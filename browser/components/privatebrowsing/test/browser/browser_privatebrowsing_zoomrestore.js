@@ -56,24 +56,20 @@ function test() {
     windowsToReset.forEach(function(win) {
       win.FullZoom.reset();
     });
+    windowsToClose.forEach(function(win) {
+      win.close();
+    });
     finish();
   }
 
   function testOnWindow(options, callback) {
-    let win = OpenBrowserWindow(options);
-    win.addEventListener("load", function onLoad() {
-      win.removeEventListener("load", onLoad, false);
-      windowsToClose.push(win);
-      windowsToReset.push(win);
-      executeSoon(function() callback(win));
-    }, false);
+    let win = whenNewWindowLoaded(options,
+      function(win) {
+        windowsToClose.push(win);
+        windowsToReset.push(win);
+        executeSoon(function() { callback(win); });
+      });
   };
-
-  registerCleanupFunction(function() {
-    windowsToClose.forEach(function(win) {
-      win.close();
-    });
-  });
 
   testOnWindow({}, function(win) {
     doTestWhenReady(true, win, function() {

@@ -116,10 +116,10 @@ abstract public class BrowserApp extends GeckoApp
         public int id;
         public String label;
         public String icon;
-        public boolean checkable;
-        public boolean checked;
-        public boolean enabled;
-        public boolean visible;
+        public boolean checkable = false;
+        public boolean checked = false;
+        public boolean enabled = true;
+        public boolean visible = true;
         public int parent;
     }
 
@@ -985,21 +985,12 @@ abstract public class BrowserApp extends GeckoApp
                 MenuItemInfo info = new MenuItemInfo();
                 info.label = message.getString("name");
                 info.id = message.getInt("id") + ADDON_MENU_OFFSET;
-                info.checkable = false;
-                info.checked = false;
-                info.enabled = true;
-                info.visible = true;
-                String iconRes = null;
-                try { // icon is optional
-                    iconRes = message.getString("icon");
-                } catch (Exception ex) { }
-                info.icon = iconRes;
-                try {
-                    info.checkable = message.getBoolean("checkable");
-                } catch (Exception ex) { }
-                try { // parent is optional
-                    info.parent = message.getInt("parent") + ADDON_MENU_OFFSET;
-                } catch (Exception ex) { }
+                info.icon = message.optString("icon", null);
+                info.checked = message.optBoolean("checked", false);
+                info.enabled = message.optBoolean("enabled", true);
+                info.visible = message.optBoolean("visible", true);
+                info.checkable = message.optBoolean("checkable", false);
+                info.parent = message.optInt("parent", -ADDON_MENU_OFFSET) + ADDON_MENU_OFFSET;
                 final MenuItemInfo menuItemInfo = info;
                 ThreadUtils.postToUiThread(new Runnable() {
                     @Override
@@ -1249,6 +1240,7 @@ abstract public class BrowserApp extends GeckoApp
     @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
+        mToast.onSaveInstanceState(outState);
         outState.putBoolean(STATE_DYNAMIC_TOOLBAR_ENABLED, mDynamicToolbarEnabled);
         // FIXME: address this in bug 876750
         //outState.putInt(STATE_ABOUT_HOME_TOP_PADDING, mHomePager.getTopPadding());
@@ -1614,21 +1606,10 @@ abstract public class BrowserApp extends GeckoApp
         if (mAddonMenuItemsCache != null && !mAddonMenuItemsCache.isEmpty()) {
             for (MenuItemInfo item : mAddonMenuItemsCache) {
                  if (item.id == id) {
-                     try {
-                        item.checkable = options.getBoolean("checkable");
-                     } catch (JSONException e) {}
-
-                     try {
-                        item.checked = options.getBoolean("checked");
-                     } catch (JSONException e) {}
-
-                     try {
-                        item.enabled = options.getBoolean("enabled");
-                     } catch (JSONException e) {}
-
-                     try {
-                        item.visible = options.getBoolean("visible");
-                     } catch (JSONException e) {}
+                     item.checkable = options.optBoolean("checkable", item.checkable);
+                     item.checked = options.optBoolean("checked", item.checked);
+                     item.enabled = options.optBoolean("enabled", item.enabled);
+                     item.visible = options.optBoolean("visible", item.visible);
                      break;
                  }
             }
@@ -1639,21 +1620,10 @@ abstract public class BrowserApp extends GeckoApp
 
         MenuItem menuItem = mMenu.findItem(id);
         if (menuItem != null) {
-            try {
-               menuItem.setCheckable(options.getBoolean("checkable"));
-            } catch (JSONException e) {}
-
-            try {
-               menuItem.setChecked(options.getBoolean("checked"));
-            } catch (JSONException e) {}
-
-            try {
-               menuItem.setEnabled(options.getBoolean("enabled"));
-            } catch (JSONException e) {}
-
-            try {
-               menuItem.setVisible(options.getBoolean("visible"));
-            } catch (JSONException e) {}
+            menuItem.setCheckable(options.optBoolean("checkable", menuItem.isCheckable()));
+            menuItem.setChecked(options.optBoolean("checked", menuItem.isChecked()));
+            menuItem.setEnabled(options.optBoolean("enabled", menuItem.isEnabled()));
+            menuItem.setVisible(options.optBoolean("visible", menuItem.isVisible()));
         }
     }
 

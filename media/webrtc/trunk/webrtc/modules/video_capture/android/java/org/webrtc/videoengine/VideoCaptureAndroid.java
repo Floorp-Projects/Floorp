@@ -56,6 +56,7 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback {
     private boolean isSurfaceReady = false;
     private SurfaceHolder surfaceHolder = null;
     private SurfaceTexture surfaceTexture = null;
+    private SurfaceTexture dummySurfaceTexture = null;
 
     private final int numCaptureBuffers = 3;
     private int expectedFrameSize = 0;
@@ -113,8 +114,10 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback {
         GeckoAppShell.getGeckoInterface().removeAppStateListener(captureAndroid.mAppStateListener);
 
         captureAndroid.StopCapture();
-        captureAndroid.camera.release();
-        captureAndroid.camera = null;
+        if (captureAndroid.camera != null) {
+            captureAndroid.camera.release();
+            captureAndroid.camera = null;
+        }
         captureAndroid.context = 0;
 
         View cameraView = GeckoAppShell.getGeckoInterface().getCameraView();
@@ -177,8 +180,10 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback {
             @Override
             public void onPause() {
                 StopCapture();
-                camera.release();
-                camera = null;
+                if (camera != null) {
+                    camera.release();
+                    camera = null;
+                }
             }
             @Override
             public void onResume() {
@@ -249,6 +254,18 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback {
                 camera.setPreviewDisplay(surfaceHolder);
             if (surfaceTexture != null)
                 camera.setPreviewTexture(surfaceTexture);
+            if (surfaceHolder == null && surfaceTexture == null) {
+                // No local renderer.  Camera won't capture without
+                // setPreview{Texture,Display}, so we create a dummy SurfaceTexture
+                // and hand it over to Camera, but never listen for frame-ready
+                // callbacks, and never call updateTexImage on it.
+                try {
+                    dummySurfaceTexture = new SurfaceTexture(42);
+                    camera.setPreviewTexture(dummySurfaceTexture);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
 
             CaptureCapabilityAndroid currentCapability =
                     new CaptureCapabilityAndroid();

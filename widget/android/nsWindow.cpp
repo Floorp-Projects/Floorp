@@ -338,6 +338,20 @@ nsWindow::GetDPI()
     return 160.0f;
 }
 
+double
+nsWindow::GetDefaultScaleInternal()
+{
+    float dpi = GetDPI();
+    if (dpi < 200) { // includes desktop displays, LDPI, and MDPI Android devices
+        return 1.0;
+    }
+    if (dpi < 300) { // includes Nokia N900, HDPI Android devices
+        return 1.5;
+    }
+    // for very high-density displays calculate an integer ratio.
+    return floor(dpi / 150);
+}
+
 NS_IMETHODIMP
 nsWindow::Show(bool aState)
 {
@@ -1066,11 +1080,17 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
         return;
     }
 
+    int bytesPerPixel = 2;
+    gfxASurface::gfxImageFormat format = gfxASurface::ImageFormatRGB16_565;
+    if (AndroidBridge::Bridge()->GetScreenDepth() == 24) {
+        bytesPerPixel = 4;
+        format = gfxASurface::ImageFormatRGB24;
+    }
+
     layers::renderTraceEventStart("Get surface", "424545");
-    static unsigned char bits2[32 * 32 * 2];
+    static unsigned char bits2[32 * 32 * 4];
     nsRefPtr<gfxImageSurface> targetSurface =
-        new gfxImageSurface(bits2, gfxIntSize(32, 32), 32 * 2,
-                            gfxASurface::ImageFormatRGB16_565);
+        new gfxImageSurface(bits2, gfxIntSize(32, 32), 32 * bytesPerPixel, format);
     layers::renderTraceEventEnd("Get surface", "424545");
 
     layers::renderTraceEventStart("Widget draw to", "434646");
@@ -2493,7 +2513,7 @@ public:
         Layer* targetLayer = GetLayerManager()->GetPrimaryScrollableLayer();
         AsyncPanZoomController* controller = nsWindow::GetPanZoomController();
         if (targetLayer && targetLayer->AsContainerLayer() && controller) {
-            targetLayer->SetAsyncPanZoomController(controller);
+            targetLayer->AsContainerLayer()->SetAsyncPanZoomController(controller);
             controller->NotifyLayersUpdated(targetLayer->AsContainerLayer()->GetFrameMetrics(), isFirstPaint);
         }
     }

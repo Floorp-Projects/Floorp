@@ -5,7 +5,7 @@
 
 #include "nsISupports.idl"
 
-[scriptable, builtinclass, uuid(73d23ad8-e77c-4079-b8c0-d71bf0ebc5b2)]
+[scriptable, builtinclass, uuid(3FFA5113-2A10-43BB-923B-6A2FAF67BE97)]
 interface nsIMemoryInfoDumper : nsISupports
 {
   /**
@@ -131,10 +131,22 @@ interface nsIMemoryInfoDumper : nsISupports
    *   arbitrary value; for example, it may set aIdentifier to the number
    *   of seconds since the epoch.
    *
+   * @param aDumpAllTraces indicates whether we should run an all-traces CC
+   *   log.  An all-traces log visits all objects currently eligible for cycle
+   *   collection, while a non-all-traces log avoids visiting some objects
+   *   which we know are reachable.
+   *
+   *   All-traces logs are much bigger than the alternative, but they may be
+   *   helpful when trying to understand why a particular object is alive.  For
+   *   example, a non-traces-log will skip references held by an active
+   *   document; if your object is being held alive by such a document, you
+   *   probably want to see those references.
+   *
    * @param aDumpChildProcesses indicates whether we should call
    *   DumpGCAndCCLogsToFile in our child processes.  If so, the child processes
    *   will dump their children, and so on.
    */
   void dumpGCAndCCLogsToFile(in AString aIdentifier,
+                             in bool aDumpAllTraces,
                              in bool aDumpChildProcesses);
 };

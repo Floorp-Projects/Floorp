@@ -239,8 +239,8 @@ function ArrayMap(callbackfn/*, thisArg*/) {
         if (k in O) {
             /* Step c.i-iii. */
             var mappedValue = callFunction(callbackfn, T, O[k], k, O);
-            // UnsafeSetElement doesn't invoke setters, so we can use it here.
-            UnsafeSetElement(A, k, mappedValue);
+            // UnsafePutElements doesn't invoke setters, so we can use it here.
+            UnsafePutElements(A, k, mappedValue);
         }
     }
 

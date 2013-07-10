@@ -325,6 +325,10 @@ const GLubyte* glGetString_mozilla(GrGLenum name)
                 strcat(extensionsString, "GL_EXT_packed_depth_stencil ");
             }
 
+            if (sGLContext.get()->IsExtensionSupported(GLContext::OES_rgb8_rgba8)) {
+                strcat(extensionsString, "GL_OES_rgb8_rgba8 ");
+            }
+
             extensionsStringBuilt = true;
         }
 

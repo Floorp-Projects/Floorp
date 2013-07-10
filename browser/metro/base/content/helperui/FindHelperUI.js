@@ -101,7 +101,7 @@ var FindHelperUI = {
   },
 
   show: function findHelperShow() {
-    if (this._open)
+    if (StartUI.isVisible || this._open)
       return;
 
     // Hide any menus

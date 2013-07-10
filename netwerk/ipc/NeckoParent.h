@@ -52,48 +52,48 @@ public:
 
 protected:
   virtual PHttpChannelParent*
-    AllocPHttpChannel(PBrowserParent*, const SerializedLoadContext&,
-                      const HttpChannelCreationArgs& aOpenArgs);
+    AllocPHttpChannelParent(PBrowserParent*, const SerializedLoadContext&,
+                            const HttpChannelCreationArgs& aOpenArgs);
   virtual bool
     RecvPHttpChannelConstructor(
                       PHttpChannelParent* aActor,
                       PBrowserParent* aBrowser,
                       const SerializedLoadContext& aSerialized,
                       const HttpChannelCreationArgs& aOpenArgs);
-  virtual bool DeallocPHttpChannel(PHttpChannelParent*);
-  virtual PCookieServiceParent* AllocPCookieService();
-  virtual bool DeallocPCookieService(PCookieServiceParent*);
-  virtual PWyciwygChannelParent* AllocPWyciwygChannel();
-  virtual bool DeallocPWyciwygChannel(PWyciwygChannelParent*);
+  virtual bool DeallocPHttpChannelParent(PHttpChannelParent*);
+  virtual PCookieServiceParent* AllocPCookieServiceParent();
+  virtual bool DeallocPCookieServiceParent(PCookieServiceParent*);
+  virtual PWyciwygChannelParent* AllocPWyciwygChannelParent();
+  virtual bool DeallocPWyciwygChannelParent(PWyciwygChannelParent*);
   virtual PFTPChannelParent*
-    AllocPFTPChannel(PBrowserParent* aBrowser,
-                     const SerializedLoadContext& aSerialized,
-                     const FTPChannelCreationArgs& aOpenArgs);
+    AllocPFTPChannelParent(PBrowserParent* aBrowser,
+                           const SerializedLoadContext& aSerialized,
+                           const FTPChannelCreationArgs& aOpenArgs);
   virtual bool
     RecvPFTPChannelConstructor(
                       PFTPChannelParent* aActor,
                       PBrowserParent* aBrowser,
                       const SerializedLoadContext& aSerialized,
                       const FTPChannelCreationArgs& aOpenArgs);
-  virtual bool DeallocPFTPChannel(PFTPChannelParent*);
-  virtual PWebSocketParent* AllocPWebSocket(PBrowserParent* browser,
-                                            const SerializedLoadContext& aSerialized);
-  virtual bool DeallocPWebSocket(PWebSocketParent*);
-  virtual PTCPSocketParent* AllocPTCPSocket(const nsString& aHost,
-                                            const uint16_t& aPort,
-                                            const bool& useSSL,
-                                            const nsString& aBinaryType,
-                                            PBrowserParent* aBrowser);
+  virtual bool DeallocPFTPChannelParent(PFTPChannelParent*);
+  virtual PWebSocketParent* AllocPWebSocketParent(PBrowserParent* browser,
+                                                  const SerializedLoadContext& aSerialized);
+  virtual bool DeallocPWebSocketParent(PWebSocketParent*);
+  virtual PTCPSocketParent* AllocPTCPSocketParent(const nsString& aHost,
+                                                  const uint16_t& aPort,
+                                                  const bool& useSSL,
+                                                  const nsString& aBinaryType,
+                                                  PBrowserParent* aBrowser);
 
-  virtual PRemoteOpenFileParent* AllocPRemoteOpenFile(const URIParams& aFileURI,
-                                                      PBrowserParent* aBrowser)
-                                                      MOZ_OVERRIDE;
+  virtual PRemoteOpenFileParent* AllocPRemoteOpenFileParent(const URIParams& aFileURI,
+                                                            PBrowserParent* aBrowser)
+                                                            MOZ_OVERRIDE;
   virtual bool RecvPRemoteOpenFileConstructor(PRemoteOpenFileParent* aActor,
                                               const URIParams& aFileURI,
                                               PBrowserParent* aBrowser)
                                               MOZ_OVERRIDE;
-  virtual bool DeallocPRemoteOpenFile(PRemoteOpenFileParent* aActor)
-                                      MOZ_OVERRIDE;
+  virtual bool DeallocPRemoteOpenFileParent(PRemoteOpenFileParent* aActor)
+                                            MOZ_OVERRIDE;
 
   virtual bool RecvPTCPSocketConstructor(PTCPSocketParent*,
                                          const nsString& aHost,
@@ -101,7 +101,7 @@ protected:
                                          const bool& useSSL,
                                          const nsString& aBinaryType,
                                          PBrowserParent* aBrowser);
-  virtual bool DeallocPTCPSocket(PTCPSocketParent*);
+  virtual bool DeallocPTCPSocketParent(PTCPSocketParent*);
   virtual bool RecvHTMLDNSPrefetch(const nsString& hostname,
                                    const uint16_t& flags);
   virtual bool RecvCancelHTMLDNSPrefetch(const nsString& hostname,

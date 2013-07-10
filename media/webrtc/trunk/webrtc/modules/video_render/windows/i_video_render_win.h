@@ -28,7 +28,7 @@ public:
     {
     };
 
-    virtual WebRtc_Word32 Init() = 0;
+    virtual int32_t Init() = 0;
 
     /**************************************************************************
      *
@@ -37,22 +37,20 @@ public:
      ***************************************************************************/
 
     virtual VideoRenderCallback
-            * CreateChannel(const WebRtc_UWord32 streamId,
-                            const WebRtc_UWord32 zOrder,
+            * CreateChannel(const uint32_t streamId,
+                            const uint32_t zOrder,
                             const float left,
                             const float top,
                             const float right,
                             const float bottom) = 0;
 
-    virtual WebRtc_Word32 DeleteChannel(const WebRtc_UWord32 streamId) = 0;
+    virtual int32_t DeleteChannel(const uint32_t streamId) = 0;
 
-    virtual WebRtc_Word32 GetStreamSettings(const WebRtc_UWord32 channel,
-                                            const WebRtc_UWord16 streamId,
-                                            WebRtc_UWord32& zOrder,
-                                            float& left,
-                                            float& top,
-                                            float& right,
-                                            float& bottom) = 0;
+    virtual int32_t GetStreamSettings(const uint32_t channel,
+                                      const uint16_t streamId,
+                                      uint32_t& zOrder,
+                                      float& left, float& top,
+                                      float& right, float& bottom) = 0;
 
     /**************************************************************************
      *
@@ -60,9 +58,9 @@ public:
      *
      ***************************************************************************/
 
-    virtual WebRtc_Word32 StartRender() = 0;
+    virtual int32_t StartRender() = 0;
 
-    virtual WebRtc_Word32 StopRender() = 0;
+    virtual int32_t StopRender() = 0;
 
     /**************************************************************************
      *
@@ -72,45 +70,39 @@ public:
 
     virtual bool IsFullScreen() = 0;
 
-    virtual WebRtc_Word32 SetCropping(const WebRtc_UWord32 channel,
-                                      const WebRtc_UWord16 streamId,
+    virtual int32_t SetCropping(const uint32_t channel,
+                                const uint16_t streamId,
+                                const float left, const float top,
+                                const float right, const float bottom) = 0;
+
+    virtual int32_t ConfigureRenderer(const uint32_t channel,
+                                      const uint16_t streamId,
+                                      const unsigned int zOrder,
                                       const float left,
                                       const float top,
                                       const float right,
                                       const float bottom) = 0;
 
-    virtual WebRtc_Word32 ConfigureRenderer(const WebRtc_UWord32 channel,
-                                            const WebRtc_UWord16 streamId,
-                                            const unsigned int zOrder,
-                                            const float left,
-                                            const float top,
-                                            const float right,
-                                            const float bottom) = 0;
+    virtual int32_t SetTransparentBackground(const bool enable) = 0;
 
-    virtual WebRtc_Word32 SetTransparentBackground(const bool enable) = 0;
+    virtual int32_t SetText(const uint8_t textId,
+                            const uint8_t* text,
+                            const int32_t textLength,
+                            const uint32_t colorText,
+                            const uint32_t colorBg,
+                            const float left, const float top,
+                            const float rigth, const float bottom) = 0;
 
-    virtual WebRtc_Word32 SetText(const WebRtc_UWord8 textId,
-                                  const WebRtc_UWord8* text,
-                                  const WebRtc_Word32 textLength,
-                                  const WebRtc_UWord32 colorText,
-                                  const WebRtc_UWord32 colorBg,
-                                  const float left,
-                                  const float top,
-                                  const float rigth,
-                                  const float bottom) = 0;
+    virtual int32_t SetBitmap(const void* bitMap,
+                              const uint8_t pictureId,
+                              const void* colorKey,
+                              const float left, const float top,
+                              const float right, const float bottom) = 0;
 
-    virtual WebRtc_Word32 SetBitmap(const void* bitMap,
-                                    const WebRtc_UWord8 pictureId,
-                                    const void* colorKey,
-                                    const float left,
-                                    const float top,
-                                    const float right,
-                                    const float bottom) = 0;
+    virtual int32_t ChangeWindow(void* window) = 0;
 
-    virtual WebRtc_Word32 ChangeWindow(void* window) = 0;
-
-    virtual WebRtc_Word32 GetGraphicsMemory(WebRtc_UWord64& totalMemory,
-                                            WebRtc_UWord64& availableMemory) = 0;
+    virtual int32_t GetGraphicsMemory(uint64_t& totalMemory,
+                                      uint64_t& availableMemory) = 0;
 
 };
 

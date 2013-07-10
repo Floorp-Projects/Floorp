@@ -189,10 +189,6 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
     }
 
     sourceItem.remove(breakpointItem);
-
-    if (this._selectedBreakpoint == breakpointItem) {
-      this._selectedBreakpoint = null;
-    }
   },
 
   /**
@@ -572,6 +568,10 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
     let contextMenu = aItem.attachment.popup;
     document.getElementById(contextMenu.commandsetId).remove();
     document.getElementById(contextMenu.menupopupId).remove();
+
+    if (this._selectedBreakpoint == aItem) {
+      this._selectedBreakpoint = null;
+    }
   },
 
   /**
@@ -1067,7 +1067,12 @@ let SourceUtils = {
       return "";
     }
 
-    let { scheme, hostPort, directory, fileName } = uri;
+    let { scheme, directory, fileName } = uri;
+    let hostPort;
+    // Add-on SDK jar: URLs will cause accessing hostPort to throw.
+    if (scheme != "jar") {
+      hostPort = uri.hostPort;
+    }
     let lastDir = directory.split("/").reverse()[1];
     let group = [];
 

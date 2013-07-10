@@ -180,10 +180,17 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk2':
         'SkFontHost_FreeType_common.cpp',
         'SkThread_pthread.cpp',
         'SkThreadUtils_pthread.cpp',
-        'SkThreadUtils_pthread_linux.cpp',
         'SkTime_Unix.cpp',
         'SkOSFile.cpp',
     ]
+    if CONFIG['OS_TARGET'] in ('Linux', 'FreeBSD', 'NetBSD'):
+        CPP_SOURCES += [
+            'SkThreadUtils_pthread_linux.cpp',
+        ]
+    else:
+        CPP_SOURCES += [
+            'SkThreadUtils_pthread_other.cpp',
+        ]
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'qt':
     CPP_SOURCES += [
         'SkFontHost_cairo.cpp',

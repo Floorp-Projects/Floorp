@@ -23,6 +23,13 @@
 
 #if defined(PR_LOGGING)
 
+#define ML_EMERG            1
+#define ML_ERROR            2
+#define ML_WARNING          3
+#define ML_NOTICE           4
+#define ML_INFO             5
+#define ML_DEBUG            6
+
 // PR_LOGGING is on --> make useful MTLOG macros
 #define MOZ_MTLOG_MODULE(n) \
   static PRLogModuleInfo* getLogModule() {      \

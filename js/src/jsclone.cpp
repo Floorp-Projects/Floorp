@@ -33,9 +33,8 @@
 #include "mozilla/FloatingPoint.h"
 
 #include "jsdate.h"
-#include "jstypedarray.h"
 
-#include "jstypedarrayinlines.h"
+#include "vm/TypedArrayObject.h"
 
 #include "vm/BooleanObject-inl.h"
 #include "vm/RegExpObject-inl.h"
@@ -582,19 +581,20 @@ JS_WriteTypedArray(JSStructuredCloneWriter *w, jsval v)
  * swapped; the Int16Array requires that they are.
  */
 bool
-JSStructuredCloneWriter::writeTypedArray(HandleObject arr)
+JSStructuredCloneWriter::writeTypedArray(HandleObject obj)
 {
-    if (!out.writePair(SCTAG_TYPED_ARRAY_OBJECT, TypedArrayObject::length(arr)))
+    Rooted<TypedArrayObject*> tarr(context(), &obj->as<TypedArrayObject>());
+    if (!out.writePair(SCTAG_TYPED_ARRAY_OBJECT, tarr->length()))
         return false;
-    uint64_t type = TypedArrayObject::type(arr);
+    uint64_t type = tarr->type();
     if (!out.write(type))
         return false;
 
     // Write out the ArrayBuffer tag and contents
-    if (!startWrite(TypedArrayObject::bufferValue(arr)))
+    if (!startWrite(TypedArrayObject::bufferValue(tarr)))
         return false;
 
-    return out.write(TypedArrayObject::byteOffset(arr));
+    return out.write(tarr->byteOffset());
 }
 
 bool
@@ -688,7 +688,7 @@ JSStructuredCloneWriter::startWrite(const Value &v)
         } else if (obj->is<DateObject>()) {
             double d = js_DateGetMsecSinceEpoch(obj);
             return out.writePair(SCTAG_DATE_OBJECT, 0) && out.writeDouble(d);
-        } else if (obj->isTypedArray()) {
+        } else if (obj->is<TypedArrayObject>()) {
             return writeTypedArray(obj);
         } else if (obj->is<ArrayBufferObject>() && obj->as<ArrayBufferObject>().hasData()) {
             return writeArrayBuffer(obj);

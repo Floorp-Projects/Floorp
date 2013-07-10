@@ -26,7 +26,7 @@ public:
     void SetTimeEllapsed(double myTime);
     double TimeEllapsed();
     void Tick10Msec();
-    WebRtc_Word16 SetUp(char* fileName);
+    int16_t SetUp(char* fileName);
     void TimedLogg(char* message);
 
 private:

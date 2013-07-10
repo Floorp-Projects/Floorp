@@ -47,6 +47,7 @@ class ScrollbarActivity;
 
 class nsGfxScrollFrameInner : public nsIReflowCallback {
 public:
+  typedef mozilla::CSSIntPoint CSSIntPoint;
   typedef mozilla::layout::ScrollbarActivity ScrollbarActivity;
 
   class AsyncScroll;
@@ -170,9 +171,9 @@ public:
                 const nsRect* aRange = nullptr) {
     ScrollToWithOrigin(aScrollPosition, aMode, nsGkAtoms::other, aRange);
   }
-  void ScrollToCSSPixels(const mozilla::CSSIntPoint& aScrollPosition);
+  void ScrollToCSSPixels(const CSSIntPoint& aScrollPosition);
   void ScrollToCSSPixelsApproximate(const mozilla::CSSPoint& aScrollPosition);
-  nsIntPoint GetScrollPositionCSSPixels();
+  CSSIntPoint GetScrollPositionCSSPixels();
   void ScrollToImpl(nsPoint aScrollPosition, const nsRect& aRange);
   void ScrollVisual(nsPoint aOldScrolledFramePosition);
   void ScrollBy(nsIntPoint aDelta, nsIScrollableFrame::ScrollUnit aUnit,
@@ -377,6 +378,7 @@ class nsHTMLScrollFrame : public nsContainerFrame,
                           public nsIAnonymousContentCreator,
                           public nsIStatefulFrame {
 public:
+  typedef mozilla::CSSIntPoint CSSIntPoint;
   friend nsIFrame* NS_NewHTMLScrollFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, bool aIsRoot);
 
   NS_DECL_QUERYFRAME
@@ -519,13 +521,13 @@ public:
                         const nsRect* aRange = nullptr) MOZ_OVERRIDE {
     mInner.ScrollTo(aScrollPosition, aMode, aRange);
   }
-  virtual void ScrollToCSSPixels(const mozilla::CSSIntPoint& aScrollPosition) MOZ_OVERRIDE {
+  virtual void ScrollToCSSPixels(const CSSIntPoint& aScrollPosition) MOZ_OVERRIDE {
     mInner.ScrollToCSSPixels(aScrollPosition);
   }
   virtual void ScrollToCSSPixelsApproximate(const mozilla::CSSPoint& aScrollPosition) MOZ_OVERRIDE {
     mInner.ScrollToCSSPixelsApproximate(aScrollPosition);
   }
-  virtual nsIntPoint GetScrollPositionCSSPixels() MOZ_OVERRIDE {
+  virtual CSSIntPoint GetScrollPositionCSSPixels() MOZ_OVERRIDE {
     return mInner.GetScrollPositionCSSPixels();
   }
   virtual void ScrollBy(nsIntPoint aDelta, ScrollUnit aUnit, ScrollMode aMode,
@@ -630,6 +632,8 @@ class nsXULScrollFrame : public nsBoxFrame,
                          public nsIAnonymousContentCreator,
                          public nsIStatefulFrame {
 public:
+  typedef mozilla::CSSIntPoint CSSIntPoint;
+
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS
 
@@ -783,13 +787,13 @@ public:
                         const nsRect* aRange = nullptr) MOZ_OVERRIDE {
     mInner.ScrollTo(aScrollPosition, aMode, aRange);
   }
-  virtual void ScrollToCSSPixels(const mozilla::CSSIntPoint& aScrollPosition) MOZ_OVERRIDE {
+  virtual void ScrollToCSSPixels(const CSSIntPoint& aScrollPosition) MOZ_OVERRIDE {
     mInner.ScrollToCSSPixels(aScrollPosition);
   }
   virtual void ScrollToCSSPixelsApproximate(const mozilla::CSSPoint& aScrollPosition) MOZ_OVERRIDE {
     mInner.ScrollToCSSPixelsApproximate(aScrollPosition);
   }
-  virtual nsIntPoint GetScrollPositionCSSPixels() MOZ_OVERRIDE {
+  virtual CSSIntPoint GetScrollPositionCSSPixels() MOZ_OVERRIDE {
     return mInner.GetScrollPositionCSSPixels();
   }
   virtual void ScrollBy(nsIntPoint aDelta, ScrollUnit aUnit, ScrollMode aMode,

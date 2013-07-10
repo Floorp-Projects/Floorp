@@ -65,6 +65,7 @@ let WebProgressListener = {
   onSecurityChange: function onSecurityChange(aWebProgress, aRequest, aState) {
     let json = this._setupJSON(aWebProgress, aRequest);
     json.state = aState;
+    json.status = SecurityUI.getSSLStatusAsString();
 
     sendAsyncMessage("Content:SecurityChange", json);
   },
@@ -148,6 +149,22 @@ let WebNavigation =  {
 };
 
 WebNavigation.init();
+
+let SecurityUI = {
+  getSSLStatusAsString: function() {
+    let status = docShell.securityUI.QueryInterface(Ci.nsISSLStatusProvider).SSLStatus;
+
+    if (status) {
+      let helper = Cc["@mozilla.org/network/serialization-helper;1"]
+                      .getService(Ci.nsISerializationHelper);
+
+      status.QueryInterface(Ci.nsISerializable);
+      return helper.serializeToString(status);
+    }
+
+    return null;
+  }
+};
 
 addEventListener("DOMTitleChanged", function (aEvent) {
   let document = content.document;

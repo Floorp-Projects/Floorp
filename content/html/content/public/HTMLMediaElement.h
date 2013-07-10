@@ -322,6 +322,13 @@ public:
   void SetRequestHeaders(nsIHttpChannel* aChannel);
 
   /**
+   * Asynchronously awaits a stable state, whereupon aRunnable runs on the main
+   * thread. This adds an event which run aRunnable to the appshell's list of
+   * sections synchronous the next time control returns to the event loop.
+   */
+  void RunInStableState(nsIRunnable* aRunnable);
+
+  /**
    * Fires a timeupdate event. If aPeriodic is true, the event will only
    * be fired if we've not fired a timeupdate event (for any reason) in the
    * last 250ms, as required by the spec when the current time is periodically
@@ -1122,9 +1129,6 @@ protected:
 
   // Is this media element playing?
   bool mPlayingThroughTheAudioChannel;
-
-  // Has this element been in a document?
-  bool mWasInDocument;
 
   // An agent used to join audio channel service.
   nsCOMPtr<nsIAudioChannelAgent> mAudioChannelAgent;

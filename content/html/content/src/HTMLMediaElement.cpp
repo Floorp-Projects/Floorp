@@ -667,12 +667,12 @@ typedef void (HTMLMediaElement::*SyncSectionFn)();
 class nsSyncSection : public nsMediaEvent
 {
 private:
-  SyncSectionFn mClosure;
+  nsCOMPtr<nsIRunnable> mRunnable;
 public:
   nsSyncSection(HTMLMediaElement* aElement,
-                SyncSectionFn aClosure) :
+                nsIRunnable* aRunnable) :
     nsMediaEvent(aElement),
-    mClosure(aClosure)
+    mRunnable(aRunnable)
   {
   }
 
@@ -680,20 +680,16 @@ public:
     // Silently cancel if our load has been cancelled.
     if (IsCancelled())
       return NS_OK;
-    (mElement.get()->*mClosure)();
+    mRunnable->Run();
     return NS_OK;
   }
 };
 
 static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 
-// Asynchronously awaits a stable state, whereupon aClosure runs on the main
-// thread. This adds an event which run aClosure to the appshell's list of
-// sections synchronous the next time control returns to the event loop.
-void AsyncAwaitStableState(HTMLMediaElement* aElement,
-                           SyncSectionFn aClosure)
+void HTMLMediaElement::RunInStableState(nsIRunnable* aRunnable)
 {
-  nsCOMPtr<nsIRunnable> event = new nsSyncSection(aElement, aClosure);
+  nsCOMPtr<nsIRunnable> event = new nsSyncSection(this, aRunnable);
   nsCOMPtr<nsIAppShell> appShell = do_GetService(kAppShellCID);
   appShell->RunInStableState(event);
 }
@@ -702,7 +698,8 @@ void HTMLMediaElement::QueueLoadFromSourceTask()
 {
   ChangeDelayLoadStatus(true);
   mNetworkState = nsIDOMHTMLMediaElement::NETWORK_LOADING;
-  AsyncAwaitStableState(this, &HTMLMediaElement::LoadFromSourceChildren);
+  RunInStableState(
+    NS_NewRunnableMethod(this, &HTMLMediaElement::LoadFromSourceChildren));
 }
 
 void HTMLMediaElement::QueueSelectResourceTask()
@@ -712,7 +709,8 @@ void HTMLMediaElement::QueueSelectResourceTask()
     return;
   mHaveQueuedSelectResource = true;
   mNetworkState = nsIDOMHTMLMediaElement::NETWORK_NO_SOURCE;
-  AsyncAwaitStableState(this, &HTMLMediaElement::SelectResourceWrapper);
+  RunInStableState(
+    NS_NewRunnableMethod(this, &HTMLMediaElement::SelectResourceWrapper));
 }
 
 /* void load (); */
@@ -1948,8 +1946,7 @@ HTMLMediaElement::HTMLMediaElement(already_AddRefed<nsINodeInfo> aNodeInfo)
     mHasAudio(false),
     mDownloadSuspendedByCache(false),
     mAudioChannelType(AUDIO_CHANNEL_NORMAL),
-    mPlayingThroughTheAudioChannel(false),
-    mWasInDocument(false)
+    mPlayingThroughTheAudioChannel(false)
 {
 #ifdef PR_LOGGING
   if (!gMediaElementLog) {
@@ -2374,8 +2371,6 @@ nsresult HTMLMediaElement::BindToTree(nsIDocument* aDocument, nsIContent* aParen
     // It's value may have changed, so update it.
     UpdatePreloadAction();
 
-    mWasInDocument = true;
-
     if (aDocument->HasAudioAvailableListeners()) {
       // The document already has listeners for the "MozAudioAvailable"
       // event, so the decoder must be notified so it initiates
@@ -2390,9 +2385,8 @@ nsresult HTMLMediaElement::BindToTree(nsIDocument* aDocument, nsIContent* aParen
 void HTMLMediaElement::UnbindFromTree(bool aDeep,
                                       bool aNullParent)
 {
-  if (!mPaused && mNetworkState != nsIDOMHTMLMediaElement::NETWORK_EMPTY) {
+  if (!mPaused && mNetworkState != nsIDOMHTMLMediaElement::NETWORK_EMPTY)
     Pause();
-  }
   nsGenericHTMLElement::UnbindFromTree(aDeep, aNullParent);
 }
 
@@ -3091,10 +3085,7 @@ bool HTMLMediaElement::CanActivateAutoplay()
   // For stream inputs, we activate autoplay on HAVE_CURRENT_DATA because
   // this element itself might be blocking the stream from making progress by
   // being paused.
-  // If we were in a document, but we have been removed, we should not start the
-  // playback.
   return !mPausedForInactiveDocumentOrChannel &&
-         mWasInDocument && IsInDoc() &&
          mAutoplaying &&
          mPaused &&
          (mDownloadSuspendedByCache ||

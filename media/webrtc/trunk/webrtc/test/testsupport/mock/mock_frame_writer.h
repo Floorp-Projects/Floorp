@@ -21,9 +21,9 @@ namespace test {
 class MockFrameWriter : public FrameWriter {
  public:
   MOCK_METHOD0(Init, bool());
-  MOCK_METHOD1(WriteFrame, bool(WebRtc_UWord8* frame_buffer));
+  MOCK_METHOD1(WriteFrame, bool(uint8_t* frame_buffer));
   MOCK_METHOD0(Close, void());
-  MOCK_METHOD0(FrameLength, int());
+  MOCK_METHOD0(FrameLength, size_t());
 };
 
 }  // namespace test

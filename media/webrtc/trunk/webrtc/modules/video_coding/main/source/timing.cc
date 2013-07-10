@@ -8,17 +8,19 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "trace.h"
-#include "internal_defines.h"
-#include "jitter_buffer_common.h"
-#include "timing.h"
-#include "timestamp_extrapolator.h"
+#include "webrtc/modules/video_coding/main/source/timing.h"
+
+#include "webrtc/modules/video_coding/main/source/internal_defines.h"
+#include "webrtc/modules/video_coding/main/source/jitter_buffer_common.h"
+#include "webrtc/modules/video_coding/main/source/timestamp_extrapolator.h"
+#include "webrtc/system_wrappers/interface/clock.h"
+#include "webrtc/system_wrappers/interface/trace.h"
 
 namespace webrtc {
 
-VCMTiming::VCMTiming(TickTimeBase* clock,
-                     WebRtc_Word32 vcmId,
-                     WebRtc_Word32 timingId,
+VCMTiming::VCMTiming(Clock* clock,
+                     int32_t vcmId,
+                     int32_t timingId,
                      VCMTiming* masterTiming)
 :
 _critSect(CriticalSectionWrapper::CreateCriticalSection()),
@@ -32,7 +34,8 @@ _renderDelayMs(kDefaultRenderDelayMs),
 _minTotalDelayMs(0),
 _requiredDelayMs(0),
 _currentDelayMs(0),
-_prevFrameTimestamp(0)
+_prevFrameTimestamp(0),
+_maxVideoDelayMs(kMaxVideoDelayMs)
 {
     if (masterTiming == NULL)
     {
@@ -55,7 +58,7 @@ VCMTiming::~VCMTiming()
 }
 
 void
-VCMTiming::Reset(WebRtc_Word64 nowMs /* = -1 */)
+VCMTiming::Reset(int64_t nowMs /* = -1 */)
 {
     CriticalSectionScoped cs(_critSect);
     if (nowMs > -1)
@@ -80,21 +83,21 @@ void VCMTiming::ResetDecodeTime()
 }
 
 void
-VCMTiming::SetRenderDelay(WebRtc_UWord32 renderDelayMs)
+VCMTiming::SetRenderDelay(uint32_t renderDelayMs)
 {
     CriticalSectionScoped cs(_critSect);
     _renderDelayMs = renderDelayMs;
 }
 
 void
-VCMTiming::SetMinimumTotalDelay(WebRtc_UWord32 minTotalDelayMs)
+VCMTiming::SetMinimumTotalDelay(uint32_t minTotalDelayMs)
 {
     CriticalSectionScoped cs(_critSect);
     _minTotalDelayMs = minTotalDelayMs;
 }
 
 void
-VCMTiming::SetRequiredDelay(WebRtc_UWord32 requiredDelayMs)
+VCMTiming::SetRequiredDelay(uint32_t requiredDelayMs)
 {
     CriticalSectionScoped cs(_critSect);
     if (requiredDelayMs != _requiredDelayMs)
@@ -105,13 +108,17 @@ VCMTiming::SetRequiredDelay(WebRtc_UWord32 requiredDelayMs)
                     "Desired jitter buffer level: %u ms", requiredDelayMs);
         }
         _requiredDelayMs = requiredDelayMs;
+        // When in initial state, set current delay to minimum delay.
+        if (_currentDelayMs == 0) {
+           _currentDelayMs = _requiredDelayMs;
+        }
     }
 }
 
-void VCMTiming::UpdateCurrentDelay(WebRtc_UWord32 frameTimestamp)
+void VCMTiming::UpdateCurrentDelay(uint32_t frameTimestamp)
 {
     CriticalSectionScoped cs(_critSect);
-    WebRtc_UWord32 targetDelayMs = TargetDelayInternal();
+    uint32_t targetDelayMs = TargetDelayInternal();
 
     // Make sure we try to sync with audio
     if (targetDelayMs < _minTotalDelayMs)
@@ -126,19 +133,19 @@ void VCMTiming::UpdateCurrentDelay(WebRtc_UWord32 frameTimestamp)
     }
     else if (targetDelayMs != _currentDelayMs)
     {
-        WebRtc_Word64 delayDiffMs = static_cast<WebRtc_Word64>(targetDelayMs) -
+        int64_t delayDiffMs = static_cast<int64_t>(targetDelayMs) -
                                     _currentDelayMs;
         // Never change the delay with more than 100 ms every second. If we're changing the
-        // delay in too large steps we will get noticable freezes. By limiting the change we
+        // delay in too large steps we will get noticeable freezes. By limiting the change we
         // can increase the delay in smaller steps, which will be experienced as the video is
         // played in slow motion. When lowering the delay the video will be played at a faster
         // pace.
-        WebRtc_Word64 maxChangeMs = 0;
+        int64_t maxChangeMs = 0;
         if (frameTimestamp < 0x0000ffff && _prevFrameTimestamp > 0xffff0000)
         {
             // wrap
             maxChangeMs = kDelayMaxChangeMsPerS * (frameTimestamp +
-                         (static_cast<WebRtc_Word64>(1)<<32) - _prevFrameTimestamp) / 90000;
+                         (static_cast<int64_t>(1)<<32) - _prevFrameTimestamp) / 90000;
         }
         else
         {
@@ -160,22 +167,22 @@ void VCMTiming::UpdateCurrentDelay(WebRtc_UWord32 frameTimestamp)
         {
             delayDiffMs = maxChangeMs;
         }
-        _currentDelayMs = _currentDelayMs + static_cast<WebRtc_Word32>(delayDiffMs);
+        _currentDelayMs = _currentDelayMs + static_cast<int32_t>(delayDiffMs);
     }
     _prevFrameTimestamp = frameTimestamp;
 }
 
-void VCMTiming::UpdateCurrentDelay(WebRtc_Word64 renderTimeMs,
-                                   WebRtc_Word64 actualDecodeTimeMs)
+void VCMTiming::UpdateCurrentDelay(int64_t renderTimeMs,
+                                   int64_t actualDecodeTimeMs)
 {
     CriticalSectionScoped cs(_critSect);
-    WebRtc_UWord32 targetDelayMs = TargetDelayInternal();
+    uint32_t targetDelayMs = TargetDelayInternal();
     // Make sure we try to sync with audio
     if (targetDelayMs < _minTotalDelayMs)
     {
         targetDelayMs = _minTotalDelayMs;
     }
-    WebRtc_Word64 delayedMs = actualDecodeTimeMs -
+    int64_t delayedMs = actualDecodeTimeMs -
                               (renderTimeMs - MaxDecodeTimeMs() - _renderDelayMs);
     if (delayedMs < 0)
     {
@@ -183,7 +190,7 @@ void VCMTiming::UpdateCurrentDelay(WebRtc_Word64 renderTimeMs,
     }
     else if (_currentDelayMs + delayedMs <= targetDelayMs)
     {
-        _currentDelayMs += static_cast<WebRtc_UWord32>(delayedMs);
+        _currentDelayMs += static_cast<uint32_t>(delayedMs);
     }
     else
     {
@@ -191,14 +198,14 @@ void VCMTiming::UpdateCurrentDelay(WebRtc_Word64 renderTimeMs,
     }
 }
 
-WebRtc_Word32
-VCMTiming::StopDecodeTimer(WebRtc_UWord32 timeStamp,
-                           WebRtc_Word64 startTimeMs,
-                           WebRtc_Word64 nowMs)
+int32_t
+VCMTiming::StopDecodeTimer(uint32_t timeStamp,
+                           int64_t startTimeMs,
+                           int64_t nowMs)
 {
     CriticalSectionScoped cs(_critSect);
-    const WebRtc_Word32 maxDecTime = MaxDecodeTimeMs();
-    WebRtc_Word32 timeDiffMs = _codecTimer.StopTimer(startTimeMs, nowMs);
+    const int32_t maxDecTime = MaxDecodeTimeMs();
+    int32_t timeDiffMs = _codecTimer.StopTimer(startTimeMs, nowMs);
     if (timeDiffMs < 0)
     {
         WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCoding, VCMId(_vcmId, _timingId),
@@ -216,17 +223,17 @@ VCMTiming::StopDecodeTimer(WebRtc_UWord32 timeStamp,
 }
 
 void
-VCMTiming::IncomingTimestamp(WebRtc_UWord32 timeStamp, WebRtc_Word64 nowMs)
+VCMTiming::IncomingTimestamp(uint32_t timeStamp, int64_t nowMs)
 {
     CriticalSectionScoped cs(_critSect);
     _tsExtrapolator->Update(nowMs, timeStamp, _master);
 }
 
-WebRtc_Word64
-VCMTiming::RenderTimeMs(WebRtc_UWord32 frameTimestamp, WebRtc_Word64 nowMs) const
+int64_t
+VCMTiming::RenderTimeMs(uint32_t frameTimestamp, int64_t nowMs) const
 {
     CriticalSectionScoped cs(_critSect);
-    const WebRtc_Word64 renderTimeMs = RenderTimeMsInternal(frameTimestamp, nowMs);
+    const int64_t renderTimeMs = RenderTimeMsInternal(frameTimestamp, nowMs);
     if (renderTimeMs < 0)
     {
         return renderTimeMs;
@@ -242,12 +249,12 @@ VCMTiming::RenderTimeMs(WebRtc_UWord32 frameTimestamp, WebRtc_Word64 nowMs) cons
     return renderTimeMs;
 }
 
-WebRtc_Word64
-VCMTiming::RenderTimeMsInternal(WebRtc_UWord32 frameTimestamp, WebRtc_Word64 nowMs) const
+int64_t
+VCMTiming::RenderTimeMsInternal(uint32_t frameTimestamp, int64_t nowMs) const
 {
-    WebRtc_Word64 estimatedCompleteTimeMs =
+    int64_t estimatedCompleteTimeMs =
             _tsExtrapolator->ExtrapolateLocalTime(frameTimestamp);
-    if (estimatedCompleteTimeMs - nowMs > kMaxVideoDelayMs)
+    if (estimatedCompleteTimeMs - nowMs > _maxVideoDelayMs)
     {
         if (_master)
         {
@@ -267,15 +274,14 @@ VCMTiming::RenderTimeMsInternal(WebRtc_UWord32 frameTimestamp, WebRtc_Word64 now
     {
         estimatedCompleteTimeMs = nowMs;
     }
-
     return estimatedCompleteTimeMs + _currentDelayMs;
 }
 
 // Must be called from inside a critical section
-WebRtc_Word32
+int32_t
 VCMTiming::MaxDecodeTimeMs(FrameType frameType /*= kVideoFrameDelta*/) const
 {
-    const WebRtc_Word32 decodeTimeMs = _codecTimer.RequiredDecodeTimeMs(frameType);
+    const int32_t decodeTimeMs = _codecTimer.RequiredDecodeTimeMs(frameType);
 
     if (decodeTimeMs < 0)
     {
@@ -286,26 +292,26 @@ VCMTiming::MaxDecodeTimeMs(FrameType frameType /*= kVideoFrameDelta*/) const
     return decodeTimeMs;
 }
 
-WebRtc_UWord32
-VCMTiming::MaxWaitingTime(WebRtc_Word64 renderTimeMs, WebRtc_Word64 nowMs) const
+uint32_t
+VCMTiming::MaxWaitingTime(int64_t renderTimeMs, int64_t nowMs) const
 {
     CriticalSectionScoped cs(_critSect);
 
-    const WebRtc_Word64 maxWaitTimeMs = renderTimeMs - nowMs -
+    const int64_t maxWaitTimeMs = renderTimeMs - nowMs -
                                         MaxDecodeTimeMs() - _renderDelayMs;
 
     if (maxWaitTimeMs < 0)
     {
         return 0;
     }
-    return static_cast<WebRtc_UWord32>(maxWaitTimeMs);
+    return static_cast<uint32_t>(maxWaitTimeMs);
 }
 
 bool
-VCMTiming::EnoughTimeToDecode(WebRtc_UWord32 availableProcessingTimeMs) const
+VCMTiming::EnoughTimeToDecode(uint32_t availableProcessingTimeMs) const
 {
     CriticalSectionScoped cs(_critSect);
-    WebRtc_Word32 maxDecodeTimeMs = MaxDecodeTimeMs();
+    int32_t maxDecodeTimeMs = MaxDecodeTimeMs();
     if (maxDecodeTimeMs < 0)
     {
         // Haven't decoded any frames yet, try decoding one to get an estimate
@@ -318,20 +324,27 @@ VCMTiming::EnoughTimeToDecode(WebRtc_UWord32 availableProcessingTimeMs) const
         // we don't have any better precision. Count ticks later?
         maxDecodeTimeMs = 1;
     }
-    return static_cast<WebRtc_Word32>(availableProcessingTimeMs) - maxDecodeTimeMs > 0;
+    return static_cast<int32_t>(availableProcessingTimeMs) - maxDecodeTimeMs > 0;
 }
 
-WebRtc_UWord32
+void VCMTiming::SetMaxVideoDelay(int maxVideoDelayMs)
+{
+    CriticalSectionScoped cs(_critSect);
+    _maxVideoDelayMs = maxVideoDelayMs;
+}
+
+uint32_t
 VCMTiming::TargetVideoDelay() const
 {
     CriticalSectionScoped cs(_critSect);
     return TargetDelayInternal();
 }
 
-WebRtc_UWord32
+uint32_t
 VCMTiming::TargetDelayInternal() const
 {
-    return _requiredDelayMs + MaxDecodeTimeMs() + _renderDelayMs;
+    return std::max(_minTotalDelayMs,
+                    _requiredDelayMs + MaxDecodeTimeMs() + _renderDelayMs);
 }
 
 }

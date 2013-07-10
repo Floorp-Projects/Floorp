@@ -628,12 +628,19 @@ js::FunctionToString(JSContext *cx, HandleFunction fun, bool bodyOnly, bool lamb
 
         StableCharPtr chars = src->chars();
         bool exprBody = fun->isExprClosure();
-        // The source data for functions created by calling the Function
-        // constructor is only the function's body.
-        bool funCon = script->sourceStart == 0 && script->scriptSource()->argumentsNotIncluded();
 
-        // Functions created with the constructor should not be using the
-        // expression body extension.
+        // The source data for functions created by calling the Function
+        // constructor is only the function's body.  This depends on the fact,
+        // asserted below, that in Function("function f() {}"), the inner
+        // function's sourceStart points to the '(', not the 'f'.
+        bool funCon = !fun->isArrow() &&
+                      script->sourceStart == 0 &&
+                      script->sourceEnd == script->scriptSource()->length() &&
+                      script->scriptSource()->argumentsNotIncluded();
+
+        // Functions created with the constructor can't be arrow functions or
+        // expression closures.
+        JS_ASSERT_IF(funCon, !fun->isArrow());
         JS_ASSERT_IF(funCon, !exprBody);
         JS_ASSERT_IF(!funCon && !fun->isArrow(), src->length() > 0 && chars[0] == '(');
 
@@ -1156,10 +1163,11 @@ JSFunction::createScriptForLazilyInterpretedFunction(JSContext *cx, HandleFuncti
 JSBool
 js::CallOrConstructBoundFunction(JSContext *cx, unsigned argc, Value *vp)
 {
-    RootedFunction fun(cx, &vp[0].toObject().as<JSFunction>());
+    CallArgs args = CallArgsFromVp(argc, vp);
+    RootedFunction fun(cx, &args.callee().as<JSFunction>());
     JS_ASSERT(fun->isBoundFunction());
 
-    bool constructing = IsConstructing(vp);
+    bool constructing = args.isConstructing();
     if (constructing && fun->isArrow()) {
         /*
          * Per spec, arrow functions do not even have a [[Construct]] method.
@@ -1183,25 +1191,25 @@ js::CallOrConstructBoundFunction(JSContext *cx, unsigned argc, Value *vp)
     /* 15.3.4.5.1 step 2. */
     const Value &boundThis = fun->getBoundFunctionThis();
 
-    InvokeArgs args(cx);
-    if (!args.init(argc + argslen))
+    InvokeArgs invokeArgs(cx);
+    if (!invokeArgs.init(argc + argslen))
         return false;
 
     /* 15.3.4.5.1, 15.3.4.5.2 step 4. */
     for (unsigned i = 0; i < argslen; i++)
-        args[i] = fun->getBoundFunctionArgument(i);
-    PodCopy(args.array() + argslen, vp + 2, argc);
+        invokeArgs[i] = fun->getBoundFunctionArgument(i);
+    PodCopy(invokeArgs.array() + argslen, vp + 2, argc);
 
     /* 15.3.4.5.1, 15.3.4.5.2 step 5. */
-    args.setCallee(ObjectValue(*target));
+    invokeArgs.setCallee(ObjectValue(*target));
 
     if (!constructing)
-        args.setThis(boundThis);
+        invokeArgs.setThis(boundThis);
 
-    if (constructing ? !InvokeConstructor(cx, args) : !Invoke(cx, args))
+    if (constructing ? !InvokeConstructor(cx, invokeArgs) : !Invoke(cx, invokeArgs))
         return false;
 
-    *vp = args.rval();
+    *vp = invokeArgs.rval();
     return true;
 }
 
@@ -1685,6 +1693,23 @@ js::DefineFunction(JSContext *cx, HandleObject obj, HandleId id, Native native,
     return fun;
 }
 
+bool
+js::IsConstructor(const Value &v)
+{
+    // Step 2.
+    if (!v.isObject())
+        return false;
+
+    // Step 3-4, a bit complex for us, since we have several flavors of
+    // [[Construct]] internal method.
+    JSObject &obj = v.toObject();
+    if (obj.is<JSFunction>()) {
+        JSFunction &fun = obj.as<JSFunction>();
+        return fun.isNativeConstructor() || fun.isInterpretedConstructor();
+    }
+    return obj.getClass()->construct != NULL;
+}
+
 void
 js::ReportIncompatibleMethod(JSContext *cx, CallReceiver call, Class *clasp)
 {
@@ -1753,3 +1778,18 @@ JSObject::hasIdempotentProtoChain() const
     MOZ_ASSUME_UNREACHABLE("Should not get here");
 }
 
+namespace JS {
+namespace detail {
+
+JS_PUBLIC_API(void)
+CheckIsValidConstructible(Value calleev)
+{
+    JSObject *callee = &calleev.toObject();
+    if (callee->is<JSFunction>())
+        JS_ASSERT(callee->as<JSFunction>().isNativeConstructor());
+    else
+        JS_ASSERT(callee->getClass()->construct != NULL);
+}
+
+} // namespace detail
+} // namespace JS

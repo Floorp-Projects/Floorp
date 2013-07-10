@@ -258,14 +258,17 @@ HTMLVideoElement::NotifyOwnerDocumentActivityChanged()
   WakeLockUpdate();
 }
 
-already_AddRefed<dom::VideoPlaybackQuality>
-HTMLVideoElement::VideoPlaybackQuality()
+already_AddRefed<VideoPlaybackQuality>
+HTMLVideoElement::GetVideoPlaybackQuality()
 {
+  DOMHighResTimeStamp creationTime = 0;
   nsPIDOMWindow* window = OwnerDoc()->GetInnerWindow();
-  NS_ENSURE_TRUE(window, nullptr);
-  nsPerformance* perf = window->GetPerformance();
-  NS_ENSURE_TRUE(perf, nullptr);
-  DOMHighResTimeStamp creationTime = perf->GetDOMTiming()->TimeStampToDOMHighRes(TimeStamp::Now());
+  if (window) {
+    nsPerformance* perf = window->GetPerformance();
+    if (perf) {
+      creationTime = perf->GetDOMTiming()->TimeStampToDOMHighRes(TimeStamp::Now());
+    }
+  }
 
   uint64_t totalFrames = 0;
   uint64_t droppedFrames = 0;
@@ -279,9 +282,9 @@ HTMLVideoElement::VideoPlaybackQuality()
     playbackJitter = stats.GetPlaybackJitter();
   }
 
-  nsRefPtr<dom::VideoPlaybackQuality> playbackQuality =
-    new dom::VideoPlaybackQuality(this, creationTime, totalFrames, droppedFrames,
-                                  corruptedFrames, playbackJitter);
+  nsRefPtr<VideoPlaybackQuality> playbackQuality =
+    new VideoPlaybackQuality(this, creationTime, totalFrames, droppedFrames,
+                             corruptedFrames, playbackJitter);
   return playbackQuality.forget();
 }
 

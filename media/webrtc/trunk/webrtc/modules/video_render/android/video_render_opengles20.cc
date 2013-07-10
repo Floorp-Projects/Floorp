@@ -68,7 +68,7 @@ const char VideoRenderOpenGles20::g_fragmentShader[] = {
   "  gl_FragColor=vec4(r,g,b,1.0);\n"
   "}\n" };
 
-VideoRenderOpenGles20::VideoRenderOpenGles20(WebRtc_Word32 id) :
+VideoRenderOpenGles20::VideoRenderOpenGles20(int32_t id) :
     _id(id),
     _textureWidth(-1),
     _textureHeight(-1) {
@@ -88,8 +88,7 @@ VideoRenderOpenGles20::VideoRenderOpenGles20(WebRtc_Word32 id) :
 VideoRenderOpenGles20::~VideoRenderOpenGles20() {
 }
 
-WebRtc_Word32 VideoRenderOpenGles20::Setup(WebRtc_Word32 width,
-                                           WebRtc_Word32 height) {
+int32_t VideoRenderOpenGles20::Setup(int32_t width, int32_t height) {
   WEBRTC_TRACE(kTraceDebug, kTraceVideoRenderer, _id,
                "%s: width %d, height %d", __FUNCTION__, (int) width,
                (int) height);
@@ -174,11 +173,11 @@ WebRtc_Word32 VideoRenderOpenGles20::Setup(WebRtc_Word32 width,
 // SetCoordinates
 // Sets the coordinates where the stream shall be rendered.
 // Values must be between 0 and 1.
-WebRtc_Word32 VideoRenderOpenGles20::SetCoordinates(WebRtc_Word32 zOrder,
-                                                    const float left,
-                                                    const float top,
-                                                    const float right,
-                                                    const float bottom) {
+int32_t VideoRenderOpenGles20::SetCoordinates(int32_t zOrder,
+                                              const float left,
+                                              const float top,
+                                              const float right,
+                                              const float bottom) {
   if ((top > 1 || top < 0) || (right > 1 || right < 0) ||
       (bottom > 1 || bottom < 0) || (left > 1 || left < 0)) {
     WEBRTC_TRACE(kTraceError, kTraceVideoRenderer, _id,
@@ -215,8 +214,7 @@ WebRtc_Word32 VideoRenderOpenGles20::SetCoordinates(WebRtc_Word32 zOrder,
   return 0;
 }
 
-WebRtc_Word32 VideoRenderOpenGles20::Render(const I420VideoFrame&
-                                            frameToRender) {
+int32_t VideoRenderOpenGles20::Render(const I420VideoFrame& frameToRender) {
 
   if (frameToRender.IsZeroSize()) {
     return -1;
@@ -232,9 +230,7 @@ WebRtc_Word32 VideoRenderOpenGles20::Render(const I420VideoFrame&
       _textureHeight != (GLsizei) frameToRender.height()) {
     SetupTextures(frameToRender);
   }
-  else {
-    UpdateTextures(frameToRender);
-  }
+  UpdateTextures(frameToRender);
 
   glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_BYTE, g_indices);
   checkGlError("glDrawArrays");
@@ -328,6 +324,17 @@ void VideoRenderOpenGles20::checkGlError(const char* op) {
 #endif
 }
 
+static void InitializeTexture(int name, int id, int width, int height) {
+  glActiveTexture(name);
+  glBindTexture(GL_TEXTURE_2D, id);
+  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, width, height, 0,
+               GL_LUMINANCE, GL_UNSIGNED_BYTE, NULL);
+}
+
 void VideoRenderOpenGles20::SetupTextures(const I420VideoFrame& frameToRender) {
   WEBRTC_TRACE(kTraceDebug, kTraceVideoRenderer, _id,
                "%s: width %d, height %d", __FUNCTION__,
@@ -337,46 +344,10 @@ void VideoRenderOpenGles20::SetupTextures(const I420VideoFrame& frameToRender) {
   const GLsizei height = frameToRender.height();
 
   glGenTextures(3, _textureIds); //Generate  the Y, U and V texture
-  GLuint currentTextureId = _textureIds[0]; // Y
-  glActiveTexture( GL_TEXTURE0);
-  glBindTexture(GL_TEXTURE_2D, currentTextureId);
+  InitializeTexture(GL_TEXTURE0, _textureIds[0], width, height);
+  InitializeTexture(GL_TEXTURE1, _textureIds[1], width / 2, height / 2);
+  InitializeTexture(GL_TEXTURE2, _textureIds[2], width / 2, height / 2);
 
-  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, width, height, 0,
-               GL_LUMINANCE, GL_UNSIGNED_BYTE,
-               (const GLvoid*) frameToRender.buffer(kYPlane));
-
-  currentTextureId = _textureIds[1]; // U
-  glActiveTexture( GL_TEXTURE1);
-  glBindTexture(GL_TEXTURE_2D, currentTextureId);
-
-  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-  const WebRtc_UWord8* uComponent = frameToRender.buffer(kUPlane);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, width / 2, height / 2, 0,
-               GL_LUMINANCE, GL_UNSIGNED_BYTE, (const GLvoid*) uComponent);
-
-  currentTextureId = _textureIds[2]; // V
-  glActiveTexture( GL_TEXTURE2);
-  glBindTexture(GL_TEXTURE_2D, currentTextureId);
-
-  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-  const WebRtc_UWord8* vComponent = frameToRender.buffer(kVPlane);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, width / 2, height / 2, 0,
-               GL_LUMINANCE, GL_UNSIGNED_BYTE, (const GLvoid*) vComponent);
   checkGlError("SetupTextures");
 
   _textureWidth = width;

@@ -9,12 +9,12 @@
 
 #include "jscompartment.h"
 #include "jsgc.h"
-#include "jstypedarray.h"
 #include "jsutil.h"
 
 #include "gc/GCInternals.h"
 #include "gc/Memory.h"
 #include "vm/Debugger.h"
+#include "vm/TypedArrayObject.h"
 
 #include "jscompartmentinlines.h"
 #include "jsobjinlines.h"
@@ -140,6 +140,7 @@ js::Nursery::allocateSlots(JSContext *cx, JSObject *obj, uint32_t nslots)
 ObjectElements *
 js::Nursery::allocateElements(JSContext *cx, JSObject *obj, uint32_t nelems)
 {
+    JS_ASSERT(nelems >= ObjectElements::VALUES_PER_HEADER);
     return reinterpret_cast<ObjectElements *>(allocateSlots(cx, obj, nelems));
 }
 
@@ -296,6 +297,50 @@ js::Nursery::allocateFromTenured(Zone *zone, AllocKind thingKind)
     return zone->allocator.arenas.allocateFromArena(zone, thingKind);
 }
 
+void
+js::Nursery::setSlotsForwardingPointer(HeapSlot *oldSlots, HeapSlot *newSlots, uint32_t nslots)
+{
+    JS_ASSERT(nslots > 0);
+    JS_ASSERT(isInside(oldSlots));
+    JS_ASSERT(!isInside(newSlots));
+    *reinterpret_cast<HeapSlot **>(oldSlots) = newSlots;
+}
+
+void
+js::Nursery::setElementsForwardingPointer(ObjectElements *oldHeader, ObjectElements *newHeader,
+                                          uint32_t nelems)
+{
+    /*
+     * If the JIT has hoisted a zero length pointer, then we do not need to
+     * relocate it because reads and writes to/from this pointer are invalid.
+     */
+    if (nelems - ObjectElements::VALUES_PER_HEADER < 1)
+        return;
+    JS_ASSERT(isInside(oldHeader));
+    JS_ASSERT(!isInside(newHeader));
+    *reinterpret_cast<HeapSlot **>(oldHeader->elements()) = newHeader->elements();
+}
+
+void
+js::Nursery::forwardBufferPointer(HeapSlot **pSlotsElems)
+{
+    HeapSlot *old = *pSlotsElems;
+
+    if (!isInside(old))
+        return;
+
+    /*
+     * If the elements buffer is zero length, the "first" item could be inside
+     * of the next object or past the end of the allocable area.  However,
+     * since we always store the runtime as the last word in the nursery,
+     * isInside will still be true, even if this zero-size allocation abuts the
+     * end of the allocable area. Thus, it is always safe to read the first
+     * word of |old| here.
+     */
+    *pSlotsElems = *reinterpret_cast<HeapSlot **>(old);
+    JS_ASSERT(!isInside(*pSlotsElems));
+}
+
 void *
 js::Nursery::moveToTenured(MinorCollectionTracer *trc, JSObject *src)
 {
@@ -355,6 +400,7 @@ js::Nursery::moveSlotsToTenured(JSObject *dst, JSObject *src, AllocKind dstKind)
     size_t count = src->numDynamicSlots();
     dst->slots = zone->pod_malloc<HeapSlot>(count);
     PodCopy(dst->slots, src->slots, count);
+    setSlotsForwardingPointer(src->slots, dst->slots, count);
     return count * sizeof(HeapSlot);
 }
 
@@ -387,6 +433,7 @@ js::Nursery::moveElementsToTenured(JSObject *dst, JSObject *src, AllocKind dstKi
             dstHeader = dst->getElementsHeader();
         }
         js_memcpy(dstHeader, srcHeader, nbytes);
+        setElementsForwardingPointer(srcHeader, dstHeader, nbytes / sizeof(HeapSlot));
         dst->elements = dstHeader->elements();
         return src->hasDynamicElements() ? nbytes : 0;
     }
@@ -398,14 +445,17 @@ js::Nursery::moveElementsToTenured(JSObject *dst, JSObject *src, AllocKind dstKi
         dst->setFixedElements();
         dstHeader = dst->getElementsHeader();
         js_memcpy(dstHeader, srcHeader, nslots * sizeof(HeapSlot));
+        setElementsForwardingPointer(srcHeader, dstHeader, nslots);
         return nslots * sizeof(HeapSlot);
     }
 
+    JS_ASSERT(nslots > 2);
     size_t nbytes = nslots * sizeof(HeapValue);
     dstHeader = static_cast<ObjectElements *>(zone->malloc_(nbytes));
     if (!dstHeader)
         MOZ_CRASH();
     js_memcpy(dstHeader, srcHeader, nslots * sizeof(HeapSlot));
+    setElementsForwardingPointer(srcHeader, dstHeader, nslots);
     dst->elements = dstHeader->elements();
     return nslots * sizeof(HeapSlot);
 }
@@ -567,7 +617,6 @@ js::Nursery::collect(JSRuntime *rt, JS::gcreason::Reason reason)
     if (rt->gcBytes >= rt->gcMaxBytes)
         disable();
 }
-
 
 void
 js::Nursery::sweep(FreeOp *fop)

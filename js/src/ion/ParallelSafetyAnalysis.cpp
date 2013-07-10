@@ -13,8 +13,9 @@
 #include "ion/IonSpewer.h"
 #include "ion/UnreachableCodeElimination.h"
 #include "ion/IonAnalysis.h"
-
 #include "vm/Stack.h"
+
+#include "jsinferinlines.h"
 
 using namespace js;
 using namespace ion;
@@ -38,6 +39,7 @@ using parallel::SpewCompile;
 
 #define PERMIT(T) (1 << T)
 
+#define PERMIT_INT32 (PERMIT(MIRType_Int32))
 #define PERMIT_NUMERIC (PERMIT(MIRType_Int32) | PERMIT(MIRType_Double))
 
 #define SPECIALIZED_OP(op, flags)                                               \
@@ -45,15 +47,15 @@ using parallel::SpewCompile;
         return visitSpecializedInstruction(ins, ins->specialization(), flags);  \
     }
 
-#define UNSAFE_OP(op)                                               \
-    virtual bool visit##op(M##op *ins) {                            \
-        SpewMIR(ins, "Unsafe");                                     \
-        return markUnsafe();                                        \
+#define UNSAFE_OP(op)                                                         \
+    virtual bool visit##op(M##op *ins) {                                      \
+        SpewMIR(ins, "Unsafe");                                               \
+        return markUnsafe();                                                  \
     }
 
-#define WRITE_GUARDED_OP(op, obj)                   \
-    virtual bool visit##op(M##op *prop) {           \
-        return insertWriteGuard(prop, prop->obj()); \
+#define WRITE_GUARDED_OP(op, obj)                                             \
+    virtual bool visit##op(M##op *prop) {                                     \
+        return insertWriteGuard(prop, prop->obj());                           \
     }
 
 #define MAYBE_WRITE_GUARDED_OP(op, obj)                                       \
@@ -137,14 +139,14 @@ class ParallelSafetyVisitor : public MInstructionVisitor
     UNSAFE_OP(GetDynamicName)
     UNSAFE_OP(FilterArguments)
     UNSAFE_OP(CallDirectEval)
-    SAFE_OP(BitNot)
+    SPECIALIZED_OP(BitNot, PERMIT_INT32)
     UNSAFE_OP(TypeOf)
     SAFE_OP(ToId)
-    SAFE_OP(BitAnd)
-    SAFE_OP(BitOr)
-    SAFE_OP(BitXor)
-    SAFE_OP(Lsh)
-    SAFE_OP(Rsh)
+    SPECIALIZED_OP(BitAnd, PERMIT_INT32)
+    SPECIALIZED_OP(BitOr, PERMIT_INT32)
+    SPECIALIZED_OP(BitXor, PERMIT_INT32)
+    SPECIALIZED_OP(Lsh, PERMIT_INT32)
+    SPECIALIZED_OP(Rsh, PERMIT_INT32)
     SPECIALIZED_OP(Ursh, PERMIT_NUMERIC)
     SPECIALIZED_OP(MinMax, PERMIT_NUMERIC)
     SAFE_OP(Abs)
@@ -168,6 +170,7 @@ class ParallelSafetyVisitor : public MInstructionVisitor
     SAFE_OP(ToDouble)
     SAFE_OP(ToInt32)
     SAFE_OP(TruncateToInt32)
+    SAFE_OP(MaybeToDoubleElement)
     CUSTOM_OP(ToString)
     SAFE_OP(NewSlots)
     CUSTOM_OP(NewArray)
@@ -194,7 +197,7 @@ class ParallelSafetyVisitor : public MInstructionVisitor
     SAFE_OP(GetPropertyCache)
     SAFE_OP(GetPropertyPolymorphic)
     UNSAFE_OP(SetPropertyPolymorphic)
-    UNSAFE_OP(GetElementCache)
+    SAFE_OP(GetElementCache)
     UNSAFE_OP(SetElementCache)
     UNSAFE_OP(BindNameCache)
     SAFE_OP(GuardShape)

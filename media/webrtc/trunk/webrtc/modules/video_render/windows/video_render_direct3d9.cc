@@ -68,8 +68,8 @@ D3D9Channel::~D3D9Channel()
     }
 }
 
-void D3D9Channel::SetStreamSettings(WebRtc_UWord16 streamId,
-                                        WebRtc_UWord32 zOrder,
+void D3D9Channel::SetStreamSettings(uint16_t streamId,
+                                        uint32_t zOrder,
                                         float startWidth,
                                         float startHeight,
                                         float stopWidth,
@@ -83,8 +83,8 @@ void D3D9Channel::SetStreamSettings(WebRtc_UWord16 streamId,
     _stopHeight = stopHeight;
 }
 
-int D3D9Channel::GetStreamSettings(WebRtc_UWord16 streamId,
-                                       WebRtc_UWord32& zOrder,
+int D3D9Channel::GetStreamSettings(uint16_t streamId,
+                                       uint32_t& zOrder,
                                        float& startWidth,
                                        float& startHeight,
                                        float& stopWidth,
@@ -142,8 +142,8 @@ int D3D9Channel::FrameSizeChange(int width, int height, int numberOfStreams)
     return 0;
 }
 
-WebRtc_Word32 D3D9Channel::RenderFrame(const WebRtc_UWord32 streamId,
-                                       I420VideoFrame& videoFrame)
+int32_t D3D9Channel::RenderFrame(const uint32_t streamId,
+                                 I420VideoFrame& videoFrame)
 {
     CriticalSectionScoped cs(_critSect);
     if (_width != videoFrame.width() || _height != videoFrame.height())
@@ -539,7 +539,7 @@ int VideoRenderDirect3D9::InitDevice()
     return 0;
 }
 
-WebRtc_Word32 VideoRenderDirect3D9::Init()
+int32_t VideoRenderDirect3D9::Init()
 {
     WEBRTC_TRACE(kTraceInfo, kTraceVideo, -1,
                  "VideoRenderDirect3D9::Init");
@@ -570,7 +570,7 @@ WebRtc_Word32 VideoRenderDirect3D9::Init()
     return InitDevice();
 }
 
-WebRtc_Word32 VideoRenderDirect3D9::ChangeWindow(void* window)
+int32_t VideoRenderDirect3D9::ChangeWindow(void* window)
 {
     WEBRTC_TRACE(kTraceError, kTraceVideo, -1, "Not supported.");
     return -1;
@@ -636,7 +636,7 @@ int VideoRenderDirect3D9::UpdateRenderSurface()
                     textureWidth = channelObj->GetTextureWidth();
                     textureHeight = channelObj->GetTextureHeight();
 
-                    WebRtc_UWord32 zOrder;
+                    uint32_t zOrder;
                     float startWidth, startHeight, stopWidth, stopHeight;
                     channelObj->GetStreamSettings(0, zOrder, startWidth,
                                                   startHeight, stopWidth,
@@ -815,7 +815,7 @@ D3D9Channel* VideoRenderDirect3D9::GetD3DChannel(int channel)
     return ddobj;
 }
 
-WebRtc_Word32 VideoRenderDirect3D9::DeleteChannel(const WebRtc_UWord32 streamId)
+int32_t VideoRenderDirect3D9::DeleteChannel(const uint32_t streamId)
 {
     CriticalSectionScoped cs(&_refD3DCritsect);
 
@@ -843,8 +843,8 @@ WebRtc_Word32 VideoRenderDirect3D9::DeleteChannel(const WebRtc_UWord32 streamId)
     return -1;
 }
 
-VideoRenderCallback* VideoRenderDirect3D9::CreateChannel(const WebRtc_UWord32 channel,
-                                                                 const WebRtc_UWord32 zOrder,
+VideoRenderCallback* VideoRenderDirect3D9::CreateChannel(const uint32_t channel,
+                                                                 const uint32_t zOrder,
                                                                  const float left,
                                                                  const float top,
                                                                  const float right,
@@ -871,13 +871,11 @@ VideoRenderCallback* VideoRenderDirect3D9::CreateChannel(const WebRtc_UWord32 ch
     return d3dChannel;
 }
 
-WebRtc_Word32 VideoRenderDirect3D9::GetStreamSettings(const WebRtc_UWord32 channel,
-                                                          const WebRtc_UWord16 streamId,
-                                                          WebRtc_UWord32& zOrder,
-                                                          float& left,
-                                                          float& top,
-                                                          float& right,
-                                                          float& bottom)
+int32_t VideoRenderDirect3D9::GetStreamSettings(const uint32_t channel,
+                                                const uint16_t streamId,
+                                                uint32_t& zOrder,
+                                                float& left, float& top,
+                                                float& right, float& bottom)
 {
     std::map<int, D3D9Channel*>::iterator ddIt;
     ddIt = _d3dChannels.find(channel & 0x0000ffff);
@@ -939,13 +937,13 @@ int VideoRenderDirect3D9::UpdateVerticeBuffer(LPDIRECT3DVERTEXBUFFER9 pVB,
     return 0;
 }
 
-WebRtc_Word32 VideoRenderDirect3D9::StartRender()
+int32_t VideoRenderDirect3D9::StartRender()
 {
     WEBRTC_TRACE(kTraceError, kTraceVideo, -1, "Not supported.");
     return 0;
 }
 
-WebRtc_Word32 VideoRenderDirect3D9::StopRender()
+int32_t VideoRenderDirect3D9::StopRender()
 {
     WEBRTC_TRACE(kTraceError, kTraceVideo, -1, "Not supported.");
     return 0;
@@ -956,45 +954,39 @@ bool VideoRenderDirect3D9::IsFullScreen()
     return _fullScreen;
 }
 
-WebRtc_Word32 VideoRenderDirect3D9::SetCropping(const WebRtc_UWord32 channel,
-                                                    const WebRtc_UWord16 streamId,
-                                                    const float left,
-                                                    const float top,
-                                                    const float right,
-                                                    const float bottom)
+int32_t VideoRenderDirect3D9::SetCropping(const uint32_t channel,
+                                          const uint16_t streamId,
+                                          const float left, const float top,
+                                          const float right, const float bottom)
 {
     WEBRTC_TRACE(kTraceError, kTraceVideo, -1, "Not supported.");
     return 0;
 }
 
-WebRtc_Word32 VideoRenderDirect3D9::SetTransparentBackground(
+int32_t VideoRenderDirect3D9::SetTransparentBackground(
                                                                  const bool enable)
 {
     WEBRTC_TRACE(kTraceError, kTraceVideo, -1, "Not supported.");
     return 0;
 }
 
-WebRtc_Word32 VideoRenderDirect3D9::SetText(const WebRtc_UWord8 textId,
-                                                const WebRtc_UWord8* text,
-                                                const WebRtc_Word32 textLength,
-                                                const WebRtc_UWord32 colorText,
-                                                const WebRtc_UWord32 colorBg,
-                                                const float left,
-                                                const float top,
-                                                const float rigth,
-                                                const float bottom)
+int32_t VideoRenderDirect3D9::SetText(const uint8_t textId,
+                                      const uint8_t* text,
+                                      const int32_t textLength,
+                                      const uint32_t colorText,
+                                      const uint32_t colorBg,
+                                      const float left, const float top,
+                                      const float rigth, const float bottom)
 {
     WEBRTC_TRACE(kTraceError, kTraceVideo, -1, "Not supported.");
     return 0;
 }
 
-WebRtc_Word32 VideoRenderDirect3D9::SetBitmap(const void* bitMap,
-                                                  const WebRtc_UWord8 pictureId,
-                                                  const void* colorKey,
-                                                  const float left,
-                                                  const float top,
-                                                  const float right,
-                                                  const float bottom)
+int32_t VideoRenderDirect3D9::SetBitmap(const void* bitMap,
+                                        const uint8_t pictureId,
+                                        const void* colorKey,
+                                        const float left, const float top,
+                                        const float right, const float bottom)
 {
     if (!bitMap)
     {
@@ -1141,8 +1133,8 @@ WebRtc_Word32 VideoRenderDirect3D9::SetBitmap(const void* bitMap,
 
 }
 
-WebRtc_Word32 VideoRenderDirect3D9::GetGraphicsMemory(WebRtc_UWord64& totalMemory,
-                                                          WebRtc_UWord64& availableMemory)
+int32_t VideoRenderDirect3D9::GetGraphicsMemory(uint64_t& totalMemory,
+                                                uint64_t& availableMemory)
 {
     if (_totalMemory == -1 || _availableMemory == -1)
     {
@@ -1155,13 +1147,13 @@ WebRtc_Word32 VideoRenderDirect3D9::GetGraphicsMemory(WebRtc_UWord64& totalMemor
     return 0;
 }
 
-WebRtc_Word32 VideoRenderDirect3D9::ConfigureRenderer(const WebRtc_UWord32 channel,
-                                                          const WebRtc_UWord16 streamId,
-                                                          const unsigned int zOrder,
-                                                          const float left,
-                                                          const float top,
-                                                          const float right,
-                                                          const float bottom)
+int32_t VideoRenderDirect3D9::ConfigureRenderer(const uint32_t channel,
+                                                const uint16_t streamId,
+                                                const unsigned int zOrder,
+                                                const float left,
+                                                const float top,
+                                                const float right,
+                                                const float bottom)
 {
     std::map<int, D3D9Channel*>::iterator ddIt;
     ddIt = _d3dChannels.find(channel & 0x0000ffff);

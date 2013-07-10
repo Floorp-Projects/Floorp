@@ -33,10 +33,10 @@
 #include "nsIRedirectResultListener.h"
 #include "mozilla/TimeStamp.h"
 #include "nsError.h"
+#include "nsPrintfCString.h"
 #include "nsAlgorithm.h"
 #include "GeckoProfiler.h"
 #include "nsIConsoleService.h"
-#include "base/compiler_specific.h"
 #include "NullHttpTransaction.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/VisualEventTracer.h"
@@ -297,7 +297,7 @@ NS_IMPL_ISUPPORTS_INHERITED1(HttpCacheQuery, nsRunnable, nsICacheListener)
 //-----------------------------------------------------------------------------
 
 nsHttpChannel::nsHttpChannel()
-    : ALLOW_THIS_IN_INITIALIZER_LIST(HttpAsyncAborter<nsHttpChannel>(this))
+    : HttpAsyncAborter<nsHttpChannel>(MOZ_THIS_IN_INITIALIZER_LIST())
     , mLogicalOffset(0)
     , mCacheAccess(0)
     , mCacheEntryDeviceTelemetryID(UNKNOWN_DEVICE)
@@ -4393,6 +4393,8 @@ NS_INTERFACE_MAP_BEGIN(nsHttpChannel)
     NS_INTERFACE_MAP_ENTRY(nsIApplicationCacheChannel)
     NS_INTERFACE_MAP_ENTRY(nsIAsyncVerifyRedirectCallback)
     NS_INTERFACE_MAP_ENTRY(nsITimedChannel)
+    NS_INTERFACE_MAP_ENTRY(nsIThreadRetargetableRequest)
+    NS_INTERFACE_MAP_ENTRY(nsIThreadRetargetableStreamListener)
 NS_INTERFACE_MAP_END_INHERITING(HttpBaseChannel)
 
 //-----------------------------------------------------------------------------
@@ -5228,6 +5230,37 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult st
 // nsHttpChannel::nsIStreamListener
 //-----------------------------------------------------------------------------
 
+class OnTransportStatusAsyncEvent : public nsRunnable
+{
+public:
+    OnTransportStatusAsyncEvent(nsITransportEventSink* aEventSink,
+                                nsresult aTransportStatus,
+                                uint64_t aProgress,
+                                uint64_t aProgressMax)
+    : mEventSink(aEventSink)
+    , mTransportStatus(aTransportStatus)
+    , mProgress(aProgress)
+    , mProgressMax(aProgressMax)
+    {
+        MOZ_ASSERT(!NS_IsMainThread(), "Shouldn't be created on main thread");
+    }
+
+    NS_IMETHOD Run()
+    {
+        MOZ_ASSERT(NS_IsMainThread(), "Should run on main thread");
+        if (mEventSink) {
+            mEventSink->OnTransportStatus(nullptr, mTransportStatus,
+                                          mProgress, mProgressMax);
+        }
+        return NS_OK;
+    }
+private:
+    nsCOMPtr<nsITransportEventSink> mEventSink;
+    nsresult mTransportStatus;
+    uint64_t mProgress;
+    uint64_t mProgressMax;
+};
+
 NS_IMETHODIMP
 nsHttpChannel::OnDataAvailable(nsIRequest *request, nsISupports *ctxt,
                                nsIInputStream *input,
@@ -5272,7 +5305,14 @@ nsHttpChannel::OnDataAvailable(nsIRequest *request, nsISupports *ctxt,
         uint64_t progress = mLogicalOffset + uint64_t(count);
         MOZ_ASSERT(progress <= progressMax, "unexpected progress values");
 
-        OnTransportStatus(nullptr, transportStatus, progress, progressMax);
+        if (NS_IsMainThread()) {
+            OnTransportStatus(nullptr, transportStatus, progress, progressMax);
+        } else {
+            nsresult rv = NS_DispatchToMainThread(
+                new OnTransportStatusAsyncEvent(this, transportStatus,
+                                                progress, progressMax));
+            NS_ENSURE_SUCCESS(rv, rv);
+        }
 
         //
         // we have to manually keep the logical offset of the stream up-to-date.
@@ -5297,6 +5337,67 @@ nsHttpChannel::OnDataAvailable(nsIRequest *request, nsISupports *ctxt,
 }
 
 //-----------------------------------------------------------------------------
+// nsHttpChannel::nsIThreadRetargetableRequest
+//-----------------------------------------------------------------------------
+
+NS_IMETHODIMP
+nsHttpChannel::RetargetDeliveryTo(nsIEventTarget* aNewTarget)
+{
+    MOZ_ASSERT(NS_IsMainThread(), "Should be called on main thread only");
+
+    NS_ENSURE_ARG(aNewTarget);
+    if (aNewTarget == NS_GetCurrentThread()) {
+        NS_WARNING("Retargeting delivery to same thread");
+        return NS_OK;
+    }
+    NS_ENSURE_TRUE(mTransactionPump || mCachePump, NS_ERROR_NOT_AVAILABLE);
+
+    nsresult rv = NS_OK;
+    // If both cache pump and transaction pump exist, we're probably dealing
+    // with partially cached content. So, we must be able to retarget both.
+    nsCOMPtr<nsIThreadRetargetableRequest> retargetableCachePump;
+    nsCOMPtr<nsIThreadRetargetableRequest> retargetableTransactionPump;
+    if (mCachePump) {
+        retargetableCachePump = do_QueryObject(mCachePump);
+        // nsInputStreamPump should implement this interface.
+        MOZ_ASSERT(retargetableCachePump);
+        rv = retargetableCachePump->RetargetDeliveryTo(aNewTarget);
+    }
+    if (NS_SUCCEEDED(rv) && mTransactionPump) {
+        retargetableTransactionPump = do_QueryObject(mTransactionPump);
+        // nsInputStreamPump should implement this interface.
+        MOZ_ASSERT(retargetableTransactionPump);
+        rv = retargetableTransactionPump->RetargetDeliveryTo(aNewTarget);
+
+        // If retarget fails for transaction pump, we must restore mCachePump.
+        if (NS_FAILED(rv) && retargetableCachePump) {
+            nsCOMPtr<nsIThread> mainThread;
+            rv = NS_GetMainThread(getter_AddRefs(mainThread));
+            NS_ENSURE_SUCCESS(rv, rv);
+            rv = retargetableCachePump->RetargetDeliveryTo(mainThread);
+        }
+    }
+    return rv;
+}
+
+//-----------------------------------------------------------------------------
+// nsHttpChannel::nsThreadRetargetableStreamListener
+//-----------------------------------------------------------------------------
+
+NS_IMETHODIMP
+nsHttpChannel::CheckListenerChain()
+{
+    NS_ASSERTION(NS_IsMainThread(), "Should be on main thread!");
+    nsresult rv = NS_OK;
+    nsCOMPtr<nsIThreadRetargetableStreamListener> retargetableListener =
+        do_QueryInterface(mListener, &rv);
+    if (retargetableListener) {
+        rv = retargetableListener->CheckListenerChain();
+    }
+    return rv;
+}
+
+//-----------------------------------------------------------------------------
 // nsHttpChannel::nsITransportEventSink
 //-----------------------------------------------------------------------------
 
@@ -5304,6 +5405,7 @@ NS_IMETHODIMP
 nsHttpChannel::OnTransportStatus(nsITransport *trans, nsresult status,
                                  uint64_t progress, uint64_t progressMax)
 {
+    MOZ_ASSERT(NS_IsMainThread(), "Should be on main thread only");
     // cache the progress sink so we don't have to query for it each time.
     if (!mProgressSink)
         GetCallback(mProgressSink);
@@ -5330,7 +5432,13 @@ nsHttpChannel::OnTransportStatus(nsITransport *trans, nsresult status,
 
         if (progress > 0) {
             MOZ_ASSERT(progress <= progressMax, "unexpected progress values");
-            mProgressSink->OnProgress(this, nullptr, progress, progressMax);
+            // Try to get mProgressSink if it was nulled out during OnStatus.
+            if (!mProgressSink) {
+                GetCallback(mProgressSink);
+            }
+            if (mProgressSink) {
+                mProgressSink->OnProgress(this, nullptr, progress, progressMax);
+            }
         }
     }
 #ifdef DEBUG

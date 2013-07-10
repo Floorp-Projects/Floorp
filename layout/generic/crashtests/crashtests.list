@@ -118,7 +118,7 @@ load 385344-2.html
 load 385414-1.html
 load 385414-2.html
 load 385426-1.html
-load 385526.html
+skip-if(B2G) load 385526.html # Bug 891347
 load 385681.html
 load 385885-1.xul
 load 386799-1.html

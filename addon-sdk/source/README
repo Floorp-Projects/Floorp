@@ -22,12 +22,8 @@ Windows users using cmd.exe should instead run:
 
   bin\activate.bat
 
-Then run:
-
-  cfx docs
-
-This should start a documentation server and open a web browser
-with further instructions.
+Then go to https://addons.mozilla.org/developers/docs/sdk/latest/dev-guide to
+browse the SDK documentation.
 
 If you get an error when running cfx or have any other problems getting
 started, see the "Troubleshooting" guide at:

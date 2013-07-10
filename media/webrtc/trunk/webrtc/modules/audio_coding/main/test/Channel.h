@@ -26,11 +26,11 @@ namespace webrtc {
 
 struct ACMTestFrameSizeStats
 {
-    WebRtc_UWord16 frameSizeSample;
-    WebRtc_Word16  maxPayloadLen;
-    WebRtc_UWord32 numPackets;
-    WebRtc_UWord64 totalPayloadLenByte;
-    WebRtc_UWord64 totalEncodedSamples;
+    uint16_t frameSizeSample;
+    int16_t  maxPayloadLen;
+    uint32_t numPackets;
+    uint64_t totalPayloadLenByte;
+    uint64_t totalEncodedSamples;
     double         rateBitPerSec;
     double         usageLenSec;
 
@@ -39,9 +39,9 @@ struct ACMTestFrameSizeStats
 struct ACMTestPayloadStats
 {
     bool                  newPacket;
-    WebRtc_Word16         payloadType;
-    WebRtc_Word16         lastPayloadLenByte;
-    WebRtc_UWord32        lastTimestamp;
+    int16_t         payloadType;
+    int16_t         lastPayloadLenByte;
+    uint32_t        lastTimestamp;
     ACMTestFrameSizeStats frameSizeStats[MAX_NUM_FRAMESIZES];
 };
 
@@ -50,15 +50,15 @@ class Channel: public AudioPacketizationCallback
 public:
 
     Channel(
-        WebRtc_Word16 chID = -1);
+        int16_t chID = -1);
     ~Channel();
 
-    WebRtc_Word32 SendData(
+    int32_t SendData(
         const FrameType       frameType,
-        const WebRtc_UWord8   payloadType,
-        const WebRtc_UWord32  timeStamp,
-        const WebRtc_UWord8*  payloadData,
-        const WebRtc_UWord16  payloadSize,
+        const uint8_t   payloadType,
+        const uint32_t  timeStamp,
+        const uint8_t*  payloadData,
+        const uint16_t  payloadSize,
         const RTPFragmentationHeader* fragmentation);
 
     void RegisterReceiverACM(
@@ -66,16 +66,16 @@ public:
 
     void ResetStats();
 
-    WebRtc_Word16 Stats(
+    int16_t Stats(
         CodecInst&           codecInst,
         ACMTestPayloadStats& payloadStats);
 
     void Stats(
-        WebRtc_UWord32* numPackets);
+        uint32_t* numPackets);
 
     void Stats(
-        WebRtc_UWord8*  payloadLenByte,
-        WebRtc_UWord32* payloadType);
+        uint8_t*  payloadLenByte,
+        uint32_t* payloadType);
 
     void PrintStats(
         CodecInst& codecInst);
@@ -85,7 +85,7 @@ public:
         _isStereo = isStereo;
     }
 
-    WebRtc_UWord32 LastInTimestamp();
+    uint32_t LastInTimestamp();
 
     void SetFECTestWithPacketLoss(bool usePacketLoss)
     {
@@ -97,27 +97,27 @@ public:
 private:
     void CalcStatistics(
         WebRtcRTPHeader& rtpInfo,
-        WebRtc_UWord16   payloadSize);
+        uint16_t   payloadSize);
 
     AudioCodingModule*      _receiverACM;
-    WebRtc_UWord16          _seqNo;
+    uint16_t          _seqNo;
     // 60msec * 32 sample(max)/msec * 2 description (maybe) * 2 bytes/sample
-    WebRtc_UWord8           _payloadData[60 * 32 * 2 * 2];
+    uint8_t           _payloadData[60 * 32 * 2 * 2];
 
     CriticalSectionWrapper* _channelCritSect;
     FILE*                   _bitStreamFile;
     bool                    _saveBitStream;
-    WebRtc_Word16           _lastPayloadType;
+    int16_t           _lastPayloadType;
     ACMTestPayloadStats     _payloadStats[MAX_NUM_PAYLOADS];
     bool                    _isStereo;
     WebRtcRTPHeader         _rtpInfo;
     bool                    _leftChannel;
-    WebRtc_UWord32          _lastInTimestamp;
+    uint32_t          _lastInTimestamp;
     // FEC Test variables
-    WebRtc_Word16           _packetLoss;
+    int16_t           _packetLoss;
     bool                    _useFECTestWithPacketLoss;
-    WebRtc_UWord64          _beginTime;
-    WebRtc_UWord64          _totalBytes;
+    uint64_t          _beginTime;
+    uint64_t          _totalBytes;
 };
 
 } // namespace webrtc

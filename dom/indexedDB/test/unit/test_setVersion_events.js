@@ -157,6 +157,21 @@ function testSteps()
 
   is(versionChangeEventCount, 3, "Saw all expected events");
 
+  event = new IDBVersionChangeEvent("versionchange");
+  ok(event, "Should be able to create an event with just passing in the type");
+  event = new IDBVersionChangeEvent("versionchange", {oldVersion: 1});
+  ok(event, "Should be able to create an event with just the old version");
+  is(event.oldVersion, 1, "Correct old version");
+  is(event.newVersion, null, "Correct new version");
+  event = new IDBVersionChangeEvent("versionchange", {newVersion: 1});
+  ok(event, "Should be able to create an event with just the new version");
+  is(event.oldVersion, 0, "Correct old version");
+  is(event.newVersion, 1, "Correct new version");
+  event = new IDBVersionChangeEvent("versionchange", {oldVersion: 1, newVersion: 2});
+  ok(event, "Should be able to create an event with both versions");
+  is(event.oldVersion, 1, "Correct old version");
+  is(event.newVersion, 2, "Correct new version");
+
   finishTest();
   yield;
 }

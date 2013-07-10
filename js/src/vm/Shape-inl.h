@@ -327,7 +327,7 @@ Shape::set(JSContext* cx, HandleObject obj, HandleObject receiver, bool strict,
     }
 
     if (attrs & JSPROP_GETTER)
-        return js_ReportGetterOnlyAssignment(cx);
+        return js_ReportGetterOnlyAssignment(cx, strict);
 
     Rooted<Shape *> self(cx, this);
     RootedId id(cx);

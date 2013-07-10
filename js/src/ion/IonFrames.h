@@ -11,6 +11,7 @@
 
 #include "mozilla/DebugOnly.h"
 
+#include "jscntxt.h"
 #include "jsfun.h"
 #include "jstypes.h"
 #include "jsutil.h"
@@ -282,6 +283,37 @@ static inline uint32_t
 MakeFrameDescriptor(uint32_t frameSize, FrameType type)
 {
     return (frameSize << FRAMESIZE_SHIFT) | type;
+}
+
+// Returns the JSScript associated with the topmost Ion frame.
+inline JSScript *
+GetTopIonJSScript(PerThreadData *pt, const SafepointIndex **safepointIndexOut, void **returnAddrOut)
+{
+    IonFrameIterator iter(pt->ionTop);
+    JS_ASSERT(iter.type() == IonFrame_Exit);
+    ++iter;
+
+    // If needed, grab the safepoint index.
+    if (safepointIndexOut)
+        *safepointIndexOut = iter.safepoint();
+
+    JS_ASSERT(iter.returnAddressToFp() != NULL);
+    if (returnAddrOut)
+        *returnAddrOut = (void *) iter.returnAddressToFp();
+
+    if (iter.isBaselineStub()) {
+        ++iter;
+        JS_ASSERT(iter.isBaselineJS());
+    }
+
+    JS_ASSERT(iter.isScripted());
+    return iter.script();
+}
+
+inline JSScript *
+GetTopIonJSScript(JSContext *cx, const SafepointIndex **safepointIndexOut, void **returnAddrOut)
+{
+    return GetTopIonJSScript(&cx->mainThread(), safepointIndexOut, returnAddrOut);
 }
 
 } // namespace ion

@@ -231,6 +231,10 @@ richgriditem[customColor] {
   color: #f1f1f1;
 }
 
+richgriditem[bending] > .tile-content {
+  transform-origin: center center;
+}
+
 /* Snapped-view variation
    We use the compact, single-column grid treatment for <=320px */
 

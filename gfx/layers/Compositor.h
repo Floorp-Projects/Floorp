@@ -94,7 +94,7 @@
  * under gfx/layers/. To add a new backend, implement at least the following
  * interfaces:
  * - Compositor (ex. CompositorOGL)
- * - TextureHost (ex. TextureImageTextureHost)
+ * - TextureHost (ex. SharedTextureHostOGL)
  * Depending on the type of data that needs to be serialized, you may need to
  * add specific TextureClient implementations.
  */
@@ -214,7 +214,7 @@ public:
    * Clients of the compositor should call this at the start of the compositing
    * process, it might be required by texture uploads etc.
    *
-   * If aFlags == CURRENT_FORCE then we will (re-)set our context on the
+   * If aFlags == ForceMakeCurrent then we will (re-)set our context on the
    * underlying API even if it is already the current context.
    */
   virtual void MakeCurrent(MakeCurrentFlags aFlags = 0) = 0;

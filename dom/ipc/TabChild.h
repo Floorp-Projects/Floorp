@@ -230,11 +230,11 @@ public:
                                   const ClonedMessageData& aData);
 
     virtual PDocumentRendererChild*
-    AllocPDocumentRenderer(const nsRect& documentRect, const gfxMatrix& transform,
-                           const nsString& bgcolor,
-                           const uint32_t& renderFlags, const bool& flushLayout,
-                           const nsIntSize& renderSize);
-    virtual bool DeallocPDocumentRenderer(PDocumentRendererChild* actor);
+    AllocPDocumentRendererChild(const nsRect& documentRect, const gfxMatrix& transform,
+                                const nsString& bgcolor,
+                                const uint32_t& renderFlags, const bool& flushLayout,
+                                const nsIntSize& renderSize);
+    virtual bool DeallocPDocumentRendererChild(PDocumentRendererChild* actor);
     virtual bool RecvPDocumentRendererConstructor(PDocumentRendererChild* actor,
                                                   const nsRect& documentRect,
                                                   const gfxMatrix& transform,
@@ -243,12 +243,12 @@ public:
                                                   const bool& flushLayout,
                                                   const nsIntSize& renderSize);
 
-    virtual PContentDialogChild* AllocPContentDialog(const uint32_t&,
-                                                     const nsCString&,
-                                                     const nsCString&,
-                                                     const InfallibleTArray<int>&,
-                                                     const InfallibleTArray<nsString>&);
-    virtual bool DeallocPContentDialog(PContentDialogChild* aDialog);
+    virtual PContentDialogChild* AllocPContentDialogChild(const uint32_t&,
+                                                          const nsCString&,
+                                                          const nsCString&,
+                                                          const InfallibleTArray<int>&,
+                                                          const InfallibleTArray<nsString>&);
+    virtual bool DeallocPContentDialogChild(PContentDialogChild* aDialog);
     static void ParamsToArrays(nsIDialogParamBlock* aParams,
                                InfallibleTArray<int>& aIntParams,
                                InfallibleTArray<nsString>& aStringParams);
@@ -269,16 +269,16 @@ public:
     }
 #endif /* DEBUG */
 
-    virtual PContentPermissionRequestChild* AllocPContentPermissionRequest(const nsCString& aType,
-                                                                           const nsCString& aAccess,
-                                                                           const IPC::Principal& aPrincipal);
-    virtual bool DeallocPContentPermissionRequest(PContentPermissionRequestChild* actor);
+    virtual PContentPermissionRequestChild* AllocPContentPermissionRequestChild(const nsCString& aType,
+                                                                                const nsCString& aAccess,
+                                                                                const IPC::Principal& aPrincipal);
+    virtual bool DeallocPContentPermissionRequestChild(PContentPermissionRequestChild* actor);
 
-    virtual POfflineCacheUpdateChild* AllocPOfflineCacheUpdate(
+    virtual POfflineCacheUpdateChild* AllocPOfflineCacheUpdateChild(
             const URIParams& manifestURI,
             const URIParams& documentURI,
             const bool& stickDocument);
-    virtual bool DeallocPOfflineCacheUpdate(POfflineCacheUpdateChild* offlineCacheUpdate);
+    virtual bool DeallocPOfflineCacheUpdateChild(POfflineCacheUpdateChild* offlineCacheUpdate);
 
     nsIWebNavigation* WebNavigation() { return mWebNav; }
 
@@ -327,18 +327,18 @@ public:
                                     nsICachedFileDescriptorListener* aCallback);
 
 protected:
-    virtual PRenderFrameChild* AllocPRenderFrame(ScrollingBehavior* aScrolling,
-                                                 TextureFactoryIdentifier* aTextureFactoryIdentifier,
-                                                 uint64_t* aLayersId) MOZ_OVERRIDE;
-    virtual bool DeallocPRenderFrame(PRenderFrameChild* aFrame) MOZ_OVERRIDE;
+    virtual PRenderFrameChild* AllocPRenderFrameChild(ScrollingBehavior* aScrolling,
+                                                      TextureFactoryIdentifier* aTextureFactoryIdentifier,
+                                                      uint64_t* aLayersId) MOZ_OVERRIDE;
+    virtual bool DeallocPRenderFrameChild(PRenderFrameChild* aFrame) MOZ_OVERRIDE;
     virtual bool RecvDestroy() MOZ_OVERRIDE;
 
     nsEventStatus DispatchWidgetEvent(nsGUIEvent& event);
 
-    virtual PIndexedDBChild* AllocPIndexedDB(const nsCString& aASCIIOrigin,
-                                             bool* /* aAllowed */);
+    virtual PIndexedDBChild* AllocPIndexedDBChild(const nsCString& aASCIIOrigin,
+                                                  bool* /* aAllowed */);
 
-    virtual bool DeallocPIndexedDB(PIndexedDBChild* aActor);
+    virtual bool DeallocPIndexedDBChild(PIndexedDBChild* aActor);
 
 private:
     /**
@@ -370,6 +370,10 @@ private:
     void DestroyWindow();
     void SetProcessNameToAppName();
     bool ProcessUpdateFrame(const mozilla::layers::FrameMetrics& aFrameMetrics);
+
+    // Update the DOM with the given display port. Finds the element based on
+    // the aFrameMetrics.mScrollId.
+    void SetDisplayPort(const FrameMetrics& aFrameMetrics);
 
     // Call RecvShow(nsIntSize(0, 0)) and block future calls to RecvShow().
     void DoFakeShow();

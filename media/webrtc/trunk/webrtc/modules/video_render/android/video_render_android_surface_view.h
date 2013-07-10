@@ -22,27 +22,24 @@ class CriticalSectionWrapper;
 
 class AndroidSurfaceViewChannel : public AndroidStream {
  public:
-  AndroidSurfaceViewChannel(WebRtc_UWord32 streamId,
+  AndroidSurfaceViewChannel(uint32_t streamId,
                             JavaVM* jvm,
                             VideoRenderAndroid& renderer,
                             jobject javaRenderObj);
   ~AndroidSurfaceViewChannel();
 
-  WebRtc_Word32 Init(WebRtc_Word32 zOrder,
-                     const float left,
-                     const float top,
-                     const float right,
-                     const float bottom);
+  int32_t Init(int32_t zOrder, const float left, const float top,
+               const float right, const float bottom);
 
   //Implement VideoRenderCallback
-  virtual WebRtc_Word32 RenderFrame(const WebRtc_UWord32 streamId,
-                                    I420VideoFrame& videoFrame);
+  virtual int32_t RenderFrame(const uint32_t streamId,
+                              I420VideoFrame& videoFrame);
 
   //Implements AndroidStream
   virtual void DeliverFrame(JNIEnv* jniEnv);
 
  private:
-  WebRtc_UWord32 _id;
+  uint32_t _id;
   CriticalSectionWrapper& _renderCritSect;
 
   I420VideoFrame _bufferToRender;
@@ -62,15 +59,15 @@ class AndroidSurfaceViewChannel : public AndroidStream {
 
 class AndroidSurfaceViewRenderer : private VideoRenderAndroid {
  public:
-  AndroidSurfaceViewRenderer(const WebRtc_Word32 id,
+  AndroidSurfaceViewRenderer(const int32_t id,
                              const VideoRenderType videoRenderType,
                              void* window,
                              const bool fullscreen);
   ~AndroidSurfaceViewRenderer();
-  WebRtc_Word32 Init();
+  int32_t Init();
   virtual AndroidStream* CreateAndroidRenderChannel(
-      WebRtc_Word32 streamId,
-      WebRtc_Word32 zOrder,
+      int32_t streamId,
+      int32_t zOrder,
       const float left,
       const float top,
       const float right,

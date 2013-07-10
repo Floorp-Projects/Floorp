@@ -45,7 +45,7 @@ const TextureFlags OwnByClient        = 0x80;
  * determine how the texture client is drawn into and how the memory
  * is shared between client and host.
  */
-enum TextureClientType
+enum DeprecatedTextureClientType
 {
   TEXTURE_CONTENT,            // dynamically drawn content
   TEXTURE_SHMEM,              // shared memory
@@ -77,7 +77,7 @@ enum CompositableType
 /**
  * How the texture host is used for composition,
  */
-enum TextureHostFlags
+enum DeprecatedTextureHostFlags
 {
   TEXTURE_HOST_DEFAULT = 0,       // The default texture host for the given
                                   // SurfaceDescriptor
@@ -126,25 +126,25 @@ const TextureIdentifier TextureOnWhiteBack = 4;
 struct TextureInfo
 {
   CompositableType mCompositableType;
-  uint32_t mTextureHostFlags;
+  uint32_t mDeprecatedTextureHostFlags;
   uint32_t mTextureFlags;
 
   TextureInfo()
     : mCompositableType(BUFFER_UNKNOWN)
-    , mTextureHostFlags(0)
+    , mDeprecatedTextureHostFlags(0)
     , mTextureFlags(0)
   {}
 
   TextureInfo(CompositableType aType)
     : mCompositableType(aType)
-    , mTextureHostFlags(0)
+    , mDeprecatedTextureHostFlags(0)
     , mTextureFlags(0)
   {}
 
   bool operator==(const TextureInfo& aOther) const
   {
     return mCompositableType == aOther.mCompositableType &&
-           mTextureHostFlags == aOther.mTextureHostFlags &&
+           mDeprecatedTextureHostFlags == aOther.mDeprecatedTextureHostFlags &&
            mTextureFlags == aOther.mTextureFlags;
   }
 };
@@ -157,6 +157,15 @@ struct TextureInfo
 enum OpenMode {
   OPEN_READ_ONLY,
   OPEN_READ_WRITE
+};
+
+// The kinds of mask texture a shader can support
+// We rely on the items in this enum being sequential
+enum MaskType {
+  MaskNone = 0,   // no mask layer
+  Mask2d,         // mask layer for layers with 2D transforms
+  Mask3d,         // mask layer for layers with 3D transforms
+  NumMaskTypes
 };
 
 } // namespace layers

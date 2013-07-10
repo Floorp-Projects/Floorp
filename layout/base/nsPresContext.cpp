@@ -321,7 +321,15 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsPresContext)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsPresContext)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(nsPresContext)
+NS_IMPL_CYCLE_COLLECTING_RELEASE_WITH_LAST_RELEASE(nsPresContext, LastRelease())
+
+void
+nsPresContext::LastRelease()
+{
+  if (IsRoot()) {
+    static_cast<nsRootPresContext*>(this)->CancelDidPaintTimer();
+  }
+}
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsPresContext)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocument);

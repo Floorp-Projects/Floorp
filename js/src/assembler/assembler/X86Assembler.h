@@ -1675,10 +1675,18 @@ public:
         m_formatter.immediate32(imm);
     }
 
-    // Intentionally left undefined. If you need this operation, consider
-    // naming it movq_i32r_signExtended to highlight the fact the operand size
-    // is not 32; the 32-bit immediate is sign-extended.
-    void movq_i32r(int imm, RegisterID dst);
+    // Note that this instruction sign-extends its 32-bit immediate field to 64
+    // bits and loads the 64-bit value into a 64-bit register.
+    //
+    // Note also that this is similar to the movl_i32r instruction, except that
+    // movl_i32r *zero*-extends its 32-bit immediate, and it has smaller code
+    // size, so it's preferred for values which could use either.
+    void movq_i32r(int imm, RegisterID dst) {
+        spew("movq       $%d, %s",
+             imm, nameIReg(dst));
+        m_formatter.oneByteOp64(OP_GROUP11_EvIz, GROUP11_MOV, dst);
+        m_formatter.immediate32(imm);
+    }
 
     void movq_i64r(int64_t imm, RegisterID dst)
     {

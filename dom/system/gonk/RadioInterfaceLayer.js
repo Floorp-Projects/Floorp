@@ -115,6 +115,7 @@ const RIL_IPC_ICCMANAGER_MSG_NAMES = [
   "RIL:GetCardLockState",
   "RIL:UnlockCardLock",
   "RIL:SetCardLock",
+  "RIL:GetCardLockRetryCount",
   "RIL:IccOpenChannel",
   "RIL:IccExchangeAPDU",
   "RIL:IccCloseChannel",
@@ -826,6 +827,10 @@ RadioInterface.prototype = {
         gMessageManager.saveRequestTarget(msg);
         this.setCardLock(msg.json.data);
         break;
+      case "RIL:GetCardLockRetryCount":
+        gMessageManager.saveRequestTarget(msg);
+        this.getCardLockRetryCount(msg.json.data);
+        break;
       case "RIL:SendMMI":
         gMessageManager.saveRequestTarget(msg);
         this.sendMMI(msg.json.data);
@@ -979,8 +984,8 @@ RadioInterface.prototype = {
         break;
       case "cardstatechange":
         this.rilContext.cardState = message.cardState;
-        gMessageManager.sendMobileConnectionMessage("RIL:CardStateChanged",
-                                                    this.clientId, message);
+        gMessageManager.sendIccMessage("RIL:CardStateChanged",
+                                       this.clientId, message);
         break;
       case "sms-received":
         let ackOk = this.handleSmsReceived(message);
@@ -1024,6 +1029,9 @@ RadioInterface.prototype = {
       case "iccSetCardLock":
       case "iccUnlockCardLock":
         this.handleIccCardLockResult(message);
+        break;
+      case "iccGetCardLockRetryCount":
+        this.handleIccCardLockRetryCount(message);
         break;
       case "icccontacts":
         this.handleReadIccContacts(message);
@@ -2105,6 +2113,10 @@ RadioInterface.prototype = {
 
   handleIccCardLockResult: function handleIccCardLockResult(message) {
     gMessageManager.sendRequestResults("RIL:CardLockResult", message);
+  },
+
+  handleIccCardLockRetryCount: function handleIccCardLockRetryCount(message) {
+    gMessageManager.sendRequestResults("RIL:CardLockRetryCount", message);
   },
 
   handleUSSDReceived: function handleUSSDReceived(ussd) {
@@ -3330,6 +3342,11 @@ RadioInterface.prototype = {
 
   setCardLock: function setCardLock(message) {
     message.rilMessageType = "iccSetCardLock";
+    this.worker.postMessage(message);
+  },
+
+  getCardLockRetryCount: function getCardLockRetryCount(message) {
+    message.rilMessageType = "iccGetCardLockRetryCount";
     this.worker.postMessage(message);
   },
 

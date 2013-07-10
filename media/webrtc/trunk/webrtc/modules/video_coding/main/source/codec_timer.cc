@@ -25,9 +25,9 @@ _history()
     Reset();
 }
 
-WebRtc_Word32 VCMCodecTimer::StopTimer(WebRtc_Word64 startTimeMs, WebRtc_Word64 nowMs)
+int32_t VCMCodecTimer::StopTimer(int64_t startTimeMs, int64_t nowMs)
 {
-    const WebRtc_Word32 timeDiff = static_cast<WebRtc_Word32>(nowMs - startTimeMs);
+    const int32_t timeDiff = static_cast<int32_t>(nowMs - startTimeMs);
     MaxFilter(timeDiff, nowMs);
     return timeDiff;
 }
@@ -45,7 +45,7 @@ void VCMCodecTimer::Reset()
 }
 
 // Update the max-value filter
-void VCMCodecTimer::MaxFilter(WebRtc_Word32 decodeTime, WebRtc_Word64 nowMs)
+void VCMCodecTimer::MaxFilter(int32_t decodeTime, int64_t nowMs)
 {
     if (!_firstDecodeTime)
     {
@@ -59,7 +59,7 @@ void VCMCodecTimer::MaxFilter(WebRtc_Word32 decodeTime, WebRtc_Word64 nowMs)
 }
 
 void
-VCMCodecTimer::UpdateMaxHistory(WebRtc_Word32 decodeTime, WebRtc_Word64 now)
+VCMCodecTimer::UpdateMaxHistory(int32_t decodeTime, int64_t now)
 {
     if (_history[0].timeMs >= 0 &&
         now - _history[0].timeMs < SHORT_FILTER_MS)
@@ -98,7 +98,7 @@ VCMCodecTimer::UpdateMaxHistory(WebRtc_Word32 decodeTime, WebRtc_Word64 now)
 }
 
 void
-VCMCodecTimer::ProcessHistory(WebRtc_Word64 nowMs)
+VCMCodecTimer::ProcessHistory(int64_t nowMs)
 {
     _filteredMax = _shortMax;
     if (_history[0].timeMs == -1)
@@ -125,7 +125,7 @@ VCMCodecTimer::ProcessHistory(WebRtc_Word64 nowMs)
 }
 
 // Get the maximum observed time within a time window
-WebRtc_Word32 VCMCodecTimer::RequiredDecodeTimeMs(FrameType /*frameType*/) const
+int32_t VCMCodecTimer::RequiredDecodeTimeMs(FrameType /*frameType*/) const
 {
     return _filteredMax;
 }

@@ -1136,6 +1136,9 @@ typedef HashSet<ReadBarriered<TypeObject>, TypeObjectEntry, SystemAllocPolicy> T
 bool
 UseNewType(JSContext *cx, JSScript *script, jsbytecode *pc);
 
+bool
+UseNewTypeForClone(JSFunction *fun);
+
 /*
  * Whether Array.prototype, or an object on its proto chain, has an
  * indexed property.

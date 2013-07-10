@@ -108,7 +108,7 @@ function performReload(callback) {
     callback();
   });
 
-  gDebuggee.location.reload();
+  gDebugger.DebuggerController.client.activeTab.reload();
 }
 
 function testStateBeforeReload() {

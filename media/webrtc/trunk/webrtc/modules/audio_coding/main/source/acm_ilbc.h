@@ -21,38 +21,38 @@ namespace webrtc {
 
 class ACMILBC : public ACMGenericCodec {
  public:
-  explicit ACMILBC(WebRtc_Word16 codec_id);
+  explicit ACMILBC(int16_t codec_id);
   ~ACMILBC();
 
   // for FEC
   ACMGenericCodec* CreateInstance(void);
 
-  WebRtc_Word16 InternalEncode(WebRtc_UWord8* bitstream,
-                               WebRtc_Word16* bitstream_len_byte);
+  int16_t InternalEncode(uint8_t* bitstream,
+                         int16_t* bitstream_len_byte);
 
-  WebRtc_Word16 InternalInitEncoder(WebRtcACMCodecParams *codec_params);
+  int16_t InternalInitEncoder(WebRtcACMCodecParams *codec_params);
 
-  WebRtc_Word16 InternalInitDecoder(WebRtcACMCodecParams *codec_params);
+  int16_t InternalInitDecoder(WebRtcACMCodecParams *codec_params);
 
  protected:
-  WebRtc_Word16 DecodeSafe(WebRtc_UWord8* bitstream,
-                           WebRtc_Word16 bitstream_len_byte,
-                           WebRtc_Word16* audio,
-                           WebRtc_Word16* audio_samples,
-                           WebRtc_Word8* speech_type);
+  int16_t DecodeSafe(uint8_t* bitstream,
+                     int16_t bitstream_len_byte,
+                     int16_t* audio,
+                     int16_t* audio_samples,
+                     int8_t* speech_type);
 
-  WebRtc_Word32 CodecDef(WebRtcNetEQ_CodecDef& codec_def,
-                         const CodecInst& codec_inst);
+  int32_t CodecDef(WebRtcNetEQ_CodecDef& codec_def,
+                   const CodecInst& codec_inst);
 
-  WebRtc_Word16 SetBitRateSafe(const WebRtc_Word32 rate);
+  int16_t SetBitRateSafe(const int32_t rate);
 
   void DestructEncoderSafe();
 
   void DestructDecoderSafe();
 
-  WebRtc_Word16 InternalCreateEncoder();
+  int16_t InternalCreateEncoder();
 
-  WebRtc_Word16 InternalCreateDecoder();
+  int16_t InternalCreateDecoder();
 
   void InternalDestructEncoderInst(void* ptr_inst);
 

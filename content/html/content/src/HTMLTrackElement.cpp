@@ -38,7 +38,6 @@
 #include "nsStyleConsts.h"
 #include "nsThreadUtils.h"
 #include "nsVideoFrame.h"
-#include "webvtt/parser.h"
 
 #ifdef PR_LOGGING
 static PRLogModuleInfo* gTrackElementLog;
@@ -304,7 +303,7 @@ HTMLTrackElement::BindToTree(nsIDocument* aDocument,
     media->NotifyAddedSource();
     LOG(PR_LOG_DEBUG, ("Track element sent notification to parent."));
 
-    nsContentUtils::AddScriptRunner(
+    mMediaParent->RunInStableState(
       NS_NewRunnableMethod(this, &HTMLTrackElement::LoadResource));
   }
 

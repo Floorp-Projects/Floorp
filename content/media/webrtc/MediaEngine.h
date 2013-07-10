@@ -101,6 +101,11 @@ public:
                           bool aAgcOn, uint32_t aAGC,
                           bool aNoiseOn, uint32_t aNoise) = 0;
 
+  /* Returns true if a source represents a fake capture device and
+   * false otherwise
+   */
+  virtual bool IsFake() = 0;
+
   /* Return false if device is currently allocated or started */
   bool IsAvailable() {
     if (mState == kAllocated || mState == kStarted) {

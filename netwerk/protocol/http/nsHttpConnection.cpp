@@ -61,6 +61,7 @@ nsHttpConnection::nsHttpConnection()
     , mLastTransactionExpectedNoContent(false)
     , mIdleMonitoring(false)
     , mProxyConnectInProgress(false)
+    , mExperienced(false)
     , mHttp1xTransactionCount(0)
     , mRemainingConnectionUses(0xffffffff)
     , mClassification(nsAHttpTransaction::CLASS_GENERAL)
@@ -70,6 +71,7 @@ nsHttpConnection::nsHttpConnection()
     , mPriority(nsISupportsPriority::PRIORITY_NORMAL)
     , mReportedSpdy(false)
     , mEverUsedSpdy(false)
+    , mLastHttpResponseVersion(NS_HTTP_VERSION_1_1)
     , mTransactionCaps(0)
 {
     LOG(("Creating nsHttpConnection @%x\n", this));
@@ -307,6 +309,9 @@ nsHttpConnection::Activate(nsAHttpTransaction *trans, uint32_t caps, int32_t pri
     MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
     LOG(("nsHttpConnection::Activate [this=%p trans=%x caps=%x]\n",
          this, trans, caps));
+
+    if (!trans->IsNullTransaction())
+        mExperienced = true;
 
     mTransactionCaps = caps;
     mPriority = pri;
@@ -885,6 +890,8 @@ nsHttpConnection::OnHeadersAvailable(nsAHttpTransaction *trans,
             LOG(("HTTP Upgrade Response to %s\n", upgradeResp));
         }
     }
+
+    mLastHttpResponseVersion = responseHead->Version();
 
     return NS_OK;
 }

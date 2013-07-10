@@ -16,54 +16,45 @@ var tests = [
   {
     name: "normal domain",
     location: "http://test1.example.org/",
-    host: "test1.example.org",
     effectiveHost: "example.org"
   },
   {
     name: "view-source",
     location: "view-source:http://example.com/",
-    // TODO: these should not be blank, bug 646690
-    host: "",
-    effectiveHost: ""
+    effectiveHost: null
   },
   {
     name: "normal HTTPS",
     location: "https://example.com/",
-    host: "example.com",
     effectiveHost: "example.com",
     isHTTPS: true
   },
   {
     name: "IDN subdomain",
     location: "http://sub1." + idnDomain + "/",
-    host: "sub1." + idnDomain,
     effectiveHost: idnDomain
   },
   {
     name: "subdomain with port",
     location: "http://sub1.test1.example.org:8000/",
-    host: "sub1.test1.example.org:8000",
     effectiveHost: "example.org"
   },
   {
     name: "subdomain HTTPS",
-    location: "https://test1.example.com",
-    host: "test1.example.com",
+    location: "https://test1.example.com/",
+
     effectiveHost: "example.com",
     isHTTPS: true
   },
   {
     name: "view-source HTTPS",
     location: "view-source:https://example.com/",
-    // TODO: these should not be blank, bug 646690
-    host: "",
-    effectiveHost: "",
+    effectiveHost: null,
     isHTTPS: true
   },
   {
     name: "IP address",
     location: "http://127.0.0.1:8888/",
-    host: "127.0.0.1:8888",
     effectiveHost: "127.0.0.1"
   },
 ]
@@ -112,8 +103,12 @@ function nextTest() {
 
 function checkResult() {
   // Sanity check other values, and the value of gIdentityHandler.getEffectiveHost()
-  is(gIdentityHandler._lastLocation.host, gCurrentTest.host, "host matches for test " + gTestDesc);
-  is(gIdentityHandler.getEffectiveHost(), gCurrentTest.effectiveHost, "effectiveHost matches for test " + gTestDesc);
+  is(gIdentityHandler._lastUri.spec, gCurrentTest.location, "location matches for test " + gTestDesc);
+  // getEffectiveHost can't be called for all modes
+  if (gCurrentTest.effectiveHost === null)
+    is(gIdentityHandler._mode == gIdentityHandler.IDENTITY_MODE_UNKNOWN || gIdentityHandler._mode == gIdentityHandler.IDENTITY_MODE_CHROMEUI, true, "mode matched");
+  else
+    is(gIdentityHandler.getEffectiveHost(), gCurrentTest.effectiveHost, "effectiveHost matches for test " + gTestDesc);
 
   executeSoon(nextTest);
 }

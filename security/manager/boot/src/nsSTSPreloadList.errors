@@ -1,5 +1,6 @@
 accounts.google.com: max-age too low: 2592000
 aladdinschools.appspot.com: did not receive HSTS header
+alpha.irccloud.com: could not connect to host
 api.mega.co.nz: could not connect to host
 api.recurly.com: did not receive HSTS header
 api.simple.com: did not receive HSTS header
@@ -12,7 +13,6 @@ braintreepayments.com: did not receive HSTS header
 browserid.org: did not receive HSTS header
 carlolly.co.uk: did not receive HSTS header
 cert.se: max-age too low: 2628001
-check.torproject.org: could not connect to host
 checkout.google.com: did not receive HSTS header
 chrome-devtools-frontend.appspot.com: did not receive HSTS header
 chrome.google.com: did not receive HSTS header
@@ -21,7 +21,7 @@ code.google.com: did not receive HSTS header
 codereview.appspot.com: did not receive HSTS header
 codereview.chromium.org: did not receive HSTS header
 crypto.is: did not receive HSTS header
-csawctf.poly.edu: could not connect to host
+csawctf.poly.edu: did not receive HSTS header
 dl.google.com: did not receive HSTS header
 docs.google.com: did not receive HSTS header
 drive.google.com: did not receive HSTS header
@@ -77,7 +77,6 @@ square.com: max-age too low: 1296000
 squareup.com: max-age too low: 1296000
 ssl.google-analytics.com: did not receive HSTS header
 ssl.panoramio.com: did not receive HSTS header
-stocktrade.de: could not connect to host
 sunshinepress.org: could not connect to host
 surfeasy.com: did not receive HSTS header
 talk.google.com: did not receive HSTS header

@@ -40,18 +40,18 @@ struct H264_SVC_NALUHeader
     length(3)
     {
     }
-    const WebRtc_UWord8 r;
-    WebRtc_UWord8       idr;
-    WebRtc_UWord8       priorityID;
-    WebRtc_UWord8       interLayerPred;
-    WebRtc_UWord8       dependencyID;
-    WebRtc_UWord8       qualityID;
-    WebRtc_UWord8       temporalID;
-    WebRtc_UWord8       useRefBasePic;
-    WebRtc_UWord8       discardable;
-    WebRtc_UWord8       output;
-    const WebRtc_UWord8 rr;
-    const WebRtc_UWord8 length;
+    const uint8_t r;
+    uint8_t       idr;
+    uint8_t       priorityID;
+    uint8_t       interLayerPred;
+    uint8_t       dependencyID;
+    uint8_t       qualityID;
+    uint8_t       temporalID;
+    uint8_t       useRefBasePic;
+    uint8_t       discardable;
+    uint8_t       output;
+    const uint8_t rr;
+    const uint8_t length;
 };
 
 class H264_PACSI_NALU
@@ -87,22 +87,22 @@ public:
         }
     }
 
-    WebRtc_UWord32        NALlength;
-    const WebRtc_UWord8   type;
-    WebRtc_UWord8         X;
-    WebRtc_UWord8         Y;
-//  WebRtc_UWord8         T;
-    WebRtc_UWord8         A;
-    WebRtc_UWord8         P;
-    WebRtc_UWord8         C;
-    WebRtc_UWord8         S;
-    WebRtc_UWord8         E;
-    WebRtc_UWord8         TL0picIDx;
-    WebRtc_UWord16        IDRpicID;
-    WebRtc_UWord16        DONC;
-    WebRtc_UWord32        numSEINALUs;
-    WebRtc_UWord32        seiMessageLength[KMaxNumberOfSEINALUs]; // we allow KMaxNumberOfSEINALUs SEI messages
-    WebRtc_UWord8*        seiMessageData[KMaxNumberOfSEINALUs];
+    uint32_t        NALlength;
+    const uint8_t   type;
+    uint8_t         X;
+    uint8_t         Y;
+//  uint8_t         T;
+    uint8_t         A;
+    uint8_t         P;
+    uint8_t         C;
+    uint8_t         S;
+    uint8_t         E;
+    uint8_t         TL0picIDx;
+    uint16_t        IDRpicID;
+    uint16_t        DONC;
+    uint32_t        numSEINALUs;
+    uint32_t        seiMessageLength[KMaxNumberOfSEINALUs]; // we allow KMaxNumberOfSEINALUs SEI messages
+    uint8_t*        seiMessageData[KMaxNumberOfSEINALUs];
 };
 
 struct H264Info
@@ -118,15 +118,15 @@ struct H264Info
             memset(type, 0, sizeof(type));
             memset(accLayerSize, 0, sizeof(accLayerSize));
         }
-    WebRtc_UWord16             numNALUs;
-    WebRtc_UWord8              numLayers;
-    WebRtc_UWord8              startCodeSize[KMaxNumberOfNALUs];
-    WebRtc_UWord32             payloadSize[KMaxNumberOfNALUs];
-    WebRtc_UWord8              NRI[KMaxNumberOfNALUs];
-    WebRtc_UWord8              type[KMaxNumberOfNALUs];
+    uint16_t             numNALUs;
+    uint8_t              numLayers;
+    uint8_t              startCodeSize[KMaxNumberOfNALUs];
+    uint32_t             payloadSize[KMaxNumberOfNALUs];
+    uint8_t              NRI[KMaxNumberOfNALUs];
+    uint8_t              type[KMaxNumberOfNALUs];
     H264_SVC_NALUHeader SVCheader[KMaxNumberOfNALUs];
     H264_PACSI_NALU     PACSI[KMaxNumberOfNALUs];
-    WebRtc_Word32              accLayerSize[KMaxNumberOfLayers];
+    int32_t              accLayerSize[KMaxNumberOfLayers];
 };
 
 
@@ -140,29 +140,29 @@ public:
 
     virtual RtpVideoCodecTypes Type();
 
-    virtual WebRtc_Word32 GetInfo(const WebRtc_UWord8* ptrEncodedBuffer, const WebRtc_UWord32 length, const H264Info*& ptrInfo);
+    virtual int32_t GetInfo(const uint8_t* ptrEncodedBuffer, const uint32_t length, const H264Info*& ptrInfo);
 
 
 protected:
-    bool HasInfo(const WebRtc_UWord32 length);
-    WebRtc_Word32  FindInfo(const WebRtc_UWord8* ptrEncodedBuffer, const WebRtc_UWord32 length);
+    bool HasInfo(const uint32_t length);
+    int32_t  FindInfo(const uint8_t* ptrEncodedBuffer, const uint32_t length);
 
     void GetNRI();
-    WebRtc_Word32 FindNALU();
-    WebRtc_Word32 FindNALUStartCodeSize();
-    WebRtc_Word32 FindNALUType();
+    int32_t FindNALU();
+    int32_t FindNALUStartCodeSize();
+    int32_t FindNALUType();
 
-    WebRtc_Word32 ParseSVCNALUHeader();
+    int32_t ParseSVCNALUHeader();
 
-    void SetLayerSEBit(WebRtc_Word32 foundLast);
-    WebRtc_Word32 SetLayerLengths();
+    void SetLayerSEBit(int32_t foundLast);
+    int32_t SetLayerLengths();
 
 private:
     const bool            _SVC;
-    const WebRtc_UWord8*    _ptrData;
-    WebRtc_UWord32          _length;
-    WebRtc_UWord32          _parsedLength;
-    WebRtc_UWord32          _remLength;
+    const uint8_t*    _ptrData;
+    uint32_t          _length;
+    uint32_t          _parsedLength;
+    uint32_t          _remLength;
     H264Info          _info;
 };
 } // namespace webrtc

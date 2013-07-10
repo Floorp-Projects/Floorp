@@ -18,6 +18,7 @@
 
 #include <hardware/hardware.h>
 #include <hardware/hwcomposer.h>
+#include <hardware/power.h>
 #include <suspend/autosuspend.h>
 
 #include "GraphicBufferAlloc.h"
@@ -36,6 +37,7 @@ GonkDisplayJB::GonkDisplayJB()
     , mHwc(nullptr)
     , mFBDevice(nullptr)
     , mEnabledCallback(nullptr)
+    , mPowerModule(nullptr)
 {
     int err = hw_get_module(GRALLOC_HARDWARE_MODULE_ID, &mFBModule);
     ALOGW_IF(err, "%s module not found", GRALLOC_HARDWARE_MODULE_ID);
@@ -82,6 +84,12 @@ GonkDisplayJB::GonkDisplayJB()
         surfaceformat = HAL_PIXEL_FORMAT_RGBA_8888;
     }
 
+    err = hw_get_module(POWER_HARDWARE_MODULE_ID,
+                                           (hw_module_t const**)&mPowerModule);
+    if (!err)
+        mPowerModule->init(mPowerModule);
+    ALOGW_IF(err, "Couldn't load %s module (%s)", POWER_HARDWARE_MODULE_ID, strerror(-err));
+
     mAlloc = new GraphicBufferAlloc();
     mFBSurface = new FramebufferSurface(0, mWidth, mHeight, surfaceformat, mAlloc);
 
@@ -115,8 +123,10 @@ GonkDisplayJB::GetNativeWindow()
 void
 GonkDisplayJB::SetEnabled(bool enabled)
 {
-    if (enabled)
+    if (enabled) {
         autosuspend_disable();
+        mPowerModule->setInteractive(mPowerModule, true);
+    }
 
     if (mHwc)
         mHwc->blank(mHwc, HWC_DISPLAY_PRIMARY, !enabled);
@@ -126,8 +136,10 @@ GonkDisplayJB::SetEnabled(bool enabled)
     if (mEnabledCallback)
         mEnabledCallback(enabled);
 
-    if (!enabled)
+    if (!enabled) {
         autosuspend_enable();
+        mPowerModule->setInteractive(mPowerModule, false);
+    }
 }
 
 void

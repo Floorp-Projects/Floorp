@@ -102,8 +102,9 @@ class nsRangeUpdater
     nsresult DidRemoveContainer(nsIDOMNode *aNode, nsIDOMNode *aParent, int32_t aOffset, uint32_t aNodeOrigLen);
     nsresult WillInsertContainer();
     nsresult DidInsertContainer();
-    nsresult WillMoveNode();
-    nsresult DidMoveNode(nsIDOMNode *aOldParent, int32_t aOldOffset, nsIDOMNode *aNewParent, int32_t aNewOffset);
+    void WillMoveNode();
+    void DidMoveNode(nsINode* aOldParent, int32_t aOldOffset,
+                     nsINode* aNewParent, int32_t aNewOffset);
   protected:    
     nsTArray<nsRefPtr<nsRangeStore> > mArray;
     bool mLock;
@@ -242,23 +243,25 @@ class MOZ_STACK_CLASS nsAutoMoveNodeSelNotify
 {
   private:
     nsRangeUpdater &mRU;
-    nsIDOMNode *mOldParent;
-    nsIDOMNode *mNewParent;
+    nsINode* mOldParent;
+    nsINode* mNewParent;
     int32_t    mOldOffset;
     int32_t    mNewOffset;
 
   public:
     nsAutoMoveNodeSelNotify(nsRangeUpdater &aRangeUpdater, 
-                            nsIDOMNode *aOldParent, 
+                            nsINode* aOldParent,
                             int32_t aOldOffset, 
-                            nsIDOMNode *aNewParent, 
-                            int32_t aNewOffset) :
-    mRU(aRangeUpdater)
-    ,mOldParent(aOldParent)
-    ,mNewParent(aNewParent)
-    ,mOldOffset(aOldOffset)
-    ,mNewOffset(aNewOffset)
+                            nsINode* aNewParent,
+                            int32_t aNewOffset)
+      : mRU(aRangeUpdater)
+      , mOldParent(aOldParent)
+      , mNewParent(aNewParent)
+      , mOldOffset(aOldOffset)
+      , mNewOffset(aNewOffset)
     {
+      MOZ_ASSERT(aOldParent);
+      MOZ_ASSERT(aNewParent);
       mRU.WillMoveNode();
     }
     

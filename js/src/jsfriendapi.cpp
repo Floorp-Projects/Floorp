@@ -723,7 +723,7 @@ DumpHeapVisitCell(JSRuntime *rt, void *data, void *thing,
                   JSGCTraceKind traceKind, size_t thingSize)
 {
     JSDumpHeapTracer *dtrc = static_cast<JSDumpHeapTracer *>(data);
-    char cellDesc[1024];
+    char cellDesc[1024 * 32];
     JS_GetTraceThingInfo(cellDesc, sizeof(cellDesc), dtrc, thing, traceKind, true);
     fprintf(dtrc->output, "%p %c %s\n", thing, MarkDescriptor(thing), cellDesc);
     JS_TraceChildren(dtrc, thing, traceKind);

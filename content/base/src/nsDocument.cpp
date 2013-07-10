@@ -1616,11 +1616,15 @@ nsDocument::Release()
       return mRefCnt.get();
     }
     NS_ASSERT_OWNINGTHREAD(nsDocument);
-    mRefCnt.stabilizeForDeletion();
     nsNodeUtils::LastRelease(this);
-    return 0;
   }
   return count;
+}
+
+NS_IMETHODIMP_(void)
+nsDocument::DeleteCycleCollectable()
+{
+  delete this;
 }
 
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_BEGIN(nsDocument)
@@ -6906,12 +6910,7 @@ nsDocument::GetViewportInfo(uint32_t aDisplayWidth,
     }
     // Now convert the scale into device pixels per CSS pixel.
     nsIWidget *widget = nsContentUtils::WidgetForDocument(this);
-#ifdef MOZ_WIDGET_ANDROID
-    // Temporarily use special Android code until bug 803207 is fixed
-    double pixelRatio = widget ? nsContentUtils::GetDevicePixelsPerMetaViewportPixel(widget) : 1.0;
-#else
     double pixelRatio = widget ? widget->GetDefaultScale() : 1.0;
-#endif
     float scaleFloat = mScaleFloat * pixelRatio;
     float scaleMinFloat= mScaleMinFloat * pixelRatio;
     float scaleMaxFloat = mScaleMaxFloat * pixelRatio;
@@ -9302,7 +9301,7 @@ NS_IMETHODIMP
 nsDocument::CreateTouchList(nsIVariant* aPoints,
                             nsIDOMTouchList** aRetVal)
 {
-  nsRefPtr<nsDOMTouchList> retval = new nsDOMTouchList();
+  nsRefPtr<nsDOMTouchList> retval = new nsDOMTouchList(ToSupports(this));
   if (aPoints) {
     uint16_t type;
     aPoints->GetDataType(&type);
@@ -9339,18 +9338,18 @@ nsDocument::CreateTouchList(nsIVariant* aPoints,
   return NS_OK;
 }
 
-already_AddRefed<nsIDOMTouchList>
+already_AddRefed<nsDOMTouchList>
 nsIDocument::CreateTouchList()
 {
-  nsRefPtr<nsDOMTouchList> retval = new nsDOMTouchList();
+  nsRefPtr<nsDOMTouchList> retval = new nsDOMTouchList(ToSupports(this));
   return retval.forget();
 }
 
-already_AddRefed<nsIDOMTouchList>
+already_AddRefed<nsDOMTouchList>
 nsIDocument::CreateTouchList(Touch& aTouch,
                              const Sequence<OwningNonNull<Touch> >& aTouches)
 {
-  nsRefPtr<nsDOMTouchList> retval = new nsDOMTouchList();
+  nsRefPtr<nsDOMTouchList> retval = new nsDOMTouchList(ToSupports(this));
   retval->Append(&aTouch);
   for (uint32_t i = 0; i < aTouches.Length(); ++i) {
     retval->Append(aTouches[i].get());
@@ -9358,10 +9357,10 @@ nsIDocument::CreateTouchList(Touch& aTouch,
   return retval.forget();
 }
 
-already_AddRefed<nsIDOMTouchList>
+already_AddRefed<nsDOMTouchList>
 nsIDocument::CreateTouchList(const Sequence<OwningNonNull<Touch> >& aTouches)
 {
-  nsRefPtr<nsDOMTouchList> retval = new nsDOMTouchList();
+  nsRefPtr<nsDOMTouchList> retval = new nsDOMTouchList(ToSupports(this));
   for (uint32_t i = 0; i < aTouches.Length(); ++i) {
     retval->Append(aTouches[i].get());
   }
@@ -11234,6 +11233,18 @@ nsDocument::DocSizeOfExcludingThis(nsWindowSizes* aWindowSizes) const
   // Measurement of the following members may be added later if DMD finds it
   // is worthwhile:
   // - many!
+}
+
+NS_IMETHODIMP
+nsDocument::QuerySelector(const nsAString& aSelector, nsIDOMElement **aReturn)
+{
+  return nsINode::QuerySelector(aSelector, aReturn);
+}
+
+NS_IMETHODIMP
+nsDocument::QuerySelectorAll(const nsAString& aSelector, nsIDOMNodeList **aReturn)
+{
+  return nsINode::QuerySelectorAll(aSelector, aReturn);
 }
 
 already_AddRefed<nsIDocument>

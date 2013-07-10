@@ -2094,36 +2094,6 @@ BluetoothDBusService::GetDevicePath(const nsAString& aAdapterPath,
   return true;
 }
 
-static int
-GetDeviceServiceChannel(const nsAString& aObjectPath,
-                        const nsAString& aPattern,
-                        int aAttributeId)
-{
-  // This is a blocking call, should not be run on main thread.
-  MOZ_ASSERT(!NS_IsMainThread());
-
-#ifdef MOZ_WIDGET_GONK
-  // GetServiceAttributeValue only exists in android's bluez dbus binding
-  // implementation
-  nsCString tempPattern = NS_ConvertUTF16toUTF8(aPattern);
-  const char* pattern = tempPattern.get();
-
-  DBusMessage *reply =
-    dbus_func_args(gThreadConnection->GetConnection(),
-                   NS_ConvertUTF16toUTF8(aObjectPath).get(),
-                   DBUS_DEVICE_IFACE, "GetServiceAttributeValue",
-                   DBUS_TYPE_STRING, &pattern,
-                   DBUS_TYPE_UINT16, &aAttributeId,
-                   DBUS_TYPE_INVALID);
-
-  return reply ? dbus_returns_int32(reply) : -1;
-#else
-  // FIXME/Bug 793977 qdot: Just return something for desktop, until we have a
-  // parser for the GetServiceAttributes xml block
-  return 1;
-#endif
-}
-
 // static
 bool
 BluetoothDBusService::RemoveReservedServicesInternal(
@@ -2589,8 +2559,7 @@ public:
     mDeviceAddress = GetAddressFromObjectPath(aObjectPath);
   }
 
-  nsresult
-  Run()
+  NS_IMETHOD Run()
   {
     MOZ_ASSERT(NS_IsMainThread());
 
@@ -2606,55 +2575,92 @@ private:
   BluetoothProfileManagerBase* mManager;
 };
 
-class GetServiceChannelRunnable : public nsRunnable
+class OnGetServiceChannelReplyHandler : public DBusReplyHandler
 {
 public:
-  GetServiceChannelRunnable(const nsAString& aObjectPath,
-                            const nsAString& aServiceUuid,
-                            BluetoothProfileManagerBase* aManager)
-    : mObjectPath(aObjectPath),
-      mServiceUuid(aServiceUuid),
-      mManager(aManager)
+  OnGetServiceChannelReplyHandler(const nsAString& aObjectPath,
+                                  const nsAString& aServiceUUID,
+                                  BluetoothProfileManagerBase* aBluetoothProfileManager)
+  : mObjectPath(aObjectPath),
+    mServiceUUID(aServiceUUID),
+    mBluetoothProfileManager(aBluetoothProfileManager)
   {
-    MOZ_ASSERT(!aObjectPath.IsEmpty());
-    MOZ_ASSERT(!aServiceUuid.IsEmpty());
-    MOZ_ASSERT(aManager);
+    MOZ_ASSERT(mBluetoothProfileManager);
   }
 
-  nsresult
-  Run()
+  void Handle(DBusMessage* aReply)
   {
-    MOZ_ASSERT(!NS_IsMainThread());
+    MOZ_ASSERT(!NS_IsMainThread()); // DBus thread
 
-    int channel = GetDeviceServiceChannel(mObjectPath, mServiceUuid, 0x0004);
-    nsRefPtr<nsRunnable> r(new OnGetServiceChannelRunnable(mObjectPath,
-                                                           mServiceUuid,
-                                                           channel,
-                                                           mManager));
-    NS_DispatchToMainThread(r);
-    return NS_OK;
+    // The default channel is an invalid value of -1. We
+    // update it if we have received a correct reply. Both
+    // cases, valid and invalid channel numbers, are handled
+    // in BluetoothProfileManagerBase::OnGetServiceChannel.
+
+    int channel = -1;
+
+    if (aReply && (dbus_message_get_type(aReply) != DBUS_MESSAGE_TYPE_ERROR)) {
+      channel = dbus_returns_int32(aReply);
+    }
+
+    nsRefPtr<nsRunnable> r = new OnGetServiceChannelRunnable(mObjectPath,
+                                                             mServiceUUID,
+                                                             channel,
+                                                             mBluetoothProfileManager);
+    nsresult rv = NS_DispatchToMainThread(r);
+    NS_ENSURE_SUCCESS_VOID(rv);
   }
 
 private:
   nsString mObjectPath;
-  nsString mServiceUuid;
-  BluetoothProfileManagerBase* mManager;
+  nsString mServiceUUID;
+  BluetoothProfileManagerBase* mBluetoothProfileManager;
 };
 
 nsresult
 BluetoothDBusService::GetServiceChannel(const nsAString& aDeviceAddress,
-                                        const nsAString& aServiceUuid,
+                                        const nsAString& aServiceUUID,
                                         BluetoothProfileManagerBase* aManager)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(mBluetoothCommandThread);
 
   nsString objectPath(GetObjectPathFromAddress(sAdapterPath, aDeviceAddress));
 
-  nsRefPtr<nsRunnable> r(new GetServiceChannelRunnable(objectPath,
-                                                       aServiceUuid,
-                                                       aManager));
-  mBluetoothCommandThread->Dispatch(r, NS_DISPATCH_NORMAL);
+#ifdef MOZ_WIDGET_GONK
+  static const int sProtocolDescriptorList = 0x0004;
+
+  // GetServiceAttributeValue only exists in android's bluez dbus binding
+  // implementation
+  nsCString serviceUUID = NS_ConvertUTF16toUTF8(aServiceUUID);
+  const char* cstrServiceUUID = serviceUUID.get();
+
+  nsRefPtr<OnGetServiceChannelReplyHandler> handler =
+    new OnGetServiceChannelReplyHandler(objectPath, aServiceUUID, aManager);
+
+  bool success = dbus_func_args_async(mConnection, -1,
+                                      OnGetServiceChannelReplyHandler::Callback, handler,
+                                      NS_ConvertUTF16toUTF8(objectPath).get(),
+                                      DBUS_DEVICE_IFACE, "GetServiceAttributeValue",
+                                      DBUS_TYPE_STRING, &cstrServiceUUID,
+                                      DBUS_TYPE_UINT16, &sProtocolDescriptorList,
+                                      DBUS_TYPE_INVALID);
+  NS_ENSURE_TRUE(success, NS_ERROR_FAILURE);
+
+  handler.forget();
+#else
+  // FIXME/Bug 793977 qdot: Just set something for desktop, until we have a
+  // parser for the GetServiceAttributes xml block
+  //
+  // Even though we are on the main thread already, we need to dispatch a
+  // runnable here. OnGetServiceChannel needs mRunnable to be set, which
+  // happens after GetServiceChannel returns.
+  nsRefPtr<nsRunnable> r = new OnGetServiceChannelRunnable(objectPath,
+                                                           aServiceUUID,
+                                                           1,
+                                                           aManager);
+  nsresult rv = NS_DispatchToMainThread(r);
+  NS_ENSURE_SUCCESS_VOID(rv);
+#endif
 
   return NS_OK;
 }

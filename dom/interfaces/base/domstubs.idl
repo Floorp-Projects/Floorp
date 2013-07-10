@@ -44,10 +44,6 @@ interface nsIDOMMediaList;
 // Base
 interface nsIDOMWindow;
 interface nsIDOMWindowCollection;
-interface nsIDOMPlugin;
-interface nsIDOMPluginArray;
-interface nsIDOMMimeType;
-interface nsIDOMMimeTypeArray;
 interface nsIDOMNavigator;
 interface nsIDOMScreen;
 interface nsIDOMHistory;

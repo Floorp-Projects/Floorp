@@ -7,8 +7,10 @@
 #include "HttpLog.h"
 
 #include "nsHttpAuthCache.h"
+
 #include <stdlib.h>
-#include "base/compiler_specific.h"
+
+#include "mozilla/Attributes.h"
 #include "nsHttp.h"
 #include "nsString.h"
 #include "nsCRT.h"
@@ -54,7 +56,7 @@ StrEquivalent(const PRUnichar *a, const PRUnichar *b)
 
 nsHttpAuthCache::nsHttpAuthCache()
     : mDB(nullptr)
-    , ALLOW_THIS_IN_INITIALIZER_LIST(mObserver(new AppDataClearObserver(this)))
+    , mObserver(new AppDataClearObserver(MOZ_THIS_IN_INITIALIZER_LIST()))
 {
     nsCOMPtr<nsIObserverService> obsSvc = mozilla::services::GetObserverService();
     if (obsSvc) {

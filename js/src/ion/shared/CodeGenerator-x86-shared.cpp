@@ -835,33 +835,59 @@ CodeGeneratorX86Shared::visitModI(LModI *ins)
 
     Label done;
 
-    // Prevent divide by zero
-    masm.testl(rhs, rhs);
-    if (ins->mir()->isTruncated()) {
-        Label notzero;
-        masm.j(Assembler::NonZero, &notzero);
-        masm.xorl(edx, edx);
-        masm.jmp(&done);
-        masm.bind(&notzero);
-    } else {
-        if (!bailoutIf(Assembler::Zero, ins->snapshot()))
-            return false;
+    // Prevent divide by zero.
+    if (ins->mir()->canBeDivideByZero()) {
+        masm.testl(rhs, rhs);
+        if (ins->mir()->isTruncated()) {
+            Label notzero;
+            masm.j(Assembler::NonZero, &notzero);
+            masm.xorl(edx, edx);
+            masm.jmp(&done);
+            masm.bind(&notzero);
+        } else {
+            if (!bailoutIf(Assembler::Zero, ins->snapshot()))
+                return false;
+        }
     }
 
     Label negative;
 
     // Switch based on sign of the lhs.
-    masm.branchTest32(Assembler::Signed, lhs, lhs, &negative);
+    if (ins->mir()->canBeNegativeDividend())
+        masm.branchTest32(Assembler::Signed, lhs, lhs, &negative);
+
     // If lhs >= 0 then remainder = lhs % rhs. The remainder must be positive.
     {
+        // Check if rhs is a power-of-two.
+        if (ins->mir()->canBePowerOfTwoDivisor()) {
+            JS_ASSERT(rhs != remainder);
+
+            // Rhs y is a power-of-two if (y & (y-1)) == 0. Note that if
+            // y is any negative number other than INT32_MIN, both y and
+            // y-1 will have the sign bit set so these are never optimized
+            // as powers-of-two. If y is INT32_MIN, y-1 will be INT32_MAX
+            // and because lhs >= 0 at this point, lhs & INT32_MAX returns
+            // the correct value.
+            Label notPowerOfTwo;
+            masm.mov(rhs, remainder);
+            masm.subl(Imm32(1), remainder);
+            masm.branchTest32(Assembler::NonZero, remainder, rhs, &notPowerOfTwo);
+            {
+                masm.andl(lhs, remainder);
+                masm.jmp(&done);
+            }
+            masm.bind(&notPowerOfTwo);
+        }
+
         // Since lhs >= 0, the sign-extension will be 0
         masm.xorl(edx, edx);
         masm.idiv(rhs);
-        masm.jump(&done);
     }
 
     // Otherwise, we have to beware of two special cases:
-    {
+    if (ins->mir()->canBeNegativeDividend()) {
+        masm.jump(&done);
+
         masm.bind(&negative);
 
         // Prevent an integer overflow exception from -2147483648 % -1

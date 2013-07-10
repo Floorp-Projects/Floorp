@@ -24,7 +24,7 @@ ChannelManagerBase::ChannelManagerBase() :
     _itemsCritSectPtr(CriticalSectionWrapper::CreateCriticalSection()),
     _itemsRWLockPtr(RWLockWrapper::CreateRWLock())
 {
-    for (int i = 0; i < KMaxNumberOfItems; i++)
+    for (int i = 0; i < kVoiceEngineMaxNumChannels; i++)
     {
         _freeItemIds[i] = true;
     }
@@ -44,11 +44,11 @@ ChannelManagerBase::~ChannelManagerBase()
     }
 }
 
-bool ChannelManagerBase::GetFreeItemId(WebRtc_Word32& itemId)
+bool ChannelManagerBase::GetFreeItemId(int32_t& itemId)
 {
     CriticalSectionScoped cs(_itemsCritSectPtr);
-    WebRtc_Word32 i(0);
-    while (i < KMaxNumberOfItems)
+    int32_t i(0);
+    while (i < kVoiceEngineMaxNumChannels)
     {
         if (_freeItemIds[i])
         {
@@ -61,21 +61,21 @@ bool ChannelManagerBase::GetFreeItemId(WebRtc_Word32& itemId)
     return false;
 }
 
-void ChannelManagerBase::AddFreeItemId(WebRtc_Word32 itemId)
+void ChannelManagerBase::AddFreeItemId(int32_t itemId)
 {
-    assert(itemId < KMaxNumberOfItems);
+    assert(itemId < kVoiceEngineMaxNumChannels);
     _freeItemIds[itemId] = true;
 }
 
 void ChannelManagerBase::RemoveFreeItemIds()
 {
-    for (int i = 0; i < KMaxNumberOfItems; i++)
+    for (int i = 0; i < kVoiceEngineMaxNumChannels; i++)
     {
         _freeItemIds[i] = false;
     }
 }
 
-bool ChannelManagerBase::CreateItem(WebRtc_Word32& itemId)
+bool ChannelManagerBase::CreateItem(int32_t& itemId)
 {
     _itemsCritSectPtr->Enter();
     void* itemPtr;
@@ -98,7 +98,7 @@ bool ChannelManagerBase::CreateItem(WebRtc_Word32& itemId)
     return true;
 }
 
-void ChannelManagerBase::InsertItem(WebRtc_Word32 itemId, void* item)
+void ChannelManagerBase::InsertItem(int32_t itemId, void* item)
 {
     CriticalSectionScoped cs(_itemsCritSectPtr);
     assert(!_items.Find(itemId));
@@ -106,7 +106,7 @@ void ChannelManagerBase::InsertItem(WebRtc_Word32 itemId, void* item)
 }
 
 void*
-ChannelManagerBase::RemoveItem(WebRtc_Word32 itemId)
+ChannelManagerBase::RemoveItem(int32_t itemId)
 {
     CriticalSectionScoped cs(_itemsCritSectPtr);
     WriteLockScoped wlock(*_itemsRWLockPtr);
@@ -135,18 +135,18 @@ void ChannelManagerBase::DestroyAllItems()
     RemoveFreeItemIds();
 }
 
-WebRtc_Word32 ChannelManagerBase::NumOfItems() const
+int32_t ChannelManagerBase::NumOfItems() const
 {
     return _items.Size();
 }
 
-WebRtc_Word32 ChannelManagerBase::MaxNumOfItems() const
+int32_t ChannelManagerBase::MaxNumOfItems() const
 {
-    return static_cast<WebRtc_Word32> (KMaxNumberOfItems);
+    return static_cast<int32_t> (kVoiceEngineMaxNumChannels);
 }
 
 void*
-ChannelManagerBase::GetItem(WebRtc_Word32 itemId) const
+ChannelManagerBase::GetItem(int32_t itemId) const
 {
     CriticalSectionScoped cs(_itemsCritSectPtr);
     MapItem* it = _items.Find(itemId);
@@ -195,8 +195,8 @@ void ChannelManagerBase::ReleaseItem()
     _itemsRWLockPtr->ReleaseLockShared();
 }
 
-void ChannelManagerBase::GetItemIds(WebRtc_Word32* channelsArray,
-                                    WebRtc_Word32& numOfChannels) const
+void ChannelManagerBase::GetItemIds(int32_t* channelsArray,
+                                    int32_t& numOfChannels) const
 {
     MapItem* it = _items.First();
     numOfChannels = (numOfChannels <= _items.Size()) ?

@@ -483,17 +483,23 @@ stage-tps: make-stage-dir
 	$(NSINSTALL) -D $(PKG_STAGE)/tps/tests
 	@(cd $(topsrcdir)/testing/tps && tar $(TAR_CREATE_FLAGS) - *) | (cd $(PKG_STAGE)/tps && tar -xf -)
 	@(cd $(topsrcdir)/services/sync/tps && tar $(TAR_CREATE_FLAGS) - *) | (cd $(PKG_STAGE)/tps && tar -xf -)
-	(cd $(topsrcdir)/services/sync/tests/tps && tar $(TAR_CREATE_FLAGS_QUIET) - *) | (cd $(PKG_STAGE)/tps/tests && tar -xf -)
+	(cd $(topsrcdir)/services/sync/tests/tps && tar $(TAR_CREATE_FLAGS) - *) | (cd $(PKG_STAGE)/tps/tests && tar -xf -)
 
 stage-modules: make-stage-dir
 	$(NSINSTALL) -D $(PKG_STAGE)/modules
 	cp -RL $(DEPTH)/_tests/modules $(PKG_STAGE)
 
+CPP_UNIT_TEST_BINS=$(wildcard $(DIST)/cppunittests/*)
+
 stage-cppunittests:
 	$(NSINSTALL) -D $(PKG_STAGE)/cppunittests
+ifdef OBJCOPY
+	$(foreach bin,$(CPP_UNIT_TEST_BINS),$(OBJCOPY) --strip-unneeded $(bin) $(bin:$(DIST)/%=$(PKG_STAGE)/%);)
+else
+	cp -RL $(DIST)/cppunittests $(PKG_STAGE)
+endif
 	$(NSINSTALL) $(topsrcdir)/testing/runcppunittests.py $(PKG_STAGE)/cppunittests
 	$(NSINSTALL) $(topsrcdir)/testing/remotecppunittests.py $(PKG_STAGE)/cppunittests
-	cp -RL $(DIST)/cppunittests $(PKG_STAGE)
 
 MARIONETTE_DIR=$(PKG_STAGE)/marionette
 stage-marionette: make-stage-dir
@@ -502,7 +508,7 @@ stage-marionette: make-stage-dir
 	$(PYTHON) $(topsrcdir)/testing/marionette/client/marionette/tests/print-manifest-dirs.py \
           $(topsrcdir) \
           $(topsrcdir)/testing/marionette/client/marionette/tests/unit-tests.ini \
-          | (cd $(topsrcdir) && xargs tar $(TAR_CREATE_FLAGS_QUIET) -) \
+          | (cd $(topsrcdir) && xargs tar $(TAR_CREATE_FLAGS) -) \
           | (cd $(MARIONETTE_DIR)/tests && tar -xf -)
 
 stage-mozbase: make-stage-dir

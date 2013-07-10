@@ -83,10 +83,6 @@
 #include "nsJSEnvironment.h"
 
 // DOM base includes
-#include "nsIDOMPluginArray.h"
-#include "nsIDOMPlugin.h"
-#include "nsIDOMMimeTypeArray.h"
-#include "nsIDOMMimeType.h"
 #include "nsIDOMLocation.h"
 #include "nsIDOMWindow.h"
 #include "nsPIDOMWindow.h"
@@ -210,18 +206,13 @@
 #include "nsIDOMNavigatorGeolocation.h"
 #include "Navigator.h"
 
-#include "nsPluginArray.h"
-#include "nsMimeTypeArray.h"
-
 #include "nsIEventListenerService.h"
 #include "nsIMessageManager.h"
 #include "mozilla/dom/Element.h"
-#include "HTMLLegendElement.h"
 
 #include "mozilla/dom/indexedDB/IDBWrapperCache.h"
 #include "mozilla/dom/indexedDB/IDBRequest.h"
 #include "mozilla/dom/indexedDB/IDBDatabase.h"
-#include "mozilla/dom/indexedDB/IDBEvents.h"
 #include "mozilla/dom/indexedDB/IDBObjectStore.h"
 #include "mozilla/dom/indexedDB/IDBTransaction.h"
 #include "mozilla/dom/indexedDB/IDBCursor.h"
@@ -451,14 +442,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            DOM_DEFAULT_SCRIPTABLE_FLAGS |
                            nsIXPCScriptable::WANT_PRECREATE |
                            nsIXPCScriptable::WANT_NEWRESOLVE)
-  NS_DEFINE_CLASSINFO_DATA(Plugin, nsPluginSH,
-                           ARRAY_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(PluginArray, nsPluginArraySH,
-                           ARRAY_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(MimeType, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(MimeTypeArray, nsMimeTypeArraySH,
-                           ARRAY_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(History, nsHistorySH,
                            ARRAY_SCRIPTABLE_FLAGS |
                            nsIXPCScriptable::WANT_PRECREATE)
@@ -535,9 +518,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 #endif
   NS_DEFINE_CLASSINFO_DATA(Crypto, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
-
-  NS_DEFINE_CLASSINFO_DATA(CSSRect, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
   // DOM Chrome Window class.
@@ -687,8 +667,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(IDBOpenDBRequest, IDBEventTargetSH,
                            IDBEVENTTARGET_SCRIPTABLE_FLAGS)
 
-  NS_DEFINE_CLASSINFO_DATA(TouchList, nsDOMTouchListSH,
-                           ARRAY_SCRIPTABLE_FLAGS)
 
   NS_DEFINE_CLASSINFO_DATA(MozCSSKeyframeRule, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
@@ -806,9 +784,6 @@ jsid nsDOMClassInfo::sDocument_id        = JSID_VOID;
 jsid nsDOMClassInfo::sFrames_id          = JSID_VOID;
 jsid nsDOMClassInfo::sSelf_id            = JSID_VOID;
 jsid nsDOMClassInfo::sWrappedJSObject_id = JSID_VOID;
-jsid nsDOMClassInfo::sURL_id             = JSID_VOID;
-jsid nsDOMClassInfo::sOnload_id          = JSID_VOID;
-jsid nsDOMClassInfo::sOnerror_id         = JSID_VOID;
 
 static const JSClass *sObjectClass = nullptr;
 
@@ -1001,9 +976,6 @@ nsDOMClassInfo::DefineStaticJSVals(JSContext *cx)
   SET_JSID_TO_STRING(sFrames_id,          cx, "frames");
   SET_JSID_TO_STRING(sSelf_id,            cx, "self");
   SET_JSID_TO_STRING(sWrappedJSObject_id, cx, "wrappedJSObject");
-  SET_JSID_TO_STRING(sURL_id,             cx, "URL");
-  SET_JSID_TO_STRING(sOnload_id,          cx, "onload");
-  SET_JSID_TO_STRING(sOnerror_id,         cx, "onerror");
 
   return NS_OK;
 }
@@ -1334,22 +1306,6 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN(Plugin, nsIDOMPlugin)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMPlugin)
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(PluginArray, nsIDOMPluginArray)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMPluginArray)
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(MimeType, nsIDOMMimeType)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMMimeType)
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(MimeTypeArray, nsIDOMMimeTypeArray)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMMimeTypeArray)
-  DOM_CLASSINFO_MAP_END
-
   DOM_CLASSINFO_MAP_BEGIN(History, nsIDOMHistory)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMHistory)
   DOM_CLASSINFO_MAP_END
@@ -1413,10 +1369,6 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(CSSStyleSheet, nsIDOMCSSStyleSheet)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMCSSStyleSheet)
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(CSSRect, nsIDOMRect)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMRect)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(Selection, nsISelection)
@@ -1676,11 +1628,6 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIIDBOpenDBRequest)
     DOM_CLASSINFO_MAP_ENTRY(nsIIDBRequest)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN_MAYBE_DISABLE(TouchList, nsIDOMTouchList,
-                                        !nsDOMTouchEvent::PrefEnabled())
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMTouchList)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(MozCSSKeyframeRule, nsIDOMMozCSSKeyframeRule)
@@ -2098,14 +2045,6 @@ nsDOMClassInfo::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   return NS_OK;
 }
 
-nsISupports*
-nsDOMTouchListSH::GetItemAt(nsISupports *aNative, uint32_t aIndex,
-                            nsWrapperCache **aCache, nsresult *aResult)
-{
-  nsDOMTouchList* list = static_cast<nsDOMTouchList*>(aNative);
-  return list->GetItemAt(aIndex);
-}
-
 NS_IMETHODIMP
 nsDOMClassInfo::Convert(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                         JSObject *obj, uint32_t type, jsval *vp,
@@ -2442,8 +2381,6 @@ nsDOMClassInfo::ShutDown()
   sFrames_id          = JSID_VOID;
   sSelf_id            = JSID_VOID;
   sWrappedJSObject_id = JSID_VOID;
-  sOnload_id          = JSID_VOID;
-  sOnerror_id         = JSID_VOID;
 
   NS_IF_RELEASE(sXPConnect);
   NS_IF_RELEASE(sSecMan);
@@ -5372,7 +5309,7 @@ nsHTMLDocumentSH::ReleaseDocument(JSFreeOp *fop, JSObject *obj)
 {
   nsIHTMLDocument* doc = GetDocument(obj);
   if (doc) {
-    xpc::DeferredRelease(doc);
+    nsContentUtils::DeferredFinalize(doc);
   }
 }
 
@@ -5418,69 +5355,6 @@ nsHTMLDocumentSH::CallToGetPropMapper(JSContext *cx, unsigned argc, jsval *vp)
 
   return ::JS_GetUCProperty(cx, self, chars, length, vp);
 }
-
-// Plugin helper
-
-nsISupports*
-nsPluginSH::GetItemAt(nsISupports *aNative, uint32_t aIndex,
-                      nsWrapperCache **aCache, nsresult *aResult)
-{
-  nsPluginElement* plugin = nsPluginElement::FromSupports(aNative);
-
-  return plugin->GetItemAt(aIndex, aResult);
-}
-
-nsISupports*
-nsPluginSH::GetNamedItem(nsISupports *aNative, const nsAString& aName,
-                         nsWrapperCache **aCache, nsresult *aResult)
-{
-  nsPluginElement* plugin = nsPluginElement::FromSupports(aNative);
-
-  return plugin->GetNamedItem(aName, aResult);
-}
-
-
-// PluginArray helper
-
-nsISupports*
-nsPluginArraySH::GetItemAt(nsISupports *aNative, uint32_t aIndex,
-                           nsWrapperCache **aCache, nsresult *aResult)
-{
-  nsPluginArray* array = nsPluginArray::FromSupports(aNative);
-
-  return array->GetItemAt(aIndex, aResult);
-}
-
-nsISupports*
-nsPluginArraySH::GetNamedItem(nsISupports *aNative, const nsAString& aName,
-                              nsWrapperCache **aCache, nsresult *aResult)
-{
-  nsPluginArray* array = nsPluginArray::FromSupports(aNative);
-
-  return array->GetNamedItem(aName, aResult);
-}
-
-
-// MimeTypeArray helper
-
-nsISupports*
-nsMimeTypeArraySH::GetItemAt(nsISupports *aNative, uint32_t aIndex,
-                             nsWrapperCache **aCache, nsresult *aResult)
-{
-  nsMimeTypeArray* array = nsMimeTypeArray::FromSupports(aNative);
-
-  return array->GetItemAt(aIndex, aResult);
-}
-
-nsISupports*
-nsMimeTypeArraySH::GetNamedItem(nsISupports *aNative, const nsAString& aName,
-                                nsWrapperCache **aCache, nsresult *aResult)
-{
-  nsMimeTypeArray* array = nsMimeTypeArray::FromSupports(aNative);
-
-  return array->GetNamedItem(aName, aResult);
-}
-
 
 // StringArray helper
 

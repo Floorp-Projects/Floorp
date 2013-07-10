@@ -7,10 +7,11 @@
 #ifndef jsstrinlines_h
 #define jsstrinlines_h
 
+#include "jsstr.h"
+
 #include "mozilla/Attributes.h"
 
 #include "jsatom.h"
-#include "jsstr.h"
 
 #include "jscntxtinlines.h"
 #include "jsgcinlines.h"
@@ -88,39 +89,6 @@ class StringSegmentRange
         return settle(stack.popCopy());
     }
 };
-
-/*
- * Return s advanced past any Unicode white space characters.
- */
-static inline const jschar *
-SkipSpace(const jschar *s, const jschar *end)
-{
-    JS_ASSERT(s <= end);
-
-    while (s < end && unicode::IsSpace(*s))
-        s++;
-
-    return s;
-}
-
-/*
- * Return less than, equal to, or greater than zero depending on whether
- * s1 is less than, equal to, or greater than s2.
- */
-inline bool
-CompareChars(const jschar *s1, size_t l1, const jschar *s2, size_t l2, int32_t *result)
-{
-    size_t n = Min(l1, l2);
-    for (size_t i = 0; i < n; i++) {
-        if (int32_t cmp = s1[i] - s2[i]) {
-            *result = cmp;
-            return true;
-        }
-    }
-
-    *result = (int32_t)(l1 - l2);
-    return true;
-}
 
 }  /* namespace js */
 

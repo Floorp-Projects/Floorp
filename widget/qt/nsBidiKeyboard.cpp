@@ -14,10 +14,16 @@ NS_IMPL_ISUPPORTS1(nsBidiKeyboard, nsIBidiKeyboard)
 
 nsBidiKeyboard::nsBidiKeyboard() : nsIBidiKeyboard()
 {
+  Reset();
 }
 
 nsBidiKeyboard::~nsBidiKeyboard()
 {
+}
+
+NS_IMETHODIMP nsBidiKeyboard::Reset()
+{
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsBidiKeyboard::IsLangRTL(bool *aIsRTL)

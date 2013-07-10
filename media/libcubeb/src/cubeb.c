@@ -39,6 +39,9 @@ int directsound_init(cubeb ** context, char const * context_name);
 #if defined(USE_WINMM)
 int winmm_init(cubeb ** context, char const * context_name);
 #endif
+#if defined(USE_WASAPI)
+int wasapi_init(cubeb ** context, char const * context_name);
+#endif
 #if defined(USE_SNDIO)
 int sndio_init(cubeb ** context, char const * context_name);
 #endif
@@ -92,6 +95,9 @@ cubeb_init(cubeb ** context, char const * context_name)
 #endif
 #if defined(USE_AUDIOQUEUE)
     audioqueue_init,
+#endif
+#if defined(USE_WASAPI)
+    wasapi_init,
 #endif
 #if defined(USE_WINMM)
     winmm_init,

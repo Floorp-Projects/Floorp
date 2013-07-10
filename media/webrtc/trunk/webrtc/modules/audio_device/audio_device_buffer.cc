@@ -88,7 +88,7 @@ AudioDeviceBuffer::~AudioDeviceBuffer()
 //  SetId
 // ----------------------------------------------------------------------------
 
-void AudioDeviceBuffer::SetId(WebRtc_UWord32 id)
+void AudioDeviceBuffer::SetId(uint32_t id)
 {
     WEBRTC_TRACE(kTraceMemory, kTraceAudioDevice, id, "AudioDeviceBuffer::SetId(id=%d)", id);
     _id = id;
@@ -98,7 +98,7 @@ void AudioDeviceBuffer::SetId(WebRtc_UWord32 id)
 //  RegisterAudioCallback
 // ----------------------------------------------------------------------------
 
-WebRtc_Word32 AudioDeviceBuffer::RegisterAudioCallback(AudioTransport* audioCallback)
+int32_t AudioDeviceBuffer::RegisterAudioCallback(AudioTransport* audioCallback)
 {
     CriticalSectionScoped lock(&_critSectCb);
     _ptrCbAudioTransport = audioCallback;
@@ -110,7 +110,7 @@ WebRtc_Word32 AudioDeviceBuffer::RegisterAudioCallback(AudioTransport* audioCall
 //  InitPlayout
 // ----------------------------------------------------------------------------
 
-WebRtc_Word32 AudioDeviceBuffer::InitPlayout()
+int32_t AudioDeviceBuffer::InitPlayout()
 {
     WEBRTC_TRACE(kTraceMemory, kTraceAudioDevice, _id, "%s", __FUNCTION__);
 
@@ -129,7 +129,7 @@ WebRtc_Word32 AudioDeviceBuffer::InitPlayout()
 //  InitRecording
 // ----------------------------------------------------------------------------
 
-WebRtc_Word32 AudioDeviceBuffer::InitRecording()
+int32_t AudioDeviceBuffer::InitRecording()
 {
     WEBRTC_TRACE(kTraceMemory, kTraceAudioDevice, _id, "%s", __FUNCTION__);
 
@@ -148,7 +148,7 @@ WebRtc_Word32 AudioDeviceBuffer::InitRecording()
 //  SetRecordingSampleRate
 // ----------------------------------------------------------------------------
 
-WebRtc_Word32 AudioDeviceBuffer::SetRecordingSampleRate(WebRtc_UWord32 fsHz)
+int32_t AudioDeviceBuffer::SetRecordingSampleRate(uint32_t fsHz)
 {
     WEBRTC_TRACE(kTraceMemory, kTraceAudioDevice, _id, "AudioDeviceBuffer::SetRecordingSampleRate(fsHz=%u)", fsHz);
 
@@ -161,7 +161,7 @@ WebRtc_Word32 AudioDeviceBuffer::SetRecordingSampleRate(WebRtc_UWord32 fsHz)
 //  SetPlayoutSampleRate
 // ----------------------------------------------------------------------------
 
-WebRtc_Word32 AudioDeviceBuffer::SetPlayoutSampleRate(WebRtc_UWord32 fsHz)
+int32_t AudioDeviceBuffer::SetPlayoutSampleRate(uint32_t fsHz)
 {
     WEBRTC_TRACE(kTraceMemory, kTraceAudioDevice, _id, "AudioDeviceBuffer::SetPlayoutSampleRate(fsHz=%u)", fsHz);
 
@@ -174,7 +174,7 @@ WebRtc_Word32 AudioDeviceBuffer::SetPlayoutSampleRate(WebRtc_UWord32 fsHz)
 //  RecordingSampleRate
 // ----------------------------------------------------------------------------
 
-WebRtc_Word32 AudioDeviceBuffer::RecordingSampleRate() const
+int32_t AudioDeviceBuffer::RecordingSampleRate() const
 {
     return _recSampleRate;
 }
@@ -183,7 +183,7 @@ WebRtc_Word32 AudioDeviceBuffer::RecordingSampleRate() const
 //  PlayoutSampleRate
 // ----------------------------------------------------------------------------
 
-WebRtc_Word32 AudioDeviceBuffer::PlayoutSampleRate() const
+int32_t AudioDeviceBuffer::PlayoutSampleRate() const
 {
     return _playSampleRate;
 }
@@ -192,7 +192,7 @@ WebRtc_Word32 AudioDeviceBuffer::PlayoutSampleRate() const
 //  SetRecordingChannels
 // ----------------------------------------------------------------------------
 
-WebRtc_Word32 AudioDeviceBuffer::SetRecordingChannels(WebRtc_UWord8 channels)
+int32_t AudioDeviceBuffer::SetRecordingChannels(uint8_t channels)
 {
     WEBRTC_TRACE(kTraceMemory, kTraceAudioDevice, _id, "AudioDeviceBuffer::SetRecordingChannels(channels=%u)", channels);
 
@@ -206,7 +206,7 @@ WebRtc_Word32 AudioDeviceBuffer::SetRecordingChannels(WebRtc_UWord8 channels)
 //  SetPlayoutChannels
 // ----------------------------------------------------------------------------
 
-WebRtc_Word32 AudioDeviceBuffer::SetPlayoutChannels(WebRtc_UWord8 channels)
+int32_t AudioDeviceBuffer::SetPlayoutChannels(uint8_t channels)
 {
     WEBRTC_TRACE(kTraceMemory, kTraceAudioDevice, _id, "AudioDeviceBuffer::SetPlayoutChannels(channels=%u)", channels);
 
@@ -228,7 +228,7 @@ WebRtc_Word32 AudioDeviceBuffer::SetPlayoutChannels(WebRtc_UWord8 channels)
 //  will be 2 instead of 4 four these cases.
 // ----------------------------------------------------------------------------
 
-WebRtc_Word32 AudioDeviceBuffer::SetRecordingChannel(const AudioDeviceModule::ChannelType channel)
+int32_t AudioDeviceBuffer::SetRecordingChannel(const AudioDeviceModule::ChannelType channel)
 {
     CriticalSectionScoped lock(&_critSect);
 
@@ -256,7 +256,7 @@ WebRtc_Word32 AudioDeviceBuffer::SetRecordingChannel(const AudioDeviceModule::Ch
 //  RecordingChannel
 // ----------------------------------------------------------------------------
 
-WebRtc_Word32 AudioDeviceBuffer::RecordingChannel(AudioDeviceModule::ChannelType& channel) const
+int32_t AudioDeviceBuffer::RecordingChannel(AudioDeviceModule::ChannelType& channel) const
 {
     channel = _recChannel;
     return 0;
@@ -266,7 +266,7 @@ WebRtc_Word32 AudioDeviceBuffer::RecordingChannel(AudioDeviceModule::ChannelType
 //  RecordingChannels
 // ----------------------------------------------------------------------------
 
-WebRtc_UWord8 AudioDeviceBuffer::RecordingChannels() const
+uint8_t AudioDeviceBuffer::RecordingChannels() const
 {
     return _recChannels;
 }
@@ -275,7 +275,7 @@ WebRtc_UWord8 AudioDeviceBuffer::RecordingChannels() const
 //  PlayoutChannels
 // ----------------------------------------------------------------------------
 
-WebRtc_UWord8 AudioDeviceBuffer::PlayoutChannels() const
+uint8_t AudioDeviceBuffer::PlayoutChannels() const
 {
     return _playChannels;
 }
@@ -284,7 +284,7 @@ WebRtc_UWord8 AudioDeviceBuffer::PlayoutChannels() const
 //  SetCurrentMicLevel
 // ----------------------------------------------------------------------------
 
-WebRtc_Word32 AudioDeviceBuffer::SetCurrentMicLevel(WebRtc_UWord32 level)
+int32_t AudioDeviceBuffer::SetCurrentMicLevel(uint32_t level)
 {
     _currentMicLevel = level;
     return 0;
@@ -294,7 +294,7 @@ WebRtc_Word32 AudioDeviceBuffer::SetCurrentMicLevel(WebRtc_UWord32 level)
 //  NewMicLevel
 // ----------------------------------------------------------------------------
 
-WebRtc_UWord32 AudioDeviceBuffer::NewMicLevel() const
+uint32_t AudioDeviceBuffer::NewMicLevel() const
 {
     return _newMicLevel;
 }
@@ -303,7 +303,7 @@ WebRtc_UWord32 AudioDeviceBuffer::NewMicLevel() const
 //  SetVQEData
 // ----------------------------------------------------------------------------
 
-WebRtc_Word32 AudioDeviceBuffer::SetVQEData(WebRtc_UWord32 playDelayMS, WebRtc_UWord32 recDelayMS, WebRtc_Word32 clockDrift)
+int32_t AudioDeviceBuffer::SetVQEData(uint32_t playDelayMS, uint32_t recDelayMS, int32_t clockDrift)
 {
     if ((playDelayMS + recDelayMS) > 300)
     {
@@ -321,7 +321,7 @@ WebRtc_Word32 AudioDeviceBuffer::SetVQEData(WebRtc_UWord32 playDelayMS, WebRtc_U
 //  StartInputFileRecording
 // ----------------------------------------------------------------------------
 
-WebRtc_Word32 AudioDeviceBuffer::StartInputFileRecording(
+int32_t AudioDeviceBuffer::StartInputFileRecording(
     const char fileName[kAdmMaxFileNameSize])
 {
     WEBRTC_TRACE(kTraceMemory, kTraceAudioDevice, _id, "%s", __FUNCTION__);
@@ -338,7 +338,7 @@ WebRtc_Word32 AudioDeviceBuffer::StartInputFileRecording(
 //  StopInputFileRecording
 // ----------------------------------------------------------------------------
 
-WebRtc_Word32 AudioDeviceBuffer::StopInputFileRecording()
+int32_t AudioDeviceBuffer::StopInputFileRecording()
 {
     WEBRTC_TRACE(kTraceMemory, kTraceAudioDevice, _id, "%s", __FUNCTION__);
 
@@ -354,7 +354,7 @@ WebRtc_Word32 AudioDeviceBuffer::StopInputFileRecording()
 //  StartOutputFileRecording
 // ----------------------------------------------------------------------------
 
-WebRtc_Word32 AudioDeviceBuffer::StartOutputFileRecording(
+int32_t AudioDeviceBuffer::StartOutputFileRecording(
     const char fileName[kAdmMaxFileNameSize])
 {
     WEBRTC_TRACE(kTraceMemory, kTraceAudioDevice, _id, "%s", __FUNCTION__);
@@ -371,7 +371,7 @@ WebRtc_Word32 AudioDeviceBuffer::StartOutputFileRecording(
 //  StopOutputFileRecording
 // ----------------------------------------------------------------------------
 
-WebRtc_Word32 AudioDeviceBuffer::StopOutputFileRecording()
+int32_t AudioDeviceBuffer::StopOutputFileRecording()
 {
     WEBRTC_TRACE(kTraceMemory, kTraceAudioDevice, _id, "%s", __FUNCTION__);
 
@@ -398,8 +398,8 @@ WebRtc_Word32 AudioDeviceBuffer::StopOutputFileRecording()
 //  16-bit,48kHz stereo,10ms => nSamples=480 => _recSize=4*480=1920 bytes
 // ----------------------------------------------------------------------------
 
-WebRtc_Word32 AudioDeviceBuffer::SetRecordedBuffer(const void* audioBuffer,
-                                                   WebRtc_UWord32 nSamples)
+int32_t AudioDeviceBuffer::SetRecordedBuffer(const void* audioBuffer,
+                                             uint32_t nSamples)
 {
     CriticalSectionScoped lock(&_critSect);
 
@@ -430,8 +430,8 @@ WebRtc_Word32 AudioDeviceBuffer::SetRecordedBuffer(const void* audioBuffer,
     }
     else
     {
-        WebRtc_Word16* ptr16In = (WebRtc_Word16*)audioBuffer;
-        WebRtc_Word16* ptr16Out = (WebRtc_Word16*)&_recBuffer[0];
+        int16_t* ptr16In = (int16_t*)audioBuffer;
+        int16_t* ptr16Out = (int16_t*)&_recBuffer[0];
 
         if (AudioDeviceModule::kChannelRight == _recChannel)
         {
@@ -439,7 +439,7 @@ WebRtc_Word32 AudioDeviceBuffer::SetRecordedBuffer(const void* audioBuffer,
         }
 
         // exctract left or right channel from input buffer to the local buffer
-        for (WebRtc_UWord32 i = 0; i < _recSamples; i++)
+        for (uint32_t i = 0; i < _recSamples; i++)
         {
             *ptr16Out = *ptr16In;
             ptr16Out++;
@@ -461,7 +461,7 @@ WebRtc_Word32 AudioDeviceBuffer::SetRecordedBuffer(const void* audioBuffer,
 //  DeliverRecordedData
 // ----------------------------------------------------------------------------
 
-WebRtc_Word32 AudioDeviceBuffer::DeliverRecordedData()
+int32_t AudioDeviceBuffer::DeliverRecordedData()
 {
     CriticalSectionScoped lock(&_critSectCb);
 
@@ -481,22 +481,22 @@ WebRtc_Word32 AudioDeviceBuffer::DeliverRecordedData()
         return 0;
     }
 
-    WebRtc_Word32 res(0);
-    WebRtc_UWord32 newMicLevel(0);
-    WebRtc_UWord32 totalDelayMS = _playDelayMS +_recDelayMS;
+    int32_t res(0);
+    uint32_t newMicLevel(0);
+    uint32_t totalDelayMS = _playDelayMS +_recDelayMS;
 
     if (_measureDelay)
     {
         CriticalSectionScoped lock(&_critSect);
 
         memset(&_recBuffer[0], 0, _recSize);
-        WebRtc_UWord32 time = AudioDeviceUtility::GetTimeInMS();
+        uint32_t time = AudioDeviceUtility::GetTimeInMS();
         if (time - _lastPulseTime > 500)
         {
             _pulseList.PushBack(time);
             _lastPulseTime = time;
 
-            WebRtc_Word16* ptr16 = (WebRtc_Word16*)&_recBuffer[0];
+            int16_t* ptr16 = (int16_t*)&_recBuffer[0];
             *ptr16 = 30000;
         }
     }
@@ -522,22 +522,31 @@ WebRtc_Word32 AudioDeviceBuffer::DeliverRecordedData()
 //  RequestPlayoutData
 // ----------------------------------------------------------------------------
 
-WebRtc_Word32 AudioDeviceBuffer::RequestPlayoutData(WebRtc_UWord32 nSamples)
+int32_t AudioDeviceBuffer::RequestPlayoutData(uint32_t nSamples)
 {
+    uint32_t playSampleRate = 0;
+    uint8_t playBytesPerSample = 0;
+    uint8_t playChannels = 0;
     {
         CriticalSectionScoped lock(&_critSect);
 
+        // Store copies under lock and use copies hereafter to avoid race with
+        // setter methods.
+        playSampleRate = _playSampleRate;
+        playBytesPerSample = _playBytesPerSample;
+        playChannels = _playChannels;
+
         // Ensure that user has initialized all essential members
-        if ((_playBytesPerSample == 0) ||
-            (_playChannels == 0)       ||
-            (_playSampleRate == 0))
+        if ((playBytesPerSample == 0) ||
+            (playChannels == 0)       ||
+            (playSampleRate == 0))
         {
             assert(false);
             return -1;
         }
 
         _playSamples = nSamples;
-        _playSize = _playBytesPerSample * nSamples;  // {2,4}*nSamples
+        _playSize = playBytesPerSample * nSamples;  // {2,4}*nSamples
         if (_playSize > kMaxBufferSizeBytes)
         {
             assert(false);
@@ -551,7 +560,7 @@ WebRtc_Word32 AudioDeviceBuffer::RequestPlayoutData(WebRtc_UWord32 nSamples)
         }
     }
 
-    WebRtc_UWord32 nSamplesOut(0);
+    uint32_t nSamplesOut(0);
 
     CriticalSectionScoped lock(&_critSectCb);
 
@@ -563,12 +572,12 @@ WebRtc_Word32 AudioDeviceBuffer::RequestPlayoutData(WebRtc_UWord32 nSamples)
 
     if (_ptrCbAudioTransport)
     {
-        WebRtc_UWord32 res(0);
+        uint32_t res(0);
 
         res = _ptrCbAudioTransport->NeedMorePlayData(_playSamples,
-                                                     _playBytesPerSample,
-                                                     _playChannels,
-                                                     _playSampleRate,
+                                                     playBytesPerSample,
+                                                     playChannels,
+                                                     playSampleRate,
                                                      &_playBuffer[0],
                                                      nSamplesOut);
         if (res != 0)
@@ -583,19 +592,19 @@ WebRtc_Word32 AudioDeviceBuffer::RequestPlayoutData(WebRtc_UWord32 nSamples)
         {
             CriticalSectionScoped lock(&_critSect);
 
-            WebRtc_Word16 maxAbs = WebRtcSpl_MaxAbsValueW16((const WebRtc_Word16*)&_playBuffer[0], (WebRtc_Word16)nSamplesOut*_playChannels);
+            int16_t maxAbs = WebRtcSpl_MaxAbsValueW16((const int16_t*)&_playBuffer[0], (int16_t)nSamplesOut*_playChannels);
             if (maxAbs > 1000)
             {
-                WebRtc_UWord32 nowTime = AudioDeviceUtility::GetTimeInMS();
+                uint32_t nowTime = AudioDeviceUtility::GetTimeInMS();
 
                 if (!_pulseList.Empty())
                 {
                     ListItem* item = _pulseList.First();
                     if (item)
                     {
-                        WebRtc_Word16 maxIndex = WebRtcSpl_MaxAbsIndexW16((const WebRtc_Word16*)&_playBuffer[0], (WebRtc_Word16)nSamplesOut*_playChannels);
-                        WebRtc_UWord32 pulseTime = item->GetUnsignedItem();
-                        WebRtc_UWord32 diff = nowTime - pulseTime + (10*maxIndex)/(nSamplesOut*_playChannels);
+                        int16_t maxIndex = WebRtcSpl_MaxAbsIndexW16((const int16_t*)&_playBuffer[0], (int16_t)nSamplesOut*_playChannels);
+                        uint32_t pulseTime = item->GetUnsignedItem();
+                        uint32_t diff = nowTime - pulseTime + (10*maxIndex)/(nSamplesOut*_playChannels);
                         WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, _id, "diff time in playout delay (%d)", diff);
                     }
                     _pulseList.PopFront();
@@ -611,7 +620,7 @@ WebRtc_Word32 AudioDeviceBuffer::RequestPlayoutData(WebRtc_UWord32 nSamples)
 //  GetPlayoutData
 // ----------------------------------------------------------------------------
 
-WebRtc_Word32 AudioDeviceBuffer::GetPlayoutData(void* audioBuffer)
+int32_t AudioDeviceBuffer::GetPlayoutData(void* audioBuffer)
 {
     CriticalSectionScoped lock(&_critSect);
 
@@ -645,7 +654,7 @@ void AudioDeviceBuffer::_EmptyList()
         ListItem* item = _pulseList.First();
         if (item)
         {
-            // WebRtc_UWord32 ts = item->GetUnsignedItem();
+            // uint32_t ts = item->GetUnsignedItem();
         }
         _pulseList.PopFront();
     }

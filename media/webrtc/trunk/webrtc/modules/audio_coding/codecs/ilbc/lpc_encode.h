@@ -26,12 +26,12 @@
  *---------------------------------------------------------------*/
 
 void WebRtcIlbcfix_LpcEncode(
-    WebRtc_Word16 *syntdenum,  /* (i/o) synthesis filter coefficients
+    int16_t *syntdenum,  /* (i/o) synthesis filter coefficients
                                   before/after encoding */
-    WebRtc_Word16 *weightdenum, /* (i/o) weighting denumerator coefficients
+    int16_t *weightdenum, /* (i/o) weighting denumerator coefficients
                                    before/after encoding */
-    WebRtc_Word16 *lsf_index,  /* (o) lsf quantization index */
-    WebRtc_Word16 *data,   /* (i) Speech to do LPC analysis on */
+    int16_t *lsf_index,  /* (o) lsf quantization index */
+    int16_t *data,   /* (i) Speech to do LPC analysis on */
     iLBC_Enc_Inst_t *iLBCenc_inst
     /* (i/o) the encoder state structure */
                              );

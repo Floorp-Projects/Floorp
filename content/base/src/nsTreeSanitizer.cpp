@@ -1111,10 +1111,9 @@ nsTreeSanitizer::SanitizeStyleSheet(const nsAString& aOriginal,
   // Loop through all the rules found in the CSS text
   int32_t ruleCount = sheet->StyleRuleCount();
   for (int32_t i = 0; i < ruleCount; ++i) {
-    nsRefPtr<mozilla::css::Rule> rule;
-    rv = sheet->GetStyleRuleAt(i, *getter_AddRefs(rule));
-    if (NS_FAILED(rv))
-      continue; NS_ASSERTION(rule, "We should have a rule by now");
+    mozilla::css::Rule* rule = sheet->GetStyleRuleAt(i);
+    if (!rule)
+      continue;
     switch (rule->GetType()) {
       default:
         didSanitize = true;

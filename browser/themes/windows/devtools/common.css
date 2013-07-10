@@ -280,15 +280,16 @@
   -moz-appearance: none;
   /* We want to match the height of a toolbar with a toolbarbutton
    * First, we need to replicated the padding of toolbar (4px),
-   * then, the padding of the button itself from toolbarbutton.css (3px),
-   * Also, we need to take the border of the buttons into accout (1px).
-   * Padding-bottom is one pixel shorter because we need to include the
-   * black border.
+   * then we need to take the border of the buttons into account (1px).
    */
-  padding: 8px 3px 7px;
+  padding: 5px 3px;
   -moz-padding-start: 6px;
   margin: 0;
   min-width: 78px;
+  /* toolbar's min-height is button min-height (25px) + padding (2 * 4px): 33px.
+   * -1px because the parent element (<tabs>) comes with a 1px bottom border.
+   */
+  min-height: 32px;
   text-shadow: 0 -1px 0 hsla(210,8%,5%,.45);
   text-align: center;
   color: inherit;

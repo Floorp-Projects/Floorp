@@ -57,6 +57,20 @@ public:
     return mozilla::dom::IDBVersionChangeEventBinding::Wrap(aCx, aScope, this);
   }
 
+  static already_AddRefed<IDBVersionChangeEvent>
+  Constructor(const GlobalObject& aGlobal,
+              const NonNull<nsAString>& aType,
+              const IDBVersionChangeEventInit& aOptions,
+              ErrorResult& aRv)
+  {
+    uint64_t newVersion = 0;
+    if (!aOptions.mNewVersion.IsNull()) {
+      newVersion = aOptions.mNewVersion.Value();
+    }
+    nsCOMPtr<EventTarget> target = do_QueryInterface(aGlobal.Get());
+    return CreateInternal(target, aType, aOptions.mOldVersion, newVersion);
+  }
+
   uint64_t OldVersion()
   {
     return mOldVersion;
@@ -126,7 +140,7 @@ protected:
   }
   virtual ~IDBVersionChangeEvent() { }
 
-  static already_AddRefed<nsDOMEvent>
+  static already_AddRefed<IDBVersionChangeEvent>
   CreateInternal(mozilla::dom::EventTarget* aOwner,
                  const nsAString& aType,
                  uint64_t aOldVersion,

@@ -597,6 +597,21 @@ NON_IDL_EVENT(open,
               EventNameType_None,
               NS_EVENT)
 
+NON_IDL_EVENT(dataavailable,
+              NS_MEDIARECORDER_DATAAVAILABLE,
+              EventNameType_None,
+              NS_EVENT)
+
+NON_IDL_EVENT(stop,
+              NS_MEDIARECORDER_STOP,
+              EventNameType_None,
+              NS_EVENT)
+
+NON_IDL_EVENT(warning,
+              NS_MEDIARECORDER_WARNING,
+              EventNameType_None,
+              NS_EVENT)
+
 // Events that only have on* attributes on XUL elements
 NON_IDL_EVENT(text,
               NS_TEXT_TEXT,

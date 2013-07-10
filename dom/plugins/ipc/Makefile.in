@@ -22,13 +22,6 @@ DEFINES += \
   $(NULL)
 endif
 
-ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
-DISABLED_CMMSRCS   += \
-    PluginUtilsOSX.mm \
-    PluginInterposeOSX.mm \
-    $(NULL)
-endif
-
 LOCAL_INCLUDES = \
   -I$(srcdir)/../base \
   -I$(topsrcdir)/xpcom/base/ \

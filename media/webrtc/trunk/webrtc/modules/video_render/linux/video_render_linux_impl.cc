@@ -19,7 +19,7 @@
 namespace webrtc {
 
 VideoRenderLinuxImpl::VideoRenderLinuxImpl(
-                                           const WebRtc_Word32 id,
+                                           const int32_t id,
                                            const VideoRenderType videoRenderType,
                                            void* window, const bool fullscreen) :
             _id(id),
@@ -37,7 +37,7 @@ VideoRenderLinuxImpl::~VideoRenderLinuxImpl()
     delete &_renderLinuxCritsect;
 }
 
-WebRtc_Word32 VideoRenderLinuxImpl::Init()
+int32_t VideoRenderLinuxImpl::Init()
 {
     WEBRTC_TRACE(kTraceInfo, kTraceVideoRenderer, _id, "%s",
                  __FUNCTION__);
@@ -61,7 +61,7 @@ WebRtc_Word32 VideoRenderLinuxImpl::Init()
 
 }
 
-WebRtc_Word32 VideoRenderLinuxImpl::ChangeUniqueId(const WebRtc_Word32 id)
+int32_t VideoRenderLinuxImpl::ChangeUniqueId(const int32_t id)
 {
     CriticalSectionScoped cs(&_renderLinuxCritsect);
 
@@ -69,7 +69,7 @@ WebRtc_Word32 VideoRenderLinuxImpl::ChangeUniqueId(const WebRtc_Word32 id)
     return 0;
 }
 
-WebRtc_Word32 VideoRenderLinuxImpl::ChangeWindow(void* window)
+int32_t VideoRenderLinuxImpl::ChangeWindow(void* window)
 {
     WEBRTC_TRACE(kTraceInfo, kTraceVideoRenderer, _id, "%s",
                  __FUNCTION__);
@@ -86,8 +86,8 @@ WebRtc_Word32 VideoRenderLinuxImpl::ChangeWindow(void* window)
 }
 
 VideoRenderCallback* VideoRenderLinuxImpl::AddIncomingRenderStream(
-                                                                       const WebRtc_UWord32 streamId,
-                                                                       const WebRtc_UWord32 zOrder,
+                                                                       const uint32_t streamId,
+                                                                       const uint32_t zOrder,
                                                                        const float left,
                                                                        const float top,
                                                                        const float right,
@@ -121,8 +121,8 @@ VideoRenderCallback* VideoRenderLinuxImpl::AddIncomingRenderStream(
     return renderCallback;
 }
 
-WebRtc_Word32 VideoRenderLinuxImpl::DeleteIncomingRenderStream(
-                                                               const WebRtc_UWord32 streamId)
+int32_t VideoRenderLinuxImpl::DeleteIncomingRenderStream(
+                                                               const uint32_t streamId)
 {
     WEBRTC_TRACE(kTraceInfo, kTraceVideoRenderer, _id, "%s",
                  __FUNCTION__);
@@ -135,9 +135,9 @@ WebRtc_Word32 VideoRenderLinuxImpl::DeleteIncomingRenderStream(
     return -1;
 }
 
-WebRtc_Word32 VideoRenderLinuxImpl::GetIncomingRenderStreamProperties(
-                                                                      const WebRtc_UWord32 streamId,
-                                                                      WebRtc_UWord32& zOrder,
+int32_t VideoRenderLinuxImpl::GetIncomingRenderStreamProperties(
+                                                                      const uint32_t streamId,
+                                                                      uint32_t& zOrder,
                                                                       float& left,
                                                                       float& top,
                                                                       float& right,
@@ -156,14 +156,14 @@ WebRtc_Word32 VideoRenderLinuxImpl::GetIncomingRenderStreamProperties(
     return -1;
 }
 
-WebRtc_Word32 VideoRenderLinuxImpl::StartRender()
+int32_t VideoRenderLinuxImpl::StartRender()
 {
     WEBRTC_TRACE(kTraceInfo, kTraceVideoRenderer, _id, "%s",
                  __FUNCTION__);
     return 0;
 }
 
-WebRtc_Word32 VideoRenderLinuxImpl::StopRender()
+int32_t VideoRenderLinuxImpl::StopRender()
 {
     WEBRTC_TRACE(kTraceInfo, kTraceVideoRenderer, _id, "%s",
                  __FUNCTION__);
@@ -185,29 +185,29 @@ bool VideoRenderLinuxImpl::FullScreen()
     return false;
 }
 
-WebRtc_Word32 VideoRenderLinuxImpl::GetGraphicsMemory(
-                                                      WebRtc_UWord64& /*totalGraphicsMemory*/,
-                                                      WebRtc_UWord64& /*availableGraphicsMemory*/) const
+int32_t VideoRenderLinuxImpl::GetGraphicsMemory(
+                                                      uint64_t& /*totalGraphicsMemory*/,
+                                                      uint64_t& /*availableGraphicsMemory*/) const
 {
     WEBRTC_TRACE(kTraceError, kTraceVideoRenderer, _id,
                  "%s - not supported on Linux", __FUNCTION__);
     return -1;
 }
 
-WebRtc_Word32 VideoRenderLinuxImpl::GetScreenResolution(
-                                                        WebRtc_UWord32& /*screenWidth*/,
-                                                        WebRtc_UWord32& /*screenHeight*/) const
+int32_t VideoRenderLinuxImpl::GetScreenResolution(
+                                                        uint32_t& /*screenWidth*/,
+                                                        uint32_t& /*screenHeight*/) const
 {
     return -1;
 }
 
-WebRtc_UWord32 VideoRenderLinuxImpl::RenderFrameRate(const WebRtc_UWord32 /*streamId*/)
+uint32_t VideoRenderLinuxImpl::RenderFrameRate(const uint32_t /*streamId*/)
 {
     return -1;
 }
 
-WebRtc_Word32 VideoRenderLinuxImpl::SetStreamCropping(
-                                                      const WebRtc_UWord32 /*streamId*/,
+int32_t VideoRenderLinuxImpl::SetStreamCropping(
+                                                      const uint32_t /*streamId*/,
                                                       const float /*left*/,
                                                       const float /*top*/,
                                                       const float /*right*/,
@@ -218,15 +218,15 @@ WebRtc_Word32 VideoRenderLinuxImpl::SetStreamCropping(
     return -1;
 }
 
-WebRtc_Word32 VideoRenderLinuxImpl::SetTransparentBackground(const bool /*enable*/)
+int32_t VideoRenderLinuxImpl::SetTransparentBackground(const bool /*enable*/)
 {
     WEBRTC_TRACE(kTraceError, kTraceVideoRenderer, _id,
                  "%s - not supported on Linux", __FUNCTION__);
     return -1;
 }
 
-WebRtc_Word32 VideoRenderLinuxImpl::ConfigureRenderer(
-                                                      const WebRtc_UWord32 streamId,
+int32_t VideoRenderLinuxImpl::ConfigureRenderer(
+                                                      const uint32_t streamId,
                                                       const unsigned int zOrder,
                                                       const float left,
                                                       const float top,
@@ -238,12 +238,12 @@ WebRtc_Word32 VideoRenderLinuxImpl::ConfigureRenderer(
     return -1;
 }
 
-WebRtc_Word32 VideoRenderLinuxImpl::SetText(
-                                            const WebRtc_UWord8 textId,
-                                            const WebRtc_UWord8* text,
-                                            const WebRtc_Word32 textLength,
-                                            const WebRtc_UWord32 textColorRef,
-                                            const WebRtc_UWord32 backgroundColorRef,
+int32_t VideoRenderLinuxImpl::SetText(
+                                            const uint8_t textId,
+                                            const uint8_t* text,
+                                            const int32_t textLength,
+                                            const uint32_t textColorRef,
+                                            const uint32_t backgroundColorRef,
                                             const float left, const float top,
                                             const float rigth,
                                             const float bottom)
@@ -253,13 +253,13 @@ WebRtc_Word32 VideoRenderLinuxImpl::SetText(
     return -1;
 }
 
-WebRtc_Word32 VideoRenderLinuxImpl::SetBitmap(const void* bitMap,
-                                              const WebRtc_UWord8 pictureId,
-                                              const void* colorKey,
-                                              const float left,
-                                              const float top,
-                                              const float right,
-                                              const float bottom)
+int32_t VideoRenderLinuxImpl::SetBitmap(const void* bitMap,
+                                        const uint8_t pictureId,
+                                        const void* colorKey,
+                                        const float left,
+                                        const float top,
+                                        const float right,
+                                        const float bottom)
 {
     WEBRTC_TRACE(kTraceError, kTraceVideoRenderer, _id,
                  "%s - not supported on Linux", __FUNCTION__);

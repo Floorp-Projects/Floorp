@@ -141,8 +141,8 @@ nsINode::nsSlots::Unlink()
 
 nsINode::~nsINode()
 {
-  NS_ASSERTION(!HasSlots(), "nsNodeUtils::LastRelease was not called?");
-  NS_ASSERTION(mSubtreeRoot == this, "Didn't restore state properly?");
+  MOZ_ASSERT(!HasSlots(), "nsNodeUtils::LastRelease was not called?");
+  MOZ_ASSERT(mSubtreeRoot == this, "Didn't restore state properly?");
 }
 
 void*
@@ -2358,6 +2358,27 @@ nsINode::QuerySelectorAll(const nsAString& aSelector, ErrorResult& aResult)
   aResult = FindMatchingElements<false>(this, aSelector, *contentList);
 
   return contentList.forget();
+}
+
+nsresult
+nsINode::QuerySelector(const nsAString& aSelector, nsIDOMElement **aReturn)
+{
+  ErrorResult rv;
+  Element* result = nsINode::QuerySelector(aSelector, rv);
+  if (rv.Failed()) {
+    return rv.ErrorCode();
+  }
+  nsCOMPtr<nsIDOMElement> elt = do_QueryInterface(result);
+  elt.forget(aReturn);
+  return NS_OK;
+}
+
+nsresult
+nsINode::QuerySelectorAll(const nsAString& aSelector, nsIDOMNodeList **aReturn)
+{
+  ErrorResult rv;
+  *aReturn = nsINode::QuerySelectorAll(aSelector, rv).get();
+  return rv.ErrorCode();
 }
 
 JSObject*

@@ -1914,6 +1914,12 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   -moz-padding-start: 0px;
 }
 
+.browserContainer > findbar {
+  background-color: -moz-dialog;
+  color: -moz-DialogText;
+  text-shadow: none;
+}
+
 /* ::::: throbber ::::: */
 
 #navigator-throbber {

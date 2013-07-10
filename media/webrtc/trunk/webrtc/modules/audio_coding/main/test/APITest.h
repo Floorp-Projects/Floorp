@@ -29,7 +29,7 @@ public:
 
     void Perform();
 private:
-    WebRtc_Word16 SetUp();
+    int16_t SetUp();
 
     static bool PushAudioThreadA(void* obj);
     static bool PullAudioThreadA(void* obj);
@@ -63,7 +63,7 @@ private:
 
     void ChangeCodec(char side);
 
-    void Wait(WebRtc_UWord32 waitLengthMs);
+    void Wait(uint32_t waitLengthMs);
 
     void LookForDTMF(char side);
 
@@ -99,9 +99,9 @@ private:
 
     //--- I/O params
     // A
-    WebRtc_Word32 _outFreqHzA;
+    int32_t _outFreqHzA;
     // B
-    WebRtc_Word32 _outFreqHzB;
+    int32_t _outFreqHzB;
 
     // Should we write to file.
     // we might skip writing to file if we
@@ -120,8 +120,8 @@ private:
     EventWrapper* _apiEventB;       // API calls
 
     // keep track of the codec in either side.
-    WebRtc_UWord8 _codecCntrA;
-    WebRtc_UWord8 _codecCntrB;
+    uint8_t _codecCntrA;
+    uint8_t _codecCntrB;
 
     // Is set to true if there is no encoder in either side
     bool _thereIsEncoderA;
@@ -137,8 +137,8 @@ private:
     bool             _sendDTXB;
     ACMVADMode       _sendVADModeB;
 
-    WebRtc_Word32    _minDelayA;
-    WebRtc_Word32    _minDelayB;
+    int32_t    _minDelayA;
+    int32_t    _minDelayB;
     bool             _payloadUsed[32];
 
     AudioPlayoutMode    _playoutModeA;
