@@ -98,7 +98,7 @@ public:
 
   void NotifyDimensionsChanged(ScreenIntSize size);
 
-  void ZoomToRect(const CSSRect& aRect);
+  void ZoomToRect(const gfxRect& aRect);
 
   void ContentReceivedTouch(bool aPreventDefault);
 

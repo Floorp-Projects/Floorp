@@ -131,9 +131,9 @@ public:
   /**
    * Kicks an animation to zoom to a rect. This may be either a zoom out or zoom
    * in. The actual animation is done on the compositor thread after being set
-   * up.
+   * up. |aRect| must be given in CSS pixels, relative to the document.
    */
-  void ZoomToRect(CSSRect aRect);
+  void ZoomToRect(const gfxRect& aRect);
 
   /**
    * If we have touch listeners, this should always be called when we know
