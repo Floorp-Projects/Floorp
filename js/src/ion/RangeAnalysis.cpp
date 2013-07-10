@@ -387,6 +387,8 @@ Range::Range(const MDefinition *def)
 
     if (def->type() == MIRType_Int32)
         truncate();
+    else if (def->type() == MIRType_Boolean)
+        truncateToBoolean();
 }
 
 const int64_t RANGE_INF_MAX = (int64_t) JSVAL_INT_MAX + 1;
@@ -1489,6 +1491,14 @@ Range::truncate()
     int64_t l = isLowerInfinite() ? JSVAL_INT_MIN : lower();
     int64_t h = isUpperInfinite() ? JSVAL_INT_MAX : upper();
     set(l, h, false, 32);
+}
+
+void
+Range::truncateToBoolean()
+{
+    if (isBoolean())
+        return;
+    set(0, 1, false, 1);
 }
 
 bool
