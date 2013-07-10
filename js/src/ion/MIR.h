@@ -627,20 +627,20 @@ class MAryInstruction : public MInstruction
   protected:
     FixedArityList<MUse, Arity> operands_;
 
-    void setOperand(size_t index, MDefinition *operand) {
+    void setOperand(size_t index, MDefinition *operand) MOZ_FINAL MOZ_OVERRIDE {
         operands_[index].set(operand, this, index);
         operand->addUse(&operands_[index]);
     }
 
-    MUse *getUseFor(size_t index) {
+    MUse *getUseFor(size_t index) MOZ_FINAL MOZ_OVERRIDE {
         return &operands_[index];
     }
 
   public:
-    MDefinition *getOperand(size_t index) const {
+    MDefinition *getOperand(size_t index) const MOZ_FINAL MOZ_OVERRIDE {
         return operands_[index].producer();
     }
-    size_t numOperands() const {
+    size_t numOperands() const MOZ_FINAL MOZ_OVERRIDE {
         return Arity;
     }
 };
@@ -946,7 +946,7 @@ class MAryControlInstruction : public MControlInstruction
     FixedArityList<MBasicBlock *, Successors> successors_;
 
   protected:
-    void setOperand(size_t index, MDefinition *operand) {
+    void setOperand(size_t index, MDefinition *operand) MOZ_FINAL MOZ_OVERRIDE {
         operands_[index].set(operand, this, index);
         operand->addUse(&operands_[index]);
     }
@@ -954,24 +954,24 @@ class MAryControlInstruction : public MControlInstruction
         successors_[index] = successor;
     }
 
-    MUse *getUseFor(size_t index) {
+    MUse *getUseFor(size_t index) MOZ_FINAL MOZ_OVERRIDE {
         return &operands_[index];
     }
 
   public:
-    MDefinition *getOperand(size_t index) const {
+    MDefinition *getOperand(size_t index) const MOZ_FINAL MOZ_OVERRIDE {
         return operands_[index].producer();
     }
-    size_t numOperands() const {
+    size_t numOperands() const MOZ_FINAL MOZ_OVERRIDE {
         return Arity;
     }
-    size_t numSuccessors() const {
+    size_t numSuccessors() const MOZ_FINAL MOZ_OVERRIDE {
         return Successors;
     }
-    MBasicBlock *getSuccessor(size_t i) const {
+    MBasicBlock *getSuccessor(size_t i) const MOZ_FINAL MOZ_OVERRIDE {
         return successors_[i];
     }
-    void replaceSuccessor(size_t i, MBasicBlock *succ) {
+    void replaceSuccessor(size_t i, MBasicBlock *succ) MOZ_FINAL MOZ_OVERRIDE {
         successors_[i] = succ;
     }
 };
@@ -1366,18 +1366,18 @@ class MVariadicInstruction : public MInstruction
 
   public:
     // Will assert if called before initialization.
-    MDefinition *getOperand(size_t index) const {
+    MDefinition *getOperand(size_t index) const MOZ_FINAL MOZ_OVERRIDE {
         return operands_[index].producer();
     }
-    size_t numOperands() const {
+    size_t numOperands() const MOZ_FINAL MOZ_OVERRIDE {
         return operands_.length();
     }
-    void setOperand(size_t index, MDefinition *operand) {
+    void setOperand(size_t index, MDefinition *operand) MOZ_FINAL MOZ_OVERRIDE {
         operands_[index].set(operand, this, index);
         operand->addUse(&operands_[index]);
     }
 
-    MUse *getUseFor(size_t index) {
+    MUse *getUseFor(size_t index) MOZ_FINAL MOZ_OVERRIDE {
         return &operands_[index];
     }
 };
@@ -5685,20 +5685,20 @@ class MDispatchInstruction
     }
 
   protected:
-    void setOperand(size_t index, MDefinition *operand) {
+    void setOperand(size_t index, MDefinition *operand) MOZ_FINAL MOZ_OVERRIDE {
         JS_ASSERT(index == 0);
         operand_.set(operand, this, 0);
         operand->addUse(&operand_);
     }
-    MUse *getUseFor(size_t index) {
+    MUse *getUseFor(size_t index) MOZ_FINAL MOZ_OVERRIDE {
         JS_ASSERT(index == 0);
         return &operand_;
     }
-    MDefinition *getOperand(size_t index) const {
+    MDefinition *getOperand(size_t index) const MOZ_FINAL MOZ_OVERRIDE {
         JS_ASSERT(index == 0);
         return operand_.producer();
     }
-    size_t numOperands() const {
+    size_t numOperands() const MOZ_FINAL MOZ_OVERRIDE {
         return 1;
     }
 
@@ -5710,13 +5710,13 @@ class MDispatchInstruction
         else
             map_[i].block = successor;
     }
-    size_t numSuccessors() const {
+    size_t numSuccessors() const MOZ_FINAL MOZ_OVERRIDE {
         return map_.length() + (fallback_ ? 1 : 0);
     }
-    void replaceSuccessor(size_t i, MBasicBlock *successor) {
+    void replaceSuccessor(size_t i, MBasicBlock *successor) MOZ_FINAL MOZ_OVERRIDE {
         setSuccessor(i, successor);
     }
-    MBasicBlock *getSuccessor(size_t i) const {
+    MBasicBlock *getSuccessor(size_t i) const MOZ_FINAL MOZ_OVERRIDE {
         JS_ASSERT(i < numSuccessors());
         if (i == map_.length())
             return fallback_;
