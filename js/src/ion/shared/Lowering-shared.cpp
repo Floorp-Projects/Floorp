@@ -72,7 +72,7 @@ LIRGeneratorShared::buildSnapshot(LInstruction *ins, MResumePoint *rp, BailoutKi
     size_t i = 0;
     for (MResumePoint **it = iter.begin(), **end = iter.end(); it != end; ++it) {
         MResumePoint *mir = *it;
-        for (size_t j = 0; j < mir->numOperands(); ++i, ++j) {
+        for (size_t j = 0, e = mir->numOperands(); j < e; ++i, ++j) {
             MDefinition *ins = mir->getOperand(j);
 
             LAllocation *type = snapshot->typeOfSlot(i);
@@ -124,7 +124,7 @@ LIRGeneratorShared::buildSnapshot(LInstruction *ins, MResumePoint *rp, BailoutKi
     size_t i = 0;
     for (MResumePoint **it = iter.begin(), **end = iter.end(); it != end; ++it) {
         MResumePoint *mir = *it;
-        for (size_t j = 0; j < mir->numOperands(); ++i, ++j) {
+        for (size_t j = 0, e = mir->numOperands(); j < e; ++i, ++j) {
             MDefinition *def = mir->getOperand(j);
 
             if (def->isPassArg())

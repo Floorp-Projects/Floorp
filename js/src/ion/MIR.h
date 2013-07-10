@@ -3741,7 +3741,7 @@ class MPhi : public MDefinition, public InlineForwardListNode<MPhi>
         // returns the operand that it will always be equal to (a, in
         // those two cases).
         MDefinition *first = getOperand(0);
-        for (size_t i = 1; i < numOperands(); i++) {
+        for (size_t i = 1, e = numOperands(); i < e; i++) {
             if (getOperand(i) != first && getOperand(i) != this)
                 return NULL;
         }
