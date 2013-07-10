@@ -10,56 +10,67 @@
 #include "mozilla/Preferences.h"
 #include "nsPresContext.h"
 #include "mozilla/dom/Touch.h"
+#include "mozilla/dom/TouchListBinding.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
 
 // TouchList
-nsDOMTouchList::nsDOMTouchList(const nsTArray< nsRefPtr<Touch> >& aTouches)
-{
-  mPoints.AppendElements(aTouches);
-  nsJSContext::LikelyShortLivingObjectCreated();
-}
-
-DOMCI_DATA(TouchList, nsDOMTouchList)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsDOMTouchList)
+  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsISupports)
   NS_INTERFACE_MAP_ENTRY(nsIDOMTouchList)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(TouchList)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_CYCLE_COLLECTION_1(nsDOMTouchList, mPoints)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_2(nsDOMTouchList, mParent, mPoints)
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsDOMTouchList)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsDOMTouchList)
 
+/* virtual */ JSObject*
+nsDOMTouchList::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
+{
+  return TouchListBinding::Wrap(aCx, aScope, this);
+}
+
+/* static */ bool
+nsDOMTouchList::PrefEnabled()
+{
+  return nsDOMTouchEvent::PrefEnabled();
+}
+
 NS_IMETHODIMP
 nsDOMTouchList::GetLength(uint32_t* aLength)
 {
-  *aLength = mPoints.Length();
+  *aLength = Length();
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDOMTouchList::Item(uint32_t aIndex, nsIDOMTouch** aRetVal)
 {
-  NS_IF_ADDREF(*aRetVal = mPoints.SafeElementAt(aIndex, nullptr));
+  NS_IF_ADDREF(*aRetVal = Item(aIndex));
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDOMTouchList::IdentifiedTouch(int32_t aIdentifier, nsIDOMTouch** aRetVal)
 {
-  *aRetVal = nullptr;
+  NS_IF_ADDREF(*aRetVal = IdentifiedTouch(aIdentifier));
+  return NS_OK;
+}
+
+Touch*
+nsDOMTouchList::IdentifiedTouch(int32_t aIdentifier) const
+{
   for (uint32_t i = 0; i < mPoints.Length(); ++i) {
-    nsRefPtr<Touch> point = mPoints[i];
+    Touch* point = mPoints[i];
     if (point && point->Identifier() == aIdentifier) {
-      point.forget(aRetVal);
-      break;
+      return point;
     }
   }
-  return NS_OK;
+  return nullptr;
 }
 
 // TouchEvent
@@ -156,9 +167,9 @@ nsDOMTouchEvent::Touches()
           unchangedTouches.AppendElement(touches[i]);
         }
       }
-      mTouches = new nsDOMTouchList(unchangedTouches);
+      mTouches = new nsDOMTouchList(ToSupports(this), unchangedTouches);
     } else {
-      mTouches = new nsDOMTouchList(touchEvent->touches);
+      mTouches = new nsDOMTouchList(ToSupports(this), touchEvent->touches);
     }
   }
   return mTouches;
@@ -189,7 +200,7 @@ nsDOMTouchEvent::TargetTouches()
         }
       }
     }
-    mTargetTouches = new nsDOMTouchList(targetTouches);
+    mTargetTouches = new nsDOMTouchList(ToSupports(this), targetTouches);
   }
   return mTargetTouches;
 }
@@ -214,7 +225,7 @@ nsDOMTouchEvent::ChangedTouches()
         changedTouches.AppendElement(touches[i]);
       }
     }
-    mChangedTouches = new nsDOMTouchList(changedTouches);
+    mChangedTouches = new nsDOMTouchList(ToSupports(this), changedTouches);
   }
   return mChangedTouches;
 }
