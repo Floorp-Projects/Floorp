@@ -673,8 +673,8 @@ function runTest() {
   fileReader2 = new FileReader;
   fileReader2.readAsBinaryString(myFile2);
   fileReader1.onload = fileReader2.onload = function() { gen.next(); };
-  yield; // Wait for both FileReaders. We don't care which order they finish.
-  yield;
+  yield undefined; // Wait for both FileReaders. We don't care which order they finish.
+  yield undefined;
   function fileFixup(o) {
     if (o.value == myFile1) {
       o.value = fileReader1.result;
@@ -704,21 +704,21 @@ function runTest() {
 
   // Make normal submission
   form.submit();
-  yield; // Wait for iframe to load as a result of the submission
+  yield undefined; // Wait for iframe to load as a result of the submission
   var submission = JSON.parse(iframe.contentDocument.documentElement.textContent);
   checkMPSubmission(submission, expectedSub, "normal submission");
 
   // Disabled controls
   setDisabled(document.querySelectorAll("input, select, textarea"), true);
   form.submit();
-  yield;
+  yield undefined;
   submission = JSON.parse(iframe.contentDocument.documentElement.textContent);
   checkMPSubmission(submission, [], "disabled controls");
 
   // Reenabled controls
   setDisabled(document.querySelectorAll("input, select, textarea"), false);
   form.submit();
-  yield;
+  yield undefined;
   submission = JSON.parse(iframe.contentDocument.documentElement.textContent);
   checkMPSubmission(submission, expectedSub, "reenabled controls");
 
@@ -726,7 +726,7 @@ function runTest() {
   form.action = "form_submit_server.sjs?plain";
   form.enctype = "text/plain";
   form.submit();
-  yield;
+  yield undefined;
   submission = JSON.parse(iframe.contentDocument.documentElement.textContent);
   checkPlainSubmission(submission, expectedSub);
 
@@ -734,7 +734,7 @@ function runTest() {
   form.action = "form_submit_server.sjs?url";
   form.enctype = "application/x-www-form-urlencoded";
   form.submit();
-  yield;
+  yield undefined;
   submission = JSON.parse(iframe.contentDocument.documentElement.textContent);
   checkURLSubmission(submission, expectedSub);
 
@@ -743,7 +743,7 @@ function runTest() {
   form.method = "GET";
   form.enctype = "";
   form.submit();
-  yield;
+  yield undefined;
   submission = JSON.parse(iframe.contentDocument.documentElement.textContent);
   checkURLSubmission(submission, expectedSub);
 
@@ -752,7 +752,7 @@ function runTest() {
   form.method = "";
   form.enctype = "";
   form.submit();
-  yield;
+  yield undefined;
   submission = JSON.parse(iframe.contentDocument.documentElement.textContent);
   checkURLSubmission(submission, expectedSub);
 
@@ -761,14 +761,14 @@ function runTest() {
   xhr.onload = function() { gen.next(); };
   xhr.open("POST", "form_submit_server.sjs");
   xhr.send(new FormData(form));
-  yield; // Wait for XHR load
+  yield undefined; // Wait for XHR load
   checkMPSubmission(JSON.parse(xhr.responseText), expectedSub, "send form using XHR and FormData");
   
   // Send disabled form using XHR and FormData
   setDisabled(document.querySelectorAll("input, select, textarea"), true);
   xhr.open("POST", "form_submit_server.sjs");
   xhr.send(new FormData(form));
-  yield;
+  yield undefined;
   checkMPSubmission(JSON.parse(xhr.responseText), [], "send disabled form using XHR and FormData");
   setDisabled(document.querySelectorAll("input, select, textarea"), false);
   
@@ -783,7 +783,7 @@ function runTest() {
   addToFormData(fd);
   xhr.open("POST", "form_submit_server.sjs");
   xhr.send(fd);
-  yield;
+  yield undefined;
   checkMPSubmission(JSON.parse(xhr.responseText), expectedAugment, "send FormData");
 
   // Augment <form> using FormData
@@ -791,12 +791,12 @@ function runTest() {
   addToFormData(fd);
   xhr.open("POST", "form_submit_server.sjs");
   xhr.send(fd);
-  yield;
+  yield undefined;
   checkMPSubmission(JSON.parse(xhr.responseText),
                     expectedSub.concat(expectedAugment), "send augmented FormData");
 
   SimpleTest.finish();
-  yield;
+  yield undefined;
 }
 
 </script>

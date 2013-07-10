@@ -50,7 +50,7 @@ function runTest() {
   // Test preflighted requests
   loader.src = "http://example.org/tests/content/base/test/file_CrossSiteXHR_inner.html";
   origin = "http://example.org";
-  yield;
+  yield undefined;
 
   tests =     [// Plain request
                { pass: 1,
@@ -1187,7 +1187,7 @@ function runTest() {
 
   SimpleTest.finish();
 
-  yield;
+  yield undefined;
 }
 
 </script>

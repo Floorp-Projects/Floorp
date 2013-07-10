@@ -42,12 +42,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=885996
         element.value = '#deadbe';
       }
       synthesizeMouseAtCenter(element, {});
-      yield;
+      yield undefined;
     };
 
     MockColorPicker.cleanup();
     SimpleTest.finish();
-    yield;
+    yield undefined;
   }
 
   </script>

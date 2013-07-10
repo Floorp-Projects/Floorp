@@ -73,43 +73,43 @@ function testIterator() {
   is($("t").href, "http://www.example.com/" + rand,
      "Unexpected cached href after move");
   while (!checkLinkColor("t", unvisitedColor, "Should be unvisited now"))
-    yield;
+    yield undefined;
 
   $("i").src = $("t").href;
-  yield;
+  yield undefined;
 
   // After second load
   while (!checkLinkColor("t", visitedColor, "Should be visited now"))
-    yield;
+    yield undefined;
   $("t").pathname = rand;
   while (!checkLinkColor("t", visitedColor,
             "Should still be visited after setting pathname to its existing value")) {
-    yield;
+    yield undefined;
   }
   /* TODO uncomment this test with the landing of bug 534526.  See
    * https://bugzilla.mozilla.org/show_bug.cgi?id=461199#c167
   $("t").pathname += "x";
   while (!checkLinkColor("t", unvisitedColor,
             "Should not be visited after changing pathname")) {
-    yield;
+    yield undefined;
   }
   $("t").pathname = $("t").pathname;
   while (!checkLinkColor("t", unvisitedColor,
             "Should not be visited after setting unvisited pathname to existing value")) {
-    yield;
+    yield undefined;
   }
   */
 
   $("i").src = $("t").href;
-  yield;
+  yield undefined;
 
   // After third load
   while (!checkLinkColor("t", visitedColor,
                          "Should be visited now after third load")) {
-    yield;
+    yield undefined;
   }
   SimpleTest.finish();
-  yield;
+  yield undefined;
 }
 
 addLoadEvent(function() {

@@ -43,7 +43,7 @@ function runTest() {
     }
   };
   xhr.send();
-  yield;
+  yield undefined;
 
 
   xhr = new XMLHttpRequest;
@@ -54,7 +54,7 @@ function runTest() {
       gen.next();
   };
   xhr.send();
-  yield;
+  yield undefined;
 
   xhr = new XMLHttpRequest;
   xhr.open("GET", "http://example.com/tests/content/base/test/file_XHRDocURI.xml");
@@ -69,7 +69,7 @@ function runTest() {
       gen.next();
   };
   xhr.send();
-  yield;
+  yield undefined;
 
   xhr = new XMLHttpRequest;
   xhr.open("GET", "http://example.com/tests/content/base/test/file_XHRDocURI.text");
@@ -79,10 +79,10 @@ function runTest() {
       gen.next();
   };
   xhr.send();
-  yield;
+  yield undefined;
   
   SimpleTest.finish();
-  yield;
+  yield undefined;
 }
 
 </script>
