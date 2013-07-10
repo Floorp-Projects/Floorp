@@ -68,7 +68,7 @@ function runTest() {
 
   // Attempt to load an image in a different same-origin document
   inner.src = innerSameSiteURI;
-  yield;
+  yield undefined;
   inner.contentWindow.postMessage(JSON.stringify({img:fileurl}), "*");
   var res = (yield);
   is(res.type, "load", "loaded successfully");
@@ -77,7 +77,7 @@ function runTest() {
   
   // Attempt to load an image in a different cross-origin document
   inner.src = innerCrossSiteURI;
-  yield;
+  yield undefined;
   inner.contentWindow.postMessage(JSON.stringify({img:fileurl}), "*");
   var res = (yield);
   is(res.type, "error", "failed successfully");
@@ -109,14 +109,14 @@ function runTest() {
 
   // Attempt to load an audio in a different same-origin document
   inner.src = innerSameSiteURI;
-  yield;
+  yield undefined;
   inner.contentWindow.postMessage(JSON.stringify({audio:fileurl}), "*");
   var res = (yield);
   is(res.type, "loadeddata", "loaded successfully");
   
   // Attempt to load an audio in a different cross-origin document
   inner.src = innerCrossSiteURI;
-  yield;
+  yield undefined;
   inner.contentWindow.postMessage(JSON.stringify({audio:fileurl}), "*");
   var res = (yield);
   is(res.type, "error", "failed successfully");
@@ -124,7 +124,7 @@ function runTest() {
   // Attempt to load a HTML document in an iframe in this document
   iframe.onload = function() { gen.next(); };
   iframe.src = "file_mozfiledataurl_doc.html";
-  yield;
+  yield undefined;
   is(iframe.contentDocument.getElementsByTagName("p")[0].textContent,
      "This here is a document!",
      "iframe loaded successfully");
@@ -137,7 +137,7 @@ function runTest() {
   file = getFile("file_mozfiledataurl_doc.html");
   fileurl = URL.createObjectURL(file);
   iframe.src = fileurl;
-  yield;
+  yield undefined;
   is(iframe.contentDocument.getElementsByTagName("p")[0].textContent,
      "This here is a document!",
      "iframe loaded successfully");
@@ -196,7 +196,7 @@ function runTest() {
 
   SimpleTest.finish();
 
-  yield;
+  yield undefined;
 }
 
 
