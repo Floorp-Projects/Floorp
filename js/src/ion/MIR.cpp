@@ -1565,10 +1565,14 @@ MCompare::infer(JSContext *cx, BaselineInspector *inspector, jsbytecode *pc)
     // now unwrapped operand is an int32.
     MDefinition *newlhs, *newrhs;
     if (MustBeUInt32(getOperand(0), &newlhs) && MustBeUInt32(getOperand(1), &newrhs)) {
-        if (newlhs != getOperand(0))
+        if (newlhs != getOperand(0)) {
+            getOperand(0)->setFoldedUnchecked();
             replaceOperand(0, newlhs);
-        if (newrhs != getOperand(1))
+        }
+        if (newrhs != getOperand(1)) {
+            getOperand(1)->setFoldedUnchecked();
             replaceOperand(1, newrhs);
+        }
         compareType_ = Compare_UInt32;
         return;
     }
