@@ -186,7 +186,7 @@ TabParent *TabParent::mIMETabParent = nullptr;
 
 NS_IMPL_ISUPPORTS3(TabParent, nsITabParent, nsIAuthPromptProvider, nsISecureBrowserUI)
 
-TabParent::TabParent(const TabContext& aContext)
+TabParent::TabParent(ContentParent* aManager, const TabContext& aContext)
   : TabContext(aContext)
   , mFrameElement(NULL)
   , mIMESelectionAnchor(0)
@@ -203,6 +203,7 @@ TabParent::TabParent(const TabContext& aContext)
   , mDefaultScale(0)
   , mShown(false)
   , mUpdatedDimensions(false)
+  , mManager(aManager)
   , mMarkedDestroying(false)
   , mIsDestroyed(false)
   , mAppPackageFileDescriptorSent(false)
@@ -268,16 +269,14 @@ TabParent::Destroy()
   }
   mIsDestroyed = true;
 
-  ContentParent* cp = static_cast<ContentParent*>(Manager());
-  cp->NotifyTabDestroying(this);
+  Manager()->NotifyTabDestroying(this);
   mMarkedDestroying = true;
 }
 
 bool
 TabParent::Recv__delete__()
 {
-  ContentParent* cp = static_cast<ContentParent*>(Manager());
-  cp->NotifyTabDestroyed(this, mMarkedDestroying);
+  Manager()->NotifyTabDestroyed(this, mMarkedDestroying);
   return true;
 }
 
@@ -1175,7 +1174,7 @@ TabParent::RecvPIndexedDBConstructor(PIndexedDBParent* aActor,
     return true;
   }
 
-  ContentParent* contentParent = static_cast<ContentParent*>(Manager());
+  ContentParent* contentParent = Manager();
   NS_ASSERTION(contentParent, "Null manager?!");
 
   nsRefPtr<IDBFactory> factory;

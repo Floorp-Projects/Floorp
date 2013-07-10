@@ -53,6 +53,8 @@ class ContentChild : public PContentChild
 public:
     ContentChild();
     virtual ~ContentChild();
+    nsrefcnt AddRef() { return 1; }
+    nsrefcnt Release() { return 1; }
 
     struct AppInfo
     {
