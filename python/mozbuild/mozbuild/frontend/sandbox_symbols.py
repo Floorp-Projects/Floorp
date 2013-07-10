@@ -316,6 +316,13 @@ VARIABLES = {
         exist. These generally have .cpp, .cc, or .cxx extensions.
         """),
 
+    'NO_DIST_INSTALL': (bool, bool, False,
+        """Disable installing certain files into the distribution directory.
+
+        If present, some files defined by other variables won't be
+        distributed/shipped with the produced build.
+        """),
+
     # IDL Generation.
     'XPIDL_SOURCES': (StrictOrderingOnAppendList, list, [],
         """XPCOM Interface Definition Files (xpidl).
