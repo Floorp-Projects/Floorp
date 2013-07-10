@@ -197,6 +197,10 @@ JavaScriptChild::AnswerGet(const ObjectId &objId, const ObjectId &receiverId,
     AutoSafeJSContext cx;
     JSAutoRequest request(cx);
 
+    // The outparam will be written to the buffer, so it must be set even if
+    // the parent won't read it.
+    *result = void_t();
+
     RootedObject obj(cx, findObject(objId));
     if (!obj)
         return false;
