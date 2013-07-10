@@ -132,8 +132,13 @@
             'trace_win.h',
           ],
         }],
-        ['OS=="android"', {
+        ['OS=="android" or moz_widget_toolkit_gonk==1', {
           'dependencies': [ 'cpu_features_android', ],
+          'sources!': [
+            # Android doesn't have these in <=2.2
+            'rw_lock_posix.cc',
+            'rw_lock_posix.h',
+          ],
         }],
         ['OS=="linux"', {
           'link_settings': {
@@ -176,7 +181,7 @@
     },
   ], # targets
   'conditions': [
-    ['OS=="android"', {
+    ['OS=="android" or moz_widget_toolkit_gonk==1', {
       'targets': [
         {
           'variables': {

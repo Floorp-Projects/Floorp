@@ -45,11 +45,11 @@
         'dummy/audio_device_utility_dummy.h',
       ],
       'conditions': [
-        ['OS=="linux"', {
+        ['OS=="linux" or include_alsa_audio==1 or include_pulse_audio==1', {
           'include_dirs': [
             'linux',
           ],
-        }], # OS==linux
+        }], # OS=="linux" or include_alsa_audio==1 or include_pulse_audio==1
         ['OS=="ios"', {
           'include_dirs': [
             'ios',
@@ -67,6 +67,7 @@
         }],
         ['OS=="android"', {
           'include_dirs': [
+            '$(topsrcdir)/widget/android',
             'android',
           ],
         }], # OS==android
@@ -77,14 +78,8 @@
         }],
         ['include_internal_audio_device==1', {
           'sources': [
-            'linux/alsasymboltable_linux.cc',
-            'linux/alsasymboltable_linux.h',
-            'linux/audio_device_alsa_linux.cc',
-            'linux/audio_device_alsa_linux.h',
             'linux/audio_device_utility_linux.cc',
             'linux/audio_device_utility_linux.h',
-            'linux/audio_mixer_manager_alsa_linux.cc',
-            'linux/audio_mixer_manager_alsa_linux.h',
             'linux/latebindingsymboltable_linux.cc',
             'linux/latebindingsymboltable_linux.h',
             'ios/audio_device_ios.cc',
@@ -110,6 +105,10 @@
             'win/audio_mixer_manager_win.h',
             'android/audio_device_utility_android.cc',
             'android/audio_device_utility_android.h',
+            'android/audio_device_opensles_android.cc',
+            'android/audio_device_opensles_android.h',
+            'android/audio_device_jni_android.cc',
+            'android/audio_device_jni_android.h',
           ],
           'conditions': [
             ['OS=="android"', {
@@ -119,43 +118,44 @@
                   '-lOpenSLES',
                 ],
               },
-              'conditions': [
-                ['enable_android_opensl==1', {
-                  'sources': [
-                    'android/audio_device_opensles_android.cc',
-                    'android/audio_device_opensles_android.h',
-                  ],
-                }, {
-                  'sources': [
-                    'android/audio_device_jni_android.cc',
-                    'android/audio_device_jni_android.h',
-                  ],
-                }],
-              ],
             }],
             ['OS=="linux"', {
-              'defines': [
-                'LINUX_ALSA',
-              ],
               'link_settings': {
                 'libraries': [
                   '-ldl',
                 ],
               },
-              'conditions': [
-                ['include_pulse_audio==1', {
-                  'defines': [
-                    'LINUX_PULSE',
-                  ],
-                  'sources': [
-                    'linux/audio_device_pulse_linux.cc',
-                    'linux/audio_device_pulse_linux.h',
-                    'linux/audio_mixer_manager_pulse_linux.cc',
-                    'linux/audio_mixer_manager_pulse_linux.h',
-                    'linux/pulseaudiosymboltable_linux.cc',
-                    'linux/pulseaudiosymboltable_linux.h',
-                  ],
-                }],
+            }],
+            ['include_alsa_audio==1', {
+              'cflags_mozilla': [
+                '$(MOZ_ALSA_CFLAGS)',
+              ],
+              'defines': [
+                'LINUX_ALSA',
+              ],
+              'sources': [
+                'linux/alsasymboltable_linux.cc',
+                'linux/alsasymboltable_linux.h',
+                'linux/audio_device_alsa_linux.cc',
+                'linux/audio_device_alsa_linux.h',
+                'linux/audio_mixer_manager_alsa_linux.cc',
+                'linux/audio_mixer_manager_alsa_linux.h',
+              ],
+            }],
+            ['include_pulse_audio==1', {
+              'cflags_mozilla': [
+                '$(MOZ_PULSEAUDIO_CFLAGS)',
+              ],
+              'defines': [
+                'LINUX_PULSE',
+              ],
+              'sources': [
+                'linux/audio_device_pulse_linux.cc',
+                'linux/audio_device_pulse_linux.h',
+                'linux/audio_mixer_manager_pulse_linux.cc',
+                'linux/audio_mixer_manager_pulse_linux.h',
+                'linux/pulseaudiosymboltable_linux.cc',
+                'linux/pulseaudiosymboltable_linux.h',
               ],
             }],
             ['OS=="mac" or OS=="ios"', {

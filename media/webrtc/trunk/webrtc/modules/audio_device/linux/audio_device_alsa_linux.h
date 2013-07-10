@@ -164,7 +164,9 @@ private:
                            const bool playback,
                            const int32_t enumDeviceNo = 0,
                            char* enumDeviceName = NULL,
-                           const int32_t ednLen = 0) const;
+                           const WebRtc_Word32 ednLen = 0,
+                           char* enumDeviceID = NULL,
+                           const WebRtc_Word32 ediLen = 0) const;
     int32_t ErrorRecovery(int32_t error, snd_pcm_t* deviceHandle);
 
 private:
