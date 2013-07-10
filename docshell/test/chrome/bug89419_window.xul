@@ -44,7 +44,7 @@
         onNavComplete: nextTest,
         preventBFCache: true
       });
-      yield;
+      yield undefined;
 
       var first = snapshotWindow(TestWindow.getWindow());
 
@@ -52,7 +52,7 @@
         uri: "about:blank",
         onNavComplete: nextTest
       });
-      yield;
+      yield undefined;
 
       var second = snapshotWindow(TestWindow.getWindow());
       function snapshotsEqual(snap1, snap2) {
@@ -64,7 +64,7 @@
         back: true,
         onNavComplete: nextTest
       });
-      yield;
+      yield undefined;
 
       var third = snapshotWindow(TestWindow.getWindow());
       ok(!snapshotsEqual(third, second), "going back should not be the same as about:blank");
@@ -73,7 +73,7 @@
       // Tell the framework the test is finished.  Include the final 'yield'
       // statement to prevent a StopIteration exception from being thrown.
       finish();
-      yield;
+      yield undefined;
     }
 
   ]]></script>

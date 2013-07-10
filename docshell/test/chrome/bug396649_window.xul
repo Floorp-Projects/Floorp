@@ -67,7 +67,7 @@
                                title: "bug396649 page" + i } ],
            onNavComplete: nextTest 
           } );
-        yield;
+        yield undefined;
       }
             
       // Go back to the first page, one page at a time.  The first 
@@ -87,7 +87,7 @@
                               persisted: i > 1 } ],
           onNavComplete: nextTest
         } );
-        yield;
+        yield undefined;
       }
       
       // Traverse history forward now.  Again, the first MAX_BFCACHE_PAGES
@@ -107,13 +107,13 @@
                               persisted: i < MAX_BFCACHE_PAGES + 1 } ],
           onNavComplete: nextTest
         } );
-        yield;
+        yield undefined;
       }
       
       // Tell the framework the test is finished.  Include the final 'yield' 
       // statement to prevent a StopIteration exception from being thrown.
       finish();
-      yield;
+      yield undefined;
     }
     
   ]]></script>

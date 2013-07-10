@@ -46,7 +46,7 @@
              "<body>find this!</body></html>",
         onNavComplete: nextTest
       });
-      yield;
+      yield undefined;
 
       // Load a second, dummy page, verifying that the original
       // page gets stored in the bfcache.
@@ -60,11 +60,11 @@
                             title: "generic page" } ],
         onNavComplete: nextTest
       });
-      yield;
+      yield undefined;
 
       // Make sure we unsuppress painting before continuing
       SimpleTest.executeSoon(nextTest);
-      yield;
+      yield undefined;
 
       // Search for some text that's on the second page (but not on
       // the first page), and verify that it can be found.
@@ -74,7 +74,7 @@
       gFindBar._findField.value = "A generic page";
       gFindBar._find();
       SimpleTest.executeSoon(nextTest);
-      yield;
+      yield undefined;
 
       // Make sure Find bar's internal status is not 'notfound'
       isnot(gFindBar._findField.getAttribute("status"), "notfound",
@@ -88,7 +88,7 @@
           TestWindow.getWindow().getSelection().toString().toLowerCase() == 
           "a generic page");
       }, nextTest, 20);
-      yield;
+      yield undefined;
 
       is(gFindBar._findField.inputField.value, "A generic page",
         "expected text not present in find input field");
@@ -106,7 +106,7 @@
                             persisted: true } ],
         onNavComplete: nextTest
       });
-      yield;
+      yield undefined;
 
       // Search for some text that's on the original page (but not
       // the dummy page loaded above), and verify that it can 
@@ -117,7 +117,7 @@
       gFindBar._findField.value = "find this";
       gFindBar._find();
       SimpleTest.executeSoon(nextTest);
-      yield;
+      yield undefined;
 
       // Make sure Find bar's internal status is not 'notfound'
       isnot(gFindBar._findField.getAttribute("status"), "notfound",
@@ -131,7 +131,7 @@
           TestWindow.getWindow().getSelection().toString().toLowerCase() == 
           "find this");
       }, nextTest, 20);
-      yield;
+      yield undefined;
 
       is(TestWindow.getWindow().getSelection().toString().toLowerCase(),
          "find this",
@@ -140,7 +140,7 @@
       // Tell the framework the test is finished.  Include the final 'yield' 
       // statement to prevent a StopIteration exception from being thrown.
       finish();
-      yield;
+      yield undefined;
     }
     
   ]]></script>
