@@ -43,8 +43,6 @@ struct NativeIterator;
 class Nursery;
 struct StackShape;
 
-namespace mjit { class Compiler; }
-
 inline JSObject *
 CastAsObject(PropertyOp op)
 {
