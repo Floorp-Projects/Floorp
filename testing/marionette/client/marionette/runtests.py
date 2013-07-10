@@ -426,6 +426,12 @@ class MarionetteTestRunner(object):
         self.logger.info('passed: %d' % self.passed)
         self.logger.info('failed: %d' % self.failed)
         self.logger.info('todo: %d' % self.todo)
+
+        if self.failed > 0:
+            self.logger.info('\nFAILED TESTS\n-------')
+            for failed_test in self.failures:
+                self.logger.info('%s' % failed_test[0])
+
         try:
             self.marionette.check_for_crash()
         except:
@@ -460,7 +466,7 @@ class MarionetteTestRunner(object):
         if os.path.isdir(filepath):
             for root, dirs, files in os.walk(filepath):
                 for filename in files:
-                    if ((filename.startswith('test_') or filename.startswith('browser_')) and 
+                    if ((filename.startswith('test_') or filename.startswith('browser_')) and
                         (filename.endswith('.py') or filename.endswith('.js'))):
                         filepath = os.path.join(root, filename)
                         self.run_test(filepath)
