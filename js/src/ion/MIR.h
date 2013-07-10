@@ -1693,8 +1693,9 @@ class MBinaryInstruction : public MAryInstruction<2>
             left = tmp;
         }
 
-        MDefinition *insLeft = ins->getOperand(0);
-        MDefinition *insRight = ins->getOperand(1);
+        MBinaryInstruction *bi = static_cast<MBinaryInstruction *>(ins);
+        MDefinition *insLeft = bi->getOperand(0);
+        MDefinition *insRight = bi->getOperand(1);
         if (isCommutative() && insLeft->valueNumber() > insRight->valueNumber()) {
             tmp = insRight;
             insRight = insLeft;
@@ -1737,12 +1738,13 @@ class MTernaryInstruction : public MAryInstruction<3>
         if (isEffectful() || ins->isEffectful())
             return false;
 
+        MTernaryInstruction *ter = static_cast<MTernaryInstruction *>(ins);
         MDefinition *first = getOperand(0);
         MDefinition *second = getOperand(1);
         MDefinition *third = getOperand(2);
-        MDefinition *insFirst = ins->getOperand(0);
-        MDefinition *insSecond = ins->getOperand(1);
-        MDefinition *insThird = ins->getOperand(2);
+        MDefinition *insFirst = ter->getOperand(0);
+        MDefinition *insSecond = ter->getOperand(1);
+        MDefinition *insThird = ter->getOperand(2);
 
         return first->valueNumber() == insFirst->valueNumber() &&
                second->valueNumber() == insSecond->valueNumber() &&
@@ -1785,14 +1787,15 @@ class MQuaternaryInstruction : public MAryInstruction<4>
         if (isEffectful() || ins->isEffectful())
             return false;
 
+        MQuaternaryInstruction *qua = static_cast<MQuaternaryInstruction *>(ins);
         MDefinition *first = getOperand(0);
         MDefinition *second = getOperand(1);
         MDefinition *third = getOperand(2);
         MDefinition *fourth = getOperand(3);
-        MDefinition *insFirst = ins->getOperand(0);
-        MDefinition *insSecond = ins->getOperand(1);
-        MDefinition *insThird = ins->getOperand(2);
-        MDefinition *insFourth = ins->getOperand(3);
+        MDefinition *insFirst = qua->getOperand(0);
+        MDefinition *insSecond = qua->getOperand(1);
+        MDefinition *insThird = qua->getOperand(2);
+        MDefinition *insFourth = qua->getOperand(3);
 
         return first->valueNumber() == insFirst->valueNumber() &&
                second->valueNumber() == insSecond->valueNumber() &&
