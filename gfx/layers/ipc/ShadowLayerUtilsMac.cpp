@@ -40,11 +40,12 @@ ShadowLayerForwarder::PlatformOpenDescriptor(OpenMode aMode,
       = static_cast<gfxASurface::gfxImageFormat>(image.format());
 
     nsRefPtr<gfxASurface> surf =
-      new gfxQuartzSurface(GetMemoryImageData(image),
+      new gfxQuartzSurface((unsigned char*)image.data(),
                            image.size(),
                            image.stride(),
                            format);
     return surf.forget();
+
   }
   return nullptr;
 }
