@@ -188,6 +188,7 @@ BluetoothOppManager::BluetoothOppManager() : mConnected(false)
                                            , mPutFinalFlag(false)
                                            , mSendTransferCompleteFlag(false)
                                            , mSuccessFlag(false)
+                                           , mIsServer(true)
                                            , mWaitingForConfirmationFlag(false)
                                            , mCurrentBlobIndex(-1)
 {
@@ -348,6 +349,7 @@ BluetoothOppManager::StartSendingNextFile()
   MOZ_ASSERT(!IsTransferring());
   MOZ_ASSERT(mBlobs.Length() > mCurrentBlobIndex + 1);
 
+  mIsServer = false;
   mBlob = mBlobs[++mCurrentBlobIndex];
 
   // Before sending content, we have to send a header including
@@ -364,8 +366,6 @@ BluetoothOppManager::StartSendingNextFile()
     SendPutHeaderRequest(sFileName, sFileLength);
     AfterFirstPut();
   }
-
-  mIsServer = false;
 }
 
 bool
@@ -447,7 +447,7 @@ BluetoothOppManager::AfterOppConnected()
   mWaitingForConfirmationFlag = true;
   AfterFirstPut();
   // Get a mount lock to prevent the sdcard from being shared with
-  // the PC while we're doing a OPP file transfer. After OPP transcation
+  // the PC while we're doing a OPP file transfer. After OPP transaction
   // were done, the mount lock will be freed.
   if (!AcquireSdcardMountLock()) {
     // If we fail to get a mount lock, abort this transaction
@@ -463,6 +463,7 @@ BluetoothOppManager::AfterOppDisconnected()
   MOZ_ASSERT(NS_IsMainThread());
 
   mConnected = false;
+  mIsServer = true;
   mLastCommand = 0;
   mPacketLeftLength = 0;
   mDsFile = nullptr;
@@ -713,6 +714,8 @@ BluetoothOppManager::ServerDataHandler(UnixSocketRawData* aMessage)
 
   ObexHeaderSet pktHeaders(opCode);
   if (opCode == ObexRequestCode::Connect) {
+    mIsServer = true;
+
     // Section 3.3.1 "Connect", IrOBEX 1.2
     // [opcode:1][length:2][version:1][flags:1][MaxPktSizeWeCanReceive:2]
     // [Headers:var]
@@ -721,7 +724,6 @@ BluetoothOppManager::ServerDataHandler(UnixSocketRawData* aMessage)
                  &pktHeaders);
     ReplyToConnect();
     AfterOppConnected();
-    mIsServer = true;
   } else if (opCode == ObexRequestCode::Abort) {
     // Section 3.3.5 "Abort", IrOBEX 1.2
     // [opcode:1][length:2][Headers:var]
@@ -781,7 +783,7 @@ BluetoothOppManager::ServerDataHandler(UnixSocketRawData* aMessage)
 
     mReceivedDataBufferOffset = 0;
 
-    // When we cancel the transfer, delete the file and notify complemention
+    // When we cancel the transfer, delete the file and notify completion
     if (mAbortFlag) {
       ReplyToPut(mPutFinalFlag, false);
       sSentFileLength += mBodySegmentLength;
@@ -858,7 +860,7 @@ BluetoothOppManager::ClientDataHandler(UnixSocketRawData* aMessage)
     packetLength = (((int)aMessage->mData[1]) << 8) | aMessage->mData[2];
   }
 
-  // Check response code and send out system message as finished if the reponse
+  // Check response code and send out system message as finished if the response
   // code is somehow incorrect.
   uint8_t expectedOpCode = ObexResponseCode::Success;
   if (mLastCommand == ObexRequestCode::Put) {
@@ -962,12 +964,11 @@ void
 BluetoothOppManager::ReceiveSocketData(BluetoothSocket* aSocket,
                                        nsAutoPtr<UnixSocketRawData>& aMessage)
 {
-  if (mLastCommand) {
+  if (mIsServer) {
+    ServerDataHandler(aMessage);
+  } else {
     ClientDataHandler(aMessage);
-    return;
   }
-
-  ServerDataHandler(aMessage);
 }
 
 void
@@ -986,12 +987,7 @@ BluetoothOppManager::SendConnectRequest()
   req[5] = BluetoothOppManager::MAX_PACKET_LENGTH >> 8;
   req[6] = (uint8_t)BluetoothOppManager::MAX_PACKET_LENGTH;
 
-  SetObexPacketInfo(req, ObexRequestCode::Connect, index);
-  mLastCommand = ObexRequestCode::Connect;
-
-  UnixSocketRawData* s = new UnixSocketRawData(index);
-  memcpy(s->mData, req, s->mSize);
-  mSocket->SendSocketData(s);
+  SendObexData(req, ObexRequestCode::Connect, index);
 }
 
 void
@@ -1018,12 +1014,7 @@ BluetoothOppManager::SendPutHeaderRequest(const nsAString& aFileName,
   index += AppendHeaderName(&req[index], (char*)fileName, (len + 1) * 2);
   index += AppendHeaderLength(&req[index], aFileSize);
 
-  SetObexPacketInfo(req, ObexRequestCode::Put, index);
-  mLastCommand = ObexRequestCode::Put;
-
-  UnixSocketRawData* s = new UnixSocketRawData(index);
-  memcpy(s->mData, req, s->mSize);
-  mSocket->SendSocketData(s);
+  SendObexData(req, ObexRequestCode::Put, index);
 
   delete [] fileName;
   delete [] req;
@@ -1048,12 +1039,7 @@ BluetoothOppManager::SendPutRequest(uint8_t* aFileBody,
   int index = 3;
   index += AppendHeaderBody(&req[index], aFileBody, aFileBodyLength);
 
-  SetObexPacketInfo(req, ObexRequestCode::Put, index);
-  mLastCommand = ObexRequestCode::Put;
-
-  UnixSocketRawData* s = new UnixSocketRawData(index);
-  memcpy(s->mData, req, s->mSize);
-  mSocket->SendSocketData(s);
+  SendObexData(req, ObexRequestCode::Put, index);
 
   delete [] req;
 }
@@ -1074,12 +1060,8 @@ BluetoothOppManager::SendPutFinalRequest()
   int index = 3;
   uint8_t* req = new uint8_t[mRemoteMaxPacketLength];
   index += AppendHeaderEndOfBody(&req[index]);
-  SetObexPacketInfo(req, ObexRequestCode::PutFinal, index);
-  mLastCommand = ObexRequestCode::PutFinal;
 
-  UnixSocketRawData* s = new UnixSocketRawData(index);
-  memcpy(s->mData, req, s->mSize);
-  mSocket->SendSocketData(s);
+  SendObexData(req, ObexRequestCode::PutFinal, index);
 
   sWaitingToSendPutFinal = false;
 
@@ -1096,12 +1078,7 @@ BluetoothOppManager::SendDisconnectRequest()
   uint8_t req[255];
   int index = 3;
 
-  SetObexPacketInfo(req, ObexRequestCode::Disconnect, index);
-  mLastCommand = ObexRequestCode::Disconnect;
-
-  UnixSocketRawData* s = new UnixSocketRawData(index);
-  memcpy(s->mData, req, s->mSize);
-  mSocket->SendSocketData(s);
+  SendObexData(req, ObexRequestCode::Disconnect, index);
 }
 
 void
@@ -1114,12 +1091,7 @@ BluetoothOppManager::SendAbortRequest()
   uint8_t req[255];
   int index = 3;
 
-  SetObexPacketInfo(req, ObexRequestCode::Abort, index);
-  mLastCommand = ObexRequestCode::Abort;
-
-  UnixSocketRawData* s = new UnixSocketRawData(index);
-  memcpy(s->mData, req, s->mSize);
-  mSocket->SendSocketData(s);
+  SendObexData(req, ObexRequestCode::Abort, index);
 }
 
 bool
@@ -1150,11 +1122,7 @@ BluetoothOppManager::ReplyToConnect()
   req[5] = BluetoothOppManager::MAX_PACKET_LENGTH >> 8;
   req[6] = (uint8_t)BluetoothOppManager::MAX_PACKET_LENGTH;
 
-  SetObexPacketInfo(req, ObexResponseCode::Success, index);
-
-  UnixSocketRawData* s = new UnixSocketRawData(index);
-  memcpy(s->mData, req, s->mSize);
-  mSocket->SendSocketData(s);
+  SendObexData(req, ObexResponseCode::Success, index);
 }
 
 void
@@ -1168,11 +1136,7 @@ BluetoothOppManager::ReplyToDisconnectOrAbort()
   uint8_t req[255];
   int index = 3;
 
-  SetObexPacketInfo(req, ObexResponseCode::Success, index);
-
-  UnixSocketRawData* s = new UnixSocketRawData(index);
-  memcpy(s->mData, req, s->mSize);
-  mSocket->SendSocketData(s);
+  SendObexData(req, ObexResponseCode::Success, index);
 }
 
 void
@@ -1184,25 +1148,30 @@ BluetoothOppManager::ReplyToPut(bool aFinal, bool aContinue)
   // [opcode:1][length:2][Headers:var]
   uint8_t req[255];
   int index = 3;
+  uint8_t opcode;
 
   if (aContinue) {
-    if (aFinal) {
-      SetObexPacketInfo(req, ObexResponseCode::Success, index);
-    } else {
-      SetObexPacketInfo(req, ObexResponseCode::Continue, index);
-    }
+    opcode = (aFinal)? ObexResponseCode::Success :
+                       ObexResponseCode::Continue;
   } else {
-    if (aFinal) {
-      SetObexPacketInfo(req, ObexResponseCode::Unauthorized, index);
-    } else {
-      SetObexPacketInfo(req,
-                        ObexResponseCode::Unauthorized & (~FINAL_BIT),
-                        index);
-    }
+    opcode = (aFinal)? ObexResponseCode::Unauthorized :
+                       ObexResponseCode::Unauthorized & (~FINAL_BIT);
   }
 
-  UnixSocketRawData* s = new UnixSocketRawData(index);
-  memcpy(s->mData, req, s->mSize);
+  SendObexData(req, opcode, index);
+}
+
+void
+BluetoothOppManager::SendObexData(uint8_t* aData, uint8_t aOpcode, int aSize)
+{
+  SetObexPacketInfo(aData, aOpcode, aSize);
+
+  if (!mIsServer) {
+    mLastCommand = aOpcode;
+  }
+
+  UnixSocketRawData* s = new UnixSocketRawData(aSize);
+  memcpy(s->mData, aData, s->mSize);
   mSocket->SendSocketData(s);
 }
 

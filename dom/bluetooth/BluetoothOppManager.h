@@ -46,13 +46,13 @@ public:
   void ServerDataHandler(mozilla::ipc::UnixSocketRawData* aMessage);
 
   /*
-   * If a application wnats to send a file, first, it needs to
+   * If an application wants to send a file, first, it needs to
    * call Connect() to create a valid RFCOMM connection. After
    * that, call SendFile()/StopSendingFile() to control file-sharing
    * process. During the file transfering process, the application
    * will receive several system messages which contain the processed
    * percentage of file. At the end, the application will get another
-   * system message indicating that te process is complete, then it can
+   * system message indicating that the process is complete, then it can
    * either call Disconnect() to close RFCOMM connection or start another
    * file-sending thread via calling SendFile() again.
    */
@@ -118,6 +118,8 @@ private:
   void RetrieveSentFileName();
   void NotifyAboutFileChange();
   bool AcquireSdcardMountLock();
+  void SendObexData(uint8_t* aData, uint8_t aOpcode, int aSize);
+
   /**
    * OBEX session status.
    * Set when OBEX session is established.
