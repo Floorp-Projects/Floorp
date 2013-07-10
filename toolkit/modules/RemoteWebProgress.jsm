@@ -106,8 +106,16 @@ RemoteWebProgress.prototype = {
       break;
 
     case "Content:SecurityChange":
+      // Invoking this getter triggers the generation of the underlying object,
+      // which we need to access with ._securityUI, because .securityUI returns
+      // a wrapper that makes _update inaccessible.
+      void this._browser.securityUI;
+      this._browser._securityUI._update(aMessage.json.state, aMessage.json.status);
+
+      // The state passed might not be correct due to checks performed
+      // on the chrome side. _update fixes that.
       for each (let p in this._progressListeners) {
-        p.onSecurityChange(this, req, aMessage.json.state);
+        p.onSecurityChange(this, req, this._browser.securityUI.state);
       }
       break;
 
