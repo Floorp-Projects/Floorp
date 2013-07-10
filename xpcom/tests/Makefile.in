@@ -130,12 +130,6 @@ ifneq (,$(SIMPLE_PROGRAMS))
 	$(INSTALL) $(SIMPLE_PROGRAMS) $(DEPTH)/_tests/xpcshell/$(relativesrcdir)/unit
 endif
 
-# Copy TestHarness.h into its own module, for ease of setting up includes
-# correctly.
-export::
-	$(NSINSTALL) -D $(DIST)/include/testing
-	$(INSTALL) $(srcdir)/TestHarness.h $(DIST)/include/testing
-
 install::
 	$(SYSINSTALL) $(IFLAGS1) $(srcdir)/test.properties $(DESTDIR)$(mozappdir)/res
 
