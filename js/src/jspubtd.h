@@ -31,7 +31,7 @@ class Value;
 template <typename T>
 class Rooted;
 
-class AutoGCRooter;
+class JS_PUBLIC_API(AutoGCRooter);
 
 struct Zone;
 
