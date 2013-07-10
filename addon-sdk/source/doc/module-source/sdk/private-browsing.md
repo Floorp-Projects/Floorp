@@ -51,14 +51,9 @@ active window is a private browser window
 * the [`selection`](modules/sdk/selection.html) module will not include
 any selections made in private browser windows
 
-Add-ons that have opted in:
-
-* will see private windows, so they will need to
+Add-ons that have opted in will see private windows, so they will need to
 use the `private-browsing` module to check whether objects are private,
 so as to avoid storing data derived from such objects.
-
-* will not be able to use panels in their code. This is due to a platform
-restriction which will be fixed in Firefox 21.
 
 Additionally, add-ons that use low-level modules such as
 [`window/utils`](modules/sdk/window/utils.html) may see private browser

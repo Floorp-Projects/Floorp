@@ -30,7 +30,7 @@ let create = map(windowCreate, function({target, data, type}) {
   return { target: target.document, type: type, data: data }
 });
 
-function readStates({document}) {
+function streamEventsFrom({document}) {
   // Map supported event types to a streams of those events on the given
   // `window` for the inserted document and than merge these streams into
   // single form stream off all window state change events.
@@ -43,15 +43,15 @@ function readStates({document}) {
     return target instanceof Ci.nsIDOMDocument
   })
 }
-
+exports.streamEventsFrom = streamEventsFrom;
 
 let opened = windows(null, { includePrivate: true });
-let state = merge(opened.map(readStates));
+let state = merge(opened.map(streamEventsFrom));
 
 
 let futureReady = filter(windowEvents, function({type})
                                         type === "DOMContentLoaded");
 let futureWindows = map(futureReady, function({target}) target);
-let futureState = expand(futureWindows, readStates);
+let futureState = expand(futureWindows, streamEventsFrom);
 
 exports.events = merge([insert, create, state, futureState]);
