@@ -37,15 +37,16 @@ function onAttach(aState, aResponse)
 
   gState = aState;
 
-  let tests = [doAutocomplete1, doAutocomplete2, doSimpleEval, doWindowEval,
-    doEvalWithException, doEvalWithHelper, doEvalString, doEvalLongString];
+  let tests = [doAutocomplete1, doAutocomplete2, doAutocomplete3,
+               doAutocomplete4, doSimpleEval, doWindowEval, doEvalWithException,
+               doEvalWithHelper, doEvalString, doEvalLongString];
   runTests(tests, testEnd);
 }
 
 function doAutocomplete1()
 {
   info("test autocomplete for 'window.foo'");
-  gState.client.autocomplete("window.foo", 0, onAutocomplete1);
+  gState.client.autocomplete("window.foo", 10, onAutocomplete1);
 }
 
 function onAutocomplete1(aResponse)
@@ -62,7 +63,7 @@ function onAutocomplete1(aResponse)
 function doAutocomplete2()
 {
   info("test autocomplete for 'window.foobarObject.'");
-  gState.client.autocomplete("window.foobarObject.", 0, onAutocomplete2);
+  gState.client.autocomplete("window.foobarObject.", 20, onAutocomplete2);
 }
 
 function onAutocomplete2(aResponse)
@@ -73,6 +74,40 @@ function onAutocomplete2(aResponse)
   is(matches.length, 7, "matches.length");
   checkObject(matches,
     ["foo", "foobar", "foobaz", "omg", "omgfoo", "omgstr", "strfoo"]);
+
+  nextTest();
+}
+
+function doAutocomplete3()
+{
+  // Check that completion suggestions are offered inside the string.
+  info("test autocomplete for 'dump(window.foobarObject.)'");
+  gState.client.autocomplete("dump(window.foobarObject.)", 25, onAutocomplete3);
+}
+
+function onAutocomplete3(aResponse)
+{
+  let matches = aResponse.matches;
+
+  ok(!aResponse.matchProp, "matchProp");
+  is(matches.length, 7, "matches.length");
+  checkObject(matches,
+    ["foo", "foobar", "foobaz", "omg", "omgfoo", "omgstr", "strfoo"]);
+
+  nextTest();
+}
+
+function doAutocomplete4()
+{
+  // Check that completion requests can have no suggestions.
+  info("test autocomplete for 'dump(window.foobarObject.)'");
+  gState.client.autocomplete("dump(window.foobarObject.)", 26, onAutocomplete4);
+}
+
+function onAutocomplete4(aResponse)
+{
+  ok(!aResponse.matchProp, "matchProp");
+  is(aResponse.matches.length, 0, "matches.length");
 
   nextTest();
 }

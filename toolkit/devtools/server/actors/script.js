@@ -415,12 +415,22 @@ ThreadActor.prototype = {
       }
     }
 
-    if (aRequest && aRequest.pauseOnExceptions) {
-      this.dbg.onExceptionUnwind = this.onExceptionUnwind.bind(this);
+    if (aRequest) {
+      this._options.pauseOnExceptions = aRequest.pauseOnExceptions;
+      this.maybePauseOnExceptions();
     }
     let packet = this._resumed();
     DebuggerServer.xpcInspector.exitNestedEventLoop();
     return packet;
+  },
+
+  /**
+   * Set the debugging hook to pause on exceptions if configured to do so.
+   */
+  maybePauseOnExceptions: function() {
+    if (this._options.pauseOnExceptions) {
+      this.dbg.onExceptionUnwind = this.onExceptionUnwind.bind(this);
+    }
   },
 
   /**

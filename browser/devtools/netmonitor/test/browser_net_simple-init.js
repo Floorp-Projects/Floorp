@@ -19,12 +19,9 @@ function test() {
 
       ok(aMonitor._view,
         "The network monitor view object exists (" + aTag + ").");
-      ok(aMonitor._view._isInitialized,
-        "The network monitor view object exists and is initialized (" + aTag + ").");
-
       ok(aMonitor._controller,
         "The network monitor controller object exists (" + aTag + ").");
-      ok(aMonitor._controller._isInitialized,
+      ok(aMonitor._controller._startup,
         "The network monitor controller object exists and is initialized (" + aTag + ").");
 
       ok(aMonitor.isReady,
@@ -40,6 +37,13 @@ function test() {
 
     function checkIfDestroyed(aTag) {
       info("Checking if destruction is ok.");
+
+      ok(aMonitor._view,
+        "The network monitor view object still exists (" + aTag + ").");
+      ok(aMonitor._controller,
+        "The network monitor controller object still exists (" + aTag + ").");
+      ok(aMonitor._controller._shutdown,
+        "The network monitor controller object still exists and is destroyed (" + aTag + ").");
 
       ok(!aMonitor._controller.client,
         "There shouldn't be a client available after destruction (" + aTag + ").");
