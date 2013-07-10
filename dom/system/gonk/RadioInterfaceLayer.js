@@ -3437,7 +3437,7 @@ RILNetworkInterface.prototype = {
   httpProxyPort: null,
 
   debug: function debug(s) {
-    dump("-*- RILNetworkInterface[" + this.mRadioInterface.clientId + ":" +
+    dump("-*- RILNetworkInterface[" + this.radioInterface.clientId + ":" +
          this.type + "]: " + s + "\n");
   },
 
