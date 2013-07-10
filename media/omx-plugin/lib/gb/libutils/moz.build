@@ -5,6 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 MODULE = 'libandroidutilsgb'
+NO_DIST_INSTALL = True
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk':
     CPP_SOURCES += [

@@ -5,6 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 MODULE = 'omxpluginhc'
+NO_DIST_INSTALL = True
 
 CPP_SOURCES += [
     'OmxPluginHoneycomb.cpp',

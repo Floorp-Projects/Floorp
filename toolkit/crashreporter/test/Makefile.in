@@ -11,8 +11,6 @@ relativesrcdir  = @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-NO_DIST_INSTALL = 1
-
 FORCE_SHARED_LIB = 1
 
 VPATH += \
