@@ -209,22 +209,6 @@ nsHTMLButtonControlFrame::Reflow(nsPresContext* aPresContext,
 
   aDesiredSize.width = aReflowState.ComputedWidth();
 
-  // If computed use the computed value.
-  if (aReflowState.ComputedHeight() != NS_INTRINSICSIZE) {
-    aDesiredSize.height = aReflowState.ComputedHeight();
-  } else {
-    aDesiredSize.height += focusPadding.TopBottom();
-
-    // Make sure we obey min/max-height in the case when we're doing intrinsic
-    // sizing (we get it for free when we have a non-intrinsic
-    // aReflowState.ComputedHeight()).  Note that we do this before adjusting
-    // for borderpadding, since mComputedMaxHeight and mComputedMinHeight are
-    // content heights.
-    aDesiredSize.height = NS_CSS_MINMAX(aDesiredSize.height,
-                                        aReflowState.mComputedMinHeight,
-                                        aReflowState.mComputedMaxHeight);
-  }
-
   aDesiredSize.width += aReflowState.mComputedBorderPadding.LeftRight();
   aDesiredSize.height += aReflowState.mComputedBorderPadding.TopBottom();
 
@@ -288,6 +272,22 @@ nsHTMLButtonControlFrame::ReflowButtonContents(nsPresContext* aPresContext,
   nscoord minInternalHeight = aReflowState.mComputedMinHeight -
     aReflowState.mComputedBorderPadding.TopBottom();
   minInternalHeight = std::max(minInternalHeight, 0);
+
+  // Compute our desired height before vertically centering our children
+  if (aReflowState.ComputedHeight() != NS_INTRINSICSIZE) {
+    aDesiredSize.height = aReflowState.ComputedHeight();
+  } else {
+    aDesiredSize.height += aFocusPadding.TopBottom();
+
+    // Make sure we obey min/max-height in the case when we're doing intrinsic
+    // sizing (we get it for free when we have a non-intrinsic
+    // aReflowState.ComputedHeight()).  Note that we do this before adjusting
+    // for borderpadding, since mComputedMaxHeight and mComputedMinHeight are
+    // content heights.
+    aDesiredSize.height = NS_CSS_MINMAX(aDesiredSize.height,
+                                        aReflowState.mComputedMinHeight,
+                                        aReflowState.mComputedMaxHeight);
+  }
 
   // center child vertically
   nscoord yoff = 0;
