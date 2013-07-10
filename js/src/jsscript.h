@@ -38,11 +38,6 @@ class Shape;
 
 class BindingIter;
 
-namespace mjit {
-    struct JITScript;
-    class CallCompiler;
-}
-
 namespace analyze {
     class ScriptAnalysis;
 }
