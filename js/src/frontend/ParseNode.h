@@ -806,6 +806,11 @@ class ParseNode
     bool getConstantValue(JSContext *cx, bool strictChecks, MutableHandleValue vp);
     inline bool isConstant();
 
+    template <class NodeType>
+    inline bool is() const {
+        return NodeType::test(*this);
+    }
+
     /* Casting operations. */
     template <class NodeType>
     inline NodeType &as() {
@@ -1177,7 +1182,7 @@ class PropertyAccess : public ParseNode
 {
   public:
     PropertyAccess(ParseNode *lhs, PropertyName *name, uint32_t begin, uint32_t end)
-      : ParseNode(PNK_DOT, JSOP_GETPROP, PN_NAME, TokenPos(begin, end))
+      : ParseNode(PNK_DOT, JSOP_NOP, PN_NAME, TokenPos(begin, end))
     {
         JS_ASSERT(lhs != NULL);
         JS_ASSERT(name != NULL);
@@ -1204,7 +1209,7 @@ class PropertyByValue : public ParseNode
 {
   public:
     PropertyByValue(ParseNode *lhs, ParseNode *propExpr, uint32_t begin, uint32_t end)
-      : ParseNode(PNK_ELEM, JSOP_GETELEM, PN_BINARY, TokenPos(begin, end))
+      : ParseNode(PNK_ELEM, JSOP_NOP, PN_BINARY, TokenPos(begin, end))
     {
         pn_u.binary.left = lhs;
         pn_u.binary.right = propExpr;
