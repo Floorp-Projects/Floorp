@@ -53,8 +53,6 @@ members = [
     # dom/interfaces/core
     'nsIDOMDOMStringList.*',
 
-    'nsIDOMTouchList.*',
-
     # dom/interfaces/storage
     'nsIDOMToString.toString',
     'nsIDOMStorage.setItem',
@@ -115,14 +113,8 @@ members = [
 irregularFilenames = {
     # stowaways
     'nsIDOMBlob': 'nsIDOMFile',
-
     'nsIIndexedDatabaseUsageCallback': 'nsIIndexedDatabaseManager',
-
-    'nsIDOMTouch': 'nsIDOMTouchEvent',
-    'nsIDOMTouchList': 'nsIDOMTouchEvent',
-
     'nsITelephoneCallback': 'nsITelephone',
-
     'nsIDOMWindowPerformance': 'nsIDOMWindow',
     }
 

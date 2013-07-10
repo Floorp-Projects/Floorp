@@ -4,14 +4,20 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  *
  * The origin of this IDL file is
- * http://dvcs.w3.org/hg/webevents/raw-file/default/touchevents.html
+ * https://dvcs.w3.org/hg/webevents/raw-file/v1/touchevents.html
  *
  * Copyright © 2012 W3C® (MIT, ERCIM, Keio), All Rights Reserved. W3C
  * liability, trademark and document use rules apply.
  */
 
+[PrefControlled]
 interface TouchList {
+  [Pure]
   readonly attribute unsigned long length;
   getter Touch? item(unsigned long index);
-  Touch identifiedTouch(long identifier);
+};
+
+/* Mozilla extension. */
+partial interface TouchList {
+  Touch? identifiedTouch(long identifier);
 };
