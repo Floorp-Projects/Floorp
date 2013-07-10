@@ -33,7 +33,7 @@ let gTests = [
         Cu.reportError(ex);
         noError = false;
       }
-      todo(noError, "Should not throw an exception trying to remove the broken view widget.");
+      ok(noError, "Should not throw an exception trying to remove the broken view widget.");
     }
   }
 ];
