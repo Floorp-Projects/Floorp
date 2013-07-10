@@ -7,11 +7,11 @@
 #define mozilla_dom_HTMLLinkElement_h
 
 #include "mozilla/Attributes.h"
+#include "mozilla/dom/Link.h"
 #include "nsGenericHTMLElement.h"
 #include "nsIDOMHTMLLinkElement.h"
 #include "nsILink.h"
 #include "nsStyleLinkElement.h"
-#include "mozilla/dom/Link.h"
 
 namespace mozilla {
 namespace dom {
