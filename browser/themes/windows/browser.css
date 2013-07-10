@@ -331,8 +331,8 @@ menuitem.bookmark-item {
 
 /* ::::: primary toolbar buttons ::::: */
 
-%include ../shared/toolbarbuttons.inc
-%include ../shared/menupanel.inc
+%include ../shared/toolbarbuttons.inc.css
+%include ../shared/menupanel.inc.css
 
 %ifndef WINDOWS_AERO
 @media (-moz-windows-theme: luna-silver) {
