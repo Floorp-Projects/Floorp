@@ -655,6 +655,11 @@ class MUnaryInstruction : public MAryInstruction<1>
     {
         setOperand(0, ins);
     }
+
+  public:
+    MDefinition *input() const {
+        return getOperand(0);
+    }
 };
 
 // Generates an LSnapshot without further effect.
@@ -2020,9 +2025,6 @@ class MUnbox : public MUnaryInstruction, public BoxInputsPolicy
     Mode mode() const {
         return mode_;
     }
-    MDefinition *input() const {
-        return getOperand(0);
-    }
     BailoutKind bailoutKind() const {
         // If infallible, no bailout should be generated.
         JS_ASSERT(fallible());
@@ -2061,10 +2063,6 @@ class MGuardObject : public MUnaryInstruction, public SingleObjectPolicy
         return new MGuardObject(ins);
     }
 
-    MDefinition *input() const {
-        return getOperand(0);
-    }
-
     TypePolicy *typePolicy() {
         return this;
     }
@@ -2090,10 +2088,6 @@ class MGuardString
 
     static MGuardString *New(MDefinition *ins) {
         return new MGuardString(ins);
-    }
-
-    MDefinition *input() const {
-        return getOperand(0);
     }
 
     TypePolicy *typePolicy() {
@@ -2447,9 +2441,6 @@ class MToDouble
     }
 
     MDefinition *foldsTo(bool useValueNumbers);
-    MDefinition *input() const {
-        return getOperand(0);
-    }
     bool congruentTo(MDefinition *const &ins) const {
         if (!ins->isToDouble() || ins->toToDouble()->conversion() != conversion())
             return false;
@@ -2482,9 +2473,6 @@ class MAsmJSUnsignedToDouble
     }
 
     MDefinition *foldsTo(bool useValueNumbers);
-    MDefinition *input() const {
-        return getOperand(0);
-    }
     bool congruentTo(MDefinition *const &ins) const {
         return congruentIfOperandsEqual(ins);
     }
@@ -2513,10 +2501,6 @@ class MToInt32 : public MUnaryInstruction
     static MToInt32 *New(MDefinition *def)
     {
         return new MToInt32(def);
-    }
-
-    MDefinition *input() const {
-        return getOperand(0);
     }
 
     MDefinition *foldsTo(bool useValueNumbers);
@@ -2561,10 +2545,6 @@ class MTruncateToInt32 : public MUnaryInstruction
         return new MTruncateToInt32(def);
     }
 
-    MDefinition *input() const {
-        return getOperand(0);
-    }
-
     MDefinition *foldsTo(bool useValueNumbers);
 
     bool congruentTo(MDefinition *const &ins) const {
@@ -2593,10 +2573,6 @@ class MToString : public MUnaryInstruction
     static MToString *New(MDefinition *def)
     {
         return new MToString(def);
-    }
-
-    MDefinition *input() const {
-        return getOperand(0);
     }
 
     MDefinition *foldsTo(bool useValueNumbers);
@@ -2670,9 +2646,6 @@ class MTypeOf
     }
     MIRType inputType() const {
         return inputType_;
-    }
-    MDefinition *input() const {
-        return getOperand(0);
     }
     MDefinition *foldsTo(bool useValueNumbers);
 
@@ -3181,9 +3154,6 @@ class MPowHalf
     static MPowHalf *New(MDefinition *input) {
         return new MPowHalf(input);
     }
-    MDefinition *input() const {
-        return getOperand(0);
-    }
     bool congruentTo(MDefinition *const &ins) const {
         return congruentIfOperandsEqual(ins);
     }
@@ -3251,9 +3221,6 @@ class MMathFunction
     }
     MathCache *cache() const {
         return cache_;
-    }
-    MDefinition *input() const {
-        return getOperand(0);
     }
     TypePolicy *typePolicy() {
         return this;
@@ -5296,9 +5263,6 @@ class MClampToUint8
 
     MDefinition *foldsTo(bool useValueNumbers);
 
-    MDefinition *input() const {
-        return getOperand(0);
-    }
     TypePolicy *typePolicy() {
         return this;
     }
@@ -7439,9 +7403,6 @@ class MTypeBarrier
     bool congruentTo(MDefinition * const &def) const {
         return false;
     }
-    MDefinition *input() const {
-        return getOperand(0);
-    }
     BailoutKind bailoutKind() const {
         return bailoutKind_;
     }
@@ -7479,9 +7440,6 @@ class MMonitorTypes : public MUnaryInstruction, public BoxInputsPolicy
         return this;
     }
 
-    MDefinition *input() const {
-        return getOperand(0);
-    }
     const types::StackTypeSet *typeSet() const {
         return typeSet_;
     }
@@ -7668,10 +7626,6 @@ class MNewStringObject :
 
     static MNewStringObject *New(MDefinition *input, HandleObject templateObj) {
         return new MNewStringObject(input, templateObj);
-    }
-
-    MDefinition *input() const {
-        return getOperand(0);
     }
 
     StringObject *templateObj() const;
@@ -7987,10 +7941,6 @@ class MAsmJSNeg : public MUnaryInstruction
     INSTRUCTION_HEADER(AsmJSNeg);
     static MAsmJSNeg *NewAsmJS(MDefinition *op, MIRType type) {
         return new MAsmJSNeg(op, type);
-    }
-
-    MDefinition *input() const {
-        return getOperand(0);
     }
 };
 
