@@ -103,7 +103,7 @@ function testReloadPage()
     clickAgain();
   });
 
-  content.location.reload();
+  gDebugger.DebuggerController.client.activeTab.reload();
 }
 
 function clickAgain()

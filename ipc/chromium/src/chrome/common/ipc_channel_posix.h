@@ -40,6 +40,7 @@ class Channel::ChannelImpl : public MessageLoopForIO::Watcher {
     DCHECK(mode_ == MODE_SERVER);
     return pipe_;
   }
+  void CloseClientFileDescriptor();
 
  private:
   void Init(Mode mode, Listener* listener);

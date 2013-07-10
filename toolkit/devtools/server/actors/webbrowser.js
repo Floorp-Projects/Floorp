@@ -696,6 +696,30 @@ BrowserTabActor.prototype = {
   },
 
   /**
+   * Reload the page in this tab.
+   */
+  onReload: function(aRequest) {
+    // Wait a tick so that the response packet can be dispatched before the
+    // subsequent navigation event packet.
+    Services.tm.currentThread.dispatch(makeInfallible(() => {
+      this.contentWindow.location.reload();
+    }, "BrowserTabActor.prototype.onReload's delayed body"), 0);
+    return {};
+  },
+
+  /**
+   * Navigate this tab to a new location
+   */
+  onNavigateTo: function(aRequest) {
+    // Wait a tick so that the response packet can be dispatched before the
+    // subsequent navigation event packet.
+    Services.tm.currentThread.dispatch(makeInfallible(() => {
+      this.contentWindow.location = aRequest.url;
+    }, "BrowserTabActor.prototype.onNavigateTo's delayed body"), 0);
+    return {};
+  },
+
+  /**
    * Prepare to enter a nested event loop by disabling debuggee events.
    */
   preNest: function BTA_preNest() {
@@ -730,8 +754,9 @@ BrowserTabActor.prototype = {
   },
 
   /**
-   * Handle location changes, by sending a tabNavigated notification to the
-   * client.
+   * Handle location changes, by clearing the previous debuggees and enabling
+   * debugging, which may have been disabled temporarily by the
+   * DebuggerProgressListener.
    */
   onWindowCreated:
   makeInfallible(function BTA_onWindowCreated(evt) {
@@ -745,6 +770,7 @@ BrowserTabActor.prototype = {
         this.threadActor.clearDebuggees();
         if (this.threadActor.dbg) {
           this.threadActor.dbg.enabled = true;
+          this.threadActor.maybePauseOnExceptions();
         }
       }
     }
@@ -782,7 +808,9 @@ BrowserTabActor.prototype = {
  */
 BrowserTabActor.prototype.requestTypes = {
   "attach": BrowserTabActor.prototype.onAttach,
-  "detach": BrowserTabActor.prototype.onDetach
+  "detach": BrowserTabActor.prototype.onDetach,
+  "reload": BrowserTabActor.prototype.onReload,
+  "navigateTo": BrowserTabActor.prototype.onNavigateTo
 };
 
 /**

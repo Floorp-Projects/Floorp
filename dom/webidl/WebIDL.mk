@@ -347,6 +347,7 @@ webidl_files = \
   TimeRanges.webidl \
   Touch.webidl \
   TouchEvent.webidl \
+  TouchList.webidl \
   TransitionEvent.webidl \
   TreeColumns.webidl \
   TreeWalker.webidl \

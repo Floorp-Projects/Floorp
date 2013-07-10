@@ -8,12 +8,12 @@
 #define mozilla_dom_HTMLAreaElement_h
 
 #include "mozilla/Attributes.h"
-#include "nsIDOMHTMLAreaElement.h"
+#include "mozilla/dom/Link.h"
 #include "nsGenericHTMLElement.h"
-#include "nsILink.h"
 #include "nsGkAtoms.h"
+#include "nsIDOMHTMLAreaElement.h"
+#include "nsILink.h"
 #include "nsIURL.h"
-#include "Link.h"
 
 class nsIDocument;
 

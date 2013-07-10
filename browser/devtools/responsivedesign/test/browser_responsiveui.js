@@ -132,11 +132,17 @@ function test() {
 
   function restart() {
     info("XXX BUG 851296: restarting.");
-    mgr.once("on", function() {executeSoon(onUIOpen2)});
+    info("XXX BUG 851296: __responsiveUI: " + gBrowser.selectedTab.__responsiveUI);
+    mgr.once("on", function() {
+      info("XXX BUG 851296: 'on' received.");
+      executeSoon(onUIOpen2);
+    });
     synthesizeKeyFromKeyTag("key_responsiveUI");
+    info("XXX BUG 851296: restart() finished.");
   }
 
   function onUIOpen2() {
+    info("XXX BUG 851296: onUIOpen2.");
     let container = gBrowser.getBrowserContainer();
     is(container.getAttribute("responsivemode"), "true", "In responsive mode.");
 
@@ -183,6 +189,8 @@ function test() {
       accelKey: modifiersAttr.match("accel")
     }
 
+    info("XXX BUG 851296: key name: " + name);
+    info("XXX BUG 851296: key modifiers: " + JSON.stringify(modifiers));
     EventUtils.synthesizeKey(name, modifiers);
   }
 }

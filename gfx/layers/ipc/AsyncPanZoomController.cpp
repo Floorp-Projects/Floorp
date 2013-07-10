@@ -268,7 +268,7 @@ AsyncPanZoomController::ReceiveInputEvent(const nsInputEvent& aEvent,
   switch (aEvent.eventStructType) {
   case NS_TOUCH_EVENT: {
     nsTouchEvent* touchEvent = static_cast<nsTouchEvent*>(aOutEvent);
-    const nsTArray<nsCOMPtr<nsIDOMTouch> >& touches = touchEvent->touches;
+    const nsTArray< nsRefPtr<dom::Touch> >& touches = touchEvent->touches;
     for (uint32_t i = 0; i < touches.Length(); ++i) {
       nsIDOMTouch* touch = touches[i];
       if (touch) {
