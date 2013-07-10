@@ -685,8 +685,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(IDBOpenDBRequest, IDBEventTargetSH,
                            IDBEVENTTARGET_SCRIPTABLE_FLAGS)
 
-  NS_DEFINE_CLASSINFO_DATA(TouchList, nsDOMTouchListSH,
-                           ARRAY_SCRIPTABLE_FLAGS)
 
   NS_DEFINE_CLASSINFO_DATA(MozCSSKeyframeRule, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
@@ -1676,11 +1674,6 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN_MAYBE_DISABLE(TouchList, nsIDOMTouchList,
-                                        !nsDOMTouchEvent::PrefEnabled())
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMTouchList)
-  DOM_CLASSINFO_MAP_END
-
   DOM_CLASSINFO_MAP_BEGIN(MozCSSKeyframeRule, nsIDOMMozCSSKeyframeRule)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMMozCSSKeyframeRule)
   DOM_CLASSINFO_MAP_END
@@ -2094,14 +2087,6 @@ nsDOMClassInfo::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   }
 
   return NS_OK;
-}
-
-nsISupports*
-nsDOMTouchListSH::GetItemAt(nsISupports *aNative, uint32_t aIndex,
-                            nsWrapperCache **aCache, nsresult *aResult)
-{
-  nsDOMTouchList* list = static_cast<nsDOMTouchList*>(aNative);
-  return list->GetItemAt(aIndex);
 }
 
 NS_IMETHODIMP
