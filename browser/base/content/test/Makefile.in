@@ -138,10 +138,7 @@ MOCHITEST_BROWSER_FILES = \
                  browser_bug595507.js \
                  browser_bug596687.js \
                  browser_bug597218.js \
-                 browser_bug598923.js \
-                 browser_bug599325.js \
                  browser_bug609700.js \
-                 browser_bug616836.js \
                  browser_bug623155.js \
                  browser_bug623893.js \
                  browser_bug624734.js \
@@ -169,14 +166,12 @@ MOCHITEST_BROWSER_FILES = \
                  browser_bug832435.js \
                  browser_bug839103.js \
                  browser_canonizeURL.js \
-                 browser_customize.js \
                  browser_findbarClose.js \
                  browser_homeDrop.js \
                  browser_keywordBookmarklets.js \
                  browser_contextSearchTabPosition.js \
                  browser_ctrlTab.js \
                  browser_customize_popupNotification.js \
-                 browser_disablechrome.js \
                  browser_discovery.js \
                  browser_duplicateIDs.js \
                  browser_fullscreen-window-open.js \
@@ -244,7 +239,6 @@ MOCHITEST_BROWSER_FILES = \
                  browser_visibleTabs_bookmarkAllTabs.js \
                  browser_visibleTabs_tabPreview.js \
                  bug592338.html \
-                 disablechrome.html \
                  discovery.html \
                  domplate_test.js \
                  file_bug822367_1.html \
@@ -288,9 +282,6 @@ MOCHITEST_BROWSER_FILES = \
                  app_bug575561.html \
                  app_subframe_bug575561.html \
                  browser_contentAreaClick.js \
-                 browser_addon_bar_close_button.js \
-                 browser_addon_bar_shortcut.js \
-                 browser_addon_bar_aomlistener.js \
                  test_bug628179.html \
                  browser_wyciwyg_urlbarCopying.js \
                  test_wyciwyg_copying.html \
