@@ -12,6 +12,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MOCHITEST_BROWSER_FILES = \
   browser_873501_handle_specials.js \
+  browser_877006_missing_view.js \
   browser_877178_unregisterArea.js \
   browser_877447_skip_missing_ids.js \
   browser_878452_drag_to_panel.js \
