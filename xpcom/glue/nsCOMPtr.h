@@ -220,26 +220,6 @@ struct already_AddRefed
 template <class T>
 inline
 const already_AddRefed<T>
-getter_AddRefs( T* aRawPtr )
-    /*
-      ...makes typing easier, because it deduces the template type, e.g., 
-      you write |dont_AddRef(fooP)| instead of |already_AddRefed<IFoo>(fooP)|.
-    */
-  {
-    return already_AddRefed<T>(aRawPtr);
-  }
-
-template <class T>
-inline
-const already_AddRefed<T>
-getter_AddRefs( const already_AddRefed<T> aAlreadyAddRefedPtr )
-  {
-    return aAlreadyAddRefedPtr;
-  }
-
-template <class T>
-inline
-const already_AddRefed<T>
 dont_AddRef( T* aRawPtr )
   {
     return already_AddRefed<T>(aRawPtr);

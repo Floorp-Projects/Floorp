@@ -476,7 +476,7 @@ nsXBLPrototypeBinding::ImplementsInterface(REFNSIID aIID) const
   // Check our IID table.
   if (mInterfaceTable) {
     nsIIDKey key(aIID);
-    nsCOMPtr<nsISupports> supports = getter_AddRefs(static_cast<nsISupports*>(mInterfaceTable->Get(&key)));
+    nsCOMPtr<nsISupports> supports = dont_AddRef(mInterfaceTable->Get(&key));
     return supports != nullptr;
   }
 
