@@ -3,10 +3,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-llvm_revision = "183744"
-
-##############################################
-
 import os
 import os.path
 import shutil
@@ -15,6 +11,7 @@ import platform
 import sys
 import json
 import collections
+import argparse
 
 
 def check_run(args):
@@ -29,9 +26,9 @@ def run_in(path, args):
     os.chdir(d)
 
 
-def patch(patch, plevel, srcdir):
+def patch(patch, srcdir):
     patch = os.path.realpath(patch)
-    check_run(['patch', '-d', srcdir, '-p%s' % plevel, '-i', patch, '--fuzz=0',
+    check_run(['patch', '-d', srcdir, '-p1', '-i', patch, '--fuzz=0',
                '-s'])
 
 
@@ -62,13 +59,13 @@ def svn_co(url, directory, revision):
     check_run(["svn", "co", "-r", revision, url, directory])
 
 
-def build_one_stage(env, stage_dir):
+def build_one_stage(env, stage_dir, llvm_source_dir):
     def f():
-        build_one_stage_aux(stage_dir)
+        build_one_stage_aux(stage_dir, llvm_source_dir)
     with_env(env, f)
 
 
-def build_tooltool_manifest():
+def build_tooltool_manifest(llvm_revision):
     basedir = os.path.split(os.path.realpath(sys.argv[0]))[0]
     tooltool = basedir + '/tooltool.py'
     setup = basedir + '/setup.sh'
@@ -84,10 +81,25 @@ def build_tooltool_manifest():
     assert data[2]['filename'] == 'clang.tar.bz2'
     os.rename('clang.tar.bz2', data[2]['digest'])
 
-isDarwin = platform.system() == "Darwin"
+
+def get_platform():
+    p = platform.system()
+    if p == "Darwin":
+        return "macosx64"
+    elif p == "Linux":
+        if platform.processor() == "x86_64":
+            return "linux64"
+        else:
+            return "linux32"
+    else:
+        raise NotImplementedError("Not supported platform")
 
 
-def build_one_stage_aux(stage_dir):
+def is_darwin():
+    return platform.system() == "Darwin"
+
+
+def build_one_stage_aux(stage_dir, llvm_source_dir):
     os.mkdir(stage_dir)
 
     build_dir = stage_dir + "/build"
@@ -98,7 +110,7 @@ def build_one_stage_aux(stage_dir):
     # with objects in compiler-rt that are compiled for arm.  Since the arm
     # support is only necessary for iOS (which we don't support), only enable
     # arm support on Linux.
-    if not isDarwin:
+    if not is_darwin():
         targets.append("arm")
 
     configure_opts = ["--enable-optimized",
@@ -106,63 +118,73 @@ def build_one_stage_aux(stage_dir):
                       "--disable-assertions",
                       "--prefix=%s" % inst_dir,
                       "--with-gcc-toolchain=/tools/gcc-4.7.2-0moz1"]
-    build_package(llvm_source_dir, build_dir, configure_opts,
-                  [])
+    build_package(llvm_source_dir, build_dir, configure_opts, [])
 
-# The directories end up in the debug info, so the easy way of getting
-# a reproducible build is to run it in a know absolute directory.
-# We use a directory in /builds/slave because the mozilla infrastructure
-# cleans it up automatically.
-base_dir = "/builds/slave/moz-toolchain"
+if __name__ == "__main__":
+    # The directories end up in the debug info, so the easy way of getting
+    # a reproducible build is to run it in a know absolute directory.
+    # We use a directory in /builds/slave because the mozilla infrastructure
+    # cleans it up automatically.
+    base_dir = "/builds/slave/moz-toolchain"
 
-source_dir = base_dir + "/src"
-build_dir = base_dir + "/build"
+    source_dir = base_dir + "/src"
+    build_dir = base_dir + "/build"
 
-llvm_source_dir = source_dir + "/llvm"
-clang_source_dir = source_dir + "/clang"
-compiler_rt_source_dir = source_dir + "/compiler-rt"
+    llvm_source_dir = source_dir + "/llvm"
+    clang_source_dir = source_dir + "/clang"
+    compiler_rt_source_dir = source_dir + "/compiler-rt"
 
-if isDarwin:
-    os.environ['MACOSX_DEPLOYMENT_TARGET'] = '10.7'
+    if is_darwin():
+        os.environ['MACOSX_DEPLOYMENT_TARGET'] = '10.7'
 
-if not os.path.exists(source_dir):
-    os.makedirs(source_dir)
-    svn_co("http://llvm.org/svn/llvm-project/llvm/branches/release_33",
-           llvm_source_dir, llvm_revision)
-    svn_co("http://llvm.org/svn/llvm-project/cfe/branches/release_33",
-           clang_source_dir, llvm_revision)
-    svn_co("http://llvm.org/svn/llvm-project/compiler-rt/branches/release_33",
-           compiler_rt_source_dir, llvm_revision)
-    os.symlink("../../clang", llvm_source_dir + "/tools/clang")
-    os.symlink("../../compiler-rt", llvm_source_dir + "/projects/compiler-rt")
-    patch("llvm-debug-frame.patch", 1, llvm_source_dir)
-    if not isDarwin:
-        patch("no-sse-on-linux.patch", 0, clang_source_dir)
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-c', '--config', required=True,
+                        type=argparse.FileType('r'),
+                        help="Clang configuration file")
 
-if os.path.exists(build_dir):
-    shutil.rmtree(build_dir)
-os.makedirs(build_dir)
+    args = parser.parse_args()
+    config = json.load(args.config)
+    llvm_revision = config["llvm_revision"]
+    llvm_repo = config["llvm_repo"]
+    clang_repo = config["clang_repo"]
+    compiler_repo = config["compiler_repo"]
 
-stage1_dir = build_dir + '/stage1'
-stage1_inst_dir = stage1_dir + '/clang'
+    if not os.path.exists(source_dir):
+        os.makedirs(source_dir)
+        svn_co(llvm_repo, llvm_source_dir, llvm_revision)
+        svn_co(clang_repo, clang_source_dir, llvm_revision)
+        svn_co(compiler_repo, compiler_rt_source_dir, llvm_revision)
+        os.symlink("../../clang", llvm_source_dir + "/tools/clang")
+        os.symlink("../../compiler-rt",
+                   llvm_source_dir + "/projects/compiler-rt")
+        for p in config.get("patches", {}).get(get_platform(), []):
+            patch(p, source_dir)
 
-if isDarwin:
-    extra_cflags = ""
-    extra_cxxflags = ""
-    cc = "/usr/bin/clang"
-    cxx = "/usr/bin/clang++"
-else:
-    extra_cflags = "-static-libgcc"
-    extra_cxxflags = "-static-libgcc -static-libstdc++"
-    cc = "/usr/bin/gcc"
-    cxx = "/usr/bin/g++"
+    if os.path.exists(build_dir):
+        shutil.rmtree(build_dir)
+    os.makedirs(build_dir)
 
-build_one_stage({"CC": cc, "CXX": cxx}, stage1_dir)
+    stage1_dir = build_dir + '/stage1'
+    stage1_inst_dir = stage1_dir + '/clang'
 
-stage2_dir = build_dir + '/stage2'
-build_one_stage({"CC": stage1_inst_dir + "/bin/clang %s" % extra_cflags,
-                 "CXX": stage1_inst_dir + "/bin/clang++ %s" % extra_cxxflags},
-                stage2_dir)
+    if is_darwin():
+        extra_cflags = ""
+        extra_cxxflags = ""
+        cc = "/usr/bin/clang"
+        cxx = "/usr/bin/clang++"
+    else:
+        extra_cflags = "-static-libgcc"
+        extra_cxxflags = "-static-libgcc -static-libstdc++"
+        cc = "/usr/bin/gcc"
+        cxx = "/usr/bin/g++"
 
-build_tar_package("tar", "clang.tar.bz2", stage2_dir, "clang")
-build_tooltool_manifest()
+    build_one_stage({"CC": cc, "CXX": cxx}, stage1_dir, llvm_source_dir)
+
+    stage2_dir = build_dir + '/stage2'
+    build_one_stage(
+        {"CC": stage1_inst_dir + "/bin/clang %s" % extra_cflags,
+         "CXX": stage1_inst_dir + "/bin/clang++ %s" % extra_cxxflags},
+        stage2_dir, llvm_source_dir)
+
+    build_tar_package("tar", "clang.tar.bz2", stage2_dir, "clang")
+    build_tooltool_manifest(llvm_revision)
