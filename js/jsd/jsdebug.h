@@ -637,7 +637,7 @@ JSD_DestroyAllSources( JSDContext* jsdc );
 /* functions for adding source items */
 
 /*
-* Add a new item for a given URL. If an iten already exists for the given URL
+* Add a new item for a given URL. If an item already exists for the given URL
 * then the old item is removed.
 * 'url' may not be NULL.
 */
