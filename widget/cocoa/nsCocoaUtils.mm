@@ -574,3 +574,55 @@ nsCocoaUtils::HiDPIEnabled()
 
   return sHiDPIEnabled;
 }
+
+void
+nsCocoaUtils::GetCommandsFromKeyEvent(NSEvent* aEvent,
+                                      nsTArray<KeyBindingsCommand>& aCommands)
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  MOZ_ASSERT(aEvent);
+
+  static NativeKeyBindingsRecorder* sNativeKeyBindingsRecorder;
+  if (!sNativeKeyBindingsRecorder) {
+    sNativeKeyBindingsRecorder = [NativeKeyBindingsRecorder new];
+  }
+
+  [sNativeKeyBindingsRecorder startRecording:aCommands];
+
+  // This will trigger 0 - N calls to doCommandBySelector: and insertText:
+  [sNativeKeyBindingsRecorder
+    interpretKeyEvents:[NSArray arrayWithObject:aEvent]];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
+@implementation NativeKeyBindingsRecorder
+
+- (void)startRecording:(nsTArray<KeyBindingsCommand>&)aCommands
+{
+  mCommands = &aCommands;
+  mCommands->Clear();
+}
+
+- (void)doCommandBySelector:(SEL)aSelector
+{
+  KeyBindingsCommand command = {
+    aSelector,
+    nil
+  };
+
+  mCommands->AppendElement(command);
+}
+
+- (void)insertText:(id)aString
+{
+  KeyBindingsCommand command = {
+    @selector(insertText:),
+    aString
+  };
+
+  mCommands->AppendElement(command);
+}
+
+@end // NativeKeyBindingsRecorder
