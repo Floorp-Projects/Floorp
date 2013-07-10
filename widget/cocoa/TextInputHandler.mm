@@ -777,6 +777,10 @@ TISInputSourceWrapper::InitKeyEvent(NSEvent *aNativeKeyEvent,
 
   nsCocoaUtils::InitInputEvent(aKeyEvent, aNativeKeyEvent);
 
+  // This is used only while dispatching the event (which is a synchronous
+  // call), so there is no need to retain and release this data.
+  aKeyEvent.mNativeKeyEvent = aNativeKeyEvent;
+
   aKeyEvent.refPoint = nsIntPoint(0, 0);
 
   // If a keyboard layout override is set, we also need to force the keyboard
