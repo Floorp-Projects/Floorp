@@ -25,7 +25,9 @@ const Cr = Components.results;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/identity/LogUtils.jsm");
-Cu.import("resource://gre/modules/identity/IdentityUtils.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "objectCopy",
+                                  "resource://gre/modules/identity/IdentityUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this,
                                   "jwcrypto",
