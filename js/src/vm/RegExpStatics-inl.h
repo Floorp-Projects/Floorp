@@ -212,12 +212,6 @@ js::GlobalObject::getRegExpStatics() const
     return static_cast<RegExpStatics *>(resObj.getPrivate());
 }
 
-inline size_t
-SizeOfRegExpStaticsData(const JSObject *obj, mozilla::MallocSizeOf mallocSizeOf)
-{
-    return mallocSizeOf(obj->getPrivate());
-}
-
 inline bool
 RegExpStatics::createDependent(JSContext *cx, size_t start, size_t end, MutableHandleValue out)
 {
