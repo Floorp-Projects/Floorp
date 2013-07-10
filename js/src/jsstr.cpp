@@ -43,6 +43,7 @@
 #include "vm/Interpreter.h"
 #include "vm/NumericConversions.h"
 #include "vm/RegExpObject.h"
+#include "vm/RegExpStatics.h"
 #include "vm/ScopeObject.h"
 #include "vm/Shape.h"
 #include "vm/StringBuffer.h"
@@ -53,7 +54,6 @@
 
 #include "vm/Interpreter-inl.h"
 #include "vm/RegExpObject-inl.h"
-#include "vm/RegExpStatics-inl.h"
 #include "vm/StringObject-inl.h"
 #include "vm/String-inl.h"
 
