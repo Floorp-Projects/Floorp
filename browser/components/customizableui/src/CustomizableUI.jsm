@@ -15,6 +15,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "CustomizableWidgets",
   "resource:///modules/CustomizableWidgets.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "DeferredTask",
   "resource://gre/modules/DeferredTask.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
+  "resource://gre/modules/PrivateBrowsingUtils.jsm");
 XPCOMUtils.defineLazyGetter(this, "gWidgetsBundle", function() {
   const kUrl = "chrome://browser/locale/customizableui/customizableWidgets.properties";
   return Services.strings.createBundle(kUrl);
@@ -295,6 +297,7 @@ let CustomizableUIInternal = {
   buildArea: function(aArea, aPlacements, aAreaNode) {
     let document = aAreaNode.ownerDocument;
     let window = document.defaultView;
+    let inPrivateWindow = PrivateBrowsingUtils.isWindowPrivate(window);
     let container = aAreaNode.customizationTarget;
 
     if (!container) {
@@ -324,6 +327,13 @@ let CustomizableUIInternal = {
       if (!node) {
         LOG("Unknown widget: " + id);
         continue;
+      }
+
+      if (inPrivateWindow && provider == CustomizableUI.PROVIDER_API) {
+        let widget = gPalette.get(id);
+        if (!widget.showInPrivateBrowsing && inPrivateWindow) {
+          continue;
+        }
       }
 
       this.ensureButtonContextMenu(node, aArea == CustomizableUI.AREA_PANEL);
@@ -482,12 +492,19 @@ let CustomizableUIInternal = {
       return;
     }
 
+    let showInPrivateBrowsing = gPalette.has(aWidgetId)
+                              ? gPalette.get(aWidgetId).showInPrivateBrowsing
+                              : true;
     let nextNodeId = placements[aPosition + 1];
 
     // Go through each of the nodes associated with this area and move the
     // widget to the requested location.
     for (let areaNode of areaNodes) {
       let window = areaNode.ownerDocument.defaultView;
+      if (!showInPrivateBrowsing && PrivateBrowsingUtils.isWindowPrivate(window)) {
+        continue;
+      }
+
       let container = areaNode.customizationTarget;
       let [provider, widgetNode] = this.getWidgetNode(aWidgetId, window);
 
@@ -506,7 +523,17 @@ let CustomizableUIInternal = {
       return;
     }
 
+    let showInPrivateBrowsing = gPalette.has(aWidgetId)
+                              ? gPalette.get(aWidgetId).showInPrivateBrowsing
+                              : true;
+
     for (let areaNode of areaNodes) {
+      let window = areaNode.ownerDocument.defaultView;
+      if (!showInPrivateBrowsing &&
+          PrivateBrowsingUtils.isWindowPrivate(window)) {
+        continue;
+      }
+
       let container = areaNode.customizationTarget;
       let widgetNode = container.ownerDocument.getElementById(aWidgetId);
       if (!widgetNode) {
@@ -538,10 +565,19 @@ let CustomizableUIInternal = {
       return;
     }
 
+    let showInPrivateBrowsing = gPalette.has(aWidgetId)
+                              ? gPalette.get(aWidgetId).showInPrivateBrowsing
+                              : true;
+
     let nextNodeId = placements[aNewPosition + 1];
 
     for (let areaNode of areaNodes) {
       let window = areaNode.ownerDocument.defaultView;
+      if (!showInPrivateBrowsing &&
+          PrivateBrowsingUtils.isWindowPrivate(window)) {
+        continue;
+      }
+
       let container = areaNode.customizationTarget;
       let [provider, widgetNode] = this.getWidgetNode(aWidgetId, window);
       if (!widgetNode) {
@@ -1377,6 +1413,7 @@ let CustomizableUIInternal = {
       allowedAreas: [],
       shortcut: null,
       tooltiptext: null,
+      showInPrivateBrowsing: true,
     };
 
     if (typeof aData.id != "string" || !/^[a-z0-9-_]{1,}$/i.test(aData.id)) {
@@ -1401,8 +1438,11 @@ let CustomizableUIInternal = {
       }
     }
 
-    if ("removable" in aData && typeof aData.removable == "boolean") {
-      widget.removable = aData.removable;
+    const kOptBoolProps = ["removable", "showInPrivateBrowsing"]
+    for (let prop of kOptBoolProps) {
+      if (typeof aData[prop] == "boolean") {
+        widget[prop] = aData[prop];
+      }
     }
 
     if (aData.defaultArea && gAreas.has(aData.defaultArea)) {
@@ -1862,7 +1902,8 @@ Object.freeze(this.CustomizableUI);
 function WidgetGroupWrapper(aWidget) {
   this.isGroup = true;
 
-  const kBareProps = ["id", "source", "type", "disabled", "label", "tooltiptext"];
+  const kBareProps = ["id", "source", "type", "disabled", "label", "tooltiptext",
+                      "showInPrivateBrowsing"];
   for (let prop of kBareProps) {
     let propertyName = prop;
     this.__defineGetter__(propertyName, function() aWidget[propertyName]);
@@ -1877,7 +1918,7 @@ function WidgetGroupWrapper(aWidget) {
       instance.disabled = aValue;
     }
   });
-  
+
   this.forWindow = function WidgetGroupWrapper_forWindow(aWindow) {
     let instance = aWidget.instances.get(aWindow.document);
     if (!instance) {

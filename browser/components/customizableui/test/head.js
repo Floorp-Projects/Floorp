@@ -143,6 +143,16 @@ function startCustomizing() {
   return deferred.promise;
 }
 
+function openAndLoadWindow(aOptions) {
+  let deferred = Promise.defer();
+  let win = OpenBrowserWindow(aOptions);
+  win.addEventListener("load", function onLoad() {
+    win.removeEventListener("load", onLoad);
+    deferred.resolve(win);
+  });
+  return deferred.promise;
+}
+
 function testRunner(testAry, asyncCleanup) {
   for (let test of testAry) {
     info(test.desc);
