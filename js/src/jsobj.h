@@ -1513,7 +1513,7 @@ extern void
 js_GetObjectSlotName(JSTracer *trc, char *buf, size_t bufsize);
 
 extern JSBool
-js_ReportGetterOnlyAssignment(JSContext *cx);
+js_ReportGetterOnlyAssignment(JSContext *cx, bool strict);
 
 extern unsigned
 js_InferFlags(JSContext *cx, unsigned defaultFlags);

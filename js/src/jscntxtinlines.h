@@ -328,7 +328,7 @@ CallSetter(JSContext *cx, HandleObject obj, HandleId id, StrictPropertyOp op, un
     }
 
     if (attrs & JSPROP_GETTER)
-        return js_ReportGetterOnlyAssignment(cx);
+        return js_ReportGetterOnlyAssignment(cx, strict);
 
     if (!(attrs & JSPROP_SHORTID))
         return CallJSPropertyOpSetter(cx, op, obj, id, strict, vp);
