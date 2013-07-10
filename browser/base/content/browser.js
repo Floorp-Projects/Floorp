@@ -1046,7 +1046,7 @@ var gBrowserInit = {
     FullZoom.init();
     PanelUI.init();
     SocialUI.init();
-    AddonManager.addAddonListener(AddonsMgrListener);
+    LightweightThemeListener.init();
     WebrtcIndicator.init();
 
     // Ensure login manager is up and running.
@@ -3447,10 +3447,6 @@ var XULBrowserWindow = {
   },
 
   init: function () {
-    // Bug 666809 - SecurityUI support for e10s
-    if (gMultiProcessBrowser)
-      return;
-
     // Initialize the security button's state and tooltip text.  Remember to reset
     // _hostChanged, otherwise onSecurityChange will short circuit.
     var securityUI = gBrowser.securityUI;
