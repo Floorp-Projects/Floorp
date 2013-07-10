@@ -1048,11 +1048,9 @@ NeedNegativeZeroCheck(MDefinition *def)
             // Only allowed to remove check when definition is the second operand
             if (use_def->getOperand(0) == def)
                 return true;
-            if (use_def->numOperands() > 2) {
-                for (size_t i = 2, e = use_def->numOperands(); i < e; i++) {
-                    if (use_def->getOperand(i) == def)
-                        return true;
-                }
+            for (size_t i = 2, e = use_def->numOperands(); i < e; i++) {
+                if (use_def->getOperand(i) == def)
+                    return true;
             }
             break;
           case MDefinition::Op_BoundsCheck:
