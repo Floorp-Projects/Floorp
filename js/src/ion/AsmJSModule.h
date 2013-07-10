@@ -687,13 +687,12 @@ class AsmJSModule
     }
 
     void patchBoundsChecks(unsigned heapSize) {
-        ion::AutoFlushCache afc("patchBoundsCheck");
-        int bits = -1;
-        JS_CEILING_LOG2(bits, heapSize);
-        if (bits == -1) {
-            // tried to size the array to 0, that is bad, but not horrible
+        if (heapSize == 0)
             return;
-        }
+
+        ion::AutoFlushCache afc("patchBoundsCheck");
+        uint32_t bits;
+        JS_CEILING_LOG2(bits, heapSize);
 
         for (unsigned i = 0; i < boundsChecks_.length(); i++)
             ion::Assembler::updateBoundsCheck(bits, (ion::Instruction*)(boundsChecks_[i].offset() + code_));
