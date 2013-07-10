@@ -582,7 +582,10 @@ class JSFlatString : public JSLinearString
      * Once a JSFlatString sub-class has been added to the atom state, this
      * operation changes the string to the JSAtom type, in place.
      */
-    inline JSAtom *morphAtomizedStringIntoAtom();
+    JS_ALWAYS_INLINE JSAtom *morphAtomizedStringIntoAtom() {
+        d.lengthAndFlags = buildLengthAndFlags(length(), ATOM_BIT);
+        return &asAtom();
+    }
 
     inline void finalize(js::FreeOp *fop);
 };
@@ -872,14 +875,28 @@ class StaticStrings
         clear();
     }
 
-    static inline bool hasUint(uint32_t u);
-    inline JSAtom *getUint(uint32_t u);
+    static bool hasUint(uint32_t u) { return u < INT_STATIC_LIMIT; }
 
-    static inline bool hasInt(int32_t i);
-    inline JSAtom *getInt(int32_t i);
+    JSAtom *getUint(uint32_t u) {
+        JS_ASSERT(hasUint(u));
+        return intStaticTable[u];
+    }
 
-    static inline bool hasUnit(jschar c);
-    JSAtom *getUnit(jschar c);
+    static bool hasInt(int32_t i) {
+        return uint32_t(i) < INT_STATIC_LIMIT;
+    }
+
+    JSAtom *getInt(int32_t i) {
+        JS_ASSERT(hasInt(i));
+        return getUint(uint32_t(i));
+    }
+
+    static bool hasUnit(jschar c) { return c < UNIT_STATIC_LIMIT; }
+
+    JSAtom *getUnit(jschar c) {
+        JS_ASSERT(hasUnit(c));
+        return unitStaticTable[c];
+    }
 
     /* May not return atom, returns null on (reported) failure. */
     inline JSLinearString *getUnitStringForElement(JSContext *cx, JSString *str, size_t index);
@@ -887,18 +904,55 @@ class StaticStrings
     static bool isStatic(JSAtom *atom);
 
     /* Return null if no static atom exists for the given (chars, length). */
-    inline JSAtom *lookup(const jschar *chars, size_t length);
+    JSAtom *lookup(const jschar *chars, size_t length) {
+        switch (length) {
+          case 1:
+            if (chars[0] < UNIT_STATIC_LIMIT)
+                return getUnit(chars[0]);
+            return NULL;
+          case 2:
+            if (fitsInSmallChar(chars[0]) && fitsInSmallChar(chars[1]))
+                return getLength2(chars[0], chars[1]);
+            return NULL;
+          case 3:
+            /*
+             * Here we know that JSString::intStringTable covers only 256 (or at least
+             * not 1000 or more) chars. We rely on order here to resolve the unit vs.
+             * int string/length-2 string atom identity issue by giving priority to unit
+             * strings for "0" through "9" and length-2 strings for "10" through "99".
+             */
+            JS_STATIC_ASSERT(INT_STATIC_LIMIT <= 999);
+            if ('1' <= chars[0] && chars[0] <= '9' &&
+                '0' <= chars[1] && chars[1] <= '9' &&
+                '0' <= chars[2] && chars[2] <= '9') {
+                int i = (chars[0] - '0') * 100 +
+                          (chars[1] - '0') * 10 +
+                          (chars[2] - '0');
+
+                if (unsigned(i) < INT_STATIC_LIMIT)
+                    return getInt(i);
+            }
+            return NULL;
+        }
+
+        return NULL;
+    }
 
   private:
     typedef uint8_t SmallChar;
     static const SmallChar INVALID_SMALL_CHAR = -1;
 
-    static inline bool fitsInSmallChar(jschar c);
+    static bool fitsInSmallChar(jschar c) {
+        return c < SMALL_CHAR_LIMIT && toSmallChar[c] != INVALID_SMALL_CHAR;
+    }
 
     static const SmallChar toSmallChar[];
 
     JSAtom *getLength2(jschar c1, jschar c2);
-    JSAtom *getLength2(uint32_t u);
+    JSAtom *getLength2(uint32_t u) {
+        JS_ASSERT(u < 100);
+        return getLength2('0' + u / 10, '0' + u % 10);
+    }
 };
 
 /*
