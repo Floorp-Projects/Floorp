@@ -1515,10 +1515,15 @@ let CustomizableUIInternal = {
         if (widgetNode) {
           widgetNode.parentNode.removeChild(widgetNode);
         }
-        for (let eventName of kSubviewEvents) {
-          let handler = "on" + eventName;
-          if (typeof widget[handler] == "function") {
-            viewNode.removeEventListener(eventName, widget[handler], false);
+        if (widget.type == "view") {
+          let viewNode = buildNode.ownerDocument.getElementById(widget.viewId);
+          if (viewNode) {
+            for (let eventName of kSubviewEvents) {
+              let handler = "on" + eventName;
+              if (typeof widget[handler] == "function") {
+                viewNode.removeEventListener(eventName, widget[handler], false);
+              }
+            }
           }
         }
       }
