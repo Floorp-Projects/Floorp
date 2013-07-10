@@ -64,38 +64,24 @@ const GENERIC_VARIABLES_VIEW_SETTINGS = {
 let NetMonitorView = {
   /**
    * Initializes the network monitor view.
-   *
-   * @param function aCallback
-   *        Called after the view finishes initializing.
    */
-  initialize: function(aCallback) {
-    dumpn("Initializing the NetMonitorView");
-
+  initialize: function() {
     this._initializePanes();
 
     this.Toolbar.initialize();
     this.RequestsMenu.initialize();
     this.NetworkDetails.initialize();
-
-    aCallback();
   },
 
   /**
    * Destroys the network monitor view.
-   *
-   * @param function aCallback
-   *        Called after the view finishes destroying.
    */
-  destroy: function(aCallback) {
-    dumpn("Destroying the NetMonitorView");
-
+  destroy: function() {
     this.Toolbar.destroy();
     this.RequestsMenu.destroy();
     this.NetworkDetails.destroy();
 
     this._destroyPanes();
-
-    aCallback();
   },
 
   /**
@@ -199,9 +185,7 @@ let NetMonitorView = {
   _detailsPaneToggleButton: null,
   _collapsePaneString: "",
   _expandPaneString: "",
-  _editorPromises: new Map(),
-  _isInitialized: false,
-  _isDestroyed: false
+  _editorPromises: new Map()
 };
 
 /**
@@ -392,8 +376,8 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
       data.body = selected.requestPostData.postData.text;
     }
 
-    NetMonitorController.webConsoleClient.sendHTTPRequest(data, (response) => {
-      let id = response.eventActor.actor;
+    NetMonitorController.webConsoleClient.sendHTTPRequest(data, aResponse => {
+      let id = aResponse.eventActor.actor;
       this._preferredItemId = id;
     });
 
@@ -1383,7 +1367,7 @@ CustomRequestView.prototype = {
     if (aData.requestPostData) {
       let body = aData.requestPostData.postData.text;
 
-      gNetwork.getString(body).then((aString) => {
+      gNetwork.getString(body).then(aString => {
         $("#custom-postdata-value").value =  aString;
       });
     }
@@ -1678,7 +1662,7 @@ NetworkDetailsView.prototype = {
 
     for (let header of aResponse.headers) {
       let headerVar = headersScope.addItem(header.name, {}, true);
-      gNetwork.getString(header.value).then((aString) => headerVar.setGrip(aString));
+      gNetwork.getString(header.value).then(aString => headerVar.setGrip(aString));
     }
   },
 
@@ -1721,7 +1705,7 @@ NetworkDetailsView.prototype = {
 
     for (let cookie of aResponse.cookies) {
       let cookieVar = cookiesScope.addItem(cookie.name, {}, true);
-      gNetwork.getString(cookie.value).then((aString) => cookieVar.setGrip(aString));
+      gNetwork.getString(cookie.value).then(aString => cookieVar.setGrip(aString));
 
       // By default the cookie name and value are shown. If this is the only
       // information available, then nothing else is to be displayed.
@@ -1733,7 +1717,7 @@ NetworkDetailsView.prototype = {
       // Display any other information other than the cookie name and value
       // which may be available.
       let rawObject = Object.create(null);
-      let otherProps = cookieProps.filter((e) => e != "name" && e != "value");
+      let otherProps = cookieProps.filter(e => e != "name" && e != "value");
       for (let prop of otherProps) {
         rawObject[prop] = cookie[prop];
       }
@@ -1768,7 +1752,7 @@ NetworkDetailsView.prototype = {
     if (!aHeadersResponse || !aPostDataResponse) {
       return;
     }
-    gNetwork.getString(aPostDataResponse.postData.text).then((aString) => {
+    gNetwork.getString(aPostDataResponse.postData.text).then(aString => {
       // Handle query strings (poor man's forms, e.g. "?foo=bar&baz=42").
       let cType = aHeadersResponse.headers.filter(({ name }) => name == "Content-Type")[0];
       let cString = cType ? cType.value : "";
@@ -1790,7 +1774,7 @@ NetworkDetailsView.prototype = {
         paramsScope.locked = true;
 
         $("#request-post-data-textarea-box").hidden = false;
-        NetMonitorView.editor("#request-post-data-textarea").then((aEditor) => {
+        NetMonitorView.editor("#request-post-data-textarea").then(aEditor => {
           aEditor.setText(aString);
         });
       }
@@ -1834,7 +1818,7 @@ NetworkDetailsView.prototype = {
     }
     let { mimeType, text, encoding } = aResponse.content;
 
-    gNetwork.getString(text).then((aString) => {
+    gNetwork.getString(text).then(aString => {
       // Handle json.
       if (mimeType.contains("/json")) {
         let jsonpRegex = /^[a-zA-Z0-9_$]+\(|\)$/g; // JSONP with callback.
@@ -1864,7 +1848,7 @@ NetworkDetailsView.prototype = {
         // Malformed JSON.
         else {
           $("#response-content-textarea-box").hidden = false;
-          NetMonitorView.editor("#response-content-textarea").then((aEditor) => {
+          NetMonitorView.editor("#response-content-textarea").then(aEditor => {
             aEditor.setMode(SourceEditor.MODES.JAVASCRIPT);
             aEditor.setText(aString);
           });
@@ -1889,7 +1873,7 @@ NetworkDetailsView.prototype = {
         $("#response-content-image-encoding-value").setAttribute("value", encoding);
 
         // Wait for the image to load in order to display the width and height.
-        $("#response-content-image").onload = (e) => {
+        $("#response-content-image").onload = e => {
           // XUL images are majestic so they don't bother storing their dimensions
           // in width and height attributes like the rest of the folk. Hack around
           // this by getting the bounding client rect and subtracting the margins.
@@ -1901,7 +1885,7 @@ NetworkDetailsView.prototype = {
       // Handle anything else.
       else {
         $("#response-content-textarea-box").hidden = false;
-        NetMonitorView.editor("#response-content-textarea").then((aEditor) => {
+        NetMonitorView.editor("#response-content-textarea").then(aEditor => {
           aEditor.setMode(SourceEditor.MODES.TEXT);
           aEditor.setText(aString);
 
@@ -2036,7 +2020,7 @@ function parseQueryString(aQueryString) {
     return;
   }
   // Turn the params string into an array containing { name: value } tuples.
-  let paramsArray = aQueryString.replace(/^[?&]/, "").split("&").map((e) =>
+  let paramsArray = aQueryString.replace(/^[?&]/, "").split("&").map(e =>
     let (param = e.split("=")) {
       name: NetworkHelper.convertToUnicode(unescape(param[0])),
       value: NetworkHelper.convertToUnicode(unescape(param[1]))
