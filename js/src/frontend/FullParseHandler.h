@@ -317,57 +317,7 @@ class FullParseHandler
         return new_<PropertyAccess>(pn, name, pn->pn_pos.begin, end);
     }
 
-  private:
-    /*
-     * Examine the RHS of a MemberExpression obj[pn], to optimize expressions
-     * like obj["name"] or obj["0"].
-     *
-     * If pn is a number or string constant that's not an index, store the
-     * corresponding PropertyName in *namep. Otherwise store NULL in *namep.
-     *
-     * Also, if pn is a string constant whose value is the ToString of an
-     * index, morph it to a number.
-     *
-     * Return false on OOM.
-     */
-    bool foldConstantIndex(ParseNode *pn, PropertyName **namep) {
-        if (pn->isKind(PNK_STRING)) {
-            JSAtom *atom = pn->pn_atom;
-            uint32_t index;
-
-            if (atom->isIndex(&index)) {
-                pn->setKind(PNK_NUMBER);
-                pn->setOp(JSOP_DOUBLE);
-                pn->pn_dval = index;
-            } else {
-                *namep = atom->asPropertyName();
-                return true;
-            }
-        } else if (pn->isKind(PNK_NUMBER)) {
-            double number = pn->pn_dval;
-            if (number != ToUint32(number)) {
-                JSContext *cx = tokenStream.getContext();
-                JSAtom *atom = ToAtom<NoGC>(cx, DoubleValue(number));
-                if (!atom)
-                    return false;
-                *namep = atom->asPropertyName();
-                return true;
-            }
-        }
-
-        *namep = NULL;
-        return true;
-    }
-
-  public:
     ParseNode *newPropertyByValue(ParseNode *lhs, ParseNode *index, uint32_t end) {
-        if (foldConstants) {
-            PropertyName *name;
-            if (!foldConstantIndex(index, &name))
-                return null();
-            if (name)
-                return newPropertyAccess(lhs, name, end);
-        }
         return new_<PropertyByValue>(lhs, index, lhs->pn_pos.begin, end);
     }
 
