@@ -280,17 +280,17 @@ class IceTestPeer : public sigslot::has_slots<> {
   }
 
   void GotCandidate(NrIceMediaStream *stream, const std::string &candidate) {
-    std::cout << "Got candidate " << candidate << std::endl;
+    std::cerr << "Got candidate " << candidate << std::endl;
     candidates_[stream->name()].push_back(candidate);
   }
 
   void StreamReady(NrIceMediaStream *stream) {
-    std::cout << "Stream ready " << stream->name() << std::endl;
+    std::cerr << "Stream ready " << stream->name() << std::endl;
     ++ready_ct_;
   }
 
   void IceCompleted(NrIceCtx *ctx) {
-    std::cout << "ICE completed " << name_ << std::endl;
+    std::cerr << "ICE completed " << name_ << std::endl;
     ice_complete_ = true;
   }
 
@@ -413,6 +413,21 @@ class IceConnectTest : public ::testing::Test {
     ASSERT_TRUE_WAIT(p1_->ice_complete() && p2_->ice_complete(), 5000);
   }
 
+
+  void ConnectP1(TrickleMode mode = TRICKLE_NONE) {
+    p1_->Connect(p2_, mode);
+  }
+
+  void ConnectP2(TrickleMode mode = TRICKLE_NONE) {
+    p2_->Connect(p1_, mode);
+  }
+
+  void WaitForComplete(int expected_streams = 1) {
+    ASSERT_TRUE_WAIT(p1_->ready_ct() == expected_streams &&
+                     p2_->ready_ct() == expected_streams, 5000);
+    ASSERT_TRUE_WAIT(p1_->ice_complete() && p2_->ice_complete(), 5000);
+  }
+
   void ConnectTrickle() {
     p1_->Connect(p2_, TRICKLE_DEFERRED);
     p2_->Connect(p1_, TRICKLE_DEFERRED);
@@ -423,6 +438,14 @@ class IceConnectTest : public ::testing::Test {
     p2_->DoTrickle(stream);
     ASSERT_TRUE_WAIT(p1_->is_ready(stream), 5000);
     ASSERT_TRUE_WAIT(p2_->is_ready(stream), 5000);
+  }
+
+  void DoTrickleP1(size_t stream) {
+    p1_->DoTrickle(stream);
+  }
+
+  void DoTrickleP2(size_t stream) {
+    p2_->DoTrickle(stream);
   }
 
   void VerifyConnected() {
@@ -537,6 +560,40 @@ TEST_F(IceConnectTest, TestConnect) {
   AddStream("first", 1);
   ASSERT_TRUE(Gather(true));
   Connect();
+}
+
+TEST_F(IceConnectTest, TestConnectP2ThenP1) {
+  AddStream("first", 1);
+  ASSERT_TRUE(Gather(true));
+  ConnectP2();
+  PR_Sleep(1000);
+  ConnectP1();
+  WaitForComplete();
+}
+
+TEST_F(IceConnectTest, TestConnectP2ThenP1Trickle) {
+  AddStream("first", 1);
+  ASSERT_TRUE(Gather(true));
+  ConnectP2();
+  PR_Sleep(1000);
+  ConnectP1(TRICKLE_DEFERRED);
+  DoTrickleP1(0);
+  WaitForComplete();
+}
+
+TEST_F(IceConnectTest, TestConnectP2ThenP1TrickleTwoComponents) {
+  AddStream("first", 1);
+  AddStream("second", 2);
+  ASSERT_TRUE(Gather(true));
+  ConnectP2();
+  PR_Sleep(1000);
+  ConnectP1(TRICKLE_DEFERRED);
+  DoTrickleP1(0);
+  std::cerr << "Sleeping between trickle streams" << std::endl;
+  PR_Sleep(1000);  // Give this some time to settle but not complete
+                   // all of ICE.
+  DoTrickleP1(1);
+  WaitForComplete(2);
 }
 
 TEST_F(IceConnectTest, TestConnectAutoPrioritize) {
