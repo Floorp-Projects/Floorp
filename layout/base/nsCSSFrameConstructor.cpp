@@ -3518,7 +3518,7 @@ nsCSSFrameConstructor::ConstructFrameFromItemInternal(FrameConstructionItem& aIt
   // descendants.
   nsIContent* parent = content->GetParent();
   bool pushInsertionPoint = aState.mTreeMatchContext.mAncestorFilter.HasFilter() &&
-    parent && parent->NodeInfo()->Equals(nsGkAtoms::children, kNameSpaceID_XBL);
+    parent && parent->IsActiveChildrenElement();
   TreeMatchContext::AutoAncestorPusher
     insertionPointPusher(pushInsertionPoint,
                          aState.mTreeMatchContext,
@@ -6511,7 +6511,7 @@ nsCSSFrameConstructor::ContentAppended(nsIContent*     aContainer,
   nsIFrame* parentFrame = GetFrameFor(aContainer);
 
   // See comment in ContentRangeInserted for why this is necessary.
-  if (!parentFrame && !aContainer->NodeInfo()->Equals(nsGkAtoms::children, kNameSpaceID_XBL)) {
+  if (!parentFrame && !aContainer->IsActiveChildrenElement()) {
     return NS_OK;
   }
 
@@ -6934,7 +6934,7 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent*            aContainer,
   // The xbl:children element won't have a frame, but default content can have the children as
   // a parent. While its uncommon to change the structure of the default content itself, a label,
   // for example, can be reframed by having its value attribute set or removed.
-  if (!parentFrame && !aContainer->NodeInfo()->Equals(nsGkAtoms::children, kNameSpaceID_XBL)) {
+  if (!parentFrame && !aContainer->IsActiveChildrenElement()) {
     return NS_OK;
   }
 
