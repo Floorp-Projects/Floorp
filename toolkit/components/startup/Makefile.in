@@ -10,7 +10,6 @@ relativesrcdir = @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-FORCE_STATIC_LIB = 1
 LIBXUL_LIBRARY = 1
 
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))

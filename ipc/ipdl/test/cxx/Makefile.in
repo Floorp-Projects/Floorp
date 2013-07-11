@@ -11,7 +11,6 @@ include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME = $(MODULE)_s
 LIBXUL_LIBRARY = 1
-FORCE_STATIC_LIB = 1
 EXPORT_LIBRARY = 1
 
 IPDLTESTS = \

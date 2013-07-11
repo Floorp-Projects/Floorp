@@ -18,7 +18,6 @@ ifdef NECKO_COOKIES
 LIBRARY_NAME     = neckocookie_s
 MSVC_ENABLE_PGO := 1
 LIBXUL_LIBRARY   = 1
-FORCE_STATIC_LIB = 1
 
 LOCAL_INCLUDES	= \
 		-I$(topsrcdir)/intl/uconv/src \
