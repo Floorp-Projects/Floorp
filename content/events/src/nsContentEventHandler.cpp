@@ -529,7 +529,8 @@ nsContentEventHandler::OnQueryTextContent(nsQueryContentEvent* aEvent)
 
   nsRefPtr<nsRange> range = new nsRange(mRootContent);
   rv = SetRangeFromFlatTextOffset(range, aEvent->mInput.mOffset,
-                                  aEvent->mInput.mLength, false);
+                                  aEvent->mInput.mLength, false,
+                                  &aEvent->mReply.mOffset);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = GenerateFlatTextContent(range, aEvent->mReply.mString);

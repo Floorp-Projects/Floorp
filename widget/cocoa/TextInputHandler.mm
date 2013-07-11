@@ -2781,14 +2781,20 @@ IMEInputHandler::ConversationIdentifier()
 }
 
 NSAttributedString*
-IMEInputHandler::GetAttributedSubstringFromRange(NSRange& aRange)
+IMEInputHandler::GetAttributedSubstringFromRange(NSRange& aRange,
+                                                 NSRange* aActualRange)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
   PR_LOG(gLog, PR_LOG_ALWAYS,
     ("%p IMEInputHandler::GetAttributedSubstringFromRange, "
-     "aRange={ location=%llu, length=%llu }, Destroyed()=%s",
-     this, aRange.location, aRange.length, TrueOrFalse(Destroyed())));
+     "aRange={ location=%llu, length=%llu }, aActualRange=%p, Destroyed()=%s",
+     this, aRange.location, aRange.length, aActualRange,
+     TrueOrFalse(Destroyed())));
+
+  if (aActualRange) {
+    *aActualRange = NSMakeRange(NSNotFound, 0);
+  }
 
   if (Destroyed() || aRange.location == NSNotFound || aRange.length == 0) {
     return nil;
@@ -2803,11 +2809,12 @@ IMEInputHandler::GetAttributedSubstringFromRange(NSRange& aRange)
 
   PR_LOG(gLog, PR_LOG_ALWAYS,
     ("%p IMEInputHandler::GetAttributedSubstringFromRange, "
-     "textContent={ mSucceeded=%s, mReply.mString=\"%s\"",
+     "textContent={ mSucceeded=%s, mReply={ mString=\"%s\", mOffset=%llu } }",
      this, TrueOrFalse(textContent.mSucceeded),
-     NS_ConvertUTF16toUTF8(textContent.mReply.mString).get()));
+     NS_ConvertUTF16toUTF8(textContent.mReply.mString).get(),
+     textContent.mReply.mOffset));
 
-  if (!textContent.mSucceeded || textContent.mReply.mString.IsEmpty()) {
+  if (!textContent.mSucceeded) {
     return nil;
   }
 
@@ -2815,6 +2822,10 @@ IMEInputHandler::GetAttributedSubstringFromRange(NSRange& aRange)
   NSAttributedString* result =
     [[[NSAttributedString alloc] initWithString:nsstr
                                      attributes:nil] autorelease];
+  if (aActualRange) {
+    aActualRange->location = textContent.mReply.mOffset;
+    aActualRange->length = textContent.mReply.mString.Length();
+  }
   return result;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;

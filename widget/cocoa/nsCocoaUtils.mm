@@ -359,6 +359,9 @@ nsCocoaUtils::GetStringForNSString(const NSString *aSrc, nsAString& aDist)
 NSString*
 nsCocoaUtils::ToNSString(const nsAString& aString)
 {
+  if (aString.IsEmpty()) {
+    return [NSString string];
+  }
   return [NSString stringWithCharacters:aString.BeginReading()
                                  length:aString.Length()];
 }
