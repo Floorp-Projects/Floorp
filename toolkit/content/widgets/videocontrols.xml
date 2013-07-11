@@ -1004,7 +1004,6 @@
                     if (this.video.paused || this.video.ended) {
                         this._triggeredByControls = true;
                         this.hideClickToPlay();
-                        this.video.playbackRate = this.video.defaultPlaybackRate;
                         this.video.play();
                     } else {
                         this.video.pause();
