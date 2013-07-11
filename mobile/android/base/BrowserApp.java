@@ -1839,11 +1839,16 @@ abstract public class BrowserApp extends GeckoApp
             public synchronized String doInBackground(Void... params) {
                 // Get the most recent URL stored in browser history.
                 String url = "";
-                Cursor c = BrowserDB.getRecentHistory(getContentResolver(), 1);
-                if (c.moveToFirst()) {
-                    url = c.getString(c.getColumnIndexOrThrow(Combined.URL));
+                Cursor c = null;
+                try {
+                    c = BrowserDB.getRecentHistory(getContentResolver(), 1);
+                    if (c.moveToFirst()) {
+                        url = c.getString(c.getColumnIndexOrThrow(Combined.URL));
+                    }
+                } finally {
+                    if (c != null)
+                        c.close();
                 }
-                c.close();
                 return url;
             }
 
