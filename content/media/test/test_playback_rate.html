@@ -113,40 +113,7 @@ function onended(e) {
     ok(!t.muted, "The audio should be muted when playing at high speed, but should not appear as such.");
     is(t.currentTime, t.duration, "Current time should be equal to the duration (not change by playback rate).");
   }
-  test_defaultPlaybackRate(e);
-}
-
-function test_defaultPlaybackRate(e) {
-  var t = e.target;
-  t.currentTime = 0.0;
-  t.defaultPlaybackRate = SLOW_RATE;
-  t.addEventListener("timeupdate", ontimeupdate_defaultPlaybackRate);
-  t.startTimestamp = Date.now();
-  t.play();
-}
-
-function ontimeupdate_defaultPlaybackRate(e) {
-  var t = e.target;
-  if (t.currentTime > t.duration / 10) {
-    t.oldCurrentTime = t.currentTime;
-    t.timestamp = Date.now();
-    var delta = t.oldCurrentTime,
-        delta_wallclock = (t.timestamp - t.startTimestamp - t.bufferingTime) / 1000;
-
-    t.bufferingTime = 0;
-
-    is(t.playbackRate, SLOW_RATE,
-        "The playback rate shoud be "+SLOW_RATE+"." + t.token + '\n');
-    is(t.defaultPlaybackRate, SLOW_RATE,
-        "The default playback rate shoud be "+SLOW_RATE+"." + t.token);
-    ok(delta_wallclock > delta , "We are effectively slowing down playback. (" + delta_wallclock + ", " + delta + ")");
-    if (t.skippedFastPart) {
-      is(t.ratechangecount, 7, "We should have received 7 \"ratechange\" events.");
-    } else {
-      is(t.ratechangecount, 8, "We should have received 8 \"ratechange\" events.");
-    }
-    finish_test(t);
-  }
+  finish_test(t);
 }
 
 function onratechange(e) {
@@ -207,7 +174,6 @@ function startTest(test, token) {
     element.playbackRate = VERY_SLOW_RATE;
     is(element.playbackRate, SLOW_RATE, "PlaybackRate should be clamped to " + SLOW_RATE + ".");
     element.play();
-    is(element.playbackRate, 1.0, "playbackRate should be reset to 1.0 on play() call");
     element.playbackRate = SLOW_RATE;
   });
 }
