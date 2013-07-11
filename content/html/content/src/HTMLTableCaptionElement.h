@@ -19,7 +19,6 @@ public:
   HTMLTableCaptionElement(already_AddRefed<nsINodeInfo> aNodeInfo)
     : nsGenericHTMLElement(aNodeInfo)
   {
-    SetIsDOMBinding();
   }
   virtual ~HTMLTableCaptionElement();
 

@@ -75,7 +75,6 @@ NS_IMETHODIMP HTMLVideoElement::GetVideoHeight(uint32_t *aVideoHeight)
 HTMLVideoElement::HTMLVideoElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : HTMLMediaElement(aNodeInfo)
 {
-  SetIsDOMBinding();
 }
 
 HTMLVideoElement::~HTMLVideoElement()

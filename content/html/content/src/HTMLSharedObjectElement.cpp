@@ -32,8 +32,6 @@ HTMLSharedObjectElement::HTMLSharedObjectElement(already_AddRefed<nsINodeInfo> a
 
   // By default we're in the loading state
   AddStatesSilently(NS_EVENT_STATE_LOADING);
-
-  SetIsDOMBinding();
 }
 
 void

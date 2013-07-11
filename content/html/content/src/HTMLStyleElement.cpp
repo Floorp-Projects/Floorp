@@ -25,7 +25,6 @@ HTMLStyleElement::HTMLStyleElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo)
 {
   AddMutationObserver(this);
-  SetIsDOMBinding();
 }
 
 HTMLStyleElement::~HTMLStyleElement()

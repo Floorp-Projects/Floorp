@@ -20,7 +20,6 @@ namespace dom {
 HTMLTitleElement::HTMLTitleElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo)
 {
-  SetIsDOMBinding();
   AddMutationObserver(this);
 }
 

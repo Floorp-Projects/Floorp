@@ -17,7 +17,6 @@ public:
   nsXMLElement(already_AddRefed<nsINodeInfo> aNodeInfo)
     : mozilla::dom::Element(aNodeInfo)
   {
-    SetIsDOMBinding();
   }
 
   // nsISupports
