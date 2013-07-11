@@ -4329,6 +4329,13 @@ Downloader.prototype = {
       this._update.statusText = getStatusTextFromCode(status,
                                                       Cr.NS_BINDING_FAILED);
 
+#ifdef MOZ_WIDGET_GONK
+      // bug891009: On FirefoxOS, manaully retry OTA download will reuse
+      // the Update object. We need to remove selected patch so that download
+      // can be triggered again successfully.
+      this._update.selectedPatch.selected = false;
+#endif
+
       // Destroy the updates directory, since we're done with it.
       cleanUpUpdatesDir();
 
