@@ -177,7 +177,7 @@ function test() {
         });
       }
 
-      return Promise.resolve(null);
+      return promise.resolve(null);
     }
 
     let str = "'<p>'" + new Array(10).join(Math.random(10)) + "'</p>'";

@@ -27,7 +27,7 @@ Cu.import("resource:///modules/devtools/scratchpad-manager.jsm");
 Cu.import("resource://gre/modules/jsdebugger.jsm");
 Cu.import("resource:///modules/devtools/gDevTools.jsm");
 Cu.import("resource://gre/modules/osfile.jsm");
-Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js");
+let promise = Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js").Promise;
 
 XPCOMUtils.defineLazyModuleGetter(this, "VariablesView",
                                   "resource:///modules/devtools/VariablesView.jsm");
@@ -389,7 +389,7 @@ var Scratchpad = {
    */
   evalForContext: function SP_evaluateForContext(aString)
   {
-    let deferred = Promise.defer();
+    let deferred = promise.defer();
 
     // This setTimeout is temporary and will be replaced by DebuggerClient
     // execution in a future patch (bug 825039). The purpose for using
@@ -434,8 +434,8 @@ var Scratchpad = {
    */
   run: function SP_run()
   {
-    let promise = this.execute();
-    promise.then(([, aError, ]) => {
+    let execPromise = this.execute();
+    execPromise.then(([, aError, ]) => {
       if (aError) {
         this.writeAsErrorComment(aError);
       }
@@ -443,7 +443,7 @@ var Scratchpad = {
         this.deselect();
       }
     });
-    return promise;
+    return execPromise;
   },
 
   /**
@@ -456,7 +456,7 @@ var Scratchpad = {
    */
   inspect: function SP_inspect()
   {
-    let deferred = Promise.defer();
+    let deferred = promise.defer();
     let reject = aReason => deferred.reject(aReason);
 
     this.execute().then(([aString, aError, aResult]) => {
@@ -489,7 +489,7 @@ var Scratchpad = {
    */
   reloadAndRun: function SP_reloadAndRun()
   {
-    let deferred = Promise.defer();
+    let deferred = promise.defer();
 
     if (this.executionContext !== SCRATCHPAD_CONTEXT_CONTENT) {
       Cu.reportError(this.strings.
@@ -526,8 +526,8 @@ var Scratchpad = {
    */
   display: function SP_display()
   {
-    let promise = this.execute();
-    promise.then(([aString, aError, aResult]) => {
+    let execPromise = this.execute();
+    execPromise.then(([aString, aError, aResult]) => {
       if (aError) {
         this.writeAsErrorComment(aError);
       }
@@ -535,7 +535,7 @@ var Scratchpad = {
         this.writeAsComment(aResult);
       }
     });
-    return promise;
+    return execPromise;
   },
 
   /**
@@ -625,8 +625,8 @@ var Scratchpad = {
 
     let encoder = new TextEncoder();
     let buffer = encoder.encode(this.getText());
-    let promise = OS.File.writeAtomic(aFile.path, buffer,{tmpPath: aFile.path + ".tmp"});
-    promise.then(value => {
+    let writePromise = OS.File.writeAtomic(aFile.path, buffer,{tmpPath: aFile.path + ".tmp"});
+    writePromise.then(value => {
       if (aCallback) {
         aCallback.call(this, Components.results.NS_OK);
       }
@@ -1523,7 +1523,7 @@ ScratchpadSidebar.prototype = {
   {
     this.show();
 
-    let deferred = Promise.defer();
+    let deferred = promise.defer();
 
     let onTabReady = () => {
       if (!this.variablesView) {
@@ -1581,7 +1581,7 @@ ScratchpadSidebar.prototype = {
    */
   _update: function SS__update(aObject)
   {
-    let deferred = Promise.defer();
+    let deferred = promise.defer();
 
     this.variablesView.rawObject = aObject;
 
