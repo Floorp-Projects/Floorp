@@ -2758,18 +2758,23 @@ IMEInputHandler::InsertTextAsCommittingComposition(
 
 void
 IMEInputHandler::SetMarkedText(NSAttributedString* aAttrString,
-                               NSRange& aSelectedRange)
+                               NSRange& aSelectedRange,
+                               NSRange* aReplacementRange)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   PR_LOG(gLog, PR_LOG_ALWAYS,
     ("%p IMEInputHandler::SetMarkedText, "
      "aAttrString=\"%s\", aSelectedRange={ location=%llu, length=%llu }, "
+     "aReplacementRange=%p { location=%llu, length=%llu }, "
      "Destroyed()=%s, IgnoreIMEComposition()=%s, IsIMEComposing()=%s, "
      "mMarkedRange={ location=%llu, length=%llu }",
      this, GetCharacters([aAttrString string]),
-     aSelectedRange.location, aSelectedRange.length, TrueOrFalse(Destroyed()),
-     TrueOrFalse(IgnoreIMEComposition()), TrueOrFalse(IsIMEComposing()),
+     aSelectedRange.location, aSelectedRange.length, aReplacementRange,
+     aReplacementRange ? aReplacementRange->location : 0,
+     aReplacementRange ? aReplacementRange->length : 0,
+     TrueOrFalse(Destroyed()), TrueOrFalse(IgnoreIMEComposition()),
+     TrueOrFalse(IsIMEComposing()),
      mMarkedRange.location, mMarkedRange.length));
 
   if (Destroyed() || IgnoreIMEComposition()) {
@@ -2778,16 +2783,42 @@ IMEInputHandler::SetMarkedText(NSAttributedString* aAttrString,
 
   nsRefPtr<IMEInputHandler> kungFuDeathGrip(this);
 
+  // First, commit current composition with the latest composition string if the
+  // replacement range is different from marked range.
+  if (IsIMEComposing() && aReplacementRange &&
+      aReplacementRange->location != NSNotFound &&
+      !NSEqualRanges(MarkedRange(), *aReplacementRange)) {
+    NSString* latestStr =
+      nsCocoaUtils::ToNSString(mLastDispatchedCompositionString);
+    NSAttributedString* attrLatestStr =
+      [[[NSAttributedString alloc] initWithString:latestStr] autorelease];
+    bool ignoreIMECommit = mIgnoreIMECommit;
+    mIgnoreIMECommit = false;
+    InsertTextAsCommittingComposition(attrLatestStr, nullptr);
+    mIgnoreIMECommit = ignoreIMECommit;
+    if (Destroyed()) {
+      PR_LOG(gLog, PR_LOG_ALWAYS,
+        ("%p IMEInputHandler::SetMarkedText, "
+         "destroyed by commiting composition for setting replacement range",
+         this));
+      return;
+    }
+  }
+
   nsString str;
   nsCocoaUtils::GetStringForNSString([aAttrString string], str);
 
   mMarkedRange.length = str.Length();
 
   if (!IsIMEComposing() && !str.IsEmpty()) {
-    nsQueryContentEvent selection(true, NS_QUERY_SELECTED_TEXT,
-                                  mWidget);
-    DispatchEvent(selection);
-    mMarkedRange.location = selection.mSucceeded ? selection.mReply.mOffset : 0;
+    // If there is no selection and replacement range is specified, set the
+    // range as selection.
+    if (aReplacementRange && aReplacementRange->location != NSNotFound &&
+        !NSEqualRanges(SelectedRange(), *aReplacementRange)) {
+      NS_ENSURE_TRUE_VOID(SetSelection(*aReplacementRange));
+    }
+
+    mMarkedRange.location = SelectedRange().location;
 
     nsCompositionEvent compStart(true, NS_COMPOSITION_START, mWidget);
     InitCompositionEvent(compStart);

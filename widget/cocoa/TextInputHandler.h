@@ -842,9 +842,12 @@ public:
    *                              create an NSAttributedString from it and pass
    *                              that instead.
    * @param aSelectedRange        Current selected range (or caret position).
+   * @param aReplacementRange     The range which will be replaced with the
+   *                              aAttrString instead of current marked range.
    */
   void SetMarkedText(NSAttributedString* aAttrString,
-                     NSRange& aSelectedRange);
+                     NSRange& aSelectedRange,
+                     NSRange* aReplacementRange = nullptr);
 
   /**
    * ConversationIdentifier() returns an ID for the current editor.  The ID is
