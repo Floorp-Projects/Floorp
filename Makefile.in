@@ -60,7 +60,7 @@ ifndef MOZ_PROFILE_USE
 # We need to explicitly put backend.RecursiveMakeBackend.built here
 # otherwise the rule in rules.mk doesn't run early enough.
 default alldep all:: CLOBBER $(topsrcdir)/configure config.status backend.RecursiveMakeBackend.built
-	$(PYTHON) $(topsrcdir)/config/purge_directories.py -d _build_manifests/purge .
+	$(call py_action,purge_manifests,-d _build_manifests/purge .)
 endif
 
 CLOBBER: $(topsrcdir)/CLOBBER
