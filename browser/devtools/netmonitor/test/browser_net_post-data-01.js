@@ -114,7 +114,7 @@ function test() {
           is(postScope.querySelectorAll(".variables-view-variable .value")[1].getAttribute("value"),
             "\"123\"", "The second post param value was incorrect.");
 
-          return Promise.resolve();
+          return promise.resolve();
         }
         else {
           checkVisibility("params textarea");

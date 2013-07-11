@@ -13,7 +13,7 @@ Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js", tempScope);
 
 let NetUtil = tempScope.NetUtil;
 let FileUtils = tempScope.FileUtils;
-let Promise = tempScope.Promise;
+let promise = tempScope.Promise;
 
 let gScratchpadWindow; // Reference to the Scratchpad chrome window object
 
@@ -127,7 +127,7 @@ function createTempFile(aName, aContent, aCallback=function(){})
  */
 function runAsyncTests(aScratchpad, aTests)
 {
-  let deferred = Promise.defer();
+  let deferred = promise.defer();
 
   (function runTest() {
     if (aTests.length) {
@@ -167,7 +167,7 @@ function runAsyncTests(aScratchpad, aTests)
  */
 function runAsyncCallbackTests(aScratchpad, aTests)
 {
-  let deferred = Promise.defer();
+  let deferred = promise.defer();
 
   (function runTest() {
     if (aTests.length) {

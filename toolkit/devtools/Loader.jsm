@@ -19,7 +19,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm
 XPCOMUtils.defineLazyModuleGetter(this, "console", "resource://gre/modules/devtools/Console.jsm");
 
 let loader = Cu.import("resource://gre/modules/commonjs/toolkit/loader.js", {}).Loader;
-let Promise = Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js", {}).Promise;
+let promise = Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js", {}).Promise;
 
 this.EXPORTED_SYMBOLS = ["devtools"];
 
@@ -55,7 +55,7 @@ var BuiltinProvider = {
       globals: loaderGlobals
     });
 
-    return Promise.resolve(undefined);
+    return promise.resolve(undefined);
   },
 
   unload: function(reason) {
@@ -104,7 +104,7 @@ var SrcdirProvider = {
   },
 
   _readFile: function(filename) {
-    let deferred = Promise.defer();
+    let deferred = promise.defer();
     let file = new FileUtils.File(filename);
     NetUtil.asyncFetch(file, (inputStream, status) => {
       if (!Components.isSuccessCode(status)) {
@@ -118,7 +118,7 @@ var SrcdirProvider = {
   },
 
   _writeFile: function(filename, data) {
-    let deferred = Promise.defer();
+    let deferred = promise.defer();
     let file = new FileUtils.File(filename);
 
     var ostream = FileUtils.openSafeFileOutputStream(file)

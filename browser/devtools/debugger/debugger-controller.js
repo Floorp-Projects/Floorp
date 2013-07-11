@@ -17,7 +17,7 @@ const CALL_STACK_PAGE_SIZE = 25; // frames
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/devtools/dbg-client.jsm");
-Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js");
+let promise = Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js").Promise;
 Cu.import("resource:///modules/source-editor.jsm");
 Cu.import("resource:///modules/devtools/LayoutHelpers.jsm");
 Cu.import("resource:///modules/devtools/BreadcrumbsWidget.jsm");
@@ -73,7 +73,7 @@ let DebuggerController = {
       window.removeEventListener("DOMContentLoaded", this.startupDebugger, true);
     }
 
-    let deferred = this._startup = Promise.defer();
+    let deferred = this._startup = promise.defer();
 
     DebuggerView.initialize(() => {
       DebuggerView._isInitialized = true;
@@ -108,7 +108,7 @@ let DebuggerController = {
       window.removeEventListener("unload", this.shutdownDebugger, true);
     }
 
-    let deferred = this._shutdown = Promise.defer();
+    let deferred = this._shutdown = promise.defer();
 
     DebuggerView.destroy(() => {
       DebuggerView._isDestroyed = true;
@@ -142,7 +142,7 @@ let DebuggerController = {
       return this._connection.promise;
     }
 
-    let deferred = this._connection = Promise.defer();
+    let deferred = this._connection = promise.defer();
 
     if (!window._isChromeDebugger) {
       let target = this._target;
@@ -1021,7 +1021,7 @@ SourceScripts.prototype = {
       return aSource._fetched;
     }
 
-    let deferred = Promise.defer();
+    let deferred = promise.defer();
     aSource._fetched = deferred.promise;
 
     // If the source text takes a long time to fetch, invoke a callback.
@@ -1054,7 +1054,7 @@ SourceScripts.prototype = {
    *         A promise that is resolved after source texts have been fetched.
    */
   getTextForSources: function(aUrls) {
-    let deferred = Promise.defer();
+    let deferred = promise.defer();
     let pending = new Set(aUrls);
     let fetched = [];
 

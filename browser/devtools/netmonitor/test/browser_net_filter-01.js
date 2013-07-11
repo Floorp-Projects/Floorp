@@ -176,7 +176,7 @@ function test() {
           fullMimeType: "application/x-shockwave-flash"
       });
 
-      return Promise.resolve(null);
+      return promise.resolve(null);
     }
 
     aDebuggee.performRequests('{ "getMedia": true, "getFlash": true }');

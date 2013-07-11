@@ -48,7 +48,7 @@ tests.testCallLogStatus = function(options) {
 };
 
 tests.testCallLogExec = function(options) {
-  var deferred = Promise.defer();
+  var deferred = promise.defer();
 
   var onWebConsoleOpen = function(subject) {
     Services.obs.removeObserver(onWebConsoleOpen, "web-console-created");
@@ -97,7 +97,7 @@ tests.testCallLogExec = function(options) {
       name: "calllog start",
       setup: function() {
         // This test wants to be in a different event
-        var deferred = Promise.defer();
+        var deferred = promise.defer();
         executeSoon(function() {
           helpers.setInput(options, "calllog start");
           deferred.resolve();
