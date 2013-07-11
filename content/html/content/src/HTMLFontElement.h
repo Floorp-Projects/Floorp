@@ -19,7 +19,6 @@ public:
   HTMLFontElement(already_AddRefed<nsINodeInfo> aNodeInfo)
     : nsGenericHTMLElement(aNodeInfo)
   {
-    SetIsDOMBinding();
   }
   virtual ~HTMLFontElement();
 

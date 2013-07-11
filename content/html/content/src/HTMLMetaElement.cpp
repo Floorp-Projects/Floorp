@@ -17,7 +17,6 @@ namespace dom {
 HTMLMetaElement::HTMLMetaElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo)
 {
-  SetIsDOMBinding();
 }
 
 HTMLMetaElement::~HTMLMetaElement()
