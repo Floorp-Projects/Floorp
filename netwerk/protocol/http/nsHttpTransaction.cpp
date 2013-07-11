@@ -20,7 +20,6 @@
 #include "nsNetUtil.h"
 #include "nsProxyRelease.h"
 #include "nsIOService.h"
-#include "nsAtomicRefcnt.h"
 
 #include "nsISeekableStream.h"
 #include "nsISocketTransport.h"

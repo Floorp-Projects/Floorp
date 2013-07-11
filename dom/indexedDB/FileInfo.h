@@ -9,7 +9,6 @@
 
 #include "IndexedDatabase.h"
 
-#include "nsAtomicRefcnt.h"
 #include "nsThreadUtils.h"
 
 #include "FileManager.h"

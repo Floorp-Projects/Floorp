@@ -10,7 +10,6 @@
 #include "nsSocketTransport2.h"
 
 #include "mozilla/Attributes.h"
-#include "nsAtomicRefcnt.h"
 #include "nsIOService.h"
 #include "nsStreamUtils.h"
 #include "nsNetSegmentUtils.h"

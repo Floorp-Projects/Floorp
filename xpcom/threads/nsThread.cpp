@@ -12,6 +12,7 @@
 #include "nsIProgrammingLanguage.h"
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
+#include "pratom.h"
 #include "prlog.h"
 #include "nsIObserverService.h"
 #include "mozilla/HangMonitor.h"

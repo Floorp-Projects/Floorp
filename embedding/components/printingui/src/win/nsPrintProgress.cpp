@@ -11,7 +11,6 @@
 #include "nsISupportsPrimitives.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
-#include "nsAtomicRefcnt.h"
 
 #if 0
 NS_IMPL_ADDREF(nsPrintProgress)

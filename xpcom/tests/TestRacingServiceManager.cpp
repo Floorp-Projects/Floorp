@@ -14,6 +14,7 @@
 #include "nsAutoPtr.h"
 #include "nsThreadUtils.h"
 #include "nsXPCOMCIDInternal.h"
+#include "pratom.h"
 #include "prmon.h"
 #include "mozilla/Attributes.h"
 

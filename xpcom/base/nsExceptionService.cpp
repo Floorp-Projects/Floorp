@@ -10,6 +10,7 @@
 #include "nsExceptionService.h"
 #include "nsIServiceManager.h"
 #include "nsCOMPtr.h"
+#include "pratom.h"
 #include "prthread.h"
 #include "mozilla/Services.h"
 

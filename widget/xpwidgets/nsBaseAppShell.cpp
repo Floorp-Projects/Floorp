@@ -9,6 +9,7 @@
 #include "nsThreadUtils.h"
 #include "nsIObserverService.h"
 #include "nsServiceManagerUtils.h"
+#include "pratom.h"
 #include "mozilla/Services.h"
 
 // When processing the next thread event, the appshell may process native
