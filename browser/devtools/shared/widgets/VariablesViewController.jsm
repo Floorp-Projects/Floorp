@@ -9,7 +9,7 @@ const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js");
+let promise = Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js").Promise;
 Cu.import("resource:///modules/devtools/VariablesView.jsm");
 Cu.import("resource:///modules/devtools/ViewHelpers.jsm");
 Cu.import("resource://gre/modules/devtools/WebConsoleUtils.jsm");
@@ -88,7 +88,7 @@ VariablesViewController.prototype = {
    *         The promise that will be resolved when the string is retrieved.
    */
   _populateFromLongString: function(aTarget, aGrip){
-    let deferred = Promise.defer();
+    let deferred = promise.defer();
 
     let from = aGrip.initial.length;
     let to = Math.min(aGrip.length, MAX_LONG_STRING_LENGTH);
@@ -120,7 +120,7 @@ VariablesViewController.prototype = {
    *        The grip to use to populate the target.
    */
   _populateFromObject: function(aTarget, aGrip) {
-    let deferred = Promise.defer();
+    let deferred = promise.defer();
 
     this._getGripClient(aGrip).getPrototypeAndProperties(aResponse => {
       let { ownProperties, prototype } = aResponse;
@@ -237,7 +237,7 @@ VariablesViewController.prototype = {
       return aTarget._fetched;
     }
 
-    let deferred = Promise.defer();
+    let deferred = promise.defer();
     aTarget._fetched = deferred.promise;
 
     if (!aSource) {

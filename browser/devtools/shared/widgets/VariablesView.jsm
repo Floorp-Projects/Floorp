@@ -21,7 +21,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource:///modules/devtools/ViewHelpers.jsm");
 Cu.import("resource:///modules/devtools/shared/event-emitter.js");
-Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js");
+let promise = Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js").Promise;
 
 XPCOMUtils.defineLazyModuleGetter(this, "NetworkHelper",
   "resource://gre/modules/devtools/NetworkHelper.jsm");
