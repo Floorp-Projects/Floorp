@@ -163,8 +163,6 @@ DBusMessage*  dbus_func_args_timeout_valist(DBusConnection* conn,
 
 int dbus_returns_int32(DBusMessage *reply);
 
-int dbus_returns_uint32(DBusMessage *reply);
-
 }
 }
 
