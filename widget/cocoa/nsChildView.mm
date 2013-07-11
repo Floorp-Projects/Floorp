@@ -5095,6 +5095,14 @@ static int32_t RoundUp(double aDouble)
 #pragma mark -
 // NSTextInputClient implementation
 
+- (NSAttributedString*)attributedSubstringForProposedRange:(NSRange)aRange
+                                        actualRange:(NSRangePointer)actualRange
+{
+  NS_ENSURE_TRUE(mTextInputHandler, nil);
+  return mTextInputHandler->GetAttributedSubstringFromRange(aRange,
+                                                            actualRange);
+}
+
 - (NSRect)firstRectForCharacterRange:(NSRange)aRange
                          actualRange:(NSRangePointer)actualRange
 {
