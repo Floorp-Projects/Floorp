@@ -4998,7 +4998,7 @@ static int32_t RoundUp(double aDouble)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  NS_ENSURE_TRUE(mTextInputHandler, );
+  NS_ENSURE_TRUE_VOID(mTextInputHandler);
 
   nsAutoRetainCocoaObject kungFuDeathGrip(self);
 
@@ -5111,6 +5111,27 @@ static int32_t RoundUp(double aDouble)
   }
 
   mTextInputHandler->InsertText(attrStr, &replacementRange);
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
+- (void)setMarkedText:(id)aString selectedRange:(NSRange)selectedRange
+                               replacementRange:(NSRange)replacementRange
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  NS_ENSURE_TRUE_VOID(mTextInputHandler);
+
+  nsAutoRetainCocoaObject kungFuDeathGrip(self);
+
+  NSAttributedString* attrStr;
+  if ([aString isKindOfClass:[NSAttributedString class]]) {
+    attrStr = static_cast<NSAttributedString*>(aString);
+  } else {
+    attrStr = [[[NSAttributedString alloc] initWithString:aString] autorelease];
+  }
+
+  mTextInputHandler->SetMarkedText(attrStr, selectedRange, &replacementRange);
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
