@@ -16,8 +16,8 @@
 namespace mozilla {
 namespace dom {
 
-class HTMLVideoElement : public HTMLMediaElement,
-                         public nsIDOMHTMLVideoElement
+class HTMLVideoElement MOZ_FINAL : public HTMLMediaElement,
+                                   public nsIDOMHTMLVideoElement
 {
 public:
   HTMLVideoElement(already_AddRefed<nsINodeInfo> aNodeInfo);

@@ -16,10 +16,10 @@
 namespace mozilla {
 namespace dom {
 
-class HTMLSharedListElement : public nsGenericHTMLElement,
-                              public nsIDOMHTMLOListElement,
-                              public nsIDOMHTMLDListElement,
-                              public nsIDOMHTMLUListElement
+class HTMLSharedListElement MOZ_FINAL : public nsGenericHTMLElement,
+                                        public nsIDOMHTMLOListElement,
+                                        public nsIDOMHTMLDListElement,
+                                        public nsIDOMHTMLUListElement
 {
 public:
   HTMLSharedListElement(already_AddRefed<nsINodeInfo> aNodeInfo)

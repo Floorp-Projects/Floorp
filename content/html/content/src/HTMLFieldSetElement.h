@@ -16,9 +16,9 @@
 namespace mozilla {
 namespace dom {
 
-class HTMLFieldSetElement : public nsGenericHTMLFormElement,
-                            public nsIDOMHTMLFieldSetElement,
-                            public nsIConstraintValidation
+class HTMLFieldSetElement MOZ_FINAL : public nsGenericHTMLFormElement,
+                                      public nsIDOMHTMLFieldSetElement,
+                                      public nsIConstraintValidation
 {
 public:
   using nsGenericHTMLFormElement::GetForm;

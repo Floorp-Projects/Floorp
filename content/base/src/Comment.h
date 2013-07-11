@@ -13,8 +13,8 @@
 namespace mozilla {
 namespace dom {
 
-class Comment : public nsGenericDOMDataNode,
-                public nsIDOMComment
+class Comment MOZ_FINAL : public nsGenericDOMDataNode,
+                          public nsIDOMComment
 {
 private:
   void Init()
