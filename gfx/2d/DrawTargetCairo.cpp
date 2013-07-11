@@ -676,55 +676,47 @@ DrawTargetCairo::Mask(const Pattern &aSource,
   cairo_pattern_destroy(mask);
   cairo_pattern_destroy(source);
 }
-#if 0
-DrawTargetCairo::MaskSurface(SourceSurface *aSurface,
-                             const Rect &aDest,
-                             const Rect &aSource,
-                             const DrawSurfaceOptions &aSurfOptions,
+
+void
+DrawTargetCairo::MaskSurface(const Pattern &aSource,
+                             SourceSurface *aMask,
+                             Point aOffset,
                              const DrawOptions &aOptions)
 {
   AutoPrepareForDrawing prep(this, mContext);
 
-  float sx = aSource.Width() / aDest.Width();
-  float sy = aSource.Height() / aDest.Height();
+  if (!PatternIsCompatible(aSource)) {
+    return;
+  }
 
-  cairo_matrix_t src_mat;
-  cairo_matrix_init_translate(&src_mat, aSource.X(), aSource.Y());
-  cairo_matrix_scale(&src_mat, sx, sy);
+  cairo_pattern_t* pat = GfxPatternToCairoPattern(aSource, aOptions.mAlpha);
+  cairo_set_source(mContext, pat);
 
-  cairo_surface_t* surf = GetCairoSurfaceForSourceSurface(aSurface);
-  cairo_pattern_t* pat = cairo_pattern_create_for_surface(surf);
-  cairo_surface_destroy(surf);
+  if (NeedIntermediateSurface(aSource, aOptions)) {
+    cairo_push_group_with_content(mContext, CAIRO_CONTENT_COLOR_ALPHA);
 
-  cairo_pattern_set_matrix(pat, &src_mat);
-  cairo_pattern_set_filter(pat, GfxFilterToCairoFilter(aSurfOptions.mFilter));
-  cairo_pattern_set_extend(pat, CAIRO_EXTEND_PAD);
+    // Don't want operators to be applied twice
+    cairo_set_operator(mContext, CAIRO_OPERATOR_OVER);
 
-  cairo_translate(mContext, aDest.X(), aDest.Y());
+    // Now draw the content using the desired operator
+    cairo_paint_with_alpha(mContext, aOptions.mAlpha);
 
-  if (IsOperatorBoundByMask(aOptions.mCompositionOp)) {
-    cairo_new_path(mContext);
-    cairo_rectangle(mContext, 0, 0, aDest.Width(), aDest.Height());
-    cairo_clip(mContext);
-    cairo_set_source(mContext, pat);
-  } else {
-    cairo_push_group(mContext);
-      cairo_new_path(mContext);
-      cairo_rectangle(mContext, 0, 0, aDest.Width(), aDest.Height());
-      cairo_set_source(mContext, pat);
-      cairo_fill(mContext);
     cairo_pop_group_to_source(mContext);
   }
 
-  cairo_set_operator(mContext, GfxOpToCairoOp(aOptions.mCompositionOp));
-  DrawPattern(aPattern, StrokeOptions(), aOptions, DRAW_FILL);
+  cairo_surface_t* surf = GetCairoSurfaceForSourceSurface(aMask);
+  cairo_pattern_t* mask = cairo_pattern_create_for_surface(surf);
+  cairo_matrix_t matrix;
 
-  cairo_paint_with_alpha(mContext, aOptions.mAlpha);
+  cairo_matrix_init_translate (&matrix, -aOffset.x, -aOffset.y);
+  cairo_pattern_set_matrix (mask, &matrix);
 
+  cairo_mask(mContext, mask);
+
+  cairo_surface_destroy(surf);
+  cairo_pattern_destroy(mask);
   cairo_pattern_destroy(pat);
 }
-
-#endif
 
 void
 DrawTargetCairo::PushClip(const Path *aPath)
