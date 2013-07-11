@@ -7,7 +7,7 @@ const TEST_URI = "data:text/html;charset=utf-8,<p>browser_telemetry_toolboxtabs_
 // opened we make use of setTimeout() to create tool active times.
 const TOOL_DELAY = 200;
 
-let {Promise} = Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js", {});
+let {Promise: promise} = Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js", {});
 let {Services} = Cu.import("resource://gre/modules/Services.jsm", {});
 
 let require = Cu.import("resource://gre/modules/devtools/Loader.jsm", {}).devtools.require;
@@ -93,7 +93,7 @@ function finishUp() {
   delete Telemetry.prototype._oldlog;
   delete Telemetry.prototype.telemetryInfo;
 
-  TargetFactory = Services = Promise = require = null;
+  TargetFactory = Services = promise = require = null;
 
   finish();
 }

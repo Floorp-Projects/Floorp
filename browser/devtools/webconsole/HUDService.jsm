@@ -30,8 +30,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "DebuggerClient",
 XPCOMUtils.defineLazyModuleGetter(this, "WebConsoleUtils",
     "resource://gre/modules/devtools/WebConsoleUtils.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "Promise",
-    "resource://gre/modules/commonjs/sdk/core/promise.js");
+XPCOMUtils.defineLazyModuleGetter(this, "promise",
+    "resource://gre/modules/commonjs/sdk/core/promise.js", "Promise");
 
 XPCOMUtils.defineLazyModuleGetter(this, "Heritage",
     "resource:///modules/devtools/ViewHelpers.jsm");
@@ -94,7 +94,7 @@ HUD_SERVICE.prototype =
    * @param nsIDOMWindow aChromeWindow
    *        The window of the web console owner.
    * @return object
-   *         A Promise object for the opening of the new WebConsole instance.
+   *         A promise object for the opening of the new WebConsole instance.
    */
   openWebConsole:
   function HS_openWebConsole(aTarget, aIframeWindow, aChromeWindow)
@@ -116,7 +116,7 @@ HUD_SERVICE.prototype =
    * @param nsIDOMWindow aChromeWindow
    *        The window of the browser console owner.
    * @return object
-   *         A Promise object for the opening of the new BrowserConsole instance.
+   *         A promise object for the opening of the new BrowserConsole instance.
    */
   openBrowserConsole:
   function HS_openBrowserConsole(aTarget, aIframeWindow, aChromeWindow)
@@ -254,7 +254,7 @@ WebConsole.prototype = {
    * Initialize the Web Console instance.
    *
    * @return object
-   *         A Promise for the initialization.
+   *         A promise for the initialization.
    */
   init: function WC_init()
   {
@@ -463,7 +463,7 @@ WebConsole.prototype = {
    * Console is closed.
    *
    * @return object
-   *         A Promise object that is resolved once the Web Console is closed.
+   *         A promise object that is resolved once the Web Console is closed.
    */
   destroy: function WC_destroy()
   {
@@ -473,7 +473,7 @@ WebConsole.prototype = {
 
     delete HUDService.hudReferences[this.hudId];
 
-    this._destroyer = Promise.defer();
+    this._destroyer = promise.defer();
 
     let popupset = this.mainPopupSet;
     let panels = popupset.querySelectorAll("panel[hudId=" + this.hudId + "]");
@@ -542,7 +542,7 @@ BrowserConsole.prototype = Heritage.extend(WebConsole.prototype,
    * Initialize the Browser Console instance.
    *
    * @return object
-   *         A Promise for the initialization.
+   *         A promise for the initialization.
    */
   init: function BC_init()
   {
@@ -577,7 +577,7 @@ BrowserConsole.prototype = Heritage.extend(WebConsole.prototype,
    * Destroy the object.
    *
    * @return object
-   *         A Promise object that is resolved once the Browser Console is closed.
+   *         A promise object that is resolved once the Browser Console is closed.
    */
   destroy: function BC_destroy()
   {
@@ -587,7 +587,7 @@ BrowserConsole.prototype = Heritage.extend(WebConsole.prototype,
 
     this._telemetry.toolClosed("browserconsole");
 
-    this._bc_destroyer = Promise.defer();
+    this._bc_destroyer = promise.defer();
 
     let chromeWindow = this.chromeWindow;
     this.$destroy().then(() =>
@@ -614,8 +614,8 @@ var HeadsUpDisplayUICommands = {
    * Toggle the Web Console for the current tab.
    *
    * @return object
-   *         A Promise for either the opening of the toolbox that holds the Web
-   *         Console, or a Promise for the closing of the toolbox.
+   *         A promise for either the opening of the toolbox that holds the Web
+   *         Console, or a promise for the closing of the toolbox.
    */
   toggleHUD: function UIC_toggleHUD()
   {
@@ -661,11 +661,11 @@ var HeadsUpDisplayUICommands = {
       return this._browserConsoleDefer.promise;
     }
 
-    this._browserConsoleDefer = Promise.defer();
+    this._browserConsoleDefer = promise.defer();
 
     function connect()
     {
-      let deferred = Promise.defer();
+      let deferred = promise.defer();
 
       if (!DebuggerServer.initialized) {
         DebuggerServer.init();
@@ -707,7 +707,7 @@ var HeadsUpDisplayUICommands = {
     {
       target = aTarget;
 
-      let deferred = Promise.defer();
+      let deferred = promise.defer();
 
       let win = Services.ww.openWindow(null, devtools.Tools.webConsole.url, "_blank",
                                        BROWSER_CONSOLE_WINDOW_FEATURES, null);

@@ -16,7 +16,7 @@ function test() {
 }
 
 tests.testConsole = function(options) {
-  let deferred = Promise.defer();
+  let deferred = promise.defer();
   let hud = null;
 
   let onWebConsoleOpen = function(subject) {

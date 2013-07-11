@@ -29,7 +29,7 @@ const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
 let { XPCOMUtils } = Cu.import("resource://gre/modules/XPCOMUtils.jsm", {});
 let { Services }   = Cu.import("resource://gre/modules/Services.jsm", {});
-let { Promise }    = Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js", {});
+let { Promise: promise }    = Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js", {});
 
 this.EXPORTED_SYMBOLS = ["AppCacheUtils"];
 
@@ -52,7 +52,7 @@ AppCacheUtils.prototype = {
   },
 
   validateManifest: function ACU_validateManifest() {
-    let deferred = Promise.defer();
+    let deferred = promise.defer();
     this.errors = [];
     // Check for missing manifest.
     this._getManifestURI().then(manifestURI => {
@@ -78,7 +78,7 @@ AppCacheUtils.prototype = {
   },
 
   _parseManifest: function ACU__parseManifest(uriInfo) {
-    let deferred = Promise.defer();
+    let deferred = promise.defer();
     let manifestName = uriInfo.name;
     let manifestLastModified = new Date(uriInfo.responseHeaders["Last-Modified"]);
 
@@ -181,7 +181,7 @@ AppCacheUtils.prototype = {
   _getURIInfo: function ACU__getURIInfo(uri) {
     let inputStream = Cc["@mozilla.org/scriptableinputstream;1"]
                         .createInstance(Ci.nsIScriptableInputStream);
-    let deferred = Promise.defer();
+    let deferred = promise.defer();
     let channelCharset = "";
     let buffer = "";
     let channel = Services.io.newChannel(uri, null, null);
@@ -318,7 +318,7 @@ AppCacheUtils.prototype = {
   },
 
   _getManifestURI: function ACU__getManifestURI() {
-    let deferred = Promise.defer();
+    let deferred = promise.defer();
 
     let getURI = node => {
       let htmlNode = this.doc.querySelector("html[manifest]");
@@ -331,7 +331,7 @@ AppCacheUtils.prototype = {
 
     if (this.doc) {
       let uri = getURI(this.doc);
-      return Promise.resolve(uri);
+      return promise.resolve(uri);
     } else {
       this._getURIInfo(this.uri).then(uriInfo => {
         if (uriInfo.success) {

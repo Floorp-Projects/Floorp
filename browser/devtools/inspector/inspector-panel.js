@@ -8,7 +8,7 @@ const {Cc, Ci, Cu, Cr} = require("chrome");
 
 Cu.import("resource://gre/modules/Services.jsm");
 
-let Promise = require("sdk/core/promise");
+let promise = require("sdk/core/promise");
 let EventEmitter = require("devtools/shared/event-emitter");
 let {CssLogic} = require("devtools/styleinspector/css-logic");
 
@@ -58,7 +58,7 @@ InspectorPanel.prototype = {
   },
 
   _deferredOpen: function(defaultSelection) {
-    let deferred = Promise.defer();
+    let deferred = promise.defer();
 
     this.onNavigatedAway = this.onNavigatedAway.bind(this);
     this.target.on("navigate", this.onNavigatedAway);
@@ -405,7 +405,7 @@ InspectorPanel.prototype = {
       this._destroyPromise = this.walker.release().then(null, console.error);
       delete this.walker;
     } else {
-      this._destroyPromise = Promise.resolve(null);
+      this._destroyPromise = promise.resolve(null);
     }
 
     this.cancelUpdate();

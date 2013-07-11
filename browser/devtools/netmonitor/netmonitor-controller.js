@@ -9,7 +9,7 @@ const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js");
+let promise = Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js").Promise;
 Cu.import("resource:///modules/source-editor.jsm");
 Cu.import("resource:///modules/devtools/shared/event-emitter.js");
 Cu.import("resource:///modules/devtools/SideMenuWidget.jsm");
@@ -48,7 +48,7 @@ let NetMonitorController = {
     NetMonitorView.initialize();
 
     // Startup is synchronous, for now.
-    return this._startup = Promise.resolve();
+    return this._startup = promise.resolve();
   },
 
   /**
@@ -68,7 +68,7 @@ let NetMonitorController = {
     this.disconnect();
 
     // Shutdown is synchronous, for now.
-    return this._shutdown = Promise.resolve();
+    return this._shutdown = promise.resolve();
   },
 
   /**
@@ -83,7 +83,7 @@ let NetMonitorController = {
       return this._connection;
     }
 
-    let deferred = Promise.defer();
+    let deferred = promise.defer();
     this._connection = deferred.promise;
 
     let target = this._target;
@@ -485,14 +485,14 @@ NetworkEventsHandler.prototype = {
   getString: function(aStringGrip) {
     // Make sure this is a long string.
     if (typeof aStringGrip != "object" || aStringGrip.type != "longString") {
-      return Promise.resolve(aStringGrip); // Go home string, you're drunk.
+      return promise.resolve(aStringGrip); // Go home string, you're drunk.
     }
     // Fetch the long string only once.
     if (aStringGrip._fullText) {
       return aStringGrip._fullText.promise;
     }
 
-    let deferred = aStringGrip._fullText = Promise.defer();
+    let deferred = aStringGrip._fullText = promise.defer();
     let { actor, initial, length } = aStringGrip;
     let longStringClient = this.webConsoleClient.longString(aStringGrip);
 
