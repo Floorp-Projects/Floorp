@@ -14,7 +14,6 @@
 #include "nsCRT.h"
 #include "prlog.h"
 #include "nsIClassInfoImpl.h"
-#include "nsAtomicRefcnt.h"
 #include "nsAlgorithm.h"
 
 using namespace mozilla;

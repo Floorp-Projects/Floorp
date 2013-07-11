@@ -10,6 +10,7 @@
 #include "nsString.h"
 #include "nsReadableUtils.h"
 #include "plstr.h"
+#include "pratom.h"
 #include "nsCRT.h"
 #include "nsIURI.h"
 #include "nsIFileURL.h"

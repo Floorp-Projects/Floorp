@@ -19,6 +19,7 @@
 #include "nsGZFileWriter.h"
 #include "nsJSEnvironment.h"
 #include "nsPrintfCString.h"
+#include "pratom.h"
 
 #ifdef XP_WIN
 #include <process.h>

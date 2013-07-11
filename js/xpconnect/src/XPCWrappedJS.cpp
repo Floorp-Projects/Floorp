@@ -8,7 +8,6 @@
 
 #include "xpcprivate.h"
 #include "nsCxPusher.h"
-#include "nsAtomicRefcnt.h"
 #include "nsContentUtils.h"
 #include "nsProxyRelease.h"
 #include "nsThreadUtils.h"

@@ -36,6 +36,7 @@
 #include "nsScriptSecurityManager.h"
 #include "nsThreadUtils.h"
 #include "nsXULAppAPI.h"
+#include "pratom.h"
 #include "xpcpublic.h"
 
 #include "AcquireListener.h"
