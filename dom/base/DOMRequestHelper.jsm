@@ -82,6 +82,12 @@ DOMRequestIpcHelperMessageListener.prototype = {
   },
 
   destroy: function() {
+    // DOMRequestIpcHelper.destroy() calls back into this function.
+    if (this._destroyed) {
+      return;
+    }
+    this._destroyed = true;
+
     Services.obs.removeObserver(this, "inner-window-destroyed");
 
     this._messages.forEach(function(msgName) {
