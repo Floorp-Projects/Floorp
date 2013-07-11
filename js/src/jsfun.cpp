@@ -1534,7 +1534,7 @@ JSFunction::isBuiltinFunctionConstructor()
 }
 
 JSFunction *
-js::NewFunction(JSContext *cx, HandleObject funobjArg, Native native, unsigned nargs,
+js::NewFunction(ExclusiveContext *cx, HandleObject funobjArg, Native native, unsigned nargs,
                 JSFunction::Flags flags, HandleObject parent, HandleAtom atom,
                 gc::AllocKind allocKind /* = JSFunction::FinalizeKind */,
                 NewObjectKind newKind /* = GenericObject */)

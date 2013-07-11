@@ -62,12 +62,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=885996
     for (var i = 0; i < document.getElementsByTagName('input').length; ++i) {
       element = document.getElementsByTagName('input')[i];
       synthesizeMouseAtCenter(element, {});
-      yield;
+      yield undefined;
     };
 
     MockColorPicker.cleanup();
     SimpleTest.finish();
-    yield;
+    yield undefined;
   }
 
   </script>

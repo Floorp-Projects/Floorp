@@ -45,22 +45,22 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=826058
     SpecialPowers.setBoolPref("dom.mozBrowserFramesEnabled", true);
 
     setAppVersion(1, continueTest);
-    yield;
+    yield undefined;
     SpecialPowers.autoConfirmAppInstall(continueTest);
-    yield;
+    yield undefined;
 
     // Load the app, uninstalled.
     checkAppState(null, false, 1, continueTest);
-    yield;
+    yield undefined;
 
     // Bump the version and install the app.
     setAppVersion(2, continueTest);
-    yield;
+    yield undefined;
 
     var request = navigator.mozApps.install(gHostedManifestURL);
     request.onerror = cbError;
     request.onsuccess = continueTest;
-    yield;
+    yield undefined;
     var app = request.result;
     ok(app, "App is non-null");
     ok(app.manifest.description == "Updated even faster than Firefox, just to annoy slashdotters.",
@@ -68,23 +68,23 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=826058
 
     // Check the app a few times.
     checkAppState(app, true, 2, continueTest);
-    yield;
+    yield undefined;
     checkAppState(app, true, 2, continueTest);
-    yield;
+    yield undefined;
 
     // Bump the version and check the app again. The app is not cached, so the
     // version bump takes effect.
     setAppVersion(3, continueTest);
-    yield;
+    yield undefined;
     checkAppState(app, true, 3, continueTest);
-    yield;
+    yield undefined;
 
     // check for update
     var icons = app.manifest.icons;
     var oldIcon = icons[Object.keys(icons)[0]];
     var oldUpdateTime = app.updateTime;
     setAppIcon('new_icon', continueTest);
-    yield;
+    yield undefined;
 
     app.ondownloadavailable = function() {
       ok(false, 'Got a downloadavailable event for non-cached hosted apps');
@@ -96,7 +96,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=826058
       continueTest();
     };
     app.checkForUpdate();
-    yield;
+    yield undefined;
 
     icons = app.manifest.icons;
     var newIcon = icons[Object.keys(icons)[0]];
@@ -108,20 +108,20 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=826058
     request = navigator.mozApps.mgmt.uninstall(app);
     request.onerror = cbError;
     request.onsuccess = continueTest;
-    yield;
+    yield undefined;
 
     // Check the uninstalled app.
     checkAppState(app, false, 3, continueTest);
-    yield;
+    yield undefined;
 
     // Install the cached app.
     setAppVersion(3, continueTest);
-    yield;
+    yield undefined;
     ok(true, "Installing cached app");
     var request = navigator.mozApps.install(gCachedManifestURL);
     request.onerror = cbError;
     request.onsuccess = continueTest;
-    yield;
+    yield undefined;
     var app = request.result;
     ok(app, "App is non-null");
     if (app.installState == "pending") {
@@ -129,13 +129,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=826058
       app.onprogress = function() ok(true, "Got download progress");
       app.ondownloadsuccess = continueTest;
       app.ondownloaderror = cbError;
-      yield;
+      yield undefined;
     }
     is(app.installState, "installed", "App is installed");
 
     // Check the cached app.
     checkAppState(app, true, 3, continueTest);
-    yield;
+    yield undefined;
 
     // Check for updates. The current infrastructure always returns a new appcache
     // manifest, so there should always be an update.
@@ -147,7 +147,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=826058
     var request = app.checkForUpdate();
     request.onerror = cbError;
     request.onsuccess = continueTest;
-    yield;
+    yield undefined;
     todo(app.lastUpdateCheck > lastCheck, "lastUpdateCheck updated appropriately");
 
 
@@ -155,12 +155,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=826058
     request = navigator.mozApps.mgmt.uninstall(app);
     request.onerror = cbError;
     request.onsuccess = continueTest;
-    yield;
+    yield undefined;
     ok(true, "Uninstalled app");
 
     // Check the uninstalled app.
     checkAppState(app, false, 3, continueTest);
-    yield;
+    yield undefined;
 
     // All done.
     ok(true, "All done");

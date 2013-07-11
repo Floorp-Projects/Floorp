@@ -118,7 +118,7 @@ function runTest() {
     iframe.src = data.src + '?' + data.action + '&' + data.isnull;
     document.getElementById('content').appendChild(iframe);
 
-    yield;
+    yield undefined;
   }
 }
 

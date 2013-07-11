@@ -92,7 +92,7 @@
                    {type: "load", title: "test1"},
                    {type: "pageshow", title: "test1", persisted: false}];
       gBrowser.loadURI(test1DocURI);
-      yield;
+      yield undefined;
 
       var test2Doc = "data:text/html,<html><head><title>test2</title></head>" +
                      "<body>test2</body></html>";
@@ -102,7 +102,7 @@
                    {type: "load", title: "test2"},
                    {type: "pageshow", title: "test2", persisted: false}];
       gBrowser.loadURI(test2Doc);
-      yield;
+      yield undefined;
 
       // Now go back in history. First page should not have been cached.
       // Check persisted property to confirm
@@ -110,7 +110,7 @@
                    {type: "load", title: "test1"},
                    {type: "pageshow", title: "test1", persisted: false}];
       gBrowser.goBack();
-      yield;
+      yield undefined;
     }
   ]]></script>
 

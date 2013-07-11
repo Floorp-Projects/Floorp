@@ -41,7 +41,7 @@
           onNavComplete: nextTest,
           preventBFCache: i != 1
         } );
-        yield;
+        yield undefined;
       
         // Store the original url for later comparison.
         var originalUrl = TestWindow.getBrowser().currentURI.spec;
@@ -59,7 +59,7 @@
           false, false, false, false, 0, null);
         TestWindow.getDocument().getElementById("link1").dispatchEvent(event);
         setTimeout(nextTest, 0);
-        yield;
+        yield undefined;
 
         // Store the fragment url for later comparison.
         var fragmentUrl = TestWindow.getBrowser().currentURI.spec;
@@ -79,7 +79,7 @@
                             {type: "pageshow"} ],
           onNavComplete: nextTest
         } );
-        yield;
+        yield undefined;
       
         // Go back
         doPageNavigation( {
@@ -89,7 +89,7 @@
                              persisted: i == 1} ],
           onNavComplete: nextTest
         } );
-        yield;
+        yield undefined;
       
         // Verify the current url is the fragment url
         is(TestWindow.getBrowser().currentURI.spec, fragmentUrl, 
@@ -113,7 +113,7 @@
           function() {
             setTimeout(nextTest, 0);
           }, 20);      
-        yield;
+        yield undefined;
       
         // Verify the current url is the original url without fragment
         is(TestWindow.getBrowser().currentURI.spec, originalUrl, 
@@ -125,7 +125,7 @@
       // Tell the framework the test is finished.  Include the final 'yield' 
       // statement to prevent a StopIteration exception from being thrown.
       finish();
-      yield;
+      yield undefined;
     }
     
   ]]></script>

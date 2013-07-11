@@ -55,7 +55,7 @@ namespace js {
 
 template <AllowGC allowGC>
 extern JSFlatString *
-Int32ToString(ThreadSafeContext *tcx, int32_t i);
+Int32ToString(ThreadSafeContext *cx, int32_t i);
 
 /*
  * Convert an integer or double (contained in the given value) to a string and
@@ -128,11 +128,11 @@ ParseDecimalNumber(const JS::TwoByteChars chars);
  * *dp == 0 and *endp == start upon return.
  */
 extern bool
-GetPrefixInteger(JSContext *cx, const jschar *start, const jschar *end, int base,
+GetPrefixInteger(ExclusiveContext *cx, const jschar *start, const jschar *end, int base,
                  const jschar **endp, double *dp);
 
 extern bool
-StringToNumber(JSContext *cx, JSString *str, double *result);
+StringToNumber(ExclusiveContext *cx, JSString *str, double *result);
 
 /* ES5 9.3 ToNumber, overwriting *vp with the appropriate number value. */
 JS_ALWAYS_INLINE bool
@@ -169,7 +169,7 @@ num_parseInt(JSContext *cx, unsigned argc, Value *vp);
  * Return false if out of memory.
  */
 extern JSBool
-js_strtod(JSContext *cx, const jschar *s, const jschar *send,
+js_strtod(js::ExclusiveContext *cx, const jschar *s, const jschar *send,
           const jschar **ep, double *dp);
 
 extern JSBool
@@ -261,6 +261,21 @@ SafeMul(int32_t one, int32_t two, int32_t *res)
     *res = one * two;
     int64_t ores = (int64_t)one * (int64_t)two;
     return ores == (int64_t)*res;
+}
+
+extern bool
+ToNumberSlow(ExclusiveContext *cx, Value v, double *dp);
+
+// Variant of ToNumber which takes an ExclusiveContext instead of a JSContext.
+// ToNumber is part of the API and can't use ExclusiveContext directly.
+JS_ALWAYS_INLINE bool
+ToNumber(ExclusiveContext *cx, const Value &v, double *out)
+{
+    if (v.isNumber()) {
+        *out = v.toNumber();
+        return true;
+    }
+    return ToNumberSlow(cx, v, out);
 }
 
 } /* namespace js */

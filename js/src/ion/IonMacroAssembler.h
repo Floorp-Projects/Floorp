@@ -652,11 +652,21 @@ class MacroAssembler : public MacroAssemblerSpecific
         Push(ImmWord(uintptr_t(NULL)));
     }
 
+    void loadForkJoinSlice(Register slice, Register scratch);
+    void loadContext(Register cxReg, Register scratch, ExecutionMode executionMode);
+
     void enterParallelExitFrameAndLoadSlice(const VMFunction *f, Register slice,
                                             Register scratch);
 
     void enterExitFrameAndLoadContext(const VMFunction *f, Register cxReg, Register scratch,
                                       ExecutionMode executionMode);
+
+    void enterFakeParallelExitFrame(Register slice, Register scratch,
+                                    IonCode *codeVal = NULL);
+
+    void enterFakeExitFrame(Register cxReg, Register scratch,
+                            ExecutionMode executionMode,
+                            IonCode *codeVal = NULL);
 
     void leaveExitFrame() {
         freeStack(IonExitFooterFrame::Size());
@@ -919,8 +929,6 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     void printf(const char *output);
     void printf(const char *output, Register value);
-
-    void copyMem(Register copyFrom, Register copyEnd, Register copyTo, Register temp);
 
     void convertInt32ValueToDouble(const Address &address, Register scratch, Label *done);
     void convertValueToDouble(ValueOperand value, FloatRegister output, Label *fail);

@@ -2934,7 +2934,7 @@ function convertToUnicode(aString, aCharset=null) {
  *        An optional prefix for the reported error message.
  */
 function reportError(aError, aPrefix="") {
-  let msg = prefix + aError.message + ":\n" + aError.stack;
+  let msg = aPrefix + aError.message + ":\n" + aError.stack;
   Cu.reportError(msg);
   dumpn(msg);
 }

@@ -1,7 +1,7 @@
 Index: lib/Driver/Tools.cpp
 ===================================================================
---- lib/Driver/Tools.cpp        (revision 181515)
-+++ lib/Driver/Tools.cpp        (working copy)
+--- a/clang/lib/Driver/Tools.cpp        (revision 181515)
++++ b/clang/lib/Driver/Tools.cpp        (working copy)
 @@ -1245,7 +1245,7 @@
    // All x86 devices running Android have core2 as their common
    // denominator. This makes a better choice than pentium4.

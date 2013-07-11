@@ -619,6 +619,12 @@ GetNativeStackLimit(const JSRuntime *rt)
     return PerThreadDataFriendFields::getMainThread(rt)->nativeStackLimit;
 }
 
+inline uintptr_t
+GetNativeStackLimit(JSContext *cx)
+{
+    return GetNativeStackLimit(GetRuntime(cx));
+}
+
 /*
  * These macros report a stack overflow and run |onerror| if we are close to
  * using up the C stack. The JS_CHECK_CHROME_RECURSION variant gives us a little
@@ -628,7 +634,7 @@ GetNativeStackLimit(const JSRuntime *rt)
 #define JS_CHECK_RECURSION(cx, onerror)                              \
     JS_BEGIN_MACRO                                                              \
         int stackDummy_;                                                        \
-        if (!JS_CHECK_STACK_SIZE(js::GetNativeStackLimit(js::GetRuntime(cx)), &stackDummy_)) { \
+        if (!JS_CHECK_STACK_SIZE(js::GetNativeStackLimit(cx), &stackDummy_)) {  \
             js_ReportOverRecursed(cx);                                          \
             onerror;                                                            \
         }                                                                       \
@@ -637,7 +643,7 @@ GetNativeStackLimit(const JSRuntime *rt)
 #define JS_CHECK_RECURSION_WITH_EXTRA_DONT_REPORT(cx, extra, onerror)           \
     JS_BEGIN_MACRO                                                              \
         uint8_t stackDummy_;                                                    \
-        if (!JS_CHECK_STACK_SIZE(js::GetNativeStackLimit(js::GetRuntime(cx)),   \
+        if (!JS_CHECK_STACK_SIZE(js::GetNativeStackLimit(cx),                   \
                                  &stackDummy_ - (extra)))                       \
         {                                                                       \
             onerror;                                                            \
@@ -647,7 +653,7 @@ GetNativeStackLimit(const JSRuntime *rt)
 #define JS_CHECK_CHROME_RECURSION(cx, onerror)                                  \
     JS_BEGIN_MACRO                                                              \
         int stackDummy_;                                                        \
-        if (!JS_CHECK_STACK_SIZE_WITH_TOLERANCE(js::GetNativeStackLimit(js::GetRuntime(cx)), \
+        if (!JS_CHECK_STACK_SIZE_WITH_TOLERANCE(js::GetNativeStackLimit(cx),    \
                                                 &stackDummy_,                   \
                                                 1024 * sizeof(size_t)))         \
         {                                                                       \
@@ -1560,7 +1566,8 @@ struct JSJitInfo {
     enum OpType {
         Getter,
         Setter,
-        Method
+        Method,
+        OpType_None
     };
 
     union {
@@ -1577,7 +1584,13 @@ struct JSJitInfo {
                                keep returning the same value for the given
                                "this" object" */
     JSValueType returnType; /* The return type tag.  Might be JSVAL_TYPE_UNKNOWN */
+
+    /* An alternative native that's safe to call in parallel mode. */
+    JSParallelNative parallelNative;
 };
+
+#define JS_JITINFO_NATIVE_PARALLEL(op)                                         \
+    {{NULL},0,0,JSJitInfo::OpType_None,false,false,false,JSVAL_TYPE_MISSING,op}
 
 static JS_ALWAYS_INLINE const JSJitInfo *
 FUNCTION_VALUE_TO_JITINFO(const JS::Value& v)

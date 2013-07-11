@@ -11,6 +11,11 @@
   background-repeat: no-repeat;
 }
 
+#urlbar[pageproxystate="valid"] > #identity-box.chromeUI:-moz-locale-dir(rtl),
+#urlbar[pageproxystate="valid"] > #identity-box.verifiedIdentity:-moz-locale-dir(rtl) {
+  background-position: left;
+}
+
 #urlbar[pageproxystate="valid"] > #identity-box.verifiedIdentity {
   color: hsl(92,100%,30%);
   background-image: linear-gradient(hsla(92,81%,16%,0),
@@ -19,38 +24,28 @@
                                     hsla(92,81%,16%,0));
 }
 
-
-%ifdef MOZ_OFFICIAL_BRANDING
 #urlbar[pageproxystate="valid"] > #identity-box.chromeUI {
+%ifdef MOZ_OFFICIAL_BRANDING
   color: rgb(229,115,0);
   background-image: linear-gradient(rgba(229,114,0,0),
                                     rgba(229,114,0,.5) 35%,
                                     rgba(229,114,0,.5) 65%,
                                     rgba(229,114,0,0));
-}
 %else
 %if MOZ_UPDATE_CHANNEL == aurora
-#urlbar[pageproxystate="valid"] > #identity-box.chromeUI {
   color: hsl(214,90%,23%);
   background-image: linear-gradient(hsla(208,99%,37%,0),
                                     hsla(214,90%,23%,.5) 35%,
                                     hsla(214,90%,23%,.5) 65%,
                                     hsla(214,90%,23%,0));
-}
 %else
-#urlbar[pageproxystate="valid"] > #identity-box.chromeUI {
   color: hsl(211,33%,32%);
   background-image: linear-gradient(hsla(211,33%,32%,0),
                                     hsla(211,33%,32%,.5) 35%,
                                     hsla(211,33%,32%,.5) 65%,
                                     hsla(211,33%,32%,0));
-}
 %endif
 %endif
-
-#identity-box.chromeUI:-moz-locale-dir(rtl),
-#identity-box.verifiedIdentity:-moz-locale-dir(rtl) {
-  background-position: left;
 }
 
 /* page proxy icon */
