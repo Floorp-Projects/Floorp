@@ -140,6 +140,8 @@ MOCHITEST_FILES = \
 		test_texttrackcue.html \
 		test_timeupdate_small_files.html \
 		test_unseekable.html \
+		test_VideoPlaybackQuality.html \
+		test_VideoPlaybackQuality_disabled.html \
 		test_webvtt_disabled.html \
 		$(NULL)
 
