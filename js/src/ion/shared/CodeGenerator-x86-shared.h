@@ -106,7 +106,7 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
     virtual bool visitGuardObjectType(LGuardObjectType *guard);
     virtual bool visitGuardClass(LGuardClass *guard);
     virtual bool visitEffectiveAddress(LEffectiveAddress *ins);
-    virtual bool visitAsmJSDivOrMod(LAsmJSDivOrMod *ins);
+    virtual bool visitUDivOrMod(LUDivOrMod *ins);
     virtual bool visitAsmJSPassStackArg(LAsmJSPassStackArg *ins);
 
     bool visitNegI(LNegI *lir);
