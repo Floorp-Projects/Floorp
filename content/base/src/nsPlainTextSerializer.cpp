@@ -1030,6 +1030,9 @@ nsPlainTextSerializer::DoAddLeaf(nsIAtom* aTag)
 
     EnsureVerticalSpace(0);
   }
+  else if (mFlags & nsIDocumentEncoder::OutputNonTextContentAsPlaceholder) {
+    Write(NS_LITERAL_STRING("\uFFFC"));
+  }
   else if (aTag == nsGkAtoms::img) {
     /* Output (in decreasing order of preference)
        alt, title or nothing */
