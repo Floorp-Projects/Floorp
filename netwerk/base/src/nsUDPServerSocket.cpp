@@ -513,7 +513,7 @@ class ServerSocketListenerProxy MOZ_FINAL : public nsIUDPServerSocketListener
 {
 public:
   ServerSocketListenerProxy(nsIUDPServerSocketListener* aListener)
-    : mListener(aListener)
+    : mListener(new nsMainThreadPtrHolder<nsIUDPServerSocketListener>(aListener))
     , mTargetThread(do_GetCurrentThread())
   { }
 
@@ -523,7 +523,7 @@ public:
   class OnPacketReceivedRunnable : public nsRunnable
   {
   public:
-    OnPacketReceivedRunnable(nsIUDPServerSocketListener* aListener,
+    OnPacketReceivedRunnable(nsMainThreadPtrHolder<nsIUDPServerSocketListener>* aListener,
                      nsIUDPServerSocket* aServ,
                      nsIUDPMessage* aMessage)
       : mListener(aListener)
@@ -534,7 +534,7 @@ public:
     NS_DECL_NSIRUNNABLE
 
   private:
-    nsCOMPtr<nsIUDPServerSocketListener> mListener;
+    nsMainThreadPtrHandle<nsIUDPServerSocketListener> mListener;
     nsCOMPtr<nsIUDPServerSocket> mServ;
     nsCOMPtr<nsIUDPMessage> mMessage;
   };
@@ -542,7 +542,7 @@ public:
   class OnStopListeningRunnable : public nsRunnable
   {
   public:
-    OnStopListeningRunnable(nsIUDPServerSocketListener* aListener,
+    OnStopListeningRunnable(nsMainThreadPtrHolder<nsIUDPServerSocketListener>* aListener,
                             nsIUDPServerSocket* aServ,
                             nsresult aStatus)
       : mListener(aListener)
@@ -553,13 +553,13 @@ public:
     NS_DECL_NSIRUNNABLE
 
   private:
-    nsCOMPtr<nsIUDPServerSocketListener> mListener;
+    nsMainThreadPtrHandle<nsIUDPServerSocketListener> mListener;
     nsCOMPtr<nsIUDPServerSocket> mServ;
     nsresult mStatus;
   };
 
 private:
-  nsCOMPtr<nsIUDPServerSocketListener> mListener;
+  nsMainThreadPtrHandle<nsIUDPServerSocketListener> mListener;
   nsCOMPtr<nsIEventTarget> mTargetThread;
 };
 
