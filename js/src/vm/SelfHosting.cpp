@@ -322,6 +322,27 @@ js::intrinsic_Dump(JSContext *cx, unsigned argc, Value *vp)
     args.rval().setUndefined();
     return true;
 }
+
+JSBool
+intrinsic_ParallelSpew(ThreadSafeContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    JS_ASSERT(args.length() == 1);
+    JS_ASSERT(args[0].isString());
+
+    ScopedThreadSafeStringInspector inspector(args[0].toString());
+    if (!inspector.ensureChars(cx))
+        return false;
+
+    ScopedJSFreePtr<char> bytes(TwoByteCharsToNewUTF8CharsZ(cx, inspector.range()).c_str());
+    parallel::Spew(parallel::SpewOps, bytes);
+
+    args.rval().setUndefined();
+    return true;
+}
+
+const JSJitInfo intrinsic_ParallelSpew_jitInfo =
+    JS_JITINFO_NATIVE_PARALLEL(JSParallelNativeThreadSafeWrapper<intrinsic_ParallelSpew>);
 #endif
 
 /*
@@ -636,6 +657,10 @@ const JSFunctionSpec intrinsic_functions[] = {
 
 #ifdef DEBUG
     JS_FN("Dump",                 intrinsic_Dump,                 1,0),
+
+    JS_FNINFO("ParallelSpew",
+              JSNativeThreadSafeWrapper<intrinsic_ParallelSpew>,
+              &intrinsic_ParallelSpew_jitInfo, 1,0),
 #endif
 
     JS_FS_END
