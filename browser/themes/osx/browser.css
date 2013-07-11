@@ -2854,12 +2854,8 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   border: none;
 }
 
-#sidebar-header > .tabs-closebutton {
-  list-style-image: url("chrome://global/skin/icons/close-sidebar.png");
-}
-
 @media (min-resolution: 2dppx) {
-  :not(#sidebar-header) > .tabs-closebutton > .toolbarbutton-icon {
+  .tabs-closebutton > .toolbarbutton-icon {
     width: 16px;
   }
 }
