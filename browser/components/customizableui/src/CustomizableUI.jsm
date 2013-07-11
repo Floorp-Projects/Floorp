@@ -2173,6 +2173,7 @@ OverflowableToolbar.prototype = {
       if (!child.hasAttribute("nooverflow")) {
         this._collapsed.push({child: child, minSize: this._target.clientWidth});
         child.classList.add("overflowedItem");
+        child.setAttribute("customizableui-anchorid", this._chevron.id);
 
         this._list.insertBefore(child, this._list.firstChild);
         this._toolbar.setAttribute("overflowing", "true");
@@ -2200,6 +2201,7 @@ OverflowableToolbar.prototype = {
 
       this._collapsed.pop();
       this._target.appendChild(child);
+      child.removeAttribute("customizableui-anchorid");
       child.classList.remove("overflowedItem");
     }
 
