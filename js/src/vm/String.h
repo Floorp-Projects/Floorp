@@ -410,7 +410,7 @@ class JSString : public js::gc::Cell
     }
 
     JS::Zone *zone() const { return tenuredZone(); }
-    bool isInsideZone(JS::Zone *zone_) { return zone_ == zone(); }
+    bool isInsideZone(JS::Zone *zone_) { return tenuredIsInsideZone(zone_); }
     js::gc::AllocKind getAllocKind() const { return tenuredGetAllocKind(); }
 
     static inline void writeBarrierPre(JSString *str);
