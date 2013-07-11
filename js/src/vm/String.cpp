@@ -474,23 +474,13 @@ js::ConcatStringsPure(ThreadSafeContext *cx, JSString *left, JSString *right)
 
         jschar *buf = str->init(wholeLength);
 
-        if (const jschar *leftChars = left->maybeChars()) {
-            PodCopy(buf, leftChars, leftLen);
-        } else {
-            ScopedJSFreePtr<jschar> chars;
-            if (!left->getCharsNonDestructive(cx, chars))
-                return NULL;
-            PodCopy(buf, chars.get(), leftLen);
-        }
+        ScopedThreadSafeStringInspector leftInspector(left);
+        ScopedThreadSafeStringInspector rightInspector(right);
+        if (!leftInspector.ensureChars(cx) || !rightInspector.ensureChars(cx))
+            return NULL;
 
-        if (const jschar *rightChars = right->maybeChars()) {
-            PodCopy(buf + leftLen, rightChars, rightLen);
-        } else {
-            ScopedJSFreePtr<jschar> chars;
-            if (!right->getCharsNonDestructive(cx, chars))
-                return NULL;
-            PodCopy(buf + leftLen, chars.get(), rightLen);
-        }
+        PodCopy(buf, leftInspector.chars(), leftLen);
+        PodCopy(buf + leftLen, rightInspector.chars(), rightLen);
 
         buf[wholeLength] = 0;
         return str;
@@ -609,6 +599,30 @@ JSFlatString::isIndexSlow(uint32_t *indexp) const
     }
 
     return false;
+}
+
+bool
+ScopedThreadSafeStringInspector::ensureChars(ThreadSafeContext *cx)
+{
+    if (chars_)
+        return true;
+
+    if (cx->isJSContext()) {
+        JSLinearString *linear = str_->ensureLinear(cx->asJSContext());
+        if (!linear)
+            return false;
+        chars_ = linear->chars();
+    } else {
+        chars_ = str_->maybeChars();
+        if (!chars_) {
+            if (!str_->getCharsNonDestructive(cx, scopedChars_))
+                return false;
+            chars_ = scopedChars_;
+        }
+    }
+
+    JS_ASSERT(chars_);
+    return true;
 }
 
 /*

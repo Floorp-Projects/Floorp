@@ -256,17 +256,15 @@ do {                                                                            
 } while(0)
 
 static ParallelResult
-ParCompareStrings(ForkJoinSlice *slice, JSString *str1,
-                  JSString *str2, int32_t *res)
+ParCompareStrings(ForkJoinSlice *slice, JSString *left, JSString *right, int32_t *res)
 {
-    if (!str1->isLinear())
-        return TP_RETRY_SEQUENTIALLY;
-    if (!str2->isLinear())
-        return TP_RETRY_SEQUENTIALLY;
-    JSLinearString &linearStr1 = str1->asLinear();
-    JSLinearString &linearStr2 = str2->asLinear();
-    if (!CompareChars(linearStr1.chars(), linearStr1.length(),
-                      linearStr2.chars(), linearStr2.length(),
+    ScopedThreadSafeStringInspector leftInspector(left);
+    ScopedThreadSafeStringInspector rightInspector(right);
+    if (!leftInspector.ensureChars(slice) || !rightInspector.ensureChars(slice))
+        return TP_FATAL;
+
+    if (!CompareChars(leftInspector.chars(), left->length(),
+                      rightInspector.chars(), right->length(),
                       res))
         return TP_FATAL;
 
