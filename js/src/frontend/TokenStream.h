@@ -29,7 +29,7 @@ namespace js {
 namespace frontend {
 
 enum TokenKind {
-    TOK_ERROR = -1,                /* well-known as the only code < EOF */
+    TOK_ERROR = 0,                 /* well-known as the only code < EOF */
     TOK_EOF,                       /* end of file */
     TOK_EOL,                       /* end of line; only returned by peekTokenSameLine() */
     TOK_SEMI,                      /* semicolon */
