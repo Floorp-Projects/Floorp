@@ -36,3 +36,5 @@ CSRCS += ['fans.c', 'tans.c']
 CMMSRCS = ['fans.mm', 'tans.mm']
 
 SSRCS = ['fans.S', 'tans.S']
+
+NO_DIST_INSTALL = True

@@ -43,6 +43,7 @@
 #include "vm/Interpreter.h"
 #include "vm/NumericConversions.h"
 #include "vm/RegExpObject.h"
+#include "vm/RegExpStatics.h"
 #include "vm/ScopeObject.h"
 #include "vm/Shape.h"
 #include "vm/StringBuffer.h"
@@ -53,7 +54,6 @@
 
 #include "vm/Interpreter-inl.h"
 #include "vm/RegExpObject-inl.h"
-#include "vm/RegExpStatics-inl.h"
 #include "vm/StringObject-inl.h"
 #include "vm/String-inl.h"
 
@@ -3630,22 +3630,22 @@ js_InitStringClass(JSContext *cx, HandleObject obj)
 
 template <AllowGC allowGC>
 JSStableString *
-js_NewString(ThreadSafeContext *tcx, jschar *chars, size_t length)
+js_NewString(ThreadSafeContext *cx, jschar *chars, size_t length)
 {
-    return JSStableString::new_<allowGC>(tcx, chars, length);
+    return JSStableString::new_<allowGC>(cx, chars, length);
 }
 
 template JSStableString *
-js_NewString<CanGC>(ThreadSafeContext *tcx, jschar *chars, size_t length);
+js_NewString<CanGC>(ThreadSafeContext *cx, jschar *chars, size_t length);
 
 template JSStableString *
-js_NewString<NoGC>(ThreadSafeContext *tcx, jschar *chars, size_t length);
+js_NewString<NoGC>(ThreadSafeContext *cx, jschar *chars, size_t length);
 
 JSLinearString *
 js_NewDependentString(JSContext *cx, JSString *baseArg, size_t start, size_t length)
 {
     if (length == 0)
-        return cx->runtime()->emptyString;
+        return cx->emptyString();
 
     JSLinearString *base = baseArg->ensureLinear(cx);
     if (!base)
@@ -3664,7 +3664,7 @@ js_NewDependentString(JSContext *cx, JSString *baseArg, size_t start, size_t len
 
 template <AllowGC allowGC>
 JSFlatString *
-js_NewStringCopyN(JSContext *cx, const jschar *s, size_t n)
+js_NewStringCopyN(ExclusiveContext *cx, const jschar *s, size_t n)
 {
     if (JSShortString::lengthFits(n))
         return NewShortString<allowGC>(cx, TwoByteChars(s, n));
@@ -3681,36 +3681,36 @@ js_NewStringCopyN(JSContext *cx, const jschar *s, size_t n)
 }
 
 template JSFlatString *
-js_NewStringCopyN<CanGC>(JSContext *cx, const jschar *s, size_t n);
+js_NewStringCopyN<CanGC>(ExclusiveContext *cx, const jschar *s, size_t n);
 
 template JSFlatString *
-js_NewStringCopyN<NoGC>(JSContext *cx, const jschar *s, size_t n);
+js_NewStringCopyN<NoGC>(ExclusiveContext *cx, const jschar *s, size_t n);
 
 template <AllowGC allowGC>
 JSFlatString *
-js_NewStringCopyN(ThreadSafeContext *tcx, const char *s, size_t n)
+js_NewStringCopyN(ThreadSafeContext *cx, const char *s, size_t n)
 {
     if (JSShortString::lengthFits(n))
-        return NewShortString<allowGC>(tcx, JS::Latin1Chars(s, n));
+        return NewShortString<allowGC>(cx, JS::Latin1Chars(s, n));
 
-    jschar *chars = InflateString(tcx, s, &n);
+    jschar *chars = InflateString(cx, s, &n);
     if (!chars)
         return NULL;
-    JSFlatString *str = js_NewString<allowGC>(tcx, chars, n);
+    JSFlatString *str = js_NewString<allowGC>(cx, chars, n);
     if (!str)
         js_free(chars);
     return str;
 }
 
 template JSFlatString *
-js_NewStringCopyN<CanGC>(ThreadSafeContext *tcx, const char *s, size_t n);
+js_NewStringCopyN<CanGC>(ThreadSafeContext *cx, const char *s, size_t n);
 
 template JSFlatString *
-js_NewStringCopyN<NoGC>(ThreadSafeContext *tcx, const char *s, size_t n);
+js_NewStringCopyN<NoGC>(ThreadSafeContext *cx, const char *s, size_t n);
 
 template <AllowGC allowGC>
 JSFlatString *
-js_NewStringCopyZ(JSContext *cx, const jschar *s)
+js_NewStringCopyZ(ExclusiveContext *cx, const jschar *s)
 {
     size_t n = js_strlen(s);
     if (JSShortString::lengthFits(n))
@@ -3728,23 +3728,23 @@ js_NewStringCopyZ(JSContext *cx, const jschar *s)
 }
 
 template JSFlatString *
-js_NewStringCopyZ<CanGC>(JSContext *cx, const jschar *s);
+js_NewStringCopyZ<CanGC>(ExclusiveContext *cx, const jschar *s);
 
 template JSFlatString *
-js_NewStringCopyZ<NoGC>(JSContext *cx, const jschar *s);
+js_NewStringCopyZ<NoGC>(ExclusiveContext *cx, const jschar *s);
 
 template <AllowGC allowGC>
 JSFlatString *
-js_NewStringCopyZ(ThreadSafeContext *tcx, const char *s)
+js_NewStringCopyZ(ThreadSafeContext *cx, const char *s)
 {
-    return js_NewStringCopyN<allowGC>(tcx, s, strlen(s));
+    return js_NewStringCopyN<allowGC>(cx, s, strlen(s));
 }
 
 template JSFlatString *
-js_NewStringCopyZ<CanGC>(ThreadSafeContext *tcx, const char *s);
+js_NewStringCopyZ<CanGC>(ThreadSafeContext *cx, const char *s);
 
 template JSFlatString *
-js_NewStringCopyZ<NoGC>(ThreadSafeContext *tcx, const char *s);
+js_NewStringCopyZ<NoGC>(ThreadSafeContext *cx, const char *s);
 
 const char *
 js_ValueToPrintable(JSContext *cx, const Value &vArg, JSAutoByteString *bytes, bool asSource)
@@ -3765,7 +3765,7 @@ js_ValueToPrintable(JSContext *cx, const Value &vArg, JSAutoByteString *bytes, b
 
 template <AllowGC allowGC>
 JSString *
-js::ToStringSlow(JSContext *cx, typename MaybeRooted<Value, allowGC>::HandleType arg)
+js::ToStringSlow(ExclusiveContext *cx, typename MaybeRooted<Value, allowGC>::HandleType arg)
 {
     /* As with ToObjectSlow, callers must verify that |arg| isn't a string. */
     JS_ASSERT(!arg.isString());
@@ -3775,7 +3775,7 @@ js::ToStringSlow(JSContext *cx, typename MaybeRooted<Value, allowGC>::HandleType
         if (!allowGC)
             return NULL;
         RootedValue v2(cx, v);
-        if (!ToPrimitive(cx, JSTYPE_STRING, &v2))
+        if (!ToPrimitive(cx->asJSContext(), JSTYPE_STRING, &v2))
             return NULL;
         v = v2;
     }
@@ -3798,10 +3798,10 @@ js::ToStringSlow(JSContext *cx, typename MaybeRooted<Value, allowGC>::HandleType
 }
 
 template JSString *
-js::ToStringSlow<CanGC>(JSContext *cx, HandleValue arg);
+js::ToStringSlow<CanGC>(ExclusiveContext *cx, HandleValue arg);
 
 template JSString *
-js::ToStringSlow<NoGC>(JSContext *cx, Value arg);
+js::ToStringSlow<NoGC>(ExclusiveContext *cx, Value arg);
 
 JSString *
 js::ValueToSource(JSContext *cx, HandleValue v)
@@ -3972,14 +3972,14 @@ js_strchr_limit(const jschar *s, jschar c, const jschar *limit)
 }
 
 jschar *
-js::InflateString(ThreadSafeContext *tcx, const char *bytes, size_t *lengthp)
+js::InflateString(ThreadSafeContext *cx, const char *bytes, size_t *lengthp)
 {
     size_t nchars;
     jschar *chars;
     size_t nbytes = *lengthp;
 
     nchars = nbytes;
-    chars = tcx->pod_malloc<jschar>(nchars + 1);
+    chars = cx->pod_malloc<jschar>(nchars + 1);
     if (!chars)
         goto bad;
     for (size_t i = 0; i < nchars; i++)

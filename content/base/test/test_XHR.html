@@ -123,7 +123,7 @@ xhr.open("GET", 'file_XHR_pass1.xml');
 xhr.responseType = 'document';
 xhr.onloadend = continueTest;
 xhr.send(null);
-yield;
+yield undefined;
 checkSetResponseTypeThrows(xhr, "document");
 is(xhr.status, 200, "wrong status");
 checkResponseTextAccessThrows(xhr);
@@ -137,7 +137,7 @@ xhr.open("GET", 'file_XHR_pass2.txt');
 xhr.responseType = 'text';
 xhr.onloadend = continueTest;
 xhr.send(null);
-yield;
+yield undefined;
 is(xhr.status, 200, "wrong status");
 checkResponseXMLAccessThrows(xhr);
 is(xhr.response, "hello pass\n", "wrong response");
@@ -156,7 +156,7 @@ xhr.open("GET", 'file_XHR_pass2.txt');
 xhr.responseType = 'arraybuffer';
 xhr.onloadend = continueTest;
 xhr.send(null);
-yield;
+yield undefined;
 is(xhr.status, 200, "wrong status");
 checkResponseTextAccessThrows(xhr);
 checkResponseXMLAccessThrows(xhr);
@@ -169,7 +169,7 @@ xhr.open("GET", 'file_XHR_binary1.bin');
 xhr.responseType = 'arraybuffer';
 xhr.onloadend = continueTest;
 xhr.send(null);
-yield;
+yield undefined;
 is(xhr.status, 200, "wrong status");
 var ab2 = xhr.response;
 ok(ab2 != null, "should have a non-null arraybuffer");
@@ -183,7 +183,7 @@ xhr.open("GET", 'file_XHR_binary1.bin');
 xhr.responseType = 'arraybuffer';
 xhr.onloadend = continueTest;
 xhr.send(null);
-yield;
+yield undefined;
 is(xhr.status, 200, "wrong status");
 checkResponseTextAccessThrows(xhr);
 checkResponseXMLAccessThrows(xhr);
@@ -199,7 +199,7 @@ xhr.responseType = 'json';
 var jsonObjStr = JSON.stringify({title: "aBook", author: "john"});
 xhr.onloadend = continueTest;
 xhr.send(jsonObjStr);
-yield;
+yield undefined;
 is(xhr.status, 200, "wrong status");
 checkResponseTextAccessThrows(xhr);
 checkResponseXMLAccessThrows(xhr);
@@ -212,7 +212,7 @@ xhr.open("POST", 'responseIdentical.sjs');
 xhr.responseType = 'json';
 xhr.onloadend = continueTest;
 xhr.send("{");
-yield;
+yield undefined;
 is(xhr.status, 200, "wrong status");
 checkResponseTextAccessThrows(xhr);
 checkResponseXMLAccessThrows(xhr);
@@ -239,7 +239,7 @@ xhr.send(null);
 xhr.onreadystatechange = continueTest;
 while (xhr.readyState != 4) {
   checkXHRStatus();
-  yield;
+  yield undefined;
 }
 checkXHRStatus();
 
@@ -253,7 +253,7 @@ for (var i = 0; i < responseTypes.length; i++) {
   xhr.responseType = t;
   xhr.onloadend = continueTest;
   xhr.send(null);
-  yield;
+  yield undefined;
   is(xhr.status, 200, "wrong status");
   checkResponseTextAccessThrows(xhr);
   checkResponseXMLAccessThrows(xhr);
@@ -266,7 +266,7 @@ for (var i = 0; i < responseTypes.length; i++) {
   var fr = new FileReader();
   fr.onload = continueTest;
   fr.readAsBinaryString(b);
-  yield;
+  yield undefined;
   ok(fr.result, "hello pass\n", "wrong values");
 
   // with a binary file
@@ -275,13 +275,13 @@ for (var i = 0; i < responseTypes.length; i++) {
   xhr.send(null);
   xhr.onreadystatechange = continueTest;
   while(xhr.readyState != 2)
-    yield;
+    yield undefined;
 
   is(xhr.status, 200, "wrong status");
   xhr.responseType = t;
 
   while(xhr.readyState != 4)
-    yield;
+    yield undefined;
   
   xhr.onreadystatechange = null;
 
@@ -295,7 +295,7 @@ for (var i = 0; i < responseTypes.length; i++) {
   b = null;
   SpecialPowers.gc();
   fr.onload = continueTest;
-  yield;
+  yield undefined;
   is(fr.result, "\xaa\xee\0\x03\xff\xff\xff\xff\xbb\xbb\xbb\xbb", "wrong values");
 
   // with a larger binary file
@@ -306,7 +306,7 @@ for (var i = 0; i < responseTypes.length; i++) {
   xhr.onreadystatechange = continueTest;
 
   while (xhr.readyState != 4)
-    yield;
+    yield undefined;
 
   xhr.onreadystatechange = null;
 
@@ -320,7 +320,7 @@ for (var i = 0; i < responseTypes.length; i++) {
   xhr = null; // kill the XHR object
   b = null;
   SpecialPowers.gc();
-  yield;
+  yield undefined;
 
   var u8 = new Uint8Array(fr.result);
   for (var i = 0; i < 65536; i++) {
@@ -352,7 +352,7 @@ client.onreadystatechange = function() {
 client.abort();
 
 SimpleTest.finish();
-yield;
+yield undefined;
 
 } /* runTests */
 </script>

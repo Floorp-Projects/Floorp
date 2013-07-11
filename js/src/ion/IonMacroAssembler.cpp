@@ -802,6 +802,12 @@ MacroAssembler::performOsr()
     ret();
 }
 
+static void
+ReportOverRecursed(JSContext *cx)
+{
+    js_ReportOverRecursed(cx);
+}
+
 void
 MacroAssembler::generateBailoutTail(Register scratch, Register bailoutInfo)
 {
@@ -823,7 +829,7 @@ MacroAssembler::generateBailoutTail(Register scratch, Register bailoutInfo)
         loadJSContext(ReturnReg);
         setupUnalignedABICall(1, scratch);
         passABIArg(ReturnReg);
-        callWithABI(JS_FUNC_TO_DATA_PTR(void *, js_ReportOverRecursed));
+        callWithABI(JS_FUNC_TO_DATA_PTR(void *, ReportOverRecursed));
         jump(&exception);
     }
 
@@ -1018,8 +1024,7 @@ MacroAssembler::loadBaselineFramePtr(Register framePtr, Register dest)
 }
 
 void
-MacroAssembler::enterParallelExitFrameAndLoadSlice(const VMFunction *f, Register slice,
-                                                   Register scratch)
+MacroAssembler::loadForkJoinSlice(Register slice, Register scratch)
 {
     // Load the current ForkJoinSlice *. If we need a parallel exit frame,
     // chances are we are about to do something very slow anyways, so just
@@ -1028,6 +1033,29 @@ MacroAssembler::enterParallelExitFrameAndLoadSlice(const VMFunction *f, Register
     callWithABI(JS_FUNC_TO_DATA_PTR(void *, ParForkJoinSlice));
     if (ReturnReg != slice)
         movePtr(ReturnReg, slice);
+}
+
+void
+MacroAssembler::loadContext(Register cxReg, Register scratch, ExecutionMode executionMode)
+{
+    switch (executionMode) {
+      case SequentialExecution:
+        // The scratch register is not used for sequential execution.
+        loadJSContext(cxReg);
+        break;
+      case ParallelExecution:
+        loadForkJoinSlice(cxReg, scratch);
+        break;
+      default:
+        MOZ_ASSUME_UNREACHABLE("No such execution mode");
+    }
+}
+
+void
+MacroAssembler::enterParallelExitFrameAndLoadSlice(const VMFunction *f, Register slice,
+                                                   Register scratch)
+{
+    loadForkJoinSlice(slice, scratch);
     // Load the PerThreadData from from the slice.
     loadPtr(Address(slice, offsetof(ForkJoinSlice, perThreadData)), scratch);
     linkParallelExitFrame(scratch);
@@ -1035,6 +1063,17 @@ MacroAssembler::enterParallelExitFrameAndLoadSlice(const VMFunction *f, Register
     exitCodePatch_ = PushWithPatch(ImmWord(-1));
     // Push the VMFunction pointer, to mark arguments.
     Push(ImmWord(f));
+}
+
+void
+MacroAssembler::enterFakeParallelExitFrame(Register slice, Register scratch,
+                                           IonCode *codeVal)
+{
+    // Load the PerThreadData from from the slice.
+    loadPtr(Address(slice, offsetof(ForkJoinSlice, perThreadData)), scratch);
+    linkParallelExitFrame(scratch);
+    Push(ImmWord(uintptr_t(codeVal)));
+    Push(ImmWord(uintptr_t(NULL)));
 }
 
 void
@@ -1049,6 +1088,24 @@ MacroAssembler::enterExitFrameAndLoadContext(const VMFunction *f, Register cxReg
         break;
       case ParallelExecution:
         enterParallelExitFrameAndLoadSlice(f, cxReg, scratch);
+        break;
+      default:
+        MOZ_ASSUME_UNREACHABLE("No such execution mode");
+    }
+}
+
+void
+MacroAssembler::enterFakeExitFrame(Register cxReg, Register scratch,
+                                   ExecutionMode executionMode,
+                                   IonCode *codeVal)
+{
+    switch (executionMode) {
+      case SequentialExecution:
+        // The cx and scratch registers are not used for sequential execution.
+        enterFakeExitFrame(codeVal);
+        break;
+      case ParallelExecution:
+        enterFakeParallelExitFrame(cxReg, scratch, codeVal);
         break;
       default:
         MOZ_ASSUME_UNREACHABLE("No such execution mode");
@@ -1174,21 +1231,6 @@ MacroAssembler::printf(const char *output, Register value)
     callWithABI(JS_FUNC_TO_DATA_PTR(void *, printf1_));
 
     PopRegsInMask(RegisterSet::Volatile());
-}
-
-void
-MacroAssembler::copyMem(Register copyFrom, Register copyEnd, Register copyTo, Register temp)
-{
-    Label copyDone;
-    Label copyLoop;
-    bind(&copyLoop);
-    branchPtr(Assembler::AboveOrEqual, copyFrom, copyEnd, &copyDone);
-    load32(Address(copyFrom, 0), temp);
-    store32(temp, Address(copyTo, 0));
-    addPtr(Imm32(4), copyTo);
-    addPtr(Imm32(4), copyFrom);
-    jump(&copyLoop);
-    bind(&copyDone);
 }
 
 void

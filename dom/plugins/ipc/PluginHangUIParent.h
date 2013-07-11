@@ -12,6 +12,7 @@
 #include "base/process.h"
 #include "base/process_util.h"
 
+#include "mozilla/Mutex.h"
 #include "mozilla/plugins/PluginMessageUtils.h"
 
 #include "MiniShmParent.h"
@@ -126,15 +127,19 @@ private:
   bool
   RecvUserResponse(const unsigned int& aResponse);
 
+  bool
+  UnwatchHangUIChildProcess(bool aWait);
+
   static
   VOID CALLBACK SOnHangUIProcessExit(PVOID aContext, BOOLEAN aIsTimer);
 
 private:
+  Mutex mMutex;
   PluginModuleParent* mModule;
   const uint32_t mTimeoutPrefMs;
   const uint32_t mIPCTimeoutMs;
   MessageLoop* mMainThreadMessageLoop;
-  volatile bool mIsShowing;
+  bool mIsShowing;
   unsigned int mLastUserResponse;
   base::ProcessHandle mHangUIProcessHandle;
   NativeWindowHandle mMainWindowHandle;

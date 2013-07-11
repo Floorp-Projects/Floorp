@@ -6,6 +6,8 @@
 
 #include <string.h>
 
+#include "mozilla/Move.h"
+
 #include "jsapi.h"
 
 #include "jsalloc.h"
@@ -19,6 +21,9 @@
 #include "jsobjinlines.h"
 
 using namespace js;
+
+using mozilla::Move;
+using mozilla::MoveRef;
 
 #ifdef DEBUG
 

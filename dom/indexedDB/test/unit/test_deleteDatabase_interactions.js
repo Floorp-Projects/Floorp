@@ -16,7 +16,7 @@ function testSteps()
 
   ok(request instanceof IDBOpenDBRequest, "Expect an IDBOpenDBRequest");
 
-  let event = yield;
+  let event = yield undefined;
 
   is(event.type, "upgradeneeded", "Expect an upgradeneeded event");
   ok(event instanceof IDBVersionChangeEvent, "Expect a versionchange event");
@@ -26,7 +26,7 @@ function testSteps()
 
   request.onsuccess = grabEventAndContinueHandler;
 
-  event = yield;
+  event = yield undefined;
 
   is(event.type, "success", "Expect a success event");
   is(event.target, request, "Event has right target");
@@ -46,17 +46,17 @@ function testSteps()
   openRequest.onerror = errorHandler;
   openRequest.onsuccess = unexpectedSuccessHandler;
 
-  event = yield;
+  event = yield undefined;
   is(event.type, "success", "expect a success event");
   is(event.target, request, "event has right target");
   is(event.target.result, null, "event should have no result");
 
   openRequest.onsuccess = grabEventAndContinueHandler;
 
-  event = yield;
+  event = yield undefined;
   is(event.target.result.version, 1, "DB has proper version");
   is(event.target.result.objectStoreNames.length, 0, "DB should have no object stores");
 
   finishTest();
-  yield;
+  yield undefined;
 }

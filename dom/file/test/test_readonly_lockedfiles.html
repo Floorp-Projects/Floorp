@@ -16,14 +16,14 @@
       let request = getFileHandle(fileStorage.key, "test.txt");
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
-      let event = yield;
+      let event = yield undefined;
 
       let fileHandle = event.target.result;
       fileHandle.onerror = errorHandler;
 
       request = fileHandle.open("readwrite").write({});
       request.onsuccess = grabEventAndContinueHandler;
-      event = yield;
+      event = yield undefined;
 
       is(event.target.lockedFile.mode, "readwrite", "Correct mode");
 
@@ -61,7 +61,7 @@
     }
 
     finishTest();
-    yield;
+    yield undefined;
   }
   </script>
   <script type="text/javascript;version=1.7" src="helpers.js"></script>

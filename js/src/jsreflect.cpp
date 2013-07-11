@@ -25,6 +25,7 @@
 #include "vm/RegExpObject.h"
 
 #include "jsobjinlines.h"
+#include "jsstrinlines.h"
 
 using namespace js;
 using namespace js::frontend;
@@ -3052,7 +3053,7 @@ reflect_parse(JSContext *cx, uint32_t argc, jsval *vp)
     CompileOptions options(cx);
     options.setFileAndLine(filename, lineno);
     options.setCanLazilyParse(false);
-    Parser<FullParseHandler> parser(cx, options, chars.get(), length,
+    Parser<FullParseHandler> parser(cx, &cx->tempLifoAlloc(), options, chars.get(), length,
                                     /* foldConstants = */ false, NULL, NULL);
 
     serialize.setParser(&parser);

@@ -139,7 +139,7 @@ function testGen() {
     });
   };
 
-  yield;
+  yield undefined;
 
   info("test 1: check if a header value is expandable");
 
@@ -201,7 +201,7 @@ function testGen() {
   EventUtils.sendMouseEvent({ type: "mousedown"}, clickable,
                              networkPanel.document.defaultView);
 
-  yield;
+  yield undefined;
 
   clickable = networkPanel.document
               .querySelector("#requestHeadersContent .longStringEllipsis");
@@ -220,7 +220,7 @@ function testGen() {
   EventUtils.sendMouseEvent({ type: "mousedown"}, clickable,
                              networkPanel.document.defaultView);
 
-  yield;
+  yield undefined;
 
   imgNode = networkPanel.document.getElementById("responseImageNode");
   is(imgNode.getAttribute("src"), "data:image/png;base64," + TEST_IMG_BASE64,
@@ -234,7 +234,7 @@ function testGen() {
   clickable = networkPanel.document.querySelector("#requestBodyFetchLink");
   EventUtils.sendMouseEvent({ type: "mousedown"}, clickable,
                              networkPanel.document.defaultView);
-  yield;
+  yield undefined;
 
   is(clickable.style.display, "none", "#requestBodyFetchLink is not visible");
 
@@ -270,7 +270,7 @@ function testGen() {
     });
   };
 
-  yield;
+  yield undefined;
 
   checkIsVisible(networkPanel, {
     requestCookie: false,
@@ -293,7 +293,7 @@ function testGen() {
   EventUtils.sendMouseEvent({ type: "mousedown"}, clickable,
                              networkPanel.document.defaultView);
 
-  yield;
+  yield undefined;
 
   webConsoleClient.longString = longStringFn;
   is(clickable.style.display, "none", "#responseBodyFetchLink is not visible");
@@ -305,5 +305,5 @@ function testGen() {
   testDriver = null;
   executeSoon(finishTest);
 
-  yield;
+  yield undefined;
 }

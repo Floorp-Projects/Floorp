@@ -13,9 +13,6 @@
 
 #include "jsapi.h"
 #include "jsdbgapi.h"
-#ifdef LIVEWIRE
-#include "lwdbgapi.h"
-#endif
 
 extern "C" {
 
@@ -640,11 +637,9 @@ JSD_DestroyAllSources( JSDContext* jsdc );
 /* functions for adding source items */
 
 /*
-* Add a new item for a given URL. If an iten already exists for the given URL
+* Add a new item for a given URL. If an item already exists for the given URL
 * then the old item is removed.
 * 'url' may not be NULL.
-*
-* ifdef LIVEWIRE url is treated as a char* and ownership is claimed by jsd
 */
 extern JSD_PUBLIC_API(JSDSourceText*)
 JSD_NewSourceText(JSDContext* jsdc, const char* url);
@@ -1521,31 +1516,6 @@ JSD_GetObjectForValue(JSDContext* jsdc, JSDValue* jsdval);
 */
 extern JSD_PUBLIC_API(JSDValue*)
 JSD_GetValueForObject(JSDContext* jsdc, JSDObject* jsdobj);
-
-/***************************************************************************/
-/* Livewire specific API */
-#ifdef LIVEWIRE
-
-extern JSD_PUBLIC_API(LWDBGScript*)
-JSDLW_GetLWScript(JSDContext* jsdc, JSDScript* jsdscript);
-
-extern JSD_PUBLIC_API(JSDSourceText*)
-JSDLW_PreLoadSource(JSDContext* jsdc, LWDBGApp* app,
-                    const char* filename, JSBool clear);
-
-extern JSD_PUBLIC_API(JSDSourceText*)
-JSDLW_ForceLoadSource(JSDContext* jsdc, JSDSourceText* jsdsrc);
-
-extern JSD_PUBLIC_API(JSBool)
-JSDLW_RawToProcessedLineNumber(JSDContext* jsdc, JSDScript* jsdscript,
-                               unsigned lineIn, unsigned* lineOut);
-
-extern JSD_PUBLIC_API(JSBool)
-JSDLW_ProcessedToRawLineNumber(JSDContext* jsdc, JSDScript* jsdscript,
-                               unsigned lineIn, unsigned* lineOut);
-
-#endif
-/***************************************************************************/
 
 } // extern "C"
 

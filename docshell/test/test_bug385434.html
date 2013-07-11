@@ -108,36 +108,36 @@ function run_test() {
   enableIframeLoadCallback();
   frameCw.document.location = "file_bug385434_1.html";
   // Wait for the iframe to load and for our callback to fire
-  yield;
+  yield undefined;
 
   noEventExpected("No hashchange expected initially.");
 
   sendMouseEvent({type: "click"}, "link1", frameCw);
-  yield;
+  yield undefined;
   eventExpected("Clicking link1 should trigger a hashchange.");
 
   sendMouseEvent({type: "click"}, "link1", frameCw);
   longWait();
-  yield;
+  yield undefined;
   // succeed if a hashchange event wasn't triggered while we were waiting
   noEventExpected("Clicking link1 again should not trigger a hashchange.");
 
   sendMouseEvent({type: "click"}, "link2", frameCw);
-  yield;
+  yield undefined;
   eventExpected("Clicking link2 should trigger a hashchange.");
 
   frameCw.history.go(-1);
-  yield;
+  yield undefined;
   eventExpected("Going back should trigger a hashchange.");
 
   frameCw.history.go(1);
-  yield;
+  yield undefined;
   eventExpected("Going forward should trigger a hashchange.");
 
   // window.location has a trailing '#' right now, so we append "link1", not
   // "#link1".
   frameCw.window.location = frameCw.window.location + "link1";
-  yield;
+  yield undefined;
   eventExpected("Assigning to window.location should trigger a hashchange.");
 
   // Set up history in the iframe which looks like:
@@ -146,18 +146,18 @@ function run_test() {
   //   file_bug385434_1.html#foo      <-- current page
   enableIframeLoadCallback();
   frameCw.window.location = "file_bug385434_2.html";
-  yield;
+  yield undefined;
 
   enableIframeLoadCallback();
   frameCw.window.location = "file_bug385434_1.html#foo";
-  yield;
+  yield undefined;
 
   // Now when we do history.go(-2) on the frame, it *shouldn't* fire a
   // hashchange.  Although the URIs differ only by their hashes, they belong to
   // two different Documents.
   frameCw.history.go(-2);
   longWait();
-  yield;
+  yield undefined;
   noEventExpected("Moving between different Documents shouldn't " +
                   "trigger a hashchange.");
 
@@ -169,10 +169,10 @@ function run_test() {
    */
   enableIframeLoadCallback();
   frameCw.document.location = "file_bug385434_2.html";
-  yield;
+  yield undefined;
 
   frameCw.document.location = "file_bug385434_2.html#foo";
-  yield;
+  yield undefined;
 
   eventExpected("frame onhashchange should fire events.");
   // iframe should set gSampleEvent
@@ -191,12 +191,12 @@ function run_test() {
    *     not "complete" (bug 504837).
    */
   frameCw.document.location = "file_bug385434_3.html";
-  yield;
+  yield undefined;
   eventExpected("Hashchange should fire even if the document " +
                 "hasn't finished loading.");
 
   SimpleTest.finish();
-  yield;
+  yield undefined;
 }
 
 var gGen = run_test();

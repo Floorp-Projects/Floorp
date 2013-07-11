@@ -764,30 +764,42 @@ ContentClientIncremental::BeginPaintBuffer(ThebesLayer* aLayer,
     nsRefPtr<gfxASurface> onWhite = GetUpdateSurface(BUFFER_WHITE, result.mRegionToDraw);
     if (onBlack && onWhite) {
       NS_ASSERTION(result.mRegionToDraw == drawRegionCopy,
-          "BeginUpdate should always modify the draw region in the same way!");
+                   "BeginUpdate should always modify the draw region in the same way!");
       FillSurface(onBlack, result.mRegionToDraw, nsIntPoint(drawBounds.x, drawBounds.y), gfxRGBA(0.0, 0.0, 0.0, 1.0));
       FillSurface(onWhite, result.mRegionToDraw, nsIntPoint(drawBounds.x, drawBounds.y), gfxRGBA(1.0, 1.0, 1.0, 1.0));
-      gfxASurface* surfaces[2] = { onBlack.get(), onWhite.get() };
-      nsRefPtr<gfxTeeSurface> surf = new gfxTeeSurface(surfaces, ArrayLength(surfaces));
+      if (gfxPlatform::GetPlatform()->SupportsAzureContent()) {
+        RefPtr<DrawTarget> onBlackDT = gfxPlatform::GetPlatform()->CreateDrawTargetForUpdateSurface(onBlack, onBlack->GetSize());
+        RefPtr<DrawTarget> onWhiteDT = gfxPlatform::GetPlatform()->CreateDrawTargetForUpdateSurface(onWhite, onWhite->GetSize());
+        RefPtr<DrawTarget> dt = Factory::CreateDualDrawTarget(onBlackDT, onWhiteDT);
+        result.mContext = new gfxContext(dt);
+      } else {
+        gfxASurface* surfaces[2] = { onBlack.get(), onWhite.get() };
+        nsRefPtr<gfxTeeSurface> surf = new gfxTeeSurface(surfaces, ArrayLength(surfaces));
 
-      // XXX If the device offset is set on the individual surfaces instead of on
-      // the tee surface, we render in the wrong place. Why?
-      gfxPoint deviceOffset = onBlack->GetDeviceOffset();
-      onBlack->SetDeviceOffset(gfxPoint(0, 0));
-      onWhite->SetDeviceOffset(gfxPoint(0, 0));
-      surf->SetDeviceOffset(deviceOffset);
+        // XXX If the device offset is set on the individual surfaces instead of on
+        // the tee surface, we render in the wrong place. Why?
+        gfxPoint deviceOffset = onBlack->GetDeviceOffset();
+        onBlack->SetDeviceOffset(gfxPoint(0, 0));
+        onWhite->SetDeviceOffset(gfxPoint(0, 0));
+        surf->SetDeviceOffset(deviceOffset);
 
-      // Using this surface as a source will likely go horribly wrong, since
-      // only the onBlack surface will really be used, so alpha information will
-      // be incorrect.
-      surf->SetAllowUseAsSource(false);
-      result.mContext = new gfxContext(surf);
+        // Using this surface as a source will likely go horribly wrong, since
+        // only the onBlack surface will really be used, so alpha information will
+        // be incorrect.
+        surf->SetAllowUseAsSource(false);
+        result.mContext = new gfxContext(surf);
+      }
     } else {
       result.mContext = nullptr;
     }
   } else {
     nsRefPtr<gfxASurface> surf = GetUpdateSurface(BUFFER_BLACK, result.mRegionToDraw);
-    result.mContext = new gfxContext(surf);
+    if (gfxPlatform::GetPlatform()->SupportsAzureContent()) {
+      RefPtr<DrawTarget> dt = gfxPlatform::GetPlatform()->CreateDrawTargetForUpdateSurface(surf, surf->GetSize());
+      result.mContext = new gfxContext(dt);
+    } else {
+      result.mContext = new gfxContext(surf);
+    }
   }
   if (!result.mContext) {
     NS_WARNING("unable to get context for update");

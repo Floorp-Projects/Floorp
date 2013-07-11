@@ -28,7 +28,7 @@
     request.onerror = errorHandler;
     request.onupgradeneeded = grabEventAndContinueHandler;
     request.onsuccess = grabEventAndContinueHandler;
-    let event = yield;
+    let event = yield undefined;
 
     is(event.type, "upgradeneeded", "Got correct event type");
 
@@ -40,7 +40,7 @@
     objectStore.add(objectData1.object, objectData1.key);
     objectStore.add(objectData2.object, objectData2.key);
 
-    event = yield;
+    event = yield undefined;
 
     is(event.type, "success", "Got correct event type");
 
@@ -48,32 +48,32 @@
                     .objectStore(objectStoreName);
     request = objectStore.get(objectData1.key);
     request.onsuccess = grabEventAndContinueHandler;
-    event = yield;
+    event = yield undefined;
 
     let result = event.target.result;
 
     verifyBlob(result.foo, blob, 1);
-    yield;
+    yield undefined;
 
     verifyBlob(result.bar, blob, 1);
-    yield;
+    yield undefined;
 
     objectStore = db.transaction([objectStoreName])
                     .objectStore(objectStoreName);
     request = objectStore.get(objectData2.key);
     request.onsuccess = grabEventAndContinueHandler;
-    event = yield;
+    event = yield undefined;
 
     result = event.target.result;
 
     verifyBlob(result.foo, file, 2);
-    yield;
+    yield undefined;
 
     verifyBlob(result.bar, file, 2);
-    yield;
+    yield undefined;
 
     finishTest();
-    yield;
+    yield undefined;
   }
   </script>
   <script type="text/javascript;version=1.7" src="file.js"></script>

@@ -201,9 +201,7 @@ jsd_DebuggerOnForUser(JSRuntime*         jsrt,
     JS_SetNewScriptHookProc(jsdc->jsrt, jsd_NewScriptHookProc, jsdc);
     JS_SetDestroyScriptHookProc(jsdc->jsrt, jsd_DestroyScriptHookProc, jsdc);
     jsd_DebuggerUnpause(jsdc);
-#ifdef LIVEWIRE
-    LWDBG_SetNewScriptHookProc(jsd_NewScriptHookProc, jsdc);
-#endif
+
     if( jsdc->userCallbacks.setContext )
         jsdc->userCallbacks.setContext(jsdc, jsdc->user);
     return jsdc;
@@ -224,9 +222,6 @@ jsd_DebuggerOff(JSDContext* jsdc)
     /* clear hooks here */
     JS_SetNewScriptHookProc(jsdc->jsrt, NULL, NULL);
     JS_SetDestroyScriptHookProc(jsdc->jsrt, NULL, NULL);
-#ifdef LIVEWIRE
-    LWDBG_SetNewScriptHookProc(NULL,NULL);
-#endif
 
     /* clean up */
     JSD_LockScriptSubsystem(jsdc);

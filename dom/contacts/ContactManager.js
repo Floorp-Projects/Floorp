@@ -739,7 +739,8 @@ ContactManager.prototype = {
       requestID: requestID,
       origin: principal.origin,
       appID: principal.appId,
-      browserFlag: principal.isInBrowserElement
+      browserFlag: principal.isInBrowserElement,
+      windowID: this._window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).outerWindowID
     });
   },
 

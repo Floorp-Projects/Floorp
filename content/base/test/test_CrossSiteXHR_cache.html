@@ -31,7 +31,7 @@ function runTest() {
 
   loader.src = "http://example.org/tests/content/base/test/file_CrossSiteXHR_inner.html";
   origin = "http://example.org";
-  yield;
+  yield undefined;
 
   tests = [{ pass: 0,
              method: "GET",
@@ -439,7 +439,7 @@ function runTest() {
     }
     if (test.pause) {
       setTimeout(function() { gen.next() }, test.pause * 1000);
-      yield;
+      yield undefined;
       continue;
     }
 
@@ -493,7 +493,7 @@ function runTest() {
 
   SimpleTest.finish();
 
-  yield;
+  yield undefined;
 }
 
 </script>

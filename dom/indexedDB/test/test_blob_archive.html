@@ -49,7 +49,7 @@
     request.onerror = errorHandler;
     request.onupgradeneeded = grabEventAndContinueHandler;
     request.onsuccess = unexpectedSuccessHandler;
-    let event = yield;
+    let event = yield undefined;
 
     let db = event.target.result;
     db.onerror = errorHandler;
@@ -58,19 +58,19 @@
     let index = objectStore.createIndex("foo", "index");
 
     request.onsuccess = grabEventAndContinueHandler;
-    event = yield;
+    event = yield undefined;
 
     let data = new Blob([binaryData]);
 
     objectStore = db.transaction("foo", "readwrite").objectStore("foo");
     objectStore.add(data).onsuccess = grabEventAndContinueHandler;
-    event = yield;
+    event = yield undefined;
 
     let key = event.target.result;
 
     objectStore = db.transaction("foo").objectStore("foo");
     objectStore.get(key).onsuccess = grabEventAndContinueHandler;
-    event = yield;
+    event = yield undefined;
 
     let archiveReader = new ArchiveReader(event.target.result);
     ok(archiveReader, "Got an ArchiveReader");
@@ -78,7 +78,7 @@
     request = archiveReader.getFilenames();
     request.onsuccess = grabEventAndContinueHandler;
     request.onerror = errorHandler;
-    event = yield;
+    event = yield undefined;
 
     is(event.target.result.length, 2, "Got 2 archive items");
     is(event.target.result[0], TEST_FILE_1,
@@ -89,13 +89,13 @@
     request = archiveReader.getFile(TEST_FILE_1);
     request.onsuccess = grabEventAndContinueHandler;
     request.onerror = errorHandler;
-    event = yield;
+    event = yield undefined;
 
     let fileReader = new FileReader();
     fileReader.readAsText(event.target.result);
     fileReader.onload = grabEventAndContinueHandler;
     fileReader.onerror = errorHandler;
-    event = yield;
+    event = yield undefined;
 
     // Don't use is() because it prints out 100 lines of text...
     ok(event.target.result == TEST_FILE_1_CONTENTS, "Correct text");
@@ -103,19 +103,19 @@
     request = archiveReader.getFile(TEST_FILE_2);
     request.onsuccess = grabEventAndContinueHandler;
     request.onerror = errorHandler;
-    event = yield;
+    event = yield undefined;
 
     fileReader = new FileReader();
     fileReader.readAsText(event.target.result);
     fileReader.onload = grabEventAndContinueHandler;
     fileReader.onerror = errorHandler;
-    event = yield;
+    event = yield undefined;
 
     // Don't use is() because it prints out a newline...
     ok(event.target.result == TEST_FILE_2_CONTENTS, "Correct text");
 
     finishTest();
-    yield;
+    yield undefined;
   }
   </script>
   <script type="text/javascript;version=1.7" src="helpers.js"></script>

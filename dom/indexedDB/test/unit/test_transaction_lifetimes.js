@@ -11,7 +11,7 @@ function testSteps()
   request.onerror = errorHandler;
   request.onupgradeneeded = grabEventAndContinueHandler;
   request.onsuccess = unexpectedSuccessHandler;
-  let event = yield;
+  let event = yield undefined;
 
   let db = event.target.result;
   db.onerror = errorHandler;
@@ -21,13 +21,13 @@ function testSteps()
 
   let os = db.createObjectStore("foo", { autoIncrement: true });
   let index = os.createIndex("bar", "foo.bar");
-  event = yield;
+  event = yield undefined;
 
   is(request.transaction, event.target,
      "request.transaction should still be set");
 
   request.onsuccess = grabEventAndContinueHandler;
-  event = yield;
+  event = yield undefined;
 
   is(request.transaction, null, "request.transaction should be cleared");
 
@@ -51,7 +51,7 @@ function testSteps()
   request.onerror = errorHandler;
   request.onsuccess = grabEventAndContinueHandler;
 
-  event = yield;
+  event = yield undefined;
 
   requestComplete = true;
 
@@ -61,7 +61,7 @@ function testSteps()
      "Should be able to get index");
 
   transaction.oncomplete = grabEventAndContinueHandler;
-  yield;
+  yield undefined;
 
   try {
     transaction.objectStore("foo");
@@ -74,7 +74,7 @@ function testSteps()
   }
 
   continueToNextStep();
-  yield;
+  yield undefined;
 
   try {
     transaction.objectStore("foo");
@@ -87,5 +87,5 @@ function testSteps()
   }
 
   finishTest();
-  yield;
+  yield undefined;
 }

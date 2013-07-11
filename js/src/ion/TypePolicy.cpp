@@ -24,7 +24,7 @@ BoxInputsPolicy::boxAt(MInstruction *at, MDefinition *operand)
 bool
 BoxInputsPolicy::adjustInputs(MInstruction *ins)
 {
-    for (size_t i = 0; i < ins->numOperands(); i++) {
+    for (size_t i = 0, e = ins->numOperands(); i < e; i++) {
         MDefinition *in = ins->getOperand(i);
         if (in->type() == MIRType_Value)
             continue;
@@ -41,7 +41,7 @@ ArithPolicy::adjustInputs(MInstruction *ins)
 
     JS_ASSERT(ins->type() == MIRType_Double || ins->type() == MIRType_Int32);
 
-    for (size_t i = 0; i < ins->numOperands(); i++) {
+    for (size_t i = 0, e = ins->numOperands(); i < e; i++) {
         MDefinition *in = ins->getOperand(i);
         if (in->type() == ins->type())
             continue;
@@ -258,7 +258,7 @@ BitwisePolicy::adjustInputs(MInstruction *ins)
     JS_ASSERT(specialization_ == MIRType_Int32 || specialization_ == MIRType_Double);
 
     // This policy works for both unary and binary bitwise operations.
-    for (size_t i = 0; i < ins->numOperands(); i++) {
+    for (size_t i = 0, e = ins->numOperands(); i < e; i++) {
         MDefinition *in = ins->getOperand(i);
         if (in->type() == MIRType_Int32)
             continue;
@@ -442,7 +442,7 @@ CallSetElementPolicy::adjustInputs(MInstruction *ins)
     SingleObjectPolicy::adjustInputs(ins);
 
     // Box the index and value operands.
-    for (size_t i = 1; i < ins->numOperands(); i++) {
+    for (size_t i = 1, e = ins->numOperands(); i < e; i++) {
         MDefinition *in = ins->getOperand(i);
         if (in->type() == MIRType_Value)
             continue;
