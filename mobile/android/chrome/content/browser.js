@@ -3197,9 +3197,9 @@ Tab.prototype = {
       }
 
       if ((hasHorizontalMargins
-           && (pageWidthGreaterThanScreenWidth != this.viewportExcludesHorizontalMargins)) ||
+           && (pageWidthGreaterThanScreenWidth == this.viewportExcludesHorizontalMargins)) ||
           (hasVerticalMargins
-           && (pageHeightGreaterThanScreenHeight != this.viewportExcludesVerticalMargins))) {
+           && (pageHeightGreaterThanScreenHeight == this.viewportExcludesVerticalMargins))) {
         if (!this.viewportMeasureCallback) {
           this.viewportMeasureCallback = setTimeout(function() {
             this.viewportMeasureCallback = null;
