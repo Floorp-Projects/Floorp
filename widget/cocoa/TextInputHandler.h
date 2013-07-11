@@ -341,6 +341,16 @@ public:
   bool DispatchEvent(nsGUIEvent& aEvent);
 
   /**
+   * SetSelection() dispatches NS_SELECTION_SET event for the aRange.
+   *
+   * @param aRange                The range which will be selected.
+   * @return                      TRUE if setting selection is succeeded and
+   *                              the widget hasn't been destroyed.
+   *                              Otherwise, FALSE.
+   */
+  bool SetSelection(NSRange& aRange);
+
+  /**
    * InitKeyEvent() initializes aKeyEvent for aNativeKeyEvent.
    *
    * @param aNativeKeyEvent       A native key event for which you want to
@@ -961,8 +971,11 @@ protected:
    * is no composition, this starts a composition and commits it immediately.
    *
    * @param aAttrString           A string which is committed.
+   * @param aReplacementRange     The range which will be replaced with the
+   *                              aAttrString instead of current selection.
    */
-  void InsertTextAsCommittingComposition(NSAttributedString* aAttrString);
+  void InsertTextAsCommittingComposition(NSAttributedString* aAttrString,
+                                         NSRange* aReplacementRange);
 
 private:
   // If mIsIMEComposing is true, the composition string is stored here.
@@ -1120,8 +1133,11 @@ public:
    * the composition by the aAttrString.
    *
    * @param aAttrString           An inserted string.
+   * @param aReplacementRange     The range which will be replaced with the
+   *                              aAttrString instead of current selection.
    */
-  void InsertText(NSAttributedString *aAttrString);
+  void InsertText(NSAttributedString *aAttrString,
+                  NSRange* aReplacementRange = nullptr);
 
   /**
    * doCommandBySelector event handler.

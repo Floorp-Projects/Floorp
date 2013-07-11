@@ -4956,7 +4956,7 @@ static int32_t RoundUp(double aDouble)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  NS_ENSURE_TRUE(mGeckoChild, );
+  NS_ENSURE_TRUE_VOID(mGeckoChild);
 
   nsAutoRetainCocoaObject kungFuDeathGrip(self);
 
@@ -5094,6 +5094,26 @@ static int32_t RoundUp(double aDouble)
 
 #pragma mark -
 // NSTextInputClient implementation
+
+- (void)insertText:(id)aString replacementRange:(NSRange)replacementRange
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  NS_ENSURE_TRUE_VOID(mGeckoChild);
+
+  nsAutoRetainCocoaObject kungFuDeathGrip(self);
+
+  NSAttributedString* attrStr;
+  if ([aString isKindOfClass:[NSAttributedString class]]) {
+    attrStr = static_cast<NSAttributedString*>(aString);
+  } else {
+    attrStr = [[[NSAttributedString alloc] initWithString:aString] autorelease];
+  }
+
+  mTextInputHandler->InsertText(attrStr, &replacementRange);
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
+}
 
 - (NSAttributedString*)attributedSubstringForProposedRange:(NSRange)aRange
                                         actualRange:(NSRangePointer)actualRange
