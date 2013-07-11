@@ -798,6 +798,8 @@ public:
 
   virtual void OnFocusChangeInGecko(bool aFocus);
 
+  void OnSelectionChange() { mSelectedRange.location = NSNotFound; }
+
   /**
    * DispatchTextEvent() dispatches a text event on mWidget.
    *
@@ -957,6 +959,7 @@ private:
   nsString mLastDispatchedCompositionString;
 
   NSRange mMarkedRange;
+  NSRange mSelectedRange;
 
   bool mIsIMEComposing;
   bool mIsIMEEnabled;
@@ -967,6 +970,7 @@ private:
   // that time, the focus processing in Gecko might not be finished yet.  So,
   // you cannot use nsQueryContentEvent or something.
   bool mIsInFocusProcessing;
+  bool mIMEHasFocus;
 
   void KillIMEComposition();
   void SendCommittedText(NSString *aString);

@@ -2864,12 +2864,18 @@ IMEInputHandler::SelectedRange()
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
 
   PR_LOG(gLog, PR_LOG_ALWAYS,
-    ("%p IMEInputHandler::SelectedRange, Destroyed()=%s",
-     this, TrueOrFalse(Destroyed())));
+    ("%p IMEInputHandler::SelectedRange, Destroyed()=%s, mSelectedRange={ "
+     "location=%llu, length=%llu }",
+     this, TrueOrFalse(Destroyed()), mSelectedRange.location,
+     mSelectedRange.length));
 
-  NSRange range = NSMakeRange(NSNotFound, 0);
   if (Destroyed()) {
-    return range;
+    return mSelectedRange;
+  }
+
+  if (mSelectedRange.location != NSNotFound) {
+    MOZ_ASSERT(mIMEHasFocus);
+    return mSelectedRange;
   }
 
   nsRefPtr<IMEInputHandler> kungFuDeathGrip(this);
@@ -2884,13 +2890,19 @@ IMEInputHandler::SelectedRange()
      selection.mReply.mString.Length()));
 
   if (!selection.mSucceeded) {
-    return range;
+    return mSelectedRange;
+  }
+
+  if (mIMEHasFocus) {
+    mSelectedRange.location = selection.mReply.mOffset;
+    mSelectedRange.length = selection.mReply.mString.Length();
+    return mSelectedRange;
   }
 
   return NSMakeRange(selection.mReply.mOffset,
                      selection.mReply.mString.Length());
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NSMakeRange(0, 0));
+  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(mSelectedRange);
 }
 
 NSRect
@@ -3011,12 +3023,14 @@ IMEInputHandler::IMEInputHandler(nsChildView* aWidget,
   mPendingMethods(0), mIMECompositionString(nullptr),
   mIsIMEComposing(false), mIsIMEEnabled(true),
   mIsASCIICapableOnly(false), mIgnoreIMECommit(false),
-  mIsInFocusProcessing(false)
+  mIsInFocusProcessing(false), mIMEHasFocus(false)
 {
   InitStaticMembers();
 
   mMarkedRange.location = NSNotFound;
   mMarkedRange.length = 0;
+  mSelectedRange.location = NSNotFound;
+  mSelectedRange.length = 0;
 }
 
 IMEInputHandler::~IMEInputHandler()
@@ -3037,6 +3051,9 @@ IMEInputHandler::OnFocusChangeInGecko(bool aFocus)
     ("%p IMEInputHandler::OnFocusChangeInGecko, aFocus=%s, Destroyed()=%s, "
      "sFocusedIMEHandler=%p",
      this, TrueOrFalse(aFocus), TrueOrFalse(Destroyed()), sFocusedIMEHandler));
+
+  mSelectedRange.location = NSNotFound; // Marking dirty
+  mIMEHasFocus = aFocus;
 
   // This is called when the native focus is changed and when the native focus
   // isn't changed but the focus is changed in Gecko.
@@ -3081,6 +3098,9 @@ IMEInputHandler::OnDestroyWidget(nsChildView* aDestroyingWidget)
     CancelIMEComposition();
     OnEndIMEComposition();
   }
+
+  mSelectedRange.location = NSNotFound; // Marking dirty
+  mIMEHasFocus = false;
 
   return true;
 }
