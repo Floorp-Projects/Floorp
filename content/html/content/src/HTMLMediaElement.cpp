@@ -2097,8 +2097,6 @@ HTMLMediaElement::Play(ErrorResult& aRv)
     }
   }
 
-  SetPlaybackRate(mDefaultPlaybackRate);
-
   mPaused = false;
   mAutoplaying = false;
   // We changed mPaused and mAutoplaying which can affect AddRemoveSelfReference
