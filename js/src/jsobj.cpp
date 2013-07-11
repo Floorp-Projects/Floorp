@@ -2843,35 +2843,33 @@ JSObject::maybeDensifySparseElements(js::ExclusiveContext *cx, HandleObject obj)
 }
 
 ObjectElements *
-AllocateElements(ThreadSafeContext *tcx, JSObject *obj, uint32_t nelems)
+AllocateElements(ThreadSafeContext *cx, JSObject *obj, uint32_t nelems)
 {
 #ifdef JSGC_GENERATIONAL
-    if (tcx->isJSContext()) {
-        JSContext *cx = tcx->asJSContext();
-        return cx->runtime()->gcNursery.allocateElements(cx, obj, nelems);
-    }
+    if (cx->isJSContext())
+        return cx->asJSContext()->runtime()->gcNursery.allocateElements(cx, obj, nelems);
 #endif
 
-    return static_cast<js::ObjectElements *>(tcx->malloc_(nelems * sizeof(HeapValue)));
+    return static_cast<js::ObjectElements *>(cx->malloc_(nelems * sizeof(HeapValue)));
 }
 
 ObjectElements *
-ReallocateElements(ThreadSafeContext *tcx, JSObject *obj, ObjectElements *oldHeader,
+ReallocateElements(ThreadSafeContext *cx, JSObject *obj, ObjectElements *oldHeader,
                    uint32_t oldCount, uint32_t newCount)
 {
 #ifdef JSGC_GENERATIONAL
-    if (tcx->isJSContext()) {
-        JSContext *cx = tcx->asJSContext();
-        return cx->runtime()->gcNursery.reallocateElements(cx, obj, oldHeader, oldCount, newCount);
+    if (cx->isJSContext()) {
+        return cx->asJSContext()->runtime()-> gcNursery.reallocateElements(cx, obj, oldHeader,
+                                                                           oldCount, newCount);
     }
 #endif
 
-    return static_cast<js::ObjectElements *>(tcx->realloc_(oldHeader, oldCount * sizeof(HeapSlot),
-                                                           newCount * sizeof(HeapSlot)));
+    return static_cast<js::ObjectElements *>(cx->realloc_(oldHeader, oldCount * sizeof(HeapSlot),
+                                                          newCount * sizeof(HeapSlot)));
 }
 
 bool
-JSObject::growElements(ThreadSafeContext *tcx, uint32_t newcap)
+JSObject::growElements(ThreadSafeContext *cx, uint32_t newcap)
 {
     JS_ASSERT(nonProxyIsExtensible());
 
@@ -2917,11 +2915,11 @@ JSObject::growElements(ThreadSafeContext *tcx, uint32_t newcap)
 
     ObjectElements *newheader;
     if (hasDynamicElements()) {
-        newheader = ReallocateElements(tcx, this, getElementsHeader(), oldAllocated, newAllocated);
+        newheader = ReallocateElements(cx, this, getElementsHeader(), oldAllocated, newAllocated);
         if (!newheader)
             return false; /* Leave elements as its old size. */
     } else {
-        newheader = AllocateElements(tcx, this, newAllocated);
+        newheader = AllocateElements(cx, this, newAllocated);
         if (!newheader)
             return false; /* Leave elements as its old size. */
         js_memcpy(newheader, getElementsHeader(),
@@ -4258,9 +4256,9 @@ js::LookupPropertyPure(JSObject *obj, jsid id, JSObject **objp, Shape **propp)
 }
 
 static inline bool
-IdIsLength(ThreadSafeContext *tcx, jsid id)
+IdIsLength(ThreadSafeContext *cx, jsid id)
 {
-    return JSID_IS_ATOM(id) && tcx->names().length == JSID_TO_ATOM(id);
+    return JSID_IS_ATOM(id) && cx->names().length == JSID_TO_ATOM(id);
 }
 
 /*
@@ -4274,7 +4272,7 @@ IdIsLength(ThreadSafeContext *tcx, jsid id)
  *  - The property has a getter.
  */
 bool
-js::GetPropertyPure(ThreadSafeContext *tcx, JSObject *obj, jsid id, Value *vp)
+js::GetPropertyPure(ThreadSafeContext *cx, JSObject *obj, jsid id, Value *vp)
 {
     /* Typed arrays are not native, so we fast-path them here. */
     if (obj->is<TypedArrayObject>()) {
@@ -4290,7 +4288,7 @@ js::GetPropertyPure(ThreadSafeContext *tcx, JSObject *obj, jsid id, Value *vp)
             return false;
         }
 
-        if (IdIsLength(tcx, id)) {
+        if (IdIsLength(cx, id)) {
             vp->setNumber(tarr->length());
             return true;
         }
@@ -4323,7 +4321,7 @@ js::GetPropertyPure(ThreadSafeContext *tcx, JSObject *obj, jsid id, Value *vp)
     }
 
     /* Special case 'length' on Array. */
-    if (obj->is<ArrayObject>() && IdIsLength(tcx, id)) {
+    if (obj->is<ArrayObject>() && IdIsLength(cx, id)) {
         vp->setNumber(obj->as<ArrayObject>().length());
         return true;
     }
@@ -4333,13 +4331,13 @@ js::GetPropertyPure(ThreadSafeContext *tcx, JSObject *obj, jsid id, Value *vp)
 
 static bool
 JS_ALWAYS_INLINE
-GetElementPure(ThreadSafeContext *tcx, JSObject *obj, uint32_t index, Value *vp)
+GetElementPure(ThreadSafeContext *cx, JSObject *obj, uint32_t index, Value *vp)
 {
     jsid id;
     if (!IndexToIdPure(index, &id))
         return false;
 
-    return GetPropertyPure(tcx, obj, id, vp);
+    return GetPropertyPure(cx, obj, id, vp);
 }
 
 /*
@@ -4348,12 +4346,12 @@ GetElementPure(ThreadSafeContext *tcx, JSObject *obj, uint32_t index, Value *vp)
  * side-effect might have occurred.
  */
 bool
-js::GetObjectElementOperationPure(ThreadSafeContext *tcx, JSObject *obj, const Value &prop,
+js::GetObjectElementOperationPure(ThreadSafeContext *cx, JSObject *obj, const Value &prop,
                                   Value *vp)
 {
     uint32_t index;
     if (IsDefinitelyIndex(prop, &index))
-        return GetElementPure(tcx, obj, index, vp);
+        return GetElementPure(cx, obj, index, vp);
 
     /* Atomizing the property value is effectful and not threadsafe. */
     if (!prop.isString() || !prop.toString()->isAtom())
@@ -4361,9 +4359,9 @@ js::GetObjectElementOperationPure(ThreadSafeContext *tcx, JSObject *obj, const V
 
     JSAtom *name = &prop.toString()->asAtom();
     if (name->isIndex(&index))
-        return GetElementPure(tcx, obj, index, vp);
+        return GetElementPure(cx, obj, index, vp);
 
-    return GetPropertyPure(tcx, obj, NameToId(name->asPropertyName()), vp);
+    return GetPropertyPure(cx, obj, NameToId(name->asPropertyName()), vp);
 }
 
 JSBool

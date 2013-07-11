@@ -561,7 +561,7 @@ class JSObject : public js::ObjectImpl
 
     /* Accessors for elements. */
     inline bool ensureElements(js::ThreadSafeContext *cx, uint32_t capacity);
-    bool growElements(js::ThreadSafeContext *tcx, uint32_t newcap);
+    bool growElements(js::ThreadSafeContext *cx, uint32_t newcap);
     void shrinkElements(js::ThreadSafeContext *cx, uint32_t cap);
     void setDynamicElements(js::ObjectElements *header) {
         JS_ASSERT(!hasDynamicElements());
@@ -614,10 +614,10 @@ class JSObject : public js::ObjectImpl
     enum EnsureDenseResult { ED_OK, ED_FAILED, ED_SPARSE };
     inline EnsureDenseResult ensureDenseElements(js::ExclusiveContext *cx,
                                                  uint32_t index, uint32_t extra);
-    inline EnsureDenseResult parExtendDenseElements(js::ThreadSafeContext *tcx, js::Value *v,
+    inline EnsureDenseResult parExtendDenseElements(js::ThreadSafeContext *cx, js::Value *v,
                                                     uint32_t extra);
 
-    inline EnsureDenseResult extendDenseElements(js::ThreadSafeContext *tcx,
+    inline EnsureDenseResult extendDenseElements(js::ThreadSafeContext *cx,
                                                  uint32_t requiredCapacity, uint32_t extra);
 
     /* Convert a single dense element to a sparse property. */
@@ -1348,12 +1348,12 @@ bool
 LookupPropertyPure(JSObject *obj, jsid id, JSObject **objp, Shape **propp);
 
 bool
-GetPropertyPure(ThreadSafeContext *tcx, JSObject *obj, jsid id, Value *vp);
+GetPropertyPure(ThreadSafeContext *cx, JSObject *obj, jsid id, Value *vp);
 
 inline bool
-GetPropertyPure(ThreadSafeContext *tcx, JSObject *obj, PropertyName *name, Value *vp)
+GetPropertyPure(ThreadSafeContext *cx, JSObject *obj, PropertyName *name, Value *vp)
 {
-    return GetPropertyPure(tcx, obj, NameToId(name), vp);
+    return GetPropertyPure(cx, obj, NameToId(name), vp);
 }
 
 bool
@@ -1386,7 +1386,7 @@ extern bool
 IsDelegate(JSContext *cx, HandleObject obj, const Value &v, bool *result);
 
 bool
-GetObjectElementOperationPure(ThreadSafeContext *tcx, JSObject *obj, const Value &prop, Value *vp);
+GetObjectElementOperationPure(ThreadSafeContext *cx, JSObject *obj, const Value &prop, Value *vp);
 
 } /* namespace js */
 
