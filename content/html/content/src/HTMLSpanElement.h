@@ -17,8 +17,8 @@
 namespace mozilla {
 namespace dom {
 
-class HTMLSpanElement : public nsGenericHTMLElement,
-                        public nsIDOMHTMLElement
+class HTMLSpanElement MOZ_FINAL : public nsGenericHTMLElement,
+                                  public nsIDOMHTMLElement
 {
 public:
   HTMLSpanElement(already_AddRefed<nsINodeInfo> aNodeInfo)

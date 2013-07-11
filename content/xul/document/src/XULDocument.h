@@ -84,11 +84,11 @@ private:
 namespace mozilla {
 namespace dom {
 
-class XULDocument : public XMLDocument,
-                    public nsIXULDocument,
-                    public nsIDOMXULDocument,
-                    public nsIStreamLoaderObserver,
-                    public nsICSSLoaderObserver
+class XULDocument MOZ_FINAL : public XMLDocument,
+                              public nsIXULDocument,
+                              public nsIDOMXULDocument,
+                              public nsIStreamLoaderObserver,
+                              public nsICSSLoaderObserver
 {
 public:
     XULDocument();

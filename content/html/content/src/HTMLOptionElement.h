@@ -18,8 +18,8 @@ namespace dom {
 
 class HTMLSelectElement;
 
-class HTMLOptionElement : public nsGenericHTMLElement,
-                          public nsIDOMHTMLOptionElement
+class HTMLOptionElement MOZ_FINAL : public nsGenericHTMLElement,
+                                    public nsIDOMHTMLOptionElement
 {
 public:
   HTMLOptionElement(already_AddRefed<nsINodeInfo> aNodeInfo);

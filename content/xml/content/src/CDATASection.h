@@ -13,8 +13,8 @@
 namespace mozilla {
 namespace dom {
 
-class CDATASection : public Text,
-                     public nsIDOMCDATASection
+class CDATASection MOZ_FINAL : public Text,
+                               public nsIDOMCDATASection
 {
 private:
   void Init()
