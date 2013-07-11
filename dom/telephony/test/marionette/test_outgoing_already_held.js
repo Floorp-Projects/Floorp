@@ -78,14 +78,26 @@ function simulateIncoming() {
     is(telephony.calls.length, 1);
     is(telephony.calls[0], incomingCall);
 
-    runEmulatorCmd("gsm list", function(result) {
-      log("Call list is now: " + result);
-      is(result[0], "inbound from " + inNumber + " : incoming");
-      is(result[1], "OK");
-      answerIncoming();
+    // Wait for emulator to catch up before continuing
+    waitFor(verifyCallList,function() {
+      return(rcvdEmulatorCallback);
     });
   };
-  runEmulatorCmd("gsm call " + inNumber);
+
+  let rcvdEmulatorCallback = false;
+  runEmulatorCmd("gsm call " + inNumber, function(result) {
+    is(result[0], "OK", "emulator callback");
+    rcvdEmulatorCallback = true;
+  });
+}
+
+function verifyCallList(){
+  runEmulatorCmd("gsm list", function(result) {
+    log("Call list is now: " + result);
+    is(result[0], "inbound from " + inNumber + " : incoming");
+    is(result[1], "OK");
+    answerIncoming();
+  });
 }
 
 function answerIncoming() {
@@ -190,15 +202,27 @@ function answerOutgoing() {
 
     is(outgoingCall, telephony.active);
 
-    runEmulatorCmd("gsm list", function(result) {
-      log("Call list is now: " + result);
-      is(result[0], "inbound from " + inNumber + " : held");
-      is(result[1], "outbound to  " + outNumber + " : active");
-      is(result[2], "OK");
-      hangUpIncoming();
+    // Wait for emulator to catch up before continuing
+    waitFor(checkCallList,function() {
+      return(rcvdEmulatorCallback);
     });
   };
-  runEmulatorCmd("gsm accept " + outNumber);
+
+  let rcvdEmulatorCallback = false;
+  runEmulatorCmd("gsm accept " + outNumber, function(result) {
+    is(result[0], "OK", "emulator callback");
+    rcvdEmulatorCallback = true;
+  });
+}
+
+function checkCallList(){
+  runEmulatorCmd("gsm list", function(result) {
+    log("Call list is now: " + result);
+    is(result[0], "inbound from " + inNumber + " : held");
+    is(result[1], "outbound to  " + outNumber + " : active");
+    is(result[2], "OK");
+    hangUpIncoming();
+  });
 }
 
 // Hang-up the original incoming call, which is now held
