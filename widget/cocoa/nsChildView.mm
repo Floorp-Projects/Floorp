@@ -1811,6 +1811,9 @@ nsChildView::NotifyIME(NotificationToIME aNotification)
       NS_ENSURE_TRUE(mTextInputHandler, NS_ERROR_NOT_AVAILABLE);
       mTextInputHandler->OnFocusChangeInGecko(false);
       return NS_OK;
+    case NOTIFY_IME_OF_SELECTION_CHANGE:
+      NS_ENSURE_TRUE(mTextInputHandler, NS_ERROR_NOT_AVAILABLE);
+      mTextInputHandler->OnSelectionChange();
     default:
       return NS_ERROR_NOT_IMPLEMENTED;
   }
@@ -1878,6 +1881,13 @@ nsChildView::GetInputContext()
     mInputContext.mNativeIMEContext = this;
   }
   return mInputContext;
+}
+
+nsIMEUpdatePreference
+nsChildView::GetIMEUpdatePreference()
+{
+  return nsIMEUpdatePreference(nsIMEUpdatePreference::NOTIFY_SELECTION_CHANGE,
+                               false);
 }
 
 NS_IMETHODIMP nsChildView::GetToggledKeyState(uint32_t aKeyCode,
