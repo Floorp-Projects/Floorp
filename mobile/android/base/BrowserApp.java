@@ -1428,6 +1428,7 @@ abstract public class BrowserApp extends GeckoApp
         final Fragment subPage = fm.findFragmentByTag(HomePager.SUBPAGE_TAG);
         if (subPage != null) {
             fm.beginTransaction().remove(subPage).commitAllowingStateLoss();
+            fm.popBackStack();
         }
 
         // FIXME: do animation if animate is true
