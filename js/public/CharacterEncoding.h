@@ -142,10 +142,10 @@ class TwoByteCharsZ : public mozilla::RangedPtr<jschar>
  * This method cannot trigger GC.
  */
 extern Latin1CharsZ
-LossyTwoByteCharsToNewLatin1CharsZ(JSContext *cx, TwoByteChars tbchars);
+LossyTwoByteCharsToNewLatin1CharsZ(js::ThreadSafeContext *cx, TwoByteChars tbchars);
 
 extern UTF8CharsZ
-TwoByteCharsToNewUTF8CharsZ(JSContext *cx, TwoByteChars tbchars);
+TwoByteCharsToNewUTF8CharsZ(js::ThreadSafeContext *cx, TwoByteChars tbchars);
 
 } // namespace JS
 
