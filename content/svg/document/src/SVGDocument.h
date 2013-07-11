@@ -14,7 +14,7 @@ class nsSVGElement;
 namespace mozilla {
 namespace dom {
 
-class SVGDocument : public XMLDocument
+class SVGDocument MOZ_FINAL : public XMLDocument
 {
 public:
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;

@@ -42,8 +42,8 @@ namespace dom {
 
 class BeforeUnloadEventHandlerNonNull;
 
-class HTMLFrameSetElement : public nsGenericHTMLElement,
-                            public nsIDOMHTMLFrameSetElement
+class HTMLFrameSetElement MOZ_FINAL : public nsGenericHTMLElement,
+                                      public nsIDOMHTMLFrameSetElement
 {
 public:
   HTMLFrameSetElement(already_AddRefed<nsINodeInfo> aNodeInfo)

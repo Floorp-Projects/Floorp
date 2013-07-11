@@ -19,10 +19,10 @@ typedef nsMappedAttributeElement nsMathMLElementBase;
 /*
  * The base class for MathML elements.
  */
-class nsMathMLElement : public nsMathMLElementBase,
-                        public nsIDOMElement,
-                        public nsILink,
-                        public mozilla::dom::Link
+class nsMathMLElement MOZ_FINAL : public nsMathMLElementBase,
+                                  public nsIDOMElement,
+                                  public nsILink,
+                                  public mozilla::dom::Link
 {
 public:
   nsMathMLElement(already_AddRefed<nsINodeInfo> aNodeInfo);

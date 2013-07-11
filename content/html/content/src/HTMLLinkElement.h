@@ -16,11 +16,11 @@
 namespace mozilla {
 namespace dom {
 
-class HTMLLinkElement : public nsGenericHTMLElement,
-                        public nsIDOMHTMLLinkElement,
-                        public nsILink,
-                        public nsStyleLinkElement,
-                        public Link
+class HTMLLinkElement MOZ_FINAL : public nsGenericHTMLElement,
+                                  public nsIDOMHTMLLinkElement,
+                                  public nsILink,
+                                  public nsStyleLinkElement,
+                                  public Link
 {
 public:
   HTMLLinkElement(already_AddRefed<nsINodeInfo> aNodeInfo);
