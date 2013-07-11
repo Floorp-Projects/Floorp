@@ -49,9 +49,20 @@ const BackgroundPageThumbs = {
         Services.tm.mainThread.dispatch(options.onDone.bind(options, url), 0);
       return;
     }
-    let cap = new Capture(url, this._onCaptureOrTimeout.bind(this), options);
     this._captureQueue = this._captureQueue || [];
+    this._capturesByURL = this._capturesByURL || new Map();
+    // We want to avoid duplicate captures for the same URL.  If there is an
+    // existing one, we just add the callback to that one and we are done.
+    let existing = this._capturesByURL.get(url);
+    if (existing) {
+      if (options.onDone)
+        existing.doneCallbacks.push(options.onDone);
+      // The queue is already being processed, so nothing else to do...
+      return;
+    }
+    let cap = new Capture(url, this._onCaptureOrTimeout.bind(this), options);
     this._captureQueue.push(cap);
+    this._capturesByURL.set(url, cap);
     this._processCaptureQueue();
   },
 
@@ -185,6 +196,7 @@ const BackgroundPageThumbs = {
     if (idx < 0)
       throw new Error("The capture should be in the queue.");
     this._captureQueue.splice(idx, 1);
+    this._capturesByURL.delete(capture.url);
 
     // Start the destroy-browser timer *before* processing the capture queue.
     let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
@@ -212,6 +224,9 @@ function Capture(url, captureCallback, options) {
   this.captureCallback = captureCallback;
   this.options = options;
   this.id = Capture.nextID++;
+  this.doneCallbacks = [];
+  if (options.onDone)
+    this.doneCallbacks.push(options.onDone);
 
   // The timeout starts when the consumer requests the capture, not when the
   // capture is dequeued and started.
@@ -280,22 +295,22 @@ Capture.prototype = {
     this.captureCallback(this);
     this.destroy();
 
-    let callOnDone = function callOnDoneFn() {
-      if (!("onDone" in this.options))
-        return;
-      try {
-        this.options.onDone(this.url);
-      }
-      catch (err) {
-        Cu.reportError(err);
+    let callOnDones = function callOnDonesFn() {
+      for (let callback of this.doneCallbacks) {
+        try {
+          callback.call(this.options, this.url);
+        }
+        catch (err) {
+          Cu.reportError(err);
+        }
       }
     }.bind(this);
 
     if (!data) {
-      callOnDone();
+      callOnDones();
       return;
     }
-    PageThumbs._store(this.url, data.finalURL, data.imageData).then(callOnDone);
+    PageThumbs._store(this.url, data.finalURL, data.imageData).then(callOnDones);
   },
 };
 

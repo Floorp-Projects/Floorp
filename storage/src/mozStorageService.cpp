@@ -619,9 +619,6 @@ Service::getLocaleCollation()
 ////////////////////////////////////////////////////////////////////////////////
 //// mozIStorageService
 
-#ifndef NS_APP_STORAGE_50_FILE
-#define NS_APP_STORAGE_50_FILE "UStor"
-#endif
 
 NS_IMETHODIMP
 Service::OpenSpecialDatabase(const char *aStorageKey,
@@ -633,13 +630,6 @@ Service::OpenSpecialDatabase(const char *aStorageKey,
   if (::strcmp(aStorageKey, "memory") == 0) {
     // just fall through with NULL storageFile, this will cause the storage
     // connection to use a memory DB.
-  }
-  else if (::strcmp(aStorageKey, "profile") == 0) {
-    rv = NS_GetSpecialDirectory(NS_APP_STORAGE_50_FILE,
-                                getter_AddRefs(storageFile));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // fall through to DB initialization
   }
   else {
     return NS_ERROR_INVALID_ARG;
