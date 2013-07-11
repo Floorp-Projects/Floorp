@@ -13,7 +13,7 @@ const {
 } = require("devtools/profiler/consts");
 
 var EventEmitter = require("devtools/shared/event-emitter");
-var Promise      = require("sdk/core/promise");
+var promise      = require("sdk/core/promise");
 var Cleopatra    = require("devtools/profiler/cleopatra");
 var Sidebar      = require("devtools/profiler/sidebar");
 var ProfilerController = require("devtools/profiler/controller");
@@ -145,11 +145,11 @@ ProfilerPanel.prototype = {
   open: function PP_open() {
     // Local profiling needs to make the target remote.
     let target = this.target;
-    let promise = !target.isRemote ? target.makeRemote() : Promise.resolve(target);
+    let targetPromise = !target.isRemote ? target.makeRemote() : promise.resolve(target);
 
-    return promise
+    return targetPromise
       .then((target) => {
-        let deferred = Promise.defer();
+        let deferred = promise.defer();
 
         this.controller = new ProfilerController(this.target);
 

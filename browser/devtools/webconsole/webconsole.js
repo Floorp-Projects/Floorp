@@ -31,8 +31,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "AutocompletePopup",
 XPCOMUtils.defineLazyModuleGetter(this, "WebConsoleUtils",
                                   "resource://gre/modules/devtools/WebConsoleUtils.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "Promise",
-                                  "resource://gre/modules/commonjs/sdk/core/promise.js");
+XPCOMUtils.defineLazyModuleGetter(this, "promise",
+                                  "resource://gre/modules/commonjs/sdk/core/promise.js", "Promise");
 
 XPCOMUtils.defineLazyModuleGetter(this, "VariablesView",
                                   "resource:///modules/devtools/VariablesView.jsm");
@@ -239,7 +239,7 @@ WebConsoleFrame.prototype = {
   get popupset() this.owner.mainPopupSet,
 
   /**
-   * Holds the initialization Promise object.
+   * Holds the initialization promise object.
    * @private
    * @type object
    */
@@ -367,7 +367,7 @@ WebConsoleFrame.prototype = {
    */
   getSaveRequestAndResponseBodies:
   function WCF_getSaveRequestAndResponseBodies() {
-    let deferred = Promise.defer();
+    let deferred = promise.defer();
     let toGet = [
       "NetworkMonitor.saveRequestAndResponseBodies"
     ];
@@ -394,7 +394,7 @@ WebConsoleFrame.prototype = {
    */
   setSaveRequestAndResponseBodies:
   function WCF_setSaveRequestAndResponseBodies(aValue) {
-    let deferred = Promise.defer();
+    let deferred = promise.defer();
     let newValue = !!aValue;
     let toSet = {
       "NetworkMonitor.saveRequestAndResponseBodies": newValue,
@@ -425,7 +425,7 @@ WebConsoleFrame.prototype = {
   /**
    * Initialize the WebConsoleFrame instance.
    * @return object
-   *         A Promise object for the initialization.
+   *         A promise object for the initialization.
    */
   init: function WCF_init()
   {
@@ -438,7 +438,7 @@ WebConsoleFrame.prototype = {
    *
    * @private
    * @return object
-   *         A Promise object that is resolved/reject based on the connection
+   *         A promise object that is resolved/reject based on the connection
    *         result.
    */
   _initConnection: function WCF__initConnection()
@@ -447,7 +447,7 @@ WebConsoleFrame.prototype = {
       return this._initDefer.promise;
     }
 
-    this._initDefer = Promise.defer();
+    this._initDefer = promise.defer();
     this.proxy = new WebConsoleConnectionProxy(this, this.owner.target);
 
     this.proxy.connect().then(() => { // on success
@@ -2727,7 +2727,7 @@ WebConsoleFrame.prototype = {
    * when the Web Console is closed.
    *
    * @return object
-   *         A Promise that is resolved when the WebConsoleFrame instance is
+   *         A promise that is resolved when the WebConsoleFrame instance is
    *         destroyed.
    */
   destroy: function WCF_destroy()
@@ -2736,7 +2736,7 @@ WebConsoleFrame.prototype = {
       return this._destroyer.promise;
     }
 
-    this._destroyer = Promise.defer();
+    this._destroyer = promise.defer();
 
     this._repeatNodes = {};
     this._outputQueue = [];
@@ -3134,12 +3134,12 @@ JSTerm.prototype = {
    *        If you do not provide a |frame| the string will be evaluated in the
    *        global content window.
    * @return object
-   *         A Promise object that is resolved when the server response is
+   *         A promise object that is resolved when the server response is
    *         received.
    */
   requestEvaluation: function JST_requestEvaluation(aString, aOptions = {})
   {
-    let deferred = Promise.defer();
+    let deferred = promise.defer();
 
     function onResult(aResponse) {
       if (!aResponse.error) {
@@ -3208,7 +3208,7 @@ JSTerm.prototype = {
    *        - autofocus: optional boolean, |true| if you want to give focus to
    *        the variables view window after open, |false| otherwise.
    * @return object
-   *         A Promise object that is resolved when the variables view has
+   *         A promise object that is resolved when the variables view has
    *         opened. The new variables view instance is given to the callbacks.
    */
   openVariablesView: function JST_openVariablesView(aOptions)
@@ -3238,10 +3238,10 @@ JSTerm.prototype = {
       return view;
     };
 
-    let promise;
+    let openPromise;
     if (aOptions.targetElement) {
-      let deferred = Promise.defer();
-      promise = deferred.promise;
+      let deferred = promise.defer();
+      openPromise = deferred.promise;
       let document = aOptions.targetElement.ownerDocument;
       let iframe = document.createElement("iframe");
 
@@ -3258,10 +3258,10 @@ JSTerm.prototype = {
       if (!this.sidebar) {
         this._createSidebar();
       }
-      promise = this._addVariablesViewSidebarTab();
+      openPromise = this._addVariablesViewSidebarTab();
     }
 
-    return promise.then(onContainerReady);
+    return openPromise.then(onContainerReady);
   },
 
   /**
@@ -3283,11 +3283,11 @@ JSTerm.prototype = {
    *
    * @private
    * @return object
-   *         A Promise object for the adding of the new tab.
+   *         A promise object for the adding of the new tab.
    */
   _addVariablesViewSidebarTab: function JST__addVariablesViewSidebarTab()
   {
-    let deferred = Promise.defer();
+    let deferred = promise.defer();
 
     let onTabReady = () => {
       let window = this.sidebar.getWindowForTab("variablesview");
@@ -4662,7 +4662,7 @@ WebConsoleConnectionProxy.prototype = {
    * Initialize a debugger client and connect it to the debugger server.
    *
    * @return object
-   *         A Promise object that is resolved/rejected based on the success of
+   *         A promise object that is resolved/rejected based on the success of
    *         the connection initialization.
    */
   connect: function WCCP_connect()
@@ -4671,15 +4671,15 @@ WebConsoleConnectionProxy.prototype = {
       return this._connectDefer.promise;
     }
 
-    this._connectDefer = Promise.defer();
+    this._connectDefer = promise.defer();
 
     let timeout = Services.prefs.getIntPref(PREF_CONNECTION_TIMEOUT);
     this._connectTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
     this._connectTimer.initWithCallback(this._connectionTimeout,
                                         timeout, Ci.nsITimer.TYPE_ONE_SHOT);
 
-    let promise = this._connectDefer.promise;
-    promise.then(function _onSucess() {
+    let connPromise = this._connectDefer.promise;
+    connPromise.then(function _onSucess() {
       this._connectTimer.cancel();
       this._connectTimer = null;
     }.bind(this), function _onFailure() {
@@ -4705,7 +4705,7 @@ WebConsoleConnectionProxy.prototype = {
     }
     this._attachConsole();
 
-    return promise;
+    return connPromise;
   },
 
   /**
@@ -4778,7 +4778,7 @@ WebConsoleConnectionProxy.prototype = {
     }
 
     if (!this._connectTimer) {
-      // This happens if the Promise is rejected (eg. a timeout), but the
+      // This happens if the promise is rejected (eg. a timeout), but the
       // connection attempt is successful, nonetheless.
       Cu.reportError("Web Console getCachedMessages error: invalid state.");
     }
@@ -4960,7 +4960,7 @@ WebConsoleConnectionProxy.prototype = {
    * Disconnect the Web Console from the remote server.
    *
    * @return object
-   *         A Promise object that is resolved when disconnect completes.
+   *         A promise object that is resolved when disconnect completes.
    */
   disconnect: function WCCP_disconnect()
   {
@@ -4968,7 +4968,7 @@ WebConsoleConnectionProxy.prototype = {
       return this._disconnecter.promise;
     }
 
-    this._disconnecter = Promise.defer();
+    this._disconnecter = promise.defer();
 
     if (!this.client) {
       this._disconnecter.resolve(null);

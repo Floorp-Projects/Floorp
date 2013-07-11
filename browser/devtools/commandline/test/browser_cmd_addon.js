@@ -14,7 +14,7 @@ function test() {
 }
 
 tests.gatTest = function(options) {
-  let deferred = Promise.defer();
+  let deferred = promise.defer();
 
   let onGatReady = function() {
     Services.obs.removeObserver(onGatReady, "gcli_addon_commands_ready");
