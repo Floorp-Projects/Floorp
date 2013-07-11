@@ -776,10 +776,10 @@ function ParallelArrayScatter(targets, defaultValue, conflictFunc, length, mode)
   // |targets.length| approximately equals |length|, especially for
   // special cases like collision-free scatters and permutations.
 
-  if (targets.length >>> 0 !== targets.length)
-    ThrowError(JSMSG_BAD_ARRAY_LENGTH, ".prototype.scatter");
+  var targetsLength = std_Math_min(targets.length, self.shape[0]);
 
-  var targetsLength = std_Math_min(targets.length, self.length);
+  if (targetsLength >>> 0 !== targetsLength)
+    ThrowError(JSMSG_BAD_ARRAY_LENGTH, ".prototype.scatter");
 
   if (length >>> 0 !== length)
     ThrowError(JSMSG_BAD_ARRAY_LENGTH, ".prototype.scatter");
