@@ -6539,6 +6539,10 @@ IonBuilder::jsop_getelem_typed_static(bool *psucceeded)
 
     ArrayBufferView::ViewType viewType = JS_GetArrayBufferViewType(tarr);
 
+    // LoadTypedArrayElementStatic currently treats uint32 arrays as int32.
+    if (viewType == ArrayBufferView::TYPE_UINT32)
+        return true;
+
     MDefinition *ptr = convertShiftToMaskForStaticTypedArray(id, viewType);
     if (!ptr)
         return true;
