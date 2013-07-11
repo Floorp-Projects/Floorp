@@ -6012,6 +6012,10 @@ if test -n "$MOZ_WEBGL_DISABLED"; then
   MOZ_ANGLE_RENDERER=
 fi
 
+if test -n "$MOZ_WEBGL_CONFORMANT"; then
+  AC_DEFINE(MOZ_WEBGL_CONFORMANT)
+fi
+
 # Locate a DirectX SDK here so we can use it for both ANGLE and
 # Joystick support.
 if test "$OS_TARGET" = "WINNT" -a -z "$CROSS_COMPILE"; then
