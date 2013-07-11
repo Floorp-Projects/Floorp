@@ -89,7 +89,7 @@ function runTest() {
             getVersionParams(getNewerAppVersion(), getNewerPlatformVersion());
   setUpdateURLOverride(url);
 
-  gAUS.notify(null);
+  gAUS.checkForBackgroundUpdates();
 }
 
 ]]>
