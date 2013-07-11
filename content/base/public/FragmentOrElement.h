@@ -48,6 +48,7 @@ public:
   nsChildContentList(nsINode* aNode)
     : mNode(aNode)
   {
+    SetIsDOMBinding();
   }
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
