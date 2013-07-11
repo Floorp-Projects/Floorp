@@ -73,9 +73,6 @@ public:
     mJSClass = aClass;
   }
 
-  bool IsStyleBinding() const { return mIsStyleBinding; }
-  void SetIsStyleBinding(bool aIsStyle) { mIsStyleBinding = aIsStyle; }
-
   /*
    * Does a lookup for a method or attribute provided by one of the bindings'
    * prototype implementation. If found, |desc| will be set up appropriately,
@@ -122,7 +119,6 @@ public:
 
   nsIAtom* GetBaseTag(int32_t* aNameSpaceID);
   nsXBLBinding* RootBinding();
-  nsXBLBinding* GetFirstStyleBinding();
 
   // Resolve all the fields for this binding and all ancestor bindings on the
   // object |obj|.  False return means a JS exception was set.
@@ -166,7 +162,6 @@ public:
 // MEMBER VARIABLES
 protected:
 
-  bool mIsStyleBinding;
   bool mMarkedForDeath;
 
   nsXBLPrototypeBinding* mPrototypeBinding; // Weak, but we're holding a ref to the docinfo

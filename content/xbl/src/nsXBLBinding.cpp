@@ -142,8 +142,7 @@ nsXBLJSClass::Destroy()
 
 // Constructors/Destructors
 nsXBLBinding::nsXBLBinding(nsXBLPrototypeBinding* aBinding)
-  : mIsStyleBinding(true),
-    mMarkedForDeath(false),
+  : mMarkedForDeath(false),
     mPrototypeBinding(aBinding)
 {
   NS_ASSERTION(mPrototypeBinding, "Must have a prototype binding!");
@@ -714,94 +713,91 @@ nsXBLBinding::ChangeDocument(nsIDocument* aOldDocument, nsIDocument* aNewDocumen
   if (aOldDocument == aNewDocument)
     return;
 
-  // Only style bindings get their prototypes unhooked.  First do ourselves.
-  if (mIsStyleBinding) {
-    // Now the binding dies.  Unhook our prototypes.
-    if (mPrototypeBinding->HasImplementation()) {
-      nsCOMPtr<nsIScriptGlobalObject> global =  do_QueryInterface(
-        aOldDocument->GetScopeObject());
-      if (global) {
-        nsCOMPtr<nsIScriptContext> context = global->GetContext();
-        if (context) {
-          JSContext *cx = context->GetNativeContext();
+  // Now the binding dies.  Unhook our prototypes.
+  if (mPrototypeBinding->HasImplementation()) {
+    nsCOMPtr<nsIScriptGlobalObject> global =  do_QueryInterface(
+                                                                aOldDocument->GetScopeObject());
+    if (global) {
+      nsCOMPtr<nsIScriptContext> context = global->GetContext();
+      if (context) {
+        JSContext *cx = context->GetNativeContext();
 
-          nsCxPusher pusher;
-          pusher.Push(cx);
+        nsCxPusher pusher;
+        pusher.Push(cx);
 
-          // scope might be null if we've cycle-collected the global
-          // object, since the Unlink phase of cycle collection happens
-          // after JS GC finalization.  But in that case, we don't care
-          // about fixing the prototype chain, since everything's going
-          // away immediately.
-          JS::Rooted<JSObject*> scope(cx, global->GetGlobalJSObject());
-          JS::Rooted<JSObject*> scriptObject(cx, mBoundElement->GetWrapper());
-          if (scope && scriptObject) {
-            // XXX Stay in sync! What if a layered binding has an
-            // <interface>?!
-            // XXXbz what does that comment mean, really?  It seems to date
-            // back to when there was such a thing as an <interface>, whever
-            // that was...
+        // scope might be null if we've cycle-collected the global
+        // object, since the Unlink phase of cycle collection happens
+        // after JS GC finalization.  But in that case, we don't care
+        // about fixing the prototype chain, since everything's going
+        // away immediately.
+        JS::Rooted<JSObject*> scope(cx, global->GetGlobalJSObject());
+        JS::Rooted<JSObject*> scriptObject(cx, mBoundElement->GetWrapper());
+        if (scope && scriptObject) {
+          // XXX Stay in sync! What if a layered binding has an
+          // <interface>?!
+          // XXXbz what does that comment mean, really?  It seems to date
+          // back to when there was such a thing as an <interface>, whever
+          // that was...
 
-            // Find the right prototype.
-            JSAutoCompartment ac(cx, scriptObject);
+          // Find the right prototype.
+          JSAutoCompartment ac(cx, scriptObject);
 
-            JS::Rooted<JSObject*> base(cx, scriptObject);
-            JS::Rooted<JSObject*> proto(cx);
-            for ( ; true; base = proto) { // Will break out on null proto
-              if (!JS_GetPrototype(cx, base, proto.address())) {
-                return;
-              }
-              if (!proto) {
-                break;
-              }
-
-              JSClass* clazz = ::JS_GetClass(proto);
-              if (!clazz ||
-                  (~clazz->flags &
-                   (JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS)) ||
-                  JSCLASS_RESERVED_SLOTS(clazz) != 1 ||
-                  clazz->finalize != XBLFinalize) {
-                // Clearly not the right class
-                continue;
-              }
-
-              nsRefPtr<nsXBLDocumentInfo> docInfo =
-                static_cast<nsXBLDocumentInfo*>(::JS_GetPrivate(proto));
-              if (!docInfo) {
-                // Not the proto we seek
-                continue;
-              }
-
-              JS::Value protoBinding = ::JS_GetReservedSlot(proto, 0);
-
-              if (JSVAL_TO_PRIVATE(protoBinding) != mPrototypeBinding) {
-                // Not the right binding
-                continue;
-              }
-
-              // Alright!  This is the right prototype.  Pull it out of the
-              // proto chain.
-              JS::Rooted<JSObject*> grandProto(cx);
-              if (!JS_GetPrototype(cx, proto, grandProto.address())) {
-                return;
-              }
-              ::JS_SetPrototype(cx, base, grandProto);
+          JS::Rooted<JSObject*> base(cx, scriptObject);
+          JS::Rooted<JSObject*> proto(cx);
+          for ( ; true; base = proto) { // Will break out on null proto
+            if (!JS_GetPrototype(cx, base, proto.address())) {
+              return;
+            }
+            if (!proto) {
               break;
             }
 
-            mPrototypeBinding->UndefineFields(cx, scriptObject);
+            JSClass* clazz = ::JS_GetClass(proto);
+            if (!clazz ||
+                (~clazz->flags &
+                 (JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS)) ||
+                JSCLASS_RESERVED_SLOTS(clazz) != 1 ||
+                clazz->finalize != XBLFinalize) {
+              // Clearly not the right class
+              continue;
+            }
 
-            // Don't remove the reference from the document to the
-            // wrapper here since it'll be removed by the element
-            // itself when that's taken out of the document.
+            nsRefPtr<nsXBLDocumentInfo> docInfo =
+              static_cast<nsXBLDocumentInfo*>(::JS_GetPrivate(proto));
+            if (!docInfo) {
+              // Not the proto we seek
+              continue;
+            }
+
+            JS::Value protoBinding = ::JS_GetReservedSlot(proto, 0);
+
+            if (JSVAL_TO_PRIVATE(protoBinding) != mPrototypeBinding) {
+              // Not the right binding
+              continue;
+            }
+
+            // Alright!  This is the right prototype.  Pull it out of the
+            // proto chain.
+            JS::Rooted<JSObject*> grandProto(cx);
+            if (!JS_GetPrototype(cx, proto, grandProto.address())) {
+              return;
+            }
+            ::JS_SetPrototype(cx, base, grandProto);
+            break;
           }
+
+          mPrototypeBinding->UndefineFields(cx, scriptObject);
+
+          // Don't remove the reference from the document to the
+          // wrapper here since it'll be removed by the element
+          // itself when that's taken out of the document.
         }
       }
     }
-
-    // Remove our event handlers
-    UnhookEventHandlers();
   }
+
+  // Remove our event handlers
+  UnhookEventHandlers();
 
   {
     nsAutoScriptBlocker scriptBlocker;
@@ -1074,15 +1070,6 @@ nsXBLBinding::RootBinding()
     return mNextBinding->RootBinding();
 
   return this;
-}
-
-nsXBLBinding*
-nsXBLBinding::GetFirstStyleBinding()
-{
-  if (mIsStyleBinding)
-    return this;
-
-  return mNextBinding ? mNextBinding->GetFirstStyleBinding() : nullptr;
 }
 
 bool
