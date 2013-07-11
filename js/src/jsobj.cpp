@@ -2847,7 +2847,7 @@ AllocateElements(ThreadSafeContext *cx, JSObject *obj, uint32_t nelems)
 {
 #ifdef JSGC_GENERATIONAL
     if (cx->isJSContext())
-        return cx->asJSContext()->runtime()->gcNursery.allocateElements(cx, obj, nelems);
+        return cx->asJSContext()->runtime()->gcNursery.allocateElements(cx->asJSContext(), obj, nelems);
 #endif
 
     return static_cast<js::ObjectElements *>(cx->malloc_(nelems * sizeof(HeapValue)));
@@ -2859,7 +2859,7 @@ ReallocateElements(ThreadSafeContext *cx, JSObject *obj, ObjectElements *oldHead
 {
 #ifdef JSGC_GENERATIONAL
     if (cx->isJSContext()) {
-        return cx->asJSContext()->runtime()-> gcNursery.reallocateElements(cx, obj, oldHeader,
+        return cx->asJSContext()->runtime()-> gcNursery.reallocateElements(cx->asJSContext(), obj, oldHeader,
                                                                            oldCount, newCount);
     }
 #endif
