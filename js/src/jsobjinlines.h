@@ -365,7 +365,7 @@ JSObject::ensureDenseInitializedLength(js::ExclusiveContext *cx, uint32_t index,
 }
 
 JSObject::EnsureDenseResult
-JSObject::extendDenseElements(js::ThreadSafeContext *tcx,
+JSObject::extendDenseElements(js::ThreadSafeContext *cx,
                               uint32_t requiredCapacity, uint32_t extra)
 {
     /*
@@ -395,14 +395,14 @@ JSObject::extendDenseElements(js::ThreadSafeContext *tcx,
         return ED_SPARSE;
     }
 
-    if (!growElements(tcx, requiredCapacity))
+    if (!growElements(cx, requiredCapacity))
         return ED_FAILED;
 
     return ED_OK;
 }
 
 inline JSObject::EnsureDenseResult
-JSObject::parExtendDenseElements(js::ThreadSafeContext *tcx, js::Value *v, uint32_t extra)
+JSObject::parExtendDenseElements(js::ThreadSafeContext *cx, js::Value *v, uint32_t extra)
 {
     JS_ASSERT(isNative());
     JS_ASSERT_IF(is<js::ArrayObject>(), as<js::ArrayObject>().lengthIsWritable());
@@ -414,7 +414,7 @@ JSObject::parExtendDenseElements(js::ThreadSafeContext *tcx, js::Value *v, uint3
         return ED_SPARSE; /* Overflow. */
 
     if (requiredCapacity > header->capacity) {
-        EnsureDenseResult edr = extendDenseElements(tcx, requiredCapacity, extra);
+        EnsureDenseResult edr = extendDenseElements(cx, requiredCapacity, extra);
         if (edr != ED_OK)
             return edr;
     }
