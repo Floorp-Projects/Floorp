@@ -2289,15 +2289,15 @@ IMEInputHandler::GetCurrentTSMDocumentID()
  ******************************************************************************/
 
 void
-IMEInputHandler::ResetIMEWindowLevel()
+IMEInputHandler::NotifyIMEOfFocusChangeInGecko()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   PR_LOG(gLog, PR_LOG_ALWAYS,
-    ("%p IMEInputHandler::ResetIMEWindowLevel, "
-     "Destroyed()=%s, IsFocused()=%s, GetCurrentTSMDocumentID()=%p",
+    ("%p IMEInputHandler::NotifyIMEOfFocusChangeInGecko, "
+     "Destroyed()=%s, IsFocused()=%s, inputContext=%p",
      this, TrueOrFalse(Destroyed()), TrueOrFalse(IsFocused()),
-     GetCurrentTSMDocumentID()));
+     mView ? [mView inputContext] : nullptr));
 
   if (Destroyed()) {
     return;
@@ -2305,32 +2305,24 @@ IMEInputHandler::ResetIMEWindowLevel()
 
   if (!IsFocused()) {
     // retry at next focus event
-    mPendingMethods |= kResetIMEWindowLevel;
+    mPendingMethods |= kNotifyIMEOfFocusChangeInGecko;
     return;
   }
 
-  TSMDocumentID doc = GetCurrentTSMDocumentID();
-  if (!doc) {
-    // retry
-    mPendingMethods |= kResetIMEWindowLevel;
-    NS_WARNING("Application is active but there is no active document");
-    ResetTimer();
-    return;
-  }
+  MOZ_ASSERT(mView);
+  NSTextInputContext* inputContext = [mView inputContext];
+  NS_ENSURE_TRUE_VOID(inputContext);
 
-  // We need to set the focused window level to TSMDocument. Then, the popup
-  // windows of IME (E.g., a candidate list window) will be over the focused
-  // view. See http://developer.apple.com/technotes/tn2005/tn2128.html#TNTAG1
-  NSInteger windowLevel = GetWindowLevel();
-
-  // Chinese IMEs on 10.5 don't work fine if the level is NSNormalWindowLevel,
-  // then, we need to increment the value.
-  if (windowLevel == NSNormalWindowLevel)
-    windowLevel++;
-
-  ::TSMSetDocumentProperty(GetCurrentTSMDocumentID(),
-                           kTSMDocumentWindowLevelPropertyTag,
-                           sizeof(windowLevel), &windowLevel);
+  // When an <input> element on a XUL <panel> element gets focus from an <input>
+  // element on the opener window of the <panel> element, the owner window
+  // still has native focus.  Therefore, IMEs may store the opener window's
+  // level at this time because they don't know the actual focus is moved to
+  // different window.  If IMEs try to get the newest window level after the
+  // focus change, we return the window level of the XUL <panel>'s widget.
+  // Therefore, let's emulate the native focus change.  Then, IMEs can refresh
+  // the stored window level.
+  [inputContext deactivate];
+  [inputContext activate];
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -2458,8 +2450,9 @@ IMEInputHandler::ExecutePendingMethods()
     DiscardIMEComposition();
   if (pendingMethods & kSyncASCIICapableOnly)
     SyncASCIICapableOnly();
-  if (pendingMethods & kResetIMEWindowLevel)
-    ResetIMEWindowLevel();
+  if (pendingMethods & kNotifyIMEOfFocusChangeInGecko) {
+    NotifyIMEOfFocusChangeInGecko();
+  }
 
   mIsInFocusProcessing = false;
 
@@ -3191,11 +3184,9 @@ IMEInputHandler::OnFocusChangeInGecko(bool aFocus)
   sFocusedIMEHandler = this;
   mIsInFocusProcessing = true;
 
-  // We need to reset the IME's window level by the current focused view of
-  // Gecko.  It may be different from mView.  However, we cannot get the
-  // new focused view here because the focus change process in Gecko hasn't
-  // been finished yet.  So, we should post the job to the todo list.
-  mPendingMethods |= kResetIMEWindowLevel;
+  // We need to notify IME of focus change in Gecko as native focus change
+  // because the window level of the focused element in Gecko may be changed.
+  mPendingMethods |= kNotifyIMEOfFocusChangeInGecko;
   ResetTimer();
 }
 
