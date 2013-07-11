@@ -71,6 +71,7 @@ public:
   const bool mOCSPGETEnabled;
 };
 
+void InitCertVerifierLog();
 } } // namespace mozilla::psm
 
 #endif // mozilla_psm__CertVerifier_h
