@@ -2266,23 +2266,10 @@ IMEInputHandler::ResetIMEWindowLevel()
     return;
   }
 
-  // When the focus of Gecko is on a text box of a popup panel, the actual
-  // focused view is the panel's parent view (mView). But the editor is
-  // displayed on the popuped widget's view (editorView).  So, their window
-  // level may be different.
-  NSView<mozView>* editorView = mWidget->GetEditorView();
-  if (!editorView) {
-    NS_ERROR("editorView is null");
-    return;
-  }
-
   // We need to set the focused window level to TSMDocument. Then, the popup
   // windows of IME (E.g., a candidate list window) will be over the focused
   // view. See http://developer.apple.com/technotes/tn2005/tn2128.html#TNTAG1
-  NSInteger windowLevel = [[editorView window] level];
-  PR_LOG(gLog, PR_LOG_ALWAYS,
-    ("%p IMEInputHandler::ResetIMEWindowLevel, windowLevel=%s (%X)",
-     this, GetWindowLevelName(windowLevel), windowLevel));
+  NSInteger windowLevel = GetWindowLevel();
 
   // Chinese IMEs on 10.5 don't work fine if the level is NSNormalWindowLevel,
   // then, we need to increment the value.
@@ -4131,6 +4118,35 @@ TextInputHandlerBase::SynthesizeNativeKeyEvent(
   return NS_OK;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+}
+
+NSInteger
+TextInputHandlerBase::GetWindowLevel()
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+
+  PR_LOG(gLog, PR_LOG_ALWAYS,
+    ("%p TextInputHandlerBase::GetWindowLevel, Destryoed()=%s",
+     this, TrueOrFalse(Destroyed())));
+
+  if (Destroyed()) {
+    return NSNormalWindowLevel;
+  }
+
+  // When an <input> element on a XUL <panel> is focused, the actual focused view
+  // is the panel's parent view (mView). But the editor is displayed on the
+  // popped-up widget's view (editorView).  We want the latter's window level.
+  NSView<mozView>* editorView = mWidget->GetEditorView();
+  NS_ENSURE_TRUE(editorView, NSNormalWindowLevel);
+  NSInteger windowLevel = [[editorView window] level];
+
+  PR_LOG(gLog, PR_LOG_ALWAYS,
+    ("%p TextInputHandlerBase::GetWindowLevel, windowLevel=%s (%X)",
+     this, GetWindowLevelName(windowLevel), windowLevel));
+
+  return windowLevel;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NSNormalWindowLevel);
 }
 
 /* static */ bool

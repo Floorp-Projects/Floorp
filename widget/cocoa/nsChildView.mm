@@ -5093,6 +5093,19 @@ static int32_t RoundUp(double aDouble)
 }
 
 #pragma mark -
+// NSTextInputClient implementation
+
+- (NSInteger)windowLevel
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+
+  NS_ENSURE_TRUE(mTextInputHandler, [[self window] level]);
+  return mTextInputHandler->GetWindowLevel();
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NSNormalWindowLevel);
+}
+
+#pragma mark -
 
 #ifdef __LP64__
 - (NSTextInputContext *)inputContext
