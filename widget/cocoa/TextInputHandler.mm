@@ -1929,7 +1929,8 @@ TextInputHandler::DispatchKeyEventForFlagsChanged(NSEvent* aNativeEvent,
 }
 
 void
-TextInputHandler::InsertText(NSAttributedString *aAttrString)
+TextInputHandler::InsertText(NSAttributedString* aAttrString,
+                             NSRange* aReplacementRange)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
@@ -1941,10 +1942,13 @@ TextInputHandler::InsertText(NSAttributedString *aAttrString)
 
   PR_LOG(gLog, PR_LOG_ALWAYS,
     ("%p TextInputHandler::InsertText, aAttrString=\"%s\", "
+     "aReplacementRange=%p { location=%llu, length=%llu }, "
      "IsIMEComposing()=%s, IgnoreIMEComposition()=%s, "
      "keyevent=%p, keypressDispatched=%s",
-     this, GetCharacters([aAttrString string]), TrueOrFalse(IsIMEComposing()),
-     TrueOrFalse(IgnoreIMEComposition()),
+     this, GetCharacters([aAttrString string]), aReplacementRange,
+     aReplacementRange ? aReplacementRange->location : 0,
+     aReplacementRange ? aReplacementRange->length : 0,
+     TrueOrFalse(IsIMEComposing()), TrueOrFalse(IgnoreIMEComposition()),
      currentKeyEvent ? currentKeyEvent->mKeyEvent : nullptr,
      currentKeyEvent ?
        TrueOrFalse(currentKeyEvent->mKeyPressDispatched) : "N/A"));
@@ -1953,14 +1957,54 @@ TextInputHandler::InsertText(NSAttributedString *aAttrString)
     return;
   }
 
+  InputContext context = mWidget->GetInputContext();
+  bool isEditable = (context.mIMEState.mEnabled == IMEState::ENABLED ||
+                     context.mIMEState.mEnabled == IMEState::PASSWORD);
+  NSRange selectedRange = SelectedRange();
+
   nsAutoString str;
   nsCocoaUtils::GetStringForNSString([aAttrString string], str);
   if (!IsIMEComposing() && str.IsEmpty()) {
-    return; // nothing to do
+    // nothing to do if there is no content which can be removed.
+    if (!isEditable) {
+      return;
+    }
+    // If replacement range is specified, we need to remove the range.
+    // Otherwise, we need to remove the selected range if it's not collapsed.
+    if (aReplacementRange && aReplacementRange->location != NSNotFound) {
+      // nothing to do since the range is collapsed.
+      if (aReplacementRange->length == 0) {
+        return;
+      }
+      // If the replacement range is different from current selected range,
+      // select the range.
+      if (!NSEqualRanges(selectedRange, *aReplacementRange)) {
+        NS_ENSURE_TRUE_VOID(SetSelection(*aReplacementRange));
+      }
+      selectedRange = SelectedRange();
+    }
+    NS_ENSURE_TRUE_VOID(selectedRange.location != NSNotFound);
+    if (selectedRange.length == 0) {
+      return; // nothing to do
+    }
+    // If this is caused by a key input, the keypress event which will be
+    // dispatched later should cause the delete.  Therefore, nothing to do here.
+    // Although, we're not sure if such case is actually possible.
+    if (!currentKeyEvent) {
+      return;
+    }
+    // Delete the selected range.
+    nsRefPtr<TextInputHandler> kungFuDeathGrip(this);
+    nsContentCommandEvent deleteCommandEvent(true, NS_CONTENT_COMMAND_DELETE,
+                                             mWidget);
+    DispatchEvent(deleteCommandEvent);
+    NS_ENSURE_TRUE_VOID(deleteCommandEvent.mSucceeded);
+    // Be aware! The widget might be destroyed here.
+    return;
   }
 
   if (str.Length() != 1 || IsIMEComposing()) {
-    InsertTextAsCommittingComposition(aAttrString);
+    InsertTextAsCommittingComposition(aAttrString, aReplacementRange);
     return;
   }
 
@@ -1971,6 +2015,14 @@ TextInputHandler::InsertText(NSAttributedString *aAttrString)
   }
 
   nsRefPtr<nsChildView> kungFuDeathGrip(mWidget);
+
+  // If the replacement range is specified, select the range.  Then, the
+  // selection will be replaced by the later keypress event.
+  if (isEditable &&
+      aReplacementRange && aReplacementRange->location != NSNotFound &&
+      !NSEqualRanges(selectedRange, *aReplacementRange)) {
+    NS_ENSURE_TRUE_VOID(SetSelection(*aReplacementRange));
+  }
 
   // Dispatch keypress event with char instead of textEvent
   nsKeyEvent keypressEvent(true, NS_KEY_PRESS, mWidget);
@@ -2602,20 +2654,48 @@ IMEInputHandler::InitCompositionEvent(nsCompositionEvent& aCompositionEvent)
 
 void
 IMEInputHandler::InsertTextAsCommittingComposition(
-                   NSAttributedString* aAttrString)
+                   NSAttributedString* aAttrString,
+                   NSRange* aReplacementRange)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   PR_LOG(gLog, PR_LOG_ALWAYS,
     ("%p IMEInputHandler::InsertTextAsCommittingComposition, "
-     "aAttrString=\"%s\", Destroyed()=%s, IsIMEComposing()=%s, "
+     "aAttrString=\"%s\", aReplacementRange=%p { location=%llu, length=%llu }, "
+     "Destroyed()=%s, IsIMEComposing()=%s, "
      "mMarkedRange={ location=%llu, length=%llu }",
-     this, GetCharacters([aAttrString string]), TrueOrFalse(Destroyed()),
-     TrueOrFalse(IsIMEComposing()),
+     this, GetCharacters([aAttrString string]), aReplacementRange,
+     aReplacementRange ? aReplacementRange->location : 0,
+     aReplacementRange ? aReplacementRange->length : 0,
+     TrueOrFalse(Destroyed()), TrueOrFalse(IsIMEComposing()),
      mMarkedRange.location, mMarkedRange.length));
+
+  if (IgnoreIMECommit()) {
+    MOZ_CRASH("IMEInputHandler::InsertTextAsCommittingComposition() must not"
+              "be called while canceling the composition");
+  }
 
   if (Destroyed()) {
     return;
+  }
+
+  // First, commit current composition with the latest composition string if the
+  // replacement range is different from marked range.
+  if (IsIMEComposing() && aReplacementRange &&
+      aReplacementRange->location != NSNotFound &&
+      !NSEqualRanges(MarkedRange(), *aReplacementRange)) {
+    NSString* latestStr =
+      nsCocoaUtils::ToNSString(mLastDispatchedCompositionString);
+    NSAttributedString* attrLatestStr =
+      [[[NSAttributedString alloc] initWithString:latestStr] autorelease];
+    InsertTextAsCommittingComposition(attrLatestStr, nullptr);
+    if (Destroyed()) {
+      PR_LOG(gLog, PR_LOG_ALWAYS,
+        ("%p IMEInputHandler::InsertTextAsCommittingComposition, "
+         "destroyed by commiting composition for setting replacement range",
+         this));
+      return;
+    }
   }
 
   nsRefPtr<IMEInputHandler> kungFuDeathGrip(this);
@@ -2624,6 +2704,13 @@ IMEInputHandler::InsertTextAsCommittingComposition(
   nsCocoaUtils::GetStringForNSString([aAttrString string], str);
 
   if (!IsIMEComposing()) {
+    // If there is no selection and replacement range is specified, set the
+    // range as selection.
+    if (aReplacementRange && aReplacementRange->location != NSNotFound &&
+        !NSEqualRanges(SelectedRange(), *aReplacementRange)) {
+      NS_ENSURE_TRUE_VOID(SetSelection(*aReplacementRange));
+    }
+
     // XXXmnakano Probably, we shouldn't emulate composition in this case.
     // I think that we should just fire DOM3 textInput event if we implement it.
     nsCompositionEvent compStart(true, NS_COMPOSITION_START, mWidget);
@@ -2638,13 +2725,6 @@ IMEInputHandler::InsertTextAsCommittingComposition(
     }
 
     OnStartIMEComposition();
-  }
-
-  if (IgnoreIMECommit()) {
-    PR_LOG(gLog, PR_LOG_ALWAYS,
-      ("%p IMEInputHandler::InsertTextAsCommittingComposition, "
-       "IgnoreIMECommit()=%s", this, TrueOrFalse(IgnoreIMECommit())));
-    str.Truncate();
   }
 
   NSRange range = NSMakeRange(0, str.Length());
@@ -4174,6 +4254,22 @@ TextInputHandlerBase::GetWindowLevel()
   return windowLevel;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NSNormalWindowLevel);
+}
+
+bool
+TextInputHandlerBase::SetSelection(NSRange& aRange)
+{
+  MOZ_ASSERT(!Destroyed());
+
+  nsRefPtr<TextInputHandlerBase> kungFuDeathGrip(this);
+  nsSelectionEvent selectionEvent(true, NS_SELECTION_SET, mWidget);
+  selectionEvent.mOffset = aRange.location;
+  selectionEvent.mLength = aRange.length;
+  selectionEvent.mReversed = false;
+  selectionEvent.mExpandToClusterBoundary = false;
+  DispatchEvent(selectionEvent);
+  NS_ENSURE_TRUE(selectionEvent.mSucceeded, false);
+  return !Destroyed();
 }
 
 /* static */ bool
