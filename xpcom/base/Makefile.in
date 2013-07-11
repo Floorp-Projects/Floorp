@@ -50,9 +50,6 @@ DISABLED_SDK_HEADERS += \
 		$(NULL)
 endif
 
-# we don't want the shared lib, but we want to force the creation of a static lib.
-FORCE_STATIC_LIB = 1
-
 
 include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
