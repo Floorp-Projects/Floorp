@@ -45,6 +45,29 @@ class JSObject;
 typedef JSBool
 (* JSNative)(JSContext *cx, unsigned argc, JS::Value *vp);
 
+/* Typedef for native functions that may be called in parallel. */
+typedef js::ParallelResult
+(* JSParallelNative)(js::ForkJoinSlice *slice, unsigned argc, JS::Value *vp);
+
+/*
+ * Typedef for native functions that may be called either in parallel or
+ * sequential execution.
+ */
+typedef JSBool
+(* JSThreadSafeNative)(js::ThreadSafeContext *tcx, unsigned argc, JS::Value *vp);
+
+/*
+ * Convenience wrappers for passing in ThreadSafeNative to places that expect
+ * a JSNative or a JSParallelNative.
+ */
+template <JSThreadSafeNative threadSafeNative>
+inline JSBool
+JSNativeThreadSafeWrapper(JSContext *cx, unsigned argc, JS::Value *vp);
+
+template <JSThreadSafeNative threadSafeNative>
+inline js::ParallelResult
+JSParallelNativeThreadSafeWrapper(js::ForkJoinSlice *slice, unsigned argc, JS::Value *vp);
+
 /*
  * Compute |this| for the |vp| inside a JSNative, either boxing primitives or
  * replacing with the global object as necessary.
