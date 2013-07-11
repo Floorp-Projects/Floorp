@@ -24,6 +24,8 @@ GetCurrentNetworkInformation(hal::NetworkInformation* aNetworkInfo)
 {
   aNetworkInfo->bandwidth() = dom::network::kDefaultBandwidth;
   aNetworkInfo->canBeMetered() = dom::network::kDefaultCanBeMetered;
+  aNetworkInfo->isWifi() = dom::network::kDefaultIsWifi;
+  aNetworkInfo->dhcpGateway() = dom::network::kDefaultDHCPGateway;
 }
 
 } // namespace hal_impl
