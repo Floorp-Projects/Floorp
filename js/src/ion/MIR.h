@@ -7366,7 +7366,6 @@ class MParDump
     }
 };
 
-
 // Given a value, guard that the value is in a particular TypeSet, then returns
 // that value.
 class MTypeBarrier
