@@ -7,7 +7,6 @@
 
 #include "xptiprivate.h"
 #include "mozilla/XPTInterfaceInfoManager.h"
-#include "nsAtomicRefcnt.h"
 
 using namespace mozilla;
 

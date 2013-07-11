@@ -24,6 +24,7 @@
 #include "nsContentUtils.h"
 #include "nsEventDispatcher.h"
 #include "nsThreadUtils.h"
+#include "pratom.h"
 
 #include "IDBEvents.h"
 #include "IDBFactory.h"

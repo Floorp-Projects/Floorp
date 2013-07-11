@@ -40,6 +40,7 @@
 #include "mozilla/Telemetry.h"
 
 #include "plbase64.h"
+#include "pratom.h"
 #include "prmem.h"
 #include "prnetdb.h"
 #include "prbit.h"

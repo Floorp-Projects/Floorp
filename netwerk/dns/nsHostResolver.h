@@ -7,7 +7,6 @@
 #define nsHostResolver_h__
 
 #include "nscore.h"
-#include "nsAtomicRefcnt.h"
 #include "prclist.h"
 #include "prnetdb.h"
 #include "pldhash.h"

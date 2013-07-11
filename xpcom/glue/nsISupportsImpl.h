@@ -22,7 +22,6 @@
 
 #if !defined(XPCOM_GLUE_AVOID_NSPR)
 #include "prthread.h" /* needed for thread-safety checks */
-#include "nsAtomicRefcnt.h" /* for NS_Atomic{Increment,Decrement}Refcnt */
 #ifdef DEBUG
 #include "nsCycleCollectorUtils.h" /* for NS_IsCycleCollectorThread */
 #endif // DEBUG
@@ -234,19 +233,6 @@ class ThreadSafeAutoRefCnt {
     // but could break pre-existing code that assumes sequential consistency.
     Atomic<nsrefcnt> mValue;
 };
-}
-
-// Temporary declarations until NS_IMPL_THREADSAFE_ADDREF/RELEASE are deleted.
-inline nsrefcnt
-NS_AtomicIncrementRefcnt(mozilla::ThreadSafeAutoRefCnt &refcnt)
-{
-  return ++refcnt;
-}
-
-inline nsrefcnt
-NS_AtomicDecrementRefcnt(mozilla::ThreadSafeAutoRefCnt &refcnt)
-{
-  return --refcnt;
 }
 #endif
 
@@ -979,19 +965,6 @@ NS_IMETHODIMP _class::QueryInterface(REFNSIID aIID, void** aInstancePtr)      \
   NS_INTERFACE_TABLE_TAIL
 
 
-#define NS_IMPL_THREADSAFE_QUERY_INTERFACE0  NS_IMPL_QUERY_INTERFACE0
-#define NS_IMPL_THREADSAFE_QUERY_INTERFACE1  NS_IMPL_QUERY_INTERFACE1
-#define NS_IMPL_THREADSAFE_QUERY_INTERFACE2  NS_IMPL_QUERY_INTERFACE2
-#define NS_IMPL_THREADSAFE_QUERY_INTERFACE3  NS_IMPL_QUERY_INTERFACE3
-#define NS_IMPL_THREADSAFE_QUERY_INTERFACE4  NS_IMPL_QUERY_INTERFACE4
-#define NS_IMPL_THREADSAFE_QUERY_INTERFACE5  NS_IMPL_QUERY_INTERFACE5
-#define NS_IMPL_THREADSAFE_QUERY_INTERFACE6  NS_IMPL_QUERY_INTERFACE6
-#define NS_IMPL_THREADSAFE_QUERY_INTERFACE7  NS_IMPL_QUERY_INTERFACE7
-#define NS_IMPL_THREADSAFE_QUERY_INTERFACE8  NS_IMPL_QUERY_INTERFACE8
-#define NS_IMPL_THREADSAFE_QUERY_INTERFACE9  NS_IMPL_QUERY_INTERFACE9
-#define NS_IMPL_THREADSAFE_QUERY_INTERFACE10  NS_IMPL_QUERY_INTERFACE10
-#define NS_IMPL_THREADSAFE_QUERY_INTERFACE11  NS_IMPL_QUERY_INTERFACE11
-
 /**
  * Declare that you're going to inherit from something that already
  * implements nsISupports, but also implements an additional interface, thus
@@ -1386,129 +1359,6 @@ NS_IMETHODIMP_(nsrefcnt) Class::Release(void)                                 \
  * @note  These are not available when linking against the standalone glue,
  *        because the implementation requires PR_ symbols.
  */
-
-#if !defined(XPCOM_GLUE_AVOID_NSPR)
-
-/**
- * Use this macro to implement the AddRef method for a given <i>_class</i>
- * @param _class The name of the class implementing the method
- */
-
-#define NS_IMPL_THREADSAFE_ADDREF(_class)                                     \
-NS_IMETHODIMP_(nsrefcnt) _class::AddRef(void)                                 \
-{                                                                             \
-  MOZ_ASSERT(int32_t(mRefCnt) >= 0, "illegal refcnt");                        \
-  nsrefcnt count = NS_AtomicIncrementRefcnt(mRefCnt);                         \
-  NS_LOG_ADDREF(this, count, #_class, sizeof(*this));                         \
-  return (nsrefcnt) count;                                                    \
-}
-
-/**
- * Use this macro to implement the Release method for a given <i>_class</i>
- * @param _class The name of the class implementing the method
- *
- * Note that we don't need to use an atomic operation to stabilize the refcnt.
- * If the refcnt is released to 0, only the current thread has a reference to
- * the object; we thus don't have to use an atomic set to inform other threads
- * that we've changed the refcnt.
- */
-
-#define NS_IMPL_THREADSAFE_RELEASE(_class)                                    \
-NS_IMETHODIMP_(nsrefcnt) _class::Release(void)                                \
-{                                                                             \
-  MOZ_ASSERT(int32_t(mRefCnt) > 0, "dup release");                            \
-  nsrefcnt count = NS_AtomicDecrementRefcnt(mRefCnt);                         \
-  NS_LOG_RELEASE(this, count, #_class);                                       \
-  if (0 == count) {                                                           \
-    mRefCnt = 1; /* stabilize */                                              \
-    /* enable this to find non-threadsafe destructors: */                     \
-    /* NS_ASSERT_OWNINGTHREAD(_class); */                                     \
-    delete (this);                                                            \
-    return 0;                                                                 \
-  }                                                                           \
-  return count;                                                               \
-}
-
-#else // XPCOM_GLUE_AVOID_NSPR
-
-#define NS_IMPL_THREADSAFE_ADDREF(_class)                                     \
-  THREADSAFE_ISUPPORTS_NOT_AVAILABLE_IN_STANDALONE_GLUE;
-
-#define NS_IMPL_THREADSAFE_RELEASE(_class)                                    \
-  THREADSAFE_ISUPPORTS_NOT_AVAILABLE_IN_STANDALONE_GLUE;
-
-#endif
-
-#define NS_IMPL_THREADSAFE_ISUPPORTS0(_class)                                 \
-  NS_IMPL_THREADSAFE_ADDREF(_class)                                           \
-  NS_IMPL_THREADSAFE_RELEASE(_class)                                          \
-  NS_IMPL_THREADSAFE_QUERY_INTERFACE0(_class)
-
-#define NS_IMPL_THREADSAFE_ISUPPORTS1(_class, _interface)                     \
-  NS_IMPL_THREADSAFE_ADDREF(_class)                                           \
-  NS_IMPL_THREADSAFE_RELEASE(_class)                                          \
-  NS_IMPL_THREADSAFE_QUERY_INTERFACE1(_class, _interface)
-
-#define NS_IMPL_THREADSAFE_ISUPPORTS2(_class, _i1, _i2)                       \
-  NS_IMPL_THREADSAFE_ADDREF(_class)                                           \
-  NS_IMPL_THREADSAFE_RELEASE(_class)                                          \
-  NS_IMPL_THREADSAFE_QUERY_INTERFACE2(_class, _i1, _i2)
-
-#define NS_IMPL_THREADSAFE_ISUPPORTS3(_class, _i1, _i2, _i3)                  \
-  NS_IMPL_THREADSAFE_ADDREF(_class)                                           \
-  NS_IMPL_THREADSAFE_RELEASE(_class)                                          \
-  NS_IMPL_THREADSAFE_QUERY_INTERFACE3(_class, _i1, _i2, _i3)
-
-#define NS_IMPL_THREADSAFE_ISUPPORTS4(_class, _i1, _i2, _i3, _i4)             \
-  NS_IMPL_THREADSAFE_ADDREF(_class)                                           \
-  NS_IMPL_THREADSAFE_RELEASE(_class)                                          \
-  NS_IMPL_THREADSAFE_QUERY_INTERFACE4(_class, _i1, _i2, _i3, _i4)
-
-#define NS_IMPL_THREADSAFE_ISUPPORTS5(_class, _i1, _i2, _i3, _i4, _i5)        \
-  NS_IMPL_THREADSAFE_ADDREF(_class)                                           \
-  NS_IMPL_THREADSAFE_RELEASE(_class)                                          \
-  NS_IMPL_THREADSAFE_QUERY_INTERFACE5(_class, _i1, _i2, _i3, _i4, _i5)
-
-#define NS_IMPL_THREADSAFE_ISUPPORTS6(_class, _i1, _i2, _i3, _i4, _i5, _i6)   \
-  NS_IMPL_THREADSAFE_ADDREF(_class)                                           \
-  NS_IMPL_THREADSAFE_RELEASE(_class)                                          \
-  NS_IMPL_THREADSAFE_QUERY_INTERFACE6(_class, _i1, _i2, _i3, _i4, _i5, _i6)
-
-#define NS_IMPL_THREADSAFE_ISUPPORTS7(_class, _i1, _i2, _i3, _i4, _i5, _i6,   \
-                                      _i7)                                    \
-  NS_IMPL_THREADSAFE_ADDREF(_class)                                           \
-  NS_IMPL_THREADSAFE_RELEASE(_class)                                          \
-  NS_IMPL_THREADSAFE_QUERY_INTERFACE7(_class, _i1, _i2, _i3, _i4, _i5, _i6,   \
-                                      _i7)
-
-#define NS_IMPL_THREADSAFE_ISUPPORTS8(_class, _i1, _i2, _i3, _i4, _i5, _i6,   \
-                                      _i7, _i8)                               \
-  NS_IMPL_THREADSAFE_ADDREF(_class)                                           \
-  NS_IMPL_THREADSAFE_RELEASE(_class)                                          \
-  NS_IMPL_THREADSAFE_QUERY_INTERFACE8(_class, _i1, _i2, _i3, _i4, _i5, _i6,   \
-                                      _i7, _i8)
-
-#define NS_IMPL_THREADSAFE_ISUPPORTS9(_class, _i1, _i2, _i3, _i4, _i5, _i6,   \
-                                      _i7, _i8, _i9)                          \
-  NS_IMPL_THREADSAFE_ADDREF(_class)                                           \
-  NS_IMPL_THREADSAFE_RELEASE(_class)                                          \
-  NS_IMPL_THREADSAFE_QUERY_INTERFACE9(_class, _i1, _i2, _i3, _i4, _i5, _i6,   \
-                                      _i7, _i8, _i9)
-
-#define NS_IMPL_THREADSAFE_ISUPPORTS10(_class, _i1, _i2, _i3, _i4, _i5, _i6,  \
-                                       _i7, _i8, _i9, _i10)                   \
-  NS_IMPL_THREADSAFE_ADDREF(_class)                                           \
-  NS_IMPL_THREADSAFE_RELEASE(_class)                                          \
-  NS_IMPL_THREADSAFE_QUERY_INTERFACE10(_class, _i1, _i2, _i3, _i4, _i5, _i6,  \
-                                       _i7, _i8, _i9, _i10)
-
-#define NS_IMPL_THREADSAFE_ISUPPORTS11(_class, _i1, _i2, _i3, _i4, _i5, _i6,  \
-                                       _i7, _i8, _i9, _i10, _i11)             \
-  NS_IMPL_THREADSAFE_ADDREF(_class)                                           \
-  NS_IMPL_THREADSAFE_RELEASE(_class)                                          \
-  NS_IMPL_THREADSAFE_QUERY_INTERFACE11(_class, _i1, _i2, _i3, _i4, _i5, _i6,  \
-                                       _i7, _i8, _i9, _i10, _i11)
-
 #define NS_INTERFACE_MAP_END_THREADSAFE NS_IMPL_QUERY_TAIL_GUTS
 
 /**

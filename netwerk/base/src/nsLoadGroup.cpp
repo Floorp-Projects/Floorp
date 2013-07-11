@@ -14,6 +14,7 @@
 #include "nsIServiceManager.h"
 #include "nsCOMPtr.h"
 #include "nsIURI.h"
+#include "pratom.h"
 #include "prlog.h"
 #include "nsCRT.h"
 #include "netCore.h"
