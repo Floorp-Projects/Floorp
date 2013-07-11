@@ -874,12 +874,15 @@ public:
    * @param aRange                A range of text to examine.  Its position is
    *                              an offset from the beginning of the focused
    *                              editor or document.
+   * @param aActualRange          If this is not null, this returns the actual
+   *                              range used for computing the result.
    * @return                      An NSRect containing the first character in
    *                              aRange, in screen coordinates.
    *                              If the length of aRange is 0, the width will
    *                              be 0.
    */
-  NSRect FirstRectForCharacterRange(NSRange& aRange);
+  NSRect FirstRectForCharacterRange(NSRange& aRange,
+                                    NSRange* aActualRange = nullptr);
 
   /**
    * CharacterIndexForPoint() returns an offset of a character at aPoint.
