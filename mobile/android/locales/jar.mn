@@ -45,6 +45,17 @@ relativesrcdir toolkit/locales:
   locale/@AB_CD@/browser/overrides/passwordmgr.properties          (%chrome/passwordmgr/passwordmgr.properties)
   locale/@AB_CD@/browser/overrides/search/search.properties        (%chrome/search/search.properties)
   locale/@AB_CD@/browser/overrides/update/updates.properties       (%chrome/mozapps/update/updates.properties)
+# about:support
+  locale/@AB_CD@/browser/overrides/global/aboutSupport.dtd         (%chrome/global/aboutSupport.dtd)
+  locale/@AB_CD@/browser/overrides/global/aboutSupport.properties  (%chrome/global/aboutSupport.properties)
+#about:crashes
+  locale/@AB_CD@/browser/overrides/crashreporter/crashes.dtd         (%crashreporter/crashes.dtd)
+  locale/@AB_CD@/browser/overrides/crashreporter/crashes.properties  (%crashreporter/crashes.properties)
+#about:mozilla
+  locale/@AB_CD@/browser/overrides/global/mozilla.dtd                (%chrome/global/mozilla.dtd)
+#about:telemetry
+  locale/@AB_CD@/browser/overrides/global/aboutTelemetry.dtd         (%chrome/global/aboutTelemetry.dtd)
+  locale/@AB_CD@/browser/overrides/global/aboutTelemetry.properties  (%chrome/global/aboutTelemetry.properties)
 
 % override chrome://global/locale/about.dtd chrome://browser/locale/overrides/about.dtd
 % override chrome://global/locale/aboutAbout.dtd chrome://browser/locale/overrides/aboutAbout.dtd
@@ -56,13 +67,25 @@ relativesrcdir toolkit/locales:
 % override chrome://passwordmgr/locale/passwordmgr.properties chrome://browser/locale/overrides/passwordmgr/passwordmgr.properties
 % override chrome://global/locale/search/search.properties chrome://browser/locale/overrides/search/search.properties
 % override chrome://mozapps/locale/update/updates.properties chrome://browser/locale/overrides/update/updates.properties
+% override chrome://global/locale/aboutSupport.dtd chrome://browser/locale/overrides/global/aboutSupport.dtd
+% override chrome://global/locale/aboutSupport.properties chrome://browser/locale/overrides/global/aboutSupport.properties
+% override chrome://global/locale/crashes.dtd chrome://browser/locale/overrides/crashreporter/crashes.dtd
+% override chrome://global/locale/crashes.properties chrome://browser/locale/overrides/crashreporter/crashes.properties
+% override chrome://global/locale/mozilla.dtd chrome://browser/locale/overrides/global/mozilla.dtd
+% override chrome://global/locale/aboutTelemetry.dtd chrome://browser/locale/overrides/global/aboutTelemetry.dtd
+% override chrome://global/locale/aboutTelemetry.properties chrome://browser/locale/overrides/global/aboutTelemetry.properties
 
 # overrides for dom l10n, also for en-US
 relativesrcdir dom/locales:
   locale/@AB_CD@/browser/overrides/charsetTitles.properties    (%chrome/charsetTitles.properties)
   locale/@AB_CD@/browser/overrides/global.dtd                  (%chrome/global.dtd)
   locale/@AB_CD@/browser/overrides/AccessFu.properties         (%chrome/accessibility/AccessFu.properties)
+  locale/@AB_CD@/browser/overrides/dom/dom.properties          (%chrome/dom/dom.properties)
+#about:plugins
+  locale/@AB_CD@/browser/overrides/plugins.properties          (%chrome/plugins.properties)
 
 % override chrome://global/locale/charsetTitles.properties chrome://browser/locale/overrides/charsetTitles.properties
 % override chrome://global/locale/global.dtd chrome://browser/locale/overrides/global.dtd
 % override chrome://global/locale/AccessFu.properties chrome://browser/locale/overrides/AccessFu.properties
+% override chrome://global/locale/dom/dom.properties chrome://browser/locale/overrides/dom/dom.properties
+% override chrome://global/locale/plugins.properties chrome://browser/locale/overrides/plugins.properties
