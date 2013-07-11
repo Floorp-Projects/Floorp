@@ -1,24 +1,41 @@
-# This Source Code Form is subject to the terms of the Mozilla Public
-# License, v. 2.0. If a copy of the MPL was not distributed with this
-# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// -*- Mode: js2; tab-width: 2; indent-tabs-mode: nil; js2-basic-offset: 2; js2-skip-preprocessor-directives: t; -*-
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+'use strict';
 
-// Services = object with smart getters for common XPCOM services
-Components.utils.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+let gAppUpdater;
 
-var gAppUpdater;
-var AboutPanelUI = {
-  get _aboutVersionLabel() {
-    return document.getElementById('about-version-label');
-  },
-
+let AboutFlyout = {
   init: function() {
+    if (this._isInitialized) {
+      Cu.reportError("Attempted to initialize AboutFlyout more than once");
+    }
+
+    this._isInitialized = true;
+
+    let self = this;
+    this._elements = {};
+    [
+      ['versionLabel', 'about-version-label'],
+      ['aboutFlyout',  'about-flyoutpanel'],
+    ].forEach(function(aElement) {
+      let [name, id] = aElement;
+      XPCOMUtils.defineLazyGetter(self._elements, name, function() {
+        return document.getElementById(id);
+      });
+    });
+
+    this._topmostElement = this._elements.aboutFlyout;
+
     // Include the build ID if this is an "a#" (nightly or aurora) build
     let version = Services.appinfo.version;
     if (/a\d+$/.test(version)) {
       let buildID = Services.appinfo.appBuildID;
       let buildDate = buildID.slice(0,4) + "-" + buildID.slice(4,6) +
                       "-" + buildID.slice(6,8);
-      this._aboutVersionLabel.textContent +=" (" + buildDate + ")";
+      this._elements.versionLabel.textContent +=" (" + buildDate + ")";
     }
 
     window.addEventListener('MozFlyoutPanelShowing', this, false);
@@ -594,4 +611,3 @@ appUpdater.prototype =
   }
 };
 #endif
-

@@ -34,6 +34,7 @@
 
 @AB_CD@.jar:
 relativesrcdir browser/locales:
+  locale/browser/syncBrand.dtd            (%chrome/browser/syncBrand.dtd)
   locale/browser/region.properties        (%chrome/browser-region/region.properties)
   locale/browser/netError.dtd             (%chrome/overrides/netError.dtd)
 % override chrome://global/locale/netError.dtd chrome://browser/locale/netError.dtd
