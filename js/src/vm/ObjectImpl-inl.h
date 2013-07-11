@@ -232,6 +232,22 @@ js::ObjectImpl::writeBarrierPost(ObjectImpl *obj, void *addr)
 #endif
 }
 
+/* static */ inline void
+js::ObjectImpl::writeBarrierPostRelocate(ObjectImpl *obj, void *addr)
+{
+#ifdef JSGC_GENERATIONAL
+    obj->runtime()->gcStoreBuffer.putRelocatableCell((Cell **)addr);
+#endif
+}
+
+/* static */ inline void
+js::ObjectImpl::writeBarrierPostRemove(ObjectImpl *obj, void *addr)
+{
+#ifdef JSGC_GENERATIONAL
+    obj->runtime()->gcStoreBuffer.removeRelocatableCell((Cell **)addr);
+#endif
+}
+
 inline void
 js::ObjectImpl::setPrivate(void *data)
 {

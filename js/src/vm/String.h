@@ -431,7 +431,9 @@ class JSString : public js::gc::Cell
     js::gc::AllocKind getAllocKind() const { return tenuredGetAllocKind(); }
 
     static inline void writeBarrierPre(JSString *str);
-    static inline void writeBarrierPost(JSString *str, void *addr);
+    static void writeBarrierPost(JSString *str, void *addr) {}
+    static void writeBarrierPostRelocate(JSString *str, void *addr) {}
+    static void writeBarrierPostRemove(JSString *str, void *addr) {}
     static inline bool needWriteBarrierPre(JS::Zone *zone);
     static inline void readBarrier(JSString *str);
 
