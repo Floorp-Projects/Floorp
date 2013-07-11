@@ -5095,6 +5095,13 @@ static int32_t RoundUp(double aDouble)
 #pragma mark -
 // NSTextInputClient implementation
 
+- (NSRect)firstRectForCharacterRange:(NSRange)aRange
+                         actualRange:(NSRangePointer)actualRange
+{
+  NS_ENSURE_TRUE(mTextInputHandler, NSMakeRect(0.0, 0.0, 0.0, 0.0));
+  return mTextInputHandler->FirstRectForCharacterRange(aRange, actualRange);
+}
+
 - (NSInteger)windowLevel
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
