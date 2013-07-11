@@ -88,7 +88,7 @@ function run_test()
 
   httpserv = new HttpServer();
   httpserv.registerDirectory("/", do_get_cwd());
-  httpserv.start(4444);
+  httpserv.start(-1);
 
   var listener = {
     onDownloadStateChange: function test_401430_odsc(aState, aDownload) {
@@ -107,6 +107,7 @@ function run_test()
   // need to save the file to the CWD, because the profile dir is in $TEMP,
   // and Windows apparently doesn't like putting things from $TEMP into
   // the recent files list.
-  var dl = addDownload({resultFileName: resultFileName,
-			targetFile: do_get_file(resultFileName, true)});
+  var dl = addDownload(httpserv,
+                       {resultFileName: resultFileName,
+                        targetFile: do_get_file(resultFileName, true)});
 }
