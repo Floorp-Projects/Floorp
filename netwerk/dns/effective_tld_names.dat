@@ -6936,6 +6936,14 @@ webhop.org
 worse-than.tv
 writesthisblog.com
 
+// Fastly Inc. http://www.fastly.com/
+// Requested by Vladimir Vuksan <vladimir@fastly.com> 2013-05-31
+a.ssl.fastly.net
+b.ssl.fastly.net
+global.ssl.fastly.net
+a.prod.fastly.net
+global.prod.fastly.net
+
 // GitHub, Inc.
 // Requested by Ben Toews <btoews@github.com> 2013-04-18
 github.io
