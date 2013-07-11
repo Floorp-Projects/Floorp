@@ -362,6 +362,8 @@ var Output = {
     startOffset: 0,
     endOffset: 0,
     text: '',
+    selectionStart: 0,
+    selectionEnd: 0,
 
     init: function init(aOutput) {
       if (aOutput && 'output' in aOutput) {
@@ -370,11 +372,20 @@ var Output = {
         // We need to append a space at the end so that the routing key corresponding
         // to the end of the output (i.e. the space) can be hit to move the caret there.
         this.text = aOutput.output + ' ';
-        return this.text;
+        this.selectionStart = typeof aOutput.selectionStart === 'number' ?
+                              aOutput.selectionStart : this.selectionStart;
+        this.selectionEnd = typeof aOutput.selectionEnd === 'number' ?
+                            aOutput.selectionEnd : this.selectionEnd;
+
+        return { text: this.text,
+                 selectionStart: this.selectionStart,
+                 selectionEnd: this.selectionEnd };
       }
+
+      return null;
     },
 
-    update: function update(aText) {
+    adjustText: function adjustText(aText) {
       let newBraille = [];
       let braille = {};
 
@@ -384,8 +395,7 @@ var Output = {
         newBraille.push(prefix);
       }
 
-      let newText = aText;
-      newBraille.push(newText);
+      newBraille.push(aText);
 
       let suffix = this.text.substring(this.endOffset).trim();
       if (suffix) {
@@ -393,9 +403,23 @@ var Output = {
         newBraille.push(suffix);
       }
 
-      braille.startOffset = prefix.length;
-      braille.output = newBraille.join('');
-      braille.endOffset = braille.output.length - suffix.length;
+      this.startOffset = braille.startOffset = prefix.length;
+      this.text = braille.text = newBraille.join('') + ' ';
+      this.endOffset = braille.endOffset = braille.text.length - suffix.length;
+      braille.selectionStart = this.selectionStart;
+      braille.selectionEnd = this.selectionEnd;
+
+      return braille;
+    },
+
+    adjustSelection: function adjustSelection(aSelection) {
+      let braille = {};
+
+      braille.startOffset = this.startOffset;
+      braille.endOffset = this.endOffset;
+      braille.text = this.text;
+      this.selectionStart = braille.selectionStart = aSelection.selectionStart + this.startOffset;
+      this.selectionEnd = braille.selectionEnd = aSelection.selectionEnd + this.startOffset;
 
       return braille;
     }
@@ -502,6 +526,7 @@ var Output = {
 
   Android: function Android(aDetails, aBrowser) {
     const ANDROID_VIEW_TEXT_CHANGED = 0x10;
+    const ANDROID_VIEW_TEXT_SELECTION_CHANGED = 0x2000;
 
     if (!this._bridge)
       this._bridge = Cc['@mozilla.org/android/bridge;1'].getService(Ci.nsIAndroidBridge);
@@ -510,14 +535,18 @@ var Output = {
       androidEvent.type = 'Accessibility:Event';
       if (androidEvent.bounds)
         androidEvent.bounds = this._adjustBounds(androidEvent.bounds, aBrowser, true);
-      if (androidEvent.eventType === ANDROID_VIEW_TEXT_CHANGED) {
-        androidEvent.brailleText = this.brailleState.update(androidEvent.text);
+
+      switch(androidEvent.eventType) {
+        case ANDROID_VIEW_TEXT_CHANGED:
+          androidEvent.brailleOutput = this.brailleState.adjustText(androidEvent.text);
+          break;
+        case ANDROID_VIEW_TEXT_SELECTION_CHANGED:
+          androidEvent.brailleOutput = this.brailleState.adjustSelection(androidEvent.brailleOutput);
+          break;
+        default:
+          androidEvent.brailleOutput = this.brailleState.init(androidEvent.brailleOutput);
+          break;
       }
-      let (output = this.brailleState.init(androidEvent.brailleText)) {
-        if (typeof output === 'string') {
-          androidEvent.brailleText = output;
-        }
-      };
       this._bridge.handleGeckoMessage(JSON.stringify(androidEvent));
     }
   },
