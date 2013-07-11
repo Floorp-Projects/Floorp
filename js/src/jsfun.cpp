@@ -34,7 +34,6 @@
 #include "vm/Xdr.h"
 
 #include "jsfuninlines.h"
-#include "jsinferinlines.h"
 #include "jsscriptinlines.h"
 
 #include "vm/Interpreter-inl.h"

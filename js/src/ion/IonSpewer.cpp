@@ -9,8 +9,6 @@
 #include "ion/Ion.h"
 #include "ion/IonSpewer.h"
 
-#include "jsscriptinlines.h"
-
 #ifndef ION_SPEW_DIR
 # if defined(_WIN32)
 #  define ION_SPEW_DIR ""

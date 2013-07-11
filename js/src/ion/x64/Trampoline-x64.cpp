@@ -15,8 +15,6 @@
 #include "ion/x64/BaselineHelpers-x64.h"
 #include "ion/ExecutionModeInlines.h"
 
-#include "jsscriptinlines.h"
-
 using namespace js;
 using namespace js::ion;
 
