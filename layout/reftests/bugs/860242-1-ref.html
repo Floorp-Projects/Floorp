@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <style>
+      .table {
+        display: table;
+        width: 100px;
+        table-layout: fixed;
+        margin-bottom: 2px;
+      }
+
+      .table > * {
+        -moz-box-sizing: border-box;
+        box-sizing: border-box;
+        display: table-cell;
+        height: 30px;
+      }
+
+      .withBorder  { border: 2px solid black; }
+
+      .thin { width: 25px; }
+      .wide { width: 75px; }
+
+      .teal    { background: teal; }
+      .purple  { background: purple; }
+    </style>
+  </head>
+  <body>
+    <div class="table">
+      <div class="thin teal"></div>
+      <div class="wide purple"></div>
+    </div>
+    <div class="table">
+      <div class="thin teal"></div>
+      <div class="wide purple"></div>
+    </div>
+    <div class="table">
+      <div class="thin withBorder teal"></div>
+      <div class="wide withBorder purple"></div>
+    </div>
+    <div class="table">
+      <div class="thin withBorder teal"></div>
+      <div class="wide withBorder purple"></div>
+    </div>
+  </body>
+</html>
