@@ -29,7 +29,7 @@ function WebappsActor(aConnection) {
   Cu.import("resource://gre/modules/AppsUtils.jsm");
   Cu.import("resource://gre/modules/FileUtils.jsm");
   Cu.import('resource://gre/modules/Services.jsm');
-  Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js");
+  let promise = Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js").Promise;
 }
 
 WebappsActor.prototype = {
@@ -303,7 +303,7 @@ WebappsActor.prototype = {
   getAll: function wa_actorGetAll(aRequest) {
     debug("getAll");
 
-    let defer = Promise.defer();
+    let defer = promise.defer();
     let reg = DOMApplicationRegistry;
     reg.getAll(function onsuccess(apps) {
       defer.resolve({ apps: apps });
@@ -321,7 +321,7 @@ WebappsActor.prototype = {
                message: "missing parameter manifestURL" };
     }
 
-    let defer = Promise.defer();
+    let defer = promise.defer();
     let reg = DOMApplicationRegistry;
     reg.uninstall(
       manifestURL,
@@ -345,7 +345,7 @@ WebappsActor.prototype = {
                message: "missing parameter manifestURL" };
     }
 
-    let defer = Promise.defer();
+    let defer = promise.defer();
     let reg = DOMApplicationRegistry;
     reg.launch(
       aRequest.manifestURL,

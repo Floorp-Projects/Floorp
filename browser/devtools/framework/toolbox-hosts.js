@@ -6,7 +6,7 @@
 
 const {Cu} = require("chrome");
 
-let Promise = require("sdk/core/promise");
+let promise = require("sdk/core/promise");
 let EventEmitter = require("devtools/shared/event-emitter");
 
 Cu.import("resource://gre/modules/Services.jsm");
@@ -44,7 +44,7 @@ BottomHost.prototype = {
    * Create a box at the bottom of the host tab.
    */
   create: function BH_create() {
-    let deferred = Promise.defer();
+    let deferred = promise.defer();
 
     let gBrowser = this.hostTab.ownerDocument.defaultView.gBrowser;
     let ownerDocument = gBrowser.ownerDocument;
@@ -104,7 +104,7 @@ BottomHost.prototype = {
       this._nbox.removeChild(this.frame);
     }
 
-    return Promise.resolve(null);
+    return promise.resolve(null);
   }
 }
 
@@ -127,7 +127,7 @@ SidebarHost.prototype = {
    * Create a box in the sidebar of the host tab.
    */
   create: function SH_create() {
-    let deferred = Promise.defer();
+    let deferred = promise.defer();
 
     let gBrowser = this.hostTab.ownerDocument.defaultView.gBrowser;
     let ownerDocument = gBrowser.ownerDocument;
@@ -185,7 +185,7 @@ SidebarHost.prototype = {
       this._sidebar.removeChild(this.frame);
     }
 
-    return Promise.resolve(null);
+    return promise.resolve(null);
   }
 }
 
@@ -207,7 +207,7 @@ WindowHost.prototype = {
    * Create a new xul window to contain the toolbox.
    */
   create: function WH_create() {
-    let deferred = Promise.defer();
+    let deferred = promise.defer();
 
     let flags = "chrome,centerscreen,resizable,dialog=no";
     let win = Services.ww.openWindow(null, this.WINDOW_URL, "_blank",
@@ -268,7 +268,7 @@ WindowHost.prototype = {
       this._window.close();
     }
 
-    return Promise.resolve(null);
+    return promise.resolve(null);
   }
 }
 

@@ -193,7 +193,7 @@ define('gcli/types/basic', ['require', 'exports', 'module' , 'util/promise', 'ut
 
 'use strict';
 
-var Promise = require('util/promise');
+var promise = require('util/promise');
 var util = require('util/util');
 var l10n = require('util/l10n');
 var types = require('gcli/types');
@@ -270,7 +270,7 @@ StringType.prototype.stringify = function(value, context) {
 
 StringType.prototype.parse = function(arg, context) {
   if (!this._allowBlank && (arg.text == null || arg.text === '')) {
-    return Promise.resolve(new Conversion(undefined, arg, Status.INCOMPLETE, ''));
+    return promise.resolve(new Conversion(undefined, arg, Status.INCOMPLETE, ''));
   }
 
   // The string '\\' (i.e. an escaped \ (represented here as '\\\\' because it
@@ -294,7 +294,7 @@ StringType.prototype.parse = function(arg, context) {
        .replace(/\\}/g, '}')
        .replace(/\uF000/g, '\\');
 
-  return Promise.resolve(new Conversion(value, arg));
+  return promise.resolve(new Conversion(value, arg));
 };
 
 StringType.prototype.name = 'string';
@@ -361,12 +361,12 @@ NumberType.prototype.getMax = function(context) {
 
 NumberType.prototype.parse = function(arg, context) {
   if (arg.text.replace(/^\s*-?/, '').length === 0) {
-    return Promise.resolve(new Conversion(undefined, arg, Status.INCOMPLETE, ''));
+    return promise.resolve(new Conversion(undefined, arg, Status.INCOMPLETE, ''));
   }
 
   if (!this._allowFloat && (arg.text.indexOf('.') !== -1)) {
     var message = l10n.lookupFormat('typesNumberNotInt2', [ arg.text ]);
-    return Promise.resolve(new Conversion(undefined, arg, Status.ERROR, message));
+    return promise.resolve(new Conversion(undefined, arg, Status.ERROR, message));
   }
 
   var value;
@@ -379,22 +379,22 @@ NumberType.prototype.parse = function(arg, context) {
 
   if (isNaN(value)) {
     var message = l10n.lookupFormat('typesNumberNan', [ arg.text ]);
-    return Promise.resolve(new Conversion(undefined, arg, Status.ERROR, message));
+    return promise.resolve(new Conversion(undefined, arg, Status.ERROR, message));
   }
 
   var max = this.getMax(context);
   if (max != null && value > max) {
     var message = l10n.lookupFormat('typesNumberMax', [ value, max ]);
-    return Promise.resolve(new Conversion(undefined, arg, Status.ERROR, message));
+    return promise.resolve(new Conversion(undefined, arg, Status.ERROR, message));
   }
 
   var min = this.getMin(context);
   if (min != null && value < min) {
     var message = l10n.lookupFormat('typesNumberMin', [ value, min ]);
-    return Promise.resolve(new Conversion(undefined, arg, Status.ERROR, message));
+    return promise.resolve(new Conversion(undefined, arg, Status.ERROR, message));
   }
 
-  return Promise.resolve(new Conversion(value, arg));
+  return promise.resolve(new Conversion(value, arg));
 };
 
 NumberType.prototype.decrement = function(value, context) {
@@ -466,10 +466,10 @@ BooleanType.prototype.lookup = [
 
 BooleanType.prototype.parse = function(arg, context) {
   if (arg.type === 'TrueNamedArgument') {
-    return Promise.resolve(new Conversion(true, arg));
+    return promise.resolve(new Conversion(true, arg));
   }
   if (arg.type === 'FalseNamedArgument') {
-    return Promise.resolve(new Conversion(false, arg));
+    return promise.resolve(new Conversion(false, arg));
   }
   return SelectionType.prototype.parse.call(this, arg, context);
 };
@@ -483,7 +483,7 @@ BooleanType.prototype.stringify = function(value, context) {
 
 BooleanType.prototype.getBlank = function(context) {
   return new Conversion(false, new BlankArgument(), Status.VALID, '',
-                        Promise.resolve(this.lookup));
+                        promise.resolve(this.lookup));
 };
 
 BooleanType.prototype.name = 'boolean';
@@ -572,7 +572,7 @@ BlankType.prototype.stringify = function(value, context) {
 };
 
 BlankType.prototype.parse = function(arg, context) {
-  return Promise.resolve(new Conversion(undefined, arg));
+  return promise.resolve(new Conversion(undefined, arg));
 };
 
 BlankType.prototype.name = 'blank';
@@ -624,7 +624,7 @@ ArrayType.prototype.parse = function(arg, context) {
   }.bind(this);
 
   var conversionPromises = arg.getArguments().map(subArgParse);
-  return Promise.all(conversionPromises).then(function(conversions) {
+  return promise.all(conversionPromises).then(function(conversions) {
     return new ArrayConversion(conversions, arg);
   });
 };
@@ -906,7 +906,7 @@ exports.createEvent = function(name) {
 
 //------------------------------------------------------------------------------
 
-var Promise = require('util/promise');
+var promise = require('util/promise');
 
 /**
  * Utility to convert a resolved promise to a concrete value.
@@ -951,10 +951,10 @@ exports.synchronize = function(promise) {
  */
 exports.promiseEach = function(array, action, scope) {
   if (array.length === 0) {
-    return Promise.resolve([]);
+    return promise.resolve([]);
   }
 
-  var deferred = Promise.defer();
+  var deferred = promise.defer();
   var replies = [];
 
   var callNext = function(index) {
@@ -974,7 +974,7 @@ exports.promiseEach = function(array, action, scope) {
     };
 
     var reply = action.call(scope, array[index], index, array);
-    Promise.resolve(reply).then(onSuccess).then(null, onFailure);
+    promise.resolve(reply).then(onSuccess).then(null, onFailure);
   };
 
   callNext(0);
@@ -1580,7 +1580,7 @@ define('gcli/types', ['require', 'exports', 'module' , 'util/util', 'util/promis
 'use strict';
 
 var util = require('util/util');
-var Promise = require('util/promise');
+var promise = require('util/promise');
 var Argument = require('gcli/argument').Argument;
 var BlankArgument = require('gcli/argument').BlankArgument;
 
@@ -1786,7 +1786,7 @@ Conversion.prototype.getPredictions = function() {
   if (typeof this.predictions === 'function') {
     return this.predictions();
   }
-  return Promise.resolve(this.predictions || []);
+  return promise.resolve(this.predictions || []);
 };
 
 /**
@@ -1795,7 +1795,7 @@ Conversion.prototype.getPredictions = function() {
  */
 Conversion.prototype.constrainPredictionIndex = function(index) {
   if (index == null) {
-    return Promise.resolve();
+    return promise.resolve();
   }
 
   return this.getPredictions().then(function(value) {
@@ -2712,7 +2712,7 @@ define('gcli/types/selection', ['require', 'exports', 'module' , 'util/promise',
 
 'use strict';
 
-var Promise = require('util/promise');
+var promise = require('util/promise');
 var util = require('util/util');
 var l10n = require('util/l10n');
 var types = require('gcli/types');
@@ -2843,9 +2843,9 @@ var forceAsync = false;
  */
 function resolve(thing, context, neverForceAsync) {
   if (forceAsync && !neverForceAsync) {
-    var deferred = Promise.defer();
+    var deferred = promise.defer();
     setTimeout(function() {
-      Promise.resolve(thing).then(function(resolved) {
+      promise.resolve(thing).then(function(resolved) {
         if (typeof resolved === 'function') {
           resolved = resolve(resolved(), neverForceAsync);
         }
@@ -2856,7 +2856,7 @@ function resolve(thing, context, neverForceAsync) {
     return deferred.promise;
   }
 
-  return Promise.resolve(thing).then(function(resolved) {
+  return promise.resolve(thing).then(function(resolved) {
     if (typeof resolved === 'function') {
       return resolve(resolved(context), context, neverForceAsync);
     }
@@ -2885,7 +2885,7 @@ function dataToLookup(data) {
  * @return A trimmed array of string:value pairs
  */
 SelectionType.prototype._findPredictions = function(arg, context) {
-  return Promise.resolve(this.getLookup(context)).then(function(lookup) {
+  return promise.resolve(this.getLookup(context)).then(function(lookup) {
     var predictions = [];
     var i, option;
     var maxPredictions = Conversion.maxPredictions;
@@ -2980,23 +2980,23 @@ SelectionType.prototype.parse = function(arg, context) {
     if (predictions.length === 0) {
       var msg = l10n.lookupFormat('typesSelectionNomatch', [ arg.text ]);
       return new Conversion(undefined, arg, Status.ERROR, msg,
-                            Promise.resolve(predictions));
+                            promise.resolve(predictions));
     }
 
     if (predictions[0].name === arg.text) {
       var value = predictions[0].value;
       return new Conversion(value, arg, Status.VALID, '',
-                            Promise.resolve(predictions));
+                            promise.resolve(predictions));
     }
 
     return new Conversion(undefined, arg, Status.INCOMPLETE, '',
-                          Promise.resolve(predictions));
+                          promise.resolve(predictions));
   }.bind(this));
 };
 
 SelectionType.prototype.getBlank = function(context) {
   var predictFunc = function() {
-    return Promise.resolve(this.getLookup(context)).then(function(lookup) {
+    return promise.resolve(this.getLookup(context)).then(function(lookup) {
       return lookup.filter(function(option) {
         return !option.value.hidden;
       }).slice(0, Conversion.maxPredictions - 1);
@@ -3219,7 +3219,7 @@ define('gcli/types/command', ['require', 'exports', 'module' , 'util/promise', '
 
 'use strict';
 
-var Promise = require('util/promise');
+var promise = require('util/promise');
 var l10n = require('util/l10n');
 var canon = require('gcli/canon');
 var types = require('gcli/types');
@@ -3280,7 +3280,7 @@ ParamType.prototype.parse = function(arg, context) {
   }
   else {
     var message = l10n.lookup('cliUnusedArg');
-    return Promise.resolve(new Conversion(undefined, arg, Status.ERROR, message));
+    return promise.resolve(new Conversion(undefined, arg, Status.ERROR, message));
   }
 };
 
@@ -3380,7 +3380,7 @@ define('gcli/canon', ['require', 'exports', 'module' , 'util/promise', 'util/uti
 
 'use strict';
 
-var Promise = require('util/promise');
+var promise = require('util/promise');
 var util = require('util/util');
 var l10n = require('util/l10n');
 
@@ -3907,7 +3907,7 @@ define('gcli/types/date', ['require', 'exports', 'module' , 'util/promise', 'uti
 
 'use strict';
 
-var Promise = require('util/promise');
+var promise = require('util/promise');
 var l10n = require('util/l10n');
 
 var types = require('gcli/types');
@@ -4029,7 +4029,7 @@ DateType.prototype.parse = function(arg, context) {
   var value;
 
   if (arg.text.replace(/\s/g, '').length === 0) {
-    return Promise.resolve(new Conversion(undefined, arg, Status.INCOMPLETE, ''));
+    return promise.resolve(new Conversion(undefined, arg, Status.INCOMPLETE, ''));
   }
 
   // Lots of room for improvement here: 1h ago, in two days, etc.
@@ -4048,13 +4048,13 @@ DateType.prototype.parse = function(arg, context) {
 
     if (isNaN(millis)) {
       var msg = l10n.lookupFormat('typesDateNan', [ arg.text ]);
-      return Promise.resolve(new Conversion(undefined, arg, Status.ERROR, msg));
+      return promise.resolve(new Conversion(undefined, arg, Status.ERROR, msg));
     }
 
     value = new Date(millis);
   }
 
-  return Promise.resolve(new Conversion(value, arg));
+  return promise.resolve(new Conversion(value, arg));
 };
 
 DateType.prototype.decrement = function(value, context) {
@@ -4148,7 +4148,7 @@ define('gcli/types/javascript', ['require', 'exports', 'module' , 'util/promise'
 
 'use strict';
 
-var Promise = require('util/promise');
+var promise = require('util/promise');
 var l10n = require('util/l10n');
 var types = require('gcli/types');
 
@@ -4227,15 +4227,15 @@ JavascriptType.prototype.parse = function(arg, context) {
 
   // No input is undefined
   if (typed === '') {
-    return Promise.resolve(new Conversion(undefined, arg, Status.INCOMPLETE));
+    return promise.resolve(new Conversion(undefined, arg, Status.INCOMPLETE));
   }
   // Just accept numbers
   if (!isNaN(parseFloat(typed)) && isFinite(typed)) {
-    return Promise.resolve(new Conversion(typed, arg));
+    return promise.resolve(new Conversion(typed, arg));
   }
   // Just accept constants like true/false/null/etc
   if (typed.trim().match(/(null|undefined|NaN|Infinity|true|false)/)) {
-    return Promise.resolve(new Conversion(typed, arg));
+    return promise.resolve(new Conversion(typed, arg));
   }
 
   // Analyze the input text and find the beginning of the last part that
@@ -4244,19 +4244,19 @@ JavascriptType.prototype.parse = function(arg, context) {
 
   // There was an error analyzing the string.
   if (beginning.err) {
-    return Promise.resolve(new Conversion(typed, arg, Status.ERROR, beginning.err));
+    return promise.resolve(new Conversion(typed, arg, Status.ERROR, beginning.err));
   }
 
   // If the current state is ParseState.COMPLEX, then we can't do completion.
   // so bail out now
   if (beginning.state === ParseState.COMPLEX) {
-    return Promise.resolve(new Conversion(typed, arg));
+    return promise.resolve(new Conversion(typed, arg));
   }
 
   // If the current state is not ParseState.NORMAL, then we are inside of a
   // string which means that no completion is possible.
   if (beginning.state !== ParseState.NORMAL) {
-    return Promise.resolve(new Conversion(typed, arg, Status.INCOMPLETE, ''));
+    return promise.resolve(new Conversion(typed, arg, Status.INCOMPLETE, ''));
   }
 
   var completionPart = typed.substring(beginning.startPos);
@@ -4271,18 +4271,18 @@ JavascriptType.prototype.parse = function(arg, context) {
 
       // We can't complete on null.foo, so bail out
       if (scope == null) {
-        return Promise.resolve(new Conversion(typed, arg, Status.ERROR,
+        return promise.resolve(new Conversion(typed, arg, Status.ERROR,
                                         l10n.lookup('jstypeParseScope')));
       }
 
       if (prop === '') {
-        return Promise.resolve(new Conversion(typed, arg, Status.INCOMPLETE, ''));
+        return promise.resolve(new Conversion(typed, arg, Status.INCOMPLETE, ''));
       }
 
       // Check if prop is a getter function on 'scope'. Functions can change
       // other stuff so we can't execute them to get the next object. Stop here.
       if (this._isSafeProperty(scope, prop)) {
-        return Promise.resolve(new Conversion(typed, arg));
+        return promise.resolve(new Conversion(typed, arg));
       }
 
       try {
@@ -4292,7 +4292,7 @@ JavascriptType.prototype.parse = function(arg, context) {
         // It would be nice to be able to report this error in some way but
         // as it can happen just when someone types '{sessionStorage.', it
         // almost doesn't really count as an error, so we ignore it
-        return Promise.resolve(new Conversion(typed, arg, Status.VALID, ''));
+        return promise.resolve(new Conversion(typed, arg, Status.VALID, ''));
       }
     }
   }
@@ -4303,24 +4303,24 @@ JavascriptType.prototype.parse = function(arg, context) {
   // If the reason we just stopped adjusting the scope was a non-simple string,
   // then we're not sure if the input is valid or invalid, so accept it
   if (prop && !prop.match(/^[0-9A-Za-z]*$/)) {
-    return Promise.resolve(new Conversion(typed, arg));
+    return promise.resolve(new Conversion(typed, arg));
   }
 
   // However if the prop was a simple string, it is an error
   if (scope == null) {
     var message = l10n.lookupFormat('jstypeParseMissing', [ prop ]);
-    return Promise.resolve(new Conversion(typed, arg, Status.ERROR, message));
+    return promise.resolve(new Conversion(typed, arg, Status.ERROR, message));
   }
 
   // If the thing we're looking for isn't a simple string, then we're not going
   // to find it, but we're not sure if it's valid or invalid, so accept it
   if (!matchProp.match(/^[0-9A-Za-z]*$/)) {
-    return Promise.resolve(new Conversion(typed, arg));
+    return promise.resolve(new Conversion(typed, arg));
   }
 
   // Skip Iterators and Generators.
   if (this._isIteratorOrGenerator(scope)) {
-    return Promise.resolve(new Conversion(typed, arg));
+    return promise.resolve(new Conversion(typed, arg));
   }
 
   var matchLen = matchProp.length;
@@ -4359,7 +4359,7 @@ JavascriptType.prototype.parse = function(arg, context) {
     }
   }
   catch (ex) {
-    return Promise.resolve(new Conversion(typed, arg, Status.INCOMPLETE, ''));
+    return promise.resolve(new Conversion(typed, arg, Status.INCOMPLETE, ''));
   }
 
   // Convert to an array for sorting, and while we're at it, note if we got
@@ -4453,8 +4453,8 @@ JavascriptType.prototype.parse = function(arg, context) {
     predictions = [];
   }
 
-  return Promise.resolve(new Conversion(typed, arg, status, message,
-                                  Promise.resolve(predictions)));
+  return promise.resolve(new Conversion(typed, arg, status, message,
+                                  promise.resolve(predictions)));
 };
 
 /**
@@ -4712,7 +4712,7 @@ define('gcli/types/node', ['require', 'exports', 'module' , 'util/promise', 'uti
 
 'use strict';
 
-var Promise = require('util/promise');
+var promise = require('util/promise');
 var host = require('util/host');
 var l10n = require('util/l10n');
 var types = require('gcli/types');
@@ -4796,7 +4796,7 @@ NodeType.prototype.stringify = function(value, context) {
 
 NodeType.prototype.parse = function(arg, context) {
   if (arg.text === '') {
-    return Promise.resolve(new Conversion(undefined, arg, Status.INCOMPLETE));
+    return promise.resolve(new Conversion(undefined, arg, Status.INCOMPLETE));
   }
 
   var nodes;
@@ -4804,12 +4804,12 @@ NodeType.prototype.parse = function(arg, context) {
     nodes = doc.querySelectorAll(arg.text);
   }
   catch (ex) {
-    return Promise.resolve(new Conversion(undefined, arg, Status.ERROR,
+    return promise.resolve(new Conversion(undefined, arg, Status.ERROR,
                                           l10n.lookup('nodeParseSyntax')));
   }
 
   if (nodes.length === 0) {
-    return Promise.resolve(new Conversion(undefined, arg, Status.INCOMPLETE,
+    return promise.resolve(new Conversion(undefined, arg, Status.INCOMPLETE,
                                           l10n.lookup('nodeParseNone')));
   }
 
@@ -4819,13 +4819,13 @@ NodeType.prototype.parse = function(arg, context) {
 
     host.flashNodes(node, true);
 
-    return Promise.resolve(new Conversion(node, arg, Status.VALID, ''));
+    return promise.resolve(new Conversion(node, arg, Status.VALID, ''));
   }
 
   host.flashNodes(nodes, false);
 
   var message = l10n.lookupFormat('nodeParseMultiple', [ nodes.length ]);
-  return Promise.resolve(new Conversion(undefined, arg, Status.ERROR, message));
+  return promise.resolve(new Conversion(undefined, arg, Status.ERROR, message));
 };
 
 NodeType.prototype.name = 'node';
@@ -4867,7 +4867,7 @@ NodeListType.prototype.stringify = function(value, context) {
 
 NodeListType.prototype.parse = function(arg, context) {
   if (arg.text === '') {
-    return Promise.resolve(new Conversion(undefined, arg, Status.INCOMPLETE));
+    return promise.resolve(new Conversion(undefined, arg, Status.INCOMPLETE));
   }
 
   var nodes;
@@ -4875,17 +4875,17 @@ NodeListType.prototype.parse = function(arg, context) {
     nodes = doc.querySelectorAll(arg.text);
   }
   catch (ex) {
-    return Promise.resolve(new Conversion(undefined, arg, Status.ERROR,
+    return promise.resolve(new Conversion(undefined, arg, Status.ERROR,
                                     l10n.lookup('nodeParseSyntax')));
   }
 
   if (nodes.length === 0 && !this.allowEmpty) {
-    return Promise.resolve(new Conversion(undefined, arg, Status.INCOMPLETE,
+    return promise.resolve(new Conversion(undefined, arg, Status.INCOMPLETE,
                                     l10n.lookup('nodeParseNone')));
   }
 
   host.flashNodes(nodes, false);
-  return Promise.resolve(new Conversion(nodes, arg, Status.VALID, ''));
+  return promise.resolve(new Conversion(nodes, arg, Status.VALID, ''));
 };
 
 NodeListType.prototype.name = 'nodelist';
@@ -4965,7 +4965,7 @@ define('gcli/types/resource', ['require', 'exports', 'module' , 'util/promise', 
 
 'use strict';
 
-var Promise = require('util/promise');
+var promise = require('util/promise');
 var types = require('gcli/types');
 var SelectionType = require('gcli/types/selection').SelectionType;
 
@@ -5216,7 +5216,7 @@ ResourceType.prototype.getLookup = function() {
     Array.prototype.push.apply(resources, ScriptResource._getAllScripts());
   }
 
-  return Promise.resolve(resources.map(function(resource) {
+  return promise.resolve(resources.map(function(resource) {
     return { name: resource.name, value: resource };
   }));
 };
@@ -5860,7 +5860,7 @@ define('gcli/cli', ['require', 'exports', 'module' , 'util/promise', 'util/util'
 
 'use strict';
 
-var Promise = require('util/promise');
+var promise = require('util/promise');
 var util = require('util/util');
 var l10n = require('util/l10n');
 
@@ -5981,7 +5981,7 @@ Assignment.prototype.getPredictionAt = function(index) {
   }
 
   if (this.isInName()) {
-    return Promise.resolve(undefined);
+    return promise.resolve(undefined);
   }
 
   return this.getPredictions().then(function(predictions) {
@@ -6287,7 +6287,7 @@ Object.defineProperty(Requisition.prototype, 'executionContext', {
     if (this._executionContext == null) {
       this._executionContext = {
         defer: function() {
-          return Promise.defer();
+          return promise.defer();
         },
         typedData: function(type, data) {
           return {
@@ -6349,7 +6349,7 @@ Object.defineProperty(Requisition.prototype, 'conversionContext', {
     if (this._conversionContext == null) {
       this._conversionContext = {
         defer: function() {
-          return Promise.defer();
+          return promise.defer();
         },
 
         createView: view.createView,
@@ -6642,7 +6642,7 @@ Requisition.prototype.setAssignment = function(assignment, arg, options) {
     }.bind(this));
   }
 
-  return Promise.resolve(undefined);
+  return promise.resolve(undefined);
 };
 
 /**
@@ -6712,10 +6712,10 @@ Requisition.prototype.complete = function(cursor, predictionChoice) {
         text: prediction.name,
         dontQuote: (assignment === this.commandAssignment)
       });
-      var promise = this.setAssignment(assignment, arg);
+      var assignmentPromise = this.setAssignment(assignment, arg);
 
       if (!prediction.incomplete) {
-        promise = promise.then(function() {
+        assignmentPromise = assignmentPromise.then(function() {
           // The prediction is complete, add a space to let the user move-on
           return this._addSpace(assignment).then(function() {
             // Bug 779443 - Remove or explain the re-parse
@@ -6726,10 +6726,10 @@ Requisition.prototype.complete = function(cursor, predictionChoice) {
         }.bind(this));
       }
 
-      outstanding.push(promise);
+      outstanding.push(assignmentPromise);
     }
 
-    return Promise.all(outstanding).then(function() {
+    return promise.all(outstanding).then(function() {
       this.onTextChange();
       this.onTextChange.resumeFire();
     }.bind(this));
@@ -6758,7 +6758,7 @@ Requisition.prototype._addSpace = function(assignment) {
     return this.setAssignment(assignment, arg);
   }
   else {
-    return Promise.resolve(undefined);
+    return promise.resolve(undefined);
   }
 };
 
@@ -7120,7 +7120,7 @@ Requisition.prototype.exec = function(options) {
 
   try {
     var reply = command.exec(args, this.executionContext);
-    Promise.resolve(reply).then(onDone, onError);
+    promise.resolve(reply).then(onDone, onError);
   }
   catch (ex) {
     onError(ex);
@@ -7471,7 +7471,7 @@ Requisition.prototype._split = function(args) {
 
   var argsUsed = 1;
 
-  var promise;
+  var parsePromise;
   var commandType = this.commandAssignment.param.type;
   while (argsUsed <= args.length) {
     var arg = (argsUsed === 1) ?
@@ -7485,17 +7485,17 @@ Requisition.prototype._split = function(args) {
       var prefixArg = new Argument(this.prefix, '', ' ');
       var prefixedArg = new MergedArgument([ prefixArg, arg ]);
 
-      promise = commandType.parse(prefixedArg, this.executionContext);
-      conversion = util.synchronize(promise);
+      parsePromise = commandType.parse(prefixedArg, this.executionContext);
+      conversion = util.synchronize(parsePromise);
 
       if (conversion.value == null) {
-        promise = commandType.parse(arg, this.executionContext);
-        conversion = util.synchronize(promise);
+        parsePromise = commandType.parse(arg, this.executionContext);
+        conversion = util.synchronize(parsePromise);
       }
     }
     else {
-      promise = commandType.parse(arg, this.executionContext);
-      conversion = util.synchronize(promise);
+      parsePromise = commandType.parse(arg, this.executionContext);
+      conversion = util.synchronize(parsePromise);
     }
 
     // We only want to carry on if this command is a parent command,
@@ -7546,19 +7546,19 @@ Requisition.prototype._assign = function(args) {
 
   if (!this.commandAssignment.value) {
     this._addUnassignedArgs(args);
-    return Promise.all(outstanding);
+    return promise.all(outstanding);
   }
 
   if (args.length === 0) {
     this.setBlankArguments();
-    return Promise.all(outstanding);
+    return promise.all(outstanding);
   }
 
   // Create an error if the command does not take parameters, but we have
   // been given them ...
   if (this.assignmentCount === 0) {
     this._addUnassignedArgs(args);
-    return Promise.all(outstanding);
+    return promise.all(outstanding);
   }
 
   // Special case: if there is only 1 parameter, and that's of type
@@ -7568,7 +7568,7 @@ Requisition.prototype._assign = function(args) {
     if (assignment.param.type.name === 'string') {
       var arg = (args.length === 1) ? args[0] : new MergedArgument(args);
       outstanding.push(this.setAssignment(assignment, arg, noArgUp));
-      return Promise.all(outstanding);
+      return promise.all(outstanding);
     }
   }
 
@@ -7675,7 +7675,7 @@ Requisition.prototype._assign = function(args) {
   // What's left is can't be assigned, but we need to extract
   this._addUnassignedArgs(args);
 
-  return Promise.all(outstanding);
+  return promise.all(outstanding);
 };
 
 exports.Requisition = Requisition;
@@ -7697,7 +7697,7 @@ function Output(options) {
   this.error = false;
   this.start = new Date();
 
-  this._deferred = Promise.defer();
+  this._deferred = promise.defer();
   this.promise = this._deferred.promise;
 
   this.onClose = util.createEvent('Output.onClose');
@@ -8498,7 +8498,7 @@ ArrayField.prototype.getConversion = function() {
   var conversions = [];
   var arrayArg = new ArrayArgument();
   for (var i = 0; i < this.members.length; i++) {
-    Promise.resolve(this.members[i].field.getConversion()).then(function(conversion) {
+    promise.resolve(this.members[i].field.getConversion()).then(function(conversion) {
       conversions.push(conversion);
       arrayArg.addArgument(conversion.arg);
     }.bind(this), util.errorHandler);
@@ -8515,7 +8515,7 @@ ArrayField.prototype._onAdd = function(ev, subConversion) {
   // ${field.element}
   var field = fields.getField(this.type.subtype, this.options);
   field.onFieldChange.add(function() {
-    Promise.resolve(this.getConversion()).then(function(conversion) {
+    promise.resolve(this.getConversion()).then(function(conversion) {
       this.onFieldChange({ conversion: conversion });
       this.setMessage(conversion.message);
     }.bind(this), util.errorHandler);
@@ -8572,7 +8572,7 @@ define('gcli/ui/fields', ['require', 'exports', 'module' , 'util/promise', 'util
 
 'use strict';
 
-var Promise = require('util/promise');
+var promise = require('util/promise');
 var util = require('util/util');
 var KeyEvent = require('util/util').KeyEvent;
 
@@ -8653,7 +8653,7 @@ Field.prototype.setMessage = function(message) {
  * to properly pass on the onFieldChange event.
  */
 Field.prototype.onInputChange = function(ev) {
-  Promise.resolve(this.getConversion()).then(function(conversion) {
+  promise.resolve(this.getConversion()).then(function(conversion) {
     this.onFieldChange({ conversion: conversion });
     this.setMessage(conversion.message);
 
@@ -8822,7 +8822,7 @@ define('gcli/ui/fields/javascript', ['require', 'exports', 'module' , 'util/util
 'use strict';
 
 var util = require('util/util');
-var Promise = require('util/promise');
+var promise = require('util/promise');
 
 var Status = require('gcli/types').Status;
 var Conversion = require('gcli/types').Conversion;
@@ -8931,7 +8931,7 @@ JavascriptField.prototype.setConversion = function(conversion) {
 
 JavascriptField.prototype.itemClicked = function(ev) {
   var parsed = this.type.parse(ev.arg, this.requisition.executionContext);
-  Promise.resolve(parsed).then(function(conversion) {
+  promise.resolve(parsed).then(function(conversion) {
     this.onFieldChange({ conversion: conversion });
     this.setMessage(conversion.message);
   }.bind(this), util.errorHandler);
@@ -8939,7 +8939,7 @@ JavascriptField.prototype.itemClicked = function(ev) {
 
 JavascriptField.prototype.onInputChange = function(ev) {
   this.item = ev.currentTarget.item;
-  Promise.resolve(this.getConversion()).then(function(conversion) {
+  promise.resolve(this.getConversion()).then(function(conversion) {
     this.onFieldChange({ conversion: conversion });
     this.setMessage(conversion.message);
   }.bind(this), util.errorHandler);
@@ -9218,7 +9218,7 @@ define('gcli/ui/fields/selection', ['require', 'exports', 'module' , 'util/promi
 
 'use strict';
 
-var Promise = require('util/promise');
+var promise = require('util/promise');
 var util = require('util/util');
 var l10n = require('util/l10n');
 
@@ -9267,7 +9267,7 @@ function SelectionField(type, options) {
     name: l10n.lookupFormat('fieldSelectionSelect', [ options.name ])
   });
 
-  Promise.resolve(this.type.getLookup()).then(function(lookup) {
+  promise.resolve(this.type.getLookup()).then(function(lookup) {
     lookup.forEach(this._addOption, this);
   }.bind(this), util.errorHandler);
 
@@ -9373,7 +9373,7 @@ SelectionTooltipField.prototype.setConversion = function(conversion) {
 
 SelectionTooltipField.prototype.itemClicked = function(ev) {
   var parsed = this.type.parse(ev.arg, this.requisition.executionContext);
-  Promise.resolve(parsed).then(function(conversion) {
+  promise.resolve(parsed).then(function(conversion) {
     this.onFieldChange({ conversion: conversion });
     this.setMessage(conversion.message);
   }.bind(this), util.errorHandler);
@@ -9381,7 +9381,7 @@ SelectionTooltipField.prototype.itemClicked = function(ev) {
 
 SelectionTooltipField.prototype.onInputChange = function(ev) {
   this.item = ev.currentTarget.item;
-  Promise.resolve(this.getConversion()).then(function(conversion) {
+  promise.resolve(this.getConversion()).then(function(conversion) {
     this.onFieldChange({ conversion: conversion });
     this.setMessage(conversion.message);
   }.bind(this), util.errorHandler);
@@ -9615,7 +9615,7 @@ define('util/connect/connector', ['require', 'exports', 'module' , 'util/promise
 var debuggerSocketConnect = Components.utils.import('resource://gre/modules/devtools/dbg-client.jsm', {}).debuggerSocketConnect;
 var DebuggerClient = Components.utils.import('resource://gre/modules/devtools/dbg-client.jsm', {}).DebuggerClient;
 
-var Promise = require('util/promise');
+var promise = require('util/promise');
 
 /**
  * What port should we use by default?
@@ -9669,7 +9669,7 @@ function Connection(prefix, host, port) {
  * or is rejected (with an error message) if the connection fails
  */
 Connection.prototype.connect = function() {
-  var deferred = Promise.defer();
+  var deferred = promise.defer();
 
   this.transport = debuggerSocketConnect(this.host, this.port);
   this.client = new DebuggerClient(this.transport);
@@ -9689,7 +9689,7 @@ Connection.prototype.connect = function() {
  * @return a promise of an array of commandSpecs
  */
 Connection.prototype.getCommandSpecs = function() {
-  var deferred = Promise.defer();
+  var deferred = promise.defer();
 
   var request = { to: this.actor, type: 'getCommandSpecs' };
 
@@ -9723,7 +9723,7 @@ exports.disconnectSupportsForce = false;
  * Kill this connection
  */
 Connection.prototype.disconnect = function(force) {
-  var deferred = Promise.defer();
+  var deferred = promise.defer();
 
   this.client.close(function() {
     deferred.resolve();
@@ -9745,7 +9745,7 @@ function Request(actor, typed, args) {
     requestId: 'id-' + Request._nextRequestId++,
   };
 
-  this._deferred = Promise.defer();
+  this._deferred = promise.defer();
   this.promise = this._deferred.promise;
 }
 
@@ -10069,7 +10069,7 @@ define('gcli/converters', ['require', 'exports', 'module' , 'util/util', 'util/p
 'use strict';
 
 var util = require('util/util');
-var Promise = require('util/promise');
+var promise = require('util/promise');
 
 // It's probably easiest to read this bottom to top
 
@@ -10342,9 +10342,9 @@ function getFallbackConverter(from, to) {
  */
 exports.convert = function(data, from, to, conversionContext) {
   if (from === to) {
-    return Promise.resolve(data);
+    return promise.resolve(data);
   }
-  return Promise.resolve(getConverter(from, to).exec(data, conversionContext));
+  return promise.resolve(getConverter(from, to).exec(data, conversionContext));
 };
 
 exports.addConverter(viewDomConverter);
@@ -10873,7 +10873,7 @@ define('gcli/ui/inputter', ['require', 'exports', 'module' , 'util/promise', 'ut
 
 'use strict';
 
-var Promise = require('util/promise');
+var promise = require('util/promise');
 var util = require('util/util');
 var KeyEvent = require('util/util').KeyEvent;
 
@@ -10883,7 +10883,7 @@ var History = require('gcli/history').History;
 var inputterCss = require('text!gcli/ui/inputter.css');
 
 
-var RESOLVED = Promise.resolve(undefined);
+var RESOLVED = promise.resolve(undefined);
 
 /**
  * A wrapper to take care of the functions concerning an input element
@@ -11563,7 +11563,7 @@ define('gcli/ui/completer', ['require', 'exports', 'module' , 'util/promise', 'u
 
 'use strict';
 
-var Promise = require('util/promise');
+var promise = require('util/promise');
 var util = require('util/util');
 var domtemplate = require('util/domtemplate');
 
@@ -11667,9 +11667,9 @@ Completer.prototype.update = function(ev) {
 Completer.prototype._getCompleterTemplateData = function() {
   // Some of the data created by this function can be calculated synchronously
   // but other parts depend on predictions which are asynchronous.
-  var promisedDirectTabText = Promise.defer();
-  var promisedArrowTabText = Promise.defer();
-  var promisedEmptyParameters = Promise.defer();
+  var promisedDirectTabText = promise.defer();
+  var promisedArrowTabText = promise.defer();
+  var promisedEmptyParameters = promise.defer();
 
   var input = this.inputter.getInputState();
   var current = this.requisition.getAssignmentAt(input.cursor.start);
@@ -11686,7 +11686,7 @@ Completer.prototype._getCompleterTemplateData = function() {
     promisedEmptyParameters.reject(ex);
   };
 
-  Promise.resolve(predictionPromise).then(function(prediction) {
+  promise.resolve(predictionPromise).then(function(prediction) {
     // directTabText is for when the current input is a prefix of the completion
     // arrowTabText is for when we need to use an -> to show what will be used
     var directTabText = '';
