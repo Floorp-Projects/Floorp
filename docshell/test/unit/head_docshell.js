@@ -9,23 +9,3 @@ const Cr = Components.results;
 var dirSvc = Cc["@mozilla.org/file/directory_service;1"].
              getService(Ci.nsIProperties);
 var profileDir = do_get_profile();
-
-function cleanup()
-{
-  // we need to remove the folder that we created for the profile
-  try {
-    if (profileDir.exists())
-      profileDir.remove(true);
-  } catch (e) {
-    // windows has a slight problem with sqlite databases and trying to remove
-    // them to quickly after you might expect to be done with them.  Eat any
-    // errors we'll get.  This should be OK because we cleanup before and after
-    // each test run.
-  }
-}
-
-// cleanup from any failed test runs in the past
-cleanup();
-
-// make sure we have our profile directory available to us
-profileDir.create(Ci.nsIFile.DIRECTORY_TYPE, 0755);
