@@ -661,10 +661,7 @@ nsEventStatus AsyncPanZoomController::OnLongPress(const TapGestureInput& aEvent)
     MonitorAutoLock monitor(mMonitor);
 
     CSSToScreenScale resolution = mFrameMetrics.CalculateResolution();
-    CSSPoint point = WidgetSpaceToCompensatedViewportSpace(
-      ScreenPoint::FromUnknownPoint(gfx::Point(
-        aEvent.mPoint.x, aEvent.mPoint.y)),
-      resolution);
+    CSSPoint point = WidgetSpaceToCompensatedViewportSpace(aEvent.mPoint, resolution);
     mGeckoContentController->HandleLongTap(gfx::RoundedToInt(point));
     return nsEventStatus_eConsumeNoDefault;
   }
@@ -680,10 +677,7 @@ nsEventStatus AsyncPanZoomController::OnSingleTapConfirmed(const TapGestureInput
     MonitorAutoLock monitor(mMonitor);
 
     CSSToScreenScale resolution = mFrameMetrics.CalculateResolution();
-    CSSPoint point = WidgetSpaceToCompensatedViewportSpace(
-      ScreenPoint::FromUnknownPoint(gfx::Point(
-        aEvent.mPoint.x, aEvent.mPoint.y)),
-      resolution);
+    CSSPoint point = WidgetSpaceToCompensatedViewportSpace(aEvent.mPoint, resolution);
     mGeckoContentController->HandleSingleTap(gfx::RoundedToInt(point));
     return nsEventStatus_eConsumeNoDefault;
   }
@@ -696,10 +690,7 @@ nsEventStatus AsyncPanZoomController::OnDoubleTap(const TapGestureInput& aEvent)
 
     if (mAllowZoom) {
       CSSToScreenScale resolution = mFrameMetrics.CalculateResolution();
-      CSSPoint point = WidgetSpaceToCompensatedViewportSpace(
-        ScreenPoint::FromUnknownPoint(gfx::Point(
-          aEvent.mPoint.x, aEvent.mPoint.y)),
-        resolution);
+      CSSPoint point = WidgetSpaceToCompensatedViewportSpace(aEvent.mPoint, resolution);
       mGeckoContentController->HandleDoubleTap(gfx::RoundedToInt(point));
     }
 
