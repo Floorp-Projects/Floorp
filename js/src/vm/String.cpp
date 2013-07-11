@@ -165,6 +165,86 @@ AllocChars(ThreadSafeContext *maybecx, size_t length, jschar **chars, size_t *ca
     return *chars != NULL;
 }
 
+bool
+JSRope::getCharsNonDestructive(ThreadSafeContext *cx, ScopedJSFreePtr<jschar> &out) const
+{
+    return getCharsNonDestructiveInternal(cx, out, false);
+}
+
+bool
+JSRope::getCharsZNonDestructive(ThreadSafeContext *cx, ScopedJSFreePtr<jschar> &out) const
+{
+    return getCharsNonDestructiveInternal(cx, out, true);
+}
+
+bool
+JSRope::getCharsNonDestructiveInternal(ThreadSafeContext *cx, ScopedJSFreePtr<jschar> &out,
+                                       bool nullTerminate) const
+{
+    /*
+     * Perform non-destructive post-order traversal of the rope, splatting
+     * each node's characters into a contiguous buffer.
+     */
+
+    size_t n = length();
+    jschar *s = cx->pod_malloc<jschar>(n + 1);
+    if (!s)
+        return false;
+    jschar *pos = s;
+
+    Vector<const JSString *, 8, SystemAllocPolicy> nodeStack;
+    if (!nodeStack.append(this))
+        return false;
+
+    const JSString *prev = NULL;
+    while (!nodeStack.empty()) {
+        const JSString *node = nodeStack.back();
+
+        if (node->isRope()) {
+            JSRope *rope = &node->asRope();
+
+            if (!prev ||
+                (prev->isRope() &&
+                 (prev->asRope().leftChild() == node ||
+                  prev->asRope().rightChild() == node)))
+            {
+                /* On our way down, push the left child. */
+                if (!nodeStack.append(rope->leftChild()))
+                    return false;
+            } else if (rope->leftChild() == prev) {
+                /*
+                 * On our way back up from the left child, push the right
+                 * child.
+                 */
+                if (!nodeStack.append(rope->rightChild()))
+                    return false;
+            } else {
+                /*
+                 * On our way back up from the right child, just pop the
+                 * stack. Non-leaf nodes in the rope contain no value to be
+                 * consumed.
+                 */
+                nodeStack.popBack();
+            }
+        } else {
+            /* For leaf nodes, copy the characters into the buffer. */
+            size_t len = node->length();
+            PodCopy(pos, node->asLinear().chars(), len);
+            pos += len;
+
+            nodeStack.popBack();
+        }
+
+        prev = node;
+    }
+
+    if (nullTerminate)
+        s[n] = 0;
+
+    out.reset(s);
+    return true;
+}
+
 template<JSRope::UsingBarrier b>
 JSFlatString *
 JSRope::flattenInternal(JSContext *maybecx)
@@ -368,6 +448,73 @@ js::ConcatStrings<CanGC>(JSContext *cx, HandleString left, HandleString right);
 
 template JSString *
 js::ConcatStrings<NoGC>(JSContext *cx, JSString *left, JSString *right);
+
+JSString *
+js::ConcatStringsPure(ThreadSafeContext *cx, JSString *left, JSString *right)
+{
+    JS_ASSERT_IF(!left->isAtom(), cx->isInsideCurrentZone(left));
+    JS_ASSERT_IF(!right->isAtom(), cx->isInsideCurrentZone(right));
+
+    size_t leftLen = left->length();
+    if (leftLen == 0)
+        return right;
+
+    size_t rightLen = right->length();
+    if (rightLen == 0)
+        return left;
+
+    size_t wholeLength = leftLen + rightLen;
+    if (!JSString::validateLength(NULL, wholeLength))
+        return NULL;
+
+    if (JSShortString::lengthFits(wholeLength)) {
+        JSShortString *str = js_NewGCShortString<NoGC>(cx);
+        if (!str)
+            return NULL;
+
+        jschar *buf = str->init(wholeLength);
+
+        if (const jschar *leftChars = left->maybeChars()) {
+            PodCopy(buf, leftChars, leftLen);
+        } else {
+            ScopedJSFreePtr<jschar> chars;
+            if (!left->getCharsNonDestructive(cx, chars))
+                return NULL;
+            PodCopy(buf, chars.get(), leftLen);
+        }
+
+        if (const jschar *rightChars = right->maybeChars()) {
+            PodCopy(buf + leftLen, rightChars, rightLen);
+        } else {
+            ScopedJSFreePtr<jschar> chars;
+            if (!right->getCharsNonDestructive(cx, chars))
+                return NULL;
+            PodCopy(buf + leftLen, chars.get(), rightLen);
+        }
+
+        buf[wholeLength] = 0;
+        return str;
+    }
+
+    return JSRope::new_<NoGC>(cx, left, right, wholeLength);
+}
+
+bool
+JSDependentString::getCharsZNonDestructive(ThreadSafeContext *cx, ScopedJSFreePtr<jschar> &out) const
+{
+    JS_ASSERT(JSString::isDependent());
+
+    size_t n = length();
+    jschar *s = cx->pod_malloc<jschar>(n + 1);
+    if (!s)
+        return false;
+
+    PodCopy(s, chars(), n);
+    s[n] = 0;
+
+    out.reset(s);
+    return true;
+}
 
 JSFlatString *
 JSDependentString::undepend(JSContext *cx)
