@@ -441,7 +441,7 @@ class JSRope : public JSString
     friend class JSString;
     JSFlatString *flatten(js::ThreadSafeContext *tcx);
 
-    void init(JSString *left, JSString *right, size_t length);
+    void init(js::ThreadSafeContext *tcx, JSString *left, JSString *right, size_t length);
 
   public:
     template <js::AllowGC allowGC>
@@ -499,9 +499,10 @@ JS_STATIC_ASSERT(sizeof(JSLinearString) == sizeof(JSString));
 class JSDependentString : public JSLinearString
 {
     friend class JSString;
-    JSFlatString *undepend(js::ThreadSafeContext *cx);
+    JSFlatString *undepend(js::ThreadSafeContext *tcx);
 
-    void init(JSLinearString *base, const jschar *chars, size_t length);
+    void init(js::ThreadSafeContext *tcx, JSLinearString *base, const jschar *chars,
+              size_t length);
 
     /* Vacuous and therefore unimplemented. */
     bool isDependent() const MOZ_DELETE;

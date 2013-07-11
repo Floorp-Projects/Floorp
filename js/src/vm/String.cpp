@@ -208,7 +208,6 @@ JSRope::flattenInternal(ThreadSafeContext *maybetcx)
     jschar *wholeChars;
     JSString *str = this;
     jschar *pos;
-    JSRuntime *rt = runtime();
 
     /* Find the left most string, containing the first string. */
     JSRope *leftMostRope = this;
@@ -247,8 +246,8 @@ JSRope::flattenInternal(ThreadSafeContext *maybetcx)
             JS_STATIC_ASSERT(!(EXTENSIBLE_FLAGS & DEPENDENT_FLAGS));
             left.d.lengthAndFlags = bits ^ (EXTENSIBLE_FLAGS | DEPENDENT_FLAGS);
             left.d.s.u2.base = (JSLinearString *)this;  /* will be true on exit */
-            StringWriteBarrierPostRemove(rt, &left.d.u1.left);
-            StringWriteBarrierPost(rt, (JSString **)&left.d.s.u2.base);
+            StringWriteBarrierPostRemove(maybetcx, &left.d.u1.left);
+            StringWriteBarrierPost(maybetcx, (JSString **)&left.d.s.u2.base);
             goto visit_right_child;
         }
     }
@@ -265,7 +264,7 @@ JSRope::flattenInternal(ThreadSafeContext *maybetcx)
 
         JSString &left = *str->d.u1.left;
         str->d.u1.chars = pos;
-        StringWriteBarrierPostRemove(rt, &str->d.u1.left);
+        StringWriteBarrierPostRemove(maybetcx, &str->d.u1.left);
         if (left.isRope()) {
             left.d.s.u3.parent = str;          /* Return to this when 'left' done, */
             left.d.lengthAndFlags = 0x200;     /* but goto visit_right_child. */
@@ -295,14 +294,14 @@ JSRope::flattenInternal(ThreadSafeContext *maybetcx)
             str->d.lengthAndFlags = buildLengthAndFlags(wholeLength, EXTENSIBLE_FLAGS);
             str->d.u1.chars = wholeChars;
             str->d.s.u2.capacity = wholeCapacity;
-            StringWriteBarrierPostRemove(rt, &str->d.u1.left);
-            StringWriteBarrierPostRemove(rt, &str->d.s.u2.right);
+            StringWriteBarrierPostRemove(maybetcx, &str->d.u1.left);
+            StringWriteBarrierPostRemove(maybetcx, &str->d.s.u2.right);
             return &this->asFlat();
         }
         size_t progress = str->d.lengthAndFlags;
         str->d.lengthAndFlags = buildLengthAndFlags(pos - str->d.u1.chars, DEPENDENT_FLAGS);
         str->d.s.u2.base = (JSLinearString *)this;       /* will be true on exit */
-        StringWriteBarrierPost(rt, (JSString **)&str->d.s.u2.base);
+        StringWriteBarrierPost(maybetcx, (JSString **)&str->d.s.u2.base);
         str = str->d.s.u3.parent;
         if (progress == 0x200)
             goto visit_right_child;
