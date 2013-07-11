@@ -18,6 +18,7 @@ if CONFIG['MOZ_ENABLE_PROFILER_SPS']:
     EXPORTS += [
         'GeckoProfilerFunc.h',
         'GeckoProfilerImpl.h',
+        'ProfilerMarkers.h',
         'PseudoStack.h',
         'shared-libraries.h',
     ]
@@ -39,6 +40,7 @@ if CONFIG['MOZ_ENABLE_PROFILER_SPS']:
         'IOInterposer.cpp',
         'NSPRInterposer.cpp',
         'ProfilerIOInterposeObserver.cpp',
+        'ProfilerMarkers.cpp',
     ]
 
     if CONFIG['OS_TARGET'] in ('Android', 'Linux'):
