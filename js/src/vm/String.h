@@ -802,6 +802,43 @@ JS_STATIC_ASSERT(sizeof(JSAtom) == sizeof(JSString));
 
 namespace js {
 
+/*
+ * Thread safe RAII wrapper for inspecting the contents of JSStrings. The
+ * thread safe operations such as |getCharsNonDestructive| require allocation
+ * of a char array. This allocation is not always required, such as when the
+ * string is already linear. This wrapper makes dealing with this detail more
+ * convenient by encapsulating the allocation logic.
+ *
+ * As the name suggests, this class is scoped. Return values from chars() and
+ * range() may not be valid after the inspector goes out of scope.
+ */
+
+class ScopedThreadSafeStringInspector
+{
+  private:
+    JSString *str_;
+    ScopedJSFreePtr<jschar> scopedChars_;
+    const jschar *chars_;
+
+  public:
+    ScopedThreadSafeStringInspector(JSString *str)
+      : str_(str),
+        chars_(NULL)
+    { }
+
+    bool ensureChars(ThreadSafeContext *cx);
+
+    const jschar *chars() {
+        JS_ASSERT(chars_);
+        return chars_;
+    }
+
+    JS::TwoByteChars range() {
+        JS_ASSERT(chars_);
+        return JS::TwoByteChars(chars_, str_->length());
+    }
+};
+
 class StaticStrings
 {
   private:
