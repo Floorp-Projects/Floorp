@@ -81,6 +81,7 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.MotionEvent;
+import android.view.OrientationEventListener;
 import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -167,6 +168,7 @@ abstract public class GeckoApp
     protected RelativeLayout mGeckoLayout;
     public View getView() { return mGeckoLayout; }
     private View mCameraView;
+    private OrientationEventListener mCameraOrientationEventListener;
     public List<GeckoAppShell.AppStateListener> mAppStateListeners;
     private static GeckoApp sAppContext;
     protected MenuPanel mMenuPanel;
@@ -1738,8 +1740,21 @@ abstract public class GeckoApp
     }
 
     public void enableCameraView() {
+        // Start listening for orientation events
+        mCameraOrientationEventListener = new OrientationEventListener(this) {
+            @Override
+            public void onOrientationChanged(int orientation) {
+                if (mAppStateListeners != null) {
+                    for (GeckoAppShell.AppStateListener listener: mAppStateListeners) {
+                        listener.onOrientationChanged();
+                    }
+                }
+            }
+        };
+        mCameraOrientationEventListener.enable();
+
+        // Try to make it fully transparent.
         if (mCameraView instanceof SurfaceView) {
-            // Try to make it fully transparent.
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
                 mCameraView.setAlpha(0.0f);
             }
@@ -1753,6 +1768,10 @@ abstract public class GeckoApp
     }
 
     public void disableCameraView() {
+        if (mCameraOrientationEventListener != null) {
+            mCameraOrientationEventListener.disable();
+            mCameraOrientationEventListener = null;
+        }
         RelativeLayout mCameraLayout = (RelativeLayout) findViewById(R.id.camera_layout);
         mCameraLayout.removeView(mCameraView);
     }
@@ -2122,12 +2141,6 @@ abstract public class GeckoApp
             if (mFormAssistPopup != null)
                 mFormAssistPopup.hide();
             refreshChrome();
-        }
-
-        if (mAppStateListeners != null) {
-            for (GeckoAppShell.AppStateListener listener: mAppStateListeners) {
-                listener.onConfigurationChanged();
-            }
         }
     }
 
