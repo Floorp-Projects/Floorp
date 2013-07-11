@@ -202,7 +202,7 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback {
                 captureLock.unlock();
             }
             @Override
-            public void onConfigurationChanged() {
+            public void onOrientationChanged() {
                 mCaptureRotation = GetRotateAmount();
             }
         };
