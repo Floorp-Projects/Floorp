@@ -22,6 +22,7 @@
 #include "nsISecureBrowserUI.h"
 #include "nsITabParent.h"
 #include "nsWeakReference.h"
+#include "Units.h"
 
 struct gfxMatrix;
 struct JSContext;
@@ -321,7 +322,7 @@ private:
     // means that the touch events are relative to where the frame was at the
     // start of the touch. We need to look for a better solution to this
     // problem see bug 872911.
-    nsIntPoint mChildProcessOffsetAtTouchStart;
+    LayoutDeviceIntPoint mChildProcessOffsetAtTouchStart;
     // When true, we've initiated normal shutdown and notified our
     // managing PContent.
     bool mMarkedDestroying;
