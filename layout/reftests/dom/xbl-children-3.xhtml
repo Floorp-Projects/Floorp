@@ -1,0 +1,61 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:html="http://www.w3.org/1999/xhtml"
+      xmlns:xbl="http://www.mozilla.org/xbl"
+      xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      class="reftest-wait">
+<head>
+  <xbl:bindings xmlns="http://www.mozilla.org/xbl">
+    <binding id="base">
+      <content>
+        <html:div style="border: solid red">
+          <children />
+        </html:div>
+      </content>
+      <implementation>
+        <property name="foo" onget="return 42" />
+      </implementation>
+    </binding>
+    <binding id="derived" extends="#base">
+      <content>
+        <html:div style="border: dashed green">
+          <children includes="span" />
+        </html:div>
+      </content>
+    </binding>
+    <binding id="nochildren">
+      <content>
+        PASS
+      </content>
+    </binding>
+  </xbl:bindings>
+</head>
+<body>
+  <!-- Control case: our (only) child matches the children element. -->
+  <div id="first" style="-moz-binding: url(#derived)"><span style="color: green">should be green in a green border</span></div>
+  <!-- Make sure we ignore xul:template and xul:observer elements! -->
+  <div style="-moz-binding: url(#derived)"><xul:template /><xul:observer /><span style="color: green">should be green in a green border</span></div>
+  <!-- Case where our (only) child doesn't match any children elements. -->
+  <div id="second" style="-moz-binding: url(#derived)"><div>Should be uncolored with no border</div></div>
+  <!-- But make sure the binding was still applied! -->
+  <div id="output" />
+  <script>
+    var $ = document.getElementById.bind(document);
+    // Note: Done in an onload handler because binding instantiation is
+    // asynchronous.
+    onload = function() {
+      $('output').textContent =
+        ($('first').foo === 42) + ", " + ($('first').foo === $('second').foo);
+      document.documentElement.removeAttribute('class');
+    }
+  </script>
+  <!-- Case where one of our children matches but the other one doesn't. -->
+  <div id="third" style="-moz-binding: url(#derived)"><span>In a span</span><div>Should be uncolored with no border</div></div>
+
+  <!-- Control case with no <children> in the binding. -->
+  <div style="-moz-binding: url(#nochildren)" />
+  <!-- Case where we have a child but no <children> in the binding. -->
+  <div style="-moz-binding: url(#nochildren)"><span style="color: green">PASS</span></div>
+  <!-- But we must ignore xul:template and xul:observer elements! -->
+  <div style="-moz-binding: url(#nochildren)"><xul:template /><xul:observer /></div>
+</body>
+</html>
