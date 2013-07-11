@@ -125,6 +125,9 @@ LIRGeneratorX86Shared::lowerMulI(MMul *mul, MDefinition *lhs, MDefinition *rhs)
 bool
 LIRGeneratorX86Shared::lowerDivI(MDiv *div)
 {
+    if (div->isUnsigned())
+        return lowerUDiv(div);
+
     // Division instructions are slow. Division by constant denominators can be
     // rewritten to use other instructions.
     if (div->rhs()->isConstant()) {
@@ -154,6 +157,9 @@ LIRGeneratorX86Shared::lowerDivI(MDiv *div)
 bool
 LIRGeneratorX86Shared::lowerModI(MMod *mod)
 {
+    if (mod->isUnsigned())
+        return lowerUMod(mod);
+
     if (mod->rhs()->isConstant()) {
         int32_t rhs = mod->rhs()->toConstant()->value().toInt32();
         int32_t shift;
@@ -182,21 +188,33 @@ LIRGeneratorX86Shared::visitAsmJSNeg(MAsmJSNeg *ins)
 }
 
 bool
+LIRGeneratorX86Shared::lowerUDiv(MInstruction *div)
+{
+    LUDivOrMod *lir = new LUDivOrMod(useFixed(div->getOperand(0), eax),
+                                     useRegister(div->getOperand(1)),
+                                     tempFixed(edx));
+    return defineFixed(lir, div, LAllocation(AnyRegister(eax)));
+}
+
+bool
 LIRGeneratorX86Shared::visitAsmJSUDiv(MAsmJSUDiv *div)
 {
-    LAsmJSDivOrMod *lir = new LAsmJSDivOrMod(useFixed(div->lhs(), eax),
-                                             useRegister(div->rhs()),
-                                             tempFixed(edx));
-    return defineFixed(lir, div, LAllocation(AnyRegister(eax)));
+    return lowerUDiv(div);
+}
+
+bool
+LIRGeneratorX86Shared::lowerUMod(MInstruction *mod)
+{
+    LUDivOrMod *lir = new LUDivOrMod(useFixed(mod->getOperand(0), eax),
+                                     useRegister(mod->getOperand(1)),
+                                     LDefinition::BogusTemp());
+    return defineFixed(lir, mod, LAllocation(AnyRegister(edx)));
 }
 
 bool
 LIRGeneratorX86Shared::visitAsmJSUMod(MAsmJSUMod *mod)
 {
-    LAsmJSDivOrMod *lir = new LAsmJSDivOrMod(useFixed(mod->lhs(), eax),
-                                             useRegister(mod->rhs()),
-                                             LDefinition::BogusTemp());
-    return defineFixed(lir, mod, LAllocation(AnyRegister(edx)));
+    return lowerUMod(mod);
 }
 
 bool
