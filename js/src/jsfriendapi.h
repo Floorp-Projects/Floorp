@@ -139,12 +139,6 @@ js_ObjectClassIs(JSContext *cx, JS::HandleObject obj, js::ESClassValue classValu
 JS_FRIEND_API(const char *)
 js_ObjectClassName(JSContext *cx, JS::HandleObject obj);
 
-JS_FRIEND_API(bool)
-js_AddObjectRoot(JSRuntime *rt, JSObject **objp);
-
-JS_FRIEND_API(void)
-js_RemoveObjectRoot(JSRuntime *rt, JSObject **objp);
-
 #ifdef DEBUG
 
 /*

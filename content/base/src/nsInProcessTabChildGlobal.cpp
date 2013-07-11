@@ -25,10 +25,8 @@ using mozilla::dom::StructuredCloneData;
 using mozilla::dom::StructuredCloneClosure;
 
 bool
-nsInProcessTabChildGlobal::DoSendSyncMessage(JSContext* aCx,
-                                             const nsAString& aMessage,
-                                             const mozilla::dom::StructuredCloneData& aData,
-                                             JS::Handle<JSObject *> aCpows,
+nsInProcessTabChildGlobal::DoSendSyncMessage(const nsAString& aMessage,
+                                             const StructuredCloneData& aData,
                                              InfallibleTArray<nsString>* aJSONRetVal)
 {
   nsTArray<nsCOMPtr<nsIRunnable> > asyncMessages;
@@ -39,9 +37,9 @@ nsInProcessTabChildGlobal::DoSendSyncMessage(JSContext* aCx,
     async->Run();
   }
   if (mChromeMessageManager) {
-    SameProcessCpowHolder cpows(js::GetRuntime(aCx), aCpows);
     nsRefPtr<nsFrameMessageManager> mm = mChromeMessageManager;
-    mm->ReceiveMessage(mOwner, aMessage, true, &aData, &cpows, aJSONRetVal);
+    mm->ReceiveMessage(mOwner, aMessage, true, &aData, JS::NullPtr(),
+                       aJSONRetVal);
   }
   return true;
 }
@@ -49,31 +47,15 @@ nsInProcessTabChildGlobal::DoSendSyncMessage(JSContext* aCx,
 class nsAsyncMessageToParent : public nsRunnable
 {
 public:
-  nsAsyncMessageToParent(JSContext* aCx,
-                         nsInProcessTabChildGlobal* aTabChild,
+  nsAsyncMessageToParent(nsInProcessTabChildGlobal* aTabChild,
                          const nsAString& aMessage,
-                         const StructuredCloneData& aData,
-                         JS::Handle<JSObject *> aCpows)
-    : mRuntime(js::GetRuntime(aCx)),
-      mTabChild(aTabChild),
-      mMessage(aMessage),
-      mCpows(aCpows),
-      mRun(false)
+                         const StructuredCloneData& aData)
+    : mTabChild(aTabChild), mMessage(aMessage), mRun(false)
   {
     if (aData.mDataLength && !mData.copy(aData.mData, aData.mDataLength)) {
       NS_RUNTIMEABORT("OOM");
     }
-    if (mCpows && !js_AddObjectRoot(mRuntime, &mCpows)) {
-      NS_RUNTIMEABORT("OOM");
-    }
     mClosure = aData.mClosure;
-  }
-
-  ~nsAsyncMessageToParent()
-  {
-    if (mCpows) {
-        JS_RemoveObjectRootRT(mRuntime, &mCpows);
-    }
   }
 
   NS_IMETHOD Run()
@@ -90,32 +72,27 @@ public:
       data.mDataLength = mData.nbytes();
       data.mClosure = mClosure;
 
-      SameProcessCpowHolder cpows(mRuntime, JS::Handle<JSObject *>::fromMarkedLocation(&mCpows));
-
       nsRefPtr<nsFrameMessageManager> mm = mTabChild->mChromeMessageManager;
-      mm->ReceiveMessage(mTabChild->mOwner, mMessage, false, &data, &cpows, nullptr);
+      mm->ReceiveMessage(mTabChild->mOwner, mMessage, false, &data,
+                         JS::NullPtr(), nullptr);
     }
     return NS_OK;
   }
-  JSRuntime* mRuntime;
   nsRefPtr<nsInProcessTabChildGlobal> mTabChild;
   nsString mMessage;
   JSAutoStructuredCloneBuffer mData;
   StructuredCloneClosure mClosure;
-  JSObject* mCpows;
   // True if this runnable has already been called. This can happen if DoSendSyncMessage
   // is called while waiting for an asynchronous message send.
   bool mRun;
 };
 
 bool
-nsInProcessTabChildGlobal::DoSendAsyncMessage(JSContext* aCx,
-                                              const nsAString& aMessage,
-                                              const StructuredCloneData& aData,
-                                              JS::Handle<JSObject *> aCpows)
+nsInProcessTabChildGlobal::DoSendAsyncMessage(const nsAString& aMessage,
+                                              const StructuredCloneData& aData)
 {
   nsCOMPtr<nsIRunnable> ev =
-    new nsAsyncMessageToParent(aCx, this, aMessage, aData, aCpows);
+    new nsAsyncMessageToParent(this, aMessage, aData);
   mASyncMessages.AppendElement(ev);
   NS_DispatchToCurrentThread(ev);
   return true;

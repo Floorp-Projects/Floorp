@@ -52,7 +52,6 @@
 #include "nsThreadUtils.h"
 #include "private/pprio.h"
 #include "StructuredCloneUtils.h"
-#include "JavaScriptParent.h"
 #include "TabChild.h"
 #include <algorithm>
 
@@ -63,7 +62,6 @@ using namespace mozilla::layout;
 using namespace mozilla::services;
 using namespace mozilla::widget;
 using namespace mozilla::dom::indexedDB;
-using namespace mozilla::jsipc;
 
 // The flags passed by the webProgress notifications are 16 bits shifted
 // from the ones registered by webProgressListeners.
@@ -710,22 +708,18 @@ TabParent::TryCapture(const nsGUIEvent& aEvent)
 bool
 TabParent::RecvSyncMessage(const nsString& aMessage,
                            const ClonedMessageData& aData,
-                           const InfallibleTArray<CpowEntry>& aCpows,
                            InfallibleTArray<nsString>* aJSONRetVal)
 {
   StructuredCloneData cloneData = ipc::UnpackClonedMessageDataForParent(aData);
-  CpowIdHolder cpows(static_cast<ContentParent*>(Manager())->GetCPOWManager(), aCpows);
-  return ReceiveMessage(aMessage, true, &cloneData, &cpows, aJSONRetVal);
+  return ReceiveMessage(aMessage, true, &cloneData, aJSONRetVal);
 }
 
 bool
 TabParent::RecvAsyncMessage(const nsString& aMessage,
-                            const ClonedMessageData& aData,
-                            const InfallibleTArray<CpowEntry>& aCpows)
+                                  const ClonedMessageData& aData)
 {
   StructuredCloneData cloneData = ipc::UnpackClonedMessageDataForParent(aData);
-  CpowIdHolder cpows(static_cast<ContentParent*>(Manager())->GetCPOWManager(), aCpows);
-  return ReceiveMessage(aMessage, false, &cloneData, &cpows, nullptr);
+  return ReceiveMessage(aMessage, false, &cloneData, nullptr);
 }
 
 bool
@@ -1090,19 +1084,26 @@ bool
 TabParent::ReceiveMessage(const nsString& aMessage,
                           bool aSync,
                           const StructuredCloneData* aCloneData,
-                          CpowHolder* aCpows,
                           InfallibleTArray<nsString>* aJSONRetVal)
 {
   nsRefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
   if (frameLoader && frameLoader->GetFrameMessageManager()) {
     nsRefPtr<nsFrameMessageManager> manager =
       frameLoader->GetFrameMessageManager();
+    AutoSafeJSContext ctx;
+    uint32_t len = 0; //TODO: obtain a real value in bug 572685
+    // Because we want JS messages to have always the same properties,
+    // create array even if len == 0.
+    JS::Rooted<JSObject*> objectsArray(ctx, JS_NewArrayObject(ctx, len, NULL));
+    if (!objectsArray) {
+      return false;
+    }
 
     manager->ReceiveMessage(mFrameElement,
                             aMessage,
                             aSync,
                             aCloneData,
-                            aCpows,
+                            objectsArray,
                             aJSONRetVal);
   }
   return true;
