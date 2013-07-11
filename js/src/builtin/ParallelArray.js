@@ -29,6 +29,14 @@
   callFunction(std_Array_slice, ARRAY, ELEMENT);
 
 /**
+ * The ParallelSpew intrinsic is only defined in debug mode, so define a dummy
+ * if debug is not on.
+ */
+#ifndef DEBUG
+#define ParallelSpew(args)
+#endif
+
+/**
  * Determine the number of chunks of size CHUNK_SIZE;
  * note that the final chunk may be smaller than CHUNK_SIZE.
  */
