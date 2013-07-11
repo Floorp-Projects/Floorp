@@ -15,6 +15,11 @@
 #include "nsHttpTransaction.h"
 #include "nsHttpAuthCache.h"
 #include "nsStandardURL.h"
+#include "nsIDOMConnection.h"
+#include "nsIDOMWindow.h"
+#include "nsIDOMNavigator.h"
+#include "nsIDOMNavigatorNetwork.h"
+#include "nsINetworkProperties.h"
 #include "nsIHttpChannel.h"
 #include "nsIURL.h"
 #include "nsIStandardURL.h"
@@ -42,6 +47,7 @@
 #include "mozIApplicationClearPrivateDataParams.h"
 #include "nsICancelable.h"
 #include "EventTokenBucket.h"
+#include "Tickler.h"
 
 #include "nsIXULAppInfo.h"
 
@@ -344,6 +350,10 @@ nsHttpHandler::Init()
     }
 
     MakeNewRequestTokenBucket();
+    mWifiTickler = new Tickler();
+    if (NS_FAILED(mWifiTickler->Init()))
+        mWifiTickler = nullptr;
+
     return NS_OK;
 }
 
@@ -1743,6 +1753,8 @@ nsHttpHandler::Observe(nsISupports *subject,
         // clear cache of all authentication credentials.
         mAuthCache.ClearAll();
         mPrivateAuthCache.ClearAll();
+        if (mWifiTickler)
+            mWifiTickler->Cancel();
 
         // ensure connection manager is shutdown
         if (mConnMgr)
@@ -1876,6 +1888,51 @@ nsHttpHandler::SpeculativeConnect(nsIURI *aURI,
         new nsHttpConnectionInfo(host, port, nullptr, usingSSL);
 
     return SpeculativeConnect(ci, aCallbacks);
+}
+
+void
+nsHttpHandler::TickleWifi(nsIInterfaceRequestor *cb)
+{
+    if (!cb || !mWifiTickler)
+        return;
+
+    // If B2G requires a similar mechanism nsINetworkManager, currently only avail
+    // on B2G, contains the necessary information on wifi and gateway
+
+    nsCOMPtr<nsIDOMWindow> domWindow;
+    cb->GetInterface(NS_GET_IID(nsIDOMWindow), getter_AddRefs(domWindow));
+    if (!domWindow)
+        return;
+
+    nsCOMPtr<nsIDOMNavigator> domNavigator;
+    domWindow->GetNavigator(getter_AddRefs(domNavigator));
+    nsCOMPtr<nsIDOMMozNavigatorNetwork> networkNavigator =
+        do_QueryInterface(domNavigator);
+    if (!networkNavigator)
+        return;
+
+    nsCOMPtr<nsIDOMMozConnection> mozConnection;
+    networkNavigator->GetMozConnection(getter_AddRefs(mozConnection));
+    nsCOMPtr<nsINetworkProperties> networkProperties =
+        do_QueryInterface(mozConnection);
+    if (!networkProperties)
+        return;
+
+    uint32_t gwAddress;
+    bool isWifi;
+    nsresult rv;
+
+    rv = networkProperties->GetDhcpGateway(&gwAddress);
+    if (NS_SUCCEEDED(rv))
+        rv = networkProperties->GetIsWifi(&isWifi);
+    if (NS_FAILED(rv))
+        return;
+
+    if (!gwAddress || !isWifi)
+        return;
+
+    mWifiTickler->SetIPV4Address(gwAddress);
+    mWifiTickler->Tickle();
 }
 
 //-----------------------------------------------------------------------------
