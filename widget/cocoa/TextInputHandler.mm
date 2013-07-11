@@ -2893,20 +2893,26 @@ IMEInputHandler::SelectedRange()
 }
 
 NSRect
-IMEInputHandler::FirstRectForCharacterRange(NSRange& aRange)
+IMEInputHandler::FirstRectForCharacterRange(NSRange& aRange,
+                                            NSRange* aActualRange)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
 
   PR_LOG(gLog, PR_LOG_ALWAYS,
-    ("%p IMEInputHandler::FirstRectForCharacterRange, Destroyed()=%s"
-     "aRange={ location=%llu, length=%llu }",
-     this, TrueOrFalse(Destroyed()), aRange.location, aRange.length));
+    ("%p IMEInputHandler::FirstRectForCharacterRange, Destroyed()=%s, "
+     "aRange={ location=%llu, length=%llu }, aActualRange=%p }",
+     this, TrueOrFalse(Destroyed()), aRange.location, aRange.length,
+     aActualRange));
 
   // XXX this returns first character rect or caret rect, it is limitation of
   // now. We need more work for returns first line rect. But current
   // implementation is enough for IMEs.
 
-  NSRect rect;
+  NSRect rect = NSMakeRect(0.0, 0.0, 0.0, 0.0);
+  NSRange actualRange = NSMakeRange(NSNotFound, 0);
+  if (aActualRange) {
+    *aActualRange = actualRange;
+  }
   if (Destroyed() || aRange.location == NSNotFound) {
     return rect;
   }
@@ -2921,6 +2927,8 @@ IMEInputHandler::FirstRectForCharacterRange(NSRange& aRange)
     DispatchEvent(charRect);
     if (charRect.mSucceeded) {
       r = charRect.mReply.mRect;
+      actualRange.location = charRect.mReply.mOffset;
+      actualRange.length = charRect.mReply.mString.Length();
     } else {
       useCaretRect = true;
     }
@@ -2935,6 +2943,8 @@ IMEInputHandler::FirstRectForCharacterRange(NSRange& aRange)
     }
     r = caretRect.mReply.mRect;
     r.width = 0;
+    actualRange.location = caretRect.mReply.mOffset;
+    actualRange.length = 0;
   }
 
   nsIWidget* rootWidget = mWidget->GetTopLevelWidget();
@@ -2949,11 +2959,17 @@ IMEInputHandler::FirstRectForCharacterRange(NSRange& aRange)
   rect = [rootView convertRect:rect toView:nil];
   rect.origin = [rootWindow convertBaseToScreen:rect.origin];
 
+  if (aActualRange) {
+    *aActualRange = actualRange;
+  }
+
   PR_LOG(gLog, PR_LOG_ALWAYS,
     ("%p IMEInputHandler::FirstRectForCharacterRange, "
-     "useCaretRect=%s rect={ x=%f, y=%f, width=%f, height=%f }",
+     "useCaretRect=%s rect={ x=%f, y=%f, width=%f, height=%f }, "
+     "actualRange={ location=%llu, length=%llu }",
      this, TrueOrFalse(useCaretRect), rect.origin.x, rect.origin.y,
-     rect.size.width, rect.size.height));
+     rect.size.width, rect.size.height, actualRange.location,
+     actualRange.length));
 
   return rect;
 
