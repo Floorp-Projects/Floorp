@@ -22,10 +22,6 @@ endif
 
 GQI_SRCS = contentbase.gqi
 
-# we don't want the shared lib, but we want to force the creation of a
-# static lib.
-FORCE_STATIC_LIB = 1
-
 EXTRA_COMPONENTS = \
 		contentSecurityPolicy.manifest \
 		contentAreaDropListener.js \

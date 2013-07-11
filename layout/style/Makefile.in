@@ -19,8 +19,6 @@ OS_CFLAGS := $(OS_CFLAGS) -Wshadow
 OS_CXXFLAGS := $(OS_CXXFLAGS) -Wshadow
 endif
 
-FORCE_STATIC_LIB = 1
-
 include $(topsrcdir)/config/rules.mk
 
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
