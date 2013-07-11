@@ -12,8 +12,8 @@ this.EXPORTED_SYMBOLS = ["NetMonitorPanel"];
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource:///modules/devtools/shared/event-emitter.js");
 
-XPCOMUtils.defineLazyModuleGetter(this, "Promise",
-  "resource://gre/modules/commonjs/sdk/core/promise.js");
+XPCOMUtils.defineLazyModuleGetter(this, "promise",
+  "resource://gre/modules/commonjs/sdk/core/promise.js", "Promise");
 
 this.NetMonitorPanel = function NetMonitorPanel(iframeWindow, toolbox) {
   this.panelWin = iframeWindow;
@@ -32,19 +32,19 @@ NetMonitorPanel.prototype = {
    * Open is effectively an asynchronous constructor.
    *
    * @return object
-   *         A Promise that is resolved when the NetMonitor completes opening.
+   *         A promise that is resolved when the NetMonitor completes opening.
    */
   open: function() {
-    let promise;
+    let targetPromise;
 
     // Local monitoring needs to make the target remote.
     if (!this.target.isRemote) {
-      promise = this.target.makeRemote();
+      targetPromise = this.target.makeRemote();
     } else {
-      promise = Promise.resolve(this.target);
+      targetPromise = promise.resolve(this.target);
     }
 
-    return promise
+    return targetPromise
       .then(() => this._controller.startupNetMonitor())
       .then(() => this._controller.connect())
       .then(() => {
