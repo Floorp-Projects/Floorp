@@ -148,12 +148,16 @@ public class EditBookmarkDialog {
                     return null;
                 }
 
-                cursor.moveToFirst();
-                Bookmark bookmark = new Bookmark(cursor.getInt(cursor.getColumnIndexOrThrow(Bookmarks._ID)),
-                                                 cursor.getString(cursor.getColumnIndexOrThrow(Bookmarks.TITLE)),
-                                                 cursor.getString(cursor.getColumnIndexOrThrow(Bookmarks.URL)),
-                                                 cursor.getString(cursor.getColumnIndexOrThrow(Bookmarks.KEYWORD)));
-                cursor.close();
+                Bookmark bookmark = null;
+                try {
+                    cursor.moveToFirst();
+                    bookmark = new Bookmark(cursor.getInt(cursor.getColumnIndexOrThrow(Bookmarks._ID)),
+                                                          cursor.getString(cursor.getColumnIndexOrThrow(Bookmarks.TITLE)),
+                                                          cursor.getString(cursor.getColumnIndexOrThrow(Bookmarks.URL)),
+                                                          cursor.getString(cursor.getColumnIndexOrThrow(Bookmarks.KEYWORD)));
+                } finally {
+                    cursor.close();
+                }
                 return bookmark;
             }
 
