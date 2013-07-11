@@ -28,6 +28,10 @@ chrome.jar:
   content/bindings/cssthrobber.xml             (content/bindings/cssthrobber.xml)
   content/bindings/popup.xml                   (content/bindings/popup.xml)
 
+* content/flyouts/flyoutUI.js                  (content/flyouts/flyoutUI.js)
+* content/flyouts/aboutFlyout.js               (content/flyouts/aboutFlyout.js)
+  content/flyouts/prefsFlyout.js               (content/flyouts/prefsFlyout.js)
+
   content/prompt/alert.xul                     (content/prompt/alert.xul)
   content/prompt/confirm.xul                   (content/prompt/confirm.xul)
   content/prompt/prompt.xul                    (content/prompt/prompt.xul)
@@ -70,7 +74,6 @@ chrome.jar:
   content/ContextCommands.js                   (content/ContextCommands.js)
   content/commandUtil.js                       (content/commandUtil.js)
   content/appbar.js                            (content/appbar.js)
-* content/aboutPanel.js                        (content/aboutPanel.js)
   content/shell.xul                            (content/jsshell/shell.xul)
   content/shell.html                           (content/jsshell/shell.html)
   content/browser.css                          (content/browser.css)
@@ -80,7 +83,6 @@ chrome.jar:
   content/input.js                             (content/input.js)
   content/Util.js                              (content/Util.js)
   content/bookmarks.js                         (content/bookmarks.js)
-  content/preferences.js                       (content/preferences.js)
   content/exceptions.js                        (content/exceptions.js)
   content/downloads.js                         (content/downloads.js)
   content/history.js                           (content/history.js)
@@ -90,7 +92,7 @@ chrome.jar:
   content/AnimatedZoom.js                      (content/AnimatedZoom.js)
   content/dbg-metro-actors.js                  (content/dbg-metro-actors.js)
 #ifdef MOZ_SERVICES_SYNC
-* content/sync.js                              (content/sync.js)
+  content/flyouts/syncFlyout.js                (content/flyouts/syncFlyout.js)
   content/RemoteTabs.js                        (content/RemoteTabs.js)
 #endif
   content/NavButtonSlider.js                   (content/NavButtonSlider.js)
