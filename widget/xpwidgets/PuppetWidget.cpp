@@ -456,13 +456,15 @@ PuppetWidget::NotifyIMEOfFocusChange(bool aFocus)
   }
 
   uint32_t chromeSeqno;
-  mIMEPreference.mWantUpdates = false;
+  mIMEPreference.mWantUpdates = nsIMEUpdatePreference::NOTIFY_NOTHING;
   mIMEPreference.mWantHints = false;
   if (!mTabChild->SendNotifyIMEFocus(aFocus, &mIMEPreference, &chromeSeqno))
     return NS_ERROR_FAILURE;
 
   if (aFocus) {
-    if (mIMEPreference.mWantUpdates && mIMEPreference.mWantHints) {
+    if ((mIMEPreference.mWantUpdates &
+           nsIMEUpdatePreference::NOTIFY_SELECTION_CHANGE) &&
+        mIMEPreference.mWantHints) {
       NotifyIMEOfSelectionChange(); // Update selection
     }
   } else {
@@ -500,7 +502,7 @@ PuppetWidget::NotifyIMEOfTextChange(uint32_t aStart,
       mTabChild->SendNotifyIMETextHint(queryEvent.mReply.mString);
     }
   }
-  if (mIMEPreference.mWantUpdates) {
+  if (mIMEPreference.mWantUpdates & nsIMEUpdatePreference::NOTIFY_TEXT_CHANGE) {
     mTabChild->SendNotifyIMETextChange(aStart, aEnd, aNewEnd);
   }
   return NS_OK;
@@ -516,7 +518,8 @@ PuppetWidget::NotifyIMEOfSelectionChange()
   if (!mTabChild)
     return NS_ERROR_FAILURE;
 
-  if (mIMEPreference.mWantUpdates) {
+  if (mIMEPreference.mWantUpdates &
+        nsIMEUpdatePreference::NOTIFY_SELECTION_CHANGE) {
     nsEventStatus status;
     nsQueryContentEvent queryEvent(true, NS_QUERY_SELECTED_TEXT, this);
     InitEvent(queryEvent, nullptr);
