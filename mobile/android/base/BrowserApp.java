@@ -74,6 +74,7 @@ import android.widget.Toast;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Vector;
 
 abstract public class BrowserApp extends GeckoApp
@@ -1373,7 +1374,7 @@ abstract public class BrowserApp extends GeckoApp
             hideBrowserSearch();
         } else {
             showBrowserSearch();
-            mBrowserSearch.filter(searchTerm);
+            mBrowserSearch.filter(searchTerm, handler);
         }
     }
 
