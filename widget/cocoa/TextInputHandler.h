@@ -850,12 +850,15 @@ public:
    * which is allocated as autorelease for aRange.
    *
    * @param aRange                The range of string which you want.
+   * @param aActualRange          The actual range of the result.
    * @return                      The string in aRange.  If the string is empty,
    *                              this returns nil.  If succeeded, this returns
    *                              an instance which is allocated as autorelease.
    *                              If this has some troubles, returns nil.
    */
-  NSAttributedString* GetAttributedSubstringFromRange(NSRange& aRange);
+  NSAttributedString* GetAttributedSubstringFromRange(
+                        NSRange& aRange,
+                        NSRange* aActualRange = nullptr);
 
   /**
    * SelectedRange() returns current selected range.
