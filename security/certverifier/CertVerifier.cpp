@@ -21,8 +21,8 @@
 using namespace insanity::pkix;
 using namespace mozilla::psm;
 
-#ifdef PR_LOGGING
-extern PRLogModuleInfo* gPIPNSSLog;
+#ifdef MOZ_LOGGING
+static PRLogModuleInfo* gCertVerifierLog = nullptr;
 #endif
 
 namespace mozilla { namespace psm {
@@ -47,6 +47,16 @@ CertVerifier::CertVerifier(implementation_config ic,
 
 CertVerifier::~CertVerifier()
 {
+}
+
+void
+InitCertVerifierLog()
+{
+#ifdef MOZ_LOGGING
+  if (!gCertVerifierLog) {
+    gCertVerifierLog = PR_NewLogModule("certverifier");
+  }
+#endif
 }
 
 static SECStatus
@@ -113,7 +123,7 @@ ClassicVerifyCert(CERTCertificate* cert,
                                 usage, time, pinArg, verifyLog, nullptr);
   }
   if (rv == SECSuccess && validationChain) {
-    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("VerifyCert: getting chain in 'classic' \n"));
+    PR_LOG(gCertVerifierLog, PR_LOG_DEBUG, ("VerifyCert: getting chain in 'classic' \n"));
     *validationChain = CERT_GetCertChainFromCert(cert, time, enumUsage);
     if (!*validationChain) {
       rv = SECFailure;
@@ -215,7 +225,7 @@ CertVerifier::VerifyCert(CERTCertificate* cert,
      ++i;
   }
   if (validationChain) {
-    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("VerifyCert: setting up validation chain outparam.\n"));
+    PR_LOG(gCertVerifierLog, PR_LOG_DEBUG, ("VerifyCert: setting up validation chain outparam.\n"));
     validationChainLocation = i;
     cvout[i].type = cert_po_certList;
     cvout[i].value.pointer.chain = nullptr;
@@ -304,11 +314,11 @@ CertVerifier::VerifyCert(CERTCertificate* cert,
       if (evOidPolicy) {
         *evOidPolicy = evPolicy;
       }
-      PR_LOG(gPIPNSSLog, PR_LOG_DEBUG,
+      PR_LOG(gCertVerifierLog, PR_LOG_DEBUG,
              ("VerifyCert: successful CERT_PKIXVerifyCert(ev) \n"));
       goto pkix_done;
     }
-    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG,
+    PR_LOG(gCertVerifierLog, PR_LOG_DEBUG,
            ("VerifyCert: failed CERT_PKIXVerifyCert(ev)\n"));
 
     if (validationChain) {
@@ -414,12 +424,12 @@ CertVerifier::VerifyCert(CERTCertificate* cert,
   // Skip EV parameters
   cvin[evParamLocation].type = cert_pi_end;
 
-  PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("VerifyCert: calling CERT_PKIXVerifyCert(dv) \n"));
+  PR_LOG(gCertVerifierLog, PR_LOG_DEBUG, ("VerifyCert: calling CERT_PKIXVerifyCert(dv) \n"));
   rv = CERT_PKIXVerifyCert(cert, usage, cvin, cvout, pinArg);
 
 pkix_done:
   if (validationChain) {
-    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("VerifyCert: validation chain requested\n"));
+    PR_LOG(gCertVerifierLog, PR_LOG_DEBUG, ("VerifyCert: validation chain requested\n"));
     ScopedCERTCertificate trustAnchor(cvout[validationTrustAnchorLocation].value.pointer.cert);
 
     if (rv == SECSuccess) {
@@ -427,14 +437,14 @@ pkix_done:
         PR_SetError(PR_UNKNOWN_ERROR, 0);
         return SECFailure;
       }
-      PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("VerifyCert: I have a chain\n"));
+      PR_LOG(gCertVerifierLog, PR_LOG_DEBUG, ("VerifyCert: I have a chain\n"));
       *validationChain = cvout[validationChainLocation].value.pointer.chain;
       if (trustAnchor) {
         // we should only add the issuer to the chain if it is not already
         // present. On CA cert checking, the issuer is the same cert, so in
         // that case we do not add the cert to the chain.
         if (!CERT_CompareCerts(trustAnchor.get(), cert)) {
-          PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("VerifyCert:  adding issuer to tail for display\n"));
+          PR_LOG(gCertVerifierLog, PR_LOG_DEBUG, ("VerifyCert:  adding issuer to tail for display\n"));
           // note: rv is reused to catch errors on cert creation!
           ScopedCERTCertificate tempCert(CERT_DupCertificate(trustAnchor.get()));
           rv = CERT_AddCertToListTail(validationChain->get(), tempCert.get());

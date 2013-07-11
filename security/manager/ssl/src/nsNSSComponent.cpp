@@ -1128,6 +1128,8 @@ nsNSSComponent::InitializeNSS()
 
     ConfigureInternalPKCS11Token();
 
+    InitCertVerifierLog();
+
     SECStatus init_rv = ::mozilla::psm::InitializeNSS(profileStr.get(), false);
     if (init_rv != SECSuccess) {
       PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("can not init NSS r/w in %s\n", profileStr.get()));
