@@ -126,11 +126,17 @@ BaseShape::operator=(const BaseShape &other)
     return *this;
 }
 
-inline bool
-BaseShape::matchesGetterSetter(PropertyOp rawGetter, StrictPropertyOp rawSetter) const
-{
-    return rawGetter == this->rawGetter && rawSetter == this->rawSetter;
-}
+inline
+StackBaseShape::StackBaseShape(ExclusiveContext *cx, Class *clasp,
+                               JSObject *parent, JSObject *metadata, uint32_t objectFlags)
+  : flags(objectFlags),
+    clasp(clasp),
+    parent(parent),
+    metadata(metadata),
+    rawGetter(NULL),
+    rawSetter(NULL),
+    compartment(cx->compartment_)
+{}
 
 inline
 StackBaseShape::StackBaseShape(Shape *shape)
@@ -141,25 +147,6 @@ StackBaseShape::StackBaseShape(Shape *shape)
     compartment(shape->compartment())
 {
     updateGetterSetter(shape->attrs, shape->getter(), shape->setter());
-}
-
-inline void
-StackBaseShape::updateGetterSetter(uint8_t attrs,
-                                   PropertyOp rawGetter,
-                                   StrictPropertyOp rawSetter)
-{
-    flags &= ~(BaseShape::HAS_GETTER_OBJECT | BaseShape::HAS_SETTER_OBJECT);
-    if ((attrs & JSPROP_GETTER) && rawGetter) {
-        JS_ASSERT(!IsPoisonedPtr(rawGetter));
-        flags |= BaseShape::HAS_GETTER_OBJECT;
-    }
-    if ((attrs & JSPROP_SETTER) && rawSetter) {
-        JS_ASSERT(!IsPoisonedPtr(rawSetter));
-        flags |= BaseShape::HAS_SETTER_OBJECT;
-    }
-
-    this->rawGetter = rawGetter;
-    this->rawSetter = rawSetter;
 }
 
 inline void
@@ -233,44 +220,11 @@ Shape::Shape(UnownedBaseShape *base, uint32_t nfixed)
     kids.setNull();
 }
 
-inline HashNumber
-StackShape::hash() const
-{
-    HashNumber hash = uintptr_t(base);
-
-    /* Accumulate from least to most random so the low bits are most random. */
-    hash = JS_ROTATE_LEFT32(hash, 4) ^ (flags & Shape::PUBLIC_FLAGS);
-    hash = JS_ROTATE_LEFT32(hash, 4) ^ attrs;
-    hash = JS_ROTATE_LEFT32(hash, 4) ^ shortid;
-    hash = JS_ROTATE_LEFT32(hash, 4) ^ slot_;
-    hash = JS_ROTATE_LEFT32(hash, 4) ^ JSID_BITS(propid);
-    return hash;
-}
-
-inline bool
-Shape::matches(const Shape *other) const
-{
-    return propid_.get() == other->propid_.get() &&
-           matchesParamsAfterId(other->base(), other->maybeSlot(), other->attrs,
-                                other->flags, other->shortid_);
-}
-
 inline bool
 Shape::matches(const StackShape &other) const
 {
     return propid_.get() == other.propid &&
            matchesParamsAfterId(other.base, other.slot_, other.attrs, other.flags, other.shortid);
-}
-
-inline bool
-Shape::matchesParamsAfterId(BaseShape *base, uint32_t aslot,
-                            unsigned aattrs, unsigned aflags, int ashortid) const
-{
-    return base->unowned() == this->base()->unowned() &&
-           maybeSlot() == aslot &&
-           attrs == aattrs &&
-           ((flags ^ aflags) & PUBLIC_FLAGS) == 0 &&
-           shortid_ == ashortid;
 }
 
 inline bool
@@ -498,37 +452,41 @@ BaseShape::markChildren(JSTracer *trc)
         MarkObject(trc, &metadata, "metadata");
 }
 
-/*
- * Property lookup hooks on objects are required to return a non-NULL shape to
- * signify that the property has been found. For cases where the property is
- * not actually represented by a Shape, use a dummy value. This includes all
- * properties of non-native objects, and dense elements for native objects.
- * Use separate APIs for these two cases.
- */
-
-static inline void
-MarkNonNativePropertyFound(MutableHandleShape propp)
+inline
+AutoRooterGetterSetter::Inner::Inner(ExclusiveContext *cx, uint8_t attrs,
+                                     PropertyOp *pgetter_, StrictPropertyOp *psetter_)
+  : CustomAutoRooter(cx), attrs(attrs),
+    pgetter(pgetter_), psetter(psetter_),
+    getterRoot(cx, pgetter_), setterRoot(cx, psetter_)
 {
-    propp.set(reinterpret_cast<Shape*>(1));
+    JS_ASSERT_IF(attrs & JSPROP_GETTER, !IsPoisonedPtr(*pgetter));
+    JS_ASSERT_IF(attrs & JSPROP_SETTER, !IsPoisonedPtr(*psetter));
 }
 
-template <AllowGC allowGC>
-static inline void
-MarkDenseElementFound(typename MaybeRooted<Shape*, allowGC>::MutableHandleType propp)
+inline
+AutoRooterGetterSetter::AutoRooterGetterSetter(ExclusiveContext *cx, uint8_t attrs,
+                                               PropertyOp *pgetter, StrictPropertyOp *psetter
+                                               MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
 {
-    propp.set(reinterpret_cast<Shape*>(1));
+    if (attrs & (JSPROP_GETTER | JSPROP_SETTER))
+        inner.construct(cx, attrs, pgetter, psetter);
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
 }
 
-static inline bool
-IsImplicitDenseElement(Shape *prop)
+inline
+StackBaseShape::AutoRooter::AutoRooter(ExclusiveContext *cx, const StackBaseShape *base_
+                                       MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
+  : CustomAutoRooter(cx), base(base_), skip(cx, base_)
 {
-    return prop == reinterpret_cast<Shape*>(1);
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
 }
 
-static inline uint8_t
-GetShapeAttributes(HandleShape shape)
+inline
+StackShape::AutoRooter::AutoRooter(ExclusiveContext *cx, const StackShape *shape_
+                                   MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
+  : CustomAutoRooter(cx), shape(shape_), skip(cx, shape_)
 {
-    return IsImplicitDenseElement(shape) ? JSPROP_ENUMERATE : shape->attributes();
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
 }
 
 } /* namespace js */

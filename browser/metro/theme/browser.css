@@ -558,27 +558,92 @@ flyoutpanel > settings:first-child {
 /* Sync flyout pane */
 
 #sync-flyoutpanel {
-  width: 400px;
+  width: 346px;
+  font-size: @metro_font_normal@;
+  font-weight: 400;
 }
 
-#sync-disconnectpanel {
-  margin-top: 25px;
+#sync-flyoutpanel button {
+  font-weight: 700;
 }
 
-#sync-disconnectwarntitle {
-  font-weight: bold;
+#sync-flyoutpanel .syncHeader {
+  font-weight: 600;
 }
 
-#sync-disconnectthrobber .progressContainer {
-  width: 25px;
-  height: 25px;
-  margin-right: 10px;
+#sync-flyoutpanel .syncSecondaryText {
+  font-weight: 100;
+  font-size: @metro_font_snormal@;
 }
 
-#sync-disconnectthrobber .progressBall {
-  margin: 2px;
-  width: 22px;
-  height: 22px;
+#sync-flyoutpanel .syncInstructionText {
+  font-style: italic;
+}
+
+.syncThrobber .progressBall {
+   margin: 2px;
+   width: 22px;
+   height: 22px;
+ }
+
+.syncThrobber .progressBallInner {
+  width: 5px;
+  height: 5px;
+  border-radius: 3px;
+}
+
+#sync-flyoutpanel .syncErrorText {
+  color: red;
+}
+
+#sync-flyoutpanel textbox {
+  margin: @metro_spacing_small@;
+  padding: @metro_spacing_xsmall@ @metro_spacing_snormal@;
+  background: @field_background_color@;
+  border: @metro_border_thick@ solid @field_mid_foreground_color@ !important;
+  color: @field_foreground_color@;
+}
+
+#sync-setup-throbber {
+  margin-top: 15px;
+  margin-left: 25px;
+}
+
+#sync-connected-device {
+  width: 200px;
+}
+
+#sync-manualsetup-failure {
+  width: 200px;
+}
+
+#sync-flyoutpanel .syncJPAKECode {
+  margin: @metro_spacing_small@;
+  padding: @metro_spacing_xsmall@ @metro_spacing_snormal@;
+  background: @field_background_color@;
+  border: @metro_border_thick@ solid @field_mid_foreground_color@ !important;
+  color: @field_foreground_color@;
+  display: block !important;
+  font-size: @metro_font_large@ !important;
+  font-weight: 600;
+  letter-spacing: 0.4em;
+  text-align: center;
+  width: 175px;
+}
+
+#sync-connected-device {
+  margin-bottom: 0px;
+  padding-bottom: 0px;
+}
+
+#sync-connected-lastSynced {
+  margin-top: 0px;
+  padding-top: 0px;
+}
+
+#sync-connected-throbber {
+  margin-top: 12px;
+  margin-left: 15px;
 }
 
 /* About flyout pane */
@@ -708,6 +773,11 @@ setting[type="radio"] > vbox {
 }
 
 #clear-notification {
+  max-height: 25px;
+}
+
+#clearprivacythrobber {
+  max-width: 25px;
   max-height: 25px;
 }
 
@@ -1021,37 +1091,6 @@ setting[type="radio"] > vbox {
 /* helperapp (save-as) popup ----------------------------------------------- */
 #helperapp-target {
   font-size: @font_small@ !important;
-}
-
-/* Sync Setup ------------------------------------------------------------- */
-.syncsetup-code {
-  display: block !important;
-  margin: @metro_spacing_small@;
-  padding: @metro_spacing_xsmall@ @metro_spacing_snormal@;
-  background: @field_background_color@;
-  border: @metro_border_thick@ solid @field_foreground_color@ !important;
-  color: @field_foreground_color@;
-  font-size: @metro_font_large@ !important;
-  letter-spacing: 0.2em;
-  text-align: left;
-  width: 250px;
-  -moz-box-flex: 1;
-}
-
-.syncsetup-label {
-  color: #fff;
-}
-
-#syncsetup-customserver {
-  -moz-margin-start: @margin_xnormal@;
-}
-
-#syncsetup-waiting {
-  padding: 2em 0 0 0;
-}
-
-#syncsetup-waiting-top {
-  padding: 1em;
 }
 
 /* content scrollbars */

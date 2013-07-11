@@ -232,7 +232,7 @@ class JSString : public js::gc::Cell
      * representable by a JSString. An allocation overflow is reported if false
      * is returned.
      */
-    static inline bool validateLength(js::ThreadSafeContext *maybetcx, size_t length);
+    static inline bool validateLength(js::ThreadSafeContext *maybecx, size_t length);
 
     static void staticAsserts() {
         JS_STATIC_ASSERT(JS_BITS_PER_WORD >= 32);
@@ -265,18 +265,35 @@ class JSString : public js::gc::Cell
      * getCharsZ additionally ensures the array is null terminated.
      */
 
-    inline const jschar *getChars(js::ThreadSafeContext *tcx);
-    inline const jschar *getCharsZ(js::ThreadSafeContext *tcx);
-    inline bool getChar(js::ThreadSafeContext *tcx, size_t index, jschar *code);
+    inline const jschar *getChars(JSContext *cx);
+    inline const jschar *getCharsZ(JSContext *cx);
+    inline bool getChar(JSContext *cx, size_t index, jschar *code);
+
+    /*
+     * Returns chars() if the string is already linear or flat. Otherwise
+     * returns NULL if a new array of chars must be allocated.
+     */
+    inline const jschar *maybeChars();
+    inline const jschar *maybeCharsZ();
+
+    /*
+     * Fallible operations to get an array of chars non-destructively. These
+     * operations are thread safe.
+     */
+
+    inline bool getCharsNonDestructive(js::ThreadSafeContext *cx,
+                                       js::ScopedJSFreePtr<jschar> &out) const;
+    inline bool getCharsZNonDestructive(js::ThreadSafeContext *cx,
+                                        js::ScopedJSFreePtr<jschar> &out) const;
 
     /* Fallible conversions to more-derived string types. */
 
-    inline JSLinearString *ensureLinear(js::ThreadSafeContext *tcx);
-    inline JSFlatString *ensureFlat(js::ThreadSafeContext *tcx);
-    inline JSStableString *ensureStable(js::ThreadSafeContext *tcx);
+    inline JSLinearString *ensureLinear(JSContext *cx);
+    inline JSFlatString *ensureFlat(JSContext *cx);
+    inline JSStableString *ensureStable(JSContext *cx);
 
-    static bool ensureLinear(js::ThreadSafeContext *tcx, JSString *str) {
-        return str->ensureLinear(tcx) != NULL;
+    static bool ensureLinear(JSContext *cx, JSString *str) {
+        return str->ensureLinear(cx) != NULL;
     }
 
     /* Type query and debug-checked casts */
@@ -410,7 +427,7 @@ class JSString : public js::gc::Cell
     }
 
     JS::Zone *zone() const { return tenuredZone(); }
-    bool isInsideZone(JS::Zone *zone_) { return zone_ == zone(); }
+    bool isInsideZone(JS::Zone *zone_) { return tenuredIsInsideZone(zone_); }
     js::gc::AllocKind getAllocKind() const { return tenuredGetAllocKind(); }
 
     static inline void writeBarrierPre(JSString *str);
@@ -434,18 +451,27 @@ class JSString : public js::gc::Cell
 
 class JSRope : public JSString
 {
+    bool getCharsNonDestructiveInternal(js::ThreadSafeContext *cx,
+                                        js::ScopedJSFreePtr<jschar> &out,
+                                        bool nullTerminate) const;
+
+    bool getCharsNonDestructive(js::ThreadSafeContext *cx,
+                                js::ScopedJSFreePtr<jschar> &out) const;
+    bool getCharsZNonDestructive(js::ThreadSafeContext *cx,
+                                 js::ScopedJSFreePtr<jschar> &out) const;
+
     enum UsingBarrier { WithIncrementalBarrier, NoBarrier };
     template<UsingBarrier b>
-    JSFlatString *flattenInternal(js::ThreadSafeContext *tcx);
+    JSFlatString *flattenInternal(JSContext *cx);
 
     friend class JSString;
-    JSFlatString *flatten(js::ThreadSafeContext *tcx);
+    JSFlatString *flatten(JSContext *cx);
 
-    void init(JSString *left, JSString *right, size_t length);
+    void init(js::ThreadSafeContext *cx, JSString *left, JSString *right, size_t length);
 
   public:
     template <js::AllowGC allowGC>
-    static inline JSRope *new_(js::ThreadSafeContext *tcx,
+    static inline JSRope *new_(js::ThreadSafeContext *cx,
                                typename js::MaybeRooted<JSString*, allowGC>::HandleType left,
                                typename js::MaybeRooted<JSString*, allowGC>::HandleType right,
                                size_t length);
@@ -498,17 +524,21 @@ JS_STATIC_ASSERT(sizeof(JSLinearString) == sizeof(JSString));
 
 class JSDependentString : public JSLinearString
 {
-    friend class JSString;
-    JSFlatString *undepend(js::ThreadSafeContext *cx);
+    bool getCharsZNonDestructive(js::ThreadSafeContext *cx,
+                                 js::ScopedJSFreePtr<jschar> &out) const;
 
-    void init(JSLinearString *base, const jschar *chars, size_t length);
+    friend class JSString;
+    JSFlatString *undepend(JSContext *cx);
+
+    void init(js::ThreadSafeContext *cx, JSLinearString *base, const jschar *chars,
+              size_t length);
 
     /* Vacuous and therefore unimplemented. */
     bool isDependent() const MOZ_DELETE;
     JSDependentString &asDependent() const MOZ_DELETE;
 
   public:
-    static inline JSLinearString *new_(JSContext *cx, JSLinearString *base,
+    static inline JSLinearString *new_(js::ExclusiveContext *cx, JSLinearString *base,
                                        const jschar *chars, size_t length);
 };
 
@@ -517,7 +547,7 @@ JS_STATIC_ASSERT(sizeof(JSDependentString) == sizeof(JSString));
 class JSFlatString : public JSLinearString
 {
     /* Vacuous and therefore unimplemented. */
-    JSFlatString *ensureFlat(js::ThreadSafeContext *cx) MOZ_DELETE;
+    JSFlatString *ensureFlat(JSContext *cx) MOZ_DELETE;
     bool isFlat() const MOZ_DELETE;
     JSFlatString &asFlat() const MOZ_DELETE;
 
@@ -552,7 +582,10 @@ class JSFlatString : public JSLinearString
      * Once a JSFlatString sub-class has been added to the atom state, this
      * operation changes the string to the JSAtom type, in place.
      */
-    inline JSAtom *morphAtomizedStringIntoAtom();
+    JS_ALWAYS_INLINE JSAtom *morphAtomizedStringIntoAtom() {
+        d.lengthAndFlags = buildLengthAndFlags(length(), ATOM_BIT);
+        return &asAtom();
+    }
 
     inline void finalize(js::FreeOp *fop);
 };
@@ -565,7 +598,8 @@ class JSStableString : public JSFlatString
 
   public:
     template <js::AllowGC allowGC>
-    static inline JSStableString *new_(js::ThreadSafeContext *cx, const jschar *chars, size_t length);
+    static inline JSStableString *new_(js::ThreadSafeContext *cx,
+                                       const jschar *chars, size_t length);
 
     JS_ALWAYS_INLINE
     JS::StableCharPtr chars() const {
@@ -662,11 +696,11 @@ class JSInlineString : public JSFlatString
 
   public:
     template <js::AllowGC allowGC>
-    static inline JSInlineString *new_(js::ThreadSafeContext *tcx);
+    static inline JSInlineString *new_(js::ThreadSafeContext *cx);
 
     inline jschar *init(size_t length);
 
-    JSStableString *uninline(js::ThreadSafeContext *tcx);
+    JSStableString *uninline(JSContext *cx);
 
     inline void resetLength(size_t length);
 
@@ -698,7 +732,7 @@ class JSShortString : public JSInlineString
 
   public:
     template <js::AllowGC allowGC>
-    static inline JSShortString *new_(js::ThreadSafeContext *tcx);
+    static inline JSShortString *new_(js::ThreadSafeContext *cx);
 
     static const size_t MAX_SHORT_LENGTH = JSString::NUM_INLINE_CHARS +
                                            INLINE_EXTENSION_CHARS
@@ -771,6 +805,43 @@ JS_STATIC_ASSERT(sizeof(JSAtom) == sizeof(JSString));
 
 namespace js {
 
+/*
+ * Thread safe RAII wrapper for inspecting the contents of JSStrings. The
+ * thread safe operations such as |getCharsNonDestructive| require allocation
+ * of a char array. This allocation is not always required, such as when the
+ * string is already linear. This wrapper makes dealing with this detail more
+ * convenient by encapsulating the allocation logic.
+ *
+ * As the name suggests, this class is scoped. Return values from chars() and
+ * range() may not be valid after the inspector goes out of scope.
+ */
+
+class ScopedThreadSafeStringInspector
+{
+  private:
+    JSString *str_;
+    ScopedJSFreePtr<jschar> scopedChars_;
+    const jschar *chars_;
+
+  public:
+    ScopedThreadSafeStringInspector(JSString *str)
+      : str_(str),
+        chars_(NULL)
+    { }
+
+    bool ensureChars(ThreadSafeContext *cx);
+
+    const jschar *chars() {
+        JS_ASSERT(chars_);
+        return chars_;
+    }
+
+    JS::TwoByteChars range() {
+        JS_ASSERT(chars_);
+        return JS::TwoByteChars(chars_, str_->length());
+    }
+};
+
 class StaticStrings
 {
   private:
@@ -804,14 +875,28 @@ class StaticStrings
         clear();
     }
 
-    static inline bool hasUint(uint32_t u);
-    inline JSAtom *getUint(uint32_t u);
+    static bool hasUint(uint32_t u) { return u < INT_STATIC_LIMIT; }
 
-    static inline bool hasInt(int32_t i);
-    inline JSAtom *getInt(int32_t i);
+    JSAtom *getUint(uint32_t u) {
+        JS_ASSERT(hasUint(u));
+        return intStaticTable[u];
+    }
 
-    static inline bool hasUnit(jschar c);
-    JSAtom *getUnit(jschar c);
+    static bool hasInt(int32_t i) {
+        return uint32_t(i) < INT_STATIC_LIMIT;
+    }
+
+    JSAtom *getInt(int32_t i) {
+        JS_ASSERT(hasInt(i));
+        return getUint(uint32_t(i));
+    }
+
+    static bool hasUnit(jschar c) { return c < UNIT_STATIC_LIMIT; }
+
+    JSAtom *getUnit(jschar c) {
+        JS_ASSERT(hasUnit(c));
+        return unitStaticTable[c];
+    }
 
     /* May not return atom, returns null on (reported) failure. */
     inline JSLinearString *getUnitStringForElement(JSContext *cx, JSString *str, size_t index);
@@ -819,18 +904,55 @@ class StaticStrings
     static bool isStatic(JSAtom *atom);
 
     /* Return null if no static atom exists for the given (chars, length). */
-    inline JSAtom *lookup(const jschar *chars, size_t length);
+    JSAtom *lookup(const jschar *chars, size_t length) {
+        switch (length) {
+          case 1:
+            if (chars[0] < UNIT_STATIC_LIMIT)
+                return getUnit(chars[0]);
+            return NULL;
+          case 2:
+            if (fitsInSmallChar(chars[0]) && fitsInSmallChar(chars[1]))
+                return getLength2(chars[0], chars[1]);
+            return NULL;
+          case 3:
+            /*
+             * Here we know that JSString::intStringTable covers only 256 (or at least
+             * not 1000 or more) chars. We rely on order here to resolve the unit vs.
+             * int string/length-2 string atom identity issue by giving priority to unit
+             * strings for "0" through "9" and length-2 strings for "10" through "99".
+             */
+            JS_STATIC_ASSERT(INT_STATIC_LIMIT <= 999);
+            if ('1' <= chars[0] && chars[0] <= '9' &&
+                '0' <= chars[1] && chars[1] <= '9' &&
+                '0' <= chars[2] && chars[2] <= '9') {
+                int i = (chars[0] - '0') * 100 +
+                          (chars[1] - '0') * 10 +
+                          (chars[2] - '0');
+
+                if (unsigned(i) < INT_STATIC_LIMIT)
+                    return getInt(i);
+            }
+            return NULL;
+        }
+
+        return NULL;
+    }
 
   private:
     typedef uint8_t SmallChar;
     static const SmallChar INVALID_SMALL_CHAR = -1;
 
-    static inline bool fitsInSmallChar(jschar c);
+    static bool fitsInSmallChar(jschar c) {
+        return c < SMALL_CHAR_LIMIT && toSmallChar[c] != INVALID_SMALL_CHAR;
+    }
 
     static const SmallChar toSmallChar[];
 
     JSAtom *getLength2(jschar c1, jschar c2);
-    JSAtom *getLength2(uint32_t u);
+    JSAtom *getLength2(uint32_t u) {
+        JS_ASSERT(u < 100);
+        return getLength2('0' + u / 10, '0' + u % 10);
+    }
 };
 
 /*
@@ -884,15 +1006,15 @@ class AutoNameVector : public AutoVectorRooter<PropertyName *>
 /* Avoid requiring vm/String-inl.h just to call getChars. */
 
 JS_ALWAYS_INLINE const jschar *
-JSString::getChars(js::ThreadSafeContext *tcx)
+JSString::getChars(JSContext *cx)
 {
-    if (JSLinearString *str = ensureLinear(tcx))
+    if (JSLinearString *str = ensureLinear(cx))
         return str->chars();
     return NULL;
 }
 
 JS_ALWAYS_INLINE bool
-JSString::getChar(js::ThreadSafeContext *tcx, size_t index, jschar *code)
+JSString::getChar(JSContext *cx, size_t index, jschar *code)
 {
     JS_ASSERT(index < length());
 
@@ -909,13 +1031,13 @@ JSString::getChar(js::ThreadSafeContext *tcx, size_t index, jschar *code)
     if (isRope()) {
         JSRope *rope = &asRope();
         if (uint32_t(index) < rope->leftChild()->length()) {
-            chars = rope->leftChild()->getChars(tcx);
+            chars = rope->leftChild()->getChars(cx);
         } else {
-            chars = rope->rightChild()->getChars(tcx);
+            chars = rope->rightChild()->getChars(cx);
             index -= rope->leftChild()->length();
         }
     } else {
-        chars = getChars(tcx);
+        chars = getChars(cx);
     }
 
     if (!chars)
@@ -926,36 +1048,72 @@ JSString::getChar(js::ThreadSafeContext *tcx, size_t index, jschar *code)
 }
 
 JS_ALWAYS_INLINE const jschar *
-JSString::getCharsZ(js::ThreadSafeContext *tcx)
+JSString::getCharsZ(JSContext *cx)
 {
-    if (JSFlatString *str = ensureFlat(tcx))
+    if (JSFlatString *str = ensureFlat(cx))
         return str->chars();
     return NULL;
 }
 
+JS_ALWAYS_INLINE const jschar *
+JSString::maybeChars()
+{
+    if (isLinear())
+        return asLinear().chars();
+    return NULL;
+}
+
+JS_ALWAYS_INLINE const jschar *
+JSString::maybeCharsZ()
+{
+    if (isFlat())
+        return asFlat().chars();
+    return NULL;
+}
+
+JS_ALWAYS_INLINE bool
+JSString::getCharsNonDestructive(js::ThreadSafeContext *cx,
+                                 js::ScopedJSFreePtr<jschar> &out) const
+{
+    /* If string is already linear, use maybeChars instead. */
+    JS_ASSERT(!isLinear());
+    return asRope().getCharsNonDestructive(cx, out);
+}
+
+JS_ALWAYS_INLINE bool
+JSString::getCharsZNonDestructive(js::ThreadSafeContext *cx,
+                                  js::ScopedJSFreePtr<jschar> &out) const
+{
+    /* If string is already flat, use maybeCharsZ instead. */
+    JS_ASSERT(!isFlat());
+    if (isDependent())
+        return asDependent().getCharsZNonDestructive(cx, out);
+    return asRope().getCharsZNonDestructive(cx, out);
+}
+
 JS_ALWAYS_INLINE JSLinearString *
-JSString::ensureLinear(js::ThreadSafeContext *tcx)
+JSString::ensureLinear(JSContext *cx)
 {
     return isLinear()
            ? &asLinear()
-           : asRope().flatten(tcx);
+           : asRope().flatten(cx);
 }
 
 JS_ALWAYS_INLINE JSFlatString *
-JSString::ensureFlat(js::ThreadSafeContext *tcx)
+JSString::ensureFlat(JSContext *cx)
 {
     return isFlat()
            ? &asFlat()
            : isDependent()
-             ? asDependent().undepend(tcx)
-             : asRope().flatten(tcx);
+             ? asDependent().undepend(cx)
+             : asRope().flatten(cx);
 }
 
 JS_ALWAYS_INLINE JSStableString *
-JSString::ensureStable(js::ThreadSafeContext *maybetcx)
+JSString::ensureStable(JSContext *maybecx)
 {
     if (isRope()) {
-        JSFlatString *flat = asRope().flatten(maybetcx);
+        JSFlatString *flat = asRope().flatten(maybecx);
         if (!flat)
             return NULL;
         JS_ASSERT(!flat->isInline());
@@ -963,7 +1121,7 @@ JSString::ensureStable(js::ThreadSafeContext *maybetcx)
     }
 
     if (isDependent()) {
-        JSFlatString *flat = asDependent().undepend(maybetcx);
+        JSFlatString *flat = asDependent().undepend(maybecx);
         if (!flat)
             return NULL;
         return &flat->asStable();
@@ -973,7 +1131,7 @@ JSString::ensureStable(js::ThreadSafeContext *maybetcx)
         return &asStable();
 
     JS_ASSERT(isInline());
-    return asInline().uninline(maybetcx);
+    return asInline().uninline(maybecx);
 }
 
 inline JSLinearString *

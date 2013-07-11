@@ -69,9 +69,10 @@ class FullParseHandler
     typedef ParseNode *Node;
     typedef Definition *DefinitionNode;
 
-    FullParseHandler(JSContext *cx, TokenStream &tokenStream, bool foldConstants,
+    FullParseHandler(ExclusiveContext *cx, LifoAlloc &alloc,
+                     TokenStream &tokenStream, bool foldConstants,
                      Parser<SyntaxParseHandler> *syntaxParser, LazyScript *lazyOuterFunction)
-      : allocator(cx),
+      : allocator(cx, alloc),
         tokenStream(tokenStream),
         foldConstants(foldConstants),
         lazyOuterFunction_(lazyOuterFunction),

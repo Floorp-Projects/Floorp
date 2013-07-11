@@ -1,7 +1,7 @@
 diff --git a/lib/CodeGen/AsmPrinter/AsmPrinter.cpp b/lib/CodeGen/AsmPrinter/AsmPrinter.cpp
 index d6d4510..c488d4a 100644
---- a/lib/CodeGen/AsmPrinter/AsmPrinter.cpp
-+++ b/lib/CodeGen/AsmPrinter/AsmPrinter.cpp
+--- a/llvm/lib/CodeGen/AsmPrinter/AsmPrinter.cpp
++++ b/llvm/lib/CodeGen/AsmPrinter/AsmPrinter.cpp
 @@ -172,6 +172,8 @@ bool AsmPrinter::doInitialization(Module &M) {
      OutStreamer.EmitFileDirective(M.getModuleIdentifier());
    }

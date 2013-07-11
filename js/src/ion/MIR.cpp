@@ -50,7 +50,7 @@ MDefinition::earlyAbortCheck()
 {
     if (isPhi())
         return false;
-    for (size_t i = 0; i < numOperands(); i++) {
+    for (size_t i = 0, e = numOperands(); i < e; i++) {
         if (getOperand(i)->block()->earlyAbort()) {
             block()->setEarlyAbort();
             IonSpew(IonSpew_Range, "Ignoring value from block %d because instruction %d is in a block that aborts", block()->id(), getOperand(i)->id());
@@ -132,7 +132,7 @@ EvaluateConstantOperands(MBinaryInstruction *ins, bool *ptypeChange = NULL)
 }
 
 void
-MDefinition::printName(FILE *fp)
+MDefinition::printName(FILE *fp) const
 {
     PrintOpcodeName(fp, op());
     fprintf(fp, "%u", id());
@@ -145,7 +145,7 @@ HashNumber
 MDefinition::valueHash() const
 {
     HashNumber out = op();
-    for (size_t i = 0; i < numOperands(); i++) {
+    for (size_t i = 0, e = numOperands(); i < e; i++) {
         uint32_t valueNumber = getOperand(i)->valueNumber();
         out = valueNumber + (out << 6) + (out << 16) - out;
     }
@@ -167,7 +167,7 @@ MDefinition::congruentIfOperandsEqual(MDefinition * const &ins) const
     if (isEffectful() || ins->isEffectful())
         return false;
 
-    for (size_t i = 0; i < numOperands(); i++) {
+    for (size_t i = 0, e = numOperands(); i < e; i++) {
         if (getOperand(i)->valueNumber() != ins->getOperand(i)->valueNumber())
             return false;
     }
@@ -228,13 +228,22 @@ MTest::foldsTo(bool useValueNumbers)
 }
 
 void
-MDefinition::printOpcode(FILE *fp)
+MDefinition::printOpcode(FILE *fp) const
 {
     PrintOpcodeName(fp, op());
-    for (size_t j = 0; j < numOperands(); j++) {
+    for (size_t j = 0, e = numOperands(); j < e; j++) {
         fprintf(fp, " ");
         getOperand(j)->printName(fp);
     }
+}
+
+void
+MDefinition::dump(FILE *fp) const
+{
+    printName(fp);
+    fprintf(fp, " = ");
+    printOpcode(fp);
+    fprintf(fp, "\n");
 }
 
 size_t
@@ -324,7 +333,7 @@ MDefinition::replaceAllUsesWith(MDefinition *dom)
     if (dom == this)
         return;
 
-    for (size_t i = 0; i < numOperands(); i++)
+    for (size_t i = 0, e = numOperands(); i < e; i++)
         getOperand(i)->setUseRemovedUnchecked();
 
     for (MUseIterator i(usesBegin()); i != usesEnd(); ) {
@@ -386,7 +395,7 @@ MConstant::congruentTo(MDefinition * const &ins) const
 }
 
 void
-MConstant::printOpcode(FILE *fp)
+MConstant::printOpcode(FILE *fp) const
 {
     PrintOpcodeName(fp, op());
     fprintf(fp, " ");
@@ -438,7 +447,7 @@ MConstant::printOpcode(FILE *fp)
 }
 
 void
-MControlInstruction::printOpcode(FILE *fp)
+MControlInstruction::printOpcode(FILE *fp) const
 {
     MDefinition::printOpcode(fp);
     for (size_t j = 0; j < numSuccessors(); j++)
@@ -446,14 +455,14 @@ MControlInstruction::printOpcode(FILE *fp)
 }
 
 void
-MCompare::printOpcode(FILE *fp)
+MCompare::printOpcode(FILE *fp) const
 {
     MDefinition::printOpcode(fp);
     fprintf(fp, " %s", js_CodeName[jsop()]);
 }
 
 void
-MConstantElements::printOpcode(FILE *fp)
+MConstantElements::printOpcode(FILE *fp) const
 {
     PrintOpcodeName(fp, op());
     fprintf(fp, " %p", value());
@@ -466,7 +475,7 @@ MParameter::New(int32_t index, types::StackTypeSet *types)
 }
 
 void
-MParameter::printOpcode(FILE *fp)
+MParameter::printOpcode(FILE *fp) const
 {
     PrintOpcodeName(fp, op());
     fprintf(fp, " %d", index());
@@ -554,7 +563,7 @@ MGoto::New(MBasicBlock *target)
 }
 
 void
-MUnbox::printOpcode(FILE *fp)
+MUnbox::printOpcode(FILE *fp) const
 {
     PrintOpcodeName(fp, op());
     fprintf(fp, " ");
@@ -843,15 +852,11 @@ MPrepareCall::argc() const
 }
 
 void
-MPassArg::printOpcode(FILE *fp)
+MPassArg::printOpcode(FILE *fp) const
 {
     PrintOpcodeName(fp, op());
     fprintf(fp, " %d ", argnum_);
-    for (size_t j = 0; j < numOperands(); j++) {
-        getOperand(j)->printName(fp);
-        if (j != numOperands() - 1)
-            fprintf(fp, " ");
-    }
+    getOperand(0)->printName(fp);
 }
 
 void
@@ -993,8 +998,8 @@ NeedNegativeZeroCheck(MDefinition *def)
             // Figure out the order in which the addition's operands will
             // execute. EdgeCaseAnalysis::analyzeLate has renumbered the MIR
             // definitions for us so that this just requires comparing ids.
-            MDefinition *first = use_def->getOperand(0);
-            MDefinition *second = use_def->getOperand(1);
+            MDefinition *first = use_def->toAdd()->getOperand(0);
+            MDefinition *second = use_def->toAdd()->getOperand(1);
             if (first->id() > second->id()) {
                 MDefinition *temp = first;
                 first = second;
@@ -1048,16 +1053,14 @@ NeedNegativeZeroCheck(MDefinition *def)
             // Only allowed to remove check when definition is the second operand
             if (use_def->getOperand(0) == def)
                 return true;
-            if (use_def->numOperands() > 2) {
-                for (size_t i = 2; i < use_def->numOperands(); i++) {
-                    if (use_def->getOperand(i) == def)
-                        return true;
-                }
+            for (size_t i = 2, e = use_def->numOperands(); i < e; i++) {
+                if (use_def->getOperand(i) == def)
+                    return true;
             }
             break;
           case MDefinition::Op_BoundsCheck:
             // Only allowed to remove check when definition is the first operand
-            if (use_def->getOperand(1) == def)
+            if (use_def->toBoundsCheck()->getOperand(1) == def)
                 return true;
             break;
           case MDefinition::Op_ToString:
@@ -1562,10 +1565,14 @@ MCompare::infer(JSContext *cx, BaselineInspector *inspector, jsbytecode *pc)
     // now unwrapped operand is an int32.
     MDefinition *newlhs, *newrhs;
     if (MustBeUInt32(getOperand(0), &newlhs) && MustBeUInt32(getOperand(1), &newrhs)) {
-        if (newlhs != getOperand(0))
+        if (newlhs != getOperand(0)) {
+            getOperand(0)->setFoldedUnchecked();
             replaceOperand(0, newlhs);
-        if (newrhs != getOperand(1))
+        }
+        if (newrhs != getOperand(1)) {
+            getOperand(1)->setFoldedUnchecked();
             replaceOperand(1, newrhs);
+        }
         compareType_ = Compare_UInt32;
         return;
     }
@@ -1703,8 +1710,8 @@ MBitNot::foldsTo(bool useValueNumbers)
     }
 
     if (input->isBitNot() && input->toBitNot()->specialization_ == MIRType_Int32) {
-        JS_ASSERT(input->getOperand(0)->type() == MIRType_Int32);
-        return input->getOperand(0); // ~~x => x
+        JS_ASSERT(input->toBitNot()->getOperand(0)->type() == MIRType_Int32);
+        return input->toBitNot()->getOperand(0); // ~~x => x
     }
 
     return this;
@@ -2189,7 +2196,7 @@ MBoundsCheckLower::fallible()
 }
 
 void
-MBeta::printOpcode(FILE *fp)
+MBeta::printOpcode(FILE *fp) const
 {
     PrintOpcodeName(fp, op());
     fprintf(fp, " ");

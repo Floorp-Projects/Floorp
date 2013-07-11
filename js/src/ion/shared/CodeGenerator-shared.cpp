@@ -135,7 +135,7 @@ CodeGeneratorShared::encodeSlots(LSnapshot *snapshot, MResumePoint *resumePoint,
 {
     IonSpew(IonSpew_Codegen, "Encoding %u of resume point %p's operands starting from %u",
             resumePoint->numOperands(), (void *) resumePoint, *startIndex);
-    for (uint32_t slotno = 0; slotno < resumePoint->numOperands(); slotno++) {
+    for (uint32_t slotno = 0, e = resumePoint->numOperands(); slotno < e; slotno++) {
         uint32_t i = slotno + *startIndex;
         MDefinition *mir = resumePoint->getOperand(slotno);
 

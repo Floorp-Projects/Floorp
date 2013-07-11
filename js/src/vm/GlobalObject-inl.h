@@ -128,69 +128,6 @@ GlobalObject::setCreateArrayFromBuffer<uint8_clamped>(Handle<JSFunction*> fun)
     setCreateArrayFromBufferHelper(FROM_BUFFER_UINT8CLAMPED, fun);
 }
 
-template<>
-inline Value
-GlobalObject::createArrayFromBuffer<uint8_t>() const
-{
-    return createArrayFromBufferHelper(FROM_BUFFER_UINT8);
-}
-
-template<>
-inline Value
-GlobalObject::createArrayFromBuffer<int8_t>() const
-{
-    return createArrayFromBufferHelper(FROM_BUFFER_INT8);
-}
-
-template<>
-inline Value
-GlobalObject::createArrayFromBuffer<uint16_t>() const
-{
-    return createArrayFromBufferHelper(FROM_BUFFER_UINT16);
-}
-
-template<>
-inline Value
-GlobalObject::createArrayFromBuffer<int16_t>() const
-{
-    return createArrayFromBufferHelper(FROM_BUFFER_INT16);
-}
-
-template<>
-inline Value
-GlobalObject::createArrayFromBuffer<uint32_t>() const
-{
-    return createArrayFromBufferHelper(FROM_BUFFER_UINT32);
-}
-
-template<>
-inline Value
-GlobalObject::createArrayFromBuffer<int32_t>() const
-{
-    return createArrayFromBufferHelper(FROM_BUFFER_INT32);
-}
-
-template<>
-inline Value
-GlobalObject::createArrayFromBuffer<float>() const
-{
-    return createArrayFromBufferHelper(FROM_BUFFER_FLOAT32);
-}
-
-template<>
-inline Value
-GlobalObject::createArrayFromBuffer<double>() const
-{
-    return createArrayFromBufferHelper(FROM_BUFFER_FLOAT64);
-}
-
-template<>
-inline Value
-GlobalObject::createArrayFromBuffer<uint8_clamped>() const
-{
-    return createArrayFromBufferHelper(FROM_BUFFER_UINT8CLAMPED);
-}
-
 void
 GlobalObject::setProtoGetter(JSFunction *protoGetter)
 {

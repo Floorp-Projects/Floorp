@@ -323,7 +323,7 @@ ion::EliminatePhis(MIRGenerator *mir, MIRGraph &graph,
         }
 
         // The current phi is/was used, so all its operands are used.
-        for (size_t i = 0; i < phi->numOperands(); i++) {
+        for (size_t i = 0, e = phi->numOperands(); i < e; i++) {
             MDefinition *in = phi->getOperand(i);
             if (!in->isPhi() || !in->isUnused() || in->isInWorklist())
                 continue;
@@ -398,7 +398,7 @@ static MIRType
 GuessPhiType(MPhi *phi)
 {
     MIRType type = MIRType_None;
-    for (size_t i = 0; i < phi->numOperands(); i++) {
+    for (size_t i = 0, e = phi->numOperands(); i < e; i++) {
         MDefinition *in = phi->getOperand(i);
         if (in->isPhi()) {
             if (!in->toPhi()->triedToSpecialize())
@@ -512,7 +512,7 @@ TypeAnalyzer::adjustPhiInputs(MPhi *phi)
 
     if (phiType == MIRType_Double) {
         // Convert int32 operands to double.
-        for (size_t i = 0; i < phi->numOperands(); i++) {
+        for (size_t i = 0, e = phi->numOperands(); i < e; i++) {
             MDefinition *in = phi->getOperand(i);
 
             if (in->type() == MIRType_Int32) {
@@ -530,7 +530,7 @@ TypeAnalyzer::adjustPhiInputs(MPhi *phi)
         return;
 
     // Box every typed input.
-    for (size_t i = 0; i < phi->numOperands(); i++) {
+    for (size_t i = 0, e = phi->numOperands(); i < e; i++) {
         MDefinition *in = phi->getOperand(i);
         if (in->type() == MIRType_Value)
             continue;
@@ -926,7 +926,7 @@ ion::AssertBasicGraphCoherency(MIRGraph &graph)
 
         // Assert that use chains are valid for this instruction.
         for (MInstructionIterator ins = block->begin(); ins != block->end(); ins++) {
-            for (uint32_t i = 0; i < ins->numOperands(); i++)
+            for (uint32_t i = 0, e = ins->numOperands(); i < e; i++)
                 JS_ASSERT(CheckOperandImpliesUse(*ins, ins->getOperand(i)));
         }
         for (MInstructionIterator ins = block->begin(); ins != block->end(); ins++) {

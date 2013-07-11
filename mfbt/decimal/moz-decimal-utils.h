@@ -39,7 +39,7 @@
     ClassName(const ClassName&) MOZ_DELETE; \
     void operator=(const ClassName&) MOZ_DELETE;
 
-#if defined(_MSC_VER) && (_MSC_VER <= 1700)
+#if defined(_MSC_VER)
 namespace std {
   inline bool isinf(double num) { return mozilla::IsInfinite(num); }
   inline bool isnan(double num) { return mozilla::IsNaN(num); }

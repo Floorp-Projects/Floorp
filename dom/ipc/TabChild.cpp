@@ -223,7 +223,8 @@ TabChild::PreloadSlowThings()
 {
     MOZ_ASSERT(!sPreallocatedTab);
 
-    nsRefPtr<TabChild> tab(new TabChild(TabContext(), /* chromeFlags */ 0));
+    nsRefPtr<TabChild> tab(new TabChild(ContentChild::GetSingleton(),
+                                        TabContext(), /* chromeFlags */ 0));
     if (!NS_SUCCEEDED(tab->Init()) ||
         !tab->InitTabChildGlobal(DONT_LOAD_SCRIPTS)) {
         return;
@@ -251,7 +252,7 @@ TabChild::PreloadSlowThings()
 }
 
 /*static*/ already_AddRefed<TabChild>
-TabChild::Create(const TabContext &aContext, uint32_t aChromeFlags)
+TabChild::Create(ContentChild* aManager, const TabContext &aContext, uint32_t aChromeFlags)
 {
     if (sPreallocatedTab &&
         sPreallocatedTab->mChromeFlags == aChromeFlags &&
@@ -267,14 +268,16 @@ TabChild::Create(const TabContext &aContext, uint32_t aChromeFlags)
         return child.forget();
     }
 
-    nsRefPtr<TabChild> iframe = new TabChild(aContext, aChromeFlags);
+    nsRefPtr<TabChild> iframe = new TabChild(aManager,
+                                             aContext, aChromeFlags);
     return NS_SUCCEEDED(iframe->Init()) ? iframe.forget() : nullptr;
 }
 
 
-TabChild::TabChild(const TabContext& aContext, uint32_t aChromeFlags)
+TabChild::TabChild(ContentChild* aManager, const TabContext& aContext, uint32_t aChromeFlags)
   : TabContext(aContext)
   , mRemoteFrame(nullptr)
+  , mManager(aManager)
   , mTabChildGlobal(nullptr)
   , mChromeFlags(aChromeFlags)
   , mOuterRect(0, 0, 0, 0)
@@ -976,7 +979,8 @@ TabChild::BrowserFrameProvideWindow(nsIDOMWindow* aOpener,
   *aReturn = nullptr;
 
   nsRefPtr<TabChild> newChild =
-      new TabChild(/* TabContext */ *this, /* chromeFlags */ 0);
+      new TabChild(ContentChild::GetSingleton(),
+                   /* TabContext */ *this, /* chromeFlags */ 0);
   if (!NS_SUCCEEDED(newChild->Init())) {
       return NS_ERROR_ABORT;
   }
@@ -2332,7 +2336,7 @@ TabChild::DoSendSyncMessage(const nsAString& aMessage,
                             const StructuredCloneData& aData,
                             InfallibleTArray<nsString>* aJSONRetVal)
 {
-  ContentChild* cc = static_cast<ContentChild*>(Manager());
+  ContentChild* cc = Manager();
   ClonedMessageData data;
   if (!BuildClonedMessageDataForChild(cc, aData, data)) {
     return false;
@@ -2344,7 +2348,7 @@ bool
 TabChild::DoSendAsyncMessage(const nsAString& aMessage,
                              const StructuredCloneData& aData)
 {
-  ContentChild* cc = static_cast<ContentChild*>(Manager());
+  ContentChild* cc = Manager();
   ClonedMessageData data;
   if (!BuildClonedMessageDataForChild(cc, aData, data)) {
     return false;

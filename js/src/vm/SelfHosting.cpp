@@ -322,6 +322,27 @@ js::intrinsic_Dump(JSContext *cx, unsigned argc, Value *vp)
     args.rval().setUndefined();
     return true;
 }
+
+JSBool
+intrinsic_ParallelSpew(ThreadSafeContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    JS_ASSERT(args.length() == 1);
+    JS_ASSERT(args[0].isString());
+
+    ScopedThreadSafeStringInspector inspector(args[0].toString());
+    if (!inspector.ensureChars(cx))
+        return false;
+
+    ScopedJSFreePtr<char> bytes(TwoByteCharsToNewUTF8CharsZ(cx, inspector.range()).c_str());
+    parallel::Spew(parallel::SpewOps, bytes);
+
+    args.rval().setUndefined();
+    return true;
+}
+
+const JSJitInfo intrinsic_ParallelSpew_jitInfo =
+    JS_JITINFO_NATIVE_PARALLEL(JSParallelNativeThreadSafeWrapper<intrinsic_ParallelSpew>);
 #endif
 
 /*
@@ -636,6 +657,10 @@ const JSFunctionSpec intrinsic_functions[] = {
 
 #ifdef DEBUG
     JS_FN("Dump",                 intrinsic_Dump,                 1,0),
+
+    JS_FNINFO("ParallelSpew",
+              JSNativeThreadSafeWrapper<intrinsic_ParallelSpew>,
+              &intrinsic_ParallelSpew_jitInfo, 1,0),
 #endif
 
     JS_FS_END
@@ -662,6 +687,20 @@ JSRuntime::initSelfHosting(JSContext *cx)
     if (!JS_DefineFunctions(cx, shg, intrinsic_functions))
         return false;
 
+    /*
+     * In self-hosting mode, scripts emit JSOP_CALLINTRINSIC instead of
+     * JSOP_NAME or JSOP_GNAME to access unbound variables. JSOP_CALLINTRINSIC
+     * does a name lookup in a special object, whose properties are filled in
+     * lazily upon first access for a given global.
+     *
+     * As that object is inaccessible to client code, the lookups are
+     * guaranteed to return the original objects, ensuring safe implementation
+     * of self-hosted builtins.
+     *
+     * Additionally, the special syntax _CallFunction(receiver, ...args, fun)
+     * is supported, for which bytecode is emitted that invokes |fun| with
+     * |receiver| as the this-object and ...args as the arguments..
+     */
     CompileOptions options(cx);
     options.setFileAndLine("self-hosted", 1);
     options.setSelfHostingMode(true);
