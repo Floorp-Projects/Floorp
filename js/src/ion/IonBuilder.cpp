@@ -19,7 +19,6 @@
 #include "ion/Lowering.h"
 #include "ion/MIRGraph.h"
 
-#include "jsanalyzeinlines.h"
 #include "jsscriptinlines.h"
 
 #include "ion/CompileInfo-inl.h"

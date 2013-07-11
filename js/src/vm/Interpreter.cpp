@@ -39,7 +39,6 @@
 #include "jsatominlines.h"
 #include "jsboolinlines.h"
 #include "jsinferinlines.h"
-#include "jsopcodeinlines.h"
 #include "jsscriptinlines.h"
 
 #include "builtin/Iterator-inl.h"

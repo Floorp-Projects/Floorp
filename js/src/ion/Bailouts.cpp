@@ -17,8 +17,6 @@
 #include "vm/Interpreter.h"
 #include "ion/BaselineJIT.h"
 
-#include "jsinferinlines.h"
-
 #include "ion/IonFrames-inl.h"
 #include "vm/Stack-inl.h"
 
