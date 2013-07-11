@@ -6483,6 +6483,19 @@ MDefinition *
 IonBuilder::convertShiftToMaskForStaticTypedArray(MDefinition *id,
                                                   ArrayBufferView::ViewType viewType)
 {
+    // No shifting is necessary if the typed array has single byte elements.
+    if (TypedArrayShift(viewType) == 0)
+        return id;
+
+    // If the index is an already shifted constant, undo the shift to get the
+    // absolute offset being accessed.
+    if (id->isConstant() && id->toConstant()->value().isInt32()) {
+        int32_t index = id->toConstant()->value().toInt32();
+        MConstant *offset = MConstant::New(Int32Value(index << TypedArrayShift(viewType)));
+        current->add(offset);
+        return offset;
+    }
+
     if (!id->isRsh() || id->isEffectful())
         return NULL;
     if (!id->getOperand(1)->isConstant())
