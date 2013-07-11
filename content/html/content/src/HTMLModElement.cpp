@@ -15,7 +15,6 @@ namespace dom {
 HTMLModElement::HTMLModElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo)
 {
-  SetIsDOMBinding();
 }
 
 HTMLModElement::~HTMLModElement()

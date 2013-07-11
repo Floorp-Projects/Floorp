@@ -34,7 +34,6 @@ public:
   HTMLSharedElement(already_AddRefed<nsINodeInfo> aNodeInfo)
     : nsGenericHTMLElement(aNodeInfo)
   {
-    SetIsDOMBinding();
   }
   virtual ~HTMLSharedElement();
 

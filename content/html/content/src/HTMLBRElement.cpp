@@ -21,7 +21,6 @@ namespace dom {
 HTMLBRElement::HTMLBRElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo)
 {
-  SetIsDOMBinding();
 }
 
 HTMLBRElement::~HTMLBRElement()
