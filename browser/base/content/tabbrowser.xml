@@ -158,7 +158,8 @@
           let findBar = document.createElementNS(this.namespaceURI, "findbar");
           let browser = this.getBrowserForTab(aTab);
           let browserContainer = this.getBrowserContainer(browser);
-          browserContainer.appendChild(findBar);
+          findBar.setAttribute("position", "top");
+          browserContainer.insertBefore(findBar, browserContainer.firstChild);
 
           // Force a style flush to ensure that our binding is attached.
           findBar.clientTop;
