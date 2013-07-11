@@ -13,7 +13,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=
   <script type="application/javascript;version=1.8">
 Components.utils.import("resource://gre/modules/devtools/Loader.jsm");
 
-const Promise = devtools.require("sdk/core/promise");
+const promise = devtools.require("sdk/core/promise");
 const inspector = devtools.require("devtools/server/actors/inspector");
 
 window.onload = function() {
@@ -70,7 +70,7 @@ function loadSelector(selector) {
 }
 
 function loadSelectors(selectors) {
-  return Promise.all([loadSelector(sel) for (sel of selectors)]);
+  return promise.all([loadSelector(sel) for (sel of selectors)]);
 }
 
 function doMoves(moves) {

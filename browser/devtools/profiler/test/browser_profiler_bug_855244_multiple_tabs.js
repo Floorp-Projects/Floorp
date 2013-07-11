@@ -31,7 +31,7 @@ function test() {
 }
 
 function openTwoTabs() {
-  let deferred = Promise.defer();
+  let deferred = promise.defer();
 
   setUp(URL, (tab, browser, panel) => {
     gTab1 = tab;
@@ -51,7 +51,7 @@ function openTwoTabs() {
 }
 
 function startTwoProfiles() {
-  let deferred = Promise.defer();
+  let deferred = promise.defer();
   gPanel1.controller.start("Profile 1", (err) => {
     ok(!err, "Profile in tab 1 started without errors");
     gPanel2.controller.start("Profile 1", (err) => {
@@ -67,7 +67,7 @@ function startTwoProfiles() {
 }
 
 function stopFirstProfile() {
-  let deferred = Promise.defer();
+  let deferred = promise.defer();
 
   gPanel1.controller.stop("Profile 1", (err, data) => {
     ok(!err, "Profile in tab 1 stopped without errors");
@@ -79,7 +79,7 @@ function stopFirstProfile() {
 }
 
 function stopSecondProfile() {
-  let deferred = Promise.defer();
+  let deferred = promise.defer();
 
   gPanel2.controller.stop("Profile 1", (err, data) => {
     ok(!err, "Profile in tab 2 stopped without errors");

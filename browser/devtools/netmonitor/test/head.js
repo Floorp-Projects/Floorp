@@ -5,7 +5,7 @@
 const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
 let { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
-let { Promise } = Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js", {});
+let { Promise: promise } = Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js", {});
 let { gDevTools } = Cu.import("resource:///modules/devtools/gDevTools.jsm", {});
 let { devtools } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 let TargetFactory = devtools.TargetFactory;
@@ -50,7 +50,7 @@ registerCleanupFunction(() => {
 function addTab(aUrl, aWindow) {
   info("Adding tab: " + aUrl);
 
-  let deferred = Promise.defer();
+  let deferred = promise.defer();
   let targetWindow = aWindow || window;
   let targetBrowser = targetWindow.gBrowser;
 
@@ -81,7 +81,7 @@ function initNetMonitor(aUrl, aWindow) {
   return addTab(aUrl).then((aTab) => {
     info("Net tab added successfully: " + aUrl);
 
-    let deferred = Promise.defer();
+    let deferred = promise.defer();
     let debuggee = aTab.linkedBrowser.contentWindow.wrappedJSObject;
     let target = TargetFactory.forTab(aTab);
 
@@ -99,7 +99,7 @@ function initNetMonitor(aUrl, aWindow) {
 function restartNetMonitor(aMonitor, aNewUrl) {
   info("Restarting the specified network monitor.");
 
-  let deferred = Promise.defer();
+  let deferred = promise.defer();
   let tab = aMonitor.target.tab;
   let url = aNewUrl || tab.linkedBrowser.contentWindow.wrappedJSObject.location.href;
 
@@ -112,7 +112,7 @@ function restartNetMonitor(aMonitor, aNewUrl) {
 function teardown(aMonitor) {
   info("Destroying the specified network monitor.");
 
-  let deferred = Promise.defer();
+  let deferred = promise.defer();
   let tab = aMonitor.target.tab;
 
   aMonitor.once("destroyed", deferred.resolve);
@@ -122,7 +122,7 @@ function teardown(aMonitor) {
 }
 
 function waitForNetworkEvents(aMonitor, aGetRequests, aPostRequests = 0) {
-  let deferred = Promise.defer();
+  let deferred = promise.defer();
 
   let panel = aMonitor.panelWin;
   let genericEvents = 0;

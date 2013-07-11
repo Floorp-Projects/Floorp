@@ -27,11 +27,11 @@ function test() {
 
 // var helpers = require('gclitest/helpers');
 var canon = require('gcli/canon');
-var Promise = require('util/promise');
+var promise = require('util/promise');
 
 exports.testBasic = function(options) {
   var getData = function() {
-    var deferred = Promise.defer();
+    var deferred = promise.defer();
 
     var resolve = function() {
       deferred.resolve([
