@@ -178,8 +178,7 @@ public:
     virtual bool RecvNotifyAlertsObserver(const nsCString& aType, const nsString& aData);
 
     virtual bool RecvAsyncMessage(const nsString& aMsg,
-                                  const ClonedMessageData& aData,
-                                  const InfallibleTArray<CpowEntry>& aCpows);
+                                  const ClonedMessageData& aData);
 
     virtual bool RecvGeolocationUpdate(const GeoPosition& somewhere);
 
