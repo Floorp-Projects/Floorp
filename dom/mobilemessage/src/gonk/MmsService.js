@@ -1549,6 +1549,9 @@ MmsService.prototype = {
    *
    * @param aParams
    *        The MmsParameters dictionay object.
+   * @param aMessage (output)
+   *        The database-savable message.
+   * Return the error code by veryfying if the |aParams| is valid or not.
    *
    * Notes:
    *
@@ -1561,13 +1564,14 @@ MmsService.prototype = {
    * name-parameter of Content-Type header nor filename parameter of Content-Disposition
    * header is available, Content-Location header SHALL be used if available.
    */
-  createSavableFromParams: function createSavableFromParams(aParams) {
+  createSavableFromParams: function createSavableFromParams(aParams, aMessage) {
     if (DEBUG) debug("createSavableFromParams: aParams: " + JSON.stringify(aParams));
-    let message = {};
+
+    let isAddrValid = true;
     let smil = aParams.smil;
 
-    // |message.headers|
-    let headers = message["headers"] = {};
+    // |aMessage.headers|
+    let headers = aMessage["headers"] = {};
     let receivers = aParams.receivers;
     if (receivers.length != 0) {
       let headersTo = headers["to"] = [];
@@ -1577,16 +1581,23 @@ MmsService.prototype = {
                          "from " + receivers[i] + " to " + normalizedAddress);
 
         headersTo.push({"address": normalizedAddress, "type": "PLMN"});
+
+        // Check if the address is valid to send MMS.
+        if (!PhoneNumberUtils.isPlainPhoneNumber(normalizedAddress)) {
+          if (DEBUG) debug("Error! Address is invalid to send MMS: " +
+                           normalizedAddress);
+          isAddrValid = false;
+        }
       }
     }
     if (aParams.subject) {
       headers["subject"] = aParams.subject;
     }
 
-    // |message.parts|
+    // |aMessage.parts|
     let attachments = aParams.attachments;
     if (attachments.length != 0 || smil) {
-      let parts = message["parts"] = [];
+      let parts = aMessage["parts"] = [];
 
       // Set the SMIL part if needed.
       if (smil) {
@@ -1641,22 +1652,59 @@ MmsService.prototype = {
     }
 
     // The following attributes are needed for saving message into DB.
-    message["type"] = "mms";
-    message["deliveryStatusRequested"] = true;
-    message["timestamp"] = Date.now();
-    message["receivers"] = receivers;
-    message["sender"] = this.getMsisdn();
+    aMessage["type"] = "mms";
+    aMessage["deliveryStatusRequested"] = true;
+    aMessage["timestamp"] = Date.now();
+    aMessage["receivers"] = receivers;
+    aMessage["sender"] = this.getMsisdn();
 
-    if (DEBUG) debug("createSavableFromParams: message: " + JSON.stringify(message));
-    return message;
+    if (DEBUG) debug("createSavableFromParams: aMessage: " +
+                     JSON.stringify(aMessage));
+
+    return isAddrValid ? Ci.nsIMobileMessageCallback.SUCCESS_NO_ERROR
+                       : Ci.nsIMobileMessageCallback.INVALID_ADDRESS_ERROR;
   },
 
   // nsIMmsService
 
   send: function send(aParams, aRequest) {
     if (DEBUG) debug("send: aParams: " + JSON.stringify(aParams));
-    if (aParams.receivers.length == 0) {
-      aRequest.notifySendMessageFailed(Ci.nsIMobileMessageCallback.INTERNAL_ERROR);
+
+    // Note that the following sanity checks for |aParams| should be consistent
+    // with the checks in SmsIPCService.GetSendMmsMessageRequestFromParams.
+
+    // Check if |aParams| is valid.
+    if (aParams == null || typeof aParams != "object") {
+      if (DEBUG) debug("Error! 'aParams' should be a non-null object.");
+      throw Cr.NS_ERROR_INVALID_ARG;
+      return;
+    }
+
+    // Check if |receivers| is valid.
+    if (!Array.isArray(aParams.receivers)) {
+      if (DEBUG) debug("Error! 'receivers' should be an array.");
+      throw Cr.NS_ERROR_INVALID_ARG;
+      return;
+    }
+
+    // Check if |subject| is valid.
+    if (aParams.subject != null && typeof aParams.subject != "string") {
+      if (DEBUG) debug("Error! 'subject' should be a string if passed.");
+      throw Cr.NS_ERROR_INVALID_ARG;
+      return;
+    }
+
+    // Check if |smil| is valid.
+    if (aParams.smil != null && typeof aParams.smil != "string") {
+      if (DEBUG) debug("Error! 'smil' should be a string if passed.");
+      throw Cr.NS_ERROR_INVALID_ARG;
+      return;
+    }
+
+    // Check if |attachments| is valid.
+    if (!Array.isArray(aParams.attachments)) {
+      if (DEBUG) debug("Error! 'attachments' should be an array.");
+      throw Cr.NS_ERROR_INVALID_ARG;
       return;
     }
 
@@ -1683,15 +1731,13 @@ MmsService.prototype = {
         if (DEBUG) debug("Marking the delivery state/staus is done. Notify sent or failed.");
         // TODO bug 832140 handle !Components.isSuccessCode(aRv)
         if (!isSentSuccess) {
-          if (DEBUG) debug("Send MMS fail. aParams.receivers = " +
-                           JSON.stringify(aParams.receivers));
+          if (DEBUG) debug("Sending MMS failed.");
           aRequest.notifySendMessageFailed(aErrorCode);
           Services.obs.notifyObservers(aDomMessage, kSmsFailedObserverTopic, null);
           return;
         }
 
-        if (DEBUG) debug("Send MMS successful. aParams.receivers = " +
-                         JSON.stringify(aParams.receivers));
+        if (DEBUG) debug("Sending MMS succeeded.");
 
         // Notifying observers the MMS message is sent.
         self.broadcastSentMessageEvent(aDomMessage);
@@ -1701,7 +1747,8 @@ MmsService.prototype = {
       });
     };
 
-    let savableMessage = this.createSavableFromParams(aParams);
+    let savableMessage = {};
+    let errorCode = this.createSavableFromParams(aParams, savableMessage);
     gMobileMessageDatabaseService
       .saveSendingMessage(savableMessage,
                           function notifySendingResult(aRv, aDomMessage) {
@@ -1709,6 +1756,12 @@ MmsService.prototype = {
 
       // TODO bug 832140 handle !Components.isSuccessCode(aRv)
       Services.obs.notifyObservers(aDomMessage, kSmsSendingObserverTopic, null);
+
+      if (errorCode !== Ci.nsIMobileMessageCallback.SUCCESS_NO_ERROR) {
+        if (DEBUG) debug("Error! The params for sending MMS are invalid.");
+        sendTransactionCb(aDomMessage, errorCode);
+        return;
+      }
 
       // For radio disabled error.
       if (gMmsConnection.radioDisabled) {
@@ -1726,6 +1779,7 @@ MmsService.prototype = {
         return;
       }
 
+      // This is the entry point starting to send MMS.
       let sendTransaction;
       try {
         sendTransaction = new SendTransaction(aDomMessage.id, savableMessage);
