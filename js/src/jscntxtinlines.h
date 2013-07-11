@@ -520,4 +520,18 @@ JSContext::currentScript(jsbytecode **ppc,
     return script;
 }
 
+template <JSThreadSafeNative threadSafeNative>
+inline JSBool
+JSNativeThreadSafeWrapper(JSContext *cx, unsigned argc, JS::Value *vp)
+{
+    return threadSafeNative(cx, argc, vp);
+}
+
+template <JSThreadSafeNative threadSafeNative>
+inline js::ParallelResult
+JSParallelNativeThreadSafeWrapper(js::ForkJoinSlice *slice, unsigned argc, JS::Value *vp)
+{
+    return threadSafeNative(slice, argc, vp) ? js::TP_SUCCESS : js::TP_FATAL;
+}
+
 #endif /* jscntxtinlines_h */

@@ -970,12 +970,12 @@ class LCallNative : public LJSCallInstructionHelper<BOX_PIECES, 0, 4>
     LIR_HEADER(CallNative)
 
     LCallNative(uint32_t argslot,
-                const LDefinition &argJSContext, const LDefinition &argUintN,
+                const LDefinition &argContext, const LDefinition &argUintN,
                 const LDefinition &argVp, const LDefinition &tmpreg)
       : JSCallHelper(argslot)
     {
         // Registers used for callWithABI().
-        setTemp(0, argJSContext);
+        setTemp(0, argContext);
         setTemp(1, argUintN);
         setTemp(2, argVp);
 
@@ -983,7 +983,7 @@ class LCallNative : public LJSCallInstructionHelper<BOX_PIECES, 0, 4>
         setTemp(3, tmpreg);
     }
 
-    const LAllocation *getArgJSContextReg() {
+    const LAllocation *getArgContextReg() {
         return getTemp(0)->output();
     }
     const LAllocation *getArgUintNReg() {

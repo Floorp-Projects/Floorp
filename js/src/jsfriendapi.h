@@ -1572,7 +1572,8 @@ struct JSJitInfo {
     enum OpType {
         Getter,
         Setter,
-        Method
+        Method,
+        OpType_None
     };
 
     union {
@@ -1589,7 +1590,13 @@ struct JSJitInfo {
                                keep returning the same value for the given
                                "this" object" */
     JSValueType returnType; /* The return type tag.  Might be JSVAL_TYPE_UNKNOWN */
+
+    /* An alternative native that's safe to call in parallel mode. */
+    JSParallelNative parallelNative;
 };
+
+#define JS_JITINFO_NATIVE_PARALLEL(op)                                         \
+    {{NULL},0,0,JSJitInfo::OpType_None,false,false,false,JSVAL_TYPE_MISSING,op}
 
 static JS_ALWAYS_INLINE const JSJitInfo *
 FUNCTION_VALUE_TO_JITINFO(const JS::Value& v)
