@@ -14,7 +14,6 @@ include protocol PRenderFrame;
 include protocol POfflineCacheUpdate;
 include protocol PIndexedDB;
 include DOMTypes;
-include JavaScriptTypes;
 include URIParams;
 
 include "gfxMatrix.h";
@@ -68,7 +67,7 @@ rpc protocol PBrowser
     manages PIndexedDB;
 
 both:
-    AsyncMessage(nsString aMessage, ClonedMessageData aData, CpowEntry[] aCpows);
+    AsyncMessage(nsString aMessage, ClonedMessageData aData);
 
 parent:
     /**
@@ -81,7 +80,7 @@ parent:
 
     rpc CreateWindow() returns (PBrowser window);
 
-    sync SyncMessage(nsString aMessage, ClonedMessageData aData, CpowEntry[] aCpows)
+    sync SyncMessage(nsString aMessage, ClonedMessageData aData)
       returns (nsString[] retval);
 
     /**

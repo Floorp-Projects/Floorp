@@ -1084,18 +1084,6 @@ js::AddScriptRoot(JSContext *cx, JSScript **rp, const char *name)
     return AddRoot(cx, rp, name, JS_GC_ROOT_SCRIPT_PTR);
 }
 
-extern JS_FRIEND_API(bool)
-js_AddObjectRoot(JSRuntime *rt, JSObject **objp)
-{
-    return AddRoot(rt, objp, NULL, JS_GC_ROOT_OBJECT_PTR);
-}
-
-extern JS_FRIEND_API(void)
-js_RemoveObjectRoot(JSRuntime *rt, JSObject **objp)
-{
-    js_RemoveRoot(rt, objp);
-}
-
 JS_FRIEND_API(void)
 js_RemoveRoot(JSRuntime *rt, void *rp)
 {
