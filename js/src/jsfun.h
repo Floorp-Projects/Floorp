@@ -142,6 +142,9 @@ class JSFunction : public JSObject
     bool isNamedLambda() const {
         return isLambda() && atom_ && !hasGuessedAtom();
     }
+    bool hasParallelNative() const {
+        return isNative() && jitInfo() && !!jitInfo()->parallelNative;
+    }
 
     bool isBuiltinFunctionConstructor();
 
@@ -290,6 +293,15 @@ class JSFunction : public JSObject
 
     JSNative maybeNative() const {
         return isInterpreted() ? NULL : native();
+    }
+
+    JSParallelNative parallelNative() const {
+        JS_ASSERT(hasParallelNative());
+        return jitInfo()->parallelNative;
+    }
+
+    JSParallelNative maybeParallelNative() const {
+        return hasParallelNative() ? parallelNative() : NULL;
     }
 
     void initNative(js::Native native, const JSJitInfo *jitinfo) {
