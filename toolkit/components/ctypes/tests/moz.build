@@ -5,6 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 MODULE = 'jsctypes-test'
+NO_DIST_INSTALL = True
 
 XPCSHELL_TESTS_MANIFESTS += ['unit/xpcshell.ini']
 

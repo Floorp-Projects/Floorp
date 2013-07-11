@@ -30,7 +30,7 @@ typedef Rooted<ArgumentsObject *> RootedArgumentsObject;
 
 /*****************************************************************************/
 
-StaticScopeIter::StaticScopeIter(JSContext *cx, JSObject *objArg)
+StaticScopeIter::StaticScopeIter(ExclusiveContext *cx, JSObject *objArg)
   : obj(cx, objArg), onNamedLambda(false)
 {
     JS_ASSERT_IF(obj, obj->is<StaticBlockObject>() || obj->is<JSFunction>());
@@ -200,7 +200,7 @@ CallObject::createTemplateObject(JSContext *cx, HandleScript script, gc::Initial
     RootedShape shape(cx, script->bindings.callObjShape());
     JS_ASSERT(shape->getObjectClass() == &class_);
 
-    RootedTypeObject type(cx, cx->compartment()->getNewType(cx, &class_, NULL));
+    RootedTypeObject type(cx, cx->getNewType(&class_, NULL));
     if (!type)
         return NULL;
 
@@ -330,7 +330,7 @@ Class DeclEnvObject::class_ = {
 DeclEnvObject *
 DeclEnvObject::createTemplateObject(JSContext *cx, HandleFunction fun, gc::InitialHeap heap)
 {
-    RootedTypeObject type(cx, cx->compartment()->getNewType(cx, &class_, NULL));
+    RootedTypeObject type(cx, cx->getNewType(&class_, NULL));
     if (!type)
         return NULL;
 
@@ -374,7 +374,7 @@ DeclEnvObject::create(JSContext *cx, HandleObject enclosing, HandleFunction call
 WithObject *
 WithObject::create(JSContext *cx, HandleObject proto, HandleObject enclosing, uint32_t depth)
 {
-    RootedTypeObject type(cx, proto->getNewType(cx, &class_));
+    RootedTypeObject type(cx, cx->getNewType(&class_, proto.get()));
     if (!type)
         return NULL;
 
@@ -653,7 +653,7 @@ ClonedBlockObject::create(JSContext *cx, Handle<StaticBlockObject *> block, Abst
     assertSameCompartment(cx, frame);
     JS_ASSERT(block->getClass() == &BlockObject::class_);
 
-    RootedTypeObject type(cx, block->getNewType(cx, &BlockObject::class_));
+    RootedTypeObject type(cx, cx->getNewType(&BlockObject::class_, block.get()));
     if (!type)
         return NULL;
 
@@ -705,9 +705,9 @@ ClonedBlockObject::copyUnaliasedValues(AbstractFramePtr frame)
 }
 
 StaticBlockObject *
-StaticBlockObject::create(JSContext *cx)
+StaticBlockObject::create(ExclusiveContext *cx)
 {
-    RootedTypeObject type(cx, cx->compartment()->getNewType(cx, &BlockObject::class_, NULL));
+    RootedTypeObject type(cx, cx->getNewType(&BlockObject::class_, NULL));
     if (!type)
         return NULL;
 
@@ -725,7 +725,7 @@ StaticBlockObject::create(JSContext *cx)
 }
 
 /* static */ Shape *
-StaticBlockObject::addVar(JSContext *cx, Handle<StaticBlockObject*> block, HandleId id,
+StaticBlockObject::addVar(ExclusiveContext *cx, Handle<StaticBlockObject*> block, HandleId id,
                           int index, bool *redeclared)
 {
     JS_ASSERT(JSID_IS_ATOM(id) || (JSID_IS_INT(id) && JSID_TO_INT(id) == index));

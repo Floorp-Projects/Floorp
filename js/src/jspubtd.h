@@ -14,6 +14,8 @@
 #include "jsprototypes.h"
 #include "jstypes.h"
 
+#include "mozilla/PodOperations.h"
+
 #if defined(JSGC_ROOT_ANALYSIS) || defined(JSGC_USE_EXACT_ROOTING) || defined(DEBUG)
 # define JSGC_TRACK_EXACT_ROOTS
 #endif
@@ -28,6 +30,8 @@ class Value;
 
 template <typename T>
 class Rooted;
+
+class JS_PUBLIC_API(AutoGCRooter);
 
 struct Zone;
 
@@ -230,7 +234,17 @@ struct Runtime
 
 namespace js {
 
+/*
+ * Parallel operations in general can have one of three states. They may
+ * succeed, fail, or "bail", where bail indicates that the code encountered an
+ * unexpected condition and should be re-run sequentially. Different
+ * subcategories of the "bail" state are encoded as variants of TP_RETRY_*.
+ */
+enum ParallelResult { TP_SUCCESS, TP_RETRY_SEQUENTIALLY, TP_RETRY_AFTER_GC, TP_FATAL };
+
 struct ThreadSafeContext;
+struct ForkJoinSlice;
+class ExclusiveContext;
 
 class Allocator;
 
@@ -289,8 +303,15 @@ struct ContextFriendFields
 
   public:
     explicit ContextFriendFields(JSRuntime *rt)
-      : runtime_(rt), compartment_(NULL), zone_(NULL)
-    { }
+      : runtime_(rt), compartment_(NULL), zone_(NULL), autoGCRooters(NULL)
+    {
+#if defined(JSGC_ROOT_ANALYSIS) || defined(JSGC_USE_EXACT_ROOTING)
+        mozilla::PodArrayZero(thingGCRooters);
+#endif
+#if defined(DEBUG) && defined(JS_GC_ZEAL) && defined(JSGC_ROOT_ANALYSIS) && !defined(JS_THREADSAFE)
+        skipGCRooters = NULL;
+#endif
+    }
 
     static const ContextFriendFields *get(const JSContext *cx) {
         return reinterpret_cast<const ContextFriendFields *>(cx);
@@ -319,6 +340,9 @@ struct ContextFriendFields
      */
     SkipRoot *skipGCRooters;
 #endif
+
+    /* Stack of thread-stack-allocated GC roots. */
+    JS::AutoGCRooter   *autoGCRooters;
 
     friend JSRuntime *GetRuntime(const JSContext *cx);
     friend JSCompartment *GetContextCompartment(const JSContext *cx);

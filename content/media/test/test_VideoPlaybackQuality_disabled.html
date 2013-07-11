@@ -1,0 +1,33 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test basic functionality of VideoPlaybackQuality</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+function test() {
+  var video = document.createElement("video");
+  ok(!video.getVideoPlaybackQuality, "getVideoPlaybackQuality should be hidden behind a pref");
+  var accessThrows = false;
+  try {
+    video.getVideoPlaybackQuality();
+  } catch (e) {
+    accessThrows = true;
+  }
+  ok(accessThrows, "getVideoPlaybackQuality should be hidden behind a pref");
+  SimpleTest.finish();
+}
+
+addLoadEvent(function() {
+  SpecialPowers.pushPrefEnv({"set": [["media.mediasource.enabled", false]]}, test);
+});
+</script>
+</pre>
+</body>
+</html>
