@@ -12,7 +12,6 @@
 #include "ion/MIRGraph.h"
 #include "ion/IonBuilder.h"
 #include "jsinferinlines.h"
-#include "jsscriptinlines.h"
 
 using namespace js;
 using namespace js::ion;
