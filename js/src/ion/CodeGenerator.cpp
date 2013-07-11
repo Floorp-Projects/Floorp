@@ -3936,7 +3936,7 @@ CodeGenerator::visitIsNullOrLikeUndefinedAndBranch(LIsNullOrLikeUndefinedAndBran
     return true;
 }
 
-typedef JSString *(*ConcatStringsFn)(ThreadSafeContext *, HandleString, HandleString);
+typedef JSString *(*ConcatStringsFn)(JSContext *, HandleString, HandleString);
 static const VMFunction ConcatStringsInfo = FunctionInfo<ConcatStringsFn>(ConcatStrings<CanGC>);
 
 bool
