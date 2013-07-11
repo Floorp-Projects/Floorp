@@ -17,6 +17,8 @@ class MIRGraph;
 
 class UnreachableCodeElimination
 {
+    typedef Vector<MBasicBlock *, 16, SystemAllocPolicy> BlockList;
+
     MIRGenerator *mir_;
     MIRGraph &graph_;
     uint32_t marked_;
@@ -27,6 +29,9 @@ class UnreachableCodeElimination
     void checkDependencyAndRemoveUsesFromUnmarkedBlocks(MDefinition *instr);
     bool removeUnmarkedBlocksAndClearDominators();
     bool removeUnmarkedBlocksAndCleanup();
+
+    bool enqueue(MBasicBlock *block, BlockList &list);
+    MBasicBlock *optimizableSuccessor(MBasicBlock *block);
 
   public:
     UnreachableCodeElimination(MIRGenerator *mir, MIRGraph &graph)
