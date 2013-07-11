@@ -1105,11 +1105,11 @@
                   }
                 }
 
-                // If the find bar is focused, keep it focused.
-                if (gFindBarInitialized &&
-                    !gFindBar.hidden &&
-                    gFindBar.getElement("findbar-textbox").getAttribute("focused") == "true")
+                // If the find bar is open, focus it.
+                if (gFindBarInitialized && !gFindBar.hidden) {
+                  gFindBar._findField.focus();
                   break;
+                }
 
                 // Otherwise, focus the content area.
                 let fm = Cc["@mozilla.org/focus-manager;1"].getService(Ci.nsIFocusManager);
