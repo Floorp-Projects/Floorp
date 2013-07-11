@@ -212,7 +212,7 @@ function runTest() {
   for (var test in gData) {
     var test = new PermTest(gData[test]);
     test.start();
-    yield;
+    yield undefined;
   }
 }
 

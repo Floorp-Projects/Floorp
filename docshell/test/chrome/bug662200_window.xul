@@ -38,7 +38,7 @@
         onNavComplete: nextTest
       };
       doPageNavigation(navData);
-      yield;
+      yield undefined;
       
       // Load the second test page.
       navData = {
@@ -55,7 +55,7 @@
       event.initMouseEvent("click", true, true, TestWindow.getWindow(),
                            0, 0, 0, 0, 0, false, false, false, false, 0, null);
       link.dispatchEvent(event);
-      yield;
+      yield undefined;
 
       // Load the third test page.
       navData = {
@@ -72,7 +72,7 @@
       event.initMouseEvent("click", true, true, TestWindow.getWindow(),
                            0, 0, 0, 0, 0, false, false, false, false, 0, null);
       link.dispatchEvent(event);
-      yield;
+      yield undefined;
       
       // Go back.
       navData = {
@@ -85,7 +85,7 @@
         onNavComplete: nextTest
       };
       doPageNavigation(navData);
-      yield;
+      yield undefined;
 
       var Ci = Components.interfaces;
       var docshell = TestWindow.getWindow()
@@ -110,7 +110,7 @@
       // so we call reload explicitly here
       waitForPageEvents(navData);
       shistory.reload(0);
-      yield;
+      yield undefined;
 
       // After this sequence of events, we should be able to go back and forward
       is(TestWindow.getBrowser().canGoBack, true, "Should be able to go back!");
@@ -120,7 +120,7 @@
       // Tell the framework the test is finished.  Include the final 'yield' 
       // statement to prevent a StopIteration exception from being thrown.
       finish();
-      yield;
+      yield undefined;
     }
     
   ]]></script>

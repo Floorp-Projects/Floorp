@@ -13,7 +13,7 @@ function testSteps()
   request.onerror = errorHandler;
   request.onsuccess = unexpectedSuccessHandler;
   request.onupgradeneeded = grabEventAndContinueHandler;
-  let event = yield;
+  let event = yield undefined;
 
   let db = event.target.result;
 
@@ -43,7 +43,7 @@ function testSteps()
     is(e.name, "InvalidStateError", "Expect an InvalidStateError");
   }
 
-  event = yield;
+  event = yield undefined;
   is(event.type, "abort", "Got transaction abort event");
   is(event.target, transaction, "Right target");
   is(event.target.transaction, null, "No transaction");
@@ -55,7 +55,7 @@ function testSteps()
   request.onerror = grabEventAndContinueHandler;
   request.onupgradeneeded = unexpectedSuccessHandler;
 
-  event = yield;
+  event = yield undefined;
 
   is(event.type, "error", "Got request error event");
   is(event.target, request, "Right target");
@@ -67,7 +67,7 @@ function testSteps()
   request.onerror = errorHandler;
   request.onsuccess = unexpectedSuccessHandler;
   request.onupgradeneeded = grabEventAndContinueHandler;
-  event = yield;
+  event = yield undefined;
 
   is(event.type, "upgradeneeded", "Got upgradeneeded event");
 
@@ -82,7 +82,7 @@ function testSteps()
 
   request.onsuccess = grabEventAndContinueHandler;
   request.onupgradeneeded = unexpectedSuccessHandler;
-  event = yield;
+  event = yield undefined;
 
   is(event.target.result, db2, "Correct target");
   is(event.type, "success", "Got success event");
@@ -94,5 +94,5 @@ function testSteps()
   is(objectStore.indexNames.length, 0, "Correct indexNames length still");
 
   finishTest();
-  yield;
+  yield undefined;
 }

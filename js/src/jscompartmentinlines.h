@@ -41,7 +41,7 @@ js::AutoCompartment::~AutoCompartment()
 namespace js {
 
 /*
- * Entering the atoms comaprtment is not possible with the AutoCompartment
+ * Entering the atoms compartment is not possible with AutoCompartment
  * since the atoms compartment does not have a global.
  *
  * Note: since most of the VM assumes that cx->global is non-null, only a
@@ -50,19 +50,19 @@ namespace js {
  */
 class AutoEnterAtomsCompartment
 {
-    JSContext *cx;
+    ExclusiveContext *cx;
     JSCompartment *oldCompartment;
   public:
-    AutoEnterAtomsCompartment(JSContext *cx)
+    AutoEnterAtomsCompartment(ExclusiveContext *cx)
       : cx(cx),
-        oldCompartment(cx->compartment())
+        oldCompartment(cx->compartment_)
     {
-        cx->setCompartment(cx->runtime()->atomsCompartment);
+        cx->privateSetCompartment(cx->runtime_->atomsCompartment);
     }
 
     ~AutoEnterAtomsCompartment()
     {
-        cx->setCompartment(oldCompartment);
+        cx->privateSetCompartment(oldCompartment);
     }
 };
 

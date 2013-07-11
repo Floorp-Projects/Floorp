@@ -648,6 +648,8 @@ pref("dom.disable_window_open_dialog_feature", true);
 
 // Screen reader support
 pref("accessibility.accessfu.activate", 2);
+// Setting for an utterance order (0 - description first, 1 - description last).
+pref("accessibility.accessfu.utterance", 1);
 // Whether to skip images with empty alt text
 pref("accessibility.accessfu.skip_empty_images", true);
 

@@ -322,7 +322,7 @@ js::ObjectImpl::slotInRange(uint32_t slot, SentinelAllowed sentinel) const
 MOZ_NEVER_INLINE
 #endif
 Shape *
-js::ObjectImpl::nativeLookup(JSContext *cx, jsid id)
+js::ObjectImpl::nativeLookup(ExclusiveContext *cx, jsid id)
 {
     MOZ_ASSERT(isNative());
     Shape **spp;

@@ -92,7 +92,7 @@
                    {type: "load", title: "test1"},
                    {type: "pageshow", title: "test1", persisted: false}];
       gBrowser.loadURI(test1Doc);
-      yield;
+      yield undefined;
 
       var test2Doc = "data:text/html,<html><head><title>test2</title></head>" +
                      "<body>test2</body></html>";
@@ -101,17 +101,17 @@
                    {type: "load", title: "test2"},
                    {type: "pageshow", title: "test2", persisted: false}];
       gBrowser.loadURI(test2Doc);
-      yield;
+      yield undefined;
 
       gExpected = [{type: "pagehide", title: "test2", persisted: true},
                    {type: "pageshow", title: "test1", persisted: true}];
       gBrowser.goBack();
-      yield;
+      yield undefined;
       
       gExpected = [{type: "pagehide", title: "test1", persisted: true},
                    {type: "pageshow", title: "test2", persisted: true}];
       gBrowser.goForward();
-      yield;
+      yield undefined;
 
       // Tests 3 + 4:
       //  Back/forward between a two-level deep iframed document and a simple
@@ -139,7 +139,7 @@
                    {type: "load", title: "test3"},
                    {type: "pageshow", title: "test3", persisted: false}];
       gBrowser.loadURI(test3Doc);
-      yield;
+      yield undefined;
 
       var test4Doc = "data:text/html,<html><head><title>test4</title></head>" +
                      "<body>test4</body></html>";
@@ -150,14 +150,14 @@
                    {type: "load", title: "test4"},
                    {type: "pageshow", title: "test4", persisted: false}];
       gBrowser.loadURI(test4Doc);
-      yield;
+      yield undefined;
 
       gExpected = [{type: "pagehide", title: "test4", persisted: true},
                    {type: "pageshow", title: "test3-nested2", persisted: true},
                    {type: "pageshow", title: "test3-nested1", persisted: true},
                    {type: "pageshow", title: "test3", persisted: true}];
       gBrowser.goBack();
-      yield;
+      yield undefined;
 
       // This is where the two nested pagehide are not dispatched in bug 364461
       gExpected = [{type: "pagehide", title: "test3", persisted: true},
@@ -165,7 +165,7 @@
                    {type: "pagehide", title: "test3-nested2", persisted: true},
                    {type: "pageshow", title: "test4", persisted: true}];
       gBrowser.goForward();
-      yield;
+      yield undefined;
 
       // Tests 5 + 6:
       //  Back/forward between a document containing an unload handler and a
@@ -180,7 +180,7 @@
                    {type: "load", title: "test5"},
                    {type: "pageshow", title: "test5", persisted: false}];
       gBrowser.loadURI(test5Doc);
-      yield;
+      yield undefined;
 
       var test6Doc = "data:text/html,<html><head><title>test6</title></head>" +
                      "<body>test6</body></html>";
@@ -190,19 +190,19 @@
                    {type: "load", title: "test6"},
                    {type: "pageshow", title: "test6", persisted: false}];
       gBrowser.loadURI(test6Doc);
-      yield;
+      yield undefined;
 
       gExpected = [{type: "pagehide", title: "test6", persisted: true},
                    {type: "load", title: "test5"},
                    {type: "pageshow", title: "test5", persisted: false}];
       gBrowser.goBack();
-      yield;
+      yield undefined;
       
       gExpected = [{type: "pagehide", title: "test5", persisted: false},
                    {type: "unload", title: "test5"},
                    {type: "pageshow", title: "test6", persisted: true}];
       gBrowser.goForward();
-      yield;
+      yield undefined;
 
       // Test 7:
       //  Testcase from https://bugzilla.mozilla.org/show_bug.cgi?id=384977#c10
@@ -226,7 +226,7 @@
                    {type: "load", title: "test7"},
                    {type: "pageshow", title: "test7", persisted: false}];
       gBrowser.loadURI(test7Doc);
-      yield;
+      yield undefined;
 
       // Simulates a click on the link inside the iframe
       function clickIframeLink() {
@@ -245,7 +245,7 @@
                    {type: "load"},
                    {type: "pageshow", persisted: false}];
       clickIframeLink();
-      yield;
+      yield undefined;
       
       is(gBrowser.currentURI.spec, "data:text/plain,aaa",
          "Navigation is blocked when clicking link");
@@ -254,14 +254,14 @@
                    {type: "pageshow", title: "test7-nested1", persisted: true},
                    {type: "pageshow", title: "test7", persisted: true}];
       gBrowser.goBack();
-      yield;
+      yield undefined;
       
       gExpected = [{type: "pagehide", title: "test7", persisted: true},
                    {type: "pagehide", title: "test7-nested1", persisted: true},
                    {type: "load"},
                    {type: "pageshow", persisted: false}];
       clickIframeLink();
-      yield;
+      yield undefined;
       
       is(gBrowser.currentURI.spec, "data:text/plain,aaa",
          "Navigation is blocked when clicking link");
@@ -269,7 +269,7 @@
       // nextTest has to be called from here, as no events are fired in this
       // step
       setTimeout(nextTest, 0);
-      yield;
+      yield undefined;
     }
   ]]></script>
 

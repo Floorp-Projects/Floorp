@@ -387,6 +387,8 @@ Range::Range(const MDefinition *def)
 
     if (def->type() == MIRType_Int32)
         truncate();
+    else if (def->type() == MIRType_Boolean)
+        truncateToBoolean();
 }
 
 const int64_t RANGE_INF_MAX = (int64_t) JSVAL_INT_MAX + 1;
@@ -708,7 +710,7 @@ MPhi::computeRange()
 
     Range *range = NULL;
     JS_ASSERT(getOperand(0)->op() != MDefinition::Op_OsrValue);
-    for (size_t i = 0; i < numOperands(); i++) {
+    for (size_t i = 0, e = numOperands(); i < e; i++) {
         if (getOperand(i)->block()->earlyAbort()) {
             IonSpew(IonSpew_Range, "Ignoring unreachable input %d", getOperand(i)->id());
             continue;
@@ -1491,6 +1493,14 @@ Range::truncate()
     set(l, h, false, 32);
 }
 
+void
+Range::truncateToBoolean()
+{
+    if (isBoolean())
+        return;
+    set(0, 1, false, 1);
+}
+
 bool
 MDefinition::truncate()
 {
@@ -1695,7 +1705,7 @@ void
 AdjustTruncatedInputs(MInstruction *truncated)
 {
     MBasicBlock *block = truncated->block();
-    for (size_t i = 0; i < truncated->numOperands(); i++) {
+    for (size_t i = 0, e = truncated->numOperands(); i < e; i++) {
         if (!truncated->isOperandTruncated(i))
             continue;
         if (truncated->getOperand(i)->type() == MIRType_Int32)

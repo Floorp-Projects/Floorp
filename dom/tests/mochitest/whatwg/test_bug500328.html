@@ -221,11 +221,11 @@ function runTest() {
    */
   enableChildLoadCallback();
   iframeCw.location = "file_bug500328_1.html";
-  yield;
+  yield undefined;
   innerLoc = iframeCw.location.toString();
   // No popstate during initial load.
   shortWait();
-  yield;
+  yield undefined;
   noPopStateExpected("No initial popstate.");
   is(JSON.stringify(gLastScriptHistoryState), "null", "null initial state.");
   statusMsg("Awake after first load.");
@@ -253,11 +253,11 @@ function runTest() {
   is(iframeCw.location.hash, "#foo",
      "Second pushstate should push us to '#foo'");
   shortWait();
-  yield;
+  yield undefined;
 
   // Let the hashchange event fire, if it's going to.
   longWait();
-  yield;
+  yield undefined;
   iframeCw.onhashchange = null;
 
   statusMsg("About to go back to page 1.");
@@ -308,7 +308,7 @@ function runTest() {
   statusMsg("About to reload page 2.");
   iframeCw.location.reload();
   enableChildLoadCallback();
-  yield;
+  yield undefined;
   statusMsg("Awake after reloading page 2.");
   noPopStateExpected("Reloading page 2 should not trigger popstate.");
   is(JSON.stringify(iframeCw.history.state), JSON.stringify(testObj2),
@@ -323,7 +323,7 @@ function runTest() {
 
   enableChildPopStateCallback();
   sendMouseEvent({type:'click'}, 'link-anchor1', iframeCw);
-  yield;
+  yield undefined;
   popstateExpected("Clicking on link-anchor1 should trigger a popstate.");
   is(iframeCw.location.search, "?test1",
       "search should be ?test1 after clicking link.");
@@ -340,10 +340,10 @@ function runTest() {
   iframe.onload = onChildLoad;
   enableChildLoadCallback();
   iframeCw.location = "about:blank";
-  yield;
+  yield undefined;
   enableChildLoadCallback();
   iframeCw.location = "file_bug500328_1.html";
-  yield;
+  yield undefined;
   noPopStateExpected("No popstate after re-loading file_bug500328_1.html");
   statusMsg("Done loading file_bug500328_1.html for the second time.");
 
@@ -359,14 +359,14 @@ function runTest() {
     // Dump so something shows up in the mochitest logs if we spin here.
     dump("ifLink has wrong initial color.  Spinning...\n");
     setTimeout(function() { gGen.next(); }, 0);
-    yield;
+    yield undefined;
   }
 
   // Navigate iframe2 to dir/${rand}
   iframe2.onload = onChildLoad;
   enableChildLoadCallback();
   iframe2Cw.location = "mytestdir/" + rand;
-  yield;
+  yield undefined;
 
   // PushState the iframe into the mytestdir directory.  This should cause
   // ifLink to turn purple, since we just visited mytestdir/${rand} in iframe2.
@@ -376,7 +376,7 @@ function runTest() {
   while (getColor(ifLink) != visitedColor) {
     dump("ifLink has wrong color after pushstate.  Spinning...\n");
     setTimeout(function() { gGen.next(); }, 0);
-    yield;
+    yield undefined;
   }
 
   ok(ifLink.href.match("mytestdir\\/" + rand + "$"),
@@ -390,7 +390,7 @@ function runTest() {
   while (getColor(ifLink) != unvisitedColor) {
     dump("ifLink has wrong color after pushstating out of dir.  Spinning...\n");
     setTimeout(function() { gGen.next(); }, 0);
-    yield;
+    yield undefined;
   }
 
   ok(!ifLink.href.match("mytestdir"),
@@ -405,7 +405,7 @@ function runTest() {
   iframeCw.location = filename;
   iframe.onload = onChildLoad;
   enableChildLoadCallback();
-  yield;
+  yield undefined;
 
   // This function tries to pushstate and replacestate to the given URL and
   // fails the test if the calls succeed.
@@ -451,9 +451,9 @@ function runTest() {
 
   enableChildLoadCallback();
   var shistory = getSHistory(popup);
-  yield;
+  yield undefined;
   shortWait();
-  yield;
+  yield undefined;
   noPopStateExpected("Shouldn't get popstate after opening window.");
 
   popup.history.pushState(null, "title 0");
@@ -466,7 +466,7 @@ function runTest() {
   // and so that the hash change we trigger below generates a new session
   // history entry.
   shortWait();
-  yield;
+  yield undefined;
 
   // Check that the current session history entry's title has been updated to
   // reflect the new document title.
@@ -481,7 +481,7 @@ function runTest() {
 
   // Yield so listeners will be notified of the title change we just performed.
   shortWait();
-  yield;
+  yield undefined;
 
   is(getSHTitle(shistory), "title 2", "SHEntry title test 2");
 
@@ -496,7 +496,7 @@ function runTest() {
 
   popup.document.title = "Changed 1";
   shortWait();
-  yield;
+  yield undefined;
 
   // This check is really a test of bug 509055.
   is(getSHTitle(shistory), "Changed 1", "SHEntry title test 4");
@@ -526,7 +526,7 @@ function runTest() {
   shistory = getSHistory(popup);
 
   enableChildLoadCallback();
-  yield;
+  yield undefined;
   statusMsg("Awake after loading content into popup.");
 
   popup.history.replaceState({n:1, ok:true}, "state 1", "good1.html");
@@ -539,25 +539,25 @@ function runTest() {
 
   // Flush the event loop so our next load creates a new session history entry.
   shortWait();
-  yield;
+  yield undefined;
 
   enableChildLoadCallback();
   popup.location = "file_bug500328_1.html";
-  yield;
+  yield undefined;
 
   // Flush the event loop so nsDocShell::OnNewURI runs and our load is recorded
   // properly.
   shortWait();
-  yield;
+  yield undefined;
 
   // Now go back and make sure everything is as it should be.
   enableChildPageShowCallback();
   popup.history.back();
-  yield;
+  yield undefined;
   // Flush the event loop so the document's location is updated and any
   // popstates fire.
   shortWait();
-  yield;
+  yield undefined;
   noPopStateExpected("no popstate during initial load");
 
   locationEndsWith(popup, "good1.html");
@@ -628,7 +628,7 @@ function runTest() {
   enableChildLoadCallback();
   iframeCw.location = "http://example.com";
   iframe.onload = onChildLoad;
-  yield;
+  yield undefined;
   iframe.onload = null;
 
   expectException(
@@ -650,13 +650,13 @@ function runTest() {
   enableChildLoadCallback();
   iframe.onload = onChildLoad;
   iframeCw.location = "about:blank";
-  yield;
+  yield undefined;
   iframe.onload = null;
 
   enableChildLoadCallback();
   // navigate to http://mochi.test:8888/[...]/file_bug500328_1.html
   iframeCw.location = innerLoc;
-  yield;
+  yield undefined;
 
   // PushState to a URL which doesn't exist
   iframeCw.history.pushState({}, "", rand);
@@ -665,7 +665,7 @@ function runTest() {
   iframe.onload = onChildLoad;
   enableChildLoadCallback();
   iframeCw.location.reload(true);
-  yield;
+  yield undefined;
   iframe.onload = null;
 
   // Since the last page was a 404, going back should actually show the
@@ -673,7 +673,7 @@ function runTest() {
   // page.
   enableChildPageShowCallback();
   iframeCw.history.back();
-  yield;
+  yield undefined;
 
   // Make sure that we're actually showing the contents of
   // file_bug500328_1.html, as opposed to the 404 page.
@@ -696,7 +696,7 @@ function runTest() {
    */
   enableChildLoadCallback();
   iframeCw.location = "file_bug500328_1.html";
-  yield;
+  yield undefined;
 
   // Run within the onload handler.  This should work without issue.
   iframeCw.history.pushState(null, "", "newpage1.html");
@@ -706,7 +706,7 @@ function runTest() {
   // become the referrer.
   enableChildLoadCallback();
   iframeCw.navigateTo("file_bug500328_1.html");
-  yield;
+  yield undefined;
 
   ok(iframeCw.document.referrer.toString().match(/newpage1.html$/),
      "Wrong referrer after pushState.  Expected newpage1.html, but was " +
@@ -721,7 +721,7 @@ function runTest() {
   iframeCw.history.replaceState(null, null, "newpage2.html#foo");
   enableChildLoadCallback();
   sendMouseEvent({type:'click'}, 'link-self', iframeCw);
-  yield;
+  yield undefined;
 
   ok(iframeCw.document.referrer.toString().match(/newpage2.html$/),
      "Wrong referrer after replaceState.  Expected newpage2.html, but was " +
@@ -739,7 +739,7 @@ function runTest() {
   statusMsg("********** Finished tests ***********");
   while(true)
   {
-    yield;
+    yield undefined;
 
     // I don't think this will actually make the mochitest fail, but there's
     // not much we can do about this.  Realistically, though, regressions are
@@ -751,7 +751,7 @@ function runTest() {
   /*
   statusMsg("XXXXXXXXXXXXXX");
   while(true) {
-    yield;
+    yield undefined;
     statusMsg("Woken up.");
   }
   */

@@ -258,6 +258,9 @@ class Range : public TempObject {
     inline bool isInt32() const {
         return !isLowerInfinite() && !isUpperInfinite();
     }
+    inline bool isBoolean() const {
+        return lower() >= 0 && upper() <= 1;
+    }
 
     inline bool hasRoundingErrors() const {
         return isDecimal() || exponent() >= MaxTruncatableExponent;
@@ -339,6 +342,9 @@ class Range : public TempObject {
 
     // Truncate the range to an Int32 range.
     void truncate();
+
+    // Truncate the range to a Boolean range.
+    void truncateToBoolean();
 
     // Set the exponent by using the precise range analysis on the full
     // range of Int32 values. This might shrink the exponent after some

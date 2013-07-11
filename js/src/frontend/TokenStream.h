@@ -28,8 +28,10 @@
 namespace js {
 namespace frontend {
 
+// Values of this type are used to index into arrays such as isExprEnding[],
+// so the first value must be zero.
 enum TokenKind {
-    TOK_ERROR = -1,                /* well-known as the only code < EOF */
+    TOK_ERROR = 0,                 /* well-known as the only code < EOF */
     TOK_EOF,                       /* end of file */
     TOK_EOL,                       /* end of line; only returned by peekTokenSameLine() */
     TOK_SEMI,                      /* semicolon */
@@ -359,12 +361,6 @@ struct CompileError {
     void throwError();
 };
 
-inline bool
-StrictModeFromContext(JSContext *cx)
-{
-    return cx->hasOption(JSOPTION_STRICT_MODE);
-}
-
 // Ideally, tokenizing would be entirely independent of context.  But the
 // strict mode flag, which is in SharedContext, affects tokenizing, and
 // TokenStream needs to see it.
@@ -433,14 +429,13 @@ class MOZ_STACK_CLASS TokenStream
   public:
     typedef Vector<jschar, 32> CharBuffer;
 
-    TokenStream(JSContext *cx, const CompileOptions &options,
+    TokenStream(ExclusiveContext *cx, const CompileOptions &options,
                 const jschar *base, size_t length, StrictModeGetter *smg,
                 AutoKeepAtoms& keepAtoms);
 
     ~TokenStream();
 
     /* Accessors. */
-    JSContext *getContext() const { return cx; }
     bool onCurrentLine(const TokenPos &pos) const { return srcCoords.isOnThisLine(pos.end, lineno); }
     const Token &currentToken() const { return tokens[cursor]; }
     bool isCurrentTokenType(TokenKind type) const {
@@ -454,8 +449,8 @@ class MOZ_STACK_CLASS TokenStream
     const char *getFilename() const { return filename; }
     unsigned getLineno() const { return lineno; }
     unsigned getColumn() const { return userbuf.addressOfNextRawChar() - linebase - 1; }
-    JSVersion versionNumber() const { return VersionNumber(version); }
-    JSVersion versionWithFlags() const { return version; }
+    JSVersion versionNumber() const { return VersionNumber(options().version); }
+    JSVersion versionWithFlags() const { return options().version; }
     bool hadError() const { return !!(flags & TSF_HAD_ERROR); }
 
     bool isCurrentTokenEquality() const {
@@ -505,7 +500,7 @@ class MOZ_STACK_CLASS TokenStream
     bool strictMode() const { return strictModeGetter && strictModeGetter->strictMode(); }
 
     void onError();
-    static JSAtom *atomize(JSContext *cx, CharBuffer &cb);
+    static JSAtom *atomize(ExclusiveContext *cx, CharBuffer &cb);
     bool putIdentInTokenbuf(const jschar *identStart);
 
     /*
@@ -624,6 +619,10 @@ class MOZ_STACK_CLASS TokenStream
         return false;
     }
 
+    bool nextTokenEndsExpr() {
+        return isExprEnding[peekToken()];
+    }
+
     class MOZ_STACK_CLASS Position {
       public:
         /*
@@ -737,7 +736,7 @@ class MOZ_STACK_CLASS TokenStream
         uint32_t lineNumToIndex(uint32_t lineNum)   const { return lineNum   - initialLineNum_; }
 
       public:
-        SourceCoords(JSContext *cx, uint32_t ln);
+        SourceCoords(ExclusiveContext *cx, uint32_t ln);
 
         void add(uint32_t lineNum, uint32_t lineStartOffset);
         void fill(const SourceCoords &other);
@@ -756,6 +755,18 @@ class MOZ_STACK_CLASS TokenStream
 
     SourceCoords srcCoords;
 
+    JSAtomState &names() const {
+        return cx->names();
+    }
+
+    ExclusiveContext *context() const {
+        return cx;
+    }
+
+    const CompileOptions &options() const {
+        return options_;
+    }
+
   private:
     /*
      * This is the low-level interface to the JS source code buffer.  It just
@@ -766,7 +777,7 @@ class MOZ_STACK_CLASS TokenStream
      */
     class TokenBuf {
       public:
-        TokenBuf(JSContext *cx, const jschar *buf, size_t length)
+        TokenBuf(ExclusiveContext *cx, const jschar *buf, size_t length)
           : base_(buf), limit_(buf + length), ptr(buf),
             skipBase(cx, &base_), skipLimit(cx, &limit_), skipPtr(cx, &ptr)
         { }
@@ -891,6 +902,9 @@ class MOZ_STACK_CLASS TokenStream
     void updateLineInfoForEOL();
     void updateFlagsForEOL();
 
+    // Options used for parsing/tokenizing.
+    const CompileOptions &options_;
+
     Token               tokens[ntokens];/* circular token buffer */
     unsigned            cursor;         /* index of last parsed token */
     unsigned            lookahead;      /* count of lookahead tokens */
@@ -901,13 +915,12 @@ class MOZ_STACK_CLASS TokenStream
     TokenBuf            userbuf;        /* user input buffer */
     const char          *filename;      /* input filename or null */
     jschar              *sourceMap;     /* source map's filename or null */
-    void                *listenerTSData;/* listener data for this TokenStream */
     CharBuffer          tokenbuf;       /* current token string buffer */
-    int8_t              oneCharTokens[128];  /* table of one-char tokens */
+    int8_t              oneCharTokens[128];  /* table of one-char tokens, indexed by 7-bit char */
     bool                maybeEOL[256];       /* probabilistic EOL lookup table */
     bool                maybeStrSpecial[256];/* speeds up string scanning */
-    JSVersion           version;        /* (i.e. to identify keywords) */
-    JSContext           *const cx;
+    uint8_t             isExprEnding[TOK_LIMIT]; /* which tokens definitely terminate exprs? */
+    ExclusiveContext    *const cx;
     JSPrincipals        *const originPrincipals;
     StrictModeGetter    *strictModeGetter; /* used to test for strict mode */
 

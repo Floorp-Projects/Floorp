@@ -29,6 +29,14 @@
   callFunction(std_Array_slice, ARRAY, ELEMENT);
 
 /**
+ * The ParallelSpew intrinsic is only defined in debug mode, so define a dummy
+ * if debug is not on.
+ */
+#ifndef DEBUG
+#define ParallelSpew(args)
+#endif
+
+/**
  * Determine the number of chunks of size CHUNK_SIZE;
  * note that the final chunk may be smaller than CHUNK_SIZE.
  */
@@ -768,10 +776,10 @@ function ParallelArrayScatter(targets, defaultValue, conflictFunc, length, mode)
   // |targets.length| approximately equals |length|, especially for
   // special cases like collision-free scatters and permutations.
 
-  if (targets.length >>> 0 !== targets.length)
-    ThrowError(JSMSG_BAD_ARRAY_LENGTH, ".prototype.scatter");
+  var targetsLength = std_Math_min(targets.length, self.shape[0]);
 
-  var targetsLength = std_Math_min(targets.length, self.length);
+  if (targetsLength >>> 0 !== targetsLength)
+    ThrowError(JSMSG_BAD_ARRAY_LENGTH, ".prototype.scatter");
 
   if (length >>> 0 !== length)
     ThrowError(JSMSG_BAD_ARRAY_LENGTH, ".prototype.scatter");

@@ -32,7 +32,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=656379
 SimpleTest.waitForExplicitFinish();
 function tests() {
   synthesizeMouseAtCenter($("label1"), { type: "mousemove" });
-  yield;
+  yield undefined;
   is($("button1").mozMatchesSelector(":hover"), true,
      "Button 1 should be hovered after mousemove over label1");
   is($("label1").mozMatchesSelector(":hover"), true,
@@ -42,7 +42,7 @@ function tests() {
   is($("label2").mozMatchesSelector(":hover"), false,
      "Label 2 should not be hovered after mousemove over label1");
   synthesizeMouseAtCenter($("button2"), { type: "mousemove" });
-  yield;
+  yield undefined;
   is($("button1").mozMatchesSelector(":hover"), false,
      "Button 1 should not be hovered after mousemove over button2");
   is($("label1").mozMatchesSelector(":hover"), false,
@@ -52,7 +52,7 @@ function tests() {
   is($("label2").mozMatchesSelector(":hover"), false,
      "Label 2 should not be hovered after mousemove over label2");
   synthesizeMouseAtCenter($("label2"), { type: "mousemove" });
-  yield;
+  yield undefined;
   is($("button1").mozMatchesSelector(":hover"), false,
      "Button 1 should not be hovered after mousemove over label2");
   is($("label1").mozMatchesSelector(":hover"), false,

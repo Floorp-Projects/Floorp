@@ -18,7 +18,7 @@ include URIParams;
 
 include "gfxMatrix.h";
 include "FrameMetrics.h";
-include "IPC/nsGUIEventIPC.h";
+include "ipc/nsGUIEventIPC.h";
 include "mozilla/dom/TabMessageUtils.h";
 include "mozilla/dom/ScreenOrientation.h";
 include "mozilla/dom/PermissionMessageUtils.h";

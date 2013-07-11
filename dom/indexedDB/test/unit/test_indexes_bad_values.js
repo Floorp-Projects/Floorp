@@ -42,7 +42,7 @@ function testSteps()
   request.onerror = errorHandler;
   request.onupgradeneeded = grabEventAndContinueHandler;
   request.onsuccess = grabEventAndContinueHandler;
-  let event = yield;
+  let event = yield undefined;
 
   let db = event.target.result;
 
@@ -59,7 +59,7 @@ function testSteps()
       }
     }
   }
-  event = yield;
+  event = yield undefined;
 
   for (let i in indexData) {
     objectStore.createIndex(indexData[i].name, indexData[i].keyPath,
@@ -77,8 +77,8 @@ function testSteps()
       }
     }
   }
-  yield;
-  yield;
+  yield undefined;
+  yield undefined;
 
   objectStore = db.transaction(objectStoreName)
                   .objectStore(objectStoreName);
@@ -102,7 +102,7 @@ function testSteps()
       testGenerator.next();
     }
   }
-  yield;
+  yield undefined;
 
   is(keyIndex, objectStoreDataWeightSort.length, "Saw all weights");
 
@@ -120,11 +120,11 @@ function testSteps()
       testGenerator.next();
     }
   }
-  yield;
+  yield undefined;
 
   is(keyIndex, objectStoreData.length + badObjectStoreData.length,
      "Saw all people");
 
   finishTest();
-  yield;
+  yield undefined;
 }
