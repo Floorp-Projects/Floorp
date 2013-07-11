@@ -15,6 +15,8 @@ namespace network {
 
   static const double kDefaultBandwidth    = -1.0;
   static const bool   kDefaultCanBeMetered = false;
+  static const bool   kDefaultIsWifi = false;
+  static const uint32_t kDefaultDHCPGateway = 0;
 
 } // namespace network
 } // namespace dom
