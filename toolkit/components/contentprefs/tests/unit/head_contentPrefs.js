@@ -80,24 +80,23 @@ var ContentPrefTest = {
   },
 
   /**
-   * Get the profile directory, registering ourselves as a provider
-   * of that directory if necessary.
+   * Get the profile directory.
    */
   getProfileDir: function ContentPrefTest_getProfileDir() {
-    var profileDir;
-
-    try {
-      profileDir = this._dirSvc.get("ProfD", Ci.nsIFile);
+    // do_get_profile can be only called from a parent process
+    if (runningInParent) {
+      return do_get_profile();
     }
-    catch (e) {}
-
-    if (!profileDir) {
-      this._dirSvc.QueryInterface(Ci.nsIDirectoryService).registerProvider(this);
-      profileDir = this._dirSvc.get("ProfD", Ci.nsIFile);
-      this._dirSvc.unregisterProvider(this);
-    }
-
-    return profileDir;
+    // if running in a content process, this just returns the path
+    // profile was initialized in the ipc head file
+    let env = Components.classes["@mozilla.org/process/environment;1"]
+                        .getService(Components.interfaces.nsIEnvironment);
+    // the python harness sets this in the environment for us
+    let profd = env.get("XPCSHELL_TEST_PROFILE_DIR");
+    let file = Components.classes["@mozilla.org/file/local;1"]
+                         .createInstance(Components.interfaces.nsILocalFile);
+    file.initWithPath(profd);
+    return file;
   },
 
   /**
