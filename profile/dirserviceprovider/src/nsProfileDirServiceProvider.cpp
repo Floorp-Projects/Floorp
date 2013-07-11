@@ -23,7 +23,6 @@
 #define BOOKMARKS_FILE_50_NAME       NS_LITERAL_CSTRING("bookmarks.html")
 #define DOWNLOADS_FILE_50_NAME       NS_LITERAL_CSTRING("downloads.rdf")
 #define SEARCH_FILE_50_NAME          NS_LITERAL_CSTRING("search.rdf" )
-#define STORAGE_FILE_50_NAME         NS_LITERAL_CSTRING("storage.sdb")
 
 //*****************************************************************************
 // nsProfileDirServiceProvider::nsProfileDirServiceProvider
@@ -225,11 +224,6 @@ nsProfileDirServiceProvider::GetFile(const char *prop, bool *persistant, nsIFile
       if (NS_SUCCEEDED(rv))
         rv = EnsureProfileFileExists(localFile, domainDir);
     }
-  }
-  else if (strcmp(prop, NS_APP_STORAGE_50_FILE) == 0) {
-    rv = domainDir->Clone(getter_AddRefs(localFile));
-    if (NS_SUCCEEDED(rv))
-      rv = localFile->AppendNative(STORAGE_FILE_50_NAME);
   }
 
   
