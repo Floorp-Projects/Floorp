@@ -1587,10 +1587,19 @@ abstract public class BrowserApp extends GeckoApp
         ThreadUtils.postToUiThread(new Runnable() {
             @Override
             public void run() {
-                if (fullscreen)
+                if (fullscreen) {
                     mBrowserToolbar.hide();
-                else
+                    if (isDynamicToolbarEnabled()) {
+                        mLayerView.getLayerMarginsAnimator().hideMargins(true);
+                        mLayerView.getLayerMarginsAnimator().setMaxMargins(0, 0, 0, 0);
+                    }
+                } else {
                     mBrowserToolbar.show();
+                    if (isDynamicToolbarEnabled()) {
+                        mLayerView.getLayerMarginsAnimator().showMargins(true);
+                        mLayerView.getLayerMarginsAnimator().setMaxMargins(0, mToolbarHeight, 0, 0);
+                    }
+                }
             }
         });
     }
