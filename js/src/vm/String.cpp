@@ -139,7 +139,7 @@ JSString::equals(const char *s)
 #endif /* DEBUG */
 
 static JS_ALWAYS_INLINE bool
-AllocChars(ThreadSafeContext *maybetcx, size_t length, jschar **chars, size_t *capacity)
+AllocChars(ThreadSafeContext *maybecx, size_t length, jschar **chars, size_t *capacity)
 {
     /*
      * String length doesn't include the null char, so include it here before
@@ -161,16 +161,14 @@ AllocChars(ThreadSafeContext *maybetcx, size_t length, jschar **chars, size_t *c
 
     JS_STATIC_ASSERT(JSString::MAX_LENGTH * sizeof(jschar) < UINT32_MAX);
     size_t bytes = numChars * sizeof(jschar);
-    *chars = (jschar *)(maybetcx ? maybetcx->malloc_(bytes) : js_malloc(bytes));
+    *chars = (jschar *)(maybecx ? maybecx->malloc_(bytes) : js_malloc(bytes));
     return *chars != NULL;
 }
 
 template<JSRope::UsingBarrier b>
 JSFlatString *
-JSRope::flattenInternal(ThreadSafeContext *maybetcx)
+JSRope::flattenInternal(JSContext *maybecx)
 {
-    JS_ASSERT_IF(maybetcx && !maybetcx->isJSContext(), b == NoBarrier);
-
     /*
      * Perform a depth-first dag traversal, splatting each node's characters
      * into a contiguous buffer. Visit each rope node three times:
@@ -246,13 +244,13 @@ JSRope::flattenInternal(ThreadSafeContext *maybetcx)
             JS_STATIC_ASSERT(!(EXTENSIBLE_FLAGS & DEPENDENT_FLAGS));
             left.d.lengthAndFlags = bits ^ (EXTENSIBLE_FLAGS | DEPENDENT_FLAGS);
             left.d.s.u2.base = (JSLinearString *)this;  /* will be true on exit */
-            StringWriteBarrierPostRemove(maybetcx, &left.d.u1.left);
-            StringWriteBarrierPost(maybetcx, (JSString **)&left.d.s.u2.base);
+            StringWriteBarrierPostRemove(maybecx, &left.d.u1.left);
+            StringWriteBarrierPost(maybecx, (JSString **)&left.d.s.u2.base);
             goto visit_right_child;
         }
     }
 
-    if (!AllocChars(maybetcx, wholeLength, &wholeChars, &wholeCapacity))
+    if (!AllocChars(maybecx, wholeLength, &wholeChars, &wholeCapacity))
         return NULL;
 
     pos = wholeChars;
@@ -264,7 +262,7 @@ JSRope::flattenInternal(ThreadSafeContext *maybetcx)
 
         JSString &left = *str->d.u1.left;
         str->d.u1.chars = pos;
-        StringWriteBarrierPostRemove(maybetcx, &str->d.u1.left);
+        StringWriteBarrierPostRemove(maybecx, &str->d.u1.left);
         if (left.isRope()) {
             left.d.s.u3.parent = str;          /* Return to this when 'left' done, */
             left.d.lengthAndFlags = 0x200;     /* but goto visit_right_child. */
@@ -294,14 +292,14 @@ JSRope::flattenInternal(ThreadSafeContext *maybetcx)
             str->d.lengthAndFlags = buildLengthAndFlags(wholeLength, EXTENSIBLE_FLAGS);
             str->d.u1.chars = wholeChars;
             str->d.s.u2.capacity = wholeCapacity;
-            StringWriteBarrierPostRemove(maybetcx, &str->d.u1.left);
-            StringWriteBarrierPostRemove(maybetcx, &str->d.s.u2.right);
+            StringWriteBarrierPostRemove(maybecx, &str->d.u1.left);
+            StringWriteBarrierPostRemove(maybecx, &str->d.s.u2.right);
             return &this->asFlat();
         }
         size_t progress = str->d.lengthAndFlags;
         str->d.lengthAndFlags = buildLengthAndFlags(pos - str->d.u1.chars, DEPENDENT_FLAGS);
         str->d.s.u2.base = (JSLinearString *)this;       /* will be true on exit */
-        StringWriteBarrierPost(maybetcx, (JSString **)&str->d.s.u2.base);
+        StringWriteBarrierPost(maybecx, (JSString **)&str->d.s.u2.base);
         str = str->d.s.u3.parent;
         if (progress == 0x200)
             goto visit_right_child;
@@ -311,21 +309,21 @@ JSRope::flattenInternal(ThreadSafeContext *maybetcx)
 }
 
 JSFlatString *
-JSRope::flatten(ThreadSafeContext *maybetcx)
+JSRope::flatten(JSContext *maybecx)
 {
 #if JSGC_INCREMENTAL
     if (zone()->needsBarrier())
-        return flattenInternal<WithIncrementalBarrier>(maybetcx);
+        return flattenInternal<WithIncrementalBarrier>(maybecx);
     else
-        return flattenInternal<NoBarrier>(maybetcx);
+        return flattenInternal<NoBarrier>(maybecx);
 #else
-    return flattenInternal<NoBarrier>(maybetcx);
+    return flattenInternal<NoBarrier>(maybecx);
 #endif
 }
 
 template <AllowGC allowGC>
 JSString *
-js::ConcatStrings(ThreadSafeContext *cx,
+js::ConcatStrings(JSContext *cx,
                   typename MaybeRooted<JSString*, allowGC>::HandleType left,
                   typename MaybeRooted<JSString*, allowGC>::HandleType right)
 {
@@ -348,10 +346,10 @@ js::ConcatStrings(ThreadSafeContext *cx,
         JSShortString *str = js_NewGCShortString<allowGC>(cx);
         if (!str)
             return NULL;
-        const jschar *leftChars = left->getChars(cx->asJSContext());
+        const jschar *leftChars = left->getChars(cx);
         if (!leftChars)
             return NULL;
-        const jschar *rightChars = right->getChars(cx->asJSContext());
+        const jschar *rightChars = right->getChars(cx);
         if (!rightChars)
             return NULL;
 
@@ -366,13 +364,13 @@ js::ConcatStrings(ThreadSafeContext *cx,
 }
 
 template JSString *
-js::ConcatStrings<CanGC>(ThreadSafeContext *cx, HandleString left, HandleString right);
+js::ConcatStrings<CanGC>(JSContext *cx, HandleString left, HandleString right);
 
 template JSString *
-js::ConcatStrings<NoGC>(ThreadSafeContext *cx, JSString *left, JSString *right);
+js::ConcatStrings<NoGC>(JSContext *cx, JSString *left, JSString *right);
 
 JSFlatString *
-JSDependentString::undepend(js::ThreadSafeContext *tcx)
+JSDependentString::undepend(JSContext *cx)
 {
     JS_ASSERT(JSString::isDependent());
 
@@ -385,7 +383,7 @@ JSDependentString::undepend(js::ThreadSafeContext *tcx)
 
     size_t n = length();
     size_t size = (n + 1) * sizeof(jschar);
-    jschar *s = (jschar *) tcx->malloc_(size);
+    jschar *s = (jschar *) cx->malloc_(size);
     if (!s)
         return NULL;
 
@@ -403,11 +401,11 @@ JSDependentString::undepend(js::ThreadSafeContext *tcx)
 }
 
 JSStableString *
-JSInlineString::uninline(ThreadSafeContext *maybetcx)
+JSInlineString::uninline(JSContext *maybecx)
 {
     JS_ASSERT(isInline());
     size_t n = length();
-    jschar *news = maybetcx ? maybetcx->pod_malloc<jschar>(n + 1) : js_pod_malloc<jschar>(n + 1);
+    jschar *news = maybecx ? maybecx->pod_malloc<jschar>(n + 1) : js_pod_malloc<jschar>(n + 1);
     if (!news)
         return NULL;
     js_strncpy(news, d.inlineStorage, n);

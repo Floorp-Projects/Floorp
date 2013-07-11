@@ -43,7 +43,7 @@ class RopeBuilder;
 
 template <AllowGC allowGC>
 extern JSString *
-ConcatStrings(ThreadSafeContext *cx,
+ConcatStrings(JSContext *cx,
               typename MaybeRooted<JSString*, allowGC>::HandleType left,
               typename MaybeRooted<JSString*, allowGC>::HandleType right);
 

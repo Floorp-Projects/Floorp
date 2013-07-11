@@ -89,12 +89,12 @@ NewShortString(ExclusiveContext *cx, JS::TwoByteChars chars)
 }
 
 static inline void
-StringWriteBarrierPost(js::ThreadSafeContext *maybetcx, JSString **strp)
+StringWriteBarrierPost(js::ThreadSafeContext *maybecx, JSString **strp)
 {
 }
 
 static inline void
-StringWriteBarrierPostRemove(js::ThreadSafeContext *maybetcx, JSString **strp)
+StringWriteBarrierPostRemove(js::ThreadSafeContext *maybecx, JSString **strp)
 {
 }
 
@@ -156,13 +156,13 @@ JSString::validateLength(js::ThreadSafeContext *maybecx, size_t length)
 }
 
 JS_ALWAYS_INLINE void
-JSRope::init(js::ThreadSafeContext *tcx, JSString *left, JSString *right, size_t length)
+JSRope::init(js::ThreadSafeContext *cx, JSString *left, JSString *right, size_t length)
 {
     d.lengthAndFlags = buildLengthAndFlags(length, ROPE_FLAGS);
     d.u1.left = left;
     d.s.u2.right = right;
-    js::StringWriteBarrierPost(tcx, &d.u1.left);
-    js::StringWriteBarrierPost(tcx, &d.s.u2.right);
+    js::StringWriteBarrierPost(cx, &d.u1.left);
+    js::StringWriteBarrierPost(cx, &d.s.u2.right);
 }
 
 template <js::AllowGC allowGC>
@@ -177,7 +177,7 @@ JSRope::new_(js::ThreadSafeContext *cx,
     JSRope *str = (JSRope *) js_NewGCString<allowGC>(cx);
     if (!str)
         return NULL;
-    str->init(tcx, left, right, length);
+    str->init(cx, left, right, length);
     return str;
 }
 
@@ -189,14 +189,14 @@ JSRope::markChildren(JSTracer *trc)
 }
 
 JS_ALWAYS_INLINE void
-JSDependentString::init(js::ThreadSafeContext *tcx, JSLinearString *base, const jschar *chars,
+JSDependentString::init(js::ThreadSafeContext *cx, JSLinearString *base, const jschar *chars,
                         size_t length)
 {
     JS_ASSERT(!js::IsPoisonedPtr(base));
     d.lengthAndFlags = buildLengthAndFlags(length, DEPENDENT_FLAGS);
     d.u1.chars = chars;
     d.s.u2.base = base;
-    js::StringWriteBarrierPost(tcx, reinterpret_cast<JSString **>(&d.s.u2.base));
+    js::StringWriteBarrierPost(cx, reinterpret_cast<JSString **>(&d.s.u2.base));
 }
 
 JS_ALWAYS_INLINE JSLinearString *
