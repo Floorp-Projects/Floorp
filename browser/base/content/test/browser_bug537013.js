@@ -69,6 +69,9 @@ function continueTests() {
   ok(gFindBar.hidden, "First tab doesn't show find bar!");
   gBrowser.selectedTab = tabs[1];
   ok(!gFindBar.hidden, "Second tab shows find bar!");
+  // Test for bug 892384
+  is(gFindBar._findField.getAttribute("focused"), "true",
+     "Open findbar refocused on tab change!");
   gBrowser.selectedTab = tabs[0];
   ok(gFindBar.hidden, "First tab doesn't show find bar!");
 
