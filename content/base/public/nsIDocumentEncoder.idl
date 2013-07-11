@@ -18,7 +18,7 @@ class nsIDocument;
 [ptr] native nsINodePtr(nsINode);
 [ptr] native nsIDocumentPtr(nsIDocument);
 
-[scriptable, uuid(82adaeca-63ee-44eb-830a-e1678bb8745e)]
+[scriptable, uuid(3d9371d8-a2ad-403e-8b0e-8885ad3562e3)]
 interface nsIDocumentEncoderNodeFixup : nsISupports
 {
   /**
@@ -215,6 +215,12 @@ interface nsIDocumentEncoder : nsISupports
    * pretty-print if this flag is set (bug 599983).
    */
   const unsigned long OutputIgnoreMozDirty = (1 << 22);
+
+  /**
+   * Output the content of non-text elements as the placehodler character
+   * U+FFFC (OBJECT REPLACEMENT CHARACTER, only for serializing to plaintext).
+   */
+  const unsigned long OutputNonTextContentAsPlaceholder = (1 << 23);
 
   /**
    * Initialize with a pointer to the document and the mime type.
