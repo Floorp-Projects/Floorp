@@ -369,6 +369,13 @@ public:
                                     const nsAString& aUnmodifiedCharacters);
 
   /**
+   * GetWindowLevel() returns the window level of current focused (in Gecko)
+   * window.  E.g., if an <input> element in XUL panel has focus, this returns
+   * the XUL panel's window level.
+   */
+  NSInteger GetWindowLevel();
+
+  /**
    * IsSpecialGeckoKey() checks whether aNativeKeyCode is mapped to a special
    * Gecko keyCode.  A key is "special" if it isn't used for text input.
    *
