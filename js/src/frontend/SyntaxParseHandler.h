@@ -42,7 +42,8 @@ class SyntaxParseHandler
     };
     typedef Definition::Kind DefinitionNode;
 
-    SyntaxParseHandler(JSContext *cx, TokenStream &tokenStream, bool foldConstants,
+    SyntaxParseHandler(ExclusiveContext *cx, LifoAlloc &alloc,
+                       TokenStream &tokenStream, bool foldConstants,
                        Parser<SyntaxParseHandler> *syntaxParser, LazyScript *lazyOuterFunction)
       : lastAtom(NULL),
         tokenStream(tokenStream)

@@ -8,6 +8,7 @@
 
 #include "jscntxt.h"
 
+#include "vm/RegExpStatics.h"
 #include "vm/StringBuffer.h"
 
 #include "jsobjinlines.h"

@@ -122,5 +122,5 @@ if CONFIG['MOZ_INSTRUMENT_EVENT_LOOP']:
         'WidgetTraceEvent.h',
     ]
 
-EXPORTS.IPC = ['nsGUIEventIPC.h']
+EXPORTS.ipc = ['nsGUIEventIPC.h']
 

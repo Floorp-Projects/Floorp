@@ -41,7 +41,8 @@
           android:title="@string/desktop_mode"
           android:checkable="true" />
 
-    <item android:title="@string/tools"
+    <item android:id="@+id/tools"
+          android:title="@string/tools"
           android:icon="@drawable/ic_menu_tools">
 
         <menu>

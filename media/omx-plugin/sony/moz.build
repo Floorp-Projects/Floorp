@@ -5,6 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 MODULE = 'omxpluginsony'
+NO_DIST_INSTALL = True
 
 CPP_SOURCES += [
     'OmxPluginSony.cpp',

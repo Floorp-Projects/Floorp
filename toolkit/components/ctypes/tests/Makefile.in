@@ -12,7 +12,6 @@ include $(DEPTH)/config/autoconf.mk
 
 SHORT_LIBNAME = jscttest
 FORCE_SHARED_LIB = 1
-NO_DIST_INSTALL = 1
 
 LOCAL_INCLUDES = \
     -I$(topsrcdir)/js/src/ctypes \
