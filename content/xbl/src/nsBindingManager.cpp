@@ -442,11 +442,6 @@ nsBindingManager::ClearBinding(nsIContent* aContent)
   // For now we can only handle removing a binding if it's the only one
   NS_ENSURE_FALSE(binding->GetBaseBinding(), NS_ERROR_FAILURE);
 
-  // Make sure it isn't a style binding
-  if (binding->IsStyleBinding()) {
-    return NS_OK;
-  }
-
   // Hold strong ref in case removing the binding tries to close the
   // window or something.
   // XXXbz should that be ownerdoc?  Wouldn't we need a ref to the
