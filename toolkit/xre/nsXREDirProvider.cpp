@@ -419,9 +419,6 @@ nsXREDirProvider::GetFile(const char* aProperty, bool* aPersistent,
       EnsureProfileFileExists(file);
       ensureFilePermissions = true;
     }
-    else if (!strcmp(aProperty, NS_APP_STORAGE_50_FILE)) {
-      rv = file->AppendNative(NS_LITERAL_CSTRING("storage.sdb"));
-    }
     else if (!strcmp(aProperty, NS_APP_DOWNLOADS_50_FILE)) {
       rv = file->AppendNative(NS_LITERAL_CSTRING("downloads.rdf"));
     }
