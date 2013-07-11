@@ -17,7 +17,7 @@ function test() {
 }
 
 tests.jsbTest = function(options) {
-  let deferred = Promise.defer();
+  let deferred = promise.defer();
 
   let observer = {
     onReady: function() {

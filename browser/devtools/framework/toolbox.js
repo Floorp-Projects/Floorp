@@ -6,7 +6,7 @@
 
 const {Cc, Ci, Cu} = require("chrome");
 const MAX_ORDINAL = 99;
-let Promise = require("sdk/core/promise");
+let promise = require("sdk/core/promise");
 let EventEmitter = require("devtools/shared/event-emitter");
 let Telemetry = require("devtools/shared/telemetry");
 
@@ -191,7 +191,7 @@ Toolbox.prototype = {
    * Open the toolbox
    */
   open: function TBOX_open() {
-    let deferred = Promise.defer();
+    let deferred = promise.defer();
 
     this._host.create().then(iframe => {
       let domReady = () => {
@@ -427,7 +427,7 @@ Toolbox.prototype = {
    *        The id of the tool to load.
    */
   loadTool: function TBOX_loadTool(id) {
-    let deferred = Promise.defer();
+    let deferred = promise.defer();
     let iframe = this.doc.getElementById("toolbox-panel-iframe-" + id);
 
     if (iframe) {
@@ -461,7 +461,7 @@ Toolbox.prototype = {
       iframe.removeEventListener("DOMContentLoaded", onLoad, true);
 
       let built = definition.build(iframe.contentWindow, this);
-      Promise.resolve(built).then((panel) => {
+      promise.resolve(built).then((panel) => {
         this._toolPanels.set(id, panel);
         this.emit(id + "-ready", panel);
         gDevTools.emit(id + "-ready", this, panel);
@@ -492,7 +492,7 @@ Toolbox.prototype = {
 
     if (this._currentToolId == id) {
       // Return the existing panel in order to have a consistent return value.
-      return Promise.resolve(this._toolPanels.get(id));
+      return promise.resolve(this._toolPanels.get(id));
     }
 
     if (!this.isReady) {
@@ -734,7 +734,7 @@ Toolbox.prototype = {
     // Assign the "_destroyer" property before calling the other
     // destroyer methods to guarantee that the Toolbox's destroy
     // method is only executed once.
-    let deferred = Promise.defer();
+    let deferred = promise.defer();
     this._destroyer = deferred.promise;
 
     this._target.off("navigate", this._refreshHostTitle);
@@ -775,7 +775,7 @@ Toolbox.prototype = {
     }
     this._target = null;
 
-    Promise.all(outstanding).then(function() {
+    promise.all(outstanding).then(function() {
       this.emit("destroyed");
       // Free _host after the call to destroyed in order to let a chance
       // to destroyed listeners to still query toolbox attributes

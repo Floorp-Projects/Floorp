@@ -11,7 +11,7 @@ let tests = {};
 
 function test() {
   helpers.addTabWithToolbar(TEST_URI, function(options) {
-    let deferred = Promise.defer();
+    let deferred = promise.defer();
 
     // Wait for site to be cached.
     gBrowser.contentWindow.applicationCache.addEventListener('error', function BCAI_error() {

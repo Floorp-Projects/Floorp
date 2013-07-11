@@ -9,7 +9,7 @@ let tests = {};
 
 function test() {
   helpers.addTabWithToolbar(TEST_URI, function(options) {
-    let deferred = Promise.defer();
+    let deferred = promise.defer();
 
     info("adding cache listener.");
 

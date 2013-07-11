@@ -343,28 +343,6 @@ ExtractHandles(DBusMessage *aReply, nsTArray<uint32_t>& aOutHandles)
 
 // static
 bool
-BluetoothDBusService::AddServiceRecords(const char* serviceName,
-                                        unsigned long long uuidMsb,
-                                        unsigned long long uuidLsb,
-                                        int channel)
-{
-  MOZ_ASSERT(!NS_IsMainThread());
-
-  DBusMessage* reply =
-    dbus_func_args(gThreadConnection->GetConnection(),
-                   NS_ConvertUTF16toUTF8(sAdapterPath).get(),
-                   DBUS_ADAPTER_IFACE, "AddRfcommServiceRecord",
-                   DBUS_TYPE_STRING, &serviceName,
-                   DBUS_TYPE_UINT64, &uuidMsb,
-                   DBUS_TYPE_UINT64, &uuidLsb,
-                   DBUS_TYPE_UINT16, &channel,
-                   DBUS_TYPE_INVALID);
-
-  return reply ? dbus_returns_uint32(reply) : -1;
-}
-
-// static
-bool
 BluetoothDBusService::AddReservedServicesInternal(
                                    const nsTArray<uint32_t>& aServices,
                                    nsTArray<uint32_t>& aServiceHandlesContainer)

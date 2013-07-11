@@ -7,7 +7,7 @@ function test() {
                    "test/browser_dbg_cmd.html";
 
   helpers.addTabWithToolbar(TEST_URI, function(options) {
-    let deferred = Promise.defer();
+    let deferred = promise.defer();
 
     let openDone = helpers.audit(options, [{
       setup: "dbg open",

@@ -49,7 +49,7 @@ tests.testCallLogStatus = function(options) {
 };
 
 tests.testCallLogExec = function(options) {
-  let deferred = Promise.defer();
+  let deferred = promise.defer();
 
   function onWebConsoleOpen(subject) {
     Services.obs.removeObserver(onWebConsoleOpen, "web-console-created");
