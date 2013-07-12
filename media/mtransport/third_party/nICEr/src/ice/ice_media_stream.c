@@ -39,6 +39,7 @@ static char *RCSSTRING __UNUSED__="$Id: ice_media_stream.c,v 1.2 2008/04/28 17:5
 #include <nr_api.h>
 #include <r_assoc.h>
 #include <async_timer.h>
+#include "ice_util.h"
 #include "ice_ctx.h"
 
 static char *nr_ice_media_stream_states[]={"INVALID",
@@ -109,6 +110,10 @@ int nr_ice_media_stream_destroy(nr_ice_media_stream **streamp)
 
     RFREE(stream->ufrag);
     RFREE(stream->pwd);
+    RFREE(stream->r2l_user);
+    RFREE(stream->l2r_user);
+    r_data_zfree(&stream->r2l_pass);
+    r_data_zfree(&stream->l2r_pass);
 
     if(stream->timer)
       NR_async_timer_cancel(stream->timer);
@@ -277,12 +282,40 @@ int nr_ice_media_stream_pair_candidates(nr_ice_peer_ctx *pctx,nr_ice_media_strea
     };
 
     if (pstream->ice_state == NR_ICE_MEDIA_STREAM_UNPAIRED) {
-      r_log(LOG_ICE,LOG_DEBUG,"ICE-PEER(%s): unfreezing stream %s",pstream->pctx->label,pstream->label);
-      pstream->ice_state = NR_ICE_MEDIA_STREAM_CHECKS_FROZEN;
+      nr_ice_media_stream_set_state(pstream, NR_ICE_MEDIA_STREAM_CHECKS_FROZEN);
     }
 
     _status=0;
   abort:
+    return(_status);
+  }
+
+int nr_ice_media_stream_service_pre_answer_requests(nr_ice_peer_ctx *pctx, nr_ice_media_stream *lstream, nr_ice_media_stream *pstream, int *serviced)
+  {
+    nr_ice_component *pcomp;
+    int r,_status;
+    char *user = 0;
+    char *lufrag, *rufrag;
+
+    if (serviced)
+      *serviced = 0;
+
+    pcomp=STAILQ_FIRST(&pstream->components);
+    while(pcomp){
+      int serviced_inner=0;
+
+      /* Flush all the pre-answer requests */
+      if(r=nr_ice_component_service_pre_answer_requests(pctx, pcomp, pstream->r2l_user, &serviced_inner))
+        ABORT(r);
+      if (serviced)
+        *serviced += serviced_inner;
+
+      pcomp=STAILQ_NEXT(pcomp,entry);
+    }
+
+    _status=0;
+   abort:
+    RFREE(user);
     return(_status);
   }
 

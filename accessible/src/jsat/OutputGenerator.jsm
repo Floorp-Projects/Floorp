@@ -176,22 +176,12 @@ this.OutputGenerator = {
    * @param {nsIAccessible} aAccessible current accessible object.
    */
   _addLandmark: function _addLandmark(aOutput, aAccessible) {
-    let getLandmarkName = function getLandmarkName(aAccessible) {
-      let roles = Utils.getAttributes(aAccessible)['xml-roles'];
-      if (!roles) {
-        return;
-      }
+    let landmarkName = Utils.getLandmarkName(aAccessible);
+    if (!landmarkName) {
+      return;
+    }
 
-      // Looking up a role that would match a landmark.
-      for (let landmark of this.gLandmarks) {
-        if (roles.indexOf(landmark) > -1) {
-          return gStringBundle.GetStringFromName(landmark);
-        }
-      }
-    };
-
-    let landmark = getLandmarkName.apply(this, [aAccessible]);
-
+    let landmark = gStringBundle.GetStringFromName(landmarkName);
     if (!landmark) {
       return;
     }
@@ -221,15 +211,6 @@ this.OutputGenerator = {
     str = PluralForm.get(aCount, str);
     return str.replace('#1', aCount);
   },
-
-  gLandmarks: [
-    'banner',
-    'complementary',
-    'contentinfo',
-    'main',
-    'navigation',
-    'search'
-  ],
 
   roleRuleMap: {
     'menubar': INCLUDE_DESC,

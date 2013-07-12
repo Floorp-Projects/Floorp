@@ -161,25 +161,12 @@ nsSVGOuterSVGFrame::Init(nsIContent* aContent,
   // simply giving failing outer <svg> elements an nsSVGContainerFrame.
   // We don't create other SVG frames if PassesConditionalProcessingTests
   // returns false, but since we do create nsSVGOuterSVGFrame frames we
-  // prevent them from painting by [ab]use NS_STATE_SVG_NONDISPLAY_CHILD. The
+  // prevent them from painting by [ab]use NS_FRAME_IS_NONDISPLAY. The
   // frame will be recreated via an nsChangeHint_ReconstructFrame restyle if
   // the value returned by PassesConditionalProcessingTests changes.
   SVGSVGElement *svg = static_cast<SVGSVGElement*>(aContent);
   if (!svg->PassesConditionalProcessingTests()) {
-    AddStateBits(NS_STATE_SVG_NONDISPLAY_CHILD);
-  } else {
-    // If this outer <svg> element is the child of a <foreignObject> that
-    // is non-display, or is the child of a frame for HTML content that
-    // itself is a descendant of a non-display SVG frame, then we want to
-    // it non-display also.  The second case is not as simple to handle
-    // as copying a state bit from the parent, since non-SVG frames do
-    // not use NS_STATE_SVG_NONDISPLAY_CHILD.
-    for (nsIFrame* f = aParent; f; f = f->GetParent()) {
-      if (f->IsFrameOfType(eSVG)) {
-        AddStateBits(f->GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD);
-        break;
-      }
-    }
+    AddStateBits(NS_FRAME_IS_NONDISPLAY);
   }
 
   nsSVGOuterSVGFrameBase::Init(aContent, aParent, aPrevInFlow);
@@ -476,7 +463,7 @@ nsSVGOuterSVGFrame::Reflow(nsPresContext*           aPresContext,
   }
   mViewportInitialized = true;
 
-  if (!(GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD)) {
+  if (!(GetStateBits() & NS_FRAME_IS_NONDISPLAY)) {
     // Now that we've marked the necessary children as dirty, call
     // ReflowSVG() on them:
 
@@ -721,7 +708,7 @@ nsSVGOuterSVGFrame::AttributeChanged(int32_t  aNameSpaceID,
                                      int32_t  aModType)
 {
   if (aNameSpaceID == kNameSpaceID_None &&
-      !(GetStateBits() & (NS_FRAME_FIRST_REFLOW | NS_STATE_SVG_NONDISPLAY_CHILD))) {
+      !(GetStateBits() & (NS_FRAME_FIRST_REFLOW | NS_FRAME_IS_NONDISPLAY))) {
     if (aAttribute == nsGkAtoms::viewBox ||
         aAttribute == nsGkAtoms::preserveAspectRatio ||
         aAttribute == nsGkAtoms::transform) {
@@ -772,7 +759,7 @@ nsSVGOuterSVGFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                      const nsRect&           aDirtyRect,
                                      const nsDisplayListSet& aLists)
 {
-  if (GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD) {
+  if (GetStateBits() & NS_FRAME_IS_NONDISPLAY) {
     return;
   }
 
@@ -863,7 +850,7 @@ nsSVGOuterSVGFrame::NotifyViewportOrTransformChanged(uint32_t aFlags)
     mCanvasTM = nullptr;
 
     if (haveNonFulLZoomTransformChange &&
-        !(mState & NS_STATE_SVG_NONDISPLAY_CHILD)) {
+        !(mState & NS_FRAME_IS_NONDISPLAY)) {
       uint32_t flags = (mState & NS_FRAME_IN_REFLOW) ?
                          SVGSVGElement::eDuringReflow : 0;
       content->ChildrenOnlyTransformChanged(flags);
@@ -910,7 +897,7 @@ nsSVGOuterSVGFrame::GetBBoxContribution(const gfxMatrix &aToBBoxUserspace,
 gfxMatrix
 nsSVGOuterSVGFrame::GetCanvasTM(uint32_t aFor)
 {
-  if (!(GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD)) {
+  if (!(GetStateBits() & NS_FRAME_IS_NONDISPLAY)) {
     if ((aFor == FOR_PAINTING && NS_SVGDisplayListPaintingEnabled()) ||
         (aFor == FOR_HIT_TESTING && NS_SVGDisplayListHitTestingEnabled())) {
       return nsSVGIntegrationUtils::GetCSSPxToDevPxMatrix(this);

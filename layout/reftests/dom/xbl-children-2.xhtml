@@ -1,0 +1,28 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:xbl="http://www.mozilla.org/xbl">
+<head>
+  <style>
+    .forced { display:block; }
+  </style>
+</head>
+<body>
+  <xbl:children>
+    FAIL
+  </xbl:children>
+
+  <xbl:children class="forced">
+    FAIL
+  </xbl:children>
+
+  <xbl:children />
+
+  <script>
+    var third = document.body.children[2];
+    third.appendChild(document.createTextNode("FAIL"));
+
+    var fourth = document.createElementNS("http://www.mozilla.org/xbl", "children");
+    fourth.appendChild(document.createTextNode("FAIL"));
+    document.body.appendChild(fourth);
+  </script>
+</body>
+</html>

@@ -1,7 +1,13 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
- 'use strict';
+'use strict';
+
+module.metadata = {
+  'engines': {
+    'Firefox': '*'
+  }
+};
 
 const { Cc, Ci } = require("chrome");
 const { Loader } = require('sdk/test/loader');
@@ -920,20 +926,6 @@ else if (isGlobalPBSupported) {
       })
     });
     pb.activate();
-  }
-}
-
-try {
-  require("sdk/panel");
-}
-catch (e) {
-  if (!/^Unsupported Application/.test(e.message))
-    throw e;
-
-  module.exports = {
-    "test Unsupported Application": function Unsupported (assert) {
-      assert.pass(e.message);
-    }
   }
 }
 

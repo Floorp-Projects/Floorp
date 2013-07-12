@@ -21,6 +21,7 @@ import android.util.DisplayMetrics;
 public class testShareLink extends BaseTest {
     ListView list;
     String url;
+    String urlTitle = "Big Link";
 
     @Override
     protected int getTestType() {
@@ -33,7 +34,7 @@ public class testShareLink extends BaseTest {
         blockForGeckoReady();
 
         loadUrl(url);
-        waitForText("Big Link"); // Waiting for page title to ensure the page is loaded
+        waitForText(urlTitle); // Waiting for page title to ensure the page is loaded
         selectMenuItem("Share");
         if (Build.VERSION.SDK_INT >= 14) {
             // Check for our own sync in the submenu.
@@ -52,7 +53,7 @@ public class testShareLink extends BaseTest {
 
         // Test share from the awesomebar context menu
         mActions.sendSpecialKey(Actions.SpecialKey.BACK); // Close the share menu
-        mSolo.clickLongOnText("Big Link");
+        mSolo.clickLongOnText(urlTitle);
         verifySharePopup(shareOptions,"Awesomebar");
 
         // Test link Context Menu
@@ -85,18 +86,11 @@ public class testShareLink extends BaseTest {
 
         // Test the share popup in the Bookmarks tab
         ListView blist = getBookmarksList("about:firefox");
-        // Make sure we are in the Bookmarks tab
-        // TODO: understand why this is sometimes necessary
-        mSolo.clickOnText("Bookmarks");
         View bookmark = blist.getChildAt(1); // Getting child at 1 because 0 might be the Desktop folder
         mSolo.clickLongOnView(bookmark);
         verifySharePopup(shareOptions,"bookmarks");
 
         // Test the share popup in the History tab
-        clickOnAwesomeBar();
-        // Make sure we are in the History tab
-        // TODO: understand why this is sometimes necessary
-        mSolo.clickOnText("History");
         ListView hlist = getHistoryList("Today|Yesterday");
         View history = hlist.getChildAt(1); // Getting child at 1 because 0 might be the "Today" label
         mSolo.clickLongOnView(history);
@@ -113,6 +107,13 @@ public class testShareLink extends BaseTest {
              mAsserter.ok(optionDisplayed(option, displayedOptions), "Share option for " + openedFrom + (openedFrom.equals("Awesomebar") ? "" : " item") + " found", option);
         }
         mActions.sendSpecialKey(Actions.SpecialKey.BACK);
+        /**
+         * Adding a wait for the page title to make sure the Awesomebar will be dismissed
+         * Because of Bug 712370 the Awesomescreen will be dismissed when the Share Menu is closed
+         * so there is no need for handeling this different depending on where the share menu was invoced from
+         * TODO: Look more into why the delay is needed here now and it was working before
+         */
+        waitForText(urlTitle);
     }
 
     // Create a SEND intent and get the possible activities offered

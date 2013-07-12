@@ -1817,7 +1817,9 @@ CodeGenerator::visitCallKnown(LCallKnown *call)
     // Invoke in sequential mode, else mark as cannot compile.
     JS_ASSERT(call->mir()->hasRootedScript());
     JSScript *targetScript = target->nonLazyScript();
-    if (GetIonScript(targetScript, executionMode) == ION_DISABLED_SCRIPT) {
+    if (GetIonScript(targetScript, executionMode) == ION_DISABLED_SCRIPT &&
+        (executionMode == ParallelExecution || !targetScript->canBaselineCompile()))
+    {
         if (executionMode == ParallelExecution)
             return false;
 
@@ -2898,7 +2900,7 @@ CodeGenerator::visitNewObjectVMCall(LNewObject *lir)
 
     // If we're making a new object with a class prototype (that is, an object
     // that derives its class from its prototype instead of being
-    // ObjectClass'd) from self-hosted code, we need a different init
+    // JSObject::class_'d) from self-hosted code, we need a different init
     // function.
     if (lir->mir()->templateObjectIsClassPrototype()) {
         if (!callVM(NewInitObjectWithClassPrototypeInfo, lir))

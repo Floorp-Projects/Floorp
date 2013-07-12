@@ -18,7 +18,6 @@ public class WebAppAllocator {
     // The number of WebApp# and WEBAPP# activites/apps/intents
     private final static int MAX_WEB_APPS = 100;
 
-    protected static GeckoApp sContext = null;
     protected static WebAppAllocator sInstance = null;
     public static WebAppAllocator getInstance() {
         return getInstance(GeckoAppShell.getContext());
@@ -26,18 +25,6 @@ public class WebAppAllocator {
 
     public static synchronized WebAppAllocator getInstance(Context cx) {
         if (sInstance == null) {
-            if (!(cx instanceof GeckoApp))
-                throw new RuntimeException("Context needs to be a GeckoApp");
-
-            sContext = (GeckoApp) cx;
-            sInstance = new WebAppAllocator(cx);
-        }
-
-        // The marketplaceApp will run in this same process, but has a different context
-        // Rather than just failing, we want to create a new Allocator instead
-        if (cx != sContext) {
-            sInstance = null;
-            sContext = (GeckoApp) cx;
             sInstance = new WebAppAllocator(cx);
         }
 

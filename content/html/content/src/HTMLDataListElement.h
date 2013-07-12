@@ -13,8 +13,8 @@
 namespace mozilla {
 namespace dom {
 
-class HTMLDataListElement : public nsGenericHTMLElement,
-                            public nsIDOMHTMLDataListElement
+class HTMLDataListElement MOZ_FINAL : public nsGenericHTMLElement,
+                                      public nsIDOMHTMLDataListElement
 {
 public:
   HTMLDataListElement(already_AddRefed<nsINodeInfo> aNodeInfo)
