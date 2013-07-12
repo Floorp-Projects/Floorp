@@ -123,6 +123,9 @@ public:
 
   nsSVGOrientType* GetOrientType() { return &mOrientType; }
 
+  // Returns the value of svg.marker-improvements.enabled.
+  static bool MarkerImprovementsPrefEnabled();
+
   // WebIDL
   already_AddRefed<SVGAnimatedRect> ViewBox();
   already_AddRefed<DOMSVGAnimatedPreserveAspectRatio> PreserveAspectRatio();
