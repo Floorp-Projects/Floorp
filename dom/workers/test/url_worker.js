@@ -1,14 +1,4 @@
-onmessage = function(event) {
-  if (event.data != 0) {
-    var worker = new Worker('url_worker.js');
-    worker.onmessage = function(event) {
-      postMessage(event.data);
-    }
-
-    worker.postMessage(event.data - 1);
-    return;
-  }
-
+onmessage = function() {
   status = false;
   try {
     if ((URL instanceof Object)) {
