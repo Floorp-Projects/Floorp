@@ -23,7 +23,6 @@ public:
   HTMLTableRowElement(already_AddRefed<nsINodeInfo> aNodeInfo)
     : nsGenericHTMLElement(aNodeInfo)
   {
-    SetIsDOMBinding();
   }
 
   NS_IMPL_FROMCONTENT_HTML_WITH_TAG(HTMLTableRowElement, tr)

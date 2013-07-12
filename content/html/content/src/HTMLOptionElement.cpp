@@ -43,8 +43,6 @@ HTMLOptionElement::HTMLOptionElement(already_AddRefed<nsINodeInfo> aNodeInfo)
     mIsSelected(false),
     mIsInSetDefaultSelected(false)
 {
-  SetIsDOMBinding();
-
   // We start off enabled
   AddStatesSilently(NS_EVENT_STATE_ENABLED);
 }

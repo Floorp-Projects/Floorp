@@ -359,6 +359,9 @@ nsCocoaUtils::GetStringForNSString(const NSString *aSrc, nsAString& aDist)
 NSString*
 nsCocoaUtils::ToNSString(const nsAString& aString)
 {
+  if (aString.IsEmpty()) {
+    return [NSString string];
+  }
   return [NSString stringWithCharacters:aString.BeginReading()
                                  length:aString.Length()];
 }
@@ -570,4 +573,233 @@ nsCocoaUtils::HiDPIEnabled()
   }
 
   return sHiDPIEnabled;
+}
+
+void
+nsCocoaUtils::GetCommandsFromKeyEvent(NSEvent* aEvent,
+                                      nsTArray<KeyBindingsCommand>& aCommands)
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  MOZ_ASSERT(aEvent);
+
+  static NativeKeyBindingsRecorder* sNativeKeyBindingsRecorder;
+  if (!sNativeKeyBindingsRecorder) {
+    sNativeKeyBindingsRecorder = [NativeKeyBindingsRecorder new];
+  }
+
+  [sNativeKeyBindingsRecorder startRecording:aCommands];
+
+  // This will trigger 0 - N calls to doCommandBySelector: and insertText:
+  [sNativeKeyBindingsRecorder
+    interpretKeyEvents:[NSArray arrayWithObject:aEvent]];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
+@implementation NativeKeyBindingsRecorder
+
+- (void)startRecording:(nsTArray<KeyBindingsCommand>&)aCommands
+{
+  mCommands = &aCommands;
+  mCommands->Clear();
+}
+
+- (void)doCommandBySelector:(SEL)aSelector
+{
+  KeyBindingsCommand command = {
+    aSelector,
+    nil
+  };
+
+  mCommands->AppendElement(command);
+}
+
+- (void)insertText:(id)aString
+{
+  KeyBindingsCommand command = {
+    @selector(insertText:),
+    aString
+  };
+
+  mCommands->AppendElement(command);
+}
+
+@end // NativeKeyBindingsRecorder
+
+struct KeyConversionData
+{
+  const char* str;
+  size_t strLength;
+  uint32_t geckoKeyCode;
+  uint32_t charCode;
+};
+
+static const KeyConversionData gKeyConversions[] = {
+
+#define KEYCODE_ENTRY(aStr, aCode) \
+  {#aStr, sizeof(#aStr) - 1, NS_##aStr, aCode}
+
+// Some keycodes may have different name in nsIDOMKeyEvent from its key name.
+#define KEYCODE_ENTRY2(aStr, aNSName, aCode) \
+  {#aStr, sizeof(#aStr) - 1, NS_##aNSName, aCode}
+
+  KEYCODE_ENTRY(VK_CANCEL, 0x001B),
+  KEYCODE_ENTRY(VK_DELETE, NSDeleteFunctionKey),
+  KEYCODE_ENTRY(VK_BACK, NSBackspaceCharacter),
+  KEYCODE_ENTRY2(VK_BACK_SPACE, VK_BACK, NSBackspaceCharacter),
+  KEYCODE_ENTRY(VK_TAB, NSTabCharacter),
+  KEYCODE_ENTRY(VK_CLEAR, NSClearLineFunctionKey),
+  KEYCODE_ENTRY(VK_RETURN, NSEnterCharacter),
+  KEYCODE_ENTRY(VK_ENTER, NSEnterCharacter),
+  KEYCODE_ENTRY(VK_SHIFT, 0),
+  KEYCODE_ENTRY(VK_CONTROL, 0),
+  KEYCODE_ENTRY(VK_ALT, 0),
+  KEYCODE_ENTRY(VK_PAUSE, NSPauseFunctionKey),
+  KEYCODE_ENTRY(VK_CAPS_LOCK, 0),
+  KEYCODE_ENTRY(VK_ESCAPE, 0),
+  KEYCODE_ENTRY(VK_SPACE, ' '),
+  KEYCODE_ENTRY(VK_PAGE_UP, NSPageUpFunctionKey),
+  KEYCODE_ENTRY(VK_PAGE_DOWN, NSPageDownFunctionKey),
+  KEYCODE_ENTRY(VK_END, NSEndFunctionKey),
+  KEYCODE_ENTRY(VK_HOME, NSHomeFunctionKey),
+  KEYCODE_ENTRY(VK_LEFT, NSLeftArrowFunctionKey),
+  KEYCODE_ENTRY(VK_UP, NSUpArrowFunctionKey),
+  KEYCODE_ENTRY(VK_RIGHT, NSRightArrowFunctionKey),
+  KEYCODE_ENTRY(VK_DOWN, NSDownArrowFunctionKey),
+  KEYCODE_ENTRY(VK_PRINTSCREEN, NSPrintScreenFunctionKey),
+  KEYCODE_ENTRY(VK_INSERT, NSInsertFunctionKey),
+  KEYCODE_ENTRY(VK_HELP, NSHelpFunctionKey),
+  KEYCODE_ENTRY(VK_0, '0'),
+  KEYCODE_ENTRY(VK_1, '1'),
+  KEYCODE_ENTRY(VK_2, '2'),
+  KEYCODE_ENTRY(VK_3, '3'),
+  KEYCODE_ENTRY(VK_4, '4'),
+  KEYCODE_ENTRY(VK_5, '5'),
+  KEYCODE_ENTRY(VK_6, '6'),
+  KEYCODE_ENTRY(VK_7, '7'),
+  KEYCODE_ENTRY(VK_8, '8'),
+  KEYCODE_ENTRY(VK_9, '9'),
+  KEYCODE_ENTRY(VK_SEMICOLON, ':'),
+  KEYCODE_ENTRY(VK_EQUALS, '='),
+  KEYCODE_ENTRY(VK_A, 'A'),
+  KEYCODE_ENTRY(VK_B, 'B'),
+  KEYCODE_ENTRY(VK_C, 'C'),
+  KEYCODE_ENTRY(VK_D, 'D'),
+  KEYCODE_ENTRY(VK_E, 'E'),
+  KEYCODE_ENTRY(VK_F, 'F'),
+  KEYCODE_ENTRY(VK_G, 'G'),
+  KEYCODE_ENTRY(VK_H, 'H'),
+  KEYCODE_ENTRY(VK_I, 'I'),
+  KEYCODE_ENTRY(VK_J, 'J'),
+  KEYCODE_ENTRY(VK_K, 'K'),
+  KEYCODE_ENTRY(VK_L, 'L'),
+  KEYCODE_ENTRY(VK_M, 'M'),
+  KEYCODE_ENTRY(VK_N, 'N'),
+  KEYCODE_ENTRY(VK_O, 'O'),
+  KEYCODE_ENTRY(VK_P, 'P'),
+  KEYCODE_ENTRY(VK_Q, 'Q'),
+  KEYCODE_ENTRY(VK_R, 'R'),
+  KEYCODE_ENTRY(VK_S, 'S'),
+  KEYCODE_ENTRY(VK_T, 'T'),
+  KEYCODE_ENTRY(VK_U, 'U'),
+  KEYCODE_ENTRY(VK_V, 'V'),
+  KEYCODE_ENTRY(VK_W, 'W'),
+  KEYCODE_ENTRY(VK_X, 'X'),
+  KEYCODE_ENTRY(VK_Y, 'Y'),
+  KEYCODE_ENTRY(VK_Z, 'Z'),
+  KEYCODE_ENTRY(VK_CONTEXT_MENU, NSMenuFunctionKey),
+  KEYCODE_ENTRY(VK_NUMPAD0, '0'),
+  KEYCODE_ENTRY(VK_NUMPAD1, '1'),
+  KEYCODE_ENTRY(VK_NUMPAD2, '2'),
+  KEYCODE_ENTRY(VK_NUMPAD3, '3'),
+  KEYCODE_ENTRY(VK_NUMPAD4, '4'),
+  KEYCODE_ENTRY(VK_NUMPAD5, '5'),
+  KEYCODE_ENTRY(VK_NUMPAD6, '6'),
+  KEYCODE_ENTRY(VK_NUMPAD7, '7'),
+  KEYCODE_ENTRY(VK_NUMPAD8, '8'),
+  KEYCODE_ENTRY(VK_NUMPAD9, '9'),
+  KEYCODE_ENTRY(VK_MULTIPLY, '*'),
+  KEYCODE_ENTRY(VK_ADD, '+'),
+  KEYCODE_ENTRY(VK_SEPARATOR, 0),
+  KEYCODE_ENTRY(VK_SUBTRACT, '-'),
+  KEYCODE_ENTRY(VK_DECIMAL, '.'),
+  KEYCODE_ENTRY(VK_DIVIDE, '/'),
+  KEYCODE_ENTRY(VK_F1, NSF1FunctionKey),
+  KEYCODE_ENTRY(VK_F2, NSF2FunctionKey),
+  KEYCODE_ENTRY(VK_F3, NSF3FunctionKey),
+  KEYCODE_ENTRY(VK_F4, NSF4FunctionKey),
+  KEYCODE_ENTRY(VK_F5, NSF5FunctionKey),
+  KEYCODE_ENTRY(VK_F6, NSF6FunctionKey),
+  KEYCODE_ENTRY(VK_F7, NSF7FunctionKey),
+  KEYCODE_ENTRY(VK_F8, NSF8FunctionKey),
+  KEYCODE_ENTRY(VK_F9, NSF9FunctionKey),
+  KEYCODE_ENTRY(VK_F10, NSF10FunctionKey),
+  KEYCODE_ENTRY(VK_F11, NSF11FunctionKey),
+  KEYCODE_ENTRY(VK_F12, NSF12FunctionKey),
+  KEYCODE_ENTRY(VK_F13, NSF13FunctionKey),
+  KEYCODE_ENTRY(VK_F14, NSF14FunctionKey),
+  KEYCODE_ENTRY(VK_F15, NSF15FunctionKey),
+  KEYCODE_ENTRY(VK_F16, NSF16FunctionKey),
+  KEYCODE_ENTRY(VK_F17, NSF17FunctionKey),
+  KEYCODE_ENTRY(VK_F18, NSF18FunctionKey),
+  KEYCODE_ENTRY(VK_F19, NSF19FunctionKey),
+  KEYCODE_ENTRY(VK_F20, NSF20FunctionKey),
+  KEYCODE_ENTRY(VK_F21, NSF21FunctionKey),
+  KEYCODE_ENTRY(VK_F22, NSF22FunctionKey),
+  KEYCODE_ENTRY(VK_F23, NSF23FunctionKey),
+  KEYCODE_ENTRY(VK_F24, NSF24FunctionKey),
+  KEYCODE_ENTRY(VK_NUM_LOCK, NSClearLineFunctionKey),
+  KEYCODE_ENTRY(VK_SCROLL_LOCK, NSScrollLockFunctionKey),
+  KEYCODE_ENTRY(VK_COMMA, ','),
+  KEYCODE_ENTRY(VK_PERIOD, '.'),
+  KEYCODE_ENTRY(VK_SLASH, '/'),
+  KEYCODE_ENTRY(VK_BACK_QUOTE, '`'),
+  KEYCODE_ENTRY(VK_OPEN_BRACKET, '['),
+  KEYCODE_ENTRY(VK_BACK_SLASH, '\\'),
+  KEYCODE_ENTRY(VK_CLOSE_BRACKET, ']'),
+  KEYCODE_ENTRY(VK_QUOTE, '\'')
+
+#undef KEYCODE_ENTRY
+
+};
+
+uint32_t
+nsCocoaUtils::ConvertGeckoNameToMacCharCode(const nsAString& aKeyCodeName)
+{
+  if (aKeyCodeName.IsEmpty()) {
+    return 0;
+  }
+
+  nsAutoCString keyCodeName;
+  keyCodeName.AssignWithConversion(aKeyCodeName);
+  // We want case-insensitive comparison with data stored as uppercase.
+  ToUpperCase(keyCodeName);
+
+  uint32_t keyCodeNameLength = keyCodeName.Length();
+  const char* keyCodeNameStr = keyCodeName.get();
+  for (uint16_t i = 0; i < ArrayLength(gKeyConversions); ++i) {
+    if (keyCodeNameLength == gKeyConversions[i].strLength &&
+        nsCRT::strcmp(gKeyConversions[i].str, keyCodeNameStr) == 0) {
+      return gKeyConversions[i].charCode;
+    }
+  }
+
+  return 0;
+}
+
+uint32_t
+nsCocoaUtils::ConvertGeckoKeyCodeToMacCharCode(uint32_t aKeyCode)
+{
+  if (!aKeyCode) {
+    return 0;
+  }
+
+  for (uint16_t i = 0; i < ArrayLength(gKeyConversions); ++i) {
+    if (gKeyConversions[i].geckoKeyCode == aKeyCode) {
+      return gKeyConversions[i].charCode;
+    }
+  }
+
+  return 0;
 }

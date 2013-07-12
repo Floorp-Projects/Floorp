@@ -27,8 +27,8 @@ include "mozilla/layers/CompositorTypes.h";
 
 using IPC::Principal;
 using gfxMatrix;
-using gfxRect;
 using gfxSize;
+using CSSRect;
 using mozilla::layers::FrameMetrics;
 using mozilla::layout::ScrollingBehavior;
 using mozilla::void_t;
@@ -264,7 +264,7 @@ parent:
      * Instructs the TabParent to forward a request to zoom to a rect given in
      * CSS pixels. This rect is relative to the document.
      */
-    ZoomToRect(gfxRect aRect);
+    ZoomToRect(CSSRect aRect);
 
     /**
      * We know for sure that content has either preventDefaulted or not

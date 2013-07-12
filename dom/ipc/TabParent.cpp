@@ -748,7 +748,7 @@ TabParent::RecvNotifyIMEFocus(const bool& aFocus,
 {
   nsCOMPtr<nsIWidget> widget = GetWidget();
   if (!widget) {
-    aPreference->mWantUpdates = false;
+    aPreference->mWantUpdates = nsIMEUpdatePreference::NOTIFY_NOTHING;
     aPreference->mWantHints = false;
     return true;
   }
@@ -1465,7 +1465,7 @@ TabParent::RecvPRenderFrameConstructor(PRenderFrameParent* actor,
 }
 
 bool
-TabParent::RecvZoomToRect(const gfxRect& aRect)
+TabParent::RecvZoomToRect(const CSSRect& aRect)
 {
   if (RenderFrameParent* rfp = GetRenderFrame()) {
     rfp->ZoomToRect(aRect);

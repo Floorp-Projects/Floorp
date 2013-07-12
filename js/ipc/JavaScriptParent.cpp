@@ -60,6 +60,7 @@ class CPOWProxyHandler : public BaseProxyHandler
         return false;
     }
 
+    virtual bool preventExtensions(JSContext *cx, HandleObject proxy) MOZ_OVERRIDE;
     virtual bool getPropertyDescriptor(JSContext *cx, HandleObject proxy, HandleId id,
                                        PropertyDescriptor *desc, unsigned flags) MOZ_OVERRIDE;
     virtual bool getOwnPropertyDescriptor(JSContext *cx, HandleObject proxy,
@@ -79,17 +80,34 @@ class CPOWProxyHandler : public BaseProxyHandler
                      JS::HandleId id, bool strict, JS::MutableHandleValue vp) MOZ_OVERRIDE;
     virtual bool keys(JSContext *cx, HandleObject proxy, AutoIdVector &props) MOZ_OVERRIDE;
 
+    virtual bool isExtensible(JSContext *cx, HandleObject proxy, bool *extensible) MOZ_OVERRIDE;
     virtual bool call(JSContext *cx, HandleObject proxy, const CallArgs &args) MOZ_OVERRIDE;
-    virtual void finalize(JSFreeOp *fop, JSObject *proxy) MOZ_OVERRIDE;
     virtual bool objectClassIs(HandleObject obj, js::ESClassValue classValue, JSContext *cx) MOZ_OVERRIDE;
     virtual const char* className(JSContext *cx, HandleObject proxy) MOZ_OVERRIDE;
-    virtual bool preventExtensions(JSContext *cx, HandleObject proxy) MOZ_OVERRIDE;
-    virtual bool isExtensible(JSContext *cx, HandleObject proxy, bool *extensible) MOZ_OVERRIDE;
+    virtual void finalize(JSFreeOp *fop, JSObject *proxy) MOZ_OVERRIDE;
 
     static CPOWProxyHandler singleton;
 };
 
 CPOWProxyHandler CPOWProxyHandler::singleton;
+
+bool
+CPOWProxyHandler::preventExtensions(JSContext *cx, HandleObject proxy)
+{
+    return ParentOf(proxy)->preventExtensions(cx, proxy);
+}
+
+bool
+JavaScriptParent::preventExtensions(JSContext *cx, HandleObject proxy)
+{
+    ObjectId objId = idOf(proxy);
+
+    ReturnStatus status;
+    if (!CallPreventExtensions(objId, &status))
+        return ipcfail(cx);
+
+    return ok(cx, status);
+}
 
 bool
 CPOWProxyHandler::getPropertyDescriptor(JSContext *cx, HandleObject proxy, HandleId id,
@@ -186,30 +204,6 @@ JavaScriptParent::getOwnPropertyNames(JSContext *cx, HandleObject proxy, AutoIdV
 }
 
 bool
-CPOWProxyHandler::keys(JSContext *cx, HandleObject proxy, AutoIdVector &props)
-{
-    return ParentOf(proxy)->keys(cx, proxy, props);
-}
-
-bool
-JavaScriptParent::keys(JSContext *cx, HandleObject proxy, AutoIdVector &props)
-{
-    return getPropertyNames(cx, proxy, JSITER_OWNONLY, props);
-}
-
-bool
-CPOWProxyHandler::enumerate(JSContext *cx, HandleObject proxy, AutoIdVector &props)
-{
-    return ParentOf(proxy)->enumerate(cx, proxy, props);
-}
-
-bool
-JavaScriptParent::enumerate(JSContext *cx, HandleObject proxy, AutoIdVector &props)
-{
-    return getPropertyNames(cx, proxy, 0, props);
-}
-
-bool
 CPOWProxyHandler::delete_(JSContext *cx, HandleObject proxy, HandleId id, bool *bp)
 {
     return ParentOf(proxy)->delete_(cx, proxy, id, bp);
@@ -232,39 +226,15 @@ JavaScriptParent::delete_(JSContext *cx, HandleObject proxy, HandleId id, bool *
 }
 
 bool
-CPOWProxyHandler::preventExtensions(JSContext *cx, HandleObject proxy)
+CPOWProxyHandler::enumerate(JSContext *cx, HandleObject proxy, AutoIdVector &props)
 {
-    return ParentOf(proxy)->preventExtensions(cx, proxy);
+    return ParentOf(proxy)->enumerate(cx, proxy, props);
 }
 
 bool
-JavaScriptParent::preventExtensions(JSContext *cx, HandleObject proxy)
+JavaScriptParent::enumerate(JSContext *cx, HandleObject proxy, AutoIdVector &props)
 {
-    ObjectId objId = idOf(proxy);
-
-    ReturnStatus status;
-    if (!CallPreventExtensions(objId, &status))
-        return ipcfail(cx);
-
-    return ok(cx, status);
-}
-
-bool
-CPOWProxyHandler::isExtensible(JSContext *cx, HandleObject proxy, bool *extensible)
-{
-    return ParentOf(proxy)->isExtensible(cx, proxy, extensible);
-}
-
-bool
-JavaScriptParent::isExtensible(JSContext *cx, HandleObject proxy, bool *extensible)
-{
-    ObjectId objId = idOf(proxy);
-
-    ReturnStatus status;
-    if (!CallIsExtensible(objId, &status, extensible))
-        return ipcfail(cx);
-
-    return ok(cx, status);
+    return getPropertyNames(cx, proxy, 0, props);
 }
 
 bool
@@ -374,6 +344,36 @@ JavaScriptParent::set(JSContext *cx, JS::HandleObject proxy, JS::HandleObject re
 }
 
 bool
+CPOWProxyHandler::keys(JSContext *cx, HandleObject proxy, AutoIdVector &props)
+{
+    return ParentOf(proxy)->keys(cx, proxy, props);
+}
+
+bool
+JavaScriptParent::keys(JSContext *cx, HandleObject proxy, AutoIdVector &props)
+{
+    return getPropertyNames(cx, proxy, JSITER_OWNONLY, props);
+}
+
+bool
+CPOWProxyHandler::isExtensible(JSContext *cx, HandleObject proxy, bool *extensible)
+{
+    return ParentOf(proxy)->isExtensible(cx, proxy, extensible);
+}
+
+bool
+JavaScriptParent::isExtensible(JSContext *cx, HandleObject proxy, bool *extensible)
+{
+    ObjectId objId = idOf(proxy);
+
+    ReturnStatus status;
+    if (!CallIsExtensible(objId, &status, extensible))
+        return ipcfail(cx);
+
+    return ok(cx, status);
+}
+
+bool
 CPOWProxyHandler::call(JSContext *cx, HandleObject proxy, const CallArgs &args)
 {
     return ParentOf(proxy)->call(cx, proxy, args);
@@ -446,25 +446,6 @@ JavaScriptParent::call(JSContext *cx, HandleObject proxy, const CallArgs &args)
     return true;
 }
 
-void
-CPOWProxyHandler::finalize(JSFreeOp *fop, JSObject *proxy)
-{
-    ParentOf(proxy)->drop(proxy);
-}
-
-void
-JavaScriptParent::drop(JSObject *obj)
-{
-    if (inactive_)
-        return;
-
-    ObjectId objId = idOf(obj);
-
-    objects_.remove(objId);
-    if (!SendDropObject(objId))
-        MOZ_CRASH();
-    decref();
-}
 
 bool
 CPOWProxyHandler::objectClassIs(HandleObject proxy, js::ESClassValue classValue, JSContext *cx)
@@ -502,6 +483,26 @@ JavaScriptParent::className(JSContext *cx, HandleObject proxy)
         return NULL;
 
     return ToNewCString(name);
+}
+
+void
+CPOWProxyHandler::finalize(JSFreeOp *fop, JSObject *proxy)
+{
+    ParentOf(proxy)->drop(proxy);
+}
+
+void
+JavaScriptParent::drop(JSObject *obj)
+{
+    if (inactive_)
+        return;
+
+    ObjectId objId = idOf(obj);
+
+    objects_.remove(objId);
+    if (!SendDropObject(objId))
+        MOZ_CRASH();
+    decref();
 }
 
 bool

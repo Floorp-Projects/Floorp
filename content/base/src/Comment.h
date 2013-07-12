@@ -21,7 +21,6 @@ private:
   {
     NS_ABORT_IF_FALSE(mNodeInfo->NodeType() == nsIDOMNode::COMMENT_NODE,
                       "Bad NodeType in aNodeInfo");
-    SetIsDOMBinding();
   }
 
 public:
