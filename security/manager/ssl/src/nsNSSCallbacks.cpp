@@ -13,23 +13,17 @@
 #include "nsIWebProgressListener.h"
 #include "nsProtectedAuthThread.h"
 #include "nsITokenDialogs.h"
-#include "nsNSSShutDown.h"
 #include "nsIUploadChannel.h"
-#include "nsThreadUtils.h"
 #include "nsIPrompt.h"
 #include "nsProxyRelease.h"
 #include "PSMRunnable.h"
 #include "ScopedNSSTypes.h"
 #include "nsIConsoleService.h"
 #include "nsIHttpChannelInternal.h"
-#include "nsCRT.h"
 #include "nsNetUtil.h"
 #include "SharedSSLState.h"
-
 #include "ssl.h"
 #include "sslproto.h"
-#include "ocsp.h"
-#include "nssb64.h"
 
 using namespace mozilla;
 using namespace mozilla::psm;
@@ -1130,183 +1124,4 @@ void HandshakeCallback(PRFileDesc* fd, void* client_data) {
 
   infoObject->NoteTimeUntilReady();
   infoObject->SetHandshakeCompleted(isResumedSession);
-}
-
-struct OCSPDefaultResponders {
-    const char *issuerName_string;
-    CERTName *issuerName;
-    const char *issuerKeyID_base64;
-    SECItem *issuerKeyID;
-    const char *ocspUrl;
-};
-
-static struct OCSPDefaultResponders myDefaultOCSPResponders[] = {
-  /* COMODO */
-  {
-    "CN=AddTrust External CA Root,OU=AddTrust External TTP Network,O=AddTrust AB,C=SE",
-    nullptr, "rb2YejS0Jvf6xCZU7wO94CTLVBo=", nullptr,
-    "http://ocsp.comodoca.com"
-  },
-  {
-    "CN=COMODO Certification Authority,O=COMODO CA Limited,L=Salford,ST=Greater Manchester,C=GB",
-    nullptr, "C1jli8ZMFTekQKkwqSG+RzZaVv8=", nullptr,
-    "http://ocsp.comodoca.com"
-  },
-  {
-    "CN=COMODO EV SGC CA,O=COMODO CA Limited,L=Salford,ST=Greater Manchester,C=GB",
-    nullptr, "f/ZMNigUrs0eN6/eWvJbw6CsK/4=", nullptr,
-    "http://ocsp.comodoca.com"
-  },
-  {
-    "CN=COMODO EV SSL CA,O=COMODO CA Limited,L=Salford,ST=Greater Manchester,C=GB",
-    nullptr, "aRZJ7LZ1ZFrpAyNgL1RipTRcPuI=", nullptr,
-    "http://ocsp.comodoca.com"
-  },
-  {
-    "CN=UTN - DATACorp SGC,OU=http://www.usertrust.com,O=The USERTRUST Network,L=Salt Lake City,ST=UT,C=US",
-    nullptr, "UzLRs89/+uDxoF2FTpLSnkUdtE8=", nullptr,
-    "http://ocsp.usertrust.com"
-  },
-  {
-    "CN=UTN-USERFirst-Hardware,OU=http://www.usertrust.com,O=The USERTRUST Network,L=Salt Lake City,ST=UT,C=US",
-    nullptr, "oXJfJhsomEOVXQc31YWWnUvSw0U=", nullptr,
-    "http://ocsp.usertrust.com"
-  },
-  /* Network Solutions */
-  {
-    "CN=Network Solutions Certificate Authority,O=Network Solutions L.L.C.,C=US",
-    nullptr, "ITDJ+wDXTpjah6oq0KcusUAxp0w=", nullptr,
-    "http://ocsp.netsolssl.com"
-  },
-  {
-    "CN=Network Solutions EV SSL CA,O=Network Solutions L.L.C.,C=US",
-    nullptr, "tk6FnYQfGx3UUolOB5Yt+d7xj8w=", nullptr,
-    "http://ocsp.netsolssl.com"
-  },
-  /* GlobalSign */
-  {
-    "CN=GlobalSign Root CA,OU=Root CA,O=GlobalSign nv-sa,C=BE",
-    nullptr, "YHtmGkUNl8qJUC99BM00qP/8/Us=", nullptr,
-    "http://ocsp.globalsign.com/ExtendedSSLCACross"
-  },
-  {
-    "CN=GlobalSign,O=GlobalSign,OU=GlobalSign Root CA - R2",
-    nullptr, "m+IHV2ccHsBqBt5ZtJot39wZhi4=", nullptr,
-    "http://ocsp.globalsign.com/ExtendedSSLCA"
-  },
-  {
-    "CN=GlobalSign Extended Validation CA,O=GlobalSign,OU=Extended Validation CA",
-    nullptr, "NLH5yYxrNUTMCGkK7uOjuVy/FuA=", nullptr,
-    "http://ocsp.globalsign.com/ExtendedSSL"
-  },
-  /* Trustwave */
-  {
-    "CN=SecureTrust CA,O=SecureTrust Corporation,C=US",
-    nullptr, "QjK2FvoE/f5dS3rD/fdMQB1aQ68=", nullptr,
-    "http://ocsp.trustwave.com"
-  }
-};
-
-static const unsigned int numResponders =
-    (sizeof myDefaultOCSPResponders) / (sizeof myDefaultOCSPResponders[0]);
-
-static CERT_StringFromCertFcn oldOCSPAIAInfoCallback = nullptr;
-
-/*
- * See if we have a hard-coded default responder for this certificate's
- * issuer (unless this certificate is a root certificate).
- *
- * The result needs to be freed (PORT_Free) when no longer in use.
- */
-char* MyAlternateOCSPAIAInfoCallback(CERTCertificate *cert) {
-  if (cert && !cert->isRoot) {
-    unsigned int i;
-    for (i=0; i < numResponders; i++) {
-      if (!(myDefaultOCSPResponders[i].issuerName));
-      else if (!(myDefaultOCSPResponders[i].issuerKeyID));
-      else if (!(cert->authKeyID));
-      else if (CERT_CompareName(myDefaultOCSPResponders[i].issuerName,
-                                &(cert->issuer)) != SECEqual);
-      else if (SECITEM_CompareItem(myDefaultOCSPResponders[i].issuerKeyID,
-                                   &(cert->authKeyID->keyID)) != SECEqual);
-      else        // Issuer Name and Key Identifier match, so use this OCSP URL.
-        return PORT_Strdup(myDefaultOCSPResponders[i].ocspUrl);
-    }
-  }
-
-  // If we've not found a hard-coded default responder, chain to the old
-  // callback function (if there is one).
-  if (oldOCSPAIAInfoCallback)
-    return (*oldOCSPAIAInfoCallback)(cert);
-
-  return nullptr;
-}
-
-void cleanUpMyDefaultOCSPResponders() {
-  unsigned int i;
-
-  for (i=0; i < numResponders; i++) {
-    if (myDefaultOCSPResponders[i].issuerName) {
-      CERT_DestroyName(myDefaultOCSPResponders[i].issuerName);
-      myDefaultOCSPResponders[i].issuerName = nullptr;
-    }
-    if (myDefaultOCSPResponders[i].issuerKeyID) {
-      SECITEM_FreeItem(myDefaultOCSPResponders[i].issuerKeyID, true);
-      myDefaultOCSPResponders[i].issuerKeyID = nullptr;
-    }
-  }
-}
-
-SECStatus RegisterMyOCSPAIAInfoCallback() {
-  // Prevent multiple registrations.
-  if (myDefaultOCSPResponders[0].issuerName)
-    return SECSuccess;                 // Already registered ok.
-
-  // Populate various fields in the myDefaultOCSPResponders[] array.
-  SECStatus rv = SECFailure;
-  unsigned int i;
-  for (i=0; i < numResponders; i++) {
-    // Create a CERTName structure from the issuer name string.
-    myDefaultOCSPResponders[i].issuerName = CERT_AsciiToName(
-      const_cast<char*>(myDefaultOCSPResponders[i].issuerName_string));
-    if (!(myDefaultOCSPResponders[i].issuerName))
-      goto loser;
-    // Create a SECItem from the Base64 authority key identifier keyID.
-    myDefaultOCSPResponders[i].issuerKeyID = NSSBase64_DecodeBuffer(nullptr,
-          nullptr, myDefaultOCSPResponders[i].issuerKeyID_base64,
-          (uint32_t)PORT_Strlen(myDefaultOCSPResponders[i].issuerKeyID_base64));
-    if (!(myDefaultOCSPResponders[i].issuerKeyID))
-      goto loser;
-  }
-
-  // Register our alternate OCSP Responder URL lookup function.
-  rv = CERT_RegisterAlternateOCSPAIAInfoCallBack(MyAlternateOCSPAIAInfoCallback,
-                                                 &oldOCSPAIAInfoCallback);
-  if (rv != SECSuccess)
-    goto loser;
-
-  return SECSuccess;
-
-loser:
-  cleanUpMyDefaultOCSPResponders();
-  return rv;
-}
-
-SECStatus UnregisterMyOCSPAIAInfoCallback() {
-  SECStatus rv;
-
-  // Only allow unregistration if we're already registered.
-  if (!(myDefaultOCSPResponders[0].issuerName))
-    return SECFailure;
-
-  // Unregister our alternate OCSP Responder URL lookup function.
-  rv = CERT_RegisterAlternateOCSPAIAInfoCallBack(oldOCSPAIAInfoCallback,
-                                                 nullptr);
-  if (rv != SECSuccess)
-    return rv;
-
-  // Tidy up.
-  oldOCSPAIAInfoCallback = nullptr;
-  cleanUpMyDefaultOCSPResponders();
-  return SECSuccess;
 }
