@@ -6,6 +6,7 @@
 package org.mozilla.gecko.home;
 
 import org.mozilla.gecko.EditBookmarkDialog;
+import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tab;
@@ -147,16 +148,30 @@ class HomeFragment extends Fragment {
 
             case R.id.remove_bookmark: {
                 final int rowId = info.rowId;
-                (new UiAsyncTask<Void, Void, Void>(ThreadUtils.getBackgroundHandler()) {
+                final String url = info.url;
+                final boolean inReadingList = info.inReadingList;
+
+                (new UiAsyncTask<Void, Void, Integer>(ThreadUtils.getBackgroundHandler()) {
                     @Override
-                    public Void doInBackground(Void... params) {
+                    public Integer doInBackground(Void... params) {
                         BrowserDB.removeBookmark(activity.getContentResolver(), rowId);
-                        return null;
+                        return BrowserDB.getReadingListCount(activity.getContentResolver());
                     }
 
                     @Override
-                    public void onPostExecute(Void result) {
-                        Toast.makeText(activity, R.string.bookmark_removed, Toast.LENGTH_SHORT).show();
+                    public void onPostExecute(Integer aCount) {
+                        int messageId = R.string.bookmark_removed;
+                        if (inReadingList) {
+                            messageId = R.string.reading_list_removed;
+
+                            GeckoEvent e = GeckoEvent.createBroadcastEvent("Reader:Remove", url);
+                            GeckoAppShell.sendEventToGecko(e);
+
+                            e = GeckoEvent.createBroadcastEvent("Reader:ListCountUpdated", Integer.toString(aCount));
+                            GeckoAppShell.sendEventToGecko(e);
+                        }
+
+                        Toast.makeText(activity, messageId, Toast.LENGTH_SHORT).show();
                     }
                 }).execute();
                 return true;
