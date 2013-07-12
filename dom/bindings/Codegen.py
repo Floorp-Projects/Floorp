@@ -9123,8 +9123,8 @@ class CGExampleRoot(CGThing):
                                 "mozilla/dom/%sBinding.h" % interfaceName,
                                 "nsContentUtils.h" ], "", self.root);
 
-        # In the header, #pragma once before everything
-        self.root = CGWrapper(self.root, declarePre="#pragma once\n\n")
+        # And now some include guards
+        self.root = CGIncludeGuard(interfaceName, self.root)
 
         # And our license block comes before everything else
         self.root = CGWrapper(self.root, pre="""/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
