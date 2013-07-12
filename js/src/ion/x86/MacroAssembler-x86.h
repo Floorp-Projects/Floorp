@@ -940,6 +940,7 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
 
     // Used from within an Exit frame to handle a pending exception.
     void handleFailureWithHandler(void *handler);
+    void handleFailureWithHandlerTail();
 
     void makeFrameDescriptor(Register frameSizeReg, FrameType type) {
         shll(Imm32(FRAMESIZE_SHIFT), frameSizeReg);

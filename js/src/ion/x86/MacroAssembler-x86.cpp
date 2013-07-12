@@ -212,6 +212,13 @@ MacroAssemblerX86::handleFailureWithHandler(void *handler)
     passABIArg(eax);
     callWithABI(handler);
 
+    IonCode *excTail = GetIonContext()->compartment->ionCompartment()->getExceptionTail();
+    jmp(excTail);
+}
+
+void
+MacroAssemblerX86::handleFailureWithHandlerTail()
+{
     Label entryFrame;
     Label catch_;
     Label finally;
