@@ -21,7 +21,7 @@ interface MozPowerManager;
 interface MozWakeLock;
 
 // http://www.whatwg.org/specs/web-apps/current-work/#the-navigator-object
-[HeaderFile="Navigator.h"]
+[HeaderFile="Navigator.h", NeedNewResolve]
 interface Navigator {
   // objects implementing this interface also implement the interfaces given below
 };
