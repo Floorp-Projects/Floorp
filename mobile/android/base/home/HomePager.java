@@ -41,6 +41,10 @@ public class HomePager extends ViewPager {
         public void onUrlOpen(String url);
     }
 
+    public interface OnNewTabsListener {
+        public void onNewTabs(String[] urls);
+    }
+
     public HomePager(Context context) {
         super(context);
         mContext = context;

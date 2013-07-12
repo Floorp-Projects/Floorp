@@ -10,7 +10,7 @@ import org.mozilla.gecko.R;
 import org.mozilla.gecko.SessionParser;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.BrowserContract.Combined;
-import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
+import org.mozilla.gecko.home.HomePager.OnNewTabsListener;
 import org.mozilla.gecko.home.TwoLinePageRow;
 
 import android.app.Activity;
@@ -60,15 +60,15 @@ public class LastTabsPage extends HomeFragment {
     // Inflater used by the adapter
     private LayoutInflater mInflater;
 
-    // On URL open listener
-    private OnUrlOpenListener mUrlOpenListener;
+    // On new tabs listener
+    private OnNewTabsListener mNewTabsListener;
 
     public static LastTabsPage newInstance() {
         return new LastTabsPage();
     }
 
     public LastTabsPage() {
-        mUrlOpenListener = null;
+        mNewTabsListener = null;
     }
 
     @Override
@@ -76,10 +76,10 @@ public class LastTabsPage extends HomeFragment {
         super.onAttach(activity);
 
         try {
-            mUrlOpenListener = (OnUrlOpenListener) activity;
+            mNewTabsListener = (OnNewTabsListener) activity;
         } catch (ClassCastException e) {
             throw new ClassCastException(activity.toString()
-                    + " must implement HomePager.OnUrlOpenListener");
+                    + " must implement HomePager.OnNewTabsListener");
         }
 
         mInflater = (LayoutInflater) activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
@@ -90,7 +90,7 @@ public class LastTabsPage extends HomeFragment {
         super.onDetach();
 
         mInflater = null;
-        mUrlOpenListener = null;
+        mNewTabsListener = null;
     }
 
     @Override
@@ -114,7 +114,7 @@ public class LastTabsPage extends HomeFragment {
                 }
 
                 final String url = c.getString(c.getColumnIndexOrThrow(Combined.URL));
-                mUrlOpenListener.onUrlOpen(url);
+                mNewTabsListener.onNewTabs(new String[] { url });
             }
         });
 
