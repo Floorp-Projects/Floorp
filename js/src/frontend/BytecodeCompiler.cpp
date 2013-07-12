@@ -18,7 +18,6 @@
 #include "jsscriptinlines.h"
 
 #include "frontend/ParseMaps-inl.h"
-#include "vm/ScopeObject-inl.h"
 
 using namespace js;
 using namespace js::frontend;

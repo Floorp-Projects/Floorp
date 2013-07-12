@@ -53,7 +53,6 @@
 #include "jsautooplen.h"        // generated headers last
 
 #include "vm/Interpreter-inl.h"
-#include "vm/RegExpObject-inl.h"
 #include "vm/StringObject-inl.h"
 #include "vm/String-inl.h"
 

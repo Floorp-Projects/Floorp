@@ -17,7 +17,6 @@
 #endif
 
 #include "vm/Interpreter-inl.h"
-#include "vm/ScopeObject-inl.h"
 #include "vm/Stack-inl.h"
 #include "vm/Probes-inl.h"
 

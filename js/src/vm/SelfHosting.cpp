@@ -20,7 +20,6 @@
 
 #include "vm/BooleanObject-inl.h"
 #include "vm/NumberObject-inl.h"
-#include "vm/RegExpObject-inl.h"
 #include "vm/StringObject-inl.h"
 
 #include "selfhosted.out.h"
