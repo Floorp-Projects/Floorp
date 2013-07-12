@@ -4868,45 +4868,27 @@ Parser<ParseHandler>::statement(bool canHaveDirectives)
     }
 }
 
-template <>
-ParseNode *
-Parser<FullParseHandler>::expr()
-{
-    ParseNode *pn = assignExpr();
-    if (pn && tokenStream.matchToken(TOK_COMMA)) {
-        ParseNode *pn2 = ListNode::create(PNK_COMMA, &handler);
-        if (!pn2)
-            return null();
-        pn2->pn_pos.begin = pn->pn_pos.begin;
-        pn2->initList(pn);
-        pn = pn2;
-        do {
-            pn2 = pn->last();
-            if (pn2->isKind(PNK_YIELD) && !pn2->isInParens()) {
-                report(ParseError, false, pn2, JSMSG_BAD_GENERATOR_SYNTAX, js_yield_str);
-                return null();
-            }
-            pn2 = assignExpr();
-            if (!pn2)
-                return null();
-            pn->append(pn2);
-        } while (tokenStream.matchToken(TOK_COMMA));
-        pn->pn_pos.end = pn->last()->pn_pos.end;
-    }
-    return pn;
-}
-
-template <>
-SyntaxParseHandler::Node
-Parser<SyntaxParseHandler>::expr()
+template <typename ParseHandler>
+typename ParseHandler::Node
+Parser<ParseHandler>::expr()
 {
     Node pn = assignExpr();
     if (pn && tokenStream.matchToken(TOK_COMMA)) {
+        Node seq = handler.newList(PNK_COMMA, pn);
+        if (!seq)
+            return null();
         do {
-            if (!assignExpr())
+            if (handler.isUnparenthesizedYield(pn)) {
+                report(ParseError, false, pn, JSMSG_BAD_GENERATOR_SYNTAX, js_yield_str);
                 return null();
+            }
+
+            pn = assignExpr();
+            if (!pn)
+                return null();
+            handler.addList(seq, pn);
         } while (tokenStream.matchToken(TOK_COMMA));
-        return SyntaxParseHandler::NodeGeneric;
+        return seq;
     }
     return pn;
 }
