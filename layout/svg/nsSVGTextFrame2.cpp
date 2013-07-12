@@ -3141,36 +3141,37 @@ nsSVGTextFrame2::ScheduleReflowSVGNonDisplayText()
              "do not call ScheduleReflowSVGNonDisplayText when the outer SVG "
              "frame is under ReflowSVG");
 
-  nsSVGOuterSVGFrame* outerSVGFrame = nullptr;
+  // We need to find an ancestor frame that we can call FrameNeedsReflow
+  // on that will cause the document to be marked as needing relayout,
+  // and for that ancestor (or some further ancestor) to be marked as
+  // a root to reflow.  We choose the closest ancestor frame that is not
+  // NS_FRAME_IS_NONDISPLAY and which is either an outer SVG frame or a
+  // non-SVG frame.  (We don't consider displayed SVG frame ancestors toerh
+  // than nsSVGOuterSVGFrame, since calling FrameNeedsReflow on those other
+  // SVG frames would do a bunch of unnecessary work on the SVG frames up to
+  // the nsSVGOuterSVGFrame.)
 
-  nsIFrame* f = GetParent();
+  nsIFrame* f = this;
   while (f) {
-    if (f->GetStateBits() & NS_STATE_IS_OUTER_SVG) {
-      outerSVGFrame = static_cast<nsSVGOuterSVGFrame*>(f);
-      break;
-    }
     if (!(f->GetStateBits() & NS_FRAME_IS_NONDISPLAY)) {
-      // We don't need to set NS_FRAME_HAS_DIRTY_CHILDREN on non-display
-      // children in the path from the dirty nsSVGTextFrame2 up to the
-      // first display container frame, since ReflowSVGNonDisplayText
-      // does not check for it.
       if (NS_SUBTREE_DIRTY(f)) {
+        // This is a displayed frame, so if it is already dirty, we will be reflowed
+        // soon anyway.  No need to call FrameNeedsReflow again, then.
         return;
+      }
+      if (!f->IsFrameOfType(eSVG) ||
+          (f->GetStateBits() & NS_STATE_IS_OUTER_SVG)) {
+        break;
       }
       f->AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
     }
     f = f->GetParent();
   }
 
-  NS_ABORT_IF_FALSE(outerSVGFrame &&
-                    outerSVGFrame->GetType() == nsGkAtoms::svgOuterSVGFrame,
-                    "Did not find nsSVGOuterSVGFrame!");
-  NS_ABORT_IF_FALSE(!(outerSVGFrame->GetStateBits() & NS_FRAME_IN_REFLOW),
-                    "should not call ScheduleReflowSVGNonDisplayText under "
-                    "nsSVGOuterSVGFrame::Reflow");
+  MOZ_ASSERT(f, "should have found an ancestor frame to reflow");
 
   PresContext()->PresShell()->FrameNeedsReflow(
-    outerSVGFrame, nsIPresShell::eResize, NS_FRAME_HAS_DIRTY_CHILDREN);
+    f, nsIPresShell::eResize, NS_FRAME_HAS_DIRTY_CHILDREN);
 }
 
 NS_IMPL_ISUPPORTS1(nsSVGTextFrame2::MutationObserver, nsIMutationObserver)
