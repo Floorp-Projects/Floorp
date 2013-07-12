@@ -4775,34 +4775,28 @@ template <typename ParseHandler>
 typename ParseHandler::Node
 Parser<ParseHandler>::statement(bool canHaveDirectives)
 {
-    Node pn;
-
     JS_CHECK_RECURSION(context, return null());
 
-    switch (tokenStream.getToken(TSF_OPERAND)) {
+    switch (TokenKind tt = tokenStream.getToken(TSF_OPERAND)) {
       case TOK_LC:
         return blockStatement();
-
-      case TOK_VAR:
-        pn = variables(PNK_VAR);
-        if (!pn)
-            return null();
-
-        /* Tell js_EmitTree to generate a final POP. */
-        handler.setListFlag(pn, PNX_POPVAR);
-        break;
 
       case TOK_CONST:
         if (!abortIfSyntaxParser())
             return null();
-
-        pn = variables(PNK_CONST);
+        // FALL THROUGH
+      case TOK_VAR: {
+        Node pn = variables(tt == TOK_CONST ? PNK_CONST : PNK_VAR);
         if (!pn)
             return null();
 
-        /* Tell js_EmitTree to generate a final POP. */
+        // Tell js_EmitTree to generate a final POP.
         handler.setListFlag(pn, PNX_POPVAR);
-        break;
+
+        if (!MatchOrInsertSemicolon(tokenStream))
+            return null();
+        return pn;
+      }
 
 #if JS_HAS_BLOCK_SCOPE
       case TOK_LET:
@@ -4870,9 +4864,6 @@ Parser<ParseHandler>::statement(bool canHaveDirectives)
       default:
         return expressionStatement();
     }
-
-    /* Check termination of this primitive statement. */
-    return MatchOrInsertSemicolon(tokenStream) ? pn : null();
 }
 
 template <>
