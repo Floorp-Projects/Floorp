@@ -10,3 +10,5 @@
 # much slower and we didn't want to slow down developers builds.
 # Has no effect when MOZ_ENABLE_SZIP is not set in mobile/android/confvars.sh.
 MOZ_SZIP_FLAGS="-D auto -f auto"
+
+ac_add_options --enable-elf-hack
