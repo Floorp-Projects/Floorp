@@ -1925,7 +1925,6 @@ Parser<ParseHandler>::functionDef(HandlePropertyName funName, const TokenStream:
     // If the outer scope is strict, immediately parse the function in strict
     // mode. Otherwise, we parse it normally. If we see a "use strict"
     // directive, we backup and reparse it as strict.
-    handler.setFunctionBody(pn, null());
     bool initiallyStrict = pc->sc->strict;
     bool becameStrict;
     if (!functionArgsAndBody(pn, fun, funName, startOffset, type, kind, initiallyStrict,
