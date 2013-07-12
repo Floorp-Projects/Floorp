@@ -58,7 +58,7 @@
 #include "MediaManager.h"
 #endif
 #ifdef MOZ_B2G_RIL
-#include "TelephonyFactory.h"
+#include "Telephony.h"
 #endif
 #ifdef MOZ_B2G_BT
 #include "nsIDOMBluetoothManager.h"
@@ -1475,19 +1475,33 @@ Navigator::GetMozCellBroadcast(nsIDOMMozCellBroadcast** aCellBroadcast)
 NS_IMETHODIMP
 Navigator::GetMozTelephony(nsIDOMTelephony** aTelephony)
 {
-  nsCOMPtr<nsIDOMTelephony> telephony = mTelephony;
-
-  if (!telephony) {
+  if (!mTelephony) {
     NS_ENSURE_STATE(mWindow);
-    nsresult rv = NS_NewTelephony(mWindow, getter_AddRefs(mTelephony));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // mTelephony may be null here!
-    telephony = mTelephony;
+    if (!telephony::Telephony::CheckPermission(mWindow)) {
+      *aTelephony = nullptr;
+      return NS_OK;
+    }
   }
 
-  telephony.forget(aTelephony);
-  return NS_OK;
+  ErrorResult rv;
+  NS_IF_ADDREF(*aTelephony = GetMozTelephony(rv));
+  return rv.ErrorCode();
+}
+
+nsIDOMTelephony*
+Navigator::GetMozTelephony(ErrorResult& aRv)
+{
+  // Callers (either the XPCOM method or the WebIDL binding) are responsible for
+  // the permission check here.
+  if (!mTelephony) {
+    if (!mWindow) {
+      aRv.Throw(NS_ERROR_UNEXPECTED);
+      return nullptr;
+    }
+    mTelephony = telephony::Telephony::Create(mWindow, aRv);
+  }
+
+  return mTelephony;
 }
 
 //*****************************************************************************
@@ -1975,6 +1989,16 @@ Navigator::HasCameraSupport(JSContext* /* unused */, JSObject* aGlobal)
   nsCOMPtr<nsPIDOMWindow> win = GetWindowFromGlobal(aGlobal);
   return win && nsDOMCameraManager::CheckPermission(win);
 }
+
+#ifdef MOZ_B2G_RIL
+/* static */
+bool
+Navigator::HasTelephonySupport(JSContext* /* unused */, JSObject* aGlobal)
+{
+  nsCOMPtr<nsPIDOMWindow> win = GetWindowFromGlobal(aGlobal);
+  return win && telephony::Telephony::CheckPermission(win);
+}
+#endif // MOZ_B2G_RIL
 
 /* static */
 already_AddRefed<nsPIDOMWindow>
