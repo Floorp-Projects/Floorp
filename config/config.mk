@@ -116,10 +116,6 @@ endif
 
 OS_CONFIG	:= $(OS_ARCH)$(OS_RELEASE)
 
-FINAL_LINK_LIBS = $(DEPTH)/config/final-link-libs
-FINAL_LINK_COMPS = $(DEPTH)/config/final-link-comps
-FINAL_LINK_COMP_NAMES = $(DEPTH)/config/final-link-comp-names
-
 MOZ_UNICHARUTIL_LIBS = $(LIBXUL_DIST)/lib/$(LIB_PREFIX)unicharutil_s.$(LIB_SUFFIX)
 MOZ_WIDGET_SUPPORT_LIBS    = $(DIST)/lib/$(LIB_PREFIX)widgetsupport_s.$(LIB_SUFFIX)
 
