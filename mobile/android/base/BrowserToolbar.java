@@ -1226,8 +1226,11 @@ public class BrowserToolbar extends GeckoRelativeLayout
     private void showUrlEditContainer() {
         mUrlDisplayContainer.setVisibility(View.GONE);
         mUrlEditContainer.setVisibility(View.VISIBLE);
-        mUrlEditText.requestFocus();
-        showSoftInput();
+
+        if (mEditingTarget != EditingTarget.NEW_TAB) {
+            mUrlEditText.requestFocus();
+            showSoftInput();
+        }
     }
 
     private void hideUrlEditContainer() {
