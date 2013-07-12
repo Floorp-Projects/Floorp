@@ -2,3 +2,5 @@
 
 CC="/tools/gcc-4.7.2-0moz1/bin/gcc"
 CXX="/tools/gcc-4.7.2-0moz1/bin/g++"
+
+ac_add_options --enable-elf-hack
