@@ -33,8 +33,9 @@ public:
   nsresult Init(nsIDOMWindow *aWindow);
   nsresult Shutdown();
 
-  static already_AddRefed<PowerManager>
-  CheckPermissionAndCreateInstance(nsPIDOMWindow*);
+  static bool CheckPermission(nsPIDOMWindow*);
+
+  static already_AddRefed<PowerManager> CreateInstance(nsPIDOMWindow*);
 
 private:
 
