@@ -12,7 +12,7 @@ import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.home.BrowserSearch.OnEditSuggestionListener;
 import org.mozilla.gecko.home.BrowserSearch.OnSearchListener;
-import org.mozilla.gecko.home.BrowserSearch.OnUrlOpenListener;
+import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
 import org.mozilla.gecko.util.StringUtils;
 import org.mozilla.gecko.widget.FaviconView;
 
