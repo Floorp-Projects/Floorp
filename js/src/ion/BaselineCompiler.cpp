@@ -12,7 +12,6 @@
 #include "ion/IonLinker.h"
 #include "ion/IonSpewer.h"
 #include "ion/VMFunctions.h"
-#include "ion/IonFrames-inl.h"
 
 #include "vm/Interpreter-inl.h"
 

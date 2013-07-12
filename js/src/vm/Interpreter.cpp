@@ -41,7 +41,6 @@
 #include "jsinferinlines.h"
 #include "jsscriptinlines.h"
 
-#include "builtin/Iterator-inl.h"
 #include "ion/IonFrames-inl.h"
 #include "vm/Interpreter-inl.h"
 #include "vm/Probes-inl.h"

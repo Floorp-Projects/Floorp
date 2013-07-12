@@ -8,11 +8,12 @@
 
 #include "js/PropertyKey.h"
 
+#include "jsatom.h"
+#include "jscntxt.h"
+
 #include "js/RootingAPI.h"
 #include "js/Value.h"
 #include "vm/String.h"
-
-#include "vm/String-inl.h"
 
 using namespace js;
 

@@ -36,8 +36,8 @@
 
 #include "vm/TypedArrayObject.h"
 
-#include "vm/BooleanObject-inl.h"
-#include "vm/RegExpObject-inl.h"
+#include "jscntxtinlines.h"
+#include "jsobjinlines.h"
 
 using namespace js;
 
