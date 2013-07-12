@@ -33,7 +33,9 @@
     <div class="link-box-bottom" onclick="switchSection('sad');">
       <a>&intro.sadLink;</a>
     </div>
-    <div id="sumo-message" class="fine-print">&support.pre;<a id="sumo-link">&support.link;</a>&support.post;</div>
+    <div class="bottom-links">
+      <a onclick="maybeLater();">&intro.maybeLater;</a>
+    </div>
   </section>
 
   <section id="happy">
@@ -47,7 +49,7 @@
       <a>&happy.ratingLink;</a>
     </div>
     <div class="bottom-links">
-      <a onclick="maybeLater();">&happy.maybeLater;</a>
+      <a onclick="maybeLater();">&happy.maybeLater2;</a>
       <a onclick="window.close();">&happy.noThanks;</a>
     </div>
   </section>
@@ -61,6 +63,7 @@
       <div class="fine-print">&feedback.privacy;</div>
       <input class="send-feedback" type="submit" value="&feedback.send;"/>
     </form>
+    <div id="sumo-message" class="fine-print">&support.pre2;<a id="sumo-link">&support.link;</a>&support.post2;</div>
   </section>
 
   <section id="thanks-sad">

@@ -331,7 +331,15 @@ public class BrowserDB {
 
         public void setPinnedSites(Cursor c) {
             mPinnedSites = new SparseArray<PinnedSite>();
-            if (c != null && c.getCount() > 0) {
+
+            if (c == null) {
+                return;
+            }
+
+            try {
+                if (c.getCount() <= 0) {
+                    return;
+                }
                 c.moveToPosition(0);
                 do {
                     int pos = c.getInt(c.getColumnIndex(Bookmarks.POSITION));
@@ -339,8 +347,7 @@ public class BrowserDB {
                     String title = c.getString(c.getColumnIndex(URLColumns.TITLE));
                     mPinnedSites.put(pos, new PinnedSite(title, url));
                 } while (c.moveToNext());
-            }
-            if (c != null && !c.isClosed()) {
+            } finally {
                 c.close();
             }
         }

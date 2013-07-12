@@ -273,8 +273,8 @@ class JSString : public js::gc::Cell
      * Returns chars() if the string is already linear or flat. Otherwise
      * returns NULL if a new array of chars must be allocated.
      */
-    inline const jschar *maybeChars();
-    inline const jschar *maybeCharsZ();
+    inline const jschar *maybeChars() const;
+    inline const jschar *maybeCharsZ() const;
 
     /*
      * Fallible operations to get an array of chars non-destructively. These
@@ -1056,7 +1056,7 @@ JSString::getCharsZ(JSContext *cx)
 }
 
 JS_ALWAYS_INLINE const jschar *
-JSString::maybeChars()
+JSString::maybeChars() const
 {
     if (isLinear())
         return asLinear().chars();
@@ -1064,7 +1064,7 @@ JSString::maybeChars()
 }
 
 JS_ALWAYS_INLINE const jschar *
-JSString::maybeCharsZ()
+JSString::maybeCharsZ() const
 {
     if (isFlat())
         return asFlat().chars();

@@ -11,8 +11,6 @@ function test1() {
             assertEq(res, 0xffffee00);
         else if (i == 84)
             assertEq(res, 444);
-        else if (i == 105)
-            assertEq(res, true);
         else if (i >= 100)
             assertEq(res, undefined);
     }

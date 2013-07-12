@@ -85,11 +85,18 @@ public class testShareLink extends BaseTest {
 
         // Test the share popup in the Bookmarks tab
         ListView blist = getBookmarksList("about:firefox");
+        // Make sure we are in the Bookmarks tab
+        // TODO: understand why this is sometimes necessary
+        mSolo.clickOnText("Bookmarks");
         View bookmark = blist.getChildAt(1); // Getting child at 1 because 0 might be the Desktop folder
         mSolo.clickLongOnView(bookmark);
         verifySharePopup(shareOptions,"bookmarks");
 
         // Test the share popup in the History tab
+        clickOnAwesomeBar();
+        // Make sure we are in the History tab
+        // TODO: understand why this is sometimes necessary
+        mSolo.clickOnText("History");
         ListView hlist = getHistoryList("Today|Yesterday");
         View history = hlist.getChildAt(1); // Getting child at 1 because 0 might be the "Today" label
         mSolo.clickLongOnView(history);

@@ -3887,16 +3887,31 @@ def getWrapTemplateForType(type, descriptorProvider, result, successCode,
     # if body.
     exceptionCodeIndented = CGIndenter(CGGeneric(exceptionCode))
 
-    def setValue(value, callWrapValue=False):
+    def setValue(value, callWrapValue=None):
         """
-        Returns the code to set the jsval to value. If "callWrapValue" is true
-        MaybeWrapValue will be called on the jsval.
+        Returns the code to set the jsval to value.
+
+        "callWrapValue" can be set to the following values:
+          * None: no wrapping will be done.
+          * "object": will wrap using MaybeWrapObjectValue.
+          * "objectOrNull": will wrap using MaybeWrapObjectOrNullValue.
+          * "nonDOMObject": will wrap using MaybeWrapNonDOMObjectValue.
+          * "nonDOMObjectOrNull": will wrap using MaybeWrapNonDOMObjectOrNullValue
+          * "value": will wrap using MaybeWrapValue.
         """
         if not callWrapValue:
             tail = successCode
         else:
-            tail = ("if (!MaybeWrapValue(cx, ${jsvalHandle})) {\n" +
-                    ("%s\n" % exceptionCodeIndented.define()) +
+            methodMap = {
+                "object": "MaybeWrapObjectValue",
+                "objectOrNull": "MaybeWrapObjectOrNullValue",
+                "nonDOMObject": "MaybeWrapNonDOMObjectValue",
+                "nonDOMObjectOrNull": "MaybeWrapNonDOMObjectOrNullValue",
+                "value": "MaybeWrapValue"
+                }
+            tail = (("if (!%s(cx, ${jsvalHandle})) {\n"
+                     "%s\n" % (methodMap[callWrapValue],
+                               exceptionCodeIndented.define())) +
                     "}\n" +
                     successCode)
         return ("${jsvalRef}.set(%s);\n" +
@@ -4068,11 +4083,13 @@ if (!returnArray) {
         # to wrap here.
         # NB: setValue(..., True) calls JS_WrapValue(), so is fallible
         if descriptorProvider.workers:
-            return (setValue("JS::ObjectOrNullValue(%s)" % result, True), False)
+            return (setValue("JS::ObjectOrNullValue(%s)" % result,
+                             "objectOrNull"),
+                    False)
 
         wrapCode = setValue(
             "JS::ObjectValue(*GetCallbackFromCallbackObject(%(result)s))",
-            True)
+            "object")
         if type.nullable():
             wrapCode = (
                 "if (%(result)s) {\n" +
@@ -4087,17 +4104,25 @@ if (!returnArray) {
         # See comments in WrapNewBindingObject explaining why we need
         # to wrap here.
         # NB: setValue(..., True) calls JS_WrapValue(), so is fallible
-        return (setValue(result, True), False)
+        return (setValue(result, "value"), False)
 
     if type.isObject() or type.isSpiderMonkeyInterface():
         # See comments in WrapNewBindingObject explaining why we need
         # to wrap here.
         if type.nullable():
             toValue = "JS::ObjectOrNullValue(%s)"
+            if type.isSpiderMonkeyInterface():
+                wrapType = "nonDOMObjectOrNull"
+            else:
+                wrapType = "objectOrNull"
         else:
             toValue = "JS::ObjectValue(*%s)"
+            if type.isSpiderMonkeyInterface():
+                wrapType = "nonDOMObject"
+            else:
+                wrapType = "object"
         # NB: setValue(..., True) calls JS_WrapValue(), so is fallible
-        return (setValue(toValue % result, True), False)
+        return (setValue(toValue % result, wrapType), False)
 
     if type.isUnion():
         if type.nullable():

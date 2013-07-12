@@ -191,13 +191,14 @@ enum nsTopLevelWidgetZPlacement { // for PlaceBehind()
 /**
  * Preference for receiving IME updates
  *
- * If mWantUpdates is true, nsTextStateManager will observe text change and
- * selection change and call nsIWidget::NotifyIMEOfTextChange() and
- * nsIWidget::NotifyIME(NOTIFY_IME_OF_SELECTION_CHANGE). The observing cost is
- * very expensive.
+ * If mWantUpdates is not NOTIFY_NOTHING, nsTextStateManager will observe text
+ * change and/or selection change and call nsIWidget::NotifyIMEOfTextChange()
+ * and/or nsIWidget::NotifyIME(NOTIFY_IME_OF_SELECTION_CHANGE).
+ * Please note that the text change observing cost is very expensive especially
+ * on an HTML editor has focus.
  * If the IME implementation on a particular platform doesn't care about
- * NotifyIMEOfTextChange and NotifyIME(NOTIFY_IME_OF_SELECTION_CHANGE), they
- * should set mWantUpdates to false to avoid the cost.
+ * NotifyIMEOfTextChange() and/or NotifyIME(NOTIFY_IME_OF_SELECTION_CHANGE),
+ * they should set mWantUpdates to NOTIFY_NOTHING to avoid the cost.
  *
  * If mWantHints is true, PuppetWidget will forward the content of text fields
  * to the chrome process to be cached. This way we return the cached content
@@ -208,15 +209,25 @@ enum nsTopLevelWidgetZPlacement { // for PlaceBehind()
  */
 struct nsIMEUpdatePreference {
 
+  typedef int8_t Notifications;
+
+  enum
+  {
+    NOTIFY_NOTHING           = 0x0000,
+    NOTIFY_SELECTION_CHANGE  = 0x0001,
+    NOTIFY_TEXT_CHANGE       = 0x0002
+  };
+
   nsIMEUpdatePreference()
-    : mWantUpdates(false), mWantHints(false)
+    : mWantUpdates(NOTIFY_NOTHING), mWantHints(false)
   {
   }
-  nsIMEUpdatePreference(bool aWantUpdates, bool aWantHints)
+  nsIMEUpdatePreference(Notifications aWantUpdates, bool aWantHints)
     : mWantUpdates(aWantUpdates), mWantHints(aWantHints)
   {
   }
-  bool mWantUpdates;
+
+  Notifications mWantUpdates;
   bool mWantHints;
 };
 

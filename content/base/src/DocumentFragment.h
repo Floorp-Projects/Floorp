@@ -34,8 +34,6 @@ private:
                       mNodeInfo->Equals(nsGkAtoms::documentFragmentNodeName,
                                         kNameSpaceID_None),
                       "Bad NodeType in aNodeInfo");
-
-    SetIsDOMBinding();
   }
 
 public:

@@ -76,7 +76,7 @@ interface mozIStorageService : nsISupports {
    * Get a connection to a named special database storage.
    *
    * @param aStorageKey a string key identifying the type of storage
-   * requested.  Valid values include: "profile", "memory".
+   * requested.  Valid values include: "memory".
    *
    * @see openDatabase for restrictions on how database connections may be
    * used. For the profile database, you should only access it from the main
@@ -189,6 +189,5 @@ interface mozIStorageService : nsISupports {
 %{C++
 
 #define MOZ_STORAGE_MEMORY_STORAGE_KEY    "memory"
-#define MOZ_STORAGE_PROFILE_STORAGE_KEY   "profile"
 
 %}
