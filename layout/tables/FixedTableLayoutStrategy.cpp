@@ -251,8 +251,22 @@ FixedTableLayoutStrategy::ComputeColumnWidths(const nsHTMLReflowState& aReflowSt
                     nsIFrame::IntrinsicWidthOffsetData offsets =
                         cellFrame->IntrinsicWidthOffsets(aReflowState.rendContext);
                     float pct = styleWidth->GetPercentValue();
-                    colWidth = NSToCoordFloor(pct * float(tableWidth)) +
-                               offsets.hPadding + offsets.hBorder;
+                    colWidth = NSToCoordFloor(pct * float(tableWidth));
+
+                    nscoord boxSizingAdjust = 0;
+                    switch (cellFrame->StylePosition()->mBoxSizing) {
+                      case NS_STYLE_BOX_SIZING_CONTENT:
+                        boxSizingAdjust += offsets.hPadding;
+                        // Fall through
+                      case NS_STYLE_BOX_SIZING_PADDING:
+                        boxSizingAdjust += offsets.hBorder;
+                        // Fall through
+                      case NS_STYLE_BOX_SIZING_BORDER:
+                        // Don't add anything
+                        break;
+                    }
+                    colWidth += boxSizingAdjust;
+
                     pct /= float(colSpan);
                     colFrame->AddPrefPercent(pct);
                     pctTotal += pct;

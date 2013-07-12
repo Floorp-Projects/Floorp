@@ -35,11 +35,11 @@ namespace dom {
 
 class nsFormControlList;
 
-class HTMLFormElement : public nsGenericHTMLElement,
-                        public nsIDOMHTMLFormElement,
-                        public nsIWebProgressListener,
-                        public nsIForm,
-                        public nsIRadioGroupContainer
+class HTMLFormElement MOZ_FINAL : public nsGenericHTMLElement,
+                                  public nsIDOMHTMLFormElement,
+                                  public nsIWebProgressListener,
+                                  public nsIForm,
+                                  public nsIRadioGroupContainer
 {
   friend class nsFormControlList;
 

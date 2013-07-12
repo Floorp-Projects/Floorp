@@ -19,6 +19,6 @@ FORCE_STATIC_LIB = 1
 
 include $(topsrcdir)/config/rules.mk
 
-DEFINES		+= -DEXPORT_XPTC_API -D_IMPL_NS_COM
+DEFINES		+= -DIMPL_LIBXUL
 
 LOCAL_INCLUDES += -I$(srcdir)/../../xptinfo/src

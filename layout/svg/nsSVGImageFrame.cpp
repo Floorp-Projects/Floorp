@@ -323,7 +323,7 @@ nsSVGImageFrame::PaintSVG(nsRenderingContext *aContext,
     nsRect dirtyRect; // only used if aDirtyRect is non-null
     if (aDirtyRect) {
       NS_ASSERTION(!NS_SVGDisplayListPaintingEnabled() ||
-                   (mState & NS_STATE_SVG_NONDISPLAY_CHILD),
+                   (mState & NS_FRAME_IS_NONDISPLAY),
                    "Display lists handle dirty rect intersection test");
       dirtyRect = aDirtyRect->ToAppUnits(appUnitsPerDevPx);
       // Adjust dirtyRect to match our local coordinate system.
@@ -432,7 +432,7 @@ nsSVGImageFrame::ReflowSVG()
   NS_ASSERTION(nsSVGUtils::OuterSVGIsCallingReflowSVG(this),
                "This call is probably a wasteful mistake");
 
-  NS_ABORT_IF_FALSE(!(GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD),
+  NS_ABORT_IF_FALSE(!(GetStateBits() & NS_FRAME_IS_NONDISPLAY),
                     "ReflowSVG mechanism not designed for this");
 
   if (!nsSVGUtils::NeedsReflowSVG(this)) {

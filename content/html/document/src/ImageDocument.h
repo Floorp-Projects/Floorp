@@ -14,10 +14,10 @@
 namespace mozilla {
 namespace dom {
 
-class ImageDocument : public MediaDocument,
-                      public nsIImageDocument,
-                      public imgINotificationObserver,
-                      public nsIDOMEventListener
+class ImageDocument MOZ_FINAL : public MediaDocument,
+                                public nsIImageDocument,
+                                public imgINotificationObserver,
+                                public nsIDOMEventListener
 {
 public:
   ImageDocument();
