@@ -117,29 +117,47 @@ Telephony::~Telephony()
 
 // static
 already_AddRefed<Telephony>
-Telephony::Create(nsPIDOMWindow* aOwner, nsITelephonyProvider* aProvider)
+Telephony::Create(nsPIDOMWindow* aOwner, ErrorResult& aRv)
 {
   NS_ASSERTION(aOwner, "Null owner!");
-  NS_ASSERTION(aProvider, "Null provider!");
+
+  nsCOMPtr<nsITelephonyProvider> ril =
+    do_GetService(NS_RILCONTENTHELPER_CONTRACTID);
+  if (!ril) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return nullptr;
+  }
 
   nsCOMPtr<nsIScriptGlobalObject> sgo = do_QueryInterface(aOwner);
-  NS_ENSURE_TRUE(sgo, nullptr);
+  if (!sgo) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return nullptr;
+  }
 
   nsCOMPtr<nsIScriptContext> scriptContext = sgo->GetContext();
-  NS_ENSURE_TRUE(scriptContext, nullptr);
+  if (!scriptContext) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return nullptr;
+  }
 
   nsRefPtr<Telephony> telephony = new Telephony();
 
   telephony->BindToOwner(aOwner);
 
-  telephony->mProvider = aProvider;
+  telephony->mProvider = ril;
   telephony->mListener = new Listener(telephony);
 
-  nsresult rv = aProvider->EnumerateCalls(telephony->mListener);
-  NS_ENSURE_SUCCESS(rv, nullptr);
+  nsresult rv = ril->EnumerateCalls(telephony->mListener);
+  if (NS_FAILED(rv)) {
+    aRv.Throw(rv);
+    return nullptr;
+  }
 
-  rv = aProvider->RegisterTelephonyMsg(telephony->mListener);
-  NS_ENSURE_SUCCESS(rv, nullptr);
+  rv = ril->RegisterTelephonyMsg(telephony->mListener);
+  if (NS_FAILED(rv)) {
+    aRv.Throw(rv);
+    return nullptr;
+  }
 
   return telephony.forget();
 }
@@ -574,36 +592,24 @@ Telephony::EnqueueEnumerationAck()
   }
 }
 
-nsresult
-NS_NewTelephony(nsPIDOMWindow* aWindow, nsIDOMTelephony** aTelephony)
+/* static */
+bool
+Telephony::CheckPermission(nsPIDOMWindow* aWindow)
 {
-  NS_ASSERTION(aWindow, "Null pointer!");
-
-  nsPIDOMWindow* innerWindow = aWindow->IsInnerWindow() ?
-    aWindow :
-    aWindow->GetCurrentInnerWindow();
+  MOZ_ASSERT(aWindow && aWindow->IsInnerWindow());
 
   nsCOMPtr<nsIPermissionManager> permMgr =
     do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
-  NS_ENSURE_TRUE(permMgr, NS_ERROR_UNEXPECTED);
+  NS_ENSURE_TRUE(permMgr, false);
 
   uint32_t permission;
   nsresult rv =
     permMgr->TestPermissionFromWindow(aWindow, "telephony", &permission);
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_SUCCESS(rv, false);
 
   if (permission != nsIPermissionManager::ALLOW_ACTION) {
-    *aTelephony = nullptr;
-    return NS_OK;
+    return false;
   }
 
-  nsCOMPtr<nsITelephonyProvider> ril =
-    do_GetService(NS_RILCONTENTHELPER_CONTRACTID);
-  NS_ENSURE_TRUE(ril, NS_ERROR_UNEXPECTED);
-
-  nsRefPtr<Telephony> telephony = Telephony::Create(innerWindow, ril);
-  NS_ENSURE_TRUE(telephony, NS_ERROR_UNEXPECTED);
-
-  telephony.forget(aTelephony);
-  return NS_OK;
+  return true;
 }
