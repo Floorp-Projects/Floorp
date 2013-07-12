@@ -49,6 +49,7 @@
                 // Hold on to the palette but remove it from the document.
                 toolbox.palette = node;
                 toolbox.removeChild(node);
+                break;
               }
             }
           }
