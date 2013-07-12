@@ -1,0 +1,39 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test bug 882865</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body onload="onWindowLoad()">
+<script class="testbody" type="text/javascript">
+
+  SimpleTest.waitForExplicitFinish();
+
+  function onWindowLoad()
+  {
+    try {
+      var crmfObject = crypto.generateCRMFRequest("CN=undefined", "regToken",
+                                                  "authenticator", null, "",
+                                                  512, null, "  rsa-ex   ",
+                                                  1024, null, "\r\n\t rsa-sign\t");
+      ok(true, "no exception thrown in generateCRMFRequest");
+    } catch (e) {
+      ok(false, "unexpected exception: " + e);
+    }
+
+    var o200 = document.documentElement;
+    var o1 = crypto;
+    try {
+      o1.generateCRMFRequest(o200.writeln, o200, 'X X X X X X X X X X X X X X X X X X X X X X X X X X X X X X X X X X X X X X', null, o1, 1404343237, Math.PI, []);
+      ok(false, "execution should not reach this line");
+    } catch (e) {
+      // The 'key generation argument' in this case was an empty array,
+      // which gets interpreted as an empty string.
+      is(e.toString(), "Error: error:invalid key generation argument:", "expected exception");
+    }
+    SimpleTest.finish();
+  }
+</script>
+</body>
+</html>

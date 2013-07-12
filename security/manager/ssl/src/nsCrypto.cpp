@@ -37,6 +37,7 @@
 #include "nsContentUtils.h"
 #include "nsCxPusher.h"
 #include "nsDOMJSUtils.h"
+#include "nsJSUtils.h"
 #include "nsIXPConnect.h"
 #include "nsIRunnable.h"
 #include "nsIWindowWatcher.h"
@@ -339,53 +340,53 @@ cryptojs_convert_to_mechanism(nsKeyGenType keyGenType)
 }
 
 /*
- * This function converts a string read through JavaScript parameters
+ * This function takes a string read through JavaScript parameters
  * and translates it to the internal enumeration representing the
- * key gen type.
+ * key gen type. Leading and trailing whitespace must be already removed.
  */
 static nsKeyGenType
-cryptojs_interpret_key_gen_type(char *keyAlg)
+cryptojs_interpret_key_gen_type(const nsAString& keyAlg)
 {
-  char *end;
-  if (!keyAlg) {
-    return invalidKeyGen;
-  }
-  /* First let's remove all leading and trailing white space */
-  while (isspace(keyAlg[0])) keyAlg++;
-  end = strchr(keyAlg, '\0');
-  if (!end) {
-    return invalidKeyGen;
-  }
-  end--;
-  while (isspace(*end)) end--;
-  end[1] = '\0';
-  if (strcmp(keyAlg, "rsa-ex") == 0) {
+  if (keyAlg.EqualsLiteral("rsa-ex")) {
     return rsaEnc;
-  } else if (strcmp(keyAlg, "rsa-dual-use") == 0) {
+  }
+  if (keyAlg.EqualsLiteral("rsa-dual-use")) {
     return rsaDualUse;
-  } else if (strcmp(keyAlg, "rsa-sign") == 0) {
+  }
+  if (keyAlg.EqualsLiteral("rsa-sign")) {
     return rsaSign;
-  } else if (strcmp(keyAlg, "rsa-sign-nonrepudiation") == 0) {
+  }
+  if (keyAlg.EqualsLiteral("rsa-sign-nonrepudiation")) {
     return rsaSignNonrepudiation;
-  } else if (strcmp(keyAlg, "rsa-nonrepudiation") == 0) {
+  }
+  if (keyAlg.EqualsLiteral("rsa-nonrepudiation")) {
     return rsaNonrepudiation;
-  } else if (strcmp(keyAlg, "ec-ex") == 0) {
+  }
+  if (keyAlg.EqualsLiteral("ec-ex")) {
     return ecEnc;
-  } else if (strcmp(keyAlg, "ec-dual-use") == 0) {
+  }
+  if (keyAlg.EqualsLiteral("ec-dual-use")) {
     return ecDualUse;
-  } else if (strcmp(keyAlg, "ec-sign") == 0) {
+  }
+  if (keyAlg.EqualsLiteral("ec-sign")) {
     return ecSign;
-  } else if (strcmp(keyAlg, "ec-sign-nonrepudiation") == 0) {
+  }
+  if (keyAlg.EqualsLiteral("ec-sign-nonrepudiation")) {
     return ecSignNonrepudiation;
-  } else if (strcmp(keyAlg, "ec-nonrepudiation") == 0) {
+  }
+  if (keyAlg.EqualsLiteral("ec-nonrepudiation")) {
     return ecNonrepudiation;
-  } else if (strcmp(keyAlg, "dsa-sign-nonrepudiation") == 0) {
+  }
+  if (keyAlg.EqualsLiteral("dsa-sign-nonrepudiation")) {
     return dsaSignNonrepudiation;
-  } else if (strcmp(keyAlg, "dsa-sign") ==0 ){
+  }
+  if (keyAlg.EqualsLiteral("dsa-sign")) {
     return dsaSign;
-  } else if (strcmp(keyAlg, "dsa-nonrepudiation") == 0) {
+  }
+  if (keyAlg.EqualsLiteral("dsa-nonrepudiation")) {
     return dsaNonrepudiation;
-  } else if (strcmp(keyAlg, "dh-ex") == 0) {
+  }
+  if (keyAlg.EqualsLiteral("dh-ex")) {
     return dhEx;
   }
   return invalidKeyGen;
@@ -916,7 +917,7 @@ cryptojs_ReadArgsAndGenerateKey(JSContext *cx,
                                 PK11SlotInfo **slot, bool willEscrow)
 {
   JSString  *jsString;
-  JSAutoByteString params, keyGenAlg;
+  JSAutoByteString params;
   int    keySize;
   nsresult  rv;
 
@@ -942,13 +943,16 @@ cryptojs_ReadArgsAndGenerateKey(JSContext *cx,
   jsString = JS_ValueToString(cx, argv[2]);
   NS_ENSURE_TRUE(jsString, NS_ERROR_OUT_OF_MEMORY);
   argv[2] = STRING_TO_JSVAL(jsString);
-  keyGenAlg.encodeLatin1(cx, jsString);
-  NS_ENSURE_TRUE(!!keyGenAlg, NS_ERROR_OUT_OF_MEMORY);
-  keyGenType->keyGenType = cryptojs_interpret_key_gen_type(keyGenAlg.ptr());
+  nsDependentJSString dependentKeyGenAlg;
+  NS_ENSURE_TRUE(dependentKeyGenAlg.init(cx, jsString), NS_ERROR_UNEXPECTED);
+  nsAutoString keyGenAlg(dependentKeyGenAlg);
+  keyGenAlg.Trim("\r\n\t ");
+  keyGenType->keyGenType = cryptojs_interpret_key_gen_type(keyGenAlg);
   if (keyGenType->keyGenType == invalidKeyGen) {
+    NS_LossyConvertUTF16toASCII keyGenAlgNarrow(dependentKeyGenAlg);
     JS_ReportError(cx, "%s%s%s", JS_ERROR,
                    "invalid key generation argument:",
-                   keyGenAlg.ptr());
+                   keyGenAlgNarrow.get());
     goto loser;
   }
   if (!*slot) {
@@ -961,9 +965,10 @@ cryptojs_ReadArgsAndGenerateKey(JSContext *cx,
                                    *slot,willEscrow);
 
   if (rv != NS_OK) {
+    NS_LossyConvertUTF16toASCII keyGenAlgNarrow(dependentKeyGenAlg);
     JS_ReportError(cx,"%s%s%s", JS_ERROR,
                    "could not generate the key for algorithm ",
-                   keyGenAlg.ptr());
+                   keyGenAlgNarrow.get());
     goto loser;
   }
   return NS_OK;
