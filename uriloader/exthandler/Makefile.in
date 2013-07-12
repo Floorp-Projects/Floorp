@@ -37,6 +37,15 @@ LIBRARY_NAME    = exthandler_s
 LIBXUL_LIBRARY  = 1
 FAIL_ON_WARNINGS = 1
 
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
+
+CMMSRCS	= nsOSHelperAppService.mm \
+			nsMIMEInfoMac.mm \
+			nsLocalHandlerAppMac.mm \
+			$(NULL)
+endif
+
 LOCAL_INCLUDES = -I$(srcdir)
 
 LOCAL_INCLUDES += -I$(topsrcdir)/dom/base \
