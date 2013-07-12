@@ -37,9 +37,16 @@ endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 DEFINES += -DWIN32_LEAN_AND_MEAN -DUNICODE -D_UNICODE
+else
+ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
+CMMSRCS = nsNativeAppSupportCocoa.mm
+endif
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
+CMMSRCS += MacLaunchHelper.mm
+CMMSRCS += MacApplicationDelegate.mm
+CMMSRCS += MacAutoreleasePool.mm
 ENABLE_CXX_EXCEPTIONS = 1
 endif
 

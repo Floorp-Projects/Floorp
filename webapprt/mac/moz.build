@@ -6,6 +6,3 @@
 
 PROGRAM = 'webapprt-stub'
 
-CMMSRCS += [
-    'webapprt.mm',
-]
