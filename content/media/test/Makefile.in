@@ -68,8 +68,6 @@ MOCHITEST_FILES = \
 		test_audio1.html \
 		test_audio2.html \
 		test_autoplay.html \
-		test_bug465498.html \
-		test_bug493187.html \
 		test_bug495145.html \
 		test_bug495300.html \
 		test_bug654550.html \
@@ -183,6 +181,12 @@ endif
 #   test_mixed_principals.html
 # Disabled since we don't play Wave files standalone, for now
 #		test_audioDocumentTitle.html
+
+# The below tests are disabled due to frequent timeouts.
+# Bug 832768 and Bug 864682:
+#		test_bug465498.html
+# Bug 707777:
+#		test_bug493187.html
 
 # sample files
 MOCHITEST_FILES += \
