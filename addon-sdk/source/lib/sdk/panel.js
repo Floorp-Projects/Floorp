@@ -184,6 +184,18 @@ const Panel = Class({
 
   /* Public API: Panel.show */
   show: function show(options, anchor) {
+    if (options instanceof Ci.nsIDOMElement) {
+      [anchor, options] = [options, null];
+    }
+
+    if (anchor instanceof Ci.nsIDOMElement) {
+      console.warn(
+        "Passing a DOM node to Panel.show() method is an unsupported " +
+        "feature that will be soon replaced. " +
+        "See: https://bugzilla.mozilla.org/show_bug.cgi?id=878877"
+      );
+    }
+
     let model = modelFor(this);
     let view = viewFor(this);
     let anchorView = getNodeView(anchor);
