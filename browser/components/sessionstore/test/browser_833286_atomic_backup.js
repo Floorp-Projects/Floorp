@@ -78,9 +78,9 @@ function testWriteNoBackup() {
   let array = yield OS.File.read(path);
   gSSData = gDecoder.decode(array);
 
-  // Manually trigger _SessionFile.createBackupCopy since the backup once
+  // Manually trigger _SessionFile.moveToBackupPath since the backup once
   // promise is already resolved and backup would not be triggered again.
-  yield _SessionFile.createBackupCopy();
+  yield _SessionFile.moveToBackupPath();
 
   nextTest(testWriteBackup);
 }

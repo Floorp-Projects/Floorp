@@ -14,10 +14,11 @@ function test() {
 function runTests() {
   // Open a new window.
   let win = OpenBrowserWindow();
-  yield whenWindowLoaded(win);
+  yield whenDelayedStartupFinished(win, next);
 
   // Load some URL in the current tab.
-  win.gBrowser.selectedBrowser.loadURI("about:robots");
+  let flags = Ci.nsIWebNavigation.LOAD_FLAGS_REPLACE_HISTORY;
+  win.gBrowser.selectedBrowser.loadURIWithFlags("about:robots", flags);
   yield whenBrowserLoaded(win.gBrowser.selectedBrowser);
 
   // Open a second tab and close the first one.

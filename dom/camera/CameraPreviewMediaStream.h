@@ -42,6 +42,7 @@ public:
 
   // Call these on any thread.
   void SetCurrentFrame(const gfxIntSize& aIntrinsicSize, Image* aImage);
+  void ClearCurrentFrame();
 
   void SetFrameCallback(CameraPreviewFrameCallback* aCallback) {
     mFrameCallback = aCallback;

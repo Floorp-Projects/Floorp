@@ -734,7 +734,6 @@ AdjustSystemClock(int64_t aDeltaMilliseconds)
 
   if (ioctl(fd, ANDROID_ALARM_SET_RTC, &now) < 0) {
     HAL_LOG(("ANDROID_ALARM_SET_RTC failed: %s", strerror(errno)));
-    return;
   }
 
   hal::NotifySystemClockChange(aDeltaMilliseconds);
