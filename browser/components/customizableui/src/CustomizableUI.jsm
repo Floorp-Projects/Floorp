@@ -316,7 +316,7 @@ let CustomizableUIInternal = {
         // Normalize removable attribute. It defaults to false if the widget is
         // originally defined as a child of a build area.
         if (!currentNode.hasAttribute("removable")) {
-          currentNode.setAttribute("removable", this.isWidgetRemovable(id));
+          currentNode.setAttribute("removable", this.isWidgetRemovable(currentNode));
         }
 
         currentNode = currentNode.nextSibling;
@@ -358,7 +358,7 @@ let CustomizableUIInternal = {
         // IDs, and because such elements are not intended to be widgets
         // (eg, titlebar-placeholder elements).
         if (node.id) {
-          if (this.isWidgetRemovable(node.id)) {
+          if (this.isWidgetRemovable(node)) {
             if (palette) {
               palette.appendChild(node);
             } else {
@@ -1696,11 +1696,23 @@ let CustomizableUIInternal = {
     }
   },
 
-  isWidgetRemovable: function(aWidgetId) {
-    let provider = this.getWidgetProvider(aWidgetId);
+  /**
+   * @param {String|Node} aWidget - widget ID or a widget node (preferred for performance).
+   * @return {Boolean} whether the widget is removable
+   */
+  isWidgetRemovable: function(aWidget) {
+    let widgetId;
+    let widgetNode;
+    if (typeof aWidget == "string") {
+      widgetId = aWidget;
+    } else {
+      widgetId = aWidget.id;
+      widgetNode = aWidget;
+    }
+    let provider = this.getWidgetProvider(widgetId);
 
     if (provider == CustomizableUI.PROVIDER_API) {
-      return gPalette.get(aWidgetId).removable;
+      return gPalette.get(widgetId).removable;
     }
 
     if (provider == CustomizableUI.PROVIDER_XUL) {
@@ -1710,16 +1722,18 @@ let CustomizableUIInternal = {
         return true;
       }
 
-      // Pick any of the build windows to look at.
-      let [window,] = [...gBuildWindows][0];
-      let [, node] = this.getWidgetNode(aWidgetId, window);
+      if (!widgetNode) {
+        // Pick any of the build windows to look at.
+        let [window,] = [...gBuildWindows][0];
+        [, widgetNode] = this.getWidgetNode(widgetId, window);
+      }
       // If we don't have a node, we assume it's removable. This can happen because
       // getWidgetProvider returns PROVIDER_XUL by default, but this will also happen
       // for API-provided widgets which have been destroyed.
-      if (!node) {
+      if (!widgetNode) {
         return true;
       }
-      return node.getAttribute("removable") == "true";
+      return widgetNode.getAttribute("removable") == "true";
     }
 
     // Otherwise this is a special widget, which are always removable.
