@@ -31,4 +31,3 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),qt)
 CXXFLAGS += $(MOZ_QT_CFLAGS)
 endif
 
-DEFINES += -D_IMPL_NS_GFX

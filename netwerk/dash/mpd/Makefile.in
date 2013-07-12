@@ -25,4 +25,3 @@ LOCAL_INCLUDES := \
 
 include $(topsrcdir)/config/rules.mk
 
-DEFINES += -DIMPL_NS_NET
