@@ -7,8 +7,6 @@
 #include "ion/IonMacroAssembler.h"
 #include "gc/Marking.h"
 
-#include "jsscriptinlines.h"
-
 using namespace js;
 using namespace js::ion;
 

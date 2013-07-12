@@ -190,7 +190,6 @@ DeleteGeneric(JSContext *cx, HandleObject obj, HandleId id, JSBool *succeeded);
 extern Class IntlClass;
 extern Class JSONClass;
 extern Class MathClass;
-extern Class ObjectClass;
 
 class ArrayBufferObject;
 class GlobalObject;
@@ -224,6 +223,8 @@ class JSObject : public js::ObjectImpl
     static js::types::TypeObject *makeLazyType(JSContext *cx, js::HandleObject obj);
 
   public:
+    static js::Class class_;
+
     /*
      * Update the last property, keeping the number of allocated slots in sync
      * with the object's new slot span.
@@ -993,11 +994,6 @@ class JSObject : public js::ObjectImpl
      * Note that X represents a low-level representation and does not query the
      * [[Class]] property of object defined by the spec (for this, see
      * js::ObjectClassIs).
-     *
-     * SpiderMonkey has not been completely switched to the is/as/XObject
-     * pattern so in some cases there is no XObject class and the engine
-     * instead pokes directly at reserved slots and getPrivate. In such cases,
-     * consider adding the missing XObject class.
      */
 
     template <class T>
@@ -1015,13 +1011,8 @@ class JSObject : public js::ObjectImpl
         return *static_cast<const T *>(this);
     }
 
-    /* Direct subtypes of JSObject: */
-    inline bool isObject()           const { return hasClass(&js::ObjectClass); }
-    using js::ObjectImpl::isProxy;
-
     /* Subtypes of Proxy. */
     inline bool isWrapper()                 const;
-    inline bool isFunctionProxy()           const { return hasClass(&js::FunctionProxyClass); }
     inline bool isCrossCompartmentWrapper() const;
 
     static inline js::ThingRootKind rootKind() { return js::THING_ROOT_OBJECT; }

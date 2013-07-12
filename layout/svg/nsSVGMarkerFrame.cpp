@@ -85,7 +85,8 @@ nsSVGMarkerFrame::GetCanvasTM(uint32_t aFor)
   gfxMatrix markedTM = mMarkedFrame->GetCanvasTM(aFor);
   mInUse2 = false;
 
-  gfxMatrix markerTM = content->GetMarkerTransform(mStrokeWidth, mX, mY, mAutoAngle);
+  gfxMatrix markerTM = content->GetMarkerTransform(mStrokeWidth, mX, mY,
+                                                   mAutoAngle, mIsStart);
   gfxMatrix viewBoxTM = content->GetViewBoxTransform();
 
   return viewBoxTM * markerTM * markedTM;
@@ -118,6 +119,7 @@ nsSVGMarkerFrame::PaintMark(nsRenderingContext *aContext,
   mX = aMark->x;
   mY = aMark->y;
   mAutoAngle = aMark->angle;
+  mIsStart = aMark->type == nsSVGMark::eStart;
 
   gfxContext *gfx = aContext->ThebesContext();
 
@@ -175,9 +177,10 @@ nsSVGMarkerFrame::GetMarkBBoxContribution(const gfxMatrix &aToBBoxUserspace,
   mX = aMark->x;
   mY = aMark->y;
   mAutoAngle = aMark->angle;
+  mIsStart = aMark->type == nsSVGMark::eStart;
 
   gfxMatrix markerTM =
-    content->GetMarkerTransform(mStrokeWidth, mX, mY, mAutoAngle);
+    content->GetMarkerTransform(mStrokeWidth, mX, mY, mAutoAngle, mIsStart);
   gfxMatrix viewBoxTM = content->GetViewBoxTransform();
 
   gfxMatrix tm = viewBoxTM * markerTM * aToBBoxUserspace;

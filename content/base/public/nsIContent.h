@@ -33,8 +33,8 @@ enum nsLinkState {
 
 // IID for the nsIContent interface
 #define NS_ICONTENT_IID \
-{ 0x8a8b4b1d, 0x72d8, 0x428e, \
- { 0x95, 0x75, 0xf9, 0x18, 0xba, 0xf6, 0x9e, 0xa1 } }
+{ 0Xf22c131c, 0Xc554, 0X4d06, \
+  { 0X81, 0Xac, 0X86, 0X64, 0X2f, 0X05, 0Xcc, 0X81 } }
 
 /**
  * A node of content in a document's content model. This interface
@@ -303,6 +303,12 @@ public:
   inline bool IsMathML(nsIAtom* aTag) const
   {
     return mNodeInfo->Equals(aTag, kNameSpaceID_MathML);
+  }
+
+  inline bool IsActiveChildrenElement() const
+  {
+    return mNodeInfo->Equals(nsGkAtoms::children, kNameSpaceID_XBL) &&
+           GetBindingParent();
   }
 
   /**

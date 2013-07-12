@@ -1282,8 +1282,6 @@ class ObjectImpl : public gc::Cell
         MOZ_ASSUME_UNREACHABLE("NYI");
     }
 
-    inline bool isProxy() const;
-
   protected:
 #ifdef DEBUG
     void checkShapeConsistency();
@@ -1655,6 +1653,8 @@ class ObjectImpl : public gc::Cell
     static inline void readBarrier(ObjectImpl *obj);
     static inline void writeBarrierPre(ObjectImpl *obj);
     static inline void writeBarrierPost(ObjectImpl *obj, void *addr);
+    static inline void writeBarrierPostRelocate(ObjectImpl *obj, void *addr);
+    static inline void writeBarrierPostRemove(ObjectImpl *obj, void *addr);
     inline void privateWriteBarrierPre(void **oldval);
     inline void privateWriteBarrierPost(void **pprivate);
     void markChildren(JSTracer *trc);
