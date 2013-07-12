@@ -403,7 +403,7 @@ class Parser : private AutoGCRooter, public StrictModeGetter
 
     // Parse a function, given only its body. Used for the Function constructor.
     Node standaloneFunctionBody(HandleFunction fun, const AutoNameVector &formals,
-                                HandleScript script, bool strict, bool *becameStrict);
+                                bool strict, bool *becameStrict);
 
     // Parse a function, given only its arguments and body. Used for lazily
     // parsed functions.
