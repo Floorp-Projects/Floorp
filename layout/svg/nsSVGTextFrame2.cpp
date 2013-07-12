@@ -3023,8 +3023,7 @@ nsSVGTextFrame2::Init(nsIContent* aContent,
   NS_ASSERTION(aContent->IsSVG(nsGkAtoms::text), "Content is not an SVG text");
 
   nsSVGTextFrame2Base::Init(aContent, aParent, aPrevInFlow);
-  AddStateBits((aParent->GetStateBits() &
-                (NS_FRAME_IS_NONDISPLAY | NS_STATE_SVG_CLIPPATH_CHILD)) |
+  AddStateBits((aParent->GetStateBits() & NS_STATE_SVG_CLIPPATH_CHILD) |
                NS_FRAME_SVG_LAYOUT | NS_FRAME_IS_SVG_TEXT);
 
   mMutationObserver.StartObserving(this);
