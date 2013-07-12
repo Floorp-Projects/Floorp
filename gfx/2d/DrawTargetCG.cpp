@@ -635,22 +635,7 @@ DrawTargetCG::StrokeRect(const Rect &aRect,
 
   CGContextConcatCTM(cg, GfxMatrixToCGAffineTransform(mTransform));
 
-  // we don't need to set all of the stroke state because
-  // it doesn't apply when stroking rects
-  switch (aStrokeOptions.mLineJoin)
-  {
-    case JOIN_BEVEL:
-      CGContextSetLineJoin(cg, kCGLineJoinBevel);
-      break;
-    case JOIN_ROUND:
-      CGContextSetLineJoin(cg, kCGLineJoinRound);
-      break;
-    case JOIN_MITER:
-    case JOIN_MITER_OR_BEVEL:
-      CGContextSetLineJoin(cg, kCGLineJoinMiter);
-      break;
-  }
-  CGContextSetLineWidth(cg, aStrokeOptions.mLineWidth);
+  SetStrokeOptions(cg, aStrokeOptions);
 
   if (isGradient(aPattern)) {
     // There's no CGContextClipStrokeRect so we do it by hand
