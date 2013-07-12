@@ -3,6 +3,15 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 'use strict';
 
+// The panel module currently supports only Firefox.
+// See: https://bugzilla.mozilla.org/show_bug.cgi?id=jetpack-panel-apps
+module.metadata = {
+  'stability': 'unstable',
+  'engines': {
+    'Firefox': '*'
+  }
+};
+
 const { getMostRecentBrowserWindow, windows: getWindows } = require('../window/utils');
 const { ignoreWindow } = require('../private-browsing/utils');
 const { isPrivateBrowsingSupported } = require('../self');
