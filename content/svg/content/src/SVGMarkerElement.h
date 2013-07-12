@@ -30,9 +30,10 @@ static const unsigned short SVG_MARKERUNITS_USERSPACEONUSE = 1;
 static const unsigned short SVG_MARKERUNITS_STROKEWIDTH    = 2;
 
 // Marker Orientation Types
-static const unsigned short SVG_MARKER_ORIENT_UNKNOWN      = 0;
-static const unsigned short SVG_MARKER_ORIENT_AUTO         = 1;
-static const unsigned short SVG_MARKER_ORIENT_ANGLE        = 2;
+static const unsigned short SVG_MARKER_ORIENT_UNKNOWN            = 0;
+static const unsigned short SVG_MARKER_ORIENT_AUTO               = 1;
+static const unsigned short SVG_MARKER_ORIENT_ANGLE              = 2;
+static const unsigned short SVG_MARKER_ORIENT_AUTO_START_REVERSE = 3;
 
 class nsSVGOrientType
 {
@@ -52,9 +53,15 @@ public:
   void SetAnimValue(uint16_t aValue)
     { mAnimVal = uint8_t(aValue); }
 
+  // we want to avoid exposing SVG_MARKER_ORIENT_AUTO_START_REVERSE to
+  // Web content
   uint16_t GetBaseValue() const
-    { return mBaseVal; }
+    { return mAnimVal == SVG_MARKER_ORIENT_AUTO_START_REVERSE ?
+               SVG_MARKER_ORIENT_UNKNOWN : mBaseVal; }
   uint16_t GetAnimValue() const
+    { return mAnimVal == SVG_MARKER_ORIENT_AUTO_START_REVERSE ?
+               SVG_MARKER_ORIENT_UNKNOWN : mAnimVal; }
+  uint16_t GetAnimValueInternal() const
     { return mAnimVal; }
 
   already_AddRefed<SVGAnimatedEnumeration>
@@ -115,7 +122,8 @@ public:
 
   // public helpers
   gfxMatrix GetMarkerTransform(float aStrokeWidth,
-                               float aX, float aY, float aAutoAngle);
+                               float aX, float aY, float aAutoAngle,
+                               bool aIsStart);
   nsSVGViewBoxRect GetViewBoxRect();
   gfxMatrix GetViewBoxTransform();
 

@@ -94,6 +94,7 @@ private:
   // stuff needed for callback
   nsSVGPathGeometryFrame *mMarkedFrame;
   float mStrokeWidth, mX, mY, mAutoAngle;
+  bool mIsStart;  // whether the callback is for a marker-start marker
 
   // nsSVGContainerFrame methods:
   virtual gfxMatrix GetCanvasTM(uint32_t aFor) MOZ_OVERRIDE;
