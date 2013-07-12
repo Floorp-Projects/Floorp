@@ -20,6 +20,7 @@ MOCHITEST_BROWSER_FILES = \
   browser_885530_showInPrivateBrowsing.js \
   browser_887438_currentset_shim.js \
   browser_890262_destroyWidget_after_add_to_panel.js \
+  browser_892955_isWidgetRemovable_for_removed_widgets.js \
   head.js \
   $(NULL)
 
