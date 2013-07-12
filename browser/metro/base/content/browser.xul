@@ -179,7 +179,8 @@
     <vbox id="page">
       <vbox id="tray" class="tray-toolbar" observes="bcast_windowState" >
         <!-- Tabs -->
-        <hbox id="tabs-container" observes="bcast_windowState">
+        <!-- onclick handler to work around bug 837242 -->
+        <hbox id="tabs-container" observes="bcast_windowState" onclick="void(0);">
           <box id="tabs" flex="1"
                 observes="bcast_preciseInput"
                 onselect="BrowserUI.selectTabAndDismiss(this);"
