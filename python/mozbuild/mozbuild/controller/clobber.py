@@ -31,8 +31,8 @@ The easiest and fastest way to clobber is to run:
 
  $ mach clobber
 
-If you know this clobber doesn't apply to you or you're feeling lucky \
-- well do ya? - you can ignore this clobber requirement by running:
+If you know this clobber doesn't apply to you or you're feeling lucky -- \
+Well, are ya? -- you can ignore this clobber requirement by running:
 
  $ touch {clobber_file}
 '''.splitlines()])
