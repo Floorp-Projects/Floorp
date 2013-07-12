@@ -123,11 +123,10 @@ DeprecatedTextureClientShmem::GetSurface()
 void
 DeprecatedTextureClientShmem::Unlock()
 {
-  if (mSurface) {
-    mSurface = nullptr;
-    ShadowLayerForwarder::CloseDescriptor(mDescriptor);
-  }
+  mSurface = nullptr;
   mSurfaceAsImage = nullptr;
+
+  ShadowLayerForwarder::CloseDescriptor(mDescriptor);
 }
 
 gfxImageSurface*
