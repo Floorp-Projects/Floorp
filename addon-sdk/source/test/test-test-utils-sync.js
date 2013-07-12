@@ -55,20 +55,22 @@ exports.testSyncAfter = function (assert) {
   AFTER_RUN = 0;
 };
 
-before(exports, (name) => {
+before(exports, (name, assert) => {
   if (name === 'testABeforeNameAsync')
     BEFORE_RUN = 2;
   else
     BEFORE_RUN = 1;
+  assert.pass('assert passed into before function');
 });
 
-after(exports, (name) => {
+after(exports, (name, assert) => {
   // testAfterName runs after testAfter, which is where this
   // check occurs in the assertation
   if (name === 'testAfterAsync')
     AFTER_RUN = 2;
   else
     AFTER_RUN = 1;
+  assert.pass('assert passed into after function');
 });
 
 require('sdk/test').run(exports);
