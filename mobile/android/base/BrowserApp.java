@@ -84,6 +84,7 @@ abstract public class BrowserApp extends GeckoApp
                                             GeckoLayerClient.OnMetricsChangedListener,
                                             BrowserSearch.OnSearchListener,
                                             BrowserSearch.OnEditSuggestionListener,
+                                            HomePager.OnNewTabsListener,
                                             HomePager.OnUrlOpenListener {
     private static final String LOGTAG = "GeckoBrowserApp";
 
@@ -1963,12 +1964,20 @@ abstract public class BrowserApp extends GeckoApp
         }).execute();
     }
 
+    // HomePager.OnNewTabsListener
+    @Override
+    public void onNewTabs(String[] urls) {
+        for (String url : urls) {
+            openUrl(url, EditingTarget.NEW_TAB);
+        }
+    }
+
     // HomePager.OnUrlOpenListener
     @Override
     public void onUrlOpen(String url) {
         openUrl(url);
     }
-
+ 
     // BrowserSearch.OnSearchListener
     @Override
     public void onSearch(String engineId, String text) {
