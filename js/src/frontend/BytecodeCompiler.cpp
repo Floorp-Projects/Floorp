@@ -10,6 +10,7 @@
 #include "frontend/BytecodeEmitter.h"
 #include "frontend/FoldConstants.h"
 #include "frontend/NameFunctions.h"
+#include "frontend/Parser.h"
 #include "ion/AsmJS.h"
 #include "vm/GlobalObject.h"
 
@@ -17,7 +18,6 @@
 #include "jsscriptinlines.h"
 
 #include "frontend/ParseMaps-inl.h"
-#include "frontend/SharedContext-inl.h"
 #include "vm/ScopeObject-inl.h"
 
 using namespace js;
