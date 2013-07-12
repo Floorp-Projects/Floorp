@@ -358,6 +358,32 @@ static NSWindow* NativeWindowForFrame(nsIFrame* aFrame,
   return (NSWindow*)topLevelWidget->GetNativeData(NS_NATIVE_WINDOW);
 }
 
+static int32_t WindowButtonsReservedWidth(nsIFrame* aFrame)
+{
+  NSWindow* window = NativeWindowForFrame(aFrame);
+  if (!window) {
+    // Return fallback values.
+    if (!nsCocoaFeatures::OnLionOrLater())
+      return 64;
+    return 61;
+  }
+
+  NSRect buttonBox = NSZeroRect;
+  NSButton* closeButton = [window standardWindowButton:NSWindowCloseButton];
+  if (closeButton) {
+    buttonBox = NSUnionRect(buttonBox, [closeButton frame]);
+  }
+  NSButton* minimizeButton = [window standardWindowButton:NSWindowMiniaturizeButton];
+  if (minimizeButton) {
+    buttonBox = NSUnionRect(buttonBox, [minimizeButton frame]);
+  }
+  NSButton* zoomButton = [window standardWindowButton:NSWindowZoomButton];
+  if (zoomButton) {
+    buttonBox = NSUnionRect(buttonBox, [zoomButton frame]);
+  }
+  return int32_t(NSMaxX(buttonBox));
+}
+
 static BOOL FrameIsInActiveWindow(nsIFrame* aFrame)
 {
   nsIWidget* topLevelWidget = NULL;
@@ -2735,7 +2761,21 @@ nsNativeThemeCocoa::GetMinimumWidgetSize(nsRenderingContext* aContext,
       aResult->SizeTo(0, (2 + 2) /* top */ + 9 + (1 + 1) /* bottom */);
       break;
     }
-      
+
+    case NS_THEME_WINDOW_BUTTON_BOX: {
+      aResult->SizeTo(WindowButtonsReservedWidth(aFrame), 0);
+      break;
+    }
+
+    case NS_THEME_MOZ_MAC_FULLSCREEN_BUTTON: {
+      if ([NativeWindowForFrame(aFrame) respondsToSelector:@selector(toggleFullScreen:)]) {
+        // This value is hardcoded because it's needed before we can measure the
+        // position and size of the fullscreen button.
+        aResult->SizeTo(20, 0);
+      }
+      break;
+    }
+
     case NS_THEME_PROGRESSBAR:
     {
       SInt32 barHeight = 0;
@@ -3017,10 +3057,12 @@ nsNativeThemeCocoa::ThemeSupportsWidget(nsPresContext* aPresContext, nsIFrame* a
 
     case NS_THEME_DIALOG:
     case NS_THEME_WINDOW:
+    case NS_THEME_WINDOW_BUTTON_BOX:
     case NS_THEME_WINDOW_TITLEBAR:
     case NS_THEME_MENUPOPUP:
     case NS_THEME_MENUITEM:
     case NS_THEME_MENUSEPARATOR:
+    case NS_THEME_MOZ_MAC_FULLSCREEN_BUTTON:
     case NS_THEME_TOOLTIP:
     
     case NS_THEME_CHECKBOX:
