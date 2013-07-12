@@ -42,8 +42,10 @@ public class testBookmarksTab extends BaseTest {
 
     private void testList(String url) {
         View child;
-        ListView list = getBookmarksList("about:firefox", 5);
-        mAsserter.isnot(list, null, "checking that bookmarks list exists and has 5 children (defaults + a folder)");
+        final int bookmarksCount = DEFAULT_BOOKMARKS_COUNT + 1;
+        ListView list = getBookmarksList(DEFAULT_BOOKMARKS_URLS[0], bookmarksCount);
+        mAsserter.isnot(list, null, "checking that bookmarks list exists and has " +
+                bookmarksCount + " children (defaults + a folder)");
 
         int count = list.getAdapter().getCount();
         for (int i = count - 1; i >= 0; i--) {

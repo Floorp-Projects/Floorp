@@ -269,9 +269,6 @@
   <string name="bookmarkdefaults_url_support">http://support.mozilla.org/@AB_CD@/products/mobile</string>
   <string name="bookmarkdefaults_favicon_abouthome">chrome/chrome/content/branding/favicon64.png</string>
 
-  <string name="bookmarkdefaults_title_abouthome">@bookmarks_aboutHome@</string>
-  <string name="bookmarkdefaults_url_abouthome">about:home</string>
-
   <!-- Site identity popup -->
   <string name="identity_connected_to">&identity_connected_to;</string>
   <string name="identity_run_by">&identity_run_by;</string>
