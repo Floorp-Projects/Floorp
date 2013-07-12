@@ -12,7 +12,7 @@
 #include "nsCxPusher.h"
 #include "nsError.h"
 #include "nsMutationEvent.h"
-#include NEW_H
+#include <new>
 #include "nsINode.h"
 #include "nsPIDOMWindow.h"
 #include "nsFrameLoader.h"
