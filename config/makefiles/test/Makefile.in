@@ -19,12 +19,10 @@ include $(topsrcdir)/config/makefiles/makeutils.mk
 dir-ts = .deps/test
 check-arglist        = $(dir-ts)/arglist.ts
 check-autotargets    = $(dir-ts)/autotargets_mk.ts
-check-export-targets = $(dir-ts)/export-targets-mk.ts
 check-XinY           = $(dir-ts)/check_XinY_mk.ts
 check-tests =\
   $(check-arglist) \
   $(check-autotargets) \
-  $(check-export-targets) \
   $(check-XinY) \
   $(NULL)
 
@@ -103,23 +101,5 @@ check-autotargets-preqs=\
 $(check-autotargets): $(check-autotargets-preqs)
 	@$(TOUCH) $@
 # </CHECK: autotargets.mk>
-
-
-###########################################################################
-# <CHECK: export-targets.mk>
-check-export-targets-preqs=\
-  $(call mkdir_deps,$(dir-ts)) \
-  $(topsrcdir)/config/makefiles/makeutils.mk \
-  $(topsrcdir)/config/makefiles/target_export.mk \
-  $(srcdir)/check-export-targets.mk \
-  checkup \
-  $(NULL)
-
-# include then test
-checkup: $(eval include $(srcdir)/check-export-targets.mk)
-
-$(check-export-targets): $(check-export-targets-preqs)
-	@$(TOUCH) $@
-# </CHECK: export-targets.mk>
 
 endif #} findstring MAKECMDGOAL
