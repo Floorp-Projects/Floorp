@@ -47,20 +47,29 @@ let tests = [
     let urls = [
       "http://www.example.com/0",
       "http://www.example.com/1",
+      // an item that will timeout to ensure timeouts work and we resume.
+      testPageURL({ wait: 2002 }),
       "http://www.example.com/2",
     ];
     let files = urls.map(fileForURL);
     files.forEach(f => ok(!f.exists(), "Thumbnail should not be cached yet."));
     urls.forEach(function (url) {
+      let isTimeoutTest = url.indexOf("?wait") >= 0;
       imports.BackgroundPageThumbs.capture(url, {
+        timeout: isTimeoutTest ? 100 : 30000,
         onDone: function onDone(capturedURL) {
           ok(urls.length > 0, "onDone called, so URLs should still remain");
           is(capturedURL, urls.shift(),
              "Captured URL should be currently expected URL (i.e., " +
              "capture() callbacks should be called in the correct order)");
           let file = files.shift();
-          ok(file.exists(),
-             "Thumbnail should be cached after capture: " + file.path);
+          if (isTimeoutTest) {
+            ok(!file.exists(),
+               "Thumbnail shouldn't exist for timed out capture: " + file.path);
+          } else {
+            ok(file.exists(),
+               "Thumbnail should be cached after capture: " + file.path);
+          }
           if (!urls.length)
             deferred.resolve();
         },
@@ -84,48 +93,6 @@ let tests = [
            "Capture timed out so thumbnail should not be cached: " + file.path);
         deferred.resolve();
       },
-    });
-    yield deferred.promise;
-  },
-
-  function timeoutQueueing() {
-    let deferred = imports.Promise.defer();
-    let urls = [
-      { url: testPageURL({ wait: 2000 }), timeout: 30000 },
-      { url: testPageURL({ wait: 2001 }), timeout: 1000 },
-      { url: testPageURL({ wait: 2002 }), timeout: 0 },
-    ];
-
-    // The expected callback order is the reverse of the above, and the reverse
-    // of the order in which the captures are made.
-    let expectedOrder = urls.slice();
-    expectedOrder.reverse();
-    expectedOrder = expectedOrder.map(u => u.url);
-
-    let files = expectedOrder.map(fileForURL);
-    files.forEach(f => ok(!f.exists(), "Thumbnail should not be cached yet."));
-
-    urls.forEach(function ({ url, timeout }) {
-      imports.BackgroundPageThumbs.capture(url, {
-        timeout: timeout,
-        onDone: function onDone(capturedURL) {
-          ok(expectedOrder.length > 0,
-             "onDone called, so URLs should still remain");
-          is(capturedURL, expectedOrder.shift(),
-             "Captured URL should be currently expected URL (i.e., " +
-             "capture() callbacks should be called in the correct order)");
-          let file = files.shift();
-          if (timeout > 2000)
-            ok(file.exists(),
-               "Thumbnail should be cached after capture: " + file.path);
-          else
-            ok(!file.exists(),
-               "Capture timed out so thumbnail should not be cached: " +
-               file.path);
-          if (!expectedOrder.length)
-            deferred.resolve();
-        },
-      });
     });
     yield deferred.promise;
   },
