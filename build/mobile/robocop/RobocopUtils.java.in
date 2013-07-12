@@ -12,7 +12,7 @@ import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.TimeUnit;
 
 public final class RobocopUtils {
-    private static final int MAX_WAIT_MS = 3000;
+    private static final int MAX_WAIT_MS = 20000;
 
     private RobocopUtils() {}
 
