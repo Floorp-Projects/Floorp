@@ -74,9 +74,6 @@ MOCHITEST_BROWSER_FILES = \
                  browser_aboutHome.js \
                  browser_aboutSyncProgress.js \
                  browser_addKeywordSearch.js \
-                 browser_addon_bar_aomlistener.js \
-                 browser_addon_bar_close_button.js \
-                 browser_addon_bar_shortcut.js \
                  browser_alltabslistener.js \
                  browser_blob-channelname.js \
                  browser_bug304198.js \
@@ -190,7 +187,6 @@ MOCHITEST_BROWSER_FILES = \
                  browser_CTP_drag_drop.js \
                  browser_ctrlTab.js \
                  browser_customize_popupNotification.js \
-                 browser_customize.js \
                  browser_discovery.js \
                  browser_duplicateIDs.js \
                  browser_findbarClose.js \
