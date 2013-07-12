@@ -330,3 +330,24 @@ partial interface Navigator {
   readonly attribute AudioChannelManager mozAudioChannelManager;
 };
 #endif // MOZ_AUDIO_CHANNEL_MANAGER
+
+#ifdef MOZ_MEDIA_NAVIGATOR
+// nsIDOMNavigatorUserMedia
+callback MozDOMGetUserMediaSuccessCallback = void (nsISupports? value);
+callback MozDOMGetUserMediaErrorCallback = void (DOMString error);
+interface MozMediaStreamOptions;
+partial interface Navigator {
+  [Throws, Func="Navigator::HasUserMediaSupport"]
+  void mozGetUserMedia(MozMediaStreamOptions? params,
+                       MozDOMGetUserMediaSuccessCallback? onsuccess,
+                       MozDOMGetUserMediaErrorCallback? onerror);
+};
+
+// nsINavigatorUserMedia
+callback MozGetUserMediaDevicesSuccessCallback = void (nsIVariant? devices);
+partial interface Navigator {
+  [Throws, ChromeOnly]
+  void mozGetUserMediaDevices(MozGetUserMediaDevicesSuccessCallback? onsuccess,
+                              MozDOMGetUserMediaErrorCallback? onerror);
+};
+#endif // MOZ_MEDIA_NAVIGATOR

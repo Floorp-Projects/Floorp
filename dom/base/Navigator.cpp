@@ -1227,16 +1227,48 @@ Navigator::MozGetUserMedia(nsIMediaStreamOptions* aParams,
     return NS_OK;
   }
 
+  ErrorResult rv;
+  MozGetUserMedia(aParams, aOnSuccess, aOnError, rv);
+  return rv.ErrorCode();
+}
+
+void
+Navigator::MozGetUserMedia(nsIMediaStreamOptions* aParams,
+                           MozDOMGetUserMediaSuccessCallback* aOnSuccess,
+                           MozDOMGetUserMediaErrorCallback* aOnError,
+                           ErrorResult& aRv)
+{
+  CallbackObjectHolder<MozDOMGetUserMediaSuccessCallback,
+                       nsIDOMGetUserMediaSuccessCallback> holder1(aOnSuccess);
+  nsCOMPtr<nsIDOMGetUserMediaSuccessCallback> onsucces =
+    holder1.ToXPCOMCallback();
+
+  CallbackObjectHolder<MozDOMGetUserMediaErrorCallback,
+                       nsIDOMGetUserMediaErrorCallback> holder2(aOnError);
+  nsCOMPtr<nsIDOMGetUserMediaErrorCallback> onerror = holder2.ToXPCOMCallback();
+
+  MozGetUserMedia(aParams, onsucces, onerror, aRv);
+}
+
+void
+Navigator::MozGetUserMedia(nsIMediaStreamOptions* aParams,
+                           nsIDOMGetUserMediaSuccessCallback* aOnSuccess,
+                           nsIDOMGetUserMediaErrorCallback* aOnError,
+                           ErrorResult& aRv)
+{
+  // Callers (either the XPCOM method or the WebIDL binding) are responsible for
+  // the pref check here.
   if (!mWindow || !mWindow->GetOuterWindow() ||
       mWindow->GetOuterWindow()->GetCurrentInnerWindow() != mWindow) {
-    return NS_ERROR_NOT_AVAILABLE;
+    aRv.Throw(NS_ERROR_NOT_AVAILABLE);
+    return;
   }
 
   bool privileged = nsContentUtils::IsChromeDoc(mWindow->GetExtantDoc());
 
   MediaManager* manager = MediaManager::Get();
-  return manager->GetUserMedia(privileged, mWindow, aParams, aOnSuccess,
-                               aOnError);
+  aRv = manager->GetUserMedia(privileged, mWindow, aParams, aOnSuccess,
+                              aOnError);
 }
 
 //*****************************************************************************
@@ -1246,18 +1278,48 @@ NS_IMETHODIMP
 Navigator::MozGetUserMediaDevices(nsIGetUserMediaDevicesSuccessCallback* aOnSuccess,
                                   nsIDOMGetUserMediaErrorCallback* aOnError)
 {
-  if (!mWindow || !mWindow->GetOuterWindow() ||
-      mWindow->GetOuterWindow()->GetCurrentInnerWindow() != mWindow) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
   // Check if the caller is chrome privileged, bail if not
   if (!nsContentUtils::IsCallerChrome()) {
     return NS_ERROR_FAILURE;
   }
 
+  ErrorResult rv;
+  MozGetUserMediaDevices(aOnSuccess, aOnError, rv);
+  return rv.ErrorCode();
+}
+
+void
+Navigator::MozGetUserMediaDevices(MozGetUserMediaDevicesSuccessCallback* aOnSuccess,
+                                  MozDOMGetUserMediaErrorCallback* aOnError,
+                                  ErrorResult& aRv)
+{
+  CallbackObjectHolder<MozGetUserMediaDevicesSuccessCallback,
+                       nsIGetUserMediaDevicesSuccessCallback> holder1(aOnSuccess);
+  nsCOMPtr<nsIGetUserMediaDevicesSuccessCallback> onsucces =
+    holder1.ToXPCOMCallback();
+
+  CallbackObjectHolder<MozDOMGetUserMediaErrorCallback,
+                       nsIDOMGetUserMediaErrorCallback> holder2(aOnError);
+  nsCOMPtr<nsIDOMGetUserMediaErrorCallback> onerror = holder2.ToXPCOMCallback();
+
+  MozGetUserMediaDevices(onsucces, onerror, aRv);
+}
+
+void
+Navigator::MozGetUserMediaDevices(nsIGetUserMediaDevicesSuccessCallback* aOnSuccess,
+                                  nsIDOMGetUserMediaErrorCallback* aOnError,
+                                  ErrorResult& aRv)
+{
+  // Callers (either the XPCOM method or the WebIDL binding) are responsible for
+  // the chromeonly check here.
+  if (!mWindow || !mWindow->GetOuterWindow() ||
+      mWindow->GetOuterWindow()->GetCurrentInnerWindow() != mWindow) {
+    aRv.Throw(NS_ERROR_NOT_AVAILABLE);
+    return;
+  }
+
   MediaManager* manager = MediaManager::Get();
-  return manager->GetUserMediaDevices(mWindow, aOnSuccess, aOnError);
+  aRv = manager->GetUserMediaDevices(mWindow, aOnSuccess, aOnError);
 }
 #endif
 
@@ -2152,6 +2214,17 @@ Navigator::HasTimeSupport(JSContext* /* unused */, JSObject* aGlobal)
   return win && CheckPermission(win, "time");
 }
 #endif // MOZ_TIME_MANAGER
+
+#ifdef MOZ_MEDIA_NAVIGATOR
+/* static */
+bool Navigator::HasUserMediaSupport(JSContext* /* unused */,
+                                    JSObject* /* unused */)
+{
+  // Make enabling peerconnection enable getUserMedia() as well
+  return Preferences::GetBool("media.navigator.enabled", false) ||
+         Preferences::GetBool("media.peerconnection.enabled", false);
+}
+#endif // MOZ_MEDIA_NAVIGATOR
 
 /* static */
 already_AddRefed<nsPIDOMWindow>
