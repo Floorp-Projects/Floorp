@@ -583,14 +583,6 @@ class Parser : private AutoGCRooter, public StrictModeGetter
 /* Declare some required template specializations. */
 
 template <>
-ParseNode *
-Parser<FullParseHandler>::expr();
-
-template <>
-SyntaxParseHandler::Node
-Parser<SyntaxParseHandler>::expr();
-
-template <>
 bool
 Parser<FullParseHandler>::setAssignmentLhsOps(ParseNode *pn, bool isPlainAssignment);
 
