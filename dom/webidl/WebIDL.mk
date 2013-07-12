@@ -8,6 +8,10 @@ generated_webidl_files = \
   CSS2Properties.webidl \
   $(NULL)
 
+preprocessed_webidl_files = \
+  Navigator.webidl \
+  $(NULL)
+
 webidl_files = \
   AnalyserNode.webidl \
   AnimationEvent.webidl \
@@ -191,7 +195,6 @@ webidl_files = \
   MozTimeManager.webidl \
   MutationEvent.webidl \
   MutationObserver.webidl \
-  Navigator.webidl \
   NetDashboard.webidl \
   Node.webidl \
   NodeFilter.webidl \
