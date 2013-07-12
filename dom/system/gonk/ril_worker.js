@@ -2252,12 +2252,25 @@ let RIL = {
       return true;
     }
 
-    if (mmi == null) {
+    function _isRadioAvailable(mmiServiceCode) {
+      if (RIL.radioState !== GECKO_RADIOSTATE_READY) {
+        _sendMMIError(GECKO_ERROR_RADIO_NOT_AVAILABLE, mmiServiceCode);
+        return false;
+      }
+      return true;
+    }
+
+    // If we couldn't parse the MMI code, we'll send it as an USSD request.
+    if (mmi === null) {
       if (this._ussdSession) {
+        if (!_isRadioAvailable(MMI_KS_SC_USSD)) {
+          return;
+        }
         options.ussd = mmiString;
         this.sendUSSD(options);
         return;
       }
+
       _sendMMIError(MMI_ERROR_KS_ERROR);
       return;
     }
@@ -2279,6 +2292,9 @@ let RIL = {
       case MMI_SC_CF_NOT_REACHABLE:
       case MMI_SC_CF_ALL:
       case MMI_SC_CF_ALL_CONDITIONAL:
+        if (!_isRadioAvailable(MMI_KS_SC_CALL_FORWARDING)) {
+          return;
+        }
         // Call forwarding requires at least an action, given by the MMI
         // procedure, and a reason, given by the MMI service code, but there
         // is no way that we get this far without a valid procedure or service
@@ -2305,7 +2321,8 @@ let RIL = {
         // an MMI code of the form **04*OLD_PIN*NEW_PIN*NEW_PIN#, where old PIN
         // should be entered as the SIA parameter and the new PIN as SIB and
         // SIC.
-        if (!_isValidPINPUKRequest(MMI_KS_SC_PIN)) {
+        if (!_isRadioAvailable(MMI_KS_SC_PIN) ||
+            !_isValidPINPUKRequest(MMI_KS_SC_PIN)) {
           return;
         }
 
@@ -2321,7 +2338,8 @@ let RIL = {
         // enter and MMI code of the form **042*OLD_PIN2*NEW_PIN2*NEW_PIN2#,
         // where the old PIN2 should be entered as the SIA parameter and the
         // new PIN2 as SIB and SIC.
-        if (!_isValidPINPUKRequest(MMI_KS_SC_PIN2)) {
+        if (!_isRadioAvailable(MMI_KS_SC_PIN2) ||
+            !_isValidPINPUKRequest(MMI_KS_SC_PIN2)) {
           return;
         }
 
@@ -2337,7 +2355,8 @@ let RIL = {
         // enter an MMI code of the form **05*PUK*NEW_PIN*NEW_PIN#, where PUK
         // should be entered as the SIA parameter and the new PIN as SIB and
         // SIC.
-        if (!_isValidPINPUKRequest(MMI_KS_SC_PUK)) {
+        if (!_isRadioAvailable(MMI_KS_SC_PUK) ||
+            !_isValidPINPUKRequest(MMI_KS_SC_PUK)) {
           return;
         }
 
@@ -2353,7 +2372,8 @@ let RIL = {
         // enter an MMI code of the form **052*PUK2*NEW_PIN2*NEW_PIN2#, where
         // PUK2 should be entered as the SIA parameter and the new PIN2 as SIB
         // and SIC.
-        if (!_isValidPINPUKRequest(MMI_KS_SC_PUK2)) {
+        if (!_isRadioAvailable(MMI_KS_SC_PUK2) ||
+            !_isValidPINPUKRequest(MMI_KS_SC_PUK2)) {
           return;
         }
 
@@ -2400,6 +2420,10 @@ let RIL = {
     // a #-string, it shall still be sent as a USSD request.
     if (mmi.fullMMI &&
         (mmiString.charAt(mmiString.length - 1) == MMI_END_OF_USSD)) {
+      if (!_isRadioAvailable(MMI_KS_SC_USSD)) {
+        return;
+      }
+
       options.ussd = mmi.fullMMI;
       options.mmiServiceCode = MMI_KS_SC_USSD;
       this.sendUSSD(options);
