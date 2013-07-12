@@ -1510,7 +1510,7 @@ public:
    */
   TextFrameIterator(nsSVGTextFrame2* aRoot, nsIContent* aSubtree)
     : mRootFrame(aRoot),
-      mSubtree(aSubtree && aSubtree != aRoot->GetContent() ?
+      mSubtree(aRoot && aSubtree && aSubtree != aRoot->GetContent() ?
                  aSubtree->GetPrimaryFrame() :
                  nullptr),
       mCurrentFrame(aRoot),
@@ -1605,6 +1605,10 @@ private:
    */
   void Init()
   {
+    if (!mRootFrame) {
+      return;
+    }
+
     mBaselines.AppendElement(mRootFrame->StyleSVGReset()->mDominantBaseline);
     Next();
   }
@@ -4734,6 +4738,12 @@ nsSVGTextFrame2::DoGlyphPositioning()
   mPositions.Clear();
   RemoveStateBits(NS_STATE_SVG_POSITIONING_DIRTY);
 
+  nsIFrame* kid = GetFirstPrincipalChild();
+  if (kid && NS_SUBTREE_DIRTY(kid)) {
+    MOZ_ASSERT(false, "should have already reflowed the kid");
+    return;
+  }
+
   // Determine the positions of each character in app units.
   nsTArray<nsPoint> charPositions;
   DetermineCharPositions(charPositions);
@@ -4925,7 +4935,6 @@ nsSVGTextFrame2::UpdateGlyphPositioning()
   }
 
   if (mState & NS_STATE_SVG_POSITIONING_DIRTY) {
-    MOZ_ASSERT(!NS_SUBTREE_DIRTY(kid), "should have already reflowed the kid");
     DoGlyphPositioning();
   }
 }
