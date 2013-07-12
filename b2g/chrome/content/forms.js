@@ -675,7 +675,7 @@ function getDocumentEncoder(element) {
   let flags = Ci.nsIDocumentEncoder.SkipInvisibleContent |
               Ci.nsIDocumentEncoder.OutputRaw |
               Ci.nsIDocumentEncoder.OutputLFLineBreak |
-              Ci.nsIDocumentEncoder.OutputDropInvisibleBreak;
+              Ci.nsIDocumentEncoder.OutputNonTextContentAsPlaceholder;
   encoder.init(element.ownerDocument, "text/plain", flags);
   return encoder;
 }
