@@ -144,7 +144,7 @@ public:
 
       principal = doc->NodePrincipal();
     } else {
-      MOZ_ASSERT_IF(!mWorkerPrivate->GetParent(), mWorkerPrivate->IsChromeWorker());
+      MOZ_ASSERT(mWorkerPrivate->IsChromeWorker());
       principal = mWorkerPrivate->GetPrincipal();
     }
 
@@ -199,7 +199,7 @@ public:
 
       principal = doc->NodePrincipal();
     } else {
-      MOZ_ASSERT_IF(!mWorkerPrivate->GetParent(), mWorkerPrivate->IsChromeWorker());
+      MOZ_ASSERT(mWorkerPrivate->IsChromeWorker());
       principal = mWorkerPrivate->GetPrincipal();
     }
 
