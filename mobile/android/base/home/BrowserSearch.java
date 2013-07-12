@@ -15,6 +15,7 @@ import org.mozilla.gecko.db.BrowserContract.Combined;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.BrowserDB.URLColumns;
 import org.mozilla.gecko.gfx.BitmapUtils;
+import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
 import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.StringUtils;
 import org.mozilla.gecko.util.ThreadUtils;
@@ -116,10 +117,6 @@ public class BrowserSearch extends HomeFragment
 
     // On edit suggestion listener
     private OnEditSuggestionListener mEditSuggestionListener;
-
-    public interface OnUrlOpenListener {
-        public void onUrlOpen(String url);
-    }
 
     public interface OnSearchListener {
         public void onSearch(String engineId, String text);
