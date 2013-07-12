@@ -74,6 +74,8 @@
 #include "nsIDOMGlobalPropertyInitializer.h"
 #include "nsJSUtils.h"
 
+#include "nsScriptNameSpaceManager.h"
+
 #include "mozilla/dom/NavigatorBinding.h"
 
 using namespace mozilla::dom::power;
@@ -2063,6 +2065,118 @@ Navigator::GetMozAudioChannelManager(ErrorResult& aRv)
   return mAudioChannelManager;
 }
 #endif
+
+bool
+Navigator::DoNewResolve(JSContext* aCx, JS::Handle<JSObject*> aObject,
+                        JS::Handle<jsid> aId, unsigned aFlags,
+                        JS::MutableHandle<JSObject*> aObjp)
+{
+  if (!JSID_IS_STRING(aId)) {
+    return true;
+  }
+
+  nsScriptNameSpaceManager *nameSpaceManager =
+    nsJSRuntime::GetNameSpaceManager();
+  if (!nameSpaceManager) {
+    return Throw<true>(aCx, NS_ERROR_NOT_INITIALIZED);
+  }
+
+  nsDependentJSString name(aId);
+
+  const nsGlobalNameStruct* name_struct =
+    nameSpaceManager->LookupNavigatorName(name);
+  if (!name_struct) {
+    return true;
+  }
+
+  if (name_struct->mType == nsGlobalNameStruct::eTypeNewDOMBinding) {
+    ConstructNavigatorProperty construct = name_struct->mConstructNavigatorProperty;
+    MOZ_ASSERT(construct);
+
+    JS::Rooted<JSObject*> naviObj(aCx,
+                                  js::CheckedUnwrap(aObject,
+                                                    /* stopAtOuter = */ false));
+    if (!naviObj) {
+      return Throw<true>(aCx, NS_ERROR_DOM_SECURITY_ERR);
+    }
+
+    JS::Rooted<JSObject*> domObject(aCx);
+    {
+      JSAutoCompartment ac(aCx, naviObj);
+
+      // Check whether our constructor is enabled after we unwrap Xrays, since
+      // we don't want to define an interface on the Xray if it's disabled in
+      // the target global, even if it's enabled in the Xray's global.
+      if (name_struct->mConstructorEnabled &&
+          !(*name_struct->mConstructorEnabled)(aCx, naviObj)) {
+        return true;
+      }
+
+      domObject = construct(aCx, naviObj);
+      if (!domObject) {
+        return Throw<true>(aCx, NS_ERROR_FAILURE);
+      }
+    }
+
+    if (!JS_WrapObject(aCx, domObject.address()) ||
+        !JS_DefinePropertyById(aCx, aObject, aId,
+                               JS::ObjectValue(*domObject),
+                               nullptr, nullptr, JSPROP_ENUMERATE)) {
+      return false;
+    }
+
+    aObjp.set(aObject);
+
+    return true;
+  }
+
+  NS_ASSERTION(name_struct->mType == nsGlobalNameStruct::eTypeNavigatorProperty,
+               "unexpected type");
+
+  nsresult rv = NS_OK;
+
+  nsCOMPtr<nsISupports> native(do_CreateInstance(name_struct->mCID, &rv));
+  if (NS_FAILED(rv)) {
+    return Throw<true>(aCx, rv);
+  }
+
+  JS::Rooted<JS::Value> prop_val(aCx, JS::UndefinedValue()); // Property value.
+
+  nsCOMPtr<nsIDOMGlobalPropertyInitializer> gpi(do_QueryInterface(native));
+
+  if (gpi) {
+    if (!mWindow) {
+      return Throw<true>(aCx, NS_ERROR_UNEXPECTED);
+    }
+
+    rv = gpi->Init(mWindow, prop_val.address());
+    if (NS_FAILED(rv)) {
+      return Throw<true>(aCx, rv);
+    }
+  }
+
+  if (JSVAL_IS_PRIMITIVE(prop_val) && !JSVAL_IS_NULL(prop_val)) {
+    nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
+    rv = nsContentUtils::WrapNative(aCx, aObject, native, prop_val.address(),
+                                    getter_AddRefs(holder), true);
+
+    if (NS_FAILED(rv)) {
+      return Throw<true>(aCx, rv);
+    }
+  }
+
+  if (!JS_WrapValue(aCx, prop_val.address())) {
+    return Throw<true>(aCx, NS_ERROR_UNEXPECTED);
+  }
+
+  JSBool ok = ::JS_DefinePropertyById(aCx, aObject, aId, prop_val,
+                                      JS_PropertyStub, JS_StrictPropertyStub,
+                                      JSPROP_ENUMERATE);
+
+  aObjp.set(aObject);
+
+  return ok;
+}
 
 /* static */
 bool

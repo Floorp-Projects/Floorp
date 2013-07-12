@@ -349,6 +349,9 @@ public:
                               nsIDOMGetUserMediaErrorCallback* aOnError,
                               ErrorResult& aRv);
 #endif // MOZ_MEDIA_NAVIGATOR
+  bool DoNewResolve(JSContext* aCx, JS::Handle<JSObject*> aObject,
+                    JS::Handle<jsid> aId, unsigned aFlags,
+                    JS::MutableHandle<JSObject*> aObjp);
 
   // WebIDL helper methods
   static bool HasBatterySupport(JSContext* /* unused*/, JSObject* /*unused */);
