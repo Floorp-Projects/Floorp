@@ -1211,9 +1211,8 @@ let CustomizableUIInternal = {
       LOG("Restoring " + aArea + " from default state");
       let defaults = gAreas.get(aArea).get("defaultPlacements");
       if (defaults) {
-        gPlacements.set(aArea, defaults);
-        for (let i = 0; i < defaults.length; i++)
-          this.addWidgetToArea(defaults[i], aArea, i);
+        for (let id of defaults)
+          this.addWidgetToArea(id, aArea);
       }
       gDirty = false;
     }
