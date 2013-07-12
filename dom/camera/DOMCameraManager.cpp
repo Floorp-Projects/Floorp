@@ -71,27 +71,21 @@ nsDOMCameraManager::~nsDOMCameraManager()
   obs->RemoveObserver(this, "xpcom-shutdown");
 }
 
-bool
-nsDOMCameraManager::CheckPermission(nsPIDOMWindow* aWindow)
+// static creator
+already_AddRefed<nsDOMCameraManager>
+nsDOMCameraManager::CheckPermissionAndCreateInstance(nsPIDOMWindow* aWindow)
 {
   nsCOMPtr<nsIPermissionManager> permMgr =
     do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
-  NS_ENSURE_TRUE(permMgr, false);
+  NS_ENSURE_TRUE(permMgr, nullptr);
 
   uint32_t permission = nsIPermissionManager::DENY_ACTION;
   permMgr->TestPermissionFromWindow(aWindow, "camera", &permission);
   if (permission != nsIPermissionManager::ALLOW_ACTION) {
     NS_WARNING("No permission to access camera");
-    return false;
+    return nullptr;
   }
 
-  return true;
-}
-
-// static creator
-already_AddRefed<nsDOMCameraManager>
-nsDOMCameraManager::CreateInstance(nsPIDOMWindow* aWindow)
-{
   // Initialize the shared active window tracker
   if (!sActiveWindowsInitialized) {
     sActiveWindows.Init();
