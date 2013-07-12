@@ -125,7 +125,7 @@ let Agent = {
     if (!this.initialState) {
       throw new Error("writeLoadStateOnceAfterStartup() must not be called " +
                       "without a valid session state or before it has been " +
-                      "read from disk.";
+                      "read from disk.");
     }
 
     // Make sure we can't call this function twice.
