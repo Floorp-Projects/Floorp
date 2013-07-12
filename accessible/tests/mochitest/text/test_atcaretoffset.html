@@ -56,7 +56,7 @@
                              [ "textarea" ]);
 
         testTextBeforeOffset(kCaretOffset, BOUNDARY_LINE_END, "\ntwo ", 5, 10,
-                             "textarea", kTodo, kTodo, kTodo);
+                             "textarea", kTodo, kTodo, kOk);
       }
 
       this.getID = function moveToLastLineEnd_getID()
@@ -119,7 +119,7 @@
                              [ "textarea" ]);
 
         testTextBeforeOffset(kCaretOffset, BOUNDARY_LINE_END, "aword", 0, 5,
-                             "textarea", kTodo, kTodo, kTodo);
+                             [ "textarea" ]);
       }
 
       this.getID = function moveToMiddleLineStart_getID()
@@ -150,7 +150,7 @@
                              [ "textarea" ]);
 
         testTextBeforeOffset(kCaretOffset, BOUNDARY_LINE_END, "aword", 0, 5,
-                             "textarea", kTodo, kTodo, kTodo);
+                             [ "textarea" ]);
       }
 
       this.getID = function moveToMiddleLineEnd_getID()
@@ -212,7 +212,7 @@
                              [ "textarea" ]);
 
         testTextBeforeOffset(kCaretOffset, BOUNDARY_LINE_END, "", 0, 0,
-                             "textarea", kTodo, kOk, kTodo);
+                             [ "textarea" ]);
       }
 
       this.getID = function moveToFirstLineEnd_getID()
@@ -224,7 +224,7 @@
     var gQueue = null;
     function doTest()
     {
-      SimpleTest.expectAssertions(3);
+      SimpleTest.expectAssertions(1);
 
       gQueue = new eventQueue();
       gQueue.push(new moveToLastLineEnd());
