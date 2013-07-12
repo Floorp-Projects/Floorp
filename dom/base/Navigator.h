@@ -395,6 +395,9 @@ public:
     return GetWindow();
   }
 
+  virtual JSObject* WrapObject(JSContext* cx,
+                               JS::Handle<JSObject*> scope) MOZ_OVERRIDE;
+
 private:
   bool CheckPermission(const char* type);
   static bool CheckPermission(nsPIDOMWindow* aWindow, const char* aType);
