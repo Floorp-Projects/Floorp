@@ -55,8 +55,6 @@ include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
 include $(topsrcdir)/config/rules.mk
 
-DEFINES		+= -D_IMPL_NS_COM
-
 ifdef MOZ_WIDGET_GTK
 CXXFLAGS        += $(TK_CFLAGS)
 endif

@@ -25,7 +25,7 @@ NO_PROFILE_GUIDED_OPTIMIZE = 1
 
 include $(topsrcdir)/config/rules.mk
 
-DEFINES		+= -DEXPORT_XPT_API
+DEFINES		+= -DIMPL_LIBXUL
 
 # Build libxpt early so that it'll be available to xpidl, which also
 # must be built early.

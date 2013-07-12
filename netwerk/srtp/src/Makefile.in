@@ -107,4 +107,3 @@ ifdef GNU_CC
 CFLAGS += -std=gnu99
 endif
 
-DEFINES += -DIMPL_NS_NET
