@@ -460,7 +460,11 @@ let SessionStoreInternal = {
 
     // A Lazy getter for the sessionstore.js backup promise.
     XPCOMUtils.defineLazyGetter(this, "_backupSessionFileOnce", function () {
-      return _SessionFile.createBackupCopy();
+      // We're creating a backup of sessionstore.js by moving it to .bak
+      // because that's a lot faster than creating a copy. sessionstore.js
+      // would be overwritten shortly afterwards anyway so we can save time
+      // and just move instead of copy.
+      return _SessionFile.moveToBackupPath();
     });
 
     // at this point, we've as good as resumed the session, so we can
@@ -504,12 +508,12 @@ let SessionStoreInternal = {
     return Task.spawn(function task() {
       try {
         // Perform background backup
-        yield _SessionFile.createUpgradeBackupCopy("-" + buildID);
+        yield _SessionFile.createBackupCopy("-" + buildID);
 
         this._prefBranch.setCharPref(PREF_UPGRADE, buildID);
 
         // In case of success, remove previous backup.
-        yield _SessionFile.removeUpgradeBackup("-" + latestBackup);
+        yield _SessionFile.removeBackupCopy("-" + latestBackup);
       } catch (ex) {
         debug("Could not perform upgrade backup " + ex);
         debug(ex.stack);
@@ -772,12 +776,12 @@ let SessionStoreInternal = {
           this._restoreCount = this._initialState.windows ? this._initialState.windows.length : 0;
           this.restoreWindow(aWindow, this._initialState,
                              this._isCmdLineEmpty(aWindow, this._initialState));
-
-          // _loadState changed from "stopped" to "running"
-          // force a save operation so that crashes happening during startup are correctly counted
-          this._initialState.session.state = STATE_RUNNING_STR;
-          this._saveStateObject(this._initialState);
           this._initialState = null;
+
+          // _loadState changed from "stopped" to "running". Save the session's
+          // load state immediately so that crashes happening during startup
+          // are correctly counted.
+          _SessionFile.writeLoadStateOnceAfterStartup(STATE_RUNNING_STR);
         }
       }
       else {
