@@ -131,6 +131,11 @@ public:
   {
     return nullptr;
   }
+
+  virtual bool IsDualDrawTarget()
+  {
+    return true;
+  }
      
 private:
   RefPtr<DrawTarget> mA;
