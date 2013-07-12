@@ -241,21 +241,9 @@ DataSourceSurfaceCG::GetData()
 SourceSurfaceCGBitmapContext::SourceSurfaceCGBitmapContext(DrawTargetCG *aDrawTarget)
 {
   mDrawTarget = aDrawTarget;
-  Init((CGContextRef)aDrawTarget->GetNativeSurface(NATIVE_SURFACE_CGCONTEXT));
-}
-
-SourceSurfaceCGBitmapContext::SourceSurfaceCGBitmapContext(CGContextRef cg)
-{
-  Init(cg);
-}
-
-void
-SourceSurfaceCGBitmapContext::Init(CGContextRef cg)
-{
-  MOZ_ASSERT(cg);
-  MOZ_ASSERT(GetContextType(cg) == CG_CONTEXT_TYPE_BITMAP);
-
-  mCg = CGContextRetain(cg);
+  mCg = (CGContextRef)aDrawTarget->GetNativeSurface(NATIVE_SURFACE_CGCONTEXT);
+  if (!mCg)
+    abort();
 
   mSize.width = CGBitmapContextGetWidth(mCg);
   mSize.height = CGBitmapContextGetHeight(mCg);
@@ -320,7 +308,6 @@ SourceSurfaceCGBitmapContext::DrawTargetWillChange()
       CGImageRelease(mImage);
     mImage = nullptr;
 
-    CGContextRelease(mCg);
     mCg = nullptr;
     mDrawTarget = nullptr;
   }
@@ -331,9 +318,6 @@ SourceSurfaceCGBitmapContext::~SourceSurfaceCGBitmapContext()
   if (!mImage && !mCg) {
     // neither mImage or mCg owns the data
     free(mData);
-  }
-  if (mCg) {
-    CGContextRelease(mCg);
   }
   if (mImage)
     CGImageRelease(mImage);

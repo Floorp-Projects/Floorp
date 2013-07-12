@@ -129,7 +129,7 @@ public:
   virtual void PushClip(const Path *);
   virtual void PushClipRect(const Rect &aRect);
   virtual void PopClip();
-  virtual TemporaryRef<SourceSurface> CreateSourceSurfaceFromNativeSurface(const NativeSurface&) const;
+  virtual TemporaryRef<SourceSurface> CreateSourceSurfaceFromNativeSurface(const NativeSurface&) const { return nullptr;}
   virtual TemporaryRef<DrawTarget> CreateSimilarDrawTarget(const IntSize &, SurfaceFormat) const;
   virtual TemporaryRef<PathBuilder> CreatePathBuilder(FillRule) const;
   virtual TemporaryRef<GradientStops> CreateGradientStops(GradientStop *, uint32_t,
