@@ -839,6 +839,8 @@ public:
    */
   virtual void *GetNativeSurface(NativeSurfaceType aType) { return NULL; }
 
+  virtual bool IsDualDrawTarget() { return false; }
+
   void AddUserData(UserDataKey *key, void *userData, void (*destroy)(void*)) {
     mUserData.Add(key, userData, destroy);
   }
@@ -1012,9 +1014,26 @@ private:
 class BorrowedCGContext
 {
 public:
-  BorrowedCGContext(DrawTarget *aDT) : mDT(aDT)
+  BorrowedCGContext()
+    : cg(nullptr)
+    , mDT(nullptr)
+  { }
+
+  BorrowedCGContext(DrawTarget *aDT)
+    : mDT(aDT)
   {
     cg = BorrowCGContextFromDrawTarget(aDT);
+  }
+
+  // We can optionally Init after construction in
+  // case we don't know what the DT will be at construction
+  // time.
+  CGContextRef Init(DrawTarget *aDT)
+  {
+    MOZ_ASSERT(!mDT, "Can't initialize twice!");
+    mDT = aDT;
+    cg = BorrowCGContextFromDrawTarget(aDT);
+    return cg;
   }
 
   // The caller needs to call Finish if cg is non-null when
