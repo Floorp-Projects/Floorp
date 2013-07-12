@@ -1,14 +1,19 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
- 'use strict'
+'use strict';
+
+module.metadata = {
+  'engines': {
+    'Firefox': '*'
+  }
+};
 
 const { Cc, Ci } = require('chrome');
 const { defer, all } = require('sdk/core/promise');
 const { has } = require('sdk/util/array');
 const { setTimeout } = require('sdk/timers');
 const { before, after } = require('sdk/test/utils');
-try {
 const {
   search 
 } = require('sdk/places/history');
@@ -19,7 +24,6 @@ const {
 const { promisedEmitter } = require('sdk/places/utils');
 const hsrv = Cc['@mozilla.org/browser/nav-history-service;1'].
               getService(Ci.nsINavHistoryService);
-} catch(e) { unsupported(e); }
 
 exports.testEmptyQuery = function (assert, done) {
   let within = toBeWithin();
@@ -240,25 +244,11 @@ function clear (done) {
   clearHistory(done);
 }
 
-// If the module doesn't support the app we're being run in, require() will
-// throw.  In that case, remove all tests above from exports, and add one dummy
-// test that passes.
-function unsupported (err) {
-  if (!/^Unsupported Application/.test(err.message))
-    throw err;
-
-  module.exports = {
-    "test Unsupported Application": function Unsupported (assert) {
-      assert.pass(err.message);
-    }
-  };
-}
-
 function searchP () {
   return promisedEmitter(search.apply(null, Array.slice(arguments)));
 }
 
-before(exports, (name, done) => clear(done));
-after(exports, (name, done) => clear(done));
+before(exports, (name, assert, done) => clear(done));
+after(exports, (name, assert, done) => clear(done));
 
 require('test').run(exports);

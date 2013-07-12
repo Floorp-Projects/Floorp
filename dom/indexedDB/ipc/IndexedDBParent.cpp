@@ -8,7 +8,6 @@
 
 #include "nsIDOMFile.h"
 #include "nsIDOMEvent.h"
-#include "nsIIDBVersionChangeEvent.h"
 #include "nsIXPConnect.h"
 
 #include "mozilla/AppProcessChecker.h"
@@ -369,12 +368,10 @@ IndexedDBDatabaseParent::HandleRequestEvent(nsIDOMEvent* aEvent,
   if (aType.EqualsLiteral(BLOCKED_EVT_STR)) {
     MOZ_ASSERT(!mDatabase);
 
-    nsCOMPtr<nsIIDBVersionChangeEvent> changeEvent = do_QueryInterface(aEvent);
+    nsCOMPtr<IDBVersionChangeEvent> changeEvent = do_QueryInterface(aEvent);
     NS_ENSURE_TRUE(changeEvent, NS_ERROR_FAILURE);
 
-    uint64_t oldVersion;
-    rv = changeEvent->GetOldVersion(&oldVersion);
-    NS_ENSURE_SUCCESS(rv, rv);
+    uint64_t oldVersion = changeEvent->OldVersion();
 
     if (!SendBlocked(oldVersion)) {
       return NS_ERROR_FAILURE;
@@ -480,12 +477,10 @@ IndexedDBDatabaseParent::HandleRequestEvent(nsIDOMEvent* aEvent,
       return NS_ERROR_FAILURE;
     }
 
-    nsCOMPtr<nsIIDBVersionChangeEvent> changeEvent = do_QueryInterface(aEvent);
+    nsCOMPtr<IDBVersionChangeEvent> changeEvent = do_QueryInterface(aEvent);
     NS_ENSURE_TRUE(changeEvent, NS_ERROR_FAILURE);
 
-    uint64_t oldVersion;
-    rv = changeEvent->GetOldVersion(&oldVersion);
-    NS_ENSURE_SUCCESS(rv, rv);
+    uint64_t oldVersion = changeEvent->OldVersion();
 
     nsAutoPtr<IndexedDBVersionChangeTransactionParent> actor(
       new IndexedDBVersionChangeTransactionParent());
@@ -521,30 +516,23 @@ IndexedDBDatabaseParent::HandleDatabaseEvent(nsIDOMEvent* aEvent,
              "Should never get error events in the parent process!");
   MOZ_ASSERT(!IsDisconnected());
 
-  nsresult rv;
-
   if (aType.EqualsLiteral(VERSIONCHANGE_EVT_STR)) {
     AutoSafeJSContext cx;
     NS_ENSURE_TRUE(cx, NS_ERROR_FAILURE);
 
-    nsCOMPtr<nsIIDBVersionChangeEvent> changeEvent = do_QueryInterface(aEvent);
+    nsCOMPtr<IDBVersionChangeEvent> changeEvent = do_QueryInterface(aEvent);
     NS_ENSURE_TRUE(changeEvent, NS_ERROR_FAILURE);
 
-    uint64_t oldVersion;
-    rv = changeEvent->GetOldVersion(&oldVersion);
-    NS_ENSURE_SUCCESS(rv, rv);
+    uint64_t oldVersion = changeEvent->OldVersion();
 
-    JS::Rooted<JS::Value> newVersionVal(cx);
-    rv = changeEvent->GetNewVersion(cx, newVersionVal.address());
-    NS_ENSURE_SUCCESS(rv, rv);
+    Nullable<uint64_t> newVersionVal = changeEvent->GetNewVersion();
 
     uint64_t newVersion;
-    if (newVersionVal.isNull()) {
+    if (newVersionVal.IsNull()) {
       newVersion = 0;
     }
     else {
-      MOZ_ASSERT(newVersionVal.isNumber());
-      newVersion = static_cast<uint64_t>(newVersionVal.toNumber());
+      newVersion = newVersionVal.Value();
     }
 
     if (!SendVersionChange(oldVersion, newVersion)) {
@@ -2112,12 +2100,10 @@ IndexedDBDeleteDatabaseRequestParent::HandleEvent(nsIDOMEvent* aEvent)
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (type.EqualsASCII(BLOCKED_EVT_STR)) {
-    nsCOMPtr<nsIIDBVersionChangeEvent> event = do_QueryInterface(aEvent);
+    nsCOMPtr<IDBVersionChangeEvent> event = do_QueryInterface(aEvent);
     MOZ_ASSERT(event);
 
-    uint64_t currentVersion;
-    rv = event->GetOldVersion(&currentVersion);
-    NS_ENSURE_SUCCESS(rv, rv);
+    uint64_t currentVersion = event->OldVersion();
 
     if (!SendBlocked(currentVersion)) {
       return NS_ERROR_FAILURE;

@@ -2236,6 +2236,36 @@
     "extended_statistics_ok": true,
     "description": "PLACES: Time to calculate frecency of a page (ms)"
   },
+  "UPDATER_BACKGROUND_CHECK_CODE_EXTERNAL": {
+    "kind": "enumerated",
+    "n_values": 50,
+    "description": "Updater: externally initiated (typically by the application) background update check result code (see PING_BGUC_* constants defined in /toolkit/mozapps/update/nsUpdateService.js)"
+  },
+  "UPDATER_BACKGROUND_CHECK_CODE_NOTIFY": {
+    "kind": "enumerated",
+    "n_values": 50,
+    "description": "Updater: timer initiated background update check result code (see PING_BGUC_* constants defined in /toolkit/mozapps/update/nsUpdateService.js)"
+  },
+  "UPDATER_INVALID_LASTUPDATETIME_EXTERNAL": {
+    "kind": "boolean",
+    "description": "Updater: Whether the last update time is invalid when a background update check was externally requested (typically by the application)"
+  },
+  "UPDATER_INVALID_LASTUPDATETIME_NOTIFY": {
+    "kind": "boolean",
+    "description": "Updater: Whether the last update time is invalid when a background update check was timer initiated"
+  },
+  "UPDATER_LAST_NOTIFY_INTERVAL_DAYS_EXTERNAL": {
+    "kind": "exponential",
+    "n_buckets": 10,
+    "high": "60",
+    "description": "Updater: The interval in days between the previous and the current background update check when the check was externally requested (typically by the application)"
+  },
+  "UPDATER_LAST_NOTIFY_INTERVAL_DAYS_NOTIFY": {
+    "kind": "exponential",
+    "n_buckets": 10,
+    "high": "60",
+    "description": "Updater: The interval in days between the previous and the current background update check when the check was timer initiated"
+  },
   "UPDATER_STATUS_CODES": {
     "kind": "enumerated",
     "n_values": 50,
@@ -2257,6 +2287,11 @@
     "kind": "boolean",
     "description": "Updater: Whether or not the MozillaMaintenance service is enabled"
   },
+  "UPDATER_SERVICE_ERROR_CODE": {
+    "kind": "enumerated",
+    "n_values": 100,
+    "description": "Updater: 0=success else SERVICE_* error code defined in /toolkit/mozapps/update/common/errors.h"
+  },
   "UPDATER_SERVICE_ERRORS": {
     "kind": "enumerated",
     "n_values": 30,
@@ -2277,6 +2312,11 @@
   "UPDATER_HAS_PERMISSIONS": {
     "kind": "boolean",
     "description": "Updater: Whether or not the updater has permissions"
+  },
+  "UPDATER_WIZ_LAST_PAGE_CODE": {
+    "kind": "enumerated",
+    "n_values": 25,
+    "description": "Updater: The update wizard page displayed when the UI was closed (mapped in toolkit/mozapps/update/content/updates.js)"
   },
   "THUNDERBIRD_GLODA_SIZE_MB": {
     "kind": "linear",

@@ -12,8 +12,6 @@
 #include "js/Value.h"
 #include "vm/String.h"
 
-#include "jsatominlines.h"
-
 #include "vm/String-inl.h"
 
 using namespace js;

@@ -12,7 +12,6 @@
 #include "vm/GlobalObject.h"
 #include "vm/String.h"
 
-#include "jsgcinlines.h"
 #include "jsobjinlines.h"
 
 using namespace js;

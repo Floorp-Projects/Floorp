@@ -1,8 +1,15 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-"use strict";
+'use strict';
 
+module.metadata = {
+  'engines': {
+    'Firefox': '*'
+  }
+};
+
+const widgets = require("sdk/widget");
 const { Cc, Ci } = require("chrome");
 const { Loader } = require('sdk/test/loader');
 const url = require("sdk/url");
@@ -1173,23 +1180,4 @@ function closeBrowserWindow(window, callback) {
     }, false);
     window.close();
   }, 0);
-}
-
-// ADD NO TESTS BELOW THIS LINE! ///////////////////////////////////////////////
-
-// If the module doesn't support the app we're being run in, require() will
-// throw.  In that case, remove all tests above from exports, and add one dummy
-// test that passes.
-try {
-  const widgets = require("sdk/widget");
-}
-catch (err) {
-  if (!/^Unsupported Application/.test(err.message))
-    throw err;
-
-  module.exports = {
-    testAppNotSupported: function (test) {
-      test.pass(err.message);
-    }
-  };
 }

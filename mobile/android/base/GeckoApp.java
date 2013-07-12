@@ -59,6 +59,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.PowerManager;
 import android.os.StrictMode;
+import android.preference.PreferenceManager;
 import android.provider.ContactsContract;
 
 import android.telephony.CellLocation;
@@ -1693,7 +1694,8 @@ abstract public class GeckoApp
             });
 
             restoreMode = RESTORE_NORMAL;
-        } else if (savedInstanceState != null) {
+        } else if (savedInstanceState != null ||
+                PreferenceManager.getDefaultSharedPreferences(this).getBoolean(GeckoPreferences.PREFS_RESTORE_SESSION, false)) {
             restoreMode = RESTORE_NORMAL;
         }
 
