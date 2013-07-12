@@ -89,27 +89,8 @@ let gTests = [
 },
 
 {
-  desc: "Check that performing a search fires a search event.",
-  setup: function () { },
-  run: function () {
-    let deferred = Promise.defer();
-    let doc = gBrowser.contentDocument;
-
-    doc.addEventListener("AboutHomeSearchEvent", function onSearch(e) {
-      is(e.detail, doc.documentElement.getAttribute("searchEngineName"), "Detail is search engine name");
-
-      gBrowser.stop();
-      deferred.resolve();
-    }, true, true);
-
-    doc.getElementById("searchText").value = "it works";
-    doc.getElementById("searchSubmit").click();
-    return deferred.promise;
-  }
-},
-
-{
-  desc: "Check that performing a search records to Firefox Health Report.",
+  desc: "Check that performing a search fires a search event and records to " +
+        "Firefox Health Report.",
   setup: function () { },
   run: function () {
     try {
@@ -120,46 +101,33 @@ let gTests = [
       return Promise.resolve();
     }
 
+    let numSearchesBefore = 0;
     let deferred = Promise.defer();
     let doc = gBrowser.contentDocument;
 
     // We rely on the listener in browser.js being installed and fired before
     // this one. If this ever changes, we should add an executeSoon() or similar.
     doc.addEventListener("AboutHomeSearchEvent", function onSearch(e) {
-      executeSoon(gBrowser.stop.bind(gBrowser));
-      let reporter = Components.classes["@mozilla.org/datareporting/service;1"]
-                                       .getService()
-                                       .wrappedJSObject
-                                       .healthReporter;
-      ok(reporter, "Health Reporter instance available.");
+      let engineName = doc.documentElement.getAttribute("searchEngineName");
+      is(e.detail, engineName, "Detail is search engine name");
 
-      reporter.onInit().then(function onInit() {
-        let provider = reporter.getProvider("org.mozilla.searches");
-        ok(provider, "Searches provider is available.");
+      gBrowser.stop();
 
-        let engineName = doc.documentElement.getAttribute("searchEngineName");
-        let id = Services.search.getEngineByName(engineName).identifier;
-
-        let m = provider.getMeasurement("counts", 2);
-        m.getValues().then(function onValues(data) {
-          let now = new Date();
-          ok(data.days.hasDay(now), "Have data for today.");
-
-          let day = data.days.getDay(now);
-          let field = id + ".abouthome";
-          ok(day.has(field), "Have data for about home on this engine.");
-
-          // Note the search from the previous test.
-          is(day.get(field), 2, "Have searches recorded.");
-
-          deferred.resolve();
-        });
-
+      getNumberOfSearches().then(num => {
+        is(num, numSearchesBefore + 1, "One more search recorded.");
+        deferred.resolve();
       });
     }, true, true);
 
-    doc.getElementById("searchText").value = "a search";
-    doc.getElementById("searchSubmit").click();
+    // Get the current number of recorded searches.
+    getNumberOfSearches().then(num => {
+      numSearchesBefore = num;
+
+      info("Perform a search.");
+      doc.getElementById("searchText").value = "a search";
+      doc.getElementById("searchSubmit").click();
+    });
+
     return deferred.promise;
   }
 },
@@ -421,4 +389,55 @@ function promiseBrowserAttributes(aTab)
   observer.observe(docElt, { attributes: true });
 
   return deferred.promise;
+}
+
+/**
+ * Retrieves the number of about:home searches recorded for the current day.
+ *
+ * @return {Promise} Returns a promise resolving to the number of searches.
+ */
+function getNumberOfSearches() {
+  let reporter = Components.classes["@mozilla.org/datareporting/service;1"]
+                                   .getService()
+                                   .wrappedJSObject
+                                   .healthReporter;
+  ok(reporter, "Health Reporter instance available.");
+
+  return reporter.onInit().then(function onInit() {
+    let provider = reporter.getProvider("org.mozilla.searches");
+    ok(provider, "Searches provider is available.");
+
+    let m = provider.getMeasurement("counts", 2);
+    return m.getValues().then(data => {
+      let now = new Date();
+      let yday = new Date(now);
+      yday.setDate(yday.getDate() - 1);
+
+      // Add the number of searches recorded yesterday to the number of searches
+      // recorded today. This makes the test not fail intermittently when it is
+      // run at midnight and we accidentally compare the number of searches from
+      // different days. Tests are always run with an empty profile so there
+      // are no searches from yesterday, normally. Should the test happen to run
+      // past midnight we make sure to count them in as well.
+      return getNumberOfSearchesByDate(data, now) +
+             getNumberOfSearchesByDate(data, yday);
+    });
+  });
+}
+
+function getNumberOfSearchesByDate(aData, aDate) {
+  if (aData.days.hasDay(aDate)) {
+    let doc = gBrowser.contentDocument;
+    let engineName = doc.documentElement.getAttribute("searchEngineName");
+    let id = Services.search.getEngineByName(engineName).identifier;
+
+    let day = aData.days.getDay(aDate);
+    let field = id + ".abouthome";
+
+    if (day.has(field)) {
+      return day.get(field) || 0;
+    }
+  }
+
+  return 0; // No records found.
 }
