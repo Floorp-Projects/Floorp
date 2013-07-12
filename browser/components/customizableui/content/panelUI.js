@@ -186,11 +186,11 @@ const PanelUI = {
       let multiView = document.createElement("panelmultiview");
       tempPanel.appendChild(multiView);
       multiView.setMainView(viewNode);
-      tempPanel.addEventListener("command", PanelUI._onWidgetPanelCommand);
+      CustomizableUI.addPanelCloseListeners(tempPanel);
 
       tempPanel.addEventListener("popuphidden", function panelRemover() {
         tempPanel.removeEventListener("popuphidden", panelRemover);
-        tempPanel.removeEventListener("command", PanelUI._onWidgetPanelCommand);
+        CustomizableUI.removePanelCloseListeners(tempPanel);
         let evt = new CustomEvent("ViewHiding", {detail: viewNode});
         viewNode.dispatchEvent(evt);
 
@@ -240,12 +240,6 @@ const PanelUI = {
   _updatePanelButton: function() {
     this.menuButton.open = this.panel.state == "open" ||
                            this.panel.state == "showing";
-  },
-
-  _onWidgetPanelCommand: function(aEvent) {
-    if (!aEvent.originalTarget.hasAttribute("noautoclose")) {
-      aEvent.currentTarget.hidePopup();
-    }
   },
 
   _onHelpViewShow: function(aEvent) {
