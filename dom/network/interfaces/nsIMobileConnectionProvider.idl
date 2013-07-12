@@ -4,19 +4,17 @@
 
 #include "nsISupports.idl"
 
-interface nsIDOMMozMobileICCInfo;
+interface nsIDOMDOMRequest;
+interface nsIDOMMozMobileCFInfo;
 interface nsIDOMMozMobileConnectionInfo;
 interface nsIDOMMozMobileNetworkInfo;
-interface nsIDOMMozMobileCFInfo;
-interface nsIDOMDOMRequest;
 interface nsIDOMWindow;
 
-[scriptable, uuid(529864f0-c2be-11e2-8b8b-0800200c9a66)]
+[scriptable, uuid(74361840-c913-11e2-8b8b-0800200c9a66)]
 interface nsIMobileConnectionListener : nsISupports
 {
   void notifyVoiceChanged();
   void notifyDataChanged();
-  void notifyIccInfoChanged();
   void notifyUssdReceived(in DOMString message,
                           in boolean sessionEnded);
   void notifyDataError(in DOMString message);
@@ -32,7 +30,7 @@ interface nsIMobileConnectionListener : nsISupports
  * XPCOM component (in the content process) that provides the mobile
  * network information.
  */
-[scriptable, uuid(66e7ac90-c2be-11e2-8b8b-0800200c9a66)]
+[scriptable, uuid(477d93f0-c913-11e2-8b8b-0800200c9a66)]
 interface nsIMobileConnectionProvider : nsISupports
 {
   /**
@@ -44,7 +42,6 @@ interface nsIMobileConnectionProvider : nsISupports
   void unregisterMobileConnectionMsg(in nsIMobileConnectionListener listener);
 
   readonly attribute long retryCount;
-  readonly attribute nsIDOMMozMobileICCInfo iccInfo;
   readonly attribute nsIDOMMozMobileConnectionInfo voiceConnectionInfo;
   readonly attribute nsIDOMMozMobileConnectionInfo dataConnectionInfo;
   readonly attribute DOMString networkSelectionMode;

@@ -287,6 +287,8 @@ DOMCameraPreview::Stopped(bool aForced)
     return;
   }
 
+  mInput->ClearCurrentFrame();
+
   DOM_CAMERA_LOGI("Dispatching preview stream stopped\n");
   nsCOMPtr<nsIRunnable> stopped = new PreviewControl(this, PreviewControl::STOPPED);
   nsresult rv = NS_DispatchToMainThread(stopped);

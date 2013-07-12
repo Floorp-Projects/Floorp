@@ -45,8 +45,8 @@ if (DEBUG) {
 
 const RILCONTENTHELPER_CID =
   Components.ID("{472816e1-1fd6-4405-996c-806f9ea68174}");
-const MOBILEICCINFO_CID =
-  Components.ID("{8649c12f-f8f4-4664-bbdd-7d115c23e2a7}");
+const ICCINFO_CID =
+  Components.ID("{fab2c0f0-d73a-11e2-8b8b-0800200c9a66}");
 const MOBILECONNECTIONINFO_CID =
   Components.ID("{a35cfd39-2d93-4489-ac7d-396475dacb27}");
 const MOBILENETWORKINFO_CID =
@@ -135,18 +135,18 @@ MobileIccCardLockRetryCount.prototype = {
                       success: 'r'}
 };
 
-function MobileICCInfo() {}
-MobileICCInfo.prototype = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIDOMMozMobileICCInfo]),
-  classID:        MOBILEICCINFO_CID,
+function IccInfo() {}
+IccInfo.prototype = {
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIDOMMozIccInfo]),
+  classID:        ICCINFO_CID,
   classInfo:      XPCOMUtils.generateCI({
-    classID:          MOBILEICCINFO_CID,
-    classDescription: "MobileICCInfo",
+    classID:          ICCINFO_CID,
+    classDescription: "IccInfo",
     flags:            Ci.nsIClassInfo.DOM_OBJECT,
-    interfaces:       [Ci.nsIDOMMozMobileICCInfo]
+    interfaces:       [Ci.nsIDOMMozIccInfo]
   }),
 
-  // nsIDOMMozMobileICCInfo
+  // nsIDOMMozIccInfo
 
   iccid: null,
   mcc: null,
@@ -381,7 +381,7 @@ function RILContentHelper() {
     cardState:            RIL.GECKO_CARDSTATE_UNKNOWN,
     retryCount:           0,
     networkSelectionMode: RIL.GECKO_NETWORK_SELECTION_UNKNOWN,
-    iccInfo:              new MobileICCInfo(),
+    iccInfo:              new IccInfo(),
     voiceConnectionInfo:  new MobileConnectionInfo(),
     dataConnectionInfo:   new MobileConnectionInfo()
   };
@@ -1337,8 +1337,7 @@ RILContentHelper.prototype = {
       }
       case "RIL:IccInfoChanged":
         this.updateInfo(msg.json.data, this.rilContext.iccInfo);
-        this._deliverEvent("_mobileConnectionListeners",
-                           "notifyIccInfoChanged", null);
+        this._deliverEvent("_iccListeners", "notifyIccInfoChanged", null);
         break;
       case "RIL:VoiceInfoChanged":
         this.updateConnectionInfo(msg.json.data,
