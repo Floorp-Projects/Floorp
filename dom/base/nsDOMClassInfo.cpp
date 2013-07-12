@@ -4660,101 +4660,15 @@ nsNavigatorSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 {
   JS::Rooted<JSObject*> obj(cx, aObj);
   JS::Rooted<jsid> id(cx, aId);
-  if (!JSID_IS_STRING(id)) {
-    return NS_OK;
+  nsCOMPtr<nsIDOMNavigator> navigator = do_QueryWrappedNative(wrapper);
+  if (!static_cast<Navigator*>(navigator.get())->
+        DoNewResolve(cx, obj, id, flags,
+                     JS::MutableHandle<JSObject*>::fromMarkedLocation(objp))) {
+    return NS_ERROR_FAILURE;
   }
-
-  nsScriptNameSpaceManager *nameSpaceManager =
-    nsJSRuntime::GetNameSpaceManager();
-  NS_ENSURE_TRUE(nameSpaceManager, NS_ERROR_NOT_INITIALIZED);
-
-  nsDependentJSString name(id);
-
-  const nsGlobalNameStruct* name_struct =
-    nameSpaceManager->LookupNavigatorName(name);
-  if (!name_struct) {
-    return NS_OK;
-  }
-
-  if (name_struct->mType == nsGlobalNameStruct::eTypeNewDOMBinding) {
-    mozilla::dom::ConstructNavigatorProperty construct = name_struct->mConstructNavigatorProperty;
-    MOZ_ASSERT(construct);
-
-    JS::Rooted<JSObject*> naviObj(cx, js::CheckedUnwrap(obj, /* stopAtOuter = */ false));
-    NS_ENSURE_TRUE(naviObj, NS_ERROR_DOM_SECURITY_ERR);
-
-    JS::Rooted<JSObject*> domObject(cx);
-    {
-      JSAutoCompartment ac(cx, naviObj);
-
-      // Check whether our constructor is enabled after we unwrap Xrays, since
-      // we don't want to define an interface on the Xray if it's disabled in
-      // the target global, even if it's enabled in the Xray's global.
-      if (name_struct->mConstructorEnabled &&
-          !(*name_struct->mConstructorEnabled)(cx, naviObj)) {
-        return NS_OK;
-      }
-
-      domObject = construct(cx, naviObj);
-      if (!domObject) {
-        return NS_ERROR_FAILURE;
-      }
-    }
-
-    if (!JS_WrapObject(cx, domObject.address()) ||
-        !JS_DefinePropertyById(cx, obj, id,
-                               JS::ObjectValue(*domObject),
-                               nullptr, nullptr, JSPROP_ENUMERATE)) {
-      return NS_ERROR_FAILURE;
-    }
-
-    *_retval = true;
-    *objp = obj;
-
-    return NS_OK;
-  }
-
-  NS_ASSERTION(name_struct->mType == nsGlobalNameStruct::eTypeNavigatorProperty,
-               "unexpected type");
-
-  nsresult rv = NS_OK;
-
-  nsCOMPtr<nsISupports> native(do_CreateInstance(name_struct->mCID, &rv));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  JS::Rooted<JS::Value> prop_val(cx, JS::UndefinedValue()); // Property value.
-
-  nsCOMPtr<nsIDOMGlobalPropertyInitializer> gpi(do_QueryInterface(native));
-
-  if (gpi) {
-    nsCOMPtr<nsIDOMNavigator> navigator = do_QueryWrappedNative(wrapper);
-    nsIDOMWindow *window = static_cast<Navigator*>(navigator.get())->GetWindow();
-    NS_ENSURE_TRUE(window, NS_ERROR_UNEXPECTED);
-
-    rv = gpi->Init(window, prop_val.address());
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  if (JSVAL_IS_PRIMITIVE(prop_val) && !JSVAL_IS_NULL(prop_val)) {
-    nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
-    rv = WrapNative(cx, obj, native, true, prop_val.address(),
-                    getter_AddRefs(holder));
-
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  if (!JS_WrapValue(cx, prop_val.address())) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  JSBool ok = ::JS_DefinePropertyById(cx, obj, id, prop_val,
-                                      JS_PropertyStub, JS_StrictPropertyStub,
-                                      JSPROP_ENUMERATE);
 
   *_retval = true;
-  *objp = obj;
-
-  return ok ? NS_OK : NS_ERROR_FAILURE;
+  return NS_OK;
 }
 
 // static
