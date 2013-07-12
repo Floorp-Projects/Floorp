@@ -40,10 +40,6 @@ public:
   typedef gfxASurface::gfxContentType gfxContentType;
 
   CompositableForwarder()
-  : mMaxTextureSize(0)
-  , mCompositorBackend(layers::LAYERS_NONE)
-  , mSupportsTextureBlitting(false)
-  , mSupportsPartialUploads(false)
   {}
 
   /**
@@ -150,7 +146,7 @@ public:
   /**
    * Returns the maximum texture size supported by the compositor.
    */
-  virtual int32_t GetMaxTextureSize() const { return mMaxTextureSize; }
+  virtual int32_t GetMaxTextureSize() const { return mTextureFactoryIdentifier.mMaxTextureSize; }
 
   bool IsOnCompositorSide() const MOZ_OVERRIDE { return false; }
 
@@ -161,24 +157,21 @@ public:
    */
   LayersBackend GetCompositorBackendType() const
   {
-    return mCompositorBackend;
+    return mTextureFactoryIdentifier.mParentBackend;
   }
 
   bool SupportsTextureBlitting() const
   {
-    return mSupportsTextureBlitting;
+    return mTextureFactoryIdentifier.mSupportsTextureBlitting;
   }
 
   bool SupportsPartialUploads() const
   {
-    return mSupportsPartialUploads;
+    return mTextureFactoryIdentifier.mSupportsPartialUploads;
   }
 
 protected:
-  uint32_t mMaxTextureSize;
-  LayersBackend mCompositorBackend;
-  bool mSupportsTextureBlitting;
-  bool mSupportsPartialUploads;
+  TextureFactoryIdentifier mTextureFactoryIdentifier;
 };
 
 } // namespace
