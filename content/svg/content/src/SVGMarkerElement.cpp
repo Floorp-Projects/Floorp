@@ -12,6 +12,7 @@
 #include "mozilla/dom/SVGAngle.h"
 #include "mozilla/dom/SVGMarkerElement.h"
 #include "mozilla/dom/SVGMarkerElementBinding.h"
+#include "mozilla/Preferences.h"
 #include "gfxMatrix.h"
 #include "SVGContentUtils.h"
 
@@ -338,6 +339,12 @@ SVGMarkerElement::GetViewBoxTransform()
   }
 
   return *mViewBoxToViewportTransform;
+}
+
+/* static */ bool
+SVGMarkerElement::MarkerImprovementsPrefEnabled()
+{
+  return Preferences::GetBool("svg.marker-improvements.enabled", false);
 }
 
 } // namespace dom
