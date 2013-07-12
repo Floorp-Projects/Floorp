@@ -1199,6 +1199,8 @@ BorrowedCGContext::BorrowCGContextFromDrawTarget(DrawTarget *aDT)
     // save the state to make it easier for callers to avoid mucking with things
     CGContextSaveGState(cg);
 
+    CGContextConcatCTM(cg, GfxMatrixToCGAffineTransform(cgDT->mTransform));
+
     return cg;
   }
   return nullptr;
