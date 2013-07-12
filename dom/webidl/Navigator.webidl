@@ -10,6 +10,7 @@
  * http://www.w3.org/TR/battery-status/#navigatorbattery-interface
  * http://www.w3.org/TR/vibration/#vibration-interface
  * http://www.w3.org/2012/sysapps/runtime/#extension-to-the-navigator-interface-1
+ * https://dvcs.w3.org/hg/gamepad/raw-file/default/gamepad.html#navigator-interface-extension
  *
  * © Copyright 2004-2011 Apple Computer, Inc., Mozilla Foundation, and
  * Opera Software ASA. You are granted a license to use, reproduce
@@ -296,3 +297,36 @@ partial interface Navigator {
   readonly attribute MozIccManager? mozIccManager;
 };
 #endif // MOZ_B2G_RIL
+
+#ifdef MOZ_GAMEPAD
+// https://dvcs.w3.org/hg/gamepad/raw-file/default/gamepad.html#navigator-interface-extension
+partial interface Navigator {
+  [Throws, Pref="dom.gamepad.enabled"]
+  sequence<Gamepad?> getGamepads();
+};
+#endif // MOZ_GAMEPAD
+
+#ifdef MOZ_B2G_BT
+// nsIDOMNavigatorBluetooth
+interface MozBluetoothManager;
+partial interface Navigator {
+  [Throws, Func="Navigator::HasBluetoothSupport"]
+  readonly attribute MozBluetoothManager mozBluetooth;
+};
+#endif // MOZ_B2G_BT
+
+#ifdef MOZ_TIME_MANAGER
+// nsIDOMMozNavigatorTime
+partial interface Navigator {
+  [Throws, Func="Navigator::HasTimeSupport"]
+  readonly attribute MozTimeManager mozTime;
+};
+#endif // MOZ_TIME_MANAGER
+
+#ifdef MOZ_AUDIO_CHANNEL_MANAGER
+// nsIMozNavigatorAudioChannelManager
+partial interface Navigator {
+  [Throws]
+  readonly attribute AudioChannelManager mozAudioChannelManager;
+};
+#endif // MOZ_AUDIO_CHANNEL_MANAGER
