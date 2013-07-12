@@ -5107,7 +5107,7 @@ nsIFrame::GetPreEffectsVisualOverflowRect() const
 nsFrame::UpdateOverflow()
 {
   MOZ_ASSERT(!(mState & NS_FRAME_SVG_LAYOUT) ||
-             !(mState & NS_STATE_SVG_NONDISPLAY_CHILD),
+             !(mState & NS_FRAME_IS_NONDISPLAY),
              "Non-display SVG do not maintain visual overflow rects");
 
   nsRect rect(nsPoint(0, 0), GetSize());
@@ -6774,7 +6774,7 @@ nsIFrame::FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
                                  nsSize aNewSize, nsSize* aOldSize)
 {
   NS_ASSERTION(!((GetStateBits() & NS_FRAME_SVG_LAYOUT) &&
-                 (GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD)),
+                 (GetStateBits() & NS_FRAME_IS_NONDISPLAY)),
                "Don't call - overflow rects not maintained on these SVG frames");
 
   nsRect bounds(nsPoint(0, 0), aNewSize);
@@ -6921,7 +6921,7 @@ nsIFrame::RecomputePerspectiveChildrenOverflow(const nsStyleContext* aStartStyle
     for (; !childFrames.AtEnd(); childFrames.Next()) {
       nsIFrame* child = childFrames.get();
       if ((child->GetStateBits() & NS_FRAME_SVG_LAYOUT) &&
-          (child->GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD)) {
+          (child->GetStateBits() & NS_FRAME_IS_NONDISPLAY)) {
         continue; // frame does not maintain overflow rects
       }
       if (child->HasPerspective()) {
@@ -6971,7 +6971,7 @@ RecomputePreserve3DChildrenOverflow(nsIFrame* aFrame, const nsRect* aBounds)
     for (; !childFrames.AtEnd(); childFrames.Next()) {
       nsIFrame* child = childFrames.get();
       if ((child->GetStateBits() & NS_FRAME_SVG_LAYOUT) &&
-          (child->GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD)) {
+          (child->GetStateBits() & NS_FRAME_IS_NONDISPLAY)) {
         continue; // frame does not maintain overflow rects
       }
       if (child->Preserves3DChildren()) {

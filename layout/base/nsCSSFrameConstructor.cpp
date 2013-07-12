@@ -8194,7 +8194,7 @@ nsCSSFrameConstructor::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
       NS_ASSERTION(frame, "This shouldn't happen");
 
       if ((frame->GetStateBits() & NS_FRAME_SVG_LAYOUT) &&
-          (frame->GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD)) {
+          (frame->GetStateBits() & NS_FRAME_IS_NONDISPLAY)) {
         // frame does not maintain overflow rects, so avoid calling
         // FinishAndStoreOverflow on it:
         hint = NS_SubtractHint(hint,

@@ -25,7 +25,7 @@ protected:
   SVGFEImageFrame(nsStyleContext* aContext)
     : SVGFEImageFrameBase(aContext)
   {
-    AddStateBits(NS_FRAME_SVG_LAYOUT | NS_STATE_SVG_NONDISPLAY_CHILD);
+    AddStateBits(NS_FRAME_SVG_LAYOUT | NS_FRAME_IS_NONDISPLAY);
   }
 
 public:

@@ -57,7 +57,7 @@ public:
   // Get bounds in our gfxContext's coordinates space (in app units)
   NS_IMETHOD_(nsRect) GetCoveredRegion()=0;
 
-  // Called on SVG child frames (except NS_STATE_SVG_NONDISPLAY_CHILD frames)
+  // Called on SVG child frames (except NS_FRAME_IS_NONDISPLAY frames)
   // to update and then invalidate their cached bounds. This method is not
   // called until after the nsSVGOuterSVGFrame has had its initial reflow
   // (i.e. once the SVG viewport dimensions are known). It should also only
@@ -81,7 +81,7 @@ public:
   // DO_NOT_NOTIFY_RENDERING_OBSERVERS - this should only be used when
   //                           updating the descendant frames of a clipPath,
   //                           mask, pattern or marker frame (or other similar
-  //                           NS_STATE_SVG_NONDISPLAY_CHILD frame) immediately
+  //                           NS_FRAME_IS_NONDISPLAY frame) immediately
   //                           prior to painting that frame's descendants.
   // TRANSFORM_CHANGED     - the current transform matrix for this frame has changed
   // COORD_CONTEXT_CHANGED - the dimensions of this frame's coordinate context has
