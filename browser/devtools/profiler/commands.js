@@ -69,7 +69,7 @@ gcli.addCommand({
         throw gcli.lookup("profilerAlreadyStarted2");
 
       panel.toggleRecording();
-      return gcli.lookup("profilerStarted");
+      return gcli.lookup("profilerStarted2");
     }
 
     return gDevTools.showToolbox(context.environment.target, "jsprofiler")

@@ -2849,7 +2849,7 @@ function fetch(aURL, aOptions={ loadFromCache: true }) {
       try {
         NetUtil.asyncFetch(url, function onFetch(aStream, aStatus) {
           if (!Components.isSuccessCode(aStatus)) {
-            deferred.reject("Request failed: " + url);
+            deferred.reject(new Error("Request failed: " + url));
             return;
           }
 
@@ -2858,7 +2858,7 @@ function fetch(aURL, aOptions={ loadFromCache: true }) {
           aStream.close();
         });
       } catch (ex) {
-        deferred.reject("Request failed: " + url);
+        deferred.reject(new Error("Request failed: " + url));
       }
       break;
 
@@ -2876,7 +2876,7 @@ function fetch(aURL, aOptions={ loadFromCache: true }) {
       let streamListener = {
         onStartRequest: function(aRequest, aContext, aStatusCode) {
           if (!Components.isSuccessCode(aStatusCode)) {
-            deferred.reject("Request failed: " + url);
+            deferred.reject(new Error("Request failed: " + url));
           }
         },
         onDataAvailable: function(aRequest, aContext, aStream, aOffset, aCount) {
@@ -2884,7 +2884,7 @@ function fetch(aURL, aOptions={ loadFromCache: true }) {
         },
         onStopRequest: function(aRequest, aContext, aStatusCode) {
           if (!Components.isSuccessCode(aStatusCode)) {
-            deferred.reject("Request failed: " + url);
+            deferred.reject(new Error("Request failed: " + url));
             return;
           }
 
@@ -2934,6 +2934,7 @@ function convertToUnicode(aString, aCharset=null) {
  *        An optional prefix for the reported error message.
  */
 function reportError(aError, aPrefix="") {
+  dbg_assert(aError instanceof Error, "Must pass Error objects to reportError");
   let msg = aPrefix + aError.message + ":\n" + aError.stack;
   Cu.reportError(msg);
   dumpn(msg);
