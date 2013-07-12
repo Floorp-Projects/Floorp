@@ -1099,8 +1099,19 @@ NS_IMETHODIMP Navigator::GetDeviceStorage(const nsAString &aType, nsIDOMDeviceSt
     return NS_OK;
   }
 
+  ErrorResult rv;
+  NS_IF_ADDREF(*_retval = GetDeviceStorage(aType, rv));
+  return rv.ErrorCode();
+}
+
+nsDOMDeviceStorage*
+Navigator::GetDeviceStorage(const nsAString& aType, ErrorResult& aRv)
+{
+  // Callers (either the XPCOM method or the WebIDL binding) are responsible for
+  // the pref check here.
   if (!mWindow || !mWindow->GetOuterWindow() || !mWindow->GetDocShell()) {
-    return NS_ERROR_FAILURE;
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
   }
 
   nsRefPtr<nsDOMDeviceStorage> storage;
@@ -1108,12 +1119,11 @@ NS_IMETHODIMP Navigator::GetDeviceStorage(const nsAString &aType, nsIDOMDeviceSt
                                              getter_AddRefs(storage));
 
   if (!storage) {
-    return NS_OK;
+    return nullptr;
   }
 
-  NS_ADDREF(*_retval = storage.get());
   mDeviceStorageStores.AppendElement(storage);
-  return NS_OK;
+  return storage;
 }
 
 NS_IMETHODIMP Navigator::GetDeviceStorages(const nsAString &aType, nsIVariant** _retval)
@@ -1125,12 +1135,12 @@ NS_IMETHODIMP Navigator::GetDeviceStorages(const nsAString &aType, nsIVariant** 
     return NS_OK;
   }
 
-  if (!mWindow || !mWindow->GetOuterWindow() || !mWindow->GetDocShell()) {
-    return NS_ERROR_FAILURE;
-  }
-
   nsTArray<nsRefPtr<nsDOMDeviceStorage> > stores;
-  nsDOMDeviceStorage::CreateDeviceStoragesFor(mWindow, aType, stores, false);
+  ErrorResult rv;
+  GetDeviceStorages(aType, stores, rv);
+  if (rv.Failed()) {
+    return rv.ErrorCode();
+  }
 
   nsCOMPtr<nsIWritableVariant> result = do_CreateInstance("@mozilla.org/variant;1");
   NS_ENSURE_TRUE(result, NS_ERROR_FAILURE);
@@ -1145,8 +1155,24 @@ NS_IMETHODIMP Navigator::GetDeviceStorages(const nsAString &aType, nsIVariant** 
   }
   result.forget(_retval);
 
-  mDeviceStorageStores.AppendElements(stores);
   return NS_OK;
+}
+
+void
+Navigator::GetDeviceStorages(const nsAString& aType,
+                             nsTArray<nsRefPtr<nsDOMDeviceStorage> >& aStores,
+                             ErrorResult& aRv)
+{
+  // Callers (either the XPCOM method or the WebIDL binding) are responsible for
+  // the pref check here.
+  if (!mWindow || !mWindow->GetOuterWindow() || !mWindow->GetDocShell()) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return;
+  }
+
+  nsDOMDeviceStorage::CreateDeviceStoragesFor(mWindow, aType, aStores, false);
+
+  mDeviceStorageStores.AppendElements(aStores);
 }
 
 //*****************************************************************************
@@ -1241,20 +1267,25 @@ Navigator::MozGetUserMediaDevices(nsIGetUserMediaDevicesSuccessCallback* aOnSucc
 
 NS_IMETHODIMP Navigator::GetMozNotification(nsISupports** aRetVal)
 {
-  NS_ENSURE_ARG_POINTER(aRetVal);
-  *aRetVal = nullptr;
+  ErrorResult rv;
+  NS_IF_ADDREF(*aRetVal = GetMozNotification(rv));
+  return rv.ErrorCode();
+}
 
+DesktopNotificationCenter*
+Navigator::GetMozNotification(ErrorResult& aRv)
+{
   if (mNotification) {
-    NS_ADDREF(*aRetVal = mNotification);
-    return NS_OK;
+    return mNotification;
   }
 
-  NS_ENSURE_TRUE(mWindow && mWindow->GetDocShell(), NS_ERROR_FAILURE);
+  if (!mWindow || !mWindow->GetDocShell()) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
 
   mNotification = new DesktopNotificationCenter(mWindow);
-
-  NS_ADDREF(*aRetVal = mNotification);
-  return NS_OK;
+  return mNotification;
 }
 
 //*****************************************************************************
@@ -1352,19 +1383,30 @@ Navigator::RequestWakeLock(const nsAString &aTopic, ErrorResult& aRv)
 NS_IMETHODIMP
 Navigator::GetMozSms(nsIDOMMozSmsManager** aSmsManager)
 {
-  *aSmsManager = nullptr;
-
   if (!mSmsManager) {
-    NS_ENSURE_STATE(mWindow);
-    NS_ENSURE_TRUE(mWindow->GetDocShell(), NS_OK);
-
-    mSmsManager = SmsManager::CreateInstanceIfAllowed(mWindow);
-    NS_ENSURE_TRUE(mSmsManager, NS_OK);
+    if (!mWindow || !SmsManager::CreationIsAllowed(mWindow)) {
+      *aSmsManager = nullptr;
+      return NS_OK;
+    }
   }
 
-  NS_ADDREF(*aSmsManager = mSmsManager);
-
+  NS_IF_ADDREF(*aSmsManager = GetMozSms());
   return NS_OK;
+}
+
+nsIDOMMozSmsManager*
+Navigator::GetMozSms()
+{
+  // Callers (either the XPCOM method or the WebIDL binding) are responsible for
+  // the permission check here.
+  if (!mSmsManager) {
+    NS_ENSURE_TRUE(mWindow, nullptr);
+    NS_ENSURE_TRUE(mWindow->GetDocShell(), nullptr);
+
+    mSmsManager = SmsManager::CreateInstance(mWindow);
+  }
+
+  return mSmsManager;
 }
 
 //*****************************************************************************
@@ -1374,32 +1416,30 @@ Navigator::GetMozSms(nsIDOMMozSmsManager** aSmsManager)
 NS_IMETHODIMP
 Navigator::GetMozMobileMessage(nsIDOMMozMobileMessageManager** aMobileMessageManager)
 {
-  *aMobileMessageManager = nullptr;
+  if (!HasMobileMessageSupport(mWindow)) {
+    *aMobileMessageManager = nullptr;
+    return NS_OK;
+  }
 
-#ifndef MOZ_WEBSMS_BACKEND
+  NS_IF_ADDREF(*aMobileMessageManager = GetMozMobileMessage());
   return NS_OK;
-#endif
+}
 
-  // First of all, the general pref has to be turned on.
-  bool enabled = false;
-  Preferences::GetBool("dom.sms.enabled", &enabled);
-  NS_ENSURE_TRUE(enabled, NS_OK);
-
+nsIDOMMozMobileMessageManager*
+Navigator::GetMozMobileMessage()
+{
+  // Callers (either the XPCOM method or the WebIDL binding) are responsible for
+  // the permission check here.
   if (!mMobileMessageManager) {
-    NS_ENSURE_STATE(mWindow);
-    NS_ENSURE_TRUE(mWindow->GetDocShell(), NS_OK);
-
-    if (!CheckPermission("sms")) {
-      return NS_OK;
-    }
+    // Check that our window has not gone away
+    NS_ENSURE_TRUE(mWindow, nullptr);
+    NS_ENSURE_TRUE(mWindow->GetDocShell(), nullptr);
 
     mMobileMessageManager = new MobileMessageManager();
     mMobileMessageManager->Init(mWindow);
   }
 
-  NS_ADDREF(*aMobileMessageManager = mMobileMessageManager);
-
-  return NS_OK;
+  return mMobileMessageManager;
 }
 
 #ifdef MOZ_B2G_RIL
@@ -1543,18 +1583,22 @@ Navigator::GetGamepads(nsIVariant** aRetVal)
 NS_IMETHODIMP
 Navigator::GetMozConnection(nsIDOMMozConnection** aConnection)
 {
-  *aConnection = nullptr;
+  NS_IF_ADDREF(*aConnection = GetMozConnection());
+  return NS_OK;
+}
 
+nsIDOMMozConnection*
+Navigator::GetMozConnection()
+{
   if (!mConnection) {
-    NS_ENSURE_STATE(mWindow);
-    NS_ENSURE_TRUE(mWindow->GetDocShell(), NS_OK);
+    NS_ENSURE_TRUE(mWindow, nullptr);
+    NS_ENSURE_TRUE(mWindow->GetDocShell(), nullptr);
 
     mConnection = new network::Connection();
     mConnection->Init(mWindow);
   }
 
-  NS_ADDREF(*aConnection = mConnection);
-  return NS_OK;
+  return mConnection;
 }
 
 #ifdef MOZ_B2G_RIL
@@ -1643,11 +1687,28 @@ Navigator::MozHasPendingMessage(const nsAString& aType, bool *aResult)
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
-  *aResult = false;
-  nsresult rv = EnsureMessagesManager();
-  NS_ENSURE_SUCCESS(rv, rv);
+  ErrorResult rv;
+  *aResult = MozHasPendingMessage(aType, rv);
+  return rv.ErrorCode();
+}
 
-  return mMessagesManager->MozHasPendingMessage(aType, aResult);
+bool
+Navigator::MozHasPendingMessage(const nsAString& aType, ErrorResult& aRv)
+{
+  // The WebIDL binding is responsible for the pref check here.
+  nsresult rv = EnsureMessagesManager();
+  if (NS_FAILED(rv)) {
+    aRv.Throw(rv);
+    return false;
+  }
+
+  bool result = false;
+  rv = mMessagesManager->MozHasPendingMessage(aType, &result);
+  if (NS_FAILED(rv)) {
+    aRv.Throw(rv);
+    return false;
+  }
+  return result;
 }
 
 NS_IMETHODIMP
@@ -1662,6 +1723,28 @@ Navigator::MozSetMessageHandler(const nsAString& aType,
   NS_ENSURE_SUCCESS(rv, rv);
 
   return mMessagesManager->MozSetMessageHandler(aType, aCallback);
+}
+
+void
+Navigator::MozSetMessageHandler(const nsAString& aType,
+                                systemMessageCallback* aCallback,
+                                ErrorResult& aRv)
+{
+  // The WebIDL binding is responsible for the pref check here.
+  nsresult rv = EnsureMessagesManager();
+  if (NS_FAILED(rv)) {
+    aRv.Throw(rv);
+    return;
+  }
+
+  CallbackObjectHolder<systemMessageCallback, nsIDOMSystemMessageCallback>
+    holder(aCallback);
+  nsCOMPtr<nsIDOMSystemMessageCallback> callback = holder.ToXPCOMCallback();
+
+  rv = mMessagesManager->MozSetMessageHandler(aType, callback);
+  if (NS_FAILED(rv)) {
+    aRv.Throw(rv);
+  }
 }
 
 //*****************************************************************************
@@ -1695,21 +1778,35 @@ NS_IMETHODIMP
 Navigator::GetMozCameras(nsISupports** aCameraManager)
 {
   if (!mCameraManager) {
+    NS_ENSURE_STATE(mWindow);
+    if (!nsDOMCameraManager::CheckPermission(mWindow)) {
+      *aCameraManager = nullptr;
+      return NS_OK;
+    }
+  }
+
+  ErrorResult rv;
+  NS_IF_ADDREF(*aCameraManager = static_cast<nsIObserver*>(GetMozCameras(rv)));
+  return rv.ErrorCode();
+}
+
+nsDOMCameraManager*
+Navigator::GetMozCameras(ErrorResult& aRv)
+{
+  // Callers (either the XPCOM method or the WebIDL binding) are responsible for
+  // the permission check here.
+  if (!mCameraManager) {
     if (!mWindow ||
         !mWindow->GetOuterWindow() ||
         mWindow->GetOuterWindow()->GetCurrentInnerWindow() != mWindow) {
-      return NS_ERROR_NOT_AVAILABLE;
+      aRv.Throw(NS_ERROR_NOT_AVAILABLE);
+      return nullptr;
     }
 
-    mCameraManager =
-      nsDOMCameraManager::CheckPermissionAndCreateInstance(mWindow);
-    NS_ENSURE_TRUE(mCameraManager, NS_OK);
+    mCameraManager = nsDOMCameraManager::CreateInstance(mWindow);
   }
 
-  nsCOMPtr<nsIObserver> cameraManager = mCameraManager.get();
-  cameraManager.forget(aCameraManager);
-
-  return NS_OK;
+  return mCameraManager;
 }
 
 size_t
@@ -1830,6 +1927,53 @@ Navigator::HasWakeLockSupport(JSContext* /* unused*/, JSObject* /*unused */)
     do_GetService(POWERMANAGERSERVICE_CONTRACTID);
   // No service means no wake lock support
   return !!pmService;
+}
+
+/* static */
+bool
+Navigator::HasSmsSupport(JSContext* /* unused */, JSObject* aGlobal)
+{
+  nsCOMPtr<nsPIDOMWindow> win = GetWindowFromGlobal(aGlobal);
+  return win && SmsManager::CreationIsAllowed(win);
+}
+
+/* static */
+bool
+Navigator::HasMobileMessageSupport(JSContext* /* unused */, JSObject* aGlobal)
+{
+  nsCOMPtr<nsPIDOMWindow> win = GetWindowFromGlobal(aGlobal);
+  return HasMobileMessageSupport(win);
+}
+
+/* static */
+bool
+Navigator::HasMobileMessageSupport(nsPIDOMWindow* aWindow)
+{
+#ifndef MOZ_WEBSMS_BACKEND
+  return false;
+#endif
+
+  // First of all, the general pref has to be turned on.
+  bool enabled = false;
+  Preferences::GetBool("dom.sms.enabled", &enabled);
+  NS_ENSURE_TRUE(enabled, false);
+
+  NS_ENSURE_TRUE(aWindow, false);
+  NS_ENSURE_TRUE(aWindow->GetDocShell(), false);
+
+  if (!CheckPermission(aWindow, "sms")) {
+    return false;
+  }
+
+  return true;
+}
+
+/* static */
+bool
+Navigator::HasCameraSupport(JSContext* /* unused */, JSObject* aGlobal)
+{
+  nsCOMPtr<nsPIDOMWindow> win = GetWindowFromGlobal(aGlobal);
+  return win && nsDOMCameraManager::CheckPermission(win);
 }
 
 /* static */

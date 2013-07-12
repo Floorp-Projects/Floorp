@@ -40,6 +40,7 @@ class nsIDOMMozConnection;
 namespace mozilla {
 namespace dom {
 class Geolocation;
+class systemMessageCallback;
 }
 }
 
@@ -284,12 +285,44 @@ public:
   void RemoveIdleObserver(MozIdleObserver& aObserver, ErrorResult& aRv);
   already_AddRefed<nsIDOMMozWakeLock> RequestWakeLock(const nsAString &aTopic,
                                                       ErrorResult& aRv);
+  nsDOMDeviceStorage* GetDeviceStorage(const nsAString& aType,
+                                       ErrorResult& aRv);
+  void GetDeviceStorages(const nsAString& aType,
+                         nsTArray<nsRefPtr<nsDOMDeviceStorage> >& aStores,
+                         ErrorResult& aRv);
+  DesktopNotificationCenter* GetMozNotification(ErrorResult& aRv);
+  bool MozIsLocallyAvailable(const nsAString& aURI, bool aWhenOffline,
+                             ErrorResult& aRv)
+  {
+    bool available = false;
+    aRv = MozIsLocallyAvailable(aURI, aWhenOffline, &available);
+    return available;
+  }
+  nsIDOMMozSmsManager* GetMozSms();
+  nsIDOMMozMobileMessageManager* GetMozMobileMessage();
+  nsIDOMMozConnection* GetMozConnection();
+  nsDOMCameraManager* GetMozCameras(ErrorResult& aRv);
+  void MozSetMessageHandler(const nsAString& aType,
+                            systemMessageCallback* aCallback,
+                            ErrorResult& aRv);
+  bool MozHasPendingMessage(const nsAString& aType, ErrorResult& aRv);
+
 
   // WebIDL helper methods
   static bool HasBatterySupport(JSContext* /* unused*/, JSObject* /*unused */);
   static bool HasPowerSupport(JSContext* /* unused */, JSObject* aGlobal);
   static bool HasIdleSupport(JSContext* /* unused */, JSObject* aGlobal);
   static bool HasWakeLockSupport(JSContext* /* unused*/, JSObject* /*unused */);
+  static bool HasDesktopNotificationSupport(JSContext* /* unused*/,
+                                            JSObject* /*unused */)
+  {
+    return HasDesktopNotificationSupport();
+  }
+  static bool HasSmsSupport(JSContext* /* unused */, JSObject* aGlobal);
+  static bool HasMobileMessageSupport(JSContext* /* unused */,
+                                      JSObject* aGlobal);
+  static bool HasCameraSupport(JSContext* /* unused */,
+                               JSObject* aGlobal);
   nsPIDOMWindow* GetParentObject() const
   {
     return GetWindow();
@@ -298,6 +331,7 @@ public:
 private:
   bool CheckPermission(const char* type);
   static bool CheckPermission(nsPIDOMWindow* aWindow, const char* aType);
+  static bool HasMobileMessageSupport(nsPIDOMWindow* aWindow);
   // GetWindowFromGlobal returns the inner window for this global, if
   // any, else null.
   static already_AddRefed<nsPIDOMWindow> GetWindowFromGlobal(JSObject* aGlobal);
