@@ -14,4 +14,4 @@ include $(DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/config/rules.mk
 
-DEFINES += -DIMPL_NS_NET
+DEFINES += -DIMPL_LIBXUL

@@ -324,14 +324,7 @@ endif
 # building libxul libraries
 ifdef LIBXUL_LIBRARY
 DEFINES += \
-		-D_IMPL_NS_COM \
-		-DEXPORT_XPT_API \
-		-DEXPORT_XPTC_API \
-		-D_IMPL_NS_GFX \
-		-D_IMPL_NS_WIDGET \
-		-DIMPL_XREAPI \
-		-DIMPL_NS_NET \
-		-DIMPL_THEBES \
+	  -DIMPL_LIBXUL \
 		$(NULL)
 
 ifndef JS_SHARED_LIBRARY

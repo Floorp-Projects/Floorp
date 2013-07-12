@@ -14,8 +14,6 @@ LIBXUL_LIBRARY = 1
 
 include $(topsrcdir)/config/rules.mk
 
-DEFINES += -DIMPL_NS_NET
-
 OS_INCLUDES += $(GLIB_CFLAGS) $(LIBCONIC_CFLAGS)
 LOCAL_INCLUDES += -I$(srcdir)/../../base/src
  
