@@ -179,26 +179,22 @@ PowerManager::SetCpuSleepAllowed(bool aAllowed)
   return NS_OK;
 }
 
-bool
-PowerManager::CheckPermission(nsPIDOMWindow* aWindow)
+already_AddRefed<PowerManager>
+PowerManager::CheckPermissionAndCreateInstance(nsPIDOMWindow* aWindow)
 {
   nsCOMPtr<nsIPermissionManager> permMgr =
     do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
-  NS_ENSURE_TRUE(permMgr, false);
+  NS_ENSURE_TRUE(permMgr, nullptr);
 
   uint32_t permission = nsIPermissionManager::DENY_ACTION;
   permMgr->TestPermissionFromWindow(aWindow, "power", &permission);
 
-  return permission == nsIPermissionManager::ALLOW_ACTION;
-}
-
-already_AddRefed<PowerManager>
-PowerManager::CreateInstance(nsPIDOMWindow* aWindow)
-{
-  nsRefPtr<PowerManager> powerManager = new PowerManager();
-  if (NS_FAILED(powerManager->Init(aWindow))) {
-    powerManager = nullptr;
+  if (permission != nsIPermissionManager::ALLOW_ACTION) {
+    return nullptr;
   }
+
+  nsRefPtr<PowerManager> powerManager = new PowerManager();
+  powerManager->Init(aWindow);
 
   return powerManager.forget();
 }

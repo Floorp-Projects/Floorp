@@ -54,49 +54,41 @@ NS_IMPL_EVENT_HANDLER(SmsManager, failed)
 NS_IMPL_EVENT_HANDLER(SmsManager, deliverysuccess)
 NS_IMPL_EVENT_HANDLER(SmsManager, deliveryerror)
 
-/* static */
-bool
-SmsManager::CreationIsAllowed(nsPIDOMWindow* aWindow)
+/* static */already_AddRefed<SmsManager>
+SmsManager::CreateInstanceIfAllowed(nsPIDOMWindow* aWindow)
 {
   NS_ASSERTION(aWindow, "Null pointer!");
 
 #ifndef MOZ_WEBSMS_BACKEND
-  return false;
+  return nullptr;
 #endif
 
   // First of all, the general pref has to be turned on.
   bool enabled = false;
   Preferences::GetBool("dom.sms.enabled", &enabled);
-  NS_ENSURE_TRUE(enabled, false);
+  NS_ENSURE_TRUE(enabled, nullptr);
 
   nsCOMPtr<nsIPermissionManager> permMgr =
     do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
-  NS_ENSURE_TRUE(permMgr, false);
+  NS_ENSURE_TRUE(permMgr, nullptr);
 
   uint32_t permission = nsIPermissionManager::DENY_ACTION;
   permMgr->TestPermissionFromWindow(aWindow, "sms", &permission);
 
   if (permission != nsIPermissionManager::ALLOW_ACTION) {
-    return false;
+    return nullptr;
   }
 
   // Check the Sms Service:
   nsCOMPtr<nsISmsService> smsService = do_GetService(SMS_SERVICE_CONTRACTID);
-  NS_ENSURE_TRUE(smsService, false);
+  NS_ENSURE_TRUE(smsService, nullptr);
 
   bool result = false;
   smsService->HasSupport(&result);
   if (!result) {
-    return false;
+    return nullptr;
   }
 
-  return true;
-}
-
-// static
-already_AddRefed<SmsManager>
-SmsManager::CreateInstance(nsPIDOMWindow* aWindow)
-{
   nsRefPtr<SmsManager> smsMgr = new SmsManager();
   smsMgr->Init(aWindow);
 
