@@ -22,7 +22,6 @@
 
 class nsClientRect;
 class nsClientRectList;
-class nsIDOMDocumentFragment;
 
 namespace mozilla {
 class ErrorResult;
@@ -89,7 +88,7 @@ public:
 
   // nsIDOMRange interface
   NS_DECL_NSIDOMRANGE
-  
+
   nsINode* GetRoot() const
   {
     return mRoot;
@@ -235,16 +234,16 @@ private:
    */
   nsresult CutContents(mozilla::dom::DocumentFragment** frag);
 
-  static nsresult CloneParentsBetween(nsIDOMNode *aAncestor,
-                                      nsIDOMNode *aNode,
-                                      nsIDOMNode **aClosestAncestor,
-                                      nsIDOMNode **aFarthestAncestor);
+  static nsresult CloneParentsBetween(nsINode* aAncestor,
+                                      nsINode* aNode,
+                                      nsINode** aClosestAncestor,
+                                      nsINode** aFarthestAncestor);
 
 public:
 /******************************************************************************
- *  Utility routine to detect if a content node starts before a range and/or 
+ *  Utility routine to detect if a content node starts before a range and/or
  *  ends after a range.  If neither it is contained inside the range.
- *  
+ *
  *  XXX - callers responsibility to ensure node in same doc as range!
  *
  *****************************************************************************/
