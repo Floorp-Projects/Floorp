@@ -51,6 +51,7 @@ endif
 # The following tests are disabled because they are unreliable:
 #   browser_bug423833.js is bug 428712
 #   browser_sanitize-download-history.js is bug 432425
+#   browser_aboutHome.js is bug 890409
 #
 # browser_sanitizeDialog_treeView.js is disabled until the tree view is added
 # back to the clear recent history dialog (sanitize.xul), if it ever is (bug
@@ -71,7 +72,6 @@ MOCHITEST_BROWSER_FILES = \
                  blockPluginVulnerableNoUpdate.xml \
                  blockPluginVulnerableUpdatable.xml \
                  browser_aboutHealthReport.js \
-                 browser_aboutHome.js \
                  browser_aboutSyncProgress.js \
                  browser_addKeywordSearch.js \
                  browser_addon_bar_aomlistener.js \
