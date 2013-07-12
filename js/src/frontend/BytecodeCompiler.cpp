@@ -472,11 +472,9 @@ frontend::CompileFunctionBody(JSContext *cx, MutableHandleFunction fun, CompileO
     parser.tokenStream.tell(&start);
     bool strict = options.strictOption;
     bool becameStrict;
-    FunctionBox *funbox;
     ParseNode *pn;
     while (true) {
-        pn = parser.standaloneFunctionBody(fun, formals, script, fn, &funbox,
-                                           strict, &becameStrict);
+        pn = parser.standaloneFunctionBody(fun, formals, script, fn, strict, &becameStrict);
         if (pn)
             break;
 
@@ -498,12 +496,10 @@ frontend::CompileFunctionBody(JSContext *cx, MutableHandleFunction fun, CompileO
     if (!NameFunctions(cx, pn))
         return false;
 
-    if (fn->pn_body) {
-        JS_ASSERT(fn->pn_body->isKind(PNK_ARGSBODY));
-        fn->pn_body->append(pn);
-        fn->pn_body->pn_pos = pn->pn_pos;
-        pn = fn->pn_body;
-    }
+    JS_ASSERT(fn->pn_body == argsbody);
+    JS_ASSERT(fn->pn_body->isKind(PNK_ARGSBODY));
+    fn->pn_body->append(pn);
+    fn->pn_body->pn_pos = pn->pn_pos;
 
     bool generateBytecode = true;
 #ifdef JS_ION
@@ -516,7 +512,7 @@ frontend::CompileFunctionBody(JSContext *cx, MutableHandleFunction fun, CompileO
             return false;
 
         if (moduleFun) {
-            funbox->object = moduleFun;
+            fn->pn_funbox->object = moduleFun;
             fun.set(moduleFun); // replace the existing function with the LinkAsmJS native
             generateBytecode = false;
         }
@@ -531,14 +527,14 @@ frontend::CompileFunctionBody(JSContext *cx, MutableHandleFunction fun, CompileO
          * NULL environment. This compiled function is never used, but instead
          * is cloned immediately onto the right scope chain.
          */
-        BytecodeEmitter funbce(/* parent = */ NULL, &parser, funbox, script,
+        BytecodeEmitter funbce(/* parent = */ NULL, &parser, fn->pn_funbox, script,
                                /* insideEval = */ false, /* evalCaller = */ NullPtr(),
                                fun->environment() && fun->environment()->is<GlobalObject>(),
                                options.lineno);
         if (!funbce.init())
             return false;
 
-        if (!EmitFunctionScript(cx, &funbce, pn))
+        if (!EmitFunctionScript(cx, &funbce, fn->pn_body))
             return false;
     }
 
