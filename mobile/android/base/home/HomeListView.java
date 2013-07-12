@@ -97,6 +97,7 @@ public class HomeListView extends ListView
         public String keyword;
         public int display;
         public boolean isFolder;
+        public boolean inReadingList;
 
         public HomeContextMenuInfo(View targetView, int position, long id, Cursor cursor) {
             super(targetView, position, id);
@@ -133,6 +134,14 @@ public class HomeListView extends ListView
             rowId = cursor.getInt(cursor.getColumnIndexOrThrow(Bookmarks._ID));
             url = cursor.getString(cursor.getColumnIndexOrThrow(URLColumns.URL));
             title = cursor.getString(cursor.getColumnIndexOrThrow(URLColumns.TITLE));
+
+            final int parentCol = cursor.getColumnIndex(Bookmarks.PARENT);
+            if (parentCol != -1) {
+                inReadingList = (cursor.getInt(parentCol) == Bookmarks.FIXED_READING_LIST_ID);
+            } else {
+                inReadingList = false;
+            }
+
             display = Combined.DISPLAY_NORMAL;
         }
     }
