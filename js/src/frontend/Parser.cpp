@@ -836,8 +836,7 @@ Parser<ParseHandler>::checkStrictBinding(HandlePropertyName name, Node pn)
 template <>
 ParseNode *
 Parser<FullParseHandler>::standaloneFunctionBody(HandleFunction fun, const AutoNameVector &formals,
-                                                 HandleScript script, bool strict,
-                                                 bool *becameStrict)
+                                                 bool strict, bool *becameStrict)
 {
     if (becameStrict)
         *becameStrict = false;
@@ -882,12 +881,6 @@ Parser<FullParseHandler>::standaloneFunctionBody(HandleFunction fun, const AutoN
     if (!FoldConstants(context, &pn, this))
         return null();
 
-    InternalHandle<Bindings*> scriptBindings(script, &script->bindings);
-    if (!funpc.generateFunctionBindings(context, alloc, scriptBindings))
-        return null();
-
-    // Also populate the internal bindings of the function box, so that
-    // heavyweight tests while emitting bytecode work.
     InternalHandle<Bindings*> funboxBindings =
         InternalHandle<Bindings*>::fromMarkedLocation(&funbox->bindings);
     if (!funpc.generateFunctionBindings(context, alloc, funboxBindings))
