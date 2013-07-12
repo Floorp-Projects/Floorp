@@ -16,8 +16,9 @@
 /** Test for WebSMS **/
 
 function checkSmsDisabled() {
-  ok('mozSms' in frames[0].navigator, "navigator.mozSms should exist");
-  is(frames[0].navigator.mozSms, null, "navigator.mozSms should return null");
+  ok(!('mozSms' in frames[0].navigator), "navigator.mozSms should not exist");
+  ok(frames[0].navigator.mozSms === undefined,
+     "navigator.mozSms should return undefined");
 }
 
 function checkSmsEnabled() {
