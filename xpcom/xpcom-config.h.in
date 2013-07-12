@@ -34,9 +34,6 @@
  */
 #undef NEED_CPP_UNUSED_IMPLEMENTATIONS
 
-/* Define to either <new> or <new.h> */
-#undef NEW_H
-
 /* Define to either __attribute__((malloc)) or nothing */
 #undef NS_ATTR_MALLOC
 

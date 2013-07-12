@@ -549,8 +549,8 @@ class JSScript : public js::gc::Cell
        information can be made context sensitive. See discussion in
        bug 826148. */
     bool            shouldCloneAtCallsite:1;
-
     bool            isCallsiteClone:1; /* is a callsite clone; has a link to the original function */
+    bool            shouldInline:1;    /* hint to inline when possible */
 #ifdef JS_ION
     bool            failedBoundsCheck:1; /* script has had hoisted bounds checks fail */
     bool            failedShapeGuard:1; /* script has had hoisted shape guard fail */

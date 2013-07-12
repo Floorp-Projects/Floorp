@@ -940,6 +940,10 @@ MMul::computeRange()
     if (canBeNegativeZero())
         canBeNegativeZero_ = Range::negativeZeroMul(&left, &right);
     setRange(Range::mul(&left, &right));
+
+    // Truncated multiplications could overflow in both directions
+    if (isTruncated() && !range()->isInt32())
+        setRange(new Range(INT32_MIN, INT32_MAX));
 }
 
 void
@@ -1586,6 +1590,13 @@ MDiv::truncate()
     // Remember analysis, needed to remove negative zero checks.
     setTruncated(true);
 
+    // Divisions where the lhs and rhs are unsigned and the result is
+    // truncated can be lowered more efficiently.
+    if (specialization() == MIRType_Int32 && tryUseUnsignedOperands()) {
+        unsigned_ = true;
+        return true;
+    }
+
     // No modifications.
     return false;
 }
@@ -1595,6 +1606,12 @@ MMod::truncate()
 {
     // Remember analysis, needed to remove negative zero checks.
     setTruncated(true);
+
+    // As for division, handle unsigned modulus with a truncated result.
+    if (specialization() == MIRType_Int32 && tryUseUnsignedOperands()) {
+        unsigned_ = true;
+        return true;
+    }
 
     // No modifications.
     return false;
@@ -1759,7 +1776,14 @@ RangeAnalysis::truncate()
             // Set truncated flag if range analysis ensure that it has no
             // rounding errors and no fractional part.
             const Range *r = iter->range();
-            if (!r || r->hasRoundingErrors())
+            bool hasRoundingErrors = !r || r->hasRoundingErrors();
+
+            // Special case integer division: the result of a/b can be infinite
+            // but cannot actually have rounding errors induced by truncation.
+            if (iter->isDiv() && iter->toDiv()->specialization() == MIRType_Int32)
+                hasRoundingErrors = false;
+
+            if (hasRoundingErrors)
                 continue;
 
             // Ensure all observable uses are truncated.

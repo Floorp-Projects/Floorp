@@ -2577,7 +2577,7 @@ RectTextureImage::Draw(GLManager* aManager,
                        const nsIntPoint& aLocation,
                        const gfx3DMatrix& aTransform)
 {
-  ShaderProgramOGL* program = aManager->GetProgram(BGRARectLayerProgramType);
+  ShaderProgramOGL* program = aManager->GetProgram(RGBARectLayerProgramType);
 
   aManager->gl()->fBindTexture(LOCAL_GL_TEXTURE_RECTANGLE_ARB, mTexture);
 
