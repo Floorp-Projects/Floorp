@@ -1072,6 +1072,21 @@ DrawTargetCG::GetNativeSurface(NativeSurfaceType aType)
   }
 }
 
+TemporaryRef<SourceSurface>
+DrawTargetCG::CreateSourceSurfaceFromNativeSurface(const NativeSurface& aNative) const
+{
+  if (aNative.mType != NATIVE_SURFACE_CGCONTEXT) {
+    return nullptr;
+  }
+
+  CGContextRef cg = (CGContextRef)aNative.mSurface;
+  if (GetContextType(cg) != CG_CONTEXT_TYPE_BITMAP) {
+    return nullptr;
+  }
+
+  return new SourceSurfaceCGBitmapContext(cg);
+}
+
 void
 DrawTargetCG::Mask(const Pattern &aSource,
                    const Pattern &aMask,
