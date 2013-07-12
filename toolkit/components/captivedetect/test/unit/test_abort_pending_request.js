@@ -4,18 +4,9 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 'use strict';
 
-const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
-
-Cu.import('resource://gre/modules/XPCOMUtils.jsm');
-Cu.import('resource://gre/modules/Services.jsm');
-Cu.import('resource://testing-common/httpd.js');
-
 const kInterfaceName = 'wifi';
 const kOtherInterfaceName = 'ril';
 
-XPCOMUtils.defineLazyServiceGetter(this, 'gCaptivePortalDetector',
-                                   '@mozilla.org/toolkit/captive-detector;1',
-                                   'nsICaptivePortalDetector');
 var server;
 var step = 0;
 var loginFinished = false;
