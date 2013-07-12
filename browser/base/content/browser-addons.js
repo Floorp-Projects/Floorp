@@ -178,50 +178,6 @@ const gXPInstallObserver = {
   }
 };
 
-/*
- * When addons are installed/uninstalled, check and see if the number of items
- * on the add-on bar changed:
- * - If an add-on was installed, incrementing the count, show the bar.
- * - If an add-on was uninstalled, and no more items are left, hide the bar.
- */
-let AddonsMgrListener = {
-  get addonBar() document.getElementById("addon-bar"),
-  get statusBar() document.getElementById("status-bar"),
-  getAddonBarItemCount: function() {
-    // Take into account the contents of the status bar shim for the count.
-    var itemCount = this.statusBar.childNodes.length;
-
-    var defaultOrNoninteractive = this.addonBar.getAttribute("defaultset")
-                                      .split(",")
-                                      .concat(["separator", "spacer", "spring"]);
-    for (let item of this.addonBar.currentSet.split(",")) {
-      if (defaultOrNoninteractive.indexOf(item) == -1)
-        itemCount++;
-    }
-
-    return itemCount;
-  },
-  onInstalling: function(aAddon) {
-    this.lastAddonBarCount = this.getAddonBarItemCount();
-  },
-  onInstalled: function(aAddon) {
-    if (this.getAddonBarItemCount() > this.lastAddonBarCount)
-      setToolbarVisibility(this.addonBar, true);
-  },
-  onUninstalling: function(aAddon) {
-    this.lastAddonBarCount = this.getAddonBarItemCount();
-  },
-  onUninstalled: function(aAddon) {
-    if (this.getAddonBarItemCount() == 0)
-      setToolbarVisibility(this.addonBar, false);
-  },
-  onEnabling: function(aAddon) this.onInstalling(),
-  onEnabled: function(aAddon) this.onInstalled(),
-  onDisabling: function(aAddon) this.onUninstalling(),
-  onDisabled: function(aAddon) this.onUninstalled(),
-};
-
-
 var LightWeightThemeWebInstaller = {
   handleEvent: function (event) {
     switch (event.type) {
@@ -415,3 +371,58 @@ var LightWeightThemeWebInstaller = {
                                     node.baseURI);
   }
 }
+
+/*
+ * Listen for Lightweight Theme styling changes and update the browser's theme accordingly.
+ */
+let LightweightThemeListener = {
+  _modifiedStyles: [],
+
+  init: function () {
+    XPCOMUtils.defineLazyGetter(this, "styleSheet", function() {
+      for (let i = document.styleSheets.length - 1; i >= 0; i--) {
+        let sheet = document.styleSheets[i];
+        if (sheet.href == "chrome://browser/skin/browser-lightweightTheme.css")
+          return sheet;
+      }
+    });
+
+    Services.obs.addObserver(this, "lightweight-theme-styling-update", false);
+    if (document.documentElement.hasAttribute("lwtheme"))
+      this.updateStyleSheet(document.documentElement.style.backgroundImage);
+  },
+
+  uninit: function () {
+    Services.obs.removeObserver(this, "lightweight-theme-styling-update");
+  },
+
+  /**
+   * Append the headerImage to the background-image property of all rulesets in
+   * browser-lightweightTheme.css.
+   *
+   * @param headerImage - a string containing a CSS image for the lightweight theme header.
+   */
+  updateStyleSheet: function(headerImage) {
+    if (!this.styleSheet)
+      return;
+    for (let i = 0; i < this.styleSheet.cssRules.length; i++) {
+      let rule = this.styleSheet.cssRules[i];
+      if (!rule.style.backgroundImage)
+        continue;
+
+      if (!this._modifiedStyles[i])
+        this._modifiedStyles[i] = { backgroundImage: rule.style.backgroundImage };
+
+      rule.style.backgroundImage = this._modifiedStyles[i].backgroundImage + ", " + headerImage;
+    }
+  },
+
+  // nsIObserver
+  observe: function (aSubject, aTopic, aData) {
+    if (aTopic != "lightweight-theme-styling-update" || !this.styleSheet)
+      return;
+
+    let themeData = JSON.parse(aData);
+    this.updateStyleSheet("url(" + themeData.headerURL + ")");
+  },
+};
