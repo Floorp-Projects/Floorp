@@ -445,12 +445,6 @@ frontend::CompileFunctionBody(JSContext *cx, MutableHandleFunction fun, CompileO
 
     fun->setArgCount(formals.length());
 
-    Rooted<JSScript*> script(cx, JSScript::Create(cx, NullPtr(), false, options,
-                                                  /* staticLevel = */ 0, sourceObject,
-                                                  /* sourceStart = */ 0, length));
-    if (!script)
-        return false;
-
     // If the context is strict, immediately parse the body in strict
     // mode. Otherwise, we parse it normally. If we see a "use strict"
     // directive, we backup and reparse it as strict.
@@ -460,7 +454,7 @@ frontend::CompileFunctionBody(JSContext *cx, MutableHandleFunction fun, CompileO
     bool strict = options.strictOption;
     bool becameStrict;
     while (true) {
-        fn = parser.standaloneFunctionBody(fun, formals, script, strict, &becameStrict);
+        fn = parser.standaloneFunctionBody(fun, formals, strict, &becameStrict);
         if (fn)
             break;
 
@@ -499,6 +493,13 @@ frontend::CompileFunctionBody(JSContext *cx, MutableHandleFunction fun, CompileO
         }
     }
 #endif
+
+    Rooted<JSScript*> script(cx, JSScript::Create(cx, NullPtr(), false, options,
+                                                  /* staticLevel = */ 0, sourceObject,
+                                                  /* sourceStart = */ 0, length));
+    if (!script)
+        return false;
+    script->bindings = fn->pn_funbox->bindings;
 
     if (generateBytecode) {
         /*
