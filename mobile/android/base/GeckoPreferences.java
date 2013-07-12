@@ -75,6 +75,8 @@ public class GeckoPreferences
     private static String PREFS_GEO_REPORTING = "app.geo.reportdata";
     private static String PREFS_HEALTHREPORT_LINK = NON_PREF_PREFIX + "healthreport.link";
 
+    public static String PREFS_RESTORE_SESSION = NON_PREF_PREFIX + "restoreSession";
+
     // These values are chosen to be distinct from other Activity constants.
     private static int REQUEST_CODE_PREF_SCREEN = 5;
     private static int RESULT_CODE_EXIT_SETTINGS = 6;
@@ -455,6 +457,10 @@ public class GeckoPreferences
         } else if (PREFS_GEO_REPORTING.equals(prefName)) {
             // Translate boolean value to int for geo reporting pref.
             PrefsHelper.setPref(prefName, (Boolean) newValue ? 1 : 0);
+            return true;
+        } else if (PREFS_RESTORE_SESSION.equals(prefName)) {
+            // Do nothing else; the pref will be persisted in the shared prefs,
+            // and it will be read at startup in Java before a session restore.
             return true;
         }
 

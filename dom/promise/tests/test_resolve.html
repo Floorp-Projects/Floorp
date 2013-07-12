@@ -4,7 +4,7 @@
 -->
 <html>
 <head>
-  <title>Future.resolve(anything) Test</title>
+  <title>Promise.resolve(anything) Test</title>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
@@ -44,12 +44,12 @@ function runTest() {
 
   var test = tests.pop();
 
-  new Future(function(resolver) {
+  new Promise(function(resolver) {
     resolver.resolve(test);
   }).then(function(what) {
     ok(test === what, "What is: " + what);
   }, cbError).done(function() {
-    new Future(function(resolver) {
+    new Promise(function(resolver) {
       resolver.reject(test)
     }).then(cbError, function(what) {
       ok(test === what, "What is: " + what);
@@ -58,7 +58,7 @@ function runTest() {
 }
 
 SimpleTest.waitForExplicitFinish();
-SpecialPowers.pushPrefEnv({"set": [["dom.future.enabled", true]]}, runTest);
+SpecialPowers.pushPrefEnv({"set": [["dom.promise.enabled", true]]}, runTest);
 // -->
 </script>
 </pre>

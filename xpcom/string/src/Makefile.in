@@ -32,4 +32,4 @@ nsUTF8UtilsSSE2.$(OBJ_SUFFIX): CXXFLAGS+=-xarch=sse2 -xO4
 endif
 endif
 
-DEFINES		+= -D_IMPL_NS_COM
+DEFINES		+= -DIMPL_LIBXUL

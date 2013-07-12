@@ -128,8 +128,8 @@ IsDOMIfaceAndProtoClass(const js::Class* clasp)
   return IsDOMIfaceAndProtoClass(Jsvalify(clasp));
 }
 
-MOZ_STATIC_ASSERT(DOM_OBJECT_SLOT == js::JSSLOT_PROXY_PRIVATE,
-                  "JSSLOT_PROXY_PRIVATE doesn't match DOM_OBJECT_SLOT.  "
+MOZ_STATIC_ASSERT(DOM_OBJECT_SLOT == js::PROXY_PRIVATE_SLOT,
+                  "js::PROXY_PRIVATE_SLOT doesn't match DOM_OBJECT_SLOT.  "
                   "Expect bad things");
 template <class T>
 inline T*
@@ -150,7 +150,7 @@ GetDOMClass(JSObject* obj)
     return &DOMJSClass::FromJSClass(clasp)->mClass;
   }
 
-  if (js::IsObjectProxyClass(clasp) || js::IsFunctionProxyClass(clasp)) {
+  if (js::IsProxyClass(clasp)) {
     js::BaseProxyHandler* handler = js::GetProxyHandler(obj);
     if (handler->family() == ProxyFamily()) {
       return &static_cast<DOMProxyHandler*>(handler)->mClass;

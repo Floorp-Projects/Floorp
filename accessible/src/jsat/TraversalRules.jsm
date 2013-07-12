@@ -184,6 +184,14 @@ this.TraversalRules = {
     [ROLE_COMBOBOX,
      ROLE_LISTBOX]),
 
+  Landmark: new BaseTraversalRule(
+    [],
+    function Landmark_match(aAccessible) {
+      return Utils.getLandmarkName(aAccessible) ? FILTER_MATCH :
+        FILTER_IGNORE;
+    }
+  ),
+
   Entry: new BaseTraversalRule(
     [ROLE_ENTRY,
      ROLE_PASSWORD_TEXT]),

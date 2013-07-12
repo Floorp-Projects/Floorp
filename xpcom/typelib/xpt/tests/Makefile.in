@@ -20,4 +20,4 @@ LIBS		= \
 
 include $(topsrcdir)/config/rules.mk
 
-DEFINES += -DEXPORT_XPT_API
+DEFINES += -DIMPL_LIBXUL

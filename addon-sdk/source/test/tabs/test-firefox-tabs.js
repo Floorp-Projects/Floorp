@@ -8,9 +8,10 @@ const { Loader } = require('sdk/test/loader');
 const timer = require('sdk/timers');
 const { getOwnerWindow } = require('sdk/private-browsing/window/utils');
 const { windows, onFocus, getMostRecentBrowserWindow } = require('sdk/window/utils');
-const { open, focus } = require('sdk/window/helpers');
+const { open, focus, close } = require('sdk/window/helpers');
 const { StringBundle } = require('sdk/deprecated/app-strings');
 const tabs = require('sdk/tabs');
+const { browserWindows } = require('sdk/windows');
 
 const base64png = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYA" +
                   "AABzenr0AAAASUlEQVRYhe3O0QkAIAwD0eyqe3Q993AQ3cBSUKpygfsNTy" +
@@ -93,14 +94,51 @@ exports.testAutomaticDestroy = function(test) {
     timer.setTimeout(function () {
       test.assert(!called, "Unloaded tab module is destroyed and inactive");
       tab.close(test.done.bind(test));
-    }, 0);
+    });
   });
-
   tabs.open("data:text/html;charset=utf-8,foo");
 };
 
-// test tab properties
-exports.testTabProperties = function(test) {
+exports.testTabPropertiesInNewWindow = function(test) {
+  test.waitUntilDone();
+
+  let count = 0;
+  function onReadyOrLoad (tab) {
+    if (count++) {
+      close(getOwnerWindow(tab)).then(test.done.bind(test));
+    }
+  }
+
+  let url = "data:text/html;charset=utf-8,<html><head><title>foo</title></head><body>foo</body></html>";
+  tabs.open({
+    inNewWindow: true,
+    url: url,
+    onReady: function(tab) {
+      test.assertEqual(tab.title, "foo", "title of the new tab matches");
+      test.assertEqual(tab.url, url, "URL of the new tab matches");
+      test.assert(tab.favicon, "favicon of the new tab is not empty");
+      test.assertEqual(tab.style, null, "style of the new tab matches");
+      test.assertEqual(tab.index, 0, "index of the new tab matches");
+      test.assertNotEqual(tab.getThumbnail(), null, "thumbnail of the new tab matches");
+      test.assertNotEqual(tab.id, null, "a tab object always has an id property.");
+
+      onReadyOrLoad(tab);
+    },
+    onLoad: function(tab) {
+      test.assertEqual(tab.title, "foo", "title of the new tab matches");
+      test.assertEqual(tab.url, url, "URL of the new tab matches");
+      test.assert(tab.favicon, "favicon of the new tab is not empty");
+      test.assertEqual(tab.style, null, "style of the new tab matches");
+      test.assertEqual(tab.index, 0, "index of the new tab matches");
+      test.assertNotEqual(tab.getThumbnail(), null, "thumbnail of the new tab matches");
+      test.assertNotEqual(tab.id, null, "a tab object always has an id property.");
+
+      onReadyOrLoad(tab);
+    }
+  });
+};
+
+exports.testTabPropertiesInSameWindow = function(test) {
   test.waitUntilDone();
 
   let count = 0;
@@ -121,6 +159,7 @@ exports.testTabProperties = function(test) {
       test.assertEqual(tab.index, 1, "index of the new tab matches");
       test.assertNotEqual(tab.getThumbnail(), null, "thumbnail of the new tab matches");
       test.assertNotEqual(tab.id, null, "a tab object always has an id property.");
+
       onReadyOrLoad(tab);
     },
     onLoad: function(tab) {
@@ -131,6 +170,7 @@ exports.testTabProperties = function(test) {
       test.assertEqual(tab.index, 1, "index of the new tab matches");
       test.assertNotEqual(tab.getThumbnail(), null, "thumbnail of the new tab matches");
       test.assertNotEqual(tab.id, null, "a tab object always has an id property.");
+
       onReadyOrLoad(tab);
     }
   });
@@ -244,7 +284,7 @@ exports.testTabClose = function(test) {
 exports.testTabMove = function(test) {
   test.waitUntilDone();
 
-  open().then(function(window) {
+  open().then(focus).then(function(window) {
     let url = "data:text/html;charset=utf-8,foo";
 
     tabs.open({
@@ -964,8 +1004,6 @@ exports.testFaviconGetterDeprecation = function (test) {
     }
   });
 }
-
-
 
 /******************* helpers *********************/
 

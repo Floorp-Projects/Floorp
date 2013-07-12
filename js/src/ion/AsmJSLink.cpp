@@ -573,7 +573,7 @@ js::LinkAsmJS(JSContext *cx, unsigned argc, JS::Value *vp)
     }
 
     gc::AllocKind allocKind = gc::GetGCObjectKind(module.numExportedFunctions());
-    RootedObject obj(cx, NewBuiltinClassInstance(cx, &ObjectClass, allocKind));
+    RootedObject obj(cx, NewBuiltinClassInstance(cx, &JSObject::class_, allocKind));
     if (!obj)
         return false;
 
