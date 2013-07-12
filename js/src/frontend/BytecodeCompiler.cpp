@@ -402,6 +402,8 @@ frontend::CompileFunctionBody(JSContext *cx, MutableHandleFunction fun, CompileO
                               const AutoNameVector &formals, const jschar *chars, size_t length,
                               bool isAsmJSRecompile)
 {
+    // FIXME: make Function pass in two strings and parse them as arguments and
+    // ProgramElements respectively.
     SkipRoot skip(cx, &chars);
 
     if (!CheckLength(cx, length))
@@ -443,22 +445,6 @@ frontend::CompileFunctionBody(JSContext *cx, MutableHandleFunction fun, CompileO
 
     fun->setArgCount(formals.length());
 
-    /* FIXME: make Function format the source for a function definition. */
-    ParseNode *fn = CodeNode::create(PNK_FUNCTION, &parser.handler);
-    if (!fn)
-        return false;
-
-    fn->pn_body = NULL;
-    fn->pn_funbox = NULL;
-    fn->pn_cookie.makeFree();
-
-    ParseNode *argsbody = ListNode::create(PNK_ARGSBODY, &parser.handler);
-    if (!argsbody)
-        return false;
-    argsbody->setOp(JSOP_NOP);
-    argsbody->makeEmpty();
-    fn->pn_body = argsbody;
-
     Rooted<JSScript*> script(cx, JSScript::Create(cx, NullPtr(), false, options,
                                                   /* staticLevel = */ 0, sourceObject,
                                                   /* sourceStart = */ 0, length));
@@ -468,14 +454,14 @@ frontend::CompileFunctionBody(JSContext *cx, MutableHandleFunction fun, CompileO
     // If the context is strict, immediately parse the body in strict
     // mode. Otherwise, we parse it normally. If we see a "use strict"
     // directive, we backup and reparse it as strict.
+    ParseNode *fn;
     TokenStream::Position start(parser.keepAtoms);
     parser.tokenStream.tell(&start);
     bool strict = options.strictOption;
     bool becameStrict;
-    ParseNode *pn;
     while (true) {
-        pn = parser.standaloneFunctionBody(fun, formals, script, fn, strict, &becameStrict);
-        if (pn)
+        fn = parser.standaloneFunctionBody(fun, formals, script, strict, &becameStrict);
+        if (fn)
             break;
 
         if (parser.hadAbortedSyntaxParse()) {
@@ -493,13 +479,8 @@ frontend::CompileFunctionBody(JSContext *cx, MutableHandleFunction fun, CompileO
         parser.tokenStream.seek(start);
     }
 
-    if (!NameFunctions(cx, pn))
+    if (!NameFunctions(cx, fn))
         return false;
-
-    JS_ASSERT(fn->pn_body == argsbody);
-    JS_ASSERT(fn->pn_body->isKind(PNK_ARGSBODY));
-    fn->pn_body->append(pn);
-    fn->pn_body->pn_pos = pn->pn_pos;
 
     bool generateBytecode = true;
 #ifdef JS_ION
