@@ -9,6 +9,7 @@
  * http://www.w3.org/TR/geolocation-API/#geolocation_interface
  * http://www.w3.org/TR/battery-status/#navigatorbattery-interface
  * http://www.w3.org/TR/vibration/#vibration-interface
+ * http://www.w3.org/2012/sysapps/runtime/#extension-to-the-navigator-interface-1
  *
  * © Copyright 2004-2011 Apple Computer, Inc., Mozilla Foundation, and
  * Opera Software ASA. You are granted a license to use, reproduce
@@ -201,4 +202,60 @@ partial interface Navigator {
    */
   [Throws, Func="Navigator::HasWakeLockSupport"]
   MozWakeLock requestWakeLock(DOMString aTopic);
+};
+
+// nsIDOMNavigatorDeviceStorage
+partial interface Navigator {
+  [Throws, Pref="device.storage.enabled"]
+  DeviceStorage? getDeviceStorage(DOMString type);
+  [Throws, Pref="device.storage.enabled"]
+  sequence<DeviceStorage> getDeviceStorages(DOMString type);
+};
+
+// nsIDOMNavigatorDesktopNotification
+partial interface Navigator {
+  [Throws, Func="Navigator::HasDesktopNotificationSupport"]
+  readonly attribute DesktopNotificationCenter mozNotification;
+};
+
+// nsIDOMClientInformation
+partial interface Navigator {
+  [Throws]
+  boolean mozIsLocallyAvailable(DOMString uri, boolean whenOffline);
+};
+
+// nsIDOMMozNavigatorSms
+interface MozSmsManager;
+partial interface Navigator {
+  [Func="Navigator::HasSmsSupport"]
+  readonly attribute MozSmsManager? mozSms;
+};
+
+// nsIDOMMozNavigatorMobileMessage
+interface MozMobileMessageManager;
+partial interface Navigator {
+  [Func="Navigator::HasMobileMessageSupport"]
+  readonly attribute MozMobileMessageManager? mozMobileMessage;
+};
+
+// nsIDOMMozNavigatorNetwork
+interface MozConnection;
+partial interface Navigator {
+  readonly attribute MozConnection? mozConnection;
+};
+
+// nsIDOMNavigatorCamera
+partial interface Navigator {
+  [Throws, Func="Navigator::HasCameraSupport"]
+  readonly attribute CameraManager mozCameras;
+};
+
+// nsIDOMNavigatorSystemMessages and sort of maybe
+// http://www.w3.org/2012/sysapps/runtime/#extension-to-the-navigator-interface-1
+callback systemMessageCallback = void (optional object message);
+partial interface Navigator {
+  [Throws, Pref="dom.sysmsg.enabled"]
+  void    mozSetMessageHandler (DOMString type, systemMessageCallback? callback);
+  [Throws, Pref="dom.sysmsg.enabled"]
+  boolean mozHasPendingMessage (DOMString type);
 };
