@@ -1758,6 +1758,7 @@ fails-if(Android&&AndroidVersion<15) == 836844-1.html 836844-1-ref.html
 test-pref(layout.css.flexbox.enabled,true) == 849407-1.html 849407-1-ref.html
 == 849996-1.html 849996-1-ref.html
 == 858803-1.html 858803-1-ref.html
+== 860242-1.html 860242-1-ref.html
 != 860370.html 860370-notref.html
 == 871338-1.html 871338-1-ref.html
 random-if(Android&&AndroidVersion>=15) == 875060-1.html 875060-1-ref.html #Bug 885303

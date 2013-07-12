@@ -61,9 +61,6 @@ struct nr_ice_cand_pair_ {
   nr_ice_candidate *remote;           /* The remote candidate */
   char *foundation;                   /* The combined foundations */
 
-  char *r2l_user;                     /* Stashed username */
-  Data r2l_pwd;                       /* Stashed password */
-
   nr_stun_client_ctx *stun_client;    /* STUN context when acting as a client */
   void *stun_client_handle;
 

@@ -19,6 +19,6 @@
     _(PowHalfD)                 \
     _(UInt32ToDouble)           \
     _(AsmJSLoadFuncPtr)         \
-    _(AsmJSDivOrMod)
+    _(UDivOrMod)
 
 #endif /* ion_x86_LOpcodes_x86_h */

@@ -70,6 +70,11 @@ public:
     }
   }
 
+  void SetSourceStream(AudioNodeStream* aSource)
+  {
+    mSource = aSource;
+  }
+
   virtual void SetTimelineParameter(uint32_t aIndex,
                                     const dom::AudioParamTimeline& aValue,
                                     TrackRate aSampleRate) MOZ_OVERRIDE
@@ -86,7 +91,7 @@ public:
         speex_resampler_destroy(mResampler);
         mResampler = nullptr;
       }
-      WebAudioUtils::ConvertAudioParamToTicks(mPlaybackRateTimeline, nullptr, mDestination);
+      WebAudioUtils::ConvertAudioParamToTicks(mPlaybackRateTimeline, mSource, mDestination);
       break;
     default:
       NS_ERROR("Bad AudioBufferSourceNodeEngine TimelineParameter");
@@ -425,6 +430,7 @@ public:
   float mPlaybackRate;
   float mDopplerShift;
   AudioNodeStream* mDestination;
+  AudioNodeStream* mSource;
   AudioParamTimeline mPlaybackRateTimeline;
   bool mLoop;
 };
@@ -444,9 +450,9 @@ AudioBufferSourceNode::AudioBufferSourceNode(AudioContext* aContext)
   , mStartCalled(false)
   , mStopped(false)
 {
-  mStream = aContext->Graph()->CreateAudioNodeStream(
-      new AudioBufferSourceNodeEngine(this, aContext->Destination()),
-      MediaStreamGraph::SOURCE_STREAM);
+  AudioBufferSourceNodeEngine* engine = new AudioBufferSourceNodeEngine(this, aContext->Destination());
+  mStream = aContext->Graph()->CreateAudioNodeStream(engine, MediaStreamGraph::SOURCE_STREAM);
+  engine->SetSourceStream(static_cast<AudioNodeStream*>(mStream.get()));
   mStream->AddMainThreadListener(this);
 }
 

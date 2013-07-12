@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+
+  <mask id="m">
+    <text>
+      <tspan id="tspan" />
+    </text>
+  </mask>
+
+  <rect width="600" height="400" mask="url(#m)"/>
+
+  <script>
+
+    window.addEventListener("load", function() {
+      document.getElementById("tspan").style.dominantBaseline = "alphabetic";
+    }, false);
+
+  </script>
+
+</svg>

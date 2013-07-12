@@ -15,8 +15,8 @@
 namespace mozilla {
 namespace dom {
 
-class HTMLSourceElement : public nsGenericHTMLElement,
-                          public nsIDOMHTMLSourceElement
+class HTMLSourceElement MOZ_FINAL : public nsGenericHTMLElement,
+                                    public nsIDOMHTMLSourceElement
 {
 public:
   HTMLSourceElement(already_AddRefed<nsINodeInfo> aNodeInfo);

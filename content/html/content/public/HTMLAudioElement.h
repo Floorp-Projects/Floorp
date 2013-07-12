@@ -18,9 +18,9 @@ typedef uint16_t nsMediaReadyState;
 namespace mozilla {
 namespace dom {
 
-class HTMLAudioElement : public HTMLMediaElement,
-                         public nsITimerCallback,
-                         public nsIDOMHTMLAudioElement
+class HTMLAudioElement MOZ_FINAL : public HTMLMediaElement,
+                                   public nsITimerCallback,
+                                   public nsIDOMHTMLAudioElement
 {
 public:
   HTMLAudioElement(already_AddRefed<nsINodeInfo> aNodeInfo);
