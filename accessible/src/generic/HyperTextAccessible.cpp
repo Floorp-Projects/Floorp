@@ -1035,14 +1035,10 @@ HyperTextAccessible::GetTextBeforeOffset(int32_t aOffset,
 
       // If we are at last empty then home key and get the text (last empty line
       // doesn't have own frame).
-      if (offset == CharacterCount()) {
-        nsAutoString lastChar;
-        GetText(offset -1, -1, lastChar);
-        if (lastChar.EqualsLiteral("\n")) {
-          *aStartOffset = FindLineBoundary(offset, eDirPrevious, eSelectBeginLine);
-          *aEndOffset = offset;
-          return GetText(*aStartOffset, *aEndOffset, aText);
-        }
+      if (IsEmptyLastLineOffset(offset)) {
+        *aStartOffset = FindLineBoundary(offset, eDirPrevious, eSelectBeginLine);
+        *aEndOffset = offset;
+        return GetText(*aStartOffset, *aEndOffset, aText);
       }
 
       // Home key, up arrow, home key.
@@ -1053,7 +1049,35 @@ HyperTextAccessible::GetTextBeforeOffset(int32_t aOffset,
       return GetText(*aStartOffset, *aEndOffset, aText);
     }
 
-    case BOUNDARY_LINE_END:
+    case BOUNDARY_LINE_END: {
+      if (aOffset == nsIAccessibleText::TEXT_OFFSET_CARET)
+        offset = AdjustCaretOffset(offset);
+
+      // Nothing if we are at first line.
+      int32_t tmpOffset = FindLineBoundary(offset, eDirPrevious, eSelectBeginLine);
+      if (tmpOffset == 0) {
+        *aStartOffset = *aEndOffset = 0;
+        return NS_OK;
+      }
+
+      // Up arrow, end key to find previous line endings.
+      if (IsEmptyLastLineOffset(offset)) { // no own frame for a last line
+        tmpOffset = FindLineBoundary(offset, eDirPrevious, eSelectLine);
+        *aStartOffset = FindLineBoundary(tmpOffset, eDirNext, eSelectEndLine);
+        *aEndOffset = offset - 1;
+        return GetText(*aStartOffset, *aEndOffset, aText);
+      }
+
+      tmpOffset = FindLineBoundary(offset, eDirPrevious, eSelectLine);
+      *aEndOffset = FindLineBoundary(tmpOffset, eDirNext, eSelectEndLine);
+      tmpOffset = FindLineBoundary(*aEndOffset, eDirPrevious, eSelectLine);
+      *aStartOffset = FindLineBoundary(tmpOffset, eDirNext, eSelectEndLine);
+      if (*aStartOffset == *aEndOffset) // we are at second line
+        *aStartOffset = 0;
+
+      return GetText(*aStartOffset, *aEndOffset, aText);
+    }
+
     case BOUNDARY_ATTRIBUTE_RANGE:
       return GetTextHelper(eGetBefore, aBoundaryType, aOffset,
                            aStartOffset, aEndOffset, aText);
@@ -1098,13 +1122,9 @@ HyperTextAccessible::GetTextAtOffset(int32_t aOffset,
       // Empty last line doesn't have own frame (a previous line contains '\n'
       // character instead) thus we can't operate on last line separately
       // from previous line.
-      if (offset == CharacterCount()) {
-        nsAutoString lastChar;
-        GetText(offset -1, -1, lastChar);
-        if (lastChar.EqualsLiteral("\n")) {
-          *aStartOffset = *aEndOffset = offset;
-          return NS_OK;
-        }
+      if (IsEmptyLastLineOffset(offset)) {
+        *aStartOffset = *aEndOffset = offset;
+        return NS_OK;
       }
 
       if (aOffset == nsIAccessibleText::TEXT_OFFSET_CARET)
@@ -1124,15 +1144,11 @@ HyperTextAccessible::GetTextAtOffset(int32_t aOffset,
       // Empty last line doesn't have own frame (a previous line contains '\n'
       // character instead) thus we can't operate on last line separately
       // from the previous line.
-      if (offset == CharacterCount()) {
-        nsAutoString lastChar;
-        GetText(offset -1, -1, lastChar);
-        if (lastChar.EqualsLiteral("\n")) {
-          *aStartOffset = offset - 1;
-          *aEndOffset = offset;
-          aText = lastChar;
-          return NS_OK;
-        }
+      if (IsEmptyLastLineOffset(offset)) {
+        *aStartOffset = offset - 1;
+        *aEndOffset = offset;
+        aText.AssignLiteral("\n");
+        return NS_OK;
       }
 
       if (aOffset == nsIAccessibleText::TEXT_OFFSET_CARET)
