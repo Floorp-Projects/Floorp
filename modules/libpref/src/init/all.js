@@ -1936,6 +1936,14 @@ pref("svg.paint-order.enabled", false);
 pref("svg.paint-order.enabled", true);
 #endif
 
+// Is support for the new marker features from SVG 2 enabled?  Currently
+// this just includes <marker orient="auto-start-reverse">.
+#ifdef RELEASE_BUILD
+pref("svg.marker-improvements.enabled", false);
+#else
+pref("svg.marker-improvements.enabled", true);
+#endif
+
 // Is support for the new SVG text implementation enabled?
 pref("svg.text.css-frames.enabled", true);
 
