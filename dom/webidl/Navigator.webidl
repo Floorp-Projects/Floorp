@@ -267,4 +267,32 @@ partial interface Navigator {
   [Throws, Func="Navigator::HasTelephonySupport"]
   readonly attribute MozTelephony? mozTelephony;
 };
+
+// nsIMozNavigatorMobileConnection
+interface MozMobileConnection;
+partial interface Navigator {
+  [Throws, Func="Navigator::HasMobileConnectionSupport"]
+  readonly attribute MozMobileConnection mozMobileConnection;
+};
+
+// nsIMozNavigatorCellBroadcast
+interface MozCellBroadcast;
+partial interface Navigator {
+  [Throws, Func="Navigator::HasCellBroadcastSupport"]
+  readonly attribute MozCellBroadcast mozCellBroadcast;
+};
+
+// nsIMozNavigatorVoicemail
+interface MozVoicemail;
+partial interface Navigator {
+  [Throws, Func="Navigator::HasVoicemailSupport"]
+  readonly attribute MozVoicemail mozVoicemail;
+};
+
+// nsIMozNavigatorIccManager
+interface MozIccManager;
+partial interface Navigator {
+  [Throws, Func="Navigator::HasIccManagerSupport"]
+  readonly attribute MozIccManager? mozIccManager;
+};
 #endif // MOZ_B2G_RIL
