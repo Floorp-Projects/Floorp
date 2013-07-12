@@ -1277,7 +1277,7 @@ nsSVGUtils::CanOptimizeOpacity(nsIFrame *aFrame)
     return true;
   }
   const nsStyleSVG *style = aFrame->StyleSVG();
-  if (style->mMarkerStart || style->mMarkerMid || style->mMarkerEnd) {
+  if (style->HasMarker()) {
     return false;
   }
   if (style->mFill.mType == eStyleSVGPaintType_None ||
