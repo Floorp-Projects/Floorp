@@ -8,8 +8,6 @@
 #include "gc/Marking.h"
 #include "ion/LIR.h"
 
-#include "jsscriptinlines.h"
-
 using namespace js;
 using namespace js::ion;
 

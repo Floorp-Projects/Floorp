@@ -19,9 +19,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=490705
 <script class="testbody" type="text/javascript">
 var testFile = "bug495794.ogg";
 var testFileDuration = 0.30;
-var testFileChannelCount = 6;
+var testFileChannelCount = 2;
 var testFileSampleRate = 48000;
-var testFileFrameBufferLength = 6 * 1024;
+var testFileFrameBufferLength = testFileChannelCount * 1024;
 
 var undef;
 

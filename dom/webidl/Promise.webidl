@@ -4,32 +4,32 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  *
  * The origin of this IDL file is
- * http://dom.spec.whatwg.org/#futures
+ * http://dom.spec.whatwg.org/#promises
  */
 
-interface FutureResolver {
+interface PromiseResolver {
   void resolve(optional any value);
   void reject(optional any value);
 };
 
-callback FutureInit = void (FutureResolver resolver);
+callback PromiseInit = void (PromiseResolver resolver);
 callback AnyCallback = any (optional any value);
 
-[PrefControlled, Constructor(FutureInit init)]
-interface Future {
+[PrefControlled, Constructor(PromiseInit init)]
+interface Promise {
   // TODO: update this interface - bug 875289
 
   [Creator, Throws]
-  static Future resolve(any value); // same as any(value)
+  static Promise resolve(any value); // same as any(value)
   [Creator, Throws]
-  static Future reject(any value);
+  static Promise reject(any value);
 
   [Creator]
-  Future then(optional AnyCallback? resolveCallback = null,
-              optional AnyCallback? rejectCallback = null);
+  Promise then(optional AnyCallback? resolveCallback = null,
+               optional AnyCallback? rejectCallback = null);
 
   [Creator]
-  Future catch(optional AnyCallback? rejectCallback = null);
+  Promise catch(optional AnyCallback? rejectCallback = null);
 
   void done(optional AnyCallback? resolveCallback = null,
             optional AnyCallback? rejectCallback = null);

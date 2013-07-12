@@ -78,26 +78,32 @@ nsSVGPolyElement::GetMarkPoints(nsTArray<nsSVGMark> *aMarks)
   if (!points.Length())
     return;
 
-  float px = 0.0, py = 0.0, prevAngle = 0.0;
+  float px = points[0].mX, py = points[0].mY, prevAngle = 0.0;
 
-  for (uint32_t i = 0; i < points.Length(); ++i) {
+  aMarks->AppendElement(nsSVGMark(px, py, 0, nsSVGMark::eStart));
+
+  for (uint32_t i = 1; i < points.Length(); ++i) {
     float x = points[i].mX;
     float y = points[i].mY;
     float angle = atan2(y-py, x-px);
-    if (i == 1)
-      aMarks->ElementAt(aMarks->Length() - 1).angle = angle;
-    else if (i > 1)
-      aMarks->ElementAt(aMarks->Length() - 1).angle =
-        SVGContentUtils::AngleBisect(prevAngle, angle);
 
-    aMarks->AppendElement(nsSVGMark(x, y, 0));
+    // Vertex marker.
+    if (i == 1) {
+      aMarks->ElementAt(0).angle = angle;
+    } else {
+      aMarks->ElementAt(aMarks->Length() - 2).angle =
+        SVGContentUtils::AngleBisect(prevAngle, angle);
+    }
+
+    aMarks->AppendElement(nsSVGMark(x, y, 0, nsSVGMark::eMid));
 
     prevAngle = angle;
     px = x;
     py = y;
   }
 
-  aMarks->ElementAt(aMarks->Length() - 1).angle = prevAngle;
+  aMarks->LastElement().angle = prevAngle;
+  aMarks->LastElement().type = nsSVGMark::eEnd;
 }
 
 void

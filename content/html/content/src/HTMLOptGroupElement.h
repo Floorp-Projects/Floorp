@@ -13,8 +13,8 @@
 namespace mozilla {
 namespace dom {
 
-class HTMLOptGroupElement : public nsGenericHTMLElement,
-                            public nsIDOMHTMLOptGroupElement
+class HTMLOptGroupElement MOZ_FINAL : public nsGenericHTMLElement,
+                                      public nsIDOMHTMLOptGroupElement
 {
 public:
   HTMLOptGroupElement(already_AddRefed<nsINodeInfo> aNodeInfo);

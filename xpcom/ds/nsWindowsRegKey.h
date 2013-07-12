@@ -26,7 +26,7 @@ NS_NewWindowsRegKey(nsIWindowsRegKey **result);
 
 //-----------------------------------------------------------------------------
 
-#ifdef _IMPL_NS_COM
+#ifdef IMPL_LIBXUL
 
 // a53bc624-d577-4839-b8ec-bb5040a52ff4
 #define NS_WINDOWSREGKEY_CID \
@@ -36,7 +36,7 @@ NS_NewWindowsRegKey(nsIWindowsRegKey **result);
 extern nsresult
 nsWindowsRegKeyConstructor(nsISupports *outer, const nsIID &iid, void **result);
 
-#endif  // _IMPL_NS_COM
+#endif  // IMPL_LIBXUL
 
 //-----------------------------------------------------------------------------
 

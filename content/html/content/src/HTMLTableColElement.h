@@ -12,8 +12,8 @@
 namespace mozilla {
 namespace dom {
 
-class HTMLTableColElement : public nsGenericHTMLElement,
-                            public nsIDOMHTMLTableColElement
+class HTMLTableColElement MOZ_FINAL : public nsGenericHTMLElement,
+                                      public nsIDOMHTMLTableColElement
 {
 public:
   HTMLTableColElement(already_AddRefed<nsINodeInfo> aNodeInfo)

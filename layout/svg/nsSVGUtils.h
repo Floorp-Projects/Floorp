@@ -63,11 +63,8 @@ class Element;
 // SVG Frame state bits
 #define NS_STATE_IS_OUTER_SVG                    NS_FRAME_STATE_BIT(20)
 
-/* are we the child of a non-display container? */
-#define NS_STATE_SVG_NONDISPLAY_CHILD            NS_FRAME_STATE_BIT(21)
-
 // If this bit is set, we are a <clipPath> element or descendant.
-#define NS_STATE_SVG_CLIPPATH_CHILD              NS_FRAME_STATE_BIT(22)
+#define NS_STATE_SVG_CLIPPATH_CHILD              NS_FRAME_STATE_BIT(21)
 
 /**
  * For text, the NS_FRAME_IS_DIRTY and NS_FRAME_HAS_DIRTY_CHILDREN bits indicate
@@ -79,7 +76,7 @@ class Element;
  * to allow us to avoid reflowing the anonymous block when it is not
  * necessary.
  */
-#define NS_STATE_SVG_POSITIONING_DIRTY           NS_FRAME_STATE_BIT(23)
+#define NS_STATE_SVG_POSITIONING_DIRTY           NS_FRAME_STATE_BIT(22)
 
 /**
  * For text, whether the values from x/y/dx/dy attributes have any percentage values
@@ -104,7 +101,7 @@ class Element;
  * NS_STATE_SVG_POSITIONING_MAY_USE_PERCENTAGES would require extra work that is
  * probably not worth it.
  */
-#define NS_STATE_SVG_POSITIONING_MAY_USE_PERCENTAGES NS_FRAME_STATE_BIT(24)
+#define NS_STATE_SVG_POSITIONING_MAY_USE_PERCENTAGES NS_FRAME_STATE_BIT(23)
 
 /**
  * Byte offsets of channels in a native packed gfxColor or cairo image surface.
@@ -319,7 +316,7 @@ public:
    * Schedules an update of the frame's bounds (which will in turn invalidate
    * the new area that the frame should paint to).
    *
-   * This does nothing when passed an NS_STATE_SVG_NONDISPLAY_CHILD frame.
+   * This does nothing when passed an NS_FRAME_IS_NONDISPLAY frame.
    * In future we may want to allow ReflowSVG to be called on such frames,
    * but that would be better implemented as a ForceReflowSVG function to
    * be called synchronously while painting them without marking or paying
@@ -341,7 +338,7 @@ public:
    * mark descendants dirty would cause it to descend through
    * nsSVGForeignObjectFrame frames to mark their children dirty, but we want to
    * handle nsSVGForeignObjectFrame specially. It would also do unnecessary work
-   * descending into NS_STATE_SVG_NONDISPLAY_CHILD frames.
+   * descending into NS_FRAME_IS_NONDISPLAY frames.
    */
   static void ScheduleReflowSVG(nsIFrame *aFrame);
 

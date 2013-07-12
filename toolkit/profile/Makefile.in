@@ -10,15 +10,12 @@ VPATH = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-FORCE_STATIC_LIB = 1
 LIBXUL_LIBRARY = 1
 
 LOCAL_INCLUDES = \
   -I$(srcdir)/../xre \
   -I$(topsrcdir)/profile/dirserviceprovider/src \
   $(NULL)
-
-DEFINES += -DIMPL_XREAPI
 
 GARBAGE += nsProfileLock.cpp
 
