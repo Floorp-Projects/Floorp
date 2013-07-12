@@ -72,6 +72,9 @@
 #endif
 
 #include "nsIDOMGlobalPropertyInitializer.h"
+#include "nsJSUtils.h"
+
+#include "mozilla/dom/NavigatorBinding.h"
 
 using namespace mozilla::dom::power;
 
@@ -362,7 +365,8 @@ Navigator::GetAppVersion(nsAString& aAppVersion)
 NS_IMETHODIMP
 Navigator::GetAppName(nsAString& aAppName)
 {
-  return NS_GetNavigatorAppName(aAppName);
+  NS_GetNavigatorAppName(aAppName);
+  return NS_OK;
 }
 
 /**
@@ -485,30 +489,48 @@ Navigator::GetProductSub(nsAString& aProductSub)
 NS_IMETHODIMP
 Navigator::GetMimeTypes(nsISupports** aMimeTypes)
 {
+  ErrorResult rv;
+  NS_IF_ADDREF(*aMimeTypes = GetMimeTypes(rv));
+  return rv.ErrorCode();
+}
+
+nsMimeTypeArray*
+Navigator::GetMimeTypes(ErrorResult& aRv)
+{
   if (!mMimeTypes) {
-    NS_ENSURE_STATE(mWindow);
+    if (!mWindow) {
+      aRv.Throw(NS_ERROR_UNEXPECTED);
+      return nullptr;
+    }
     nsWeakPtr win = do_GetWeakReference(mWindow);
     mMimeTypes = new nsMimeTypeArray(win);
   }
 
-  NS_ADDREF(*aMimeTypes = mMimeTypes);
-
-  return NS_OK;
+  return mMimeTypes;
 }
 
 NS_IMETHODIMP
 Navigator::GetPlugins(nsISupports** aPlugins)
 {
+  ErrorResult rv;
+  NS_IF_ADDREF(*aPlugins = static_cast<nsIObserver*>(GetPlugins(rv)));
+  return rv.ErrorCode();
+}
+
+nsPluginArray*
+Navigator::GetPlugins(ErrorResult& aRv)
+{
   if (!mPlugins) {
-    NS_ENSURE_STATE(mWindow);
+    if (!mWindow) {
+      aRv.Throw(NS_ERROR_UNEXPECTED);
+      return nullptr;
+    }
     nsWeakPtr win = do_GetWeakReference(mWindow);
     mPlugins = new nsPluginArray(win);
     mPlugins->Init();
   }
 
-  NS_ADDREF(*aPlugins = static_cast<nsIObserver*>(mPlugins.get()));
-
-  return NS_OK;
+  return mPlugins;
 }
 
 // Values for the network.cookie.cookieBehavior pref are documented in
@@ -518,7 +540,14 @@ Navigator::GetPlugins(nsISupports** aPlugins)
 NS_IMETHODIMP
 Navigator::GetCookieEnabled(bool* aCookieEnabled)
 {
-  *aCookieEnabled =
+  *aCookieEnabled = CookieEnabled();
+  return NS_OK;
+}
+
+bool
+Navigator::CookieEnabled()
+{
+  bool cookieEnabled =
     (Preferences::GetInt("network.cookie.cookieBehavior",
                          COOKIE_BEHAVIOR_REJECT) != COOKIE_BEHAVIOR_REJECT);
 
@@ -526,12 +555,12 @@ Navigator::GetCookieEnabled(bool* aCookieEnabled)
   // Note that the code for getting the URI here matches that in
   // nsHTMLDocument::SetCookie.
   if (!mWindow || !mWindow->GetDocShell()) {
-    return NS_OK;
+    return cookieEnabled;
   }
 
   nsCOMPtr<nsIDocument> doc = mWindow->GetExtantDoc();
   if (!doc) {
-    return NS_OK;
+    return cookieEnabled;
   }
 
   nsCOMPtr<nsIURI> codebaseURI;
@@ -540,23 +569,23 @@ Navigator::GetCookieEnabled(bool* aCookieEnabled)
   if (!codebaseURI) {
     // Not a codebase, so technically can't set cookies, but let's
     // just return the default value.
-    return NS_OK;
+    return cookieEnabled;
   }
 
   nsCOMPtr<nsICookiePermission> permMgr =
     do_GetService(NS_COOKIEPERMISSION_CONTRACTID);
-  NS_ENSURE_TRUE(permMgr, NS_OK);
+  NS_ENSURE_TRUE(permMgr, cookieEnabled);
 
   // Pass null for the channel, just like the cookie service does.
   nsCookieAccess access;
   nsresult rv = permMgr->CanAccess(codebaseURI, nullptr, &access);
-  NS_ENSURE_SUCCESS(rv, NS_OK);
+  NS_ENSURE_SUCCESS(rv, cookieEnabled);
 
   if (access != nsICookiePermission::ACCESS_DEFAULT) {
-    *aCookieEnabled = access != nsICookiePermission::ACCESS_DENY;
+    cookieEnabled = access != nsICookiePermission::ACCESS_DENY;
   }
 
-  return NS_OK;
+  return cookieEnabled;
 }
 
 NS_IMETHODIMP
@@ -564,8 +593,14 @@ Navigator::GetOnLine(bool* aOnline)
 {
   NS_PRECONDITION(aOnline, "Null out param");
 
-  *aOnline = !NS_IsOffline();
+  *aOnline = OnLine();
   return NS_OK;
+}
+
+bool
+Navigator::OnLine()
+{
+  return !NS_IsOffline();
 }
 
 NS_IMETHODIMP
@@ -613,13 +648,22 @@ Navigator::GetDoNotTrack(nsAString &aResult)
 NS_IMETHODIMP
 Navigator::JavaEnabled(bool* aReturn)
 {
+  ErrorResult rv;
+  *aReturn = JavaEnabled(rv);
+  return rv.ErrorCode();
+}
+
+bool
+Navigator::JavaEnabled(ErrorResult& aRv)
+{
   Telemetry::AutoTimer<Telemetry::CHECK_JAVA_ENABLED> telemetryTimer;
   // Return true if we have a handler for "application/x-java-vm",
   // otherwise return false.
-  *aReturn = false;
-
   if (!mMimeTypes) {
-    NS_ENSURE_STATE(mWindow);
+    if (!mWindow) {
+      aRv.Throw(NS_ERROR_UNEXPECTED);
+      return false;
+    }
     nsWeakPtr win = do_GetWeakReference(mWindow);
     mMimeTypes = new nsMimeTypeArray(win);
   }
@@ -629,15 +673,13 @@ Navigator::JavaEnabled(bool* aReturn)
   nsMimeType *mimeType =
     mMimeTypes->NamedItem(NS_LITERAL_STRING("application/x-java-vm"));
 
-  *aReturn = mimeType && mimeType->GetEnabledPlugin();
-
-  return NS_OK;
+  return mimeType && mimeType->GetEnabledPlugin();
 }
 
 NS_IMETHODIMP
 Navigator::TaintEnabled(bool *aReturn)
 {
-  *aReturn = false;
+  *aReturn = TaintEnabled();
   return NS_OK;
 }
 
@@ -755,11 +797,30 @@ Navigator::AddIdleObserver(nsIIdleObserver* aIdleObserver)
     return NS_ERROR_DOM_SECURITY_ERR;
   }
 
-  if (NS_FAILED(mWindow->RegisterIdleObserver(aIdleObserver))) {
+  AddIdleObserver(*aIdleObserver);
+  return NS_OK;
+}
+
+void
+Navigator::AddIdleObserver(nsIIdleObserver& aIdleObserver)
+{
+  // Callers (either the XPCOM method or the WebIDL binding) are responsible for
+  // the permission check here.
+  if (NS_FAILED(mWindow->RegisterIdleObserver(&aIdleObserver))) {
     NS_WARNING("Failed to add idle observer.");
   }
+}
 
-  return NS_OK;
+void
+Navigator::AddIdleObserver(MozIdleObserver& aIdleObserver, ErrorResult& aRv)
+{
+  if (!mWindow) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return;
+  }
+  CallbackObjectHolder<MozIdleObserver, nsIIdleObserver> holder(&aIdleObserver);
+  nsCOMPtr<nsIIdleObserver> obs = holder.ToXPCOMCallback();
+  return AddIdleObserver(*obs);
 }
 
 NS_IMETHODIMP
@@ -774,24 +835,35 @@ Navigator::RemoveIdleObserver(nsIIdleObserver* aIdleObserver)
 
   NS_ENSURE_ARG_POINTER(aIdleObserver);
 
-  if (NS_FAILED(mWindow->UnregisterIdleObserver(aIdleObserver))) {
+  RemoveIdleObserver(*aIdleObserver);
+  return NS_OK;
+}
+
+void
+Navigator::RemoveIdleObserver(nsIIdleObserver& aIdleObserver)
+{
+  // Callers (either the XPCOM method or the WebIDL binding) are responsible for
+  // the permission check here.
+  if (NS_FAILED(mWindow->UnregisterIdleObserver(&aIdleObserver))) {
     NS_WARNING("Failed to remove idle observer.");
   }
-  return NS_OK;
+}
+
+void
+Navigator::RemoveIdleObserver(MozIdleObserver& aIdleObserver, ErrorResult& aRv)
+{
+  if (!mWindow) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return;
+  }
+  CallbackObjectHolder<MozIdleObserver, nsIIdleObserver> holder(&aIdleObserver);
+  nsCOMPtr<nsIIdleObserver> obs = holder.ToXPCOMCallback();
+  return RemoveIdleObserver(*obs);
 }
 
 NS_IMETHODIMP
 Navigator::Vibrate(const JS::Value& aPattern, JSContext* cx)
 {
-  NS_ENSURE_STATE(mWindow);
-
-  nsCOMPtr<nsIDocument> doc = mWindow->GetExtantDoc();
-  NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
-  if (doc->Hidden()) {
-    // Hidden documents cannot start or stop a vibration.
-    return NS_OK;
-  }
-
   nsAutoTArray<uint32_t, 8> pattern;
 
   // null or undefined pattern is an error.
@@ -829,10 +901,54 @@ Navigator::Vibrate(const JS::Value& aPattern, JSContext* cx)
     }
   }
 
+  ErrorResult rv;
+  Vibrate(pattern, rv);
+  return rv.ErrorCode();
+}
+
+void
+Navigator::Vibrate(uint32_t aDuration, ErrorResult& aRv)
+{
+  nsAutoTArray<uint32_t, 1> pattern;
+  pattern.AppendElement(aDuration);
+  Vibrate(pattern, aRv);
+}
+
+void
+Navigator::Vibrate(const nsTArray<uint32_t>& aPattern, ErrorResult& aRv)
+{
+  if (!mWindow) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return;
+  }
+  nsCOMPtr<nsIDocument> doc = mWindow->GetExtantDoc();
+  if (!doc) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return;
+  }
+  if (doc->Hidden()) {
+    // Hidden documents cannot start or stop a vibration.
+    return;
+  }
+
+  if (aPattern.Length() > sMaxVibrateListLen) {
+    // XXXbz this should be returning false instead
+    aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+    return;
+  }
+
+  for (size_t i = 0; i < aPattern.Length(); ++i) {
+    if (aPattern[i] > sMaxVibrateMS) {
+      // XXXbz this should be returning false instead
+      aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+      return;
+    }
+  }
+
   // The spec says we check sVibratorEnabled after we've done the sanity
   // checking on the pattern.
   if (!sVibratorEnabled) {
-    return NS_OK;
+    return;
   }
 
   // Add a listener to cancel the vibration if the document becomes hidden,
@@ -849,8 +965,7 @@ Navigator::Vibrate(const JS::Value& aPattern, JSContext* cx)
   }
   gVibrateWindowListener = new VibrateWindowListener(mWindow, doc);
 
-  hal::Vibrate(pattern, mWindow);
-  return NS_OK;
+  hal::Vibrate(aPattern, mWindow);
 }
 
 //*****************************************************************************
@@ -1040,34 +1155,35 @@ NS_IMETHODIMP Navigator::GetDeviceStorages(const nsAString &aType, nsIVariant** 
 
 NS_IMETHODIMP Navigator::GetGeolocation(nsIDOMGeoGeolocation** _retval)
 {
-  NS_ENSURE_ARG_POINTER(_retval);
-  *_retval = nullptr;
+  ErrorResult rv;
+  NS_IF_ADDREF(*_retval = GetGeolocation(rv));
+  return rv.ErrorCode();
+}
 
+Geolocation*
+Navigator::GetGeolocation(ErrorResult& aRv)
+{
   if (!Preferences::GetBool("geo.enabled", true)) {
-    return NS_OK;
+    return nullptr;
   }
 
   if (mGeolocation) {
-    NS_ADDREF(*_retval = mGeolocation);
-    return NS_OK;
+    return mGeolocation;
   }
 
   if (!mWindow || !mWindow->GetOuterWindow() || !mWindow->GetDocShell()) {
-    return NS_ERROR_FAILURE;
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
   }
 
   mGeolocation = new Geolocation();
-  if (!mGeolocation) {
-    return NS_ERROR_FAILURE;
-  }
-
   if (NS_FAILED(mGeolocation->Init(mWindow->GetOuterWindow()))) {
     mGeolocation = nullptr;
-    return NS_ERROR_FAILURE;
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
   }
 
-  NS_ADDREF(*_retval = mGeolocation);
-  return NS_OK;
+  return mGeolocation;
 }
 
 //*****************************************************************************
@@ -1148,50 +1264,85 @@ NS_IMETHODIMP Navigator::GetMozNotification(nsISupports** aRetVal)
 NS_IMETHODIMP
 Navigator::GetBattery(nsISupports** aBattery)
 {
-  if (!mBatteryManager) {
-    *aBattery = nullptr;
+  ErrorResult rv;
+  NS_IF_ADDREF(*aBattery = GetBattery(rv));
+  return rv.ErrorCode();
+}
 
-    NS_ENSURE_STATE(mWindow);
-    NS_ENSURE_TRUE(mWindow->GetDocShell(), NS_OK);
+battery::BatteryManager*
+Navigator::GetBattery(ErrorResult& aRv)
+{
+  if (!mBatteryManager) {
+    if (!mWindow) {
+      aRv.Throw(NS_ERROR_UNEXPECTED);
+      return nullptr;
+    }
+    NS_ENSURE_TRUE(mWindow->GetDocShell(), nullptr);
 
     mBatteryManager = new battery::BatteryManager();
     mBatteryManager->Init(mWindow);
   }
 
-  NS_ADDREF(*aBattery = mBatteryManager);
-
-  return NS_OK;
+  return mBatteryManager;
 }
 
 NS_IMETHODIMP
 Navigator::GetMozPower(nsIDOMMozPowerManager** aPower)
 {
-  *aPower = nullptr;
+  if (!PowerManager::CheckPermission(mWindow)) {
+    *aPower = nullptr;
+    return NS_OK;
+  }
+  ErrorResult rv;
+  NS_IF_ADDREF(*aPower = GetMozPower(rv));
+  return rv.ErrorCode();
+}
 
+nsIDOMMozPowerManager*
+Navigator::GetMozPower(ErrorResult& aRv)
+{
+  // Callers (either the XPCOM method or the WebIDL binding) are responsible for
+  // the permission check here.
   if (!mPowerManager) {
-    NS_ENSURE_STATE(mWindow);
-    mPowerManager = PowerManager::CheckPermissionAndCreateInstance(mWindow);
-    NS_ENSURE_TRUE(mPowerManager, NS_OK);
+    if (!mWindow) {
+      aRv.Throw(NS_ERROR_UNEXPECTED);
+      return nullptr;
+    }
+    mPowerManager = PowerManager::CreateInstance(mWindow);
+    if (!mPowerManager) {
+      // We failed to get the power manager service?
+      aRv.Throw(NS_ERROR_UNEXPECTED);
+    }
   }
 
-  nsCOMPtr<nsIDOMMozPowerManager> power(mPowerManager);
-  power.forget(aPower);
-
-  return NS_OK;
+  return mPowerManager;
 }
 
 NS_IMETHODIMP
 Navigator::RequestWakeLock(const nsAString &aTopic, nsIDOMMozWakeLock **aWakeLock)
 {
-  NS_ENSURE_STATE(mWindow);
+  ErrorResult rv;
+  *aWakeLock = RequestWakeLock(aTopic, rv).get();
+  return rv.ErrorCode();
+}
 
-  *aWakeLock = nullptr;
+already_AddRefed<nsIDOMMozWakeLock>
+Navigator::RequestWakeLock(const nsAString &aTopic, ErrorResult& aRv)
+{
+  if (!mWindow) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return nullptr;
+  }
 
   nsCOMPtr<nsIPowerManagerService> pmService =
     do_GetService(POWERMANAGERSERVICE_CONTRACTID);
-  NS_ENSURE_TRUE(pmService, NS_OK);
+  // Maybe it went away for some reason... Or maybe we're just called
+  // from our XPCOM method.
+  NS_ENSURE_TRUE(pmService, nullptr);
 
-  return pmService->NewWakeLock(aTopic, mWindow, aWakeLock);
+  nsCOMPtr<nsIDOMMozWakeLock> wakelock;
+  aRv = pmService->NewWakeLock(aTopic, mWindow, getter_AddRefs(wakelock));
+  return wakelock.forget();
 }
 
 //*****************************************************************************
@@ -1604,7 +1755,14 @@ Navigator::OnNavigation()
 bool
 Navigator::CheckPermission(const char* type)
 {
-  if (!mWindow) {
+  return CheckPermission(mWindow, type);
+}
+
+/* static */
+bool
+Navigator::CheckPermission(nsPIDOMWindow* aWindow, const char* aType)
+{
+  if (!aWindow) {
     return false;
   }
 
@@ -1613,7 +1771,7 @@ Navigator::CheckPermission(const char* type)
   NS_ENSURE_TRUE(permMgr, false);
 
   uint32_t permission = nsIPermissionManager::DENY_ACTION;
-  permMgr->TestPermissionFromWindow(mWindow, type, &permission);
+  permMgr->TestPermissionFromWindow(aWindow, aType, &permission);
   return permission == nsIPermissionManager::ALLOW_ACTION;
 }
 
@@ -1636,6 +1794,53 @@ Navigator::GetMozAudioChannelManager(nsISupports** aAudioChannelManager)
   return NS_OK;
 }
 #endif
+
+/* static */
+bool
+Navigator::HasBatterySupport(JSContext* /* unused*/, JSObject* /*unused */)
+{
+  return battery::BatteryManager::HasSupport();
+}
+
+/* static */
+bool
+Navigator::HasPowerSupport(JSContext* /* unused */, JSObject* aGlobal)
+{
+  nsCOMPtr<nsPIDOMWindow> win = GetWindowFromGlobal(aGlobal);
+  return win && PowerManager::CheckPermission(win);
+}
+
+/* static */
+bool
+Navigator::HasIdleSupport(JSContext*  /* unused */, JSObject* aGlobal)
+{
+  if (!nsContentUtils::IsIdleObserverAPIEnabled()) {
+    return false;
+  }
+
+  nsCOMPtr<nsPIDOMWindow> win = GetWindowFromGlobal(aGlobal);
+  return CheckPermission(win, "idle");
+}
+
+/* static */
+bool
+Navigator::HasWakeLockSupport(JSContext* /* unused*/, JSObject* /*unused */)
+{
+  nsCOMPtr<nsIPowerManagerService> pmService =
+    do_GetService(POWERMANAGERSERVICE_CONTRACTID);
+  // No service means no wake lock support
+  return !!pmService;
+}
+
+/* static */
+already_AddRefed<nsPIDOMWindow>
+Navigator::GetWindowFromGlobal(JSObject* aGlobal)
+{
+  nsCOMPtr<nsPIDOMWindow> win =
+    do_QueryInterface(nsJSUtils::GetStaticScriptGlobal(aGlobal));
+  MOZ_ASSERT(!win || win->IsInnerWindow());
+  return win.forget();
+}
 
 } // namespace dom
 } // namespace mozilla
@@ -1735,7 +1940,7 @@ NS_GetNavigatorAppVersion(nsAString& aAppVersion)
   return rv;
 }
 
-nsresult
+void
 NS_GetNavigatorAppName(nsAString& aAppName)
 {
   if (!nsContentUtils::IsCallerChrome()) {
@@ -1744,10 +1949,8 @@ NS_GetNavigatorAppName(nsAString& aAppName)
 
     if (override) {
       aAppName = override;
-      return NS_OK;
     }
   }
 
   aAppName.AssignLiteral("Netscape");
-  return NS_OK;
 }

@@ -69,6 +69,8 @@ class nsIDOMTelephony;
 // Navigator: Script "navigator" object
 //*****************************************************************************
 
+void NS_GetNavigatorAppName(nsAString& aAppName);
+
 namespace mozilla {
 namespace dom {
 
@@ -79,6 +81,7 @@ class BatteryManager;
 class DesktopNotificationCenter;
 class SmsManager;
 class MobileMessageManager;
+class MozIdleObserver;
 
 namespace icc {
 #ifdef MOZ_B2G_RIL
@@ -192,7 +195,7 @@ public:
   static void Init();
 
   void Invalidate();
-  nsPIDOMWindow *GetWindow()
+  nsPIDOMWindow *GetWindow() const
   {
     return mWindow;
   }
@@ -218,8 +221,91 @@ public:
 
   NS_DECL_NSIDOMNAVIGATORCAMERA
 
+  // WebIDL API
+  void GetAppName(nsString& aAppName)
+  {
+    NS_GetNavigatorAppName(aAppName);
+  }
+  void GetAppVersion(nsString& aAppVersion, ErrorResult& aRv)
+  {
+    aRv = GetAppVersion(aAppVersion);
+  }
+  void GetPlatform(nsString& aPlatform, ErrorResult& aRv)
+  {
+    aRv = GetPlatform(aPlatform);
+  }
+  void GetUserAgent(nsString& aUserAgent, ErrorResult& aRv)
+  {
+    aRv = GetUserAgent(aUserAgent);
+  }
+  // The XPCOM GetProduct is OK
+  // The XPCOM GetLanguage is OK
+  bool OnLine();
+  void RegisterProtocolHandler(const nsAString& aScheme, const nsAString& aURL,
+                               const nsAString& aTitle, ErrorResult& rv)
+  {
+    rv = RegisterProtocolHandler(aScheme, aURL, aTitle);
+  }
+  void RegisterContentHandler(const nsAString& aMIMEType, const nsAString& aURL,
+                              const nsAString& aTitle, ErrorResult& rv)
+  {
+    rv = RegisterContentHandler(aMIMEType, aURL, aTitle);
+  }
+  nsMimeTypeArray* GetMimeTypes(ErrorResult& aRv);
+  nsPluginArray* GetPlugins(ErrorResult& aRv);
+  // The XPCOM GetDoNotTrack is ok
+  Geolocation* GetGeolocation(ErrorResult& aRv);
+  battery::BatteryManager* GetBattery(ErrorResult& aRv);
+  void Vibrate(uint32_t aDuration, ErrorResult& aRv);
+  void Vibrate(const nsTArray<uint32_t>& aDuration, ErrorResult& aRv);
+  void GetAppCodeName(nsString& aAppCodeName, ErrorResult& aRv)
+  {
+    aRv = GetAppCodeName(aAppCodeName);
+  }
+  void GetOscpu(nsString& aOscpu, ErrorResult& aRv)
+  {
+    aRv = GetOscpu(aOscpu);
+  }
+  // The XPCOM GetVendor is OK
+  // The XPCOM GetVendorSub is OK
+  // The XPCOM GetProductSub is OK
+  bool CookieEnabled();
+  void GetBuildID(nsString& aBuildID, ErrorResult& aRv)
+  {
+    aRv = GetBuildID(aBuildID);
+  }
+  nsIDOMMozPowerManager* GetMozPower(ErrorResult& aRv);
+  bool JavaEnabled(ErrorResult& aRv);
+  bool TaintEnabled()
+  {
+    return false;
+  }
+  void AddIdleObserver(MozIdleObserver& aObserver, ErrorResult& aRv);
+  void RemoveIdleObserver(MozIdleObserver& aObserver, ErrorResult& aRv);
+  already_AddRefed<nsIDOMMozWakeLock> RequestWakeLock(const nsAString &aTopic,
+                                                      ErrorResult& aRv);
+
+  // WebIDL helper methods
+  static bool HasBatterySupport(JSContext* /* unused*/, JSObject* /*unused */);
+  static bool HasPowerSupport(JSContext* /* unused */, JSObject* aGlobal);
+  static bool HasIdleSupport(JSContext* /* unused */, JSObject* aGlobal);
+  static bool HasWakeLockSupport(JSContext* /* unused*/, JSObject* /*unused */);
+  nsPIDOMWindow* GetParentObject() const
+  {
+    return GetWindow();
+  }
+
 private:
   bool CheckPermission(const char* type);
+  static bool CheckPermission(nsPIDOMWindow* aWindow, const char* aType);
+  // GetWindowFromGlobal returns the inner window for this global, if
+  // any, else null.
+  static already_AddRefed<nsPIDOMWindow> GetWindowFromGlobal(JSObject* aGlobal);
+
+  // Methods to common up the XPCOM and WebIDL implementations of
+  // Add/RemoveIdleObserver.
+  void AddIdleObserver(nsIIdleObserver& aIdleObserver);
+  void RemoveIdleObserver(nsIIdleObserver& aIdleObserver);
 
   nsRefPtr<nsMimeTypeArray> mMimeTypes;
   nsRefPtr<nsPluginArray> mPlugins;
@@ -258,6 +344,5 @@ private:
 nsresult NS_GetNavigatorUserAgent(nsAString& aUserAgent);
 nsresult NS_GetNavigatorPlatform(nsAString& aPlatform);
 nsresult NS_GetNavigatorAppVersion(nsAString& aAppVersion);
-nsresult NS_GetNavigatorAppName(nsAString& aAppName);
 
 #endif // mozilla_dom_Navigator_h
