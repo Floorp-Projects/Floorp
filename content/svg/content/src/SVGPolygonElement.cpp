@@ -46,8 +46,6 @@ SVGPolygonElement::GetMarkPoints(nsTArray<nsSVGMark> *aMarks)
 
   nsSVGMark *endMark = &aMarks->LastElement();
   nsSVGMark *startMark = &aMarks->ElementAt(0);
-  gfxFloat xmid = (startMark->x + endMark->x) / 2;
-  gfxFloat ymid = (startMark->y + endMark->y) / 2;
   float angle = atan2(startMark->y - endMark->y, startMark->x - endMark->x);
 
   endMark->angle = SVGContentUtils::AngleBisect(angle, endMark->angle);
