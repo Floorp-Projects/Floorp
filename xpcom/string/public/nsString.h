@@ -21,7 +21,7 @@
 #include "nsReadableUtils.h"
 #endif
 
-#include NEW_H
+#include <new>
 
   // enable support for the obsolete string API if not explicitly disabled
 #ifndef MOZ_STRING_WITH_OBSOLETE_API
