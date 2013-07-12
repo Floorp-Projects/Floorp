@@ -5281,7 +5281,7 @@ main(int argc, char **argv, char **envp)
                                "Don't compile very large scripts (default: on, off to disable)")
         || !op.addIntOption('\0', "ion-uses-before-compile", "COUNT",
                             "Wait for COUNT calls or iterations before compiling "
-                            "(default: 10240)", -1)
+                            "(default: 1000)", -1)
         || !op.addStringOption('\0', "ion-regalloc", "[mode]",
                                "Specify Ion register allocation:\n"
                                "  lsra: Linear Scan register allocation (default)\n"
