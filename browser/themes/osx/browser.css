@@ -9,6 +9,7 @@
 %define forwardTransitionLength 150ms
 %define conditionalForwardWithUrlbar window:not([chromehidden~=toolbar]) :-moz-any(#nav-bar[currentset*="unified-back-forward-button,urlbar-container"],#nav-bar:not([currentset])) > #nav-bar-customizationtarget > #unified-back-forward-button
 %define conditionalForwardWithUrlbarWidth 27
+%define toolbarButtonPressed :hover:active:not([disabled="true"]):not([customizableui-areatype="menu-panel"])
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 @namespace html url("http://www.w3.org/1999/xhtml");
@@ -429,11 +430,11 @@ toolbarbutton.bookmark-item > menupopup {
     -moz-image-region: rect(18px, 108px, 36px, 90px);
   }
 
-  #home-button:hover:active {
+  #home-button@toolbarButtonPressed@ {
     -moz-image-region: rect(18px, 126px, 36px, 108px);
   }
 
-  #bookmarks-menu-button:hover:active:not([disabled="true"]) {
+  #bookmarks-menu-button@toolbarButtonPressed@ {
     -moz-image-region: rect(18px, 144px, 36px, 126px);
   }
 
@@ -441,11 +442,11 @@ toolbarbutton.bookmark-item > menupopup {
     -moz-image-region: rect(36px, 144px, 54px, 126px);
   }
 
-  #bookmarks-menu-button[starred]:hover:active:not([disabled="true"]) {
+  #bookmarks-menu-button[starred]@toolbarButtonPressed@ {
     -moz-image-region: rect(18px, 162px, 36px, 144px);
   }
 
-  #history-panelmenu:hover:active:not([disabled="true"]) {
+  #history-panelmenu@toolbarButtonPressed@ {
     -moz-image-region: rect(18px, 180px, 36px, 162px);
   }
 
@@ -453,64 +454,64 @@ toolbarbutton.bookmark-item > menupopup {
     -moz-image-region: rect(36px, 180px, 54px, 162px);
   }
 
-  #downloads-indicator:hover:active:not([disabled="true"]),
-  #downloads-button:hover:active:not([disabled="true"]) {
+  #downloads-indicator@toolbarButtonPressed@,
+  #downloads-button@toolbarButtonPressed@ {
     -moz-image-region: rect(18px, 198px, 36px, 180px);
   }
 
-  #add-ons-button:hover:active:not([disabled="true"]) {
+  #add-ons-button@toolbarButtonPressed@ {
     -moz-image-region: rect(18px, 216px, 36px, 198px);
   }
 
-  #open-file-button:hover:active:not([disabled="true"]) {
+  #open-file-button@toolbarButtonPressed@ {
     -moz-image-region: rect(18px, 234px, 36px, 216px);
   }
 
-  #save-page-button:hover:active:not([disabled="true"]) {
+  #save-page-button@toolbarButtonPressed@ {
     -moz-image-region: rect(18px, 252px, 36px, 234px);
   }
 
-  #sync-button:hover:active:not([disabled="true"]) {
+  #sync-button@toolbarButtonPressed@ {
     -moz-image-region: rect(18px, 270px, 36px, 252px);
   }
 
-  #feed-button:hover:active:not([disabled="true"]) {
+  #feed-button@toolbarButtonPressed@ {
     -moz-image-region: rect(18px, 288px, 36px, 270px);
   }
 
-  #share-button:hover:active:not([disabled="true"]) {
+  #share-button@toolbarButtonPressed@ {
     -moz-image-region: rect(18px, 306px, 36px, 288px);
   }
 
-  #charset-button:hover:active:not([disabled="true"]) {
+  #charset-button@toolbarButtonPressed@ {
     -moz-image-region: rect(18px, 324px, 36px, 306px);
   }
 
-  #new-window-button:hover:active:not([disabled="true"]) {
+  #new-window-button@toolbarButtonPressed@ {
     -moz-image-region: rect(18px, 342px, 36px, 324px);
   }
 
-  #new-tab-button:hover:active:not([disabled="true"]) {
+  #new-tab-button@toolbarButtonPressed@ {
     -moz-image-region: rect(18px, 360px, 36px, 342px);
   }
 
-  #privatebrowsing-button:hover:active:not([disabled="true"]) {
+  #privatebrowsing-button@toolbarButtonPressed@ {
     -moz-image-region: rect(18px, 378px, 36px, 360px);
   }
 
-  #find-button:hover:active:not([disabled="true"]) {
+  #find-button@toolbarButtonPressed@ {
     -moz-image-region: rect(18px, 396px, 36px, 378px);
   }
 
-  #print-button:hover:active:not([disabled="true"]) {
+  #print-button@toolbarButtonPressed@ {
     -moz-image-region: rect(18px, 414px, 36px, 396px);
   }
 
-  #fullscreen-button:hover:active:not([disabled="true"]) {
+  #fullscreen-button@toolbarButtonPressed@ {
     -moz-image-region: rect(18px, 432px, 36px, 414px);
   }
 
-  #developer-button:hover:active:not([disabled="true"]) {
+  #developer-button@toolbarButtonPressed@ {
     -moz-image-region: rect(18px, 450px, 36px, 432px);
   }
 
@@ -518,11 +519,11 @@ toolbarbutton.bookmark-item > menupopup {
     -moz-image-region: rect(36px, 450px, 54px, 432px);
   }
 
-  #preferences-button:hover:active:not([disabled="true"]) {
+  #preferences-button@toolbarButtonPressed@ {
     -moz-image-region: rect(18px, 468px, 36px, 450px);
   }
 
-  #PanelUI-menu-button:hover:active:not([disabled="true"]) {
+  #PanelUI-menu-button@toolbarButtonPressed@ {
     -moz-image-region: rect(18px, 486px, 36px, 468px);
   }
 
@@ -530,31 +531,31 @@ toolbarbutton.bookmark-item > menupopup {
     -moz-image-region: rect(36px, 486px, 54px, 468px);
   }
 
-  #cut-button:hover:active:not([disabled="true"]) {
+  #cut-button@toolbarButtonPressed@ {
     -moz-image-region: rect(18px, 504px, 36px, 486px);
   }
 
-  #copy-button:hover:active:not([disabled="true"]) {
+  #copy-button@toolbarButtonPressed@ {
     -moz-image-region: rect(18px, 522px, 36px, 504px);
   }
 
-  #paste-button:hover:active:not([disabled="true"]) {
+  #paste-button@toolbarButtonPressed@ {
     -moz-image-region: rect(18px, 540px, 36px, 522px);
   }
 
-  #zoom-out-button:hover:active:not([disabled="true"]) {
+  #zoom-out-button@toolbarButtonPressed@ {
     -moz-image-region: rect(18px, 558px, 36px, 540px);
   }
 
-  #zoom-in-button:hover:active:not([disabled="true"]) {
+  #zoom-in-button@toolbarButtonPressed@ {
     -moz-image-region: rect(18px, 576px, 36px, 558px);
   }
 
-  #webrtc-status-button:hover:active:not([disabled="true"]) {
+  #webrtc-status-button@toolbarButtonPressed@ {
     -moz-image-region: rect(18px, 594px, 36px, 576px);
   }
 
-  #nav-bar-overflow-button:hover:active:not([disabled="true"]) {
+  #nav-bar-overflow-button@toolbarButtonPressed@ {
     -moz-image-region: rect(18px, 612px, 36px, 594px);
   }
 
@@ -566,11 +567,11 @@ toolbarbutton.bookmark-item > menupopup {
    * OSX has a unique set of icons when fullscreen is in the checked state.
    */
 
-  #fullscreen-button[checked="true"] {
+  #fullscreen-button[checked="true"]:not([customizableui-areatype="menu-panel"]) {
     -moz-image-region: rect(36px, 432px, 54px, 414px);
   }
 
-  #fullscreen-button[checked="true"]:hover:active:not([disabled="true"]) {
+  #fullscreen-button[checked="true"]@toolbarButtonPressed@ {
     -moz-image-region: rect(54px, 432px, 72px, 414px);
   }
 }
