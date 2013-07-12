@@ -111,6 +111,7 @@ Navigator::Navigator(nsPIDOMWindow* aWindow)
 {
   NS_ASSERTION(aWindow->IsInnerWindow(),
                "Navigator must get an inner window!");
+  SetIsDOMBinding();
 }
 
 Navigator::~Navigator()
@@ -2176,6 +2177,12 @@ Navigator::DoNewResolve(JSContext* aCx, JS::Handle<JSObject*> aObject,
   aObjp.set(aObject);
 
   return ok;
+}
+
+JSObject*
+Navigator::WrapObject(JSContext* cx, JS::Handle<JSObject*> scope)
+{
+  return NavigatorBinding::Wrap(cx, scope, this);
 }
 
 /* static */
