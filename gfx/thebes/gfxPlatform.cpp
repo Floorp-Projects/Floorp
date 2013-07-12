@@ -639,6 +639,15 @@ gfxPlatform::GetSourceSurfaceForSurface(DrawTarget *aTarget, gfxASurface *aSurfa
     }
     srcBuffer = aTarget->CreateSourceSurfaceFromNativeSurface(surf);
   } else
+#elif defined XP_MACOSX
+  if (aSurface->GetType() == gfxASurface::SurfaceTypeQuartz) {
+    NativeSurface surf;
+    surf.mFormat = format;
+    surf.mType = NATIVE_SURFACE_CGCONTEXT;
+    surf.mSurface = static_cast<gfxQuartzSurface*>(aSurface)->GetCGContext();
+
+    srcBuffer = aTarget->CreateSourceSurfaceFromNativeSurface(surf);
+  } else
 #endif
   if (aSurface->CairoSurface() && aTarget->GetType() == BACKEND_CAIRO) {
     // If this is an xlib cairo surface we don't want to fetch it into memory
