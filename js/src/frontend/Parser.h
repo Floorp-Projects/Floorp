@@ -402,8 +402,8 @@ class Parser : private AutoGCRooter, public StrictModeGetter
     bool maybeParseDirective(Node pn, bool *cont);
 
     // Parse a function, given only its body. Used for the Function constructor.
-    Node standaloneFunctionBody(HandleFunction fun, const AutoNameVector &formals, HandleScript script,
-                                Node fn, FunctionBox **funbox, bool strict,
+    Node standaloneFunctionBody(HandleFunction fun, const AutoNameVector &formals,
+                                HandleScript script, Node fn, bool strict,
                                 bool *becameStrict = NULL);
 
     // Parse a function, given only its arguments and body. Used for lazily
