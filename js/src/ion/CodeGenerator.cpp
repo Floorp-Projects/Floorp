@@ -1817,7 +1817,9 @@ CodeGenerator::visitCallKnown(LCallKnown *call)
     // Invoke in sequential mode, else mark as cannot compile.
     JS_ASSERT(call->mir()->hasRootedScript());
     JSScript *targetScript = target->nonLazyScript();
-    if (GetIonScript(targetScript, executionMode) == ION_DISABLED_SCRIPT) {
+    if (GetIonScript(targetScript, executionMode) == ION_DISABLED_SCRIPT &&
+        (executionMode == ParallelExecution || !targetScript->canBaselineCompile()))
+    {
         if (executionMode == ParallelExecution)
             return false;
 
