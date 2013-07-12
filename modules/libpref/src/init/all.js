@@ -1854,11 +1854,11 @@ pref("dom.max_script_run_time", 10);
 // If true, ArchiveReader will be enabled
 pref("dom.archivereader.enabled", false);
 
-// If true, Future will be enabled
+// If true, Promise will be enabled
 #ifdef RELEASE_BUILD
-pref("dom.future.enabled", false);
+pref("dom.promise.enabled", false);
 #else
-pref("dom.future.enabled", true);
+pref("dom.promise.enabled", true);
 #endif
 
 // Hang monitor timeout after which we kill the browser, in seconds
@@ -1934,6 +1934,14 @@ pref("svg.display-lists.painting.enabled", true);
 pref("svg.paint-order.enabled", false);
 #else
 pref("svg.paint-order.enabled", true);
+#endif
+
+// Is support for the new marker features from SVG 2 enabled?  Currently
+// this just includes <marker orient="auto-start-reverse">.
+#ifdef RELEASE_BUILD
+pref("svg.marker-improvements.enabled", false);
+#else
+pref("svg.marker-improvements.enabled", true);
 #endif
 
 // Is support for the new SVG text implementation enabled?

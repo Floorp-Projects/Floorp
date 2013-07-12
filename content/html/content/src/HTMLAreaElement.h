@@ -20,10 +20,10 @@ class nsIDocument;
 namespace mozilla {
 namespace dom {
 
-class HTMLAreaElement : public nsGenericHTMLElement,
-                        public nsIDOMHTMLAreaElement,
-                        public nsILink,
-                        public Link
+class HTMLAreaElement MOZ_FINAL : public nsGenericHTMLElement,
+                                  public nsIDOMHTMLAreaElement,
+                                  public nsILink,
+                                  public Link
 {
 public:
   HTMLAreaElement(already_AddRefed<nsINodeInfo> aNodeInfo);

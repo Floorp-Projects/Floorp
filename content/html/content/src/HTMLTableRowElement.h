@@ -16,8 +16,8 @@ class nsContentList;
 namespace mozilla {
 namespace dom {
 
-class HTMLTableRowElement : public nsGenericHTMLElement,
-                            public nsIDOMHTMLTableRowElement
+class HTMLTableRowElement MOZ_FINAL : public nsGenericHTMLElement,
+                                      public nsIDOMHTMLTableRowElement
 {
 public:
   HTMLTableRowElement(already_AddRefed<nsINodeInfo> aNodeInfo)

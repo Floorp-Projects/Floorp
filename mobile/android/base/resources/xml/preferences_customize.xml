@@ -22,6 +22,11 @@
                         android:defaultValue="true"
                         android:persistent="false" />
 
+    <CheckBoxPreference android:key="android.not_a_preference.restoreSession"
+                        android:title="@string/pref_restore_session"
+                        android:defaultValue="false"
+                        android:persistent="true" />
+
    <ListPreference android:key="app.update.autodownload"
                    android:title="@string/pref_update_autodownload"
                    android:entries="@array/pref_update_autodownload_entries"

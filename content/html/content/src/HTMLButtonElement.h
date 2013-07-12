@@ -14,9 +14,9 @@
 namespace mozilla {
 namespace dom {
 
-class HTMLButtonElement : public nsGenericHTMLFormElement,
-                          public nsIDOMHTMLButtonElement,
-                          public nsIConstraintValidation
+class HTMLButtonElement MOZ_FINAL : public nsGenericHTMLFormElement,
+                                    public nsIDOMHTMLButtonElement,
+                                    public nsIConstraintValidation
 {
 public:
   using nsIConstraintValidation::GetValidationMessage;

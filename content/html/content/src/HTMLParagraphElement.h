@@ -15,8 +15,8 @@
 namespace mozilla {
 namespace dom {
 
-class HTMLParagraphElement : public nsGenericHTMLElement,
-                             public nsIDOMHTMLParagraphElement
+class HTMLParagraphElement MOZ_FINAL : public nsGenericHTMLElement,
+                                       public nsIDOMHTMLParagraphElement
 {
 public:
   HTMLParagraphElement(already_AddRefed<nsINodeInfo> aNodeInfo)

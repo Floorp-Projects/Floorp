@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "xpcom-config.h"
-#include NEW_H    // for placement new
+#include <new>    // for placement new
 #include "nscore.h"
 #include "nsCRT.h"
 

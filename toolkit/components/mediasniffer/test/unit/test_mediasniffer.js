@@ -67,7 +67,8 @@ function setupChannel(url, flags)
 {
   var ios = Components.classes["@mozilla.org/network/io-service;1"].
                        getService(Ci.nsIIOService);
-  var chan = ios.newChannel("http://localhost:4444" + url, "", null);
+  var chan = ios.newChannel("http://localhost:" +
+                           httpserver.identity.primaryPort + url, "", null);
   chan.loadFlags |= flags;
   var httpChan = chan.QueryInterface(Components.interfaces.nsIHttpChannel);
   return httpChan;
@@ -87,7 +88,7 @@ function runNext() {
 }
 
 function run_test() {
-  httpserver.start(4444);
+  httpserver.start(-1);
   do_test_pending();
   try {
     runNext();
