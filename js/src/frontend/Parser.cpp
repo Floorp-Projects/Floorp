@@ -4478,6 +4478,8 @@ template <>
 ParseNode *
 Parser<FullParseHandler>::withStatement()
 {
+    // test262/ch12/12.10/12.10-0-1.js fails if we try to parse with-statements
+    // in syntax-parse mode. See bug 892583.
     if (handler.syntaxParser) {
         handler.disableSyntaxParser();
         abortedSyntaxParse = true;
