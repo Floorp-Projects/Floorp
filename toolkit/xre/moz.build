@@ -87,11 +87,3 @@ if CONFIG['MOZ_UPDATER']:
         CPP_SOURCES += [
             'nsUpdateDriver.cpp',
         ]
-
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
-    CMMSRCS += [
-        'MacApplicationDelegate.mm',
-        'MacAutoreleasePool.mm',
-        'MacLaunchHelper.mm',
-        'nsNativeAppSupportCocoa.mm',
-    ]

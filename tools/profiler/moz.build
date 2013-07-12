@@ -64,8 +64,3 @@ EXPORTS.mozilla += [
 ]
 
 XPCSHELL_TESTS_MANIFESTS += ['tests/xpcshell.ini']
-
-if CONFIG['MOZ_ENABLE_PROFILER_SPS'] and CONFIG['OS_TARGET'] == 'Darwin':
-    CMMSRCS += [
-        'shim_mac_dump_syms.mm',
-    ]
