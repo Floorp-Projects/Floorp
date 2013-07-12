@@ -517,7 +517,8 @@ nsFrame::Init(nsIContent*      aContent,
     mState |= state & (NS_FRAME_INDEPENDENT_SELECTION |
                        NS_FRAME_GENERATED_CONTENT |
                        NS_FRAME_IS_SVG_TEXT |
-                       NS_FRAME_IN_POPUP);
+                       NS_FRAME_IN_POPUP |
+                       NS_FRAME_IS_NONDISPLAY);
   }
   const nsStyleDisplay *disp = StyleDisplay();
   if (disp->HasTransform(this)) {

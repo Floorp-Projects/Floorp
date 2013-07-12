@@ -88,8 +88,7 @@ nsSVGDisplayContainerFrame::Init(nsIContent* aContent,
                                  nsIFrame* aPrevInFlow)
 {
   if (!(GetStateBits() & NS_STATE_IS_OUTER_SVG)) {
-    AddStateBits(aParent->GetStateBits() &
-      (NS_FRAME_IS_NONDISPLAY | NS_STATE_SVG_CLIPPATH_CHILD));
+    AddStateBits(aParent->GetStateBits() & NS_STATE_SVG_CLIPPATH_CHILD);
   }
   nsSVGContainerFrame::Init(aContent, aParent, aPrevInFlow);
 }
