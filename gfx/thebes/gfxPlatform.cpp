@@ -601,6 +601,12 @@ void SourceSnapshotDetached(void *nullSurf)
 }
 #endif
 
+void
+gfxPlatform::ClearSourceSurfaceForSurface(gfxASurface *aSurface)
+{
+  aSurface->SetData(&kSourceSurface, nullptr, nullptr);
+}
+
 RefPtr<SourceSurface>
 gfxPlatform::GetSourceSurfaceForSurface(DrawTarget *aTarget, gfxASurface *aSurface)
 {
