@@ -794,7 +794,14 @@ DoCommandCallback(const char *aCommand, void *aData)
 
   nsCOMPtr<nsIController> controller;
   controllers->GetControllerForCommand(aCommand, getter_AddRefs(controller));
-  if (controller) {
+  if (!controller) {
+    return;
+  }
+
+  bool commandEnabled;
+  nsresult rv = controller->IsCommandEnabled(aCommand, &commandEnabled);
+  NS_ENSURE_SUCCESS_VOID(rv);
+  if (commandEnabled) {
     controller->DoCommand(aCommand);
   }
 }

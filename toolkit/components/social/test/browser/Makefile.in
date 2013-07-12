@@ -16,6 +16,7 @@ ifdef MOZ_SOCIAL
 MOCHITEST_BROWSER_FILES = \
   head.js \
   data.json \
+  echo.sjs \
   worker_xhr.js \
   browser_frameworker.js \
   worker_relative.js \

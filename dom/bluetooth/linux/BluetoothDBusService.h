@@ -58,18 +58,6 @@ public:
                 nsAString& aDevicePath) MOZ_OVERRIDE;
 
   static bool
-  AddServiceRecords(const char* serviceName,
-                    unsigned long long uuidMsb,
-                    unsigned long long uuidLsb,
-                    int channel);
-
-  static bool
-  RemoveServiceRecords(const char* serviceName,
-                       unsigned long long uuidMsb,
-                       unsigned long long uuidLsb,
-                       int channel);
-
-  static bool
   AddReservedServicesInternal(const nsTArray<uint32_t>& aServices,
                               nsTArray<uint32_t>& aServiceHandlesContainer);
 

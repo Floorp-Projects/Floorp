@@ -661,6 +661,10 @@ pref("accessibility.accessfu.utterance", 1);
 // Whether to skip images with empty alt text
 pref("accessibility.accessfu.skip_empty_images", true);
 
+// Transmit UDP busy-work to the LAN when anticipating low latency
+// network reads and on wifi to mitigate 802.11 Power Save Polling delays
+pref("network.tickle-wifi.enabled", true);
+
 // Mobile manages state by autodetection
 pref("network.manage-offline-status", true);
 

@@ -13,7 +13,6 @@ chrome.jar:
 * skin/browser.css                          (browser.css)
 * skin/content.css                          (content.css)
   skin/config.css                           (config.css)
-* skin/forms.css                            (forms.css)
 * skin/platform.css                         (platform.css)
 * skin/tiles.css                            (tiles.css)
   skin/touchcontrols.css                    (touchcontrols.css)

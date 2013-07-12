@@ -759,9 +759,12 @@ var Input = {
   },
 
   activateContextMenu: function activateContextMenu(aMessage) {
-    if (Utils.MozBuildApp === 'mobile/android')
+    if (Utils.MozBuildApp === 'mobile/android') {
+      let vp = Utils.getViewport(Utils.win) || { zoom: 1.0 };
       Services.obs.notifyObservers(null, 'Gesture:LongPress',
-                                   JSON.stringify({x: aMessage.x, y: aMessage.y}));
+                                   JSON.stringify({x: aMessage.x / vp.zoom,
+                                                   y: aMessage.y / vp.zoom}));
+    }
   },
 
   setEditState: function setEditState(aEditState) {

@@ -43,7 +43,6 @@ public:
   HTMLBodyElement(already_AddRefed<nsINodeInfo> aNodeInfo)
     : nsGenericHTMLElement(aNodeInfo)
   {
-    SetIsDOMBinding();
   }
   virtual ~HTMLBodyElement();
 

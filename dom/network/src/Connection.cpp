@@ -28,6 +28,7 @@ const bool  Connection::sMeteredDefaultValue = false;
 
 NS_INTERFACE_MAP_BEGIN(Connection)
   NS_INTERFACE_MAP_ENTRY(nsIDOMMozConnection)
+  NS_INTERFACE_MAP_ENTRY(nsINetworkProperties)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(MozConnection)
 NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
 
@@ -41,6 +42,8 @@ NS_IMPL_EVENT_HANDLER(Connection, change)
 Connection::Connection()
   : mCanBeMetered(kDefaultCanBeMetered)
   , mBandwidth(kDefaultBandwidth)
+  , mIsWifi(kDefaultIsWifi)
+  , mDHCPGateway(kDefaultDHCPGateway)
 {
 }
 
@@ -88,11 +91,27 @@ Connection::GetMetered(bool* aMetered)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+Connection::GetIsWifi(bool *aIsWifi)
+{
+  *aIsWifi = mIsWifi;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+Connection::GetDhcpGateway(uint32_t *aGW)
+{
+  *aGW = mDHCPGateway;
+  return NS_OK;
+}
+
 void
 Connection::UpdateFromNetworkInfo(const hal::NetworkInformation& aNetworkInfo)
 {
   mBandwidth = aNetworkInfo.bandwidth();
   mCanBeMetered = aNetworkInfo.canBeMetered();
+  mIsWifi = aNetworkInfo.isWifi();
+  mDHCPGateway = aNetworkInfo.dhcpGateway();
 }
 
 void
