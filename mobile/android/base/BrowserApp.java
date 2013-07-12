@@ -1248,14 +1248,22 @@ abstract public class BrowserApp extends GeckoApp
     }
 
     private void openUrl(String url) {
-        openUrl(url, null);
+        openUrl(url, null, mBrowserToolbar.getEditingTarget());
+    }
+
+    private void openUrl(String url, EditingTarget target) {
+        openUrl(url, null, target);
     }
 
     private void openUrl(String url, String searchEngine) {
+        openUrl(url, searchEngine, mBrowserToolbar.getEditingTarget());
+    }
+
+    private void openUrl(String url, String searchEngine, EditingTarget target) {
         mBrowserToolbar.setProgressVisibility(true);
 
         int flags = Tabs.LOADURL_NONE;
-        if (mBrowserToolbar.getEditingTarget() == EditingTarget.NEW_TAB) {
+        if (target == EditingTarget.NEW_TAB) {
             flags |= Tabs.LOADURL_NEW_TAB;
         }
 
