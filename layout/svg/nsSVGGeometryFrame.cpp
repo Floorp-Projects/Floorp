@@ -25,7 +25,7 @@ nsSVGGeometryFrame::Init(nsIContent* aContent,
                          nsIFrame* aPrevInFlow)
 {
   AddStateBits(aParent->GetStateBits() &
-               (NS_STATE_SVG_NONDISPLAY_CHILD | NS_STATE_SVG_CLIPPATH_CHILD));
+               (NS_FRAME_IS_NONDISPLAY | NS_STATE_SVG_CLIPPATH_CHILD));
   nsSVGGeometryFrameBase::Init(aContent, aParent, aPrevInFlow);
 }
 

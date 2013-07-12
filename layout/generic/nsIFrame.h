@@ -321,6 +321,10 @@ typedef uint64_t nsFrameState;
 // rect stored to invalidate.
 #define NS_FRAME_HAS_INVALID_RECT                   NS_FRAME_STATE_BIT(52)
 
+// Frame is not displayed directly due to it being, or being under, an SVG
+// <defs> element or an SVG resource element (<mask>, <pattern>, etc.)
+#define NS_FRAME_IS_NONDISPLAY                      NS_FRAME_STATE_BIT(53)
+
 // Box layout bits
 #define NS_STATE_IS_HORIZONTAL                      NS_FRAME_STATE_BIT(22)
 #define NS_STATE_IS_DIRECTION_NORMAL                NS_FRAME_STATE_BIT(31)
