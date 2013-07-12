@@ -4,6 +4,16 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 'use strict';
 
+const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
+
+Cu.import('resource://gre/modules/XPCOMUtils.jsm');
+Cu.import('resource://gre/modules/Services.jsm');
+Cu.import('resource://testing-common/httpd.js');
+
+XPCOMUtils.defineLazyServiceGetter(this, 'gCaptivePortalDetector',
+                                   '@mozilla.org/toolkit/captive-detector;1',
+                                   'nsICaptivePortalDetector');
+
 const kServerURL = 'http://localhost:4444';
 const kCanonicalSitePath = '/canonicalSite.html';
 const kCanonicalSiteContent = 'true';
