@@ -121,4 +121,18 @@ CameraPreviewMediaStream::SetCurrentFrame(const gfxIntSize& aIntrinsicSize, Imag
   }
 }
 
+void
+CameraPreviewMediaStream::ClearCurrentFrame()
+{
+  MutexAutoLock lock(mMutex);
+
+  for (uint32_t i = 0; i < mVideoOutputs.Length(); ++i) {
+    VideoFrameContainer* output = mVideoOutputs[i];
+    output->ClearCurrentFrame();
+    nsCOMPtr<nsIRunnable> event =
+      NS_NewRunnableMethod(output, &VideoFrameContainer::Invalidate);
+    NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
+  }
+}
+
 }
