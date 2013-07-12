@@ -27,7 +27,10 @@ public:
   NS_REALLY_FORWARD_NSIDOMEVENTTARGET(nsDOMEventTargetHelper)
 
   static already_AddRefed<SmsManager>
-  CreateInstanceIfAllowed(nsPIDOMWindow *aWindow);
+  CreateInstance(nsPIDOMWindow *aWindow);
+
+  static bool
+  CreationIsAllowed(nsPIDOMWindow *aWindow);
 
   void Init(nsPIDOMWindow *aWindow);
   void Shutdown();
