@@ -1,48 +1,19 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-Components.utils.import("resource://gre/modules/devtools/dbg-server.jsm");
-Components.utils.import("resource://gre/modules/devtools/dbg-client.jsm");
-
-Components.utils.import("resource://gre/modules/FileUtils.jsm");
-Components.utils.import("resource://gre/modules/Services.jsm");
-
-const Ci = Components.interfaces;
-const Cc = Components.classes;
-const Cu = Components.utils;
-const Cr = Components.results;
-
-let gClient, gActor;
 let gAppId = "actor-test";
 
-add_test(function testSetup() {
-  // Initialize a loopback remote protocol connection
-  DebuggerServer.init(function () { return true; });
-  // We need to register browser actors to have `listTabs` working
-  // and also have a root actor
-  DebuggerServer.addBrowserActors();
-
-  // Setup client and actor used in all tests
-  gClient = new DebuggerClient(DebuggerServer.connectPipe());
-  gClient.connect(function onConnect() {
-    gClient.listTabs(function onListTabs(aResponse) {
-      gActor = aResponse.webappsActor;
-      run_next_test();
-    });
-  });
-});
-
 add_test(function testLaunchInexistantApp() {
-  let request = {to: gActor, type: "launch", manifestURL: "http://foo.com"};
-  gClient.request(request, function (aResponse) {
+  let request = {type: "launch", manifestURL: "http://foo.com"};
+  webappActorRequest(request, function (aResponse) {
     do_check_eq(aResponse.error, "NO_SUCH_APP");
     run_next_test();
   });
 });
 
 add_test(function testCloseInexistantApp() {
-  let request = {to: gActor, type: "close", manifestURL: "http://foo.com"};
-  gClient.request(request, function (aResponse) {
+  let request = {type: "close", manifestURL: "http://foo.com"};
+  webappActorRequest(request, function (aResponse) {
     do_check_eq(aResponse.error, "missingParameter");
     do_check_eq(aResponse.message, "No application for http://foo.com");
     run_next_test();
@@ -56,8 +27,8 @@ add_test(function testInstallPackaged() {
   let appDir = FileUtils.getDir("TmpD", ["b2g", gAppId], true, true);
   zip.copyTo(appDir, "application.zip");
 
-  let request = {to: gActor, type: "install", appId: gAppId};
-  gClient.request(request, function (aResponse) {
+  let request = {type: "install", appId: gAppId};
+  webappActorRequest(request, function (aResponse) {
     do_check_eq(aResponse.appId, gAppId);
   });
 
@@ -80,8 +51,8 @@ add_test(function testInstallPackaged() {
 
 // Now check that the app appear in getAll
 add_test(function testGetAll() {
-  let request = {to: gActor, type: "getAll"};
-  gClient.request(request, function (aResponse) {
+  let request = {type: "getAll"};
+  webappActorRequest(request, function (aResponse) {
     do_check_true("apps" in aResponse);
     let apps = aResponse.apps;
     do_check_true(apps.length > 0);
@@ -106,7 +77,7 @@ add_test(function testLaunchApp() {
   let manifestURL = "app://" + gAppId + "/manifest.webapp";
   let startPoint = "/index.html";
   let request = {
-    to: gActor, type: "launch",
+    type: "launch",
     manifestURL: manifestURL,
     startPoint: startPoint
   };
@@ -118,7 +89,7 @@ add_test(function testLaunchApp() {
     run_next_test();
   }, "webapps-launch", false);
 
-  gClient.request(request, function (aResponse) {
+  webappActorRequest(request, function (aResponse) {
     do_check_false("error" in aResponse);
   });
 });
@@ -126,7 +97,7 @@ add_test(function testLaunchApp() {
 add_test(function testCloseApp() {
   let manifestURL = "app://" + gAppId + "/manifest.webapp";
   let request = {
-    to: gActor, type: "close",
+    type: "close",
     manifestURL: manifestURL
   };
   Services.obs.addObserver(function observer(subject, topic, data) {
@@ -136,7 +107,7 @@ add_test(function testCloseApp() {
     run_next_test();
   }, "webapps-close", false);
 
-  gClient.request(request, function (aResponse) {
+  webappActorRequest(request, function (aResponse) {
     do_check_false("error" in aResponse);
   });
 });
@@ -145,7 +116,7 @@ add_test(function testUninstall() {
   let origin = "app://" + gAppId;
   let manifestURL = origin + "/manifest.webapp";
   let request = {
-    to: gActor, type: "uninstall",
+    type: "uninstall",
     manifestURL: manifestURL
   };
 
@@ -168,72 +139,15 @@ add_test(function testUninstall() {
     run_next_test();
   }, "webapps-sync-uninstall", false);
 
-  gClient.request(request, function (aResponse) {
+  webappActorRequest(request, function (aResponse) {
     do_check_false("error" in aResponse);
   });
 });
 
-// Close the test remote connection before leaving this test
-add_test(function testTearDown() {
-  gClient.close(function () {
-    run_next_test();
-  });
-});
 
 function run_test() {
-  // We have to setup a profile, otherwise indexed db used by webapps
-  // will throw random exception when trying to get profile folder
-  do_get_profile();
-
-  // The webapps dir isn't registered on b2g xpcshell tests,
-  // we have to manually set it to the directory service.
-  do_get_webappsdir();
-
-  // We also need a valid nsIXulAppInfo service as Webapps.jsm is querying it
-  Components.utils.import("resource://testing-common/AppInfo.jsm");
-  updateAppInfo();
-
-  // We have to toggle this flag in order to have apps being listed in getAll
-  // as only launchable apps are returned
-  Components.utils.import('resource://gre/modules/Webapps.jsm');
-  DOMApplicationRegistry.allAppsLaunchable = true;
+  setup();
 
   run_next_test();
 }
-
-function do_get_webappsdir() {
-  var webappsDir = Services.dirsvc.get("ProfD", Ci.nsILocalFile);
-  webappsDir.append("test_webapps");
-  if (!webappsDir.exists())
-    webappsDir.create(Ci.nsIFile.DIRECTORY_TYPE, 0755);
-
-  var coreAppsDir = Services.dirsvc.get("ProfD", Ci.nsILocalFile);
-  coreAppsDir.append("test_coreapps");
-  if (!coreAppsDir.exists())
-    coreAppsDir.create(Ci.nsIFile.DIRECTORY_TYPE, 0755);
-
-  // Register our own provider for the profile directory.
-  // It will return our special docshell profile directory.
-  var provider = {
-    getFile: function(prop, persistent) {
-      persistent.value = true;
-      if (prop == "webappsDir") {
-        return webappsDir.clone();
-      }
-      else if (prop == "coreAppsDir") {
-        return coreAppsDir.clone();
-      }
-      throw Cr.NS_ERROR_FAILURE;
-    },
-    QueryInterface: function(iid) {
-      if (iid.equals(Ci.nsIDirectoryServiceProvider) ||
-          iid.equals(Ci.nsISupports)) {
-        return this;
-      }
-      throw Cr.NS_ERROR_NO_INTERFACE;
-    }
-  };
-  Services.dirsvc.QueryInterface(Ci.nsIDirectoryService).registerProvider(provider);
-}
-
 
