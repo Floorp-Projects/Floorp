@@ -3732,7 +3732,7 @@ def convertConstIDLValueToJSVal(value):
         return "JSVAL_TRUE" if value.value else "JSVAL_FALSE"
     if tag in [IDLType.Tags.float, IDLType.Tags.double]:
         return "DOUBLE_TO_JSVAL(%s)" % (value.value)
-    raise TypeError("Const value of unhandled type: " + value.type)
+    raise TypeError("Const value of unhandled type: %s" % value.type)
 
 class CGArgumentConverter(CGThing):
     """

@@ -35,7 +35,8 @@ Tests of DOM Worker Navigator
       return;
     }
 
-    is(navigator[args.name], args.value, "Mismatched navigator string!");
+    is(navigator[args.name], args.value,
+       "Mismatched navigator string for " + args.name + "!");
   };
 
   worker.onerror = function(event) {

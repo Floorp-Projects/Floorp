@@ -191,6 +191,7 @@ webidl_files = \
   MozTimeManager.webidl \
   MutationEvent.webidl \
   MutationObserver.webidl \
+  Navigator.webidl \
   NetDashboard.webidl \
   Node.webidl \
   NodeFilter.webidl \
