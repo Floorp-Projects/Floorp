@@ -1713,6 +1713,12 @@ let CustomizableUIInternal = {
       // Pick any of the build windows to look at.
       let [window,] = [...gBuildWindows][0];
       let [, node] = this.getWidgetNode(aWidgetId, window);
+      // If we don't have a node, we assume it's removable. This can happen because
+      // getWidgetProvider returns PROVIDER_XUL by default, but this will also happen
+      // for API-provided widgets which have been destroyed.
+      if (!node) {
+        return true;
+      }
       return node.getAttribute("removable") == "true";
     }
 
