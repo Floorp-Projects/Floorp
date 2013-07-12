@@ -46,7 +46,7 @@ function test_portal_found() {
     complete: function complete(success) {
       do_check_eq(++step, 3);
       do_check_true(success);
-      server.stop(do_test_finished);
+      gServer.stop(do_test_finished);
     },
   };
 
@@ -54,11 +54,5 @@ function test_portal_found() {
 }
 
 function run_test() {
-  server = new HttpServer();
-  server.registerPathHandler(kCanonicalSitePath, xhr_handler);
-  server.start(4444);
-
-  fakeUIResponse();
-
-  test_portal_found();
+  run_captivedetect_test(xhr_handler, fakeUIResponse, test_portal_found);
 }
