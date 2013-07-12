@@ -83,6 +83,7 @@
 #include "nsDeckFrame.h"
 #include "nsTableFrame.h"
 #include "nsSubDocumentFrame.h"
+#include "nsSVGTextFrame2.h"
 
 #include "gfxContext.h"
 #include "nsRenderingContext.h"
@@ -697,6 +698,17 @@ nsFrame::GetOffsets(int32_t &aStart, int32_t &aEnd) const
 /* virtual */ void
 nsFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
 {
+  if (IsSVGText()) {
+    nsSVGTextFrame2* svgTextFrame = static_cast<nsSVGTextFrame2*>(
+        nsLayoutUtils::GetClosestFrameOfType(this, nsGkAtoms::svgTextFrame2));
+    // Just as in nsSVGTextFrame2::DidSetStyleContext, we need to ensure that
+    // any non-display nsSVGTextFrame2s get reflowed when a child text frame
+    // gets new style.
+    if (svgTextFrame->GetStateBits() & NS_FRAME_IS_NONDISPLAY) {
+      svgTextFrame->ScheduleReflowSVGNonDisplayText();
+    }
+  }
+
   ImageLoader* imageLoader = PresContext()->Document()->StyleImageLoader();
 
   // If the old context had a background image image and new context
