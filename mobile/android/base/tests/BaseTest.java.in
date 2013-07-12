@@ -45,6 +45,19 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
     private static final int MAX_WAIT_ENABLED_TEXT_MS = 10000;
     public static final int MAX_WAIT_MS = 3000;
 
+    // Note: DEFAULT_BOOKMARKS_TITLES.length == DEFAULT_BOOKMARKS_URLS.length
+    protected static final String[] DEFAULT_BOOKMARKS_TITLES = new String[] {
+        "Firefox: About your browser",
+        "Firefox: Support",
+        "Firefox: Customize with add-ons"
+    };
+    protected static final String[] DEFAULT_BOOKMARKS_URLS = new String[] {
+        "about:firefox",
+        "http://support.mozilla.org/en-US/products/mobile",
+        "https://addons.mozilla.org/en-US/android/"
+    };
+    protected static final int DEFAULT_BOOKMARKS_COUNT = DEFAULT_BOOKMARKS_TITLES.length;
+
     private static Class<Activity> mLauncherActivityClass;
     private Activity mActivity;
     protected Solo mSolo;
