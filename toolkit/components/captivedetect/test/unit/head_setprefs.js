@@ -22,6 +22,8 @@ const kPrefsCanonicalContent = 'captivedetect.canonicalContent';
 const kPrefsMaxWaitingTime = 'captivedetect.maxWaitingTime';
 const kPrefsPollingTime = 'captivedetect.pollingTime';
 
+var gServer;
+
 function setupPrefs() {
   let prefs = Components.classes["@mozilla.org/preferences-service;1"]
                 .getService(Components.interfaces.nsIPrefService)
@@ -32,4 +34,15 @@ function setupPrefs() {
   prefs.setIntPref(kPrefsPollingTime, 1);
 }
 
-setupPrefs();
+function run_captivedetect_test(xhr_handler, fakeUIResponse, testfun)
+{
+  gServer = new HttpServer();
+  gServer.registerPathHandler(kCanonicalSitePath, xhr_handler);
+  gServer.start(4444);
+
+  setupPrefs();
+
+  fakeUIResponse();
+
+  testfun();
+}
