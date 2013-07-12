@@ -24,8 +24,7 @@ let wantLogging = Services.prefs.getBoolPref("devtools.debugger.log");
 Cu.import("resource://gre/modules/jsdebugger.jsm");
 addDebuggerToGlobal(this);
 
-let promise = Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js").Promise;
-const { defer, resolve, reject, all } = promise;
+loadSubScript.call(this, "resource://gre/modules/commonjs/sdk/core/promise.js");
 
 Cu.import("resource://gre/modules/devtools/SourceMap.jsm");
 
@@ -198,11 +197,11 @@ var DebuggerServer = {
   get initialized() this._initialized,
 
   /**
-   * Performs cleanup tasks before shutting down the debugger server, if no
-   * connections are currently open. Such tasks include clearing any actor
-   * constructors added at runtime. This method should be called whenever a
-   * debugger server is no longer useful, to avoid memory leaks. After this
-   * method returns, the debugger server must be initialized again before use.
+   * Performs cleanup tasks before shutting down the debugger server. Such tasks
+   * include clearing any actor constructors added at runtime. This method
+   * should be called whenever a debugger server is no longer useful, to avoid
+   * memory leaks. After this method returns, the debugger server must be
+   * initialized again before use.
    */
   destroy: function DS_destroy() {
     if (!this._initialized) {

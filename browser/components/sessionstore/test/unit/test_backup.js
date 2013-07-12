@@ -19,7 +19,7 @@ function pathBackup(ext) {
 
 // Ensure that things proceed smoothly if there is no file to back up
 add_task(function test_nothing_to_backup() {
-  yield _SessionFile.createUpgradeBackupCopy("");
+  yield _SessionFile.createBackupCopy("");
 });
 
 // Create a file, back it up, remove it
@@ -29,14 +29,14 @@ add_task(function test_do_backup() {
   yield OS.File.writeAtomic(pathStore, content, {tmpPath: pathStore + ".tmp"});
 
   do_print("Ensuring that the backup is created");
-  yield _SessionFile.createUpgradeBackupCopy(ext);
+  yield _SessionFile.createBackupCopy(ext);
   do_check_true((yield OS.File.exists(pathBackup(ext))));
 
   let data = yield OS.File.read(pathBackup(ext));
   do_check_eq((new TextDecoder()).decode(data), content);
 
   do_print("Ensuring that we can remove the backup");
-  yield _SessionFile.removeUpgradeBackup(ext);
+  yield _SessionFile.removeBackupCopy(ext);
   do_check_false((yield OS.File.exists(pathBackup(ext))));
 });
 
