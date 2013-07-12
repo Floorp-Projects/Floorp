@@ -1451,21 +1451,35 @@ Navigator::GetMozMobileMessage()
 NS_IMETHODIMP
 Navigator::GetMozCellBroadcast(nsIDOMMozCellBroadcast** aCellBroadcast)
 {
-  *aCellBroadcast = nullptr;
-
-  if (!mCellBroadcast) {
-    NS_ENSURE_STATE(mWindow);
-
-    if (!CheckPermission("cellbroadcast")) {
-      return NS_OK;
-    }
-
-    nsresult rv = NS_NewCellBroadcast(mWindow, getter_AddRefs(mCellBroadcast));
-    NS_ENSURE_SUCCESS(rv, rv);
+  if (!mCellBroadcast &&
+      !CheckPermission("cellbroadcast")) {
+    *aCellBroadcast = nullptr;
+    return NS_OK;
   }
 
-  NS_ADDREF(*aCellBroadcast = mCellBroadcast);
-  return NS_OK;
+  ErrorResult rv;
+  NS_IF_ADDREF(*aCellBroadcast = GetMozCellBroadcast(rv));
+  return rv.ErrorCode();
+}
+
+nsIDOMMozCellBroadcast*
+Navigator::GetMozCellBroadcast(ErrorResult& aRv)
+{
+  // Callers (either the XPCOM method or the WebIDL binding) are responsible for
+  // the permission check here.
+  if (!mCellBroadcast) {
+    if (!mWindow) {
+      aRv.Throw(NS_ERROR_UNEXPECTED);
+      return nullptr;
+    }
+
+    aRv = NS_NewCellBroadcast(mWindow, getter_AddRefs(mCellBroadcast));
+    if (aRv.Failed()) {
+      return nullptr;
+    }
+  }
+
+  return mCellBroadcast;
 }
 
 //*****************************************************************************
@@ -1511,20 +1525,35 @@ Navigator::GetMozTelephony(ErrorResult& aRv)
 NS_IMETHODIMP
 Navigator::GetMozVoicemail(nsIDOMMozVoicemail** aVoicemail)
 {
-  *aVoicemail = nullptr;
-
-  if (!mVoicemail) {
-    NS_ENSURE_STATE(mWindow);
-    if (!CheckPermission("voicemail")) {
-      return NS_OK;
-    }
-
-    nsresult rv = NS_NewVoicemail(mWindow, getter_AddRefs(mVoicemail));
-    NS_ENSURE_SUCCESS(rv, rv);
+  if (!mVoicemail &&
+      !CheckPermission("voicemail")) {
+    *aVoicemail = nullptr;
+    return NS_OK;
   }
 
-  NS_ADDREF(*aVoicemail = mVoicemail);
-  return NS_OK;
+  ErrorResult rv;
+  NS_IF_ADDREF(*aVoicemail = GetMozVoicemail(rv));
+  return rv.ErrorCode();
+}
+
+nsIDOMMozVoicemail*
+Navigator::GetMozVoicemail(ErrorResult& aRv)
+{
+  // Callers (either the XPCOM method or the WebIDL binding) are responsible for
+  // the permission check here.
+  if (!mVoicemail) {
+    if (!mWindow) {
+      aRv.Throw(NS_ERROR_UNEXPECTED);
+      return nullptr;
+    }
+
+    aRv = NS_NewVoicemail(mWindow, getter_AddRefs(mVoicemail));
+    if (aRv.Failed()) {
+      return nullptr;
+    }
+  }
+
+  return mVoicemail;
 }
 
 //*****************************************************************************
@@ -1534,22 +1563,34 @@ Navigator::GetMozVoicemail(nsIDOMMozVoicemail** aVoicemail)
 NS_IMETHODIMP
 Navigator::GetMozIccManager(nsIDOMMozIccManager** aIccManager)
 {
-  *aIccManager = nullptr;
+  if (!mIccManager &&
+      !CheckPermission("mobileconnection")) {
+    *aIccManager = nullptr;
+    return NS_OK;
+  }
 
+  ErrorResult rv;
+  NS_IF_ADDREF(*aIccManager = GetMozIccManager(rv));
+  return rv.ErrorCode();
+}
+
+nsIDOMMozIccManager*
+Navigator::GetMozIccManager(ErrorResult& aRv)
+{
+  // Callers (either the XPCOM method or the WebIDL binding) are responsible for
+  // the permission check here.
   if (!mIccManager) {
-    NS_ENSURE_STATE(mWindow);
-    NS_ENSURE_TRUE(mWindow->GetDocShell(), NS_OK);
-
-    if (!CheckPermission("mobileconnection")) {
-      return NS_OK;
+    if (!mWindow) {
+      aRv.Throw(NS_ERROR_UNEXPECTED);
+      return nullptr;
     }
+    NS_ENSURE_TRUE(mWindow->GetDocShell(), nullptr);
 
     mIccManager = new icc::IccManager();
     mIccManager->Init(mWindow);
   }
 
-  NS_ADDREF(*aIccManager = mIccManager);
-  return NS_OK;
+  return mIccManager;
 }
 
 #endif // MOZ_B2G_RIL
@@ -1622,21 +1663,32 @@ Navigator::GetMozConnection()
 NS_IMETHODIMP
 Navigator::GetMozMobileConnection(nsIDOMMozMobileConnection** aMobileConnection)
 {
-  *aMobileConnection = nullptr;
+  if (!mMobileConnection &&
+      !CheckPermission("mobileconnection") &&
+      !CheckPermission("mobilenetwork")) {
+    return NS_OK;
+  }
 
+  ErrorResult rv;
+  NS_IF_ADDREF(*aMobileConnection = GetMozMobileConnection(rv));
+  return rv.ErrorCode();
+}
+
+nsIDOMMozMobileConnection*
+Navigator::GetMozMobileConnection(ErrorResult& aRv)
+{
+  // Callers (either the XPCOM method or the WebIDL binding) are responsible for
+  // the permission check here.
   if (!mMobileConnection) {
-    NS_ENSURE_STATE(mWindow);
-    if (!CheckPermission("mobileconnection") &&
-        !CheckPermission("mobilenetwork")) {
-      return NS_OK;
+    if (!mWindow) {
+      aRv.Throw(NS_ERROR_UNEXPECTED);
+      return nullptr;
     }
-
     mMobileConnection = new network::MobileConnection();
     mMobileConnection->Init(mWindow);
   }
 
-  NS_ADDREF(*aMobileConnection = mMobileConnection);
-  return NS_OK;
+  return mMobileConnection;
 }
 #endif // MOZ_B2G_RIL
 
@@ -1997,6 +2049,43 @@ Navigator::HasTelephonySupport(JSContext* /* unused */, JSObject* aGlobal)
 {
   nsCOMPtr<nsPIDOMWindow> win = GetWindowFromGlobal(aGlobal);
   return win && telephony::Telephony::CheckPermission(win);
+}
+
+/* static */
+bool
+Navigator::HasMobileConnectionSupport(JSContext* /* unused */,
+                                      JSObject* aGlobal)
+{
+  nsCOMPtr<nsPIDOMWindow> win = GetWindowFromGlobal(aGlobal);
+  return win && (CheckPermission(win, "mobileconnection") ||
+                 CheckPermission(win, "mobilenetwork"));
+}
+
+/* static */
+bool
+Navigator::HasCellBroadcastSupport(JSContext* /* unused */,
+                                   JSObject* aGlobal)
+{
+  nsCOMPtr<nsPIDOMWindow> win = GetWindowFromGlobal(aGlobal);
+  return win && CheckPermission(win, "cellbroadcast");
+}
+
+/* static */
+bool
+Navigator::HasVoicemailSupport(JSContext* /* unused */,
+                               JSObject* aGlobal)
+{
+  nsCOMPtr<nsPIDOMWindow> win = GetWindowFromGlobal(aGlobal);
+  return win && CheckPermission(win, "voicemail");
+}
+
+/* static */
+bool
+Navigator::HasIccManagerSupport(JSContext* /* unused */,
+                                JSObject* aGlobal)
+{
+  nsCOMPtr<nsPIDOMWindow> win = GetWindowFromGlobal(aGlobal);
+  return win && CheckPermission(win, "mobileconnection");
 }
 #endif // MOZ_B2G_RIL
 
