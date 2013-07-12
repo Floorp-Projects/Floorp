@@ -836,11 +836,22 @@ Parser<ParseHandler>::checkStrictBinding(HandlePropertyName name, Node pn)
 template <>
 ParseNode *
 Parser<FullParseHandler>::standaloneFunctionBody(HandleFunction fun, const AutoNameVector &formals,
-                                                 HandleScript script, Node fn,
-                                                 bool strict, bool *becameStrict)
+                                                 HandleScript script, bool strict,
+                                                 bool *becameStrict)
 {
     if (becameStrict)
         *becameStrict = false;
+
+    Node fn = handler.newFunctionDefinition();
+    if (!fn)
+        return null();
+
+    ParseNode *argsbody = ListNode::create(PNK_ARGSBODY, &handler);
+    if (!argsbody)
+        return null();
+    argsbody->setOp(JSOP_NOP);
+    argsbody->makeEmpty();
+    fn->pn_body = argsbody;
 
     FunctionBox *funbox = newFunctionBox(fun, /* outerpc = */ NULL, strict);
     if (!funbox)
@@ -882,7 +893,10 @@ Parser<FullParseHandler>::standaloneFunctionBody(HandleFunction fun, const AutoN
     if (!funpc.generateFunctionBindings(context, alloc, funboxBindings))
         return null();
 
-    return pn;
+    JS_ASSERT(fn->pn_body->isKind(PNK_ARGSBODY));
+    fn->pn_body->append(pn);
+    fn->pn_body->pn_pos = pn->pn_pos;
+    return fn;
 }
 
 template <>
