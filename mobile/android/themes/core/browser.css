@@ -2,33 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-%filter substitution
-%include defines.inc
-
-/* content scrollbars */
-.scroller {
-  opacity: 0;
-  background-color: rgba(0, 0, 0, 0.4) !important;
-  -moz-border-top-colors: none !important;
-  -moz-border-bottom-colors: none !important;
-  -moz-border-right-colors: none !important;
-  -moz-border-left-colors: none !important;
-  border-radius: @border_radius_tiny@;
-  border: @border_width_tiny@ solid rgba(255, 255, 255, 0.4) !important;
-}
-
-.scroller[panning="true"] {
-  opacity: 1;
-}
-
-.scroller[orient="vertical"] {
-  min-width: @scroller_thickness@;
-  width: @scroller_thickness@;
-  min-height: @scroller_minimum@;
-}
-
-.scroller[orient="horizontal"] {
-  min-height: @scroller_thickness@;
-  height: @scroller_thickness@;
-  min-width: @scroller_minimum@;
+/**
+ * Optimization for tabs that are restored lazily. We can save a good amount of
+ * memory that to-be-restored tabs would otherwise consume simply by setting
+ * their browsers to 'display: none' as that will prevent them from having to
+ * create a presentation and the like.
+ */
+browser[pending] {
+  display: none;
 }
