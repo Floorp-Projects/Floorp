@@ -168,30 +168,23 @@ BluetoothManager::Create(nsPIDOMWindow* aWindow)
   return manager.forget();
 }
 
-nsresult
-NS_NewBluetoothManager(nsPIDOMWindow* aWindow,
-                       nsIDOMBluetoothManager** aBluetoothManager)
+// static
+bool
+BluetoothManager::CheckPermission(nsPIDOMWindow* aWindow)
 {
   NS_ASSERTION(aWindow, "Null pointer!");
 
   nsCOMPtr<nsIPermissionManager> permMgr =
     do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
-  NS_ENSURE_TRUE(permMgr, NS_ERROR_UNEXPECTED);
+  NS_ENSURE_TRUE(permMgr, false);
 
   uint32_t permission;
   nsresult rv =
     permMgr->TestPermissionFromWindow(aWindow, "bluetooth",
                                       &permission);
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_SUCCESS(rv, false);
 
-  nsRefPtr<BluetoothManager> bluetoothManager;
-
-  if (permission == nsIPermissionManager::ALLOW_ACTION) {
-    bluetoothManager = BluetoothManager::Create(aWindow);
-  }
-
-  bluetoothManager.forget(aBluetoothManager);
-  return NS_OK;
+  return permission == nsIPermissionManager::ALLOW_ACTION;
 }
 
 void

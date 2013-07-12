@@ -1603,15 +1603,12 @@ Navigator::GetMozIccManager(ErrorResult& aRv)
 NS_IMETHODIMP
 Navigator::GetGamepads(nsIVariant** aRetVal)
 {
-  NS_ENSURE_ARG_POINTER(aRetVal);
-  *aRetVal = nullptr;
-
-  NS_ENSURE_STATE(mWindow);
-  NS_ENSURE_TRUE(mWindow->GetDocShell(), NS_OK);
-  nsGlobalWindow* win = static_cast<nsGlobalWindow*>(mWindow.get());
-
+  ErrorResult rv;
   nsAutoTArray<nsRefPtr<Gamepad>, 2> gamepads;
-  win->GetGamepads(gamepads);
+  GetGamepads(gamepads, rv);
+  if (rv.Failed()) {
+    return rv.ErrorCode();
+  }
 
   nsRefPtr<nsVariant> out = new nsVariant();
   NS_ENSURE_STATE(out);
@@ -1628,6 +1625,19 @@ Navigator::GetGamepads(nsIVariant** aRetVal)
   out.forget(aRetVal);
 
   return NS_OK;
+}
+
+void
+Navigator::GetGamepads(nsTArray<nsRefPtr<Gamepad> >& aGamepads,
+                       ErrorResult& aRv)
+{
+  if (!mWindow) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return;
+  }
+  NS_ENSURE_TRUE_VOID(mWindow->GetDocShell());
+  nsGlobalWindow* win = static_cast<nsGlobalWindow*>(mWindow.get());
+  win->GetGamepads(aGamepads);
 }
 #endif
 
@@ -1700,18 +1710,33 @@ Navigator::GetMozMobileConnection(ErrorResult& aRv)
 NS_IMETHODIMP
 Navigator::GetMozBluetooth(nsIDOMBluetoothManager** aBluetooth)
 {
-  nsCOMPtr<nsIDOMBluetoothManager> bluetooth = mBluetooth;
-
-  if (!bluetooth) {
+  if (!mBluetooth) {
     NS_ENSURE_STATE(mWindow);
-    nsresult rv = NS_NewBluetoothManager(mWindow, getter_AddRefs(mBluetooth));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    bluetooth = mBluetooth;
+    if (!bluetooth::BluetoothManager::CheckPermission(mWindow)) {
+      *aBluetooth = nullptr;
+      return NS_OK;
+    }
   }
 
-  bluetooth.forget(aBluetooth);
-  return NS_OK;
+  ErrorResult rv;
+  NS_IF_ADDREF(*aBluetooth = GetMozBluetooth(rv));
+  return rv.ErrorCode();
+}
+
+nsIDOMBluetoothManager*
+Navigator::GetMozBluetooth(ErrorResult& aRv)
+{
+  // Callers (either the XPCOM method or the WebIDL binding) are responsible for
+  // the permission check here.
+  if (!mBluetooth) {
+    if (!mWindow) {
+      aRv.Throw(NS_ERROR_UNEXPECTED);
+      return nullptr;
+    }
+    mBluetooth = bluetooth::BluetoothManager::Create(mWindow);
+  }
+
+  return mBluetooth;
 }
 #endif //MOZ_B2G_BT
 
@@ -1820,19 +1845,30 @@ Navigator::MozSetMessageHandler(const nsAString& aType,
 NS_IMETHODIMP
 Navigator::GetMozTime(nsISupports** aTime)
 {
-  *aTime = nullptr;
-
-  NS_ENSURE_STATE(mWindow);
   if (!CheckPermission("time")) {
     return NS_ERROR_DOM_SECURITY_ERR;
+  }
+
+  ErrorResult rv;
+  NS_IF_ADDREF(*aTime = GetMozTime(rv));
+  return rv.ErrorCode();
+}
+
+time::TimeManager*
+Navigator::GetMozTime(ErrorResult& aRv)
+{
+  // Callers (either the XPCOM method or the WebIDL binding) are responsible for
+  // the permission check here.
+  if (!mWindow) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return nullptr;
   }
 
   if (!mTimeManager) {
     mTimeManager = new time::TimeManager(mWindow);
   }
 
-  NS_ADDREF(*aTime = mTimeManager);
-  return NS_OK;
+  return mTimeManager;
 }
 #endif
 
@@ -1945,16 +1981,24 @@ Navigator::CheckPermission(nsPIDOMWindow* aWindow, const char* aType)
 NS_IMETHODIMP
 Navigator::GetMozAudioChannelManager(nsISupports** aAudioChannelManager)
 {
-  *aAudioChannelManager = nullptr;
+  ErrorResult rv;
+  NS_IF_ADDREF(*aAudioChannelManager = GetMozAudioChannelManager(rv));
+  return rv.ErrorCode();
+}
 
+system::AudioChannelManager*
+Navigator::GetMozAudioChannelManager(ErrorResult& aRv)
+{
   if (!mAudioChannelManager) {
-    NS_ENSURE_STATE(mWindow);
+    if (!mWindow) {
+      aRv.Throw(NS_ERROR_UNEXPECTED);
+      return nullptr;
+    }
     mAudioChannelManager = new system::AudioChannelManager();
     mAudioChannelManager->Init(mWindow);
   }
 
-  NS_ADDREF(*aAudioChannelManager = mAudioChannelManager);
-  return NS_OK;
+  return mAudioChannelManager;
 }
 #endif
 
@@ -2088,6 +2132,26 @@ Navigator::HasIccManagerSupport(JSContext* /* unused */,
   return win && CheckPermission(win, "mobileconnection");
 }
 #endif // MOZ_B2G_RIL
+
+#ifdef MOZ_B2G_BT
+/* static */
+bool
+Navigator::HasBluetoothSupport(JSContext* /* unused */, JSObject* aGlobal)
+{
+  nsCOMPtr<nsPIDOMWindow> win = GetWindowFromGlobal(aGlobal);
+  return win && bluetooth::BluetoothManager::CheckPermission(win);
+}
+#endif // MOZ_B2G_BT
+
+#ifdef MOZ_TIME_MANAGER
+/* static */
+bool
+Navigator::HasTimeSupport(JSContext* /* unused */, JSObject* aGlobal)
+{
+  nsCOMPtr<nsPIDOMWindow> win = GetWindowFromGlobal(aGlobal);
+  return win && CheckPermission(win, "time");
+}
+#endif // MOZ_TIME_MANAGER
 
 /* static */
 already_AddRefed<nsPIDOMWindow>

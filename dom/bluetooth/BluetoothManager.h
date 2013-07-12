@@ -29,8 +29,10 @@ public:
 
   NS_REALLY_FORWARD_NSIDOMEVENTTARGET(nsDOMEventTargetHelper)
 
+  // Never returns null
   static already_AddRefed<BluetoothManager>
-  Create(nsPIDOMWindow* aWindow);
+    Create(nsPIDOMWindow* aWindow);
+  static bool CheckPermission(nsPIDOMWindow* aWindow);
   void Notify(const BluetoothSignal& aData);
   virtual void SetPropertyByValue(const BluetoothNamedValue& aValue) MOZ_OVERRIDE;
 private:
@@ -39,8 +41,5 @@ private:
 };
 
 END_BLUETOOTH_NAMESPACE
-
-nsresult NS_NewBluetoothManager(nsPIDOMWindow* aWindow,
-                                nsIDOMBluetoothManager** aBluetoothManager);
 
 #endif
