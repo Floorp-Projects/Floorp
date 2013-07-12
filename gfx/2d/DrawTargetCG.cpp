@@ -1045,6 +1045,7 @@ DrawTargetCG::Init(CGContextRef cgContext, const IntSize &aSize)
   mSize = aSize;
 
   mCg = cgContext;
+  CGContextRetain(mCg);
 
   mData = nullptr;
 
