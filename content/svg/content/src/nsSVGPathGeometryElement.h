@@ -12,9 +12,18 @@ struct gfxMatrix;
 template <class E> class nsTArray;
 
 struct nsSVGMark {
+  enum Type {
+    eStart,
+    eMid,
+    eEnd,
+
+    eTypeCount
+  };
+
   float x, y, angle;
-  nsSVGMark(float aX, float aY, float aAngle) :
-    x(aX), y(aY), angle(aAngle) {}
+  Type type;
+  nsSVGMark(float aX, float aY, float aAngle, Type aType) :
+    x(aX), y(aY), angle(aAngle), type(aType) {}
 };
 
 class gfxContext;

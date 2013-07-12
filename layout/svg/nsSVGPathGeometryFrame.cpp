@@ -452,30 +452,21 @@ nsSVGPathGeometryFrame::GetBBoxContribution(const gfxMatrix &aToBBoxUserspace,
       static_cast<nsSVGPathGeometryElement*>(mContent)->GetMarkPoints(&marks);
       uint32_t num = marks.Length();
 
-      if (num) {
-        nsSVGMarkerFrame *frame = properties.GetMarkerStartFrame();
+      // These are in the same order as the nsSVGMark::Type constants.
+      nsSVGMarkerFrame* markerFrames[] = {
+        properties.GetMarkerStartFrame(),
+        properties.GetMarkerMidFrame(),
+        properties.GetMarkerEndFrame(),
+      };
+      PR_STATIC_ASSERT(NS_ARRAY_LENGTH(markerFrames) == nsSVGMark::eTypeCount);
+
+      for (uint32_t i = 0; i < num; i++) {
+        nsSVGMark& mark = marks[i];
+        nsSVGMarkerFrame* frame = markerFrames[mark.type];
         if (frame) {
           SVGBBox mbbox =
             frame->GetMarkBBoxContribution(aToBBoxUserspace, aFlags, this,
-                                           &marks[0], strokeWidth);
-          bbox.UnionEdges(mbbox);
-        }
-
-        frame = properties.GetMarkerMidFrame();
-        if (frame) {
-          for (uint32_t i = 1; i < num - 1; i++) {
-            SVGBBox mbbox =
-              frame->GetMarkBBoxContribution(aToBBoxUserspace, aFlags, this,
-                                             &marks[i], strokeWidth);
-            bbox.UnionEdges(mbbox);
-          }
-        }
-
-        frame = properties.GetMarkerEndFrame();
-        if (frame) {
-          SVGBBox mbbox =
-            frame->GetMarkBBoxContribution(aToBBoxUserspace, aFlags, this,
-                                           &marks[num-1], strokeWidth);
+                                           &marks[i], strokeWidth);
           bbox.UnionEdges(mbbox);
         }
       }
@@ -655,21 +646,22 @@ nsSVGPathGeometryFrame::PaintMarkers(nsRenderingContext* aContext)
                  (mContent)->GetMarkPoints(&marks);
 
       uint32_t num = marks.Length();
-
       if (num) {
-        nsSVGMarkerFrame *frame = properties.GetMarkerStartFrame();
-        if (frame)
-          frame->PaintMark(aContext, this, &marks[0], strokeWidth);
+        // These are in the same order as the nsSVGMark::Type constants.
+        nsSVGMarkerFrame* markerFrames[] = {
+          properties.GetMarkerStartFrame(),
+          properties.GetMarkerMidFrame(),
+          properties.GetMarkerEndFrame(),
+        };
+        PR_STATIC_ASSERT(NS_ARRAY_LENGTH(markerFrames) == nsSVGMark::eTypeCount);
 
-        frame = properties.GetMarkerMidFrame();
-        if (frame) {
-          for (uint32_t i = 1; i < num - 1; i++)
-            frame->PaintMark(aContext, this, &marks[i], strokeWidth);
+        for (uint32_t i = 0; i < num; i++) {
+          nsSVGMark& mark = marks[i];
+          nsSVGMarkerFrame* frame = markerFrames[mark.type];
+          if (frame) {
+            frame->PaintMark(aContext, this, &mark, strokeWidth);
+          }
         }
-
-        frame = properties.GetMarkerEndFrame();
-        if (frame)
-          frame->PaintMark(aContext, this, &marks[num-1], strokeWidth);
       }
     }
   }
