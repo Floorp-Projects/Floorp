@@ -287,9 +287,10 @@ DrawTargetCG::DrawSurface(SourceSurface *aSurface,
   CGRect flippedRect = CGRectMake(aDest.x, -(aDest.y + aDest.height),
                                   aDest.width, aDest.height);
 
-  //XXX: we should implement this for patterns too
   if (aSurfOptions.mFilter == FILTER_POINT)
     CGContextSetInterpolationQuality(cg, kCGInterpolationNone);
+  else
+    CGContextSetInterpolationQuality(cg, kCGInterpolationLow);
 
   CGContextDrawImage(cg, flippedRect, image);
 
@@ -483,6 +484,11 @@ SetFillFromPattern(CGContextRef cg, CGColorSpaceRef aColorSpace, const Pattern &
     CGColorSpaceRelease(patternSpace);
 
     CGPatternRef pattern = CreateCGPattern(aPattern, CGContextGetCTM(cg));
+    const SurfacePattern& pat = static_cast<const SurfacePattern&>(aPattern);
+    if (pat.mFilter == FILTER_POINT)
+      CGContextSetInterpolationQuality(cg, kCGInterpolationNone);
+    else
+      CGContextSetInterpolationQuality(cg, kCGInterpolationLow);
     CGFloat alpha = 1.;
     CGContextSetFillPattern(cg, pattern, &alpha);
     CGPatternRelease(pattern);
@@ -506,6 +512,11 @@ SetStrokeFromPattern(CGContextRef cg, CGColorSpaceRef aColorSpace, const Pattern
     CGColorSpaceRelease(patternSpace);
 
     CGPatternRef pattern = CreateCGPattern(aPattern, CGContextGetCTM(cg));
+    const SurfacePattern& pat = static_cast<const SurfacePattern&>(aPattern);
+    if (pat.mFilter == FILTER_POINT)
+      CGContextSetInterpolationQuality(cg, kCGInterpolationNone);
+    else
+      CGContextSetInterpolationQuality(cg, kCGInterpolationLow);
     CGFloat alpha = 1.;
     CGContextSetStrokePattern(cg, pattern, &alpha);
     CGPatternRelease(pattern);
