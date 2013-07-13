@@ -11,6 +11,10 @@
 #include "ion/AsmJSModule.h"
 #include "frontend/BytecodeCompiler.h"
 
+#ifdef MOZ_VTUNE
+# include "jitprofiling.h"
+#endif
+
 #ifdef JS_ION_PERF
 # include "ion/PerfSpewer.h"
 #endif

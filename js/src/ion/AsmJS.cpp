@@ -22,6 +22,10 @@
 
 #include "frontend/ParseNode-inl.h"
 
+#ifdef MOZ_VTUNE
+# include "jitprofiling.h"
+#endif
+
 using namespace js;
 using namespace js::frontend;
 using namespace js::ion;
