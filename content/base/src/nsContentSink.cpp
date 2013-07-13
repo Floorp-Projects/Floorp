@@ -1501,7 +1501,7 @@ nsContentSink::IsScriptExecutingImpl()
 nsresult
 nsContentSink::WillParseImpl(void)
 {
-  if (mRunsToCompletion) {
+  if (mRunsToCompletion || !mDocument) {
     return NS_OK;
   }
 

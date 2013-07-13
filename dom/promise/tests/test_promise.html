@@ -1,0 +1,412 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>Basic Promise Test</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script type="application/javascript"><!--
+
+function promiseResolve() {
+  ok(Promise, "Promise object should exist");
+
+  var promise = new Promise(function(resolver) {
+    ok(resolver, "PromiseResolver exists");
+    ok("reject" in resolver, "PromiseResolver.reject exists");
+    ok("resolve" in resolver, "PromiseResolver.resolve exists");
+
+    resolver.resolve(42);
+  }).done(function(what) {
+    ok(true, "Done - resolveCb has been called");
+    is(what, 42, "ResolveCb received 42");
+    runTest();
+  }, function() {
+    ok(false, "Done - rejectCb has been called");
+    runTest();
+  });
+}
+
+function promiseReject() {
+  var promise = new Promise(function(resolver) {
+    resolver.reject(42);
+  }).done(function(what) {
+    ok(false, "Done - resolveCb has been called");
+    runTest();
+  }, function(what) {
+    ok(true, "Done - rejectCb has been called");
+    is(what, 42, "RejectCb received 42");
+    runTest();
+  });
+}
+
+function promiseException() {
+  var promise = new Promise(function(resolver) {
+    throw 42;
+  }).done(function(what) {
+    ok(false, "Done - resolveCb has been called");
+    runTest();
+  }, function(what) {
+    ok(true, "Done - rejectCb has been called");
+    is(what, 42, "RejectCb received 42");
+    runTest();
+  });
+}
+
+function promiseGC() {
+  var resolver;
+  var promise = new Promise(function(r) {
+    resolver = r;
+  }).done(function(what) {
+    ok(true, "Done - promise is still alive");
+    runTest();
+  });
+
+  promise = null;
+
+  SpecialPowers.gc();
+  SpecialPowers.forceGC();
+  SpecialPowers.forceCC();
+
+  resolver.resolve(42);
+}
+
+function promiseAsync() {
+  var global = "foo";
+  var f = new Promise(function(r) {
+    is(global, "foo", "Global should be foo");
+    r.resolve(42);
+    is(global, "foo", "Global should still be foo");
+    setTimeout(function() {
+      is(global, "bar", "Global should still be bar!");
+      runTest();
+    }, 0);
+  }).done(function() {
+    global = "bar";
+  });
+  is(global, "foo", "Global should still be foo (2)");
+}
+
+function promiseDoubleDone() {
+  var steps = 0;
+  var promise = new Promise(function(resolver) {
+    resolver.resolve(42);
+  });
+
+  promise.done(function(what) {
+    ok(true, "Done.resolve has been called");
+    is(what, 42, "Value == 42");
+    steps++;
+  }, function(what) {
+    ok(false, "Done.reject has been called");
+  });
+
+  promise.done(function(what) {
+    ok(true, "Done.resolve has been called");
+    is(steps, 1, "Done.resolve - step == 1");
+    is(what, 42, "Value == 42");
+    runTest();
+  }, function(what) {
+    ok(false, "Done.reject has been called");
+  });
+}
+
+function promiseDoneException() {
+  var promise = new Promise(function(resolver) {
+    resolver.resolve(42);
+  });
+
+  onErrorCb = window.onerror;
+  window.onerror = function(e) {
+    ok(true, "window.onerror has been called!");
+    window.onerror = onErrorCb;
+    runTest();
+  };
+
+  promise.done(function(what) {
+    ok(true, "Done.resolve has been called");
+    throw "booh";
+  });
+}
+
+function promiseThenCatchDone() {
+  var promise = new Promise(function(resolver) {
+    resolver.resolve(42);
+  });
+
+  var promise2 = promise.then(function(what) {
+    ok(true, "Then.resolve has been called");
+    is(what, 42, "Value == 42");
+    return what + 1;
+  }, function(what) {
+    ok(false, "Then.reject has been called");
+  });
+
+  isnot(promise, promise2, "These 2 promise objs are different");
+
+  promise2.then(function(what) {
+    ok(true, "Then.resolve has been called");
+    is(what, 43, "Value == 43");
+    return what + 1;
+  }, function(what) {
+    ok(false, "Then.reject has been called");
+  }).catch(function() {
+    ok(false, "Catch has been called");
+  }).done(function(what) {
+    ok(true, "Done.resolve has been called");
+    is(what, 44, "Value == 44");
+    runTest();
+  }, function(what) {
+    ok(false, "Done.reject has been called");
+  });
+}
+
+function promiseRejectThenCatchDone() {
+  var promise = new Promise(function(resolver) {
+    resolver.reject(42);
+  });
+
+  var promise2 = promise.then(function(what) {
+    ok(false, "Then.resolve has been called");
+  }, function(what) {
+    ok(true, "Then.reject has been called");
+    is(what, 42, "Value == 42");
+    return what + 1;
+  });
+
+  isnot(promise, promise2, "These 2 promise objs are different");
+
+  promise2.then(function(what) {
+    ok(true, "Then.resolve has been called");
+    is(what, 43, "Value == 43");
+    return what+1;
+  }).catch(function(what) {
+    ok(false, "Catch has been called");
+  }).done(function(what) {
+    ok(true, "Then.resolve has been called");
+    is(what, 44, "Value == 44");
+    runTest();
+  });
+}
+
+function promiseRejectThenCatchDone2() {
+  var promise = new Promise(function(resolver) {
+    resolver.reject(42);
+  });
+
+  promise.then(function(what) {
+    ok(true, "Then.resolve has been called");
+    is(what, 42, "Value == 42");
+    return what+1;
+  }).catch(function(what) {
+    is(what, 42, "Value == 42");
+    ok(true, "Catch has been called");
+    return what+1;
+  }).done(function(what) {
+    ok(true, "Then.resolve has been called");
+    is(what, 43, "Value == 43");
+    runTest();
+  });
+}
+
+function promiseRejectThenCatchExceptionDone() {
+  var promise = new Promise(function(resolver) {
+    resolver.reject(42);
+  });
+
+  promise.then(function(what) {
+    ok(false, "Then.resolve has been called");
+  }, function(what) {
+    ok(true, "Then.reject has been called");
+    is(what, 42, "Value == 42");
+    throw(what + 1);
+  }).catch(function(what) {
+    ok(true, "Catch has been called");
+    is(what, 43, "Value == 43");
+    return what + 1;
+  }).done(function(what) {
+    ok(true, "Then.resolve has been called");
+    is(what, 44, "Value == 44");
+    runTest();
+  });
+}
+
+function promiseThenCatchOrderingResolve() {
+  var global = 0;
+  var f = new Promise(function(r) {
+    r.resolve(42);
+  });
+
+  f.done(function() {
+    f.then(function() {
+      global++;
+    });
+    f.catch(function() {
+      global++;
+    });
+    f.done(function() {
+      global++;
+    });
+    setTimeout(function() {
+      is(global, 2, "Many steps... should return 2");
+      runTest();
+    }, 0);
+  });
+}
+
+function promiseThenCatchOrderingReject() {
+  var global = 0;
+  var f = new Promise(function(r) {
+    r.reject(42);
+  })
+
+  f.done(function() {}, function() {
+    f.then(function() {
+      global++;
+    });
+    f.catch(function() {
+      global++;
+    });
+    f.done(function() {}, function() {
+      global++;
+    });
+    setTimeout(function() {
+      is(global, 2, "Many steps... should return 2");
+      runTest();
+    }, 0);
+  });
+}
+
+function promiseNestedPromise() {
+  new Promise(function(resolver) {
+    resolver.resolve(new Promise(function(r) {
+      ok(true, "Nested promise is executed");
+      r.resolve(42);
+    }));
+  }).then(function(value) {
+    is(value, 42, "Nested promise is executed and then == 42");
+    runTest();
+  });
+}
+
+function promiseNestedNestedPromise() {
+  new Promise(function(resolver) {
+    resolver.resolve(new Promise(function(r) {
+      ok(true, "Nested promise is executed");
+      r.resolve(42);
+    }).then(function(what) { return what+1; }));
+  }).then(function(value) {
+    is(value, 43, "Nested promise is executed and then == 43");
+    runTest();
+  });
+}
+
+function promiseWrongNestedPromise() {
+  new Promise(function(resolver) {
+    resolver.resolve(new Promise(function(r) {
+      ok(true, "Nested promise is executed");
+      r.resolve(42);
+    }));
+    resolver.reject(42);
+  }).then(function(value) {
+    is(value, 42, "Nested promise is executed and then == 42");
+    runTest();
+  }, function(value) {
+     ok(false, "This is wrong");
+  });
+}
+
+function promiseLoop() {
+  new Promise(function(resolver) {
+    resolver.resolve(new Promise(function(r) {
+      ok(true, "Nested promise is executed");
+      r.resolve(new Promise(function(r) {
+        ok(true, "Nested nested promise is executed");
+        r.resolve(42);
+      }));
+    }));
+  }).then(function(value) {
+    is(value, 42, "Nested nested promise is executed and then == 42");
+    runTest();
+  }, function(value) {
+     ok(false, "This is wrong");
+  });
+}
+
+function promiseReject() {
+  var promise = Promise.reject(42).done(function(what) {
+    ok(false, "This should not be called");
+  }, function(what) {
+    is(what, 42, "Value == 42");
+    runTest();
+  });
+}
+
+function promiseResolve() {
+  var promise = Promise.resolve(42).done(function(what) {
+    is(what, 42, "Value == 42");
+    runTest();
+  }, function() {
+    ok(false, "This should not be called");
+  });
+}
+
+function promiseResolveNestedPromise() {
+  var promise = Promise.resolve(new Promise(function(r) {
+    ok(true, "Nested promise is executed");
+    r.resolve(42);
+  }, function() {
+    ok(false, "This should not be called");
+  })).done(function(what) {
+    is(what, 42, "Value == 42");
+    runTest();
+  }, function() {
+    ok(false, "This should not be called");
+  });
+}
+
+var tests = [ promiseResolve, promiseReject,
+              promiseException, promiseGC, promiseAsync,
+              promiseDoubleDone, promiseDoneException,
+              promiseThenCatchDone, promiseRejectThenCatchDone,
+              promiseRejectThenCatchDone2,
+              promiseRejectThenCatchExceptionDone,
+              promiseThenCatchOrderingResolve,
+              promiseThenCatchOrderingReject,
+              promiseNestedPromise, promiseNestedNestedPromise,
+              promiseWrongNestedPromise, promiseLoop,
+              promiseReject, promiseResolve,
+              promiseResolveNestedPromise,
+            ];
+
+function runTest() {
+  if (!tests.length) {
+    SimpleTest.finish();
+    return;
+  }
+
+  var test = tests.shift();
+  test();
+}
+
+var p = SpecialPowers.getBoolPref("dom.promise.enabled");
+SpecialPowers.setBoolPref("dom.promise.enabled", false);
+ok(!("Promise" in window), "Promise object should not exist if disabled by pref");
+SpecialPowers.setBoolPref("dom.promise.enabled", p);
+
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({"set": [["dom.promise.enabled", true]]}, runTest);
+// -->
+</script>
+</pre>
+</body>
+</html>
+

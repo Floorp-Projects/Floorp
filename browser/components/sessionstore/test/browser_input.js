@@ -19,7 +19,7 @@ function runTests() {
   // because we always collect data for tabs of active windows no matter if
   // the window is dirty or not.
   let win = OpenBrowserWindow();
-  yield waitForLoad(win);
+  yield whenDelayedStartupFinished(win, next);
 
   // Create a tab with some form fields.
   let tab = gBrowser.selectedTab = gBrowser.addTab(URL);

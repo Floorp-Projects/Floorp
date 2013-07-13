@@ -283,6 +283,8 @@ intrinsic_DecompileArg(JSContext *cx, unsigned argc, Value *vp)
  * - |cloneAtCallsite: true| will hint that |fun| should be cloned
  *   each callsite to improve TI resolution.  This is important for
  *   higher-order functions like |Array.map|.
+ * - |inline: true| will hint that |fun| be inlined regardless of
+ *   JIT heuristics.
  */
 static JSBool
 intrinsic_SetScriptHints(JSContext *cx, unsigned argc, Value *vp)
@@ -304,6 +306,12 @@ intrinsic_SetScriptHints(JSContext *cx, unsigned argc, Value *vp)
         return false;
     if (ToBoolean(propv))
         funScript->shouldCloneAtCallsite = true;
+
+    id = AtomToId(Atomize(cx, "inline", strlen("inline")));
+    if (!JSObject::getGeneric(cx, flags, flags, id, &propv))
+        return false;
+    if (ToBoolean(propv))
+        funScript->shouldInline = true;
 
     args.rval().setUndefined();
     return true;
@@ -654,6 +662,10 @@ const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("intl_NumberFormat_availableLocales", intl_NumberFormat_availableLocales, 0,0),
     JS_FN("intl_numberingSystem", intl_numberingSystem, 1,0),
     JS_FN("intl_patternForSkeleton", intl_patternForSkeleton, 2,0),
+
+    // See builtin/RegExp.h for descriptions of the regexp_* functions.
+    JS_FN("regexp_exec_no_statics", regexp_exec_no_statics, 2,0),
+    JS_FN("regexp_test_no_statics", regexp_test_no_statics, 2,0),
 
 #ifdef DEBUG
     JS_FN("Dump",                 intrinsic_Dump,                 1,0),

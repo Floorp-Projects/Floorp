@@ -34,8 +34,8 @@ const BackgroundPageThumbs = {
    *                   onDone(url),
    *                 where `url` is the captured URL.
    * @opt timeout    The capture will time out after this many milliseconds have
-   *                 elapsed after calling this method.  Defaults to 30000 (30
-   *                 seconds).
+   *                 elapsed after the capture has progressed to the head of
+   *                 the queue and started.  Defaults to 30000 (30 seconds).
    */
   capture: function (url, options={}) {
     if (isPrivateBrowsingActive()) {
@@ -49,9 +49,20 @@ const BackgroundPageThumbs = {
         Services.tm.mainThread.dispatch(options.onDone.bind(options, url), 0);
       return;
     }
-    let cap = new Capture(url, this._onCaptureOrTimeout.bind(this), options);
     this._captureQueue = this._captureQueue || [];
+    this._capturesByURL = this._capturesByURL || new Map();
+    // We want to avoid duplicate captures for the same URL.  If there is an
+    // existing one, we just add the callback to that one and we are done.
+    let existing = this._capturesByURL.get(url);
+    if (existing) {
+      if (options.onDone)
+        existing.doneCallbacks.push(options.onDone);
+      // The queue is already being processed, so nothing else to do...
+      return;
+    }
+    let cap = new Capture(url, this._onCaptureOrTimeout.bind(this), options);
     this._captureQueue.push(cap);
+    this._capturesByURL.set(url, cap);
     this._processCaptureQueue();
   },
 
@@ -175,16 +186,15 @@ const BackgroundPageThumbs = {
   },
 
   /**
-   * Called when a capture completes or times out.
+   * Called when the current capture completes or times out.
    */
   _onCaptureOrTimeout: function (capture) {
-    // Since timeouts are configurable per capture, and a capture's timeout
-    // timer starts when it's created, it's possible for any capture to time
-    // out regardless of its position in the queue.
-    let idx = this._captureQueue.indexOf(capture);
-    if (idx < 0)
-      throw new Error("The capture should be in the queue.");
-    this._captureQueue.splice(idx, 1);
+    // Since timeouts start as an item is being processed, only the first
+    // item in the queue can be passed to this method.
+    if (capture !== this._captureQueue[0])
+      throw new Error("The capture should be at the head of the queue.");
+    this._captureQueue.shift();
+    this._capturesByURL.delete(capture.url);
 
     // Start the destroy-browser timer *before* processing the capture queue.
     let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
@@ -212,13 +222,9 @@ function Capture(url, captureCallback, options) {
   this.captureCallback = captureCallback;
   this.options = options;
   this.id = Capture.nextID++;
-
-  // The timeout starts when the consumer requests the capture, not when the
-  // capture is dequeued and started.
-  let timeout = typeof(options.timeout) == "number" ? options.timeout :
-                DEFAULT_CAPTURE_TIMEOUT;
-  this._timeoutTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-  this._timeoutTimer.initWithCallback(this, timeout, Ci.nsITimer.TYPE_ONE_SHOT);
+  this.doneCallbacks = [];
+  if (options.onDone)
+    this.doneCallbacks.push(options.onDone);
 }
 
 Capture.prototype = {
@@ -233,6 +239,11 @@ Capture.prototype = {
    * @param messageManager  The nsIMessageSender of the thumbnail browser.
    */
   start: function (messageManager) {
+    let timeout = typeof(this.options.timeout) == "number" ? this.options.timeout :
+                  DEFAULT_CAPTURE_TIMEOUT;
+    this._timeoutTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+    this._timeoutTimer.initWithCallback(this, timeout, Ci.nsITimer.TYPE_ONE_SHOT);
+
     this._msgMan = messageManager;
     this._msgMan.sendAsyncMessage("BackgroundPageThumbs:capture",
                                   { id: this.id, url: this.url });
@@ -243,15 +254,15 @@ Capture.prototype = {
    * The only intended external use of this method is by the service when it's
    * uninitializing and doing things like destroying the thumbnail browser.  In
    * that case the consumer's completion callback will never be called.
-   *
-   * This method is not idempotent.  It's an error to call it more than once on
-   * the same capture.
    */
   destroy: function () {
-    this._timeoutTimer.cancel();
-    delete this._timeoutTimer;
+    // This method may be called for captures that haven't started yet, so
+    // guard against not yet having _timeoutTimer, _msgMan etc properties...
+    if (this._timeoutTimer) {
+      this._timeoutTimer.cancel();
+      delete this._timeoutTimer;
+    }
     if (this._msgMan) {
-      // The capture may have never started, so _msgMan may be undefined.
       this._msgMan.removeMessageListener("BackgroundPageThumbs:didCapture",
                                          this);
       delete this._msgMan;
@@ -280,22 +291,22 @@ Capture.prototype = {
     this.captureCallback(this);
     this.destroy();
 
-    let callOnDone = function callOnDoneFn() {
-      if (!("onDone" in this.options))
-        return;
-      try {
-        this.options.onDone(this.url);
-      }
-      catch (err) {
-        Cu.reportError(err);
+    let callOnDones = function callOnDonesFn() {
+      for (let callback of this.doneCallbacks) {
+        try {
+          callback.call(this.options, this.url);
+        }
+        catch (err) {
+          Cu.reportError(err);
+        }
       }
     }.bind(this);
 
     if (!data) {
-      callOnDone();
+      callOnDones();
       return;
     }
-    PageThumbs._store(this.url, data.finalURL, data.imageData).then(callOnDone);
+    PageThumbs._store(this.url, data.finalURL, data.imageData).then(callOnDones);
   },
 };
 

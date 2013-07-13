@@ -143,6 +143,41 @@ var gUpdates = {
   _runUnload: true,
 
   /**
+   * Submit the last page code when the wizard exited. The pageid is used to map
+   * to an integer instead of using the pageindex since pages can be added and
+   * removed which would change the page's pageindex.
+   * @param   pageID
+   */
+  _sendLastPageCodePing: function(pageID) {
+    var pageMap = { invalid: 0,
+                    dummy: 1,
+                    checking: 2,
+                    pluginupdatesfound: 3,
+                    noupdatesfound: 4,
+                    manualUpdate: 5,
+                    unsupported: 6,
+                    incompatibleCheck: 7,
+                    updatesfoundbasic: 8,
+                    updatesfoundbillboard: 9,
+                    license: 10,
+                    incompatibleList: 11,
+                    downloading: 12,
+                    errors: 13,
+                    errorextra: 14,
+                    errorpatching: 15,
+                    finished: 16,
+                    finishedBackground: 17,
+                    installed: 18 };
+    try {
+      Services.telemetry.getHistogramById("UPDATER_WIZ_LAST_PAGE_CODE").
+        add(pageMap[pageID] || pageMap.invalid);
+    }
+    catch (e) {
+      Components.utils.reportError(e);
+    }
+  },
+
+  /**
    * Helper function for setButtons
    * Resets button to original label & accesskey if string is null.
    */
@@ -251,6 +286,7 @@ var gUpdates = {
     var pageid = document.documentElement.currentPage.pageid;
     if ("onWizardFinish" in this._pages[pageid])
       this._pages[pageid].onWizardFinish();
+    this._sendLastPageCodePing(pageid);
   },
 
   /**
@@ -262,6 +298,7 @@ var gUpdates = {
     var pageid = document.documentElement.currentPage.pageid;
     if ("onWizardCancel" in this._pages[pageid])
       this._pages[pageid].onWizardCancel();
+    this._sendLastPageCodePing(pageid);
   },
 
   /**
@@ -1838,7 +1875,6 @@ var gFinishedPage = {
    * in the wizard after an update has been downloaded.
    */
   onExtra1: function() {
-    // XXXrstrong - reminding the user to restart is broken (see bug 464835)
     gUpdates.wiz.cancel();
   }
 };

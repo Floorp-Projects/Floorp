@@ -12,6 +12,7 @@ EXTRA_JS_MODULES += [
     'Dict.jsm',
     'FileUtils.jsm',
     'Geometry.jsm',
+    'Http.jsm',
     'InlineSpellChecker.jsm',
     'NewTabUtils.jsm',
     'PageMenu.jsm',

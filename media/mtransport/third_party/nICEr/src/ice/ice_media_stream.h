@@ -50,7 +50,10 @@ struct nr_ice_media_stream_ {
 
   char *ufrag;    /* ICE username */
   char *pwd;    /* ICE password */
-
+  char *r2l_user;  /* The username for incoming requests */
+  char *l2r_user;  /* The username for outgoing requests */
+  Data r2l_pass;   /* The password for incoming requests */
+  Data l2r_pass;   /* The password for outcoming requests */
   int ice_state;
 
 #define NR_ICE_MEDIA_STREAM_UNPAIRED           1
@@ -77,6 +80,7 @@ int nr_ice_media_stream_get_attributes(nr_ice_media_stream *stream, char ***attr
 int nr_ice_media_stream_get_default_candidate(nr_ice_media_stream *stream, int component, nr_ice_candidate **candp);
 int nr_ice_media_stream_pair_candidates(nr_ice_peer_ctx *pctx,nr_ice_media_stream *lstream,nr_ice_media_stream *pstream);
 int nr_ice_media_stream_start_checks(nr_ice_peer_ctx *pctx, nr_ice_media_stream *stream);
+int nr_ice_media_stream_service_pre_answer_requests(nr_ice_peer_ctx *pctx,nr_ice_media_stream *lstream,nr_ice_media_stream *pstream, int *serviced);
 int nr_ice_media_stream_unfreeze_pairs(nr_ice_peer_ctx *pctx, nr_ice_media_stream *stream);
 int nr_ice_media_stream_unfreeze_pairs_foundation(nr_ice_media_stream *stream, char *foundation);
 int nr_ice_media_stream_dump_state(nr_ice_peer_ctx *pctx, nr_ice_media_stream *stream,FILE *out);

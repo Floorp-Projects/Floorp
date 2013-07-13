@@ -54,6 +54,7 @@ public:
 
   typedef mozilla::TimeStamp TimeStamp;
   typedef mozilla::TimeDuration TimeDuration;
+  typedef mozilla::LayoutDeviceIntPoint LayoutDeviceIntPoint;
 
   nsEventStateManager();
   virtual ~nsEventStateManager();
@@ -193,13 +194,13 @@ public:
   static void SetFullScreenState(mozilla::dom::Element* aElement, bool aIsFullScreen);
 
   static bool IsRemoteTarget(nsIContent* aTarget);
-  static nsIntPoint GetChildProcessOffset(nsFrameLoader* aFrameLoader,
-                                          const nsEvent& aEvent);
+  static LayoutDeviceIntPoint GetChildProcessOffset(nsFrameLoader* aFrameLoader,
+                                                    const nsEvent& aEvent);
 
   static void MapEventCoordinatesForChildProcess(nsFrameLoader* aFrameLoader,
                                                  nsEvent* aEvent);
 
-  static void MapEventCoordinatesForChildProcess(const nsIntPoint& aOffset,
+  static void MapEventCoordinatesForChildProcess(const LayoutDeviceIntPoint& aOffset,
                                                  nsEvent* aEvent);
 
   // Holds the point in screen coords that a mouse event was dispatched to,

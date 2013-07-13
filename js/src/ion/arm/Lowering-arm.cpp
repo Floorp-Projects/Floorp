@@ -228,6 +228,9 @@ LIRGeneratorARM::lowerForShift(LInstructionHelper<1, 2, 0> *ins, MDefinition *mi
 bool
 LIRGeneratorARM::lowerDivI(MDiv *div)
 {
+    if (div->isUnsigned())
+        return lowerUDiv(div);
+
     // Division instructions are slow. Division by constant denominators can be
     // rewritten to use other instructions.
     if (div->rhs()->isConstant()) {
@@ -273,6 +276,9 @@ LIRGeneratorARM::lowerMulI(MMul *mul, MDefinition *lhs, MDefinition *rhs)
 bool
 LIRGeneratorARM::lowerModI(MMod *mod)
 {
+    if (mod->isUnsigned())
+        return lowerUMod(mod);
+
     if (mod->rhs()->isConstant()) {
         int32_t rhs = mod->rhs()->toConstant()->value().toInt32();
         int32_t shift;
@@ -430,22 +436,35 @@ LIRGeneratorARM::visitAsmJSNeg(MAsmJSNeg *ins)
     JS_ASSERT(ins->type() == MIRType_Double);
     return define(new LNegD(useRegisterAtStart(ins->input())), ins);
 }
+
+bool
+LIRGeneratorARM::lowerUDiv(MInstruction *div)
+{
+    LUDivOrMod *lir = new LUDivOrMod(useFixed(div->getOperand(0), r0),
+                                     useFixed(div->getOperand(1), r1),
+                                     tempFixed(r2), tempFixed(r3));
+    return defineFixed(lir, div, LAllocation(AnyRegister(r0)));
+}
+
 bool
 LIRGeneratorARM::visitAsmJSUDiv(MAsmJSUDiv *div)
 {
-    LAsmJSDivOrMod *lir = new LAsmJSDivOrMod(useFixed(div->lhs(), r0),
-                                         useFixed(div->rhs(), r1),
-                                         tempFixed(r2), tempFixed(r3));
-    return defineFixed(lir, div, LAllocation(AnyRegister(r0)));
+    return lowerUDiv(div);
+}
+
+bool
+LIRGeneratorARM::lowerUMod(MInstruction *mod)
+{
+    LUDivOrMod *lir = new LUDivOrMod(useFixed(mod->getOperand(0), r0),
+                                     useFixed(mod->getOperand(1), r1),
+                                     tempFixed(r2), tempFixed(r3));
+    return defineFixed(lir, mod, LAllocation(AnyRegister(r1)));
 }
 
 bool
 LIRGeneratorARM::visitAsmJSUMod(MAsmJSUMod *mod)
 {
-    LAsmJSDivOrMod *lir = new LAsmJSDivOrMod(useFixed(mod->lhs(), r0),
-                                         useFixed(mod->rhs(), r1),
-                                         tempFixed(r2), tempFixed(r3));
-    return defineFixed(lir, mod, LAllocation(AnyRegister(r1)));
+    return lowerUMod(mod);
 }
 
 bool

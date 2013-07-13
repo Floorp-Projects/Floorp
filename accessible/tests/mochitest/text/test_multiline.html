@@ -16,7 +16,7 @@
 
     function doTest()
     {
-      SimpleTest.expectAssertions(35);
+      SimpleTest.expectAssertions(20);
 
       // __o__n__e__w__o__r__d__\n
       //  0  1  2  3  4  5  6  7
@@ -107,36 +107,11 @@
       // getTextBeforeOffset
 
       // BOUNDARY_LINE_START
-      testTextBeforeOffset(0, BOUNDARY_LINE_START, "", 0, 0,
-                           "div", kOk, kOk, kOk,
-                           "divbr", kOk, kOk, kOk,
-                           "editable", kOk, kOk, kOk,
-                           "editablebr", kOk, kOk, kOk,
-                           "textarea", kOk, kOk, kOk);
-      testTextBeforeOffset(8, BOUNDARY_LINE_START, "oneword\n", 0, 8,
-                           "div", kTodo, kTodo, kOk,
-                           "divbr", kTodo, kTodo, kOk,
-                           "editable", kTodo, kTodo, kOk,
-                           "editablebr", kTodo, kTodo, kOk,
-                           "textarea", kTodo, kTodo, kOk);
-      testTextBeforeOffset(9, BOUNDARY_LINE_START, "\n", 8, 9,
-                           "div", kTodo, kTodo, kOk,
-                           "divbr", kTodo, kTodo, kOk,
-                           "editable", kTodo, kTodo, kOk,
-                           "editablebr", kTodo, kTodo, kOk,
-                           "textarea", kTodo, kTodo, kOk);
-      testTextBeforeOffset(18, BOUNDARY_LINE_START, "\n", 8, 9,
-                           "div", kTodo, kTodo, kTodo,
-                           "divbr", kTodo, kTodo, kTodo,
-                           "editable", kTodo, kTodo, kTodo,
-                           "editablebr", kTodo, kTodo, kTodo,
-                           "textarea", kTodo, kTodo, kTodo);
-      testTextBeforeOffset(19, BOUNDARY_LINE_START, "two words \n", 9, 19,
-                           "div", kTodo, kOk, kOk,
-                           "divbr", kTodo, kOk, kOk,
-                           "editable", kTodo, kOk, kOk,
-                           "editablebr", kTodo, kOk, kOk,
-                           "textarea", kTodo, kOk, kOk);
+      testTextBeforeOffset(0, BOUNDARY_LINE_START, "", 0, 0, IDs);
+      testTextBeforeOffset(8, BOUNDARY_LINE_START, "oneword\n", 0, 8, IDs);
+      testTextBeforeOffset(9, BOUNDARY_LINE_START, "\n", 8, 9, IDs);
+      testTextBeforeOffset(18, BOUNDARY_LINE_START, "\n", 8, 9, IDs);
+      testTextBeforeOffset(19, BOUNDARY_LINE_START, "two words\n", 9, 19, IDs);
 
       // BOUNDARY_LINE_END
       testTextBeforeOffset(0, BOUNDARY_LINE_END, "", 0, 0,

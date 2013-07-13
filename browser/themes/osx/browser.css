@@ -2373,7 +2373,7 @@ sidebarheader > .tabs-closebutton > .toolbarbutton-text {
 
 .browserContainer > findbar {
   background: @scopeBarBackground@;
-  border-top: @scopeBarSeparatorBorder@;
+  border-bottom: @scopeBarSeparatorBorder@;
   color: -moz-DialogText;
   text-shadow: none;
 }

@@ -248,7 +248,9 @@ select:not([size]):not([multiple])[disabled],
 select[size="0"][disabled],
 select[size="1"][disabled],
 button[disabled],
-* > input:not([type="image"])[disabled] {
+button[disabled]:active,
+* > input:not([type="image"])[disabled],
+* > input:not([type="image"])[disabled]:active {
   color: rgba(0,0,0,0.3);
   border-color: rgba(125,125,125,0.4);
   border-style: solid;
@@ -263,9 +265,13 @@ select[size="1"][disabled] {
 }
 
 input[type="button"][disabled],
+input[type="button"][disabled]:active,
 input[type="submit"][disabled],
+input[type="submit"][disabled]:active,
 input[type="reset"][disabled],
-button[disabled="true"] {
+input[type="reset"][disabled]:active,
+button[disabled],
+button[disabled]:active {
   padding: 0 7px 0 7px;
   background: transparent linear-gradient(rgba(255,255,255,0.4) 0, rgba(235,235,235,0.4) 3px, rgba(185,185,185,0.4) 100%);
 }
@@ -293,12 +299,12 @@ select[disabled] > button {
 
 *:-moz-any-link:active,
 *[role=button]:active,
-button:active,
-input:active,
+button:not([disabled]):active,
+input:not([disabled]):active,
+select:not([disabled]):active,
+textarea:not([disabled]):active,
 option:active,
-select:active,
 label:active,
-textarea:active,
 xul|menulist:active {
   background-color: @color_background_highlight_overlay@ !important;
 }

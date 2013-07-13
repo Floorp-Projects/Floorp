@@ -602,8 +602,8 @@ GeckoInputDispatcher::unregisterInputChannel(const sp<InputChannel>& inputChanne
 
 nsAppShell::nsAppShell()
     : mNativeCallbackRequest(false)
-    , mHandlers()
     , mEnableDraw(false)
+    , mHandlers()
 {
     gAppShell = this;
 }

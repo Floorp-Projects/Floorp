@@ -223,8 +223,6 @@ XMLDocument::XMLDocument(const char* aContentType)
 {
   // NOTE! nsDocument::operator new() zeroes out all members, so don't
   // bother initializing members to 0.
-
-  SetIsDOMBinding();
 }
 
 XMLDocument::~XMLDocument()

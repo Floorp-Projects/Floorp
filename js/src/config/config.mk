@@ -116,10 +116,6 @@ endif
 
 OS_CONFIG	:= $(OS_ARCH)$(OS_RELEASE)
 
-FINAL_LINK_LIBS = $(DEPTH)/config/final-link-libs
-FINAL_LINK_COMPS = $(DEPTH)/config/final-link-comps
-FINAL_LINK_COMP_NAMES = $(DEPTH)/config/final-link-comp-names
-
 MOZ_UNICHARUTIL_LIBS = $(LIBXUL_DIST)/lib/$(LIB_PREFIX)unicharutil_s.$(LIB_SUFFIX)
 MOZ_WIDGET_SUPPORT_LIBS    = $(DIST)/lib/$(LIB_PREFIX)widgetsupport_s.$(LIB_SUFFIX)
 
@@ -328,14 +324,7 @@ endif
 # building libxul libraries
 ifdef LIBXUL_LIBRARY
 DEFINES += \
-		-D_IMPL_NS_COM \
-		-DEXPORT_XPT_API \
-		-DEXPORT_XPTC_API \
-		-D_IMPL_NS_GFX \
-		-D_IMPL_NS_WIDGET \
-		-DIMPL_XREAPI \
-		-DIMPL_NS_NET \
-		-DIMPL_THEBES \
+	  -DIMPL_LIBXUL \
 		$(NULL)
 
 ifndef JS_SHARED_LIBRARY
@@ -813,3 +802,11 @@ MOZ_GTK2_CFLAGS := -I$(topsrcdir)/widget/gtk2/compat $(MOZ_GTK2_CFLAGS)
 endif
 
 DEFINES += -DNO_NSPR_10_SUPPORT
+
+# Run a named Python build action. The first argument is the name of the build
+# action. The second argument are the arguments to pass to the action (space
+# delimited arguments). e.g.
+#
+#   libs::
+#       $(call py_action,purge_manifests,_build_manifests/purge/foo.manifest)
+py_action = $(PYTHON) -m mozbuild.action.$(1) $(2)

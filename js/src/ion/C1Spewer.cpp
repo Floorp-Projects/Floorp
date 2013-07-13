@@ -16,8 +16,6 @@
 #include "ion/LIR.h"
 #include "ion/LinearScan.h"
 
-#include "jsscriptinlines.h"
-
 using namespace js;
 using namespace js::ion;
 

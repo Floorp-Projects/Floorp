@@ -44,7 +44,6 @@ enum SeparatorType
 HTMLMenuElement::HTMLMenuElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo), mType(MENU_TYPE_LIST)
 {
-  SetIsDOMBinding();
 }
 
 HTMLMenuElement::~HTMLMenuElement()

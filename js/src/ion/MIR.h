@@ -1706,6 +1706,11 @@ class MBinaryInstruction : public MAryInstruction<2>
         return (left->valueNumber() == insLeft->valueNumber()) &&
                (right->valueNumber() == insRight->valueNumber());
     }
+
+    // Return true if the operands to this instruction are both unsigned,
+    // in which case any wrapping operands were replaced with the underlying
+    // int32 operands.
+    bool tryUseUnsignedOperands();
 };
 
 class MTernaryInstruction : public MAryInstruction<3>
@@ -3388,12 +3393,14 @@ class MDiv : public MBinaryArithInstruction
     bool canBeNegativeZero_;
     bool canBeNegativeOverflow_;
     bool canBeDivideByZero_;
+    bool unsigned_;
 
     MDiv(MDefinition *left, MDefinition *right, MIRType type)
       : MBinaryArithInstruction(left, right),
         canBeNegativeZero_(true),
         canBeNegativeOverflow_(true),
-        canBeDivideByZero_(true)
+        canBeDivideByZero_(true),
+        unsigned_(false)
     {
         if (type != MIRType_Value)
             specialization_ = type;
@@ -3438,14 +3445,21 @@ class MDiv : public MBinaryArithInstruction
         return canBeDivideByZero_;
     }
 
+    bool isUnsigned() {
+        return unsigned_;
+    }
+
     bool fallible();
     bool truncate();
 };
 
 class MMod : public MBinaryArithInstruction
 {
+    bool unsigned_;
+
     MMod(MDefinition *left, MDefinition *right, MIRType type)
-      : MBinaryArithInstruction(left, right)
+      : MBinaryArithInstruction(left, right),
+        unsigned_(false)
     {
         if (type != MIRType_Value)
             specialization_ = type;
@@ -3473,6 +3487,10 @@ class MMod : public MBinaryArithInstruction
     bool canBeNegativeDividend() const;
     bool canBeDivideByZero() const;
     bool canBePowerOfTwoDivisor() const;
+
+    bool isUnsigned() {
+        return unsigned_;
+    }
 
     bool fallible();
 
@@ -5001,9 +5019,7 @@ class MLoadTypedArrayElementHole
         return getOperand(1);
     }
     AliasSet getAliasSet() const {
-        // Out-of-bounds accesses are handled using a VM call, this may
-        // invoke getters on the prototype chain.
-        return AliasSet::Store(AliasSet::Any);
+        return AliasSet::Load(AliasSet::TypedArrayElement);
     }
 };
 

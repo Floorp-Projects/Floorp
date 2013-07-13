@@ -27,7 +27,6 @@ ifneq (,$(MOZ_B2G_BT))
 
 LIBRARY_NAME     = dombluetooth_s
 LIBXUL_LIBRARY   = 1
-FORCE_STATIC_LIB = 1
 
 ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
 VPATH += \

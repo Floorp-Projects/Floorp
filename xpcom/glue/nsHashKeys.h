@@ -12,7 +12,7 @@
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "pldhash.h"
-#include NEW_H
+#include <new>
 
 #include "nsStringGlue.h"
 #include "nsCRTGlue.h"

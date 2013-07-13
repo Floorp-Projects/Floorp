@@ -16,10 +16,10 @@
 namespace mozilla {
 namespace dom {
 
-class HTMLAnchorElement : public nsGenericHTMLElement,
-                          public nsIDOMHTMLAnchorElement,
-                          public nsILink,
-                          public Link
+class HTMLAnchorElement MOZ_FINAL : public nsGenericHTMLElement,
+                                    public nsIDOMHTMLAnchorElement,
+                                    public nsILink,
+                                    public Link
 {
 public:
   using Element::GetText;
@@ -29,7 +29,6 @@ public:
     : nsGenericHTMLElement(aNodeInfo)
     , Link(MOZ_THIS_IN_INITIALIZER_LIST())
   {
-    SetIsDOMBinding();
   }
   virtual ~HTMLAnchorElement();
 

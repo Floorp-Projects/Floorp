@@ -87,7 +87,6 @@ webidl_files = \
   FocusEvent.webidl \
   FormData.webidl \
   Function.webidl \
-  Future.webidl \
   GainNode.webidl \
   Geolocation.webidl \
   HTMLAnchorElement.webidl \
@@ -215,6 +214,7 @@ webidl_files = \
   Position.webidl \
   PositionError.webidl \
   ProcessingInstruction.webidl \
+  Promise.webidl \
   Range.webidl \
   Rect.webidl \
   RGBColor.webidl \

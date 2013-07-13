@@ -14,9 +14,6 @@ LIBXUL_LIBRARY	= 1
 
 LOCAL_INCLUDES += $(MOZ_QT_CFLAGS)
 
-# we don't want the shared lib, but we want to force the creation of a static lib.
-FORCE_STATIC_LIB = 1
-
 EXTRA_COMPONENTS = gtkqticonsconverter.manifest
 
 include $(topsrcdir)/config/rules.mk

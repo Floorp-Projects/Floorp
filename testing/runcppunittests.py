@@ -139,7 +139,13 @@ def main():
     if not options.xre_path:
         print >>sys.stderr, """Error: --xre-path is required"""
         sys.exit(1)
-    progs = [os.path.abspath(p) for p in args]
+    progs = []
+    for p in args:
+        if os.path.isdir(p):
+            #filter out .py files packaged with the unit tests
+            progs.extend([os.path.abspath(os.path.join(p, x)) for x in os.listdir(p) if not x.endswith('.py')])
+        else:
+            progs.append(os.path.abspath(p))
     options.xre_path = os.path.abspath(options.xre_path)
     tester = CPPUnitTests()
     try:

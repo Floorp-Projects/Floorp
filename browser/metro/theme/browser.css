@@ -161,6 +161,9 @@ documenttab[closing] > .documenttab-container {
   width: @thumbnail_width@;
   height: @thumbnail_height@;
 }
+#tray:not([expanded]) .documenttab-thumbnail {
+  background-image: none!important;
+}
 
 .documenttab-title {
   margin: @metro_spacing_normal@ @metro_spacing_snormal@;

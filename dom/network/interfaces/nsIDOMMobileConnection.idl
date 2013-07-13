@@ -6,13 +6,12 @@
 
 interface nsIDOMEventListener;
 interface nsIDOMDOMRequest;
-interface nsIDOMMozMobileICCInfo;
 interface nsIDOMMozMobileConnectionInfo;
 interface nsIDOMMozMobileNetworkInfo;
 interface nsIDOMMozMobileCellInfo;
 interface nsIDOMMozMobileCFInfo;
 
-[scriptable, builtinclass, uuid(dc010230-c2bc-11e2-8b8b-0800200c9a66)]
+[scriptable, builtinclass, uuid(fd26e2e0-c910-11e2-8b8b-0800200c9a66)]
 interface nsIDOMMozMobileConnection : nsIDOMEventTarget
 {
   const long ICC_SERVICE_CLASS_VOICE = (1 << 0);
@@ -54,11 +53,6 @@ interface nsIDOMMozMobileConnection : nsIDOMEventTarget
    * Value is undefined for other cardState values.
    */
   readonly attribute long retryCount;
-
-  /**
-   * Information stored in the device's ICC card.
-   */
-  readonly attribute nsIDOMMozMobileICCInfo iccInfo;
 
   /**
    * Information about the voice connection.
@@ -232,12 +226,6 @@ interface nsIDOMMozMobileConnection : nsIDOMEventTarget
    */
   nsIDOMDOMRequest getCallWaitingOption();
 
-   /**
-   * The 'iccinfochange' event is notified whenever the icc info object
-   * changes.
-   */
-  [implicit_jscontext] attribute jsval oniccinfochange;
-
   /**
    * The 'voicechange' event is notified whenever the voice connection object
    * changes.
@@ -378,46 +366,6 @@ interface nsIDOMMozMobileCellInfo: nsISupports
    * Mobile Cell ID for GSM/WCDMA networks.
    */
   readonly attribute unsigned long gsmCellId;
-};
-
-[scriptable, uuid(10d5c5a2-d43f-4f94-8657-cf7ccabbab6e)]
-interface nsIDOMMozMobileICCInfo : nsISupports
-{
-   /**
-   * Integrated Circuit Card Identifier.
-   */
-  readonly attribute DOMString iccid;
-
-  /**
-   * Mobile Country Code (MCC) of the subscriber's home network.
-   */
-  readonly attribute DOMString mcc;
-
-  /**
-   * Mobile Network Code (MNC) of the subscriber's home network.
-   */
-  readonly attribute DOMString mnc;
-
-  /**
-   * Service Provider Name (SPN) of the subscriber's home network.
-   */
-  readonly attribute DOMString spn;
-
-  /**
-   * Network name must be a part of displayed carrier name.
-   */
-  readonly attribute boolean isDisplayNetworkNameRequired;
-
-  /**
-   * Service provider name must be a part of displayed carrier name.
-   */
-  readonly attribute boolean isDisplaySpnRequired;
-
-  /**
-   * Mobile Station ISDN Number (MSISDN) of the subscriber's, aka
-   * his phone number.
-   */
-  readonly attribute DOMString msisdn;
 };
 
 [scriptable, uuid(d1b35ad8-99aa-47cc-ab49-2e72b00e39df)]

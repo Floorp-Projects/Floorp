@@ -12,7 +12,6 @@ include $(DEPTH)/config/autoconf.mk
 
 ifndef MOZ_DISABLE_PARENTAL_CONTROLS
 ifeq (WINNT,$(OS_ARCH))
-FORCE_STATIC_LIB = 1
 LIBXUL_LIBRARY = 1
 endif
 endif

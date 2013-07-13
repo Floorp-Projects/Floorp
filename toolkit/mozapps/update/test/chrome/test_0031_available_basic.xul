@@ -35,7 +35,7 @@ function runTest() {
   let url = URL_UPDATE + "?showDetails=1&showPrompt=1" + getVersionParams();
   setUpdateURLOverride(url);
 
-  gAUS.notify(null);
+  gAUS.checkForBackgroundUpdates();
 }
 
 ]]>
