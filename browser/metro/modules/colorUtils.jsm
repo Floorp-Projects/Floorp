@@ -14,18 +14,20 @@ let ColorUtils = {
    *  & background color as is desired) The first argument to the callback is
    * the foreground/contrast color, the second is the background/primary/dominant one
    */
-  getForegroundAndBackgroundIconColors: function getForegroundAndBackgroundIconColors(aIconURI, aSuccessCallback) {
+  getForegroundAndBackgroundIconColors: function getForegroundAndBackgroundIconColors(aIconURI, aSuccessCallback, aErrorCallback) {
     if (!aIconURI) {
       return;
     }
-
     let that = this;
     let wrappedIcon = aIconURI;
     ColorAnalyzer.findRepresentativeColor(wrappedIcon, function (success, color) {
-      let foregroundColor = that.bestTextColorForContrast(color);
-      let backgroundColor = that.convertDecimalToRgbColor(color);
-      // let the caller do whatever it is they need through the callback
-      aSuccessCallback(foregroundColor, backgroundColor);
+      if (!success) {
+        aErrorCallback();
+      } else {
+        let foregroundColor = that.bestTextColorForContrast(color);
+        let backgroundColor = that.convertDecimalToRgbColor(color);
+        aSuccessCallback(foregroundColor, backgroundColor);
+      }
     }, this);
   },
   /** returns the best color for text readability on top of aColor
