@@ -43,14 +43,11 @@ const backgroundPageThumbsContent = {
     this._onLoad = function onLoad(event) {
       if (event.target != content.document)
         return;
-      let pageLoadTime = new Date() - loadDate;
       removeEventListener("load", this._onLoad, true);
       delete this._onLoad;
 
       let canvas = PageThumbs._createCanvas(content);
-      let captureDate = new Date();
       PageThumbs._captureToCanvas(content, canvas);
-      let captureTime = new Date() - captureDate;
 
       let finalURL = this._webNav.currentURI.spec;
       let fileReader = Cc["@mozilla.org/files/filereader;1"].
@@ -60,10 +57,6 @@ const backgroundPageThumbsContent = {
           id: msg.json.id,
           imageData: fileReader.result,
           finalURL: finalURL,
-          telemetry: {
-            CAPTURE_PAGE_LOAD_TIME_MS: pageLoadTime,
-            CAPTURE_CANVAS_DRAW_TIME_MS: captureTime,
-          },
         });
       };
       canvas.toBlob(blob => fileReader.readAsArrayBuffer(blob));
@@ -77,7 +70,6 @@ const backgroundPageThumbsContent = {
     addEventListener("load", this._onLoad, true);
     this._webNav.loadURI(msg.json.url, Ci.nsIWebNavigation.LOAD_FLAGS_NONE,
                          null, null, null);
-    let loadDate = new Date();
   },
 };
 
