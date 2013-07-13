@@ -1,0 +1,154 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta charset='utf-8'/>
+    <title>Native Key Bindings for Cocoa Test</title>
+    <!-- Any copyright is dedicated to the Public Domain.
+         http://creativecommons.org/publicdomain/zero/1.0/ -->
+    <script type="text/javascript"
+            src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+    <script type="text/javascript"
+            src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+    <script type="text/javascript"
+            src="chrome://mochikit/content/tests/SimpleTest/NativeKeyCodes.js"></script>
+  </head>
+  <body>
+    <div id="editable" contenteditable>
+
+      <p>Stretching attack nullam stuck in a tree zzz, suspendisse cras nec
+      suspendisse lick suscipit. Nunc egestas amet litter box, nullam climb the
+      curtains biting I don't like that food tristique biting sleep on your
+      keyboard non. Lay down in your way cras nec tempus chase the red dot cras
+      nec, pharetra pharetra eat the grass leap run orci turpis attack.
+      Consectetur sleep in the sink eat I don't like that food, knock over the
+      lamp catnip in viverra tail flick zzz meow etiam enim. Ac ac hiss shed
+      everywhere kittens rhoncus, attack your ankles zzz iaculis kittens. Nullam
+      pellentesque rip the couch iaculis rhoncus nibh, give me fish orci turpis
+      purr sleep on your face quis nunc bibendum.</p>
+
+      <p>Neque jump on the table bat iaculis, adipiscing sleep on your keyboard
+      jump vel justo shed everywhere suspendisse lick. Zzz enim faucibus
+      hairball faucibus, pharetra sunbathe biting bat leap rip the couch attack.
+      Tortor nibh in viverra quis hairball nam, vulputate adipiscing sleep on
+      your keyboard purr knock over the lamp orci turpis. Vestibulum I don't
+      like that food et chase the red dot, adipiscing neque bibendum rutrum
+      accumsan quis rhoncus claw. Leap accumsan vehicula enim biting sleep on
+      your face, pharetra nam accumsan egestas kittens sunbathe. Pharetra chase
+      the red dot sniff non eat the grass, vulputate fluffy fur aliquam puking
+      judging you.</p>
+
+      <p>Claw purr sollicitudin sollicitudin lay down in your way consectetur,
+      pellentesque vehicula zzz orci turpis consectetur. I don't like that food
+      rhoncus pellentesque sniff attack, rhoncus tortor attack your ankles
+      iaculis scratched hiss vel. Tortor zzz tortor nullam rip the couch rutrum,
+      bat enim ut leap hairball iaculis. Bibendum sunbathe elit suspendisse
+      nibh, puking adipiscing sleep on your face sleep on your face zzz catnip.
+      Judging you rutrum bat sunbathe sleep on your face, jump on the table leap
+      tincidunt a faucibus sleep in the sink. Stuck in a tree tristique zzz hiss
+      in viverra nullam, quis tortor pharetra attack.</p>
+
+    </div>
+
+    <script type="text/javascript;version=1.8">
+      SimpleTest.waitForExplicitFinish();
+
+      let editNode = document.getElementById("editable");
+
+      let utils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
+                         getInterface(Components.interfaces.nsIDOMWindowUtils);
+
+      let layouts = {
+        "US":              0,
+        "Greek":           1,
+        "German":          2,
+        "Swedish":         3,
+        "Dvorak-Qwerty":   4,
+        "Thai":            5
+      };
+
+      function synthesizeNativeKey(aLayout, aKeyCode, aModifiers, aSystemChars,
+                                   aSystemUnmodifiedChars)
+      {
+        let modifiers = 0;
+        if (aModifiers.capsLock) modifiers |= 0x01;
+        if (aModifiers.numLock) modifiers |= 0x02;
+        if (aModifiers.shift) modifiers |= 0x0100;
+        if (aModifiers.shiftRight) modifiers |= 0x0200;
+        if (aModifiers.ctrl) modifiers |= 0x0400;
+        if (aModifiers.ctrlRight) modifiers |= 0x0800;
+        if (aModifiers.alt) modifiers |= 0x1000;
+        if (aModifiers.altRight) modifiers |= 0x2000;
+        if (aModifiers.command) modifiers |= 0x4000;
+        if (aModifiers.commandRight) modifiers |= 0x8000;
+        if (aModifiers.help) modifiers |= 0x10000;
+        if (aModifiers.function) modifiers |= 0x100000;
+        if (aModifiers.numericKeyPad) modifiers |= 0x01000000;
+
+        utils.sendNativeKeyEvent(aLayout, aKeyCode, modifiers,
+                                 aSystemChars, aSystemUnmodifiedChars);
+      }
+
+      function testSelection(aAnchorOffset, aFocusOffset)
+      {
+        let selection = window.getSelection();
+
+        is(selection.anchorOffset, aAnchorOffset, "Incorrect anchor offset");
+        is(selection.focusOffset, aFocusOffset, "Incorrect focus offset");
+      }
+
+      function doTest()
+      {
+        editNode.focus();
+
+        // Move to beginning of line
+        synthesizeNativeKey(layouts.US, MAC_VK_LeftArrow,
+                            {ctrl: true}, "\uf702", "\uf702");
+        testSelection(0, 0);
+
+        // Move to end of line
+        synthesizeNativeKey(layouts.US, MAC_VK_RightArrow,
+                            {ctrl: true}, "\uf703", "\uf703");
+        testSelection(73, 73);
+
+        // Move down
+        synthesizeNativeKey(layouts.US, MAC_VK_ANSI_N, {ctrl: true}, "n", "n");
+        testSelection(140, 140);
+
+        // Move to beginning of line
+        synthesizeNativeKey(layouts.US, MAC_VK_LeftArrow,
+                            {ctrl: true}, "\uf702", "\uf702");
+        testSelection(73, 73);
+
+        // Move word right and modify selection
+        synthesizeNativeKey(layouts.US, MAC_VK_RightArrow,
+                            {alt: true, shift: true}, "\uf703", "\uf703");
+        testSelection(73, 84);
+
+        // Move word right
+        synthesizeNativeKey(layouts.US, MAC_VK_RightArrow,
+                            {alt: true}, "\uf703", "\uf703");
+        testSelection(84, 84);
+
+        // Move word right
+        synthesizeNativeKey(layouts.US, MAC_VK_RightArrow,
+                            {alt: true}, "\uf703", "\uf703");
+        testSelection(89, 89);
+
+        // Move down and modify selection
+        synthesizeNativeKey(layouts.US, MAC_VK_DownArrow,
+                            {shift: true}, "\uf701", "\uf701");
+        testSelection(89, 171);
+
+        // Move backward and modify selection
+        synthesizeNativeKey(layouts.US, MAC_VK_ANSI_B,
+                            {ctrl: true, shift: true}, "B", "B");
+        testSelection(89, 170);
+
+        SimpleTest.finish();
+      }
+
+      SimpleTest.waitForFocus(doTest);
+    </script>
+  </body>
+</html>
+

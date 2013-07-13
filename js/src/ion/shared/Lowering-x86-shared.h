@@ -41,6 +41,8 @@ class LIRGeneratorX86Shared : public LIRGeneratorShared
     bool lowerMulI(MMul *mul, MDefinition *lhs, MDefinition *rhs);
     bool lowerDivI(MDiv *div);
     bool lowerModI(MMod *mod);
+    bool lowerUDiv(MInstruction *div);
+    bool lowerUMod(MInstruction *mod);
     bool lowerUrshD(MUrsh *mir);
     bool lowerConstantDouble(double d, MInstruction *ins);
     bool lowerTruncateDToInt32(MTruncateToInt32 *ins);

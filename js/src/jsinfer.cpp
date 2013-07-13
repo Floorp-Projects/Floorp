@@ -3300,7 +3300,7 @@ TypeCompartment::fixObjectType(JSContext *cx, JSObject *obj)
      * Use the same type object for all singleton/JSON objects with the same
      * base shape, i.e. the same fields written in the same order.
      */
-    JS_ASSERT(obj->isObject());
+    JS_ASSERT(obj->is<JSObject>());
 
     if (obj->slotSpan() == 0 || obj->inDictionaryMode() || !obj->hasEmptyElements())
         return;
@@ -3333,7 +3333,7 @@ TypeCompartment::fixObjectType(JSContext *cx, JSObject *obj)
 
     /* Make a new type to use for the object and similar future ones. */
     Rooted<TaggedProto> objProto(cx, obj->getTaggedProto());
-    TypeObject *objType = newTypeObject(cx, &ObjectClass, objProto);
+    TypeObject *objType = newTypeObject(cx, &JSObject::class_, objProto);
     if (!objType || !objType->addDefiniteProperties(cx, obj)) {
         cx->compartment()->types.setPendingNukeTypes(cx);
         return;
@@ -3413,7 +3413,7 @@ TypeCompartment::newTypedObject(JSContext *cx, IdValuePair *properties, size_t n
         return NULL;
 
     gc::AllocKind allocKind = gc::GetGCObjectKind(nproperties);
-    size_t nfixed = gc::GetGCKindSlots(allocKind, &ObjectClass);
+    size_t nfixed = gc::GetGCKindSlots(allocKind, &JSObject::class_);
 
     ObjectTableKey::Lookup lookup(properties, nproperties, nfixed);
     ObjectTypeTable::AddPtr p = objectTypeTable->lookupForAdd(lookup);
@@ -3421,7 +3421,7 @@ TypeCompartment::newTypedObject(JSContext *cx, IdValuePair *properties, size_t n
     if (!p)
         return NULL;
 
-    RootedObject obj(cx, NewBuiltinClassInstance(cx, &ObjectClass, allocKind));
+    RootedObject obj(cx, NewBuiltinClassInstance(cx, &JSObject::class_, allocKind));
     if (!obj) {
         cx->clearPendingException();
         return NULL;
@@ -5213,7 +5213,7 @@ CheckNewScriptProperties(JSContext *cx, HandleTypeObject type, HandleFunction fu
     state.thisFunction = fun;
 
     /* Strawman object to add properties to and watch for duplicates. */
-    state.baseobj = NewBuiltinClassInstance(cx, &ObjectClass, gc::FINALIZE_OBJECT16);
+    state.baseobj = NewBuiltinClassInstance(cx, &JSObject::class_, gc::FINALIZE_OBJECT16);
     if (!state.baseobj) {
         if (type->newScript)
             type->clearNewScript(cx);

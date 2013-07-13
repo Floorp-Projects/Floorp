@@ -103,17 +103,10 @@ public:
   void Clear(ErrorResult& error);
   already_AddRefed<nsIDOMSVGNumber> Initialize(nsIDOMSVGNumber *newItem,
                                                ErrorResult& error);
-  nsIDOMSVGNumber* GetItem(uint32_t index, ErrorResult& error)
-  {
-    bool found;
-    nsIDOMSVGNumber* item = IndexedGetter(index, found, error);
-    if (!found) {
-      error.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
-    }
-    return item;
-  }
-  nsIDOMSVGNumber* IndexedGetter(uint32_t index, bool& found,
-                                 ErrorResult& error);
+  already_AddRefed<nsIDOMSVGNumber> GetItem(uint32_t index,
+                                            ErrorResult& error);
+  already_AddRefed<nsIDOMSVGNumber> IndexedGetter(uint32_t index, bool& found,
+                                                  ErrorResult& error);
   already_AddRefed<nsIDOMSVGNumber> InsertItemBefore(nsIDOMSVGNumber *newItem,
                                                      uint32_t index,
                                                      ErrorResult& error);
@@ -159,8 +152,8 @@ private:
    */
   SVGNumberList& InternalList() const;
 
-  /// Creates a DOMSVGNumber for aIndex, if it doesn't already exist.
-  void EnsureItemAt(uint32_t aIndex);
+  /// Returns the nsIDOMSVGNumber at aIndex, creating it if necessary.
+  already_AddRefed<nsIDOMSVGNumber> GetItemAt(uint32_t aIndex);
 
   void MaybeInsertNullInAnimValListAt(uint32_t aIndex);
   void MaybeRemoveItemFromAnimValListAt(uint32_t aIndex);

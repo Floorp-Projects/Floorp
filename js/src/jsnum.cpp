@@ -37,7 +37,7 @@
 #include "vm/StringBuffer.h"
 
 #include "jsatominlines.h"
-#include "jsstrinlines.h"
+
 #include "vm/NumberObject-inl.h"
 #include "vm/String-inl.h"
 

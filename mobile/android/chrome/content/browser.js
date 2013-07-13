@@ -2473,7 +2473,7 @@ function Tab(aURL, aParams) {
   this.viewportExcludesHorizontalMargins = true;
   this.viewportExcludesVerticalMargins = true;
   this.viewportMeasureCallback = null;
-  this.lastPageSizeAfterViewportChange = { width: 0, height: 0 };
+  this.lastPageSizeUsedForViewportChange = { width: 0, height: 0 };
   this.contentDocumentIsDisplayed = true;
   this.pluginDoorhangerTimeout = null;
   this.shouldShowPluginDoorhanger = true;
@@ -3159,67 +3159,72 @@ Tab.prototype = {
     return viewport;
   },
 
-  sendViewportUpdate: function(aPageSizeUpdate, aAfterViewportSizeChange) {
+  sendViewportUpdate: function(aPageSizeUpdate) {
     let viewport = this.getViewport();
     let displayPort = getBridge().getDisplayPort(aPageSizeUpdate, BrowserApp.isBrowserContentDocumentDisplayed(), this.id, viewport);
     if (displayPort != null)
       this.setDisplayPort(displayPort);
+  },
 
-    if (aAfterViewportSizeChange) {
-      // Store the page size that was used to calculate the viewport so that we
-      // can verify it's changed when we consider remeasuring.
-      this.lastPageSizeAfterViewportChange =
-        { width: viewport.pageRight - viewport.pageLeft,
-          height: viewport.pageBottom - viewport.pageTop };
-    } else if (aPageSizeUpdate &&
-               (gViewportMargins.top > 0 || gViewportMargins.right > 0
-                  || gViewportMargins.bottom > 0 || gViewportMargins.left > 0)) {
-      // If the page size has changed so that it might or might not fit on the
-      // screen with the margins included, run updateViewportSize to resize the
-      // browser accordingly.
-      // A page will receive the smaller viewport when its page size fits
-      // within the screen size, so remeasure when the page size remains within
-      // the threshold of screen + margins, in case it's sizing itself relative
-      // to the viewport.
-      let hasHorizontalMargins = gViewportMargins.left > 0 || gViewportMargins.right > 0;
-      let hasVerticalMargins = gViewportMargins.top > 0 || gViewportMargins.bottom > 0;
-      let pageHeightGreaterThanScreenHeight, pageWidthGreaterThanScreenWidth;
+  updateViewportForPageSize: function() {
+    let hasHorizontalMargins = gViewportMargins.left != 0 || gViewportMargins.right != 0;
+    let hasVerticalMargins = gViewportMargins.top != 0 || gViewportMargins.bottom != 0;
 
-      if (hasHorizontalMargins) {
-        pageWidthGreaterThanScreenWidth =
-            Math.round(viewport.pageRight - viewport.pageLeft)
-            > gScreenWidth + gViewportMargins.left + gViewportMargins.right;
+    if (!hasHorizontalMargins && !hasVerticalMargins) {
+      // If there are no margins, then we don't need to do any remeasuring
+      return;
+    }
+
+    // If the page size has changed so that it might or might not fit on the
+    // screen with the margins included, run updateViewportSize to resize the
+    // browser accordingly.
+    // A page will receive the smaller viewport when its page size fits
+    // within the screen size, so remeasure when the page size remains within
+    // the threshold of screen + margins, in case it's sizing itself relative
+    // to the viewport.
+    let viewport = this.getViewport();
+    let pageWidth = viewport.pageRight - viewport.pageLeft;
+    let pageHeight = viewport.pageBottom - viewport.pageTop;
+    let remeasureNeeded = false;
+
+    if (hasHorizontalMargins) {
+      let screenWidth = gScreenWidth + gViewportMargins.left + gViewportMargins.right;
+      let viewportShouldExcludeHorizontalMargins = (Math.round(pageWidth) <= screenWidth);
+      if (viewportShouldExcludeHorizontalMargins != this.viewportExcludesHorizontalMargins) {
+        remeasureNeeded = true;
       }
-      if (hasVerticalMargins) {
-        pageHeightGreaterThanScreenHeight =
-            Math.round(viewport.pageBottom - viewport.pageTop)
-            > gScreenHeight + gViewportMargins.top + gViewportMargins.bottom;
+    }
+    if (hasVerticalMargins) {
+      let screenHeight = gScreenHeight + gViewportMargins.top + gViewportMargins.bottom;
+      let viewportShouldExcludeVerticalMargins = (Math.round(pageHeight) <= screenHeight);
+      if (viewportShouldExcludeVerticalMargins != this.viewportExcludesVerticalMargins) {
+        remeasureNeeded = true;
       }
+    }
 
-      if ((hasHorizontalMargins
-           && (pageWidthGreaterThanScreenWidth != this.viewportExcludesHorizontalMargins)) ||
-          (hasVerticalMargins
-           && (pageHeightGreaterThanScreenHeight != this.viewportExcludesVerticalMargins))) {
-        if (!this.viewportMeasureCallback) {
-          this.viewportMeasureCallback = setTimeout(function() {
-            this.viewportMeasureCallback = null;
+    if (remeasureNeeded) {
+      if (!this.viewportMeasureCallback) {
+        this.viewportMeasureCallback = setTimeout(function() {
+          this.viewportMeasureCallback = null;
 
-            let viewport = this.getViewport();
-            if (Math.abs((viewport.pageRight - viewport.pageLeft)
-                           - this.lastPageSizeAfterViewportChange.width) >= 0.5 ||
-                Math.abs((viewport.pageBottom - viewport.pageTop)
-                           - this.lastPageSizeAfterViewportChange.height) >= 0.5) {
-              this.updateViewportSize(gScreenWidth);
-            }
-          }.bind(this), kViewportRemeasureThrottle);
-        }
-      } else if (this.viewportMeasureCallback) {
-        // If the page changed size twice since we last measured the viewport and
-        // the latest size change reveals we don't need to remeasure, cancel any
-        // pending remeasure.
-        clearTimeout(this.viewportMeasureCallback);
-        this.viewportMeasureCallback = null;
+          // Re-fetch the viewport as it may have changed between setting the timeout
+          // and running this callback
+          let viewport = this.getViewport();
+          let pageWidth = viewport.pageRight - viewport.pageLeft;
+          let pageHeight = viewport.pageBottom - viewport.pageTop;
+
+          if (Math.abs(pageWidth - this.lastPageSizeUsedForViewportChange.width) >= 0.5 ||
+              Math.abs(pageHeight - this.lastPageSizeUsedForViewportChange.height) >= 0.5) {
+            this.updateViewportSize(gScreenWidth);
+          }
+        }.bind(this), kViewportRemeasureThrottle);
       }
+    } else if (this.viewportMeasureCallback) {
+      // If the page changed size twice since we last measured the viewport and
+      // the latest size change reveals we don't need to remeasure, cancel any
+      // pending remeasure.
+      clearTimeout(this.viewportMeasureCallback);
+      this.viewportMeasureCallback = null;
     }
   },
 
@@ -3415,6 +3420,7 @@ Tab.prototype = {
           return;
 
         this.sendViewportUpdate(true);
+        this.updateViewportForPageSize();
         break;
       }
 
@@ -3777,6 +3783,13 @@ Tab.prototype = {
         this.viewportExcludesVerticalMargins = false;
       }
 
+      // Store the page size that was used to calculate the viewport so that we
+      // can verify it's changed when we consider remeasuring in updateViewportForPageSize
+      this.lastPageSizeUsedForViewportChange = {
+        width: pageWidth,
+        height: pageHeight
+      };
+
       minScale = screenW / pageWidth;
     }
     minScale = this.clampZoom(minScale);
@@ -3804,7 +3817,7 @@ Tab.prototype = {
     let zoom = (aInitialLoad && metadata.defaultZoom) ? metadata.defaultZoom : this.clampZoom(this._zoom * zoomScale);
     this.setResolution(zoom, false);
     this.setScrollClampingSize(zoom);
-    this.sendViewportUpdate(false, true);
+    this.sendViewportUpdate();
   },
 
   sendViewportMetadata: function sendViewportMetadata() {

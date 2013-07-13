@@ -379,6 +379,8 @@ nsSVGAngle::SMILOrient::ValueFromString(const nsAString& aStr,
   nsSMILValue val(&SVGOrientSMILType::sSingleton);
   if (aStr.EqualsLiteral("auto")) {
     val.mU.mOrient.mOrientType = SVG_MARKER_ORIENT_AUTO;
+  } else if (aStr.EqualsLiteral("auto-start-reverse")) {
+    val.mU.mOrient.mOrientType = SVG_MARKER_ORIENT_AUTO_START_REVERSE;
   } else {
     float value;
     uint16_t unitType;
@@ -426,7 +428,8 @@ nsSVGAngle::SMILOrient::SetAnimValue(const nsSMILValue& aValue)
 
   if (aValue.mType == &SVGOrientSMILType::sSingleton) {
     mOrientType->SetAnimValue(aValue.mU.mOrient.mOrientType);
-    if (aValue.mU.mOrient.mOrientType == SVG_MARKER_ORIENT_AUTO) {
+    if (aValue.mU.mOrient.mOrientType == SVG_MARKER_ORIENT_AUTO ||
+        aValue.mU.mOrient.mOrientType == SVG_MARKER_ORIENT_AUTO_START_REVERSE) {
       mAngle->SetAnimValue(0.0f, SVG_ANGLETYPE_UNSPECIFIED, mSVGElement);
     } else {
       mAngle->SetAnimValue(aValue.mU.mOrient.mAngle, aValue.mU.mOrient.mUnit, mSVGElement);

@@ -1474,7 +1474,9 @@ let SyntaxTreeVisitor = {
       aCallbacks.onArrayExpression(aNode);
     }
     for (let element of aNode.elements) {
-      if (element) {
+      // TODO: remove the typeof check when support for SpreadExpression is
+      // added (bug 890913).
+      if (element && typeof this[element.type] == "function") {
         this[element.type](element, aNode, aCallbacks);
       }
     }

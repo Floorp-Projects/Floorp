@@ -174,23 +174,7 @@ function forceWriteState(aCallback) {
 }
 
 function testOnWindow(aIsPrivate, aCallback) {
-  let win = OpenBrowserWindow({private: aIsPrivate});
-  let gotLoad = false;
-  let gotActivate = false;
-  win.addEventListener("activate", function onActivate() {
-    win.removeEventListener("activate", onActivate, false);
-    gotActivate = true;
-    if (gotLoad) {
-      executeSoon(function() { aCallback(win) });
-    }
-  }, false);
-  win.addEventListener("load", function onLoad() {
-    win.removeEventListener("load", onLoad, false);
-    gotLoad = true;
-    if (gotActivate) {
-      executeSoon(function() { aCallback(win) });
-    }
-  }, false);
+  whenNewWindowLoaded({private: aIsPrivate}, aCallback);
 }
 
 function waitForTabLoad(aWin, aURL, aCallback) {

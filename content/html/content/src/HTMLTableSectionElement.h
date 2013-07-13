@@ -13,14 +13,13 @@
 namespace mozilla {
 namespace dom {
 
-class HTMLTableSectionElement : public nsGenericHTMLElement,
-                                public nsIDOMHTMLTableSectionElement
+class HTMLTableSectionElement MOZ_FINAL : public nsGenericHTMLElement,
+                                          public nsIDOMHTMLTableSectionElement
 {
 public:
   HTMLTableSectionElement(already_AddRefed<nsINodeInfo> aNodeInfo)
     : nsGenericHTMLElement(aNodeInfo)
   {
-    SetIsDOMBinding();
   }
 
   // nsISupports

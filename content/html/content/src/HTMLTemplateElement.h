@@ -14,8 +14,8 @@
 namespace mozilla {
 namespace dom {
 
-class HTMLTemplateElement : public nsGenericHTMLElement,
-                            public nsIDOMHTMLElement
+class HTMLTemplateElement MOZ_FINAL : public nsGenericHTMLElement,
+                                      public nsIDOMHTMLElement
 {
 public:
   HTMLTemplateElement(already_AddRefed<nsINodeInfo> aNodeInfo);

@@ -221,6 +221,7 @@ edu.au
 gov.au
 asn.au
 id.au
+csiro.au
 // Historic 2LDs (closed to new registration, but sites still exist)
 info.au
 conf.au
@@ -6935,6 +6936,14 @@ webhop.net
 webhop.org
 worse-than.tv
 writesthisblog.com
+
+// Fastly Inc. http://www.fastly.com/
+// Requested by Vladimir Vuksan <vladimir@fastly.com> 2013-05-31
+a.ssl.fastly.net
+b.ssl.fastly.net
+global.ssl.fastly.net
+a.prod.fastly.net
+global.prod.fastly.net
 
 // GitHub, Inc.
 // Requested by Ben Toews <btoews@github.com> 2013-04-18

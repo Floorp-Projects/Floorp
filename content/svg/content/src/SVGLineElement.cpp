@@ -100,8 +100,8 @@ SVGLineElement::GetMarkPoints(nsTArray<nsSVGMark> *aMarks) {
 
   float angle = atan2(y2 - y1, x2 - x1);
 
-  aMarks->AppendElement(nsSVGMark(x1, y1, angle));
-  aMarks->AppendElement(nsSVGMark(x2, y2, angle));
+  aMarks->AppendElement(nsSVGMark(x1, y1, angle, nsSVGMark::eStart));
+  aMarks->AppendElement(nsSVGMark(x2, y2, angle, nsSVGMark::eEnd));
 }
 
 void

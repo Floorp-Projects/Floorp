@@ -30,8 +30,6 @@
 #include "vm/StringBuffer.h"
 
 #include "jsatominlines.h"
-#include "jscntxtinlines.h"
-#include "jsstrinlines.h"
 
 #include "vm/ArrayObject-inl.h"
 #include "vm/ArgumentsObject-inl.h"

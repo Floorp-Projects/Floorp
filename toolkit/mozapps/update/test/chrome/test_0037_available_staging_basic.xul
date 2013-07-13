@@ -39,7 +39,7 @@ function runTest() {
 
   setupTimer(90000); // 90 seconds
 
-  gAUS.notify(null);
+  gAUS.checkForBackgroundUpdates();
 }
 
 ]]>

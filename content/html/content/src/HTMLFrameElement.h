@@ -16,8 +16,8 @@ class nsIDOMDocument;
 namespace mozilla {
 namespace dom {
 
-class HTMLFrameElement : public nsGenericHTMLFrameElement,
-                         public nsIDOMHTMLFrameElement
+class HTMLFrameElement MOZ_FINAL : public nsGenericHTMLFrameElement,
+                                   public nsIDOMHTMLFrameElement
 {
 public:
   using nsGenericHTMLFrameElement::SwapFrameLoaders;

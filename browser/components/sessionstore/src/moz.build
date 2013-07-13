@@ -16,6 +16,7 @@ EXTRA_JS_MODULES = [
     'DocumentUtils.jsm',
     'SessionMigration.jsm',
     'SessionStorage.jsm',
+    'SessionWorker.js',
     'XPathGenerator.jsm',
     '_SessionFile.jsm',
 ]

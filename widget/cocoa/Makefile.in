@@ -52,6 +52,7 @@ CMMSRCS = \
   nsMacWebAppUtils.mm \
   GfxInfo.mm \
   WidgetTraceEvent.mm \
+  NativeKeyBindings.mm \
   $(NULL)
 
 ifeq (x86_64,$(TARGET_CPU))

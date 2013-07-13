@@ -4,13 +4,13 @@ const Ci = Components.interfaces;
 
 var server = new HttpServer();
 server.registerPathHandler('/image.png', imageHandler);
-server.start(8088);
+server.start(-1);
 
 load('image_load_helpers.js');
 
 var gHits = 0;
 
-var gIoService = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);  
+var gIoService = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
 var gPublicLoader = Cc["@mozilla.org/image/loader;1"].createInstance(Ci.imgILoader);
 var gPrivateLoader = Cc["@mozilla.org/image/loader;1"].createInstance(Ci.imgILoader);
 gPrivateLoader.QueryInterface(Ci.imgICache).respectPrivacyNotifications();
@@ -45,7 +45,7 @@ NotificationCallbacks.prototype = {
   }
 };
 
-var gImgPath = 'http://localhost:8088/image.png';
+var gImgPath = 'http://localhost:' + server.identity.primaryPort + '/image.png';
 
 function setup_chan(path, isPrivate, callback) {
   var uri = gIoService.newURI(gImgPath, null, null);
@@ -53,7 +53,7 @@ function setup_chan(path, isPrivate, callback) {
   chan.notificationCallbacks = new NotificationCallbacks(isPrivate);
   var channelListener = new ChannelListener();
   chan.asyncOpen(channelListener, null);
-  
+
   var listener = new ImageListener(null, callback);
   var outlistener = {};
   var loader = isPrivate ? gPrivateLoader : gPublicLoader;
@@ -74,7 +74,7 @@ function loadImage(isPrivate, callback) {
   loadGroup.notificationCallbacks = new NotificationCallbacks(isPrivate);
   var loader = isPrivate ? gPrivateLoader : gPublicLoader;
   requests.push(loader.loadImageXPCOM(uri, null, null, null, loadGroup, outer, null, 0, null, null));
-  listener.synchronous = false;  
+  listener.synchronous = false;
 }
 
 function run_loadImage_tests() {
@@ -105,7 +105,7 @@ function run_test() {
   do_register_cleanup(cleanup);
 
   do_test_pending();
- 
+
   // We create a public channel that loads an image, then an identical
   // one that should cause a cache read. We then create a private channel
   // and load the same image, and do that a second time to ensure a cache

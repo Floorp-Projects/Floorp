@@ -9,7 +9,6 @@
 
 #include "mozilla/dom/indexedDB/IndexedDatabase.h"
 
-#include "nsIIDBVersionChangeEvent.h"
 #include "nsIRunnable.h"
 
 #include "nsDOMEvent.h"
@@ -24,6 +23,10 @@
 #define VERSIONCHANGE_EVT_STR "versionchange"
 #define BLOCKED_EVT_STR "blocked"
 #define UPGRADENEEDED_EVT_STR "upgradeneeded"
+
+#define IDBVERSIONCHANGEEVENT_IID \
+  { 0x3b65d4c3, 0x73ad, 0x492e, \
+    { 0xb1, 0x2d, 0x15, 0xf9, 0xda, 0xc2, 0x08, 0x4b } }
 
 BEGIN_INDEXEDDB_NAMESPACE
 
@@ -43,13 +46,12 @@ CreateGenericEvent(mozilla::dom::EventTarget* aOwner,
                    Bubbles aBubbles,
                    Cancelable aCancelable);
 
-class IDBVersionChangeEvent : public nsDOMEvent,
-                              public nsIIDBVersionChangeEvent
+class IDBVersionChangeEvent : public nsDOMEvent
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_FORWARD_TO_NSDOMEVENT
-  NS_DECL_NSIIDBVERSIONCHANGEEVENT
+  NS_DECLARE_STATIC_IID_ACCESSOR(IDBVERSIONCHANGEEVENT_IID)
 
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aScope) MOZ_OVERRIDE

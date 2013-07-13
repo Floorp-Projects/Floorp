@@ -38,7 +38,7 @@ public:
   NS_FORWARD_NSIDOMNODE_TO_NSINODE
 };
 
-class DocumentType : public DocumentTypeForward
+class DocumentType MOZ_FINAL : public DocumentTypeForward
 {
 public:
   DocumentType(already_AddRefed<nsINodeInfo> aNodeInfo,

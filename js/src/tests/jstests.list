@@ -36,12 +36,9 @@ skip-if(!xulRuntime.shell) script test262/ch10/10.4/10.4.2/S10.4.2_A1.2_T11.js
 skip script test262/ch10/10.4/10.4.3/10.4.3-1-104.js # bug 603201
 skip script test262/ch10/10.4/10.4.3/10.4.3-1-106.js # bug 603201
 
-skip script test262/intl402/ch10/10.1/10.1.1_a.js # bug 854320
 skip script test262/intl402/ch10/10.1/10.1.1_13.js # bug 853704
 skip script test262/intl402/ch10/10.1/10.1.1_19_c.js # bug 853704
-skip script test262/intl402/ch11/11.1/11.1.1_a.js # bug 854320
 skip script test262/intl402/ch11/11.3/11.3.2_TRP.js # bug 853706
-skip script test262/intl402/ch12/12.1/12.1.1_a.js # bug 854320
 
 #######################################################################
 # Tests disabled due to jstest limitations wrt imported test262 tests #

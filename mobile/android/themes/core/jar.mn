@@ -20,7 +20,7 @@ chrome.jar:
 * skin/aboutPrivateBrowsing.css             (aboutPrivateBrowsing.css)
   skin/aboutReader.css                      (aboutReader.css)
   skin/aboutSupport.css                     (aboutSupport.css)
-* skin/browser.css                          (browser.css)
+  skin/browser.css                          (browser.css)
 * skin/content.css                          (content.css)
   skin/config.css                           (config.css)
   skin/touchcontrols.css                    (touchcontrols.css)

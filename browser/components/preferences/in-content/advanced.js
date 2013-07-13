@@ -613,6 +613,7 @@ var gAdvancedPane = {
 #ifdef MOZ_METRO
     if (this._showingWin8Prefs) {
       warnIncompatible.disabled |= metroEnabledPref.value;
+      warnIncompatible.checked |= metroEnabledPref.value;
     }
 #endif
 #endif
@@ -645,6 +646,7 @@ var gAdvancedPane = {
   {
     var enabledPref = document.getElementById("app.update.enabled");
     var autoPref = document.getElementById("app.update.auto");
+    var modePref = document.getElementById("app.update.mode");
 #ifdef XP_WIN
 #ifdef MOZ_METRO
     var metroEnabledPref = document.getElementById("app.update.metro.enabled");
@@ -666,6 +668,7 @@ var gAdvancedPane = {
         enabledPref.value = true;
         autoPref.value = true;
         metroEnabledPref.value = true;
+        modePref.value = 1;
         break;
 #endif
 #endif
@@ -679,7 +682,6 @@ var gAdvancedPane = {
     }
 
     var warnIncompatible = document.getElementById("warnIncompatible");
-    var modePref = document.getElementById("app.update.mode");
     warnIncompatible.disabled = enabledPref.locked || !enabledPref.value ||
                                 autoPref.locked || !autoPref.value ||
                                 modePref.locked;
@@ -687,6 +689,7 @@ var gAdvancedPane = {
 #ifdef MOZ_METRO
     if (this._showingWin8Prefs) {
       warnIncompatible.disabled |= metroEnabledPref.value;
+      warnIncompatible.checked |= metroEnabledPref.value;
     }
 #endif
 #endif

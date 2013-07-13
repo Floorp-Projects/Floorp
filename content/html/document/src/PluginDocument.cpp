@@ -22,8 +22,8 @@
 namespace mozilla {
 namespace dom {
 
-class PluginDocument : public MediaDocument
-                     , public nsIPluginDocument
+class PluginDocument MOZ_FINAL : public MediaDocument
+                               , public nsIPluginDocument
 {
 public:
   PluginDocument();

@@ -38,6 +38,10 @@
       testStatic("xhtml3", "Test", "XHTML <title> containing an element");
       testStatic("xul1", "Test", "XUL <window> title attribute");
       testStatic("svg1", "Test", "SVG <title>");
+
+      // This one does nothing and won't fire an event
+      document.getElementById("xhtml4").contentDocument.title = "Hello";
+      is(document.getElementById("xhtml4").contentDocument.title, "", "Setting 'title' does nothing with no <head>");
     }
 
     function testDynamics() {
@@ -73,100 +77,116 @@
         op(frame.contentDocument);
       }
 
-      testDynamic("html1", "Hello", "Setting HTML <title> text contents",
-                  function(doc){
-                    var t = doc.getElementById("t"); t.textContent = "Hello";
-                  });
-      testDynamic("html2", "Foo", "Removing HTML <title>",
-                  function(doc){
-                    var t = doc.getElementById("t"); t.parentNode.removeChild(t);
-                  });
-      testDynamic("html3", "Hello", "Appending HTML <title> element to root element",
-                  function(doc){
-                    var t = doc.createElement("title"); t.textContent = "Hello"; doc.documentElement.appendChild(t);
-                  });
+      var dynamicTests = [
+        [ "html1", "Hello", "Setting HTML <title> text contents",
+          function(doc){
+            var t = doc.getElementById("t"); t.textContent = "Hello";
+          } ],
+        [ "html2", "Foo", "Removing HTML <title>",
+          function(doc){
+            var t = doc.getElementById("t"); t.parentNode.removeChild(t);
+          } ],
+        [ "html3", "Hello", "Appending HTML <title> element to root element",
+          function(doc){
+            var t = doc.createElement("title"); t.textContent = "Hello"; doc.documentElement.appendChild(t);
+          } ],
+        [ "xhtml3", "Hello", "Setting 'title' clears existing <title> contents",
+          function(doc){
+            doc.title = "Hello";
+          },
+          function(doc, desc) {
+            is(doc.documentElement.firstChild.data, "Hello", desc);
+            is(doc.documentElement.firstChild.nextSibling, null, desc);
+          } ],
+        [ "xhtml5", "Hello", "Setting 'title' works with a <head>",
+          function(doc){
+            doc.title = "Hello";
+          },
+          function(doc, desc) {
+            var head = doc.documentElement.firstChild;
+            var title = head.firstChild;
+            is(title.tagName.toLowerCase(), "title", desc);
+            is(title.firstChild.data, "Hello", desc);
+            is(title.firstChild.nextSibling, null, desc);
+            is(title.nextSibling, null, desc);
+          } ],
+        [ "xhtml6", "Hello", "Setting 'title' appends to <head>",
+          function(doc){
+            doc.title = "Hello";
+          },
+          function(doc, desc) {
+            var head = doc.documentElement.firstChild;
+            is(head.firstChild.tagName.toLowerCase(), "style", desc);
+            var title = head.firstChild.nextSibling;
+            is(title.tagName.toLowerCase(), "title", desc);
+            is(title.firstChild.data, "Hello", desc);
+            is(title.firstChild.nextSibling, null, desc);
+            is(title.nextSibling, null, desc);
+          } ],
+        [ "xul1", "Hello", "Setting XUL <window> title attribute",
+          function(doc){
+            doc.documentElement.setAttribute("title", "Hello");
+          } ],
+        [ "xul2", "Hello", "Setting 'title' in XUL",
+          function(doc){
+            doc.title = "Hello";
+          },
+          function(doc, desc) {
+            is(doc.documentElement.getAttribute("title"), "Hello", desc);
+            is(doc.documentElement.firstChild, null, desc);
+          } ],
+        [ "svg1", "Hello", "Setting SVG <title> text contents",
+          function(doc){
+            var t = doc.getElementById("t"); t.textContent = "Hello";
+          } ],
+        [ "svg2", "", "Removing SVG <title>",
+          function(doc){
+            var t = doc.getElementById("t"); t.parentNode.removeChild(t);
+          } ] ];
 
-      testDynamic("xhtml3", "Hello", "Setting 'title' clears existing <title> contents",
-                  function(doc){
-                    doc.title = "Hello";
-                  },
-                  function(doc, desc) {
-                    is(doc.documentElement.firstChild.data, "Hello", desc);
-                    is(doc.documentElement.firstChild.nextSibling, null, desc);
-                  });
-      // This one does nothing and won't fire an event
-      document.getElementById("xhtml4").contentDocument.title = "Hello";
-      is(document.getElementById("xhtml4").contentDocument.title, "", "Setting 'title' does nothing with no <head>");
-      testDynamic("xhtml5", "Hello", "Setting 'title' works with a <head>",
-                  function(doc){
-                    doc.title = "Hello";
-                  },
-                  function(doc, desc) {
-                    var head = doc.documentElement.firstChild;
-                    var title = head.firstChild;
-                    is(title.tagName.toLowerCase(), "title", desc);
-                    is(title.firstChild.data, "Hello", desc);
-                    is(title.firstChild.nextSibling, null, desc);
-                    is(title.nextSibling, null, desc);
-                  });
-      testDynamic("xhtml6", "Hello", "Setting 'title' appends to <head>",
-                  function(doc){
-                    doc.title = "Hello";
-                  },
-                  function(doc, desc) {
-                    var head = doc.documentElement.firstChild;
-                    is(head.firstChild.tagName.toLowerCase(), "style", desc);
-                    var title = head.firstChild.nextSibling;
-                    is(title.tagName.toLowerCase(), "title", desc);
-                    is(title.firstChild.data, "Hello", desc);
-                    is(title.firstChild.nextSibling, null, desc);
-                    is(title.nextSibling, null, desc);
-                  });
+      var titleWindow = window;
 
-      testDynamic("xul1", "Hello", "Setting XUL <window> title attribute",
-                  function(doc){
-                    doc.documentElement.setAttribute("title", "Hello");
-                  });
-      testDynamic("xul2", "Hello", "Setting 'title' in XUL",
-                  function(doc){
-                    doc.title = "Hello";
-                  },
-                  function(doc, desc) {
-                    is(doc.documentElement.getAttribute("title"), "Hello", desc);
-                    is(doc.documentElement.firstChild, null, desc);
-                  });
+      function runIndividualTest(i) {
+        if (i == dynamicTests.length) {
+          // Closing the window will nuke the global properties, since this
+          // function is not really running on this window... or something
+          // like that.  Thanks, executeSoon!
+          var tester = SimpleTest;
+          window.close();
+          tester.finish();
+        } else {
+          var parameters = dynamicTests[i];
+          var testElementId = parameters[0];
+          var testExpectedValue = parameters[1];
+          var testDescription = parameters[2];
+          var testOp = parameters[3];
+          var testCheckDOM = parameters[4];
 
-      testDynamic("svg1", "Hello", "Setting SVG <title> text contents",
-                  function(doc){
-                    var t = doc.getElementById("t"); t.textContent = "Hello";
-                  });
-      testDynamic("svg2", "", "Removing SVG <title>",
-                  function(doc){
-                    var t = doc.getElementById("t"); t.parentNode.removeChild(t);
-                  });
+          function checkTest() {
+            ok(!inProgress[testDescription],
+               testDescription + ": DOMTitleChange not fired");
+            ok(inProgressDoc[testDescription],
+               testDescription + ": DOMTitleChange fired on content document");
+            ok(inProgressWin[testDescription],
+               testDescription + ": DOMTitleChange fired on content window");
+            // Run the next test in the context of the parent XUL window.
+            titleWindow.setTimeout(runIndividualTest, 0, i+1);
+          }
+          function spinEventLoopOp(doc) {
+            // Perform the test's operations.
+            testOp(doc);
+            // Spin the associated window's event loop to ensure we
+            // drain any asynchronous changes and fire associated
+            // events.
+            doc.defaultView.setTimeout(checkTest, 0);
+          }
 
-      function end() {
-        for (description in inProgress) {
-          ok(!inProgress[description],
-             description + ": DOMTitleChange not fired");
+          testDynamic(testElementId, testExpectedValue, testDescription,
+                      spinEventLoopOp, testCheckDOM);
         }
-        for (description in inProgressDoc) {
-          ok(inProgressDoc[description],
-             description + ": DOMTitleChange fired on content document");
-        }
-        for (description in inProgressWin) {
-          ok(inProgressWin[description],
-             description + ": DOMTitleChange fired on content window");
-        }
-
-        // Closing the window will nuke the global properties, since this
-        // function is not really running on this window... or something
-        // like that.  Thanks, executeSoon!
-        var tester = SimpleTest;
-        window.close();
-        tester.finish();
       }
-      SimpleTest.executeSoon(end);
+
+      window.setTimeout(runIndividualTest, 0, 0);
     }
 
     function runTests() {

@@ -1,17 +1,17 @@
 [
 {
-"clang_version": "r170890"
-},
+"clang_version": "r185949"
+}, 
 {
-"filename": "setup.sh",
-"algorithm": "sha512",
-"digest": "2005a41fe97a5e00997063705f39d42b6a43b1cf7ba306cbc7b1513de34cdcd050fc6326efa2107f19ba0cc67914745dbf13154fa748010a93cf072481ef4aaa",
-"size": 47
-},
+"size": 47, 
+"digest": "2005a41fe97a5e00997063705f39d42b6a43b1cf7ba306cbc7b1513de34cdcd050fc6326efa2107f19ba0cc67914745dbf13154fa748010a93cf072481ef4aaa", 
+"algorithm": "sha512", 
+"filename": "setup.sh"
+}, 
 {
-"filename": "clang.tar.bz2",
-"algorithm": "sha512",
-"digest": "e14ccefd965372a57c540647b2b99e21a4aa82f81a8b9a9e18dac7cba4c3436181bef0dfab8c51bcb5c343f504a693fdcfbe7d609f10291b5dd65ab059979d29",
-"size": 63034761
+"size": 73050713, 
+"digest": "2c5c26a44402f974c2a4ccffb07ea1ac2d01d84dc3e4281fef6e047a62606811a16534d034477dfd9be055a07d931b17ca4e883c8edcd1f8d3a8c91b150e2288", 
+"algorithm": "sha512", 
+"filename": "clang.tar.bz2"
 }
 ]

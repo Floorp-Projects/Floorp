@@ -6,7 +6,6 @@
 
 <?xml-stylesheet href="chrome://browser/skin/platform.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/browser.css" type="text/css"?>
-<?xml-stylesheet href="chrome://browser/skin/forms.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/content/browser.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/cssthrobber.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/tiles.css" type="text/css"?>

@@ -221,7 +221,7 @@ IMEHandler::GetUpdatePreference()
   }
 #endif //NS_ENABLE_TSF
 
-  return nsIMEUpdatePreference(false, false);
+  return nsIMEUpdatePreference();
 }
 
 // static

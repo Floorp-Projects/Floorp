@@ -32,8 +32,6 @@ HTMLSharedObjectElement::HTMLSharedObjectElement(already_AddRefed<nsINodeInfo> a
 
   // By default we're in the loading state
   AddStatesSilently(NS_EVENT_STATE_LOADING);
-
-  SetIsDOMBinding();
 }
 
 void
@@ -244,13 +242,28 @@ HTMLSharedObjectElement::ParseAttribute(int32_t aNamespaceID,
 }
 
 static void
-MapAttributesIntoRule(const nsMappedAttributes *aAttributes,
-                      nsRuleData *aData)
+MapAttributesIntoRuleBase(const nsMappedAttributes *aAttributes,
+                          nsRuleData *aData)
 {
   nsGenericHTMLElement::MapImageBorderAttributeInto(aAttributes, aData);
   nsGenericHTMLElement::MapImageMarginAttributeInto(aAttributes, aData);
   nsGenericHTMLElement::MapImageSizeAttributesInto(aAttributes, aData);
   nsGenericHTMLElement::MapImageAlignAttributeInto(aAttributes, aData);
+}
+
+static void
+MapAttributesIntoRuleExceptHidden(const nsMappedAttributes *aAttributes,
+                                  nsRuleData *aData)
+{
+  MapAttributesIntoRuleBase(aAttributes, aData);
+  nsGenericHTMLElement::MapCommonAttributesIntoExceptHidden(aAttributes, aData);
+}
+
+static void
+MapAttributesIntoRule(const nsMappedAttributes *aAttributes,
+                      nsRuleData *aData)
+{
+  MapAttributesIntoRuleBase(aAttributes, aData);
   nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aData);
 }
 
@@ -271,6 +284,10 @@ HTMLSharedObjectElement::IsAttributeMapped(const nsIAtom *aAttribute) const
 nsMapRuleToAttributesFunc
 HTMLSharedObjectElement::GetAttributeMappingFunction() const
 {
+  if (mNodeInfo->Equals(nsGkAtoms::embed)) {
+    return &MapAttributesIntoRuleExceptHidden;
+  }
+
   return &MapAttributesIntoRule;
 }
 

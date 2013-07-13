@@ -116,11 +116,6 @@ JSString::writeBarrierPre(JSString *str)
 #endif
 }
 
-inline void
-JSString::writeBarrierPost(JSString *str, void *addr)
-{
-}
-
 inline bool
 JSString::needWriteBarrierPre(JS::Zone *zone)
 {

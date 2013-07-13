@@ -30,13 +30,9 @@ class JavaScriptParent
     bool init();
 
   public:
-    bool has(JSContext *cx, JS::HandleObject proxy, JS::HandleId id, bool *bp);
-    bool hasOwn(JSContext *cx, JS::HandleObject proxy, JS::HandleId id, bool *bp);
-    bool get(JSContext *cx, JS::HandleObject proxy, JS::HandleObject receiver,
-             JS::HandleId id, JS::MutableHandleValue vp);
-    bool set(JSContext *cx, JS::HandleObject proxy, JS::HandleObject receiver,
-             JS::HandleId id, bool strict, JS::MutableHandleValue vp);
-    bool call(JSContext *cx, JS::HandleObject proxy, const JS::CallArgs &args);
+    // Fundamental proxy traps. These are required.
+    // (The traps should be in the same order like js/src/jsproxy.h)
+    bool preventExtensions(JSContext *cx, JS::HandleObject proxy);
     bool getPropertyDescriptor(JSContext *cx, JS::HandleObject proxy, JS::HandleId id,
                                JSPropertyDescriptor *desc, unsigned flags);
     bool getOwnPropertyDescriptor(JSContext *cx, JS::HandleObject proxy, JS::HandleId id,
@@ -44,13 +40,24 @@ class JavaScriptParent
     bool defineProperty(JSContext *cx, JS::HandleObject proxy, JS::HandleId id,
                         JSPropertyDescriptor *desc);
     bool getOwnPropertyNames(JSContext *cx, JS::HandleObject proxy, js::AutoIdVector &props);
-    bool keys(JSContext *cx, JS::HandleObject proxy, js::AutoIdVector &props);
-    bool enumerate(JSContext *cx, JS::HandleObject proxy, js::AutoIdVector &props);
     bool delete_(JSContext *cx, JS::HandleObject proxy, JS::HandleId id, bool *bp);
+    bool enumerate(JSContext *cx, JS::HandleObject proxy, js::AutoIdVector &props);
+
+    // Derived proxy traps. Implementing these is useful for perfomance.
+    bool has(JSContext *cx, JS::HandleObject proxy, JS::HandleId id, bool *bp);
+    bool hasOwn(JSContext *cx, JS::HandleObject proxy, JS::HandleId id, bool *bp);
+    bool get(JSContext *cx, JS::HandleObject proxy, JS::HandleObject receiver,
+             JS::HandleId id, JS::MutableHandleValue vp);
+    bool set(JSContext *cx, JS::HandleObject proxy, JS::HandleObject receiver,
+             JS::HandleId id, bool strict, JS::MutableHandleValue vp);
+    bool keys(JSContext *cx, JS::HandleObject proxy, js::AutoIdVector &props);
+    // We use "iterate" provided by the base class here.
+
+    // SpiderMonkey Extensions.
+    bool isExtensible(JSContext *cx, JS::HandleObject proxy, bool *extensible);
+    bool call(JSContext *cx, JS::HandleObject proxy, const JS::CallArgs &args);
     bool objectClassIs(JSContext *cx, JS::HandleObject obj, js::ESClassValue classValue);
     const char* className(JSContext *cx, JS::HandleObject proxy);
-    bool preventExtensions(JSContext *cx, JS::HandleObject proxy);
-    bool isExtensible(JSContext *cx, JS::HandleObject proxy, bool *extensible);
 
     void decref();
     void incref();
