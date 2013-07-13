@@ -22,6 +22,13 @@ const kStartOverlayURI = "about:start";
 const debugServerStateChanged = "devtools.debugger.remote-enabled";
 const debugServerPortChanged = "devtools.debugger.remote-port";
 
+// delay when showing the tab bar briefly after a new (empty) tab opens
+const kNewTabAnimationDelayMsec = 1000;
+// delay when showing the tab bar after opening a link on a new tab
+const kOpenInNewTabAnimationDelayMsec = 3000;
+// delay before closing tab bar after selecting another tab
+const kSelectTabAnimationDelayMsec = 500;
+
 /**
  * Cache of commonly used elements.
  */
@@ -465,19 +472,7 @@ var BrowserUI = {
   newTab: function newTab(aURI, aOwner) {
     aURI = aURI || kStartOverlayURI;
     let tab = Browser.addTab(aURI, true, aOwner);
-    ContextUI.peekTabs();
     return tab;
-  },
-
-  newOrSelectTab: function newOrSelectTab(aURI, aOwner) {
-    let tabs = Browser.tabs;
-    for (let i = 0; i < tabs.length; i++) {
-      if (tabs[i].browser.currentURI.spec == aURI) {
-        Browser.selectedTab = tabs[i];
-        return;
-      }
-    }
-    this.newTab(aURI, aOwner);
   },
 
   setOnTabAnimationEnd: function setOnTabAnimationEnd(aCallback) {
@@ -502,9 +497,9 @@ var BrowserUI = {
     }
 
     this.setOnTabAnimationEnd(function() {
-	    Browser.closeTab(tabToClose, { forceClose: true } );
-        if (wasCollapsed)
-          ContextUI.dismissTabsWithDelay(kNewTabAnimationDelayMsec);
+      Browser.closeTab(tabToClose, { forceClose: true } );
+      if (wasCollapsed)
+        ContextUI.dismissTabsWithDelay(kNewTabAnimationDelayMsec);
     });
   },
 
@@ -546,7 +541,7 @@ var BrowserUI = {
 
   selectTabAndDismiss: function selectTabAndDismiss(aTab) {
     this.selectTab(aTab);
-    ContextUI.dismissTabs();
+    ContextUI.dismissTabsWithDelay(kSelectTabAnimationDelayMsec);
   },
 
   selectTabAtIndex: function selectTabAtIndex(aIndex) {
@@ -1333,6 +1328,7 @@ var BrowserUI = {
       case "cmd_newTab":
         this.newTab();
         this._editURI(false);
+        ContextUI.peekTabs(kNewTabAnimationDelayMsec);
         break;
       case "cmd_closeTab":
         this.closeTab();
