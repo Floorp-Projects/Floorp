@@ -990,6 +990,9 @@ static const JSFunctionSpec number_static_methods[] = {
     JS_FN("isInteger", Number_isInteger, 1, 0),
     JS_FN("isNaN", Number_isNaN, 1, 0),
     JS_FN("toInteger", Number_toInteger, 1, 0),
+    /* ES6 additions. */
+    JS_FN("parseFloat", num_parseFloat, 1, 0),
+    JS_FN("parseInt", num_parseInt, 2, 0),
     JS_FS_END
 };
 
