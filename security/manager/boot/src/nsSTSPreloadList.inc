@@ -8,7 +8,7 @@
 /*****************************************************************************/
 
 #include "mozilla/StandardInteger.h"
-const PRTime gPreloadListExpirationTime = INT64_C(1383992137406000);
+const PRTime gPreloadListExpirationTime = INT64_C(1384596271277000);
 
 class nsSTSPreload
 {
@@ -22,12 +22,12 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "api.intercom.io", false },
   { "app.recurly.com", false },
   { "arivo.com.br", true },
+  { "bank.simple.com", false },
   { "bassh.net", true },
   { "bccx.com", true },
   { "blog.cyveillance.com", true },
   { "blog.linode.com", false },
   { "blog.torproject.org", false },
-  { "blueseed.co", false },
   { "bugzilla.mozilla.org", true },
   { "business.medbank.com.mt", true },
   { "carezone.com", false },
@@ -69,7 +69,6 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "logotype.se", true },
   { "lookout.com", false },
   { "luneta.nearbuysystems.com", false },
-  { "makeyourlaws.org", false },
   { "manager.linode.com", false },
   { "mattmccutchen.net", true },
   { "mega.co.nz", false },
