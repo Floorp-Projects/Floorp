@@ -3326,7 +3326,10 @@ IMEInputHandler::KillIMEComposition()
   }
 
   if (IsFocused()) {
-    [[NSInputManager currentInputManager] markedTextAbandoned: mView];
+    NS_ENSURE_TRUE_VOID(mView);
+    NSTextInputContext* inputContext = [mView inputContext];
+    NS_ENSURE_TRUE_VOID(inputContext);
+    [inputContext discardMarkedText];
     return;
   }
 
