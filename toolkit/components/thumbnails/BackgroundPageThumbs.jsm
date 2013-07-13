@@ -38,17 +38,6 @@ const BackgroundPageThumbs = {
    *                 the queue and started.  Defaults to 30000 (30 seconds).
    */
   capture: function (url, options={}) {
-    if (isPrivateBrowsingActive()) {
-      // There's only one, global private-browsing state shared by all private
-      // windows and the thumbnail browser.  Just as if you log into a site in
-      // one private window you're logged in in all private windows, you're also
-      // logged in in the thumbnail browser.  A crude way to avoid capturing
-      // sites in this situation is to refuse to capture at all when any private
-      // windows are open.  See bug 870179.
-      if (options.onDone)
-        Services.tm.mainThread.dispatch(options.onDone.bind(options, url), 0);
-      return;
-    }
     this._captureQueue = this._captureQueue || [];
     this._capturesByURL = this._capturesByURL || new Map();
     // We want to avoid duplicate captures for the same URL.  If there is an
@@ -239,11 +228,27 @@ Capture.prototype = {
    * @param messageManager  The nsIMessageSender of the thumbnail browser.
    */
   start: function (messageManager) {
-    let timeout = typeof(this.options.timeout) == "number" ? this.options.timeout :
+    // The thumbnail browser uses private browsing mode and therefore shares
+    // browsing state with private windows.  To avoid capturing sites that the
+    // user is logged into in private browsing windows, (1) observe window
+    // openings, and if a private window is opened during capture, discard the
+    // capture when it finishes, and (2) don't start the capture at all if a
+    // private window is open already.
+    Services.ww.registerNotification(this);
+    if (isPrivateBrowsingActive()) {
+      this._done(null);
+      return;
+    }
+
+    // timeout timer
+    let timeout = typeof(this.options.timeout) == "number" ?
+                  this.options.timeout :
                   DEFAULT_CAPTURE_TIMEOUT;
     this._timeoutTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-    this._timeoutTimer.initWithCallback(this, timeout, Ci.nsITimer.TYPE_ONE_SHOT);
+    this._timeoutTimer.initWithCallback(this, timeout,
+                                        Ci.nsITimer.TYPE_ONE_SHOT);
 
+    // didCapture registration
     this._msgMan = messageManager;
     this._msgMan.sendAsyncMessage("BackgroundPageThumbs:capture",
                                   { id: this.id, url: this.url });
@@ -268,6 +273,7 @@ Capture.prototype = {
       delete this._msgMan;
     }
     delete this.captureCallback;
+    Services.ww.unregisterNotification(this);
   },
 
   // Called when the didCapture message is received.
@@ -281,6 +287,13 @@ Capture.prototype = {
   // Called when the timeout timer fires.
   notify: function () {
     this._done(null);
+  },
+
+  // Called when the window watcher notifies us.
+  observe: function (subj, topic, data) {
+    if (topic == "domwindowopened" &&
+        PrivateBrowsingUtils.isWindowPrivate(subj))
+      this._privateWinOpenedDuringCapture = true;
   },
 
   _done: function (data) {
@@ -302,7 +315,7 @@ Capture.prototype = {
       }
     }.bind(this);
 
-    if (!data) {
+    if (!data || this._privateWinOpenedDuringCapture) {
       callOnDones();
       return;
     }
