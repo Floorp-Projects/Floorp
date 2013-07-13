@@ -3712,5 +3712,45 @@
     "kind": "enumerated",
     "n_values": 4,
     "description": "Accumulates type of content (mixed, mixed passive, unmixed) per page load"
+  },
+  "FX_THUMBNAILS_BG_QUEUE_SIZE_ON_CAPTURE": {
+    "kind": "exponential",
+    "high": 100,
+    "n_buckets": 15,
+    "extended_statistics_ok": true,
+    "description": "BACKGROUND THUMBNAILS: Size of capture queue when a capture request is received"
+  },
+  "FX_THUMBNAILS_BG_CAPTURE_QUEUE_TIME_MS": {
+    "kind": "exponential",
+    "high": 300000,
+    "n_buckets": 20,
+    "extended_statistics_ok": true,
+    "description": "BACKGROUND THUMBNAILS: Time the capture request spent in the queue before being serviced (ms)"
+  },
+  "FX_THUMBNAILS_BG_CAPTURE_SERVICE_TIME_MS": {
+    "kind": "exponential",
+    "high": 30000,
+    "n_buckets": 20,
+    "extended_statistics_ok": true,
+    "description": "BACKGROUND THUMBNAILS: Time the capture took once it started and successfully completed (ms)"
+  },
+  "FX_THUMBNAILS_BG_CAPTURE_DONE_REASON": {
+    "kind": "enumerated",
+    "n_values": 4,
+    "description": "BACKGROUND THUMBNAILS: Reason the capture completed (see TEL_CAPTURE_DONE_* constants in BackgroundPageThumbs.jsm)"
+  },
+  "FX_THUMBNAILS_BG_CAPTURE_PAGE_LOAD_TIME_MS": {
+    "kind": "exponential",
+    "high": 60000,
+    "n_buckets": 20,
+    "extended_statistics_ok": true,
+    "description": "BACKGROUND THUMBNAILS: Time the capture's page load took (ms)"
+  },
+  "FX_THUMBNAILS_BG_CAPTURE_CANVAS_DRAW_TIME_MS": {
+    "kind": "exponential",
+    "high": 500,
+    "n_buckets": 15,
+    "extended_statistics_ok": true,
+    "description": "BACKGROUND THUMBNAILS: Time it took to draw the capture's window to canvas (ms)"
   }
 }
