@@ -213,7 +213,7 @@ function run_test_2() {
       do_check_true(newb1.userDisabled);
       do_check_false(newb1.isActive);
 
-      run_test_3();
+      do_execute_soon(run_test_3);
     });
   });
 }
@@ -267,7 +267,7 @@ function run_test_4() {
       do_check_false(newb1.userDisabled);
       do_check_true(newb1.isActive);
 
-      run_test_5();
+      do_execute_soon(run_test_5);
     });
   });
 }
@@ -324,7 +324,7 @@ function check_test_7() {
     AddonManager.getAddonByID("ab-CD@dictionaries.addons.mozilla.org", function(newb1) {
       do_check_eq(newb1, null);
 
-      run_test_8();
+      do_execute_soon(run_test_8);
     });
   });
 }
@@ -360,7 +360,7 @@ function run_test_8() {
     do_check_true(HunspellEngine.isDictionaryEnabled("ab-CD.dic"));
     do_check_in_crash_annotation("ab-CD@dictionaries.addons.mozilla.org", "1.0");
 
-    run_test_9();
+    do_execute_soon(run_test_9);
   });
 }
 
@@ -377,7 +377,7 @@ function run_test_9() {
     do_check_eq(b1, null);
     do_check_not_in_crash_annotation("ab-CD@dictionaries.addons.mozilla.org", "1.0");
 
-    run_test_12();
+    do_execute_soon(run_test_12);
   });
 }
 
@@ -414,16 +414,18 @@ function run_test_12() {
     do_check_in_crash_annotation("ab-CD@dictionaries.addons.mozilla.org", "1.0");
 
     b1.uninstall();
-    restartManager();
-
-    run_test_16();
+    do_execute_soon(run_test_16);
   });
 }
 
 
 // Tests that bootstrapped extensions don't get loaded when in safe mode
 function run_test_16() {
+  restartManager();
+
   installAllFiles([do_get_addon("test_dictionary")], function() {
+    // spin the event loop to let the addon finish starting
+   do_execute_soon(function check_installed_dictionary() {
     AddonManager.getAddonByID("ab-CD@dictionaries.addons.mozilla.org", function(b1) {
       // Should have installed and started
       do_check_true(HunspellEngine.isDictionaryEnabled("ab-CD.dic"));
@@ -451,10 +453,11 @@ function run_test_16() {
         AddonManager.getAddonByID("ab-CD@dictionaries.addons.mozilla.org", function(b1) {
           b1.uninstall();
 
-          run_test_17();
+          do_execute_soon(run_test_17);
         });
       });
     });
+   });
   });
 }
 
@@ -534,7 +537,8 @@ function run_test_23() {
         "onInstallEnded",
       ], function() {
         do_check_true(addon.hasResource("install.rdf"));
-        check_test_23();
+        // spin to let the addon startup finish
+        do_execute_soon(check_test_23);
       });
     });
     install.install();
@@ -566,9 +570,7 @@ function check_test_23() {
         restartManager();
         AddonManager.getAddonByID("ab-CD@dictionaries.addons.mozilla.org", function(b1) {
           b1.uninstall();
-          restartManager();
-
-          run_test_25();
+          do_execute_soon(run_test_25);
         });
       });
     });
@@ -578,44 +580,46 @@ function check_test_23() {
 // Tests that updating from a bootstrappable add-on to a normal add-on calls
 // the uninstall method
 function run_test_25() {
-  installAllFiles([do_get_addon("test_dictionary")], function() {
-    HunspellEngine.listener = function(aEvent) {
-      HunspellEngine.listener = null;
-      do_check_eq(aEvent, "addDirectory");
+  restartManager();
+
+  HunspellEngine.listener = function(aEvent) {
+    HunspellEngine.listener = null;
+    do_check_eq(aEvent, "addDirectory");
+    do_check_true(HunspellEngine.isDictionaryEnabled("ab-CD.dic"));
+
+    installAllFiles([do_get_addon("test_dictionary_2")], function test_25_installed2() {
+      // Needs a restart to complete this so the old version stays running
       do_check_true(HunspellEngine.isDictionaryEnabled("ab-CD.dic"));
-  
-      installAllFiles([do_get_addon("test_dictionary_2")], function() {
-        // Needs a restart to complete this so the old version stays running
-        do_check_true(HunspellEngine.isDictionaryEnabled("ab-CD.dic"));
-  
+
+      AddonManager.getAddonByID("ab-CD@dictionaries.addons.mozilla.org", function(b1) {
+        do_check_neq(b1, null);
+        do_check_eq(b1.version, "1.0");
+        do_check_true(b1.isActive);
+        do_check_true(hasFlag(b1.pendingOperations, AddonManager.PENDING_UPGRADE));
+
+        restartManager();
+
+        do_check_false(HunspellEngine.isDictionaryEnabled("ab-CD.dic"));
+
         AddonManager.getAddonByID("ab-CD@dictionaries.addons.mozilla.org", function(b1) {
           do_check_neq(b1, null);
-          do_check_eq(b1.version, "1.0");
+          do_check_eq(b1.version, "2.0");
           do_check_true(b1.isActive);
-          do_check_true(hasFlag(b1.pendingOperations, AddonManager.PENDING_UPGRADE));
-  
-          restartManager();
-  
-          do_check_false(HunspellEngine.isDictionaryEnabled("ab-CD.dic"));
-  
-          AddonManager.getAddonByID("ab-CD@dictionaries.addons.mozilla.org", function(b1) {
-            do_check_neq(b1, null);
-            do_check_eq(b1.version, "2.0");
-            do_check_true(b1.isActive);
-            do_check_eq(b1.pendingOperations, AddonManager.PENDING_NONE);
-  
-            run_test_26();
-          });
+          do_check_eq(b1.pendingOperations, AddonManager.PENDING_NONE);
+
+          do_execute_soon(run_test_26);
         });
       });
-    };
-  });
+    });
+  };
+
+  installAllFiles([do_get_addon("test_dictionary")], function test_25_installed() { });
 }
 
 // Tests that updating from a normal add-on to a bootstrappable add-on calls
 // the install method
 function run_test_26() {
-  installAllFiles([do_get_addon("test_dictionary")], function() {
+  installAllFiles([do_get_addon("test_dictionary")], function test_26_install() {
     // Needs a restart to complete this
     do_check_false(HunspellEngine.isDictionaryEnabled("ab-CD.dic"));
 
@@ -637,8 +641,7 @@ function run_test_26() {
 
         HunspellEngine.deactivate();
         b1.uninstall();
-        restartManager();
-        run_test_27();
+        do_execute_soon(run_test_27);
       });
     });
   });
@@ -646,6 +649,7 @@ function run_test_26() {
 
 // Tests that an update check from a normal add-on to a bootstrappable add-on works
 function run_test_27() {
+  restartManager();
   writeInstallRDFForExtension({
     id: "ab-CD@dictionaries.addons.mozilla.org",
     version: "1.0",
@@ -683,14 +687,14 @@ function check_test_27(install) {
     do_check_eq(b1.version, "2.0");
     do_check_eq(b1.type, "dictionary");
     b1.uninstall();
-    restartManager();
-
-    run_test_28();
+    do_execute_soon(run_test_28);
   });
 }
 
 // Tests that an update check from a bootstrappable add-on to a normal add-on works
 function run_test_28() {
+  restartManager();
+
   writeInstallRDFForExtension({
     id: "ef@dictionaries.addons.mozilla.org",
     version: "1.0",
@@ -729,14 +733,14 @@ function check_test_28(install) {
     do_check_eq(b2.version, "2.0");
     do_check_eq(b2.type, "extension");
     b2.uninstall();
-    restartManager();
-
-    run_test_29();
+    do_execute_soon(run_test_29);
   });
 }
 
 // Tests that an update check from a bootstrappable add-on to a bootstrappable add-on works
 function run_test_29() {
+  restartManager();
+
   writeInstallRDFForExtension({
     id: "gh@dictionaries.addons.mozilla.org",
     version: "1.0",

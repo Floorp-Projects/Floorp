@@ -71,17 +71,18 @@ function run_test_2() {
       gExpectedFile.append("extensions");
       gExpectedFile.append("addon1@tests.mozilla.org.xpi");
 
+      do_check_true(a1 != null);
       a1.uninstall();
       do_check_false(gCacheFlushed);
-      restartManager();
-
-      run_test_3();
+      do_execute_soon(run_test_3);
     });
   });
 }
 
 // Tests that the cache is flushed when installing a restartless add-on
 function run_test_3() {
+  restartManager();
+
   AddonManager.getInstallForFile(do_get_addon("test_cacheflush2"), function(aInstall) {
     aInstall.addListener({
       onInstallStarted: function(aInstall) {
@@ -96,7 +97,7 @@ function run_test_3() {
         do_check_true(gCacheFlushed);
         gCacheFlushed = false;
 
-        run_test_4();
+        do_execute_soon(run_test_4);
       }
     });
 

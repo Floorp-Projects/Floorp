@@ -414,7 +414,7 @@ function trigger_background_update(aCallback) {
   Services.obs.addObserver({
     observe: function(aSubject, aTopic, aData) {
       Services.obs.removeObserver(this, "addons-background-update-complete");
-      aCallback();
+      do_execute_soon(aCallback);
     }
   }, "addons-background-update-complete", false);
 
@@ -493,7 +493,7 @@ function check_cache(aExpectedToFind, aExpectedImmediately, aCallback) {
         check_results([aAddon], [expected], true);
 
       if (--pendingAddons == 0)
-        aCallback();
+        do_execute_soon(aCallback);
     });
   }
 
@@ -537,7 +537,7 @@ function run_test() {
     gServer.registerDirectory("/data/", do_get_file("data"));
     gServer.start(PORT);
 
-    run_test_1();
+    do_execute_soon(run_test_1);
   });
 }
 
@@ -552,7 +552,7 @@ function run_test_1() {
   Services.prefs.setBoolPref(PREF_GETADDONS_CACHE_ENABLED, true);
   do_check_true(AddonRepository.cacheEnabled);
 
-  run_test_2();
+  do_execute_soon(run_test_2);
 }
 
 // Tests that the cache and database begin as empty
@@ -684,7 +684,7 @@ function run_test_12() {
 
   AddonManager.getAddonsByIDs(ADDON_IDS, function(aAddons) {
     check_results(aAddons, WITHOUT_CACHE);
-    run_test_13();
+    do_execute_soon(run_test_13);
   });
 }
 
@@ -700,7 +700,7 @@ function run_test_13() {
 
     AddonManager.getAddonsByIDs(ADDON_IDS, function(aAddons) {
       check_results(aAddons, WITHOUT_CACHE);
-      run_test_14();
+      do_execute_soon(run_test_14);
     });
   });
 }
@@ -715,7 +715,7 @@ function run_test_14() {
 
     AddonManager.getAddonsByIDs(ADDON_IDS, function(aAddons) {
       check_results(aAddons, WITHOUT_CACHE);
-      run_test_15();
+      do_execute_soon(run_test_15);
     });
   });
 }
@@ -728,7 +728,7 @@ function run_test_15() {
   trigger_background_update(function() {
     AddonManager.getAddonsByIDs(ADDON_IDS, function(aAddons) {
       check_results(aAddons, WITH_CACHE);
-      run_test_16();
+      do_execute_soon(run_test_16);
     });
   });
 }
@@ -741,7 +741,7 @@ function run_test_16() {
 
   AddonManager.getAddonsByIDs(ADDON_IDS, function(aAddons) {
     check_results(aAddons, WITH_CACHE);
-    run_test_17();
+    do_execute_soon(run_test_17);
   });
 }
 

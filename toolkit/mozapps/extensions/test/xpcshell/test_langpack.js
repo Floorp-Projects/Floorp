@@ -77,7 +77,8 @@ function run_test_1() {
       "onInstallEnded",
     ], function() {
       do_check_true(addon.hasResource("install.rdf"));
-      check_test_1();
+      // spin to let the startup complete
+      do_execute_soon(check_test_1);
     });
     install.install();
   });

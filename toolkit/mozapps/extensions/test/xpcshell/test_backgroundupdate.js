@@ -40,7 +40,7 @@ function run_test_1() {
     Services.obs.addObserver(function() {
       Services.obs.removeObserver(arguments.callee, "addons-background-update-complete");
 
-      run_test_2();
+      do_execute_soon(run_test_2);
     }, "addons-background-update-complete", false);
 
     AddonManagerPrivate.backgroundUpdateCheck();
