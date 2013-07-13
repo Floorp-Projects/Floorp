@@ -105,7 +105,7 @@ function run_test() {
       a4.uninstall();
 
       installAllFiles([do_get_addon("test_locked2_5"),
-                       do_get_addon("test_locked2_6")], function() {
+                       do_get_addon("test_locked2_6")], function locked_installed() {
         do_check_neq(a1, null);
         do_check_true(a1.isActive);
         do_check_false(a1.userDisabled);
