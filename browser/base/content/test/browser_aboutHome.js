@@ -263,7 +263,6 @@ function test()
 {
   waitForExplicitFinish();
   requestLongerTimeout(2);
-  ignoreAllUncaughtExceptions();
 
   Task.spawn(function () {
     for (let test of gTests) {
