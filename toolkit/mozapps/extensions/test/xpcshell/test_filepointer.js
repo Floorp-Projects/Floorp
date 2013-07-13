@@ -177,14 +177,14 @@ function check_test_2() {
 
     a1.uninstall();
 
-    restartManager();
-
-    run_test_3();
+    do_execute_soon(run_test_3);
   });
 }
 
 // Tests that uninstalling doesn't clobber the original sources
 function run_test_3() {
+  restartManager();
+
   writePointer(addon1.id);
 
   restartManager();
@@ -201,7 +201,7 @@ function run_test_3() {
     source.append(addon1.id);
     do_check_true(source.exists());
 
-    run_test_4();
+    do_execute_soon(run_test_4);
   });
 }
 
@@ -224,7 +224,7 @@ function run_test_4() {
     pointer.append("addon2@tests.mozilla.org");
     do_check_false(pointer.exists());
 
-    run_test_5();
+    do_execute_soon(run_test_5);
   });
 }
 
@@ -258,7 +258,7 @@ function run_test_5() {
       pointer.append(addon1.id);
       do_check_false(pointer.exists());
 
-      run_test_6();
+      do_execute_soon(run_test_6);
     });
   });
 }
@@ -285,7 +285,7 @@ function run_test_6() {
     AddonManager.getAddonByID("addon1@tests.mozilla.org", function(a1) {
       do_check_eq(a1, null);
 
-      run_test_7();
+      do_execute_soon(run_test_7);
     });
   });
 }
@@ -316,7 +316,7 @@ function run_test_7() {
 
       restartManager();
 
-      run_test_8();
+      do_execute_soon(run_test_8);
     });
   });
 }
@@ -343,7 +343,7 @@ function run_test_8() {
 
       restartManager();
 
-      run_test_9();
+      do_execute_soon(run_test_9);
     });
   });
 }
@@ -370,7 +370,7 @@ function run_test_9() {
       pointer.append(addon1.id);
       do_check_false(pointer.exists());
 
-      run_test_10();
+      do_execute_soon(run_test_10);
     });
   });
 }
