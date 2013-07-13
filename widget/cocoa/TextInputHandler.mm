@@ -2192,7 +2192,7 @@ IMEInputHandler::OnCurrentTextInputSourceChange(CFNotificationCenterRef aCenter,
       PR_LOG(gLog, PR_LOG_ALWAYS,
         ("IMEInputHandler::OnCurrentTextInputSourceChange,\n"
          "  Current Input Source is changed to:\n"
-         "    currentInputManager=%p\n"
+         "    currentInputContext=%p\n"
          "    %s\n"
          "      type=%s %s\n"
          "      overridden keyboard layout=%s\n"
@@ -2202,7 +2202,7 @@ IMEInputHandler::OnCurrentTextInputSourceChange(CFNotificationCenterRef aCenter,
          "    current ASCII capable Input Source=%s\n"
          "    current Keyboard Layout=%s\n"
          "    current ASCII capable Keyboard Layout=%s",
-         [NSInputManager currentInputManager], GetCharacters(is0),
+         [NSTextInputContext currentInputContext], GetCharacters(is0),
          GetCharacters(type0), tis.IsASCIICapable() ? "- ASCII capable " : "",
          GetCharacters(is4), GetCharacters(is5),
          GetCharacters(lang0), GetCharacters(bundleID0),
@@ -2338,9 +2338,9 @@ IMEInputHandler::DiscardIMEComposition()
 
   PR_LOG(gLog, PR_LOG_ALWAYS,
     ("%p IMEInputHandler::DiscardIMEComposition, "
-     "Destroyed()=%s, IsFocused()=%s, currentInputManager=%p",
+     "Destroyed()=%s, IsFocused()=%s, mView=%p, inputContext=%p",
      this, TrueOrFalse(Destroyed()), TrueOrFalse(IsFocused()),
-     [NSInputManager currentInputManager]));
+     mView, mView ? [mView inputContext] : nullptr));
 
   if (Destroyed()) {
     return;
@@ -3232,8 +3232,8 @@ IMEInputHandler::OnStartIMEComposition()
 
   PR_LOG(gLog, PR_LOG_ALWAYS,
     ("%p IMEInputHandler::OnStartIMEComposition, mView=%p, mWidget=%p"
-     "currentInputManager=%p, mIsIMEComposing=%s",
-     this, mView, mWidget, [NSInputManager currentInputManager],
+     "inputContext=%p, mIsIMEComposing=%s",
+     this, mView, mWidget, mView ? [mView inputContext] : nullptr,
      TrueOrFalse(mIsIMEComposing)));
 
   NS_ASSERTION(!mIsIMEComposing, "There is a composition already");
@@ -3251,8 +3251,8 @@ IMEInputHandler::OnUpdateIMEComposition(NSString* aIMECompositionString)
 
   PR_LOG(gLog, PR_LOG_ALWAYS,
     ("%p IMEInputHandler::OnUpdateIMEComposition, mView=%p, mWidget=%p, "
-     "currentInputManager=%p, mIsIMEComposing=%s, aIMECompositionString=\"%s\"",
-     this, mView, mWidget, [NSInputManager currentInputManager],
+     "inputContext=%p, mIsIMEComposing=%s, aIMECompositionString=\"%s\"",
+     this, mView, mWidget, mView ? [mView inputContext] : nullptr,
      TrueOrFalse(mIsIMEComposing), GetCharacters(aIMECompositionString)));
 
   NS_ASSERTION(mIsIMEComposing, "We're not in composition");
@@ -3271,8 +3271,8 @@ IMEInputHandler::OnEndIMEComposition()
 
   PR_LOG(gLog, PR_LOG_ALWAYS,
     ("%p IMEInputHandler::OnEndIMEComposition, mView=%p, mWidget=%p, "
-     "currentInputManager=%p, mIsIMEComposing=%s",
-     this, mView, mWidget, [NSInputManager currentInputManager],
+     "inputContext=%p, mIsIMEComposing=%s",
+     this, mView, mWidget, mView ? [mView inputContext] : nullptr,
      TrueOrFalse(mIsIMEComposing)));
 
   NS_ASSERTION(mIsIMEComposing, "We're not in composition");
@@ -3296,8 +3296,8 @@ IMEInputHandler::SendCommittedText(NSString *aString)
 
   PR_LOG(gLog, PR_LOG_ALWAYS,
     ("%p IMEInputHandler::SendCommittedText, mView=%p, mWidget=%p, "
-     "currentInputManager=%p, mIsIMEComposing=%s",
-     this, mView, mWidget, [NSInputManager currentInputManager],
+     "inputContext=%p, mIsIMEComposing=%s",
+     this, mView, mWidget, mView ? [mView inputContext] : nullptr,
      TrueOrFalse(mIsIMEComposing), mWidget));
 
   NS_ENSURE_TRUE(mWidget, );
@@ -3321,9 +3321,9 @@ IMEInputHandler::KillIMEComposition()
 
   PR_LOG(gLog, PR_LOG_ALWAYS,
     ("%p IMEInputHandler::KillIMEComposition, mView=%p, mWidget=%p, "
-     "currentInputManager=%p, mIsIMEComposing=%s, "
+     "inputContext=%p, mIsIMEComposing=%s, "
      "Destroyed()=%s, IsFocused()=%s",
-     this, mView, mWidget, [NSInputManager currentInputManager],
+     this, mView, mWidget, mView ? [mView inputContext] : nullptr,
      TrueOrFalse(mIsIMEComposing), TrueOrFalse(Destroyed()),
      TrueOrFalse(IsFocused())));
 
