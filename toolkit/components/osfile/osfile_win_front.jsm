@@ -255,10 +255,10 @@
       * @throws {OS.File.Error} If the file could not be opened.
       */
      File.open = function Win_open(path, mode = {}, options = {}) {
-       let share = options.winShare || DEFAULT_SHARE;
+       let share = options.winShare !== undefined ? options.winShare : DEFAULT_SHARE;
        let security = options.winSecurity || null;
-       let flags = options.winFlags || DEFAULT_FLAGS;
-       let template = options.winTemplate?options.winTemplate._fd:null;
+       let flags = options.winFlags !== undefined ? options.winFlags : DEFAULT_FLAGS;
+       let template = options.winTemplate ? options.winTemplate._fd : null;
        let access;
        let disposition;
        if ("winAccess" in options && "winDisposition" in options) {
@@ -493,7 +493,9 @@
       * This iterator will not enter subdirectories.
       *
       * @param {string} path The directory upon which to iterate.
-      * @param {*=} options Ignored in this implementation.
+      * @param {*=} options An object that may contain the following field:
+      * @option {string} winPattern Windows file name pattern; if set,
+      * only files matching this pattern are returned.
       *
       * @throws {File.Error} If |path| does not represent a directory or
       * if the directory cannot be iterated.
