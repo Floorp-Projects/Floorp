@@ -81,7 +81,6 @@ nsMathMLElement::nsMathMLElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   ALLOW_THIS_IN_INITIALIZER_LIST(Link(this)),
   mIncrementScriptLevel(false)
 {
-  SetIsDOMBinding();
 }
 
 nsresult

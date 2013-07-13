@@ -455,19 +455,16 @@ nsXBLService::LoadBindings(nsIContent* aContent, nsIURI* aURL,
   
   nsXBLBinding *binding = bindingManager->GetBinding(aContent);
   if (binding) {
-    nsXBLBinding *styleBinding = binding->GetFirstStyleBinding();
-    if (styleBinding) {
-      if (binding->MarkedForDeath()) {
-        FlushStyleBindings(aContent);
-        binding = nullptr;
-      }
-      else {
-        // See if the URIs match.
-        if (styleBinding->PrototypeBinding()->CompareBindingURI(aURL))
-          return NS_OK;
-        FlushStyleBindings(aContent);
-        binding = nullptr;
-      }
+    if (binding->MarkedForDeath()) {
+      FlushStyleBindings(aContent);
+      binding = nullptr;
+    }
+    else {
+      // See if the URIs match.
+      if (binding->PrototypeBinding()->CompareBindingURI(aURL))
+        return NS_OK;
+      FlushStyleBindings(aContent);
+      binding = nullptr;
     }
   }
 
@@ -537,15 +534,10 @@ nsXBLService::FlushStyleBindings(nsIContent* aContent)
   nsXBLBinding *binding = bindingManager->GetBinding(aContent);
   
   if (binding) {
-    nsXBLBinding *styleBinding = binding->GetFirstStyleBinding();
+    // Clear out the script references.
+    binding->ChangeDocument(document, nullptr);
 
-    if (styleBinding) {
-      // Clear out the script references.
-      styleBinding->ChangeDocument(document, nullptr);
-    }
-
-    if (styleBinding == binding) 
-      bindingManager->SetBinding(aContent, nullptr); // Flush old style bindings
+    bindingManager->SetBinding(aContent, nullptr); // Flush old style bindings
   }
    
   return NS_OK;

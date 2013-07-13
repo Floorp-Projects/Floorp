@@ -16,7 +16,7 @@ EXPORT_LIBRARY	= 1
 RESFILE		= widget.res
 LIBXUL_LIBRARY = 1
 
-DEFINES		+= -D_IMPL_NS_WIDGET -DMOZ_UNICODE 
+DEFINES		+= -DMOZ_UNICODE 
 
 ifdef MOZ_ENABLE_D3D9_LAYER
 DEFINES		+= -DMOZ_ENABLE_D3D9_LAYER
@@ -41,8 +41,6 @@ LOCAL_INCLUDES	= \
 		-I$(topsrcdir)/xpcom/base \
 		-I$(topsrcdir)/content/events/src \
 		$(NULL)
-
-FORCE_STATIC_LIB = 1
 
 include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk

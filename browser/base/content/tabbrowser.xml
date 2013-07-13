@@ -158,7 +158,8 @@
           let findBar = document.createElementNS(this.namespaceURI, "findbar");
           let browser = this.getBrowserForTab(aTab);
           let browserContainer = this.getBrowserContainer(browser);
-          browserContainer.appendChild(findBar);
+          findBar.setAttribute("position", "top");
+          browserContainer.insertBefore(findBar, browserContainer.firstChild);
 
           // Force a style flush to ensure that our binding is attached.
           findBar.clientTop;
@@ -686,6 +687,17 @@
                 // previous location.
                 this.mBrowser.missingPlugins = null;
 
+                if (this.mTabBrowser.isFindBarInitialized(this.mTab)) {
+                  let findBar = this.mTabBrowser.getFindBar(this.mTab);
+
+                  // Close the Find toolbar if we're in old-style TAF mode
+                  if (findBar.findMode != findBar.FIND_NORMAL)
+                    findBar.close();
+
+                  // fix bug 253793 - turn off highlight when page changes
+                  findBar.getElement("highlight").checked = false;
+                }
+
                 // Don't clear the favicon if this onLocationChange was
                 // triggered by a pushState or a replaceState.  See bug 550565.
                 if (!gMultiProcessBrowser) {
@@ -1092,11 +1104,11 @@
                   }
                 }
 
-                // If the find bar is focused, keep it focused.
-                if (gFindBarInitialized &&
-                    !gFindBar.hidden &&
-                    gFindBar.getElement("findbar-textbox").getAttribute("focused") == "true")
+                // If the find bar is open, focus it.
+                if (gFindBarInitialized && !gFindBar.hidden) {
+                  gFindBar._findField.focus();
                   break;
+                }
 
                 // Otherwise, focus the content area.
                 let fm = Cc["@mozilla.org/focus-manager;1"].getService(Ci.nsIFocusManager);

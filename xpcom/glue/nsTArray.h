@@ -21,7 +21,7 @@
 #include "nsQuickSort.h"
 #include "nsDebug.h"
 #include "nsTraceRefcnt.h"
-#include NEW_H
+#include <new>
 
 namespace JS {
 template <class T>

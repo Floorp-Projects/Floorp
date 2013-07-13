@@ -24,7 +24,7 @@ var rect = document.getElementsByTagName('embed')[0].getBoundingClientRect();
 var hasFrame = rect.left != 0 || rect.right != 0 || rect.top != 0 ||
                rect.bottom != 0;
 
-ok(!hasFrame, "embed should not have a frame with hidden set");
+ok(hasFrame, "embed should have a frame with hidden set");
 
 </script>
 </pre>

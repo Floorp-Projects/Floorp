@@ -610,6 +610,16 @@ var SelectionHelperUI = {
     this.startMark.position(targetMark.xPos, targetMark.yPos);
     this.endMark.position(targetMark.xPos, targetMark.yPos);
 
+    // We delay transitioning until we know which direction the user is dragging
+    // based on a hysteresis value in the drag marker code. Down in our caller, we
+    // cache the first drag position in _cachedCaretPos so we can select from the
+    // initial caret drag position. Use those values if we have them. (Note
+    // _cachedCaretPos has already been translated in _getMarkerBaseMessage.)
+    let xpos = this._cachedCaretPos ? this._cachedCaretPos.xPos :
+      this._msgTarget.ctobx(targetMark.xPos, true);
+    let ypos = this._cachedCaretPos ? this._cachedCaretPos.yPos :
+      this._msgTarget.ctoby(targetMark.yPos, true);
+
     // Start the selection monocle drag. SelectionHandler relies on this
     // for getting initialized. This will also trigger a message back for
     // monocle positioning. Note, markerDragMove is still on the stack in
@@ -617,8 +627,8 @@ var SelectionHelperUI = {
     this._sendAsyncMessage("Browser:SelectionSwitchMode", {
       newMode: "selection",
       change: targetMark.tag,
-      xPos: this._msgTarget.ctobx(targetMark.xPos, true),
-      yPos: this._msgTarget.ctoby(targetMark.yPos, true),
+      xPos: xpos,
+      yPos: ypos,
     });
   },
 
@@ -1097,6 +1107,7 @@ var SelectionHelperUI = {
   markerDragStart: function markerDragStart(aMarker) {
     let json = this._getMarkerBaseMessage(aMarker.tag);
     if (aMarker.tag == "caret") {
+      this._cachedCaretPos = null;
       this._sendAsyncMessage("Browser:CaretMove", json);
       return;
     }
@@ -1123,8 +1134,13 @@ var SelectionHelperUI = {
         this._transitionFromCaretToSelection(aDirection);
         return false;
       }
+      // Cache for when we start the drag in _transitionFromCaretToSelection.
+      if (!this._cachedCaretPos) {
+        this._cachedCaretPos = this._getMarkerBaseMessage(aMarker.tag).caret;
+      }
       return true;
     }
+    this._cachedCaretPos = null;
 
     // We'll re-display these after the drag is complete.
     this._hideMonocles();

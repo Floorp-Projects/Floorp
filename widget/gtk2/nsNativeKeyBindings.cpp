@@ -256,7 +256,7 @@ nsNativeKeyBindings::KeyPress(const nsNativeKeyEvent& aEvent,
   if (KeyPressInternal(aEvent, aCallback, aCallbackData, keyCode))
     return true;
 
-  nsKeyEvent *nativeKeyEvent = static_cast<nsKeyEvent*>(aEvent.nativeEvent);
+  nsKeyEvent *nativeKeyEvent = aEvent.mGeckoEvent;
   if (!nativeKeyEvent ||
       (nativeKeyEvent->eventStructType != NS_KEY_EVENT &&
        nativeKeyEvent->message != NS_KEY_PRESS)) {
@@ -279,7 +279,7 @@ Also gtk_bindings_activate may work with some non-shortcuts operations (todo: ch
 See bugs 411005 406407
 
   Code, which should be used after fixing http://bugzilla.gnome.org/show_bug.cgi?id=162726:
-  const nsGUIEvent *guiEvent = static_cast<nsGUIEvent*>(aEvent.nativeEvent);
+  const nsGUIEvent *guiEvent = aEvent.mGeckoEvent;
   if (guiEvent &&
      (guiEvent->message == NS_KEY_PRESS || guiEvent->message == NS_KEY_UP || guiEvent->message == NS_KEY_DOWN) &&
       guiEvent->pluginEvent)

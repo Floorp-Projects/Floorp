@@ -1333,9 +1333,11 @@ ArrayBufferViewObject::trace(JSTracer *trc, JSObject *obj)
     MarkSlot(trc, &bufSlot, "typedarray.buffer");
 
     /* Update obj's data slot if the array buffer moved. */
-    ArrayBufferObject &buf = bufSlot.toObject().as<ArrayBufferObject>();
-    int32_t offset = obj->getReservedSlot(BYTEOFFSET_SLOT).toInt32();
-    obj->initPrivate(buf.dataPointer() + offset);
+    if (bufSlot.isObject()) {
+        ArrayBufferObject &buf = bufSlot.toObject().as<ArrayBufferObject>();
+        int32_t offset = obj->getReservedSlot(BYTEOFFSET_SLOT).toInt32();
+        obj->initPrivate(buf.dataPointer() + offset);
+    }
 
     /* Update NEXT_VEIW_SLOT, if the view moved. */
     IsSlotMarked(&obj->getReservedSlotRef(NEXT_VIEW_SLOT));
@@ -1442,13 +1444,8 @@ class TypedArrayObjectTemplate : public TypedArrayObject
             return true;
         }
 
-        RootedObject proto(cx, tarray->getProto());
-        if (!proto) {
-            vp.setUndefined();
-            return true;
-        }
-
-        return JSObject::getElement(cx, proto, receiver, index, vp);
+        vp.setUndefined();
+        return true;
     }
 
     static JSBool
@@ -2143,8 +2140,8 @@ class TypedArrayObjectTemplate : public TypedArrayObject
             return NULL; // must be arrayBuffer
         }
 
-        JS_ASSERT(bufobj->is<ArrayBufferObject>() || bufobj->isProxy());
-        if (bufobj->isProxy()) {
+        JS_ASSERT(bufobj->is<ArrayBufferObject>() || bufobj->is<ProxyObject>());
+        if (bufobj->is<ProxyObject>()) {
             /*
              * Normally, NonGenericMethodGuard handles the case of transparent
              * wrappers. However, we have a peculiar situation: we want to

@@ -79,6 +79,7 @@ typedef struct nr_stun_client_ice_use_candidate_params_ {
     char *username;
     Data password;
     UINT4 priority;
+    UINT8 tiebreaker;
 } nr_stun_client_ice_use_candidate_params;
 
 int nr_stun_build_use_candidate(nr_stun_client_ice_use_candidate_params *params, nr_stun_message **msg);

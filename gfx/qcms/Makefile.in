@@ -57,8 +57,6 @@ endif
 endif
 endif
 
-FORCE_STATIC_LIB = 1
-
 include $(topsrcdir)/config/rules.mk
 
 CFLAGS          += -DMOZ_QCMS

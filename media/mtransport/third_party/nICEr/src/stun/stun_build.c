@@ -239,6 +239,9 @@ nr_stun_build_use_candidate(nr_stun_client_ice_use_candidate_params *params, nr_
    if ((r=nr_stun_message_add_priority_attribute(req, params->priority)))
        ABORT(r);
 
+   if ((r=nr_stun_message_add_ice_controlling_attribute(req, params->tiebreaker)))
+     ABORT(r);
+
    *msg = req;
 
    _status=0;
@@ -274,6 +277,9 @@ nr_stun_build_req_ice(nr_stun_client_ice_binding_request_params *params, nr_stun
        if ((r=nr_stun_message_add_ice_controlled_attribute(req, params->tiebreaker)))
            ABORT(r);
        break;
+   default:
+       assert(0);
+       ABORT(R_INTERNAL);
    }
 
    *msg = req;

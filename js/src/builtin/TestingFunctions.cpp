@@ -331,7 +331,7 @@ IsProxy(JSContext *cx, unsigned argc, jsval *vp)
         args.rval().setBoolean(false);
         return true;
     }
-    args.rval().setBoolean(args[0].toObject().isProxy());
+    args.rval().setBoolean(args[0].toObject().is<ProxyObject>());
     return true;
 }
 

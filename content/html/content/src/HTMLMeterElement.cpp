@@ -19,7 +19,6 @@ const double HTMLMeterElement::kDefaultMax   =  1.0;
 HTMLMeterElement::HTMLMeterElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo)
 {
-  SetIsDOMBinding();
 }
 
 HTMLMeterElement::~HTMLMeterElement()

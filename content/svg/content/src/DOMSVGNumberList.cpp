@@ -174,7 +174,18 @@ DOMSVGNumberList::Initialize(nsIDOMSVGNumber *newItem,
   return InsertItemBefore(newItem, 0, error);
 }
 
-nsIDOMSVGNumber*
+already_AddRefed<nsIDOMSVGNumber>
+DOMSVGNumberList::GetItem(uint32_t index, ErrorResult& error)
+{
+  bool found;
+  nsRefPtr<nsIDOMSVGNumber> item = IndexedGetter(index, found, error);
+  if (!found) {
+    error.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
+  }
+  return item.forget();
+}
+
+already_AddRefed<nsIDOMSVGNumber>
 DOMSVGNumberList::IndexedGetter(uint32_t index, bool& found, ErrorResult& error)
 {
   if (IsAnimValList()) {
@@ -182,8 +193,7 @@ DOMSVGNumberList::IndexedGetter(uint32_t index, bool& found, ErrorResult& error)
   }
   found = index < LengthNoFlush();
   if (found) {
-    EnsureItemAt(index);
-    return mItems[index];
+    return GetItemAt(index);
   }
   return nullptr;
 }
@@ -304,14 +314,13 @@ DOMSVGNumberList::RemoveItem(uint32_t index,
   // internal value.
   MaybeRemoveItemFromAnimValListAt(index);
 
-  // We have to return the removed item, so make sure it exists:
-  EnsureItemAt(index);
+  // We have to return the removed item, so get it, creating it if necessary:
+  nsRefPtr<nsIDOMSVGNumber> result = GetItemAt(index);
 
   nsAttrValue emptyOrOldValue = Element()->WillChangeNumberList(AttrEnum());
   // Notify the DOM item of removal *before* modifying the lists so that the
   // DOM item can copy its *old* value:
   mItems[index]->RemovingFromList();
-  nsCOMPtr<nsIDOMSVGNumber> result = mItems[index];
 
   InternalList().RemoveItem(index);
   mItems.RemoveElementAt(index);
@@ -325,12 +334,16 @@ DOMSVGNumberList::RemoveItem(uint32_t index,
   return result.forget();
 }
 
-void
-DOMSVGNumberList::EnsureItemAt(uint32_t aIndex)
+already_AddRefed<nsIDOMSVGNumber>
+DOMSVGNumberList::GetItemAt(uint32_t aIndex)
 {
+  MOZ_ASSERT(aIndex < mItems.Length());
+
   if (!mItems[aIndex]) {
     mItems[aIndex] = new DOMSVGNumber(this, AttrEnum(), aIndex, IsAnimValList());
   }
+  nsRefPtr<nsIDOMSVGNumber> result = mItems[aIndex];
+  return result.forget();
 }
 
 void

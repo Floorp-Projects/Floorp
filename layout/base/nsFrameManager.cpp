@@ -1379,8 +1379,7 @@ nsFrameManager::ReResolveStyleContext(nsPresContext     *aPresContext,
         // children element. Push the children element as an ancestor here because it does
         // not have a frame and would not otherwise be pushed as an ancestor.
         nsIContent* parent = undisplayed->mContent->GetParent();
-        bool pushInsertionPoint = parent &&
-          parent->NodeInfo()->Equals(nsGkAtoms::children, kNameSpaceID_XBL);
+        bool pushInsertionPoint = parent && parent->IsActiveChildrenElement();
         TreeMatchContext::AutoAncestorPusher
           insertionPointPusher(pushInsertionPoint,
                                aTreeMatchContext,
@@ -1549,8 +1548,7 @@ nsFrameManager::ReResolveStyleContext(nsPresContext     *aPresContext,
             // Check if the frame has a content because |child| may be a nsPageFrame that does
             // not have a content.
             nsIContent* parent = child->GetContent() ? child->GetContent()->GetParent() : nullptr;
-            bool pushInsertionPoint = parent &&
-              parent->NodeInfo()->Equals(nsGkAtoms::children, kNameSpaceID_XBL);
+            bool pushInsertionPoint = parent && parent->IsActiveChildrenElement();
             TreeMatchContext::AutoAncestorPusher
               insertionPointPusher(pushInsertionPoint, aTreeMatchContext,
                                    parent && parent->IsElement() ? parent->AsElement() : nullptr);
@@ -1911,8 +1909,7 @@ nsFrameManagerBase::UndisplayedMap::GetEntryFor(nsIContent** aParentContent)
   // be a <xbl:children> element) but the parent in the frame tree would be the
   // insertion parent (parent of the <xbl:children> element). Here the children
   // elements are normalized to the insertion parent to correct for the mismatch.
-  if (parentContent &&
-      parentContent->NodeInfo()->Equals(nsGkAtoms::children, kNameSpaceID_XBL)) {
+  if (parentContent && parentContent->IsActiveChildrenElement()) {
     parentContent = parentContent->GetParent();
     // Change the caller's pointer for the parent content to be the insertion parent.
     *aParentContent = parentContent;

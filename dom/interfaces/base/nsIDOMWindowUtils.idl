@@ -827,7 +827,8 @@ interface nsIDOMWindowUtils : nsISupports {
                      in long aCaretLength);
 
   /**
-   * Synthesize a query content event.
+   * Synthesize a query content event. Note that the result value returned here
+   * is in LayoutDevice pixels rather than CSS pixels.
    *
    * @param aType  One of the following const values.  And see also each comment
    *               for the other parameters and the result.

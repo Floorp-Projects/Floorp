@@ -538,7 +538,7 @@ JSObject::setType(js::types::TypeObject *newType)
 JSObject::getProto(JSContext *cx, js::HandleObject obj, js::MutableHandleObject protop)
 {
     if (obj->getTaggedProto().isLazy()) {
-        JS_ASSERT(obj->isProxy());
+        JS_ASSERT(obj->is<js::ProxyObject>());
         return js::Proxy::getPrototypeOf(cx, obj, protop);
     } else {
         protop.set(obj->js::ObjectImpl::getProto());
@@ -850,7 +850,7 @@ IsNativeFunction(const js::Value &v, JSNative native)
 static JS_ALWAYS_INLINE bool
 ClassMethodIsNative(JSContext *cx, JSObject *obj, Class *clasp, jsid methodid, JSNative native)
 {
-    JS_ASSERT(!obj->isProxy());
+    JS_ASSERT(!obj->is<ProxyObject>());
     JS_ASSERT(obj->getClass() == clasp);
 
     Value v;
@@ -1081,14 +1081,14 @@ NewObjectScriptedCall(JSContext *cx, MutableHandleObject obj);
 static inline JSObject *
 CopyInitializerObject(JSContext *cx, HandleObject baseobj, NewObjectKind newKind = GenericObject)
 {
-    JS_ASSERT(baseobj->getClass() == &ObjectClass);
+    JS_ASSERT(baseobj->getClass() == &JSObject::class_);
     JS_ASSERT(!baseobj->inDictionaryMode());
 
     gc::AllocKind allocKind = gc::GetGCObjectFixedSlotsKind(baseobj->numFixedSlots());
     allocKind = gc::GetBackgroundAllocKind(allocKind);
     JS_ASSERT_IF(baseobj->isTenured(), allocKind == baseobj->tenuredGetAllocKind());
     RootedObject obj(cx);
-    obj = NewBuiltinClassInstance(cx, &ObjectClass, allocKind, newKind);
+    obj = NewBuiltinClassInstance(cx, &JSObject::class_, allocKind, newKind);
     if (!obj)
         return NULL;
 
@@ -1157,7 +1157,7 @@ DefineConstructorAndPrototype(JSContext *cx, Handle<GlobalObject*> global,
 inline bool
 ObjectClassIs(HandleObject obj, ESClassValue classValue, JSContext *cx)
 {
-    if (JS_UNLIKELY(obj->isProxy()))
+    if (JS_UNLIKELY(obj->is<ProxyObject>()))
         return Proxy::objectClassIs(obj, classValue, cx);
 
     switch (classValue) {

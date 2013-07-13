@@ -6,8 +6,6 @@
 
 #include "ion/shared/MoveEmitter-x86-shared.h"
 
-#include "jsscriptinlines.h"
-
 using namespace js;
 using namespace js::ion;
 

@@ -14,6 +14,9 @@ function f1() {
 f1();
 
 function f2() {
+    // Test that values on the prototype are ignored,
+    // even for OOB accesses. This behavior is new
+    // with ECMA 6 (see bug 829896).
     Object.prototype[50] = 4.4;
     Object.prototype[55] = Math;
 
@@ -22,10 +25,6 @@ function f2() {
         var x = a[i];
         if (i < a.length)
             assertEq(x, 0);
-        else if (i === 50)
-            assertEq(x, 4.4);
-        else if (i === 55)
-            assertEq(x, Math);
         else
             assertEq(x, undefined);
     }

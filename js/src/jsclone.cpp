@@ -692,7 +692,7 @@ JSStructuredCloneWriter::startWrite(const Value &v)
             return writeTypedArray(obj);
         } else if (obj->is<ArrayBufferObject>() && obj->as<ArrayBufferObject>().hasData()) {
             return writeArrayBuffer(obj);
-        } else if (obj->isObject() || obj->is<ArrayObject>()) {
+        } else if (obj->is<JSObject>() || obj->is<ArrayObject>()) {
             return traverseObject(obj);
         } else if (obj->is<BooleanObject>()) {
             return out.writePair(SCTAG_BOOLEAN_OBJECT, obj->as<BooleanObject>().unbox());
@@ -1099,7 +1099,7 @@ JSStructuredCloneReader::startRead(Value *vp)
       case SCTAG_OBJECT_OBJECT: {
         JSObject *obj = (tag == SCTAG_ARRAY_OBJECT)
                         ? NewDenseEmptyArray(context())
-                        : NewBuiltinClassInstance(context(), &ObjectClass);
+                        : NewBuiltinClassInstance(context(), &JSObject::class_);
         if (!obj || !objs.append(ObjectValue(*obj)))
             return false;
         vp->setObject(*obj);
