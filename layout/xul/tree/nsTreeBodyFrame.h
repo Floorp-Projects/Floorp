@@ -120,6 +120,8 @@ public:
   nsresult EndUpdateBatch();
   nsresult ClearStyleAndImageCaches();
 
+  void ManageReflowCallback(const nsRect& aRect, nscoord aHorzWidth);
+
   virtual nsSize GetMinSize(nsBoxLayoutState& aBoxLayoutState) MOZ_OVERRIDE;
   virtual void SetBounds(nsBoxLayoutState& aBoxLayoutState, const nsRect& aRect,
                          bool aRemoveOverflowArea = false) MOZ_OVERRIDE;
@@ -576,6 +578,13 @@ protected: // Data Members
 
   // The horizontal scroll position
   nscoord mHorzPosition;
+
+  // The original desired horizontal width before changing it and posting a
+  // reflow callback. In some cases, the desired horizontal width can first be
+  // different from the current desired horizontal width, only to return to
+  // the same value later during the same reflow. In this case, we can cancel
+  // the posted reflow callback and prevent an unnecessary reflow.
+  nscoord mOriginalHorzWidth;
   // Our desired horizontal width (the width for which we actually have tree
   // columns).
   nscoord mHorzWidth;
