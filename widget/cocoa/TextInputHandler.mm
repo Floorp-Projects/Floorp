@@ -2352,17 +2352,11 @@ IMEInputHandler::DiscardIMEComposition()
     return;
   }
 
-  NSInputManager* im = [NSInputManager currentInputManager];
-  if (!im) {
-    // retry
-    mPendingMethods |= kDiscardIMEComposition;
-    NS_WARNING("Application is active but there is no currentInputManager");
-    ResetTimer();
-    return;
-  }
-
+  NS_ENSURE_TRUE_VOID(mView);
+  NSTextInputContext* inputContext = [mView inputContext];
+  NS_ENSURE_TRUE_VOID(inputContext);
   mIgnoreIMECommit = true;
-  [im markedTextAbandoned: mView];
+  [inputContext discardMarkedText];
   mIgnoreIMECommit = false;
 
   NS_OBJC_END_TRY_ABORT_BLOCK
