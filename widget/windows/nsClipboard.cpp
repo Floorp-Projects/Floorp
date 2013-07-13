@@ -927,9 +927,8 @@ nsClipboard::GetNativeClipboardData ( nsITransferable * aTransferable, int32_t a
 NS_IMETHODIMP
 nsClipboard::EmptyClipboard(int32_t aWhichClipboard)
 {
-  if (::OpenClipboard(nullptr)) { 
-    ::EmptyClipboard();
-    ::CloseClipboard();
+  if (aWhichClipboard == kGlobalClipboard && !mEmptyingForSetData) {
+    OleSetClipboard(NULL);
   }
   return nsBaseClipboard::EmptyClipboard(aWhichClipboard);
 }
