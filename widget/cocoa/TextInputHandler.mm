@@ -2268,11 +2268,11 @@ IMEInputHandler::DebugPrintAllIMEModes()
 TSMDocumentID
 IMEInputHandler::GetCurrentTSMDocumentID()
 {
-  // On OS X 10.6.x at least, ::TSMGetActiveDocument() has a bug that prevents
-  // it from returning accurate results unless
-  // [NSInputManager currentInputManager] is called first.
-  // So, we need to call [NSInputManager currentInputManager] first here.
-  [NSInputManager currentInputManager];
+  // At least on Mac OS X 10.6.x and 10.7.x, ::TSMGetActiveDocument() has a bug.
+  // The result of ::TSMGetActiveDocument() isn't modified for new active text
+  // input context until [NSTextInputContext currentInputContext] is called.
+  // Therefore, we need to call it here.
+  [NSTextInputContext currentInputContext];
   return ::TSMGetActiveDocument();
 }
 
