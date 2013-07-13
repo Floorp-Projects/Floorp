@@ -492,7 +492,7 @@ SendFunctionsToPerf(JSContext *cx, AsmJSModule &module)
         unsigned long size = (end - start);
 
         JSAutoByteString bytes;
-        const char *method_name = js_AtomToPrintableString(cx, func.name, &bytes);
+        const char *method_name = AtomToPrintableString(cx, func.name, &bytes);
         if (!method_name)
             return false;
 
@@ -522,7 +522,7 @@ SendBlocksToPerf(JSContext *cx, AsmJSModule &module)
 
         unsigned long size = (unsigned long)func.endCodeOffset - (unsigned long)func.startCodeOffset;
         JSAutoByteString bytes;
-        const char *method_name = js_AtomToPrintableString(cx, func.name, &bytes);
+        const char *method_name = AtomToPrintableString(cx, func.name, &bytes);
         if (!method_name)
             return false;
 
