@@ -7,7 +7,6 @@
 #ifndef vm_Runtime_h
 #define vm_Runtime_h
 
-#include "mozilla/Atomics.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/PodOperations.h"
@@ -649,7 +648,7 @@ struct JSRuntime : public JS::shadow::Runtime,
      * If non-zero, we were been asked to call the operation callback as soon
      * as possible.
      */
-    mozilla::Atomic<int32_t> interrupt;
+    volatile int32_t    interrupt;
 
 #ifdef JS_THREADSAFE
   private:
