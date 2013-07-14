@@ -161,11 +161,6 @@ MediaRecorder::Start(const Optional<int32_t>& aTimeSlice, ErrorResult& aResult)
     return;
   }
 
-  if (!CheckPrincipal()) {
-    aResult.Throw(NS_ERROR_DOM_SECURITY_ERR);
-    return;
-  }
-
   if (aTimeSlice.WasPassed()) {
     if (aTimeSlice.Value() < 0) {
       aResult.Throw(NS_ERROR_INVALID_ARG);
@@ -175,6 +170,17 @@ MediaRecorder::Start(const Optional<int32_t>& aTimeSlice, ErrorResult& aResult)
   } else {
     mTimeSlice = 0;
   }
+
+  // Create a TrackUnionStream to support Pause/Resume by using ChangeExplicitBlockerCount
+  MediaStreamGraph* gm = mStream->GetStream()->Graph();
+  mTrackUnionStream = gm->CreateTrackUnionStream(mStream);
+  MOZ_ASSERT(mTrackUnionStream, "CreateTrackUnionStream failed");
+
+  if (!CheckPrincipal()) {
+    aResult.Throw(NS_ERROR_DOM_SECURITY_ERR);
+    return;
+  }
+
   if (mEncodedBufferCache == nullptr) {
     mEncodedBufferCache = new EncodedBufferCache(MAX_ALLOW_MEMORY_BUFFER);
   }
@@ -184,8 +190,12 @@ MediaRecorder::Start(const Optional<int32_t>& aTimeSlice, ErrorResult& aResult)
   }
   MOZ_ASSERT(mEncoder, "CreateEncoder failed");
 
+  mTrackUnionStream->SetAutofinish(true);
+  nsRefPtr<MediaInputPort> port =
+    mTrackUnionStream->AllocateInputPort(mStream->GetStream(), MediaInputPort::FLAG_BLOCK_OUTPUT);
+
   if (mEncoder) {
-    mStream.get()->GetStream()->AddListener(mEncoder);
+    mTrackUnionStream->AddListener(mEncoder);
   } else {
     aResult.Throw(NS_ERROR_DOM_ABORT_ERR);
   }
@@ -210,9 +220,31 @@ MediaRecorder::Stop(ErrorResult& aResult)
     aResult.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
   }
-
-  mStream.get()->GetStream()->RemoveListener(mEncoder);
+  mTrackUnionStream->RemoveListener(mEncoder);
   mState = RecordingState::Inactive;
+}
+
+void
+MediaRecorder::Pause(ErrorResult& aResult)
+{
+  if (mState != RecordingState::Recording) {
+    aResult.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return;
+  }
+  mTrackUnionStream->ChangeExplicitBlockerCount(-1);
+
+  mState = RecordingState::Paused;
+}
+
+void
+MediaRecorder::Resume(ErrorResult& aResult)
+{
+  if (mState != RecordingState::Paused) {
+    aResult.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return;
+  }
+  mTrackUnionStream->ChangeExplicitBlockerCount(1);
+  mState = RecordingState::Recording;
 }
 
 void
