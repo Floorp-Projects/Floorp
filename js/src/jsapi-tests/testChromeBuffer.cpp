@@ -4,10 +4,6 @@
 
 #include "jsapi-tests/tests.h"
 
-JSPrincipals system_principals = {
-    1
-};
-
 JSClass global_class = {
     "global",
     JSCLASS_IS_GLOBAL | JSCLASS_GLOBAL_FLAGS,
@@ -41,6 +37,8 @@ CallTrusted(JSContext *cx, unsigned argc, jsval *vp)
 
 BEGIN_TEST(testChromeBuffer)
 {
+    JSPrincipals system_principals;
+    system_principals.refcount = 1;
     JS_SetTrustedPrincipals(rt, &system_principals);
 
     trusted_glob = JS_NewGlobalObject(cx, &global_class, &system_principals);

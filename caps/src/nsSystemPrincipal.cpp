@@ -32,7 +32,7 @@ NS_IMETHODIMP_(nsrefcnt)
 nsSystemPrincipal::AddRef()
 {
   NS_PRECONDITION(int32_t(refcount) >= 0, "illegal refcnt");
-  nsrefcnt count = PR_ATOMIC_INCREMENT(&refcount);
+  nsrefcnt count = ++refcount;
   NS_LOG_ADDREF(this, count, "nsSystemPrincipal", sizeof(*this));
   return count;
 }
@@ -41,7 +41,7 @@ NS_IMETHODIMP_(nsrefcnt)
 nsSystemPrincipal::Release()
 {
   NS_PRECONDITION(0 != refcount, "dup release");
-  nsrefcnt count = PR_ATOMIC_DECREMENT(&refcount);
+  nsrefcnt count = --refcount;
   NS_LOG_RELEASE(this, count, "nsSystemPrincipal");
   if (count == 0) {
     delete this;
