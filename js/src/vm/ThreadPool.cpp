@@ -187,7 +187,8 @@ ThreadPoolWorker::terminate()
 
 ThreadPool::ThreadPool(JSRuntime *rt)
   : runtime_(rt),
-    numWorkers_(0) // updated during init()
+    numWorkers_(0), // updated during init()
+    nextId_(0)
 {
 }
 
@@ -280,6 +281,21 @@ ThreadPool::terminateWorkers()
         worker->terminate();
         js_delete(worker);
     }
+}
+
+bool
+ThreadPool::submitOne(JSContext *cx, TaskExecutor *executor)
+{
+    JS_ASSERT(numWorkers() > 0);
+
+    runtime_->assertValidThread();
+
+    if (!lazyStartWorkers(cx))
+        return false;
+
+    // Find next worker in round-robin fashion.
+    size_t id = JS_ATOMIC_INCREMENT(&nextId_) % numWorkers();
+    return workers_[id]->submit(executor);
 }
 
 bool
