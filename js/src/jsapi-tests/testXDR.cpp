@@ -11,8 +11,6 @@
 
 #include "jsscriptinlines.h"
 
-using mozilla::ArrayLength;
-
 static JSScript *
 CompileScriptForPrincipalsVersionOrigin(JSContext *cx, JS::HandleObject obj,
                                         JSPrincipals *principals, JSPrincipals *originPrincipals,
@@ -77,11 +75,13 @@ FreezeThaw(JSContext *cx, JS::HandleObject funobj)
     return funobj2;
 }
 
+static JSPrincipals testPrincipals[] = {
+    { 1 },
+    { 1 },
+};
+
 BEGIN_TEST(testXDR_principals)
 {
-    JSPrincipals testPrincipals[2];
-    for (size_t i = 0; i < ArrayLength(testPrincipals); ++i)
-        testPrincipals[i].refcount = 1;
     JSScript *script;
     JSCompartment *compartment = js::GetContextCompartment(cx);
     for (int i = TEST_FIRST; i != TEST_END; ++i) {

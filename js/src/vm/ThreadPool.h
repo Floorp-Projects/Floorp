@@ -48,14 +48,21 @@ class TaskExecutor
 // threads are disabled, or when manually specified for benchmarking
 // purposes).
 //
-// The way to submit a job is using |submitAll()|, which executes the
-// job on all worker threads.  This does not fail if there are no
-// worker threads, it simply does nothing. Of course, each thread may
-// have any number of previously submitted things that they are
-// already working on, and so they will finish those before they get
-// to this job.  Therefore it is possible to have some worker threads
-// pick up (and even finish) their piece of the job before others
-// have even started.
+// You can either submit jobs in one of two ways.  The first is
+// |submitOne()|, which submits a job to be executed by one worker
+// thread (this will fail if there are no worker threads).  The job
+// will be enqueued and executed by some worker (the current scheduler
+// uses round-robin load balancing; something more sophisticated,
+// e.g. a central queue or work stealing, might be better).
+//
+// The second way to submit a job is using |submitAll()|---in this
+// case, the job will be executed by all worker threads.  This does
+// not fail if there are no worker threads, it simply does nothing.
+// Of course, each thread may have any number of previously submitted
+// things that they are already working on, and so they will finish
+// those before they get to this job.  Therefore it is possible to
+// have some worker threads pick up (and even finish) their piece of
+// the job before others have even started.
 class ThreadPool
 {
   private:
@@ -67,6 +74,9 @@ class ThreadPool
 
     // Number of workers we will start, when we actually start them
     size_t numWorkers_;
+
+    // Next worker for |submitOne()|. Atomically modified.
+    uint32_t nextId_;
 
     bool lazyStartWorkers(JSContext *cx);
     void terminateWorkers();
@@ -82,6 +92,7 @@ class ThreadPool
     size_t numWorkers() { return numWorkers_; }
 
     // See comment on class:
+    bool submitOne(JSContext *cx, TaskExecutor *executor);
     bool submitAll(JSContext *cx, TaskExecutor *executor);
 
     // Wait until all worker threads have finished their current set
