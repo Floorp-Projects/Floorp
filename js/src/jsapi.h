@@ -9,6 +9,7 @@
 #ifndef jsapi_h
 #define jsapi_h
 
+#include "mozilla/Atomics.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/RangedPtr.h"
@@ -3728,7 +3729,7 @@ JS_SetReservedSlot(JSObject *obj, uint32_t index, jsval v);
  */
 struct JSPrincipals {
     /* Don't call "destroy"; use reference counting macros below. */
-    int refcount;
+    mozilla::Atomic<uint32_t> refcount;
 
 #ifdef DEBUG
     /* A helper to facilitate principals debugging. */
