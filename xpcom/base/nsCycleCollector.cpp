@@ -980,7 +980,6 @@ class nsCycleCollector
 
     bool mCollectionInProgress;
     bool mScanInProgress;
-    bool mFollowupCollection;
     nsCycleCollectorResults *mResults;
     TimeStamp mCollectionStart;
 
@@ -2790,8 +2789,6 @@ nsCycleCollector::PrepareForCollection(nsCycleCollectorResults *aResults,
         mJSRuntime->PrepareForCollection();
     }
 
-    mFollowupCollection = false;
-
     mResults = aResults;
     mWhiteNodes = aWhiteNodes;
 
@@ -2972,8 +2969,6 @@ nsCycleCollector::FinishCollection(nsICycleCollectorListener *aListener)
     TimeLog timeLog;
     bool collected = CollectWhite(aListener);
     timeLog.Checkpoint("CollectWhite()");
-
-    mFollowupCollection = true;
 
     mWhiteNodes->Clear();
     ClearGraph();
