@@ -202,10 +202,11 @@ class nsAutoRefCnt {
     nsrefcnt operator=(nsrefcnt aValue) { return (mValue = aValue); }
     operator nsrefcnt() const { return mValue; }
     nsrefcnt get() const { return mValue; }
+
+    static const bool isThreadSafe = false;
  private:
-    // do not define these to enforce the faster prefix notation
-    nsrefcnt operator++(int);
-    nsrefcnt operator--(int);
+    nsrefcnt operator++(int) MOZ_DELETE;
+    nsrefcnt operator--(int) MOZ_DELETE;
     nsrefcnt mValue;
 };
 
@@ -223,6 +224,8 @@ class ThreadSafeAutoRefCnt {
     MOZ_ALWAYS_INLINE nsrefcnt operator=(nsrefcnt aValue) { return (mValue = aValue); }
     MOZ_ALWAYS_INLINE operator nsrefcnt() const { return mValue; }
     MOZ_ALWAYS_INLINE nsrefcnt get() const { return mValue; }
+
+    static const bool isThreadSafe = true;
  private:
     nsrefcnt operator++(int) MOZ_DELETE;
     nsrefcnt operator--(int) MOZ_DELETE;
@@ -231,6 +234,19 @@ class ThreadSafeAutoRefCnt {
     // but could break pre-existing code that assumes sequential consistency.
     Atomic<nsrefcnt> mValue;
 };
+}
+
+// Temporary declarations until NS_IMPL_THREADSAFE_ADDREF/RELEASE are deleted.
+inline nsrefcnt
+NS_AtomicIncrementRefcnt(mozilla::ThreadSafeAutoRefCnt &refcnt)
+{
+  return ++refcnt;
+}
+
+inline nsrefcnt
+NS_AtomicDecrementRefcnt(mozilla::ThreadSafeAutoRefCnt &refcnt)
+{
+  return --refcnt;
 }
 #endif
 
@@ -249,6 +265,17 @@ public:                                                                       \
   NS_IMETHOD_(nsrefcnt) Release(void);                                        \
 protected:                                                                    \
   nsAutoRefCnt mRefCnt;                                                       \
+  NS_DECL_OWNINGTHREAD                                                        \
+public:
+
+#define NS_DECL_THREADSAFE_ISUPPORTS                                          \
+public:                                                                       \
+  NS_IMETHOD QueryInterface(REFNSIID aIID,                                    \
+                            void** aInstancePtr);                             \
+  NS_IMETHOD_(nsrefcnt) AddRef(void);                                         \
+  NS_IMETHOD_(nsrefcnt) Release(void);                                        \
+protected:                                                                    \
+  ::mozilla::ThreadSafeAutoRefCnt mRefCnt;                                    \
   NS_DECL_OWNINGTHREAD                                                        \
 public:
 
@@ -418,10 +445,11 @@ public:
 NS_IMETHODIMP_(nsrefcnt) _class::AddRef(void)                                 \
 {                                                                             \
   MOZ_ASSERT(int32_t(mRefCnt) >= 0, "illegal refcnt");                        \
-  NS_ASSERT_OWNINGTHREAD_AND_NOT_CCTHREAD(_class);                            \
-  ++mRefCnt;                                                                  \
-  NS_LOG_ADDREF(this, mRefCnt, #_class, sizeof(*this));                       \
-  return mRefCnt;                                                             \
+  if (!mRefCnt.isThreadSafe)                                                  \
+    NS_ASSERT_OWNINGTHREAD_AND_NOT_CCTHREAD(_class);                          \
+  nsrefcnt count = ++mRefCnt;                                                 \
+  NS_LOG_ADDREF(this, count, #_class, sizeof(*this));                         \
+  return count;                                                               \
 }
 
 /**
@@ -461,16 +489,18 @@ NS_IMETHODIMP_(nsrefcnt) _class::AddRef(void)                                 \
 NS_IMETHODIMP_(nsrefcnt) _class::Release(void)                                \
 {                                                                             \
   MOZ_ASSERT(int32_t(mRefCnt) > 0, "dup release");                            \
-  NS_ASSERT_OWNINGTHREAD_AND_NOT_CCTHREAD(_class);                            \
-  --mRefCnt;                                                                  \
-  NS_LOG_RELEASE(this, mRefCnt, #_class);                                     \
-  if (mRefCnt == 0) {                                                         \
-    NS_ASSERT_OWNINGTHREAD(_class);                                           \
+  if (!mRefCnt.isThreadSafe)                                                  \
+    NS_ASSERT_OWNINGTHREAD_AND_NOT_CCTHREAD(_class);                          \
+  nsrefcnt count = --mRefCnt;                                                 \
+  NS_LOG_RELEASE(this, count, #_class);                                       \
+  if (count == 0) {                                                           \
+    if (!mRefCnt.isThreadSafe)                                                \
+      NS_ASSERT_OWNINGTHREAD(_class);                                         \
     mRefCnt = 1; /* stabilize */                                              \
     _destroy;                                                                 \
     return 0;                                                                 \
   }                                                                           \
-  return mRefCnt;                                                             \
+  return count;                                                               \
 }
 
 /**
