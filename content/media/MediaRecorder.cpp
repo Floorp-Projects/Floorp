@@ -185,9 +185,7 @@ MediaRecorder::Start(const Optional<int32_t>& aTimeSlice, ErrorResult& aResult)
     mEncodedBufferCache = new EncodedBufferCache(MAX_ALLOW_MEMORY_BUFFER);
   }
 
-  if (mEncoder == nullptr) {
-    mEncoder = MediaEncoder::CreateEncoder(NS_LITERAL_STRING(""));
-  }
+  mEncoder = MediaEncoder::CreateEncoder(NS_LITERAL_STRING(""));
   MOZ_ASSERT(mEncoder, "CreateEncoder failed");
 
   mTrackUnionStream->SetAutofinish(true);
