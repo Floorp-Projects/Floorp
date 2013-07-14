@@ -30,6 +30,9 @@
 
 #include "nsDebug.h"
 #include "nsTraceRefcnt.h"
+#ifndef XPCOM_GLUE
+#include "mozilla/Atomics.h"
+#endif
 #include "mozilla/Attributes.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Likely.h"
@@ -206,6 +209,31 @@ class nsAutoRefCnt {
     nsrefcnt mValue;
 };
 
+#ifndef XPCOM_GLUE
+namespace mozilla {
+class ThreadSafeAutoRefCnt {
+ public:
+    ThreadSafeAutoRefCnt() : mValue(0) {}
+    ThreadSafeAutoRefCnt(nsrefcnt aValue) : mValue(aValue) {}
+    
+    // only support prefix increment/decrement
+    MOZ_ALWAYS_INLINE nsrefcnt operator++() { return ++mValue; }
+    MOZ_ALWAYS_INLINE nsrefcnt operator--() { return --mValue; }
+
+    MOZ_ALWAYS_INLINE nsrefcnt operator=(nsrefcnt aValue) { return (mValue = aValue); }
+    MOZ_ALWAYS_INLINE operator nsrefcnt() const { return mValue; }
+    MOZ_ALWAYS_INLINE nsrefcnt get() const { return mValue; }
+ private:
+    nsrefcnt operator++(int) MOZ_DELETE;
+    nsrefcnt operator--(int) MOZ_DELETE;
+    // In theory, RelaseAcquire consistency (but no weaker) is sufficient for
+    // the counter. Making it weaker could speed up builds on ARM (but not x86),
+    // but could break pre-existing code that assumes sequential consistency.
+    Atomic<nsrefcnt> mValue;
+};
+}
+#endif
+
 ///////////////////////////////////////////////////////////////////////////////
 
 /**
@@ -364,13 +392,13 @@ public:
 public:                                                                       \
   NS_METHOD_(nsrefcnt) AddRef(void) {                                         \
     MOZ_ASSERT(int32_t(mRefCnt) >= 0, "illegal refcnt");                      \
-    nsrefcnt count = NS_AtomicIncrementRefcnt(mRefCnt);                       \
+    nsrefcnt count = ++mRefCnt;                                               \
     NS_LOG_ADDREF(this, count, #_class, sizeof(*this));                       \
     return (nsrefcnt) count;                                                  \
   }                                                                           \
   NS_METHOD_(nsrefcnt) Release(void) {                                        \
     MOZ_ASSERT(int32_t(mRefCnt) > 0, "dup release");                          \
-    nsrefcnt count = NS_AtomicDecrementRefcnt(mRefCnt);                       \
+    nsrefcnt count = --mRefCnt;                                               \
     NS_LOG_RELEASE(this, count, #_class);                                     \
     if (count == 0) {                                                         \
       delete (this);                                                          \
@@ -379,7 +407,7 @@ public:                                                                       \
     return count;                                                             \
   }                                                                           \
 protected:                                                                    \
-  nsAutoRefCnt mRefCnt;                                                       \
+  ::mozilla::ThreadSafeAutoRefCnt mRefCnt;                                    \
 public:
 
 /**
