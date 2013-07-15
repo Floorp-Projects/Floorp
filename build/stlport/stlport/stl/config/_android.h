@@ -15,8 +15,8 @@
 // Use unix for streams
 #define _STLP_USE_UNIX_IO 1
 
-// We do have rtti support now through GAbi++
-#undef _STLP_NO_RTTI
+// We don't want rtti support
+#define _STLP_NO_RTTI 1
 
 // C library is in the global namespace.
 #define _STLP_VENDOR_GLOBAL_CSTD 1
@@ -37,8 +37,8 @@
 #undef _STLP_NO_EXCEPTION_HEADER
 
 // No throwing exceptions
-#undef _STLP_NO_EXCEPTIONS
-
+#define _STLP_NO_EXCEPTIONS 1
+#define _STLP_NO_EXCEPTION_HEADER 1
 
 // No need to define our own namespace
 #define _STLP_NO_OWN_NAMESPACE 1
@@ -54,13 +54,6 @@
 // sinl, cosl, etc
 #define _STLP_NO_VENDOR_MATH_L 1
 
-// Define how to include our native headers.
-#define _STLP_NATIVE_HEADER(header) <usr/include/header>
-#define _STLP_NATIVE_C_HEADER(header) <../include/header>
-#define _STLP_NATIVE_CPP_C_HEADER(header) <../../gabi++/include/header>
-#define _STLP_NATIVE_CPP_RUNTIME_HEADER(header) <../../gabi++/include/header>
-#define _STLP_NATIVE_OLD_STREAMS_HEADER(header) <usr/include/header>
-
 // Include most of the gcc settings.
 #include <stl/config/_gcc.h>
 
@@ -68,12 +61,13 @@
 #undef _STLP_USE_GLIBC
 
 // No exceptions.
-#undef _STLP_NO_UNCAUGHT_EXCEPT_SUPPORT
-#undef _STLP_NO_UNEXPECTED_EXCEPT_SUPPORT
+#define _STLP_NO_UNCAUGHT_EXCEPT_SUPPORT 1
+#define _STLP_NO_UNEXPECTED_EXCEPT_SUPPORT 1
 
-#ifndef _ANDROID_NDK_BLAZE_
-// Android does have include_next but it doesn't work well in our build system.
-#undef _STLP_HAS_INCLUDE_NEXT
-#endif
+#define _STLP_HAS_INCLUDE_NEXT 1
+
+// Use operator new instead of stlport own node allocator
+#undef _STLP_USE_NEWALLOC
+#define _STLP_USE_NEWALLOC 1
 
 #endif /* __stl_config__android_h */
