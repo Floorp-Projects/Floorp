@@ -737,9 +737,7 @@
             if ((this._grid.isSelectionAtEnd && !aReverse) ||
                 (this._grid.isSelectionAtStart && aReverse)) {
               let index = !aReverse ? 0 : this._otherGrid.itemCount - 1;
-              this._grid.clearSelection();
               this._otherGrid.selectedIndex = index;
-              this._grid = this._otherGrid;
             } else {
               this._grid.offsetSelection(aReverse ? -1 : 1);
             }
@@ -787,12 +785,6 @@
         <parameter name="aEvent"/>
         <body>
           <![CDATA[
-            // XXX this should probably be supported in grid.xml
-            // somehow via some single-selection option.
-            if (this._grid) this._grid.clearSelection();
-            this._grid = aItem.control;
-            this._grid.selectedIndex = this._grid.getIndexOfItem(aItem);
-
             this.submitSelected();
           ]]>
         </body>
@@ -826,6 +818,19 @@
 
           if (grid == this._results)
             this.updateResults();
+        ]]>
+      </handler>
+
+      <handler event="select">
+        <![CDATA[
+          let grid = event.originalTarget;
+
+          // If a selection was made on a different grid,
+          // remove selection from the current grid.
+          if (grid != this._grid) {
+            this._grid.clearSelection();
+            this._grid = this._otherGrid;
+          }
         ]]>
       </handler>
     </handlers>
