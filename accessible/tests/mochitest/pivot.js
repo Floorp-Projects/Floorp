@@ -76,6 +76,21 @@ function VCChangedChecker(aDocAcc, aIdOrNameOrAcc, aTextOffsets, aPivotMoveMetho
 {
   this.__proto__ = new invokerChecker(EVENT_VIRTUALCURSOR_CHANGED, aDocAcc);
 
+  this.match = function VCChangedChecker_check(aEvent)
+  {
+    var event = null;
+    try {
+      event = aEvent.QueryInterface(nsIAccessibleVirtualCursorChangeEvent);
+    } catch (e) {
+      return false;
+    }
+
+    var expectedReason = VCChangedChecker.methodReasonMap[aPivotMoveMethod] ||
+      nsIAccessiblePivot.REASON_NONE;
+
+    return event.reason == expectedReason;
+  };
+
   this.check = function VCChangedChecker_check(aEvent)
   {
     SimpleTest.info("VCChangedChecker_check");
@@ -86,11 +101,6 @@ function VCChangedChecker(aDocAcc, aIdOrNameOrAcc, aTextOffsets, aPivotMoveMetho
     } catch (e) {
       SimpleTest.ok(false, "Does not support correct interface: " + e);
     }
-
-    SimpleTest.is(
-      event.reason,
-      VCChangedChecker.methodReasonMap[aPivotMoveMethod],
-      'wrong move reason');
 
     var position = aDocAcc.virtualCursor.position;
     var idMatches = position && position.DOMNode.id == aIdOrNameOrAcc;
@@ -196,9 +206,14 @@ function setVCPosInvoker(aDocAcc, aPivotMoveMethod, aRule, aIdOrNameOrAcc)
   {
     VCChangedChecker.
       storePreviousPosAndOffset(aDocAcc.virtualCursor);
-    var moved = aDocAcc.virtualCursor[aPivotMoveMethod](aRule);
-    SimpleTest.ok((expectMove && moved) || (!expectMove && !moved),
-                  "moved pivot");
+    if (aPivotMoveMethod && aRule) {
+      var moved = aDocAcc.virtualCursor[aPivotMoveMethod](aRule);
+      SimpleTest.is(!!moved, !!expectMove,
+                    "moved pivot with " + aPivotMoveMethod +
+                    " to " + aIdOrNameOrAcc);
+    } else {
+      aDocAcc.virtualCursor.position = getAccessible(aIdOrNameOrAcc);
+    }
   };
 
   this.getID = function setVCPosInvoker_getID()
@@ -447,7 +462,7 @@ function removeVCRootInvoker(aRootNode)
  */
 function dumpTraversalSequence(aPivot, aRule)
 {
-  var sequence = []
+  var sequence = [];
   if (aPivot.moveFirst(aRule)) {
     do {
       sequence.push("'" + prettyName(aPivot.position) + "'");
