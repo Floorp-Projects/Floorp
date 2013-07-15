@@ -2192,7 +2192,7 @@ IMEInputHandler::OnCurrentTextInputSourceChange(CFNotificationCenterRef aCenter,
       PR_LOG(gLog, PR_LOG_ALWAYS,
         ("IMEInputHandler::OnCurrentTextInputSourceChange,\n"
          "  Current Input Source is changed to:\n"
-         "    currentInputManager=%p\n"
+         "    currentInputContext=%p\n"
          "    %s\n"
          "      type=%s %s\n"
          "      overridden keyboard layout=%s\n"
@@ -2202,7 +2202,7 @@ IMEInputHandler::OnCurrentTextInputSourceChange(CFNotificationCenterRef aCenter,
          "    current ASCII capable Input Source=%s\n"
          "    current Keyboard Layout=%s\n"
          "    current ASCII capable Keyboard Layout=%s",
-         [NSInputManager currentInputManager], GetCharacters(is0),
+         [NSTextInputContext currentInputContext], GetCharacters(is0),
          GetCharacters(type0), tis.IsASCIICapable() ? "- ASCII capable " : "",
          GetCharacters(is4), GetCharacters(is5),
          GetCharacters(lang0), GetCharacters(bundleID0),
@@ -2268,11 +2268,11 @@ IMEInputHandler::DebugPrintAllIMEModes()
 TSMDocumentID
 IMEInputHandler::GetCurrentTSMDocumentID()
 {
-  // On OS X 10.6.x at least, ::TSMGetActiveDocument() has a bug that prevents
-  // it from returning accurate results unless
-  // [NSInputManager currentInputManager] is called first.
-  // So, we need to call [NSInputManager currentInputManager] first here.
-  [NSInputManager currentInputManager];
+  // At least on Mac OS X 10.6.x and 10.7.x, ::TSMGetActiveDocument() has a bug.
+  // The result of ::TSMGetActiveDocument() isn't modified for new active text
+  // input context until [NSTextInputContext currentInputContext] is called.
+  // Therefore, we need to call it here.
+  [NSTextInputContext currentInputContext];
   return ::TSMGetActiveDocument();
 }
 
@@ -2338,9 +2338,9 @@ IMEInputHandler::DiscardIMEComposition()
 
   PR_LOG(gLog, PR_LOG_ALWAYS,
     ("%p IMEInputHandler::DiscardIMEComposition, "
-     "Destroyed()=%s, IsFocused()=%s, currentInputManager=%p",
+     "Destroyed()=%s, IsFocused()=%s, mView=%p, inputContext=%p",
      this, TrueOrFalse(Destroyed()), TrueOrFalse(IsFocused()),
-     [NSInputManager currentInputManager]));
+     mView, mView ? [mView inputContext] : nullptr));
 
   if (Destroyed()) {
     return;
@@ -2352,17 +2352,11 @@ IMEInputHandler::DiscardIMEComposition()
     return;
   }
 
-  NSInputManager* im = [NSInputManager currentInputManager];
-  if (!im) {
-    // retry
-    mPendingMethods |= kDiscardIMEComposition;
-    NS_WARNING("Application is active but there is no currentInputManager");
-    ResetTimer();
-    return;
-  }
-
+  NS_ENSURE_TRUE_VOID(mView);
+  NSTextInputContext* inputContext = [mView inputContext];
+  NS_ENSURE_TRUE_VOID(inputContext);
   mIgnoreIMECommit = true;
-  [im markedTextAbandoned: mView];
+  [inputContext discardMarkedText];
   mIgnoreIMECommit = false;
 
   NS_OBJC_END_TRY_ABORT_BLOCK
@@ -3232,8 +3226,8 @@ IMEInputHandler::OnStartIMEComposition()
 
   PR_LOG(gLog, PR_LOG_ALWAYS,
     ("%p IMEInputHandler::OnStartIMEComposition, mView=%p, mWidget=%p"
-     "currentInputManager=%p, mIsIMEComposing=%s",
-     this, mView, mWidget, [NSInputManager currentInputManager],
+     "inputContext=%p, mIsIMEComposing=%s",
+     this, mView, mWidget, mView ? [mView inputContext] : nullptr,
      TrueOrFalse(mIsIMEComposing)));
 
   NS_ASSERTION(!mIsIMEComposing, "There is a composition already");
@@ -3251,8 +3245,8 @@ IMEInputHandler::OnUpdateIMEComposition(NSString* aIMECompositionString)
 
   PR_LOG(gLog, PR_LOG_ALWAYS,
     ("%p IMEInputHandler::OnUpdateIMEComposition, mView=%p, mWidget=%p, "
-     "currentInputManager=%p, mIsIMEComposing=%s, aIMECompositionString=\"%s\"",
-     this, mView, mWidget, [NSInputManager currentInputManager],
+     "inputContext=%p, mIsIMEComposing=%s, aIMECompositionString=\"%s\"",
+     this, mView, mWidget, mView ? [mView inputContext] : nullptr,
      TrueOrFalse(mIsIMEComposing), GetCharacters(aIMECompositionString)));
 
   NS_ASSERTION(mIsIMEComposing, "We're not in composition");
@@ -3271,8 +3265,8 @@ IMEInputHandler::OnEndIMEComposition()
 
   PR_LOG(gLog, PR_LOG_ALWAYS,
     ("%p IMEInputHandler::OnEndIMEComposition, mView=%p, mWidget=%p, "
-     "currentInputManager=%p, mIsIMEComposing=%s",
-     this, mView, mWidget, [NSInputManager currentInputManager],
+     "inputContext=%p, mIsIMEComposing=%s",
+     this, mView, mWidget, mView ? [mView inputContext] : nullptr,
      TrueOrFalse(mIsIMEComposing)));
 
   NS_ASSERTION(mIsIMEComposing, "We're not in composition");
@@ -3296,8 +3290,8 @@ IMEInputHandler::SendCommittedText(NSString *aString)
 
   PR_LOG(gLog, PR_LOG_ALWAYS,
     ("%p IMEInputHandler::SendCommittedText, mView=%p, mWidget=%p, "
-     "currentInputManager=%p, mIsIMEComposing=%s",
-     this, mView, mWidget, [NSInputManager currentInputManager],
+     "inputContext=%p, mIsIMEComposing=%s",
+     this, mView, mWidget, mView ? [mView inputContext] : nullptr,
      TrueOrFalse(mIsIMEComposing), mWidget));
 
   NS_ENSURE_TRUE(mWidget, );
@@ -3321,9 +3315,9 @@ IMEInputHandler::KillIMEComposition()
 
   PR_LOG(gLog, PR_LOG_ALWAYS,
     ("%p IMEInputHandler::KillIMEComposition, mView=%p, mWidget=%p, "
-     "currentInputManager=%p, mIsIMEComposing=%s, "
+     "inputContext=%p, mIsIMEComposing=%s, "
      "Destroyed()=%s, IsFocused()=%s",
-     this, mView, mWidget, [NSInputManager currentInputManager],
+     this, mView, mWidget, mView ? [mView inputContext] : nullptr,
      TrueOrFalse(mIsIMEComposing), TrueOrFalse(Destroyed()),
      TrueOrFalse(IsFocused())));
 
@@ -3332,7 +3326,10 @@ IMEInputHandler::KillIMEComposition()
   }
 
   if (IsFocused()) {
-    [[NSInputManager currentInputManager] markedTextAbandoned: mView];
+    NS_ENSURE_TRUE_VOID(mView);
+    NSTextInputContext* inputContext = [mView inputContext];
+    NS_ENSURE_TRUE_VOID(inputContext);
+    [inputContext discardMarkedText];
     return;
   }
 

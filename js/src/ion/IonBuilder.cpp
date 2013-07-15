@@ -19,11 +19,12 @@
 #include "ion/Lowering.h"
 #include "ion/MIRGraph.h"
 
+#include "jsinferinlines.h"
+#include "jsobjinlines.h"
 #include "jsscriptinlines.h"
 
 #include "ion/CompileInfo-inl.h"
 #include "ion/ExecutionModeInlines.h"
-#include "vm/ScopeObject-inl.h"
 
 using namespace js;
 using namespace js::ion;

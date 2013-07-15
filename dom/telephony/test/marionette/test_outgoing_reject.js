@@ -101,14 +101,26 @@ function reject() {
     is(telephony.active, null);
     is(telephony.calls.length, 0);
 
-    runEmulatorCmd("gsm list", function(result) {
-      log("Call list is now: " + result);
-      is(result[0], "OK");
-      cleanUp();
+    // Wait for emulator to catch up before continuing
+    waitFor(verifyCallList,function() {
+      return(rcvdEmulatorCallback);
     });
   };
-  runEmulatorCmd("gsm cancel " + number);
+
+  let rcvdEmulatorCallback = false;
+  runEmulatorCmd("gsm cancel " + number, function(result) {
+    is(result[0], "OK", "emulator callback");
+    rcvdEmulatorCallback = true;
+  });
 };
+
+function verifyCallList(){
+  runEmulatorCmd("gsm list", function(result) {
+    log("Call list is now: " + result);
+    is(result[0], "OK");
+    cleanUp();
+  });
+}
 
 function cleanUp() {
   SpecialPowers.removePermission("telephony", document);

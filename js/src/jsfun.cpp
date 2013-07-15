@@ -42,7 +42,6 @@
 #ifdef JS_ION
 #include "ion/Ion.h"
 #include "ion/IonFrameIterator.h"
-#include "ion/IonFrameIterator-inl.h"
 #endif
 
 using namespace js;

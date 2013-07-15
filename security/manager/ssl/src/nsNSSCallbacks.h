@@ -26,9 +26,6 @@ void HandshakeCallback(PRFileDesc *fd, void *client_data);
 SECStatus CanFalseStartCallback(PRFileDesc* fd, void* client_data,
                                 PRBool *canFalseStart);
 
-SECStatus RegisterMyOCSPAIAInfoCallback();
-SECStatus UnregisterMyOCSPAIAInfoCallback();
-
 class nsHTTPListener MOZ_FINAL : public nsIStreamLoaderObserver
 {
 private:
@@ -224,6 +221,3 @@ public:
 };
 
 #endif // _NSNSSCALLBACKS_H_
-
-
-

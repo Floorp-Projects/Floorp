@@ -12,9 +12,9 @@
           src="../text.js"></script>
   <script type="application/javascript">
     if (navigator.platform.startsWith("Mac")) {
-      SimpleTest.expectAssertions(0, 8);
+      SimpleTest.expectAssertions(0, 4);
     } else {
-      SimpleTest.expectAssertions(8);
+      SimpleTest.expectAssertions(4);
     }
 
     function doTest()
@@ -84,21 +84,9 @@
       testTextBeforeOffset(15, BOUNDARY_LINE_START, "", 0, 0, IDs);
 
       // BOUNDARY_LINE_END
-      testTextBeforeOffset(0, BOUNDARY_LINE_END, "", 0, 0,
-                           "input", kOk, kOk, kOk,
-                           "div", kOk, kOk, kOk,
-                           "editable", kOk, kOk, kOk,
-                           "textarea", kOk, kOk, kOk);
-      testTextBeforeOffset(1, BOUNDARY_LINE_END, "", 0, 0,
-                           "input", kTodo, kOk, kTodo,
-                           "div", kTodo, kOk, kTodo,
-                           "editable", kTodo, kOk, kTodo,
-                           "textarea", kTodo, kOk, kTodo);
-      testTextBeforeOffset(14, BOUNDARY_LINE_END, "", 0, 0,
-                           "input", kTodo, kOk, kTodo,
-                           "div", kTodo, kOk, kTodo,
-                           "editable", kTodo, kOk, kTodo,
-                           "textarea", kTodo, kOk, kTodo);
+      testTextBeforeOffset(0, BOUNDARY_LINE_END, "", 0, 0, IDs);
+      testTextBeforeOffset(1, BOUNDARY_LINE_END, "", 0, 0, IDs);
+      testTextBeforeOffset(14, BOUNDARY_LINE_END, "", 0, 0, IDs);
       testTextBeforeOffset(15, BOUNDARY_LINE_END, "", 0, 0, IDs);
 
       ////////////////////////////////////////////////////////////////////////

@@ -43,10 +43,10 @@ let Elements = {};
   ["browsers",           "browsers"],
   ["navbar",             "navbar"],
   ["contextappbar",      "contextappbar"],
+  ["findbar",            "findbar"],
   ["contentViewport",    "content-viewport"],
   ["progress",           "progress-control"],
   ["progressContainer",  "progress-container"],
-  ["contentNavigator",   "content-navigator"],
 ].forEach(function (aElementGlobal) {
   let [name, id] = aElementGlobal;
   XPCOMUtils.defineLazyGetter(Elements, name, function() {
