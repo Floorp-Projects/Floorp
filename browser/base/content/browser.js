@@ -4521,7 +4521,11 @@ function updateTitlebarDisplay() {
   document.getElementById("titlebar").hidden = !drawInTitlebar;
 
   if (drawInTitlebar)
+#ifdef XP_WIN
     document.documentElement.setAttribute("chromemargin", "0,2,2,2");
+#else
+    document.documentElement.setAttribute("chromemargin", "0,-1,-1,-1");
+#endif
   else
     document.documentElement.removeAttribute("chromemargin");
 
