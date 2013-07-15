@@ -47,7 +47,7 @@ public class GeckoView extends LayerView
         GeckoAppShell.setContextGetter(this);
         if (context instanceof Activity) {
             Tabs tabs = Tabs.getInstance();
-            tabs.attachToActivity((Activity) context);
+            tabs.attachToContext(context);
         }
         GeckoProfile profile = GeckoProfile.get(context);
         BrowserDB.initialize(profile.getName());
