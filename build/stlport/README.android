@@ -1,0 +1,9 @@
+Version: 5.2.1
+
+Changes:
+    * Added _android.h included by _system.h
+    * Do not use linux float functions in num_get_float.cpp as Android does not
+      have them.
+    * _mbstate_t.h cannot define its own mbstate_t as bionic already defines
+      it.
+    * _pair.h needs to define bionic's (sgi's) internal pair header guard.

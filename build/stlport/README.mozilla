@@ -1,0 +1,3 @@
+This copy of STLport was taken from the Android NDK r8e.
+Android specific changes are listed in README.android.
+The libs/ directory containing prebuilt static libraries was removed.
