@@ -53,7 +53,6 @@ public:
   virtual bool RecvStop() MOZ_OVERRIDE;
   virtual bool RecvPause() MOZ_OVERRIDE;
   virtual bool RecvResume() MOZ_OVERRIDE;
-  virtual bool RecvNotifyChildCreated(const uint64_t& child) MOZ_OVERRIDE;
   virtual bool RecvMakeSnapshot(const SurfaceDescriptor& aInSnapshot,
                                 SurfaceDescriptor* aOutSnapshot);
   virtual bool RecvFlushRendering() MOZ_OVERRIDE;
@@ -74,8 +73,6 @@ public:
   void Destroy();
 
   LayerManagerComposite* GetLayerManager() { return mLayerManager; }
-
-  void NotifyChildCreated(uint64_t aChild);
 
   void AsyncRender();
 
@@ -155,7 +152,6 @@ public:
   struct LayerTreeState {
     nsRefPtr<Layer> mRoot;
     nsRefPtr<AsyncPanZoomController> mController;
-    CompositorParent *mParent;
     TargetConfig mTargetConfig;
   };
 
