@@ -1455,17 +1455,11 @@ gfxContext::Mask(gfxASurface *surface, const gfxPoint& offset)
 
     gfxPoint pt = surface->GetDeviceOffset();
 
-    //Since we're already passing the offset as a transform, we have to temporarily set the device offset to 0,0 to avoid using it twice if sourceSurf still has access to it.
-    surface->SetDeviceOffset(gfxPoint(0.0,0.0));
-
     // We clip here to bind to the mask surface bounds, see above.
     mDT->MaskSurface(GeneralPattern(this), 
               sourceSurf,
               Point(offset.x - pt.x, offset.y -  pt.y),
               DrawOptions(1.0f, CurrentState().op, CurrentState().aaMode));
-    
-    //We set the device offset to zero temporarily. Let's restore it now.
-    surface->SetDeviceOffset(pt);
   }
 }
 
