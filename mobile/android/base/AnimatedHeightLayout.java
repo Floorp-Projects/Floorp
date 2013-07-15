@@ -21,6 +21,10 @@ public class AnimatedHeightLayout extends RelativeLayout {
         super(context, attrs);
     }
 
+    public AnimatedHeightLayout(Context context, AttributeSet attrs, int defStyle) {
+        super(context, attrs, defStyle);
+    }
+
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         int oldHeight = getMeasuredHeight();
