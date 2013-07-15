@@ -145,6 +145,7 @@ FENNEC_JAVA_FILES = \
   ReaderModeUtils.java \
   RemoteTabs.java \
   RobocopAPI.java \
+  SearchEngineRow.java \
   ServiceNotificationClient.java \
   ScrollAnimator.java \
   SessionParser.java \
@@ -448,8 +449,6 @@ RES_LAYOUT = \
   res/layout/awesomebar_allpages_list.xml \
   res/layout/awesomebar_row.xml \
   res/layout/awesomebar_search.xml \
-  res/layout/awesomebar_suggestion_row.xml \
-  res/layout/awesomebar_suggestion_item.xml \
   res/layout/awesomebar_suggestion_prompt.xml \
   res/layout/awesomebar_tab_indicator.xml \
   res/layout/awesomebar_tabs.xml \
@@ -461,6 +460,7 @@ RES_LAYOUT = \
   res/layout/find_in_page_content.xml \
   res/layout/font_size_preference.xml \
   res/layout/gecko_app.xml \
+  res/layout/home_search_item_row.xml \
   res/layout/web_app.xml \
   res/layout/launch_app_list.xml \
   res/layout/launch_app_listitem.xml \
@@ -471,11 +471,13 @@ RES_LAYOUT = \
   res/layout/notification_progress.xml \
   res/layout/notification_progress_text.xml \
   res/layout/preference_rightalign_icon.xml \
+  res/layout/search_engine_row.xml \
   res/layout/site_setting_item.xml \
   res/layout/site_setting_title.xml \
   res/layout/setup_screen.xml \
   res/layout/shared_ui_components.xml \
   res/layout/site_identity.xml \
+  res/layout/suggestion_item.xml \
   res/layout/remote_tabs_child.xml \
   res/layout/remote_tabs_group.xml \
   res/layout/tabs_panel.xml \
