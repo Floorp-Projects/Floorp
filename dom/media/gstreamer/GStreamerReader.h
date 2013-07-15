@@ -25,6 +25,8 @@
 #include "ImageContainer.h"
 #include "nsRect.h"
 
+struct GstURIDecodeBin;
+
 namespace mozilla {
 
 namespace dom {
@@ -89,6 +91,30 @@ private:
 
   static GstBusSyncReply ErrorCb(GstBus *aBus, GstMessage *aMessage, gpointer aUserData);
   GstBusSyncReply Error(GstBus *aBus, GstMessage *aMessage);
+
+  /*
+   * We attach this callback to playbin so that when uridecodebin is
+   * constructed, we can then list for its autoplug-sort signal to blacklist
+   * the elements it can construct.
+   */
+  static void ElementAddedCb(GstBin *aPlayBin,
+                             GstElement *aElement,
+                             gpointer aUserData);
+
+  /*
+   * Called on the autoplug-sort signal emitted by uridecodebin for filtering
+   * the elements it uses.
+   */
+  static GValueArray *ElementFilterCb(GstURIDecodeBin *aBin,
+                                      GstPad *aPad,
+                                      GstCaps *aCaps,
+                                      GValueArray *aFactories,
+                                      gpointer aUserData);
+
+  GValueArray *ElementFilter(GstURIDecodeBin *aBin,
+                             GstPad *aPad,
+                             GstCaps *aCaps,
+                             GValueArray *aFactories);
 
   /* Called on the source-setup signal emitted by playbin. Used to
    * configure appsrc .
@@ -169,7 +195,7 @@ private:
   static bool ShouldAutoplugFactory(GstElementFactory* aFactory, GstCaps* aCaps);
 
   /* Called by decodebin during autoplugging. We use it to apply our
-   * container/codec whitelist.
+   * container/codec blacklist.
    */
   static GValueArray* AutoplugSortCb(GstElement* aElement,
                                      GstPad* aPad, GstCaps* aCaps,
