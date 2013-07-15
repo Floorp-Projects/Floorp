@@ -97,9 +97,6 @@ js_math_floor_impl(double x);
 namespace js {
 
 extern JSBool
-math_exp(JSContext *cx, unsigned argc, Value *vp);
-
-extern JSBool
 math_imul(JSContext *cx, unsigned argc, js::Value *vp);
 
 extern JSBool
@@ -131,6 +128,48 @@ math_tan(JSContext *cx, unsigned argc, js::Value *vp);
 
 extern double
 math_tan_impl(MathCache *cache, double x);
+
+extern JSBool
+math_log10(JSContext *cx, unsigned argc, js::Value *vp);
+
+extern JSBool
+math_log2(JSContext *cx, unsigned argc, js::Value *vp);
+
+extern JSBool
+math_log1p(JSContext *cx, unsigned argc, js::Value *vp);
+
+extern JSBool
+math_expm1(JSContext *cx, unsigned argc, js::Value *vp);
+
+extern JSBool
+math_cosh(JSContext *cx, unsigned argc, js::Value *vp);
+
+extern JSBool
+math_sinh(JSContext *cx, unsigned argc, js::Value *vp);
+
+extern JSBool
+math_tanh(JSContext *cx, unsigned argc, js::Value *vp);
+
+extern JSBool
+math_acosh(JSContext *cx, unsigned argc, js::Value *vp);
+
+extern JSBool
+math_asinh(JSContext *cx, unsigned argc, js::Value *vp);
+
+extern JSBool
+math_atanh(JSContext *cx, unsigned argc, js::Value *vp);
+
+extern JSBool
+math_hypot(JSContext *cx, unsigned argc, Value *vp);
+
+extern JSBool
+math_trunc(JSContext *cx, unsigned argc, Value *vp);
+
+extern JSBool
+math_sign(JSContext *cx, unsigned argc, Value *vp);
+
+extern JSBool
+math_cbrt(JSContext *cx, unsigned argc, Value *vp);
 
 extern JSBool
 math_asin(JSContext *cx, unsigned argc, Value *vp);
@@ -173,6 +212,48 @@ ecmaPow(double x, double y);
 
 extern JSBool
 math_imul(JSContext *cx, unsigned argc, Value *vp);
+
+extern double 
+math_log10_impl(MathCache *cache, double x);
+
+extern double 
+math_log2_impl(MathCache *cache, double x);
+
+extern double 
+math_log1p_impl(MathCache *cache, double x);
+
+extern double 
+math_expm1_impl(MathCache *cache, double x);
+
+extern double 
+math_cosh_impl(MathCache *cache, double x);
+
+extern double 
+math_sinh_impl(MathCache *cache, double x);
+
+extern double 
+math_tanh_impl(MathCache *cache, double x);
+
+extern double 
+math_acosh_impl(MathCache *cache, double x);
+
+extern double 
+math_asinh_impl(MathCache *cache, double x);
+
+extern double 
+math_atanh_impl(MathCache *cache, double x);
+
+extern double 
+math_hypot_impl(double x, double y);
+
+extern double 
+math_trunc_impl(MathCache *cache, double x);
+
+extern double 
+math_sign_impl(MathCache *cache, double x);
+
+extern double 
+math_cbrt_impl(MathCache *cache, double x);
 
 } /* namespace js */
 
