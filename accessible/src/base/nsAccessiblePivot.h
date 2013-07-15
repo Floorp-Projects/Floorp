@@ -16,6 +16,7 @@
 #include "mozilla/Attributes.h"
 
 class nsIAccessibleTraversalRule;
+class RuleCache;
 
 /**
  * Class represents an accessible pivot.
@@ -89,6 +90,18 @@ private:
    * Update the pivot, and notify observers. Return true if it moved.
    */
   bool MovePivotInternal(Accessible* aPosition, PivotMoveReason aReason);
+
+  /*
+   * Get initial node we should start a search from with a given rule.
+   *
+   * When we do a move operation from one position to another,
+   * the initial position can be inside of a subtree that is ignored by
+   * the given rule. We need to step out of the ignored subtree and start
+   * the search from there.
+   *
+   */
+  Accessible* AdjustStartPosition(Accessible* aAccessible, RuleCache& aCache,
+                                  uint16_t* aFilterResult, nsresult* aResult);
 
   /*
    * The root accessible.
