@@ -730,19 +730,28 @@ ContentParent::TransformPreallocatedIntoApp(const nsAString& aAppManifestURL,
 }
 
 void
-ContentParent::ShutDownProcess()
+ContentParent::ShutDownProcess(bool aFromActorDestroyed)
 {
   if (!mIsDestroyed) {
+    mIsDestroyed = true;
+
     const InfallibleTArray<PIndexedDBParent*>& idbParents =
       ManagedPIndexedDBParent();
     for (uint32_t i = 0; i < idbParents.Length(); ++i) {
       static_cast<IndexedDBParent*>(idbParents[i])->Disconnect();
     }
 
-    // Close() can only be called once.  It kicks off the
-    // destruction sequence.
-    Close();
-    mIsDestroyed = true;
+    if (aFromActorDestroyed) {
+      // If ActorDestroyed() is calling this method but mIsDestroyed was false,
+      // we're in an error state.
+      AsyncChannel* channel = GetIPCChannel();
+      if (channel) {
+        channel->CloseWithError();
+      }
+    } else {
+      // Close() can only be called once: It kicks off the destruction sequence.
+      Close();
+    }
   }
   // NB: must MarkAsDead() here so that this isn't accidentally
   // returned from Get*() while in the midst of shutdown.
@@ -948,6 +957,11 @@ ContentParent::ActorDestroy(ActorDestroyReason why)
         obs->NotifyObservers((nsIPropertyBag2*) props, "ipc:content-shutdown", nullptr);
     }
 
+    // If the child process was terminated due to a SIGKIL, ShutDownProcess
+    // might not have been called yet.  We must call it to ensure that our
+    // channel is closed, etc.
+    ShutDownProcess(/* aForce = */ true);
+
     MessageLoop::current()->
         PostTask(FROM_HERE,
                  NewRunnableFunction(DelayedDeleteSubprocess, mSubprocess));
@@ -1006,7 +1020,8 @@ ContentParent::NotifyTabDestroyed(PBrowserParent* aTab,
     if (ManagedPBrowserParent().Length() == 1) {
         MessageLoop::current()->PostTask(
             FROM_HERE,
-            NewRunnableMethod(this, &ContentParent::ShutDownProcess));
+            NewRunnableMethod(this, &ContentParent::ShutDownProcess,
+                              /* force */ false));
     }
 }
 
@@ -1464,7 +1479,7 @@ ContentParent::Observe(nsISupports* aSubject,
                        const PRUnichar* aData)
 {
     if (!strcmp(aTopic, "xpcom-shutdown") && mSubprocess) {
-        ShutDownProcess();
+        ShutDownProcess(/* force */ false);
         NS_ASSERTION(!mSubprocess, "Close should have nulled mSubprocess");
     }
 
