@@ -34,7 +34,6 @@ function test() {
 
 function checkIdentityMode(win) {
   let identityMode = win.document.getElementById("identity-box").className;
-  is(identityMode, "unknownIdentity", "Identity should be chromeUI but is currently " +
-                                      "shown as unknownIdentity for new windows.");
+  is(identityMode, "chromeUI", "Identity state should be chromeUI for about:home in a new window");
   finish();
 }
