@@ -41,8 +41,9 @@ add_test(function test_Logger() {
   log.debug("this should be logged but not appended.");
 
   do_check_eq(appender.messages.length, 1);
-  do_check_true(appender.messages[0].indexOf("info test") > 0);
-  do_check_true(appender.messages[0].indexOf("INFO") > 0);
+
+  let msgRe = /\d+\ttest.logger\t\INFO\tinfo test/;
+  do_check_true(msgRe.test(appender.messages[0]));
 
   run_next_test();
 });
@@ -65,6 +66,113 @@ add_test(function test_Logger_parent() {
 
   do_check_eq(gpAppender.messages.length, 1);
   do_check_true(gpAppender.messages[0].indexOf("child info test") > 0);
+
+  run_next_test();
+});
+
+// A utility method for checking object equivalence.
+// Fields with a reqular expression value in expected will be tested
+// against the corresponding value in actual. Otherwise objects
+// are expected to have the same keys and equal values.
+function checkObjects(expected, actual) {
+  do_check_true(expected instanceof Object);
+  do_check_true(actual instanceof Object);
+  for (let key in expected) {
+    do_check_neq(actual[key], undefined);
+    if (expected[key] instanceof RegExp) {
+      do_check_true(expected[key].test(actual[key].toString()));
+    } else {
+      if (expected[key] instanceof Object) {
+        checkObjects(expected[key], actual[key]);
+      } else {
+        do_check_eq(expected[key], actual[key]);
+      }
+    }
+  }
+
+  for (let key in actual) {
+    do_check_neq(expected[key], undefined);
+  }
+}
+
+add_test(function test_StructuredLogCommands() {
+  let appender = new MockAppender(new Log4Moz.StructuredFormatter());
+  let logger = Log4Moz.repository.getLogger("test.StructuredOutput");
+  logger.addAppender(appender);
+  logger.level = Log4Moz.Level.Info;
+
+  logger.logStructured("test_message", {_message: "message string one"});
+  logger.logStructured("test_message", {_message: "message string two",
+                                        _level: "ERROR",
+                                        source_file: "test_log4moz.js"});
+  logger.logStructured("test_message");
+  logger.logStructured("test_message", {source_file: "test_log4moz.js",
+                                        message_position: 4});
+
+  let messageOne = {"_time": /\d+/,
+                    "_namespace": "test.StructuredOutput",
+                    "_level": "INFO",
+                    "_message": "message string one",
+                    "action": "test_message"};
+
+  let messageTwo = {"_time": /\d+/,
+                    "_namespace": "test.StructuredOutput",
+                    "_level": "ERROR",
+                    "_message": "message string two",
+                    "action": "test_message",
+                    "source_file": "test_log4moz.js"};
+
+  let messageThree = {"_time": /\d+/,
+                      "_namespace": "test.StructuredOutput",
+                      "_level": "INFO",
+                      "action": "test_message"};
+
+  let messageFour = {"_time": /\d+/,
+                     "_namespace": "test.StructuredOutput",
+                     "_level": "INFO",
+                     "action": "test_message",
+                     "source_file": "test_log4moz.js",
+                     "message_position": 4};
+
+  checkObjects(messageOne, JSON.parse(appender.messages[0]));
+  checkObjects(messageTwo, JSON.parse(appender.messages[1]));
+  checkObjects(messageThree, JSON.parse(appender.messages[2]));
+  checkObjects(messageFour, JSON.parse(appender.messages[3]));
+
+  let errored = false;
+  try {
+    logger.logStructured("", {_message: "invalid message"});
+  } catch (e) {
+    errored = true;
+    do_check_eq(e, "An action is required when logging a structured message.");
+  } finally {
+    do_check_true(errored);
+  }
+
+  let errored = false;
+  try {
+    logger.logStructured("message_action", "invalid params");
+  } catch (e) {
+    errored = true;
+    do_check_eq(e, "The params argument is required to be an object.");
+  } finally {
+    do_check_true(errored);
+  }
+
+  // Logging with unstructured interface should produce the same messages
+  // as the structured interface for these cases.
+  let appender = new MockAppender(new Log4Moz.StructuredFormatter());
+  let logger = Log4Moz.repository.getLogger("test.StructuredOutput1");
+  messageOne._namespace = "test.StructuredOutput1";
+  messageTwo._namespace = "test.StructuredOutput1";
+  logger.addAppender(appender);
+  logger.level = Log4Moz.Level.All;
+  logger.info("message string one", {action: "test_message"});
+  logger.error("message string two", {action: "test_message",
+                                      source_file: "test_log4moz.js"});
+
+  checkObjects(messageOne, JSON.parse(appender.messages[0]));
+  checkObjects(messageTwo, JSON.parse(appender.messages[1]));
 
   run_next_test();
 });

@@ -36,6 +36,16 @@ this.Log4Moz = {
       20: "DEBUG",
       10: "TRACE",
       0:  "ALL"
+    },
+    Numbers: {
+      "FATAL": 70,
+      "ERROR": 60,
+      "WARN": 50,
+      "INFO": 40,
+      "CONFIG": 30,
+      "DEBUG": 20,
+      "TRACE": 10,
+      "ALL": 0,
     }
   },
 
@@ -55,6 +65,7 @@ this.Log4Moz = {
 
   Formatter: Formatter,
   BasicFormatter: BasicFormatter,
+  StructuredFormatter: StructuredFormatter,
 
   Appender: Appender,
   DumpAppender: DumpAppender,
@@ -109,10 +120,15 @@ this.Log4Moz = {
  * LogMessage
  * Encapsulates a single log event's data
  */
-function LogMessage(loggerName, level, message){
+function LogMessage(loggerName, level, message, params) {
   this.loggerName = loggerName;
   this.level = level;
   this.message = message;
+  this.params = params;
+
+  // The _structured field will correspond to whether this message is to
+  // be interpreted as a structured message.
+  this._structured = this.params && this.params.action;
   this.time = Date.now();
 }
 LogMessage.prototype = {
@@ -123,8 +139,12 @@ LogMessage.prototype = {
   },
 
   toString: function LogMsg_toString(){
-    return "LogMessage [" + this.time + " " + this.level + " " +
-      this.message + "]";
+    let msg = "LogMessage [" + this.time + " " + this.level + " " +
+      this.message;
+    if (this.params) {
+      msg += " " + JSON.stringify(this.params);
+    }
+    return msg + "]"
   }
 };
 
@@ -211,7 +231,39 @@ Logger.prototype = {
     this.updateAppenders();
   },
 
-  log: function Logger_log(level, string) {
+  /**
+   * Logs a structured message object.
+   *
+   * @param action
+   *        (string) A message action, one of a set of actions known to the
+   *          log consumer.
+   * @param params
+   *        (object) Parameters to be included in the message.
+   *          If _level is included as a key and the corresponding value
+   *          is a number or known level name, the message will be logged
+   *          at the indicated level.
+   */
+  logStructured: function (action, params) {
+    if (!action) {
+      throw "An action is required when logging a structured message.";
+    }
+    if (!params) {
+      return this.log(this.level, undefined, {"action": action});
+    }
+    if (typeof params != "object") {
+      throw "The params argument is required to be an object.";
+    }
+
+    let level = params._level || this.level;
+    if ((typeof level == "string") && level in Log4Moz.Level.Numbers) {
+      level = Log4Moz.Level.Numbers[level];
+    }
+
+    params.action = action;
+    this.log(level, params._message, params);
+  },
+
+  log: function (level, string, params) {
     if (this.level > level)
       return;
 
@@ -224,32 +276,32 @@ Logger.prototype = {
         continue;
       }
       if (!message) {
-        message = new LogMessage(this._name, level, string);
+        message = new LogMessage(this._name, level, string, params);
       }
       appender.append(message);
     }
   },
 
-  fatal: function Logger_fatal(string) {
-    this.log(Log4Moz.Level.Fatal, string);
+  fatal: function (string, params) {
+    this.log(Log4Moz.Level.Fatal, string, params);
   },
-  error: function Logger_error(string) {
-    this.log(Log4Moz.Level.Error, string);
+  error: function (string, params) {
+    this.log(Log4Moz.Level.Error, string, params);
   },
-  warn: function Logger_warn(string) {
-    this.log(Log4Moz.Level.Warn, string);
+  warn: function (string, params) {
+    this.log(Log4Moz.Level.Warn, string, params);
   },
-  info: function Logger_info(string) {
-    this.log(Log4Moz.Level.Info, string);
+  info: function (string, params) {
+    this.log(Log4Moz.Level.Info, string, params);
   },
-  config: function Logger_config(string) {
-    this.log(Log4Moz.Level.Config, string);
+  config: function (string, params) {
+    this.log(Log4Moz.Level.Config, string, params);
   },
-  debug: function Logger_debug(string) {
-    this.log(Log4Moz.Level.Debug, string);
+  debug: function (string, params) {
+    this.log(Log4Moz.Level.Debug, string, params);
   },
-  trace: function Logger_trace(string) {
-    this.log(Log4Moz.Level.Trace, string);
+  trace: function (string, params) {
+    this.log(Log4Moz.Level.Trace, string, params);
   }
 };
 
@@ -314,8 +366,8 @@ LoggerRepository.prototype = {
 
 /*
  * Formatters
- * These massage a LogMessage into whatever output is desired
- * Only the BasicFormatter is currently implemented
+ * These massage a LogMessage into whatever output is desired.
+ * BasicFormatter and StructuredFormatter are implemented here.
  */
 
 // Abstract formatter
@@ -324,7 +376,7 @@ Formatter.prototype = {
   format: function Formatter_format(message) {}
 };
 
-// Basic formatter that doesn't do anything fancy
+// Basic formatter that doesn't do anything fancy.
 function BasicFormatter(dateFormat) {
   if (dateFormat)
     this.dateFormat = dateFormat;
@@ -339,6 +391,36 @@ BasicFormatter.prototype = {
       message.message + "\n";
   }
 };
+
+// Structured formatter that outputs JSON based on message data.
+// This formatter will format unstructured messages by supplying
+// default values.
+function StructuredFormatter() { }
+StructuredFormatter.prototype = {
+  __proto__: Formatter.prototype,
+
+  format: function (logMessage) {
+    let output = {
+      _time: logMessage.time,
+      _namespace: logMessage.loggerName,
+      _level: logMessage.levelDesc
+    };
+
+    for (let key in logMessage.params) {
+      output[key] = logMessage.params[key];
+    }
+
+    if (!output.action) {
+      output.action = "UNKNOWN";
+    }
+
+    if (!output._message && logMessage.message) {
+      output._message = logMessage.message;
+    }
+
+    return JSON.stringify(output);
+  }
+}
 
 /*
  * Appenders
