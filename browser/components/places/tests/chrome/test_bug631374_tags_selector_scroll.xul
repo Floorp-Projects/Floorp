@@ -118,15 +118,20 @@
             SimpleTest.isnot(listItem, null, "Valid listItem found");
 
             tagsSelector.ensureElementIsVisible(listItem);
-            let visibleIndex = tagsSelector.getIndexOfFirstVisibleRow();
+            let firstVisibleTag = tags[tagsSelector.getIndexOfFirstVisibleRow()];
 
             SimpleTest.ok(listItem.checked, "Item is checked " + i);
             let selectedTag = listItem.label;
 
             // Uncheck the tag.
             listItem.checked = false;
-            SimpleTest.is(tagsSelector.getIndexOfFirstVisibleRow(),
-                          Math.max(visibleIndex -1, 0),
+
+            // Ensure the first visible tag is still visible in the list.
+            let firstVisibleIndex = tagsSelector.getIndexOfFirstVisibleRow();
+            let lastVisibleIndex = firstVisibleIndex + tagsSelector.getNumberOfVisibleRows() -1;
+            let expectedTagIndex = tags.indexOf(firstVisibleTag);
+            SimpleTest.ok(expectedTagIndex >= firstVisibleIndex &&
+                          expectedTagIndex <= lastVisibleIndex,
                           "Scroll position is correct");
 
             // The listbox is rebuilt, so we have to get the new element.

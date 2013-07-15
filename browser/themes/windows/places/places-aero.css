@@ -15,4 +15,8 @@
     background-color: transparent;
     border-top: none;
   }
+
+  .sidebar-placesTreechildren::-moz-tree-cell-text(leaf, hover) {
+    text-decoration: none;
+  }
 }
