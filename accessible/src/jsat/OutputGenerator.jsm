@@ -579,7 +579,7 @@ this.UtteranceGenerator = {
     if (roleStr) {
       desc.push(roleStr);
     }
-    desc.push(this._getPluralFormString('listItemCount', aItemCount));
+    desc.push(this._getPluralFormString('listItemsCount', aItemCount));
     let utterance = [desc.join(' ')];
 
     this._addName(utterance, aAccessible, aFlags);

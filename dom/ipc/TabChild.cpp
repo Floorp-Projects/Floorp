@@ -84,6 +84,7 @@
 #include "StructuredCloneUtils.h"
 #include "xpcpublic.h"
 #include "nsViewportInfo.h"
+#include "JavaScriptChild.h"
 
 #define BROWSER_ELEMENT_CHILD_SCRIPT \
     NS_LITERAL_STRING("chrome://global/content/BrowserElementChild.js")
@@ -97,6 +98,7 @@ using namespace mozilla::layout;
 using namespace mozilla::docshell;
 using namespace mozilla::dom::indexedDB;
 using namespace mozilla::widget;
+using namespace mozilla::jsipc;
 
 NS_IMPL_ISUPPORTS1(ContentListener, nsIDOMEventListener)
 
@@ -1454,7 +1456,7 @@ TabChild::DispatchMessageManagerMessage(const nsAString& aMessageName,
     nsRefPtr<nsFrameMessageManager> mm =
       static_cast<nsFrameMessageManager*>(mTabChildGlobal->mMessageManager.get());
     mm->ReceiveMessage(static_cast<EventTarget*>(mTabChildGlobal),
-                       aMessageName, false, &cloneData, JS::NullPtr(), nullptr);
+                       aMessageName, false, &cloneData, nullptr, nullptr);
 }
 
 static void
@@ -2030,15 +2032,17 @@ TabChild::RecvLoadRemoteScript(const nsString& aURL)
 
 bool
 TabChild::RecvAsyncMessage(const nsString& aMessage,
-                           const ClonedMessageData& aData)
+                           const ClonedMessageData& aData,
+                           const InfallibleTArray<CpowEntry>& aCpows)
 {
   if (mTabChildGlobal) {
     nsCOMPtr<nsIXPConnectJSObjectHolder> kungFuDeathGrip(GetGlobal());
     StructuredCloneData cloneData = UnpackClonedMessageDataForChild(aData);
     nsRefPtr<nsFrameMessageManager> mm =
       static_cast<nsFrameMessageManager*>(mTabChildGlobal->mMessageManager.get());
+    CpowIdHolder cpows(static_cast<ContentChild*>(Manager())->GetCPOWManager(), aCpows);
     mm->ReceiveMessage(static_cast<EventTarget*>(mTabChildGlobal),
-                       aMessage, false, &cloneData, JS::NullPtr(), nullptr);
+                       aMessage, false, &cloneData, &cpows, nullptr);
   }
   return true;
 }
@@ -2332,8 +2336,10 @@ TabChild::DeallocPIndexedDBChild(PIndexedDBChild* aActor)
 }
 
 bool
-TabChild::DoSendSyncMessage(const nsAString& aMessage,
+TabChild::DoSendSyncMessage(JSContext* aCx,
+                            const nsAString& aMessage,
                             const StructuredCloneData& aData,
+                            JS::Handle<JSObject *> aCpows,
                             InfallibleTArray<nsString>* aJSONRetVal)
 {
   ContentChild* cc = Manager();
@@ -2341,19 +2347,29 @@ TabChild::DoSendSyncMessage(const nsAString& aMessage,
   if (!BuildClonedMessageDataForChild(cc, aData, data)) {
     return false;
   }
-  return SendSyncMessage(nsString(aMessage), data, aJSONRetVal);
+  InfallibleTArray<CpowEntry> cpows;
+  if (!cc->GetCPOWManager()->Wrap(aCx, aCpows, &cpows)) {
+    return false;
+  }
+  return SendSyncMessage(nsString(aMessage), data, cpows, aJSONRetVal);
 }
 
 bool
-TabChild::DoSendAsyncMessage(const nsAString& aMessage,
-                             const StructuredCloneData& aData)
+TabChild::DoSendAsyncMessage(JSContext* aCx,
+                             const nsAString& aMessage,
+                             const StructuredCloneData& aData,
+                             JS::Handle<JSObject *> aCpows)
 {
   ContentChild* cc = Manager();
   ClonedMessageData data;
   if (!BuildClonedMessageDataForChild(cc, aData, data)) {
     return false;
   }
-  return SendAsyncMessage(nsString(aMessage), data);
+  InfallibleTArray<CpowEntry> cpows;
+  if (!cc->GetCPOWManager()->Wrap(aCx, aCpows, &cpows)) {
+    return false;
+  }
+  return SendAsyncMessage(nsString(aMessage), data, cpows);
 }
 
 

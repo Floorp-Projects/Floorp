@@ -310,11 +310,11 @@ class AsmJSModule
         ion::PerfSpewer::BasicBlocksVector blocks;
 
         ProfiledBlocksFunction(JSAtom *name, unsigned start, unsigned end, ion::PerfSpewer::BasicBlocksVector &blocksVector)
-          : ProfiledFunction(name, start, end), blocks(Move(blocksVector))
+          : ProfiledFunction(name, start, end), blocks(mozilla::Move(blocksVector))
         { }
 
         ProfiledBlocksFunction(const ProfiledBlocksFunction &copy)
-          : ProfiledFunction(copy.name, copy.startCodeOffset, copy.endCodeOffset), blocks(Move(copy.blocks))
+          : ProfiledFunction(copy.name, copy.startCodeOffset, copy.endCodeOffset), blocks(mozilla::Move(copy.blocks))
         { }
     };
 #endif
