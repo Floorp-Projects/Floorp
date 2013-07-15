@@ -4690,11 +4690,6 @@ RIL[REQUEST_LAST_CALL_FAIL_CAUSE] = function REQUEST_LAST_CALL_FAIL_CAUSE(length
     case CALL_FAIL_NORMAL:
       this._handleDisconnectedCall(options);
       break;
-    case CALL_FAIL_BUSY:
-      options.state = CALL_STATE_BUSY;
-      this._handleChangedCallState(options);
-      this._handleDisconnectedCall(options);
-      break;
     default:
       options.rilMessageType = "callError";
       options.errorMsg = RIL_CALL_FAILCAUSE_TO_GECKO_CALL_ERROR[failCause];

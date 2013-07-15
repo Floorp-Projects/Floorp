@@ -101,11 +101,11 @@ namespace mozilla {
  * One hint: if you're writing a move constructor where the type has members
  * that should be moved themselves, it's much nicer to write this:
  *
- *   C(MoveRef<C> c) : x(c->x), y(c->y) { }
+ *   C(MoveRef<C> c) : x(Move(c->x)), y(Move(c->y)) { }
  *
  * than the equivalent:
  *
- *   C(MoveRef<C> c) { new(&x) X(c->x); new(&y) Y(c->y); }
+ *   C(MoveRef<C> c) { new(&x) X(Move(c->x)); new(&y) Y(Move(c->y)); }
  *
  * especially since GNU C++ fails to notice that this does indeed initialize x
  * and y, which may matter if they're const.
