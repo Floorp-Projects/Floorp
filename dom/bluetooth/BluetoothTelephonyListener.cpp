@@ -35,7 +35,7 @@ TelephonyListener::CallStateChanged(uint32_t aCallIndex,
                                     bool aIsEmergency)
 {
   BluetoothHfpManager* hfp = BluetoothHfpManager::Get();
-  hfp->HandleCallStateChanged(aCallIndex, aCallState, aNumber,
+  hfp->HandleCallStateChanged(aCallIndex, aCallState, EmptyString(), aNumber,
                               aIsOutgoing, true);
 
   return NS_OK;
@@ -57,7 +57,7 @@ TelephonyListener::EnumerateCallState(uint32_t aCallIndex,
                                       bool* aResult)
 {
   BluetoothHfpManager* hfp = BluetoothHfpManager::Get();
-  hfp->HandleCallStateChanged(aCallIndex, aCallState, aNumber,
+  hfp->HandleCallStateChanged(aCallIndex, aCallState, EmptyString(), aNumber,
                               aIsOutgoing, false);
   *aResult = true;
   return NS_OK;
@@ -77,7 +77,7 @@ TelephonyListener::NotifyError(int32_t aCallIndex,
     // via setting CALL_STATE_DISCONNECTED
     hfp->HandleCallStateChanged(aCallIndex,
                                 nsITelephonyProvider::CALL_STATE_DISCONNECTED,
-                                EmptyString(), false, true);
+                                aError, EmptyString(), false, true);
     NS_WARNING("Reset the call state due to call transition ends abnormally");
   }
 

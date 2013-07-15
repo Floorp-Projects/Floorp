@@ -243,8 +243,14 @@ private:
      * will return false and this ContentParent will not be returned
      * by the Get*() funtions.  However, the shutdown sequence itself
      * may be asynchronous.
+     *
+     * If aFromActorDestroyed is true and this is the first call to
+     * ShutDownProcess, then we'll close our channel using CloseWithError()
+     * rather than vanilla Close().  CloseWithError() indicates to IPC that this
+     * is an abnormal shutdown (e.g. a crash); when the process shuts down
+     * cleanly, ShutDownProcess runs before ActorDestroyed.
      */
-    void ShutDownProcess();
+    void ShutDownProcess(bool aFromActorDestroyed);
 
     PCompositorParent*
     AllocPCompositorParent(mozilla::ipc::Transport* aTransport,

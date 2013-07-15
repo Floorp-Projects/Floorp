@@ -187,7 +187,7 @@ class BaseBootstrapper(object):
 
         info = self.check_output([hg, '--version']).splitlines()[0]
 
-        match = re.search('version ([^\)]+)', info)
+        match = re.search('version ([^\+\)]+)', info)
         if not match:
             print('ERROR: Unable to identify Mercurial version.')
             return True, False, None
