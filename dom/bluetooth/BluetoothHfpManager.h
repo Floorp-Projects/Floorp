@@ -86,8 +86,8 @@ public:
    * @param aSend A boolean indicates whether we need to notify headset or not
    */
   void HandleCallStateChanged(uint32_t aCallIndex, uint16_t aCallState,
-                              const nsAString& aNumber, const bool aIsOutgoing,
-                              bool aSend);
+                              const nsAString& aError, const nsAString& aNumber,
+                              const bool aIsOutgoing, bool aSend);
 
   bool IsConnected();
   bool IsScoConnected();
