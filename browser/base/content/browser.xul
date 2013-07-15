@@ -35,7 +35,6 @@
         titlemodifier=""
         titlemodifier_normal=""
         titlemodifier_privatebrowsing="&mainWindow.titlePrivateBrowsingSuffix;"
-        chromemargin="0,-1,-1,-1"
 #else
         title_privatebrowsing="&mainWindow.titlemodifier;@PRE_RELEASE_SUFFIX@ &mainWindow.titlePrivateBrowsingSuffix;"
         titlemodifier="&mainWindow.titlemodifier;@PRE_RELEASE_SUFFIX@"
@@ -43,6 +42,11 @@
         titlemodifier_privatebrowsing="&mainWindow.titlemodifier;@PRE_RELEASE_SUFFIX@ &mainWindow.titlePrivateBrowsingSuffix;"
 #endif
 #ifdef CAN_DRAW_IN_TITLEBAR
+#ifdef XP_WIN
+        chromemargin="0,2,2,2"
+#else
+        chromemargin="0,-1,-1,-1"
+#endif
         tabsintitlebar="true"
 #endif
         titlemenuseparator="&mainWindow.titlemodifiermenuseparator;"
