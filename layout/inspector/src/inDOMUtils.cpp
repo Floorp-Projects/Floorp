@@ -34,6 +34,8 @@
 #include "nsRuleProcessorData.h"
 #include "nsCSSRuleProcessor.h"
 #include "mozilla/dom/InspectorUtilsBinding.h"
+#include "nsCSSProps.h"
+#include "nsColor.h"
 
 using namespace mozilla;
 using namespace mozilla::css;
@@ -419,6 +421,78 @@ inDOMUtils::GetCSSPropertyNames(uint32_t aFlags, uint32_t* aCount,
   *aCount = propCount;
   *aProps = props;
 
+  return NS_OK;
+}
+
+static void GetKeywordsForProperty(const nsCSSProperty aProperty,
+                                   nsTArray<nsString>& aArray)
+{
+  if (nsCSSProps::IsShorthand(aProperty)) {
+    // Shorthand props have no keywords.
+    return;
+  }
+  const int32_t *keywordTable = nsCSSProps::kKeywordTableTable[aProperty];
+  if (keywordTable) {
+    size_t i = 0;
+    while (nsCSSKeyword(keywordTable[i]) != eCSSKeyword_UNKNOWN) {
+      nsCSSKeyword word = nsCSSKeyword(keywordTable[i]);
+      CopyASCIItoUTF16(nsCSSKeywords::GetStringValue(word),
+          *aArray.AppendElement());
+      // Increment counter by 2, because in this table every second
+      // element is a nsCSSKeyword.
+      i += 2;
+    }
+  }
+}
+
+static void GetColorsForProperty(const nsCSSProperty propertyID,
+                                 nsTArray<nsString>& aArray)
+{
+  uint32_t propertyParserVariant = nsCSSProps::ParserVariant(propertyID);
+  if (propertyParserVariant & VARIANT_COLOR) {
+    size_t size;
+    const char * const *allColorNames = NS_AllColorNames(&size);
+    for (size_t i = 0; i < size; i++) {
+      CopyASCIItoUTF16(allColorNames[i], *aArray.AppendElement());
+    }
+  }
+  return;
+}
+
+NS_IMETHODIMP
+inDOMUtils::GetCSSValuesForProperty(const nsAString& aProperty,
+                                    uint32_t* aLength,
+                                    PRUnichar*** aValues)
+{
+  nsCSSProperty propertyID = nsCSSProps::LookupProperty(aProperty,
+                                                        nsCSSProps::eEnabled);
+  if (propertyID == eCSSProperty_UNKNOWN) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsTArray<nsString> array;
+  // All CSS properties take initial and inherit.
+  array.AppendElement(NS_LITERAL_STRING("-moz-initial"));
+  array.AppendElement(NS_LITERAL_STRING("inherit"));
+  if (!nsCSSProps::IsShorthand(propertyID)) {
+    // Property is longhand.
+    GetKeywordsForProperty(propertyID, array);
+    GetColorsForProperty(propertyID, array);
+  } else {
+    // Property is shorthand.
+    CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(subproperty, propertyID) {
+      GetKeywordsForProperty(*subproperty, array);
+      GetColorsForProperty(*subproperty, array);
+    }
+  }
+
+  *aLength = array.Length();
+  PRUnichar** ret =
+    static_cast<PRUnichar**>(NS_Alloc(*aLength * sizeof(PRUnichar*)));
+  for (uint32_t i = 0; i < *aLength; ++i) {
+    ret[i] = ToNewUnicode(array[i]);
+  }
+  *aValues = ret;
   return NS_OK;
 }
 
