@@ -90,6 +90,18 @@
     border-color: hsla(206,100%,60%,.65) hsla(206,100%,55%,.65) hsla(206,100%,50%,.65);
   }
 
+  #sidebar-header {
+    -moz-appearance: none;
+    color: black;
+    background-color: #EEF3FA;
+    border-bottom: none;
+    text-shadow: none;
+  }
+
+  #sidebar-title {
+    font-weight: bold;
+  }
+
   .sidebar-splitter {
     border: 0;
     -moz-border-end: 1px solid #A9B7C9;
