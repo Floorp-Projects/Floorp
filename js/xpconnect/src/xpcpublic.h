@@ -413,6 +413,12 @@ GetNativeForGlobal(JSObject *global);
  */
 JSObject *
 GetJunkScope();
+
+// Error reporter used when there is no associated DOM window on to which to
+// report errors and warnings.
+NS_EXPORT_(void)
+SystemErrorReporter(JSContext *cx, const char *message, JSErrorReport *rep);
+
 } // namespace xpc
 
 namespace mozilla {
