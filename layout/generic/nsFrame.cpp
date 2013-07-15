@@ -698,7 +698,7 @@ nsFrame::GetOffsets(int32_t &aStart, int32_t &aEnd) const
 /* virtual */ void
 nsFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
 {
-  if (IsSVGText()) {
+  if (IsSVGText() && !(mState & NS_FRAME_FIRST_REFLOW)) {
     nsSVGTextFrame2* svgTextFrame = static_cast<nsSVGTextFrame2*>(
         nsLayoutUtils::GetClosestFrameOfType(this, nsGkAtoms::svgTextFrame2));
     // Just as in nsSVGTextFrame2::DidSetStyleContext, we need to ensure that
