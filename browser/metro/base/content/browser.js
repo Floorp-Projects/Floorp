@@ -574,6 +574,7 @@ var Browser = {
     } else {
       // Update all of our UI to reflect the new tab's location
       BrowserUI.updateURI();
+      BrowserUI.update();
 
       let event = document.createEvent("Events");
       event.initEvent("TabSelect", true, false);
@@ -1578,7 +1579,7 @@ Tab.prototype = {
 
     // Ensure that history is initialized
     history.QueryInterface(Ci.nsISHistoryInternal);
-    
+
     for (let i = 0, length = otherHistory.index; i <= length; i++)
       history.addEntry(otherHistory.getEntryAtIndex(i, false), true);
   },
