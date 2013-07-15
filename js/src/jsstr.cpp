@@ -3771,7 +3771,7 @@ js::ToStringSlow(ExclusiveContext *cx, typename MaybeRooted<Value, allowGC>::Han
 
     Value v = arg;
     if (!v.isPrimitive()) {
-        if (!allowGC)
+        if (!cx->shouldBeJSContext() || !allowGC)
             return NULL;
         RootedValue v2(cx, v);
         if (!ToPrimitive(cx->asJSContext(), JSTYPE_STRING, &v2))

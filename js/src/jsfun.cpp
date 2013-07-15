@@ -517,7 +517,7 @@ FindBody(JSContext *cx, HandleFunction fun, StableCharPtr chars, size_t length,
     CompileOptions options(cx);
     options.setFileAndLine("internal-findBody", 0)
            .setVersion(fun->nonLazyScript()->getVersion());
-    AutoKeepAtoms keepAtoms(cx->runtime());
+    AutoKeepAtoms keepAtoms(cx->perThreadData);
     TokenStream ts(cx, options, chars.get(), length, NULL, keepAtoms);
     int nest = 0;
     bool onward = true;
@@ -1337,7 +1337,7 @@ js::Function(JSContext *cx, unsigned argc, Value *vp)
         return false;
     }
 
-    AutoKeepAtoms keepAtoms(cx->runtime());
+    AutoKeepAtoms keepAtoms(cx->perThreadData);
     AutoNameVector formals(cx);
 
     bool hasRest = false;

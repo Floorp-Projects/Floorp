@@ -451,7 +451,8 @@ JSObject::addProperty(ExclusiveContext *cx, HandleObject obj, HandleId id,
     if (!JSObject::isExtensible(cx, obj, &extensible))
         return NULL;
     if (!extensible) {
-        obj->reportNotExtensible(cx->asJSContext());
+        if (cx->isJSContext())
+            obj->reportNotExtensible(cx->asJSContext());
         return NULL;
     }
 
@@ -577,8 +578,10 @@ CheckCanChangeAttrs(ExclusiveContext *cx, JSObject *obj, Shape *shape, unsigned 
 
     /* Reject attempts to remove a slot from the permanent data property. */
     if (shape->isDataDescriptor() && shape->hasSlot() &&
-        (*attrsp & (JSPROP_GETTER | JSPROP_SETTER | JSPROP_SHARED))) {
-        obj->reportNotConfigurable(cx->asJSContext(), shape->propid());
+        (*attrsp & (JSPROP_GETTER | JSPROP_SETTER | JSPROP_SHARED)))
+    {
+        if (cx->isJSContext())
+            obj->reportNotConfigurable(cx->asJSContext(), shape->propid());
         return false;
     }
 
@@ -618,7 +621,8 @@ JSObject::putProperty(ExclusiveContext *cx, HandleObject obj, HandleId id,
         if (!JSObject::isExtensible(cx, obj, &extensible))
             return NULL;
         if (!extensible) {
-            obj->reportNotExtensible(cx->asJSContext());
+            if (cx->isJSContext())
+                obj->reportNotExtensible(cx->asJSContext());
             return NULL;
         }
 
@@ -740,7 +744,9 @@ JSObject::putProperty(ExclusiveContext *cx, HandleObject obj, HandleId id,
     if (hadSlot && !shape->hasSlot()) {
         if (oldSlot < obj->slotSpan())
             obj->freeSlot(oldSlot);
-        ++cx->asJSContext()->runtime()->propertyRemovals;
+        /* Note: The optimization based on propertyRemovals is only relevant to the main thread. */
+        if (cx->isJSContext())
+            ++cx->asJSContext()->runtime()->propertyRemovals;
     }
 
     obj->checkShapeConsistency();
@@ -844,7 +850,8 @@ JSObject::removeProperty(ExclusiveContext *cx, jsid id_)
     /* If shape has a slot, free its slot number. */
     if (shape->hasSlot()) {
         self->freeSlot(shape->slot());
-        ++cx->asJSContext()->runtime()->propertyRemovals;
+        if (cx->isJSContext())
+            ++cx->asJSContext()->runtime()->propertyRemovals;
     }
 
     /*

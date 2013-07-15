@@ -286,25 +286,15 @@ TokenStream::TokenStream(ExclusiveContext *cx, const CompileOptions &options,
     linebaseSkip(cx, &linebase),
     prevLinebaseSkip(cx, &prevLinebase)
 {
+    // The caller must ensure that a reference is held on the supplied principals
+    // throughout compilation.
+    JS_ASSERT_IF(originPrincipals, originPrincipals->refcount);
+
     // Column numbers are computed as offsets from the current line's base, so the
     // initial line's base must be included in the buffer. linebase and userbuf
     // were adjusted above, and if we are starting tokenization part way through
     // this line then adjust the next character.
     userbuf.setAddressOfNextRawChar(base);
-
-    JSContext *ncx = cx->asJSContext();
-    {
-        if (originPrincipals)
-            JS_HoldPrincipals(originPrincipals);
-
-        JSSourceHandler listener = ncx->runtime()->debugHooks.sourceHandler;
-        void *listenerData = ncx->runtime()->debugHooks.sourceHandlerData;
-
-        if (listener) {
-            void *listenerTSData;
-            listener(options.filename, options.lineno, base, length, &listenerTSData, listenerData);
-        }
-    }
 
     /*
      * This table holds all the token kinds that satisfy these properties:
@@ -367,8 +357,8 @@ TokenStream::~TokenStream()
 {
     if (sourceMap)
         js_free(sourceMap);
-    if (originPrincipals)
-        JS_DropPrincipals(cx->asJSContext()->runtime(), originPrincipals);
+
+    JS_ASSERT_IF(originPrincipals, originPrincipals->refcount);
 }
 
 /* Use the fastest available getc. */
