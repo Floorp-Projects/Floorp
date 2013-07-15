@@ -83,6 +83,7 @@ var BrowserUI = {
   get _forward() { return document.getElementById("cmd_forward"); },
 
   lastKnownGoodURL: "", // used when the user wants to escape unfinished url entry
+  ready: false, // used for tests to determine when delayed initialization is done
 
   init: function() {
     // start the debugger now so we can use it on the startup code as well
@@ -134,6 +135,7 @@ var BrowserUI = {
         let event = document.createEvent("Events");
         event.initEvent("UIReadyDelayed", true, false);
         window.dispatchEvent(event);
+        BrowserUI.ready = true;
       }, 0);
     });
 
