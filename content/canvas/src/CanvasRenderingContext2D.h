@@ -548,11 +548,6 @@ protected:
                  double dx, double dy, double dw, double dh, 
                  uint8_t optional_argc, mozilla::ErrorResult& error);
 
-  void DrawDirectlyToCanvas(const nsLayoutUtils::DirectDrawInfo& image,
-                            mozilla::gfx::Rect* bounds, double dx, double dy,
-                            double dw, double dh, double sx, double sy,
-                            double sw, double sh, gfxIntSize imgSize);
-
   nsString& GetFont()
   {
     /* will initilize the value if not set, else does nothing */
