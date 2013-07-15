@@ -211,9 +211,6 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback {
     }
 
     public int GetRotateAmount() {
-        android.hardware.Camera.CameraInfo info =
-            new android.hardware.Camera.CameraInfo();
-        android.hardware.Camera.getCameraInfo(cameraId, info);
         int rotation = GeckoAppShell.getGeckoInterface().getActivity().getWindowManager().getDefaultDisplay().getRotation();
         int degrees = 0;
         switch (rotation) {
@@ -222,15 +219,24 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback {
             case Surface.ROTATION_180: degrees = 180; break;
             case Surface.ROTATION_270: degrees = 270; break;
         }
-
-        int result;
-        if (info.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
-            result = (info.orientation + degrees) % 360;
-        } else {  // back-facing
-            result = (info.orientation - degrees + 360) % 360;
+        if(android.os.Build.VERSION.SDK_INT>8) {
+            android.hardware.Camera.CameraInfo info =
+                new android.hardware.Camera.CameraInfo();
+            android.hardware.Camera.getCameraInfo(cameraId, info);
+            int result;
+            if (info.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
+                result = (info.orientation + degrees) % 360;
+            } else {  // back-facing
+                result = (info.orientation - degrees + 360) % 360;
+            }
+            return result;
+        } else {
+            // Assume 90deg orientation for Froyo devices.
+            // Only back-facing cameras are supported in Froyo.
+            int orientation = 90;
+            int result = (orientation - degrees + 360) % 360;
+            return result;
         }
-
-        return result;
     }
 
     private int tryStartCapture(int width, int height, int frameRate) {
