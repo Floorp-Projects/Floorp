@@ -34,15 +34,6 @@ this.SystemMessagePermissionsTable = {
   "bluetooth-dialer-command": {
     "telephony": []
   },
-  "bluetooth-requestconfirmation": {
-    "bluetooth": []
-  },
-  "bluetooth-requestpasskey": {
-    "bluetooth": []
-  },
-  "bluetooth-requestpincode": {
-    "bluetooth": []
-  },
   "bluetooth-authorize": {
     "bluetooth": []
   },
@@ -50,6 +41,9 @@ this.SystemMessagePermissionsTable = {
     "bluetooth": []
   },
   "bluetooth-pairedstatuschanged": {
+    "bluetooth": []
+  },
+  "bluetooth-a2dp-status-changed": {
     "bluetooth": []
   },
   "bluetooth-hfp-status-changed": {
