@@ -34,16 +34,16 @@
 #include "frontend/SourceNotes.h"
 #include "js/CharacterEncoding.h"
 #include "vm/Shape.h"
+#include "vm/ScopeObject.h"
 #include "vm/StringBuffer.h"
 
 #include "jscntxtinlines.h"
 #include "jscompartmentinlines.h"
+#include "jsinferinlines.h"
 #include "jsopcodeinlines.h"
+#include "jsscriptinlines.h"
 
 #include "jsautooplen.h"
-
-#include "vm/RegExpObject-inl.h"
-#include "vm/ScopeObject-inl.h"
 
 using namespace js;
 using namespace js::gc;

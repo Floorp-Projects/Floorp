@@ -243,7 +243,7 @@ function moveCaret(aMessage) {
 function presentCaretChange(aText, aOldOffset, aNewOffset) {
   if (aOldOffset !== aNewOffset) {
     let msg = Presentation.textSelectionChanged(aText, aNewOffset, aNewOffset,
-                                                aOldOffset, aOldOffset);
+                                                aOldOffset, aOldOffset, true);
     sendAsyncMessage('AccessFu:Present', msg);
   }
 }

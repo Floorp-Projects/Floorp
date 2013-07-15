@@ -284,6 +284,19 @@ protected:
   }
 
   /**
+   * Return true if the given offset points to terminal empty line if any.
+   */
+  bool IsEmptyLastLineOffset(int32_t aOffset)
+  {
+    if (aOffset != static_cast<int32_t>(CharacterCount()))
+      return false;
+
+    nsAutoString lastChar;
+    GetText(aOffset -1, -1, lastChar);
+    return lastChar.EqualsLiteral("\n");
+  }
+
+  /**
    * Return an offset of the found word boundary.
    */
   int32_t FindWordBoundary(int32_t aOffset, nsDirection aDirection,

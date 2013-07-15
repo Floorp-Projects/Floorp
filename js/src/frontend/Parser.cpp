@@ -43,7 +43,6 @@
 
 #include "frontend/ParseMaps-inl.h"
 #include "frontend/ParseNode-inl.h"
-#include "frontend/SharedContext-inl.h"
 
 #include "vm/NumericConversions.h"
 
@@ -836,18 +835,28 @@ Parser<ParseHandler>::checkStrictBinding(HandlePropertyName name, Node pn)
 template <>
 ParseNode *
 Parser<FullParseHandler>::standaloneFunctionBody(HandleFunction fun, const AutoNameVector &formals,
-                                                 HandleScript script, Node fn, FunctionBox **funbox,
                                                  bool strict, bool *becameStrict)
 {
     if (becameStrict)
         *becameStrict = false;
 
-    *funbox = newFunctionBox(fun, /* outerpc = */ NULL, strict);
+    Node fn = handler.newFunctionDefinition();
+    if (!fn)
+        return null();
+
+    ParseNode *argsbody = ListNode::create(PNK_ARGSBODY, &handler);
+    if (!argsbody)
+        return null();
+    argsbody->setOp(JSOP_NOP);
+    argsbody->makeEmpty();
+    fn->pn_body = argsbody;
+
+    FunctionBox *funbox = newFunctionBox(fun, /* outerpc = */ NULL, strict);
     if (!funbox)
         return null();
-    handler.setFunctionBox(fn, *funbox);
+    handler.setFunctionBox(fn, funbox);
 
-    ParseContext<FullParseHandler> funpc(this, pc, *funbox, /* staticLevel = */ 0, /* bodyid = */ 0);
+    ParseContext<FullParseHandler> funpc(this, pc, funbox, /* staticLevel = */ 0, /* bodyid = */ 0);
     if (!funpc.init())
         return null();
 
@@ -871,18 +880,15 @@ Parser<FullParseHandler>::standaloneFunctionBody(HandleFunction fun, const AutoN
     if (!FoldConstants(context, &pn, this))
         return null();
 
-    InternalHandle<Bindings*> scriptBindings(script, &script->bindings);
-    if (!funpc.generateFunctionBindings(context, alloc, scriptBindings))
-        return null();
-
-    // Also populate the internal bindings of the function box, so that
-    // heavyweight tests while emitting bytecode work.
     InternalHandle<Bindings*> funboxBindings =
-        InternalHandle<Bindings*>::fromMarkedLocation(&(*funbox)->bindings);
+        InternalHandle<Bindings*>::fromMarkedLocation(&funbox->bindings);
     if (!funpc.generateFunctionBindings(context, alloc, funboxBindings))
         return null();
 
-    return pn;
+    JS_ASSERT(fn->pn_body->isKind(PNK_ARGSBODY));
+    fn->pn_body->append(pn);
+    fn->pn_body->pn_pos = pn->pn_pos;
+    return fn;
 }
 
 template <>
@@ -1925,7 +1931,6 @@ Parser<ParseHandler>::functionDef(HandlePropertyName funName, const TokenStream:
     // If the outer scope is strict, immediately parse the function in strict
     // mode. Otherwise, we parse it normally. If we see a "use strict"
     // directive, we backup and reparse it as strict.
-    handler.setFunctionBody(pn, null());
     bool initiallyStrict = pc->sc->strict;
     bool becameStrict;
     if (!functionArgsAndBody(pn, fun, funName, startOffset, type, kind, initiallyStrict,
@@ -4478,6 +4483,8 @@ template <>
 ParseNode *
 Parser<FullParseHandler>::withStatement()
 {
+    // test262/ch12/12.10/12.10-0-1.js fails if we try to parse with-statements
+    // in syntax-parse mode. See bug 892583.
     if (handler.syntaxParser) {
         handler.disableSyntaxParser();
         abortedSyntaxParse = true;
@@ -4775,34 +4782,28 @@ template <typename ParseHandler>
 typename ParseHandler::Node
 Parser<ParseHandler>::statement(bool canHaveDirectives)
 {
-    Node pn;
-
     JS_CHECK_RECURSION(context, return null());
 
-    switch (tokenStream.getToken(TSF_OPERAND)) {
+    switch (TokenKind tt = tokenStream.getToken(TSF_OPERAND)) {
       case TOK_LC:
         return blockStatement();
-
-      case TOK_VAR:
-        pn = variables(PNK_VAR);
-        if (!pn)
-            return null();
-
-        /* Tell js_EmitTree to generate a final POP. */
-        handler.setListFlag(pn, PNX_POPVAR);
-        break;
 
       case TOK_CONST:
         if (!abortIfSyntaxParser())
             return null();
-
-        pn = variables(PNK_CONST);
+        // FALL THROUGH
+      case TOK_VAR: {
+        Node pn = variables(tt == TOK_CONST ? PNK_CONST : PNK_VAR);
         if (!pn)
             return null();
 
-        /* Tell js_EmitTree to generate a final POP. */
+        // Tell js_EmitTree to generate a final POP.
         handler.setListFlag(pn, PNX_POPVAR);
-        break;
+
+        if (!MatchOrInsertSemicolon(tokenStream))
+            return null();
+        return pn;
+      }
 
 #if JS_HAS_BLOCK_SCOPE
       case TOK_LET:
@@ -4870,50 +4871,29 @@ Parser<ParseHandler>::statement(bool canHaveDirectives)
       default:
         return expressionStatement();
     }
-
-    /* Check termination of this primitive statement. */
-    return MatchOrInsertSemicolon(tokenStream) ? pn : null();
 }
 
-template <>
-ParseNode *
-Parser<FullParseHandler>::expr()
-{
-    ParseNode *pn = assignExpr();
-    if (pn && tokenStream.matchToken(TOK_COMMA)) {
-        ParseNode *pn2 = ListNode::create(PNK_COMMA, &handler);
-        if (!pn2)
-            return null();
-        pn2->pn_pos.begin = pn->pn_pos.begin;
-        pn2->initList(pn);
-        pn = pn2;
-        do {
-            pn2 = pn->last();
-            if (pn2->isKind(PNK_YIELD) && !pn2->isInParens()) {
-                report(ParseError, false, pn2, JSMSG_BAD_GENERATOR_SYNTAX, js_yield_str);
-                return null();
-            }
-            pn2 = assignExpr();
-            if (!pn2)
-                return null();
-            pn->append(pn2);
-        } while (tokenStream.matchToken(TOK_COMMA));
-        pn->pn_pos.end = pn->last()->pn_pos.end;
-    }
-    return pn;
-}
-
-template <>
-SyntaxParseHandler::Node
-Parser<SyntaxParseHandler>::expr()
+template <typename ParseHandler>
+typename ParseHandler::Node
+Parser<ParseHandler>::expr()
 {
     Node pn = assignExpr();
     if (pn && tokenStream.matchToken(TOK_COMMA)) {
+        Node seq = handler.newList(PNK_COMMA, pn);
+        if (!seq)
+            return null();
         do {
-            if (!assignExpr())
+            if (handler.isUnparenthesizedYield(pn)) {
+                report(ParseError, false, pn, JSMSG_BAD_GENERATOR_SYNTAX, js_yield_str);
                 return null();
+            }
+
+            pn = assignExpr();
+            if (!pn)
+                return null();
+            handler.addList(seq, pn);
         } while (tokenStream.matchToken(TOK_COMMA));
-        return SyntaxParseHandler::NodeGeneric;
+        return seq;
     }
     return pn;
 }

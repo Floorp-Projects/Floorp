@@ -287,9 +287,10 @@ DrawTargetCG::DrawSurface(SourceSurface *aSurface,
   CGRect flippedRect = CGRectMake(aDest.x, -(aDest.y + aDest.height),
                                   aDest.width, aDest.height);
 
-  //XXX: we should implement this for patterns too
   if (aSurfOptions.mFilter == FILTER_POINT)
     CGContextSetInterpolationQuality(cg, kCGInterpolationNone);
+  else
+    CGContextSetInterpolationQuality(cg, kCGInterpolationLow);
 
   CGContextDrawImage(cg, flippedRect, image);
 
@@ -298,40 +299,6 @@ DrawTargetCG::DrawSurface(SourceSurface *aSurface,
   CGContextRestoreGState(mCg);
 
   CGImageRelease(subimage);
-}
-
-void
-DrawTargetCG::MaskSurface(const Pattern &aSource,
-                          SourceSurface *aMask,
-                          Point aOffset,
-                          const DrawOptions &aDrawOptions)
-{
-  MarkChanged();
-
-  CGImageRef image;
-  CGContextSaveGState(mCg);
-
-  CGContextSetBlendMode(mCg, ToBlendMode(aDrawOptions.mCompositionOp));
-  UnboundnessFixer fixer;
-  CGContextRef cg = fixer.Check(mCg, aDrawOptions.mCompositionOp);
-  CGContextSetAlpha(cg, aDrawOptions.mAlpha);
-
-  CGContextConcatCTM(cg, GfxMatrixToCGAffineTransform(mTransform));
-  image = GetImageFromSourceSurface(aMask);
-
-  CGContextScaleCTM(cg, 1, -1);
-
-  IntSize size = aMask->GetSize();
-  CGContextClipToMask(cg, CGRectMake(aOffset.x, -(aOffset.y + size.height), size.width, size.height), image);
-
-  CGContextScaleCTM(cg, 1, -1);
-
-  FillRect(Rect(aOffset.x, aOffset.y, size.width, size.height), aSource, aDrawOptions);
-
-  fixer.Fix(mCg);
-
-  CGContextRestoreGState(mCg);
-
 }
 
 static CGColorRef ColorToCGColor(CGColorSpaceRef aColorSpace, const Color& aColor)
@@ -517,6 +484,11 @@ SetFillFromPattern(CGContextRef cg, CGColorSpaceRef aColorSpace, const Pattern &
     CGColorSpaceRelease(patternSpace);
 
     CGPatternRef pattern = CreateCGPattern(aPattern, CGContextGetCTM(cg));
+    const SurfacePattern& pat = static_cast<const SurfacePattern&>(aPattern);
+    if (pat.mFilter == FILTER_POINT)
+      CGContextSetInterpolationQuality(cg, kCGInterpolationNone);
+    else
+      CGContextSetInterpolationQuality(cg, kCGInterpolationLow);
     CGFloat alpha = 1.;
     CGContextSetFillPattern(cg, pattern, &alpha);
     CGPatternRelease(pattern);
@@ -540,12 +512,59 @@ SetStrokeFromPattern(CGContextRef cg, CGColorSpaceRef aColorSpace, const Pattern
     CGColorSpaceRelease(patternSpace);
 
     CGPatternRef pattern = CreateCGPattern(aPattern, CGContextGetCTM(cg));
+    const SurfacePattern& pat = static_cast<const SurfacePattern&>(aPattern);
+    if (pat.mFilter == FILTER_POINT)
+      CGContextSetInterpolationQuality(cg, kCGInterpolationNone);
+    else
+      CGContextSetInterpolationQuality(cg, kCGInterpolationLow);
     CGFloat alpha = 1.;
     CGContextSetStrokePattern(cg, pattern, &alpha);
     CGPatternRelease(pattern);
   }
 
 }
+
+void
+DrawTargetCG::MaskSurface(const Pattern &aSource,
+                          SourceSurface *aMask,
+                          Point aOffset,
+                          const DrawOptions &aDrawOptions)
+{
+  MarkChanged();
+
+  CGImageRef image;
+  CGContextSaveGState(mCg);
+
+  CGContextSetBlendMode(mCg, ToBlendMode(aDrawOptions.mCompositionOp));
+  UnboundnessFixer fixer;
+  CGContextRef cg = fixer.Check(mCg, aDrawOptions.mCompositionOp);
+  CGContextSetAlpha(cg, aDrawOptions.mAlpha);
+
+  CGContextConcatCTM(cg, GfxMatrixToCGAffineTransform(mTransform));
+  image = GetImageFromSourceSurface(aMask);
+
+  // use a negative-y so that the mask image draws right ways up
+  CGContextScaleCTM(cg, 1, -1);
+
+  IntSize size = aMask->GetSize();
+
+  CGContextClipToMask(cg, CGRectMake(aOffset.x, -(aOffset.y + size.height), size.width, size.height), image);
+
+  CGContextScaleCTM(cg, 1, -1);
+  if (isGradient(aSource)) {
+    // we shouldn't need to clip to an additional rectangle
+    // as the cliping to the mask should be sufficient.
+    DrawGradient(cg, aSource);
+  } else {
+    SetFillFromPattern(cg, mColorSpace, aSource);
+    CGContextFillRect(cg, CGRectMake(aOffset.x, aOffset.y, size.width, size.height));
+  }
+
+  fixer.Fix(mCg);
+
+  CGContextRestoreGState(mCg);
+}
+
 
 
 void
@@ -627,22 +646,7 @@ DrawTargetCG::StrokeRect(const Rect &aRect,
 
   CGContextConcatCTM(cg, GfxMatrixToCGAffineTransform(mTransform));
 
-  // we don't need to set all of the stroke state because
-  // it doesn't apply when stroking rects
-  switch (aStrokeOptions.mLineJoin)
-  {
-    case JOIN_BEVEL:
-      CGContextSetLineJoin(cg, kCGLineJoinBevel);
-      break;
-    case JOIN_ROUND:
-      CGContextSetLineJoin(cg, kCGLineJoinRound);
-      break;
-    case JOIN_MITER:
-    case JOIN_MITER_OR_BEVEL:
-      CGContextSetLineJoin(cg, kCGLineJoinMiter);
-      break;
-  }
-  CGContextSetLineWidth(cg, aStrokeOptions.mLineWidth);
+  SetStrokeOptions(cg, aStrokeOptions);
 
   if (isGradient(aPattern)) {
     // There's no CGContextClipStrokeRect so we do it by hand
@@ -1026,6 +1030,7 @@ DrawTargetCG::Init(CGContextRef cgContext, const IntSize &aSize)
   mSize = aSize;
 
   mCg = cgContext;
+  CGContextRetain(mCg);
 
   mData = nullptr;
 
@@ -1189,6 +1194,8 @@ BorrowedCGContext::BorrowCGContextFromDrawTarget(DrawTarget *aDT)
 
     // save the state to make it easier for callers to avoid mucking with things
     CGContextSaveGState(cg);
+
+    CGContextConcatCTM(cg, GfxMatrixToCGAffineTransform(cgDT->mTransform));
 
     return cg;
   }

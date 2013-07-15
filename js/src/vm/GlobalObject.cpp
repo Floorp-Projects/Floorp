@@ -19,13 +19,13 @@
 #include "builtin/MapObject.h"
 #include "builtin/Object.h"
 #include "builtin/RegExp.h"
+#include "vm/RegExpStatics.h"
 
 #include "jscompartmentinlines.h"
 #include "jsfuninlines.h"
 #include "jsobjinlines.h"
 
 #include "vm/GlobalObject-inl.h"
-#include "vm/RegExpStatics-inl.h"
 
 using namespace js;
 

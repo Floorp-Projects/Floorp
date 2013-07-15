@@ -2105,7 +2105,9 @@ nsChildView::MaybeDrawResizeIndicator(GLManager* aManager, const nsIntRect& aRec
   nsIntSize size = mResizeIndicatorRect.Size();
   mResizerImage->UpdateIfNeeded(size, nsIntRegion(), ^(gfx::DrawTarget* drawTarget, const nsIntRegion& updateRegion) {
     ClearRegion(drawTarget, updateRegion);
-    DrawResizer(static_cast<CGContextRef>(drawTarget->GetNativeSurface(gfx::NATIVE_SURFACE_CGCONTEXT)));
+    gfx::BorrowedCGContext borrow(drawTarget);
+    DrawResizer(borrow.cg);
+    borrow.Finish();
   });
 
   mResizerImage->Draw(aManager, mResizeIndicatorRect.TopLeft());
@@ -2165,9 +2167,8 @@ nsChildView::UpdateTitlebarImageBuffer()
 
   ClearRegion(mTitlebarImageBuffer, dirtyTitlebarRegion);
 
-  CGContextRef ctx =
-    static_cast<CGContextRef>(mTitlebarImageBuffer->GetNativeSurface(gfx::NATIVE_SURFACE_CGCONTEXT));
-  CGContextSaveGState(ctx);
+  gfx::BorrowedCGContext borrow(mTitlebarImageBuffer);
+  CGContextRef ctx = borrow.cg;
 
   double scale = BackingScaleFactor();
   CGContextScaleCTM(ctx, scale, scale);
@@ -2233,7 +2234,7 @@ nsChildView::UpdateTitlebarImageBuffer()
                         DevPixelsToCocoaPoints(1));
 
   [NSGraphicsContext setCurrentContext:oldContext];
-  CGContextRestoreGState(ctx);
+  borrow.Finish();
 
   mUpdatedTitlebarRegion.Or(mUpdatedTitlebarRegion, dirtyTitlebarRegion);
 }
@@ -2290,8 +2291,9 @@ nsChildView::MaybeDrawRoundedCorners(GLManager* aManager, const nsIntRect& aRect
   nsIntSize size(mDevPixelCornerRadius, mDevPixelCornerRadius);
   mCornerMaskImage->UpdateIfNeeded(size, nsIntRegion(), ^(gfx::DrawTarget* drawTarget, const nsIntRegion& updateRegion) {
     ClearRegion(drawTarget, updateRegion);
-    DrawTopLeftCornerMask(static_cast<CGContextRef>(drawTarget->GetNativeSurface(gfx::NATIVE_SURFACE_CGCONTEXT)),
-                          mDevPixelCornerRadius);
+    gfx::BorrowedCGContext borrow(drawTarget);
+    DrawTopLeftCornerMask(borrow.cg, mDevPixelCornerRadius);
+    borrow.Finish();
   });
 
   // Use operator destination in: multiply all 4 channels with source alpha.

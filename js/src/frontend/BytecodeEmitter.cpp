@@ -38,7 +38,6 @@
 
 #include "frontend/ParseMaps-inl.h"
 #include "frontend/ParseNode-inl.h"
-#include "frontend/SharedContext-inl.h"
 
 using namespace js;
 using namespace js::gc;

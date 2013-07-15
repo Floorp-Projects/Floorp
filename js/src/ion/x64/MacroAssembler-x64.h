@@ -1077,6 +1077,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     void callWithABI(Address fun, Result result = GENERAL);
 
     void handleFailureWithHandler(void *handler);
+    void handleFailureWithHandlerTail();
 
     void makeFrameDescriptor(Register frameSizeReg, FrameType type) {
         shlq(Imm32(FRAMESIZE_SHIFT), frameSizeReg);
