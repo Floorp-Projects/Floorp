@@ -33,17 +33,17 @@
                                     rgba(229,114,0,0));
 %else
 %if MOZ_UPDATE_CHANNEL == aurora
-  color: hsl(214,90%,23%);
-  background-image: linear-gradient(hsla(208,99%,37%,0),
-                                    hsla(214,90%,23%,.5) 35%,
-                                    hsla(214,90%,23%,.5) 65%,
-                                    hsla(214,90%,23%,0));
+  color: rgb(51,30,84);
+  background-image: linear-gradient(rgba(51,30,84,0),
+                                    rgba(51,30,84,.5) 35%,
+                                    rgba(51,30,84,.5) 65%,
+                                    rgba(51,30,84,0));
 %else
-  color: hsl(211,33%,32%);
-  background-image: linear-gradient(hsla(211,33%,32%,0),
-                                    hsla(211,33%,32%,.5) 35%,
-                                    hsla(211,33%,32%,.5) 65%,
-                                    hsla(211,33%,32%,0));
+  color: rgb(0,33,71);
+  background-image: linear-gradient(rgba(0,33,71,0),
+                                    rgba(0,33,71,.5) 35%,
+                                    rgba(0,33,71,.5) 65%,
+                                    rgba(0,33,71,0));
 %endif
 %endif
 }
