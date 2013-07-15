@@ -2,6 +2,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+"use strict";
 
 Cu.import("resource://gre/modules/PageThumbs.jsm");
 Cu.import("resource://gre/modules/devtools/dbg-server.jsm")
@@ -81,9 +82,9 @@ var BrowserUI = {
   get _back() { return document.getElementById("cmd_back"); },
   get _forward() { return document.getElementById("cmd_forward"); },
 
-  lastKnownGoodURL: "", //used when the user wants to escape unfinished url entry
-  init: function() {
+  lastKnownGoodURL: "", // used when the user wants to escape unfinished url entry
 
+  init: function() {
     // start the debugger now so we can use it on the startup code as well
     if (Services.prefs.getBoolPref(debugServerStateChanged)) {
       this.runDebugServer();
@@ -123,11 +124,11 @@ var BrowserUI = {
 
     // We can delay some initialization until after startup.  We wait until
     // the first page is shown, then dispatch a UIReadyDelayed event.
-    messageManager.addMessageListener("pageshow", function() {
+    messageManager.addMessageListener("pageshow", function onPageShow() {
       if (getBrowser().currentURI.spec == "about:blank")
         return;
 
-      messageManager.removeMessageListener("pageshow", arguments.callee, true);
+      messageManager.removeMessageListener("pageshow", onPageShow);
 
       setTimeout(function() {
         let event = document.createEvent("Events");
@@ -142,9 +143,9 @@ var BrowserUI = {
     });
 
     // Delay the panel UI and Sync initialization
-    window.addEventListener("UIReadyDelayed", function(aEvent) {
+    window.addEventListener("UIReadyDelayed", function delayedInit(aEvent) {
       Util.dumpLn("* delay load started...");
-      window.removeEventListener(aEvent.type, arguments.callee, false);
+      window.removeEventListener("UIReadyDelayed",  delayedInit, false);
 
       // Login Manager and Form History initialization
       Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
