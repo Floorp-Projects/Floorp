@@ -1479,6 +1479,9 @@ js::ToNumberSlow(ExclusiveContext *cx, Value v, double *out)
             break;
 
         JS_ASSERT(v.isObject());
+        if (!cx->isJSContext())
+            return false;
+
         RootedValue v2(cx, v);
         if (!ToPrimitive(cx->asJSContext(), JSTYPE_NUMBER, &v2))
             return false;

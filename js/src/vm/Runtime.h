@@ -537,7 +537,19 @@ class PerThreadData : public js::PerThreadDataFriendFields
      * extremely dangerous and should only be used when in an OOM situation or
      * in non-exposed debugging facilities.
      */
-    int32_t             suppressGC;
+    int32_t suppressGC;
+
+    /*
+     * Count of AutoKeepAtoms instances on the stack. When any instances exist,
+     * atoms in the runtime will not be collected.
+     */
+    unsigned gcKeepAtoms;
+
+    /*
+     * Count of currently active compilations. When any compilations exist,
+     * the runtime's parseMapPool will not be purged.
+     */
+    unsigned activeCompilations;
 
     PerThreadData(JSRuntime *runtime);
     ~PerThreadData();
@@ -889,7 +901,6 @@ struct JSRuntime : public JS::shadow::Runtime,
     js::gc::ChunkPool   gcChunkPool;
 
     js::RootedValueMap  gcRootsHash;
-    unsigned            gcKeepAtoms;
     volatile size_t     gcBytes;
     size_t              gcMaxBytes;
     size_t              gcMaxMallocBytes;
@@ -1297,13 +1308,6 @@ struct JSRuntime : public JS::shadow::Runtime,
     /* Pool of maps used during parse/emit. */
     js::frontend::ParseMapPool parseMapPool;
 
-    /*
-     * Count of currently active compilations.
-     * When there are compilations active for the context, the GC must not
-     * purge the ParseMapPool.
-     */
-    unsigned activeCompilations;
-
   private:
     JSPrincipals        *trustedPrincipals_;
   public:
@@ -1477,10 +1481,6 @@ struct JSRuntime : public JS::shadow::Runtime,
 #endif
 };
 
-/* Common macros to access thread-local caches in JSRuntime. */
-#define JS_KEEP_ATOMS(rt)   (rt)->gcKeepAtoms++;
-#define JS_UNKEEP_ATOMS(rt) (rt)->gcKeepAtoms--;
-
 namespace js {
 
 /*
@@ -1601,18 +1601,20 @@ class AutoUnlockGC
 
 class MOZ_STACK_CLASS AutoKeepAtoms
 {
-    JSRuntime *rt;
+    PerThreadData *pt;
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 
   public:
-    explicit AutoKeepAtoms(JSRuntime *rt
+    explicit AutoKeepAtoms(PerThreadData *pt
                            MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : rt(rt)
+      : pt(pt)
     {
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-        JS_KEEP_ATOMS(rt);
+        pt->gcKeepAtoms++;
     }
-    ~AutoKeepAtoms() { JS_UNKEEP_ATOMS(rt); }
+    ~AutoKeepAtoms() {
+        pt->gcKeepAtoms--;
+    }
 };
 
 inline void

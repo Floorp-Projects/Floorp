@@ -395,12 +395,12 @@ Parser<ParseHandler>::Parser(ExclusiveContext *cx, LifoAlloc *alloc,
     traceListHead(NULL),
     pc(NULL),
     sct(NULL),
-    keepAtoms(cx->asJSContext()->runtime()),
+    keepAtoms(cx->perThreadData),
     foldConstants(foldConstants),
     abortedSyntaxParse(false),
     handler(cx, *alloc, tokenStream, foldConstants, syntaxParser, lazyOuterFunction)
 {
-    cx->asJSContext()->runtime()->activeCompilations++;
+    cx->perThreadData->activeCompilations++;
 
     // The Mozilla specific JSOPTION_EXTRA_WARNINGS option adds extra warnings
     // which are not generated if functions are parsed lazily. Note that the
@@ -414,7 +414,7 @@ Parser<ParseHandler>::Parser(ExclusiveContext *cx, LifoAlloc *alloc,
 template <typename ParseHandler>
 Parser<ParseHandler>::~Parser()
 {
-    context->asJSContext()->runtime()->activeCompilations--;
+    context->perThreadData->activeCompilations--;
 
     alloc.release(tempPoolMark);
 
@@ -1219,6 +1219,8 @@ Parser<ParseHandler>::newFunction(GenericParseContext *pc, HandleAtom atom,
     if (options().selfHostingMode)
         fun->setIsSelfHostedBuiltin();
     if (fun && !options().compileAndGo) {
+        if (!context->shouldBeJSContext())
+            return NULL;
         if (!JSObject::clearParent(context->asJSContext(), fun))
             return NULL;
         if (!JSObject::clearType(context->asJSContext(), fun))
