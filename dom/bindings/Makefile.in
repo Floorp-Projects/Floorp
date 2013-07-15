@@ -147,10 +147,10 @@ $(binding_header_files): .BindingGen
 $(binding_cpp_files): .BindingGen
 
 # $(binding_dependency_trackers) pick up additional dependencies via .pp files
+# The rule: just brings the tracker up to date, if it's out of date, so that
+# we'll know that we have to redo binding generation and flag this prerequisite
+# there as being newer than the bindinggen target.
 $(binding_dependency_trackers):
-	# Just bring it up to date, if it's out of date, so that we'll know that
-	# we have to redo binding generation and flag this prerequisite there as
-	# being newer than the bindinggen target.
 	@$(TOUCH) $@
 
 $(globalgen_targets): ParserResults.pkl
@@ -179,34 +179,34 @@ $(CACHE_DIR)/.done:
 	$(MKDIR) -p $(CACHE_DIR)
 	@$(TOUCH) $@
 
+# Running GlobalGen.py updates ParserResults.pkl as a side-effect
 ParserResults.pkl: $(globalgen_dependencies)
-	# Running GlobalGen.py updates ParserResults.pkl as a side-effect
 	PYTHONDONTWRITEBYTECODE=1 $(PYTHON) $(topsrcdir)/config/pythonpath.py \
-    $(PLY_INCLUDE) -I$(srcdir)/parser \
-    $(srcdir)/GlobalGen.py $(srcdir)/Bindings.conf . \
-    --cachedir=$(CACHE_DIR) \
-    $(all_webidl_files)
+	  $(PLY_INCLUDE) -I$(srcdir)/parser \
+	  $(srcdir)/GlobalGen.py $(srcdir)/Bindings.conf . \
+	  --cachedir=$(CACHE_DIR) \
+	  $(all_webidl_files)
 
+# Make sure .deps actually exists, since we'll try to write to it from 
+# BindingGen.py but we're typically running in the export phase, which is
+# before anyone has bothered creating .deps.
+# Then, pass our long lists through files to try to avoid blowing out the
+# command line.
+# Next, BindingGen.py will examine the changed dependency list to figure out
+# what it really needs to regenerate.
+# Finally, touch the .BindingGen file so that we don't have to keep redoing
+# all that until something else actually changes.
 .BindingGen: $(bindinggen_dependencies) $(binding_dependency_trackers)
-	# Make sure .deps actually exists, since we'll try to write to it from
-	# BindingGen.py but we're typically running in the export phase, which
-	# is before anyone has bothered creating .deps.
 	$(MKDIR) -p .deps
-	# Pass our long lists through files to try to avoid blowing
-	# out the command line
 	echo $(all_webidl_files) > .all-webidl-file-list
 	echo $? > .changed-dependency-list
-	# BindingGen.py will examine the changed dependency list to figure out
-	# what it really needs to regenerate.
 	PYTHONDONTWRITEBYTECODE=1 $(PYTHON) $(topsrcdir)/config/pythonpath.py \
-    $(PLY_INCLUDE) -I$(srcdir)/parser \
-    $(srcdir)/BindingGen.py \
-    $(srcdir)/Bindings.conf \
-    $(CURDIR) \
-    .all-webidl-file-list \
-    .changed-dependency-list
-	# Now touch the .BindingGen file so that we don't have to keep redoing
-	# all that until something else actually changes.
+	  $(PLY_INCLUDE) -I$(srcdir)/parser \
+	  $(srcdir)/BindingGen.py \
+	  $(srcdir)/Bindings.conf \
+	  $(CURDIR) \
+	  .all-webidl-file-list \
+	  .changed-dependency-list
 	@$(TOUCH) $@
 
 GARBAGE += \
