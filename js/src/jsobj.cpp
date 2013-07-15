@@ -5269,7 +5269,7 @@ js_ReportGetterOnlyAssignment(JSContext *cx, bool strict)
 {
     return JS_ReportErrorFlagsAndNumber(cx,
                                         strict
-                                        ? JSREPORT_ERROR 
+                                        ? JSREPORT_ERROR
                                         : JSREPORT_WARNING | JSREPORT_STRICT,
                                         js_GetErrorMessage, NULL,
                                         JSMSG_GETTER_ONLY);
