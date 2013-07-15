@@ -356,7 +356,7 @@
       <button class="findbar-item previous-button" command="cmd_findPrevious"/>
       <button class="findbar-item next-button" command="cmd_findNext"/>
       <spacer flex="1"/>
-      <button class="findbar-item close-button" command="cmd_findClose"/>
+      <button id="findbar-close" class="findbar-item close-button" command="cmd_findClose"/>
     </appbar>
 
     <!-- Context button bar -->

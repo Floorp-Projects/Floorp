@@ -21,6 +21,8 @@ BROWSER_TESTS = \
   browser_context_menu_tests_03.html \
   browser_context_ui.js \
   browser_downloads.js \
+  browser_findbar.js \
+  browser_findbar.html \
   browser_history.js \
   browser_onscreen_keyboard.js \
   browser_onscreen_keyboard.html \
