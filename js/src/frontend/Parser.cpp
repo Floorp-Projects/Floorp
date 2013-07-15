@@ -3954,7 +3954,7 @@ Parser<FullParseHandler>::forStatement()
             pn2 = pn1;
             pn1 = NULL;
 
-            if (!setAssignmentLhsOps(pn2, true))
+            if (!checkAndMarkAsAssignmentLhs(pn2, true))
                 return null();
         }
 
@@ -4179,7 +4179,7 @@ Parser<SyntaxParseHandler>::forStatement()
             return null();
         }
 
-        if (!isForDecl && !setAssignmentLhsOps(lhsNode, true))
+        if (!isForDecl && !checkAndMarkAsAssignmentLhs(lhsNode, true))
             return null();
 
         if (!expr())
@@ -5086,7 +5086,7 @@ Parser<ParseHandler>::condExpr1()
 
 template <>
 bool
-Parser<FullParseHandler>::setAssignmentLhsOps(ParseNode *pn, bool isPlainAssignment)
+Parser<FullParseHandler>::checkAndMarkAsAssignmentLhs(ParseNode *pn, bool isPlainAssignment)
 {
     switch (pn->getKind()) {
       case PNK_NAME:
@@ -5125,7 +5125,7 @@ Parser<FullParseHandler>::setAssignmentLhsOps(ParseNode *pn, bool isPlainAssignm
 
 template <>
 bool
-Parser<SyntaxParseHandler>::setAssignmentLhsOps(Node pn, bool isPlainAssignment)
+Parser<SyntaxParseHandler>::checkAndMarkAsAssignmentLhs(Node pn, bool isPlainAssignment)
 {
     /* Full syntax checking of valid assignment LHS terms requires a parse tree. */
     if (pn != SyntaxParseHandler::NodeName &&
@@ -5214,7 +5214,7 @@ Parser<ParseHandler>::assignExpr()
         return lhs;
     }
 
-    if (!setAssignmentLhsOps(lhs, kind == PNK_ASSIGN))
+    if (!checkAndMarkAsAssignmentLhs(lhs, kind == PNK_ASSIGN))
         return null();
 
     Node rhs = assignExpr();
@@ -5224,59 +5224,48 @@ Parser<ParseHandler>::assignExpr()
     return handler.newBinaryOrAppend(kind, lhs, rhs, pc, op);
 }
 
-template <> bool
-Parser<FullParseHandler>::setLvalKid(ParseNode *pn, ParseNode *kid, const char *name)
-{
-    if (!kid->isKind(PNK_NAME) &&
-        !kid->isKind(PNK_DOT) &&
-        (!kid->isKind(PNK_CALL) ||
-         (!kid->isOp(JSOP_CALL) && !kid->isOp(JSOP_EVAL) &&
-          !kid->isOp(JSOP_FUNCALL) && !kid->isOp(JSOP_FUNAPPLY))) &&
-        !kid->isKind(PNK_ELEM))
-    {
-        report(ParseError, false, null(), JSMSG_BAD_OPERAND, name);
-        return false;
-    }
-    if (!checkStrictAssignment(kid))
-        return false;
-    pn->pn_kid = kid;
-    return true;
-}
-
 static const char incop_name_str[][10] = {"increment", "decrement"};
 
 template <>
 bool
-Parser<FullParseHandler>::setIncOpKid(ParseNode *pn, ParseNode *kid, TokenKind tt, bool preorder)
+Parser<FullParseHandler>::checkAndMarkAsIncOperand(ParseNode *kid, TokenKind tt, bool preorder)
 {
-    if (!setLvalKid(pn, kid, incop_name_str[tt == TOK_DEC]))
+    // Check.
+    if (!kid->isKind(PNK_NAME) &&
+        !kid->isKind(PNK_DOT) &&
+        !kid->isKind(PNK_ELEM) &&
+        !(kid->isKind(PNK_CALL) &&
+          (kid->isOp(JSOP_CALL) ||
+           kid->isOp(JSOP_EVAL) ||
+           kid->isOp(JSOP_FUNCALL) ||
+           kid->isOp(JSOP_FUNAPPLY))))
+    {
+        report(ParseError, false, null(), JSMSG_BAD_OPERAND, incop_name_str[tt == TOK_DEC]);
+        return false;
+    }
+
+    if (!checkStrictAssignment(kid))
         return false;
 
-    switch (kid->getKind()) {
-      case PNK_NAME:
+    // Mark.
+    if (kid->isKind(PNK_NAME)) {
         kid->markAsAssigned();
-        break;
-
-      case PNK_CALL:
+    } else if (kid->isKind(PNK_CALL)) {
         if (!makeSetCall(kid, JSMSG_BAD_INCOP_OPERAND))
             return false;
-        break;
-
-      case PNK_DOT:
-      case PNK_ELEM:
-        break;
-
-      default:
-        JS_ASSERT(0);
     }
     return true;
 }
 
 template <>
 bool
-Parser<SyntaxParseHandler>::setIncOpKid(Node pn, Node kid, TokenKind tt, bool preorder)
+Parser<SyntaxParseHandler>::checkAndMarkAsIncOperand(Node kid, TokenKind tt, bool preorder)
 {
-    return setAssignmentLhsOps(kid, false);
+    // To the extent of what we support in syntax-parse mode, the rules for
+    // inc/dec operands are the same as for assignment. There are differences,
+    // such as destructuring; but if we hit any of those cases, we'll abort and
+    // reparse in full mode.
+    return checkAndMarkAsAssignmentLhs(kid, false);
 }
 
 template <typename ParseHandler>
@@ -5320,15 +5309,12 @@ Parser<ParseHandler>::unaryExpr()
         pn2 = memberExpr(tt2, true);
         if (!pn2)
             return null();
-        pn = handler.newUnary((tt == TOK_INC) ? PNK_PREINCREMENT : PNK_PREDECREMENT,
-                              JSOP_NOP,
-                              begin,
-                              pn2);
-        if (!pn)
+        if (!checkAndMarkAsIncOperand(pn2, tt, true))
             return null();
-        if (!setIncOpKid(pn, pn2, tt, true))
-            return null();
-        break;
+        return handler.newUnary((tt == TOK_INC) ? PNK_PREINCREMENT : PNK_PREDECREMENT,
+                                JSOP_NOP,
+                                begin,
+                                pn2);
       }
 
       case TOK_DELETE: {
@@ -5359,19 +5345,16 @@ Parser<ParseHandler>::unaryExpr()
         tt = tokenStream.peekTokenSameLine(TSF_OPERAND);
         if (tt == TOK_INC || tt == TOK_DEC) {
             tokenStream.consumeKnownToken(tt);
-            pn2 = handler.newUnary((tt == TOK_INC) ? PNK_POSTINCREMENT : PNK_POSTDECREMENT,
-                                   JSOP_NOP,
-                                   begin,
-                                   pn);
-            if (!pn2)
+            if (!checkAndMarkAsIncOperand(pn, tt, false))
                 return null();
-            if (!setIncOpKid(pn2, pn, tt, false))
-                return null();
-            pn = pn2;
+            return handler.newUnary((tt == TOK_INC) ? PNK_POSTINCREMENT : PNK_POSTDECREMENT,
+                                    JSOP_NOP,
+                                    begin,
+                                    pn);
         }
-        break;
+        return pn;
     }
-    return pn;
+    MOZ_ASSUME_UNREACHABLE("unaryExpr");
 }
 
 /*
