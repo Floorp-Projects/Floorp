@@ -194,16 +194,17 @@ menulist {
   min-width: @touch_action_minwidth@; /* keep the button from being too narrow */
   border: 0 none;
   -moz-box-align: center;
+  font-weight: 600;
 }
 
 .menu-popup richlistitem:not([disabled]):hover {
-  background-color: #dedad0;
+  background-color: #ccc;
   color: black;
 }
 
 .menu-popup richlistitem:not([disabled]):active {
-  background-color: @selected_color@ !important;
-  color: black;
+  background-color: black;
+  color: white;
 }
 
 .menu-popup > richlistbox[left-hand="true"] > richlistitem {
@@ -214,7 +215,7 @@ menulist {
   padding-right: 50px;
 }
 
-/* form select popup */
+/* Additional styles applied to popups for form <select> elements. */
 
 #select-container {
   padding: 0;
@@ -233,7 +234,7 @@ menulist {
 }
 
 /* listcell element doesn't have flex="1" so we need to force it */
-#select-commands .option-command > listcell {
+.option-command > listcell {
   -moz-box-flex: 1 !important;
 }
 
@@ -244,8 +245,8 @@ menulist {
 }
 
 .option-command.selected {
-  background-color: @selected_color@ !important;
-  color: black;
+  background-color: #ff8000;
+  color: white;
 }
 
 .option-command.optgroup {
@@ -255,12 +256,12 @@ menulist {
 }
 
 .option-command:not([disabled]):hover {
-  background-color: #dedad0;
+  background-color: #f0f0f0;
   color: black;
 }
 
 .option-command:not([disabled]):active {
-  background-color: @selected_color@ !important;
+  background-color: #d3d3d3;
   color: black;
 }
 
