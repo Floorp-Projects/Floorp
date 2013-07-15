@@ -1,0 +1,67 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+%include listbox.css
+%filter substitution
+%define selectedBorderColor rgb(217,217,217)
+%define hoverAndFocusBorderColor rgb(125,162,206)
+%define selectedFocusBorderColor rgb(132,172,221)
+%define selectedGradientColor1 rgba(190,190,190,.1)
+%define selectedGradientColor2 rgba(190,190,190,.4)
+%define selectedFocusGradientColor1 rgba(131,183,249,.16)
+%define selectedFocusGradientColor2 rgba(131,183,249,.375)
+
+@media (-moz-windows-default-theme) {
+  listitem {
+    color: -moz-FieldText;
+    -moz-margin-start: 1px;
+    -moz-margin-end: 1px;
+    padding-top: 1px;
+    padding-bottom: 1px;
+    border-width: 1px;
+    border-radius: 3px;
+    background-repeat: no-repeat;
+    background-size: 100% 100%;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.4), inset 0 -1px 0 1px rgba(255,255,255,.2);
+  }
+
+  listitem[selected="true"] {
+    border-color: @selectedBorderColor@;
+    background-image: linear-gradient(@selectedGradientColor1@, @selectedGradientColor2@);
+    background-color: rgba(190,190,190,.15);
+    color: -moz-DialogText;
+  }
+
+  listbox:focus > listitem[selected="true"] {
+    border-color: @selectedFocusBorderColor@;
+    background-image: linear-gradient(@selectedFocusGradientColor1@, @selectedFocusGradientColor2@);
+    background-color: rgba(131,183,249,.02);
+    color: -moz-DialogText;
+  }
+
+  listbox:focus > listitem[current="true"] {
+    border-color: @hoverAndFocusBorderColor@;
+    outline: none;
+  }
+
+  listbox:focus > listitem[selected="true"][current="true"] {
+    background-color: rgba(131,183,249,.15);
+    outline: none;
+  }
+
+  @media (-moz-os-version: windows-win8) {
+    listitem {
+      border-radius: 0;
+      box-shadow: none;
+    }
+
+    listitem[selected="true"] {
+      background-image: linear-gradient(@selectedGradientColor2@, @selectedGradientColor2@);
+    }
+
+    listbox:focus > listitem[selected="true"] {
+      background-image: linear-gradient(@selectedFocusGradientColor2@, @selectedFocusGradientColor2@);
+    }
+  }
+}

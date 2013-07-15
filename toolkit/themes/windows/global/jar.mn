@@ -211,9 +211,9 @@ toolkit.jar:
 *       skin/classic/aero/global/global.css
         skin/classic/aero/global/globalBindings.xml
         skin/classic/aero/global/groupbox.css
-*       skin/classic/aero/global/inContentUI.css                        (inContentUI-aero.css)
+*       skin/classic/aero/global/inContentUI.css                         (inContentUI-aero.css)
         skin/classic/aero/global/linkTree.css
-        skin/classic/aero/global/listbox.css
+*       skin/classic/aero/global/listbox.css                             (listbox-aero.css)
 *       skin/classic/aero/global/menu.css                                (menu-aero.css)
 *       skin/classic/aero/global/menulist.css                            (menulist-aero.css)
         skin/classic/aero/global/netError.css
