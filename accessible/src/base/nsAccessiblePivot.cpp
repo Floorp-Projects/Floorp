@@ -416,6 +416,31 @@ nsAccessiblePivot::MovePivotInternal(Accessible* aPosition,
 }
 
 Accessible*
+nsAccessiblePivot::AdjustStartPosition(Accessible* aAccessible,
+                                       RuleCache& aCache,
+                                       uint16_t* aFilterResult,
+                                       nsresult* aResult)
+{
+  Accessible* matched = aAccessible;
+  *aResult = aCache.ApplyFilter(aAccessible, aFilterResult);
+
+  if (aAccessible != mRoot && aAccessible != mModalRoot) {
+    for (Accessible* temp = aAccessible->Parent();
+         temp && temp != mRoot && temp != mModalRoot; temp = temp->Parent()) {
+      uint16_t filtered = nsIAccessibleTraversalRule::FILTER_IGNORE;
+      *aResult = aCache.ApplyFilter(temp, &filtered);
+      NS_ENSURE_SUCCESS(*aResult, nullptr);
+      if (filtered & nsIAccessibleTraversalRule::FILTER_IGNORE_SUBTREE) {
+        *aFilterResult = filtered;
+        matched = temp;
+      }
+    }
+  }
+
+  return matched;
+}
+
+Accessible*
 nsAccessiblePivot::SearchBackward(Accessible* aAccessible,
                                   nsIAccessibleTraversalRule* aRule,
                                   bool aSearchCurrent,
@@ -428,15 +453,13 @@ nsAccessiblePivot::SearchBackward(Accessible* aAccessible,
     return nullptr;
 
   RuleCache cache(aRule);
-  Accessible* accessible = aAccessible;
-
   uint16_t filtered = nsIAccessibleTraversalRule::FILTER_IGNORE;
+  Accessible* accessible = AdjustStartPosition(aAccessible, cache,
+                                               &filtered, aResult);
+  NS_ENSURE_SUCCESS(*aResult, nullptr);
 
-  if (aSearchCurrent) {
-    *aResult = cache.ApplyFilter(accessible, &filtered);
-    NS_ENSURE_SUCCESS(*aResult, nullptr);
-    if (filtered & nsIAccessibleTraversalRule::FILTER_MATCH)
-      return accessible;
+  if (aSearchCurrent && (filtered & nsIAccessibleTraversalRule::FILTER_MATCH)) {
+    return accessible;
   }
 
   Accessible* root = GetActiveRoot();
@@ -492,7 +515,7 @@ nsAccessiblePivot::SearchForward(Accessible* aAccessible,
   RuleCache cache(aRule);
 
   uint16_t filtered = nsIAccessibleTraversalRule::FILTER_IGNORE;
-  *aResult = cache.ApplyFilter(accessible, &filtered);
+  accessible = AdjustStartPosition(accessible, cache, &filtered, aResult);
   NS_ENSURE_SUCCESS(*aResult, nullptr);
   if (aSearchCurrent && (filtered & nsIAccessibleTraversalRule::FILTER_MATCH))
     return accessible;
