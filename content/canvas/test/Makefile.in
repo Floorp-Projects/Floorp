@@ -11,6 +11,7 @@ relativesrcdir  = @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
 MOCHITEST_FILES = \
+	android.json \
 	test_canvas.html \
 	test_isPointInStroke.html \
 	image_transparent50.png \
