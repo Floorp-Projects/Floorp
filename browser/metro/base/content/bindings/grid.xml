@@ -91,7 +91,14 @@
           <![CDATA[
             if(!this.isBound)
               return;
-            if (this.controller)
+
+            if ("single" == this.getAttribute("seltype")) {
+              // we'll republish this as a selectionchange event on the grid
+              aEvent.stopPropagation();
+              this.selectItem(aItem);
+            }
+
+	    if (this.controller && this.controller.handleItemClick)
               this.controller.handleItemClick(aItem, aEvent);
           ]]>
         </body>
