@@ -52,7 +52,6 @@
 #PanelUI-contents > toolbaritem > toolbarbutton > .toolbarbutton-text,
 #PanelUI-contents > toolbarpaletteitem > toolbarbutton > .toolbarbutton-text,
 #PanelUI-contents > toolbarbutton > .toolbarbutton-text {
-  display: -moz-box;
   font-size: 10px;
 }
 
