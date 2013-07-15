@@ -782,14 +782,14 @@ Parser<ParseHandler>::checkFinalReturn(Node pn)
 }
 
 /*
- * Check that it is permitted to assign to lhs.  Strict mode code may not
- * assign to 'eval' or 'arguments'.
+ * Check that assigning to lhs is permitted.  Assigning to 'eval' or
+ * 'arguments' is banned in strict mode and in destructuring assignment.
  */
 template <typename ParseHandler>
 bool
-Parser<ParseHandler>::checkStrictAssignment(Node lhs)
+Parser<ParseHandler>::checkStrictAssignment(Node lhs, AssignmentFlavor flavor)
 {
-    if (!pc->sc->needStrictChecks())
+    if (!pc->sc->needStrictChecks() && flavor != KeyedDestructuringAssignment)
         return true;
 
     JSAtom *atom = handler.isName(lhs);
@@ -798,12 +798,20 @@ Parser<ParseHandler>::checkStrictAssignment(Node lhs)
 
     if (atom == context->names().eval || atom == context->names().arguments) {
         JSAutoByteString name;
-        if (!AtomToPrintableString(context, atom, &name) ||
-            !report(ParseStrictError, pc->sc->strict, lhs,
-                    JSMSG_DEPRECATED_ASSIGN, name.ptr()))
-        {
+        if (!AtomToPrintableString(context, atom, &name))
             return false;
+
+        ParseReportKind kind;
+        unsigned errnum;
+        if (pc->sc->strict || flavor != KeyedDestructuringAssignment) {
+            kind = ParseStrictError;
+            errnum = JSMSG_BAD_STRICT_ASSIGN;
+        } else {
+            kind = ParseError;
+            errnum = JSMSG_BAD_DESTRUCT_ASSIGN;
         }
+        if (!report(kind, pc->sc->strict, lhs, errnum, name.ptr()))
+            return false;
     }
     return true;
 }
@@ -2919,40 +2927,6 @@ Parser<FullParseHandler>::bindDestructuringVar(BindData<FullParseHandler> *data,
     return true;
 }
 
-template <>
-bool
-Parser<FullParseHandler>::bindDestructuringLHS(ParseNode *pn)
-{
-    switch (pn->getKind()) {
-      case PNK_NAME:
-        pn->markAsAssigned();
-
-        /*
-         * We may be called on a name node that has already been specialized,
-         * in the very weird and ECMA-262-required "for (var [x] = i in o) ..."
-         * case. See bug 558633.
-         */
-        if (!(js_CodeSpec[pn->getOp()].format & JOF_SET))
-            pn->setOp(JSOP_SETNAME);
-        break;
-
-      case PNK_DOT:
-      case PNK_ELEM:
-        break;
-
-      case PNK_CALL:
-        if (!makeSetCall(pn, JSMSG_BAD_LEFTSIDE_OF_ASS))
-            return false;
-        break;
-
-      default:
-        report(ParseError, false, pn, JSMSG_BAD_LEFTSIDE_OF_ASS);
-        return false;
-    }
-
-    return true;
-}
-
 /*
  * Destructuring patterns can appear in two kinds of contexts:
  *
@@ -3021,7 +2995,7 @@ Parser<FullParseHandler>::checkDestructuring(BindData<FullParseHandler> *data,
                         }
                         ok = bindDestructuringVar(data, pn);
                     } else {
-                        ok = bindDestructuringLHS(pn);
+                        ok = checkAndMarkAsAssignmentLhs(pn, KeyedDestructuringAssignment);
                     }
                 }
                 if (!ok)
@@ -3055,7 +3029,7 @@ Parser<FullParseHandler>::checkDestructuring(BindData<FullParseHandler> *data,
                     if (!noteNameUse(name, pn))
                         return false;
                 }
-                ok = bindDestructuringLHS(pn);
+                ok = checkAndMarkAsAssignmentLhs(pn, KeyedDestructuringAssignment);
             }
             if (!ok)
                 return false;
@@ -3937,7 +3911,7 @@ Parser<FullParseHandler>::forStatement()
             pn2 = pn1;
             pn1 = NULL;
 
-            if (!checkAndMarkAsAssignmentLhs(pn2, true))
+            if (!checkAndMarkAsAssignmentLhs(pn2, PlainAssignment))
                 return null();
         }
 
@@ -4162,7 +4136,7 @@ Parser<SyntaxParseHandler>::forStatement()
             return null();
         }
 
-        if (!isForDecl && !checkAndMarkAsAssignmentLhs(lhsNode, true))
+        if (!isForDecl && !checkAndMarkAsAssignmentLhs(lhsNode, PlainAssignment))
             return null();
 
         if (!expr())
@@ -5069,13 +5043,23 @@ Parser<ParseHandler>::condExpr1()
 
 template <>
 bool
-Parser<FullParseHandler>::checkAndMarkAsAssignmentLhs(ParseNode *pn, bool isPlainAssignment)
+Parser<FullParseHandler>::checkAndMarkAsAssignmentLhs(ParseNode *pn, AssignmentFlavor flavor)
 {
     switch (pn->getKind()) {
       case PNK_NAME:
-        if (!checkStrictAssignment(pn))
+        if (!checkStrictAssignment(pn, flavor))
             return false;
-        pn->setOp(pn->isOp(JSOP_GETLOCAL) ? JSOP_SETLOCAL : JSOP_SETNAME);
+        if (flavor == KeyedDestructuringAssignment) {
+            /*
+             * We may be called on a name node that has already been
+             * specialized, in the very weird "for (var [x] = i in o) ..."
+             * case. See bug 558633.
+             */
+            if (!(js_CodeSpec[pn->getOp()].format & JOF_SET))
+                pn->setOp(JSOP_SETNAME);
+        } else {
+            pn->setOp(pn->isOp(JSOP_GETLOCAL) ? JSOP_SETLOCAL : JSOP_SETNAME);
+        }
         pn->markAsAssigned();
         break;
 
@@ -5086,7 +5070,7 @@ Parser<FullParseHandler>::checkAndMarkAsAssignmentLhs(ParseNode *pn, bool isPlai
 #if JS_HAS_DESTRUCTURING
       case PNK_ARRAY:
       case PNK_OBJECT:
-        if (!isPlainAssignment) {
+        if (flavor == CompoundAssignment) {
             report(ParseError, false, null(), JSMSG_BAD_DESTRUCT_ASS);
             return false;
         }
@@ -5101,7 +5085,7 @@ Parser<FullParseHandler>::checkAndMarkAsAssignmentLhs(ParseNode *pn, bool isPlai
         break;
 
       default:
-        report(ParseError, false, null(), JSMSG_BAD_LEFTSIDE_OF_ASS);
+        report(ParseError, false, pn, JSMSG_BAD_LEFTSIDE_OF_ASS);
         return false;
     }
     return true;
@@ -5109,7 +5093,7 @@ Parser<FullParseHandler>::checkAndMarkAsAssignmentLhs(ParseNode *pn, bool isPlai
 
 template <>
 bool
-Parser<SyntaxParseHandler>::checkAndMarkAsAssignmentLhs(Node pn, bool isPlainAssignment)
+Parser<SyntaxParseHandler>::checkAndMarkAsAssignmentLhs(Node pn, AssignmentFlavor flavor)
 {
     /* Full syntax checking of valid assignment LHS terms requires a parse tree. */
     if (pn != SyntaxParseHandler::NodeName &&
@@ -5118,7 +5102,7 @@ Parser<SyntaxParseHandler>::checkAndMarkAsAssignmentLhs(Node pn, bool isPlainAss
     {
         return abortIfSyntaxParser();
     }
-    return checkStrictAssignment(pn);
+    return checkStrictAssignment(pn, flavor);
 }
 
 template <typename ParseHandler>
@@ -5198,7 +5182,8 @@ Parser<ParseHandler>::assignExpr()
         return lhs;
     }
 
-    if (!checkAndMarkAsAssignmentLhs(lhs, kind == PNK_ASSIGN))
+    AssignmentFlavor flavor = kind == PNK_ASSIGN ? PlainAssignment : CompoundAssignment;
+    if (!checkAndMarkAsAssignmentLhs(lhs, flavor))
         return null();
 
     Node rhs = assignExpr();
@@ -5228,7 +5213,7 @@ Parser<FullParseHandler>::checkAndMarkAsIncOperand(ParseNode *kid, TokenKind tt,
         return false;
     }
 
-    if (!checkStrictAssignment(kid))
+    if (!checkStrictAssignment(kid, IncDecAssignment))
         return false;
 
     // Mark.
@@ -5249,7 +5234,7 @@ Parser<SyntaxParseHandler>::checkAndMarkAsIncOperand(Node kid, TokenKind tt, boo
     // inc/dec operands are the same as for assignment. There are differences,
     // such as destructuring; but if we hit any of those cases, we'll abort and
     // reparse in full mode.
-    return checkAndMarkAsAssignmentLhs(kid, false);
+    return checkAndMarkAsAssignmentLhs(kid, IncDecAssignment);
 }
 
 template <typename ParseHandler>

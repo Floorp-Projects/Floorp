@@ -286,7 +286,7 @@ MSG_DEF(JSMSG_DEPRECATED_OCTAL,       232, 0, JSEXN_SYNTAXERR, "octal literals a
 MSG_DEF(JSMSG_STRICT_CODE_WITH,       233, 0, JSEXN_SYNTAXERR, "strict mode code may not contain 'with' statements")
 MSG_DEF(JSMSG_DUPLICATE_PROPERTY,     234, 1, JSEXN_SYNTAXERR, "property name {0} appears more than once in object literal")
 MSG_DEF(JSMSG_DEPRECATED_DELETE_OPERAND, 235, 0, JSEXN_SYNTAXERR, "applying the 'delete' operator to an unqualified name is deprecated")
-MSG_DEF(JSMSG_DEPRECATED_ASSIGN,      236, 1, JSEXN_SYNTAXERR, "assignment to {0} is deprecated")
+MSG_DEF(JSMSG_BAD_STRICT_ASSIGN,      236, 1, JSEXN_SYNTAXERR, "can't assign to {0} in strict mode")
 MSG_DEF(JSMSG_BAD_BINDING,            237, 1, JSEXN_SYNTAXERR, "redefining {0} is deprecated")
 MSG_DEF(JSMSG_INVALID_DESCRIPTOR,     238, 0, JSEXN_TYPEERR, "property descriptors must not specify a value or be writable when a getter or setter has been specified")
 MSG_DEF(JSMSG_OBJECT_NOT_EXTENSIBLE,  239, 1, JSEXN_TYPEERR, "{0} is not extensible")
@@ -401,3 +401,4 @@ MSG_DEF(JSMSG_WRONG_VALUE,            347, 2, JSEXN_ERR, "expected {0} but found
 MSG_DEF(JSMSG_PAR_ARRAY_SCATTER_BAD_TARGET, 348, 1, JSEXN_ERR, "target for index {0} is not an integer")
 MSG_DEF(JSMSG_SELFHOSTED_UNBOUND_NAME,349, 0, JSEXN_TYPEERR, "self-hosted code may not contain unbound name lookups")
 MSG_DEF(JSMSG_DEPRECATED_SOURCE_MAP,  350, 0, JSEXN_SYNTAXERR, "Using //@ to indicate source map URL pragmas is deprecated. Use //# instead")
+MSG_DEF(JSMSG_BAD_DESTRUCT_ASSIGN,    351, 1, JSEXN_SYNTAXERR, "can't assign to {0} using destructuring assignment")

@@ -514,7 +514,14 @@ class Parser : private AutoGCRooter, public StrictModeGetter
 #endif
     }
 
-    bool checkAndMarkAsAssignmentLhs(Node pn, bool isPlainAssignment);
+    enum AssignmentFlavor {
+        PlainAssignment,
+        CompoundAssignment,
+        KeyedDestructuringAssignment,
+        IncDecAssignment
+    };
+
+    bool checkAndMarkAsAssignmentLhs(Node pn, AssignmentFlavor flavor);
     bool matchInOrOf(bool *isForOfp);
 
     bool checkFunctionArguments();
@@ -527,7 +534,7 @@ class Parser : private AutoGCRooter, public StrictModeGetter
     bool isValidForStatementLHS(Node pn1, JSVersion version,
                                 bool forDecl, bool forEach, bool forOf);
     bool checkAndMarkAsIncOperand(Node kid, TokenKind tt, bool preorder);
-    bool checkStrictAssignment(Node lhs);
+    bool checkStrictAssignment(Node lhs, AssignmentFlavor flavor);
     bool checkStrictBinding(HandlePropertyName name, Node pn);
     bool defineArg(Node funcpn, HandlePropertyName name,
                    bool disallowDuplicateArgs = false, Node *duplicatedArg = NULL);
@@ -582,11 +589,11 @@ class Parser : private AutoGCRooter, public StrictModeGetter
 
 template <>
 bool
-Parser<FullParseHandler>::checkAndMarkAsAssignmentLhs(ParseNode *pn, bool isPlainAssignment);
+Parser<FullParseHandler>::checkAndMarkAsAssignmentLhs(ParseNode *pn, AssignmentFlavor flavor);
 
 template <>
 bool
-Parser<SyntaxParseHandler>::checkAndMarkAsAssignmentLhs(Node pn, bool isPlainAssignment);
+Parser<SyntaxParseHandler>::checkAndMarkAsAssignmentLhs(Node pn, AssignmentFlavor flavor);
 
 } /* namespace frontend */
 } /* namespace js */
