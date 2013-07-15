@@ -120,6 +120,8 @@ public class GeckoThread extends Thread implements GeckoEventListener {
         GeckoAppShell.runGecko(path, args, mUri, type);
     }
 
+    private static Object sLock = new Object();
+
     @Override
     public void handleMessage(String event, JSONObject message) {
         if ("Gecko:Ready".equals(event)) {
@@ -130,13 +132,13 @@ public class GeckoThread extends Thread implements GeckoEventListener {
     }
 
     public static boolean checkLaunchState(LaunchState checkState) {
-        synchronized (sLaunchState) {
+        synchronized (sLock) {
             return sLaunchState == checkState;
         }
     }
 
     static void setLaunchState(LaunchState setState) {
-        synchronized (sLaunchState) {
+        synchronized (sLock) {
             sLaunchState = setState;
         }
     }
@@ -146,7 +148,7 @@ public class GeckoThread extends Thread implements GeckoEventListener {
      * state is <code>checkState</code>; otherwise do nothing and return false.
      */
     static boolean checkAndSetLaunchState(LaunchState checkState, LaunchState setState) {
-        synchronized (sLaunchState) {
+        synchronized (sLock) {
             if (sLaunchState != checkState)
                 return false;
             sLaunchState = setState;
