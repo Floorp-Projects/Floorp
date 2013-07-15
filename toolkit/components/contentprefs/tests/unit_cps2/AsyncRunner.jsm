@@ -63,7 +63,10 @@ AsyncRunner.prototype = {
   },
 
   observe: function AR_consoleServiceListener(msg) {
-    if (msg instanceof Ci.nsIScriptError)
+    if (msg instanceof Ci.nsIScriptError &&
+        !(msg.flags & Ci.nsIScriptError.warningFlag))
+    {
       this._callbacks.consoleError(msg);
+    }
   },
 };
