@@ -877,7 +877,7 @@ ContentParent::ActorDestroy(ActorDestroyReason why)
     if (ppm) {
       ppm->ReceiveMessage(static_cast<nsIContentFrameMessageManager*>(ppm.get()),
                           CHILD_PROCESS_SHUTDOWN_MESSAGE, false,
-                          nullptr, JS::NullPtr(), nullptr);
+                          nullptr, nullptr, nullptr);
     }
     nsCOMPtr<nsIThreadObserver>
         kungFuDeathGrip(static_cast<nsIThreadObserver*>(this));
@@ -2323,26 +2323,30 @@ ContentParent::RecvTestPermissionFromPrincipal(const IPC::Principal& aPrincipal,
 bool
 ContentParent::RecvSyncMessage(const nsString& aMsg,
                                const ClonedMessageData& aData,
+                               const InfallibleTArray<CpowEntry>& aCpows,
                                InfallibleTArray<nsString>* aRetvals)
 {
   nsRefPtr<nsFrameMessageManager> ppm = mMessageManager;
   if (ppm) {
     StructuredCloneData cloneData = ipc::UnpackClonedMessageDataForParent(aData);
+    CpowIdHolder cpows(GetCPOWManager(), aCpows);
     ppm->ReceiveMessage(static_cast<nsIContentFrameMessageManager*>(ppm.get()),
-                        aMsg, true, &cloneData, JS::NullPtr(), aRetvals);
+                        aMsg, true, &cloneData, &cpows, aRetvals);
   }
   return true;
 }
 
 bool
 ContentParent::RecvAsyncMessage(const nsString& aMsg,
-                                      const ClonedMessageData& aData)
+                                const ClonedMessageData& aData,
+                                const InfallibleTArray<CpowEntry>& aCpows)
 {
   nsRefPtr<nsFrameMessageManager> ppm = mMessageManager;
   if (ppm) {
     StructuredCloneData cloneData = ipc::UnpackClonedMessageDataForParent(aData);
+    CpowIdHolder cpows(GetCPOWManager(), aCpows);
     ppm->ReceiveMessage(static_cast<nsIContentFrameMessageManager*>(ppm.get()),
-                        aMsg, false, &cloneData, JS::NullPtr(), nullptr);
+                        aMsg, false, &cloneData, &cpows, nullptr);
   }
   return true;
 }
@@ -2546,14 +2550,20 @@ ContentParent::RecvPrivateDocShellsExist(const bool& aExist)
 }
 
 bool
-ContentParent::DoSendAsyncMessage(const nsAString& aMessage,
-                                  const mozilla::dom::StructuredCloneData& aData)
+ContentParent::DoSendAsyncMessage(JSContext* aCx,
+                                  const nsAString& aMessage,
+                                  const mozilla::dom::StructuredCloneData& aData,
+                                  JS::Handle<JSObject *> aCpows)
 {
   ClonedMessageData data;
   if (!BuildClonedMessageDataForParent(this, aData, data)) {
     return false;
   }
-  return SendAsyncMessage(nsString(aMessage), data);
+  InfallibleTArray<CpowEntry> cpows;
+  if (!GetCPOWManager()->Wrap(aCx, aCpows, &cpows)) {
+    return false;
+  }
+  return SendAsyncMessage(nsString(aMessage), data, cpows);
 }
 
 bool
