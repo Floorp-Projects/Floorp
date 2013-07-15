@@ -1508,6 +1508,20 @@ let CustomizableUIInternal = {
       return;
     }
 
+    // Remove it from the default placements of an area if it was added there:
+    if (widget.defaultArea) {
+      let area = gAreas.get(widget.defaultArea);
+      if (area) {
+        let defaultPlacements = area.get("defaultPlacements");
+        // We can assume this is present because if a widget has a defaultArea,
+        // we automatically create a defaultPlacements array for that area.
+        let widgetIndex = defaultPlacements.indexOf(aWidgetId);
+        if (widgetIndex != -1) {
+          defaultPlacements.splice(widgetIndex, 1);
+        }
+      }
+    }
+
     // This will not remove the widget from gPlacements - we want to keep the
     // setting so the widget gets put back in it's old position if/when it
     // returns.
