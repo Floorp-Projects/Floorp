@@ -123,7 +123,7 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
             mView = (LinearLayout) (LayoutInflater.from(mContext).inflate(R.layout.awesomebar_allpages_list, null));
             mView.setTag(TAG);
 
-            ListView list = getListView();
+            final ListView list = getListView();
             list.setTag(TAG);
             ((Activity)mContext).registerForContextMenu(list);
             list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -136,6 +136,23 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
             AwesomeBarCursorAdapter adapter = getCursorAdapter();
             list.setAdapter(adapter);
             list.setOnTouchListener(mListListener);
+
+            final ListSelectionListener listener = new ListSelectionListener();
+            list.setOnItemSelectedListener(listener);
+            list.setOnFocusChangeListener(listener);
+
+            list.setOnKeyListener(new View.OnKeyListener() {
+                @Override
+                public boolean onKey(View v, int keyCode, android.view.KeyEvent event) {
+                    View selected = list.getSelectedView();
+
+                    if (selected instanceof SearchEngineRow) {
+                        return ((SearchEngineRow) selected).onKeyDown(keyCode, event);
+                    }
+                    return false;
+                }
+            });
+
         }
 
         return mView;
@@ -461,6 +478,12 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
 
         @Override
         public boolean isEnabled(int position) {
+            // If we're using a gamepad or keyboard, allow the row to be
+            // focused so it can pass the focus to its child suggestion views.
+            if (!getListView().isInTouchMode()) {
+                return true;
+            }
+
             // If the suggestion row only contains one item (the user-entered
             // query), allow the entire row to be clickable; clicking the row
             // has the same effect as clicking the single suggestion. If the
@@ -876,6 +899,48 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
                 case MESSAGE_UPDATE_FAVICONS:
                     updateFavicons();
                     break;
+            }
+        }
+    }
+
+    private static class ListSelectionListener implements View.OnFocusChangeListener,
+                                                          AdapterView.OnItemSelectedListener {
+        private SearchEngineRow mSelectedEngineRow;
+
+        @Override
+        public void onFocusChange(View v, boolean hasFocus) {
+            if (hasFocus) {
+                View selectedRow = ((ListView) v).getSelectedView();
+                if (selectedRow != null) {
+                    selectRow(selectedRow);
+                }
+            } else {
+                deselectRow();
+            }
+        }
+
+        @Override
+        public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+            deselectRow();
+            selectRow(view);
+        }
+
+        @Override
+        public void onNothingSelected(AdapterView<?> parent) {
+            deselectRow();
+        }
+
+        private void selectRow(View row) {
+            if (row instanceof SearchEngineRow) {
+                mSelectedEngineRow = (SearchEngineRow) row;
+                mSelectedEngineRow.onSelected();
+            }
+        }
+
+        private void deselectRow() {
+            if (mSelectedEngineRow != null) {
+                mSelectedEngineRow.onDeselected();
+                mSelectedEngineRow = null;
             }
         }
     }
