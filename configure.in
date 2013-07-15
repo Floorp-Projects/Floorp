@@ -190,8 +190,11 @@ if test -n "$gonkdir" ; then
     STRIP="$gonk_toolchain_prefix"strip
     OBJCOPY="$gonk_toolchain_prefix"objcopy
 
-    STLPORT_CPPFLAGS="-I$gonkdir/ndk/sources/cxx-stl/stlport/stlport/ -I$gonkdir/external/stlport/stlport/"
-    STLPORT_LIBS="-lstlport"
+    if ! test -e "$gonkdir/ndk/sources/cxx-stl/stlport/src/iostream.cpp"; then
+        AC_MSG_ERROR([Couldn't find path to stlport sources in the gonk tree])
+    fi
+    STLPORT_CPPFLAGS="-I$_topsrcdir/build/stlport/stlport -I$gonkdir/ndk/sources/cxx-stl/system/include"
+    STLPORT_LIBS="$_objdir/build/stlport/libstlport_static.a -static-libstdc++"
 
     case "$target_cpu" in
     arm)
@@ -222,7 +225,7 @@ if test -n "$gonkdir" ; then
     CFLAGS="-mandroid -fno-short-enums -fno-exceptions $CFLAGS"
     CXXFLAGS="-mandroid -fno-short-enums -fno-exceptions -Wno-psabi $CXXFLAGS $STLPORT_CPPFLAGS"
     dnl Add -llog by default, since we use it all over the place.
-    LIBS="$LIBS -llog $STLPORT_LIBS"
+    LIBS="$LIBS -llog"
 
     LDFLAGS="-mandroid -L$gonkdir/out/target/product/$GONK_PRODUCT/obj/lib -Wl,-rpath-link=$gonkdir/out/target/product/$GONK_PRODUCT/obj/lib --sysroot=$gonkdir/out/target/product/$GONK_PRODUCT/obj/ $LDFLAGS"
 
@@ -9140,6 +9143,8 @@ netwerk/necko-config.h
 xpcom/xpcom-config.h
 xpcom/xpcom-private.h
 )
+
+AC_SUBST(STLPORT_LIBS)
 
 AC_OUTPUT([mozilla-config.h])
 

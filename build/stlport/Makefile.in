@@ -17,12 +17,12 @@ STL_FLAGS =
 # installing it in dist/lib.
 LIBRARY = $(LIB_PREFIX)$(LIBRARY_NAME).$(LIB_SUFFIX)
 
-VPATH += $(STLPORT_SOURCES)/src
+VPATH += $(srcdir)/src
 
-CSRCS = $(notdir $(wildcard $(STLPORT_SOURCES)/src/*.c))
+CSRCS = $(notdir $(wildcard $(srcdir)/src/*.c))
 
 include $(topsrcdir)/config/rules.mk
 
 DEFINES += -D_GNU_SOURCE
 CXXFLAGS += -fuse-cxa-atexit
-INCLUDES += -I$(STLPORT_SOURCES)/stlport
+INCLUDES += -I$(srcdir)/stlport
