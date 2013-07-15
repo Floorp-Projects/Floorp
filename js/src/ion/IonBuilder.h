@@ -649,6 +649,9 @@ class IonBuilder : public MIRGenerator
 
     // If this is an inline builder, the call info for the builder.
     const CallInfo *inlineCallInfo_;
+
+    // return value (if not immediatly returning)
+    MDefinition *retval_;
 };
 
 class CallInfo
