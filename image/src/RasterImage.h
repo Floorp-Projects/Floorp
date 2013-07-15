@@ -120,10 +120,6 @@ class nsIThreadPool;
  * @par
  * The mAnim structure has members only needed for animated images, so
  * it's not allocated until the second frame is added.
- *
- * @note
- * mAnimationMode and mLoopCount are not in the mAnim structure because
- * they have public setters.
  */
 
 class ScaleRequest;
@@ -137,6 +133,7 @@ class Image;
 namespace image {
 
 class Decoder;
+class FrameAnimator;
 
 class RasterImage : public ImageResource
                   , public nsIProperties
@@ -323,20 +320,6 @@ private:
   }
 
   nsresult OnImageDataCompleteCore(nsIRequest* aRequest, nsISupports*, nsresult aStatus);
-
-  struct Anim
-  {
-    //! Area of the first frame that needs to be redrawn on subsequent loops.
-    nsIntRect                  firstFrameRefreshArea;
-    uint32_t                   currentAnimationFrameIndex; // 0 to numFrames-1
-
-    // the time that the animation advanced to the current frame
-    TimeStamp                  currentAnimationFrameTime;
-
-    Anim() :
-      currentAnimationFrameIndex(0)
-    {}
-  };
 
   /**
    * Each RasterImage has a pointer to one or zero heap-allocated
@@ -546,33 +529,6 @@ private:
                      gfxImageSurface **_retval);
 
   /**
-   * Advances the animation. Typically, this will advance a single frame, but it
-   * may advance multiple frames. This may happen if we have infrequently
-   * "ticking" refresh drivers (e.g. in background tabs), or extremely short-
-   * lived animation frames.
-   *
-   * @param aTime the time that the animation should advance to. This will
-   *              typically be <= TimeStamp::Now().
-   *
-   * @param [out] aDirtyRect a pointer to an nsIntRect which encapsulates the
-   *        area to be repainted after the frame is advanced.
-   *
-   * @returns true, if the frame was successfully advanced, false if it was not
-   *          able to be advanced (e.g. the frame to which we want to advance is
-   *          still decoding). Note: If false is returned, then aDirtyRect will
-   *          remain unmodified.
-   */
-  bool AdvanceFrame(mozilla::TimeStamp aTime, nsIntRect* aDirtyRect);
-
-  /**
-   * Gets the length of a single loop of this image, in milliseconds.
-   *
-   * If this image is not finished decoding, is not animated, or it is animated
-   * but does not loop, returns 0.
-   */
-  uint32_t GetSingleLoopTime() const;
-
-  /**
    * Deletes and nulls out the frame in mFrames[framenum].
    *
    * Does not change the size of mFrames.
@@ -587,33 +543,11 @@ private:
   imgFrame* GetDrawableImgFrame(uint32_t framenum);
   imgFrame* GetCurrentImgFrame();
   uint32_t GetCurrentImgFrameIndex() const;
-  mozilla::TimeStamp GetCurrentImgFrameEndTime() const;
 
   size_t SizeOfDecodedWithComputedFallbackIfHeap(gfxASurface::MemoryLocation aLocation,
                                                  mozilla::MallocSizeOf aMallocSizeOf) const;
 
-  inline void EnsureAnimExists()
-  {
-    if (!mAnim) {
-
-      // Create the animation context
-      mAnim = new Anim();
-
-      // We don't support discarding animated images (See bug 414259).
-      // Lock the image and throw away the key.
-      //
-      // Note that this is inefficient, since we could get rid of the source
-      // data too. However, doing this is actually hard, because we're probably
-      // calling ensureAnimExists mid-decode, and thus we're decoding out of
-      // the source buffer. Since we're going to fix this anyway later, and
-      // since we didn't kill the source data in the old world either, locking
-      // is acceptable for the moment.
-      LockImage();
-
-      // Notify our observers that we are starting animation.
-      CurrentStatusTracker().RecordImageIsAnimated();
-    }
-  }
+  void EnsureAnimExists();
 
   nsresult InternalAddFrameHelper(uint32_t framenum, imgFrame *frame,
                                   uint8_t **imageData, uint32_t *imageLength,
@@ -671,10 +605,7 @@ private: // data
   // IMPORTANT: if you use mAnim in a method, call EnsureImageIsDecoded() first to ensure
   // that the frames actually exist (they may have been discarded to save memory, or
   // we maybe decoding on draw).
-  RasterImage::Anim*        mAnim;
-
-  //! # loops remaining before animation stops (-1 no stop)
-  int32_t                    mLoopCount;
+  FrameAnimator* mAnim;
 
   // Discard members
   uint32_t                   mLockCount;
@@ -789,10 +720,6 @@ protected:
 
 inline NS_IMETHODIMP RasterImage::GetAnimationMode(uint16_t *aAnimationMode) {
   return GetAnimationModeInternal(aAnimationMode);
-}
-
-inline NS_IMETHODIMP RasterImage::SetAnimationMode(uint16_t aAnimationMode) {
-  return SetAnimationModeInternal(aAnimationMode);
 }
 
 // Asynchronous Decode Requestor
