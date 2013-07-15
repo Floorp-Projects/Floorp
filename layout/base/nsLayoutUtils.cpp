@@ -4484,15 +4484,6 @@ nsLayoutUtils::SurfaceFromElement(nsIImageLoadingContent* aElement,
   SurfaceFromElementResult result;
   nsresult rv;
 
-  bool forceCopy = (aSurfaceFlags & SFE_WANT_NEW_SURFACE) != 0;
-  bool wantImageSurface = (aSurfaceFlags & SFE_WANT_IMAGE_SURFACE) != 0;
-  bool premultAlpha = (aSurfaceFlags & SFE_NO_PREMULTIPLY_ALPHA) == 0;
-
-  if (!premultAlpha) {
-    forceCopy = true;
-    wantImageSurface = true;
-  }
-
   // Push a null JSContext on the stack so that code that runs within
   // the below code doesn't think it's being called by JS. See bug
   // 604262.
@@ -4525,6 +4516,8 @@ nsLayoutUtils::SurfaceFromElement(nsIImageLoadingContent* aElement,
   if (NS_FAILED(rv))
     return result;
 
+  uint32_t noRasterize = aSurfaceFlags & SFE_NO_RASTERIZING_VECTORS;
+
   uint32_t whichFrame = (aSurfaceFlags & SFE_WANT_FIRST_FRAME)
                         ? (uint32_t) imgIContainer::FRAME_FIRST
                         : (uint32_t) imgIContainer::FRAME_CURRENT;
@@ -4533,12 +4526,6 @@ nsLayoutUtils::SurfaceFromElement(nsIImageLoadingContent* aElement,
     frameFlags |= imgIContainer::FLAG_DECODE_NO_COLORSPACE_CONVERSION;
   if (aSurfaceFlags & SFE_NO_PREMULTIPLY_ALPHA)
     frameFlags |= imgIContainer::FLAG_DECODE_NO_PREMULTIPLY_ALPHA;
-  nsRefPtr<gfxASurface> framesurf;
-  rv = imgContainer->GetFrame(whichFrame,
-                              frameFlags,
-                              getter_AddRefs(framesurf));
-  if (NS_FAILED(rv))
-    return result;
 
   int32_t imgWidth, imgHeight;
   rv = imgContainer->GetWidth(&imgWidth);
@@ -4546,24 +4533,48 @@ nsLayoutUtils::SurfaceFromElement(nsIImageLoadingContent* aElement,
   if (NS_FAILED(rv) || NS_FAILED(rv2))
     return result;
 
-  if (wantImageSurface && framesurf->GetType() != gfxASurface::SurfaceTypeImage) {
-    forceCopy = true;
-  }
+  if (!noRasterize || imgContainer->GetType() == imgIContainer::TYPE_RASTER) {
+    bool forceCopy = (aSurfaceFlags & SFE_WANT_NEW_SURFACE) != 0;
+    bool wantImageSurface = (aSurfaceFlags & SFE_WANT_IMAGE_SURFACE) != 0;
+    bool premultAlpha = (aSurfaceFlags & SFE_NO_PREMULTIPLY_ALPHA) == 0;
 
-  nsRefPtr<gfxASurface> gfxsurf = framesurf;
-  if (forceCopy) {
-    if (wantImageSurface) {
-      gfxsurf = new gfxImageSurface (gfxIntSize(imgWidth, imgHeight), gfxASurface::ImageFormatARGB32);
-    } else {
-      gfxsurf = gfxPlatform::GetPlatform()->CreateOffscreenSurface(gfxIntSize(imgWidth, imgHeight),
-                                                                   gfxASurface::CONTENT_COLOR_ALPHA);
+    if (!premultAlpha) {
+      forceCopy = true;
+      wantImageSurface = true;
     }
 
-    nsRefPtr<gfxContext> ctx = new gfxContext(gfxsurf);
+    nsRefPtr<gfxASurface> framesurf;
+    rv = imgContainer->GetFrame(whichFrame,
+                                frameFlags,
+                                getter_AddRefs(framesurf));
+    if (NS_FAILED(rv))
+      return result;
 
-    ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
-    ctx->SetSource(framesurf);
-    ctx->Paint();
+    if (wantImageSurface && framesurf->GetType() != gfxASurface::SurfaceTypeImage) {
+      forceCopy = true;
+    }
+
+    nsRefPtr<gfxASurface> gfxsurf = framesurf;
+    if (forceCopy) {
+      if (wantImageSurface) {
+        gfxsurf = new gfxImageSurface (gfxIntSize(imgWidth, imgHeight), gfxASurface::ImageFormatARGB32);
+      } else {
+        gfxsurf = gfxPlatform::GetPlatform()->CreateOffscreenSurface(gfxIntSize(imgWidth, imgHeight),
+                                                                     gfxASurface::CONTENT_COLOR_ALPHA);
+      }
+
+      nsRefPtr<gfxContext> ctx = new gfxContext(gfxsurf);
+
+      ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
+      ctx->SetSource(framesurf);
+      ctx->Paint();
+    }
+    result.mSurface = gfxsurf;
+  }
+  else {
+    result.mDrawInfo.mImgContainer = imgContainer;
+    result.mDrawInfo.mWhichFrame = whichFrame;
+    result.mDrawInfo.mDrawingFlags = frameFlags;
   }
 
   int32_t corsmode;
@@ -4571,7 +4582,6 @@ nsLayoutUtils::SurfaceFromElement(nsIImageLoadingContent* aElement,
     result.mCORSUsed = (corsmode != imgIRequest::CORS_NONE);
   }
 
-  result.mSurface = gfxsurf;
   result.mSize = gfxIntSize(imgWidth, imgHeight);
   result.mPrincipal = principal.forget();
   // no images, including SVG images, can load content from another domain.
