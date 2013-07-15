@@ -48,6 +48,7 @@ SVGPolygonElement::GetMarkPoints(nsTArray<nsSVGMark> *aMarks)
   nsSVGMark *startMark = &aMarks->ElementAt(0);
   float angle = atan2(startMark->y - endMark->y, startMark->x - endMark->x);
 
+  endMark->type = nsSVGMark::eMid;
   endMark->angle = SVGContentUtils::AngleBisect(angle, endMark->angle);
   startMark->angle = SVGContentUtils::AngleBisect(angle, startMark->angle);
   // for a polygon (as opposed to a polyline) there's an implicit extra point
@@ -55,7 +56,6 @@ SVGPolygonElement::GetMarkPoints(nsTArray<nsSVGMark> *aMarks)
   // doesn't return
   aMarks->AppendElement(nsSVGMark(startMark->x, startMark->y, startMark->angle,
                                   nsSVGMark::eEnd));
-  endMark->type = nsSVGMark::eMid;
 }
 
 void
