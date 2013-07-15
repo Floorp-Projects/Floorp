@@ -435,8 +435,10 @@
 
       <handler event="input" phase="capturing">
         <![CDATA[
-          // Ensures that paste-and-go actually brings the URL bar into editing mode.
+          // Ensures that paste-and-go actually brings the URL bar into editing mode
+          // and displays the half-height autocomplete popup.
           this.beginEditing();
+          this.openPopup();
         ]]>
       </handler>
 
