@@ -257,10 +257,12 @@ ok(mozContacts, "mozContacts exists");
 ok("mozContact" in window, "mozContact exists");
 var steps = [
   function() {
-    mozContacts.getRevision().onsuccess = function(e) {
+    req = mozContacts.getRevision();
+    req.onsuccess = function(e) {
       initialRev = e.target.result;
       next();
     };
+    req.onerror = onFailure;
   },
   function () {
     ok(true, "Deleting database");
