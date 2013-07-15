@@ -854,6 +854,21 @@ public class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
         viewportMetricsChanged(true);
     }
 
+    /** Implementation of PanZoomTarget
+     * Notification that a subdocument has been scrolled by a certain amount.
+     * This is used here to make sure that the margins are still accessible
+     * during subdocument scrolling.
+     *
+     * You must hold the monitor while calling this.
+     */
+    @Override
+    public void onSubdocumentScrollBy(float dx, float dy) {
+        ImmutableViewportMetrics newMarginsMetrics =
+            mMarginsAnimator.scrollBy(mViewportMetrics, dx, dy);
+        mViewportMetrics = mViewportMetrics.setMarginsFrom(newMarginsMetrics);
+        viewportMetricsChanged(true);
+    }
+
     /** Implementation of PanZoomTarget */
     @Override
     public void panZoomStopped() {
