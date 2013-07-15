@@ -294,8 +294,20 @@ var BrowserUI = {
    * Navigation
    */
 
+  /* Updates the overall state of the toolbar, but not the URL bar. */
   update: function(aState) {
+    let uri = this.getDisplayURI(Browser.selectedBrowser);
+    StartUI.update(uri);
+
+    this._updateButtons();
     this._updateToolbar();
+  },
+
+  /* Updates the URL bar. */
+  updateURI: function(aOptions) {
+    let uri = this.getDisplayURI(Browser.selectedBrowser);
+    let cleanURI = Util.isURLEmpty(uri) ? "" : uri;
+    this._edit.value = cleanURI;
   },
 
   getDisplayURI: function(browser) {
@@ -316,23 +328,6 @@ var BrowserUI = {
     return spec;
   },
 
-  /* Set the location to the current content */
-  updateURI: function(aOptions) {
-    aOptions = aOptions || {};
-
-    let uri = this.getDisplayURI(Browser.selectedBrowser);
-    let cleanURI = Util.isURLEmpty(uri) ? "" : uri;
-
-    this._edit.value = cleanURI;
-
-    if ("captionOnly" in aOptions && aOptions.captionOnly)
-      return;
-
-    StartUI.update(uri);
-    this._updateButtons();
-    this._updateToolbar();
-  },
-
   goToURI: function(aURI) {
     aURI = aURI || this._edit.value;
     if (!aURI)
@@ -344,7 +339,7 @@ var BrowserUI = {
     Util.forceOnline();
 
     BrowserUI.showContent(aURI);
-    content.focus();
+    Browser.selectedBrowser.focus();
 
     Task.spawn(function() {
       let postData = {};
@@ -371,13 +366,17 @@ var BrowserUI = {
 
     // Make sure we're online before attempting to load
     Util.forceOnline();
+
     BrowserUI.showContent();
+    Browser.selectedBrowser.focus();
 
-    Browser.loadURI(submission.uri.spec, { postData: submission.postData });
+    Task.spawn(function () {
+      Browser.loadURI(submission.uri.spec, { postData: submission.postData });
 
-    // loadURI may open a new tab, so get the selectedBrowser afterward.
-    Browser.selectedBrowser.userTypedValue = submission.uri.spec;
-    this._titleChanged(Browser.selectedBrowser);
+      // loadURI may open a new tab, so get the selectedBrowser afterward.
+      Browser.selectedBrowser.userTypedValue = submission.uri.spec;
+      BrowserUI._titleChanged(Browser.selectedBrowser);
+    });
   },
 
   /*********************************
