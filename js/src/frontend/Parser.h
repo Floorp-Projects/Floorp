@@ -500,7 +500,6 @@ class Parser : private AutoGCRooter, public StrictModeGetter
     bool arrayInitializerComprehensionTail(Node pn);
     Node generatorExpr(Node kid);
     bool argumentList(Node listNode);
-    Node bracketedExpr();
     Node letBlock(LetContext letContext);
     Node destructuringExpr(BindData<ParseHandler> *data, TokenKind tt);
 
