@@ -2046,11 +2046,6 @@ EmitElemOperands(ExclusiveContext *cx, ParseNode *pn, JSOp op, BytecodeEmitter *
         right = pn->pn_right;
     }
 
-    if (op == JSOP_GETELEM && left->isKind(PNK_NAME) && right->isKind(PNK_NUMBER)) {
-        if (!BindNameToSlot(cx, bce, left))
-            return false;
-    }
-
     if (!EmitTree(cx, bce, left))
         return false;
 
@@ -5697,6 +5692,7 @@ frontend::EmitTree(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             bool restIsDefn = false;
             if (fun->hasRest()) {
                 JS_ASSERT(!bce->sc->asFunctionBox()->argumentsHasLocalBinding());
+
                 // Defaults with a rest parameter need special handling. The
                 // rest parameter needs to be undefined while defaults are being
                 // processed. To do this, we create the rest argument and let it
@@ -5710,6 +5706,7 @@ frontend::EmitTree(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
                 if (Emit1(cx, bce, JSOP_REST) < 0)
                     return false;
                 CheckTypeSet(cx, bce, JSOP_REST);
+
                 // Only set the rest parameter if it's not aliased by a nested
                 // function in the body.
                 if (restIsDefn) {
