@@ -16,6 +16,5 @@ CPP_UNIT_TESTS = \
 		TestAudioChannelService.cpp \
 		$(NULL)
 
-include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/config/rules.mk
 
