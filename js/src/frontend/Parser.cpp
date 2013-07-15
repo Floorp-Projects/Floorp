@@ -2926,10 +2926,7 @@ Parser<FullParseHandler>::bindDestructuringLHS(ParseNode *pn)
     switch (pn->getKind()) {
       case PNK_NAME:
         pn->markAsAssigned();
-        /* FALL THROUGH */
 
-      case PNK_DOT:
-      case PNK_ELEM:
         /*
          * We may be called on a name node that has already been specialized,
          * in the very weird and ECMA-262-required "for (var [x] = i in o) ..."
@@ -2937,6 +2934,10 @@ Parser<FullParseHandler>::bindDestructuringLHS(ParseNode *pn)
          */
         if (!(js_CodeSpec[pn->getOp()].format & JOF_SET))
             pn->setOp(JSOP_SETNAME);
+        break;
+
+      case PNK_DOT:
+      case PNK_ELEM:
         break;
 
       case PNK_CALL:
@@ -5077,12 +5078,11 @@ Parser<FullParseHandler>::checkAndMarkAsAssignmentLhs(ParseNode *pn, bool isPlai
         pn->setOp(pn->isOp(JSOP_GETLOCAL) ? JSOP_SETLOCAL : JSOP_SETNAME);
         pn->markAsAssigned();
         break;
+
       case PNK_DOT:
-        pn->setOp(JSOP_SETPROP);
-        break;
       case PNK_ELEM:
-        pn->setOp(JSOP_SETELEM);
         break;
+
 #if JS_HAS_DESTRUCTURING
       case PNK_ARRAY:
       case PNK_OBJECT:
@@ -5094,10 +5094,12 @@ Parser<FullParseHandler>::checkAndMarkAsAssignmentLhs(ParseNode *pn, bool isPlai
             return false;
         break;
 #endif
+
       case PNK_CALL:
         if (!makeSetCall(pn, JSMSG_BAD_LEFTSIDE_OF_ASS))
             return false;
         break;
+
       default:
         report(ParseError, false, null(), JSMSG_BAD_LEFTSIDE_OF_ASS);
         return false;
