@@ -16,8 +16,6 @@
 
 #include "vm/Shape.h"
 
-#include "ion/IonFrames-inl.h"
-
 #include "vm/Interpreter-inl.h"
 
 using namespace js;

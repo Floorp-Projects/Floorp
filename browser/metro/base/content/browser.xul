@@ -250,15 +250,6 @@
     <html:div id="overlay-plus" class="overlay-button"
               observes="cmd_back"></html:div>
 
-    <!-- popup for content navigator helper -->
-    <appbar id="content-navigator" class="window-width content-navigator-box" orient="horizontal" pack="start">
-      <textbox id="find-helper-textbox" class="search-bar content-navigator-item" oncommand="FindHelperUI.search(this.value)" oninput="FindHelperUI.updateCommands(this.value);" type="search"/>
-      <button class="content-navigator-item previous-button" command="cmd_findPrevious"/>
-      <button class="content-navigator-item next-button" command="cmd_findNext"/>
-      <spacer flex="1"/>
-      <button class="content-navigator-item close-button" command="cmd_findClose"/>
-    </appbar>
-
     <!-- Navbar -->
     <appbar id="navbar" mousethrough="never" observes="bcast_windowState">
       <hbox id="progress-container" layer="true">
@@ -355,6 +346,15 @@
         </vbox>
       </deck>
     </vbox>
+
+    <!-- Find bar -->
+    <appbar id="findbar" class="window-width findbar-box" orient="horizontal" pack="start">
+      <textbox id="findbar-textbox" class="search-bar findbar-item" oncommand="FindHelperUI.search(this.value)" oninput="FindHelperUI.updateCommands(this.value);" type="search"/>
+      <button class="findbar-item previous-button" command="cmd_findPrevious"/>
+      <button class="findbar-item next-button" command="cmd_findNext"/>
+      <spacer flex="1"/>
+      <button class="findbar-item close-button" command="cmd_findClose"/>
+    </appbar>
 
     <!-- Context button bar -->
     <appbar id="contextappbar">

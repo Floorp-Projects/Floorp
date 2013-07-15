@@ -377,7 +377,7 @@ class StoreBuffer
 
     /* TODO: profile to find the ideal size for these. */
     static const size_t ValueBufferSize = 1 * 1024 * sizeof(ValueEdge);
-    static const size_t CellBufferSize = 2 * 1024 * sizeof(CellPtrEdge);
+    static const size_t CellBufferSize = 8 * 1024 * sizeof(CellPtrEdge);
     static const size_t SlotBufferSize = 2 * 1024 * sizeof(SlotEdge);
     static const size_t WholeCellBufferSize = 2 * 1024 * sizeof(WholeCellEdges);
     static const size_t RelocValueBufferSize = 1 * 1024 * sizeof(ValueEdge);

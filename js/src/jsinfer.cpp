@@ -37,8 +37,6 @@
 #include "jsobjinlines.h"
 #include "jsscriptinlines.h"
 
-#include "vm/Stack-inl.h"
-
 #ifdef __SUNPRO_CC
 #include <alloca.h>
 #endif

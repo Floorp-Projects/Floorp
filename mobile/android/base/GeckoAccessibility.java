@@ -200,9 +200,10 @@ public class GeckoAccessibility {
                 sVirtualCursorNode.setBoundsInScreen(screenBounds);
             }
 
-            final String brailleText = message.optString("brailleText");
-            if (!brailleText.isEmpty()) {
-                sendBrailleText(view, brailleText);
+            final JSONObject braille = message.optJSONObject("brailleOutput");
+            if (braille != null) {
+                sendBrailleText(view, braille.optString("text"),
+                                braille.optInt("selectionStart"), braille.optInt("selectionEnd"));
             }
 
             ThreadUtils.postToUiThread(new Runnable() {
@@ -234,13 +235,13 @@ public class GeckoAccessibility {
         }
     }
 
-    private static void sendBrailleText(final View view, final String text) {
+    private static void sendBrailleText(final View view, final String text, final int selectionStart, final int selectionEnd) {
         AccessibilityNodeInfo info = AccessibilityNodeInfo.obtain(view, VIRTUAL_CURSOR_POSITION);
         WriteData data = WriteData.forInfo(info);
         data.setText(text);
-        // Set the focus blink
-        data.setSelectionStart(0);
-        data.setSelectionEnd(0);
+        // Set either the focus blink or the current caret position/selection
+        data.setSelectionStart(selectionStart);
+        data.setSelectionEnd(selectionEnd);
         sSelfBrailleClient.write(data);
     }
 

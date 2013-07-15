@@ -1256,8 +1256,6 @@ nsNSSComponent::InitializeNSS(bool showWarningBox)
       // dynamic options from prefs
       setValidationOptions(mPrefBranch);
 
-      RegisterMyOCSPAIAInfoCallback();
-
       mHttpForNSS.initTable();
       mHttpForNSS.registerHttpClient();
 
@@ -1301,7 +1299,6 @@ nsNSSComponent::ShutdownNSS()
 
     PK11_SetPasswordFunc((PK11PasswordFunc)nullptr);
     mHttpForNSS.unregisterHttpClient();
-    UnregisterMyOCSPAIAInfoCallback();
 
     if (mPrefBranch) {
       mPrefBranch->RemoveObserver("security.", this);

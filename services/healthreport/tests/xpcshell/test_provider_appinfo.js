@@ -221,3 +221,32 @@ add_task(function test_record_blocklist() {
 
   yield storage.close();
 });
+
+add_task(function test_record_app_update () {
+  let storage = yield Metrics.Storage("record_update");
+
+  Services.prefs.setBoolPref("app.update.enabled", true);
+  Services.prefs.setBoolPref("app.update.auto", true);
+  let provider = new AppInfoProvider();
+  yield provider.init(storage);
+  let now = new Date();
+  yield provider.collectDailyData();
+
+  let m = provider.getMeasurement("update", 1);
+  let data = yield m.getValues();
+  let d = yield m.serializer(m.SERIALIZE_JSON).daily(data.days.getDay(now));
+  do_check_eq(d.enabled, 1);
+  do_check_eq(d.autoDownload, 1);
+
+  Services.prefs.setBoolPref("app.update.enabled", false);
+  Services.prefs.setBoolPref("app.update.auto", false);
+
+  yield provider.collectDailyData();
+  data = yield m.getValues();
+  d = yield m.serializer(m.SERIALIZE_JSON).daily(data.days.getDay(now));
+  do_check_eq(d.enabled, 0);
+  do_check_eq(d.autoDownload, 0);
+
+  yield provider.shutdown();
+  yield storage.close();
+});

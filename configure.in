@@ -4289,7 +4289,6 @@ MOZ_PLACES=1
 MOZ_SOCIAL=1
 MOZ_PREF_EXTENSIONS=1
 MOZ_PROFILELOCKING=1
-MOZ_PSM=1
 MOZ_REFLOW_PERF=
 MOZ_SAFE_BROWSING=
 MOZ_HELP_VIEWER=
@@ -5283,14 +5282,6 @@ dnl ========================================================
 if test -n "$MOZ_ANDROID_BEAM"; then
     AC_DEFINE(MOZ_ANDROID_BEAM)
 fi
-
-dnl ========================================================
-dnl = Build Personal Security Manager
-dnl ========================================================
-MOZ_ARG_DISABLE_BOOL(crypto,
-[  --disable-crypto        Disable crypto support (Personal Security Manager)],
-    MOZ_PSM=,
-    MOZ_PSM=1 )
 
 dnl ========================================================
 dnl = JS Debugger XPCOM component (js/jsd)
@@ -8146,7 +8137,14 @@ dnl Graphics checks.
 dnl ========================================================
 
 if test "${OS_TARGET}" = "WINNT" -o "${OS_ARCH}" = "Darwin" -o "${MOZ_WIDGET_TOOLKIT}" = "android" -o "${MOZ_WIDGET_TOOLKIT}" = "gtk2"; then
-MOZ_ENABLE_SKIA=1
+    case "${target_cpu}" in
+    i*86*|x86_64|arm)
+        MOZ_ENABLE_SKIA=1
+        ;;
+    *)
+        MOZ_ENABLE_SKIA=
+        ;;
+    esac
 else
 MOZ_ENABLE_SKIA=
 fi
@@ -8633,7 +8631,6 @@ AC_SUBST(MOZ_AUTH_EXTENSION)
 AC_SUBST(MOZ_PERMISSIONS)
 AC_SUBST(MOZ_PREF_EXTENSIONS)
 AC_SUBST(MOZ_JS_LIBS)
-AC_SUBST(MOZ_PSM)
 AC_SUBST(MOZ_DEBUG)
 AC_SUBST(MOZ_DEBUG_SYMBOLS)
 AC_SUBST(MOZ_DEBUG_ENABLE_DEFS)

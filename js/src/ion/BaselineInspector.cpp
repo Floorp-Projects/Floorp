@@ -7,8 +7,6 @@
 #include "ion/BaselineIC.h"
 #include "ion/BaselineInspector.h"
 
-#include "vm/Shape-inl.h"
-
 using namespace js;
 using namespace js::ion;
 
