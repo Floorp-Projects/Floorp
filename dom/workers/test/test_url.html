@@ -21,7 +21,7 @@
     is(event.target, worker);
 
     if (event.data.type == 'finish') {
-      runTest();
+      SimpleTest.finish();
     } else if (event.data.type == 'status') {
       ok(event.data.status, event.data.msg);
     } else if (event.data.type == 'url') {
@@ -42,22 +42,8 @@
     SimpleTest.finish();
   };
 
-  var tests = [
-    function() { worker.postMessage(0); },
-    function() { worker.postMessage(4); }
-  ];
+  worker.postMessage(true);
 
-  function runTest() {
-    if (!tests.length) {
-      SimpleTest.finish();
-      return;
-    }
-
-    var test = tests.shift();
-    test();
-  }
-
-  runTest();
   SimpleTest.waitForExplicitFinish();
 
 </script>
