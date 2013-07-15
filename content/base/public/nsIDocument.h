@@ -2116,6 +2116,10 @@ public:
     return mStyleSheetChangeEventsEnabled;
   }
 
+  void ObsoleteSheet(nsIURI *aSheetURI, mozilla::ErrorResult& rv);
+
+  void ObsoleteSheet(const nsAString& aSheetURI, mozilla::ErrorResult& rv);
+
   virtual nsHTMLDocument* AsHTMLDocument() { return nullptr; }
 
   virtual JSObject* WrapObject(JSContext *aCx,
