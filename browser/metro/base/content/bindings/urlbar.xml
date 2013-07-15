@@ -518,6 +518,8 @@
 
       <field name="_input">null</field>
 
+      <property name="input" readonly="true" onget="return this._input;"/>
+      <property name="matchCount" readonly="true" onget="return this.input.controller.matchCount;"/>
       <property name="popupOpen" readonly="true" onget="return !this.hidden"/>
       <property name="overrideValue" readonly="true" onget="return null;"/>
 
@@ -546,9 +548,6 @@
           ]]>
         </setter>
       </property>
-
-      <property name="input" readonly="true" onget="return this._input;"/>
-      <property name="_matchCount" readonly="true" onget="return this.input.controller.matchCount;"/>
 
       <method name="openAutocompletePopup">
         <parameter name="aInput"/>
@@ -586,7 +585,31 @@
         </body>
       </method>
 
-      <!-- Updating the results on the grids -->
+      <!-- Updating grid content -->
+
+      <field name="_grid">null</field>
+      <field name="_results" readonly="true">document.getAnonymousElementByAttribute(this, 'anonid', 'results');</field>
+      <field name="_searches" readonly="true">document.getAnonymousElementByAttribute(this, 'anonid', 'searches');</field>
+
+      <property name="_otherGrid" readonly="true">
+        <getter>
+          <![CDATA[
+            if (this._grid == null)
+              return null;
+
+            return (this._grid == this._results) ? this._searches : this._results;
+          ]]>
+        </getter>
+      </property>
+
+      <method name="_isGridBound">
+        <parameter name="aGrid"/>
+        <body>
+          <![CDATA[
+            return aGrid && aGrid.isBound;
+          ]]>
+        </body>
+      </method>
 
       <method name="invalidate">
         <body>
@@ -600,6 +623,8 @@
         </body>
       </method>
 
+      <!-- Updating grid content: results -->
+
       <method name="updateResults">
         <body>
           <![CDATA[
@@ -610,8 +635,8 @@
               return;
 
             let controller = this.input.controller;
-            let lastMatch = this._matchCount - 1;
-            let iterCount = Math.max(this._results.itemCount, this._matchCount);
+            let lastMatch = this.matchCount - 1;
+            let iterCount = Math.max(this._results.itemCount, this.matchCount);
 
             // Swap out existing items for new search hit results
             for (let i = 0; i < iterCount; i++) {
@@ -641,6 +666,10 @@
           ]]>
         </body>
       </method>
+
+      <!-- Updating grid content: search engines -->
+
+      <field name="_engines">[]</field>
 
       <method name="_initSearchEngines">
         <body>
@@ -693,13 +722,17 @@
         </body>
       </method>
 
-      <!-- Selecting search results -->
+      <!-- Selecting results -->
 
       <method name="selectBy">
         <parameter name="aReverse"/>
         <parameter name="aPage"/>
         <body>
           <![CDATA[
+            if (!this._isGridBound(this._results) ||
+                !this._isGridBound(this._searches))
+              return;
+
             // Move between grids if we're at the edge of one.
             if ((this._grid.isSelectionAtEnd && !aReverse) ||
                 (this._grid.isSelectionAtStart && aReverse)) {
@@ -726,18 +759,20 @@
         </body>
       </method>
 
-      <!-- Submitting selected search results -->
+      <!-- Submitting selected results -->
 
       <method name="submitSelected">
         <body>
           <![CDATA[
-            if (this._results.selectedIndex >= 0) {
+            if (this._isGridBound(this._results) &&
+                this._results.selectedIndex >= 0) {
               let url = this.input.controller.getValueAt(this._results.selectedIndex);
               this.input.value = url;
               return this.input.submitURL();
             }
 
-            if (this._searches.selectedIndex >= 0) {
+            if (this._isGridBound(this._searches) &&
+                this._searches.selectedIndex >= 0) {
               let engine = this._engines[this._searches.selectedIndex];
               return this.input.submitSearch(engine.name);
             }
@@ -749,6 +784,7 @@
 
       <method name="handleItemClick">
         <parameter name="aItem"/>
+        <parameter name="aEvent"/>
         <body>
           <![CDATA[
             // XXX this should probably be supported in grid.xml
@@ -775,33 +811,6 @@
                 this.updateSearchEngineGrid();
                 break;
             }
-          ]]>
-        </body>
-      </method>
-
-      <!-- Helpers -->
-
-      <field name="_engines">[]</field>
-      <field name="_grid">null</field>
-      <field name="_results" readonly="true">document.getAnonymousElementByAttribute(this, 'anonid', 'results');</field>
-      <field name="_searches" readonly="true">document.getAnonymousElementByAttribute(this, 'anonid', 'searches');</field>
-
-      <property name="_otherGrid" readonly="true">
-        <getter>
-          <![CDATA[
-            if (this._grid == null)
-              return null;
-
-            return (this._grid == this._results) ? this._searches : this._results;
-          ]]>
-        </getter>
-      </property>
-
-      <method name="_isGridBound">
-        <parameter name="aGrid"/>
-        <body>
-          <![CDATA[
-            return aGrid && aGrid.itemCount != undefined;
           ]]>
         </body>
       </method>
