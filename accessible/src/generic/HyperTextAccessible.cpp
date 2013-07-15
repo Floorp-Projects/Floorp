@@ -1130,7 +1130,9 @@ HyperTextAccessible::GetTextAtOffset(int32_t aOffset,
       if (aOffset == nsIAccessibleText::TEXT_OFFSET_CARET)
         offset = AdjustCaretOffset(offset);
 
-      // Home key, arrow down and if not on last line then home key.
+      // Start offset is begin of the current line (as the home key was
+      // pressed). End offset is begin of the next line if any (arrow down and
+      // home keys), otherwise end of the current line (arrow down only).
       *aStartOffset = FindLineBoundary(offset, eDirPrevious, eSelectBeginLine);
       *aEndOffset = FindLineBoundary(offset, eDirNext, eSelectLine);
       int32_t tmpOffset = FindLineBoundary(*aEndOffset, eDirPrevious, eSelectBeginLine);
@@ -1154,8 +1156,10 @@ HyperTextAccessible::GetTextAtOffset(int32_t aOffset,
       if (aOffset == nsIAccessibleText::TEXT_OFFSET_CARET)
         offset = AdjustCaretOffset(offset);
 
-      // In contrast to word end boundary we follow the spec here. End key,
-      // then up arrow and if not on first line then end key.
+      // In contrast to word end boundary we follow the spec here.
+      // End offset is end of the current line (as the end key was pressed).
+      // Start offset is end of the previous line if any (up arrow and end keys),
+      // otherwise 0 offset (up arrow only).
       *aEndOffset = FindLineBoundary(offset, eDirNext, eSelectEndLine);
       int32_t tmpOffset = FindLineBoundary(offset, eDirPrevious, eSelectLine);
       *aStartOffset = FindLineBoundary(tmpOffset, eDirNext, eSelectEndLine);

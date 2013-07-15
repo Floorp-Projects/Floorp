@@ -54,6 +54,8 @@ js::ObjectImpl::nonProxyIsExtensible() const
 js::ObjectImpl::isExtensible(ExclusiveContext *cx, js::Handle<ObjectImpl*> obj, bool *extensible)
 {
     if (obj->asObjectPtr()->is<ProxyObject>()) {
+        if (!cx->shouldBeJSContext())
+            return false;
         HandleObject h =
             HandleObject::fromMarkedLocation(reinterpret_cast<JSObject* const*>(obj.address()));
         return Proxy::isExtensible(cx->asJSContext(), h, extensible);

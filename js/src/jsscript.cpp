@@ -1562,7 +1562,8 @@ js::SweepScriptData(JSRuntime *rt)
         SharedScriptData *entry = e.front();
         if (entry->marked) {
             entry->marked = false;
-        } else if (!rt->gcKeepAtoms) {
+        } else if (!rt->mainThread.gcKeepAtoms) {
+            // FIXME bug 875125 this should check all instances of PerThreadData.
             js_free(entry);
             e.removeFront();
         }
@@ -2015,7 +2016,7 @@ js::CallNewScriptHook(JSContext *cx, HandleScript script, HandleFunction fun)
 
     JS_ASSERT(!script->isActiveEval);
     if (JSNewScriptHook hook = cx->runtime()->debugHooks.newScriptHook) {
-        AutoKeepAtoms keep(cx->runtime());
+        AutoKeepAtoms keepAtoms(cx->perThreadData);
         hook(cx, script->filename(), script->lineno, script, fun,
              cx->runtime()->debugHooks.newScriptHookData);
     }

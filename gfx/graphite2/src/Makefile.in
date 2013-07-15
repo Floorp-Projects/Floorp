@@ -31,10 +31,6 @@ else
 LIBXUL_LIBRARY = 1
 endif
 
-# MSVC doesn't like the paths in _SOURCES, so strip off the prefix
-# and leave bare filenames
-FORCE_USE_PIC = 1
-
 ifeq (WINNT,$(OS_TARGET))
 DEFINES += -DGRAPHITE2_EXPORTING
 else

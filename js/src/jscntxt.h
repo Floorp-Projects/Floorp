@@ -177,6 +177,18 @@ struct ThreadSafeContext : ContextFriendFields,
         return maybeJSContext();
     }
 
+    // In some cases we could potentially want to do operations that require a
+    // JSContext while running off the main thread. While this should never
+    // actually happen, the wide enough API for working off the main thread
+    // makes such operations impossible to rule out. Rather than blindly using
+    // asJSContext() and crashing afterwards, this method may be used to watch
+    // for such cases and produce either a soft failure in release builds or
+    // an assertion failure in debug builds.
+    bool shouldBeJSContext() const {
+        JS_ASSERT(isJSContext());
+        return isJSContext();
+    }
+
     bool isExclusiveContext() const {
         return contextKind_ == Context_JS || contextKind_ == Context_Exclusive;
     }

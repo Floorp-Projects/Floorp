@@ -128,6 +128,20 @@ CanLazilyParse(JSContext *cx, const CompileOptions &options)
         !cx->compartment()->debugMode();
 }
 
+inline void
+MaybeCallSourceHandler(JSContext *cx, const CompileOptions &options,
+                       const jschar *chars, size_t length)
+{
+    JSSourceHandler listener = cx->runtime()->debugHooks.sourceHandler;
+    void *listenerData = cx->runtime()->debugHooks.sourceHandlerData;
+
+    if (listener) {
+        void *listenerTSData;
+        listener(options.filename, options.lineno, chars, length,
+                 &listenerTSData, listenerData);
+    }
+}
+
 JSScript *
 frontend::CompileScript(JSContext *cx, HandleObject scopeChain,
                         HandleScript evalCaller,
@@ -139,6 +153,8 @@ frontend::CompileScript(JSContext *cx, HandleObject scopeChain,
 {
     RootedString source(cx, source_);
     SkipRoot skip(cx, &chars);
+
+    MaybeCallSourceHandler(cx, options, chars, length);
 
     /*
      * The scripted callerFrame can only be given for compile-and-go scripts
@@ -404,6 +420,8 @@ frontend::CompileFunctionBody(JSContext *cx, MutableHandleFunction fun, CompileO
     // FIXME: make Function pass in two strings and parse them as arguments and
     // ProgramElements respectively.
     SkipRoot skip(cx, &chars);
+
+    MaybeCallSourceHandler(cx, options, chars, length);
 
     if (!CheckLength(cx, length))
         return false;

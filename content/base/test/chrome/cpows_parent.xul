@@ -1,0 +1,90 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+<window title="MessageManager CPOW tests"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  onload="start()">
+
+  <!-- test results are displayed in the html:body -->
+  <label value="CPOWs"/>
+
+  <script type="application/javascript"><![CDATA[
+    var test_state = "remote";
+    var test_node = null;
+
+    function ok(condition, message) {
+      return opener.wrappedJSObject.ok(condition, message);
+    }
+
+    function testCpowMessage(message) {
+      ok(message.json.check == "ok", "correct json");
+
+      let data = message.objects.data;
+      let document = message.objects.document;
+      ok(data.i === 5, "integer property");
+      ok(data.b === true, "boolean property");
+      ok(data.s === "hello", "string property");
+      ok(data.x.i === 10, "nested property");
+      ok(data.f() === 99, "function call");
+      ok(document.title === "Hello, Kitty", "document node");
+
+      data.i = 6;
+      data.b = false;
+      data.s = "bye";
+      data.x = null;
+      ok(data.i === 6, "integer property");
+      ok(data.b === false, "boolean property");
+      ok(data.s === "bye", "string property");
+      ok(data.x === null, "nested property");
+    }
+
+    function recvAsyncMessage(message) {
+      testCpowMessage(message);
+    }
+
+    function recvSyncMessage(message) {
+      testCpowMessage(message);
+    }
+
+    function recvFailMessage(message) {
+      ok(false, message.json.message);
+    }
+
+    function recvDoneMessage(message) {
+      if (test_state == "remote") {
+        test_node.parentNode.removeChild(test_node);
+        run_tests("inprocess");
+        return;
+      }
+        
+      finish();
+    }
+
+    function run_tests(type) {
+      var node = document.getElementById('cpowbrowser_' + type);
+
+      test_state = type;
+      test_node = node;
+
+      var mm = node.messageManager;
+      mm.addMessageListener("cpows:async", recvAsyncMessage);
+      mm.addMessageListener("cpows:sync", recvSyncMessage);
+      mm.addMessageListener("cpows:done", recvDoneMessage);
+      mm.addMessageListener("cpows:fail", recvFailMessage);
+      mm.loadFrameScript("chrome://mochitests/content/chrome/content/base/test/chrome/cpows_child.js", true);
+    }
+
+    function start() {
+      run_tests('remote');
+    }
+
+    function finish() {
+      opener.setTimeout("done()", 0);
+      window.close();
+    }
+  ]]></script>
+
+  <browser type="content" src="about:blank" id="cpowbrowser_remote" remote="true"/>
+  <browser type="content" src="about:blank" id="cpowbrowser_inprocess"/>
+</window>

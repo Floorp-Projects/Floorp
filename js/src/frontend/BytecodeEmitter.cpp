@@ -4517,10 +4517,8 @@ EmitFunc(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         bool generateBytecode = true;
 #ifdef JS_ION
         if (funbox->useAsm) {
-            if (!cx->isJSContext()) {
-                bce->parser->tokenStream.reportError(JSMSG_SYNTAX_ERROR);
+            if (!cx->shouldBeJSContext())
                 return false;
-            }
 
             RootedFunction moduleFun(cx);
 
