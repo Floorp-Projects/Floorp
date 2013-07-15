@@ -59,3 +59,20 @@ class SearchProvider(object):
         self.mdn(term)
         self.mxr(term)
 
+
+@CommandProvider
+class UUIDProvider(object):
+    @Command('uuid', category='misc',
+        description='Generate a uuid.')
+    @CommandArgument('--format', '-f', choices=['idl', 'cpp'], default='idl',
+                     help='Output format for the generated uuid.')
+    def uuid(self, format):
+        import uuid
+        u = uuid.uuid4()
+        if format == 'idl':
+            print(u)
+        else:
+            u = u.hex
+            print('{ 0x%s, 0x%s, 0x%s, \\' % (u[0:8], u[8:12], u[12:16]))
+            pairs = tuple(map(lambda n: u[n:n+2], range(16, 32, 2)))
+            print(('  { ' + '0x%s, ' * 7 + '0x%s } }') % pairs)
