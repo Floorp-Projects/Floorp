@@ -180,6 +180,7 @@ const PanelUI = {
       let tempPanel = document.createElement("panel");
       tempPanel.setAttribute("type", "arrow");
       tempPanel.setAttribute("id", "customizationui-widget-panel");
+      tempPanel.setAttribute("level", "top");
       document.getElementById(CustomizableUI.AREA_NAVBAR).appendChild(tempPanel);
 
       let multiView = document.createElement("panelmultiview");
