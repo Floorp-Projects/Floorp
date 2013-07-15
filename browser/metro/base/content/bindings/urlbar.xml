@@ -640,15 +640,15 @@
         </body>
       </method>
 
-      <method name="updateSearchEngines">
+      <method name="_initSearchEngines">
         <body>
           <![CDATA[
-            Services.search.init(this._onSearchServiceInit.bind(this));
+            Services.search.init(this.updateSearchEngineGrid.bind(this));
           ]]>
         </body>
       </method>
 
-      <method name="_onSearchServiceInit">
+      <method name="updateSearchEngineGrid">
         <body>
           <![CDATA[
             if (!this._isGridBound(this._searches))
@@ -768,11 +768,11 @@
         <parameter name="aData"/>
         <body>
           <![CDATA[
-            if (aTopic != "browser-search-engine-modified" ||
-                aData != "engine-changed")
-              return;
-
-            this.updateSearchEngines();
+            switch (aTopic) {
+              case "browser-search-engine-modified":
+                this.updateSearchEngineGrid();
+                break;
+            }
           ]]>
         </body>
       </method>
@@ -811,7 +811,7 @@
           let grid = event.originalTarget;
 
           if (grid == this._searches)
-            this.updateSearchEngines();
+            this._initSearchEngines();
 
           if (grid == this._results)
             this.updateResults();
