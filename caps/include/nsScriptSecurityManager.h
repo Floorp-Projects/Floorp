@@ -430,20 +430,6 @@ private:
     nsIPrincipal*
     GetSubjectPrincipal(JSContext* cx, nsresult* rv);
 
-    // Returns null if a principal cannot be found.  Note that rv can be NS_OK
-    // when this happens -- this means that there was no script.  Callers MUST
-    // pass in a non-null rv here.
-    static nsIPrincipal*
-    GetScriptPrincipal(JSScript* script, nsresult* rv);
-
-    // Returns null if a principal cannot be found.  Note that rv can be NS_OK
-    // when this happens -- this means that there was no script associated
-    // with the function object, and no global object associated with the scope
-    // of obj (the last object on its parent chain). Callers MUST pass in a
-    // non-null rv here.
-    static nsIPrincipal*
-    GetFunctionObjectPrincipal(JSContext* cx, JS::Handle<JSObject*> obj, nsresult* rv);
-
     /**
      * Check capability levels for an |aObj| that implements
      * nsISecurityCheckedComponent.

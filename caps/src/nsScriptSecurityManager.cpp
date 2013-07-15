@@ -1584,25 +1584,7 @@ nsScriptSecurityManager::CheckFunctionAccess(JSContext *aCx, void *aFunObj,
     // This check is called for event handlers
     nsresult rv;
     JS::Rooted<JSObject*> rootedFunObj(aCx, static_cast<JSObject*>(aFunObj));
-    nsIPrincipal* subject =
-        GetFunctionObjectPrincipal(aCx, rootedFunObj, &rv);
-
-    // If subject is null, get a principal from the function object's scope.
-    if (NS_SUCCEEDED(rv) && !subject)
-    {
-#ifdef DEBUG
-        {
-            JS_ASSERT(JS_ObjectIsFunction(aCx, rootedFunObj));
-            JS::Rooted<JSFunction*> fun(aCx, JS_GetObjectFunction(rootedFunObj));
-            JSScript *script = JS_GetFunctionScript(aCx, fun);
-
-            NS_ASSERTION(!script, "Null principal for non-native function!");
-        }
-#endif
-
-        subject = doGetObjectPrincipal(rootedFunObj);
-    }
-
+    nsIPrincipal* subject = doGetObjectPrincipal(rootedFunObj);
     if (!subject)
         return NS_ERROR_FAILURE;
 
@@ -1927,77 +1909,6 @@ nsScriptSecurityManager::GetCodebasePrincipalInternal(nsIURI *aURI,
     NS_IF_ADDREF(*result = principal);
 
     return NS_OK;
-}
-
-// static
-nsIPrincipal*
-nsScriptSecurityManager::GetScriptPrincipal(JSScript *script,
-                                            nsresult* rv)
-{
-    NS_PRECONDITION(rv, "Null out param");
-    *rv = NS_OK;
-    if (!script)
-    {
-        return nullptr;
-    }
-    JSPrincipals *jsp = JS_GetScriptPrincipals(script);
-    if (!jsp) {
-        *rv = NS_ERROR_FAILURE;
-        NS_ERROR("Script compiled without principals!");
-        return nullptr;
-    }
-    return nsJSPrincipals::get(jsp);
-}
-
-// static
-nsIPrincipal*
-nsScriptSecurityManager::GetFunctionObjectPrincipal(JSContext *cx,
-                                                    JS::Handle<JSObject*> obj,
-                                                    nsresult *rv)
-{
-    NS_PRECONDITION(rv, "Null out param");
-
-    *rv = NS_OK;
-
-    if (!JS_ObjectIsFunction(cx, obj))
-    {
-        // Protect against pseudo-functions (like SJOWs).
-        nsIPrincipal *result = doGetObjectPrincipal(obj);
-        if (!result)
-            *rv = NS_ERROR_FAILURE;
-        return result;
-    }
-
-    JS::Rooted<JSFunction*> fun(cx, JS_GetObjectFunction(obj));
-    JSScript *script = JS_GetFunctionScript(cx, fun);
-
-    if (!script)
-    {
-        // A native function: skip it in order to find its scripted caller.
-        return nullptr;
-    }
-
-    if (!js::IsOriginalScriptFunction(fun))
-    {
-        // Here, obj is a cloned function object.  In this case, the
-        // clone's prototype may have been precompiled from brutally
-        // shared chrome, or else it is a lambda or nested function.
-        // The general case here is a function compiled against a
-        // different scope than the one it is parented by at runtime,
-        // hence the creation of a clone to carry the correct scope
-        // chain linkage.
-        //
-        // Since principals follow scope, we must get the object
-        // principal from the clone's scope chain. There are no
-        // reliable principals compiled into the function itself.
-
-        nsIPrincipal *result = doGetObjectPrincipal(obj);
-        if (!result)
-            *rv = NS_ERROR_FAILURE;
-        return result;
-    }
-
-    return GetScriptPrincipal(script, rv);
 }
 
 nsIPrincipal*
