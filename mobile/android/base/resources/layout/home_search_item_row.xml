@@ -7,4 +7,5 @@
                                    android:layout_width="fill_parent"
                                    android:layout_height="wrap_content"
                                    android:minHeight="@dimen/awesomebar_row_height"
+                                   android:duplicateParentState="true"
                                    android:padding="7dp"/>
