@@ -160,7 +160,10 @@ struct AutoTxnEnd {
 void
 CompositableForwarder::IdentifyTextureHost(const TextureFactoryIdentifier& aIdentifier)
 {
-  mTextureFactoryIdentifier = aIdentifier;
+  mMaxTextureSize = aIdentifier.mMaxTextureSize;
+  mCompositorBackend = aIdentifier.mParentBackend;
+  mSupportsTextureBlitting = aIdentifier.mSupportsTextureBlitting;
+  mSupportsPartialUploads = aIdentifier.mSupportsPartialUploads;
 }
 
 ShadowLayerForwarder::ShadowLayerForwarder()

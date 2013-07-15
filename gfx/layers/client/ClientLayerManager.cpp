@@ -232,16 +232,6 @@ ClientLayerManager::EndEmptyTransaction(EndTransactionFlags aFlags)
   return true;
 }
 
-CompositorChild *
-ClientLayerManager::GetRemoteRenderer()
-{
-  if (!mWidget) {
-    return nullptr;
-  }
-
-  return mWidget->GetRemoteRenderer();
-}
-
 void 
 ClientLayerManager::MakeSnapshotIfRequired()
 {
@@ -249,7 +239,7 @@ ClientLayerManager::MakeSnapshotIfRequired()
     return;
   }
   if (mWidget) {
-    if (CompositorChild* remoteRenderer = GetRemoteRenderer()) {
+    if (CompositorChild* remoteRenderer = mWidget->GetRemoteRenderer()) {
       nsIntRect bounds;
       mWidget->GetBounds(bounds);
       SurfaceDescriptor inSnapshot, snapshot;
