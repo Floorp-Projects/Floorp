@@ -91,11 +91,6 @@ toolbarbutton.bookmark-item[open="true"] {
   height: 16px;
 }
 
-#PlacesToolbarItems > .bookmark-item:not([image]):not([label=""]):not([container]) > .toolbarbutton-icon {
-  display: none;
-}
-
-
 /* Prevent [mode="icons"] from hiding the label */
 .bookmark-item > .toolbarbutton-text {
   display: -moz-box !important;
