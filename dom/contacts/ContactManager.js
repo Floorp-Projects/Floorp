@@ -640,6 +640,8 @@ ContactManager.prototype = {
       case "Contact:Save:Return:KO":
       case "Contact:Remove:Return:KO":
       case "Contacts:Clear:Return:KO":
+      case "Contacts:GetRevision:Return:KO":
+      case "Contacts:Count:Return:KO":
         req = this.getRequest(msg.requestID);
         if (req)
           Services.DOMRequest.fireError(req.request, msg.errorMsg);
