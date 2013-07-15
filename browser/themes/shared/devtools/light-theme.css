@@ -44,7 +44,7 @@
 }
 
 .theme-selected {
-  background-color: hsl(0,0%,90%);
+  background-color: #CCC;
 }
 
 .theme-bg-darker {
