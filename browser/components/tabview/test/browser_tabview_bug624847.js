@@ -64,7 +64,7 @@ function test() {
 
         createBlankTab();
         afterAllTabsLoaded(testUndoCloseWithSelectedBlankPinnedTab);
-      }, 0);
+      });
     });
   }
 
@@ -94,7 +94,7 @@ function test() {
         gBrowser.removeTab(gBrowser.tabs[0]);
 
         afterAllTabsLoaded(finishTest);
-      }, 0);
+      });
     });
   }
 
