@@ -27,7 +27,11 @@ this.SitePermissions = {
   /* Returns an array of all permission IDs.
    */
   listPermissions: function () {
-    return Object.keys(gPermissionObject);
+    let array = Object.keys(gPermissionObject);
+    array.sort((a, b) => {
+      return this.getPermissionLabel(a).localeCompare(this.getPermissionLabel(b));
+    });
+    return array;
   },
 
   /* Returns an array of permission states to be exposed to the user for a
