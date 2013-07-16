@@ -63,17 +63,6 @@ public:
   // nsStyleLinkElement
   NS_IMETHOD GetCharset(nsAString& aCharset) MOZ_OVERRIDE;
 
-  virtual void SetData(const nsAString& aData, mozilla::ErrorResult& rv) MOZ_OVERRIDE
-  {
-    nsGenericDOMDataNode::SetData(aData, rv);
-    if (rv.Failed()) {
-      return;
-    }
-    UpdateStyleSheetInternal(nullptr, true);
-  }
-  using nsGenericDOMDataNode::SetData; // Prevent hiding overloaded virtual function.
-  using ProcessingInstruction::SetData;
-
 protected:
   nsCOMPtr<nsIURI> mOverriddenBaseURI;
 

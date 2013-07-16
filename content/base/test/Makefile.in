@@ -638,7 +638,6 @@ MOCHITEST_FILES_C= \
 		test_bug890580.html \
 		test_declare_stylesheet_obsolete.html \
 		variable_style_sheet.sjs \
-		test_processing_instruction_update_stylesheet.xhtml \
 		$(NULL)
 
 # OOP tests don't work on Windows (bug 763081) or native-fennec
