@@ -395,14 +395,7 @@ abstract public class BrowserApp extends GeckoApp
 
         mBrowserToolbar = (BrowserToolbar) findViewById(R.id.browser_toolbar);
 
-        mToast = new ButtonToast(findViewById(R.id.toast), new ButtonToast.ToastListener() {
-            @Override
-            public void onButtonClicked(CharSequence token) {
-                if (ADD_SHORTCUT_TOAST.equals(token)) {
-                    showBookmarkDialog();
-                }
-            }
-        });
+        mToast = new ButtonToast(findViewById(R.id.toast));
 
         ((GeckoApp.MainLayout) mMainLayout).setTouchEventInterceptor(new HideTabsTouchListener());
         ((GeckoApp.MainLayout) mMainLayout).setMotionEventInterceptor(new MotionEventInterceptor() {
@@ -1699,10 +1692,15 @@ abstract public class BrowserApp extends GeckoApp
                     } else {
                         tab.addBookmark();
                         mToast.show(false,
-                                    getResources().getString(R.string.bookmark_added),
-                                    getResources().getString(R.string.bookmark_options),
-                                    0,
-                                    ADD_SHORTCUT_TOAST);
+                            getResources().getString(R.string.bookmark_added),
+                            getResources().getString(R.string.bookmark_options),
+                            0,
+                            new ButtonToast.ToastListener() {
+                                @Override
+                                public void onButtonClicked() {
+                                    showBookmarkDialog();
+                                }
+                            });
                         item.setIcon(R.drawable.ic_menu_bookmark_remove);
                     }
                 }
