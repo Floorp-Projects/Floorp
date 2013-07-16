@@ -64,11 +64,12 @@ let steps = [
     req.onerror = onFailure("Deleting database");
   },
   function() {
-    mozSettings.addObserver("test1", function(e) {
+    function obs(e) {
       checkBlob(e.settingValue);
-      mozSettings.removeObserver("test1", this);
+      mozSettings.removeObserver("test1", obs);
       next();
-    });
+    }
+    mozSettings.addObserver("test1", obs);
     next();
   },
   function() {
