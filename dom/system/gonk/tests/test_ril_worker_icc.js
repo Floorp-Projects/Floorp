@@ -2633,6 +2633,41 @@ add_test(function test_unlock_card_lock_corporateLocked() {
  */
 add_test(function test_mcc_mnc_parsing() {
   let worker = newUint8Worker();
+  let helper = worker.ICCUtilsHelper;
+
+  function do_test(imsi, mncLength, expectedMcc, expectedMnc) {
+    let result = helper.parseMccMncFromImsi(imsi, mncLength);
+
+    if (!imsi) {
+      do_check_eq(result, null);
+      return;
+    }
+
+    do_check_eq(result.mcc, expectedMcc);
+    do_check_eq(result.mnc, expectedMnc);
+  }
+
+  // Test the imsi is null.
+  do_test(null, null, null, null);
+
+  // Test MCC is Taiwan
+  do_test("466923202422409", 0x02, "466", "92");
+  do_test("466923202422409", 0x03, "466", "923");
+  do_test("466923202422409", null, "466", "92");
+
+  // Test MCC is US
+  do_test("310260542718417", 0x02, "310", "26");
+  do_test("310260542718417", 0x03, "310", "260");
+  do_test("310260542718417", null, "310", "260");
+
+  run_next_test();
+ });
+
+ /**
+  * Verify reading EF_AD and parsing MCC/MNC
+  */
+add_test(function test_reading_ad_and_parsing_mcc_mnc() {
+  let worker = newUint8Worker();
   let record = worker.ICCRecordHelper;
   let helper = worker.GsmPDUHelper;
   let ril    = worker.RIL;
