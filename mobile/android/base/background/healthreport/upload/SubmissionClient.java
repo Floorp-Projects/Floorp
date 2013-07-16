@@ -4,6 +4,8 @@
 
 package org.mozilla.gecko.background.healthreport.upload;
 
+import java.util.Collection;
+
 public interface SubmissionClient {
   public interface Delegate {
     /**
@@ -35,6 +37,6 @@ public interface SubmissionClient {
     public void onSuccess(long localTime, String id);
   }
 
-  public void upload(long localTime, Delegate delegate);
+  public void upload(long localTime, String id, Collection<String> oldIds, Delegate delegate);
   public void delete(long localTime, String id, Delegate delegate);
 }
