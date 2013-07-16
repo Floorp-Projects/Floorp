@@ -11,29 +11,11 @@ findbar {
   background-size: 100% 2px;
   background-repeat: no-repeat;
   min-width: 1px;
-  transition-property: margin-bottom, opacity, visibility;
-  transition-duration: 150ms, 150ms, 0s;
-  transition-timing-function: ease-in-out, ease-in-out, linear;
 }
 
 findbar[position="top"] {
   background-image: none;
   box-shadow: 0 -1px 0 rgba(0,0,0,.1) inset;
-  transition-property: margin-top, opacity, visibility;
-}
-
-findbar[hidden] {
-  /* Override display:none to make the transition work. */
-  display: -moz-box;
-  visibility: collapse;
-  margin-bottom: -1em;
-  opacity: 0;
-  transition-delay: 0s, 0s, 150ms;
-}
-
-findbar[position="top"][hidden] {
-  margin-bottom: auto;
-  margin-top: -1em;
 }
 
 .findbar-closebutton {
