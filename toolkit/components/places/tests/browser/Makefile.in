@@ -23,6 +23,7 @@ MOCHITEST_BROWSER_FILES = \
 	browser_favicon_setAndFetchFaviconForPage_failures.js \
 	browser_notfound.js \
 	browser_redirect.js \
+	browser_visited_notfound.js \
 	browser_visituri.js \
 	browser_visituri_nohistory.js \
 	browser_visituri_privatebrowsing_perwindowpb.js \
