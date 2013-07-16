@@ -780,6 +780,11 @@ MobileMessageDatabaseService.prototype = {
           if (DEBUG) {
             debug("MMS: part[" + i + "]: " + JSON.stringify(part));
           }
+          // Sometimes the part is incomplete because the device reboots when
+          // downloading MMS. Don't need to expose this part to the content.
+          if (!part) {
+            continue;
+          }
 
           let partHeaders = part["headers"];
           let partContent = part["content"];

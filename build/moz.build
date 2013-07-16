@@ -9,7 +9,7 @@ if CONFIG['OS_ARCH'] not in ('WINNT', 'OS2'):
 elif CONFIG['OS_ARCH'] == 'WINNT':
     DIRS += ['win32']
 
-if CONFIG['STLPORT_SOURCES']:
+if CONFIG['OS_TARGET'] == 'Android' and not CONFIG['MOZ_ANDROID_LIBSTDCXX']:
     DIRS += ['stlport']
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':

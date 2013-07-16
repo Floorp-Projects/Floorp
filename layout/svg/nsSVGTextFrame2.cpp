@@ -3326,9 +3326,12 @@ nsSVGTextFrame2::NotifySVGChanged(uint32_t aFlags)
   // at every tick of a transform animation, but ensures our glyph metrics
   // do not get too far out of sync with the final font size on the screen.
   if (needNewCanvasTM && mLastContextScale != 0.0f) {
-    // Compute the new mCanvasTM now.
     mCanvasTM = nullptr;
-    gfxMatrix newTM = GetCanvasTM(FOR_OUTERSVG_TM);
+    // If we are a non-display frame, then we don't want to call
+    // GetCanvasTM(FOR_OUTERSVG_TM), since the context scale does not use it.
+    gfxMatrix newTM =
+      (mState & NS_FRAME_IS_NONDISPLAY) ? gfxMatrix() :
+                                          GetCanvasTM(FOR_OUTERSVG_TM);
     // Compare the old and new context scales.
     float scale = GetContextScale(newTM);
     float change = scale / mLastContextScale;
@@ -3705,6 +3708,10 @@ nsSVGTextFrame2::GetCanvasTM(uint32_t aFor)
   }
   if (!mCanvasTM) {
     NS_ASSERTION(mParent, "null parent");
+    NS_ASSERTION(!(aFor == FOR_OUTERSVG_TM &&
+                   (GetStateBits() & NS_FRAME_IS_NONDISPLAY)),
+                 "should not call GetCanvasTM(FOR_OUTERSVG_TM) when we are "
+                 "non-display");
 
     nsSVGContainerFrame *parent = static_cast<nsSVGContainerFrame*>(mParent);
     dom::SVGTextContentElement *content = static_cast<dom::SVGTextContentElement*>(mContent);

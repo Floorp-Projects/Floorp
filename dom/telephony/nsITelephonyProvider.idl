@@ -83,15 +83,14 @@ interface nsITelephonyProvider : nsISupports
   const unsigned short CALL_STATE_UNKNOWN = 0;
   const unsigned short CALL_STATE_DIALING = 1;
   const unsigned short CALL_STATE_ALERTING = 2;
-  const unsigned short CALL_STATE_BUSY = 3;
-  const unsigned short CALL_STATE_CONNECTING = 4;
-  const unsigned short CALL_STATE_CONNECTED = 5;
-  const unsigned short CALL_STATE_HOLDING = 6;
-  const unsigned short CALL_STATE_HELD = 7;
-  const unsigned short CALL_STATE_RESUMING = 8;
-  const unsigned short CALL_STATE_DISCONNECTING = 9;
-  const unsigned short CALL_STATE_DISCONNECTED = 10;
-  const unsigned short CALL_STATE_INCOMING = 11;
+  const unsigned short CALL_STATE_CONNECTING = 3;
+  const unsigned short CALL_STATE_CONNECTED = 4;
+  const unsigned short CALL_STATE_HOLDING = 5;
+  const unsigned short CALL_STATE_HELD = 6;
+  const unsigned short CALL_STATE_RESUMING = 7;
+  const unsigned short CALL_STATE_DISCONNECTING = 8;
+  const unsigned short CALL_STATE_DISCONNECTED = 9;
+  const unsigned short CALL_STATE_INCOMING = 10;
 
   /**
    * Called when a content process registers receiving unsolicited messages from

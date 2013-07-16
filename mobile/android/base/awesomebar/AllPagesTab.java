@@ -85,13 +85,6 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
     private static final int MESSAGE_UPDATE_FAVICONS = 2;
     private static final int DELAY_SHOW_THUMBNAILS = 550;
 
-    private class SearchEntryViewHolder {
-        public FlowLayout suggestionView;
-        public FaviconView iconView;
-        public LinearLayout userEnteredView;
-        public TextView userEnteredTextView;
-    }
-
     public AllPagesTab(Context context) {
         super(context);
         mSearchEngines = new ArrayList<SearchEngine>();
@@ -130,7 +123,7 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
             mView = (LinearLayout) (LayoutInflater.from(mContext).inflate(R.layout.awesomebar_allpages_list, null));
             mView.setTag(TAG);
 
-            ListView list = getListView();
+            final ListView list = getListView();
             list.setTag(TAG);
             ((Activity)mContext).registerForContextMenu(list);
             list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -143,6 +136,23 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
             AwesomeBarCursorAdapter adapter = getCursorAdapter();
             list.setAdapter(adapter);
             list.setOnTouchListener(mListListener);
+
+            final ListSelectionListener listener = new ListSelectionListener();
+            list.setOnItemSelectedListener(listener);
+            list.setOnFocusChangeListener(listener);
+
+            list.setOnKeyListener(new View.OnKeyListener() {
+                @Override
+                public boolean onKey(View v, int keyCode, android.view.KeyEvent event) {
+                    View selected = list.getSelectedView();
+
+                    if (selected instanceof SearchEngineRow) {
+                        return ((SearchEngineRow) selected).onKeyDown(keyCode, event);
+                    }
+                    return false;
+                }
+            });
+
         }
 
         return mView;
@@ -468,6 +478,12 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
 
         @Override
         public boolean isEnabled(int position) {
+            // If we're using a gamepad or keyboard, allow the row to be
+            // focused so it can pass the focus to its child suggestion views.
+            if (!getListView().isInTouchMode()) {
+                return true;
+            }
+
             // If the suggestion row only contains one item (the user-entered
             // query), allow the entire row to be clickable; clicking the row
             // has the same effect as clicking the single suggestion. If the
@@ -482,23 +498,21 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
         public View getView(int position, View convertView, ViewGroup parent) {
             int type = getItemViewType(position);
             if (type == ROW_SEARCH || type == ROW_SUGGEST) {
-                SearchEntryViewHolder viewHolder = null;
-
-                if (convertView == null || !(convertView.getTag() instanceof SearchEntryViewHolder)) {
-                    convertView = getInflater().inflate(R.layout.awesomebar_suggestion_row, getListView(), false);
-
-                    viewHolder = new SearchEntryViewHolder();
-                    viewHolder.suggestionView = (FlowLayout) convertView.findViewById(R.id.suggestion_layout);
-                    viewHolder.iconView = (FaviconView) convertView.findViewById(R.id.suggestion_icon);
-                    viewHolder.userEnteredView = (LinearLayout) convertView.findViewById(R.id.suggestion_user_entered);
-                    viewHolder.userEnteredTextView = (TextView) convertView.findViewById(R.id.suggestion_text);
-
-                    convertView.setTag(viewHolder);
-                } else {
-                    viewHolder = (SearchEntryViewHolder) convertView.getTag();
+                if (convertView == null || !(convertView instanceof SearchEngineRow)) {
+                    convertView = (SearchEngineRow) getInflater().inflate(R.layout.home_search_item_row, getListView(), false);
+                    ((SearchEngineRow) convertView).setOnUrlOpenListener(getUrlListener());
                 }
 
-                bindSearchEngineView(mSearchEngines.get(getEngineIndex(position)), viewHolder);
+                SearchEngineRow searchRow = (SearchEngineRow) convertView;
+                searchRow.setSearchTerm(mSearchTerm);
+
+                final SearchEngine engine = mSearchEngines.get(getEngineIndex(position));
+                final boolean doAnimation = (mAnimateSuggestions && engine.suggestions.size() > 0);
+                searchRow.updateFromSearchEngine(engine, doAnimation);
+                if (doAnimation) {
+                    // Only animate suggestions the first time they are shown
+                    mAnimateSuggestions = false;
+                }
             } else {
                 AwesomeEntryViewHolder viewHolder = null;
 
@@ -528,91 +542,6 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
             }
 
             return convertView;
-        }
-
-        private void bindSearchEngineView(final SearchEngine engine, final SearchEntryViewHolder viewHolder) {
-            // when a suggestion is clicked, do a search
-            OnClickListener clickListener = new OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    AwesomeBarTabs.OnUrlOpenListener listener = getUrlListener();
-                    if (listener != null) {
-                        String suggestion = ((TextView) v.findViewById(R.id.suggestion_text)).getText().toString();
-
-                        // If we're not clicking the user-entered view (the
-                        // first suggestion item) and the search matches a URL
-                        // pattern, go to that URL. Otherwise, do a search for
-                        // the term.
-                        if (v != viewHolder.userEnteredView && !StringUtils.isSearchQuery(suggestion, false)) {
-                            listener.onUrlOpen(suggestion, null);
-                        } else {
-                            listener.onSearch(engine, suggestion);
-                        }
-                    }
-                }
-            };
-
-            // when a suggestion is long-clicked, copy the suggestion into the URL EditText
-            OnLongClickListener longClickListener = new OnLongClickListener() {
-                @Override
-                public boolean onLongClick(View v) {
-                    AwesomeBarTabs.OnUrlOpenListener listener = getUrlListener();
-                    if (listener != null) {
-                        String suggestion = ((TextView) v.findViewById(R.id.suggestion_text)).getText().toString();
-                        listener.onEditSuggestion(suggestion);
-                        return true;
-                    }
-                    return false;
-                }
-            };
-
-            // set the search engine icon (e.g., Google) for the row
-            FlowLayout suggestionView = viewHolder.suggestionView;
-            updateFavicon(viewHolder.iconView, engine.icon, engine.name);
-
-            // user-entered search term is first suggestion
-            viewHolder.userEnteredTextView.setText(mSearchTerm);
-            viewHolder.userEnteredView.setOnClickListener(clickListener);
-            
-            // add additional suggestions given by this engine
-            int recycledSuggestionCount = suggestionView.getChildCount();
-            int suggestionCount = engine.suggestions.size();
-            boolean showedSuggestions = false;
-
-            for (int i = 0; i < suggestionCount; i++) {
-                String suggestion = engine.suggestions.get(i);
-                View suggestionItem = null;
-
-                // reuse suggestion views from recycled view, if possible
-                if (i+1 < recycledSuggestionCount) {
-                    suggestionItem = suggestionView.getChildAt(i+1);
-                    suggestionItem.setVisibility(View.VISIBLE);
-                } else {
-                    suggestionItem = getInflater().inflate(R.layout.awesomebar_suggestion_item, null);
-                    ((ImageView) suggestionItem.findViewById(R.id.suggestion_magnifier)).setVisibility(View.GONE);
-                    suggestionView.addView(suggestionItem);
-                }
-                ((TextView) suggestionItem.findViewById(R.id.suggestion_text)).setText(suggestion);
-
-                suggestionItem.setOnClickListener(clickListener);
-                suggestionItem.setOnLongClickListener(longClickListener);
-
-                if (mAnimateSuggestions) {
-                    showedSuggestions = true;
-                    AlphaAnimation anim = new AlphaAnimation(0, 1);
-                    anim.setDuration(ANIMATION_DURATION);
-                    anim.setStartOffset(i * ANIMATION_DURATION);
-                    suggestionItem.startAnimation(anim);
-                }
-            }
-            
-            // hide extra suggestions that have been recycled
-            for (int i = suggestionCount + 1; i < recycledSuggestionCount; i++) {
-                suggestionView.getChildAt(i).setVisibility(View.GONE);
-            }
-
-            if (showedSuggestions)
-                mAnimateSuggestions = false;
         }
     };
 
@@ -698,6 +627,18 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
         };
         yesButton.setOnClickListener(listener);
         noButton.setOnClickListener(listener);
+
+        // If the prompt container gains focus, automatically pass focus to the
+        // yes button in the prompt.
+        final View promptContainer = mSuggestionsOptInPrompt.findViewById(R.id.prompt_container);
+        promptContainer.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View v, boolean hasFocus) {
+                if (hasFocus) {
+                    yesButton.requestFocus();
+                }
+            }
+        });
 
         mSuggestionsOptInPrompt.setVisibility(View.GONE);
         ((LinearLayout)getView()).addView(mSuggestionsOptInPrompt, 0);
@@ -970,6 +911,48 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
                 case MESSAGE_UPDATE_FAVICONS:
                     updateFavicons();
                     break;
+            }
+        }
+    }
+
+    private static class ListSelectionListener implements View.OnFocusChangeListener,
+                                                          AdapterView.OnItemSelectedListener {
+        private SearchEngineRow mSelectedEngineRow;
+
+        @Override
+        public void onFocusChange(View v, boolean hasFocus) {
+            if (hasFocus) {
+                View selectedRow = ((ListView) v).getSelectedView();
+                if (selectedRow != null) {
+                    selectRow(selectedRow);
+                }
+            } else {
+                deselectRow();
+            }
+        }
+
+        @Override
+        public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+            deselectRow();
+            selectRow(view);
+        }
+
+        @Override
+        public void onNothingSelected(AdapterView<?> parent) {
+            deselectRow();
+        }
+
+        private void selectRow(View row) {
+            if (row instanceof SearchEngineRow) {
+                mSelectedEngineRow = (SearchEngineRow) row;
+                mSelectedEngineRow.onSelected();
+            }
+        }
+
+        private void deselectRow() {
+            if (mSelectedEngineRow != null) {
+                mSelectedEngineRow.onDeselected();
+                mSelectedEngineRow = null;
             }
         }
     }

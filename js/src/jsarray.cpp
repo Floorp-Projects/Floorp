@@ -421,10 +421,8 @@ js::CanonicalizeArrayLengthValue(JSContext *cx, HandleValue v, uint32_t *newLen)
     if (d == *newLen)
         return true;
 
-    if (!cx->isJSContext())
-        return false;
-
-    JS_ReportErrorNumber(cx->asJSContext(), js_GetErrorMessage, NULL, JSMSG_BAD_ARRAY_LENGTH);
+    if (cx->isJSContext())
+        JS_ReportErrorNumber(cx->asJSContext(), js_GetErrorMessage, NULL, JSMSG_BAD_ARRAY_LENGTH);
     return false;
 }
 
@@ -460,6 +458,9 @@ js::ArraySetLength(JSContext *cx, Handle<ArrayObject*> arr, HandleId id, unsigne
     if (!lengthIsWritable) {
         if (newLen == oldLen)
             return true;
+
+        if (!cx->isJSContext())
+            return false;
 
         if (setterIsStrict) {
             return JS_ReportErrorFlagsAndNumber(cx->asJSContext(),

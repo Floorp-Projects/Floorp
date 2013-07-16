@@ -26,7 +26,7 @@ using mozilla::DebugOnly;
 void
 CodeLocationJump::repoint(IonCode *code, MacroAssembler *masm)
 {
-    JS_ASSERT(!absolute_);
+    JS_ASSERT(state_ == Relative);
     size_t new_off = (size_t)raw_;
 #ifdef JS_SMALL_BRANCH
     size_t jumpTableEntryOffset = reinterpret_cast<size_t>(jumpTableEntry_);
@@ -50,7 +50,7 @@ CodeLocationJump::repoint(IonCode *code, MacroAssembler *masm)
 void
 CodeLocationLabel::repoint(IonCode *code, MacroAssembler *masm)
 {
-     JS_ASSERT(!absolute_);
+     JS_ASSERT(state_ == Relative);
      size_t new_off = (size_t)raw_;
      if (masm != NULL) {
 #ifdef JS_CPU_X64
