@@ -309,8 +309,7 @@ public:
      *  the event.
      */
     bool DispatchMouseEvent(const nsString& aType,
-                            const float&    aX,
-                            const float&    aY,
+                            const CSSPoint& aPoint,
                             const int32_t&  aButton,
                             const int32_t&  aClickCount,
                             const int32_t&  aModifiers,
@@ -407,7 +406,7 @@ private:
                                        const nsACString& aJSONData);
 
     void DispatchSynthesizedMouseEvent(uint32_t aMsg, uint64_t aTime,
-                                       const nsIntPoint& aRefPoint);
+                                       const LayoutDevicePoint& aRefPoint);
 
     // These methods are used for tracking synthetic mouse events
     // dispatched for compatibility.  On each touch event, we
@@ -445,7 +444,7 @@ private:
     ScreenIntSize mInnerSize;
     // When we're tracking a possible tap gesture, this is the "down"
     // point of the touchstart.
-    nsIntPoint mGestureDownPoint;
+    LayoutDevicePoint mGestureDownPoint;
     // The touch identifier of the active gesture.
     int32_t mActivePointerId;
     // A timer task that fires if the tap-hold timeout is exceeded by
