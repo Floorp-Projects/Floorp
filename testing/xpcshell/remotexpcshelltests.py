@@ -248,6 +248,17 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
         return ['-e', 'const _TEST_FILE = ["%s"];' %
                  replaceBackSlashes(remoteName)]
 
+    def setupTempDir(self):
+        # make sure the temp dir exists
+        if self.device.dirExists(self.remoteTmpDir):
+            self.device.removeDir(self.remoteTmpDir)
+        self.device.mkDir(self.remoteTmpDir)
+
+        self.env["XPCSHELL_TEST_TEMP_DIR"] = self.remoteTmpDir
+        if self.interactive:
+            self.log.info("TEST-INFO | temp dir is %s" % self.remoteTmpDir)
+        return self.remoteTmpDir
+
     def setupProfileDir(self):
         self.device.removeDir(self.profileDir)
         self.device.mkDir(self.profileDir)
@@ -299,6 +310,7 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
         self.env["XPCSHELL_TEST_PROFILE_DIR"]=self.profileDir
         self.env["TMPDIR"]=self.remoteTmpDir
         self.env["HOME"]=self.profileDir
+        self.setupTempDir()
         if self.options.setup:
             self.pushWrapper()
 
