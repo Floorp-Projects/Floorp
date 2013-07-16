@@ -52,11 +52,6 @@ AudioListener::RegisterPannerNode(PannerNode* aPannerNode)
   UpdatePannersVelocity();
 }
 
-void AudioListener::UnregisterPannerNode(PannerNode* aPannerNode)
-{
-  mPanners.RemoveElement(aPannerNode);
-}
-
 void
 AudioListener::SendDoubleParameterToStream(uint32_t aIndex, double aValue)
 {
