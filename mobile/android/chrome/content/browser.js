@@ -204,6 +204,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "Rect",
                                   "resource://gre/modules/Geometry.jsm");
 
 function resolveGeckoURI(aURI) {
+  if (!aURI)
+    throw "Can't resolve an empty uri";
+
   if (aURI.startsWith("chrome://")) {
     let registry = Cc['@mozilla.org/chrome/chrome-registry;1'].getService(Ci["nsIChromeRegistry"]);
     return registry.convertChromeURL(Services.io.newURI(aURI, null, null)).spec;
@@ -728,7 +731,7 @@ var BrowserApp = {
       if (tabs[i].browser.contentWindow == aWindow)
         return tabs[i];
     }
-    return null; 
+    return null;
   },
 
   getBrowserForWindow: function getBrowserForWindow(aWindow) {
@@ -1539,13 +1542,21 @@ var BrowserApp = {
 var NativeWindow = {
   init: function() {
     Services.obs.addObserver(this, "Menu:Clicked", false);
+    Services.obs.addObserver(this, "PageActions:Clicked", false);
+    Services.obs.addObserver(this, "PageActions:LongClicked", false);
     Services.obs.addObserver(this, "Doorhanger:Reply", false);
+    Services.obs.addObserver(this, "Toast:Click", false);
+    Services.obs.addObserver(this, "Toast:Hidden", false);
     this.contextmenus.init();
   },
 
   uninit: function() {
     Services.obs.removeObserver(this, "Menu:Clicked");
+    Services.obs.removeObserver(this, "PageActions:Clicked");
+    Services.obs.removeObserver(this, "PageActions:LongClicked");
     Services.obs.removeObserver(this, "Doorhanger:Reply");
+    Services.obs.removeObserver(this, "Toast:Click", false);
+    Services.obs.removeObserver(this, "Toast:Hidden", false);
     this.contextmenus.uninit();
   },
 
@@ -1565,12 +1576,55 @@ var NativeWindow = {
   },
 
   toast: {
-    show: function(aMessage, aDuration) {
-      sendMessageToJava({
+    _callbacks: {},
+    show: function(aMessage, aDuration, aOptions) {
+      let msg = {
         type: "Toast:Show",
         message: aMessage,
         duration: aDuration
+      };
+
+      if (aOptions.button) {
+        msg.button = {
+          label: aOptions.button.label,
+          id: uuidgen.generateUUID().toString(),
+          // If the caller specified a button, make sure we convert any chrome urls
+          // to jar:jar urls so that the frontend can show them
+          icon: aOptions.button.icon ? resolveGeckoURI(aOptions.button.icon) : null,
+        };
+        this._callbacks[msg.button.id] = aOptions.button.callback;
+      }
+
+      sendMessageToJava(msg);
+    }
+  },
+
+  pageactions: {
+    _items: { },
+    add: function(aOptions) {
+      let id = uuidgen.generateUUID().toString();
+      sendMessageToJava({
+        gecko: {
+          type: "PageActions:Add",
+          id: id,
+          title: aOptions.title,
+          icon: aOptions.icon,
+        }
       });
+      this._items[id] = {
+        clickCallback: aOptions.clickCallback,
+        longClickCallback: aOptions.longClickCallback
+      };
+      return id;
+    },
+    remove: function(id) {
+      sendMessageToJava({
+        gecko: {
+          type: "PageActions:Remove",
+          id: id
+        }
+      });
+      delete this._items[id];
     }
   },
 
@@ -1671,6 +1725,20 @@ var NativeWindow = {
     if (aTopic == "Menu:Clicked") {
       if (this.menu._callbacks[aData])
         this.menu._callbacks[aData]();
+    } else if (aTopic == "Toast:Click") {
+      if (this.toast._callbacks[aData]) {
+        this.toast._callbacks[aData]();
+        delete this.toast._callbacks[aData];
+      }
+    } else if (aTopic == "Toast:Hidden") {
+      if (this.toast._callbacks[aData])
+        delete this.toast._callbacks[aData];
+    } else if (aTopic == "PageActions:Clicked") {
+        if (this.pageactions._items[aData].clickCallback)
+          this.pageactions._items[aData].clickCallback();
+    } else if (aTopic == "PageActions:LongClicked") {
+        if (this.pageactions._items[aData].longClickCallback)
+          this.pageactions._items[aData].longClickCallback();
     } else if (aTopic == "Doorhanger:Reply") {
       let data = JSON.parse(aData);
       let reply_id = data["callback"];
@@ -2469,6 +2537,8 @@ function Tab(aURL, aParams) {
   this._fixedMarginTop = 0;
   this._fixedMarginRight = 0;
   this._fixedMarginBottom = 0;
+  this._readerEnabled = false;
+  this._readerActive = false;
   this.userScrollPos = { x: 0, y: 0 };
   this.viewportExcludesHorizontalMargins = true;
   this.viewportExcludesVerticalMargins = true;
@@ -2763,6 +2833,7 @@ Tab.prototype = {
       this.browser.setAttribute("type", "content-primary");
       this.browser.focus();
       this.browser.docShellIsActive = true;
+      Reader.updatePageAction(this);
     } else {
       this.browser.setAttribute("type", "content-targetable");
       this.browser.docShellIsActive = false;
@@ -3455,9 +3526,12 @@ Tab.prototype = {
           if (article == null || (article.url != tabURL)) {
             // Don't clear the article for about:reader pages since we want to
             // use the article from the previous page
-            if (!tabURL.startsWith("about:reader"))
+            if (!tabURL.startsWith("about:reader")) {
               this.savedArticle = null;
-
+              this.readerEnabled = false;
+            } else {
+              this.readerActive = true;
+            }
             return;
           }
 
@@ -3467,6 +3541,12 @@ Tab.prototype = {
             type: "Content:ReaderEnabled",
             tabID: this.id
           });
+
+          if(this.readerActive)
+            this.readerActive = false;
+
+          if(!this.readerEnabled)
+            this.readerEnabled = true;
         }.bind(this));
       }
     }
@@ -3920,6 +4000,26 @@ Tab.prototype = {
           ViewportHandler.updateMetadata(this, false);
         break;
     }
+  },
+
+  set readerEnabled(isReaderEnabled) {
+    this._readerEnabled = isReaderEnabled;
+    if (this.getActive())
+      Reader.updatePageAction(this);
+  },
+
+  get readerEnabled() {
+    return this._readerEnabled;
+  },
+
+  set readerActive(isReaderActive) {
+    this._readerActive = isReaderActive;
+    if (this.getActive())
+      Reader.updatePageAction(this);
+  },
+
+  get readerActive() {
+    return this._readerActive;
   },
 
   // nsIBrowserTab
@@ -6858,6 +6958,46 @@ let Reader = {
     Services.obs.addObserver(this, "Reader:Remove", false);
 
     Services.prefs.addObserver("reader.parse-on-load.", this, false);
+  },
+
+  pageAction: {
+    readerModeCallback: function(){
+      sendMessageToJava({
+        gecko: {
+          type: "Reader:Click",
+        }
+      });
+    },
+
+    readerModeActiveCallback: function(){
+      sendMessageToJava({
+        gecko: {
+          type: "Reader:LongClick",
+        }
+      });
+    },
+  },
+
+  updatePageAction: function(tab) {
+    if(this.pageAction.id) {
+      NativeWindow.pageactions.remove(this.pageAction.id);
+      delete this.pageAction.id;
+    }
+
+    if (tab.readerActive) {
+      this.pageAction.id = NativeWindow.pageactions.add({
+        title: Strings.browser.GetStringFromName("readerMode.exit"),
+        icon: "drawable://reader_active",
+        clickCallback: this.pageAction.readerModeCallback
+      });
+    } else if (tab.readerEnabled) {
+      this.pageAction.id = NativeWindow.pageactions.add({
+        title: Strings.browser.GetStringFromName("readerMode.enter"),
+        icon: "drawable://reader",
+        clickCallback:this.pageAction.readerModeCallback,
+        longClickCallback: this.pageAction.readerModeActiveCallback
+      });
+    }
   },
 
   observe: function(aMessage, aTopic, aData) {
