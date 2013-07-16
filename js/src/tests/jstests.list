@@ -38,7 +38,6 @@ skip script test262/ch10/10.4/10.4.3/10.4.3-1-106.js # bug 603201
 
 skip script test262/intl402/ch10/10.1/10.1.1_13.js # bug 853704
 skip script test262/intl402/ch10/10.1/10.1.1_19_c.js # bug 853704
-skip script test262/intl402/ch11/11.3/11.3.2_TRP.js # bug 853706
 
 #######################################################################
 # Tests disabled due to jstest limitations wrt imported test262 tests #
