@@ -374,6 +374,9 @@ nsSHEntry::Create(nsIURI * aURI, const nsAString &aTitle,
   //By default the page is not expired
   mShared->mExpired = false;
 
+  mIsSrcdocEntry = false;
+  mSrcdocData = NullString();
+
   return NS_OK;
 }
 
