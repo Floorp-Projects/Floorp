@@ -2947,10 +2947,6 @@ void nsGfxScrollFrameInner::CurPosAttributeChanged(nsIContent* aContent)
                (mVScrollbarBox && mVScrollbarBox->GetContent() == aContent),
                "unexpected child");
 
-  if (mScrollbarActivity) {
-    mScrollbarActivity->ActivityOccurred();
-  }
-
   // Attribute changes on the scrollbars happen in one of three ways:
   // 1) The scrollbar changed the attribute in response to some user event
   // 2) We changed the attribute in response to a ScrollPositionDidChange
@@ -2981,6 +2977,10 @@ void nsGfxScrollFrameInner::CurPosAttributeChanged(nsIContent* aContent)
   // on the bottom or right edge of the rectangle.
   if (allowedRange.ClampPoint(current) == current) {
     return;
+  }
+
+  if (mScrollbarActivity) {
+    mScrollbarActivity->ActivityOccurred();
   }
 
   bool isSmooth = aContent->HasAttr(kNameSpaceID_None, nsGkAtoms::smooth);
