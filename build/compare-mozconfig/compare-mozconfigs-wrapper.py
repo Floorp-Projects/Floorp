@@ -51,7 +51,3 @@ def main():
                                     whitelist_path, '--no-download',
                                     platform + ',' + release_mozconfig_path +
                                     ',' + nightly_mozconfig_path])
-        sys.exit(ret_code)
-
-if __name__ == '__main__':
-    main()
