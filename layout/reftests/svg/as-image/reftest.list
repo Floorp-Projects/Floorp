@@ -16,6 +16,13 @@ skip-if(B2G) == background-simple-1.html  lime100x100-ref.html # bug 773482
 == background-resize-3.html  lime100x100-ref.html
 == background-resize-4.html  lime100x100-ref.html
 
+# Test for stretching background images by different amounts in each dimension
+== background-stretch-1.html background-stretch-1-ref.html
+
+# Tests for scaling background images
+== background-scale-no-viewbox-1.html   background-scale-no-viewbox-1-ref.html
+== background-scale-with-viewbox-1.html background-scale-with-viewbox-1-ref.html
+
 # Tests with -moz-image-rect()
 skip-if(B2G) == background-image-rect-1svg.html  lime100x100-ref.html # bug 773482
 == background-image-rect-1png.html  lime100x100-ref.html
