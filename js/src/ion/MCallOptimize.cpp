@@ -72,6 +72,32 @@ IonBuilder::inlineNativeCall(CallInfo &callInfo, JSNative native)
         return inlineMathFunction(callInfo, MMathFunction::ASin);
     if (native == js::math_acos)
         return inlineMathFunction(callInfo, MMathFunction::ACos);
+    if (native == js::math_log10)
+        return inlineMathFunction(callInfo, MMathFunction::Log10);
+    if (native == js::math_log2)
+        return inlineMathFunction(callInfo, MMathFunction::Log2);
+    if (native == js::math_log1p)
+        return inlineMathFunction(callInfo, MMathFunction::Log1P);
+    if (native == js::math_expm1)
+        return inlineMathFunction(callInfo, MMathFunction::ExpM1);
+    if (native == js::math_cosh)
+        return inlineMathFunction(callInfo, MMathFunction::CosH);
+    if (native == js::math_sin)
+        return inlineMathFunction(callInfo, MMathFunction::SinH);
+    if (native == js::math_tan)
+        return inlineMathFunction(callInfo, MMathFunction::TanH);
+    if (native == js::math_acosh)
+        return inlineMathFunction(callInfo, MMathFunction::ACosH);
+    if (native == js::math_asin)
+        return inlineMathFunction(callInfo, MMathFunction::ASinH);
+    if (native == js::math_atan)
+        return inlineMathFunction(callInfo, MMathFunction::ATanH);
+    if (native == js::math_sign)
+        return inlineMathFunction(callInfo, MMathFunction::Sign);
+    if (native == js::math_trunc)
+        return inlineMathFunction(callInfo, MMathFunction::Trunc);
+    if (native == js::math_cbrt)
+        return inlineMathFunction(callInfo, MMathFunction::Cbrt);
 
     // String natives.
     if (native == js_String)

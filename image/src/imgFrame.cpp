@@ -509,7 +509,7 @@ nsresult imgFrame::ImageUpdated(const nsIntRect &aUpdateRect)
   return NS_OK;
 }
 
-bool imgFrame::GetIsDirty()
+bool imgFrame::GetIsDirty() const
 {
   MutexAutoLock lock(mDirtyMutex);
   return mDirty;
@@ -796,8 +796,11 @@ void imgFrame::SetBlendMethod(int32_t aBlendMethod)
   mBlendMethod = (int8_t)aBlendMethod;
 }
 
+// This can be called from any thread.
 bool imgFrame::ImageComplete() const
 {
+  MutexAutoLock lock(mDirtyMutex);
+
   return mDecoded.IsEqualInterior(nsIntRect(mOffset, mSize));
 }
 

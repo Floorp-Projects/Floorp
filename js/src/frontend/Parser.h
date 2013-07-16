@@ -272,7 +272,6 @@ struct ParseContext : public GenericParseContext
     return decls_.init() && lexdeps.ensureMap(sc->context);
 }
 
-    InBlockBool inBlock() const { return InBlockBool(!topStmt || topStmt->type == STMT_BLOCK); }
     unsigned blockid() { return topStmt ? topStmt->blockid : bodyid; }
 
     // True if we are at the topmost level of a entire script or function body.
@@ -416,9 +415,8 @@ class Parser : private AutoGCRooter, public StrictModeGetter
     enum FunctionBodyType { StatementListBody, ExpressionBody };
     Node functionBody(FunctionSyntaxKind kind, FunctionBodyType type);
 
-    bool functionArgsAndBodyGeneric(Node pn, HandleFunction fun,
-                                    HandlePropertyName funName, FunctionType type,
-                                    FunctionSyntaxKind kind, bool strict, bool *becameStrict);
+    bool functionArgsAndBodyGeneric(Node pn, HandleFunction fun, FunctionType type,
+                                    FunctionSyntaxKind kind, bool *becameStrict);
 
     virtual bool strictMode() { return pc->sc->strict; }
 
@@ -486,9 +484,9 @@ class Parser : private AutoGCRooter, public StrictModeGetter
     bool functionArguments(FunctionSyntaxKind kind, Node *list, Node funcpn, bool &hasRest);
 
     Node functionDef(HandlePropertyName name, const TokenStream::Position &start,
-                     size_t startOffset, FunctionType type, FunctionSyntaxKind kind);
-    bool functionArgsAndBody(Node pn, HandleFunction fun, HandlePropertyName funName,
-                             size_t startOffset, FunctionType type, FunctionSyntaxKind kind,
+                     FunctionType type, FunctionSyntaxKind kind);
+    bool functionArgsAndBody(Node pn, HandleFunction fun,
+                             FunctionType type, FunctionSyntaxKind kind,
                              bool strict, bool *becameStrict = NULL);
 
     Node unaryOpExpr(ParseNodeKind kind, JSOp op, uint32_t begin);
@@ -500,7 +498,6 @@ class Parser : private AutoGCRooter, public StrictModeGetter
     bool arrayInitializerComprehensionTail(Node pn);
     Node generatorExpr(Node kid);
     bool argumentList(Node listNode);
-    Node bracketedExpr();
     Node letBlock(LetContext letContext);
     Node destructuringExpr(BindData<ParseHandler> *data, TokenKind tt);
 
@@ -514,7 +511,14 @@ class Parser : private AutoGCRooter, public StrictModeGetter
 #endif
     }
 
-    bool setAssignmentLhsOps(Node pn, bool isPlainAssignment);
+    enum AssignmentFlavor {
+        PlainAssignment,
+        CompoundAssignment,
+        KeyedDestructuringAssignment,
+        IncDecAssignment
+    };
+
+    bool checkAndMarkAsAssignmentLhs(Node pn, AssignmentFlavor flavor);
     bool matchInOrOf(bool *isForOfp);
 
     bool checkFunctionArguments();
@@ -526,10 +530,9 @@ class Parser : private AutoGCRooter, public StrictModeGetter
 
     bool isValidForStatementLHS(Node pn1, JSVersion version,
                                 bool forDecl, bool forEach, bool forOf);
-    bool setLvalKid(Node pn, Node kid, const char *name);
-    bool setIncOpKid(Node pn, Node kid, TokenKind tt, bool preorder);
-    bool checkStrictAssignment(Node lhs);
-    bool checkStrictBinding(HandlePropertyName name, Node pn);
+    bool checkAndMarkAsIncOperand(Node kid, TokenKind tt, bool preorder);
+    bool checkStrictAssignment(Node lhs, AssignmentFlavor flavor);
+    bool checkStrictBinding(PropertyName *name, Node pn);
     bool defineArg(Node funcpn, HandlePropertyName name,
                    bool disallowDuplicateArgs = false, Node *duplicatedArg = NULL);
     Node pushLexicalScope(StmtInfoPC *stmt);
@@ -568,8 +571,7 @@ class Parser : private AutoGCRooter, public StrictModeGetter
     bool checkFinalReturn(Node pn);
     DefinitionNode getOrCreateLexicalDependency(ParseContext<ParseHandler> *pc, JSAtom *atom);
 
-    bool leaveFunction(Node fn, HandlePropertyName funName,
-                       ParseContext<ParseHandler> *outerpc,
+    bool leaveFunction(Node fn, ParseContext<ParseHandler> *outerpc,
                        FunctionSyntaxKind kind = Expression);
 
     TokenPos pos() const { return tokenStream.currentToken().pos; }
@@ -583,11 +585,11 @@ class Parser : private AutoGCRooter, public StrictModeGetter
 
 template <>
 bool
-Parser<FullParseHandler>::setAssignmentLhsOps(ParseNode *pn, bool isPlainAssignment);
+Parser<FullParseHandler>::checkAndMarkAsAssignmentLhs(ParseNode *pn, AssignmentFlavor flavor);
 
 template <>
 bool
-Parser<SyntaxParseHandler>::setAssignmentLhsOps(Node pn, bool isPlainAssignment);
+Parser<SyntaxParseHandler>::checkAndMarkAsAssignmentLhs(Node pn, AssignmentFlavor flavor);
 
 } /* namespace frontend */
 } /* namespace js */

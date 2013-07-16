@@ -1581,7 +1581,6 @@ MCompare::infer(JSContext *cx, BaselineInspector *inspector, jsbytecode *pc)
     bool relationalEq = !(looseEq || strictEq);
 
     // Comparisons on unsigned integers may be treated as UInt32.
-    MDefinition *newlhs, *newrhs;
     if (tryUseUnsignedOperands()) {
         compareType_ = Compare_UInt32;
         return;
