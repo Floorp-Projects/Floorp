@@ -146,5 +146,6 @@ function IsObject(v) {
     // (i.e. |document.all|), which have bogus |typeof| behavior.  Detect
     // these objects using strict equality, which said bogosity doesn't affect.
     return (typeof v === "object" && v !== null) ||
+           typeof v === "function" ||
            (typeof v === "undefined" && v !== undefined);
 }
