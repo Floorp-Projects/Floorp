@@ -66,7 +66,7 @@ CPP_SOURCES += [
     'nsStreamCipher.cpp',
     'nsTLSSocketProvider.cpp',
     'nsUsageArrayHelper.cpp',
-    'PSMContentListener.cpp',
+	'PSMContentListener.cpp',
     'PSMRunnable.cpp',
     'SharedSSLState.cpp',
     'SSLServerCertVerification.cpp',
@@ -85,6 +85,3 @@ if CONFIG['MOZ_XUL']:
 
 LIBRARY_NAME = 'pipnss'
 
-CSRCS += [
-    'md4.c',
-]

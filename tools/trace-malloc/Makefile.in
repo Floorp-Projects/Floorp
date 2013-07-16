@@ -40,6 +40,7 @@ PROGCSRCS = \
 PROGOBJS = $(PROGCSRCS:.c=.$(OBJ_SUFFIX))
 endif
 
+CSRCS = $(SIMPLECSRCS) $(EXTRACSRCS) $(PROGCSRCS)
 ifeq ($(OS_ARCH),WINNT)
 LOCAL_INCLUDES	+= -I$(topsrcdir)/config/os2
 endif
