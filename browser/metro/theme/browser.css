@@ -352,97 +352,11 @@ documenttab[selected] .documenttab-selection {
   visibility: collapse;
 }
 
-/* App Bar ----------------------------------------------------------------- */
-
-appbar {
-  display: block;
-  position: fixed;
-  bottom: 0;
-  width: 100%;
-  transform: translateY(100%);
-  transition: transform @metro_animation_duration@ @metro_animation_easing@;
-  font-size: 0;
-}
-
-appbar toolbar {
-  -moz-appearance: none;
-  -moz-box-align: center;
-  border: 0;
-  width: 100%;
-  min-height: @toolbar_height@;
-  font-size: 1rem;
-}
-
-appbar toolbar > toolbarbutton {
-  border: 0;
-  margin: 0 @toolbar_horizontal_spacing@;
-  padding: 0;
-  /* Don't inherit background-color from toolbarbutton[checked="true"] */
-  background-color: transparent;
-}
-
-appbar > toolbar > toolbarbutton[disabled] {
-  visibility: collapse;
-}
-
-#navbar[startpage],
-appbar[visible] {
+#navbar[startpage] {
   transform: none;
 }
 
-#stack[keyboardVisible] > appbar {
-  /* Slow the bottom up transition since it's impossible to match the system's
-     soft keyboard movement. */
-  transition: transform @metro_animation_duration@ @metro_animation_easing@,
-              bottom @appbar_keyboard_slideup_duration@ @metro_animation_easing@;
-}
-
-#toolbar > .appbar-primary {
-  -moz-image-region: rect(0 40px 40px 0);
-}
-
-#toolbar > .appbar-primary:not([checked]):hover:not(:active) {
-  -moz-image-region: rect(0 80px 40px 40px);
-}
-
-#toolbar > .appbar-primary[checked] {
-  -moz-image-region: rect(0 120px 40px 80px);
-}
-
-#toolbar > .appbar-primary[checked]:hover:not(:active) {
-  -moz-image-region: rect(0 160px 40px 120px);
-}
-
-#toolbar > .appbar-primary:active {
-  -moz-image-region: rect(0 120px 40px 80px);
-}
-
-@media (min-resolution: 130dpi) {
-  #toolbar > .appbar-primary > .toolbarbutton-icon {
-    width: 40px;
-    height: 40px;
-  }
-
-  #toolbar > .appbar-primary {
-    -moz-image-region: rect(0 56px 56px 0);
-  }
-
-  #toolbar > .appbar-primary:not([checked]):hover:not(:active) {
-    -moz-image-region: rect(0 112px 56px 56px);
-  }
-
-  #toolbar > .appbar-primary[checked] {
-    -moz-image-region: rect(0 224px 56px 168px);
-  }
-
-  #toolbar > .appbar-primary[checked]:hover:not(:active) {
-    -moz-image-region: rect(0 224px 56px 168px);
-  }
-
-  #toolbar > .appbar-primary:active {
-    -moz-image-region: rect(0 168px 56px 112px);
-  }
-}
+/* App Bar ----------------------------------------------------------------- */
 
 /* Page-Specific */
 
@@ -473,10 +387,6 @@ appbar[visible] {
 }
 
 /* Application-Specific */
-
-#download-button, #contextualactions-tray > toolbarbutton {
-  list-style-image: url(chrome://browser/skin/images/appbar-icons.png);
-}
 
 #download-button {
   -moz-image-region: rect(0px, 40px, 40px, 0px) !important;

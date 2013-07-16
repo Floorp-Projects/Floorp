@@ -291,7 +291,7 @@
             <toolbarbutton id="stop-button" command="cmd_stop"/>
           </hbox>
 
-          <toolbarbutton id="download-button" oncommand="Appbar.onDownloadButton()"/>
+          <toolbarbutton id="download-button" class="appbar-secondary" oncommand="Appbar.onDownloadButton()"/>
           <toolbarbutton id="star-button" class="appbar-primary" type="checkbox" oncommand="Appbar.onStarButton()"/>
           <toolbarbutton id="pin-button" class="appbar-primary" type="checkbox" oncommand="Appbar.onPinButton()"/>
           <toolbarbutton id="menu-button" class="appbar-primary" oncommand="Appbar.onMenuButton(event)"/>
@@ -362,11 +362,11 @@
     <!-- Context button bar -->
     <appbar id="contextappbar">
       <toolbar id="contextualactions-tray" flex="1">
-        <toolbarbutton id="delete-selected-button" hidden="true" fade="true" oncommand="Appbar.dispatchContextualAction('delete')"/>
-        <toolbarbutton id="restore-selected-button" hidden="true" fade="true" oncommand="Appbar.dispatchContextualAction('restore')"/>
-        <toolbarbutton id="pin-selected-button" hidden="true" fade="true" oncommand="Appbar.dispatchContextualAction('pin')"/>
-        <toolbarbutton id="unpin-selected-button" hidden="true" fade="true" oncommand="Appbar.dispatchContextualAction('unpin')"/>
-        <toolbarbutton id="clear-selected-button" hidden="true" fade="true" oncommand="Appbar.dispatchContextualAction('clear')"/>
+        <toolbarbutton id="delete-selected-button" class="appbar-secondary" hidden="true" fade="true" oncommand="Appbar.dispatchContextualAction('delete')"/>
+        <toolbarbutton id="restore-selected-button" class="appbar-secondary" hidden="true" fade="true" oncommand="Appbar.dispatchContextualAction('restore')"/>
+        <toolbarbutton id="pin-selected-button" class="appbar-secondary" hidden="true" fade="true" oncommand="Appbar.dispatchContextualAction('pin')"/>
+        <toolbarbutton id="unpin-selected-button" class="appbar-secondary" hidden="true" fade="true" oncommand="Appbar.dispatchContextualAction('unpin')"/>
+        <toolbarbutton id="clear-selected-button" class="appbar-secondary" hidden="true" fade="true" oncommand="Appbar.dispatchContextualAction('clear')"/>
       </toolbar>
     </appbar>
 
