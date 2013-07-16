@@ -2750,8 +2750,11 @@ nsDocument::SetDocumentURI(nsIURI* aURI)
   nsIURI* newBase = GetDocBaseURI();
 
   bool equalBases = false;
+  // Changing just the ref of a URI does not change how relative URIs would
+  // resolve wrt to it, so we can treat the bases as equal as long as they're
+  // equal ignoring the ref.
   if (oldBase && newBase) {
-    oldBase->Equals(newBase, &equalBases);
+    oldBase->EqualsExceptRef(newBase, &equalBases);
   }
   else {
     equalBases = !oldBase && !newBase;
