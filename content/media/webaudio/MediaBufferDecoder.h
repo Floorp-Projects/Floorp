@@ -26,15 +26,19 @@ class DecodeErrorCallback;
 class DecodeSuccessCallback;
 }
 
-struct WebAudioDecodeJob
+struct WebAudioDecodeJob MOZ_FINAL
 {
   // You may omit both the success and failure callback, or you must pass both.
   // The callbacks are only necessary for asynchronous operation.
   WebAudioDecodeJob(const nsACString& aContentType,
                     dom::AudioContext* aContext,
+                    const dom::ArrayBuffer& aBuffer,
                     dom::DecodeSuccessCallback* aSuccessCallback = nullptr,
                     dom::DecodeErrorCallback* aFailureCallback = nullptr);
   ~WebAudioDecodeJob();
+
+  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(WebAudioDecodeJob)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(WebAudioDecodeJob)
 
   enum ErrorCode {
     NoError,
@@ -52,6 +56,8 @@ struct WebAudioDecodeJob
 
   bool AllocateBuffer();
 
+
+  JS::Heap<JSObject*> mArrayBuffer;
   nsCString mContentType;
   uint32_t mWriteIndex;
   nsRefPtr<dom::AudioContext> mContext;
