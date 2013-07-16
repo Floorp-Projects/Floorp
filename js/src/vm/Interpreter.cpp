@@ -1288,10 +1288,6 @@ Interpret(JSContext *cx, RunState &state)
     InterruptEnabler interrupts(&switchMask, -1);
 
 # define DO_OP()            goto do_op
-# define DO_NEXT_OP(n)      JS_BEGIN_MACRO                                    \
-                                JS_ASSERT((n) == len);                        \
-                                goto advance_pc;                              \
-                            JS_END_MACRO
 
 # define BEGIN_CASE(OP)     case OP:
 # define END_CASE(OP)       END_CASE_LEN(OP##_LENGTH)
@@ -1300,21 +1296,21 @@ Interpret(JSContext *cx, RunState &state)
 
 /*
  * To share the code for all len == 1 cases we use the specialized label with
- * code that falls through to advance_pc: .
+ * code that falls through to advanceAndDoOp: .
  */
 # define END_CASE_LEN1      goto advance_pc_by_one;
-# define END_CASE_LEN2      len = 2; goto advance_pc;
-# define END_CASE_LEN3      len = 3; goto advance_pc;
-# define END_CASE_LEN4      len = 4; goto advance_pc;
-# define END_CASE_LEN5      len = 5; goto advance_pc;
-# define END_CASE_LEN6      len = 6; goto advance_pc;
-# define END_CASE_LEN7      len = 7; goto advance_pc;
-# define END_CASE_LEN8      len = 8; goto advance_pc;
-# define END_CASE_LEN9      len = 9; goto advance_pc;
-# define END_CASE_LEN10     len = 10; goto advance_pc;
-# define END_CASE_LEN11     len = 11; goto advance_pc;
-# define END_CASE_LEN12     len = 12; goto advance_pc;
-# define END_VARLEN_CASE    goto advance_pc;
+# define END_CASE_LEN2      len = 2; goto advanceAndDoOp;
+# define END_CASE_LEN3      len = 3; goto advanceAndDoOp;
+# define END_CASE_LEN4      len = 4; goto advanceAndDoOp;
+# define END_CASE_LEN5      len = 5; goto advanceAndDoOp;
+# define END_CASE_LEN6      len = 6; goto advanceAndDoOp;
+# define END_CASE_LEN7      len = 7; goto advanceAndDoOp;
+# define END_CASE_LEN8      len = 8; goto advanceAndDoOp;
+# define END_CASE_LEN9      len = 9; goto advanceAndDoOp;
+# define END_CASE_LEN10     len = 10; goto advanceAndDoOp;
+# define END_CASE_LEN11     len = 11; goto advanceAndDoOp;
+# define END_CASE_LEN12     len = 12; goto advanceAndDoOp;
+# define END_VARLEN_CASE    goto advanceAndDoOp;
 # define ADD_EMPTY_CASE(OP) BEGIN_CASE(OP)
 # define END_EMPTY_CASES    goto advance_pc_by_one;
 
@@ -1443,8 +1439,8 @@ Interpret(JSContext *cx, RunState &state)
     /*
      * It is important that "op" be initialized before calling DO_OP because
      * it is possible for "op" to be specially assigned during the normal
-     * processing of an opcode while looping. We rely on DO_NEXT_OP to manage
-     * "op" correctly in all other cases.
+     * processing of an opcode while looping. We rely on |advanceAndDoOp:| to
+     * manage "op" correctly in all other cases.
      */
     JSOp op;
     int32_t len;
@@ -1453,13 +1449,13 @@ Interpret(JSContext *cx, RunState &state)
     if (rt->profilingScripts || cx->runtime()->debugHooks.interruptHook)
         interrupts.enable();
 
-    DO_NEXT_OP(len);
+    goto advanceAndDoOp;
 
     for (;;) {
       advance_pc_by_one:
         JS_ASSERT(js_CodeSpec[op].length == 1);
         len = 1;
-      advance_pc:
+      advanceAndDoOp:
         js::gc::MaybeVerifyBarriers(cx);
         regs.pc += len;
         op = (JSOp) *regs.pc;
@@ -1723,7 +1719,7 @@ BEGIN_CASE(JSOP_STOP)
             TypeScript::Monitor(cx, script, regs.pc, regs.sp[-1]);
 
             len = JSOP_CALL_LENGTH;
-            DO_NEXT_OP(len);
+            goto advanceAndDoOp;
         }
 
         /* Increment pc so that |sp - fp->slots == ReconstructStackDepth(pc)|. */
@@ -1773,7 +1769,7 @@ BEGIN_CASE(JSOP_OR)
     bool cond = ToBooleanOp(regs);
     if (cond == true) {
         len = GET_JUMP_OFFSET(regs.pc);
-        DO_NEXT_OP(len);
+        goto advanceAndDoOp;
     }
 }
 END_CASE(JSOP_OR)
@@ -1783,7 +1779,7 @@ BEGIN_CASE(JSOP_AND)
     bool cond = ToBooleanOp(regs);
     if (cond == false) {
         len = GET_JUMP_OFFSET(regs.pc);
-        DO_NEXT_OP(len);
+        goto advanceAndDoOp;
     }
 }
 END_CASE(JSOP_AND)
@@ -1806,7 +1802,7 @@ END_CASE(JSOP_AND)
                 BRANCH(len);                                                  \
             }                                                                 \
             len = 1 + JSOP_IFEQ_LENGTH;                                       \
-            DO_NEXT_OP(len);                                                  \
+            goto advanceAndDoOp;                                              \
         }                                                                     \
     JS_END_MACRO
 
@@ -2506,7 +2502,7 @@ BEGIN_CASE(JSOP_FUNCALL)
         TypeScript::Monitor(cx, script, regs.pc, newsp[-1]);
         regs.sp = newsp;
         len = JSOP_CALL_LENGTH;
-        DO_NEXT_OP(len);
+        goto advanceAndDoOp;
     }
 
     InitialFrameFlags initial = construct ? INITIAL_CONSTRUCT : INITIAL_NONE;
@@ -2719,7 +2715,7 @@ BEGIN_CASE(JSOP_TABLESWITCH)
         double d;
         /* Don't use mozilla::DoubleIsInt32; treat -0 (double) as 0. */
         if (!rref.isDouble() || (d = rref.toDouble()) != (i = int32_t(rref.toDouble())))
-            DO_NEXT_OP(len);
+            goto advanceAndDoOp;
     }
 
     pc2 += JUMP_OFFSET_LEN;
@@ -3249,7 +3245,7 @@ BEGIN_CASE(JSOP_LEAVEBLOCKEXPR)
     } else {
         /* Another op will pop; nothing to do here. */
         len = JSOP_LEAVEFORLETIN_LENGTH;
-        DO_NEXT_OP(len);
+        goto advanceAndDoOp;
     }
 }
 END_CASE(JSOP_LEAVEBLOCK)
@@ -3361,7 +3357,7 @@ END_CASE(JSOP_ARRAYPUSH)
                  * catch block.
                  */
                 len = 0;
-                DO_NEXT_OP(len);
+                goto advanceAndDoOp;
 
               case JSTRY_FINALLY:
                 /*
@@ -3372,7 +3368,7 @@ END_CASE(JSOP_ARRAYPUSH)
                 PUSH_COPY(cx->getPendingException());
                 cx->clearPendingException();
                 len = 0;
-                DO_NEXT_OP(len);
+                goto advanceAndDoOp;
 
               case JSTRY_ITER: {
                 /* This is similar to JSOP_ENDITER in the interpreter loop. */
