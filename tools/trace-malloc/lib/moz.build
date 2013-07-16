@@ -22,6 +22,3 @@ if CONFIG['OS_ARCH'] == 'WINNT':
 
 LIBRARY_NAME = 'tracemalloc'
 
-CSRCS += [
-    'nsTraceMalloc.c',
-]

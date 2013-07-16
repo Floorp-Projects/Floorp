@@ -32,7 +32,3 @@ if CONFIG['OS_TARGET'] == 'Android':
 
 LIBRARY_NAME = 'mozglue'
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
-    CSRCS += [
-        'cpuacct.c',
-    ]

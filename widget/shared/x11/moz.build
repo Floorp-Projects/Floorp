@@ -6,6 +6,3 @@
 
 MODULE = 'widget'
 
-CSRCS += [
-    'keysym2ucs.c',
-]
