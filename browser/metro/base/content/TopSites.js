@@ -247,6 +247,8 @@ TopSitesView.prototype = {
         // fire a MozContextActionsChange event to update the context appbar
         let event = document.createEvent("Events");
         event.actions = [...nextContextActions];
+        event.noun = tileGroup.contextNoun;
+        event.qty = selectedTiles.length;
         event.initEvent("MozContextActionsChange", true, false);
         tileGroup.dispatchEvent(event);
       },0);
