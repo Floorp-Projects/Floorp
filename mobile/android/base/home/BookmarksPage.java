@@ -46,8 +46,11 @@ public class BookmarksPage extends HomeFragment {
     // Cursor loader ID for grid of bookmarks.
     private static final int TOP_BOOKMARKS_LOADER_ID = 1;
 
+    // Loader ID for favicons.
+    private static final int FAVICONS_LOADER_ID = 2; 
+
     // Loader ID for thumbnails.
-    private static final int THUMBNAILS_LOADER_ID = 2;
+    private static final int THUMBNAILS_LOADER_ID = 3;
 
     // Key for bookmarks folder id.
     private static final String BOOKMARKS_FOLDER_KEY = "folder_id";
@@ -217,6 +220,10 @@ public class BookmarksPage extends HomeFragment {
                 case TOP_BOOKMARKS_LOADER_ID: {
                     return new TopBookmarksLoader(getActivity());
                 }
+
+                case FAVICONS_LOADER_ID: {
+                    return FaviconsLoader.createInstance(getActivity(), args);
+                }
             }
 
             return null;
@@ -228,6 +235,8 @@ public class BookmarksPage extends HomeFragment {
             switch(loaderId) {
                 case BOOKMARKS_LIST_LOADER_ID: {
                     mListAdapter.swapCursor(c);
+                    FaviconsLoader.restartFromCursor(getLoaderManager(), FAVICONS_LOADER_ID,
+                            mLoaderCallbacks, c);
                     break;
                 }
 
@@ -250,6 +259,12 @@ public class BookmarksPage extends HomeFragment {
                     }
                     break;
                 }
+
+                case FAVICONS_LOADER_ID: {
+                    // Force the list to use in-memory favicons.
+                    mListAdapter.notifyDataSetChanged();
+                    break;
+                }
             }
         }
 
@@ -269,6 +284,11 @@ public class BookmarksPage extends HomeFragment {
                         mTopBookmarksAdapter.swapCursor(null);
                         break;
                     }
+                }
+
+                case FAVICONS_LOADER_ID: {
+                    // Do nothing.
+                    break;
                 }
             }
         }
