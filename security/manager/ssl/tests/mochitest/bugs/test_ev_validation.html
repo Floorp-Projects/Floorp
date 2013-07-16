@@ -25,7 +25,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=813418
   var wnd = window.open("https://ev-valid.example.com/tests/security/manager/ssl/tests/mochitest/bugs/test_ev_validation_child.html");
   window.addEventListener("message", function(event) {
      if (event.origin == "https://ev-valid.example.com") {
-       is(event.data, "EV", "Child was EV valid.");
+       if (SpecialPowers.isDebugBuild) {
+         is(event.data, "EV", "Child was EV valid (debug build).");
+       }
+       else {
+          is(event.data, "secure", "Child was just secure (NO EV) no ev flags present (non -debug build).");
+       }
        wnd.close();
        wnd = window.open("https://example.com/tests/security/manager/ssl/tests/mochitest/bugs/test_ev_validation_child.html");
      }

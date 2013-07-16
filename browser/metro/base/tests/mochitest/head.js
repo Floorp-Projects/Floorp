@@ -708,8 +708,8 @@ TouchDragAndHold.prototype = {
   System utilities
 =============================================================================*/
 
- /*
- * emptyClipboard - clear the windows clipbaord.
+/*
+ * emptyClipboard - clear the windows clipboard.
  */
 function emptyClipboard() {
   Cc["@mozilla.org/widget/clipboard;1"].getService(Ci.nsIClipboard)
