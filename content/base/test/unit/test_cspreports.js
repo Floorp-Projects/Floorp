@@ -10,15 +10,13 @@ const Cr = Components.results;
 Cu.import('resource://gre/modules/CSPUtils.jsm');
 Cu.import('resource://gre/modules/NetUtil.jsm');
 
-// load the HTTP server
-Cu.import("resource://testing-common/httpd.js");
+var httpServer = new HttpServer();
+httpServer.start(-1);
+var testsToFinish = 0;
 
-const REPORT_SERVER_PORT = 9000;
+const REPORT_SERVER_PORT = httpServer.identity.primaryPort;
 const REPORT_SERVER_URI = "http://localhost";
 const REPORT_SERVER_PATH = "/report";
-
-var httpServer = null;
-var testsToFinish = 0;
 
 /**
  * Construct a callback that listens to a report submission and either passes
@@ -98,9 +96,6 @@ function run_test() {
   var selfuri = NetUtil.newURI(REPORT_SERVER_URI +
                                ":" + REPORT_SERVER_PORT +
                                "/foo/self");
-
-  httpServer = new HttpServer();
-  httpServer.start(REPORT_SERVER_PORT);
 
   // test that inline script violations cause a report.
   makeTest(0, {"blocked-uri": "self"}, false,
