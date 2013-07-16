@@ -4660,7 +4660,7 @@ nsNavigatorSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   JS::Rooted<JSObject*> obj(cx, aObj);
   JS::Rooted<jsid> id(cx, aId);
   nsCOMPtr<nsIDOMNavigator> navigator = do_QueryWrappedNative(wrapper);
-  JS::Rooted<JS::Value> value(cx);
+  JS::Rooted<JS::Value> value(cx, JS::UndefinedValue());
   if (!static_cast<Navigator*>(navigator.get())->DoNewResolve(cx, obj, id,
                                                               &value)) {
     return NS_ERROR_FAILURE;

@@ -6683,7 +6683,7 @@ class CGResolveOwnPropertyViaNewresolve(CGAbstractBindingMethod):
                 "  return false;\n"
                 "}\n"
                 "if (!value.isUndefined()) {\n"
-                "  FillPropertyDescriptor(desc, wrapper, value, false);\n"
+                "  FillPropertyDescriptor(desc, wrapper, value, /* readonly = */ false);\n"
                 "}\n"
                 "return true;"))
 
