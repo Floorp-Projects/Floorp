@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "WebGLContext.h"
+#include "WebGL1Context.h"
 #include "WebGLObjectModel.h"
 #include "WebGLExtensions.h"
 #include "WebGLContextUtils.h"
@@ -87,20 +88,6 @@ WebGLMemoryPressureObserver::Observe(nsISupports* aSubject,
     return NS_OK;
 }
 
-
-nsresult NS_NewCanvasRenderingContextWebGL(nsIDOMWebGLRenderingContext** aResult);
-
-nsresult
-NS_NewCanvasRenderingContextWebGL(nsIDOMWebGLRenderingContext** aResult)
-{
-    Telemetry::Accumulate(Telemetry::CANVAS_WEBGL_USED, 1);
-    nsIDOMWebGLRenderingContext* ctx = new WebGLContext();
-    if (!ctx)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    NS_ADDREF(*aResult = ctx);
-    return NS_OK;
-}
 
 WebGLContextOptions::WebGLContextOptions()
     : alpha(true), depth(true), stencil(false),
@@ -225,12 +212,6 @@ WebGLContext::~WebGLContext()
     WebGLMemoryMultiReporterWrapper::RemoveWebGLContext(this);
     TerminateContextLossTimer();
     mContextRestorer = nullptr;
-}
-
-JSObject*
-WebGLContext::WrapObject(JSContext *cx, JS::Handle<JSObject*> scope)
-{
-    return dom::WebGLRenderingContextBinding::Wrap(cx, scope, this);
 }
 
 void

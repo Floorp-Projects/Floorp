@@ -20,7 +20,6 @@ OS_CXXFLAGS := $(OS_CXXFLAGS) -Wshadow
 endif
 
 include $(topsrcdir)/config/rules.mk
-
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
 
 LOCAL_INCLUDES	+= \
@@ -34,6 +33,9 @@ LOCAL_INCLUDES	+= \
 		-I$(srcdir)/../../content/xul/document/src \
 		$(NULL)
 
+nsStyleStructList.h : $(srcdir)/generate-stylestructlist.py
+	$(PYTHON) $< > $@
+
 _FILES	= \
 	contenteditable.css \
 	designmode.css \
@@ -42,7 +44,10 @@ _FILES	= \
 	TopLevelVideoDocument.css \
 	$(NULL)
 
-GARBAGE		+= $(addprefix $(DIST)/bin/res/,$(_FILES))
+GARBAGE	+= \
+	$(addprefix $(DIST)/bin/res/,$(_FILES)) \
+	nsStyleStructList.h \
+	$(NULL)
 
 libs:: $(_FILES)
 	$(INSTALL) $^ $(DIST)/bin/res

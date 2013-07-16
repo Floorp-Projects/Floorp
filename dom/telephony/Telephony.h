@@ -8,6 +8,9 @@
 #define mozilla_dom_telephony_telephony_h__
 
 #include "TelephonyCommon.h"
+// Need to include TelephonyCall.h because we have inline methods that
+// assume they see the definition of TelephonyCall.
+#include "TelephonyCall.h"
 
 #include "nsIDOMTelephony.h"
 #include "nsIDOMTelephonyCall.h"
@@ -56,7 +59,9 @@ public:
                                                    nsDOMEventTargetHelper)
 
   static already_AddRefed<Telephony>
-  Create(nsPIDOMWindow* aOwner, nsITelephonyProvider* aProvider);
+  Create(nsPIDOMWindow* aOwner, ErrorResult& aRv);
+
+  static bool CheckPermission(nsPIDOMWindow* aOwner);
 
   nsISupports*
   ToISupports()

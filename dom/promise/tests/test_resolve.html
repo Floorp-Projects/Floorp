@@ -48,12 +48,12 @@ function runTest() {
     resolver.resolve(test);
   }).then(function(what) {
     ok(test === what, "What is: " + what);
-  }, cbError).done(function() {
+  }, cbError).then(function() {
     new Promise(function(resolver) {
       resolver.reject(test)
     }).then(cbError, function(what) {
       ok(test === what, "What is: " + what);
-    }).done(runTest, cbError);
+    }).then(runTest, cbError);
   });
 }
 
