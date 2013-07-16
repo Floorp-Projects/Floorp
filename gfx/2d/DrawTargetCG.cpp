@@ -515,6 +515,7 @@ DrawGradient(CGContextRef cg, const Pattern &aPattern, const CGRect &aExtents)
   if (aPattern.GetType() == PATTERN_LINEAR_GRADIENT) {
     const LinearGradientPattern& pat = static_cast<const LinearGradientPattern&>(aPattern);
     GradientStopsCG *stops = static_cast<GradientStopsCG*>(pat.mStops.get());
+    CGContextConcatCTM(cg, GfxMatrixToCGAffineTransform(pat.mMatrix));
     if (stops->mExtend == EXTEND_CLAMP) {
 
       // XXX: we should take the m out of the properties of LinearGradientPatterns
@@ -532,6 +533,7 @@ DrawGradient(CGContextRef cg, const Pattern &aPattern, const CGRect &aExtents)
     }
   } else if (aPattern.GetType() == PATTERN_RADIAL_GRADIENT) {
     const RadialGradientPattern& pat = static_cast<const RadialGradientPattern&>(aPattern);
+    CGContextConcatCTM(cg, GfxMatrixToCGAffineTransform(pat.mMatrix));
     GradientStopsCG *stops = static_cast<GradientStopsCG*>(pat.mStops.get());
     if (stops->mExtend == EXTEND_CLAMP) {
 
