@@ -1365,14 +1365,6 @@ TypeSet::addType(JSContext *cx, Type type)
             JS_ASSERT(!nobject->singleton);
             if (nobject->unknownProperties())
                 goto unknownObject;
-            if (objectCount > 1) {
-                nobject->contribution += (objectCount - 1) * (objectCount - 1);
-                if (nobject->contribution >= TypeObject::CONTRIBUTION_LIMIT) {
-                    InferSpew(ISpewOps, "limitUnknown: %sT%p%s",
-                              InferSpewColor(this), this, InferSpewColorReset());
-                    goto unknownObject;
-                }
-            }
         }
     }
 
