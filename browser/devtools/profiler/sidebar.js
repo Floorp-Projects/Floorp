@@ -43,9 +43,8 @@ Sidebar.prototype = Heritage.extend(WidgetMethods, {
     box.appendChild(h3);
     box.appendChild(span);
 
-    this.push([box], {
+    this.push([box, profile.uid], {
       attachment: {
-        uid:   profile.uid,
         name:  profile.name,
         state: PROFILE_IDLE
       }
@@ -57,7 +56,7 @@ Sidebar.prototype = Heritage.extend(WidgetMethods, {
   },
 
   getItemByProfile: function (profile) {
-    return this.getItemForPredicate(item => item.attachment.uid === profile.uid);
+    return this.getItemByValue(profile.uid.toString());
   },
 
   setProfileState: function (profile, state) {
