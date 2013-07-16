@@ -25,12 +25,12 @@ function promiseResolve() {
     ok("resolve" in resolver, "PromiseResolver.resolve exists");
 
     resolver.resolve(42);
-  }).done(function(what) {
-    ok(true, "Done - resolveCb has been called");
+  }).then(function(what) {
+    ok(true, "Then - resolveCb has been called");
     is(what, 42, "ResolveCb received 42");
     runTest();
   }, function() {
-    ok(false, "Done - rejectCb has been called");
+    ok(false, "Then - rejectCb has been called");
     runTest();
   });
 }
@@ -38,11 +38,11 @@ function promiseResolve() {
 function promiseReject() {
   var promise = new Promise(function(resolver) {
     resolver.reject(42);
-  }).done(function(what) {
-    ok(false, "Done - resolveCb has been called");
+  }).then(function(what) {
+    ok(false, "Then - resolveCb has been called");
     runTest();
   }, function(what) {
-    ok(true, "Done - rejectCb has been called");
+    ok(true, "Then - rejectCb has been called");
     is(what, 42, "RejectCb received 42");
     runTest();
   });
@@ -51,11 +51,11 @@ function promiseReject() {
 function promiseException() {
   var promise = new Promise(function(resolver) {
     throw 42;
-  }).done(function(what) {
-    ok(false, "Done - resolveCb has been called");
+  }).then(function(what) {
+    ok(false, "Then - resolveCb has been called");
     runTest();
   }, function(what) {
-    ok(true, "Done - rejectCb has been called");
+    ok(true, "Then - rejectCb has been called");
     is(what, 42, "RejectCb received 42");
     runTest();
   });
@@ -65,8 +65,8 @@ function promiseGC() {
   var resolver;
   var promise = new Promise(function(r) {
     resolver = r;
-  }).done(function(what) {
-    ok(true, "Done - promise is still alive");
+  }).then(function(what) {
+    ok(true, "Then - promise is still alive");
     runTest();
   });
 
@@ -89,55 +89,51 @@ function promiseAsync() {
       is(global, "bar", "Global should still be bar!");
       runTest();
     }, 0);
-  }).done(function() {
+  }).then(function() {
     global = "bar";
   });
   is(global, "foo", "Global should still be foo (2)");
 }
 
-function promiseDoubleDone() {
+function promiseDoubleThen() {
   var steps = 0;
   var promise = new Promise(function(resolver) {
     resolver.resolve(42);
   });
 
-  promise.done(function(what) {
-    ok(true, "Done.resolve has been called");
+  promise.then(function(what) {
+    ok(true, "Then.resolve has been called");
     is(what, 42, "Value == 42");
     steps++;
   }, function(what) {
-    ok(false, "Done.reject has been called");
+    ok(false, "Then.reject has been called");
   });
 
-  promise.done(function(what) {
-    ok(true, "Done.resolve has been called");
-    is(steps, 1, "Done.resolve - step == 1");
+  promise.then(function(what) {
+    ok(true, "Then.resolve has been called");
+    is(steps, 1, "Then.resolve - step == 1");
     is(what, 42, "Value == 42");
     runTest();
   }, function(what) {
-    ok(false, "Done.reject has been called");
+    ok(false, "Then.reject has been called");
   });
 }
 
-function promiseDoneException() {
+function promiseThenException() {
   var promise = new Promise(function(resolver) {
     resolver.resolve(42);
   });
 
-  onErrorCb = window.onerror;
-  window.onerror = function(e) {
-    ok(true, "window.onerror has been called!");
-    window.onerror = onErrorCb;
-    runTest();
-  };
-
-  promise.done(function(what) {
-    ok(true, "Done.resolve has been called");
+  promise.then(function(what) {
+    ok(true, "Then.resolve has been called");
     throw "booh";
+  }).catch(function(e) {
+    ok(true, "window.onerror has been called!");
+    runTest();
   });
 }
 
-function promiseThenCatchDone() {
+function promiseThenCatchThen() {
   var promise = new Promise(function(resolver) {
     resolver.resolve(42);
   });
@@ -160,16 +156,16 @@ function promiseThenCatchDone() {
     ok(false, "Then.reject has been called");
   }).catch(function() {
     ok(false, "Catch has been called");
-  }).done(function(what) {
-    ok(true, "Done.resolve has been called");
+  }).then(function(what) {
+    ok(true, "Then.resolve has been called");
     is(what, 44, "Value == 44");
     runTest();
   }, function(what) {
-    ok(false, "Done.reject has been called");
+    ok(false, "Then.reject has been called");
   });
 }
 
-function promiseRejectThenCatchDone() {
+function promiseRejectThenCatchThen() {
   var promise = new Promise(function(resolver) {
     resolver.reject(42);
   });
@@ -190,14 +186,14 @@ function promiseRejectThenCatchDone() {
     return what+1;
   }).catch(function(what) {
     ok(false, "Catch has been called");
-  }).done(function(what) {
+  }).then(function(what) {
     ok(true, "Then.resolve has been called");
     is(what, 44, "Value == 44");
     runTest();
   });
 }
 
-function promiseRejectThenCatchDone2() {
+function promiseRejectThenCatchThen2() {
   var promise = new Promise(function(resolver) {
     resolver.reject(42);
   });
@@ -210,14 +206,14 @@ function promiseRejectThenCatchDone2() {
     is(what, 42, "Value == 42");
     ok(true, "Catch has been called");
     return what+1;
-  }).done(function(what) {
+  }).then(function(what) {
     ok(true, "Then.resolve has been called");
     is(what, 43, "Value == 43");
     runTest();
   });
 }
 
-function promiseRejectThenCatchExceptionDone() {
+function promiseRejectThenCatchExceptionThen() {
   var promise = new Promise(function(resolver) {
     resolver.reject(42);
   });
@@ -232,7 +228,7 @@ function promiseRejectThenCatchExceptionDone() {
     ok(true, "Catch has been called");
     is(what, 43, "Value == 43");
     return what + 1;
-  }).done(function(what) {
+  }).then(function(what) {
     ok(true, "Then.resolve has been called");
     is(what, 44, "Value == 44");
     runTest();
@@ -245,14 +241,14 @@ function promiseThenCatchOrderingResolve() {
     r.resolve(42);
   });
 
-  f.done(function() {
+  f.then(function() {
     f.then(function() {
       global++;
     });
     f.catch(function() {
       global++;
     });
-    f.done(function() {
+    f.then(function() {
       global++;
     });
     setTimeout(function() {
@@ -268,14 +264,14 @@ function promiseThenCatchOrderingReject() {
     r.reject(42);
   })
 
-  f.done(function() {}, function() {
+  f.then(function() {}, function() {
     f.then(function() {
       global++;
     });
     f.catch(function() {
       global++;
     });
-    f.done(function() {}, function() {
+    f.then(function() {}, function() {
       global++;
     });
     setTimeout(function() {
@@ -342,7 +338,7 @@ function promiseLoop() {
 }
 
 function promiseReject() {
-  var promise = Promise.reject(42).done(function(what) {
+  var promise = Promise.reject(42).then(function(what) {
     ok(false, "This should not be called");
   }, function(what) {
     is(what, 42, "Value == 42");
@@ -351,7 +347,7 @@ function promiseReject() {
 }
 
 function promiseResolve() {
-  var promise = Promise.resolve(42).done(function(what) {
+  var promise = Promise.resolve(42).then(function(what) {
     is(what, 42, "Value == 42");
     runTest();
   }, function() {
@@ -365,7 +361,7 @@ function promiseResolveNestedPromise() {
     r.resolve(42);
   }, function() {
     ok(false, "This should not be called");
-  })).done(function(what) {
+  })).then(function(what) {
     is(what, 42, "Value == 42");
     runTest();
   }, function() {
@@ -375,10 +371,10 @@ function promiseResolveNestedPromise() {
 
 var tests = [ promiseResolve, promiseReject,
               promiseException, promiseGC, promiseAsync,
-              promiseDoubleDone, promiseDoneException,
-              promiseThenCatchDone, promiseRejectThenCatchDone,
-              promiseRejectThenCatchDone2,
-              promiseRejectThenCatchExceptionDone,
+              promiseDoubleThen, promiseThenException,
+              promiseThenCatchThen, promiseRejectThenCatchThen,
+              promiseRejectThenCatchThen2,
+              promiseRejectThenCatchExceptionThen,
               promiseThenCatchOrderingResolve,
               promiseThenCatchOrderingReject,
               promiseNestedPromise, promiseNestedNestedPromise,
