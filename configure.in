@@ -2465,6 +2465,13 @@ ia64*-hpux*)
 
 esac
 
+case "$target" in
+*-*linux*)
+    # Includes linux-android
+    AC_DEFINE(XP_LINUX)
+    ;;
+esac
+
 AC_SUBST(MOZ_LINKER)
 if test -n "$MOZ_LINKER"; then
   AC_DEFINE(MOZ_LINKER)
