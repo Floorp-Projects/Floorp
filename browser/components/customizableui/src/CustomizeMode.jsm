@@ -554,11 +554,8 @@ CustomizeMode.prototype = {
 
   persistCurrentSets: function()  {
     let document = this.document;
-    let toolbars = document.querySelectorAll("toolbar[customizable='true']");
+    let toolbars = document.querySelectorAll("toolbar[customizable='true'][currentset]");
     for (let toolbar of toolbars) {
-      let set = toolbar.currentSet;
-      toolbar.setAttribute("currentset", set);
-      LOG("Setting currentset of " + toolbar.id + " as " + set);
       // Persist the currentset attribute directly on hardcoded toolbars.
       document.persist(toolbar.id, "currentset");
     }
