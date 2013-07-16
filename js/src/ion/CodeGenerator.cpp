@@ -3571,6 +3571,45 @@ CodeGenerator::visitMathFunctionD(LMathFunctionD *ins)
       case MMathFunction::ACos:
         funptr = JS_FUNC_TO_DATA_PTR(void *, js::math_acos_impl);
         break;
+      case MMathFunction::Log10:
+        funptr = JS_FUNC_TO_DATA_PTR(void *, js::math_log10_impl);
+        break;
+      case MMathFunction::Log2:
+        funptr = JS_FUNC_TO_DATA_PTR(void *, js::math_log2_impl);
+        break;
+      case MMathFunction::Log1P:
+        funptr = JS_FUNC_TO_DATA_PTR(void *, js::math_log1p_impl);
+        break;
+      case MMathFunction::ExpM1:
+        funptr = JS_FUNC_TO_DATA_PTR(void *, js::math_expm1_impl);
+        break;
+      case MMathFunction::CosH:
+        funptr = JS_FUNC_TO_DATA_PTR(void *, js::math_cosh_impl);
+        break;
+      case MMathFunction::SinH:
+        funptr = JS_FUNC_TO_DATA_PTR(void *, js::math_sinh_impl);
+        break;
+      case MMathFunction::TanH:
+        funptr = JS_FUNC_TO_DATA_PTR(void *, js::math_tanh_impl);
+        break;
+      case MMathFunction::ACosH:
+        funptr = JS_FUNC_TO_DATA_PTR(void *, js::math_acosh_impl);
+        break;
+      case MMathFunction::ASinH:
+        funptr = JS_FUNC_TO_DATA_PTR(void *, js::math_asinh_impl);
+        break;
+      case MMathFunction::ATanH:
+        funptr = JS_FUNC_TO_DATA_PTR(void *, js::math_atanh_impl);
+        break;
+      case MMathFunction::Sign:
+        funptr = JS_FUNC_TO_DATA_PTR(void *, js::math_sign_impl);
+        break;
+      case MMathFunction::Trunc:
+        funptr = JS_FUNC_TO_DATA_PTR(void *, js::math_trunc_impl);
+        break;
+      case MMathFunction::Cbrt:
+        funptr = JS_FUNC_TO_DATA_PTR(void *, js::math_cbrt_impl);
+        break;
       default:
         MOZ_ASSUME_UNREACHABLE("Unknown math function");
     }

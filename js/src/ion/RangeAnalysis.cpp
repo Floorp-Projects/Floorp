@@ -895,6 +895,9 @@ MAbs::computeRange()
 
     Range other(getOperand(0));
     setRange(Range::abs(&other));
+
+    if (implicitTruncate_ && !range()->isInt32())
+        setRange(new Range(INT32_MIN, INT32_MAX));
 }
 
 void
@@ -917,6 +920,9 @@ MAdd::computeRange()
     Range right(getOperand(1));
     Range *next = Range::add(&left, &right);
     setRange(next);
+
+    if (isTruncated() && !range()->isInt32())
+        setRange(new Range(INT32_MIN, INT32_MAX));
 }
 
 void
@@ -928,6 +934,9 @@ MSub::computeRange()
     Range right(getOperand(1));
     Range *next = Range::sub(&left, &right);
     setRange(next);
+
+    if (isTruncated() && !range()->isInt32())
+        setRange(new Range(INT32_MIN, INT32_MAX));
 }
 
 void

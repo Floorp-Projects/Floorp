@@ -84,8 +84,10 @@ const WebProgress = {
     let spec = aJson.location;
     let location = spec.split("#")[0]; // Ignore fragment identifier changes.
 
-    if (aTab == Browser.selectedTab)
+    if (aTab == Browser.selectedTab) {
       BrowserUI.updateURI();
+      BrowserUI.update();
+    }
 
     let locationHasChanged = (location != aTab.browser.lastLocation);
     if (locationHasChanged) {
@@ -123,22 +125,15 @@ const WebProgress = {
   _networkStart: function _networkStart(aJson, aTab) {
     aTab.startLoading();
 
-    if (aTab == Browser.selectedTab) {
+    if (aTab == Browser.selectedTab)
       BrowserUI.update(TOOLBARSTATE_LOADING);
-
-      // We should at least show something in the URLBar until
-      // the load has progressed further along
-      if (aTab.browser.currentURI.spec == "about:blank")
-        BrowserUI.updateURI({ captionOnly: true });
-    }
   },
 
   _networkStop: function _networkStop(aJson, aTab) {
     aTab.endLoading();
 
-    if (aTab == Browser.selectedTab) {
+    if (aTab == Browser.selectedTab)
       BrowserUI.update(TOOLBARSTATE_LOADED);
-    }
   },
 
   _windowStart: function _windowStart(aJson, aTab) {
@@ -162,7 +157,7 @@ const WebProgress = {
 
     // 'Whoosh' in
     this._progressCount = kProgressMarginStart;
-    Elements.progress.style.width = this._progressCount + "%"; 
+    Elements.progress.style.width = this._progressCount + "%";
     Elements.progress.removeAttribute("fade");
 
     // Create a pulse timer to keep things moving even if we don't
@@ -204,7 +199,7 @@ const WebProgress = {
   _progressStop: function _progressStop(aJson, aTab) {
     this._progressActive = false;
     // 'Whoosh out' and fade
-    Elements.progress.style.width = "100%"; 
+    Elements.progress.style.width = "100%";
     Elements.progress.setAttribute("fade", true);
   },
 
@@ -213,7 +208,7 @@ const WebProgress = {
       return;
     // Close out fade finished, reset
     if (data.propertyName == "opacity") {
-      Elements.progress.style.width = "0px"; 
+      Elements.progress.style.width = "0px";
       Elements.progressContainer.setAttribute("collapsed", true);
     }
   },

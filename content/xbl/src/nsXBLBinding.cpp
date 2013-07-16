@@ -357,12 +357,35 @@ nsXBLBinding::GenerateAnonymousContent()
       for (nsIContent* child = iter.GetNextChild(); child; child = iter.GetNextChild()) {
         mDefaultInsertionPoint->AppendInsertedChild(child, bindingManager);
       }
-    } else if (!mInsertionPoints.IsEmpty()) {
+    } else {
+      // It is odd to come into this code if mInsertionPoints is not empty, but
+      // we need to make sure to do the compatibility hack below if the bound
+      // node has any non <xul:template> or <xul:observer> children.
       ExplicitChildIterator iter(mBoundElement);
       for (nsIContent* child = iter.GetNextChild(); child; child = iter.GetNextChild()) {
         XBLChildrenElement* point = FindInsertionPointForInternal(child);
         if (point) {
           point->AppendInsertedChild(child, bindingManager);
+        } else {
+          nsINodeInfo *ni = child->NodeInfo();
+          if (ni->NamespaceID() != kNameSpaceID_XUL ||
+              (!ni->Equals(nsGkAtoms::_template) &&
+               !ni->Equals(nsGkAtoms::observer))) {
+            // Compatibility hack. For some reason the original XBL
+            // implementation dropped the content of a binding if any child of
+            // the bound element didn't match any of the <children> in the
+            // binding. This became a pseudo-API that we have to maintain.
+
+            // Undo InstallAnonymousContent
+            UninstallAnonymousContent(doc, mContent);
+
+            // Clear out our children elements to avoid dangling references.
+            ClearInsertionPoints();
+
+            // Pretend as though there was no content in the binding.
+            mContent = nullptr;
+            return;
+          }
         }
       }
     }

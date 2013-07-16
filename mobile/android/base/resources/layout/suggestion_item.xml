@@ -9,6 +9,7 @@
               android:orientation="horizontal"
               android:background="@drawable/suggestion_selector"
               android:gravity="center_vertical"
+              android:clickable="true"
               android:padding="7dp">
 
     <ImageView android:id="@+id/suggestion_magnifier"
