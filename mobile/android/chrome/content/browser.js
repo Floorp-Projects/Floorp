@@ -204,9 +204,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "Rect",
                                   "resource://gre/modules/Geometry.jsm");
 
 function resolveGeckoURI(aURI) {
-  if (!aURI)
-    throw "Can't resolve an empty uri";
-
   if (aURI.startsWith("chrome://")) {
     let registry = Cc['@mozilla.org/chrome/chrome-registry;1'].getService(Ci["nsIChromeRegistry"]);
     return registry.convertChromeURL(Services.io.newURI(aURI, null, null)).spec;
@@ -1543,16 +1540,12 @@ var NativeWindow = {
   init: function() {
     Services.obs.addObserver(this, "Menu:Clicked", false);
     Services.obs.addObserver(this, "Doorhanger:Reply", false);
-    Services.obs.addObserver(this, "Toast:Click", false);
-    Services.obs.addObserver(this, "Toast:Hidden", false);
     this.contextmenus.init();
   },
 
   uninit: function() {
     Services.obs.removeObserver(this, "Menu:Clicked");
     Services.obs.removeObserver(this, "Doorhanger:Reply");
-    Services.obs.removeObserver(this, "Toast:Click", false);
-    Services.obs.removeObserver(this, "Toast:Hidden", false);
     this.contextmenus.uninit();
   },
 
@@ -1572,26 +1565,12 @@ var NativeWindow = {
   },
 
   toast: {
-    _callbacks: {},
-    show: function(aMessage, aDuration, aOptions) {
-      let msg = {
+    show: function(aMessage, aDuration) {
+      sendMessageToJava({
         type: "Toast:Show",
         message: aMessage,
         duration: aDuration
-      };
-
-      if (aOptions.button) {
-        msg.button = {
-          label: aOptions.button.label,
-          id: uuidgen.generateUUID().toString(),
-          // If the caller specified a button, make sure we convert any chrome urls
-          // to jar:jar urls so that the frontend can show them
-          icon: aOptions.button.icon ? resolveGeckoURI(aOptions.button.icon) : null,
-        };
-        this._callbacks[msg.button.id] = aOptions.button.callback;
-      }
-
-      sendMessageToJava(msg);
+      });
     }
   },
 
@@ -1692,14 +1671,6 @@ var NativeWindow = {
     if (aTopic == "Menu:Clicked") {
       if (this.menu._callbacks[aData])
         this.menu._callbacks[aData]();
-    } else if (aTopic == "Toast:Click") {
-      if (this.toast._callbacks[aData]) {
-        this.toast._callbacks[aData]();
-        delete this.toast._callbacks[aData];
-      }
-    } else if (aTopic == "Toast:Hidden") {
-      if (this.toast._callbacks[aData])
-        delete this.toast._callbacks[aData];
     } else if (aTopic == "Doorhanger:Reply") {
       let data = JSON.parse(aData);
       let reply_id = data["callback"];
