@@ -401,6 +401,7 @@ void
 AudioContext::UnregisterPannerNode(PannerNode* aNode)
 {
   mPannerNodes.RemoveEntry(aNode);
+  mListener->UnregisterPannerNode(aNode);
 }
 
 void
