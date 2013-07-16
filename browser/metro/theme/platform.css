@@ -498,7 +498,6 @@ notification {
   -moz-box-flex: 9999;
 }
 
-
 /* Dialogs ----------------------------------------------------------------- */
 
 .modal-block,
@@ -706,6 +705,20 @@ appbar toolbar > toolbarbutton {
 
 appbar toolbar > toolbarbutton[disabled] {
   visibility: collapse;
+}
+
+appbar toolbar[labelled] {
+  min-height: @labelled_toolbar_height@;
+}
+
+appbar toolbar[labelled] > toolbarbutton {
+  -moz-box-orient: vertical;
+}
+
+appbar toolbar[labelled] > toolbarbutton > .toolbarbutton-text {
+  display: block;
+  padding-top: @metro_spacing_small@;
+  font-size: 0.75rem;
 }
 
 /* Sprites */

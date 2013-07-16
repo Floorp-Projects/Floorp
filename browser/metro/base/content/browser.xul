@@ -361,12 +361,22 @@
 
     <!-- Context button bar -->
     <appbar id="contextappbar">
-      <toolbar id="contextualactions-tray" flex="1">
-        <toolbarbutton id="delete-selected-button" class="appbar-secondary" hidden="true" fade="true" oncommand="Appbar.dispatchContextualAction('delete')"/>
-        <toolbarbutton id="restore-selected-button" class="appbar-secondary" hidden="true" fade="true" oncommand="Appbar.dispatchContextualAction('restore')"/>
-        <toolbarbutton id="pin-selected-button" class="appbar-secondary" hidden="true" fade="true" oncommand="Appbar.dispatchContextualAction('pin')"/>
-        <toolbarbutton id="unpin-selected-button" class="appbar-secondary" hidden="true" fade="true" oncommand="Appbar.dispatchContextualAction('unpin')"/>
-        <toolbarbutton id="clear-selected-button" class="appbar-secondary" hidden="true" fade="true" oncommand="Appbar.dispatchContextualAction('clear')"/>
+      <toolbar id="contextualactions-tray" labelled="true" flex="1">
+        <toolbarbutton id="delete-selected-button" class="appbar-secondary"
+                       hidden="true" fade="true"
+                       oncommand="Appbar.dispatchContextualAction('delete')"/>
+        <toolbarbutton id="restore-selected-button" class="appbar-secondary"
+                       hidden="true" fade="true"
+                       oncommand="Appbar.dispatchContextualAction('restore')"/>
+        <toolbarbutton id="pin-selected-button" class="appbar-secondary"
+                       hidden="true" fade="true"
+                       oncommand="Appbar.dispatchContextualAction('pin')"/>
+        <toolbarbutton id="unpin-selected-button" class="appbar-secondary"
+                       hidden="true" fade="true"
+                       oncommand="Appbar.dispatchContextualAction('unpin')"/>
+        <toolbarbutton id="clear-selected-button" class="appbar-secondary"
+                       hidden="true" fade="true"
+                       oncommand="Appbar.dispatchContextualAction('clear')"/>
       </toolbar>
     </appbar>
 
