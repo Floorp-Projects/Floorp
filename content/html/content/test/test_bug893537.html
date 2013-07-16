@@ -1,0 +1,42 @@
+<!doctype html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=893537
+-->
+    <head>
+<title>Test for crash caused by unloading and reloading srcdoc iframes</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=893537">Mozilla Bug 893537</a>
+
+<iframe id="pframe" src="file_bug893537.html"></iframe>
+
+<pre id="test">
+<script>
+  SimpleTest.waitForExplicitFinish();
+  var pframe = $("pframe");
+  
+  var loadState = 1;
+  pframe.contentWindow.addEventListener("load", function () {
+
+    if (loadState == 1) {
+      var iframe = pframe.contentDocument.getElementById("iframe");
+      iframe.removeAttribute("srcdoc");
+      loadState = 2;
+    }
+    if (loadState == 2) {
+      SimpleTest.executeSoon(function () { pframe.contentWindow.location.reload() });
+      loadState = 3;
+    }
+    if (loadState == 3) {
+      ok(true, "This is a mochitest implementation of a crashtest.  To finish is to pass");
+      SimpleTest.finish();
+    }
+  });
+
+</script>
+</pre>
+</body>
+</html>
