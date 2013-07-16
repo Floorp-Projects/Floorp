@@ -4660,10 +4660,19 @@ nsNavigatorSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   JS::Rooted<JSObject*> obj(cx, aObj);
   JS::Rooted<jsid> id(cx, aId);
   nsCOMPtr<nsIDOMNavigator> navigator = do_QueryWrappedNative(wrapper);
-  if (!static_cast<Navigator*>(navigator.get())->
-        DoNewResolve(cx, obj, id, flags,
-                     JS::MutableHandle<JSObject*>::fromMarkedLocation(objp))) {
+  JS::Rooted<JS::Value> value(cx);
+  if (!static_cast<Navigator*>(navigator.get())->DoNewResolve(cx, obj, id,
+                                                              &value)) {
     return NS_ERROR_FAILURE;
+  }
+
+  if (!value.isUndefined()) {
+    if (!JS_DefinePropertyById(cx, obj, id, value, JS_PropertyStub,
+                               JS_StrictPropertyStub, JSPROP_ENUMERATE)) {
+      return NS_ERROR_FAILURE;
+    }
+
+    *objp = obj;
   }
 
   *_retval = true;
