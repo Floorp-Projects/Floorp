@@ -127,7 +127,20 @@ class ArgumentParser(argparse.ArgumentParser):
 
 @CommandProvider
 class Mach(object):
-    """Contains code for the command-line `mach` interface."""
+    """Main mach driver type.
+
+    This type is responsible for holding global mach state and dispatching
+    a command from arguments.
+
+    The following attributes may be assigned to the instance to influence
+    behavior:
+
+        populate_context_handler -- If defined, it must be a callable. The
+            callable will be called with the mach.base.CommandContext instance
+            as its single argument right before command dispatch. This allows
+            modification of the context instance and thus passing of
+            arbitrary data to command handlers.
+    """
 
     USAGE = """%(prog)s [global arguments] command [command arguments]
 
@@ -153,6 +166,8 @@ To see more help for a specific command, run:
         self.log_manager = LoggingManager()
         self.logger = logging.getLogger(__name__)
         self.settings = ConfigSettings()
+
+        self.populate_context_handler = None
 
         self.log_manager.register_structured_logger(self.logger)
 
@@ -302,6 +317,9 @@ To see more help for a specific command, run:
         context = CommandContext(topdir=self.cwd, cwd=self.cwd,
             settings=self.settings, log_manager=self.log_manager,
             commands=Registrar)
+
+        if self.populate_context_handler:
+            self.populate_context_handler(context)
 
         handler = getattr(args, 'mach_handler')
         cls = handler.cls
