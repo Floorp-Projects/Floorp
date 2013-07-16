@@ -22,7 +22,6 @@ MOCHITEST_FILES	= \
 		test_leak_windowClose.html \
 		create_notification.html \
 		notification_common.js \
-		test_bug893501.html \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
