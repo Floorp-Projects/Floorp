@@ -4,13 +4,17 @@
 
 "use strict";
 
-const { Cu } = require("chrome");
+const { Cu, Cc, Ci, components } = require("chrome");
+
 const {
   PROFILE_IDLE,
   PROFILE_RUNNING,
   PROFILE_COMPLETED,
-  SHOW_PLATFORM_DATA
+  SHOW_PLATFORM_DATA,
+  L10N_BUNDLE
 } = require("devtools/profiler/consts");
+
+const { TextEncoder } = Cu.import("resource://gre/modules/commonjs/toolkit/loader.js", {});
 
 var EventEmitter = require("devtools/shared/event-emitter");
 var promise      = require("sdk/core/promise");
@@ -21,6 +25,11 @@ var ProfilerController = require("devtools/profiler/controller");
 Cu.import("resource:///modules/devtools/gDevTools.jsm");
 Cu.import("resource://gre/modules/devtools/Console.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource:///modules/devtools/ViewHelpers.jsm");
+Cu.import("resource://gre/modules/osfile.jsm");
+Cu.import("resource://gre/modules/NetUtil.jsm");
+
+loader.lazyGetter(this, "L10N", () => new ViewHelpers.L10N(L10N_BUNDLE));
 
 /**
  * Profiler panel. It is responsible for creating and managing
@@ -80,7 +89,8 @@ ProfilerPanel.prototype = {
     let doc = this.document;
 
     return {
-      get record() doc.querySelector("#profiler-start")
+      get record() doc.querySelector("#profiler-start"),
+      get import() doc.querySelector("#profiler-import"),
     };
   },
 
@@ -104,7 +114,7 @@ ProfilerPanel.prototype = {
     this._runningUid = profile ? profile.uid : null;
 
     if (this._runningUid)
-      btn.setAttribute("checked", true)
+      btn.setAttribute("checked", true);
     else
       btn.removeAttribute("checked");
   },
@@ -152,13 +162,22 @@ ProfilerPanel.prototype = {
         let deferred = promise.defer();
 
         this.controller = new ProfilerController(this.target);
-
         this.sidebar = new Sidebar(this.document.querySelector("#profiles-list"));
-        this.sidebar.widget.addEventListener("select", (ev) => {
-          if (!ev.detail)
-            return;
 
-          let profile = this.profiles.get(parseInt(ev.detail.value, 10));
+        this.sidebar.on("save", (_, uid) => {
+          let profile = this.profiles.get(uid);
+
+          if (!profile.data)
+            return void Cu.reportError("Can't save profile because there's no data.");
+
+          this.openFileDialog({ mode: "save", name: profile.name }).then((file) => {
+            if (file)
+              this.saveProfile(file, profile.data);
+          });
+        });
+
+        this.sidebar.on("select", (_, uid) => {
+          let profile = this.profiles.get(uid);
           this.activeProfile = profile;
 
           if (profile.isReady) {
@@ -175,18 +194,18 @@ ProfilerPanel.prototype = {
           btn.addEventListener("click", () => this.toggleRecording(), false);
           btn.removeAttribute("disabled");
 
+          let imp = this.controls.import;
+          imp.addEventListener("click", () => {
+            this.openFileDialog({ mode: "open" }).then((file) => {
+              if (file)
+                this.loadProfile(file);
+            });
+          }, false);
+          imp.removeAttribute("disabled");
+
           // Import queued profiles.
           for (let [name, data] of this.controller.profiles) {
-            let profile = this.createProfile(name);
-            profile.isStarted = false;
-            profile.isFinished = true;
-            profile.data = data.data;
-            profile.parse(data.data, () => this.emit("parsed"));
-
-            this.sidebar.setProfileState(profile, PROFILE_COMPLETED);
-            if (!this.sidebar.selectedItem) {
-              this.sidebar.selectedItem = this.sidebar.getItemByProfile(profile);
-            }
+            this.importProfile(name, data.data);
           }
 
           this.isReady = true;
@@ -195,15 +214,7 @@ ProfilerPanel.prototype = {
         });
 
         this.controller.on("profileEnd", (_, data) => {
-          let profile = this.createProfile(data.name);
-          profile.isStarted = false;
-          profile.isFinished = true;
-          profile.data = data.data;
-          profile.parse(data.data, () => this.emit("parsed"));
-
-          this.sidebar.setProfileState(profile, PROFILE_COMPLETED);
-          if (!this.sidebar.selectedItem)
-            this.sidebar.selectedItem = this.sidebar.getItemByProfile(profile);
+          this.importProfile(data.name, data.data);
 
           if (this.recordingProfile && !data.fromConsole)
             this.recordingProfile = null;
@@ -227,9 +238,9 @@ ProfilerPanel.prototype = {
    * @param string name
    *        (optional) name of the new profile
    *
-   * @return ProfilerPanel
+   * @return Profile
    */
-  createProfile: function (name) {
+  createProfile: function (name, opts={}) {
     if (name && this.getProfileByName(name)) {
       return this.getProfileByName(name);
     }
@@ -239,12 +250,37 @@ ProfilerPanel.prototype = {
     let profile = new Cleopatra(this, {
       uid: uid,
       name: name,
-      showPlatformData: this.showPlatformData
+      showPlatformData: this.showPlatformData,
+      external: opts.external
     });
 
     this.profiles.set(uid, profile);
     this.sidebar.addProfile(profile);
     this.emit("profileCreated", uid);
+
+    return profile;
+  },
+
+  /**
+   * Imports profile data
+   *
+   * @param string name, new profile name
+   * @param object data, profile data to import
+   * @param object opts, (optional) if property 'external' is found
+   *                     Cleopatra will hide arrow buttons.
+   *
+   * @return Profile
+   */
+  importProfile: function (name, data, opts={}) {
+    let profile = this.createProfile(name, { external: opts.external });
+    profile.isStarted = false;
+    profile.isFinished = true;
+    profile.data = data;
+    profile.parse(data, () => this.emit("parsed"));
+
+    this.sidebar.setProfileState(profile, PROFILE_COMPLETED);
+    if (!this.sidebar.selectedItem)
+      this.sidebar.selectedItem = this.sidebar.getItemByProfile(profile);
 
     return profile;
   },
@@ -422,7 +458,7 @@ ProfilerPanel.prototype = {
    */
   displaySource: function PP_displaySource(data, onOpen=function() {}) {
     let win = this.window;
-    let panelWin, timeout;
+    let panelWin;
 
     function onSourceShown(event) {
       if (event.detail.url !== data.uri) {
@@ -453,6 +489,81 @@ ProfilerPanel.prototype = {
       panelWin.addEventListener("Debugger:SourceShown", onSourceShown, false);
       panelWin.DebuggerView.Sources.preferredSource = data.uri;
     }.bind(this));
+  },
+
+  /**
+   * Opens a normal file dialog.
+   *
+   * @params object opts, (optional) property 'mode' can be used to
+   *                      specify which dialog to open. Can be either
+   *                      'save' or 'open' (default is 'open').
+   * @return promise
+   */
+  openFileDialog: function (opts={}) {
+    let deferred = promise.defer();
+
+    let picker = Ci.nsIFilePicker;
+    let fp = Cc["@mozilla.org/filepicker;1"].createInstance(picker);
+    let { name, mode } = opts;
+    let save = mode === "save";
+    let title = L10N.getStr(save ? "profiler.saveFileAs" : "profiler.openFile");
+
+    fp.init(this.window, title, save ? picker.modeSave : picker.modeOpen);
+    fp.appendFilter("JSON", "*.json");
+    fp.appendFilters(picker.filterText | picker.filterAll);
+
+    if (save)
+      fp.defaultString = (name || "profile") + ".json";
+
+    fp.open((result) => {
+      deferred.resolve(result === picker.returnCancel ? null : fp.file);
+    });
+
+    return deferred.promise;
+  },
+
+  /**
+   * Saves profile data to disk
+   *
+   * @param File file
+   * @param object data
+   *
+   * @return promise
+   */
+  saveProfile: function (file, data) {
+    let encoder = new TextEncoder();
+    let buffer = encoder.encode(JSON.stringify({ profile: data }, null, "  "));
+    let opts = { tmpPath: file.path + ".tmp" };
+
+    return OS.File.writeAtomic(file.path, buffer, opts);
+  },
+
+  /**
+   * Reads profile data from disk
+   *
+   * @param File file
+   * @return promise
+   */
+  loadProfile: function (file) {
+    let deferred = promise.defer();
+    let ch = NetUtil.newChannel(file);
+    ch.contentType = "application/json";
+
+    NetUtil.asyncFetch(ch, (input, status) => {
+      if (!components.isSuccessCode(status)) throw new Error(status);
+
+      let conv = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
+        .createInstance(Ci.nsIScriptableUnicodeConverter);
+      conv.charset = "UTF-8";
+
+      let data = NetUtil.readInputStreamToString(input, input.available());
+      data = conv.ConvertToUnicode(data);
+      this.importProfile(file.leafName, JSON.parse(data).profile, { external: true });
+
+      deferred.resolve();
+    });
+
+    return deferred.promise;
   },
 
   /**
