@@ -1680,7 +1680,7 @@ abstract public class BrowserApp extends GeckoApp
                         mToast.show(false,
                             getResources().getString(R.string.bookmark_added),
                             getResources().getString(R.string.bookmark_options),
-                            0,
+                            null,
                             new ButtonToast.ToastListener() {
                                 @Override
                                 public void onButtonClicked() {
