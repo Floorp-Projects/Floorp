@@ -61,9 +61,6 @@ TelephonyCall::ChangeStateInternal(uint16_t aCallState, bool aFireEvents)
     case nsITelephonyProvider::CALL_STATE_ALERTING:
       stateString.AssignLiteral("alerting");
       break;
-    case nsITelephonyProvider::CALL_STATE_BUSY:
-      stateString.AssignLiteral("busy");
-      break;
     case nsITelephonyProvider::CALL_STATE_CONNECTING:
       stateString.AssignLiteral("connecting");
       break;
@@ -269,7 +266,6 @@ TelephonyCall::Resume()
 NS_IMPL_EVENT_HANDLER(TelephonyCall, statechange)
 NS_IMPL_EVENT_HANDLER(TelephonyCall, dialing)
 NS_IMPL_EVENT_HANDLER(TelephonyCall, alerting)
-NS_IMPL_EVENT_HANDLER(TelephonyCall, busy)
 NS_IMPL_EVENT_HANDLER(TelephonyCall, connecting)
 NS_IMPL_EVENT_HANDLER(TelephonyCall, connected)
 NS_IMPL_EVENT_HANDLER(TelephonyCall, disconnecting)

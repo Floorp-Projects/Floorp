@@ -53,14 +53,12 @@ class SyntaxParseHandler
 
     void trace(JSTracer *trc) {}
 
-    Node newName(PropertyName *name, InBlockBool inBlock, uint32_t blockid, const TokenPos &pos) {
+    Node newName(PropertyName *name, uint32_t blockid, const TokenPos &pos) {
         lastAtom = name;
         return NodeName;
     }
 
-    DefinitionNode newPlaceholder(JSAtom *atom, InBlockBool inBlock, uint32_t blockid,
-                                  const TokenPos &pos)
-    {
+    DefinitionNode newPlaceholder(JSAtom *atom, uint32_t blockid, const TokenPos &pos) {
         return Definition::PLACEHOLDER;
     }
 

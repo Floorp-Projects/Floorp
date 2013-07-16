@@ -11,10 +11,18 @@ var server;
 
 const kDefaultServerPort = 9000;
 const kSuccessPath = "/success";
-const kPostPath = "/post";
 const kBaseUrl = "http://localhost:" + kDefaultServerPort;
 const kSuccessUrl = kBaseUrl + kSuccessPath;
+
+const kPostPath = "/post";
 const kPostUrl = kBaseUrl + kPostPath;
+const kPostDataSent = [["foo", "bar"], ["complex", "!*()@"]];
+const kPostDataReceived = "foo=bar&complex=%21%2A%28%29%40";
+
+const kPutPath = "/put";
+const kPutUrl = kBaseUrl + kPutPath;
+const kPutDataSent = [["P", "NP"]];
+const kPutDataReceived = "P=NP";
 
 function successResult(aRequest, aResponse) {
   aResponse.setStatusLine(null, 200, "OK");
@@ -22,22 +30,24 @@ function successResult(aRequest, aResponse) {
   aResponse.write("Success!");
 }
 
-function checkData(aRequest, aResponse) {
-  let body = new BinaryInputStream(aRequest.bodyInputStream);
-  let bytes = [];
-  let avail;
-  while ((avail = body.available()) > 0)
-    Array.prototype.push.apply(bytes, body.readByteArray(avail));
+function getDataChecker(aExpectedMethod, aExpectedData) {
+  return function(aRequest, aResponse) {
+    let body = new BinaryInputStream(aRequest.bodyInputStream);
+    let bytes = [];
+    let avail;
+    while ((avail = body.available()) > 0)
+      Array.prototype.push.apply(bytes, body.readByteArray(avail));
 
-  do_check_eq(aRequest.method, "POST");
+    do_check_eq(aRequest.method, aExpectedMethod);
 
-  var data = String.fromCharCode.apply(null, bytes);
+    var data = String.fromCharCode.apply(null, bytes);
 
-  do_check_eq(data, "foo=bar&complex=%21%2A%28%29%40");
+    do_check_eq(data, aExpectedData);
 
-  aResponse.setStatusLine(null, 200, "OK");
-  aResponse.setHeader("Content-Type", "application/json");
-  aResponse.write("Success!");
+    aResponse.setStatusLine(null, 200, "OK");
+    aResponse.setHeader("Content-Type", "application/json");
+    aResponse.write("Success!");
+  }
 }
 
 add_test(function test_successCallback() {
@@ -87,16 +97,38 @@ add_test(function test_PostData() {
       do_test_finished();
       run_next_test();
     },
-    postData: [["foo", "bar"], ["complex", "!*()@"]]
+    postData: kPostDataSent
   }
   httpRequest(kPostUrl, options);
+});
+
+add_test(function test_PutData() {
+  do_test_pending();
+  let options = {
+    method: "PUT",
+    onLoad: function(aResponse) {
+      do_check_eq(aResponse, "Success!");
+      do_test_finished();
+      run_next_test();
+    },
+    onError: function(e) {
+      do_check_true(false);
+      do_test_finished();
+      run_next_test();
+    },
+    postData: kPutDataSent
+  }
+  httpRequest(kPutUrl, options);
 });
 
 function run_test() {
   // Set up a mock HTTP server to serve a success page.
   server = new HttpServer();
   server.registerPathHandler(kSuccessPath, successResult);
-  server.registerPathHandler(kPostPath, checkData);
+  server.registerPathHandler(kPostPath,
+                             getDataChecker("POST", kPostDataReceived));
+  server.registerPathHandler(kPutPath,
+                             getDataChecker("PUT", kPutDataReceived));
   server.start(kDefaultServerPort);
 
   run_next_test();

@@ -7903,13 +7903,8 @@ IonBuilder::getPropTryCache(bool *emitted, HandlePropertyName name, HandleId id,
             return true;
     }
 
-    MIRType rvalType = MIRTypeFromValueType(types->getKnownTypeTag());
-    if (barrier || IsNullOrUndefined(rvalType) || accessGetter)
-        rvalType = MIRType_Value;
-
     current->pop();
     MGetPropertyCache *load = MGetPropertyCache::New(obj, name);
-    load->setResultType(rvalType);
 
     // Try to mark the cache as idempotent. We only do this if JM is enabled
     // (its ICs are used to mark property reads as likely non-idempotent) or
@@ -7943,6 +7938,21 @@ IonBuilder::getPropTryCache(bool *emitted, HandlePropertyName name, HandleId id,
 
     if (accessGetter)
         barrier = true;
+
+    // ParallelGetPropertyIC cannot safely call TypeScript::Monitor to ensure
+    // that the observed type set contains undefined. To account for possible
+    // missing properties, which property types do not track, we must always
+    // insert a type barrier.
+    if (info().executionMode() == ParallelExecution &&
+        !types->hasType(types::Type::UndefinedType()))
+    {
+        barrier = true;
+    }
+
+    MIRType rvalType = MIRTypeFromValueType(types->getKnownTypeTag());
+    if (barrier || IsNullOrUndefined(rvalType))
+        rvalType = MIRType_Value;
+    load->setResultType(rvalType);
 
     if (!pushTypeBarrier(load, types, barrier))
         return false;

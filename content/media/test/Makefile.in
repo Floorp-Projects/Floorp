@@ -119,7 +119,6 @@ MOCHITEST_FILES = \
 		test_mozHasAudio.html \
 		test_source_media.html \
 		test_autoplay_contentEditable.html \
-		test_buffered.html \
 		test_bug448534.html \
 		test_bug463162.xhtml \
 		test_decoder_disable.html \
@@ -184,6 +183,7 @@ endif
 
 # The below tests are disabled due to frequent timeouts.
 # Bug 832768 and Bug 864682:
+#		test_buffered.html
 #		test_bug465498.html
 # Bug 707777:
 #		test_bug493187.html

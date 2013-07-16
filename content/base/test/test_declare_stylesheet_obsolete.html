@@ -1,0 +1,94 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=713564
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 713564</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+  <!-- Load the variable stylesheet, which changes the color of #content. -->
+  <link rel="stylesheet" type="text/css" href="variable_style_sheet.sjs"/>
+
+  <script type="application/javascript">
+
+  function insertLinkToVarSSAndRun(callback) {
+    var ss = document.createElement("link");
+    ss.rel = "stylesheet";
+    ss.type = "text/css";
+    ss.href = "variable_style_sheet.sjs";
+    document.getElementsByTagName("head")[0].appendChild(ss);
+    ss.addEventListener("load", callback);
+  }
+
+  /** Test for Bug 713564 **/
+
+  // Then you link to that sheet, remove the link from the DOM, insert a new link to
+  // the same url and check that there was no new access, then call our new method,
+  // insert _another_ <link> to the same url, and check that this time we hit the
+  // server.
+  SimpleTest.waitForExplicitFinish();
+
+  function do_test() {
+    var var_sheet = document.getElementsByTagName("link")[1];
+    var head = document.getElementsByTagName("head")[0];
+    var content = document.getElementById("content");
+    var var_sheet_url = var_sheet.href;
+
+    var previousBgColor = window.getComputedStyle(content).
+                                 getPropertyValue("background-color");
+    var_sheet.parentNode.removeChild(var_sheet);
+    insertLinkToVarSSAndRun(function() {
+      is(window.getComputedStyle(content).getPropertyValue("background-color"),
+         previousBgColor,
+         "Sheet should still be the same.");
+
+      // Obsolete sheet
+      try {
+        SpecialPowers.wrap(document).obsoleteSheet(var_sheet_url);
+      } catch (e) {
+        ok(false, "obsoleteSheet should not raise an error on valid URL.");
+      }
+      insertLinkToVarSSAndRun(function() {
+        isnot(window.getComputedStyle(content).getPropertyValue("background-color"),
+              previousBgColor,
+              "Sheet should change after obsoleted and reinserted.");
+        SimpleTest.finish();
+      });
+    });
+    // obsoleteSheet should throw with invalid input:
+    try {
+      SpecialPowers.wrap(document).obsoleteSheet("");
+      ok(false, "obsoleteSheet should throw with empty string.");
+    } catch (e) {
+      ok(true, "obsoleteSheet throws with empty string.");
+    }
+    try {
+      SpecialPowers.wrap(document).obsoleteSheet("foo");
+      ok(false, "obsoleteSheet should throw with invalid URL.");
+    } catch (e) {
+      ok(true, "obsoleteSheet throws with invalid URL.");
+    }
+    try {
+      SpecialPowers.wrap(document).obsoleteSheet("http://www.mozilla.org");
+      ok(true, "obsoleteSheet should not throw with valid URL.");
+    } catch (e) {
+      ok(false, "obsoleteSheet throws with valid URL.");
+    }
+  }
+
+  </script>
+</head>
+<body onload="do_test();">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=713564">Mozilla Bug 713564</a>
+<p id="display"></p>
+<div id="content">
+  <br>
+  <br>
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

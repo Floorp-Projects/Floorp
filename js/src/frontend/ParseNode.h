@@ -630,7 +630,6 @@ class ParseNode
 #define PND_LET                 0x01    /* let (block-scoped) binding */
 #define PND_CONST               0x02    /* const binding (orthogonal to let) */
 #define PND_ASSIGNED            0x04    /* set if ever LHS of assignment */
-#define PND_BLOCKCHILD          0x08    /* use or def is direct block child */
 #define PND_PLACEHOLDER         0x10    /* placeholder definition for lexdep */
 #define PND_BOUND               0x20    /* bound to a stack or global slot */
 #define PND_DEOPTIMIZED         0x40    /* former pn_used name node, pn_lexdef
@@ -713,7 +712,6 @@ class ParseNode
 
     bool isLet() const          { return test(PND_LET); }
     bool isConst() const        { return test(PND_CONST); }
-    bool isBlockChild() const   { return test(PND_BLOCKCHILD); }
     bool isPlaceholder() const  { return test(PND_PLACEHOLDER); }
     bool isDeoptimized() const  { return test(PND_DEOPTIMIZED); }
     bool isAssigned() const     { return test(PND_ASSIGNED); }
@@ -976,21 +974,16 @@ struct CodeNode : public ParseNode
 #endif
 };
 
-enum InBlockBool {
-    NotInBlock = false,
-    InBlock = true
-};
-
 struct NameNode : public ParseNode
 {
-    NameNode(ParseNodeKind kind, JSOp op, JSAtom *atom, InBlockBool inBlock, uint32_t blockid,
+    NameNode(ParseNodeKind kind, JSOp op, JSAtom *atom, uint32_t blockid,
              const TokenPos &pos)
       : ParseNode(kind, op, PN_NAME, pos)
     {
         pn_atom = atom;
         pn_expr = NULL;
         pn_cookie.makeFree();
-        pn_dflags = inBlock ? PND_BLOCKCHILD : 0;
+        pn_dflags = 0;
         pn_blockid = blockid;
         JS_ASSERT(pn_blockid == blockid);  // check for bitfield overflow
     }

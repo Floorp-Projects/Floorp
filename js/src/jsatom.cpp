@@ -36,6 +36,10 @@ using mozilla::RangedPtr;
 const char *
 js::AtomToPrintableString(ExclusiveContext *cx, JSAtom *atom, JSAutoByteString *bytes)
 {
+    // The only uses for this method when running off the main thread are for
+    // parse errors/warnings, which will not actually be reported in such cases.
+    if (!cx->isJSContext())
+        return "";
     return js_ValueToPrintable(cx->asJSContext(), StringValue(atom), bytes);
 }
 
@@ -334,14 +338,21 @@ js::AtomizeString(ExclusiveContext *cx, JSString *str,
         return &atom;
     }
 
-    const jschar *chars = str->getChars(cx->asJSContext());
-    if (!chars)
-        return NULL;
+    const jschar *chars;
+    if (str->isLinear()) {
+        chars = str->asLinear().chars();
+    } else {
+        if (!cx->shouldBeJSContext())
+            return NULL;
+        chars = str->getChars(cx->asJSContext());
+        if (!chars)
+            return NULL;
+    }
 
     if (JSAtom *atom = AtomizeAndCopyChars<NoGC>(cx, chars, str->length(), ib))
         return atom;
 
-    if (!allowGC)
+    if (!cx->isJSContext() || !allowGC)
         return NULL;
 
     JSLinearString *linear = str->ensureLinear(cx->asJSContext());

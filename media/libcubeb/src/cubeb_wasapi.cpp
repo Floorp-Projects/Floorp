@@ -9,9 +9,9 @@
 #endif
 #include <assert.h>
 #include <windows.h>
-#include <Mmdeviceapi.h>
-#include <WinDef.h>
-#include <Audioclient.h>
+#include <mmdeviceapi.h>
+#include <windef.h>
+#include <audioclient.h>
 #include <math.h>
 #include <process.h>
 #include <avrt.h>
@@ -21,7 +21,7 @@
 #include "cubeb-speex-resampler.h"
 #include <stdio.h>
 
-#if 1
+#if 0
 #  define LOG(...) do {         \
   fprintf(stderr, __VA_ARGS__); \
   fprintf(stderr, "\n");        \
