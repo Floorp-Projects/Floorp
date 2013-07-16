@@ -1686,6 +1686,9 @@ abstract public class BrowserApp extends GeckoApp
                                 public void onButtonClicked() {
                                     showBookmarkDialog();
                                 }
+
+                                @Override
+                                public void onToastHidden(ButtonToast.ReasonHidden reason) { }
                             });
                         item.setIcon(R.drawable.ic_menu_bookmark_remove);
                     }
