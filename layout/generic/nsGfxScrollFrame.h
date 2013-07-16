@@ -269,6 +269,8 @@ public:
   void ScheduleSyntheticMouseMove();
   static void ScrollActivityCallback(nsITimer *aTimer, void* anInstance);
 
+  void HandleScrollbarStyleSwitching();
+
   // owning references to the nsIAnonymousContentCreator-built content
   nsCOMPtr<nsIContent> mHScrollbarContent;
   nsCOMPtr<nsIContent> mVScrollbarContent;
