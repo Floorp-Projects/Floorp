@@ -16,6 +16,8 @@
 using namespace js;
 using namespace js::ion;
 
+using mozilla::Array;
+
 // Iterates over the flags in an AliasSet.
 class AliasSetIterator
 {
@@ -117,7 +119,7 @@ IonSpewAliasInfo(const char *pre, MDefinition *ins, const char *post)
 bool
 AliasAnalysis::analyze()
 {
-    FixedArityList<MDefinitionVector, AliasSet::NumCategories> stores;
+    Array<MDefinitionVector, AliasSet::NumCategories> stores;
 
     // Initialize to the first instruction.
     MDefinition *firstIns = *graph_.begin()->begin();

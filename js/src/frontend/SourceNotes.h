@@ -81,6 +81,19 @@ enum SrcNoteType {
     SRC_XDELTA      = 24        /* 24-31 are for extended delta notes */
 };
 
+/* A source note array is terminated by an all-zero element. */
+inline void
+SN_MAKE_TERMINATOR(jssrcnote *sn)
+{
+    *sn = SRC_NULL;
+}
+
+inline bool
+SN_IS_TERMINATOR(jssrcnote *sn)
+{
+    return *sn == SRC_NULL;
+}
+
 }  // namespace js
 
 #define SN_TYPE_BITS            5
@@ -140,10 +153,6 @@ enum SrcNoteType {
 #define SN_LENGTH(sn)           ((js_SrcNoteSpec[SN_TYPE(sn)].arity == 0) ? 1 \
                                  : js_SrcNoteLength(sn))
 #define SN_NEXT(sn)             ((sn) + SN_LENGTH(sn))
-
-/* A source note array is terminated by an all-zero element. */
-#define SN_MAKE_TERMINATOR(sn)  (*(sn) = SRC_NULL)
-#define SN_IS_TERMINATOR(sn)    (*(sn) == SRC_NULL)
 
 struct JSSrcNoteSpec {
     const char      *name;      /* name for disassembly/debugging output */

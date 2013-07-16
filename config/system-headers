@@ -468,6 +468,7 @@ IOKit/IOKitLib.h
 IOKit/IOMessage.h
 IOKit/pwr_mgt/IOPMLib.h
 iomanip
+ios
 iostream
 iostream.h
 iterator
@@ -678,6 +679,7 @@ OpenTransport.h
 os2.h
 OS.h
 osreldate.h
+ostream
 OSUtils.h
 Packages.h
 Palettes.h

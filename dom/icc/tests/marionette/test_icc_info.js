@@ -5,9 +5,42 @@ MARIONETTE_TIMEOUT = 30000;
 
 SpecialPowers.addPermission("mobileconnection", true, document);
 
-let icc = navigator.mozIccManager;
-ok(icc instanceof MozIccManager,
-   "icc is instanceof " + icc.constructor);
+// Permission changes can't change existing Navigator.prototype
+// objects, so grab our objects from a new Navigator
+let ifr = document.createElement("iframe");
+let icc;
+let iccInfo;
+ifr.onload = function() {
+  icc = ifr.contentWindow.navigator.mozIccManager;
+  ok(icc instanceof ifr.contentWindow.MozIccManager,
+     "icc is instanceof " + icc.constructor);
+
+  iccInfo = icc.iccInfo;
+
+  // The emulator's hard coded iccid value.
+  // See it here {B2G_HOME}/external/qemu/telephony/sim_card.c#L299.
+  is(iccInfo.iccid, 89014103211118510720);
+
+  // The emulator's hard coded mcc and mnc codes.
+  // See it here {B2G_HOME}/external/qemu/telephony/android_modem.c#L2465.
+  is(iccInfo.mcc, 310);
+  is(iccInfo.mnc, 260);
+  is(iccInfo.spn, "Android");
+  // Phone number is hardcoded in MSISDN
+  // See {B2G_HOME}/external/qemu/telephony/sim_card.c, in asimcard_io()
+  is(iccInfo.msisdn, "15555215554");
+
+  testDisplayConditionChange(testSPN, [
+    // [MCC, MNC, isDisplayNetworkNameRequired, isDisplaySpnRequired]
+    [123, 456, false, true], // Not in HPLMN.
+    [234, 136,  true, true], // Not in HPLMN, but in PLMN specified in SPDI.
+    [123, 456, false, true], // Not in HPLMN. Triggering iccinfochange
+    [466,  92,  true, true], // Not in HPLMN, but in another PLMN specified in SPDI.
+    [123, 456, false, true], // Not in HPLMN. Triggering iccinfochange
+    [310, 260,  true, true], // inside HPLMN.
+  ], finalize);
+};
+document.body.appendChild(ifr);
 
 let emulatorCmdPendingCount = 0;
 function sendEmulatorCommand(cmd, callback) {
@@ -39,21 +72,6 @@ function finalize() {
   finish();
 }
 
-let iccInfo = icc.iccInfo;
-
-// The emulator's hard coded iccid value.
-// See it here {B2G_HOME}/external/qemu/telephony/sim_card.c#L299.
-is(iccInfo.iccid, 89014103211118510720);
-
-// The emulator's hard coded mcc and mnc codes.
-// See it here {B2G_HOME}/external/qemu/telephony/android_modem.c#L2465.
-is(iccInfo.mcc, 310);
-is(iccInfo.mnc, 260);
-is(iccInfo.spn, "Android");
-// Phone number is hardcoded in MSISDN
-// See {B2G_HOME}/external/qemu/telephony/sim_card.c, in asimcard_io()
-is(iccInfo.msisdn, "15555215554");
-
 // Test display condition change.
 function testDisplayConditionChange(func, caseArray, oncomplete) {
   (function do_call(index) {
@@ -75,13 +93,3 @@ function testSPN(mcc, mnc, expectedIsDisplayNetworkNameRequired,
   });
   setEmulatorMccMnc(mcc, mnc);
 }
-
-testDisplayConditionChange(testSPN, [
-  // [MCC, MNC, isDisplayNetworkNameRequired, isDisplaySpnRequired]
-  [123, 456, false, true], // Not in HPLMN.
-  [234, 136,  true, true], // Not in HPLMN, but in PLMN specified in SPDI.
-  [123, 456, false, true], // Not in HPLMN. Triggering iccinfochange
-  [466,  92,  true, true], // Not in HPLMN, but in another PLMN specified in SPDI.
-  [123, 456, false, true], // Not in HPLMN. Triggering iccinfochange
-  [310, 260,  true, true], // inside HPLMN.
-], finalize);

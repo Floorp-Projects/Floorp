@@ -35,12 +35,12 @@ function expectSuccess(param) {
 }
 
 function testFailures() {
-  expectFailure(null);
-  expectFailure(undefined);
+  expectSuccess(null);
+  expectSuccess(undefined);
   expectFailure(-1);
-  expectFailure('a');
+  expectSuccess('a');
   expectFailure([100, -1]);
-  expectFailure([100, 'a']);
+  expectSuccess([100, 'a']);
 
   var maxVibrateMs = SpecialPowers.getIntPref('dom.vibrator.max_vibrate_ms');
   var maxVibrateListLen = SpecialPowers.getIntPref('dom.vibrator.max_vibrate_list_len');
