@@ -1442,31 +1442,17 @@ abstract public class BrowserApp extends GeckoApp
         });
 
         if (info.icon != null) {
-            if (info.icon.startsWith("data")) {
-                BitmapDrawable drawable = new BitmapDrawable(BitmapUtils.getBitmapFromDataURI(info.icon));
-                item.setIcon(drawable);
-            }
-            else if (info.icon.startsWith("jar:") || info.icon.startsWith("file://")) {
-                ThreadUtils.postToBackgroundThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            URL url = new URL(info.icon);
-                            InputStream is = (InputStream) url.getContent();
-                            try {
-                                Drawable drawable = Drawable.createFromStream(is, "src");
-                                item.setIcon(drawable);
-                            } finally {
-                                is.close();
-                            }
-                        } catch (Exception e) {
-                            Log.w(LOGTAG, "Unable to set icon", e);
-                        }
+            BitmapUtils.getDrawable(this, info.icon, new BitmapUtils.BitmapLoader() {
+                @Override
+                public void onBitmapFound(Drawable d) {
+                    if (d == null) {
+                        item.setIcon(R.drawable.ic_menu_addons_filler);
+                        return;
                     }
-                });
-            } else {
-                item.setIcon(R.drawable.ic_menu_addons_filler);
-            }
+
+                    item.setIcon(d);
+                }
+            });
         } else {
             item.setIcon(R.drawable.ic_menu_addons_filler);
         }
