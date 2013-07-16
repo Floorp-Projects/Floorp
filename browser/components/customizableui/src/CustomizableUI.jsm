@@ -492,6 +492,7 @@ let CustomizableUIInternal = {
       return;
     }
 
+    let area = gAreas.get(aArea);
     let showInPrivateBrowsing = gPalette.has(aWidgetId)
                               ? gPalette.get(aWidgetId).showInPrivateBrowsing
                               : true;
@@ -514,6 +515,9 @@ let CustomizableUIInternal = {
                                 : null;
       this.insertWidgetBefore(widgetNode, nextNode, container, aArea);
       this._addParentFlex(widgetNode);
+      if (area.type == this.TYPE_TOOLBAR) {
+        areaNode.setAttribute("currentset", areaNode.currentSet);
+      }
     }
   },
 
@@ -523,6 +527,7 @@ let CustomizableUIInternal = {
       return;
     }
 
+    let area = gAreas.get(aArea);
     let showInPrivateBrowsing = gPalette.has(aWidgetId)
                               ? gPalette.get(aWidgetId).showInPrivateBrowsing
                               : true;
@@ -549,6 +554,9 @@ let CustomizableUIInternal = {
         this.removeLocationAttributes(widgetNode);
         areaNode.toolbox.palette.appendChild(widgetNode);
       }
+      if (area.type == this.TYPE_TOOLBAR) {
+        areaNode.setAttribute("currentset", areaNode.currentSet);
+      }
     }
   },
 
@@ -565,6 +573,7 @@ let CustomizableUIInternal = {
       return;
     }
 
+    let area = gAreas.get(aArea);
     let showInPrivateBrowsing = gPalette.has(aWidgetId)
                               ? gPalette.get(aWidgetId).showInPrivateBrowsing
                               : true;
@@ -588,6 +597,9 @@ let CustomizableUIInternal = {
       let nextNode = nextNodeId ? container.querySelector(idToSelector(nextNodeId))
                                 : null;
       this.insertWidgetBefore(widgetNode, nextNode, container, aArea);
+      if (area.type == this.TYPE_TOOLBAR) {
+        areaNode.setAttribute("currentset", areaNode.currentSet);
+      }
     }
   },
 
