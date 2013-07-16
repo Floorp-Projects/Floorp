@@ -176,12 +176,13 @@ AudioContext::CreateBuffer(JSContext* aJSContext, ArrayBuffer& aBuffer,
                   aBuffer.Data(), aBuffer.Length(),
                   contentType);
 
-  WebAudioDecodeJob job(contentType, this);
+  nsRefPtr<WebAudioDecodeJob> job =
+    new WebAudioDecodeJob(contentType, this, aBuffer);
 
   if (mDecoder.SyncDecodeMedia(contentType.get(),
-                               aBuffer.Data(), aBuffer.Length(), job) &&
-      job.mOutput) {
-    nsRefPtr<AudioBuffer> buffer = job.mOutput.forget();
+                               aBuffer.Data(), aBuffer.Length(), *job) &&
+      job->mOutput) {
+    nsRefPtr<AudioBuffer> buffer = job->mOutput.forget();
     if (aMixToMono) {
       buffer->MixToMono(aJSContext);
     }
@@ -379,8 +380,8 @@ AudioContext::DecodeAudioData(const ArrayBuffer& aBuffer,
   if (aFailureCallback.WasPassed()) {
     failureCallback = &aFailureCallback.Value();
   }
-  nsAutoPtr<WebAudioDecodeJob> job(
-    new WebAudioDecodeJob(contentType, this,
+  nsRefPtr<WebAudioDecodeJob> job(
+    new WebAudioDecodeJob(contentType, this, aBuffer,
                           &aSuccessCallback, failureCallback));
   mDecoder.AsyncDecodeMedia(contentType.get(),
                             aBuffer.Data(), aBuffer.Length(), *job);
