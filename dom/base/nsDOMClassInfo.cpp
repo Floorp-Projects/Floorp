@@ -129,7 +129,6 @@
 #include "nsIXSLTProcessorPrivate.h"
 
 #include "nsXMLHttpRequest.h"
-#include "nsIDOMSettingsManager.h"
 #include "nsIDOMContactManager.h"
 #include "nsIDOMPermissionSettings.h"
 #include "nsIDOMApplicationRegistry.h"
