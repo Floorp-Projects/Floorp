@@ -1954,7 +1954,9 @@ nsDocument::Init()
   // we use the default compartment for this document, instead of creating
   // wrapper in some random compartment when the document is exposed to js
   // via some events.
-  mScopeObject = do_GetWeakReference(xpc::GetNativeForGlobal(xpc::GetJunkScope()));
+  nsCOMPtr<nsIGlobalObject> global = xpc::GetJunkScopeGlobal();
+  NS_ENSURE_TRUE(global, NS_ERROR_FAILURE);
+  mScopeObject = do_GetWeakReference(global);
   MOZ_ASSERT(mScopeObject);
 
   // Force initialization.
@@ -2750,8 +2752,11 @@ nsDocument::SetDocumentURI(nsIURI* aURI)
   nsIURI* newBase = GetDocBaseURI();
 
   bool equalBases = false;
+  // Changing just the ref of a URI does not change how relative URIs would
+  // resolve wrt to it, so we can treat the bases as equal as long as they're
+  // equal ignoring the ref.
   if (oldBase && newBase) {
-    oldBase->Equals(newBase, &equalBases);
+    oldBase->EqualsExceptRef(newBase, &equalBases);
   }
   else {
     equalBases = !oldBase && !newBase;

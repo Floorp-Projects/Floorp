@@ -1158,8 +1158,8 @@ RuntimeService::RegisterWorker(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
   }
   else {
     if (!mNavigatorStringsLoaded) {
-      if (NS_FAILED(NS_GetNavigatorAppName(mNavigatorStrings.mAppName)) ||
-          NS_FAILED(NS_GetNavigatorAppVersion(mNavigatorStrings.mAppVersion)) ||
+      NS_GetNavigatorAppName(mNavigatorStrings.mAppName);
+      if (NS_FAILED(NS_GetNavigatorAppVersion(mNavigatorStrings.mAppVersion)) ||
           NS_FAILED(NS_GetNavigatorPlatform(mNavigatorStrings.mPlatform)) ||
           NS_FAILED(NS_GetNavigatorUserAgent(mNavigatorStrings.mUserAgent))) {
         JS_ReportError(aCx, "Failed to load navigator strings!");
