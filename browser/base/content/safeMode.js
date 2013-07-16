@@ -9,6 +9,8 @@ let Cu = Components.utils;
 
 const appStartup = Services.startup;
 
+Cu.import("resource://gre/modules/ResetProfile.jsm");
+
 let defaultToReset = false;
 
 function restartApp() {
@@ -69,7 +71,7 @@ function onLoad() {
   if (appStartup.automaticSafeModeNecessary) {
     document.getElementById("autoSafeMode").hidden = false;
     document.getElementById("safeMode").hidden = true;
-    if (resetSupported()) {
+    if (ResetProfile.resetSupported()) {
       populateResetPane("resetProfileItems");
       document.getElementById("resetProfile").hidden = false;
     } else {
@@ -77,7 +79,7 @@ function onLoad() {
       document.documentElement.getButton("extra1").hidden = true;
     }
   } else {
-    if (!resetSupported()) {
+    if (!ResetProfile.resetSupported()) {
       // Hide the reset button and text if it's not supported.
       document.documentElement.getButton("extra1").hidden = true;
       document.getElementById("resetProfileInstead").hidden = true;
