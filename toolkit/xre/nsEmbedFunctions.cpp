@@ -26,10 +26,6 @@
 #include "nsIToolkitChromeRegistry.h"
 #include "nsIToolkitProfile.h"
 
-#if defined(OS_LINUX)
-#  define XP_LINUX
-#endif
-
 #ifdef XP_WIN
 #include <process.h>
 #endif
