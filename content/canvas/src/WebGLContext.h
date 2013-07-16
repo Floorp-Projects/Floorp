@@ -151,7 +151,7 @@ public:
                                                            nsIDOMWebGLRenderingContext)
 
     virtual JSObject* WrapObject(JSContext *cx,
-                                 JS::Handle<JSObject*> scope) MOZ_OVERRIDE;
+                                 JS::Handle<JSObject*> scope) = 0;
 
     NS_DECL_NSIDOMWEBGLRENDERINGCONTEXT
 

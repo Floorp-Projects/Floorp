@@ -28,6 +28,7 @@ if CONFIG['MOZ_WEBGL']:
     CPP_SOURCES += [
         'WebGLActiveInfo.cpp',
         'WebGLBuffer.cpp',
+        'WebGL1Context.cpp',
         'WebGLContext.cpp',
         'WebGLContextGL.cpp',
         'WebGLContextUtils.cpp',
