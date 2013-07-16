@@ -440,7 +440,7 @@ define SUBMAKE # $(call SUBMAKE,target,directory,static)
 endef # The extra line is important here! don't delete it
 
 define TIER_DIR_SUBMAKE
-@echo "BUILDSTATUS TIERDIR_START  $(2)"
+@echo "BUILDSTATUS TIERDIR_START $(2)"
 $(call SUBMAKE,$(1),$(2),$(3))
 @echo "BUILDSTATUS TIERDIR_FINISH $(2)"
 
@@ -714,7 +714,7 @@ endif
 # from the user.
 define CREATE_TIER_RULE
 tier_$(1)::
-	@echo "BUILDSTATUS TIER_START  $(1)"
+	@echo "BUILDSTATUS TIER_START $(1)"
 	@printf "BUILDSTATUS SUBTIERS"
 ifneq (,$(tier_$(1)_staticdirs))
 	@printf " static"
@@ -726,18 +726,18 @@ endif
 	@echo "BUILDSTATUS STATICDIRS $$($$@_staticdirs)"
 	@echo "BUILDSTATUS DIRS $$($$@_dirs)"
 ifneq (,$(tier_$(1)_staticdirs))
-	@echo "BUILDSTATUS SUBTIER_START  $(1) static"
+	@echo "BUILDSTATUS SUBTIER_START $(1) static"
 	$$(foreach dir,$$($$@_staticdirs),$$(call TIER_DIR_SUBMAKE,,$$(dir),1))
 	@echo "BUILDSTATUS SUBTIER_FINISH $(1) static"
 endif
 ifneq (,$(tier_$(1)_dirs))
-	@echo "BUILDSTATUS SUBTIER_START  $(1) export"
+	@echo "BUILDSTATUS SUBTIER_START $(1) export"
 	$$(MAKE) export_$$@
 	@echo "BUILDSTATUS SUBTIER_FINISH $(1) export"
-	@echo "BUILDSTATUS SUBTIER_START  $(1) libs"
+	@echo "BUILDSTATUS SUBTIER_START $(1) libs"
 	$$(MAKE) libs_$$@
 	@echo "BUILDSTATUS SUBTIER_FINISH $(1) libs"
-	@echo "BUILDSTATUS SUBTIER_START  $(1) tools"
+	@echo "BUILDSTATUS SUBTIER_START $(1) tools"
 	$$(MAKE) tools_$$@
 	@echo "BUILDSTATUS SUBTIER_FINISH $(1) tools"
 	@echo "BUILDSTATUS TIER_FINISH $(1)"
