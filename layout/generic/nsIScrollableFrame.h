@@ -88,6 +88,21 @@ public:
   virtual nscoord GetNondisappearingScrollbarWidth(nsPresContext* aPresContext,
                                                    nsRenderingContext* aRC) = 0;
   /**
+   * GetScrolledRect is designed to encapsulate deciding which
+   * directions of overflow should be reachable by scrolling and which
+   * should not.  Callers should NOT depend on it having any particular
+   * behavior (although nsXULScrollFrame currently does).
+   *
+   * This should only be called when the scrolled frame has been
+   * reflowed with the scroll port size given in mScrollPort.
+   *
+   * Currently it allows scrolling down and to the right for
+   * nsHTMLScrollFrames with LTR directionality and for all
+   * nsXULScrollFrames, and allows scrolling down and to the left for
+   * nsHTMLScrollFrames with RTL directionality.
+   */
+  virtual nsRect GetScrolledRect() const = 0;
+  /**
    * Get the area of the scrollport relative to the origin of this frame's
    * border-box.
    * This is the area of this frame minus border and scrollbars.
