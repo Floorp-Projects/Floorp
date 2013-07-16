@@ -134,7 +134,7 @@ function createRow(aPartId) {
   for (let state of SitePermissions.getAvailableStates(aPartId)) {
     let radio = document.createElement("radio");
     radio.setAttribute("id", aPartId + "#" + state);
-    radio.setAttribute("label", SitePermissions.getStateLabel(state));
+    radio.setAttribute("label", SitePermissions.getStateLabel(aPartId, state));
     radio.setAttribute("command", commandId);
     radiogroup.appendChild(radio);
   }

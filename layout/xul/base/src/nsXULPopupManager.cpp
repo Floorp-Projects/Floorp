@@ -647,16 +647,17 @@ nsXULPopupManager::ShowTooltipAtScreen(nsIContent* aPopup,
 
   InitTriggerEvent(nullptr, nullptr, nullptr);
 
-  mCachedMousePoint = nsIntPoint(aXPos, aYPos);
+  nsPresContext* pc = popupFrame->PresContext();
+  mCachedMousePoint = nsIntPoint(pc->CSSPixelsToDevPixels(aXPos),
+                                 pc->CSSPixelsToDevPixels(aYPos));
+
   // coordinates are relative to the root widget
-  nsPresContext* rootPresContext =
-    popupFrame->PresContext()->GetRootPresContext();
+  nsPresContext* rootPresContext = pc->GetRootPresContext();
   if (rootPresContext) {
-    nsCOMPtr<nsIWidget> widget;
-    rootPresContext->PresShell()->GetViewManager()->
-      GetRootWidget(getter_AddRefs(widget));
-    if (widget)
-      mCachedMousePoint -= widget->WidgetToScreenOffset();
+    nsIWidget *rootWidget = rootPresContext->GetRootWidget();
+    if (rootWidget) {
+      mCachedMousePoint -= rootWidget->WidgetToScreenOffset();
+    }
   }
 
   popupFrame->InitializePopupAtScreen(aTriggerContent, aXPos, aYPos, false);

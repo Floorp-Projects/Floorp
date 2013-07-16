@@ -966,7 +966,14 @@ TypeScript::MonitorAssign(JSContext *cx, HandleObject obj, jsid id)
         uint32_t i;
         if (js_IdIsIndex(id, &i))
             return;
-        MarkTypeObjectUnknownProperties(cx, obj->type());
+
+        // But if we don't have too many properties yet, don't do anything.  The
+        // idea here is that normal object initialization should not trigger
+        // deoptimization in most cases, while actual usage as a hashmap should.
+        TypeObject* type = obj->type();
+        if (type->getPropertyCount() < 8)
+            return;
+        MarkTypeObjectUnknownProperties(cx, type);
     }
 }
 
