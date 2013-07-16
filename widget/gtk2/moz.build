@@ -53,5 +53,17 @@ if CONFIG['MOZ_X11']:
         'nsDragService.cpp',
     ]
 
-CPP_SOURCES += [
+CSRCS += [
+    'mozcontainer.c',
 ]
+
+if CONFIG['ACCESSIBILITY']:
+    CSRCS += [
+        'maiRedundantObjectFactory.c',
+    ]
+
+if CONFIG['MOZ_ENABLE_GTK2']:
+    CSRCS += [
+        'gtk2drawing.c',
+        'gtk3drawing.c',
+    ]
