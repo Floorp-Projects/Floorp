@@ -18,8 +18,6 @@ package org.mozilla.gecko.widget;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
-import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.Handler;
 import android.text.TextUtils;
@@ -32,7 +30,6 @@ import android.widget.TextView;
 import java.util.LinkedList;
 
 import org.mozilla.gecko.R;
-import org.mozilla.gecko.gfx.BitmapUtils;
 
 public class ButtonToast {
     private final static String LOGTAG = "GeckoButtonToast";
@@ -49,17 +46,18 @@ public class ButtonToast {
 
     // State objects
     private static class Toast {
+        public final CharSequence token;
         public final CharSequence buttonMessage;
-        public Drawable buttonDrawable;
+        public final int buttonIcon;
         public final CharSequence message;
         public ToastListener listener;
 
-        public Toast(CharSequence aMessage, CharSequence aButtonMessage,
-                     Drawable aDrawable, ToastListener aListener) {
+        public Toast(CharSequence aMessage, CharSequence aButtonMessage, int aIcon, ToastListener aListener) {
             message = aMessage;
             buttonMessage = aButtonMessage;
-            buttonDrawable = aDrawable;
+            buttonIcon = aIcon;
             listener = aListener;
+            token = "";
         }
     }
 
@@ -90,9 +88,10 @@ public class ButtonToast {
     }
 
     public void show(boolean immediate, CharSequence message,
-                     CharSequence buttonMessage, Drawable buttonDrawable,
+                     CharSequence buttonMessage, int buttonIcon,
                      ToastListener listener) {
-        show(new Toast(message, buttonMessage, buttonDrawable, listener), immediate);
+        Toast t = new Toast(message, buttonMessage, buttonIcon, listener);
+        show(t, immediate);
     }
 
     private void show(Toast t, boolean immediate) {
@@ -107,8 +106,7 @@ public class ButtonToast {
 
         mMessageView.setText(t.message);
         mButton.setText(t.buttonMessage);
-        mButton.setCompoundDrawablePadding(mView.getContext().getResources().getDimensionPixelSize(R.dimen.toast_button_padding));
-        mButton.setCompoundDrawablesWithIntrinsicBounds(null, null, t.buttonDrawable, null);
+        mButton.setCompoundDrawablesWithIntrinsicBounds(0, 0, t.buttonIcon, 0);
 
         mHideHandler.removeCallbacks(mHideRunnable);
         mHideHandler.postDelayed(mHideRunnable, TOAST_DURATION);
