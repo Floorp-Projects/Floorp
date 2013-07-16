@@ -61,8 +61,26 @@ public class HealthReportConstants {
 
   public static final String PREF_OBSOLETE_DOCUMENT_IDS_TO_DELETION_ATTEMPTS_REMAINING = "healthreport_obsolete_document_ids_to_deletions_remaining";
 
-  public static final String PREF_DELETION_ATTEMPTS_PER_OBSOLETE_DOCUMENT_ID = "healthreport_deletion_attempts_per_obsolete_document_id";
-  public static final long DEFAULT_DELETION_ATTEMPTS_PER_OBSOLETE_DOCUMENT_ID = 5;
+  // We don't want to try to delete forever, but we also don't want to orphan
+  // obsolete document IDs from devices that fail to reach the server for a few
+  // days.  This tries to delete document IDs for at least one week (of upload
+  // failures).  Note that if the device is really offline, no upload is
+  // performed and our count of attempts is not altered.
+  public static final long DELETION_ATTEMPTS_PER_OBSOLETE_DOCUMENT_ID = (DEFAULT_MAXIMUM_FAILURES_PER_DAY + 1) * 7;
+
+  // If we absolutely know that a document ID reached the server, we really
+  // don't want to orphan it.  This tries to delete document IDs that will
+  // definitely be orphaned for at least six weeks (of upload failures).  Note
+  // that if the device is really offline, no upload is performed and our count
+  // of attempts is not altered.
+  public static final long DELETION_ATTEMPTS_PER_KNOWN_TO_BE_ON_SERVER_DOCUMENT_ID = (DEFAULT_MAXIMUM_FAILURES_PER_DAY + 1) * 7 * 6;
+
+  // We don't want to allocate unbounded storage for obsolete IDs, but we also
+  // don't want to orphan obsolete document IDs from devices that fail to delete
+  // for a few days.  This stores as many IDs as are expected to be generated in
+  // a month.  Note that if the device is really offline, no upload is performed
+  // and our count of attempts is not altered.
+  public static final long MAXIMUM_STORED_OBSOLETE_DOCUMENT_IDS = (DEFAULT_MAXIMUM_FAILURES_PER_DAY + 1) * 30;
 
   // Forensic.
   public static final String PREF_LAST_DELETE_REQUESTED = "healthreport_last_delete_requested";
@@ -78,4 +96,12 @@ public class HealthReportConstants {
 
   public static final String PREF_DOCUMENT_SERVER_NAMESPACE = "healthreport_document_server_namespace";
   public static final String DEFAULT_DOCUMENT_SERVER_NAMESPACE = "metrics";
+
+  // One UUID is 36 characters (like e56542e0-e4d2-11e2-a28f-0800200c9a66), so
+  // we limit the number of obsolete IDs passed so that each request is not a
+  // large upload (and therefore more likely to fail).  We also don't want to
+  // push Bagheera to make too many deletes, since we don't know how the cluster
+  // will handle such API usage.  This obsoletes 2 days worth of old documents
+  // at a time.
+  public static final int MAXIMUM_DELETIONS_PER_POST = ((int) DEFAULT_MAXIMUM_FAILURES_PER_DAY + 1) * 2;
 }

@@ -35,6 +35,7 @@ SYNC_JAVA_FILES := \
   background/common/log/writers/StringLogWriter.java \
   background/common/log/writers/TagLogWriter.java \
   background/common/log/writers/ThreadLocalTagLogWriter.java \
+  background/datareporting/TelemetryRecorder.java \
   background/db/CursorDumper.java \
   background/db/Tab.java \
   background/healthreport/Environment.java \
@@ -51,6 +52,7 @@ SYNC_JAVA_FILES := \
   background/healthreport/upload/HealthReportBroadcastService.java \
   background/healthreport/upload/HealthReportUploadService.java \
   background/healthreport/upload/HealthReportUploadStartReceiver.java \
+  background/healthreport/upload/ObsoleteDocumentTracker.java \
   background/healthreport/upload/SubmissionClient.java \
   background/healthreport/upload/SubmissionPolicy.java \
   sync/AlreadySyncingException.java \

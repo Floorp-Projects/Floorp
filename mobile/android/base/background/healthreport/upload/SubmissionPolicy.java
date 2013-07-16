@@ -4,13 +4,15 @@
 
 package org.mozilla.gecko.background.healthreport.upload;
 
-import java.util.Collections;
+import java.net.MalformedURLException;
+import java.net.SocketException;
+import java.net.UnknownHostException;
+import java.util.Collection;
 
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.background.healthreport.HealthReportConstants;
 import org.mozilla.gecko.background.healthreport.HealthReportUtils;
 import org.mozilla.gecko.background.healthreport.upload.SubmissionClient.Delegate;
-import org.mozilla.gecko.sync.ExtendedJSONObject;
 
 import android.content.SharedPreferences;
 
@@ -47,10 +49,18 @@ public class SubmissionPolicy {
   protected final SharedPreferences sharedPreferences;
   protected final SubmissionClient client;
   protected final boolean uploadEnabled;
+  protected final ObsoleteDocumentTracker tracker;
 
-  public SubmissionPolicy(final SharedPreferences sharedPreferences, final SubmissionClient client, boolean uploadEnabled) {
+  public SubmissionPolicy(final SharedPreferences sharedPreferences,
+      final SubmissionClient client,
+      final ObsoleteDocumentTracker tracker,
+      boolean uploadEnabled) {
+    if (sharedPreferences == null) {
+      throw new IllegalArgumentException("sharedPreferences must not be null");
+    }
     this.sharedPreferences = sharedPreferences;
     this.client = client;
+    this.tracker = tracker;
     this.uploadEnabled = uploadEnabled;
   }
 
@@ -84,26 +94,15 @@ public class SubmissionPolicy {
       return false;
     }
 
-    ExtendedJSONObject ids = getObsoleteIds();
-    if (ids.size() > 0) {
-      // Deleting obsolete documents takes precedence over everything else. We
-      // try to delete aggressively, since the volume of deletes should be very
-      // low. But we don't want to send too many delete requests at the same
-      // time, so we process these one at a time. In the future (Bug 872756), we
-      // will be able to delete multiple documents with one request.
-      String obsoleteId;
-      try {
-        // We don't care what the order is, but let's make testing easier by
-        // being deterministic. Deleting in random order might avoid failing too
-        // many times in succession, but we expect only a single pending delete
-        // in practice.
-        obsoleteId = Collections.min(ids.keySet());
-      } catch (Exception e) {
-        Logger.warn(LOG_TAG, "Got exception picking obsolete id to delete.", e);
-        return false;
-      }
+    if (!uploadEnabled) {
+      // We only delete (rather than mark as obsolete during upload) when
+      // uploading is disabled. We try to delete aggressively, since the volume
+      // of deletes should be very low. But we don't want to send too many
+      // delete requests at the same time, so we process these one at a time. In
+      // the future (Bug 872756), we will be able to delete multiple documents
+      // with one request.
+      final String obsoleteId = tracker.getNextObsoleteId();
       if (obsoleteId == null) {
-        Logger.error(LOG_TAG, "Next obsolete id to delete is null?");
         return false;
       }
 
@@ -111,12 +110,6 @@ public class SubmissionPolicy {
       editor.setLastDeleteRequested(localTime); // Write committed by delegate.
       client.delete(localTime, obsoleteId, new DeleteDelegate(editor));
       return true;
-    }
-
-    // If we delete all obsolete ids, we could fall through to this point, and
-    // we don't want to upload.
-    if (!uploadEnabled) {
-      return false;
     }
 
     long firstRun = getFirstRunLocalTime();
@@ -135,37 +128,67 @@ public class SubmissionPolicy {
       return false;
     }
 
+    String id = HealthReportUtils.generateDocumentId();
+    Collection<String> oldIds = tracker.getBatchOfObsoleteIds();
+    tracker.addObsoleteId(id);
+
     Editor editor = editor();
     editor.setLastUploadRequested(localTime); // Write committed by delegate.
-    client.upload(localTime, new UploadDelegate(editor));
+    client.upload(localTime, id, oldIds, new UploadDelegate(editor, oldIds));
     return true;
+  }
+
+  /**
+   * Return true if the upload that produced <code>e</code> definitely did not
+   * produce a new record on the remote server.
+   *
+   * @param e
+   *          <code>Exception</code> that upload produced.
+   * @return true if the server could not have a new record.
+   */
+  protected boolean isLocalException(Exception e) {
+    return (e instanceof MalformedURLException) ||
+           (e instanceof SocketException) ||
+           (e instanceof UnknownHostException);
   }
 
   protected class UploadDelegate implements Delegate {
     protected final Editor editor;
+    protected final Collection<String> oldIds;
 
-    public UploadDelegate(Editor editor) {
+    public UploadDelegate(Editor editor, Collection<String> oldIds) {
       this.editor = editor;
+      this.oldIds = oldIds;
     }
 
     @Override
     public void onSuccess(long localTime, String id) {
       long next = localTime + getMinimumTimeBetweenUploads();
+      tracker.markIdAsUploaded(id);
+      tracker.purgeObsoleteIds(oldIds);
       editor
         .setNextSubmission(next)
         .setLastUploadSucceeded(localTime)
         .setCurrentDayFailureCount(0)
         .commit();
       if (Logger.LOG_PERSONAL_INFORMATION) {
-        Logger.pii(LOG_TAG, "Successful upload with id " + id + " reported at " + localTime + "; next upload at " + next + ".");
+        Logger.pii(LOG_TAG, "Successful upload with id " + id + " obsoleting "
+            + oldIds.size() + " old records reported at " + localTime + "; next upload at " + next + ".");
       } else {
-        Logger.info(LOG_TAG, "Successful upload reported at " + localTime + "; next upload at " + next + ".");
+        Logger.info(LOG_TAG, "Successful upload obsoleting " + oldIds.size()
+            + " old records reported at " + localTime + "; next upload at " + next + ".");
       }
     }
 
     @Override
     public void onHardFailure(long localTime, String id, String reason, Exception e) {
       long next = localTime + getMinimumTimeBetweenUploads();
+      if (isLocalException(e)) {
+        Logger.info(LOG_TAG, "Hard failure caused by local exception; not tracking id and not decrementing attempts.");
+        tracker.removeObsoleteId(id);
+      } else {
+        tracker.decrementObsoleteIdAttempts(oldIds);
+      }
       editor
         .setNextSubmission(next)
         .setLastUploadFailed(localTime)
@@ -177,14 +200,20 @@ public class SubmissionPolicy {
     @Override
     public void onSoftFailure(long localTime, String id, String reason, Exception e) {
       int failuresToday = getCurrentDayFailureCount();
-      Logger.warn(LOG_TAG, "Soft failure reported at " + localTime + ": " + reason + " Previously failed " + failuresToday + " today.");
+      Logger.warn(LOG_TAG, "Soft failure reported at " + localTime + ": " + reason + " Previously failed " + failuresToday + " time(s) today.");
 
       if (failuresToday >= getMaximumFailuresPerDay()) {
-        onHardFailure(localTime, id, "Reached the limit of daily upload attempts.", null);
+        onHardFailure(localTime, id, "Reached the limit of daily upload attempts: " + failuresToday, e);
         return;
       }
 
       long next = localTime + getMinimumTimeAfterFailure();
+      if (isLocalException(e)) {
+        Logger.info(LOG_TAG, "Soft failure caused by local exception; not tracking id and not decrementing attempts.");
+        tracker.removeObsoleteId(id);
+      } else {
+        tracker.decrementObsoleteIdAttempts(oldIds);
+      }
       editor
         .setNextSubmission(next)
         .setLastUploadFailed(localTime)
@@ -204,7 +233,11 @@ public class SubmissionPolicy {
     @Override
     public void onSoftFailure(final long localTime, String id, String reason, Exception e) {
       long next = localTime + getMinimumTimeBetweenDeletes();
-      decrementObsoleteIdAttempts(id);
+      if (isLocalException(e)) {
+        Logger.info(LOG_TAG, "Soft failure caused by local exception; not decrementing attempts.");
+      } else {
+        tracker.decrementObsoleteIdAttempts(id);
+      }
       editor
         .setNextSubmission(next)
         .setLastDeleteFailed(localTime)
@@ -221,7 +254,7 @@ public class SubmissionPolicy {
     public void onHardFailure(final long localTime, String id, String reason, Exception e) {
       // We're never going to be able to delete this id, so don't keep trying.
       long next = localTime + getMinimumTimeBetweenDeletes();
-      removeObsoleteId(id);
+      tracker.removeObsoleteId(id);
       editor
         .setNextSubmission(next)
         .setLastDeleteFailed(localTime)
@@ -237,7 +270,7 @@ public class SubmissionPolicy {
     @Override
     public void onSuccess(final long localTime, String id) {
       long next = localTime + getMinimumTimeBetweenDeletes();
-      removeObsoleteId(id);
+      tracker.removeObsoleteId(id);
       editor
         .setNextSubmission(next)
         .setLastDeleteSucceeded(localTime)
@@ -392,54 +425,5 @@ public class SubmissionPolicy {
 
   public long getMinimumTimeBetweenDeletes() {
     return getSharedPreferences().getLong(HealthReportConstants.PREF_MINIMUM_TIME_BETWEEN_DELETES, HealthReportConstants.DEFAULT_MINIMUM_TIME_BETWEEN_DELETES);
-  }
-
-  public ExtendedJSONObject getObsoleteIds() {
-    return HealthReportUtils.getObsoleteIds(getSharedPreferences());
-  }
-
-  public void setObsoleteIds(ExtendedJSONObject ids) {
-    HealthReportUtils.setObsoleteIds(getSharedPreferences(), ids);
-  }
-
-  /**
-   * Remove id from set of obsolete document ids tracked for deletion.
-   *
-   * Public for testing.
-   *
-   * @param id to stop tracking.
-   */
-  public void removeObsoleteId(String id) {
-    ExtendedJSONObject ids = HealthReportUtils.getObsoleteIds(getSharedPreferences());
-    ids.remove(id);
-    setObsoleteIds(ids);
-  }
-
-  /**
-   * Decrement attempts remaining for id in set of obsolete document ids tracked
-   * for deletion.
-   *
-   * Public for testing.
-   *
-   * @param id to decrement attempts.
-   */
-  public void decrementObsoleteIdAttempts(String id) {
-    ExtendedJSONObject ids = HealthReportUtils.getObsoleteIds(getSharedPreferences());
-
-    if (!ids.containsKey(id)) {
-      return;
-    }
-    try {
-      Long attempts = ids.getLong(id);
-      if (attempts == null || --attempts < 1) {
-        ids.remove(id);
-      } else {
-        ids.put(id, attempts);
-      }
-    } catch (ClassCastException e) {
-      Logger.info(LOG_TAG, "Got exception decrementing obsolete ids counter.", e);
-    }
-
-    setObsoleteIds(ids);
   }
 }
