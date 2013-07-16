@@ -158,7 +158,7 @@ ProfilerPanel.prototype = {
           if (!ev.detail)
             return;
 
-          let profile = this.profiles.get(ev.detail.attachment.uid);
+          let profile = this.profiles.get(parseInt(ev.detail.value, 10));
           this.activeProfile = profile;
 
           if (profile.isReady) {
