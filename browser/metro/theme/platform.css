@@ -664,6 +664,111 @@ arrowbox {
   font-weight: 100;
 }
 
+/* App bars ----------------------------------------------------------------- */
+
+appbar {
+  display: block;
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  transform: translateY(100%);
+  transition: transform @metro_animation_duration@ @metro_animation_easing@;
+  font-size: 0;
+}
+
+appbar toolbar {
+  -moz-appearance: none;
+  -moz-box-align: center;
+  border: 0;
+  width: 100%;
+  min-height: @toolbar_height@;
+  font-size: 1rem;
+}
+
+appbar[visible] {
+  transform: none;
+}
+
+#stack[keyboardVisible] > appbar {
+  /* Slow the bottom up transition since it's impossible to match the system's
+     soft keyboard movement. */
+  transition: transform @metro_animation_duration@ @metro_animation_easing@,
+              bottom @appbar_keyboard_slideup_duration@ @metro_animation_easing@;
+}
+
+appbar toolbar > toolbarbutton {
+  border: 0;
+  margin: 0 @toolbar_horizontal_spacing@;
+  padding: 0;
+  /* Don't inherit background-color from toolbarbutton[checked="true"] */
+  background-color: transparent;
+}
+
+appbar toolbar > toolbarbutton[disabled] {
+  visibility: collapse;
+}
+
+/* Sprites */
+
+.appbar-primary > .toolbarbutton-icon,
+.appbar-secondary > .toolbarbutton-icon {
+  width: 40px;
+  height: 40px;
+}
+
+/* Primary sprite format: one button per sprite.
+
+   States from left to right:
+   normal, hover, active/toggled, toggled+hover, toggled+active. */
+
+.appbar-primary {
+  -moz-image-region: rect(0 40px 40px 0);
+}
+
+.appbar-primary:not([checked]):hover:not(:active) {
+  -moz-image-region: rect(0 80px 40px 40px);
+}
+
+.appbar-primary[checked] {
+  -moz-image-region: rect(0 120px 40px 80px);
+}
+
+.appbar-primary[checked]:hover:not(:active) {
+  -moz-image-region: rect(0 160px 40px 120px);
+}
+
+.appbar-primary:active {
+  -moz-image-region: rect(0 120px 40px 80px);
+}
+
+@media (min-resolution: 130dpi) {
+  .appbar-primary {
+    -moz-image-region: rect(0 56px 56px 0);
+  }
+
+  .appbar-primary:not([checked]):hover:not(:active) {
+    -moz-image-region: rect(0 112px 56px 56px);
+  }
+
+  .appbar-primary[checked] {
+    -moz-image-region: rect(0 224px 56px 168px);
+  }
+
+  .appbar-primary[checked]:hover:not(:active) {
+    -moz-image-region: rect(0 224px 56px 168px);
+  }
+
+  .appbar-primary:active {
+    -moz-image-region: rect(0 168px 56px 112px);
+  }
+}
+
+/* Secondary sprite format: one sprite for everything */
+
+.appbar-secondary {
+  list-style-image: url(chrome://browser/skin/images/appbar-icons.png);
+}
+
 /* Find bar ------------------------------------------------------------- */
 
 #findbar {
