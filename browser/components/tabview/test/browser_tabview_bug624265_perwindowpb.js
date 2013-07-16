@@ -55,25 +55,6 @@ function test() {
     }, aWindow);
   }
 
-  // [887515] testing undo closing multiple tabs
-  let testUndoCloseMultipleTabs = function (aWindow) {
-    aWindow.gBrowser.loadOneTab('http://mochi.test:8888/', {inBackground: true});
-    aWindow.gBrowser.loadOneTab('http://mochi.test:8888/', {inBackground: true});
-    aWindow.gBrowser.loadOneTab('http://mochi.test:8888/', {inBackground: true});
-    aWindow.gBrowser.loadOneTab('http://mochi.test:8888/', {inBackground: true});
-
-    afterAllTabsLoaded(function () {
-      assertNumberOfVisibleTabs(aWindow, 5);
-
-      aWindow.gBrowser.removeTabsToTheEndFrom(aWindow.gBrowser.tabs[0]);
-      assertNumberOfVisibleTabs(aWindow, 1);
-      restoreTab(function () {
-        assertNumberOfVisibleTabs(aWindow, 5);
-        next(aWindow);
-      }, undefined, aWindow);
-    }, aWindow);
-  }
-
   // [623792] duplicating tab via middle click on reload button
   let testDuplicateTab = function (aWindow) {
     aWindow.gBrowser.loadOneTab('http://mochi.test:8888/', {inBackground: true});
@@ -130,9 +111,6 @@ function test() {
 
   // Tests for #624265
   tests.push(testUndoCloseTabs);
-
-  // Tests for #887515
-  tests.push(testUndoCloseMultipleTabs);
 
   // Tests for #623792
   tests.push(testDuplicateTab);
