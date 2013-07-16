@@ -28,17 +28,32 @@
   padding: 3px 5px;
 }
 
+.profiler-sidebar-item, .side-menu-widget-item-contents {
+  cursor: default;
+}
+
 .profiler-sidebar-item > h3 {
   font-size: 13px;
   display: block;
+  cursor: pointer;
 }
 
-.profiler-sidebar-item > span {
+.profiler-sidebar-item > hbox {
   margin-top: 2px;
   color: rgb(140, 152, 165);
 }
 
-.selected .profiler-sidebar-item > span {
+.profiler-sidebar-item > hbox > a {
+  display: none;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+[state=completed].selected .profiler-sidebar-item > hbox > a {
+  display: block;
+}
+
+.selected .profiler-sidebar-item > hbox {
   color: rgb(128, 195, 228);
 }
 
