@@ -69,8 +69,7 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
                            Bookmarks.URL,
                            Bookmarks.TITLE,
                            Bookmarks.TYPE,
-                           Bookmarks.PARENT,
-                           Bookmarks.KEYWORD }; 
+                           Bookmarks.PARENT };
 
     public LocalBrowserDB(String profile) {
         mProfile = profile;

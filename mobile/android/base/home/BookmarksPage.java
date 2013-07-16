@@ -47,7 +47,7 @@ public class BookmarksPage extends HomeFragment {
     private static final int TOP_BOOKMARKS_LOADER_ID = 1;
 
     // Loader ID for favicons.
-    private static final int FAVICONS_LOADER_ID = 2; 
+    private static final int FAVICONS_LOADER_ID = 2;
 
     // Loader ID for thumbnails.
     private static final int THUMBNAILS_LOADER_ID = 3;
