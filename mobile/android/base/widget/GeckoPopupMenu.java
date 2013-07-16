@@ -17,10 +17,10 @@ import android.view.MenuItem;
 import android.view.View;
 
 /**
- * A PopupMenu that uses the custom GeckoMenu. This menu is 
+ * A PopupMenu that uses the custom GeckoMenu. This menu is
  * usually tied to an anchor, and show as a dropdrown from the anchor.
  */
-public class GeckoPopupMenu implements GeckoMenu.Callback, 
+public class GeckoPopupMenu implements GeckoMenu.Callback,
                                        GeckoMenu.MenuPresenter {
 
     // An interface for listeners for dismissal.
@@ -92,8 +92,9 @@ public class GeckoPopupMenu implements GeckoMenu.Callback,
      * @param menuRes The menu resource to be inflated.
      */
     public void inflate(int menuRes) {
-        mMenuInflater.inflate(menuRes, mMenu);
-
+        if (menuRes > 0) {
+            mMenuInflater.inflate(menuRes, mMenu);
+        }
         mMenuPanel.addView(mMenu);
         mMenuPopup.setPanelView(mMenuPanel);
     }
