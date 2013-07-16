@@ -227,6 +227,7 @@ webidl_files = \
   Screen.webidl \
   ScriptProcessorNode.webidl \
   ScrollAreaEvent.webidl \
+  SettingsManager.webidl \
   SimpleGestureEvent.webidl \
   SourceBuffer.webidl \
   SourceBufferList.webidl \
