@@ -129,11 +129,12 @@
                                          android:layout_gravity="center_vertical"
                                          gecko:autoUpdateTheme="false"/>
 
-        <ImageButton android:id="@+id/reader"
-                     style="@style/AddressBar.ImageButton.Icon"
-                     android:src="@drawable/reader"
-                     android:contentDescription="@string/reader"
-                     android:visibility="gone"/>
+        <org.mozilla.gecko.PageActionLayout android:id="@+id/page_action_layout"
+                                            android:layout_width="wrap_content"
+                                            android:layout_height="match_parent"
+                                            android:layout_marginRight="12dp"
+                                            android:visibility="gone"
+                                            android:orientation="horizontal"/>
 
         <ImageButton android:id="@+id/stop"
                      style="@style/AddressBar.ImageButton.Icon"

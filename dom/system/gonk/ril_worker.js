@@ -4632,6 +4632,15 @@ RIL[REQUEST_GET_IMSI] = function REQUEST_GET_IMSI(length, options) {
   options.rilMessageType = "iccimsi";
   options.imsi = this.iccInfoPrivate.imsi;
   this.sendDOMMessage(options);
+
+  if (this._isCdma) {
+    let mccMnc = ICCUtilsHelper.parseMccMncFromImsi(this.iccInfoPrivate.imsi);
+    if (mccMnc) {
+      this.iccInfo.mcc = mccMnc.mcc;
+      this.iccInfo.mnc = mccMnc.mnc;
+      ICCUtilsHelper.handleICCInfoChange();
+    }
+  }
 };
 RIL[REQUEST_HANGUP] = function REQUEST_HANGUP(length, options) {
   if (options.rilRequestError) {
@@ -10343,20 +10352,12 @@ let ICCRecordHelper = {
         debug("AD: " + str);
       }
 
-      let imsi = RIL.iccInfoPrivate.imsi;
-      if (imsi) {
-        // MCC is the first 3 digits of IMSI.
-        RIL.iccInfo.mcc = imsi.substr(0,3);
-        // The 4th byte of the response is the length of MNC.
-        let mncLength = ad && ad[3];
-        if (!mncLength) {
-          // If response dose not contain the length of MNC, check the MCC table
-          // to decide the length of MNC.
-          let index = MCC_TABLE_FOR_MNC_LENGTH_IS_3.indexOf(RIL.iccInfo.mcc);
-          mncLength = (index !== -1) ? 3 : 2;
-        }
-        RIL.iccInfo.mnc = imsi.substr(3, mncLength);
-        if (DEBUG) debug("MCC: " + RIL.iccInfo.mcc + " MNC: " + RIL.iccInfo.mnc);
+      // The 4th byte of the response is the length of MNC.
+      let mccMnc = ICCUtilsHelper.parseMccMncFromImsi(RIL.iccInfoPrivate.imsi,
+                                                      ad && ad[3]);
+      if (mccMnc) {
+        RIL.iccInfo.mcc = mccMnc.mcc;
+        RIL.iccInfo.mnc = mccMnc.mnc;
         ICCUtilsHelper.handleICCInfoChange();
       }
     }
@@ -11632,6 +11633,36 @@ let ICCUtilsHelper = {
     }
 
     return true;
+  },
+
+  /**
+   * Parse MCC/MNC from IMSI. If there is no available value for the length of
+   * mnc, it will use the data in MCC table to parse.
+   *
+   * @param imsi
+   *        The imsi of icc.
+   * @param mncLength [optional]
+   *        The length of mnc.
+   *
+   * @return An object contains the parsing result of mcc and mnc.
+   *         Or null if any error occurred.
+   */
+  parseMccMncFromImsi: function parseMccMncFromImsi(imsi, mncLength) {
+    if (!imsi) {
+      return;
+    }
+
+    // MCC is the first 3 digits of IMSI.
+    let mcc = imsi.substr(0,3);
+    if (!mncLength) {
+      // Check the MCC table to decide the length of MNC.
+      let index = MCC_TABLE_FOR_MNC_LENGTH_IS_3.indexOf(mcc);
+      mncLength = (index !== -1) ? 3 : 2;
+    }
+    let mnc = imsi.substr(3, mncLength);
+    if (DEBUG) debug("IMSI: " + imsi + " MCC: " + mcc + " MNC: " + mnc);
+
+    return { mcc: mcc, mnc: mnc};
   },
 };
 

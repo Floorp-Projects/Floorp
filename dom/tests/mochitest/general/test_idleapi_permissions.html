@@ -17,23 +17,28 @@ var idleObserver = {
   onactive: null
 };
 
+function doAddIdleObserver(obs) {
+  var i = document.createElement("iframe");
+  document.body.appendChild(i);
+  var added = false;
+  try {
+    i.contentWindow.navigator.addIdleObserver(obs);
+    added = true;
+  } catch (e) { }
+  i.remove();
+  return added;
+}
+
 function run_test() {
   // addIdleObserver checks whether time is > 0.
   this.idleObserver.time = 100;
 
-  var added = false;
-  try {
-    navigator.addIdleObserver(this.idleObserver);
-    added = true;
-  } catch (e) { }
+  var added = doAddIdleObserver(this.idleObserver, false);
   ok(!added, "Should not be able to add idle observer without permission");
   
   SpecialPowers.addPermission("idle", true, document);
-  added = false;
-  try {
-    navigator.addIdleObserver(this.idleObserver);
-    added = true;
-  } catch (e) { }
+
+  added = doAddIdleObserver(this.idleObserver, true);
   ok(added, "Should be able to add idle observer with permission.");
   
   SimpleTest.finish();

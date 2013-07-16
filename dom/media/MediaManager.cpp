@@ -1095,9 +1095,9 @@ MediaManager::GetUserMedia(bool aPrivileged, nsPIDOMWindow* aWindow,
 
 #ifdef MOZ_B2G_CAMERA
   if (mCameraManager == nullptr) {
-    mCameraManager = nsDOMCameraManager::CheckPermissionAndCreateInstance(aWindow);
-    if (!mCameraManager) {
-      aPrivileged = false;
+    aPrivileged = nsDOMCameraManager::CheckPermission(aWindow);
+    if (aPrivileged) {
+      mCameraManager = nsDOMCameraManager::CreateInstance(aWindow);
     }
   }
 #endif
