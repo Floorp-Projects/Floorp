@@ -498,6 +498,9 @@ public:
     nsBoxLayoutState bls(aPresContext, aRC, 0);
     return mInner.GetNondisappearingScrollbarWidth(&bls);
   }
+  virtual nsRect GetScrolledRect() const MOZ_OVERRIDE {
+    return mInner.GetScrolledRect();
+  }
   virtual nsRect GetScrollPortRect() const MOZ_OVERRIDE {
     return mInner.GetScrollPortRect();
   }
@@ -763,6 +766,9 @@ public:
           nsRenderingContext* aRC) MOZ_OVERRIDE {
     nsBoxLayoutState bls(aPresContext, aRC, 0);
     return mInner.GetNondisappearingScrollbarWidth(&bls);
+  }
+  virtual nsRect GetScrolledRect() const MOZ_OVERRIDE {
+    return mInner.GetScrolledRect();
   }
   virtual nsRect GetScrollPortRect() const MOZ_OVERRIDE {
     return mInner.GetScrollPortRect();

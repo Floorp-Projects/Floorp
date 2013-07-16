@@ -1,0 +1,26 @@
+<!doctype html>
+<title>background-attachment: local</title>
+<style>
+#outer {
+  width: 200px;
+  height: 200px;
+  padding: 40px;
+  border: 10px dashed;
+  overflow: hidden;
+  background: green local content-box;
+}
+#outer div {
+  height: 500px;
+}
+p {
+  margin-top: 20px;
+}
+</style>
+<div id=outer>
+  <div>
+    <p>Test</p>
+  </div>
+</div>
+<script>
+document.getElementById('outer').scrollTop = 15;
+</script>

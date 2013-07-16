@@ -1676,12 +1676,14 @@ SetupDirtyRects(const nsRect& aBGClipArea, const nsRect& aCallerDirtyRect,
 }
 
 struct BackgroundClipState {
-  nsRect mBGClipArea;
+  nsRect mBGClipArea;  // Affected by mClippedRadii
+  nsRect mAdditionalBGClipArea;  // Not affected by mClippedRadii
   nsRect mDirtyRect;
   gfxRect mDirtyRectGfx;
 
   gfxCornerSizes mClippedRadii;
   bool mRadiiAreOuter;
+  bool mHasAdditionalBGClipArea;
 
   // Whether we are being asked to draw with a caller provided background
   // clipping area. If this is true we also disable rounded corners.
@@ -1690,15 +1692,49 @@ struct BackgroundClipState {
 
 static void
 GetBackgroundClip(gfxContext *aCtx, uint8_t aBackgroundClip,
+                  uint8_t aBackgroundAttachment,
                   nsIFrame* aForFrame, const nsRect& aBorderArea,
                   const nsRect& aCallerDirtyRect, bool aHaveRoundedCorners,
                   const gfxCornerSizes& aBGRadii, nscoord aAppUnitsPerPixel,
                   /* out */ BackgroundClipState* aClipState)
 {
   aClipState->mBGClipArea = aBorderArea;
+  aClipState->mHasAdditionalBGClipArea = false;
   aClipState->mCustomClip = false;
   aClipState->mRadiiAreOuter = true;
   aClipState->mClippedRadii = aBGRadii;
+  if (aForFrame->GetType() == nsGkAtoms::scrollFrame &&
+        NS_STYLE_BG_ATTACHMENT_LOCAL == aBackgroundAttachment) {
+    // As of this writing, this is still in discussion in the CSS Working Group
+    // http://lists.w3.org/Archives/Public/www-style/2013Jul/0250.html
+
+    // The rectangle for 'background-clip' scrolls with the content,
+    // but the background is also clipped at a non-scrolling 'padding-box'
+    // like the content. (See below.)
+    // Therefore, only 'content-box' makes a difference here.
+    if (aBackgroundClip == NS_STYLE_BG_CLIP_CONTENT) {
+      nsIScrollableFrame* scrollableFrame = do_QueryFrame(aForFrame);
+      // Clip at a rectangle attached to the scrolled content.
+      aClipState->mHasAdditionalBGClipArea = true;
+      aClipState->mAdditionalBGClipArea = nsRect(
+        aClipState->mBGClipArea.TopLeft()
+          + scrollableFrame->GetScrolledFrame()->GetPosition()
+          // For the dir=rtl case:
+          + scrollableFrame->GetScrollRange().TopLeft(),
+        scrollableFrame->GetScrolledRect().Size());
+      nsMargin padding = aForFrame->GetUsedPadding();
+      // padding-bottom is ignored on scrollable frames:
+      // https://bugzilla.mozilla.org/show_bug.cgi?id=748518
+      padding.bottom = 0;
+      aForFrame->ApplySkipSides(padding);
+      aClipState->mAdditionalBGClipArea.Deflate(padding);
+    }
+
+    // Also clip at a non-scrolling, rounded-corner 'padding-box',
+    // same as the scrolled content because of the 'overflow' property.
+    aBackgroundClip = NS_STYLE_BG_CLIP_PADDING;
+  }
+
   if (aBackgroundClip != NS_STYLE_BG_CLIP_BORDER) {
     nsMargin border = aForFrame->GetUsedBorder();
     if (aBackgroundClip == NS_STYLE_BG_CLIP_MOZ_ALMOST_PADDING) {
@@ -1730,6 +1766,13 @@ GetBackgroundClip(gfxContext *aCtx, uint8_t aBackgroundClip,
     }
   }
 
+  if (!aHaveRoundedCorners && aClipState->mHasAdditionalBGClipArea) {
+    // Do the intersection here to account for the fast path(?) below.
+    aClipState->mBGClipArea =
+      aClipState->mBGClipArea.Intersect(aClipState->mAdditionalBGClipArea);
+    aClipState->mHasAdditionalBGClipArea = false;
+  }
+
   SetupDirtyRects(aClipState->mBGClipArea, aCallerDirtyRect, aAppUnitsPerPixel,
                   &aClipState->mDirtyRect, &aClipState->mDirtyRectGfx);
 }
@@ -1758,6 +1801,20 @@ SetupBackgroundClip(BackgroundClipState& aClipState, gfxContext *aCtx,
   // as above with bgArea, arguably a bug, but table painting seems
   // to depend on it.
 
+  if (aHaveRoundedCorners || aClipState.mHasAdditionalBGClipArea) {
+    aAutoSR->Reset(aCtx);
+  }
+
+  if (aClipState.mHasAdditionalBGClipArea) {
+    gfxRect bgAreaGfx = nsLayoutUtils::RectToGfxRect(
+      aClipState.mAdditionalBGClipArea, aAppUnitsPerPixel);
+    bgAreaGfx.Round();
+    bgAreaGfx.Condition();
+    aCtx->NewPath();
+    aCtx->Rectangle(bgAreaGfx, true);
+    aCtx->Clip();
+  }
+
   if (aHaveRoundedCorners) {
     gfxRect bgAreaGfx =
       nsLayoutUtils::RectToGfxRect(aClipState.mBGClipArea, aAppUnitsPerPixel);
@@ -1773,7 +1830,6 @@ SetupBackgroundClip(BackgroundClipState& aClipState, gfxContext *aCtx,
       return;
     }
 
-    aAutoSR->Reset(aCtx);
     aCtx->NewPath();
     aCtx->RoundedRectangle(bgAreaGfx, aClipState.mClippedRadii, aClipState.mRadiiAreOuter);
     aCtx->Clip();
@@ -1820,9 +1876,20 @@ DrawBackgroundColor(BackgroundClipState& aClipState, gfxContext *aCtx,
   aCtx->Rectangle(dirty, true);
   aCtx->Clip();
 
+  if (aClipState.mHasAdditionalBGClipArea) {
+    gfxRect bgAdditionalAreaGfx = nsLayoutUtils::RectToGfxRect(
+      aClipState.mAdditionalBGClipArea, aAppUnitsPerPixel);
+    bgAdditionalAreaGfx.Round();
+    bgAdditionalAreaGfx.Condition();
+    aCtx->NewPath();
+    aCtx->Rectangle(bgAdditionalAreaGfx, true);
+    aCtx->Clip();
+  }
+
   aCtx->NewPath();
   aCtx->RoundedRectangle(bgAreaGfx, aClipState.mClippedRadii,
                          aClipState.mRadiiAreOuter);
+
   aCtx->Fill();
   aCtx->Restore();
 }
@@ -2583,7 +2650,8 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
         NS_STYLE_BG_CLIP_MOZ_ALMOST_PADDING : NS_STYLE_BG_CLIP_PADDING;
     }
 
-    GetBackgroundClip(ctx, currentBackgroundClip, aForFrame, aBorderArea,
+    GetBackgroundClip(ctx, currentBackgroundClip, bg->BottomLayer().mAttachment,
+                      aForFrame, aBorderArea,
                       aDirtyRect, haveRoundedCorners, bgRadii, appUnitsPerPixel,
                       &clipState);
   }
@@ -2657,7 +2725,7 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
           // already called GetBackgroundClip above and it stored its results
           // in clipState.
           if (clipSet) {
-            GetBackgroundClip(ctx, currentBackgroundClip, aForFrame,
+            GetBackgroundClip(ctx, currentBackgroundClip, layer.mAttachment, aForFrame,
                               aBorderArea, aDirtyRect, haveRoundedCorners,
                               bgRadii, appUnitsPerPixel, &clipState);
           }
@@ -2764,7 +2832,8 @@ nsCSSRendering::PaintBackgroundColorWithSC(nsPresContext* aPresContext,
   }
 
   BackgroundClipState clipState;
-  GetBackgroundClip(ctx, currentBackgroundClip, aForFrame, aBorderArea,
+  GetBackgroundClip(ctx, currentBackgroundClip, bg->BottomLayer().mAttachment,
+                    aForFrame, aBorderArea,
                     aDirtyRect, haveRoundedCorners, bgRadii, appUnitsPerPixel,
                     &clipState);
 
@@ -2828,6 +2897,31 @@ nsCSSRendering::ComputeBackgroundPositioningArea(nsPresContext* aPresContext,
     if (geometryFrame) {
       bgPositioningArea = geometryFrame->GetRect();
     }
+  } else if (frameType == nsGkAtoms::scrollFrame &&
+             NS_STYLE_BG_ATTACHMENT_LOCAL == aLayer.mAttachment) {
+    nsIScrollableFrame* scrollableFrame = do_QueryFrame(aForFrame);
+    bgPositioningArea = nsRect(
+      scrollableFrame->GetScrolledFrame()->GetPosition()
+        // For the dir=rtl case:
+        + scrollableFrame->GetScrollRange().TopLeft(),
+      scrollableFrame->GetScrolledRect().Size());
+    // The ScrolledRect’s size does not include the borders or scrollbars,
+    // reverse the handling of background-origin
+    // compared to the common case below.
+    if (aLayer.mOrigin == NS_STYLE_BG_ORIGIN_BORDER) {
+      nsMargin border = geometryFrame->GetUsedBorder();
+      geometryFrame->ApplySkipSides(border);
+      bgPositioningArea.Inflate(border);
+      bgPositioningArea.Inflate(scrollableFrame->GetActualScrollbarSizes());
+    } else if (aLayer.mOrigin != NS_STYLE_BG_ORIGIN_PADDING) {
+      nsMargin padding = geometryFrame->GetUsedPadding();
+      geometryFrame->ApplySkipSides(padding);
+      bgPositioningArea.Deflate(padding);
+      NS_ASSERTION(aLayer.mOrigin == NS_STYLE_BG_ORIGIN_CONTENT,
+                   "unknown background-origin value");
+    }
+    *aAttachedToFrame = aForFrame;
+    return bgPositioningArea;
   } else {
     bgPositioningArea = nsRect(nsPoint(0,0), aBorderArea.Size());
   }
