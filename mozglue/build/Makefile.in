@@ -11,7 +11,6 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 DIST_INSTALL = 1
-
 # Build mozglue as a shared lib on Windows, OSX and Android.
 # If this is ever changed, update MOZ_SHARED_MOZGLUE in browser/installer/Makefile.in
 ifneq (,$(filter WINNT Darwin Android,$(OS_TARGET)))
@@ -93,10 +92,6 @@ EXTRA_DSO_LDOPTS += $(MOZ_ZLIB_LIBS)
 SHARED_LIBRARY_LIBS += $(call EXPAND_LIBNAME_PATH,android,../android)
 # To properly wrap jemalloc's pthread_atfork call.
 EXTRA_DSO_LDOPTS += -Wl,--wrap=pthread_atfork
-endif
-
-ifeq (gonk, $(MOZ_WIDGET_TOOLKIT))
-CSRCS += cpuacct.c
 endif
 
 ifdef MOZ_LINKER

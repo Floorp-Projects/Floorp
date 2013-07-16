@@ -6,8 +6,19 @@
 
 if not CONFIG['MOZ_PROFILE_GENERATE']:
     PROGRAM = 'spacetrace'
+    CSRCS += [
+        'formdata.c',
+        'spacecategory.c',
+        'spacetrace.c',
+    ]
 
 CPP_SOURCES += [
     '$(EXTRACPPSRCS)',
     '$(SIMPLECPPSRCS)',
 ]
+
+CSRCS += [
+    'leakstats.c',
+    'tmreader.c',
+    'tmstats.c',
+]        

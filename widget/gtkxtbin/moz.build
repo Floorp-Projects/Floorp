@@ -12,3 +12,8 @@ EXPORTS += [
 
 LIBRARY_NAME = 'gtkxtbin'
 
+
+if CONFIG['MOZ_ENABLE_GTK2']:
+    CSRCS += [
+        'gtk2xtbin.c',
+    ]
