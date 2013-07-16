@@ -398,6 +398,17 @@ GetJunkScope()
     return self->GetJunkScope();
 }
 
+nsIGlobalObject *
+GetJunkScopeGlobal()
+{
+    JSObject *junkScope = GetJunkScope();
+    // GetJunkScope would ideally never fail, currently it is not yet the case
+    // unfortunately...(see Bug 874158)
+    if (!junkScope)
+        return nullptr;
+    return GetNativeForGlobal(junkScope);
+}
+
 }
 
 static void
