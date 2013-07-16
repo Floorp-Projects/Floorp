@@ -50,8 +50,7 @@ IonBuilder::IonBuilder(JSContext *cx, TempAllocator *temp, MIRGraph *graph,
     failedShapeGuard_(info->script()->failedShapeGuard),
     nonStringIteration_(false),
     lazyArguments_(NULL),
-    inlineCallInfo_(NULL),
-    retval_(NULL)
+    inlineCallInfo_(NULL)
 {
     script_.init(info->script());
     pc = info->startPC();
@@ -1101,7 +1100,6 @@ IonBuilder::snoopControlFlow(JSOp op)
 
       case JSOP_RETURN:
       case JSOP_STOP:
-      case JSOP_RETRVAL:
         return processReturn(op);
 
       case JSOP_THROW:
@@ -1512,11 +1510,6 @@ IonBuilder::inspectOpcode(JSOp op)
 
       case JSOP_INSTANCEOF:
         return jsop_instanceof();
-
-      case JSOP_SETRVAL:
-        JS_ASSERT(!retval_);
-        retval_ = current->pop();
-        return true;
 
       default:
 #ifdef DEBUG
@@ -3194,12 +3187,6 @@ IonBuilder::processReturn(JSOp op)
         def = ins;
         break;
       }
-
-      case JSOP_RETRVAL:
-        JS_ASSERT(retval_ && current == retval_->block());
-        def = retval_;
-        retval_ = NULL;
-        break;
 
       default:
         def = NULL;
