@@ -218,15 +218,15 @@ function activateCurrent(aMessage) {
 
 function activateContextMenu(aMessage) {
   function sendContextMenuCoordinates(aAccessible) {
-    let objX = {}, objY = {}, objW = {}, objH = {};
-    aAccessible.getBounds(objX, objY, objW, objH);
-    let x = objX.value + objW.value / 2;
-    let y = objY.value + objH.value / 2;
-    sendAsyncMessage('AccessFu:ActivateContextMenu', {x: x, y: y});
+    let bounds = Utils.getBounds(aAccessible);
+    sendAsyncMessage('AccessFu:ActivateContextMenu',
+                     { x: bounds.left + bounds.width / 2,
+                       y: bounds.top + bounds.height / 2 });
   }
 
-  if (!forwardToChild(aMessage, activateContextMenu, vc.position)) {
-    sendContextMenuCoordinates(vc.position);
+  let position = Utils.getVirtualCursor(content.document).position;
+  if (!forwardToChild(aMessage, activateContextMenu, position)) {
+    sendContextMenuCoordinates(position);
   }
 }
 
