@@ -129,7 +129,6 @@ FENNEC_JAVA_FILES = \
   NotificationService.java \
   NSSBridge.java \
   OrderedBroadcastHelper.java \
-  PageActionLayout.java \
   PrefsHelper.java \
   PrivateDataPreference.java \
   PrivateTab.java \
@@ -642,7 +641,6 @@ RES_DRAWABLE_MDPI = \
   res/drawable-mdpi/ic_menu_new_tab.png \
   res/drawable-mdpi/ic_menu_reload.png \
   res/drawable-mdpi/ic_status_logo.png \
-  res/drawable-mdpi/icon_pageaction.png \
   res/drawable-mdpi/progress_spinner_1.png \
   res/drawable-mdpi/progress_spinner_2.png \
   res/drawable-mdpi/progress_spinner_3.png \
@@ -765,7 +763,6 @@ RES_DRAWABLE_HDPI = \
   res/drawable-hdpi/ic_menu_new_tab.png \
   res/drawable-hdpi/ic_menu_reload.png \
   res/drawable-hdpi/ic_status_logo.png \
-  res/drawable-hdpi/icon_pageaction.png \
   res/drawable-hdpi/tab_indicator_divider.9.png \
   res/drawable-hdpi/tab_indicator_selected.9.png \
   res/drawable-hdpi/tab_indicator_selected_focused.9.png \
@@ -864,7 +861,6 @@ RES_DRAWABLE_XHDPI = \
   res/drawable-xhdpi/ic_menu_new_tab.png \
   res/drawable-xhdpi/ic_menu_reload.png \
   res/drawable-xhdpi/ic_status_logo.png \
-  res/drawable-xhdpi/icon_pageaction.png \
   res/drawable-xhdpi/spinner_default.9.png \
   res/drawable-xhdpi/spinner_focused.9.png \
   res/drawable-xhdpi/spinner_pressed.9.png \
