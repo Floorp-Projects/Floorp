@@ -1061,6 +1061,10 @@
     "n_values": 5,
     "description": "HTTP Offline Cache Hit, Reval, Failed-Reval, Miss"
   },
+  "HTTP_OFFLINE_CACHE_DOCUMENT_LOAD": {
+    "kind": "boolean",
+    "description": "Rate of page load from offline cache"
+  },
   "CACHE_DEVICE_SEARCH_2": {
     "kind": "exponential",
     "high": "10000",
