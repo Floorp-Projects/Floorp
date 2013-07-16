@@ -114,6 +114,7 @@
     <command id="Social:FocusChat" oncommand="SocialChatBar.focus();" hidden="true" disabled="true"/>
     <command id="Social:Toggle" oncommand="Social.toggle();" hidden="true"/>
     <command id="Social:Addons" oncommand="BrowserOpenAddonsMgr('addons://list/service');"/>
+    <command id="MenuPanel:Toggle" oncommand="PanelUI.toggle();"/>
   </commandset>
 
   <commandset id="placesCommands">
@@ -394,6 +395,13 @@
     <key id="key_undoCloseTab" command="History:UndoCloseTab" key="&tabCmd.commandkey;" modifiers="accel,shift"/>
 #endif
     <key id="key_undoCloseWindow" command="History:UndoCloseWindow" key="&newNavigatorCmd.key;" modifiers="accel,shift"/>
+
+    <key id="key_menuButton" command="MenuPanel:Toggle"
+#ifdef XP_MACOSX
+         key="&toggleMenuPanelMac.key;" modifiers="accel,shift"/>
+#else
+         key="&toggleMenuPanel.key;" modifiers="accel"/>
+#endif
 
 #ifdef XP_GNOME
 #define NUM_SELECT_TAB_MODIFIER alt

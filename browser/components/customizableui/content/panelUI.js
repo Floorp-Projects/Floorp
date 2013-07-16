@@ -80,7 +80,7 @@ const PanelUI = {
       this.ensureRegistered();
       this.panel.hidden = false;
 
-      let anchor = aEvent.target;
+      let anchor = aEvent ? aEvent.target : this.menuButton;
       let iconAnchor =
         document.getAnonymousElementByAttribute(anchor, "class",
                                                 "toolbarbutton-icon");
