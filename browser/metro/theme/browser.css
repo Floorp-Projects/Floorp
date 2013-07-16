@@ -414,6 +414,9 @@ documenttab[selected] .documenttab-selection {
   transition-timing-function: ease-in;
   transition-delay: 80ms;
 }
+#contextualactions-tray > toolbarbutton > .toolbarbutton-text {
+  color: white;
+}
 
 #pin-selected-button {
   -moz-image-region: rect(0px, 240px, 40px, 200px) !important;
