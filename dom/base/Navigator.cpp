@@ -2068,8 +2068,8 @@ Navigator::GetMozAudioChannelManager(ErrorResult& aRv)
 
 bool
 Navigator::DoNewResolve(JSContext* aCx, JS::Handle<JSObject*> aObject,
-                        JS::Handle<jsid> aId, unsigned aFlags,
-                        JS::MutableHandle<JSObject*> aObjp)
+                        JS::Handle<jsid> aId,
+                        JS::MutableHandle<JS::Value> aValue)
 {
   if (!JSID_IS_STRING(aId)) {
     return true;
@@ -2118,15 +2118,11 @@ Navigator::DoNewResolve(JSContext* aCx, JS::Handle<JSObject*> aObject,
       }
     }
 
-    if (!JS_WrapObject(aCx, domObject.address()) ||
-        !JS_DefinePropertyById(aCx, aObject, aId,
-                               JS::ObjectValue(*domObject),
-                               nullptr, nullptr, JSPROP_ENUMERATE)) {
+    if (!JS_WrapObject(aCx, domObject.address())) {
       return false;
     }
 
-    aObjp.set(aObject);
-
+    aValue.setObject(*domObject);
     return true;
   }
 
@@ -2169,13 +2165,8 @@ Navigator::DoNewResolve(JSContext* aCx, JS::Handle<JSObject*> aObject,
     return Throw<true>(aCx, NS_ERROR_UNEXPECTED);
   }
 
-  JSBool ok = ::JS_DefinePropertyById(aCx, aObject, aId, prop_val,
-                                      JS_PropertyStub, JS_StrictPropertyStub,
-                                      JSPROP_ENUMERATE);
-
-  aObjp.set(aObject);
-
-  return ok;
+  aValue.set(prop_val);
+  return true;
 }
 
 /* static */
