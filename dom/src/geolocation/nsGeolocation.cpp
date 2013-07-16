@@ -255,6 +255,26 @@ PositionError::GetCode(int16_t *aCode)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+PositionError::GetMessage(nsAString& aMessage)
+{
+  switch (mCode)
+  {
+    case nsIDOMGeoPositionError::PERMISSION_DENIED:
+      aMessage = NS_LITERAL_STRING("User denied geolocation prompt");
+      break;
+    case nsIDOMGeoPositionError::POSITION_UNAVAILABLE:
+      aMessage = NS_LITERAL_STRING("Unknown error acquiring position");
+      break;
+    case nsIDOMGeoPositionError::TIMEOUT:
+      aMessage = NS_LITERAL_STRING("Position acquisition timed out");
+      break;
+    default:
+      break;
+  }
+  return NS_OK;
+}
+
 Geolocation*
 PositionError::GetParentObject() const
 {
