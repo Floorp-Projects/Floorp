@@ -47,12 +47,6 @@ public class ButtonToast {
     private final LinkedList<Toast> mQueue = new LinkedList<Toast>();
     private Toast mCurrentToast;
 
-    public enum ReasonHidden {
-        CLICKED,
-        TIMEOUT,
-        STARTUP
-    }
-
     // State objects
     private static class Toast {
         public final CharSequence buttonMessage;
@@ -71,7 +65,6 @@ public class ButtonToast {
 
     public interface ToastListener {
         void onButtonClicked();
-        void onToastHidden(ReasonHidden reason);
     }
 
     public ButtonToast(View view) {
@@ -86,14 +79,14 @@ public class ButtonToast {
                         if (t == null)
                             return;
 
-                        hide(false, ReasonHidden.CLICKED);
+                        hide(false);
                         if (t.listener != null) {
                             t.listener.onButtonClicked();
                         }
                     }
                 });
 
-        hide(true, ReasonHidden.STARTUP);
+        hide(true);
     }
 
     public void show(boolean immediate, CharSequence message,
@@ -130,15 +123,12 @@ public class ButtonToast {
         mView.startAnimation(alpha);
     }
 
-    public void hide(boolean immediate, ReasonHidden reason) {
-        if (mButton.isPressed() && reason != ReasonHidden.CLICKED) {
+    public void hide(boolean immediate) {
+        if (mButton.isPressed()) {
             mHideHandler.postDelayed(mHideRunnable, TOAST_DURATION);
             return;
         }
 
-        if (mCurrentToast != null && mCurrentToast.listener != null) {
-            mCurrentToast.listener.onToastHidden(reason);
-        }
         mCurrentToast = null;
         mButton.setEnabled(false);
         mHideHandler.removeCallbacks(mHideRunnable);
@@ -183,7 +173,7 @@ public class ButtonToast {
     private Runnable mHideRunnable = new Runnable() {
         @Override
         public void run() {
-            hide(false, ReasonHidden.TIMEOUT);
+            hide(false);
         }
     };
 }
