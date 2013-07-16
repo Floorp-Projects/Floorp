@@ -50,23 +50,24 @@ public class ButtonToast {
         public final CharSequence buttonMessage;
         public final int buttonIcon;
         public final CharSequence message;
+        public ToastListener listener;
 
-        public Toast(CharSequence aMessage, CharSequence aButtonMessage, int aIcon, CharSequence aToken) {
+        public Toast(CharSequence aMessage, CharSequence aButtonMessage, int aIcon, ToastListener aListener) {
             message = aMessage;
             buttonMessage = aButtonMessage;
             buttonIcon = aIcon;
-            token = aToken;
+            listener = aListener;
+            token = "";
         }
     }
 
     public interface ToastListener {
-        void onButtonClicked(CharSequence token);
+        void onButtonClicked();
     }
 
-    public ButtonToast(View view, ToastListener listener) {
+    public ButtonToast(View view) {
         mView = view;
-        mListener = listener;
-
+        mListener = null;
         mMessageView = (TextView) mView.findViewById(R.id.toast_message);
         mButton = (Button) mView.findViewById(R.id.toast_button);
         mButton.setOnClickListener(new View.OnClickListener() {
@@ -77,8 +78,8 @@ public class ButtonToast {
                             return;
 
                         hide(false);
-                        if (mListener != null) {
-                            mListener.onButtonClicked(t.token);
+                        if (t.listener != null) {
+                            t.listener.onButtonClicked();
                         }
                     }
                 });
@@ -88,8 +89,8 @@ public class ButtonToast {
 
     public void show(boolean immediate, CharSequence message,
                      CharSequence buttonMessage, int buttonIcon,
-                     CharSequence token) {
-        Toast t = new Toast(message, buttonMessage, buttonIcon, token);
+                     ToastListener listener) {
+        Toast t = new Toast(message, buttonMessage, buttonIcon, listener);
         show(t, immediate);
     }
 
