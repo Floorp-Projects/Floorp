@@ -45,8 +45,9 @@ public:
                                                          nsIObserver)
   NS_DECL_NSIOBSERVER
 
+  static bool CheckPermission(nsPIDOMWindow* aWindow);
   static already_AddRefed<nsDOMCameraManager>
-    CheckPermissionAndCreateInstance(nsPIDOMWindow* aWindow);
+    CreateInstance(nsPIDOMWindow* aWindow);
   static bool IsWindowStillActive(uint64_t aWindowId);
 
   void Register(mozilla::nsDOMCameraControl* aDOMCameraControl);

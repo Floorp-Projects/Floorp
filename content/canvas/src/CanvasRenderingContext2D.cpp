@@ -3296,6 +3296,8 @@ CanvasRenderingContext2D::DrawWindow(nsIDOMWindow* window, double x,
   // gfxContext-over-Azure may modify the DrawTarget's transform, so
   // save and restore it
   Matrix matrix = mTarget->GetTransform();
+  double sw = matrix._11 * w;
+  double sh = matrix._22 * h;
   nsRefPtr<gfxContext> thebes;
   nsRefPtr<gfxASurface> drawSurf;
   if (gfxPlatform::GetPlatform()->SupportsAzureContentForDrawTarget(mTarget)) {
@@ -3304,7 +3306,7 @@ CanvasRenderingContext2D::DrawWindow(nsIDOMWindow* window, double x,
                                 matrix._22, matrix._31, matrix._32));
   } else {
     drawSurf =
-      gfxPlatform::GetPlatform()->CreateOffscreenSurface(gfxIntSize(ceil(w), ceil(h)),
+      gfxPlatform::GetPlatform()->CreateOffscreenSurface(gfxIntSize(ceil(sw), ceil(sh)),
                                                          gfxASurface::CONTENT_COLOR_ALPHA);
     if (!drawSurf) {
       error.Throw(NS_ERROR_FAILURE);
@@ -3314,6 +3316,7 @@ CanvasRenderingContext2D::DrawWindow(nsIDOMWindow* window, double x,
     drawSurf->SetDeviceOffset(gfxPoint(-floor(x), -floor(y)));
     thebes = new gfxContext(drawSurf);
     thebes->Translate(gfxPoint(floor(x), floor(y)));
+    thebes->Scale(matrix._11, matrix._22);
   }
 
   nsCOMPtr<nsIPresShell> shell = presContext->PresShell();
@@ -3333,8 +3336,9 @@ CanvasRenderingContext2D::DrawWindow(nsIDOMWindow* window, double x,
                                            IntSize(size.width, size.height),
                                            img->Stride(),
                                            FORMAT_B8G8R8A8);
-    mgfx::Rect rect(0, 0, w, h);
-    mTarget->DrawSurface(data, rect, rect);
+    mgfx::Rect destRect(0, 0, w, h);
+    mgfx::Rect sourceRect(0, 0, sw, sh);
+    mTarget->DrawSurface(data, destRect, sourceRect);
     mTarget->Flush();
   } else {
     mTarget->SetTransform(matrix);

@@ -19,7 +19,11 @@
 #include "SkTSearch.h"
 
 #ifndef SK_FONT_FILE_PREFIX
+#ifdef SK_BUILD_FOR_ANDROID
+    #define SK_FONT_FILE_PREFIX "/fonts/"
+#else
     #define SK_FONT_FILE_PREFIX "/usr/share/fonts/truetype/"
+#endif
 #endif
 #ifndef SK_FONT_FILE_DIR_SEPERATOR
     #define SK_FONT_FILE_DIR_SEPERATOR "/"
@@ -419,7 +423,13 @@ static void load_system_fonts() {
         return;
     }
 
-    SkString baseDirectory(SK_FONT_FILE_PREFIX);
+    SkString baseDirectory;
+#ifdef SK_BUILD_FOR_ANDROID
+    baseDirectory.set(getenv("ANDROID_ROOT"));
+#endif
+
+    baseDirectory.append(SK_FONT_FILE_PREFIX);
+
     unsigned int count = 0;
     load_directory_fonts(baseDirectory, &count);
 
