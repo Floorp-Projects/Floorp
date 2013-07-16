@@ -5,22 +5,14 @@
 
 package org.mozilla.gecko.gfx;
 
-import org.mozilla.gecko.util.ThreadUtils;
-import org.mozilla.gecko.util.GeckoJarReader;
-import org.mozilla.gecko.util.UiAsyncTask;
-
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
-import android.graphics.drawable.Drawable;
-import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.util.Base64;
 import android.util.Log;
-import android.text.TextUtils;
 
 import org.mozilla.gecko.R;
 
@@ -34,70 +26,6 @@ public final class BitmapUtils {
     private static final String LOGTAG = "GeckoBitmapUtils";
 
     private BitmapUtils() {}
-
-    public interface BitmapLoader {
-        public void onBitmapFound(Drawable d);
-    }
-
-    /* Given a string url, returns a drawable for the bitmap. Should work with data, file, jar, 
-     * or chrome (converted to jar:jar) urls. Results are sent to the passed in BitmapLoader object.
-     * Can return null if a Drawable couldn't be created.
-     * Results are always posted on the UI thread.
-     * TODO: Support for http(s) and drawable urls.
-     */
-    public static void getDrawable(final Context context, final String data, final BitmapLoader loader) {
-        if (TextUtils.isEmpty(data)) {
-            postResultToUiThread(null, loader);
-            return;
-        }
-
-        if (data.startsWith("data")) {
-            BitmapDrawable d = new BitmapDrawable(getBitmapFromDataURI(data));
-            postResultToUiThread(d, loader);
-            return;
-        }
-
-        if (!data.startsWith("jar:") && !data.startsWith("file://")) {
-            postResultToUiThread(null, loader);
-            return;
-        }
-
-        (new UiAsyncTask<Void, Void, Drawable>(ThreadUtils.getBackgroundHandler()) {
-            @Override
-            public Drawable doInBackground(Void... params) {
-                try {
-                    if (data.startsWith("jar:jar")) {
-                        return GeckoJarReader.getBitmapDrawable(context.getResources(), data);
-                    }
-
-                    URL url = new URL(data);
-                    InputStream is = (InputStream) url.getContent();
-                    try {
-                        return Drawable.createFromStream(is, "src");
-                    } finally {
-                        is.close();
-                    }
-                } catch (Exception e) {
-                    Log.w(LOGTAG, "Unable to set icon", e);
-                }
-                return null;
-            }
-
-            @Override
-            public void onPostExecute(Drawable drawable) {
-                postResultToUiThread(drawable, loader);
-            }
-        }).execute();
-    }
-
-    private static void postResultToUiThread(final Drawable d, final BitmapLoader loader) {
-        ThreadUtils.postToUiThread(new Runnable() {
-            @Override
-            public void run() {
-                loader.onBitmapFound(d);
-            }
-        });
-    }
 
     public static Bitmap decodeByteArray(byte[] bytes) {
         return decodeByteArray(bytes, null);
