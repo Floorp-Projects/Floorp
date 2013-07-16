@@ -7,10 +7,12 @@ package org.mozilla.gecko.background.bagheera;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.security.GeneralSecurityException;
+import java.util.Collection;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.regex.Pattern;
 
+import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.sync.net.BaseResource;
 import org.mozilla.gecko.sync.net.BaseResourceDelegate;
 import org.mozilla.gecko.sync.net.Resource;
@@ -102,8 +104,8 @@ public class BagheeraClient {
    *          the document ID, which is typically a UUID.
    * @param payload
    *          a document, typically JSON-encoded.
-   * @param oldID
-   *          an optional ID which denotes a document to supersede. Can be null.
+   * @param oldIDs
+   *          an optional collection of IDs which denote documents to supersede. Can be null or empty.
    * @param delegate
    *          the delegate whose methods should be invoked on success or
    *          failure.
@@ -111,7 +113,7 @@ public class BagheeraClient {
   public void uploadJSONDocument(final String namespace,
                                  final String id,
                                  final String payload,
-                                 final String oldID,
+                                 Collection<String> oldIDs,
                                  final BagheeraRequestDelegate delegate) throws URISyntaxException {
     if (namespace == null) {
       throw new IllegalArgumentException("Must provide namespace.");
@@ -126,7 +128,7 @@ public class BagheeraClient {
     final BaseResource resource = makeResource(namespace, id);
     final HttpEntity deflatedBody = DeflateHelper.deflateBody(payload);
 
-    resource.delegate = new BagheeraUploadResourceDelegate(resource, namespace, id, oldID, delegate);
+    resource.delegate = new BagheeraUploadResourceDelegate(resource, namespace, id, oldIDs, delegate);
     resource.post(deflatedBody);
   }
 
@@ -228,23 +230,23 @@ public class BagheeraClient {
   public final class BagheeraUploadResourceDelegate extends BagheeraResourceDelegate {
     private static final String HEADER_OBSOLETE_DOCUMENT = "X-Obsolete-Document";
     private static final String COMPRESSED_CONTENT_TYPE = "application/json+zlib; charset=utf-8";
-    protected String obsoleteDocumentID;
+    protected final Collection<String> obsoleteDocumentIDs;
 
     public BagheeraUploadResourceDelegate(Resource resource,
         String namespace,
         String id,
-        String obsoleteDocumentID,
+        Collection<String> obsoleteDocumentIDs,
         BagheeraRequestDelegate delegate) {
       super(resource, namespace, id, delegate);
-      this.obsoleteDocumentID = obsoleteDocumentID;
+      this.obsoleteDocumentIDs = obsoleteDocumentIDs;
     }
 
     @Override
     public void addHeaders(HttpRequestBase request, DefaultHttpClient client) {
       super.addHeaders(request, client);
       request.setHeader(HTTP.CONTENT_TYPE, COMPRESSED_CONTENT_TYPE);
-      if (this.obsoleteDocumentID != null) {
-        request.addHeader(HEADER_OBSOLETE_DOCUMENT, this.obsoleteDocumentID);
+      if (this.obsoleteDocumentIDs != null && this.obsoleteDocumentIDs.size() > 0) {
+        request.addHeader(HEADER_OBSOLETE_DOCUMENT, Utils.toCommaSeparatedString(this.obsoleteDocumentIDs));
       }
     }
   }
