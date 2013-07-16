@@ -97,17 +97,17 @@ CPP_SOURCES += [
     'nsVariant.cpp',
 ]
 
-if CONFIG['HAVE_CLOCK_MONOTONIC']:
+if CONFIG['OS_ARCH'] == 'WINNT':
+    CPP_SOURCES += [
+        'TimeStamp_windows.cpp',
+    ]
+elif CONFIG['HAVE_CLOCK_MONOTONIC']:
     CPP_SOURCES += [
         'TimeStamp_posix.cpp',
     ]
 elif CONFIG['OS_ARCH'] == 'Darwin':
     CPP_SOURCES += [
         'TimeStamp_darwin.cpp',
-    ]
-elif CONFIG['OS_ARCH'] == 'WINNT':
-    CPP_SOURCES += [
-        'TimeStamp_windows.cpp',
     ]
 else:
     error('No TimeStamp implementation on this platform.  Build will not succeed')
