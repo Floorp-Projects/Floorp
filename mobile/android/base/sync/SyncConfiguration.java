@@ -340,7 +340,7 @@ public class SyncConfiguration implements CredentialsSource {
     try {
       ExtendedJSONObject o = ExtendedJSONObject.parseJSONObject(json);
       Map<String, Boolean> map = new HashMap<String, Boolean>();
-      for (Entry<String, Object> e : o.entryIterable()) {
+      for (Entry<String, Object> e : o.entrySet()) {
         String key = e.getKey();
         Boolean value = (Boolean) e.getValue();
         map.put(key, value);
