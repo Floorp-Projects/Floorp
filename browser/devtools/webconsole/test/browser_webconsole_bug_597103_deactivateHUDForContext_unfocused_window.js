@@ -17,12 +17,10 @@ function tab1Loaded(aEvent) {
   browser.removeEventListener(aEvent.type, tab1Loaded, true);
 
   win2 = OpenBrowserWindow();
-  win2.addEventListener("load", win2Loaded, true);
+  whenDelayedStartupFinished(win2, win2Loaded);
 }
 
-function win2Loaded(aEvent) {
-  win2.removeEventListener(aEvent.type, win2Loaded, true);
-
+function win2Loaded() {
   tab2 = win2.gBrowser.addTab(TEST_URI);
   win2.gBrowser.selectedTab = tab2;
   tab2.linkedBrowser.addEventListener("load", tab2Loaded, true);
@@ -35,17 +33,14 @@ function tab2Loaded(aEvent) {
   function onWebConsoleOpen() {
     consolesOpened++;
     if (consolesOpened == 2) {
-      Services.obs.removeObserver(onWebConsoleOpen, "web-console-created");
       executeSoon(closeConsoles);
     }
   }
 
-  Services.obs.addObserver(onWebConsoleOpen, "web-console-created", false);
-
   function openConsoles() {
     try {
       let target1 = TargetFactory.forTab(tab1);
-      gDevTools.showToolbox(target1, "webconsole");
+      gDevTools.showToolbox(target1, "webconsole").then(onWebConsoleOpen);
     }
     catch (ex) {
       ok(false, "gDevTools.showToolbox(target1) exception: " + ex);
@@ -54,7 +49,7 @@ function tab2Loaded(aEvent) {
 
     try {
       let target2 = TargetFactory.forTab(tab2);
-      gDevTools.showToolbox(target2, "webconsole");
+      gDevTools.showToolbox(target2, "webconsole").then(onWebConsoleOpen);
     }
     catch (ex) {
       ok(false, "gDevTools.showToolbox(target2) exception: " + ex);
@@ -62,25 +57,13 @@ function tab2Loaded(aEvent) {
     }
   }
 
-  let consolesClosed = 0;
-  function onWebConsoleClose()
-  {
-    consolesClosed++;
-    if (consolesClosed == 2) {
-      Services.obs.removeObserver(onWebConsoleClose, "web-console-destroyed");
-      executeSoon(testEnd);
-    }
-  }
-
   function closeConsoles() {
-    Services.obs.addObserver(onWebConsoleClose, "web-console-destroyed", false);
-
     try {
       let target1 = TargetFactory.forTab(tab1);
       gDevTools.closeToolbox(target1).then(function() {
         try {
           let target2 = TargetFactory.forTab(tab2);
-          gDevTools.closeToolbox(target2);
+          gDevTools.closeToolbox(target2).then(testEnd);
         }
         catch (ex) {
           ok(false, "gDevTools.closeToolbox(target2) exception: " + ex);
