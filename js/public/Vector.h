@@ -210,8 +210,6 @@ class Vector : private AllocPolicy
     bool growStorageBy(size_t incr);
     bool convertToHeapStorage(size_t newCap);
 
-    template <bool InitNewElems> inline bool growByImpl(size_t inc);
-
     /* magic constants */
 
     static const int sMaxInlineBytes = 1024;
@@ -756,9 +754,8 @@ Vector<T,N,AP>::shrinkBy(size_t incr)
 }
 
 template <class T, size_t N, class AP>
-template <bool InitNewElems>
 MOZ_ALWAYS_INLINE bool
-Vector<T,N,AP>::growByImpl(size_t incr)
+Vector<T,N,AP>::growBy(size_t incr)
 {
     REENTRANCY_GUARD_ET_AL;
     if (incr > mCapacity - mLength && !growStorageBy(incr))
@@ -766,8 +763,7 @@ Vector<T,N,AP>::growByImpl(size_t incr)
 
     MOZ_ASSERT(mLength + incr <= mCapacity);
     T *newend = endNoCheck() + incr;
-    if (InitNewElems)
-        Impl::initialize(endNoCheck(), newend);
+    Impl::initialize(endNoCheck(), newend);
     mLength += incr;
 #ifdef DEBUG
     if (mLength > mReserved)
@@ -778,16 +774,19 @@ Vector<T,N,AP>::growByImpl(size_t incr)
 
 template <class T, size_t N, class AP>
 MOZ_ALWAYS_INLINE bool
-Vector<T,N,AP>::growBy(size_t incr)
-{
-    return growByImpl<true>(incr);
-}
-
-template <class T, size_t N, class AP>
-MOZ_ALWAYS_INLINE bool
 Vector<T,N,AP>::growByUninitialized(size_t incr)
 {
-    return growByImpl<false>(incr);
+    REENTRANCY_GUARD_ET_AL;
+    if (incr > mCapacity - mLength && !growStorageBy(incr))
+        return false;
+
+    MOZ_ASSERT(mLength + incr <= mCapacity);
+    mLength += incr;
+#ifdef DEBUG
+    if (mLength > mReserved)
+        mReserved = mLength;
+#endif
+    return true;
 }
 
 template <class T, size_t N, class AP>

@@ -517,7 +517,7 @@ FindBody(JSContext *cx, HandleFunction fun, StableCharPtr chars, size_t length,
     CompileOptions options(cx);
     options.setFileAndLine("internal-findBody", 0)
            .setVersion(fun->nonLazyScript()->getVersion());
-    AutoKeepAtoms keepAtoms(cx->runtime());
+    AutoKeepAtoms keepAtoms(cx->perThreadData);
     TokenStream ts(cx, options, chars.get(), length, NULL, keepAtoms);
     int nest = 0;
     bool onward = true;
@@ -1075,6 +1075,16 @@ JSFunction::createScriptForLazilyInterpretedFunction(JSContext *cx, HandleFuncti
 
         fun->initScript(NULL);
 
+        if (fun != lazy->function()) {
+            script = lazy->function()->getOrCreateScript(cx);
+            if (!script) {
+                fun->initLazyScript(lazy);
+                return false;
+            }
+            fun->initScript(script);
+            return true;
+        }
+
         // Lazy script caching is only supported for leaf functions. If a
         // script with inner functions was returned by the cache, those inner
         // functions would be delazified when deep cloning the script, even if
@@ -1124,7 +1134,7 @@ JSFunction::createScriptForLazilyInterpretedFunction(JSContext *cx, HandleFuncti
         const jschar *lazyStart = chars + lazy->begin();
         size_t lazyLength = lazy->end() - lazy->begin();
 
-        if (!frontend::CompileLazyFunction(cx, fun, lazy, lazyStart, lazyLength)) {
+        if (!frontend::CompileLazyFunction(cx, lazy, lazyStart, lazyLength)) {
             fun->initLazyScript(lazy);
             return false;
         }
@@ -1337,7 +1347,7 @@ js::Function(JSContext *cx, unsigned argc, Value *vp)
         return false;
     }
 
-    AutoKeepAtoms keepAtoms(cx->runtime());
+    AutoKeepAtoms keepAtoms(cx->perThreadData);
     AutoNameVector formals(cx);
 
     bool hasRest = false;

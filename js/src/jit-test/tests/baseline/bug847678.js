@@ -1,4 +1,4 @@
-// |jit-test| error: TypeError
+// |jit-test| error: SyntaxError
 s = newGlobal();
 function g(c) {
     evalcx(c, s)

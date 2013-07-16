@@ -5265,8 +5265,8 @@ main(int argc, char **argv, char **envp)
         || !op.addStringOption('\0', "ion-gvn", "[mode]",
                                "Specify Ion global value numbering:\n"
                                "  off: disable GVN\n"
-                               "  pessimistic: (default) use pessimistic GVN\n"
-                               "  optimistic: use optimistic GVN")
+                               "  pessimistic: use pessimistic GVN\n"
+                               "  optimistic: (default) use optimistic GVN")
         || !op.addStringOption('\0', "ion-licm", "on/off",
                                "Loop invariant code motion (default: on, off to disable)")
         || !op.addStringOption('\0', "ion-edgecase-analysis", "on/off",

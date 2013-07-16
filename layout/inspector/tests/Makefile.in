@@ -23,6 +23,7 @@ MOCHITEST_FILES =\
 		test_bug856317.html \
 		bug856317.css \
 		test_isinheritableproperty.html \
+		test_bug877690.html \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

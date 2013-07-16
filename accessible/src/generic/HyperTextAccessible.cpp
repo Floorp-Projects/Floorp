@@ -1130,7 +1130,9 @@ HyperTextAccessible::GetTextAtOffset(int32_t aOffset,
       if (aOffset == nsIAccessibleText::TEXT_OFFSET_CARET)
         offset = AdjustCaretOffset(offset);
 
-      // Home key, arrow down and if not on last line then home key.
+      // Start offset is begin of the current line (as the home key was
+      // pressed). End offset is begin of the next line if any (arrow down and
+      // home keys), otherwise end of the current line (arrow down only).
       *aStartOffset = FindLineBoundary(offset, eDirPrevious, eSelectBeginLine);
       *aEndOffset = FindLineBoundary(offset, eDirNext, eSelectLine);
       int32_t tmpOffset = FindLineBoundary(*aEndOffset, eDirPrevious, eSelectBeginLine);
@@ -1154,8 +1156,10 @@ HyperTextAccessible::GetTextAtOffset(int32_t aOffset,
       if (aOffset == nsIAccessibleText::TEXT_OFFSET_CARET)
         offset = AdjustCaretOffset(offset);
 
-      // In contrast to word end boundary we follow the spec here. End key,
-      // then up arrow and if not on first line then end key.
+      // In contrast to word end boundary we follow the spec here.
+      // End offset is end of the current line (as the end key was pressed).
+      // Start offset is end of the previous line if any (up arrow and end keys),
+      // otherwise 0 offset (up arrow only).
       *aEndOffset = FindLineBoundary(offset, eDirNext, eSelectEndLine);
       int32_t tmpOffset = FindLineBoundary(offset, eDirPrevious, eSelectLine);
       *aStartOffset = FindLineBoundary(tmpOffset, eDirNext, eSelectEndLine);
@@ -1216,7 +1220,41 @@ HyperTextAccessible::GetTextAfterOffset(int32_t aOffset,
       return GetText(*aStartOffset, *aEndOffset, aText);
 
     case BOUNDARY_LINE_START:
+      if (aOffset == nsIAccessibleText::TEXT_OFFSET_CARET)
+        offset = AdjustCaretOffset(offset);
+
+      // Down arrow, home key, down arrow, home key.
+      *aStartOffset = FindLineBoundary(offset, eDirNext, eSelectLine);
+      if (*aStartOffset != CharacterCount()) {
+        *aStartOffset = FindLineBoundary(*aStartOffset, eDirPrevious, eSelectBeginLine);
+        *aEndOffset = FindLineBoundary(*aStartOffset, eDirNext, eSelectLine);
+        if (*aEndOffset != CharacterCount())
+          *aEndOffset = FindLineBoundary(*aEndOffset, eDirPrevious, eSelectBeginLine);
+      } else {
+        *aEndOffset = CharacterCount();
+      }
+      return GetText(*aStartOffset, *aEndOffset, aText);
+
     case BOUNDARY_LINE_END:
+      if (aOffset == nsIAccessibleText::TEXT_OFFSET_CARET)
+        offset = AdjustCaretOffset(offset);
+
+      // Empty last line doesn't have own frame (a previous line contains '\n'
+      // character instead) thus we can't operate on last line separately
+      // from the previous line.
+      if (IsEmptyLastLineOffset(offset)) {
+        *aStartOffset = *aEndOffset = offset;
+        return NS_OK;
+      }
+
+      // End key, down arrow, end key.
+      *aStartOffset = FindLineBoundary(offset, eDirNext, eSelectEndLine);
+      *aEndOffset = FindLineBoundary(*aStartOffset, eDirNext, eSelectLine);
+      if (*aEndOffset != CharacterCount())
+        *aEndOffset = FindLineBoundary(*aEndOffset, eDirNext, eSelectEndLine);
+
+      return GetText(*aStartOffset, *aEndOffset, aText);
+
     case BOUNDARY_ATTRIBUTE_RANGE:
       return GetTextHelper(eGetAfter, aBoundaryType, aOffset,
                            aStartOffset, aEndOffset, aText);

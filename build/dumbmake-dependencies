@@ -19,8 +19,7 @@ toolkit/library
   security/manager
   security/dbm
   security/nss
-  accessible/build
-    accessible
+  accessible
   dom
   content
   layout

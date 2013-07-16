@@ -248,7 +248,7 @@ documenttab[selected] .documenttab-selection {
 
 /* Toolbar ------------------------------------------------------------------ */
 
-#toolbar {
+#toolbar-autocomplete {
   background-color: @panel_light_color@;
 }
 
@@ -364,7 +364,7 @@ appbar {
   font-size: 0;
 }
 
-appbar > toolbar {
+appbar toolbar {
   -moz-appearance: none;
   -moz-box-align: center;
   border: 0;
@@ -373,7 +373,7 @@ appbar > toolbar {
   font-size: 1rem;
 }
 
-appbar > toolbar > toolbarbutton {
+appbar toolbar > toolbarbutton {
   border: 0;
   margin: 0 @toolbar_horizontal_spacing@;
   padding: 0;

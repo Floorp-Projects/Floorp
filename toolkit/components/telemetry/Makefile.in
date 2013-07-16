@@ -37,7 +37,6 @@ ifdef MOZ_HISTOGRAMS_VERSION
 DEFINES += -DHISTOGRAMS_FILE_VERSION="$(MOZ_HISTOGRAMS_VERSION)"
 endif
 
-include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/config/rules.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
 

@@ -150,8 +150,6 @@ endif
 
 LOCAL_INCLUDES	+= -I$(srcdir) -I$(srcdir)/../../cairo/src
 
-include $(topsrcdir)/config/config.mk
-
 include $(topsrcdir)/config/rules.mk
 
 CFLAGS += -DPACKAGE="mozpixman" -D_USE_MATH_DEFINES

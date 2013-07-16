@@ -17,4 +17,4 @@
 #
 # Modifying this file will now automatically clobber the buildbot machines \o/
 #
-Bug 870407 - move CMMSRCS to mozbuild
+Bug 870180 - CPOWs

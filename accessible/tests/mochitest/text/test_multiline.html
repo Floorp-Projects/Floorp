@@ -16,8 +16,6 @@
 
     function doTest()
     {
-      SimpleTest.expectAssertions(5);
-
       // __o__n__e__w__o__r__d__\n
       //  0  1  2  3  4  5  6  7
       // __\n
@@ -34,74 +32,19 @@
       // getTextAfterOffset
 
       // BOUNDARY_LINE_START
-      testTextAfterOffset(0, BOUNDARY_LINE_START, "\n", 8, 9,
-                          "div", kTodo, kTodo, kTodo,
-                          "divbr", kTodo, kTodo, kTodo,
-                          "editable", kTodo, kTodo, kTodo,
-                          "editablebr", kTodo, kTodo, kTodo,
-                          "textarea", kTodo, kTodo, kTodo);
-      testTextAfterOffset(7, BOUNDARY_LINE_START, "\n", 8, 9,
-                          "div", kOk, kTodo, kTodo,
-                          "divbr", kOk, kTodo, kTodo,
-                          "editable", kOk, kTodo, kTodo,
-                          "editablebr", kOk, kTodo, kTodo,
-                          "textarea", kOk, kTodo, kTodo);
-      testTextAfterOffset(8, BOUNDARY_LINE_START, "two words\n", 9, 19,
-                          "div", kTodo, kTodo, kTodo,
-                          "divbr", kTodo, kTodo, kTodo,
-                          "editable", kTodo, kTodo, kTodo,
-                          "editablebr", kTodo, kTodo, kTodo,
-                          "textarea", kTodo, kTodo, kTodo);
-      testTextAfterOffset(9, BOUNDARY_LINE_START, "", 19, 19,
-                          "div", kTodo, kTodo, kTodo,
-                          "divbr", kTodo, kTodo, kTodo,
-                          "editable", kTodo, kTodo, kTodo,
-                          "editablebr", kTodo, kTodo, kTodo,
-                          "textarea", kTodo, kTodo, kTodo);
-      testTextAfterOffset(19, BOUNDARY_LINE_START, "", 19, 19,
-                          "div", kOk, kOk, kTodo,
-                          "divbr", kOk, kOk, kTodo,
-                          "editable", kOk, kOk, kTodo,
-                          "editablebr", kOk, kOk, kTodo,
-                          "textarea", kOk, kOk, kTodo);
+      testTextAfterOffset(0, BOUNDARY_LINE_START, "\n", 8, 9, IDs);
+      testTextAfterOffset(7, BOUNDARY_LINE_START, "\n", 8, 9, IDs);
+      testTextAfterOffset(8, BOUNDARY_LINE_START, "two words\n", 9, 19, IDs);
+      testTextAfterOffset(9, BOUNDARY_LINE_START, "", 19, 19, IDs);
+      testTextAfterOffset(19, BOUNDARY_LINE_START, "", 19, 19, IDs);
 
       // BOUNDARY_LINE_END
-      testTextAfterOffset(0, BOUNDARY_LINE_END, "\n", 7, 8,
-                          "div", kTodo, kTodo, kTodo,
-                          "divbr", kTodo, kTodo, kTodo,
-                          "editable", kTodo, kTodo, kTodo,
-                          "editablebr", kTodo, kTodo, kTodo,
-                          "textarea", kTodo, kTodo, kTodo);
-      testTextAfterOffset(7, BOUNDARY_LINE_END, "\n", 7, 8,
-                          "div", kOk, kOk, kOk,
-                          "divbr", kOk, kOk, kOk,
-                          "editable", kOk, kOk, kOk,
-                          "editablebr", kOk, kOk, kOk,
-                          "textarea", kOk, kOk, kOk);
-      testTextAfterOffset(8, BOUNDARY_LINE_END, "\ntwo words", 8, 18,
-                          "div", kOk, kOk, kOk,
-                          "divbr", kOk, kOk, kOk,
-                          "editable", kOk, kOk, kOk,
-                          "editablebr", kOk, kOk, kOk,
-                          "textarea", kOk, kOk, kOk);
-      testTextAfterOffset(9, BOUNDARY_LINE_END, "\n", 18, 19,
-                          "div", kTodo, kTodo, kTodo,
-                          "divbr", kTodo, kTodo, kTodo,
-                          "editable", kTodo, kTodo, kTodo,
-                          "editablebr", kTodo, kTodo, kTodo,
-                          "textarea", kTodo, kTodo, kTodo);
-      testTextAfterOffset(18, BOUNDARY_LINE_END, "\n", 18, 19,
-                          "div", kOk, kOk, kOk,
-                          "divbr", kOk, kOk, kOk,
-                          "editable", kOk, kOk, kOk,
-                          "editablebr", kOk, kOk, kOk,
-                          "textarea", kOk, kOk, kOk);
-      testTextAfterOffset(19, BOUNDARY_LINE_END, "", 19, 19,
-                          "div", kOk, kTodo, kTodo,
-                          "divbr", kOk, kTodo, kTodo,
-                          "editable", kOk, kTodo, kTodo,
-                          "editablebr", kOk, kTodo, kTodo,
-                          "textarea", kOk, kTodo, kTodo);
+      testTextAfterOffset(0, BOUNDARY_LINE_END, "\n", 7, 8, IDs);
+      testTextAfterOffset(7, BOUNDARY_LINE_END, "\n", 7, 8, IDs);
+      testTextAfterOffset(8, BOUNDARY_LINE_END, "\ntwo words", 8, 18, IDs);
+      testTextAfterOffset(9, BOUNDARY_LINE_END, "\n", 18, 19, IDs);
+      testTextAfterOffset(18, BOUNDARY_LINE_END, "\n", 18, 19, IDs);
+      testTextAfterOffset(19, BOUNDARY_LINE_END, "", 19, 19, IDs);
 
       ////////////////////////////////////////////////////////////////////////
       // getTextBeforeOffset
@@ -165,6 +108,11 @@
      title="getTextBeforeOffset for word boundaries: evolving"
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=855732">
     Bug 855732
+  </a>
+  <a target="_blank"
+     title=" getTextAfterOffset for line boundary on new rails"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=882292">
+    Bug 882292
   </a>
   <p id="display"></p>
   <div id="content" style="display: none"></div>
