@@ -87,10 +87,6 @@ ifneq (,$(INTEL_ARCHITECTURE))
 ifdef HAVE_TOOLCHAIN_SUPPORT_MSSSE3
 DEFINES += -DSK_BUILD_SSSE3
 endif
-else
-ifeq ($(CPU_ARCH)_$(GNU_CC),arm_1)
-DISABLED_SSRCS += memset.arm.S
-endif
 endif
 
 include $(topsrcdir)/config/rules.mk
