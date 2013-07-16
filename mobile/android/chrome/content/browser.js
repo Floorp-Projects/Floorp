@@ -233,6 +233,10 @@ var Strings = {};
   });
 });
 
+const kFormHelperModeDisabled = 0;
+const kFormHelperModeEnabled = 1;
+const kFormHelperModeDynamic = 2;   // disabled on tablets
+
 var BrowserApp = {
   _tabs: [],
   _selectedTab: null,
@@ -1294,12 +1298,19 @@ var BrowserApp = {
   },
 
   scrollToFocusedInput: function(aBrowser, aAllowZoom = true) {
+    let formHelperMode = Services.prefs.getIntPref("formhelper.mode");
+    if (formHelperMode == kFormHelperModeDisabled)
+      return;
+
     let focused = this.getFocusedInput(aBrowser);
 
     if (focused) {
+      let shouldZoom = Services.prefs.getBoolPref("formhelper.autozoom");
+      if (formHelperMode == kFormHelperModeDynamic && this.isTablet)
+        shouldZoom = false;
        // _zoomToElement will handle not sending any message if this input is already mostly filling the screen
       BrowserEventHandler._zoomToElement(focused, -1, false,
-          aAllowZoom && !this.isTablet && !ViewportHandler.getViewportMetadata(aBrowser.contentWindow).isSpecified);
+          aAllowZoom && shouldZoom && !ViewportHandler.getViewportMetadata(aBrowser.contentWindow).isSpecified);
     }
   },
 
