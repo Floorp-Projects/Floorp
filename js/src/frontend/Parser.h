@@ -214,6 +214,13 @@ struct ParseContext : public GenericParseContext
     // All inner functions in this context. Only filled in when parsing syntax.
     AutoFunctionVector innerFunctions;
 
+    // In a function context, points to a Directive struct that can be updated
+    // to reflect new directives encountered in the Directive Prologue that
+    // require reparsing the function. In global/module/generator-tail contexts,
+    // we don't need to reparse when encountering a DirectivePrologue so this
+    // pointer may be NULL.
+    Directives *newDirectives;
+
     // Set when parsing a declaration-like destructuring pattern.  This flag
     // causes PrimaryExpr to create PN_NAME parse nodes for variable references
     // which are not hooked into any definition's use chain, added to any tree
@@ -225,12 +232,9 @@ struct ParseContext : public GenericParseContext
     // they need to be treated differently.
     bool            inDeclDestructuring:1;
 
-    // True if we are in a function, saw a "use strict" directive, and weren't
-    // strict before.
-    bool            funBecameStrict:1;
-
     ParseContext(Parser<ParseHandler> *prs, GenericParseContext *parent,
-                 SharedContext *sc, unsigned staticLevel, uint32_t bodyid)
+                 SharedContext *sc, Directives *newDirectives,
+                 unsigned staticLevel, uint32_t bodyid)
       : GenericParseContext(parent, sc),
         bodyid(0),           // initialized in init()
         blockidGen(bodyid),  // used to set |bodyid| and subsequently incremented in init()
@@ -250,8 +254,8 @@ struct ParseContext : public GenericParseContext
         lexdeps(prs->context),
         funcStmts(NULL),
         innerFunctions(prs->context),
-        inDeclDestructuring(false),
-        funBecameStrict(false)
+        newDirectives(newDirectives),
+        inDeclDestructuring(false)
     {
         prs->pc = this;
     }
@@ -287,6 +291,12 @@ struct ParseContext : public GenericParseContext
         return sc->isFunctionBox() && sc->asFunctionBox()->useAsmOrInsideUseAsm();
     }
 };
+
+template <typename ParseHandler>
+inline
+Directives::Directives(ParseContext<ParseHandler> *parent)
+  : strict_(parent->sc->strict)
+{}
 
 template <typename ParseHandler>
 struct BindData;
@@ -369,7 +379,8 @@ class Parser : private AutoGCRooter, public StrictModeGetter
      */
     ObjectBox *newObjectBox(JSObject *obj);
     ModuleBox *newModuleBox(Module *module, ParseContext<ParseHandler> *pc);
-    FunctionBox *newFunctionBox(JSFunction *fun, ParseContext<ParseHandler> *pc, bool strict);
+    FunctionBox *newFunctionBox(JSFunction *fun, ParseContext<ParseHandler> *pc,
+                                Directives directives);
 
     /*
      * Create a new function object given parse context (pc) and a name (which
@@ -402,7 +413,7 @@ class Parser : private AutoGCRooter, public StrictModeGetter
 
     // Parse a function, given only its body. Used for the Function constructor.
     Node standaloneFunctionBody(HandleFunction fun, const AutoNameVector &formals,
-                                bool strict, bool *becameStrict);
+                                Directives inheritedDirectives, Directives *newDirectives);
 
     // Parse a function, given only its arguments and body. Used for lazily
     // parsed functions.
@@ -416,7 +427,7 @@ class Parser : private AutoGCRooter, public StrictModeGetter
     Node functionBody(FunctionSyntaxKind kind, FunctionBodyType type);
 
     bool functionArgsAndBodyGeneric(Node pn, HandleFunction fun, FunctionType type,
-                                    FunctionSyntaxKind kind, bool *becameStrict);
+                                    FunctionSyntaxKind kind, Directives *newDirectives);
 
     virtual bool strictMode() { return pc->sc->strict; }
 
@@ -487,7 +498,7 @@ class Parser : private AutoGCRooter, public StrictModeGetter
                      FunctionType type, FunctionSyntaxKind kind);
     bool functionArgsAndBody(Node pn, HandleFunction fun,
                              FunctionType type, FunctionSyntaxKind kind,
-                             bool strict, bool *becameStrict = NULL);
+                             Directives inheritedDirectives, Directives *newDirectives);
 
     Node unaryOpExpr(ParseNodeKind kind, JSOp op, uint32_t begin);
 

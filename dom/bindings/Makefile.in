@@ -14,7 +14,6 @@ EXPORT_LIBRARY   = 1
 FAIL_ON_WARNINGS := 1
 
 include $(topsrcdir)/config/config.mk
-include $(topsrcdir)/ipc/chromium/chromium-config.mk
 
 # Need this to find all our DOM source files.
 include $(topsrcdir)/dom/dom-config.mk
@@ -22,7 +21,7 @@ include $(topsrcdir)/dom/dom-config.mk
 include $(topsrcdir)/dom/webidl/WebIDL.mk
 
 binding_include_path := mozilla/dom
-all_webidl_files = $(webidl_files) $(generated_webidl_files)
+all_webidl_files = $(webidl_files) $(generated_webidl_files) $(preprocessed_webidl_files)
 # Set exported_binding_headers before adding the test IDL to the mix
 exported_binding_headers := $(subst .webidl,Binding.h,$(all_webidl_files))
 # Set linked_binding_cpp_files before adding the test IDL to the mix
@@ -113,6 +112,7 @@ CXXFLAGS += -Wno-uninitialized
 endif
 
 include $(topsrcdir)/config/rules.mk
+include $(topsrcdir)/ipc/chromium/chromium-config.mk
 
 # If you change bindinggen_dependencies here, change it in
 # dom/bindings/test/Makefile.in too.
@@ -141,6 +141,23 @@ $(webidl_files): %: $(webidl_base)/%
 
 $(test_webidl_files): %: $(srcdir)/test/%
 	$(INSTALL) $(IFLAGS1) $(srcdir)/test/$* .
+
+# We can't easily use PP_TARGETS here because it insists on outputting targets
+# that look like "$(CURDIR)/foo" whereas we want our target to just be "foo".
+# Make sure to include $(GLOBAL_DEPS) so we pick up changes to what symbols are
+# defined.  Also make sure to remove $@ before writing to it, because otherwise
+# if a file goes from non-preprocessed to preprocessed we can end up writing to
+# a symlink, which will clobber files in the srcdir, which is bad.
+$(preprocessed_webidl_files): %: $(webidl_base)/% $(GLOBAL_DEPS)
+	$(RM) $@
+	PYTHONDONTWRITEBYTECODE=1 $(PYTHON) \
+          $(topsrcdir)/config/Preprocessor.py $(DEFINES) $(ACDEFINES) $(XULPPFLAGS) $(webidl_base)/$* -o $@
+
+# Make is dumb and can get confused between "foo" and "$(CURDIR)/foo".  Make
+# sure that the latter depends on the former, since the latter gets used in .pp
+# files.
+all_webidl_files_absolute = $(addprefix $(CURDIR)/,$(all_webidl_files))
+$(all_webidl_files_absolute): $(CURDIR)/%: %
 
 $(binding_header_files): .BindingGen
 

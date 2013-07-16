@@ -1180,6 +1180,9 @@ var StartUI = {
       // of the keyboard transition.
       ContentAreaObserver.navBarWillBlur();
     }
+
+    if (aEvent.button == 0)
+      ContextUI.dismissTabs();
   },
 
   handleEvent: function handleEvent(aEvent) {

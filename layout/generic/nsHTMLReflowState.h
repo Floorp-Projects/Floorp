@@ -533,6 +533,15 @@ public:
                                      nscoord aContainingBlockHeight,
                                      nsMargin& aComputedOffsets);
 
+  // If a relatively positioned element, adjust the position appropriately.
+  static void ApplyRelativePositioning(const nsStyleDisplay* aDisplay,
+                                       const nsMargin& aComputedOffsets,
+                                       nsPoint* aPosition);
+
+  void ApplyRelativePositioning(nsPoint* aPosition) const {
+    ApplyRelativePositioning(mStyleDisplay, mComputedOffsets, aPosition);
+  }
+
 #ifdef DEBUG
   // Reflow trace methods.  Defined in nsFrame.cpp so they have access
   // to the display-reflow infrastructure.

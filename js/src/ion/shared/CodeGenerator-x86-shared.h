@@ -50,6 +50,7 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
     MoveResolver::MoveOperand toMoveOperand(const LAllocation *a) const;
 
     bool bailoutIf(Assembler::Condition condition, LSnapshot *snapshot);
+    bool bailoutIf(Assembler::DoubleCondition condition, LSnapshot *snapshot);
     bool bailoutFrom(Label *label, LSnapshot *snapshot);
     bool bailout(LSnapshot *snapshot);
 
