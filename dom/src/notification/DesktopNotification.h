@@ -46,10 +46,14 @@ public:
 
   DesktopNotificationCenter(nsPIDOMWindow *aWindow)
   {
+    MOZ_ASSERT(aWindow);
     mOwner = aWindow;
 
-    // Grab the uri of the document
-    mPrincipal = mOwner->GetDoc()->NodePrincipal();
+    nsCOMPtr<nsIScriptObjectPrincipal> sop = do_QueryInterface(aWindow);
+    MOZ_ASSERT(sop);
+
+    mPrincipal = sop->GetPrincipal();
+    MOZ_ASSERT(mPrincipal);
 
     SetIsDOMBinding();
   }
