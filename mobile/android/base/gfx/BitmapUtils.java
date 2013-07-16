@@ -5,14 +5,22 @@
 
 package org.mozilla.gecko.gfx;
 
+import org.mozilla.gecko.util.ThreadUtils;
+import org.mozilla.gecko.util.GeckoJarReader;
+import org.mozilla.gecko.util.UiAsyncTask;
+
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.graphics.drawable.Drawable;
+import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.util.Base64;
 import android.util.Log;
+import android.text.TextUtils;
 
 import org.mozilla.gecko.R;
 
@@ -26,6 +34,64 @@ public final class BitmapUtils {
     private static final String LOGTAG = "GeckoBitmapUtils";
 
     private BitmapUtils() {}
+
+    public interface BitmapLoader {
+        public void onBitmapFound(Drawable d);
+    }
+
+    public static void getDrawable(final Context context, final String data, final BitmapLoader loader) {
+        if (TextUtils.isEmpty(data)) {
+            loader.onBitmapFound(null);
+            return;
+        }
+
+        if (data.startsWith("data")) {
+            BitmapDrawable d = new BitmapDrawable(getBitmapFromDataURI(data));
+            loader.onBitmapFound(d);
+            return;
+        }
+
+        if (data.startsWith("jar:") || data.startsWith("file://")) {
+            (new UiAsyncTask<Void, Void, Drawable>(ThreadUtils.getBackgroundHandler()) {
+                @Override
+                public Drawable doInBackground(Void... params) {
+                    try {
+                        if (data.startsWith("jar:jar")) {
+                            return GeckoJarReader.getBitmapDrawable(context.getResources(), data);
+                        }
+
+                        URL url = new URL(data);
+                        InputStream is = (InputStream) url.getContent();
+                        try {
+                            return Drawable.createFromStream(is, "src");
+                        } finally {
+                            is.close();
+                        }
+                    } catch (Exception e) {
+                        Log.w(LOGTAG, "Unable to set icon", e);
+                    }
+                    return null;
+                }
+
+                @Override
+                public void onPostExecute(Drawable drawable) {
+                    loader.onBitmapFound(drawable);
+                }
+            }).execute();
+            return;
+        }
+
+        if(data.startsWith("drawable://")) {
+            Uri imageUri = Uri.parse(data);
+            int id = getResource(imageUri, R.drawable.ic_status_logo);
+            Drawable d = context.getResources().getDrawable(id);
+
+            loader.onBitmapFound(d);
+            return;
+        }
+
+        loader.onBitmapFound(null);
+    }
 
     public static Bitmap decodeByteArray(byte[] bytes) {
         return decodeByteArray(bytes, null);
