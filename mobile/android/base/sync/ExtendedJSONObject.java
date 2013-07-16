@@ -285,7 +285,7 @@ public class ExtendedJSONObject {
   }
 
   @SuppressWarnings("unchecked")
-  public Iterable<Entry<String, Object>> entryIterable() {
+  public Set<Entry<String, Object>> entrySet() {
     return this.object.entrySet();
   }
 

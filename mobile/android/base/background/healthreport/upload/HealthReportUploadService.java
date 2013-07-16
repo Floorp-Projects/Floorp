@@ -73,8 +73,9 @@ public class HealthReportUploadService extends BackgroundService {
     Logger.pii(LOG_TAG, "Ticking policy for profile " + profileName + " at " + profilePath + ".");
 
     final SharedPreferences sharedPrefs = getSharedPreferences();
+    final ObsoleteDocumentTracker tracker = new ObsoleteDocumentTracker(sharedPrefs);
     SubmissionClient client = new AndroidSubmissionClient(this, sharedPrefs, profilePath);
-    SubmissionPolicy policy = new SubmissionPolicy(sharedPrefs, client, uploadEnabled);
+    SubmissionPolicy policy = new SubmissionPolicy(sharedPrefs, client, tracker, uploadEnabled);
 
     final long now = System.currentTimeMillis();
     policy.tick(now);
