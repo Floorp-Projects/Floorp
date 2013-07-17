@@ -1175,6 +1175,15 @@ ContentParent::IsForApp()
     return !mAppManifestURL.IsEmpty();
 }
 
+int32_t
+ContentParent::Pid()
+{
+    if (!mSubprocess || !mSubprocess->GetChildProcessHandle()) {
+        return -1;
+    }
+    return base::GetProcId(mSubprocess->GetChildProcessHandle());
+}
+
 bool
 ContentParent::RecvReadPrefsArray(InfallibleTArray<PrefSetting>* aPrefs)
 {
