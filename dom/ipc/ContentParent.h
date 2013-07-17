@@ -146,9 +146,7 @@ public:
         return mSubprocess;
     }
 
-    int32_t Pid() {
-        return base::GetProcId(mSubprocess->GetChildProcessHandle());
-    }
+    int32_t Pid();
 
     bool NeedsPermissionsUpdate() {
         return mSendPermissionUpdates;
