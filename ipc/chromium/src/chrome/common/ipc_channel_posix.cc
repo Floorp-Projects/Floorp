@@ -293,6 +293,7 @@ void Channel::ChannelImpl::Init(Mode mode, Listener* listener) {
 #if defined(OS_MACOSX)
   last_pending_fd_id_ = 0;
 #endif
+  output_queue_length_ = 0;
 }
 
 bool Channel::ChannelImpl::CreatePipe(const std::wstring& channel_id,
@@ -364,7 +365,7 @@ bool Channel::ChannelImpl::EnqueueHelloMessage() {
     return false;
   }
 
-  output_queue_.push(msg.release());
+  OutputQueuePush(msg.release());
   return true;
 }
 
@@ -574,7 +575,7 @@ bool Channel::ChannelImpl::ProcessIncomingMessages() {
                                        IPC::Message::PRIORITY_NORMAL);
           DCHECK(m.fd_cookie() != 0);
           fdAck->set_fd_cookie(m.fd_cookie());
-          output_queue_.push(fdAck);
+          OutputQueuePush(fdAck);
 #endif
 
           m.file_descriptor_set()->SetDescriptors(
@@ -730,7 +731,7 @@ bool Channel::ChannelImpl::ProcessOutgoingMessages() {
       DLOG(INFO) << "sent message @" << msg << " on channel @" << this <<
                     " with type " << msg->type();
 #endif
-      output_queue_.pop();
+      OutputQueuePop();
       delete msg;
     }
   }
@@ -761,7 +762,7 @@ bool Channel::ChannelImpl::Send(Message* message) {
     return false;
   }
 
-  output_queue_.push(message);
+  OutputQueuePush(message);
   if (!waiting_connect_) {
     if (!is_blocked_on_write_) {
       if (!ProcessOutgoingMessages())
@@ -850,6 +851,18 @@ void Channel::ChannelImpl::CloseDescriptors(uint32_t pending_fd_id)
 }
 #endif
 
+void Channel::ChannelImpl::OutputQueuePush(Message* msg)
+{
+  output_queue_.push(msg);
+  output_queue_length_++;
+}
+
+void Channel::ChannelImpl::OutputQueuePop()
+{
+  output_queue_.pop();
+  output_queue_length_--;
+}
+
 // Called by libevent when we can write to the pipe without blocking.
 void Channel::ChannelImpl::OnFileCanWriteWithoutBlocking(int fd) {
   if (!ProcessOutgoingMessages()) {
@@ -859,7 +872,7 @@ void Channel::ChannelImpl::OnFileCanWriteWithoutBlocking(int fd) {
 }
 
 void Channel::ChannelImpl::Close() {
-  // Close can be called multiple time, so we need to make sure we're
+  // Close can be called multiple times, so we need to make sure we're
   // idempotent.
 
   // Unregister libevent for the listening socket and close it.
@@ -890,7 +903,7 @@ void Channel::ChannelImpl::Close() {
 
   while (!output_queue_.empty()) {
     Message* m = output_queue_.front();
-    output_queue_.pop();
+    OutputQueuePop();
     delete m;
   }
 
@@ -911,6 +924,16 @@ void Channel::ChannelImpl::Close() {
 #endif
 
   closed_ = true;
+}
+
+bool Channel::ChannelImpl::Unsound_IsClosed() const
+{
+  return closed_;
+}
+
+uint32_t Channel::ChannelImpl::Unsound_NumQueuedMessages() const
+{
+  return output_queue_length_;
 }
 
 //------------------------------------------------------------------------------
@@ -954,6 +977,14 @@ int Channel::GetServerFileDescriptor() const {
 
 void Channel::CloseClientFileDescriptor() {
   channel_impl_->CloseClientFileDescriptor();
+}
+
+bool Channel::Unsound_IsClosed() const {
+  return channel_impl_->Unsound_IsClosed();
+}
+
+uint32_t Channel::Unsound_NumQueuedMessages() const {
+  return channel_impl_->Unsound_NumQueuedMessages();
 }
 
 }  // namespace IPC
