@@ -74,6 +74,7 @@ public:
 
   void ExtractPacketHeaders(const ObexHeaderSet& aHeader);
   bool ExtractBlobHeaders();
+  void CheckPutFinal(uint32_t aNumRead);
 
   // Return true if there is an ongoing file-transfer session, please see
   // Bug 827267 for more information.
@@ -109,6 +110,7 @@ private:
   void ReplyToConnect();
   void ReplyToDisconnectOrAbort();
   void ReplyToPut(bool aFinal, bool aContinue);
+  void ReplyError(uint8_t aError);
   void AfterOppConnected();
   void AfterFirstPut();
   void AfterOppDisconnected();
@@ -190,6 +192,12 @@ private:
    */
   bool mWaitingForConfirmationFlag;
 
+  nsString mFileName;
+  nsString mContentType;
+  uint32_t mFileLength;
+  uint32_t mSentFileLength;
+  bool mWaitingToSendPutFinal;
+
   nsAutoArrayPtr<uint8_t> mBodySegment;
   nsAutoArrayPtr<uint8_t> mReceivedDataBuffer;
 
@@ -200,7 +208,6 @@ private:
   /**
    * A seperate member thread is required because our read calls can block
    * execution, which is not allowed to happen on the IOThread.
-   * 
    */
   nsCOMPtr<nsIThread> mReadFileThread;
   nsCOMPtr<nsIOutputStream> mOutputStream;

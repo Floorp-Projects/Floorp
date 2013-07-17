@@ -179,6 +179,16 @@ SettingsListener.observe('language.current', 'en-US', function(value) {
     function(value) {
       Services.prefs.setBoolPref('ril.radio.disabled', value);
   });
+
+  SettingsListener.observe('wap.UAProf.url', '',
+    function(value) {
+      Services.prefs.setCharPref('wap.UAProf.url', value);
+  });
+
+  SettingsListener.observe('wap.UAProf.tagname', 'x-wap-profile',
+    function(value) {
+      Services.prefs.setCharPref('wap.UAProf.tagname', value);
+  });
 })();
 
 //=================== DeviceInfo ====================
