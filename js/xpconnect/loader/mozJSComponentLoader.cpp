@@ -1075,6 +1075,7 @@ mozJSComponentLoader::UnloadModules()
         JSAutoRequest ar(mContext);
         RootedObject global(mContext, mLoaderGlobal->GetJSObject());
         if (global) {
+            JSAutoCompartment ac(mContext, global);
             JS_SetAllNonReservedSlotsToUndefined(mContext, global);
         } else {
             NS_WARNING("Going to leak!");
