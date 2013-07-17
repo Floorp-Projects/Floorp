@@ -73,7 +73,7 @@ HelperAppLauncherDialog.prototype = {
         accessKey: "",
         callback: function() {
           aLauncher.saveToDisk(null, false);
-          Services.obs.notifyObservers(null, "dl-run", "true");
+          Services.obs.notifyObservers(aLauncher.targetFile, "dl-run", "true");
         }
       },
       {
@@ -81,7 +81,7 @@ HelperAppLauncherDialog.prototype = {
         accessKey: "",
         callback: function() {
           aLauncher.saveToDisk(null, false);
-          Services.obs.notifyObservers(null, "dl-run", "false");
+          Services.obs.notifyObservers(aLauncher.targetFile, "dl-run", "false");
         }
       },
       {
@@ -104,7 +104,7 @@ HelperAppLauncherDialog.prototype = {
     let newBar = notificationBox.appendNotification(msg,
                                                     "save-download",
                                                     URI_GENERIC_ICON_DOWNLOAD,
-                                                    notificationBox.PRIORITY_WARNING_MEDIUM,
+                                                    notificationBox.PRIORITY_WARNING_HIGH,
                                                     buttons);
   },
 

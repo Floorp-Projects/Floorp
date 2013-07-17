@@ -113,8 +113,7 @@
           <xul:progressmeter anonid="progressmeter" mode="normal" value="0" flex="1" xbl:inherits="value=progress,mode=progressmode"/>
           <xul:button class="download-pause" label="&downloadPause.label;"
                       oncommand="Downloads.pauseDownload(document.getBindingParent(this));"/>
-          <xul:button class="download-cancel" label="&downloadCancel.label;"
-                      oncommand="Downloads.cancelDownload(document.getBindingParent(this));"/>
+          <xul:button class="download-cancel" label="&downloadCancel.label;"/>
         </xul:hbox>
         <xul:label class="normal" xbl:inherits="value=status" crop="end"/>
       </xul:vbox>
@@ -133,8 +132,7 @@
           <xul:progressmeter anonid="progressmeter" mode="normal" value="0" flex="1" xbl:inherits="value=progress,mode=progressmode"/>
           <xul:button class="download-resume" label="&downloadResume.label;"
                       oncommand="Downloads.resumeDownload(document.getBindingParent(this));"/>
-          <xul:button class="download-cancel" label="&downloadCancel.label;"
-                      oncommand="Downloads.cancelDownload(document.getBindingParent(this));"/>
+          <xul:button class="download-cancel" label="&downloadCancel.label;"/>
         </xul:hbox>
         <xul:label class="normal" xbl:inherits="value=status" crop="end"/>
       </xul:vbox>

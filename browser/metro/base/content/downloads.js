@@ -8,7 +8,12 @@ const URI_GENERIC_ICON_DOWNLOAD = "chrome://browser/skin/images/alert-downloads-
 var Downloads = {
   _inited: false,
   _progressAlert: null,
-  _runAfterDownload: false,
+
+  _lastSec: Infinity,
+  _notificationBox: null,
+  _progressNotification: null,
+  _progressNotificationInfo: new Map(),
+  _runDownloadBooleanMap: new Map(),
 
   get manager() {
     return Cc["@mozilla.org/download-manager;1"]
@@ -41,6 +46,9 @@ var Downloads = {
     Services.obs.addObserver(this, "dl-start", true);
     Services.obs.addObserver(this, "dl-done", true);
     Services.obs.addObserver(this, "dl-run", true);
+    Services.obs.addObserver(this, "dl-failed", true);
+
+    this._notificationBox = Browser.getNotificationBox();
   },
 
   uninit: function dh_uninit() {
@@ -48,6 +56,7 @@ var Downloads = {
       Services.obs.removeObserver(this, "dl-start");
       Services.obs.removeObserver(this, "dl-done");
       Services.obs.removeObserver(this, "dl-run");
+      Services.obs.removeObserver(this, "dl-failed");
     }
   },
 
@@ -61,7 +70,7 @@ var Downloads = {
 
     let file = this._getLocalFile(fileURI);
     try {
-      file && file.launch();
+      file && MetroUtils.launchInDesktop(aDownload.target.spec, "");
     } catch (ex) {
       Util.dumpLn("Failed to open download, with id: "+id+", download target URI spec: " + fileURI.spec);
       Util.dumpLn("Failed download source:"+(aDownload.source && aDownload.source.spec));
@@ -75,20 +84,16 @@ var Downloads = {
     let download = this.manager.getDownload(id);
 
     if (download) {
-      // TODO <sfoster> add class/mark element for removal transition?
       this.manager.removeDownload(id);
     }
   },
 
   cancelDownload: function dh_cancelDownload(aDownload) {
-    let id = aDownload.getAttribute("downloadId");
-    let download = this.manager.getDownload(id);
-    this.manager.cancelDownload(id);
+    this.manager.cancelDownload(aDownload.id);
 
-    let fileURI = download.target;
-
+    let fileURI = aDownload.target;
     if (!(fileURI && fileURI.spec)) {
-      Util.dumpLn("Cant remove download file for: "+id+", fileURI is invalid");
+      Util.dumpLn("Cant remove download file for: "+aDownload.id+", fileURI is invalid");
       return;
     }
 
@@ -97,8 +102,22 @@ var Downloads = {
       if (file && file.exists())
         file.remove(false);
     } catch (ex) {
-      Util.dumpLn("Failed to cancel download, with id: "+id+", download target URI spec: " + fileURI.spec);
+      Util.dumpLn("Failed to cancel download, with id: "+aDownload.id+", download target URI spec: " + fileURI.spec);
       Util.dumpLn("Failed download source:"+(aDownload.source && aDownload.source.spec));
+    }
+    this._progressNotificationInfo.delete(aDownload.guid);
+    this._runDownloadBooleanMap.delete(aDownload.targetFile.path);
+    this._downloadCount--;
+    if (this._progressNotificationInfo.size == 0) {
+      this._notificationBox.removeNotification(this._progressNotification);
+      this._progressNotification = null;
+    }
+  },
+
+  // Cancels all downloads.
+  cancelDownloads: function dh_cancelDownloads() {
+    for (let info of this._progressNotificationInfo) {
+      this.cancelDownload(info[1].download);
     }
   },
 
@@ -110,11 +129,6 @@ var Downloads = {
   resumeDownload: function dh_resumeDownload(aDownload) {
     let id = aDownload.getAttribute("downloadId");
     this.manager.resumeDownload(id);
-  },
-
-  retryDownload: function dh_retryDownload(aDownload) {
-    let id = aDownload.getAttribute("downloadId");
-    this.manager.retryDownload(id);
   },
 
   showPage: function dh_showPage(aDownload) {
@@ -146,36 +160,187 @@ var Downloads = {
     notifier.showAlertNotification(aIcon, aTitle, aMessage, true, "", observer, aName);
   },
 
-  observe: function (aSubject, aTopic, aData) {
-    let download = null;
-    if (aSubject != null) {
-      download = aSubject.QueryInterface(Ci.nsIDownload);
+  showNotification: function dh_showNotification(title, msg, buttons, priority) {
+    return this._notificationBox.appendNotification(msg,
+                                              title,
+                                              URI_GENERIC_ICON_DOWNLOAD,
+                                              priority,
+                                              buttons);
+  },
+
+  _showDownloadFailedNotification: function (aDownload) {
+    let tryAgainButtonText =
+      Strings.browser.GetStringFromName("downloadTryAgain");
+    let cancelButtonText =
+      Strings.browser.GetStringFromName("downloadCancel");
+
+    let message = Strings.browser.formatStringFromName("alertDownloadFailed",
+      [aDownload.displayName], 1);
+
+    let buttons = [
+      {
+        isDefault: true,
+        label: tryAgainButtonText,
+        accessKey: "",
+        callback: function() {
+          Downloads.manager.retryDownload(aDownload.id);
+        }
+      },
+      {
+        label: cancelButtonText,
+        accessKey: "",
+        callback: function() {
+          Downloads.cancelDownload(aDownload);
+        }
+      }
+    ];
+    this.showNotification("download-failed", message, buttons,
+      this._notificationBox.PRIORITY_WARNING_HIGH);
+  },
+
+  _showDownloadCompleteNotification: function (aDownload) {
+    let runButtonText =
+      Strings.browser.GetStringFromName("downloadRun");
+    let showInFilesButtonText =
+      Strings.browser.GetStringFromName("downloadShowInFiles");
+
+    message = Strings.browser.formatStringFromName("alertDownloadsDone2",
+      [aDownload.displayName], 1);
+
+    let buttons = [
+      {
+        isDefault: true,
+        label: runButtonText,
+        accessKey: "",
+        callback: function() {
+          Downloads.openDownload(aDownload);
+        }
+      },
+      {
+        label: showInFilesButtonText,
+        accessKey: "",
+        callback: function() {
+          let fileURI = aDownload.target;
+          let file = Downloads._getLocalFile(fileURI);
+          file.reveal();
+        }
+      }
+    ];
+    this.showNotification("download-complete", message, buttons,
+      this._notificationBox.PRIORITY_WARNING_MEDIUM);
+  },
+
+  _computeDownloadProgressString: function dv_computeDownloadProgressString(aDownload) {
+    let totTransferred = 0, totSize = 0, totSecondsLeft = 0;
+    for (let info of this._progressNotificationInfo) {
+      let size = info[1].download.size;
+      let amountTransferred = info[1].download.amountTransferred;
+      let speed = info[1].download.speed;
+
+      totTransferred += amountTransferred;
+      totSize += size;
+      totSecondsLeft += ((size - amountTransferred) / speed);
     }
-    let msgKey = "";
+    // Compute progress in bytes.
+    let amountTransferred = Util.getDownloadSize(totTransferred);
+    let size = Util.getDownloadSize(totSize);
+    let progress = amountTransferred + "/" + size;
+
+    // Compute progress in time.;
+    let [timeLeft, newLast] = DownloadUtils.getTimeLeft(totSecondsLeft, this._lastSec);
+    this._lastSec = newLast;
+
+    if (this._progressNotificationInfo.size == 1) {
+      return Strings.browser.GetStringFromName("alertDownloadsStart2")
+        .replace("#1", aDownload.displayName)
+        .replace("#2", progress)
+        .replace("#3", timeLeft)
+    }
+
+    let numDownloads = this._progressNotificationInfo.size;
+    return PluralForm.get(numDownloads,
+                          Strings.browser.GetStringFromName("alertDownloadMultiple"))
+                          .replace("#1", numDownloads)
+                          .replace("#2", progress)
+                          .replace("#3", timeLeft);
+  },
+
+  _saveDownloadData: function dv_saveDownloadData(aDownload) {
+    if (!this._progressNotificationInfo.get(aDownload.guid)) {
+      this._progressNotificationInfo.set(aDownload.guid, {});
+    }
+    let infoObj = this._progressNotificationInfo.get(aDownload.guid);
+    infoObj.download = aDownload;
+    this._progressNotificationInfo.set(aDownload.guid, infoObj);
+  },
+
+  updateInfobar: function dv_updateInfobar(aDownload) {
+    this._saveDownloadData(aDownload);
+    let message = this._computeDownloadProgressString(aDownload);
+
+    if (this._progressNotification == null ||
+        !this._notificationBox.getNotificationWithValue("download-progress")) {
+
+      let cancelButtonText =
+              Strings.browser.GetStringFromName("downloadCancel");
+
+      let buttons = [
+        {
+          isDefault: false,
+          label: cancelButtonText,
+          accessKey: "",
+          callback: function() {
+            Downloads.cancelDownloads();
+          }
+        }
+      ];
+
+      this._progressNotification =
+        this.showNotification("download-progress", message, buttons,
+        this._notificationBox.PRIORITY_WARNING_LOW);
+    } else {
+      this._progressNotification.label = message;
+    }
+  },
+
+  observe: function (aSubject, aTopic, aData) {
+    let message = "";
+    let msgTitle = "";
 
     switch (aTopic) {
       case "dl-run":
-        this._runAfterDownload = (aData == 'true');
+        let file = aSubject.QueryInterface(Ci.nsIFile);
+        this._runDownloadBooleanMap.set(file.path, (aData == 'true'));
         break;
       case "dl-start":
-        msgKey = "alertDownloadsStart";
+        let download = aSubject.QueryInterface(Ci.nsIDownload);
+        if (!this._progressNotificationInfo.get(download.guid)) {
+          this._progressNotificationInfo.set(download.guid, {});
+        }
         if (!this._progressAlert) {
           this._progressAlert = new AlertDownloadProgressListener();
           this.manager.addListener(this._progressAlert);
         }
+        this.updateInfobar(download);
         break;
       case "dl-done":
-        msgKey = "alertDownloadsDone";
-        if (this._runAfterDownload) {
+        download = aSubject.QueryInterface(Ci.nsIDownload);
+        if (this._runDownloadBooleanMap.get(download.targetFile.path)) {
           this.openDownload(download);
+        } else {
+          this._showDownloadCompleteNotification(download);
+        }
+
+        this._progressNotificationInfo.delete(download.guid);
+        this._runDownloadBooleanMap.delete(download.targetFile.path);
+        if (this._progressNotificationInfo.size == 0) {
+          this._notificationBox.removeNotification(this._progressNotification);
+          this._progressNotification = null;
         }
         break;
-    }
-
-    if (msgKey) {
-      let message = Strings.browser.formatStringFromName(msgKey, [download.displayName], 1);
-      let url = download.target.spec.replace("file:", "download:");
-      this.showAlert(url, message);
+      case "dl-failed":
+        download = aSubject.QueryInterface(Ci.nsIDownload);
+        break;
     }
   },
 
@@ -243,7 +408,7 @@ DownloadsView.prototype = {
       iconURI: "moz-icon://" + aDownload.displayName + "?size=64",
       date: DownloadUtils.getReadableDates(new Date())[0],
       domain: DownloadUtils.getURIHost(aDownload.source.spec)[0],
-      size: this._getDownloadSize(aDownload.size),
+      size: Util.getDownloadSize(aDownload.size),
       state: aDownload.state
     };
 
@@ -253,14 +418,6 @@ DownloadsView.prototype = {
       anItem.setAttribute(name, aAttrs[name]);
     if (anItem.refresh)
       anItem.refresh();
-  },
-
-  _getDownloadSize: function dv__getDownloadSize (aSize) {
-    let displaySize = DownloadUtils.convertByteUnits(aSize);
-    if (displaySize[0] > 0) // [0] is size, [1] is units
-      return displaySize.join("");
-    else
-      return Strings.browser.GetStringFromName("downloadsUnknownSize");
   },
 
   _initStatement: function dv__initStatement() {
@@ -296,7 +453,7 @@ DownloadsView.prototype = {
         iconURI: "moz-icon://" + this._stmt.row.name + "?size=25",
         date: DownloadUtils.getReadableDates(new Date(this._stmt.row.endTime / 1000))[0],
         domain: DownloadUtils.getURIHost(this._stmt.row.source)[0],
-        size: this._getDownloadSize(this._stmt.row.maxBytes),
+        size: Util.getDownloadSize(this._stmt.row.maxBytes),
         state: this._stmt.row.state
       };
 
@@ -379,6 +536,12 @@ DownloadsView.prototype = {
 
     let attrs = this._getAttrsForDownload(aDownload);
     this._updateItemWithAttrs(item, attrs);
+
+    if (Downloads._progressNotification != null) {
+      Downloads._saveDownloadData(aDownload);
+      Downloads._progressNotification.label =
+        Downloads._computeDownloadProgressString(aDownload);
+    }
   },
 
   removeDownload: function dv_removeDownload(aDownload) {
@@ -492,7 +655,7 @@ AlertDownloadProgressListener.prototype = {
       Downloads.showAlert(aDownload.target.spec.replace("file:", "download:"),
                           strings.GetStringFromName("alertDownloadsNoSpace"),
                           strings.GetStringFromName("alertDownloadsSize"));
-      Downloads.cancelDownload(aDownload.id);
+      Downloads.cancelDownload(aDownload);
     }
   },
 
