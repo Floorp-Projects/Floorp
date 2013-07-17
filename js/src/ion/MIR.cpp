@@ -153,7 +153,7 @@ MDefinition::valueHash() const
 }
 
 bool
-MDefinition::congruentIfOperandsEqual(MDefinition * const &ins) const
+MDefinition::congruentIfOperandsEqual(MDefinition *ins) const
 {
     if (numOperands() != ins->numOperands())
         return false;
@@ -387,7 +387,7 @@ MConstant::valueHash() const
     return (HashNumber)JSVAL_TO_IMPL(value_).asBits;
 }
 bool
-MConstant::congruentTo(MDefinition * const &ins) const
+MConstant::congruentTo(MDefinition *ins) const
 {
     if (!ins->isConstant())
         return false;
@@ -488,7 +488,7 @@ MParameter::valueHash() const
 }
 
 bool
-MParameter::congruentTo(MDefinition * const &ins) const
+MParameter::congruentTo(MDefinition *ins) const
 {
     if (!ins->isParameter())
         return false;
@@ -641,7 +641,7 @@ MPhi::foldsTo(bool useValueNumbers)
 }
 
 bool
-MPhi::congruentTo(MDefinition *const &ins) const
+MPhi::congruentTo(MDefinition *ins) const
 {
     if (!ins->isPhi())
         return false;
