@@ -7206,11 +7206,12 @@ JS_GetScriptedGlobal(JSContext *cx)
 JS_PUBLIC_API(JSBool)
 JS_PreventExtensions(JSContext *cx, JS::HandleObject obj)
 {
-    bool extensible;
-    if (!JSObject::isExtensible(cx, obj, &extensible))
-        return false;
-    if (!extensible)
-        return true;
+    JSBool extensible;
+    if (!JS_IsExtensible(cx, obj, &extensible))
+        return JS_TRUE;
+    if (extensible)
+        return JS_TRUE;
+
     return JSObject::preventExtensions(cx, obj);
 }
 
