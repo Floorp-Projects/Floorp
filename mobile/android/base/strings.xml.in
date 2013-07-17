@@ -234,8 +234,6 @@
   <string name="button_yes">&button_yes;</string>
   <string name="button_no">&button_no;</string>
 
-  <string name="abouthome_addons_title">&abouthome_addons_title;</string>
-  <string name="abouthome_addons_browse">&abouthome_addons_browse;</string>
   <string name="abouthome_last_tabs_title">&abouthome_last_tabs_title;</string>
   <string name="abouthome_last_tabs_open">&abouthome_last_tabs_open;</string>
   <string name="abouthome_top_sites_title">&abouthome_top_sites_title;</string>

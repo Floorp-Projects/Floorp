@@ -5,7 +5,6 @@
 
 <resources>
 
-    <dimen name="abouthome_addon_icon_size">32dp</dimen>
     <dimen name="abouthome_content_top_sites_item_height">110dp</dimen>
     <dimen name="abouthome_gutter_small">0dp</dimen>
     <dimen name="abouthome_gutter_large">0dp</dimen>
