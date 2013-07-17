@@ -43,7 +43,7 @@ var i32 = new Int32Array(4096/4);
 for (var i = 0; i < 100; i++)
     i32[i] = i;
 var f2Main = f2(this, null, i32.buffer);
-ok(f2Main, "f2.main is an asm.js function");
+ok(jsFuns.isAsmJSFunction(f2Main), "f2.main is an asm.js function");
 ok(f2Main(4) == 6, "f2.main(4)");
 ok(f2Main(100) == 4950, "f2.main(100)");
 ok(f2Main(5000) == 4950, "f2.main(5000)");
@@ -63,8 +63,8 @@ function f3(stdlib, foreign, buffer) {
     return main;
 }
 var f3Main = f3(this, null, i32.buffer);
-ok(f3Main, "f3.main is an asm.js function");
-ok(f3Main(2000000, 1000) == ((4950*2000000)|0), "f3.main(2000000, 1000)");
+ok(jsFuns.isAsmJSFunction(f3Main), "f3.main is an asm.js function");
+ok(f3Main(200000, 1000) == ((4950*200000)|0), "f3.main(200000, 1000)");
 
 var w = new Worker('http://mochi.test:8888/tests/js/xpconnect/tests/mochitest/file_asmjs.js');
 w.onmessage = function(e) {
