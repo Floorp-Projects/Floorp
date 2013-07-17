@@ -8,8 +8,6 @@
               android:id="@+id/browser_toolbar"
               style="@style/BrowserToolbar"
               android:layout_centerVertical="true"
-              android:clipChildren="false"
-              android:clipToPadding="false"
               android:clickable="true"
               android:focusable="true">
 
