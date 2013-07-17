@@ -434,7 +434,7 @@ JavaScriptChild::AnswerIsExtensible(const ObjectId &objId, ReturnStatus *rs, boo
         return fail(cx, rs);
 
     *result = !!extensible;
-    return ok(rs);
+    return true;
 }
 
 bool

@@ -60,8 +60,6 @@ public:
     {
         nsCString version;
         nsCString buildID;
-        nsCString name;
-        nsCString UAName;
     };
 
     bool Init(MessageLoop* aIOLoop,
@@ -196,8 +194,7 @@ public:
     virtual bool RecvGarbageCollect();
     virtual bool RecvCycleCollect();
 
-    virtual bool RecvAppInfo(const nsCString& version, const nsCString& buildID,
-                             const nsCString& name, const nsCString& UAName);
+    virtual bool RecvAppInfo(const nsCString& version, const nsCString& buildID);
 
     virtual bool RecvLastPrivateDocShellDestroyed();
 

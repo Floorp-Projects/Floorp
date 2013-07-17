@@ -27,15 +27,8 @@ function make_object()
   o.b = true;
   o.s = "hello";
   o.x = { i: 10 };
-  o.f = function () { return 99; };
-
-  // Doing anything with this Proxy will throw.
-  var throwing = new Proxy({}, new Proxy({}, {
-      get: function (trap) { throw trap; }
-    }));
-
+  o.f = function () { return 99; }
   return { "data": o,
-           "throwing": throwing,
            "document": content.document
          };
 }

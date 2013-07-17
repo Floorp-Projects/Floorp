@@ -29,24 +29,12 @@ let WebProgressListener = {
     };
   },
 
-  _setupObjects: function setupObjects(aWebProgress) {
-    let win = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
-                      .getInterface(Ci.nsIDOMWindow);
-    return {
-      contentWindow: win,
-      // DOMWindow is not necessarily the content-window with subframes.
-      DOMWindow: aWebProgress.DOMWindow
-    };
-  },
-
   onStateChange: function onStateChange(aWebProgress, aRequest, aStateFlags, aStatus) {
     let json = this._setupJSON(aWebProgress, aRequest);
-    let objects = this._setupObjects(aWebProgress);
-
     json.stateFlags = aStateFlags;
     json.status = aStatus;
 
-    sendAsyncMessage("Content:StateChange", json, objects);
+    sendAsyncMessage("Content:StateChange", json);
   },
 
   onProgressChange: function onProgressChange(aWebProgress, aRequest, aCurSelf, aMaxSelf, aCurTotal, aMaxTotal) {
@@ -57,35 +45,29 @@ let WebProgressListener = {
     let charset = content.document.characterSet;
 
     let json = this._setupJSON(aWebProgress, aRequest);
-    let objects = this._setupObjects(aWebProgress);
-
     json.documentURI = aWebProgress.DOMWindow.document.documentURIObject.spec;
     json.location = spec;
     json.canGoBack = docShell.canGoBack;
     json.canGoForward = docShell.canGoForward;
     json.charset = charset.toString();
 
-    sendAsyncMessage("Content:LocationChange", json, objects);
+    sendAsyncMessage("Content:LocationChange", json);
   },
 
   onStatusChange: function onStatusChange(aWebProgress, aRequest, aStatus, aMessage) {
     let json = this._setupJSON(aWebProgress, aRequest);
-    let objects = this._setupObjects(aWebProgress);
-
     json.status = aStatus;
     json.message = aMessage;
 
-    sendAsyncMessage("Content:StatusChange", json, objects);
+    sendAsyncMessage("Content:StatusChange", json);
   },
 
   onSecurityChange: function onSecurityChange(aWebProgress, aRequest, aState) {
     let json = this._setupJSON(aWebProgress, aRequest);
-    let objects = this._setupObjects(aWebProgress);
-
     json.state = aState;
     json.status = SecurityUI.getSSLStatusAsString();
 
-    sendAsyncMessage("Content:SecurityChange", json, objects);
+    sendAsyncMessage("Content:SecurityChange", json);
   },
 
   QueryInterface: function QueryInterface(aIID) {
