@@ -217,21 +217,14 @@ var gPluginHandler = {
   },
 
   handleEvent : function(event) {
-    let plugin;
-    let doc;
+    let plugin = event.target;
+    let doc = plugin.ownerDocument;
+
+    // We're expecting the target to be a plugin.
+    if (!(plugin instanceof Ci.nsIObjectLoadingContent))
+      return;
 
     let eventType = event.type;
-    if (eventType === "PluginRemoved") {
-      doc = event.target;
-    }
-    else {
-      plugin = event.target;
-      doc = plugin.ownerDocument;
-
-      if (!(plugin instanceof Ci.nsIObjectLoadingContent))
-        return;
-    }
-
     if (eventType == "PluginBindingAttached") {
       // The plugin binding fires this event when it is created.
       // As an untrusted event, ensure that this object actually has a binding
@@ -311,7 +304,6 @@ var gPluginHandler = {
         break;
 
       case "PluginInstantiated":
-      case "PluginRemoved":
         this._showClickToPlayNotification(browser);
         break;
     }
@@ -694,12 +686,18 @@ var gPluginHandler = {
 
     switch (aNewState) {
       case "allownow":
+        if (aPluginInfo.fallbackType == Ci.nsIObjectLoadingContent.PLUGIN_ACTIVE) {
+          return;
+        }
         permission = Ci.nsIPermissionManager.ALLOW_ACTION;
         expireType = Ci.nsIPermissionManager.EXPIRE_SESSION;
         expireTime = Date.now() + Services.prefs.getIntPref(this.PREF_SESSION_PERSIST_MINUTES) * 60 * 1000;
         break;
 
       case "allowalways":
+        if (aPluginInfo.fallbackType == Ci.nsIObjectLoadingContent.PLUGIN_ACTIVE) {
+          return;
+        }
         permission = Ci.nsIPermissionManager.ALLOW_ACTION;
         expireType = Ci.nsIPermissionManager.EXPIRE_TIME;
         expireTime = Date.now() +
@@ -707,28 +705,25 @@ var gPluginHandler = {
         break;
 
       case "block":
+        if (aPluginInfo.fallbackType != Ci.nsIObjectLoadingContent.PLUGIN_ACTIVE) {
+          return;
+        }
         permission = Ci.nsIPermissionManager.PROMPT_ACTION;
         expireType = Ci.nsIPermissionManager.EXPIRE_NEVER;
         expireTime = 0;
         break;
 
-      // In case a plugin has already been allowed in another tab, the "continue allowing" button
-      // shouldn't change any permissions but should run the plugin-enablement code below.
-      case "continue":
-        break;
       default:
         Cu.reportError(Error("Unexpected plugin state: " + aNewState));
         return;
     }
 
     let browser = aNotification.browser;
-    if (aNewState != "continue") {
-      Services.perms.add(browser.currentURI, aPluginInfo.permissionString,
-                         permission, expireType, expireTime);
+    Services.perms.add(browser.currentURI, aPluginInfo.permissionString,
+                       permission, expireType, expireTime);
 
-      if (aNewState == "block") {
-        return;
-      }
+    if (aNewState == "block") {
+      return;
     }
 
     // Manually activate the plugins that would have been automatically
@@ -771,7 +766,8 @@ var gPluginHandler = {
         fallbackType == plugin.PLUGIN_BLOCKLISTED;
     });
     let dismissed = notification ? notification.dismissed : true;
-    if (aPrimaryPlugin)
+    // Always show the doorhanger if the anchor is not available.
+    if (!isElementVisible(gURLBar) || aPrimaryPlugin)
       dismissed = false;
 
     let primaryPluginPermission = null;
