@@ -640,6 +640,21 @@ public:
                              nsBindingManager* aOldBindingManager = nullptr) = 0;
 
   /**
+   * Gets the insertion parent element of the XBL binding.
+   * The insertion parent is our one true parent in the transformed DOM.
+   *
+   * @return the insertion parent element.
+   */
+  virtual nsIContent *GetXBLInsertionParent() const = 0;
+
+  /**
+   * Sets the insertion parent element of the XBL binding.
+   *
+   * @param aContent The insertion parent element.
+   */
+  virtual void SetXBLInsertionParent(nsIContent* aContent) = 0;
+
+  /**
    * Returns the content node that is the parent of this node in the flattened
    * tree. For nodes that are not filtered into an insertion point, this
    * simply returns their DOM parent in the original DOM tree.

@@ -150,8 +150,7 @@ nsIContent*
 nsIContent::GetFlattenedTreeParent() const
 {
   if (HasFlag(NODE_MAY_BE_IN_BINDING_MNGR)) {
-    nsIContent* parent = OwnerDoc()->BindingManager()->
-      GetInsertionParent(const_cast<nsIContent*>(this));
+    nsIContent* parent = GetXBLInsertionParent();
     if (parent) {
       return parent;
     }
@@ -568,6 +567,9 @@ FragmentOrElement::nsDOMSlots::Traverse(nsCycleCollectionTraversalCallback &cb, 
   NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mSlots->mXBLBinding");
   cb.NoteNativeChild(mXBLBinding, NS_CYCLE_COLLECTION_PARTICIPANT(nsXBLBinding));
 
+  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mSlots->mXBLInsertionParent");
+  cb.NoteXPCOMChild(mXBLInsertionParent.get());
+
   NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mSlots->mChildrenList");
   cb.NoteXPCOMChild(NS_ISUPPORTS_CAST(nsIDOMNodeList*, mChildrenList));
 
@@ -587,6 +589,7 @@ FragmentOrElement::nsDOMSlots::Unlink(bool aIsXUL)
   if (aIsXUL)
     NS_IF_RELEASE(mControllers);
   mXBLBinding = nullptr;
+  mXBLInsertionParent = nullptr;
   mChildrenList = nullptr;
   mUndoManager = nullptr;
   if (mClassList) {
@@ -806,8 +809,7 @@ nsIContent::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
   // check for an anonymous parent
   // XXX XBL2/sXBL issue
   if (HasFlag(NODE_MAY_BE_IN_BINDING_MNGR)) {
-    nsIContent* insertionParent = OwnerDoc()->BindingManager()->
-      GetInsertionParent(this);
+    nsIContent* insertionParent = GetXBLInsertionParent();
     NS_ASSERTION(!(aVisitor.mEventTargetAtParent && insertionParent &&
                    aVisitor.mEventTargetAtParent != insertionParent),
                  "Retargeting and having insertion parent!");
@@ -941,6 +943,29 @@ FragmentOrElement::SetXBLBinding(nsXBLBinding* aBinding,
       oldBinding->SetBoundElement(nullptr);
     }
   }
+}
+
+nsIContent*
+FragmentOrElement::GetXBLInsertionParent() const
+{
+  if (HasFlag(NODE_MAY_BE_IN_BINDING_MNGR)) {
+    nsDOMSlots *slots = GetExistingDOMSlots();
+    if (slots) {
+      return slots->mXBLInsertionParent;
+    }
+  }
+
+  return nullptr;
+}
+
+void
+FragmentOrElement::SetXBLInsertionParent(nsIContent* aContent)
+{
+  nsDOMSlots *slots = DOMSlots();
+  if (aContent) {
+    SetFlags(NODE_MAY_BE_IN_BINDING_MNGR);
+  }
+  slots->mXBLInsertionParent = aContent;
 }
 
 nsresult

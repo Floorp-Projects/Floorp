@@ -3567,8 +3567,7 @@ nsContentUtils::HasMutationListeners(nsINode* aNode,
 
     if (aNode->IsNodeOfType(nsINode::eCONTENT)) {
       nsIContent* content = static_cast<nsIContent*>(aNode);
-      nsIContent* insertionParent =
-        doc->BindingManager()->GetInsertionParent(content);
+      nsIContent* insertionParent = content->GetXBLInsertionParent();
       if (insertionParent) {
         aNode = insertionParent;
         continue;
