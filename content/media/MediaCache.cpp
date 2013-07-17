@@ -2192,6 +2192,18 @@ MediaCacheStream::Read(char* aBuffer, uint32_t aCount, uint32_t* aBytes)
 }
 
 nsresult
+MediaCacheStream::ReadAt(int64_t aOffset, char* aBuffer,
+                         uint32_t aCount, uint32_t* aBytes)
+{
+  NS_ASSERTION(!NS_IsMainThread(), "Don't call on main thread");
+
+  ReentrantMonitorAutoEnter mon(gMediaCache->GetReentrantMonitor());
+  nsresult rv = Seek(nsISeekableStream::NS_SEEK_SET, aOffset);
+  if (NS_FAILED(rv)) return rv;
+  return Read(aBuffer, aCount, aBytes);
+}
+
+nsresult
 MediaCacheStream::ReadFromCache(char* aBuffer,
                                   int64_t aOffset,
                                   int64_t aCount)
