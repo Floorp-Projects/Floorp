@@ -6,12 +6,12 @@ loadRelativeToScript('utility.js');
 loadRelativeToScript('annotations.js');
 loadRelativeToScript('loadCallgraph.js');
 
-if (typeof arguments[0] != 'string')
+if (typeof scriptArgs[0] != 'string')
     throw "Usage: computeGCFunctions.js <callgraph.txt>";
 
 print("Time: " + new Date);
 
-loadCallgraph(arguments[0]);
+loadCallgraph(scriptArgs[0]);
 
 for (var name in gcFunctions) {
     print("");
