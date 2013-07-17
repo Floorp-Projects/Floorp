@@ -3019,7 +3019,8 @@ class MAbs
     }
     static MAbs *NewAsmJS(MDefinition *num, MIRType type) {
         MAbs *ins = new MAbs(num, type);
-        ins->implicitTruncate_ = true;
+        if (type == MIRType_Int32)
+            ins->implicitTruncate_ = true;
         return ins;
     }
     MDefinition *num() const {
