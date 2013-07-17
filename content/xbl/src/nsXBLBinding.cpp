@@ -358,7 +358,7 @@ nsXBLBinding::GenerateAnonymousContent()
     } else {
       // It is odd to come into this code if mInsertionPoints is not empty, but
       // we need to make sure to do the compatibility hack below if the bound
-      // node has any non <xul:template> or <xul:observer> children.
+      // node has any non <xul:template> or <xul:observes> children.
       ExplicitChildIterator iter(mBoundElement);
       for (nsIContent* child = iter.GetNextChild(); child; child = iter.GetNextChild()) {
         XBLChildrenElement* point = FindInsertionPointForInternal(child);
@@ -368,7 +368,7 @@ nsXBLBinding::GenerateAnonymousContent()
           nsINodeInfo *ni = child->NodeInfo();
           if (ni->NamespaceID() != kNameSpaceID_XUL ||
               (!ni->Equals(nsGkAtoms::_template) &&
-               !ni->Equals(nsGkAtoms::observer))) {
+               !ni->Equals(nsGkAtoms::observes))) {
             // Compatibility hack. For some reason the original XBL
             // implementation dropped the content of a binding if any child of
             // the bound element didn't match any of the <children> in the
