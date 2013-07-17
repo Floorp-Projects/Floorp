@@ -274,9 +274,7 @@ this.AccessFu = {
       case 'Accessibility:Focus':
         this._focused = JSON.parse(aData);
         if (this._focused) {
-          let mm = Utils.getMessageManager(Utils.CurrentBrowser);
-          mm.sendAsyncMessage('AccessFu:VirtualCursor',
-                              {action: 'whereIsIt', move: true});
+          this.showCurrent(true);
         }
         break;
       case 'Accessibility:MoveCaret':
@@ -327,18 +325,22 @@ this.AccessFu = {
       case 'TabSelect':
       {
         if (this._focused) {
-          let mm = Utils.getMessageManager(Utils.CurrentBrowser);
           // We delay this for half a second so the awesomebar could close,
           // and we could use the current coordinates for the content item.
           // XXX TODO figure out how to avoid magic wait here.
           Utils.win.setTimeout(
             function () {
-              mm.sendAsyncMessage('AccessFu:VirtualCursor', {action: 'whereIsIt'});
-            }, 500);
+              this.showCurrent(false);
+            }.bind(this), 500);
         }
         break;
       }
     }
+  },
+
+  showCurrent: function showCurrent(aMove) {
+    let mm = Utils.getMessageManager(Utils.CurrentBrowser);
+    mm.sendAsyncMessage('AccessFu:ShowCurrent', { move: aMove });
   },
 
   announce: function announce(aAnnouncement) {
@@ -632,8 +634,7 @@ var Input = {
     switch (gestureName) {
       case 'dwell1':
       case 'explore1':
-        this.moveCursor('moveToPoint', 'SimpleTouch', 'gesture',
-                        aGesture.x, aGesture.y);
+        this.moveToPoint('SimpleTouch', aGesture.x, aGesture.y);
         break;
       case 'doubletap1':
         this.activateCurrent();
@@ -754,12 +755,18 @@ var Input = {
     aEvent.stopPropagation();
   },
 
-  moveCursor: function moveCursor(aAction, aRule, aInputType, aX, aY) {
+  moveToPoint: function moveToPoint(aRule, aX, aY) {
     let mm = Utils.getMessageManager(Utils.CurrentBrowser);
-    mm.sendAsyncMessage('AccessFu:VirtualCursor',
+    mm.sendAsyncMessage('AccessFu:MoveToPoint', {rule: aRule,
+                                                 x: aX, y: aY,
+                                                 origin: 'top'});
+  },
+
+  moveCursor: function moveCursor(aAction, aRule, aInputType) {
+    let mm = Utils.getMessageManager(Utils.CurrentBrowser);
+    mm.sendAsyncMessage('AccessFu:MoveCursor',
                         {action: aAction, rule: aRule,
-                         x: aX, y: aY, origin: 'top',
-                         inputType: aInputType});
+                         origin: 'top', inputType: aInputType});
   },
 
   moveCaret: function moveCaret(aDetails) {

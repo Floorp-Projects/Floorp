@@ -164,6 +164,42 @@ let tests = [
     win.close();
   },
 
+  function openPrivateWindowDuringCapture() {
+    let url = "http://example.com/";
+    let file = fileForURL(url);
+    ok(!file.exists(), "Thumbnail file should not already exist.");
+
+    let deferred = imports.Promise.defer();
+
+    let waitCount = 0;
+    function maybeFinish() {
+      if (++waitCount == 2)
+        deferred.resolve();
+    }
+
+    imports.BackgroundPageThumbs.capture(url, {
+      onDone: function (capturedURL) {
+        is(capturedURL, url, "Captured URL should be URL passed to capture.");
+        ok(!file.exists(),
+           "Thumbnail file should not exist because a private window " +
+           "was opened during the capture.");
+        maybeFinish();
+      },
+    });
+
+    // Opening the private window at this point relies on a couple of
+    // implementation details: (1) The capture will start immediately and
+    // synchronously (since at this point in the test, the service is
+    // initialized and its queue is empty), and (2) when it starts the capture
+    // registers with the window watcher.
+    openPrivateWindow().then(function (win) {
+      win.close();
+      maybeFinish();
+    });
+
+    yield deferred.promise;
+  },
+
   function noCookies() {
     // Visit the test page in the browser and tell it to set a cookie.
     let url = testPageURL({ setGreenCookie: true });
@@ -263,7 +299,7 @@ let tests = [
     imports.BackgroundPageThumbs.capture(url, {onDone: doneCallback});
     imports.BackgroundPageThumbs.capture(url, {onDone: doneCallback});
     yield deferred.promise;
-  }
+  },
 ];
 
 function capture(url, options) {

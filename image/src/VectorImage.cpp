@@ -230,9 +230,11 @@ class SVGDrawingCallback : public gfxDrawingCallback {
 public:
   SVGDrawingCallback(SVGDocumentWrapper* aSVGDocumentWrapper,
                      const nsIntRect& aViewport,
+                     const gfxSize& aScale,
                      uint32_t aImageFlags) :
     mSVGDocumentWrapper(aSVGDocumentWrapper),
     mViewport(aViewport),
+    mScale(aScale),
     mImageFlags(aImageFlags)
   {}
   virtual bool operator()(gfxContext* aContext,
@@ -242,6 +244,7 @@ public:
 private:
   nsRefPtr<SVGDocumentWrapper> mSVGDocumentWrapper;
   const nsIntRect mViewport;
+  const gfxSize   mScale;
   uint32_t        mImageFlags;
 };
 
@@ -271,6 +274,7 @@ SVGDrawingCallback::operator()(gfxContext* aContext,
 
   gfxContextMatrixAutoSaveRestore contextMatrixRestorer(aContext);
   aContext->Multiply(gfxMatrix(aTransform).Invert());
+  aContext->Scale(1.0 / mScale.width, 1.0 / mScale.height);
 
   nsPresContext* presContext = presShell->GetPresContext();
   MOZ_ASSERT(presContext, "pres shell w/out pres context");
@@ -698,17 +702,10 @@ VectorImage::Draw(gfxContext* aContext,
   // if we hit the tiling path. Unfortunately, the temporary surface isn't
   // created at the size at which we'll ultimately draw, causing fuzzy output.
   // To fix this we pre-apply the transform's scaling to the drawing parameters
-  // and then remove the scaling from the transform, so the fact that temporary
+  // and remove the scaling from the transform, so the fact that temporary
   // surfaces won't take the scaling into account doesn't matter. (Bug 600207.)
   gfxSize scale(aUserSpaceToImageSpace.ScaleFactors(true));
   gfxPoint translation(aUserSpaceToImageSpace.GetTranslation());
-
-  // Rescale everything.
-  nsIntSize scaledViewport(aViewportSize.width / scale.width,
-                           aViewportSize.height / scale.height);
-  gfxIntSize scaledViewportGfx(scaledViewport.width, scaledViewport.height);
-  nsIntRect scaledSubimage(aSubimage);
-  scaledSubimage.ScaleRoundOut(1.0 / scale.width, 1.0 / scale.height);
 
   // Remove the scaling from the transform.
   gfxMatrix unscale;
@@ -718,28 +715,30 @@ VectorImage::Draw(gfxContext* aContext,
   unscale.Translate(-translation);
   gfxMatrix unscaledTransform(aUserSpaceToImageSpace * unscale);
 
-  mSVGDocumentWrapper->UpdateViewportBounds(scaledViewport);
+  mSVGDocumentWrapper->UpdateViewportBounds(aViewportSize);
   mSVGDocumentWrapper->FlushImageTransformInvalidation();
 
-  // Based on imgFrame::Draw
-  gfxRect sourceRect = unscaledTransform.Transform(aFill);
-  gfxRect imageRect(0, 0, scaledViewport.width, scaledViewport.height);
-  gfxRect subimage(scaledSubimage.x, scaledSubimage.y,
-                   scaledSubimage.width, scaledSubimage.height);
-
+  // Rescale drawing parameters.
+  gfxIntSize drawableSize(aViewportSize.width / scale.width,
+                          aViewportSize.height / scale.height);
+  gfxRect drawableSourceRect = unscaledTransform.Transform(aFill);
+  gfxRect drawableImageRect(0, 0, drawableSize.width, drawableSize.height);
+  gfxRect drawableSubimage(aSubimage.x, aSubimage.y,
+                           aSubimage.width, aSubimage.height);
+  drawableSubimage.ScaleRoundOut(1.0 / scale.width, 1.0 / scale.height);
 
   nsRefPtr<gfxDrawingCallback> cb =
     new SVGDrawingCallback(mSVGDocumentWrapper,
-                           nsIntRect(nsIntPoint(0, 0), scaledViewport),
+                           nsIntRect(nsIntPoint(0, 0), aViewportSize),
+                           scale,
                            aFlags);
 
-  nsRefPtr<gfxDrawable> drawable = new gfxCallbackDrawable(cb, scaledViewportGfx);
+  nsRefPtr<gfxDrawable> drawable = new gfxCallbackDrawable(cb, drawableSize);
 
-  gfxUtils::DrawPixelSnapped(aContext, drawable,
-                             unscaledTransform,
-                             subimage, sourceRect, imageRect, aFill,
-                             gfxASurface::ImageFormatARGB32, aFilter,
-                             aFlags);
+  gfxUtils::DrawPixelSnapped(aContext, drawable, unscaledTransform,
+                             drawableSubimage, drawableSourceRect,
+                             drawableImageRect, aFill,
+                             gfxASurface::ImageFormatARGB32, aFilter, aFlags);
 
   MOZ_ASSERT(mRenderingObserver, "Should have a rendering observer by now");
   mRenderingObserver->ResumeHonoringInvalidations();

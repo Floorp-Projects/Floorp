@@ -40,7 +40,7 @@ format = new Intl.NumberFormat("th-th-u-nu-thai",
                                {style: "percent",
                                 minimumSignificantDigits: 2,
                                 maximumSignificantDigits: 2});
-assertEq(format.format(0), "๐.๐๐%");
+assertEq(format.format(0), "๐.๐%");
 assertEq(format.format(-0.01), "-๑.๐%");
 assertEq(format.format(1.10), "๑๑๐%");
 
