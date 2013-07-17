@@ -326,8 +326,8 @@ this.TouchAdapter = {
  * of one single touch.
  */
 function TouchPoint(aTouch, aTime, aDPI) {
-  this.startX = this.x = aTouch.screenX;
-  this.startY = this.y = aTouch.screenY;
+  this.startX = this.x = aTouch.screenX * this.scaleFactor;
+  this.startY = this.y = aTouch.screenY * this.scaleFactor;
   this.startTime = aTime;
   this.distanceTraveled = 0;
   this.dpi = aDPI;
@@ -338,8 +338,8 @@ TouchPoint.prototype = {
   update: function TouchPoint_update(aTouch, aTime) {
     let lastX = this.x;
     let lastY = this.y;
-    this.x = aTouch.screenX;
-    this.y = aTouch.screenY;
+    this.x = aTouch.screenX * this.scaleFactor;
+    this.y = aTouch.screenY * this.scaleFactor;
     this.time = aTime;
 
     this.distanceTraveled += this.getDistanceToCoord(lastX, lastY);
@@ -347,6 +347,20 @@ TouchPoint.prototype = {
 
   getDistanceToCoord: function TouchPoint_getDistanceToCoord(aX, aY) {
     return Math.sqrt(Math.pow(this.x - aX, 2) + Math.pow(this.y - aY, 2));
+  },
+
+  get scaleFactor() {
+    if (!this._scaleFactor) {
+      // Android events come with the x, y coordinates affected by the widget
+      // scaling; we restore it to normal here.
+      if (Utils.MozBuildApp == 'mobile/android') {
+        this._scaleFactor = Utils.win.devicePixelRatio;
+      } else {
+        this._scaleFactor = 1;
+      }
+    }
+
+    return this._scaleFactor;
   },
 
   finish: function TouchPoint_finish() {
