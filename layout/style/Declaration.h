@@ -58,7 +58,7 @@ public:
    */
   void ValueAppended(nsCSSProperty aProperty);
 
-  void RemoveProperty(nsCSSProperty aProperty);
+  bool RemoveProperty(nsCSSProperty aProperty);
 
   bool HasProperty(nsCSSProperty aProperty) const;
 
