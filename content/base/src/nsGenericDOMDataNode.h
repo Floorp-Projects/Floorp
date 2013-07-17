@@ -169,7 +169,7 @@ public:
 
   // WebIDL API
   // Our XPCOM GetData is just fine for WebIDL
-  void SetData(const nsAString& aData, mozilla::ErrorResult& rv)
+  virtual void SetData(const nsAString& aData, mozilla::ErrorResult& rv)
   {
     rv = SetData(aData);
   }

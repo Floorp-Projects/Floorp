@@ -7,22 +7,21 @@
  * retrying the download.
  */
 
-const HTTP_SERVER_PORT = 4444;
-
 function run_test()
 {
   let dm = Cc["@mozilla.org/download-manager;1"].
            getService(Ci.nsIDownloadManager);
   let db = dm.DBConnection;
   var httpserv = new HttpServer();
-  httpserv.start(HTTP_SERVER_PORT);
+  httpserv.start(-1);
 
   let stmt = db.createStatement(
     "INSERT INTO moz_downloads (source, target, state, referrer) " +
     "VALUES (?1, ?2, ?3, ?4)");
 
   // Download from the test http server
-  stmt.bindByIndex(0, "http://localhost:"+HTTP_SERVER_PORT+"/httpd.js");
+  stmt.bindByIndex(0, "http://localhost:"+ httpserv.identity.primaryPort +
+                      "/httpd.js");
 
   // Download to a temp local file
   let file = Cc["@mozilla.org/file/directory_service;1"].

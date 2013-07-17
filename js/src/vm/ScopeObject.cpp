@@ -2192,3 +2192,175 @@ js::GetDebugScopeForFrame(JSContext *cx, AbstractFramePtr frame)
     ScopeIter si(frame, cx);
     return GetDebugScope(cx, si);
 }
+
+#ifdef DEBUG
+
+typedef HashSet<PropertyName *> PropertyNameSet;
+
+static bool
+RemoveReferencedNames(JSContext *cx, HandleScript script, PropertyNameSet &remainingNames)
+{
+    // Remove from remainingNames --- the closure variables in some outer
+    // script --- any free variables in this script. This analysis isn't perfect:
+    //
+    // - It will not account for free variables in an inner script which are
+    //   actually accessing some name in an intermediate script between the
+    //   inner and outer scripts. This can cause remainingNames to be an
+    //   underapproximation.
+    //
+    // - It will not account for new names introduced via eval. This can cause
+    //   remainingNames to be an overapproximation. This would be easy to fix
+    //   but is nice to have as the eval will probably not access these
+    //   these names and putting eval in an inner script is bad news if you
+    //   care about entraining variables unnecessarily.
+
+    for (jsbytecode *pc = script->code;
+         pc != script->code + script->length;
+         pc += GetBytecodeLength(pc))
+    {
+        PropertyName *name;
+
+        switch (JSOp(*pc)) {
+          case JSOP_NAME:
+          case JSOP_CALLNAME:
+          case JSOP_SETNAME:
+            name = script->getName(pc);
+            break;
+
+          case JSOP_GETALIASEDVAR:
+          case JSOP_CALLALIASEDVAR:
+          case JSOP_SETALIASEDVAR:
+            name = ScopeCoordinateName(cx, script, pc);
+            break;
+
+          default:
+            name = NULL;
+            break;
+        }
+
+        if (name)
+            remainingNames.remove(name);
+    }
+
+    if (script->hasObjects()) {
+        ObjectArray *objects = script->objects();
+        for (size_t i = 0; i < objects->length; i++) {
+            JSObject *obj = objects->vector[i];
+            if (obj->is<JSFunction>() && obj->as<JSFunction>().isInterpreted()) {
+                JSFunction *fun = &obj->as<JSFunction>();
+                RootedScript innerScript(cx, fun->getOrCreateScript(cx));
+                if (!innerScript)
+                    return false;
+
+                if (!RemoveReferencedNames(cx, innerScript, remainingNames))
+                    return false;
+            }
+        }
+    }
+
+    return true;
+}
+
+static bool
+AnalyzeEntrainedVariablesInScript(JSContext *cx, HandleScript script, HandleScript innerScript)
+{
+    PropertyNameSet remainingNames(cx);
+    if (!remainingNames.init())
+        return false;
+
+    for (BindingIter bi(script); bi; bi++) {
+        if (bi->aliased()) {
+            PropertyNameSet::AddPtr p = remainingNames.lookupForAdd(bi->name());
+            if (!p && !remainingNames.add(p, bi->name()))
+                return false;
+        }
+    }
+
+    if (!RemoveReferencedNames(cx, innerScript, remainingNames))
+        return false;
+
+    if (!remainingNames.empty()) {
+        Sprinter buf(cx);
+        if (!buf.init())
+            return false;
+
+        buf.printf("Script ");
+
+        if (JSAtom *name = script->function()->displayAtom()) {
+            buf.putString(name);
+            buf.printf(" ");
+        }
+
+        buf.printf("(%s:%d) has variables entrained by ", script->filename(), script->lineno);
+
+        if (JSAtom *name = innerScript->function()->displayAtom()) {
+            buf.putString(name);
+            buf.printf(" ");
+        }
+
+        buf.printf("(%s:%d) ::", innerScript->filename(), innerScript->lineno);
+
+        for (PropertyNameSet::Range r = remainingNames.all(); !r.empty(); r.popFront()) {
+            buf.printf(" ");
+            buf.putString(r.front());
+        }
+
+        printf("%s\n", buf.string());
+    }
+
+    if (innerScript->hasObjects()) {
+        ObjectArray *objects = innerScript->objects();
+        for (size_t i = 0; i < objects->length; i++) {
+            JSObject *obj = objects->vector[i];
+            if (obj->is<JSFunction>() && obj->as<JSFunction>().isInterpreted()) {
+                JSFunction *fun = &obj->as<JSFunction>();
+                RootedScript innerInnerScript(cx, fun->nonLazyScript());
+                if (!AnalyzeEntrainedVariablesInScript(cx, script, innerInnerScript))
+                    return false;
+            }
+        }
+    }
+
+    return true;
+}
+
+// Look for local variables in script or any other script inner to it, which are
+// part of the script's call object and are unnecessarily entrained by their own
+// inner scripts which do not refer to those variables. An example is:
+//
+// function foo() {
+//   var a, b;
+//   function bar() { return a; }
+//   function baz() { return b; }
+// }
+//
+// |bar| unnecessarily entrains |b|, and |baz| unnecessarily entrains |a|.
+bool
+js::AnalyzeEntrainedVariables(JSContext *cx, HandleScript script)
+{
+    if (!script->hasObjects())
+        return true;
+
+    ObjectArray *objects = script->objects();
+    for (size_t i = 0; i < objects->length; i++) {
+        JSObject *obj = objects->vector[i];
+        if (obj->is<JSFunction>() && obj->as<JSFunction>().isInterpreted()) {
+            JSFunction *fun = &obj->as<JSFunction>();
+            RootedScript innerScript(cx, fun->getOrCreateScript(cx));
+            if (!innerScript)
+                return false;
+
+            if (script->function() && script->function()->isHeavyweight()) {
+                if (!AnalyzeEntrainedVariablesInScript(cx, script, innerScript))
+                    return false;
+            }
+
+            if (!AnalyzeEntrainedVariables(cx, innerScript))
+                return false;
+        }
+    }
+
+    return true;
+}
+
+#endif

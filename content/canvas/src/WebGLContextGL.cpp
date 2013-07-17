@@ -2113,7 +2113,18 @@ WebGLContext::GetParameter(JSContext* cx, WebGLenum pname, ErrorResult& rv)
         case LOCAL_GL_RENDERER:
             return StringValue(cx, "Mozilla", rv);
         case LOCAL_GL_VERSION:
-            return StringValue(cx, "WebGL 1.0", rv);
+        {
+            const char* version = 0;
+
+            if (IsWebGL2()) {
+                version = "WebGL 2.0";
+            } else {
+                version = "WebGL 1.0";
+            }
+
+            MOZ_ASSERT(version != 0);
+            return StringValue(cx, version, rv);
+        }
         case LOCAL_GL_SHADING_LANGUAGE_VERSION:
             return StringValue(cx, "WebGL GLSL ES 1.0", rv);
 
