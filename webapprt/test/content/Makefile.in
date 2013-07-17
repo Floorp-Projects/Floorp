@@ -13,6 +13,7 @@ include $(DEPTH)/config/autoconf.mk
 MOCHITEST_FILES = \
   test.webapp \
   webapprt_sample.html \
+  webapprt_indexeddb.html \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk
