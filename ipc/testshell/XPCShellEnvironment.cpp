@@ -86,21 +86,6 @@ Environment(JSObject* global)
     return static_cast<XPCShellEnvironment*>(v.get().toPrivate());
 }
 
-JSContextCallback gOldContextCallback = NULL;
-
-static JSBool
-ContextCallback(JSContext *cx,
-                unsigned contextOp)
-{
-    if (gOldContextCallback && !gOldContextCallback(cx, contextOp))
-        return JS_FALSE;
-
-    if (contextOp == JSCONTEXT_NEW) {
-        JS_SetErrorReporter(cx, xpc::SystemErrorReporter);
-    }
-    return JS_TRUE;
-}
-
 static JSBool
 Print(JSContext *cx,
       unsigned argc,
@@ -585,12 +570,6 @@ XPCShellEnvironment::~XPCShellEnvironment()
 
         JSRuntime *rt = JS_GetRuntime(cx);
         JS_GC(rt);
-
-        if (gOldContextCallback) {
-            NS_ASSERTION(rt, "Should never be null!");
-            JS_SetContextCallback(rt, gOldContextCallback);
-            gOldContextCallback = NULL;
-        }
     }
 }
 
@@ -623,7 +602,6 @@ XPCShellEnvironment::Init()
         return false;
     }
 
-    gOldContextCallback = JS_SetContextCallback(rt, ContextCallback);
     AutoSafeJSContext cx;
 
     JS_SetContextPrivate(cx, this);
