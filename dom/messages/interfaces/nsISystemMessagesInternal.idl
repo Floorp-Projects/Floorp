@@ -47,3 +47,18 @@ interface nsISystemMessagesWrapper: nsISupports
    */
   jsval wrapMessage(in jsval message, in nsIDOMWindow window);
 };
+
+/*
+ * Implements an interface to allow specific message types to
+ * configure some behaviors
+ */
+[scriptable, uuid(8a71981b-a462-4697-b63c-925997f9d47b)]
+interface nsISystemMessagesConfigurator: nsISupports
+{
+  /*
+   * Will be true if this type of system messages is safe to send
+   * before the frontend has activated the app to process it.
+   * The default value (if there's no overriding class) is true
+   */
+  readonly attribute boolean safeToSendBeforeRunningApp;
+};
