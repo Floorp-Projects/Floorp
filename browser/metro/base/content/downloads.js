@@ -9,6 +9,12 @@ var Downloads = {
   _inited: false,
   _progressAlert: null,
 
+  /**
+   * _downloadCount keeps track of the number of downloads that a single
+   * notification bar groups together. A download is grouped with other
+   * downloads if it starts before other downloads have completed.
+   */
+  _downloadCount: 0,
   _lastSec: Infinity,
   _notificationBox: null,
   _progressNotification: null,
@@ -89,7 +95,13 @@ var Downloads = {
   },
 
   cancelDownload: function dh_cancelDownload(aDownload) {
-    this.manager.cancelDownload(aDownload.id);
+    this._progressNotificationInfo.delete(aDownload.guid);
+    this._runDownloadBooleanMap.delete(aDownload.targetFile.path);
+    this._downloadCount--;
+    if (this._progressNotificationInfo.size == 0) {
+      this._notificationBox.removeNotification(this._progressNotification);
+      this._progressNotification = null;
+    }
 
     let fileURI = aDownload.target;
     if (!(fileURI && fileURI.spec)) {
@@ -99,18 +111,12 @@ var Downloads = {
 
     let file = this._getLocalFile(fileURI);
     try {
+      this.manager.cancelDownload(aDownload.id);
       if (file && file.exists())
         file.remove(false);
     } catch (ex) {
       Util.dumpLn("Failed to cancel download, with id: "+aDownload.id+", download target URI spec: " + fileURI.spec);
       Util.dumpLn("Failed download source:"+(aDownload.source && aDownload.source.spec));
-    }
-    this._progressNotificationInfo.delete(aDownload.guid);
-    this._runDownloadBooleanMap.delete(aDownload.targetFile.path);
-    this._downloadCount--;
-    if (this._progressNotificationInfo.size == 0) {
-      this._notificationBox.removeNotification(this._progressNotification);
-      this._progressNotification = null;
     }
   },
 
@@ -119,6 +125,9 @@ var Downloads = {
     for (let info of this._progressNotificationInfo) {
       this.cancelDownload(info[1].download);
     }
+    this._downloadCount = 0;
+    this._progressNotificationInfo.clear();
+    this._runDownloadBooleanMap.clear();
   },
 
   pauseDownload: function dh_pauseDownload(aDownload) {
@@ -199,23 +208,11 @@ var Downloads = {
   },
 
   _showDownloadCompleteNotification: function (aDownload) {
-    let runButtonText =
-      Strings.browser.GetStringFromName("downloadRun");
-    let showInFilesButtonText =
-      Strings.browser.GetStringFromName("downloadShowInFiles");
-
-    message = Strings.browser.formatStringFromName("alertDownloadsDone2",
-      [aDownload.displayName], 1);
+    let message = "";
+    let showInFilesButtonText = PluralForm.get(this._downloadCount,
+      Strings.browser.GetStringFromName("downloadsShowInFiles"));
 
     let buttons = [
-      {
-        isDefault: true,
-        label: runButtonText,
-        accessKey: "",
-        callback: function() {
-          Downloads.openDownload(aDownload);
-        }
-      },
       {
         label: showInFilesButtonText,
         accessKey: "",
@@ -226,6 +223,26 @@ var Downloads = {
         }
       }
     ];
+
+    if (this._downloadCount > 1) {
+      message = PluralForm.get(this._downloadCount,
+                               Strings.browser.GetStringFromName("alertMultipleDownloadsComplete"))
+                               .replace("#1", this._downloadCount)
+    } else {
+      let runButtonText =
+        Strings.browser.GetStringFromName("downloadRun");
+      message = Strings.browser.formatStringFromName("alertDownloadsDone2",
+        [aDownload.displayName], 1);
+
+      buttons.unshift({
+        isDefault: true,
+        label: runButtonText,
+        accessKey: "",
+        callback: function() {
+          Downloads.openDownload(aDownload);
+        }
+      });
+    }
     this.showNotification("download-complete", message, buttons,
       this._notificationBox.PRIORITY_WARNING_MEDIUM);
   },
@@ -250,14 +267,14 @@ var Downloads = {
     let [timeLeft, newLast] = DownloadUtils.getTimeLeft(totSecondsLeft, this._lastSec);
     this._lastSec = newLast;
 
-    if (this._progressNotificationInfo.size == 1) {
+    if (this._downloadCount == 1) {
       return Strings.browser.GetStringFromName("alertDownloadsStart2")
         .replace("#1", aDownload.displayName)
         .replace("#2", progress)
         .replace("#3", timeLeft)
     }
 
-    let numDownloads = this._progressNotificationInfo.size;
+    let numDownloads = this._downloadCount;
     return PluralForm.get(numDownloads,
                           Strings.browser.GetStringFromName("alertDownloadMultiple"))
                           .replace("#1", numDownloads)
@@ -313,6 +330,7 @@ var Downloads = {
         this._runDownloadBooleanMap.set(file.path, (aData == 'true'));
         break;
       case "dl-start":
+        this._downloadCount++;
         let download = aSubject.QueryInterface(Ci.nsIDownload);
         if (!this._progressNotificationInfo.get(download.guid)) {
           this._progressNotificationInfo.set(download.guid, {});
@@ -325,15 +343,18 @@ var Downloads = {
         break;
       case "dl-done":
         download = aSubject.QueryInterface(Ci.nsIDownload);
-        if (this._runDownloadBooleanMap.get(download.targetFile.path)) {
+        let runAfterDownload = this._runDownloadBooleanMap.get(download.targetFile.path);
+        if (runAfterDownload) {
           this.openDownload(download);
-        } else {
-          this._showDownloadCompleteNotification(download);
         }
 
         this._progressNotificationInfo.delete(download.guid);
         this._runDownloadBooleanMap.delete(download.targetFile.path);
         if (this._progressNotificationInfo.size == 0) {
+          if (this._downloadCount > 1 || !runAfterDownload) {
+            this._showDownloadCompleteNotification(download);
+          }
+          this._downloadCount = 0;
           this._notificationBox.removeNotification(this._progressNotification);
           this._progressNotification = null;
         }
