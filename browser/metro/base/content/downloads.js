@@ -8,6 +8,7 @@ const URI_GENERIC_ICON_DOWNLOAD = "chrome://browser/skin/images/alert-downloads-
 var Downloads = {
   _inited: false,
   _progressAlert: null,
+  _runAfterDownload: false,
 
   get manager() {
     return Cc["@mozilla.org/download-manager;1"]
@@ -39,20 +40,19 @@ var Downloads = {
 
     Services.obs.addObserver(this, "dl-start", true);
     Services.obs.addObserver(this, "dl-done", true);
+    Services.obs.addObserver(this, "dl-run", true);
   },
 
   uninit: function dh_uninit() {
     if (this._inited) {
       Services.obs.removeObserver(this, "dl-start");
       Services.obs.removeObserver(this, "dl-done");
+      Services.obs.removeObserver(this, "dl-run");
     }
   },
 
   openDownload: function dh_openDownload(aDownload) {
-    // expects xul item
-    let id = aDownload.getAttribute("downloadId");
-    let download = this.manager.getDownload(id);
-    let fileURI = download.target;
+    let fileURI = aDownload.target
 
     if (!(fileURI && fileURI.spec)) {
       Util.dumpLn("Cant open download "+id+", fileURI is invalid");
@@ -147,10 +147,16 @@ var Downloads = {
   },
 
   observe: function (aSubject, aTopic, aData) {
-    let download = aSubject.QueryInterface(Ci.nsIDownload);
+    let download = null;
+    if (aSubject != null) {
+      download = aSubject.QueryInterface(Ci.nsIDownload);
+    }
     let msgKey = "";
 
     switch (aTopic) {
+      case "dl-run":
+        this._runAfterDownload = (aData == 'true');
+        break;
       case "dl-start":
         msgKey = "alertDownloadsStart";
         if (!this._progressAlert) {
@@ -160,6 +166,9 @@ var Downloads = {
         break;
       case "dl-done":
         msgKey = "alertDownloadsDone";
+        if (this._runAfterDownload) {
+          this.openDownload(download);
+        }
         break;
     }
 
