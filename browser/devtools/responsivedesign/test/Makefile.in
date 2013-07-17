@@ -16,6 +16,7 @@ MOCHITEST_BROWSER_FILES := \
 		browser_responsiveruleview.js \
 		browser_responsive_cmd.js \
 		browser_responsivecomputedview.js \
+		browser_responsive_devicewidth.js \
 		head.js \
 		$(NULL)
 
