@@ -958,6 +958,11 @@ bool WebGLContext::IsExtensionSupported(JSContext *cx, WebGLExtensionID ext) con
         }
     }
 
+    return IsExtensionSupported(ext);
+}
+
+bool WebGLContext::IsExtensionSupported(WebGLExtensionID ext) const
+{
     if (mDisableExtensions) {
         return false;
     }
@@ -1123,55 +1128,65 @@ WebGLContext::GetExtension(JSContext *cx, const nsAString& aName, ErrorResult& r
 
     // step 3: if the extension hadn't been previously been created, create it now, thus enabling it
     if (!IsExtensionEnabled(ext)) {
-        WebGLExtensionBase *obj = nullptr;
-        switch (ext) {
-            case OES_element_index_uint:
-                obj = new WebGLExtensionElementIndexUint(this);
-                break;
-            case OES_standard_derivatives:
-                obj = new WebGLExtensionStandardDerivatives(this);
-                break;
-            case EXT_texture_filter_anisotropic:
-                obj = new WebGLExtensionTextureFilterAnisotropic(this);
-                break;
-            case WEBGL_lose_context:
-                obj = new WebGLExtensionLoseContext(this);
-                break;
-            case WEBGL_compressed_texture_s3tc:
-                obj = new WebGLExtensionCompressedTextureS3TC(this);
-                break;
-            case WEBGL_compressed_texture_atc:
-                obj = new WebGLExtensionCompressedTextureATC(this);
-                break;
-            case WEBGL_compressed_texture_pvrtc:
-                obj = new WebGLExtensionCompressedTexturePVRTC(this);
-                break;
-            case WEBGL_debug_renderer_info:
-                obj = new WebGLExtensionDebugRendererInfo(this);
-                break;
-            case WEBGL_depth_texture:
-                obj = new WebGLExtensionDepthTexture(this);
-                break;
-            case OES_texture_float:
-                obj = new WebGLExtensionTextureFloat(this);
-                break;
-            case OES_texture_float_linear:
-                obj = new WebGLExtensionTextureFloatLinear(this);
-                break;
-            case WEBGL_draw_buffers:
-                obj = new WebGLExtensionDrawBuffers(this);
-                break;
-            case OES_vertex_array_object:
-                obj = new WebGLExtensionVertexArray(this);
-                break;
-            default:
-                MOZ_ASSERT(false, "should not get there.");
-        }
-        mExtensions.EnsureLengthAtLeast(ext + 1);
-        mExtensions[ext] = obj;
+        EnableExtension(ext);
     }
 
     return WebGLObjectAsJSObject(cx, mExtensions[ext].get(), rv);
+}
+
+void
+WebGLContext::EnableExtension(WebGLExtensionID ext)
+{
+    mExtensions.EnsureLengthAtLeast(ext + 1);
+
+    MOZ_ASSERT(IsExtensionEnabled(ext) == false);
+
+    WebGLExtensionBase* obj = nullptr;
+    switch (ext) {
+        case OES_element_index_uint:
+            obj = new WebGLExtensionElementIndexUint(this);
+            break;
+        case OES_standard_derivatives:
+            obj = new WebGLExtensionStandardDerivatives(this);
+            break;
+        case EXT_texture_filter_anisotropic:
+            obj = new WebGLExtensionTextureFilterAnisotropic(this);
+            break;
+        case WEBGL_lose_context:
+            obj = new WebGLExtensionLoseContext(this);
+            break;
+        case WEBGL_compressed_texture_s3tc:
+            obj = new WebGLExtensionCompressedTextureS3TC(this);
+            break;
+        case WEBGL_compressed_texture_atc:
+            obj = new WebGLExtensionCompressedTextureATC(this);
+            break;
+        case WEBGL_compressed_texture_pvrtc:
+            obj = new WebGLExtensionCompressedTexturePVRTC(this);
+            break;
+        case WEBGL_debug_renderer_info:
+            obj = new WebGLExtensionDebugRendererInfo(this);
+            break;
+        case WEBGL_depth_texture:
+            obj = new WebGLExtensionDepthTexture(this);
+            break;
+        case OES_texture_float:
+            obj = new WebGLExtensionTextureFloat(this);
+            break;
+        case OES_texture_float_linear:
+            obj = new WebGLExtensionTextureFloatLinear(this);
+            break;
+        case WEBGL_draw_buffers:
+            obj = new WebGLExtensionDrawBuffers(this);
+            break;
+        case OES_vertex_array_object:
+            obj = new WebGLExtensionVertexArray(this);
+            break;
+        default:
+            MOZ_ASSERT(false, "should not get there.");
+    }
+
+    mExtensions[ext] = obj;
 }
 
 void

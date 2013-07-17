@@ -390,6 +390,7 @@ public:
     void DrawArrays(GLenum mode, WebGLint first, WebGLsizei count);
     void DrawElements(WebGLenum mode, WebGLsizei count, WebGLenum type,
                       WebGLintptr byteOffset);
+    void DrawBuffers(const dom::Sequence<GLenum>& buffers);
     void Enable(WebGLenum cap);
     void EnableVertexAttribArray(WebGLuint index);
     void Flush() {
@@ -894,11 +895,15 @@ protected:
     };
     nsTArray<nsRefPtr<WebGLExtensionBase> > mExtensions;
 
+    // enable an extension. the extension should not be enabled before.
+    void EnableExtension(WebGLExtensionID ext);
+
     // returns true if the extension has been enabled by calling getExtension.
     bool IsExtensionEnabled(WebGLExtensionID ext) const;
 
     // returns true if the extension is supported for this JSContext (this decides what getSupportedExtensions exposes)
     bool IsExtensionSupported(JSContext *cx, WebGLExtensionID ext) const;
+    bool IsExtensionSupported(WebGLExtensionID ext) const;
 
     nsTArray<WebGLenum> mCompressedTextureFormats;
 
