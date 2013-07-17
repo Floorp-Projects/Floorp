@@ -24,6 +24,8 @@
 #include "nsIDOMNodeList.h"
 #include "nsIDOMXULElement.h"
 #include "nsIXULBrowserWindow.h"
+#include "nsIDOMChromeWindow.h"
+#include "nsIBrowserDOMWindow.h"
 
 // CIDs
 static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
@@ -243,6 +245,25 @@ NS_IMETHODIMP nsChromeTreeOwner::GetPrimaryContentShell(nsIDocShellTreeItem** aS
 {
    NS_ENSURE_STATE(mXULWindow);
    return mXULWindow->GetPrimaryContentShell(aShell);
+}
+
+NS_IMETHODIMP
+nsChromeTreeOwner::GetContentWindow(JSContext* aCx, JS::Value* aVal)
+{
+  NS_ENSURE_STATE(mXULWindow);
+
+  nsCOMPtr<nsIDOMWindow> domWin;
+  mXULWindow->GetWindowDOMWindow(getter_AddRefs(domWin));
+  nsCOMPtr<nsIDOMChromeWindow> chromeWin = do_QueryInterface(domWin);
+  if (!chromeWin)
+    return NS_OK;
+
+  nsCOMPtr<nsIBrowserDOMWindow> browserDOMWin;
+  chromeWin->GetBrowserDOMWindow(getter_AddRefs(browserDOMWin));
+  if (!browserDOMWin)
+    return NS_OK;
+
+  return browserDOMWin->GetContentWindow(aVal);
 }
 
 NS_IMETHODIMP nsChromeTreeOwner::SizeShellTo(nsIDocShellTreeItem* aShellItem,

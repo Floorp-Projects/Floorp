@@ -108,7 +108,7 @@ function run_test() {
     response.setHeader("Accept-Ranges", "none", false);
     response.write("foo");
   });
-  httpserv.start(4444);
+  httpserv.start(-1);
 
   let tmpDir = Cc["@mozilla.org/file/directory_service;1"].
                getService(Ci.nsIProperties).
@@ -140,7 +140,7 @@ function run_test() {
             do_check_eq(dlD.state, dm.DOWNLOAD_CANCELED);
 
             // Create Download-E
-            dlE = addDownload({
+            dlE = addDownload(httpserv, {
               isPrivate: true,
               targetFile: fileE,
               sourceURI: downloadESource,
@@ -164,7 +164,7 @@ function run_test() {
             do_check_eq(dlE.state, dm.DOWNLOAD_CANCELED);
 
             // Create Download-F
-            dlF = addDownload({
+            dlF = addDownload(httpserv, {
               isPrivate: true,
               targetFile: fileF,
               sourceURI: downloadFSource,
@@ -199,7 +199,7 @@ function run_test() {
             do_check_eq(dlF.state, dm.DOWNLOAD_CANCELED);
 
             // Create Download-G
-            dlG = addDownload({
+            dlG = addDownload(httpserv, {
               isPrivate: false,
               targetFile: fileG,
               sourceURI: downloadGSource,
@@ -218,23 +218,25 @@ function run_test() {
 
   dm.addPrivacyAwareListener(listener);
 
+  const PORT = httpserv.identity.primaryPort;
+
   // properties of Download-D
-  const downloadDSource = "http://localhost:4444/noresume";
+  const downloadDSource = "http://localhost:" + PORT + "/noresume";
   const downloadDDest = "download-file-D";
   const downloadDName = "download-D";
 
   // properties of Download-E
-  const downloadESource = "http://localhost:4444/file/head_download_manager.js";
+  const downloadESource = "http://localhost:" + PORT + "/file/head_download_manager.js";
   const downloadEDest = "download-file-E";
   const downloadEName = "download-E";
 
   // properties of Download-F
-  const downloadFSource = "http://localhost:4444/file/head_download_manager.js";
+  const downloadFSource = "http://localhost:" + PORT + "/file/head_download_manager.js";
   const downloadFDest = "download-file-F";
   const downloadFName = "download-F";
 
   // properties of Download-G
-  const downloadGSource = "http://localhost:4444/noresume";
+  const downloadGSource = "http://localhost:" + PORT + "/noresume";
   const downloadGDest = "download-file-G";
   const downloadGName = "download-G";
 
@@ -253,7 +255,7 @@ function run_test() {
   fileG.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0666);
 
   // Create Download-D
-  let dlD = addDownload({
+  let dlD = addDownload(httpserv, {
     isPrivate: true,
     targetFile: fileD,
     sourceURI: downloadDSource,

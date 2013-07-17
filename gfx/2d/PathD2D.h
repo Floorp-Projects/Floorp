@@ -6,8 +6,9 @@
 #ifndef MOZILLA_GFX_PATHD2D_H_
 #define MOZILLA_GFX_PATHD2D_H_
 
+#include <d2d1.h>
+
 #include "2D.h"
-#include "moz-d2d1-1.h"
 
 namespace mozilla {
 namespace gfx {
@@ -90,6 +91,7 @@ public:
 
 private:
   friend class DrawTargetD2D;
+  friend class DrawTargetD2D1;
 
   mutable RefPtr<ID2D1PathGeometry> mGeometry;
   bool mEndedActive;
