@@ -65,8 +65,7 @@ function run_test() {
 
   try {
     _("Log in.");
-    Service.serverURL = TEST_SERVER_URL;
-    Service.clusterURL = TEST_CLUSTER_URL;
+    Service.serverURL = server.baseURI;
 
     _("Checking Status.sync with no credentials.");
     Service.verifyAndFetchSymmetricKeys();
@@ -81,8 +80,7 @@ function run_test() {
     let syncKey = Service.identity.syncKey;
     Service.startOver();
 
-    Service.serverURL = TEST_SERVER_URL;
-    Service.clusterURL = TEST_CLUSTER_URL;
+    Service.serverURL = server.baseURI;
     Service.login("johndoe", "ilovejane", syncKey);
     do_check_true(Service.isLoggedIn);
 
