@@ -485,6 +485,8 @@ public:
 
   virtual already_AddRefed<gfxImageSurface> GetAsSurface() MOZ_OVERRIDE;
 
+  virtual void SetBuffer(SurfaceDescriptor* aBuffer, ISurfaceAllocator* aAllocator) MOZ_OVERRIDE;
+
 #ifdef MOZ_LAYERS_HAVE_LOG
   virtual const char* Name() { return "SurfaceStreamHostOGL"; }
 #endif
@@ -506,6 +508,7 @@ protected:
   GLenum mTextureTarget;
   GLuint mUploadTexture;
   GLenum mWrapMode;
+  nsRefPtr<GLContext> mStreamGL;
 };
 
 class TiledDeprecatedTextureHostOGL : public DeprecatedTextureHost
