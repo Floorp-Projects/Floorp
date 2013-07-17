@@ -21,8 +21,6 @@ LOCAL_INCLUDES = \
 DEFINES		+= -DMOZ_NEED_LEADING_UNDERSCORE
 
 
-include $(topsrcdir)/config/config.mk
-
 # we don't want the shared lib, but we want to force the creation of a static lib.
 FORCE_STATIC_LIB = 1
 
