@@ -51,6 +51,5 @@ LOCAL_INCLUDES += $(VPATH:%=-I%)
 
 endif # MOZ_B2G_BT
 
-include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/config/rules.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
