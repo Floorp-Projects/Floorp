@@ -41,13 +41,7 @@ AudioChannelManager::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 void
 AudioChannelManager::Notify(const SwitchEvent& aEvent)
 {
-  if (aEvent.status() == SWITCH_STATE_ON ||
-      aEvent.status() == SWITCH_STATE_HEADSET ||
-      aEvent.status() == SWITCH_STATE_HEADPHONE) {
-    mState = SWITCH_STATE_ON;
-  } else {
-    mState = SWITCH_STATE_OFF;
-  }
+  mState = aEvent.status();
 
   DispatchTrustedEvent(NS_LITERAL_STRING("headphoneschange"));
 }
