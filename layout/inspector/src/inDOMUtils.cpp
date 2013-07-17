@@ -546,8 +546,7 @@ inDOMUtils::GetBindingURLs(nsIDOMElement *aElement, nsIArray **_retval)
   nsCOMPtr<nsIContent> content = do_QueryInterface(aElement);
   NS_ENSURE_ARG_POINTER(content);
 
-  nsIDocument *ownerDoc = content->OwnerDoc();
-  nsXBLBinding *binding = ownerDoc->BindingManager()->GetBinding(content);
+  nsXBLBinding *binding = content->GetXBLBinding();
 
   while (binding) {
     urls->AppendElement(binding->PrototypeBinding()->BindingURI(), false);
