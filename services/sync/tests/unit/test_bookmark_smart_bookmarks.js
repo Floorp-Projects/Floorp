@@ -22,8 +22,6 @@ let store = engine._store;
 // Clean up after other tests. Only necessary in XULRunner.
 store.wipe();
 
-var syncTesting = new SyncTestingInfrastructure();
-
 function newSmartBookmark(parent, uri, position, title, queryID) {
   let id = PlacesUtils.bookmarks.insertBookmark(parent, uri, position, title);
   PlacesUtils.annotations.setItemAnnotation(id, SMART_BOOKMARKS_ANNO,
@@ -60,7 +58,8 @@ function serverForFoo(engine) {
 // Verify that Places smart bookmarks have their annotation uploaded and
 // handled locally.
 add_test(function test_annotation_uploaded() {
-  new SyncTestingInfrastructure();
+  let server = serverForFoo(engine);
+  new SyncTestingInfrastructure(server.server);
 
   let startCount = smartBookmarkCount();
 
@@ -108,7 +107,6 @@ add_test(function test_annotation_uploaded() {
   do_check_eq(smartBookmarkCount(), startCount + 1);
 
   _("Sync record to the server.");
-  let server = serverForFoo(engine);
   let collection = server.user("foo").collection("bookmarks");
 
   try {
@@ -175,7 +173,8 @@ add_test(function test_annotation_uploaded() {
 });
 
 add_test(function test_smart_bookmarks_duped() {
-  new SyncTestingInfrastructure();
+  let server = serverForFoo(engine);
+  new SyncTestingInfrastructure(server.server);
 
   let parent = PlacesUtils.toolbarFolderId;
   let uri =
@@ -189,7 +188,6 @@ add_test(function test_smart_bookmarks_duped() {
   let record = store.createRecord(mostVisitedGUID);
 
   _("Prepare sync.");
-  let server = serverForFoo(engine);
   let collection = server.user("foo").collection("bookmarks");
 
   try {

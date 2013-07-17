@@ -43,8 +43,8 @@ function sync_httpd_setup() {
   return httpd_setup(handlers);
 }
 
-function setUp() {
-  new SyncTestingInfrastructure("johndoe", "ilovejane", "sekrit");
+function setUp(server) {
+  new SyncTestingInfrastructure(server, "johndoe", "ilovejane", "sekrit");
 }
 
 function run_test() {
@@ -80,7 +80,7 @@ add_test(function test_tracker_score_updated() {
 
 add_test(function test_sync_triggered() {
   let server = sync_httpd_setup();
-  setUp();
+  setUp(server);
 
   Service.login();
 
@@ -103,7 +103,7 @@ add_test(function test_clients_engine_sync_triggered() {
   // global score tracker gives it that treatment. See bug 676042 for more.
 
   let server = sync_httpd_setup();
-  setUp();
+  setUp(server);
   Service.login();
 
   const TOPIC = "weave:service:sync:finish";
@@ -121,7 +121,7 @@ add_test(function test_clients_engine_sync_triggered() {
 add_test(function test_incorrect_credentials_sync_not_triggered() {
   _("Ensure that score changes don't trigger a sync if Status.login != LOGIN_SUCCEEDED.");
   let server = sync_httpd_setup();
-  setUp();
+  setUp(server);
 
   // Ensure we don't actually try to sync.
   function onSyncStart() {
