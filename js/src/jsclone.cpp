@@ -135,6 +135,12 @@ js::ClearStructuredClone(const uint64_t *data, size_t nbytes)
                 if (tag == SCTAG_TRANSFER_MAP) {
                     u = LittleEndian::readUint64(point++);
                     js_free(reinterpret_cast<void*>(u));
+                } else {
+                    // The only things in the transfer map should be
+                    // SCTAG_TRANSFER_MAP tags paired with pointers. If we find
+                    // any other tag, we've walked off the end of the transfer
+                    // map.
+                    break;
                 }
             }
         }
