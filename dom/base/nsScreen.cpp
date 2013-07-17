@@ -387,19 +387,6 @@ nsScreen::SlowMozUnlockOrientation()
   return NS_OK;
 }
 
-bool
-nsScreen::IsDeviceSizePageSize()
-{
-  nsPIDOMWindow* owner = GetOwner();
-  if (owner) {
-    nsIDocShell* docShell = owner->GetDocShell();
-    if (docShell) {
-      return docShell->GetDeviceSizeIsPageSize();
-    }
-  }
-  return false;
-}
-
 /* virtual */
 JSObject*
 nsScreen::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
