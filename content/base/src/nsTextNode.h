@@ -53,6 +53,7 @@ public:
 
   // nsIDOMCharacterData
   NS_FORWARD_NSIDOMCHARACTERDATA(nsGenericDOMDataNode::)
+  using nsGenericDOMDataNode::SetData; // Prevent hiding overloaded virtual function.
 
   // nsIDOMText
   NS_FORWARD_NSIDOMTEXT(nsGenericDOMDataNode::)
