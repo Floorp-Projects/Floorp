@@ -1173,6 +1173,15 @@ nsXBLBinding::LookupMemberInternal(JSContext* aCx, nsString& aName,
   if (!JS_GetProperty(aCx, aXBLScope, mJSClass->name, classObject.address())) {
     return false;
   }
+
+  // The bound element may have been adoped by a document and have a different
+  // wrapper (and different xbl scope) than when the binding was applied, in
+  // this case getting the class object will fail. Behave as if the class
+  // object did not exist.
+  if (classObject.isUndefined()) {
+    return true;
+  }
+
   MOZ_ASSERT(classObject.isObject());
 
   // Look for the property on this binding. If it's not there, try the next

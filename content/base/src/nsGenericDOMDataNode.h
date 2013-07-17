@@ -141,6 +141,9 @@ public:
 #endif
 
   virtual nsIContent *GetBindingParent() const MOZ_OVERRIDE;
+  virtual nsXBLBinding *GetXBLBinding() const MOZ_OVERRIDE;
+  virtual void SetXBLBinding(nsXBLBinding* aBinding,
+                             nsBindingManager* aOldBindingManager = nullptr) MOZ_OVERRIDE;
   virtual bool IsNodeOfType(uint32_t aFlags) const MOZ_OVERRIDE;
   virtual bool IsLink(nsIURI** aURI) const MOZ_OVERRIDE;
 

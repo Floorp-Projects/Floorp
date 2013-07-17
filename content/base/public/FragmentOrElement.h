@@ -215,6 +215,9 @@ public:
   virtual bool TextIsOnlyWhitespace() MOZ_OVERRIDE;
   virtual void AppendTextTo(nsAString& aResult) MOZ_OVERRIDE;
   virtual nsIContent *GetBindingParent() const MOZ_OVERRIDE;
+  virtual nsXBLBinding *GetXBLBinding() const MOZ_OVERRIDE;
+  virtual void SetXBLBinding(nsXBLBinding* aBinding,
+                             nsBindingManager* aOldBindingManager = nullptr) MOZ_OVERRIDE;
   virtual bool IsLink(nsIURI** aURI) const MOZ_OVERRIDE;
 
   virtual void DestroyContent() MOZ_OVERRIDE;
@@ -359,6 +362,11 @@ public:
      * An object implementing the .classList property for this element.
      */
     nsRefPtr<nsDOMTokenList> mClassList;
+
+    /**
+     * XBL binding installed on the element.
+     */
+    nsRefPtr<nsXBLBinding> mXBLBinding;
   };
 
 protected:
