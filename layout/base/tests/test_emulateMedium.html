@@ -1,0 +1,141 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=819930
+-->
+  <head>
+    <meta charset="utf-8">
+    <title>Test for Bug 819930</title>
+    <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+    <script type="text/javascript" src="/tests/SimpleTest/WindowSnapshot.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+    <style>
+      @media braille {
+        body {
+          background-color: rgb(255, 255, 0);
+        }
+      }
+
+      @media embossed {
+        body {
+          background-color: rgb(210, 180, 140);
+        }
+      }
+
+      @media handheld {
+        body {
+          background-color: rgb(0, 255, 0);
+        }
+      }
+
+      @media print {
+        body {
+          background-color: rgb(0, 255, 255);
+        }
+      }
+
+      @media projection {
+        body {
+          background-color: rgb(30, 144, 255);
+        }
+      }
+
+      @media screen {
+        body {
+          background-color: green;
+        }
+      }
+
+      @media speech {
+        body {
+          background-color: rgb(192, 192, 192);
+        }
+      }
+
+      @media tty {
+        body {
+          background-color: rgb(255, 192, 203);
+        }
+      }
+
+      @media tv {
+        body {
+          background-color: rgb(75, 0, 130);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=819930">Mozilla Bug 819930</a>
+    <p id="display"></p>
+
+    <div id="content" style="display: none"></div>
+    <pre id="test">
+      <script type="application/javascript;version=1.7">
+        let tests = [{name: 'braille', value: 'rgb(255, 255, 0)'},
+                     {name: 'embossed', value: 'rgb(210, 180, 140)'},
+                     {name: 'handheld', value: 'rgb(0, 255, 0)'},
+                     {name: 'print', value: 'rgb(0, 255, 255)'},
+                     {name: 'projection', value: 'rgb(30, 144, 255)'},
+                     {name: 'speech', value: 'rgb(192, 192, 192)'},
+                     {name: 'tty', value: 'rgb(255, 192, 203)'},
+                     {name: 'tv', value: 'rgb(75, 0, 130)'}];
+
+        let originalColor = 'rgb(0, 128, 0)';
+        let body = document.body;
+
+        let getColor = function() {
+          return window.getComputedStyle(body)
+                       .getPropertyValue('background-color');
+        };
+
+        tests.forEach(function(test) {
+          // Emulate the given media
+          SpecialPowers.emulateMedium(window, test.name);
+          is(getColor(), test.value, 'emulating ' + test.name + ' produced ' +
+             'correct rendering');
+
+          // Do the @media screen rules get applied after ending the emulation?
+          SpecialPowers.stopEmulatingMedium(window);
+          is(getColor(), originalColor, 'Ending ' + test.name +
+             ' emulation restores style for original medium');
+
+          // CSS media types are case-insensitive; we should be too.
+          SpecialPowers.emulateMedium(window, test.name.toUpperCase());
+          is(getColor(), test.value,
+             test.name + ' emulation is case-insensitive');
+          SpecialPowers.stopEmulatingMedium(window);
+        });
+
+        // Emulating screen should produce the same rendering as when there is
+        // no emulation in effect
+        SpecialPowers.emulateMedium(window, 'screen');
+        is(getColor(), originalColor,
+           'Emulating screen produces original rendering');
+        SpecialPowers.stopEmulatingMedium(window);
+
+        // Screen should be case-insensitive too
+        SpecialPowers.emulateMedium(window, 'SCREEN');
+        is(getColor(), originalColor, 'screen emulation is case-insensitive');
+        SpecialPowers.stopEmulatingMedium(window);
+
+        // An invalid parameter shouldn't fail. Given the CSS rules above,
+        // an invalid parameter should result in a different rendering from any
+        // produced thus far
+        try {
+          SpecialPowers.emulateMedium(window, 'clay');
+          let invalid = getColor();
+          tests.push({name: 'screen', value: 'green'});
+          tests.forEach(function(test) {
+            isnot(invalid, test.value, 'Emulating invalid type differs from ' +
+               test.name);
+          });
+        } catch (e) {
+          ok(false, 'Supplying invalid type to emulateMedium shouldn\'t throw');
+        }
+
+        SpecialPowers.stopEmulatingMedium(window);
+      </script>
+    </pre>
+  </body>
+</html>
