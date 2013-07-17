@@ -4173,7 +4173,7 @@ DoSetElemFallback(JSContext *cx, BaselineFrame *frame, ICSetElem_Fallback *stub,
         if (!InitArrayElemOperation(cx, pc, obj, index.toInt32(), rhs))
             return false;
     } else {
-        if (!SetObjectElement(cx, obj, index, rhs, script->strict, script, pc))
+        if (!SetObjectElement(cx, obj, index, rhs, script->strict))
             return false;
     }
 
