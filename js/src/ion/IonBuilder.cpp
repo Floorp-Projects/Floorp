@@ -6326,15 +6326,6 @@ IonBuilder::jsop_getelem()
     bool cacheable = obj->mightBeType(MIRType_Object) && !obj->mightBeType(MIRType_String) &&
         (index->mightBeType(MIRType_Int32) || index->mightBeType(MIRType_String));
 
-    bool nonNativeGetElement =
-        script()->analysis()->getCode(pc).nonNativeGetElement ||
-        inspector->hasSeenNonNativeGetElement(pc);
-
-    // Turn off cacheing if the element is int32 and we've seen non-native objects as the target
-    // of this getelem.
-    if (index->mightBeType(MIRType_Int32) && nonNativeGetElement)
-        cacheable = false;
-
     types::StackTypeSet *types = types::TypeScript::BytecodeTypes(script(), pc);
     bool barrier = PropertyReadNeedsTypeBarrier(cx, obj, NULL, types);
 
@@ -6847,14 +6838,8 @@ IonBuilder::jsop_setelem_dense(types::StackTypeSet::DoubleConversion conversion,
         MOZ_ASSUME_UNREACHABLE("Unknown double conversion");
     }
 
-    bool writeHole;
-    if (safety == SetElem_Normal) {
-        writeHole = script()->analysis()->getCode(pc).arrayWriteHole;
-        SetElemICInspector icInspect(inspector->setElemICInspector(pc));
-        writeHole |= icInspect.sawOOBDenseWrite();
-    } else {
-        writeHole = false;
-    }
+    bool writeHole = safety == SetElem_Normal &&
+                               inspector->setElemICInspector(pc).sawOOBDenseWrite();
 
     // Use MStoreElementHole if this SETELEM has written to out-of-bounds
     // indexes in the past. Otherwise, use MStoreElement so that we can hoist
