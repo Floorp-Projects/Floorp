@@ -857,8 +857,8 @@ let CustomizableUIInternal = {
       node.setAttribute("label", this.getLocalizedProperty(aWidget, "label"));
       node.setAttribute("tooltiptext", this.getLocalizedProperty(aWidget, "tooltiptext"));
       //XXXunf Need to hook this up to a <key> element or something.
-      let shortcut = this.getLocalizedProperty(aWidget, "shortcut");
-      if (shortcut) {
+      let shortcut = this.getLocalizedProperty(aWidget, "shortcut", null, "none");
+      if (shortcut != "none") {
         node.setAttribute("acceltext", shortcut);
       }
       node.setAttribute("class", "toolbarbutton-1 chromeclass-toolbar-additional");
@@ -922,7 +922,9 @@ let CustomizableUIInternal = {
       }
       return gWidgetsBundle.GetStringFromName(name) || def;
     } catch(ex) {
-      ERROR("Could not localize property '" + name + "'.");
+      if (!def) {
+        ERROR("Could not localize property '" + name + "'.");
+      }
     }
     return def;
   },
