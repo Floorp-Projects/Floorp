@@ -188,6 +188,8 @@ function run_test() {
   do_test_pending();
   do_register_cleanup(cleanupUpdaterTest);
 
+  adjustGeneralPaths();
+
   setupUpdaterTest(MAR_PARTIAL_FILE);
 
   // Exclusively lock an existing file so it is in use during the update
