@@ -23,6 +23,7 @@
 
 #include "mozilla/Hal.h"
 #include "mozilla/Services.h"
+#include "base/message_loop.h"
 
 #include "BluetoothCommon.h"
 #include "BluetoothProfileManagerBase.h"
@@ -60,6 +61,7 @@ static int sMaxStreamVolumeTbl[AUDIO_STREAM_CNT] = {
 // A bitwise variable for recording what kind of headset is attached.
 static int sHeadsetState;
 static const int kBtSampleRate = 8000;
+static bool sSwitchDone = true;
 
 class RecoverTask : public nsRunnable
 {
@@ -114,6 +116,14 @@ IsDeviceOn(audio_devices_t device)
            AUDIO_POLICY_DEVICE_STATE_AVAILABLE;
 
   return false;
+}
+
+static void ProcessDelayedAudioRoute(SwitchState aState)
+{
+  if (sSwitchDone)
+    return;
+  InternalSetAudioRoutes(aState);
+  sSwitchDone = true;
 }
 
 NS_IMPL_ISUPPORTS2(AudioManager, nsIAudioManager, nsIObserver)
@@ -269,8 +279,16 @@ class HeadphoneSwitchObserver : public SwitchObserver
 {
 public:
   void Notify(const SwitchEvent& aEvent) {
-    InternalSetAudioRoutes(aEvent.status());
     NotifyHeadphonesStatus(aEvent.status());
+    // When user pulled out the headset, a delay of routing here can avoid the leakage of audio from speaker.
+    if (aEvent.status() == SWITCH_STATE_OFF && sSwitchDone) {
+      MessageLoop::current()->PostDelayedTask(
+        FROM_HERE, NewRunnableFunction(&ProcessDelayedAudioRoute, SWITCH_STATE_OFF), 1000);
+      sSwitchDone = false;
+    } else if (aEvent.status() != SWITCH_STATE_OFF) {
+      InternalSetAudioRoutes(aEvent.status());
+      sSwitchDone = true;
+    }
   }
 };
 
