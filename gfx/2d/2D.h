@@ -35,6 +35,8 @@ typedef _cairo_scaled_font cairo_scaled_font_t;
 
 struct ID3D10Device1;
 struct ID3D10Texture2D;
+struct ID3D11Device;
+struct ID2D1Device;
 struct IDWriteRenderingParams;
 
 class GrContext;
@@ -989,6 +991,11 @@ public:
 
   static void SetDirect3D10Device(ID3D10Device1 *aDevice);
   static ID3D10Device1 *GetDirect3D10Device();
+#ifdef USE_D2D1_1
+  static void SetDirect3D11Device(ID3D11Device *aDevice);
+  static ID3D11Device *GetDirect3D11Device();
+  static ID2D1Device *GetD2D1Device();
+#endif
 
   static TemporaryRef<GlyphRenderingOptions>
     CreateDWriteGlyphRenderingOptions(IDWriteRenderingParams *aParams);
@@ -999,6 +1006,10 @@ public:
 
 private:
   static ID3D10Device1 *mD3D10Device;
+#ifdef USE_D2D1_1
+  static ID3D11Device *mD3D11Device;
+  static ID2D1Device *mD2D1Device;
+#endif
 #endif
 
   static DrawEventRecorder *mRecorder;
