@@ -109,11 +109,7 @@ if test "$echo_libdir" = "yes"; then
 fi
 
 if test "$echo_cflags" = "yes"; then
-    cflags="-include $includedir/$LIBRARY_NAME/js/RequiredDefines.h -I$includedir/$LIBRARY_NAME $NSPR_CFLAGS"
-    if test '@USE_CXX11@' = "1"; then
-        cflags="$cflags -std=gnu++0x"
-    fi
-    echo $cflags
+    echo "-std=gnu++0x -include $includedir/$LIBRARY_NAME/js/RequiredDefines.h -I$includedir/$LIBRARY_NAME $NSPR_CFLAGS"
 fi
 
 if test "$echo_libs" = "yes"; then
