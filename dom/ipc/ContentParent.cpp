@@ -521,6 +521,23 @@ ContentParent::GetAll(nsTArray<ContentParent*>& aArray)
 
     for (ContentParent* cp = sContentParents->getFirst(); cp;
          cp = cp->getNext()) {
+        if (cp->mIsAlive) {
+            aArray.AppendElement(cp);
+        }
+    }
+}
+
+void
+ContentParent::GetAllEvenIfDead(nsTArray<ContentParent*>& aArray)
+{
+    aArray.Clear();
+
+    if (!sContentParents) {
+        return;
+    }
+
+    for (ContentParent* cp = sContentParents->getFirst(); cp;
+         cp = cp->getNext()) {
         aArray.AppendElement(cp);
     }
 }
@@ -788,11 +805,6 @@ ContentParent::MarkAsDead()
     }
 
     mIsAlive = false;
-
-    // Remove from sContentParents.
-    if (isInList()) {
-         remove();
-    }
 }
 
 void

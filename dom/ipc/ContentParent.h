@@ -106,6 +106,7 @@ public:
                        nsIDOMElement* aFrameElement);
 
     static void GetAll(nsTArray<ContentParent*>& aArray);
+    static void GetAllEvenIfDead(nsTArray<ContentParent*>& aArray);
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSIOBSERVER
