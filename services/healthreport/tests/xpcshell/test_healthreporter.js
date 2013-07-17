@@ -22,7 +22,7 @@ Cu.import("resource://testing-common/services/metrics/mocks.jsm");
 Cu.import("resource://testing-common/services/healthreport/utils.jsm");
 
 
-const DUMMY_URI = "http://localhost/";
+const DUMMY_URI = "http://localhost:62013/";
 const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
 
 const HealthReporterState = bsp.HealthReporterState;
