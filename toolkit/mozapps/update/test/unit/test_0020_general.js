@@ -5,12 +5,17 @@
 
 /* General Update Check Update XML Tests */
 
+const TEST_ID = "0020";
+
 var gNextRunFunc;
 var gExpectedCount;
 
 function run_test() {
   do_test_pending();
   do_register_cleanup(end_test);
+
+  adjustGeneralPaths();
+
   removeUpdateDirsAndFiles();
   setUpdateURLOverride();
   setUpdateChannel("test_channel");

@@ -11,6 +11,8 @@
 // 2152398868, 2152398878, 2152398890, 2152398919, 2152398920, 2153390069,
 // 2152398918, 2152398861
 
+const TEST_ID = "0050";
+
 var gNextRunFunc;
 var gExpectedStatusCode;
 var gExpectedStatusText;
@@ -18,6 +20,9 @@ var gExpectedStatusText;
 function run_test() {
   do_test_pending();
   do_register_cleanup(end_test);
+
+  adjustGeneralPaths();
+
   removeUpdateDirsAndFiles();
   setUpdateURLOverride();
   standardInit();

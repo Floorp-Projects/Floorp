@@ -4,9 +4,13 @@
 
 /* General Update Directory Cleanup Tests - Bug 539717 */
 
+const TEST_ID = "0072";
+
 function run_test() {
   do_test_pending();
   do_register_cleanup(end_test);
+
+  adjustGeneralPaths();
 
   removeUpdateDirsAndFiles();
 
