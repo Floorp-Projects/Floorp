@@ -5207,10 +5207,18 @@ static int32_t RoundUp(double aDouble)
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
 #if !defined(RELEASE_BUILD) || defined(DEBUG)
-  if (mGeckoChild &&
-      mGeckoChild->GetInputContext().IsPasswordEditor() !=
-        TextInputHandler::IsSecureEventInputEnabled()) {
-    MOZ_CRASH("in wrong secure input mode");
+  if (mGeckoChild && mTextInputHandler && mTextInputHandler->IsFocused()) {
+    if (mIsPluginView) {
+      if (TextInputHandler::IsSecureEventInputEnabled()) {
+        MOZ_CRASH("While a plugin has focus, we must not be in secure mode");
+      }
+    } else if (mGeckoChild->GetInputContext().IsPasswordEditor() &&
+               !TextInputHandler::IsSecureEventInputEnabled()) {
+      MOZ_CRASH("A password editor has focus, but not in secure input mode");
+    } else if (!mGeckoChild->GetInputContext().IsPasswordEditor() &&
+               TextInputHandler::IsSecureEventInputEnabled()) {
+      MOZ_CRASH("A non-password editor has focus, but in secure input mode");
+    }
   }
 #endif // #if !defined(RELEASE_BUILD) || defined(DEBUG)
 
