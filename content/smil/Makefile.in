@@ -14,9 +14,7 @@ LIBRARY_NAME	= gkconsmil_s
 LIBXUL_LIBRARY	= 1
 FAIL_ON_WARNINGS = 1
 
-include $(topsrcdir)/config/config.mk
-
-INCLUDES += 	\
+LOCAL_INCLUDES += 	\
 		-I$(srcdir)/../base/src \
 		-I$(srcdir)/../../layout/style \
 		-I$(srcdir)/../events/src \

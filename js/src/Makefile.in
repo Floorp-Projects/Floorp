@@ -149,8 +149,6 @@ else
 SDK_LIBRARY = $(SHARED_LIBRARY)
 endif
 
-include $(topsrcdir)/config/config.mk
-
 ifeq (,$(MOZ_GLUE_PROGRAM_LDFLAGS))
 # When building standalone, we need to include mfbt sources, and to declare
 # "exported" mfbt symbols on its behalf when we use its headers.

@@ -25,7 +25,6 @@ IS_COMPONENT	= 1
 # name specified in NS_IMPL_NSGETMODULE
 MODULE_NAME	= nsSampleModule
 
-include $(topsrcdir)/config/config.mk
 
 # EXTRA_DSO_LDOPTS specifies linker flags when building a shared library
 # from this Makefile. We link against the "dependent glue" and against the

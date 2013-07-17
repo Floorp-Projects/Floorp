@@ -62,10 +62,9 @@ check-variable = $(if $(filter-out 0 1,$(words $($(x))z)),$(error Spaces are not
 
 $(foreach x,$(CHECK_VARS),$(check-variable))
 
-core_abspath = $(if $(findstring :,$(1)),$(1),$(if $(filter /%,$(1)),$(1),$(CURDIR)/$(1)))
-core_realpath = $(if $(realpath $(1)),$(realpath $(1)),$(call core_abspath,$(1)))
-
-core_winabspath = $(firstword $(subst /, ,$(call core_abspath,$(1)))):$(subst $(space),,$(patsubst %,\\%,$(wordlist 2,$(words $(subst /, ,$(call core_abspath,$(1)))), $(strip $(subst /, ,$(call core_abspath,$(1)))))))
+ifndef INCLUDED_FUNCTIONS_MK
+include $(topsrcdir)/config/makefiles/functions.mk
+endif
 
 RM = rm -f
 

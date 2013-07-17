@@ -16,8 +16,6 @@ LIBRARY_NAME	= test656331
 IS_COMPONENT	= 1
 FORCE_SHARED_LIB = 1
 
-include $(topsrcdir)/config/config.mk
-
 MANIFEST_FILE = bug656331.manifest
 
 EXTRA_DSO_LDOPTS = \
