@@ -65,6 +65,9 @@ DISABLED_CSRCS           += \
                 cubeb_pulse.c \
                 $(NULL)
 DEFINES         += -DUSE_PULSE
+ifeq ($(MOZ_WIDGET_TOOLKIT),gonk)
+DEFINES         += -DDISABLE_LIBPULSE_DLOPEN
+endif
 endif
 
 include $(topsrcdir)/config/rules.mk
