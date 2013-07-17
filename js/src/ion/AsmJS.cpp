@@ -4,6 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/Move.h"
+
 #include "jsmath.h"
 #include "jsworkers.h"
 #include "prmjtime.h"
@@ -19,6 +21,10 @@
 #include "jsfuninlines.h"
 
 #include "frontend/ParseNode-inl.h"
+
+#ifdef MOZ_VTUNE
+# include "jitprofiling.h"
+#endif
 
 using namespace js;
 using namespace js::frontend;
@@ -1452,7 +1458,7 @@ class MOZ_STACK_CLASS ModuleCompiler
             for (unsigned i = 0; i < slowFunctions_.length(); i++) {
                 SlowFunction &func = slowFunctions_[i];
                 JSAutoByteString name;
-                if (!js_AtomToPrintableString(cx_, func.name, &name))
+                if (!AtomToPrintableString(cx_, func.name, &name))
                     return;
                 slowFuns.reset(JS_smprintf("%s%s:%u:%u (%ums)%s", slowFuns.get(),
                                            name.ptr(), func.line, func.column, func.ms,

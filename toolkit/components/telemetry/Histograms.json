@@ -1067,6 +1067,10 @@
     "n_values": 5,
     "description": "HTTP Offline Cache Hit, Reval, Failed-Reval, Miss"
   },
+  "HTTP_OFFLINE_CACHE_DOCUMENT_LOAD": {
+    "kind": "boolean",
+    "description": "Rate of page load from offline cache"
+  },
   "CACHE_DEVICE_SEARCH_2": {
     "kind": "exponential",
     "high": "10000",
@@ -2236,6 +2240,36 @@
     "extended_statistics_ok": true,
     "description": "PLACES: Time to calculate frecency of a page (ms)"
   },
+  "UPDATER_BACKGROUND_CHECK_CODE_EXTERNAL": {
+    "kind": "enumerated",
+    "n_values": 50,
+    "description": "Updater: externally initiated (typically by the application) background update check result code (see PING_BGUC_* constants defined in /toolkit/mozapps/update/nsUpdateService.js)"
+  },
+  "UPDATER_BACKGROUND_CHECK_CODE_NOTIFY": {
+    "kind": "enumerated",
+    "n_values": 50,
+    "description": "Updater: timer initiated background update check result code (see PING_BGUC_* constants defined in /toolkit/mozapps/update/nsUpdateService.js)"
+  },
+  "UPDATER_INVALID_LASTUPDATETIME_EXTERNAL": {
+    "kind": "boolean",
+    "description": "Updater: Whether the last update time is invalid when a background update check was externally requested (typically by the application)"
+  },
+  "UPDATER_INVALID_LASTUPDATETIME_NOTIFY": {
+    "kind": "boolean",
+    "description": "Updater: Whether the last update time is invalid when a background update check was timer initiated"
+  },
+  "UPDATER_LAST_NOTIFY_INTERVAL_DAYS_EXTERNAL": {
+    "kind": "exponential",
+    "n_buckets": 10,
+    "high": "60",
+    "description": "Updater: The interval in days between the previous and the current background update check when the check was externally requested (typically by the application)"
+  },
+  "UPDATER_LAST_NOTIFY_INTERVAL_DAYS_NOTIFY": {
+    "kind": "exponential",
+    "n_buckets": 10,
+    "high": "60",
+    "description": "Updater: The interval in days between the previous and the current background update check when the check was timer initiated"
+  },
   "UPDATER_STATUS_CODES": {
     "kind": "enumerated",
     "n_values": 50,
@@ -2257,6 +2291,11 @@
     "kind": "boolean",
     "description": "Updater: Whether or not the MozillaMaintenance service is enabled"
   },
+  "UPDATER_SERVICE_ERROR_CODE": {
+    "kind": "enumerated",
+    "n_values": 100,
+    "description": "Updater: 0=success else SERVICE_* error code defined in /toolkit/mozapps/update/common/errors.h"
+  },
   "UPDATER_SERVICE_ERRORS": {
     "kind": "enumerated",
     "n_values": 30,
@@ -2277,6 +2316,11 @@
   "UPDATER_HAS_PERMISSIONS": {
     "kind": "boolean",
     "description": "Updater: Whether or not the updater has permissions"
+  },
+  "UPDATER_WIZ_LAST_PAGE_CODE": {
+    "kind": "enumerated",
+    "n_values": 25,
+    "description": "Updater: The update wizard page displayed when the UI was closed (mapped in toolkit/mozapps/update/content/updates.js)"
   },
   "THUNDERBIRD_GLODA_SIZE_MB": {
     "kind": "linear",
@@ -3668,5 +3712,45 @@
     "kind": "enumerated",
     "n_values": 4,
     "description": "Accumulates type of content (mixed, mixed passive, unmixed) per page load"
+  },
+  "FX_THUMBNAILS_BG_QUEUE_SIZE_ON_CAPTURE": {
+    "kind": "exponential",
+    "high": 100,
+    "n_buckets": 15,
+    "extended_statistics_ok": true,
+    "description": "BACKGROUND THUMBNAILS: Size of capture queue when a capture request is received"
+  },
+  "FX_THUMBNAILS_BG_CAPTURE_QUEUE_TIME_MS": {
+    "kind": "exponential",
+    "high": 300000,
+    "n_buckets": 20,
+    "extended_statistics_ok": true,
+    "description": "BACKGROUND THUMBNAILS: Time the capture request spent in the queue before being serviced (ms)"
+  },
+  "FX_THUMBNAILS_BG_CAPTURE_SERVICE_TIME_MS": {
+    "kind": "exponential",
+    "high": 30000,
+    "n_buckets": 20,
+    "extended_statistics_ok": true,
+    "description": "BACKGROUND THUMBNAILS: Time the capture took once it started and successfully completed (ms)"
+  },
+  "FX_THUMBNAILS_BG_CAPTURE_DONE_REASON": {
+    "kind": "enumerated",
+    "n_values": 4,
+    "description": "BACKGROUND THUMBNAILS: Reason the capture completed (see TEL_CAPTURE_DONE_* constants in BackgroundPageThumbs.jsm)"
+  },
+  "FX_THUMBNAILS_BG_CAPTURE_PAGE_LOAD_TIME_MS": {
+    "kind": "exponential",
+    "high": 60000,
+    "n_buckets": 20,
+    "extended_statistics_ok": true,
+    "description": "BACKGROUND THUMBNAILS: Time the capture's page load took (ms)"
+  },
+  "FX_THUMBNAILS_BG_CAPTURE_CANVAS_DRAW_TIME_MS": {
+    "kind": "exponential",
+    "high": 500,
+    "n_buckets": 15,
+    "extended_statistics_ok": true,
+    "description": "BACKGROUND THUMBNAILS: Time it took to draw the capture's window to canvas (ms)"
   }
 }

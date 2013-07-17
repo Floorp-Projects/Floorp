@@ -8,10 +8,14 @@
 #include "gfxQuartzNativeDrawing.h"
 #include "gfxQuartzSurface.h"
 #include "cairo-quartz.h"
+#include "mozilla/gfx/2D.h"
 // see cairo-quartz-surface.c for the complete list of these
 enum {
     kPrivateCGCompositeSourceOver = 2
 };
+
+using namespace mozilla::gfx;
+using namespace mozilla;
 
 // private Quartz routine needed here
 extern "C" {
@@ -21,7 +25,9 @@ extern "C" {
 gfxQuartzNativeDrawing::gfxQuartzNativeDrawing(gfxContext* ctx,
                                                const gfxRect& nativeRect,
                                                gfxFloat aBackingScale)
-    : mContext(ctx), mNativeRect(nativeRect), mBackingScale(aBackingScale)
+    : mContext(ctx)
+    , mNativeRect(nativeRect)
+    , mBackingScale(aBackingScale)
 {
     mNativeRect.RoundOut();
 }
@@ -30,6 +36,26 @@ CGContextRef
 gfxQuartzNativeDrawing::BeginNativeDrawing()
 {
     NS_ASSERTION(!mQuartzSurface, "BeginNativeDrawing called when drawing already in progress");
+
+    if (!mContext->IsCairo()) {
+      DrawTarget *dt = mContext->GetDrawTarget();
+      if (mContext->GetDrawTarget()->IsDualDrawTarget()) {
+        IntSize backingSize(NSToIntFloor(mNativeRect.width * mBackingScale),
+                            NSToIntFloor(mNativeRect.height * mBackingScale));
+        mDrawTarget = Factory::CreateDrawTarget(BACKEND_COREGRAPHICS, backingSize, FORMAT_B8G8R8A8);
+
+        Matrix transform;
+        transform.Scale(mBackingScale, mBackingScale);
+        transform.Translate(-mNativeRect.x, -mNativeRect.y);
+
+        mDrawTarget->SetTransform(transform);
+        dt = mDrawTarget;
+      }
+
+      mCGContext = mBorrowedContext.Init(dt);
+      MOZ_ASSERT(mCGContext);
+      return mCGContext;
+    }
 
     gfxPoint deviceOffset;
     nsRefPtr<gfxASurface> surf = mContext->CurrentSurface(&deviceOffset.x, &deviceOffset.y);
@@ -96,7 +122,34 @@ gfxQuartzNativeDrawing::BeginNativeDrawing()
 void
 gfxQuartzNativeDrawing::EndNativeDrawing()
 {
-    NS_ASSERTION(mQuartzSurface, "EndNativeDrawing called without BeginNativeDrawing");
+    NS_ASSERTION(mCGContext, "EndNativeDrawing called without BeginNativeDrawing");
+
+    if (mBorrowedContext.cg) {
+        MOZ_ASSERT(!mContext->IsCairo());
+        mBorrowedContext.Finish();
+        if (mDrawTarget) {
+          DrawTarget *dest = mContext->GetDrawTarget();
+          RefPtr<SourceSurface> source = mDrawTarget->Snapshot();
+
+          IntSize backingSize(NSToIntFloor(mNativeRect.width * mBackingScale),
+                              NSToIntFloor(mNativeRect.height * mBackingScale));
+
+          Matrix oldTransform = dest->GetTransform();
+          Matrix newTransform = oldTransform;
+          newTransform.Translate(mNativeRect.x, mNativeRect.y);
+          newTransform.Scale(1.0f / mBackingScale, 1.0f / mBackingScale);
+
+          dest->SetTransform(newTransform);
+
+          dest->DrawSurface(source,
+                            gfx::Rect(0, 0, backingSize.width, backingSize.height),
+                            gfx::Rect(0, 0, backingSize.width, backingSize.height));
+
+
+          dest->SetTransform(oldTransform);
+        }
+        return;
+    }
 
     cairo_quartz_finish_cg_context_with_clip(mSurfaceContext->GetCairo());
     mQuartzSurface->MarkDirty();

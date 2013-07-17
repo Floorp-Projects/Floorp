@@ -10,7 +10,6 @@ relativesrcdir = @relativesrcdir@
 
 LIBRARY_NAME     = dombindings_test_s
 LIBXUL_LIBRARY   = 1
-FORCE_STATIC_LIB = 1
 # Do NOT export this library.  We don't actually want our test code
 # being added to libxul or anything.
 

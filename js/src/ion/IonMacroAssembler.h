@@ -24,6 +24,7 @@
 #include "ion/ParallelFunctions.h"
 #include "ion/VMFunctions.h"
 #include "vm/ForkJoin.h"
+#include "vm/ProxyObject.h"
 #include "vm/Shape.h"
 #include "vm/TypedArrayObject.h"
 
@@ -652,11 +653,21 @@ class MacroAssembler : public MacroAssemblerSpecific
         Push(ImmWord(uintptr_t(NULL)));
     }
 
+    void loadForkJoinSlice(Register slice, Register scratch);
+    void loadContext(Register cxReg, Register scratch, ExecutionMode executionMode);
+
     void enterParallelExitFrameAndLoadSlice(const VMFunction *f, Register slice,
                                             Register scratch);
 
     void enterExitFrameAndLoadContext(const VMFunction *f, Register cxReg, Register scratch,
                                       ExecutionMode executionMode);
+
+    void enterFakeParallelExitFrame(Register slice, Register scratch,
+                                    IonCode *codeVal = NULL);
+
+    void enterFakeExitFrame(Register cxReg, Register scratch,
+                            ExecutionMode executionMode,
+                            IonCode *codeVal = NULL);
 
     void leaveExitFrame() {
         freeStack(IonExitFooterFrame::Size());
@@ -743,9 +754,9 @@ class MacroAssembler : public MacroAssemblerSpecific
         // of the JSObject::isWrapper test performed in EmulatesUndefined.  If none
         // of the branches are taken, we can check class flags directly.
         loadObjClass(objReg, scratch);
-        branchPtr(Assembler::Equal, scratch, ImmWord(&ObjectProxyClass), slowCheck);
-        branchPtr(Assembler::Equal, scratch, ImmWord(&OuterWindowProxyClass), slowCheck);
-        branchPtr(Assembler::Equal, scratch, ImmWord(&FunctionProxyClass), slowCheck);
+        branchPtr(Assembler::Equal, scratch, ImmWord(&ObjectProxyObject::class_), slowCheck);
+        branchPtr(Assembler::Equal, scratch, ImmWord(&OuterWindowProxyObject::class_), slowCheck);
+        branchPtr(Assembler::Equal, scratch, ImmWord(&FunctionProxyObject::class_), slowCheck);
 
         test32(Address(scratch, Class::offsetOfFlags()), Imm32(JSCLASS_EMULATES_UNDEFINED));
         return truthy ? Assembler::Zero : Assembler::NonZero;
@@ -919,8 +930,6 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     void printf(const char *output);
     void printf(const char *output, Register value);
-
-    void copyMem(Register copyFrom, Register copyEnd, Register copyTo, Register temp);
 
     void convertInt32ValueToDouble(const Address &address, Register scratch, Label *done);
     void convertValueToDouble(ValueOperand value, FloatRegister output, Label *fail);

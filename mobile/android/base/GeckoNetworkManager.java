@@ -10,7 +10,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.ConnectivityManager;
+import android.net.DhcpInfo;
 import android.net.NetworkInfo;
+import android.net.wifi.WifiManager;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 
@@ -142,6 +144,20 @@ public class GeckoNetworkManager extends BroadcastReceiver {
         mApplicationContext.unregisterReceiver(sInstance);
     }
 
+    private int wifiDhcpGatewayAddress() {
+        if (mNetworkType != NetworkType.NETWORK_WIFI) {
+            return 0;
+        }
+ 
+        WifiManager mgr = (WifiManager)sInstance.mApplicationContext.getSystemService(Context.WIFI_SERVICE);
+        DhcpInfo d = mgr.getDhcpInfo();
+        if (d == null) {
+            return 0;
+        }
+
+        return d.gateway;
+    }
+
     private void updateNetworkType() {
         NetworkType previousNetworkType = mNetworkType;
         mNetworkType = getNetworkType();
@@ -152,17 +168,22 @@ public class GeckoNetworkManager extends BroadcastReceiver {
 
         GeckoAppShell.sendEventToGecko(GeckoEvent.createNetworkEvent(
                                        getNetworkSpeed(mNetworkType),
-                                       isNetworkUsuallyMetered(mNetworkType)));
+                                       isNetworkUsuallyMetered(mNetworkType),
+                                       mNetworkType == NetworkType.NETWORK_WIFI,
+                                       wifiDhcpGatewayAddress()));
     }
 
     public double[] getCurrentInformation() {
         return new double[] { getNetworkSpeed(mNetworkType),
-                              isNetworkUsuallyMetered(mNetworkType) ? 1.0 : 0.0 };
+                              isNetworkUsuallyMetered(mNetworkType) ? 1.0 : 0.0,
+                              (mNetworkType == NetworkType.NETWORK_WIFI) ? 1.0 : 0.0,
+                              wifiDhcpGatewayAddress()};
     }
 
     public void enableNotifications() {
         // We set mShouldNotify *after* calling updateNetworkType() to make sure we
         // don't notify an eventual change in mNetworkType.
+        mNetworkType = NetworkType.NETWORK_NONE; // force a notification
         updateNetworkType();
         mShouldNotify = true;
 

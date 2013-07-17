@@ -8,8 +8,6 @@
 #include "jscntxt.h" /* for error messages */
 #include "jsobj.h" /* for unwrapping without a context */
 
-#include "vm/ObjectImpl-inl.h"
-
 using JS::PerfMeasurement;
 
 // You cannot forward-declare a static object in C++, so instead

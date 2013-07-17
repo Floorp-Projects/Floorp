@@ -44,7 +44,7 @@
                             ["textarea"]);
 
         testTextAfterOffset(kCaretOffset, BOUNDARY_LINE_END, "", 15, 15,
-                            "textarea", kOk, kTodo, kTodo);
+                            [ "textarea" ]);
 
         testTextAtOffset(kCaretOffset, BOUNDARY_LINE_START, "words", 10, 15,
                          [ "textarea" ]);
@@ -52,11 +52,11 @@
         testTextAtOffset(kCaretOffset, BOUNDARY_LINE_END, "words", 10, 15,
                          [ "textarea" ]);
 
-        testTextBeforeOffset(kCaretOffset, BOUNDARY_LINE_START, "words", 10, 15,
-                             "textarea", kOk, kOk, kOk);
+        testTextBeforeOffset(kCaretOffset, BOUNDARY_LINE_START, "two ", 6, 10,
+                             [ "textarea" ]);
 
         testTextBeforeOffset(kCaretOffset, BOUNDARY_LINE_END, "\ntwo ", 5, 10,
-                             "textarea", kTodo, kTodo, kTodo);
+                             "textarea", kTodo, kTodo, kOk);
       }
 
       this.getID = function moveToLastLineEnd_getID()
@@ -72,10 +72,10 @@
       this.finalCheck = function moveToLastLineStart_finalCheck()
       {
         testTextAfterOffset(kCaretOffset, BOUNDARY_LINE_START, "", 15, 15,
-                            "textarea", kTodo, kTodo, kOk);
+                            [ "textarea" ]);
 
         testTextAfterOffset(kCaretOffset, BOUNDARY_LINE_END, "", 15, 15,
-                            "textarea", kTodo, kTodo, kOk);
+                            [ "textarea" ]);
 
         testTextAtOffset(kCaretOffset, BOUNDARY_LINE_START, "words", 10, 15,
                          [ "textarea" ]);
@@ -84,7 +84,7 @@
                          [ "textarea" ]);
 
         testTextBeforeOffset(kCaretOffset, BOUNDARY_LINE_START, "two ", 6, 10,
-                             "textarea", kTodo, kTodo, kOk);
+                             [ "textarea" ]);
 
         testTextBeforeOffset(kCaretOffset, BOUNDARY_LINE_END, "\ntwo ", 5, 10,
                              "textarea", kTodo, kTodo, kOk);
@@ -104,10 +104,10 @@
       this.finalCheck = function moveToMiddleLineStart_finalCheck()
       {
         testTextAfterOffset(kCaretOffset, BOUNDARY_LINE_START, "words", 10, 15,
-                            "textarea", kTodo, kTodo, kTodo);
+                            [ "textarea" ]);
 
         testTextAfterOffset(kCaretOffset, BOUNDARY_LINE_END, "words", 10, 15,
-                            "textarea", kTodo, kTodo, kTodo);
+                            [ "textarea" ]);
 
         testTextAtOffset(kCaretOffset, BOUNDARY_LINE_START, "two ", 6, 10,
                          [ "textarea" ]);
@@ -116,10 +116,10 @@
                          [ "textarea" ]);
 
         testTextBeforeOffset(kCaretOffset, BOUNDARY_LINE_START, "aword\n", 0, 6,
-                             "textarea", kTodo, kTodo, kOk);
+                             [ "textarea" ]);
 
         testTextBeforeOffset(kCaretOffset, BOUNDARY_LINE_END, "aword", 0, 5,
-                             "textarea", kTodo, kTodo, kTodo);
+                             [ "textarea" ]);
       }
 
       this.getID = function moveToMiddleLineStart_getID()
@@ -135,10 +135,10 @@
       this.finalCheck = function moveToMiddleLineEnd_finalCheck()
       {
         testTextAfterOffset(kCaretOffset, BOUNDARY_LINE_START, "words", 10, 15,
-                            "textarea", kTodo, kTodo, kTodo);
+                            [ "textarea" ]);
 
         testTextAfterOffset(kCaretOffset, BOUNDARY_LINE_END, "words", 10, 15,
-                            "textarea", kTodo, kTodo, kOk);
+                            [ "textarea" ]);
 
         testTextAtOffset(kCaretOffset, BOUNDARY_LINE_START, "two ", 6, 10,
                          [ "textarea" ]);
@@ -147,10 +147,10 @@
                          [ "textarea" ]);
 
         testTextBeforeOffset(kCaretOffset, BOUNDARY_LINE_START, "aword\n", 0, 6,
-                             "textarea", kTodo, kTodo, kTodo);
+                             [ "textarea" ]);
 
         testTextBeforeOffset(kCaretOffset, BOUNDARY_LINE_END, "aword", 0, 5,
-                             "textarea", kTodo, kTodo, kTodo);
+                             [ "textarea" ]);
       }
 
       this.getID = function moveToMiddleLineEnd_getID()
@@ -166,10 +166,10 @@
       this.finalCheck = function moveToFirstLineStart_finalCheck()
       {
         testTextAfterOffset(kCaretOffset, BOUNDARY_LINE_START, "two ", 6, 10,
-                            "textarea", kTodo, kTodo, kTodo);
+                            [ "textarea" ]);
 
-        testTextAfterOffset(kCaretOffset, BOUNDARY_LINE_END, "aword", 0, 5,
-                            "textarea", kOk, kOk, kOk);
+        testTextAfterOffset(kCaretOffset, BOUNDARY_LINE_END, "\ntwo ", 5, 10,
+                            [ "textarea" ]);
 
         testTextAtOffset(kCaretOffset, BOUNDARY_LINE_START, "aword\n", 0, 6,
                          [ "textarea" ]);
@@ -178,7 +178,7 @@
                          [ "textarea" ]);
 
         testTextBeforeOffset(kCaretOffset, BOUNDARY_LINE_START, "", 0, 0,
-                             "textarea", kOk, kOk, kOk);
+                             [ "textarea" ]);
 
         testTextBeforeOffset(kCaretOffset, BOUNDARY_LINE_END, "", 0, 0,
                              "textarea", kOk, kOk, kOk);
@@ -197,10 +197,10 @@
       this.finalCheck = function moveToFirstLineStart_finalCheck()
       {
         testTextAfterOffset(kCaretOffset, BOUNDARY_LINE_START, "two ", 6, 10,
-                            "textarea", kTodo, kTodo, kTodo);
+                            [ "textarea" ]);
 
         testTextAfterOffset(kCaretOffset, BOUNDARY_LINE_END, "\ntwo ", 5, 10,
-                            "textarea", kTodo, kTodo, kTodo);
+                            [ "textarea" ]);
 
         testTextAtOffset(kCaretOffset, BOUNDARY_LINE_START, "aword\n", 0, 6,
                          [ "textarea" ]);
@@ -209,10 +209,10 @@
                          [ "textarea" ]);
 
         testTextBeforeOffset(kCaretOffset, BOUNDARY_LINE_START, "", 0, 0,
-                             "textarea", kTodo, kOk, kTodo);
+                             [ "textarea" ]);
 
         testTextBeforeOffset(kCaretOffset, BOUNDARY_LINE_END, "", 0, 0,
-                             "textarea", kTodo, kOk, kTodo);
+                             [ "textarea" ]);
       }
 
       this.getID = function moveToFirstLineEnd_getID()
@@ -224,8 +224,6 @@
     var gQueue = null;
     function doTest()
     {
-      SimpleTest.expectAssertions(6);
-
       gQueue = new eventQueue();
       gQueue.push(new moveToLastLineEnd());
       gQueue.push(new moveToLastLineStart());

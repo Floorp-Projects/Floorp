@@ -12,14 +12,12 @@ include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME	= domencoding_s
 LIBXUL_LIBRARY	= 1
-FORCE_STATIC_LIB = 1
 
 LOCAL_INCLUDES = \
 	-I$(topsrcdir)/intl/locale/src \
 	$(NULL)
 
 include $(topsrcdir)/dom/dom-config.mk
-include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/config/rules.mk
 
 EncodingUtils.$(OBJ_SUFFIX): labelsencodings.properties.h

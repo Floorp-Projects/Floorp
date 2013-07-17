@@ -15,16 +15,14 @@ LIBRARY_NAME   = nkftp_s
 MSVC_ENABLE_PGO := 1
 LIBXUL_LIBRARY = 1
 
-FORCE_STATIC_LIB = 1
-
 LOCAL_INCLUDES = \
   -I$(srcdir)/../../base/src \
   -I$(topsrcdir)/xpcom/ds \
   $(NULL)
 
 include $(topsrcdir)/config/config.mk
-include $(topsrcdir)/ipc/chromium/chromium-config.mk
 include $(topsrcdir)/config/rules.mk
+include $(topsrcdir)/ipc/chromium/chromium-config.mk
 
 ifeq ($(OS_ARCH),WINNT)
 ifndef MOZ_DEBUG
@@ -34,4 +32,3 @@ endif
 endif
 endif # WINNT
 
-DEFINES += -DIMPL_NS_NET

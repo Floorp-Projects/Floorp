@@ -39,7 +39,7 @@ function runTests() {
     let res = (yield);
     if (res == "done") {
       SimpleTest.finish();
-      yield;
+      yield undefined;
     }
     is(res, "pass");
   }

@@ -161,7 +161,6 @@ HTMLMenuItemElement::HTMLMenuItemElement(
     mCheckedDirty(false),
     mChecked(false)
 {
-  SetIsDOMBinding();
   mParserCreating = aFromParser;
 }
 

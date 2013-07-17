@@ -4,17 +4,8 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 'use strict';
 
-const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
-
-Cu.import('resource://gre/modules/XPCOMUtils.jsm');
-Cu.import('resource://gre/modules/Services.jsm');
-Cu.import('resource://testing-common/httpd.js');
-
 const kInterfaceName = 'wifi';
 
-XPCOMUtils.defineLazyServiceGetter(this, 'gCaptivePortalDetector',
-                                   '@mozilla.org/toolkit/captive-detector;1',
-                                   'nsICaptivePortalDetector');
 var server;
 var step = 0;
 
@@ -30,7 +21,7 @@ function fakeUIResponse() {
     if (topic === 'captive-portal-login') {
       let xhr = Cc['@mozilla.org/xmlextras/xmlhttprequest;1']
                   .createInstance(Ci.nsIXMLHttpRequest);
-      xhr.open('GET', kServerURL + kCanonicalSitePath, true);
+      xhr.open('GET', gServerURL + kCanonicalSitePath, true);
       xhr.send();
       do_check_eq(++step, 2);
       let details = JSON.parse(data);
@@ -51,7 +42,7 @@ function test_cancel() {
     complete: function complete(success) {
       do_check_eq(++step, 3);
       do_check_false(success);
-      server.stop(do_test_finished);
+      gServer.stop(do_test_finished);
     },
   };
 
@@ -59,11 +50,5 @@ function test_cancel() {
 }
 
 function run_test() {
-  server = new HttpServer();
-  server.registerPathHandler(kCanonicalSitePath, xhr_handler);
-  server.start(4444);
-
-  fakeUIResponse();
-
-  test_cancel();
+  run_captivedetect_test(xhr_handler, fakeUIResponse, test_cancel);
 }

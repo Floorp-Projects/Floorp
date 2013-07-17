@@ -44,6 +44,7 @@
 #include "FrameMetrics.h"
 #include "ProcessUtils.h"
 #include "mozilla/dom/TabContext.h"
+#include "mozilla/dom/ContentChild.h"
 
 struct gfxMatrix;
 class nsICachedFileDescriptorListener;
@@ -77,12 +78,13 @@ public:
   NS_FORWARD_SAFE_NSIMESSAGESENDER(mMessageManager)
   NS_IMETHOD SendSyncMessage(const nsAString& aMessageName,
                              const JS::Value& aObject,
+                             const JS::Value& aRemote,
                              JSContext* aCx,
                              uint8_t aArgc,
                              JS::Value* aRetval)
   {
     return mMessageManager
-      ? mMessageManager->SendSyncMessage(aMessageName, aObject, aCx, aArgc, aRetval)
+      ? mMessageManager->SendSyncMessage(aMessageName, aObject, aRemote, aCx, aArgc, aRetval)
       : NS_ERROR_NULL_POINTER;
   }
   NS_IMETHOD GetContent(nsIDOMWindow** aContent) MOZ_OVERRIDE;
@@ -163,8 +165,8 @@ public:
     static void PreloadSlowThings();
 
     /** Return a TabChild with the given attributes. */
-    static already_AddRefed<TabChild> 
-    Create(const TabContext& aContext, uint32_t aChromeFlags);
+    static already_AddRefed<TabChild>
+    Create(ContentChild* aManager, const TabContext& aContext, uint32_t aChromeFlags);
 
     virtual ~TabChild();
 
@@ -186,11 +188,15 @@ public:
     /**
      * MessageManagerCallback methods that we override.
      */
-    virtual bool DoSendSyncMessage(const nsAString& aMessage,
+    virtual bool DoSendSyncMessage(JSContext* aCx,
+                                   const nsAString& aMessage,
                                    const mozilla::dom::StructuredCloneData& aData,
+                                   JS::Handle<JSObject *> aCpows,
                                    InfallibleTArray<nsString>* aJSONRetVal);
-    virtual bool DoSendAsyncMessage(const nsAString& aMessage,
-                                    const mozilla::dom::StructuredCloneData& aData);
+    virtual bool DoSendAsyncMessage(JSContext* aCx,
+                                    const nsAString& aMessage,
+                                    const mozilla::dom::StructuredCloneData& aData,
+                                    JS::Handle<JSObject *> aCpows);
 
     virtual bool RecvLoadURL(const nsCString& uri);
     virtual bool RecvCacheFileDescriptor(const nsString& aPath,
@@ -227,7 +233,8 @@ public:
     virtual bool RecvActivateFrameEvent(const nsString& aType, const bool& capture);
     virtual bool RecvLoadRemoteScript(const nsString& aURL);
     virtual bool RecvAsyncMessage(const nsString& aMessage,
-                                  const ClonedMessageData& aData);
+                                  const ClonedMessageData& aData,
+                                  const InfallibleTArray<CpowEntry>& aCpows);
 
     virtual PDocumentRendererChild*
     AllocPDocumentRendererChild(const nsRect& documentRect, const gfxMatrix& transform,
@@ -302,8 +309,7 @@ public:
      *  the event.
      */
     bool DispatchMouseEvent(const nsString& aType,
-                            const float&    aX,
-                            const float&    aY,
+                            const CSSPoint& aPoint,
                             const int32_t&  aButton,
                             const int32_t&  aClickCount,
                             const int32_t&  aModifiers,
@@ -325,6 +331,8 @@ public:
     void CancelCachedFileDescriptorCallback(
                                     const nsAString& aPath,
                                     nsICachedFileDescriptorListener* aCallback);
+
+    ContentChild* Manager() { return mManager; }
 
 protected:
     virtual PRenderFrameChild* AllocPRenderFrameChild(ScrollingBehavior* aScrolling,
@@ -349,7 +357,7 @@ private:
      *
      * |aIsBrowserElement| indicates whether we're a browser (but not an app).
      */
-    TabChild(const TabContext& aContext, uint32_t aChromeFlags);
+    TabChild(ContentChild* aManager, const TabContext& aContext, uint32_t aChromeFlags);
 
     nsresult Init();
 
@@ -398,7 +406,7 @@ private:
                                        const nsACString& aJSONData);
 
     void DispatchSynthesizedMouseEvent(uint32_t aMsg, uint64_t aTime,
-                                       const nsIntPoint& aRefPoint);
+                                       const LayoutDevicePoint& aRefPoint);
 
     // These methods are used for tracking synthetic mouse events
     // dispatched for compatibility.  On each touch event, we
@@ -429,13 +437,14 @@ private:
     nsCOMPtr<nsIURI> mLastURI;
     FrameMetrics mLastMetrics;
     RenderFrameChild* mRemoteFrame;
+    nsRefPtr<ContentChild> mManager;
     nsRefPtr<TabChildGlobal> mTabChildGlobal;
     uint32_t mChromeFlags;
     nsIntRect mOuterRect;
     ScreenIntSize mInnerSize;
     // When we're tracking a possible tap gesture, this is the "down"
     // point of the touchstart.
-    nsIntPoint mGestureDownPoint;
+    LayoutDevicePoint mGestureDownPoint;
     // The touch identifier of the active gesture.
     int32_t mActivePointerId;
     // A timer task that fires if the tap-hold timeout is exceeded by

@@ -18,10 +18,10 @@
 namespace mozilla {
 namespace dom {
 
-class HTMLSharedObjectElement : public nsGenericHTMLElement
-                              , public nsObjectLoadingContent
-                              , public nsIDOMHTMLAppletElement
-                              , public nsIDOMHTMLEmbedElement
+class HTMLSharedObjectElement MOZ_FINAL : public nsGenericHTMLElement
+                                        , public nsObjectLoadingContent
+                                        , public nsIDOMHTMLAppletElement
+                                        , public nsIDOMHTMLEmbedElement
 {
 public:
   HTMLSharedObjectElement(already_AddRefed<nsINodeInfo> aNodeInfo,

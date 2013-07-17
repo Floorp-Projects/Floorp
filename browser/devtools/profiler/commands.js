@@ -10,7 +10,7 @@ Cu.import("resource://gre/modules/devtools/gcli.jsm");
 loader.lazyGetter(this, "gDevTools",
   () => Cu.import("resource:///modules/devtools/gDevTools.jsm", {}).gDevTools);
 
-var Promise = require("sdk/core/promise");
+var promise = require("sdk/core/promise");
 
 /*
  * 'profiler' command. Doesn't do anything.
@@ -69,7 +69,7 @@ gcli.addCommand({
         throw gcli.lookup("profilerAlreadyStarted2");
 
       panel.toggleRecording();
-      return gcli.lookup("profilerStarted");
+      return gcli.lookup("profilerStarted2");
     }
 
     return gDevTools.showToolbox(context.environment.target, "jsprofiler")

@@ -46,13 +46,13 @@ public:
   void ServerDataHandler(mozilla::ipc::UnixSocketRawData* aMessage);
 
   /*
-   * If a application wnats to send a file, first, it needs to
+   * If an application wants to send a file, first, it needs to
    * call Connect() to create a valid RFCOMM connection. After
    * that, call SendFile()/StopSendingFile() to control file-sharing
    * process. During the file transfering process, the application
    * will receive several system messages which contain the processed
    * percentage of file. At the end, the application will get another
-   * system message indicating that te process is complete, then it can
+   * system message indicating that the process is complete, then it can
    * either call Disconnect() to close RFCOMM connection or start another
    * file-sending thread via calling SendFile() again.
    */
@@ -74,6 +74,7 @@ public:
 
   void ExtractPacketHeaders(const ObexHeaderSet& aHeader);
   bool ExtractBlobHeaders();
+  void CheckPutFinal(uint32_t aNumRead);
 
   // Return true if there is an ongoing file-transfer session, please see
   // Bug 827267 for more information.
@@ -109,6 +110,7 @@ private:
   void ReplyToConnect();
   void ReplyToDisconnectOrAbort();
   void ReplyToPut(bool aFinal, bool aContinue);
+  void ReplyError(uint8_t aError);
   void AfterOppConnected();
   void AfterFirstPut();
   void AfterOppDisconnected();
@@ -118,6 +120,8 @@ private:
   void RetrieveSentFileName();
   void NotifyAboutFileChange();
   bool AcquireSdcardMountLock();
+  void SendObexData(uint8_t* aData, uint8_t aOpcode, int aSize);
+
   /**
    * OBEX session status.
    * Set when OBEX session is established.
@@ -188,6 +192,12 @@ private:
    */
   bool mWaitingForConfirmationFlag;
 
+  nsString mFileName;
+  nsString mContentType;
+  uint32_t mFileLength;
+  uint32_t mSentFileLength;
+  bool mWaitingToSendPutFinal;
+
   nsAutoArrayPtr<uint8_t> mBodySegment;
   nsAutoArrayPtr<uint8_t> mReceivedDataBuffer;
 
@@ -198,7 +208,6 @@ private:
   /**
    * A seperate member thread is required because our read calls can block
    * execution, which is not allowed to happen on the IOThread.
-   * 
    */
   nsCOMPtr<nsIThread> mReadFileThread;
   nsCOMPtr<nsIOutputStream> mOutputStream;

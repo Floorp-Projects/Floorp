@@ -41,7 +41,7 @@ public:
 
     virtual bool QueueBuffer(ANativeWindowBuffer* buf) = 0;
 
-    uint32_t xdpi;
+    float xdpi;
     uint32_t surfaceformat;
 };
 

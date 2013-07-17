@@ -387,6 +387,8 @@ Range::Range(const MDefinition *def)
 
     if (def->type() == MIRType_Int32)
         truncate();
+    else if (def->type() == MIRType_Boolean)
+        truncateToBoolean();
 }
 
 const int64_t RANGE_INF_MAX = (int64_t) JSVAL_INT_MAX + 1;
@@ -708,7 +710,7 @@ MPhi::computeRange()
 
     Range *range = NULL;
     JS_ASSERT(getOperand(0)->op() != MDefinition::Op_OsrValue);
-    for (size_t i = 0; i < numOperands(); i++) {
+    for (size_t i = 0, e = numOperands(); i < e; i++) {
         if (getOperand(i)->block()->earlyAbort()) {
             IonSpew(IonSpew_Range, "Ignoring unreachable input %d", getOperand(i)->id());
             continue;
@@ -893,6 +895,9 @@ MAbs::computeRange()
 
     Range other(getOperand(0));
     setRange(Range::abs(&other));
+
+    if (implicitTruncate_ && !range()->isInt32())
+        setRange(new Range(INT32_MIN, INT32_MAX));
 }
 
 void
@@ -915,6 +920,9 @@ MAdd::computeRange()
     Range right(getOperand(1));
     Range *next = Range::add(&left, &right);
     setRange(next);
+
+    if (isTruncated() && !range()->isInt32())
+        setRange(new Range(INT32_MIN, INT32_MAX));
 }
 
 void
@@ -926,6 +934,9 @@ MSub::computeRange()
     Range right(getOperand(1));
     Range *next = Range::sub(&left, &right);
     setRange(next);
+
+    if (isTruncated() && !range()->isInt32())
+        setRange(new Range(INT32_MIN, INT32_MAX));
 }
 
 void
@@ -938,6 +949,10 @@ MMul::computeRange()
     if (canBeNegativeZero())
         canBeNegativeZero_ = Range::negativeZeroMul(&left, &right);
     setRange(Range::mul(&left, &right));
+
+    // Truncated multiplications could overflow in both directions
+    if (isTruncated() && !range()->isInt32())
+        setRange(new Range(INT32_MIN, INT32_MAX));
 }
 
 void
@@ -1491,6 +1506,14 @@ Range::truncate()
     set(l, h, false, 32);
 }
 
+void
+Range::truncateToBoolean()
+{
+    if (isBoolean())
+        return;
+    set(0, 1, false, 1);
+}
+
 bool
 MDefinition::truncate()
 {
@@ -1576,6 +1599,13 @@ MDiv::truncate()
     // Remember analysis, needed to remove negative zero checks.
     setTruncated(true);
 
+    // Divisions where the lhs and rhs are unsigned and the result is
+    // truncated can be lowered more efficiently.
+    if (specialization() == MIRType_Int32 && tryUseUnsignedOperands()) {
+        unsigned_ = true;
+        return true;
+    }
+
     // No modifications.
     return false;
 }
@@ -1585,6 +1615,12 @@ MMod::truncate()
 {
     // Remember analysis, needed to remove negative zero checks.
     setTruncated(true);
+
+    // As for division, handle unsigned modulus with a truncated result.
+    if (specialization() == MIRType_Int32 && tryUseUnsignedOperands()) {
+        unsigned_ = true;
+        return true;
+    }
 
     // No modifications.
     return false;
@@ -1695,7 +1731,7 @@ void
 AdjustTruncatedInputs(MInstruction *truncated)
 {
     MBasicBlock *block = truncated->block();
-    for (size_t i = 0; i < truncated->numOperands(); i++) {
+    for (size_t i = 0, e = truncated->numOperands(); i < e; i++) {
         if (!truncated->isOperandTruncated(i))
             continue;
         if (truncated->getOperand(i)->type() == MIRType_Int32)
@@ -1749,7 +1785,14 @@ RangeAnalysis::truncate()
             // Set truncated flag if range analysis ensure that it has no
             // rounding errors and no fractional part.
             const Range *r = iter->range();
-            if (!r || r->hasRoundingErrors())
+            bool hasRoundingErrors = !r || r->hasRoundingErrors();
+
+            // Special case integer division: the result of a/b can be infinite
+            // but cannot actually have rounding errors induced by truncation.
+            if (iter->isDiv() && iter->toDiv()->specialization() == MIRType_Int32)
+                hasRoundingErrors = false;
+
+            if (hasRoundingErrors)
                 continue;
 
             // Ensure all observable uses are truncated.

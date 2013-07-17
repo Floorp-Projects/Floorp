@@ -15,10 +15,10 @@
 namespace mozilla {
 namespace dom {
 
-class HTMLOutputElement : public nsGenericHTMLFormElement,
-                          public nsIDOMHTMLOutputElement,
-                          public nsStubMutationObserver,
-                          public nsIConstraintValidation
+class HTMLOutputElement MOZ_FINAL : public nsGenericHTMLFormElement,
+                                    public nsIDOMHTMLOutputElement,
+                                    public nsStubMutationObserver,
+                                    public nsIConstraintValidation
 {
 public:
   using nsIConstraintValidation::GetValidationMessage;

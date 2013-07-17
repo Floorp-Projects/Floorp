@@ -1242,7 +1242,7 @@ class ObjectImpl : public gc::Cell
     }
 
     static inline bool
-    isExtensible(JSContext *cx, Handle<ObjectImpl*> obj, bool *extensible);
+    isExtensible(ExclusiveContext *cx, Handle<ObjectImpl*> obj, bool *extensible);
 
     // Indicates whether a non-proxy is extensible.  Don't call on proxies!
     // This method really shouldn't exist -- but there are a few internal
@@ -1282,8 +1282,6 @@ class ObjectImpl : public gc::Cell
         MOZ_ASSUME_UNREACHABLE("NYI");
     }
 
-    inline bool isProxy() const;
-
   protected:
 #ifdef DEBUG
     void checkShapeConsistency();
@@ -1292,18 +1290,19 @@ class ObjectImpl : public gc::Cell
 #endif
 
     Shape *
-    replaceWithNewEquivalentShape(JSContext *cx, Shape *existingShape, Shape *newShape = NULL);
+    replaceWithNewEquivalentShape(ExclusiveContext *cx,
+                                  Shape *existingShape, Shape *newShape = NULL);
 
     enum GenerateShape {
         GENERATE_NONE,
         GENERATE_SHAPE
     };
 
-    bool setFlag(JSContext *cx, /*BaseShape::Flag*/ uint32_t flag,
+    bool setFlag(ExclusiveContext *cx, /*BaseShape::Flag*/ uint32_t flag,
                  GenerateShape generateShape = GENERATE_NONE);
-    bool clearFlag(JSContext *cx, /*BaseShape::Flag*/ uint32_t flag);
+    bool clearFlag(ExclusiveContext *cx, /*BaseShape::Flag*/ uint32_t flag);
 
-    bool toDictionaryMode(JSContext *cx);
+    bool toDictionaryMode(ExclusiveContext *cx);
 
   private:
     /*
@@ -1424,7 +1423,7 @@ class ObjectImpl : public gc::Cell
         return shape_;
     }
 
-    bool generateOwnShape(JSContext *cx, js::Shape *newShape = NULL) {
+    bool generateOwnShape(ExclusiveContext *cx, js::Shape *newShape = NULL) {
         return replaceWithNewEquivalentShape(cx, lastProperty(), newShape);
     }
 
@@ -1462,21 +1461,21 @@ class ObjectImpl : public gc::Cell
     /* Compute dynamicSlotsCount() for this object. */
     inline uint32_t numDynamicSlots() const;
 
-    Shape *nativeLookup(JSContext *cx, jsid id);
-    Shape *nativeLookup(JSContext *cx, PropertyId pid) {
+    Shape *nativeLookup(ExclusiveContext *cx, jsid id);
+    Shape *nativeLookup(ExclusiveContext *cx, PropertyId pid) {
         return nativeLookup(cx, pid.asId());
     }
-    Shape *nativeLookup(JSContext *cx, PropertyName *name) {
+    Shape *nativeLookup(ExclusiveContext *cx, PropertyName *name) {
         return nativeLookup(cx, NameToId(name));
     }
 
-    bool nativeContains(JSContext *cx, jsid id) {
+    bool nativeContains(ExclusiveContext *cx, jsid id) {
         return nativeLookup(cx, id) != NULL;
     }
-    bool nativeContains(JSContext *cx, PropertyName* name) {
+    bool nativeContains(ExclusiveContext *cx, PropertyName* name) {
         return nativeLookup(cx, name) != NULL;
     }
-    inline bool nativeContains(JSContext *cx, Shape* shape);
+    inline bool nativeContains(ExclusiveContext *cx, Shape* shape);
 
     /*
      * Contextless; can be called from parallel code. Returns false if the
@@ -1654,6 +1653,8 @@ class ObjectImpl : public gc::Cell
     static inline void readBarrier(ObjectImpl *obj);
     static inline void writeBarrierPre(ObjectImpl *obj);
     static inline void writeBarrierPost(ObjectImpl *obj, void *addr);
+    static inline void writeBarrierPostRelocate(ObjectImpl *obj, void *addr);
+    static inline void writeBarrierPostRemove(ObjectImpl *obj, void *addr);
     inline void privateWriteBarrierPre(void **oldval);
     inline void privateWriteBarrierPost(void **pprivate);
     void markChildren(JSTracer *trc);

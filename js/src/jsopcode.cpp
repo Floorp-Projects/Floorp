@@ -34,17 +34,16 @@
 #include "frontend/SourceNotes.h"
 #include "js/CharacterEncoding.h"
 #include "vm/Shape.h"
+#include "vm/ScopeObject.h"
 #include "vm/StringBuffer.h"
 
 #include "jscntxtinlines.h"
-#include "jsobjinlines.h"
 #include "jscompartmentinlines.h"
+#include "jsinferinlines.h"
 #include "jsopcodeinlines.h"
+#include "jsscriptinlines.h"
 
 #include "jsautooplen.h"
-
-#include "vm/RegExpObject-inl.h"
-#include "vm/ScopeObject-inl.h"
 
 using namespace js;
 using namespace js::gc;
@@ -491,7 +490,7 @@ ToDisassemblySource(JSContext *cx, jsval v, JSAutoByteString *bytes)
                                : JSID_TO_ATOM(shape->propid());
 
                 JSAutoByteString bytes;
-                if (!js_AtomToPrintableString(cx, atom, &bytes))
+                if (!AtomToPrintableString(cx, atom, &bytes))
                     return false;
 
                 r.popFront();

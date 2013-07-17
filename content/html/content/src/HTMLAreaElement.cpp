@@ -19,7 +19,6 @@ HTMLAreaElement::HTMLAreaElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo)
   , Link(MOZ_THIS_IN_INITIALIZER_LIST())
 {
-  SetIsDOMBinding();
 }
 
 HTMLAreaElement::~HTMLAreaElement()

@@ -16,8 +16,6 @@
 
 #include "vm/Shape.h"
 
-#include "ion/IonFrames-inl.h"
-
 #include "vm/Interpreter-inl.h"
 
 using namespace js;
@@ -28,7 +26,7 @@ using mozilla::DebugOnly;
 void
 CodeLocationJump::repoint(IonCode *code, MacroAssembler *masm)
 {
-    JS_ASSERT(!absolute_);
+    JS_ASSERT(state_ == Relative);
     size_t new_off = (size_t)raw_;
 #ifdef JS_SMALL_BRANCH
     size_t jumpTableEntryOffset = reinterpret_cast<size_t>(jumpTableEntry_);
@@ -52,7 +50,7 @@ CodeLocationJump::repoint(IonCode *code, MacroAssembler *masm)
 void
 CodeLocationLabel::repoint(IonCode *code, MacroAssembler *masm)
 {
-     JS_ASSERT(!absolute_);
+     JS_ASSERT(state_ == Relative);
      size_t new_off = (size_t)raw_;
      if (masm != NULL) {
 #ifdef JS_CPU_X64
@@ -424,10 +422,10 @@ IonCache::initializeAddCacheState(LInstruction *ins, AddCacheState *addState)
 static bool
 IsCacheableDOMProxy(JSObject *obj)
 {
-    if (!obj->isProxy())
+    if (!obj->is<ProxyObject>())
         return false;
 
-    BaseProxyHandler *handler = GetProxyHandler(obj);
+    BaseProxyHandler *handler = obj->as<ProxyObject>().handler();
 
     if (handler->family() != GetDOMProxyHandlerFamily())
         return false;
@@ -637,11 +635,12 @@ GenerateDOMProxyChecks(JSContext *cx, MacroAssembler &masm, JSObject *obj,
     //      1. The object is a DOMProxy.
     //      2. The object does not have expando properties, or has an expando
     //          which is known to not have the desired property.
-    Address handlerAddr(object, JSObject::getFixedSlotOffset(JSSLOT_PROXY_HANDLER));
+    Address handlerAddr(object, ProxyObject::offsetOfHandler());
     Address expandoSlotAddr(object, JSObject::getFixedSlotOffset(GetDOMProxyExpandoSlot()));
 
     // Check that object is a DOMProxy.
-    masm.branchPrivatePtr(Assembler::NotEqual, handlerAddr, ImmWord(GetProxyHandler(obj)), stubFailure);
+    masm.branchPrivatePtr(Assembler::NotEqual, handlerAddr,
+                          ImmWord(obj->as<ProxyObject>().handler()), stubFailure);
 
     if (skipExpandoCheck)
         return;
@@ -1348,7 +1347,7 @@ DetermineGetPropKind(JSContext *cx, IonCache &cache, JSObject *receiver,
     {
         // With Proxies, we cannot garantee any property access as the proxy can
         // mask any property from the prototype chain.
-        JS_ASSERT(!checkObj->isProxy());
+        JS_ASSERT(!checkObj->is<ProxyObject>());
         *readSlot = true;
     } else if (IsCacheableGetPropCallNative(checkObj, holder, shape) ||
                IsCacheableGetPropCallPropertyOp(checkObj, holder, shape))

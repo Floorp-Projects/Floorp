@@ -14,8 +14,8 @@ Cu.import("resource://gre/modules/devtools/Loader.jsm", tempScope);
 let TargetFactory = tempScope.devtools.TargetFactory;
 Components.utils.import("resource://gre/modules/devtools/Console.jsm", tempScope);
 let console = tempScope.console;
-let Promise = Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js", {}).Promise;
-// Promise._reportErrors = true; // please never leave me.
+let promise = Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js", {}).Promise;
+// promise._reportErrors = true; // please never leave me.
 
 let gPendingOutputTest = 0;
 
@@ -407,7 +407,7 @@ function openInspector(aCallback, aTab = gBrowser.selectedTab)
  *        Options for matching:
  *        - webconsole: the WebConsole instance we work with.
  * @return object
- *         A Promise object that is resolved when all the rules complete
+ *         A promise object that is resolved when all the rules complete
  *         matching. The resolved callback is given an array of all the rules
  *         you wanted to check. Each rule has a new property: |matchedProp|
  *         which holds a reference to the Property object instance from the
@@ -439,10 +439,10 @@ function findVariableViewProperties(aView, aRules, aOptions)
     // Process the rules that need to expand properties.
     let lastStep = processExpandRules.bind(null, expandRules);
 
-    // Return the results - a Promise resolved to hold the updated aRules array.
+    // Return the results - a promise resolved to hold the updated aRules array.
     let returnResults = onAllRulesMatched.bind(null, aRules);
 
-    return Promise.all(outstanding).then(lastStep).then(returnResults);
+    return promise.all(outstanding).then(lastStep).then(returnResults);
   }
 
   function onMatch(aProp, aRule, aMatched)
@@ -466,10 +466,10 @@ function findVariableViewProperties(aView, aRules, aOptions)
   {
     let rule = aRules.shift();
     if (!rule) {
-      return Promise.resolve(null);
+      return promise.resolve(null);
     }
 
-    let deferred = Promise.defer();
+    let deferred = promise.defer();
     let expandOptions = {
       rootVariable: aView,
       expandTo: rule.name,
@@ -486,7 +486,7 @@ function findVariableViewProperties(aView, aRules, aOptions)
         rule.name = name;
       });
     }, function onFailure() {
-      return Promise.resolve(null);
+      return promise.resolve(null);
     }).then(processExpandRules.bind(null, aRules)).then(function() {
       deferred.resolve(null);
     });
@@ -527,14 +527,14 @@ function findVariableViewProperties(aView, aRules, aOptions)
  * @param object aOptions
  *        Options for matching. See findVariableViewProperties().
  * @return object
- *         A Promise that is resolved when all the checks complete. Resolution
+ *         A promise that is resolved when all the checks complete. Resolution
  *         result is a boolean that tells your promise callback the match
  *         result: true or false.
  */
 function matchVariablesViewProperty(aProp, aRule, aOptions)
 {
   function resolve(aResult) {
-    return Promise.resolve(aResult);
+    return promise.resolve(aResult);
   }
 
   if (aRule.name) {
@@ -590,9 +590,9 @@ function matchVariablesViewProperty(aProp, aRule, aOptions)
     }));
   }
 
-  outstanding.push(Promise.resolve(true));
+  outstanding.push(promise.resolve(true));
 
-  return Promise.all(outstanding).then(function _onMatchDone(aResults) {
+  return promise.all(outstanding).then(function _onMatchDone(aResults) {
     let ruleMatched = aResults.indexOf(false) == -1;
     return resolve(ruleMatched);
   });
@@ -606,17 +606,17 @@ function matchVariablesViewProperty(aProp, aRule, aOptions)
  * @param object aWebConsole
  *        The WebConsole instance to work with.
  * @return object
- *         A Promise that is resolved when the check completes. The resolved
+ *         A promise that is resolved when the check completes. The resolved
  *         callback is given a boolean: true if the property is an iterator, or
  *         false otherwise.
  */
 function isVariableViewPropertyIterator(aProp, aWebConsole)
 {
   if (aProp.displayValue == "Iterator") {
-    return Promise.resolve(true);
+    return promise.resolve(true);
   }
 
-  let deferred = Promise.defer();
+  let deferred = promise.defer();
 
   variablesViewExpandTo({
     rootVariable: aProp,
@@ -644,7 +644,7 @@ function isVariableViewPropertyIterator(aProp, aWebConsole)
  *        - webconsole: a WebConsole instance. If this is not provided all
  *        property expand() calls will be considered sync. Things may fail!
  * @return object
- *         A Promise that is resolved only when the last property in |expandTo|
+ *         A promise that is resolved only when the last property in |expandTo|
  *         is found, and rejected otherwise. Resolution reason is always the
  *         last property - |nextSibling| in the example above. Rejection is
  *         always the last property that was found.
@@ -654,16 +654,16 @@ function variablesViewExpandTo(aOptions)
   let root = aOptions.rootVariable;
   let expandTo = aOptions.expandTo.split(".");
   let jsterm = (aOptions.webconsole || {}).jsterm;
-  let lastDeferred = Promise.defer();
+  let lastDeferred = promise.defer();
 
   function fetch(aProp)
   {
     if (!aProp.onexpand) {
       ok(false, "property " + aProp.name + " cannot be expanded: !onexpand");
-      return Promise.reject(aProp);
+      return promise.reject(aProp);
     }
 
-    let deferred = Promise.defer();
+    let deferred = promise.defer();
 
     if (aProp._fetched || !jsterm) {
       executeSoon(function() {
@@ -778,7 +778,7 @@ function updateVariablesViewProperty(aOptions)
  *        Options for opening the debugger:
  *        - tab: the tab you want to open the debugger for.
  * @return object
- *         A Promise that is resolved once the debugger opens, or rejected if
+ *         A promise that is resolved once the debugger opens, or rejected if
  *         the open fails. The resolution callback is given one argument, an
  *         object that holds the following properties:
  *         - target: the Target object for the Tab.
@@ -792,7 +792,7 @@ function openDebugger(aOptions = {})
     aOptions.tab = gBrowser.selectedTab;
   }
 
-  let deferred = Promise.defer();
+  let deferred = promise.defer();
 
   let target = TargetFactory.forTab(aOptions.tab);
   let toolbox = gDevTools.getToolbox(target);
@@ -855,6 +855,12 @@ function getMessageElementText(aElement)
  * @param object aOptions
  *        Options for what you want to wait for:
  *        - webconsole: the webconsole instance you work with.
+ *        - matchCondition: "any" or "all". Default: "all". The promise
+ *        returned by this function resolves when all of the messages are
+ *        matched, if the |matchCondition| is "all". If you set the condition to
+ *        "any" then the promise is resolved by any message rule that matches,
+ *        irrespective of order - waiting for messages stops whenever any rule
+ *        matches.
  *        - messages: an array of objects that tells which messages to wait for.
  *        Properties:
  *            - text: string or RegExp to match the textContent of each new
@@ -885,7 +891,7 @@ function getMessageElementText(aElement)
  *            - source: object that can hold one property: url. This is used to
  *            match the source URL of the message.
  * @return object
- *         A Promise object is returned once the messages you want are found.
+ *         A promise object is returned once the messages you want are found.
  *         The promise is resolved with the array of rule objects you give in
  *         the |messages| property. Each objects is the same as provided, with
  *         additional properties:
@@ -904,7 +910,8 @@ function waitForMessages(aOptions)
   let rules = WebConsoleUtils.cloneObject(aOptions.messages, true);
   let rulesMatched = 0;
   let listenerAdded = false;
-  let deferred = Promise.defer();
+  let deferred = promise.defer();
+  aOptions.matchCondition = aOptions.matchCondition || "all";
 
   function checkText(aRule, aText)
   {
@@ -1154,9 +1161,15 @@ function waitForMessages(aOptions)
     }
   }
 
+  function allRulesMatched()
+  {
+    return aOptions.matchCondition == "all" && rulesMatched == rules.length ||
+           aOptions.matchCondition == "any" && rulesMatched > 0;
+  }
+
   function maybeDone()
   {
-    if (rulesMatched == rules.length) {
+    if (allRulesMatched()) {
       if (listenerAdded) {
         webconsole.ui.off("messages-added", onMessagesAdded);
         webconsole.ui.off("messages-updated", onMessagesAdded);
@@ -1169,7 +1182,7 @@ function waitForMessages(aOptions)
   }
 
   function testCleanup() {
-    if (rulesMatched == rules.length) {
+    if (allRulesMatched()) {
       return;
     }
 
@@ -1198,7 +1211,7 @@ function waitForMessages(aOptions)
 
   executeSoon(() => {
     onMessagesAdded("messages-added", webconsole.outputNode.childNodes);
-    if (rulesMatched != rules.length) {
+    if (!allRulesMatched()) {
       listenerAdded = true;
       registerCleanupFunction(testCleanup);
       webconsole.ui.on("messages-added", onMessagesAdded);

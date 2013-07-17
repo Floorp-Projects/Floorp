@@ -274,9 +274,7 @@ this.AccessFu = {
       case 'Accessibility:Focus':
         this._focused = JSON.parse(aData);
         if (this._focused) {
-          let mm = Utils.getMessageManager(Utils.CurrentBrowser);
-          mm.sendAsyncMessage('AccessFu:VirtualCursor',
-                              {action: 'whereIsIt', move: true});
+          this.showCurrent(true);
         }
         break;
       case 'Accessibility:MoveCaret':
@@ -327,18 +325,22 @@ this.AccessFu = {
       case 'TabSelect':
       {
         if (this._focused) {
-          let mm = Utils.getMessageManager(Utils.CurrentBrowser);
           // We delay this for half a second so the awesomebar could close,
           // and we could use the current coordinates for the content item.
           // XXX TODO figure out how to avoid magic wait here.
           Utils.win.setTimeout(
             function () {
-              mm.sendAsyncMessage('AccessFu:VirtualCursor', {action: 'whereIsIt'});
-            }, 500);
+              this.showCurrent(false);
+            }.bind(this), 500);
         }
         break;
       }
     }
+  },
+
+  showCurrent: function showCurrent(aMove) {
+    let mm = Utils.getMessageManager(Utils.CurrentBrowser);
+    mm.sendAsyncMessage('AccessFu:ShowCurrent', { move: aMove });
   },
 
   announce: function announce(aAnnouncement) {
@@ -362,6 +364,8 @@ var Output = {
     startOffset: 0,
     endOffset: 0,
     text: '',
+    selectionStart: 0,
+    selectionEnd: 0,
 
     init: function init(aOutput) {
       if (aOutput && 'output' in aOutput) {
@@ -370,11 +374,20 @@ var Output = {
         // We need to append a space at the end so that the routing key corresponding
         // to the end of the output (i.e. the space) can be hit to move the caret there.
         this.text = aOutput.output + ' ';
-        return this.text;
+        this.selectionStart = typeof aOutput.selectionStart === 'number' ?
+                              aOutput.selectionStart : this.selectionStart;
+        this.selectionEnd = typeof aOutput.selectionEnd === 'number' ?
+                            aOutput.selectionEnd : this.selectionEnd;
+
+        return { text: this.text,
+                 selectionStart: this.selectionStart,
+                 selectionEnd: this.selectionEnd };
       }
+
+      return null;
     },
 
-    update: function update(aText) {
+    adjustText: function adjustText(aText) {
       let newBraille = [];
       let braille = {};
 
@@ -384,8 +397,7 @@ var Output = {
         newBraille.push(prefix);
       }
 
-      let newText = aText;
-      newBraille.push(newText);
+      newBraille.push(aText);
 
       let suffix = this.text.substring(this.endOffset).trim();
       if (suffix) {
@@ -393,9 +405,23 @@ var Output = {
         newBraille.push(suffix);
       }
 
-      braille.startOffset = prefix.length;
-      braille.output = newBraille.join('');
-      braille.endOffset = braille.output.length - suffix.length;
+      this.startOffset = braille.startOffset = prefix.length;
+      this.text = braille.text = newBraille.join('') + ' ';
+      this.endOffset = braille.endOffset = braille.text.length - suffix.length;
+      braille.selectionStart = this.selectionStart;
+      braille.selectionEnd = this.selectionEnd;
+
+      return braille;
+    },
+
+    adjustSelection: function adjustSelection(aSelection) {
+      let braille = {};
+
+      braille.startOffset = this.startOffset;
+      braille.endOffset = this.endOffset;
+      braille.text = this.text;
+      this.selectionStart = braille.selectionStart = aSelection.selectionStart + this.startOffset;
+      this.selectionEnd = braille.selectionEnd = aSelection.selectionEnd + this.startOffset;
 
       return braille;
     }
@@ -502,6 +528,7 @@ var Output = {
 
   Android: function Android(aDetails, aBrowser) {
     const ANDROID_VIEW_TEXT_CHANGED = 0x10;
+    const ANDROID_VIEW_TEXT_SELECTION_CHANGED = 0x2000;
 
     if (!this._bridge)
       this._bridge = Cc['@mozilla.org/android/bridge;1'].getService(Ci.nsIAndroidBridge);
@@ -510,14 +537,18 @@ var Output = {
       androidEvent.type = 'Accessibility:Event';
       if (androidEvent.bounds)
         androidEvent.bounds = this._adjustBounds(androidEvent.bounds, aBrowser, true);
-      if (androidEvent.eventType === ANDROID_VIEW_TEXT_CHANGED) {
-        androidEvent.brailleText = this.brailleState.update(androidEvent.text);
+
+      switch(androidEvent.eventType) {
+        case ANDROID_VIEW_TEXT_CHANGED:
+          androidEvent.brailleOutput = this.brailleState.adjustText(androidEvent.text);
+          break;
+        case ANDROID_VIEW_TEXT_SELECTION_CHANGED:
+          androidEvent.brailleOutput = this.brailleState.adjustSelection(androidEvent.brailleOutput);
+          break;
+        default:
+          androidEvent.brailleOutput = this.brailleState.init(androidEvent.brailleOutput);
+          break;
       }
-      let (output = this.brailleState.init(androidEvent.brailleText)) {
-        if (typeof output === 'string') {
-          androidEvent.brailleText = output;
-        }
-      };
       this._bridge.handleGeckoMessage(JSON.stringify(androidEvent));
     }
   },
@@ -603,8 +634,7 @@ var Input = {
     switch (gestureName) {
       case 'dwell1':
       case 'explore1':
-        this.moveCursor('moveToPoint', 'SimpleTouch', 'gesture',
-                        aGesture.x, aGesture.y);
+        this.moveToPoint('SimpleTouch', aGesture.x, aGesture.y);
         break;
       case 'doubletap1':
         this.activateCurrent();
@@ -725,12 +755,18 @@ var Input = {
     aEvent.stopPropagation();
   },
 
-  moveCursor: function moveCursor(aAction, aRule, aInputType, aX, aY) {
+  moveToPoint: function moveToPoint(aRule, aX, aY) {
     let mm = Utils.getMessageManager(Utils.CurrentBrowser);
-    mm.sendAsyncMessage('AccessFu:VirtualCursor',
+    mm.sendAsyncMessage('AccessFu:MoveToPoint', {rule: aRule,
+                                                 x: aX, y: aY,
+                                                 origin: 'top'});
+  },
+
+  moveCursor: function moveCursor(aAction, aRule, aInputType) {
+    let mm = Utils.getMessageManager(Utils.CurrentBrowser);
+    mm.sendAsyncMessage('AccessFu:MoveCursor',
                         {action: aAction, rule: aRule,
-                         x: aX, y: aY, origin: 'top',
-                         inputType: aInputType});
+                         origin: 'top', inputType: aInputType});
   },
 
   moveCaret: function moveCaret(aDetails) {
@@ -759,9 +795,12 @@ var Input = {
   },
 
   activateContextMenu: function activateContextMenu(aMessage) {
-    if (Utils.MozBuildApp === 'mobile/android')
+    if (Utils.MozBuildApp === 'mobile/android') {
+      let vp = Utils.getViewport(Utils.win) || { zoom: 1.0 };
       Services.obs.notifyObservers(null, 'Gesture:LongPress',
-                                   JSON.stringify({x: aMessage.x, y: aMessage.y}));
+                                   JSON.stringify({x: aMessage.x / vp.zoom,
+                                                   y: aMessage.y / vp.zoom}));
+    }
   },
 
   setEditState: function setEditState(aEditState) {
@@ -782,6 +821,8 @@ var Input = {
       B: ['movePrevious', 'Button'],
       c: ['moveNext', 'Combobox'],
       C: ['movePrevious', 'Combobox'],
+      d: ['moveNext', 'Landmark'],
+      D: ['movePrevious', 'Landmark'],
       e: ['moveNext', 'Entry'],
       E: ['movePrevious', 'Entry'],
       f: ['moveNext', 'FormElement'],

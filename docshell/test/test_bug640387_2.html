@@ -52,13 +52,13 @@ function run_test() {
 
   // Spin the event loop so we exit the onload handler.
   SimpleTest.executeSoon(function() { gGen.next() });
-  yield;
+  yield undefined;
 
   let origLocation = iframe.location + '';
   callbackOnHashchange = true;
   iframe.location.hash = '#1';
   // Wait for a hashchange event.
-  yield;
+  yield undefined;
 
   ok(true, 'Got hashchange.');
 
@@ -67,16 +67,16 @@ function run_test() {
   // result of the load is a different document than we had previously.
   callbackOnLoad = true;
   errorOnHashchange = true;
-  yield;
+  yield undefined;
 
   ok(true, 'Got final load.');
 
   // Spin the event loop to give hashchange a chance to fire, if it's going to.
   SimpleTest.executeSoon(function() { gGen.next() });
-  yield;
+  yield undefined;
 
   SimpleTest.finish();
-  yield;
+  yield undefined;
 }
 
 callbackOnLoad = true;

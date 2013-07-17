@@ -28,7 +28,6 @@ STL_FLAGS =
 USE_STATIC_LIBS = 1
 
 # Need to custom install OMX media plugin
-NO_DIST_INSTALL = 1
 NO_INSTALL = 1
 
 include $(topsrcdir)/config/rules.mk

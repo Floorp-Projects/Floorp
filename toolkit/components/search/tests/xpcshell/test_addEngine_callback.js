@@ -8,6 +8,8 @@
 "use strict";
 
 const Ci = Components.interfaces;
+let gHttpServer;
+let gBaseUrl;
 
 Components.utils.import("resource://testing-common/httpd.js");
 
@@ -67,7 +69,7 @@ add_test(function simple_callback_test() {
       do_throw("search callback returned error: " + errorCode);
     }
   }
-  Services.search.addEngine("http://localhost:4444/data/engine.xml",
+  Services.search.addEngine(gBaseUrl + "/data/engine.xml",
                             Ci.nsISearchEngine.DATA_XML,
                             null, false, searchCallback);
 });
@@ -85,7 +87,7 @@ add_test(function duplicate_failure_test() {
     }
   }
   // Re-add the same engine added in the previous test
-  Services.search.addEngine("http://localhost:4444/data/engine.xml",
+  Services.search.addEngine(gBaseUrl + "/data/engine.xml",
                             Ci.nsISearchEngine.DATA_XML,
                             null, false, searchCallback);
 });
@@ -111,12 +113,13 @@ add_test(function load_failure_test() {
 function run_test() {
   updateAppInfo();
 
-  let httpServer = new HttpServer();
-  httpServer.start(4444);
-  httpServer.registerDirectory("/", do_get_cwd());
+  gHttpServer = new HttpServer();
+  gHttpServer.start(-1);
+  gHttpServer.registerDirectory("/", do_get_cwd());
+  gBaseUrl = "http://localhost:" + gHttpServer.identity.primaryPort;
 
   do_register_cleanup(function cleanup() {
-    httpServer.stop(function() {});
+    gHttpServer.stop(function() {});
   });
 
   run_next_test();

@@ -247,6 +247,8 @@ TopSitesView.prototype = {
         // fire a MozContextActionsChange event to update the context appbar
         let event = document.createEvent("Events");
         event.actions = [...nextContextActions];
+        event.noun = tileGroup.contextNoun;
+        event.qty = selectedTiles.length;
         event.initEvent("MozContextActionsChange", true, false);
         tileGroup.dispatchEvent(event);
       },0);
@@ -293,13 +295,15 @@ TopSitesView.prototype = {
       aTileNode.iconSrc = iconURLfromSiteURL.spec;
       let faviconURL = (PlacesUtils.favicons.getFaviconLinkForIcon(iconURLfromSiteURL)).spec;
       let xpFaviconURI = Util.makeURI(faviconURL.replace("moz-anno:favicon:",""));
-      ColorUtils.getForegroundAndBackgroundIconColors(xpFaviconURI, function(foreground, background) {
-        aTileNode.style.color = foreground; //color text
+      let successAction = function(foreground, background) {
+	      aTileNode.style.color = foreground; //color text
         aTileNode.setAttribute("customColor", background);
         if (aTileNode.refresh) {
           aTileNode.refresh();
         }
-      });
+      };
+      let failureAction = function() {};
+      ColorUtils.getForegroundAndBackgroundIconColors(xpFaviconURI, successAction, failureAction);
     });
 
     if (this._useThumbs) {

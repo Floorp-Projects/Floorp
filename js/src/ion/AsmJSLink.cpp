@@ -11,6 +11,10 @@
 #include "ion/AsmJSModule.h"
 #include "frontend/BytecodeCompiler.h"
 
+#ifdef MOZ_VTUNE
+# include "jitprofiling.h"
+#endif
+
 #ifdef JS_ION_PERF
 # include "ion/PerfSpewer.h"
 #endif
@@ -446,7 +450,7 @@ SendFunctionsToVTune(JSContext *cx, AsmJSModule &module)
             return false;
 
         JSAutoByteString bytes;
-        const char *method_name = js_AtomToPrintableString(cx, func.name, &bytes);
+        const char *method_name = AtomToPrintableString(cx, func.name, &bytes);
         if (!method_name)
             return false;
 
@@ -492,7 +496,7 @@ SendFunctionsToPerf(JSContext *cx, AsmJSModule &module)
         unsigned long size = (end - start);
 
         JSAutoByteString bytes;
-        const char *method_name = js_AtomToPrintableString(cx, func.name, &bytes);
+        const char *method_name = AtomToPrintableString(cx, func.name, &bytes);
         if (!method_name)
             return false;
 
@@ -522,7 +526,7 @@ SendBlocksToPerf(JSContext *cx, AsmJSModule &module)
 
         unsigned long size = (unsigned long)func.endCodeOffset - (unsigned long)func.startCodeOffset;
         JSAutoByteString bytes;
-        const char *method_name = js_AtomToPrintableString(cx, func.name, &bytes);
+        const char *method_name = AtomToPrintableString(cx, func.name, &bytes);
         if (!method_name)
             return false;
 
@@ -573,7 +577,7 @@ js::LinkAsmJS(JSContext *cx, unsigned argc, JS::Value *vp)
     }
 
     gc::AllocKind allocKind = gc::GetGCObjectKind(module.numExportedFunctions());
-    RootedObject obj(cx, NewBuiltinClassInstance(cx, &ObjectClass, allocKind));
+    RootedObject obj(cx, NewBuiltinClassInstance(cx, &JSObject::class_, allocKind));
     if (!obj)
         return false;
 

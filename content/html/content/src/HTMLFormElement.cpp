@@ -251,8 +251,6 @@ HTMLFormElement::HTMLFormElement(already_AddRefed<nsINodeInfo> aNodeInfo)
 {
   mImageNameLookupTable.Init(NS_FORM_CONTROL_LIST_HASHTABLE_SIZE);
   mPastNameLookupTable.Init(NS_FORM_CONTROL_LIST_HASHTABLE_SIZE);
-
-  SetIsDOMBinding();
 }
 
 HTMLFormElement::~HTMLFormElement()

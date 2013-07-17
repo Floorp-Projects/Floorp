@@ -220,13 +220,6 @@ struct IonLIRTraceData {
 };
 #endif
 
-// Parallel operations in general can have one of three states.  They may
-// succeed, fail, or "bail", where bail indicates that the code encountered an
-// unexpected condition and should be re-run sequentially.
-// Different subcategories of the "bail" state are encoded as variants of
-// TP_RETRY_*.
-enum ParallelResult { TP_SUCCESS, TP_RETRY_SEQUENTIALLY, TP_RETRY_AFTER_GC, TP_FATAL };
-
 ///////////////////////////////////////////////////////////////////////////
 // Bailout tracking
 

@@ -77,8 +77,9 @@ function run_test() {
   updateAppInfo();
 
   let httpServer = new HttpServer();
-  httpServer.start(4444);
+  httpServer.start(-1);
   httpServer.registerDirectory("/", do_get_cwd());
+  let baseUrl = "http://localhost:" + httpServer.identity.primaryPort;
 
   do_register_cleanup(function cleanup() {
     httpServer.stop(function() {});
@@ -89,10 +90,10 @@ function run_test() {
 
   Services.obs.addObserver(search_observer, "browser-search-engine-modified", false);
 
-  Services.search.addEngine("http://localhost:4444/data/engine.xml",
+  Services.search.addEngine(baseUrl + "/data/engine.xml",
                             Ci.nsISearchEngine.DATA_XML,
                             null, false);
-  Services.search.addEngine("http://localhost:4444/data/engine2.xml",
+  Services.search.addEngine(baseUrl + "/data/engine2.xml",
                             Ci.nsISearchEngine.DATA_XML,
                             null, false);
 }

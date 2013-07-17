@@ -5,6 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 MODULE = 'memory'
+NO_DIST_INSTALL = True
 
 CSRCS += [
     'jemalloc_config.c',

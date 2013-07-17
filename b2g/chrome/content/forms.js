@@ -235,7 +235,13 @@ let FormAssistant = {
 
     this._documentEncoder = null;
     if (this._editor) {
-      this._editor.removeEditorObserver(this);
+      // When the nsIFrame of the input element is reconstructed by
+      // CSS restyling, the editor observers are removed. Catch
+      // [nsIEditor.removeEditorObserver] failure exception if that
+      // happens.
+      try {
+        this._editor.removeEditorObserver(this);
+      } catch (e) {}
       this._editor = null;
     }
 
@@ -675,7 +681,7 @@ function getDocumentEncoder(element) {
   let flags = Ci.nsIDocumentEncoder.SkipInvisibleContent |
               Ci.nsIDocumentEncoder.OutputRaw |
               Ci.nsIDocumentEncoder.OutputLFLineBreak |
-              Ci.nsIDocumentEncoder.OutputDropInvisibleBreak;
+              Ci.nsIDocumentEncoder.OutputNonTextContentAsPlaceholder;
   encoder.init(element.ownerDocument, "text/plain", flags);
   return encoder;
 }

@@ -31,14 +31,14 @@ function test() {
 }
 
 function setupGlobals() {
-  let deferred = Promise.defer();
+  let deferred = promise.defer();
   gPanel = gDevTools.getToolbox(gTarget).getPanel("jsprofiler");
   deferred.resolve();
   return deferred.promise;
 }
 
 function testProfilerStart() {
-  let deferred = Promise.defer();
+  let deferred = promise.defer();
 
   gPanel.once("started", function () {
     is(gPanel.profiles.size, 1, "There is a new profile");
@@ -48,7 +48,7 @@ function testProfilerStart() {
     deferred.resolve();
   });
 
-  cmd("profiler start", gcli.lookup("profilerStarted"));
+  cmd("profiler start", gcli.lookup("profilerStarted2"));
   return deferred.promise;
 }
 
@@ -57,7 +57,7 @@ function testProfilerList() {
 }
 
 function testProfilerStop() {
-  let deferred = Promise.defer();
+  let deferred = promise.defer();
 
   gPanel.once("stopped", function () {
     is(gPanel.activeProfile, gPanel.getProfileByName("Profile 1"), "Active profile is OK");
@@ -71,7 +71,7 @@ function testProfilerStop() {
 }
 
 function testProfilerShow() {
-  let deferred = Promise.defer();
+  let deferred = promise.defer();
 
   gPanel.once("profileSwitched", function () {
     is(gPanel.getProfileByName("Profile 1"), gPanel.activeProfile, "Profile 1 is active");
@@ -84,7 +84,7 @@ function testProfilerShow() {
 }
 
 function testProfilerClose() {
-  let deferred = Promise.defer();
+  let deferred = promise.defer();
 
   helpers.audit(gOptions, [{
     setup: "profiler close",
@@ -111,7 +111,7 @@ function testProfilerCloseWhenClosed() {
   // errors when executing 'profiler close' on a closed
   // toolbox. See bug 863636 for more info.
 
-  let deferred = Promise.defer();
+  let deferred = promise.defer();
 
   helpers.audit(gOptions, [{
     setup: "profiler close",

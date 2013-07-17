@@ -31,6 +31,9 @@ var _nextPortId = 1;
 // new ClientPort.
 this.getFrameWorkerHandle =
  function getFrameWorkerHandle(url, clientWindow, name, origin, exposeLocalStorage = false) {
+  // prevent data/about urls - see bug 891516
+  if (['http', 'https'].indexOf(Services.io.newURI(url, null, null).scheme) < 0)
+    throw new Error("getFrameWorkerHandle requires http/https urls");
   // first create the client port we are going to use.  Later we will
   // message the worker to create the worker port.
   let portid = _nextPortId++;

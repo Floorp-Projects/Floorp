@@ -33,7 +33,7 @@ enum ObexHeaderId {
   Who = 0x4A,
   ConnectionId = 0xCB,
   AppParameters = 0x4C,
-  AuthChallenge =0x4D,
+  AuthChallenge = 0x4D,
   AuthResponse = 0x4E,
   ObjectClass = 0x4F
 };

@@ -123,6 +123,7 @@ FENNEC_JAVA_FILES = \
   NotificationService.java \
   NSSBridge.java \
   OrderedBroadcastHelper.java \
+  PageActionLayout.java \
   PrefsHelper.java \
   PrivateDataPreference.java \
   PrivateTab.java \
@@ -248,6 +249,7 @@ FENNEC_JAVA_FILES = \
   menu/MenuItemDefault.java \
   menu/MenuPanel.java \
   menu/MenuPopup.java \
+  preferences/SearchPreferenceCategory.java \
   widget/AboutHome.java \
   widget/AboutHomeView.java \
   widget/AboutHomeSection.java \
@@ -323,6 +325,7 @@ FENNEC_PP_JAVA_FILES = \
 
 FENNEC_PP_XML_FILES = \
   res/xml/preferences.xml \
+  res/xml/preferences_customize.xml \
   res/xml/searchable.xml \
   $(NULL)
 
@@ -481,11 +484,13 @@ RES_LAYOUT = \
   res/layout/notification_progress.xml \
   res/layout/notification_progress_text.xml \
   res/layout/preference_rightalign_icon.xml \
+  res/layout/search_engine_row.xml \
   res/layout/site_setting_item.xml \
   res/layout/site_setting_title.xml \
   res/layout/setup_screen.xml \
   res/layout/shared_ui_components.xml \
   res/layout/site_identity.xml \
+  res/layout/suggestion_item.xml \
   res/layout/remote_tabs_child.xml \
   res/layout/remote_tabs_group.xml \
   res/layout/search_engine_row.xml \
@@ -585,14 +590,15 @@ RES_VALUES_V16 = \
   $(NULL)
 
 RES_XML = \
-  res/xml/preferences_customize.xml \
   res/xml/preferences_display.xml \
+  res/xml/preferences_search.xml \
   res/xml/preferences_privacy.xml \
   res/xml/preferences_vendor.xml \
   $(SYNC_RES_XML) \
   $(NULL)
 
 RES_XML_V11 = \
+  res/xml-v11/preferences_customize.xml \
   res/xml-v11/preference_headers.xml \
   res/xml-v11/preferences_customize_tablet.xml \
   res/xml-v11/preferences.xml \
@@ -647,6 +653,7 @@ RES_DRAWABLE_MDPI = \
   res/drawable-mdpi/ic_url_bar_search.png \
   res/drawable-mdpi/ic_url_bar_star.png \
   res/drawable-mdpi/ic_url_bar_tab.png \
+  res/drawable-mdpi/icon_pageaction.png \
   res/drawable-mdpi/progress_spinner_1.png \
   res/drawable-mdpi/progress_spinner_2.png \
   res/drawable-mdpi/progress_spinner_3.png \
@@ -766,6 +773,7 @@ RES_DRAWABLE_HDPI = \
   res/drawable-hdpi/ic_url_bar_search.png \
   res/drawable-hdpi/ic_url_bar_star.png \
   res/drawable-hdpi/ic_url_bar_tab.png \
+  res/drawable-hdpi/icon_pageaction.png \
   res/drawable-hdpi/tab_indicator_divider.9.png \
   res/drawable-hdpi/tab_indicator_selected.9.png \
   res/drawable-hdpi/tab_indicator_selected_focused.9.png \
@@ -862,6 +870,7 @@ RES_DRAWABLE_XHDPI = \
   res/drawable-xhdpi/ic_url_bar_search.png \
   res/drawable-xhdpi/ic_url_bar_star.png \
   res/drawable-xhdpi/ic_url_bar_tab.png \
+  res/drawable-xhdpi/icon_pageaction.png \
   res/drawable-xhdpi/spinner_default.9.png \
   res/drawable-xhdpi/spinner_focused.9.png \
   res/drawable-xhdpi/spinner_pressed.9.png \

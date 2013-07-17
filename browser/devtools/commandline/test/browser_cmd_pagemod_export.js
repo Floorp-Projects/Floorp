@@ -309,7 +309,7 @@ function test() {
           }
         },
         post: function() {
-          let deferred = Promise.defer();
+          let deferred = promise.defer();
           executeSoon(function() {
             deferred.resolve();
           });

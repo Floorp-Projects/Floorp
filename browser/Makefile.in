@@ -7,8 +7,6 @@ topsrcdir = @top_srcdir@
 srcdir    = @srcdir@
 VPATH     = @srcdir@
 
-include $(topsrcdir)/config/config.mk
-
 include $(topsrcdir)/config/rules.mk
 
 ifdef MAKENSISU
@@ -21,3 +19,6 @@ ifdef MOZ_MAINTENANCE_SERVICE
 	$(MAKE) -C installer/windows maintenanceservice_installer
 endif
 endif
+
+check::
+	$(PYTHON) $(topsrcdir)/build/compare-mozconfig/compare-mozconfigs-wrapper.py

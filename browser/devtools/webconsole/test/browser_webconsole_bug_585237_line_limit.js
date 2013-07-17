@@ -54,7 +54,7 @@ function testGen() {
     failureFn: finishTest,
   });
 
-  yield;
+  yield undefined;
 
   is(countMessageNodes(), 20, "there are 20 message nodes in the output " +
      "when the log limit is set to 20");
@@ -71,7 +71,7 @@ function testGen() {
     failureFn: finishTest,
   });
 
-  yield;
+  yield undefined;
 
   is(countMessageNodes(), 20, "there are still 20 message nodes in the " +
      "output when adding one more");
@@ -91,7 +91,7 @@ function testGen() {
     failureFn: finishTest,
   });
 
-  yield;
+  yield undefined;
 
   is(countMessageNodes(), 30, "there are 30 message nodes in the output " +
      "when the log limit is set to 30");
@@ -100,7 +100,7 @@ function testGen() {
   hud = testDriver = prefBranch = console = outputNode = null;
   finishTest();
 
-  yield;
+  yield undefined;
 }
 
 function countMessageNodes() {

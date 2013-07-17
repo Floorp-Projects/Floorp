@@ -1021,6 +1021,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void linkExitFrame();
     void linkParallelExitFrame(const Register &pt);
     void handleFailureWithHandler(void *handler);
+    void handleFailureWithHandlerTail();
 
     /////////////////////////////////////////////////////////////////
     // Common interface.

@@ -38,7 +38,7 @@
     request.onerror = errorHandler;
     request.onupgradeneeded = grabEventAndContinueHandler;
     request.onsuccess = grabEventAndContinueHandler;
-    let event = yield;
+    let event = yield undefined;
 
     is(event.type, "upgradeneeded", "Got correct event type");
 
@@ -51,7 +51,7 @@
       objectStore.add(data.blobs, data.key);
     }
 
-    event = yield;
+    event = yield undefined;
 
     is(event.type, "success", "Got correct event type");
 
@@ -61,16 +61,16 @@
 
       request = objectStore.get(data.key);
       request.onsuccess = grabEventAndContinueHandler;
-      event = yield;
+      event = yield undefined;
 
       verifyBlobArray(event.target.result, data.blobs, data.expectedFileIds);
-      yield;
+      yield undefined;
     }
 
     is(bufferCache.length, 11, "Correct length");
 
     finishTest();
-    yield;
+    yield undefined;
   }
   </script>
   <script type="text/javascript;version=1.7" src="file.js"></script>

@@ -3,6 +3,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 'use strict';
 
+module.metadata = {
+  'engines': {
+    'Firefox': '*'
+  }
+};
+
 const { Cc, Ci } = require('chrome');
 const { request } = require('sdk/addon/host');
 const { filter } = require('sdk/event/utils');
@@ -13,8 +19,6 @@ const { defer, all } = require('sdk/core/promise');
 const { defer: async } = require('sdk/lang/functional');
 const { before, after } = require('sdk/test/utils');
 
-// Test for unsupported platforms
-try {
 const {
   Bookmark, Group, Separator,
   save, search, remove,
@@ -30,7 +34,6 @@ const bmsrv = Cc['@mozilla.org/browser/nav-bookmarks-service;1'].
                     getService(Ci.nsINavBookmarksService);
 const tagsrv = Cc['@mozilla.org/browser/tagging-service;1'].
                     getService(Ci.nsITaggingService);
-} catch (e) { unsupported(e); }
 
 exports.testDefaultFolders = function (assert) {
   var ids = [
@@ -945,20 +948,6 @@ before(exports, name => {
 after(exports, name => {
   clearAllBookmarks();
 });
-
-// If the module doesn't support the app we're being run in, require() will
-// throw.  In that case, remove all tests above from exports, and add one dummy
-// test that passes.
-function unsupported (err) {
-  if (!/^Unsupported Application/.test(err.message))
-    throw err;
-
-  module.exports = {
-    "test Unsupported Application": function Unsupported (assert) {
-      assert.pass(err.message);
-    }
-  };
-}
 
 function saveP () {
   return promisedEmitter(save.apply(null, Array.slice(arguments)));

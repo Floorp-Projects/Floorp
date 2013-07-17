@@ -35,7 +35,7 @@
           uri: getHttpUrl("bug294258_testcase.html"),
           onNavComplete: nextTest
         } );
-      yield;
+      yield undefined;
       
       // Change the data for each of the form fields, and reload.
       $("text").value = "text value";
@@ -54,7 +54,7 @@
           reload: true,
           onNavComplete: nextTest
         } );
-      yield;
+      yield undefined;
       
       // Verify that none of the form data has changed.
       is($("text").value, "text value", "Text value changed");
@@ -67,7 +67,7 @@
       // Tell the framework the test is finished.  Include the final 'yield' 
       // statement to prevent a StopIteration exception from being thrown.
       finish();
-      yield;
+      yield undefined;
     }
     
   ]]></script>

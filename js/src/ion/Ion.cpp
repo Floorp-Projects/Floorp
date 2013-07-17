@@ -47,9 +47,7 @@
 #include "jsgcinlines.h"
 #include "jsinferinlines.h"
 
-#include "gc/Barrier-inl.h"
 #include "vm/Stack-inl.h"
-#include "ion/IonFrames-inl.h"
 #include "ion/CompilerRoot.h"
 #include "ion/ExecutionModeInlines.h"
 #include "ion/AsmJS.h"
@@ -172,6 +170,7 @@ ion::InitializeIon()
 
 IonRuntime::IonRuntime()
   : execAlloc_(NULL),
+    exceptionTail_(NULL),
     enterJIT_(NULL),
     bailoutHandler_(NULL),
     argumentsRectifier_(NULL),
@@ -208,6 +207,10 @@ IonRuntime::initialize(JSContext *cx)
 
     functionWrappers_ = cx->new_<VMWrapperMap>(cx);
     if (!functionWrappers_ || !functionWrappers_->init())
+        return false;
+
+    exceptionTail_ = generateExceptionTailStub(cx);
+    if (!exceptionTail_)
         return false;
 
     if (cx->runtime()->jitSupportsFloatingPoint) {

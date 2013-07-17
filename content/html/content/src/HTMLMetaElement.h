@@ -13,8 +13,8 @@
 namespace mozilla {
 namespace dom {
 
-class HTMLMetaElement : public nsGenericHTMLElement,
-                        public nsIDOMHTMLMetaElement
+class HTMLMetaElement MOZ_FINAL : public nsGenericHTMLElement,
+                                  public nsIDOMHTMLMetaElement
 {
 public:
   HTMLMetaElement(already_AddRefed<nsINodeInfo> aNodeInfo);

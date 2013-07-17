@@ -133,6 +133,7 @@
 #define NS_METHOD_(type) type __stdcall
 #define NS_CALLBACK_(_type, _name) _type (__stdcall * _name)
 #define NS_STDCALL __stdcall
+#define NS_HAVE_STDCALL
 #define NS_FROZENCALL __cdecl
 
 /*
@@ -235,7 +236,7 @@
 #define IMPORT_XPCOM_API(type) NS_EXTERN_C NS_IMPORT type NS_FROZENCALL
 #define GLUE_XPCOM_API(type) NS_EXTERN_C NS_HIDDEN_(type) NS_FROZENCALL
 
-#ifdef _IMPL_NS_COM
+#ifdef IMPL_LIBXUL
 #define XPCOM_API(type) EXPORT_XPCOM_API(type)
 #elif defined(XPCOM_GLUE)
 #define XPCOM_API(type) GLUE_XPCOM_API(type)
