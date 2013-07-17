@@ -2576,7 +2576,7 @@ JS_CallGenericTracer(JSTracer *trc, void *gcthing, const char *name);
 
 template <typename HashSetEnum>
 inline void
-JS_CallHashSetObjectTracer(JSTracer *trc, HashSetEnum &e, JSObject *const &key, const char *name)
+JS_CallHashSetObjectTracer(JSTracer *trc, HashSetEnum &e, JSObject *key, const char *name)
 {
     JSObject *updated = key;
     JS_SET_TRACING_LOCATION(trc, reinterpret_cast<void *>(&const_cast<JSObject *&>(key)));
