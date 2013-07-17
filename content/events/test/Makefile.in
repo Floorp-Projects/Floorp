@@ -104,6 +104,7 @@ MOCHITEST_FILES = \
 		test_focus_disabled.html \
 		test_bug847597.html \
 		test_bug855741.html \
+		test_dblclick_explicit_original_target.html \
 		$(NULL)
 
 ifeq (,$(filter gonk,$(MOZ_WIDGET_TOOLKIT)))

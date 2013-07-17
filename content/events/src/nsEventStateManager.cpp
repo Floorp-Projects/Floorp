@@ -4567,7 +4567,10 @@ nsEventStateManager::CheckForAndDispatchClick(nsPresContext* aPresContext,
       if (!mouseContent && !mCurrentTarget) {
         return NS_OK;
       }
-      ret = presShell->HandleEventWithTarget(&event, mCurrentTarget,
+
+      // HandleEvent clears out mCurrentTarget which we might need again
+      nsWeakFrame currentTarget = mCurrentTarget;
+      ret = presShell->HandleEventWithTarget(&event, currentTarget,
                                              mouseContent, aStatus);
       if (NS_SUCCEEDED(ret) && aEvent->clickCount == 2) {
         //fire double click
@@ -4581,7 +4584,7 @@ nsEventStateManager::CheckForAndDispatchClick(nsPresContext* aPresContext,
         event2.button = aEvent->button;
         event2.inputSource = aEvent->inputSource;
 
-        ret = presShell->HandleEventWithTarget(&event2, mCurrentTarget,
+        ret = presShell->HandleEventWithTarget(&event2, currentTarget,
                                                mouseContent, aStatus);
       }
     }
