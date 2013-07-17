@@ -67,7 +67,7 @@ function run_test() {
   });
 
   setBasicCredentials("johndoe", JAPANESE, "irrelevant");
-  Service.serverURL = TEST_SERVER_URL;
+  Service.serverURL = server.baseURI;
 
   try {
     _("Try to log in with the password.");
