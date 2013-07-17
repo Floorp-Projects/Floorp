@@ -196,6 +196,8 @@ function run_test() {
   do_test_pending();
   do_register_cleanup(cleanupUpdaterTest);
 
+  adjustGeneralPaths();
+
   setupUpdaterTest(MAR_IN_USE_WIN_FILE);
 
   // Launch an existing file so it is in use during the update
