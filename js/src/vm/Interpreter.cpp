@@ -1253,7 +1253,7 @@ SetObjectElementOperation(JSContext *cx, Handle<JSObject*> obj, HandleId id, con
             // that's ok, because optimized ion doesn't generate analysis info.  However,
             // baseline must generate this information, so it passes the script and pc in
             // as arguments.
-            if (script || cx->currentlyRunningInInterpreter()) {
+            if (script) {
                 JS_ASSERT(!!script == !!pc);
                 if (!script)
                     types::TypeScript::GetPcScript(cx, script.address(), &pc);
