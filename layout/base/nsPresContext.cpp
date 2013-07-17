@@ -233,6 +233,7 @@ nsPresContext::nsPresContext(nsIDocument* aDocument, nsPresContextType aType)
     mMedium = nsGkAtoms::print;
     mPaginated = true;
   }
+  mMediaEmulated = mMedium;
 
   if (!IsDynamic()) {
     mImageAnimationMode = imgIContainer::kDontAnimMode;
@@ -1689,6 +1690,30 @@ nsPresContext::UIResolutionChangedInternal()
 
   mDocument->EnumerateSubDocuments(UIResolutionChangedSubdocumentCallback,
                                    nullptr);
+}
+
+void
+nsPresContext::EmulateMedium(const nsAString& aMediaType)
+{
+  nsIAtom* previousMedium = Medium();
+  mIsEmulatingMedia = true;
+
+  nsAutoString mediaType;
+  nsContentUtils::ASCIIToLower(aMediaType, mediaType);
+
+  mMediaEmulated = do_GetAtom(mediaType);
+  if (mMediaEmulated != previousMedium && mShell) {
+    MediaFeatureValuesChanged(eRebuildStyleIfNeeded, nsChangeHint(0));
+  }
+}
+
+void nsPresContext::StopEmulatingMedium()
+{
+  nsIAtom* previousMedium = Medium();
+  mIsEmulatingMedia = false;
+  if (Medium() != previousMedium) {
+    MediaFeatureValuesChanged(eRebuildStyleIfNeeded, nsChangeHint(0));
+  }
 }
 
 void
