@@ -144,6 +144,8 @@ public:
   virtual nsXBLBinding *GetXBLBinding() const MOZ_OVERRIDE;
   virtual void SetXBLBinding(nsXBLBinding* aBinding,
                              nsBindingManager* aOldBindingManager = nullptr) MOZ_OVERRIDE;
+  virtual nsIContent *GetXBLInsertionParent() const;
+  virtual void SetXBLInsertionParent(nsIContent* aContent);
   virtual bool IsNodeOfType(uint32_t aFlags) const MOZ_OVERRIDE;
   virtual bool IsLink(nsIURI** aURI) const MOZ_OVERRIDE;
 
@@ -231,11 +233,19 @@ protected:
     {
     }
 
+    void Traverse(nsCycleCollectionTraversalCallback &cb);
+    void Unlink();
+
     /**
      * The nearest enclosing content node with a binding that created us.
      * @see nsIContent::GetBindingParent
      */
     nsIContent* mBindingParent;  // [Weak]
+
+    /**
+     * @see nsIContent::GetXBLInsertionParent
+     */
+    nsCOMPtr<nsIContent> mXBLInsertionParent;
   };
 
   // Override from nsINode

@@ -86,11 +86,21 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsGenericDOMDataNode)
     return NS_SUCCESS_INTERRUPTED_TRAVERSE;
   }
 
+  nsDataSlots *slots = tmp->GetExistingDataSlots();
+  if (slots) {
+    slots->Traverse(cb);
+  }
+
   tmp->OwnerDoc()->BindingManager()->Traverse(tmp, cb);
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGenericDOMDataNode)
   nsINode::Unlink(tmp);
+
+  nsDataSlots *slots = tmp->GetExistingDataSlots();
+  if (slots) {
+    slots->Unlink();
+  }
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_INTERFACE_MAP_BEGIN(nsGenericDOMDataNode)
@@ -649,6 +659,29 @@ nsGenericDOMDataNode::SetXBLBinding(nsXBLBinding* aBinding,
 {
 }
 
+nsIContent *
+nsGenericDOMDataNode::GetXBLInsertionParent() const
+{
+  if (HasFlag(NODE_MAY_BE_IN_BINDING_MNGR)) {
+    nsDataSlots *slots = GetExistingDataSlots();
+    if (slots) {
+      return slots->mXBLInsertionParent;
+    }
+  }
+
+  return nullptr;
+}
+
+void
+nsGenericDOMDataNode::SetXBLInsertionParent(nsIContent* aContent)
+{
+  nsDataSlots *slots = DataSlots();
+  if (aContent) {
+    SetFlags(NODE_MAY_BE_IN_BINDING_MNGR);
+  }
+  slots->mXBLInsertionParent = aContent;
+}
+
 bool
 nsGenericDOMDataNode::IsNodeOfType(uint32_t aFlags) const
 {
@@ -692,6 +725,19 @@ nsINode::nsSlots*
 nsGenericDOMDataNode::CreateSlots()
 {
   return new nsDataSlots();
+}
+
+void
+nsGenericDOMDataNode::nsDataSlots::Traverse(nsCycleCollectionTraversalCallback &cb)
+{
+  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mSlots->mXBLInsertionParent");
+  cb.NoteXPCOMChild(mXBLInsertionParent.get());
+}
+
+void
+nsGenericDOMDataNode::nsDataSlots::Unlink()
+{
+  mXBLInsertionParent = nullptr;
 }
 
 //----------------------------------------------------------------------
