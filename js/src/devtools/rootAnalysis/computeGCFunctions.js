@@ -2,9 +2,9 @@
 
 "use strict";
 
-load('utility.js');
-load('annotations.js');
-load('loadCallgraph.js');
+loadRelativeToScript('utility.js');
+loadRelativeToScript('annotations.js');
+loadRelativeToScript('loadCallgraph.js');
 
 if (typeof arguments[0] != 'string')
     throw "Usage: computeGCFunctions.js <callgraph.txt>";
