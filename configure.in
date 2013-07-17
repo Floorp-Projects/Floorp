@@ -8124,6 +8124,13 @@ dnl ========================================================
 dnl Graphics checks.
 dnl ========================================================
 
+if test "${OS_TARGET}" = "WINNT"; then
+  if $PERL -e "exit($MOZ_WINSDK_MAXVER < 0x06020000)"; then
+    MOZ_ENABLE_DIRECT2D1_1=1
+    AC_SUBST(MOZ_ENABLE_DIRECT2D1_1)
+  fi
+fi
+
 if test "${OS_TARGET}" = "WINNT" -o "${OS_ARCH}" = "Darwin" -o "${MOZ_WIDGET_TOOLKIT}" = "android" -o "${MOZ_WIDGET_TOOLKIT}" = "gtk2"; then
     case "${target_cpu}" in
     i*86*|x86_64|arm)
