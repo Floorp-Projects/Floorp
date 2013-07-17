@@ -33,8 +33,8 @@ nsNullPrincipalURI::nsNullPrincipalURI(const nsCString &aSpec)
 static NS_DEFINE_CID(kNullPrincipalURIImplementationCID,
                      NS_NULLPRINCIPALURI_IMPLEMENTATION_CID);
 
-NS_IMPL_THREADSAFE_ADDREF(nsNullPrincipalURI)
-NS_IMPL_THREADSAFE_RELEASE(nsNullPrincipalURI)
+NS_IMPL_ADDREF(nsNullPrincipalURI)
+NS_IMPL_RELEASE(nsNullPrincipalURI)
 
 NS_INTERFACE_MAP_BEGIN(nsNullPrincipalURI)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIURI)
