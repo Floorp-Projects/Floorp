@@ -423,6 +423,8 @@ let LightweightThemeListener = {
       return;
 
     let themeData = JSON.parse(aData);
+    if (!themeData)
+      return;
     this.updateStyleSheet("url(" + themeData.headerURL + ")");
   },
 };
