@@ -332,9 +332,7 @@
             Components.utils.import("resource://gre/modules/WindowDraggingUtils.jsm", tmp);
             let draggableThis = new tmp.WindowDraggingElement(this);
             draggableThis.mouseDownCheck = function(e) {
-              // Don't move while customizing.
-              return this._dragBindingAlive &&
-                     this.getAttribute("customizing") != "true";
+              return this._dragBindingAlive;
             };
           } catch (e) {}
         }
