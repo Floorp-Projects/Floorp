@@ -14,6 +14,15 @@
 # and reapply it after running update-icu.sh (additional updates may be needed).
 # If the bug has been addressed, please delete this warning.
 
+# Warning
+# =======
+# The fix for ICU bug 10045 has been individually backported into this tree.
+# If you update ICU to a version that does not have this fix yet, obtain the
+# patch "Backported fix for formatting 0 with significant digits from ICU" from
+# https://bugzilla.mozilla.org/show_bug.cgi?id=853706
+# and reapply it after running update-icu.sh.
+# If you update ICU to a version that has the fix, please delete this warning.
+
 # Usage: update-icu.sh <URL of ICU SVN with release>
 # E.g., for ICU 50.1.1: update-icu.sh http://source.icu-project.org/repos/icu/icu/tags/release-50-1-1/
 

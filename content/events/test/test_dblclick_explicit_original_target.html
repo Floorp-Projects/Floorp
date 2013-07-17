@@ -1,0 +1,33 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test explicit original target of dblclick event</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<p id="display">Test explicit original target of dblclick event</p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(runTests);
+
+function runTests()
+{
+  synthesizeMouse(document.getElementById("display"), 5, 5, { clickCount: 2 });
+}
+
+window.ondblclick = function(event) {
+  is(event.explicitOriginalTarget.nodeType, Node.TEXT_NODE, "explicitOriginalTarget is a text node");
+  SimpleTest.finish();
+}
+
+</script>
+</pre>
+</body>
+</html>
