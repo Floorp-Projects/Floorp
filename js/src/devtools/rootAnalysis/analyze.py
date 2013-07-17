@@ -19,7 +19,7 @@ def env(config):
     e = os.environ
     e['PATH'] = '%s:%s/bin' % (e['PATH'], config['sixgill'])
     e['XDB'] = '%(sixgill)s/bin/xdb.so' % config
-    e['SOURCE_ROOT'] = e['TARGET']
+    e['SOURCE_ROOT'] = config['source'] or e['TARGET']
     return e
 
 def fill(command, config):
@@ -145,6 +145,8 @@ data = config.copy()
 parser = argparse.ArgumentParser(description='Statically analyze build tree for rooting hazards.')
 parser.add_argument('target', metavar='TARGET', type=str, nargs='?',
                     help='run starting from this target')
+parser.add_argument('--source', metavar='SOURCE', type=str, nargs='?',
+                    help='source code to analyze')
 parser.add_argument('--jobs', '-j', default=4, metavar='JOBS', type=int,
                     help='number of simultaneous analyzeRoots.js jobs')
 parser.add_argument('--list', const=True, nargs='?', type=bool,
