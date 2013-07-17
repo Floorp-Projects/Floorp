@@ -764,10 +764,10 @@ public:
    * each other.
    */
   enum {
-    // When set, blocking on the input stream forces blocking on the output
+    // When set, blocking on the output stream forces blocking on the input
     // stream.
     FLAG_BLOCK_INPUT = 0x01,
-    // When set, blocking on the output stream forces blocking on the input
+    // When set, blocking on the input stream forces blocking on the output
     // stream.
     FLAG_BLOCK_OUTPUT = 0x02
   };
