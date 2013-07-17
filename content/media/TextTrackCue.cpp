@@ -17,8 +17,9 @@
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_4(TextTrackCue,
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_5(TextTrackCue,
                                         mGlobal,
+                                        mDocument,
                                         mTrack,
                                         mTrackElement,
                                         mDisplayState)
@@ -44,7 +45,8 @@ TextTrackCue::SetDefaultCueSettings()
 TextTrackCue::TextTrackCue(nsISupports* aGlobal,
                            double aStartTime,
                            double aEndTime,
-                           const nsAString& aText)
+                           const nsAString& aText,
+                           ErrorResult& aRv)
   : mGlobal(aGlobal)
   , mText(aText)
   , mStartTime(aStartTime)
@@ -55,6 +57,9 @@ TextTrackCue::TextTrackCue(nsISupports* aGlobal,
   SetDefaultCueSettings();
   MOZ_ASSERT(aGlobal);
   SetIsDOMBinding();
+  if (NS_FAILED(StashDocument())) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+  }
 }
 
 TextTrackCue::TextTrackCue(nsISupports* aGlobal,
@@ -62,7 +67,8 @@ TextTrackCue::TextTrackCue(nsISupports* aGlobal,
                            double aEndTime,
                            const nsAString& aText,
                            HTMLTrackElement* aTrackElement,
-                           webvtt_node* head)
+                           webvtt_node* head,
+                           ErrorResult& aRv)
   : mGlobal(aGlobal)
   , mText(aText)
   , mStartTime(aStartTime)
@@ -75,6 +81,9 @@ TextTrackCue::TextTrackCue(nsISupports* aGlobal,
   SetDefaultCueSettings();
   MOZ_ASSERT(aGlobal);
   SetIsDOMBinding();
+  if (NS_FAILED(StashDocument())) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+  }
 }
 
 TextTrackCue::~TextTrackCue()
@@ -84,20 +93,29 @@ TextTrackCue::~TextTrackCue()
   }
 }
 
+/** Save a reference to our creating document so it's available
+ *  even when unlinked during discard/teardown.
+ */
+nsresult
+TextTrackCue::StashDocument()
+{
+  nsCOMPtr<nsPIDOMWindow> window(do_QueryInterface(mGlobal));
+  if (!window) {
+    return NS_ERROR_NO_INTERFACE;
+  }
+  mDocument = window->GetDoc();
+  if (!mDocument) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  return NS_OK;
+}
+
 void
 TextTrackCue::CreateCueOverlay()
 {
-  nsCOMPtr<nsPIDOMWindow> window(do_QueryInterface(mGlobal));
-  if(!window) {
-    return;
-  }
-  nsIDocument* document = window->GetDoc();
-  if(!document) {
-    return;
-  }
-  document->CreateElem(NS_LITERAL_STRING("div"), nullptr,
-                       kNameSpaceID_XHTML,
-                       getter_AddRefs(mDisplayState));
+  mDocument->CreateElem(NS_LITERAL_STRING("div"), nullptr,
+                        kNameSpaceID_XHTML,
+                        getter_AddRefs(mDisplayState));
   nsGenericHTMLElement* cueDiv =
     static_cast<nsGenericHTMLElement*>(mDisplayState.get());
   cueDiv->SetClassName(NS_LITERAL_STRING("caption-text"));
@@ -146,17 +164,8 @@ TextTrackCue::RenderCue()
 already_AddRefed<DocumentFragment>
 TextTrackCue::GetCueAsHTML()
 {
-  nsCOMPtr<nsPIDOMWindow> window(do_QueryInterface(mGlobal));
-  if(!window) {
-    return nullptr;
-  }
-  nsIDocument* document = window->GetDoc();
-  if(!document){
-    return nullptr;
-  }
-  nsRefPtr<DocumentFragment> frag =
-    document->CreateDocumentFragment();
-
+  MOZ_ASSERT(mDocument);
+  nsRefPtr<DocumentFragment> frag = mDocument->CreateDocumentFragment();
   ConvertNodeTreeToDOMTree(frag);
 
   return frag.forget();
@@ -188,17 +197,9 @@ TextTrackCue::ConvertInternalNodeToContent(const webvtt_node* aWebVTTNode)
   nsIAtom* atom = nsGkAtoms::span;
 
   nsCOMPtr<nsIContent> cueTextContent;
-  nsCOMPtr<nsPIDOMWindow> window(do_QueryInterface(mGlobal));
-  if(!window) {
-    return nullptr;
-  }
-  nsIDocument* document = window->GetDoc();
-  if(!document){
-    return nullptr;
-  }
-  document->CreateElem(nsDependentAtomString(atom), nullptr,
-                       kNameSpaceID_XHTML,
-                       getter_AddRefs(cueTextContent));
+  mDocument->CreateElem(nsDependentAtomString(atom), nullptr,
+                        kNameSpaceID_XHTML,
+                        getter_AddRefs(cueTextContent));
   return cueTextContent.forget();
 }
 
@@ -206,14 +207,8 @@ already_AddRefed<nsIContent>
 TextTrackCue::ConvertLeafNodeToContent(const webvtt_node* aWebVTTNode)
 {
   nsCOMPtr<nsIContent> cueTextContent;
-  nsCOMPtr<nsPIDOMWindow> window(do_QueryInterface(mGlobal));
-  if(!window) {
-    return nullptr;
-  }
-  nsIDocument* document = window->GetDoc();
-  if(!document) {
-    return nullptr;
-  }
+  // Use mDocument to create nodes on cueTextContent.
+
   return cueTextContent.forget();
 }
 
