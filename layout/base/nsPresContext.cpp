@@ -2586,17 +2586,6 @@ nsPresContext::IsCrossProcessRootContentDocument()
   return (tabChild && tabChild->IsRootContentDocument());
 }
 
-bool
-nsPresContext::IsDeviceSizePageSize()
-{
-  bool isDeviceSizePageSize = false;
-  nsCOMPtr<nsIDocShell> docShell(do_QueryReferent(mContainer));
-  if (docShell) {
-    isDeviceSizePageSize = docShell->GetDeviceSizeIsPageSize();
-  }
-  return isDeviceSizePageSize;
-}
-
 nsRootPresContext::nsRootPresContext(nsIDocument* aDocument,
                                      nsPresContextType aType)
   : nsPresContext(aDocument, aType),
