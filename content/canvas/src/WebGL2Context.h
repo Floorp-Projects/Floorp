@@ -3,14 +3,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef WEBGL1CONTEXT_H_
-#define WEBGL1CONTEXT_H_
+#ifndef WEBGL2CONTEXT_H_
+#define WEBGL2CONTEXT_H_
 
 #include "WebGLContext.h"
 
 namespace mozilla {
 
-class WebGL1Context
+class WebGL2Context
     : public WebGLContext
 {
 // -----------------------------------------------------------------------------
@@ -18,10 +18,17 @@ class WebGL1Context
 public:
 
     // -------------------------------------------------------------------------
-    // CONSTRUCTOR & DESTRUCTOR
+    // DESTRUCTOR
 
-    WebGL1Context();
-    virtual ~WebGL1Context();
+    virtual ~WebGL2Context();
+
+
+    // -------------------------------------------------------------------------
+    // STATIC FUNCTIONS
+
+    static bool IsSupported();
+
+    static WebGL2Context* Create();
 
 
     // -------------------------------------------------------------------------
@@ -29,7 +36,7 @@ public:
 
     virtual bool IsWebGL2() const MOZ_OVERRIDE
     {
-        return false;
+        return true;
     }
 
 
@@ -38,6 +45,16 @@ public:
 
     virtual JSObject* WrapObject(JSContext *cx,
                                  JS::Handle<JSObject*> scope) MOZ_OVERRIDE;
+
+
+// -----------------------------------------------------------------------------
+// PRIVATE
+private:
+
+    // -------------------------------------------------------------------------
+    // CONSTRUCTOR
+
+    WebGL2Context();
 
 
 };
