@@ -6735,18 +6735,25 @@ IonBuilder::jsop_setelem()
         return jsop_setelem_typed(arrayType, SetElem_Normal,
                                   object, index, value);
 
-    if (!PropertyWriteNeedsTypeBarrier(cx, current, &object, NULL, &value)) {
-        if (ElementAccessIsDenseNative(object, index)) {
+    if (ElementAccessIsDenseNative(object, index)) {
+        do {
+            if (PropertyWriteNeedsTypeBarrier(cx, current, &object, NULL, &value))
+                break;
+            if (!object->resultTypeSet())
+                break;
+
             types::StackTypeSet::DoubleConversion conversion =
                 object->resultTypeSet()->convertDoubleElements(cx);
 
             // If AmbiguousDoubleConversion, only handle int32 values for now.
-            if (conversion != types::StackTypeSet::AmbiguousDoubleConversion ||
-                value->type() == MIRType_Int32)
+            if (conversion == types::StackTypeSet::AmbiguousDoubleConversion &&
+                value->type() != MIRType_Int32)
             {
-                return jsop_setelem_dense(conversion, SetElem_Normal, object, index, value);
+                break;
             }
-        }
+
+            return jsop_setelem_dense(conversion, SetElem_Normal, object, index, value);
+        } while(false);
     }
 
     if (object->type() == MIRType_Magic)
