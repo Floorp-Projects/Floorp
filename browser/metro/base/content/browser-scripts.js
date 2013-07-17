@@ -120,7 +120,6 @@ let ScriptContexts = {};
   ["ConsolePanelView", "chrome://browser/content/console.js"],
   ["DownloadsPanelView", "chrome://browser/content/downloads.js"],
   ["DownloadsView", "chrome://browser/content/downloads.js"],
-  ["Downloads", "chrome://browser/content/downloads.js"],
   ["BookmarksStartView", "chrome://browser/content/bookmarks.js"],
   ["HistoryView", "chrome://browser/content/history.js"],
   ["HistoryStartView", "chrome://browser/content/history.js"],
