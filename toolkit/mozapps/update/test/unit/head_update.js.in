@@ -2193,7 +2193,7 @@ function adjustGeneralPaths() {
       }
       catch (e) {
         dump("Unable to remove file\n" +
-             "path: " + updatesDir.path + "\n" +
+             "path: " + testBin.path + "\n" +
              "Exception: " + e + "\n");
       }
     }
@@ -2206,7 +2206,7 @@ function adjustGeneralPaths() {
       }
       catch (e) {
         dump("Unable to remove directory\n" +
-             "path: " + updatesDir.path + "\n" +
+             "path: " + testDir.path + "\n" +
              "Exception: " + e + "\n");
       }
     }
