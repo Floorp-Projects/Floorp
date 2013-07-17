@@ -4,8 +4,14 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+[Pref="dom.icc.enabled",
+ Constructor(DOMString type, optional MozStkCommandEventInit eventInitDict)]
 interface MozStkCommandEvent : Event
 {
-  [Throws]
   readonly attribute any command;
+};
+
+dictionary MozStkCommandEventInit : EventInit
+{
+  any command = null;
 };

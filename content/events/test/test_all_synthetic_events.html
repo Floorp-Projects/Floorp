@@ -250,7 +250,9 @@ const kEventConstructors = {
                                                          return new MozSmsEvent(aName, aProps);
                                                        },
                                              },
-  MozStkCommandEvent:                        { create: null, // Cannot create untrusted event from JS.
+  MozStkCommandEvent:                        { create: function (aName, aProps) {
+                                                          return new MozStkCommandEvent(aName, aProps);
+                                                       },
                                              },
   MozVoicemailEvent:                         { create: function (aName, aProps) {
                                                           return new MozVoicemailEvent(aName, aProps);
