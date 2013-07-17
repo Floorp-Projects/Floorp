@@ -1692,7 +1692,7 @@ ContentParent::DeallocPDeviceStorageRequestParent(PDeviceStorageRequestParent* d
 PBlobParent*
 ContentParent::AllocPBlobParent(const BlobConstructorParams& aParams)
 {
-  return BlobParent::Create(aParams);
+  return BlobParent::Create(this, aParams);
 }
 
 bool
@@ -1772,7 +1772,7 @@ ContentParent::GetOrCreateActorForBlob(nsIDOMBlob* aBlob)
     }
       }
 
-  BlobParent* actor = BlobParent::Create(aBlob);
+  BlobParent* actor = BlobParent::Create(this, aBlob);
   NS_ENSURE_TRUE(actor, nullptr);
 
   if (!SendPBlobConstructor(actor, params)) {
