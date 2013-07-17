@@ -38,5 +38,5 @@ function onTabViewWindowLoaded() {
       gBrowser.removeTab(tabTwo);
       finish();
     });
-  });
+  }, 0);
 }
