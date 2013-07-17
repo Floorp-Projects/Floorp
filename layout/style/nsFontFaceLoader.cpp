@@ -530,7 +530,7 @@ nsUserFontSet::InsertRule(nsCSSFontFaceRule *aRule, uint8_t aSheetType,
   // this is a new rule:
 
   uint32_t weight = NS_STYLE_FONT_WEIGHT_NORMAL;
-  uint32_t stretch = NS_STYLE_FONT_STRETCH_NORMAL;
+  int32_t stretch = NS_STYLE_FONT_STRETCH_NORMAL;
   uint32_t italicStyle = NS_STYLE_FONT_STYLE_NORMAL;
   nsString languageOverride;
 
