@@ -229,6 +229,13 @@ Highlighter.prototype = {
    */
   invalidateSize: function Highlighter_invalidateSize()
   {
+    let canHiglightNode = this.selection.isNode() &&
+                          this.selection.isConnected() &&
+                          this.selection.isElementNode();
+
+    if (!canHiglightNode)
+      return;
+
     // The highlighter runs locally while the selection runs remotely,
     // so we can't quite trust the selection's isConnected to protect us
     // here, do the check manually.
@@ -237,13 +244,6 @@ Highlighter.prototype = {
         !this.selection.node.ownerDocument.defaultView) {
       return;
     }
-
-    let canHiglightNode = this.selection.isNode() &&
-                          this.selection.isConnected() &&
-                          this.selection.isElementNode();
-
-    if (!canHiglightNode)
-      return;
 
     let clientRect = this.selection.node.getBoundingClientRect();
     let rect = LayoutHelpers.getDirtyRect(this.selection.node);

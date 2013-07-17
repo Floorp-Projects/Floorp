@@ -744,7 +744,7 @@ Toolbox.prototype = {
     gDevTools.off("tool-registered", this._toolRegistered);
     gDevTools.off("tool-unregistered", this._toolUnregistered);
 
-    // Revert docShell.allowJavascript back to it's original value if it was
+    // Revert docShell.allowJavascript back to its original value if it was
     // changed via the Disable JS option.
     if (typeof this._origAllowJavascript != "undefined") {
       let docShell = this._host.hostTab.linkedBrowser.docShell;
@@ -755,7 +755,12 @@ Toolbox.prototype = {
     let outstanding = [];
 
     for (let [id, panel] of this._toolPanels) {
-      outstanding.push(panel.destroy());
+      try {
+        outstanding.push(panel.destroy());
+      } catch(e) {
+        // We don't want to stop here if any panel fail to close.
+        console.error(e);
+      }
     }
 
     let container = this.doc.getElementById("toolbox-buttons");
