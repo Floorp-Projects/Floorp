@@ -29,8 +29,7 @@ public class AboutHome extends Fragment {
     public static enum UpdateFlags {
         TOP_SITES,
         PREVIOUS_TABS,
-        RECOMMENDED_ADDONS,
-        REMOTE_TABS;
+        RECOMMENDED_ADDONS;
 
         public static final EnumSet<UpdateFlags> ALL = EnumSet.allOf(UpdateFlags.class);
     }
@@ -38,12 +37,10 @@ public class AboutHome extends Fragment {
     private UriLoadListener mUriLoadListener;
     private LoadCompleteListener mLoadCompleteListener;
     private LightweightTheme mLightweightTheme;
-    private ContentObserver mTabsContentObserver;
     private int mTopPadding;
     private AboutHomeView mAboutHomeView;
     private AddonsSection mAddonsSection;
     private LastTabsSection mLastTabsSection;
-    private RemoteTabsSection mRemoteTabsSection;
     private TopSitesView mTopSitesView;
     private ScrollAnimator mScrollAnimator;
 
@@ -96,7 +93,6 @@ public class AboutHome extends Fragment {
         mAboutHomeView = (AboutHomeView) inflater.inflate(R.layout.abouthome_content, container, false);
         mAddonsSection = (AddonsSection) mAboutHomeView.findViewById(R.id.recommended_addons);
         mLastTabsSection = (LastTabsSection) mAboutHomeView.findViewById(R.id.last_tabs);
-        mRemoteTabsSection = (RemoteTabsSection) mAboutHomeView.findViewById(R.id.remote_tabs);
         mTopSitesView = (TopSitesView) mAboutHomeView.findViewById(R.id.top_sites_grid);
 
         mAboutHomeView.setLightweightTheme(mLightweightTheme);
@@ -123,24 +119,11 @@ public class AboutHome extends Fragment {
         mTopSitesView.setLoadCompleteListener(mLoadCompleteListener);
         mTopSitesView.setUriLoadListener(mUriLoadListener);
         mAddonsSection.setUriLoadListener(mUriLoadListener);
-
-        // Reload the mobile homepage on inbound tab syncs
-        // Because the tabs URI is coarse grained, this updates the
-        // remote tabs component on *every* tab change
-        mTabsContentObserver = new ContentObserver(null) {
-            @Override
-            public void onChange(boolean selfChange) {
-                update(EnumSet.of(AboutHome.UpdateFlags.REMOTE_TABS));
-            }
-        };
-        getActivity().getContentResolver().registerContentObserver(BrowserContract.Tabs.CONTENT_URI,
-                false, mTabsContentObserver);
     }
 
     @Override
     public void onDestroyView() {
         mLightweightTheme.removeListener(mAboutHomeView);
-        getActivity().getContentResolver().unregisterContentObserver(mTabsContentObserver);
         mTopSitesView.onDestroy();
 
         if (mScrollAnimator != null) {
@@ -151,7 +134,6 @@ public class AboutHome extends Fragment {
         mAboutHomeView = null;
         mAddonsSection = null;
         mLastTabsSection = null;
-        mRemoteTabsSection = null;
         mTopSitesView = null;
 
         super.onDestroyView();
@@ -225,10 +207,6 @@ public class AboutHome extends Fragment {
 
         if (flags.contains(UpdateFlags.RECOMMENDED_ADDONS)) {
             mAddonsSection.readRecommendedAddons();
-        }
-
-        if (flags.contains(UpdateFlags.REMOTE_TABS)) {
-            mRemoteTabsSection.loadRemoteTabs();
         }
     }
 
