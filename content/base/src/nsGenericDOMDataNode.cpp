@@ -637,6 +637,18 @@ nsGenericDOMDataNode::GetBindingParent() const
   return slots ? slots->mBindingParent : nullptr;
 }
 
+nsXBLBinding *
+nsGenericDOMDataNode::GetXBLBinding() const
+{
+  return nullptr;
+}
+
+void
+nsGenericDOMDataNode::SetXBLBinding(nsXBLBinding* aBinding,
+                                    nsBindingManager* aOldBindingManager)
+{
+}
+
 bool
 nsGenericDOMDataNode::IsNodeOfType(uint32_t aFlags) const
 {
