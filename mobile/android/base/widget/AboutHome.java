@@ -28,8 +28,7 @@ import android.view.ViewGroup;
 public class AboutHome extends Fragment {
     public static enum UpdateFlags {
         TOP_SITES,
-        PREVIOUS_TABS,
-        RECOMMENDED_ADDONS;
+        PREVIOUS_TABS;
 
         public static final EnumSet<UpdateFlags> ALL = EnumSet.allOf(UpdateFlags.class);
     }
@@ -39,7 +38,6 @@ public class AboutHome extends Fragment {
     private LightweightTheme mLightweightTheme;
     private int mTopPadding;
     private AboutHomeView mAboutHomeView;
-    private AddonsSection mAddonsSection;
     private LastTabsSection mLastTabsSection;
     private TopSitesView mTopSitesView;
     private ScrollAnimator mScrollAnimator;
@@ -91,7 +89,6 @@ public class AboutHome extends Fragment {
         super.onCreateView(inflater, container, savedInstanceState);
 
         mAboutHomeView = (AboutHomeView) inflater.inflate(R.layout.abouthome_content, container, false);
-        mAddonsSection = (AddonsSection) mAboutHomeView.findViewById(R.id.recommended_addons);
         mLastTabsSection = (LastTabsSection) mAboutHomeView.findViewById(R.id.last_tabs);
         mTopSitesView = (TopSitesView) mAboutHomeView.findViewById(R.id.top_sites_grid);
 
@@ -118,7 +115,6 @@ public class AboutHome extends Fragment {
 
         mTopSitesView.setLoadCompleteListener(mLoadCompleteListener);
         mTopSitesView.setUriLoadListener(mUriLoadListener);
-        mAddonsSection.setUriLoadListener(mUriLoadListener);
     }
 
     @Override
@@ -132,7 +128,6 @@ public class AboutHome extends Fragment {
         mScrollAnimator = null;
 
         mAboutHomeView = null;
-        mAddonsSection = null;
         mLastTabsSection = null;
         mTopSitesView = null;
 
@@ -203,10 +198,6 @@ public class AboutHome extends Fragment {
 
         if (flags.contains(UpdateFlags.PREVIOUS_TABS)) {
             mLastTabsSection.readLastTabs();
-        }
-
-        if (flags.contains(UpdateFlags.RECOMMENDED_ADDONS)) {
-            mAddonsSection.readRecommendedAddons();
         }
     }
 

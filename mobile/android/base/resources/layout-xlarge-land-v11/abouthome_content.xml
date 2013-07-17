@@ -68,13 +68,6 @@
                                                       gecko:title="@string/abouthome_last_tabs_title"
                                                       gecko:more_text="@string/abouthome_last_tabs_open"/>
 
-            <org.mozilla.gecko.widget.AddonsSection android:id="@+id/recommended_addons"
-                                                    android:layout_width="fill_parent"
-                                                    android:layout_height="wrap_content"
-                                                    android:visibility="gone"
-                                                    gecko:title="@string/abouthome_addons_title"
-                                                    gecko:more_text="@string/abouthome_addons_browse"/>
-
         </LinearLayout>
 
     </LinearLayout>
