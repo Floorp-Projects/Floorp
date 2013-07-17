@@ -4,6 +4,8 @@
  */
 
 AUS_Cu.import("resource://gre/modules/FileUtils.jsm");
+
+const TEST_ID = "bug794211";
 const KEY_UPDATE_ARCHIVE_DIR = "UpdArchD"
 
 let gActiveUpdate = null;
@@ -27,6 +29,8 @@ function run_test() {
   do_test_pending();
   do_register_cleanup(end_test);
   DEBUG_AUS_TEST = true;
+
+  adjustGeneralPaths();
 
   removeUpdateDirsAndFiles();
   setUpdateURLOverride();

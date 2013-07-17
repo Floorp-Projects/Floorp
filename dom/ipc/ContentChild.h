@@ -53,6 +53,8 @@ class ContentChild : public PContentChild
 public:
     ContentChild();
     virtual ~ContentChild();
+    nsrefcnt AddRef() { return 1; }
+    nsrefcnt Release() { return 1; }
 
     struct AppInfo
     {
@@ -176,7 +178,8 @@ public:
     virtual bool RecvNotifyAlertsObserver(const nsCString& aType, const nsString& aData);
 
     virtual bool RecvAsyncMessage(const nsString& aMsg,
-                                  const ClonedMessageData& aData);
+                                  const ClonedMessageData& aData,
+                                  const InfallibleTArray<CpowEntry>& aCpows);
 
     virtual bool RecvGeolocationUpdate(const GeoPosition& somewhere);
 

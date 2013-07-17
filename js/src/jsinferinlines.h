@@ -461,7 +461,7 @@ GetClassForProtoKey(JSProtoKey key)
 {
     switch (key) {
       case JSProto_Object:
-        return &ObjectClass;
+        return &JSObject::class_;
       case JSProto_Array:
         return &ArrayObject::class_;
 
@@ -509,7 +509,7 @@ GetTypeNewObject(JSContext *cx, JSProtoKey key)
     RootedObject proto(cx);
     if (!js_GetClassPrototype(cx, key, &proto))
         return NULL;
-    return proto->getNewType(cx, GetClassForProtoKey(key));
+    return cx->getNewType(GetClassForProtoKey(key), proto.get());
 }
 
 /* Get a type object for the immediate allocation site within a native. */
@@ -556,12 +556,12 @@ TypeMonitorCall(JSContext *cx, const js::CallArgs &args, bool constructing)
 }
 
 inline bool
-TrackPropertyTypes(JSContext *cx, JSObject *obj, jsid id)
+TrackPropertyTypes(ExclusiveContext *cx, JSObject *obj, jsid id)
 {
     if (!cx->typeInferenceEnabled() || obj->hasLazyType() || obj->type()->unknownProperties())
         return false;
 
-    if (obj->hasSingletonType() && !obj->type()->maybeGetProperty(id, cx))
+    if (obj->hasSingletonType() && !obj->type()->maybeGetProperty(id, cx->asJSContext()))
         return false;
 
     return true;
@@ -587,21 +587,23 @@ EnsureTrackPropertyTypes(JSContext *cx, JSObject *obj, jsid id)
 
 /* Add a possible type for a property of obj. */
 inline void
-AddTypePropertyId(JSContext *cx, JSObject *obj, jsid id, Type type)
+AddTypePropertyId(ExclusiveContext *cx, JSObject *obj, jsid id, Type type)
 {
-    if (cx->typeInferenceEnabled())
+    if (cx->typeInferenceEnabled()) {
         id = IdToTypeId(id);
-    if (TrackPropertyTypes(cx, obj, id))
-        obj->type()->addPropertyType(cx, id, type);
+        if (TrackPropertyTypes(cx, obj, id))
+            obj->type()->addPropertyType(cx->asJSContext(), id, type);
+    }
 }
 
 inline void
-AddTypePropertyId(JSContext *cx, JSObject *obj, jsid id, const Value &value)
+AddTypePropertyId(ExclusiveContext *cx, JSObject *obj, jsid id, const Value &value)
 {
-    if (cx->typeInferenceEnabled())
+    if (cx->typeInferenceEnabled()) {
         id = IdToTypeId(id);
-    if (TrackPropertyTypes(cx, obj, id))
-        obj->type()->addPropertyType(cx, id, value);
+        if (TrackPropertyTypes(cx, obj, id))
+            obj->type()->addPropertyType(cx->asJSContext(), id, value);
+    }
 }
 
 inline void
@@ -620,10 +622,10 @@ AddTypeProperty(JSContext *cx, TypeObject *obj, const char *name, const Value &v
 
 /* Set one or more dynamic flags on a type object. */
 inline void
-MarkTypeObjectFlags(JSContext *cx, JSObject *obj, TypeObjectFlags flags)
+MarkTypeObjectFlags(ExclusiveContext *cx, JSObject *obj, TypeObjectFlags flags)
 {
     if (cx->typeInferenceEnabled() && !obj->hasLazyType() && !obj->type()->hasAllFlags(flags))
-        obj->type()->setFlags(cx, flags);
+        obj->type()->setFlags(cx->asJSContext(), flags);
 }
 
 /*
@@ -649,20 +651,21 @@ MarkTypeObjectUnknownProperties(JSContext *cx, TypeObject *obj,
  * have a getter/setter.
  */
 inline void
-MarkTypePropertyConfigured(JSContext *cx, HandleObject obj, jsid id)
+MarkTypePropertyConfigured(ExclusiveContext *cx, HandleObject obj, jsid id)
 {
-    if (cx->typeInferenceEnabled())
+    if (cx->typeInferenceEnabled()) {
         id = IdToTypeId(id);
-    if (TrackPropertyTypes(cx, obj, id))
-        obj->type()->markPropertyConfigured(cx, id);
+        if (TrackPropertyTypes(cx, obj, id))
+            obj->type()->markPropertyConfigured(cx->asJSContext(), id);
+    }
 }
 
 /* Mark a state change on a particular object. */
 inline void
-MarkObjectStateChange(JSContext *cx, JSObject *obj)
+MarkObjectStateChange(ExclusiveContext *cx, JSObject *obj)
 {
     if (cx->typeInferenceEnabled() && !obj->hasLazyType() && !obj->type()->unknownProperties())
-        obj->type()->markStateChange(cx);
+        obj->type()->markStateChange(cx->asJSContext());
 }
 
 /*
@@ -671,17 +674,23 @@ MarkObjectStateChange(JSContext *cx, JSObject *obj)
  */
 
 inline void
-FixArrayType(JSContext *cx, HandleObject obj)
+FixArrayType(ExclusiveContext *cxArg, HandleObject obj)
 {
-    if (cx->typeInferenceEnabled())
-        cx->compartment()->types.fixArrayType(cx, obj);
+    if (cxArg->isJSContext()) {
+        JSContext *cx = cxArg->asJSContext();
+        if (cx->typeInferenceEnabled())
+            cx->compartment()->types.fixArrayType(cx, obj);
+    }
 }
 
 inline void
-FixObjectType(JSContext *cx, HandleObject obj)
+FixObjectType(ExclusiveContext *cxArg, HandleObject obj)
 {
-    if (cx->typeInferenceEnabled())
-        cx->compartment()->types.fixObjectType(cx, obj);
+    if (cxArg->isJSContext()) {
+        JSContext *cx = cxArg->asJSContext();
+        if (cx->typeInferenceEnabled())
+            cx->compartment()->types.fixObjectType(cx, obj);
+    }
 }
 
 /* Interface helpers for JSScript*. */
@@ -785,7 +794,7 @@ TypeScript::StandardType(JSContext *cx, JSProtoKey key)
     RootedObject proto(cx);
     if (!js_GetClassPrototype(cx, key, &proto, NULL))
         return NULL;
-    return proto->getNewType(cx, GetClassForProtoKey(key));
+    return cx->getNewType(GetClassForProtoKey(key), proto.get());
 }
 
 struct AllocationSiteKey {
@@ -957,7 +966,19 @@ TypeScript::MonitorAssign(JSContext *cx, HandleObject obj, jsid id)
         uint32_t i;
         if (js_IdIsIndex(id, &i))
             return;
-        MarkTypeObjectUnknownProperties(cx, obj->type());
+
+        // But if we don't have too many properties yet, don't do anything.  The
+        // idea here is that normal object initialization should not trigger
+        // deoptimization in most cases, while actual usage as a hashmap should.
+        // Except for vanilla objects and arrays work around bug 894447 for now
+        // by deoptimizing more eagerly.  Since in those cases we often have a
+        // pc-keyed TypeObject, this is ok.
+        TypeObject* type = obj->type();
+        if (!obj->is<JSObject>() && !obj->is<ArrayObject>() &&
+            type->getPropertyCount() < 8) {
+            return;
+        }
+        MarkTypeObjectUnknownProperties(cx, type);
     }
 }
 
@@ -1344,14 +1365,6 @@ TypeSet::addType(JSContext *cx, Type type)
             JS_ASSERT(!nobject->singleton);
             if (nobject->unknownProperties())
                 goto unknownObject;
-            if (objectCount > 1) {
-                nobject->contribution += (objectCount - 1) * (objectCount - 1);
-                if (nobject->contribution >= TypeObject::CONTRIBUTION_LIMIT) {
-                    InferSpew(ISpewOps, "limitUnknown: %sT%p%s",
-                              InferSpewColor(this), this, InferSpewColorReset());
-                    goto unknownObject;
-                }
-            }
         }
     }
 

@@ -43,7 +43,8 @@ public:
 
   bool Headphones() const
   {
-    return mState == hal::SWITCH_STATE_ON;
+    MOZ_ASSERT(mState != hal::SWITCH_STATE_UNKNOWN);
+    return mState != hal::SWITCH_STATE_OFF;
   }
 
   IMPL_EVENT_HANDLER(headphoneschange)

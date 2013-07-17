@@ -42,7 +42,7 @@ function testSteps()
   openRequest.onerror = errorHandler;
   openRequest.onupgradeneeded = grabEventAndContinueHandler;
   openRequest.onsuccess = unexpectedSuccessHandler;
-  let event = yield;
+  let event = yield undefined;
   let db = event.target.result;
   let trans = event.target.transaction;
 
@@ -64,8 +64,8 @@ function testSteps()
   store1.add({ foo: "value2" }).onsuccess =
     genCheck(c1++, { foo: "value2" }, "second" + test);
 
-  yield;
-  yield;
+  yield undefined;
+  yield undefined;
 
   store2.put({ bar: "value1" }).onsuccess =
     genCheck(c2, { bar: "value1", id: c2 }, "first in store2" + test,
@@ -75,16 +75,16 @@ function testSteps()
     genCheck(c1++, { foo: "value3" }, "third" + test,
              { store: store1 });
 
-  yield;
-  yield;
+  yield undefined;
+  yield undefined;
 
   store2.get(IDBKeyRange.lowerBound(c2)).onsuccess = grabEventAndContinueHandler;
-  event = yield;
+  event = yield undefined;
   is(event.target.result, undefined, "no such value" + test);
 
   // Close version_change transaction
   openRequest.onsuccess = grabEventAndContinueHandler;
-  event = yield;
+  event = yield undefined;
 
   is(event.target, openRequest, "succeeded to open" + test);
   is(event.type, "success", "succeeded to open" + test);
@@ -98,7 +98,7 @@ function testSteps()
   trans = db.transaction("store1", RW);
   trans.objectStore("store1").add({ explicit: 2 }).onsuccess =
     genCheck(c1++, { explicit: 2 }, "second" + test);
-  yield; yield;
+  yield undefined; yield undefined;
 
   trans = db.transaction("store1", RW);
   trans.objectStore("store1").add({ explicit: 3 }, 200).onsuccess =
@@ -106,39 +106,39 @@ function testSteps()
   c1 = 201;
   trans.objectStore("store1").add({ explicit: 4 }).onsuccess =
     genCheck(c1++, { explicit: 4 }, "fourth" + test);
-  yield; yield;
+  yield undefined; yield undefined;
 
   trans = db.transaction("store1", RW);
   trans.objectStore("store1").add({ explicit: 5 }, 150).onsuccess =
     genCheck(150, { explicit: 5 }, "fifth" + test);
-  yield;
+  yield undefined;
   trans.objectStore("store1").add({ explicit: 6 }).onsuccess =
     genCheck(c1++, { explicit: 6 }, "sixth" + test);
-  yield;
+  yield undefined;
 
   trans = db.transaction("store1", RW);
   trans.objectStore("store1").add({ explicit: 7 }, "key").onsuccess =
     genCheck("key", { explicit: 7 }, "seventh" + test);
-  yield;
+  yield undefined;
   trans.objectStore("store1").add({ explicit: 8 }).onsuccess =
     genCheck(c1++, { explicit: 8 }, "eighth" + test);
-  yield;
+  yield undefined;
 
   trans = db.transaction("store1", RW);
   trans.objectStore("store1").add({ explicit: 7 }, [100000]).onsuccess =
     genCheck([100000], { explicit: 7 }, "seventh" + test);
-  yield;
+  yield undefined;
   trans.objectStore("store1").add({ explicit: 8 }).onsuccess =
     genCheck(c1++, { explicit: 8 }, "eighth" + test);
-  yield;
+  yield undefined;
 
   trans = db.transaction("store1", RW);
   trans.objectStore("store1").add({ explicit: 9 }, -100000).onsuccess =
     genCheck(-100000, { explicit: 9 }, "ninth" + test);
-  yield;
+  yield undefined;
   trans.objectStore("store1").add({ explicit: 10 }).onsuccess =
     genCheck(c1++, { explicit: 10 }, "tenth" + test);
-  yield;
+  yield undefined;
 
 
   trans = db.transaction("store2", RW);
@@ -149,7 +149,7 @@ function testSteps()
   trans.objectStore("store2").add({ explicit2: 2 }).onsuccess =
     genCheck(c2, { explicit2: 2, id: c2 }, "second store2" + test);
   c2++;
-  yield; yield;
+  yield undefined; yield undefined;
 
   trans = db.transaction("store2", RW);
   trans.objectStore("store2").add({ explicit2: 3, id: 400 }).onsuccess =
@@ -158,43 +158,43 @@ function testSteps()
   trans.objectStore("store2").add({ explicit2: 4 }).onsuccess =
     genCheck(c2, { explicit2: 4, id: c2 }, "fourth store2" + test);
   c2++;
-  yield; yield;
+  yield undefined; yield undefined;
 
   trans = db.transaction("store2", RW);
   trans.objectStore("store2").add({ explicit: 5, id: 150 }).onsuccess =
     genCheck(150, { explicit: 5, id: 150 }, "fifth store2" + test);
-  yield;
+  yield undefined;
   trans.objectStore("store2").add({ explicit: 6 }).onsuccess =
     genCheck(c2, { explicit: 6, id: c2 }, "sixth store2" + test);
   c2++;
-  yield;
+  yield undefined;
 
   trans = db.transaction("store2", RW);
   trans.objectStore("store2").add({ explicit: 7, id: "key" }).onsuccess =
     genCheck("key", { explicit: 7, id: "key" }, "seventh store2" + test);
-  yield;
+  yield undefined;
   trans.objectStore("store2").add({ explicit: 8 }).onsuccess =
     genCheck(c2, { explicit: 8, id: c2 }, "eighth store2" + test);
   c2++;
-  yield;
+  yield undefined;
 
   trans = db.transaction("store2", RW);
   trans.objectStore("store2").add({ explicit: 7, id: [100000] }).onsuccess =
     genCheck([100000], { explicit: 7, id: [100000] }, "seventh store2" + test);
-  yield;
+  yield undefined;
   trans.objectStore("store2").add({ explicit: 8 }).onsuccess =
     genCheck(c2, { explicit: 8, id: c2 }, "eighth store2" + test);
   c2++;
-  yield;
+  yield undefined;
 
   trans = db.transaction("store2", RW);
   trans.objectStore("store2").add({ explicit: 9, id: -100000 }).onsuccess =
     genCheck(-100000, { explicit: 9, id: -100000 }, "ninth store2" + test);
-  yield;
+  yield undefined;
   trans.objectStore("store2").add({ explicit: 10 }).onsuccess =
     genCheck(c2, { explicit: 10, id: c2 }, "tenth store2" + test);
   c2++;
-  yield;
+  yield undefined;
 
 
   // Test separate transactions doesn't generate overlapping numbers
@@ -208,7 +208,7 @@ function testSteps()
     genCheck(c1, { over: 1 }, "second" + test,
              { trans: trans });
   c1 += 2;
-  yield; yield;
+  yield undefined; yield undefined;
 
   trans = db.transaction("store2", RW);
   trans2 = db.transaction("store2", RW);
@@ -219,7 +219,7 @@ function testSteps()
     genCheck(c2, { over: 1, id: c2 }, "fourth" + test,
              { trans: trans });
   c2 += 2;
-  yield; yield;
+  yield undefined; yield undefined;
 
   // Test that error inserts doesn't increase generator
   test = " for test error inserts";
@@ -231,27 +231,27 @@ function testSteps()
     addEventListener("error", new ExpectError("ConstraintError", true));
   trans.objectStore("store1").add({ error: 2 }).onsuccess =
     genCheck(c1++, { error: 2 }, "first" + test);
-  yield; yield;
+  yield undefined; yield undefined;
 
   trans.objectStore("store2").add({ error: 3, unique: 1 }).
     addEventListener("error", new ExpectError("ConstraintError", true));
   trans.objectStore("store2").add({ error: 4 }).onsuccess =
     genCheck(c2, { error: 4, id: c2 }, "second" + test);
   c2++;
-  yield; yield;
+  yield undefined; yield undefined;
 
   trans.objectStore("store1").add({ error: 5, unique: 1 }, 100000).
     addEventListener("error", new ExpectError("ConstraintError", true));
   trans.objectStore("store1").add({ error: 6 }).onsuccess =
     genCheck(c1++, { error: 6 }, "third" + test);
-  yield; yield;
+  yield undefined; yield undefined;
 
   trans.objectStore("store2").add({ error: 7, unique: 1, id: 100000 }).
     addEventListener("error", new ExpectError("ConstraintError", true));
   trans.objectStore("store2").add({ error: 8 }).onsuccess =
     genCheck(c2, { error: 8, id: c2 }, "fourth" + test);
   c2++;
-  yield; yield;
+  yield undefined; yield undefined;
 
   // Test that aborts doesn't increase generator
   test = " for test aborted transaction";
@@ -260,19 +260,19 @@ function testSteps()
     genCheck(c1, { abort: 1 }, "first" + test);
   trans.objectStore("store2").put({ abort: 2 }).onsuccess =
     genCheck(c2, { abort: 2, id: c2 }, "second" + test);
-  yield; yield;
+  yield undefined; yield undefined;
 
   trans.objectStore("store1").add({ abort: 3 }, 500).onsuccess =
     genCheck(500, { abort: 3 }, "third" + test);
   trans.objectStore("store2").put({ abort: 4, id: 600 }).onsuccess =
     genCheck(600, { abort: 4, id: 600 }, "fourth" + test);
-  yield; yield;
+  yield undefined; yield undefined;
 
   trans.objectStore("store1").add({ abort: 5 }).onsuccess =
     genCheck(501, { abort: 5 }, "fifth" + test);
   trans.objectStore("store2").put({ abort: 6 }).onsuccess =
     genCheck(601, { abort: 6, id: 601 }, "sixth" + test);
-  yield; yield;
+  yield undefined; yield undefined;
 
   trans.abort();
   trans.onabort = grabEventAndContinueHandler;
@@ -286,7 +286,7 @@ function testSteps()
   trans.objectStore("store2").put({ abort: 2 }).onsuccess =
     genCheck(c2, { abort: 2, id: c2 }, "re-second" + test);
   c2++;
-  yield; yield;
+  yield undefined; yield undefined;
 
   // Test that delete doesn't decrease generator
   test = " for test delete items"
@@ -296,26 +296,26 @@ function testSteps()
   trans.objectStore("store2").put({ delete: 2 }).onsuccess =
     genCheck(c2, { delete: 2, id: c2 }, "second" + test);
   c2++;
-  yield; yield;
+  yield undefined; yield undefined;
 
   trans.objectStore("store1").delete(c1 - 1).onsuccess =
     grabEventAndContinueHandler;
   trans.objectStore("store2").delete(c2 - 1).onsuccess =
     grabEventAndContinueHandler;
-  yield; yield;
+  yield undefined; yield undefined;
 
   trans.objectStore("store1").add({ delete: 3 }).onsuccess =
     genCheck(c1++, { delete: 3 }, "first" + test);
   trans.objectStore("store2").put({ delete: 4 }).onsuccess =
     genCheck(c2, { delete: 4, id: c2 }, "second" + test);
   c2++;
-  yield; yield;
+  yield undefined; yield undefined;
 
   trans.objectStore("store1").delete(c1 - 1).onsuccess =
     grabEventAndContinueHandler;
   trans.objectStore("store2").delete(c2 - 1).onsuccess =
     grabEventAndContinueHandler;
-  yield; yield;
+  yield undefined; yield undefined;
 
   trans = db.transaction(["store1", "store2"], RW);
   trans.objectStore("store1").add({ delete: 5 }).onsuccess =
@@ -323,7 +323,7 @@ function testSteps()
   trans.objectStore("store2").put({ delete: 6 }).onsuccess =
     genCheck(c2, { delete: 6, id: c2 }, "second" + test);
   c2++;
-  yield; yield;
+  yield undefined; yield undefined;
 
   // Test that clears doesn't decrease generator
   test = " for test clear stores";
@@ -333,26 +333,26 @@ function testSteps()
   trans.objectStore("store2").put({ clear: 2 }).onsuccess =
     genCheck(c2, { clear: 2, id: c2 }, "second" + test);
   c2++;
-  yield; yield;
+  yield undefined; yield undefined;
 
   trans.objectStore("store1").clear().onsuccess =
     grabEventAndContinueHandler;
   trans.objectStore("store2").clear().onsuccess =
     grabEventAndContinueHandler;
-  yield; yield;
+  yield undefined; yield undefined;
 
   trans.objectStore("store1").add({ clear: 3 }).onsuccess =
     genCheck(c1++, { clear: 3 }, "third" + test);
   trans.objectStore("store2").put({ clear: 4 }).onsuccess =
     genCheck(c2, { clear: 4, id: c2 }, "forth" + test);
   c2++;
-  yield; yield;
+  yield undefined; yield undefined;
 
   trans.objectStore("store1").clear().onsuccess =
     grabEventAndContinueHandler;
   trans.objectStore("store2").clear().onsuccess =
     grabEventAndContinueHandler;
-  yield; yield;
+  yield undefined; yield undefined;
 
   trans = db.transaction(["store1", "store2"], RW);
   trans.objectStore("store1").add({ clear: 5 }).onsuccess =
@@ -360,7 +360,7 @@ function testSteps()
   trans.objectStore("store2").put({ clear: 6 }).onsuccess =
     genCheck(c2, { clear: 6, id: c2 }, "sixth" + test);
   c2++;
-  yield; yield;
+  yield undefined; yield undefined;
 
 
   // Test that close/reopen doesn't decrease generator
@@ -370,7 +370,7 @@ function testSteps()
     grabEventAndContinueHandler;
   trans.objectStore("store2").clear().onsuccess =
     grabEventAndContinueHandler;
-  yield; yield;
+  yield undefined; yield undefined;
   db.close();
 
   SpecialPowers.gc();
@@ -379,7 +379,7 @@ function testSteps()
   openRequest.onerror = errorHandler;
   openRequest.onupgradeneeded = grabEventAndContinueHandler;
   openRequest.onsuccess = unexpectedSuccessHandler;
-  event = yield;
+  event = yield undefined;
   db = event.target.result;
   trans = event.target.transaction;
 
@@ -388,11 +388,11 @@ function testSteps()
   trans.objectStore("store2").put({ reopen: 2 }).onsuccess =
     genCheck(c2, { reopen: 2, id: c2 }, "second" + test);
   c2++;
-  yield; yield;
+  yield undefined; yield undefined;
 
   openRequest.onsuccess = grabEventAndContinueHandler;
-  yield;
+  yield undefined;
 
   finishTest();
-  yield;
+  yield undefined;
 }

@@ -13,7 +13,6 @@ GARBAGE_DIRS += _ipdlheaders
 GARBAGE += ipdl_lextab.py ipdl_yacctab.py $(wildcard *.pyc $(srcdir)/ipdl/*.pyc $(srcdir)/ipdl/cxx/*.pyc)
 
 LIBRARY_NAME = mozipdlgen_s
-FORCE_STATIC_LIB = 1
 LIBXUL_LIBRARY = 1
 EXPORT_LIBRARY = 1
 
@@ -26,8 +25,8 @@ LOCAL_INCLUDES += -I$(DEPTH)/ipc/ipdl/_ipdlheaders
 
 
 include $(topsrcdir)/config/config.mk
-include $(topsrcdir)/ipc/chromium/chromium-config.mk
 include $(topsrcdir)/config/rules.mk
+include $(topsrcdir)/ipc/chromium/chromium-config.mk
 
 
 # NB: the IPDL compiler manages .ipdl-->.h/.cpp dependencies itself,

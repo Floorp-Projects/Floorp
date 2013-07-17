@@ -921,7 +921,7 @@ cryptojs_ReadArgsAndGenerateKey(JSContext *cx,
   nsresult  rv;
 
   if (!JSVAL_IS_INT(argv[0])) {
-    JS_ReportError(cx, "%s%s\n", JS_ERROR,
+    JS_ReportError(cx, "%s%s", JS_ERROR,
                    "passed in non-integer for key size");
     return NS_ERROR_FAILURE;
   }
@@ -935,7 +935,7 @@ cryptojs_ReadArgsAndGenerateKey(JSContext *cx,
   }
 
   if (JSVAL_IS_NULL(argv[2])) {
-    JS_ReportError(cx,"%s%s\n", JS_ERROR,
+    JS_ReportError(cx,"%s%s", JS_ERROR,
              "key generation type not specified");
     return NS_ERROR_FAILURE;
   }
@@ -1863,13 +1863,13 @@ nsCrypto::GenerateCRMFRequest(nsIDOMCRMFObject** aReturn)
    * Get all of the parameters.
    */
   if (argc < 5 || ((argc-5) % 3) != 0) {
-    JS_ReportError(cx, "%s", "%s%s\n", JS_ERROR,
+    JS_ReportError(cx, "%s%s", JS_ERROR,
                   "incorrect number of parameters");
     return NS_ERROR_FAILURE;
   }
   
   if (JSVAL_IS_NULL(argv[0])) {
-    JS_ReportError(cx, "%s%s\n", JS_ERROR, "no DN specified");
+    JS_ReportError(cx, "%s%s", JS_ERROR, "no DN specified");
     return NS_ERROR_FAILURE;
   }
   
@@ -1904,7 +1904,7 @@ nsCrypto::GenerateCRMFRequest(nsIDOMCRMFObject** aReturn)
     NS_ENSURE_TRUE(!!eaCert, NS_ERROR_OUT_OF_MEMORY);
   }
   if (JSVAL_IS_NULL(argv[4])) {
-    JS_ReportError(cx, "%s%s\n", JS_ERROR, "no completion "
+    JS_ReportError(cx, "%s%s", JS_ERROR, "no completion "
                    "function specified");
     return NS_ERROR_FAILURE;
   }
@@ -2502,7 +2502,7 @@ nsCrypto::SignText(const nsAString& aStringToSign, const nsAString& aCaOption,
 
   if (!aCaOption.EqualsLiteral("auto") &&
       !aCaOption.EqualsLiteral("ask")) {
-    JS_ReportError(cx, "%s%s\n", JS_ERROR, "caOption argument must be ask or auto");
+    JS_ReportError(cx, "%s%s", JS_ERROR, "caOption argument must be ask or auto");
 
     aResult.Append(internalError);
 

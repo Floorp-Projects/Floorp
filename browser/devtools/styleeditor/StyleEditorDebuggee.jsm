@@ -14,8 +14,8 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource:///modules/devtools/shared/event-emitter.js");
 
-XPCOMUtils.defineLazyModuleGetter(this, "Promise",
-    "resource://gre/modules/commonjs/sdk/core/promise.js");
+XPCOMUtils.defineLazyModuleGetter(this, "promise",
+    "resource://gre/modules/commonjs/sdk/core/promise.js", "Promise");
 
 /**
  * A StyleEditorDebuggee represents the document the style editor is debugging.
@@ -228,6 +228,12 @@ let StyleSheet = function(form, debuggee) {
   this._client.addListener("propertyChange", this._onPropertyChange);
   this._client.addListener("styleApplied", this._onStyleApplied);
 
+  // Backwards compatibility
+  this._client.addListener("sourceLoad-" + this._actor, this._onSourceLoad);
+  this._client.addListener("propertyChange-" + this._actor, this._onPropertyChange);
+  this._client.addListener("styleApplied-" + this._actor, this._onStyleApplied);
+
+
   // set initial property values
   for (let attr in form) {
     this[attr] = form[attr];
@@ -324,5 +330,9 @@ StyleSheet.prototype = {
     this._client.removeListener("sourceLoad", this._onSourceLoad);
     this._client.removeListener("propertyChange", this._onPropertyChange);
     this._client.removeListener("styleApplied", this._onStyleApplied);
+
+    this._client.removeListener("sourceLoad-" + this._actor, this._onSourceLoad);
+    this._client.removeListener("propertyChange-" + this._actor, this._onPropertyChange);
+    this._client.removeListener("styleApplied-" + this._actor, this._onStyleApplied);
   }
 }

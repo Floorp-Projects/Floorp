@@ -306,7 +306,7 @@ Loop::isLoopInvariant(MInstruction *ins)
 
     // An instruction is only loop invariant if it and all of its operands can
     // be safely hoisted into the loop preheader.
-    for (size_t i = 0; i < ins->numOperands(); i ++) {
+    for (size_t i = 0, e = ins->numOperands(); i < e; i++) {
         if (isInLoop(ins->getOperand(i)) &&
             !ins->getOperand(i)->isLoopInvariant()) {
 

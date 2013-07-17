@@ -1574,9 +1574,9 @@ WebGLContext::DrawArrays(GLenum mode, WebGLint first, WebGLsizei count)
             return ErrorInvalidFramebufferOperation("drawArrays: incomplete framebuffer");
     }
 
-    BindFakeBlackTextures();
     if (!DoFakeVertexAttrib0(checked_firstPlusCount.value()))
         return;
+    BindFakeBlackTextures();
 
     SetupContextLossTimer();
     gl->fDrawArrays(mode, first, count);
@@ -1684,9 +1684,9 @@ WebGLContext::DrawElements(WebGLenum mode, WebGLsizei count, WebGLenum type,
             return ErrorInvalidFramebufferOperation("drawElements: incomplete framebuffer");
     }
 
-    BindFakeBlackTextures();
     if (!DoFakeVertexAttrib0(maxAllowedCount))
         return;
+    BindFakeBlackTextures();
 
     SetupContextLossTimer();
     gl->fDrawElements(mode, count, type, reinterpret_cast<GLvoid*>(byteOffset));

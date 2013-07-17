@@ -312,6 +312,13 @@ class XPCShellTests(object):
             self.log.info("TEST-INFO | profile dir is %s" % profileDir)
         return profileDir
 
+    def setupTempDir(self):
+        tempDir = mkdtemp()
+        self.env["XPCSHELL_TEST_TEMP_DIR"] = tempDir
+        if self.interactive:
+            self.log.info("TEST-INFO | temp dir is %s" % tempDir)
+        return tempDir
+
     def setupLeakLogging(self):
         """
           Enable leaks (only) detection to its own log file and set environment variables.
@@ -823,6 +830,39 @@ class XPCShellTests(object):
 
         return self.failCount == 0
 
+    def print_stdout(self, stdout):
+        """Print stdout line-by-line to avoid overflowing buffers."""
+        self.log.info(">>>>>>>")
+        if (stdout):
+            for line in stdout.splitlines():
+                self.log.info(line)
+        self.log.info("<<<<<<<")
+
+    def cleanupDir(self, directory, name, stdout, xunit_result):
+        try:
+            self.removeDir(directory)
+        except Exception:
+            self.log.info("TEST-INFO | Failed to remove directory: %s. Waiting." % directory)
+
+            # We suspect the filesystem may still be making changes. Wait a
+            # little bit and try again.
+            time.sleep(5)
+
+            try:
+                self.removeDir(directory)
+            except Exception:
+                message = "TEST-UNEXPECTED-FAIL | %s | Failed to clean up directory: %s" % (name, sys.exc_info()[1])
+                self.log.error(message)
+                self.print_stdout(stdout)
+                self.print_stdout(traceback.format_exc())
+
+                self.failCount += 1
+                xunit_result["passed"] = False
+                xunit_result["failure"] = {
+                    "type": "TEST-UNEXPECTED-FAIL",
+                    "message": message,
+                    "text": "%s\n%s" % (stdout, traceback.format_exc())
+                }
 
     def run_test(self, test, tests_root_dir=None, app_dir_key=None,
             interactive=False, verbose=False, pStdout=None, pStderr=None,
@@ -871,8 +911,10 @@ class XPCShellTests(object):
         head_files, tail_files = self.getHeadAndTailFiles(test)
         cmdH = self.buildCmdHead(head_files, tail_files, self.xpcsCmd)
 
-        # Create a temp dir that the JS harness can stick a profile in
+        # Create a profile and a temp dir that the JS harness can stick
+        # a profile and temporary data in
         self.profileDir = self.setupProfileDir()
+        self.tempDir = self.setupTempDir()
         self.leakLogFile = self.setupLeakLogging()
 
         # The test file will have to be loaded after the head files.
@@ -917,14 +959,6 @@ class XPCShellTests(object):
             if testTimer:
                 testTimer.cancel()
 
-            def print_stdout(stdout):
-                """Print stdout line-by-line to avoid overflowing buffers."""
-                self.log.info(">>>>>>>")
-                if (stdout):
-                    for line in stdout.splitlines():
-                        self.log.info(line)
-                self.log.info("<<<<<<<")
-
             result = not ((self.getReturnCode(proc) != 0) or
                           # if do_throw or do_check failed
                           (stdout and re.search("^((parent|child): )?TEST-UNEXPECTED-",
@@ -943,7 +977,7 @@ class XPCShellTests(object):
                 message = "%s | %s | test failed (with xpcshell return code: %d), see following log:" % (
                               failureType, name, self.getReturnCode(proc))
                 self.log.error(message)
-                print_stdout(stdout)
+                self.print_stdout(stdout)
                 self.failCount += 1
                 xunit_result["passed"] = False
 
@@ -958,7 +992,7 @@ class XPCShellTests(object):
                 xunit_result["time"] = now - startTime
                 self.log.info("TEST-%s | %s | test passed (time: %.3fms)" % ("PASS" if expected else "KNOWN-FAIL", name, timeTaken))
                 if verbose:
-                    print_stdout(stdout)
+                    self.print_stdout(stdout)
 
                 xunit_result["passed"] = True
 
@@ -996,7 +1030,7 @@ class XPCShellTests(object):
             if proc and self.poll(proc) is None:
                 message = "TEST-UNEXPECTED-FAIL | %s | Process still running after test!" % name
                 self.log.error(message)
-                print_stdout(stdout)
+                self.print_stdout(stdout)
                 self.failCount += 1
                 xunit_result["passed"] = False
                 xunit_result["failure"] = {
@@ -1010,30 +1044,9 @@ class XPCShellTests(object):
             # We don't want to delete the profile when running check-interactive
             # or check-one.
             if self.profileDir and not self.interactive and not self.singleFile:
-                try:
-                    self.removeDir(self.profileDir)
-                except Exception:
-                    self.log.info("TEST-INFO | Failed to remove profile directory. Waiting.")
+                self.cleanupDir(self.profileDir, name, stdout, xunit_result)
 
-                    # We suspect the filesystem may still be making changes. Wait a
-                    # little bit and try again.
-                    time.sleep(5)
-
-                    try:
-                        self.removeDir(self.profileDir)
-                    except Exception:
-                        message = "TEST-UNEXPECTED-FAIL | %s | Failed to clean up the test profile directory: %s" % (name, sys.exc_info()[1])
-                        self.log.error(message)
-                        print_stdout(stdout)
-                        print_stdout(traceback.format_exc())
-
-                        self.failCount += 1
-                        xunit_result["passed"] = False
-                        xunit_result["failure"] = {
-                            "type": "TEST-UNEXPECTED-FAIL",
-                            "message": message,
-                            "text": "%s\n%s" % (stdout, traceback.format_exc())
-                        }
+            self.cleanupDir(self.tempDir, name, stdout, xunit_result)
 
         if gotSIGINT:
             xunit_result["passed"] = False

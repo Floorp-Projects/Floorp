@@ -41,6 +41,7 @@ namespace mozilla {
 namespace net {
 class ATokenBucketEvent;
 class EventTokenBucket;
+class Tickler;
 }
 }
 
@@ -184,6 +185,7 @@ public:
                                 nsIInterfaceRequestor *callbacks,
                                 uint32_t caps = 0)
     {
+        TickleWifi(callbacks);
         return mConnMgr->SpeculativeConnect(ci, callbacks, caps);
     }
 
@@ -472,6 +474,10 @@ public:
     {
         mRequestTokenBucket = aTokenBucket;
     }
+
+private:
+    nsRefPtr<mozilla::net::Tickler> mWifiTickler;
+    void TickleWifi(nsIInterfaceRequestor *cb);
 };
 
 extern nsHttpHandler *gHttpHandler;

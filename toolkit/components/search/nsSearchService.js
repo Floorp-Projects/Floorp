@@ -2681,7 +2681,13 @@ SearchService.prototype = {
   get _originalDefaultEngine() {
     let defaultPrefB = Services.prefs.getDefaultBranch(BROWSER_SEARCH_PREF);
     let nsIPLS = Ci.nsIPrefLocalizedString;
-    let defaultEngine = defaultPrefB.getComplexValue("defaultenginename", nsIPLS).data;
+    let defaultEngine;
+    try {
+      defaultEngine = defaultPrefB.getComplexValue("defaultenginename", nsIPLS).data;
+    } catch (ex) {
+      // If the default pref is invalid (e.g. an add-on set it to a bogus value)
+      // getEngineByName will just return null, which is the best we can do.
+    }
     return this.getEngineByName(defaultEngine);
   },
 

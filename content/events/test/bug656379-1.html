@@ -94,12 +94,12 @@ function tests() {
   // Press the button.
   sendMouseEvent("mousemove", button);
   sendMouseEvent("mousedown", button);
-  yield;
+  yield undefined;
   pressedFocusedButtonCanvas = takeSnapshot();
   compareSnapshots_(normalButtonCanvas, pressedFocusedButtonCanvas, false, "Pressed focused buttons should look different from normal buttons.");
   // Release.
   sendMouseEvent("mouseup", button);
-  yield;
+  yield undefined;
   // make sure the button is focused as this doesn't happen on click on Mac
   button.focus();
   normalFocusedButtonCanvas = takeSnapshot();
@@ -107,32 +107,32 @@ function tests() {
   // Unfocus the button.
   sendMouseEvent("mousedown", outside);
   sendMouseEvent("mouseup", outside);
-  yield;
+  yield undefined;
 
   // Press the label.
   sendMouseEvent("mousemove", label);
   sendMouseEvent("mousedown", label);
-  yield;
+  yield undefined;
   compareSnapshots_(normalButtonCanvas, currentSnapshot, false, "Pressing the label should have pressed the button.");
   pressedButtonCanvas = takeSnapshot();
   // Move the mouse down from the label.
   sendMouseEvent("mousemove", outside);
-  yield;
+  yield undefined;
   compareSnapshots_(normalButtonCanvas, currentSnapshot, true, "Moving the mouse down from the label should have unpressed the button.");
   // ... and up again.
   sendMouseEvent("mousemove", label);
-  yield;
+  yield undefined;
   compareSnapshots_(pressedButtonCanvas, currentSnapshot, true, "Moving the mouse back on top of the label should have pressed the button.");
   // Release.
   sendMouseEvent("mouseup", label);
-  yield;
+  yield undefined;
   compareSnapshots_(normalFocusedButtonCanvas, currentSnapshot, true, "Releasing the mouse over the label should have unpressed (and focused) the button.");
   // Press the label and remove it.
   sendMouseEvent("mousemove", label);
   sendMouseEvent("mousedown", label);
-  yield;
+  yield undefined;
   label.parentNode.removeChild(label);
-  yield;
+  yield undefined;
   compareSnapshots_(normalButtonCanvas, currentSnapshot, true, "Removing the label should have unpressed the button.");
   sendMouseEvent("mouseup", label);
   window.removeEventListener("MozAfterPaint", paintListener, false);

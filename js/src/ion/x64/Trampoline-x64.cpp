@@ -15,8 +15,6 @@
 #include "ion/x64/BaselineHelpers-x64.h"
 #include "ion/ExecutionModeInlines.h"
 
-#include "jsscriptinlines.h"
-
 using namespace js;
 using namespace js::ion;
 
@@ -713,6 +711,17 @@ IonRuntime::generateDebugTrapHandler(JSContext *cx)
     masm.mov(rbp, rsp);
     masm.pop(rbp);
     masm.ret();
+
+    Linker linker(masm);
+    return linker.newCode(cx, JSC::OTHER_CODE);
+}
+
+IonCode *
+IonRuntime::generateExceptionTailStub(JSContext *cx)
+{
+    MacroAssembler masm;
+
+    masm.handleFailureWithHandlerTail();
 
     Linker linker(masm);
     return linker.newCode(cx, JSC::OTHER_CODE);

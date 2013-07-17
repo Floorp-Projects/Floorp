@@ -24,7 +24,6 @@ LOCAL_INCLUDES = \
   -I$(srcdir) \
   $(NULL)
 
-include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/config/rules.mk
 
 CXXFLAGS += $(TK_CFLAGS)

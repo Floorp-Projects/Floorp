@@ -1356,6 +1356,10 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
       if (computedHeightLeftOver > 0 &&
           NS_UNCONSTRAINEDSIZE != aReflowState.availableHeight &&
           aMetrics.height > aReflowState.availableHeight) {
+        if (ShouldAvoidBreakInside(aReflowState)) {
+          aState.mReflowStatus = NS_INLINE_LINE_BREAK_BEFORE();
+          return;
+        }
         // We don't fit and we consumed some of the computed height,
         // so we should consume all the available height and then
         // break.  If our bottom border/padding straddles the break

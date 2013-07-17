@@ -8,8 +8,6 @@ include $(DEPTH)/config/autoconf.mk
 LIBXUL_LIBRARY = 1
 EXPORT_LIBRARY = 1
 
-DEFINES += -D_IMPL_NS_GFX
-
 include $(topsrcdir)/config/rules.mk
 
 # These files use MMX and SSE2 intrinsics, so they need special compile flags

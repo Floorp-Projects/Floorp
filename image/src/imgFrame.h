@@ -41,7 +41,7 @@ public:
             uint32_t aImageFlags = imgIContainer::FLAG_NONE);
 
   nsresult ImageUpdated(const nsIntRect &aUpdateRect);
-  bool GetIsDirty();
+  bool GetIsDirty() const;
 
   nsIntRect GetRect() const;
   gfxASurface::gfxImageFormat GetFormat() const;
@@ -152,7 +152,7 @@ private: // data
 
   nsIntRect    mDecoded;
 
-  mozilla::Mutex mDirtyMutex;
+  mutable mozilla::Mutex mDirtyMutex;
 
   // The palette and image data for images that are paletted, since Cairo
   // doesn't support these images.

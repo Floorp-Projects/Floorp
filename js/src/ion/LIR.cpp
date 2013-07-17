@@ -279,7 +279,7 @@ LAllocation::toString() const
 void
 LInstruction::printOperands(FILE *fp)
 {
-    for (size_t i = 0; i < numOperands(); i++) {
+    for (size_t i = 0, e = numOperands(); i < e; i++) {
         fprintf(fp, " (%s)", getOperand(i)->toString());
         if (i != numOperands() - 1)
             fprintf(fp, ",");

@@ -216,11 +216,6 @@ toolbarbutton.bookmark-item > menupopup {
   max-height: 16px;
 }
 
-#PlacesToolbarItems > .bookmark-item:not([image]):not([label=""]):not([container]) > .toolbarbutton-icon {
-  display: none;
-}
-
-
 .bookmark-item > .toolbarbutton-icon[label]:not([label=""]),
 .bookmark-item > .toolbarbutton-icon[type="menu"] {
   -moz-margin-end: 5px;
@@ -2139,7 +2134,7 @@ sidebarheader > .tabs-closebutton > .toolbarbutton-text {
 
 .browserContainer > findbar {
   background: @scopeBarBackground@;
-  border-top: @scopeBarSeparatorBorder@;
+  border-bottom: @scopeBarSeparatorBorder@;
   color: -moz-DialogText;
   text-shadow: none;
 }

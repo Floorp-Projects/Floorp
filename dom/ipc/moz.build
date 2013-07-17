@@ -68,4 +68,5 @@ IPDL_SOURCES += [
     'PCrashReporter.ipdl',
     'PDocumentRenderer.ipdl',
     'PMemoryReportRequest.ipdl',
+    'PTabContext.ipdlh',
 ]

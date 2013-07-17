@@ -10,12 +10,10 @@ VPATH            = @srcdir@
 LIBRARY_NAME     = dombindings_s
 MSVC_ENABLE_PGO := 1
 LIBXUL_LIBRARY   = 1
-FORCE_STATIC_LIB = 1
 EXPORT_LIBRARY   = 1
 FAIL_ON_WARNINGS := 1
 
 include $(topsrcdir)/config/config.mk
-include $(topsrcdir)/ipc/chromium/chromium-config.mk
 
 # Need this to find all our DOM source files.
 include $(topsrcdir)/dom/dom-config.mk
@@ -23,7 +21,7 @@ include $(topsrcdir)/dom/dom-config.mk
 include $(topsrcdir)/dom/webidl/WebIDL.mk
 
 binding_include_path := mozilla/dom
-all_webidl_files = $(webidl_files) $(generated_webidl_files)
+all_webidl_files = $(webidl_files) $(generated_webidl_files) $(preprocessed_webidl_files)
 # Set exported_binding_headers before adding the test IDL to the mix
 exported_binding_headers := $(subst .webidl,Binding.h,$(all_webidl_files))
 # Set linked_binding_cpp_files before adding the test IDL to the mix
@@ -114,6 +112,7 @@ CXXFLAGS += -Wno-uninitialized
 endif
 
 include $(topsrcdir)/config/rules.mk
+include $(topsrcdir)/ipc/chromium/chromium-config.mk
 
 # If you change bindinggen_dependencies here, change it in
 # dom/bindings/test/Makefile.in too.
@@ -143,15 +142,32 @@ $(webidl_files): %: $(webidl_base)/%
 $(test_webidl_files): %: $(srcdir)/test/%
 	$(INSTALL) $(IFLAGS1) $(srcdir)/test/$* .
 
+# We can't easily use PP_TARGETS here because it insists on outputting targets
+# that look like "$(CURDIR)/foo" whereas we want our target to just be "foo".
+# Make sure to include $(GLOBAL_DEPS) so we pick up changes to what symbols are
+# defined.  Also make sure to remove $@ before writing to it, because otherwise
+# if a file goes from non-preprocessed to preprocessed we can end up writing to
+# a symlink, which will clobber files in the srcdir, which is bad.
+$(preprocessed_webidl_files): %: $(webidl_base)/% $(GLOBAL_DEPS)
+	$(RM) $@
+	PYTHONDONTWRITEBYTECODE=1 $(PYTHON) \
+          $(topsrcdir)/config/Preprocessor.py $(DEFINES) $(ACDEFINES) $(XULPPFLAGS) $(webidl_base)/$* -o $@
+
+# Make is dumb and can get confused between "foo" and "$(CURDIR)/foo".  Make
+# sure that the latter depends on the former, since the latter gets used in .pp
+# files.
+all_webidl_files_absolute = $(addprefix $(CURDIR)/,$(all_webidl_files))
+$(all_webidl_files_absolute): $(CURDIR)/%: %
+
 $(binding_header_files): .BindingGen
 
 $(binding_cpp_files): .BindingGen
 
 # $(binding_dependency_trackers) pick up additional dependencies via .pp files
+# The rule: just brings the tracker up to date, if it's out of date, so that
+# we'll know that we have to redo binding generation and flag this prerequisite
+# there as being newer than the bindinggen target.
 $(binding_dependency_trackers):
-	# Just bring it up to date, if it's out of date, so that we'll know that
-	# we have to redo binding generation and flag this prerequisite there as
-	# being newer than the bindinggen target.
 	@$(TOUCH) $@
 
 $(globalgen_targets): ParserResults.pkl
@@ -180,34 +196,34 @@ $(CACHE_DIR)/.done:
 	$(MKDIR) -p $(CACHE_DIR)
 	@$(TOUCH) $@
 
+# Running GlobalGen.py updates ParserResults.pkl as a side-effect
 ParserResults.pkl: $(globalgen_dependencies)
-	# Running GlobalGen.py updates ParserResults.pkl as a side-effect
 	PYTHONDONTWRITEBYTECODE=1 $(PYTHON) $(topsrcdir)/config/pythonpath.py \
-    $(PLY_INCLUDE) -I$(srcdir)/parser \
-    $(srcdir)/GlobalGen.py $(srcdir)/Bindings.conf . \
-    --cachedir=$(CACHE_DIR) \
-    $(all_webidl_files)
+	  $(PLY_INCLUDE) -I$(srcdir)/parser \
+	  $(srcdir)/GlobalGen.py $(srcdir)/Bindings.conf . \
+	  --cachedir=$(CACHE_DIR) \
+	  $(all_webidl_files)
 
+# Make sure .deps actually exists, since we'll try to write to it from 
+# BindingGen.py but we're typically running in the export phase, which is
+# before anyone has bothered creating .deps.
+# Then, pass our long lists through files to try to avoid blowing out the
+# command line.
+# Next, BindingGen.py will examine the changed dependency list to figure out
+# what it really needs to regenerate.
+# Finally, touch the .BindingGen file so that we don't have to keep redoing
+# all that until something else actually changes.
 .BindingGen: $(bindinggen_dependencies) $(binding_dependency_trackers)
-	# Make sure .deps actually exists, since we'll try to write to it from
-	# BindingGen.py but we're typically running in the export phase, which
-	# is before anyone has bothered creating .deps.
 	$(MKDIR) -p .deps
-	# Pass our long lists through files to try to avoid blowing
-	# out the command line
 	echo $(all_webidl_files) > .all-webidl-file-list
 	echo $? > .changed-dependency-list
-	# BindingGen.py will examine the changed dependency list to figure out
-	# what it really needs to regenerate.
 	PYTHONDONTWRITEBYTECODE=1 $(PYTHON) $(topsrcdir)/config/pythonpath.py \
-    $(PLY_INCLUDE) -I$(srcdir)/parser \
-    $(srcdir)/BindingGen.py \
-    $(srcdir)/Bindings.conf \
-    $(CURDIR) \
-    .all-webidl-file-list \
-    .changed-dependency-list
-	# Now touch the .BindingGen file so that we don't have to keep redoing
-	# all that until something else actually changes.
+	  $(PLY_INCLUDE) -I$(srcdir)/parser \
+	  $(srcdir)/BindingGen.py \
+	  $(srcdir)/Bindings.conf \
+	  $(CURDIR) \
+	  .all-webidl-file-list \
+	  .changed-dependency-list
 	@$(TOUCH) $@
 
 GARBAGE += \

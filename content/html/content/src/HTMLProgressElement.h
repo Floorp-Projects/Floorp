@@ -17,8 +17,8 @@
 namespace mozilla {
 namespace dom {
 
-class HTMLProgressElement : public nsGenericHTMLElement,
-                            public nsIDOMHTMLProgressElement
+class HTMLProgressElement MOZ_FINAL : public nsGenericHTMLElement,
+                                      public nsIDOMHTMLProgressElement
 {
 public:
   HTMLProgressElement(already_AddRefed<nsINodeInfo> aNodeInfo);

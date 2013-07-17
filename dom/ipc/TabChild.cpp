@@ -84,6 +84,7 @@
 #include "StructuredCloneUtils.h"
 #include "xpcpublic.h"
 #include "nsViewportInfo.h"
+#include "JavaScriptChild.h"
 
 #define BROWSER_ELEMENT_CHILD_SCRIPT \
     NS_LITERAL_STRING("chrome://global/content/BrowserElementChild.js")
@@ -97,6 +98,7 @@ using namespace mozilla::layout;
 using namespace mozilla::docshell;
 using namespace mozilla::dom::indexedDB;
 using namespace mozilla::widget;
+using namespace mozilla::jsipc;
 
 NS_IMPL_ISUPPORTS1(ContentListener, nsIDOMEventListener)
 
@@ -223,7 +225,8 @@ TabChild::PreloadSlowThings()
 {
     MOZ_ASSERT(!sPreallocatedTab);
 
-    nsRefPtr<TabChild> tab(new TabChild(TabContext(), /* chromeFlags */ 0));
+    nsRefPtr<TabChild> tab(new TabChild(ContentChild::GetSingleton(),
+                                        TabContext(), /* chromeFlags */ 0));
     if (!NS_SUCCEEDED(tab->Init()) ||
         !tab->InitTabChildGlobal(DONT_LOAD_SCRIPTS)) {
         return;
@@ -251,7 +254,7 @@ TabChild::PreloadSlowThings()
 }
 
 /*static*/ already_AddRefed<TabChild>
-TabChild::Create(const TabContext &aContext, uint32_t aChromeFlags)
+TabChild::Create(ContentChild* aManager, const TabContext &aContext, uint32_t aChromeFlags)
 {
     if (sPreallocatedTab &&
         sPreallocatedTab->mChromeFlags == aChromeFlags &&
@@ -267,14 +270,16 @@ TabChild::Create(const TabContext &aContext, uint32_t aChromeFlags)
         return child.forget();
     }
 
-    nsRefPtr<TabChild> iframe = new TabChild(aContext, aChromeFlags);
+    nsRefPtr<TabChild> iframe = new TabChild(aManager,
+                                             aContext, aChromeFlags);
     return NS_SUCCEEDED(iframe->Init()) ? iframe.forget() : nullptr;
 }
 
 
-TabChild::TabChild(const TabContext& aContext, uint32_t aChromeFlags)
+TabChild::TabChild(ContentChild* aManager, const TabContext& aContext, uint32_t aChromeFlags)
   : TabContext(aContext)
   , mRemoteFrame(nullptr)
+  , mManager(aManager)
   , mTabChildGlobal(nullptr)
   , mChromeFlags(aChromeFlags)
   , mOuterRect(0, 0, 0, 0)
@@ -322,9 +327,9 @@ TabChild::Observe(nsISupports *aSubject,
     nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(aSubject));
     nsCOMPtr<nsITabChild> tabChild(GetTabChildFrom(docShell));
     if (tabChild == this) {
-      gfxRect rect;
+      CSSRect rect;
       sscanf(NS_ConvertUTF16toUTF8(aData).get(),
-             "{\"x\":%lf,\"y\":%lf,\"w\":%lf,\"h\":%lf}",
+             "{\"x\":%f,\"y\":%f,\"w\":%f,\"h\":%f}",
              &rect.x, &rect.y, &rect.width, &rect.height);
       SendZoomToRect(rect);
     }
@@ -976,7 +981,8 @@ TabChild::BrowserFrameProvideWindow(nsIDOMWindow* aOpener,
   *aReturn = nullptr;
 
   nsRefPtr<TabChild> newChild =
-      new TabChild(/* TabContext */ *this, /* chromeFlags */ 0);
+      new TabChild(ContentChild::GetSingleton(),
+                   /* TabContext */ *this, /* chromeFlags */ 0);
   if (!NS_SUCCEEDED(newChild->Init())) {
       return NS_ERROR_ABORT;
   }
@@ -1450,7 +1456,7 @@ TabChild::DispatchMessageManagerMessage(const nsAString& aMessageName,
     nsRefPtr<nsFrameMessageManager> mm =
       static_cast<nsFrameMessageManager*>(mTabChildGlobal->mMessageManager.get());
     mm->ReceiveMessage(static_cast<EventTarget*>(mTabChildGlobal),
-                       aMessageName, false, &cloneData, JS::NullPtr(), nullptr);
+                       aMessageName, false, &cloneData, nullptr, nullptr);
 }
 
 static void
@@ -1643,7 +1649,7 @@ TabChild::RecvMouseEvent(const nsString& aType,
                          const int32_t&  aModifiers,
                          const bool&     aIgnoreRootScrollFrame)
 {
-  DispatchMouseEvent(aType, aX, aY, aButton, aClickCount, aModifiers,
+  DispatchMouseEvent(aType, CSSPoint(aX, aY), aButton, aClickCount, aModifiers,
                      aIgnoreRootScrollFrame);
   return true;
 }
@@ -1666,14 +1672,14 @@ TabChild::RecvMouseWheelEvent(const WheelEvent& event)
 
 void
 TabChild::DispatchSynthesizedMouseEvent(uint32_t aMsg, uint64_t aTime,
-                                        const nsIntPoint& aRefPoint)
+                                        const LayoutDevicePoint& aRefPoint)
 {
   MOZ_ASSERT(aMsg == NS_MOUSE_MOVE || aMsg == NS_MOUSE_BUTTON_DOWN ||
              aMsg == NS_MOUSE_BUTTON_UP);
 
   nsMouseEvent event(true, aMsg, NULL,
       nsMouseEvent::eReal, nsMouseEvent::eNormal);
-  event.refPoint = aRefPoint;
+  event.refPoint = nsIntPoint(aRefPoint.x, aRefPoint.y);
   event.time = aTime;
   event.button = nsMouseEvent::eLeftButton;
   event.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_TOUCH;
@@ -1729,7 +1735,7 @@ TabChild::UpdateTapState(const nsTouchEvent& aEvent, nsEventStatus aStatus)
     }
 
     Touch* touch = static_cast<Touch*>(aEvent.touches[0].get());
-    mGestureDownPoint = touch->mRefPoint;
+    mGestureDownPoint = LayoutDevicePoint(touch->mRefPoint.x, touch->mRefPoint.y);
     mActivePointerId = touch->mIdentifier;
     if (sClickHoldContextMenusEnabled) {
       MOZ_ASSERT(!mTapHoldTimer);
@@ -1751,7 +1757,7 @@ TabChild::UpdateTapState(const nsTouchEvent& aEvent, nsEventStatus aStatus)
     return;
   }
 
-  nsIntPoint currentPoint = trackedTouch->mRefPoint;
+  LayoutDevicePoint currentPoint = LayoutDevicePoint(trackedTouch->mRefPoint.x, trackedTouch->mRefPoint.y);
   int64_t time = aEvent.time;
   switch (aEvent.message) {
   case NS_TOUCH_MOVE:
@@ -1780,9 +1786,15 @@ TabChild::UpdateTapState(const nsTouchEvent& aEvent, nsEventStatus aStatus)
 void
 TabChild::FireContextMenuEvent()
 {
+  double scale;
+  GetDefaultScale(&scale);
+  if (scale < 0) {
+    scale = 1;
+  }
+
   MOZ_ASSERT(mTapHoldTimer && mActivePointerId >= 0);
   bool defaultPrevented = DispatchMouseEvent(NS_LITERAL_STRING("contextmenu"),
-                                             mGestureDownPoint.x, mGestureDownPoint.y,
+                                             mGestureDownPoint / CSSToLayoutDeviceScale(scale),
                                              2 /* Right button */,
                                              1 /* Click count */,
                                              0 /* Modifiers */,
@@ -2026,15 +2038,17 @@ TabChild::RecvLoadRemoteScript(const nsString& aURL)
 
 bool
 TabChild::RecvAsyncMessage(const nsString& aMessage,
-                           const ClonedMessageData& aData)
+                           const ClonedMessageData& aData,
+                           const InfallibleTArray<CpowEntry>& aCpows)
 {
   if (mTabChildGlobal) {
     nsCOMPtr<nsIXPConnectJSObjectHolder> kungFuDeathGrip(GetGlobal());
     StructuredCloneData cloneData = UnpackClonedMessageDataForChild(aData);
     nsRefPtr<nsFrameMessageManager> mm =
       static_cast<nsFrameMessageManager*>(mTabChildGlobal->mMessageManager.get());
+    CpowIdHolder cpows(static_cast<ContentChild*>(Manager())->GetCPOWManager(), aCpows);
     mm->ReceiveMessage(static_cast<EventTarget*>(mTabChildGlobal),
-                       aMessage, false, &cloneData, JS::NullPtr(), nullptr);
+                       aMessage, false, &cloneData, &cpows, nullptr);
   }
   return true;
 }
@@ -2270,8 +2284,7 @@ TabChild::IsAsyncPanZoomEnabled()
 
 bool
 TabChild::DispatchMouseEvent(const nsString& aType,
-                             const float&    aX,
-                             const float&    aY,
+                             const CSSPoint& aPoint,
                              const int32_t&  aButton,
                              const int32_t&  aClickCount,
                              const int32_t&  aModifiers,
@@ -2281,7 +2294,7 @@ TabChild::DispatchMouseEvent(const nsString& aType,
   NS_ENSURE_TRUE(utils, true);
   
   bool defaultPrevented = false;
-  utils->SendMouseEvent(aType, aX, aY, aButton, aClickCount, aModifiers,
+  utils->SendMouseEvent(aType, aPoint.x, aPoint.y, aButton, aClickCount, aModifiers,
                         aIgnoreRootScrollFrame, 0, 0, &defaultPrevented);
   return defaultPrevented;
 }
@@ -2328,28 +2341,40 @@ TabChild::DeallocPIndexedDBChild(PIndexedDBChild* aActor)
 }
 
 bool
-TabChild::DoSendSyncMessage(const nsAString& aMessage,
+TabChild::DoSendSyncMessage(JSContext* aCx,
+                            const nsAString& aMessage,
                             const StructuredCloneData& aData,
+                            JS::Handle<JSObject *> aCpows,
                             InfallibleTArray<nsString>* aJSONRetVal)
 {
-  ContentChild* cc = static_cast<ContentChild*>(Manager());
+  ContentChild* cc = Manager();
   ClonedMessageData data;
   if (!BuildClonedMessageDataForChild(cc, aData, data)) {
     return false;
   }
-  return SendSyncMessage(nsString(aMessage), data, aJSONRetVal);
+  InfallibleTArray<CpowEntry> cpows;
+  if (!cc->GetCPOWManager()->Wrap(aCx, aCpows, &cpows)) {
+    return false;
+  }
+  return SendSyncMessage(nsString(aMessage), data, cpows, aJSONRetVal);
 }
 
 bool
-TabChild::DoSendAsyncMessage(const nsAString& aMessage,
-                             const StructuredCloneData& aData)
+TabChild::DoSendAsyncMessage(JSContext* aCx,
+                             const nsAString& aMessage,
+                             const StructuredCloneData& aData,
+                             JS::Handle<JSObject *> aCpows)
 {
-  ContentChild* cc = static_cast<ContentChild*>(Manager());
+  ContentChild* cc = Manager();
   ClonedMessageData data;
   if (!BuildClonedMessageDataForChild(cc, aData, data)) {
     return false;
   }
-  return SendAsyncMessage(nsString(aMessage), data);
+  InfallibleTArray<CpowEntry> cpows;
+  if (!cc->GetCPOWManager()->Wrap(aCx, aCpows, &cpows)) {
+    return false;
+  }
+  return SendAsyncMessage(nsString(aMessage), data, cpows);
 }
 
 

@@ -139,6 +139,7 @@ FILE *gErrFile = NULL;
 FILE *gInFile = NULL;
 
 int gExitCode = 0;
+bool gIgnoreReportedErrors = false;
 JSBool gQuitting = false;
 static JSBool reportWarnings = true;
 static JSBool compileOnly = false;
@@ -264,97 +265,6 @@ GetLine(JSContext *cx, char *bufp, FILE *file, const char *prompt) {
         strcpy(bufp, line);
     }
     return true;
-}
-
-static void
-my_ErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
-{
-    int i, j, k, n;
-    char *prefix = NULL, *tmp;
-    const char *ctmp;
-    nsCOMPtr<nsIXPConnect> xpc;
-
-    // Don't report an exception from inner JS frames as the callers may intend
-    // to handle it.
-    if (JS_DescribeScriptedCaller(cx, nullptr, nullptr)) {
-        return;
-    }
-
-    // In some cases cx->fp is null here so use XPConnect to tell us about inner
-    // frames.
-    if ((xpc = do_GetService(nsIXPConnect::GetCID()))) {
-        nsAXPCNativeCallContext *cc = nullptr;
-        xpc->GetCurrentNativeCallContext(&cc);
-        if (cc) {
-            nsAXPCNativeCallContext *prev = cc;
-            while (NS_SUCCEEDED(prev->GetPreviousCallContext(&prev)) && prev) {
-                uint16_t lang;
-                if (NS_SUCCEEDED(prev->GetLanguage(&lang)) &&
-                    lang == nsAXPCNativeCallContext::LANG_JS) {
-                    return;
-                }
-            }
-        }
-    }
-
-    if (!report) {
-        fprintf(gErrFile, "%s\n", message);
-        return;
-    }
-
-    /* Conditionally ignore reported warnings. */
-    if (JSREPORT_IS_WARNING(report->flags) && !reportWarnings)
-        return;
-
-    if (report->filename)
-        prefix = JS_smprintf("%s:", report->filename);
-    if (report->lineno) {
-        tmp = prefix;
-        prefix = JS_smprintf("%s%u: ", tmp ? tmp : "", report->lineno);
-        JS_free(cx, tmp);
-    }
-    if (JSREPORT_IS_WARNING(report->flags)) {
-        tmp = prefix;
-        prefix = JS_smprintf("%s%swarning: ",
-                             tmp ? tmp : "",
-                             JSREPORT_IS_STRICT(report->flags) ? "strict " : "");
-        JS_free(cx, tmp);
-    }
-
-    /* embedded newlines -- argh! */
-    while ((ctmp = strchr(message, '\n')) != 0) {
-        ctmp++;
-        if (prefix) fputs(prefix, gErrFile);
-        fwrite(message, 1, ctmp - message, gErrFile);
-        message = ctmp;
-    }
-    /* If there were no filename or lineno, the prefix might be empty */
-    if (prefix)
-        fputs(prefix, gErrFile);
-    fputs(message, gErrFile);
-
-    if (!report->linebuf) {
-        fputc('\n', gErrFile);
-        goto out;
-    }
-
-    fprintf(gErrFile, ":\n%s%s\n%s", prefix, report->linebuf, prefix);
-    n = report->tokenptr - report->linebuf;
-    for (i = j = 0; i < n; i++) {
-        if (report->linebuf[i] == '\t') {
-            for (k = (j + 8) & ~7; j < k; j++) {
-                fputc('.', gErrFile);
-            }
-            continue;
-        }
-        fputc('.', gErrFile);
-        j++;
-    }
-    fputs("^\n", gErrFile);
- out:
-    if (!JSREPORT_IS_WARNING(report->flags))
-        gExitCode = EXITCODE_RUNTIME_ERROR;
-    JS_free(cx, prefix);
 }
 
 static JSBool
@@ -516,6 +426,21 @@ Quit(JSContext *cx, unsigned argc, jsval *vp)
     gQuitting = true;
 //    exit(0);
     return false;
+}
+
+// Provide script a way to disable the xpcshell error reporter, preventing
+// reported errors from being logged to the console and also from affecting the
+// exit code returned by the xpcshell binary.
+static JSBool
+IgnoreReportedErrors(JSContext *cx, unsigned argc, jsval *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    if (argc != 1 || !args[0].isBoolean()) {
+        JS_ReportError(cx, "Bad arguments");
+        return false;
+    }
+    gIgnoreReportedErrors = args[0].toBoolean();
+    return true;
 }
 
 static JSBool
@@ -892,6 +817,7 @@ static const JSFunctionSpec glob_functions[] = {
     JS_FS("readline",        ReadLine,       1,0),
     JS_FS("load",            Load,           1,0),
     JS_FS("quit",            Quit,           0,0),
+    JS_FS("ignoreReportedErrors", IgnoreReportedErrors, 1,0),
     JS_FS("version",         Version,        1,0),
     JS_FS("build",           BuildDate,      0,0),
     JS_FS("dumpXPC",         DumpXPC,        1,0),
@@ -1378,6 +1304,7 @@ ProcessArgs(JSContext *cx, JS::Handle<JSObject*> obj, char **argv, int argc, XPC
 
     if (filename || isInteractive)
         Process(cx, obj, filename, forceTTY);
+
     return gExitCode;
 }
 
@@ -1462,6 +1389,19 @@ nsXPCFunctionThisTranslator::TranslateThis(nsISupports *aInitialThis,
 // ContextCallback calls are chained
 static JSContextCallback gOldJSContextCallback;
 
+void
+XPCShellErrorReporter(JSContext *cx, const char *message, JSErrorReport *rep)
+{
+    if (gIgnoreReportedErrors)
+        return;
+
+    if (!JSREPORT_IS_WARNING(rep->flags))
+        gExitCode = EXITCODE_RUNTIME_ERROR;
+
+    // Delegate to the system error reporter for heavy lifting.
+    xpc::SystemErrorReporterExternal(cx, message, rep);
+}
+
 static JSBool
 ContextCallback(JSContext *cx, unsigned contextOp)
 {
@@ -1469,7 +1409,7 @@ ContextCallback(JSContext *cx, unsigned contextOp)
         return false;
 
     if (contextOp == JSCONTEXT_NEW) {
-        JS_SetErrorReporter(cx, my_ErrorReporter);
+        JS_SetErrorReporter(cx, XPCShellErrorReporter);
     }
     return true;
 }

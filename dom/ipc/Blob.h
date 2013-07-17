@@ -162,6 +162,7 @@ class Blob : public BlobTraits<ActorFlavor>::BaseType
   friend class RemoteBlob<ActorFlavor>;
 
 public:
+  typedef typename BlobTraits<ActorFlavor>::ConcreteContentManagerType ContentManager;
   typedef typename BlobTraits<ActorFlavor>::ProtocolType ProtocolType;
   typedef typename BlobTraits<ActorFlavor>::StreamType StreamType;
   typedef typename BlobTraits<ActorFlavor>::ConstructorParamsType
@@ -183,14 +184,14 @@ protected:
 public:
   // This create function is called on the sending side.
   static Blob*
-  Create(nsIDOMBlob* aBlob)
+  Create(ContentManager* aManager, nsIDOMBlob* aBlob)
   {
-    return new Blob(aBlob);
+    return new Blob(aManager, aBlob);
   }
 
   // This create function is called on the receiving side.
   static Blob*
-  Create(const ConstructorParamsType& aParams);
+  Create(ContentManager* aManager, const ConstructorParamsType& aParams);
 
   // Get the blob associated with this actor. This may always be called on the
   // sending side. It may also be called on the receiving side unless this is a
@@ -207,12 +208,17 @@ public:
   bool
   SetMysteryBlobInfo(const nsString& aContentType, uint64_t aLength);
 
+  ContentManager* Manager()
+  {
+    return mManager;
+  }
+
 private:
   // This constructor is called on the sending side.
-  Blob(nsIDOMBlob* aBlob);
+  Blob(ContentManager* aManager, nsIDOMBlob* aBlob);
 
   // This constructor is called on the receiving side.
-  Blob(const ConstructorParamsType& aParams);
+  Blob(ContentManager* aManager, const ConstructorParamsType& aParams);
 
   static already_AddRefed<RemoteBlobType>
   CreateRemoteBlob(const ConstructorParamsType& aParams);
@@ -229,6 +235,8 @@ private:
 
   virtual bool
   RecvPBlobStreamConstructor(StreamType* aActor) MOZ_OVERRIDE;
+
+  nsRefPtr<ContentManager> mManager;
 };
 
 } // namespace ipc

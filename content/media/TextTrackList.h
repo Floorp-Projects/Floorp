@@ -46,6 +46,8 @@ public:
   already_AddRefed<TextTrack> AddTextTrack(TextTrackKind aKind,
                                            const nsAString& aLabel,
                                            const nsAString& aLanguage);
+  TextTrack* GetTrackById(const nsAString& aId);
+
   void AddTextTrack(TextTrack* aTextTrack) {
     mTextTracks.AppendElement(aTextTrack);
   }

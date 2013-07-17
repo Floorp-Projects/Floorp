@@ -66,10 +66,12 @@
 <!ENTITY settings "Settings">
 <!ENTITY settings_title "Settings">
 <!ENTITY pref_category_customize "Customize">
+<!ENTITY pref_category_search "Search">
 <!ENTITY pref_category_display "Display">
 <!ENTITY pref_category_privacy_short "Privacy">
 <!ENTITY pref_category_vendor "&vendorShortName;">
 <!ENTITY pref_category_datareporting "Data choices">
+<!ENTITY pref_category_installed_search_engines "Installed search engines">
 
 <!-- collected old strings - remove after determining final strings
      as part of Bug 877791 -->
@@ -113,6 +115,7 @@
 <!ENTITY pref_plugins_disabled "Disabled">
 <!ENTITY pref_text_size "Text size">
 <!ENTITY pref_reflow_on_zoom3 "Double tap to reflow text">
+<!ENTITY pref_restore_session "Always restore tabs">
 <!ENTITY pref_font_size_tiny "Tiny">
 <!ENTITY pref_font_size_small "Small">
 <!ENTITY pref_font_size_medium "Medium">

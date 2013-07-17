@@ -6,7 +6,6 @@
 
 <?xml-stylesheet href="chrome://browser/skin/platform.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/browser.css" type="text/css"?>
-<?xml-stylesheet href="chrome://browser/skin/forms.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/content/browser.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/cssthrobber.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/tiles.css" type="text/css"?>
@@ -23,6 +22,8 @@
 <!ENTITY % aboutPanelDTD SYSTEM "chrome://browser/locale/aboutPanel.dtd">
 %aboutPanelDTD;
 #ifdef MOZ_SERVICES_SYNC
+<!ENTITY % syncBrandDTD SYSTEM "chrome://browser/locale/syncBrand.dtd">
+%syncBrandDTD;
 <!ENTITY % syncDTD SYSTEM "chrome://browser/locale/sync.dtd">
 %syncDTD;
 #endif
@@ -47,8 +48,6 @@
   <script type="application/javascript" src="chrome://browser/content/Util.js"/>
   <script type="application/javascript" src="chrome://browser/content/input.js"/>
   <script type="application/javascript;version=1.8" src="chrome://browser/content/appbar.js"/>
-  <script type="application/javascript" src="chrome://browser/content/aboutPanel.js"/>
-
   <broadcasterset id="broadcasterset">
     <broadcaster id="bcast_contentShowing" disabled="false"/>
     <broadcaster id="bcast_urlbarState" mode="view"/>
@@ -146,9 +145,11 @@
     <key id="key_quit" key="q" modifiers="accel" command="cmd_quit"/>
     <key id="key_addBoomkark" key="d" modifiers="accel" command="cmd_addBookmark"/>
     <key id="key_console" key="j" modifiers="accel,shift" oncommand="PanelUI.show('console-container')"/>
-    <key id="key_options" key="o" modifiers="accel,shift" oncommand="Elements.prefsFlyout.show()"/>
-    <key id="key_options" key="s" modifiers="accel,shift" oncommand="Elements.syncFlyout.show()"/>
-    <key id="key_options" key="a" modifiers="accel,shift" oncommand="Elements.aboutFlyout.show()"/>
+    <key id="key_options" key="o" modifiers="accel,shift" oncommand="FlyoutPanelsUI.show('PrefsFlyout')" />
+#ifdef MOZ_SERVICES_SYNC
+    <key id="key_options" key="s" modifiers="accel,shift" oncommand="FlyoutPanelsUI.show('SyncFlyout')" />
+#endif
+    <key id="key_options" key="a" modifiers="accel,shift" oncommand="FlyoutPanelsUI.show('AboutFlyout')" />
 
     <!-- manage tabs -->
     <key id="key_newTab" key="t" modifiers="accel" command="cmd_newTab"/>
@@ -178,7 +179,8 @@
     <vbox id="page">
       <vbox id="tray" class="tray-toolbar" observes="bcast_windowState" >
         <!-- Tabs -->
-        <hbox id="tabs-container" observes="bcast_windowState">
+        <!-- onclick handler to work around bug 837242 -->
+        <hbox id="tabs-container" observes="bcast_windowState" onclick="void(0);">
           <box id="tabs" flex="1"
                 observes="bcast_preciseInput"
                 onselect="BrowserUI.selectTabAndDismiss(this);"
@@ -195,19 +197,19 @@
             <scrollbox id="start-scrollbox" orient="horizontal" observes="bcast_preciseInput" flex="1">
               <vbox id="start-topsites" class="meta-section">
                 <label class="meta-section-title" value="&startTopSitesHeader.label;"/>
-                <richgrid id="start-topsites-grid" rows="3" columns="3" tiletype="thumbnail" seltype="multiple" flex="1"/>
+                <richgrid id="start-topsites-grid" noun="topsite" rows="3" columns="3" tiletype="thumbnail" seltype="multiple" flex="1"/>
               </vbox>
               <vbox id="start-bookmarks" class="meta-section">
                 <label class="meta-section-title" value="&startBookmarksHeader.label;"/>
-                <richgrid id="start-bookmarks-grid" seltype="multiple" flex="1"/>
+                <richgrid id="start-bookmarks-grid" noun="bookmark" seltype="multiple" flex="1"/>
               </vbox>
               <vbox id="start-history" class="meta-section">
                 <label class="meta-section-title" value="&startHistoryHeader.label;"/>
-                <richgrid id="start-history-grid" seltype="multiple" flex="1"/>
+                <richgrid id="start-history-grid" noun="history" seltype="multiple" flex="1"/>
               </vbox>
               <vbox id="start-remotetabs" class="meta-section">
                 <label class="meta-section-title" value="&startRemoteTabsHeader.label;"/>
-                <richgrid id="start-remotetabs-grid" seltype="multiple" flex="1"/>
+                <richgrid id="start-remotetabs-grid" noun="tab" seltype="multiple" flex="1"/>
               </vbox>
             </scrollbox>
           </hbox>
@@ -217,7 +219,7 @@
             <scrollbox id="snapped-scrollbox" orient="vertical" flex="1">
               <vbox id="snapped-topsites">
                 <label class="meta-section-title" value="&startTopSitesHeader.label;"/>
-                <richgrid id="snapped-topsites-grid" class="canSnapTiles" rows="8" columns="1" flex="1"/>
+                <richgrid id="snapped-topsites-grid" noun="topsite" class="canSnapTiles" rows="8" columns="1" flex="1"/>
               </vbox>
               <label class="meta-section-title" value="&snappedBookmarksHeader.label;"
                 onclick="PanelUI.show('bookmarks-container');"/>
@@ -227,8 +229,6 @@
                 onclick="PanelUI.show('remotetabs-container');" inputProcessing="true"/>
             </scrollbox>
           </hbox>
-          <!-- Autocompletion interface -->
-          <box id="start-autocomplete" observes="bcast_windowState"/>
         </hbox>
       </vbox> <!-- end tray -->
 
@@ -249,59 +249,54 @@
     <html:div id="overlay-plus" class="overlay-button"
               observes="cmd_back"></html:div>
 
-    <!-- popup for content navigator helper -->
-    <appbar id="content-navigator" class="window-width content-navigator-box" orient="horizontal" pack="start">
-      <textbox id="find-helper-textbox" class="search-bar content-navigator-item" oncommand="FindHelperUI.search(this.value)" oninput="FindHelperUI.updateCommands(this.value);" type="search"/>
-      <button class="content-navigator-item previous-button" command="cmd_findPrevious"/>
-      <button class="content-navigator-item next-button" command="cmd_findNext"/>
-      <spacer flex="1"/>
-      <button class="content-navigator-item close-button" command="cmd_findClose"/>
-    </appbar>
-
     <!-- Navbar -->
     <appbar id="navbar" mousethrough="never" observes="bcast_windowState">
       <hbox id="progress-container" layer="true">
         <hbox id="progress-control" />
       </hbox>
 
-      <!-- Main Toolbar -->
-      <toolbar id="toolbar" observes="bcast_windowState" flex="1">
-        <observes element="bcast_windowState" attribute="*"/>
-        <observes element="bcast_urlbarState" attribute="*"/>
+      <vbox id="toolbar-autocomplete" flex="1">
+        <!-- Autocomplete -->
+        <scrollbox flex="1">
+          <hbox id="urlbar-autocomplete" observes="bcast_windowState"/>
+        </scrollbox>
 
-        <toolbarbutton id="back-button" class="appbar-primary" command="cmd_back"/>
-        <toolbarbutton id="forward-button" class="appbar-primary" command="cmd_forward"/>
+        <!-- Main Toolbar -->
+        <toolbar id="toolbar" observes="bcast_windowState" flex="1">
+          <observes element="bcast_windowState" attribute="*"/>
+          <observes element="bcast_urlbarState" attribute="*"/>
 
-        <hbox id="urlbar-container" flex="1" observes="bcast_urlbarState">
-          <hbox id="urlbar" flex="1">
-            <box id="identity-box" role="button">
-              <hbox id="identity-box-inner" align="center" mousethrough="always">
-                <image id="identity-icon"/>
-              </hbox>
-            </box>
+          <toolbarbutton id="back-button" class="appbar-primary" command="cmd_back"/>
+          <toolbarbutton id="forward-button" class="appbar-primary" command="cmd_forward"/>
 
-            <textbox id="urlbar-edit"
-                     type="url"
-                     class="uri-element"
-                     autocompletesearch="history"
-                     autocompletepopup="start-autocomplete"
-                     completeselectedindex="true"
-                     placeholder="&urlbar.emptytext;"
-                     flex="1"
-                     onpaste="this.focus();"
-                     ontextentered="BrowserUI.handleUrlbarEnter(param);"
-                     onblur="BrowserUI._urlbarBlurred();"/>
+          <hbox id="urlbar-container" flex="1" observes="bcast_urlbarState">
+            <hbox id="urlbar" flex="1">
+              <box id="identity-box" role="button">
+                <hbox id="identity-box-inner" align="center" mousethrough="always">
+                  <image id="identity-icon"/>
+                </hbox>
+              </box>
+
+              <textbox id="urlbar-edit"
+                       type="url"
+                       class="uri-element"
+                       autocompletesearch="history"
+                       autocompletepopup="urlbar-autocomplete"
+                       completeselectedindex="true"
+                       placeholder="&urlbar.emptytext;"
+                       flex="1"/>
+            </hbox>
+
+            <toolbarbutton id="reload-button" oncommand="CommandUpdater.doCommand(event.shiftKey ? 'cmd_forceReload' : 'cmd_reload');"/>
+            <toolbarbutton id="stop-button" command="cmd_stop"/>
           </hbox>
 
-          <toolbarbutton id="reload-button" oncommand="CommandUpdater.doCommand(event.shiftKey ? 'cmd_forceReload' : 'cmd_reload');"/>
-          <toolbarbutton id="stop-button" command="cmd_stop"/>
-        </hbox>
-
-        <toolbarbutton id="download-button" oncommand="Appbar.onDownloadButton()"/>
-        <toolbarbutton id="star-button" class="appbar-primary" type="checkbox" oncommand="Appbar.onStarButton()"/>
-        <toolbarbutton id="pin-button" class="appbar-primary" type="checkbox" oncommand="Appbar.onPinButton()"/>
-        <toolbarbutton id="menu-button" class="appbar-primary" oncommand="Appbar.onMenuButton(event)"/>
-       </toolbar>
+          <toolbarbutton id="download-button" class="appbar-secondary" oncommand="Appbar.onDownloadButton()"/>
+          <toolbarbutton id="star-button" class="appbar-primary" type="checkbox" oncommand="Appbar.onStarButton()"/>
+          <toolbarbutton id="pin-button" class="appbar-primary" type="checkbox" oncommand="Appbar.onPinButton()"/>
+          <toolbarbutton id="menu-button" class="appbar-primary" oncommand="Appbar.onMenuButton(event)"/>
+        </toolbar>
+      </vbox>
     </appbar>
 
     <vbox id="panel-container" hidden="true" class="window-width window-height meta" observes="bcast_windowState">
@@ -320,16 +315,16 @@
 
       <deck id="panel-items" selectedIndex="0" flex="1" >
         <scrollbox id="bookmarks-container" flex="1">
-          <richgrid id="bookmarks-list" class="canSnapTiles" seltype="multiple" flex="1"/>
+          <richgrid id="bookmarks-list" noun="bookmark" class="canSnapTiles" seltype="multiple" flex="1"/>
         </scrollbox>
         <scrollbox id="history-container" flex="1">
-          <richgrid id="history-list" class="canSnapTiles" seltype="multiple" flex="1"/>
+          <richgrid id="history-list" noun="history" class="canSnapTiles" seltype="multiple" flex="1"/>
         </scrollbox>
         <scrollbox id="downloads-container" flex="1">
-          <richgrid id="downloads-list" class="canSnapTiles" seltype="single" flex="1"/>
+          <richgrid id="downloads-list" noun="download" class="canSnapTiles" seltype="single" flex="1"/>
         </scrollbox>
         <scrollbox id="remotetabs-container" flex="1">
-          <richgrid id="remotetabs-list" class="canSnapTiles" seltype="single" flex="1"/>
+          <richgrid id="remotetabs-list" noun="tab" class="canSnapTiles" seltype="single" flex="1"/>
         </scrollbox>
         <vbox id="console-container" flex="1">
           <vbox id="console-header" class="panel-list">
@@ -355,14 +350,33 @@
       </deck>
     </vbox>
 
+    <!-- Find bar -->
+    <appbar id="findbar" class="window-width findbar-box" orient="horizontal" pack="start">
+      <textbox id="findbar-textbox" class="search-bar findbar-item" oncommand="FindHelperUI.search(this.value)" oninput="FindHelperUI.updateCommands(this.value);" type="search"/>
+      <button class="findbar-item previous-button" command="cmd_findPrevious"/>
+      <button class="findbar-item next-button" command="cmd_findNext"/>
+      <spacer flex="1"/>
+      <button id="findbar-close" class="findbar-item close-button" command="cmd_findClose"/>
+    </appbar>
+
     <!-- Context button bar -->
     <appbar id="contextappbar">
-      <toolbar id="contextualactions-tray" flex="1">
-        <toolbarbutton id="delete-selected-button" hidden="true" fade="true" oncommand="Appbar.dispatchContextualAction('delete')"/>
-        <toolbarbutton id="restore-selected-button" hidden="true" fade="true" oncommand="Appbar.dispatchContextualAction('restore')"/>
-        <toolbarbutton id="pin-selected-button" hidden="true" fade="true" oncommand="Appbar.dispatchContextualAction('pin')"/>
-        <toolbarbutton id="unpin-selected-button" hidden="true" fade="true" oncommand="Appbar.dispatchContextualAction('unpin')"/>
-        <toolbarbutton id="clear-selected-button" hidden="true" fade="true" oncommand="Appbar.dispatchContextualAction('clear')"/>
+      <toolbar id="contextualactions-tray" labelled="true" flex="1">
+        <toolbarbutton id="delete-selected-button" class="appbar-secondary"
+                       modifies-noun="true" hidden="true" fade="true"
+                       oncommand="Appbar.dispatchContextualAction('delete')"/>
+        <toolbarbutton id="restore-selected-button" class="appbar-secondary"
+                       modifies-noun="true" hidden="true" fade="true"
+                       oncommand="Appbar.dispatchContextualAction('restore')"/>
+        <toolbarbutton id="pin-selected-button" class="appbar-secondary"
+                       modifies-noun="true" hidden="true" fade="true"
+                       oncommand="Appbar.dispatchContextualAction('pin')"/>
+        <toolbarbutton id="unpin-selected-button" class="appbar-secondary"
+                       modifies-noun="true" hidden="true" fade="true"
+                       oncommand="Appbar.dispatchContextualAction('unpin')"/>
+        <toolbarbutton id="clear-selected-button" class="appbar-secondary"
+                       hidden="true" fade="true"
+                       oncommand="Appbar.dispatchContextualAction('clear')"/>
       </toolbar>
     </appbar>
 
@@ -422,39 +436,207 @@
             class="text-link" value="&aboutHeader.policy.label;"/>
     </flyoutpanel>
 
-    <flyoutpanel id="sync-flyoutpanel" headertext="&syncHeader.title;">
-      <description id="sync-description">&sync.setup.description;</description>
-      <description id="sync-accountinfo" collapsed="true"></description>
-      <description id="sync-lastsync" collapsed="true"></description>
-      <description id="sync-errordescription" collapsed="true"></description>
-      <setting id="sync-connect" type="control" collapsed="true">
-        <button label="&sync.setupbutton.label;" oncommand="Sync.tryConnect();" />
-      </setting>
-      <setting id="sync-connected" class="setting-group" type="control" collapsed="true">
-        <button id="sync-pairdevice" label="&sync.pair.button;" oncommand="SyncPairDevice.open();" />
-      </setting>
-      <setting id="sync-device" class="setting-subgroup" type="string" title="&sync.deviceName;" onchange="Sync.changeName(this);" collapsed="true"/>
-      <setting id="sync-disconnect" class="setting-subgroup" type="control" collapsed="true">
-        <button label="&sync.removebutton.label;" oncommand="Sync.onDisconnect();" />
-      </setting>
-      <vbox id="sync-disconnectwarnpanel" collapsed="true">
-        <description id="sync-disconnectwarntitle"></description>
-        <description id="sync-disconnectwarnmsg">&sync.removewarn.note;</description>
-        <hbox>
-          <spacer flex="1" />
-          <button label="&sync.setup.cancel;" oncommand="Sync.onCancelDisconnect();" />
-          <button label="&sync.setup.remove;" oncommand="Sync.disconnect();" />
-        </hbox>
-      </vbox>
-      <vbox id="sync-disconnectpanel">
-        <hbox>
-          <spacer flex="1" />
-          <cssthrobber id="sync-disconnectthrobber"/>
-          <label>&sync.removethrobber.label;</label>
+#ifdef MOZ_SERVICES_SYNC
+    <flyoutpanel id="sync-flyoutpanel" headertext="&sync.flyout.title;">
+
+      <vbox id="sync-presetup-container" collapsed="true">
+        <description>&sync.flyout.presetup.description1;</description>
+        <separator />
+        <hbox onclick="FlyoutPanelsUI.SyncFlyout.startEasySetup();"
+              align="center"
+              class="text-link">
+          <image src="chrome://browser/skin/images/plus-34.png" />
+          <separator />
+          <label value="&sync.flyout.presetup.setup.label;"
+                 class="text-link" />
           <spacer flex="1" />
         </hbox>
       </vbox>
+
+      <vbox id="sync-setup-container" collapsed="true">
+        <description>&sync.flyout.setup.description1;</description>
+        <description>&sync.flyout.setup.description2;</description>
+        <separator />
+        <vbox flex="1" pack="center" align="start">
+          <textbox id="sync-setup-code1"
+                   class="syncJPAKECode"
+                   placeholder="...."
+                   disabled="true" />
+          <textbox id="sync-setup-code2"
+                   class="syncJPAKECode"
+                   placeholder="...."
+                   disabled="true" />
+          <hbox>
+            <textbox id="sync-setup-code3"
+                         class="syncJPAKECode"
+                         placeholder="...."
+                         disabled="true" />
+            <vbox flex="1" pack="center" align="center">
+              <cssthrobber id='sync-setup-throbber'
+                           flex='1'
+                           class='syncThrobber'
+                           collapsed='true'
+                           disabled='true' />
+            </vbox>
+          </hbox>
+        </vbox>
+        <separator />
+        <description class="text-link"
+                     flex="1"
+                     onclick="FlyoutPanelsUI.SyncFlyout.abortEasySetup();
+                              FlyoutPanelsUI.SyncFlyout.showManualSetup()">
+          &sync.flyout.setup.manual.label;
+        </description>
+        <separator />
+        <description>&sync.flyout.setup.description3;</description>
+        <description>&sync.flyout.setup.description4;</description>
+        <description class="syncInstructionText">
+          &sync.flyout.setup.description5;
+        </description>
+        <description class="syncInstructionText">
+          &sync.flyout.setup.description6;
+        </description>
+      </vbox>
+
+      <vbox id="sync-manualsetup-container" collapsed="true">
+        <description>&sync.flyout.manualsetup.description1;</description>
+        <separator/>
+        <textbox id="sync-manualsetup-account"
+                 placeholder="&sync.flyout.manualsetup.account.placeholder;"
+                 oninput="FlyoutPanelsUI.SyncFlyout.updateManualSetupConnectButtonState();"/>
+        <textbox id="sync-manualsetup-password"
+                 placeholder="&sync.flyout.manualsetup.password.placeholder;"
+                 type="password"
+                 oninput="FlyoutPanelsUI.SyncFlyout.updateManualSetupConnectButtonState();"/>
+        <textbox id="sync-manualsetup-syncKey"
+                 placeholder="&sync.flyout.manualsetup.recoveryKey.placeholder;"
+                 oninput="FlyoutPanelsUI.SyncFlyout.updateManualSetupConnectButtonState();"/>
+        <description id="sync-manualsetup-failure"
+                     class="syncErrorText"
+                     collapsed="true" />
+        <separator />
+        <hbox>
+          <button id="sync-manualsetup-connect"
+                  class="syncButton"
+                  oncommand="FlyoutPanelsUI.SyncFlyout.manualSetupConnect();"
+                  label="&sync.flyout.manualsetup.connect.label;"
+                  disabled="true" />
+          <spacer flex="1" />
+        </hbox>
+      </vbox>
+
+      <vbox id="sync-setupsuccess-container" collapsed="true">
+        <description>&sync.flyout.setupsuccess.description1;</description>
+        <description>&sync.flyout.setupsuccess.description2;</description>
+      </vbox>
+
+      <vbox id="sync-setupfailure-container" collapsed="true">
+        <description>&sync.flyout.setupfailure.description;</description>
+        <hbox>
+          <button class="syncButton"
+                  oncommand="FlyoutPanelsUI.SyncFlyout.onCancelButton();"
+                  label="&sync.flyout.setupfailure.cancelButton;" />
+          <button class="syncButton"
+                  oncommand="FlyoutPanelsUI.SyncFlyout.onTryAgainButton();"
+                  label="&sync.flyout.setupfailure.tryAgainButton;" />
+        </hbox>
+      </vbox>
+
+      <vbox id="sync-connected-container" collapsed="true">
+        <description id="sync-connected-account"
+                     class="syncHeader" />
+        <separator />
+        <hbox>
+          <vbox>
+            <description id="sync-connected-device"
+                         class="syncHeader" />
+            <description id="sync-connected-lastSynced"
+                         class="syncSecondaryText" />
+          </vbox>
+          <cssthrobber id="sync-connected-throbber"
+                       class="syncThrobber"
+                       collapsed="true" />
+        </hbox>
+        <label id="sync-disconnect-label"
+               class="text-link"
+               onclick="FlyoutPanelsUI.SyncFlyout.onDisconnectLink();">
+          &sync.flyout.connected.disconnect;
+        </label>
+        <separator />
+        <vbox id="sync-disconnect-warning" collapsed="true">
+          <description class="syncHeader">
+            &sync.flyout.connected.disconnectWarningHeader;
+          </description>
+          <description class="syncSecondaryText">
+            &sync.flyout.connected.disconnectWarning;
+          </description>
+          <hbox>
+            <separator />
+            <button label="&sync.flyout.connected.cancel;"
+                    oncommand="FlyoutPanelsUI.SyncFlyout.onDisconnectCancel();" />
+            <button label="&sync.flyout.connected.disconnect;"
+                    oncommand="FlyoutPanelsUI.SyncFlyout.onDisconnectButton();" />
+
+          </hbox>
+          <separator />
+        </vbox>
+        <hbox onclick="FlyoutPanelsUI.SyncFlyout.onPairDeviceLink();"
+              class="text-link">
+          <image src="chrome://browser/skin/images/plus-24.png" />
+          <separator />
+          <label>&sync.flyout.connected.pair;</label>
+        </hbox>
+      </vbox>
+
+      <vbox id="sync-pair-container" collapsed="true">
+        <description>&sync.flyout.pairNewDevice.description;</description>
+        <separator />
+        <hbox>
+          <vbox>
+            <textbox id="sync-pair-entry1"
+                     class="syncJPAKECode"
+                     maxlength="4"
+                     oninput="FlyoutPanelsUI.SyncFlyout.updatePairButtonState();" />
+            <textbox id="sync-pair-entry2"
+                     class="syncJPAKECode"
+                     maxlength="4"
+                     oninput="FlyoutPanelsUI.SyncFlyout.updatePairButtonState();" />
+            <textbox id="sync-pair-entry3"
+                     class="syncJPAKECode"
+                     maxlength="4"
+                     oninput="FlyoutPanelsUI.SyncFlyout.updatePairButtonState();" />
+          </vbox>
+          <spacer flex="1" />
+        </hbox>
+        <description id="sync-pair-failure"
+                     class="syncErrorText"
+                     collapsed="true">
+          &sync.flyout.pairNewDevice.failure;
+        </description>
+        <hbox>
+          <button id="sync-pair-button"
+                  label="&sync.flyout.pairNewDevice.pair;"
+                  oncommand="FlyoutPanelsUI.SyncFlyout.onPairButton();"
+                  disabled="true" />
+          <spacer flex="1" />
+        </hbox>
+        <description>&sync.flyout.pairNewDevice.note1;</description>
+        <description>&sync.flyout.pairNewDevice.note2;</description>
+        <description class="syncInstructionText">
+          &sync.flyout.pairNewDevice.note3;
+        </description>
+        <description class="syncInstructionText">
+          &sync.flyout.pairNewDevice.note4;
+        </description>
+      </vbox>
+
+      <vbox id="sync-pair-success-container" collapsed="true">
+        <description>&sync.flyout.pairSuccess.description1;</description>
+        <description>&sync.flyout.pairSuccess.description2;</description>
+      </vbox>
+
     </flyoutpanel>
+#endif
 
     <flyoutpanel id="prefs-flyoutpanel" headertext="&optionsHeader.title;">
       <settings id="prefs-startup" label="&optionsHeader.startup.title;"> <!-- note, this element has a custom margin-top -->
@@ -504,7 +686,7 @@
       </settings>
       <settings id="prefs-dnt" label="&doNotTrack.title;">
         <description>&doNotTrack.desc;</description>
-        <setting id="prefs-dnt-value" pref="privacy.donottrackheader.value" onpreferencechanged="PreferencesPanelView.onDNTPreferenceChanged()" type="radio" >
+        <setting id="prefs-dnt-value" pref="privacy.donottrackheader.value" onpreferencechanged="FlyoutPanelsUI.PrefsFlyout.onDNTPreferenceChanged();" type="radio" >
           <radiogroup id="prefs-dnt-options">
             <radio id="prefs-dnt-notrack" label="&doNotTrack.options.trackingNotOkay;" value="1"/>
             <radio id="prefs-dnt-nopref" label="&doNotTrack.options.noPreference;" value="-1"/>
@@ -513,91 +695,6 @@
         </setting>
       </settings>
     </flyoutpanel>
-
-#ifdef MOZ_SERVICES_SYNC
-    <box id="syncsetup-container" class="perm-modal-block" hidden="true">
-      <dialog id="syncsetup-dialog" class="content-dialog" flex="1">
-        <vbox class="prompt-inner">
-          <hbox class="prompt-title">
-            <description>&sync.setup2.title;</description>
-          </hbox>
-          <vbox id="syncsetup-simple" class="syncsetup-page" flex="1">
-            <scrollbox id="sync-message" class="prompt-message" orient="vertical" flex="1">
-              <description class="syncsetup-desc" flex="1">&sync.setup.pair2;</description>
-              <description class="text-link" flex="1" onclick="Sync.openTutorial();">&sync.setup.tutorial;</description>
-              <separator/>
-              <vbox flex="1" pack="center" align="start">
-                <description id="syncsetup-code1" class="syncsetup-code">....</description>
-                <description id="syncsetup-code2" class="syncsetup-code">....</description>
-                <description id="syncsetup-code3" class="syncsetup-code">....</description>
-              </vbox>
-              <separator/>
-              <description class="text-link" flex="1" onclick="Sync.openManual();">&sync.fallback;</description>
-              <separator flex="1"/>
-            </scrollbox>
-            <hbox class="prompt-buttons">
-              <button oncommand="Sync.close();">&sync.setup.cancel;</button>
-            </hbox>
-          </vbox>
-          <vbox id="syncsetup-waiting" class="syncsetup-page" flex="1" hidden="true">
-            <progressmeter id="syncsetup-progressbar" mode="undetermined"/>
-            <vbox id="syncsetup-waiting-top" align="center" flex="1">
-              <description id="syncsetup-waiting-desc" class="syncsetup-desc" flex="1">&sync.setup.waiting2;</description>
-              <description id="syncsetup-waitingdownload-desc" class="syncsetup-desc" hidden="true" flex="1">&sync.setup.waitingdownload;</description>
-            </vbox>
-            <hbox class="prompt-buttons" pack="center" align="end">
-              <button id="syncsetup-waiting-cancel" oncommand="Sync.close();">&sync.setup.cancel;</button>
-              <button id="syncsetup-waiting-close" hidden="true" oncommand="Sync.close();">&sync.setup.close;</button>
-            </hbox>
-          </vbox>
-          <vbox id="syncsetup-fallback" class="syncsetup-page" flex="1" hidden="true">
-            <scrollbox class="prompt-message" orient="vertical" flex="1">
-              <description class="syncsetup-desc" flex="1">&sync.setup.manual;</description>
-              <separator/>
-              <textbox id="syncsetup-account" class="prompt-edit" placeholder="&sync.account;" oninput="Sync.canConnect();"/>
-              <textbox id="syncsetup-password" class="prompt-edit" placeholder="&sync.password;" type="password" oninput="Sync.canConnect();"/>
-              <textbox id="syncsetup-synckey" class="prompt-edit" placeholder="&sync.recoveryKey;" oninput="Sync.canConnect();"/>
-              <separator class="thin"/>
-              <checkbox id="syncsetup-usecustomserver" label="&sync.customServer;" oncommand="Sync.toggleCustomServer();"/>
-              <textbox id="syncsetup-customserver" class="prompt-edit" placeholder="&sync.serverURL;"/>
-              <separator flex="1"/>
-            </scrollbox>
-            <hbox class="prompt-buttons">
-              <button oncommand="Sync.close();">&sync.setup.cancel;</button>
-              <separator/>
-              <button id="syncsetup-button-connect" oncommand="Sync.close(); Sync.connect();">&sync.setup.connect2;</button>
-            </hbox>
-          </vbox>
-        </vbox>
-      </dialog>
-    </box>
-
-    <box id="syncpair-container" class="perm-modal-block" hidden="true">
-      <dialog id="syncpair-dialog" class="content-dialog" flex="1">
-        <vbox class="prompt-inner">
-          <hbox class="prompt-title">
-            <description>&sync.pair.title;</description>
-          </hbox>
-          <vbox id="syncpair-simple" class="syncsetup-page" flex="1">
-            <vbox id="sync-message" class="prompt-message" orient="vertical" flex="1">
-              <description class="syncsetup-desc" flex="1">&sync.pair.description;</description>
-              <description class="text-link" flex="1" onclick="SyncPairDevice.close(); Sync.openTutorial();">&sync.setup.tutorial;</description>
-              <separator/>
-              <vbox align="center" flex="1">
-                <textbox id="syncpair-code1" class="syncsetup-code" oninput="SyncPairDevice.onTextBoxInput(this);"/>
-                <textbox id="syncpair-code2" class="syncsetup-code" oninput="SyncPairDevice.onTextBoxInput(this);"/>
-                <textbox id="syncpair-code3" class="syncsetup-code" oninput="SyncPairDevice.onTextBoxInput(this);"/>
-              </vbox>
-            </vbox>
-            <hbox class="prompt-buttons" pack="center">
-              <button oncommand="SyncPairDevice.close();">&sync.setup.cancel;</button>
-              <button id="syncpair-connectbutton" disabled="true" oncommand="SyncPairDevice.connect();">&sync.setup.connect2;</button>
-            </hbox>
-          </vbox>
-        </vbox>
-      </dialog>
-    </box>
-#endif
 
     <!-- Chrome touch selection overlay -->
     <!-- onclick addresses dom bug 835175 -->

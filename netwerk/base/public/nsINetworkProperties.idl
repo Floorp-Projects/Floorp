@@ -1,0 +1,18 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+/* This interface provides supplemental information
+   to that which is provided by the network info definition. It is
+   reasonable to expect it to grow.
+*/
+
+
+[scriptable, builtinclass, uuid(0af94dec-7ffc-4301-8937-766c214ac688)]
+interface nsINetworkProperties : nsISupports
+{
+    readonly attribute boolean isWifi;
+    readonly attribute unsigned long dhcpGateway;
+};

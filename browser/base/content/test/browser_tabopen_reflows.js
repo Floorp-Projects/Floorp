@@ -39,7 +39,23 @@ const EXPECTED_REFLOWS = [
     "TabItem@chrome://browser/content/tabview.js|" +
     "TabItems_link@chrome://browser/content/tabview.js|" +
     "@chrome://browser/content/tabview.js|" +
-    "addTab@chrome://browser/content/tabbrowser.xml|"
+    "addTab@chrome://browser/content/tabbrowser.xml|",
+
+  // SessionStore.getWindowDimensions()
+  "ssi_getWindowDimension@resource:///modules/sessionstore/SessionStore.jsm|" +
+    "@resource:///modules/sessionstore/SessionStore.jsm|" +
+    "ssi_updateWindowFeatures@resource:///modules/sessionstore/SessionStore.jsm|" +
+    "ssi_collectWindowData@resource:///modules/sessionstore/SessionStore.jsm|" +
+    "@resource:///modules/sessionstore/SessionStore.jsm|" +
+    "ssi_forEachBrowserWindow@resource:///modules/sessionstore/SessionStore.jsm|" +
+    "ssi_getCurrentState@resource:///modules/sessionstore/SessionStore.jsm|" +
+    "ssi_saveState@resource:///modules/sessionstore/SessionStore.jsm|" +
+    "ssi_onTimerCallback@resource:///modules/sessionstore/SessionStore.jsm|" +
+    "ssi_observe@resource:///modules/sessionstore/SessionStore.jsm|",
+
+  // tabPreviews.capture()
+  "tabPreviews_capture@chrome://browser/content/browser.js|" +
+    "tabPreviews_handleEvent/<@chrome://browser/content/browser.js|"
 ];
 
 const PREF_PRELOAD = "browser.newtab.preload";

@@ -44,6 +44,7 @@ MOCHITEST_BROWSER_TESTS = \
 	browser_net_footer-summary.js \
 	browser_net_resend.js \
 	browser_net_req-resp-bodies.js \
+	browser_net_copy_url.js \
 	head.js \
 	$(NULL)
 

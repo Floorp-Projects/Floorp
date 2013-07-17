@@ -13,8 +13,6 @@ include $(DEPTH)/config/autoconf.mk
 LIBXUL_LIBRARY = 1
 FAIL_ON_WARNINGS = 1
 
-FORCE_STATIC_LIB = 1
-
 LOCAL_INCLUDES	+= \
 		-I$(srcdir)/../../style \
 		-I$(topsrcdir)/content/base/src \

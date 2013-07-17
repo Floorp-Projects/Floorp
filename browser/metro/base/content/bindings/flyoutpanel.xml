@@ -23,37 +23,29 @@
       </xul:vbox>
     </content>
 
-    <implementation implements="nsIDOMEventListener">
+    <implementation>
       <constructor>
         <![CDATA[
-          window.addEventListener('MozContextUIShow', this);
-          window.addEventListener('MozContextUIDismiss', this);
-          window.addEventListener('MozAppbarDismissing', this);
+            this.setAttribute("isSlidOut", true);
         ]]>
       </constructor>
-
-      <destructor>
-        <![CDATA[
-          window.removeEventListener('MozContextUIShow', this);
-          window.removeEventListener('MozContextUIDismiss', this);
-          window.removeEventListener('MozAppbarDismissing', this);
-        ]]>
-      </destructor>
-
-      <property name="isVisible" readonly="true">
-        <getter>
-          <![CDATA[
-            return this.hasAttribute("visible");
-          ]]>
-        </getter>
-      </property>
-      
       <method name="_onAfterSlideOut">
         <body>
           <![CDATA[
+            this.removeAttribute("isSlidingOut");
+            this.setAttribute("isSlidOut", true);
             this.removeAttribute("visible");
             this.removeEventListener("transitionend", this._onAfterSlideOut);
-            DialogUI.popPopup(this);
+          ]]>
+        </body>
+      </method>
+
+      <method name="_onAfterSlideIn">
+        <body>
+          <![CDATA[
+            this.removeAttribute("isSlidingIn");
+            this.setAttribute("isSlidIn", true);
+            this.removeEventListener("transitionend", this._onAfterSlideIn);
           ]]>
         </body>
       </method>
@@ -61,11 +53,19 @@
       <method name="hide">
         <body>
           <![CDATA[
-            if (!this.isVisible)
+            if (this.hasAttribute("isSlidingOut")
+             || this.hasAttribute("isSlidOut")) {
               return;
+            }
+
+            if (this.hasAttribute("isSlidingIn")) {
+              this._onAfterSlideIn();
+            }
 
             this.addEventListener("transitionend", this._onAfterSlideOut);
             this.classList.remove("flyoutpanel-slide-in");
+            this.setAttribute("isSlidingOut", true);
+            this.removeAttribute("isSlidIn");
           ]]>
         </body>
       </method>
@@ -73,30 +73,23 @@
       <method name="show">
         <body>
           <![CDATA[
-            if (this.isVisible)
+            if (this.hasAttribute("isSlidingIn")
+             || this.hasAttribute("isSlidIn")) {
               return;
+            }
+
+            if (this.hasAttribute("isSlidingOut")) {
+              this._onAfterSlideOut();
+            }
 
             let event = document.createEvent("Events");
             event.initEvent("MozFlyoutPanelShowing", true, false);
             this.dispatchEvent(event);
-            this.setAttribute("visible", "true");
             this.classList.add("flyoutpanel-slide-in");
-            DialogUI.pushPopup(this, this);
-          ]]>
-        </body>
-      </method>
 
-      <method name="handleEvent">
-        <parameter name="aEvent"/>
-        <body>
-          <![CDATA[
-            switch (aEvent.type) {
-              case 'MozContextUIShow':
-              case 'MozAppbarDismissing':
-              case 'MozContextUIDismiss':
-                this.hide();
-                break;
-            }
+            this.setAttribute("isSlidingIn", true);
+            this.setAttribute("visible", true);
+            this.removeAttribute("isSlidOut");
           ]]>
         </body>
       </method>

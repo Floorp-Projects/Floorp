@@ -422,7 +422,7 @@ ContentParent::CreateBrowserOrApp(const TabContext& aContext,
 
     if (aContext.IsBrowserElement() || !aContext.HasOwnApp()) {
         if (nsRefPtr<ContentParent> cp = GetNewOrUsed(aContext.IsBrowserElement())) {
-            nsRefPtr<TabParent> tp(new TabParent(aContext));
+            nsRefPtr<TabParent> tp(new TabParent(cp, aContext));
             tp->SetOwnerElement(aFrameElement);
             uint32_t chromeFlags = 0;
 
@@ -498,7 +498,7 @@ ContentParent::CreateBrowserOrApp(const TabContext& aContext,
         sAppContentParents->Put(manifestURL, p);
     }
 
-    nsRefPtr<TabParent> tp = new TabParent(aContext);
+    nsRefPtr<TabParent> tp = new TabParent(p, aContext);
     tp->SetOwnerElement(aFrameElement);
     PBrowserParent* browser = p->SendPBrowserConstructor(
         nsRefPtr<TabParent>(tp).forget().get(), // DeallocPBrowserParent() releases this ref.
@@ -730,19 +730,28 @@ ContentParent::TransformPreallocatedIntoApp(const nsAString& aAppManifestURL,
 }
 
 void
-ContentParent::ShutDownProcess()
+ContentParent::ShutDownProcess(bool aFromActorDestroyed)
 {
   if (!mIsDestroyed) {
+    mIsDestroyed = true;
+
     const InfallibleTArray<PIndexedDBParent*>& idbParents =
       ManagedPIndexedDBParent();
     for (uint32_t i = 0; i < idbParents.Length(); ++i) {
       static_cast<IndexedDBParent*>(idbParents[i])->Disconnect();
     }
 
-    // Close() can only be called once.  It kicks off the
-    // destruction sequence.
-    Close();
-    mIsDestroyed = true;
+    if (aFromActorDestroyed) {
+      // If ActorDestroyed() is calling this method but mIsDestroyed was false,
+      // we're in an error state.
+      AsyncChannel* channel = GetIPCChannel();
+      if (channel) {
+        channel->CloseWithError();
+      }
+    } else {
+      // Close() can only be called once: It kicks off the destruction sequence.
+      Close();
+    }
   }
   // NB: must MarkAsDead() here so that this isn't accidentally
   // returned from Get*() while in the midst of shutdown.
@@ -868,7 +877,7 @@ ContentParent::ActorDestroy(ActorDestroyReason why)
     if (ppm) {
       ppm->ReceiveMessage(static_cast<nsIContentFrameMessageManager*>(ppm.get()),
                           CHILD_PROCESS_SHUTDOWN_MESSAGE, false,
-                          nullptr, JS::NullPtr(), nullptr);
+                          nullptr, nullptr, nullptr);
     }
     nsCOMPtr<nsIThreadObserver>
         kungFuDeathGrip(static_cast<nsIThreadObserver*>(this));
@@ -948,6 +957,11 @@ ContentParent::ActorDestroy(ActorDestroyReason why)
         obs->NotifyObservers((nsIPropertyBag2*) props, "ipc:content-shutdown", nullptr);
     }
 
+    // If the child process was terminated due to a SIGKIL, ShutDownProcess
+    // might not have been called yet.  We must call it to ensure that our
+    // channel is closed, etc.
+    ShutDownProcess(/* aForce = */ true);
+
     MessageLoop::current()->
         PostTask(FROM_HERE,
                  NewRunnableFunction(DelayedDeleteSubprocess, mSubprocess));
@@ -1006,7 +1020,8 @@ ContentParent::NotifyTabDestroyed(PBrowserParent* aTab,
     if (ManagedPBrowserParent().Length() == 1) {
         MessageLoop::current()->PostTask(
             FROM_HERE,
-            NewRunnableMethod(this, &ContentParent::ShutDownProcess));
+            NewRunnableMethod(this, &ContentParent::ShutDownProcess,
+                              /* force */ false));
     }
 }
 
@@ -1464,7 +1479,7 @@ ContentParent::Observe(nsISupports* aSubject,
                        const PRUnichar* aData)
 {
     if (!strcmp(aTopic, "xpcom-shutdown") && mSubprocess) {
-        ShutDownProcess();
+        ShutDownProcess(/* force */ false);
         NS_ASSERTION(!mSubprocess, "Close should have nulled mSubprocess");
     }
 
@@ -1640,7 +1655,7 @@ ContentParent::AllocPBrowserParent(const IPCTabContext& aContext,
         return nullptr;
     }
 
-    TabParent* parent = new TabParent(TabContext(aContext));
+    TabParent* parent = new TabParent(this, TabContext(aContext));
 
     // We release this ref in DeallocPBrowserParent()
     NS_ADDREF(parent);
@@ -1677,7 +1692,7 @@ ContentParent::DeallocPDeviceStorageRequestParent(PDeviceStorageRequestParent* d
 PBlobParent*
 ContentParent::AllocPBlobParent(const BlobConstructorParams& aParams)
 {
-  return BlobParent::Create(aParams);
+  return BlobParent::Create(this, aParams);
 }
 
 bool
@@ -1757,7 +1772,7 @@ ContentParent::GetOrCreateActorForBlob(nsIDOMBlob* aBlob)
     }
       }
 
-  BlobParent* actor = BlobParent::Create(aBlob);
+  BlobParent* actor = BlobParent::Create(this, aBlob);
   NS_ENSURE_TRUE(actor, nullptr);
 
   if (!SendPBlobConstructor(actor, params)) {
@@ -2308,26 +2323,30 @@ ContentParent::RecvTestPermissionFromPrincipal(const IPC::Principal& aPrincipal,
 bool
 ContentParent::RecvSyncMessage(const nsString& aMsg,
                                const ClonedMessageData& aData,
+                               const InfallibleTArray<CpowEntry>& aCpows,
                                InfallibleTArray<nsString>* aRetvals)
 {
   nsRefPtr<nsFrameMessageManager> ppm = mMessageManager;
   if (ppm) {
     StructuredCloneData cloneData = ipc::UnpackClonedMessageDataForParent(aData);
+    CpowIdHolder cpows(GetCPOWManager(), aCpows);
     ppm->ReceiveMessage(static_cast<nsIContentFrameMessageManager*>(ppm.get()),
-                        aMsg, true, &cloneData, JS::NullPtr(), aRetvals);
+                        aMsg, true, &cloneData, &cpows, aRetvals);
   }
   return true;
 }
 
 bool
 ContentParent::RecvAsyncMessage(const nsString& aMsg,
-                                      const ClonedMessageData& aData)
+                                const ClonedMessageData& aData,
+                                const InfallibleTArray<CpowEntry>& aCpows)
 {
   nsRefPtr<nsFrameMessageManager> ppm = mMessageManager;
   if (ppm) {
     StructuredCloneData cloneData = ipc::UnpackClonedMessageDataForParent(aData);
+    CpowIdHolder cpows(GetCPOWManager(), aCpows);
     ppm->ReceiveMessage(static_cast<nsIContentFrameMessageManager*>(ppm.get()),
-                        aMsg, false, &cloneData, JS::NullPtr(), nullptr);
+                        aMsg, false, &cloneData, &cpows, nullptr);
   }
   return true;
 }
@@ -2531,14 +2550,20 @@ ContentParent::RecvPrivateDocShellsExist(const bool& aExist)
 }
 
 bool
-ContentParent::DoSendAsyncMessage(const nsAString& aMessage,
-                                  const mozilla::dom::StructuredCloneData& aData)
+ContentParent::DoSendAsyncMessage(JSContext* aCx,
+                                  const nsAString& aMessage,
+                                  const mozilla::dom::StructuredCloneData& aData,
+                                  JS::Handle<JSObject *> aCpows)
 {
   ClonedMessageData data;
   if (!BuildClonedMessageDataForParent(this, aData, data)) {
     return false;
   }
-  return SendAsyncMessage(nsString(aMessage), data);
+  InfallibleTArray<CpowEntry> cpows;
+  if (!GetCPOWManager()->Wrap(aCx, aCpows, &cpows)) {
+    return false;
+  }
+  return SendAsyncMessage(nsString(aMessage), data, cpows);
 }
 
 bool

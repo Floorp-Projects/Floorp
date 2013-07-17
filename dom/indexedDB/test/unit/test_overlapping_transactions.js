@@ -13,7 +13,7 @@ function testSteps()
   let request = indexedDB.open(name, 1);
   request.onerror = errorHandler;
   request.onupgradeneeded = grabEventAndContinueHandler;
-  let event = yield;
+  let event = yield undefined;
 
   let db = event.target.result;
   is(db.objectStoreNames.length, 0, "Correct objectStoreNames list");
@@ -22,7 +22,7 @@ function testSteps()
   for (let i in objectStores) {
     db.createObjectStore(objectStores[i], { autoIncrement: true });
   }
-  let event = yield;
+  let event = yield undefined;
 
   is(db.objectStoreNames.length, objectStores.length,
      "Correct objectStoreNames list");
@@ -81,12 +81,12 @@ function testSteps()
     }
 
     stepNumber++;
-    yield; yield; yield; yield; yield;
+    yield undefined; yield undefined; yield undefined; yield undefined; yield undefined;
 
     is(stepNumber, 6, "All callbacks received");
   }
 
   finishTest();
-  yield;
+  yield undefined;
 }
 

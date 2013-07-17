@@ -287,7 +287,7 @@ enum {
                           TYPE_FLAG_INT32 | TYPE_FLAG_DOUBLE | TYPE_FLAG_STRING,
 
     /* Mask/shift for the number of objects in objectSet */
-    TYPE_FLAG_OBJECT_COUNT_MASK   = 0xff00,
+    TYPE_FLAG_OBJECT_COUNT_MASK   = 0x1f00,
     TYPE_FLAG_OBJECT_COUNT_SHIFT  = 8,
     TYPE_FLAG_OBJECT_COUNT_LIMIT  =
         TYPE_FLAG_OBJECT_COUNT_MASK >> TYPE_FLAG_OBJECT_COUNT_SHIFT,
@@ -972,20 +972,6 @@ struct TypeObject : gc::Cell
     static inline size_t offsetOfFlags() { return offsetof(TypeObject, flags); }
 
     /*
-     * Estimate of the contribution of this object to the type sets it appears in.
-     * This is the sum of the sizes of those sets at the point when the object
-     * was added.
-     *
-     * When the contribution exceeds the CONTRIBUTION_LIMIT, any type sets the
-     * object is added to are instead marked as unknown. If we get to this point
-     * we are probably not adding types which will let us do meaningful optimization
-     * later, and we want to ensure in such cases that our time/space complexity
-     * is linear, not worst-case cubic as it would otherwise be.
-     */
-    uint32_t contribution;
-    static const uint32_t CONTRIBUTION_LIMIT = 2000;
-
-    /*
      * If non-NULL, objects of this type have always been constructed using
      * 'new' on the specified script, which adds some number of properties to
      * the object in a definite order before the object escapes.
@@ -1026,6 +1012,10 @@ struct TypeObject : gc::Cell
 
     /* If this is an interpreted function, the function object. */
     HeapPtrFunction interpretedFunction;
+
+#if JS_BITS_PER_WORD == 32
+    uint32_t padding;
+#endif
 
     inline TypeObject(Class *clasp, TaggedProto proto, bool isFunction, bool unknown);
 
@@ -1412,7 +1402,7 @@ struct TypeCompartment
      * or JSProto_Object to indicate a type whose class is unknown (not just
      * js_ObjectClass).
      */
-    TypeObject *newTypeObject(JSContext *cx, Class *clasp, Handle<TaggedProto> proto,
+    TypeObject *newTypeObject(ExclusiveContext *cx, Class *clasp, Handle<TaggedProto> proto,
                               bool unknown = false);
 
     /* Get or make an object for an allocation site, and add to the allocation site table. */

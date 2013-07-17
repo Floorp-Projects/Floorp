@@ -10,7 +10,6 @@
 #include "ion/AsmJSModule.h"
 #include "assembler/assembler/MacroAssembler.h"
 
-#include "gc/Barrier-inl.h"
 #include "vm/ObjectImpl-inl.h"
 
 using namespace js;

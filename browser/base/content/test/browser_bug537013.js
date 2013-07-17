@@ -39,6 +39,8 @@ function test() {
   gBrowser.selectedTab = tabs[0];
 
   setFindString(texts[0]);
+  // Turn on highlight for testing bug 891638
+  gFindBar.getElement("highlight").checked = true;
 
   // Make sure the second tab is correct, then set it up
   gBrowser.selectedTab = tabs[1];
@@ -52,10 +54,24 @@ function test() {
   gBrowser.selectedTab = tabs[0];
   ok(!gFindBar.hidden, "First tab shows find bar!");
   is(gFindBar._findField.value, texts[0], "First tab persists find value!");
+  ok(gFindBar.getElement("highlight").checked,
+     "Highlight button state persists!");
+
+  // While we're here, let's test bug 253793
+  gBrowser.reload();
+  gBrowser.addEventListener("DOMContentLoaded", continueTests, true);
+}
+
+function continueTests() {
+  gBrowser.removeEventListener("DOMContentLoaded", continueTests, true);
+  ok(!gFindBar.getElement("highlight").checked, "Highlight button reset!");
   gFindBar.close();
   ok(gFindBar.hidden, "First tab doesn't show find bar!");
   gBrowser.selectedTab = tabs[1];
   ok(!gFindBar.hidden, "Second tab shows find bar!");
+  // Test for bug 892384
+  is(gFindBar._findField.getAttribute("focused"), "true",
+     "Open findbar refocused on tab change!");
   gBrowser.selectedTab = tabs[0];
   ok(gFindBar.hidden, "First tab doesn't show find bar!");
 

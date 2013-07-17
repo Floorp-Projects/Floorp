@@ -56,6 +56,8 @@ struct SensorData {
 struct NetworkInformation {
   double bandwidth;
   bool   canBeMetered;
+  bool   isWifi;
+  uint32_t dhcpGateway;
 };
 
 struct SwitchEvent {

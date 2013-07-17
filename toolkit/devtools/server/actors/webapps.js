@@ -29,7 +29,7 @@ function WebappsActor(aConnection) {
   Cu.import("resource://gre/modules/AppsUtils.jsm");
   Cu.import("resource://gre/modules/FileUtils.jsm");
   Cu.import('resource://gre/modules/Services.jsm');
-  Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js");
+  let promise = Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js").Promise;
 }
 
 WebappsActor.prototype = {
@@ -54,12 +54,8 @@ WebappsActor.prototype = {
     reg._readManifests([{ id: aId }], function(aResult) {
       let manifest = aResult[0].manifest;
       aApp.name = manifest.name;
-      if ("_registerSystemMessages" in reg) {
-        reg._registerSystemMessages(manifest, aApp);
-      }
-      if ("_registerActivities" in reg) {
-        reg._registerActivities(manifest, aApp, true);
-      }
+      reg.updateAppHandlers(null, manifest, aApp);
+
       reg._saveApps(function() {
         aApp.manifest = manifest;
         reg.broadcastMessage("Webapps:AddApp", { id: aId, app: aApp });
@@ -303,7 +299,7 @@ WebappsActor.prototype = {
   getAll: function wa_actorGetAll(aRequest) {
     debug("getAll");
 
-    let defer = Promise.defer();
+    let defer = promise.defer();
     let reg = DOMApplicationRegistry;
     reg.getAll(function onsuccess(apps) {
       defer.resolve({ apps: apps });
@@ -321,7 +317,7 @@ WebappsActor.prototype = {
                message: "missing parameter manifestURL" };
     }
 
-    let defer = Promise.defer();
+    let defer = promise.defer();
     let reg = DOMApplicationRegistry;
     reg.uninstall(
       manifestURL,
@@ -345,7 +341,7 @@ WebappsActor.prototype = {
                message: "missing parameter manifestURL" };
     }
 
-    let defer = Promise.defer();
+    let defer = promise.defer();
     let reg = DOMApplicationRegistry;
     reg.launch(
       aRequest.manifestURL,

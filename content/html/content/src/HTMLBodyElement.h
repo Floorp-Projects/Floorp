@@ -33,8 +33,8 @@ public:
   HTMLBodyElement*  mPart;  // not ref-counted, cleared by content 
 };
 
-class HTMLBodyElement : public nsGenericHTMLElement,
-                        public nsIDOMHTMLBodyElement
+class HTMLBodyElement MOZ_FINAL : public nsGenericHTMLElement,
+                                  public nsIDOMHTMLBodyElement
 {
 public:
   using Element::GetText;
@@ -43,7 +43,6 @@ public:
   HTMLBodyElement(already_AddRefed<nsINodeInfo> aNodeInfo)
     : nsGenericHTMLElement(aNodeInfo)
   {
-    SetIsDOMBinding();
   }
   virtual ~HTMLBodyElement();
 

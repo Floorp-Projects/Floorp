@@ -586,8 +586,9 @@ HandleParallelFailure(ResumeFromException *rfe)
     ForkJoinSlice *slice = ForkJoinSlice::Current();
     IonFrameIterator iter(slice->perThreadData->ionTop);
 
+    parallel::Spew(parallel::SpewBailouts, "Bailing from VM reentry");
+
     while (!iter.isEntry()) {
-        parallel::Spew(parallel::SpewBailouts, "Bailing from VM reentry");
         if (iter.isScripted()) {
             slice->bailoutRecord->setCause(ParallelBailoutFailedIC,
                                            iter.script(), iter.script(), NULL);
@@ -1047,6 +1048,15 @@ GetPcScript(JSContext *cx, JSScript **scriptRes, jsbytecode **pcRes)
 
     // Recover the return address.
     IonFrameIterator it(rt->mainThread.ionTop);
+
+    // If the previous frame is a rectifier frame (maybe unwound),
+    // skip past it.
+    if (it.prevType() == IonFrame_Rectifier || it.prevType() == IonFrame_Unwound_Rectifier) {
+        ++it;
+        JS_ASSERT(it.prevType() == IonFrame_BaselineStub ||
+                  it.prevType() == IonFrame_BaselineJS ||
+                  it.prevType() == IonFrame_OptimizedJS);
+    }
 
     // If the previous frame is a stub frame, skip the exit frame so that
     // returnAddress below gets the return address into the BaselineJS

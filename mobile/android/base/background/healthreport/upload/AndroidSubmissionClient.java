@@ -5,7 +5,7 @@
 package org.mozilla.gecko.background.healthreport.upload;
 
 import java.io.IOException;
-import java.util.UUID;
+import java.util.Collection;
 
 import org.json.JSONObject;
 import org.mozilla.gecko.background.bagheera.BagheeraClient;
@@ -15,6 +15,7 @@ import org.mozilla.gecko.background.healthreport.EnvironmentBuilder;
 import org.mozilla.gecko.background.healthreport.HealthReportConstants;
 import org.mozilla.gecko.background.healthreport.HealthReportDatabaseStorage;
 import org.mozilla.gecko.background.healthreport.HealthReportGenerator;
+import org.mozilla.gecko.sync.net.BaseResource;
 
 import android.content.ContentProviderClient;
 import android.content.Context;
@@ -61,24 +62,25 @@ public class AndroidSubmissionClient implements SubmissionClient {
       .commit();
   }
 
-  protected void uploadPayload(String payload, BagheeraRequestDelegate uploadDelegate) {
+  protected void uploadPayload(String id, String payload, Collection<String> oldIds, BagheeraRequestDelegate uploadDelegate) {
     final BagheeraClient client = new BagheeraClient(getDocumentServerURI());
 
-    final String id = UUID.randomUUID().toString();
-    final String lastId = getLastUploadDocumentId();
-
     Logger.pii(LOG_TAG, "New health report has id " + id +
-        (lastId == null ? "." : " and obsoletes id " + lastId + "."));
+        "and obsoletes " + (oldIds != null ? Integer.toString(oldIds.size()) : "no") + " old ids.");
 
     try {
-      client.uploadJSONDocument(getDocumentServerNamespace(), id, payload, lastId, uploadDelegate);
+      client.uploadJSONDocument(getDocumentServerNamespace(),
+          id,
+          payload,
+          oldIds,
+          uploadDelegate);
     } catch (Exception e) {
       uploadDelegate.handleError(e);
     }
   }
 
   @Override
-  public void upload(long localTime, Delegate delegate) {
+  public void upload(long localTime, String id, Collection<String> oldIds, Delegate delegate) {
     // We abuse the life-cycle of an Android ContentProvider slightly by holding
     // onto a ContentProviderClient while we generate a payload. This keeps our
     // database storage alive, and may also allow us to share a database
@@ -116,8 +118,8 @@ public class AndroidSubmissionClient implements SubmissionClient {
         return;
       }
 
-      BagheeraRequestDelegate uploadDelegate = new RequestDelegate(delegate, localTime, true, null);
-      this.uploadPayload(document.toString(), uploadDelegate);
+      BagheeraRequestDelegate uploadDelegate = new RequestDelegate(delegate, localTime, true, id);
+      this.uploadPayload(id, document.toString(), oldIds, uploadDelegate);
     } catch (Exception e) {
       Logger.warn(LOG_TAG, "Got exception generating document.", e);
       delegate.onHardFailure(localTime, null, "Got exception uploading.", e);
@@ -153,11 +155,12 @@ public class AndroidSubmissionClient implements SubmissionClient {
       this.localTime = localTime;
       this.isUpload = isUpload;
       this.methodString = this.isUpload ? "upload" : "delete";
-      this.id = this.isUpload ? null : id; // id is known for deletions only.
+      this.id = id;
     }
 
     @Override
     public void handleSuccess(int status, String namespace, String id, HttpResponse response) {
+      BaseResource.consumeEntity(response);
       if (isUpload) {
         setLastUploadLocalTimeAndDocumentId(localTime, id);
       }
@@ -176,6 +179,7 @@ public class AndroidSubmissionClient implements SubmissionClient {
      */
     @Override
     public void handleFailure(int status, String namespace, HttpResponse response) {
+      BaseResource.consumeEntity(response);
       Logger.debug(LOG_TAG, "Failed " + methodString + " at " + localTime + ".");
       if (status >= 500) {
         delegate.onSoftFailure(localTime, id, "Got status " + status + " from server.", null);

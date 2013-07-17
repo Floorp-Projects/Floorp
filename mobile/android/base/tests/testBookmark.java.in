@@ -104,13 +104,13 @@ public class testBookmark extends PixelTest  {
                 try {
                    return isBookmarked == (Boolean)mIsBookmarked.invoke(null, getActivity().getContentResolver(), BOOKMARK_URL);
                 } catch(java.lang.IllegalAccessException ex) {
-                    mAsserter.is(true, false, "Can not call addBookmark");
+                    mAsserter.is(true, false, "Can not call isBookmarked");
                 } catch(java.lang.reflect.InvocationTargetException ex) {
-                    mAsserter.is(true, false, "Error calling addBookmark");
+                    mAsserter.is(true, false, "Error calling isBookmarked");
                 }
                 return false;
             }
-        }, MAX_WAIT_MS);
+        }, 10000);
         try {
             Boolean res = (Boolean)mIsBookmarked.invoke(null, getActivity().getContentResolver(), BOOKMARK_URL);
             return res.booleanValue();

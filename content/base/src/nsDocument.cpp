@@ -1954,7 +1954,9 @@ nsDocument::Init()
   // we use the default compartment for this document, instead of creating
   // wrapper in some random compartment when the document is exposed to js
   // via some events.
-  mScopeObject = do_GetWeakReference(xpc::GetNativeForGlobal(xpc::GetJunkScope()));
+  nsCOMPtr<nsIGlobalObject> global = xpc::GetJunkScopeGlobal();
+  NS_ENSURE_TRUE(global, NS_ERROR_FAILURE);
+  mScopeObject = do_GetWeakReference(global);
   MOZ_ASSERT(mScopeObject);
 
   // Force initialization.
@@ -2750,8 +2752,11 @@ nsDocument::SetDocumentURI(nsIURI* aURI)
   nsIURI* newBase = GetDocBaseURI();
 
   bool equalBases = false;
+  // Changing just the ref of a URI does not change how relative URIs would
+  // resolve wrt to it, so we can treat the bases as equal as long as they're
+  // equal ignoring the ref.
   if (oldBase && newBase) {
-    oldBase->Equals(newBase, &equalBases);
+    oldBase->EqualsExceptRef(newBase, &equalBases);
   }
   else {
     equalBases = !oldBase && !newBase;
@@ -9447,6 +9452,30 @@ nsDocument::CaretPositionFromPoint(float aX, float aY, nsISupports** aCaretPos)
   NS_ENSURE_ARG_POINTER(aCaretPos);
   *aCaretPos = nsIDocument::CaretPositionFromPoint(aX, aY).get();
   return NS_OK;
+}
+
+void
+nsIDocument::ObsoleteSheet(nsIURI *aSheetURI, ErrorResult& rv)
+{
+  nsresult res = CSSLoader()->ObsoleteSheet(aSheetURI);
+  if (NS_FAILED(res)) {
+    rv.Throw(res);
+  }
+}
+
+void
+nsIDocument::ObsoleteSheet(const nsAString& aSheetURI, ErrorResult& rv)
+{
+  nsCOMPtr<nsIURI> uri;
+  nsresult res = NS_NewURI(getter_AddRefs(uri), aSheetURI);
+  if (NS_FAILED(res)) {
+    rv.Throw(res);
+    return;
+  }
+  res = CSSLoader()->ObsoleteSheet(uri);
+  if (NS_FAILED(res)) {
+    rv.Throw(res);
+  }
 }
 
 namespace mozilla {

@@ -169,6 +169,13 @@ function runTests()
 
   marker.setAttribute("orient", "auto");
   is(marker.getAttribute("orient"), "auto", "checking 'auto' string preserved");
+  is(marker.orientType.baseVal, SVGMarkerElement.SVG_MARKER_ORIENT_AUTO, "type baseVal");
+  is(marker.orientType.animVal, SVGMarkerElement.SVG_MARKER_ORIENT_AUTO, "type animVal");
+
+  marker.setAttribute("orient", "auto-start-reverse");
+  is(marker.getAttribute("orient"), "auto-start-reverse", "checking 'auto-start-reverse' string preserved");
+  is(marker.orientType.baseVal, SVGMarkerElement.SVG_MARKER_ORIENT_UNKNOWN, "type baseVal");
+  is(marker.orientType.animVal, SVGMarkerElement.SVG_MARKER_ORIENT_UNKNOWN, "type animVal");
 
   marker.setAttribute("orient", "");
   ok(marker.getAttribute("orient") === "", "empty angle attribute");
@@ -296,7 +303,11 @@ function runTests()
   SimpleTest.finish();
 }
 
-window.addEventListener("load", runTests, false);
+function runTestsWithPref() {
+  SpecialPowers.pushPrefEnv({ 'set': [['svg.marker-improvements.enabled', true]] }, runTests);
+}
+
+window.addEventListener("load", runTestsWithPref, false);
 </script>
 </pre>
 </body>

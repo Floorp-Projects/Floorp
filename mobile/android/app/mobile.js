@@ -147,12 +147,9 @@ pref("signon.expireMasterPassword", false);
 pref("signon.SignonFileName", "signons.txt");
 pref("signon.debug", false);
 
-/* form helper */
-// 0 = disabled, 1 = enabled, 2 = dynamic depending on screen size
-pref("formhelper.mode", 2);
+/* form helper (scroll to and optionally zoom into editable fields)  */
+pref("formhelper.mode", 2);  // 0 = disabled, 1 = enabled, 2 = dynamic depending on screen size
 pref("formhelper.autozoom", true);
-pref("formhelper.autozoom.caret", true);
-pref("formhelper.restore", false);
 
 /* find helper */
 pref("findhelper.autozoom", true);
@@ -470,7 +467,7 @@ pref("app.faqURL", "http://www.mozilla.com/%LOCALE%/mobile/beta/faq/");
 #else
 pref("app.faqURL", "http://www.mozilla.com/%LOCALE%/mobile/faq/");
 #endif
-pref("app.marketplaceURL", "https://marketplace.mozilla.org/");
+pref("app.marketplaceURL", "https://marketplace.firefox.com/");
 
 // Name of alternate about: page for certificate errors (when undefined, defaults to about:neterror)
 pref("security.alternate_certificate_error_page", "certerror");
@@ -655,11 +652,15 @@ pref("ui.scrolling.axis_lock_mode", "standard");
 
 // Enable accessibility mode if platform accessibility is enabled.
 pref("accessibility.accessfu.activate", 2);
-pref("accessibility.accessfu.quicknav_modes", "Link,Heading,FormElement,ListItem");
+pref("accessibility.accessfu.quicknav_modes", "Link,Heading,FormElement,Landmark,ListItem");
 // Setting for an utterance order (0 - description first, 1 - description last).
-pref("accessibility.accessfu.utterance", 0);
+pref("accessibility.accessfu.utterance", 1);
 // Whether to skip images with empty alt text
 pref("accessibility.accessfu.skip_empty_images", true);
+
+// Transmit UDP busy-work to the LAN when anticipating low latency
+// network reads and on wifi to mitigate 802.11 Power Save Polling delays
+pref("network.tickle-wifi.enabled", true);
 
 // Mobile manages state by autodetection
 pref("network.manage-offline-status", true);

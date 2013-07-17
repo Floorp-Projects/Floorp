@@ -253,7 +253,7 @@ OptionParser::extractValue(size_t argc, char **argv, size_t *i, char **value)
     char *eq = strchr(argv[*i], '=');
     if (eq) {
         *value = eq + 1;
-        if (value[0] == '\0')
+        if (*value[0] == '\0')
             return error("A value is required for option %.*s", eq - argv[*i], argv[*i]);
         return Okay;
     }

@@ -350,8 +350,8 @@ ASSERT_NODE_FLAGS_SPACE(ELEMENT_TYPE_SPECIFIC_BITS_OFFSET + 3);
 
 class nsScriptEventHandlerOwnerTearoff;
 
-class nsXULElement : public nsStyledElement,
-                     public nsIDOMXULElement
+class nsXULElement MOZ_FINAL : public nsStyledElement,
+                               public nsIDOMXULElement
 {
 public:
     nsXULElement(already_AddRefed<nsINodeInfo> aNodeInfo);

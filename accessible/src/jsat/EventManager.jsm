@@ -212,6 +212,9 @@ this.EventManager.prototype = {
             editState.atStart != this.editState.atStart)
           this.sendMsgFunc("AccessFu:Input", editState);
 
+        this.present(Presentation.textSelectionChanged(acc.getText(0,-1),
+                     caretOffset, caretOffset, 0, 0, aEvent.isFromUserInput));
+
         this.editState = editState;
         break;
       }

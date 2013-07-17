@@ -314,14 +314,10 @@ AbstractFile.read = function read(path, bytes) {
  * Limitation: In a few extreme cases (hardware failure during the
  * write, user unplugging disk during the write, etc.), data may be
  * corrupted. If your data is user-critical (e.g. preferences,
- * application data, etc.), you may ish to pass option |flush: true|
- * to decrease the vulnerability to such extreme cases. Note, however,
- * that activating |flush| is expensive in terms of performance and
- * battery usage and is not sufficient to totally eliminate this
- * vulnarability.
- *
- * Important note: In the current implementation, option |tmpPath|
- * is required.
+ * application data, etc.), you may wish to consider adding options
+ * |tmpPath| and/or |flush| to reduce the likelihood of corruption, as
+ * detailed below. Note that no combination of options can be
+ * guaranteed to totally eliminate the risk of corruption.
  *
  * @param {string} path The path of the file to modify.
  * @param {Typed Array | C pointer} buffer A buffer containing the bytes to write.
@@ -329,14 +325,20 @@ AbstractFile.read = function read(path, bytes) {
  * of this function. This object may contain the following fields:
  * - {number} bytes The number of bytes to write. If unspecified,
  * |buffer.byteLength|. Required if |buffer| is a C pointer.
- * - {string} tmpPath The path at which to write the temporary file.
+ * - {string} tmpPath If |null| or unspecified, write all data directly
+ * to |path|. If specified, write all data to a temporary file called
+ * |tmpPath| and, once this write is complete, rename the file to
+ * replace |path|. Performing this additional operation is a little
+ * slower but also a little safer.
  * - {bool} noOverwrite - If set, this function will fail if a file already
- * exists at |path|. The |tmpPath| is not overwritten if |path| exist.
- * - {bool} flush - If set to |true|, the function will flush the
- * file. This is considerably slower but slightly safer: if
- * the system shuts down improperly (typically due to a kernel freeze
+ * exists at |path|.
+ * - {bool} flush - If |false| or unspecified, return immediately once the
+ * write is complete. If |true|, before writing, force the operating system
+ * to write its internal disk buffers to the disk. This is considerably slower
+ * (not just for the application but for the whole system) but also safer:
+ * if the system shuts down improperly (typically due to a kernel freeze
  * or a power failure) or if the device is disconnected before the buffer
- * is flushed, the file has more changes of not being corrupted.
+ * is flushed, the file has more chances of not being corrupted.
  *
  * @return {number} The number of bytes actually written.
  */
@@ -358,35 +360,36 @@ AbstractFile.writeAtomic =
     buffer = new TextEncoder(encoding).encode(buffer);
   }
 
-  if (!options.flush) {
+  let bytesWritten = 0;
+
+  if (!options.tmpPath) {
     // Just write, without any renaming trick
     let dest = OS.File.open(path, {write: true, truncate: true});
     try {
-      return dest.write(buffer, options);
+      bytesWritten = dest.write(buffer, options);
+      if (options.flush) {
+        dest.flush();
+      }
     } finally {
       dest.close();
     }
+    return bytesWritten;
   }
 
-  let tmpPath = options.tmpPath;
-  if (!tmpPath) {
-    throw new TypeError("Expected option tmpPath");
-  }
-
-
-  let tmpFile = OS.File.open(tmpPath, {write: true, truncate: true});
-  let bytesWritten;
+  let tmpFile = OS.File.open(options.tmpPath, {write: true, truncate: true});
   try {
     bytesWritten = tmpFile.write(buffer, options);
-    tmpFile.flush();
+    if (options.flush) {
+      tmpFile.flush();
+    }
   } catch (x) {
-    OS.File.remove(tmpPath);
+    OS.File.remove(options.tmpPath);
     throw x;
   } finally {
     tmpFile.close();
   }
 
-  OS.File.move(tmpPath, path, {noCopy: true});
+  OS.File.move(options.tmpPath, path, {noCopy: true});
   return bytesWritten;
 };
 

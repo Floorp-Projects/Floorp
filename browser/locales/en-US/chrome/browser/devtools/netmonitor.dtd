@@ -169,12 +169,20 @@
   -  in a "receive" state. -->
 <!ENTITY netmonitorUI.timings.receive     "Receiving:">
 
-<!-- LOCALIZATION NOTE (debuggerUI.custom.headers): This is the label displayed
+<!-- LOCALIZATION NOTE (netmonitorUI.context.copyUrl): This is the label displayed
+  -  on the context menu that copies the selected request's url -->
+<!ENTITY netmonitorUI.context.copyUrl      "Copy URL">
+
+<!-- LOCALIZATION NOTE (netmonitorUI.context.copyUrl.accesskey): This is the access key
+  -  for the Copy URL menu item displayed in the context menu for a request -->
+<!ENTITY netmonitorUI.context.copyUrl.accesskey  "C">
+
+<!-- LOCALIZATION NOTE (debuggerUI.summary.resend): This is the label displayed
   -  on the button in the headers tab that opens a form to resend the currently
      displayed request -->
 <!ENTITY netmonitorUI.summary.resend      "Resend">
 
-<!-- LOCALIZATION NOTE (debuggerUI.custom.headers): This is the access key
+<!-- LOCALIZATION NOTE (debuggerUI.summary.resend.accesskey): This is the access key
   -  for the Resend menu item displayed in the context menu for a request -->
 <!ENTITY netmonitorUI.summary.resend.accesskey  "R">
 
@@ -190,14 +198,14 @@
   -  above the request headers entry in the custom request form -->
 <!ENTITY netmonitorUI.custom.headers      "Request Headers:">
 
-<!-- LOCALIZATION NOTE (debuggerUI.custom.headers): This is the label displayed
+<!-- LOCALIZATION NOTE (debuggerUI.custom.postData): This is the label displayed
   -  above the request body entry in the custom request form -->
 <!ENTITY netmonitorUI.custom.postData     "Request Body:">
 
-<!-- LOCALIZATION NOTE (debuggerUI.custom.headers): This is the label displayed
+<!-- LOCALIZATION NOTE (debuggerUI.custom.send): This is the label displayed
   -  on the button which sends the custom request -->
 <!ENTITY netmonitorUI.custom.send         "Send">
 
-<!-- LOCALIZATION NOTE (debuggerUI.custom.headers): This is the label displayed
+<!-- LOCALIZATION NOTE (debuggerUI.custom.cancel): This is the label displayed
   -  on the button which cancels and closes the custom request form -->
 <!ENTITY netmonitorUI.custom.cancel       "Cancel">

@@ -839,6 +839,8 @@ public:
    */
   virtual void *GetNativeSurface(NativeSurfaceType aType) { return NULL; }
 
+  virtual bool IsDualDrawTarget() { return false; }
+
   void AddUserData(UserDataKey *key, void *userData, void (*destroy)(void*)) {
     mUserData.Add(key, userData, destroy);
   }
@@ -971,6 +973,12 @@ public:
   static TemporaryRef<GlyphRenderingOptions>
     CreateCairoGlyphRenderingOptions(FontHinting aHinting, bool aAutoHinting);
 #endif
+  static TemporaryRef<DrawTarget>
+    CreateDualDrawTarget(DrawTarget *targetA, DrawTarget *targetB);
+
+#ifdef XP_MACOSX
+  static TemporaryRef<DrawTarget> CreateDrawTargetForCairoCGContext(CGContextRef cg, const IntSize& aSize);
+#endif
 
 #ifdef WIN32
   static TemporaryRef<DrawTarget> CreateDrawTargetForD3D10Texture(ID3D10Texture2D *aTexture, SurfaceFormat aFormat);
@@ -1006,9 +1014,26 @@ private:
 class BorrowedCGContext
 {
 public:
-  BorrowedCGContext(DrawTarget *aDT) : mDT(aDT)
+  BorrowedCGContext()
+    : cg(nullptr)
+    , mDT(nullptr)
+  { }
+
+  BorrowedCGContext(DrawTarget *aDT)
+    : mDT(aDT)
   {
     cg = BorrowCGContextFromDrawTarget(aDT);
+  }
+
+  // We can optionally Init after construction in
+  // case we don't know what the DT will be at construction
+  // time.
+  CGContextRef Init(DrawTarget *aDT)
+  {
+    MOZ_ASSERT(!mDT, "Can't initialize twice!");
+    mDT = aDT;
+    cg = BorrowCGContextFromDrawTarget(aDT);
+    return cg;
   }
 
   // The caller needs to call Finish if cg is non-null when

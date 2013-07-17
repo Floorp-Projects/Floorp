@@ -127,6 +127,10 @@ struct CSSPixel {
  * 2) the "widget scale" (see nsIWidget::GetDefaultScale)
  */
 struct LayoutDevicePixel {
+  static LayoutDeviceIntPoint FromAppUnitsToNearest(const nsPoint& aPoint, nscoord appUnitsPerDevPixel) {
+    nsIntPoint result = aPoint.ToNearestPixels(appUnitsPerDevPixel);
+    return LayoutDeviceIntPoint(result.x, result.y);
+  }
 };
 
 /*

@@ -12,7 +12,7 @@ function testSteps()
   let request = indexedDB.open(this.window ? window.location.pathname : "Splendid Test", 1);
   request.onerror = errorHandler;
   request.onupgradeneeded = grabEventAndContinueHandler;
-  let event = yield;
+  let event = yield undefined;
 
   let db = event.target.result;
 
@@ -25,33 +25,33 @@ function testSteps()
   let index = objectStore.createIndex("foo", "index");
 
   event.target.onsuccess = continueToNextStep;
-  yield;
+  yield undefined;
 
   objectStore = db.transaction("foo", "readwrite")
                   .objectStore("foo");
   request = objectStore.add(data);
   request.onsuccess = grabEventAndContinueHandler;
-  event = yield;
+  event = yield undefined;
 
   let key;
   executeSoon(function() {
     key = request.result;
     continueToNextStep();
   });
-  yield;
+  yield undefined;
 
   is(key, data.key, "Got the right key");
 
   objectStore = db.transaction("foo").objectStore("foo");
   objectStore.get(data.key).onsuccess = grabEventAndContinueHandler;
-  event = yield;
+  event = yield undefined;
 
   let obj;
   executeSoon(function() {
     obj = event.target.result;
     continueToNextStep();
   });
-  yield;
+  yield undefined;
 
   is(obj.key, data.key, "Got the right key");
   is(obj.index, data.index, "Got the right property value");
@@ -60,17 +60,17 @@ function testSteps()
                   .objectStore("foo");
   request = objectStore.delete(data.key);
   request.onsuccess = grabEventAndContinueHandler;
-  event = yield;
+  event = yield undefined;
 
   key = undefined;
   executeSoon(function() {
     key = request.result;
     continueToNextStep();
   }, 0);
-  yield;
+  yield undefined;
 
   ok(key === undefined, "Got the right value");
 
   finishTest();
-  yield;
+  yield undefined;
 }

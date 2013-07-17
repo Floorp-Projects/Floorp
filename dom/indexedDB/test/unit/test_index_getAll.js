@@ -55,7 +55,7 @@ function testSteps()
   request.onerror = errorHandler;
   request.onupgradeneeded = grabEventAndContinueHandler;
   request.onsuccess = grabEventAndContinueHandler;
-  let event = yield;
+  let event = yield undefined;
 
   let db = event.target.result;
 
@@ -73,7 +73,7 @@ function testSteps()
       }
     }
   }
-  yield;
+  yield undefined;
   ok(true, "1");
 
   // Now create the indexes.
@@ -83,7 +83,7 @@ function testSteps()
   }
 
   is(objectStore.indexNames.length, indexData.length, "Good index count");
-  yield;
+  yield undefined;
 
   ok(true, "2");
   objectStore = db.transaction(objectStoreName)
@@ -92,7 +92,7 @@ function testSteps()
   request = objectStore.index("height").mozGetAllKeys(65);
   request.onerror = errorHandler;
   request.onsuccess = grabEventAndContinueHandler;
-  event = yield;
+  event = yield undefined;
   ok(true, "3");
 
   is(event.target.result instanceof Array, true, "Got an array object");
@@ -106,7 +106,7 @@ function testSteps()
   request = objectStore.index("height").mozGetAllKeys(65, 0);
   request.onerror = errorHandler;
   request.onsuccess = grabEventAndContinueHandler;
-  event = yield;
+  event = yield undefined;
   ok(true, "3");
 
   is(event.target.result instanceof Array, true, "Got an array object");
@@ -120,7 +120,7 @@ function testSteps()
   request = objectStore.index("height").mozGetAllKeys(65, null);
   request.onerror = errorHandler;
   request.onsuccess = grabEventAndContinueHandler;
-  event = yield;
+  event = yield undefined;
   ok(true, "3");
 
   is(event.target.result instanceof Array, true, "Got an array object");
@@ -134,7 +134,7 @@ function testSteps()
   request = objectStore.index("height").mozGetAllKeys(65, undefined);
   request.onerror = errorHandler;
   request.onsuccess = grabEventAndContinueHandler;
-  event = yield;
+  event = yield undefined;
   ok(true, "3");
 
   is(event.target.result instanceof Array, true, "Got an array object");
@@ -148,7 +148,7 @@ function testSteps()
   request = objectStore.index("height").mozGetAllKeys();
   request.onerror = errorHandler;
   request.onsuccess = grabEventAndContinueHandler;
-  event = yield;
+  event = yield undefined;
   ok(true, "4");
 
   is(event.target.result instanceof Array, true, "Got an array object");
@@ -162,7 +162,7 @@ function testSteps()
   request = objectStore.index("height").mozGetAllKeys(null, 4);
   request.onerror = errorHandler;
   request.onsuccess = grabEventAndContinueHandler;
-  event = yield;
+  event = yield undefined;
 
   ok(true, "5");
   is(event.target.result instanceof Array, true, "Got an array object");
@@ -175,7 +175,7 @@ function testSteps()
   request = objectStore.index("height").mozGetAllKeys(65, 1);
   request.onerror = errorHandler;
   request.onsuccess = grabEventAndContinueHandler;
-  event = yield;
+  event = yield undefined;
 
   ok(true, "6");
   is(event.target.result instanceof Array, true, "Got an array object");
@@ -187,5 +187,5 @@ function testSteps()
   }
 
   finishTest();
-  yield;
+  yield undefined;
 }

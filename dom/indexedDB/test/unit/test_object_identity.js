@@ -10,7 +10,7 @@ function testSteps()
   let request = indexedDB.open(this.window ? window.location.pathname : "Splendid Test", 1);
   request.onerror = errorHandler;
   request.onupgradeneeded = grabEventAndContinueHandler;
-  let event = yield;
+  let event = yield undefined;
 
   let db = event.target.result;
   let transaction = event.target.transaction;
@@ -24,7 +24,7 @@ function testSteps()
   ok(index1 === index2, "Got same indexes");
 
   request.onsuccess = continueToNextStep;
-  yield;
+  yield undefined;
 
   transaction = db.transaction(db.objectStoreNames);
 
@@ -43,6 +43,6 @@ function testSteps()
   ok(index4 !== index2, "Different indexes");
 
   finishTest();
-  yield;
+  yield undefined;
 }
 

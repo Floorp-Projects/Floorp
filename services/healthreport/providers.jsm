@@ -155,6 +155,24 @@ AppVersionMeasurement2.prototype = Object.freeze({
   },
 });
 
+/**
+ * Holds data on the application update functionality.
+ */
+function AppUpdateMeasurement1() {
+  Metrics.Measurement.call(this);
+}
+
+AppUpdateMeasurement1.prototype = Object.freeze({
+  __proto__: Metrics.Measurement.prototype,
+
+  name: "update",
+  version: 1,
+
+  fields: {
+    enabled: {type: Metrics.Storage.FIELD_DAILY_LAST_NUMERIC},
+    autoDownload: {type: Metrics.Storage.FIELD_DAILY_LAST_NUMERIC},
+  },
+});
 
 this.AppInfoProvider = function AppInfoProvider() {
   Metrics.Provider.call(this);
@@ -169,6 +187,7 @@ AppInfoProvider.prototype = Object.freeze({
   measurementTypes: [
     AppInfoMeasurement,
     AppInfoMeasurement1,
+    AppUpdateMeasurement1,
     AppVersionMeasurement1,
     AppVersionMeasurement2,
   ],
@@ -371,6 +390,17 @@ AppInfoProvider.prototype = Object.freeze({
     }
 
     return m.setDailyLastNumeric("isDefaultBrowser", isDefault);
+  },
+
+  collectDailyData: function () {
+    let m = this.getMeasurement(AppUpdateMeasurement1.prototype.name,
+                                AppUpdateMeasurement1.prototype.version);
+
+    let enabled = this._prefs.get("app.update.enabled", false);
+    yield m.setDailyLastNumeric("enabled", enabled ? 1 : 0);
+
+    let auto = this._prefs.get("app.update.auto", false);
+    yield m.setDailyLastNumeric("autoDownload", auto ? 1 : 0);
   },
 });
 

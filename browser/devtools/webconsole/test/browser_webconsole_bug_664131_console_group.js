@@ -43,7 +43,7 @@ function testGen() {
     failureFn: finishTest,
   });
 
-  yield;
+  yield undefined;
 
   let msg = outputNode.querySelectorAll(".webconsole-msg-icon-container");
   is(msg.length, 1, "one message node displayed");
@@ -61,7 +61,7 @@ function testGen() {
     failureFn: finishTest,
   });
 
-  yield;
+  yield undefined;
 
   msg = outputNode.querySelectorAll(".webconsole-msg-icon-container");
   is(msg.length, 2, "two message nodes displayed");
@@ -80,7 +80,7 @@ function testGen() {
     failureFn: finishTest,
   });
 
-  yield;
+  yield undefined;
 
   msg = outputNode.querySelectorAll(".webconsole-msg-icon-container");
   is(msg.length, 3, "three message nodes displayed");
@@ -98,7 +98,7 @@ function testGen() {
     failureFn: finishTest,
   });
 
-  yield;
+  yield undefined;
 
   msg = outputNode.querySelectorAll(".webconsole-msg-icon-container");
   is(msg.length, 4, "four message nodes displayed");
@@ -119,7 +119,7 @@ function testGen() {
     failureFn: finishTest,
   });
 
-  yield;
+  yield undefined;
 
   msg = outputNode.querySelectorAll(".webconsole-msg-icon-container");
   is(msg.length, 1, "one message node displayed");
@@ -128,6 +128,6 @@ function testGen() {
   testDriver = hud = null;
   finishTest();
 
-  yield;
+  yield undefined;
 }
 
