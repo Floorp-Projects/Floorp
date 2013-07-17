@@ -236,6 +236,8 @@ function run_test() {
   do_test_pending();
   do_register_cleanup(cleanupUpdaterTest);
 
+  adjustGeneralPaths();
+
   setupUpdaterTest(MAR_IN_USE_WIN_FILE);
 
   let fileInUseBin = getApplyDirFile(TEST_DIRS[2].relPathDir +

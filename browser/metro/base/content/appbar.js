@@ -45,8 +45,10 @@ var Appbar = {
 
       case 'MozContextActionsChange':
         let actions = aEvent.actions;
+        let noun = aEvent.noun;
+        let qty = aEvent.qty;
         // could transition in old, new buttons?
-        this.showContextualActions(actions);
+        this.showContextualActions(actions, noun, qty);
         break;
 
       case "selectionchange":
@@ -158,33 +160,36 @@ var Appbar = {
     }
   },
 
-  showContextualActions: function(aVerbs) {
+  showContextualActions: function(aVerbs, aNoun, aQty) {
     if (aVerbs.length)
       Elements.contextappbar.show();
     else
       Elements.contextappbar.hide();
 
-    let doc = document;
-    // button element id to action verb lookup
-    let buttonsMap = new Map();
+    // Look up all of the buttons for the verbs that should be visible.
+    let idsToVisibleVerbs = new Map();
     for (let verb of aVerbs) {
       let id = verb + "-selected-button";
-      if (!doc.getElementById(id)) {
+      if (!document.getElementById(id)) {
         throw new Error("Appbar.showContextualActions: no button for " + verb);
       }
-      buttonsMap.set(id, verb);
+      idsToVisibleVerbs.set(id, verb);
     }
 
-    // sort buttons into 2 buckets - needing showing and needing hiding
-    let toHide = [],
-        toShow = [];
-    for (let btnNode of Elements.contextappbar.querySelectorAll("#contextualactions-tray > toolbarbutton")) {
-      // correct the hidden state for each button;
-      // .. buttons present in the map should be visible, otherwise not
-      if (buttonsMap.has(btnNode.id)) {
-        if (btnNode.hidden) toShow.push(btnNode);
-      } else if (!btnNode.hidden) {
-        toHide.push(btnNode);
+    // Sort buttons into 2 buckets - needing showing and needing hiding.
+    let toHide = [], toShow = [];
+    let buttons = Elements.contextappbar.getElementsByTagName("toolbarbutton");
+    for (let button of buttons) {
+      let verb = idsToVisibleVerbs.get(button.id);
+      if (verb != undefined) {
+        // Button should be visible, and may or may not be showing.
+        this._updateContextualActionLabel(button, verb, aNoun, aQty);
+        if (button.hidden) {
+          toShow.push(button);
+        }
+      } else if (!button.hidden) {
+        // Button is visible, but shouldn't be.
+        toHide.push(button);
       }
     }
     return Task.spawn(function() {
@@ -199,6 +204,20 @@ var Appbar = {
 
   clearContextualActions: function() {
     this.showContextualActions([]);
+  },
+
+  _updateContextualActionLabel: function(aBtnNode, aVerb, aNoun, aQty) {
+    // True if action modifies the noun for the grid (bookmark, top site, etc.),
+    // causing the label to be pluralized by the number of selected items.
+    let modifiesNoun = aBtnNode.getAttribute("modifies-noun") == "true";
+    if (modifiesNoun && (!aNoun || isNaN(aQty))) {
+      throw new Error("Appbar._updateContextualActionLabel: " +
+                      "missing noun/quantity for " + aVerb);
+    }
+
+    let labelName = "contextAppbar." + aVerb + (modifiesNoun ? "." + aNoun : "");
+    let label = Strings.browser.GetStringFromName(labelName);
+    aBtnNode.label = modifiesNoun ? PluralForm.get(aQty, label) : label;
   },
 
   _onTileSelectionChanged: function _onTileSelectionChanged(aEvent){
@@ -219,6 +238,8 @@ var Appbar = {
     // fire event with these verbs as payload
     let event = document.createEvent("Events");
     event.actions = verbs;
+    event.noun = activeTileset.contextNoun;
+    event.qty = activeTileset.selectedItems.length;
     event.initEvent("MozContextActionsChange", true, false);
     Elements.contextappbar.dispatchEvent(event);
 

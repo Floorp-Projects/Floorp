@@ -19,6 +19,7 @@
 %define toolbar_vertical_spacing 5px
 %define toolbar_horizontal_spacing 20px
 %define toolbar_height 68px
+%define labelled_toolbar_height 90px
 %define tabs_height 178px
 %define findbar_height 54px
 

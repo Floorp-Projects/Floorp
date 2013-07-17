@@ -5,12 +5,16 @@
 
 /* Offline retry test (Bug 794211) */
 
+const TEST_ID = "bug794211";
+
 // Needs to be in sync w/ nsUpdateService.js
 const NETWORK_ERROR_OFFLINE = 111;
 
 function run_test() {
   do_test_pending();
   do_register_cleanup(end_test);
+
+  adjustGeneralPaths();
 
   logTestInfo("test when an update check fails because the network is " +
               "offline that we check again when the network comes online. " +
