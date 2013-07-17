@@ -2735,11 +2735,10 @@ else
     AC_MSG_RESULT(no)
 fi
 
-dnl Check whether we can use gcc's c++0x mode
+dnl Check whether gcc's c++0x mode works
 AC_LANG_CPLUSPLUS
 
 if test "$GNU_CXX"; then
-    _SAVE_CXXFLAGS=$CXXFLAGS
     CXXFLAGS="$CXXFLAGS -std=gnu++0x"
 
     AC_CACHE_CHECK(for gcc c++0x headers bug without rtti,
@@ -2757,10 +2756,10 @@ if test "$GNU_CXX"; then
                             ac_cv_cxx0x_clang_workaround="no")])
 
         if test "ac_cv_cxx0x_clang_workaround" = "no"; then
-            CXXFLAGS="$_SAVE_CXXFLAGS"
+            AC_MSG_ERROR([Your toolchain does not support C++0x/C++11 mode properly. Please upgrade your toolchain])
         fi
     elif test "$ac_cv_cxx0x_headers_bug" = "yes"; then
-        CXXFLAGS="$_SAVE_CXXFLAGS"
+        AC_MSG_ERROR([Your toolchain does not support C++0x/C++11 mode properly. Please upgrade your toolchain])
     fi
 fi
 
