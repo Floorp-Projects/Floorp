@@ -4018,7 +4018,7 @@ pref("layers.acceleration.draw-fps", false);
 pref("layers.draw-borders", false);
 
 #ifdef XP_MACOSX
-pref("layers.offmainthreadcomposition.enabled", true);
+pref("layers.offmainthreadcomposition.enabled", false);
 #else
 pref("layers.offmainthreadcomposition.enabled", false);
 #endif
