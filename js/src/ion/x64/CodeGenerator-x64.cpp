@@ -14,7 +14,6 @@
 #include "jsscriptinlines.h"
 
 #include "ion/shared/CodeGenerator-shared-inl.h"
-#include "vm/Shape-inl.h"
 
 using namespace js;
 using namespace js::ion;

@@ -95,11 +95,11 @@ setting[type="menulist"] {
 }
 
 #urlbar-edit {
-  -moz-binding: url("chrome://browser/content/bindings/autocomplete.xml#autocomplete");
+  -moz-binding: url("chrome://browser/content/bindings/urlbar.xml#urlbar");
 }
 
-#start-autocomplete {
-  -moz-binding: url("chrome://browser/content/bindings/autocomplete.xml#autocomplete-popup");
+#urlbar-autocomplete {
+  -moz-binding: url("chrome://browser/content/bindings/urlbar.xml#urlbar-autocomplete");
 }
 
 richgrid {

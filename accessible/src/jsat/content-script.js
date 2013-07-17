@@ -26,100 +26,136 @@ Logger.debug('content-script.js');
 
 let eventManager = null;
 
-function virtualCursorControl(aMessage) {
-  if (Logger.logLevel >= Logger.DEBUG)
-    Logger.debug(aMessage.name, JSON.stringify(aMessage.json));
+function moveCursor(aMessage) {
+  if (Logger.logLevel >= Logger.DEBUG) {
+    Logger.debug(aMessage.name, JSON.stringify(aMessage.json, null, ' '));
+  }
 
-  try {
-    let vc = Utils.getVirtualCursor(content.document);
-    let origin = aMessage.json.origin;
-    if (origin != 'child') {
-      if (forwardMessage(vc, aMessage))
-        return;
-    }
+  let vc = Utils.getVirtualCursor(content.document);
+  let origin = aMessage.json.origin;
+  let action = aMessage.json.action;
+  let rule = TraversalRules[aMessage.json.rule];
 
-    let details = aMessage.json;
-    let rule = TraversalRules[details.rule];
-    let moved = 0;
-    switch (details.action) {
-    case 'moveFirst':
-    case 'moveLast':
-      moved = vc[details.action](rule);
-      break;
-    case 'moveNext':
-    case 'movePrevious':
-      try {
-        if (origin == 'parent' && vc.position == null) {
-          if (details.action == 'moveNext')
-            moved = vc.moveFirst(rule);
-          else
-            moved = vc.moveLast(rule);
-        } else {
-          moved = vc[details.action](rule);
+  function moveCursorInner() {
+    try {
+      if (origin == 'parent' &&
+          !Utils.isAliveAndVisible(vc.position)) {
+        // We have a bad position in this frame, move vc to last or first item.
+        if (action == 'moveNext') {
+          return vc.moveFirst(rule);
+        } else if (action == 'movePrevious') {
+          return vc.moveLast(rule);
         }
-      } catch (x) {
+      }
+
+      return vc[action](rule);
+    } catch (x) {
+      if (action == 'moveNext' || action == 'movePrevious') {
+        // If we are trying to move next/prev put the vc on the focused item.
         let acc = Utils.AccRetrieval.
           getAccessibleFor(content.document.activeElement);
-        moved = vc.moveNext(rule, acc, true);
+        return vc.moveNext(rule, acc, true);
+      } else {
+        throw x;
       }
-      break;
-    case 'moveToPoint':
-      if (!this._ppcp) {
-        this._ppcp = Utils.getPixelsPerCSSPixel(content);
-      }
-      moved = vc.moveToPoint(rule,
-                             details.x * this._ppcp, details.y * this._ppcp,
-                             true);
-      break;
-    case 'whereIsIt':
-      if (!forwardMessage(vc, aMessage)) {
-        if (!vc.position && aMessage.json.move)
-          vc.moveFirst(TraversalRules.Simple);
-        else {
-          sendAsyncMessage('AccessFu:Present', Presentation.pivotChanged(
-            vc.position, null, Ci.nsIAccessiblePivot.REASON_NONE));
-        }
-      }
-
-      break;
-    default:
-      break;
     }
 
-    if (moved == true) {
-      forwardMessage(vc, aMessage);
-    } else if (moved == false && details.action != 'moveToPoint') {
+    return false;
+  }
+
+  try {
+    if (origin != 'child' &&
+        forwardToChild(aMessage, moveCursor, vc.position)) {
+      // We successfully forwarded the move to the child document.
+      return;
+    }
+
+    if (moveCursorInner()) {
+      // If we moved, try forwarding the message to the new position,
+      // it may be a frame with a vc of its own.
+      forwardToChild(aMessage, moveCursor, vc.position);
+    } else {
+      // If we did not move, we probably reached the end or start of the
+      // document, go back to parent content and move us out of the iframe.
       if (origin == 'parent') {
         vc.position = null;
       }
-      aMessage.json.origin = 'child';
-      sendAsyncMessage('AccessFu:VirtualCursor', aMessage.json);
+      forwardToParent(aMessage);
     }
   } catch (x) {
-    Logger.logException(x, 'Failed to move virtual cursor');
+    Logger.logException(x, 'Cursor move failed');
   }
 }
 
-function forwardMessage(aVirtualCursor, aMessage) {
-  try {
-    let acc = aVirtualCursor.position;
-    if (acc && acc.role == ROLE_INTERNAL_FRAME) {
-      let mm = Utils.getMessageManager(acc.DOMNode);
-      mm.addMessageListener(aMessage.name, virtualCursorControl);
-      aMessage.json.origin = 'parent';
-      if (Utils.isContentProcess) {
-        // XXX: OOP content's screen offset is 0,
-        // so we remove the real screen offset here.
-        aMessage.json.x -= content.mozInnerScreenX;
-        aMessage.json.y -= content.mozInnerScreenY;
-      }
-      mm.sendAsyncMessage(aMessage.name, aMessage.json);
-      return true;
-    }
-  } catch (x) {
-    // Frame may be hidden, we regard this case as false.
+function moveToPoint(aMessage) {
+  if (Logger.logLevel >= Logger.DEBUG) {
+    Logger.debug(aMessage.name, JSON.stringify(aMessage.json, null, ' '));
   }
-  return false;
+
+  let vc = Utils.getVirtualCursor(content.document);
+  let details = aMessage.json;
+  let rule = TraversalRules[details.rule];
+
+  try {
+    if (!this._ppcp) {
+      this._ppcp = Utils.getPixelsPerCSSPixel(content);
+    }
+    vc.moveToPoint(rule, details.x * this._ppcp, details.y * this._ppcp, true);
+    forwardToChild(aMessage, moveToPoint, vc.position);
+  } catch (x) {
+    Logger.logException(x, 'Failed move to point');
+  }
+}
+
+function showCurrent(aMessage) {
+  if (Logger.logLevel >= Logger.DEBUG) {
+    Logger.debug(aMessage.name, JSON.stringify(aMessage.json, null, ' '));
+  }
+
+  let vc = Utils.getVirtualCursor(content.document);
+
+  if (!forwardToChild(vc, showCurrent, aMessage)) {
+    if (!vc.position && aMessage.json.move) {
+      vc.moveFirst(TraversalRules.Simple);
+    } else {
+      sendAsyncMessage('AccessFu:Present', Presentation.pivotChanged(
+                         vc.position, null, Ci.nsIAccessiblePivot.REASON_NONE));
+    }
+  }
+}
+
+function forwardToParent(aMessage) {
+  // XXX: This is a silly way to make a deep copy
+  let newJSON = JSON.parse(JSON.stringify(aMessage.json));
+  newJSON.origin = 'child';
+  sendAsyncMessage(aMessage.name, newJSON);
+}
+
+function forwardToChild(aMessage, aListener, aVCPosition) {
+  let acc = aVCPosition || Utils.getVirtualCursor(content.document).position;
+
+  if (!Utils.isAliveAndVisible(acc) || acc.role != ROLE_INTERNAL_FRAME) {
+    return false;
+  }
+
+  if (Logger.logLevel >= Logger.DEBUG) {
+    Logger.debug('forwardToChild', Logger.accessibleToString(acc),
+                 aMessage.name, JSON.stringify(aMessage.json, null, '  '));
+  }
+
+  let mm = Utils.getMessageManager(acc.DOMNode);
+  mm.addMessageListener(aMessage.name, aListener);
+  // XXX: This is a silly way to make a deep copy
+  let newJSON = JSON.parse(JSON.stringify(aMessage.json));
+  newJSON.origin = 'parent';
+  if (Utils.isContentProcess) {
+    // XXX: OOP content's screen offset is 0,
+    // so we remove the real screen offset here.
+    newJSON.x -= content.mozInnerScreenX;
+    newJSON.y -= content.mozInnerScreenY;
+  }
+  mm.sendAsyncMessage(aMessage.name, newJSON);
+  return true;
 }
 
 function activateCurrent(aMessage) {
@@ -174,23 +210,24 @@ function activateCurrent(aMessage) {
     return;
   }
 
-  let vc = Utils.getVirtualCursor(content.document);
-  if (!forwardMessage(vc, aMessage))
-    activateAccessible(vc.position);
+  let position = Utils.getVirtualCursor(content.document).position;
+  if (!forwardToChild(aMessage, activateCurrent, position)) {
+    activateAccessible(position);
+  }
 }
 
 function activateContextMenu(aMessage) {
   function sendContextMenuCoordinates(aAccessible) {
-    let objX = {}, objY = {}, objW = {}, objH = {};
-    aAccessible.getBounds(objX, objY, objW, objH);
-    let x = objX.value + objW.value / 2;
-    let y = objY.value + objH.value / 2;
-    sendAsyncMessage('AccessFu:ActivateContextMenu', {x: x, y: y});
+    let bounds = Utils.getBounds(aAccessible);
+    sendAsyncMessage('AccessFu:ActivateContextMenu',
+                     { x: bounds.left + bounds.width / 2,
+                       y: bounds.top + bounds.height / 2 });
   }
 
-  let vc = Utils.getVirtualCursor(content.document);
-  if (!forwardMessage(vc, aMessage))
-    sendContextMenuCoordinates(vc.position);
+  let position = Utils.getVirtualCursor(content.document).position;
+  if (!forwardToChild(aMessage, activateContextMenu, position)) {
+    sendContextMenuCoordinates(position);
+  }
 }
 
 function moveCaret(aMessage) {
@@ -243,7 +280,7 @@ function moveCaret(aMessage) {
 function presentCaretChange(aText, aOldOffset, aNewOffset) {
   if (aOldOffset !== aNewOffset) {
     let msg = Presentation.textSelectionChanged(aText, aNewOffset, aNewOffset,
-                                                aOldOffset, aOldOffset);
+                                                aOldOffset, aOldOffset, true);
     sendAsyncMessage('AccessFu:Present', msg);
   }
 }
@@ -315,15 +352,14 @@ function scroll(aMessage) {
     return false;
   }
 
-  if (aMessage.json.origin != 'child') {
-    if (forwardMessage(vc, aMessage))
-      return;
+  if (aMessage.json.origin != 'child' &&
+      forwardToChild(aMessage, scroll, vc.position)) {
+    return;
   }
 
   if (!tryToScroll()) {
     // Failed to scroll anything in this document. Try in parent document.
-    aMessage.json.origin = 'child';
-    sendAsyncMessage('AccessFu:Scroll', aMessage.json);
+    forwardToParent(aMessage);
   }
 }
 
@@ -334,7 +370,9 @@ addMessageListener(
     if (m.json.buildApp)
       Utils.MozBuildApp = m.json.buildApp;
 
-    addMessageListener('AccessFu:VirtualCursor', virtualCursorControl);
+    addMessageListener('AccessFu:MoveToPoint', moveToPoint);
+    addMessageListener('AccessFu:MoveCursor', moveCursor);
+    addMessageListener('AccessFu:ShowCurrent', showCurrent);
     addMessageListener('AccessFu:Activate', activateCurrent);
     addMessageListener('AccessFu:ContextMenu', activateContextMenu);
     addMessageListener('AccessFu:Scroll', scroll);
@@ -351,7 +389,9 @@ addMessageListener(
   function(m) {
     Logger.debug('AccessFu:Stop');
 
-    removeMessageListener('AccessFu:VirtualCursor', virtualCursorControl);
+    removeMessageListener('AccessFu:MoveToPoint', moveToPoint);
+    removeMessageListener('AccessFu:MoveCursor', moveCursor);
+    removeMessageListener('AccessFu:ShowCurrent', showCurrent);
     removeMessageListener('AccessFu:Activate', activateCurrent);
     removeMessageListener('AccessFu:ContextMenu', activateContextMenu);
     removeMessageListener('AccessFu:Scroll', scroll);

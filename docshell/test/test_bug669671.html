@@ -72,7 +72,7 @@ function test()
 
   // Step 2 - We'll get another onChildLoad when this finishes.
   popup.location = 'file_bug669671.sjs';
-  yield;
+  yield undefined;
 
   // Step 3 - Call pushState and change the URI back to ?pushed.
   checkPopupLoadCount();
@@ -80,13 +80,13 @@ function test()
 
   // Step 4 - Navigate away.  This should trigger another onChildLoad.
   popup.location = 'file_bug669671.sjs?navigated-1';
-  yield;
+  yield undefined;
 
   // Step 5 - Go back.  This should result in another onload (because the file is
   // not in bfcache) and should be the fourth time we've requested the sjs file.
   checkPopupLoadCount();
   popup.back();
-  yield;
+  yield undefined;
 
   // This is the check which was failing before we fixed the bug.
   checkPopupLoadCount();
@@ -95,37 +95,37 @@ function test()
 
   // Do the whole thing again, but with replaceState.
   popup = window.open('file_bug669671.sjs?replaced');
-  yield;
+  yield undefined;
   checkPopupLoadCount();
   popup.location = 'file_bug669671.sjs';
-  yield;
+  yield undefined;
   checkPopupLoadCount();
   popup.history.replaceState('', '', '?replaced');
   popup.location = 'file_bug669671.sjs?navigated-2';
-  yield;
+  yield undefined;
   checkPopupLoadCount();
   popup.back();
-  yield;
+  yield undefined;
   checkPopupLoadCount();
   popup.close();
 
   // Once more, with feeling.  Notice that we don't have to prime the cache
   // with an extra load here, because X and X#hash share the same cache entry.
   popup = window.open('file_bug669671.sjs?hash-test');
-  yield;
+  yield undefined;
   var initialCount = checkPopupLoadCount();
   popup.history.replaceState('', '', '#hash');
   popup.location = 'file_bug669671.sjs?navigated-3';
-  yield;
+  yield undefined;
   checkPopupLoadCount();
   popup.back();
-  yield;
+  yield undefined;
   is(popup.document.body.innerHTML, initialCount + '',
      'Load count (should be cached)');
   popup.close();
 
   SimpleTest.finish();
-  yield;
+  yield undefined;
 }
 
 // This will call into onChildLoad once it loads.

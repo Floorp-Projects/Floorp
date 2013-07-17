@@ -16,14 +16,14 @@
       let request = getFileHandle(fileStorage.key, "test.txt");
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
-      let event = yield;
+      let event = yield undefined;
 
       let fileHandle = event.target.result;
       fileHandle.onerror = errorHandler;
 
       let lockedFile = fileHandle.open();
       continueToNextStep();
-      yield;
+      yield undefined;
 
       try {
         lockedFile.getMetadata({ size: true });
@@ -37,7 +37,7 @@
     }
 
     finishTest();
-    yield;
+    yield undefined;
   }
   </script>
   <script type="text/javascript;version=1.7" src="helpers.js"></script>

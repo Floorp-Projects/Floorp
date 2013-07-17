@@ -10,8 +10,6 @@
 #include "ion/IonFrames.h"
 #include "mozilla/Casting.h"
 
-#include "jsscriptinlines.h"
-
 using namespace js;
 using namespace js::ion;
 
@@ -242,6 +240,13 @@ MacroAssemblerX64::handleFailureWithHandler(void *handler)
     passABIArg(rax);
     callWithABI(handler);
 
+    IonCode *excTail = GetIonContext()->compartment->ionCompartment()->getExceptionTail();
+    jmp(excTail);
+}
+
+void
+MacroAssemblerX64::handleFailureWithHandlerTail()
+{
     Label entryFrame;
     Label catch_;
     Label finally;

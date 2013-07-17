@@ -12,6 +12,7 @@ include $(DEPTH)/config/autoconf.mk
 
 BROWSER_TESTS = \
   head.js \
+  browser_urlbar.js \
   browser_bookmarks.js \
   browser_canonizeURL.js \
   browser_context_menu_tests.js \
@@ -20,6 +21,8 @@ BROWSER_TESTS = \
   browser_context_menu_tests_03.html \
   browser_context_ui.js \
   browser_downloads.js \
+  browser_findbar.js \
+  browser_findbar.html \
   browser_history.js \
   browser_onscreen_keyboard.js \
   browser_onscreen_keyboard.html \
@@ -60,6 +63,7 @@ BROWSER_TEST_RESOURCES = \
   res/textblock01.html \
   res/textinput01.html \
   res/textarea01.html \
+  res/testEngine.xml \
   $(NULL)
 
 libs:: $(BROWSER_TESTS)

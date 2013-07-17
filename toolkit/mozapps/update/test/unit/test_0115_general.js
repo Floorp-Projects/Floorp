@@ -232,6 +232,8 @@ ADDITIONAL_TEST_DIRS = [
 function run_test() {
   do_register_cleanup(cleanupUpdaterTest);
 
+  adjustGeneralPaths();
+
   gBackgroundUpdate = true;
   setupUpdaterTest(MAR_PARTIAL_FILE);
 

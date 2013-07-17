@@ -24,7 +24,7 @@
     request.onerror = errorHandler;
     request.onupgradeneeded = grabEventAndContinueHandler;
     request.onsuccess = grabEventAndContinueHandler;
-    let event = yield;
+    let event = yield undefined;
 
     is(event.type, "upgradeneeded", "Got correct event type");
 
@@ -33,13 +33,13 @@
 
     let objectStore = db.createObjectStore(objectStoreName, { });
 
-    event = yield;
+    event = yield undefined;
 
     is(event.type, "success", "Got correct event type");
 
     request = db.mozCreateFileHandle("random.bin", "binary/random");
     request.onsuccess = grabEventAndContinueHandler;
-    event = yield;
+    event = yield undefined;
 
     let fileHandle = event.target.result;
     fileHandle.onerror = errorHandler;
@@ -50,11 +50,11 @@
 
     request = lockedFile.write(testFile);
     request.onsuccess = grabEventAndContinueHandler;
-    event = yield;
+    event = yield undefined;
 
     request = fileHandle.getFile();
     request.onsuccess = grabEventAndContinueHandler;
-    event = yield;
+    event = yield undefined;
 
     let file = event.target.result;
 
@@ -63,7 +63,7 @@
 
     request = objectStore.add(file, 42);
     request.onsuccess = grabEventAndContinueHandler;
-    event = yield;
+    event = yield undefined;
 
     // At this moment, the file should not be readable anymore.
     let reader = new FileReader();
@@ -79,13 +79,13 @@
 
     request = objectStore.get(42);
     request.onsuccess = grabEventAndContinueHandler;
-    event = yield;
+    event = yield undefined;
 
     verifyBlob(event.target.result, testFile, 2);
-    yield;
+    yield undefined;
 
     finishTest();
-    yield;
+    yield undefined;
   }
   </script>
   <script type="text/javascript;version=1.7" src="file.js"></script>

@@ -13,15 +13,14 @@
 namespace mozilla {
 namespace dom {
 
-class CDATASection : public Text,
-                     public nsIDOMCDATASection
+class CDATASection MOZ_FINAL : public Text,
+                               public nsIDOMCDATASection
 {
 private:
   void Init()
   {
     NS_ABORT_IF_FALSE(mNodeInfo->NodeType() == nsIDOMNode::CDATA_SECTION_NODE,
                       "Bad NodeType in aNodeInfo");
-    SetIsDOMBinding();
   }
 
 public:

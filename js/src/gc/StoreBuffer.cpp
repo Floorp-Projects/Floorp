@@ -12,11 +12,11 @@
 
 #include "vm/ForkJoin.h"
 
-#include "gc/Barrier-inl.h"
 #include "vm/ObjectImpl-inl.h"
 
 using namespace js;
 using namespace js::gc;
+using mozilla::ReentrancyGuard;
 
 /*** SlotEdge ***/
 
@@ -148,6 +148,7 @@ template <typename T>
 void
 StoreBuffer::MonoTypeBuffer<T>::mark(JSTracer *trc)
 {
+    ReentrancyGuard g(*this);
     compact();
     T *cursor = base;
     while (cursor != pos) {
@@ -241,6 +242,8 @@ StoreBuffer::GenericBuffer::clear()
 void
 StoreBuffer::GenericBuffer::mark(JSTracer *trc)
 {
+    ReentrancyGuard g(*this);
+
     uint8_t *p = base;
     while (p < pos) {
         unsigned size = *((unsigned *)p);

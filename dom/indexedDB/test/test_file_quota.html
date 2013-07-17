@@ -24,7 +24,7 @@
     request.onerror = errorHandler;
     request.onupgradeneeded = grabEventAndContinueHandler;
     request.onsuccess = grabEventAndContinueHandler;
-    let event = yield;
+    let event = yield undefined;
 
     is(event.type, "upgradeneeded", "Got correct event type");
 
@@ -32,7 +32,7 @@
 
     db.createObjectStore(objectStoreName, { });
 
-    event = yield;
+    event = yield undefined;
 
     is(event.type, "success", "Got correct event type");
 
@@ -42,15 +42,15 @@
     request = objectStore.add(fileData.file, fileData.key);
     request.addEventListener("error", new ExpectError("UnknownError", true));
     request.onsuccess = unexpectedSuccessHandler;
-    event = yield;
+    event = yield undefined;
 
     trans.oncomplete = grabEventAndContinueHandler;
-    event = yield;
+    event = yield undefined;
 
     is(event.type, "complete", "Got correct event type");
 
     finishTest();
-    yield;
+    yield undefined;
   }
   </script>
   <script type="text/javascript;version=1.7" src="file.js"></script>

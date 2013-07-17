@@ -1,0 +1,41 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>Promise - bug 883683</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script type="application/javascript"><!--
+
+function runTest() {
+  [{}, {}, {}, {}, {}].reduce(Promise.reject);
+  ok(true, "No leaks with reject?");
+
+  [{}, {}, {}, {}, {}].reduce(Promise.resolve);
+  ok(true, "No leaks with resolve?");
+
+  [{}, {}, {}, {}, {}].reduce(function(a, b, c, d) { return new Promise(function(r) { throw a; }); });
+  ok(true, "No leaks with exception?");
+
+  [{}, {}, {}, {}, {}].reduce(function(a, b, c, d) { return new Promise(function(r) { }); });
+  ok(true, "No leaks with empty promise?");
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({"set": [["dom.promise.enabled", true]]}, runTest);
+// -->
+</script>
+</pre>
+</body>
+</html>

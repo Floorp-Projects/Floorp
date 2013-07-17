@@ -26,8 +26,8 @@ namespace dom {
 
 // Attribute helper class used to wrap up an attribute with a dom
 // object that implements nsIDOMAttr and nsIDOMNode
-class Attr : public nsIAttribute,
-             public nsIDOMAttr
+class Attr MOZ_FINAL : public nsIAttribute,
+                       public nsIDOMAttr
 {
 public:
   Attr(nsDOMAttributeMap* aAttrMap,

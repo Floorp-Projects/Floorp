@@ -7,9 +7,14 @@
  * unsupported system update when it has already been shown (bug 843497).
  */
 
+const TEST_ID = "0082";
+
 function run_test() {
   do_test_pending();
   do_register_cleanup(end_test);
+
+  adjustGeneralPaths();
+
   removeUpdateDirsAndFiles();
   setUpdateURLOverride();
   // The mock XMLHttpRequest is MUCH faster

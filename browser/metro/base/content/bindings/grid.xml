@@ -86,12 +86,20 @@
 
       <method name="handleItemClick">
         <parameter name="aItem"/>
+        <parameter name="aEvent"/>
         <body>
           <![CDATA[
             if(!this.isBound)
               return;
-            if (this.controller)
-              this.controller.handleItemClick(aItem);
+
+            if ("single" == this.getAttribute("seltype")) {
+              // we'll republish this as a selectionchange event on the grid
+              aEvent.stopPropagation();
+              this.selectItem(aItem);
+            }
+
+	    if (this.controller && this.controller.handleItemClick)
+              this.controller.handleItemClick(aItem, aEvent);
           ]]>
         </body>
       </method>
@@ -109,6 +117,10 @@
           ]]>
         </body>
       </method>
+
+      <property name="contextNoun" readonly="true"
+                onget="return this.getAttribute('noun');"/>
+
       <property name="contextActions">
         <getter>
           <![CDATA[

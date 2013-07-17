@@ -2256,6 +2256,10 @@ struct nsStyleSVG {
   bool mStrokeDasharrayFromObject   : 1;
   bool mStrokeDashoffsetFromObject  : 1;
   bool mStrokeWidthFromObject       : 1;
+
+  bool HasMarker() const {
+    return mMarkerStart || mMarkerMid || mMarkerEnd;
+  }
 };
 
 struct nsStyleSVGReset {

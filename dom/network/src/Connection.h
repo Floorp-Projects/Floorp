@@ -7,6 +7,7 @@
 #define mozilla_dom_network_Connection_h
 
 #include "nsIDOMConnection.h"
+#include "nsINetworkProperties.h"
 #include "nsDOMEventTargetHelper.h"
 #include "nsCycleCollectionParticipant.h"
 #include "mozilla/Observer.h"
@@ -24,10 +25,12 @@ namespace network {
 class Connection : public nsDOMEventTargetHelper
                  , public nsIDOMMozConnection
                  , public NetworkObserver
+                 , public nsINetworkProperties
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIDOMMOZCONNECTION
+  NS_DECL_NSINETWORKPROPERTIES
 
   NS_REALLY_FORWARD_NSIDOMEVENTTARGET(nsDOMEventTargetHelper)
 
@@ -55,6 +58,16 @@ private:
    * The connection bandwidth.
    */
   double mBandwidth;
+
+  /**
+   * If the connection is WIFI
+   */
+  bool mIsWifi;
+
+  /**
+   * DHCP Gateway information for IPV4, in network byte order. 0 if unassigned.
+   */
+  uint32_t mDHCPGateway;
 
   static const char* sMeteredPrefName;
   static const bool  sMeteredDefaultValue;

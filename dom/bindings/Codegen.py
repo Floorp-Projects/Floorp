@@ -85,6 +85,9 @@ class CGNativePropertyHooks(CGThing):
         if self.descriptor.concrete and self.descriptor.proxy:
             resolveOwnProperty = "ResolveOwnProperty"
             enumerateOwnProperties = "EnumerateOwnProperties"
+        elif self.descriptor.interface.getExtendedAttribute("NeedNewResolve"):
+            resolveOwnProperty = "ResolveOwnPropertyViaNewresolve"
+            enumerateOwnProperties = "nullptr"
         else:
             resolveOwnProperty = "nullptr"
             enumerateOwnProperties = "nullptr"
@@ -3732,7 +3735,7 @@ def convertConstIDLValueToJSVal(value):
         return "JSVAL_TRUE" if value.value else "JSVAL_FALSE"
     if tag in [IDLType.Tags.float, IDLType.Tags.double]:
         return "DOUBLE_TO_JSVAL(%s)" % (value.value)
-    raise TypeError("Const value of unhandled type: " + value.type)
+    raise TypeError("Const value of unhandled type: %s" % value.type)
 
 class CGArgumentConverter(CGThing):
     """
@@ -3887,16 +3890,31 @@ def getWrapTemplateForType(type, descriptorProvider, result, successCode,
     # if body.
     exceptionCodeIndented = CGIndenter(CGGeneric(exceptionCode))
 
-    def setValue(value, callWrapValue=False):
+    def setValue(value, callWrapValue=None):
         """
-        Returns the code to set the jsval to value. If "callWrapValue" is true
-        MaybeWrapValue will be called on the jsval.
+        Returns the code to set the jsval to value.
+
+        "callWrapValue" can be set to the following values:
+          * None: no wrapping will be done.
+          * "object": will wrap using MaybeWrapObjectValue.
+          * "objectOrNull": will wrap using MaybeWrapObjectOrNullValue.
+          * "nonDOMObject": will wrap using MaybeWrapNonDOMObjectValue.
+          * "nonDOMObjectOrNull": will wrap using MaybeWrapNonDOMObjectOrNullValue
+          * "value": will wrap using MaybeWrapValue.
         """
         if not callWrapValue:
             tail = successCode
         else:
-            tail = ("if (!MaybeWrapValue(cx, ${jsvalHandle})) {\n" +
-                    ("%s\n" % exceptionCodeIndented.define()) +
+            methodMap = {
+                "object": "MaybeWrapObjectValue",
+                "objectOrNull": "MaybeWrapObjectOrNullValue",
+                "nonDOMObject": "MaybeWrapNonDOMObjectValue",
+                "nonDOMObjectOrNull": "MaybeWrapNonDOMObjectOrNullValue",
+                "value": "MaybeWrapValue"
+                }
+            tail = (("if (!%s(cx, ${jsvalHandle})) {\n"
+                     "%s\n" % (methodMap[callWrapValue],
+                               exceptionCodeIndented.define())) +
                     "}\n" +
                     successCode)
         return ("${jsvalRef}.set(%s);\n" +
@@ -4068,11 +4086,13 @@ if (!returnArray) {
         # to wrap here.
         # NB: setValue(..., True) calls JS_WrapValue(), so is fallible
         if descriptorProvider.workers:
-            return (setValue("JS::ObjectOrNullValue(%s)" % result, True), False)
+            return (setValue("JS::ObjectOrNullValue(%s)" % result,
+                             "objectOrNull"),
+                    False)
 
         wrapCode = setValue(
             "JS::ObjectValue(*GetCallbackFromCallbackObject(%(result)s))",
-            True)
+            "object")
         if type.nullable():
             wrapCode = (
                 "if (%(result)s) {\n" +
@@ -4087,17 +4107,25 @@ if (!returnArray) {
         # See comments in WrapNewBindingObject explaining why we need
         # to wrap here.
         # NB: setValue(..., True) calls JS_WrapValue(), so is fallible
-        return (setValue(result, True), False)
+        return (setValue(result, "value"), False)
 
     if type.isObject() or type.isSpiderMonkeyInterface():
         # See comments in WrapNewBindingObject explaining why we need
         # to wrap here.
         if type.nullable():
             toValue = "JS::ObjectOrNullValue(%s)"
+            if type.isSpiderMonkeyInterface():
+                wrapType = "nonDOMObjectOrNull"
+            else:
+                wrapType = "objectOrNull"
         else:
             toValue = "JS::ObjectValue(*%s)"
+            if type.isSpiderMonkeyInterface():
+                wrapType = "nonDOMObject"
+            else:
+                wrapType = "object"
         # NB: setValue(..., True) calls JS_WrapValue(), so is fallible
-        return (setValue(toValue % result, True), False)
+        return (setValue(toValue % result, wrapType), False)
 
     if type.isUnion():
         if type.nullable():
@@ -5105,8 +5133,9 @@ class CGAbstractBindingMethod(CGAbstractStaticMethod):
     """
     def __init__(self, descriptor, name, args, unwrapFailureCode=None,
                  getThisObj="args.computeThis(cx).toObjectOrNull()",
-                 callArgs="JS::CallArgs args = JS::CallArgsFromVp(argc, vp);"):
-        CGAbstractStaticMethod.__init__(self, descriptor, name, "JSBool", args)
+                 callArgs="JS::CallArgs args = JS::CallArgsFromVp(argc, vp);",
+                 returnType="JSBool"):
+        CGAbstractStaticMethod.__init__(self, descriptor, name, returnType, args)
 
         if unwrapFailureCode is None:
             self.unwrapFailureCode = 'return ThrowErrorMessage(cx, MSG_THIS_DOES_NOT_IMPLEMENT_INTERFACE, "Value", "%s");' % descriptor.interface.identifier.name
@@ -5120,13 +5149,14 @@ class CGAbstractBindingMethod(CGAbstractStaticMethod):
         # we're someone's consequential interface.  But for this-unwrapping, we
         # know that we're the real deal.  So fake a descriptor here for
         # consumption by CastableObjectUnwrapper.
-        getThis = CGGeneric("""%s
-JS::RootedObject obj(cx, %s);
-if (!obj) {
-  return false;
-}
-
-%s* self;""" % (self.callArgs, self.getThisObj, self.descriptor.nativeType))
+        getThis = CGList([
+                CGGeneric(self.callArgs) if self.callArgs != "" else None,
+                CGGeneric("JS::RootedObject obj(cx, %s);\n"
+                          "if (!obj) {\n"
+                          "  return false;\n"
+                          "}" % self.getThisObj) if self.getThisObj else None,
+                CGGeneric("%s* self;" % self.descriptor.nativeType)
+                ], "\n")
         unwrapThis = CGGeneric(
             str(CastableObjectUnwrapper(
                         self.descriptor,
@@ -5240,13 +5270,13 @@ class CGNewResolveHook(CGAbstractBindingMethod):
     """
     def __init__(self, descriptor):
         self._needNewResolve = descriptor.interface.getExtendedAttribute("NeedNewResolve")
-        args = [Argument('JSContext*', 'cx'), Argument('JS::Handle<JSObject*>', 'obj_'),
+        args = [Argument('JSContext*', 'cx'), Argument('JS::Handle<JSObject*>', 'obj'),
                 Argument('JS::Handle<jsid>', 'id'), Argument('unsigned', 'flags'),
                 Argument('JS::MutableHandle<JSObject*>', 'objp')]
         # Our "self" is actually the callee in this case, not the thisval.
         CGAbstractBindingMethod.__init__(
             self, descriptor, NEWRESOLVE_HOOK_NAME,
-            args, getThisObj="obj_", callArgs="")
+            args, getThisObj="", callArgs="")
 
     def define(self):
         if not self._needNewResolve:
@@ -5254,7 +5284,19 @@ class CGNewResolveHook(CGAbstractBindingMethod):
         return CGAbstractBindingMethod.define(self)
 
     def generate_code(self):
-        return CGIndenter(CGGeneric("return self->DoNewResolve(cx, obj, id, flags, objp);"))
+        return CGIndenter(CGGeneric(
+                "JS::Rooted<JS::Value> value(cx);\n"
+                "if (!self->DoNewResolve(cx, obj, id, &value)) {\n"
+                "  return false;\n"
+                "}\n"
+                "if (value.isUndefined()) {\n"
+                "  return true;\n"
+                "}\n"
+                "if (!JS_DefinePropertyById(cx, obj, id, value, nullptr, nullptr, JSPROP_ENUMERATE)) {\n"
+                "  return false;\n"
+                "}\n"
+                "objp.set(obj);\n"
+                "return true;"))
 
 class CppKeywords():
     """
@@ -6604,7 +6646,7 @@ class CGClass(CGThing):
             result = result + memberString
         return result
 
-class CGResolveOwnProperty(CGAbstractMethod):
+class CGResolveOwnProperty(CGAbstractStaticMethod):
     def __init__(self, descriptor):
         args = [Argument('JSContext*', 'cx'),
                 Argument('JS::Handle<JSObject*>', 'wrapper'),
@@ -6612,18 +6654,47 @@ class CGResolveOwnProperty(CGAbstractMethod):
                 Argument('JS::Handle<jsid>', 'id'),
                 Argument('JSPropertyDescriptor*', 'desc'), Argument('unsigned', 'flags'),
                 ]
-        CGAbstractMethod.__init__(self, descriptor, "ResolveOwnProperty", "bool", args)
+        CGAbstractStaticMethod.__init__(self, descriptor, "ResolveOwnProperty",
+                                        "bool", args)
     def definition_body(self):
         return """  return js::GetProxyHandler(obj)->getOwnPropertyDescriptor(cx, wrapper, id, desc, flags);
 """
 
-class CGEnumerateOwnProperties(CGAbstractMethod):
+class CGResolveOwnPropertyViaNewresolve(CGAbstractBindingMethod):
+    """
+    An implementation of Xray ResolveOwnProperty stuff for things that have a
+    newresolve hook.
+    """
+    def __init__(self, descriptor):
+        args = [Argument('JSContext*', 'cx'),
+                Argument('JS::Handle<JSObject*>', 'wrapper'),
+                Argument('JS::Handle<JSObject*>', 'obj'),
+                Argument('JS::Handle<jsid>', 'id'),
+                Argument('JSPropertyDescriptor*', 'desc'), Argument('unsigned', 'flags'),
+                ]
+        CGAbstractBindingMethod.__init__(self, descriptor,
+                                         "ResolveOwnPropertyViaNewresolve",
+                                         args, getThisObj="",
+                                         callArgs="", returnType="bool")
+    def generate_code(self):
+        return CGIndenter(CGGeneric(
+                "JS::Rooted<JS::Value> value(cx);\n"
+                "if (!self->DoNewResolve(cx, obj, id, &value)) {\n"
+                "  return false;\n"
+                "}\n"
+                "if (!value.isUndefined()) {\n"
+                "  FillPropertyDescriptor(desc, wrapper, value, /* readonly = */ false);\n"
+                "}\n"
+                "return true;"))
+
+class CGEnumerateOwnProperties(CGAbstractStaticMethod):
     def __init__(self, descriptor):
         args = [Argument('JSContext*', 'cx'),
                 Argument('JS::Handle<JSObject*>', 'wrapper'),
                 Argument('JS::Handle<JSObject*>', 'obj'),
                 Argument('JS::AutoIdVector&', 'props')]
-        CGAbstractMethod.__init__(self, descriptor, "EnumerateOwnProperties", "bool", args)
+        CGAbstractStaticMethod.__init__(self, descriptor,
+                                        "EnumerateOwnProperties", "bool", args)
     def definition_body(self):
         return """  return js::GetProxyHandler(obj)->getOwnPropertyNames(cx, wrapper, props);
 """
@@ -7581,6 +7652,16 @@ class CGDescriptor(CGThing):
         cgThings.append(CGGeneric(define=str(properties)))
         cgThings.append(CGNativeProperties(descriptor, properties))
 
+        # Set up our Xray callbacks as needed.  Note that we don't need to do
+        # it in workers.
+        if not descriptor.workers and descriptor.concrete and descriptor.proxy:
+            cgThings.append(CGResolveOwnProperty(descriptor))
+            cgThings.append(CGEnumerateOwnProperties(descriptor))
+        elif descriptor.interface.getExtendedAttribute("NeedNewResolve"):
+            cgThings.append(CGResolveOwnPropertyViaNewresolve(descriptor))
+
+        # Now that we have our ResolveOwnProperty/EnumerateOwnProperties stuff
+        # done, set up our NativePropertyHooks.
         cgThings.append(CGNativePropertyHooks(descriptor, properties))
 
         if descriptor.interface.hasInterfaceObject():
@@ -7603,12 +7684,6 @@ class CGDescriptor(CGThing):
             cgThings.append(CGGetProtoObjectMethod(descriptor))
         if descriptor.interface.hasInterfaceObject():
             cgThings.append(CGGetConstructorObjectMethod(descriptor))
-
-        # Set up our Xray callbacks as needed.  Note that we don't need to do
-        # it in workers.
-        if not descriptor.workers and descriptor.concrete and descriptor.proxy:
-            cgThings.append(CGResolveOwnProperty(descriptor))
-            cgThings.append(CGEnumerateOwnProperties(descriptor))
 
         if descriptor.interface.hasInterfaceObject():
             cgThings.append(CGDefineDOMInterfaceMethod(descriptor))
@@ -8350,9 +8425,10 @@ class CGBindingRoot(CGThing):
         requiresPreferences = any(descriptorRequiresPreferences(d) for d in descriptors)
         hasOwnedDescriptors = any(d.nativeOwnership == 'owned' for d in descriptors)
         requiresContentUtils = any(d.interface.hasInterfaceObject() for d in descriptors)
-        def descriptorHasChromeOnlyMembers(desc):
-            return any(isChromeOnly(a) for a in desc.interface.members)
-        hasChromeOnlyMembers = any(descriptorHasChromeOnlyMembers(d) for d in descriptors)
+        def descriptorHasChromeOnly(desc):
+            return (any(isChromeOnly(a) for a in desc.interface.members) or
+                    desc.interface.getExtendedAttribute("ChromeOnly") is not None)
+        hasChromeOnly = any(descriptorHasChromeOnly(d) for d in descriptors)
         # XXXkhuey ugly hack but this is going away soon.
         isEventTarget = webIDLFile.endswith("EventTarget.webidl")
         hasWorkerStuff = len(config.getDescriptors(webIDLFile=webIDLFile,
@@ -8469,7 +8545,7 @@ class CGBindingRoot(CGThing):
                             + (['mozilla/dom/NonRefcountedDOMObject.h'] if hasOwnedDescriptors else [])
                             + (['nsContentUtils.h'] if requiresContentUtils else [])
                             + (['nsCxPusher.h'] if mainDictionaries else [])
-                            + (['AccessCheck.h'] if hasChromeOnlyMembers else [])
+                            + (['AccessCheck.h'] if hasChromeOnly else [])
                             + (['xpcprivate.h'] if isEventTarget else []),
                          prefix,
                          curr,
@@ -9097,8 +9173,8 @@ class CGExampleRoot(CGThing):
                                 "mozilla/dom/%sBinding.h" % interfaceName,
                                 "nsContentUtils.h" ], "", self.root);
 
-        # In the header, #pragma once before everything
-        self.root = CGWrapper(self.root, declarePre="#pragma once\n\n")
+        # And now some include guards
+        self.root = CGIncludeGuard(interfaceName, self.root)
 
         # And our license block comes before everything else
         self.root = CGWrapper(self.root, pre="""/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */

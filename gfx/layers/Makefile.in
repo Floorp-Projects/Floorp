@@ -23,9 +23,7 @@ include $(DEPTH)/config/autoconf.mk
 LIBRARY_NAME   = layers
 MSVC_ENABLE_PGO := 1
 LIBXUL_LIBRARY = 1
-FORCE_STATIC_LIB = 1
 
-DEFINES += -DIMPL_THEBES
 ifdef MOZ_DEBUG
 DEFINES += -DD3D_DEBUG_INFO
 endif
@@ -35,7 +33,6 @@ DEFINES	+= -DMOZ_ENABLE_D3D10_LAYER
 endif
 
 include $(topsrcdir)/config/rules.mk
-
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
 
 LOCAL_INCLUDES += \

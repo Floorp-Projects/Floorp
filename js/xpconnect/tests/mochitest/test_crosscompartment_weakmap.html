@@ -16,13 +16,13 @@ function setup() {
 
   my_map.set(item, "success_string");
 
-  var navi_fail = false;
+  var rule_fail = false;
   try {
-    my_map.set(window.frames[0].navigator, 1);
+    my_map.set(window.frames[0].document.styleSheets[0].cssRules[0], 1);
   } catch (e) {
-    navi_fail = true;
+    rule_fail = true;
   }
-  ok(navi_fail, "Using window.navigator as a weak map key across compartments should produce an exception because it can't be wrapper preserved.");
+  ok(rule_fail, "Using rule as a weak map key across compartments should produce an exception because it can't be wrapper preserved.");
 }
 
 function runTest() {

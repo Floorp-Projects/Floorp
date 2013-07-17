@@ -8,6 +8,10 @@ generated_webidl_files = \
   CSS2Properties.webidl \
   $(NULL)
 
+preprocessed_webidl_files = \
+  Navigator.webidl \
+  $(NULL)
+
 webidl_files = \
   AnalyserNode.webidl \
   AnimationEvent.webidl \
@@ -87,7 +91,6 @@ webidl_files = \
   FocusEvent.webidl \
   FormData.webidl \
   Function.webidl \
-  Future.webidl \
   GainNode.webidl \
   Geolocation.webidl \
   HTMLAnchorElement.webidl \
@@ -215,6 +218,7 @@ webidl_files = \
   Position.webidl \
   PositionError.webidl \
   ProcessingInstruction.webidl \
+  Promise.webidl \
   Range.webidl \
   Rect.webidl \
   RGBColor.webidl \
@@ -227,6 +231,7 @@ webidl_files = \
   Screen.webidl \
   ScriptProcessorNode.webidl \
   ScrollAreaEvent.webidl \
+  SettingsManager.webidl \
   SimpleGestureEvent.webidl \
   SourceBuffer.webidl \
   SourceBufferList.webidl \

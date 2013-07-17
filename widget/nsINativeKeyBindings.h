@@ -15,15 +15,24 @@
 #define NS_NATIVEKEYBINDINGS_CONTRACTID_PREFIX \
   "@mozilla.org/widget/native-key-bindings;1?type="
 
+#define NS_NATIVEKEYBINDINGSINPUT_CONTRACTID \
+NS_NATIVEKEYBINDINGS_CONTRACTID_PREFIX "input"
+
+#define NS_NATIVEKEYBINDINGSTEXTAREA_CONTRACTID \
+NS_NATIVEKEYBINDINGS_CONTRACTID_PREFIX "textarea"
+
+#define NS_NATIVEKEYBINDINGSEDITOR_CONTRACTID \
+NS_NATIVEKEYBINDINGS_CONTRACTID_PREFIX "editor"
+
 struct nsNativeKeyEvent
 {
-  nsEvent *nativeEvent; // see bug 406407 to see how this is used
-  uint32_t keyCode;
-  uint32_t charCode;
-  bool     altKey;
-  bool     ctrlKey;
-  bool     shiftKey;
-  bool     metaKey;
+  nsKeyEvent* mGeckoEvent; // see bug 406407 to see how this is used
+  uint32_t    keyCode;
+  uint32_t    charCode;
+  bool        altKey;
+  bool        ctrlKey;
+  bool        shiftKey;
+  bool        metaKey;
 };
 
 class nsINativeKeyBindings : public nsISupports

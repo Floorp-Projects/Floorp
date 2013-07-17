@@ -8,9 +8,6 @@
 #include "frontend/FullParseHandler.h"
 #include "frontend/SyntaxParseHandler.h"
 
-#include "frontend/ParseMaps-inl.h"
-#include "vm/String-inl.h"
-
 using namespace js;
 using namespace js::frontend;
 
@@ -58,9 +55,9 @@ ParseMapPool::allocateFresh()
 }
 
 DefinitionList::Node *
-DefinitionList::allocNode(JSContext *cx, uintptr_t head, Node *tail)
+DefinitionList::allocNode(ExclusiveContext *cx, LifoAlloc &alloc, uintptr_t head, Node *tail)
 {
-    Node *result = cx->tempLifoAlloc().new_<Node>(head, tail);
+    Node *result = alloc.new_<Node>(head, tail);
     if (!result)
         js_ReportOutOfMemory(cx);
     return result;
@@ -105,11 +102,11 @@ AtomDecls<ParseHandler>::addShadow(JSAtom *atom, typename ParseHandler::Definiti
     if (!p)
         return map->add(p, atom, DefinitionList(ParseHandler::definitionToBits(defn)));
 
-    return p.value().pushFront<ParseHandler>(cx, defn);
+    return p.value().pushFront<ParseHandler>(cx, alloc, defn);
 }
 
 void
-frontend::InitAtomMap(JSContext *cx, frontend::AtomIndexMap *indices, HeapPtrAtom *atoms)
+frontend::InitAtomMap(frontend::AtomIndexMap *indices, HeapPtrAtom *atoms)
 {
     if (indices->isMap()) {
         typedef AtomIndexMap::WordMap WordMap;

@@ -10,10 +10,12 @@
 // This file declares the core data structures for LIR: storage allocations for
 // inputs and outputs, as well as the interface instructions must conform to.
 
+#include "mozilla/Array.h"
+
 #include "jscntxt.h"
+
 #include "ion/IonAllocPolicy.h"
 #include "ion/InlineList.h"
-#include "ion/FixedArityList.h"
 #include "ion/LOpcodes.h"
 #include "ion/Registers.h"
 #include "ion/MIR.h"
@@ -805,37 +807,37 @@ class LBlock : public TempObject
 template <size_t Defs, size_t Operands, size_t Temps>
 class LInstructionHelper : public LInstruction
 {
-    FixedArityList<LDefinition, Defs> defs_;
-    FixedArityList<LAllocation, Operands> operands_;
-    FixedArityList<LDefinition, Temps> temps_;
+    mozilla::Array<LDefinition, Defs> defs_;
+    mozilla::Array<LAllocation, Operands> operands_;
+    mozilla::Array<LDefinition, Temps> temps_;
 
   public:
-    size_t numDefs() const {
+    size_t numDefs() const MOZ_FINAL MOZ_OVERRIDE {
         return Defs;
     }
-    LDefinition *getDef(size_t index) {
+    LDefinition *getDef(size_t index) MOZ_FINAL MOZ_OVERRIDE {
         return &defs_[index];
     }
-    size_t numOperands() const {
+    size_t numOperands() const MOZ_FINAL MOZ_OVERRIDE {
         return Operands;
     }
-    LAllocation *getOperand(size_t index) {
+    LAllocation *getOperand(size_t index) MOZ_FINAL MOZ_OVERRIDE {
         return &operands_[index];
     }
-    size_t numTemps() const {
+    size_t numTemps() const MOZ_FINAL MOZ_OVERRIDE {
         return Temps;
     }
-    LDefinition *getTemp(size_t index) {
+    LDefinition *getTemp(size_t index) MOZ_FINAL MOZ_OVERRIDE {
         return &temps_[index];
     }
 
-    void setDef(size_t index, const LDefinition &def) {
+    void setDef(size_t index, const LDefinition &def) MOZ_FINAL MOZ_OVERRIDE {
         defs_[index] = def;
     }
-    void setOperand(size_t index, const LAllocation &a) {
+    void setOperand(size_t index, const LAllocation &a) MOZ_FINAL MOZ_OVERRIDE {
         operands_[index] = a;
     }
-    void setTemp(size_t index, const LDefinition &a) {
+    void setTemp(size_t index, const LDefinition &a) MOZ_FINAL MOZ_OVERRIDE {
         temps_[index] = a;
     }
 

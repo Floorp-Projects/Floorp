@@ -15,7 +15,7 @@ function testSteps()
   let request = indexedDB.open(name, 1);
   request.onerror = errorHandler;
   request.onupgradeneeded = grabEventAndContinueHandler;
-  let event = yield;
+  let event = yield undefined;
 
   let db = event.target.result;
   is(db.objectStoreNames.length, 0, "Correct objectStoreNames list");
@@ -34,7 +34,7 @@ function testSteps()
       }
     }
   }
-  yield;
+  yield undefined;
 
   is(db.objectStoreNames.length, 1, "Correct objectStoreNames list");
   is(db.objectStoreNames.item(0), objectStoreName, "Correct name");
@@ -44,7 +44,7 @@ function testSteps()
   let request = indexedDB.open(name, 2);
   request.onerror = errorHandler;
   request.onupgradeneeded = grabEventAndContinueHandler;
-  let event = yield;
+  let event = yield undefined;
 
   let db = event.target.result;
   let trans = event.target.transaction;
@@ -75,20 +75,20 @@ function testSteps()
     is(event.target.result, undefined, "ObjectStore shouldn't have any items");
     testGenerator.send(event);
   }
-  event = yield;
+  event = yield undefined;
 
   db.deleteObjectStore(objectStore.name);
   is(db.objectStoreNames.length, 0, "Correct objectStores list");
 
   continueToNextStep();
-  yield;
+  yield undefined;
 
   db.close();
 
   let request = indexedDB.open(name, 3);
   request.onerror = errorHandler;
   request.onupgradeneeded = grabEventAndContinueHandler;
-  let event = yield;
+  let event = yield undefined;
 
   let db = event.target.result;
 
@@ -100,8 +100,8 @@ function testSteps()
 
   db.deleteObjectStore(objectStoreName);
 
-  event = yield;
+  event = yield undefined;
 
   finishTest();
-  yield;
+  yield undefined;
 }

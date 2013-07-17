@@ -220,7 +220,7 @@ class AsmJSModule
 
         ExportedFunction(JSFunction *fun,
                          PropertyName *maybeFieldName,
-                         MoveRef<ArgCoercionVector> argCoercions,
+                         mozilla::MoveRef<ArgCoercionVector> argCoercions,
                          ReturnType returnType)
           : fun_(fun),
             maybeFieldName_(maybeFieldName),
@@ -238,10 +238,10 @@ class AsmJSModule
         }
 
       public:
-        ExportedFunction(MoveRef<ExportedFunction> rhs)
+        ExportedFunction(mozilla::MoveRef<ExportedFunction> rhs)
           : fun_(rhs->fun_),
             maybeFieldName_(rhs->maybeFieldName_),
-            argCoercions_(Move(rhs->argCoercions_)),
+            argCoercions_(mozilla::Move(rhs->argCoercions_)),
             returnType_(rhs->returnType_),
             hasCodePtr_(rhs->hasCodePtr_),
             u(rhs->u)
@@ -310,11 +310,11 @@ class AsmJSModule
         ion::PerfSpewer::BasicBlocksVector blocks;
 
         ProfiledBlocksFunction(JSAtom *name, unsigned start, unsigned end, ion::PerfSpewer::BasicBlocksVector &blocksVector)
-          : ProfiledFunction(name, start, end), blocks(Move(blocksVector))
+          : ProfiledFunction(name, start, end), blocks(mozilla::Move(blocksVector))
         { }
 
         ProfiledBlocksFunction(const ProfiledBlocksFunction &copy)
-          : ProfiledFunction(copy.name, copy.startCodeOffset, copy.endCodeOffset), blocks(Move(copy.blocks))
+          : ProfiledFunction(copy.name, copy.startCodeOffset, copy.endCodeOffset), blocks(mozilla::Move(copy.blocks))
         { }
     };
 #endif
@@ -501,10 +501,11 @@ class AsmJSModule
     }
 
     bool addExportedFunction(JSFunction *fun, PropertyName *maybeFieldName,
-                             MoveRef<ArgCoercionVector> argCoercions, ReturnType returnType)
+                             mozilla::MoveRef<ArgCoercionVector> argCoercions,
+                             ReturnType returnType)
     {
         ExportedFunction func(fun, maybeFieldName, argCoercions, returnType);
-        return exports_.append(Move(func));
+        return exports_.append(mozilla::Move(func));
     }
     unsigned numExportedFunctions() const {
         return exports_.length();

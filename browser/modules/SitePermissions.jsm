@@ -27,7 +27,11 @@ this.SitePermissions = {
   /* Returns an array of all permission IDs.
    */
   listPermissions: function () {
-    return Object.keys(gPermissionObject);
+    let array = Object.keys(gPermissionObject);
+    array.sort((a, b) => {
+      return this.getPermissionLabel(a).localeCompare(this.getPermissionLabel(b));
+    });
+    return array;
   },
 
   /* Returns an array of permission states to be exposed to the user for a
@@ -89,11 +93,11 @@ this.SitePermissions = {
 
   /* Removes the saved state of a particular permission for a given URI.
    */
-  remove: function (aURI, aPermission) {
+  remove: function (aURI, aPermissionID) {
     if (!this.isSupportedURI(aURI))
       return;
 
-    Services.perms.remove(aURI.host, aPermission);
+    Services.perms.remove(aURI.host, aPermissionID);
 
     if (aPermissionID in gPermissionObject &&
         gPermissionObject[aPermissionID].onChange)
@@ -110,7 +114,14 @@ this.SitePermissions = {
   /* Returns the localized label for the given permission state, to be used in
    * a UI for managing permissions.
    */
-  getStateLabel: function (aState) {
+  getStateLabel: function (aPermissionID, aState) {
+    if (aPermissionID in gPermissionObject &&
+        gPermissionObject[aPermissionID].getStateLabel) {
+      let label = gPermissionObject[aPermissionID].getStateLabel(aState);
+      if (label)
+        return label;
+    }
+
     switch (aState) {
       case this.UNKNOWN:
         return gStringBundle.GetStringFromName("alwaysAsk");
@@ -139,6 +150,11 @@ let gPermissionObject = {
    *    Called to get the permission's default state.
    *    Defaults to UNKNOWN, indicating that the user will be asked each time
    *    a page asks for that permissions.
+   *
+   *  - getStateLabel
+   *    Called to get the localized label for the given permission state, to be
+   *    used in a UI for managing permissions. May return null for states that
+   *    should use their default label.
    *
    *  - onChange
    *    Called when a permission state changes.
@@ -189,8 +205,18 @@ let gPermissionObject = {
   },
 
   "indexedDB": {
-    getDefault: function () {
-      return SitePermissions.ALLOW;
+    states: [ SitePermissions.ALLOW, SitePermissions.UNKNOWN, SitePermissions.BLOCK ],
+    getStateLabel: function (aState) {
+      // indexedDB redefines nsIPermissionManager.UNKNOWN_ACTION (the default)
+      // as "allow" and nsIPermissionManager.ALLOW_ACTION as "ask the user."
+      switch (aState) {
+        case SitePermissions.UNKNOWN:
+          return gStringBundle.GetStringFromName("allow");
+        case SitePermissions.ALLOW:
+          return gStringBundle.GetStringFromName("alwaysAsk");
+        default:
+          return null;
+      }
     },
     onChange: function (aURI, aState) {
       if (aState == SitePermissions.ALLOW || aState == SitePermissions.BLOCK)

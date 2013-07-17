@@ -129,7 +129,7 @@ function run() {
   // the document's base changes the visitedness of our links.
   iframe.onload = continueTest;
   iframeCw.location = "http://example.com/" + rand;
-  yield; // wait for onload to fire.
+  yield undefined; // wait for onload to fire.
 
   // Make sure things are what as we expect them at the beginning.
   link123HrefIs("http://mochi.test:8888/", 1);
@@ -153,13 +153,13 @@ function run() {
   // timeout and fail anyway).
   while (getColor($('colorlink')) != visitedColor) {
     setTimeout(continueTest, 0);
-    yield;
+    yield undefined;
   }
   is(getColor($('colorlink')), visitedColor,
      "Wrong link color after base change.");
   while (getFill($('ellipselink')) != visitedFill) {
     setTimeout(continueTest, 0);
-    yield;
+    yield undefined;
   }
   is(getFill($('ellipselink')), visitedFill,
           "Wrong ellipse fill after base change.");
@@ -227,13 +227,13 @@ function run() {
 
   iframe.onload = null;
   iframeCw.location = "file_bug209275_1.html";
-  yield; // wait for our child to call us back.
+  yield undefined; // wait for our child to call us back.
   is(iframeCw.document.getElementById("link").href,
      path + "file_bug209275_1.html#",
      "Wrong href after nuking document.");
 
   iframeCw.location = "file_bug209275_2.html";
-  yield; // wait for callback from child
+  yield undefined; // wait for callback from child
   is(iframeCw.document.getElementById("link").href,
      "http://mochi.test:8888/",
      "Wrong href after nuking document second time.");
@@ -241,13 +241,13 @@ function run() {
   // Make sure that document.open() makes the document forget about any <base>
   // tags it has.
   iframeCw.location = "file_bug209275_3.html";
-  yield; // wait for callback from child
+  yield undefined; // wait for callback from child
   is(iframeCw.document.getElementById("link").href,
      "http://mochi.test:8888/",
      "Wrong href after document.open().");
 
   SimpleTest.finish();
-  yield;
+  yield undefined;
 }
 
 window.addEventListener("load", function() {

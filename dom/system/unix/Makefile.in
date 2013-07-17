@@ -11,15 +11,11 @@ include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME    = domsystemunix_s
 
-# we don't want the shared lib, but we want to force the creation of a static lib.
 LIBXUL_LIBRARY   = 1
-FORCE_STATIC_LIB = 1
 EXPORT_LIBRARY = 1
 FAIL_ON_WARNINGS := 1
 
 include $(topsrcdir)/config/config.mk
-include $(topsrcdir)/ipc/chromium/chromium-config.mk
-
 
 ifdef MOZ_MAEMO_LIBLOCATION
         LOCAL_INCLUDES  += $(MOZ_PLATFORM_MAEMO_CFLAGS) \
@@ -38,3 +34,4 @@ LOCAL_INCLUDES  += $(MOZ_QT_CFLAGS) \
 endif
 
 include $(topsrcdir)/config/rules.mk
+include $(topsrcdir)/ipc/chromium/chromium-config.mk

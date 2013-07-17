@@ -74,7 +74,6 @@ DocumentType::DocumentType(already_AddRefed<nsINodeInfo> aNodeInfo,
   mSystemId(aSystemId),
   mInternalSubset(aInternalSubset)
 {
-  SetIsDOMBinding();
   NS_ABORT_IF_FALSE(mNodeInfo->NodeType() == nsIDOMNode::DOCUMENT_TYPE_NODE,
                     "Bad NodeType in aNodeInfo");
 }

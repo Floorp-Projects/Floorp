@@ -5,9 +5,13 @@
 
 /* General Update Manager Tests */
 
+const TEST_ID = "0064";
+
 function run_test() {
   do_test_pending();
   do_register_cleanup(end_test);
+
+  adjustGeneralPaths();
 
   logTestInfo("testing removal of an update download in progress for the " +
               "same version of the application with the same application " +

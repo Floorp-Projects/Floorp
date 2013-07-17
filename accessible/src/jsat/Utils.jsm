@@ -234,7 +234,8 @@ this.Utils = {
 
   inHiddenSubtree: function inHiddenSubtree(aAccessible) {
     for (let acc=aAccessible; acc; acc=acc.parent) {
-      if (JSON.parse(Utils.getAttributes(acc).hidden)) {
+      let hidden = Utils.getAttributes(acc).hidden;
+      if (hidden && JSON.parse(hidden)) {
         return true;
       }
     }
@@ -260,6 +261,28 @@ this.Utils = {
     }
 
     return true;
+  },
+
+  getLandmarkName: function getLandmarkName(aAccessible) {
+    const landmarks = [
+      'banner',
+      'complementary',
+      'contentinfo',
+      'main',
+      'navigation',
+      'search'
+    ];
+    let roles = this.getAttributes(aAccessible)['xml-roles'];
+    if (!roles) {
+      return;
+    }
+
+    // Looking up a role that would match a landmark.
+    for (let landmark of landmarks) {
+      if (roles.indexOf(landmark) > -1) {
+        return landmark;
+      }
+    }
   }
 };
 

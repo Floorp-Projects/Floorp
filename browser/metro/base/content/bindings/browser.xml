@@ -757,6 +757,7 @@
         <setter><![CDATA[
           // Do not change displayport on local tabs!
           this._active = val;
+          this.docShellIsActive = this._active;
         ]]></setter>
       </property>
 

@@ -7,8 +7,11 @@
 #ifndef js_Vector_h
 #define js_Vector_h
 
+#include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/Move.h"
+#include "mozilla/ReentrancyGuard.h"
 #include "mozilla/TypeTraits.h"
 
 #include "js/TemplateLib.h"
@@ -78,7 +81,7 @@ struct VectorImpl
     template <class U>
     static inline void moveConstruct(T *dst, const U *srcbeg, const U *srcend) {
         for (const U *p = srcbeg; p != srcend; ++p, ++dst)
-            new(dst) T(Move(*p));
+            new(dst) T(mozilla::Move(*p));
     }
 
     /*
@@ -98,13 +101,13 @@ struct VectorImpl
      * not overflow.
      */
     static inline bool growTo(Vector<T,N,AP> &v, size_t newCap) {
-        JS_ASSERT(!v.usingInlineStorage());
-        JS_ASSERT(!CapacityHasExcessSpace<T>(newCap));
+        MOZ_ASSERT(!v.usingInlineStorage());
+        MOZ_ASSERT(!CapacityHasExcessSpace<T>(newCap));
         T *newbuf = reinterpret_cast<T *>(v.malloc_(newCap * sizeof(T)));
         if (!newbuf)
             return false;
         for (T *dst = newbuf, *src = v.beginNoCheck(); src != v.endNoCheck(); ++dst, ++src)
-            new(dst) T(Move(*src));
+            new(dst) T(mozilla::Move(*src));
         VectorImpl::destroy(v.beginNoCheck(), v.endNoCheck());
         v.free_(v.mBegin);
         v.mBegin = newbuf;
@@ -161,8 +164,8 @@ struct VectorImpl<T, N, AP, true>
     }
 
     static inline bool growTo(Vector<T,N,AP> &v, size_t newCap) {
-        JS_ASSERT(!v.usingInlineStorage());
-        JS_ASSERT(!CapacityHasExcessSpace<T>(newCap));
+        MOZ_ASSERT(!v.usingInlineStorage());
+        MOZ_ASSERT(!CapacityHasExcessSpace<T>(newCap));
         size_t oldSize = sizeof(T) * v.mCapacity;
         size_t newSize = sizeof(T) * newCap;
         T *newbuf = reinterpret_cast<T *>(v.realloc_(v.mBegin, oldSize, newSize));
@@ -206,8 +209,6 @@ class Vector : private AllocPolicy
 
     bool growStorageBy(size_t incr);
     bool convertToHeapStorage(size_t newCap);
-
-    template <bool InitNewElems> inline bool growByImpl(size_t inc);
 
     /* magic constants */
 
@@ -259,7 +260,7 @@ class Vector : private AllocPolicy
     mozilla::AlignedStorage<sInlineBytes> storage;
 
 #ifdef DEBUG
-    friend class ReentrancyGuard;
+    friend class mozilla::ReentrancyGuard;
     bool entered;
 #endif
 
@@ -290,8 +291,8 @@ class Vector : private AllocPolicy
 
 #ifdef DEBUG
     size_t reserved() const {
-        JS_ASSERT(mReserved <= mCapacity);
-        JS_ASSERT(mLength <= mReserved);
+        MOZ_ASSERT(mReserved <= mCapacity);
+        MOZ_ASSERT(mLength <= mReserved);
         return mReserved;
     }
 #endif
@@ -308,8 +309,8 @@ class Vector : private AllocPolicy
     typedef T ElementType;
 
     Vector(AllocPolicy = AllocPolicy());
-    Vector(MoveRef<Vector>); /* Move constructor. */
-    Vector &operator=(MoveRef<Vector>); /* Move assignment. */
+    Vector(mozilla::MoveRef<Vector>); /* Move constructor. */
+    Vector &operator=(mozilla::MoveRef<Vector>); /* Move assignment. */
     ~Vector();
 
     /* accessors */
@@ -337,42 +338,46 @@ class Vector : private AllocPolicy
     }
 
     T *begin() {
-        JS_ASSERT(!entered);
+        MOZ_ASSERT(!entered);
         return mBegin;
     }
 
     const T *begin() const {
-        JS_ASSERT(!entered);
+        MOZ_ASSERT(!entered);
         return mBegin;
     }
 
     T *end() {
-        JS_ASSERT(!entered);
+        MOZ_ASSERT(!entered);
         return mBegin + mLength;
     }
 
     const T *end() const {
-        JS_ASSERT(!entered);
+        MOZ_ASSERT(!entered);
         return mBegin + mLength;
     }
 
     T &operator[](size_t i) {
-        JS_ASSERT(!entered && i < mLength);
+        MOZ_ASSERT(!entered);
+        MOZ_ASSERT(i < mLength);
         return begin()[i];
     }
 
     const T &operator[](size_t i) const {
-        JS_ASSERT(!entered && i < mLength);
+        MOZ_ASSERT(!entered);
+        MOZ_ASSERT(i < mLength);
         return begin()[i];
     }
 
     T &back() {
-        JS_ASSERT(!entered && !empty());
+        MOZ_ASSERT(!entered);
+        MOZ_ASSERT(!empty());
         return *(end() - 1);
     }
 
     const T &back() const {
-        JS_ASSERT(!entered && !empty());
+        MOZ_ASSERT(!entered);
+        MOZ_ASSERT(!empty());
         return *(end() - 1);
     }
 
@@ -385,8 +390,8 @@ class Vector : private AllocPolicy
         bool empty() const { return cur_ == end_; }
         size_t remain() const { return end_ - cur_; }
         T &front() const { return *cur_; }
-        void popFront() { JS_ASSERT(!empty()); ++cur_; }
-        T popCopyFront() { JS_ASSERT(!empty()); return *cur_++; }
+        void popFront() { MOZ_ASSERT(!empty()); ++cur_; }
+        T popCopyFront() { MOZ_ASSERT(!empty()); return *cur_++; }
     };
 
     Range all() {
@@ -518,16 +523,16 @@ class Vector : private AllocPolicy
 
 /* This does the re-entrancy check plus several other sanity checks. */
 #define REENTRANCY_GUARD_ET_AL \
-    ReentrancyGuard g(*this); \
-    JS_ASSERT_IF(usingInlineStorage(), mCapacity == sInlineCapacity); \
-    JS_ASSERT(reserved() <= mCapacity); \
-    JS_ASSERT(mLength <= reserved()); \
-    JS_ASSERT(mLength <= mCapacity)
+    mozilla::ReentrancyGuard g(*this); \
+    MOZ_ASSERT_IF(usingInlineStorage(), mCapacity == sInlineCapacity); \
+    MOZ_ASSERT(reserved() <= mCapacity); \
+    MOZ_ASSERT(mLength <= reserved()); \
+    MOZ_ASSERT(mLength <= mCapacity)
 
 /* Vector Implementation */
 
 template <class T, size_t N, class AllocPolicy>
-JS_ALWAYS_INLINE
+MOZ_ALWAYS_INLINE
 Vector<T,N,AllocPolicy>::Vector(AllocPolicy ap)
   : AllocPolicy(ap), mBegin((T *)storage.addr()), mLength(0),
     mCapacity(sInlineCapacity)
@@ -538,8 +543,8 @@ Vector<T,N,AllocPolicy>::Vector(AllocPolicy ap)
 
 /* Move constructor. */
 template <class T, size_t N, class AllocPolicy>
-JS_ALWAYS_INLINE
-Vector<T, N, AllocPolicy>::Vector(MoveRef<Vector> rhs)
+MOZ_ALWAYS_INLINE
+Vector<T, N, AllocPolicy>::Vector(mozilla::MoveRef<Vector> rhs)
     : AllocPolicy(rhs)
 #ifdef DEBUG
     , entered(false)
@@ -576,9 +581,9 @@ Vector<T, N, AllocPolicy>::Vector(MoveRef<Vector> rhs)
 
 /* Move assignment. */
 template <class T, size_t N, class AP>
-JS_ALWAYS_INLINE
+MOZ_ALWAYS_INLINE
 Vector<T, N, AP> &
-Vector<T, N, AP>::operator=(MoveRef<Vector> rhs)
+Vector<T, N, AP>::operator=(mozilla::MoveRef<Vector> rhs)
 {
     this->~Vector();
     new(this) Vector(rhs);
@@ -586,7 +591,7 @@ Vector<T, N, AP>::operator=(MoveRef<Vector> rhs)
 }
 
 template <class T, size_t N, class AP>
-JS_ALWAYS_INLINE
+MOZ_ALWAYS_INLINE
 Vector<T,N,AP>::~Vector()
 {
     REENTRANCY_GUARD_ET_AL;
@@ -604,10 +609,10 @@ template <class T, size_t N, class AP>
 inline bool
 Vector<T,N,AP>::convertToHeapStorage(size_t newCap)
 {
-    JS_ASSERT(usingInlineStorage());
+    MOZ_ASSERT(usingInlineStorage());
 
     /* Allocate buffer. */
-    JS_ASSERT(!CapacityHasExcessSpace<T>(newCap));
+    MOZ_ASSERT(!CapacityHasExcessSpace<T>(newCap));
     T *newBuf = reinterpret_cast<T *>(this->malloc_(newCap * sizeof(T)));
     if (!newBuf)
         return false;
@@ -624,11 +629,11 @@ Vector<T,N,AP>::convertToHeapStorage(size_t newCap)
 }
 
 template <class T, size_t N, class AP>
-JS_NEVER_INLINE bool
+MOZ_NEVER_INLINE bool
 Vector<T,N,AP>::growStorageBy(size_t incr)
 {
-    JS_ASSERT(mLength + incr > mCapacity);
-    JS_ASSERT_IF(!usingInlineStorage(), !CapacityHasExcessSpace<T>(mCapacity));
+    MOZ_ASSERT(mLength + incr > mCapacity);
+    MOZ_ASSERT_IF(!usingInlineStorage(), !CapacityHasExcessSpace<T>(mCapacity));
 
     /*
      * When choosing a new capacity, its size should is as close to 2^N bytes
@@ -706,8 +711,8 @@ template <class T, size_t N, class AP>
 inline bool
 Vector<T,N,AP>::initCapacity(size_t request)
 {
-    JS_ASSERT(empty());
-    JS_ASSERT(usingInlineStorage());
+    MOZ_ASSERT(empty());
+    MOZ_ASSERT(usingInlineStorage());
     if (request == 0)
         return true;
     T *newbuf = reinterpret_cast<T *>(this->malloc_(request * sizeof(T)));
@@ -732,8 +737,8 @@ Vector<T,N,AP>::reserve(size_t request)
 #ifdef DEBUG
     if (request > mReserved)
         mReserved = request;
-    JS_ASSERT(mLength <= mReserved);
-    JS_ASSERT(mReserved <= mCapacity);
+    MOZ_ASSERT(mLength <= mReserved);
+    MOZ_ASSERT(mReserved <= mCapacity);
 #endif
     return true;
 }
@@ -743,24 +748,22 @@ inline void
 Vector<T,N,AP>::shrinkBy(size_t incr)
 {
     REENTRANCY_GUARD_ET_AL;
-    JS_ASSERT(incr <= mLength);
+    MOZ_ASSERT(incr <= mLength);
     Impl::destroy(endNoCheck() - incr, endNoCheck());
     mLength -= incr;
 }
 
 template <class T, size_t N, class AP>
-template <bool InitNewElems>
-JS_ALWAYS_INLINE bool
-Vector<T,N,AP>::growByImpl(size_t incr)
+MOZ_ALWAYS_INLINE bool
+Vector<T,N,AP>::growBy(size_t incr)
 {
     REENTRANCY_GUARD_ET_AL;
     if (incr > mCapacity - mLength && !growStorageBy(incr))
         return false;
 
-    JS_ASSERT(mLength + incr <= mCapacity);
+    MOZ_ASSERT(mLength + incr <= mCapacity);
     T *newend = endNoCheck() + incr;
-    if (InitNewElems)
-        Impl::initialize(endNoCheck(), newend);
+    Impl::initialize(endNoCheck(), newend);
     mLength += incr;
 #ifdef DEBUG
     if (mLength > mReserved)
@@ -770,17 +773,20 @@ Vector<T,N,AP>::growByImpl(size_t incr)
 }
 
 template <class T, size_t N, class AP>
-JS_ALWAYS_INLINE bool
-Vector<T,N,AP>::growBy(size_t incr)
-{
-    return growByImpl<true>(incr);
-}
-
-template <class T, size_t N, class AP>
-JS_ALWAYS_INLINE bool
+MOZ_ALWAYS_INLINE bool
 Vector<T,N,AP>::growByUninitialized(size_t incr)
 {
-    return growByImpl<false>(incr);
+    REENTRANCY_GUARD_ET_AL;
+    if (incr > mCapacity - mLength && !growStorageBy(incr))
+        return false;
+
+    MOZ_ASSERT(mLength + incr <= mCapacity);
+    mLength += incr;
+#ifdef DEBUG
+    if (mLength > mReserved)
+        mReserved = mLength;
+#endif
+    return true;
 }
 
 template <class T, size_t N, class AP>
@@ -796,7 +802,7 @@ Vector<T,N,AP>::resize(size_t newLength)
 }
 
 template <class T, size_t N, class AP>
-JS_ALWAYS_INLINE bool
+MOZ_ALWAYS_INLINE bool
 Vector<T,N,AP>::resizeUninitialized(size_t newLength)
 {
     size_t curLength = mLength;
@@ -841,7 +847,7 @@ Vector<T,N,AP>::canAppendWithoutRealloc(size_t needed) const
 
 template <class T, size_t N, class AP>
 template <class U>
-JS_ALWAYS_INLINE bool
+MOZ_ALWAYS_INLINE bool
 Vector<T,N,AP>::append(U t)
 {
     REENTRANCY_GUARD_ET_AL;
@@ -858,17 +864,17 @@ Vector<T,N,AP>::append(U t)
 
 template <class T, size_t N, class AP>
 template <class U>
-JS_ALWAYS_INLINE void
+MOZ_ALWAYS_INLINE void
 Vector<T,N,AP>::internalAppend(U u)
 {
-    JS_ASSERT(mLength + 1 <= mReserved);
-    JS_ASSERT(mReserved <= mCapacity);
+    MOZ_ASSERT(mLength + 1 <= mReserved);
+    MOZ_ASSERT(mReserved <= mCapacity);
     new(endNoCheck()) T(u);
     ++mLength;
 }
 
 template <class T, size_t N, class AP>
-JS_ALWAYS_INLINE bool
+MOZ_ALWAYS_INLINE bool
 Vector<T,N,AP>::appendN(const T &t, size_t needed)
 {
     REENTRANCY_GUARD_ET_AL;
@@ -884,11 +890,11 @@ Vector<T,N,AP>::appendN(const T &t, size_t needed)
 }
 
 template <class T, size_t N, class AP>
-JS_ALWAYS_INLINE void
+MOZ_ALWAYS_INLINE void
 Vector<T,N,AP>::internalAppendN(const T &t, size_t needed)
 {
-    JS_ASSERT(mLength + needed <= mReserved);
-    JS_ASSERT(mReserved <= mCapacity);
+    MOZ_ASSERT(mLength + needed <= mReserved);
+    MOZ_ASSERT(mReserved <= mCapacity);
     Impl::copyConstructN(endNoCheck(), needed, t);
     mLength += needed;
 }
@@ -897,9 +903,10 @@ template <class T, size_t N, class AP>
 inline T *
 Vector<T,N,AP>::insert(T *p, const T &val)
 {
-    JS_ASSERT(begin() <= p && p <= end());
+    MOZ_ASSERT(begin() <= p);
+    MOZ_ASSERT(p <= end());
     size_t pos = p - begin();
-    JS_ASSERT(pos <= mLength);
+    MOZ_ASSERT(pos <= mLength);
     size_t oldLength = mLength;
     if (pos == oldLength) {
         if (!append(val))
@@ -919,7 +926,8 @@ template<typename T, size_t N, class AP>
 inline void
 Vector<T,N,AP>::erase(T *it)
 {
-    JS_ASSERT(begin() <= it && it < end());
+    MOZ_ASSERT(begin() <= it);
+    MOZ_ASSERT(it < end());
     while (it + 1 != end()) {
         *it = *(it + 1);
         ++it;
@@ -929,7 +937,7 @@ Vector<T,N,AP>::erase(T *it)
 
 template <class T, size_t N, class AP>
 template <class U>
-JS_ALWAYS_INLINE bool
+MOZ_ALWAYS_INLINE bool
 Vector<T,N,AP>::append(const U *insBegin, const U *insEnd)
 {
     REENTRANCY_GUARD_ET_AL;
@@ -947,11 +955,11 @@ Vector<T,N,AP>::append(const U *insBegin, const U *insEnd)
 
 template <class T, size_t N, class AP>
 template <class U>
-JS_ALWAYS_INLINE void
+MOZ_ALWAYS_INLINE void
 Vector<T,N,AP>::internalAppend(const U *insBegin, size_t insLength)
 {
-    JS_ASSERT(mLength + insLength <= mReserved);
-    JS_ASSERT(mReserved <= mCapacity);
+    MOZ_ASSERT(mLength + insLength <= mReserved);
+    MOZ_ASSERT(mReserved <= mCapacity);
     Impl::copyConstruct(endNoCheck(), insBegin, insBegin + insLength);
     mLength += insLength;
 }
@@ -974,24 +982,24 @@ Vector<T,N,AP>::internalAppend(const Vector<U,O,BP> &other)
 
 template <class T, size_t N, class AP>
 template <class U>
-JS_ALWAYS_INLINE bool
+MOZ_ALWAYS_INLINE bool
 Vector<T,N,AP>::append(const U *insBegin, size_t insLength)
 {
     return this->append(insBegin, insBegin + insLength);
 }
 
 template <class T, size_t N, class AP>
-JS_ALWAYS_INLINE void
+MOZ_ALWAYS_INLINE void
 Vector<T,N,AP>::popBack()
 {
     REENTRANCY_GUARD_ET_AL;
-    JS_ASSERT(!empty());
+    MOZ_ASSERT(!empty());
     --mLength;
     endNoCheck()->~T();
 }
 
 template <class T, size_t N, class AP>
-JS_ALWAYS_INLINE T
+MOZ_ALWAYS_INLINE T
 Vector<T,N,AP>::popCopy()
 {
     T ret = back();
@@ -1076,8 +1084,8 @@ template <class T, size_t N, class AP>
 inline void
 Vector<T,N,AP>::swap(Vector &other)
 {
-    // TODO Implement N != 0
-    JS_STATIC_ASSERT(N == 0);
+    MOZ_STATIC_ASSERT(N == 0,
+                      "still need to implement this for N != 0");
 
     // This only works when inline storage is always empty.
     if (!usingInlineStorage() && other.usingInlineStorage()) {
@@ -1087,15 +1095,15 @@ Vector<T,N,AP>::swap(Vector &other)
         mBegin = other.mBegin;
         other.mBegin = other.inlineStorage();
     } else if (!usingInlineStorage() && !other.usingInlineStorage()) {
-        Swap(mBegin, other.mBegin);
+        mozilla::Swap(mBegin, other.mBegin);
     } else {
         // This case is a no-op, since we'd set both to use their inline storage.
     }
 
-    Swap(mLength, other.mLength);
-    Swap(mCapacity, other.mCapacity);
+    mozilla::Swap(mLength, other.mLength);
+    mozilla::Swap(mCapacity, other.mCapacity);
 #ifdef DEBUG
-    Swap(mReserved, other.mReserved);
+    mozilla::Swap(mReserved, other.mReserved);
 #endif
 }
 

@@ -196,18 +196,13 @@ function test() {
       options = {private: true};
     }
 
-    let newWin = OpenBrowserWindow(options);
-    newWin.addEventListener("load", function(aEvent) {
-      newWin.removeEventListener("load", arguments.callee, false);
-      newWin.gBrowser.addEventListener("load", function(aEvent) {
-        newWin.gBrowser.removeEventListener("load", arguments.callee, true);
-        TEST_URLS.forEach(function (url) {
-          newWin.gBrowser.addTab(url);
-        });
+    whenNewWindowLoaded(options, function (newWin) {
+      TEST_URLS.forEach(function (url) {
+        newWin.gBrowser.addTab(url);
+      });
 
-        executeSoon(function() testFn(newWin));
-      }, true);
-    }, false);
+      executeSoon(() => testFn(newWin));
+    });
   }
 
   /**
@@ -230,20 +225,16 @@ function test() {
 
       // Open a new window
       // The previously closed window should be restored
-      newWin = OpenBrowserWindow({});
-      newWin.addEventListener("load", function() {
-        this.removeEventListener("load", arguments.callee, true);
-        executeSoon(function() {
-          is(newWin.gBrowser.browsers.length, TEST_URLS.length + 1,
-             "Restored window in-session with otherpopup windows around");
+      whenNewWindowLoaded({}, function (newWin) {
+        is(newWin.gBrowser.browsers.length, TEST_URLS.length + 1,
+           "Restored window in-session with otherpopup windows around");
 
-          // Cleanup
-          newWin.close();
+        // Cleanup
+        newWin.close();
 
-          // Next please
-          executeSoon(nextFn);
-        });
-      }, true);
+        // Next please
+        executeSoon(nextFn);
+      });
     });
   }
 
@@ -259,32 +250,24 @@ function test() {
       // Enter private browsing mode
       // Open a new window.
       // The previously closed window should NOT be restored
-      newWin = OpenBrowserWindow({private: true});
-      newWin.addEventListener("load", function() {
-        this.removeEventListener("load", arguments.callee, true);
-        executeSoon(function() {
-          is(newWin.gBrowser.browsers.length, 1,
-             "Did not restore in private browing mode");
+      whenNewWindowLoaded({private: true}, function (newWin) {
+        is(newWin.gBrowser.browsers.length, 1,
+           "Did not restore in private browing mode");
 
-          // Cleanup
-          newWin.BrowserTryToCloseWindow();
+        // Cleanup
+        newWin.BrowserTryToCloseWindow();
 
-          // Exit private browsing mode again
-          newWin = OpenBrowserWindow({});
-          newWin.addEventListener("load", function() {
-            this.removeEventListener("load", arguments.callee, true);
-            executeSoon(function() {
-              is(newWin.gBrowser.browsers.length, TEST_URLS.length + 1,
-                 "Restored after leaving private browsing again");
+        // Exit private browsing mode again
+        whenNewWindowLoaded({}, function (newWin) {
+          is(newWin.gBrowser.browsers.length, TEST_URLS.length + 1,
+             "Restored after leaving private browsing again");
 
-              newWin.close();
+          newWin.close();
 
-              // Next please
-              executeSoon(nextFn);
-            });
-          }, true);
+          // Next please
+          executeSoon(nextFn);
         });
-      }, true);
+      });
     });
   }
 
@@ -312,21 +295,17 @@ function test() {
           popup2.close();
 
           // open a new window the previously closed window should be restored to
-          newWin = OpenBrowserWindow({});
-          newWin.addEventListener("load", function() {
-            this.removeEventListener("load", arguments.callee, true);
-            executeSoon(function() {
-              is(newWin.gBrowser.browsers.length, TEST_URLS.length + 1,
-                 "Restored window and associated tabs in session");
+          whenNewWindowLoaded({}, function (newWin) {
+            is(newWin.gBrowser.browsers.length, TEST_URLS.length + 1,
+               "Restored window and associated tabs in session");
 
-              // Cleanup
-              newWin.close();
-              popup.close();
+            // Cleanup
+            newWin.close();
+            popup.close();
 
-              // Next please
-              executeSoon(nextFn);
-            });
-          }, true);
+            // Next please
+            executeSoon(nextFn);
+          });
         }, true);
       }, false);
     });
@@ -366,22 +345,18 @@ function test() {
           // but instead a new window is opened without restoring anything
           popup.close();
 
-          let newWin = OpenBrowserWindow({});
-          newWin.addEventListener("load", function() {
-            newWin.removeEventListener("load", arguments.callee, true);
-            executeSoon(function() {
-              isnot(newWin.gBrowser.browsers.length, 2,
-                    "Did not restore the popup window");
-              is(TEST_URLS.indexOf(newWin.gBrowser.browsers[0].currentURI.spec), -1,
-                 "Did not restore the popup window (2)");
+          whenNewWindowLoaded({}, function (newWin) {
+            isnot(newWin.gBrowser.browsers.length, 2,
+                  "Did not restore the popup window");
+            is(TEST_URLS.indexOf(newWin.gBrowser.browsers[0].currentURI.spec), -1,
+               "Did not restore the popup window (2)");
 
-              // Cleanup
-              newWin.close();
+            // Cleanup
+            newWin.close();
 
-              // Next please
-              executeSoon(nextFn);
-            });
-          }, true);
+            // Next please
+            executeSoon(nextFn);
+          });
         }, true);
       }, false);
     }, true);
@@ -402,27 +377,23 @@ function test() {
 
         newWin = undoCloseWindow(0);
 
-        newWin2 = OpenBrowserWindow({});
-        newWin2.addEventListener("load", function() {
-          newWin2.removeEventListener("load", arguments.callee, true);
-          executeSoon(function() {
-            is(newWin2.gBrowser.browsers.length, 1,
-               "Did not restore, as undoCloseWindow() was last called");
-            is(TEST_URLS.indexOf(newWin2.gBrowser.browsers[0].currentURI.spec), -1,
-               "Did not restore, as undoCloseWindow() was last called (2)");
+        whenNewWindowLoaded({}, function (newWin2) {
+          is(newWin2.gBrowser.browsers.length, 1,
+             "Did not restore, as undoCloseWindow() was last called");
+          is(TEST_URLS.indexOf(newWin2.gBrowser.browsers[0].currentURI.spec), -1,
+             "Did not restore, as undoCloseWindow() was last called (2)");
 
-            browserWindowsCount([2, 3], "browser windows while running testOpenCloseRestoreFromPopup");
+          browserWindowsCount([2, 3], "browser windows while running testOpenCloseRestoreFromPopup");
 
-            // Cleanup
-            newWin.close();
-            newWin2.close();
+          // Cleanup
+          newWin.close();
+          newWin2.close();
 
-            browserWindowsCount([0, 1], "browser windows while running testOpenCloseRestoreFromPopup");
+          browserWindowsCount([0, 1], "browser windows while running testOpenCloseRestoreFromPopup");
 
-            // Next please
-            executeSoon(nextFn);
-          });
-        }, true);
+          // Next please
+          executeSoon(nextFn);
+        });
       });
     });
   }

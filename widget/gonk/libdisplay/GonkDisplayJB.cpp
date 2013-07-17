@@ -63,7 +63,13 @@ GonkDisplayJB::GonkDisplayJB()
                  HWC_HARDWARE_COMPOSER, strerror(-err));
     }
 
-    if (!err) {
+    /* Fallback on the FB rendering path instead of trying to support HWC 1.0 */
+    if (!err && mHwc->common.version == HWC_DEVICE_API_VERSION_1_0) {
+        hwc_close_1(mHwc);
+        mHwc = nullptr;
+    }
+
+    if (!err && mHwc) {
         if (mFBDevice) {
             framebuffer_close(mFBDevice);
             mFBDevice = nullptr;
@@ -80,7 +86,7 @@ GonkDisplayJB::GonkDisplayJB()
 
         mWidth = values[0];
         mHeight = values[1];
-        xdpi = values[2];
+        xdpi = values[2] / 1000.0f;
         surfaceformat = HAL_PIXEL_FORMAT_RGBA_8888;
     }
 

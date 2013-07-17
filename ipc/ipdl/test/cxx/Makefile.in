@@ -11,7 +11,6 @@ include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME = $(MODULE)_s
 LIBXUL_LIBRARY = 1
-FORCE_STATIC_LIB = 1
 EXPORT_LIBRARY = 1
 
 IPDLTESTS = \
@@ -62,8 +61,8 @@ TESTER_TEMPLATE := $(srcdir)/IPDLUnitTests.template.cpp
 GENTESTER := $(srcdir)/genIPDLUnitTests.py
 
 include $(topsrcdir)/config/config.mk
-include $(topsrcdir)/ipc/chromium/chromium-config.mk
 include $(topsrcdir)/config/rules.mk
+include $(topsrcdir)/ipc/chromium/chromium-config.mk
 
 
 IPDLUNITTEST_BIN = $(DEPTH)/dist/bin/ipdlunittest$(BIN_SUFFIX)

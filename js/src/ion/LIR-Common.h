@@ -226,11 +226,13 @@ class LControlInstructionHelper : public LInstructionHelper<0, Operands, Temps> 
     MBasicBlock *successors_[Succs];
 
   public:
-    size_t numSuccessors() const { return Succs; }
+    virtual size_t numSuccessors() const MOZ_FINAL MOZ_OVERRIDE { return Succs; }
 
-    MBasicBlock *getSuccessor(size_t i) const { return successors_[i]; }
+    virtual MBasicBlock *getSuccessor(size_t i) const MOZ_FINAL MOZ_OVERRIDE {
+        return successors_[i];
+    }
 
-    void setSuccessor(size_t i, MBasicBlock *successor) {
+    virtual void setSuccessor(size_t i, MBasicBlock *successor) MOZ_FINAL MOZ_OVERRIDE {
         successors_[i] = successor;
     }
 };
@@ -968,12 +970,12 @@ class LCallNative : public LJSCallInstructionHelper<BOX_PIECES, 0, 4>
     LIR_HEADER(CallNative)
 
     LCallNative(uint32_t argslot,
-                const LDefinition &argJSContext, const LDefinition &argUintN,
+                const LDefinition &argContext, const LDefinition &argUintN,
                 const LDefinition &argVp, const LDefinition &tmpreg)
       : JSCallHelper(argslot)
     {
         // Registers used for callWithABI().
-        setTemp(0, argJSContext);
+        setTemp(0, argContext);
         setTemp(1, argUintN);
         setTemp(2, argVp);
 
@@ -981,7 +983,7 @@ class LCallNative : public LJSCallInstructionHelper<BOX_PIECES, 0, 4>
         setTemp(3, tmpreg);
     }
 
-    const LAllocation *getArgJSContextReg() {
+    const LAllocation *getArgContextReg() {
         return getTemp(0)->output();
     }
     const LAllocation *getArgUintNReg() {
@@ -4469,7 +4471,7 @@ class MPhi;
 // register allocator. Like its equivalent in MIR, phis are collected at the
 // top of blocks and are meant to be executed in parallel, choosing the input
 // corresponding to the predecessor taken in the control flow graph.
-class LPhi : public LInstruction
+class LPhi MOZ_FINAL : public LInstruction
 {
     uint32_t numInputs_;
     LAllocation *inputs_;
@@ -4770,7 +4772,7 @@ class LAsmJSPassStackArg : public LInstructionHelper<0, 1, 0>
     }
 };
 
-class LAsmJSCall : public LInstruction
+class LAsmJSCall MOZ_FINAL : public LInstruction
 {
     LAllocation *operands_;
     uint32_t numOperands_;

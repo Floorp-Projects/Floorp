@@ -240,7 +240,7 @@ function test() {
           time: true
         });
 
-      return Promise.resolve(null);
+      return promise.resolve(null);
     }
 
     aDebuggee.performRequests();

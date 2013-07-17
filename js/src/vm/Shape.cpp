@@ -30,7 +30,7 @@ using mozilla::DebugOnly;
 using mozilla::PodZero;
 
 bool
-ShapeTable::init(JSRuntime *rt, Shape *lastProp)
+ShapeTable::init(ExclusiveContext *cx, Shape *lastProp)
 {
     /*
      * Either we're creating a table for a large scope that was populated
@@ -47,7 +47,7 @@ ShapeTable::init(JSRuntime *rt, Shape *lastProp)
      * Use rt->calloc_ for memory accounting and overpressure handling
      * without OOM reporting. See ShapeTable::change.
      */
-    entries = (Shape **) rt->calloc_(sizeOfEntries(JS_BIT(sizeLog2)));
+    entries = (Shape **) cx->calloc_(sizeOfEntries(JS_BIT(sizeLog2)));
     if (!entries)
         return false;
 
@@ -67,7 +67,7 @@ ShapeTable::init(JSRuntime *rt, Shape *lastProp)
 }
 
 bool
-Shape::makeOwnBaseShape(JSContext *cx)
+Shape::makeOwnBaseShape(ExclusiveContext *cx)
 {
     JS_ASSERT(!base()->isOwned());
     assertSameCompartmentDebugOnly(cx, compartment());
@@ -105,19 +105,18 @@ Shape::handoffTableTo(Shape *shape)
 }
 
 /* static */ bool
-Shape::hashify(JSContext *cx, Shape *shape)
+Shape::hashify(ExclusiveContext *cx, Shape *shape)
 {
     JS_ASSERT(!shape->hasTable());
 
     if (!shape->ensureOwnBaseShape(cx))
         return false;
 
-    JSRuntime *rt = cx->runtime();
-    ShapeTable *table = rt->new_<ShapeTable>(shape->entryCount());
+    ShapeTable *table = cx->new_<ShapeTable>(shape->entryCount());
     if (!table)
         return false;
 
-    if (!table->init(rt, shape)) {
+    if (!table->init(cx, shape)) {
         js_free(table);
         return false;
     }
@@ -212,7 +211,7 @@ ShapeTable::search(jsid id, bool adding)
 }
 
 bool
-ShapeTable::change(int log2Delta, JSContext *cx)
+ShapeTable::change(int log2Delta, ExclusiveContext *cx)
 {
     JS_ASSERT(entries);
 
@@ -250,7 +249,7 @@ ShapeTable::change(int log2Delta, JSContext *cx)
 }
 
 bool
-ShapeTable::grow(JSContext *cx)
+ShapeTable::grow(ExclusiveContext *cx)
 {
     JS_ASSERT(needsToGrow());
 
@@ -258,14 +257,14 @@ ShapeTable::grow(JSContext *cx)
     int delta = removedCount < size >> 2;
 
     if (!change(delta, cx) && entryCount + removedCount == size - 1) {
-        JS_ReportOutOfMemory(cx);
+        js_ReportOutOfMemory(cx);
         return false;
     }
     return true;
 }
 
 Shape *
-Shape::getChildBinding(JSContext *cx, const StackShape &child)
+Shape::getChildBinding(ExclusiveContext *cx, const StackShape &child)
 {
     JS_ASSERT(!inDictionary());
 
@@ -278,7 +277,7 @@ Shape::getChildBinding(JSContext *cx, const StackShape &child)
 }
 
 /* static */ Shape *
-Shape::replaceLastProperty(JSContext *cx, const StackBaseShape &base,
+Shape::replaceLastProperty(ExclusiveContext *cx, const StackBaseShape &base,
                            TaggedProto proto, HandleShape shape)
 {
     JS_ASSERT(!shape->inDictionary());
@@ -310,7 +309,8 @@ Shape::replaceLastProperty(JSContext *cx, const StackBaseShape &base,
  * one of lastProperty() or lastProperty()->parent.
  */
 /* static */ Shape *
-JSObject::getChildProperty(JSContext *cx, HandleObject obj, HandleShape parent, StackShape &child)
+JSObject::getChildProperty(ExclusiveContext *cx,
+                           HandleObject obj, HandleShape parent, StackShape &child)
 {
     /*
      * Shared properties have no slot, but slot_ will reflect that of parent.
@@ -360,12 +360,12 @@ JSObject::getChildProperty(JSContext *cx, HandleObject obj, HandleShape parent, 
 }
 
 bool
-js::ObjectImpl::toDictionaryMode(JSContext *cx)
+js::ObjectImpl::toDictionaryMode(ExclusiveContext *cx)
 {
     JS_ASSERT(!inDictionaryMode());
 
     /* We allocate the shapes from cx->compartment(), so make sure it's right. */
-    JS_ASSERT(compartment() == cx->compartment());
+    JS_ASSERT(cx->isInsideCurrentCompartment(this));
 
     uint32_t span = slotSpan();
 
@@ -440,7 +440,7 @@ NormalizeGetterAndSetter(JSObject *obj,
 }
 
 /* static */ Shape *
-JSObject::addProperty(JSContext *cx, HandleObject obj, HandleId id,
+JSObject::addProperty(ExclusiveContext *cx, HandleObject obj, HandleId id,
                       PropertyOp getter, StrictPropertyOp setter,
                       uint32_t slot, unsigned attrs,
                       unsigned flags, int shortid, bool allowDictionary)
@@ -451,7 +451,8 @@ JSObject::addProperty(JSContext *cx, HandleObject obj, HandleId id,
     if (!JSObject::isExtensible(cx, obj, &extensible))
         return NULL;
     if (!extensible) {
-        obj->reportNotExtensible(cx);
+        if (cx->isJSContext())
+            obj->reportNotExtensible(cx->asJSContext());
         return NULL;
     }
 
@@ -478,7 +479,7 @@ ShouldConvertToDictionary(JSObject *obj)
 }
 
 /* static */ Shape *
-JSObject::addPropertyInternal(JSContext *cx, HandleObject obj, HandleId id,
+JSObject::addPropertyInternal(ExclusiveContext *cx, HandleObject obj, HandleId id,
                               PropertyOp getter, StrictPropertyOp setter,
                               uint32_t slot, unsigned attrs,
                               unsigned flags, int shortid, Shape **spp,
@@ -567,7 +568,7 @@ JSObject::addPropertyInternal(JSContext *cx, HandleObject obj, HandleId id,
  * enforce all restrictions from ECMA-262 v5 8.12.9 [[DefineOwnProperty]].
  */
 inline bool
-CheckCanChangeAttrs(JSContext *cx, JSObject *obj, Shape *shape, unsigned *attrsp)
+CheckCanChangeAttrs(ExclusiveContext *cx, JSObject *obj, Shape *shape, unsigned *attrsp)
 {
     if (shape->configurable())
         return true;
@@ -577,8 +578,10 @@ CheckCanChangeAttrs(JSContext *cx, JSObject *obj, Shape *shape, unsigned *attrsp
 
     /* Reject attempts to remove a slot from the permanent data property. */
     if (shape->isDataDescriptor() && shape->hasSlot() &&
-        (*attrsp & (JSPROP_GETTER | JSPROP_SETTER | JSPROP_SHARED))) {
-        obj->reportNotConfigurable(cx, shape->propid());
+        (*attrsp & (JSPROP_GETTER | JSPROP_SETTER | JSPROP_SHARED)))
+    {
+        if (cx->isJSContext())
+            obj->reportNotConfigurable(cx->asJSContext(), shape->propid());
         return false;
     }
 
@@ -586,7 +589,7 @@ CheckCanChangeAttrs(JSContext *cx, JSObject *obj, Shape *shape, unsigned *attrsp
 }
 
 /* static */ Shape *
-JSObject::putProperty(JSContext *cx, HandleObject obj, HandleId id,
+JSObject::putProperty(ExclusiveContext *cx, HandleObject obj, HandleId id,
                       PropertyOp getter, StrictPropertyOp setter,
                       uint32_t slot, unsigned attrs,
                       unsigned flags, int shortid)
@@ -618,7 +621,8 @@ JSObject::putProperty(JSContext *cx, HandleObject obj, HandleId id,
         if (!JSObject::isExtensible(cx, obj, &extensible))
             return NULL;
         if (!extensible) {
-            obj->reportNotExtensible(cx);
+            if (cx->isJSContext())
+                obj->reportNotExtensible(cx->asJSContext());
             return NULL;
         }
 
@@ -740,7 +744,9 @@ JSObject::putProperty(JSContext *cx, HandleObject obj, HandleId id,
     if (hadSlot && !shape->hasSlot()) {
         if (oldSlot < obj->slotSpan())
             obj->freeSlot(oldSlot);
-        ++cx->runtime()->propertyRemovals;
+        /* Note: The optimization based on propertyRemovals is only relevant to the main thread. */
+        if (cx->isJSContext())
+            ++cx->asJSContext()->runtime()->propertyRemovals;
     }
 
     obj->checkShapeConsistency();
@@ -749,7 +755,7 @@ JSObject::putProperty(JSContext *cx, HandleObject obj, HandleId id,
 }
 
 /* static */ Shape *
-JSObject::changeProperty(JSContext *cx, HandleObject obj, HandleShape shape, unsigned attrs,
+JSObject::changeProperty(ExclusiveContext *cx, HandleObject obj, HandleShape shape, unsigned attrs,
                          unsigned mask, PropertyOp getter, StrictPropertyOp setter)
 {
     JS_ASSERT(obj->nativeContains(cx, shape));
@@ -790,7 +796,7 @@ JSObject::changeProperty(JSContext *cx, HandleObject obj, HandleShape shape, uns
 }
 
 bool
-JSObject::removeProperty(JSContext *cx, jsid id_)
+JSObject::removeProperty(ExclusiveContext *cx, jsid id_)
 {
     RootedId id(cx, id_);
     RootedObject self(cx, this);
@@ -844,7 +850,8 @@ JSObject::removeProperty(JSContext *cx, jsid id_)
     /* If shape has a slot, free its slot number. */
     if (shape->hasSlot()) {
         self->freeSlot(shape->slot());
-        ++cx->runtime()->propertyRemovals;
+        if (cx->isJSContext())
+            ++cx->asJSContext()->runtime()->propertyRemovals;
     }
 
     /*
@@ -943,9 +950,9 @@ JSObject::rollbackProperties(JSContext *cx, uint32_t slotSpan)
 }
 
 Shape *
-js::ObjectImpl::replaceWithNewEquivalentShape(JSContext *cx, Shape *oldShape, Shape *newShape)
+ObjectImpl::replaceWithNewEquivalentShape(ExclusiveContext *cx, Shape *oldShape, Shape *newShape)
 {
-    JS_ASSERT(cx->compartment() == oldShape->compartment());
+    JS_ASSERT(cx->isInsideCurrentCompartment(oldShape));
     JS_ASSERT_IF(oldShape != lastProperty(),
                  inDictionaryMode() &&
                  nativeLookup(cx, oldShape->propidRef()) == oldShape);
@@ -997,7 +1004,7 @@ js::ObjectImpl::replaceWithNewEquivalentShape(JSContext *cx, Shape *oldShape, Sh
 }
 
 bool
-JSObject::shadowingShapeChange(JSContext *cx, const Shape &shape)
+JSObject::shadowingShapeChange(ExclusiveContext *cx, const Shape &shape)
 {
     return generateOwnShape(cx);
 }
@@ -1034,7 +1041,7 @@ JSObject::setParent(JSContext *cx, HandleObject obj, HandleObject parent)
 }
 
 /* static */ Shape *
-Shape::setObjectParent(JSContext *cx, JSObject *parent, TaggedProto proto, Shape *last)
+Shape::setObjectParent(ExclusiveContext *cx, JSObject *parent, TaggedProto proto, Shape *last)
 {
     if (last->getObjectParent() == parent)
         return last;
@@ -1093,7 +1100,7 @@ js::ObjectImpl::preventExtensions(JSContext *cx, Handle<ObjectImpl*> obj)
                "preventExtensions");
 #endif
 
-    if (obj->isProxy()) {
+    if (Downcast(obj)->is<ProxyObject>()) {
         RootedObject object(cx, obj->asObjectPtr());
         return js::Proxy::preventExtensions(cx, object);
     }
@@ -1121,7 +1128,7 @@ js::ObjectImpl::preventExtensions(JSContext *cx, Handle<ObjectImpl*> obj)
 }
 
 bool
-js::ObjectImpl::setFlag(JSContext *cx, /*BaseShape::Flag*/ uint32_t flag_,
+js::ObjectImpl::setFlag(ExclusiveContext *cx, /*BaseShape::Flag*/ uint32_t flag_,
                         GenerateShape generateShape)
 {
     BaseShape::Flag flag = (BaseShape::Flag) flag_;
@@ -1154,7 +1161,7 @@ js::ObjectImpl::setFlag(JSContext *cx, /*BaseShape::Flag*/ uint32_t flag_,
 }
 
 bool
-js::ObjectImpl::clearFlag(JSContext *cx, /*BaseShape::Flag*/ uint32_t flag)
+js::ObjectImpl::clearFlag(ExclusiveContext *cx, /*BaseShape::Flag*/ uint32_t flag)
 {
     JS_ASSERT(inDictionaryMode());
     JS_ASSERT(lastProperty()->getObjectFlags() & flag);
@@ -1172,7 +1179,7 @@ js::ObjectImpl::clearFlag(JSContext *cx, /*BaseShape::Flag*/ uint32_t flag)
 }
 
 /* static */ Shape *
-Shape::setObjectFlag(JSContext *cx, BaseShape::Flag flag, TaggedProto proto, Shape *last)
+Shape::setObjectFlag(ExclusiveContext *cx, BaseShape::Flag flag, TaggedProto proto, Shape *last)
 {
     if (last->getObjectFlags() & flag)
         return last;
@@ -1229,9 +1236,9 @@ StackBaseShape::AutoRooter::trace(JSTracer *trc)
 }
 
 /* static */ UnownedBaseShape*
-BaseShape::getUnowned(JSContext *cx, const StackBaseShape &base)
+BaseShape::getUnowned(ExclusiveContext *cx, const StackBaseShape &base)
 {
-    BaseShapeSet &table = cx->compartment()->baseShapes;
+    BaseShapeSet &table = cx->baseShapes();
 
     if (!table.initialized() && !table.init())
         return NULL;
@@ -1320,14 +1327,14 @@ InitialShapeEntry::match(const InitialShapeEntry &key, const Lookup &lookup)
 }
 
 /* static */ Shape *
-EmptyShape::getInitialShape(JSContext *cx, Class *clasp, TaggedProto proto,
+EmptyShape::getInitialShape(ExclusiveContext *cx, Class *clasp, TaggedProto proto,
                             JSObject *parent, JSObject *metadata,
                             size_t nfixed, uint32_t objectFlags)
 {
-    JS_ASSERT_IF(proto.isObject(), cx->compartment() == proto.toObject()->compartment());
-    JS_ASSERT_IF(parent, cx->compartment() == parent->compartment());
+    JS_ASSERT_IF(proto.isObject(), cx->isInsideCurrentCompartment(proto.toObject()));
+    JS_ASSERT_IF(parent, cx->isInsideCurrentCompartment(parent));
 
-    InitialShapeSet &table = cx->compartment()->initialShapes;
+    InitialShapeSet &table = cx->initialShapes();
 
     if (!table.initialized() && !table.init())
         return NULL;
@@ -1344,7 +1351,7 @@ EmptyShape::getInitialShape(JSContext *cx, Class *clasp, TaggedProto proto,
     RootedObject parentRoot(cx, parent);
     RootedObject metadataRoot(cx, metadata);
 
-    StackBaseShape base(cx->compartment(), clasp, parent, metadata, objectFlags);
+    StackBaseShape base(cx, clasp, parent, metadata, objectFlags);
     Rooted<UnownedBaseShape*> nbase(cx, BaseShape::getUnowned(cx, base));
     if (!nbase)
         return NULL;
@@ -1364,7 +1371,7 @@ EmptyShape::getInitialShape(JSContext *cx, Class *clasp, TaggedProto proto,
 }
 
 /* static */ Shape *
-EmptyShape::getInitialShape(JSContext *cx, Class *clasp, TaggedProto proto,
+EmptyShape::getInitialShape(ExclusiveContext *cx, Class *clasp, TaggedProto proto,
                             JSObject *parent, JSObject *metadata,
                             AllocKind kind, uint32_t objectFlags)
 {
@@ -1381,7 +1388,7 @@ NewObjectCache::invalidateEntriesForShape(JSContext *cx, HandleShape shape, Hand
         kind = GetBackgroundAllocKind(kind);
 
     Rooted<GlobalObject *> global(cx, &shape->getObjectParent()->global());
-    Rooted<types::TypeObject *> type(cx, proto->getNewType(cx, clasp));
+    Rooted<types::TypeObject *> type(cx, cx->getNewType(clasp, proto.get()));
 
     EntryIndex entry;
     if (lookupGlobal(clasp, global, kind, &entry))
@@ -1393,17 +1400,16 @@ NewObjectCache::invalidateEntriesForShape(JSContext *cx, HandleShape shape, Hand
 }
 
 /* static */ void
-EmptyShape::insertInitialShape(JSContext *cx, HandleShape shape, HandleObject proto)
+EmptyShape::insertInitialShape(ExclusiveContext *cx, HandleShape shape, HandleObject proto)
 {
     InitialShapeEntry::Lookup lookup(shape->getObjectClass(), TaggedProto(proto),
                                      shape->getObjectParent(), shape->getObjectMetadata(),
                                      shape->numFixedSlots(), shape->getObjectFlags());
 
-    InitialShapeSet::Ptr p = cx->compartment()->initialShapes.lookup(lookup);
+    InitialShapeSet::Ptr p = cx->initialShapes().lookup(lookup);
     JS_ASSERT(p);
 
     InitialShapeEntry &entry = const_cast<InitialShapeEntry &>(*p);
-    JS_ASSERT(entry.shape->isEmptyShape());
 
     /* The new shape had better be rooted at the old one. */
 #ifdef DEBUG
@@ -1418,12 +1424,17 @@ EmptyShape::insertInitialShape(JSContext *cx, HandleShape shape, HandleObject pr
     /*
      * This affects the shape that will be produced by the various NewObject
      * methods, so clear any cache entry referring to the old shape. This is
-     * not required for correctness (though it may bust on the above asserts):
-     * the NewObject must always check for a nativeEmpty() result and generate
-     * the appropriate properties if found. Clearing the cache entry avoids
-     * this duplicate regeneration.
+     * not required for correctness: the NewObject must always check for a
+     * nativeEmpty() result and generate the appropriate properties if found.
+     * Clearing the cache entry avoids this duplicate regeneration.
+     *
+     * Clearing is not necessary when this context is running off the main
+     * thread, as it will not use the new object cache for allocations.
      */
-    cx->runtime()->newObjectCache.invalidateEntriesForShape(cx, shape, proto);
+    if (cx->isJSContext()) {
+        JSContext *ncx = cx->asJSContext();
+        ncx->runtime()->newObjectCache.invalidateEntriesForShape(ncx, shape, proto);
+    }
 }
 
 /*

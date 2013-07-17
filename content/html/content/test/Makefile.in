@@ -390,6 +390,8 @@ MOCHITEST_FILES = \
 		file_srcdoc.html \
 		test_srcdoc-2.html \
 		file_srcdoc-2.html \
+		test_bug893537.html \
+		file_bug893537.html \
 		$(NULL)
 
 MOCHITEST_CHROME_FILES = \

@@ -84,14 +84,14 @@ function doTest() {
   // Try loading in an iframe
   iframe.setAttribute("src", "bug608669.xul");
   iframe.onload = nextTest;
-  yield;
+  yield undefined;
   is(notificationCount, 1, "after first load");
   is(iframe.contentWindow.x, "y", "reused window");
 
   // Try loading again in an iframe
   iframe.setAttribute("src", "bug608669.xul?x");
   iframe.onload = nextTest;
-  yield;
+  yield undefined;
   is(notificationCount, 2, "after second load");
   is("x" in iframe.contentWindow, false, "didn't reuse window");
 
@@ -99,7 +99,7 @@ function doTest() {
   popup = window.open("bug608669.xul", "bug 608669",
                       "chrome,width=600,height=600");
   popup.onload = nextTest;
-  yield;
+  yield undefined;
   is(notificationCount, 3, "after window.open load");
   popup.close();
 
@@ -107,7 +107,7 @@ function doTest() {
   os.removeObserver(observer, "chrome-document-global-created");
   os.removeObserver(observer, "content-document-global-created");
   SimpleTest.finish();
-  yield;
+  yield undefined;
 }
 
 

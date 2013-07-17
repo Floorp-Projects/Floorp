@@ -14,7 +14,7 @@
         let request = indexedDB.open(name, 1);
         request.onerror = grabEventAndContinueHandler;
         request.onsuccess = grabEventAndContinueHandler;
-        let event = yield;
+        let event = yield undefined;
 
         if (event.type == "success") {
           testResult = event.target.result;
@@ -26,7 +26,7 @@
         event.preventDefault();
 
         finishTest()
-        yield;
+        yield undefined;
       }
     </script>
 

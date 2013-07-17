@@ -21,13 +21,11 @@ LIBRARY_NAME = xulapp_s
 MSVC_ENABLE_PGO := 1
 LIBXUL_LIBRARY = 1
 
-FORCE_STATIC_LIB = 1
-
 ifeq ($(MOZ_GL_DEFAULT_PROVIDER),GLX)
 DEFINES += -DUSE_GLX_TEST
 endif
 
-DEFINES += -DIMPL_XREAPI \
+DEFINES += \
   -DMOZ_APP_NAME='"$(MOZ_APP_NAME)"' \
   -DMOZ_APP_VERSION='"$(MOZ_APP_VERSION)"'
 
@@ -131,8 +129,8 @@ endif
 endif
 
 include $(topsrcdir)/config/config.mk
-include $(topsrcdir)/ipc/chromium/chromium-config.mk
 include $(topsrcdir)/config/rules.mk
+include $(topsrcdir)/ipc/chromium/chromium-config.mk
 
 LOCAL_INCLUDES += \
   -I$(topsrcdir)/testing/gtest/mozilla \

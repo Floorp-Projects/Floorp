@@ -18,8 +18,8 @@
 namespace mozilla {
 namespace dom {
 
-class HTMLMeterElement : public nsGenericHTMLElement,
-                         public nsIDOMHTMLMeterElement
+class HTMLMeterElement MOZ_FINAL : public nsGenericHTMLElement,
+                                   public nsIDOMHTMLMeterElement
 {
 public:
   HTMLMeterElement(already_AddRefed<nsINodeInfo> aNodeInfo);

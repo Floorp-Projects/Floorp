@@ -42,8 +42,8 @@ var FindHelperUI = {
   },
 
   init: function findHelperInit() {
-    this._textbox = document.getElementById("find-helper-textbox");
-    this._container = Elements.contentNavigator;
+    this._textbox = document.getElementById("findbar-textbox");
+    this._container = Elements.findbar;
 
     this._cmdPrevious = document.getElementById(this.commands.previous);
     this._cmdNext = document.getElementById(this.commands.next);

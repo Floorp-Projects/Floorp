@@ -327,6 +327,13 @@ CodeGeneratorX86Shared::bailoutIf(Assembler::Condition condition, LSnapshot *sna
 }
 
 bool
+CodeGeneratorX86Shared::bailoutIf(Assembler::DoubleCondition condition, LSnapshot *snapshot)
+{
+    JS_ASSERT(Assembler::NaNCondFromDoubleCondition(condition) == Assembler::NaN_HandledByCond);
+    return bailoutIf(Assembler::ConditionFromDoubleCondition(condition), snapshot);
+}
+
+bool
 CodeGeneratorX86Shared::bailoutFrom(Label *label, LSnapshot *snapshot)
 {
     JS_ASSERT(label->used() && !label->bound());
@@ -625,7 +632,7 @@ CodeGeneratorX86Shared::visitMulI(LMulI *ins)
 }
 
 bool
-CodeGeneratorX86Shared::visitAsmJSDivOrMod(LAsmJSDivOrMod *ins)
+CodeGeneratorX86Shared::visitUDivOrMod(LUDivOrMod *ins)
 {
     JS_ASSERT(ToRegister(ins->lhs()) == eax);
     Register rhs = ToRegister(ins->rhs());
@@ -1289,8 +1296,12 @@ CodeGeneratorX86Shared::visitRound(LRound *lir)
         masm.addsd(input, temp);
 
         // Round toward -Infinity without the benefit of ROUNDSD.
-        Label testZero;
         {
+            // If input + 0.5 >= 0, input is a negative number >= -0.5 and the result is -0.
+            masm.compareDouble(Assembler::DoubleGreaterThanOrEqual, temp, scratch);
+            if (!bailoutIf(Assembler::DoubleGreaterThanOrEqual, lir->snapshot()))
+                return false;
+
             // Truncate and round toward zero.
             // This is off-by-one for everything but integer-valued inputs.
             masm.cvttsd2si(temp, output);
@@ -1300,19 +1311,13 @@ CodeGeneratorX86Shared::visitRound(LRound *lir)
 
             // Test whether the truncated double was integer-valued.
             masm.cvtsi2sd(output, scratch);
-            masm.branchDouble(Assembler::DoubleEqualOrUnordered, temp, scratch, &testZero);
+            masm.branchDouble(Assembler::DoubleEqualOrUnordered, temp, scratch, &end);
 
             // Input is not integer-valued, so we rounded off-by-one in the
             // wrong direction. Correct by subtraction.
             masm.subl(Imm32(1), output);
             // Cannot overflow: output was already checked against INT_MIN.
-
-            // Fall through to testZero.
         }
-
-        masm.bind(&testZero);
-        if (!bailoutIf(Assembler::Zero, lir->snapshot()))
-            return false;
     }
 
     masm.bind(&end);

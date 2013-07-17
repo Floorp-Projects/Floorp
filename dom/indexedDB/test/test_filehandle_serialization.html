@@ -29,7 +29,7 @@
       request.onerror = errorHandler;
       request.onupgradeneeded = grabEventAndContinueHandler;
       request.onsuccess = grabEventAndContinueHandler;
-      let event = yield;
+      let event = yield undefined;
 
       is(event.type, "upgradeneeded", "Got correct event type");
 
@@ -38,7 +38,7 @@
 
       db.createObjectStore(objectStoreName, { });
 
-      event = yield;
+      event = yield undefined;
 
       is(event.type, "success", "Got correct event type");
 
@@ -49,7 +49,7 @@
 
     let request = db1.mozCreateFileHandle("random.bin", "binary/random");
     request.onsuccess = grabEventAndContinueHandler;
-    event = yield;
+    event = yield undefined;
 
     let fileHandle = event.target.result;
     is(getFileId(fileHandle), 1, "Correct file id");
@@ -61,11 +61,11 @@
 
     request = objectStore.add(fileHandle, 42);
     request.onsuccess = grabEventAndContinueHandler;
-    event = yield;
+    event = yield undefined;
 
     request = objectStore.get(42);
     request.onsuccess = grabEventAndContinueHandler;
-    event = yield;
+    event = yield undefined;
 
     let result = event.target.result;
     is(getFileId(result), 1, "Correct file id");
@@ -88,7 +88,7 @@
     }
 
     finishTest();
-    yield;
+    yield undefined;
   }
   </script>
   <script type="text/javascript;version=1.7" src="file.js"></script>

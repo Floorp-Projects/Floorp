@@ -13,6 +13,7 @@
 #include <assert.h>
 #include <algorithm>
 #include <cmath>
+#include <cstdlib>
 
 #include "system_wrappers/interface/trace.h"
 

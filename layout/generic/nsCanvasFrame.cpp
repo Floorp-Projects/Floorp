@@ -476,12 +476,8 @@ nsCanvasFrame::Reflow(nsPresContext*           aPresContext,
 
     nsPoint kidPt(kidReflowState.mComputedMargin.left,
                   kidReflowState.mComputedMargin.top);
-    // Apply CSS relative positioning
-    const nsStyleDisplay* styleDisp = kidFrame->StyleDisplay();
-    if (NS_STYLE_POSITION_RELATIVE == styleDisp->mPosition) {
-      kidPt += nsPoint(kidReflowState.mComputedOffsets.left,
-                       kidReflowState.mComputedOffsets.top);
-    }
+
+    kidReflowState.ApplyRelativePositioning(&kidPt);
 
     // Reflow the frame
     ReflowChild(kidFrame, aPresContext, kidDesiredSize, kidReflowState,

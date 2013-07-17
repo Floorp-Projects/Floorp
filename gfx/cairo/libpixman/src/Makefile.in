@@ -136,23 +136,16 @@ endif
 
 ifdef USE_ARM_SIMD_GCC
 CSRCS += pixman-arm-simd.c
-DISABLED_SSRCS += pixman-arm-simd-asm.S pixman-arm-simd-asm-scaled.S
 DEFINES += -DUSE_ARM_SIMD
 endif
 
 ifdef USE_ARM_NEON_GCC
 CSRCS += pixman-arm-neon.c
-DISABLED_SSRCS += pixman-arm-neon-asm.S
-DISABLED_SSRCS += pixman-arm-neon-asm-bilinear.S
 DEFINES += -DUSE_ARM_NEON
 ARM_NEON_CFLAGS = -mfpu=neon
 endif
 
 LOCAL_INCLUDES	+= -I$(srcdir) -I$(srcdir)/../../cairo/src
-
-FORCE_STATIC_LIB = 1
-
-include $(topsrcdir)/config/config.mk
 
 include $(topsrcdir)/config/rules.mk
 

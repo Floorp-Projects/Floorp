@@ -98,14 +98,14 @@ public class MenuPopup extends PopupWindow {
         int screenWidth = mResources.getDisplayMetrics().widthPixels;
         int arrowWidth = mResources.getDimensionPixelSize(R.dimen.menu_popup_arrow_width);
         int arrowOffset = (anchor.getWidth() - arrowWidth)/2;
-       
+
         if (anchorLocation[0] + mPopupWidth <= screenWidth) {
             // left align
             ((LayoutParams) mArrowTop.getLayoutParams()).rightMargin = mPopupWidth - anchor.getWidth() + arrowOffset;
             ((LayoutParams) mArrowBottom.getLayoutParams()).rightMargin = mPopupWidth - anchor.getWidth() + arrowOffset;
         } else {
             // right align
-            ((LayoutParams) mArrowTop.getLayoutParams()).rightMargin = mArrowMargin;
+            ((LayoutParams) mArrowTop.getLayoutParams()).rightMargin = screenWidth - anchorLocation[0] - anchor.getWidth()/2 - arrowWidth/2;
             ((LayoutParams) mArrowBottom.getLayoutParams()).rightMargin = mArrowMargin;
         }
 

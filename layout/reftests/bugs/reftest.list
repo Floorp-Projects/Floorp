@@ -1749,6 +1749,7 @@ skip-if(B2G) == 818276-1.html 818276-1-ref.html
 == 827577-1a.html 827577-1-ref.html
 == 827577-1b.html 827577-1-ref.html
 == 827799-1.html about:blank
+== 829958.html 829958-ref.html
 fails-if(Android&&AndroidVersion<15) == 836844-1.html 836844-1-ref.html
 == 841192-1.html 841192-1-ref.html
 == 844178.html 844178-ref.html
@@ -1758,6 +1759,7 @@ fails-if(Android&&AndroidVersion<15) == 836844-1.html 836844-1-ref.html
 test-pref(layout.css.flexbox.enabled,true) == 849407-1.html 849407-1-ref.html
 == 849996-1.html 849996-1-ref.html
 == 858803-1.html 858803-1-ref.html
+== 860242-1.html 860242-1-ref.html
 != 860370.html 860370-notref.html
 == 871338-1.html 871338-1-ref.html
 random-if(Android&&AndroidVersion>=15) == 875060-1.html 875060-1-ref.html #Bug 885303

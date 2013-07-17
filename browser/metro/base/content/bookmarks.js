@@ -234,13 +234,15 @@ BookmarksView.prototype = {
     if (!aIconUri) {
       return;
     }
-    ColorUtils.getForegroundAndBackgroundIconColors(aIconUri, function(foregroundColor, backgroundColor) {
+    let successAction = function(foregroundColor, backgroundColor) {
       aItem.style.color = foregroundColor; //color text
       aItem.setAttribute("customColor", backgroundColor); //set background
       if (aItem.refresh) {
         aItem.refresh();
       }
-    });
+    };
+    let failureAction = function() {};
+    ColorUtils.getForegroundAndBackgroundIconColors(aIconUri, successAction, failureAction);
   },
 
   _sendNeedsRefresh: function bv__sendNeedsRefresh(){
@@ -312,6 +314,8 @@ BookmarksView.prototype = {
           let event = document.createEvent("Events");
           // we need the restore button to show (the tile node will go away though)
           event.actions = ["restore"];
+          event.noun = tileGroup.contextNoun;
+          event.qty = selectedTiles.length;
           event.initEvent("MozContextActionsChange", true, false);
           tileGroup.dispatchEvent(event);
         }, 0);

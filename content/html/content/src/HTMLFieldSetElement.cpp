@@ -18,8 +18,6 @@ HTMLFieldSetElement::HTMLFieldSetElement(already_AddRefed<nsINodeInfo> aNodeInfo
   , mElements(nullptr)
   , mFirstLegend(nullptr)
 {
-  SetIsDOMBinding();
-
   // <fieldset> is always barred from constraint validation.
   SetBarredFromConstraintValidation(true);
 

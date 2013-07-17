@@ -11,7 +11,7 @@
 using namespace JS;
 
 Latin1CharsZ
-JS::LossyTwoByteCharsToNewLatin1CharsZ(JSContext *cx, TwoByteChars tbchars)
+JS::LossyTwoByteCharsToNewLatin1CharsZ(js::ThreadSafeContext *cx, TwoByteChars tbchars)
 {
     JS_ASSERT(cx);
     size_t len = tbchars.length();
@@ -25,8 +25,7 @@ JS::LossyTwoByteCharsToNewLatin1CharsZ(JSContext *cx, TwoByteChars tbchars)
 }
 
 static size_t
-GetDeflatedUTF8StringLength(JSContext *cx, const jschar *chars,
-                            size_t nchars)
+GetDeflatedUTF8StringLength(const jschar *chars, size_t nchars)
 {
     size_t nbytes;
     const jschar *end;
@@ -78,7 +77,7 @@ PutUTF8ReplacementCharacter(char **dst, size_t *dstlenp) {
  * into |*dstlenp| on success.  Returns false on failure.
  */
 static bool
-DeflateStringToUTF8Buffer(JSContext *cx, const jschar *src, size_t srclen,
+DeflateStringToUTF8Buffer(js::ThreadSafeContext *cx, const jschar *src, size_t srclen,
                           char *dst, size_t *dstlenp)
 {
     size_t dstlen = *dstlenp;
@@ -132,19 +131,20 @@ DeflateStringToUTF8Buffer(JSContext *cx, const jschar *src, size_t srclen,
 
 bufferTooSmall:
     *dstlenp = (origDstlen - dstlen);
-    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BUFFER_TOO_SMALL);
+    if (cx->isJSContext())
+        JS_ReportErrorNumber(cx->asJSContext(), js_GetErrorMessage, NULL, JSMSG_BUFFER_TOO_SMALL);
     return false;
 }
 
 
 UTF8CharsZ
-JS::TwoByteCharsToNewUTF8CharsZ(JSContext *cx, TwoByteChars tbchars)
+JS::TwoByteCharsToNewUTF8CharsZ(js::ThreadSafeContext *cx, TwoByteChars tbchars)
 {
     JS_ASSERT(cx);
 
     /* Get required buffer size. */
     jschar *str = tbchars.start().get();
-    size_t len = GetDeflatedUTF8StringLength(cx, str, tbchars.length());
+    size_t len = GetDeflatedUTF8StringLength(str, tbchars.length());
 
     /* Allocate buffer. */
     unsigned char *utf8 = cx->pod_malloc<unsigned char>(len + 1);

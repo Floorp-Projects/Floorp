@@ -140,6 +140,30 @@ class FunctionContextFlags
 
 class GlobalSharedContext;
 
+// List of directives that may be encountered in a Directive Prologue (ES5 15.1).
+class Directives
+{
+    bool strict_;
+
+  public:
+    explicit Directives(bool strict) : strict_(strict) {}
+    template <typename ParseHandler> explicit Directives(ParseContext<ParseHandler> *parent);
+
+    void setStrict() { strict_ = true; }
+    bool strict() const { return strict_; }
+
+    Directives &operator=(Directives rhs) {
+        strict_ = rhs.strict_;
+        return *this;
+    }
+    bool operator==(const Directives &rhs) const {
+        return strict_ == rhs.strict_;
+    }
+    bool operator!=(const Directives &rhs) const {
+        return strict_ != rhs.strict_;
+    }
+};
+
 /*
  * The struct SharedContext is part of the current parser context (see
  * ParseContext). It stores information that is reused between the parser and
@@ -149,16 +173,18 @@ class GlobalSharedContext;
 class SharedContext
 {
   public:
-    JSContext *const context;
+    ExclusiveContext *const context;
     AnyContextFlags anyCxFlags;
     bool strict;
+    bool extraWarnings;
 
     // If it's function code, funbox must be non-NULL and scopeChain must be NULL.
     // If it's global code, funbox must be NULL.
-    SharedContext(JSContext *cx, bool strict)
+    SharedContext(ExclusiveContext *cx, Directives directives, bool extraWarnings)
       : context(cx),
         anyCxFlags(),
-        strict(strict)
+        strict(directives.strict()),
+        extraWarnings(extraWarnings)
     {}
 
     virtual ObjectBox *toObjectBox() = 0;
@@ -178,7 +204,9 @@ class SharedContext
     void setHasDebuggerStatement()        { anyCxFlags.hasDebuggerStatement        = true; }
 
     // JSOPTION_EXTRA_WARNINGS warnings or strict mode errors.
-    inline bool needStrictChecks();
+    bool needStrictChecks() {
+        return strict || extraWarnings;
+    }
 };
 
 class GlobalSharedContext : public SharedContext
@@ -187,8 +215,9 @@ class GlobalSharedContext : public SharedContext
     const RootedObject scopeChain_; /* scope chain object for the script */
 
   public:
-    GlobalSharedContext(JSContext *cx, JSObject *scopeChain, bool strict)
-      : SharedContext(cx, strict),
+    GlobalSharedContext(ExclusiveContext *cx, JSObject *scopeChain,
+                        Directives directives, bool extraWarnings)
+      : SharedContext(cx, directives, extraWarnings),
         scopeChain_(cx, scopeChain)
     {}
 
@@ -208,8 +237,8 @@ class ModuleBox : public ObjectBox, public SharedContext
   public:
     Bindings bindings;
 
-    ModuleBox(JSContext *cx, ObjectBox *traceListHead, Module *module,
-              ParseContext<FullParseHandler> *pc);
+    ModuleBox(ExclusiveContext *cx, ObjectBox *traceListHead, Module *module,
+              ParseContext<FullParseHandler> *pc, bool extraWarnings);
     ObjectBox *toObjectBox() { return this; }
     Module *module() const { return &object->as<Module>(); }
 };
@@ -243,8 +272,9 @@ class FunctionBox : public ObjectBox, public SharedContext
     FunctionContextFlags funCxFlags;
 
     template <typename ParseHandler>
-    FunctionBox(JSContext *cx, ObjectBox* traceListHead, JSFunction *fun, ParseContext<ParseHandler> *pc,
-                bool strict);
+    FunctionBox(ExclusiveContext *cx, ObjectBox* traceListHead, JSFunction *fun,
+                ParseContext<ParseHandler> *pc, Directives directives,
+                bool extraWarnings);
 
     ObjectBox *toObjectBox() { return this; }
     JSFunction *function() const { return &object->as<JSFunction>(); }
@@ -361,7 +391,7 @@ struct StmtInfoBase {
     RootedAtom      label;          /* name of LABEL */
     Rooted<StaticBlockObject *> blockObj; /* block scope object */
 
-    StmtInfoBase(JSContext *cx)
+    StmtInfoBase(ExclusiveContext *cx)
         : isBlockScope(false), isForLetBlock(false), label(cx), blockObj(cx)
     {}
 
