@@ -10,6 +10,14 @@ const DEFAULT_CAPTURE_TIMEOUT = 30000; // ms
 const DESTROY_BROWSER_TIMEOUT = 60000; // ms
 const FRAME_SCRIPT_URL = "chrome://global/content/backgroundPageThumbsContent.js";
 
+const TELEMETRY_HISTOGRAM_ID_PREFIX = "FX_THUMBNAILS_BG_";
+
+// possible FX_THUMBNAILS_BG_CAPTURE_DONE_REASON telemetry values
+const TEL_CAPTURE_DONE_OK = 0;
+const TEL_CAPTURE_DONE_TIMEOUT = 1;
+const TEL_CAPTURE_DONE_PB_BEFORE_START = 2;
+const TEL_CAPTURE_DONE_PB_AFTER_START = 3;
+
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 
@@ -38,19 +46,11 @@ const BackgroundPageThumbs = {
    *                 the queue and started.  Defaults to 30000 (30 seconds).
    */
   capture: function (url, options={}) {
-    if (isPrivateBrowsingActive()) {
-      // There's only one, global private-browsing state shared by all private
-      // windows and the thumbnail browser.  Just as if you log into a site in
-      // one private window you're logged in in all private windows, you're also
-      // logged in in the thumbnail browser.  A crude way to avoid capturing
-      // sites in this situation is to refuse to capture at all when any private
-      // windows are open.  See bug 870179.
-      if (options.onDone)
-        Services.tm.mainThread.dispatch(options.onDone.bind(options, url), 0);
-      return;
-    }
     this._captureQueue = this._captureQueue || [];
     this._capturesByURL = this._capturesByURL || new Map();
+
+    tel("QUEUE_SIZE_ON_CAPTURE", this._captureQueue.length);
+
     // We want to avoid duplicate captures for the same URL.  If there is an
     // existing one, we just add the callback to that one and we are done.
     let existing = this._capturesByURL.get(url);
@@ -222,6 +222,7 @@ function Capture(url, captureCallback, options) {
   this.captureCallback = captureCallback;
   this.options = options;
   this.id = Capture.nextID++;
+  this.creationDate = new Date();
   this.doneCallbacks = [];
   if (options.onDone)
     this.doneCallbacks.push(options.onDone);
@@ -239,11 +240,32 @@ Capture.prototype = {
    * @param messageManager  The nsIMessageSender of the thumbnail browser.
    */
   start: function (messageManager) {
-    let timeout = typeof(this.options.timeout) == "number" ? this.options.timeout :
+    this.startDate = new Date();
+    tel("CAPTURE_QUEUE_TIME_MS", this.startDate - this.creationDate);
+
+    // The thumbnail browser uses private browsing mode and therefore shares
+    // browsing state with private windows.  To avoid capturing sites that the
+    // user is logged into in private browsing windows, (1) observe window
+    // openings, and if a private window is opened during capture, discard the
+    // capture when it finishes, and (2) don't start the capture at all if a
+    // private window is open already.
+    Services.ww.registerNotification(this);
+    if (isPrivateBrowsingActive()) {
+      tel("CAPTURE_DONE_REASON", TEL_CAPTURE_DONE_PB_BEFORE_START);
+      // Captures should always finish asyncly.
+      schedule(() => this._done(null));
+      return;
+    }
+
+    // timeout timer
+    let timeout = typeof(this.options.timeout) == "number" ?
+                  this.options.timeout :
                   DEFAULT_CAPTURE_TIMEOUT;
     this._timeoutTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-    this._timeoutTimer.initWithCallback(this, timeout, Ci.nsITimer.TYPE_ONE_SHOT);
+    this._timeoutTimer.initWithCallback(this, timeout,
+                                        Ci.nsITimer.TYPE_ONE_SHOT);
 
+    // didCapture registration
     this._msgMan = messageManager;
     this._msgMan.sendAsyncMessage("BackgroundPageThumbs:capture",
                                   { id: this.id, url: this.url });
@@ -268,10 +290,14 @@ Capture.prototype = {
       delete this._msgMan;
     }
     delete this.captureCallback;
+    Services.ww.unregisterNotification(this);
   },
 
   // Called when the didCapture message is received.
   receiveMessage: function (msg) {
+    tel("CAPTURE_DONE_REASON", TEL_CAPTURE_DONE_OK);
+    tel("CAPTURE_SERVICE_TIME_MS", new Date() - this.startDate);
+
     // A different timed-out capture may have finally successfully completed, so
     // discard messages that aren't meant for this capture.
     if (msg.json.id == this.id)
@@ -280,7 +306,15 @@ Capture.prototype = {
 
   // Called when the timeout timer fires.
   notify: function () {
+    tel("CAPTURE_DONE_REASON", TEL_CAPTURE_DONE_TIMEOUT);
     this._done(null);
+  },
+
+  // Called when the window watcher notifies us.
+  observe: function (subj, topic, data) {
+    if (topic == "domwindowopened" &&
+        PrivateBrowsingUtils.isWindowPrivate(subj))
+      this._privateWinOpenedDuringCapture = true;
   },
 
   _done: function (data) {
@@ -290,6 +324,13 @@ Capture.prototype = {
 
     this.captureCallback(this);
     this.destroy();
+
+    if (data && data.telemetry) {
+      // Telemetry is currently disabled in the content process (bug 680508).
+      for (let id in data.telemetry) {
+        tel(id, data.telemetry[id]);
+      }
+    }
 
     let callOnDones = function callOnDonesFn() {
       for (let callback of this.doneCallbacks) {
@@ -302,7 +343,9 @@ Capture.prototype = {
       }
     }.bind(this);
 
-    if (!data) {
+    if (!data || this._privateWinOpenedDuringCapture) {
+      if (this._privateWinOpenedDuringCapture)
+        tel("CAPTURE_DONE_REASON", TEL_CAPTURE_DONE_PB_AFTER_START);
       callOnDones();
       return;
     }
@@ -342,4 +385,19 @@ function isPrivateBrowsingActive() {
     if (PrivateBrowsingUtils.isWindowPrivate(wins.getNext()))
       return true;
   return false;
+}
+
+/**
+ * Adds a value to one of this module's telemetry histograms.
+ *
+ * @param histogramID  This is prefixed with this module's ID.
+ * @param value        The value to add.
+ */
+function tel(histogramID, value) {
+  let id = TELEMETRY_HISTOGRAM_ID_PREFIX + histogramID;
+  Services.telemetry.getHistogramById(id).add(value);
+}
+
+function schedule(callback) {
+  Services.tm.mainThread.dispatch(callback, Ci.nsIThread.DISPATCH_NORMAL);
 }

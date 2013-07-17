@@ -2548,6 +2548,12 @@ nsHttpChannel::OpenCacheEntry(bool usingSSL)
         }
     }
 
+    if (mLoadFlags & LOAD_INITIAL_DOCUMENT_URI) {
+        mozilla::Telemetry::Accumulate(
+            Telemetry::HTTP_OFFLINE_CACHE_DOCUMENT_LOAD,
+            !!mApplicationCache);
+    }
+
     nsCOMPtr<nsICacheSession> session;
 
     // If we have an application cache, we check it first.
