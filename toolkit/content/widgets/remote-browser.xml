@@ -62,6 +62,16 @@
                 onget="return this._characterSet"
                 readonly="true"/>
 
+      <field name="_contentWindow">null</field>
+
+      <property name="contentWindow"
+                onget="return this._contentWindow"
+                readonly="true"/>
+
+      <property name="contentDocument"
+                onget="return this.contentWindow ? this.contentWindow.document : null"
+                readonly="true"/>
+
       <constructor>
         <![CDATA[
           this.messageManager.addMessageListener("DOMTitleChanged", this);
