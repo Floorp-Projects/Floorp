@@ -1049,6 +1049,14 @@ WebGLContext::InitAndValidateGL()
         return false;
     }
 
+    if (IsWebGL2() &&
+        (!IsExtensionSupported(OES_vertex_array_object) ||
+         !IsExtensionSupported(WEBGL_draw_buffers)
+        ))
+    {
+        return false;
+    }
+
     mMemoryPressureObserver
         = new WebGLMemoryPressureObserver(this);
     nsCOMPtr<nsIObserverService> observerService
@@ -1062,6 +1070,14 @@ WebGLContext::InitAndValidateGL()
     mDefaultVertexArray = new WebGLVertexArray(this);
     mDefaultVertexArray->mAttribBuffers.SetLength(mGLMaxVertexAttribs);
     mBoundVertexArray = mDefaultVertexArray;
+
+    if (IsWebGL2()) {
+        EnableExtension(OES_vertex_array_object);
+        EnableExtension(WEBGL_draw_buffers);
+
+        MOZ_ASSERT(IsExtensionEnabled(OES_vertex_array_object));
+        MOZ_ASSERT(IsExtensionEnabled(WEBGL_draw_buffers));
+    }
 
     return true;
 }
