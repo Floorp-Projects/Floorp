@@ -3284,7 +3284,7 @@ nsPIDOMWindow::AddAudioContext(AudioContext* aAudioContext)
   mAudioContexts.AppendElement(aAudioContext);
 
   nsIDocShell* docShell = GetDocShell();
-  if (docShell && !docShell->GetAllowMedia()) {
+  if (docShell && !docShell->GetAllowMedia() && !aAudioContext->IsOffline()) {
     aAudioContext->Mute();
   }
 }
@@ -3293,7 +3293,9 @@ void
 nsPIDOMWindow::MuteAudioContexts()
 {
   for (uint32_t i = 0; i < mAudioContexts.Length(); ++i) {
-    mAudioContexts[i]->Mute();
+    if (!mAudioContexts[i]->IsOffline()) {
+      mAudioContexts[i]->Mute();
+    }
   }
 }
 
@@ -3301,7 +3303,9 @@ void
 nsPIDOMWindow::UnmuteAudioContexts()
 {
   for (uint32_t i = 0; i < mAudioContexts.Length(); ++i) {
-    mAudioContexts[i]->Unmute();
+    if (!mAudioContexts[i]->IsOffline()) {
+      mAudioContexts[i]->Unmute();
+    }
   }
 }
 
