@@ -7,6 +7,7 @@
 #define WEBGLVERTEXARRAY_H_
 
 #include "WebGLObjectModel.h"
+#include "WebGLBuffer.h"
 #include "WebGLVertexAttribData.h"
 
 #include "nsWrapperCache.h"
