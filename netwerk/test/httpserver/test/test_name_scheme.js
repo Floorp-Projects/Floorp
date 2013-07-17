@@ -8,42 +8,47 @@
 // htaccess-like functionality without the need to explicitly disable display
 // of such files
 
-const PREFIX = "http://localhost:4444";
+var srv;
 
-var tests =
-  [
-   new Test(PREFIX + "/bar.html^",
+XPCOMUtils.defineLazyGetter(this, "PREFIX", function() {
+  return "http://localhost:" + srv.identity.primaryPort;
+});
+
+XPCOMUtils.defineLazyGetter(this, "tests", function() {
+  return [
+    new Test(PREFIX + "/bar.html^",
             null, start_bar_html_, null),
-   new Test(PREFIX + "/foo.html^",
+    new Test(PREFIX + "/foo.html^",
             null, start_foo_html_, null),
-   new Test(PREFIX + "/normal-file.txt",
+    new Test(PREFIX + "/normal-file.txt",
             null, start_normal_file_txt, null),
-   new Test(PREFIX + "/folder^/file.txt",
+    new Test(PREFIX + "/folder^/file.txt",
             null, start_folder__file_txt, null),
 
-   new Test(PREFIX + "/foo/bar.html^",
+    new Test(PREFIX + "/foo/bar.html^",
             null, start_bar_html_, null),
-   new Test(PREFIX + "/foo/foo.html^",
+    new Test(PREFIX + "/foo/foo.html^",
             null, start_foo_html_, null),
-   new Test(PREFIX + "/foo/normal-file.txt",
+    new Test(PREFIX + "/foo/normal-file.txt",
             null, start_normal_file_txt, null),
-   new Test(PREFIX + "/foo/folder^/file.txt",
+    new Test(PREFIX + "/foo/folder^/file.txt",
             null, start_folder__file_txt, null),
 
-   new Test(PREFIX + "/end-caret^/bar.html^",
+    new Test(PREFIX + "/end-caret^/bar.html^",
             null, start_bar_html_, null),
-   new Test(PREFIX + "/end-caret^/foo.html^",
+    new Test(PREFIX + "/end-caret^/foo.html^",
             null, start_foo_html_, null),
-   new Test(PREFIX + "/end-caret^/normal-file.txt",
+    new Test(PREFIX + "/end-caret^/normal-file.txt",
             null, start_normal_file_txt, null),
-   new Test(PREFIX + "/end-caret^/folder^/file.txt",
+    new Test(PREFIX + "/end-caret^/folder^/file.txt",
             null, start_folder__file_txt, null)
-  ];
+    ];
+});
 
 
 function run_test()
 {
-  var srv = createServer();
+  srv = createServer();
 
   // make sure underscores work in directories "mounted" in directories with
   // folders starting with _
@@ -52,7 +57,7 @@ function run_test()
   srv.registerDirectory("/foo/", nameDir);
   srv.registerDirectory("/end-caret^/", nameDir);
 
-  srv.start(4444);
+  srv.start(-1);
 
   runHttpTests(tests, testComplete(srv));
 }

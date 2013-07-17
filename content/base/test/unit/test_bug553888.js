@@ -4,9 +4,10 @@
 
 Components.utils.import("resource://testing-common/httpd.js");
 
-var server = null;
+var server = new HttpServer();
+server.start(-1);
 
-const SERVER_PORT = 4444;
+const SERVER_PORT = server.identity.primaryPort;
 const HTTP_BASE = "http://localhost:" + SERVER_PORT;
 const redirectPath = "/redirect";
 const headerCheckPath = "/headerCheck";
@@ -36,10 +37,8 @@ function headerCheckHandler(metadata, response) {
 }
 
 function run_test() {
-  var server = new HttpServer();
   server.registerPathHandler(redirectPath, redirectHandler);
   server.registerPathHandler(headerCheckPath, headerCheckHandler);
-  server.start(SERVER_PORT);
 
   do_test_pending();
   var request = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"]

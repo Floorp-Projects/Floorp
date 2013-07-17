@@ -6,15 +6,15 @@
 
 // test that special headers are sent as an array of headers with the same name
 
-const PORT = 4444;
+var srv;
 
 function run_test()
 {
-  var srv;
+  srv;
 
   srv = createServer();
   srv.registerPathHandler("/path-handler", pathHandler);
-  srv.start(PORT);
+  srv.start(-1);
 
   runHttpTests(tests, testComplete(srv));
 }
@@ -47,9 +47,12 @@ function pathHandler(request, response)
  * BEGIN TESTS *
  ***************/
 
-var tests = [
-  new Test("http://localhost:4444/path-handler",
-           null, check)];
+XPCOMUtils.defineLazyGetter(this, "tests", function() {
+  return [
+    new Test("http://localhost:" + srv.identity.primaryPort + "/path-handler",
+             null, check)
+  ];
+});
 
 function check(ch, cx)
 {
