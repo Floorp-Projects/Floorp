@@ -4664,9 +4664,10 @@ ParseFunction(ModuleCompiler &m, ParseNode **fnOut)
     if (!fn)
         return false;
 
+    // This flows into FunctionBox, so must be tenured.
     RootedFunction fun(m.cx(), NewFunction(m.cx(), NullPtr(), NULL, 0, JSFunction::INTERPRETED,
                                            m.cx()->global(), name, JSFunction::FinalizeKind,
-                                           GenericObject));
+                                           TenuredObject));
     if (!fun)
         return false;
 
