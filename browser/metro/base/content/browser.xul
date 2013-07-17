@@ -320,9 +320,6 @@
         <scrollbox id="history-container" flex="1">
           <richgrid id="history-list" noun="history" class="canSnapTiles" seltype="multiple" flex="1"/>
         </scrollbox>
-        <scrollbox id="downloads-container" flex="1">
-          <richgrid id="downloads-list" noun="download" class="canSnapTiles" seltype="single" flex="1"/>
-        </scrollbox>
         <scrollbox id="remotetabs-container" flex="1">
           <richgrid id="remotetabs-list" noun="tab" class="canSnapTiles" seltype="single" flex="1"/>
         </scrollbox>
