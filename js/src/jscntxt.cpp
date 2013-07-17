@@ -1138,14 +1138,9 @@ JSContext::saveFrameChain()
     if (Activation *act = mainThread().activation())
         act->saveFrameChain();
 
-    if (defaultCompartmentObject_)
-        setCompartment(defaultCompartmentObject_->compartment());
-    else
-        setCompartment(NULL);
+    setCompartment(NULL);
     enterCompartmentDepth_ = 0;
 
-    if (isExceptionPending())
-        wrapPendingException();
     return true;
 }
 
