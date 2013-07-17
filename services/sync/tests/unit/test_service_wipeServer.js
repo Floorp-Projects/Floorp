@@ -31,8 +31,8 @@ FakeCollection.prototype = {
 function setUpTestFixtures(server) {
   let cryptoService = new FakeCryptoService();
 
-  Service.serverURL = server.baseURI;
-  Service.clusterURL = server.baseURI;
+  Service.serverURL = server.baseURI + "/";
+  Service.clusterURL = server.baseURI + "/";
 
   setBasicCredentials("johndoe", null, "aabcdeabcdeabcdeabcdeabcde");
 }
@@ -57,7 +57,7 @@ add_test(function test_wipeServer_list_success() {
 
   try {
     setUpTestFixtures(server);
-    new SyncTestingInfrastructure("johndoe", "irrelevant", "irrelevant");
+    new SyncTestingInfrastructure(server, "johndoe", "irrelevant", "irrelevant");
 
     _("Confirm initial environment.");
     do_check_false(steam_coll.deleted);
@@ -91,7 +91,7 @@ add_test(function test_wipeServer_list_503() {
 
   try {
     setUpTestFixtures(server);
-    new SyncTestingInfrastructure("johndoe", "irrelevant", "irrelevant");
+    new SyncTestingInfrastructure(server, "johndoe", "irrelevant", "irrelevant");
 
     _("Confirm initial environment.");
     do_check_false(steam_coll.deleted);
