@@ -40,4 +40,8 @@ function test() {
      "Invalid window for getWindowValue throws");
   ok(test(function() ss.setWindowValue({}, "", "")),
      "Invalid window for setWindowValue throws");
+  ok(test(function() ss.getNumberOfTabsClosedLast({})),
+     "Invalid window for getNumberOfTabsClosedLast  throws");
+  ok(test(function() ss.setNumberOfTabsClosedLast({}, 1)),
+     "Invalid window for setNumberOfTabsClosedLast throws");
 }
