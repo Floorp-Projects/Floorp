@@ -138,21 +138,6 @@ static void ProcessDelayedAudioRoute(SwitchState aState)
 
 NS_IMPL_ISUPPORTS2(AudioManager, nsIAudioManager, nsIObserver)
 
-static AudioSystem::audio_devices
-GetRoutingMode(int aType) {
-  if (aType == nsIAudioManager::FORCE_SPEAKER) {
-    return AudioSystem::DEVICE_OUT_SPEAKER;
-  } else if (aType == nsIAudioManager::FORCE_HEADPHONES) {
-    return AudioSystem::DEVICE_OUT_WIRED_HEADSET;
-  } else if (aType == nsIAudioManager::FORCE_BT_SCO) {
-    return AudioSystem::DEVICE_OUT_BLUETOOTH_SCO;
-  } else if (aType == nsIAudioManager::FORCE_BT_A2DP) {
-    return AudioSystem::DEVICE_OUT_BLUETOOTH_A2DP;
-  } else {
-    return AudioSystem::DEVICE_IN_DEFAULT;
-  }
-}
-
 static void
 InternalSetAudioRoutesICS(SwitchState aState)
 {
@@ -172,32 +157,14 @@ InternalSetAudioRoutesICS(SwitchState aState)
 }
 
 static void
-InternalSetAudioRoutesGB(SwitchState aState)
-{
-  audio_io_handle_t handle = 
-    AudioSystem::getOutput((AudioSystem::stream_type)AudioSystem::SYSTEM);
-  String8 cmd;
-
-  if (aState == SWITCH_STATE_HEADSET || aState == SWITCH_STATE_HEADPHONE) {
-    cmd.appendFormat("routing=%d", GetRoutingMode(nsIAudioManager::FORCE_HEADPHONES));
-  } else if (aState == SWITCH_STATE_OFF) {
-    cmd.appendFormat("routing=%d", GetRoutingMode(nsIAudioManager::FORCE_SPEAKER));
-  }
-
-  AudioSystem::setParameters(handle, cmd);
-}
-
-static void
 InternalSetAudioRoutes(SwitchState aState)
 {
   if (static_cast<
     status_t (*)(audio_devices_t, audio_policy_dev_state_t, const char*)
     >(AudioSystem::setDeviceConnectionState)) {
     InternalSetAudioRoutesICS(aState);
-  } else if (static_cast<
-    audio_io_handle_t (*)(AudioSystem::stream_type, uint32_t, uint32_t, uint32_t, AudioSystem::output_flags)
-    >(AudioSystem::getOutput)) {
-    InternalSetAudioRoutesGB(aState);
+  } else {
+    NS_NOTREACHED("Doesn't support audio routing on GB version");
   }
 }
 
@@ -442,50 +409,35 @@ AudioManager::SetPhoneState(int32_t aState)
   return NS_OK;
 }
 
-//
-// Kids, don't try this at home.  We want this to link and work on
-// both GB and ICS.  Problem is, the symbol exported by audioflinger
-// is different on the two gonks.
-//
-// So what we do here is weakly link to both of them, and then call
-// whichever symbol resolves at dynamic link time (if any).
-//
 NS_IMETHODIMP
 AudioManager::SetForceForUse(int32_t aUsage, int32_t aForce)
 {
-  status_t status = 0;
-
   if (static_cast<
-      status_t (*)(AudioSystem::force_use, AudioSystem::forced_config)
-      >(AudioSystem::setForceUse)) {
-    // Dynamically resolved the GB signature.
-    status = AudioSystem::setForceUse((AudioSystem::force_use)aUsage,
-                                      (AudioSystem::forced_config)aForce);
-  } else if (static_cast<
              status_t (*)(audio_policy_force_use_t, audio_policy_forced_cfg_t)
              >(AudioSystem::setForceUse)) {
     // Dynamically resolved the ICS signature.
-    status = AudioSystem::setForceUse((audio_policy_force_use_t)aUsage,
-                                      (audio_policy_forced_cfg_t)aForce);
+    status_t status = AudioSystem::setForceUse(
+                        (audio_policy_force_use_t)aUsage,
+                        (audio_policy_forced_cfg_t)aForce);
+    return status ? NS_ERROR_FAILURE : NS_OK;
   }
 
-  return status ? NS_ERROR_FAILURE : NS_OK;
+  NS_NOTREACHED("Doesn't support force routing on GB version");
+  return NS_ERROR_UNEXPECTED;
 }
 
 NS_IMETHODIMP
 AudioManager::GetForceForUse(int32_t aUsage, int32_t* aForce) {
   if (static_cast<
-      AudioSystem::forced_config (*)(AudioSystem::force_use)
+      audio_policy_forced_cfg_t (*)(audio_policy_force_use_t)
       >(AudioSystem::getForceUse)) {
-    // Dynamically resolved the GB signature.
-    *aForce = AudioSystem::getForceUse((AudioSystem::force_use)aUsage);
-  } else if (static_cast<
-             audio_policy_forced_cfg_t (*)(audio_policy_force_use_t)
-             >(AudioSystem::getForceUse)) {
     // Dynamically resolved the ICS signature.
     *aForce = AudioSystem::getForceUse((audio_policy_force_use_t)aUsage);
+    return NS_OK;
   }
-  return NS_OK;
+
+  NS_NOTREACHED("Doesn't support force routing on GB version");
+  return NS_ERROR_UNEXPECTED;
 }
 
 NS_IMETHODIMP
