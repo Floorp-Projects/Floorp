@@ -1452,6 +1452,10 @@ class AssemblerX86Shared
         JS_ASSERT(HasSSE2());
         masm.sqrtsd_rr(src.code(), dest.code());
     }
+    void sqrtss(const FloatRegister &src, const FloatRegister &dest) {
+        JS_ASSERT(HasSSE2());
+        masm.sqrtss_rr(src.code(), dest.code());
+    }
     void roundsd(const FloatRegister &src, const FloatRegister &dest,
                  JSC::X86Assembler::RoundingMode mode)
     {

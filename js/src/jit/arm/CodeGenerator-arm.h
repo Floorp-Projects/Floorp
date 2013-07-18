@@ -67,6 +67,7 @@ class CodeGeneratorARM : public CodeGeneratorShared
     virtual bool visitMinMaxD(LMinMaxD *ins);
     virtual bool visitAbsD(LAbsD *ins);
     virtual bool visitSqrtD(LSqrtD *ins);
+    virtual bool visitSqrtF(LSqrtF *ins);
     virtual bool visitAddI(LAddI *ins);
     virtual bool visitSubI(LSubI *ins);
     virtual bool visitBitNotI(LBitNotI *ins);

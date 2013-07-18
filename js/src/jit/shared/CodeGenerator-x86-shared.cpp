@@ -483,6 +483,15 @@ CodeGeneratorX86Shared::visitSqrtD(LSqrtD *ins)
 }
 
 bool
+CodeGeneratorX86Shared::visitSqrtF(LSqrtF *ins)
+{
+    FloatRegister input = ToFloatRegister(ins->input());
+    FloatRegister output = ToFloatRegister(ins->output());
+    masm.sqrtss(input, output);
+    return true;
+}
+
+bool
 CodeGeneratorX86Shared::visitPowHalfD(LPowHalfD *ins)
 {
     FloatRegister input = ToFloatRegister(ins->input());

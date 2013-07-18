@@ -349,6 +349,15 @@ CodeGeneratorARM::visitSqrtD(LSqrtD *ins)
 }
 
 bool
+CodeGeneratorARM::visitSqrtF(LSqrtF *ins)
+{
+    FloatRegister input = ToFloatRegister(ins->input());
+    FloatRegister output = ToFloatRegister(ins->output());
+    masm.ma_vsqrt_f32(input, output);
+    return true;
+}
+
+bool
 CodeGeneratorARM::visitAddI(LAddI *ins)
 {
     const LAllocation *lhs = ins->getOperand(0);

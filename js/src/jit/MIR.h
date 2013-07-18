@@ -3455,23 +3455,24 @@ class MAbs
 // Inline implementation of Math.sqrt().
 class MSqrt
   : public MUnaryInstruction,
-    public DoublePolicy<0>
+    public FloatingPointPolicy<0>
 {
-    MSqrt(MDefinition *num)
+    MSqrt(MDefinition *num, MIRType type)
       : MUnaryInstruction(num)
     {
-        setResultType(MIRType_Double);
+        setResultType(type);
+        setPolicyType(type);
         setMovable();
     }
 
   public:
     INSTRUCTION_HEADER(Sqrt)
     static MSqrt *New(MDefinition *num) {
-        return new MSqrt(num);
+        return new MSqrt(num, MIRType_Double);
     }
     static MSqrt *NewAsmJS(MDefinition *num, MIRType type) {
-        JS_ASSERT(type == MIRType_Double);
-        return new MSqrt(num);
+        JS_ASSERT(IsFloatingPointType(type));
+        return new MSqrt(num, type);
     }
     MDefinition *num() const {
         return getOperand(0);
@@ -3487,6 +3488,9 @@ class MSqrt
         return AliasSet::None();
     }
     void computeRange();
+
+    bool isFloat32Commutative() const { return true; }
+    void trySpecializeFloat32();
 };
 
 // Inline implementation of atan2 (arctangent of y/x).

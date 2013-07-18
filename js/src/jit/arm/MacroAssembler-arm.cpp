@@ -1431,6 +1431,12 @@ MacroAssemblerARM::ma_vsqrt(FloatRegister src, FloatRegister dest, Condition cc)
     as_vsqrt(dest, src, cc);
 }
 
+void
+MacroAssemblerARM::ma_vsqrt_f32(FloatRegister src, FloatRegister dest, Condition cc)
+{
+    as_vsqrt(VFPRegister(dest).singleOverlay(), VFPRegister(src).singleOverlay(), cc);
+}
+
 union DoublePun
 {
     struct
