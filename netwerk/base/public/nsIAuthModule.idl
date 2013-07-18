@@ -24,6 +24,23 @@ interface nsIAuthModule : nsISupports
      */
     const unsigned long REQ_DELEGATE = (1 << 1);
 
+    /**
+     * The authentication is required for a proxy connection.
+     */
+    const unsigned long REQ_PROXY_AUTH = (1 << 2);
+
+    /**
+     * Flags used for telemetry.
+     */
+    const unsigned long NTLM_MODULE_SAMBA_AUTH_PROXY = 0;
+    const unsigned long NTLM_MODULE_SAMBA_AUTH_DIRECT = 1;
+    const unsigned long NTLM_MODULE_WIN_API_PROXY = 2;
+    const unsigned long NTLM_MODULE_WIN_API_DIRECT = 3;
+    const unsigned long NTLM_MODULE_GENERIC_PROXY = 4;
+    const unsigned long NTLM_MODULE_GENERIC_DIRECT = 5;
+    const unsigned long NTLM_MODULE_KERBEROS_PROXY = 6;
+    const unsigned long NTLM_MODULE_KERBEROS_DIRECT = 7;
+
     /** Other flags may be defined in the future */
 
     /**
