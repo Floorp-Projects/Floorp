@@ -10,7 +10,7 @@
               android:background="@android:color/white">
 
     <TextView android:id="@+id/title"
-              style="@style/AboutHome.PageTitle"/>
+              style="@style/Widget.Home.PageTitle"/>
 
     <org.mozilla.gecko.home.HomeListView
             android:id="@+id/list"

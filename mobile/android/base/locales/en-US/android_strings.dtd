@@ -266,9 +266,9 @@ size. -->
 <!ENTITY button_set "Set">
 <!ENTITY button_clear "Clear">
 
-<!ENTITY abouthome_last_tabs_title "Your tabs from last time">
-<!ENTITY abouthome_last_tabs_open "Open all tabs from last time">
-<!ENTITY abouthome_visited_empty "Websites you visited go here">
+<!ENTITY home_last_tabs_title "Your tabs from last time">
+<!ENTITY home_last_tabs_open "Open all tabs from last time">
+<!ENTITY home_visited_empty "Websites you visited go here">
 
 <!ENTITY filepicker_title "Choose File">
 <!ENTITY filepicker_audio_title "Choose or record a sound">

@@ -152,6 +152,49 @@
         <item name="android:divider">#E7ECF0</item>
     </style>
 
+    <style name="Widget.Home" />
+
+    <style name="Widget.Home.HeaderItem">
+        <item name="android:layout_width">fill_parent</item>
+        <item name="android:layout_height">32dp</item>
+        <item name="android:textAppearance">@style/TextAppearance.Widget.Home.Header</item>
+        <item name="android:background">#fff5f7f9</item>
+        <item name="android:focusable">false</item>
+        <item name="android:gravity">center|left</item>
+        <item name="android:paddingLeft">10dip</item>
+        <item name="android:paddingRight">10dip</item>
+    </style>
+
+    <style name="Widget.Home.EmptyMessage">
+        <item name="android:textAppearance">@style/TextAppearance.Widget.Home.PageTitle</item>
+        <item name="android:gravity">center</item>
+        <item name="android:focusable">false</item>
+        <item name="android:paddingLeft">10dip</item>
+        <item name="android:paddingRight">10dip</item>
+    </style>
+
+    <style name="Widget.Home.PageButton">
+        <item name="android:layout_width">fill_parent</item>
+        <item name="android:layout_height">40dip</item>
+        <item name="android:textAppearance">@style/TextAppearance.Widget.Home.PageTitle</item>
+        <item name="android:background">@drawable/action_bar_button</item>
+        <item name="android:focusable">true</item>
+        <item name="android:gravity">center|left</item>
+        <item name="android:paddingLeft">10dip</item>
+        <item name="android:paddingRight">10dip</item>
+    </style>
+
+    <style name="Widget.Home.PageTitle">
+        <item name="android:layout_width">fill_parent</item>
+        <item name="android:layout_height">32dp</item>
+        <item name="android:textAppearance">@style/TextAppearance.Widget.Home.PageTitle</item>
+        <item name="android:background">@color/background_light</item>
+        <item name="android:focusable">false</item>
+        <item name="android:gravity">center|left</item>
+        <item name="android:paddingLeft">10dip</item>
+        <item name="android:paddingRight">10dip</item>
+    </style>
+
     <!--
         TextAppearance
         Note: Gecko uses light theme as default, while Android uses dark.
@@ -251,6 +294,14 @@
     <style name="TextAppearance.Widget.TwoLinePageRow.Url" parent="TextAppearance.Micro">
         <item name="android:textColor">?android:attr/textColorSecondary</item>
     </style>
+
+    <style name="TextAppearance.Widget.Home" />
+
+    <style name="TextAppearance.Widget.Home.Header" parent="TextAppearance.Small">
+        <item name="android:textColor">?android:attr/textColorPrimary</item>
+    </style>
+
+    <style name="TextAppearance.Widget.Home.PageTitle" parent="TextAppearance.Medium" />
 
     <!-- BrowserToolbar -->
     <style name="BrowserToolbar">
@@ -386,58 +437,6 @@
 
     <style name="WebView.Titlebar.Title">
         <item name="android:textColor">#ff222222</item>
-    </style>
-
-    <style name="AboutHome">
-    </style>
-
-    <style name="AboutHome.TextAppearance" />
-
-    <style name="AboutHome.TextAppearance.Header" parent="TextAppearance.Small">
-        <item name="android:textColor">#ff222222</item>
-    </style>
-
-    <style name="AboutHome.TextAppearance.PageTitle" parent="TextAppearance.Medium" />
-
-    <style name="AboutHome.HeaderItem">
-        <item name="android:layout_width">fill_parent</item>
-        <item name="android:layout_height">32dp</item>
-        <item name="android:textAppearance">@style/AboutHome.TextAppearance.Header</item>
-        <item name="android:background">#fff5f7f9</item>
-        <item name="android:focusable">false</item>
-        <item name="android:gravity">center|left</item>
-        <item name="android:paddingLeft">10dip</item>
-        <item name="android:paddingRight">10dip</item>
-    </style>
-
-    <style name="AboutHome.EmptyMessage">
-        <item name="android:textAppearance">@style/AboutHome.TextAppearance.PageTitle</item>
-        <item name="android:gravity">center</item>
-        <item name="android:focusable">false</item>
-        <item name="android:paddingLeft">10dip</item>
-        <item name="android:paddingRight">10dip</item>
-    </style>
-
-    <style name="AboutHome.PageButton">
-        <item name="android:layout_width">fill_parent</item>
-        <item name="android:layout_height">40dip</item>
-        <item name="android:textAppearance">@style/AboutHome.TextAppearance.PageTitle</item>
-        <item name="android:background">@drawable/action_bar_button</item>
-        <item name="android:focusable">true</item>
-        <item name="android:gravity">center|left</item>
-        <item name="android:paddingLeft">10dip</item>
-        <item name="android:paddingRight">10dip</item>
-    </style>
-
-    <style name="AboutHome.PageTitle">
-        <item name="android:layout_width">fill_parent</item>
-        <item name="android:layout_height">32dp</item>
-        <item name="android:textAppearance">@style/AboutHome.TextAppearance.PageTitle</item>
-        <item name="android:background">@color/background_light</item>
-        <item name="android:focusable">false</item>
-        <item name="android:gravity">center|left</item>
-        <item name="android:paddingLeft">10dip</item>
-        <item name="android:paddingRight">10dip</item>
     </style>
 
     <style name="GeckoDialogTitle">

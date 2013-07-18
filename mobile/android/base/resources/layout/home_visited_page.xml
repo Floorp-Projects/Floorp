@@ -9,10 +9,10 @@
               android:orientation="vertical">
 
     <TextView android:id="@+id/empty_message"
-              style="@style/AboutHome.EmptyMessage"
+              style="@style/Widget.Home.EmptyMessage"
               android:layout_width="fill_parent"
               android:layout_height="fill_parent"
-              android:text="@string/abouthome_visited_empty"
+              android:text="@string/home_visited_empty"
               android:visibility="gone"/>
 
     <org.mozilla.gecko.home.HomeListView
@@ -29,7 +29,7 @@
                   android:visibility="gone">
 
         <Button android:id="@+id/history_button"
-                style="@style/AboutHome.PageButton"
+                style="@style/Widget.Home.PageButton"
                 android:text="@string/history_title"/>
 
         <View android:layout_width="fill_parent"
@@ -37,8 +37,8 @@
               android:background="#FFD1D5DA"/>
 
         <Button android:id="@+id/tabs_button"
-                style="@style/AboutHome.PageButton"
-                android:text="@string/abouthome_last_tabs_title"/>
+                style="@style/Widget.Home.PageButton"
+                android:text="@string/home_last_tabs_title"/>
 
     </LinearLayout>
 
