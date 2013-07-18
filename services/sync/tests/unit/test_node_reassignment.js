@@ -59,8 +59,8 @@ function handleReassign(handler, req, resp) {
 /**
  * A node assignment handler.
  */
+const newNodeBody = "http://localhost:8080/";
 function installNodeHandler(server, next) {
-  let newNodeBody = server.baseURI;
   function handleNodeRequest(req, resp) {
     _("Client made a request for a node reassignment.");
     resp.setStatusLine(req.httpVersion, 200, "OK");
@@ -75,13 +75,13 @@ function installNodeHandler(server, next) {
 
 function prepareServer() {
   setBasicCredentials("johndoe", "ilovejane", "abcdeabcdeabcdeabcdeabcdea");
+  Service.serverURL  = TEST_SERVER_URL;
+  Service.clusterURL = TEST_CLUSTER_URL;
 
+  do_check_eq(Service.userAPIURI, "http://localhost:8080/user/1.0/");
   let server = new SyncServer();
   server.registerUser("johndoe");
   server.start();
-  Service.serverURL = server.baseURI;
-  Service.clusterURL = server.baseURI;
-  do_check_eq(Service.userAPIURI, server.baseURI + "user/1.0/");
   return server;
 }
 

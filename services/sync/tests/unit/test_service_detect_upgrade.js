@@ -66,7 +66,8 @@ add_test(function v4_upgrade() {
     Service.status.resetSync();
 
     _("Logging in.");
-    Service.serverURL = server.baseURI;
+    Service.serverURL = TEST_SERVER_URL;
+    Service.clusterURL = TEST_CLUSTER_URL;
 
     Service.login("johndoe", "ilovejane", passphrase);
     do_check_true(Service.isLoggedIn);
@@ -101,7 +102,8 @@ add_test(function v4_upgrade() {
     _("Syncing afresh...");
     Service.logout();
     Service.collectionKeys.clear();
-    Service.serverURL = server.baseURI;
+    Service.serverURL = TEST_SERVER_URL;
+    Service.clusterURL = TEST_CLUSTER_URL;
     meta_global.payload = JSON.stringify({"syncID": "foooooooooooooobbbbbbbbbbbb",
                                           "storageVersion": STORAGE_VERSION});
     collections.meta = Date.now() / 1000;
@@ -237,8 +239,8 @@ add_test(function v5_upgrade() {
     Service.status.resetSync();
 
     setBasicCredentials("johndoe", "ilovejane", passphrase);
-    Service.serverURL = server.baseURI + "/";
-    Service.clusterURL = server.baseURI + "/";
+    Service.serverURL = TEST_SERVER_URL;
+    Service.clusterURL = TEST_CLUSTER_URL;
 
     // Test an upgrade where the contents of the server would cause us to error
     // -- keys decrypted with a different sync key, for example.

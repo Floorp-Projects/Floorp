@@ -46,7 +46,18 @@ function do_check_throws(aFunc, aResult, aStack) {
  */
 let _ = function(some, debug, text, to) print(Array.slice(arguments).join(" "));
 
-function httpd_setup (handlers, port=-1) {
+/**
+ * Obtain a port number to run a server on.
+ *
+ * In the ideal world, this would be dynamic so multiple servers could be run
+ * in parallel.
+ */
+function get_server_port() {
+  return 8080;
+}
+
+function httpd_setup (handlers, port) {
+  let port   = port || 8080;
   let server = new HttpServer();
   for (let path in handlers) {
     server.registerPathHandler(path, handlers[path]);
@@ -61,10 +72,6 @@ function httpd_setup (handlers, port=-1) {
     _("==========================================");
     do_throw(ex);
   }
-
-  // Set the base URI for convenience.
-  let i = server.identity;
-  server.baseURI = i.primaryScheme + "://" + i.primaryHost + ":" + i.primaryPort;
 
   return server;
 }
