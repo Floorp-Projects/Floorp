@@ -159,14 +159,6 @@ InternalSetAudioRoutesICS(SwitchState aState)
                                           AUDIO_POLICY_DEVICE_STATE_UNAVAILABLE, "");
     sHeadsetState = 0;
   }
-
-  // The audio volume is not consistent when we plug and unplug the headset.
-  // Set the fm volume again here.
-  if (IsDeviceOn(AUDIO_DEVICE_OUT_FM)) {
-    float masterVolume;
-    AudioSystem::getMasterVolume(&masterVolume);
-    AudioSystem::setFmVolume(masterVolume);
-  }
 }
 
 static void
@@ -326,6 +318,9 @@ AudioManager::AudioManager() : mPhoneState(PHONE_STATE_CURRENT),
     AUDIO_DEVICE_OUT_SPEAKER);
 #endif
 
+  // Gecko only control stream volume not master so set to default value
+  // directly.
+  AudioSystem::setMasterVolume(1.0);
   AudioSystem::setErrorCallback(BinderDeadCallback);
 }
 
@@ -355,52 +350,6 @@ NS_IMETHODIMP
 AudioManager::SetMicrophoneMuted(bool aMicrophoneMuted)
 {
   if (AudioSystem::muteMicrophone(aMicrophoneMuted)) {
-    return NS_ERROR_FAILURE;
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-AudioManager::GetMasterVolume(float* aMasterVolume)
-{
-  if (AudioSystem::getMasterVolume(aMasterVolume)) {
-    return NS_ERROR_FAILURE;
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-AudioManager::SetMasterVolume(float aMasterVolume)
-{
-  if (AudioSystem::setMasterVolume(aMasterVolume)) {
-    return NS_ERROR_FAILURE;
-  }
-  // For now, just set the voice volume at the same level
-  if (AudioSystem::setVoiceVolume(aMasterVolume)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  if (IsDeviceOn(AUDIO_DEVICE_OUT_FM) &&
-      AudioSystem::setFmVolume(aMasterVolume)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-AudioManager::GetMasterMuted(bool* aMasterMuted)
-{
-  if (AudioSystem::getMasterMute(aMasterMuted)) {
-    return NS_ERROR_FAILURE;
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-AudioManager::SetMasterMuted(bool aMasterMuted)
-{
-  if (AudioSystem::setMasterMute(aMasterMuted)) {
     return NS_ERROR_FAILURE;
   }
   return NS_OK;

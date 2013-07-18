@@ -4,23 +4,13 @@
 
 #include "nsISupports.idl"
 
-[scriptable, builtinclass, uuid(b76a3de4-79f4-4cbb-a0e2-871095eacb2c)]
+[scriptable, builtinclass, uuid(60da41b4-cdc2-11e2-8a91-10bf48d64bd4)]
 interface nsIAudioManager : nsISupports
 {
   /**
    * Microphone muted?
    */
   attribute boolean microphoneMuted;
-
-  /**
-   * The master volume.
-   */
-  attribute float masterVolume;
-
-  /**
-   * Master volume muted?
-   */
-  attribute boolean masterMuted;
 
   /**
    * Are we playing audio from the FM radio?
