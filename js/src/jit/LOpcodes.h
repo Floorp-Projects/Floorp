@@ -102,6 +102,7 @@
     _(AbsI)                         \
     _(AbsD)                         \
     _(SqrtD)                        \
+    _(SqrtF)                        \
     _(Atan2D)                       \
     _(PowI)                         \
     _(PowD)                         \
