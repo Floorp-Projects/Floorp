@@ -5,8 +5,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 XPIDL_SOURCES += [
-    'nsIDOMSVGAnimatedEnum.idl',
-    'nsIDOMSVGAnimatedNumber.idl',
     'nsIDOMSVGElement.idl',
     'nsIDOMSVGLength.idl',
     'nsIDOMSVGNumber.idl',

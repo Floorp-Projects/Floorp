@@ -133,6 +133,8 @@ GetBackendName(mozilla::gfx::BackendType aBackend)
         return "skia";
       case mozilla::gfx::BACKEND_RECORDING:
         return "recording";
+      case mozilla::gfx::BACKEND_DIRECT2D1_1:
+        return "direct2d 1.1";
       case mozilla::gfx::BACKEND_NONE:
         return "none";
   }

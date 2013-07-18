@@ -19,7 +19,7 @@ def env(config):
     e = os.environ
     e['PATH'] = '%s:%s/bin' % (e['PATH'], config['sixgill'])
     e['XDB'] = '%(sixgill)s/bin/xdb.so' % config
-    e['SOURCE_ROOT'] = e['TARGET']
+    e['SOURCE_ROOT'] = config['source'] or e['TARGET']
     return e
 
 def fill(command, config):
@@ -34,6 +34,20 @@ def fill(command, config):
                 print("  %s" % fragment)
         raise Hell
 
+def print_command(command, outfile=None, env=None):
+    output = ' '.join(command)
+    if outfile:
+        output += ' > ' + outfile
+    if env:
+        changed = {}
+        e = os.environ
+        for key,value in env.items():
+            if (key not in e) or (e[key] != value):
+                changed[key] = value
+        if changed:
+            output = ' '.join(key + "='" + value + "'" for key, value in changed.items()) + ' ' + output
+    print output
+
 def generate_hazards(config, outfilename):
     jobs = []
     for i in range(config['jobs']):
@@ -47,7 +61,7 @@ def generate_hazards(config, outfilename):
                        config)
         outfile = 'rootingHazards.%s' % (i+1,)
         output = open(outfile, 'w')
-        print(' '.join(command) + ' > ' + outfile)
+        print_command(command, outfile=outfile, env=env(config))
         jobs.append((command, Popen(command, stdout=output, env=env(config))))
 
     final_status = 0
@@ -61,7 +75,7 @@ def generate_hazards(config, outfilename):
 
     with open(outfilename, 'w') as output:
         command = ['cat'] + [ 'rootingHazards.%s' % (i+1,) for i in range(config['jobs']) ]
-        print(' '.join(command) + ' > ' + outfilename)
+        print_command(command, outfile=outfilename)
         subprocess.call(command, stdout=output)
 
 JOBS = { 'dbs':
@@ -109,8 +123,8 @@ def run_job(name, config):
         command(config, outfilename)
     else:
         command = fill(command, config)
-        print(' '.join(command))
         temp = '%s.tmp' % name
+        print_command(command, outfile=outfilename, env=env(config))
         with open(temp, 'w') as output:
             subprocess.check_call(command, stdout=output, env=env(config))
         if outfilename is not None:
@@ -131,6 +145,8 @@ data = config.copy()
 parser = argparse.ArgumentParser(description='Statically analyze build tree for rooting hazards.')
 parser.add_argument('target', metavar='TARGET', type=str, nargs='?',
                     help='run starting from this target')
+parser.add_argument('--source', metavar='SOURCE', type=str, nargs='?',
+                    help='source code to analyze')
 parser.add_argument('--jobs', '-j', default=4, metavar='JOBS', type=int,
                     help='number of simultaneous analyzeRoots.js jobs')
 parser.add_argument('--list', const=True, nargs='?', type=bool,

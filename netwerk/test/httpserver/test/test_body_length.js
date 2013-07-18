@@ -10,15 +10,13 @@
  * octal number.
  */
 
-const PORT = 4444;
-
 var srv;
 
 function run_test()
 {
   srv = createServer();
   srv.registerPathHandler("/content-length", contentLength);
-  srv.start(PORT);
+  srv.start(-1);
 
   runHttpTests(tests, testComplete(srv));
 }
@@ -44,10 +42,12 @@ function contentLength(request, response)
  * BEGIN TESTS *
  ***************/
 
-var tests = [
-             new Test("http://localhost:4444/content-length",
-                      init_content_length),
-            ];
+XPCOMUtils.defineLazyGetter(this, 'tests', function() {
+  return [
+           new Test("http://localhost:" + srv.identity.primaryPort + "/content-length",
+                    init_content_length),
+  ];
+});
 
 function init_content_length(ch)
 {

@@ -1,0 +1,46 @@
+changeset:   137539:f7c118c5e82f
+tag:         tip
+user:        Jan Beich <jbeich@tormail.org>
+date:        Sat Jul 06 10:39:16 2013 +0200
+summary:     Bug 890240 - Use stub where pthread_setaffinity_np() isn't available. #define cpu_set_t to cpuset_t on Free/NetBSD. r=gwright, f=landry
+
+diff --git a/gfx/skia/src/utils/SkThreadUtils_pthread_linux.cpp b/gfx/skia/src/utils/SkThreadUtils_pthread_linux.cpp
+--- a/gfx/skia/src/utils/SkThreadUtils_pthread_linux.cpp
++++ b/gfx/skia/src/utils/SkThreadUtils_pthread_linux.cpp
+@@ -8,16 +8,35 @@
+ #ifndef _GNU_SOURCE
+ #define _GNU_SOURCE //for pthread_setaffinity_np
+ #endif
+ 
+ #include "SkThreadUtils.h"
+ #include "SkThreadUtils_pthread.h"
+ 
+ #include <pthread.h>
++#ifdef __FreeBSD__
++#include <pthread_np.h>
++#endif
++
++#if defined(__FreeBSD__) || defined(__NetBSD__)
++#define cpu_set_t cpuset_t
++#endif
++
++#ifndef CPU_COUNT
++static int CPU_COUNT(cpu_set_t *set) {
++    int count = 0;
++    for (int i = 0; i < CPU_SETSIZE; i++) {
++        if (CPU_ISSET(i, set)) {
++            count++;
++	}
++    }
++    return count;
++}
++#endif /* !CPU_COUNT */
+ 
+ static int nth_set_cpu(unsigned int n, cpu_set_t* cpuSet) {
+     n %= CPU_COUNT(cpuSet);
+     for (unsigned int setCpusSeen = 0, currentCpu = 0; true; ++currentCpu) {
+         if (CPU_ISSET(currentCpu, cpuSet)) {
+             ++setCpusSeen;
+             if (setCpusSeen > n) {
+                 return currentCpu;
+

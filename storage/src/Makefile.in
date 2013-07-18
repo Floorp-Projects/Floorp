@@ -12,11 +12,6 @@ include $(DEPTH)/config/autoconf.mk
 
 LIBXUL_LIBRARY = 1
 
-# TODO: we do this in crashreporter and xpcom/base too, should be centralized
-ifeq ($(OS_ARCH),Linux)
-DEFINES += -DXP_LINUX
-endif
-
 # Don't use the jemalloc allocator on Android, because we can't guarantee
 # that Gecko will configure sqlite before it is first used (bug 730495).
 #

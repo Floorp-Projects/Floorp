@@ -71,7 +71,8 @@ var Appbar = {
   },
 
   onDownloadButton: function() {
-    PanelUI.show("downloads-container");
+    // TODO: Bug 883962: Toggle the downloads infobar when the
+    // download button is clicked
     ContextUI.dismiss();
   },
 

@@ -153,7 +153,9 @@ TokenStream::SourceCoords::add(uint32_t lineNum, uint32_t lineStartOffset)
         // the line numbers will be wrong, but the code won't crash or anything
         // like that.
         lineStartOffsets_[lineIndex] = lineStartOffset;
-        (void)lineStartOffsets_.append(MAX_PTR);
+
+        uint32_t maxPtr = MAX_PTR;
+        (void)lineStartOffsets_.append(maxPtr);
 
     } else {
         // We have seen this newline before (and ungot it).  Do nothing (other

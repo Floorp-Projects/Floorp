@@ -6,6 +6,7 @@
 
 #include "vm/String-inl.h"
 
+#include "mozilla/MathAlgorithms.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/RangedPtr.h"
@@ -18,6 +19,7 @@ using namespace js;
 
 using mozilla::PodCopy;
 using mozilla::RangedPtr;
+using mozilla::RoundUpPow2;
 
 bool
 JSString::isShort() const
@@ -658,7 +660,7 @@ const StaticStrings::SmallChar StaticStrings::toSmallChar[] = { R7(0) };
 bool
 StaticStrings::init(JSContext *cx)
 {
-    AutoEnterAtomsCompartment ac(cx);
+    AutoCompartment ac(cx, cx->runtime()->atomsCompartment);
 
     for (uint32_t i = 0; i < UNIT_STATIC_LIMIT; i++) {
         jschar buffer[] = { jschar(i), '\0' };
