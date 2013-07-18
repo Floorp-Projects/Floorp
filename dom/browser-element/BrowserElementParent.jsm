@@ -67,6 +67,16 @@ function defineAndExpose(obj, name, value) {
   obj.__exposedProps__[name] = 'r';
 }
 
+function visibilityChangeHandler(weakBEP, win) {
+  let bep = weakBEP.get();
+  if (bep) {
+    bep._ownerVisibilityChange();
+  } else {
+    win.removeEventListener('visibilitychange', visibilityChangeHandler,
+                            /* useCapture */ false);
+  }
+}
+
 this.BrowserElementParentBuilder = {
   create: function create(frameLoader, hasRemoteFrame) {
     return new BrowserElementParent(frameLoader, hasRemoteFrame);
@@ -97,7 +107,7 @@ function BrowserElementParent(frameLoader, hasRemoteFrame) {
   let mmCalls = {
     "hello": this._recvHello,
     "contextmenu": this._fireCtxMenuEvent,
-    "locationchange": this._fireEventFromMsg,
+    "locationchange": this._gotLocationChange,
     "loadstart": this._fireEventFromMsg,
     "loadend": this._fireEventFromMsg,
     "titlechange": this._fireEventFromMsg,
@@ -168,9 +178,12 @@ function BrowserElementParent(frameLoader, hasRemoteFrame) {
   defineDOMRequestMethod('getCanGoForward', 'get-can-go-forward');
 
   // Listen to visibilitychange on the iframe's owner window, and forward it
-  // down to the child.
+  // down to the child.  The event listener must hold a weak reference to this,
+  // otherwise the window will hold this object alive.
+
+  var weakSelf = Cu.getWeakReference(this);
   this._window.addEventListener('visibilitychange',
-                                this._ownerVisibilityChange.bind(this),
+                                visibilityChangeHandler.bind(null, weakSelf, this._window),
                                 /* useCapture = */ false,
                                 /* wantsUntrusted = */ false);
 
@@ -597,6 +610,11 @@ BrowserElementParent.prototype = {
     let evt = this._createEvent('error', {type: 'fatal'},
                                 /* cancelable = */ false);
     this._frameElement.dispatchEvent(evt);
+  },
+
+  _gotLocationChange: function(data) {
+    this[data._payload_] = 'BEP location';
+    this._fireEventFromMsg(data);
   },
 
   observe: function(subject, topic, data) {

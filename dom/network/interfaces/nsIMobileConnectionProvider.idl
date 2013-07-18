@@ -66,4 +66,8 @@ interface nsIMobileConnectionProvider : nsISupports
   nsIDOMDOMRequest setCallWaitingOption(in nsIDOMWindow   window,
                                         in bool enabled);
   nsIDOMDOMRequest getCallWaitingOption(in nsIDOMWindow   window);
+
+  nsIDOMDOMRequest setCallingLineIdRestriction(in nsIDOMWindow   window,
+                                               in unsigned short clirMode);
+  nsIDOMDOMRequest getCallingLineIdRestriction(in nsIDOMWindow   window);
 };
