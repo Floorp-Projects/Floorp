@@ -288,6 +288,28 @@ GLScreenBuffer::BeforeReadCall()
     AssureBlitted();
 }
 
+bool
+GLScreenBuffer::ReadPixels(GLint x, GLint y, GLsizei width, GLsizei height,
+                           GLenum format, GLenum type, GLvoid *pixels)
+{
+    // If the currently bound framebuffer is backed by a SharedSurface_GL
+    // then it might want to override how we read pixel data from it.
+    // This is normally only the default framebuffer, but we can also
+    // have SharedSurfaces bound to other framebuffers when doing
+    // readback for BasicLayers.
+    SharedSurface_GL* surf;
+    if (GetReadFB() == 0) {
+        surf = SharedSurf();
+    } else {
+        surf = mGL->mFBOMapping[GetReadFB()];
+    }
+    if (surf) {
+        return surf->ReadPixels(x, y, width, height, format, type, pixels);
+    }
+
+    return false;
+}
+
 void
 GLScreenBuffer::RequireBlit()
 {
@@ -593,6 +615,7 @@ ReadBuffer::Create(GLContext* gl,
     GLuint fb = 0;
     gl->fGenFramebuffers(1, &fb);
     gl->AttachBuffersToFB(colorTex, colorRB, depthRB, stencilRB, fb, target);
+    gl->mFBOMapping[fb] = surf;
 
     MOZ_ASSERT(gl->IsFramebufferComplete(fb));
 
@@ -613,6 +636,7 @@ ReadBuffer::~ReadBuffer()
 
     mGL->fDeleteFramebuffers(1, &fb);
     mGL->fDeleteRenderbuffers(2, rbs);
+    mGL->mFBOMapping.erase(mFB);
 }
 
 void
@@ -641,6 +665,7 @@ ReadBuffer::Attach(SharedSurface_GL* surf)
         }
 
         mGL->AttachBuffersToFB(colorTex, colorRB, 0, 0, mFB, target);
+        mGL->mFBOMapping[mFB] = surf;
         MOZ_ASSERT(mGL->IsFramebufferComplete(mFB));
     }
 

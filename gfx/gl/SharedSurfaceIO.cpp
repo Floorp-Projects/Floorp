@@ -27,6 +27,29 @@ SharedSurface_IOSurface::Fence()
     mGL->fFlush();
 }
 
+bool
+SharedSurface_IOSurface::ReadPixels(GLint x, GLint y, GLsizei width, GLsizei height,
+                                    GLenum format, GLenum type, GLvoid *pixels)
+{
+    // Calling glReadPixels when an IOSurface is bound to the current framebuffer
+    // can cause corruption in following glReadPixel calls (even if they aren't
+    // reading from an IOSurface).
+    // We workaround this by copying to a temporary texture, and doing the readback
+    // from that.
+    ScopedTexture texture(mGL);
+    ScopedBindTexture bindTex(mGL, texture.Texture());
+    mGL->fCopyTexImage2D(LOCAL_GL_TEXTURE_2D, 0,
+                         HasAlpha() ? LOCAL_GL_RGBA : LOCAL_GL_RGB,
+                         x, y,
+                         width, height, 0);
+
+    ScopedFramebufferForTexture fb(mGL, texture.Texture());
+    ScopedBindFramebuffer bindFB(mGL, fb.FB());
+
+    mGL->fReadPixels(0, 0, width, height, format, type, pixels);
+    return true;
+}
+
 SharedSurface_IOSurface::SharedSurface_IOSurface(MacIOSurface* surface,
                                                  GLContext* gl,
                                                  const gfxIntSize& size,
