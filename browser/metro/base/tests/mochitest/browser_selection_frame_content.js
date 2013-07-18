@@ -138,7 +138,7 @@ gTests.push({
 
     yield promise;
     ok(promise && !(promise instanceof Error), "promise error");
-    ok(ContextMenuUI._menuPopup._visible, "is visible");
+    ok(ContextMenuUI._menuPopup.visible, "is visible");
 
     let menuItem = document.getElementById("context-copy");
     ok(menuItem, "menu item exists");
