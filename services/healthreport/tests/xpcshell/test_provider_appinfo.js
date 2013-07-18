@@ -250,3 +250,25 @@ add_task(function test_record_app_update () {
   yield provider.shutdown();
   yield storage.close();
 });
+
+add_task(function test_healthreporter_integration () {
+  let reporter = getHealthReporter("healthreporter_integration");
+  yield reporter.init();
+
+  try {
+    yield reporter._providerManager.registerProviderFromType(AppInfoProvider);
+    yield reporter.collectMeasurements();
+
+    let payload = yield reporter.getJSONPayload(true);
+    let days = payload['data']['days'];
+
+    for (let [day, measurements] in Iterator(days)) {
+      do_check_eq(Object.keys(measurements).length, 3);
+      do_check_true("org.mozilla.appInfo.appinfo" in measurements);
+      do_check_true("org.mozilla.appInfo.update" in measurements);
+      do_check_true("org.mozilla.appInfo.versions" in measurements);
+    }
+  } finally {
+    reporter._shutdown();
+  }
+});
