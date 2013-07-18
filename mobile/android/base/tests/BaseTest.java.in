@@ -19,8 +19,10 @@ import android.os.SystemClock;
 import android.test.ActivityInstrumentationTestCase2;
 import android.util.DisplayMetrics;
 import android.view.inputmethod.InputMethodManager;
+import android.view.KeyEvent;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -57,6 +59,11 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
         "https://addons.mozilla.org/en-US/android/"
     };
     protected static final int DEFAULT_BOOKMARKS_COUNT = DEFAULT_BOOKMARKS_TITLES.length;
+
+    // IDs for UI views
+    private static final String BROWSER_TOOLBAR_ID = "browser_toolbar";
+    protected static final String URL_EDIT_TEXT_ID = "url_edit_text";
+    protected static final String URL_BAR_TITLE_ID = "url_bar_title";
 
     private static Class<Activity> mLauncherActivityClass;
     private Activity mActivity;
@@ -177,64 +184,35 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
     }
 
     /**
-     * Click on the specified element and return the resulting activity.
-     * @return The created activity, or null if the element cannot be clicked.
+     * Click on the URL bar to focus it and enter editing mode.
      */
-    protected final Activity getActivityFromClick(Element element) {
-        Instrumentation inst = getInstrumentation();
-        Instrumentation.ActivityMonitor monitor = inst.addMonitor((String)null, null, false);
-        boolean clicked = element.click();
-        if (!clicked) {
-            mAsserter.ok(clicked != false, "checking that awesome bar clicked", "awesome bar was clicked");
-            return null;
-        }
-        inst.waitForMonitor(monitor);
-        // Give the activity time to render itself and initialize views 
-        // before continuing, so that views are created before access
-        // attempts are made. Again, waitForIdleSync was used here
-        // previously, but replaced with a sleep to avoid hangs.
-        // TODO: Investigate and document why these pauses are required.
-        mSolo.sleep(2000);
+    protected final void focusUrlBar() {
+        // Click on the browser toolbar to enter editing mode
+        mDriver.findElement(mActivity, BROWSER_TOOLBAR_ID).click();
 
-        return mSolo.getCurrentActivity();
-    }
-
-    /**
-     * Click on the awesome bar element and return the resulting activity.
-     * @return The created activity, or null if the awesome bar cannot be clicked.
-     */
-    private Activity mAwesomeActivity;
-    protected final Activity clickOnAwesomeBar() {
-        mAwesomeActivity = null;
+        // Wait for highlighed text to gain focus
         boolean success = waitForTest(new BooleanTest() {
             @Override
             public boolean test() {
-                Element awesomebar = mDriver.findElement(mActivity, "browser_toolbar");
-                if (awesomebar != null) {
-                    mAwesomeActivity = getActivityFromClick(awesomebar);
-                    if (mAwesomeActivity == null) {
-                        mAsserter.dumpLog("failed to click on awesome bar!");
-                    }
-                    return mSolo.waitForText("History", 1, MAX_WAIT_MS);
-                }
-                return false;
+                EditText urlEditText = mSolo.getEditText(0);
+                mAsserter.dumpLog("*********************** urlEditText - " + urlEditText);
+                mAsserter.dumpLog("*********************** urlEditText.hasFocus() - " + urlEditText.hasFocus());
+                return urlEditText.hasFocus();
             }
-        }, MAX_WAIT_MS*5);
+        }, MAX_WAIT_ENABLED_TEXT_MS);
 
-        if (!success)
-            mAsserter.dumpLog("failed to find History");
-        return mAwesomeActivity;
+        mAsserter.ok(success, "waiting for urlbar text to gain focus", "urlbar text gained focus");
     }
 
     protected final void enterUrl(String url) {
-        Activity awesomeBarActivity = clickOnAwesomeBar();
-        Element urlbar = mDriver.findElement(awesomeBarActivity, "awesomebar_text");
+        focusUrlBar();
+
+        // Send the keys for the URL we want to enter
         mActions.sendKeys(url);
-        String urlbarText = null;
-        if (urlbar != null) {
-            urlbarText = urlbar.getText();
-        }
-        mAsserter.is(urlbarText, url, "Awesomebar URL typed properly");
+
+        // Get the URL text from the URL bar EditText view
+        String urlBarText = mDriver.findElement(mActivity, URL_EDIT_TEXT_ID).getText();
+        mAsserter.is(url, urlBarText, "URL typed properly");
     }
 
     protected final void hitEnterAndWait() {
@@ -246,7 +224,7 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
     }
 
     /**
-     * Load <code>url</code> using the awesome bar UI and sending key strokes.
+     * Load <code>url</code> by sending key strokes to the URL bar UI.
      *
      * This method waits synchronously for the <code>DOMContentLoaded</code>
      * message from Gecko before returning.
@@ -278,28 +256,28 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
     }
 
     public final void verifyUrl(String url) {
-        Activity awesomeBarActivity = clickOnAwesomeBar();
-        Element urlbar = mDriver.findElement(awesomeBarActivity, "awesomebar_text");
-        String urlbarText = null;
-        if (urlbar != null) {
+        Element urlEditText = mDriver.findElement(mActivity, URL_EDIT_TEXT_ID);
+        String urlBarText = null;
+        if (urlEditText != null) {
             // wait for a short time for the expected text, in case there is a delay
             // in updating the view
-            waitForTest(new VerifyUrlTest(urlbar, url), VERIFY_URL_TIMEOUT);
-            urlbarText = urlbar.getText();
+            waitForTest(new VerifyUrlTest(urlEditText, url), VERIFY_URL_TIMEOUT);
+            urlBarText = urlEditText.getText();
         }
-        mAsserter.is(urlbarText, url, "Awesomebar URL stayed the same");
+        mAsserter.is(urlBarText, url, "Browser toolbar URL stayed the same");
     }
 
     class VerifyUrlTest implements BooleanTest {
-        private Element mUrlbar;
+        private Element mUrlEditText;
         private String mUrl;
-        public VerifyUrlTest(Element urlbar, String url) {
-            mUrlbar = urlbar;
+        public VerifyUrlTest(Element urlEditText, String url) {
+            mUrlEditText = urlEditText;
             mUrl = url;
         }
+
         @Override
         public boolean test() {
-            String urlbarText = mUrlbar.getText();
+            String urlbarText = mUrlEditText.getText();
             if (urlbarText.equals(mUrl)) {
                 return true;
             }
@@ -491,27 +469,28 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
     }
 
     public final void verifyPageTitle(String title) {
-        Element awesomebar = mDriver.findElement(getActivity(), "awesome_bar_title");
+        Element urlBarTitle = mDriver.findElement(getActivity(), URL_BAR_TITLE_ID);
         String pageTitle = null;
-        if (awesomebar != null) {
+        if (urlBarTitle != null) {
             // Wait for the title to make sure it has been displayed in case the view
             // does not update fast enough
-            waitForTest(new VerifyTitle(awesomebar, title), MAX_WAIT_MS);
-            pageTitle = awesomebar.getText();
+            waitForTest(new VerifyTitle(urlBarTitle, title), MAX_WAIT_MS);
+            pageTitle = urlBarTitle.getText();
         }
         mAsserter.is(pageTitle, title, "Page title is correct");
     }
 
     class VerifyTitle implements BooleanTest {
-        private Element mAwesomebar;
+        private Element mUrlBarTitle;
         private String mTitle;
-        public VerifyTitle(Element awesomebar, String title) {
-            mAwesomebar = awesomebar;
+        public VerifyTitle(Element urlBarTitle, String title) {
+            mUrlBarTitle = urlBarTitle;
             mTitle = title;
         }
+
         @Override
         public boolean test() {
-            String pageTitle = mAwesomebar.getText();
+            String pageTitle = mUrlBarTitle.getText();
             if (pageTitle.equals(mTitle)) {
                 return true;
             }
@@ -556,79 +535,26 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
         return false;
     }
 
-    private ListView getAwesomeList(String waitText, int expectedChildCount,
-         String clickText, String tagName, String callerName) {
-        ArrayList<ListView> views;
-        ListView tabView = null;
-        int childCount = 0;
-        for (int i = 0; i < MAX_LIST_ATTEMPTS; i++) {
-            tabView = null;
-            childCount = 0;
-            Activity awesomeBarActivity = clickOnAwesomeBar();
-            mSolo.clickOnText(clickText);
-            if (waitForText(waitText)) {
-                views = mSolo.getCurrentListViews();
-                for (ListView view : views) {
-                    if (view.getTag().equals(tagName)) {
-                        tabView = view;
-                        ListAdapter adapter = view.getAdapter();
-                        if (adapter != null) {
-                            childCount = adapter.getCount();
-                        } else {
-                            childCount = 0;
-                        }
-                        if (expectedChildCount < 0 || expectedChildCount == childCount) {
-                            return view;
-                        }
-                    }
-                }
-            }
-        }
-        if (tabView == null) {
-            mAsserter.dumpLog(callerName+" did not find ListView");
-        } else if (expectedChildCount >= 0) {
-            mAsserter.dumpLog(callerName+" found ListView with "+childCount+" children");
-        }
-        return null;
-    }
-
     /**
-     * Click on the awesome bar, click on the Top Sites tab, and return 
-     * the ListView for the All Pages ("Top Sites") tab.
+     * FIXME: Write new versions of these methods and update their consumers to use the new about:home pages.
      */
     protected ListView getAllPagesList(String waitText, int expectedChildCount) {
-        return getAwesomeList(waitText, expectedChildCount, 
-            "Top Sites", "allPages", "getAllPagesList");
+        return null;
     }
-
     protected ListView getAllPagesList(String waitText) {
-        return getAllPagesList(waitText, -1);
+        return null;
     }
-
-    /** 
-     * Click on the awesome bar, click on the Bookmarks tab, and return
-     * the ListView for the Bookmarks tab.
-     */
     protected ListView getBookmarksList(String waitText, int expectedChildCount) {
-        return getAwesomeList(waitText, expectedChildCount, 
-            "Bookmarks", "bookmarks", "getBookmarksList");
+        return null;
     }
-
     protected ListView getBookmarksList(String waitText) {
-        return getBookmarksList(waitText, -1);
+        return null;
     }
-
-    /**
-     * Click on the awesome bar, click on the History tab, and return
-     * the ListView for the History tab.
-     */
     protected ListView getHistoryList(String waitText, int expectedChildCount) {
-        return getAwesomeList(waitText, expectedChildCount, 
-            "History", "history", "getHistoryList");
+        return null;
     }
-
     protected ListView getHistoryList(String waitText) {
-        return getHistoryList(waitText, -1);
+        return null;
     }
 
     public long addOrUpdateBookmark(String title, String url, boolean bookmarklet) {
@@ -710,8 +636,9 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
         }, MAX_WAIT_MS);
         mAsserter.ok(success, "waiting for add tab view", "add tab view available");
         mAsserter.ok(addTab.click(), "checking that add_tab clicked", "add_tab element clicked");
-        // must pause before sending keys, until awesome bar is displayed; waiting for known text is simple
-        waitForText("History");
+
+        mDriver.findElement(mActivity, URL_EDIT_TEXT_ID).click();
+
         // cannot use loadUrl(): getText fails because we are using a different urlbar
         mActions.sendKeys(url);
         hitEnterAndWait();
