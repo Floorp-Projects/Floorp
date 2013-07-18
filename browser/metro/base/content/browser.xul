@@ -681,6 +681,9 @@
       <settings id="prefs-reporting" label="&optionsHeader.reporting.title;">
         <setting pref="app.crashreporter.autosubmit" type="bool" title="&optionsHeader.reporting.crashes.label;" oncommand="BrowserUI.crashReportingPrefChanged(this.value);"/>
       </settings>
+      <settings id="prefs-telemetry" label="&optionsHeader.telemetry.title;">
+        <setting pref="toolkit.telemetry.enabled" type="bool" title="&optionsHeader.telemetry.label;" oncommand="FlyoutPanelsUI.PrefsFlyout.onTelemetryPreferenceChanged(this.value);"/>
+      </settings>
       <settings id="prefs-dnt" label="&doNotTrack.title;">
         <description>&doNotTrack.desc;</description>
         <setting id="prefs-dnt-value" pref="privacy.donottrackheader.value" onpreferencechanged="FlyoutPanelsUI.PrefsFlyout.onDNTPreferenceChanged();" type="radio" >
