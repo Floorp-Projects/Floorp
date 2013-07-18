@@ -297,12 +297,19 @@ LIRGeneratorARM::lowerModI(MMod *mod)
             return define(lir, mod);
         }
     }
-    LModI *lir = new LModI(useFixed(mod->lhs(), r0), use(mod->rhs(), r1),
-                           tempFixed(r2), tempFixed(r3), temp(LDefinition::GENERAL));
 
-    if (mod->fallible() && !assignSnapshot(lir))
-        return false;
-    return defineFixed(lir, mod, LAllocation(AnyRegister(r1)));
+    if (hasIDIV()) {
+        LModI *lir = new LModI(useRegister(mod->lhs()), useRegister(mod->rhs()), temp());
+        if (mod->fallible() && !assignSnapshot(lir))
+            return false;
+        return define(lir, mod);
+    } else {
+        LSoftModI *lir = new LSoftModI(useFixed(mod->lhs(), r0), use(mod->rhs(), r1),
+                                       tempFixed(r2), tempFixed(r3), temp(LDefinition::GENERAL));
+        if (mod->fallible() && !assignSnapshot(lir))
+            return false;
+        return defineFixed(lir, mod, LAllocation(AnyRegister(r1)));
+    }
 }
 
 bool
