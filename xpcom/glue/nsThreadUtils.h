@@ -321,9 +321,9 @@ struct nsRunnableMethodTraits<R (C::*)(), Owning> {
   typedef nsRunnableMethod<C, R, Owning> base_type;
 };
 
-#ifdef HAVE_STDCALL
+#ifdef NS_HAVE_STDCALL
 template <class C, typename R, bool Owning>
-struct nsRunnableMethodTraits<R (__stdcall C::*)(), Owning> {
+struct nsRunnableMethodTraits<R (NS_STDCALL C::*)(), Owning> {
   typedef C class_type;
   typedef R return_type;
   typedef nsRunnableMethod<C, R, Owning> base_type;

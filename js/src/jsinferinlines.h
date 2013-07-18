@@ -966,7 +966,19 @@ TypeScript::MonitorAssign(JSContext *cx, HandleObject obj, jsid id)
         uint32_t i;
         if (js_IdIsIndex(id, &i))
             return;
-        MarkTypeObjectUnknownProperties(cx, obj->type());
+
+        // But if we don't have too many properties yet, don't do anything.  The
+        // idea here is that normal object initialization should not trigger
+        // deoptimization in most cases, while actual usage as a hashmap should.
+        // Except for vanilla objects and arrays work around bug 894447 for now
+        // by deoptimizing more eagerly.  Since in those cases we often have a
+        // pc-keyed TypeObject, this is ok.
+        TypeObject* type = obj->type();
+        if (!obj->is<JSObject>() && !obj->is<ArrayObject>() &&
+            type->getPropertyCount() < 8) {
+            return;
+        }
+        MarkTypeObjectUnknownProperties(cx, type);
     }
 }
 
@@ -1353,14 +1365,6 @@ TypeSet::addType(JSContext *cx, Type type)
             JS_ASSERT(!nobject->singleton);
             if (nobject->unknownProperties())
                 goto unknownObject;
-            if (objectCount > 1) {
-                nobject->contribution += (objectCount - 1) * (objectCount - 1);
-                if (nobject->contribution >= TypeObject::CONTRIBUTION_LIMIT) {
-                    InferSpew(ISpewOps, "limitUnknown: %sT%p%s",
-                              InferSpewColor(this), this, InferSpewColorReset());
-                    goto unknownObject;
-                }
-            }
         }
     }
 

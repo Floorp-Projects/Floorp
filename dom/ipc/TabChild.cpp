@@ -1649,7 +1649,7 @@ TabChild::RecvMouseEvent(const nsString& aType,
                          const int32_t&  aModifiers,
                          const bool&     aIgnoreRootScrollFrame)
 {
-  DispatchMouseEvent(aType, aX, aY, aButton, aClickCount, aModifiers,
+  DispatchMouseEvent(aType, CSSPoint(aX, aY), aButton, aClickCount, aModifiers,
                      aIgnoreRootScrollFrame);
   return true;
 }
@@ -1672,14 +1672,14 @@ TabChild::RecvMouseWheelEvent(const WheelEvent& event)
 
 void
 TabChild::DispatchSynthesizedMouseEvent(uint32_t aMsg, uint64_t aTime,
-                                        const nsIntPoint& aRefPoint)
+                                        const LayoutDevicePoint& aRefPoint)
 {
   MOZ_ASSERT(aMsg == NS_MOUSE_MOVE || aMsg == NS_MOUSE_BUTTON_DOWN ||
              aMsg == NS_MOUSE_BUTTON_UP);
 
   nsMouseEvent event(true, aMsg, NULL,
       nsMouseEvent::eReal, nsMouseEvent::eNormal);
-  event.refPoint = aRefPoint;
+  event.refPoint = nsIntPoint(aRefPoint.x, aRefPoint.y);
   event.time = aTime;
   event.button = nsMouseEvent::eLeftButton;
   event.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_TOUCH;
@@ -1735,7 +1735,7 @@ TabChild::UpdateTapState(const nsTouchEvent& aEvent, nsEventStatus aStatus)
     }
 
     Touch* touch = static_cast<Touch*>(aEvent.touches[0].get());
-    mGestureDownPoint = touch->mRefPoint;
+    mGestureDownPoint = LayoutDevicePoint(touch->mRefPoint.x, touch->mRefPoint.y);
     mActivePointerId = touch->mIdentifier;
     if (sClickHoldContextMenusEnabled) {
       MOZ_ASSERT(!mTapHoldTimer);
@@ -1757,7 +1757,7 @@ TabChild::UpdateTapState(const nsTouchEvent& aEvent, nsEventStatus aStatus)
     return;
   }
 
-  nsIntPoint currentPoint = trackedTouch->mRefPoint;
+  LayoutDevicePoint currentPoint = LayoutDevicePoint(trackedTouch->mRefPoint.x, trackedTouch->mRefPoint.y);
   int64_t time = aEvent.time;
   switch (aEvent.message) {
   case NS_TOUCH_MOVE:
@@ -1786,9 +1786,15 @@ TabChild::UpdateTapState(const nsTouchEvent& aEvent, nsEventStatus aStatus)
 void
 TabChild::FireContextMenuEvent()
 {
+  double scale;
+  GetDefaultScale(&scale);
+  if (scale < 0) {
+    scale = 1;
+  }
+
   MOZ_ASSERT(mTapHoldTimer && mActivePointerId >= 0);
   bool defaultPrevented = DispatchMouseEvent(NS_LITERAL_STRING("contextmenu"),
-                                             mGestureDownPoint.x, mGestureDownPoint.y,
+                                             mGestureDownPoint / CSSToLayoutDeviceScale(scale),
                                              2 /* Right button */,
                                              1 /* Click count */,
                                              0 /* Modifiers */,
@@ -2278,8 +2284,7 @@ TabChild::IsAsyncPanZoomEnabled()
 
 bool
 TabChild::DispatchMouseEvent(const nsString& aType,
-                             const float&    aX,
-                             const float&    aY,
+                             const CSSPoint& aPoint,
                              const int32_t&  aButton,
                              const int32_t&  aClickCount,
                              const int32_t&  aModifiers,
@@ -2289,7 +2294,7 @@ TabChild::DispatchMouseEvent(const nsString& aType,
   NS_ENSURE_TRUE(utils, true);
   
   bool defaultPrevented = false;
-  utils->SendMouseEvent(aType, aX, aY, aButton, aClickCount, aModifiers,
+  utils->SendMouseEvent(aType, aPoint.x, aPoint.y, aButton, aClickCount, aModifiers,
                         aIgnoreRootScrollFrame, 0, 0, &defaultPrevented);
   return defaultPrevented;
 }

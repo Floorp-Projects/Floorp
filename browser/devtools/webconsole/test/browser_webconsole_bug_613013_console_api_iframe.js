@@ -35,15 +35,14 @@ function performTest() {
   Services.obs.removeObserver(TestObserver, "console-api-log-event");
   TestObserver = null;
 
-  waitForSuccess({
-    name: "console.log() message",
-    validatorFn: function()
-    {
-      return hud.outputNode.textContent.indexOf("foobarBug613013") > -1;
-    },
-    successFn: finishTest,
-    failureFn: finishTest,
-  });
+  waitForMessages({
+    webconsole: hud,
+    messages: [{
+      text: "foobarBug613013",
+      category: CATEGORY_WEBDEV,
+      severity: SEVERITY_LOG,
+    }],
+  }).then(finishTest);
 }
 
 function test() {

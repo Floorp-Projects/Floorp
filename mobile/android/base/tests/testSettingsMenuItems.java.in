@@ -24,8 +24,9 @@ public class testSettingsMenuItems extends PixelTest {
     //
     // This test assumes menu items are in order (scrolling down for off-screen items).
     String[][] OPTIONS_CUSTOMIZE = {
+         { "Search", "", "Show search suggestions", "Installed search engines" },
          { "Import from Android", "", "Bookmarks", "History", "Import" },
-         { "Show search suggestions" },
+         { "Always restore tabs" },
          { "Automatic updates", "Only over Wi-Fi", "Enabled", "Only over Wi-Fi", "Disabled" },
      };
 
@@ -163,8 +164,12 @@ public class testSettingsMenuItems extends PixelTest {
                                    "The " + itemChoice + " choice is present in section " + section);
                   }
                   // Leave submenu after checking.
-                  waitForText("^Cancel$");
-                  mSolo.clickOnText("^Cancel$");
+                  if (waitForText("^Cancel$")) {
+                      mSolo.clickOnText("^Cancel$");
+                  } else {
+                      // Some submenus aren't dialogs, but are nested screens; exit using "back".
+                      mActions.sendSpecialKey(Actions.SpecialKey.BACK);
+                  }
                 }
             }
             // Navigate back a screen if on a phone.

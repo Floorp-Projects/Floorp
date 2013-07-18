@@ -296,10 +296,6 @@ public:
     return mCode;
   }
 
-  void GetMessage(nsString& aRetVal) const {
-    aRetVal.Truncate();
-  }
-
   void NotifyCallback(const GeoPositionErrorCallback& callback);
 private:
   ~PositionError();

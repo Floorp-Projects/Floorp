@@ -194,6 +194,8 @@ function run_test() {
   do_test_pending();
   do_register_cleanup(cleanupUpdaterTest);
 
+  adjustGeneralPaths();
+
   gBackgroundUpdate = true;
   setupUpdaterTest(MAR_COMPLETE_WIN_FILE);
 

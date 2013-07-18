@@ -234,7 +234,8 @@ this.Utils = {
 
   inHiddenSubtree: function inHiddenSubtree(aAccessible) {
     for (let acc=aAccessible; acc; acc=acc.parent) {
-      if (JSON.parse(Utils.getAttributes(acc).hidden)) {
+      let hidden = Utils.getAttributes(acc).hidden;
+      if (hidden && JSON.parse(hidden)) {
         return true;
       }
     }

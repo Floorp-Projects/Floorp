@@ -65,6 +65,13 @@ public:
     MOZ_ASSERT(mOffset <= mLength);
     return NS_OK;
   }
+  virtual nsresult ReadAt(int64_t aOffset, char* aBuffer,
+                          uint32_t aCount, uint32_t* aBytes)
+  {
+    nsresult rv = Seek(nsISeekableStream::NS_SEEK_SET, aOffset);
+    if (NS_FAILED(rv)) return rv;
+    return Read(aBuffer, aCount, aBytes);
+  }
   virtual nsresult Seek(int32_t aWhence, int64_t aOffset)
   {
     MOZ_ASSERT(aOffset <= UINT32_MAX);

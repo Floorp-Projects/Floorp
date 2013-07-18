@@ -205,8 +205,8 @@ frontend::CompileScript(JSContext *cx, HandleObject scopeChain,
                                     canLazilyParse ? &syntaxParser.ref() : NULL, NULL);
     parser.sct = sct;
 
-    GlobalSharedContext globalsc(cx, scopeChain,
-                                 options.strictOption, options.extraWarningsOption);
+    Directives directives(options.strictOption);
+    GlobalSharedContext globalsc(cx, scopeChain, directives, options.extraWarningsOption);
 
     bool savedCallerFun =
         options.compileAndGo &&
@@ -240,7 +240,8 @@ frontend::CompileScript(JSContext *cx, HandleObject scopeChain,
     // reset when this occurs.
     Maybe<ParseContext<FullParseHandler> > pc;
 
-    pc.construct(&parser, (GenericParseContext *) NULL, &globalsc, staticLevel, /* bodyid = */ 0);
+    pc.construct(&parser, (GenericParseContext *) NULL, &globalsc, (Directives *) NULL,
+                 staticLevel, /* bodyid = */ 0);
     if (!pc.ref().init())
         return NULL;
 
@@ -267,7 +268,8 @@ frontend::CompileScript(JSContext *cx, HandleObject scopeChain,
              * wishes to decompile it while it's running.
              */
             JSFunction *fun = evalCaller->functionOrCallerFunction();
-            ObjectBox *funbox = parser.newFunctionBox(fun, pc.addr(), fun->strict());
+            Directives directives(/* strict = */ fun->strict());
+            ObjectBox *funbox = parser.newFunctionBox(fun, pc.addr(), directives);
             if (!funbox)
                 return NULL;
             bce.objectList.add(funbox);
@@ -305,7 +307,7 @@ frontend::CompileScript(JSContext *cx, HandleObject scopeChain,
 
                 pc.destroy();
                 pc.construct(&parser, (GenericParseContext *) NULL, &globalsc,
-                             staticLevel, /* bodyid = */ 0);
+                             (Directives *) NULL, staticLevel, /* bodyid = */ 0);
                 if (!pc.ref().init())
                     return NULL;
                 JS_ASSERT(parser.pc == pc.addr());
@@ -462,16 +464,19 @@ frontend::CompileFunctionBody(JSContext *cx, MutableHandleFunction fun, CompileO
 
     fun->setArgCount(formals.length());
 
-    // If the context is strict, immediately parse the body in strict
-    // mode. Otherwise, we parse it normally. If we see a "use strict"
-    // directive, we backup and reparse it as strict.
-    ParseNode *fn;
+    // Speculatively parse using the default directives implied by the context.
+    // If a directive is encountered (e.g., "use strict") that changes how the
+    // function should have been parsed, we backup and reparse with the new set
+    // of directives.
+    Directives directives(options.strictOption);
+
     TokenStream::Position start(parser.keepAtoms);
     parser.tokenStream.tell(&start);
-    bool strict = options.strictOption;
-    bool becameStrict;
+
+    ParseNode *fn;
     while (true) {
-        fn = parser.standaloneFunctionBody(fun, formals, strict, &becameStrict);
+        Directives newDirectives = directives;
+        fn = parser.standaloneFunctionBody(fun, formals, directives, &newDirectives);
         if (fn)
             break;
 
@@ -481,10 +486,12 @@ frontend::CompileFunctionBody(JSContext *cx, MutableHandleFunction fun, CompileO
             // the parse.
             parser.clearAbortedSyntaxParse();
         } else {
-            // If the function became strict, reparse in strict mode.
-            if (strict || !becameStrict || parser.tokenStream.hadError())
+            if (parser.tokenStream.hadError() || directives == newDirectives)
                 return false;
-            strict = true;
+
+            // Assignment must be monotonic to prevent reparsing iloops
+            JS_ASSERT_IF(directives.strict(), newDirectives.strict());
+            directives = newDirectives;
         }
 
         parser.tokenStream.seek(start);
