@@ -22,8 +22,8 @@ function cleanAndGo(server) {
   server.stop(run_next_test);
 }
 
-function configureService(username, password) {
-  Service.clusterURL = TEST_CLUSTER_URL;
+function configureService(server, username, password) {
+  Service.clusterURL = server.baseURI;
 
   Service.identity.account = username || "foo";
   Service.identity.basicPassword = password || "password";
@@ -40,14 +40,14 @@ function createServerAndConfigureClient() {
   };
 
   const USER = "foo";
-  Service.serverURL = TEST_SERVER_URL;
-  Service.clusterURL = TEST_CLUSTER_URL;
-  Service.identity.username = USER;
-
   let server = new SyncServer();
   server.registerUser(USER, "password");
   server.createContents(USER, contents);
   server.start();
+
+  Service.serverURL = server.baseURI;
+  Service.clusterURL = server.baseURI;
+  Service.identity.username = USER;
 
   return [engine, server, USER];
 }
@@ -75,11 +75,6 @@ function run_test() {
 add_test(function test_syncStartup_emptyOrOutdatedGlobalsResetsSync() {
   _("SyncEngine._syncStartup resets sync and wipes server data if there's no or an outdated global record");
 
-  let syncTesting = new SyncTestingInfrastructure();
-  Service.serverURL = TEST_SERVER_URL;
-  Service.clusterURL = TEST_CLUSTER_URL;
-  Service.identity.username = "foo";
-
   // Some server side data that's going to be wiped
   let collection = new ServerCollection();
   collection.insert('flying',
@@ -92,6 +87,9 @@ add_test(function test_syncStartup_emptyOrOutdatedGlobalsResetsSync() {
   let server = sync_httpd_setup({
       "/1.1/foo/storage/rotary": collection.handler()
   });
+
+  let syncTesting = new SyncTestingInfrastructure(server);
+  Service.identity.username = "foo";
 
   let engine = makeRotaryEngine();
   engine._store.items = {rekolok: "Rekonstruktionslokomotive"};
@@ -129,14 +127,13 @@ add_test(function test_syncStartup_emptyOrOutdatedGlobalsResetsSync() {
 add_test(function test_syncStartup_serverHasNewerVersion() {
   _("SyncEngine._syncStartup ");
 
-  let syncTesting = new SyncTestingInfrastructure();
-  Service.serverURL = TEST_SERVER_URL;
-  Service.clusterURL = TEST_CLUSTER_URL;
-  Service.identity.username = "foo";
   let global = new ServerWBO('global', {engines: {rotary: {version: 23456}}});
   let server = httpd_setup({
       "/1.1/foo/storage/meta/global": global.handler()
   });
+
+  let syncTesting = new SyncTestingInfrastructure(server);
+  Service.identity.username = "foo";
 
   let engine = makeRotaryEngine();
   try {
@@ -160,11 +157,9 @@ add_test(function test_syncStartup_serverHasNewerVersion() {
 add_test(function test_syncStartup_syncIDMismatchResetsClient() {
   _("SyncEngine._syncStartup resets sync if syncIDs don't match");
 
-  let syncTesting = new SyncTestingInfrastructure();
-  Service.serverURL = TEST_SERVER_URL;
-  Service.clusterURL = TEST_CLUSTER_URL;
-  Service.identity.username = "foo";
   let server = sync_httpd_setup({});
+  let syncTesting = new SyncTestingInfrastructure(server);
+  Service.identity.username = "foo";
 
   // global record with a different syncID than our engine has
   let engine = makeRotaryEngine();
@@ -198,15 +193,13 @@ add_test(function test_syncStartup_syncIDMismatchResetsClient() {
 add_test(function test_processIncoming_emptyServer() {
   _("SyncEngine._processIncoming working with an empty server backend");
 
-  let syncTesting = new SyncTestingInfrastructure();
-  Service.serverURL = TEST_SERVER_URL;
-  Service.clusterURL = TEST_CLUSTER_URL;
-  Service.identity.username = "foo";
   let collection = new ServerCollection();
-
   let server = sync_httpd_setup({
       "/1.1/foo/storage/rotary": collection.handler()
   });
+
+  let syncTesting = new SyncTestingInfrastructure(server);
+  Service.identity.username = "foo";
 
   let engine = makeRotaryEngine();
   try {
@@ -223,13 +216,6 @@ add_test(function test_processIncoming_emptyServer() {
 
 add_test(function test_processIncoming_createFromServer() {
   _("SyncEngine._processIncoming creates new records from server data");
-
-  let syncTesting = new SyncTestingInfrastructure();
-  Service.serverURL = TEST_SERVER_URL;
-  Service.clusterURL = TEST_CLUSTER_URL;
-  Service.identity.username = "foo";
-
-  generateNewKeys(Service.collectionKeys);
 
   // Some server records that will be downloaded
   let collection = new ServerCollection();
@@ -250,6 +236,11 @@ add_test(function test_processIncoming_createFromServer() {
       "/1.1/foo/storage/rotary/flying": collection.wbo("flying").handler(),
       "/1.1/foo/storage/rotary/scotsman": collection.wbo("scotsman").handler()
   });
+
+  let syncTesting = new SyncTestingInfrastructure(server);
+  Service.identity.username = "foo";
+
+  generateNewKeys(Service.collectionKeys);
 
   let engine = makeRotaryEngine();
   let meta_global = Service.recordManager.set(engine.metaURL,
@@ -287,10 +278,6 @@ add_test(function test_processIncoming_createFromServer() {
 add_test(function test_processIncoming_reconcile() {
   _("SyncEngine._processIncoming updates local records");
 
-  let syncTesting = new SyncTestingInfrastructure();
-  Service.serverURL = TEST_SERVER_URL;
-  Service.clusterURL = TEST_CLUSTER_URL;
-  Service.identity.username = "foo";
   let collection = new ServerCollection();
 
   // This server record is newer than the corresponding client one,
@@ -334,6 +321,9 @@ add_test(function test_processIncoming_reconcile() {
   let server = sync_httpd_setup({
       "/1.1/foo/storage/rotary": collection.handler()
   });
+
+  let syncTesting = new SyncTestingInfrastructure(server);
+  Service.identity.username = "foo";
 
   let engine = makeRotaryEngine();
   engine._store.items = {newerserver: "New data, but not as new as server!",
@@ -608,11 +598,8 @@ add_test(function test_processIncoming_reconcile_changed_dupe_new() {
 add_test(function test_processIncoming_mobile_batchSize() {
   _("SyncEngine._processIncoming doesn't fetch everything at once on mobile clients");
 
-  let syncTesting = new SyncTestingInfrastructure();
-  Service.serverURL = TEST_SERVER_URL;
-  Service.clusterURL = TEST_CLUSTER_URL;
-  Service.identity.username = "foo";
   Svc.Prefs.set("client.type", "mobile");
+  Service.identity.username = "foo";
 
   // A collection that logs each GET
   let collection = new ServerCollection();
@@ -636,6 +623,8 @@ add_test(function test_processIncoming_mobile_batchSize() {
   let server = sync_httpd_setup({
       "/1.1/foo/storage/rotary": collection.handler()
   });
+
+  let syncTesting = new SyncTestingInfrastructure(server);
 
   let engine = makeRotaryEngine();
   let meta_global = Service.recordManager.set(engine.metaURL,
@@ -679,9 +668,6 @@ add_test(function test_processIncoming_mobile_batchSize() {
 
 add_test(function test_processIncoming_store_toFetch() {
   _("If processIncoming fails in the middle of a batch on mobile, state is saved in toFetch and lastSync.");
-  let syncTesting = new SyncTestingInfrastructure();
-  Service.serverURL = TEST_SERVER_URL;
-  Service.clusterURL = TEST_CLUSTER_URL;
   Service.identity.username = "foo";
   Svc.Prefs.set("client.type", "mobile");
 
@@ -709,14 +695,16 @@ add_test(function test_processIncoming_store_toFetch() {
   let engine = makeRotaryEngine();
   engine.enabled = true;
 
-  let meta_global = Service.recordManager.set(engine.metaURL,
-                                              new WBORecord(engine.metaURL));
-  meta_global.payload.engines = {rotary: {version: engine.version,
-                                         syncID: engine.syncID}};
   let server = sync_httpd_setup({
       "/1.1/foo/storage/rotary": collection.handler()
   });
 
+  let syncTesting = new SyncTestingInfrastructure(server);
+
+  let meta_global = Service.recordManager.set(engine.metaURL,
+                                              new WBORecord(engine.metaURL));
+  meta_global.payload.engines = {rotary: {version: engine.version,
+                                         syncID: engine.syncID}};
   try {
 
     // Confirm initial environment
@@ -748,9 +736,6 @@ add_test(function test_processIncoming_store_toFetch() {
 
 add_test(function test_processIncoming_resume_toFetch() {
   _("toFetch and previousFailed items left over from previous syncs are fetched on the next sync, along with new items.");
-  let syncTesting = new SyncTestingInfrastructure();
-  Service.serverURL = TEST_SERVER_URL;
-  Service.clusterURL = TEST_CLUSTER_URL;
   Service.identity.username = "foo";
 
   const LASTSYNC = Date.now() / 1000;
@@ -784,14 +769,16 @@ add_test(function test_processIncoming_resume_toFetch() {
   engine.toFetch = ["flying", "scotsman"];
   engine.previousFailed = ["failed0", "failed1", "failed2"];
 
-  let meta_global = Service.recordManager.set(engine.metaURL,
-                                              new WBORecord(engine.metaURL));
-  meta_global.payload.engines = {rotary: {version: engine.version,
-                                         syncID: engine.syncID}};
   let server = sync_httpd_setup({
       "/1.1/foo/storage/rotary": collection.handler()
   });
 
+  let syncTesting = new SyncTestingInfrastructure(server);
+
+  let meta_global = Service.recordManager.set(engine.metaURL,
+                                              new WBORecord(engine.metaURL));
+  meta_global.payload.engines = {rotary: {version: engine.version,
+                                         syncID: engine.syncID}};
   try {
 
     // Confirm initial environment
@@ -818,9 +805,6 @@ add_test(function test_processIncoming_resume_toFetch() {
 
 add_test(function test_processIncoming_applyIncomingBatchSize_smaller() {
   _("Ensure that a number of incoming items less than applyIncomingBatchSize is still applied.");
-  let syncTesting = new SyncTestingInfrastructure();
-  Service.serverURL = TEST_SERVER_URL;
-  Service.clusterURL = TEST_CLUSTER_URL;
   Service.identity.username = "foo";
 
   // Engine that doesn't like the first and last record it's given.
@@ -843,14 +827,16 @@ add_test(function test_processIncoming_applyIncomingBatchSize_smaller() {
     collection.insert(id, payload);
   }
 
-  let meta_global = Service.recordManager.set(engine.metaURL,
-                                              new WBORecord(engine.metaURL));
-  meta_global.payload.engines = {rotary: {version: engine.version,
-                                         syncID: engine.syncID}};
   let server = sync_httpd_setup({
       "/1.1/foo/storage/rotary": collection.handler()
   });
 
+  let syncTesting = new SyncTestingInfrastructure(server);
+
+  let meta_global = Service.recordManager.set(engine.metaURL,
+                                              new WBORecord(engine.metaURL));
+  meta_global.payload.engines = {rotary: {version: engine.version,
+                                         syncID: engine.syncID}};
   try {
 
     // Confirm initial environment
@@ -874,8 +860,6 @@ add_test(function test_processIncoming_applyIncomingBatchSize_smaller() {
 
 add_test(function test_processIncoming_applyIncomingBatchSize_multiple() {
   _("Ensure that incoming items are applied according to applyIncomingBatchSize.");
-  let syncTesting = new SyncTestingInfrastructure();
-  Service.clusterURL = TEST_CLUSTER_URL;
   Service.identity.username = "foo";
 
   const APPLY_BATCH_SIZE = 10;
@@ -899,14 +883,16 @@ add_test(function test_processIncoming_applyIncomingBatchSize_multiple() {
     collection.insert(id, payload);
   }
 
-  let meta_global = Service.recordManager.set(engine.metaURL,
-                                              new WBORecord(engine.metaURL));
-  meta_global.payload.engines = {rotary: {version: engine.version,
-                                         syncID: engine.syncID}};
   let server = sync_httpd_setup({
       "/1.1/foo/storage/rotary": collection.handler()
   });
 
+  let syncTesting = new SyncTestingInfrastructure(server);
+
+  let meta_global = Service.recordManager.set(engine.metaURL,
+                                              new WBORecord(engine.metaURL));
+  meta_global.payload.engines = {rotary: {version: engine.version,
+                                         syncID: engine.syncID}};
   try {
 
     // Confirm initial environment
@@ -927,9 +913,6 @@ add_test(function test_processIncoming_applyIncomingBatchSize_multiple() {
 
 add_test(function test_processIncoming_notify_count() {
   _("Ensure that failed records are reported only once.");
-  let syncTesting = new SyncTestingInfrastructure();
-  Service.serverURL = TEST_SERVER_URL;
-  Service.clusterURL = TEST_CLUSTER_URL;
   Service.identity.username = "foo";
 
   const APPLY_BATCH_SIZE = 5;
@@ -952,14 +935,16 @@ add_test(function test_processIncoming_notify_count() {
     collection.insert(id, payload);
   }
 
-  let meta_global = Service.recordManager.set(engine.metaURL,
-                                              new WBORecord(engine.metaURL));
-  meta_global.payload.engines = {rotary: {version: engine.version,
-                                         syncID: engine.syncID}};
   let server = sync_httpd_setup({
       "/1.1/foo/storage/rotary": collection.handler()
   });
 
+  let syncTesting = new SyncTestingInfrastructure(server);
+
+  let meta_global = Service.recordManager.set(engine.metaURL,
+                                              new WBORecord(engine.metaURL));
+  meta_global.payload.engines = {rotary: {version: engine.version,
+                                         syncID: engine.syncID}};
   try {
     // Confirm initial environment.
     do_check_eq(engine.lastSync, 0);
@@ -1017,9 +1002,6 @@ add_test(function test_processIncoming_notify_count() {
 
 add_test(function test_processIncoming_previousFailed() {
   _("Ensure that failed records are retried.");
-  let syncTesting = new SyncTestingInfrastructure();
-  Service.serverURL = TEST_SERVER_URL;
-  Service.clusterURL = TEST_CLUSTER_URL;
   Service.identity.username = "foo";
   Svc.Prefs.set("client.type", "mobile");
 
@@ -1043,14 +1025,16 @@ add_test(function test_processIncoming_previousFailed() {
     collection.insert(id, payload);
   }
 
-  let meta_global = Service.recordManager.set(engine.metaURL,
-                                              new WBORecord(engine.metaURL));
-  meta_global.payload.engines = {rotary: {version: engine.version,
-                                         syncID: engine.syncID}};
   let server = sync_httpd_setup({
       "/1.1/foo/storage/rotary": collection.handler()
   });
 
+  let syncTesting = new SyncTestingInfrastructure(server);
+
+  let meta_global = Service.recordManager.set(engine.metaURL,
+                                              new WBORecord(engine.metaURL));
+  meta_global.payload.engines = {rotary: {version: engine.version,
+                                         syncID: engine.syncID}};
   try {
     // Confirm initial environment.
     do_check_eq(engine.lastSync, 0);
@@ -1104,9 +1088,6 @@ add_test(function test_processIncoming_previousFailed() {
 
 add_test(function test_processIncoming_failed_records() {
   _("Ensure that failed records from _reconcile and applyIncomingBatch are refetched.");
-  let syncTesting = new SyncTestingInfrastructure();
-  Service.serverURL = TEST_SERVER_URL;
-  Service.clusterURL = TEST_CLUSTER_URL;
   Service.identity.username = "foo";
 
   // Let's create three and a bit batches worth of server side records.
@@ -1149,11 +1130,6 @@ add_test(function test_processIncoming_failed_records() {
     return this._applyIncoming.apply(this, arguments);
   };
 
-  let meta_global = Service.recordManager.set(engine.metaURL,
-                                              new WBORecord(engine.metaURL));
-  meta_global.payload.engines = {rotary: {version: engine.version,
-                                         syncID: engine.syncID}};
-
   // Keep track of requests made of a collection.
   let count = 0;
   let uris  = [];
@@ -1168,6 +1144,13 @@ add_test(function test_processIncoming_failed_records() {
   let server = sync_httpd_setup({
       "/1.1/foo/storage/rotary": recording_handler(collection)
   });
+
+  let syncTesting = new SyncTestingInfrastructure(server);
+
+  let meta_global = Service.recordManager.set(engine.metaURL,
+                                              new WBORecord(engine.metaURL));
+  meta_global.payload.engines = {rotary: {version: engine.version,
+                                         syncID: engine.syncID}};
 
   try {
 
@@ -1240,9 +1223,6 @@ add_test(function test_processIncoming_failed_records() {
 add_test(function test_processIncoming_decrypt_failed() {
   _("Ensure that records failing to decrypt are either replaced or refetched.");
 
-  let syncTesting = new SyncTestingInfrastructure();
-  Service.serverURL = TEST_SERVER_URL;
-  Service.clusterURL = TEST_CLUSTER_URL;
   Service.identity.username = "foo";
 
   // Some good and some bogus records. One doesn't contain valid JSON,
@@ -1274,14 +1254,16 @@ add_test(function test_processIncoming_decrypt_failed() {
   engine._store.items = {nojson: "Valid JSON",
                          nodecrypt: "Valid ciphertext"};
 
-  let meta_global = Service.recordManager.set(engine.metaURL,
-                                              new WBORecord(engine.metaURL));
-  meta_global.payload.engines = {rotary: {version: engine.version,
-                                         syncID: engine.syncID}};
   let server = sync_httpd_setup({
       "/1.1/foo/storage/rotary": collection.handler()
   });
 
+  let syncTesting = new SyncTestingInfrastructure(server);
+
+  let meta_global = Service.recordManager.set(engine.metaURL,
+                                              new WBORecord(engine.metaURL));
+  meta_global.payload.engines = {rotary: {version: engine.version,
+                                         syncID: engine.syncID}};
   try {
 
     // Confirm initial state
@@ -1319,9 +1301,6 @@ add_test(function test_processIncoming_decrypt_failed() {
 add_test(function test_uploadOutgoing_toEmptyServer() {
   _("SyncEngine._uploadOutgoing uploads new records to server");
 
-  let syncTesting = new SyncTestingInfrastructure();
-  Service.serverURL = TEST_SERVER_URL;
-  Service.clusterURL = TEST_CLUSTER_URL;
   Service.identity.username = "foo";
   let collection = new ServerCollection();
   collection._wbos.flying = new ServerWBO('flying');
@@ -1332,6 +1311,8 @@ add_test(function test_uploadOutgoing_toEmptyServer() {
       "/1.1/foo/storage/rotary/flying": collection.wbo("flying").handler(),
       "/1.1/foo/storage/rotary/scotsman": collection.wbo("scotsman").handler()
   });
+
+  let syncTesting = new SyncTestingInfrastructure(server);
   generateNewKeys(Service.collectionKeys);
 
   let engine = makeRotaryEngine();
@@ -1379,9 +1360,6 @@ add_test(function test_uploadOutgoing_toEmptyServer() {
 add_test(function test_uploadOutgoing_failed() {
   _("SyncEngine._uploadOutgoing doesn't clear the tracker of objects that failed to upload.");
 
-  let syncTesting = new SyncTestingInfrastructure();
-  Service.serverURL = TEST_SERVER_URL;
-  Service.clusterURL = TEST_CLUSTER_URL;
   Service.identity.username = "foo";
   let collection = new ServerCollection();
   // We only define the "flying" WBO on the server, not the "scotsman"
@@ -1391,6 +1369,8 @@ add_test(function test_uploadOutgoing_failed() {
   let server = sync_httpd_setup({
       "/1.1/foo/storage/rotary": collection.handler()
   });
+
+  let syncTesting = new SyncTestingInfrastructure(server);
 
   let engine = makeRotaryEngine();
   engine.lastSync = 123; // needs to be non-zero so that tracker is queried
@@ -1443,9 +1423,6 @@ add_test(function test_uploadOutgoing_failed() {
 add_test(function test_uploadOutgoing_MAX_UPLOAD_RECORDS() {
   _("SyncEngine._uploadOutgoing uploads in batches of MAX_UPLOAD_RECORDS");
 
-  let syncTesting = new SyncTestingInfrastructure();
-  Service.serverURL = TEST_SERVER_URL;
-  Service.clusterURL = TEST_CLUSTER_URL;
   Service.identity.username = "foo";
   let collection = new ServerCollection();
 
@@ -1476,6 +1453,8 @@ add_test(function test_uploadOutgoing_MAX_UPLOAD_RECORDS() {
       "/1.1/foo/storage/rotary": collection.handler()
   });
 
+  let syncTesting = new SyncTestingInfrastructure(server);
+
   try {
 
     // Confirm initial environment.
@@ -1501,7 +1480,9 @@ add_test(function test_uploadOutgoing_MAX_UPLOAD_RECORDS() {
 add_test(function test_syncFinish_noDelete() {
   _("SyncEngine._syncFinish resets tracker's score");
 
-  let syncTesting = new SyncTestingInfrastructure();
+  let server = httpd_setup({});
+
+  let syncTesting = new SyncTestingInfrastructure(server);
   let engine = makeRotaryEngine();
   engine._delete = {}; // Nothing to delete
   engine._tracker.score = 100;
@@ -1509,16 +1490,13 @@ add_test(function test_syncFinish_noDelete() {
   // _syncFinish() will reset the engine's score.
   engine._syncFinish();
   do_check_eq(engine.score, 0);
-  run_next_test();
+  server.stop(run_next_test);
 });
 
 
 add_test(function test_syncFinish_deleteByIds() {
   _("SyncEngine._syncFinish deletes server records slated for deletion (list of record IDs).");
 
-  let syncTesting = new SyncTestingInfrastructure();
-  Service.serverURL = TEST_SERVER_URL;
-  Service.clusterURL = TEST_CLUSTER_URL;
   Service.identity.username = "foo";
   let collection = new ServerCollection();
   collection._wbos.flying = new ServerWBO(
@@ -1534,6 +1512,7 @@ add_test(function test_syncFinish_deleteByIds() {
   let server = httpd_setup({
       "/1.1/foo/storage/rotary": collection.handler()
   });
+  let syncTesting = new SyncTestingInfrastructure(server);
 
   let engine = makeRotaryEngine();
   try {
@@ -1558,9 +1537,6 @@ add_test(function test_syncFinish_deleteByIds() {
 add_test(function test_syncFinish_deleteLotsInBatches() {
   _("SyncEngine._syncFinish deletes server records in batches of 100 (list of record IDs).");
 
-  let syncTesting = new SyncTestingInfrastructure();
-  Service.serverURL = TEST_SERVER_URL;
-  Service.clusterURL = TEST_CLUSTER_URL;
   Service.identity.username = "foo";
   let collection = new ServerCollection();
 
@@ -1586,6 +1562,8 @@ add_test(function test_syncFinish_deleteLotsInBatches() {
   let server = httpd_setup({
       "/1.1/foo/storage/rotary": collection.handler()
   });
+
+  let syncTesting = new SyncTestingInfrastructure(server);
 
   let engine = makeRotaryEngine();
   try {
@@ -1630,15 +1608,13 @@ add_test(function test_syncFinish_deleteLotsInBatches() {
 add_test(function test_sync_partialUpload() {
   _("SyncEngine.sync() keeps changedIDs that couldn't be uploaded.");
 
-  let syncTesting = new SyncTestingInfrastructure();
-  Service.serverURL = TEST_SERVER_URL;
-  Service.clusterURL = TEST_CLUSTER_URL;
   Service.identity.username = "foo";
 
   let collection = new ServerCollection();
   let server = sync_httpd_setup({
       "/1.1/foo/storage/rotary": collection.handler()
   });
+  let syncTesting = new SyncTestingInfrastructure(server);
   generateNewKeys(Service.collectionKeys);
 
   let engine = makeRotaryEngine();
@@ -1705,9 +1681,6 @@ add_test(function test_sync_partialUpload() {
 
 add_test(function test_canDecrypt_noCryptoKeys() {
   _("SyncEngine.canDecrypt returns false if the engine fails to decrypt items on the server, e.g. due to a missing crypto key collection.");
-  let syncTesting = new SyncTestingInfrastructure();
-  Service.serverURL = TEST_SERVER_URL;
-  Service.clusterURL = TEST_CLUSTER_URL;
   Service.identity.username = "foo";
 
   // Wipe collection keys so we can test the desired scenario.
@@ -1722,6 +1695,7 @@ add_test(function test_canDecrypt_noCryptoKeys() {
       "/1.1/foo/storage/rotary": collection.handler()
   });
 
+  let syncTesting = new SyncTestingInfrastructure(server);
   let engine = makeRotaryEngine();
   try {
 
@@ -1734,9 +1708,6 @@ add_test(function test_canDecrypt_noCryptoKeys() {
 
 add_test(function test_canDecrypt_true() {
   _("SyncEngine.canDecrypt returns true if the engine can decrypt the items on the server.");
-  let syncTesting = new SyncTestingInfrastructure();
-  Service.serverURL = TEST_SERVER_URL;
-  Service.clusterURL = TEST_CLUSTER_URL;
   Service.identity.username = "foo";
 
   generateNewKeys(Service.collectionKeys);
@@ -1750,6 +1721,7 @@ add_test(function test_canDecrypt_true() {
       "/1.1/foo/storage/rotary": collection.handler()
   });
 
+  let syncTesting = new SyncTestingInfrastructure(server);
   let engine = makeRotaryEngine();
   try {
 
@@ -1762,9 +1734,6 @@ add_test(function test_canDecrypt_true() {
 });
 
 add_test(function test_syncapplied_observer() {
-  let syncTesting = new SyncTestingInfrastructure();
-  Service.serverURL = TEST_SERVER_URL;
-  Service.clusterURL = TEST_CLUSTER_URL;
   Service.identity.username = "foo";
 
   const NUMBER_OF_RECORDS = 10;
@@ -1779,13 +1748,16 @@ add_test(function test_syncapplied_observer() {
     collection.insert(id, payload);
   }
 
+  let server = httpd_setup({
+    "/1.1/foo/storage/rotary": collection.handler()
+  });
+
+  let syncTesting = new SyncTestingInfrastructure(server);
+
   let meta_global = Service.recordManager.set(engine.metaURL,
                                               new WBORecord(engine.metaURL));
   meta_global.payload.engines = {rotary: {version: engine.version,
                                          syncID: engine.syncID}};
-  let server = httpd_setup({
-    "/1.1/foo/storage/rotary": collection.handler()
-  });
 
   let numApplyCalls = 0;
   let engine_name;
