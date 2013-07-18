@@ -54,35 +54,33 @@ function test() {
                         cmd("dbg step out", function() {
                           is(output.value, "step out", "debugger stepped out");
                           cmd("dbg continue", function() {
-                            cmd("dbg continue", function() {
-                              is(output.value, "dbg continue", "debugger continued");
+                            is(output.value, "dbg continue", "debugger continued");
 
-                              function closeDebugger(cb) {
-                                helpers.audit(options, [{
-                                  setup: "dbg close",
-                                  completed: false,
-                                  exec: { output: "" }
-                                }]);
+                            function closeDebugger(cb) {
+                              helpers.audit(options, [{
+                                setup: "dbg close",
+                                completed: false,
+                                exec: { output: "" }
+                              }]);
 
-                                let toolbox = gDevTools.getToolbox(options.target);
-                                if (!toolbox) {
+                              let toolbox = gDevTools.getToolbox(options.target);
+                              if (!toolbox) {
+                                ok(true, "Debugger was closed.");
+                                cb();
+                              } else {
+                                toolbox.on("destroyed", function () {
                                   ok(true, "Debugger was closed.");
                                   cb();
-                                } else {
-                                  toolbox.on("destroyed", function () {
-                                    ok(true, "Debugger was closed.");
-                                    cb();
-                                  });
-                                }
+                                });
                               }
+                            }
 
-                              // We're closing the debugger twice to make sure
-                              // 'dbg close' doesn't error when toolbox is already
-                              // closed. See bug 884638 for more info.
+                            // We're closing the debugger twice to make sure
+                            // 'dbg close' doesn't error when toolbox is already
+                            // closed. See bug 884638 for more info.
 
-                              closeDebugger(() => {
-                                closeDebugger(() => deferred.resolve());
-                              });
+                            closeDebugger(() => {
+                              closeDebugger(() => deferred.resolve());
                             });
                           });
                         });
