@@ -110,6 +110,8 @@ MOCHITEST_BROWSER_TESTS = \
 	browser_dbg_source_maps-01.js \
 	browser_dbg_source_maps-02.js \
 	browser_dbg_step-out.js \
+	browser_dbg_event-listeners.js \
+	browser_dbg_break-on-dom-event.js \
 	head.js \
 	$(NULL)
 
@@ -154,6 +156,7 @@ MOCHITEST_BROWSER_PAGES = \
 	test-location-changes-bp.html \
 	test-step-out.html \
 	test-pause-exceptions-reload.html \
+	test-event-listeners.html \
 	$(NULL)
 
 # Bug 888811 & bug 891176:
