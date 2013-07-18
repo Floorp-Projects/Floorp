@@ -12,6 +12,7 @@
 #include "jit/Ion.h"
 #include "jit/IonBuilder.h"
 #include "jit/LIR.h"
+#include "jit/Lowering.h"
 #include "jit/MIRGraph.h"
 
 #include "jsinferinlines.h"
@@ -400,6 +401,12 @@ class TypeAnalyzer
     bool adjustInputs(MDefinition *def);
     bool insertConversions();
 
+    bool graphContainsFloat32();
+    bool markPhiConsumers();
+    bool markPhiProducers();
+    bool specializeValidFloatOps();
+    bool tryEmitFloatOperations();
+
   public:
     TypeAnalyzer(MIRGenerator *mir, MIRGraph &graph)
       : mir(mir), graph(graph)
@@ -415,6 +422,7 @@ static MIRType
 GuessPhiType(MPhi *phi)
 {
     MIRType type = MIRType_None;
+    bool convertibleToFloat32 = false;
     for (size_t i = 0, e = phi->numOperands(); i < e; i++) {
         MDefinition *in = phi->getOperand(i);
         if (in->isPhi()) {
@@ -429,6 +437,8 @@ GuessPhiType(MPhi *phi)
         }
         if (type == MIRType_None) {
             type = in->type();
+            if (in->isConstant())
+                convertibleToFloat32 = true;
             continue;
         }
         if (type != in->type()) {
@@ -436,11 +446,20 @@ GuessPhiType(MPhi *phi)
             if (in->resultTypeSet() && in->resultTypeSet()->empty())
                 continue;
 
-            // Specialize phis with int32 and double operands as double.
-            if (IsNumberType(type) && IsNumberType(in->type()))
+            if (IsFloatType(type) && IsFloatType(in->type())) {
+                // Specialize phis with int32 and float32 operands as float32.
+                type = MIRType_Float32;
+            } else if (convertibleToFloat32 && in->type() == MIRType_Float32) {
+                // If we only saw constants before and encounter a Float32 value, promote previous
+                // constants to Float32
+                type = MIRType_Float32;
+            } else if (IsNumberType(type) && IsNumberType(in->type())) {
+                // Specialize phis with int32 and double operands as double.
                 type = MIRType_Double;
-            else
+                convertibleToFloat32 &= in->isConstant();
+            } else {
                 return MIRType_Value;
+            }
         }
     }
     return type;
@@ -476,6 +495,13 @@ TypeAnalyzer::propagateSpecialization(MPhi *phi)
             continue;
         }
         if (use->type() != phi->type()) {
+            // Specialize phis with int32 and float operands as floats.
+            if (IsFloatType(use->type()) && IsFloatType(phi->type())) {
+                if (!respecialize(use, MIRType_Float32))
+                    return false;
+                continue;
+            }
+
             // Specialize phis with int32 and double operands as double.
             if (IsNumberType(use->type()) && IsNumberType(phi->type())) {
                 if (!respecialize(use, MIRType_Double))
@@ -546,9 +572,24 @@ TypeAnalyzer::adjustPhiInputs(MPhi *phi)
             } else {
                 MInstruction *replacement;
 
-                if (phiType == MIRType_Double && in->type() == MIRType_Int32) {
+                if (phiType == MIRType_Double && IsFloatType(in->type())) {
                     // Convert int32 operands to double.
                     replacement = MToDouble::New(in);
+                } else if (phiType == MIRType_Float32) {
+                    if (in->type() == MIRType_Int32 || in->type() == MIRType_Double) {
+                        replacement = MToFloat32::New(in);
+                    } else {
+                        // See comment below
+                        if (in->type() != MIRType_Value) {
+                            MBox *box = MBox::New(in);
+                            in->block()->insertBefore(in->block()->lastIns(), box);
+                            in = box;
+                        }
+
+                        MUnbox *unbox = MUnbox::New(in, MIRType_Double, MUnbox::Fallible);
+                        in->block()->insertBefore(in->block()->lastIns(), unbox);
+                        replacement = MToFloat32::New(in);
+                    }
                 } else {
                     // If we know this branch will fail to convert to phiType,
                     // insert a box that'll immediately fail in the fallible unbox
@@ -583,8 +624,7 @@ TypeAnalyzer::adjustPhiInputs(MPhi *phi)
             // the original box.
             phi->replaceOperand(i, in->toUnbox()->input());
         } else {
-            MBox *box = MBox::New(in);
-            in->block()->insertBefore(in->block()->lastIns(), box);
+            MDefinition *box = BoxInputsPolicy::alwaysBoxAt(in->block()->lastIns(), in);
             phi->replaceOperand(i, box);
         }
     }
@@ -650,9 +690,222 @@ TypeAnalyzer::insertConversions()
     return true;
 }
 
+// This function tries to emit Float32 specialized operations whenever it's possible.
+// MIR nodes are flagged as:
+// - Producers, when they can create Float32 that might need to be coerced into a Double.
+//   Loads in Float32 arrays and conversions to Float32 are producers.
+// - Consumers, when they can have Float32 as inputs and validate a legal use of a Float32.
+//   Stores in Float32 arrays and conversions to Float32 are consumers.
+// - Float32 commutative, when using the Float32 instruction instead of the Double instruction
+//   does not result in a compound loss of precision. This is the case for +, -, /, * with 2
+//   operands, for instance. However, an addition with 3 operands is not commutative anymore,
+//   so an intermediate coercion is needed.
+// Except for phis, all these flags are known after Ion building, so they cannot change during
+// the process.
+//
+// The idea behind the algorithm is easy: whenever we can prove that a commutative operation
+// has only producers as inputs and consumers as uses, we can specialize the operation as a
+// float32 operation. Otherwise, we have to convert all float32 inputs to doubles. Even
+// if a lot of conversions are produced, GVN will take care of eliminating the redundant ones.
+//
+// Phis have a special status. Phis need to be flagged as producers or consumers as they can
+// be inputs or outputs of commutative instructions. Fortunately, producers and consumers
+// properties are such that we can deduce the property using all non phis inputs first (which form
+// an initial phi graph) and then propagate all properties from one phi to another using a
+// fixed point algorithm. The algorithm is ensured to terminate as each iteration has less or as
+// many flagged phis as the previous iteration (so the worst steady state case is all phis being
+// flagged as false).
+//
+// In a nutshell, the algorithm applies three passes:
+// 1 - Determine which phis are consumers. Each phi gets an initial value by making a global AND on
+// all its non-phi inputs. Then each phi propagates its value to other phis. If after propagation,
+// the flag value changed, we have to reapply the algorithm on all phi operands, as a phi is a
+// consumer if all of its uses are consumers.
+// 2 - Determine which phis are producers. It's the same algorithm, except that we have to reapply
+// the algorithm on all phi uses, as a phi is a producer if all of its operands are producers.
+// 3 - Go through all commutative operations and ensure their inputs are all producers and their
+// uses are all consumers.
+bool
+TypeAnalyzer::markPhiConsumers()
+{
+    JS_ASSERT(phiWorklist_.empty());
+
+    // Iterate in postorder so worklist is initialized to RPO.
+    for (PostorderIterator block(graph.poBegin()); block != graph.poEnd(); ++block) {
+        if (mir->shouldCancel("Ensure Float32 commutativity - Consumer Phis - Initial state"))
+            return false;
+
+        for (MPhiIterator phi(block->phisBegin()); phi != block->phisEnd(); ++phi) {
+            JS_ASSERT(!phi->isInWorklist());
+            bool canConsumeFloat32 = true;
+            for (MUseDefIterator use(*phi); canConsumeFloat32 && use; use++) {
+                MDefinition *usedef = use.def();
+                canConsumeFloat32 &= usedef->isPhi() || usedef->canConsumeFloat32();
+            }
+            phi->setCanConsumeFloat32(canConsumeFloat32);
+            if (canConsumeFloat32 && !addPhiToWorklist(*phi))
+                return false;
+        }
+    }
+
+    while (!phiWorklist_.empty()) {
+        if (mir->shouldCancel("Ensure Float32 commutativity - Consumer Phis - Fixed point"))
+            return false;
+
+        MPhi *phi = popPhi();
+        JS_ASSERT(phi->canConsumeFloat32());
+
+        bool validConsumer = true;
+        for (MUseDefIterator use(phi); use; use++) {
+            MDefinition *def = use.def();
+            if (def->isPhi() && !def->canConsumeFloat32()) {
+                validConsumer = false;
+                break;
+            }
+        }
+
+        if (validConsumer)
+            continue;
+
+        // Propagate invalidated phis
+        phi->setCanConsumeFloat32(false);
+        for (size_t i = 0, e = phi->numOperands(); i < e; ++i) {
+            MDefinition *input = phi->getOperand(i);
+            if (input->isPhi() && !input->isInWorklist() && input->canConsumeFloat32())
+            {
+                if (!addPhiToWorklist(input->toPhi()))
+                    return false;
+            }
+        }
+    }
+    return true;
+}
+
+bool
+TypeAnalyzer::markPhiProducers()
+{
+    JS_ASSERT(phiWorklist_.empty());
+
+    // Iterate in reverse postorder so worklist is initialized to PO.
+    for (ReversePostorderIterator block(graph.rpoBegin()); block != graph.rpoEnd(); ++block) {
+        if (mir->shouldCancel("Ensure Float32 commutativity - Producer Phis - initial state"))
+            return false;
+
+        for (MPhiIterator phi(block->phisBegin()); phi != block->phisEnd(); ++phi) {
+            JS_ASSERT(!phi->isInWorklist());
+            bool canProduceFloat32 = true;
+            for (size_t i = 0, e = phi->numOperands(); canProduceFloat32 && i < e; ++i) {
+                MDefinition *input = phi->getOperand(i);
+                canProduceFloat32 &= input->isPhi() || input->canProduceFloat32();
+            }
+            phi->setCanProduceFloat32(canProduceFloat32);
+            if (canProduceFloat32 && !addPhiToWorklist(*phi))
+                return false;
+        }
+    }
+
+    while (!phiWorklist_.empty()) {
+        if (mir->shouldCancel("Ensure Float32 commutativity - Producer Phis - Fixed point"))
+            return false;
+
+        MPhi *phi = popPhi();
+        JS_ASSERT(phi->canProduceFloat32());
+
+        bool validProducer = true;
+        for (size_t i = 0, e = phi->numOperands(); i < e; ++i) {
+            MDefinition *input = phi->getOperand(i);
+            if (input->isPhi() && !input->canProduceFloat32()) {
+                validProducer = false;
+                break;
+            }
+        }
+
+        if (validProducer)
+            continue;
+
+        // Propagate invalidated phis
+        phi->setCanProduceFloat32(false);
+        for (MUseDefIterator use(phi); use; use++) {
+            MDefinition *def = use.def();
+            if (def->isPhi() && !def->isInWorklist() && def->canProduceFloat32())
+            {
+                if (!addPhiToWorklist(def->toPhi()))
+                    return false;
+            }
+        }
+    }
+    return true;
+}
+
+bool
+TypeAnalyzer::specializeValidFloatOps()
+{
+    for (ReversePostorderIterator block(graph.rpoBegin()); block != graph.rpoEnd(); ++block) {
+        if (mir->shouldCancel("Ensure Float32 commutativity - Instructions"))
+            return false;
+
+        for (MInstructionIterator ins(block->begin()); ins != block->end(); ++ins) {
+            if (!ins->isFloat32Commutative())
+                continue;
+
+            if (ins->type() == MIRType_Float32)
+                continue;
+
+            // This call will try to specialize the instruction iff all uses are consumers and
+            // all inputs are producers.
+            ins->trySpecializeFloat32();
+        }
+    }
+    return true;
+}
+
+bool
+TypeAnalyzer::graphContainsFloat32()
+{
+    for (ReversePostorderIterator block(graph.rpoBegin()); block != graph.rpoEnd(); ++block) {
+        if (mir->shouldCancel("Ensure Float32 commutativity - Graph contains Float32"))
+            return false;
+
+        for (MDefinitionIterator def(*block); def; def++) {
+            if (def->type() == MIRType_Float32)
+                return true;
+        }
+    }
+    return false;
+}
+
+bool
+TypeAnalyzer::tryEmitFloatOperations()
+{
+    // Backends that currently don't know how to generate Float32 specialized instructions
+    // shouldn't run this pass and just let all instructions as specialized for Double.
+    if (!LIRGenerator::allowFloat32Optimizations())
+        return true;
+
+    // Asm.js uses the ahead of time type checks to specialize operations, no need to check
+    // them again at this point.
+    if (mir->compilingAsmJS())
+        return true;
+
+    // Check ahead of time that there is at least one definition typed as Float32, otherwise we
+    // don't need this pass.
+    if (!graphContainsFloat32())
+        return true;
+
+    if (!markPhiConsumers())
+       return false;
+    if (!markPhiProducers())
+       return false;
+    if (!specializeValidFloatOps())
+       return false;
+    return true;
+}
+
 bool
 TypeAnalyzer::analyze()
 {
+    if (!tryEmitFloatOperations())
+        return false;
     if (!specializePhis())
         return false;
     if (!insertConversions())

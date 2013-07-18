@@ -251,6 +251,7 @@ class Assembler : public AssemblerX86Shared
     using AssemblerX86Shared::j;
     using AssemblerX86Shared::jmp;
     using AssemblerX86Shared::movsd;
+    using AssemblerX86Shared::movss;
     using AssemblerX86Shared::retarget;
     using AssemblerX86Shared::cmpl;
     using AssemblerX86Shared::call;
@@ -444,6 +445,11 @@ class Assembler : public AssemblerX86Shared
         masm.movsd_mr((const void *)dp, dest.code());
     }
 
+    void movss(const float *dp, const FloatRegister &dest) {
+        JS_ASSERT(HasSSE2());
+        masm.movss_mr((const void *)dp, dest.code());
+    }
+
     // Move a 32-bit immediate into a register where the immediate can be
     // patched.
     CodeOffsetLabel movlWithPatch(Imm32 imm, Register dest) {
@@ -461,6 +467,11 @@ class Assembler : public AssemblerX86Shared
         masm.movsd_mr(addr, dest.code());
         return masm.currentOffset();
     }
+    CodeOffsetLabel movssWithPatch(void *addr, FloatRegister dest) {
+        JS_ASSERT(HasSSE2());
+        masm.movss_mr(addr, dest.code());
+        return masm.currentOffset();
+    }
 
     // Store to *addr where addr can be patched
     CodeOffsetLabel movlWithPatch(Register src, void *addr) {
@@ -470,6 +481,11 @@ class Assembler : public AssemblerX86Shared
     CodeOffsetLabel movsdWithPatch(FloatRegister dest, void *addr) {
         JS_ASSERT(HasSSE2());
         masm.movsd_rm(dest.code(), addr);
+        return masm.currentOffset();
+    }
+    CodeOffsetLabel movssWithPatch(FloatRegister dest, void *addr) {
+        JS_ASSERT(HasSSE2());
+        masm.movss_rm(dest.code(), addr);
         return masm.currentOffset();
     }
 

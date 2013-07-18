@@ -76,6 +76,7 @@ namespace jit {
     _(GuardString)                                                          \
     _(AssertRange)                                                          \
     _(ToDouble)                                                             \
+    _(ToFloat32)                                                            \
     _(ToInt32)                                                              \
     _(TruncateToInt32)                                                      \
     _(ToString)                                                             \

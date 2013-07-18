@@ -248,7 +248,7 @@ Loop::requiresHoistedUse(const MDefinition *ins) const
     // hoisting on their own, in general. Floating-point constants typically
     // are worth hoisting, unless they'll end up being spilled (eg. due to a
     // call).
-    if (ins->isConstant() && (ins->type() != MIRType_Double || containsPossibleCall_))
+    if (ins->isConstant() && (IsFloatingPointType(ins->type()) || containsPossibleCall_))
         return true;
 
     return false;
