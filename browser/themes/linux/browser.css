@@ -14,7 +14,7 @@
 %filter substitution
 
 %define forwardTransitionLength 150ms
-%define conditionalForwardWithUrlbar       window:not([chromehidden~=toolbar]) :-moz-any(#nav-bar[currentset*="unified-back-forward-button,urlbar-container"],                #nav-bar:not([currentset]))                 > #nav-bar-customizationtarget > #unified-back-forward-button
+%define conditionalForwardWithUrlbar window:not([chromehidden~="toolbar"]) #urlbar-container
 %define conditionalForwardWithUrlbarWidth 32
 
 #menubar-items {
@@ -551,17 +551,18 @@ menuitem:not([type]):not(.menuitem-tooltip):not(.menuitem-iconic-tooltip) {
   list-style-image: url("moz-icon://stock/gtk-go-back-rtl?size=toolbar&state=disabled");
 }
 
-#forward-button,
-@conditionalForwardWithUrlbar@ > #forward-button {
+#forward-button {
   list-style-image: url("moz-icon://stock/gtk-go-forward-ltr?size=toolbar");
 }
-#forward-button:-moz-locale-dir(rtl),
-@conditionalForwardWithUrlbar@ > #forward-button:-moz-locale-dir(rtl) {
+#forward-button:-moz-locale-dir(rtl) {
   list-style-image: url("moz-icon://stock/gtk-go-forward-rtl?size=toolbar");
 }
 
 #forward-button[disabled] {
   list-style-image: url("moz-icon://stock/gtk-go-forward-ltr?size=toolbar&state=disabled");
+  transform: scale(0);
+  opacity: 0;
+  pointer-events: none;
 }
 #forward-button[disabled]:-moz-locale-dir(rtl) {
   list-style-image: url("moz-icon://stock/gtk-go-forward-rtl?size=toolbar&state=disabled");
@@ -569,26 +570,6 @@ menuitem:not([type]):not(.menuitem-tooltip):not(.menuitem-iconic-tooltip) {
 
 @conditionalForwardWithUrlbar@:not([switchingtabs]) > #forward-button {
   transition: @forwardTransitionLength@ ease-out;
-}
-
-@conditionalForwardWithUrlbar@ > #forward-button[disabled] {
-  transform: scale(0);
-  opacity: 0;
-  pointer-events: none;
-}
-
-#reload-button {
-  list-style-image: url("moz-icon://stock/gtk-refresh?size=toolbar");
-}
-#reload-button[disabled="true"] {
-  list-style-image: url("moz-icon://stock/gtk-refresh?size=toolbar&state=disabled");
-}
-
-#stop-button {
-  list-style-image: url("moz-icon://stock/gtk-stop?size=toolbar");
-}
-#stop-button[disabled="true"] {
-  list-style-image: url("moz-icon://stock/gtk-stop?size=toolbar&state=disabled");
 }
 
 #home-button {
@@ -772,26 +753,26 @@ toolbar > .customization-target > toolbarpaletteitem > #history-panelmenu {
   -moz-box-align: stretch;
 }
 
-@conditionalForwardWithUrlbar@ + #urlbar-container {
+@conditionalForwardWithUrlbar@ > #urlbar-wrapper {
   -moz-padding-start: @conditionalForwardWithUrlbarWidth@px;
   -moz-margin-start: -@conditionalForwardWithUrlbarWidth@px;
   position: relative;
   pointer-events: none;
 }
 
-@conditionalForwardWithUrlbar@ + #urlbar-container > #urlbar {
+@conditionalForwardWithUrlbar@ > #urlbar-wrapper > #urlbar {
   pointer-events: all;
 }
 
-@conditionalForwardWithUrlbar@:not([switchingtabs]) + #urlbar-container > #urlbar {
+@conditionalForwardWithUrlbar@:not([switchingtabs]) > #urlbar-wrapper > #urlbar {
   transition: margin-left @forwardTransitionLength@ ease-out,
               margin-right @forwardTransitionLength@ ease-out;
 }
 
-@conditionalForwardWithUrlbar@[forwarddisabled] + #urlbar-container > #urlbar:-moz-locale-dir(ltr) {
+@conditionalForwardWithUrlbar@[forwarddisabled] > #urlbar-wrapper > #urlbar:-moz-locale-dir(ltr) {
   margin-left: -@conditionalForwardWithUrlbarWidth@px;
 }
-@conditionalForwardWithUrlbar@[forwarddisabled] + #urlbar-container > #urlbar:-moz-locale-dir(rtl) {
+@conditionalForwardWithUrlbar@[forwarddisabled] > #urlbar-wrapper > #urlbar:-moz-locale-dir(rtl) {
   margin-right: -@conditionalForwardWithUrlbarWidth@px;
 }
 
@@ -810,7 +791,7 @@ toolbar > .customization-target > toolbarpaletteitem > #history-panelmenu {
   -moz-margin-start: -4px;
 }
 
-#urlbar-search-splitter + #urlbar-container > #urlbar ,
+#urlbar-search-splitter + #urlbar-container > #urlbar-wrapper > #urlbar,
 #urlbar-search-splitter + #search-container > #searchbar > .searchbar-textbox {
   -moz-margin-start: 0;
 }
@@ -1240,11 +1221,6 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 
 /* Combined go/reload/stop button in location bar */
 
-#go-button {
-  padding-top: 2px;
-  padding-bottom: 2px;
-}
-
 #urlbar > toolbarbutton {
   -moz-appearance: none;
   padding: 0;
@@ -1253,12 +1229,10 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   width: 22px;
 }
 
-#go-button,
 #urlbar-go-button {
   list-style-image: url("chrome://browser/skin/Go-arrow.png");
 }
 
-#go-button:-moz-locale-dir(rtl) > .toolbarbutton-icon,
 #urlbar-go-button:-moz-locale-dir(rtl) > .toolbarbutton-icon {
   transform: scaleX(-1);
 }

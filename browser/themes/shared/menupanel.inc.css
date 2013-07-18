@@ -5,16 +5,6 @@ toolbarpaletteitem[place="palette"] > :-moz-any(@primaryToolbarButtons@) {
   list-style-image: url(chrome://browser/skin/menuPanel.png);
 }
 
-#reload-button[customizableui-areatype="menu-panel"],
-toolbarpaletteitem[place="palette"] > #reload-button {
-  -moz-image-region: rect(0px, 64px, 32px, 32px);
-}
-
-#stop-button[customizableui-areatype="menu-panel"],
-toolbarpaletteitem[place="palette"] > #stop-button {
-  -moz-image-region: rect(0px, 96px, 32px, 64px);
-}
-
 #home-button[customizableui-areatype="menu-panel"],
 toolbarpaletteitem[place="palette"] > #home-button {
   -moz-image-region: rect(0px, 128px, 32px, 96px);
