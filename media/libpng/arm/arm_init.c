@@ -3,7 +3,7 @@
  *
  * Copyright (c) 2013 Glenn Randers-Pehrson
  * Written by Mans Rullgard, 2011.
- * Last changed in libpng 1.5.16 [May 23, 2013]
+ * Last changed in libpng 1.5.17 [June 27, 2013]
  *
  * This code is released under the libpng license.
  * For conditions of distribution and use, see the disclaimer
@@ -16,7 +16,7 @@
 
 #include "../pngpriv.h"
 
-#ifdef PNG_ARM_NEON_SUPPORTED
+#if PNG_ARM_NEON_OPT > 0
 #ifdef PNG_ARM_NEON_CHECK_SUPPORTED /* Do run-time checks */
 #include <signal.h> /* for sig_atomic_t */
 
@@ -216,4 +216,4 @@ png_init_filter_functions_neon(png_structp pp, unsigned int bpp)
           png_read_filter_row_paeth4_neon;
    }
 }
-#endif /* PNG_ARM_NEON_SUPPORTED */
+#endif /* PNG_ARM_NEON_OPT > 0 */
