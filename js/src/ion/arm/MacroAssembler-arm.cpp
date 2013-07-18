@@ -882,6 +882,13 @@ MacroAssemblerARM::ma_mod_mask(Register src, Register dest, Register hold, int32
 
 }
 
+void
+MacroAssemblerARM::ma_smod(Register num, Register div, Register dest)
+{
+    as_sdiv(ScratchRegister, num, div);
+    as_mls(dest, num, ScratchRegister, div);
+}
+
 // division
 void
 MacroAssemblerARM::ma_sdiv(Register num, Register div, Register dest, Condition cond)
