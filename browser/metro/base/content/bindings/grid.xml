@@ -568,11 +568,13 @@
             typeSizes = this.ownerDocument.defaultView._richgridTileSizes = {};
 
             let sheets = this.ownerDocument.styleSheets;
-            // the (first matching) rules that will give us tile type => width/height values
+            // The (first matching) rules that will give us tile type => width/height values
+            // The keys in this object are string-matched against the selectorText
+            // of rules in our stylesheet. Quoted values in a selector will always use " not '
             let typeSelectors = {
-              "richgriditem" : "default",
-              "richgriditem[customImage]": "thumbnail",
-              "richgriditem[compact]": "compact"
+              'richgriditem' : "default",
+              'richgriditem[tiletype="thumbnail"]': "thumbnail",
+              'richgriditem[compact]': "compact"
             };
             let rules, sheet;
             for (let i=0; (sheet=sheets[i]); i++) {
@@ -619,8 +621,12 @@
           <![CDATA[
             let item = this.ownerDocument.createElement("richgriditem");
             item.setAttribute("label", aLabel);
-            if (aValue)
+            if (aValue) {
               item.setAttribute("value", aValue);
+            }
+            if(this.hasAttribute("tiletype")) {
+              item.setAttribute("tiletype", this.getAttribute("tiletype"));
+            }
             return item;
           ]]>
         </body>
