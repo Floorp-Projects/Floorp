@@ -1565,10 +1565,6 @@ abstract public class GeckoApp
                     rec.recordJavaStartupTime(javaDuration);
                 }
 
-                // Sync settings need Gecko to be loaded, so
-                // no hurry in starting this.
-                checkMigrateSync();
-
                 // Record our launch time for the announcements service
                 // to use in assessing inactivity.
                 final Context context = GeckoApp.this;
@@ -2260,17 +2256,6 @@ abstract public class GeckoApp
     }
 
     protected void finishProfileMigration() {
-    }
-
-    private void checkMigrateSync() {
-        final File profileDir = getProfile().getDir();
-        if (!GeckoApp.sIsUsingCustomProfile && profileDir != null) {
-            final GeckoApp app = GeckoApp.sAppContext;
-            ProfileMigrator profileMigrator = new ProfileMigrator(app);
-            if (!profileMigrator.hasSyncMigrated()) {
-                profileMigrator.launchSyncPrefs();
-            }
-        }
     }
 
     public PromptService getPromptService() {
