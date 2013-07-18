@@ -340,13 +340,6 @@ BitwisePolicy::adjustInputs(MInstruction *ins)
         if (in->type() == MIRType_Object || in->type() == MIRType_String)
             in = boxAt(ins, in);
 
-        if (in->type() == MIRType_Float32) {
-            MToDouble *replace = MToDouble::New(in);
-            ins->block()->insertBefore(ins, replace);
-            ins->replaceOperand(i, replace);
-            in = replace;
-        }
-
         MInstruction *replace = MTruncateToInt32::New(in);
         ins->block()->insertBefore(ins, replace);
         ins->replaceOperand(i, replace);
@@ -652,11 +645,6 @@ StoreTypedArrayPolicy::adjustValueInput(MInstruction *ins, int arrayType,
       case ScalarTypeRepresentation::TYPE_INT32:
       case ScalarTypeRepresentation::TYPE_UINT32:
         if (value->type() != MIRType_Int32) {
-            // Workaround for bug 915903
-            if (value->type() == MIRType_Float32) {
-                value = MToDouble::New(value);
-                ins->block()->insertBefore(ins, value->toInstruction());
-            }
             value = MTruncateToInt32::New(value);
             ins->block()->insertBefore(ins, value->toInstruction());
         }

@@ -26,6 +26,9 @@ using namespace js::jit;
 using mozilla::DebugOnly;
 using mozilla::DoubleExponentBias;
 using mozilla::DoubleExponentShift;
+using mozilla::FloatExponentBias;
+using mozilla::FloatExponentShift;
+using mozilla::FloatExponentBits;
 using JS::GenericNaN;
 
 CodeGeneratorX86::CodeGeneratorX86(MIRGenerator *gen, LIRGraph *graph, MacroAssembler *masm)
@@ -790,6 +793,23 @@ class OutOfLineTruncate : public OutOfLineCodeBase<CodeGeneratorX86>
     }
 };
 
+class OutOfLineTruncateFloat32 : public OutOfLineCodeBase<CodeGeneratorX86>
+{
+    LTruncateFToInt32 *ins_;
+
+  public:
+    OutOfLineTruncateFloat32(LTruncateFToInt32 *ins)
+      : ins_(ins)
+    { }
+
+    bool accept(CodeGeneratorX86 *codegen) {
+        return codegen->visitOutOfLineTruncateFloat32(this);
+    }
+    LTruncateFToInt32 *ins() const {
+        return ins_;
+    }
+};
+
 } // namespace jit
 } // namespace js
 
@@ -804,6 +824,21 @@ CodeGeneratorX86::visitTruncateDToInt32(LTruncateDToInt32 *ins)
         return false;
 
     masm.branchTruncateDouble(input, output, ool->entry());
+    masm.bind(ool->rejoin());
+    return true;
+}
+
+bool
+CodeGeneratorX86::visitTruncateFToInt32(LTruncateFToInt32 *ins)
+{
+    FloatRegister input = ToFloatRegister(ins->input());
+    Register output = ToRegister(ins->output());
+
+    OutOfLineTruncateFloat32 *ool = new OutOfLineTruncateFloat32(ins);
+    if (!addOutOfLineCode(ool))
+        return false;
+
+    masm.branchTruncateFloat32(input, output, ool->entry());
     masm.bind(ool->rejoin());
     return true;
 }
@@ -888,6 +923,95 @@ CodeGeneratorX86::visitOutOfLineTruncate(OutOfLineTruncate *ool)
         else
             masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, js::ToInt32));
         masm.storeCallResult(output);
+
+        restoreVolatile(output);
+    }
+
+    masm.jump(ool->rejoin());
+    return true;
+}
+
+bool
+CodeGeneratorX86::visitOutOfLineTruncateFloat32(OutOfLineTruncateFloat32 *ool)
+{
+    LTruncateFToInt32 *ins = ool->ins();
+    FloatRegister input = ToFloatRegister(ins->input());
+    Register output = ToRegister(ins->output());
+
+    Label fail;
+
+    if (Assembler::HasSSE3()) {
+        // Push float32, but subtracts 64 bits so that the value popped by fisttp fits
+        masm.subl(Imm32(sizeof(uint64_t)), esp);
+        masm.storeFloat(input, Operand(esp, 0));
+
+        static const uint32_t EXPONENT_MASK = FloatExponentBits;
+        static const uint32_t EXPONENT_SHIFT = FloatExponentShift;
+        // Integers are still 64 bits long, so we can still test for an exponent > 63.
+        static const uint32_t TOO_BIG_EXPONENT = (FloatExponentBias + 63) << EXPONENT_SHIFT;
+
+        // Check exponent to avoid fp exceptions.
+        Label failPopFloat;
+        masm.movl(Operand(esp, 0), output);
+        masm.and32(Imm32(EXPONENT_MASK), output);
+        masm.branch32(Assembler::GreaterThanOrEqual, output, Imm32(TOO_BIG_EXPONENT), &failPopFloat);
+
+        // Load float, perform 32-bit truncation.
+        masm.fld32(Operand(esp, 0));
+        masm.fisttp(Operand(esp, 0));
+
+        // Load low word, pop 64bits and jump back.
+        masm.movl(Operand(esp, 0), output);
+        masm.addl(Imm32(sizeof(uint64_t)), esp);
+        masm.jump(ool->rejoin());
+
+        masm.bind(&failPopFloat);
+        masm.addl(Imm32(sizeof(uint64_t)), esp);
+        masm.jump(&fail);
+    } else {
+        FloatRegister temp = ToFloatRegister(ins->tempFloat());
+
+        // Try to convert float32 representing integers within 2^32 of a signed
+        // integer, by adding/subtracting 2^32 and then trying to convert to int32.
+        // This has to be an exact conversion, as otherwise the truncation works
+        // incorrectly on the modified value.
+        masm.xorps(ScratchFloatReg, ScratchFloatReg);
+        masm.ucomiss(input, ScratchFloatReg);
+        masm.j(Assembler::Parity, &fail);
+
+        {
+            Label positive;
+            masm.j(Assembler::Above, &positive);
+
+            masm.loadConstantFloat32(4294967296.f, temp);
+            Label skip;
+            masm.jmp(&skip);
+
+            masm.bind(&positive);
+            masm.loadConstantFloat32(-4294967296.f, temp);
+            masm.bind(&skip);
+        }
+
+        masm.addss(input, temp);
+        masm.cvttss2si(temp, output);
+        masm.cvtsi2ss(output, ScratchFloatReg);
+
+        masm.ucomiss(temp, ScratchFloatReg);
+        masm.j(Assembler::Parity, &fail);
+        masm.j(Assembler::Equal, ool->rejoin());
+    }
+
+    masm.bind(&fail);
+    {
+        saveVolatile(output);
+
+        masm.push(input);
+        masm.setupUnalignedABICall(1, output);
+        masm.cvtss2sd(input, input);
+        masm.passABIArg(input);
+        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, js::ToInt32));
+        masm.storeCallResult(output);
+        masm.pop(input);
 
         restoreVolatile(output);
     }

@@ -130,6 +130,7 @@
     _(DoubleToInt32)                \
     _(Float32ToInt32)               \
     _(TruncateDToInt32)             \
+    _(TruncateFToInt32)             \
     _(IntToString)                  \
     _(DoubleToString)               \
     _(Start)                        \

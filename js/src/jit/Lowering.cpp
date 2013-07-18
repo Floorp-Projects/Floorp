@@ -1736,6 +1736,9 @@ LIRGenerator::visitTruncateToInt32(MTruncateToInt32 *truncate)
       case MIRType_Double:
         return lowerTruncateDToInt32(truncate);
 
+      case MIRType_Float32:
+        return lowerTruncateFToInt32(truncate);
+
       default:
         // Objects might be effectful.
         // Strings are complicated - we don't handle them yet.
