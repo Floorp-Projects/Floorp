@@ -1185,8 +1185,13 @@ bool
 LIRGenerator::visitSqrt(MSqrt *ins)
 {
     MDefinition *num = ins->num();
-    JS_ASSERT(num->type() == MIRType_Double);
-    LSqrtD *lir = new LSqrtD(useRegisterAtStart(num));
+    JS_ASSERT(IsFloatingPointType(num->type()));
+    if (num->type() == MIRType_Double) {
+        LSqrtD *lir = new LSqrtD(useRegisterAtStart(num));
+        return define(lir, ins);
+    }
+
+    LSqrtF *lir = new LSqrtF(useRegisterAtStart(num));
     return define(lir, ins);
 }
 

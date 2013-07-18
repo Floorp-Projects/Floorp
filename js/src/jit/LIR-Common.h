@@ -2303,6 +2303,16 @@ class LSqrtD : public LInstructionHelper<1, 1, 0>
     }
 };
 
+// Square root of a float32.
+class LSqrtF : public LInstructionHelper<1, 1, 0>
+{
+  public:
+    LIR_HEADER(SqrtF)
+    LSqrtF(const LAllocation &num) {
+        setOperand(0, num);
+    }
+};
+
 class LAtan2D : public LCallInstructionHelper<1, 2, 1>
 {
   public:
