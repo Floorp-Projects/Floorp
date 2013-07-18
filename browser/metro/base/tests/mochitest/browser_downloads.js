@@ -214,7 +214,7 @@ gTests.push({
   desc: "zero downloads",
   run: function () {
     yield resetDownloads();
-    todo("Test there are no visible notifications with an empty db.");
+    todo(false, "Test there are no visible notifications with an empty db.");
   }
 });
 
@@ -247,12 +247,12 @@ gTests.push({
       // we're going to add stuff to the downloads db.
       yield spawn( gen_addDownloadRows( DownloadData ) );
 
-      todo("Check that Downloads._progressNotificationInfo and Downloads._downloadCount
-        have the correct length (DownloadData.length)
+      todo( false, "Check that Downloads._progressNotificationInfo and Downloads._downloadCount \
+        have the correct length (DownloadData.length) \
         May also test that the correct notifications show up for various states.");
 
-      todo("Iterate through download objects in Downloads._progressNotificationInfo
-        and confirm that the downloads they refer to are the same as those in
+      todo(false, "Iterate through download objects in Downloads._progressNotificationInfo \
+        and confirm that the downloads they refer to are the same as those in \
         DownloadData.");
     } catch(e) {
       info("Show downloads, some error: " + e);
@@ -299,7 +299,7 @@ gTests.push({
 
       is(downloadRows.length, 3, "Correct number of downloads in the db before removal");
 
-      todo("Get some download from Downloads._progressNotificationInfo,
+      todo(false, "Get some download from Downloads._progressNotificationInfo, \
         confirm that its file exists, then remove it.");
 
       // remove is async(?), wait a bit
@@ -318,7 +318,7 @@ gTests.push({
       });
       yield promisedDownloads;
 
-      todo("confirm that the removed download is no longer in the database
+      todo(false, "confirm that the removed download is no longer in the database \
         and its file no longer exists.");
 
     } catch(e) {
