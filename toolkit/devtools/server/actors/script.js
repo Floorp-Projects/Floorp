@@ -1226,7 +1226,9 @@ ThreadActor.prototype = {
    *        The stack frame that contained the debugger statement.
    */
   onDebuggerStatement: function TA_onDebuggerStatement(aFrame) {
-    if (this.sources.isBlackBoxed(aFrame.script.url)) {
+    // Don't pause if we are currently stepping (in or over) or the frame is
+    // black-boxed.
+    if (this.sources.isBlackBoxed(aFrame.script.url) || aFrame.onStep) {
       return undefined;
     }
     return this._pauseAndRespond(aFrame, { type: "debuggerStatement" });
@@ -2200,7 +2202,10 @@ BreakpointActor.prototype = {
    *        The stack frame that contained the breakpoint.
    */
   hit: function BA_hit(aFrame) {
-    if (this.threadActor.sources.isBlackBoxed(this.location.url)) {
+    // Don't pause if we are currently stepping (in or over) or the frame is
+    // black-boxed.
+    if (this.threadActor.sources.isBlackBoxed(this.location.url) ||
+        aFrame.onStep) {
       return undefined;
     }
 
