@@ -37,6 +37,7 @@ enum ShaderProgramType {
   RGBXLayerProgramType,
   BGRXLayerProgramType,
   RGBARectLayerProgramType,
+  RGBXRectLayerProgramType,
   BGRARectLayerProgramType,
   RGBAExternalLayerProgramType,
   ColorLayerProgramType,
@@ -81,8 +82,12 @@ ShaderProgramFromTargetAndFormat(GLenum aTarget,
       MOZ_ASSERT(aFormat == gfx::FORMAT_R8G8B8A8);
       return RGBALayerExternalProgramType;
     case LOCAL_GL_TEXTURE_RECTANGLE_ARB:
-      MOZ_ASSERT(aFormat == gfx::FORMAT_R8G8B8A8);
-      return RGBARectLayerProgramType;
+      MOZ_ASSERT(aFormat == gfx::FORMAT_R8G8B8A8 ||
+                 aFormat == gfx::FORMAT_R8G8B8X8);
+      if (aFormat == gfx::FORMAT_R8G8B8A8)
+        return RGBARectLayerProgramType;
+      else
+        return RGBXRectLayerProgramType;
     default:
       return ShaderProgramFromSurfaceFormat(aFormat);
   }
@@ -135,6 +140,7 @@ struct ProgramProfileOGL
 
     return aMask != Mask3d ||
            aType == RGBARectLayerProgramType ||
+           aType == RGBXRectLayerProgramType ||
            aType == RGBALayerProgramType;
   }
 
