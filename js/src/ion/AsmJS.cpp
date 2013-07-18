@@ -6354,7 +6354,7 @@ js::CompileAsmJS(JSContext *cx, AsmJSParser &parser, ParseNode *stmtList, bool *
 {
     *validated = false;
 
-    if (!JSC::MacroAssembler().supportsFloatingPoint())
+    if (!JSC::MacroAssembler::supportsFloatingPoint())
         return Warn(cx, JSMSG_USE_ASM_TYPE_FAIL, "Disabled by lack of floating point support");
 
     if (cx->runtime()->gcSystemPageSize != AsmJSPageSize)
@@ -6413,7 +6413,7 @@ js::IsAsmJSCompilationAvailable(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    bool available = JSC::MacroAssembler().supportsFloatingPoint() &&
+    bool available = JSC::MacroAssembler::supportsFloatingPoint() &&
                      !cx->compartment()->debugMode() &&
                      cx->hasOption(JSOPTION_ASMJS);
 
