@@ -4422,37 +4422,53 @@ static bool CleartypeSettingChanged()
   return true;
 }
 
-// The main windows message processing method.
-bool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
-                                LRESULT *aRetValue)
+bool
+nsWindow::ExternalHandlerProcessMessage(UINT aMessage,
+                                        WPARAM& aWParam,
+                                        LPARAM& aLParam,
+                                        MSGResult& aResult)
 {
-  // (Large blocks of code should be broken out into OnEvent handlers.)
-  if (mWindowHook.Notify(mWnd, msg, wParam, lParam, aRetValue))
+  if (mWindowHook.Notify(mWnd, aMessage, aWParam, aLParam, &aResult.mResult)) {
     return true;
+  }
 
+  if (IMEHandler::ProcessMessage(this, aMessage, aWParam, aLParam,
+                                 &aResult.mResult, aResult.mConsumed)) {
+    return true;
+  }
+
+  if (MouseScrollHandler::ProcessMessage(this, aMessage, aWParam, aLParam,
+                                         &aResult.mResult, aResult.mConsumed)) {
+    return true;
+  }
+
+  if (PluginHasFocus()) {
+    bool callDefaultWndProc;
+    MSG nativeMsg = WinUtils::InitMSG(aMessage, aWParam, aLParam, mWnd);
+    if (ProcessMessageForPlugin(nativeMsg, &aResult.mResult,
+                                callDefaultWndProc)) {
+      aResult.mConsumed = !callDefaultWndProc;
+      return true;
+    }
+  }
+
+  return false;
+}
+
+// The main windows message processing method.
+bool
+nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
+                         LRESULT *aRetValue)
+{
 #if defined(EVENT_DEBUG_OUTPUT)
   // First param shows all events, second param indicates whether
   // to show mouse move events. See nsWindowDbg for details.
   PrintEvent(msg, SHOW_REPEAT_EVENTS, SHOW_MOUSEMOVE_EVENTS);
 #endif
 
-  bool eatMessage;
-  if (IMEHandler::ProcessMessage(this, msg, wParam, lParam, aRetValue,
-                                 eatMessage)) {
-    return mWnd ? eatMessage : true;
-  }
-
-  if (MouseScrollHandler::ProcessMessage(this, msg, wParam, lParam, aRetValue,
-                                         eatMessage)) {
-    return mWnd ? eatMessage : true;
-  }
-
-  if (PluginHasFocus()) {
-    bool callDefaultWndProc;
-    MSG nativeMsg = WinUtils::InitMSG(msg, wParam, lParam, mWnd);
-    if (ProcessMessageForPlugin(nativeMsg, aRetValue, callDefaultWndProc)) {
-      return mWnd ? !callDefaultWndProc : true;
-    }
+  MSGResult msgResult(aRetValue);
+  if (ExternalHandlerProcessMessage(msg, wParam, lParam, msgResult)) {
+    return (msgResult.mConsumed || !mWnd);
   }
 
   bool result = false;    // call the default nsWindow proc
@@ -4467,6 +4483,7 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
     return true;
   }
 
+  // (Large blocks of code should be broken out into OnEvent handlers.)
   switch (msg) {
     // WM_QUERYENDSESSION must be handled by all windows.
     // Otherwise Windows thinks the window can just be killed at will.
