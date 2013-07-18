@@ -11,6 +11,7 @@
 
 #include "nsIMM32Handler.h"
 #include "nsWindow.h"
+#include "nsWindowDefs.h"
 #include "WinUtils.h"
 #include "KeyboardLayout.h"
 #include <algorithm>
@@ -239,14 +240,14 @@ nsIMM32Handler::CancelComposition(nsWindow* aWindow, bool aForce)
 nsIMM32Handler::ProcessInputLangChangeMessage(nsWindow* aWindow,
                                               WPARAM wParam,
                                               LPARAM lParam,
-                                              LRESULT *aRetValue,
-                                              bool &aEatMessage)
+                                              MSGResult& aResult)
 {
-  *aRetValue = 0;
-  aEatMessage = false;
+  aResult.mResult = 0;
+  aResult.mConsumed = false;
   // We don't need to create the instance of the handler here.
   if (gIMM32Handler) {
-    aEatMessage = gIMM32Handler->OnInputLangChange(aWindow, wParam, lParam);
+    aResult.mConsumed =
+      gIMM32Handler->OnInputLangChange(aWindow, wParam, lParam);
   }
   InitKeyboardLayout(reinterpret_cast<HKL>(lParam));
   // We can release the instance here, because the instance may be never
@@ -260,7 +261,7 @@ nsIMM32Handler::ProcessInputLangChangeMessage(nsWindow* aWindow,
 /* static */ bool
 nsIMM32Handler::ProcessMessage(nsWindow* aWindow, UINT msg,
                                WPARAM &wParam, LPARAM &lParam,
-                               LRESULT *aRetValue, bool &aEatMessage)
+                               MSGResult& aResult)
 {
   // XXX We store the composing window in mComposingWindow.  If IME messages are
   // sent to different window, we should commit the old transaction.  And also
@@ -270,70 +271,67 @@ nsIMM32Handler::ProcessMessage(nsWindow* aWindow, UINT msg,
   // When a plug-in has focus or compsition, we should dispatch the IME events
   // to the plug-in.
   if (aWindow->PluginHasFocus() || IsComposingOnPlugin()) {
-      return ProcessMessageForPlugin(aWindow, msg, wParam, lParam, aRetValue,
-                                   aEatMessage);
+      return ProcessMessageForPlugin(aWindow, msg, wParam, lParam, aResult);
   }
 
-  *aRetValue = 0;
+  aResult.mResult = 0;
   switch (msg) {
     case WM_LBUTTONDOWN:
     case WM_MBUTTONDOWN:
     case WM_RBUTTONDOWN: {
       // We don't need to create the instance of the handler here.
-      if (!gIMM32Handler)
-        return false;
-      if (!gIMM32Handler->OnMouseEvent(aWindow, lParam,
-                            msg == WM_LBUTTONDOWN ? IMEMOUSE_LDOWN :
-                            msg == WM_MBUTTONDOWN ? IMEMOUSE_MDOWN :
-                                                    IMEMOUSE_RDOWN)) {
+      if (!gIMM32Handler) {
         return false;
       }
-      aEatMessage = false;
-      return true;
+      return gIMM32Handler->OnMouseEvent(aWindow, lParam,
+                              msg == WM_LBUTTONDOWN ? IMEMOUSE_LDOWN :
+                              msg == WM_MBUTTONDOWN ? IMEMOUSE_MDOWN :
+                                                      IMEMOUSE_RDOWN, aResult);
     }
     case WM_INPUTLANGCHANGE:
-      return ProcessInputLangChangeMessage(aWindow, wParam, lParam,
-                                           aRetValue, aEatMessage);
+      return ProcessInputLangChangeMessage(aWindow, wParam, lParam, aResult);
     case WM_IME_STARTCOMPOSITION:
       EnsureHandlerInstance();
-      aEatMessage = gIMM32Handler->OnIMEStartComposition(aWindow);
+      aResult.mConsumed = gIMM32Handler->OnIMEStartComposition(aWindow);
       return true;
     case WM_IME_COMPOSITION:
       EnsureHandlerInstance();
-      aEatMessage = gIMM32Handler->OnIMEComposition(aWindow, wParam, lParam);
+      aResult.mConsumed =
+        gIMM32Handler->OnIMEComposition(aWindow, wParam, lParam);
       return true;
     case WM_IME_ENDCOMPOSITION:
       EnsureHandlerInstance();
-      aEatMessage = gIMM32Handler->OnIMEEndComposition(aWindow);
+      aResult.mConsumed = gIMM32Handler->OnIMEEndComposition(aWindow);
       return true;
     case WM_IME_CHAR:
-      aEatMessage = OnIMEChar(aWindow, wParam, lParam);
+      aResult.mConsumed = OnIMEChar(aWindow, wParam, lParam);
       return true;
     case WM_IME_NOTIFY:
-      aEatMessage = OnIMENotify(aWindow, wParam, lParam);
+      aResult.mConsumed = OnIMENotify(aWindow, wParam, lParam);
       return true;
     case WM_IME_REQUEST:
       EnsureHandlerInstance();
-      aEatMessage =
-        gIMM32Handler->OnIMERequest(aWindow, wParam, lParam, aRetValue);
+      aResult.mConsumed =
+        gIMM32Handler->OnIMERequest(aWindow, wParam, lParam, &aResult.mResult);
       return true;
     case WM_IME_SELECT:
-      aEatMessage = OnIMESelect(aWindow, wParam, lParam);
+      aResult.mConsumed = OnIMESelect(aWindow, wParam, lParam);
       return true;
     case WM_IME_SETCONTEXT:
-      aEatMessage = OnIMESetContext(aWindow, wParam, lParam, aRetValue);
+      aResult.mConsumed =
+        OnIMESetContext(aWindow, wParam, lParam, &aResult.mResult);
       return true;
     case WM_KEYDOWN:
-      return OnKeyDownEvent(aWindow, wParam, lParam, aEatMessage);
+      return OnKeyDownEvent(aWindow, wParam, lParam, aResult);
     case WM_CHAR:
       if (!gIMM32Handler) {
         return false;
       }
-      aEatMessage = gIMM32Handler->OnChar(aWindow, wParam, lParam);
-      // If we eat this message, we should return "processed", otherwise,
+      aResult.mConsumed = gIMM32Handler->OnChar(aWindow, wParam, lParam);
+      // If we consume this message, we should return "processed", otherwise,
       // the message should be handled on nsWindow, so, we should return
       // "not processed" at that time.
-      return aEatMessage;
+      return aResult.mConsumed;
     default:
       return false;
   };
@@ -342,45 +340,44 @@ nsIMM32Handler::ProcessMessage(nsWindow* aWindow, UINT msg,
 /* static */ bool
 nsIMM32Handler::ProcessMessageForPlugin(nsWindow* aWindow, UINT msg,
                                         WPARAM &wParam, LPARAM &lParam,
-                                        LRESULT *aRetValue,
-                                        bool &aEatMessage)
+                                        MSGResult& aResult)
 {
-  *aRetValue = 0;
-  aEatMessage = false;
+  aResult.mResult = 0;
+  aResult.mConsumed = false;
   switch (msg) {
     case WM_INPUTLANGCHANGEREQUEST:
     case WM_INPUTLANGCHANGE:
       aWindow->DispatchPluginEvent(msg, wParam, lParam, false);
-      return ProcessInputLangChangeMessage(aWindow, wParam, lParam,
-                                           aRetValue, aEatMessage);
+      return ProcessInputLangChangeMessage(aWindow, wParam, lParam, aResult);
     case WM_IME_COMPOSITION:
       EnsureHandlerInstance();
-      aEatMessage =
+      aResult.mConsumed =
         gIMM32Handler->OnIMECompositionOnPlugin(aWindow, wParam, lParam);
       return true;
     case WM_IME_STARTCOMPOSITION:
       EnsureHandlerInstance();
-      aEatMessage =
+      aResult.mConsumed =
         gIMM32Handler->OnIMEStartCompositionOnPlugin(aWindow, wParam, lParam);
       return true;
     case WM_IME_ENDCOMPOSITION:
       EnsureHandlerInstance();
-      aEatMessage =
+      aResult.mConsumed =
         gIMM32Handler->OnIMEEndCompositionOnPlugin(aWindow, wParam, lParam);
       return true;
     case WM_IME_CHAR:
       EnsureHandlerInstance();
-      aEatMessage =
+      aResult.mConsumed =
         gIMM32Handler->OnIMECharOnPlugin(aWindow, wParam, lParam);
       return true;
     case WM_IME_SETCONTEXT:
-      aEatMessage = OnIMESetContextOnPlugin(aWindow, wParam, lParam, aRetValue);
+      aResult.mConsumed =
+        OnIMESetContextOnPlugin(aWindow, wParam, lParam, &aResult.mResult);
       return true;
     case WM_CHAR:
       if (!gIMM32Handler) {
         return false;
       }
-      aEatMessage =
+      aResult.mConsumed =
         gIMM32Handler->OnCharOnPlugin(aWindow, wParam, lParam);
       return false;  // is going to be handled by nsWindow.
     case WM_IME_COMPOSITIONFULL:
@@ -389,7 +386,8 @@ nsIMM32Handler::ProcessMessageForPlugin(nsWindow* aWindow, UINT msg,
     case WM_IME_KEYUP:
     case WM_IME_REQUEST:
     case WM_IME_SELECT:
-      aEatMessage = aWindow->DispatchPluginEvent(msg, wParam, lParam, false);
+      aResult.mConsumed =
+        aWindow->DispatchPluginEvent(msg, wParam, lParam, false);
       return true;
   }
   return false;
@@ -1937,8 +1935,11 @@ nsIMM32Handler::ResolveIMECaretPos(nsIWidget* aReferenceWidget,
 }
 
 bool
-nsIMM32Handler::OnMouseEvent(nsWindow* aWindow, LPARAM lParam, int aAction)
+nsIMM32Handler::OnMouseEvent(nsWindow* aWindow, LPARAM lParam, int aAction,
+                             MSGResult& aResult)
 {
+  aResult.mConsumed = false; // always call next wndprc
+
   if (!sWM_MSIME_MOUSE || !mIsComposing ||
       !ShouldDrawCompositionStringOurselves()) {
     return false;
@@ -1996,12 +1997,12 @@ nsIMM32Handler::OnMouseEvent(nsWindow* aWindow, LPARAM lParam, int aAction)
 
 /* static */ bool
 nsIMM32Handler::OnKeyDownEvent(nsWindow* aWindow, WPARAM wParam, LPARAM lParam,
-                               bool &aEatMessage)
+                               MSGResult& aResult)
 {
   PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
     ("IMM32: OnKeyDownEvent, hWnd=%08x, wParam=%08x, lParam=%08x\n",
      aWindow->GetWindowHandle(), wParam, lParam));
-  aEatMessage = false;
+  aResult.mConsumed = false;
   switch (wParam) {
     case VK_TAB:
     case VK_PRIOR:

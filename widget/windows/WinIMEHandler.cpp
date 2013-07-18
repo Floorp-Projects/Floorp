@@ -114,7 +114,7 @@ IMEHandler::ProcessMessage(nsWindow* aWindow, UINT aMessage,
 #endif // #ifdef NS_ENABLE_TSF
 
   return nsIMM32Handler::ProcessMessage(aWindow, aMessage, aWParam, aLParam,
-                                        &aResult.mResult, aResult.mConsumed);
+                                        aResult);
 }
 
 // static
