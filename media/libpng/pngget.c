@@ -1302,4 +1302,5 @@ png_get_first_frame_is_hidden(png_structp png_ptr, png_infop info_ptr)
     return 0;
 }
 #endif /* PNG_APNG_SUPPORTED */
+
 #endif /* PNG_READ_SUPPORTED || PNG_WRITE_SUPPORTED */

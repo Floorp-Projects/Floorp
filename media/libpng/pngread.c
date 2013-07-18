@@ -369,6 +369,7 @@ png_read_frame_head(png_structp png_ptr, png_infop info_ptr)
     png_crc_finish(png_ptr, 0); /* CRC from last IDAT or fdAT chunk */
 
     png_read_reset(png_ptr);
+    png_ptr->flags &= ~PNG_FLAG_ROW_INIT;
     png_ptr->mode &= ~PNG_HAVE_fcTL;
 
     have_chunk_after_DAT = 0;
