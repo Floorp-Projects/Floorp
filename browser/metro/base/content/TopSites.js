@@ -307,7 +307,15 @@ TopSitesView.prototype = {
     });
 
     if (this._useThumbs) {
-      aSite.backgroundImage = 'url("'+PageThumbs.getThumbnailURL(aSite.url)+'")';
+      Task.spawn(function() {
+        let filepath = PageThumbsStorage.getFilePathForURL(aSite.url);
+        if (yield OS.File.exists(filepath)) {
+          aSite.backgroundImage = 'url("'+PageThumbs.getThumbnailURL(aSite.url)+'")';
+          if ("isBound" in aTileNode && aTileNode.isBound) {
+            aTileNode.backgroundImage = aSite.backgroundImage;
+          }
+        }
+      });
     } else {
       delete aSite.backgroundImage;
     }
