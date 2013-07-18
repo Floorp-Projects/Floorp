@@ -46,6 +46,7 @@ class LIRGeneratorX86Shared : public LIRGeneratorShared
     bool lowerUMod(MInstruction *mod);
     bool lowerUrshD(MUrsh *mir);
     bool lowerConstantDouble(double d, MInstruction *ins);
+    bool lowerConstantFloat32(float d, MInstruction *ins);
     bool lowerTruncateDToInt32(MTruncateToInt32 *ins);
 };
 

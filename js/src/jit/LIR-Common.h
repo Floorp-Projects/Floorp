@@ -188,6 +188,22 @@ class LDouble : public LInstructionHelper<1, 0, 0>
     }
 };
 
+// Constant float32.
+class LFloat32 : public LInstructionHelper<1, 0, 0>
+{
+    float f_;
+  public:
+    LIR_HEADER(Float32);
+
+    LFloat32(float f)
+      : f_(f)
+    { }
+
+    float getFloat() const {
+        return f_;
+    }
+};
+
 // A constant Value.
 class LValue : public LInstructionHelper<BOX_PIECES, 0, 0>
 {
@@ -2102,6 +2118,16 @@ class LNegD : public LInstructionHelper<1, 1, 0>
     }
 };
 
+// Negative of a float32.
+class LNegF : public LInstructionHelper<1, 1, 0>
+{
+  public:
+    LIR_HEADER(NegF)
+    LNegF(const LAllocation &num) {
+        setOperand(0, num);
+    }
+};
+
 // Absolute value of an integer.
 class LAbsI : public LInstructionHelper<1, 1, 0>
 {
@@ -2302,6 +2328,23 @@ class LMathD : public LBinaryMath<0>
     }
 };
 
+// Performs an add, sub, mul, or div on two double values.
+class LMathF: public LBinaryMath<0>
+{
+    JSOp jsop_;
+
+  public:
+    LIR_HEADER(MathF)
+
+    LMathF(JSOp jsop)
+      : jsop_(jsop)
+    { }
+
+    JSOp jsop() const {
+        return jsop_;
+    }
+};
+
 class LModD : public LBinaryMath<1>
 {
   public:
@@ -2458,6 +2501,39 @@ class LInt32ToDouble : public LInstructionHelper<1, 1, 0>
     }
 };
 
+// Convert a 32-bit float to a double.
+class LFloat32ToDouble : public LInstructionHelper<1, 1, 0>
+{
+  public:
+    LIR_HEADER(Float32ToDouble)
+
+    LFloat32ToDouble(const LAllocation &input) {
+        setOperand(0, input);
+    }
+};
+
+// Convert a double to a 32-bit float.
+class LDoubleToFloat32 : public LInstructionHelper<1, 1, 0>
+{
+  public:
+    LIR_HEADER(DoubleToFloat32)
+
+    LDoubleToFloat32(const LAllocation &input) {
+        setOperand(0, input);
+    }
+};
+
+// Convert a 32-bit integer to a float32.
+class LInt32ToFloat32 : public LInstructionHelper<1, 1, 0>
+{
+  public:
+    LIR_HEADER(Int32ToFloat32)
+
+    LInt32ToFloat32(const LAllocation &input) {
+        setOperand(0, input);
+    }
+};
+
 // Convert a value to a double.
 class LValueToDouble : public LInstructionHelper<1, BOX_PIECES, 0>
 {
@@ -2467,6 +2543,18 @@ class LValueToDouble : public LInstructionHelper<1, BOX_PIECES, 0>
 
     MToDouble *mir() {
         return mir_->toToDouble();
+    }
+};
+
+// Convert a value to a float32.
+class LValueToFloat32 : public LInstructionHelper<1, BOX_PIECES, 0>
+{
+  public:
+    LIR_HEADER(ValueToFloat32)
+    static const size_t Input = 0;
+
+    MToFloat32 *mir() {
+        return mir_->toToFloat32();
     }
 };
 
@@ -4984,6 +5072,32 @@ class LAssertRangeD : public LInstructionHelper<0, 1, 1>
     LIR_HEADER(AssertRangeD)
 
     LAssertRangeD(const LAllocation &input, const LDefinition &temp) {
+        setOperand(0, input);
+        setTemp(0, temp);
+    }
+
+    const LAllocation *input() {
+        return getOperand(0);
+    }
+
+    const LDefinition *temp() {
+        return getTemp(0);
+    }
+
+    MAssertRange *mir() {
+        return mir_->toAssertRange();
+    }
+    Range *range() {
+        return mir()->range();
+    }
+};
+
+class LAssertRangeF : public LInstructionHelper<0, 1, 1>
+{
+  public:
+    LIR_HEADER(AssertRangeF)
+
+    LAssertRangeF(const LAllocation &input, const LDefinition &temp) {
         setOperand(0, input);
         setTemp(0, temp);
     }

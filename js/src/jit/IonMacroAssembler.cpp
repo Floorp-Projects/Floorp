@@ -15,6 +15,7 @@
 #include "jit/BaselineIC.h"
 #include "jit/BaselineJIT.h"
 #include "jit/BaselineRegisters.h"
+#include "jit/Lowering.h"
 #include "jit/MIR.h"
 #include "vm/ForkJoin.h"
 
@@ -304,6 +305,41 @@ MacroAssembler::moveNurseryPtr(const ImmMaybeNurseryPtr &ptr, const Register &re
     movePtr(ptr, reg);
 }
 
+template<typename S, typename T>
+static void
+StoreToTypedFloatArray(MacroAssembler &masm, int arrayType, const S &value, const T &dest) {
+    switch (arrayType) {
+      case ScalarTypeRepresentation::TYPE_FLOAT32:
+        if (LIRGenerator::allowFloat32Optimizations()) {
+            masm.storeFloat(value, dest);
+        } else {
+#ifdef JS_MORE_DETERMINISTIC
+            // See the comment in ToDoubleForTypedArray.
+            masm.canonicalizeDouble(value);
+#endif
+            masm.convertDoubleToFloat(value, ScratchFloatReg);
+            masm.storeFloat(ScratchFloatReg, dest);
+        }
+        break;
+      case ScalarTypeRepresentation::TYPE_FLOAT64:
+#ifdef JS_MORE_DETERMINISTIC
+        // See the comment in ToDoubleForTypedArray.
+        masm.canonicalizeDouble(value);
+#endif
+        masm.storeDouble(value, dest);
+        break;
+      default:
+        MOZ_ASSUME_UNREACHABLE("Invalid typed array type");
+    }
+}
+
+void MacroAssembler::storeToTypedFloatArray(int arrayType, const FloatRegister &value, const BaseIndex &dest) {
+    StoreToTypedFloatArray(*this, arrayType, value, dest);
+}
+void MacroAssembler::storeToTypedFloatArray(int arrayType, const FloatRegister &value, const Address &dest) {
+    StoreToTypedFloatArray(*this, arrayType, value, dest);
+}
+
 template<typename T>
 void
 MacroAssembler::loadFromTypedArray(int arrayType, const T &src, AnyRegister dest, Register temp,
@@ -337,11 +373,16 @@ MacroAssembler::loadFromTypedArray(int arrayType, const T &src, AnyRegister dest
         }
         break;
       case ScalarTypeRepresentation::TYPE_FLOAT32:
-      case ScalarTypeRepresentation::TYPE_FLOAT64:
-        if (arrayType == ScalarTypeRepresentation::TYPE_FLOAT32)
+        if (LIRGenerator::allowFloat32Optimizations()) {
+            loadFloat(src, dest.fpu());
+            canonicalizeFloat(dest.fpu());
+        } else {
             loadFloatAsDouble(src, dest.fpu());
-        else
-            loadDouble(src, dest.fpu());
+            canonicalizeDouble(dest.fpu());
+        }
+        break;
+      case ScalarTypeRepresentation::TYPE_FLOAT64:
+        loadDouble(src, dest.fpu());
         canonicalizeDouble(dest.fpu());
         break;
       default:
@@ -395,6 +436,11 @@ MacroAssembler::loadFromTypedArray(int arrayType, const T &src, const ValueOpera
         }
         break;
       case ScalarTypeRepresentation::TYPE_FLOAT32:
+        loadFromTypedArray(arrayType, src, AnyRegister(ScratchFloatReg), dest.scratchReg(), NULL);
+        if (LIRGenerator::allowFloat32Optimizations())
+            convertFloatToDouble(ScratchFloatReg, ScratchFloatReg);
+        boxDouble(ScratchFloatReg, dest);
+        break;
       case ScalarTypeRepresentation::TYPE_FLOAT64:
         loadFromTypedArray(arrayType, src, AnyRegister(ScratchFloatReg), dest.scratchReg(), NULL);
         boxDouble(ScratchFloatReg, dest);
