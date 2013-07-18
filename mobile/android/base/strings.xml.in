@@ -318,4 +318,8 @@
   <string name="wallpaper_progress">&wallpaper_progress;</string>
   <string name="wallpaper_fail">&wallpaper_fail;</string>
 
+
+  <!-- Guest mode -->
+  <string name="enter_guest_mode">&enter_guest_mode;</string>
+  <string name="exit_guest_mode">&exit_guest_mode;</string>
 </resources>
