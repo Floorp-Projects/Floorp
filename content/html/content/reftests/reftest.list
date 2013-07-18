@@ -1,6 +1,5 @@
 # autofocus attribute (we can't test with mochitests)
 include autofocus/reftest.list
-include toblob-todataurl/reftest.list
 
 skip-if(B2G) == 41464-1a.html 41464-1-ref.html
 skip-if(B2G) == 41464-1b.html 41464-1-ref.html
