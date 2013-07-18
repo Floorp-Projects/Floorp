@@ -180,6 +180,11 @@ class LIRGeneratorShared : public MInstructionVisitorWithDefaults
     static bool allowStaticTypedArrayAccesses() {
         return false;
     }
+
+     // Whether we can emit Float32 specific optimizations.
+    static bool allowFloat32Optimizations() {
+       return false;
+    }
 };
 
 } // namespace jit

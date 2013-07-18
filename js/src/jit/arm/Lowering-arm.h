@@ -67,6 +67,13 @@ class LIRGeneratorARM : public LIRGeneratorShared
     LGetPropertyCacheT *newLGetPropertyCacheT(MGetPropertyCache *ins);
     LGetElementCacheT *newLGetElementCacheT(MGetElementCache *ins);
 
+    bool lowerConstantFloat32(float d, MInstruction *ins) {
+        MOZ_ASSUME_UNREACHABLE("NYI");
+    }
+    bool lowerTruncateFToInt32(MTruncateToInt32 *ins) {
+        MOZ_ASSUME_UNREACHABLE("NYI");
+    }
+
   public:
     bool visitConstant(MConstant *ins);
     bool visitBox(MBox *box);

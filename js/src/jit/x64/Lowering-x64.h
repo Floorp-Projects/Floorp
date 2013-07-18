@@ -43,6 +43,10 @@ class LIRGeneratorX64 : public LIRGeneratorX86Shared
     bool visitAsmJSStoreHeap(MAsmJSStoreHeap *ins);
     bool visitAsmJSLoadFuncPtr(MAsmJSLoadFuncPtr *ins);
     bool visitStoreTypedArrayElementStatic(MStoreTypedArrayElementStatic *ins);
+
+    static bool allowFloat32Optimizations() {
+        return true;
+    }
 };
 
 typedef LIRGeneratorX64 LIRGeneratorSpecific;

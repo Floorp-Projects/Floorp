@@ -140,6 +140,7 @@ LIRGeneratorShared::defineReturn(LInstruction *lir, MDefinition *mir)
         lir->setDef(0, LDefinition(vreg, LDefinition::BOX, LGeneralReg(JSReturnReg)));
 #endif
         break;
+      case MIRType_Float32:
       case MIRType_Double:
         lir->setDef(0, LDefinition(vreg, LDefinition::DOUBLE, LFloatReg(ReturnFloatReg)));
         break;
@@ -266,7 +267,7 @@ LIRGeneratorShared::useRegisterOrConstantAtStart(MDefinition *mir)
 LAllocation
 LIRGeneratorShared::useRegisterOrNonDoubleConstant(MDefinition *mir)
 {
-    if (mir->isConstant() && mir->type() != MIRType_Double)
+    if (mir->isConstant() && mir->type() != MIRType_Double && mir->type() != MIRType_Float32)
         return LAllocation(mir->toConstant()->vp());
     return useRegister(mir);
 }
@@ -405,7 +406,7 @@ VirtualRegisterOfPayload(MDefinition *mir)
 {
     if (mir->isBox()) {
         MDefinition *inner = mir->toBox()->getOperand(0);
-        if (!inner->isConstant() && inner->type() != MIRType_Double)
+        if (!inner->isConstant() && inner->type() != MIRType_Double && inner->type() != MIRType_Float32)
             return inner->virtualRegister();
     }
     if (mir->isTypeBarrier())

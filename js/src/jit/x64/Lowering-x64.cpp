@@ -104,10 +104,12 @@ LIRGeneratorX64::visitStoreTypedArrayElement(MStoreTypedArrayElement *ins)
     JS_ASSERT(ins->elements()->type() == MIRType_Elements);
     JS_ASSERT(ins->index()->type() == MIRType_Int32);
 
-    if (ins->isFloatArray())
-        JS_ASSERT(ins->value()->type() == MIRType_Double);
-    else
+    if (ins->isFloatArray()) {
+        JS_ASSERT_IF(ins->arrayType() == ScalarTypeRepresentation::TYPE_FLOAT32, ins->value()->type() == MIRType_Float32);
+        JS_ASSERT_IF(ins->arrayType() == ScalarTypeRepresentation::TYPE_FLOAT64, ins->value()->type() == MIRType_Double);
+    } else {
         JS_ASSERT(ins->value()->type() == MIRType_Int32);
+    }
 
     LUse elements = useRegister(ins->elements());
     LAllocation index = useRegisterOrConstant(ins->index());
@@ -122,10 +124,12 @@ LIRGeneratorX64::visitStoreTypedArrayElementHole(MStoreTypedArrayElementHole *in
     JS_ASSERT(ins->index()->type() == MIRType_Int32);
     JS_ASSERT(ins->length()->type() == MIRType_Int32);
 
-    if (ins->isFloatArray())
-        JS_ASSERT(ins->value()->type() == MIRType_Double);
-    else
+    if (ins->isFloatArray()) {
+        JS_ASSERT_IF(ins->arrayType() == ScalarTypeRepresentation::TYPE_FLOAT32, ins->value()->type() == MIRType_Float32);
+        JS_ASSERT_IF(ins->arrayType() == ScalarTypeRepresentation::TYPE_FLOAT64, ins->value()->type() == MIRType_Double);
+    } else {
         JS_ASSERT(ins->value()->type() == MIRType_Int32);
+    }
 
     LUse elements = useRegister(ins->elements());
     LAllocation length = useAnyOrConstant(ins->length());
