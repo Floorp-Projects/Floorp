@@ -7113,14 +7113,16 @@ let Reader = {
 
   getArticleForTab: function Reader_getArticleForTab(tabId, url, callback) {
     let tab = BrowserApp.getTabForId(tabId);
-    let article = tab.savedArticle;
-
-    if (article && article.url == url) {
-      this.log("Saved article found in tab");
-      callback(article);
-    } else {
-      this.parseDocumentFromURL(url, callback);
+    if (tab) {
+      let article = tab.savedArticle;
+      if (article && article.url == url) {
+        this.log("Saved article found in tab");
+        callback(article);
+        return;
+      }
     }
+
+    this.parseDocumentFromURL(url, callback);
   },
 
   parseDocumentFromTab: function(tabId, callback) {
