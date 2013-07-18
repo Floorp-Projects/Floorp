@@ -169,7 +169,6 @@ SYNC_JAVA_FILES := \
   sync/repositories/android/CachedSQLiteOpenHelper.java \
   sync/repositories/android/ClientsDatabase.java \
   sync/repositories/android/ClientsDatabaseAccessor.java \
-  sync/repositories/android/FennecControlHelper.java \
   sync/repositories/android/FennecTabsRepository.java \
   sync/repositories/android/FormHistoryRepositorySession.java \
   sync/repositories/android/PasswordsRepositorySession.java \
