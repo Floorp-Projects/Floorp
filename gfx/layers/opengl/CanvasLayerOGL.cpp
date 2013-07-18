@@ -222,7 +222,7 @@ CanvasLayerOGL::UpdateSurface()
           SharedSurface_IOSurface *ioSurf = SharedSurface_IOSurface::Cast(surf);
           mTexture = ioSurf->Texture();
           mTextureTarget = ioSurf->TextureTarget();
-          mLayerProgram = RGBARectLayerProgramType;
+          mLayerProgram = ioSurf->HasAlpha() ? RGBARectLayerProgramType : RGBXRectLayerProgramType;
           break;
         }
 #endif
@@ -323,7 +323,8 @@ CanvasLayerOGL::RenderLayer(int aPreviousDestination,
   gl()->ApplyFilterToBoundTexture(mFilter);
 
   program->Activate();
-  if (mLayerProgram == RGBARectLayerProgramType) {
+  if (mLayerProgram == RGBARectLayerProgramType ||
+      mLayerProgram == RGBXRectLayerProgramType) {
     // This is used by IOSurface that use 0,0...w,h coordinate rather then 0,0..1,1.
     program->SetTexCoordMultiplier(mBounds.width, mBounds.height);
   }
