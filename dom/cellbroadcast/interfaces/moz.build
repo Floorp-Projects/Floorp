@@ -9,7 +9,6 @@ XPIDL_SOURCES += [
     'nsIDOMMozCellBroadcast.idl',
     'nsIDOMMozCellBroadcastEvent.idl',
     'nsIDOMMozCellBroadcastMessage.idl',
-    'nsINavigatorCellBroadcast.idl',
 ]
 
 XPIDL_MODULE = 'dom_cellbroadcast'
