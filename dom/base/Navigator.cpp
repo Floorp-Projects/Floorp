@@ -39,7 +39,6 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/StaticPtr.h"
 #include "Connection.h"
-#include "nsDOMClassInfo.h"
 #include "nsDOMEvent.h"
 #include "nsGlobalWindow.h"
 #ifdef MOZ_B2G_RIL
@@ -158,7 +157,6 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(Navigator)
 #ifdef MOZ_AUDIO_CHANNEL_MANAGER
   NS_INTERFACE_MAP_ENTRY(nsIMozNavigatorAudioChannelManager)
 #endif
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(Navigator)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(Navigator)
