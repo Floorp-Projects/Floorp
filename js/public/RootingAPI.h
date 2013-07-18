@@ -11,7 +11,6 @@
 #include "mozilla/TypeTraits.h"
 
 #include "js/Utility.h"
-#include "js/TemplateLib.h"
 
 #include "jspubtd.h"
 

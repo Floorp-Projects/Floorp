@@ -9,6 +9,7 @@
 #ifndef jsinferinlines_h
 #define jsinferinlines_h
 
+#include "mozilla/MathAlgorithms.h"
 #include "mozilla/PodOperations.h"
 
 #include "jsarray.h"
@@ -970,14 +971,9 @@ TypeScript::MonitorAssign(JSContext *cx, HandleObject obj, jsid id)
         // But if we don't have too many properties yet, don't do anything.  The
         // idea here is that normal object initialization should not trigger
         // deoptimization in most cases, while actual usage as a hashmap should.
-        // Except for vanilla objects and arrays work around bug 894447 for now
-        // by deoptimizing more eagerly.  Since in those cases we often have a
-        // pc-keyed TypeObject, this is ok.
         TypeObject* type = obj->type();
-        if (!obj->is<JSObject>() && !obj->is<ArrayObject>() &&
-            type->getPropertyCount() < 8) {
+        if (type->getPropertyCount() < 8)
             return;
-        }
         MarkTypeObjectUnknownProperties(cx, type);
     }
 }
@@ -1104,9 +1100,7 @@ HashSetCapacity(unsigned count)
     if (count <= SET_ARRAY_SIZE)
         return SET_ARRAY_SIZE;
 
-    unsigned log2;
-    JS_FLOOR_LOG2(log2, count);
-    return 1 << (log2 + 2);
+    return 1 << (mozilla::FloorLog2(count) + 2);
 }
 
 /* Compute the FNV hash for the low 32 bits of v. */

@@ -26,10 +26,7 @@ DownloadManagerUI.prototype = {
   },
 
   get visible() {
-    let browser = Services.wm.getMostRecentWindow("navigator:browser");
-    if (browser) {
-      return browser.DownloadsView.visible;
-    }
+    // For now there is no Download Manager UI.
     return false;
   },
 

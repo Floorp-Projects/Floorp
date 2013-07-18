@@ -127,7 +127,7 @@ public:
                bool aMixToMono, ErrorResult& aRv);
 
   already_AddRefed<MediaStreamAudioDestinationNode>
-  CreateMediaStreamDestination();
+  CreateMediaStreamDestination(ErrorResult& aRv);
 
   already_AddRefed<ScriptProcessorNode>
   CreateScriptProcessor(uint32_t aBufferSize,

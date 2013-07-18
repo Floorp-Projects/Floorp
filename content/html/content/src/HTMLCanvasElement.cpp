@@ -31,6 +31,8 @@
 #include "nsNetUtil.h"
 #include "nsStreamUtils.h"
 
+#include "../canvas/src/WebGL2Context.h"
+
 using namespace mozilla::layers;
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Canvas)
@@ -677,6 +679,20 @@ HTMLCanvasElement::GetContextHelper(const nsAString& aContextId,
     Telemetry::Accumulate(Telemetry::CANVAS_2D_USED, 1);
     nsRefPtr<CanvasRenderingContext2D> ctx =
       new CanvasRenderingContext2D();
+
+    ctx->SetCanvasElement(this);
+    ctx.forget(aContext);
+    return NS_OK;
+  }
+  else if (WebGL2Context::IsSupported() &&
+           aContextId.EqualsLiteral("experimental-webgl2"))
+  {
+    Telemetry::Accumulate(Telemetry::CANVAS_WEBGL_USED, 1);
+    nsRefPtr<WebGL2Context> ctx = WebGL2Context::Create();
+
+    if (ctx == nullptr) {
+      return NS_ERROR_NOT_IMPLEMENTED;
+    }
 
     ctx->SetCanvasElement(this);
     ctx.forget(aContext);

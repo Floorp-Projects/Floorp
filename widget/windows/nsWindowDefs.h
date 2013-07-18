@@ -221,6 +221,28 @@ struct TITLEBARINFOEX
 };
 #endif
 
+namespace mozilla {
+namespace widget {
+
+struct MSGResult
+{
+  // Result for the message.
+  LRESULT& mResult;
+  // If mConsumed is true, the caller shouldn't call next wndproc.
+  bool mConsumed;
+
+  MSGResult(LRESULT* aResult = nullptr) :
+    mResult(aResult ? *aResult : mDefaultResult), mConsumed(false)
+  {
+  }
+
+private:
+  LRESULT mDefaultResult;
+};
+
+} // namespace widget
+} // namespace mozilla
+
 /**************************************************************
  *
  * SECTION: macros

@@ -438,7 +438,7 @@ public:
 
         JumpList(const JumpList &other)
         {
-            m_jumps.append(other.m_jumps);
+            m_jumps.appendAll(other.m_jumps);
         }
 
         JumpList &operator=(const JumpList &other)

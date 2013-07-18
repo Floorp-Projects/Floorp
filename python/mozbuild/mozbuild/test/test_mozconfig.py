@@ -171,13 +171,13 @@ class TestMozconfigLoader(unittest.TestCase):
         with NamedTemporaryFile(mode='w') as mozconfig:
             mozconfig.write('ac_add_options --enable-debug\n')
             mozconfig.write('ac_add_options --disable-tests --enable-foo\n')
-            mozconfig.write('ac_add_options --foo="bar"\n')
+            mozconfig.write('ac_add_options --foo="bar baz"\n')
             mozconfig.flush()
 
             result = self.get_loader().read_mozconfig(mozconfig.name)
             self.assertEqual(result['configure_args'], [
                 '--enable-debug', '--disable-tests', '--enable-foo',
-                '--foo=bar'])
+                '--foo=bar baz'])
 
     def test_read_ac_options_substitution(self):
         """Ensure ac_add_options values are substituted."""
@@ -213,14 +213,14 @@ class TestMozconfigLoader(unittest.TestCase):
         with NamedTemporaryFile(mode='w') as mozconfig:
             mozconfig.write('mk_add_options MOZ_OBJDIR=/foo/bar\n')
             mozconfig.write('mk_add_options MOZ_MAKE_FLAGS=-j8\n')
-            mozconfig.write('mk_add_options FOO=BAR\n')
+            mozconfig.write('mk_add_options FOO="BAR BAZ"\n')
             mozconfig.write('mk_add_options BIZ=1\n')
             mozconfig.flush()
 
             result = self.get_loader().read_mozconfig(mozconfig.name)
             self.assertEqual(result['topobjdir'], '/foo/bar')
             self.assertEqual(result['make_flags'], '-j8')
-            self.assertEqual(result['make_extra'], ['FOO=BAR', 'BIZ=1'])
+            self.assertEqual(result['make_extra'], ['FOO=BAR BAZ', 'BIZ=1'])
 
     def test_read_moz_objdir_substitution(self):
         """Ensure @TOPSRCDIR@ substitution is recognized in MOZ_OBJDIR."""
