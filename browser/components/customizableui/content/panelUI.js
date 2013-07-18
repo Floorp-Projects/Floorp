@@ -167,7 +167,8 @@ const PanelUI = {
 
     if (aPlacementArea == CustomizableUI.AREA_PANEL) {
       this.multiView.showSubView(aViewId, aAnchor);
-    } else {
+    } else if (!aAnchor.open) {
+      aAnchor.open = true;
       // Emit the ViewShowing event so that the widget definition has a chance
       // to lazily populate the subview with things.
       let evt = document.createEvent("CustomEvent");
@@ -188,15 +189,17 @@ const PanelUI = {
       multiView.setMainView(viewNode);
       CustomizableUI.addPanelCloseListeners(tempPanel);
 
-      tempPanel.addEventListener("popuphidden", function panelRemover() {
+      let panelRemover = function() {
         tempPanel.removeEventListener("popuphidden", panelRemover);
         CustomizableUI.removePanelCloseListeners(tempPanel);
         let evt = new CustomEvent("ViewHiding", {detail: viewNode});
         viewNode.dispatchEvent(evt);
+        aAnchor.open = false;
 
         this.multiView.appendChild(viewNode);
         tempPanel.parentElement.removeChild(tempPanel);
-      }.bind(this));
+      }.bind(this);
+      tempPanel.addEventListener("popuphidden", panelRemover);
 
       let iconAnchor =
         document.getAnonymousElementByAttribute(aAnchor, "class",
