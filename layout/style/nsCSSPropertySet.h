@@ -38,13 +38,11 @@ public:
           property_set_type(1) << (p % kBitsInChunk);
     }
 
-    bool RemoveProperty(nsCSSProperty aProperty) {
+    void RemoveProperty(nsCSSProperty aProperty) {
         AssertInSetRange(aProperty);
         size_t p = aProperty;
-        property_set_type prev = mProperties[p / kBitsInChunk];
         mProperties[p / kBitsInChunk] &=
             ~(property_set_type(1) << (p % kBitsInChunk));
-        return prev != mProperties[p / kBitsInChunk];
     }
 
     bool HasProperty(nsCSSProperty aProperty) const {

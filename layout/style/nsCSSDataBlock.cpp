@@ -445,30 +445,26 @@ nsCSSExpandedDataBlock::Clear()
     AssertInitialState();
 }
 
-bool
+void
 nsCSSExpandedDataBlock::ClearProperty(nsCSSProperty aPropID)
 {
-  bool cleared = false;
-
   if (nsCSSProps::IsShorthand(aPropID)) {
     CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(p, aPropID) {
-      cleared = ClearLonghandProperty(*p) || cleared;
+      ClearLonghandProperty(*p);
     }
   } else {
-    cleared = ClearLonghandProperty(aPropID);
+    ClearLonghandProperty(aPropID);
   }
-
-  return cleared;
 }
 
-bool
+void
 nsCSSExpandedDataBlock::ClearLonghandProperty(nsCSSProperty aPropID)
 {
     NS_ABORT_IF_FALSE(!nsCSSProps::IsShorthand(aPropID), "out of range");
 
+    ClearPropertyBit(aPropID);
     ClearImportantBit(aPropID);
     PropertyAt(aPropID)->Reset();
-    return ClearPropertyBit(aPropID);
 }
 
 bool

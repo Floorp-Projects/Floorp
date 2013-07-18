@@ -273,7 +273,7 @@ nsresult
 nsDOMCSSDeclaration::RemoveProperty(const nsCSSProperty aPropID)
 {
   css::Declaration* decl = GetCSSDeclaration(false);
-  if (!decl || decl->Count() == 0) {
+  if (!decl) {
     return NS_OK; // no decl, so nothing to remove
   }
 
@@ -284,13 +284,7 @@ nsDOMCSSDeclaration::RemoveProperty(const nsCSSProperty aPropID)
   // rule (see stack in bug 209575).
   mozAutoDocConditionalContentUpdateBatch autoUpdate(DocToUpdate(), true);
 
-  css::Declaration* mutableDecl = decl->EnsureMutable();
-  if (!mutableDecl->RemoveProperty(aPropID)) {
-    if (mutableDecl != decl) {
-      delete mutableDecl;
-    }
-    return NS_OK; // nothing removed
-  }
-
-  return SetCSSDeclaration(mutableDecl);
+  decl = decl->EnsureMutable();
+  decl->RemoveProperty(aPropID);
+  return SetCSSDeclaration(decl);
 }
