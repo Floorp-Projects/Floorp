@@ -1101,7 +1101,7 @@ inline void
 SHAPE_STORE_PRESERVING_COLLISION(js::Shape **spp, js::Shape *shape)
 {
     *spp = reinterpret_cast<js::Shape*>(uintptr_t(shape) |
-                                        SHAPE_HAD_COLLISION(*spp));
+                                        uintptr_t(SHAPE_HAD_COLLISION(*spp)));
 }
 
 namespace js {
