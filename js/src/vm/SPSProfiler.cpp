@@ -205,8 +205,6 @@ SPSProfiler::pop()
 const char*
 SPSProfiler::allocProfileString(JSContext *cx, JSScript *script, JSFunction *maybeFun)
 {
-    // Note: this profiler string is regexp-matched by
-    // browser/devtools/profiler/cleopatra/js/parserWorker.js.
     DebugOnly<uint64_t> gcBefore = cx->runtime()->gcNumber;
     StringBuffer buf(cx);
     bool hasAtom = maybeFun != NULL && maybeFun->displayAtom() != NULL;
