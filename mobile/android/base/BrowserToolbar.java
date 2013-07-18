@@ -11,14 +11,14 @@ import org.mozilla.gecko.gfx.ImmutableViewportMetrics;
 import org.mozilla.gecko.gfx.LayerView;
 import org.mozilla.gecko.menu.GeckoMenu;
 import org.mozilla.gecko.menu.MenuPopup;
+import org.mozilla.gecko.PageActionLayout;
+import org.mozilla.gecko.PrefsHelper;
 import org.mozilla.gecko.util.Clipboard;
 import org.mozilla.gecko.util.StringUtils;
 import org.mozilla.gecko.util.HardwareUtils;
-
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.util.UiAsyncTask;
-
-import org.mozilla.gecko.PrefsHelper;
+import org.mozilla.gecko.util.GeckoEventListener;
 
 import org.json.JSONObject;
 
@@ -63,14 +63,14 @@ import android.widget.RelativeLayout;
 import android.widget.RelativeLayout.LayoutParams;
 import android.widget.ViewSwitcher;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 public class BrowserToolbar extends GeckoRelativeLayout
                             implements Tabs.OnTabsChangedListener,
                                        GeckoMenu.ActionItemBarPresenter,
-                                       Animation.AnimationListener {
+                                       Animation.AnimationListener,
+                                       GeckoEventListener {
     private static final String LOGTAG = "GeckoToolbar";
     public static final String PREF_TITLEBAR_MODE = "browser.chrome.titlebarMode";
     private LayoutParams mAwesomeBarParams;
@@ -88,7 +88,7 @@ public class BrowserToolbar extends GeckoRelativeLayout
     public ImageButton mFavicon;
     public ImageButton mStop;
     public ImageButton mSiteSecurity;
-    public ImageButton mReader;
+    public PageActionLayout mPageActionLayout;
     private AnimationDrawable mProgressSpinner;
     private TabCounter mTabsCounter;
     private ImageView mShadow;
@@ -183,6 +183,9 @@ public class BrowserToolbar extends GeckoRelativeLayout
         mDomainColor = new ForegroundColorSpan(res.getColor(R.color.url_bar_domaintext));
         mPrivateDomainColor = new ForegroundColorSpan(res.getColor(R.color.url_bar_domaintext_private));
 
+        registerEventListener("Reader:Click");
+        registerEventListener("Reader:LongClick");
+
         mShowSiteSecurity = false;
         mShowReader = false;
 
@@ -221,8 +224,8 @@ public class BrowserToolbar extends GeckoRelativeLayout
         mProgressSpinner = (AnimationDrawable) res.getDrawable(R.drawable.progress_spinner);
 
         mStop = (ImageButton) findViewById(R.id.stop);
-        mReader = (ImageButton) findViewById(R.id.reader);
         mShadow = (ImageView) findViewById(R.id.shadow);
+        mPageActionLayout = (PageActionLayout) findViewById(R.id.page_action_layout);
 
         if (Build.VERSION.SDK_INT >= 16) {
             mShadow.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
@@ -237,9 +240,9 @@ public class BrowserToolbar extends GeckoRelativeLayout
         // order appropriately.
         if (HardwareUtils.isTablet()) {
             mFocusOrder = Arrays.asList(mTabs, mBack, mForward, this,
-                    mSiteSecurity, mReader, mStop, mActionItemBar, mMenu);
+                    mSiteSecurity, mPageActionLayout, mStop, mActionItemBar, mMenu);
         } else {
-            mFocusOrder = Arrays.asList(this, mSiteSecurity, mReader, mStop,
+            mFocusOrder = Arrays.asList(this, mSiteSecurity, mPageActionLayout, mStop,
                     mTabs, mMenu);
         }
     }
@@ -353,28 +356,6 @@ public class BrowserToolbar extends GeckoRelativeLayout
             }
         });
 
-        mReader.setOnClickListener(new Button.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Tab tab = Tabs.getInstance().getSelectedTab();
-                if (tab != null) {
-                    tab.toggleReaderMode();
-                }
-            }
-        });
-
-        mReader.setOnLongClickListener(new Button.OnLongClickListener() {
-            public boolean onLongClick(View v) {
-                Tab tab = Tabs.getInstance().getSelectedTab();
-                if (tab != null) {
-                    tab.addToReadingList();
-                    return true;
-                }
-
-                return false;
-            }
-        });
-
         mShadow.setOnClickListener(new Button.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -474,7 +455,7 @@ public class BrowserToolbar extends GeckoRelativeLayout
                     if (showProgress && tab.getState() == Tab.STATE_LOADING)
                         setProgressVisibility(true);
                     setSecurityMode(tab.getSecurityMode());
-                    setReaderMode(tab.getReaderEnabled());
+                    setPageActionVisibility(mStop.getVisibility() == View.VISIBLE);
                 }
                 break;
             case STOP:
@@ -519,7 +500,7 @@ public class BrowserToolbar extends GeckoRelativeLayout
                 break;
             case READER_ENABLED:
                 if (Tabs.getInstance().isSelectedTab(tab)) {
-                    setReaderMode(tab.getReaderEnabled());
+                    setPageActionVisibility(mStop.getVisibility() == View.VISIBLE);
                 }
                 break;
         }
@@ -537,7 +518,7 @@ public class BrowserToolbar extends GeckoRelativeLayout
         mFavicon.setNextFocusDownId(nextId);
         mStop.setNextFocusDownId(nextId);
         mSiteSecurity.setNextFocusDownId(nextId);
-        mReader.setNextFocusDownId(nextId);
+        mPageActionLayout.setNextFocusDownId(nextId);
         mMenu.setNextFocusDownId(nextId);
     }
 
@@ -613,7 +594,7 @@ public class BrowserToolbar extends GeckoRelativeLayout
                 ViewHelper.setTranslationX(mMenuIcon, curveTranslation);
             }
 
-            ViewHelper.setAlpha(mReader, 0);
+            ViewHelper.setAlpha(mPageActionLayout, 0);
             ViewHelper.setAlpha(mStop, 0);
         }
 
@@ -661,7 +642,7 @@ public class BrowserToolbar extends GeckoRelativeLayout
 
                 // Fade toolbar buttons (reader, stop) after the entry
                 // is schrunk back to its original size.
-                buttonsAnimator.attach(mReader,
+                buttonsAnimator.attach(mPageActionLayout,
                                        PropertyAnimator.Property.ALPHA,
                                        1);
                 buttonsAnimator.attach(mStop,
@@ -708,7 +689,7 @@ public class BrowserToolbar extends GeckoRelativeLayout
         setSelected(true);
 
         // Hide stop/reader buttons immediately
-        ViewHelper.setAlpha(mReader, 0);
+        ViewHelper.setAlpha(mPageActionLayout, 0);
         ViewHelper.setAlpha(mStop, 0);
 
         // Slide the right side elements of the toolbar
@@ -827,22 +808,16 @@ public class BrowserToolbar extends GeckoRelativeLayout
         // Handle the viewing mode page actions
         setSiteSecurityVisibility(mShowSiteSecurity && !isLoading);
 
-        // Handle the readerMode image and visibility: We show the reader mode button if 1) you can
-        // enter reader mode for current page or 2) if you're already in reader mode,
-        // in which case we show the reader mode "close" (reader_active) icon.
         boolean inReaderMode = false;
         Tab tab = Tabs.getInstance().getSelectedTab();
         if (tab != null)
             inReaderMode = ReaderModeUtils.isAboutReader(tab.getURL());
-        mReader.setImageResource(inReaderMode ? R.drawable.reader_active : R.drawable.reader);
 
-        mReader.setVisibility(!isLoading && (mShowReader || inReaderMode) ? View.VISIBLE : View.GONE);
-
+        mPageActionLayout.setVisibility(!isLoading ? View.VISIBLE : View.GONE);
         // We want title to fill the whole space available for it when there are icons
         // being shown on the right side of the toolbar as the icons already have some
         // padding in them. This is just to avoid wasting space when icons are shown.
         mTitle.setPadding(0, 0, (!isLoading && !(mShowReader || inReaderMode) ? mTitlePadding : 0), 0);
-
         updateFocusOrder();
     }
 
@@ -926,7 +901,7 @@ public class BrowserToolbar extends GeckoRelativeLayout
         String url = tab.getURL();
 
         // Only set shadow to visible when not on about screens except about:blank.
-        visible &= !(url == null || (url.startsWith("about:") && 
+        visible &= !(url == null || (url.startsWith("about:") &&
                      !url.equals("about:blank")));
 
         if ((mShadow.getVisibility() == View.VISIBLE) != visible) {
@@ -994,11 +969,6 @@ public class BrowserToolbar extends GeckoRelativeLayout
         mSiteSecurity.setImageLevel(imageLevel);
         mShowSiteSecurity = (imageLevel != SiteIdentityPopup.LEVEL_UKNOWN);
 
-        setPageActionVisibility(mStop.getVisibility() == View.VISIBLE);
-    }
-
-    private void setReaderMode(boolean showReader) {
-        mShowReader = showReader;
         setPageActionVisibility(mStop.getVisibility() == View.VISIBLE);
     }
 
@@ -1162,7 +1132,7 @@ public class BrowserToolbar extends GeckoRelativeLayout
             setFavicon(tab.getFavicon());
             setProgressVisibility(tab.getState() == Tab.STATE_LOADING);
             setSecurityMode(tab.getSecurityMode());
-            setReaderMode(tab.getReaderEnabled());
+            setPageActionVisibility(mStop.getVisibility() == View.VISIBLE);
             setShadowVisibility(true);
             updateBackButton(tab.canDoBack());
             updateForwardButton(tab.canDoForward());
@@ -1189,6 +1159,9 @@ public class BrowserToolbar extends GeckoRelativeLayout
              mPrefObserverId = null;
         }
         Tabs.unregisterOnTabsChangedListener(this);
+
+        unregisterEventListener("Reader:Click");
+        unregisterEventListener("Reader:LongClick");
     }
 
     public boolean openOptionsMenu() {
@@ -1224,5 +1197,28 @@ public class BrowserToolbar extends GeckoRelativeLayout
             mMenuPopup.dismiss();
 
         return true;
+    }
+
+    protected void registerEventListener(String event) {
+        GeckoAppShell.getEventDispatcher().registerEventListener(event, this);
+    }
+
+    protected void unregisterEventListener(String event) {
+        GeckoAppShell.getEventDispatcher().unregisterEventListener(event, this);
+    }
+
+    @Override
+    public void handleMessage(String event, JSONObject message) {
+        if (event.equals("Reader:Click")) {
+            Tab tab = Tabs.getInstance().getSelectedTab();
+            if (tab != null) {
+                tab.toggleReaderMode();
+            }
+        } else if (event.equals("Reader:LongClick")) {
+            Tab tab = Tabs.getInstance().getSelectedTab();
+            if (tab != null) {
+                tab.addToReadingList();
+            }
+        }
     }
 }

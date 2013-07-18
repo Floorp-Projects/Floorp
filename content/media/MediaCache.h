@@ -345,7 +345,10 @@ public:
   // this will block until the data is available or the stream is
   // closed, otherwise it won't block.
   nsresult Read(char* aBuffer, uint32_t aCount, uint32_t* aBytes);
-
+  // Seeks to aOffset in the stream then performs a Read operation. See
+  // 'Read' for argument and return details.
+  nsresult ReadAt(int64_t aOffset, char* aBuffer,
+                  uint32_t aCount, uint32_t* aBytes);
 private:
   friend class MediaCache;
 

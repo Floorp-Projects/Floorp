@@ -20,7 +20,13 @@
     <vbox class="profiler-sidebar">
       <toolbar class="devtools-toolbar">
         <hbox id="profiler-controls">
-          <toolbarbutton id="profiler-start" class="devtools-toolbarbutton"/>
+          <toolbarbutton id="profiler-start"
+            class="devtools-toolbarbutton"
+            disabled="true"/>
+          <toolbarbutton id="profiler-import"
+            class="devtools-toolbarbutton"
+            disabled="true"
+            label="&importProfile.label;"/>
         </hbox>
       </toolbar>
 

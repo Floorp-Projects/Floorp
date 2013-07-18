@@ -5,7 +5,7 @@
 
 /* Test product/channel MAR security check */
 
-const TEST_ID = "0114";
+const TEST_ID = "0114-PCC";
 
 // We don't actually care if the MAR has any data, we only care about the
 // application return code and update.status result.
@@ -17,6 +17,8 @@ function run_test() {
   if (!IS_MAR_CHECKS_ENABLED) {
     return;
   }
+
+  adjustGeneralPaths();
 
   // Setup a wrong channel MAR file
   do_register_cleanup(cleanupUpdaterTest);

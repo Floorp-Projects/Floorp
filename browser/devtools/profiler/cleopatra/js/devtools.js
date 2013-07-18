@@ -4,6 +4,7 @@
 
 var gInstanceUID;
 var gParsedQS;
+var gHideSourceLinks;
 
 function getParam(key) {
   if (gParsedQS)
@@ -93,6 +94,7 @@ window.addEventListener("message", onParentMessage);
  * in the light mode and creates all the UI we need.
  */
 function initUI() {
+  gHideSourceLinks = getParam("ext") === "true";
   gLightMode = true;
 
   gFileList = { profileParsingFinished: function () {} };
@@ -106,25 +108,6 @@ function initUI() {
 
   container.appendChild(gMainArea);
   document.body.appendChild(container);
-
-  var startButton = document.createElement("button");
-  startButton.innerHTML = gStrings.getStr("profiler.start");
-  startButton.addEventListener("click", function (event) {
-    event.target.setAttribute("disabled", true);
-    notifyParent("start");
-  }, false);
-
-  var stopButton = document.createElement("button");
-  stopButton.innerHTML = gStrings.getStr("profiler.stop");
-  stopButton.addEventListener("click", function (event) {
-    event.target.setAttribute("disabled", true);
-    notifyParent("stop");
-  }, false);
-
-  var message = document.createElement("div");
-  message.className = "message";
-  message.innerHTML = "To start profiling click the button above.";
-  gMainArea.appendChild(message);
 }
 
 /**
@@ -224,7 +207,8 @@ function enterFinishedProfileUI() {
     }
   }
 
-  if (getParam("showPlatformData") !== "true")
+  // Show platform data?
+  if (getParam("spd") !== "true")
     toggleJavascriptOnly();
 }
 
