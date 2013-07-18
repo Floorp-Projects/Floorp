@@ -492,20 +492,6 @@
         <item name="android:paddingRight">10dip</item>
     </style>
 
-    <style name="AboutHome.LastTabRow" />
-
-    <style name="AboutHome.LastTabRow.Title">
-        <item name="android:textSize">16sp</item>
-        <item name="android:singleLine">true</item>
-        <item name="android:textColor">@color/abouthome_section_title</item>
-    </style>
-
-    <style name="AboutHome.LastTabRow.Url">
-        <item name="android:textSize">12sp</item>
-        <item name="android:singleLine">true</item>
-        <item name="android:textColor">@color/abouthome_section_subtitle</item>
-    </style>
-
     <style name="AboutHome.EmptyMessage">
         <item name="android:textAppearance">@style/AboutHome.TextAppearance.PageTitle</item>
         <item name="android:gravity">center</item>
