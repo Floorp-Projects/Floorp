@@ -48,6 +48,10 @@ interface WebGL2RenderingContext : WebGLRenderingContext {
     /* vertex array objects */
     const GLenum VERTEX_ARRAY_BINDING        = 0x85B5;
 
+    /* blend equations */
+    const GLenum MIN                         = 0x8007;
+    const GLenum MAX                         = 0x8008;
+
 
     void bindVertexArray(WebGLVertexArray? arrayObject);
     WebGLVertexArray? createVertexArray();
