@@ -100,16 +100,10 @@ public:
                      : JS::UndefinedValue();
     aRv = ToDataURL(aType, params, aCx, aDataURL);
   }
-  void ToBlob(JSContext* aCx,
-              nsIFileCallback* aCallback,
-              const nsAString& aType,
-              const Optional<JS::Handle<JS::Value> >& aParams,
+  void ToBlob(nsIFileCallback* aCallback, const nsAString& aType,
               ErrorResult& aRv)
   {
-    JS::Value params = aParams.WasPassed()
-                     ? aParams.Value()
-                     : JS::UndefinedValue();
-    aRv = ToBlob(aCallback, aType, params, aCx);
+    aRv = ToBlob(aCallback, aType);
   }
 
   bool MozOpaque() const
@@ -233,11 +227,6 @@ protected:
   nsIntSize GetWidthHeight();
 
   nsresult UpdateContext(JSContext* aCx, JS::Handle<JS::Value> options);
-  nsresult ParseParams(JSContext* aCx,
-                       const nsAString& aType,
-                       const JS::Value& aEncoderOptions,
-                       nsAString& aParams,
-                       bool* usingCustomParseOptions);
   nsresult ExtractData(const nsAString& aType,
                        const nsAString& aOptions,
                        nsIInputStream** aStream,
