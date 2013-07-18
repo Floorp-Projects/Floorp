@@ -27,8 +27,7 @@ import android.view.ViewGroup;
 
 public class AboutHome extends Fragment {
     public static enum UpdateFlags {
-        TOP_SITES,
-        PREVIOUS_TABS;
+        TOP_SITES;
 
         public static final EnumSet<UpdateFlags> ALL = EnumSet.allOf(UpdateFlags.class);
     }
@@ -38,7 +37,6 @@ public class AboutHome extends Fragment {
     private LightweightTheme mLightweightTheme;
     private int mTopPadding;
     private AboutHomeView mAboutHomeView;
-    private LastTabsSection mLastTabsSection;
     private TopSitesView mTopSitesView;
     private ScrollAnimator mScrollAnimator;
 
@@ -89,7 +87,6 @@ public class AboutHome extends Fragment {
         super.onCreateView(inflater, container, savedInstanceState);
 
         mAboutHomeView = (AboutHomeView) inflater.inflate(R.layout.abouthome_content, container, false);
-        mLastTabsSection = (LastTabsSection) mAboutHomeView.findViewById(R.id.last_tabs);
         mTopSitesView = (TopSitesView) mAboutHomeView.findViewById(R.id.top_sites_grid);
 
         mAboutHomeView.setLightweightTheme(mLightweightTheme);
@@ -128,7 +125,6 @@ public class AboutHome extends Fragment {
         mScrollAnimator = null;
 
         mAboutHomeView = null;
-        mLastTabsSection = null;
         mTopSitesView = null;
 
         super.onDestroyView();
@@ -195,21 +191,6 @@ public class AboutHome extends Fragment {
         if (flags.contains(UpdateFlags.TOP_SITES)) {
             mTopSitesView.loadTopSites();
         }
-
-        if (flags.contains(UpdateFlags.PREVIOUS_TABS)) {
-            mLastTabsSection.readLastTabs();
-        }
-    }
-
-    public void setLastTabsVisibility(boolean visible) {
-        if (mAboutHomeView == null) {
-            return;
-        }
-
-        if (visible)
-            mLastTabsSection.show();
-        else
-            mLastTabsSection.hide();
     }
 
     public void requestFocus() {
