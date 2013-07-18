@@ -867,10 +867,10 @@ struct SelectPointersVisitor
     void
     Visit(nsPurpleBuffer &aBuffer, nsPurpleBufferEntry *aEntry)
     {
-        MOZ_ASSERT(!(aEntry->mObject && !aEntry->mRefCnt->get()),
+        MOZ_ASSERT(aEntry->mObject, "Null object in purple buffer");
+        MOZ_ASSERT(aEntry->mRefCnt->get() != 0,
                    "SelectPointersVisitor: snow-white object in the purple buffer");
-        if (!aEntry->mObject ||
-            !aEntry->mRefCnt->IsPurple() ||
+        if (!aEntry->mRefCnt->IsPurple() ||
             AddPurpleRoot(mBuilder, aEntry->mObject, aEntry->mParticipant)) {
             aBuffer.Remove(aEntry);
         }
@@ -2176,7 +2176,8 @@ public:
     void
     Visit(nsPurpleBuffer& aBuffer, nsPurpleBufferEntry* aEntry)
     {
-        if (aEntry->mObject && !aEntry->mRefCnt->get()) {
+        MOZ_ASSERT(aEntry->mObject, "Null object in purple buffer");
+        if (!aEntry->mRefCnt->get()) {
             void *o = aEntry->mObject;
             nsCycleCollectionParticipant *cp = aEntry->mParticipant;
             CanonicalizeParticipant(&o, &cp);
@@ -2216,18 +2217,17 @@ public:
     void
     Visit(nsPurpleBuffer &aBuffer, nsPurpleBufferEntry *aEntry)
     {
-        if (aEntry->mObject) {
-            if (!aEntry->mRefCnt->get()) {
-              SnowWhiteKiller::Visit(aBuffer, aEntry);
-              return;
-            }
-            void *o = aEntry->mObject;
-            nsCycleCollectionParticipant *cp = aEntry->mParticipant;
-            CanonicalizeParticipant(&o, &cp);
-            if (aEntry->mRefCnt->IsPurple() && !cp->CanSkip(o, false) &&
-                (!mRemoveChildlessNodes || MayHaveChild(o, cp))) {
-                return;
-            }
+        MOZ_ASSERT(aEntry->mObject, "null mObject in purple buffer");
+        if (!aEntry->mRefCnt->get()) {
+            SnowWhiteKiller::Visit(aBuffer, aEntry);
+            return;
+        }
+        void *o = aEntry->mObject;
+        nsCycleCollectionParticipant *cp = aEntry->mParticipant;
+        CanonicalizeParticipant(&o, &cp);
+        if (aEntry->mRefCnt->IsPurple() && !cp->CanSkip(o, false) &&
+            (!mRemoveChildlessNodes || MayHaveChild(o, cp))) {
+            return;
         }
         aBuffer.Remove(aEntry);
     }
