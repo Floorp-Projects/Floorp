@@ -262,7 +262,6 @@ FENNEC_JAVA_FILES = \
   widget/GeckoPopupMenu.java \
   widget/GeckoActionProvider.java \
   widget/IconTabWidget.java \
-  widget/LinkTextView.java \
   widget/PromoBox.java \
   widget/TabRow.java \
   widget/ThumbnailView.java \
@@ -1029,7 +1028,6 @@ RES_DRAWABLE_XLARGE_XHDPI_V11 = \
   $(NULL)
 
 RES_COLOR = \
-  res/color/abouthome_section_more_text.xml \
   res/color/abouthome_section_subtitle.xml \
   res/color/abouthome_section_title.xml \
   res/color/primary_text.xml \
@@ -1045,7 +1043,6 @@ RES_COLOR = \
   $(NULL)
 
 RES_MENU = \
-  res/menu/abouthome_topsites_contextmenu.xml \
   res/menu/browser_app_menu.xml \
   res/menu/gecko_app_menu.xml \
   res/menu/home_contextmenu.xml \
