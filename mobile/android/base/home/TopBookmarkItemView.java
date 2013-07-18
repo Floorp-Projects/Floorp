@@ -205,7 +205,7 @@ public class TopBookmarkItemView extends RelativeLayout {
      */
     private Drawable getPinDrawable() {
         if (sPinDrawable == null) {
-            int size = getResources().getDimensionPixelSize(R.dimen.abouthome_topsite_pinsize);
+            int size = getResources().getDimensionPixelSize(R.dimen.top_bookmark_pinsize);
 
             // Draw a little triangle in the upper right corner.
             Path path = new Path();
@@ -216,7 +216,7 @@ public class TopBookmarkItemView extends RelativeLayout {
 
             sPinDrawable = new ShapeDrawable(new PathShape(path, size, size));
             Paint p = ((ShapeDrawable) sPinDrawable).getPaint();
-            p.setColor(getResources().getColor(R.color.abouthome_topsite_pin));
+            p.setColor(getResources().getColor(R.color.top_bookmark_pin));
         }
 
         return sPinDrawable;

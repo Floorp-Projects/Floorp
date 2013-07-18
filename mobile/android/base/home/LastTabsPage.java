@@ -101,7 +101,7 @@ public class LastTabsPage extends HomeFragment {
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
         final TextView title = (TextView) view.findViewById(R.id.title);
-        title.setText(R.string.abouthome_last_tabs_title);
+        title.setText(R.string.home_last_tabs_title);
 
         mList = (ListView) view.findViewById(R.id.list);
 
