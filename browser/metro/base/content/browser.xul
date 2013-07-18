@@ -280,10 +280,14 @@
                      completeselectedindex="true"
                      placeholder="&urlbar.emptytext;"/>
 
-            <toolbarbutton id="reload-button" oncommand="
-              CommandUpdater.doCommand(event.shiftKey ? 'cmd_forceReload'
-                                                      : 'cmd_reload');"/>
-            <toolbarbutton id="stop-button" command="cmd_stop"/>
+            <toolbarbutton id="go-button" class="urlbar-button"
+                           command="cmd_go"/>
+            <toolbarbutton id="reload-button" class="urlbar-button"
+                           oncommand="CommandUpdater.doCommand(
+                                        event.shiftKey ? 'cmd_forceReload'
+                                                       : 'cmd_reload');"/>
+            <toolbarbutton id="stop-button" class="urlbar-button"
+                           command="cmd_stop"/>
           </hbox>
 
           <toolbarbutton id="download-button" class="appbar-secondary"
