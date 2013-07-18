@@ -554,8 +554,6 @@ abstract public class GeckoApp
             } else if (event.equals("Reader:FaviconRequest")) {
                 final String url = message.getString("url");
                 handleFaviconRequest(url);
-            } else if (event.equals("Reader:GoToReadingList")) {
-                showReadingList();
             } else if (event.equals("Gecko:Ready")) {
                 mGeckoReadyStartupTimer.stop();
                 geckoConnected();
@@ -1491,7 +1489,6 @@ abstract public class GeckoApp
         registerEventListener("Reader:Removed");
         registerEventListener("Reader:Share");
         registerEventListener("Reader:FaviconRequest");
-        registerEventListener("Reader:GoToReadingList");
         registerEventListener("onCameraCapture");
         registerEventListener("Menu:Add");
         registerEventListener("Menu:Remove");
@@ -2033,7 +2030,6 @@ abstract public class GeckoApp
         unregisterEventListener("Reader:Removed");
         unregisterEventListener("Reader:Share");
         unregisterEventListener("Reader:FaviconRequest");
-        unregisterEventListener("Reader:GoToReadingList");
         unregisterEventListener("onCameraCapture");
         unregisterEventListener("Menu:Add");
         unregisterEventListener("Menu:Remove");
@@ -2275,10 +2271,6 @@ abstract public class GeckoApp
 
     public PromptService getPromptService() {
         return mPromptService;
-    }
-
-    public void showReadingList() {
-        // FIXME: bug 862798 (also, this probably belong in BrowserApp)
     }
 
     @Override
