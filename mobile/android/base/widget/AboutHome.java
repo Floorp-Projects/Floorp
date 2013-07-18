@@ -26,18 +26,11 @@ import android.view.View;
 import android.view.ViewGroup;
 
 public class AboutHome extends Fragment {
-    public static enum UpdateFlags {
-        TOP_SITES;
-
-        public static final EnumSet<UpdateFlags> ALL = EnumSet.allOf(UpdateFlags.class);
-    }
-
     private UriLoadListener mUriLoadListener;
     private LoadCompleteListener mLoadCompleteListener;
     private LightweightTheme mLightweightTheme;
     private int mTopPadding;
     private AboutHomeView mAboutHomeView;
-    private TopSitesView mTopSitesView;
     private ScrollAnimator mScrollAnimator;
 
     public interface UriLoadListener {
@@ -87,7 +80,6 @@ public class AboutHome extends Fragment {
         super.onCreateView(inflater, container, savedInstanceState);
 
         mAboutHomeView = (AboutHomeView) inflater.inflate(R.layout.abouthome_content, container, false);
-        mTopSitesView = (TopSitesView) mAboutHomeView.findViewById(R.id.top_sites_grid);
 
         mAboutHomeView.setLightweightTheme(mLightweightTheme);
         mLightweightTheme.addListener(mAboutHomeView);
@@ -108,16 +100,11 @@ public class AboutHome extends Fragment {
 
         view.setPadding(0, mTopPadding, 0, 0);
         ((PromoBox) view.findViewById(R.id.promo_box)).showRandomPromo();
-        update(AboutHome.UpdateFlags.ALL);
-
-        mTopSitesView.setLoadCompleteListener(mLoadCompleteListener);
-        mTopSitesView.setUriLoadListener(mUriLoadListener);
     }
 
     @Override
     public void onDestroyView() {
         mLightweightTheme.removeListener(mAboutHomeView);
-        mTopSitesView.onDestroy();
 
         if (mScrollAnimator != null) {
             mScrollAnimator.cancel();
@@ -125,7 +112,6 @@ public class AboutHome extends Fragment {
         mScrollAnimator = null;
 
         mAboutHomeView = null;
-        mTopSitesView = null;
 
         super.onDestroyView();
     }
@@ -147,49 +133,6 @@ public class AboutHome extends Fragment {
                                 .detach(this)
                                 .attach(this)
                                 .commitAllowingStateLoss();
-        }
-    }
-
-    @Override
-    public boolean onContextItemSelected(MenuItem item) {
-        ContextMenuInfo info = item.getMenuInfo();
-
-        if (getView() == null) {
-            return true;
-        }
-
-        switch (item.getItemId()) {
-            case R.id.abouthome_open_new_tab:
-                mTopSitesView.openNewTab(info);
-                return true;
-
-            case R.id.abouthome_open_private_tab:
-                mTopSitesView.openNewPrivateTab(info);
-                return true;
-
-            case R.id.abouthome_topsites_edit:
-                mTopSitesView.editSite(info);
-                return true;
-
-            case R.id.abouthome_topsites_unpin:
-                mTopSitesView.unpinSite(info, TopSitesView.UnpinFlags.REMOVE_PIN);
-                return true;
-
-            case R.id.abouthome_topsites_pin:
-                mTopSitesView.pinSite(info);
-                return true;
-
-        }
-        return super.onContextItemSelected(item);
-    }
-
-    public void update(final EnumSet<UpdateFlags> flags) {
-        if (getView() == null) {
-            return;
-        }
-
-        if (flags.contains(UpdateFlags.TOP_SITES)) {
-            mTopSitesView.loadTopSites();
         }
     }
 
