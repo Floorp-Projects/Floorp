@@ -393,14 +393,16 @@ AppInfoProvider.prototype = Object.freeze({
   },
 
   collectDailyData: function () {
-    let m = this.getMeasurement(AppUpdateMeasurement1.prototype.name,
-                                AppUpdateMeasurement1.prototype.version);
+    return this.storage.enqueueTransaction(function getDaily() {
+      let m = this.getMeasurement(AppUpdateMeasurement1.prototype.name,
+                                  AppUpdateMeasurement1.prototype.version);
 
-    let enabled = this._prefs.get("app.update.enabled", false);
-    yield m.setDailyLastNumeric("enabled", enabled ? 1 : 0);
+      let enabled = this._prefs.get("app.update.enabled", false);
+      yield m.setDailyLastNumeric("enabled", enabled ? 1 : 0);
 
-    let auto = this._prefs.get("app.update.auto", false);
-    yield m.setDailyLastNumeric("autoDownload", auto ? 1 : 0);
+      let auto = this._prefs.get("app.update.auto", false);
+      yield m.setDailyLastNumeric("autoDownload", auto ? 1 : 0);
+    }.bind(this));
   },
 });
 
