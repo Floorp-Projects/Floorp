@@ -61,9 +61,17 @@ MacroAssemblerARM::convertUInt32ToDouble(const Register &src, const FloatRegiste
 {
     // direct conversions aren't possible.
     VFPRegister dest = VFPRegister(dest_);
-    as_vxfer(src, InvalidReg, dest.uintOverlay(),
-             CoreToFloat);
+    as_vxfer(src, InvalidReg, dest.uintOverlay(), CoreToFloat);
     as_vcvt(dest, dest.uintOverlay());
+}
+
+void
+MacroAssemblerARM::convertUInt32ToFloat32(const Register &src, const FloatRegister &dest_)
+{
+    // direct conversions aren't possible.
+    VFPRegister dest = VFPRegister(dest_);
+    as_vxfer(src, InvalidReg, dest.uintOverlay(), CoreToFloat);
+    as_vcvt(VFPRegister(dest).singleOverlay(), dest.uintOverlay());
 }
 
 void MacroAssemblerARM::convertDoubleToFloat(const FloatRegister &src, const FloatRegister &dest)

@@ -20,7 +20,8 @@
     _(ModPowTwoI)               \
     _(ModMaskI)                 \
     _(PowHalfD)                 \
-    _(UInt32ToDouble)           \
+    _(AsmJSUInt32ToDouble)      \
+    _(AsmJSUInt32ToFloat32)     \
     _(UDiv)                     \
     _(UMod)                     \
     _(SoftUDivOrMod)            \

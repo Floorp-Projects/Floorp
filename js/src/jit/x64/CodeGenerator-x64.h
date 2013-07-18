@@ -60,6 +60,7 @@ class CodeGeneratorX64 : public CodeGeneratorX86Shared
     bool visitAsmJSLoadFuncPtr(LAsmJSLoadFuncPtr *ins);
     bool visitAsmJSLoadFFIFunc(LAsmJSLoadFFIFunc *ins);
     bool visitAsmJSUInt32ToDouble(LAsmJSUInt32ToDouble *lir);
+    bool visitAsmJSUInt32ToFloat32(LAsmJSUInt32ToFloat32 *lir);
 
     void postAsmJSCall(LAsmJSCall *lir) {}
 };
