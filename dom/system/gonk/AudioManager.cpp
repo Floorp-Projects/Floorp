@@ -28,6 +28,9 @@
 #include "BluetoothCommon.h"
 #include "BluetoothProfileManagerBase.h"
 
+#include "nsJSUtils.h"
+#include "nsCxPusher.h"
+
 using namespace mozilla::dom::gonk;
 using namespace android;
 using namespace mozilla::hal;
@@ -63,21 +66,25 @@ static int sHeadsetState;
 static const int kBtSampleRate = 8000;
 static bool sSwitchDone = true;
 
+namespace mozilla {
+namespace dom {
+namespace gonk {
 class RecoverTask : public nsRunnable
 {
 public:
   RecoverTask() {}
   NS_IMETHODIMP Run() {
-    nsCOMPtr<nsIAudioManager> am = do_GetService(NS_AUDIOMANAGER_CONTRACTID);
-    NS_ENSURE_TRUE(am, NS_OK);
-    for (int i = 0; i < AUDIO_STREAM_CNT; i++) {
-      AudioSystem::initStreamVolume(static_cast<audio_stream_type_t>(i), 0,
-                                    sMaxStreamVolumeTbl[i]);
-      int32_t volidx = 0;
-      am->GetStreamVolumeIndex(i, &volidx);
-      am->SetStreamVolumeIndex(static_cast<audio_stream_type_t>(i),
-                               volidx);
+    nsCOMPtr<nsIAudioManager> amService = do_GetService(NS_AUDIOMANAGER_CONTRACTID);
+    NS_ENSURE_TRUE(amService, NS_OK);
+    AudioManager *am = static_cast<AudioManager *>(amService.get());
+    for (int loop = 0; loop < AUDIO_STREAM_CNT; loop++) {
+      AudioSystem::initStreamVolume(static_cast<audio_stream_type_t>(loop), 0,
+                                   sMaxStreamVolumeTbl[loop]);
+      int32_t index;
+      am->GetStreamVolumeIndex(loop, &index);
+      am->SetStreamVolumeIndex(loop, index);
     }
+
     if (sHeadsetState & AUDIO_DEVICE_OUT_WIRED_HEADSET)
       InternalSetAudioRoutes(SWITCH_STATE_HEADSET);
     else if (sHeadsetState & AUDIO_DEVICE_OUT_WIRED_HEADPHONE)
@@ -97,6 +104,9 @@ public:
     return NS_OK;
   }
 };
+} /* namespace gonk */
+} /* namespace dom */
+} /* namespace mozilla */
 
 static void
 BinderDeadCallback(status_t aErr)
@@ -242,12 +252,47 @@ AudioManager::Observe(nsISupports* aSubject,
         AudioSystem::setParameters(0, cmd);
       }
     }
-  } else {
-    NS_WARNING("Unexpected topic in AudioManager");
-    return NS_ERROR_FAILURE;
+  } 
+  // To process the volume control on each audio channel according to
+  // change of settings
+  else if (!strcmp(aTopic, "mozsettings-changed")) {
+    AutoSafeJSContext cx;
+    nsDependentString dataStr(aData);
+    JS::Rooted<JS::Value> val(cx);
+    if (!JS_ParseJSON(cx, dataStr.get(), dataStr.Length(), &val) ||
+        !val.isObject()) {
+      return NS_OK;
+    }
+
+    JS::Rooted<JSObject*> obj(cx, &val.toObject());
+    JS::Rooted<JS::Value> key(cx);
+    if (!JS_GetProperty(cx, obj, "key", key.address()) ||
+        !key.isString()) {
+      return NS_OK;
+    }
+
+    JS::RootedString jsKey(cx, JS_ValueToString(cx, key));
+    if (!jsKey) {
+      return NS_OK;
+    }
+    nsDependentJSString keyStr;
+    if (!keyStr.init(cx, jsKey) || keyStr.EqualsLiteral("audio.volume.bt_sco")) {
+      return NS_OK;
+    }
+
+    JS::Rooted<JS::Value> value(cx);
+    if (!JS_GetProperty(cx, obj, "value", value.address()) || !value.isInt32()) {
+      return NS_OK;
+    }
+
+    int32_t index = value.toInt32();
+    SetStreamVolumeIndex(AUDIO_STREAM_BLUETOOTH_SCO, index);
+
+    return NS_OK;
   }
 
-  return NS_OK;
+  NS_WARNING("Unexpected topic in AudioManager");
+  return NS_ERROR_FAILURE;
 }
 
 static void
@@ -300,6 +345,9 @@ AudioManager::AudioManager() : mPhoneState(PHONE_STATE_CURRENT),
   if (NS_FAILED(obs->AddObserver(this, BLUETOOTH_A2DP_STATUS_CHANGED_ID, false))) {
     NS_WARNING("Failed to add bluetooth a2dp status changed observer!");
   }
+  if (NS_FAILED(obs->AddObserver(this, "mozsettings-changed", false))) {
+    NS_WARNING("Failed to add mozsettings-changed oberver!");
+  }
 
   for (int loop = 0; loop < AUDIO_STREAM_CNT; loop++) {
     AudioSystem::initStreamVolume(static_cast<audio_stream_type_t>(loop), 0,
@@ -307,20 +355,12 @@ AudioManager::AudioManager() : mPhoneState(PHONE_STATE_CURRENT),
     mCurrentStreamVolumeTbl[loop] = sMaxStreamVolumeTbl[loop];
   }
   // Force publicnotification to output at maximal volume
-#if ANDROID_VERSION < 17
-  AudioSystem::setStreamVolumeIndex(
-    static_cast<audio_stream_type_t>(AUDIO_STREAM_ENFORCED_AUDIBLE),
-    sMaxStreamVolumeTbl[AUDIO_STREAM_ENFORCED_AUDIBLE]);
-#else
-  AudioSystem::setStreamVolumeIndex(
-    static_cast<audio_stream_type_t>(AUDIO_STREAM_ENFORCED_AUDIBLE),
-    sMaxStreamVolumeTbl[AUDIO_STREAM_ENFORCED_AUDIBLE],
-    AUDIO_DEVICE_OUT_SPEAKER);
-#endif
-
+  SetStreamVolumeIndex(AUDIO_STREAM_ENFORCED_AUDIBLE,
+                       sMaxStreamVolumeTbl[AUDIO_STREAM_ENFORCED_AUDIBLE]);
   // Gecko only control stream volume not master so set to default value
   // directly.
   AudioSystem::setMasterVolume(1.0);
+
   AudioSystem::setErrorCallback(BinderDeadCallback);
 }
 
@@ -467,24 +507,8 @@ AudioManager::SetFmRadioAudioEnabled(bool aFmRadioAudioEnabled)
     InternalSetAudioRoutes(GetCurrentSwitchState(SWITCH_HEADPHONES));
     // sync volume with music after powering on fm radio
     if (aFmRadioAudioEnabled) {
-      int32_t volIndex = 0;
-#if ANDROID_VERSION < 17
-      AudioSystem::getStreamVolumeIndex(
-        static_cast<audio_stream_type_t>(AUDIO_STREAM_MUSIC),
-        &volIndex);
-      AudioSystem::setStreamVolumeIndex(
-        static_cast<audio_stream_type_t>(AUDIO_STREAM_FM),
-        volIndex);
-#else
-      AudioSystem::getStreamVolumeIndex(
-        static_cast<audio_stream_type_t>(AUDIO_STREAM_MUSIC),
-        &volIndex,
-        AUDIO_DEVICE_OUT_DEFAULT);
-      AudioSystem::setStreamVolumeIndex(
-        static_cast<audio_stream_type_t>(AUDIO_STREAM_FM),
-        volIndex,
-        AUDIO_DEVICE_OUT_SPEAKER);
-#endif
+      int32_t volIndex = mCurrentStreamVolumeTbl[AUDIO_STREAM_MUSIC];
+      SetStreamVolumeIndex(AUDIO_STREAM_FM, volIndex);
       mCurrentStreamVolumeTbl[AUDIO_STREAM_FM] = volIndex;
     }
     return NS_OK;
@@ -494,48 +518,155 @@ AudioManager::SetFmRadioAudioEnabled(bool aFmRadioAudioEnabled)
 }
 
 NS_IMETHODIMP
-AudioManager::SetStreamVolumeIndex(int32_t aStream, int32_t aIndex) {
-#if ANDROID_VERSION < 17
-  status_t status =
-    AudioSystem::setStreamVolumeIndex(
-      static_cast<audio_stream_type_t>(aStream),
-      aIndex);
-#else
-  status_t status =
-    AudioSystem::setStreamVolumeIndex(
-      static_cast<audio_stream_type_t>(aStream),
-      aIndex,
-      AUDIO_DEVICE_OUT_SPEAKER);
-#endif
+AudioManager::SetAudioChannelVolume(int32_t aChannel, int32_t aIndex) {
+  status_t status;
 
-  // sync fm volume with music stream type
-  if (aStream == AUDIO_STREAM_MUSIC && IsDeviceOn(AUDIO_DEVICE_OUT_FM)) {
-#if ANDROID_VERSION < 17
-    AudioSystem::setStreamVolumeIndex(
-      static_cast<audio_stream_type_t>(AUDIO_STREAM_FM),
-      aIndex);
-#else
-    AudioSystem::setStreamVolumeIndex(
-      static_cast<audio_stream_type_t>(AUDIO_STREAM_FM),
-      aIndex,
-      AUDIO_DEVICE_OUT_SPEAKER);
-#endif
-    mCurrentStreamVolumeTbl[AUDIO_STREAM_FM] = aIndex;
+  switch (aChannel) {
+    case AUDIO_CHANNEL_CONTENT:
+      status = SetStreamVolumeIndex(AUDIO_STREAM_MUSIC, aIndex);
+      status += SetStreamVolumeIndex(AUDIO_STREAM_SYSTEM, aIndex);
+      // sync FMRadio's volume with content channel.
+      if (IsDeviceOn(AUDIO_DEVICE_OUT_FM)) {
+        status += SetStreamVolumeIndex(AUDIO_STREAM_FM, aIndex);
+      }
+      break;
+    case AUDIO_CHANNEL_NOTIFICATION:
+      status = SetStreamVolumeIndex(AUDIO_STREAM_NOTIFICATION, aIndex);
+      status += SetStreamVolumeIndex(AUDIO_STREAM_RING, aIndex);
+      break;
+    case AUDIO_CHANNEL_ALARM:
+      status = SetStreamVolumeIndex(AUDIO_STREAM_ALARM, aIndex);
+      break;
+    case AUDIO_CHANNEL_TELEPHONY:
+      status = SetStreamVolumeIndex(AUDIO_STREAM_VOICE_CALL, aIndex);
+      break;
+    default:
+      return NS_ERROR_INVALID_ARG;
   }
-  mCurrentStreamVolumeTbl[aStream] = aIndex;
 
   return status ? NS_ERROR_FAILURE : NS_OK;
 }
 
 NS_IMETHODIMP
-AudioManager::GetStreamVolumeIndex(int32_t aStream, int32_t* aIndex) {
-  *aIndex = mCurrentStreamVolumeTbl[aStream];
+AudioManager::GetAudioChannelVolume(int32_t aChannel, int32_t* aIndex) {
+  if (!aIndex) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  switch (aChannel) {
+    case AUDIO_CHANNEL_CONTENT:
+      MOZ_ASSERT(mCurrentStreamVolumeTbl[AUDIO_STREAM_MUSIC] ==
+                 mCurrentStreamVolumeTbl[AUDIO_STREAM_SYSTEM]);
+      *aIndex = mCurrentStreamVolumeTbl[AUDIO_STREAM_MUSIC];
+      break;
+    case AUDIO_CHANNEL_NOTIFICATION:
+      MOZ_ASSERT(mCurrentStreamVolumeTbl[AUDIO_STREAM_NOTIFICATION] ==
+                 mCurrentStreamVolumeTbl[AUDIO_STREAM_RING]);
+      *aIndex = mCurrentStreamVolumeTbl[AUDIO_STREAM_NOTIFICATION];
+      break;
+    case AUDIO_CHANNEL_ALARM:
+      *aIndex = mCurrentStreamVolumeTbl[AUDIO_STREAM_ALARM];
+      break;
+    case AUDIO_CHANNEL_TELEPHONY:
+      *aIndex = mCurrentStreamVolumeTbl[AUDIO_STREAM_VOICE_CALL];
+      break;
+    default:
+      return NS_ERROR_INVALID_ARG;
+  }
+
   return NS_OK;
 }
 
 NS_IMETHODIMP
-AudioManager::GetMaxStreamVolumeIndex(int32_t aStream, int32_t* aMaxIndex) {
-  *aMaxIndex = sMaxStreamVolumeTbl[aStream];
-  return NS_OK;
+AudioManager::GetMaxAudioChannelVolume(int32_t aChannel, int32_t* aMaxIndex) {
+  if (!aMaxIndex) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  int32_t stream;
+  switch (aChannel) {
+    case AUDIO_CHANNEL_CONTENT:
+      MOZ_ASSERT(sMaxStreamVolumeTbl[AUDIO_STREAM_MUSIC] ==
+                 sMaxStreamVolumeTbl[AUDIO_STREAM_SYSTEM]);
+      stream = AUDIO_STREAM_MUSIC;
+      break;
+    case AUDIO_CHANNEL_NOTIFICATION:
+      MOZ_ASSERT(sMaxStreamVolumeTbl[AUDIO_STREAM_NOTIFICATION] ==
+                 sMaxStreamVolumeTbl[AUDIO_STREAM_RING]);
+      stream = AUDIO_STREAM_NOTIFICATION;
+      break;
+    case AUDIO_CHANNEL_ALARM:
+      stream = AUDIO_STREAM_ALARM;
+      break;
+    case AUDIO_CHANNEL_TELEPHONY:
+      stream = AUDIO_STREAM_VOICE_CALL;
+      break;
+    default:
+      return NS_ERROR_INVALID_ARG;
+  }
+
+  *aMaxIndex = sMaxStreamVolumeTbl[stream];
+   return NS_OK;
 }
 
+status_t
+AudioManager::SetStreamVolumeIndex(int32_t aStream, int32_t aIndex) {
+  if (aIndex < 0 || aIndex > sMaxStreamVolumeTbl[aStream]) {
+    return BAD_VALUE;
+  }
+
+  mCurrentStreamVolumeTbl[aStream] = aIndex;
+#if ANDROID_VERSION < 17
+  return AudioSystem::setStreamVolumeIndex(
+           static_cast<audio_stream_type_t>(aStream),
+           aIndex);
+#else
+  int device = 0;
+
+  if (aStream == AUDIO_STREAM_BLUETOOTH_SCO) {
+    device = AUDIO_DEVICE_OUT_BLUETOOTH_SCO_HEADSET;
+  } else if (aStream == AUDIO_STREAM_FM) {
+    device = AUDIO_DEVICE_OUT_FM;
+  }
+
+  if (device != 0) {
+    return AudioSystem::setStreamVolumeIndex(
+             static_cast<audio_stream_type_t>(aStream),
+             aIndex,
+             device);
+  }
+
+  status_t status = AudioSystem::setStreamVolumeIndex(
+                      static_cast<audio_stream_type_t>(aStream),
+                      aIndex,
+                      AUDIO_DEVICE_OUT_SPEAKER);
+  status += AudioSystem::setStreamVolumeIndex(
+              static_cast<audio_stream_type_t>(aStream),
+              aIndex,
+              AUDIO_DEVICE_OUT_WIRED_HEADSET);
+  status += AudioSystem::setStreamVolumeIndex(
+              static_cast<audio_stream_type_t>(aStream),
+              aIndex,
+              AUDIO_DEVICE_OUT_WIRED_HEADPHONE);
+  status += AudioSystem::setStreamVolumeIndex(
+              static_cast<audio_stream_type_t>(aStream),
+              aIndex,
+              AUDIO_DEVICE_OUT_EARPIECE);
+  return status;
+#endif
+}
+
+status_t
+AudioManager::GetStreamVolumeIndex(int32_t aStream, int32_t *aIndex) {
+  if (!aIndex) {
+    return BAD_VALUE;
+  }
+
+  if (aStream <= AUDIO_STREAM_DEFAULT || aStream >= AUDIO_STREAM_MAX) {
+    return BAD_VALUE;
+  }
+
+  *aIndex = mCurrentStreamVolumeTbl[aStream];
+
+  return NO_ERROR;
+}
