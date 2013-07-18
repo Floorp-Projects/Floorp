@@ -41,11 +41,20 @@ enum {
 
   // This bit is set to indicate that if the text node changes to
   // whitespace, we may need to reframe it (or its ancestors).
-  NS_REFRAME_IF_WHITESPACE =              DATA_NODE_FLAG_BIT(1)
+  NS_REFRAME_IF_WHITESPACE =              DATA_NODE_FLAG_BIT(1),
+
+  // This bit is set to indicate that we have a cached
+  // TextIsOnlyWhitespace value
+  NS_CACHED_TEXT_IS_ONLY_WHITESPACE =     DATA_NODE_FLAG_BIT(2),
+
+  // This bit is only meaningful if the NS_CACHED_TEXT_IS_ONLY_WHITESPACE
+  // bit is set, and if so it indicates whether we're only whitespace or
+  // not.
+  NS_TEXT_IS_ONLY_WHITESPACE =            DATA_NODE_FLAG_BIT(3)
 };
 
 // Make sure we have enough space for those bits
-ASSERT_NODE_FLAGS_SPACE(NODE_TYPE_SPECIFIC_BITS_OFFSET + 2);
+ASSERT_NODE_FLAGS_SPACE(NODE_TYPE_SPECIFIC_BITS_OFFSET + 4);
 
 #undef DATA_NODE_FLAG_BIT
 
