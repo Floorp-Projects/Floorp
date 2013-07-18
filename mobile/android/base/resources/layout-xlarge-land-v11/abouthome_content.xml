@@ -60,14 +60,6 @@
                       android:orientation="vertical"
                       android:layout_marginLeft="@dimen/abouthome_gutter_small"
                       android:layout_marginRight="@dimen/abouthome_gutter_large">
-
-            <org.mozilla.gecko.widget.LastTabsSection android:id="@+id/last_tabs"
-                                                      android:layout_width="fill_parent"
-                                                      android:layout_height="wrap_content"
-                                                      android:visibility="gone"
-                                                      gecko:title="@string/abouthome_last_tabs_title"
-                                                      gecko:more_text="@string/abouthome_last_tabs_open"/>
-
         </LinearLayout>
 
     </LinearLayout>
