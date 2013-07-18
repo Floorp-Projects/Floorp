@@ -54,6 +54,19 @@ class MacroAssemblerARM : public Assembler
     void convertDoubleToInt32(const FloatRegister &src, const Register &dest, Label *fail,
                               bool negativeZeroCheck = true);
 
+    void convertFloatToDouble(const FloatRegister &src, const FloatRegister &dest) {
+        MOZ_ASSUME_UNREACHABLE("NYI");
+    }
+    void branchTruncateFloat32(const FloatRegister &src, const Register &dest, Label *fail) {
+        MOZ_ASSUME_UNREACHABLE("NYI");
+    }
+    void convertInt32ToFloat32(const Register &src, const FloatRegister &dest) {
+        MOZ_ASSUME_UNREACHABLE("NYI");
+    }
+    void convertInt32ToFloat32(const Address &src, FloatRegister dest) {
+        MOZ_ASSUME_UNREACHABLE("NYI");
+    }
+
     void addDouble(FloatRegister src, FloatRegister dest);
     void subDouble(FloatRegister src, FloatRegister dest);
     void mulDouble(FloatRegister src, FloatRegister dest);
@@ -748,6 +761,16 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     Condition testDoubleTruthy(bool truthy, const FloatRegister &reg);
     Condition testStringTruthy(bool truthy, const ValueOperand &value);
 
+    void boolValueToFloat32(const ValueOperand &operand, const FloatRegister &dest) {
+        MOZ_ASSUME_UNREACHABLE("NYI");
+    }
+    void int32ValueToFloat32(const ValueOperand &operand, const FloatRegister &dest) {
+        MOZ_ASSUME_UNREACHABLE("NYI");
+    }
+    void loadStaticFloat32(const float *dp, const FloatRegister &dest) {
+        MOZ_ASSUME_UNREACHABLE("NYI");
+    }
+
     template<typename T>
     void branchTestInt32(Condition cond, const T & t, Label *label) {
         Condition c = testInt32(cond, t);
@@ -1187,6 +1210,13 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void loadFloatAsDouble(const Address &addr, const FloatRegister &dest);
     void loadFloatAsDouble(const BaseIndex &src, const FloatRegister &dest);
 
+    void loadFloat(const Address &addr, const FloatRegister &dest) {
+        MOZ_ASSUME_UNREACHABLE("NYI");
+    }
+    void loadFloat(const BaseIndex &src, const FloatRegister &dest) {
+        MOZ_ASSUME_UNREACHABLE("NYI");
+    }
+
     void store8(const Register &src, const Address &address);
     void store8(const Imm32 &imm, const Address &address);
     void store8(const Register &src, const BaseIndex &address);
@@ -1268,6 +1298,11 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void compareDouble(FloatRegister lhs, FloatRegister rhs);
     void branchDouble(DoubleCondition cond, const FloatRegister &lhs, const FloatRegister &rhs,
                       Label *label);
+
+    void branchFloat(DoubleCondition cond, const FloatRegister &lhs, const FloatRegister &rhs,
+                      Label *label) {
+        MOZ_ASSUME_UNREACHABLE("NYI");
+    }
 
     void checkStackAlignment();
 

@@ -15,6 +15,7 @@
 #include "jit/BaselineJIT.h"
 #include "jit/IonLinker.h"
 #include "jit/IonSpewer.h"
+#include "jit/Lowering.h"
 #include "jit/PerfSpewer.h"
 #include "jit/VMFunctions.h"
 
@@ -5168,7 +5169,14 @@ ICSetElem_TypedArray::Compiler::generateStubCode(MacroAssembler &masm)
 
     if (type_ == ScalarTypeRepresentation::TYPE_FLOAT32 || type_ == ScalarTypeRepresentation::TYPE_FLOAT64) {
         masm.ensureDouble(value, FloatReg0, &failure);
-        masm.storeToTypedFloatArray(type_, FloatReg0, dest);
+        if (LIRGenerator::allowFloat32Optimizations() &&
+            type_ == ScalarTypeRepresentation::TYPE_FLOAT32)
+        {
+            masm.convertDoubleToFloat(FloatReg0, ScratchFloatReg);
+            masm.storeToTypedFloatArray(type_, ScratchFloatReg, dest);
+        } else {
+            masm.storeToTypedFloatArray(type_, FloatReg0, dest);
+        }
         EmitReturnFromIC(masm);
     } else if (type_ == ScalarTypeRepresentation::TYPE_UINT8_CLAMPED) {
         Label notInt32;
