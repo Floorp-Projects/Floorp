@@ -382,6 +382,39 @@ MobileConnection::SetCallWaitingOption(bool aEnabled,
   return mProvider->SetCallWaitingOption(GetOwner(), aEnabled, aRequest);
 }
 
+NS_IMETHODIMP
+MobileConnection::GetCallingLineIdRestriction(nsIDOMDOMRequest** aRequest)
+{
+  *aRequest = nullptr;
+
+  if (!CheckPermission("mobileconnection")) {
+    return NS_OK;
+  }
+
+  if (!mProvider) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return mProvider->GetCallingLineIdRestriction(GetOwner(), aRequest);
+}
+
+NS_IMETHODIMP
+MobileConnection::SetCallingLineIdRestriction(unsigned short aClirMode,
+                                              nsIDOMDOMRequest** aRequest)
+{
+  *aRequest = nullptr;
+
+  if (!CheckPermission("mobileconnection")) {
+    return NS_OK;
+  }
+
+  if (!mProvider) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return mProvider->SetCallingLineIdRestriction(GetOwner(), aClirMode, aRequest);
+}
+
 // nsIMobileConnectionListener
 
 NS_IMETHODIMP

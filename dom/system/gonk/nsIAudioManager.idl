@@ -4,23 +4,13 @@
 
 #include "nsISupports.idl"
 
-[scriptable, builtinclass, uuid(b76a3de4-79f4-4cbb-a0e2-871095eacb2c)]
+[scriptable, builtinclass, uuid(60da41b4-cdc2-11e2-8a91-10bf48d64bd4)]
 interface nsIAudioManager : nsISupports
 {
   /**
    * Microphone muted?
    */
   attribute boolean microphoneMuted;
-
-  /**
-   * The master volume.
-   */
-  attribute float masterVolume;
-
-  /**
-   * Master volume muted?
-   */
-  attribute boolean masterMuted;
 
   /**
    * Are we playing audio from the FM radio?
@@ -60,22 +50,8 @@ interface nsIAudioManager : nsISupports
   void setForceForUse(in long usage, in long force);
   long getForceForUse(in long usage);
 
-  /**
-   * Control the volume of various audio streams
-   */
-  const long STREAM_TYPE_VOICE_CALL = 0;
-  const long STREAM_TYPE_SYSTEM = 1;
-  const long STREAM_TYPE_RING = 2;
-  const long STREAM_TYPE_MUSIC = 3;
-  const long STREAM_TYPE_ALARM = 4;
-  const long STREAM_TYPE_NOTIFICATION = 5;
-  const long STREAM_TYPE_BLUETOOTH_SCO = 6;
-  const long STREAM_TYPE_ENFORCED_AUDIBLE = 7;
-  const long STREAM_TYPE_DTMF = 8;
-  const long STREAM_TYPE_TTS = 9;
-  const long STREAM_TYPE_FM = 10;
-
-  void setStreamVolumeIndex(in long stream, in long index);
-  long getStreamVolumeIndex(in long stream);
-  long getMaxStreamVolumeIndex(in long stream);
+  /* The range of volume index is from 0 to N. Ex: 0 ~ 15 */
+  void setAudioChannelVolume(in long channel, in long index);
+  long getAudioChannelVolume(in long channel);
+  long getMaxAudioChannelVolume(in long channel);
 };

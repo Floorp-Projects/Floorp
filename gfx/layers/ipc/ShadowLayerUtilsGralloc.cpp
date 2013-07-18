@@ -372,13 +372,15 @@ ISurfaceAllocator::PlatformAllocSurfaceDescriptor(const gfxIntSize& aSize,
   }
 #endif
 
-  // Some GL implementations fail to render gralloc textures with
-  // width < 64.  There's not much point in gralloc'ing buffers that
-  // small anyway, so fall back on shared memory plus a texture
-  // upload.
-  if (aSize.width < 64) {
-    return false;
-  }
+  /* XXX: Surfaces with a width or height <= 16 pixels fail to render properly
+   * when drawn from gralloc'd textures of the same size on certain GL
+   * implementations. We increase all those surfaces' dimensions to 32 to work
+   * around this problem. Remove this workaround once the devices affected by
+   * this issue are not supported anymore (currently the Unagi and Otoro). */
+  gfxIntSize allocSize = aSize;
+  allocSize.width = std::max(aSize.width, 32);
+  allocSize.height = std::max(aSize.height, 32);
+
   PROFILER_LABEL("ShadowLayerForwarder", "PlatformAllocSurfaceDescriptor");
   // Gralloc buffers are efficiently mappable as gfxImageSurface, so
   // no need to check |aCaps & MAP_AS_IMAGE_SURFACE|.
@@ -387,7 +389,7 @@ ISurfaceAllocator::PlatformAllocSurfaceDescriptor(const gfxIntSize& aSize,
   bool defaultRBSwap;
 
   if (aCaps & USING_GL_RENDERING_ONLY) {
-    gc = AllocGrallocBuffer(aSize,
+    gc = AllocGrallocBuffer(allocSize,
                             PixelFormatForContentType(aContent),
                             GraphicBuffer::USAGE_HW_RENDER |
                             GraphicBuffer::USAGE_HW_TEXTURE,
@@ -396,7 +398,7 @@ ISurfaceAllocator::PlatformAllocSurfaceDescriptor(const gfxIntSize& aSize,
     // this for RB swap.
     defaultRBSwap = false;
   } else {
-    gc = AllocGrallocBuffer(aSize,
+    gc = AllocGrallocBuffer(allocSize,
                             PixelFormatForContentType(aContent),
                             GraphicBuffer::USAGE_SW_READ_OFTEN |
                             GraphicBuffer::USAGE_SW_WRITE_OFTEN |
@@ -420,7 +422,7 @@ ISurfaceAllocator::PlatformAllocSurfaceDescriptor(const gfxIntSize& aSize,
   GrallocBufferActor* gba = static_cast<GrallocBufferActor*>(gc);
   gba->InitFromHandle(handle.get_MagicGrallocBufferHandle());
 
-  *aBuffer = SurfaceDescriptorGralloc(nullptr, gc, aSize,
+  *aBuffer = SurfaceDescriptorGralloc(nullptr, gc, allocSize,
                                       /* external */ false,
                                       defaultRBSwap);
   return true;
