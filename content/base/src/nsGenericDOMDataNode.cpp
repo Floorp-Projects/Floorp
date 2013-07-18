@@ -341,6 +341,8 @@ nsGenericDOMDataNode::SetTextInternal(uint32_t aOffset, uint32_t aCount,
     delete [] to;
   }
 
+  UnsetFlags(NS_CACHED_TEXT_IS_ONLY_WHITESPACE);
+
   if (document && mText.IsBidi()) {
     // If we found bidi characters in mText.SetTo() above, indicate that the
     // document contains bidi characters.
@@ -907,6 +909,10 @@ nsGenericDOMDataNode::TextIsOnlyWhitespace()
     return false;
   }
 
+  if (HasFlag(NS_CACHED_TEXT_IS_ONLY_WHITESPACE)) {
+    return HasFlag(NS_TEXT_IS_ONLY_WHITESPACE);
+  }
+
   const char* cp = mText.Get1b();
   const char* end = cp + mText.GetLength();
 
@@ -914,12 +920,15 @@ nsGenericDOMDataNode::TextIsOnlyWhitespace()
     char ch = *cp;
 
     if (!dom::IsSpaceCharacter(ch)) {
+      UnsetFlags(NS_TEXT_IS_ONLY_WHITESPACE);
+      SetFlags(NS_CACHED_TEXT_IS_ONLY_WHITESPACE);
       return false;
     }
 
     ++cp;
   }
 
+  SetFlags(NS_CACHED_TEXT_IS_ONLY_WHITESPACE | NS_TEXT_IS_ONLY_WHITESPACE);
   return true;
 }
 
