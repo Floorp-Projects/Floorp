@@ -32,7 +32,7 @@ interface AudioContext : EventTarget {
     [Creator]
     AudioBufferSourceNode createBufferSource();
 
-    [Creator]
+    [Creator, Throws]
     MediaStreamAudioDestinationNode createMediaStreamDestination();
 
     [Creator, Throws]
