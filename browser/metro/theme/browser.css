@@ -567,18 +567,106 @@ documenttab[selected] .documenttab-selection {
 }
 
 /* Combined stop-reload button */
+.urlbar-button {
+  -moz-image-region: rect(0px, 30px, 30px, 0px);
+}
+
+.urlbar-button:hover:not(:active) {
+  -moz-image-region: rect(0px, 60px, 30px, 30px);
+  background-color: #dedfdf;
+}
+
+.urlbar-button:active {
+  -moz-image-region: rect(0px, 90px, 30px, 60px);
+  background-color: #6d7073;
+}
+
+.urlbar-button  > .toolbarbutton-icon {
+  width: 30px;
+  height: 30px;
+}
+
+#go-button {
+  list-style-image: url(chrome://browser/skin/images/urlbar-go.png)
+}
+
 #reload-button {
-  list-style-image: url(chrome://browser/skin/images/appbar-reload.png);
+  list-style-image: url(chrome://browser/skin/images/urlbar-reload.png);
 }
 
 #stop-button {
-  list-style-image: url(chrome://browser/skin/images/appbar-stop.png);
+  list-style-image: url(chrome://browser/skin/images/urlbar-stop.png);
 }
 
-#urlbar[mode="loading"] > #reload-button,
+@media (min-resolution: @min_res_140pc@) {
+  .urlbar-button {
+    -moz-image-region: rect(0px, 42px, 42px, 0px);
+  }
+
+  .urlbar-button:hover:not(:active) {
+    -moz-image-region: rect(0px, 84px, 42px, 42px);
+  }
+
+  .urlbar-button:active {
+    -moz-image-region: rect(0px, 126px, 42px, 84px);
+  }
+
+  #go-button {
+    list-style-image: url(chrome://browser/skin/images/urlbar-go@1.4x.png)
+  }
+
+  #reload-button {
+    list-style-image: url(chrome://browser/skin/images/urlbar-reload@1.4x.png);
+  }
+
+  #stop-button {
+    list-style-image: url(chrome://browser/skin/images/urlbar-stop@1.4x.png);
+  }
+}
+
+@media (min-resolution: @min_res_180pc@) {
+  .urlbar-button {
+    -moz-image-region: rect(0px, 54px, 54px, 0px);
+  }
+
+  .urlbar-button:hover:not(:active) {
+    -moz-image-region: rect(0px, 108px, 54px, 54px);
+  }
+
+  .urlbar-button:active {
+    -moz-image-region: rect(0px, 162px, 54px, 108px);
+  }
+
+  #go-button {
+    list-style-image: url(chrome://browser/skin/images/urlbar-go@1.8x.png)
+  }
+
+  #reload-button {
+    list-style-image: url(chrome://browser/skin/images/urlbar-reload@1.8x.png);
+  }
+
+  #stop-button {
+    list-style-image: url(chrome://browser/skin/images/urlbar-stop@1.8x.png);
+  }
+}
+
+#urlbar:-moz-any([mode="loading"], [mode="view"]) > #go-button,
+#urlbar:-moz-any([mode="edit"], [mode="loading"]) > #reload-button,
 #urlbar:-moz-any([mode="edit"], [mode="view"]) > #stop-button,
 #toolbar[viewstate="snapped"] > #urlbar ~ toolbarbutton {
   visibility: collapse;
+}
+
+/* Application-Specific */
+
+#download-button {
+  -moz-image-region: rect(0px, 40px, 40px, 0px) !important;
+}
+#download-button:hover {
+  -moz-image-region: rect(40px, 40px, 80px, 0px) !important;
+}
+#download-button:active {
+  -moz-image-region: rect(80px, 40px, 120px, 0px) !important;
 }
 
 /* Page-Specific */
@@ -621,18 +709,6 @@ documenttab[selected] .documenttab-selection {
   #menu-button {
     list-style-image: url(chrome://browser/skin/images/navbar-menu@1.8x.png);
   }
-}
-
-/* Application-Specific */
-
-#download-button {
-  -moz-image-region: rect(0px, 40px, 40px, 0px) !important;
-}
-#download-button:hover {
-  -moz-image-region: rect(40px, 40px, 80px, 0px) !important;
-}
-#download-button:active {
-  -moz-image-region: rect(80px, 40px, 120px, 0px) !important;
 }
 
 /* Panel UI ================================================================ */
