@@ -38,7 +38,7 @@ function run_test() {
 
   try {
     _("Set up test fixtures.");
-    new SyncTestingInfrastructure(server, "johndoe", "ilovejane", "foo");
+    new SyncTestingInfrastructure("johndoe", "ilovejane", "foo");
     Service.scheduler.globalScore = GLOBAL_SCORE;
     // Avoid daily ping
     Svc.Prefs.set("lastPing", Math.floor(Date.now() / 1000));

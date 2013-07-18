@@ -43,6 +43,9 @@ add_test(function test_offline() {
 });
 
 function setup() {
+  Service.serverURL = TEST_SERVER_URL;
+  Service.clusterURL = TEST_CLUSTER_URL;
+
   let janeHelper = track_collections_helper();
   let janeU      = janeHelper.with_updated_collection;
   let janeColls  = janeHelper.collections;
@@ -50,7 +53,7 @@ function setup() {
   let johnU      = johnHelper.with_updated_collection;
   let johnColls  = johnHelper.collections;
 
-  let server = httpd_setup({
+  return httpd_setup({
     "/1.1/johndoe/info/collections": login_handling(johnHelper.handler),
     "/1.1/janedoe/info/collections": login_handling(janeHelper.handler),
 
@@ -62,9 +65,6 @@ function setup() {
     "/1.1/janedoe/storage/crypto/keys": janeU("crypto", new ServerWBO("keys").handler()),
     "/1.1/janedoe/storage/meta/global": janeU("meta",   new ServerWBO("global").handler())
   });
-
-  Service.serverURL = server.baseURI;
-  return server;
 }
 
 add_test(function test_login_logout() {
