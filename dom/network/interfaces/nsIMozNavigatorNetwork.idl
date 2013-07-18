@@ -4,10 +4,10 @@
 
 #include "nsISupports.idl"
 
-interface nsIDOMMozCellBroadcast;
+interface nsIDOMMozConnection;
 
-[scriptable, uuid(010af082-22c5-471a-be21-0d738c50df67)]
-interface nsIMozNavigatorCellBroadcast : nsISupports
+[uuid(7f021f5d-f704-4a29-b166-829595169aaf)]
+interface nsIMozNavigatorNetwork : nsISupports
 {
-  readonly attribute nsIDOMMozCellBroadcast mozCellBroadcast;
+  readonly attribute nsIDOMMozConnection mozConnection;
 };

@@ -7,7 +7,6 @@
 #ifndef mozilla_dom_SVGAnimatedInteger_h
 #define mozilla_dom_SVGAnimatedInteger_h
 
-#include "nsIDOMSVGAnimatedEnum.h"
 #include "nsWrapperCache.h"
 
 #include "nsSVGElement.h"

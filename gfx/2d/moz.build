@@ -49,9 +49,11 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
         'PathD2D.cpp',
         'ScaledFontDWrite.cpp',
     ]
-    if CONFIG['MOZ_WINSDK_MAXVER'] >= '0x06020000':
+    if CONFIG['MOZ_ENABLE_DIRECT2D1_1']:
         CPP_SOURCES += [
-            'RadialGradientEffectD2D1.cpp'
+            'RadialGradientEffectD2D1.cpp',
+            'DrawTargetD2D1.cpp',
+            'SourceSurfaceD2D1.cpp'
         ]
     if CONFIG['MOZ_ENABLE_SKIA']:
         CPP_SOURCES += [

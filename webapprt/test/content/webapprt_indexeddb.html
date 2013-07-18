@@ -1,0 +1,38 @@
+<!DOCTYPE HTML>
+
+<!--
+  This is a IndexedDB WebappRT content mochitest.  Since its name is prefixed with
+  webapprt_, this file is picked up by the Mochitest harness.  It's just a plain
+  mochitest that runs in the app browser within an app window.
+-->
+
+<html>
+  <head>
+    <meta charset="utf-8">
+    <script src="/tests/SimpleTest/SimpleTest.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  </head>
+  <body>
+    <p id="display">
+      This is the IndexedDB WebappRT content mochitest.
+    </p>
+    <div id="content" style="display: none"></div>
+    <pre id="test">
+      <script>
+
+SimpleTest.waitForExplicitFinish();
+
+var request = indexedDB.open('test');
+request.onsuccess = function() {
+  ok(true, "onsuccess should be called");
+  SimpleTest.finish();
+}
+request.onerror = function() {
+  ok(false, "onerror shouldn't be called");
+  SimpleTest.finish();
+}
+
+      </script>
+    </pre>
+  </body>
+</html>

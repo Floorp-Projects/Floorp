@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/MathAlgorithms.h"
 
 #include "jscntxt.h"
 #include "jscompartment.h"
@@ -25,6 +26,8 @@
 
 using namespace js;
 using namespace js::ion;
+
+using mozilla::FloorLog2;
 
 // shared
 CodeGeneratorARM::CodeGeneratorARM(MIRGenerator *gen, LIRGraph *graph, MacroAssembler *masm)
@@ -406,8 +409,7 @@ CodeGeneratorARM::visitMulI(LMulI *ins)
             if (!mul->canOverflow()) {
                 // If it cannot overflow, we can do lots of optimizations
                 Register src = ToRegister(lhs);
-                uint32_t shift;
-                JS_FLOOR_LOG2(shift, constant);
+                uint32_t shift = FloorLog2(constant);
                 uint32_t rest = constant - (1 << shift);
                 // See if the constant has one bit set, meaning it can be encoded as a bitshift
                 if ((1 << shift) == constant) {
@@ -416,8 +418,7 @@ CodeGeneratorARM::visitMulI(LMulI *ins)
                 } else {
                     // If the constant cannot be encoded as (1<<C1), see if it can be encoded as
                     // (1<<C1) | (1<<C2), which can be computed using an add and a shift
-                    uint32_t shift_rest;
-                    JS_FLOOR_LOG2(shift_rest, rest);
+                    uint32_t shift_rest = FloorLog2(rest);
                     if ((1u << shift_rest) == rest) {
                         masm.as_add(ToRegister(dest), src, lsl(src, shift-shift_rest));
                         if (shift_rest != 0)
@@ -429,8 +430,7 @@ CodeGeneratorARM::visitMulI(LMulI *ins)
                 // To stay on the safe side, only optimize things that are a
                 // power of 2.
 
-                uint32_t shift;
-                JS_FLOOR_LOG2(shift, constant);
+                uint32_t shift = FloorLog2(constant);
                 if ((1 << shift) == constant) {
                     // dest = lhs * pow(2,shift)
                     masm.ma_lsl(Imm32(shift), ToRegister(lhs), ToRegister(dest));
@@ -641,37 +641,9 @@ CodeGeneratorARM::visitDivPowTwoI(LDivPowTwoI *ins)
 }
 
 bool
-CodeGeneratorARM::visitModI(LModI *ins)
+CodeGeneratorARM::modICommon(MMod *mir, Register lhs, Register rhs, Register output,
+                             LSnapshot *snapshot, Label &done)
 {
-    // Extract the registers from this instruction
-    Register lhs = ToRegister(ins->lhs());
-    Register rhs = ToRegister(ins->rhs());
-    Register callTemp = ToRegister(ins->getTemp(2));
-    MMod *mir = ins->mir();
-    Label done;
-    // save the lhs in case we end up with a 0 that should be a -0.0 because lhs < 0.
-    JS_ASSERT(callTemp.code() > r3.code() && callTemp.code() < r12.code());
-    masm.ma_mov(lhs, callTemp);
-
-    // Prevent INT_MIN % -1;
-    // The integer division will give INT_MIN, but we want -(double)INT_MIN.
-    if (mir->canBeNegativeDividend()) {
-        masm.ma_cmp(lhs, Imm32(INT_MIN)); // sets EQ if lhs == INT_MIN
-        masm.ma_cmp(rhs, Imm32(-1), Assembler::Equal); // if EQ (LHS == INT_MIN), sets EQ if rhs == -1
-        if (mir->isTruncated()) {
-            // (INT_MIN % -1)|0 == 0
-            Label skip;
-            masm.ma_b(&skip, Assembler::NotEqual);
-            masm.ma_mov(Imm32(0), r1);
-            masm.ma_b(&done);
-            masm.bind(&skip);
-        } else {
-            JS_ASSERT(mir->fallible());
-            if (!bailoutIf(Assembler::Equal, ins->snapshot()))
-                return false;
-        }
-    }
-
     // 0/X (with X < 0) is bad because both of these values *should* be doubles, and
     // the result should be -0.0, which cannot be represented in integers.
     // X/0 is bad because it will give garbage (or abort), when it should give
@@ -691,25 +663,101 @@ CodeGeneratorARM::visitModI(LModI *ins)
         // NaN|0 == 0 and (0 % -X)|0 == 0
         Label skip;
         masm.ma_b(&skip, Assembler::NotEqual);
-        masm.ma_mov(Imm32(0), r1);
+        masm.ma_mov(Imm32(0), output);
         masm.ma_b(&done);
         masm.bind(&skip);
     } else {
         JS_ASSERT(mir->fallible());
-        if (!bailoutIf(Assembler::Equal, ins->snapshot()))
+        if (!bailoutIf(Assembler::Equal, snapshot))
             return false;
     }
-    masm.setupAlignedABICall(2);
-    masm.passABIArg(lhs);
-    masm.passABIArg(rhs);
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, __aeabi_idivmod));
+
+    return true;
+}
+
+bool
+CodeGeneratorARM::visitModI(LModI *ins)
+{
+    Register lhs = ToRegister(ins->lhs());
+    Register rhs = ToRegister(ins->rhs());
+    Register output = ToRegister(ins->output());
+    Register callTemp = ToRegister(ins->getTemp(0));
+    MMod *mir = ins->mir();
+
+    // save the lhs in case we end up with a 0 that should be a -0.0 because lhs < 0.
+    masm.ma_mov(lhs, callTemp);
+
+    Label done;
+    if (!modICommon(mir, lhs, rhs, output, ins->snapshot(), done))
+        return false;
+
+    masm.ma_smod(lhs, rhs, output);
+
     // If X%Y == 0 and X < 0, then we *actually* wanted to return -0.0
-    // See if X < 0
-    masm.ma_cmp(r1, Imm32(0));
     if (mir->isTruncated()) {
         // -0.0|0 == 0
     } else {
         JS_ASSERT(mir->fallible());
+        // See if X < 0
+        masm.ma_cmp(output, Imm32(0));
+        masm.ma_b(&done, Assembler::NotEqual);
+        masm.ma_cmp(callTemp, Imm32(0));
+        if (!bailoutIf(Assembler::Signed, ins->snapshot()))
+            return false;
+    }
+
+    masm.bind(&done);
+    return true;
+}
+
+bool
+CodeGeneratorARM::visitSoftModI(LSoftModI *ins)
+{
+    // Extract the registers from this instruction
+    Register lhs = ToRegister(ins->lhs());
+    Register rhs = ToRegister(ins->rhs());
+    Register output = ToRegister(ins->output());
+    Register callTemp = ToRegister(ins->getTemp(2));
+    MMod *mir = ins->mir();
+    Label done;
+    // save the lhs in case we end up with a 0 that should be a -0.0 because lhs < 0.
+    JS_ASSERT(callTemp.code() > r3.code() && callTemp.code() < r12.code());
+    masm.ma_mov(lhs, callTemp);
+
+    // Prevent INT_MIN % -1;
+    // The integer division will give INT_MIN, but we want -(double)INT_MIN.
+    if (mir->canBeNegativeDividend()) {
+        masm.ma_cmp(lhs, Imm32(INT_MIN)); // sets EQ if lhs == INT_MIN
+        masm.ma_cmp(rhs, Imm32(-1), Assembler::Equal); // if EQ (LHS == INT_MIN), sets EQ if rhs == -1
+        if (mir->isTruncated()) {
+            // (INT_MIN % -1)|0 == 0
+            Label skip;
+            masm.ma_b(&skip, Assembler::NotEqual);
+            masm.ma_mov(Imm32(0), output);
+            masm.ma_b(&done);
+            masm.bind(&skip);
+        } else {
+            JS_ASSERT(mir->fallible());
+            if (!bailoutIf(Assembler::Equal, ins->snapshot()))
+                return false;
+        }
+    }
+
+    if (!modICommon(mir, lhs, rhs, output, ins->snapshot(), done))
+        return false;
+
+    masm.setupAlignedABICall(2);
+    masm.passABIArg(lhs);
+    masm.passABIArg(rhs);
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, __aeabi_idivmod));
+
+    // If X%Y == 0 and X < 0, then we *actually* wanted to return -0.0
+    if (mir->isTruncated()) {
+        // -0.0|0 == 0
+    } else {
+        JS_ASSERT(mir->fallible());
+        // See if X < 0
+        masm.ma_cmp(r1, Imm32(0));
         masm.ma_b(&done, Assembler::NotEqual);
         masm.ma_cmp(callTemp, Imm32(0));
         if (!bailoutIf(Assembler::Signed, ins->snapshot()))

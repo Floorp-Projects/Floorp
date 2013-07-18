@@ -542,6 +542,7 @@ private:
     mGlobal = JS_NewGlobalObject(mContext, &sGlobalClass, nullptr, options);
     NS_ENSURE_TRUE(mGlobal, NS_ERROR_OUT_OF_MEMORY);
 
+    JSAutoCompartment ac(mContext, mGlobal);
     JS_SetGlobalObject(mContext, mGlobal);
     JS_InitStandardClasses(mContext, mGlobal);
 
@@ -593,6 +594,7 @@ ProxyAutoConfig::SetupJS()
     return NS_ERROR_FAILURE;
 
   JSAutoRequest ar(mJSRuntime->Context());
+  JSAutoCompartment ac(mJSRuntime->Context(), mJSRuntime->Global());
 
   sRunning = this;
   JSScript *script = JS_CompileScript(mJSRuntime->Context(),
@@ -634,6 +636,7 @@ ProxyAutoConfig::GetProxyForURI(const nsCString &aTestURI,
 
   JSContext *cx = mJSRuntime->Context();
   JSAutoRequest ar(cx);
+  JSAutoCompartment ac(cx, mJSRuntime->Global());
 
   // the sRunning flag keeps a new PAC file from being installed
   // while the event loop is spinning on a DNS function. Don't early return.
@@ -673,6 +676,7 @@ ProxyAutoConfig::GC()
   if (!mJSRuntime || !mJSRuntime->IsOK())
     return;
 
+  JSAutoCompartment ac(mJSRuntime->Context(), mJSRuntime->Global());
   JS_MaybeGC(mJSRuntime->Context());
 }
 

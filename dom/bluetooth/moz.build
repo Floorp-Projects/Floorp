@@ -22,7 +22,6 @@ if CONFIG['MOZ_B2G_BT']:
         'nsIDOMBluetoothDevice.idl',
         'nsIDOMBluetoothDeviceEvent.idl',
         'nsIDOMBluetoothManager.idl',
-        'nsIDOMNavigatorBluetooth.idl',
     ]
 
     CPP_SOURCES += [

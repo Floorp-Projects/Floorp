@@ -31,11 +31,11 @@ function run_test() {
     let full = "";
     let body = "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"; //60
     for (var i = 0; i < 1000; i++) {
-      full += body;      
+      full += body;
     }
     response.write(full);
   });
-  httpserv.start(4444);
+  httpserv.start(-1);
 
   let state = 0;
 
@@ -66,8 +66,8 @@ function run_test() {
               // public request.
 
               state++;
-                              
-              addDownload({
+
+              addDownload(httpserv, {
                 isPrivate: true,
                 sourceURI: downloadCSource,
                 downloadName: downloadCName + "!!!",
@@ -96,11 +96,13 @@ function run_test() {
 
   downloadUtils.downloadManager.addPrivacyAwareListener(listener);
 
-  const downloadCSource = "http://localhost:4444/head_download_manager.js";
+  const downloadCSource = "http://localhost:" +
+                          httpserv.identity.primaryPort +
+                          "/head_download_manager.js";
   const downloadCName = "download-C";
 
   // First a public download that completes without interruption.
-  let dl = addDownload({
+  let dl = addDownload(httpserv, {
     isPrivate: false,
     sourceURI: downloadCSource,
     downloadName: downloadCName,

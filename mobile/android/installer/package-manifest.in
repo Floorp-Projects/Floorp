@@ -134,7 +134,6 @@
 @BINPATH@/components/dom.xpt
 @BINPATH@/components/dom_apps.xpt
 @BINPATH@/components/dom_base.xpt
-@BINPATH@/components/dom_battery.xpt
 @BINPATH@/components/dom_camera.xpt
 @BINPATH@/components/dom_canvas.xpt
 @BINPATH@/components/dom_core.xpt

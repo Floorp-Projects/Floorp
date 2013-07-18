@@ -17,7 +17,6 @@
 
 #include "gc/Barrier.h"
 #include "gc/Marking.h"
-#include "js/TemplateLib.h"
 #include "vm/MatchPairs.h"
 #include "vm/Runtime.h"
 #include "yarr/MatchResult.h"

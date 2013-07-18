@@ -26,7 +26,6 @@
 #include "js/HeapAPI.h"
 #include "js/MemoryMetrics.h"
 #include "js/PropertyKey.h"
-#include "js/TemplateLib.h"
 #include "js/Utility.h"
 #include "js/Value.h"
 #include "js/Vector.h"

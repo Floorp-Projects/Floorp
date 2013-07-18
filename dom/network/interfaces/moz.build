@@ -7,9 +7,9 @@
 XPIDL_SOURCES += [
     'nsIDOMConnection.idl',
     'nsIDOMDataErrorEvent.idl',
-    'nsIDOMNavigatorNetwork.idl',
     'nsIDOMTCPSocket.idl',
     'nsIDOMUSSDReceivedEvent.idl',
+    'nsIMozNavigatorNetwork.idl',
     'nsITCPSocketChild.idl',
     'nsITCPSocketParent.idl',
 ]
@@ -21,7 +21,6 @@ if CONFIG['MOZ_B2G_RIL']:
         'nsIDOMNetworkStats.idl',
         'nsIDOMNetworkStatsManager.idl',
         'nsIMobileConnectionProvider.idl',
-        'nsINavigatorMobileConnection.idl',
     ]
 
 XPIDL_MODULE = 'dom_network'

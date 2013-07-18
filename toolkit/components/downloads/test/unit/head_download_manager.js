@@ -78,6 +78,7 @@ function importDownloadsFile(aFName)
 var gDownloadCount = 0;
 /**
  * Adds a download to the DM, and starts it.
+ * @param server: a HttpServer used to serve the sourceURI
  * @param aParams (optional): an optional object which contains the function
  *                            parameters:
  *                              resultFileName: leaf node for the target file
@@ -87,8 +88,11 @@ var gDownloadCount = 0;
  *                              runBeforeStart: a function to run before starting the download
  *                              isPrivate: whether the download is private or not
  */
-function addDownload(aParams)
+function addDownload(server, aParams)
 {
+  if (!server)
+    do_throw("Must provide a valid server.");
+  const PORT = server.identity.primaryPort;
   if (!aParams)
     aParams = {};
   if (!("resultFileName" in aParams))
@@ -98,7 +102,7 @@ function addDownload(aParams)
     aParams.targetFile.append(aParams.resultFileName);
   }
   if (!("sourceURI" in aParams))
-    aParams.sourceURI = "http://localhost:4444/head_download_manager.js";
+    aParams.sourceURI = "http://localhost:" + PORT + "/head_download_manager.js";
   if (!("downloadName" in aParams))
     aParams.downloadName = null;
   if (!("runBeforeStart" in aParams))

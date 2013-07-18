@@ -86,11 +86,21 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsGenericDOMDataNode)
     return NS_SUCCESS_INTERRUPTED_TRAVERSE;
   }
 
+  nsDataSlots *slots = tmp->GetExistingDataSlots();
+  if (slots) {
+    slots->Traverse(cb);
+  }
+
   tmp->OwnerDoc()->BindingManager()->Traverse(tmp, cb);
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGenericDOMDataNode)
   nsINode::Unlink(tmp);
+
+  nsDataSlots *slots = tmp->GetExistingDataSlots();
+  if (slots) {
+    slots->Unlink();
+  }
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_INTERFACE_MAP_BEGIN(nsGenericDOMDataNode)
@@ -330,6 +340,8 @@ nsGenericDOMDataNode::SetTextInternal(uint32_t aOffset, uint32_t aCount,
 
     delete [] to;
   }
+
+  UnsetFlags(NS_CACHED_TEXT_IS_ONLY_WHITESPACE);
 
   if (document && mText.IsBidi()) {
     // If we found bidi characters in mText.SetTo() above, indicate that the
@@ -637,6 +649,41 @@ nsGenericDOMDataNode::GetBindingParent() const
   return slots ? slots->mBindingParent : nullptr;
 }
 
+nsXBLBinding *
+nsGenericDOMDataNode::GetXBLBinding() const
+{
+  return nullptr;
+}
+
+void
+nsGenericDOMDataNode::SetXBLBinding(nsXBLBinding* aBinding,
+                                    nsBindingManager* aOldBindingManager)
+{
+}
+
+nsIContent *
+nsGenericDOMDataNode::GetXBLInsertionParent() const
+{
+  if (HasFlag(NODE_MAY_BE_IN_BINDING_MNGR)) {
+    nsDataSlots *slots = GetExistingDataSlots();
+    if (slots) {
+      return slots->mXBLInsertionParent;
+    }
+  }
+
+  return nullptr;
+}
+
+void
+nsGenericDOMDataNode::SetXBLInsertionParent(nsIContent* aContent)
+{
+  nsDataSlots *slots = DataSlots();
+  if (aContent) {
+    SetFlags(NODE_MAY_BE_IN_BINDING_MNGR);
+  }
+  slots->mXBLInsertionParent = aContent;
+}
+
 bool
 nsGenericDOMDataNode::IsNodeOfType(uint32_t aFlags) const
 {
@@ -680,6 +727,19 @@ nsINode::nsSlots*
 nsGenericDOMDataNode::CreateSlots()
 {
   return new nsDataSlots();
+}
+
+void
+nsGenericDOMDataNode::nsDataSlots::Traverse(nsCycleCollectionTraversalCallback &cb)
+{
+  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mSlots->mXBLInsertionParent");
+  cb.NoteXPCOMChild(mXBLInsertionParent.get());
+}
+
+void
+nsGenericDOMDataNode::nsDataSlots::Unlink()
+{
+  mXBLInsertionParent = nullptr;
 }
 
 //----------------------------------------------------------------------
@@ -849,6 +909,10 @@ nsGenericDOMDataNode::TextIsOnlyWhitespace()
     return false;
   }
 
+  if (HasFlag(NS_CACHED_TEXT_IS_ONLY_WHITESPACE)) {
+    return HasFlag(NS_TEXT_IS_ONLY_WHITESPACE);
+  }
+
   const char* cp = mText.Get1b();
   const char* end = cp + mText.GetLength();
 
@@ -856,12 +920,15 @@ nsGenericDOMDataNode::TextIsOnlyWhitespace()
     char ch = *cp;
 
     if (!dom::IsSpaceCharacter(ch)) {
+      UnsetFlags(NS_TEXT_IS_ONLY_WHITESPACE);
+      SetFlags(NS_CACHED_TEXT_IS_ONLY_WHITESPACE);
       return false;
     }
 
     ++cp;
   }
 
+  SetFlags(NS_CACHED_TEXT_IS_ONLY_WHITESPACE | NS_TEXT_IS_ONLY_WHITESPACE);
   return true;
 }
 

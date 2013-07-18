@@ -204,6 +204,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "Rect",
                                   "resource://gre/modules/Geometry.jsm");
 
 function resolveGeckoURI(aURI) {
+  if (!aURI)
+    throw "Can't resolve an empty uri";
+
   if (aURI.startsWith("chrome://")) {
     let registry = Cc['@mozilla.org/chrome/chrome-registry;1'].getService(Ci["nsIChromeRegistry"]);
     return registry.convertChromeURL(Services.io.newURI(aURI, null, null)).spec;
@@ -1553,6 +1556,8 @@ var NativeWindow = {
     Services.obs.addObserver(this, "PageActions:Clicked", false);
     Services.obs.addObserver(this, "PageActions:LongClicked", false);
     Services.obs.addObserver(this, "Doorhanger:Reply", false);
+    Services.obs.addObserver(this, "Toast:Click", false);
+    Services.obs.addObserver(this, "Toast:Hidden", false);
     this.contextmenus.init();
   },
 
@@ -1561,6 +1566,8 @@ var NativeWindow = {
     Services.obs.removeObserver(this, "PageActions:Clicked");
     Services.obs.removeObserver(this, "PageActions:LongClicked");
     Services.obs.removeObserver(this, "Doorhanger:Reply");
+    Services.obs.removeObserver(this, "Toast:Click", false);
+    Services.obs.removeObserver(this, "Toast:Hidden", false);
     this.contextmenus.uninit();
   },
 
@@ -1580,12 +1587,26 @@ var NativeWindow = {
   },
 
   toast: {
-    show: function(aMessage, aDuration) {
-      sendMessageToJava({
+    _callbacks: {},
+    show: function(aMessage, aDuration, aOptions) {
+      let msg = {
         type: "Toast:Show",
         message: aMessage,
         duration: aDuration
-      });
+      };
+
+      if (aOptions && aOptions.button) {
+        msg.button = {
+          label: aOptions.button.label,
+          id: uuidgen.generateUUID().toString(),
+          // If the caller specified a button, make sure we convert any chrome urls
+          // to jar:jar urls so that the frontend can show them
+          icon: aOptions.button.icon ? resolveGeckoURI(aOptions.button.icon) : null,
+        };
+        this._callbacks[msg.button.id] = aOptions.button.callback;
+      }
+
+      sendMessageToJava(msg);
     }
   },
 
@@ -1721,6 +1742,14 @@ var NativeWindow = {
     } else if (aTopic == "PageActions:LongClicked") {
         if (this.pageactions._items[aData].longClickCallback)
           this.pageactions._items[aData].longClickCallback();
+    } else if (aTopic == "Toast:Click") {
+      if (this.toast._callbacks[aData]) {
+        this.toast._callbacks[aData]();
+        delete this.toast._callbacks[aData];
+      }
+    } else if (aTopic == "Toast:Hidden") {
+      if (this.toast._callbacks[aData])
+        delete this.toast._callbacks[aData];
     } else if (aTopic == "Doorhanger:Reply") {
       let data = JSON.parse(aData);
       let reply_id = data["callback"];
@@ -2492,6 +2521,10 @@ nsBrowserAccess.prototype = {
 
   isTabContentWindow: function(aWindow) {
     return BrowserApp.getBrowserForWindow(aWindow) != null;
+  },
+
+  get contentWindow() {
+    return BrowserApp.selectedBrowser.contentWindow;
   }
 };
 
@@ -7113,14 +7146,16 @@ let Reader = {
 
   getArticleForTab: function Reader_getArticleForTab(tabId, url, callback) {
     let tab = BrowserApp.getTabForId(tabId);
-    let article = tab.savedArticle;
-
-    if (article && article.url == url) {
-      this.log("Saved article found in tab");
-      callback(article);
-    } else {
-      this.parseDocumentFromURL(url, callback);
+    if (tab) {
+      let article = tab.savedArticle;
+      if (article && article.url == url) {
+        this.log("Saved article found in tab");
+        callback(article);
+        return;
+      }
     }
+
+    this.parseDocumentFromURL(url, callback);
   },
 
   parseDocumentFromTab: function(tabId, callback) {

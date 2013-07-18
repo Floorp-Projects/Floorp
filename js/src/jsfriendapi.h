@@ -237,19 +237,6 @@ typedef bool
 extern JS_FRIEND_API(void)
 DumpHeapComplete(JSRuntime *rt, FILE *fp);
 
-class JS_FRIEND_API(AutoSwitchCompartment) {
-  private:
-    JSContext *cx;
-    JSCompartment *oldCompartment;
-  public:
-    AutoSwitchCompartment(JSContext *cx, JSCompartment *newCompartment
-                          MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
-    AutoSwitchCompartment(JSContext *cx, JS::HandleObject target
-                          MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
-    ~AutoSwitchCompartment();
-    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
-};
-
 #ifdef OLD_GETTER_SETTER_METHODS
 JS_FRIEND_API(JSBool) obj_defineGetter(JSContext *cx, unsigned argc, js::Value *vp);
 JS_FRIEND_API(JSBool) obj_defineSetter(JSContext *cx, unsigned argc, js::Value *vp);
