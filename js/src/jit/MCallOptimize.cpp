@@ -800,9 +800,9 @@ IonBuilder::inlineMathImul(CallInfo &callInfo)
     if (returnType != MIRType_Int32)
         return InliningStatus_NotInlined;
 
-    if (!IsNumberType(callInfo.getArg(0)->type()) || callInfo.getArg(0)->type() == MIRType_Float32)
+    if (!IsNumberType(callInfo.getArg(0)->type()))
         return InliningStatus_NotInlined;
-    if (!IsNumberType(callInfo.getArg(1)->type()) || callInfo.getArg(1)->type() == MIRType_Float32)
+    if (!IsNumberType(callInfo.getArg(1)->type()))
         return InliningStatus_NotInlined;
 
     callInfo.unwrapArgs();
