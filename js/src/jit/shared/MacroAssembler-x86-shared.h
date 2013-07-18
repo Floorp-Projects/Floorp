@@ -62,6 +62,34 @@ class MacroAssemblerX86Shared : public Assembler
         j(ConditionFromDoubleCondition(cond), label);
     }
 
+    void compareFloat(DoubleCondition cond, const FloatRegister &lhs, const FloatRegister &rhs) {
+        if (cond & DoubleConditionBitInvert)
+            ucomiss(rhs, lhs);
+        else
+            ucomiss(lhs, rhs);
+    }
+    void branchFloat(DoubleCondition cond, const FloatRegister &lhs,
+                      const FloatRegister &rhs, Label *label)
+    {
+        compareFloat(cond, lhs, rhs);
+
+        if (cond == DoubleEqual) {
+            Label unordered;
+            j(Parity, &unordered);
+            j(Equal, label);
+            bind(&unordered);
+            return;
+        }
+        if (cond == DoubleNotEqualOrUnordered) {
+            j(NotEqual, label);
+            j(Parity, label);
+            return;
+        }
+
+        JS_ASSERT(!(cond & DoubleConditionBitSpecial));
+        j(ConditionFromDoubleCondition(cond), label);
+    }
+
     void move32(const Imm32 &imm, const Register &dest) {
         if (imm.value == 0)
             xorl(dest, dest);
@@ -211,6 +239,12 @@ class MacroAssemblerX86Shared : public Assembler
     void convertInt32ToDouble(const Address &src, FloatRegister dest) {
         cvtsi2sd(Operand(src), dest);
     }
+    void convertInt32ToFloat32(const Register &src, const FloatRegister &dest) {
+        cvtsi2ss(src, dest);
+    }
+    void convertInt32ToFloat32(const Address &src, FloatRegister dest) {
+        cvtsi2ss(Operand(src), dest);
+    }
     Condition testDoubleTruthy(bool truthy, const FloatRegister &reg) {
         xorpd(ScratchFloatReg, ScratchFloatReg);
         ucomisd(ScratchFloatReg, reg);
@@ -293,6 +327,13 @@ class MacroAssemblerX86Shared : public Assembler
         // XOR the float in a float register with -0.0.
         xorpd(ScratchFloatReg, reg); // s ^ 0x80000000000000
     }
+    void negateFloat(FloatRegister reg) {
+        pcmpeqw(ScratchFloatReg, ScratchFloatReg);
+        psllq(Imm32(31), ScratchFloatReg);
+
+        // XOR the float in a float register with -0.0.
+        xorps(ScratchFloatReg, reg); // s ^ 0x80000000
+    }
     void addDouble(FloatRegister src, FloatRegister dest) {
         addsd(src, dest);
     }
@@ -304,6 +345,9 @@ class MacroAssemblerX86Shared : public Assembler
     }
     void divDouble(FloatRegister src, FloatRegister dest) {
         divsd(src, dest);
+    }
+    void convertFloatToDouble(const FloatRegister &src, const FloatRegister &dest) {
+        cvtss2sd(src, dest);
     }
     void convertDoubleToFloat(const FloatRegister &src, const FloatRegister &dest) {
         cvtsd2ss(src, dest);
@@ -323,6 +367,18 @@ class MacroAssemblerX86Shared : public Assembler
     void loadFloatAsDouble(const Operand &src, FloatRegister dest) {
         movss(src, dest);
         cvtss2sd(dest, dest);
+    }
+    void loadFloat(const Register &src, FloatRegister dest) {
+        movss(Operand(src), dest);
+    }
+    void loadFloat(const Address &src, FloatRegister dest) {
+        movss(Operand(src), dest);
+    }
+    void loadFloat(const BaseIndex &src, FloatRegister dest) {
+        movss(Operand(src), dest);
+    }
+    void loadFloat(const Operand &src, FloatRegister dest) {
+        movss(src, dest);
     }
     void storeFloat(FloatRegister src, const Address &dest) {
         movss(src, Operand(dest));
