@@ -78,10 +78,30 @@ VARIABLES = {
         This variable contains a list of C source files to compile.
         """),
 
-    'DEFINES': (StrictOrderingOnAppendList, list, [],
-        """Compiler defines to declare.
+    'DEFINES': (OrderedDict, dict, OrderedDict(),
+        """Dictionary of compiler defines to declare.
 
-        Command line -D flags passed to the compiler.
+        These are passed in to the compiler as -Dkey='value' for string values,
+        -Dkey=value for numeric values, or -Dkey if the value is True. Note
+        that for string values, the outer-level of single-quotes will be
+        consumed by the shell. If you want to have a string-literal in the
+        program, the value needs to have double-quotes.
+
+        Example:
+        DEFINES['NS_NO_XPCOM'] = True
+        DEFINES['MOZ_EXTENSIONS_DB_SCHEMA'] = 15
+        DEFINES['DLL_SUFFIX'] = '".so"'
+
+        This will result in the compiler flags -DNS_NO_XPCOM,
+        -DMOZ_EXTENSIONS_DB_SCHEMA=15, and -DDLL_SUFFIX='".so"',
+        respectively. These could also be combined into a single
+        update:
+
+        DEFINES.update({
+            'NS_NO_XPCOM': True,
+            'MOZ_EXTENSIONS_DB_SCHEMA': 15,
+            'DLL_SUFFIX': '".so"',
+        })
         """),
 
     'DIRS': (list, list, [],

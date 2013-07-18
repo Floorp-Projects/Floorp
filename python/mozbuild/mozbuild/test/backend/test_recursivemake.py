@@ -157,10 +157,6 @@ class TestRecursiveMakeBackend(BackendTester):
                 'CSRCS += bar.c',
                 'CSRCS += foo.c',
             ],
-            'DEFINES': [
-                'DEFINES += -Dbar',
-                'DEFINES += -Dfoo',
-            ],
             'EXTRA_COMPONENTS': [
                 'EXTRA_COMPONENTS += bar.js',
                 'EXTRA_COMPONENTS += foo.js',
@@ -389,6 +385,19 @@ class TestRecursiveMakeBackend(BackendTester):
             "IPDLDIRS := %s/bar %s/foo" % (topsrcdir, topsrcdir),
         ]
         self.assertEqual(lines, expected)
+
+    def test_defines(self):
+        """Test that DEFINES are written to backend.mk correctly."""
+        env = self._consume('defines', RecursiveMakeBackend)
+
+        backend_path = os.path.join(env.topobjdir, 'backend.mk')
+        lines = [l.strip() for l in open(backend_path, 'rt').readlines()[2:]]
+
+        var = 'DEFINES'
+        defines = [val for val in lines if val.startswith(var)]
+
+        expected = ['DEFINES += -DFOO -DBAZ=\'"abcd"\' -DBAR=7 -DVALUE=\'xyz\'']
+        self.assertEqual(defines, expected)
 
     def test_local_includes(self):
         """Test that LOCAL_INCLUDES are written to backend.mk correctly."""
