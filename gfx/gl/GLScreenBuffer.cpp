@@ -14,6 +14,9 @@
 #include "SharedSurfaceGralloc.h"
 #include "nsXULAppAPI.h"
 #endif
+#ifdef XP_MACOSX
+#include "SharedSurfaceIO.h"
+#endif
 
 using namespace mozilla::gfx;
 
@@ -39,6 +42,13 @@ GLScreenBuffer::Create(GLContext* gl,
         XRE_GetProcessType() != GeckoProcessType_Default)
     {
         factory = new SurfaceFactory_Gralloc(gl, caps);
+    }
+#endif
+#ifdef XP_MACOSX
+    /* On OSX, we want an IOSurface factory, and we want one right at the start */
+    if (!factory)
+    {
+        factory = new SurfaceFactory_IOSurface(gl, caps);
     }
 #endif
 
