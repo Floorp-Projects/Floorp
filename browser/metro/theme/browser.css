@@ -722,28 +722,21 @@ documenttab[selected] .documenttab-selection {
 }
 
 #panel-close-button {
-  background: transparent;
-  border: 0 none;
-  -moz-appearance: none;
-  margin: 0;
   -moz-margin-end: 40px;
-  list-style-image: url(chrome://browser/skin/images/appbar-back.png);
-  -moz-image-region: rect(0 40px 40px 0);
-  padding: 0;
-  min-height: 40px;
-  max-height: 40px;
+  list-style-image: url(chrome://browser/skin/images/navbar-back.png);
   -moz-box-pack: center;
 }
 
-@media (min-resolution: 130dpi) {
+@media (min-resolution: @min_res_140pc@) {
   #panel-close-button {
-    list-style-image: url(chrome://browser/skin/images/appbar-back@1.4x.png);
-    width: 40px;
+    list-style-image: url(chrome://browser/skin/images/navbar-back@1.4x.png);
   }
 }
 
-#panel-close-button[disabled] {
-  opacity: .5;
+@media (min-resolution: @min_res_180pc@) {
+  #panel-close-button {
+    list-style-image: url(chrome://browser/skin/images/navbar-back@1.8x.png);
+  }
 }
 
 #panel-view-switcher {
