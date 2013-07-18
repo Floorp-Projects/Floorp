@@ -34,7 +34,7 @@ class BaselineCompiler;
 class Nursery
 {
   public:
-    const static int NumNurseryChunks = 8;
+    const static int NumNurseryChunks = 16;
     const static int LastNurseryChunk = NumNurseryChunks - 1;
     const static size_t Alignment = gc::ChunkSize;
     const static size_t NurserySize = gc::ChunkSize * NumNurseryChunks;

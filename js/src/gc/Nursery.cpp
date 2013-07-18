@@ -655,9 +655,9 @@ js::Nursery::collect(JSRuntime *rt, JS::gcreason::Reason reason)
 
     /* Resize the nursery. */
     double promotionRate = trc.tenuredSize / double(allocationEnd() - start());
-    if (promotionRate > 0.5)
+    if (promotionRate > 0.05)
         growAllocableSpace();
-    else if (promotionRate < 0.1)
+    else if (promotionRate < 0.01)
         shrinkAllocableSpace();
 
     /* Sweep. */
