@@ -259,6 +259,11 @@ IonBuilder::canInlineTarget(JSFunction *target)
         return false;
     }
 
+    if (!target->hasScript()) {
+        IonSpew(IonSpew_Inlining, "Cannot inline due to lack of Non-Lazy script");
+        return false;
+    }
+
     RootedScript inlineScript(cx, target->nonLazyScript());
     ExecutionMode executionMode = info().executionMode();
     if (!CanIonCompile(inlineScript, executionMode)) {
