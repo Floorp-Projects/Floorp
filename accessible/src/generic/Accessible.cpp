@@ -3353,14 +3353,14 @@ Accessible::GetLevelInternal()
 void
 Accessible::StaticAsserts() const
 {
-  MOZ_STATIC_ASSERT(eLastChildrenFlag <= (2 << kChildrenFlagsBits) - 1,
-                    "Accessible::mChildrenFlags was oversized by eLastChildrenFlag!");
-  MOZ_STATIC_ASSERT(eLastStateFlag <= (2 << kStateFlagsBits) - 1,
-                    "Accessible::mStateFlags was oversized by eLastStateFlag!");
-  MOZ_STATIC_ASSERT(eLastAccType <= (2 << kTypeBits) - 1,
-                    "Accessible::mType was oversized by eLastAccType!");
-  MOZ_STATIC_ASSERT(eLastAccGenericType <= (2 << kGenericTypesBits) - 1,
-                    "Accessible::mGenericType was oversized by eLastAccGenericType!");
+  static_assert(eLastChildrenFlag <= (2 << kChildrenFlagsBits) - 1,
+                "Accessible::mChildrenFlags was oversized by eLastChildrenFlag!");
+  static_assert(eLastStateFlag <= (2 << kStateFlagsBits) - 1,
+                "Accessible::mStateFlags was oversized by eLastStateFlag!");
+  static_assert(eLastAccType <= (2 << kTypeBits) - 1,
+                "Accessible::mType was oversized by eLastAccType!");
+  static_assert(eLastAccGenericType <= (2 << kGenericTypesBits) - 1,
+                "Accessible::mGenericType was oversized by eLastAccGenericType!");
 }
 
 

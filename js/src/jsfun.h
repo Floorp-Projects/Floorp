@@ -52,8 +52,8 @@ class JSFunction : public JSObject
 
     static void staticAsserts() {
         JS_STATIC_ASSERT(INTERPRETED == JS_FUNCTION_INTERPRETED_BIT);
-        MOZ_STATIC_ASSERT(sizeof(JSFunction) == sizeof(js::shadow::Function),
-                          "shadow interface must match actual interface");
+        static_assert(sizeof(JSFunction) == sizeof(js::shadow::Function),
+                      "shadow interface must match actual interface");
     }
 
     uint16_t        nargs;        /* maximum number of specified arguments,

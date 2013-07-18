@@ -193,9 +193,9 @@ main()
     { 0xc8, 0xf2, 0x09, 0x59, 0x4e, 0x64, 0x40, 0xaa, 0x7b, 0xf7, 0xb8, 0xe0,
       0xfa, 0x44, 0xb2, 0x31, 0x95, 0xad, 0x94, 0x81 };
 
-  MOZ_STATIC_ASSERT(sizeof(expected) == sizeof(SHA1Sum::Hash),
-                    "expected-data size should be the same as the actual hash "
-                    "size");
+  static_assert(sizeof(expected) == sizeof(SHA1Sum::Hash),
+                "expected-data size should be the same as the actual hash "
+                "size");
 
   for (size_t i = 0; i < SHA1Sum::HashSize; i++)
     MOZ_ASSERT(hash[i] == expected[i]);

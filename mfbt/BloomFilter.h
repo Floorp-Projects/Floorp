@@ -106,7 +106,7 @@ class BloomFilter
      */
   public:
     BloomFilter() {
-        MOZ_STATIC_ASSERT(KeySize <= keyShift, "KeySize too big");
+        static_assert(KeySize <= keyShift, "KeySize too big");
 
         // Should we have a custom operator new using calloc instead and
         // require that we're allocated via the operator?

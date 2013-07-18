@@ -37,8 +37,8 @@ public:
   template <size_t LEN>
   nsresult Dispatch(const char (&taskThreadName)[LEN])
   {
-    MOZ_STATIC_ASSERT(LEN <= 15,
-                      "Thread name must be no more than 15 characters");
+    static_assert(LEN <= 15,
+                  "Thread name must be no more than 15 characters");
     return Dispatch(nsDependentCString(taskThreadName));
   }
 
