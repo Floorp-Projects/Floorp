@@ -9,6 +9,8 @@ const kProgressMarginStart = 30;
 const kProgressMarginEnd = 70;
 
 const WebProgress = {
+  get _identityBox() { return document.getElementById("identity-box"); },
+
   _progressActive: false,
 
   init: function init() {
@@ -75,8 +77,7 @@ const WebProgress = {
     }
 
     if (aTab == Browser.selectedTab) {
-      let identityBox = document.getElementById("identity-box-inner");
-      identityBox.className = aTab._identityState;
+      this._identityBox.className = aTab._identityState;
     }
   },
 
@@ -214,13 +215,11 @@ const WebProgress = {
   },
 
   _onTabSelect: function(aEvent) {
-    let identityBox = document.getElementById("identity-box-inner");
     let tab = Browser.getTabFromChrome(aEvent.originalTarget);
-    identityBox.className = tab._identityState || "";
+    this._identityBox.className = tab._identityState || "";
   },
 
   _onUrlBarInput: function(aEvent) {
-    let identityBox = document.getElementById("identity-box-inner");
-    Browser.selectedTab._identityState = identityBox.className = "";
+    Browser.selectedTab._identityState = this._identityBox.className = "";
   },
 };
