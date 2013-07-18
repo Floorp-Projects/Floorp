@@ -100,6 +100,12 @@ class Channel : public Message::Sender {
   // immediately.
   virtual bool Send(Message* message);
 
+  // Unsound_IsClosed() and Unsound_NumQueuedMessages() are safe to call from
+  // any thread, but the value returned may be out of date, because we don't
+  // use any synchronization when reading or writing it.
+  bool Unsound_IsClosed() const;
+  uint32_t Unsound_NumQueuedMessages() const;
+
 #if defined(OS_POSIX)
   // On POSIX an IPC::Channel wraps a socketpair(), this method returns the
   // FD # for the client end of the socket and the equivalent FD# to use for
