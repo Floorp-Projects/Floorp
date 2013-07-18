@@ -175,7 +175,6 @@
 #ifdef MOZ_B2G_FM
 @BINPATH@/components/dom_fm.xpt
 #endif
-@BINPATH@/components/dom_battery.xpt
 #ifdef MOZ_B2G_BT
 @BINPATH@/components/dom_bluetooth.xpt
 #endif

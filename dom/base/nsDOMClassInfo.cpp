@@ -226,7 +226,6 @@ using mozilla::dom::workers::ResolveWorkerClasses;
 #include "nsIDOMSmsSegmentInfo.h"
 #include "nsIDOMMozMobileMessageThread.h"
 #include "nsIDOMConnection.h"
-#include "mozilla/dom/network/Utils.h"
 
 #ifdef MOZ_B2G_RIL
 #include "Telephony.h"
