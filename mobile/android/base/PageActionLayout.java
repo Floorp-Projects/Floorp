@@ -166,33 +166,50 @@ public class PageActionLayout extends LinearLayout implements GeckoEventListener
         }
     }
 
+    private void setActionForView(final ImageButton view, final PageAction pageAction) {
+        if (pageAction == null) {
+            view.setTag(null);
+            ThreadUtils.postToUiThread(new Runnable() {
+                @Override
+                public void run () {
+                    view.setImageDrawable(null);
+                    view.setVisibility(View.GONE);
+                    view.setContentDescription(null);
+                }
+            });
+            return;
+        }
+
+        view.setTag(pageAction.getID());
+        ThreadUtils.postToUiThread(new Runnable() {
+            @Override
+            public void run () {
+                view.setImageDrawable(pageAction.getDrawable());
+                view.setVisibility(View.VISIBLE);
+                view.setContentDescription(pageAction.getTitle());
+            }
+        });
+    }
+
     private void refreshPageActionIcons() {
         final Resources resources = mContext.getResources();
         for(int index = 0; index < this.getChildCount(); index++) {
             final ImageButton v = (ImageButton)this.getChildAt(index);
             final PageAction pageAction = getPageActionForViewAt(index);
 
-            if (index == (this.getChildCount() - 1)) {
-                String id = (pageAction != null) ? pageAction.getID() : null;
-                v.setTag((mPageActionList.size() > mMaxVisiblePageActions) ? MENU_BUTTON_KEY : id);
+            // If there are more pageactions then buttons, set the menu icon. Otherwise set the page action's icon if there is a page action.
+            if (index == (this.getChildCount() - 1) && mPageActionList.size() > mMaxVisiblePageActions) {
+                v.setTag(MENU_BUTTON_KEY);
                 ThreadUtils.postToUiThread(new Runnable() {
                     @Override
                     public void run () {
-                        // If there are more pageactions then buttons, set the menu icon. Otherwise set the page action's icon if there is a page action.
-                        Drawable d = (pageAction != null) ? pageAction.getDrawable() : null;
-                        v.setImageDrawable((mPageActionList.size() > mMaxVisiblePageActions) ? resources.getDrawable(R.drawable.icon_pageaction) : d);
+                        v.setImageDrawable(resources.getDrawable(R.drawable.icon_pageaction));
                         v.setVisibility((pageAction != null) ? View.VISIBLE : View.GONE);
+                        v.setContentDescription(resources.getString(R.string.page_action_dropmarker_description));
                     }
                 });
             } else {
-                v.setTag((pageAction != null) ? pageAction.getID() : null);
-                ThreadUtils.postToUiThread(new Runnable() {
-                    @Override
-                    public void run () {
-                        v.setImageDrawable((pageAction != null) ? pageAction.getDrawable() : null);
-                        v.setVisibility((pageAction != null) ? View.VISIBLE : View.GONE);
-                    }
-                });
+                setActionForView(v, pageAction);
             }
         }
     }
