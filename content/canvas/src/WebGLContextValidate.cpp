@@ -196,10 +196,19 @@ bool WebGLContext::ValidateBlendEquationEnum(WebGLenum mode, const char *info)
         case LOCAL_GL_FUNC_SUBTRACT:
         case LOCAL_GL_FUNC_REVERSE_SUBTRACT:
             return true;
+        case LOCAL_GL_MIN:
+        case LOCAL_GL_MAX:
+            if (IsWebGL2()) {
+                // http://www.opengl.org/registry/specs/EXT/blend_minmax.txt
+                return true;
+            }
+            break;
         default:
-            ErrorInvalidEnumInfo(info, mode);
-            return false;
+            break;
     }
+
+    ErrorInvalidEnumInfo(info, mode);
+    return false;
 }
 
 bool WebGLContext::ValidateBlendFuncDstEnum(WebGLenum factor, const char *info)
@@ -1052,7 +1061,8 @@ WebGLContext::InitAndValidateGL()
     if (IsWebGL2() &&
         (!IsExtensionSupported(OES_vertex_array_object) ||
          !IsExtensionSupported(WEBGL_draw_buffers) ||
-         !gl->IsExtensionSupported(gl::GLContext::EXT_gpu_shader4)
+         !gl->IsExtensionSupported(gl::GLContext::EXT_gpu_shader4) ||
+         !gl->IsExtensionSupported(gl::GLContext::EXT_blend_minmax)
         ))
     {
         return false;
