@@ -1426,24 +1426,27 @@ ConvertLinearSum(MBasicBlock *block, const LinearSum &sum)
             } else {
                 def = term.term;
             }
-        } else {
+        } else if (term.scale == -1) {
             if (!def) {
                 def = MConstant::New(Int32Value(0));
                 block->insertBefore(block->lastIns(), def->toInstruction());
             }
-            if (term.scale == -1) {
-                def = MSub::New(def, term.term);
-                def->toSub()->setInt32();
-                block->insertBefore(block->lastIns(), def->toInstruction());
-            } else {
-                MConstant *factor = MConstant::New(Int32Value(term.scale));
-                block->insertBefore(block->lastIns(), factor);
-                MMul *mul = MMul::New(term.term, factor);
-                mul->setInt32();
-                block->insertBefore(block->lastIns(), mul);
+            def = MSub::New(def, term.term);
+            def->toSub()->setInt32();
+            block->insertBefore(block->lastIns(), def->toInstruction());
+        } else {
+            JS_ASSERT(term.scale != 0);
+            MConstant *factor = MConstant::New(Int32Value(term.scale));
+            block->insertBefore(block->lastIns(), factor);
+            MMul *mul = MMul::New(term.term, factor);
+            mul->setInt32();
+            block->insertBefore(block->lastIns(), mul);
+            if (def) {
                 def = MAdd::New(def, mul);
                 def->toAdd()->setInt32();
                 block->insertBefore(block->lastIns(), def->toInstruction());
+            } else {
+                def = mul;
             }
         }
     }
