@@ -8,13 +8,13 @@ import java.io.File;
 import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
 
+import org.mozilla.gecko.background.common.GlobalConstants;
+import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.sync.CredentialException;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
-import org.mozilla.gecko.background.common.GlobalConstants;
-import org.mozilla.gecko.background.common.log.Logger;
-import org.mozilla.gecko.sync.SyncConstants;
 import org.mozilla.gecko.sync.SyncConfiguration;
+import org.mozilla.gecko.sync.SyncConstants;
 import org.mozilla.gecko.sync.ThreadPool;
 import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.sync.config.AccountPickler;
@@ -28,7 +28,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager.NameNotFoundException;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.util.Log;
@@ -81,20 +80,6 @@ public class SyncAccounts {
     // exist.
     final Account account = AccountPickler.unpickle(c, Constants.ACCOUNT_PICKLE_FILENAME);
     return (account != null);
-  }
-
-  /**
-   * This class provides background-thread abstracted access to whether a
-   * Firefox Sync account has been set up on this device.
-   * <p>
-   * Subclass this task and override `onPostExecute` to act on the result.
-   */
-  public static class AccountsExistTask extends AsyncTask<Context, Void, Boolean> {
-    @Override
-    protected Boolean doInBackground(Context... params) {
-      Context c = params[0];
-      return syncAccountsExist(c);
-    }
   }
 
   /**
@@ -193,37 +178,6 @@ public class SyncAccounts {
       o.put(Constants.JSON_KEY_CLIENT_NAME, clientName);
       o.put(Constants.JSON_KEY_CLIENT_GUID, clientGuid);
       return o;
-    }
-  }
-
-  /**
-   * This class provides background-thread abstracted access to creating a
-   * Firefox Sync account.
-   * <p>
-   * Subclass this task and override `onPostExecute` to act on the result. The
-   * <code>Result</code> (of type <code>Account</code>) is null if an error
-   * occurred and the account could not be added.
-   */
-  public static class CreateSyncAccountTask extends AsyncTask<SyncAccountParameters, Void, Account> {
-    protected final boolean syncAutomatically;
-
-    public CreateSyncAccountTask() {
-      this(true);
-    }
-
-    public CreateSyncAccountTask(final boolean syncAutomically) {
-      this.syncAutomatically = syncAutomically;
-    }
-
-    @Override
-    protected Account doInBackground(SyncAccountParameters... params) {
-      SyncAccountParameters syncAccount = params[0];
-      try {
-        return createSyncAccount(syncAccount, syncAutomatically);
-      } catch (Exception e) {
-        Log.e(SyncConstants.GLOBAL_LOG_TAG, "Unable to create account.", e);
-        return null;
-      }
     }
   }
 
