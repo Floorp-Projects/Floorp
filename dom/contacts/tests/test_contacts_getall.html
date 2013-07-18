@@ -40,7 +40,7 @@ let adr1 = {
 };
 
 let properties1 = {
-  name: "Testname1",
+  name: ["Testname1 TestFamilyName"],
   familyName: ["TestFamilyName","Wagner"],
   givenName: ["Test1","Test2"],
   nickname: "nicktest",
@@ -165,6 +165,7 @@ function addContacts() {
   for (let i = 0; i < 39; ++i) {
     createResult1 = new mozContact();
     properties1.familyName[0] = "Testname" + (i < 10 ? "0" + i : i);
+    properties1.name = properties1.givenName[0] + " " + properties1.familyName[0];
     createResult1.init(properties1);
     req = mozContacts.save(createResult1);
     req.onsuccess = function() {
@@ -174,6 +175,7 @@ function addContacts() {
   };
   createResult1 = new mozContact();
   properties1.familyName[0] = "Testname39";
+  properties1.name = properties1.givenName[0] + " Testname39";
   createResult1.init(properties1);
   req = mozContacts.save(createResult1);
   req.onsuccess = function() {
