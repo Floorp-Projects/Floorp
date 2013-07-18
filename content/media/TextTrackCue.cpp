@@ -17,8 +17,7 @@
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_5(TextTrackCue,
-                                        mGlobal,
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_4(TextTrackCue,
                                         mDocument,
                                         mTrack,
                                         mTrackElement,
@@ -47,8 +46,7 @@ TextTrackCue::TextTrackCue(nsISupports* aGlobal,
                            double aEndTime,
                            const nsAString& aText,
                            ErrorResult& aRv)
-  : mGlobal(aGlobal)
-  , mText(aText)
+  : mText(aText)
   , mStartTime(aStartTime)
   , mEndTime(aEndTime)
   , mHead(nullptr)
@@ -57,7 +55,7 @@ TextTrackCue::TextTrackCue(nsISupports* aGlobal,
   SetDefaultCueSettings();
   MOZ_ASSERT(aGlobal);
   SetIsDOMBinding();
-  if (NS_FAILED(StashDocument())) {
+  if (NS_FAILED(StashDocument(aGlobal))) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
   }
 }
@@ -69,8 +67,7 @@ TextTrackCue::TextTrackCue(nsISupports* aGlobal,
                            HTMLTrackElement* aTrackElement,
                            webvtt_node* head,
                            ErrorResult& aRv)
-  : mGlobal(aGlobal)
-  , mText(aText)
+  : mText(aText)
   , mStartTime(aStartTime)
   , mEndTime(aEndTime)
   , mTrackElement(aTrackElement)
@@ -81,7 +78,7 @@ TextTrackCue::TextTrackCue(nsISupports* aGlobal,
   SetDefaultCueSettings();
   MOZ_ASSERT(aGlobal);
   SetIsDOMBinding();
-  if (NS_FAILED(StashDocument())) {
+  if (NS_FAILED(StashDocument(aGlobal))) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
   }
 }
@@ -97,9 +94,9 @@ TextTrackCue::~TextTrackCue()
  *  even when unlinked during discard/teardown.
  */
 nsresult
-TextTrackCue::StashDocument()
+TextTrackCue::StashDocument(nsISupports* aGlobal)
 {
-  nsCOMPtr<nsPIDOMWindow> window(do_QueryInterface(mGlobal));
+  nsCOMPtr<nsPIDOMWindow> window(do_QueryInterface(aGlobal));
   if (!window) {
     return NS_ERROR_NO_INTERFACE;
   }

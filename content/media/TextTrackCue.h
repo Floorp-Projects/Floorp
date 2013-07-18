@@ -54,9 +54,9 @@ public:
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
 
-  nsISupports* GetParentObject()
+  nsINode* GetParentObject()
   {
-    return mGlobal;
+    return mDocument;
   }
 
   TextTrack* GetTrack() const
@@ -322,9 +322,8 @@ private:
   void CueChanged();
   void SetDefaultCueSettings();
   void CreateCueOverlay();
-  nsresult StashDocument();
+  nsresult StashDocument(nsISupports* aGlobal);
 
-  nsCOMPtr<nsISupports> mGlobal;
   nsRefPtr<nsIDocument> mDocument;
   nsString mText;
   double mStartTime;
