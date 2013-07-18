@@ -1121,8 +1121,8 @@ template<typename T, size_t N, class AP, class TV>
 inline void
 VectorBase<T, N, AP, TV>::swap(TV& other)
 {
-  MOZ_STATIC_ASSERT(N == 0,
-                    "still need to implement this for N != 0");
+  static_assert(N == 0,
+                "still need to implement this for N != 0");
 
   // This only works when inline storage is always empty.
   if (!usingInlineStorage() && other.usingInlineStorage()) {

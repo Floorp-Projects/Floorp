@@ -251,7 +251,7 @@ class Pickle {
   // a power of 2.
   template<uint32_t alignment> struct ConstantAligner {
     static uint32_t align(int bytes) {
-      MOZ_STATIC_ASSERT((alignment & (alignment - 1)) == 0,
+      static_assert((alignment & (alignment - 1)) == 0,
 			"alignment must be a power of two");
       return (bytes + (alignment - 1)) & ~static_cast<uint32_t>(alignment - 1);
     }

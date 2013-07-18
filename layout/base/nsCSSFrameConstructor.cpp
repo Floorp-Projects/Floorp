@@ -9031,7 +9031,7 @@ nsCSSFrameConstructor::ProcessChildren(nsFrameConstructorState& aState,
                   "Parent frame in ProcessChildren should be its own "
                   "content insertion frame");
   const uint32_t kMaxDepth = 2 * MAX_REFLOW_DEPTH;
-  MOZ_STATIC_ASSERT(kMaxDepth <= UINT16_MAX, "mCurrentDepth type is too narrow");
+  static_assert(kMaxDepth <= UINT16_MAX, "mCurrentDepth type is too narrow");
   AutoRestore<uint16_t> savedDepth(mCurrentDepth);
   if (mCurrentDepth != UINT16_MAX) {
     ++mCurrentDepth;

@@ -1220,9 +1220,9 @@ nsDOMClassInfo::Init()
 {
   /* Errors that can trigger early returns are done first,
      otherwise nsDOMClassInfo is left in a half inited state. */
-  MOZ_STATIC_ASSERT(sizeof(uintptr_t) == sizeof(void*),
-                    "BAD! You'll need to adjust the size of uintptr_t to the "
-                    "size of a pointer on your platform.");
+  static_assert(sizeof(uintptr_t) == sizeof(void*),
+                "BAD! You'll need to adjust the size of uintptr_t to the "
+                "size of a pointer on your platform.");
 
   NS_ENSURE_TRUE(!sIsInitialized, NS_ERROR_ALREADY_INITIALIZED);
 
@@ -1686,9 +1686,9 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMXULPopupElement)
   DOM_CLASSINFO_MAP_END
 
-  MOZ_STATIC_ASSERT(MOZ_ARRAY_LENGTH(sClassInfoData) == eDOMClassInfoIDCount,
-                    "The number of items in sClassInfoData doesn't match the "
-                    "number of nsIDOMClassInfo ID's, this is bad! Fix it!");
+  static_assert(MOZ_ARRAY_LENGTH(sClassInfoData) == eDOMClassInfoIDCount,
+                "The number of items in sClassInfoData doesn't match the "
+                "number of nsIDOMClassInfo ID's, this is bad! Fix it!");
 
 #ifdef DEBUG
   for (size_t i = 0; i < eDOMClassInfoIDCount; i++) {

@@ -13,8 +13,8 @@
 using namespace mozilla;
 
 static Atomic<int32_t, Relaxed> sMemoryPressurePending;
-MOZ_STATIC_ASSERT(MemPressure_None == 0,
-                  "Bad static initialization with the default constructor.");
+static_assert(MemPressure_None == 0,
+              "Bad static initialization with the default constructor.");
 
 MemoryPressureState
 NS_GetPendingMemoryPressure()

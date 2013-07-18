@@ -2322,9 +2322,9 @@ nsScriptSecurityManager::nsScriptSecurityManager(void)
       mIsJavaScriptEnabled(false),
       mPolicyPrefsChanged(true)
 {
-    MOZ_STATIC_ASSERT(sizeof(intptr_t) == sizeof(void*),
-                      "intptr_t and void* have different lengths on this platform. "
-                      "This may cause a security failure with the SecurityLevel union.");
+    static_assert(sizeof(intptr_t) == sizeof(void*),
+                  "intptr_t and void* have different lengths on this platform. "
+                  "This may cause a security failure with the SecurityLevel union.");
 }
 
 nsresult nsScriptSecurityManager::Init()
