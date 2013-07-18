@@ -444,10 +444,10 @@ CodeGeneratorX86::visitLoadTypedArrayElementStatic(LLoadTypedArrayElementStatic 
 
     Address srcAddr(ptr, (int32_t) mir->base());
     if (vt == ArrayBufferView::TYPE_FLOAT32) {
+        JS_ASSERT(mir->type() == MIRType_Float32);
         FloatRegister dest = ToFloatRegister(out);
         masm.movssWithPatch(srcAddr, dest);
-        masm.cvtss2sd(dest, dest);
-        masm.canonicalizeDouble(dest);
+        masm.canonicalizeFloat(dest);
         if (ool)
             masm.bind(ool->rejoin());
         return true;
@@ -541,8 +541,8 @@ CodeGeneratorX86::visitStoreTypedArrayElementStatic(LStoreTypedArrayElementStati
 
     Address dstAddr(ptr, (int32_t) mir->base());
     if (vt == ArrayBufferView::TYPE_FLOAT32) {
-        masm.convertDoubleToFloat(ToFloatRegister(value), ScratchFloatReg);
-        masm.movssWithPatch(ScratchFloatReg, dstAddr);
+        JS_ASSERT(mir->value()->type() == MIRType_Float32);
+        masm.movssWithPatch(ToFloatRegister(value), dstAddr);
         masm.bind(&rejoin);
         return true;
     }

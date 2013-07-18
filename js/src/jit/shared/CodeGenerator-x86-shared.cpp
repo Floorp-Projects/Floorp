@@ -90,6 +90,14 @@ CodeGeneratorX86Shared::visitDouble(LDouble *ins)
 }
 
 bool
+CodeGeneratorX86Shared::visitFloat32(LFloat32 *ins)
+{
+    const LDefinition *out = ins->getDef(0);
+    masm.loadConstantFloat32(ins->getFloat(), ToFloatRegister(out));
+    return true;
+}
+
+bool
 CodeGeneratorX86Shared::visitTestIAndBranch(LTestIAndBranch *test)
 {
     const LAllocation *opd = test->input();
@@ -1277,6 +1285,34 @@ CodeGeneratorX86Shared::visitMathD(LMathD *math)
 }
 
 bool
+CodeGeneratorX86Shared::visitMathF(LMathF *math)
+{
+    FloatRegister lhs = ToFloatRegister(math->lhs());
+    Operand rhs = ToOperand(math->rhs());
+
+    JS_ASSERT(ToFloatRegister(math->output()) == lhs);
+
+    switch (math->jsop()) {
+      case JSOP_ADD:
+        masm.addss(rhs, lhs);
+        break;
+      case JSOP_SUB:
+        masm.subss(rhs, lhs);
+        break;
+      case JSOP_MUL:
+        masm.mulss(rhs, lhs);
+        break;
+      case JSOP_DIV:
+        masm.divss(rhs, lhs);
+        break;
+      default:
+        MOZ_ASSUME_UNREACHABLE("unexpected opcode");
+        return false;
+    }
+    return true;
+}
+
+bool
 CodeGeneratorX86Shared::visitFloor(LFloor *lir)
 {
     FloatRegister input = ToFloatRegister(lir->input());
@@ -1524,6 +1560,16 @@ CodeGeneratorX86Shared::visitNegD(LNegD *ins)
     JS_ASSERT(input == ToFloatRegister(ins->output()));
 
     masm.negateDouble(input);
+    return true;
+}
+
+bool
+CodeGeneratorX86Shared::visitNegF(LNegF *ins)
+{
+    FloatRegister input = ToFloatRegister(ins->input());
+    JS_ASSERT(input == ToFloatRegister(ins->output()));
+
+    masm.negateFloat(input);
     return true;
 }
 
