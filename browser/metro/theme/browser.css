@@ -474,49 +474,39 @@ documenttab[selected] .documenttab-selection {
   background-color: @panel_light_color@;
 }
 
-#back-button {
-  list-style-image: url(chrome://browser/skin/images/navbar-back.png);
+#toolbar > #back-button {
+  list-style-image: url(chrome://browser/skin/images/appbar-back.png);
   position: relative;
   z-index: 1;
   transition: opacity @forward_transition_length@ ease-out;
 }
 
-#back-button[disabled] {
+#toolbar > #back-button[disabled] {
   visibility: visible;
   opacity: 0.5;
 }
 
-#forward-button {
-  list-style-image: url(chrome://browser/skin/images/navbar-forward.png);
+#toolbar > #forward-button {
+  list-style-image: url(chrome://browser/skin/images/appbar-forward.png);
   transition: margin @forward_transition_length@ ease-out,
               visibility @forward_transition_length@ ease-out,
               opacity @forward_transition_length@ ease-out;
 }
 
-#forward-button[disabled] {
+#toolbar > #forward-button[disabled] {
   -moz-margin-start: -@forward_spacing@;
   visibility: hidden;
   opacity: 0;
   pointer-events: none;
 }
 
-@media (min-resolution: @min_res_140pc@) {
-  #back-button {
-    list-style-image: url(chrome://browser/skin/images/navbar-back@1.4x.png);
+@media (min-resolution: 130dpi) {
+  #toolbar > #back-button {
+    list-style-image: url(chrome://browser/skin/images/appbar-back@1.4x.png);
   }
 
-  #forward-button {
-    list-style-image: url(chrome://browser/skin/images/navbar-forward@1.4x.png);
-  }
-}
-
-@media (min-resolution: @min_res_180pc@) {
-  #back-button {
-    list-style-image: url(chrome://browser/skin/images/navbar-back@1.8x.png);
-  }
-
-  #forward-button {
-    list-style-image: url(chrome://browser/skin/images/navbar-forward@1.8x.png);
+  #toolbar > #forward-button {
+    list-style-image: url(chrome://browser/skin/images/appbar-forward@1.4x.png);
   }
 }
 
@@ -587,42 +577,28 @@ documenttab[selected] .documenttab-selection {
 /* Page-Specific */
 
 #pin-button {
-  list-style-image: url(chrome://browser/skin/images/navbar-pin.png);
+  list-style-image: url(chrome://browser/skin/images/appbar-pin.png);
 }
 
 #star-button {
-  list-style-image: url(chrome://browser/skin/images/navbar-star.png);
+  list-style-image: url(chrome://browser/skin/images/appbar-star.png);
 }
 
 #menu-button {
-  list-style-image: url(chrome://browser/skin/images/navbar-menu.png);
+  list-style-image: url(chrome://browser/skin/images/appbar-menu.png);
 }
 
-@media (min-resolution: @min_res_140pc@) {
+@media (min-resolution: 130dpi) {
   #pin-button {
-    list-style-image: url(chrome://browser/skin/images/navbar-pin@1.4x.png);
+    list-style-image: url(chrome://browser/skin/images/appbar-pin@1.4x.png);
   }
 
   #star-button {
-    list-style-image: url(chrome://browser/skin/images/navbar-star@1.4x.png);
+    list-style-image: url(chrome://browser/skin/images/appbar-star@1.4x.png);
   }
 
   #menu-button {
-    list-style-image: url(chrome://browser/skin/images/navbar-menu@1.4x.png);
-  }
-}
-
-@media (min-resolution: @min_res_180pc@) {
-  #pin-button {
-    list-style-image: url(chrome://browser/skin/images/navbar-pin@1.8x.png);
-  }
-
-  #star-button {
-    list-style-image: url(chrome://browser/skin/images/navbar-star@1.8x.png);
-  }
-
-  #menu-button {
-    list-style-image: url(chrome://browser/skin/images/navbar-menu@1.8x.png);
+    list-style-image: url(chrome://browser/skin/images/appbar-menu@1.4x.png);
   }
 }
 
