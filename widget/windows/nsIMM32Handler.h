@@ -16,6 +16,14 @@ class nsIWidget;
 class nsWindow;
 struct nsIntRect;
 
+namespace mozilla {
+namespace widget {
+
+struct MSGResult;
+
+} // namespace widget
+} // namespace mozilla
+
 class nsIMEContext
 {
 public:
@@ -101,18 +109,15 @@ protected:
 
 class nsIMM32Handler
 {
+  typedef mozilla::widget::MSGResult MSGResult;
 public:
   static void Initialize();
   static void Terminate();
-  // The result of Process* method mean "The message was processed, don't
-  // process the message in the caller (nsWindow)" when it's TRUE.  At that
-  // time, aEatMessage means that the message should be passed to next WndProc
-  // when it's FALSE, otherwise, the message should be eaten by us.  When the
-  // result is FALSE, aEatMessage doesn't have any meaning.  Then, the caller
-  // should continue to process the message.
+
+  // If Process*() returns true, the caller shouldn't do anything anymore.
   static bool ProcessMessage(nsWindow* aWindow, UINT msg,
-                               WPARAM &wParam, LPARAM &lParam,
-                               LRESULT *aRetValue, bool &aEatMessage);
+                             WPARAM& wParam, LPARAM& lParam,
+                             MSGResult& aResult);
   static bool IsComposing()
   {
     return IsComposingOnOurEditor() || IsComposingOnPlugin();
@@ -157,21 +162,20 @@ protected:
   static bool ProcessInputLangChangeMessage(nsWindow* aWindow,
                                               WPARAM wParam,
                                               LPARAM lParam,
-                                              LRESULT *aRetValue,
-                                              bool &aEatMessage);
+                                              MSGResult& aResult);
   static bool ProcessMessageForPlugin(nsWindow* aWindow, UINT msg,
                                         WPARAM &wParam, LPARAM &lParam,
-                                        LRESULT *aRetValue,
-                                        bool &aEatMessage);
+                                        MSGResult& aResult);
 
   nsIMM32Handler();
   ~nsIMM32Handler();
 
   // The result of following On*Event methods means "The message was processed,
   // don't process the message in the caller (nsWindow)".
-  bool OnMouseEvent(nsWindow* aWindow, LPARAM lParam, int aAction);
+  bool OnMouseEvent(nsWindow* aWindow, LPARAM lParam, int aAction,
+                    MSGResult& aResult);
   static bool OnKeyDownEvent(nsWindow* aWindow, WPARAM wParam, LPARAM lParam,
-                               bool &aEatMessage);
+                             MSGResult& aResult);
 
   // The result of On* methods mean "eat this message" when it's TRUE.
   bool OnIMEStartComposition(nsWindow* aWindow);
