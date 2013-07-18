@@ -413,6 +413,14 @@ ThreadActor.prototype = {
             stepFrame.onPop = onPop;
         }
       }
+    } else {
+      // Clear any previous stepping hooks on a plain resumption.
+      let frame = this.youngestFrame;
+      while (frame) {
+        frame.onStep = undefined;
+        frame.onPop = undefined;
+        frame = frame.older;
+      }
     }
 
     if (aRequest) {
