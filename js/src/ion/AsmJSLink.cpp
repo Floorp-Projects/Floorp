@@ -36,18 +36,6 @@ LinkFail(JSContext *cx, const char *str)
 }
 
 static bool
-GetDataProperty(JSContext *cx, const Value &objVal, HandlePropertyName field, MutableHandleValue v)
-{
-    if (!objVal.isObject())
-        return LinkFail(cx, "accessing property of non-object");
-    if (!objVal.toObject().isNative())
-        return LinkFail(cx, "accessing property of non-host object");
-    if (!HasDataProperty(cx, &objVal.toObject(), NameToId(field), v.address()))
-        return LinkFail(cx, "object missing data property");
-    return true;
-}
-
-static bool
 ValidateGlobalVariable(JSContext *cx, const AsmJSModule &module, AsmJSModule::Global &global,
                        HandleValue importVal)
 {
@@ -67,7 +55,7 @@ ValidateGlobalVariable(JSContext *cx, const AsmJSModule &module, AsmJSModule::Gl
       case AsmJSModule::Global::InitImport: {
         RootedPropertyName field(cx, global.varImportField());
         RootedValue v(cx);
-        if (!GetDataProperty(cx, importVal, field, &v))
+        if (!GetProperty(cx, importVal, field, &v))
             return false;
 
         switch (global.varImportCoercion()) {
@@ -93,7 +81,7 @@ ValidateFFI(JSContext *cx, AsmJSModule::Global &global, HandleValue importVal,
 {
     RootedPropertyName field(cx, global.ffiField());
     RootedValue v(cx);
-    if (!GetDataProperty(cx, importVal, field, &v))
+    if (!GetProperty(cx, importVal, field, &v))
         return false;
 
     if (!v.isObject() || !v.toObject().is<JSFunction>())
@@ -109,7 +97,7 @@ ValidateArrayView(JSContext *cx, AsmJSModule::Global &global, HandleValue global
 {
     RootedPropertyName field(cx, global.viewName());
     RootedValue v(cx);
-    if (!GetDataProperty(cx, globalVal, field, &v))
+    if (!GetProperty(cx, globalVal, field, &v))
         return false;
 
     if (!IsTypedArrayConstructor(v, global.viewType()))
@@ -122,10 +110,10 @@ static bool
 ValidateMathBuiltin(JSContext *cx, AsmJSModule::Global &global, HandleValue globalVal)
 {
     RootedValue v(cx);
-    if (!GetDataProperty(cx, globalVal, cx->names().Math, &v))
+    if (!GetProperty(cx, globalVal, cx->names().Math, &v))
         return false;
     RootedPropertyName field(cx, global.mathName());
-    if (!GetDataProperty(cx, v, field, &v))
+    if (!GetProperty(cx, v, field, &v))
         return false;
 
     Native native = NULL;
@@ -158,7 +146,7 @@ ValidateGlobalConstant(JSContext *cx, AsmJSModule::Global &global, HandleValue g
 {
     RootedPropertyName field(cx, global.constantName());
     RootedValue v(cx);
-    if (!GetDataProperty(cx, globalVal, field, &v))
+    if (!GetProperty(cx, globalVal, field, &v))
         return false;
 
     if (!v.isNumber())
@@ -273,12 +261,8 @@ AsmJSActivation::AsmJSActivation(JSContext *cx, AsmJSModule &module)
     resumePC_(NULL)
 {
     if (cx->runtime()->spsProfiler.enabled()) {
-        // Use a profiler string that matches jsMatch regex in
-        // browser/devtools/profiler/cleopatra/js/parserWorker.js.
-        // (For now use a single static string to avoid further slowing down
-        // calls into asm.js.)
         profiler_ = &cx->runtime()->spsProfiler;
-        profiler_->enterNative("asm.js code :0", this);
+        profiler_->enterNative("asm.js code", this);
     }
 
     prev_ = cx_->runtime()->mainThread.asmJSActivationStack_;

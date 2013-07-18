@@ -78,15 +78,8 @@ function assertAsmLinkFail(f)
     if (!isAsmJSCompilationAvailable())
         return;
 
-    assertEq(isAsmJSModule(f), true);
-
     // Verify no error is thrown with warnings off
-    var ret = f.apply(null, Array.slice(arguments, 1));
-
-    assertEq(isAsmJSFunction(ret), false);
-    if (typeof ret === 'object')
-        for (f of ret)
-            assertEq(isAsmJSFunction(f), false);
+    f.apply(null, Array.slice(arguments, 1));
 
     // Turn on warnings-as-errors
     var oldOpts = options("werror");
