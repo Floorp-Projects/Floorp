@@ -181,7 +181,6 @@ MobileConnectionInfo.prototype = {
   emergencyCallsOnly: false,
   roaming: false,
   network: null,
-  lastKnownMcc: null,
   cell: null,
   type: null,
   signalStrength: null,
