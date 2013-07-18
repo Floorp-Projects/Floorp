@@ -674,7 +674,7 @@ private:
 
         Block() : mNext(nullptr) {
             // Ensure Block is the right size (see above).
-            MOZ_STATIC_ASSERT(
+            static_assert(
                 sizeof(Block) == 16384 ||       // 32-bit
                 sizeof(Block) == 32768,         // 64-bit
                 "ill-sized nsPurpleBuffer::Block"

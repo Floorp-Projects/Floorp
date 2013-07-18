@@ -754,9 +754,9 @@ GetStatesForPseudoClass(const nsAString& aStatePseudo)
     nsEventStates(),
     nsEventStates()
   };
-  MOZ_STATIC_ASSERT(NS_ARRAY_LENGTH(sPseudoClassStates) ==
-                    nsCSSPseudoClasses::ePseudoClass_NotPseudoClass + 1,
-                    "Length of PseudoClassStates array is incorrect");
+  static_assert(NS_ARRAY_LENGTH(sPseudoClassStates) ==
+                nsCSSPseudoClasses::ePseudoClass_NotPseudoClass + 1,
+                "Length of PseudoClassStates array is incorrect");
 
   nsCOMPtr<nsIAtom> atom = do_GetAtom(aStatePseudo);
 

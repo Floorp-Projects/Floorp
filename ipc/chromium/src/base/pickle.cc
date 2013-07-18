@@ -16,8 +16,8 @@
 
 //------------------------------------------------------------------------------
 
-MOZ_STATIC_ASSERT(MOZ_ALIGNOF(Pickle::memberAlignmentType) >= MOZ_ALIGNOF(uint32_t),
-		  "Insufficient alignment");
+static_assert(MOZ_ALIGNOF(Pickle::memberAlignmentType) >= MOZ_ALIGNOF(uint32_t),
+              "Insufficient alignment");
 
 // static
 const int Pickle::kPayloadUnit = 64;
@@ -61,8 +61,8 @@ struct Copier<T, sizeof(uint64_t), false>
 #else
     static const int loIndex = 1, hiIndex = 0;
 #endif
-    MOZ_STATIC_ASSERT(MOZ_ALIGNOF(uint32_t*) == MOZ_ALIGNOF(void*),
-		      "Pointers have different alignments");
+    static_assert(MOZ_ALIGNOF(uint32_t*) == MOZ_ALIGNOF(void*),
+                  "Pointers have different alignments");
     uint32_t* src = *reinterpret_cast<uint32_t**>(iter);
     uint32_t* uint32dest = reinterpret_cast<uint32_t*>(dest);
     uint32dest[loIndex] = src[loIndex];
@@ -81,15 +81,15 @@ struct Copier<T, size, true>
     //     big as MOZ_ALIGNOF(T).
     // Check the first condition, as the second condition is already
     // known to be true, or we wouldn't be here.
-    MOZ_STATIC_ASSERT(MOZ_ALIGNOF(T*) == MOZ_ALIGNOF(void*),
-		      "Pointers have different alignments");
+    static_assert(MOZ_ALIGNOF(T*) == MOZ_ALIGNOF(void*),
+                  "Pointers have different alignments");
     *dest = *(*reinterpret_cast<T**>(iter));
   }
 };
 
 template<typename T>
 void CopyFromIter(T* dest, void** iter) {
-  MOZ_STATIC_ASSERT(mozilla::IsPod<T>::value, "Copied type must be a POD type");
+  static_assert(mozilla::IsPod<T>::value, "Copied type must be a POD type");
   Copier<T, sizeof(T), (MOZ_ALIGNOF(T) <= sizeof(Pickle::memberAlignmentType))>::Copy(dest, iter);
 }
 
