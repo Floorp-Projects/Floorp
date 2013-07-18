@@ -72,8 +72,6 @@
   <color name="url_bar_text_highlight_pb">#FFD06BFF</color>
   <color name="suggestion_primary">#dddddd</color>
   <color name="suggestion_pressed">#bbbbbb</color>
-  <color name="abouthome_thumbnail_bg">#5FFF</color>
-  <color name="abouthome_topsite_shadow">#1000</color>
   <color name="tab_row_pressed">#4D000000</color>
   <color name="abouthome_topsite_pin">#55000000</color>
   <color name="dialogtitle_textcolor">#ffffff</color>

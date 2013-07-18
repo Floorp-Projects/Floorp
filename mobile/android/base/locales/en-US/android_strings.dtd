@@ -268,10 +268,6 @@ size. -->
 
 <!ENTITY abouthome_last_tabs_title "Your tabs from last time">
 <!ENTITY abouthome_last_tabs_open "Open all tabs from last time">
-<!ENTITY abouthome_top_sites_title "Top sites">
-<!ENTITY abouthome_topsites_edit "Edit">
-<!ENTITY abouthome_topsites_pin "Pin Site">
-<!ENTITY abouthome_topsites_unpin "Unpin Site">
 <!ENTITY abouthome_visited_empty "Websites you visited go here">
 
 <!-- Localization note (abouthome_about_sync3, abouthome_about_apps2): The

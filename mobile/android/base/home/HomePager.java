@@ -98,13 +98,6 @@ public class HomePager extends ViewPager {
     }
 
     /**
-     * @see AboutHome#update(EnumSet)
-     */
-    public void updateAboutHome(final EnumSet<AboutHome.UpdateFlags> flags) {
-        // FIXME: Individual sections should update based on the flags.
-    }
-
-    /**
      * @see AboutHome#setLastTabsVisibility(boolean)
      */
     public void setAboutHomeLastTabsVisibility(boolean visible) {
