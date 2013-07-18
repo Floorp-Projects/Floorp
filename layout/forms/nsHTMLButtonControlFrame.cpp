@@ -266,38 +266,28 @@ nsHTMLButtonControlFrame::ReflowButtonContents(nsPresContext* aPresContext,
               xoffset,
               aFocusPadding.top + aReflowState.mComputedBorderPadding.top,
               0, aStatus);
-  
-  // calculate the min internal height so the contents gets centered correctly.
-  // XXXbz this assumes border-box sizing.
-  nscoord minInternalHeight = aReflowState.mComputedMinHeight -
-    aReflowState.mComputedBorderPadding.TopBottom();
-  minInternalHeight = std::max(minInternalHeight, 0);
 
   // Compute our desired height before vertically centering our children
+  nscoord actualDesiredHeight = 0;
   if (aReflowState.ComputedHeight() != NS_INTRINSICSIZE) {
-    aDesiredSize.height = aReflowState.ComputedHeight();
+    actualDesiredHeight = aReflowState.ComputedHeight();
   } else {
-    aDesiredSize.height += aFocusPadding.TopBottom();
+    actualDesiredHeight = aDesiredSize.height + aFocusPadding.TopBottom();
 
     // Make sure we obey min/max-height in the case when we're doing intrinsic
     // sizing (we get it for free when we have a non-intrinsic
     // aReflowState.ComputedHeight()).  Note that we do this before adjusting
     // for borderpadding, since mComputedMaxHeight and mComputedMinHeight are
     // content heights.
-    aDesiredSize.height = NS_CSS_MINMAX(aDesiredSize.height,
+    actualDesiredHeight = NS_CSS_MINMAX(actualDesiredHeight,
                                         aReflowState.mComputedMinHeight,
                                         aReflowState.mComputedMaxHeight);
   }
 
-  // center child vertically
-  nscoord yoff = 0;
-  if (aReflowState.ComputedHeight() != NS_INTRINSICSIZE) {
-    yoff = (aReflowState.ComputedHeight() - aDesiredSize.height)/2;
-    if (yoff < 0) {
-      yoff = 0;
-    }
-  } else if (aDesiredSize.height < minInternalHeight) {
-    yoff = (minInternalHeight - aDesiredSize.height) / 2;
+  // center child vertically in the content area
+  nscoord yoff = (actualDesiredHeight - aFocusPadding.TopBottom() - aDesiredSize.height) / 2;
+  if (yoff < 0) {
+    yoff = 0;
   }
 
   // Place the child
@@ -309,8 +299,9 @@ nsHTMLButtonControlFrame::ReflowButtonContents(nsPresContext* aPresContext,
     aDesiredSize.ascent = aFirstKid->GetBaseline();
 
   // Adjust the baseline by our offset (since we moved the child's
-  // baseline by that much).
+  // baseline by that much), and set our actual desired height.
   aDesiredSize.ascent += yoff;
+  aDesiredSize.height = actualDesiredHeight;
 }
 
 nsresult nsHTMLButtonControlFrame::SetFormProperty(nsIAtom* aName, const nsAString& aValue)
