@@ -51,7 +51,7 @@ _SUBDIR_CONFIG_ARGS="$ac_configure_args"
 dnl Set the version number of the libs included with mozilla
 dnl ========================================================
 MOZJPEG=62
-MOZPNG=10516
+MOZPNG=10517
 NSPR_VERSION=4
 NSS_VERSION=3
 
@@ -4177,6 +4177,12 @@ if test "${PNG_DIR}" -a -d "${PNG_DIR}" -a "$MOZ_NATIVE_PNG" = 1; then
     MOZ_PNG_CFLAGS="-I${PNG_DIR}/include"
     MOZ_PNG_LIBS="-L${PNG_DIR}/lib ${MOZ_PNG_LIBS}"
 fi
+
+MOZ_PNG_ARM_NEON=
+if test "$MOZ_NATIVE_PNG" != 1 -a "$CPU_ARCH" = "arm" ; then
+    MOZ_PNG_ARM_NEON=1
+fi
+AC_SUBST(MOZ_PNG_ARM_NEON)
 
 fi # SKIP_LIBRARY_CHECKS
 
