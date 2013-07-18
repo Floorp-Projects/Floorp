@@ -334,7 +334,7 @@ protected:
                                          UINT aMessage, WPARAM& aWParam,
                                          LPARAM& aLParam, MSGResult& aResult);
   bool                    ProcessMessageForPlugin(const MSG &aMsg,
-                                                  LRESULT *aRetValue, bool &aCallDefWndProc);
+                                                  MSGResult& aResult);
   LRESULT                 ProcessCharMessage(const MSG &aMsg,
                                              bool *aEventDispatched);
   LRESULT                 ProcessKeyUpMessage(const MSG &aMsg,
