@@ -2213,34 +2213,18 @@ nsStyleDisplay::nsStyleDisplay(const nsStyleDisplay& aSource)
   mPerspectiveOrigin[1] = aSource.mPerspectiveOrigin[1];
 }
 
-static uint8_t
-MapRelativePositionToStatic(uint8_t aPositionValue)
-{
-  return aPositionValue == NS_STYLE_POSITION_RELATIVE ?
-      NS_STYLE_POSITION_STATIC : aPositionValue;
-}
-
 nsChangeHint nsStyleDisplay::CalcDifference(const nsStyleDisplay& aOther) const
 {
   nsChangeHint hint = nsChangeHint(0);
 
-  // Changes between position:static and position:relative don't need
-  // to reconstruct frames.
   if (!EqualURIs(mBinding, aOther.mBinding)
-      || MapRelativePositionToStatic(mPosition) !=
-           MapRelativePositionToStatic(aOther.mPosition)
+      || mPosition != aOther.mPosition
       || mDisplay != aOther.mDisplay
       || (mFloats == NS_STYLE_FLOAT_NONE) != (aOther.mFloats == NS_STYLE_FLOAT_NONE)
       || mOverflowX != aOther.mOverflowX
       || mOverflowY != aOther.mOverflowY
-      || mResize != aOther.mResize) {
+      || mResize != aOther.mResize)
     NS_UpdateHint(hint, nsChangeHint_ReconstructFrame);
-  }
-
-  if (mPosition != aOther.mPosition) {
-    NS_UpdateHint(hint,
-      NS_CombineHint(nsChangeHint_NeedReflow, nsChangeHint_RepaintFrame));
-  }
 
   if (mFloats != aOther.mFloats) {
     // Changing which side we float on doesn't affect descendants directly
