@@ -21,14 +21,12 @@ add_test(function test_authenticated_request() {
   let id = "eyJleHBpcmVzIjogMTM2NTAxMDg5OC4x";
   let key = "qTZf4ZFpAMpMoeSsX3zVRjiqmNs=";
   let method = "GET";
-  let uri = CommonUtils.makeURI(TEST_SERVER_URL + "foo");
 
   let nonce = btoa(CryptoUtils.generateRandomBytes(16));
   let ts = Math.floor(Date.now() / 1000);
   let extra = {ts: ts, nonce: nonce};
 
-  let sig = CryptoUtils.computeHTTPMACSHA1(id, key, method, uri, extra);
-  let auth = sig.getHeader();
+  let auth;
 
   let server = httpd_setup({"/foo": function(request, response) {
       do_check_true(request.hasHeader("Authorization"));
@@ -38,6 +36,9 @@ add_test(function test_authenticated_request() {
       response.bodyOutputStream.write(message, message.length);
     }
   });
+  let uri = CommonUtils.makeURI(server.baseURI + "/foo");
+  let sig = CryptoUtils.computeHTTPMACSHA1(id, key, method, uri, extra);
+  auth = sig.getHeader();
 
   let req = new TokenAuthenticatedRESTRequest(uri, {id: id, key: key}, extra);
   let cb = Async.makeSpinningCallback();

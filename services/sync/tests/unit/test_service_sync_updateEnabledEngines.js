@@ -66,8 +66,8 @@ function sync_httpd_setup(handlers) {
   return httpd_setup(handlers);
 }
 
-function setUp() {
-  new SyncTestingInfrastructure("johndoe", "ilovejane",
+function setUp(server) {
+  new SyncTestingInfrastructure(server, "johndoe", "ilovejane",
                                 "abcdeabcdeabcdeabcdeabcdea");
   // Ensure that the server has valid keys so that logging in will work and not
   // result in a server wipe, rendering many of these tests useless.
@@ -95,7 +95,7 @@ add_test(function test_newAccount() {
     "/1.1/johndoe/storage/meta/global": new ServerWBO("global", {}).handler(),
     "/1.1/johndoe/storage/steam": new ServerWBO("steam", {}).handler()
   });
-  setUp();
+  setUp(server);
 
   try {
     _("Engine is enabled from the beginning.");
@@ -125,7 +125,7 @@ add_test(function test_enabledLocally() {
     "/1.1/johndoe/storage/meta/global": metaWBO.handler(),
     "/1.1/johndoe/storage/steam": new ServerWBO("steam", {}).handler()
   });
-  setUp();
+  setUp(server);
 
   try {
     _("Enable engine locally.");
@@ -161,7 +161,7 @@ add_test(function test_disabledLocally() {
     "/1.1/johndoe/storage/meta/global": metaWBO.handler(),
     "/1.1/johndoe/storage/steam": steamCollection.handler()
   });
-  setUp();
+  setUp(server);
 
   try {
     _("Disable engine locally.");
@@ -210,7 +210,7 @@ add_test(function test_disabledLocally_wipe503() {
     "/1.1/johndoe/storage/meta/global": metaWBO.handler(),
     "/1.1/johndoe/storage/steam": service_unavailable
   });
-  setUp();
+  setUp(server);
 
   _("Disable engine locally.");
   Service._ignorePrefObserver = true;
@@ -248,7 +248,7 @@ add_test(function test_enabledRemotely() {
     "/1.1/johndoe/storage/steam":
     upd("steam", new ServerWBO("steam", {}).handler())
   });
-  setUp();
+  setUp(server);
 
   // We need to be very careful how we do this, so that we don't trigger a
   // fresh start!
@@ -289,7 +289,7 @@ add_test(function test_disabledRemotelyTwoClients() {
     "/1.1/johndoe/storage/steam":
     upd("steam", new ServerWBO("steam", {}).handler())
   });
-  setUp();
+  setUp(server);
 
   try {
     _("Enable engine locally.");
@@ -330,7 +330,7 @@ add_test(function test_disabledRemotely() {
     "/1.1/johndoe/storage/meta/global": metaWBO.handler(),
     "/1.1/johndoe/storage/steam": new ServerWBO("steam", {}).handler()
   });
-  setUp();
+  setUp(server);
 
   try {
     _("Enable engine locally.");
@@ -363,7 +363,7 @@ add_test(function test_dependentEnginesEnabledLocally() {
     "/1.1/johndoe/storage/steam": new ServerWBO("steam", {}).handler(),
     "/1.1/johndoe/storage/stirling": new ServerWBO("stirling", {}).handler()
   });
-  setUp();
+  setUp(server);
 
   try {
     _("Enable engine locally. Doing it on one is enough.");
@@ -407,7 +407,7 @@ add_test(function test_dependentEnginesDisabledLocally() {
     "/1.1/johndoe/storage/steam":           steamCollection.handler(),
     "/1.1/johndoe/storage/stirling":        stirlingCollection.handler()
   });
-  setUp();
+  setUp(server);
 
   try {
     _("Disable engines locally. Doing it on one is enough.");
