@@ -1958,7 +1958,7 @@ public:
   static nsresult AppendBackgroundItemsToTop(nsDisplayListBuilder* aBuilder,
                                              nsIFrame* aFrame,
                                              nsDisplayList* aList,
-                                             nsDisplayBackgroundImage** aBackground = nullptr);
+                                             bool* aAppendedThemedBackground = nullptr);
 
   virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
                                    LayerManager* aManager,
