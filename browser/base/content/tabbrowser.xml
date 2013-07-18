@@ -979,7 +979,7 @@
             this.mCurrentTab = this.tabContainer.selectedItem;
             this.showTab(this.mCurrentTab);
 
-            var backForwardContainer = document.getElementById("unified-back-forward-button");
+            var backForwardContainer = document.getElementById("urlbar-container");
             if (backForwardContainer) {
               backForwardContainer.setAttribute("switchingtabs", "true");
               window.addEventListener("MozAfterPaint", function removeSwitchingtabsAttr() {

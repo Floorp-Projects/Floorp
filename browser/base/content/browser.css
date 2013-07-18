@@ -198,14 +198,9 @@ toolbar[overflowable]:not([overflowing]) > .overflow-button {
   display: -moz-box;
 }
 
-#wrapper-urlbar-container #urlbar-container > #urlbar > toolbarbutton,
-#urlbar-container:not([combined]) > #urlbar > toolbarbutton,
-#urlbar-container[combined] + #reload-button + #stop-button,
-#urlbar-container[combined] + #reload-button,
+#wrapper-urlbar-container > #urlbar-container > #urlbar-wrapper > #urlbar > toolbarbutton,
 #urlbar-reload-button:not([displaystop]) + #urlbar-stop-button,
-#urlbar-reload-button[displaystop],
-#reload-button:not([displaystop]) + #stop-button,
-#reload-button[displaystop] {
+#urlbar-reload-button[displaystop] {
   visibility: collapse;
 }
 
@@ -281,7 +276,7 @@ panel[noactions] > richlistbox > richlistitem[type~="action"] > .ac-url-box > .a
   display: none;
 }
 
-#wrapper-urlbar-container > #urlbar-container > #urlbar {
+#wrapper-urlbar-container > #urlbar-container > #urlbar-wrapper > #urlbar {
   -moz-user-input: disabled;
   cursor: -moz-grab;
 }
@@ -294,9 +289,7 @@ panel[noactions] > richlistbox > richlistitem[type~="action"] > .ac-url-box > .a
   -moz-binding: url("chrome://browser/content/urlbarBindings.xml#urlbar-rich-result-popup");
 }
 
-#urlbar-container[combined] > #urlbar > #urlbar-icons > #go-button,
-#urlbar[pageproxystate="invalid"] > #urlbar-icons > .urlbar-icon:not(#go-button),
-#urlbar[pageproxystate="valid"] > #urlbar-icons > #go-button,
+#urlbar[pageproxystate="invalid"] > #urlbar-icons > .urlbar-icon,
 #urlbar[pageproxystate="invalid"][focused="true"] > #urlbar-go-button ~ toolbarbutton,
 #urlbar[pageproxystate="valid"] > #urlbar-go-button,
 #urlbar:not([focused="true"]) > #urlbar-go-button {

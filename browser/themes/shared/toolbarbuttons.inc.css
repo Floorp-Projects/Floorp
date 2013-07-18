@@ -19,14 +19,6 @@
   transform: scaleX(-1);
 }
 
-#reload-button {
-  -moz-image-region: rect(0, 90px, 18px, 72px);
-}
-
-#stop-button {
-  -moz-image-region: rect(0, 108px, 18px, 90px);
-}
-
 #home-button[customizableui-areatype="toolbar"] {
   -moz-image-region: rect(0, 126px, 18px, 108px);
 }

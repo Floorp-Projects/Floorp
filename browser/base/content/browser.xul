@@ -532,28 +532,28 @@
              aria-label="&navbarCmd.label;"
              fullscreentoolbar="true" mode="icons" customizable="true"
              iconsize="large"
-             defaultset="unified-back-forward-button,urlbar-container,reload-button,stop-button,search-container,webrtc-status-button,bookmarks-menu-button,downloads-button,home-button,social-share-button"
+             defaultset="urlbar-container,search-container,webrtc-status-button,bookmarks-menu-button,downloads-button,home-button,social-share-button"
              customizationtarget="nav-bar-customizationtarget"
              overflowbutton="nav-bar-overflow-button"
              overflowtarget="widget-overflow-list"
              context="toolbar-context-menu">
 
       <hbox id="nav-bar-customizationtarget" class="customization-target" flex="1">
-        <toolbaritem id="unified-back-forward-button" class="chromeclass-toolbar-additional"
-                     context="backForwardMenu" removable="false"
-                     forwarddisabled="true"
-                     title="&backForwardItem.title;"
-                     nooverflow="true">
-          <toolbarbutton id="back-button" class="toolbarbutton-1"
+        <toolbaritem id="urlbar-container" align="center" flex="400" persist="width"
+                     forwarddisabled="true" title="&locationItem.title;" removable="false"
+                     class="chromeclass-location" nooverflow="true">
+          <toolbarbutton id="back-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
                          label="&backCmd.label;"
                          command="Browser:BackOrBackDuplicate"
                          onclick="checkForMiddleClick(this, event);"
-                         tooltip="back-button-tooltip"/>
-          <toolbarbutton id="forward-button" class="toolbarbutton-1"
+                         tooltip="back-button-tooltip"
+                         context="backForwardMenu"/>
+          <toolbarbutton id="forward-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
                          label="&forwardCmd.label;"
                          command="Browser:ForwardOrForwardDuplicate"
                          onclick="checkForMiddleClick(this, event);"
-                         tooltip="forward-button-tooltip"/>
+                         tooltip="forward-button-tooltip"
+                         context="backForwardMenu"/>
           <dummyobservertarget hidden="true"
                                onbroadcast="if (this.getAttribute('disabled') == 'true')
                                               this.parentNode.setAttribute('forwarddisabled', 'true');
@@ -561,92 +561,89 @@
                                               this.parentNode.removeAttribute('forwarddisabled');">
             <observes element="Browser:ForwardOrForwardDuplicate" attribute="disabled"/>
           </dummyobservertarget>
-        </toolbaritem>
-
-        <toolbaritem id="urlbar-container" align="center" flex="400" persist="width" combined="true"
-                     title="&locationItem.title;" class="chromeclass-location" removable="false" nooverflow="true">
-          <textbox id="urlbar" flex="1"
-                   placeholder="&urlbar.placeholder2;"
-                   type="autocomplete"
-                   autocompletesearch="urlinline history"
-                   autocompletesearchparam="enable-actions"
-                   autocompletepopup="PopupAutoCompleteRichResult"
-                   completeselectedindex="true"
-                   tabscrolling="true"
-                   showcommentcolumn="true"
-                   showimagecolumn="true"
-                   enablehistory="true"
-                   maxrows="6"
-                   newlines="stripsurroundingwhitespace"
-                   oninput="gBrowser.userTypedValue = this.value;"
-                   ontextentered="this.handleCommand(param);"
-                   ontextreverted="return this.handleRevert();"
-                   pageproxystate="invalid"
-                   onfocus="document.getElementById('identity-box').style.MozUserFocus= 'normal'"
-                   onblur="setTimeout(function() document.getElementById('identity-box').style.MozUserFocus = '', 0);">
-            <box id="notification-popup-box" hidden="true" align="center">
-              <image id="default-notification-icon" class="notification-anchor-icon" role="button"/>
-              <image id="identity-notification-icon" class="notification-anchor-icon" role="button"/>
-              <image id="geo-notification-icon" class="notification-anchor-icon" role="button"/>
-              <image id="addons-notification-icon" class="notification-anchor-icon" role="button"/>
-              <image id="indexedDB-notification-icon" class="notification-anchor-icon" role="button"/>
-              <image id="password-notification-icon" class="notification-anchor-icon" role="button"/>
-              <image id="webapps-notification-icon" class="notification-anchor-icon" role="button"/>
-              <image id="plugins-notification-icon" class="notification-anchor-icon" role="button"/>
-              <image id="web-notifications-notification-icon" class="notification-anchor-icon" role="button"/>
-              <image id="blocked-plugins-notification-icon" class="notification-anchor-icon" role="button"/>
-              <image id="plugin-install-notification-icon" class="notification-anchor-icon" role="button"/>
-              <image id="mixed-content-blocked-notification-icon" class="notification-anchor-icon" role="button"/>
-              <image id="webRTC-shareDevices-notification-icon" class="notification-anchor-icon" role="button"/>
-              <image id="webRTC-sharingDevices-notification-icon" class="notification-anchor-icon" role="button"/>
-              <image id="pointerLock-notification-icon" class="notification-anchor-icon" role="button"/>
-              <image id="servicesInstall-notification-icon" class="notification-anchor-icon" role="button"/>
-            </box>
-            <!-- Use onclick instead of normal popup= syntax since the popup
-                 code fires onmousedown, and hence eats our favicon drag events.
-                 We only add the identity-box button to the tab order when the location bar
-                 has focus, otherwise pressing F6 focuses it instead of the location bar -->
-            <box id="identity-box" role="button"
-                 align="center"
-                 onclick="gIdentityHandler.handleIdentityButtonEvent(event);"
-                 onkeypress="gIdentityHandler.handleIdentityButtonEvent(event);"
-                 ondragstart="gIdentityHandler.onDragStart(event);">
-              <image id="page-proxy-favicon"
-                     onclick="PageProxyClickHandler(event);"
-                     pageproxystate="invalid"/>
-              <hbox id="identity-icon-labels">
-                <label id="identity-icon-label" class="plain" flex="1"/>
-                <label id="identity-icon-country-label" class="plain"/>
+          <hbox id="urlbar-wrapper" flex="1">
+            <textbox id="urlbar" flex="1"
+                     placeholder="&urlbar.placeholder2;"
+                     type="autocomplete"
+                     autocompletesearch="urlinline history"
+                     autocompletesearchparam="enable-actions"
+                     autocompletepopup="PopupAutoCompleteRichResult"
+                     completeselectedindex="true"
+                     tabscrolling="true"
+                     showcommentcolumn="true"
+                     showimagecolumn="true"
+                     enablehistory="true"
+                     maxrows="6"
+                     newlines="stripsurroundingwhitespace"
+                     oninput="gBrowser.userTypedValue = this.value;"
+                     ontextentered="this.handleCommand(param);"
+                     ontextreverted="return this.handleRevert();"
+                     pageproxystate="invalid"
+                     onfocus="document.getElementById('identity-box').style.MozUserFocus= 'normal'"
+                     onblur="setTimeout(function() document.getElementById('identity-box').style.MozUserFocus = '', 0);">
+              <box id="notification-popup-box" hidden="true" align="center">
+                <image id="default-notification-icon" class="notification-anchor-icon" role="button"/>
+                <image id="identity-notification-icon" class="notification-anchor-icon" role="button"/>
+                <image id="geo-notification-icon" class="notification-anchor-icon" role="button"/>
+                <image id="addons-notification-icon" class="notification-anchor-icon" role="button"/>
+                <image id="indexedDB-notification-icon" class="notification-anchor-icon" role="button"/>
+                <image id="password-notification-icon" class="notification-anchor-icon" role="button"/>
+                <image id="webapps-notification-icon" class="notification-anchor-icon" role="button"/>
+                <image id="plugins-notification-icon" class="notification-anchor-icon" role="button"/>
+                <image id="web-notifications-notification-icon" class="notification-anchor-icon" role="button"/>
+                <image id="blocked-plugins-notification-icon" class="notification-anchor-icon" role="button"/>
+                <image id="plugin-install-notification-icon" class="notification-anchor-icon" role="button"/>
+                <image id="mixed-content-blocked-notification-icon" class="notification-anchor-icon" role="button"/>
+                <image id="webRTC-shareDevices-notification-icon" class="notification-anchor-icon" role="button"/>
+                <image id="webRTC-sharingDevices-notification-icon" class="notification-anchor-icon" role="button"/>
+                <image id="pointerLock-notification-icon" class="notification-anchor-icon" role="button"/>
+                <image id="servicesInstall-notification-icon" class="notification-anchor-icon" role="button"/>
+              </box>
+              <!-- Use onclick instead of normal popup= syntax since the popup
+                   code fires onmousedown, and hence eats our favicon drag events.
+                   We only add the identity-box button to the tab order when the location bar
+                   has focus, otherwise pressing F6 focuses it instead of the location bar -->
+              <box id="identity-box" role="button"
+                   align="center"
+                   onclick="gIdentityHandler.handleIdentityButtonEvent(event);"
+                   onkeypress="gIdentityHandler.handleIdentityButtonEvent(event);"
+                   ondragstart="gIdentityHandler.onDragStart(event);">
+                <image id="page-proxy-favicon"
+                       onclick="PageProxyClickHandler(event);"
+                       pageproxystate="invalid"/>
+                <hbox id="identity-icon-labels">
+                  <label id="identity-icon-label" class="plain" flex="1"/>
+                  <label id="identity-icon-country-label" class="plain"/>
+                </hbox>
+              </box>
+              <box id="urlbar-display-box" align="center">
+                <label id="urlbar-display" value="&urlbar.switchToTab.label;"/>
+              </box>
+              <hbox id="urlbar-icons">
+                <image id="page-report-button"
+                       class="urlbar-icon"
+                       hidden="true"
+                       tooltiptext="&pageReportIcon.tooltip;"
+                       onclick="gPopupBlockerObserver.onReportButtonClick(event);"/>
+                <image id="star-button"
+                       class="urlbar-icon"
+                       onclick="BookmarkingUI.onCommand(event);"/>
               </hbox>
-            </box>
-            <box id="urlbar-display-box" align="center">
-              <label id="urlbar-display" value="&urlbar.switchToTab.label;"/>
-            </box>
-            <hbox id="urlbar-icons">
-              <image id="page-report-button"
-                     class="urlbar-icon"
-                     hidden="true"
-                     tooltiptext="&pageReportIcon.tooltip;"
-                     onclick="gPopupBlockerObserver.onReportButtonClick(event);"/>
-              <image id="go-button"
-                     class="urlbar-icon"
-                     tooltiptext="&goEndCap.tooltip;"
-                     onclick="gURLBar.handleCommand(event);"/>
-            </hbox>
-            <toolbarbutton id="urlbar-go-button"
-                           class="chromeclass-toolbar-additional"
-                           onclick="gURLBar.handleCommand(event);"
-                           tooltiptext="&goEndCap.tooltip;"/>
-            <toolbarbutton id="urlbar-reload-button"
-                           class="chromeclass-toolbar-additional"
-                           command="Browser:ReloadOrDuplicate"
-                           onclick="checkForMiddleClick(this, event);"
-                           tooltiptext="&reloadButton.tooltip;"/>
-            <toolbarbutton id="urlbar-stop-button"
-                           class="chromeclass-toolbar-additional"
-                           command="Browser:Stop"
-                           tooltiptext="&stopButton.tooltip;"/>
-          </textbox>
+              <toolbarbutton id="urlbar-go-button"
+                             class="chromeclass-toolbar-additional"
+                             onclick="gURLBar.handleCommand(event);"
+                             tooltiptext="&goEndCap.tooltip;"/>
+              <toolbarbutton id="urlbar-reload-button"
+                             class="chromeclass-toolbar-additional"
+                             command="Browser:ReloadOrDuplicate"
+                             onclick="checkForMiddleClick(this, event);"
+                             tooltiptext="&reloadButton.tooltip;"/>
+              <toolbarbutton id="urlbar-stop-button"
+                             class="chromeclass-toolbar-additional"
+                             command="Browser:Stop"
+                             tooltiptext="&stopButton.tooltip;"/>
+            </textbox>
+          </hbox>
         </toolbaritem>
 
         <toolbarbutton id="reload-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
@@ -1088,7 +1085,7 @@
       <svg:path d="M 0,0 C 0.16,0.11 0.28,0.29 0.28,0.5 0.28,0.71 0.16,0.89 0,1 L 1,1 1,0 0,0 z"/>
     </svg:clipPath>
     <svg:clipPath id="windows-urlbar-back-button-clip-path" clipPathUnits="userSpaceOnUse">
-      <svg:path d="M 0,0 0,7.8 C 2.5,11 4,14 4,18 4,22 2.5,25 0,28 l 0,22 10000,0 0,-50 L 0,0 z"/>
+      <svg:path d="m 0,-5 l 0,7.8 c 2.5,3.2 4,6.2 4,10.2 c 0,4 -1.5,7 -4,10 l 0,22l10000,0 l 0,-50 l -10000,0 z"/>
     </svg:clipPath>
 #endif
 #ifdef XP_MACOSX
@@ -1096,7 +1093,7 @@
       <svg:path d="M 0,0 C 0.15,0.12 0.25,0.3 0.25,0.5 0.25,0.7 0.15,0.88 0,1 L 1,1 1,0 0,0 z"/>
     </svg:clipPath>
     <svg:clipPath id="osx-urlbar-back-button-clip-path" clipPathUnits="userSpaceOnUse">
-      <svg:path d="m 0,-5 0,9.03 C 3.6,6.8 6,11.1 6,16 6,21 3.6,25 0,28 l 0,27 10000,0 0,-55 L 0,-5 z"/>
+      <svg:path d="m 0,-10 l 0,9.03 c 3.6,2.77 6,7.07 6,11.97 c 0,5 -2.4,9 -6,12 l 0,27 l 10000,0 l 0,-55 l -10000,-5 z"/>
     </svg:clipPath>
 #endif
   </svg:svg>

@@ -158,7 +158,6 @@ These should match what Safari and other Apple applications use on OS X Lion. --
 <!ENTITY printButton.label            "Print">
 <!ENTITY printButton.tooltip          "Print this page">
 
-<!ENTITY backForwardItem.title        "Back/Forward">
 <!ENTITY locationItem.title           "Location">
 <!ENTITY searchItem.title             "Search">
 <!ENTITY bookmarksItem.title          "Bookmarks">

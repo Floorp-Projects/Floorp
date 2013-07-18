@@ -144,10 +144,7 @@ let CustomizableUIInternal = {
       type: CustomizableUI.TYPE_TOOLBAR,
       overflowable: true,
       defaultPlacements: [
-        "unified-back-forward-button",
         "urlbar-container",
-        "reload-button",
-        "stop-button",
         "search-container",
         "webrtc-status-button",
         "bookmarks-menu-button",
