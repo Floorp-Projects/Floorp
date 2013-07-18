@@ -91,6 +91,7 @@ static const char *sExtensionNames[] = {
     "GL_APPLE_vertex_array_object",
     "GL_ARB_draw_buffers",
     "GL_EXT_draw_buffers",
+    "GL_EXT_gpu_shader4",
     nullptr
 };
 
