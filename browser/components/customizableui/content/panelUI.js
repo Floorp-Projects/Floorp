@@ -79,6 +79,10 @@ const PanelUI = {
     } else if (this.panel.state == "closed") {
       this.ensureRegistered();
       this.panel.hidden = false;
+      let editControlPlacement = CustomizableUI.getPlacementOfWidget("edit-controls");
+      if (editControlPlacement && editControlPlacement.area == CustomizableUI.AREA_PANEL) {
+        updateEditUIVisibility();
+      }
 
       let anchor = aEvent ? aEvent.target : this.menuButton;
       let iconAnchor =
