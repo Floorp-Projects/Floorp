@@ -851,6 +851,7 @@ let CustomizableUIInternal = {
         node.setAttribute("disabled", true);
       }
       node.setAttribute("removable", aWidget.removable);
+      node.setAttribute("nooverflow", aWidget.nooverflow);
       node.setAttribute("label", this.getLocalizedProperty(aWidget, "label"));
       node.setAttribute("tooltiptext", this.getLocalizedProperty(aWidget, "tooltiptext"));
       //XXXunf Need to hook this up to a <key> element or something.
@@ -1467,6 +1468,7 @@ let CustomizableUIInternal = {
       instances: new Map(),
       currentArea: null,
       removable: false,
+      nooverflow: false,
       defaultArea: null,
       allowedAreas: [],
       shortcut: null,
@@ -1496,7 +1498,7 @@ let CustomizableUIInternal = {
       }
     }
 
-    const kOptBoolProps = ["removable", "showInPrivateBrowsing"]
+    const kOptBoolProps = ["removable", "showInPrivateBrowsing", "nooverflow"]
     for (let prop of kOptBoolProps) {
       if (typeof aData[prop] == "boolean") {
         widget[prop] = aData[prop];
@@ -2079,6 +2081,9 @@ function WidgetSingleWrapper(aWidget, aNode) {
     return aNode.getAttribute("customizableui-areatype") || "";
   });
 
+  this.__defineGetter__("overflowed", function() {
+    return aNode.classList.contains("overflowedItem");
+  });
 
   Object.freeze(this);
 }
@@ -2147,6 +2152,10 @@ function XULWidgetSingleWrapper(aWidgetId, aNode) {
 
   this.__defineGetter__("areaType", function() {
     return aNode.getAttribute("customizableui-areatype") || "";
+  });
+
+  this.__defineGetter__("overflowed", function() {
+    return aNode.classList.contains("overflowedItem");
   });
 
   Object.freeze(this);
