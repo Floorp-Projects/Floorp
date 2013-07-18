@@ -303,9 +303,91 @@ CodeGenerator::visitValueToDouble(LValueToDouble *lir)
 }
 
 bool
+CodeGenerator::visitValueToFloat32(LValueToFloat32 *lir)
+{
+    MToFloat32 *mir = lir->mir();
+    ValueOperand operand = ToValue(lir, LValueToFloat32::Input);
+    FloatRegister output = ToFloatRegister(lir->output());
+
+    Register tag = masm.splitTagForTest(operand);
+
+    Label isDouble, isInt32, isBool, isNull, isUndefined, done;
+    bool hasBoolean = false, hasNull = false, hasUndefined = false;
+
+    masm.branchTestDouble(Assembler::Equal, tag, &isDouble);
+    masm.branchTestInt32(Assembler::Equal, tag, &isInt32);
+
+    if (mir->conversion() != MToFloat32::NumbersOnly) {
+        masm.branchTestBoolean(Assembler::Equal, tag, &isBool);
+        masm.branchTestUndefined(Assembler::Equal, tag, &isUndefined);
+        hasBoolean = true;
+        hasUndefined = true;
+        if (mir->conversion() != MToFloat32::NonNullNonStringPrimitives) {
+            masm.branchTestNull(Assembler::Equal, tag, &isNull);
+            hasNull = true;
+        }
+    }
+
+    if (!bailout(lir->snapshot()))
+        return false;
+
+    if (hasNull) {
+        static float DoubleZeroFloat = DoubleZero;
+        masm.bind(&isNull);
+        masm.loadStaticFloat32(&DoubleZeroFloat, output);
+        masm.jump(&done);
+    }
+
+    if (hasUndefined) {
+        static float js_NaN_float = js_NaN;
+        masm.bind(&isUndefined);
+        masm.loadStaticFloat32(&js_NaN_float, output);
+        masm.jump(&done);
+    }
+
+    if (hasBoolean) {
+        masm.bind(&isBool);
+        masm.boolValueToFloat32(operand, output);
+        masm.jump(&done);
+    }
+
+    masm.bind(&isInt32);
+    masm.int32ValueToFloat32(operand, output);
+    masm.jump(&done);
+
+    masm.bind(&isDouble);
+    masm.unboxDouble(operand, output);
+    masm.convertDoubleToFloat(output, output);
+    masm.bind(&done);
+
+    return true;
+}
+
+bool
 CodeGenerator::visitInt32ToDouble(LInt32ToDouble *lir)
 {
     masm.convertInt32ToDouble(ToRegister(lir->input()), ToFloatRegister(lir->output()));
+    return true;
+}
+
+bool
+CodeGenerator::visitFloat32ToDouble(LFloat32ToDouble *lir)
+{
+    masm.convertFloatToDouble(ToFloatRegister(lir->input()), ToFloatRegister(lir->output()));
+    return true;
+}
+
+bool
+CodeGenerator::visitDoubleToFloat32(LDoubleToFloat32 *lir)
+{
+    masm.convertDoubleToFloat(ToFloatRegister(lir->input()), ToFloatRegister(lir->output()));
+    return true;
+}
+
+bool
+CodeGenerator::visitInt32ToFloat32(LInt32ToFloat32 *lir)
+{
+    masm.convertInt32ToFloat32(ToRegister(lir->input()), ToFloatRegister(lir->output()));
     return true;
 }
 
@@ -7422,6 +7504,19 @@ CodeGenerator::visitAssertRangeD(LAssertRangeD *ins)
     Range *r = ins->range();
 
     return emitAssertRangeD(r, input, temp);
+}
+
+bool
+CodeGenerator::visitAssertRangeF(LAssertRangeF *ins)
+{
+    FloatRegister input = ToFloatRegister(ins->input());
+    FloatRegister temp = ToFloatRegister(ins->temp());
+    Range *r = ins->range();
+
+    masm.convertFloatToDouble(input, input);
+    bool success = emitAssertRangeD(r, input, temp);
+    masm.convertDoubleToFloat(input, input);
+    return success;
 }
 
 bool

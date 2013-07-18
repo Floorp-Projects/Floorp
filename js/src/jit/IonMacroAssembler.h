@@ -427,7 +427,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     void Push(TypedOrValueRegister v) {
         if (v.hasValue())
             Push(v.valueReg());
-        else if (v.type() == MIRType_Double)
+        else if (IsFloatingPointType(v.type()))
             Push(v.typedReg().fpu());
         else
             Push(ValueTypeFromMIRType(v.type()), v.typedReg().gpr());
@@ -558,6 +558,14 @@ class MacroAssembler : public MacroAssemblerSpecific
         bind(&notNaN);
     }
 
+    void canonicalizeFloat(FloatRegister reg) {
+        static float js_NaN_float = js_NaN;
+        Label notNaN;
+        branchFloat(DoubleOrdered, reg, reg, &notNaN);
+        loadStaticFloat32(&js_NaN_float, reg);
+        bind(&notNaN);
+    }
+
     template<typename T>
     void loadFromTypedArray(int arrayType, const T &src, AnyRegister dest, Register temp, Label *fail);
 
@@ -586,24 +594,8 @@ class MacroAssembler : public MacroAssemblerSpecific
         }
     }
 
-    template<typename T>
-    void storeToTypedFloatArray(int arrayType, FloatRegister value, const T &dest) {
-#ifdef JS_MORE_DETERMINISTIC
-        // See the comment in ToDoubleForTypedArray.
-        canonicalizeDouble(value);
-#endif
-        switch (arrayType) {
-          case ScalarTypeRepresentation::TYPE_FLOAT32:
-            convertDoubleToFloat(value, ScratchFloatReg);
-            storeFloat(ScratchFloatReg, dest);
-            break;
-          case ScalarTypeRepresentation::TYPE_FLOAT64:
-            storeDouble(value, dest);
-            break;
-          default:
-            MOZ_ASSUME_UNREACHABLE("Invalid typed array type");
-        }
-    }
+    void storeToTypedFloatArray(int arrayType, const FloatRegister &value, const BaseIndex &dest);
+    void storeToTypedFloatArray(int arrayType, const FloatRegister &value, const Address &dest);
 
     Register extractString(const Address &address, Register scratch) {
         return extractObject(address, scratch);

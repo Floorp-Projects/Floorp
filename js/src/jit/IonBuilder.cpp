@@ -6339,6 +6339,7 @@ jit::TypeSetIncludes(types::TypeSet *types, MIRType input, types::TypeSet *input
       case MIRType_Boolean:
       case MIRType_Int32:
       case MIRType_Double:
+      case MIRType_Float32:
       case MIRType_String:
       case MIRType_Magic:
         return types->hasType(types::Type::PrimitiveType(ValueTypeFromMIRType(input)));
@@ -7057,6 +7058,8 @@ IonBuilder::jsop_getelem_typed(MDefinition *obj, MDefinition *index,
             knownType = allowDouble ? MIRType_Double : MIRType_Int32;
             break;
           case ScalarTypeRepresentation::TYPE_FLOAT32:
+            knownType = (LIRGenerator::allowFloat32Optimizations()) ? MIRType_Float32 : MIRType_Double;
+            break;
           case ScalarTypeRepresentation::TYPE_FLOAT64:
             knownType = MIRType_Double;
             break;
