@@ -6,6 +6,7 @@
 
 #include "WindowHook.h"
 #include "nsWindow.h"
+#include "nsWindowDefs.h"
 
 namespace mozilla {
 namespace widget {
@@ -99,17 +100,20 @@ WindowHook::DeleteIfEmpty(MessageData *data) {
 
 bool
 WindowHook::Notify(HWND hWnd, UINT nMsg, WPARAM wParam, LPARAM lParam,
-                   LRESULT *aResult) {
+                   MSGResult& aResult)
+{
   MessageData *data = Lookup(nMsg);
   if (!data)
     return false;
 
   uint32_t length = data->monitors.Length();
   for (uint32_t midx = 0; midx < length; midx++) {
-    data->monitors[midx].Invoke(hWnd, nMsg, wParam, lParam, aResult);
+    data->monitors[midx].Invoke(hWnd, nMsg, wParam, lParam, &aResult.mResult);
   }
 
-  return data->hook.Invoke(hWnd, nMsg, wParam, lParam, aResult);
+  aResult.mConsumed =
+    data->hook.Invoke(hWnd, nMsg, wParam, lParam, &aResult.mResult);
+  return aResult.mConsumed;
 }
 
 bool
