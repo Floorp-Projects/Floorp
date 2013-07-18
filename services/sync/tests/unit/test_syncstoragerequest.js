@@ -8,8 +8,6 @@ Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://testing-common/services/sync/utils.js");
 
-const STORAGE_REQUEST_RESOURCE_URL = TEST_SERVER_URL + "resource";
-
 function run_test() {
   Log4Moz.repository.getLogger("Sync.RESTRequest").level = Log4Moz.Level.Trace;
   initTestLogging();
@@ -25,7 +23,7 @@ add_test(function test_user_agent_desktop() {
                    " FxSync/" + WEAVE_VERSION + "." +
                    Services.appinfo.appBuildID + ".desktop";
 
-  let request = new SyncStorageRequest(STORAGE_REQUEST_RESOURCE_URL);
+  let request = new SyncStorageRequest(server.baseURI + "/resource");
   request.onComplete = function onComplete(error) {
     do_check_eq(error, null);
     do_check_eq(this.response.status, 200);
@@ -44,7 +42,7 @@ add_test(function test_user_agent_mobile() {
                    " FxSync/" + WEAVE_VERSION + "." +
                    Services.appinfo.appBuildID + ".mobile";
 
-  let request = new SyncStorageRequest(STORAGE_REQUEST_RESOURCE_URL);
+  let request = new SyncStorageRequest(server.baseURI + "/resource");
   request.get(function (error) {
     do_check_eq(error, null);
     do_check_eq(this.response.status, 200);
@@ -60,7 +58,7 @@ add_test(function test_auth() {
 
   setBasicCredentials("johndoe", "ilovejane", "XXXXXXXXX");
 
-  let request = Service.getStorageRequest(STORAGE_REQUEST_RESOURCE_URL);
+  let request = Service.getStorageRequest(server.baseURI + "/resource");
   request.get(function (error) {
     do_check_eq(error, null);
     do_check_eq(this.response.status, 200);
@@ -84,7 +82,7 @@ add_test(function test_weave_timestamp() {
   let server = httpd_setup({"/resource": handler});
 
   do_check_eq(SyncStorageRequest.serverTime, undefined);
-  let request = new SyncStorageRequest(STORAGE_REQUEST_RESOURCE_URL);
+  let request = new SyncStorageRequest(server.baseURI + "/resource");
   request.get(function (error) {
     do_check_eq(error, null);
     do_check_eq(this.response.status, 200);
@@ -110,7 +108,7 @@ add_test(function test_weave_backoff() {
     backoffInterval = subject;
   });
 
-  let request = new SyncStorageRequest(STORAGE_REQUEST_RESOURCE_URL);
+  let request = new SyncStorageRequest(server.baseURI + "/resource");
   request.get(function (error) {
     do_check_eq(error, null);
     do_check_eq(this.response.status, 200);
@@ -135,7 +133,7 @@ add_test(function test_weave_quota_notice() {
     quotaValue = subject;
   });
 
-  let request = new SyncStorageRequest(STORAGE_REQUEST_RESOURCE_URL);
+  let request = new SyncStorageRequest(server.baseURI + "/resource");
   request.get(function (error) {
     do_check_eq(error, null);
     do_check_eq(this.response.status, 200);
@@ -160,7 +158,7 @@ add_test(function test_weave_quota_error() {
   }
   Svc.Obs.add("weave:service:quota:remaining", onQuota);
 
-  let request = new SyncStorageRequest(STORAGE_REQUEST_RESOURCE_URL);
+  let request = new SyncStorageRequest(server.baseURI + "/resource");
   request.get(function (error) {
     do_check_eq(error, null);
     do_check_eq(this.response.status, 400);
@@ -179,7 +177,7 @@ add_test(function test_abort() {
   }
   let server = httpd_setup({"/resource": handler});
 
-  let request = new SyncStorageRequest(STORAGE_REQUEST_RESOURCE_URL);
+  let request = new SyncStorageRequest(server.baseURI + "/resource");
 
   // Aborting a request that hasn't been sent yet is pointless and will throw.
   do_check_throws(function () {
