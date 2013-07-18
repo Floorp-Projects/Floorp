@@ -21,7 +21,11 @@ extern "C" {
  * code in tool/mar.c.
 */
 #define MAX_SIGNATURES 8
+#ifdef __cplusplus
+static_assert(MAX_SIGNATURES <= 9, "too many signatures");
+#else
 MOZ_STATIC_ASSERT(MAX_SIGNATURES <= 9, "too many signatures");
+#endif
 
 struct ProductInformationBlock {
   const char *MARChannelID;
