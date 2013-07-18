@@ -59,6 +59,11 @@ public:
         return (SharedSurface_GL*)surf;
     }
 
+    virtual bool ReadPixels(GLint x, GLint y, GLsizei width, GLsizei height,
+                            GLenum format, GLenum type, GLvoid *pixels) {
+        return false;
+    }
+
     virtual void LockProd();
     virtual void UnlockProd();
 

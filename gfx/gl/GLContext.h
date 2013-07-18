@@ -15,6 +15,7 @@
 #include <ctype.h>
 #include <set>
 #include <stack>
+#include <map>
 
 #ifdef WIN32
 #include <windows.h>
@@ -718,7 +719,16 @@ public:
         y = FixYValue(y, height);
 
         BeforeGLReadCall();
-        raw_fReadPixels(x, y, width, height, format, type, pixels);
+
+        bool didReadPixels = false;
+        if (mScreen) {
+            didReadPixels = mScreen->ReadPixels(x, y, width, height, format, type, pixels);
+        }
+
+        if (!didReadPixels) {
+            raw_fReadPixels(x, y, width, height, format, type, pixels);
+        }
+
         AfterGLReadCall();
     }
 
@@ -1182,6 +1192,8 @@ protected:
     int32_t mRenderer;
 
 public:
+    std::map<GLuint, SharedSurface_GL*> mFBOMapping;
+
     enum {
         DebugEnabled = 1 << 0,
         DebugTrace = 1 << 1,
@@ -3180,6 +3192,33 @@ protected:
         MOZ_ASSERT(mGL->IsCurrent());
 
         mGL->fActiveTexture(mOldTexUnit);
+    }
+};
+
+struct ScopedTexture
+    : public ScopedGLWrapper<ScopedTexture>
+{
+    friend struct ScopedGLWrapper<ScopedTexture>;
+
+protected:
+    GLuint mTexture;
+
+public:
+    ScopedTexture(GLContext* gl)
+        : ScopedGLWrapper<ScopedTexture>(gl)
+    {
+        mGL->fGenTextures(1, &mTexture);
+    }
+
+    GLuint Texture() { return mTexture; }
+
+protected:
+    void UnwrapImpl() {
+        // Check that we're not falling out of scope after
+        // the current context changed.
+        MOZ_ASSERT(mGL->IsCurrent());
+
+        mGL->fDeleteTextures(1, &mTexture);
     }
 };
 
