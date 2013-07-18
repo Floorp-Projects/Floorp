@@ -1051,7 +1051,8 @@ WebGLContext::InitAndValidateGL()
 
     if (IsWebGL2() &&
         (!IsExtensionSupported(OES_vertex_array_object) ||
-         !IsExtensionSupported(WEBGL_draw_buffers)
+         !IsExtensionSupported(WEBGL_draw_buffers) ||
+         !gl->IsExtensionSupported(gl::GLContext::EXT_gpu_shader4)
         ))
     {
         return false;

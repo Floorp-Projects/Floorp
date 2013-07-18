@@ -4265,6 +4265,57 @@ WebGLContext::CompileShader(WebGLShader *shader)
 
         const char *s = sourceCString.get();
 
+#define WEBGL2_BYPASS_ANGLE
+#ifdef WEBGL2_BYPASS_ANGLE
+        /*
+         * The bypass don't bring a full support for GLSL ES 3.0, but the main purpose
+         * is to natively bring gl_InstanceID (to do instanced rendering) and gl_FragData
+         *
+         * To remove the bypass code, just comment #define WEBGL2_BYPASS_ANGLE above
+         *
+         * To bypass angle, the context must be a WebGL 2 and the shader must have the
+         * following line at the very top :
+         *      #version proto-200
+         *
+         * In this case, byPassANGLE == true and here is what we do :
+         *  We create two shader source code:
+         *    - one for the driver, that enable GL_EXT_gpu_shader4
+         *    - one for the angle compilor, to get informations about vertex attributes
+         *      and uniforms
+         */
+        static const char *bypassPrefixSearch = "#version proto-200";
+        static const char *bypassANGLEPrefix[2] = {"precision mediump float;\n"
+                                                   "#define gl_VertexID 0\n"
+                                                   "#define gl_InstanceID 0\n",
+
+                                                   "precision mediump float;\n"
+                                                   "#extension GL_EXT_draw_buffers : enable\n"
+                                                   "#define gl_PrimitiveID 0\n"};
+
+        const bool bypassANGLE = IsWebGL2() && (strstr(s, bypassPrefixSearch) != 0);
+
+        const char *angleShaderCode = s;
+        nsTArray<char> bypassANGLEShaderCode;
+        nsTArray<char> bypassDriverShaderCode;
+
+        if (bypassANGLE) {
+            const int bypassStage = (shader->ShaderType() == LOCAL_GL_FRAGMENT_SHADER) ? 1 : 0;
+            const char *originalShader = strstr(s, bypassPrefixSearch) + strlen(bypassPrefixSearch);
+            int originalShaderSize = strlen(s) - (originalShader - s);
+            int bypassShaderCodeSize = originalShaderSize + 4096 + 1;
+
+            bypassANGLEShaderCode.SetLength(bypassShaderCodeSize);
+            strcpy(bypassANGLEShaderCode.Elements(), bypassANGLEPrefix[bypassStage]);
+            strcat(bypassANGLEShaderCode.Elements(), originalShader);
+
+            bypassDriverShaderCode.SetLength(bypassShaderCodeSize);
+            strcpy(bypassDriverShaderCode.Elements(), "#extension GL_EXT_gpu_shader4 : enable\n");
+            strcat(bypassDriverShaderCode.Elements(), originalShader);
+
+            angleShaderCode = bypassANGLEShaderCode.Elements();
+        }
+#endif
+
         compiler = ShConstructCompiler((ShShaderType) shader->ShaderType(),
                                        SH_WEBGL_SPEC,
                                        targetShaderSourceLanguage,
@@ -4297,7 +4348,11 @@ WebGLContext::CompileShader(WebGLShader *shader)
 #endif
         }
 
+#ifdef WEBGL2_BYPASS_ANGLE
+        if (!ShCompile(compiler, &angleShaderCode, 1, compileOptions)) {
+#else
         if (!ShCompile(compiler, &s, 1, compileOptions)) {
+#endif
             size_t len = 0;
             ShGetInfo(compiler, SH_INFO_LOG_LENGTH, &len);
 
@@ -4386,7 +4441,17 @@ WebGLContext::CompileShader(WebGLShader *shader)
 
             const char *ts = translatedSrc.get();
 
+#ifdef WEBGL2_BYPASS_ANGLE
+            if (bypassANGLE) {
+                const char* driverShaderCode = bypassDriverShaderCode.Elements();
+                gl->fShaderSource(shadername, 1, (const GLchar**) &driverShaderCode, nullptr);
+            }
+            else {
+                gl->fShaderSource(shadername, 1, &ts, nullptr);
+            }
+#else
             gl->fShaderSource(shadername, 1, &ts, nullptr);
+#endif
         } else { // not useShaderSourceTranslation
             // we just pass the raw untranslated shader source. We then can't use ANGLE idenfier mapping.
             // that's really bad, as that means we can't be 100% conformant. We should work towards always
