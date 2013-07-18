@@ -243,12 +243,6 @@ abstract public class BrowserApp extends GeckoApp
     }
 
     @Override
-    void handleClearHistory() {
-        super.handleClearHistory();
-        updateAboutHomeTopSites();
-    }
-
-    @Override
     public boolean onKey(View v, int keyCode, KeyEvent event) {
         // Global onKey handler. This is called if the focused UI doesn't
         // handle the key event, and before Gecko swallows the events.
@@ -766,14 +760,6 @@ abstract public class BrowserApp extends GeckoApp
         }
 
         super.onDestroy();
-    }
-
-    @Override
-    protected void finishProfileMigration() {
-        // Update about:home with the new information.
-        updateAboutHomeTopSites();
-
-        super.finishProfileMigration();
     }
 
     @Override
@@ -1316,12 +1302,6 @@ abstract public class BrowserApp extends GeckoApp
 
         // Reset favicon load state
         tab.setFaviconLoadId(Favicons.NOT_LOADING);
-    }
-
-
-    /* About:home UI */
-    void updateAboutHomeTopSites() {
-        mHomePager.updateAboutHome(EnumSet.of(AboutHome.UpdateFlags.TOP_SITES));
     }
 
     public boolean enterEditingMode(EditingTarget target) {

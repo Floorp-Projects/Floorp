@@ -5,32 +5,6 @@
 
 <resources>
 
-    <style name="AboutHome.Thumbnail">
-      <item name="android:layout_width">fill_parent</item>
-      <item name="android:layout_height">fill_parent</item>
-      <item name="android:paddingTop">12dip</item>
-      <item name="android:paddingBottom">12dip</item>
-      <item name="android:paddingLeft">12dip</item>
-      <item name="android:paddingRight">12dip</item>
-    </style>
-
-    <style name="AboutHome.Thumbnail.Grid">
-      <item name="android:layout_width">fill_parent</item>
-      <item name="android:layout_height">wrap_content</item>
-      <!-- Use padding instead of grid spacing to split up items so that
-           tap highlight will extend outside the thumbnail -->
-      <item name="android:verticalSpacing">0dip</item>
-      <item name="android:horizontalSpacing">0dip</item>
-      <item name="android:isScrollContainer">false</item>
-      <item name="android:gravity">center</item>
-      <item name="android:listSelector">@drawable/action_bar_button</item>
-      <item name="android:paddingTop">0dip</item>
-      <item name="android:paddingBottom">0dip</item>
-      <!-- Increase the padding on left and right on large screen sizes -->
-      <item name="android:paddingLeft">60dip</item>
-      <item name="android:paddingRight">60dip</item>
-    </style>
-
     <style name="UrlBar.ImageButton.Forward">
         <item name="android:contentDescription">@string/forward</item>
         <item name="android:layout_width">45dip</item>

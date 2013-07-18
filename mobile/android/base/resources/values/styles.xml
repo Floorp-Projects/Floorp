@@ -391,69 +391,6 @@
     <style name="AboutHome">
     </style>
 
-    <style name="AboutHome.Thumbnail">
-      <item name="android:layout_width">fill_parent</item>
-      <item name="android:layout_height">fill_parent</item>
-      <item name="android:paddingTop">5dip</item>
-      <item name="android:paddingBottom">5dip</item>
-      <item name="android:paddingLeft">5dip</item>
-      <item name="android:paddingRight">5dip</item>
-    </style>
-
-    <style name="AboutHome.Thumbnail.Grid">
-      <item name="android:layout_width">fill_parent</item>
-      <item name="android:layout_height">wrap_content</item>
-      <!-- Use padding instead of grid spacing to split up items so that
-           tap highlight will extend outside the thumbnail -->
-      <item name="android:verticalSpacing">0dip</item>
-      <item name="android:horizontalSpacing">0dip</item>
-      <item name="android:isScrollContainer">false</item>
-      <item name="android:gravity">center</item>
-      <item name="android:listSelector">@drawable/action_bar_button</item>
-      <item name="android:paddingTop">0dip</item>
-      <item name="android:paddingBottom">0dip</item>
-      <item name="android:paddingLeft">0dip</item>
-      <item name="android:paddingRight">0dip</item>
-    </style>
-
-    <style name="AboutHome.Thumbnail.Pinned">
-      <item name="android:layout_width">@dimen/abouthome_topsite_pinsize</item>
-      <item name="android:layout_height">@dimen/abouthome_topsite_pinsize</item>
-      <item name="android:layout_alignTop">@id/thumbnail</item>
-      <item name="android:layout_alignRight">@id/thumbnail</item>
-      <item name="android:minWidth">30dip</item>
-      <item name="android:minHeight">30dip</item>
-    </style>
-
-    <style name="AboutHome.Thumbnail.Image">
-      <item name="android:layout_width">fill_parent</item>
-      <item name="android:layout_height">fill_parent</item>
-      <item name="android:layout_centerHorizontal">true</item>
-      <item name="android:layout_alignParentTop">true</item>
-      <item name="android:src">@drawable/abouthome_thumbnail_bg</item>
-      <item name="android:background">@color/abouthome_thumbnail_bg</item>
-      <item name="android:paddingTop">0dip</item>
-      <item name="android:paddingBottom">@dimen/abouthome_icon_radius</item>
-      <item name="android:paddingLeft">0dip</item>
-      <item name="android:paddingRight">0dip</item>
-      <item name="android:scaleType">fitCenter</item>
-    </style>
-
-    <style name="AboutHome.Thumbnail.Label">
-      <item name="android:layout_width">fill_parent</item>
-      <item name="android:layout_height">18dip</item>
-      <item name="android:layout_alignBottom">@id/thumbnail</item>
-      <item name="android:background">#EFFF</item>
-      <item name="android:singleLine">true</item>
-      <item name="android:textColor">#222</item>
-      <item name="android:paddingTop">0dip</item>
-      <item name="android:paddingBottom">1dip</item>
-      <item name="android:paddingLeft">5dip</item>
-      <item name="android:paddingRight">5dip</item>
-      <item name="android:textSize">12sp</item>
-      <item name="android:gravity">center|left</item>
-    </style>
-
     <style name="AboutHome.TextAppearance" />
 
     <style name="AboutHome.TextAppearance.Title" parent="TextAppearance">

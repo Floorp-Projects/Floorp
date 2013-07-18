@@ -16,20 +16,6 @@
                   android:paddingLeft="@dimen/abouthome_gutter_large"
                   android:paddingRight="@dimen/abouthome_gutter_large">
 
-        <org.mozilla.gecko.GeckoTextView android:id="@+id/top_sites_title"
-                                         android:text="@string/abouthome_top_sites_title"
-                                         android:layout_width="fill_parent"
-                                         android:layout_height="26dip"
-                                         android:background="#34FFFFFF"
-                                         android:paddingLeft="12dip"
-                                         android:textSize="12sp"
-                                         android:textColor="@color/abouthome_section_title"
-                                         android:textStyle="bold"
-                                         android:gravity="left|center_vertical"/>
-
-        <org.mozilla.gecko.widget.TopSitesView android:id="@+id/top_sites_grid"
-                                               style="@style/AboutHome.Thumbnail.Grid"/>
-
         <org.mozilla.gecko.widget.PromoBox android:id="@+id/promo_box"
                                            android:background="@drawable/abouthome_promo_box"
                                            android:layout_width="fill_parent"

@@ -264,7 +264,6 @@ FENNEC_JAVA_FILES = \
   widget/IconTabWidget.java \
   widget/LinkTextView.java \
   widget/PromoBox.java \
-  widget/TopSitesView.java \
   widget/TabRow.java \
   widget/ThumbnailView.java \
   widget/TwoWayView.java \
@@ -508,7 +507,6 @@ RES_LAYOUT = \
   res/layout/simple_dropdown_item_1line.xml \
   res/layout/suggestion_item.xml \
   res/layout/abouthome_section.xml \
-  res/layout/abouthome_topsite_item.xml \
   res/layout/validation_message.xml \
   res/layout/videoplayer.xml \
   $(NULL)
@@ -620,7 +618,6 @@ RES_DRAWABLE_MDPI = \
   res/drawable-mdpi/abouthome_promo_logo_apps.png \
   res/drawable-mdpi/abouthome_promo_logo_sync.png \
   res/drawable-mdpi/abouthome_thumbnail.png \
-  res/drawable-mdpi/abouthome_thumbnail_bg.png \
   res/drawable-mdpi/abouthome_thumbnail_add.png \
   res/drawable-mdpi/alert_addon.png \
   res/drawable-mdpi/alert_app.png \
@@ -741,7 +738,6 @@ RES_DRAWABLE_HDPI = \
   res/drawable-hdpi/abouthome_promo_logo_apps.png \
   res/drawable-hdpi/abouthome_promo_logo_sync.png \
   res/drawable-hdpi/abouthome_thumbnail.png \
-  res/drawable-hdpi/abouthome_thumbnail_bg.png \
   res/drawable-hdpi/abouthome_thumbnail_add.png \
   res/drawable-hdpi/alert_addon.png \
   res/drawable-hdpi/alert_app.png \
@@ -832,7 +828,6 @@ RES_DRAWABLE_XHDPI = \
   res/drawable-xhdpi/abouthome_promo_logo_apps.png \
   res/drawable-xhdpi/abouthome_promo_logo_sync.png \
   res/drawable-xhdpi/abouthome_thumbnail.png \
-  res/drawable-xhdpi/abouthome_thumbnail_bg.png \
   res/drawable-xhdpi/abouthome_thumbnail_add.png \
   res/drawable-xhdpi/url_bar_bg_shadow.png \
   res/drawable-xhdpi/url_bar_entry_default.9.png \
