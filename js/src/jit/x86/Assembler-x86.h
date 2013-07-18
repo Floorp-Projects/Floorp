@@ -268,6 +268,16 @@ class Assembler : public AssemblerX86Shared
         return leal(src, dest);
     }
 
+    void fld32(const Operand &dest) {
+        switch (dest.kind()) {
+          case Operand::MEM_REG_DISP:
+            masm.fld32_m(dest.disp(), dest.base());
+            break;
+          default:
+            MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
+        }
+    }
+
     void cmpl(const Register src, ImmWord ptr) {
         masm.cmpl_ir(ptr.value, src.code());
     }

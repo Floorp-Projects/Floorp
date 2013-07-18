@@ -15,6 +15,7 @@ namespace jit {
 
 class OutOfLineLoadTypedArrayOutOfBounds;
 class OutOfLineTruncate;
+class OutOfLineTruncateFloat32;
 
 class CodeGeneratorX86 : public CodeGeneratorX86Shared
 {
@@ -64,6 +65,7 @@ class CodeGeneratorX86 : public CodeGeneratorX86Shared
     bool visitCompareVAndBranch(LCompareVAndBranch *lir);
     bool visitAsmJSUInt32ToDouble(LAsmJSUInt32ToDouble *lir);
     bool visitTruncateDToInt32(LTruncateDToInt32 *ins);
+    bool visitTruncateFToInt32(LTruncateFToInt32 *ins);
     bool visitLoadTypedArrayElementStatic(LLoadTypedArrayElementStatic *ins);
     bool visitStoreTypedArrayElementStatic(LStoreTypedArrayElementStatic *ins);
     bool visitAsmJSLoadHeap(LAsmJSLoadHeap *ins);
@@ -75,6 +77,7 @@ class CodeGeneratorX86 : public CodeGeneratorX86Shared
 
     bool visitOutOfLineLoadTypedArrayOutOfBounds(OutOfLineLoadTypedArrayOutOfBounds *ool);
     bool visitOutOfLineTruncate(OutOfLineTruncate *ool);
+    bool visitOutOfLineTruncateFloat32(OutOfLineTruncateFloat32 *ool);
 
     void postAsmJSCall(LAsmJSCall *lir);
 };

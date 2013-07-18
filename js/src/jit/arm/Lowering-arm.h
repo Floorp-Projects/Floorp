@@ -61,6 +61,7 @@ class LIRGeneratorARM : public LIRGeneratorShared
     bool lowerConstantDouble(double d, MInstruction *ins);
     bool lowerConstantFloat32(float d, MInstruction *ins);
     bool lowerTruncateDToInt32(MTruncateToInt32 *ins);
+    bool lowerTruncateFToInt32(MTruncateToInt32 *ins);
     bool lowerDivI(MDiv *div);
     bool lowerModI(MMod *mod);
     bool lowerMulI(MMul *mul, MDefinition *lhs, MDefinition *rhs);

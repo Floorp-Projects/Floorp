@@ -485,7 +485,8 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
 
     enum Result {
         GENERAL,
-        DOUBLE
+        DOUBLE,
+        FLOAT
     };
 
     MacroAssemblerARMCompat()
@@ -605,6 +606,9 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void push(const Register &reg) {
         ma_push(reg);
     }
+    void push(const FloatRegister &reg) {
+        ma_vpush(VFPRegister(reg));
+    }
     void pushWithPadding(const Register &reg, const Imm32 extraSpace) {
         Imm32 totSpace = Imm32(extraSpace.value + 4);
         ma_dtr(IsStore, sp, totSpace, reg, PreIndex);
@@ -619,6 +623,9 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
 
     void pop(const Register &reg) {
         ma_pop(reg);
+    }
+    void pop(const FloatRegister &reg) {
+        ma_vpop(VFPRegister(reg));
     }
 
     void popN(const Register &reg, Imm32 extraSpace) {

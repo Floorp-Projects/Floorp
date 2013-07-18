@@ -522,6 +522,15 @@ LIRGeneratorARM::lowerTruncateDToInt32(MTruncateToInt32 *ins)
 }
 
 bool
+LIRGeneratorARM::lowerTruncateFToInt32(MTruncateToInt32 *ins)
+{
+    MDefinition *opd = ins->input();
+    JS_ASSERT(opd->type() == MIRType_Float32);
+
+    return define(new LTruncateFToInt32(useRegister(opd), LDefinition::BogusTemp()), ins);
+}
+
+bool
 LIRGeneratorARM::visitStoreTypedArrayElementStatic(MStoreTypedArrayElementStatic *ins)
 {
     MOZ_ASSUME_UNREACHABLE("NYI");

@@ -568,3 +568,15 @@ CodeGeneratorX64::visitTruncateDToInt32(LTruncateDToInt32 *ins)
     // call a stub if it fails.
     return emitTruncateDouble(input, output);
 }
+
+bool
+CodeGeneratorX64::visitTruncateFToInt32(LTruncateFToInt32 *ins)
+{
+    FloatRegister input = ToFloatRegister(ins->input());
+    Register output = ToRegister(ins->output());
+
+    // On x64, branchTruncateFloat32 uses cvttss2sq. Unlike the x86
+    // implementation, this should handle most floats and we can just
+    // call a stub if it fails.
+    return emitTruncateFloat32(input, output);
+}

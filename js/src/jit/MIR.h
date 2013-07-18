@@ -2953,6 +2953,11 @@ class MTruncateToInt32 : public MUnaryInstruction
 
     void computeRange();
     bool isOperandTruncated(size_t index) const;
+# ifdef DEBUG
+    bool isConsistentFloat32Use() const {
+        return true;
+    }
+#endif
 };
 
 // Converts any type to a string

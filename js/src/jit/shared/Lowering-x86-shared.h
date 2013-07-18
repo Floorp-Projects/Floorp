@@ -48,6 +48,7 @@ class LIRGeneratorX86Shared : public LIRGeneratorShared
     bool lowerConstantDouble(double d, MInstruction *ins);
     bool lowerConstantFloat32(float d, MInstruction *ins);
     bool lowerTruncateDToInt32(MTruncateToInt32 *ins);
+    bool lowerTruncateFToInt32(MTruncateToInt32 *ins);
 };
 
 } // namespace jit
