@@ -48,6 +48,7 @@ class MacroAssemblerARM : public Assembler
     void convertBoolToInt32(Register source, Register dest);
     void convertInt32ToDouble(const Register &src, const FloatRegister &dest);
     void convertInt32ToDouble(const Address &src, FloatRegister dest);
+    void convertUInt32ToFloat32(const Register &src, const FloatRegister &dest);
     void convertUInt32ToDouble(const Register &src, const FloatRegister &dest);
     void convertDoubleToFloat(const FloatRegister &src, const FloatRegister &dest);
     void branchTruncateDouble(const FloatRegister &src, const Register &dest, Label *fail);

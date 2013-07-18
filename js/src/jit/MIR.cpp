@@ -401,6 +401,14 @@ MConstant::New(const Value &v)
     return new MConstant(v);
 }
 
+MConstant *
+MConstant::NewAsmJS(const Value &v, MIRType type)
+{
+    MConstant *constant = new MConstant(v);
+    constant->setResultType(type);
+    return constant;
+}
+
 types::TemporaryTypeSet *
 jit::MakeSingletonTypeSet(JSObject *obj)
 {
@@ -2710,6 +2718,21 @@ MAsmJSUnsignedToDouble::foldsTo(bool useValueNumbers)
         const Value &v = input()->toConstant()->value();
         if (v.isInt32())
             return MConstant::New(DoubleValue(uint32_t(v.toInt32())));
+    }
+
+    return this;
+}
+
+MDefinition *
+MAsmJSUnsignedToFloat32::foldsTo(bool useValueNumbers)
+{
+    if (input()->isConstant()) {
+        const Value &v = input()->toConstant()->value();
+        if (v.isInt32()) {
+            double dval = double(uint32_t(v.toInt32()));
+            if (IsFloat32Representable(dval))
+                return MConstant::NewAsmJS(JS::Float32Value(float(dval)), MIRType_Float32);
+        }
     }
 
     return this;

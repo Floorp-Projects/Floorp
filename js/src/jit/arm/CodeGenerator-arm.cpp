@@ -1582,9 +1582,16 @@ CodeGeneratorARM::visitBitAndAndBranch(LBitAndAndBranch *baab)
 }
 
 bool
-CodeGeneratorARM::visitUInt32ToDouble(LUInt32ToDouble *lir)
+CodeGeneratorARM::visitAsmJSUInt32ToDouble(LAsmJSUInt32ToDouble *lir)
 {
     masm.convertUInt32ToDouble(ToRegister(lir->input()), ToFloatRegister(lir->output()));
+    return true;
+}
+
+bool
+CodeGeneratorARM::visitAsmJSUInt32ToFloat32(LAsmJSUInt32ToFloat32 *lir)
+{
+    masm.convertUInt32ToFloat32(ToRegister(lir->input()), ToFloatRegister(lir->output()));
     return true;
 }
 

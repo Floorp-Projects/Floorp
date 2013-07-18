@@ -961,6 +961,7 @@ class MConstant : public MNullaryInstruction
   public:
     INSTRUCTION_HEADER(Constant)
     static MConstant *New(const Value &v);
+    static MConstant *NewAsmJS(const Value &v, MIRType type);
 
     const js::Value &value() const {
         return value_;
@@ -2887,6 +2888,34 @@ class MAsmJSUnsignedToDouble
     AliasSet getAliasSet() const {
         return AliasSet::None();
     }
+};
+
+// Converts a uint32 to a float32 (coming from asm.js).
+class MAsmJSUnsignedToFloat32
+  : public MUnaryInstruction
+{
+    MAsmJSUnsignedToFloat32(MDefinition *def)
+      : MUnaryInstruction(def)
+    {
+        setResultType(MIRType_Float32);
+        setMovable();
+    }
+
+  public:
+    INSTRUCTION_HEADER(AsmJSUnsignedToFloat32);
+    static MAsmJSUnsignedToFloat32 *NewAsmJS(MDefinition *def) {
+        return new MAsmJSUnsignedToFloat32(def);
+    }
+
+    MDefinition *foldsTo(bool useValueNumbers);
+    bool congruentTo(MDefinition *ins) const {
+        return congruentIfOperandsEqual(ins);
+    }
+    AliasSet getAliasSet() const {
+        return AliasSet::None();
+    }
+
+    bool canProduceFloat32() const { return true; }
 };
 
 // Converts a primitive (either typed or untyped) to an int32. If the input is

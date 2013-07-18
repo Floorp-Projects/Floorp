@@ -2352,6 +2352,13 @@ public:
         m_formatter.prefix(PRE_SSE_F2);
         m_formatter.twoByteOp64(OP2_CVTSI2SD_VsdEd, (RegisterID)dst, src);
     }
+    void cvtsq2ss_rr(RegisterID src, XMMRegisterID dst)
+    {
+        spew("cvtsq2ss   %s, %s",
+             nameIReg(src), nameFPReg(dst));
+        m_formatter.prefix(PRE_SSE_F3);
+        m_formatter.twoByteOp64(OP2_CVTSI2SD_VsdEd, (RegisterID)dst, src);
+    }
 #endif
 
     void cvtsi2sd_mr(int offset, RegisterID base, XMMRegisterID dst)
