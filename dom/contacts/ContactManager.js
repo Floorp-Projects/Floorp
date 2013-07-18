@@ -541,6 +541,7 @@ function ContactManager()
 ContactManager.prototype = {
   __proto__: DOMRequestIpcHelper.prototype,
   _oncontactchange: null,
+  _cachedContacts: [] ,
 
   set oncontactchange(aCallback) {
     if (DEBUG) debug("set oncontactchange");
@@ -630,6 +631,13 @@ ContactManager.prototype = {
         }
         break;
       case "Contact:Save:Return:OK":
+        // If a cached contact was saved and a new contact ID was returned, update the contact's ID
+        if (this._cachedContacts[msg.requestID]) {
+          if (msg.contactID) {
+            this._cachedContacts[msg.requestID].id = msg.contactID;
+          }
+          delete this._cachedContacts[msg.requestID];
+        }
       case "Contacts:Clear:Return:OK":
       case "Contact:Remove:Return:OK":
         req = this.getRequest(msg.requestID);
@@ -643,8 +651,12 @@ ContactManager.prototype = {
       case "Contacts:GetRevision:Return:KO":
       case "Contacts:Count:Return:KO":
         req = this.getRequest(msg.requestID);
-        if (req)
-          Services.DOMRequest.fireError(req.request, msg.errorMsg);
+        if (req) {
+          if (req.request) {
+            req = req.request;
+          }
+          Services.DOMRequest.fireError(req, msg.errorMsg);
+        }
         break;
       case "PermissionPromptHelper:AskPermission:OK":
         if (DEBUG) debug("id: " + msg.requestID);
@@ -747,7 +759,6 @@ ContactManager.prototype = {
   },
 
   save: function save(aContact) {
-    let request;
     if (DEBUG) debug("save: " + JSON.stringify(aContact) + " :" + aContact.id);
     let newContact = {};
     newContact.properties = {
@@ -777,12 +788,16 @@ ContactManager.prototype = {
     for (let field in newContact.properties) {
       newContact.properties[field] = aContact[field];
     }
+    let request = this.createRequest();
+    let requestID = this.getRequestId({request: request, reason: reason});
 
     let reason;
     if (aContact.id == "undefined") {
       // for example {25c00f01-90e5-c545-b4d4-21E2ddbab9e0} becomes
       // 25c00f0190e5c545b4d421E2ddbab9e0
       aContact.id = this._getRandomId().replace('-', '', 'g').replace('{', '').replace('}', '');
+      // Cache the contact so that its ID may be updated later if necessary
+      this._cachedContacts[requestID] = aContact;
       reason = "create";
     } else {
       reason = "update";
@@ -790,10 +805,9 @@ ContactManager.prototype = {
 
     this._setMetaData(newContact, aContact);
     if (DEBUG) debug("send: " + JSON.stringify(newContact));
-    request = this.createRequest();
     let options = { contact: newContact, reason: reason };
     let allowCallback = function() {
-      cpmm.sendAsyncMessage("Contact:Save", {requestID: this.getRequestId({request: request, reason: reason}), options: options});
+      cpmm.sendAsyncMessage("Contact:Save", {requestID: requestID, options: options});
     }.bind(this)
     this.askPermission(reason, request, allowCallback);
     return request;
@@ -920,8 +934,8 @@ ContactManager.prototype = {
                               "Contact:Remove:Return:OK", "Contact:Remove:Return:KO",
                               "Contact:Changed",
                               "PermissionPromptHelper:AskPermission:OK",
-                              "Contacts:GetAll:Next", "Contacts:Revision",
-                              "Contacts:Count"]);
+                              "Contacts:GetAll:Next", "Contacts:Count",
+                              "Contacts:Revision", "Contacts:GetRevision:Return:KO",]);
   },
 
   // Called from DOMRequestIpcHelper
