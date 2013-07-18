@@ -1109,6 +1109,11 @@ toolbarbutton.bookmark-item > menupopup {
   border-color: rgba(0,0,0,0.2);
 }
 
+#back-button:-moz-locale-dir(rtl),
+#forward-button:-moz-locale-dir(rtl) {
+  transform: scaleX(-1);
+}
+
 /* Back button styles */
 
 #back-button {
