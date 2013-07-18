@@ -1648,8 +1648,12 @@ static nsStyleContext* GetBackgroundStyleContext(nsIFrame* aFrame)
 nsDisplayBackgroundImage::AppendBackgroundItemsToTop(nsDisplayListBuilder* aBuilder,
                                                      nsIFrame* aFrame,
                                                      nsDisplayList* aList,
-                                                     nsDisplayBackgroundImage** aBackground)
+                                                     bool* aAppendedThemedBackground)
 {
+  if (aAppendedThemedBackground) {
+    *aAppendedThemedBackground = false;
+  }
+
   nsStyleContext* bgSC = nullptr;
   const nsStyleBackground* bg = nullptr;
   nsPresContext* presContext = aFrame->PresContext();
@@ -1681,10 +1685,10 @@ nsDisplayBackgroundImage::AppendBackgroundItemsToTop(nsDisplayListBuilder* aBuil
 
   if (isThemed) {
     nsDisplayBackgroundImage* bgItem =
-      new (aBuilder) nsDisplayBackgroundImage(aBuilder, aFrame, 0, isThemed, nullptr);
+      new (aBuilder) nsDisplayBackgroundImage(aBuilder, aFrame, 0, true, nullptr);
     aList->AppendNewToTop(bgItem);
-    if (aBackground) {
-      *aBackground = bgItem;
+    if (aAppendedThemedBackground) {
+      *aAppendedThemedBackground = true;
     }
     return NS_OK;
   }
@@ -1695,18 +1699,13 @@ nsDisplayBackgroundImage::AppendBackgroundItemsToTop(nsDisplayListBuilder* aBuil
  
   // Passing bg == nullptr in this macro will result in one iteration with
   // i = 0.
-  bool backgroundSet = !aBackground;
   NS_FOR_VISIBLE_BACKGROUND_LAYERS_BACK_TO_FRONT(i, bg) {
     if (bg->mLayers[i].mImage.IsEmpty()) {
       continue;
     }
     nsDisplayBackgroundImage* bgItem =
-      new (aBuilder) nsDisplayBackgroundImage(aBuilder, aFrame, i, isThemed, bg);
+      new (aBuilder) nsDisplayBackgroundImage(aBuilder, aFrame, i, false, bg);
     aList->AppendNewToTop(bgItem);
-    if (!backgroundSet) {
-      *aBackground = bgItem;
-      backgroundSet = true;
-    }
   }
 
   return NS_OK;
