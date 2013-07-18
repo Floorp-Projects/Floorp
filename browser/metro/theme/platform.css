@@ -744,20 +744,20 @@ appbar toolbar[labelled] > toolbarbutton > .toolbarbutton-text {
   -moz-image-region: rect(0 40px 40px 0);
 }
 
-.appbar-primary:not([checked]):hover:not(:active) {
+.appbar-primary:not([checked]):hover:not(:active):not([disabled]) {
   -moz-image-region: rect(0 80px 40px 40px);
 }
 
-.appbar-primary:not([checked]):active,
+.appbar-primary:not([checked]):active:not([disabled]),
 .appbar-primary[checked] {
   -moz-image-region: rect(0 120px 40px 80px);
 }
 
-.appbar-primary[checked]:hover:not(:active) {
+.appbar-primary[checked]:hover:not(:active):not([disabled]) {
   -moz-image-region: rect(0 160px 40px 120px);
 }
 
-.appbar-primary[checked]:active {
+.appbar-primary[checked]:active:not([disabled]) {
   -moz-image-region: rect(0 200px 40px 160px);
 }
 
@@ -766,20 +766,20 @@ appbar toolbar[labelled] > toolbarbutton > .toolbarbutton-text {
     -moz-image-region: rect(0 56px 56px 0);
   }
 
-  .appbar-primary:not([checked]):hover:not(:active) {
+  .appbar-primary:not([checked]):hover:not(:active):not([disabled]) {
     -moz-image-region: rect(0 112px 56px 56px);
   }
 
-  .appbar-primary:not([checked]):active,
+  .appbar-primary:not([checked]):active:not([disabled]),
   .appbar-primary[checked] {
     -moz-image-region: rect(0 168px 56px 112px);
   }
 
-  .appbar-primary[checked]:hover:not(:active) {
+  .appbar-primary[checked]:hover:not(:active):not([disabled]) {
     -moz-image-region: rect(0 224px 56px 168px);
   }
 
-  .appbar-primary[checked]:active {
+  .appbar-primary[checked]:active:not([disabled]) {
     -moz-image-region: rect(0 280px 56px 224px);
   }
 }
@@ -789,20 +789,20 @@ appbar toolbar[labelled] > toolbarbutton > .toolbarbutton-text {
     -moz-image-region: rect(0 72px 72px 0);
   }
 
-  .appbar-primary:not([checked]):hover:not(:active) {
+  .appbar-primary:not([checked]):hover:not(:active):not([disabled]) {
     -moz-image-region: rect(0 144px 72px 72px);
   }
 
-  .appbar-primary:not([checked]):active,
+  .appbar-primary:not([checked]):active:not([disabled]),
   .appbar-primary[checked] {
     -moz-image-region: rect(0 216px 72px 144px);
   }
 
-  .appbar-primary[checked]:hover:not(:active) {
+  .appbar-primary[checked]:hover:not(:active):not([disabled]) {
     -moz-image-region: rect(0 288px 72px 216px);
   }
 
-  .appbar-primary[checked]:active {
+  .appbar-primary[checked]:active:not([disabled]) {
     -moz-image-region: rect(0 360px 72px 288px);
   }
 }
