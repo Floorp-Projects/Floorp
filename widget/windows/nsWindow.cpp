@@ -651,8 +651,8 @@ NS_METHOD nsWindow::Destroy()
   // Our windows can be subclassed which may prevent us receiving WM_DESTROY. If OnDestroy()
   // didn't get called, call it now.
   if (false == mOnDestroyCalled) {
-    LRESULT result;
-    mWindowHook.Notify(mWnd, WM_DESTROY, 0, 0, &result);
+    MSGResult msgResult;
+    mWindowHook.Notify(mWnd, WM_DESTROY, 0, 0, msgResult);
     OnDestroy();
   }
 
@@ -4428,7 +4428,7 @@ nsWindow::ExternalHandlerProcessMessage(UINT aMessage,
                                         LPARAM& aLParam,
                                         MSGResult& aResult)
 {
-  if (mWindowHook.Notify(mWnd, aMessage, aWParam, aLParam, &aResult.mResult)) {
+  if (mWindowHook.Notify(mWnd, aMessage, aWParam, aLParam, aResult)) {
     return true;
   }
 
