@@ -330,6 +330,12 @@ documenttab[selected] .documenttab-selection {
   overflow: hidden;
 }
 
+/* helperapp (save-as) popup */
+
+#helperapp-target {
+  font-size: @font_small@ !important;
+}
+
 /* overlay buttons */
 
 .overlay-button {
@@ -511,7 +517,7 @@ documenttab[selected] .documenttab-selection {
 }
 
 /* URL bar */
-#urlbar {
+#urlbar-container {
   border: @metro_border_thick@ solid @urlbar_border_color@;
   margin: 0 @toolbar_horizontal_spacing@;
   padding: 0;
@@ -519,7 +525,7 @@ documenttab[selected] .documenttab-selection {
   overflow: hidden;
 }
 
-#urlbar[mode="edit"] {
+#urlbar-container[mode="edit"] {
   border-color: @metro_orange@;
 }
 
@@ -530,11 +536,11 @@ documenttab[selected] .documenttab-selection {
   list-style-image: url("chrome://browser/skin/images/identity-icons-generic.png");
 }
 
-#identity-box.verifiedDomain > #identity-icon {
+#identity-box-inner.verifiedDomain > #identity-icon {
   list-style-image: url("chrome://browser/skin/images/identity-icons-https.png");
 }
 
-#identity-box.verifiedIdentity > #identity-icon {
+#identity-box-inner.verifiedIdentity > #identity-icon {
   list-style-image: url("chrome://browser/skin/images/identity-icons-https-ev.png");
 }
 
@@ -568,9 +574,9 @@ documenttab[selected] .documenttab-selection {
   list-style-image: url(chrome://browser/skin/images/appbar-stop.png);
 }
 
-#urlbar[mode="loading"] > #reload-button,
-#urlbar:-moz-any([mode="edit"], [mode="view"]) > #stop-button,
-#toolbar[viewstate="snapped"] > #urlbar ~ toolbarbutton {
+#toolbar[mode="loading"] > #urlbar-container > #reload-button,
+#toolbar:-moz-any([mode="edit"], [mode="view"]) > #urlbar-container > #stop-button,
+#toolbar[viewstate="snapped"] > #urlbar-container ~ toolbarbutton {
   visibility: collapse;
 }
 
