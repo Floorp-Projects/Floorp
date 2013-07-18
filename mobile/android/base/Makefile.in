@@ -601,6 +601,7 @@ RES_ANIM = \
   $(NULL)
 
 RES_DRAWABLE_MDPI = \
+  $(SYNC_RES_DRAWABLE_MDPI) \
   res/drawable-mdpi/blank.png \
   res/drawable-mdpi/favicon.png \
   res/drawable-mdpi/folder.png \
@@ -716,14 +717,14 @@ RES_DRAWABLE_MDPI = \
   res/drawable-mdpi/shadow.png \
   res/drawable-mdpi/start.png \
   res/drawable-mdpi/marketplace.png \
-  $(addprefix res/drawable-mdpi/,$(notdir $(SYNC_RES_DRAWABLE_MDPI))) \
   $(NULL)
 
 RES_DRAWABLE_LDPI = \
-  $(addprefix res/drawable-ldpi/,$(notdir $(SYNC_RES_DRAWABLE_LDPI))) \
+  $(SYNC_RES_DRAWABLE_LDPI) \
   $(NULL)
 
 RES_DRAWABLE_HDPI = \
+  $(SYNC_RES_DRAWABLE_HDPI) \
   res/drawable-hdpi/blank.png \
   res/drawable-hdpi/favicon.png \
   res/drawable-hdpi/folder.png \
@@ -817,7 +818,6 @@ RES_DRAWABLE_HDPI = \
   res/drawable-hdpi/handle_end.png \
   res/drawable-hdpi/handle_middle.png \
   res/drawable-hdpi/handle_start.png \
-  $(addprefix res/drawable-hdpi/,$(notdir $(SYNC_RES_DRAWABLE_HDPI))) \
   $(NULL)
 
 RES_DRAWABLE_XHDPI = \
@@ -1086,50 +1086,51 @@ RES_DRAWABLE_MDPI += res/drawable-mdpi/crash_reporter.png
 RES_LAYOUT += res/layout/crash_reporter.xml
 endif
 
-MOZ_ANDROID_DRAWABLES += \
+RES_DRAWABLE += \
   $(SYNC_RES_DRAWABLE)                                                          \
-  mobile/android/base/resources/drawable/abouthome_logo.xml                     \
-  mobile/android/base/resources/drawable/abouthome_promo_box.xml                \
-  mobile/android/base/resources/drawable/action_bar_button.xml                  \
-  mobile/android/base/resources/drawable/action_bar_button_inverse.xml          \
-  mobile/android/base/resources/drawable/address_bar_bg.xml                     \
-  mobile/android/base/resources/drawable/address_bar_bg_shadow_repeat.xml       \
-  mobile/android/base/resources/drawable/address_bar_nav_button.xml             \
-  mobile/android/base/resources/drawable/address_bar_right_edge.xml             \
-  mobile/android/base/resources/drawable/address_bar_url.xml                    \
-  mobile/android/base/resources/drawable/awesomebar_listview_divider.xml        \
-  mobile/android/base/resources/drawable/awesomebar_header_row.xml              \
-  mobile/android/base/resources/drawable/awesomebar_tab_indicator.xml           \
-  mobile/android/base/resources/drawable/awesomebar_tab_selected.xml            \
-  mobile/android/base/resources/drawable/awesomebar_tab_unselected.xml          \
-  mobile/android/base/resources/drawable/divider_vertical.xml                   \
-  mobile/android/base/resources/drawable/favicon_bg.xml                         \
-  mobile/android/base/resources/drawable/handle_end_level.xml                   \
-  mobile/android/base/resources/drawable/handle_start_level.xml                 \
-  mobile/android/base/resources/drawable/ic_menu_back.xml                       \
-  mobile/android/base/resources/drawable/ic_menu_desktop_mode_off.xml           \
-  mobile/android/base/resources/drawable/ic_menu_desktop_mode_on.xml            \
-  mobile/android/base/resources/drawable/ic_menu_quit.xml                       \
-  mobile/android/base/resources/drawable/menu_item_state.xml                    \
-  mobile/android/base/resources/drawable/menu_level.xml                         \
-  mobile/android/base/resources/drawable/progress_spinner.xml                   \
-  mobile/android/base/resources/drawable/remote_tabs_child_divider.xml          \
-  mobile/android/base/resources/drawable/shaped_button.xml                      \
-  mobile/android/base/resources/drawable/site_security_level.xml                \
-  mobile/android/base/resources/drawable/spinner.xml                            \
-  mobile/android/base/resources/drawable/suggestion_selector.xml                \
-  mobile/android/base/resources/drawable/tab_new_level.xml                      \
-  mobile/android/base/resources/drawable/tab_row.xml                            \
-  mobile/android/base/resources/drawable/tab_thumbnail.xml                      \
-  mobile/android/base/resources/drawable/tabs_panel_indicator.xml               \
-  mobile/android/base/resources/drawable/textbox_bg.xml                         \
-  mobile/android/base/resources/drawable/toast_button.xml                       \
-  mobile/android/base/resources/drawable/webapp_titlebar_bg.xml                 \
+  res/drawable/abouthome_logo.xml                     \
+  res/drawable/abouthome_promo_box.xml                \
+  res/drawable/action_bar_button.xml                  \
+  res/drawable/action_bar_button_inverse.xml          \
+  res/drawable/address_bar_bg.xml                     \
+  res/drawable/address_bar_bg_shadow_repeat.xml       \
+  res/drawable/address_bar_nav_button.xml             \
+  res/drawable/address_bar_right_edge.xml             \
+  res/drawable/address_bar_url.xml                    \
+  res/drawable/awesomebar_listview_divider.xml        \
+  res/drawable/awesomebar_header_row.xml              \
+  res/drawable/awesomebar_tab_indicator.xml           \
+  res/drawable/awesomebar_tab_selected.xml            \
+  res/drawable/awesomebar_tab_unselected.xml          \
+  res/drawable/divider_vertical.xml                   \
+  res/drawable/favicon_bg.xml                         \
+  res/drawable/handle_end_level.xml                   \
+  res/drawable/handle_start_level.xml                 \
+  res/drawable/ic_menu_back.xml                       \
+  res/drawable/ic_menu_desktop_mode_off.xml           \
+  res/drawable/ic_menu_desktop_mode_on.xml            \
+  res/drawable/ic_menu_quit.xml                       \
+  res/drawable/menu_item_state.xml                    \
+  res/drawable/menu_level.xml                         \
+  res/drawable/progress_spinner.xml                   \
+  res/drawable/remote_tabs_child_divider.xml          \
+  res/drawable/shaped_button.xml                      \
+  res/drawable/site_security_level.xml                \
+  res/drawable/spinner.xml                            \
+  res/drawable/suggestion_selector.xml                \
+  res/drawable/tab_new_level.xml                      \
+  res/drawable/tab_row.xml                            \
+  res/drawable/tab_thumbnail.xml                      \
+  res/drawable/tabs_panel_indicator.xml               \
+  res/drawable/textbox_bg.xml                         \
+  res/drawable/toast_button.xml                       \
+  res/drawable/webapp_titlebar_bg.xml                 \
   $(NULL)
 
 MOZ_BRANDING_DRAWABLE_MDPI = $(shell if test -e $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/android-resources.mn; then cat $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/android-resources.mn | tr '\n' ' ';  fi)
 
 RESOURCES=$(RES_LAYOUT) $(RES_LAYOUT_LARGE_LAND_V11) $(RES_LAYOUT_LARGE_V11) $(RES_LAYOUT_XLARGE_V11) $(RES_LAYOUT_XLARGE_LAND_V11) $(RES_VALUES) $(RES_VALUES_LAND) $(RES_VALUES_V11) $(RES_VALUES_LARGE_V11) $(RES_VALUES_LARGE_LAND_V11) $(RES_VALUES_XLARGE_V11) $(RES_VALUES_LAND_V14) $(RES_VALUES_V14) $(RES_XML) $(RES_XML_V11) $(RES_ANIM) $(RES_DRAWABLE_MDPI) $(RES_DRAWABLE_LDPI) $(RES_DRAWABLE_HDPI) $(RES_DRAWABLE_XHDPI) $(RES_DRAWABLE_MDPI_V11) $(RES_DRAWABLE_HDPI_V11) $(RES_DRAWABLE_XHDPI_V11) $(RES_DRAWABLE_LARGE_MDPI_V11) $(RES_DRAWABLE_LARGE_HDPI_V11) $(RES_DRAWABLE_LARGE_XHDPI_V11) $(RES_DRAWABLE_XLARGE_MDPI_V11) $(RES_DRAWABLE_XLARGE_HDPI_V11) $(RES_DRAWABLE_XLARGE_XHDPI_V11) $(RES_COLOR) $(RES_MENU)
+RESOURCES += $(RES_DRAWABLE)
 
 RES_DIRS= \
   res/layout                    \
@@ -1326,11 +1327,6 @@ res/drawable-xxhdpi/icon.png: $(MOZ_APP_ICON)
 	$(NSINSTALL) -D res/drawable-xxhdpi
 	cp $(ICON_PATH_XXHDPI) $@
 
-RES_DRAWABLE = $(addprefix res/drawable/,$(notdir $(MOZ_ANDROID_DRAWABLES)))
-$(RES_DRAWABLE): $(addprefix $(topsrcdir)/,$(MOZ_ANDROID_DRAWABLES))
-	$(NSINSTALL) -D res/drawable
-	$(NSINSTALL) $^ res/drawable/
-
 RES_BRANDING_DRAWABLE_MDPI = $(addprefix res/drawable-mdpi/,$(notdir $(MOZ_BRANDING_DRAWABLE_MDPI)))
 $(RES_BRANDING_DRAWABLE_MDPI): $(addprefix $(topsrcdir)/,$(MOZ_BRANDING_DRAWABLE_MDPI))
 	$(NSINSTALL) -D res/drawable-mdpi
@@ -1347,10 +1343,25 @@ $(RESOURCES): $(RES_DIRS) $(subst res/,$(srcdir)/resources/,$(RESOURCES))
 res/values/strings.xml:
 	$(MAKE) -C locales
 
-R.java: $(MOZ_APP_ICON) $(RESOURCES) $(RES_DRAWABLE) $(RES_BRANDING_DRAWABLE_MDPI) $(PP_RES_XML) res/drawable-mdpi/icon.png res/drawable-hdpi/icon.png res/drawable-xhdpi/icon.png res/drawable-xxhdpi/icon.png res/values/strings.xml AndroidManifest.xml FORCE
+all_resources = \
+  res/drawable-mdpi/logo.png \
+  res/drawable-mdpi/icon.png \
+  res/drawable-hdpi/icon.png \
+  res/drawable-xhdpi/icon.png \
+  res/drawable-xxhdpi/icon.png \
+  res/values/strings.xml \
+  AndroidManifest.xml \
+  $(RESOURCES) \
+  $(PP_RES_XML) \
+  $(RES_BRANDING_DRAWABLE_MDPI) \
+  $(NULL)
+
+R.java: $(all_resources)
+R.java: FORCE
 	$(AAPT) package -f -M AndroidManifest.xml -I $(ANDROID_SDK)/android.jar -S res -J . --custom-package org.mozilla.gecko
 
-gecko.ap_: AndroidManifest.xml res/drawable-mdpi/icon.png res/drawable-hdpi/icon.png res/drawable-xhdpi/icon.png res/drawable-xxhdpi/icon.png $(RESOURCES) $(RES_DRAWABLE) $(RES_BRANDING_DRAWABLE_MDPI) $(PP_RES_XML) res/values/strings.xml FORCE
+gecko.ap_: $(all_resources)
+gecko.ap_: FORCE
 	$(AAPT) package -f -M AndroidManifest.xml -I $(ANDROID_SDK)/android.jar  -S res -F $@
 
 fennec_ids.txt: fennec-ids-generator.py R.java
