@@ -24,6 +24,9 @@
 #include "nsIDOMNodeList.h"
 #include "nsIDOMXULElement.h"
 #include "nsIXULBrowserWindow.h"
+#include "mozilla/dom/Element.h"
+
+using namespace mozilla;
 
 // CIDs
 static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
@@ -258,7 +261,7 @@ nsChromeTreeOwner::SetPersistence(bool aPersistPosition,
                                   bool aPersistSizeMode)
 {
   NS_ENSURE_STATE(mXULWindow);
-  nsCOMPtr<nsIDOMElement> docShellElement = mXULWindow->GetWindowDOMElement();
+  nsCOMPtr<dom::Element> docShellElement = mXULWindow->GetWindowDOMElement();
   if (!docShellElement)
     return NS_ERROR_FAILURE;
 
@@ -283,8 +286,10 @@ nsChromeTreeOwner::SetPersistence(bool aPersistPosition,
   FIND_PERSIST_STRING(gLiterals->kHeight,   aPersistSize);
   FIND_PERSIST_STRING(gLiterals->kSizemode, aPersistSizeMode);
 
-  if (saveString) 
-    docShellElement->SetAttribute(gLiterals->kPersist, persistString);
+  ErrorResult rv;
+  if (saveString) {
+    docShellElement->SetAttribute(gLiterals->kPersist, persistString, rv);
+  }
 
   return NS_OK;
 }
@@ -295,8 +300,8 @@ nsChromeTreeOwner::GetPersistence(bool* aPersistPosition,
                                   bool* aPersistSizeMode)
 {
   NS_ENSURE_STATE(mXULWindow);
-  nsCOMPtr<nsIDOMElement> docShellElement = mXULWindow->GetWindowDOMElement();
-  if (!docShellElement) 
+  nsCOMPtr<dom::Element> docShellElement = mXULWindow->GetWindowDOMElement();
+  if (!docShellElement)
     return NS_ERROR_FAILURE;
 
   nsAutoString persistString;
