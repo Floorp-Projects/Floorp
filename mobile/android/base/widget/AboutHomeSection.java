@@ -22,7 +22,6 @@ public class AboutHomeSection extends GeckoLinearLayout {
     private TextView mTitle;
     private TextView mSubtitle;
     private LinearLayout mItemsContainer;
-    private LinkTextView mMoreText;
 
     public AboutHomeSection(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -34,12 +33,10 @@ public class AboutHomeSection extends GeckoLinearLayout {
         mTitle = (TextView) this.findViewById(R.id.title);
         mSubtitle = (TextView) this.findViewById(R.id.subtitle);
         mItemsContainer = (LinearLayout) this.findViewById(R.id.items_container);
-        mMoreText = (LinkTextView) this.findViewById(R.id.more_text);
 
         TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.AboutHomeSection);
         setTitle(a.getText(R.styleable.AboutHomeSection_title));
         setSubtitle(a.getText(R.styleable.AboutHomeSection_subtitle));
-        setMoreText(a.getText(R.styleable.AboutHomeSection_more_text));
         a.recycle();
     }
 
@@ -65,20 +62,6 @@ public class AboutHomeSection extends GeckoLinearLayout {
         }
     }
 
-    public void setMoreText(CharSequence moreText) {
-        if (!TextUtils.isEmpty(moreText)) {
-            mMoreText.setText(moreText);
-            mMoreText.setVisibility(View.VISIBLE);
-        } else {
-            mMoreText.setVisibility(View.GONE);
-        }
-    }
-
-    public void setOnMoreTextClickListener(View.OnClickListener listener) {
-        mMoreText.setOnClickListener(listener);
-        mMoreText.setOnKeyListener(GamepadUtils.getClickDispatcher());
-    }
-
     public void addItem(View item) {
         mItemsContainer.addView(item);
 
@@ -98,13 +81,5 @@ public class AboutHomeSection extends GeckoLinearLayout {
 
     public void hide() {
         setVisibility(View.GONE);
-    }
-
-    public void showMoreText() {
-        mMoreText.setVisibility(View.VISIBLE);
-    }
-
-    public void hideMoreText() {
-        mMoreText.setVisibility(View.GONE);
     }
 }
