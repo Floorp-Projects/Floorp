@@ -415,12 +415,6 @@ AudioManager::SetForceForUse(int32_t aUsage, int32_t aForce)
 {
   status_t status = 0;
 
-  if (IsDeviceOn(AUDIO_DEVICE_OUT_BLUETOOTH_SCO_HEADSET) &&
-      aUsage == nsIAudioManager::USE_COMMUNICATION &&
-      aForce == nsIAudioManager::FORCE_NONE) {
-    aForce = nsIAudioManager::FORCE_BT_SCO;
-  }
-
   if (static_cast<
       status_t (*)(AudioSystem::force_use, AudioSystem::forced_config)
       >(AudioSystem::setForceUse)) {
