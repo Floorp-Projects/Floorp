@@ -834,7 +834,7 @@ MobileMessageDatabaseService.prototype = {
     let normalizedAddress = PhoneNumberUtils.normalize(aAddress, false);
     let allPossibleAddresses = [normalizedAddress];
     let parsedAddress = PhoneNumberUtils.parse(normalizedAddress);
-    if (parsedAddress &&
+    if (parsedAddress && parsedAddress.internationalNumber &&
         allPossibleAddresses.indexOf(parsedAddress.internationalNumber) < 0) {
       // We only stores international numbers into participant store because
       // the parsed national number doesn't contain country info and may
