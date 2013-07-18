@@ -297,7 +297,7 @@ interface nsIDOMMozMobileConnection : nsIDOMEventTarget
   [implicit_jscontext] attribute jsval oncfstatechange;
 };
 
-[scriptable, uuid(c9d9ff61-a2f0-41cd-b478-9cefa7b31f31)]
+[scriptable, uuid(49706beb-a160-40b7-b745-50f62e389a2c)]
 interface nsIDOMMozMobileConnectionInfo : nsISupports
 {
   /**
@@ -331,11 +331,6 @@ interface nsIDOMMozMobileConnectionInfo : nsISupports
    * Network operator
    */
   readonly attribute nsIDOMMozMobileNetworkInfo network;
-
-  /**
-   * Mobile Country Code (MCC) of last known network operator.
-   */
-  readonly attribute DOMString lastKnownMcc;
 
   /**
    * Type of connection.
