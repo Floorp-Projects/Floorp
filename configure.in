@@ -4798,7 +4798,7 @@ then
     else
         HOST_QMAKE="$QTDIR/bin/qmake"
     fi
-    QT_VERSION=`$HOST_QMAKE -v | grep 'Using Qt version' | grep -oP '\d+\.\d+\.\d+'`
+    QT_VERSION=`$HOST_QMAKE -v | grep 'Using Qt version' | egrep -o '[[0-9]]+\.[[0-9]]+\.[[0-9]]+'`
 
     if test -z "$QTDIR"; then
         case $QT_VERSION in
