@@ -4500,6 +4500,14 @@ if test -z "$gonkdir" ; then
     case "$MOZ_BUILD_APP" in
     mobile/android)
         android_min_api_level=16
+        case "$target" in
+        *-android*|*-linuxandroid*)
+            :
+            ;;
+        *)
+            AC_MSG_ERROR([You must specify --target=arm-linux-androideabi (or some other valid android target) when building with --enable-application=mobile/android. See https://wiki.mozilla.org/Mobile/Fennec/Android#Setup_Fennec_mozconfig for more information about the necessary options])
+            ;;
+        esac
         ;;
     esac
 
