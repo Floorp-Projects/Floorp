@@ -7,7 +7,7 @@
 %include shared.inc
 %filter substitution
 %define forwardTransitionLength 150ms
-%define conditionalForwardWithUrlbar window:not([chromehidden~=toolbar]) :-moz-any(#nav-bar[currentset*="unified-back-forward-button,urlbar-container"],#nav-bar:not([currentset])) > #nav-bar-customizationtarget > #unified-back-forward-button
+%define conditionalForwardWithUrlbar window:not([chromehidden~="toolbar"]) #urlbar-container
 %define conditionalForwardWithUrlbarWidth 27
 %define toolbarButtonPressed :hover:active:not([disabled="true"]):not([customizableui-areatype="menu-panel"])
 
@@ -417,14 +417,6 @@ toolbarbutton.bookmark-item > menupopup {
     -moz-image-region: rect(18px, 72px, 36px, 54px);
   }
 
-  #reload-button:hover:active:not([disabled="true"]) {
-    -moz-image-region: rect(18px, 90px, 36px, 72px);
-  }
-
-  #stop-button:hover:active:not([disabled="true"]) {
-    -moz-image-region: rect(18px, 108px, 36px, 90px);
-  }
-
   #home-button@toolbarButtonPressed@ {
     -moz-image-region: rect(18px, 126px, 36px, 108px);
   }
@@ -597,22 +589,6 @@ toolbarbutton.bookmark-item > menupopup {
 
   #forward-button:hover:active:not([disabled="true"]) {
     -moz-image-region: rect(36px, 144px, 72px, 108px);
-  }
-
-  #reload-button {
-    -moz-image-region: rect(0, 180px, 36px, 144px);
-  }
-
-  #reload-button:hover:active:not([disabled="true"]) {
-    -moz-image-region: rect(36px, 180px, 72px, 144px);
-  }
-
-  #stop-button {
-    -moz-image-region: rect(0, 216px, 36px, 180px);
-  }
-
-  #stop-button:hover:active:not([disabled="true"]) {
-    -moz-image-region: rect(36px, 216px, 72px, 180px);
   }
 
   #home-button[customizableui-areatype="toolbar"] {
@@ -872,16 +848,6 @@ toolbarbutton.bookmark-item > menupopup {
     list-style-image: url(chrome://browser/skin/menuPanel@2x.png);
   }
 
-  #reload-button[customizableui-areatype="menu-panel"],
-  toolbarpaletteitem[place="palette"] > #reload-button {
-    -moz-image-region: rect(0px, 128px, 64px, 64px);
-  }
-
-  #stop-button[customizableui-areatype="menu-panel"],
-  toolbarpaletteitem[place="palette"] > #stop-button {
-    -moz-image-region: rect(0px, 192px, 64px, 128px);
-  }
-
   #home-button[customizableui-areatype="menu-panel"],
   toolbarpaletteitem[place="palette"] > #home-button {
     -moz-image-region: rect(0px, 256px, 64px, 192px);
@@ -1114,12 +1080,6 @@ toolbarbutton.bookmark-item > menupopup {
   margin-top: 1px;
 }
 
-/* unified back/forward button */
-
-#unified-back-forward-button {
-  -moz-box-align: center;
-}
-
 /* Common back and forward button styles */
 
 #back-button,
@@ -1134,7 +1094,6 @@ toolbarbutton.bookmark-item > menupopup {
 #forward-button:-moz-lwtheme {
   background-origin: border-box;
   border: 1px solid rgba(0,0,0,0.4);
-  border-radius: @toolbarbuttonCornerRadius@;
   box-shadow: inset 0 1px rgba(255,255,255,0.3), 0 1px rgba(255,255,255,0.2);
 }
 
@@ -1152,7 +1111,7 @@ toolbarbutton.bookmark-item > menupopup {
 
 /* Back button styles */
 
-#nav-bar #back-button {
+#back-button {
   -moz-margin-end: -7px;
   position: relative;
   z-index: 1;
@@ -1162,27 +1121,26 @@ toolbarbutton.bookmark-item > menupopup {
   border-radius: 10000px;
 }
 
-#nav-bar #back-button:not(:-moz-lwtheme) {
+#back-button:not(:-moz-lwtheme) {
   height: 31px;
   padding: 4px 5px 5px 3px;
   margin-bottom: -1px;
   background: url(chrome://browser/skin/keyhole-circle.png) 0 0 no-repeat;
-  border-radius: 0;
 }
 
 @media (min-resolution: 2dppx) {
-  #nav-bar #back-button:not(:-moz-lwtheme) {
+  #back-button:not(:-moz-lwtheme) {
     background-image: url(chrome://browser/skin/keyhole-circle@2x.png);
     background-size: 90px;
   }
 }
 
-#nav-bar #back-button:-moz-window-inactive:not(:-moz-lwtheme) {
+#back-button:-moz-window-inactive:not(:-moz-lwtheme) {
   background-position: -60px 0;
 }
 
-#nav-bar #back-button:not([disabled="true"]):active:hover:not(:-moz-lwtheme),
-#nav-bar #back-button[open="true"]:not(:-moz-lwtheme) {
+#back-button:not([disabled="true"]):active:hover:not(:-moz-lwtheme),
+#back-button[open="true"]:not(:-moz-lwtheme) {
   background-position: -30px 0;
 }
 
@@ -1190,26 +1148,22 @@ toolbarbutton.bookmark-item > menupopup {
 
 #forward-button {
   -moz-margin-start: 0;
+  -moz-margin-end: 0;
+  clip-path: url(chrome://browser/content/browser.xul#osx-keyhole-forward-clip-path);
 }
 
-#nav-bar #forward-button > .toolbarbutton-icon {
+#forward-button > .toolbarbutton-icon {
   /* shift the icon away from the back button */
   margin-left: 3px;
   margin-right: -1px;
 }
 
-#nav-bar #forward-button {
-  clip-path: url(chrome://browser/content/browser.xul#osx-keyhole-forward-clip-path);
-}
-
 #forward-button:-moz-lwtheme {
-  border-top-left-radius: 0;
-  border-bottom-left-radius: 0;
+  -moz-padding-start: 2px;
+  -moz-padding-end: 0;
 }
 
-/* Conditional forward button styles */
-
-@conditionalForwardWithUrlbar@ > #forward-button:not(:-moz-lwtheme) {
+#forward-button:not(:-moz-lwtheme) {
   -moz-padding-start: 2px;
   background: linear-gradient(hsl(0,0%,99%), hsl(0,0%,67%)) padding-box;
   border: 1px solid;
@@ -1218,21 +1172,11 @@ toolbarbutton.bookmark-item > menupopup {
               0 1px 0 hsla(0,0%,100%,.2);
 }
 
-@conditionalForwardWithUrlbar@ > #forward-button {
-  border-radius: 0;
-  -moz-margin-end: 0;
-}
-
-@conditionalForwardWithUrlbar@ > #forward-button:-moz-lwtheme {
-  -moz-padding-start: 2px;
-  -moz-padding-end: 0;
-}
-
-@conditionalForwardWithUrlbar@:not([switchingtabs]) > #forward-button {
+#urlbar-container:not([switchingtabs]) > #forward-button {
   transition: opacity @forwardTransitionLength@ ease-out;
 }
 
-@conditionalForwardWithUrlbar@ > #forward-button:hover:active:not(:-moz-lwtheme) {
+#forward-button:hover:active:not(:-moz-lwtheme) {
   background-image: linear-gradient(hsl(0,0%,74%), hsl(0,0%,61%));
   box-shadow: inset rgba(0,0,0,.3) 0 -6px 10px,
               inset #000 0 1px 3px,
@@ -1240,18 +1184,18 @@ toolbarbutton.bookmark-item > menupopup {
               0 1px 0 hsla(0,0%,100%,.2);
 }
 
-@conditionalForwardWithUrlbar@ > #forward-button:-moz-window-inactive:not(:-moz-lwtheme) {
+#forward-button:-moz-window-inactive:not(:-moz-lwtheme) {
   border-color: hsl(0,0%,64%) hsl(0,0%,65%) hsl(0,0%,66%);
   background-image: linear-gradient(hsl(0,0%,99%), hsl(0,0%,82%));
   box-shadow: inset 0 1px 0 hsla(0,0%,100%,.35);
 }
 
-@conditionalForwardWithUrlbar@:not(:hover) > #forward-button[disabled] {
+#urlbar-container:not(:hover) > #forward-button[disabled] {
   opacity: 0;
 }
 
 @media (-moz-mac-lion-theme) {
-  @conditionalForwardWithUrlbar@ > #forward-button:not(:-moz-lwtheme) {
+  #forward-button:not(:-moz-lwtheme) {
     background-image: linear-gradient(hsla(0,0%,100%,.73), hsla(0,0%,100%,.05) 85%);
     border-color: hsla(0,0%,0%,.35) hsla(0,0%,0%,.25) hsla(0,0%,0%,.2);
     box-shadow: inset 0 1px 0 hsla(0,0%,100%,.2),
@@ -1259,7 +1203,7 @@ toolbarbutton.bookmark-item > menupopup {
                 0 1px 0 hsla(0,0%,100%,.2);
   }
 
-  @conditionalForwardWithUrlbar@ > #forward-button:hover:active:not(:-moz-lwtheme) {
+  #forward-button:hover:active:not(:-moz-lwtheme) {
     background-image: linear-gradient(hsla(0,0%,60%,.37), hsla(0,0%,100%,.35) 95%);
     border-color: hsla(0,0%,0%,.43) hsla(0,0%,0%,.25) hsla(0,0%,0%,.37);
     box-shadow: inset 0 1px 0 hsla(0,0%,0%,.02),
@@ -1267,7 +1211,7 @@ toolbarbutton.bookmark-item > menupopup {
                 0 1px 0 hsla(0,0%,100%,.2);
   }
 
-  @conditionalForwardWithUrlbar@ > #forward-button:-moz-window-inactive:not(:-moz-lwtheme) {
+  #forward-button:-moz-window-inactive:not(:-moz-lwtheme) {
     background-image: none;
     border-color: hsla(0,0%,0%,.2);
   }
@@ -1460,53 +1404,53 @@ toolbarbutton.bookmark-item > menupopup {
   border-radius: @toolbarbuttonCornerRadius@;
 }
 
-@conditionalForwardWithUrlbar@ + #urlbar-container {
+@conditionalForwardWithUrlbar@ > #urlbar-wrapper {
   padding-left: @conditionalForwardWithUrlbarWidth@px;
   -moz-margin-start: -@conditionalForwardWithUrlbarWidth@px;
   position: relative;
   pointer-events: none;
 }
 
-@conditionalForwardWithUrlbar@ + #urlbar-container > #urlbar {
+@conditionalForwardWithUrlbar@ > #urlbar-wrapper > #urlbar {
   -moz-border-start: none;
   margin-left: 0;
   pointer-events: all;
 }
 
-@conditionalForwardWithUrlbar@:not([switchingtabs]) + #urlbar-container > #urlbar {
+@conditionalForwardWithUrlbar@:not([switchingtabs]) > #urlbar-wrapper > #urlbar {
   transition: margin-left @forwardTransitionLength@ ease-out;
 }
 
-@conditionalForwardWithUrlbar@ + #urlbar-container > #urlbar:-moz-locale-dir(ltr) {
+@conditionalForwardWithUrlbar@ > #urlbar-wrapper > #urlbar:-moz-locale-dir(ltr) {
   border-top-left-radius: 0;
   border-bottom-left-radius: 0;
 }
 
-@conditionalForwardWithUrlbar@ + #urlbar-container > #urlbar:-moz-locale-dir(rtl) {
+@conditionalForwardWithUrlbar@ > #urlbar-wrapper > #urlbar:-moz-locale-dir(rtl) {
   border-top-right-radius: 0;
   border-bottom-right-radius: 0;
 }
 
-@conditionalForwardWithUrlbar@[forwarddisabled] + #urlbar-container {
+@conditionalForwardWithUrlbar@[forwarddisabled] > #urlbar-wrapper {
   clip-path: url("chrome://browser/content/browser.xul#osx-urlbar-back-button-clip-path");
 }
 
-@conditionalForwardWithUrlbar@[forwarddisabled] + #urlbar-container > #urlbar {
+@conditionalForwardWithUrlbar@[forwarddisabled] > #urlbar-wrapper > #urlbar {
   margin-left: -@conditionalForwardWithUrlbarWidth@px;
 }
 
-@conditionalForwardWithUrlbar@[forwarddisabled]:hover:not([switchingtabs]) + #urlbar-container > #urlbar {
+@conditionalForwardWithUrlbar@[forwarddisabled]:hover:not([switchingtabs]) > #urlbar-wrapper > #urlbar {
   /* delay the hiding of the forward button when hovered to avoid accidental clicks on the url bar */
   transition-delay: 100s;
 }
 
-@conditionalForwardWithUrlbar@[forwarddisabled]:not(:hover) + #urlbar-container > #urlbar {
+@conditionalForwardWithUrlbar@[forwarddisabled]:not(:hover) > #urlbar-wrapper > #urlbar {
   /* when not hovered anymore, trigger a new transition to hide the forward button immediately */
   margin-left: -@conditionalForwardWithUrlbarWidth@.01px;
 }
 
-@conditionalForwardWithUrlbar@ + #urlbar-container:-moz-locale-dir(rtl),
-@conditionalForwardWithUrlbar@ + #urlbar-container > #urlbar:-moz-locale-dir(rtl) {
+@conditionalForwardWithUrlbar@ > #urlbar-wrapper:-moz-locale-dir(rtl),
+@conditionalForwardWithUrlbar@ > #urlbar-wrapper > #urlbar:-moz-locale-dir(rtl) {
   /* let osx-urlbar-back-button-clip-path clip the urlbar's right side for RTL */
   transform: scaleX(-1);
 }
@@ -1535,30 +1479,30 @@ toolbarbutton.bookmark-item > menupopup {
   border-radius: 0;
 }
 
-@conditionalForwardWithUrlbar@ + #urlbar-container > #urlbar > #identity-box {
+@conditionalForwardWithUrlbar@ > #urlbar-wrapper > #urlbar > #identity-box {
   border-radius: 0;
 }
 
-@conditionalForwardWithUrlbar@[forwarddisabled] + #urlbar-container > #urlbar > #notification-popup-box[hidden] + #identity-box:-moz-locale-dir(ltr) {
+@conditionalForwardWithUrlbar@[forwarddisabled] > #urlbar-wrapper > #urlbar > #notification-popup-box[hidden] + #identity-box:-moz-locale-dir(ltr) {
   transition: 0s padding-left;
   padding-left: 10px;
 }
 
-@conditionalForwardWithUrlbar@[forwarddisabled] + #urlbar-container > #urlbar > #notification-popup-box[hidden] + #identity-box:-moz-locale-dir(rtl) {
+@conditionalForwardWithUrlbar@[forwarddisabled] > #urlbar-wrapper > #urlbar > #notification-popup-box[hidden] + #identity-box:-moz-locale-dir(rtl) {
   transition: 0s padding-right;
   padding-right: 10px;
 }
 
-@conditionalForwardWithUrlbar@[forwarddisabled]:hover:not([switchingtabs]) + #urlbar-container > #urlbar > #notification-popup-box[hidden] + #identity-box {
+@conditionalForwardWithUrlbar@[forwarddisabled]:hover:not([switchingtabs]) > #urlbar-wrapper > #urlbar > #notification-popup-box[hidden] + #identity-box {
   /* delay the hiding of the forward button when hovered to avoid accidental clicks on the url bar */
   transition-delay: 100s;
 }
 
-@conditionalForwardWithUrlbar@[forwarddisabled]:not(:hover) + #urlbar-container > #urlbar > #notification-popup-box[hidden] + #identity-box:-moz-locale-dir(ltr) {
+@conditionalForwardWithUrlbar@[forwarddisabled]:not(:hover) > #urlbar-wrapper > #urlbar > #notification-popup-box[hidden] + #identity-box:-moz-locale-dir(ltr) {
   padding-left: 10.01px;
 }
 
-@conditionalForwardWithUrlbar@[forwarddisabled]:not(:hover) + #urlbar-container > #urlbar > #notification-popup-box[hidden] + #identity-box:-moz-locale-dir(rtl) {
+@conditionalForwardWithUrlbar@[forwarddisabled]:not(:hover) > #urlbar-wrapper > #urlbar > #notification-popup-box[hidden] + #identity-box:-moz-locale-dir(rtl) {
   padding-right: 10.01px;
 }
 
@@ -1811,7 +1755,6 @@ richlistitem[type~="action"][actiontype="switchtab"][selected="true"] > .ac-url-
 
 /* ----- COMBINED GO/RELOAD/STOP BUTTON IN LOCATION BAR ----- */
 
-#go-button,
 #urlbar > toolbarbutton {
   margin: 0;
   -moz-padding-start: 2px;
@@ -1824,21 +1767,14 @@ richlistitem[type~="action"][actiontype="switchtab"][selected="true"] > .ac-url-
   background-image: radial-gradient(circle closest-side, hsla(205,100%,70%,.3), hsla(205,100%,70%,0));
 }
 
-#go-button {
-  padding: 0 3px;
-}
-
-#go-button,
 #urlbar-go-button {
   -moz-image-region: rect(0, 42px, 14px, 28px);
 }
 
-#go-button:hover:active,
 #urlbar-go-button:hover:active {
   -moz-image-region: rect(14px, 42px, 28px, 28px);
 }
 
-#go-button:-moz-locale-dir(rtl),
 #urlbar-go-button:-moz-locale-dir(rtl) > .toolbarbutton-icon {
   transform: scaleX(-1);
 }
@@ -1864,17 +1800,14 @@ richlistitem[type~="action"][actiontype="switchtab"][selected="true"] > .ac-url-
 }
 
 @media (min-resolution: 2dppx) {
-  #go-button,
   #urlbar > toolbarbutton {
     list-style-image: url("chrome://browser/skin/reload-stop-go@2x.png");
   }
 
-  #go-button,
   #urlbar-go-button {
     -moz-image-region: rect(0, 84px, 28px, 56px);
   }
 
-  #go-button:hover:active,
   #urlbar-go-button:hover:active {
     -moz-image-region: rect(28px, 84px, 56px, 56px);
   }
@@ -1895,7 +1828,6 @@ richlistitem[type~="action"][actiontype="switchtab"][selected="true"] > .ac-url-
     -moz-image-region: rect(28px, 56px, 56px, 28px);
   }
 
-  #go-button > .toolbarbutton-icon,
   #urlbar > toolbarbutton > .toolbarbutton-icon {
     width: 14px;
   }
@@ -3003,7 +2935,7 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   }
 }
 
-@conditionalForwardWithUrlbar@[forwarddisabled] + #urlbar-container > #urlbar > #notification-popup-box {
+@conditionalForwardWithUrlbar@[forwarddisabled] > #urlbar-wrapper > #urlbar > #notification-popup-box {
   padding-left: 7px;
 }
 

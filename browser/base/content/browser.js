@@ -312,29 +312,22 @@ function SetClickAndHoldHandlers() {
     aElm.addEventListener("click", clickHandler, true);
   }
 
-  // Bug 414797: Clone unified-back-forward-button's context menu into both the
-  // back and the forward buttons.
-  var unifiedButton = document.getElementById("unified-back-forward-button");
-  if (unifiedButton && !unifiedButton._clickHandlersAttached) {
-    unifiedButton._clickHandlersAttached = true;
+  // Bug 414797: Clone the back/forward buttons' context menu into both buttons.
+  let popup = document.getElementById("backForwardMenu").cloneNode(true);
+  popup.removeAttribute("id");
+  // Prevent the back/forward buttons' context attributes from being inherited.
+  popup.setAttribute("context", "");
 
-    let popup = document.getElementById("backForwardMenu").cloneNode(true);
-    popup.removeAttribute("id");
-    // Prevent the context attribute on unified-back-forward-button from being
-    // inherited.
-    popup.setAttribute("context", "");
+  let backButton = document.getElementById("back-button");
+  backButton.setAttribute("type", "menu");
+  backButton.appendChild(popup);
+  _addClickAndHoldListenersOnElement(backButton);
 
-    let backButton = document.getElementById("back-button");
-    backButton.setAttribute("type", "menu");
-    backButton.appendChild(popup);
-    _addClickAndHoldListenersOnElement(backButton);
-
-    let forwardButton = document.getElementById("forward-button");
-    popup = popup.cloneNode(true);
-    forwardButton.setAttribute("type", "menu");
-    forwardButton.appendChild(popup);
-    _addClickAndHoldListenersOnElement(forwardButton);
-  }
+  let forwardButton = document.getElementById("forward-button");
+  popup = popup.cloneNode(true);
+  forwardButton.setAttribute("type", "menu");
+  forwardButton.appendChild(popup);
+  _addClickAndHoldListenersOnElement(forwardButton);
 }
 
 const gSessionHistoryObserver = {
@@ -2174,13 +2167,10 @@ function UpdateUrlbarSearchSplitterState()
   var splitter = document.getElementById("urlbar-search-splitter");
   var urlbar = document.getElementById("urlbar-container");
   var searchbar = document.getElementById("search-container");
-  var stop = document.getElementById("stop-button");
 
   var ibefore = null;
   if (urlbar && searchbar) {
-    if (urlbar.nextSibling == searchbar ||
-        urlbar.getAttribute("combined") &&
-        stop && stop.nextSibling == searchbar)
+    if (urlbar.nextSibling == searchbar)
       ibefore = searchbar;
     else if (searchbar.nextSibling == urlbar)
       ibefore = urlbar;
@@ -3896,20 +3886,8 @@ var CombinedStopReload = {
     if (this._initialized)
       return;
 
-    var urlbar = document.getElementById("urlbar-container");
-    var reload = document.getElementById("reload-button");
-    var stop = document.getElementById("stop-button");
-
-    if (urlbar) {
-      if (!reload || urlbar.nextSibling != reload ||
-          !stop || reload.nextSibling != stop)
-        urlbar.removeAttribute("combined");
-      else {
-        urlbar.setAttribute("combined", "true");
-        reload = document.getElementById("urlbar-reload-button");
-        stop = document.getElementById("urlbar-stop-button");
-      }
-    }
+    let reload = document.getElementById("urlbar-reload-button");
+    let stop = document.getElementById("urlbar-stop-button");
     if (!stop || !reload || reload.nextSibling != stop)
       return;
 
