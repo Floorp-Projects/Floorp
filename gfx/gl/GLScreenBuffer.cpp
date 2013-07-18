@@ -565,10 +565,12 @@ ReadBuffer::Create(GLContext* gl,
 
     GLuint colorTex = 0;
     GLuint colorRB = 0;
+    GLenum target = 0;
 
     switch (surf->AttachType()) {
     case AttachmentType::GLTexture:
         colorTex = surf->Texture();
+        target = surf->TextureTarget();
         break;
     case AttachmentType::GLRenderbuffer:
         colorRB = surf->Renderbuffer();
@@ -580,7 +582,7 @@ ReadBuffer::Create(GLContext* gl,
 
     GLuint fb = 0;
     gl->fGenFramebuffers(1, &fb);
-    gl->AttachBuffersToFB(colorTex, colorRB, depthRB, stencilRB, fb);
+    gl->AttachBuffersToFB(colorTex, colorRB, depthRB, stencilRB, fb, target);
 
     MOZ_ASSERT(gl->IsFramebufferComplete(fb));
 
@@ -614,10 +616,12 @@ ReadBuffer::Attach(SharedSurface_GL* surf)
     if (surf->AttachType() != AttachmentType::Screen) {
         GLuint colorTex = 0;
         GLuint colorRB = 0;
+        GLenum target = 0;
 
         switch (surf->AttachType()) {
         case AttachmentType::GLTexture:
             colorTex = surf->Texture();
+            target = surf->TextureTarget();
             break;
         case AttachmentType::GLRenderbuffer:
             colorRB = surf->Renderbuffer();
@@ -626,7 +630,7 @@ ReadBuffer::Attach(SharedSurface_GL* surf)
             MOZ_CRASH("Unknown attachment type?");
         }
 
-        mGL->AttachBuffersToFB(colorTex, colorRB, 0, 0, mFB);
+        mGL->AttachBuffersToFB(colorTex, colorRB, 0, 0, mFB, target);
         MOZ_ASSERT(mGL->IsFramebufferComplete(mFB));
     }
 
