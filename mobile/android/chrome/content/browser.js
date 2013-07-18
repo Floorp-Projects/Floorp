@@ -994,7 +994,7 @@ var BrowserApp = {
   getPreferences: function getPreferences(aPrefsRequest, aListen) {
     let prefs = [];
 
-    for each (let prefName in aPrefsRequest.preferences) {
+    for (let prefName of aPrefsRequest.preferences) {
       let pref = {
         name: prefName,
         type: "",
@@ -2048,7 +2048,8 @@ var NativeWindow = {
         }
 
         // then check for any context menu items registered in the ui
-         for each (let item in this.items) {
+        for (let itemId of Object.keys(this.items)) {
+          let item = this.items[itemId];
           if (!this._getMenuItemForId(item.id) && item.matches(element, aX, aY)) {
             this.menuitems.push(item);
           }
@@ -6463,7 +6464,7 @@ var SearchEngines = {
           formData.push({ name: escapedName, value: escapedValue });
           break;
         case "select-one":
-          for each (let option in el.options) {
+          for (let option of el.options) {
             if (option.selected) {
               formData.push({ name: escapedName, value: escapedValue });
               break;
