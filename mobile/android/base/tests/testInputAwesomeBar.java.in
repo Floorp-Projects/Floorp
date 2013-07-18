@@ -13,7 +13,6 @@ import android.widget.EditText;
  * - Check that all AwesomeBar text is selected after switching AwesomeScreen tabs.
  */
 public final class testInputAwesomeBar extends BaseTest {
-    private Activity    mAwesomeBarActivity;
     private Element     mAwesomeBarTextElement;
     private EditText    mAwesomeBarEditText;
 
@@ -101,10 +100,10 @@ public final class testInputAwesomeBar extends BaseTest {
     }
 
     private void openAwesomeScreen() {
-        mAwesomeBarActivity = clickOnAwesomeBar();
-        mAwesomeBarTextElement = mDriver.findElement(mAwesomeBarActivity, "awesomebar_text");
+        focusUrlBar();
+        mAwesomeBarTextElement = mDriver.findElement(getActivity(), URL_EDIT_TEXT_ID);
         int id = mAwesomeBarTextElement.getId();
-        mAwesomeBarEditText = (EditText) mAwesomeBarActivity.findViewById(id);
+        mAwesomeBarEditText = (EditText) getActivity().findViewById(id);
     }
 
     private String getAwesomeBarText() {

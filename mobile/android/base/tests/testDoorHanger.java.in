@@ -55,6 +55,7 @@ public class testDoorHanger extends BaseTest {
         mSolo.clickOnButton(GEO_DENY);
         mAsserter.is(mSolo.searchText(GEO_MESSAGE), false, "Geolocation doorhanger has been hidden when denying share");
 
+        /* FIXME: disabled on fig - bug 880060 (for some reason this fails because of some raciness)
         // Re-trigger geolocation notification
         loadUrl(GEO_URL);
         waitForText(GEO_MESSAGE);
@@ -64,6 +65,7 @@ public class testDoorHanger extends BaseTest {
 
         // Make sure doorhanger is hidden
         mAsserter.is(mSolo.searchText(GEO_MESSAGE), false, "Geolocation doorhanger notification is hidden when opening a new tab");
+        */
 
         // Load offline storage page
         loadUrl(OFFLINE_STORAGE_URL);

@@ -81,7 +81,7 @@ public class testWebContentContextMenu extends PixelTest {
                     mAsserter.ok(mSolo.waitForText("New private tab opened"), "Waiting for private tab to open", "The private tab is opened");
 
                     // Verifying if the private data is not listed in Awesomescreen
-                    clickOnAwesomeBar();
+                    focusUrlBar();
                     mSolo.clickOnText("History");
                     mAsserter.ok(mSolo.waitForText("Browser Blank Page 01"), "Looking in History for the page loaded in the normal tab", "Fount it");
                     mAsserter.ok(mSolo.waitForText("Browser Blank Page 02") == false, "Looking in History for the page loaded in the private tab", "Page is not present in History");

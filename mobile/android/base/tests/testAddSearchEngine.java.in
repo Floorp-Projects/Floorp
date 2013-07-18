@@ -66,7 +66,7 @@ public class testAddSearchEngine extends BaseTest {
         for (int i = 0; i < MAX_TRIES; i++ ) {
             // Start a search and wait for the search engine data to be displayed
             Actions.EventExpecter enginesEventExpecter = mActions.expectGeckoEvent("SearchEngines:Data");
-            clickOnAwesomeBar();
+            focusUrlBar();
             waitForText("Bookmarks");
             mActions.sendKeys("Firefox for Android");
             enginesEventExpecter.blockForEvent();
