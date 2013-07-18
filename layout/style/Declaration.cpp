@@ -55,28 +55,24 @@ Declaration::ValueAppended(nsCSSProperty aProperty)
   mOrder.AppendElement(aProperty);
 }
 
-bool
+void
 Declaration::RemoveProperty(nsCSSProperty aProperty)
 {
   nsCSSExpandedDataBlock data;
   ExpandTo(&data);
   NS_ABORT_IF_FALSE(!mData && !mImportantData, "Expand didn't null things out");
 
-  bool removed = false;
-
   if (nsCSSProps::IsShorthand(aProperty)) {
     CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(p, aProperty) {
-      removed = data.ClearLonghandProperty(*p) || removed;
+      data.ClearLonghandProperty(*p);
       mOrder.RemoveElement(*p);
     }
   } else {
-    removed = data.ClearLonghandProperty(aProperty);
+    data.ClearLonghandProperty(aProperty);
     mOrder.RemoveElement(aProperty);
   }
 
   CompressFrom(&data);
-
-  return removed;
 }
 
 bool

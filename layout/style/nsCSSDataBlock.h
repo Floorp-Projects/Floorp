@@ -224,12 +224,12 @@ public:
      * Clear the data for the given property (including the set and
      * important bits).  Can be used with shorthand properties.
      */
-    bool ClearProperty(nsCSSProperty aPropID);
+    void ClearProperty(nsCSSProperty aPropID);
 
     /**
      * Same as ClearProperty, but faster and cannot be used with shorthands.
      */
-    bool ClearLonghandProperty(nsCSSProperty aPropID);
+    void ClearLonghandProperty(nsCSSProperty aPropID);
 
     /**
      * Transfer the state for |aPropID| (which may be a shorthand)
@@ -306,8 +306,8 @@ private:
         mPropertiesSet.AddProperty(aProperty);
     }
 
-    bool ClearPropertyBit(nsCSSProperty aProperty) {
-        return mPropertiesSet.RemoveProperty(aProperty);
+    void ClearPropertyBit(nsCSSProperty aProperty) {
+        mPropertiesSet.RemoveProperty(aProperty);
     }
 
     bool HasPropertyBit(nsCSSProperty aProperty) {
@@ -318,8 +318,8 @@ private:
         mPropertiesImportant.AddProperty(aProperty);
     }
 
-    bool ClearImportantBit(nsCSSProperty aProperty) {
-        return mPropertiesImportant.RemoveProperty(aProperty);
+    void ClearImportantBit(nsCSSProperty aProperty) {
+        mPropertiesImportant.RemoveProperty(aProperty);
     }
 
     bool HasImportantBit(nsCSSProperty aProperty) {
