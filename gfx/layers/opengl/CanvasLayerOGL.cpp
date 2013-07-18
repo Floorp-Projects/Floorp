@@ -22,6 +22,7 @@
 
 #ifdef XP_MACOSX
 #include "mozilla/gfx/MacIOSurface.h"
+#include "SharedSurfaceIO.h"
 #endif
 
 #ifdef XP_WIN
@@ -216,6 +217,15 @@ CanvasLayerOGL::UpdateSurface()
           mTexture = textureSurf->Texture();
           break;
         }
+#ifdef XP_MACOSX
+        case SharedSurfaceType::IOSurface: {
+          SharedSurface_IOSurface *ioSurf = SharedSurface_IOSurface::Cast(surf);
+          mTexture = ioSurf->Texture();
+          mTextureTarget = ioSurf->TextureTarget();
+          mLayerProgram = RGBARectLayerProgramType;
+          break;
+        }
+#endif
         default:
           MOZ_CRASH("Unacceptable SharedSurface type.");
       }
@@ -315,7 +325,7 @@ CanvasLayerOGL::RenderLayer(int aPreviousDestination,
   program->Activate();
   if (mLayerProgram == RGBARectLayerProgramType) {
     // This is used by IOSurface that use 0,0...w,h coordinate rather then 0,0..1,1.
-    program->SetTexCoordMultiplier(mDrawTarget->GetSize().width, mDrawTarget->GetSize().height);
+    program->SetTexCoordMultiplier(mBounds.width, mBounds.height);
   }
   program->SetLayerQuadRect(drawRect);
   program->SetLayerTransform(GetEffectiveTransform());
