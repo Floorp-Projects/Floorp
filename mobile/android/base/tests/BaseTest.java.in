@@ -195,8 +195,6 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
             @Override
             public boolean test() {
                 EditText urlEditText = mSolo.getEditText(0);
-                mAsserter.dumpLog("*********************** urlEditText - " + urlEditText);
-                mAsserter.dumpLog("*********************** urlEditText.hasFocus() - " + urlEditText.hasFocus());
                 return urlEditText.hasFocus();
             }
         }, MAX_WAIT_ENABLED_TEXT_MS);
