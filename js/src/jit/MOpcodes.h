@@ -184,6 +184,7 @@ namespace jit {
     _(AsmJSUDiv)                                                            \
     _(AsmJSUMod)                                                            \
     _(AsmJSUnsignedToDouble)                                                \
+    _(AsmJSUnsignedToFloat32)                                               \
     _(AsmJSLoadHeap)                                                        \
     _(AsmJSStoreHeap)                                                       \
     _(AsmJSLoadGlobalVar)                                                   \

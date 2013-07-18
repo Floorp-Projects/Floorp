@@ -671,6 +671,9 @@ class Assembler : public AssemblerX86Shared
     void cvtsq2sd(const Register &src, const FloatRegister &dest) {
         masm.cvtsq2sd_rr(src.code(), dest.code());
     }
+    void cvtsq2ss(const Register &src, const FloatRegister &dest) {
+        masm.cvtsq2ss_rr(src.code(), dest.code());
+    }
 };
 
 static inline void

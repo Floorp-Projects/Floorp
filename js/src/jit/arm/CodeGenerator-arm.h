@@ -101,7 +101,8 @@ class CodeGeneratorARM : public CodeGeneratorShared
     virtual bool visitCompareV(LCompareV *lir);
     virtual bool visitCompareVAndBranch(LCompareVAndBranch *lir);
     virtual bool visitBitAndAndBranch(LBitAndAndBranch *baab);
-    virtual bool visitUInt32ToDouble(LUInt32ToDouble *lir);
+    virtual bool visitAsmJSUInt32ToDouble(LAsmJSUInt32ToDouble *lir);
+    virtual bool visitAsmJSUInt32ToFloat32(LAsmJSUInt32ToFloat32 *lir);
     virtual bool visitNotI(LNotI *ins);
     virtual bool visitNotD(LNotD *ins);
     virtual bool visitNotF(LNotF *ins);

@@ -110,6 +110,21 @@ class LAsmJSUInt32ToDouble : public LInstructionHelper<1, 1, 1>
     }
 };
 
+// Convert a 32-bit unsigned integer to a float32.
+class LAsmJSUInt32ToFloat32: public LInstructionHelper<1, 1, 1>
+{
+  public:
+    LIR_HEADER(AsmJSUInt32ToFloat32)
+
+    LAsmJSUInt32ToFloat32(const LAllocation &input, const LDefinition &temp) {
+        setOperand(0, input);
+        setTemp(0, temp);
+    }
+    const LDefinition *temp() {
+        return getTemp(0);
+    }
+};
+
 class LAsmJSLoadFuncPtr : public LInstructionHelper<1, 1, 0>
 {
   public:

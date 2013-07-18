@@ -1108,6 +1108,10 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         cvtsq2sd(src, dest);
     }
 
+    void convertUInt32ToFloat32(const Register &src, const FloatRegister &dest) {
+        cvtsq2ss(src, dest);
+    }
+
     void inc64(AbsoluteAddress dest) {
         if (JSC::X86Assembler::isAddressImmediate(dest.addr)) {
             addPtr(Imm32(1), Operand(dest));

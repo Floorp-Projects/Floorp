@@ -205,6 +205,14 @@ LIRGeneratorX86::visitAsmJSUnsignedToDouble(MAsmJSUnsignedToDouble *ins)
 }
 
 bool
+LIRGeneratorX86::visitAsmJSUnsignedToFloat32(MAsmJSUnsignedToFloat32 *ins)
+{
+    JS_ASSERT(ins->input()->type() == MIRType_Int32);
+    LAsmJSUInt32ToFloat32 *lir = new LAsmJSUInt32ToFloat32(useRegisterAtStart(ins->input()), temp());
+    return define(lir, ins);
+}
+
+bool
 LIRGeneratorX86::visitAsmJSLoadHeap(MAsmJSLoadHeap *ins)
 {
     MDefinition *ptr = ins->ptr();

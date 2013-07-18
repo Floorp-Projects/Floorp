@@ -467,7 +467,15 @@ bool
 LIRGeneratorARM::visitAsmJSUnsignedToDouble(MAsmJSUnsignedToDouble *ins)
 {
     JS_ASSERT(ins->input()->type() == MIRType_Int32);
-    LUInt32ToDouble *lir = new LUInt32ToDouble(useRegisterAtStart(ins->input()));
+    LAsmJSUInt32ToDouble *lir = new LAsmJSUInt32ToDouble(useRegisterAtStart(ins->input()));
+    return define(lir, ins);
+}
+
+bool
+LIRGeneratorARM::visitAsmJSUnsignedToFloat32(MAsmJSUnsignedToFloat32 *ins)
+{
+    JS_ASSERT(ins->input()->type() == MIRType_Int32);
+    LAsmJSUInt32ToFloat32 *lir = new LAsmJSUInt32ToFloat32(useRegisterAtStart(ins->input()));
     return define(lir, ins);
 }
 
