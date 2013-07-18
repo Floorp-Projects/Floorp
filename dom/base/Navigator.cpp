@@ -453,14 +453,6 @@ Navigator::GetProductSub(nsAString& aProductSub)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-Navigator::GetMimeTypes(nsISupports** aMimeTypes)
-{
-  ErrorResult rv;
-  NS_IF_ADDREF(*aMimeTypes = GetMimeTypes(rv));
-  return rv.ErrorCode();
-}
-
 nsMimeTypeArray*
 Navigator::GetMimeTypes(ErrorResult& aRv)
 {
@@ -474,14 +466,6 @@ Navigator::GetMimeTypes(ErrorResult& aRv)
   }
 
   return mMimeTypes;
-}
-
-NS_IMETHODIMP
-Navigator::GetPlugins(nsISupports** aPlugins)
-{
-  ErrorResult rv;
-  NS_IF_ADDREF(*aPlugins = static_cast<nsIObserver*>(GetPlugins(rv)));
-  return rv.ErrorCode();
 }
 
 nsPluginArray*
@@ -503,13 +487,6 @@ Navigator::GetPlugins(ErrorResult& aRv)
 // Values for the network.cookie.cookieBehavior pref are documented in
 // nsCookieService.cpp.
 #define COOKIE_BEHAVIOR_REJECT 2
-
-NS_IMETHODIMP
-Navigator::GetCookieEnabled(bool* aCookieEnabled)
-{
-  *aCookieEnabled = CookieEnabled();
-  return NS_OK;
-}
 
 bool
 Navigator::CookieEnabled()
@@ -553,15 +530,6 @@ Navigator::CookieEnabled()
   }
 
   return cookieEnabled;
-}
-
-NS_IMETHODIMP
-Navigator::GetOnLine(bool* aOnline)
-{
-  NS_PRECONDITION(aOnline, "Null out param");
-
-  *aOnline = OnLine();
-  return NS_OK;
 }
 
 bool
@@ -612,14 +580,6 @@ Navigator::GetDoNotTrack(nsAString &aResult)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-Navigator::JavaEnabled(bool* aReturn)
-{
-  ErrorResult rv;
-  *aReturn = JavaEnabled(rv);
-  return rv.ErrorCode();
-}
-
 bool
 Navigator::JavaEnabled(ErrorResult& aRv)
 {
@@ -641,13 +601,6 @@ Navigator::JavaEnabled(ErrorResult& aRv)
     mMimeTypes->NamedItem(NS_LITERAL_STRING("application/x-java-vm"));
 
   return mimeType && mimeType->GetEnabledPlugin();
-}
-
-NS_IMETHODIMP
-Navigator::TaintEnabled(bool *aReturn)
-{
-  *aReturn = TaintEnabled();
-  return NS_OK;
 }
 
 void
@@ -732,51 +685,7 @@ VibrateWindowListener::RemoveListener()
                                     true /* use capture */);
 }
 
-/**
- * Converts a JS::Value into a vibration duration, checking that the duration is in
- * bounds (non-negative and not larger than sMaxVibrateMS).
- *
- * Returns true on success, false on failure.
- */
-bool
-GetVibrationDurationFromJsval(const JS::Value& aJSVal, JSContext* cx,
-                              int32_t* aOut)
-{
-  return JS_ValueToInt32(cx, aJSVal, aOut) &&
-         *aOut >= 0 && static_cast<uint32_t>(*aOut) <= sMaxVibrateMS;
-}
-
 } // anonymous namespace
-
-NS_IMETHODIMP
-Navigator::AddIdleObserver(nsIIdleObserver* aIdleObserver)
-{
-  NS_ENSURE_STATE(mWindow);
-
-  if (!nsContentUtils::IsIdleObserverAPIEnabled()) {
-    NS_WARNING("The IdleObserver API has been disabled.");
-    return NS_OK;
-  }
-
-  NS_ENSURE_ARG_POINTER(aIdleObserver);
-
-  if (!CheckPermission("idle")) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
-
-  AddIdleObserver(*aIdleObserver);
-  return NS_OK;
-}
-
-void
-Navigator::AddIdleObserver(nsIIdleObserver& aIdleObserver)
-{
-  // Callers (either the XPCOM method or the WebIDL binding) are responsible for
-  // the permission check here.
-  if (NS_FAILED(mWindow->RegisterIdleObserver(&aIdleObserver))) {
-    NS_WARNING("Failed to add idle observer.");
-  }
-}
 
 void
 Navigator::AddIdleObserver(MozIdleObserver& aIdleObserver, ErrorResult& aRv)
@@ -787,32 +696,8 @@ Navigator::AddIdleObserver(MozIdleObserver& aIdleObserver, ErrorResult& aRv)
   }
   CallbackObjectHolder<MozIdleObserver, nsIIdleObserver> holder(&aIdleObserver);
   nsCOMPtr<nsIIdleObserver> obs = holder.ToXPCOMCallback();
-  return AddIdleObserver(*obs);
-}
-
-NS_IMETHODIMP
-Navigator::RemoveIdleObserver(nsIIdleObserver* aIdleObserver)
-{
-  NS_ENSURE_STATE(mWindow);
-
-  if (!nsContentUtils::IsIdleObserverAPIEnabled()) {
-    NS_WARNING("The IdleObserver API has been disabled");
-    return NS_OK;
-  }
-
-  NS_ENSURE_ARG_POINTER(aIdleObserver);
-
-  RemoveIdleObserver(*aIdleObserver);
-  return NS_OK;
-}
-
-void
-Navigator::RemoveIdleObserver(nsIIdleObserver& aIdleObserver)
-{
-  // Callers (either the XPCOM method or the WebIDL binding) are responsible for
-  // the permission check here.
-  if (NS_FAILED(mWindow->UnregisterIdleObserver(&aIdleObserver))) {
-    NS_WARNING("Failed to remove idle observer.");
+  if (NS_FAILED(mWindow->RegisterIdleObserver(obs))) {
+    NS_WARNING("Failed to add idle observer.");
   }
 }
 
@@ -825,52 +710,9 @@ Navigator::RemoveIdleObserver(MozIdleObserver& aIdleObserver, ErrorResult& aRv)
   }
   CallbackObjectHolder<MozIdleObserver, nsIIdleObserver> holder(&aIdleObserver);
   nsCOMPtr<nsIIdleObserver> obs = holder.ToXPCOMCallback();
-  return RemoveIdleObserver(*obs);
-}
-
-NS_IMETHODIMP
-Navigator::Vibrate(const JS::Value& aPattern, JSContext* cx)
-{
-  nsAutoTArray<uint32_t, 8> pattern;
-
-  // null or undefined pattern is an error.
-  if (JSVAL_IS_NULL(aPattern) || JSVAL_IS_VOID(aPattern)) {
-    return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+  if (NS_FAILED(mWindow->UnregisterIdleObserver(obs))) {
+    NS_WARNING("Failed to remove idle observer.");
   }
-
-  if (JSVAL_IS_PRIMITIVE(aPattern)) {
-    int32_t p;
-    if (GetVibrationDurationFromJsval(aPattern, cx, &p)) {
-      pattern.AppendElement(p);
-    }
-    else {
-      return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
-    }
-  }
-  else {
-    JS::Rooted<JSObject*> obj(cx, aPattern.toObjectOrNull());
-    uint32_t length;
-    if (!JS_GetArrayLength(cx, obj, &length) || length > sMaxVibrateListLen) {
-      return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
-    }
-    pattern.SetLength(length);
-
-    for (uint32_t i = 0; i < length; ++i) {
-      JS::Rooted<JS::Value> v(cx);
-      int32_t pv;
-      if (JS_GetElement(cx, obj, i, v.address()) &&
-          GetVibrationDurationFromJsval(v, cx, &pv)) {
-        pattern[i] = pv;
-      }
-      else {
-        return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
-      }
-    }
-  }
-
-  ErrorResult rv;
-  Vibrate(pattern, rv);
-  return rv.ErrorCode();
 }
 
 void
@@ -1235,23 +1077,9 @@ Navigator::GetBattery(ErrorResult& aRv)
   return mBatteryManager;
 }
 
-NS_IMETHODIMP
-Navigator::GetMozPower(nsIDOMMozPowerManager** aPower)
-{
-  if (!PowerManager::CheckPermission(mWindow)) {
-    *aPower = nullptr;
-    return NS_OK;
-  }
-  ErrorResult rv;
-  NS_IF_ADDREF(*aPower = GetMozPower(rv));
-  return rv.ErrorCode();
-}
-
 nsIDOMMozPowerManager*
 Navigator::GetMozPower(ErrorResult& aRv)
 {
-  // Callers (either the XPCOM method or the WebIDL binding) are responsible for
-  // the permission check here.
   if (!mPowerManager) {
     if (!mWindow) {
       aRv.Throw(NS_ERROR_UNEXPECTED);
@@ -1265,14 +1093,6 @@ Navigator::GetMozPower(ErrorResult& aRv)
   }
 
   return mPowerManager;
-}
-
-NS_IMETHODIMP
-Navigator::RequestWakeLock(const nsAString &aTopic, nsIDOMMozWakeLock **aWakeLock)
-{
-  ErrorResult rv;
-  *aWakeLock = RequestWakeLock(aTopic, rv).get();
-  return rv.ErrorCode();
 }
 
 already_AddRefed<nsIDOMMozWakeLock>
