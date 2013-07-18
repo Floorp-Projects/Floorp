@@ -234,9 +234,9 @@
   <string name="button_yes">&button_yes;</string>
   <string name="button_no">&button_no;</string>
 
-  <string name="abouthome_last_tabs_title">&abouthome_last_tabs_title;</string>
-  <string name="abouthome_last_tabs_open">&abouthome_last_tabs_open;</string>
-  <string name="abouthome_visited_empty">&abouthome_visited_empty;</string>
+  <string name="home_last_tabs_title">&home_last_tabs_title;</string>
+  <string name="home_last_tabs_open">&home_last_tabs_open;</string>
+  <string name="home_visited_empty">&home_visited_empty;</string>
 
   <string name="filepicker_title">&filepicker_title;</string>
   <string name="filepicker_audio_title">&filepicker_audio_title;</string>

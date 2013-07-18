@@ -600,7 +600,6 @@ RES_DRAWABLE_MDPI = \
   res/drawable-mdpi/favicon.png \
   res/drawable-mdpi/folder.png \
   res/drawable-mdpi/abouthome_thumbnail.png \
-  res/drawable-mdpi/abouthome_thumbnail_add.png \
   res/drawable-mdpi/alert_addon.png \
   res/drawable-mdpi/alert_app.png \
   res/drawable-mdpi/alert_download.png \
@@ -683,6 +682,7 @@ RES_DRAWABLE_MDPI = \
   res/drawable-mdpi/tabs_normal.png \
   res/drawable-mdpi/tabs_private.png \
   res/drawable-mdpi/tabs_synced.png \
+  res/drawable-mdpi/top_bookmark_add.png \
   res/drawable-mdpi/urlbar_stop.png \
   res/drawable-mdpi/reader.png \
   res/drawable-mdpi/reader_active.png \
@@ -713,7 +713,6 @@ RES_DRAWABLE_HDPI = \
   res/drawable-hdpi/home_bg.png \
   res/drawable-hdpi/home_star.png \
   res/drawable-hdpi/abouthome_thumbnail.png \
-  res/drawable-hdpi/abouthome_thumbnail_add.png \
   res/drawable-hdpi/alert_addon.png \
   res/drawable-hdpi/alert_app.png \
   res/drawable-hdpi/alert_download.png \
@@ -778,6 +777,7 @@ RES_DRAWABLE_HDPI = \
   res/drawable-hdpi/tabs_normal.png \
   res/drawable-hdpi/tabs_private.png \
   res/drawable-hdpi/tabs_synced.png \
+  res/drawable-hdpi/top_bookmark_add.png \
   res/drawable-hdpi/urlbar_stop.png \
   res/drawable-hdpi/reader.png \
   res/drawable-hdpi/reader_active.png \
@@ -796,7 +796,6 @@ RES_DRAWABLE_XHDPI = \
   res/drawable-xhdpi/favicon.png \
   res/drawable-xhdpi/folder.png \
   res/drawable-xhdpi/abouthome_thumbnail.png \
-  res/drawable-xhdpi/abouthome_thumbnail_add.png \
   res/drawable-xhdpi/url_bar_bg_shadow.png \
   res/drawable-xhdpi/url_bar_entry_default.9.png \
   res/drawable-xhdpi/url_bar_entry_default_pb.9.png \
@@ -840,6 +839,7 @@ RES_DRAWABLE_XHDPI = \
   res/drawable-xhdpi/find_close.png \
   res/drawable-xhdpi/find_next.png \
   res/drawable-xhdpi/find_prev.png \
+  res/drawable-xhdpi/top_bookmark_add.png \
   res/drawable-xhdpi/urlbar_stop.png \
   res/drawable-xhdpi/reader.png \
   res/drawable-xhdpi/reader_active.png \

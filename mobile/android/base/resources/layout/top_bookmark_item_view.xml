@@ -23,8 +23,8 @@
 
     <ImageView android:id="@+id/pin"
                style="@style/Widget.TopBookmarkItemPin"
-               android:layout_width="@dimen/abouthome_topsite_pinsize"
-               android:layout_height="@dimen/abouthome_topsite_pinsize"
+               android:layout_width="@dimen/top_bookmark_pinsize"
+               android:layout_height="@dimen/top_bookmark_pinsize"
                android:layout_alignTop="@id/thumbnail"
                android:layout_alignRight="@id/thumbnail"/>
 
