@@ -4433,8 +4433,7 @@ nsWindow::ExternalHandlerProcessMessage(UINT aMessage,
     return true;
   }
 
-  if (IMEHandler::ProcessMessage(this, aMessage, aWParam, aLParam,
-                                 &aResult.mResult, aResult.mConsumed)) {
+  if (IMEHandler::ProcessMessage(this, aMessage, aWParam, aLParam, aResult)) {
     return true;
   }
 
