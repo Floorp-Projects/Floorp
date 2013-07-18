@@ -86,7 +86,7 @@ GonkDisplayJB::GonkDisplayJB()
 
         mWidth = values[0];
         mHeight = values[1];
-        xdpi = values[2];
+        xdpi = values[2] / 1000.0f;
         surfaceformat = HAL_PIXEL_FORMAT_RGBA_8888;
     }
 

@@ -815,7 +815,7 @@ abstract public class BrowserApp extends GeckoApp
 
         // If the page has shrunk so that the toolbar no longer scrolls, make
         // sure the toolbar is visible.
-        if (aMetrics.getPageHeight() < aMetrics.getHeight()) {
+        if (aMetrics.getPageHeight() <= aMetrics.getHeight()) {
             if (mDynamicToolbarCanScroll) {
                 mDynamicToolbarCanScroll = false;
                 if (!mBrowserToolbar.isVisible()) {

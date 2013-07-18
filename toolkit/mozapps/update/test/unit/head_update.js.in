@@ -393,7 +393,7 @@ function pathHandler(metadata, response) {
  * @return  The relative path to the directory where the update will be applied.
  */
 function getApplyDirPath() {
-  return TEST_ID + APPLY_TO_DIR_SUFFIX;
+  return TEST_ID + APPLY_TO_DIR_SUFFIX + "appdir/";
 }
 
 /**
@@ -1238,7 +1238,7 @@ function cleanupUpdaterTest() {
   }
 
   // Try to remove the updates and the apply to directories.
-  let applyToDir = getApplyDirFile(null, true);
+  let applyToDir = getApplyDirFile(null, true).parent;
   try {
     removeDirRecursive(applyToDir);
   }
@@ -2159,6 +2159,59 @@ function adjustPathsOnWindows() {
 }
 
 let gWindowsBinDir = null;
+
+/**
+ * This function makes XREExeF and UpdRootD point to unique locations so
+ * xpcshell tests can run in parallel.
+ */
+function adjustGeneralPaths() {
+  let dirProvider = {
+    getFile: function DP_getFile(prop, persistent) {
+      persistent.value = true;
+      if (prop == XRE_EXECUTABLE_FILE)
+        return do_get_file(getApplyDirPath() + "test" + APP_BIN_SUFFIX, true);
+      if (prop == XRE_UPDATE_ROOT_DIR)
+        return do_get_file(getApplyDirPath(), true);
+      return null;
+    },
+    QueryInterface: function(iid) {
+      if (iid.equals(AUS_Ci.nsIDirectoryServiceProvider) ||
+          iid.equals(AUS_Ci.nsISupports))
+        return this;
+      throw AUS_Cr.NS_ERROR_NO_INTERFACE;
+    }
+  };
+  let ds = Services.dirsvc.QueryInterface(AUS_Ci.nsIDirectoryService);
+  ds.registerProvider(dirProvider);
+  do_register_cleanup(function() {
+    ds.unregisterProvider(dirProvider);
+    let testBin = do_get_file(getApplyDirPath() + "test" + APP_BIN_SUFFIX, true);
+    // Try to remove the test.bin file if it exists (it shouldn't).
+    if (testBin.exists()) {
+      try {
+        testBin.remove(false);
+      }
+      catch (e) {
+        dump("Unable to remove file\n" +
+             "path: " + testBin.path + "\n" +
+             "Exception: " + e + "\n");
+      }
+    }
+    let testDir = do_get_file(getApplyDirPath(), true).parent;
+    // Try to remove the directory used to apply updates (this is non-fatal
+    // for the test).
+    if (testDir.exists()) {
+      try {
+        removeDirRecursive(testDir);
+      }
+      catch (e) {
+        dump("Unable to remove directory\n" +
+             "path: " + testDir.path + "\n" +
+             "Exception: " + e + "\n");
+      }
+    }
+  });
+}
 
 /**
  * This function returns the current process directory on Windows and Linux, and

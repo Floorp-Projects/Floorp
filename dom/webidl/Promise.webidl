@@ -8,6 +8,7 @@
  */
 
 interface PromiseResolver {
+  // TODO bug 875289 - void fulfill(optional any value);
   void resolve(optional any value);
   void reject(optional any value);
 };
@@ -17,20 +18,16 @@ callback AnyCallback = any (optional any value);
 
 [PrefControlled, Constructor(PromiseInit init)]
 interface Promise {
-  // TODO: update this interface - bug 875289
-
+  // TODO bug 875289 - static Promise fulfill(any value);
   [Creator, Throws]
   static Promise resolve(any value); // same as any(value)
   [Creator, Throws]
   static Promise reject(any value);
 
   [Creator]
-  Promise then(optional AnyCallback? resolveCallback = null,
-               optional AnyCallback? rejectCallback = null);
+  Promise then([TreatUndefinedAs=Missing] optional AnyCallback fulfillCallback,
+               [TreatUndefinedAs=Missing] optional AnyCallback rejectCallback);
 
   [Creator]
-  Promise catch(optional AnyCallback? rejectCallback = null);
-
-  void done(optional AnyCallback? resolveCallback = null,
-            optional AnyCallback? rejectCallback = null);
+  Promise catch([TreatUndefinedAs=Missing] optional AnyCallback rejectCallback);
 };

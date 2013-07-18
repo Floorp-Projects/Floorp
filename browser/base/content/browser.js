@@ -6868,7 +6868,7 @@ var gIdentityHandler = {
         continue;
       let menuitem = document.createElement("menuitem");
       menuitem.setAttribute("value", state);
-      menuitem.setAttribute("label", SitePermissions.getStateLabel(state));
+      menuitem.setAttribute("label", SitePermissions.getStateLabel(aPermission, state));
       menupopup.appendChild(menuitem);
     }
     menulist.appendChild(menupopup);

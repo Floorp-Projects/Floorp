@@ -26,7 +26,9 @@ const { PROFILE_IDLE, PROFILE_COMPLETED, PROFILE_RUNNING } = require("devtools/p
 function Cleopatra(panel, opts) {
   let doc = panel.document;
   let win = panel.window;
-  let { uid, name, showPlatformData } = opts;
+  let { uid, name } = opts;
+  let spd = opts.showPlatformData;
+  let ext = opts.external;
 
   EventEmitter.decorate(this);
 
@@ -41,7 +43,7 @@ function Cleopatra(panel, opts) {
   this.iframe = doc.createElement("iframe");
   this.iframe.setAttribute("flex", "1");
   this.iframe.setAttribute("id", "profiler-cleo-" + uid);
-  this.iframe.setAttribute("src", "cleopatra.html?uid=" + uid + "&showPlatformData=" + showPlatformData);
+  this.iframe.setAttribute("src", "cleopatra.html?uid=" + uid + "&spd=" + spd + "&ext=" + ext);
   this.iframe.setAttribute("hidden", "true");
 
   // Append our iframe and subscribe to postMessage events.

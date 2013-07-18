@@ -8,16 +8,56 @@
 
 const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-consoleiframes.html";
 
+let expectedMessages = [
+  {
+    text: "main file",
+    category: CATEGORY_WEBDEV,
+    severity: SEVERITY_LOG,
+  },
+  {
+    text: "blah",
+    category: CATEGORY_JS,
+    severity: SEVERITY_ERROR
+  },
+  {
+    text: "iframe 2",
+    category: CATEGORY_WEBDEV,
+    severity: SEVERITY_LOG
+  },
+  {
+    text: "iframe 3",
+    category: CATEGORY_WEBDEV,
+    severity: SEVERITY_LOG
+  }
+];
+
+// "iframe 1" console messages can be coalesced into one if they follow each
+// other in the sequence of messages (depending on timing). If they do not, then
+// they will be displayed in the console output independently, as separate
+// messages. This is why we need to match any of the following two rules.
+let expectedMessagesAny = [
+  {
+    name: "iframe 1 (count: 2)",
+    text: "iframe 1",
+    category: CATEGORY_WEBDEV,
+    severity: SEVERITY_LOG,
+    count: 2
+  },
+  {
+    name: "iframe 1 (repeats: 2)",
+    text: "iframe 1",
+    category: CATEGORY_WEBDEV,
+    severity: SEVERITY_LOG,
+    repeats: 2
+  },
+];
+
 function test()
 {
   expectUncaughtException();
   addTab(TEST_URI);
   browser.addEventListener("load", function onLoad() {
     browser.removeEventListener("load", onLoad, true);
-
-    // Test for cached nsIConsoleMessages.
-    Services.console.logStringMessage("test1 for bug859756");
-
     info("open web console");
     openConsole(null, consoleOpened);
   }, true);
@@ -29,31 +69,16 @@ function consoleOpened(hud)
 
   waitForMessages({
     webconsole: hud,
-    messages: [
-      {
-        text: "main file",
-        category: CATEGORY_WEBDEV,
-        severity: SEVERITY_LOG,
-      },
-      {
-        text: "blah",
-        category: CATEGORY_JS,
-        severity: SEVERITY_ERROR
-      },
-      {
-        text: "iframe 1",
-        category: CATEGORY_WEBDEV,
-        severity: SEVERITY_LOG,
-        count: 2
-      },
-      {
-        text: "iframe 2",
-        category: CATEGORY_WEBDEV,
-        severity: SEVERITY_LOG
-      }
-    ],
+    messages: expectedMessages,
   }).then(() => {
-    closeConsole(null, onWebConsoleClose);
+    info("first messages matched");
+    waitForMessages({
+      webconsole: hud,
+      messages: expectedMessagesAny,
+      matchCondition: "any",
+    }).then(() => {
+      closeConsole(null, onWebConsoleClose);
+    });
   });
 }
 
@@ -66,34 +91,17 @@ function onWebConsoleClose()
 function onBrowserConsoleOpen(hud)
 {
   ok(hud, "browser console opened");
-  Services.console.logStringMessage("test2 for bug859756");
-
   waitForMessages({
     webconsole: hud,
-    messages: [
-      {
-        text: "main file",
-        category: CATEGORY_WEBDEV,
-        severity: SEVERITY_LOG,
-      },      
-      {
-        text: "blah",
-        category: CATEGORY_JS,
-        severity: SEVERITY_ERROR
-      },
-      {
-        text: "iframe 1",
-        category: CATEGORY_WEBDEV,
-        severity: SEVERITY_LOG,
-        count: 2
-      },
-      {
-        text: "iframe 2",
-        category: CATEGORY_WEBDEV,
-        severity: SEVERITY_LOG
-      }
-    ],
+    messages: expectedMessages,
   }).then(() => {
-    closeConsole(null, finishTest);
+    info("first messages matched");
+    waitForMessages({
+      webconsole: hud,
+      messages: expectedMessagesAny,
+      matchCondition: "any",
+    }).then(() => {
+      closeConsole(null, finishTest);
+    });
   });
 }

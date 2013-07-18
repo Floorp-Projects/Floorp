@@ -21,3 +21,7 @@
 <!-- LOCALIZATION NOTE (profilerStop.label): This is the label for the
   -  button that stops the profiler. -->
 <!ENTITY profilerStop.label "Stop">
+
+<!-- LOCALIZATION NOTE (profiler.importProfile): This string is displayed
+  -  on a button that opens a dialog to import a saved profile data file. -->
+<!ENTITY importProfile.label "Import…">

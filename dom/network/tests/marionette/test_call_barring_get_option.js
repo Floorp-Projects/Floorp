@@ -5,9 +5,19 @@ MARIONETTE_TIMEOUT = 60000;
 
 SpecialPowers.addPermission("mobileconnection", true, document);
 
-let connection = navigator.mozMobileConnection;
-ok(connection instanceof MozMobileConnection,
-   "connection is instanceof " + connection.constructor);
+// Permission changes can't change existing Navigator.prototype
+// objects, so grab our objects from a new Navigator
+let ifr = document.createElement("iframe");
+let connection;
+ifr.onload = function() {
+  connection = ifr.contentWindow.navigator.mozMobileConnection;
+
+  ok(connection instanceof ifr.contentWindow.MozMobileConnection,
+     "connection is instanceof " + connection.constructor);
+
+  testGetCallBarringOption();
+};
+document.body.appendChild(ifr);
 
 function testGetCallBarringOption() {
   let option = {'program': 0, 'password': '', 'serviceClass': 0};
@@ -27,5 +37,3 @@ function cleanUp() {
   SpecialPowers.removePermission("mobileconnection", document);
   finish();
 }
-
-testGetCallBarringOption();

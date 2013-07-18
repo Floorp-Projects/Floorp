@@ -41,7 +41,7 @@ gTests.push({
     yield waitForCondition(() => BrowserUI.ready);
     is(Elements.findbar.isShowing, false, "Find bar is hidden by default");
 
-    ContextUI.displayNavbar();
+    yield showNavBar();
     EventUtils.sendMouseEvent({ type: "click" }, "menu-button");
     EventUtils.sendMouseEvent({ type: "click" }, "context-findinpage");
     yield waitForEvent(Elements.findbar, "transitionend");

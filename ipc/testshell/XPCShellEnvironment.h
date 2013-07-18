@@ -14,6 +14,8 @@
 #include "nsCOMPtr.h"
 #include "nsDebug.h"
 #include "nsStringGlue.h"
+#include "nsJSPrincipals.h"
+#include "nsContentUtils.h"
 
 struct JSContext;
 class JSObject;
@@ -28,26 +30,17 @@ public:
     static XPCShellEnvironment* CreateEnvironment();
     ~XPCShellEnvironment();
 
+    void ProcessFile(JSContext *cx, JS::Handle<JSObject*> obj,
+                     const char *filename, FILE *file, JSBool forceTTY);
     bool EvaluateString(const nsString& aString,
                         nsString* aResult = nullptr);
 
     JSPrincipals* GetPrincipal() {
-        return mJSPrincipals;
+        return nsJSPrincipals::get(nsContentUtils::GetSystemPrincipal());
     }
 
     JSObject* GetGlobalObject() {
         return mGlobalHolder.ToJSObject();
-    }
-
-    JSContext* GetContext() {
-        return mCx;
-    }
-
-    void SetExitCode(int aExitCode) {
-        mExitCode = aExitCode;
-    }
-    int ExitCode() {
-        return mExitCode;
     }
 
     void SetIsQuitting() {
@@ -57,33 +50,14 @@ public:
         return mQuitting;
     }
 
-    void SetShouldReportWarnings(JSBool aReportWarnings) {
-        mReportWarnings = aReportWarnings;
-    }
-    JSBool ShouldReportWarnings() {
-        return mReportWarnings;
-    }
-
-    void SetShouldCompoleOnly(JSBool aCompileOnly) {
-        mCompileOnly = aCompileOnly;
-    }
-    JSBool ShouldCompileOnly() {
-        return mCompileOnly;
-    }
-
 protected:
     XPCShellEnvironment();
     bool Init();
 
 private:
-    JSContext* mCx;
     nsAutoJSValHolder mGlobalHolder;
-    JSPrincipals* mJSPrincipals;
 
-    int mExitCode;
     JSBool mQuitting;
-    JSBool mReportWarnings;
-    JSBool mCompileOnly;
 };
 
 } /* namespace ipc */
