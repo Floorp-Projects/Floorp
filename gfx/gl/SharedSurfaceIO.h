@@ -27,6 +27,9 @@ public:
     virtual void Fence();
     virtual bool WaitSync() { return true; }
 
+    virtual bool ReadPixels(GLint x, GLint y, GLsizei width, GLsizei height,
+                            GLenum format, GLenum type, GLvoid *pixels) MOZ_OVERRIDE;
+
     virtual GLuint Texture() const
     {
         return mTexture;
