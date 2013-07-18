@@ -11,7 +11,6 @@ const Cu = Components.utils;
 
 const PANE_APPEARANCE_DELAY = 50;
 const PAGE_SIZE_ITEM_COUNT_RATIO = 5;
-const WIDGET_FOCUSABLE_NODES = new Set(["vbox", "hbox"]);
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -610,7 +609,7 @@ this.WidgetMethods = {
    *          - relaxed: true if this container should allow dupes & degenerates
    *          - attachment: some attached primitive/object for the item
    *          - attributes: a batch of attributes set to the displayed element
-   *          - finalize: function invokde when the item is removed
+   *          - finalize: function invoked when the item is removed
    * @return Item
    *         The item associated with the displayed element if an unstaged push,
    *         undefined if the item was staged for a later commit.
@@ -1118,21 +1117,16 @@ this.WidgetMethods = {
   _focusChange: function(aDirection) {
     let commandDispatcher = this._commandDispatcher;
     let prevFocusedElement = commandDispatcher.focusedElement;
-    let currFocusedElement;
 
-    do {
-      commandDispatcher.suppressFocusScroll = true;
-      commandDispatcher[aDirection]();
-      currFocusedElement = commandDispatcher.focusedElement;
+    commandDispatcher.suppressFocusScroll = true;
+    commandDispatcher[aDirection]();
 
-      // Make sure the newly focused item is a part of this container. If the
-      // focus goes out of bounds, revert the previously focused item.
-      if (!this.getItemForElement(currFocusedElement)) {
-        prevFocusedElement.focus();
-        return false;
-      }
-    } while (!WIDGET_FOCUSABLE_NODES.has(currFocusedElement.tagName));
-
+    // Make sure the newly focused item is a part of this container.
+    // If the focus goes out of bounds, revert the previously focused item.
+    if (!this.getItemForElement(commandDispatcher.focusedElement)) {
+      prevFocusedElement.focus();
+      return false;
+    }
     // Focus remained within bounds.
     return true;
   },
@@ -1214,10 +1208,7 @@ this.WidgetMethods = {
    */
   getItemForElement: function(aElement) {
     while (aElement) {
-      let item =
-        this._itemsByElement.get(aElement) ||
-        this._itemsByElement.get(aElement.nextElementSibling) ||
-        this._itemsByElement.get(aElement.previousElementSibling);
+      let item = this._itemsByElement.get(aElement);
       if (item) {
         return item;
       }
