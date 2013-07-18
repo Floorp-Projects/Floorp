@@ -654,7 +654,7 @@ static bool
 JitSupportsFloatingPoint()
 {
 #if defined(JS_ION)
-    if (!JSC::MacroAssembler().supportsFloatingPoint())
+    if (!JSC::MacroAssembler::supportsFloatingPoint())
         return false;
 
 #if defined(JS_ION) && WTF_ARM_ARCH_VERSION == 6
