@@ -1237,13 +1237,6 @@ public class GeckoAppShell
 
     public static void showAlertNotification(String aImageUrl, String aAlertTitle, String aAlertText,
                                              String aAlertCookie, String aAlertName) {
-        Log.d(LOGTAG, "GeckoAppShell.showAlertNotification\n" +
-            "- image = '" + aImageUrl + "'\n" +
-            "- title = '" + aAlertTitle + "'\n" +
-            "- text = '" + aAlertText +"'\n" +
-            "- cookie = '" + aAlertCookie +"'\n" +
-            "- name = '" + aAlertName + "'");
-
         // The intent to launch when the user clicks the expanded notification
         String app = getContext().getClass().getName();
         Intent notificationIntent = new Intent(GeckoApp.ACTION_ALERT_CALLBACK);
@@ -1297,7 +1290,7 @@ public class GeckoAppShell
         if (GeckoApp.ACTION_ALERT_CALLBACK.equals(aAction)) {
             callObserver(aAlertName, "alertclickcallback", aAlertCookie);
 
-            if (sNotificationClient.isProgressStyle(notificationID)) {
+            if (sNotificationClient.isOngoing(notificationID)) {
                 // When clicked, keep the notification if it displays progress
                 return;
             }
