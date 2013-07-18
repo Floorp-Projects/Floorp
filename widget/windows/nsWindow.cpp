@@ -4438,7 +4438,7 @@ nsWindow::ExternalHandlerProcessMessage(UINT aMessage,
   }
 
   if (MouseScrollHandler::ProcessMessage(this, aMessage, aWParam, aLParam,
-                                         &aResult.mResult, aResult.mConsumed)) {
+                                         aResult)) {
     return true;
   }
 
