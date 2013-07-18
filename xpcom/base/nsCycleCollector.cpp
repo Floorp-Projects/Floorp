@@ -201,13 +201,11 @@ struct nsCycleCollectorParams
     bool mLogAll;
     bool mLogShutdown;
     bool mAllTracesAtShutdown;
-    bool mDoNothing;
 
     nsCycleCollectorParams() :
         mLogAll      (PR_GetEnv("XPCOM_CC_LOG_ALL") != NULL),
         mLogShutdown (PR_GetEnv("XPCOM_CC_LOG_SHUTDOWN") != NULL),
-        mAllTracesAtShutdown (PR_GetEnv("XPCOM_CC_ALL_TRACES_AT_SHUTDOWN") != NULL),
-        mDoNothing   (false)
+        mAllTracesAtShutdown (PR_GetEnv("XPCOM_CC_ALL_TRACES_AT_SHUTDOWN") != NULL)
     {
     }
 };
@@ -2668,9 +2666,6 @@ nsCycleCollector::ShutdownThreads()
 void
 nsCycleCollector::RegisterJSRuntime(CycleCollectedJSRuntime *aJSRuntime)
 {
-    if (mParams.mDoNothing)
-        return;
-
     if (mJSRuntime)
         Fault("multiple registrations of cycle collector JS runtime", aJSRuntime);
 
@@ -2689,9 +2684,6 @@ nsCycleCollector::RegisterJSRuntime(CycleCollectedJSRuntime *aJSRuntime)
 void
 nsCycleCollector::ForgetJSRuntime()
 {
-    if (mParams.mDoNothing)
-        return;
-
     if (!mJSRuntime)
         Fault("forgetting non-registered cycle collector JS runtime");
 
@@ -2731,9 +2723,6 @@ nsCycleCollector::Suspect(void *n, nsCycleCollectionParticipant *cp,
     MOZ_ASSERT(nsCycleCollector_isScanSafe(n, cp),
                "suspected a non-scansafe pointer");
 
-    if (mParams.mDoNothing)
-        return;
-
     mPurpleBuf.Put(n, cp, aRefCnt);
 }
 
@@ -2756,9 +2745,6 @@ nsCycleCollector::FixGrayBits(bool aForceGC)
 {
     MOZ_ASSERT(NS_IsMainThread(),
                "nsCycleCollector::FixGrayBits() must be called on the main thread.");
-
-    if (mParams.mDoNothing)
-        return;
 
     if (!mJSRuntime)
         return;
@@ -2925,9 +2911,6 @@ nsCycleCollector::BeginCollection(ccType aCCType,
     // aListener should be Begin()'d before this
     TimeLog timeLog;
 
-    if (mParams.mDoNothing)
-        return false;
-
     bool mergeZones = ShouldMergeZones(aCCType);
     if (mResults) {
         mResults->mMergedZones = mergeZones;
@@ -2996,8 +2979,6 @@ nsCycleCollector::FinishCollection(nsICycleCollectorListener *aListener)
     ClearGraph();
     timeLog.Checkpoint("ClearGraph()");
 
-    mParams.mDoNothing = false;
-
     return collected;
 }
 
@@ -3026,8 +3007,6 @@ nsCycleCollector::Shutdown()
         }
         ShutdownCollect(listener);
     }
-
-    mParams.mDoNothing = true;
 }
 
 void
