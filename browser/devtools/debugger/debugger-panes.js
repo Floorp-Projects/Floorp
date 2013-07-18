@@ -18,7 +18,6 @@ function SourcesView() {
   this._onSourceSelect = this._onSourceSelect.bind(this);
   this._onSourceClick = this._onSourceClick.bind(this);
   this._onBreakpointRemoved = this._onBreakpointRemoved.bind(this);
-  this._onSourceCheck = this._onSourceCheck.bind(this);
   this._onBreakpointClick = this._onBreakpointClick.bind(this);
   this._onBreakpointCheckboxClick = this._onBreakpointCheckboxClick.bind(this);
   this._onConditionalPopupShowing = this._onConditionalPopupShowing.bind(this);
@@ -35,12 +34,9 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
   initialize: function() {
     dumpn("Initializing the SourcesView");
 
-    this.widget = new SideMenuWidget(document.getElementById("sources"), {
-      showCheckboxes: true
-    });
+    this.widget = new SideMenuWidget(document.getElementById("sources"));
     this.emptyText = L10N.getStr("noSourcesText");
     this.unavailableText = L10N.getStr("noMatchingSourcesText");
-    this._blackBoxCheckboxTooltip = L10N.getStr("blackBoxCheckboxTooltip");
 
     this._commandset = document.getElementById("debuggerCommands");
     this._popupset = document.getElementById("debuggerPopupset");
@@ -52,7 +48,6 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
     window.addEventListener("Debugger:EditorUnloaded", this._onEditorUnload, false);
     this.widget.addEventListener("select", this._onSourceSelect, false);
     this.widget.addEventListener("click", this._onSourceClick, false);
-    this.widget.addEventListener("check", this._onSourceCheck, false);
     this._cbPanel.addEventListener("popupshowing", this._onConditionalPopupShowing, false);
     this._cbPanel.addEventListener("popupshown", this._onConditionalPopupShown, false);
     this._cbPanel.addEventListener("popuphiding", this._onConditionalPopupHiding, false);
@@ -75,7 +70,6 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
     window.removeEventListener("Debugger:EditorUnloaded", this._onEditorUnload, false);
     this.widget.removeEventListener("select", this._onSourceSelect, false);
     this.widget.removeEventListener("click", this._onSourceClick, false);
-    this.widget.removeEventListener("check", this._onSourceCheck, false);
     this._cbPanel.removeEventListener("popupshowing", this._onConditionalPopupShowing, false);
     this._cbPanel.removeEventListener("popupshowing", this._onConditionalPopupShown, false);
     this._cbPanel.removeEventListener("popuphiding", this._onConditionalPopupHiding, false);
@@ -115,8 +109,6 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
     this.push([label, url, group], {
       staged: aOptions.staged, /* stage the item to be appended later? */
       attachment: {
-        checkboxState: !aSource.isBlackBoxed,
-        checkboxTooltip: this._blackBoxCheckboxTooltip,
         source: aSource
       }
     });
@@ -645,14 +637,6 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
   _onSourceClick: function() {
     // Use this container as a filtering target.
     DebuggerView.Filtering.target = this;
-  },
-
-  /**
-   * The check listener for the sources container.
-   */
-  _onSourceCheck: function({ detail: { checked }, target }) {
-    let item = this.getItemForElement(target);
-    DebuggerController.SourceScripts.blackBox(item.attachment.source, !checked);
   },
 
   /**
