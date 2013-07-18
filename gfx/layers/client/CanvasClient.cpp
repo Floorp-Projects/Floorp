@@ -66,7 +66,7 @@ CanvasClient2D::Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer)
                                               : gfxASurface::CONTENT_COLOR_ALPHA;
   mDeprecatedTextureClient->EnsureAllocated(aSize, contentType);
 
-  gfxASurface* surface = mDeprecatedTextureClient->LockSurface();
+  gfxASurface* surface = mDeprecatedTextureClient->LockImageSurface();
   aLayer->UpdateSurface(surface);
   mDeprecatedTextureClient->Unlock();
 }
