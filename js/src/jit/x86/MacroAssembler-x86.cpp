@@ -48,6 +48,34 @@ MacroAssemblerX86::loadConstantDouble(double d, const FloatRegister &dest)
 }
 
 void
+MacroAssemblerX86::loadConstantFloat32(float f, const FloatRegister &dest)
+{
+    // Contrarily to loadConstantDouble, this one doesn't have any maybeInlineFloat,
+    // but that might be interesting to do it in the future.
+    if (!floatMap_.initialized()) {
+        enoughMemory_ &= floatMap_.init();
+        if (!enoughMemory_)
+            return;
+    }
+    size_t floatIndex;
+    FloatMap::AddPtr p = floatMap_.lookupForAdd(f);
+    if (p) {
+        floatIndex = p->value;
+    } else {
+        floatIndex = floats_.length();
+        enoughMemory_ &= floats_.append(Float(f));
+        enoughMemory_ &= floatMap_.add(p, f, floatIndex);
+        if (!enoughMemory_)
+            return;
+    }
+    Float &flt = floats_[floatIndex];
+    JS_ASSERT(!flt.uses.bound());
+
+    masm.movss_mr(reinterpret_cast<const void *>(flt.uses.prev()), dest.code());
+    flt.uses.setPrev(masm.size());
+}
+
+void
 MacroAssemblerX86::loadStaticDouble(const double *dp, const FloatRegister &dest) {
     if (maybeInlineDouble(*dp, dest))
         return;
@@ -57,15 +85,28 @@ MacroAssemblerX86::loadStaticDouble(const double *dp, const FloatRegister &dest)
 }
 
 void
+MacroAssemblerX86::loadStaticFloat32(const float *fp, const FloatRegister &dest) {
+    // x86 can just load from any old immediate address.
+    movss(fp, dest);
+}
+
+void
 MacroAssemblerX86::finish()
 {
-    if (doubles_.empty())
+    if (doubles_.empty() && floats_.empty())
         return;
 
     masm.align(sizeof(double));
     for (size_t i = 0; i < doubles_.length(); i++) {
         CodeLabel cl(doubles_[i].uses);
         writeDoubleConstant(doubles_[i].value, cl.src());
+        enoughMemory_ &= addCodeLabel(cl);
+        if (!enoughMemory_)
+            return;
+    }
+    for (size_t i = 0; i < floats_.length(); i++) {
+        CodeLabel cl(floats_[i].uses);
+        writeFloatConstant(floats_[i].value, cl.src());
         enoughMemory_ &= addCodeLabel(cl);
         if (!enoughMemory_)
             return;

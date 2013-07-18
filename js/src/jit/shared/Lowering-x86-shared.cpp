@@ -265,10 +265,19 @@ LIRGeneratorX86Shared::lowerConstantDouble(double d, MInstruction *mir)
 }
 
 bool
+LIRGeneratorX86Shared::lowerConstantFloat32(float f, MInstruction *mir)
+{
+    return define(new LFloat32(f), mir);
+}
+
+bool
 LIRGeneratorX86Shared::visitConstant(MConstant *ins)
 {
     if (ins->type() == MIRType_Double)
         return lowerConstantDouble(ins->value().toDouble(), ins);
+
+    if (ins->type() == MIRType_Float32)
+        return lowerConstantFloat32(ins->value().toDouble(), ins);
 
     // Emit non-double constants at their uses.
     if (ins->canEmitAtUses())

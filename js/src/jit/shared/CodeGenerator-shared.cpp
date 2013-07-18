@@ -162,15 +162,23 @@ CodeGeneratorShared::encodeSlots(LSnapshot *snapshot, MResumePoint *resumePoint,
           case MIRType_Object:
           case MIRType_Boolean:
           case MIRType_Double:
+          case MIRType_Float32:
           {
             LAllocation *payload = snapshot->payloadOfSlot(i);
-            JSValueType type = ValueTypeFromMIRType(mir->type());
+            JSValueType valueType = ValueTypeFromMIRType(type);
             if (payload->isMemory()) {
-                snapshots_.addSlot(type, ToStackIndex(payload));
+                if (type == MIRType_Float32)
+                    snapshots_.addFloat32Slot(ToStackIndex(payload));
+                else
+                    snapshots_.addSlot(valueType, ToStackIndex(payload));
             } else if (payload->isGeneralReg()) {
-                snapshots_.addSlot(type, ToRegister(payload));
+                snapshots_.addSlot(valueType, ToRegister(payload));
             } else if (payload->isFloatReg()) {
-                snapshots_.addSlot(ToFloatRegister(payload));
+                FloatRegister reg = ToFloatRegister(payload);
+                if (type == MIRType_Float32)
+                    snapshots_.addFloat32Slot(reg);
+                else
+                    snapshots_.addSlot(reg);
             } else {
                 MConstant *constant = mir->toConstant();
                 const Value &v = constant->value();
