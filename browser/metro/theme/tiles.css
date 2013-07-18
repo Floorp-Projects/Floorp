@@ -17,7 +17,7 @@ richgriditem {
   width: @grid_double_column_width@;
   height: @grid_row_height@;
 }
-richgriditem[customImage] {
+richgriditem[tiletype="thumbnail"] {
   width: @grid_double_column_width@;
   height: @grid_double_row_height@;
 }
@@ -131,7 +131,12 @@ richgriditem:active {
 }
 
 /* thumbnail variation */
-richgriditem[customImage] {
+
+richgriditem[tiletype="thumbnail"] .tile-start-container {
+  background-image: url("chrome://browser/skin/images/firefox-watermark.png");
+}
+
+richgriditem[tiletype="thumbnail"] {
   width: @grid_double_column_width@;
   height: @grid_double_row_height@;
   -moz-box-pack: end;
@@ -139,19 +144,19 @@ richgriditem[customImage] {
   color: #1a1a1a;
 }
 
-richgriditem[customImage] .tile-desc {
+richgriditem[tiletype="thumbnail"] .tile-desc {
   background: transparent;
   margin: 0px;
   left: 0;
 }
 
-richgriditem[customImage] > .tile-content > .tile-desc {
+richgriditem[tiletype="thumbnail"] > .tile-content > .tile-desc {
   /* ensure thumbnail labels get their color from the parent richgriditem element */
   color: inherit;
 }
 
 /* put the image in place of the icon if there is an image background */
-richgriditem[customImage] > .tile-content > .tile-start-container {
+richgriditem[tiletype="thumbnail"] > .tile-content > .tile-start-container {
   background-size: cover;
   background-position: top left;
   background-repeat: no-repeat;
@@ -162,7 +167,7 @@ richgriditem[customImage] > .tile-content > .tile-start-container {
   left: 0;
   background-color: hsla(0,2%,98%,.95);
 }
-richgriditem[customImage] .tile-icon-box {
+richgriditem[tiletype="thumbnail"] .tile-icon-box {
   visibility: collapse;
 }
 
