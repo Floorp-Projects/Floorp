@@ -153,6 +153,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitOsrValue(MOsrValue *value);
     bool visitOsrScopeChain(MOsrScopeChain *object);
     bool visitToDouble(MToDouble *convert);
+    bool visitToFloat32(MToFloat32 *convert);
     bool visitToInt32(MToInt32 *convert);
     bool visitTruncateToInt32(MTruncateToInt32 *truncate);
     bool visitToString(MToString *convert);

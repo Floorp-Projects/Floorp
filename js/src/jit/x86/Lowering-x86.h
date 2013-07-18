@@ -55,6 +55,10 @@ class LIRGeneratorX86 : public LIRGeneratorX86Shared
     static bool allowStaticTypedArrayAccesses() {
         return true;
     }
+
+    static bool allowFloat32Optimizations() {
+        return true;
+    }
 };
 
 typedef LIRGeneratorX86 LIRGeneratorSpecific;
