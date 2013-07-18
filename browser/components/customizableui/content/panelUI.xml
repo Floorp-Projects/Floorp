@@ -95,7 +95,7 @@
                 onget="return this._viewStack.getAttribute('viewtype') == 'subview'"/>
       <property name="_mainViewId" onget="return this.getAttribute('mainViewId');" onset="this.setAttribute('mainViewId', val); return val;"/>
       <property name="_mainView" readonly="true"
-                onget="return document.getElementById(this._mainViewId);"/>
+                onget="return this._mainViewId ? document.getElementById(this._mainViewId) : null;"/>
 
       <property name="ignoreMutations">
         <getter>
