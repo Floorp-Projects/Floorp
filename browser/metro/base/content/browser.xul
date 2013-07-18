@@ -247,7 +247,7 @@
     <html:div id="overlay-plus" class="overlay-button"
               observes="cmd_back"></html:div>
 
-    <!-- Navbar -->
+    <!-- Navigation bar -->
     <appbar id="navbar" mousethrough="never" observes="bcast_windowState">
       <hbox id="progress-container" layer="true">
         <hbox id="progress-control" />
@@ -259,40 +259,41 @@
           <hbox id="urlbar-autocomplete" observes="bcast_windowState"/>
         </scrollbox>
 
-        <!-- Main Toolbar -->
-        <toolbar id="toolbar" observes="bcast_windowState" flex="1">
+        <!-- Main toolbar -->
+        <toolbar id="toolbar" flex="1">
           <observes element="bcast_windowState" attribute="*"/>
           <observes element="bcast_urlbarState" attribute="*"/>
 
-          <toolbarbutton id="back-button" class="appbar-primary" command="cmd_back"/>
-          <toolbarbutton id="forward-button" class="appbar-primary" command="cmd_forward"/>
+          <toolbarbutton id="back-button" class="appbar-primary"
+                         command="cmd_back"/>
+          <toolbarbutton id="forward-button" class="appbar-primary"
+                         command="cmd_forward"/>
 
-          <hbox id="urlbar-container" flex="1" observes="bcast_urlbarState">
-            <hbox id="urlbar" flex="1">
-              <box id="identity-box" role="button">
-                <hbox id="identity-box-inner" align="center" mousethrough="always">
-                  <image id="identity-icon"/>
-                </hbox>
-              </box>
+          <hbox id="urlbar" flex="1" observes="bcast_urlbarState">
+            <box id="identity-box" align="center" role="button">
+              <image id="identity-icon"/>
+            </box>
 
-              <textbox id="urlbar-edit"
-                       type="url"
-                       class="uri-element"
-                       autocompletesearch="history"
-                       autocompletepopup="urlbar-autocomplete"
-                       completeselectedindex="true"
-                       placeholder="&urlbar.emptytext;"
-                       flex="1"/>
-            </hbox>
+            <textbox id="urlbar-edit" type="url" flex="1"
+                     autocompletesearch="history"
+                     autocompletepopup="urlbar-autocomplete"
+                     completeselectedindex="true"
+                     placeholder="&urlbar.emptytext;"/>
 
-            <toolbarbutton id="reload-button" oncommand="CommandUpdater.doCommand(event.shiftKey ? 'cmd_forceReload' : 'cmd_reload');"/>
+            <toolbarbutton id="reload-button" oncommand="
+              CommandUpdater.doCommand(event.shiftKey ? 'cmd_forceReload'
+                                                      : 'cmd_reload');"/>
             <toolbarbutton id="stop-button" command="cmd_stop"/>
           </hbox>
 
-          <toolbarbutton id="download-button" class="appbar-secondary" oncommand="Appbar.onDownloadButton()"/>
-          <toolbarbutton id="star-button" class="appbar-primary" type="checkbox" oncommand="Appbar.onStarButton()"/>
-          <toolbarbutton id="pin-button" class="appbar-primary" type="checkbox" oncommand="Appbar.onPinButton()"/>
-          <toolbarbutton id="menu-button" class="appbar-primary" oncommand="Appbar.onMenuButton(event)"/>
+          <toolbarbutton id="download-button" class="appbar-secondary"
+                         oncommand="Appbar.onDownloadButton()"/>
+          <toolbarbutton id="star-button" class="appbar-primary" type="checkbox"
+                         oncommand="Appbar.onStarButton()"/>
+          <toolbarbutton id="pin-button" class="appbar-primary" type="checkbox"
+                         oncommand="Appbar.onPinButton()"/>
+          <toolbarbutton id="menu-button" class="appbar-primary"
+                         oncommand="Appbar.onMenuButton(event)"/>
         </toolbar>
       </vbox>
     </appbar>
@@ -337,12 +338,14 @@
     </vbox>
 
     <!-- Find bar -->
-    <appbar id="findbar" class="window-width findbar-box" orient="horizontal" pack="start">
-      <textbox id="findbar-textbox" class="search-bar findbar-item" oncommand="FindHelperUI.search(this.value)" oninput="FindHelperUI.updateCommands(this.value);" type="search"/>
-      <button class="findbar-item previous-button" command="cmd_findPrevious"/>
-      <button class="findbar-item next-button" command="cmd_findNext"/>
+    <appbar id="findbar" class="window-width" pack="start">
+      <textbox id="findbar-textbox" type="search"
+               oncommand="FindHelperUI.search(this.value)"
+               oninput="FindHelperUI.updateCommands(this.value); "/>
+      <button class="previous-button" command="cmd_findPrevious"/>
+      <button class="next-button" command="cmd_findNext"/>
       <spacer flex="1"/>
-      <button id="findbar-close" class="findbar-item close-button" command="cmd_findClose"/>
+      <button id="findbar-close" class="close-button" command="cmd_findClose"/>
     </appbar>
 
     <!-- Context button bar -->
