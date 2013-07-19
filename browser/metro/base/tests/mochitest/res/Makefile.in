@@ -10,18 +10,12 @@ relativesrcdir  = @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-ifndef MOZ_DEBUG
 MOCHITEST_METRO_FILES = \
-  ../mochitest/head.js \
-  perfhelpers.js \
-  browser_miscgfx_01.js \
-  browser_tabs_01.js \
-  browser_deck_01.js \
-  browser_msgmgr_01.js \
-  msgmanagerecho.js \
-  browser_layers_01.js \
-  browser_firstx.js \
+  image01.png \
+  textblock01.html \
+  textinput01.html \
+  textarea01.html \
+  testEngine.xml \
   $(NULL)
-endif
 
 include $(topsrcdir)/config/rules.mk
