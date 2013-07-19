@@ -27,7 +27,7 @@ public:
 
   NS_DECL_NSIPKIPARAMBLOCK
   NS_DECL_NSIDIALOGPARAMBLOCK
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
 private:
   nsCOMPtr<nsIDialogParamBlock> mDialogParamBlock;
   nsCOMPtr<nsISupportsArray>    mSupports;

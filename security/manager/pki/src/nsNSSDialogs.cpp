@@ -47,14 +47,14 @@ nsNSSDialogs::~nsNSSDialogs()
 {
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS8(nsNSSDialogs, nsITokenPasswordDialogs,
-                                            nsICertificateDialogs,
-                                            nsIClientAuthDialogs,
-                                            nsICertPickDialogs,
-                                            nsITokenDialogs,
-                                            nsIDOMCryptoDialogs,
-                                            nsIGeneratingKeypairInfoDialogs,
-                                            nsISSLCertErrorDialog)
+NS_IMPL_ISUPPORTS8(nsNSSDialogs, nsITokenPasswordDialogs,
+                   nsICertificateDialogs,
+                   nsIClientAuthDialogs,
+                   nsICertPickDialogs,
+                   nsITokenDialogs,
+                   nsIDOMCryptoDialogs,
+                   nsIGeneratingKeypairInfoDialogs,
+                   nsISSLCertErrorDialog)
 
 nsresult
 nsNSSDialogs::Init()

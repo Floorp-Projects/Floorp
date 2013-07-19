@@ -23,9 +23,9 @@ nsEntropyCollector::~nsEntropyCollector()
 {
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(nsEntropyCollector,
-                              nsIEntropyCollector,
-                              nsIBufEntropyCollector)
+NS_IMPL_ISUPPORTS2(nsEntropyCollector,
+                   nsIEntropyCollector,
+                   nsIBufEntropyCollector)
 
 NS_IMETHODIMP
 nsEntropyCollector::RandomUpdate(void *new_entropy, int32_t bufLen)

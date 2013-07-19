@@ -1321,7 +1321,7 @@ static int64_t PSMAvailable64(void)
 namespace {
 class PrefObserver : public nsIObserver {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIOBSERVER
   PrefObserver(nsSSLIOLayerHelpers* aOwner) : mOwner(aOwner) {}
   virtual ~PrefObserver() {}
@@ -1330,7 +1330,7 @@ private:
 };
 } // namespace anonymous
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(PrefObserver, nsIObserver)
+NS_IMPL_ISUPPORTS1(PrefObserver, nsIObserver)
 
 NS_IMETHODIMP
 PrefObserver::Observe(nsISupports *aSubject, const char *aTopic, 

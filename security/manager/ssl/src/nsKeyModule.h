@@ -52,7 +52,7 @@ class nsKeyObjectFactory MOZ_FINAL : public nsIKeyObjectFactory
 public:
   nsKeyObjectFactory();
 
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIKEYOBJECTFACTORY
 
 private:

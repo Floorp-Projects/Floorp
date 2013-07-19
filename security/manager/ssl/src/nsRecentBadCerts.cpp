@@ -22,8 +22,7 @@
 
 using namespace mozilla;
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsRecentBadCerts,
-                              nsIRecentBadCerts)
+NS_IMPL_ISUPPORTS1(nsRecentBadCerts, nsIRecentBadCerts)
 
 nsRecentBadCerts::nsRecentBadCerts()
 :monitor("nsRecentBadCerts.monitor")

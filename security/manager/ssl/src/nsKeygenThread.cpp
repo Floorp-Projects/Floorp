@@ -16,7 +16,7 @@
 using namespace mozilla;
 using namespace mozilla::psm;
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsKeygenThread, nsIKeygenThread)
+NS_IMPL_ISUPPORTS1(nsKeygenThread, nsIKeygenThread)
 
 
 nsKeygenThread::nsKeygenThread()

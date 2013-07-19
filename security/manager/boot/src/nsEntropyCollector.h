@@ -20,7 +20,7 @@ class nsEntropyCollector : public nsIBufEntropyCollector
     nsEntropyCollector();
     virtual ~nsEntropyCollector();
 
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSIENTROPYCOLLECTOR
     NS_DECL_NSIBUFENTROPYCOLLECTOR
 
