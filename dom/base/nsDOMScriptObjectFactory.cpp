@@ -209,7 +209,7 @@ nsresult NS_GetScriptRuntimeByID(uint32_t aScriptTypeID,
 }
 
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsDOMExceptionProvider, nsIExceptionProvider)
+NS_IMPL_ISUPPORTS1(nsDOMExceptionProvider, nsIExceptionProvider)
 
 NS_IMETHODIMP
 nsDOMExceptionProvider::GetException(nsresult result,

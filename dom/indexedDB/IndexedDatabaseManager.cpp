@@ -51,7 +51,7 @@ int32_t gClosed = 0;
 class AsyncDeleteFileRunnable MOZ_FINAL : public nsIRunnable
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIRUNNABLE
 
   AsyncDeleteFileRunnable(FileManager* aFileManager, int64_t aFileId);
@@ -64,7 +64,7 @@ private:
 class GetFileReferencesHelper MOZ_FINAL : public nsIRunnable
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIRUNNABLE
 
   GetFileReferencesHelper(const nsACString& aOrigin,
@@ -611,8 +611,8 @@ AsyncDeleteFileRunnable::AsyncDeleteFileRunnable(FileManager* aFileManager,
 {
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(AsyncDeleteFileRunnable,
-                              nsIRunnable)
+NS_IMPL_ISUPPORTS1(AsyncDeleteFileRunnable,
+                   nsIRunnable)
 
 NS_IMETHODIMP
 AsyncDeleteFileRunnable::Run()
@@ -683,8 +683,8 @@ GetFileReferencesHelper::DispatchAndReturnFileReferences(int32_t* aMemRefCnt,
   return NS_OK;
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(GetFileReferencesHelper,
-                              nsIRunnable)
+NS_IMPL_ISUPPORTS1(GetFileReferencesHelper,
+                   nsIRunnable)
 
 NS_IMETHODIMP
 GetFileReferencesHelper::Run()

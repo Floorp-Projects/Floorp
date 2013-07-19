@@ -36,7 +36,8 @@ protected:
   ~DeviceStorageRequestParent();
 
 private:
-  nsAutoRefCnt mRefCnt;
+  ThreadSafeAutoRefCnt mRefCnt;
+  NS_DECL_OWNINGTHREAD
   DeviceStorageParams mParams;
 
   class CancelableRunnable : public nsRunnable

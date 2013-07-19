@@ -27,7 +27,7 @@ MemoryOutputStream::Create(uint64_t aSize)
   return stream.forget();
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(MemoryOutputStream, nsIOutputStream)
+NS_IMPL_ISUPPORTS1(MemoryOutputStream, nsIOutputStream)
 
 NS_IMETHODIMP
 MemoryOutputStream::Close()

@@ -51,6 +51,6 @@ public:
 class nsDOMExceptionProvider MOZ_FINAL : public nsIExceptionProvider
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIEXCEPTIONPROVIDER
 };

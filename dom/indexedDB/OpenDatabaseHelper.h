@@ -53,7 +53,7 @@ public:
                  "Can't be for deletion and request a version!");
   }
 
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIRUNNABLE
 
   nsresult Init();
