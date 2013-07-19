@@ -80,7 +80,7 @@ public:
   virtual ~MediaDocumentStreamListener();
   void SetStreamListener(nsIStreamListener *aListener);
 
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
 
   NS_DECL_NSIREQUESTOBSERVER
 

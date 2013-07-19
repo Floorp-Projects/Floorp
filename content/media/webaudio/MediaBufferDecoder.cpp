@@ -66,7 +66,7 @@ public:
   explicit BufferDecoder(MediaResource* aResource);
   virtual ~BufferDecoder();
 
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
 
   // This has to be called before decoding begins
   void BeginDecoding(nsIThread* aDecodeThread)
@@ -126,7 +126,7 @@ private:
   nsRefPtr<MediaResource> mResource;
 };
 
-NS_IMPL_THREADSAFE_ISUPPORTS0(BufferDecoder)
+NS_IMPL_ISUPPORTS0(BufferDecoder)
 
 BufferDecoder::BufferDecoder(MediaResource* aResource)
   : mReentrantMonitor("BufferDecoder")
