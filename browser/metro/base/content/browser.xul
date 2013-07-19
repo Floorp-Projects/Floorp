@@ -196,31 +196,31 @@
 
           <scrollbox id="start-scrollbox" observes="bcast_preciseInput" flex="1">
             <vbox id="start-topsites" class="meta-section">
-              <label class="meta-section-title wide-title" value="&startTopSitesHeader.label;"/>
+              <label class="meta-section-title wide-title" value="&topSitesHeader.label;"/>
               <label class="meta-section-title narrow-title" value="&snappedTopSitesHeader.label;"
                 onclick="StartUI.onNarrowTitleClick('start-topsites-grid')"/>
-              <richgrid id="start-topsites-grid" noun="topsite" rows="3" columns="3" tiletype="thumbnail" seltype="multiple" flex="1" expanded="true"/>
+              <richgrid id="start-topsites-grid" set-name="topSites" rows="3" columns="3" tiletype="thumbnail" seltype="multiple" flex="1" expanded="true"/>
             </vbox>
 
             <vbox id="start-bookmarks" class="meta-section">
-              <label class="meta-section-title wide-title" value="&startBookmarksHeader.label;"/>
+              <label class="meta-section-title wide-title" value="&bookmarksHeader.label;"/>
               <label class="meta-section-title narrow-title" value="&snappedBookmarksHeader.label;"
                 onclick="StartUI.onNarrowTitleClick('start-bookmarks-grid')"/>
-              <richgrid id="start-bookmarks-grid" noun="bookmark" seltype="multiple" flex="1"/>
+              <richgrid id="start-bookmarks-grid" set-name="bookmarks" seltype="multiple" flex="1"/>
             </vbox>
 
             <vbox id="start-history" class="meta-section">
-              <label class="meta-section-title wide-title" value="&startHistoryHeader.label;"/>
-              <label class="meta-section-title narrow-title" value="&snappedHistoryHeader.label;"
+              <label class="meta-section-title wide-title" value="&recentHistoryHeader.label;"/>
+              <label class="meta-section-title narrow-title" value="&snappedRecentHistoryHeader.label;"
                 onclick="StartUI.onNarrowTitleClick('start-history-grid')"/>
-              <richgrid id="start-history-grid" noun="history" seltype="multiple" flex="1"/>
+              <richgrid id="start-history-grid" set-name="recentHistory" seltype="multiple" flex="1"/>
             </vbox>
 
             <vbox id="start-remotetabs" class="meta-section">
-              <label class="meta-section-title wide-title" value="&startRemoteTabsHeader.label;"/>
+              <label class="meta-section-title wide-title" value="&remoteTabsHeader.label;"/>
               <label id="snappedRemoteTabsLabel" class="meta-section-title narrow-title" value="&snappedRemoteTabsHeader.label;"
                 onclick="StartUI.onNarrowTitleClick('start-remotetabs-grid')"/>
-              <richgrid id="start-remotetabs-grid" noun="tab" seltype="multiple" flex="1"/>
+              <richgrid id="start-remotetabs-grid" set-name="remoteTabs" seltype="multiple" flex="1"/>
             </vbox>
 
             <!-- Spacer to take extra space in snapped mode. -->
@@ -311,16 +311,16 @@
 
       <deck id="panel-items" selectedIndex="0" flex="1" >
         <scrollbox id="bookmarks-container" flex="1">
-          <richgrid id="bookmarks-list" noun="bookmark" class="canSnapTiles"
-                    seltype="multiple" flex="1"/>
+          <richgrid id="bookmarks-list" class="canSnapTiles"
+                    set-name="bookmarks" seltype="multiple" flex="1"/>
         </scrollbox>
         <scrollbox id="history-container" flex="1">
-          <richgrid id="history-list" noun="history" class="canSnapTiles"
-                    seltype="multiple" flex="1"/>
+          <richgrid id="history-list" class="canSnapTiles"
+                    set-name="recentHistory" seltype="multiple" flex="1"/>
         </scrollbox>
         <scrollbox id="remotetabs-container" flex="1">
-          <richgrid id="remotetabs-list" noun="tab" class="canSnapTiles"
-                    seltype="single" flex="1"/>
+          <richgrid id="remotetabs-list" class="canSnapTiles"
+                    set-name="remoteTabs" seltype="single" flex="1"/>
         </scrollbox>
         <vbox id="console-container" flex="1">
           <vbox id="console-header" class="panel-list">
@@ -374,18 +374,18 @@
     <!-- Context button bar -->
     <appbar id="contextappbar">
       <toolbar id="contextualactions-tray" labelled="true" flex="1">
-        <toolbarbutton id="delete-selected-button" class="appbar-secondary"
-                       modifies-noun="true" hidden="true" fade="true"
-                       oncommand="Appbar.dispatchContextualAction('delete')"/>
-        <toolbarbutton id="restore-selected-button" class="appbar-secondary"
-                       modifies-noun="true" hidden="true" fade="true"
-                       oncommand="Appbar.dispatchContextualAction('restore')"/>
         <toolbarbutton id="pin-selected-button" class="appbar-secondary"
-                       modifies-noun="true" hidden="true" fade="true"
+                       label-uses-set-name="true" hidden="true" fade="true"
                        oncommand="Appbar.dispatchContextualAction('pin')"/>
         <toolbarbutton id="unpin-selected-button" class="appbar-secondary"
-                       modifies-noun="true" hidden="true" fade="true"
+                       label-uses-set-name="true" hidden="true" fade="true"
                        oncommand="Appbar.dispatchContextualAction('unpin')"/>
+        <toolbarbutton id="delete-selected-button" class="appbar-secondary"
+                       hidden="true" fade="true"
+                       oncommand="Appbar.dispatchContextualAction('delete')"/>
+        <toolbarbutton id="restore-selected-button" class="appbar-secondary"
+                       hidden="true" fade="true"
+                       oncommand="Appbar.dispatchContextualAction('restore')"/>
         <toolbarbutton id="clear-selected-button" class="appbar-secondary"
                        hidden="true" fade="true"
                        oncommand="Appbar.dispatchContextualAction('clear')"/>
