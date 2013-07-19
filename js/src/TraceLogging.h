@@ -23,6 +23,8 @@ class TraceLogging
         YARR_JIT_STOP,
         GC_START,
         GC_STOP,
+        MINOR_GC_START,
+        MINOR_GC_STOP,
         INFO_ENGINE_INTERPRETER,
         INFO_ENGINE_BASELINE,
         INFO_ENGINE_IONMONKEY,

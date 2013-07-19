@@ -70,6 +70,8 @@ const char* const TraceLogging::type_name[] = {
     "stop,yarr_jit_execute",
     "start,gc",
     "stop,gc",
+    "start,minor_gc",
+    "stop,minor_gc",
     "info,engine,interpreter",
     "info,engine,baseline",
     "info,engine,ionmonkey"
