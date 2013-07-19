@@ -1676,7 +1676,7 @@ skip-if(B2G) == 665597-1.html 665597-1-ref.html
 skip-if(B2G) == 665597-2.html 665597-2-ref.html
 == 668319-1.xul about:blank
 != 669015-1.xul 669015-1-notref.xul
-fuzzy-if(azureSkiaGL,14,2000) == 670442-1.html 670442-1-ref.html
+skip-if(azureSkiaGL) == 670442-1.html 670442-1-ref.html
 == 670467-1.html 670467-1-ref.html
 == 670467-2.html 670467-2-ref.html
 == 690164-1.html 690164-1-ref.html
