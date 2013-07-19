@@ -4871,7 +4871,7 @@ CheckFunctionsSequential(ModuleCompiler &m)
     return true;
 }
 
-#ifdef JS_PARALLEL_COMPILATION
+#ifdef JS_WORKER_THREADS
 // State of compilation as tracked and updated by the main thread.
 struct ParallelGroupState
 {
@@ -5063,7 +5063,7 @@ CheckFunctionsParallel(ModuleCompiler &m)
     }
     return true;
 }
-#endif // JS_PARALLEL_COMPILATION
+#endif // JS_WORKER_THREADS
 
 static bool
 CheckFuncPtrTable(ModuleCompiler &m, ParseNode *var)
@@ -6311,7 +6311,7 @@ CheckModule(JSContext *cx, AsmJSParser &parser, ParseNode *stmtList,
     if (!CheckModuleGlobals(m))
         return false;
 
-#ifdef JS_PARALLEL_COMPILATION
+#ifdef JS_WORKER_THREADS
     if (OffThreadCompilationEnabled(cx)) {
         if (!CheckFunctionsParallel(m))
             return false;
@@ -6369,9 +6369,9 @@ js::CompileAsmJS(JSContext *cx, AsmJSParser &parser, ParseNode *stmtList, bool *
     if (!EnsureAsmJSSignalHandlersInstalled(cx->runtime()))
         return Warn(cx, JSMSG_USE_ASM_TYPE_FAIL, "Platform missing signal handler support");
 
-# ifdef JS_PARALLEL_COMPILATION
+# ifdef JS_WORKER_THREADS
     if (OffThreadCompilationEnabled(cx)) {
-        if (!EnsureParallelCompilationInitialized(cx->runtime()))
+        if (!EnsureWorkerThreadsInitialized(cx->runtime()))
             return Warn(cx, JSMSG_USE_ASM_TYPE_FAIL, "Failed compilation thread initialization");
     }
 # endif
