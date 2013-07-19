@@ -84,13 +84,8 @@ function testOff() {
 function testSearching() {
   log("Test 4: Searching.");
   // Set emulator data state to 'searching' and verify
-
-  // Bug 819533: WebMobileConnection data/voice state incorrect when emulator
-  // data state is 'searching'. So until fixed, expect 'registered'.
-
-  // changeDataStateAndVerify("searching", "searching", testDenied);
-  log("* When Bug 819533 is fixed, change this test to expect 'searching' *");
-  changeDataStateAndVerify("searching", "registered", testDenied);
+  // Expect mobileConnection.data.state to be 'searching'
+  changeDataStateAndVerify("searching", "searching", testDenied);
 }
 
 function testDenied() {
