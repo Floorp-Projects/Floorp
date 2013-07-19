@@ -157,7 +157,7 @@ nsXPCWrappedJS::AddRef(void)
 {
     if (!MOZ_LIKELY(NS_IsMainThread() || NS_IsCycleCollectorThread()))
         MOZ_CRASH();
-    nsrefcnt cnt = NS_AtomicIncrementRefcnt(mRefCnt);
+    nsrefcnt cnt = ++mRefCnt;
     NS_LOG_ADDREF(this, cnt, "nsXPCWrappedJS", sizeof(*this));
 
     if (2 == cnt && IsValid()) {
@@ -197,7 +197,7 @@ nsXPCWrappedJS::Release(void)
 
 do_decrement:
 
-    nsrefcnt cnt = NS_AtomicDecrementRefcnt(mRefCnt);
+    nsrefcnt cnt = --mRefCnt;
     NS_LOG_RELEASE(this, cnt, "nsXPCWrappedJS");
 
     if (0 == cnt) {

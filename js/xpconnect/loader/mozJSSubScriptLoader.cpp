@@ -62,7 +62,7 @@ mozJSSubScriptLoader::~mozJSSubScriptLoader()
     /* empty */
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(mozJSSubScriptLoader, mozIJSSubScriptLoader)
+NS_IMPL_ISUPPORTS1(mozJSSubScriptLoader, mozIJSSubScriptLoader)
 
 static nsresult
 ReportError(JSContext *cx, const char *msg)
