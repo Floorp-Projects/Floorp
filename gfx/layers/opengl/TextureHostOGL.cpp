@@ -354,6 +354,22 @@ SurfaceStreamHostOGL::SwapTexturesImpl(const SurfaceDescriptor& aImage,
 {
   MOZ_ASSERT(aImage.type() == SurfaceDescriptor::TSurfaceStreamDescriptor,
              "Invalid descriptor");
+
+  mStreamGL = nullptr;
+
+  if (aImage.type() == SurfaceDescriptor::TSurfaceStreamDescriptor) {
+    // Bug 894405
+    //
+    // The SurfaceStream's GLContext was refed before being passed up to us, so
+    // we need to ensure it gets unrefed when we are finished.
+    const SurfaceStreamDescriptor& streamDesc =
+        aImage.get_SurfaceStreamDescriptor();
+
+    SurfaceStream* surfStream = SurfaceStream::FromHandle(streamDesc.handle());
+    if (surfStream) {
+      mStreamGL = dont_AddRef(surfStream->GLContext());
+    }
+  } 
 }
 
 void

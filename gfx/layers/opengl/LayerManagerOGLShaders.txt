@@ -62,6 +62,7 @@
 uniform mat4 uMatrixProj;
 uniform mat4 uLayerQuadTransform;
 uniform mat4 uLayerTransform;
+uniform mat4 uTextureTransform;
 uniform vec4 uRenderTargetOffset;
 
 attribute vec4 aVertexCoord;
@@ -123,7 +124,7 @@ $VERTEX_MASK_STUFF<mask>$
   finalPosition.xyz *= finalPosition.w;
   finalPosition = uMatrixProj * finalPosition;
 
-  vTexCoord = aTexCoord;
+  vTexCoord = (uTextureTransform * vec4(aTexCoord.x, aTexCoord.y, 0.0, 1.0)).xy;
   gl_Position = finalPosition;
 }
 @end
@@ -214,24 +215,6 @@ $FRAGMENT_CALC_MASK<mask>$
   gl_FragColor = texture2D(uTexture, vTexCoord) * uLayerOpacity * mask;
 }
 @end
-
-// Single texture in RGBA format for use with GL_TEXTURE_EXTERNAL_OES
-@shader sRGBATextureLayerExternal<mask:,Mask,Mask3D>FS
-#extension GL_OES_EGL_image_external : require
-
-#define MEDIUMP_SHADER 1
-$LAYER_FRAGMENT<mask>$
-
-uniform samplerExternalOES uTexture;
-uniform mat4 uTextureTransform;
-
-void main()
-{
-$FRAGMENT_CALC_MASK<mask>$
-  gl_FragColor = texture2D(uTexture, (uTextureTransform * vec4(vTexCoord.x, vTexCoord.y, 0.0, 1.0)).xy) * uLayerOpacity * mask;
-}
-@end
-
 
 // Single texture in RGBA format, but with a Rect texture.
 // Container layer needs this to render a FBO group.
