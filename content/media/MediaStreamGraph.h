@@ -7,6 +7,7 @@
 #define MOZILLA_MEDIASTREAMGRAPH_H_
 
 #include "mozilla/Mutex.h"
+#include "mozilla/LinkedList.h"
 #include "AudioStream.h"
 #include "nsTArray.h"
 #include "nsIRunnable.h"
@@ -257,7 +258,7 @@ struct AudioChunk;
  * for those objects in arbitrary order and the MediaStreamGraph has to be able
  * to handle this.
  */
-class MediaStream {
+class MediaStream : public mozilla::LinkedListElement<MediaStream> {
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaStream)
 
