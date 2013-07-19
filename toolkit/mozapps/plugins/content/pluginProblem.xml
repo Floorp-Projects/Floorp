@@ -74,8 +74,10 @@
     </content>
     <implementation>
       <constructor>
-        // Notify browser-plugins.js that we were attached
-        this.dispatchEvent(new CustomEvent("PluginBindingAttached"));
+        // Notify browser-plugins.js that we were attached, on a delay because
+        // this binding doesn't complete layout until the constructor
+        // completes.
+        setTimeout(() => { this.dispatchEvent(new CustomEvent("PluginBindingAttached")) }, 0);
       </constructor>
     </implementation>
 </binding>
