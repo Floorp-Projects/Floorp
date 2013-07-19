@@ -23,11 +23,10 @@ addLoadEvent(function() {
   document.designMode = "on";
   var content = document.getElementById("content");
   getSelection().collapse(content, 0);
-  var html1 = "<test:tag>test:tag</test:tag>";
-  var html2 = "<a href=\"http://mozilla.org/\" test:attr=\"test:attr\" custom=\"value\">link</a>";
-  document.execCommand("insertHTML", false, html1);
-  document.execCommand("insertHTML", false, html2);
-  is(content.innerHTML, html1 + html2,
+  var html = "<test:tag>test:tag</test:tag>" +
+             "<a href=\"http://mozilla.org/\" test:attr=\"test:attr\" custom=\"value\">link</a>";
+  document.execCommand("insertHTML", false, html);
+  is(content.innerHTML, html,
      "The custom tags and attributes should be inserted into the document using the insertHTML command");
   SimpleTest.finish();
 });

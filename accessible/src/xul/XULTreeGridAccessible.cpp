@@ -453,6 +453,7 @@ XULTreeGridCellAccessible::
 {
   mParent = aRowAcc;
   mStateFlags |= eSharedNode;
+  mGenericTypes |= eTableCell;
 
   NS_ASSERTION(mTreeView, "mTreeView is null");
 

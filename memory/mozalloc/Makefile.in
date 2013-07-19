@@ -24,11 +24,6 @@ else
 FORCE_SHARED_LIB= 1
 endif
 
-# TODO: we do this in crashreporter and storage/src too, should be centralized
-ifeq ($(OS_ARCH),Linux)
-DEFINES += -DXP_LINUX
-endif
-
 ifeq (,$(filter-out OS2,$(OS_ARCH)))
 # The strndup declaration in string.h is in an ifdef __USE_GNU section
 DEFINES		+= -D_GNU_SOURCE

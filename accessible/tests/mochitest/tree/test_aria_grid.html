@@ -151,6 +151,26 @@
 
       testAccessibleTree("crazy_grid4", accTree);
 
+      //////////////////////////////////////////////////////////////////////////
+      // grids that could contain whitespace accessibles but shouldn't.
+
+      var accTree =
+        { TREE_TABLE: [
+          { ROW: [
+            { GRID_CELL: [
+              { TEXT_LEAF: [ ] }
+            ] },
+            { GRID_CELL: [
+              { TEXT_LEAF: [ ] }
+            ] },
+            { GRID_CELL: [
+              { TEXT_LEAF: [ ] }
+            ] }
+          ] },
+        ] };
+
+      testAccessibleTree("whitespaces-grid", accTree);
+
       SimpleTest.finish();
     }
 
@@ -225,6 +245,14 @@
           </tr>
         </table>
       </div>
+    </div>
+  </div>
+
+  <div role="treegrid" id="whitespaces-grid">
+    <div role="row" aria-selected="false" tabindex="-1">
+      <span role="gridcell">03:30PM-04:30PM</span>
+      <span role="gridcell" style="font-weight:bold;">test</span>
+      <span role="gridcell">a user1</span>
     </div>
   </div>
 </body>

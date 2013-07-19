@@ -15,7 +15,9 @@ CPP_UNIT_TESTS = \
   TestAtomics.cpp \
   TestBloomFilter.cpp \
   TestCasting.cpp \
+  TestCeilingFloor.cpp \
   TestCheckedInt.cpp \
+  TestCountZeroes.cpp \
   TestEndian.cpp \
   TestEnumSet.cpp \
   TestSHA1.cpp \

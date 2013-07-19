@@ -31,6 +31,15 @@ pref("extensions.blocklist.itemURL", "https://addons.mozilla.org/%LOCALE%/%APP%/
 
 pref("full-screen-api.enabled", true);
 
+// IndexedDB
+pref("dom.indexedDB.enabled", true);
+pref("indexedDB.feature.enabled", true);
+pref("dom.indexedDB.warningQuota", 50);
+
+// Offline cache prefs
+pref("browser.offline-apps.notify", false);
+pref("browser.cache.offline.enable", true);
+pref("offline-apps.allow_by_default", true);
 
 // Enable smooth scrolling
 pref("general.smoothScroll", true);

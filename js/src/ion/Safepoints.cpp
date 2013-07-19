@@ -5,11 +5,16 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ion/Safepoints.h"
+
+#include "mozilla/MathAlgorithms.h"
+
 #include "ion/IonSpewer.h"
 #include "ion/LIR.h"
 
 using namespace js;
 using namespace ion;
+
+using mozilla::FloorLog2;
 
 bool
 SafepointWriter::init(uint32_t slotCount)
@@ -381,8 +386,7 @@ SafepointReader::getSlotFromBitmap(uint32_t *slot)
 
     // The current chunk still has bits in it, so get the next bit, then mask
     // it out of the slot chunk.
-    uint32_t bit;
-    JS_FLOOR_LOG2(bit, currentSlotChunk_);
+    uint32_t bit = FloorLog2(currentSlotChunk_);
     currentSlotChunk_ &= ~(1 << bit);
 
     // Return the slot, taking care to add 1 back in since it was subtracted

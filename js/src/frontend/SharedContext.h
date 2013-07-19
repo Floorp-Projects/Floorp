@@ -144,23 +144,28 @@ class GlobalSharedContext;
 class Directives
 {
     bool strict_;
+    bool asmJS_;
 
   public:
-    explicit Directives(bool strict) : strict_(strict) {}
+    explicit Directives(bool strict) : strict_(strict), asmJS_(false) {}
     template <typename ParseHandler> explicit Directives(ParseContext<ParseHandler> *parent);
 
     void setStrict() { strict_ = true; }
     bool strict() const { return strict_; }
 
+    void setAsmJS() { asmJS_ = true; }
+    bool asmJS() const { return asmJS_; }
+
     Directives &operator=(Directives rhs) {
         strict_ = rhs.strict_;
+        asmJS_ = rhs.asmJS_;
         return *this;
     }
     bool operator==(const Directives &rhs) const {
-        return strict_ == rhs.strict_;
+        return strict_ == rhs.strict_ && asmJS_ == rhs.asmJS_;
     }
     bool operator!=(const Directives &rhs) const {
-        return strict_ != rhs.strict_;
+        return !(*this == rhs);
     }
 };
 
@@ -258,10 +263,10 @@ class FunctionBox : public ObjectBox, public SharedContext
     uint32_t        bufEnd;
     uint32_t        startLine;
     uint32_t        startColumn;
-    uint32_t        asmStart;               /* offset of the "use asm" directive, if present */
     uint16_t        ndefaults;
     bool            inWith:1;               /* some enclosing scope is a with-statement */
     bool            inGenexpLambda:1;       /* lambda from generator expression */
+    bool            hasDestructuringArgs:1; /* arguments list contains destructuring expression */
     bool            useAsm:1;               /* function contains "use asm" directive */
     bool            insideUseAsm:1;         /* nested function of function of "use asm" directive */
 

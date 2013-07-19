@@ -32,7 +32,7 @@ function run_test()
 {
   httpserv = new HttpServer();
   httpserv.registerDirectory("/", do_get_cwd());
-  httpserv.start(4444);
+  httpserv.start(-1);
 
   // our download listener
   var listener = {
@@ -59,6 +59,6 @@ function run_test()
            getService(Ci.nsIObserverService);
   os.addObserver(observer, "dl-start", false);
 
-  addDownload();
+  addDownload(httpserv);
   do_test_pending();
 }

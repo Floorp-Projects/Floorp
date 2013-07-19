@@ -244,9 +244,29 @@ MetroWidget::Destroy()
     return NS_OK;
   Log("[%X] %s mWnd=%X type=%d", this, __FUNCTION__, mWnd, mWindowType);
   mOnDestroyCalled = true;
+
+  nsCOMPtr<nsIWidget> kungFuDeathGrip(this);
+
   RemoveSubclass();
+  NotifyWindowDestroyed();
+
+  // Prevent the widget from sending additional events.
+  mWidgetListener = nullptr;
+  mAttachedWidgetListener = nullptr;
+
+  // Release references to children, device context, toolkit, and app shell.
+  nsBaseWidget::Destroy();
+  nsBaseWidget::OnDestroy();
+
+  if (mLayerManager) {
+    mLayerManager->Destroy();
+  }
+
+  mLayerManager = nullptr;
   mView = nullptr;
   mIdleService = nullptr;
+  mWnd = NULL;
+
   return NS_OK;
 }
 
