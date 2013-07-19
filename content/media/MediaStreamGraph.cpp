@@ -489,10 +489,10 @@ MediaStreamGraphImpl::UpdateStreamOrderForStream(nsTArray<MediaStream*>* aStack,
 void
 MediaStreamGraphImpl::UpdateStreamOrder()
 {
-  nsTArray<nsRefPtr<MediaStream> > oldStreams;
-  oldStreams.SwapElements(mStreams);
-  for (uint32_t i = 0; i < oldStreams.Length(); ++i) {
-    MediaStream* stream = oldStreams[i];
+  mOldStreams.SwapElements(mStreams);
+  mStreams.ClearAndRetainStorage();
+  for (uint32_t i = 0; i < mOldStreams.Length(); ++i) {
+    MediaStream* stream = mOldStreams[i];
     stream->mHasBeenOrdered = false;
     stream->mIsConsumed = false;
     stream->mIsOnOrderingStack = false;
@@ -504,8 +504,8 @@ MediaStreamGraphImpl::UpdateStreamOrder()
   }
 
   nsAutoTArray<MediaStream*,10> stack;
-  for (uint32_t i = 0; i < oldStreams.Length(); ++i) {
-    nsRefPtr<MediaStream>& s = oldStreams[i];
+  for (uint32_t i = 0; i < mOldStreams.Length(); ++i) {
+    nsRefPtr<MediaStream>& s = mOldStreams[i];
     if (!s->mAudioOutputs.IsEmpty() || !s->mVideoOutputs.IsEmpty()) {
       MarkConsumed(s);
     }
