@@ -3229,6 +3229,53 @@ SyntaxParse(JSContext *cx, unsigned argc, jsval *vp)
     return true;
 }
 
+#ifdef JS_THREADSAFE
+
+static JSBool
+OffThreadCompileScript(JSContext *cx, unsigned argc, jsval *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    if (args.length() < 1) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_MORE_ARGS_NEEDED,
+                             "offThreadCompileScript", "0", "s");
+        return false;
+    }
+    if (!args[0].isString()) {
+        const char *typeName = JS_GetTypeName(cx, JS_TypeOfValue(cx, args[0]));
+        JS_ReportError(cx, "expected string to parse, got %s", typeName);
+        return false;
+    }
+
+    JSString *scriptContents = args[0].toString();
+    CompileOptions options(cx);
+    options.setFileAndLine("<string>", 1)
+           .setCompileAndGo(true)
+           .setSourcePolicy(CompileOptions::NO_SOURCE);
+
+    const jschar *chars = JS_GetStringCharsZ(cx, scriptContents);
+    if (!chars)
+        return false;
+    size_t length = JS_GetStringLength(scriptContents);
+
+    // Prevent the string contents from ever being GC'ed. This will leak memory
+    // but since the compiled script is never consumed there isn't much choice.
+    JSString **permanentRoot = cx->new_<JSString *>();
+    if (!permanentRoot)
+        return false;
+    *permanentRoot = scriptContents;
+    if (!JS_AddStringRoot(cx, permanentRoot))
+        return false;
+
+    if (!StartOffThreadParseScript(cx, options, chars, length))
+        return false;
+
+    args.rval().setUndefined();
+    return true;
+}
+
+#endif // JS_THREADSAFE
+
 struct FreeOnReturn
 {
     JSContext *cx;
@@ -3797,6 +3844,12 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
     JS_FN_HELP("syntaxParse", SyntaxParse, 1, 0,
 "syntaxParse(code)",
 "  Check the syntax of a string, returning success value"),
+
+#ifdef JS_THREADSAFE
+    JS_FN_HELP("offThreadCompileScript", OffThreadCompileScript, 1, 0,
+"offThreadCompileScript(code)",
+"  Trigger an off thread parse/emit for the input string"),
+#endif
 
     JS_FN_HELP("timeout", Timeout, 1, 0,
 "timeout([seconds], [func])",
