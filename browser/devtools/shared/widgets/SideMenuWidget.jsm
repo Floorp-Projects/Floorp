@@ -25,28 +25,21 @@ this.EXPORTED_SYMBOLS = ["SideMenuWidget"];
  *
  * @param nsIDOMNode aNode
  *        The element associated with the widget.
- * @param Object aOptions
- *        - showArrows: Specifies if items in this container should display
- *          horizontal arrows.
- *        - showCheckboxes: Specifies if items in this container should display
- *          checkboxes.
+ * @param boolean aShowArrows
+ *        Specifies if items in this container should display horizontal arrows.
  */
-this.SideMenuWidget = function SideMenuWidget(aNode, aOptions={}) {
+this.SideMenuWidget = function SideMenuWidget(aNode, aShowArrows = true) {
   this.document = aNode.ownerDocument;
   this.window = this.document.defaultView;
   this._parent = aNode;
-
-  let { showArrows, showCheckboxes } = aOptions;
-  this._showArrows = showArrows || false;
-  this._showCheckboxes = showCheckboxes || false;
+  this._showArrows = aShowArrows;
 
   // Create an internal scrollbox container.
   this._list = this.document.createElement("scrollbox");
   this._list.className = "side-menu-widget-container";
   this._list.setAttribute("flex", "1");
   this._list.setAttribute("orient", "vertical");
-  this._list.setAttribute("with-arrow", showArrows);
-  this._list.setAttribute("with-checkboxes", showCheckboxes);
+  this._list.setAttribute("with-arrow", aShowArrows);
   this._list.setAttribute("tabindex", "0");
   this._list.addEventListener("keypress", e => this.emit("keyPress", e), false);
   this._list.addEventListener("mousedown", e => this.emit("mousePress", e), false);
@@ -98,12 +91,10 @@ SideMenuWidget.prototype = {
    *        A tooltip attribute for the displayed item.
    * @param string aGroup [optional]
    *        The group to place the displayed item into.
-   * @param Object aAttachment [optional]
-   *        Extra data for the user.
    * @return nsIDOMNode
    *         The element associated with the displayed item.
    */
-  insertItemAt: function(aIndex, aContents, aTooltip = "", aGroup = "", aAttachment={}) {
+  insertItemAt: function(aIndex, aContents, aTooltip = "", aGroup = "") {
     aTooltip = NetworkHelper.convertToUnicode(unescape(aTooltip));
     aGroup = NetworkHelper.convertToUnicode(unescape(aGroup));
 
@@ -124,7 +115,7 @@ SideMenuWidget.prototype = {
       (this._list.scrollTop + this._list.clientHeight >= this._list.scrollHeight);
 
     let group = this._getMenuGroupForName(aGroup);
-    let item = this._getMenuItemForGroup(group, aContents, aTooltip, aAttachment);
+    let item = this._getMenuItemForGroup(group, aContents, aTooltip);
     let element = item.insertSelfAt(aIndex);
 
     if (this.maintainSelectionVisible) {
@@ -406,17 +397,14 @@ SideMenuWidget.prototype = {
    *        The string or node displayed in the container.
    * @param string aTooltip [optional]
    *        A tooltip attribute for the displayed item.
-   * @param object aAttachment [optional]
-   *        The attachement object.
    */
-  _getMenuItemForGroup: function(aGroup, aContents, aTooltip, aAttachment) {
-    return new SideMenuItem(aGroup, aContents, aTooltip, this._showArrows, this._showCheckboxes, aAttachment);
+  _getMenuItemForGroup: function(aGroup, aContents, aTooltip) {
+    return new SideMenuItem(aGroup, aContents, aTooltip, this._showArrows);
   },
 
   window: null,
   document: null,
   _showArrows: false,
-  _showCheckboxes: false,
   _parent: null,
   _list: null,
   _boxObject: null,
@@ -539,30 +527,14 @@ SideMenuGroup.prototype = {
  *        The string or node displayed in the container.
  * @param boolean aArrowFlag
  *        True if a horizontal arrow should be shown.
- * @param boolean aCheckboxFlag
- *        True if a checkbox should be shown.
- * @param object aAttachment [optional]
- *        The attachment object.
  */
-function SideMenuItem(aGroup, aContents, aTooltip, aArrowFlag, aCheckboxFlag, aAttachment={}) {
+function SideMenuItem(aGroup, aContents, aTooltip, aArrowFlag) {
   this.document = aGroup.document;
   this.window = aGroup.window;
   this.ownerView = aGroup;
 
-  let makeCheckbox = () => {
-    let checkbox = this.document.createElement("checkbox");
-    checkbox.className = "side-menu-widget-item-checkbox";
-    checkbox.setAttribute("checked", aAttachment.checkboxState);
-    checkbox.setAttribute("tooltiptext", aAttachment.checkboxTooltip);
-    checkbox.addEventListener("command", function () {
-      ViewHelpers.dispatchEvent(checkbox, "check", {
-        checked: checkbox.checked,
-      });
-    }, false);
-    return checkbox;
-  };
-
-  if (aArrowFlag || aCheckboxFlag) {
+  // Show a horizontal arrow towards the content.
+  if (aArrowFlag) {
     let container = this._container = this.document.createElement("hbox");
     container.className = "side-menu-widget-item";
     container.setAttribute("tooltiptext", aTooltip);
@@ -570,22 +542,13 @@ function SideMenuItem(aGroup, aContents, aTooltip, aArrowFlag, aCheckboxFlag, aA
     let target = this._target = this.document.createElement("vbox");
     target.className = "side-menu-widget-item-contents";
 
-    // Show a checkbox before the content.
-    if (aCheckboxFlag) {
-      let checkbox = this._checkbox = makeCheckbox();
-      container.appendChild(checkbox);
-    }
+    let arrow = this._arrow = this.document.createElement("hbox");
+    arrow.className = "side-menu-widget-item-arrow";
 
     container.appendChild(target);
-
-    // Show a horizontal arrow towards the content.
-    if (aArrowFlag) {
-      let arrow = this._arrow = this.document.createElement("hbox");
-      arrow.className = "side-menu-widget-item-arrow";
-      container.appendChild(arrow);
-    }
+    container.appendChild(arrow);
   }
-  // Skip a few redundant nodes when no horizontal arrow or checkbox is shown.
+  // Skip a few redundant nodes when no horizontal arrow is shown.
   else {
     let target = this._target = this._container = this.document.createElement("hbox");
     target.className = "side-menu-widget-item side-menu-widget-item-contents";

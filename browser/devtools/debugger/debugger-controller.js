@@ -423,7 +423,6 @@ function StackFrames() {
   this._onResumed = this._onResumed.bind(this);
   this._onFrames = this._onFrames.bind(this);
   this._onFramesCleared = this._onFramesCleared.bind(this);
-  this._onBlackBoxChange = this._onBlackBoxChange.bind(this);
   this._afterFramesCleared = this._afterFramesCleared.bind(this);
   this.evaluate = this.evaluate.bind(this);
 }
@@ -448,7 +447,6 @@ StackFrames.prototype = {
     this.activeThread.addListener("resumed", this._onResumed);
     this.activeThread.addListener("framesadded", this._onFrames);
     this.activeThread.addListener("framescleared", this._onFramesCleared);
-    window.addEventListener("Debugger:BlackBoxChange", this._onBlackBoxChange, false);
     this._handleTabNavigation();
   },
 
@@ -464,7 +462,6 @@ StackFrames.prototype = {
     this.activeThread.removeListener("resumed", this._onResumed);
     this.activeThread.removeListener("framesadded", this._onFrames);
     this.activeThread.removeListener("framescleared", this._onFramesCleared);
-    window.removeEventListener("Debugger:BlackBoxChange", this._onBlackBoxChange, false);
   },
 
   /**
@@ -597,22 +594,12 @@ StackFrames.prototype = {
     // Make sure all the previous stackframes are removed before re-adding them.
     DebuggerView.StackFrames.empty();
 
-    let previousBlackBoxed = null;
     for (let frame of this.activeThread.cachedFrames) {
-      let { depth, where: { url, line }, isBlackBoxed } = frame;
+      let { depth, where: { url, line } } = frame;
       let frameLocation = NetworkHelper.convertToUnicode(unescape(url));
       let frameTitle = StackFrameUtils.getFrameTitle(frame);
 
-      if (isBlackBoxed) {
-        if (previousBlackBoxed == url) {
-          continue;
-        }
-        previousBlackBoxed = url;
-      } else {
-        previousBlackBoxed = null;
-      }
-
-      DebuggerView.StackFrames.addFrame(frameTitle, frameLocation, line, depth, isBlackBoxed);
+      DebuggerView.StackFrames.addFrame(frameTitle, frameLocation, line, depth);
     }
     if (this.currentFrame == null) {
       DebuggerView.StackFrames.selectedDepth = 0;
@@ -637,18 +624,6 @@ StackFrames.prototype = {
     // this is not necessary, and will result in a brief redraw flicker.
     // To avoid it, invalidate the UI only after a short time if necessary.
     window.setTimeout(this._afterFramesCleared, FRAME_STEP_CLEAR_DELAY);
-  },
-
-  /**
-   * Handler for the debugger's BlackBoxChange notification.
-   */
-  _onBlackBoxChange: function() {
-    if (this.activeThread.state == "paused") {
-      // We have to clear out the existing frames and refetch them to get their
-      // updated black boxed status.
-      this.activeThread._clearFrames();
-      this.activeThread.fillFrames(CALL_STACK_PAGE_SIZE);
-    }
   },
 
   /**
@@ -1023,27 +998,6 @@ SourceScripts.prototype = {
 
     // Signal that scripts have been added.
     window.dispatchEvent(document, "Debugger:AfterSourcesAdded");
-  },
-
-  /**
-   * Set the black boxed status of the given source.
-   *
-   * @param Object aSource
-   *        The source form.
-   * @param bool aBlackBoxFlag
-   *        True to black box the source, false to un-black box it.
-   */
-  blackBox: function(aSource, aBlackBoxFlag) {
-    const sourceClient = this.activeThread.source(aSource);
-    sourceClient[aBlackBoxFlag ? "blackBox" : "unblackBox"](function({ error, message }) {
-      if (error) {
-        let msg = "Could not toggle black boxing for "
-          + aSource.url + ": " + message;
-        dumpn(msg);
-        return void Cu.reportError(msg);
-      }
-      window.dispatchEvent(document, "Debugger:BlackBoxChange", sourceClient);
-    });
   },
 
   /**
