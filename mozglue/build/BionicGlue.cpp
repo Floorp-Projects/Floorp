@@ -15,6 +15,7 @@
 
 #define NS_EXPORT __attribute__ ((visibility("default")))
 
+#if ANDROID_VERSION < 17 || defined(MOZ_WIDGET_ANDROID)
 /* Android doesn't have pthread_atfork(), so we need to use our own. */
 struct AtForkFuncs {
   void (*prepare)(void);
@@ -59,11 +60,13 @@ private:
 };
 
 static std::vector<AtForkFuncs, SpecialAllocator<AtForkFuncs> > atfork;
+#endif
 
 #ifdef MOZ_WIDGET_GONK
 #include "cpuacct.h"
 #define WRAP(x) x
 
+#if ANDROID_VERSION < 17 || defined(MOZ_WIDGET_ANDROID)
 extern "C" NS_EXPORT int
 timer_create(clockid_t, struct sigevent*, timer_t*)
 {
@@ -71,12 +74,14 @@ timer_create(clockid_t, struct sigevent*, timer_t*)
   abort();
   return -1;
 }
+#endif
 
 #else
 #define cpuacct_add(x)
 #define WRAP(x) __wrap_##x
 #endif
 
+#if ANDROID_VERSION < 17 || defined(MOZ_WIDGET_ANDROID)
 extern "C" NS_EXPORT int
 WRAP(pthread_atfork)(void (*prepare)(void), void (*parent)(void), void (*child)(void))
 {
@@ -117,6 +122,7 @@ WRAP(fork)(void)
   }
   return pid;
 }
+#endif
 
 extern "C" NS_EXPORT int
 WRAP(raise)(int sig)
