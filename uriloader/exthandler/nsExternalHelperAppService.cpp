@@ -1084,8 +1084,8 @@ nsExternalHelperAppService::Observe(nsISupports *aSubject, const char *aTopic, c
 // begin external app handler implementation 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 
-NS_IMPL_THREADSAFE_ADDREF(nsExternalAppHandler)
-NS_IMPL_THREADSAFE_RELEASE(nsExternalAppHandler)
+NS_IMPL_ADDREF(nsExternalAppHandler)
+NS_IMPL_RELEASE(nsExternalAppHandler)
 
 NS_INTERFACE_MAP_BEGIN(nsExternalAppHandler)
    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIStreamListener)
