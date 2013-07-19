@@ -57,11 +57,11 @@ public:
 
   NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(nsXBLBinding)
 
-  nsXBLPrototypeBinding* PrototypeBinding() { return mPrototypeBinding; }
+  nsXBLPrototypeBinding* PrototypeBinding() const { return mPrototypeBinding; }
   nsIContent* GetAnonymousContent() { return mContent.get(); }
   nsXBLBinding* GetBindingWithContent();
 
-  nsXBLBinding* GetBaseBinding() { return mNextBinding; }
+  nsXBLBinding* GetBaseBinding() const { return mNextBinding; }
   void SetBaseBinding(nsXBLBinding *aBinding);
 
   nsIContent* GetBoundElement() { return mBoundElement; }

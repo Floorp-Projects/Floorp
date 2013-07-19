@@ -10,7 +10,7 @@
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
           xmlns:xbl="http://www.mozilla.org/xbl">
 
-  <binding id="autocomplete"
+  <binding id="autocomplete" role="xulcombobox"
            extends="chrome://global/content/bindings/textbox.xml#textbox">
     <resources>
       <stylesheet src="chrome://global/content/autocomplete.css"/>
@@ -44,7 +44,7 @@
       </xul:popupset>
     </content>
 
-    <implementation implements="nsIDOMXULMenuListElement, nsIAccessibleProvider">
+    <implementation implements="nsIDOMXULMenuListElement">
 
       <constructor><![CDATA[
         // XXX bug 90337 band-aid until we figure out what's going on here
@@ -79,17 +79,6 @@
         window.top.removeEventListener("DOMMenuBarActive", this.mMenuBarListener, true);
         this.mInputElt.controllers.removeController(this.mPasteController);
       ]]></destructor>
-
-      <!-- =================== nsIAccessibleProvider =================== -->
-
-      <property name="accessibleType" readonly="true">
-        <getter>
-          <![CDATA[
-            // Will be exposed as nsIAccessible::ROLE_AUTOCOMPLETE
-            return Components.interfaces.nsIAccessibleProvider.XULCombobox;
-          ]]>
-        </getter>
-      </property>
 
       <!-- =================== nsIAutoCompleteInput =================== -->
       <!-- XXX: This implementation is currently incomplete. -->

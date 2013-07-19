@@ -9,8 +9,8 @@
    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
    xmlns:xbl="http://www.mozilla.org/xbl">
   
-  <binding id="editor">
-    <implementation type="application/javascript" implements="nsIAccessibleProvider">
+  <binding id="editor" role="outerdoc">
+    <implementation type="application/javascript">
       <constructor>
         <![CDATA[
           // Make window editable immediately only
@@ -22,14 +22,6 @@
         ]]>
       </constructor>
       <destructor/>
-
-      <property name="accessibleType" readonly="true">
-        <getter>
-          <![CDATA[
-            return Components.interfaces.nsIAccessibleProvider.OuterDoc;
-          ]]>
-        </getter>
-      </property>
 
       <field name="_editorContentListener">
         <![CDATA[
