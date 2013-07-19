@@ -79,7 +79,7 @@ private:
   nsCString mSchemaDesc;
 
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
 
   StorageSQLiteMultiReporter(Service *aService) 
   : mService(aService)
@@ -216,7 +216,7 @@ private:
   }
 };
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(
+NS_IMPL_ISUPPORTS1(
   StorageSQLiteMultiReporter,
   nsIMemoryMultiReporter
 )
@@ -224,7 +224,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(
 ////////////////////////////////////////////////////////////////////////////////
 //// Service
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(
+NS_IMPL_ISUPPORTS2(
   Service,
   mozIStorageService,
   nsIObserver
