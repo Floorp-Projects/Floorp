@@ -36,18 +36,19 @@ function testShim() {
   is(Ci.nsIDOMLoadStatus, LoadStatus);
   is(Ci.nsIDOMOfflineResourceList, OfflineResourceList);
   is(Ci.nsIDOMRange, Range);
-  is(Ci.nsIDOMSVGFETurbulenceElement, SVGFETurbulenceElement);
-  is(Ci.nsIDOMSVGFEMorphologyElement, SVGFEMorphologyElement);
-  is(Ci.nsIDOMSVGFEConvolveMatrixElement, SVGFEConvolveMatrixElement);
-  is(Ci.nsIDOMSVGFEDisplacementMapElement, SVGFEDisplacementMapElement);
   is(Ci.nsIDOMSVGLength, SVGLength);
-  is(Ci.nsIDOMSVGUnitTypes, SVGUnitTypes);
   is(Ci.nsIDOMNodeFilter, NodeFilter);
   is(Ci.nsIDOMXPathNamespace, XPathNamespace);
   is(Ci.nsIDOMXPathResult, XPathResult);
   is(Ci.nsIDOMXULButtonElement, XULButtonElement);
   is(Ci.nsIDOMXULCheckboxElement, XULCheckboxElement);
   is(Ci.nsIDOMXULPopupElement, XULPopupElement);
+
+  // Test for Bug 895231
+  for (var k of Object.keys(Components.interfaces)) {
+    ok(SpecialPowers.Ci.hasOwnProperty(k),
+       k + " should be removed from the Components shim");
+  }
 }
 </script>
 </head>
