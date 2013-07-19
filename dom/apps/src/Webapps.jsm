@@ -2789,7 +2789,9 @@ this.DOMApplicationRegistry = {
       this.broadcastMessage("Webapps:Uninstall:Broadcast:Return:OK", appClone);
       // Catch exception on callback call to ensure notifying observers after
       try {
-        aOnSuccess();
+        if (aOnSuccess) {
+          aOnSuccess();
+        }
       } catch(ex) {
         Cu.reportError("DOMApplicationRegistry: Exception on app uninstall: " +
                        ex + "\n" + ex.stack);
