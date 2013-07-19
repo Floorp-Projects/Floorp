@@ -62,6 +62,7 @@
 using namespace mozilla;
 using namespace mozilla::css;
 using mozilla::image::ImageOps;
+using mozilla::CSSSizeOrRatio;
 
 static int gFrameTreeLockCount = 0;
 
@@ -2882,6 +2883,43 @@ nsCSSRendering::ComputeBackgroundPositioningArea(nsPresContext* aPresContext,
   return bgPositioningArea;
 }
 
+// Apply the CSS image sizing algorithm as it applies to background images.
+// See http://www.w3.org/TR/css3-background/#the-background-size .
+// aIntrinsicSize is the size that the background image 'would like to be'.
+// It can be found by calling nsImageRenderer::ComputeIntrinsicSize.
+static nsSize
+ComputeDrawnSizeForBackground(const CSSSizeOrRatio& aIntrinsicSize,
+                              const nsSize& aBgPositioningArea,
+                              const nsStyleBackground::Size& aLayerSize)
+{
+  // Size is dictated by cover or contain rules.
+  if (aLayerSize.mWidthType == nsStyleBackground::Size::eContain ||
+      aLayerSize.mWidthType == nsStyleBackground::Size::eCover) {
+    nsImageRenderer::FitType fitType =
+      aLayerSize.mWidthType == nsStyleBackground::Size::eCover
+        ? nsImageRenderer::COVER
+        : nsImageRenderer::CONTAIN;
+    return nsImageRenderer::ComputeConstrainedSize(aBgPositioningArea,
+                                                   aIntrinsicSize.mRatio,
+                                                   fitType);
+  }
+
+  // No cover/contain constraint, use default algorithm.
+  CSSSizeOrRatio specifiedSize;
+  if (aLayerSize.mWidthType == nsStyleBackground::Size::eLengthPercentage) {
+    specifiedSize.SetWidth(
+      aLayerSize.ResolveWidthLengthPercentage(aBgPositioningArea));
+  }
+  if (aLayerSize.mHeightType == nsStyleBackground::Size::eLengthPercentage) {
+    specifiedSize.SetHeight(
+      aLayerSize.ResolveHeightLengthPercentage(aBgPositioningArea));
+  }
+
+  return nsImageRenderer::ComputeConcreteSize(specifiedSize,
+                                              aIntrinsicSize,
+                                              aBgPositioningArea);
+}
+
 nsBackgroundLayerState
 nsCSSRendering::PrepareBackgroundLayer(nsPresContext* aPresContext,
                                        nsIFrame* aForFrame,
@@ -2994,9 +3032,15 @@ nsCSSRendering::PrepareBackgroundLayer(nsPresContext* aPresContext,
   // Scale the image as specified for background-size and as required for
   // proper background positioning when background-position is defined with
   // percentages.
-  nsSize imageSize = state.mImageRenderer.ComputeSize(aLayer.mSize, bgPositioningArea.Size());
+  CSSSizeOrRatio intrinsicSize = state.mImageRenderer.ComputeIntrinsicSize();
+  nsSize imageSize = ComputeDrawnSizeForBackground(intrinsicSize,
+                                                   bgPositioningArea.Size(),
+                                                   aLayer.mSize);
   if (imageSize.width <= 0 || imageSize.height <= 0)
     return state;
+
+  state.mImageRenderer.SetPreferredSize(intrinsicSize,
+                                        bgPositioningArea.Size());
 
   // Compute the position of the background now that the background's size is
   // determined.
@@ -4363,57 +4407,49 @@ nsImageRenderer::PrepareImage()
   return mIsReady;
 }
 
-enum FitType { CONTAIN, COVER };
-
-static nsSize
-ComputeContainCoverSizeFromRatio(const nsSize& aBgPositioningArea,
-                                 const nsSize& aRatio, FitType fitType)
+nsSize
+CSSSizeOrRatio::ComputeConcreteSize() const
 {
-  NS_ABORT_IF_FALSE(aRatio.width > 0, "width division by zero");
-  NS_ABORT_IF_FALSE(aRatio.height > 0, "height division by zero");
-
-  float scaleX = double(aBgPositioningArea.width) / aRatio.width;
-  float scaleY = double(aBgPositioningArea.height) / aRatio.height;
-  nsSize size;
-  if ((fitType == CONTAIN) == (scaleX < scaleY)) {
-    size.width = aBgPositioningArea.width;
-    size.height = NSCoordSaturatingNonnegativeMultiply(aRatio.height, scaleX);
-  } else {
-    size.width = NSCoordSaturatingNonnegativeMultiply(aRatio.width, scaleY);
-    size.height = aBgPositioningArea.height;
+  NS_ASSERTION(CanComputeConcreteSize(), "Cannot compute");
+  if (mHasWidth && mHasHeight) {
+    return nsSize(mWidth, mHeight);
   }
-  return size;
+  if (mHasWidth) {
+    nscoord height = NSCoordSaturatingNonnegativeMultiply(
+      mWidth,
+      double(mRatio.height) / mRatio.width);
+    return nsSize(mWidth, height);
+  } 
+
+  MOZ_ASSERT(mHasHeight);
+  nscoord width = NSCoordSaturatingNonnegativeMultiply(
+    mHeight,
+    double(mRatio.width) / mRatio.height);      
+  return nsSize(width, mHeight);
 }
 
-void
-nsImageRenderer::ComputeUnscaledDimensions(const nsSize& aBgPositioningArea,
-                                           nscoord& aUnscaledWidth, bool& aHaveWidth,
-                                           nscoord& aUnscaledHeight, bool& aHaveHeight,
-                                           nsSize& aRatio)
+CSSSizeOrRatio
+nsImageRenderer::ComputeIntrinsicSize()
 {
   NS_ASSERTION(mIsReady, "Ensure PrepareImage() has returned true "
                          "before calling me");
 
+  CSSSizeOrRatio result;
   switch (mType) {
     case eStyleImageType_Image:
     {
+      bool haveWidth, haveHeight;
       nsIntSize imageIntSize;
       nsLayoutUtils::ComputeSizeForDrawing(mImageContainer, imageIntSize,
-                                           aRatio, aHaveWidth, aHaveHeight);
-      if (aHaveWidth) {
-        aUnscaledWidth = nsPresContext::CSSPixelsToAppUnits(imageIntSize.width);
+                                           result.mRatio, haveWidth, haveHeight);
+      if (haveWidth) {
+        result.SetWidth(nsPresContext::CSSPixelsToAppUnits(imageIntSize.width));
       }
-      if (aHaveHeight) {
-        aUnscaledHeight = nsPresContext::CSSPixelsToAppUnits(imageIntSize.height);
+      if (haveHeight) {
+        result.SetHeight(nsPresContext::CSSPixelsToAppUnits(imageIntSize.height));
       }
-      return;
+      break;
     }
-    case eStyleImageType_Gradient:
-      // Per <http://dev.w3.org/csswg/css3-images/#gradients>, gradients have no
-      // intrinsic dimensions.
-      aHaveWidth = aHaveHeight = false;
-      aRatio = nsSize(0, 0);
-      return;
     case eStyleImageType_Element:
     {
       // XXX element() should have the width/height of the referenced element,
@@ -4422,203 +4458,137 @@ nsImageRenderer::ComputeUnscaledDimensions(const nsSize& aBgPositioningArea,
       //     <http://dev.w3.org/csswg/css3-images/#element-reference>.
       //     Make sure to change nsStyleBackground::Size::DependsOnFrameSize
       //     when fixing this!
-      aHaveWidth = aHaveHeight = true;
-      nsSize size;
       if (mPaintServerFrame) {
-        if (mPaintServerFrame->IsFrameOfType(nsIFrame::eSVG)) {
-          size = aBgPositioningArea;
-        } else {
+        // SVG images have no intrinsic size
+        if (!mPaintServerFrame->IsFrameOfType(nsIFrame::eSVG)) {
           // The intrinsic image size for a generic nsIFrame paint server is
           // the union of the border-box rects of all of its continuations,
           // rounded to device pixels.
           int32_t appUnitsPerDevPixel =
             mForFrame->PresContext()->AppUnitsPerDevPixel();
-          size =
+          result.SetSize(
             nsSVGIntegrationUtils::GetContinuationUnionSize(mPaintServerFrame).
               ToNearestPixels(appUnitsPerDevPixel).
-              ToAppUnits(appUnitsPerDevPixel);
+              ToAppUnits(appUnitsPerDevPixel));
         }
       } else {
         NS_ASSERTION(mImageElementSurface.mSurface, "Surface should be ready.");
         gfxIntSize surfaceSize = mImageElementSurface.mSize;
-        size.width = nsPresContext::CSSPixelsToAppUnits(surfaceSize.width);
-        size.height = nsPresContext::CSSPixelsToAppUnits(surfaceSize.height);
+        result.SetSize(
+          nsSize(nsPresContext::CSSPixelsToAppUnits(surfaceSize.width),
+                 nsPresContext::CSSPixelsToAppUnits(surfaceSize.height)));
       }
-      aRatio = size;
-      aUnscaledWidth = size.width;
-      aUnscaledHeight = size.height;
-      return;
+      break;
     }
+    case eStyleImageType_Gradient:
+      // Per <http://dev.w3.org/csswg/css3-images/#gradients>, gradients have no
+      // intrinsic dimensions.
     case eStyleImageType_Null:
     default:
-      aHaveWidth = aHaveHeight = true;
-      aUnscaledWidth = aUnscaledHeight = 0;
-      aRatio = nsSize(0, 0);
-      return;
+      break;
   }
+
+  return result;
 }
 
-nsSize
-nsImageRenderer::ComputeDrawnSize(const nsStyleBackground::Size& aLayerSize,
-                                  const nsSize& aBgPositioningArea,
-                                  nscoord aUnscaledWidth, bool aHaveWidth,
-                                  nscoord aUnscaledHeight, bool aHaveHeight,
-                                  const nsSize& aIntrinsicRatio)
+/* static */ nsSize
+nsImageRenderer::ComputeConcreteSize(const CSSSizeOrRatio& aSpecifiedSize,
+                                     const CSSSizeOrRatio& aIntrinsicSize,
+                                     const nsSize& aDefaultSize)
 {
-  NS_ABORT_IF_FALSE(aIntrinsicRatio.width >= 0,
-                    "image ratio with nonsense width");
-  NS_ABORT_IF_FALSE(aIntrinsicRatio.height >= 0,
-                    "image ratio with nonsense height");
-
-  // Bail early if the image is empty.
-  if ((aHaveWidth && aUnscaledWidth <= 0) ||
-      (aHaveHeight && aUnscaledHeight <= 0)) {
-    return nsSize(0, 0);
+  // The specified size is fully specified, just use that
+  if (aSpecifiedSize.IsConcrete()) {
+    return aSpecifiedSize.ComputeConcreteSize();
   }
 
-  // If the image has an intrinsic ratio but either component of it is zero,
-  // then the image would eventually scale to nothingness, so again we can bail.
-  bool haveRatio = aIntrinsicRatio != nsSize(0, 0);
-  if (haveRatio &&
-      (aIntrinsicRatio.width == 0 || aIntrinsicRatio.height == 0)) {
-    return nsSize(0, 0);
-  }
+  MOZ_ASSERT(!aSpecifiedSize.mHasWidth || !aSpecifiedSize.mHasHeight);
 
-  // Easiest case: background-size completely specifies the size.
-  if (aLayerSize.mWidthType == nsStyleBackground::Size::eLengthPercentage &&
-      aLayerSize.mHeightType == nsStyleBackground::Size::eLengthPercentage) {
-    return nsSize(aLayerSize.ResolveWidthLengthPercentage(aBgPositioningArea),
-                  aLayerSize.ResolveHeightLengthPercentage(aBgPositioningArea));
-  }
-
-  // The harder cases: contain/cover.
-  if (aLayerSize.mWidthType == nsStyleBackground::Size::eContain ||
-      aLayerSize.mWidthType == nsStyleBackground::Size::eCover) {
-    FitType fitType = aLayerSize.mWidthType == nsStyleBackground::Size::eCover
-                    ? COVER
-                    : CONTAIN;
-    if (!haveRatio) {
-      // If we don't have an intrinsic ratio, then proportionally scaling to
-      // either largest-fitting or smallest-covering size means scaling to the
-      // background positioning area's size.
-      return aBgPositioningArea;
+  if (!aSpecifiedSize.mHasWidth && !aSpecifiedSize.mHasHeight) {
+    // no specified size, try using the intrinsic size
+    if (aIntrinsicSize.CanComputeConcreteSize()) {
+      return aIntrinsicSize.ComputeConcreteSize();
     }
 
-    return ComputeContainCoverSizeFromRatio(aBgPositioningArea, aIntrinsicRatio,
-                                            fitType);
-  }
-
-  // Harder case: all-auto.
-  if (aLayerSize.mWidthType == nsStyleBackground::Size::eAuto &&
-      aLayerSize.mHeightType == nsStyleBackground::Size::eAuto) {
-    // If the image has all its dimensions, we're done.
-    if (aHaveWidth && aHaveHeight)
-      return nsSize(aUnscaledWidth, aUnscaledHeight);
-
-    // If the image has no dimensions, treat it as if for contain.
-    if (!aHaveWidth && !aHaveHeight) {
-      if (!haveRatio) {
-        // As above, max-contain without a ratio means the whole area.
-        return aBgPositioningArea;
-      }
-
-      // Otherwise determine size using the intrinsic ratio.
-      return ComputeContainCoverSizeFromRatio(aBgPositioningArea,
-                                              aIntrinsicRatio, CONTAIN);
+    if (aIntrinsicSize.mHasWidth) {
+      return nsSize(aIntrinsicSize.mWidth, aDefaultSize.height);
+    }
+    if (aIntrinsicSize.mHasHeight) {
+      return nsSize(aDefaultSize.width, aIntrinsicSize.mHeight);
     }
 
-    NS_ABORT_IF_FALSE(aHaveWidth != aHaveHeight, "logic error");
-
-    if (haveRatio) {
-      // Resolve missing dimensions using the intrinsic ratio.
-      nsSize size;
-      if (aHaveWidth) {
-        size.width = aUnscaledWidth;
-        size.height =
-          NSCoordSaturatingNonnegativeMultiply(size.width,
-                                               double(aIntrinsicRatio.height) /
-                                               aIntrinsicRatio.width);
-      } else {
-        size.height = aUnscaledHeight;
-        size.width =
-          NSCoordSaturatingNonnegativeMultiply(size.height,
-                                               double(aIntrinsicRatio.width) /
-                                               aIntrinsicRatio.height);
-      }
-
-      return size;
-    }
-
-    // Without a ratio we must fall back to the relevant dimension of the
-    // area to determine the missing dimension.
-    return aHaveWidth ? nsSize(aUnscaledWidth, aBgPositioningArea.height)
-                      : nsSize(aBgPositioningArea.width, aUnscaledHeight);
+    // couldn't use the intrinsic size either, revert to using the default size
+    return ComputeConstrainedSize(aDefaultSize,
+                                  aIntrinsicSize.mRatio,
+                                  CONTAIN);
   }
 
-  // Hardest case: only one auto.  Prepare to negotiate amongst intrinsic
-  // dimensions, intrinsic ratio, *and* a specific background-size!
-  NS_ABORT_IF_FALSE((aLayerSize.mWidthType == nsStyleBackground::Size::eAuto) !=
-                    (aLayerSize.mHeightType == nsStyleBackground::Size::eAuto),
-                    "logic error");
+  MOZ_ASSERT(aSpecifiedSize.mHasWidth || aSpecifiedSize.mHasHeight);
 
-  bool isAutoWidth = aLayerSize.mWidthType == nsStyleBackground::Size::eAuto;
-
-  if (haveRatio) {
-    // Use the specified dimension, and compute the other from the ratio.
-    NS_ABORT_IF_FALSE(aIntrinsicRatio.width > 0,
-                      "ratio width out of sync with width?");
-    NS_ABORT_IF_FALSE(aIntrinsicRatio.height > 0,
-                      "ratio height out of sync with width?");
-    nsSize size;
-    if (isAutoWidth) {
-      size.height = aLayerSize.ResolveHeightLengthPercentage(aBgPositioningArea);
-      size.width =
-        NSCoordSaturatingNonnegativeMultiply(size.height,
-                                             double(aIntrinsicRatio.width) /
-                                             aIntrinsicRatio.height);
+  // The specified height is partial, try to compute the missing part.
+  if (aSpecifiedSize.mHasWidth) {
+    nscoord height;
+    if (aIntrinsicSize.HasRatio()) {
+      height = NSCoordSaturatingNonnegativeMultiply(
+        aSpecifiedSize.mWidth,
+        double(aIntrinsicSize.mRatio.height) / aIntrinsicSize.mRatio.width);
+    } else if (aIntrinsicSize.mHasHeight) {
+      height = aIntrinsicSize.mHeight;
     } else {
-      size.width = aLayerSize.ResolveWidthLengthPercentage(aBgPositioningArea);
-      size.height =
-        NSCoordSaturatingNonnegativeMultiply(size.width,
-                                             double(aIntrinsicRatio.height) /
-                                             aIntrinsicRatio.width);
+      height = aDefaultSize.height;
     }
-
-    return size;
+    return nsSize(aSpecifiedSize.mWidth, height);
   }
 
-  NS_ABORT_IF_FALSE(!(aHaveWidth && aHaveHeight),
-                    "if we have width and height, we must have had a ratio");
-
-  // We have a specified dimension and an auto dimension, with no ratio to
-  // preserve.  A specified dimension trumps all, so use that.  For the other
-  // dimension, resolve auto to the intrinsic dimension (if present) or to 100%.
-  nsSize size;
-  if (isAutoWidth) {
-    size.width = aHaveWidth ? aUnscaledWidth : aBgPositioningArea.width;
-    size.height = aLayerSize.ResolveHeightLengthPercentage(aBgPositioningArea);
+  MOZ_ASSERT(aSpecifiedSize.mHasHeight);
+  nscoord width;
+  if (aIntrinsicSize.HasRatio()) {
+    width = NSCoordSaturatingNonnegativeMultiply(
+      aSpecifiedSize.mHeight,
+      double(aIntrinsicSize.mRatio.width) / aIntrinsicSize.mRatio.height);
+  } else if (aIntrinsicSize.mHasWidth) {
+    width = aIntrinsicSize.mWidth;
   } else {
-    size.width = aLayerSize.ResolveWidthLengthPercentage(aBgPositioningArea);
-    size.height = aHaveHeight ? aUnscaledHeight : aBgPositioningArea.height;
+    width = aDefaultSize.width;
+  }
+  return nsSize(width, aSpecifiedSize.mHeight);
+}
+
+/* static */ nsSize
+nsImageRenderer::ComputeConstrainedSize(const nsSize& aConstrainingSize,
+                                        const nsSize& aIntrinsicRatio,
+                                        FitType aFitType)
+{
+  if (aIntrinsicRatio.width <= 0 && aIntrinsicRatio.height <= 0) {
+    return aConstrainingSize;
   }
 
+  float scaleX = double(aConstrainingSize.width) / aIntrinsicRatio.width;
+  float scaleY = double(aConstrainingSize.height) / aIntrinsicRatio.height;
+  nsSize size;
+  if ((aFitType == CONTAIN) == (scaleX < scaleY)) {
+    size.width = aConstrainingSize.width;
+    size.height = NSCoordSaturatingNonnegativeMultiply(
+                    aIntrinsicRatio.height, scaleX);
+  } else {
+    size.width = NSCoordSaturatingNonnegativeMultiply(
+                   aIntrinsicRatio.width, scaleY);
+    size.height = aConstrainingSize.height;
+  }
   return size;
 }
 
-/*
- * The size returned by this method differs from the value of mSize, which this
- * method also computes, in that mSize is the image's "preferred" size for this
- * particular rendering, while the size returned here is the actual rendered
- * size after accounting for background-size.  The preferred size is most often
- * the image's intrinsic dimensions.  But for images with incomplete intrinsic
- * dimensions, the preferred size varies, depending on the background
- * positioning area, the specified background-size, and the intrinsic ratio and
- * dimensions of the image (if it has them).
+/**
+ * mSize is the image's "preferred" size for this particular rendering, while
+ * the drawn (aka concrete) size is the actual rendered size after accounting
+ * for background-size etc..  The preferred size is most often the image's
+ * intrinsic dimensions.  But for images with incomplete intrinsic dimensions,
+ * the preferred size varies, depending on the specified and default sizes, see
+ * nsImageRenderer::Compute*Size.
  *
  * This distinction is necessary because the components of a vector image are
  * specified with respect to its preferred size for a rendering situation, not
- * to its actual rendered size after background-size is applied.  For example,
- * consider a 4px wide vector image with no height which contains a left-aligned
+ * to its actual rendered size.  For example, consider a 4px wide background
+ * vector image with no height which contains a left-aligned
  * 2px wide black rectangle with height 100%.  If the background-size width is
  * auto (or 4px), the vector image will render 4px wide, and the black rectangle
  * will be 2px wide.  If the background-size width is 8px, the vector image will
@@ -4626,24 +4596,16 @@ nsImageRenderer::ComputeDrawnSize(const nsStyleBackground::Size& aLayerSize,
  * In both cases mSize.width will be 4px; but in the first case the returned
  * width will be 4px, while in the second case the returned width will be 8px.
  */
-nsSize
-nsImageRenderer::ComputeSize(const nsStyleBackground::Size& aLayerSize,
-                             const nsSize& aBgPositioningArea)
+void
+nsImageRenderer::SetPreferredSize(const CSSSizeOrRatio& aIntrinsicSize,
+                                  const nsSize& aDefaultSize)
 {
-  bool haveWidth, haveHeight;
-  nsSize ratio;
-  nscoord unscaledWidth, unscaledHeight;
-  ComputeUnscaledDimensions(aBgPositioningArea,
-                            unscaledWidth, haveWidth,
-                            unscaledHeight, haveHeight,
-                            ratio);
-  nsSize drawnSize = ComputeDrawnSize(aLayerSize, aBgPositioningArea,
-                                      unscaledWidth, haveWidth,
-                                      unscaledHeight, haveHeight,
-                                      ratio);
-  mSize.width = haveWidth ? unscaledWidth : drawnSize.width;
-  mSize.height = haveHeight ? unscaledHeight : drawnSize.height;
-  return drawnSize;
+  mSize.width = aIntrinsicSize.mHasWidth
+                  ? aIntrinsicSize.mWidth
+                  : aDefaultSize.width;
+  mSize.height = aIntrinsicSize.mHasHeight
+                  ? aIntrinsicSize.mHeight
+                  : aDefaultSize.height;
 }
 
 void
