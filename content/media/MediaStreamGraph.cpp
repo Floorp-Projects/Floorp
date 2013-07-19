@@ -313,20 +313,30 @@ MediaStreamGraphImpl::GetAudioPosition(MediaStream* aStream)
 void
 MediaStreamGraphImpl::UpdateCurrentTime()
 {
-  GraphTime prevCurrentTime = mCurrentTime;
-  TimeStamp now = TimeStamp::Now();
-  GraphTime nextCurrentTime =
-    SecondsToMediaTime((now - mCurrentTimeStamp).ToSeconds()) + mCurrentTime;
+  GraphTime prevCurrentTime, nextCurrentTime;
+  if (mRealtime) {
+    TimeStamp now = TimeStamp::Now();
+    prevCurrentTime = mCurrentTime;
+    nextCurrentTime =
+      SecondsToMediaTime((now - mCurrentTimeStamp).ToSeconds()) + mCurrentTime;
+
+    mCurrentTimeStamp = now;
+    LOG(PR_LOG_DEBUG+1, ("Updating current time to %f (real %f, mStateComputedTime %f)",
+          MediaTimeToSeconds(nextCurrentTime),
+          (now - mInitialTimeStamp).ToSeconds(),
+          MediaTimeToSeconds(mStateComputedTime)));
+  } else {
+    prevCurrentTime = mCurrentTime;
+    nextCurrentTime = mCurrentTime + MEDIA_GRAPH_TARGET_PERIOD_MS;
+    LOG(PR_LOG_DEBUG+1, ("Updating offline current time to %f (mStateComputedTime %f)",
+          MediaTimeToSeconds(nextCurrentTime),
+          MediaTimeToSeconds(mStateComputedTime)));
+  }
+
   if (mStateComputedTime < nextCurrentTime) {
     LOG(PR_LOG_WARNING, ("Media graph global underrun detected"));
     nextCurrentTime = mStateComputedTime;
   }
-  mCurrentTimeStamp = now;
-
-  LOG(PR_LOG_DEBUG+1, ("Updating current time to %f (real %f, mStateComputedTime %f)",
-                       MediaTimeToSeconds(nextCurrentTime),
-                       (now - mInitialTimeStamp).ToSeconds(),
-                       MediaTimeToSeconds(mStateComputedTime)));
 
   if (prevCurrentTime >= nextCurrentTime) {
     NS_ASSERTION(prevCurrentTime == nextCurrentTime, "Time can't go backwards!");
