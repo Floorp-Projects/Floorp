@@ -20,7 +20,7 @@
 class nsWindowsSystemProxySettings MOZ_FINAL : public nsISystemProxySettings
 {
 public:
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSISYSTEMPROXYSETTINGS
 
     nsWindowsSystemProxySettings() {};
@@ -33,7 +33,7 @@ private:
     bool PatternMatch(const nsACString& aHost, const nsACString& aOverride);
 };
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsWindowsSystemProxySettings, nsISystemProxySettings)
+NS_IMPL_ISUPPORTS1(nsWindowsSystemProxySettings, nsISystemProxySettings)
 
 NS_IMETHODIMP
 nsWindowsSystemProxySettings::GetMainThreadOnly(bool *aMainThreadOnly)
