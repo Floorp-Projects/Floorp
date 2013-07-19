@@ -22,7 +22,7 @@ class nsIRDFService;
 class nsRDFResource : public nsIRDFResource {
 public:
 
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
 
     // nsIRDFNode methods:
     NS_IMETHOD EqualsNode(nsIRDFNode* aNode, bool* aResult);
