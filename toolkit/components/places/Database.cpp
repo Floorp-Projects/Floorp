@@ -215,7 +215,7 @@ class BlockingConnectionCloseCallback MOZ_FINAL : public mozIStorageCompletionCa
   bool mDone;
 
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_MOZISTORAGECOMPLETIONCALLBACK
   BlockingConnectionCloseCallback();
   void Spin();
@@ -249,7 +249,7 @@ void BlockingConnectionCloseCallback::Spin() {
   }
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(
+NS_IMPL_ISUPPORTS1(
   BlockingConnectionCloseCallback
 , mozIStorageCompletionCallback
 )
@@ -332,7 +332,7 @@ CreateRoot(nsCOMPtr<mozIStorageConnection>& aDBConn,
 
 PLACES_FACTORY_SINGLETON_IMPLEMENTATION(Database, gDatabase)
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(Database
+NS_IMPL_ISUPPORTS2(Database
 , nsIObserver
 , nsISupportsWeakReference
 )
