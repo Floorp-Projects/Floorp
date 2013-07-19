@@ -27,7 +27,6 @@ MOCHITEST_BROWSER_FILES = \
 	browser_input.js \
 	browser_input_sample.html \
 	browser_pageshow.js \
-	browser_sessionStorage.js \
         browser_upgrade_backup.js \
 	browser_windowRestore_perwindowpb.js \
 	browser_248970_b_perwindowpb.js \
