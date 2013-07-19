@@ -205,7 +205,7 @@ namespace detail {
   {
 #  if defined(MOZ_BITSCAN_WINDOWS64)
     unsigned long index;
-    _BitScanForward64(&idx, static_cast<unsigned __int64>(u));
+    _BitScanForward64(&index, static_cast<unsigned __int64>(u));
     return uint_fast8_t(index);
 #  else
     uint32_t lo = uint32_t(u);

@@ -215,9 +215,10 @@
       * @throws {OS.File.Error} If the file could not be opened.
       */
      File.open = function Unix_open(path, mode, options = {}) {
-       let omode = options.unixMode || DEFAULT_UNIX_MODE;
+       let omode = options.unixMode !== undefined ?
+                     options.unixMode : DEFAULT_UNIX_MODE;
        let flags;
-       if (options.unixFlags) {
+       if (options.unixFlags !== undefined) {
          flags = options.unixFlags;
        } else {
          mode = OS.Shared.AbstractFile.normalizeOpenMode(mode);
@@ -325,7 +326,7 @@
       * directory already exists.
       */
      File.makeDir = function makeDir(path, options = {}) {
-       let omode = options.unixMode || DEFAULT_UNIX_MODE_DIR;
+       let omode = options.unixMode !== undefined ? options.unixMode : DEFAULT_UNIX_MODE_DIR;
        let result = UnixFile.mkdir(path, omode);
        if (result != -1 ||
            options.ignoreExisting && ctypes.errno == OS.Constants.libc.EEXIST) {
@@ -430,8 +431,8 @@
 
        // An implementation of |pump| using |read|/|write|
        let pump_userland = function pump_userland(source, dest, options = {}) {
-         let bufSize = options.bufSize || 4096;
-         let nbytes = options.nbytes || Infinity;
+         let bufSize = options.bufSize > 0 ? options.bufSize : 4096;
+         let nbytes = options.nbytes > 0 ? options.nbytes : Infinity;
          if (!pump_buffer || pump_buffer.length < bufSize) {
            pump_buffer = new (ctypes.ArrayType(ctypes.char))(bufSize);
          }
@@ -466,7 +467,7 @@
 
          // An implementation of |pump| using |splice| (for Linux/Android)
          pump = function pump_splice(source, dest, options = {}) {
-           let nbytes = options.nbytes || Infinity;
+           let nbytes = options.nbytes > 0 ? options.nbytes : Infinity;
            let pipe = [];
            throw_on_negative("pump", UnixFile.pipe(pipe));
            let pipe_read = pipe[0];

@@ -32,7 +32,6 @@ class Layer;
 
 enum ShaderProgramType {
   RGBALayerProgramType,
-  RGBALayerExternalProgramType,
   BGRALayerProgramType,
   RGBXLayerProgramType,
   BGRXLayerProgramType,
@@ -80,7 +79,7 @@ ShaderProgramFromTargetAndFormat(GLenum aTarget,
   switch(aTarget) {
     case LOCAL_GL_TEXTURE_EXTERNAL:
       MOZ_ASSERT(aFormat == gfx::FORMAT_R8G8B8A8);
-      return RGBALayerExternalProgramType;
+      return RGBAExternalLayerProgramType;
     case LOCAL_GL_TEXTURE_RECTANGLE_ARB:
       MOZ_ASSERT(aFormat == gfx::FORMAT_R8G8B8A8 ||
                  aFormat == gfx::FORMAT_R8G8B8X8);
@@ -189,12 +188,10 @@ struct ProgramProfileOGL
   nsTArray<Argument> mAttributes;
   uint32_t mTextureCount;
   bool mHasMatrixProj;
-  bool mHasTextureTransform;
 private:
   ProgramProfileOGL() :
     mTextureCount(0),
-    mHasMatrixProj(false),
-    mHasTextureTransform(false) {}
+    mHasMatrixProj(false) {}
 };
 
 
@@ -315,13 +312,11 @@ public:
 
   // sets this program's texture transform, if it uses one
   void SetTextureTransform(const gfx3DMatrix& aMatrix) {
-    if (mProfile.mHasTextureTransform)
-      SetMatrixUniform(mProfile.LookupUniformLocation("uTextureTransform"), aMatrix);
+    SetMatrixUniform(mProfile.LookupUniformLocation("uTextureTransform"), aMatrix);
   }
 
   void SetTextureTransform(const gfx::Matrix4x4& aMatrix) {
-    if (mProfile.mHasTextureTransform)
-      SetMatrixUniform(mProfile.LookupUniformLocation("uTextureTransform"), aMatrix);
+    SetMatrixUniform(mProfile.LookupUniformLocation("uTextureTransform"), aMatrix);
   }
 
   void SetRenderOffset(const nsIntPoint& aOffset) {

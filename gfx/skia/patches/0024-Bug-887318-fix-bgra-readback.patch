@@ -1,0 +1,217 @@
+diff --git a/gfx/gl/GLContextSkia.cpp b/gfx/gl/GLContextSkia.cpp
+--- a/gfx/gl/GLContextSkia.cpp
++++ b/gfx/gl/GLContextSkia.cpp
+@@ -303,39 +303,47 @@ const GLubyte* glGetString_mozilla(GrGLe
+     if (name == LOCAL_GL_VERSION) {
+         if (sGLContext.get()->IsGLES2()) {
+             return reinterpret_cast<const GLubyte*>("OpenGL ES 2.0");
+         } else {
+             return reinterpret_cast<const GLubyte*>("2.0");
+         }
+     } else if (name == LOCAL_GL_EXTENSIONS) {
+         // Only expose the bare minimum extensions we want to support to ensure a functional Ganesh
+         // as GLContext only exposes certain extensions
+         static bool extensionsStringBuilt = false;
+-        static char extensionsString[120];
++        static char extensionsString[256];
+ 
+         if (!extensionsStringBuilt) {
+             if (sGLContext.get()->IsExtensionSupported(GLContext::EXT_texture_format_BGRA8888)) {
+                 strcpy(extensionsString, "GL_EXT_texture_format_BGRA8888 ");
+             }
+ 
+             if (sGLContext.get()->IsExtensionSupported(GLContext::OES_packed_depth_stencil)) {
+                 strcat(extensionsString, "GL_OES_packed_depth_stencil ");
+             }
+ 
+             if (sGLContext.get()->IsExtensionSupported(GLContext::EXT_packed_depth_stencil)) {
+                 strcat(extensionsString, "GL_EXT_packed_depth_stencil ");
+             }
+ 
+             if (sGLContext.get()->IsExtensionSupported(GLContext::OES_rgb8_rgba8)) {
+                 strcat(extensionsString, "GL_OES_rgb8_rgba8 ");
+             }
+ 
++            if (sGLContext.get()->IsExtensionSupported(GLContext::EXT_bgra)) {
++                strcat(extensionsString, "GL_EXT_bgra ");
++            }
++
++            if (sGLContext.get()->IsExtensionSupported(GLContext::EXT_read_format_bgra)) {
++                strcat(extensionsString, "GL_EXT_read_format_bgra ");
++            }
++
+             extensionsStringBuilt = true;
+         }
+ 
+         return reinterpret_cast<const GLubyte*>(extensionsString);
+ 
+     } else if (name == LOCAL_GL_SHADING_LANGUAGE_VERSION) {
+         if (sGLContext.get()->IsGLES2()) {
+             return reinterpret_cast<const GLubyte*>("OpenGL ES GLSL ES 1.0");
+         } else {
+             return reinterpret_cast<const GLubyte*>("1.10");
+diff --git a/gfx/skia/src/gpu/gl/GrGpuGL.cpp b/gfx/skia/src/gpu/gl/GrGpuGL.cpp
+--- a/gfx/skia/src/gpu/gl/GrGpuGL.cpp
++++ b/gfx/skia/src/gpu/gl/GrGpuGL.cpp
+@@ -1,18 +1,18 @@
+ /*
+  * Copyright 2011 Google Inc.
+  *
+  * Use of this source code is governed by a BSD-style license that can be
+  * found in the LICENSE file.
+  */
+ 
+-
++#include <algorithm>
+ #include "GrGpuGL.h"
+ #include "GrGLStencilBuffer.h"
+ #include "GrGLPath.h"
+ #include "GrGLShaderBuilder.h"
+ #include "GrTemplates.h"
+ #include "GrTypes.h"
+ #include "SkTemplates.h"
+ 
+ static const GrGLuint GR_MAX_GLUINT = ~0U;
+ static const GrGLint  GR_INVAL_GLINT = ~0;
+@@ -1381,29 +1381,67 @@ bool GrGpuGL::readPixelsWillPayForYFlip(
+     // Note the rowBytes might be tight to the passed in data, but if data
+     // gets clipped in x to the target the rowBytes will no longer be tight.
+     if (left >= 0 && (left + width) < renderTarget->width()) {
+            return 0 == rowBytes ||
+                   GrBytesPerPixel(config) * width == rowBytes;
+     } else {
+         return false;
+     }
+ }
+ 
++static void swizzleRow(void* buffer, int byteLen) {
++    uint8_t* src = (uint8_t*)buffer;
++    uint8_t* end = src + byteLen;
++
++    GrAssert((end - src) % 4 == 0);
++
++    for (; src != end; src += 4) {
++        std::swap(src[0], src[2]);
++    }
++}
++
++bool GrGpuGL::canReadBGRA() const
++{
++    if (kDesktop_GrGLBinding == this->glBinding() ||
++        this->hasExtension("GL_EXT_bgra"))
++        return true;
++
++    if (this->hasExtension("GL_EXT_read_format_bgra")) {
++        GrGLint readFormat = 0;
++        GrGLint readType = 0;
++
++        GL_CALL(GetIntegerv(GR_GL_IMPLEMENTATION_COLOR_READ_FORMAT, &readFormat));
++        GL_CALL(GetIntegerv(GR_GL_IMPLEMENTATION_COLOR_READ_TYPE, &readType));
++
++        return readFormat == GR_GL_BGRA && readType == GR_GL_UNSIGNED_BYTE;
++    }
++
++    return false;
++}
++
+ bool GrGpuGL::onReadPixels(GrRenderTarget* target,
+                            int left, int top,
+                            int width, int height,
+                            GrPixelConfig config,
+                            void* buffer,
+                            size_t rowBytes) {
+     GrGLenum format;
+     GrGLenum type;
+     bool flipY = kBottomLeft_GrSurfaceOrigin == target->origin();
++    bool needSwizzle = false;
++
++    if (kBGRA_8888_GrPixelConfig == config && !this->canReadBGRA()) {
++        // Read RGBA and swizzle after
++        config = kRGBA_8888_GrPixelConfig;
++        needSwizzle = true;
++    }
++
+     if (!this->configToGLFormats(config, false, NULL, &format, &type)) {
+         return false;
+     }
+     size_t bpp = GrBytesPerPixel(config);
+     if (!adjust_pixel_ops_params(target->width(), target->height(), bpp,
+                                  &left, &top, &width, &height,
+                                  const_cast<const void**>(&buffer),
+                                  &rowBytes)) {
+         return false;
+     }
+@@ -1478,35 +1516,46 @@ bool GrGpuGL::onReadPixels(GrRenderTarge
+             scratch.reset(tightRowBytes);
+             void* tmpRow = scratch.get();
+             // flip y in-place by rows
+             const int halfY = height >> 1;
+             char* top = reinterpret_cast<char*>(buffer);
+             char* bottom = top + (height - 1) * rowBytes;
+             for (int y = 0; y < halfY; y++) {
+                 memcpy(tmpRow, top, tightRowBytes);
+                 memcpy(top, bottom, tightRowBytes);
+                 memcpy(bottom, tmpRow, tightRowBytes);
++
++                if (needSwizzle) {
++                    swizzleRow(top, tightRowBytes);
++                    swizzleRow(bottom, tightRowBytes);
++                }
++
+                 top += rowBytes;
+                 bottom -= rowBytes;
+             }
+         }
+     } else {
+-        GrAssert(readDst != buffer);        GrAssert(rowBytes != tightRowBytes);
++        GrAssert(readDst != buffer);
++        GrAssert(rowBytes != tightRowBytes);
+         // copy from readDst to buffer while flipping y
+         // const int halfY = height >> 1;
+         const char* src = reinterpret_cast<const char*>(readDst);
+         char* dst = reinterpret_cast<char*>(buffer);
+         if (flipY) {
+             dst += (height-1) * rowBytes;
+         }
+         for (int y = 0; y < height; y++) {
+             memcpy(dst, src, tightRowBytes);
++            if (needSwizzle) {
++                swizzleRow(dst, tightRowBytes);
++            }
++
+             src += readDstRowBytes;
+             if (!flipY) {
+                 dst += rowBytes;
+             } else {
+                 dst -= rowBytes;
+             }
+         }
+     }
+     return true;
+ }
+diff --git a/gfx/skia/src/gpu/gl/GrGpuGL.h b/gfx/skia/src/gpu/gl/GrGpuGL.h
+--- a/gfx/skia/src/gpu/gl/GrGpuGL.h
++++ b/gfx/skia/src/gpu/gl/GrGpuGL.h
+@@ -243,20 +243,22 @@ private:
+                        GrPixelConfig dataConfig,
+                        const void* data,
+                        size_t rowBytes);
+ 
+     bool createRenderTargetObjects(int width, int height,
+                                    GrGLuint texID,
+                                    GrGLRenderTarget::Desc* desc);
+ 
+     void fillInConfigRenderableTable();
+ 
++    bool canReadBGRA() const;
++
+     GrGLContext fGLContext;
+ 
+     // GL program-related state
+     ProgramCache*               fProgramCache;
+     SkAutoTUnref<GrGLProgram>   fCurrentProgram;
+ 
+     ///////////////////////////////////////////////////////////////////////////
+     ///@name Caching of GL State
+     ///@{
+     int                         fHWActiveTextureUnitIdx;

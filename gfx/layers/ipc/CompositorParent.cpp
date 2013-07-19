@@ -36,7 +36,6 @@ namespace layers {
 // FIXME/bug 774386: we're assuming that there's only one
 // CompositorParent, but that's not always true.  This assumption only
 // affects CrossProcessCompositorParent below.
-static CompositorParent* sCurrentCompositor;
 static Thread* sCompositorThread = nullptr;
 // manual reference count of the compositor thread.
 static int sCompositorThreadRefCount = 0;
@@ -153,9 +152,6 @@ CompositorParent::CompositorParent(nsIWidget* aWidget,
   CompositorLoop()->PostTask(FROM_HERE, NewRunnableFunction(&AddCompositor,
                                                           this, &mCompositorID));
 
-  if (!sCurrentCompositor) {
-    sCurrentCompositor = this;
-  }
   ++sCompositorThreadRefCount;
 }
 
@@ -169,9 +165,6 @@ CompositorParent::~CompositorParent()
 {
   MOZ_COUNT_DTOR(CompositorParent);
 
-  if (this == sCurrentCompositor) {
-    sCurrentCompositor = NULL;
-  }
   ReleaseCompositorThread();
 }
 
@@ -677,6 +670,19 @@ CompositorParent::SetTimeAndSampleAnimations(TimeStamp aTime, bool aIsTesting)
 typedef map<uint64_t, CompositorParent::LayerTreeState> LayerTreeMap;
 static LayerTreeMap sIndirectLayerTrees;
 
+bool
+CompositorParent::RecvNotifyChildCreated(const uint64_t& child)
+{
+  NotifyChildCreated(child);
+  return true;
+}
+
+void
+CompositorParent::NotifyChildCreated(uint64_t aChild)
+{
+  sIndirectLayerTrees[aChild].mParent = this;
+}
+
 /*static*/ uint64_t
 CompositorParent::AllocateLayerTreeId()
 {
@@ -710,7 +716,7 @@ UpdateControllerForLayersId(uint64_t aLayersId,
 
   // Notify the AsyncPanZoomController about the current compositor so that it
   // can request composites off the compositor thread.
-  aController->SetCompositorParent(sCurrentCompositor);
+  aController->SetCompositorParent(sIndirectLayerTrees[aLayersId].mParent);
 }
 
 /*static*/ void
@@ -752,6 +758,7 @@ public:
   virtual bool RecvStop() MOZ_OVERRIDE { return true; }
   virtual bool RecvPause() MOZ_OVERRIDE { return true; }
   virtual bool RecvResume() MOZ_OVERRIDE { return true; }
+  virtual bool RecvNotifyChildCreated(const uint64_t& child) MOZ_OVERRIDE;
   virtual bool RecvMakeSnapshot(const SurfaceDescriptor& aInSnapshot,
                                 SurfaceDescriptor* aOutSnapshot)
   { return true; }
@@ -851,9 +858,14 @@ CrossProcessCompositorParent::AllocPLayerTransactionParent(const LayersBackend& 
 {
   MOZ_ASSERT(aId != 0);
 
-  nsRefPtr<LayerManager> lm = sCurrentCompositor->GetLayerManager();
-  *aTextureFactoryIdentifier = lm->GetTextureFactoryIdentifier();
-  return new LayerTransactionParent(lm->AsLayerManagerComposite(), this, aId);
+  if (sIndirectLayerTrees[aId].mParent) {
+    nsRefPtr<LayerManager> lm = sIndirectLayerTrees[aId].mParent->GetLayerManager();
+    *aTextureFactoryIdentifier = lm->GetTextureFactoryIdentifier();
+    return new LayerTransactionParent(lm->AsLayerManagerComposite(), this, aId);
+  }
+
+  NS_WARNING("Created child without a matching parent?");
+  return new LayerTransactionParent(nullptr, this, aId);
 }
 
 bool
@@ -862,6 +874,13 @@ CrossProcessCompositorParent::DeallocPLayerTransactionParent(PLayerTransactionPa
   LayerTransactionParent* slp = static_cast<LayerTransactionParent*>(aLayers);
   RemoveIndirectTree(slp->GetId());
   delete aLayers;
+  return true;
+}
+
+bool
+CrossProcessCompositorParent::RecvNotifyChildCreated(const uint64_t& child)
+{
+  sIndirectLayerTrees[child].mParent->NotifyChildCreated(child);
   return true;
 }
 
@@ -879,7 +898,7 @@ CrossProcessCompositorParent::ShadowLayersUpdated(
   }
   UpdateIndirectTree(id, shadowRoot, aTargetConfig, isFirstPaint);
 
-  sCurrentCompositor->NotifyShadowTreeTransaction();
+  sIndirectLayerTrees[id].mParent->NotifyShadowTreeTransaction();
 }
 
 void
