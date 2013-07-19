@@ -41,7 +41,7 @@ private:
 
 class nsOfflineCacheEvictionFunction MOZ_FINAL : public mozIStorageFunction {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_MOZISTORAGEFUNCTION
 
   nsOfflineCacheEvictionFunction(nsOfflineCacheDevice *device)
@@ -63,7 +63,7 @@ class nsOfflineCacheDevice : public nsCacheDevice
 public:
   nsOfflineCacheDevice();
 
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
 
   /**
    * nsCacheDevice methods

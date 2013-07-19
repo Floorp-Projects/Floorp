@@ -18,7 +18,7 @@ enum {
 class nsSOCKSSocketProvider : public nsISocketProvider
 {
 public:
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSISOCKETPROVIDER
     
     nsSOCKSSocketProvider(uint32_t version) : mVersion(version) {}

@@ -57,7 +57,7 @@ public:
 
 private:
     nsSocketTransport               *mTransport;
-    nsrefcnt                         mReaderRefCnt;
+    mozilla::ThreadSafeAutoRefCnt    mReaderRefCnt;
 
     // access to these is protected by mTransport->mLock
     nsresult                         mCondition;
@@ -91,7 +91,7 @@ private:
                                        uint32_t count, uint32_t *countRead);
 
     nsSocketTransport                *mTransport;
-    nsrefcnt                          mWriterRefCnt;
+    mozilla::ThreadSafeAutoRefCnt     mWriterRefCnt;
 
     // access to these is protected by mTransport->mLock
     nsresult                          mCondition;
@@ -110,7 +110,7 @@ class nsSocketTransport : public nsASocketHandler
     typedef mozilla::Mutex Mutex;
 
 public:
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSITRANSPORT
     NS_DECL_NSISOCKETTRANSPORT
     NS_DECL_NSIDNSLISTENER

@@ -13,7 +13,7 @@ extern PRLogModuleInfo *gWifiMonitorLog;
 #define LOG(args)     PR_LOG(gWifiMonitorLog, PR_LOG_DEBUG, args)
 
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsWifiAccessPoint, nsIWifiAccessPoint)
+NS_IMPL_ISUPPORTS1(nsWifiAccessPoint, nsIWifiAccessPoint)
 
 nsWifiAccessPoint::nsWifiAccessPoint()
 {

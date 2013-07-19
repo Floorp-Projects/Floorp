@@ -43,7 +43,7 @@ class nsIOThreadPool : public nsIEventTarget
                      , public nsIObserver
 {
 public:
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSIEVENTTARGET
     NS_DECL_NSIOBSERVER
 
@@ -66,7 +66,7 @@ private:
     nsThreadPoolNaming mNaming; // thread name numbering
 };
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(nsIOThreadPool, nsIEventTarget, nsIObserver)
+NS_IMPL_ISUPPORTS2(nsIOThreadPool, nsIEventTarget, nsIObserver)
 
 nsresult
 nsIOThreadPool::Init()

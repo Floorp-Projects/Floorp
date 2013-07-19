@@ -37,7 +37,7 @@ static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 //-----------------------------------------------------------------------------
 
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsHttpConnectionMgr, nsIObserver)
+NS_IMPL_ISUPPORTS1(nsHttpConnectionMgr, nsIObserver)
 
 static void
 InsertTransactionSorted(nsTArray<nsHttpTransaction*> &pendingQ, nsHttpTransaction *trans)
@@ -2459,7 +2459,7 @@ nsHttpConnectionMgr::nsConnectionHandle::~nsConnectionHandle()
     }
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS0(nsHttpConnectionMgr::nsConnectionHandle)
+NS_IMPL_ISUPPORTS0(nsHttpConnectionMgr::nsConnectionHandle)
 
 nsHttpConnectionMgr::nsConnectionEntry *
 nsHttpConnectionMgr::GetOrCreateConnectionEntry(nsHttpConnectionInfo *ci)
@@ -2557,11 +2557,11 @@ nsHttpConnectionMgr::nsConnectionHandle::PushBack(const char *buf, uint32_t bufL
 //////////////////////// nsHalfOpenSocket
 
 
-NS_IMPL_THREADSAFE_ISUPPORTS4(nsHttpConnectionMgr::nsHalfOpenSocket,
-                              nsIOutputStreamCallback,
-                              nsITransportEventSink,
-                              nsIInterfaceRequestor,
-                              nsITimerCallback)
+NS_IMPL_ISUPPORTS4(nsHttpConnectionMgr::nsHalfOpenSocket,
+                   nsIOutputStreamCallback,
+                   nsITransportEventSink,
+                   nsIInterfaceRequestor,
+                   nsITimerCallback)
 
 nsHttpConnectionMgr::
 nsHalfOpenSocket::nsHalfOpenSocket(nsConnectionEntry *ent,

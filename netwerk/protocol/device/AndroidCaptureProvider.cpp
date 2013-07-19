@@ -17,7 +17,7 @@
 
 using namespace mozilla::net;
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(AndroidCameraInputStream, nsIInputStream, nsIAsyncInputStream)
+NS_IMPL_ISUPPORTS2(AndroidCameraInputStream, nsIInputStream, nsIAsyncInputStream)
 
 AndroidCameraInputStream::AndroidCameraInputStream() :
   mWidth(0), mHeight(0), mCamera(0), mHeaderSent(false), mClosed(true), mFrameSize(0),
@@ -255,7 +255,7 @@ NS_IMETHODIMP AndroidCameraInputStream::CloseWithStatus(nsresult status)
  * AndroidCaptureProvider implementation
  */
 
-NS_IMPL_THREADSAFE_ISUPPORTS0(AndroidCaptureProvider)
+NS_IMPL_ISUPPORTS0(AndroidCaptureProvider)
 
 AndroidCaptureProvider* AndroidCaptureProvider::sInstance = NULL;
 

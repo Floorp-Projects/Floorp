@@ -79,7 +79,7 @@ nsDNSPrefetch::PrefetchHigh()
 }
 
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsDNSPrefetch, nsIDNSListener)
+NS_IMPL_ISUPPORTS1(nsDNSPrefetch, nsIDNSListener)
 
 NS_IMETHODIMP
 nsDNSPrefetch::OnLookupComplete(nsICancelable *request,

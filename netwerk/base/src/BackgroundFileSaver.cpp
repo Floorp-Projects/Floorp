@@ -708,11 +708,11 @@ BackgroundFileSaver::NotifySaveComplete()
 ////////////////////////////////////////////////////////////////////////////////
 //// BackgroundFileSaverOutputStream
 
-NS_IMPL_THREADSAFE_ISUPPORTS4(BackgroundFileSaverOutputStream,
-                              nsIBackgroundFileSaver,
-                              nsIOutputStream,
-                              nsIAsyncOutputStream,
-                              nsIOutputStreamCallback)
+NS_IMPL_ISUPPORTS4(BackgroundFileSaverOutputStream,
+                   nsIBackgroundFileSaver,
+                   nsIOutputStream,
+                   nsIAsyncOutputStream,
+                   nsIOutputStreamCallback)
 
 BackgroundFileSaverOutputStream::BackgroundFileSaverOutputStream()
 : BackgroundFileSaver()
@@ -811,10 +811,10 @@ BackgroundFileSaverOutputStream::OnOutputStreamReady(
 ////////////////////////////////////////////////////////////////////////////////
 //// BackgroundFileSaverStreamListener
 
-NS_IMPL_THREADSAFE_ISUPPORTS3(BackgroundFileSaverStreamListener,
-                              nsIBackgroundFileSaver,
-                              nsIRequestObserver,
-                              nsIStreamListener)
+NS_IMPL_ISUPPORTS3(BackgroundFileSaverStreamListener,
+                   nsIBackgroundFileSaver,
+                   nsIRequestObserver,
+                   nsIStreamListener)
 
 BackgroundFileSaverStreamListener::BackgroundFileSaverStreamListener()
 : BackgroundFileSaver()
@@ -975,8 +975,8 @@ BackgroundFileSaverStreamListener::NotifySuspendOrResume()
 
 ////////////////////////////////////////////////////////////////////////////////
 //// DigestOutputStream
-NS_IMPL_THREADSAFE_ISUPPORTS1(DigestOutputStream,
-                              nsIOutputStream)
+NS_IMPL_ISUPPORTS1(DigestOutputStream,
+                   nsIOutputStream)
 
 DigestOutputStream::DigestOutputStream(nsIOutputStream* aStream,
                                        PK11Context* aContext) :

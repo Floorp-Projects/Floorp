@@ -8,7 +8,7 @@
 #include "nsCOMPtr.h"
 
 // Yes, we support QI to nsProxyInfo
-NS_IMPL_THREADSAFE_ISUPPORTS2(nsProxyInfo, nsProxyInfo, nsIProxyInfo) 
+NS_IMPL_ISUPPORTS2(nsProxyInfo, nsProxyInfo, nsIProxyInfo) 
 
 using namespace mozilla;
 

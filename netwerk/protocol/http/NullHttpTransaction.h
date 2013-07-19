@@ -24,7 +24,7 @@ namespace mozilla { namespace net {
 class NullHttpTransaction MOZ_FINAL : public nsAHttpTransaction
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSAHTTPTRANSACTION
 
   NullHttpTransaction(nsHttpConnectionInfo *ci,
