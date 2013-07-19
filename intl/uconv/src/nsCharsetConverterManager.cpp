@@ -31,8 +31,7 @@ static nsIStringBundle * sTitleBundle;
 
 // Class nsCharsetConverterManager [implementation]
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsCharsetConverterManager,
-                              nsICharsetConverterManager)
+NS_IMPL_ISUPPORTS1(nsCharsetConverterManager, nsICharsetConverterManager)
 
 nsCharsetConverterManager::nsCharsetConverterManager() 
 {
