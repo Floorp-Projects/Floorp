@@ -2,24 +2,24 @@
 
 "use strict";
 
-load('utility.js');
-load('annotations.js');
-load('suppressedPoints.js');
+loadRelativeToScript('utility.js');
+loadRelativeToScript('annotations.js');
+loadRelativeToScript('suppressedPoints.js');
 
 var sourceRoot = (environment['SOURCE_ROOT'] || '') + '/'
 
 var functionName;
 var functionBodies;
 
-if (typeof arguments[0] != 'string' || typeof arguments[1] != 'string')
+if (typeof scriptArgs[0] != 'string' || typeof scriptArgs[1] != 'string')
     throw "Usage: analyzeRoots.js <gcFunctions.lst> <suppressedFunctions.lst> <gcTypes.txt> [start end [tmpfile]]";
 
-var gcFunctionsFile = arguments[0];
-var suppressedFunctionsFile = arguments[1];
-var gcTypesFile = arguments[2];
-var batch = (arguments[3]|0) || 1;
-var numBatches = (arguments[4]|0) || 1;
-var tmpfile = arguments[5] || "tmp.txt";
+var gcFunctionsFile = scriptArgs[0];
+var suppressedFunctionsFile = scriptArgs[1];
+var gcTypesFile = scriptArgs[2];
+var batch = (scriptArgs[3]|0) || 1;
+var numBatches = (scriptArgs[4]|0) || 1;
+var tmpfile = scriptArgs[5] || "tmp.txt";
 
 var gcFunctions = {};
 var text = snarf("gcFunctions.lst").split('\n');

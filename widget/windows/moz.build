@@ -41,6 +41,7 @@ CPP_SOURCES += [
     'nsAppShell.cpp',
     'nsBidiKeyboard.cpp',
     'nsClipboard.cpp',
+    'nsColorPicker.cpp',
     'nsDataObj.cpp',
     'nsDataObjCollection.cpp',
     'nsDragService.cpp',

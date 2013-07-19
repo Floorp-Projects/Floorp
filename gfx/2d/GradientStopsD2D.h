@@ -24,6 +24,7 @@ public:
 
 private:
   friend class DrawTargetD2D;
+  friend class DrawTargetD2D1;
 
   mutable RefPtr<ID2D1GradientStopCollection> mStopCollection;
 };

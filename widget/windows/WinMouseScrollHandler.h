@@ -23,6 +23,8 @@ namespace widget {
 class ModifierKeyState;
 class WheelEvent;
 
+struct MSGResult;
+
 class MouseScrollHandler {
 public:
   static MouseScrollHandler* GetInstance();
@@ -34,8 +36,7 @@ public:
                              UINT msg,
                              WPARAM wParam,
                              LPARAM lParam,
-                             LRESULT *aRetValue,
-                             bool &aEatMessage);
+                             MSGResult& aResult);
 
   /**
    * See nsIWidget::SynthesizeNativeMouseScrollEvent() for the detail about

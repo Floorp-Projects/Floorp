@@ -1,4 +1,5 @@
 . "$topsrcdir/b2g/config/mozconfigs/common"
+. "$topsrcdir/build/unix/mozconfig.linux32"
 
 ac_add_options --enable-update-channel=${MOZ_UPDATE_CHANNEL}
 ac_add_options --enable-update-packaging

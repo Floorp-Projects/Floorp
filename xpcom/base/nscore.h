@@ -133,7 +133,10 @@
 #define NS_METHOD_(type) type __stdcall
 #define NS_CALLBACK_(_type, _name) _type (__stdcall * _name)
 #define NS_STDCALL __stdcall
+#ifndef _WIN64
+// Win64 has only one calling convention.  __stdcall will be ignored by the compiler.
 #define NS_HAVE_STDCALL
+#endif
 #define NS_FROZENCALL __cdecl
 
 /*

@@ -195,8 +195,8 @@ private:
 class nsDisplayCanvasBackgroundImage : public nsDisplayBackgroundImage {
 public:
   nsDisplayCanvasBackgroundImage(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-                                 uint32_t aLayer, bool aIsThemed, const nsStyleBackground* aBg)
-    : nsDisplayBackgroundImage(aBuilder, aFrame, aLayer, aIsThemed, aBg)
+                                 uint32_t aLayer, const nsStyleBackground* aBg)
+    : nsDisplayBackgroundImage(aBuilder, aFrame, aLayer, aBg)
   {}
 
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsRenderingContext* aCtx) MOZ_OVERRIDE;
@@ -217,6 +217,17 @@ public:
   
   
   NS_DISPLAY_DECL_NAME("CanvasBackgroundImage", TYPE_CANVAS_BACKGROUND_IMAGE)
+};
+
+class nsDisplayCanvasThemedBackground : public nsDisplayThemedBackground {
+public:
+  nsDisplayCanvasThemedBackground(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
+    : nsDisplayThemedBackground(aBuilder, aFrame)
+  {}
+
+  virtual void Paint(nsDisplayListBuilder* aBuilder, nsRenderingContext* aCtx) MOZ_OVERRIDE;
+
+  NS_DISPLAY_DECL_NAME("CanvasThemedBackground", TYPE_CANVAS_THEMED_BACKGROUND)
 };
 
 #endif /* nsCanvasFrame_h___ */

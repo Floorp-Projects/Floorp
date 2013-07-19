@@ -17,28 +17,34 @@ namespace js {
 class ScriptSource;
 class SPSProfiler;
 class AsmJSModule;
-namespace frontend { class TokenStream; class ParseNode; }
-namespace ion { class MIRGenerator; class LIRGraph; }
+namespace frontend {
+    template <typename ParseHandler> struct Parser;
+    template <typename ParseHandler> struct ParseContext;
+    class FullParseHandler;
+    struct ParseNode;
+}
+namespace ion {
+    class MIRGenerator;
+    class LIRGraph;
+}
 
-// Called after parsing a function 'fn' which contains the "use asm" directive.
-// This function performs type-checking and code-generation. If type-checking
-// succeeds, the generated native function is assigned to |moduleFun|.
-// Otherwise, a warning will be emitted and |moduleFun| is left unchanged. The
-// function returns 'false' only if a real JS semantic error (probably OOM) is
-// pending.
+typedef frontend::Parser<frontend::FullParseHandler> AsmJSParser;
+typedef frontend::ParseContext<frontend::FullParseHandler> AsmJSParseContext;
+
+// Takes over parsing of a function starting with "use asm". The return value
+// indicates whether an error was reported which the caller should propagate.
+// If no error was reported, the function may still fail to validate as asm.js.
+// In this case, the parser.tokenStream has been advanced an indeterminate
+// amount and the entire function should be reparsed from the beginning.
 extern bool
-CompileAsmJS(JSContext *cx, frontend::TokenStream &ts, frontend::ParseNode *fn,
-             const CompileOptions &options,
-             ScriptSource *scriptSource, uint32_t bufStart, uint32_t bufEnd,
-             MutableHandleFunction moduleFun);
+CompileAsmJS(JSContext *cx, AsmJSParser &parser, frontend::ParseNode *stmtList, bool *validated);
 
-// Called for any "use asm" function which successfully typechecks. This
-// function performs the validation and dynamic linking of a module to its
-// given arguments. If validation succeeds, the module's return value (its
-// exports) are returned via |vp|.  Otherwise, there was a validation error and
-// execution fall back to the usual path (bytecode generation, interpretation,
-// etc). The function returns 'false' only if a real JS semantic error (OOM or
-// exception thrown when executing GetProperty on the arguments) is pending.
+// Implements the semantics of an asm.js module function that has been successfully validated.
+// A successfully validated asm.js module does not have bytecode emitted, but rather a list of
+// dynamic constraints that must be satisfied by the arguments passed by the caller. If these
+// constraints are satisfied, then LinkAsmJS can return CallAsmJS native functions that trampoline
+// into compiled code. If any of the constraints fails, LinkAsmJS reparses the entire asm.js module
+// from source so that it can be run as plain bytecode.
 extern JSBool
 LinkAsmJS(JSContext *cx, unsigned argc, JS::Value *vp);
 
@@ -65,18 +71,18 @@ TriggerOperationCallbackForAsmJSCode(JSRuntime *rt);
 class AsmJSActivation
 {
     JSContext *cx_;
-    const AsmJSModule &module_;
+    AsmJSModule &module_;
     AsmJSActivation *prev_;
     void *errorRejoinSP_;
     SPSProfiler *profiler_;
     void *resumePC_;
 
   public:
-    AsmJSActivation(JSContext *cx, const AsmJSModule &module);
+    AsmJSActivation(JSContext *cx, AsmJSModule &module);
     ~AsmJSActivation();
 
     JSContext *cx() { return cx_; }
-    const AsmJSModule &module() const { return module_; }
+    AsmJSModule &module() const { return module_; }
 
     // Read by JIT code:
     static unsigned offsetOfContext() { return offsetof(AsmJSActivation, cx_); }
@@ -139,20 +145,19 @@ struct AsmJSParallelTask
 {
     LifoAlloc lifo;         // Provider of all heap memory used for compilation.
 
-    uint32_t funcNum;       // Index |i| of function in |Module.function(i)|.
+    void *func;             // Really, a ModuleCompiler::Func*
     ion::MIRGenerator *mir; // Passed from main thread to worker.
     ion::LIRGraph *lir;     // Passed from worker to main thread.
     unsigned compileTime;
 
     AsmJSParallelTask(size_t defaultChunkSize)
-      : lifo(defaultChunkSize),
-        funcNum(0), mir(NULL), lir(NULL), compileTime(0)
+      : lifo(defaultChunkSize), func(NULL), mir(NULL), lir(NULL), compileTime(0)
     { }
 
-    void init(uint32_t newFuncNum, ion::MIRGenerator *newMir) {
-        funcNum = newFuncNum;
-        mir = newMir;
-        lir = NULL;
+    void init(void *func, ion::MIRGenerator *mir) {
+        this->func = func;
+        this->mir = mir;
+        this->lir = NULL;
     }
 };
 
