@@ -24,11 +24,13 @@
      Needs to be two words or shorter to fit in narrow vertical space.-->
 <!-- LOCALIZATION NOTE (snappedRemoteTabsHeader.label,
                         snappedBookmarksHeader.label,
-                        snappedHistoryHeader.lavel )
+                        snappedHistoryHeader.label,
+                        snappedTopSitesHeader.label )
       The '>' character is not part of the name, but is an indicator of more content. Please do not localize the '>' -->
 <!ENTITY snappedRemoteTabsHeader.label    "Remote Tabs >">
-<!ENTITY snappedBookmarksHeader.label       "Bookmarks >">
-<!ENTITY snappedHistoryHeader.label         "Recent History >">
+<!ENTITY snappedBookmarksHeader.label     "Bookmarks >">
+<!ENTITY snappedHistoryHeader.label       "Recent History >">
+<!ENTITY snappedTopSitesHeader.label      "Top Sites >">
 
 <!ENTITY autocompleteResultsHeader.label  "Your Results">
 <!ENTITY autocompleteSearchesHeader.label "Internet Searches"> 

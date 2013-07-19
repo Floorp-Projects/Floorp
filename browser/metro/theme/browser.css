@@ -744,11 +744,12 @@ setting[type="radio"] > vbox {
   min-width: calc(3 * @grid_double_column_width@);
 }
 
-/* if snapped, hide the fullscreen awesome screen, if viewstate is anything
- *  other than snapped, hide the snapped awesome screen */
-#start[viewstate="snapped"],
-#snapped-start:not([viewstate="snapped"]) {
-  visibility: collapse;
+#start-scrollbox {
+  -moz-box-orient: horizontal;
+}
+
+#start[viewstate="snapped"] #start-scrollbox {
+  -moz-box-orient: vertical;
 }
 
 /*Formatting for the limited horizontal space of snapped*/
