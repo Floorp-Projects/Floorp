@@ -944,6 +944,12 @@ class MacroAssembler : public MacroAssemblerSpecific
     void printf(const char *output);
     void printf(const char *output, Register value);
 
+#if JS_TRACE_LOGGING
+    void tracelogStart(JSScript *script);
+    void tracelogStop();
+    void tracelogLog(TraceLogging::Type type);
+#endif
+
     void convertInt32ValueToDouble(const Address &address, Register scratch, Label *done);
     void convertValueToDouble(ValueOperand value, FloatRegister output, Label *fail);
     void convertValueToInt32(ValueOperand value, FloatRegister temp, Register output, Label *fail);
