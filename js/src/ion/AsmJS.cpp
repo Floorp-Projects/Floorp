@@ -1452,14 +1452,14 @@ class MOZ_STACK_CLASS ModuleCompiler
 #ifdef JS_ION_PERF
     bool trackPerfProfiledFunction(const Func &func, unsigned endCodeOffset) {
         unsigned lineno = 0U, columnIndex = 0U;
-        tokenStream_.srcCoords.lineNumAndColumnIndex(func.srcOffset(), &lineno, &columnIndex);
+        parser().tokenStream.srcCoords.lineNumAndColumnIndex(func.srcOffset(), &lineno, &columnIndex);
 
-        unsigned startCodeOffset = func.codeLabel()->offset();
+        unsigned startCodeOffset = func.code()->offset();
         return module_->trackPerfProfiledFunction(func.name(), startCodeOffset, endCodeOffset, lineno, columnIndex);
     }
 
     bool trackPerfProfiledBlocks(AsmJSPerfSpewer &perfSpewer, const Func &func, unsigned endCodeOffset) {
-        unsigned startCodeOffset = func.codeLabel()->offset();
+        unsigned startCodeOffset = func.code()->offset();
         perfSpewer.noteBlocksOffsets(masm_);
         return module_->trackPerfProfiledBlocks(func.name(), startCodeOffset, endCodeOffset, perfSpewer.basicBlocks());
     }
@@ -4788,7 +4788,7 @@ GenerateCode(ModuleCompiler &m, ModuleCompiler::Func &func, MIRGenerator &mir, L
 
 #ifdef JS_ION_PERF
     if (PerfBlockEnabled()) {
-        if (!m.trackPerfProfiledBlocks(mirGen.perfSpewer(), func, m.masm().size()))
+        if (!m.trackPerfProfiledBlocks(mir.perfSpewer(), func, m.masm().size()))
             return false;
     } else if (PerfFuncEnabled()) {
         if (!m.trackPerfProfiledFunction(func, m.masm().size()))
