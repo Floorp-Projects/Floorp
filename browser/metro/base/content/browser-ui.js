@@ -1200,7 +1200,11 @@ var StartUI = {
         let startBox = document.getElementById("start-scrollbox");
         let [, scrollInterface] = ScrollUtils.getScrollboxFromElement(startBox);
 
-        scrollInterface.scrollBy(aEvent.detail, 0);
+        if (Elements.windowState.getAttribute("viewstate") == "snapped") {
+          scrollInterface.scrollBy(0, aEvent.detail);
+        } else {
+          scrollInterface.scrollBy(aEvent.detail, 0);
+        }
 
         aEvent.preventDefault();
         aEvent.stopPropagation();
