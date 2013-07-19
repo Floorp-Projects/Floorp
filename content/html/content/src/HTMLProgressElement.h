@@ -7,6 +7,7 @@
 #define mozilla_dom_HTMLProgressElement_h
 
 #include "mozilla/Attributes.h"
+#include "nsIDOMHTMLProgressElement.h"
 #include "nsGenericHTMLElement.h"
 #include "nsAttrValue.h"
 #include "nsAttrValueInlines.h"
@@ -17,7 +18,7 @@ namespace mozilla {
 namespace dom {
 
 class HTMLProgressElement MOZ_FINAL : public nsGenericHTMLElement,
-                                      public nsIDOMHTMLElement
+                                      public nsIDOMHTMLProgressElement
 {
 public:
   HTMLProgressElement(already_AddRefed<nsINodeInfo> aNodeInfo);
@@ -34,6 +35,9 @@ public:
 
   // nsIDOMHTMLElement
   NS_FORWARD_NSIDOMHTMLELEMENT_TO_GENERIC
+
+  // nsIDOMHTMLProgressElement
+  NS_DECL_NSIDOMHTMLPROGRESSELEMENT
 
   nsEventStates IntrinsicState() const MOZ_OVERRIDE;
 
