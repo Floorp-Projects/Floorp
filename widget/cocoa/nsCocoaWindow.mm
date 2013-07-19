@@ -512,15 +512,16 @@ NS_IMETHODIMP nsCocoaWindow::CreatePopupContentView(const nsIntRect &aRect,
 
 NS_IMETHODIMP nsCocoaWindow::Destroy()
 {
+  // The reference from a possible sibling widget will never get cleared because
+  // we don't implement GetParent so RemoveChild never removes us from the
+  // sibling widget list. So if we don't hide ourselves here we may stay on
+  // screen. This is gross. (Bug 891424)
+  Show(false);
+
   if (mPopupContentView)
     mPopupContentView->Destroy();
 
   nsBaseWidget::Destroy();
-  // nsBaseWidget::Destroy() calls GetParent()->RemoveChild(this). But we
-  // don't implement GetParent(), so we need to do the equivalent here.
-  if (mParent) {
-    mParent->RemoveChild(this);
-  }
   nsBaseWidget::OnDestroy();
 
   if (mFullScreen) {
