@@ -114,7 +114,7 @@
     <command id="Social:FocusChat" oncommand="SocialChatBar.focus();" hidden="true" disabled="true"/>
     <command id="Social:Toggle" oncommand="Social.toggle();" hidden="true"/>
     <command id="Social:Addons" oncommand="BrowserOpenAddonsMgr('addons://list/service');"/>
-    <command id="MenuPanel:Toggle" oncommand="PanelUI.toggle();"/>
+    <command id="MenuPanel:Toggle" oncommand="PanelUI.toggle(event);"/>
   </commandset>
 
   <commandset id="placesCommands">
