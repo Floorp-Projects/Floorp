@@ -37,8 +37,8 @@ NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMGeoPositionCoords)
 NS_INTERFACE_MAP_ENTRY(nsIDOMGeoPositionCoords)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_THREADSAFE_ADDREF(nsGeoPositionCoords)
-NS_IMPL_THREADSAFE_RELEASE(nsGeoPositionCoords)
+NS_IMPL_ADDREF(nsGeoPositionCoords)
+NS_IMPL_RELEASE(nsGeoPositionCoords)
 
 NS_IMETHODIMP
 nsGeoPositionCoords::GetLatitude(double *aLatitude)
@@ -128,8 +128,8 @@ NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMGeoPosition)
 NS_INTERFACE_MAP_ENTRY(nsIDOMGeoPosition)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_THREADSAFE_ADDREF(nsGeoPosition)
-NS_IMPL_THREADSAFE_RELEASE(nsGeoPosition)
+NS_IMPL_ADDREF(nsGeoPosition)
+NS_IMPL_RELEASE(nsGeoPosition)
 
 NS_IMETHODIMP
 nsGeoPosition::GetTimestamp(DOMTimeStamp* aTimestamp)

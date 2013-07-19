@@ -19,7 +19,7 @@ namespace {
 class ProgressRunnable MOZ_FINAL : public nsIRunnable
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIRUNNABLE
 
   ProgressRunnable(FileHelper* aFileHelper,
@@ -40,7 +40,7 @@ private:
 class CloseRunnable MOZ_FINAL : public nsIRunnable
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIRUNNABLE
 
   CloseRunnable(FileHelper* aFileHelper)
@@ -54,7 +54,7 @@ private:
 class DestroyRunnable MOZ_FINAL : public nsIRunnable
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIRUNNABLE
 
   DestroyRunnable(FileHelper* aFileHelper)
@@ -101,7 +101,7 @@ FileStreamWrapper::~FileStreamWrapper()
   }
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS0(FileStreamWrapper)
+NS_IMPL_ISUPPORTS0(FileStreamWrapper)
 
 FileInputStreamWrapper::FileInputStreamWrapper(nsISupports* aFileStream,
                                                FileHelper* aFileHelper,
@@ -347,7 +347,7 @@ FileOutputStreamWrapper::IsNonBlocking(bool* _retval)
   return NS_OK;
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(ProgressRunnable, nsIRunnable)
+NS_IMPL_ISUPPORTS1(ProgressRunnable, nsIRunnable)
 
 NS_IMETHODIMP
 ProgressRunnable::Run()
@@ -360,7 +360,7 @@ ProgressRunnable::Run()
   return NS_OK;
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(CloseRunnable, nsIRunnable)
+NS_IMPL_ISUPPORTS1(CloseRunnable, nsIRunnable)
 
 NS_IMETHODIMP
 CloseRunnable::Run()
@@ -373,7 +373,7 @@ CloseRunnable::Run()
   return NS_OK;
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(DestroyRunnable, nsIRunnable)
+NS_IMPL_ISUPPORTS1(DestroyRunnable, nsIRunnable)
 
 NS_IMETHODIMP
 DestroyRunnable::Run()
