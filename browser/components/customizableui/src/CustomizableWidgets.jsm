@@ -105,11 +105,10 @@ const CustomizableWidgets = [{
 
               let item = doc.createElementNS(kNSXUL, "toolbarbutton");
               item.setAttribute("label", title || uri);
-              item.addEventListener("click", function(aEvent) {
-                if (aEvent.button == 0) {
-                  doc.defaultView.openUILink(uri, aEvent);
-                  CustomizableUI.hidePanelForNode(item);
-                }
+              item.setAttribute("tabindex", "0");
+              item.addEventListener("command", function(aEvent) {
+                doc.defaultView.openUILink(uri, aEvent);
+                CustomizableUI.hidePanelForNode(item);
               });
               if (icon)
                 item.setAttribute("image", "moz-anno:favicon:" + icon);
@@ -220,6 +219,7 @@ const CustomizableWidgets = [{
           if (attrVal)
             item.setAttribute(attr, attrVal);
         }
+        item.setAttribute("tabindex", "0");
         fragment.appendChild(item);
       }
       items.appendChild(fragment);
@@ -318,6 +318,8 @@ const CustomizableWidgets = [{
       buttons.forEach(function(aButton) {
         let btnNode = aDocument.createElementNS(kNSXUL, "toolbarbutton");
         setAttributes(btnNode, aButton);
+        if (inPanel)
+          btnNode.setAttribute("tabindex", "0");
         node.appendChild(btnNode);
       });
 
@@ -456,6 +458,8 @@ const CustomizableWidgets = [{
       buttons.forEach(function(aButton) {
         let btnNode = aDocument.createElementNS(kNSXUL, "toolbarbutton");
         setAttributes(btnNode, aButton);
+        if (inPanel)
+          btnNode.setAttribute("tabindex", "0");
         node.appendChild(btnNode);
       });
 

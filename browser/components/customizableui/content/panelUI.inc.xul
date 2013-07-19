@@ -16,21 +16,21 @@
       <vbox id="PanelUI-mainView-spring" flex="1"/>
 
       <footer class="PanelUI-footer">
-        <toolbarbutton id="PanelUI-customize-btn" label="&appMenuCustomize.label;"
+        <toolbarbutton id="PanelUI-customize-btn" label="&appMenuCustomize.label;" tabindex="0"
                        oncommand="gCustomizeMode.toggle()" flex="1"/>
         <!-- The parentNode is used so that the footer is presented as the anchor
              instead of just the button being the anchor. -->
-        <toolbarbutton id="PanelUI-help-btn" aria-label="&helpMenu.label;"
+        <toolbarbutton id="PanelUI-help-btn" aria-label="&helpMenu.label;" tabindex="0"
                        oncommand="PanelUI.showHelpView(this.parentNode);"/>
       </footer>
     </panelview>
 
     <panelview id="PanelUI-history" flex="1">
       <label value="&appMenuHistory.label;"/>
-      <toolbarbutton id="appMenuClearRecentHistory"
+      <toolbarbutton id="appMenuClearRecentHistory" tabindex="0"
                      label="&appMenuHistory.clearRecent.label;"
                      command="Tools:Sanitize"/>
-      <toolbarbutton id="appMenuRestoreLastSession"
+      <toolbarbutton id="appMenuRestoreLastSession" tabindex="0"
                      label="&appMenuHistory.restoreSession.label;"
                      command="Browser:RestoreLastSession"/>
       <vbox id="PanelUI-historyItems"/>

@@ -51,6 +51,9 @@ var FeedHandler = {
       item.setAttribute("feed", feedInfo.href);
       item.setAttribute("tooltiptext", feedInfo.href);
       item.setAttribute("crop", "center");
+      if (isSubview) {
+        item.setAttribute("tabindex", "0");
+      }
       container.appendChild(item);
     }
     return true;
