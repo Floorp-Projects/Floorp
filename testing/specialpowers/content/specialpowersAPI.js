@@ -1113,6 +1113,13 @@ SpecialPowersAPI.prototype = {
     this._getMUDV(window).textZoom = zoom;
   },
 
+  emulateMedium: function(window, mediaType) {
+    this._getMUDV(window).emulateMedium(mediaType);
+  },
+  stopEmulatingMedium: function(window) {
+    this._getMUDV(window).stopEmulatingMedium();
+  },
+
   createSystemXHR: function() {
     return this.wrap(Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance(Ci.nsIXMLHttpRequest));
   },

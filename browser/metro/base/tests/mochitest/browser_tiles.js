@@ -90,8 +90,12 @@ gTests.push({
 
     let under3rowsHeight = (3 * grid.tileHeight -20) + "px";
     container.style.height = under3rowsHeight;
-    grid.arrangeItems();
 
+    let arrangedPromise = waitForEvent(grid, "arranged");
+    grid.arrangeItems();
+    yield arrangedPromise;
+
+    ok(true, "arranged event is fired when arrangeItems is called");
     is(grid.rowCount, 2, "rowCount is re-calculated correctly for a given container height");
   }
 });

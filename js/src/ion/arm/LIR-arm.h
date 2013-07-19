@@ -150,14 +150,32 @@ class LDivPowTwoI : public LInstructionHelper<1, 1, 0>
     }
 };
 
-class LModI : public LBinaryMath<3>
+class LModI : public LBinaryMath<1>
 {
   public:
     LIR_HEADER(ModI);
 
     LModI(const LAllocation &lhs, const LAllocation &rhs,
-          const LDefinition &temp1, const LDefinition &temp2,
           const LDefinition &callTemp)
+    {
+        setOperand(0, lhs);
+        setOperand(1, rhs);
+        setTemp(0, callTemp);
+    }
+
+    MMod *mir() const {
+        return mir_->toMod();
+    }
+};
+
+class LSoftModI : public LBinaryMath<3>
+{
+  public:
+    LIR_HEADER(SoftModI);
+
+    LSoftModI(const LAllocation &lhs, const LAllocation &rhs,
+              const LDefinition &temp1, const LDefinition &temp2,
+              const LDefinition &callTemp)
     {
         setOperand(0, lhs);
         setOperand(1, rhs);

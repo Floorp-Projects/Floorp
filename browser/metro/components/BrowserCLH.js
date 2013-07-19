@@ -270,8 +270,6 @@ BrowserCLH.prototype = {
         var updateService = Cc["@mozilla.org/updates/update-service;1"].getService(Ci.nsIApplicationUpdateService);
         var updateTimerCallback = updateService.QueryInterface(Ci.nsITimerCallback);
         updateTimerCallback.notify(null);
-      } else if (alertFlag.length >= 9 && alertFlag.substr(0, 9) == "download:") {
-        showPanelWhenReady(browserWin, "downloads-container");
       }
     }
   },

@@ -250,14 +250,23 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
 
     def setupTempDir(self):
         # make sure the temp dir exists
-        if self.device.dirExists(self.remoteTmpDir):
-            self.device.removeDir(self.remoteTmpDir)
-        self.device.mkDir(self.remoteTmpDir)
+        if not self.device.dirExists(self.remoteTmpDir):
+            self.device.mkDir(self.remoteTmpDir)
 
         self.env["XPCSHELL_TEST_TEMP_DIR"] = self.remoteTmpDir
         if self.interactive:
             self.log.info("TEST-INFO | temp dir is %s" % self.remoteTmpDir)
         return self.remoteTmpDir
+
+    def setupPluginsDir(self):
+        # making sure tmp dir is set up
+        self.setupTempDir()
+
+        pluginsDir = self.remoteJoin(self.remoteTmpDir, "plugins")
+        self.device.pushDir(self.pluginsPath, pluginsDir)
+        if self.interactive:
+            self.log.info("TEST-INFO | plugins dir is %s" % pluginsDir)
+        return pluginsDir
 
     def setupProfileDir(self):
         self.device.removeDir(self.profileDir)

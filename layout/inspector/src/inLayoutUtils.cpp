@@ -68,19 +68,6 @@ inLayoutUtils::GetEventStateManagerFor(nsIDOMElement *aElement)
   return shell->GetPresContext()->EventStateManager();
 }
 
-nsBindingManager* 
-inLayoutUtils::GetBindingManagerFor(nsIDOMNode* aNode)
-{
-  nsCOMPtr<nsIDOMDocument> domdoc;
-  aNode->GetOwnerDocument(getter_AddRefs(domdoc));
-  if (domdoc) {
-    nsCOMPtr<nsIDocument> doc = do_QueryInterface(domdoc);
-    return doc->BindingManager();
-  }
-  
-  return nullptr;
-}
-
 nsIDOMDocument*
 inLayoutUtils::GetSubDocumentFor(nsIDOMNode* aNode)
 {

@@ -6,7 +6,12 @@
 
 #include "ds/LifoAlloc.h"
 
+#include "mozilla/MathAlgorithms.h"
+
 using namespace js;
+
+using mozilla::RoundUpPow2;
+using mozilla::tl::BitSize;
 
 namespace js {
 namespace detail {
@@ -87,7 +92,7 @@ LifoAlloc::getOrCreateChunk(size_t n)
 
         // Guard for overflow.
         if (allocSizeWithHeader < n ||
-            (allocSizeWithHeader & (size_t(1) << (tl::BitSize<size_t>::result - 1)))) {
+            (allocSizeWithHeader & (size_t(1) << (BitSize<size_t>::value - 1)))) {
             return NULL;
         }
 

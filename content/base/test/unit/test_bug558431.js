@@ -5,7 +5,6 @@ const Cu = Components.utils;
 const Cr = Components.results;
 
 Cu.import('resource://gre/modules/CSPUtils.jsm');
-Cu.import("resource://testing-common/httpd.js");
 
 var httpserv = null;
 

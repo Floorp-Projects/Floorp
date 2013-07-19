@@ -41,11 +41,20 @@ enum {
 
   // This bit is set to indicate that if the text node changes to
   // whitespace, we may need to reframe it (or its ancestors).
-  NS_REFRAME_IF_WHITESPACE =              DATA_NODE_FLAG_BIT(1)
+  NS_REFRAME_IF_WHITESPACE =              DATA_NODE_FLAG_BIT(1),
+
+  // This bit is set to indicate that we have a cached
+  // TextIsOnlyWhitespace value
+  NS_CACHED_TEXT_IS_ONLY_WHITESPACE =     DATA_NODE_FLAG_BIT(2),
+
+  // This bit is only meaningful if the NS_CACHED_TEXT_IS_ONLY_WHITESPACE
+  // bit is set, and if so it indicates whether we're only whitespace or
+  // not.
+  NS_TEXT_IS_ONLY_WHITESPACE =            DATA_NODE_FLAG_BIT(3)
 };
 
 // Make sure we have enough space for those bits
-ASSERT_NODE_FLAGS_SPACE(NODE_TYPE_SPECIFIC_BITS_OFFSET + 2);
+ASSERT_NODE_FLAGS_SPACE(NODE_TYPE_SPECIFIC_BITS_OFFSET + 4);
 
 #undef DATA_NODE_FLAG_BIT
 
@@ -141,6 +150,11 @@ public:
 #endif
 
   virtual nsIContent *GetBindingParent() const MOZ_OVERRIDE;
+  virtual nsXBLBinding *GetXBLBinding() const MOZ_OVERRIDE;
+  virtual void SetXBLBinding(nsXBLBinding* aBinding,
+                             nsBindingManager* aOldBindingManager = nullptr) MOZ_OVERRIDE;
+  virtual nsIContent *GetXBLInsertionParent() const;
+  virtual void SetXBLInsertionParent(nsIContent* aContent);
   virtual bool IsNodeOfType(uint32_t aFlags) const MOZ_OVERRIDE;
   virtual bool IsLink(nsIURI** aURI) const MOZ_OVERRIDE;
 
@@ -169,7 +183,7 @@ public:
 
   // WebIDL API
   // Our XPCOM GetData is just fine for WebIDL
-  void SetData(const nsAString& aData, mozilla::ErrorResult& rv)
+  virtual void SetData(const nsAString& aData, mozilla::ErrorResult& rv)
   {
     rv = SetData(aData);
   }
@@ -228,11 +242,19 @@ protected:
     {
     }
 
+    void Traverse(nsCycleCollectionTraversalCallback &cb);
+    void Unlink();
+
     /**
      * The nearest enclosing content node with a binding that created us.
      * @see nsIContent::GetBindingParent
      */
     nsIContent* mBindingParent;  // [Weak]
+
+    /**
+     * @see nsIContent::GetXBLInsertionParent
+     */
+    nsCOMPtr<nsIContent> mXBLInsertionParent;
   };
 
   // Override from nsINode

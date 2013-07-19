@@ -84,7 +84,7 @@ WebappsRegistry.prototype = {
       }
     } catch(e) {
       throw new Components.Exception(
-        "INVALID_URL: '" + aURL, Cr.NS_ERROR_FAILURE
+        "INVALID_URL: '" + aURL + "'", Cr.NS_ERROR_FAILURE
       );
     }
 
