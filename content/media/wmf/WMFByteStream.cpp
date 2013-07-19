@@ -36,11 +36,11 @@ static const uint32_t NumWMFIoThreads = 4;
 // on this thread, so we need MSCOM working.
 class ThreadPoolListener MOZ_FINAL : public nsIThreadPoolListener {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSITHREADPOOLLISTENER
 };
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(ThreadPoolListener, nsIThreadPoolListener)
+NS_IMPL_ISUPPORTS1(ThreadPoolListener, nsIThreadPoolListener)
 
 NS_IMETHODIMP
 ThreadPoolListener::OnThreadCreated()
@@ -214,8 +214,8 @@ WMFByteStream::QueryInterface(REFIID aIId, void **aInterface)
   return E_NOINTERFACE;
 }
 
-NS_IMPL_THREADSAFE_ADDREF(WMFByteStream)
-NS_IMPL_THREADSAFE_RELEASE(WMFByteStream)
+NS_IMPL_ADDREF(WMFByteStream)
+NS_IMPL_RELEASE(WMFByteStream)
 
 
 // Stores data regarding an async read opreation.
@@ -239,12 +239,12 @@ public:
   ULONG mBytesRead;
 
   // IUnknown ref counting.
-  nsAutoRefCnt mRefCnt;
+  ThreadSafeAutoRefCnt mRefCnt;
   NS_DECL_OWNINGTHREAD
 };
 
-NS_IMPL_THREADSAFE_ADDREF(ReadRequest)
-NS_IMPL_THREADSAFE_RELEASE(ReadRequest)
+NS_IMPL_ADDREF(ReadRequest)
+NS_IMPL_RELEASE(ReadRequest)
 
 // IUnknown Methods
 STDMETHODIMP
