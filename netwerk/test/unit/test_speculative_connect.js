@@ -9,7 +9,7 @@ const ServerSocket = CC("@mozilla.org/network/server-socket;1",
 var serv;
 
 function TestServer() {
-    this.listener = ServerSocket(4444, true, -1);
+    this.listener = ServerSocket(-1, true, -1);
     this.listener.asyncListen(this);
 }
 
@@ -34,7 +34,7 @@ function run_test() {
         .getService(Ci.nsIIOService);    
 
     serv = new TestServer();
-    URI = ios.newURI("http://localhost:4444/just/a/test", null, null);
+    URI = ios.newURI("http://localhost:" + serv.listener.port + "/just/a/test", null, null);
     ios.QueryInterface(Components.interfaces.nsISpeculativeConnect)
         .speculativeConnect(URI, null);
     do_test_pending();

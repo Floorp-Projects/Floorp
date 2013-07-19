@@ -33,7 +33,8 @@ var tests = [
 function setupChannel(url) {
     var ios = Components.classes["@mozilla.org/network/io-service;1"].
                          getService(Ci.nsIIOService);
-    var chan = ios.newChannel("http://localhost:4444" + url, "", null);
+    var chan = ios.newChannel("http://localhost:" +
+			      httpserver.identity.primaryPort + url, "", null);
     return chan;
 }
 
@@ -54,7 +55,7 @@ function completeIter(request, data, ctx) {
 function run_test() {
     httpserver.registerPathHandler("/test/cegzip1", handler);
     httpserver.registerPathHandler("/test/cegzip2", handler);
-    httpserver.start(4444);
+    httpserver.start(-1);
 
     startIter();
     do_test_pending();

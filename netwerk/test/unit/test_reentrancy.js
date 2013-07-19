@@ -5,6 +5,10 @@ const Cr = Components.results;
 
 Cu.import("resource://testing-common/httpd.js");
 
+XPCOMUtils.defineLazyGetter(this, "URL", function() {
+  return "http://localhost:" + httpserver.identity.primaryPort;
+});
+
 var httpserver = new HttpServer();
 var testpath = "/simple";
 var httpbody = "<?xml version='1.0' ?><root>0123456789</root>";
@@ -13,7 +17,7 @@ function syncXHR()
 {
   var xhr = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
             .createInstance(Ci.nsIXMLHttpRequest);
-  xhr.open("GET", "http://localhost:4444" + testpath, false);
+  xhr.open("GET", URL + testpath, false);
   xhr.send(null);    
 }
 
@@ -84,7 +88,7 @@ function makeChan(url) {
 
 function next_test()
 {
-  var chan = makeChan("http://localhost:4444" + testpath);
+  var chan = makeChan(URL + testpath);
   chan.QueryInterface(Ci.nsIRequest);
   chan.asyncOpen(listener, null);
 }
@@ -92,7 +96,7 @@ function next_test()
 function run_test()
 {
   httpserver.registerPathHandler(testpath, serverHandler);
-  httpserver.start(4444);
+  httpserver.start(-1);
 
   next_test();
 
