@@ -115,7 +115,7 @@ class TransportLayerLoopback : public TransportLayer {
       layer_ = nullptr;
     }
 
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSITIMERCALLBACK
 
  private:
