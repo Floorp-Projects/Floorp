@@ -311,6 +311,8 @@ WorkerThreadState::init(JSRuntime *rt)
     for (size_t i = 0; i < numThreads; i++) {
         WorkerThread &helper = threads[i];
         helper.runtime = rt;
+        helper.threadData.construct(rt);
+        helper.threadData.ref().addToThreadList();
         helper.thread = PR_CreateThread(PR_USER_THREAD,
                                         WorkerThread::ThreadMain, &helper,
                                         PR_PRIORITY_NORMAL, PR_LOCAL_THREAD, PR_JOINABLE_THREAD, 0);
@@ -322,8 +324,6 @@ WorkerThreadState::init(JSRuntime *rt)
             numThreads = 0;
             return false;
         }
-        helper.threadData.construct(rt);
-        helper.threadData.ref().addToThreadList();
     }
 
     resetAsmJSFailureState();
@@ -439,19 +439,20 @@ WorkerThread::destroy()
 {
     WorkerThreadState &state = *runtime->workerThreadState;
 
-    if (!thread)
-        return;
+    if (thread) {
+        {
+            AutoLockWorkerThreadState lock(runtime);
+            terminate = true;
 
-    {
-        AutoLockWorkerThreadState lock(runtime);
-        terminate = true;
+            /* Notify all workers, to ensure that this thread wakes up. */
+            state.notifyAll(WorkerThreadState::WORKER);
+        }
 
-        /* Notify all workers, to ensure that this thread wakes up. */
-        state.notifyAll(WorkerThreadState::WORKER);
+        PR_JoinThread(thread);
     }
 
-    PR_JoinThread(thread);
-    threadData.ref().removeFromThreadList();
+    if (!threadData.empty())
+        threadData.ref().removeFromThreadList();
 }
 
 /* static */
