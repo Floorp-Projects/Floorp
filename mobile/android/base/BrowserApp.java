@@ -24,7 +24,6 @@ import org.mozilla.gecko.util.GamepadUtils;
 import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.util.UiAsyncTask;
-import org.mozilla.gecko.widget.AboutHome;
 import org.mozilla.gecko.widget.GeckoActionProvider;
 import org.mozilla.gecko.widget.ButtonToast;
 
@@ -379,18 +378,6 @@ abstract public class BrowserApp extends GeckoApp
                 GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Reader:ListCountUpdated", Integer.toString(count)));
             }
         });
-    }
-
-    @Override
-    void onStatePurged() {
-        ThreadUtils.postToUiThread(new Runnable() {
-            @Override
-            public void run() {
-                mHomePager.setAboutHomeLastTabsVisibility(false);
-            }
-        });
-
-        super.onStatePurged();
     }
 
     @Override
@@ -1392,8 +1379,6 @@ abstract public class BrowserApp extends GeckoApp
 
         // FIXME: do animation if animate is true
         mHomePager.show(getSupportFragmentManager());
-
-        mBrowserToolbar.setNextFocusDownId(R.id.abouthome_content);
     }
 
     private void animateHideHomePager() {

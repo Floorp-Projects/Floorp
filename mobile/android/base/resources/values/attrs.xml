@@ -31,11 +31,6 @@
 
     </declare-styleable>
 
-    <declare-styleable name="AboutHomeSection">
-        <attr name="title" format="string"/>
-        <attr name="subtitle" format="string"/>
-    </declare-styleable>
-
     <!-- DoorHangers -->
     <declare-styleable name="DoorHanger">
         <attr name="arrowPopupWidth" format="dimension">

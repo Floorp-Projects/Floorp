@@ -236,11 +236,6 @@
 
   <string name="abouthome_last_tabs_title">&abouthome_last_tabs_title;</string>
   <string name="abouthome_last_tabs_open">&abouthome_last_tabs_open;</string>
-  <string name="abouthome_about_sync">&abouthome_about_sync3;</string>
-  <string name="abouthome_about_apps">&abouthome_about_apps3;</string>
-  <string name="abouthome_sync_bold_name">&abouthome_sync_bold_name;</string>
-  <string name="abouthome_apps_bold_name">&abouthome_apps_bold_name2;</string>
-  
   <string name="abouthome_visited_empty">&abouthome_visited_empty;</string>
 
   <string name="filepicker_title">&filepicker_title;</string>

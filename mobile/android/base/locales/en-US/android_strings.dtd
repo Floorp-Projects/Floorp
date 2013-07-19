@@ -270,20 +270,6 @@ size. -->
 <!ENTITY abouthome_last_tabs_open "Open all tabs from last time">
 <!ENTITY abouthome_visited_empty "Websites you visited go here">
 
-<!-- Localization note (abouthome_about_sync3, abouthome_about_apps2): The
-     chevron (ex: "»"; unicode= U+00BB) is used as an arrow to show that
-     clicking this text in the promotions box will perform some action. Note
-     that a non-breaking space (unicode= U+00A0) should be used between this
-     character and the remainder of the string to prevent word wrap. -->
-<!ENTITY abouthome_about_sync3 "Set up Firefox Sync to access bookmarks, history and tabs from your other devices&#x00A0;»">
-<!ENTITY abouthome_about_apps3 "Get apps from the Firefox Marketplace and discover the best the Web has to offer&#x00A0;»">
-<!-- Localization note (abouthome_sync_bold_name, abouthome_apps_bold_name):
-     These strings are accentuated as bold text in the "abouthome_about_..."
-     strings above. These strings should be a subset of the strings above and
-     generally be the name of the product the string describes. -->
-<!ENTITY abouthome_sync_bold_name "Firefox Sync">
-<!ENTITY abouthome_apps_bold_name2 "Firefox Marketplace">
-
 <!ENTITY filepicker_title "Choose File">
 <!ENTITY filepicker_audio_title "Choose or record a sound">
 <!ENTITY filepicker_image_title "Choose or take a picture">
