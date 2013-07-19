@@ -22,7 +22,7 @@ class GenericFactory MOZ_FINAL : public nsIFactory
 public:
   typedef Module::ConstructorProcPtr ConstructorProcPtr;
 
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIFACTORY
 
   GenericFactory(ConstructorProcPtr ctor)

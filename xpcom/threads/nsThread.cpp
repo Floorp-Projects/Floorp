@@ -130,8 +130,8 @@ nsThreadClassInfo::GetClassIDNoAlloc(nsCID *result)
 
 //-----------------------------------------------------------------------------
 
-NS_IMPL_THREADSAFE_ADDREF(nsThread)
-NS_IMPL_THREADSAFE_RELEASE(nsThread)
+NS_IMPL_ADDREF(nsThread)
+NS_IMPL_RELEASE(nsThread)
 NS_INTERFACE_MAP_BEGIN(nsThread)
   NS_INTERFACE_MAP_ENTRY(nsIThread)
   NS_INTERFACE_MAP_ENTRY(nsIThreadInternal)

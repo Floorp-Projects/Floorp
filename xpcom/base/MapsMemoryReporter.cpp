@@ -116,7 +116,7 @@ class MapsReporter MOZ_FINAL : public nsIMemoryMultiReporter
 public:
   MapsReporter();
 
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
 
   NS_IMETHOD GetName(nsACString &aName)
   {
@@ -158,7 +158,7 @@ private:
   nsTHashtable<nsCStringHashKey> mMozillaLibraries;
 };
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(MapsReporter, nsIMemoryMultiReporter)
+NS_IMPL_ISUPPORTS1(MapsReporter, nsIMemoryMultiReporter)
 
 MapsReporter::MapsReporter()
   : mSearchedForLibxul(false)
