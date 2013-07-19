@@ -844,10 +844,7 @@ var SelectionHelperUI = {
 
     if (this._hitTestSelection(aEvent) && this._targetIsEditable) {
       // Attach to the newly placed caret position
-      this._sendAsyncMessage("Browser:CaretAttach", {
-        xPos: aEvent.clientX,
-        yPos: aEvent.clientY
-      });
+      this.attachToCaret(this._msgTarget, aEvent.clientX, aEvent.clientY);
       return;
     }
 
