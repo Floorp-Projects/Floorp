@@ -43,7 +43,7 @@ class Preferences : public nsIPrefService,
 public:
   typedef mozilla::dom::PrefSetting PrefSetting;
 
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIPREFSERVICE
   NS_FORWARD_NSIPREFBRANCH(sRootBranch->)
   NS_DECL_NSIOBSERVER
