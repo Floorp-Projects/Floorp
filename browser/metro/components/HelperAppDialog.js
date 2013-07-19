@@ -12,6 +12,7 @@ const URI_GENERIC_ICON_DOWNLOAD = "chrome://browser/skin/images/alert-downloads-
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/DownloadUtils.jsm");
 
 // -----------------------------------------------------------------------
 // HelperApp Launcher Dialog
@@ -32,23 +33,79 @@ HelperAppLauncherDialog.prototype = {
       aLauncher.launchWithApplication(null, false);
     } else {
       let wasClicked = false;
-      let listener = {
-        observe: function(aSubject, aTopic, aData) {
-          if (aTopic == "alertclickcallback") {
-            wasClicked = true;
-            let win = Cc["@mozilla.org/appshell/window-mediator;1"].getService(Ci.nsIWindowMediator).getMostRecentWindow("navigator:browser");
-            if (win)
-              win.PanelUI.show("downloads-container");
-  
-            aLauncher.saveToDisk(null, false);
-          } else {
-            if (!wasClicked)
-              aLauncher.cancel(Cr.NS_BINDING_ABORTED);
-          }
-        }
-      };
-      this._notify(aLauncher, listener);
+      this._showDownloadInfobar(aLauncher);
     }
+  },
+
+  _getDownloadSize: function dv__getDownloadSize (aSize) {
+    let displaySize = DownloadUtils.convertByteUnits(aSize);
+    if (displaySize[0] > 0) // [0] is size, [1] is units
+      return displaySize.join("");
+    else
+      return Strings.browser.GetStringFromName("downloadsUnknownSize");
+  },
+
+  _getChromeWindow: function (aWindow) {
+      let chromeWin = aWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                            .getInterface(Ci.nsIWebNavigation)
+                            .QueryInterface(Ci.nsIDocShellTreeItem)
+                            .rootTreeItem
+                            .QueryInterface(Ci.nsIInterfaceRequestor)
+                            .getInterface(Ci.nsIDOMWindow)
+                            .QueryInterface(Ci.nsIDOMChromeWindow);
+     return chromeWin;
+  },
+
+  _showDownloadInfobar: function do_showDownloadInfobar(aLauncher) {
+    let browserBundle = Services.strings.createBundle("chrome://browser/locale/browser.properties");
+
+    let runButtonText =
+              browserBundle.GetStringFromName("downloadRun");
+    let saveButtonText =
+              browserBundle.GetStringFromName("downloadSave");
+    let cancelButtonText =
+              browserBundle.GetStringFromName("downloadCancel");
+
+    let buttons = [
+      {
+        isDefault: true,
+        label: runButtonText,
+        accessKey: "",
+        callback: function() {
+          aLauncher.saveToDisk(null, false);
+          Services.obs.notifyObservers(aLauncher.targetFile, "dl-run", "true");
+        }
+      },
+      {
+        label: saveButtonText,
+        accessKey: "",
+        callback: function() {
+          aLauncher.saveToDisk(null, false);
+          Services.obs.notifyObservers(aLauncher.targetFile, "dl-run", "false");
+        }
+      },
+      {
+        label: cancelButtonText,
+        accessKey: "",
+        callback: function() { aLauncher.cancel(Cr.NS_BINDING_ABORTED); }
+      }
+    ];
+
+    let window = Services.wm.getMostRecentWindow("navigator:browser");
+    let chromeWin = this._getChromeWindow(window).wrappedJSObject;
+    let notificationBox = chromeWin.Browser.getNotificationBox();
+    downloadSize = this._getDownloadSize(aLauncher.contentLength);
+
+    let msg = browserBundle.GetStringFromName("alertDownloadSave")
+      .replace("#1", aLauncher.suggestedFileName)
+      .replace("#2", downloadSize)
+      .replace("#3", aLauncher.source.host);
+
+    let newBar = notificationBox.appendNotification(msg,
+                                                    "save-download",
+                                                    URI_GENERIC_ICON_DOWNLOAD,
+                                                    notificationBox.PRIORITY_WARNING_HIGH,
+                                                    buttons);
   },
 
   promptForSaveToFile: function hald_promptForSaveToFile(aLauncher, aContext, aDefaultFile, aSuggestedFileExt, aForcePrompt) {
@@ -203,16 +260,6 @@ HelperAppLauncherDialog.prototype = {
   isUsableDirectory: function hald_isUsableDirectory(aDirectory) {
     return aDirectory.exists() && aDirectory.isDirectory() && aDirectory.isWritable();
   },
-
-  _notify: function hald_notify(aLauncher, aCallback) {
-    let bundle = Services.strings.createBundle("chrome://browser/locale/browser.properties");
-
-    let notifier = Cc[aCallback ? "@mozilla.org/alerts-service;1" : "@mozilla.org/toaster-alerts-service;1"].getService(Ci.nsIAlertsService);
-    notifier.showAlertNotification(URI_GENERIC_ICON_DOWNLOAD,
-                                   bundle.GetStringFromName("alertDownloads"),
-                                   bundle.GetStringFromName("alertTapToSave"),
-                                   true, "", aCallback, "downloadopen-fail");
-  }
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([HelperAppLauncherDialog]);

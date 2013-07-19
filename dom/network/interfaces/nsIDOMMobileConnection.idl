@@ -11,7 +11,7 @@ interface nsIDOMMozMobileNetworkInfo;
 interface nsIDOMMozMobileCellInfo;
 interface nsIDOMMozMobileCFInfo;
 
-[scriptable, builtinclass, uuid(fd26e2e0-c910-11e2-8b8b-0800200c9a66)]
+[scriptable, builtinclass, uuid(7fd42b7e-8100-4f2b-bc85-858603d499c8)]
 interface nsIDOMMozMobileConnection : nsIDOMEventTarget
 {
   const long ICC_SERVICE_CLASS_VOICE = (1 << 0);
@@ -38,6 +38,19 @@ interface nsIDOMMozMobileConnection : nsIDOMEventTarget
   const long CALL_BARRING_PROGRAM_OUTGOING_INTERNATIONAL_EXCEPT_HOME = 2;
   const long CALL_BARRING_PROGRAM_ALL_INCOMING                       = 3;
   const long CALL_BARRING_PROGRAM_INCOMING_ROAMING                   = 4;
+
+  /**
+   * Calling line identification restriction constants.
+   *
+   * @see 3GPP TS 27.007 7.7 Defined values
+   *
+   * (0) Uses subscription default value.
+   * (1) Restricts CLI presentation.
+   * (2) Allows CLI presentation.
+   */
+  const long CLIR_DEFAULT     = 0;
+  const long CLIR_INVOCATION  = 1;
+  const long CLIR_SUPPRESSION = 2;
 
   /**
    * These two fields can be accessed by privileged applications with the
@@ -225,6 +238,33 @@ interface nsIDOMMozMobileConnection : nsIDOMEventTarget
    * or 'GenericFailure'.
    */
   nsIDOMDOMRequest getCallWaitingOption();
+
+  /**
+   * Enables or disables the presentation of the calling line identity (CLI) to
+   * the called party when originating a call.
+   *
+   * @param clirMode
+   *        Is one of the CLIR_* constants.
+   *        
+   * If successful, the request's onsuccess will be called.
+   *
+   * Otherwise, the request's onerror will be called, and the request's error
+   * will be either 'RadioNotAvailable', 'RequestNotSupported',
+   */
+  nsIDOMDOMRequest setCallingLineIdRestriction(in unsigned short clirMode);
+
+  /**
+   * Queries current CLIR status.
+   *
+   * If successful, the request's onsuccess will be called, and the request's
+   * result will be a DOMCLIRStatus dictionary containing CLIR 'n' and 'm'
+   * parameter.
+   *
+   * Otherwise, the request's onerror will be called, and the request's error
+   * will be either 'RadioNotAvailable', 'RequestNotSupported',
+   * or 'GenericFailure'.
+   */
+  nsIDOMDOMRequest getCallingLineIdRestriction();
 
   /**
    * The 'voicechange' event is notified whenever the voice connection object
@@ -488,4 +528,29 @@ dictionary DOMMMIResult
    * information can be a number, a string key or an array of string keys.
    */
   jsval additionalInformation;
+};
+
+dictionary DOMCLIRStatus
+{
+  /**
+   * CLIR parameter 'n': parameter sets the adjustment for outgoing calls.
+   *
+   * 0 Presentation indicator is used according to the subscription of the
+   *   CLIR service (uses subscription default value).
+   * 1 CLIR invocation (restricts CLI presentation).
+   * 2 CLIR suppression (allows CLI presentation).
+   */
+  unsigned short n;
+
+  /**
+   * CLIR parameter 'm': parameter shows the subscriber CLIR service status in
+   *                     the network.
+   * 0 CLIR not provisioned.
+   * 1 CLIR provisioned in permanent mode.
+   * 2 unknown (e.g. no network, etc.).
+   * 3 CLIR temporary mode presentation restricted.
+   *
+   * @see 3GPP TS 27.007 7.7 Defined values
+   */
+  unsigned short m;
 };

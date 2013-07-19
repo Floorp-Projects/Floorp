@@ -4,7 +4,7 @@
         "path": ""
     },
     "global": {
-        "talos_url": "http://puppetagain.pub.build.mozilla.org/data/python/packages/talos-7d4ae29b7d1f.tar.gz",
+        "talos_repo": "http://hg.mozilla.org/build/talos",
         "talos_revision": "7d4ae29b7d1f"
     },
     "suites": {

@@ -20,8 +20,12 @@
 #include "nsHashPropertyBag.h"
 
 #ifdef MOZ_WIDGET_GONK
+#include "nsJSUtils.h"
+#include "nsCxPusher.h"
 #include "nsIAudioManager.h"
+#define NS_AUDIOMANAGER_CONTRACTID "@mozilla.org/telephony/audiomanager;1"
 #endif
+
 using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::hal;
@@ -77,6 +81,10 @@ AudioChannelService::AudioChannelService()
     nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
     if (obs) {
       obs->AddObserver(this, "ipc:content-shutdown", false);
+#ifdef MOZ_WIDGET_GONK
+      // To monitor the volume settings based on audio channel.
+      obs->AddObserver(this, "mozsettings-changed", false);
+#endif
     }
   }
 }
@@ -484,41 +492,91 @@ AudioChannelService::ChannelName(AudioChannelType aType)
 }
 
 NS_IMETHODIMP
-AudioChannelService::Observe(nsISupports* aSubject, const char* aTopic, const PRUnichar* data)
+AudioChannelService::Observe(nsISupports* aSubject, const char* aTopic, const PRUnichar* aData)
 {
-  MOZ_ASSERT(!strcmp(aTopic, "ipc:content-shutdown"));
-
-  nsCOMPtr<nsIPropertyBag2> props = do_QueryInterface(aSubject);
-  if (!props) {
-    NS_WARNING("ipc:content-shutdown message without property bag as subject");
-    return NS_OK;
-  }
-
-  uint64_t childID = 0;
-  nsresult rv = props->GetPropertyAsUint64(NS_LITERAL_STRING("childID"),
-                                           &childID);
-  if (NS_SUCCEEDED(rv)) {
-    for (int32_t type = AUDIO_CHANNEL_INT_NORMAL;
-         type < AUDIO_CHANNEL_INT_LAST;
-         ++type) {
-      int32_t index;
-      while ((index = mChannelCounters[type].IndexOf(childID)) != -1) {
-        mChannelCounters[type].RemoveElementAt(index);
-      }
-
-      if ((index = mActiveContentChildIDs.IndexOf(childID)) != -1) {
-        mActiveContentChildIDs.RemoveElementAt(index);
-      }
+  if (!strcmp(aTopic, "ipc:content-shutdown")) {
+    nsCOMPtr<nsIPropertyBag2> props = do_QueryInterface(aSubject);
+    if (!props) {
+      NS_WARNING("ipc:content-shutdown message without property bag as subject");
+      return NS_OK;
     }
 
-    // We don't have to remove the agents from the mAgents hashtable because if
-    // that table contains only agents running on the same process.
+    uint64_t childID = 0;
+    nsresult rv = props->GetPropertyAsUint64(NS_LITERAL_STRING("childID"),
+                                             &childID);
+    if (NS_SUCCEEDED(rv)) {
+      for (int32_t type = AUDIO_CHANNEL_INT_NORMAL;
+           type < AUDIO_CHANNEL_INT_LAST;
+           ++type) {
+        int32_t index;
+        while ((index = mChannelCounters[type].IndexOf(childID)) != -1) {
+          mChannelCounters[type].RemoveElementAt(index);
+        }
 
-    SendAudioChannelChangedNotification(childID);
-    Notify();
-  } else {
-    NS_WARNING("ipc:content-shutdown message without childID property");
+        if ((index = mActiveContentChildIDs.IndexOf(childID)) != -1) {
+          mActiveContentChildIDs.RemoveElementAt(index);
+        }
+      }
+
+      // We don't have to remove the agents from the mAgents hashtable because if
+      // that table contains only agents running on the same process.
+
+      SendAudioChannelChangedNotification(childID);
+      Notify();
+    } else {
+      NS_WARNING("ipc:content-shutdown message without childID property");
+    }
   }
+#ifdef MOZ_WIDGET_GONK
+  // To process the volume control on each audio channel according to
+  // change of settings
+  else if (!strcmp(aTopic, "mozsettings-changed")) {
+    AutoSafeJSContext cx;
+    nsDependentString dataStr(aData);
+    JS::Rooted<JS::Value> val(cx);
+    if (!JS_ParseJSON(cx, dataStr.get(), dataStr.Length(), &val) ||
+        !val.isObject()) {
+      return NS_OK;
+    }
+
+    JS::Rooted<JSObject*> obj(cx, &val.toObject());
+    JS::Rooted<JS::Value> key(cx);
+    if (!JS_GetProperty(cx, obj, "key", key.address()) ||
+        !key.isString()) {
+      return NS_OK;
+    }
+
+    JS::RootedString jsKey(cx, JS_ValueToString(cx, key));
+    if (!jsKey) {
+      return NS_OK;
+    }
+    nsDependentJSString keyStr;
+    if (!keyStr.init(cx, jsKey) || keyStr.Find("audio.volume.", 0, false)) {
+      return NS_OK;
+    }
+
+    JS::Rooted<JS::Value> value(cx);
+    if (!JS_GetProperty(cx, obj, "value", value.address()) || !value.isInt32()) {
+      return NS_OK;
+    }
+
+    nsCOMPtr<nsIAudioManager> audioManager = do_GetService(NS_AUDIOMANAGER_CONTRACTID);
+    NS_ENSURE_TRUE(audioManager, NS_OK);
+
+    int32_t index = value.toInt32();
+    if (keyStr.EqualsLiteral("audio.volume.content")) {
+      audioManager->SetAudioChannelVolume(AUDIO_CHANNEL_CONTENT, index);
+    } else if (keyStr.EqualsLiteral("audio.volume.notification")) {
+      audioManager->SetAudioChannelVolume(AUDIO_CHANNEL_NOTIFICATION, index);
+    } else if (keyStr.EqualsLiteral("audio.volume.alarm")) {
+      audioManager->SetAudioChannelVolume(AUDIO_CHANNEL_ALARM, index);
+    } else if (keyStr.EqualsLiteral("audio.volume.telephony")) {
+      audioManager->SetAudioChannelVolume(AUDIO_CHANNEL_TELEPHONY, index);
+    } else {
+      MOZ_ASSERT("unexpected audio channel for volume control");
+    }
+  }
+#endif
 
   return NS_OK;
 }

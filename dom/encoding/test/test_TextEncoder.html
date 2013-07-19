@@ -12,6 +12,12 @@
 <div id="log"></div>
 <script>
 
+if (navigator.platform.startsWith("Win")) {
+  SimpleTest.expectAssertions(0, 2);
+} else {
+  SimpleTest.expectAssertions(2);
+}
+
 setup({explicit_done: true});
 runTest();
 

@@ -24,11 +24,6 @@ scrollbar[orient="vertical"]
 }
 
 @media all and (-moz-overlay-scrollbars) {
-  scrollbar {
-    position: relative;
-    z-index: 2147483647;
-  }
-
   scrollbar:not([active="true"]),
   scrollbar[disabled="true"] {
     visibility: hidden;

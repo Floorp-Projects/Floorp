@@ -6,21 +6,24 @@
 
 // make sure response.write works for strings, and coerces other args to strings
 
-var tests =
-  [
-   new Test("http://localhost:4444/writeString",
+XPCOMUtils.defineLazyGetter(this, "tests", function() {
+  return [
+    new Test("http://localhost:" + srv.identity.primaryPort + "/writeString",
             null, check_1234, succeeded),
-   new Test("http://localhost:4444/writeInt",
+    new Test("http://localhost:" + srv.identity.primaryPort + "/writeInt",
             null, check_1234, succeeded),
   ];
+});
+
+var srv;
 
 function run_test()
 {
-  var srv = createServer();
+  srv = createServer();
 
   srv.registerPathHandler("/writeString", writeString);
   srv.registerPathHandler("/writeInt", writeInt);
-  srv.start(4444);
+  srv.start(-1);
 
   runHttpTests(tests, testComplete(srv));
 }

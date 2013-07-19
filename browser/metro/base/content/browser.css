@@ -156,27 +156,6 @@ richlistitem {
   -moz-binding: url("chrome://browser/content/bindings/bindings.xml#richlistitem");
 }
 
-richgriditem[typeName="download"][state="-1"] {
-  -moz-binding: url("chrome://browser/content/bindings/downloads.xml#download-not-started");
-}
-
-richgriditem[typeName="download"] {
-  -moz-binding: url("chrome://browser/content/bindings/downloads.xml#download-downloading");
-}
-
-richgriditem[typeName="download"][state="1"] {
-  -moz-binding: url("chrome://browser/content/bindings/downloads.xml#download-done");
-}
-
-richgriditem[typeName="download"][state="2"],
-richgriditem[typeName="download"][state="3"] {
-  -moz-binding: url("chrome://browser/content/bindings/downloads.xml#download-retry");
-}
-
-richgriditem[typeName="download"][state="4"] {
-  -moz-binding: url("chrome://browser/content/bindings/downloads.xml#download-paused");
-}
-
 richlistitem[type="error"],
 richlistitem[type="warning"] {
   -moz-binding: url("chrome://browser/content/bindings/console.xml#error");

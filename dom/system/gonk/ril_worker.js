@@ -87,6 +87,8 @@ let RILQUIRKS_MODEM_DEFAULTS_TO_EMERGENCY_MODE = libcutils.property_get("ro.moz.
 let RILQUIRKS_SIM_APP_STATE_EXTRA_FIELDS = libcutils.property_get("ro.moz.ril.simstate_extra_field", "false") === "true";
 // Needed for call-waiting on Peak device
 let RILQUIRKS_EXTRA_UINT32_2ND_CALL = libcutils.property_get("ro.moz.ril.extra_int_2nd_call", "false") == "true";
+// On the emulator we support querying the number of lock retries
+let RILQUIRKS_HAVE_QUERY_ICC_LOCK_RETRY_COUNT = libcutils.property_get("ro.moz.ril.have_query_icc_lock_retry_count", "false") == "true";
 
 // Marker object.
 let PENDING_NETWORK_TYPE = {};
@@ -1198,32 +1200,54 @@ let RIL = {
 
   /**
    * Helper function for fetching the number of unlock retries of ICC locks.
+   *
+   * We only query the retry count when we're on the emulator. The phones do
+   * not support the request id and their rild doesn't return an error.
    */
   iccGetCardLockRetryCount: function iccGetCardLockRetryCount(options) {
-    switch (options.lockType) {
-      case "pin":
-      case "puk":
-      case "pin2":
-      case "puk2":
-      case "nck":
-      case "cck":
-      case "spck":
-        options.errorMsg = GECKO_ERROR_REQUEST_NOT_SUPPORTED;
-        options.success = false;
-        this.sendDOMMessage(options);
-        return;
-      default:
-        options.errorMsg = GECKO_ERROR_GENERIC_FAILURE;
-        options.success = false;
-        this.sendDOMMessage(options);
-        return;
+    var selCode = {
+      pin: ICC_SEL_CODE_SIM_PIN,
+      puk: ICC_SEL_CODE_SIM_PUK,
+      pin2: ICC_SEL_CODE_SIM_PIN2,
+      puk2: ICC_SEL_CODE_SIM_PUK2,
+      nck: ICC_SEL_CODE_PH_NET_PIN,
+      cck: ICC_SEL_CODE_PH_CORP_PIN,
+      spck: ICC_SEL_CODE_PH_SP_PIN
+    };
+
+    if (typeof(selCode[options.lockType]) === 'undefined') {
+      /* unknown lock type */
+      options.errorMsg = GECKO_ERROR_GENERIC_FAILURE;
+      options.success = false;
+      this.sendDOMMessage(options);
+      return;
     }
 
-    // TODO: We currently don't have a way for
-    // reading the retry count. See bug 868896.
-    options.retryCount = 0;
-    options.success = true;
-    this.sendDOMMessage(options);
+    if (RILQUIRKS_HAVE_QUERY_ICC_LOCK_RETRY_COUNT) {
+      /* Only the emulator supports this request, ... */
+      options.selCode = selCode[options.lockType];
+      this.queryICCLockRetryCount(options);
+    } else {
+      /* ... while the phones do not. */
+      options.errorMsg = GECKO_ERROR_REQUEST_NOT_SUPPORTED;
+      options.success = false;
+      this.sendDOMMessage(options);
+    }
+  },
+
+  /**
+   * Query ICC lock retry count.
+   *
+   * @param selCode
+   *        One of ICC_SEL_CODE_*.
+   * @param serviceClass
+   *        One of ICC_SERVICE_CLASS_*.
+   */
+  queryICCLockRetryCount: function queryICCLockRetryCount(options) {
+    Buf.newParcel(REQUEST_GET_UNLOCK_RETRY_COUNT, options);
+    Buf.writeUint32(1);
+    Buf.writeString(options.selCode);
+    Buf.sendParcel();
   },
 
   /**
@@ -1452,6 +1476,39 @@ let RIL = {
     Buf.writeUint32(2);
     Buf.writeUint32(options.enabled ? 1 : 0);
     Buf.writeUint32(ICC_SERVICE_CLASS_VOICE);
+    Buf.sendParcel();
+  },
+
+  /**
+   * Queries current CLIP status.
+   *
+   * (MMI request for code "*#30#")
+   *
+   */
+  queryCLIP: function queryCLIP(options) {
+    Buf.simpleRequest(REQUEST_QUERY_CLIP, options);
+  },
+
+  /**
+   * Queries current CLIR status.
+   *
+   */
+  getCLIR: function getCLIR(options) {
+    Buf.simpleRequest(REQUEST_GET_CLIR, options);
+  },
+
+  /**
+   * Enables or disables the presentation of the calling line identity (CLI) to
+   * the called party when originating a call.
+   *
+   * @param options.clirMode
+   *        Is one of the CLIR_* constants in
+   *        nsIDOMMozMobileConnection interface.
+   */
+  setCLIR: function setCLIR(options) {
+    Buf.newParcel(REQUEST_SET_CLIR, options);
+    Buf.writeUint32(1);
+    Buf.writeUint32(options.clirMode);
     Buf.sendParcel();
   },
 
@@ -2397,6 +2454,17 @@ let RIL = {
         this.sendDOMMessage(options);
         return;
 
+      // CLIP
+      case MMI_SC_CLIP:
+        options.mmiServiceCode = MMI_KS_SC_CLIP;
+        options.procedure = mmi.procedure;
+        if (options.procedure === MMI_PROCEDURE_INTERROGATION) {
+          this.queryCLIP(options);
+        } else {
+          _sendMMIError(MMI_ERROR_KS_NOT_SUPPORTED, MMI_KS_SC_CLIP);
+        }
+        return;
+
       // Call barring
       case MMI_SC_BAOC:
       case MMI_SC_BAOIC:
@@ -2408,8 +2476,6 @@ let RIL = {
       case MMI_SC_BA_MT:
       // Call waiting
       case MMI_SC_CALL_WAITING:
-      // CLIP
-      case MMI_SC_CLIP:
       // CLIR
       case MMI_SC_CLIR:
         _sendMMIError(MMI_ERROR_KS_NOT_SUPPORTED);
@@ -4899,8 +4965,34 @@ RIL[REQUEST_CANCEL_USSD] = function REQUEST_CANCEL_USSD(length, options) {
   options.errorMsg = RIL_ERROR_TO_GECKO_ERROR[options.rilRequestError];
   this.sendDOMMessage(options);
 };
-RIL[REQUEST_GET_CLIR] = null;
-RIL[REQUEST_SET_CLIR] = null;
+RIL[REQUEST_GET_CLIR] = function REQUEST_GET_CLIR(length, options) {
+  options.success = (options.rilRequestError === 0);
+  if (!options.success) {
+    options.errorMsg = RIL_ERROR_TO_GECKO_ERROR[options.rilRequestError];
+    this.sendDOMMessage(options);
+    return;
+  }
+
+  let bufLength = Buf.readUint32();
+  if (!bufLength || bufLength < 2) {
+    options.success = false;
+    options.errorMsg = GECKO_ERROR_GENERIC_FAILURE;
+    this.sendDOMMessage(options);
+    return;
+  }
+
+  options.n = Buf.readUint32(); // Will be TS 27.007 +CLIR parameter 'n'.
+  options.m = Buf.readUint32(); // Will be TS 27.007 +CLIR parameter 'm'.
+  this.sendDOMMessage(options);
+};
+RIL[REQUEST_SET_CLIR] = function REQUEST_SET_CLIR(length, options) {
+  options.success = (options.rilRequestError === 0);
+  if (!options.success) {
+    options.errorMsg = RIL_ERROR_TO_GECKO_ERROR[options.rilRequestError];
+  }
+  this.sendDOMMessage(options);
+};
+
 RIL[REQUEST_QUERY_CALL_FORWARD_STATUS] =
   function REQUEST_QUERY_CALL_FORWARD_STATUS(length, options) {
     options.success = (options.rilRequestError === 0);
@@ -5150,7 +5242,44 @@ RIL[REQUEST_BASEBAND_VERSION] = function REQUEST_BASEBAND_VERSION(length, option
 RIL[REQUEST_SEPARATE_CONNECTION] = null;
 RIL[REQUEST_SET_MUTE] = null;
 RIL[REQUEST_GET_MUTE] = null;
-RIL[REQUEST_QUERY_CLIP] = null;
+RIL[REQUEST_QUERY_CLIP] = function REQUEST_QUERY_CLIP(length, options) {
+  options.success = (options.rilRequestError === 0);
+  if (!options.success) {
+    options.errorMsg = RIL_ERROR_TO_GECKO_ERROR[options.rilRequestError];
+    this.sendDOMMessage(options);
+    return;
+  }
+
+  let bufLength = Buf.readUint32();
+  if (!bufLength) {
+    options.success = false;
+    options.errorMsg = GECKO_ERROR_GENERIC_FAILURE;
+    this.sendDOMMessage(options);
+    return;
+  }
+
+  // options.provisioned informs about the called party receives the calling
+  // party's address information:
+  // 0 for CLIP not provisioned
+  // 1 for CLIP provisioned
+  // 2 for unknown
+  options.provisioned = Buf.readUint32();
+  if (options.rilMessageType === "sendMMI") {
+    switch (options.provisioned) {
+      case 0:
+        options.statusMessage = MMI_SM_KS_SERVICE_DISABLED;
+        break;
+      case 1:
+        options.statusMessage = MMI_SM_KS_SERVICE_ENABLED;
+        break;
+      default:
+        options.success = false;
+        options.errorMsg = MMI_ERROR_KS_ERROR;
+        break;
+    }
+  }
+  this.sendDOMMessage(options);
+};
 RIL[REQUEST_LAST_DATA_CALL_FAIL_CAUSE] = null;
 
 RIL.readDataCall_v5 = function readDataCall_v5(options) {
@@ -5376,6 +5505,14 @@ RIL[REQUEST_VOICE_RADIO_TECH] = function REQUEST_VOICE_RADIO_TECH(length, option
   }
   let radioTech = Buf.readUint32List();
   this._processRadioTech(radioTech[0]);
+};
+RIL[REQUEST_GET_UNLOCK_RETRY_COUNT] = function REQUEST_GET_UNLOCK_RETRY_COUNT(length, options) {
+  options.success = (options.rilRequestError === 0);
+  if (!options.success) {
+    options.errorMsg = RIL_ERROR_TO_GECKO_ERROR[options.rilRequestError];
+  }
+  options.retryCount = length ? Buf.readUint32List()[0] : -1;
+  this.sendDOMMessage(options);
 };
 RIL[UNSOLICITED_RESPONSE_RADIO_STATE_CHANGED] = function UNSOLICITED_RESPONSE_RADIO_STATE_CHANGED() {
   let radioState = Buf.readUint32();

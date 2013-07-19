@@ -55,9 +55,11 @@
               this.clearSelection();
             }
             this._selectedItem = wasSelected ? null : anItem;
-            anItem.selected = !wasSelected;
-
-            this._fireOnSelectionChange();
+            if (wasSelected)
+              anItem.removeAttribute("selected");
+            else
+              anItem.setAttribute("selected", true);
+            this._fireEvent("selectionchange");
           ]]>
         </body>
       </method>
@@ -72,13 +74,14 @@
               this.clearSelection();
             }
             this._selectedItem = anItem;
-            anItem.selected = true;
+            if (wasSelected) {
+              return;
+            }
+            anItem.setAttribute("selected", true);
             if (isSingleMode) {
-              if (!wasSelected) {
-                this._fireOnSelect();
-              }
+              this._fireEvent("select");
             } else {
-              this._fireOnSelectionChange();
+              this._fireEvent("selectionchange");
             }
           ]]>
         </body>
@@ -170,7 +173,7 @@
       <property name="selectedItems">
         <getter>
           <![CDATA[
-            return this.querySelectorAll("richgriditem[selected='true']");
+            return this.querySelectorAll("richgriditem[selected]");
           ]]>
         </getter>
       </property>
@@ -486,6 +489,7 @@
             if (this._columnCount) {
               gridStyle.MozColumnCount = this._columnCount;
             }
+            this._fireEvent("arranged");
           ]]>
         </body>
       </method>
@@ -568,11 +572,13 @@
             typeSizes = this.ownerDocument.defaultView._richgridTileSizes = {};
 
             let sheets = this.ownerDocument.styleSheets;
-            // the (first matching) rules that will give us tile type => width/height values
+            // The (first matching) rules that will give us tile type => width/height values
+            // The keys in this object are string-matched against the selectorText
+            // of rules in our stylesheet. Quoted values in a selector will always use " not '
             let typeSelectors = {
-              "richgriditem" : "default",
-              "richgriditem[customImage]": "thumbnail",
-              "richgriditem[compact]": "compact"
+              'richgriditem' : "default",
+              'richgriditem[tiletype="thumbnail"]': "thumbnail",
+              'richgriditem[compact]': "compact"
             };
             let rules, sheet;
             for (let i=0; (sheet=sheets[i]); i++) {
@@ -619,35 +625,33 @@
           <![CDATA[
             let item = this.ownerDocument.createElement("richgriditem");
             item.setAttribute("label", aLabel);
-            if (aValue)
+            if (aValue) {
               item.setAttribute("value", aValue);
+            }
+            if(this.hasAttribute("tiletype")) {
+              item.setAttribute("tiletype", this.getAttribute("tiletype"));
+            }
             return item;
           ]]>
         </body>
       </method>
 
-      <method name="_fireOnSelect">
+      <method name="_fireEvent">
+        <parameter name="aType"/>
         <body>
           <![CDATA[
-            if (this.suppressOnSelect || this._suppressOnSelect)
-              return;
+            switch (aType) {
+              case "select" :
+              case "selectionchange" :
+                if (this.suppressOnSelect || this._suppressOnSelect)
+                  return;
+                break;
+              case "arranged" :
+                break;
+            }
 
             let event = document.createEvent("Events");
-            event.initEvent("select", true, true);
-            this.dispatchEvent(event);
-          ]]>
-        </body>
-      </method>
-      <method name="_fireOnSelectionChange">
-        <body>
-          <![CDATA[
-            // flush out selection-related cached properties so they get recalc'd next time
-            // fire an event?
-            if (this.suppressOnSelect || this._suppressOnSelect)
-              return;
-
-            let event = document.createEvent("Events");
-            event.initEvent("selectionchange", true, true);
+            event.initEvent(aType, true, true);
             this.dispatchEvent(event);
           ]]>
         </body>
@@ -941,7 +945,10 @@
         <![CDATA[
           // fires for right-click, long-click and (keyboard) contextmenu input
           // toggle the selected state of tiles in a grid
-          this.control.handleItemContextMenu(this, event);
+          let gridParent = this.control;
+          if(!this.isBound || !gridParent)
+            return;
+          gridParent.handleItemContextMenu(this, event);
         ]]>
       </handler>
     </handlers>

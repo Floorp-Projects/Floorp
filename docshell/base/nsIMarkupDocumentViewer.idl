@@ -23,7 +23,7 @@ interface nsIMarkupDocumentViewer;
 
 [ref] native nsIMarkupDocumentViewerTArray(nsTArray<nsCOMPtr<nsIMarkupDocumentViewer> >);
 
-[scriptable, uuid(02d37b31-e654-4b74-9bc3-14dfe0020bb3)]
+[scriptable, uuid(23326580-e6ce-4ee1-94b8-f1d9424a9977)]
 interface nsIMarkupDocumentViewer : nsISupports
 {
 
@@ -136,4 +136,17 @@ interface nsIMarkupDocumentViewer : nsISupports
    *        in CSS pixels.
    */
   void changeMaxLineBoxWidth(in int32_t maxLineBoxWidth);
+
+  /*
+   * Render the document as if being viewed on a device with the specified
+   * media type. This will cause a reflow.
+   *
+   * @param mediaType The media type to be emulated
+   */
+  void emulateMedium(in AString aMediaType);
+
+  /*
+   * Restore the viewer's natural media type
+   */
+  void stopEmulatingMedium();
 };
