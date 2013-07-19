@@ -10,7 +10,7 @@ relativesrcdir  = @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-BROWSER_TESTS = \
+MOCHITEST_METRO_FILES = \
   head.js \
   browser_urlbar.js \
   browser_bookmarks.js \
@@ -39,7 +39,7 @@ BROWSER_TESTS = \
   $(NULL)
 
 ifndef MOZ_DEBUG
-BROWSER_TESTS += \
+MOCHITEST_METRO_FILES += \
   browser_selection_basic.js \
   browser_selection_basic.html \
   browser_selection_textarea.js \
@@ -57,19 +57,5 @@ BROWSER_TESTS += \
   browser_selection_contenteditable.html \
   $(NULL)
 endif
-
-BROWSER_TEST_RESOURCES = \
-  res/image01.png \
-  res/textblock01.html \
-  res/textinput01.html \
-  res/textarea01.html \
-  res/testEngine.xml \
-  $(NULL)
-
-libs:: $(BROWSER_TESTS)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/metro/$(relativesrcdir)
-
-libs:: $(BROWSER_TEST_RESOURCES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/metro/$(relativesrcdir)/res
 
 include $(topsrcdir)/config/rules.mk

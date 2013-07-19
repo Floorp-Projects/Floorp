@@ -58,6 +58,10 @@ ifdef MOCHITEST_A11Y_FILES
 $(eval $(call mochitest-libs-rule-template,MOCHITEST_A11Y_FILES,a11y))
 endif
 
+ifdef MOCHITEST_METRO_FILES
+$(eval $(call mochitest-libs-rule-template,MOCHITEST_METRO_FILES,metro))
+endif
+
 ifdef MOCHITEST_ROBOCOP_FILES
 $(eval $(call mochitest-libs-rule-template,MOCHITEST_ROBOCOP_FILES,tests/robocop,flat_hierarchy))
 endif

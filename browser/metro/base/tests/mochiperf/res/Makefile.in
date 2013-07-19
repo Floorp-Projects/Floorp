@@ -12,15 +12,12 @@ include $(DEPTH)/config/autoconf.mk
 
 ifndef MOZ_DEBUG
 MOCHITEST_METRO_FILES = \
-  ../mochitest/head.js \
-  perfhelpers.js \
-  browser_miscgfx_01.js \
-  browser_tabs_01.js \
-  browser_deck_01.js \
-  browser_msgmgr_01.js \
-  msgmanagerecho.js \
-  browser_layers_01.js \
-  browser_firstx.js \
+  ripples.html \
+  scroll_test.html \
+  tidevideo.html \
+  tide.mp4 \
+  divs_test.html \
+  fx.png \
   $(NULL)
 endif
 
