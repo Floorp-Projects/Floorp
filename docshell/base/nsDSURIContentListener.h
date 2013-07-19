@@ -23,7 +23,7 @@ class nsDSURIContentListener :
 {
 friend class nsDocShell;
 public:
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSIURICONTENTLISTENER
 
     nsresult Init();
