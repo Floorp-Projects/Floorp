@@ -257,6 +257,28 @@ void main()
 #endif
 @end
 
+@shader sRGBXRectTextureLayer<mask:,Mask,Mask3D>FS
+#extension GL_ARB_texture_rectangle : enable
+
+$LAYER_FRAGMENT<mask>$
+
+/* This should not be used on GL ES */
+#ifndef GL_ES
+uniform sampler2DRect uTexture;
+uniform vec2 uTexCoordMultiplier;
+void main()
+{
+$FRAGMENT_CALC_MASK<mask>$
+  gl_FragColor = vec4(texture2DRect(uTexture, vec2(vTexCoord * uTexCoordMultiplier)).rgb, 1.0) * uLayerOpacity * mask;
+}
+#else
+void main()
+{
+  gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+}
+#endif
+@end
+
 // Single texture in BGRA format, but with a Rect texture.
 // nsChildView needs this for old Mac hardware.
 @shader sBGRARectTextureLayerFS

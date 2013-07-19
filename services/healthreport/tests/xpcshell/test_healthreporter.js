@@ -22,7 +22,9 @@ Cu.import("resource://testing-common/services/metrics/mocks.jsm");
 Cu.import("resource://testing-common/services/healthreport/utils.jsm");
 
 
-const DUMMY_URI = "http://localhost:62013/";
+const SERVER_HOSTNAME = "localhost";
+const SERVER_PORT = 8080;
+const SERVER_URI = "http://" + SERVER_HOSTNAME + ":" + SERVER_PORT;
 const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
 
 const HealthReporterState = bsp.HealthReporterState;
@@ -38,7 +40,7 @@ function defineNow(policy, now) {
   });
 }
 
-function getJustReporter(name, uri=DUMMY_URI, inspected=false) {
+function getJustReporter(name, uri=SERVER_URI, inspected=false) {
   let branch = "healthreport.testing." + name + ".";
 
   let prefs = new Preferences(branch + "healthreport.");
@@ -82,12 +84,13 @@ function getReporter(name, uri, inspected) {
 
 function getReporterAndServer(name, namespace="test") {
   return Task.spawn(function get() {
-    let server = new BagheeraServer();
-    server.createNamespace(namespace);
-    server.start();
-
-    let reporter = yield getReporter(name, server.serverURI);
+    let reporter = yield getReporter(name, SERVER_URI);
     reporter.serverNamespace = namespace;
+
+    let server = new BagheeraServer(SERVER_URI);
+    server.createNamespace(namespace);
+
+    server.start(SERVER_PORT);
 
     throw new Task.Result([reporter, server]);
   });
@@ -164,7 +167,7 @@ add_task(function test_shutdown_normal() {
 });
 
 add_task(function test_shutdown_storage_in_progress() {
-  let reporter = yield getJustReporter("shutdown_storage_in_progress", DUMMY_URI, true);
+  let reporter = yield getJustReporter("shutdown_storage_in_progress", SERVER_URI, true);
 
   reporter.onStorageCreated = function () {
     print("Faking shutdown during storage initialization.");
@@ -182,7 +185,7 @@ add_task(function test_shutdown_storage_in_progress() {
 // results in shutdown and storage closure.
 add_task(function test_shutdown_provider_manager_in_progress() {
   let reporter = yield getJustReporter("shutdown_provider_manager_in_progress",
-                                       DUMMY_URI, true);
+                                       SERVER_URI, true);
 
   reporter.onProviderManagerInitialized = function () {
     print("Faking shutdown during provider manager initialization.");
@@ -200,7 +203,7 @@ add_task(function test_shutdown_provider_manager_in_progress() {
 // Simulates an error during provider manager initialization and verifies we shut down.
 add_task(function test_shutdown_when_provider_manager_errors() {
   let reporter = yield getJustReporter("shutdown_when_provider_manager_errors",
-                                       DUMMY_URI, true);
+                                       SERVER_URI, true);
 
   reporter.onInitializeProviderManagerFinished = function () {
     print("Throwing fake error.");
@@ -583,7 +586,7 @@ add_task(function test_idle_daily() {
 add_task(function test_data_submission_transport_failure() {
   let reporter = yield getReporter("data_submission_transport_failure");
   try {
-    reporter.serverURI = DUMMY_URI;
+    reporter.serverURI = "http://localhost:8080/";
     reporter.serverNamespace = "test00";
 
     let deferred = Promise.defer();
@@ -870,10 +873,10 @@ add_task(function test_failure_if_not_initialized() {
 });
 
 add_task(function test_upload_on_init_failure() {
-  let server = new BagheeraServer();
-  server.start();
-  let reporter = yield getJustReporter("upload_on_init_failure", server.serverURI, true);
+  let reporter = yield getJustReporter("upload_on_init_failure", SERVER_URI, true);
+  let server = new BagheeraServer(SERVER_URI);
   server.createNamespace(reporter.serverNamespace);
+  server.start(SERVER_PORT);
 
   reporter.onInitializeProviderManagerFinished = function () {
     throw new Error("Fake error during provider manager initialization.");

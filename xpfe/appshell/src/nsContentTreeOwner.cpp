@@ -42,6 +42,7 @@
 #endif
 
 #include "mozilla/Preferences.h"
+#include "mozilla/dom/Element.h"
 
 using namespace mozilla;
 
@@ -292,10 +293,18 @@ nsContentTreeOwner::ContentShellRemoved(nsIDocShellTreeItem* aContentShell)
   return mXULWindow->ContentShellRemoved(aContentShell);
 }
 
-NS_IMETHODIMP nsContentTreeOwner::GetPrimaryContentShell(nsIDocShellTreeItem** aShell)
+NS_IMETHODIMP
+nsContentTreeOwner::GetPrimaryContentShell(nsIDocShellTreeItem** aShell)
 {
    NS_ENSURE_STATE(mXULWindow);
    return mXULWindow->GetPrimaryContentShell(aShell);
+}
+
+NS_IMETHODIMP
+nsContentTreeOwner::GetContentWindow(JSContext* aCx, JS::Value* aVal)
+{
+  NS_ENSURE_STATE(mXULWindow);
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP nsContentTreeOwner::SizeShellTo(nsIDocShellTreeItem* aShellItem,
@@ -311,7 +320,7 @@ nsContentTreeOwner::SetPersistence(bool aPersistPosition,
                                    bool aPersistSizeMode)
 {
   NS_ENSURE_STATE(mXULWindow);
-  nsCOMPtr<nsIDOMElement> docShellElement = mXULWindow->GetWindowDOMElement();
+  nsCOMPtr<dom::Element> docShellElement = mXULWindow->GetWindowDOMElement();
   if (!docShellElement)
     return NS_ERROR_FAILURE;
 
@@ -367,8 +376,10 @@ nsContentTreeOwner::SetPersistence(bool aPersistPosition,
     saveString = true;
   }
 
-  if(saveString) 
-    docShellElement->SetAttribute(NS_LITERAL_STRING("persist"), persistString);
+  ErrorResult rv;
+  if(saveString) {
+    docShellElement->SetAttribute(NS_LITERAL_STRING("persist"), persistString, rv);
+  }
 
   return NS_OK;
 }
@@ -379,7 +390,7 @@ nsContentTreeOwner::GetPersistence(bool* aPersistPosition,
                                    bool* aPersistSizeMode)
 {
   NS_ENSURE_STATE(mXULWindow);
-  nsCOMPtr<nsIDOMElement> docShellElement = mXULWindow->GetWindowDOMElement();
+  nsCOMPtr<dom::Element> docShellElement = mXULWindow->GetWindowDOMElement();
   if (!docShellElement)
     return NS_ERROR_FAILURE;
 
@@ -703,7 +714,7 @@ NS_IMETHODIMP nsContentTreeOwner::SetTitle(const PRUnichar* aTitle)
 
   if (docTitle.IsEmpty())
     docTitle.Assign(mTitleDefault);
-  
+
   if (!docTitle.IsEmpty()) {
     if (!mTitlePreface.IsEmpty()) {
       // Title will be: "Preface: Doc Title - Mozilla"
@@ -714,7 +725,7 @@ NS_IMETHODIMP nsContentTreeOwner::SetTitle(const PRUnichar* aTitle)
       // Title will be: "Doc Title - Mozilla"
       title = docTitle;
     }
-  
+
     if (!mWindowTitleModifier.IsEmpty())
       title += mTitleSeparator + mWindowTitleModifier;
   }
@@ -725,7 +736,7 @@ NS_IMETHODIMP nsContentTreeOwner::SetTitle(const PRUnichar* aTitle)
   // if there is no location bar we modify the title to display at least
   // the scheme and host (if any) as an anti-spoofing measure.
   //
-  nsCOMPtr<nsIDOMElement> docShellElement = mXULWindow->GetWindowDOMElement();
+  nsCOMPtr<dom::Element> docShellElement = mXULWindow->GetWindowDOMElement();
 
   if (docShellElement) {
     nsAutoString chromeString;
@@ -773,11 +784,10 @@ NS_IMETHODIMP nsContentTreeOwner::SetTitle(const PRUnichar* aTitle)
         }
       }
     }
-    nsCOMPtr<nsIDOMDocument> document;
-    docShellElement->GetOwnerDocument(getter_AddRefs(document));
-    if (document) {
-      return document->SetTitle(title);
-    }
+    nsIDocument* document = docShellElement->OwnerDoc();
+    ErrorResult rv;
+    document->SetTitle(title, rv);
+    return rv.ErrorCode();
   }
 
   return mXULWindow->SetTitle(title.get());
@@ -928,19 +938,20 @@ nsContentTreeOwner::ProvideWindow(nsIDOMWindow* aParent,
 class nsContentTitleSettingEvent : public nsRunnable
 {
 public:
-  nsContentTitleSettingEvent(nsIDOMElement *dse, const nsAString& wtm)
+  nsContentTitleSettingEvent(dom::Element* dse, const nsAString& wtm)
     : mElement(dse),
       mTitleDefault(wtm) {}
 
   NS_IMETHOD Run()
   {
-    mElement->SetAttribute(NS_LITERAL_STRING("titledefault"), mTitleDefault);
-    mElement->RemoveAttribute(NS_LITERAL_STRING("titlemodifier"));
+    ErrorResult rv;
+    mElement->SetAttribute(NS_LITERAL_STRING("titledefault"), mTitleDefault, rv);
+    mElement->RemoveAttribute(NS_LITERAL_STRING("titlemodifier"), rv);
     return NS_OK;
   }
 
 private:
-  nsCOMPtr<nsIDOMElement> mElement;
+  nsCOMPtr<dom::Element> mElement;
   nsString mTitleDefault;
 };
 #endif
@@ -950,11 +961,11 @@ void nsContentTreeOwner::XULWindow(nsXULWindow* aXULWindow)
    mXULWindow = aXULWindow;
    if (mXULWindow && mPrimary) {
       // Get the window title modifiers
-      nsCOMPtr<nsIDOMElement> docShellElement = mXULWindow->GetWindowDOMElement();
+      nsCOMPtr<dom::Element> docShellElement = mXULWindow->GetWindowDOMElement();
 
       nsAutoString   contentTitleSetting;
 
-      if(docShellElement)  
+      if(docShellElement)
          {
          docShellElement->GetAttribute(NS_LITERAL_STRING("contenttitlesetting"), contentTitleSetting);
          if(contentTitleSetting.EqualsLiteral("true"))
@@ -963,7 +974,7 @@ void nsContentTreeOwner::XULWindow(nsXULWindow* aXULWindow)
             docShellElement->GetAttribute(NS_LITERAL_STRING("titledefault"), mTitleDefault);
             docShellElement->GetAttribute(NS_LITERAL_STRING("titlemodifier"), mWindowTitleModifier);
             docShellElement->GetAttribute(NS_LITERAL_STRING("titlepreface"), mTitlePreface);
-            
+
 #if defined(XP_MACOSX)
             // On OS X, treat the titlemodifier like it's the titledefault, and don't ever append
             // the separator + appname.

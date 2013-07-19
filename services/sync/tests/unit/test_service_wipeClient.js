@@ -82,7 +82,7 @@ add_test(function test_credentials_preserved() {
   _("Ensure that credentials are preserved if client is wiped.");
 
   // Required for wipeClient().
-  Service.clusterURL = "http://dummy:9000/";
+  Service.clusterURL = TEST_CLUSTER_URL;
   Service.identity.account = "testaccount";
   Service.identity.basicPassword = "testpassword";
   let key = Utils.generatePassphrase();

@@ -271,6 +271,8 @@ JavaScriptChild::AnswerDelete(const ObjectId &objId, const nsString &id, ReturnS
     AutoSafeJSContext cx;
     JSAutoRequest request(cx);
 
+    *success = false;
+
     RootedObject obj(cx, findObject(objId));
     if (!obj)
         return false;
@@ -299,6 +301,8 @@ JavaScriptChild::AnswerHas(const ObjectId &objId, const nsString &id, ReturnStat
     AutoSafeJSContext cx;
     JSAutoRequest request(cx);
 
+    *bp = false;
+
     RootedObject obj(cx, findObject(objId));
     if (!obj)
         return false;
@@ -322,6 +326,8 @@ JavaScriptChild::AnswerHasOwn(const ObjectId &objId, const nsString &id, ReturnS
 {
     AutoSafeJSContext cx;
     JSAutoRequest request(cx);
+
+    *bp = false;
 
     RootedObject obj(cx, findObject(objId));
     if (!obj)
@@ -434,7 +440,7 @@ JavaScriptChild::AnswerIsExtensible(const ObjectId &objId, ReturnStatus *rs, boo
         return fail(cx, rs);
 
     *result = !!extensible;
-    return true;
+    return ok(rs);
 }
 
 bool
@@ -548,7 +554,6 @@ JavaScriptChild::AnswerObjectClassIs(const ObjectId &objId, const uint32_t &clas
     JSAutoCompartment comp(cx, obj);
 
     *result = js_ObjectClassIs(cx, obj, (js::ESClassValue)classValue);
-
     return true;
 }
 
@@ -588,7 +593,7 @@ JavaScriptChild::AnswerGetPropertyNames(const ObjectId &objId, const uint32_t &f
     for (size_t i = 0; i < props.length(); i++) {
         nsString name;
         if (!convertIdToGeckoString(cx, props.handleAt(i), &name))
-            return false;
+            return fail(cx, rs);
 
         names->AppendElement(name);
     }
@@ -602,6 +607,8 @@ JavaScriptChild::AnswerInstanceOf(const ObjectId &objId, const JSIID &iid, Retur
 {
     AutoSafeJSContext cx;
     JSAutoRequest request(cx);
+
+    *instanceof = false;
 
     RootedObject obj(cx, findObject(objId));
     if (!obj)

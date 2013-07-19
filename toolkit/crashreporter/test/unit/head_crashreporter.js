@@ -72,7 +72,7 @@ function handleMinidump(callback)
 {
   // find minidump
   let minidump = null;
-  let en = do_get_cwd().directoryEntries;
+  let en = do_get_tempdir().directoryEntries;
   while (en.hasMoreElements()) {
     let f = en.getNext().QueryInterface(Components.interfaces.nsILocalFile);
     if (f.leafName.substr(-4) == ".dmp") {
@@ -116,7 +116,7 @@ function do_content_crash(setup, callback)
   let crashReporter =
       Components.classes["@mozilla.org/toolkit/crash-reporter;1"]
       .getService(Components.interfaces.nsICrashReporter);
-  crashReporter.minidumpPath = do_get_cwd();
+  crashReporter.minidumpPath = do_get_tempdir();
 
   let headfile = do_get_file("../unit/crasher_subprocess_head.js");
   let tailfile = do_get_file("../unit/crasher_subprocess_tail.js");
@@ -127,14 +127,14 @@ function do_content_crash(setup, callback)
   }
 
   let handleCrash = function() {
-    try {            
+    try {
       handleMinidump(callback);
     } catch (x) {
       do_report_unexpected_exception(x);
     }
     do_test_finished();
   };
-  
+
   sendCommand("load(\"" + headfile.path.replace(/\\/g, "/") + "\");", function()
     sendCommand(setup, function()
       sendCommand("load(\"" + tailfile.path.replace(/\\/g, "/") + "\");",

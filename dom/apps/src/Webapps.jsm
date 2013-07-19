@@ -2783,7 +2783,7 @@ this.DOMApplicationRegistry = {
       // Catch exception on callback call to ensure notifying observers after
       try {
         aOnSuccess();
-      } catch(e) {
+      } catch(ex) {
         Cu.reportError("DOMApplicationRegistry: Exception on app uninstall: " +
                        ex + "\n" + ex.stack);
       }

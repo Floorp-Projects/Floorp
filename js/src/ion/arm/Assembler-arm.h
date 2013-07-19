@@ -637,10 +637,10 @@ class Imm8 : public Operand2
 {
   public:
     static datastore::Imm8mData encodeImm(uint32_t imm) {
-        // In gcc, clz is undefined if you call it with 0.
+        // mozilla::CountLeadingZeroes32(imm) requires imm != 0.
         if (imm == 0)
             return datastore::Imm8mData(0, 0);
-        int left = js_bitscan_clz32(imm) & 30;
+        int left = mozilla::CountLeadingZeroes32(imm) & 30;
         // See if imm is a simple value that can be encoded with a rotate of 0.
         // This is effectively imm <= 0xff, but I assume this can be optimized
         // more
@@ -654,7 +654,7 @@ class Imm8 : public Operand2
             return  datastore::Imm8mData(imm >> (24 - left), ((8+left) >> 1));
         }
         // Look for the most signifigant bit set, once again.
-        int right = 32 - (js_bitscan_clz32(no_imm)  & 30);
+        int right = 32 - (mozilla::CountLeadingZeroes32(no_imm) & 30);
         // If it is in the bottom 8 bits, there is a chance that this is a
         // wraparound case.
         if (right >= 8)

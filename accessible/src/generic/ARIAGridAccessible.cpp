@@ -533,6 +533,7 @@ ARIAGridCellAccessible::
   ARIAGridCellAccessible(nsIContent* aContent, DocAccessible* aDoc) :
   HyperTextAccessibleWrap(aContent, aDoc), xpcAccessibleTableCell(this)
 {
+  mGenericTypes |= eTableCell;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

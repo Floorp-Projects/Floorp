@@ -42,6 +42,10 @@ gfxQuartzNativeDrawing::BeginNativeDrawing()
       if (mContext->GetDrawTarget()->IsDualDrawTarget()) {
         IntSize backingSize(NSToIntFloor(mNativeRect.width * mBackingScale),
                             NSToIntFloor(mNativeRect.height * mBackingScale));
+
+       if (backingSize.IsEmpty())
+          return nullptr;
+
         mDrawTarget = Factory::CreateDrawTarget(BACKEND_COREGRAPHICS, backingSize, FORMAT_B8G8R8A8);
 
         Matrix transform;

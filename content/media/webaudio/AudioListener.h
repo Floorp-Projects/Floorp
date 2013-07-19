@@ -127,6 +127,7 @@ public:
   }
 
   void RegisterPannerNode(PannerNode* aPannerNode);
+  void UnregisterPannerNode(PannerNode* aPannerNode);
 
 private:
   void SendDoubleParameterToStream(uint32_t aIndex, double aValue);

@@ -38,3 +38,5 @@
 <!ENTITY doNotTrack.options.trackingOkay                         "I want to be tracked">
 <!ENTITY optionsHeader.reporting.title                           "Crash Reporter">
 <!ENTITY optionsHeader.reporting.crashes.label                   "&brandShortName; submits crash reports to help Mozilla make your browser more stable and secure">
+<!ENTITY optionsHeader.telemetry.title                            "Telemetry">
+<!ENTITY optionsHeader.telemetry.label                            "Shares usage statistics about &brandShortName; with Mozilla to help us make your browser better">

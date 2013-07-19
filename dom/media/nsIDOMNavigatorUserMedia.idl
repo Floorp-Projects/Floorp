@@ -47,19 +47,3 @@ interface nsIMediaStreamOptions : nsISupports
   readonly attribute nsIMediaDevice audioDevice;
   readonly attribute nsIMediaDevice videoDevice;
 };
-
-[scriptable, uuid(381e0071-0be5-4f6b-ae21-8e3407a37faa)]
-interface nsIDOMNavigatorUserMedia : nsISupports
-{
-  void mozGetUserMedia(in nsIMediaStreamOptions params,
-    in nsIDOMGetUserMediaSuccessCallback onsuccess,
-    in nsIDOMGetUserMediaErrorCallback onerror);
-};
-
-[scriptable, uuid(20e9c794-fdfe-43f4-a81b-ebd9069e0af1)]
-interface nsINavigatorUserMedia : nsISupports
-{
-  void mozGetUserMediaDevices(
-    in nsIGetUserMediaDevicesSuccessCallback onsuccess,
-    in nsIDOMGetUserMediaErrorCallback onerror);
-};

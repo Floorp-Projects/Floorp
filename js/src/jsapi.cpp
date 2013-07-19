@@ -1245,12 +1245,14 @@ JS_NewContext(JSRuntime *rt, size_t stackChunkSize)
 JS_PUBLIC_API(void)
 JS_DestroyContext(JSContext *cx)
 {
+    JS_ASSERT(!cx->compartment());
     DestroyContext(cx, DCM_FORCE_GC);
 }
 
 JS_PUBLIC_API(void)
 JS_DestroyContextNoGC(JSContext *cx)
 {
+    JS_ASSERT(!cx->compartment());
     DestroyContext(cx, DCM_NO_GC);
 }
 
@@ -2087,6 +2089,8 @@ JS_GetGlobalForScopeChain(JSContext *cx)
 {
     AssertHeapIsIdleOrIterating(cx);
     CHECK_REQUEST(cx);
+    if (!cx->compartment())
+        return NULL;
     return cx->global();
 }
 
@@ -3316,10 +3320,12 @@ JS_NewGlobalObject(JSContext *cx, JSClass *clasp, JSPrincipals *principals,
 
     AutoHoldZone hold(compartment->zone());
 
-    JSCompartment *saved = cx->compartment();
-    cx->setCompartment(compartment);
-    Rooted<GlobalObject *> global(cx, GlobalObject::create(cx, Valueify(clasp)));
-    cx->setCompartment(saved);
+    Rooted<GlobalObject *> global(cx);
+    {
+        AutoCompartment ac(cx, compartment);
+        global = GlobalObject::create(cx, Valueify(clasp));
+    }
+
     if (!global)
         return NULL;
 
@@ -7206,12 +7212,11 @@ JS_GetScriptedGlobal(JSContext *cx)
 JS_PUBLIC_API(JSBool)
 JS_PreventExtensions(JSContext *cx, JS::HandleObject obj)
 {
-    JSBool extensible;
-    if (!JS_IsExtensible(cx, obj, &extensible))
-        return JS_TRUE;
-    if (extensible)
-        return JS_TRUE;
-
+    bool extensible;
+    if (!JSObject::isExtensible(cx, obj, &extensible))
+        return false;
+    if (!extensible)
+        return true;
     return JSObject::preventExtensions(cx, obj);
 }
 

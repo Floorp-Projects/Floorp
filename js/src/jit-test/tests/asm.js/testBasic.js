@@ -1,4 +1,5 @@
 load(libdir + "asm.js");
+load(libdir + "asserts.js");
 
 assertAsmTypeFail(USE_ASM);
 assertAsmTypeFail(USE_ASM + 'return');
@@ -7,6 +8,11 @@ assertAsmTypeFail(USE_ASM + 'function f(){}');
 assertAsmTypeFail(USE_ASM + 'function f(){} return 0');
 assertAsmTypeFail(USE_ASM + 'function f() 0; return 0');
 assertAsmTypeFail(USE_ASM + 'function f(){} return g');
+assertAsmTypeFail(USE_ASM + 'function f(){} function f(){} return f');
+assertAsmTypeFail(USE_ASM + 'var f=0; function f(){} return f');
+assertAsmTypeFail('glob', USE_ASM + 'var f=glob.Math.imul; function f(){} return f');
+assertAsmTypeFail('glob','foreign', USE_ASM + 'var f=foreign.foo; function f(){} return f');
+assertAsmTypeFail(USE_ASM + 'function f(){} var f=[f,f]; return f');
 assertAsmTypeFail(USE_ASM + 'function f() 0; return f');
 assertAsmTypeFail('"use strict";' + USE_ASM + 'function f() {} return f');
 assertAsmTypeFail(USE_ASM + '"use strict"; function f() {} return f');
@@ -136,3 +142,18 @@ function assertLinkFailInEval(str)
     options("werror");
 }
 assertLinkFailInEval('(function(global) { "use asm"; var im=global.Math.imul; function g() {} return g })');
+
+assertThrowsInstanceOf(function() { new Function(USE_ASM + 'var)') }, SyntaxError);
+assertThrowsInstanceOf(function() { new Function(USE_ASM + 'return)') }, SyntaxError);
+assertThrowsInstanceOf(function() { new Function(USE_ASM + 'var z=-2w') }, SyntaxError);
+assertThrowsInstanceOf(function() { new Function(USE_ASM + 'var z=-2w;') }, SyntaxError);
+assertThrowsInstanceOf(function() { new Function(USE_ASM + 'function') }, SyntaxError);
+assertThrowsInstanceOf(function() { new Function(USE_ASM + 'function f') }, SyntaxError);
+assertThrowsInstanceOf(function() { new Function(USE_ASM + 'function f(') }, SyntaxError);
+assertThrowsInstanceOf(function() { new Function(USE_ASM + 'function f()') }, SyntaxError);
+assertThrowsInstanceOf(function() { new Function(USE_ASM + 'function f() {') }, SyntaxError);
+assertThrowsInstanceOf(function() { new Function(USE_ASM + 'function f() {} var') }, SyntaxError);
+assertThrowsInstanceOf(function() { new Function(USE_ASM + 'function f() {} var TBL=-2w; return f') }, SyntaxError);
+assertThrowsInstanceOf(function() { new Function(USE_ASM + 'function f() {} var TBL=-2w return f') }, SyntaxError);
+assertThrowsInstanceOf(function() { new Function(USE_ASM + 'function () {}') }, SyntaxError);
+assertNoWarning(function() { parse("function f() { 'use asm'; function g() {} return g }") });

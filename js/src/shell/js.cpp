@@ -172,6 +172,7 @@ static bool compileOnly = false;
 static bool fuzzingSafe = false;
 
 #ifdef DEBUG
+static bool dumpEntrainedVariables = false;
 static bool OOM_printAllocationCount = false;
 #endif
 
@@ -428,6 +429,12 @@ RunFile(JSContext *cx, Handle<JSObject*> obj, const char *filename, FILE *file, 
 
     RootedScript script(cx);
     script = JS::Compile(cx, obj, options, file);
+
+#ifdef DEBUG
+    if (dumpEntrainedVariables)
+        AnalyzeEntrainedVariables(cx, script);
+#endif
+
     JS_SetOptions(cx, oldopts);
     JS_ASSERT_IF(!script, gGotError);
     if (script && !compileOnly) {
@@ -829,6 +836,7 @@ class AutoNewContext
     JSContext *oldcx;
     JSContext *newcx;
     Maybe<JSAutoRequest> newRequest;
+    Maybe<AutoCompartment> newCompartment;
 
     AutoNewContext(const AutoNewContext &) MOZ_DELETE;
 
@@ -845,6 +853,7 @@ class AutoNewContext
         JS_SetGlobalObject(newcx, JS_GetGlobalForScopeChain(cx));
 
         newRequest.construct(newcx);
+        newCompartment.construct(newcx, JS_GetGlobalForScopeChain(cx));
         return true;
     }
 
@@ -856,6 +865,7 @@ class AutoNewContext
             bool throwing = JS_IsExceptionPending(newcx);
             if (throwing)
                 JS_GetPendingException(newcx, exc.address());
+            newCompartment.destroy();
             newRequest.destroy();
             if (throwing)
                 JS_SetPendingException(oldcx, exc);
@@ -1063,7 +1073,7 @@ Evaluate(JSContext *cx, unsigned argc, jsval *vp)
             if (!smurl)
                 return false;
             jschar *smurl_copy = js_strdup(cx, smurl);
-            if (!smurl_copy || !script->scriptSource()->setSourceMap(cx, smurl_copy, script->filename()))
+            if (!smurl_copy || !script->scriptSource()->setSourceMap(cx, smurl_copy))
                 return false;
         }
         if (!JS_ExecuteScript(cx, global, script, vp)) {
@@ -2613,9 +2623,13 @@ EvalInFrame(JSContext *cx, unsigned argc, jsval *vp)
             break;
     }
 
-    bool saved = false;
-    if (saveCurrent)
-        saved = JS_SaveFrameChain(cx);
+    AutoSaveFrameChain sfc(cx);
+    mozilla::Maybe<AutoCompartment> ac;
+    if (saveCurrent) {
+        if (!sfc.save())
+            return false;
+        ac.construct(cx, GetDefaultGlobalForContext(cx));
+    }
 
     size_t length;
     const jschar *chars = JS_GetStringCharsAndLength(cx, str, &length);
@@ -2629,10 +2643,6 @@ EvalInFrame(JSContext *cx, unsigned argc, jsval *vp)
                                              JS_PCToLineNumber(cx, fpscript,
                                                                fi.pc()),
                                              MutableHandleValue::fromMarkedLocation(vp));
-
-    if (saved)
-        JS_RestoreFrameChain(cx);
-
     return ok;
 }
 
@@ -5069,6 +5079,11 @@ ProcessArgs(JSContext *cx, JSObject *obj_, OptionParser *op)
 
 #endif /* JS_ION */
 
+#ifdef DEBUG
+    if (op->getBoolOption("dump-entrained-variables"))
+        dumpEntrainedVariables = true;
+#endif
+
     /* |scriptArgs| gets bound on the global before any code is run. */
     if (!BindScriptArgs(cx, obj, op))
         return EXIT_FAILURE;
@@ -5134,6 +5149,7 @@ Shell(JSContext *cx, OptionParser *op, char **envp)
     if (!glob)
         return 1;
 
+    JSAutoCompartment ac(cx, glob);
     JS_SetGlobalObject(cx, glob);
 
     JSObject *envobj = JS_DefineObject(cx, glob, "environment", &env_class, NULL, 0);
@@ -5302,6 +5318,10 @@ main(int argc, char **argv, char **envp)
                              "to test JIT codegen (no-op on platforms other than x86).")
         || !op.addBoolOption('\0', "fuzzing-safe", "Don't expose functions that aren't safe for "
                              "fuzzers to call")
+#ifdef DEBUG
+        || !op.addBoolOption('\0', "dump-entrained-variables", "Print variables which are "
+                             "unnecessarily entrained by inner functions")
+#endif
 #ifdef JSGC_GENERATIONAL
         || !op.addBoolOption('\0', "no-ggc", "Disable Generational GC")
 #endif

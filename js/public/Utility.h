@@ -12,6 +12,7 @@
 #include "mozilla/Compiler.h"
 #include "mozilla/Move.h"
 #include "mozilla/Scoped.h"
+#include "mozilla/TemplateLib.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -22,8 +23,6 @@
 #endif
 
 #include "jstypes.h"
-
-#include "js/TemplateLib.h"
 
 /* The public JS engine namespace. */
 namespace JS {}
@@ -169,173 +168,6 @@ static JS_INLINE void js_free(void* p)
     free(p);
 }
 #endif/* JS_USE_CUSTOM_ALLOCATOR */
-
-extern "C" {
-
-/*
- * Replace bit-scanning code sequences with CPU-specific instructions to
- * speedup calculations of ceiling/floor log2.
- *
- * With GCC 3.4 or later we can use __builtin_clz for that, see bug 327129.
- *
- * SWS: Added MSVC intrinsic bitscan support.  See bugs 349364 and 356856.
- */
-#if defined(_WIN32) && (_MSC_VER >= 1300) && (defined(_M_IX86) || defined(_M_AMD64) || defined(_M_X64))
-
-unsigned char _BitScanForward(unsigned long * Index, unsigned long Mask);
-unsigned char _BitScanReverse(unsigned long * Index, unsigned long Mask);
-# pragma intrinsic(_BitScanForward,_BitScanReverse)
-
-__forceinline static int
-__BitScanForward32(unsigned int val)
-{
-    unsigned long idx;
-
-    _BitScanForward(&idx, (unsigned long)val);
-    return (int)idx;
-}
-__forceinline static int
-__BitScanReverse32(unsigned int val)
-{
-    unsigned long idx;
-
-    _BitScanReverse(&idx, (unsigned long)val);
-    return (int)(31-idx);
-}
-# define js_bitscan_ctz32(val)  __BitScanForward32(val)
-# define js_bitscan_clz32(val)  __BitScanReverse32(val)
-
-#if defined(_M_AMD64) || defined(_M_X64)
-unsigned char _BitScanForward64(unsigned long * Index, unsigned __int64 Mask);
-unsigned char _BitScanReverse64(unsigned long * Index, unsigned __int64 Mask);
-# pragma intrinsic(_BitScanForward64,_BitScanReverse64)
-#endif
-
-__forceinline static int
-__BitScanForward64(unsigned __int64 val)
-{
-#if defined(_M_AMD64) || defined(_M_X64)
-    unsigned long idx;
-
-    _BitScanForward64(&idx, val);
-    return (int)idx;
-#else
-    uint32_t lo = (uint32_t)val;
-    uint32_t hi = (uint32_t)(val >> 32);
-    return lo != 0 ?
-           js_bitscan_ctz32(lo) :
-           32 + js_bitscan_ctz32(hi);
-#endif
-}
-__forceinline static int
-__BitScanReverse64(unsigned __int64 val)
-{
-#if defined(_M_AMD64) || defined(_M_X64)
-    unsigned long idx;
-
-    _BitScanReverse64(&idx, val);
-    return (int)(63-idx);
-#else
-    uint32_t lo = (uint32_t)val;
-    uint32_t hi = (uint32_t)(val >> 32);
-    return hi != 0 ?
-           js_bitscan_clz32(hi) :
-           32 + js_bitscan_clz32(lo);
-#endif
-}
-# define js_bitscan_ctz64(val)  __BitScanForward64(val)
-# define js_bitscan_clz64(val)  __BitScanReverse64(val)
-#elif MOZ_IS_GCC
-
-#if MOZ_GCC_VERSION_AT_LEAST(3, 4, 0)
-# define USE_BUILTIN_CTZ
-#endif
-
-#elif defined(__clang__)
-
-#if __has_builtin(__builtin_ctz)
-# define USE_BUILTIN_CTZ
-#endif
-
-#endif
-
-#if defined(USE_BUILTIN_CTZ)
-
-JS_STATIC_ASSERT(sizeof(unsigned int) == sizeof(uint32_t));
-# define js_bitscan_ctz32(val)  __builtin_ctz(val)
-# define js_bitscan_clz32(val)  __builtin_clz(val)
-
-JS_STATIC_ASSERT(sizeof(unsigned long long) == sizeof(uint64_t));
-# define js_bitscan_ctz64(val)  __builtin_ctzll(val)
-# define js_bitscan_clz64(val)  __builtin_clzll(val)
-
-# undef USE_BUILTIN_CTZ
-
-#endif
-
-/*
-** Macro version of JS_CeilingLog2: Compute the log of the least power of
-** 2 greater than or equal to _n. The result is returned in _log2.
-*/
-/*
- * Use intrinsic function or count-leading-zeros to calculate ceil(log2(_n)).
- * The macro checks for "n <= 1" and not "n != 0" as js_bitscan_clz32(0) is
- * undefined.
- */
-# define JS_CEILING_LOG2(_log2,_n)                                            \
-    JS_BEGIN_MACRO                                                            \
-        unsigned int j_ = (unsigned int)(_n);                                 \
-        (_log2) = (j_ <= 1 ? 0 : 32 - js_bitscan_clz32(j_ - 1));              \
-    JS_END_MACRO
-
-/*
-** Macro version of JS_FloorLog2: Compute the log of the greatest power of
-** 2 less than or equal to _n. The result is returned in _log2.
-**
-** This is equivalent to finding the highest set bit in the word.
-*/
-/*
- * Use js_bitscan_clz32 or count-leading-zeros to calculate floor(log2(_n)).
- * Since js_bitscan_clz32(0) is undefined, the macro set the loweset bit to 1
- * to ensure 0 result when _n == 0.
- */
-# define JS_FLOOR_LOG2(_log2,_n)                                              \
-    JS_BEGIN_MACRO                                                            \
-        (_log2) = 31 - js_bitscan_clz32(((unsigned int)(_n)) | 1);            \
-    JS_END_MACRO
-
-#if JS_BYTES_PER_WORD == 4
-#  define js_FloorLog2wImpl(n)                                                \
-    ((size_t)(JS_BITS_PER_WORD - 1 - js_bitscan_clz32(n)))
-#elif JS_BYTES_PER_WORD == 8
-#  define js_FloorLog2wImpl(n)                                                \
-    ((size_t)(JS_BITS_PER_WORD - 1 - js_bitscan_clz64(n)))
-#else
-# error "NOT SUPPORTED"
-#endif
-
-} // extern "C"
-
-/*
- * Internal function.
- * Compute the log of the least power of 2 greater than or equal to n. This is
- * a version of JS_CeilingLog2 that operates on unsigned integers with
- * CPU-dependant size.
- */
-#define JS_CEILING_LOG2W(n) ((n) <= 1 ? 0 : 1 + JS_FLOOR_LOG2W((n) - 1))
-
-/*
- * Internal function.
- * Compute the log of the greatest power of 2 less than or equal to n.
- * This is a version of JS_FloorLog2 that operates on unsigned integers with
- * CPU-dependant size and requires that n != 0.
- */
-static MOZ_ALWAYS_INLINE size_t
-JS_FLOOR_LOG2W(size_t n)
-{
-    JS_ASSERT(n != 0);
-    return js_FloorLog2wImpl(n);
-}
 
 /*
  * JS_ROTATE_LEFT32
@@ -521,7 +353,7 @@ template <class T>
 static JS_ALWAYS_INLINE T *
 js_pod_malloc(size_t numElems)
 {
-    if (numElems & js::tl::MulOverflowMask<sizeof(T)>::result)
+    if (numElems & mozilla::tl::MulOverflowMask<sizeof(T)>::value)
         return NULL;
     return (T *)js_malloc(numElems * sizeof(T));
 }
@@ -530,7 +362,7 @@ template <class T>
 static JS_ALWAYS_INLINE T *
 js_pod_calloc(size_t numElems)
 {
-    if (numElems & js::tl::MulOverflowMask<sizeof(T)>::result)
+    if (numElems & mozilla::tl::MulOverflowMask<sizeof(T)>::value)
         return NULL;
     return (T *)js_calloc(numElems * sizeof(T));
 }
@@ -563,16 +395,6 @@ SCOPED_TEMPLATE(ScopedReleasePtr, ScopedReleasePtrTraits)
 } /* namespace js */
 
 namespace js {
-
-/*
- * Round x up to the nearest power of 2.  This function assumes that the most
- * significant bit of x is not set, which would lead to overflow.
- */
-JS_ALWAYS_INLINE size_t
-RoundUpPow2(size_t x)
-{
-    return size_t(1) << JS_CEILING_LOG2W(x);
-}
 
 /* Integral types for all hash functions. */
 typedef uint32_t HashNumber;

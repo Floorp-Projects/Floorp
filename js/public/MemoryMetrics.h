@@ -179,7 +179,7 @@ struct ZoneStats
         typePool(other.typePool),
         hugeStrings()
     {
-        hugeStrings.append(other.hugeStrings);
+        hugeStrings.appendAll(other.hugeStrings);
     }
 
     // Add other's numbers to this object's numbers.
@@ -202,7 +202,7 @@ struct ZoneStats
 
         #undef ADD
 
-        hugeStrings.append(other.hugeStrings);
+        hugeStrings.appendAll(other.hugeStrings);
     }
 
     // This field can be used by embedders.

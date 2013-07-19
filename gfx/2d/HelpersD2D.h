@@ -6,7 +6,11 @@
 #ifndef MOZILLA_GFX_HELPERSD2D_H_
 #define MOZILLA_GFX_HELPERSD2D_H_
 
+#ifndef USE_D2D1_1
 #include "moz-d2d1-1.h"
+#else
+#include <d2d1_1.h>
+#endif
 
 #include <vector>
 
@@ -25,6 +29,10 @@ namespace mozilla {
 namespace gfx {
 
 ID2D1Factory* D2DFactory();
+
+#ifdef USE_D2D1_1
+ID2D1Factory1* D2DFactory1();
+#endif
 
 static inline D2D1_POINT_2F D2DPoint(const Point &aPoint)
 {
@@ -67,6 +75,18 @@ static inline D2D1_BITMAP_INTERPOLATION_MODE D2DFilter(const Filter &aFilter)
     return D2D1_BITMAP_INTERPOLATION_MODE_LINEAR;
   }
 }
+
+#ifdef USE_D2D1_1
+static inline D2D1_INTERPOLATION_MODE D2DInterpolationMode(const Filter &aFilter)
+{
+  switch (aFilter) {
+  case FILTER_POINT:
+    return D2D1_INTERPOLATION_MODE_NEAREST_NEIGHBOR;
+  default:
+    return D2D1_INTERPOLATION_MODE_LINEAR;
+  }
+}
+#endif
 
 static inline D2D1_ANTIALIAS_MODE D2DAAMode(AntialiasMode aMode)
 {
@@ -151,6 +171,38 @@ static inline D2D1_PIXEL_FORMAT D2DPixelFormat(SurfaceFormat aFormat)
 {
   return D2D1::PixelFormat(DXGIFormat(aFormat), AlphaMode(aFormat));
 }
+
+#ifdef USE_D2D1_1
+static inline D2D1_COMPOSITE_MODE D2DCompositionMode(CompositionOp aOp)
+{
+  switch(aOp) {
+  case OP_OVER:
+    return D2D1_COMPOSITE_MODE_SOURCE_OVER;
+  case OP_ADD:
+    return D2D1_COMPOSITE_MODE_PLUS;
+  case OP_ATOP:
+    return D2D1_COMPOSITE_MODE_SOURCE_ATOP;
+  case OP_OUT:
+    return D2D1_COMPOSITE_MODE_SOURCE_OUT;
+  case OP_IN:
+    return D2D1_COMPOSITE_MODE_SOURCE_IN;
+  case OP_SOURCE:
+    return D2D1_COMPOSITE_MODE_SOURCE_COPY;
+  case OP_DEST_IN:
+    return D2D1_COMPOSITE_MODE_DESTINATION_IN;
+  case OP_DEST_OUT:
+    return D2D1_COMPOSITE_MODE_DESTINATION_OUT;
+  case OP_DEST_OVER:
+    return D2D1_COMPOSITE_MODE_DESTINATION_OVER;
+  case OP_DEST_ATOP:
+    return D2D1_COMPOSITE_MODE_DESTINATION_ATOP;
+  case OP_XOR:
+    return D2D1_COMPOSITE_MODE_XOR;
+  default:
+    return D2D1_COMPOSITE_MODE_SOURCE_OVER;
+  }
+}
+#endif
 
 static inline bool IsPatternSupportedByD2D(const Pattern &aPattern)
 {

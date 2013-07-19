@@ -18,6 +18,8 @@ package org.mozilla.gecko.widget;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.Handler;
 import android.text.TextUtils;
@@ -30,6 +32,7 @@ import android.widget.TextView;
 import java.util.LinkedList;
 
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.gfx.BitmapUtils;
 
 public class ButtonToast {
     private final static String LOGTAG = "GeckoButtonToast";
@@ -44,29 +47,36 @@ public class ButtonToast {
     private final LinkedList<Toast> mQueue = new LinkedList<Toast>();
     private Toast mCurrentToast;
 
+    public enum ReasonHidden {
+        CLICKED,
+        TIMEOUT,
+        STARTUP
+    }
+
     // State objects
     private static class Toast {
-        public final CharSequence token;
         public final CharSequence buttonMessage;
-        public final int buttonIcon;
+        public Drawable buttonDrawable;
         public final CharSequence message;
+        public ToastListener listener;
 
-        public Toast(CharSequence aMessage, CharSequence aButtonMessage, int aIcon, CharSequence aToken) {
+        public Toast(CharSequence aMessage, CharSequence aButtonMessage,
+                     Drawable aDrawable, ToastListener aListener) {
             message = aMessage;
             buttonMessage = aButtonMessage;
-            buttonIcon = aIcon;
-            token = aToken;
+            buttonDrawable = aDrawable;
+            listener = aListener;
         }
     }
 
     public interface ToastListener {
-        void onButtonClicked(CharSequence token);
+        void onButtonClicked();
+        void onToastHidden(ReasonHidden reason);
     }
 
-    public ButtonToast(View view, ToastListener listener) {
+    public ButtonToast(View view) {
         mView = view;
-        mListener = listener;
-
+        mListener = null;
         mMessageView = (TextView) mView.findViewById(R.id.toast_message);
         mButton = (Button) mView.findViewById(R.id.toast_button);
         mButton.setOnClickListener(new View.OnClickListener() {
@@ -76,21 +86,20 @@ public class ButtonToast {
                         if (t == null)
                             return;
 
-                        hide(false);
-                        if (mListener != null) {
-                            mListener.onButtonClicked(t.token);
+                        hide(false, ReasonHidden.CLICKED);
+                        if (t.listener != null) {
+                            t.listener.onButtonClicked();
                         }
                     }
                 });
 
-        hide(true);
+        hide(true, ReasonHidden.STARTUP);
     }
 
     public void show(boolean immediate, CharSequence message,
-                     CharSequence buttonMessage, int buttonIcon,
-                     CharSequence token) {
-        Toast t = new Toast(message, buttonMessage, buttonIcon, token);
-        show(t, immediate);
+                     CharSequence buttonMessage, Drawable buttonDrawable,
+                     ToastListener listener) {
+        show(new Toast(message, buttonMessage, buttonDrawable, listener), immediate);
     }
 
     private void show(Toast t, boolean immediate) {
@@ -105,7 +114,8 @@ public class ButtonToast {
 
         mMessageView.setText(t.message);
         mButton.setText(t.buttonMessage);
-        mButton.setCompoundDrawablesWithIntrinsicBounds(0, 0, t.buttonIcon, 0);
+        mButton.setCompoundDrawablePadding(mView.getContext().getResources().getDimensionPixelSize(R.dimen.toast_button_padding));
+        mButton.setCompoundDrawablesWithIntrinsicBounds(null, null, t.buttonDrawable, null);
 
         mHideHandler.removeCallbacks(mHideRunnable);
         mHideHandler.postDelayed(mHideRunnable, TOAST_DURATION);
@@ -120,12 +130,15 @@ public class ButtonToast {
         mView.startAnimation(alpha);
     }
 
-    public void hide(boolean immediate) {
-        if (mButton.isPressed()) {
+    public void hide(boolean immediate, ReasonHidden reason) {
+        if (mButton.isPressed() && reason != ReasonHidden.CLICKED) {
             mHideHandler.postDelayed(mHideRunnable, TOAST_DURATION);
             return;
         }
 
+        if (mCurrentToast != null && mCurrentToast.listener != null) {
+            mCurrentToast.listener.onToastHidden(reason);
+        }
         mCurrentToast = null;
         mButton.setEnabled(false);
         mHideHandler.removeCallbacks(mHideRunnable);
@@ -170,7 +183,7 @@ public class ButtonToast {
     private Runnable mHideRunnable = new Runnable() {
         @Override
         public void run() {
-            hide(false);
+            hide(false, ReasonHidden.TIMEOUT);
         }
     };
 }
