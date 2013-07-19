@@ -18,7 +18,7 @@ function inChildProcess() {
 }
 function makeChan(path) {
   var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
-  var chan = ios.newChannel("http://localhost:4444/" + path, null, null)
+  var chan = ios.newChannel("http://localhost:" + httpserver.identity.primaryPort + "/" + path, null, null)
                 .QueryInterface(Ci.nsIHttpChannel);
   return chan;
 }
@@ -73,7 +73,7 @@ function run_test() {
   httpserver = new HttpServer();
   httpserver.registerPathHandler("/set", setHandler);
   httpserver.registerPathHandler("/present", presentHandler);
-  httpserver.start(4444);
+  httpserver.start(-1);
   
   do_test_pending();
   

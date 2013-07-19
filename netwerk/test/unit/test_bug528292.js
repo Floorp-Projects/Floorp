@@ -7,11 +7,23 @@ Cu.import("resource://testing-common/httpd.js");
 
 const sentCookieVal     = "foo=bar";
 const responseBody      = "response body";
-const baseURL           = "http://localhost:4444";
+
+XPCOMUtils.defineLazyGetter(this, "baseURL", function() {
+  return "http://localhost:" + httpServer.identity.primaryPort;
+});
+
 const preRedirectPath   = "/528292/pre-redirect";
-const preRedirectURL    = baseURL + preRedirectPath;
+
+XPCOMUtils.defineLazyGetter(this, "preRedirectURL", function() {
+  return baseURL + preRedirectPath;
+});
+
 const postRedirectPath  = "/528292/post-redirect";
-const postRedirectURL   = baseURL + postRedirectPath;
+
+XPCOMUtils.defineLazyGetter(this, "postRedirectURL", function() {
+  return baseURL + postRedirectPath;
+});
+
 var   httpServer        = null;
 var   receivedCookieVal = null;
 
@@ -35,7 +47,7 @@ function run_test()
   httpServer = new HttpServer();
   httpServer.registerPathHandler(preRedirectPath, preRedirectHandler);
   httpServer.registerPathHandler(postRedirectPath, postRedirectHandler);
-  httpServer.start(4444);
+  httpServer.start(-1);
 
   // Disable third-party cookies in general.
   Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch).
