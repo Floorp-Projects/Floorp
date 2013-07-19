@@ -250,6 +250,7 @@ var gPluginHandler = {
       }
     }
 
+    let shouldShowNotification = false;
     let browser = gBrowser.getBrowserForDocument(doc.defaultView.top.document);
 
     switch (eventType) {
@@ -275,7 +276,7 @@ var gPluginHandler = {
 
       case "PluginBlocklisted":
       case "PluginOutdated":
-        this._showClickToPlayNotification(browser);
+        shouldShowNotification = true;
         break;
 
       case "PluginVulnerableUpdatable":
@@ -297,7 +298,7 @@ var gPluginHandler = {
           let vulnerabilityText = doc.getAnonymousElementByAttribute(plugin, "anonid", "vulnerabilityStatus");
           vulnerabilityText.textContent = vulnerabilityString;
         }
-        this._showClickToPlayNotification(browser);
+        shouldShowNotification = true;
         break;
 
       case "PluginPlayPreview":
@@ -307,12 +308,12 @@ var gPluginHandler = {
       case "PluginDisabled":
         let manageLink = doc.getAnonymousElementByAttribute(plugin, "class", "managePluginsLink");
         this.addLinkClickCallback(manageLink, "managePlugins");
-        this._showClickToPlayNotification(browser);
+        shouldShowNotification = true;
         break;
 
       case "PluginInstantiated":
       case "PluginRemoved":
-        this._showClickToPlayNotification(browser);
+        shouldShowNotification = true;
         break;
     }
 
@@ -321,6 +322,12 @@ var gPluginHandler = {
       let overlay = doc.getAnonymousElementByAttribute(plugin, "class", "mainBox");
       if (overlay != null && this.isTooSmall(plugin, overlay))
         overlay.style.visibility = "hidden";
+    }
+
+    // Only show the notification after we've done the isTooSmall check, so
+    // that the notification can decide whether to show the "alert" icon
+    if (shouldShowNotification) {
+      this._showClickToPlayNotification(browser);
     }
   },
 
@@ -754,6 +761,7 @@ var gPluginHandler = {
     let notification = PopupNotifications.getNotification("click-to-play-plugins", aBrowser);
 
     let contentWindow = aBrowser.contentWindow;
+    let contentDoc = aBrowser.contentDocument;
     let cwu = contentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
                            .getInterface(Ci.nsIDOMWindowUtils);
     let plugins = cwu.plugins;
@@ -764,12 +772,23 @@ var gPluginHandler = {
       return;
     }
 
-    let haveVulnerablePlugin = plugins.some(function(plugin) {
+    let icon = 'plugins-notification-icon';
+    for (let plugin of plugins) {
       let fallbackType = plugin.pluginFallbackType;
-      return fallbackType == plugin.PLUGIN_VULNERABLE_UPDATABLE ||
-        fallbackType == plugin.PLUGIN_VULNERABLE_NO_UPDATE ||
-        fallbackType == plugin.PLUGIN_BLOCKLISTED;
-    });
+      if (fallbackType == plugin.PLUGIN_VULNERABLE_UPDATABLE ||
+          fallbackType == plugin.PLUGIN_VULNERABLE_NO_UPDATE ||
+          fallbackType == plugin.PLUGIN_BLOCKLISTED) {
+        icon = 'blocked-plugins-notification-icon';
+        break;
+      }
+      if (fallbackType == plugin.PLUGIN_CLICK_TO_PLAY) {
+        let overlay = contentDoc.getAnonymousElementByAttribute(plugin, "class", "mainBox");
+        if (!overlay || overlay.style.visibility == 'hidden') {
+          icon = 'alert-plugins-notification-icon';
+        }
+      }
+    }
+
     let dismissed = notification ? notification.dismissed : true;
     if (aPrimaryPlugin)
       dismissed = false;
@@ -784,7 +803,6 @@ var gPluginHandler = {
       eventCallback: this._clickToPlayNotificationEventCallback,
       primaryPlugin: primaryPluginPermission
     };
-    let icon = haveVulnerablePlugin ? "blocked-plugins-notification-icon" : "plugins-notification-icon";
     PopupNotifications.show(aBrowser, "click-to-play-plugins",
                             "", icon,
                             null, null, options);
