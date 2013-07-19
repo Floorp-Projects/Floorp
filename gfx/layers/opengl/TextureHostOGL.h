@@ -621,6 +621,11 @@ public:
     return LOCAL_GL_CLAMP_TO_EDGE;
   }
 
+  virtual GLenum GetTextureTarget() const MOZ_OVERRIDE
+  {
+    return mTextureTarget;
+  }
+
   bool IsValid() const MOZ_OVERRIDE;
 
   virtual already_AddRefed<gfxImageSurface> GetAsSurface() MOZ_OVERRIDE;
