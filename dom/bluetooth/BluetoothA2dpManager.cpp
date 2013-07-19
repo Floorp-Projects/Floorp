@@ -24,8 +24,8 @@ using namespace mozilla;
 USING_BLUETOOTH_NAMESPACE
 
 namespace {
-  StaticRefPtr<BluetoothA2dpManager> gBluetoothA2dpManager;
-  bool gInShutdown = false;
+  StaticRefPtr<BluetoothA2dpManager> sBluetoothA2dpManager;
+  bool sInShutdown = false;
 } // anonymous namespace
 
 NS_IMETHODIMP
@@ -33,7 +33,7 @@ BluetoothA2dpManager::Observe(nsISupports* aSubject,
                               const char* aTopic,
                               const PRUnichar* aData)
 {
-  MOZ_ASSERT(gBluetoothA2dpManager);
+  MOZ_ASSERT(sBluetoothA2dpManager);
 
   if (!strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
     HandleShutdown();
@@ -101,32 +101,32 @@ BluetoothA2dpManager::Get()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  // If we already exist, exit early
-  if (gBluetoothA2dpManager) {
-    return gBluetoothA2dpManager;
+  // If sBluetoothA2dpManager already exists, exit early
+  if (sBluetoothA2dpManager) {
+    return sBluetoothA2dpManager;
   }
 
   // If we're in shutdown, don't create a new instance
-  if (gInShutdown) {
+  if (sInShutdown) {
     NS_WARNING("BluetoothA2dpManager can't be created during shutdown");
     return nullptr;
   }
 
-  // Create new instance, register, return
+  // Create a new instance, register, and return
   BluetoothA2dpManager* manager = new BluetoothA2dpManager();
   NS_ENSURE_TRUE(manager->Init(), nullptr);
 
-  gBluetoothA2dpManager = manager;
-  return gBluetoothA2dpManager;
+  sBluetoothA2dpManager = manager;
+  return sBluetoothA2dpManager;
 }
 
 void
 BluetoothA2dpManager::HandleShutdown()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  gInShutdown = true;
+  sInShutdown = true;
   Disconnect();
-  gBluetoothA2dpManager = nullptr;
+  sBluetoothA2dpManager = nullptr;
 }
 
 bool
@@ -135,7 +135,7 @@ BluetoothA2dpManager::Connect(const nsAString& aDeviceAddress)
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!aDeviceAddress.IsEmpty());
 
-  if (gInShutdown) {
+  if (sInShutdown) {
     NS_WARNING("Connect called while in shutdown!");
     return false;
   }
