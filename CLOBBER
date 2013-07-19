@@ -17,5 +17,5 @@
 #
 # Modifying this file will now automatically clobber the buildbot machines \o/
 #
-Bug 889503 - Move Settings API to WebIDL.
-Requires a clobber due to Bug 890744.
+Bug 885962 - Polish mixed content blocking UI
+Android-only resource clobber (just rm objdir/mobile/android/base/res)
