@@ -39,34 +39,34 @@ function testBreakOnAll()
     gThreadClient.pauseOnDOMEvents("*", function(packet) {
       is(packet, undefined, "The pause-on-any-event request completed successfully.");
 
-      gThreadClient.resume(function() {
-        gClient.addOneTimeListener("paused", function(event, packet) {
-          is(packet.why.type, "pauseOnDOMEvents", "A hidden breakpoint was hit.");
-          is(packet.frame.callee.name, "keyupHandler", "The keyupHandler is entered.");
+      gClient.addOneTimeListener("paused", function(event, packet) {
+        is(packet.why.type, "pauseOnDOMEvents", "A hidden breakpoint was hit.");
+        is(packet.frame.callee.name, "keyupHandler", "The keyupHandler is entered.");
 
-          gThreadClient.resume(function() {
-            gClient.addOneTimeListener("paused", function(event, packet) {
-              is(packet.why.type, "pauseOnDOMEvents", "A hidden breakpoint was hit.");
-              is(packet.frame.callee.name, "clickHandler", "The clickHandler is entered.");
+        gThreadClient.resume(function() {
+          gClient.addOneTimeListener("paused", function(event, packet) {
+            is(packet.why.type, "pauseOnDOMEvents", "A hidden breakpoint was hit.");
+            is(packet.frame.callee.name, "clickHandler", "The clickHandler is entered.");
 
-              gThreadClient.resume(function() {
-                gClient.addOneTimeListener("paused", function(event, packet) {
-                  is(packet.why.type, "pauseOnDOMEvents", "A hidden breakpoint was hit.");
-                  is(packet.frame.callee.name, "onchange", "The onchange handler is entered.");
+            gThreadClient.resume(function() {
+              gClient.addOneTimeListener("paused", function(event, packet) {
+                is(packet.why.type, "pauseOnDOMEvents", "A hidden breakpoint was hit.");
+                is(packet.frame.callee.name, "onchange", "The onchange handler is entered.");
 
-                  gThreadClient.resume(testBreakOnDisabled);
-                });
-
-                gInput.focus();
-                gInput.value = "foo";
-                gInput.blur();
+                gThreadClient.resume(testBreakOnDisabled);
               });
+
+              gInput.focus();
+              gInput.value = "foo";
+              gInput.blur();
             });
-
-            EventUtils.sendMouseEvent({ type: "click" }, gButton);
           });
-        });
 
+          EventUtils.sendMouseEvent({ type: "click" }, gButton);
+        });
+      });
+
+      gThreadClient.resume(function() {
         gInput.focus();
         EventUtils.synthesizeKey("e", {}, content);
       });
