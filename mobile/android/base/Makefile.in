@@ -683,8 +683,9 @@ RES_DRAWABLE_MDPI = \
   res/drawable-mdpi/find_close.png \
   res/drawable-mdpi/find_next.png \
   res/drawable-mdpi/find_prev.png \
-  res/drawable-mdpi/larry_blue.png \
-  res/drawable-mdpi/larry_green.png \
+  res/drawable-mdpi/larry.png \
+  res/drawable-mdpi/lock_identified.png \
+  res/drawable-mdpi/lock_verified.png \
   res/drawable-mdpi/menu.png \
   res/drawable-mdpi/menu_pb.png \
   res/drawable-mdpi/menu_panel_bg.9.png \
@@ -694,10 +695,8 @@ RES_DRAWABLE_MDPI = \
   res/drawable-mdpi/menu_item_check.png \
   res/drawable-mdpi/menu_item_more.png \
   res/drawable-mdpi/menu_item_uncheck.png \
-  res/drawable-mdpi/site_security_blocked_mixed_content.png \
-  res/drawable-mdpi/site_security_loaded_mixed_content.png \
-  res/drawable-mdpi/site_security_identified.png \
-  res/drawable-mdpi/site_security_verified.png \
+  res/drawable-mdpi/shield.png \
+  res/drawable-mdpi/shield_doorhanger.png \
   res/drawable-mdpi/tabs_normal.png \
   res/drawable-mdpi/tabs_private.png \
   res/drawable-mdpi/tabs_synced.png \
@@ -717,6 +716,8 @@ RES_DRAWABLE_MDPI = \
   res/drawable-mdpi/shadow.png \
   res/drawable-mdpi/start.png \
   res/drawable-mdpi/marketplace.png \
+  res/drawable-mdpi/warning.png \
+  res/drawable-mdpi/warning_doorhanger.png \
   $(NULL)
 
 RES_DRAWABLE_LDPI = \
@@ -790,8 +791,9 @@ RES_DRAWABLE_HDPI = \
   res/drawable-hdpi/find_close.png \
   res/drawable-hdpi/find_next.png \
   res/drawable-hdpi/find_prev.png \
-  res/drawable-hdpi/larry_blue.png \
-  res/drawable-hdpi/larry_green.png \
+  res/drawable-hdpi/larry.png \
+  res/drawable-hdpi/lock_identified.png \
+  res/drawable-hdpi/lock_verified.png \
   res/drawable-hdpi/menu.png \
   res/drawable-hdpi/menu_pb.png \
   res/drawable-hdpi/menu_panel_bg.9.png \
@@ -801,10 +803,8 @@ RES_DRAWABLE_HDPI = \
   res/drawable-hdpi/menu_item_check.png \
   res/drawable-hdpi/menu_item_more.png \
   res/drawable-hdpi/menu_item_uncheck.png \
-  res/drawable-hdpi/site_security_blocked_mixed_content.png \
-  res/drawable-hdpi/site_security_loaded_mixed_content.png \
-  res/drawable-hdpi/site_security_identified.png \
-  res/drawable-hdpi/site_security_verified.png \
+  res/drawable-hdpi/shield.png \
+  res/drawable-hdpi/shield_doorhanger.png \
   res/drawable-hdpi/tabs_normal.png \
   res/drawable-hdpi/tabs_private.png \
   res/drawable-hdpi/tabs_synced.png \
@@ -818,6 +818,8 @@ RES_DRAWABLE_HDPI = \
   res/drawable-hdpi/handle_end.png \
   res/drawable-hdpi/handle_middle.png \
   res/drawable-hdpi/handle_start.png \
+  res/drawable-hdpi/warning.png \
+  res/drawable-hdpi/warning_doorhanger.png \
   $(NULL)
 
 RES_DRAWABLE_XHDPI = \
@@ -885,8 +887,9 @@ RES_DRAWABLE_XHDPI = \
   res/drawable-xhdpi/reader.png \
   res/drawable-xhdpi/reader_active.png \
   res/drawable-xhdpi/reading_list.png \
-  res/drawable-xhdpi/larry_blue.png \
-  res/drawable-xhdpi/larry_green.png \
+  res/drawable-xhdpi/larry.png \
+  res/drawable-xhdpi/lock_identified.png \
+  res/drawable-xhdpi/lock_verified.png \
   res/drawable-xhdpi/menu.png \
   res/drawable-xhdpi/menu_pb.png \
   res/drawable-xhdpi/menu_panel_bg.9.png \
@@ -896,13 +899,11 @@ RES_DRAWABLE_XHDPI = \
   res/drawable-xhdpi/menu_item_check.png \
   res/drawable-xhdpi/menu_item_more.png \
   res/drawable-xhdpi/menu_item_uncheck.png \
+  res/drawable-xhdpi/shield.png \
+  res/drawable-xhdpi/shield_doorhanger.png \
   res/drawable-xhdpi/tab_indicator_divider.9.png \
   res/drawable-xhdpi/tab_indicator_selected.9.png \
   res/drawable-xhdpi/tab_indicator_selected_focused.9.png \
-  res/drawable-xhdpi/site_security_blocked_mixed_content.png \
-  res/drawable-xhdpi/site_security_loaded_mixed_content.png \
-  res/drawable-xhdpi/site_security_identified.png \
-  res/drawable-xhdpi/site_security_verified.png \
   res/drawable-xhdpi/tabs_normal.png \
   res/drawable-xhdpi/tabs_private.png \
   res/drawable-xhdpi/tabs_synced.png \
@@ -912,6 +913,8 @@ RES_DRAWABLE_XHDPI = \
   res/drawable-xhdpi/handle_end.png \
   res/drawable-xhdpi/handle_middle.png \
   res/drawable-xhdpi/handle_start.png \
+  res/drawable-xhdpi/warning.png \
+  res/drawable-xhdpi/warning_doorhanger.png \
   $(NULL)
 
 RES_DRAWABLE_MDPI_V11 = \
