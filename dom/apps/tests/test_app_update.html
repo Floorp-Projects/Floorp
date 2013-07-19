@@ -33,8 +33,20 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=826058
     catch (e) { dump("Got exception: " + e + "\n"); }
   }
 
-  function cbError() {
-    ok(false, "Error callback invoked: " + this.error.name);
+  function mozAppsError() {
+    ok(false, "mozApps error: " + this.error.name);
+    finish();
+  }
+
+  function xhrError(event, url) {
+    var xhr = event.target;
+    ok(false, "XHR error loading " + url + ": " + xhr.status + " - " +
+              xhr.statusText);
+    finish();
+  }
+
+  function xhrAbort(url) {
+    ok(false, "XHR abort loading " + url);
     finish();
   }
 
@@ -58,7 +70,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=826058
     yield undefined;
 
     var request = navigator.mozApps.install(gHostedManifestURL);
-    request.onerror = cbError;
+    request.onerror = mozAppsError;
     request.onsuccess = continueTest;
     yield undefined;
     var app = request.result;
@@ -106,7 +118,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=826058
 
     // Uninstall the app.
     request = navigator.mozApps.mgmt.uninstall(app);
-    request.onerror = cbError;
+    request.onerror = mozAppsError;
     request.onsuccess = continueTest;
     yield undefined;
 
@@ -119,7 +131,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=826058
     yield undefined;
     ok(true, "Installing cached app");
     var request = navigator.mozApps.install(gCachedManifestURL);
-    request.onerror = cbError;
+    request.onerror = mozAppsError;
     request.onsuccess = continueTest;
     yield undefined;
     var app = request.result;
@@ -128,7 +140,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=826058
       ok(true, "App is pending. Waiting for progress");
       app.onprogress = function() ok(true, "Got download progress");
       app.ondownloadsuccess = continueTest;
-      app.ondownloaderror = cbError;
+      app.ondownloaderror = mozAppsError;
       yield undefined;
     }
     is(app.installState, "installed", "App is installed");
@@ -145,7 +157,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=826058
     app.ondownloadavailable = function() ok(false, "downloadavailable fired");
     ok(true, "Checking for updates");
     var request = app.checkForUpdate();
-    request.onerror = cbError;
+    request.onerror = mozAppsError;
     request.onsuccess = continueTest;
     yield undefined;
     todo(app.lastUpdateCheck > lastCheck, "lastUpdateCheck updated appropriately");
@@ -153,7 +165,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=826058
 
     // Uninstall the app.
     request = navigator.mozApps.mgmt.uninstall(app);
-    request.onerror = cbError;
+    request.onerror = mozAppsError;
     request.onsuccess = continueTest;
     yield undefined;
     ok(true, "Uninstalled app");
@@ -169,19 +181,21 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=826058
 
   function setAppVersion(version, cb) {
     var xhr = new XMLHttpRequest();
-    xhr.addEventListener("load", function() { is(xhr.responseText, "OK", "setVersion OK"); cb(); });
-    xhr.addEventListener("error", cbError);
-    xhr.addEventListener("abort", cbError);
-    xhr.open('GET', gBaseURL + 'file_app.sjs?setVersion=' + version, true);
+    var url = gBaseURL + 'file_app.sjs?setVersion=' + version;
+    xhr.addEventListener("load", function() { is(xhr.responseText, "OK", "setAppVersion OK"); cb(); });
+    xhr.addEventListener("error", event => xhrError(event, url));
+    xhr.addEventListener("abort", event => xhrAbort(url));
+    xhr.open('GET', url, true);
     xhr.send();
   }
 
   function setAppIcon(icon, cb) {
     var xhr = new XMLHttpRequest();
-    xhr.addEventListener("load", function() { is(xhr.responseText, "OK", "setIcon OK"); cb(); });
-    xhr.addEventListener("error", cbError);
-    xhr.addEventListener("abort", cbError);
-    xhr.open('GET', gBaseURL + 'file_app.sjs?setIcon=' + icon, true);
+    var url = gBaseURL + 'file_app.sjs?setIcon=' + icon;
+    xhr.addEventListener("load", function() { is(xhr.responseText, "OK", "setAppIcon OK"); cb(); });
+    xhr.addEventListener("error", event => xhrError(event, url));
+    xhr.addEventListener("abort", event => xhrAbort(url));
+    xhr.open('GET', url, true);
     xhr.send();
   }
 

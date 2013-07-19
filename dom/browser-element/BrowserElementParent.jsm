@@ -107,7 +107,7 @@ function BrowserElementParent(frameLoader, hasRemoteFrame) {
   let mmCalls = {
     "hello": this._recvHello,
     "contextmenu": this._fireCtxMenuEvent,
-    "locationchange": this._gotLocationChange,
+    "locationchange": this._fireEventFromMsg,
     "loadstart": this._fireEventFromMsg,
     "loadend": this._fireEventFromMsg,
     "titlechange": this._fireEventFromMsg,
@@ -610,11 +610,6 @@ BrowserElementParent.prototype = {
     let evt = this._createEvent('error', {type: 'fatal'},
                                 /* cancelable = */ false);
     this._frameElement.dispatchEvent(evt);
-  },
-
-  _gotLocationChange: function(data) {
-    this[data._payload_] = 'BEP location';
-    this._fireEventFromMsg(data);
   },
 
   observe: function(subject, topic, data) {
