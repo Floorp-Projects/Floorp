@@ -18,7 +18,7 @@ class nsRecentBadCerts;
 class nsNSSCertificateDB : public nsIX509CertDB, public nsIX509CertDB2
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIX509CERTDB
   NS_DECL_NSIX509CERTDB2
 
