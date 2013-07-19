@@ -5,7 +5,7 @@
  * found in the LICENSE file.
  */
 
-
+#include <algorithm>
 #include "GrGpuGL.h"
 #include "GrGLStencilBuffer.h"
 #include "GrGLPath.h"
@@ -1388,6 +1388,36 @@ bool GrGpuGL::readPixelsWillPayForYFlip(GrRenderTarget* renderTarget,
     }
 }
 
+static void swizzleRow(void* buffer, int byteLen) {
+    uint8_t* src = (uint8_t*)buffer;
+    uint8_t* end = src + byteLen;
+
+    GrAssert((end - src) % 4 == 0);
+
+    for (; src != end; src += 4) {
+        std::swap(src[0], src[2]);
+    }
+}
+
+bool GrGpuGL::canReadBGRA() const
+{
+    if (kDesktop_GrGLBinding == this->glBinding() ||
+        this->hasExtension("GL_EXT_bgra"))
+        return true;
+
+    if (this->hasExtension("GL_EXT_read_format_bgra")) {
+        GrGLint readFormat = 0;
+        GrGLint readType = 0;
+
+        GL_CALL(GetIntegerv(GR_GL_IMPLEMENTATION_COLOR_READ_FORMAT, &readFormat));
+        GL_CALL(GetIntegerv(GR_GL_IMPLEMENTATION_COLOR_READ_TYPE, &readType));
+
+        return readFormat == GR_GL_BGRA && readType == GR_GL_UNSIGNED_BYTE;
+    }
+
+    return false;
+}
+
 bool GrGpuGL::onReadPixels(GrRenderTarget* target,
                            int left, int top,
                            int width, int height,
@@ -1397,6 +1427,14 @@ bool GrGpuGL::onReadPixels(GrRenderTarget* target,
     GrGLenum format;
     GrGLenum type;
     bool flipY = kBottomLeft_GrSurfaceOrigin == target->origin();
+    bool needSwizzle = false;
+
+    if (kBGRA_8888_GrPixelConfig == config && !this->canReadBGRA()) {
+        // Read RGBA and swizzle after
+        config = kRGBA_8888_GrPixelConfig;
+        needSwizzle = true;
+    }
+
     if (!this->configToGLFormats(config, false, NULL, &format, &type)) {
         return false;
     }
@@ -1485,12 +1523,19 @@ bool GrGpuGL::onReadPixels(GrRenderTarget* target,
                 memcpy(tmpRow, top, tightRowBytes);
                 memcpy(top, bottom, tightRowBytes);
                 memcpy(bottom, tmpRow, tightRowBytes);
+
+                if (needSwizzle) {
+                    swizzleRow(top, tightRowBytes);
+                    swizzleRow(bottom, tightRowBytes);
+                }
+
                 top += rowBytes;
                 bottom -= rowBytes;
             }
         }
     } else {
-        GrAssert(readDst != buffer);        GrAssert(rowBytes != tightRowBytes);
+        GrAssert(readDst != buffer);
+        GrAssert(rowBytes != tightRowBytes);
         // copy from readDst to buffer while flipping y
         // const int halfY = height >> 1;
         const char* src = reinterpret_cast<const char*>(readDst);
@@ -1500,6 +1545,10 @@ bool GrGpuGL::onReadPixels(GrRenderTarget* target,
         }
         for (int y = 0; y < height; y++) {
             memcpy(dst, src, tightRowBytes);
+            if (needSwizzle) {
+                swizzleRow(dst, tightRowBytes);
+            }
+
             src += readDstRowBytes;
             if (!flipY) {
                 dst += rowBytes;

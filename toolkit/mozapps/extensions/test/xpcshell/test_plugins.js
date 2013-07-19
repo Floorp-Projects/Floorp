@@ -159,7 +159,7 @@ function run_test_3(p) {
     do_check_true(p.isActive);
     do_check_eq(p.name, "Test Plug-in");
 
-    run_test_4();
+    do_execute_soon(run_test_4);
   });
 }
 

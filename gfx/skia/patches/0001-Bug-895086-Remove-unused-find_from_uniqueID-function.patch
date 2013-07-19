@@ -1,0 +1,38 @@
+From 58861c38751adf1f4ef3f67f8e85f5c36f1c43a5 Mon Sep 17 00:00:00 2001
+From: George Wright <gw@gwright.org.uk>
+Date: Wed, 17 Jul 2013 16:28:07 -0400
+Subject: [PATCH] Bug 895086 - Remove unused find_from_uniqueID() function from
+ SkFontHost_linux
+
+---
+ gfx/skia/src/ports/SkFontHost_linux.cpp | 14 --------------
+ 1 file changed, 14 deletions(-)
+
+diff --git a/gfx/skia/src/ports/SkFontHost_linux.cpp b/gfx/skia/src/ports/SkFontHost_linux.cpp
+index df21014..05b73dc 100644
+--- a/gfx/skia/src/ports/SkFontHost_linux.cpp
++++ b/gfx/skia/src/ports/SkFontHost_linux.cpp
+@@ -117,20 +117,6 @@ static FamilyRec* find_family(const SkTypeface* member) {
+     return NULL;
+ }
+ 
+-static SkTypeface* find_from_uniqueID(uint32_t uniqueID) {
+-    FamilyRec* curr = gFamilyHead;
+-    while (curr != NULL) {
+-        for (int i = 0; i < 4; i++) {
+-            SkTypeface* face = curr->fFaces[i];
+-            if (face != NULL && face->uniqueID() == uniqueID) {
+-                return face;
+-            }
+-        }
+-        curr = curr->fNext;
+-    }
+-    return NULL;
+-}
+-
+ /*  Remove reference to this face from its family. If the resulting family
+  is empty (has no faces), return that family, otherwise return NULL
+  */
+-- 
+1.8.3.1
+
