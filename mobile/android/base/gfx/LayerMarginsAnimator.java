@@ -226,17 +226,17 @@ public class LayerMarginsAnimator implements TouchEventInterceptor {
      * viewport origin and returns the modified metrics.
      */
     ImmutableViewportMetrics scrollBy(ImmutableViewportMetrics aMetrics, float aDx, float aDy) {
-        // Make sure to cancel any margin animations when scrolling begins
-        if (mAnimationTimer != null) {
-            mAnimationTimer.cancel();
-            mAnimationTimer = null;
-        }
-
         float[] newMarginsX = { aMetrics.marginLeft, aMetrics.marginRight };
         float[] newMarginsY = { aMetrics.marginTop, aMetrics.marginBottom };
 
         // Only alter margins if the toolbar isn't pinned
         if (!mMarginsPinned) {
+            // Make sure to cancel any margin animations when margin-scrolling begins
+            if (mAnimationTimer != null) {
+                mAnimationTimer.cancel();
+                mAnimationTimer = null;
+            }
+
             // Reset the touch travel when changing direction
             if ((aDx >= 0) != (mTouchTravelDistance.x >= 0)) {
                 mTouchTravelDistance.x = 0;
