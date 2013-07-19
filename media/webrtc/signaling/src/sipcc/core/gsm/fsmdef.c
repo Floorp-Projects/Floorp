@@ -3712,6 +3712,17 @@ fsmdef_ev_setremotedesc(sm_event_t *event) {
             return (fsmdef_release(fcb, cause, FALSE));
         }
 
+        /* Now that the SDP is digested we need to sanity check
+           for ICE parameters */
+        cause = gsmsdp_check_ice_attributes_exist(fcb);
+        if (cause != CC_CAUSE_OK) {
+            ui_set_remote_description(evSetRemoteDescError, fcb->state, line,
+            call_id, dcb->caller_id.call_instance_id, strlib_empty(),
+              PC_INTERNAL_ERROR, "ICE attributes missing; cause = %s",
+              cc_cause_name(cause));
+            return (SM_RC_END);
+        }
+
         gsmsdp_clean_media_list(dcb);
 
         fsm_change_state(fcb, __LINE__, FSMDEF_S_HAVE_REMOTE_OFFER);
