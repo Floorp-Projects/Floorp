@@ -361,7 +361,8 @@ function testTableSelection(aIdentifier, aCellsArray, aMsg)
   for (var colIdx = 0; colIdx < colsCount; colIdx++) {
     var isColSelected = true;
     for (var rowIdx = 0; rowIdx < rowCount; rowIdx++) {
-      if (aCellsArray[rowIdx][colIdx] == false) {
+      if (aCellsArray[rowIdx][colIdx] == false ||
+          aCellsArray[rowIdx][colIdx] == undefined) {
         isColSelected = false;
         break;
       }
@@ -401,7 +402,8 @@ function testTableSelection(aIdentifier, aCellsArray, aMsg)
   for (var rowIdx = 0; rowIdx < rowCount; rowIdx++) {
     var isRowSelected = true;
     for (var colIdx = 0; colIdx < colsCount; colIdx++) {
-      if (aCellsArray[rowIdx][colIdx] == false) {
+      if (aCellsArray[rowIdx][colIdx] == false ||
+          aCellsArray[rowIdx][colIdx] == undefined) {
         isRowSelected = false;
         break;
       }
@@ -442,7 +444,8 @@ function testTableSelection(aIdentifier, aCellsArray, aMsg)
       if (aCellsArray[rowIdx][colIdx] & kSpanned)
         continue;
 
-      is(acc.isCellSelected(rowIdx, colIdx), aCellsArray[rowIdx][colIdx],
+      var isSelected = aCellsArray[rowIdx][colIdx] == true;
+      is(acc.isCellSelected(rowIdx, colIdx), isSelected,
          msg + "Wrong selection state of cell at " + rowIdx + " row and " +
          colIdx + " column for " + prettyName(aIdentifier));
 
@@ -496,7 +499,9 @@ function testTableSelection(aIdentifier, aCellsArray, aMsg)
 
       var cell = acc.getCellAt(rowIdx, colIdx);
       var isSel = aCellsArray[rowIdx][colIdx];
-      if (isSel)
+      if (isSel == undefined)
+        testStates(cell, 0, 0, STATE_SELECTABLE | STATE_SELECTED);
+      else if (isSel == true)
         testStates(cell, STATE_SELECTED);
       else
         testStates(cell, STATE_SELECTABLE, 0, STATE_SELECTED);
