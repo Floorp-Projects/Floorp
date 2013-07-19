@@ -250,9 +250,6 @@ FENNEC_JAVA_FILES = \
   menu/MenuPanel.java \
   menu/MenuPopup.java \
   preferences/SearchPreferenceCategory.java \
-  widget/AboutHome.java \
-  widget/AboutHomeView.java \
-  widget/AboutHomeSection.java \
   widget/ActivityChooserModel.java \
   widget/ButtonToast.java \
   widget/ArrowPopup.java \
@@ -262,7 +259,6 @@ FENNEC_JAVA_FILES = \
   widget/GeckoPopupMenu.java \
   widget/GeckoActionProvider.java \
   widget/IconTabWidget.java \
-  widget/PromoBox.java \
   widget/TabRow.java \
   widget/ThumbnailView.java \
   widget/TwoWayView.java \
@@ -451,7 +447,6 @@ endif
 
 RES_LAYOUT = \
   $(SYNC_RES_LAYOUT) \
-  res/layout/abouthome_content.xml \
   res/layout/arrow_popup.xml \
   res/layout/autocomplete_list.xml \
   res/layout/autocomplete_list_item.xml \
@@ -505,7 +500,6 @@ RES_LAYOUT = \
   res/layout/select_dialog_singlechoice.xml \
   res/layout/simple_dropdown_item_1line.xml \
   res/layout/suggestion_item.xml \
-  res/layout/abouthome_section.xml \
   res/layout/validation_message.xml \
   res/layout/videoplayer.xml \
   $(NULL)
@@ -524,10 +518,6 @@ RES_LAYOUT_XLARGE_V11 = \
   res/layout-xlarge-v11/font_size_preference.xml \
   res/layout-xlarge-v11/remote_tabs_child.xml \
   res/layout-xlarge-v11/remote_tabs_group.xml \
-  $(NULL)
-
-RES_LAYOUT_XLARGE_LAND_V11 = \
-  res/layout-xlarge-land-v11/abouthome_content.xml \
   $(NULL)
 
 RES_VALUES = \
@@ -609,13 +599,6 @@ RES_DRAWABLE_MDPI = \
   res/drawable-mdpi/blank.png \
   res/drawable-mdpi/favicon.png \
   res/drawable-mdpi/folder.png \
-  res/drawable-mdpi/abouthome_icon.png \
-  res/drawable-mdpi/abouthome_logo_dark.png \
-  res/drawable-mdpi/abouthome_logo_light.png \
-  res/drawable-mdpi/abouthome_promo_box_bg.9.png \
-  res/drawable-mdpi/abouthome_promo_box_pressed_bg.9.png \
-  res/drawable-mdpi/abouthome_promo_logo_apps.png \
-  res/drawable-mdpi/abouthome_promo_logo_sync.png \
   res/drawable-mdpi/abouthome_thumbnail.png \
   res/drawable-mdpi/abouthome_thumbnail_add.png \
   res/drawable-mdpi/alert_addon.png \
@@ -729,13 +712,6 @@ RES_DRAWABLE_HDPI = \
   res/drawable-hdpi/folder.png \
   res/drawable-hdpi/home_bg.png \
   res/drawable-hdpi/home_star.png \
-  res/drawable-hdpi/abouthome_icon.png \
-  res/drawable-hdpi/abouthome_logo_dark.png \
-  res/drawable-hdpi/abouthome_logo_light.png \
-  res/drawable-hdpi/abouthome_promo_box_bg.9.png \
-  res/drawable-hdpi/abouthome_promo_box_pressed_bg.9.png \
-  res/drawable-hdpi/abouthome_promo_logo_apps.png \
-  res/drawable-hdpi/abouthome_promo_logo_sync.png \
   res/drawable-hdpi/abouthome_thumbnail.png \
   res/drawable-hdpi/abouthome_thumbnail_add.png \
   res/drawable-hdpi/alert_addon.png \
@@ -819,13 +795,6 @@ RES_DRAWABLE_XHDPI = \
   res/drawable-xhdpi/blank.png \
   res/drawable-xhdpi/favicon.png \
   res/drawable-xhdpi/folder.png \
-  res/drawable-xhdpi/abouthome_icon.png \
-  res/drawable-xhdpi/abouthome_logo_dark.png \
-  res/drawable-xhdpi/abouthome_logo_light.png \
-  res/drawable-xhdpi/abouthome_promo_box_bg.9.png \
-  res/drawable-xhdpi/abouthome_promo_box_pressed_bg.9.png \
-  res/drawable-xhdpi/abouthome_promo_logo_apps.png \
-  res/drawable-xhdpi/abouthome_promo_logo_sync.png \
   res/drawable-xhdpi/abouthome_thumbnail.png \
   res/drawable-xhdpi/abouthome_thumbnail_add.png \
   res/drawable-xhdpi/url_bar_bg_shadow.png \
@@ -1028,8 +997,6 @@ RES_DRAWABLE_XLARGE_XHDPI_V11 = \
   $(NULL)
 
 RES_COLOR = \
-  res/color/abouthome_section_subtitle.xml \
-  res/color/abouthome_section_title.xml \
   res/color/primary_text.xml \
   res/color/primary_text_inverse.xml \
   res/color/secondary_text.xml \
@@ -1062,8 +1029,6 @@ endif
 
 MOZ_ANDROID_DRAWABLES += \
   $(SYNC_RES_DRAWABLE)                                                          \
-  mobile/android/base/resources/drawable/abouthome_logo.xml                     \
-  mobile/android/base/resources/drawable/abouthome_promo_box.xml                \
   mobile/android/base/resources/drawable/action_bar_button.xml                  \
   mobile/android/base/resources/drawable/action_bar_button_inverse.xml          \
   mobile/android/base/resources/drawable/bookmark_thumbnail_bg.xml              \
@@ -1100,14 +1065,13 @@ MOZ_ANDROID_DRAWABLES += \
 
 MOZ_BRANDING_DRAWABLE_MDPI = $(shell if test -e $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/android-resources.mn; then cat $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/android-resources.mn | tr '\n' ' ';  fi)
 
-RESOURCES=$(RES_LAYOUT) $(RES_LAYOUT_LARGE_LAND_V11) $(RES_LAYOUT_LARGE_V11) $(RES_LAYOUT_XLARGE_V11) $(RES_LAYOUT_XLARGE_LAND_V11) $(RES_VALUES) $(RES_VALUES_LAND) $(RES_VALUES_V11) $(RES_VALUES_LARGE_V11) $(RES_VALUES_LARGE_LAND_V11) $(RES_VALUES_XLARGE_V11) $(RES_VALUES_LAND_V14) $(RES_VALUES_V14) $(RES_VALUES_V16) $(RES_XML) $(RES_XML_V11) $(RES_ANIM) $(RES_DRAWABLE_MDPI) $(RES_DRAWABLE_LDPI) $(RES_DRAWABLE_HDPI) $(RES_DRAWABLE_XHDPI) $(RES_DRAWABLE_MDPI_V11) $(RES_DRAWABLE_HDPI_V11) $(RES_DRAWABLE_XHDPI_V11) $(RES_DRAWABLE_LARGE_MDPI_V11) $(RES_DRAWABLE_LARGE_HDPI_V11) $(RES_DRAWABLE_LARGE_XHDPI_V11) $(RES_DRAWABLE_XLARGE_MDPI_V11) $(RES_DRAWABLE_XLARGE_HDPI_V11) $(RES_DRAWABLE_XLARGE_XHDPI_V11) $(RES_COLOR) $(RES_MENU)
+RESOURCES=$(RES_LAYOUT) $(RES_LAYOUT_LARGE_LAND_V11) $(RES_LAYOUT_LARGE_V11) $(RES_LAYOUT_XLARGE_V11) $(RES_VALUES) $(RES_VALUES_LAND) $(RES_VALUES_V11) $(RES_VALUES_LARGE_V11) $(RES_VALUES_LARGE_LAND_V11) $(RES_VALUES_XLARGE_V11) $(RES_VALUES_LAND_V14) $(RES_VALUES_V14) $(RES_VALUES_V16) $(RES_XML) $(RES_XML_V11) $(RES_ANIM) $(RES_DRAWABLE_MDPI) $(RES_DRAWABLE_LDPI) $(RES_DRAWABLE_HDPI) $(RES_DRAWABLE_XHDPI) $(RES_DRAWABLE_MDPI_V11) $(RES_DRAWABLE_HDPI_V11) $(RES_DRAWABLE_XHDPI_V11) $(RES_DRAWABLE_LARGE_MDPI_V11) $(RES_DRAWABLE_LARGE_HDPI_V11) $(RES_DRAWABLE_LARGE_XHDPI_V11) $(RES_DRAWABLE_XLARGE_MDPI_V11) $(RES_DRAWABLE_XLARGE_HDPI_V11) $(RES_DRAWABLE_XLARGE_XHDPI_V11) $(RES_COLOR) $(RES_MENU)
 
 RES_DIRS= \
   res/layout                    \
   res/layout-large-v11          \
   res/layout-large-land-v11     \
   res/layout-xlarge-v11         \
-  res/layout-xlarge-land-v11    \
   res/values                    \
   res/values-v11                \
   res/values-large-v11          \

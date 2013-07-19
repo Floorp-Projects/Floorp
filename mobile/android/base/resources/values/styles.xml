@@ -393,30 +393,11 @@
 
     <style name="AboutHome.TextAppearance" />
 
-    <style name="AboutHome.TextAppearance.Title" parent="TextAppearance">
-        <item name="android:textColor">@color/abouthome_section_title</item>
-    </style>
-
-    <style name="AboutHome.TextAppearance.SubTitle" parent="TextAppearance.Micro">
-        <item name="android:textColor">@color/abouthome_section_subtitle</item>
-    </style>
-
     <style name="AboutHome.TextAppearance.Header" parent="TextAppearance.Small">
         <item name="android:textColor">#ff222222</item>
     </style>
 
     <style name="AboutHome.TextAppearance.PageTitle" parent="TextAppearance.Medium" />
-
-    <style name="AboutHome.RowItem">
-        <item name="android:background">@drawable/action_bar_button</item>
-        <item name="android:focusable">true</item>
-    </style>
-
-    <style name="AboutHome.RowItem.TextRow">
-        <item name="android:textAppearance">@style/AboutHome.TextAppearance.Title</item>
-        <item name="android:ellipsize">middle</item>
-        <item name="android:singleLine">true</item>
-    </style>
 
     <style name="AboutHome.HeaderItem">
         <item name="android:layout_width">fill_parent</item>
