@@ -10,15 +10,8 @@
    xmlns:html="http://www.w3.org/1999/xhtml">
 
   <!-- bound to <description>s -->
-  <binding id="text-base">
-    <implementation implements="nsIDOMXULDescriptionElement, nsIAccessibleProvider">
-      <property name="accessibleType" readonly="true">
-        <getter>
-          <![CDATA[
-            return Components.interfaces.nsIAccessibleProvider.XULText;
-          ]]>
-        </getter>
-      </property>
+  <binding id="text-base" role="xul:text">
+    <implementation implements="nsIDOMXULDescriptionElement">
       <property name="disabled" onset="if (val) this.setAttribute('disabled', 'true');
                                        else this.removeAttribute('disabled');
                                        return val;"
@@ -286,15 +279,8 @@
     </handlers>
   </binding>
 
-  <binding id="text-link" extends="chrome://global/content/bindings/text.xml#text-label">
-    <implementation implements="nsIAccessibleProvider">
-      <property name="accessibleType" readonly="true">
-        <getter>
-          <![CDATA[
-            return Components.interfaces.nsIAccessibleProvider.XULLink;
-          ]]>
-        </getter>
-      </property>
+  <binding id="text-link" extends="chrome://global/content/bindings/text.xml#text-label" role="xul:link">
+    <implementation>
       <property name="href" onget="return this.getAttribute('href');"
                             onset="this.setAttribute('href', val); return val;" />
       <method name="open">

@@ -83,15 +83,8 @@
     </implementation>
   </binding>
 
-  <binding id="iframe">
-    <implementation implements="nsIAccessibleProvider">
-      <property name="accessibleType" readonly="true">
-        <getter>
-          <![CDATA[
-            return Components.interfaces.nsIAccessibleProvider.OuterDoc;
-          ]]>
-        </getter>
-      </property>
+  <binding id="iframe" role="outerdoc">
+    <implementation>
       <property name="docShell"
                 readonly="true"
                 onget="return this.boxObject.QueryInterface(Components.interfaces.nsIContainerBoxObject).docShell"/>
@@ -134,23 +127,13 @@
     </content>
   </binding>
 
-  <binding id="statusbar">
+  <binding id="statusbar" role="xul:statusbar">
     <content>
       <children/>
       <xul:statusbarpanel class="statusbar-resizerpanel">
         <xul:resizer dir="bottomend"/>
       </xul:statusbarpanel>
     </content>
-
-    <implementation implements="nsIAccessibleProvider">
-      <property name="accessibleType" readonly="true">
-        <getter>
-          <![CDATA[
-            return Components.interfaces.nsIAccessibleProvider.XULStatusBar;
-          ]]>
-        </getter>
-      </property>
-    </implementation>
   </binding>
   
   <binding id="statusbar-drag"
@@ -171,56 +154,26 @@
     </implementation>
   </binding>
 
-  <binding id="statusbarpanel-iconic" display="xul:button"
+  <binding id="statusbarpanel-iconic" display="xul:button" role="xul:button"
            extends="chrome://global/content/bindings/general.xml#statusbarpanel">
     <content>
       <xul:image class="statusbarpanel-icon" xbl:inherits="src,src=image"/>
     </content>
-
-    <implementation implements="nsIAccessibleProvider">
-      <property name="accessibleType" readonly="true">
-        <getter>
-          <![CDATA[
-            return Components.interfaces.nsIAccessibleProvider.XULButton;
-          ]]>
-        </getter>
-      </property>
-    </implementation>
   </binding>
 
-  <binding id="statusbarpanel-iconic-text" display="xul:button"
+  <binding id="statusbarpanel-iconic-text" display="xul:button" role="xul:button"
            extends="chrome://global/content/bindings/general.xml#statusbarpanel">
     <content>
       <xul:image class="statusbarpanel-icon" xbl:inherits="src,src=image"/>
       <xul:label class="statusbarpanel-text" xbl:inherits="value=label,crop"/>
     </content>
-
-    <implementation implements="nsIAccessibleProvider">
-      <property name="accessibleType" readonly="true">
-        <getter>
-          <![CDATA[
-            return Components.interfaces.nsIAccessibleProvider.XULButton;
-          ]]>
-        </getter>
-      </property>
-    </implementation>
   </binding>
 
-  <binding id="image">
-    <implementation implements="nsIDOMXULImageElement, nsIAccessibleProvider">
+  <binding id="image" role="xul:image">
+    <implementation implements="nsIDOMXULImageElement">
       <property name="src"
                 onget="return this.getAttribute('src');"
                 onset="this.setAttribute('src',val); return val;"/>
-      <property name="accessibleType" readonly="true">
-        <getter>
-          <![CDATA[
-            // Expose XUL images with an onclick as a toolbarbutton
-            return this.hasAttribute("onclick") ?
-              Components.interfaces.nsIAccessibleProvider.XULToolbarButton :
-              Components.interfaces.nsIAccessibleProvider.XULImage;
-          ]]>
-        </getter>
-      </property>
     </implementation>
   </binding>
 
@@ -261,7 +214,7 @@
     </implementation>
   </binding>
 
-  <binding id="dropmarker" extends="xul:button">
+  <binding id="dropmarker" extends="xul:button" role="xul:dropmarker">
     <resources>
       <stylesheet src="chrome://global/skin/dropmarker.css"/>
     </resources>
@@ -269,16 +222,6 @@
     <content>
       <xul:image class="dropmarker-icon"/>
     </content>
-
-    <implementation implements="nsIAccessibleProvider">
-      <property name="accessibleType" readonly="true">
-        <getter>
-          <![CDATA[
-            return Components.interfaces.nsIAccessibleProvider.XULDropmarker;
-          ]]>
-        </getter>
-      </property>
-    </implementation>
   </binding>
 
   <binding id="windowdragbox">

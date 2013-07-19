@@ -9,7 +9,7 @@
    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
    xmlns:xbl="http://www.mozilla.org/xbl">
 
-  <binding id="toolbarbutton" display="xul:button"
+  <binding id="toolbarbutton" display="xul:button" role="xul:toolbarbutton"
            extends="chrome://global/content/bindings/button.xml#button-base">
     <resources>
       <stylesheet src="chrome://global/skin/toolbarbutton.css"/>
@@ -21,14 +21,6 @@
       <xul:label class="toolbarbutton-text" crop="right" flex="1"
                  xbl:inherits="value=label,accesskey,crop"/>
     </content>
-    
-    <implementation implements="nsIAccessibleProvider">
-      <property name="accessibleType" readonly="true">
-        <getter>
-          return Components.interfaces.nsIAccessibleProvider.XULToolbarButton;
-        </getter>
-      </property>
-    </implementation>
   </binding>
 
   <binding id="menu" display="xul:menu" 

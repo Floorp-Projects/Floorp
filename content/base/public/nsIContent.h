@@ -296,6 +296,11 @@ public:
     return IsInNamespace(kNameSpaceID_XUL);
   }
 
+  inline bool IsXUL(nsIAtom* aTag) const
+  {
+    return mNodeInfo->Equals(aTag, kNameSpaceID_XUL);
+  }
+
   inline bool IsMathML() const
   {
     return IsInNamespace(kNameSpaceID_MathML);

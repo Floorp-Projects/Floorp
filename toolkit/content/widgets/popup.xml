@@ -205,7 +205,7 @@
 
   </binding>
 
-  <binding id="popup"
+  <binding id="popup" role="xul:menupopup"
            extends="chrome://global/content/bindings/popup.xml#popup-base">
     
     <content>
@@ -214,16 +214,6 @@
         <children/>
       </xul:arrowscrollbox>
     </content>
-
-    <implementation implements="nsIAccessibleProvider">
-      <property name="accessibleType" readonly="true">
-        <getter>
-          <![CDATA[
-              return Components.interfaces.nsIAccessibleProvider.XULMenupopup;
-            ]]>
-        </getter>
-      </property>
-    </implementation>
 
     <handlers>
       <handler event="popupshowing" phase="target">
@@ -247,20 +237,9 @@
     </handlers>
   </binding>
 
-  <binding id="panel"
+  <binding id="panel" role="xul:panel"
            extends="chrome://global/content/bindings/popup.xml#popup-base">
-    <!-- This separate binding for dialog-like panels - not menu, list or autocomplete popups
-         exposes the popup as an alert or a pane, depending on whether it is always intended
-         to get keyboard navigation when it opens -->
-    <implementation implements="nsIDOMXULPopupElement, nsIAccessibleProvider">
-      <property name="accessibleType" readonly="true">
-        <getter>
-          <![CDATA[
-          return (this.getAttribute("noautofocus") == "true") ?
-                       Components.interfaces.nsIAccessibleProvider.XULAlert :
-                       Components.interfaces.nsIAccessibleProvider.XULPane;
-        ]]></getter>
-      </property>
+    <implementation implements="nsIDOMXULPopupElement">
       <field name="_prevFocus">0</field>
       <field name="_dragBindingAlive">true</field>
       <constructor>
@@ -487,20 +466,15 @@
     </handlers>
   </binding>
 
-  <binding id="tooltip" extends="chrome://global/content/bindings/popup.xml#popup-base">
+  <binding id="tooltip" role="xul:tooltip"
+           extends="chrome://global/content/bindings/popup.xml#popup-base">
     <content>
       <children>
         <xul:label class="tooltip-label" xbl:inherits="xbl:text=label" flex="1"/>
       </children>
     </content>
     
-    <implementation implements="nsIAccessibleProvider">
-      <property name="accessibleType" readonly="true">
-        <getter>
-          return Components.interfaces.nsIAccessibleProvider.XULTooltip;
-        </getter>
-      </property>
-
+    <implementation>
       <field name="_mouseOutCount">0</field>
       <field name="_isMouseOver">false</field>
       
