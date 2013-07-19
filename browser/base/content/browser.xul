@@ -533,7 +533,7 @@
              aria-label="&navbarCmd.label;"
              fullscreentoolbar="true" mode="icons" customizable="true"
              iconsize="large"
-             defaultset="urlbar-container,search-container,webrtc-status-button,bookmarks-menu-button,downloads-button,home-button,social-share-button"
+             defaultset="urlbar-container,search-container,webrtc-status-button,bookmarks-menu-button,downloads-button,home-button,social-share-button,social-toolbar-item"
              customizationtarget="nav-bar-customizationtarget"
              overflowbutton="nav-bar-overflow-button"
              overflowtarget="widget-overflow-list"
@@ -779,7 +779,6 @@
                      title="&socialToolbar.title;"
                      hidden="true"
                      nooverflow="true"
-                     skipintoolbarset="true"
                      observes="socialActiveBroadcaster">
         <toolbarbutton id="social-notification-icon" class="default-notification-icon toolbarbutton-1 notification-anchor-icon"
                    oncommand="PopupNotifications._reshowNotifications(this,
