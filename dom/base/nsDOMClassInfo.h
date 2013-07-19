@@ -211,7 +211,6 @@ public:
   static jsid sItem_id;
   static jsid sNamedItem_id;
   static jsid sEnumerate_id;
-  static jsid sNavigator_id;
   static jsid sTop_id;
   static jsid sDocument_id;
   static jsid sFrames_id;
@@ -378,32 +377,6 @@ public:
   }
 };
 
-
-// Navigator scriptable helper
-
-class nsNavigatorSH : public nsDOMGenericSH
-{
-protected:
-  nsNavigatorSH(nsDOMClassInfoData* aData) : nsDOMGenericSH(aData)
-  {
-  }
-
-  virtual ~nsNavigatorSH()
-  {
-  }
-
-public:
-  NS_IMETHOD PreCreate(nsISupports *nativeObj, JSContext *cx,
-                       JSObject *globalObj, JSObject **parentObj) MOZ_OVERRIDE;
-  NS_IMETHOD NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                        JSObject *obj, jsid id, uint32_t flags,
-                        JSObject **objp, bool *_retval) MOZ_OVERRIDE;
-
-  static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
-  {
-    return new nsNavigatorSH(aData);
-  }
-};
 
 // Generic array scriptable helper
 

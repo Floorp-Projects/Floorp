@@ -114,7 +114,7 @@ Sanitizer.prototype = {
         // Clear "Never remember passwords for this site", which is not handled by
         // the permission manager
         var hosts = Services.logins.getAllDisabledHosts({})
-        for each (var host in hosts) {
+        for (var host of hosts) {
           Services.logins.setLoginSavingEnabled(host, true);
         }
       },

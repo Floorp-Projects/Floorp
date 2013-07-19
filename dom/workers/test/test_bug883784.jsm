@@ -2,7 +2,7 @@ this.EXPORTED_SYMBOLS = ["Test"];
 
 this.Test = {
   start: function(ok, is, finish) {
-    let worker = new ChromeWorker("url_worker.js");
+    let worker = new ChromeWorker("jsm_url_worker.js");
     worker.onmessage = function(event) {
 
       if (event.data.type == 'finish') {
@@ -30,6 +30,6 @@ this.Test = {
       finish();
     };
 
-    worker.postMessage(true);
+    worker.postMessage(0);
   }
 };

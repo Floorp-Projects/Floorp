@@ -16,6 +16,7 @@
     _(SoftDivI)                 \
     _(DivPowTwoI)               \
     _(ModI)                     \
+    _(SoftModI)                 \
     _(ModPowTwoI)               \
     _(ModMaskI)                 \
     _(PowHalfD)                 \

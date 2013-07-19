@@ -17,6 +17,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/HalTypes.h"
 #include "mozilla/LinkedList.h"
+#include "mozilla/StaticPtr.h"
 
 #include "nsFrameMessageManager.h"
 #include "nsIObserver.h"
@@ -105,6 +106,7 @@ public:
                        nsIDOMElement* aFrameElement);
 
     static void GetAll(nsTArray<ContentParent*>& aArray);
+    static void GetAllEvenIfDead(nsTArray<ContentParent*>& aArray);
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSIOBSERVER
@@ -146,9 +148,7 @@ public:
         return mSubprocess;
     }
 
-    int32_t Pid() {
-        return base::GetProcId(mSubprocess->GetChildProcessHandle());
-    }
+    int32_t Pid();
 
     bool NeedsPermissionsUpdate() {
         return mSendPermissionUpdates;
@@ -182,7 +182,7 @@ private:
     static nsDataHashtable<nsStringHashKey, ContentParent*> *sAppContentParents;
     static nsTArray<ContentParent*>* sNonAppContentParents;
     static nsTArray<ContentParent*>* sPrivateContent;
-    static LinkedList<ContentParent> sContentParents;
+    static StaticAutoPtr<LinkedList<ContentParent> > sContentParents;
 
     static void JoinProcessesIOThread(const nsTArray<ContentParent*>* aProcesses,
                                       Monitor* aMonitor, bool* aDone);
@@ -244,13 +244,12 @@ private:
      * by the Get*() funtions.  However, the shutdown sequence itself
      * may be asynchronous.
      *
-     * If aFromActorDestroyed is true and this is the first call to
+     * If aCloseWithError is true and this is the first call to
      * ShutDownProcess, then we'll close our channel using CloseWithError()
      * rather than vanilla Close().  CloseWithError() indicates to IPC that this
-     * is an abnormal shutdown (e.g. a crash); when the process shuts down
-     * cleanly, ShutDownProcess runs before ActorDestroyed.
+     * is an abnormal shutdown (e.g. a crash).
      */
-    void ShutDownProcess(bool aFromActorDestroyed);
+    void ShutDownProcess(bool aCloseWithError);
 
     PCompositorParent*
     AllocPCompositorParent(mozilla::ipc::Transport* aTransport,
