@@ -142,13 +142,9 @@ public:
 
   bool operator==(const nsMainThreadPtrHolder<T>& aOther) const { return mRawPtr == aOther.mRawPtr; }
 
-  NS_IMETHOD_(nsrefcnt) Release();
-  NS_IMETHOD_(nsrefcnt) AddRef();
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(nsMainThreadPtrHolder<T>)
 
 private:
-  // This class is threadsafe and reference-counted.
-  nsAutoRefCnt mRefCnt;
-
   // Our wrapped pointer.
   T* mRawPtr;
 
@@ -160,11 +156,6 @@ private:
   T& operator=(nsMainThreadPtrHolder& other);
   nsMainThreadPtrHolder(const nsMainThreadPtrHolder& other);
 };
-
-template<class T>
-NS_IMPL_THREADSAFE_ADDREF(nsMainThreadPtrHolder<T>)
-template<class T>
-NS_IMPL_THREADSAFE_RELEASE(nsMainThreadPtrHolder<T>)
 
 template<class T>
 class nsMainThreadPtrHandle

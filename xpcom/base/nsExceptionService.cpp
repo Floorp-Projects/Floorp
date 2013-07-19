@@ -42,7 +42,7 @@ public:
 class nsExceptionManager MOZ_FINAL : public nsIExceptionManager
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIEXCEPTIONMANAGER
 
   nsExceptionManager(nsExceptionService *svc);
@@ -67,7 +67,7 @@ int32_t nsExceptionManager::totalInstances = 0;
 // one per thread.
 // An exception if the destructor, which may be called on
 // the thread shutting down xpcom
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsExceptionManager, nsIExceptionManager)
+NS_IMPL_ISUPPORTS1(nsExceptionManager, nsIExceptionManager)
 
 nsExceptionManager::nsExceptionManager(nsExceptionService *svc) :
   mNextThread(nullptr),
@@ -122,10 +122,10 @@ nsExceptionManager *nsExceptionService::firstThread = nullptr;
 int32_t nsExceptionService::totalInstances = 0;
 #endif
 
-NS_IMPL_THREADSAFE_ISUPPORTS3(nsExceptionService,
-                              nsIExceptionService,
-                              nsIExceptionManager,
-                              nsIObserver)
+NS_IMPL_ISUPPORTS3(nsExceptionService,
+                   nsIExceptionService,
+                   nsIExceptionManager,
+                   nsIObserver)
 
 nsExceptionService::nsExceptionService()
   : mProviders(4, true) /* small, thread-safe hashtable */

@@ -59,8 +59,8 @@ cpu_type_t pref_cpu_types[2] = {
 //-------------------------------------------------------------------//
 // nsIProcess implementation
 //-------------------------------------------------------------------//
-NS_IMPL_THREADSAFE_ISUPPORTS2(nsProcess, nsIProcess,
-                                         nsIObserver)
+NS_IMPL_ISUPPORTS2(nsProcess, nsIProcess,
+                   nsIObserver)
 
 //Constructor
 nsProcess::nsProcess()

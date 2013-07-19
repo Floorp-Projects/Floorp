@@ -15,7 +15,7 @@
 
 namespace mozilla {
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(GenericModule, nsIModule)
+NS_IMPL_ISUPPORTS1(GenericModule, nsIModule)
 
 NS_IMETHODIMP
 GenericModule::GetClassObject(nsIComponentManager* aCompMgr,

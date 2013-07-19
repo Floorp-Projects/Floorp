@@ -188,15 +188,15 @@ void TimerEventAllocator::Free(void* aPtr)
 
 } // anonymous namespace
 
-NS_IMPL_THREADSAFE_QUERY_INTERFACE1(nsTimerImpl, nsITimer)
-NS_IMPL_THREADSAFE_ADDREF(nsTimerImpl)
+NS_IMPL_QUERY_INTERFACE1(nsTimerImpl, nsITimer)
+NS_IMPL_ADDREF(nsTimerImpl)
 
 NS_IMETHODIMP_(nsrefcnt) nsTimerImpl::Release(void)
 {
   nsrefcnt count;
 
   MOZ_ASSERT(int32_t(mRefCnt) > 0, "dup release");
-  count = NS_AtomicDecrementRefcnt(mRefCnt);
+  count = --mRefCnt;
   NS_LOG_RELEASE(this, count, "nsTimerImpl");
   if (count == 0) {
     mRefCnt = 1; /* stabilize */

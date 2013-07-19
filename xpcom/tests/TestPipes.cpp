@@ -106,7 +106,7 @@ WriteAll(nsIOutputStream *os, const char *buf, uint32_t bufLen, uint32_t *lenWri
 
 class nsReceiver : public nsIRunnable {
 public:
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
 
     NS_IMETHOD Run() {
         nsresult rv;
@@ -146,7 +146,7 @@ protected:
     uint32_t            mCount;
 };
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsReceiver, nsIRunnable)
+NS_IMPL_ISUPPORTS1(nsReceiver, nsIRunnable)
 
 nsresult
 TestPipe(nsIInputStream* in, nsIOutputStream* out)
@@ -197,7 +197,7 @@ TestPipe(nsIInputStream* in, nsIOutputStream* out)
 
 class nsShortReader : public nsIRunnable {
 public:
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
 
     NS_IMETHOD Run() {
         nsresult rv;
@@ -261,7 +261,7 @@ protected:
     Monitor*                 mMon;
 };
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsShortReader, nsIRunnable)
+NS_IMPL_ISUPPORTS1(nsShortReader, nsIRunnable)
 
 nsresult
 TestShortWrites(nsIInputStream* in, nsIOutputStream* out)
@@ -316,7 +316,7 @@ TestShortWrites(nsIInputStream* in, nsIOutputStream* out)
 class nsPump : public nsIRunnable
 {
 public:
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
 
     NS_IMETHOD Run() {
         nsresult rv;
@@ -352,8 +352,7 @@ protected:
     uint32_t                            mCount;
 };
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsPump,
-                              nsIRunnable)
+NS_IMPL_ISUPPORTS1(nsPump, nsIRunnable)
 
 nsresult
 TestChainedPipes()

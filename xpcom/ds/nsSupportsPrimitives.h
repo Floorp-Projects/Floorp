@@ -67,7 +67,7 @@ private:
 class nsSupportsPRBoolImpl MOZ_FINAL : public nsISupportsPRBool
 {
 public:
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSISUPPORTSPRIMITIVE
     NS_DECL_NSISUPPORTSPRBOOL
 
@@ -271,7 +271,7 @@ private:
 class nsSupportsVoidImpl MOZ_FINAL : public nsISupportsVoid
 {
 public:
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSISUPPORTSPRIMITIVE
     NS_DECL_NSISUPPORTSVOID
 
@@ -288,7 +288,7 @@ private:
 class nsSupportsInterfacePointerImpl MOZ_FINAL : public nsISupportsInterfacePointer
 {
 public:
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSISUPPORTSPRIMITIVE
     NS_DECL_NSISUPPORTSINTERFACEPOINTER
 

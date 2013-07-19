@@ -334,12 +334,12 @@ LazyIdleThread::SelfDestruct()
   delete this;
 }
 
-NS_IMPL_THREADSAFE_ADDREF(LazyIdleThread)
+NS_IMPL_ADDREF(LazyIdleThread)
 
 NS_IMETHODIMP_(nsrefcnt)
 LazyIdleThread::Release()
 {
-  nsrefcnt count = NS_AtomicDecrementRefcnt(mRefCnt);
+  nsrefcnt count = --mRefCnt;
   NS_LOG_RELEASE(this, count, "LazyIdleThread");
 
   if (!count) {
@@ -363,11 +363,11 @@ LazyIdleThread::Release()
   return count;
 }
 
-NS_IMPL_THREADSAFE_QUERY_INTERFACE5(LazyIdleThread, nsIThread,
-                                                    nsIEventTarget,
-                                                    nsITimerCallback,
-                                                    nsIThreadObserver,
-                                                    nsIObserver)
+NS_IMPL_QUERY_INTERFACE5(LazyIdleThread, nsIThread,
+                         nsIEventTarget,
+                         nsITimerCallback,
+                         nsIThreadObserver,
+                         nsIObserver)
 
 NS_IMETHODIMP
 LazyIdleThread::Dispatch(nsIRunnable* aEvent,

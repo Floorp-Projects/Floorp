@@ -28,7 +28,7 @@
 
 #ifndef XPCOM_GLUE_AVOID_NSPR
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsRunnable, nsIRunnable)
+NS_IMPL_ISUPPORTS1(nsRunnable, nsIRunnable)
 
 NS_IMETHODIMP
 nsRunnable::Run()
@@ -37,7 +37,7 @@ nsRunnable::Run()
   return NS_OK;
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(nsCancelableRunnable, nsICancelableRunnable,
+NS_IMPL_ISUPPORTS2(nsCancelableRunnable, nsICancelableRunnable,
                               nsIRunnable)
 
 NS_IMETHODIMP
@@ -247,14 +247,14 @@ class nsNameThreadRunnable MOZ_FINAL : public nsIRunnable
 public:
   nsNameThreadRunnable(const nsACString &name) : mName(name) { }
 
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIRUNNABLE
 
 protected:
   const nsCString mName;
 };
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsNameThreadRunnable, nsIRunnable)
+NS_IMPL_ISUPPORTS1(nsNameThreadRunnable, nsIRunnable)
 
 NS_IMETHODIMP
 nsNameThreadRunnable::Run()

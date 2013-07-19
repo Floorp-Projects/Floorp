@@ -5,7 +5,7 @@
 
 #include "nsAtomService.h"
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsAtomService, nsIAtomService)
+NS_IMPL_ISUPPORTS1(nsAtomService, nsIAtomService)
 
 nsAtomService::nsAtomService()
 {
