@@ -322,6 +322,7 @@ ContainerRender(Container* aContainer,
       rgb->Activate();
       rgb->SetLayerQuadRect(visibleRect);
       rgb->SetLayerTransform(transform);
+      rgb->SetTextureTransform(gfx3DMatrix());
       rgb->SetLayerOpacity(opacity);
       rgb->SetRenderOffset(aOffset);
       rgb->SetTextureUnit(0);

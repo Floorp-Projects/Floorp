@@ -189,12 +189,10 @@ struct ProgramProfileOGL
   nsTArray<Argument> mAttributes;
   uint32_t mTextureCount;
   bool mHasMatrixProj;
-  bool mHasTextureTransform;
 private:
   ProgramProfileOGL() :
     mTextureCount(0),
-    mHasMatrixProj(false),
-    mHasTextureTransform(false) {}
+    mHasMatrixProj(false) {}
 };
 
 
@@ -315,13 +313,11 @@ public:
 
   // sets this program's texture transform, if it uses one
   void SetTextureTransform(const gfx3DMatrix& aMatrix) {
-    if (mProfile.mHasTextureTransform)
-      SetMatrixUniform(mProfile.LookupUniformLocation("uTextureTransform"), aMatrix);
+    SetMatrixUniform(mProfile.LookupUniformLocation("uTextureTransform"), aMatrix);
   }
 
   void SetTextureTransform(const gfx::Matrix4x4& aMatrix) {
-    if (mProfile.mHasTextureTransform)
-      SetMatrixUniform(mProfile.LookupUniformLocation("uTextureTransform"), aMatrix);
+    SetMatrixUniform(mProfile.LookupUniformLocation("uTextureTransform"), aMatrix);
   }
 
   void SetRenderOffset(const nsIntPoint& aOffset) {
