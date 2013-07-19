@@ -30,7 +30,7 @@ public:
   TimerThread();
   NS_HIDDEN_(nsresult) InitLocks();
 
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIRUNNABLE
   NS_DECL_NSIOBSERVER
   

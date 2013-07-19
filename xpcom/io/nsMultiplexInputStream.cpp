@@ -33,7 +33,7 @@ class nsMultiplexInputStream MOZ_FINAL : public nsIMultiplexInputStream,
 public:
     nsMultiplexInputStream();
 
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSIINPUTSTREAM
     NS_DECL_NSIMULTIPLEXINPUTSTREAM
     NS_DECL_NSISEEKABLESTREAM
@@ -60,8 +60,8 @@ private:
     nsresult mStatus;
 };
 
-NS_IMPL_THREADSAFE_ADDREF(nsMultiplexInputStream)
-NS_IMPL_THREADSAFE_RELEASE(nsMultiplexInputStream)
+NS_IMPL_ADDREF(nsMultiplexInputStream)
+NS_IMPL_RELEASE(nsMultiplexInputStream)
 
 NS_IMPL_CLASSINFO(nsMultiplexInputStream, NULL, nsIClassInfo::THREADSAFE,
                   NS_MULTIPLEXINPUTSTREAM_CID)

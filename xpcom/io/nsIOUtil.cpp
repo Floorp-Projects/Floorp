@@ -8,7 +8,7 @@
 #include "nsIOutputStream.h"
 #include "nsStreamUtils.h"
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsIOUtil, nsIIOUtil)
+NS_IMPL_ISUPPORTS1(nsIOUtil, nsIIOUtil)
 
 NS_IMETHODIMP
 nsIOUtil::InputStreamIsBuffered(nsIInputStream* aStream, bool* _retval)
