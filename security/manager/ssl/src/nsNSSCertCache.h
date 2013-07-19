@@ -16,7 +16,7 @@ class nsNSSCertCache : public nsINSSCertCache,
                        public nsNSSShutDownObject
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSINSSCERTCACHE
 
   nsNSSCertCache();

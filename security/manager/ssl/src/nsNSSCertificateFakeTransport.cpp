@@ -20,9 +20,10 @@ extern PRLogModuleInfo* gPIPNSSLog;
 
 /* nsNSSCertificateFakeTransport */
 
-NS_IMPL_THREADSAFE_ISUPPORTS3(nsNSSCertificateFakeTransport, nsIX509Cert,
-                                                nsISerializable,
-                                                nsIClassInfo)
+NS_IMPL_ISUPPORTS3(nsNSSCertificateFakeTransport,
+                   nsIX509Cert,
+                   nsISerializable,
+                   nsIClassInfo)
 
 nsNSSCertificateFakeTransport::nsNSSCertificateFakeTransport() :
   mCertSerialization(nullptr)

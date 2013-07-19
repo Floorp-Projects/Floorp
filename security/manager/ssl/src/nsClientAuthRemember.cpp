@@ -27,9 +27,9 @@
 using namespace mozilla;
 using namespace mozilla::psm;
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(nsClientAuthRememberService, 
-                              nsIObserver,
-                              nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS2(nsClientAuthRememberService,
+                   nsIObserver,
+                   nsISupportsWeakReference)
 
 nsClientAuthRememberService::nsClientAuthRememberService()
   : monitor("nsClientAuthRememberService.monitor")

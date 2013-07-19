@@ -124,7 +124,7 @@ nsKeyObject::GetType(int16_t *_retval)
 //////////////////////////////////////////////////////////////////////////////
 // nsIKeyObjectFactory
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsKeyObjectFactory, nsIKeyObjectFactory)
+NS_IMPL_ISUPPORTS1(nsKeyObjectFactory, nsIKeyObjectFactory)
 
 nsKeyObjectFactory::nsKeyObjectFactory()
 {

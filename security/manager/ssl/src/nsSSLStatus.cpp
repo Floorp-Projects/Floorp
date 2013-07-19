@@ -223,7 +223,7 @@ nsSSLStatus::nsSSLStatus()
   mCipherName = "";
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS3(nsSSLStatus, nsISSLStatus, nsISerializable, nsIClassInfo)
+NS_IMPL_ISUPPORTS3(nsSSLStatus, nsISSLStatus, nsISerializable, nsIClassInfo)
 
 nsSSLStatus::~nsSSLStatus()
 {

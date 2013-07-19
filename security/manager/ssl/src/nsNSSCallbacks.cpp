@@ -298,13 +298,13 @@ SECStatus nsNSSHttpRequestSession::trySendAndReceiveFcn(PRPollDesc **pPollDesc,
 void
 nsNSSHttpRequestSession::AddRef()
 {
-  NS_AtomicIncrementRefcnt(mRefCount);
+  ++mRefCount;
 }
 
 void
 nsNSSHttpRequestSession::Release()
 {
-  int32_t newRefCount = NS_AtomicDecrementRefcnt(mRefCount);
+  int32_t newRefCount = --mRefCount;
   if (!newRefCount) {
     delete this;
   }
@@ -569,7 +569,7 @@ nsHTTPListener::~nsHTTPListener()
   }
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsHTTPListener, nsIStreamLoaderObserver)
+NS_IMPL_ISUPPORTS1(nsHTTPListener, nsIStreamLoaderObserver)
 
 void
 nsHTTPListener::FreeLoadGroup(bool aCancelLoad)

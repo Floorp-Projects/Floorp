@@ -11,7 +11,7 @@
 
 using namespace mozilla;
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsNSSCertCache, nsINSSCertCache)
+NS_IMPL_ISUPPORTS1(nsNSSCertCache, nsINSSCertCache)
 
 nsNSSCertCache::nsNSSCertCache()
 :mutex("nsNSSCertCache.mutex"), mCertList(nullptr)
