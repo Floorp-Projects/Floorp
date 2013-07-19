@@ -310,7 +310,7 @@ const GLubyte* glGetString_mozilla(GrGLenum name)
         // Only expose the bare minimum extensions we want to support to ensure a functional Ganesh
         // as GLContext only exposes certain extensions
         static bool extensionsStringBuilt = false;
-        static char extensionsString[120];
+        static char extensionsString[256];
 
         if (!extensionsStringBuilt) {
             if (sGLContext.get()->IsExtensionSupported(GLContext::EXT_texture_format_BGRA8888)) {
@@ -327,6 +327,14 @@ const GLubyte* glGetString_mozilla(GrGLenum name)
 
             if (sGLContext.get()->IsExtensionSupported(GLContext::OES_rgb8_rgba8)) {
                 strcat(extensionsString, "GL_OES_rgb8_rgba8 ");
+            }
+
+            if (sGLContext.get()->IsExtensionSupported(GLContext::EXT_bgra)) {
+                strcat(extensionsString, "GL_EXT_bgra ");
+            }
+
+            if (sGLContext.get()->IsExtensionSupported(GLContext::EXT_read_format_bgra)) {
+                strcat(extensionsString, "GL_EXT_read_format_bgra ");
             }
 
             extensionsStringBuilt = true;

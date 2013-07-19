@@ -616,7 +616,7 @@ DateImpl::EqualsDate(nsIRDFDate* date, bool* result)
     if (NS_FAILED(rv = date->GetValue(&p)))
         return rv;
 
-    *result = LL_EQ(p, mValue);
+    *result = p == mValue;
     return NS_OK;
 }
 

@@ -68,7 +68,7 @@ function run_test_1() {
     do_check_false(hasFlag(a2.permissions, AddonManager.PERM_CAN_UNINSTALL));
     do_check_eq(a2.scope, AddonManager.SCOPE_USER);
 
-    run_test_2();
+    do_execute_soon(run_test_2);
   });
 }
 
@@ -88,7 +88,7 @@ function run_test_2() {
     do_check_eq(a1, null);
     do_check_eq(a2, null);
 
-    run_test_3();
+    do_execute_soon(run_test_3);
   });
 }
 
@@ -108,15 +108,15 @@ function run_test_3() {
     do_check_eq(a1, null);
     do_check_eq(a2, null);
 
-    // Restarting with bad items in the registry should not force an EM restart
-    restartManager();
-
-    run_test_4();
+    do_execute_soon(run_test_4);
   });
 }
 
 // Tests whether an extension's ID can change without its directory changing
 function run_test_4() {
+  // Restarting with bad items in the registry should not force an EM restart
+  restartManager();
+
   MockRegistry.setValue(AM_Ci.nsIWindowsRegKey.ROOT_KEY_LOCAL_MACHINE,
                         "SOFTWARE\\Mozilla\\XPCShell\\Extensions",
                         "addon1@tests.mozilla.org", null);

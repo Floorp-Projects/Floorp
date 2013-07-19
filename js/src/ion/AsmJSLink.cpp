@@ -261,8 +261,12 @@ AsmJSActivation::AsmJSActivation(JSContext *cx, AsmJSModule &module)
     resumePC_(NULL)
 {
     if (cx->runtime()->spsProfiler.enabled()) {
+        // Use a profiler string that matches jsMatch regex in
+        // browser/devtools/profiler/cleopatra/js/parserWorker.js.
+        // (For now use a single static string to avoid further slowing down
+        // calls into asm.js.)
         profiler_ = &cx->runtime()->spsProfiler;
-        profiler_->enterNative("asm.js code", this);
+        profiler_->enterNative("asm.js code :0", this);
     }
 
     prev_ = cx_->runtime()->mainThread.asmJSActivationStack_;

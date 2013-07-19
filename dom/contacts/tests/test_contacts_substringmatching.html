@@ -27,6 +27,7 @@ if (SpecialPowers.isMainProcess()) {
 
 var substringLength = 8;
 SpecialPowers.setIntPref("dom.phonenumber.substringmatching.BR", substringLength);
+SpecialPowers.setCharPref("ril.lastKnownSimMcc", "724");
 
 SpecialPowers.addPermission("contacts-write", true, document);
 SpecialPowers.addPermission("contacts-read", true, document);

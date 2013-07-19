@@ -111,8 +111,6 @@ let gTests = [
     doc.addEventListener("AboutHomeSearchEvent", function onSearch(e) {
       is(e.detail, engineName, "Detail is search engine name");
 
-      gBrowser.stop();
-
       getNumberOfSearches(engineName).then(num => {
         is(num, numSearchesBefore + 1, "One more search recorded.");
         deferred.resolve();
@@ -126,6 +124,7 @@ let gTests = [
       info("Perform a search.");
       doc.getElementById("searchText").value = "a search";
       doc.getElementById("searchSubmit").click();
+      gBrowser.stop();
     });
 
     return deferred.promise;

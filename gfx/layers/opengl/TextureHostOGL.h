@@ -506,6 +506,7 @@ protected:
   GLenum mTextureTarget;
   GLuint mUploadTexture;
   GLenum mWrapMode;
+  nsRefPtr<GLContext> mStreamGL;
 };
 
 class TiledDeprecatedTextureHostOGL : public DeprecatedTextureHost
@@ -616,6 +617,11 @@ public:
   GLenum GetWrapMode() const MOZ_OVERRIDE
   {
     return LOCAL_GL_CLAMP_TO_EDGE;
+  }
+
+  virtual GLenum GetTextureTarget() const MOZ_OVERRIDE
+  {
+    return mTextureTarget;
   }
 
   bool IsValid() const MOZ_OVERRIDE;
