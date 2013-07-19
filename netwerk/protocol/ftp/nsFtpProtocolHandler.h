@@ -28,7 +28,7 @@ class nsFtpProtocolHandler : public nsIProxiedProtocolHandler
                            , public nsSupportsWeakReference
 {
 public:
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSIPROTOCOLHANDLER
     NS_DECL_NSIPROXIEDPROTOCOLHANDLER
     NS_DECL_NSIOBSERVER

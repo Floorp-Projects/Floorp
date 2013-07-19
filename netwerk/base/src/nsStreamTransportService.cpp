@@ -32,7 +32,7 @@ class nsInputStreamTransport : public nsITransport
                              , public nsIInputStream
 {
 public:
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSITRANSPORT
     NS_DECL_NSIINPUTSTREAM
 
@@ -70,9 +70,9 @@ private:
     bool                            mInProgress;
 };
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(nsInputStreamTransport,
-                              nsITransport,
-                              nsIInputStream)
+NS_IMPL_ISUPPORTS2(nsInputStreamTransport,
+                   nsITransport,
+                   nsIInputStream)
 
 /** nsITransport **/
 
@@ -232,7 +232,7 @@ class nsOutputStreamTransport : public nsITransport
                               , public nsIOutputStream
 {
 public:
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSITRANSPORT
     NS_DECL_NSIOUTPUTSTREAM
 
@@ -270,9 +270,9 @@ private:
     bool                            mInProgress;
 };
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(nsOutputStreamTransport,
-                              nsITransport,
-                              nsIOutputStream)
+NS_IMPL_ISUPPORTS2(nsOutputStreamTransport,
+                   nsITransport,
+                   nsIOutputStream)
 
 /** nsITransport **/
 
@@ -454,10 +454,10 @@ nsStreamTransportService::Init()
     return NS_OK;
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS3(nsStreamTransportService,
-                              nsIStreamTransportService,
-                              nsIEventTarget,
-                              nsIObserver)
+NS_IMPL_ISUPPORTS3(nsStreamTransportService,
+                   nsIStreamTransportService,
+                   nsIEventTarget,
+                   nsIObserver)
 
 NS_IMETHODIMP
 nsStreamTransportService::Dispatch(nsIRunnable *task, uint32_t flags)

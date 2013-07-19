@@ -13,7 +13,7 @@ using mozilla::AutoSafeJSContext;
 namespace mozilla {
 namespace net {
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(Dashboard, nsIDashboard, nsIDashboardEventNotifier)
+NS_IMPL_ISUPPORTS2(Dashboard, nsIDashboard, nsIDashboardEventNotifier)
 using mozilla::dom::Sequence;
 
 Dashboard::Dashboard()

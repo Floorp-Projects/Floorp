@@ -23,7 +23,7 @@ nsSocketProviderService::Create(nsISupports *aOuter, REFNSIID aIID, void **aResu
   return rv;
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsSocketProviderService, nsISocketProviderService)
+NS_IMPL_ISUPPORTS1(nsSocketProviderService, nsISocketProviderService)
 
 ////////////////////////////////////////////////////////////////////////////////
 
