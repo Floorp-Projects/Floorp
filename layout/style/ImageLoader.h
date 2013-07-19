@@ -5,6 +5,9 @@
 // A class that handles style system image loads (other image loads are handled
 // by the nodes in the content tree).
 
+#ifndef mozilla_css_ImageLoader_h___
+#define mozilla_css_ImageLoader_h___
+
 #include "nsClassHashtable.h"
 #include "nsHashKeys.h"
 #include "nsCSSValue.h"
@@ -117,3 +120,5 @@ private:
 
 } // namespace css
 } // namespace mozilla
+
+#endif /* mozilla_css_ImageLoader_h___ */
