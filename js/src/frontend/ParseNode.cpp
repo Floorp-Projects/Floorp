@@ -384,7 +384,7 @@ Parser<FullParseHandler>::cloneParseTree(ParseNode *opn)
             MOZ_ASSUME_UNREACHABLE("module nodes cannot be cloned");
         }
         NULLCHECK(pn->pn_funbox =
-                  newFunctionBox(opn->pn_funbox->function(), pc,
+                  newFunctionBox(pn, opn->pn_funbox->function(), pc,
                                  Directives(/* strict = */ opn->pn_funbox->strict)));
         NULLCHECK(pn->pn_body = cloneParseTree(opn->pn_body));
         pn->pn_cookie = opn->pn_cookie;

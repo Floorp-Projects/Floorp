@@ -473,6 +473,127 @@ gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);\n\
 #endif\n\
 ";
 
+static const char sRGBXRectTextureLayerFS[] = "/* sRGBXRectTextureLayerFS */\n\
+#extension GL_ARB_texture_rectangle : enable\n\
+/* Fragment Shader */\n\
+#ifdef GL_ES\n\
+#ifdef MEDIUMP_SHADER\n\
+precision mediump float;\n\
+#else\n\
+precision lowp float;\n\
+#endif\n\
+#endif\n\
+\n\
+#ifndef NO_LAYER_OPACITY\n\
+uniform float uLayerOpacity;\n\
+#endif\n\
+#ifdef GL_ES // for tiling, texcoord can be greater than the lowfp range\n\
+varying mediump vec2 vTexCoord;\n\
+#else\n\
+varying vec2 vTexCoord;\n\
+#endif\n\
+\n\
+/* This should not be used on GL ES */\n\
+#ifndef GL_ES\n\
+uniform sampler2DRect uTexture;\n\
+uniform vec2 uTexCoordMultiplier;\n\
+void main()\n\
+{\n\
+float mask = 1.0;\n\
+\n\
+gl_FragColor = vec4(texture2DRect(uTexture, vec2(vTexCoord * uTexCoordMultiplier)).rgb, 1.0) * uLayerOpacity * mask;\n\
+}\n\
+#else\n\
+void main()\n\
+{\n\
+gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);\n\
+}\n\
+#endif\n\
+";
+
+static const char sRGBXRectTextureLayerMaskFS[] = "/* sRGBXRectTextureLayerMaskFS */\n\
+#extension GL_ARB_texture_rectangle : enable\n\
+/* Fragment Shader */\n\
+#ifdef GL_ES\n\
+#ifdef MEDIUMP_SHADER\n\
+precision mediump float;\n\
+#else\n\
+precision lowp float;\n\
+#endif\n\
+#endif\n\
+\n\
+#ifndef NO_LAYER_OPACITY\n\
+uniform float uLayerOpacity;\n\
+#endif\n\
+#ifdef GL_ES // for tiling, texcoord can be greater than the lowfp range\n\
+varying mediump vec2 vTexCoord;\n\
+#else\n\
+varying vec2 vTexCoord;\n\
+#endif\n\
+\n\
+varying vec2 vMaskCoord;\n\
+uniform sampler2D uMaskTexture;\n\
+\n\
+/* This should not be used on GL ES */\n\
+#ifndef GL_ES\n\
+uniform sampler2DRect uTexture;\n\
+uniform vec2 uTexCoordMultiplier;\n\
+void main()\n\
+{\n\
+float mask = texture2D(uMaskTexture, vMaskCoord).r;\n\
+\n\
+gl_FragColor = vec4(texture2DRect(uTexture, vec2(vTexCoord * uTexCoordMultiplier)).rgb, 1.0) * uLayerOpacity * mask;\n\
+}\n\
+#else\n\
+void main()\n\
+{\n\
+gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);\n\
+}\n\
+#endif\n\
+";
+
+static const char sRGBXRectTextureLayerMask3DFS[] = "/* sRGBXRectTextureLayerMask3DFS */\n\
+#extension GL_ARB_texture_rectangle : enable\n\
+/* Fragment Shader */\n\
+#ifdef GL_ES\n\
+#ifdef MEDIUMP_SHADER\n\
+precision mediump float;\n\
+#else\n\
+precision lowp float;\n\
+#endif\n\
+#endif\n\
+\n\
+#ifndef NO_LAYER_OPACITY\n\
+uniform float uLayerOpacity;\n\
+#endif\n\
+#ifdef GL_ES // for tiling, texcoord can be greater than the lowfp range\n\
+varying mediump vec2 vTexCoord;\n\
+#else\n\
+varying vec2 vTexCoord;\n\
+#endif\n\
+\n\
+varying vec3 vMaskCoord;\n\
+uniform sampler2D uMaskTexture;\n\
+\n\
+/* This should not be used on GL ES */\n\
+#ifndef GL_ES\n\
+uniform sampler2DRect uTexture;\n\
+uniform vec2 uTexCoordMultiplier;\n\
+void main()\n\
+{\n\
+vec2 maskCoords = vMaskCoord.xy / vMaskCoord.z;\n\
+float mask = texture2D(uMaskTexture, maskCoords).r;\n\
+\n\
+gl_FragColor = vec4(texture2DRect(uTexture, vec2(vTexCoord * uTexCoordMultiplier)).rgb, 1.0) * uLayerOpacity * mask;\n\
+}\n\
+#else\n\
+void main()\n\
+{\n\
+gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);\n\
+}\n\
+#endif\n\
+";
+
 static const char sBGRARectTextureLayerFS[] = "/* sBGRARectTextureLayerFS */\n\
 #extension GL_ARB_texture_rectangle : enable\n\
 /* Fragment Shader */\n\

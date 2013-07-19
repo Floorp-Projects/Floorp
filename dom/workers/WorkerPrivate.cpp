@@ -1692,6 +1692,13 @@ WorkerRunnable::Run()
   }
 
   bool result = WorkerRun(cx, mWorkerPrivate);
+  // In the case of CompileScriptRunnnable, WorkerRun above can cause us to
+  // lazily create a global, in which case we need to be in its compartment
+  // when calling PostRun() below. Maybe<> this time...
+  if (mTarget == WorkerThread && ac.empty() &&
+      js::GetDefaultGlobalForContext(cx)) {
+    ac.construct(cx, js::GetDefaultGlobalForContext(cx));
+  }
   PostRun(cx, mWorkerPrivate, result);
   return result ? NS_OK : NS_ERROR_FAILURE;
 }
@@ -2835,6 +2842,7 @@ WorkerPrivate::DoRunLoop(JSContext* aCx)
 
   EnableMemoryReporter();
 
+  Maybe<JSAutoCompartment> maybeAC;
   for (;;) {
     Status currentStatus;
     bool scheduleIdleGC;
@@ -2852,6 +2860,17 @@ WorkerPrivate::DoRunLoop(JSContext* aCx)
 
       {
         MutexAutoUnlock unlock(mMutex);
+
+        // Workers lazily create a global object in CompileScriptRunnable. In
+        // the old world, creating the global would implicitly set it as the
+        // default compartment object on mJSContext, meaning that subsequent
+        // runnables would be able to operate in that compartment without
+        // explicitly entering it. That no longer works, so we mimic the
+        // "operate in the compartment of the worker global once it exists"
+        // behavior here. This could probably be improved with some refactoring.
+        if (maybeAC.empty() && js::GetDefaultGlobalForContext(aCx)) {
+          maybeAC.construct(aCx, js::GetDefaultGlobalForContext(aCx));
+        }
 
         if (!normalGCTimerRunning &&
             event != idleGCEvent &&

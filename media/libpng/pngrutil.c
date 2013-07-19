@@ -4302,7 +4302,6 @@ png_read_reset(png_structp png_ptr)
     png_ptr->mode &= ~PNG_AFTER_IDAT;
     png_ptr->row_number = 0;
     png_ptr->pass = 0;
-    png_ptr->flags &= ~PNG_FLAG_ROW_INIT;
 }
 
 void /* PRIVATE */

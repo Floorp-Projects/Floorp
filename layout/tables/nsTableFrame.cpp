@@ -1268,8 +1268,7 @@ nsTableFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       // in its own display item, so do that to take advantage of
       // opacity and visibility optimizations
       if (deflate == nsMargin(0, 0, 0, 0)) {
-        nsDisplayBackgroundImage* bg;
-        DisplayBackgroundUnconditional(aBuilder, aLists, false, &bg);
+        DisplayBackgroundUnconditional(aBuilder, aLists, false);
       }
     }
     

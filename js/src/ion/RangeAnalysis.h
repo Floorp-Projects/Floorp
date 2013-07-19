@@ -363,7 +363,7 @@ class Range : public TempObject {
         JS_ASSERT_IF(lower() == JSVAL_INT_MIN, max == (uint32_t) JSVAL_INT_MIN);
         JS_ASSERT(max <= (uint32_t) JSVAL_INT_MIN);
         // The number of bits needed to encode |max| is the power of 2 plus one.
-        max_exponent_ = max ? js_FloorLog2wImpl(max) : max;
+        max_exponent_ = max ? mozilla::FloorLog2Size(max) : max;
     }
 
     const SymbolicBound *symbolicLower() const {

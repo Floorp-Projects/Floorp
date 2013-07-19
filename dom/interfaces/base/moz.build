@@ -13,7 +13,6 @@ XPIDL_SOURCES += [
     'nsIContentURIGrouper.idl',
     'nsIDOMCRMFObject.idl',
     'nsIDOMChromeWindow.idl',
-    'nsIDOMClientInformation.idl',
     'nsIDOMClientRect.idl',
     'nsIDOMClientRectList.idl',
     'nsIDOMConstructor.idl',

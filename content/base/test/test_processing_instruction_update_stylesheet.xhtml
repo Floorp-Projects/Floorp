@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet href="data:text/css;charset=UTF-8,p{color:red}" type="text/css"?>
+<!DOCTYPE html
+PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=888864
+-->
+<head>
+  <title>Test for Bug 888864</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+  <![CDATA[
+
+  /** Test for Bug 888864 **/
+  SimpleTest.waitForExplicitFinish();
+
+  function changeColorAndRun(callback) {
+    var piNode = document.firstChild;
+    piNode.data = 'href="data:text/css;charset=UTF-8,p{color:green}" type="text/css"';
+    piNode.addEventListener("load", callback);
+  }
+
+  function runTest() {
+    var previousColor = window.getComputedStyle(document.getElementById("display")).
+                               getPropertyValue("color");
+    changeColorAndRun(function() {
+        var afterChange = window.getComputedStyle(document.getElementById("display")).
+                                 getPropertyValue("color");
+        isnot(previousColor, afterChange,
+              "Color of the p element should change.");
+        SimpleTest.finish();
+    });
+  }
+  ]]>
+</script>
+</head>
+<body onload="runTest();">
+<p id="display">This changes color</p>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=888864">Mozilla Bug 888864</a>
+<pre id="test">
+</pre>
+</body>
+</html>

@@ -59,17 +59,20 @@ policies and contribution forms [3].
  * would run test_function with a timeout of 1s.
  *
  * Additionally, test-specific metadata can be passed in the properties. These
- * are used when the individual test has different metadata from that stored
+ * are used when the individual test has different metadata from that stored 
  * in the <head>.
  * The recognized metadata properties are:
  *
  *    help - The url of the part of the specification being tested
  *
- *    assert - A human readable description of what the test is attempting
+ *    assert - A human readable description of what the test is attempting 
  *             to prove
  *
  *    author - Name and contact information for the author of the test in the
  *             format: "Name <email_addr>" or "Name http://contact/url"
+ *
+ *    flags - space separated list of test flags in addition to any present in
+ *            the head metadata
  *
  * == Asynchronous Tests ==
  *
@@ -163,10 +166,6 @@ policies and contribution forms [3].
  *                    use when integrating with some existing test framework
  *                    that has its own timeout mechanism).
  *
- * allow_uncaught_exception - don't treat an uncaught exception as an error;
- *                            needed when e.g. testing the window.onerror
- *                            handler.
- *
  * == Determining when all tests are complete ==
  *
  * By default the test harness will assume there are no more results to come
@@ -205,7 +204,7 @@ policies and contribution forms [3].
  * Note that the first item in each parameter list corresponds to the name of
  * the test.
  *
- * The properties argument is identical to that for test(). This may be a
+ * The properties argument is identical to that for test(). This may be a 
  * single object (used for all generated tests) or an array.
  *
  * == Callback API ==
@@ -291,18 +290,6 @@ policies and contribution forms [3].
  * assert_approx_equals(actual, expected, epsilon, description)
  *   asserts that /actual/ is a number within +/- /epsilon/ of /expected/
  *
- * assert_less_than(actual, expected, description)
- *   asserts that /actual/ is a number less than /expected/
- *
- * assert_greater_than(actual, expected, description)
- *   asserts that /actual/ is a number greater than /expected/
- *
- * assert_less_than_equal(actual, expected, description)
- *   asserts that /actual/ is a number less than or equal to /expected/
- *
- * assert_greater_than_equal(actual, expected, description)
- *   asserts that /actual/ is a number greater than or equal to /expected/
- *
  * assert_regexp_match(actual, expected, description)
  *   asserts that /actual/ matches the regexp /expected/
  *
@@ -344,7 +331,7 @@ policies and contribution forms [3].
  *   is true for some expected_array_N in expected_array. This only works for assert_func
  *   with signature assert_func(actual, expected, args_1, ..., args_N). Note that tests
  *   with multiple allowed pass conditions are bad practice unless the spec specifically
- *   allows multiple behaviours. Test authors should not use this method simply to hide
+ *   allows multiple behaviours. Test authors should not use this method simply to hide 
  *   UA bugs.
  *
  * assert_exists(object, property_name, description)
@@ -402,8 +389,9 @@ policies and contribution forms [3].
     function next_default_name()
     {
         //Don't use document.title to work around an Opera bug in XHTML documents
-        var title = document.getElementsByTagName("title")[0];
-        var prefix = (title && title.firstChild && title.firstChild.data) || "Untitled";
+        var prefix = document.getElementsByTagName("title").length > 0 ?
+                         document.getElementsByTagName("title")[0].firstChild.data :
+                         "Untitled";
         var suffix = name_counter > 0 ? " " + name_counter : "";
         name_counter++;
         return prefix + suffix;
@@ -463,8 +451,8 @@ policies and contribution forms [3].
                     test(function()
                          {
                              func.apply(this, x.slice(1));
-                         },
-                         name,
+                         }, 
+                         name, 
                          Array.isArray(properties) ? properties[i] : properties);
                 });
     }
@@ -496,22 +484,11 @@ policies and contribution forms [3].
     /*
      * Convert a value to a nice, human-readable string
      */
-    function format_value(val, seen)
+    function format_value(val)
     {
-	if (!seen) {
-	    seen = [];
-        }
-        if (typeof val === "object" && val !== null)
-        {
-            if (seen.indexOf(val) >= 0)
-            {
-                return "[...]";
-            }
-	    seen.push(val);
-        }
         if (Array.isArray(val))
         {
-            return "[" + val.map(function(x) {return format_value(x, seen)}).join(", ") + "]";
+            return "[" + val.map(format_value).join(", ") + "]";
         }
 
         switch (typeof val)
@@ -771,74 +748,6 @@ policies and contribution forms [3].
     };
     expose(assert_approx_equals, "assert_approx_equals");
 
-    function assert_less_than(actual, expected, description)
-    {
-        /*
-         * Test if a primitive number is less than another
-         */
-        assert(typeof actual === "number",
-               "assert_less_than", description,
-               "expected a number but got a ${type_actual}",
-               {type_actual:typeof actual});
-
-        assert(actual < expected,
-               "assert_less_than", description,
-               "expected a number less than ${expected} but got ${actual}",
-               {expected:expected, actual:actual});
-    };
-    expose(assert_less_than, "assert_less_than");
-
-    function assert_greater_than(actual, expected, description)
-    {
-        /*
-         * Test if a primitive number is greater than another
-         */
-        assert(typeof actual === "number",
-               "assert_greater_than", description,
-               "expected a number but got a ${type_actual}",
-               {type_actual:typeof actual});
-
-        assert(actual > expected,
-               "assert_greater_than", description,
-               "expected a number greater than ${expected} but got ${actual}",
-               {expected:expected, actual:actual});
-    };
-    expose(assert_greater_than, "assert_greater_than");
-
-    function assert_less_than_equal(actual, expected, description)
-    {
-        /*
-         * Test if a primitive number is less than or equal to another
-         */
-        assert(typeof actual === "number",
-               "assert_less_than_equal", description,
-               "expected a number but got a ${type_actual}",
-               {type_actual:typeof actual});
-
-        assert(actual <= expected,
-               "assert_less_than", description,
-               "expected a number less than or equal to ${expected} but got ${actual}",
-               {expected:expected, actual:actual});
-    };
-    expose(assert_less_than_equal, "assert_less_than_equal");
-
-    function assert_greater_than_equal(actual, expected, description)
-    {
-        /*
-         * Test if a primitive number is greater than or equal to another
-         */
-        assert(typeof actual === "number",
-               "assert_greater_than_equal", description,
-               "expected a number but got a ${type_actual}",
-               {type_actual:typeof actual});
-
-        assert(actual >= expected,
-               "assert_greater_than_equal", description,
-               "expected a number greater than or equal to ${expected} but got ${actual}",
-               {expected:expected, actual:actual});
-    };
-    expose(assert_greater_than_equal, "assert_greater_than_equal");
-
     function assert_regexp_match(actual, expected, description) {
         /*
          * Test if a string (actual) matches a regexp (expected)
@@ -1046,12 +955,12 @@ policies and contribution forms [3].
     }
     expose(assert_unreached, "assert_unreached");
 
-    function assert_any(assert_func, actual, expected_array)
+    function assert_any(assert_func, actual, expected_array) 
     {
         var args = [].slice.call(arguments, 3)
         var errors = []
         var passed = false;
-        forEach(expected_array,
+        forEach(expected_array, 
                 function(expected)
                 {
                     try {
@@ -1132,7 +1041,7 @@ policies and contribution forms [3].
 
         try
         {
-            return func.apply(this_obj, Array.prototype.slice.call(arguments, 2));
+            func.apply(this_obj, Array.prototype.slice.call(arguments, 2));
         }
         catch(e)
         {
@@ -1276,8 +1185,6 @@ policies and contribution forms [3].
         this.wait_for_finish = false;
         this.processing_callbacks = false;
 
-        this.allow_uncaught_exception = false;
-
         this.timeout_length = settings.timeout;
         this.timeout_id = null;
 
@@ -1298,8 +1205,6 @@ policies and contribution forms [3].
                          this_obj.complete();
                      }
                  });
-
-        this.set_timeout();
     }
 
     Tests.prototype.setup = function(func, properties)
@@ -1313,28 +1218,24 @@ policies and contribution forms [3].
             this.phase = this.phases.SETUP;
         }
 
-        this.properties = properties;
-
         for (var p in properties)
         {
             if (properties.hasOwnProperty(p))
             {
-                var value = properties[p]
-                if (p == "timeout")
-                {
-                    this.timeout_length = value;
-                }
-                else if (p == "allow_uncaught_exception") {
-                    this.allow_uncaught_exception = value;
-                }
-                else if (p == "explicit_done" && value)
-                {
-                    this.wait_for_finish = true;
-                }
-                else if (p == "explicit_timeout" && value) {
-                    this.timeout_length = null;
-                }
+                this.properties[p] = properties[p];
             }
+        }
+
+        if (properties.timeout)
+        {
+            this.timeout_length = properties.timeout;
+        }
+        if (properties.explicit_done)
+        {
+            this.wait_for_finish = true;
+        }
+        if (properties.explicit_timeout) {
+            this.timeout_length = null;
         }
 
         if (func)
@@ -1548,15 +1449,6 @@ policies and contribution forms [3].
 
     var tests = new Tests();
 
-    window.onerror = function(msg) {
-        if (!tests.allow_uncaught_exception)
-        {
-            tests.status.status = tests.status.ERROR;
-            tests.status.message = msg;
-            tests.complete();
-        }
-    }
-
     function timeout() {
         if (tests.timeout_length === null)
         {
@@ -1710,11 +1602,6 @@ policies and contribution forms [3].
             }
         }
 
-        var status_text_harness = {};
-        status_text_harness[harness_status.OK] = "OK";
-        status_text_harness[harness_status.ERROR] = "Error";
-        status_text_harness[harness_status.TIMEOUT] = "Timeout";
-
         var status_text = {};
         status_text[Test.prototype.PASS] = "Pass";
         status_text[Test.prototype.FAIL] = "Fail";
@@ -1739,34 +1626,6 @@ policies and contribution forms [3].
 
         var summary_template = ["section", {"id":"summary"},
                                 ["h2", {}, "Summary"],
-                                function(vars)
-                                {
-                                    if (harness_status.status === harness_status.OK)
-                                    {
-                                        return null;
-                                    }
-                                    else
-                                    {
-                                        var status = status_text_harness[harness_status.status];
-                                        var rv = [["p", {"class":status_class(status)}]];
-
-                                        if (harness_status.status === harness_status.ERROR)
-                                        {
-                                            rv[0].push("Harness encountered an error:");
-                                            rv.push(["pre", {}, harness_status.message]);
-                                        }
-                                        else if (harness_status.status === harness_status.TIMEOUT)
-                                        {
-                                            rv[0].push("Harness timed out.");
-                                        }
-                                        else
-                                        {
-                                            rv[0].push("Harness got an unexpected status.");
-                                        }
-
-                                        return rv;
-                                    }
-                                },
                                 ["p", {}, "Found ${num_tests} tests"],
                                 function(vars) {
                                     var rv = [["div", {}]];
@@ -1832,7 +1691,7 @@ policies and contribution forms [3].
             }
             return false;
         }
-
+        
         function get_assertion(test)
         {
             if (test.properties.hasOwnProperty("assert")) {
@@ -1843,7 +1702,7 @@ policies and contribution forms [3].
             }
             return '';
         }
-
+        
         log.appendChild(document.createElementNS(xhtml_ns, "section"));
         var assertions = has_assertions();
         var html = "<h2>Details</h2><table id='results' " + (assertions ? "class='assertions'" : "" ) + ">"

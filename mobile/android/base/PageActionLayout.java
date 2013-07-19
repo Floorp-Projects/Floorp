@@ -55,6 +55,7 @@ public class PageActionLayout extends LinearLayout implements GeckoEventListener
 
         mPageActionList = new LinkedHashMap<String, PageAction>();
         setNumberShown(DEFAULT_PAGE_ACTIONS_SHOWN);
+        refreshPageActionIcons();
 
         registerEventListener("PageActions:Add");
         registerEventListener("PageActions:Remove");

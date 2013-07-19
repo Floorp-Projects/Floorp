@@ -3019,7 +3019,8 @@ class MAbs
     }
     static MAbs *NewAsmJS(MDefinition *num, MIRType type) {
         MAbs *ins = new MAbs(num, type);
-        ins->implicitTruncate_ = true;
+        if (type == MIRType_Int32)
+            ins->implicitTruncate_ = true;
         return ins;
     }
     MDefinition *num() const {
@@ -5464,7 +5465,7 @@ class InlinePropertyTable : public TempObject
     void trimTo(AutoObjectVector &targets, Vector<bool> &choiceSet);
 
     // Ensure that the InlinePropertyTable's domain is a subset of |targets|.
-    void trimToAndMaybePatchTargets(AutoObjectVector &targets, AutoObjectVector &originals);
+    void trimToTargets(AutoObjectVector &targets);
 };
 
 class MGetPropertyCache

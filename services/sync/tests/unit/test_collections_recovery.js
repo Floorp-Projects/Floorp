@@ -25,6 +25,8 @@ add_test(function test_missing_crypto_collection() {
   }
 
   setBasicCredentials("johndoe", "ilovejane", "a-aaaaa-aaaaa-aaaaa-aaaaa-aaaaa");
+  Service.serverURL = TEST_SERVER_URL;
+  Service.clusterURL = TEST_CLUSTER_URL;
 
   let handlers = {
     "/1.1/johndoe/info/collections": maybe_empty(johnHelper.handler),
@@ -38,7 +40,6 @@ add_test(function test_missing_crypto_collection() {
       johnU(coll, new ServerCollection({}, true).handler());
   }
   let server = httpd_setup(handlers);
-  Service.serverURL = server.baseURI;
 
   try {
     let fresh = 0;

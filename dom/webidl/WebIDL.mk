@@ -389,6 +389,7 @@ endif
 ifdef MOZ_WEBGL
 webidl_files += \
   WebGLRenderingContext.webidl \
+  WebGL2RenderingContext.webidl \
   $(NULL)
 endif
 

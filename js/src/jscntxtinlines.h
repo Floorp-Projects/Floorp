@@ -401,19 +401,6 @@ inline void
 JSContext::setDefaultCompartmentObject(JSObject *obj)
 {
     defaultCompartmentObject_ = obj;
-
-    if (!hasEnteredCompartment()) {
-        /*
-         * If JSAPI callers want to JS_SetGlobalObject while code is running,
-         * they must have entered a compartment (otherwise there will be no
-         * final leaveCompartment call to set the context's compartment back to
-         * defaultCompartmentObject->compartment()).
-         */
-        JS_ASSERT(!currentlyRunning());
-        setCompartment(obj ? obj->compartment() : NULL);
-        if (throwing)
-            wrapPendingException();
-    }
 }
 
 inline void
@@ -427,8 +414,8 @@ inline void
 JSContext::enterCompartment(JSCompartment *c)
 {
     enterCompartmentDepth_++;
-    setCompartment(c);
     c->enter();
+    setCompartment(c);
     if (throwing)
         wrapPendingException();
 }
@@ -439,28 +426,23 @@ JSContext::leaveCompartment(JSCompartment *oldCompartment)
     JS_ASSERT(hasEnteredCompartment());
     enterCompartmentDepth_--;
 
-    compartment()->leave();
+    // Only call leave() after we've setCompartment()-ed away from the current
+    // compartment.
+    JSCompartment *startingCompartment = compartment();
+    setCompartment(oldCompartment);
+    startingCompartment->leave();
 
-    /*
-     * Before we entered the current compartment, 'compartment' was
-     * 'oldCompartment', so we might want to simply set it back. However, we
-     * currently have this terrible scheme whereby defaultCompartmentObject_ can
-     * be updated while enterCompartmentDepth_ > 0. In this case, oldCompartment
-     * != defaultCompartmentObject_->compartment and we must ignore
-     * oldCompartment.
-     */
-    if (hasEnteredCompartment() || !defaultCompartmentObject_)
-        setCompartment(oldCompartment);
-    else
-        setCompartment(defaultCompartmentObject_->compartment());
-
-    if (throwing)
+    if (throwing && oldCompartment)
         wrapPendingException();
 }
 
 inline void
 JSContext::setCompartment(JSCompartment *comp)
 {
+    // Both the current and the new compartment should be properly marked as
+    // entered at this point.
+    JS_ASSERT_IF(compartment_, compartment_->hasBeenEntered());
+    JS_ASSERT_IF(comp, comp->hasBeenEntered());
     compartment_ = comp;
     zone_ = comp ? comp->zone() : NULL;
     allocator_ = zone_ ? &zone_->allocator : NULL;

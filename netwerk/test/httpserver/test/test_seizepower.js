@@ -8,7 +8,9 @@
  * Tests that the seizePower API works correctly.
  */
 
-const PORT = 4444;
+XPCOMUtils.defineLazyGetter(this, "PORT", function() {
+  return srv.identity.primaryPort;
+});
 
 var srv;
 
@@ -22,7 +24,7 @@ function run_test()
   srv.registerPathHandler("/async-seizure", handleAsyncSeizure);
   srv.registerPathHandler("/seize-after-async", handleSeizeAfterAsync);
 
-  srv.start(PORT);
+  srv.start(-1);
 
   runRawTests(tests, testComplete(srv));
 }
@@ -134,50 +136,47 @@ function handleSeizeAfterAsync(request, response)
  * BEGIN TESTS *
  ***************/
 
-var test, data;
-var tests = [];
+XPCOMUtils.defineLazyGetter(this, "tests", function() {
+  return [
+    new RawTest("localhost", PORT, data0, checkRawData),
+    new RawTest("localhost", PORT, data1, checkTooLate),
+    new RawTest("localhost", PORT, data2, checkExceptions),
+    new RawTest("localhost", PORT, data3, checkAsyncSeizure),
+    new RawTest("localhost", PORT, data4, checkSeizeAfterAsync),
+  ];
+});
 
-data = "GET /raw-data HTTP/1.0\r\n" +
+var data0 = "GET /raw-data HTTP/1.0\r\n" +
        "\r\n";
 function checkRawData(data)
 {
   do_check_eq(data, "Raw data!");
 }
-test = new RawTest("localhost", PORT, data, checkRawData),
-tests.push(test);
 
-data = "GET /called-too-late HTTP/1.0\r\n" +
+var data1 = "GET /called-too-late HTTP/1.0\r\n" +
        "\r\n";
 function checkTooLate(data)
 {
   do_check_eq(LineIterator(data).next(), "too-late passed");
 }
-test = new RawTest("localhost", PORT, data, checkTooLate),
-tests.push(test);
 
-data = "GET /exceptions HTTP/1.0\r\n" +
+var data2 = "GET /exceptions HTTP/1.0\r\n" +
        "\r\n";
 function checkExceptions(data)
 {
   do_check_eq("exceptions test passed", data);
 }
-test = new RawTest("localhost", PORT, data, checkExceptions),
-tests.push(test);
 
-data = "GET /async-seizure HTTP/1.0\r\n" +
+var data3 = "GET /async-seizure HTTP/1.0\r\n" +
        "\r\n";
 function checkAsyncSeizure(data)
 {
   do_check_eq(data, "async seizure passed");
 }
-test = new RawTest("localhost", PORT, data, checkAsyncSeizure),
-tests.push(test);
 
-data = "GET /seize-after-async HTTP/1.0\r\n" +
+var data4 = "GET /seize-after-async HTTP/1.0\r\n" +
        "\r\n";
 function checkSeizeAfterAsync(data)
 {
   do_check_eq(LineIterator(data).next(), "HTTP/1.0 200 async seizure pass");
 }
-test = new RawTest("localhost", PORT, data, checkSeizeAfterAsync),
-tests.push(test);

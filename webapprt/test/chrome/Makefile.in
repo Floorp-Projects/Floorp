@@ -14,9 +14,11 @@ MOCHITEST_WEBAPPRT_CHROME_FILES = \
   head.js \
   browser_sample.js \
     sample.webapp \
+    sample.webapp^headers^ \
     sample.html \
   browser_window-title.js \
     window-title.webapp \
+    window-title.webapp^headers^ \
     window-title.html \
   $(NULL)
 

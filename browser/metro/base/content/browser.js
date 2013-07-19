@@ -1205,6 +1205,10 @@ nsBrowserAccess.prototype = {
 
   isTabContentWindow: function(aWindow) {
     return Browser.browsers.some(function (browser) browser.contentWindow == aWindow);
+  },
+
+  get contentWindow() {
+    return Browser.selectedBrowser.contentWindow;
   }
 };
 
@@ -1376,8 +1380,7 @@ function getNotificationBox(aBrowser) {
 }
 
 function showDownloadManager(aWindowContext, aID, aReason) {
-  PanelUI.show("downloads-container");
-  // TODO: select the download with aID
+  // TODO: Bug 883962: Toggle the downloads infobar as our current "download manager".
 }
 
 function Tab(aURI, aParams, aOwner) {
