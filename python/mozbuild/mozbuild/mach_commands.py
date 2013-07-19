@@ -174,7 +174,7 @@ class BuildProgressFooter(object):
                 written += len(arg)
             else:
                 if written + len(part) > max_width:
-                    write_pieces.append(arg[0:max_width - written])
+                    write_pieces.append(part[0:max_width - written])
                     written += len(part)
                     break
 
