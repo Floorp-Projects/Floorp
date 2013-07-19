@@ -15,7 +15,7 @@
    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
    xmlns:xbl="http://www.mozilla.org/xbl">
 
-  <binding id="textbox" extends="xul:box">
+  <binding id="textbox" extends="xul:box" role="xul:textbox">
     <resources>
       <stylesheet src="chrome://global/content/textbox.css"/>
       <stylesheet src="chrome://global/skin/textbox.css"/>
@@ -29,15 +29,7 @@
       </xul:hbox>
     </content>
 
-    <implementation implements="nsIAccessibleProvider, nsIDOMXULTextBoxElement, nsIDOMXULLabeledControlElement">
-      <property name="accessibleType" readonly="true">
-        <getter>
-          <![CDATA[
-            return Components.interfaces.nsIAccessibleProvider.XULTextBox;
-          ]]>
-        </getter>
-      </property>
-
+    <implementation implements="nsIDOMXULTextBoxElement, nsIDOMXULLabeledControlElement">
       <!-- nsIDOMXULLabeledControlElement -->
       <field name="crop">""</field>
       <field name="image">""</field>

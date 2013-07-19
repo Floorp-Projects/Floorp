@@ -9,7 +9,7 @@
    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
    xmlns:xbl="http://www.mozilla.org/xbl">
 
-  <binding id="progressmeter">
+  <binding id="progressmeter" role="xul:progressmeter">
     <resources>
       <stylesheet src="chrome://global/skin/progressmeter.css"/>
     </resources>
@@ -19,7 +19,7 @@
       <xul:spacer class="progress-remainder" xbl:inherits="mode"/>
     </content>
     
-    <implementation implements="nsIAccessibleProvider">
+    <implementation>
       <property name="mode" onset="if (this.mode != val) this.setAttribute('mode', val); return val;"
                             onget="return this.getAttribute('mode');"/>
 
@@ -53,14 +53,6 @@
                 onset="this.setAttribute('max', isNaN(val) ? 100 : Math.max(val, 1));
                        this.value = this.value;
                        return val;" />
-
-      <property name="accessibleType" readonly="true">
-        <getter>
-          <![CDATA[
-            return Components.interfaces.nsIAccessibleProvider.XULProgressMeter;
-          ]]>
-        </getter>
-      </property>
     </implementation>
   </binding>
 
