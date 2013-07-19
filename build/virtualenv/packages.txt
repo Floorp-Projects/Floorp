@@ -1,6 +1,7 @@
 simplejson.pth:python/simplejson-2.1.1
 marionette.pth:testing/marionette/client
 blessings.pth:python/blessings
+configobj.pth:python/configobj
 mach.pth:python/mach
 mozbuild.pth:python/mozbuild
 pymake.pth:build/pymake

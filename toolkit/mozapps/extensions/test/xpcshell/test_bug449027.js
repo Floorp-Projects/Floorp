@@ -368,7 +368,7 @@ function check_state(test, lastTest, callback) {
 
       do_check_eq(expected, gNewBlocks.length);
     }
-    callback();
+    do_execute_soon(callback);
   });
 }
 
@@ -410,7 +410,7 @@ function check_test_pt1() {
         do_throw("Addon " + (i + 1) + " did not get installed correctly");
     }
 
-    check_state("start", null, run_test_pt2);
+    do_execute_soon(function checkstate1() {check_state("start", null, run_test_pt2);});
   });
 }
 

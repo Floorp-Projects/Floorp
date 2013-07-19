@@ -62,7 +62,7 @@ profileDir.append("extensions");
 var gIsNightly = false;
 
 function run_test() {
-  do_test_pending();
+  do_test_pending("checkcompatibility.js");
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "2.2.3", "2");
 
   ADDONS.forEach(function(a) {
@@ -130,7 +130,7 @@ function run_test_1() {
                                function([a1, a2, a3, a4, a5]) {
     check_state(false, a1, a2, a3, a4, a5);
 
-    run_test_2();
+    do_execute_soon(run_test_2);
   });
 }
 
@@ -151,7 +151,7 @@ function run_test_2() {
                                function([a1, a2, a3, a4, a5]) {
     check_state(true, a1, a2, a3, a4, a5);
 
-    run_test_3();
+    do_execute_soon(run_test_3);
   });
 }
 
@@ -170,7 +170,7 @@ function run_test_3() {
                                function([a1, a2, a3, a4, a5]) {
     check_state(true, a1, a2, a3, a4, a5);
 
-    run_test_4();
+    do_execute_soon(run_test_4);
   });
 }
 
@@ -191,6 +191,6 @@ function run_test_4() {
                                function([a1, a2, a3, a4, a5]) {
     check_state(false, a1, a2, a3, a4, a5);
 
-    do_test_finished();
+    do_test_finished("checkcompatibility.js");
   });
 }

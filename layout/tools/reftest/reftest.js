@@ -543,6 +543,7 @@ function BuildConditionSandbox(aURL) {
     sandbox.d2d = false;
     sandbox.azureQuartz = false;
     sandbox.azureSkia = false;
+    sandbox.azureSkiaGL = false;
     sandbox.contentSameGfxBackendAsCanvas = false;
 #else
     var gfxInfo = (NS_GFXINFO_CONTRACTID in CC) && CC[NS_GFXINFO_CONTRACTID].getService(CI.nsIGfxInfo);
@@ -554,6 +555,7 @@ function BuildConditionSandbox(aURL) {
     var info = gfxInfo.getInfo();
     sandbox.azureQuartz = info.AzureCanvasBackend == "quartz";
     sandbox.azureSkia = info.AzureCanvasBackend == "skia";
+    sandbox.azureSkiaGL = info.AzureSkiaAccelerated; // FIXME: assumes GL right now
     // true if we are using the same Azure backend for rendering canvas and content
     sandbox.contentSameGfxBackendAsCanvas = info.AzureContentBackend == info.AzureCanvasBackend
                                             || (info.AzureContentBackend == "none" && info.AzureCanvasBackend == "cairo");
