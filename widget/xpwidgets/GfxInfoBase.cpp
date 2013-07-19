@@ -87,7 +87,7 @@ void InitGfxDriverInfoShutdownObserver()
 using namespace mozilla::widget;
 using namespace mozilla;
 
-NS_IMPL_THREADSAFE_ISUPPORTS3(GfxInfoBase, nsIGfxInfo, nsIObserver, nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS3(GfxInfoBase, nsIGfxInfo, nsIObserver, nsISupportsWeakReference)
 
 #define BLACKLIST_PREF_BRANCH "gfx.blacklist."
 #define SUGGESTED_VERSION_PREF BLACKLIST_PREF_BRANCH "suggested-driver-version"
