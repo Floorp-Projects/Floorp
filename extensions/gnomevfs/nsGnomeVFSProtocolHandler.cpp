@@ -314,7 +314,7 @@ FileInfoComparator(gconstpointer a, gconstpointer b)
 class nsGnomeVFSInputStream MOZ_FINAL : public nsIInputStream
 {
   public:
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSIINPUTSTREAM
 
     nsGnomeVFSInputStream(const nsCString &uriSpec)
@@ -631,7 +631,7 @@ nsGnomeVFSInputStream::SetContentTypeOfChannel(const char *contentType)
   return rv;
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsGnomeVFSInputStream, nsIInputStream)
+NS_IMPL_ISUPPORTS1(nsGnomeVFSInputStream, nsIInputStream)
 
 NS_IMETHODIMP
 nsGnomeVFSInputStream::Close()

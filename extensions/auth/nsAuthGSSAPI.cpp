@@ -331,7 +331,7 @@ nsAuthGSSAPI::Shutdown()
 }
 
 /* Limitations apply to this class's thread safety. See the header file */
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsAuthGSSAPI, nsIAuthModule)
+NS_IMPL_ISUPPORTS1(nsAuthGSSAPI, nsIAuthModule)
 
 NS_IMETHODIMP
 nsAuthGSSAPI::Init(const char *serviceName,
