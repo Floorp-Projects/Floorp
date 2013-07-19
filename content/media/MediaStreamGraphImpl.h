@@ -371,6 +371,11 @@ public:
 
   nsTArray<nsRefPtr<MediaStream> > mStreams;
   /**
+   * mOldStreams is used as temporary storage for streams when computing the
+   * order in which we compute them.
+   */
+  nsTArray<nsRefPtr<MediaStream> > mOldStreams;
+  /**
    * The current graph time for the current iteration of the RunThread control
    * loop.
    */
