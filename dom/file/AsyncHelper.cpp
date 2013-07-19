@@ -14,7 +14,7 @@
 
 USING_FILE_NAMESPACE
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(AsyncHelper, nsIRunnable, nsIRequest)
+NS_IMPL_ISUPPORTS2(AsyncHelper, nsIRunnable, nsIRequest)
 
 nsresult
 AsyncHelper::AsyncWork(nsIRequestObserver* aObserver, nsISupports* aCtxt)

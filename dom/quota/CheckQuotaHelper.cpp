@@ -137,9 +137,9 @@ CheckQuotaHelper::GetQuotaPermission(nsIPrincipal* aPrincipal)
   return permission;
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS3(CheckQuotaHelper, nsIRunnable,
-                                                nsIInterfaceRequestor,
-                                                nsIObserver)
+NS_IMPL_ISUPPORTS3(CheckQuotaHelper, nsIRunnable,
+                   nsIInterfaceRequestor,
+                   nsIObserver)
 
 NS_IMETHODIMP
 CheckQuotaHelper::Run()

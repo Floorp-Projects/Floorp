@@ -39,9 +39,9 @@ using namespace mozilla::services;
 namespace mozilla {
 namespace system {
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(nsVolumeService,
-                              nsIVolumeService,
-                              nsIDOMMozWakeLockListener)
+NS_IMPL_ISUPPORTS2(nsVolumeService,
+                   nsIVolumeService,
+                   nsIDOMMozWakeLockListener)
 
 StaticRefPtr<nsVolumeService> nsVolumeService::sSingleton;
 

@@ -343,8 +343,8 @@ FileService::LockedFileQueue::LockedFileQueue(LockedFile* aLockedFile)
   NS_ASSERTION(aLockedFile, "Null pointer!");
 }
 
-NS_IMPL_THREADSAFE_ADDREF(FileService::LockedFileQueue)
-NS_IMPL_THREADSAFE_RELEASE(FileService::LockedFileQueue)
+NS_IMPL_ADDREF(FileService::LockedFileQueue)
+NS_IMPL_RELEASE(FileService::LockedFileQueue)
 
 nsresult
 FileService::LockedFileQueue::Enqueue(FileHelper* aFileHelper)
