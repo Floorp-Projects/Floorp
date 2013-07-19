@@ -32,7 +32,6 @@ class Layer;
 
 enum ShaderProgramType {
   RGBALayerProgramType,
-  RGBALayerExternalProgramType,
   BGRALayerProgramType,
   RGBXLayerProgramType,
   BGRXLayerProgramType,
@@ -80,7 +79,7 @@ ShaderProgramFromTargetAndFormat(GLenum aTarget,
   switch(aTarget) {
     case LOCAL_GL_TEXTURE_EXTERNAL:
       MOZ_ASSERT(aFormat == gfx::FORMAT_R8G8B8A8);
-      return RGBALayerExternalProgramType;
+      return RGBAExternalLayerProgramType;
     case LOCAL_GL_TEXTURE_RECTANGLE_ARB:
       MOZ_ASSERT(aFormat == gfx::FORMAT_R8G8B8A8 ||
                  aFormat == gfx::FORMAT_R8G8B8X8);
