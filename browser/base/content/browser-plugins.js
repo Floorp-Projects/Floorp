@@ -765,8 +765,7 @@ var gPluginHandler = {
         fallbackType == plugin.PLUGIN_BLOCKLISTED;
     });
     let dismissed = notification ? notification.dismissed : true;
-    // Always show the doorhanger if the anchor is not available.
-    if (!isElementVisible(gURLBar) || aPrimaryPlugin)
+    if (aPrimaryPlugin)
       dismissed = false;
 
     let primaryPluginPermission = null;
