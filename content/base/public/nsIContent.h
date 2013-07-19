@@ -18,6 +18,7 @@ class nsAttrValue;
 class nsAttrName;
 class nsTextFragment;
 class nsIFrame;
+class nsXBLBinding;
 
 namespace mozilla {
 namespace widget {
@@ -614,6 +615,44 @@ public:
    * @return the binding parent
    */
   virtual nsIContent *GetBindingParent() const = 0;
+
+  /**
+   * Gets the current XBL binding that is bound to this element.
+   *
+   * @return the current binding.
+   */
+  virtual nsXBLBinding *GetXBLBinding() const = 0;
+
+  /**
+   * Sets or unsets an XBL binding for this element. Setting a
+   * binding on an element that already has a binding will remove the
+   * old binding.
+   *
+   * @param aBinding The binding to bind to this content. If nullptr is
+   *        provided as the argument, then existing binding will be
+   *        removed.
+   *
+   * @param aOldBindingManager The old binding manager that contains
+   *                           this content if this content was adopted
+   *                           to another document.
+   */
+  virtual void SetXBLBinding(nsXBLBinding* aBinding,
+                             nsBindingManager* aOldBindingManager = nullptr) = 0;
+
+  /**
+   * Gets the insertion parent element of the XBL binding.
+   * The insertion parent is our one true parent in the transformed DOM.
+   *
+   * @return the insertion parent element.
+   */
+  virtual nsIContent *GetXBLInsertionParent() const = 0;
+
+  /**
+   * Sets the insertion parent element of the XBL binding.
+   *
+   * @param aContent The insertion parent element.
+   */
+  virtual void SetXBLInsertionParent(nsIContent* aContent) = 0;
 
   /**
    * Returns the content node that is the parent of this node in the flattened

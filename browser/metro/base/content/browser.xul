@@ -320,9 +320,6 @@
         <scrollbox id="history-container" flex="1">
           <richgrid id="history-list" noun="history" class="canSnapTiles" seltype="multiple" flex="1"/>
         </scrollbox>
-        <scrollbox id="downloads-container" flex="1">
-          <richgrid id="downloads-list" noun="download" class="canSnapTiles" seltype="single" flex="1"/>
-        </scrollbox>
         <scrollbox id="remotetabs-container" flex="1">
           <richgrid id="remotetabs-list" noun="tab" class="canSnapTiles" seltype="single" flex="1"/>
         </scrollbox>
@@ -683,6 +680,9 @@
       <setting pref="signon.rememberSignons" title="&optionsHeader.privacy.passwords.label;" type="bool"/>
       <settings id="prefs-reporting" label="&optionsHeader.reporting.title;">
         <setting pref="app.crashreporter.autosubmit" type="bool" title="&optionsHeader.reporting.crashes.label;" oncommand="BrowserUI.crashReportingPrefChanged(this.value);"/>
+      </settings>
+      <settings id="prefs-telemetry" label="&optionsHeader.telemetry.title;">
+        <setting pref="toolkit.telemetry.enabled" type="bool" title="&optionsHeader.telemetry.label;" oncommand="FlyoutPanelsUI.PrefsFlyout.onTelemetryPreferenceChanged(this.value);"/>
       </settings>
       <settings id="prefs-dnt" label="&doNotTrack.title;">
         <description>&doNotTrack.desc;</description>

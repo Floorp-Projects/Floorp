@@ -13,7 +13,6 @@
 #include "prprf.h"
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
-#include "prlong.h"
 #include "plstr.h"
 #include "nsCOMArray.h"
 #include "nsIComponentRegistrar.h"

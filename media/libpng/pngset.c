@@ -1,7 +1,7 @@
 
 /* pngset.c - storage of image information into info struct
  *
- * Last changed in libpng 1.5.14 [January 24, 2013]
+ * Last changed in libpng 1.5.17 [June 27, 2013]
  * Copyright (c) 1998-2013 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
@@ -252,16 +252,7 @@ png_set_IHDR(png_structp png_ptr, png_infop info_ptr,
 
    info_ptr->pixel_depth = (png_byte)(info_ptr->channels * info_ptr->bit_depth);
 
-   /* Check for potential overflow */
-   if (width >
-       (PNG_UINT_32_MAX >> 3)      /* 8-byte RRGGBBAA pixels */
-       - 48       /* bigrowbuf hack */
-       - 1        /* filter byte */
-       - 7*8      /* rounding of width to multiple of 8 pixels */
-       - 8)       /* extra max_pixel_depth pad */
-      info_ptr->rowbytes = 0;
-   else
-      info_ptr->rowbytes = PNG_ROWBYTES(info_ptr->pixel_depth, width);
+   info_ptr->rowbytes = PNG_ROWBYTES(info_ptr->pixel_depth, width);
 
 #ifdef PNG_APNG_SUPPORTED
    /* for non-animated png. this may be overwritten from an acTL chunk later */
@@ -1158,8 +1149,8 @@ png_ensure_fcTL_is_valid(png_structp png_ptr,
         png_error(png_ptr, "invalid y_offset in fcTL (> 2^31-1)");
     if (width + x_offset > png_ptr->first_frame_width ||
         height + y_offset > png_ptr->first_frame_height)
-        png_error(png_ptr, "dimensions of a frame in fcTL are greater than"
-                           "those in IHDR");
+        png_error(png_ptr, "dimensions of a frame are greater than"
+                           "the ones in IHDR");
 
     if (dispose_op != PNG_DISPOSE_OP_NONE &&
         dispose_op != PNG_DISPOSE_OP_BACKGROUND &&

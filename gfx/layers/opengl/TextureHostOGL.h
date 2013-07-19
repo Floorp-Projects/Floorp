@@ -466,13 +466,13 @@ public:
 
   virtual GLenum GetTextureTarget() const MOZ_OVERRIDE
   {
-    return LOCAL_GL_TEXTURE_2D;
+    return mTextureTarget;
   }
 
   void BindTexture(GLenum activetex) MOZ_OVERRIDE {
     MOZ_ASSERT(mGL);
     mGL->fActiveTexture(activetex);
-    mGL->fBindTexture(LOCAL_GL_TEXTURE_2D, mTextureHandle);
+    mGL->fBindTexture(mTextureTarget, mTextureHandle);
   }
   void ReleaseTexture() MOZ_OVERRIDE {
   }
@@ -492,6 +492,7 @@ public:
   SurfaceStreamHostOGL()
     : mGL(nullptr)
     , mTextureHandle(0)
+    , mTextureTarget(LOCAL_GL_TEXTURE_2D)
     , mUploadTexture(0)
     , mWrapMode(LOCAL_GL_CLAMP_TO_EDGE)
   {}
@@ -502,6 +503,7 @@ protected:
   gfx::IntSize mSize;
   nsRefPtr<GLContext> mGL;
   GLuint mTextureHandle;
+  GLenum mTextureTarget;
   GLuint mUploadTexture;
   GLenum mWrapMode;
 };

@@ -823,7 +823,8 @@ var gBrowserInit = {
     // setup history swipe animation
     gHistorySwipeAnimation.init();
 
-    if (window.opener && !window.opener.closed) {
+    if (window.opener && !window.opener.closed &&
+        PrivateBrowsingUtils.isWindowPrivate(window) == PrivateBrowsingUtils.isWindowPrivate(window.opener)) {
       let openerSidebarBox = window.opener.document.getElementById("sidebar-box");
       // If the opener had a sidebar, open the same sidebar in our window.
       // The opener can be the hidden window too, if we're coming from the state
@@ -4432,6 +4433,10 @@ nsBrowserAccess.prototype = {
 
   isTabContentWindow: function (aWindow) {
     return gBrowser.browsers.some(function (browser) browser.contentWindow == aWindow);
+  },
+
+  get contentWindow() {
+    return gBrowser.contentWindow;
   }
 }
 
@@ -6259,15 +6264,31 @@ function undoCloseTab(aIndex) {
   var tab = null;
   var ss = Cc["@mozilla.org/browser/sessionstore;1"].
            getService(Ci.nsISessionStore);
-  if (ss.getClosedTabCount(window) > (aIndex || 0)) {
-    TabView.prepareUndoCloseTab(blankTabToRemove);
-    tab = ss.undoCloseTab(window, aIndex || 0);
-    TabView.afterUndoCloseTab();
-
-    if (blankTabToRemove)
-      gBrowser.removeTab(blankTabToRemove);
+  let numberOfTabsToUndoClose = 0;
+  if (Number.isInteger(aIndex)) {
+    if (ss.getClosedTabCount(window) > aIndex) {
+      numberOfTabsToUndoClose = 1;
+    } else {
+      return tab;
+    }
+  } else {
+    numberOfTabsToUndoClose = ss.getNumberOfTabsClosedLast(window);
+    aIndex = 0;
   }
 
+  while (numberOfTabsToUndoClose > 0 &&
+         numberOfTabsToUndoClose--) {
+    TabView.prepareUndoCloseTab(blankTabToRemove);
+    tab = ss.undoCloseTab(window, aIndex);
+    TabView.afterUndoCloseTab();
+    if (blankTabToRemove) {
+      gBrowser.removeTab(blankTabToRemove);
+      blankTabToRemove = null;
+    }
+  }
+
+  // Reset the number of tabs closed last time to the default.
+  ss.setNumberOfTabsClosedLast(window, 1);
   return tab;
 }
 
@@ -7061,10 +7082,15 @@ var TabContextMenu = {
       menuItem.disabled = disabled;
 
     // Session store
-    document.getElementById("context_undoCloseTab").disabled =
-      Cc["@mozilla.org/browser/sessionstore;1"].
-      getService(Ci.nsISessionStore).
-      getClosedTabCount(window) == 0;
+    let ss = Cc["@mozilla.org/browser/sessionstore;1"].
+               getService(Ci.nsISessionStore);
+    let undoCloseTabElement = document.getElementById("context_undoCloseTab");
+    let closedTabCount = ss.getNumberOfTabsClosedLast(window);
+    undoCloseTabElement.disabled = closedTabCount == 0;
+    // Change the label of "Undo Close Tab" to specify if it will undo a batch-close
+    // or a single close.
+    let visibleLabel = closedTabCount <= 1 ? "singletablabel" : "multipletablabel";
+    undoCloseTabElement.setAttribute("label", undoCloseTabElement.getAttribute(visibleLabel));
 
     // Only one of pin/unpin should be visible
     document.getElementById("context_pinTab").hidden = this.contextTab.pinned;
