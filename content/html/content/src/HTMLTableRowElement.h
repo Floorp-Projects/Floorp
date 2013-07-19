@@ -10,11 +10,12 @@
 #include "nsIDOMHTMLTableRowElement.h"
 
 class nsIDOMHTMLTableElement;
-class nsIDOMHTMLTableSectionElement;
 class nsContentList;
 
 namespace mozilla {
 namespace dom {
+
+class HTMLTableSectionElement;
 
 class HTMLTableRowElement MOZ_FINAL : public nsGenericHTMLElement,
                                       public nsIDOMHTMLTableRowElement
@@ -108,7 +109,7 @@ protected:
   virtual JSObject* WrapNode(JSContext *aCx,
                              JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
 
-  already_AddRefed<nsIDOMHTMLTableSectionElement> GetSection() const;
+  HTMLTableSectionElement* GetSection() const;
   HTMLTableElement* GetTable() const;
   nsRefPtr<nsContentList> mCells;
 };
