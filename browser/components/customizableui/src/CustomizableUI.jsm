@@ -29,7 +29,6 @@ const kNSXUL = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 const kSpecialWidgetPfx = "customizableui-special-";
 
 const kCustomizationContextMenu = "customizationContextMenu";
-const kContextMenuBackup        = "customization-old-context";
 
 
 const kPrefCustomizationState        = "browser.uiCustomization.state";
@@ -403,22 +402,15 @@ let CustomizableUIInternal = {
     }
   },
 
-  ensureButtonContextMenu: function(aNode, ourContextMenu) {
-    if (ourContextMenu) {
-      let currentCtxt = aNode.getAttribute("context");
-      // Need to save widget's own context menu if we're replacing it:
-      if (currentCtxt && currentCtxt != kCustomizationContextMenu) {
-        aNode.setAttribute(kContextMenuBackup, currentCtxt);
-      }
-      aNode.setAttribute("context", kCustomizationContextMenu);
-    } else if (aNode.getAttribute("context") == kCustomizationContextMenu) {
-      let oldCtxt = aNode.getAttribute(kContextMenuBackup);
-      if (oldCtxt) {
-        aNode.setAttribute("context", oldCtxt);
-        aNode.removeAttribute(kContextMenuBackup);
-      } else {
+  ensureButtonContextMenu: function(aNode, aShouldHaveCustomizationMenu) {
+    let currentContextMenu = aNode.getAttribute("context") ||
+                             aNode.getAttribute("contextmenu");
+    if (aShouldHaveCustomizationMenu) {
+      if (!currentContextMenu)
+        aNode.setAttribute("context", kCustomizationContextMenu);
+    } else {
+      if (currentContextMenu == kCustomizationContextMenu)
         aNode.removeAttribute("context");
-      }
     }
   },
 
