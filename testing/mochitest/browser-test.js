@@ -40,7 +40,7 @@ function testOnLoad() {
                            "chrome,centerscreen,dialog=no,resizable,titlebar,toolbar=no,width=800,height=600", sstring);
   } else {
     // This code allows us to redirect without requiring specialpowers for chrome and a11y tests.
-    function messageHandler(m) {
+    let messageHandler = function(m) {
       messageManager.removeMessageListener("chromeEvent", messageHandler);
       var url = m.json.data;
 
@@ -49,7 +49,7 @@ function testOnLoad() {
       var webNav = content.window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
                          .getInterface(Components.interfaces.nsIWebNavigation);
       webNav.loadURI(url, null, null, null, null);
-    }
+    };
 
     var listener = 'data:,function doLoad(e) { var data=e.getData("data");removeEventListener("contentEvent", function (e) { doLoad(e); }, false, true);sendAsyncMessage("chromeEvent", {"data":data}); };addEventListener("contentEvent", function (e) { doLoad(e); }, false, true);';
     messageManager.loadFrameScript(listener, true);
@@ -303,6 +303,14 @@ Tester.prototype = {
       // behavior of returning the last opened popup.
       document.popupNode = null;
 
+      // Notify a long running test problem if it didn't end up in a timeout.
+      if (this.currentTest.unexpectedTimeouts && !this.currentTest.timedOut) {
+        let msg = "This test exceeded the timeout threshold. It should be " +
+                  "rewritten or split up. If that's not possible, use " +
+                  "requestLongerTimeout(N), but only as a last resort.";
+        this.currentTest.addResult(new testResult(false, msg, "", false));
+      }
+
       // Note the test run time
       let time = Date.now() - this.lastStartTime;
       this.dumper.dump("INFO TEST-END | " + this.currentTest.path + " | finished in " + time + "ms\n");
@@ -453,16 +461,32 @@ Tester.prototype = {
     }
     else {
       var self = this;
-      this.currentTest.scope.__waitTimer = setTimeout(function() {
+      this.currentTest.scope.__waitTimer = setTimeout(function timeoutFn() {
         if (--self.currentTest.scope.__timeoutFactor > 0) {
           // We were asked to wait a bit longer.
           self.currentTest.scope.info(
             "Longer timeout required, waiting longer...  Remaining timeouts: " +
             self.currentTest.scope.__timeoutFactor);
           self.currentTest.scope.__waitTimer =
-            setTimeout(arguments.callee, gTimeoutSeconds * 1000);
+            setTimeout(timeoutFn, gTimeoutSeconds * 1000);
           return;
         }
+
+        // If the test is taking longer than expected, but it's not hanging,
+        // mark the fact, but let the test continue.  At the end of the test,
+        // if it didn't timeout, we will notify the problem through an error.
+        // To figure whether it's an actual hang, compare the time of the last
+        // result or message to half of the timeout time.
+        // Though, to protect against infinite loops, limit the number of times
+        // we allow the test to proceed.
+        const MAX_UNEXPECTED_TIMEOUTS = 10;
+        if (Date.now() - self.currentTest.lastOutputTime < (gTimeoutSeconds / 2) * 1000 &&
+            ++self.currentTest.unexpectedTimeouts <= MAX_UNEXPECTED_TIMEOUTS) {
+            self.currentTest.scope.__waitTimer =
+              setTimeout(timeoutFn, gTimeoutSeconds * 1000);
+          return;
+        }
+
         self.currentTest.addResult(new testResult(false, "Test timed out", "", false));
         self.currentTest.timedOut = true;
         self.currentTest.scope.__waitTimer = null;
