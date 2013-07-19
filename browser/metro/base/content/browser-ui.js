@@ -550,14 +550,12 @@ var BrowserUI = {
         let autocomplete = document.getElementById("urlbar-autocomplete");
         if (aData == "snapped") {
           FlyoutPanelsUI.hide();
-          // Order matters (need grids to get dimensions, etc), now
-          // let snapped grid know to refresh/redraw
-          Services.obs.notifyObservers(null, "metro_viewstate_dom_snapped", null);
           autocomplete.setAttribute("orient", "vertical");
         }
         else {
           autocomplete.setAttribute("orient", "horizontal");
         }
+
         break;
     }
   },
@@ -1100,7 +1098,6 @@ var StartUI = {
 
   sections: [
     "TopSitesStartView",
-    "TopSitesSnappedView",
     "BookmarksStartView",
     "HistoryStartView",
     "RemoteTabsStartView"
