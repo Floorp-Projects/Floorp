@@ -61,7 +61,6 @@ VIAddVersionKey "FileDescription" "${BrandShortName} Helper"
 VIAddVersionKey "OriginalFilename" "helper.exe"
 
 !insertmacro AddDisabledDDEHandlerValues
-!insertmacro CleanUpdateDirectories
 !insertmacro CleanVirtualStore
 !insertmacro ElevateUAC
 !insertmacro GetLongPath
