@@ -18,7 +18,7 @@ DispatchToWorkerThread(nsIRunnable* r)
   return t->Dispatch(r, NS_DISPATCH_NORMAL);
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(UrlClassifierDBServiceWorkerProxy,
+NS_IMPL_ISUPPORTS1(UrlClassifierDBServiceWorkerProxy,
                               nsIUrlClassifierDBServiceWorker)
 
 NS_IMETHODIMP
@@ -181,7 +181,7 @@ UrlClassifierDBServiceWorkerProxy::CacheMissesRunnable::Run()
 }
 
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(UrlClassifierLookupCallbackProxy,
+NS_IMPL_ISUPPORTS1(UrlClassifierLookupCallbackProxy,
                               nsIUrlClassifierLookupCallback)
 
 NS_IMETHODIMP
@@ -199,7 +199,7 @@ UrlClassifierLookupCallbackProxy::LookupCompleteRunnable::Run()
   return NS_OK;
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(UrlClassifierCallbackProxy,
+NS_IMPL_ISUPPORTS1(UrlClassifierCallbackProxy,
                               nsIUrlClassifierCallback)
 
 NS_IMETHODIMP
@@ -216,7 +216,7 @@ UrlClassifierCallbackProxy::HandleEventRunnable::Run()
   return NS_OK;
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(UrlClassifierUpdateObserverProxy,
+NS_IMPL_ISUPPORTS1(UrlClassifierUpdateObserverProxy,
                               nsIUrlClassifierUpdateObserver)
 
 NS_IMETHODIMP
