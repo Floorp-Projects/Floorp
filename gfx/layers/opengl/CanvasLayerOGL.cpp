@@ -330,6 +330,7 @@ CanvasLayerOGL::RenderLayer(int aPreviousDestination,
   }
   program->SetLayerQuadRect(drawRect);
   program->SetLayerTransform(GetEffectiveTransform());
+  program->SetTextureTransform(gfx3DMatrix());
   program->SetLayerOpacity(GetEffectiveOpacity());
   program->SetRenderOffset(aOffset);
   program->SetTextureUnit(0);

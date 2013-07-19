@@ -1371,18 +1371,10 @@ public class GeckoAppShell
     public static synchronized int getScreenDepth() {
         if (sScreenDepth == 0) {
             sScreenDepth = 16;
-            if (getGeckoInterface() != null) {
-                switch (getGeckoInterface().getActivity().getWindowManager().getDefaultDisplay().getPixelFormat()) {
-                    case PixelFormat.RGBA_8888 :
-                    case PixelFormat.RGBX_8888 :
-                    case PixelFormat.RGB_888 :
-                    {
-                        if (isHighMemoryDevice()) {
-                            sScreenDepth = 24;
-                        }
-                        break;
-                    }
-                }
+            PixelFormat info = new PixelFormat();
+            PixelFormat.getPixelFormatInfo(getGeckoInterface().getActivity().getWindowManager().getDefaultDisplay().getPixelFormat(), info);
+            if (info.bitsPerPixel >= 24 && isHighMemoryDevice()) {
+                sScreenDepth = 24;
             }
         }
 

@@ -70,7 +70,7 @@ function run_test_1() {
       do_check_eq(list.length, 1);
       do_check_eq(list[0].id, "addon1@tests.mozilla.org");
 
-      check_test_1();
+      do_execute_soon(check_test_1);
     });
   });
 }
@@ -87,14 +87,14 @@ function check_test_1() {
     dest.append(do_get_expected_addon_name("addon1@tests.mozilla.org"));
     do_check_false(dest.exists());
     writeInstallRDFForExtension(addon1, profileDir);
-    restartManager();
-
-    run_test_2();
+    do_execute_soon(run_test_2);
   });
 }
 
 // Cancelling the uninstall should send onOperationCancelled
 function run_test_2() {
+  restartManager();
+
   prepare_test({
     "addon1@tests.mozilla.org": [
       "onUninstalling"
@@ -122,7 +122,7 @@ function run_test_2() {
 
     ensure_test_completed();
 
-    check_test_2();
+    do_execute_soon(check_test_2);
   });
 }
 
@@ -180,13 +180,14 @@ function check_test_3() {
     ensure_test_completed();
     do_check_true(hasFlag(AddonManager.PENDING_DISABLE, a1.pendingOperations));
 
-    restartManager();
-    run_test_4();
+    do_execute_soon(run_test_4);
   });
 }
 
 // Test that uninstalling an inactive item should happen without a restart
 function run_test_4() {
+  restartManager();
+
   AddonManager.getAddonByID("addon1@tests.mozilla.org", function(a1) {
     do_check_neq(a1, null);
     do_check_false(a1.isActive);

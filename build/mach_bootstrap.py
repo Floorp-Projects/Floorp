@@ -29,6 +29,7 @@ SEARCH_PATHS = [
     'python/mozboot',
     'python/mozbuild',
     'python/blessings',
+    'python/configobj',
     'python/psutil',
     'python/which',
     'build/pymake',
