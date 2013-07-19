@@ -49,7 +49,10 @@ function end_test() {
 function installUpdate(aInstall, aCallback) {
   aInstall.addListener({
     onInstallEnded: function(aInstall) {
-      aCallback(aInstall);
+      // give the startup time to run
+      do_execute_soon(function() {
+        aCallback(aInstall);
+      });
     }
   });
 
@@ -113,16 +116,16 @@ function check_test_1(install) {
 
       a2.uninstall();
 
-      restartManager();
-      shutdownManager();
-
-      run_test_2();
+      do_execute_soon(run_test_2);
     });
   });
 }
 
 // Test that when the new add-on already exists we just upgrade that
 function run_test_2() {
+  restartManager();
+  shutdownManager();
+
   writeInstallRDFForExtension({
     id: "addon1@tests.mozilla.org",
     version: "1.0",
@@ -179,16 +182,16 @@ function check_test_2(install) {
       a1.uninstall();
       a2.uninstall();
 
-      restartManager();
-      shutdownManager();
-
-      run_test_3();
+      do_execute_soon(run_test_3);
     });
   });
 }
 
 // Test that we rollback correctly when removing the old add-on fails
 function run_test_3() {
+  restartManager();
+  shutdownManager();
+
   // This test only works on Windows
   if (!("nsIWindowsRegKey" in AM_Ci)) {
     run_test_4();
@@ -261,10 +264,7 @@ function check_test_3(install) {
 
         a2.uninstall();
 
-        restartManager();
-        shutdownManager();
-
-        run_test_4();
+        do_execute_soon(run_test_4);
       });
     });
   });
@@ -272,6 +272,9 @@ function check_test_3(install) {
 
 // Tests that upgrading to a bootstrapped add-on works but requires a restart
 function run_test_4() {
+  restartManager();
+  shutdownManager();
+
   writeInstallRDFForExtension({
     id: "addon2@tests.mozilla.org",
     version: "2.0",
@@ -325,7 +328,7 @@ function check_test_4() {
       do_check_eq(getInstalledVersion(), 3);
       do_check_eq(getActiveVersion(), 3);
 
-      run_test_5();
+      do_execute_soon(run_test_5);
     });
   });
 }

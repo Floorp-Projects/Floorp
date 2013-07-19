@@ -339,6 +339,66 @@ js::Nursery::forwardBufferPointer(HeapSlot **pSlotsElems)
     JS_ASSERT(!isInside(*pSlotsElems));
 }
 
+void
+js::Nursery::collectToFixedPoint(MinorCollectionTracer *trc)
+{
+    for (RelocationOverlay *p = trc->head; p; p = p->next()) {
+        JSObject *obj = static_cast<JSObject*>(p->forwardingAddress());
+        traceObject(trc, obj);
+    }
+}
+
+JS_ALWAYS_INLINE void
+js::Nursery::traceObject(MinorCollectionTracer *trc, JSObject *obj)
+{
+    Class *clasp = obj->getClass();
+    if (clasp->trace)
+        clasp->trace(trc, obj);
+
+    if (!obj->isNative())
+        return;
+
+    if (!obj->hasEmptyElements())
+        markSlots(trc, obj->getDenseElements(), obj->getDenseInitializedLength());
+
+    HeapSlot *fixedStart, *fixedEnd, *dynStart, *dynEnd;
+    obj->getSlotRange(0, obj->slotSpan(), &fixedStart, &fixedEnd, &dynStart, &dynEnd);
+    markSlots(trc, fixedStart, fixedEnd);
+    markSlots(trc, dynStart, dynEnd);
+}
+
+JS_ALWAYS_INLINE void
+js::Nursery::markSlots(MinorCollectionTracer *trc, HeapSlot *vp, uint32_t nslots)
+{
+    markSlots(trc, vp, vp + nslots);
+}
+
+JS_ALWAYS_INLINE void
+js::Nursery::markSlots(MinorCollectionTracer *trc, HeapSlot *vp, HeapSlot *end)
+{
+    for (; vp != end; ++vp)
+        markSlot(trc, vp);
+}
+
+JS_ALWAYS_INLINE void
+js::Nursery::markSlot(MinorCollectionTracer *trc, HeapSlot *slotp)
+{
+    if (!slotp->isObject())
+        return;
+
+    JSObject *obj = &slotp->toObject();
+    if (!isInside(obj))
+        return;
+
+    if (getForwardedPointer(&obj)) {
+        slotp->unsafeGet()->setObject(*obj);
+        return;
+    }
+
+    JSObject *tenured = static_cast<JSObject*>(moveToTenured(trc, obj));
+    slotp->unsafeGet()->setObject(*tenured);
+}
+
 void *
 js::Nursery::moveToTenured(MinorCollectionTracer *trc, JSObject *src)
 {
@@ -591,16 +651,13 @@ js::Nursery::collect(JSRuntime *rt, JS::gcreason::Reason reason)
      * to the nursery, then those nursery objects get moved as well, until no
      * objects are left to move. That is, we iterate to a fixed point.
      */
-    for (RelocationOverlay *p = trc.head; p; p = p->next()) {
-        JSObject *obj = static_cast<JSObject*>(p->forwardingAddress());
-        JS_TraceChildren(&trc, obj, MapAllocToTraceKind(obj->tenuredGetAllocKind()));
-    }
+    collectToFixedPoint(&trc);
 
     /* Resize the nursery. */
     double promotionRate = trc.tenuredSize / double(allocationEnd() - start());
-    if (promotionRate > 0.5)
+    if (promotionRate > 0.05)
         growAllocableSpace();
-    else if (promotionRate < 0.1)
+    else if (promotionRate < 0.01)
         shrinkAllocableSpace();
 
     /* Sweep. */

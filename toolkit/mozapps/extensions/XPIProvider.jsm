@@ -2723,7 +2723,7 @@ var XPIProvider = {
      */
     function removeMetadata(aInstallLocation, aOldAddon) {
       // This add-on has disappeared
-      LOG("Add-on " + aOldAddon.id + " removed from " + aInstallLocation.name);
+      LOG("Add-on " + aOldAddon.id + " removed from " + aInstallLocation);
       XPIDatabase.removeAddonMetadata(aOldAddon);
 
       // Remember add-ons that were uninstalled during startup
@@ -3047,7 +3047,7 @@ var XPIProvider = {
               XPIProvider.allAppGlobal = false;
           }
           else {
-            changed = removeMetadata(installLocation, aOldAddon) || changed;
+            changed = removeMetadata(installLocation.name, aOldAddon) || changed;
           }
         }, this);
       }
@@ -3954,8 +3954,10 @@ var XPIProvider = {
     if (Services.appinfo.inSafeMode)
       return;
 
-    if (aMethod == "startup")
+    if (aMethod == "startup") {
+      LOG("Registering manifest for " + aFile.path);
       Components.manager.addBootstrappedManifestLocation(aFile);
+    }
 
     try {
       // Load the scope if it hasn't already been loaded
@@ -3995,8 +3997,10 @@ var XPIProvider = {
       }
     }
     finally {
-      if (aMethod == "shutdown")
+      if (aMethod == "shutdown") {
+        LOG("Removing manifest for " + aFile.path);
         Components.manager.removeBootstrappedManifestLocation(aFile);
+      }
     }
   },
 
@@ -4329,6 +4333,9 @@ function AddonInstall(aInstallLocation, aUrl, aHash, aReleaseNotesURI,
                             .getInterface(Ci.nsIDOMWindow);
   else
     this.window = null;
+
+  this.WARN = WARN;
+  this.LOG = LOG;
 }
 
 AddonInstall.prototype = {
@@ -4416,7 +4423,7 @@ AddonInstall.prototype = {
         crypto.initWithString(this.hash.algorithm);
       }
       catch (e) {
-        WARN("Unknown hash algorithm " + this.hash.algorithm);
+        WARN("Unknown hash algorithm '" + this.hash.algorithm + "' for addon " + this.sourceURI.spec, e);
         this.state = AddonManager.STATE_DOWNLOAD_FAILED;
         this.error = AddonManager.ERROR_INCORRECT_HASH;
         aCallback(this);
@@ -4624,15 +4631,21 @@ AddonInstall.prototype = {
    */
   removeTemporaryFile: function AI_removeTemporaryFile() {
     // Only proceed if this AddonInstall owns its XPI file
-    if (!this.ownsTempFile)
+    if (!this.ownsTempFile) {
+      this.LOG("removeTemporaryFile: " + this.sourceURI.spec + " does not own temp file");
       return;
+    }
 
     try {
+      this.LOG("removeTemporaryFile: " + this.sourceURI.spec + " removing temp file " +
+          this.file.path);
       this.file.remove(true);
       this.ownsTempFile = false;
     }
     catch (e) {
-      WARN("Failed to remove temporary file " + this.file.path, e);
+      this.WARN("Failed to remove temporary file " + this.file.path + " for addon " +
+          this.sourceURI.spec,
+          e);
     }
   },
 
@@ -4869,6 +4882,7 @@ AddonInstall.prototype = {
     this.state = AddonManager.STATE_DOWNLOADING;
     if (!AddonManagerPrivate.callInstallListeners("onDownloadStarted",
                                                   this.listeners, this.wrapper)) {
+      LOG("onDownloadStarted listeners cancelled installation of addon " + this.sourceURI.spec);
       this.state = AddonManager.STATE_CANCELLED;
       XPIProvider.removeActiveInstall(this);
       AddonManagerPrivate.callInstallListeners("onDownloadCancelled",
@@ -4903,7 +4917,7 @@ AddonInstall.prototype = {
                        FileUtils.MODE_TRUNCATE, FileUtils.PERMS_FILE, 0);
     }
     catch (e) {
-      WARN("Failed to start download", e);
+      WARN("Failed to start download for addon " + this.sourceURI.spec, e);
       this.state = AddonManager.STATE_DOWNLOAD_FAILED;
       this.error = AddonManager.ERROR_FILE_ACCESS;
       XPIProvider.removeActiveInstall(this);
@@ -4929,7 +4943,7 @@ AddonInstall.prototype = {
       Services.obs.addObserver(this, "network:offline-about-to-go-offline", false);
     }
     catch (e) {
-      WARN("Failed to start download", e);
+      WARN("Failed to start download for addon " + this.sourceURI.spec, e);
       this.state = AddonManager.STATE_DOWNLOAD_FAILED;
       this.error = AddonManager.ERROR_NETWORK_FAILURE;
       XPIProvider.removeActiveInstall(this);
@@ -4997,7 +5011,7 @@ AddonInstall.prototype = {
         this.crypto.initWithString(this.hash.algorithm);
       }
       catch (e) {
-        WARN("Unknown hash algorithm " + this.hash.algorithm);
+        WARN("Unknown hash algorithm '" + this.hash.algorithm + "' for addon " + this.sourceURI.spec, e);
         this.state = AddonManager.STATE_DOWNLOAD_FAILED;
         this.error = AddonManager.ERROR_INCORRECT_HASH;
         XPIProvider.removeActiveInstall(this);
@@ -5121,8 +5135,13 @@ AddonInstall.prototype = {
 
     // If the listener hasn't restarted the download then remove any temporary
     // file
-    if (this.state == AddonManager.STATE_DOWNLOAD_FAILED)
+    if (this.state == AddonManager.STATE_DOWNLOAD_FAILED) {
+      LOG("downloadFailed: removing temp file for " + this.sourceURI.spec);
       this.removeTemporaryFile();
+    }
+    else
+      LOG("downloadFailed: listener changed AddonInstall state for " +
+          this.sourceURI.spec + " to " + this.state);
   },
 
   /**
@@ -5247,7 +5266,7 @@ AddonInstall.prototype = {
           stream.close();
         }
 
-        LOG("Install of " + this.sourceURI.spec + " completed.");
+        LOG("Staged install of " + this.sourceURI.spec + " ready; waiting for restart.");
         this.state = AddonManager.STATE_INSTALLED;
         if (isUpgrade) {
           delete this.existingAddon.pendingUpgrade;
@@ -6846,8 +6865,10 @@ DirectoryInstallLocation.prototype = {
 
     let trashDir = this.getTrashDir();
 
-    if (file.leafName != aId)
+    if (file.leafName != aId) {
+      LOG("uninstallAddon: flushing jar cache " + file.path + " for addon " + aId);
       flushJarCache(file);
+    }
 
     let transaction = new SafeInstallOperation();
 

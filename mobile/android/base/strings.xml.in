@@ -196,6 +196,8 @@
   <string name="reading_list_failed">&reading_list_failed;</string>
   <string name="reading_list_duplicate">&reading_list_duplicate;</string>
 
+  <string name="page_action_dropmarker_description">&page_action_dropmarker_description;</string>
+
   <string name="contextmenu_open_new_tab">&contextmenu_open_new_tab;</string>
   <string name="contextmenu_open_private_tab">&contextmenu_open_private_tab;</string>
   <string name="contextmenu_open_in_reader">&contextmenu_open_in_reader;</string>
@@ -316,4 +318,8 @@
   <string name="wallpaper_progress">&wallpaper_progress;</string>
   <string name="wallpaper_fail">&wallpaper_fail;</string>
 
+
+  <!-- Guest mode -->
+  <string name="enter_guest_mode">&enter_guest_mode;</string>
+  <string name="exit_guest_mode">&exit_guest_mode;</string>
 </resources>

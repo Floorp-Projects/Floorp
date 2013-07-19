@@ -112,9 +112,7 @@ function run_test_1() {
               check_addon(a1, "2.0");
 
               a1.uninstall();
-              restartManager();
-
-              run_test_2();
+              do_execute_soon(run_test_2);
             });
           });
         });
@@ -125,6 +123,8 @@ function run_test_1() {
 
 // Test that a failed uninstall gets rolled back
 function run_test_2() {
+  restartManager();
+
   installAllFiles([do_get_addon("test_bug587088_1")], function() {
     restartManager();
 

@@ -1,0 +1,47 @@
+Metadata-Version: 1.0
+Name: configobj
+Version: 4.7.2
+Summary: Config file reading, writing and validation.
+Home-page: http://www.voidspace.org.uk/python/configobj.html
+Author: Michael Foord & Nicola Larosa
+Author-email: fuzzyman@voidspace.org.uk
+License: UNKNOWN
+Download-URL: http://www.voidspace.org.uk/downloads/configobj-4.7.2.zip
+Description: **ConfigObj** is a simple but powerful config file reader and writer: an *ini
+        file round tripper*. Its main feature is that it is very easy to use, with a
+        straightforward programmer's interface and a simple syntax for config files.
+        It has lots of other features though :
+        
+        * Nested sections (subsections), to any level
+        * List values
+        * Multiple line values
+        * Full Unicode support
+        * String interpolation (substitution)
+        * Integrated with a powerful validation system
+        
+        - including automatic type checking/conversion
+        - and allowing default values
+        - repeated sections
+        
+        * All comments in the file are preserved
+        * The order of keys/sections is preserved
+        * Powerful ``unrepr`` mode for storing/retrieving Python data-types
+        
+        | Release 4.7.2 fixes several bugs in 4.7.1
+        | Release 4.7.1 fixes a bug with the deprecated options keyword in
+        | 4.7.0.
+        | Release 4.7.0 improves performance adds features for validation and
+        | fixes some bugs.
+Keywords: config,ini,dictionary,application,admin,sysadmin,configuration,validation
+Platform: UNKNOWN
+Classifier: Development Status :: 6 - Mature
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: BSD License
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 2.3
+Classifier: Programming Language :: Python :: 2.4
+Classifier: Programming Language :: Python :: 2.5
+Classifier: Programming Language :: Python :: 2.6
+Classifier: Operating System :: OS Independent
+Classifier: Topic :: Software Development :: Libraries
+Classifier: Topic :: Software Development :: Libraries :: Python Modules

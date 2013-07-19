@@ -4859,6 +4859,10 @@ js::ReleaseAllJITCode(FreeOp *fop)
             ion::FinishDiscardBaselineScript(fop, script);
         }
     }
+
+    /* Sweep now invalidated compiler outputs from each compartment. */
+    for (CompartmentsIter comp(fop->runtime()); !comp.done(); comp.next())
+        comp->types.sweepCompilerOutputs(fop, false);
 #endif
 }
 

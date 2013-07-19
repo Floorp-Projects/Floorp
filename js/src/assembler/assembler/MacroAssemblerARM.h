@@ -1111,17 +1111,17 @@ public:
     }
 
     // Floating point operators
-    bool supportsFloatingPoint() const
+    static bool supportsFloatingPoint()
     {
         return s_isVFPPresent;
     }
 
-    bool supportsFloatingPointTruncate() const
+    static bool supportsFloatingPointTruncate()
     {
         return true;
     }
 
-    bool supportsFloatingPointSqrt() const
+    static bool supportsFloatingPointSqrt()
     {
         return s_isVFPPresent;
     }
