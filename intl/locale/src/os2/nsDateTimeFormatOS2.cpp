@@ -5,7 +5,7 @@
 #include <unidef.h>
 #include "nsDateTimeFormatOS2.h"
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsDateTimeFormatOS2,nsIDateTimeFormat)
+NS_IMPL_ISUPPORTS1(nsDateTimeFormatOS2,nsIDateTimeFormat)
 
 #define NSDATETIME_FORMAT_BUFFER_LEN  80
 

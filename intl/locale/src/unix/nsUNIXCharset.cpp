@@ -36,7 +36,7 @@ static const char* kUnixCharsets[][3] = {
 #include "unixcharset.properties.h"
 };
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsPlatformCharset, nsIPlatformCharset)
+NS_IMPL_ISUPPORTS1(nsPlatformCharset, nsIPlatformCharset)
 
 nsPlatformCharset::nsPlatformCharset()
 {

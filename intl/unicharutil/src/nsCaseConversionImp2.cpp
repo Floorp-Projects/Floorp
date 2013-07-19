@@ -16,7 +16,7 @@ NS_IMETHODIMP_(nsrefcnt) nsCaseConversionImp2::Release(void)
   return (nsrefcnt)1;
 }
 
-NS_IMPL_THREADSAFE_QUERY_INTERFACE1(nsCaseConversionImp2, nsICaseConversion)
+NS_IMPL_QUERY_INTERFACE1(nsCaseConversionImp2, nsICaseConversion)
 
 NS_IMETHODIMP nsCaseConversionImp2::ToUpper(PRUnichar aChar, PRUnichar* aReturn)
 {

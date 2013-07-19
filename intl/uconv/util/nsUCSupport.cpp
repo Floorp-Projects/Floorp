@@ -30,11 +30,11 @@ nsBasicDecoderSupport::~nsBasicDecoderSupport()
 // Interface nsISupports [implementation]
 
 #ifdef DEBUG
-NS_IMPL_THREADSAFE_ISUPPORTS2(nsBasicDecoderSupport,
-                              nsIUnicodeDecoder,
-                              nsIBasicDecoder)
+NS_IMPL_ISUPPORTS2(nsBasicDecoderSupport,
+                   nsIUnicodeDecoder,
+                   nsIBasicDecoder)
 #else
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsBasicDecoderSupport, nsIUnicodeDecoder)
+NS_IMPL_ISUPPORTS1(nsBasicDecoderSupport, nsIUnicodeDecoder)
 #endif
 
 //----------------------------------------------------------------------

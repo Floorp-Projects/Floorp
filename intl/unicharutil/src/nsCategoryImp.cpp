@@ -10,7 +10,7 @@
 
 static nsCategoryImp gCategoryImp;
 
-NS_IMPL_THREADSAFE_QUERY_INTERFACE1(nsCategoryImp, nsIUGenCategory)
+NS_IMPL_QUERY_INTERFACE1(nsCategoryImp, nsIUGenCategory)
 
 NS_IMETHODIMP_(nsrefcnt) nsCategoryImp::AddRef(void)
 {
