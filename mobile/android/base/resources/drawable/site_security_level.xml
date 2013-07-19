@@ -6,9 +6,9 @@
 <level-list xmlns:android="http://schemas.android.com/apk/res/android">
 
     <item android:maxLevel="0" android:drawable="@android:color/transparent"/>
-    <item android:maxLevel="1" android:drawable="@drawable/site_security_identified"/>
-    <item android:maxLevel="2" android:drawable="@drawable/site_security_verified"/>
-    <item android:maxLevel="3" android:drawable="@drawable/site_security_blocked_mixed_content"/>
-    <item android:maxLevel="4" android:drawable="@drawable/site_security_loaded_mixed_content"/>
+    <item android:maxLevel="1" android:drawable="@drawable/lock_identified"/>
+    <item android:maxLevel="2" android:drawable="@drawable/lock_verified"/>
+    <item android:maxLevel="3" android:drawable="@drawable/shield"/>
+    <item android:maxLevel="4" android:drawable="@drawable/warning"/>
 
 </level-list>

@@ -6,13 +6,19 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
               android:layout_width="fill_parent"
               android:layout_height="wrap_content"
-              android:orientation="horizontal">
+              android:orientation="horizontal"
+              android:padding="@dimen/doorhanger_padding">
+
+    <ImageView android:id="@+id/larry"
+               android:layout_width="wrap_content"
+               android:layout_height="wrap_content"
+               android:src="@drawable/larry"
+               android:paddingRight="@dimen/doorhanger_padding"/>
 
     <LinearLayout android:layout_width="0dip"
                   android:layout_height="wrap_content"
                   android:layout_weight="1.0"
-                  android:orientation="vertical"
-                  android:padding="12dip">
+                  android:orientation="vertical">
 
         <TextView android:layout_width="wrap_content"
                   android:layout_height="wrap_content"
@@ -23,7 +29,9 @@
         <TextView android:id="@+id/host"
                   android:layout_width="wrap_content"
                   android:layout_height="wrap_content"
-                  android:textSize="18sp"/>
+                  android:textSize="20sp"
+                  android:textColor="@color/doorhanger_text"
+                  android:textStyle="bold"/>
 
         <TextView android:layout_width="wrap_content"
                   android:layout_height="wrap_content"
@@ -35,7 +43,9 @@
         <TextView android:id="@+id/owner"
                   android:layout_width="wrap_content"
                   android:layout_height="wrap_content"
-                  android:textSize="18sp"/>
+                  android:textColor="@color/doorhanger_text"
+                  android:textSize="16sp"
+                  android:textStyle="bold"/>
 
         <TextView android:id="@+id/verifier"
                   android:layout_width="wrap_content"
@@ -45,10 +55,5 @@
                   android:paddingTop="12dip"/>
 
     </LinearLayout>
-
-    <ImageView android:id="@+id/larry"
-               android:layout_width="wrap_content"
-               android:layout_height="wrap_content"
-               android:padding="15dip"/>
 
 </LinearLayout>
