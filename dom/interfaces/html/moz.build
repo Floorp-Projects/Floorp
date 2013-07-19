@@ -65,7 +65,6 @@ XPIDL_SOURCES += [
     'nsIDOMHTMLTextAreaElement.idl',
     'nsIDOMHTMLTitleElement.idl',
     'nsIDOMHTMLUListElement.idl',
-    'nsIDOMHTMLUnknownElement.idl',
     'nsIDOMHTMLVideoElement.idl',
     'nsIDOMMediaError.idl',
     'nsIDOMMozBrowserFrame.idl',
