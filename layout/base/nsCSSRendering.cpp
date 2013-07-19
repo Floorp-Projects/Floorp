@@ -2623,14 +2623,8 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
   // this here because this might be the only code that knows about the
   // association of the style data with the frame.
   if (aBackgroundSC != aForFrame->StyleContext()) {
-    ImageLoader* loader = aPresContext->Document()->StyleImageLoader();
-
     NS_FOR_VISIBLE_BACKGROUND_LAYERS_BACK_TO_FRONT_WITH_RANGE(i, bg, startLayer, nLayers) {
-      if (bg->mLayers[i].mImage.GetType() == eStyleImageType_Image) {
-        imgIRequest *image = bg->mLayers[i].mImage.GetImageData();
-
-        loader->AssociateRequestToFrame(image, aForFrame);
-      }
+      aForFrame->AssociateImage(bg->mLayers[i].mImage, aPresContext);
     }
   }
 
@@ -2672,10 +2666,10 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
         nsBackgroundLayerState state = PrepareBackgroundLayer(aPresContext, aForFrame,
             aFlags, aBorderArea, clipState.mBGClipArea, *bg, layer);
         if (!state.mFillArea.IsEmpty()) {
-          state.mImageRenderer.Draw(aPresContext, aRenderingContext,
-                                    state.mDestArea, state.mFillArea,
-                                    state.mAnchor + aBorderArea.TopLeft(),
-                                    clipState.mDirtyRect);
+          state.mImageRenderer.DrawBackground(aPresContext, aRenderingContext,
+                                              state.mDestArea, state.mFillArea,
+                                              state.mAnchor + aBorderArea.TopLeft(),
+                                              clipState.mDirtyRect);
         }
       }
     }
@@ -4610,20 +4604,20 @@ nsImageRenderer::SetPreferredSize(const CSSSizeOrRatio& aIntrinsicSize,
 
 void
 nsImageRenderer::Draw(nsPresContext*       aPresContext,
-                      nsRenderingContext& aRenderingContext,
-                      const nsRect&        aDest,
+                      nsRenderingContext&  aRenderingContext,
+                      const nsRect&        aDirtyRect,
                       const nsRect&        aFill,
-                      const nsPoint&       aAnchor,
-                      const nsRect&        aDirty)
+                      const nsRect&        aDest,
+                      uint32_t             aFlags /* = imgIContainer::FLAG_NONE */)
 {
   if (!mIsReady) {
     NS_NOTREACHED("Ensure PrepareImage() has returned true before calling me");
     return;
   }
-
   if (aDest.IsEmpty() || aFill.IsEmpty() ||
-      mSize.width <= 0 || mSize.height <= 0)
+      mSize.width <= 0 || mSize.height <= 0) {
     return;
+  }
 
   gfxPattern::GraphicsFilter graphicsFilter =
     nsLayoutUtils::GetGraphicsFilterForFrame(mForFrame);
@@ -4631,30 +4625,23 @@ nsImageRenderer::Draw(nsPresContext*       aPresContext,
   switch (mType) {
     case eStyleImageType_Image:
     {
-      uint32_t drawFlags = imgIContainer::FLAG_NONE;
-      if (mFlags & FLAG_SYNC_DECODE_IMAGES) {
-        drawFlags |= imgIContainer::FLAG_SYNC_DECODE;
-      }
-      if (mFlags & FLAG_PAINTING_TO_WINDOW) {
-        drawFlags |= imgIContainer::FLAG_HIGH_QUALITY_SCALING;
-      }
-
-      nsLayoutUtils::DrawBackgroundImage(&aRenderingContext, mImageContainer,
-          nsIntSize(nsPresContext::AppUnitsToIntCSSPixels(mSize.width),
-                    nsPresContext::AppUnitsToIntCSSPixels(mSize.height)),
-          graphicsFilter,
-          aDest, aFill, aAnchor, aDirty, drawFlags);
-      break;
+      nsLayoutUtils::DrawSingleImage(&aRenderingContext, mImageContainer,
+                                     graphicsFilter, aFill, aDirtyRect,
+                                     nullptr, aFlags);
+      return;
     }
     case eStyleImageType_Gradient:
+    {
       nsCSSRendering::PaintGradient(aPresContext, aRenderingContext,
-          mGradientData, aDirty, aDest, aFill);
-      break;
+                                    mGradientData, aDirtyRect, aDest, aFill);
+      return;
+    }
     case eStyleImageType_Element:
+    {
       if (mPaintServerFrame) {
         nsSVGIntegrationUtils::DrawPaintServer(
             &aRenderingContext, mForFrame, mPaintServerFrame, graphicsFilter,
-            aDest, aFill, aAnchor, aDirty, mSize);
+            aDest, aFill, aDest.TopLeft(), aDirtyRect, mSize);
       } else {
         NS_ASSERTION(mImageElementSurface.mSurface, "Surface should be ready.");
         nsRefPtr<gfxDrawable> surfaceDrawable =
@@ -4662,13 +4649,54 @@ nsImageRenderer::Draw(nsPresContext*       aPresContext,
                                  mImageElementSurface.mSize);
         nsLayoutUtils::DrawPixelSnapped(
             &aRenderingContext, surfaceDrawable, graphicsFilter,
-            aDest, aFill, aAnchor, aDirty);
+            aDest, aFill, aDest.TopLeft(), aDirtyRect);
       }
-      break;
+      return;
+    }
     case eStyleImageType_Null:
     default:
-      break;
+      return;
   }
+}
+
+void
+nsImageRenderer::DrawBackground(nsPresContext*       aPresContext,
+                                nsRenderingContext&  aRenderingContext,
+                                const nsRect&        aDest,
+                                const nsRect&        aFill,
+                                const nsPoint&       aAnchor,
+                                const nsRect&        aDirty)
+{
+  if (!mIsReady) {
+    NS_NOTREACHED("Ensure PrepareImage() has returned true before calling me");
+    return;
+  }
+  if (aDest.IsEmpty() || aFill.IsEmpty() ||
+      mSize.width <= 0 || mSize.height <= 0) {
+    return;
+  }
+
+  if (mType == eStyleImageType_Image) {
+    gfxPattern::GraphicsFilter graphicsFilter =
+      nsLayoutUtils::GetGraphicsFilterForFrame(mForFrame);
+
+    uint32_t drawFlags = imgIContainer::FLAG_NONE;
+    if (mFlags & FLAG_SYNC_DECODE_IMAGES) {
+      drawFlags |= imgIContainer::FLAG_SYNC_DECODE;
+    }
+    if (mFlags & FLAG_PAINTING_TO_WINDOW) {
+      drawFlags |= imgIContainer::FLAG_HIGH_QUALITY_SCALING;
+    }
+
+    nsLayoutUtils::DrawBackgroundImage(&aRenderingContext, mImageContainer,
+        nsIntSize(nsPresContext::AppUnitsToIntCSSPixels(mSize.width),
+                  nsPresContext::AppUnitsToIntCSSPixels(mSize.height)),
+        graphicsFilter,
+        aDest, aFill, aAnchor, aDirty, drawFlags);
+    return;
+  }
+
+  Draw(aPresContext, aRenderingContext, aDirty, aFill, aDest);
 }
 
 bool

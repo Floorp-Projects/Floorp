@@ -95,7 +95,7 @@ struct CSSSizeOrRatio
  * CSS gradient.
  *
  * @note Always call the member functions in the order of PrepareImage(),
- * SetSize(), and Draw().
+ * SetSize(), and Draw*().
  */
 class nsImageRenderer {
 public:
@@ -162,18 +162,31 @@ public:
 
   /**
    * Draws the image to the target rendering context.
-   * @see nsLayoutUtils::DrawImage() for other parameters
+   * @see nsLayoutUtils::DrawImage() for other parameters.
    */
   void Draw(nsPresContext*       aPresContext,
-            nsRenderingContext& aRenderingContext,
-            const nsRect&        aDest,
+            nsRenderingContext&  aRenderingContext,
+            const nsRect&        aDirtyRect,
             const nsRect&        aFill,
-            const nsPoint&       aAnchor,
-            const nsRect&        aDirty);
+            const nsRect&        aDest,
+            uint32_t             aFlags = imgIContainer::FLAG_NONE);
+  /**
+   * Draws the image to the target rendering context using background-specific
+   * arguments.
+   * @see nsLayoutUtils::DrawImage() for parameters.
+   */
+  void DrawBackground(nsPresContext*       aPresContext,
+                      nsRenderingContext&  aRenderingContext,
+                      const nsRect&        aDest,
+                      const nsRect&        aFill,
+                      const nsPoint&       aAnchor,
+                      const nsRect&        aDirty);
 
   bool IsRasterImage();
   bool IsAnimatedImage();
   already_AddRefed<ImageContainer> GetContainer(LayerManager* aManager);
+
+  bool IsReady() { return mIsReady; }
 
 private:
   nsIFrame*                 mForFrame;

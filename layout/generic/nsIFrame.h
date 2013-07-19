@@ -30,6 +30,7 @@
 #include "nsIContent.h"
 #include "nsAlgorithm.h"
 #include "mozilla/layout/FrameChildList.h"
+#include "mozilla/css/ImageLoader.h"
 #include "FramePropertyTable.h"
 #include "mozilla/TypedEnum.h"
 #include <algorithm>
@@ -1350,6 +1351,24 @@ public:
   virtual ContentOffsets GetContentOffsetsFromPointExternal(nsPoint aPoint,
                                                             uint32_t aFlags = 0)
   { return GetContentOffsetsFromPoint(aPoint, aFlags); }
+
+  /**
+   * Ensure that aImage gets notifed when the underlying image request loads
+   * or animates.
+   */
+  void AssociateImage(const nsStyleImage& aImage, nsPresContext* aPresContext)
+  {
+    if (aImage.GetType() != eStyleImageType_Image) {
+      return;
+    }
+
+    imgIRequest *req = aImage.GetImageData();
+    mozilla::css::ImageLoader* loader =
+      aPresContext->Document()->StyleImageLoader();
+
+    // If this fails there's not much we can do ...
+    loader->AssociateRequestToFrame(req, this);
+  }
 
   /**
    * This structure holds information about a cursor. mContainer represents a

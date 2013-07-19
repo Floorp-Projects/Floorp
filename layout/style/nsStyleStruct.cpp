@@ -1709,6 +1709,28 @@ nsStyleImage::IsComplete() const
   }
 }
 
+bool
+nsStyleImage::IsLoaded() const
+{
+  switch (mType) {
+    case eStyleImageType_Null:
+      return false;
+    case eStyleImageType_Gradient:
+    case eStyleImageType_Element:
+      return true;
+    case eStyleImageType_Image:
+    {
+      uint32_t status = imgIRequest::STATUS_ERROR;
+      return NS_SUCCEEDED(mImage->GetImageStatus(&status)) &&
+             !(status & imgIRequest::STATUS_ERROR) &&
+             (status & imgIRequest::STATUS_LOAD_COMPLETE);
+    }
+    default:
+      NS_NOTREACHED("unexpected image type");
+      return false;
+  }
+}
+
 static inline bool
 EqualRects(const nsStyleSides* aRect1, const nsStyleSides* aRect2)
 {
