@@ -11,8 +11,8 @@
 #include "nsISupportsPrimitives.h"
 #include "nsIComponentManager.h"
 
-NS_IMPL_THREADSAFE_ADDREF(nsPrintProgress)
-NS_IMPL_THREADSAFE_RELEASE(nsPrintProgress)
+NS_IMPL_ADDREF(nsPrintProgress)
+NS_IMPL_RELEASE(nsPrintProgress)
 
 NS_INTERFACE_MAP_BEGIN(nsPrintProgress)
    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIPrintStatusFeedback)
