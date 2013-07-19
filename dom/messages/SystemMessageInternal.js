@@ -48,6 +48,12 @@ function debug(aMsg) {
 }
 
 
+let defaultMessageConfigurator = {
+  get safeToSendBeforeRunningApp() {
+    return true;
+  }
+};
+
 const MSG_SENT_SUCCESS = 0;
 const MSG_SENT_FAILURE_PERM_DENIED = 1;
 const MSG_SENT_FAILURE_APP_NOT_RUNNING = 2;
@@ -71,6 +77,8 @@ function SystemMessageInternal() {
 
   this._cpuWakeLocks = {};
 
+  this._configurators = {};
+
   Services.obs.addObserver(this, "xpcom-shutdown", false);
   Services.obs.addObserver(this, "webapps-registry-start", false);
   Services.obs.addObserver(this, "webapps-registry-ready", false);
@@ -82,6 +90,22 @@ function SystemMessageInternal() {
 }
 
 SystemMessageInternal.prototype = {
+
+  _getMessageConfigurator: function _getMessageConfigurator(aType) {
+    debug("_getMessageConfigurator for type: " + aType);
+    if (this._configurators[aType] === undefined) {
+      let contractID = "@mozilla.org/dom/system-messages/configurator/" + aType + ";1";
+      if (contractID in Cc) {
+        debug(contractID + " is registered, creating an instance");
+        this._configurators[aType] =
+          Cc[contractID].createInstance(Ci.nsISystemMessagesConfigurator);
+      } else {
+        debug(contractID + "is not registered, caching the answer");
+        this._configurators[aType] = null;
+      }
+    }
+    return this._configurators[aType] || defaultMessageConfigurator;
+  },
 
   _cancelCpuWakeLock: function _cancelCpuWakeLock(aPageKey) {
     let cpuWakeLock = this._cpuWakeLocks[aPageKey];
@@ -547,36 +571,42 @@ SystemMessageInternal.prototype = {
     let appPageIsRunning = false;
     let pageKey = this._createKeyForPage({ type: aType,
                                            manifest: aManifestURI,
-                                           uri: aPageURI })
+                                           uri: aPageURI });
 
-    let targets = this._listeners[aManifestURI];
-    if (targets) {
-      for (let index = 0; index < targets.length; ++index) {
-        let target = targets[index];
-        // We only need to send the system message to the targets (processes)
-        // which contain the window page that matches the manifest/page URL of
-        // the destination of system message.
-        if (target.winCounts[aPageURI] === undefined) {
-          continue;
+    // Tries to send the message to a previously opened app only if it's safe
+    // to do so. Generically, it's safe to send the message if the app isn't
+    // going to be reloaded. And it's not safe otherwise
+    if (this._getMessageConfigurator(aType).safeToSendBeforeRunningApp) {
+
+      let targets = this._listeners[aManifestURI];
+      if (targets) {
+        for (let index = 0; index < targets.length; ++index) {
+          let target = targets[index];
+          // We only need to send the system message to the targets (processes)
+          // which contain the window page that matches the manifest/page URL of
+          // the destination of system message.
+          if (target.winCounts[aPageURI] === undefined) {
+            continue;
+          }
+
+          appPageIsRunning = true;
+          // We need to acquire a CPU wake lock for that page and expect that
+          // we'll receive a "SystemMessageManager:HandleMessagesDone" message
+          // when the page finishes handling the system message. At that point,
+          // we'll release the lock we acquired.
+          this._acquireCpuWakeLock(pageKey);
+
+          // Multiple windows can share the same target (process), the content
+          // window needs to check if the manifest/page URL is matched. Only
+          // *one* window should handle the system message.
+          let manager = target.target;
+          manager.sendAsyncMessage("SystemMessageManager:Message",
+                                   { type: aType,
+                                     msg: aMessage,
+                                     manifest: aManifestURI,
+                                     uri: aPageURI,
+                                     msgID: aMessageID });
         }
-
-        appPageIsRunning = true;
-        // We need to acquire a CPU wake lock for that page and expect that
-        // we'll receive a "SystemMessageManager:HandleMessagesDone" message
-        // when the page finishes handling the system message. At that point,
-        // we'll release the lock we acquired.
-        this._acquireCpuWakeLock(pageKey);
-
-        // Multiple windows can share the same target (process), the content
-        // window needs to check if the manifest/page URL is matched. Only
-        // *one* window should handle the system message.
-        let manager = target.target;
-        manager.sendAsyncMessage("SystemMessageManager:Message",
-                                 { type: aType,
-                                   msg: aMessage,
-                                   manifest: aManifestURI,
-                                   uri: aPageURI,
-                                   msgID: aMessageID });
       }
     }
 

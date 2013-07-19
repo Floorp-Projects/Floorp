@@ -480,7 +480,7 @@ InternalPrompt.prototype = {
         prompt.inProgress = false;
         self._asyncPromptInProgress = false;
 
-        for each (let consumer in prompt.consumers) {
+        for (let consumer of prompt.consumers) {
           if (!consumer.callback)
             // Not having a callback means that consumer didn't provide it
             // or canceled the notification

@@ -126,6 +126,21 @@ ProgramProfileOGL::GetProfileFor(ShaderProgramType aType,
     AddCommonTextureArgs(result);
     result.mTextureCount = 1;
     break;
+  case RGBXRectLayerProgramType:
+    if (aMask == Mask3d) {
+      result.mVertexShaderString = sLayerMask3DVS;
+      result.mFragmentShaderString = sRGBXRectTextureLayerMask3DFS;
+    } else if (aMask == Mask2d) {
+      result.mVertexShaderString = sLayerMaskVS;
+      result.mFragmentShaderString = sRGBXRectTextureLayerMaskFS;
+    } else {
+      result.mVertexShaderString = sLayerVS;
+      result.mFragmentShaderString = sRGBXRectTextureLayerFS;
+    }
+    AddCommonArgs(result);
+    AddCommonTextureArgs(result);
+    result.mTextureCount = 1;
+    break;
   case BGRARectLayerProgramType:
     MOZ_ASSERT(aMask == MaskNone, "BGRARectLayerProgramType can't handle masks.");
     result.mVertexShaderString = sLayerVS;

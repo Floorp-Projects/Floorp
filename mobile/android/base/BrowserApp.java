@@ -113,7 +113,6 @@ abstract public class BrowserApp extends GeckoApp
     }
 
     private Vector<MenuItemInfo> mAddonMenuItemsCache;
-    private ButtonToast mToast;
     private PropertyAnimator mMainLayoutAnimator;
 
     private static final Interpolator sTabsInterpolator = new Interpolator() {
@@ -394,15 +393,6 @@ abstract public class BrowserApp extends GeckoApp
         super.onCreate(savedInstanceState);
 
         mBrowserToolbar = (BrowserToolbar) findViewById(R.id.browser_toolbar);
-
-        mToast = new ButtonToast(findViewById(R.id.toast), new ButtonToast.ToastListener() {
-            @Override
-            public void onButtonClicked(CharSequence token) {
-                if (ADD_SHORTCUT_TOAST.equals(token)) {
-                    showBookmarkDialog();
-                }
-            }
-        });
 
         ((GeckoApp.MainLayout) mMainLayout).setTouchEventInterceptor(new HideTabsTouchListener());
         ((GeckoApp.MainLayout) mMainLayout).setMotionEventInterceptor(new MotionEventInterceptor() {
@@ -1449,31 +1439,17 @@ abstract public class BrowserApp extends GeckoApp
         });
 
         if (info.icon != null) {
-            if (info.icon.startsWith("data")) {
-                BitmapDrawable drawable = new BitmapDrawable(BitmapUtils.getBitmapFromDataURI(info.icon));
-                item.setIcon(drawable);
-            }
-            else if (info.icon.startsWith("jar:") || info.icon.startsWith("file://")) {
-                ThreadUtils.postToBackgroundThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            URL url = new URL(info.icon);
-                            InputStream is = (InputStream) url.getContent();
-                            try {
-                                Drawable drawable = Drawable.createFromStream(is, "src");
-                                item.setIcon(drawable);
-                            } finally {
-                                is.close();
-                            }
-                        } catch (Exception e) {
-                            Log.w(LOGTAG, "Unable to set icon", e);
-                        }
+            BitmapUtils.getDrawable(this, info.icon, new BitmapUtils.BitmapLoader() {
+                @Override
+                public void onBitmapFound(Drawable d) {
+                    if (d == null) {
+                        item.setIcon(R.drawable.ic_menu_addons_filler);
+                        return;
                     }
-                });
-            } else {
-                item.setIcon(R.drawable.ic_menu_addons_filler);
-            }
+
+                    item.setIcon(d);
+                }
+            });
         } else {
             item.setIcon(R.drawable.ic_menu_addons_filler);
         }
@@ -1699,10 +1675,18 @@ abstract public class BrowserApp extends GeckoApp
                     } else {
                         tab.addBookmark();
                         mToast.show(false,
-                                    getResources().getString(R.string.bookmark_added),
-                                    getResources().getString(R.string.bookmark_options),
-                                    0,
-                                    ADD_SHORTCUT_TOAST);
+                            getResources().getString(R.string.bookmark_added),
+                            getResources().getString(R.string.bookmark_options),
+                            null,
+                            new ButtonToast.ToastListener() {
+                                @Override
+                                public void onButtonClicked() {
+                                    showBookmarkDialog();
+                                }
+
+                                @Override
+                                public void onToastHidden(ButtonToast.ReasonHidden reason) { }
+                            });
                         item.setIcon(R.drawable.ic_menu_bookmark_remove);
                     }
                 }

@@ -11,9 +11,6 @@ const Cu = Components.utils;
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://webapprt/modules/WebappRT.jsm");
 
-const MANIFEST_URL_BASE = Services.io.newURI(
-  "http://mochi.test:8888/webapprtChrome/webapprt/test/chrome/", null, null);
-
 // When WebappsHandler opens an install confirmation dialog for apps we install,
 // close it, which will be seen as the equivalent of cancelling the install.
 // This doesn't prevent us from installing those apps, as we listen for the same
@@ -70,6 +67,6 @@ function becomeWebapp(manifestURL, parameters, onBecome) {
   Services.obs.addObserver(observeInstall, "webapps-ask-install", false);
 
   // Step 1: Install the app at the URL specified by the manifest.
-  let url = Services.io.newURI(manifestURL, null, MANIFEST_URL_BASE);
+  let url = Services.io.newURI(manifestURL, null, null);
   navigator.mozApps.install(url.spec, parameters);
 }

@@ -10,18 +10,16 @@
  * properly.
  */
 
-const PORT = 4444;
-
-var srv;
+var srv = createServer();
+srv.start(-1);
+const PORT = srv.identity.primaryPort;
 
 function run_test()
 {
-  srv = createServer();
   srv.registerPathHandler("/lots-of-leading-blank-lines",
                           lotsOfLeadingBlankLines);
   srv.registerPathHandler("/very-long-request-line",
                           veryLongRequestLine);
-  srv.start(PORT);
 
   runRawTests(tests, testComplete(srv));
 }
@@ -53,7 +51,7 @@ reallyLong = reallyLong + reallyLong + reallyLong + reallyLong; // 524288
 if (reallyLong.length !== 524288)
   throw new TypeError("generated length not as long as expected");
 str = "GET /very-long-request-line?" + reallyLong + " HTTP/1.1\r\n" +
-      "Host: localhost:4444\r\n" +
+      "Host: localhost:" + PORT + "\r\n" +
       "\r\n";
 data = [];
 for (var i = 0; i < str.length; i += 16384)
@@ -80,7 +78,7 @@ function checkVeryLongRequestLine(data)
      "Version: 1.1",
      "Scheme:  http",
      "Host:    localhost",
-     "Port:    4444",
+     "Port:    " + PORT,
     ];
 
   expectLines(iter, body);
@@ -100,7 +98,7 @@ for (var i = 0; i < 14; i++)
   blankLines += blankLines;
 str = blankLines +
       "GET /lots-of-leading-blank-lines HTTP/1.1\r\n" +
-      "Host: localhost:4444\r\n" +
+      "Host: localhost:" + PORT + "\r\n" +
       "\r\n";
 data = [];
 for (var i = 0; i < str.length; i += 100)
@@ -127,7 +125,7 @@ function checkLotsOfLeadingBlankLines(data)
      "Version: 1.1",
      "Scheme:  http",
      "Host:    localhost",
-     "Port:    4444",
+     "Port:    " + PORT,
     ];
 
   expectLines(iter, body);

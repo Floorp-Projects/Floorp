@@ -2,9 +2,9 @@
 
 "use strict";
 
-load('utility.js');
-load('annotations.js');
-load('suppressedPoints.js');
+loadRelativeToScript('utility.js');
+loadRelativeToScript('annotations.js');
+loadRelativeToScript('suppressedPoints.js');
 
 var subclasses = {};
 var superclasses = {};

@@ -2299,7 +2299,7 @@ LIRGenerator::visitGetPropertyPolymorphic(MGetPropertyPolymorphic *ins)
 
     if (ins->type() == MIRType_Value) {
         LGetPropertyPolymorphicV *lir = new LGetPropertyPolymorphicV(useRegister(ins->obj()));
-        return assignSnapshot(lir) && defineBox(lir, ins);
+        return assignSnapshot(lir, Bailout_CachedShapeGuard) && defineBox(lir, ins);
     }
 
     LDefinition maybeTemp = (ins->type() == MIRType_Double) ? temp() : LDefinition::BogusTemp();
@@ -2322,7 +2322,7 @@ LIRGenerator::visitSetPropertyPolymorphic(MSetPropertyPolymorphic *ins)
     LAllocation value = useRegisterOrConstant(ins->value());
     LSetPropertyPolymorphicT *lir =
         new LSetPropertyPolymorphicT(useRegister(ins->obj()), value, ins->value()->type(), temp());
-    return assignSnapshot(lir) && add(lir, ins);
+    return assignSnapshot(lir, Bailout_CachedShapeGuard) && add(lir, ins);
 }
 
 bool
@@ -2454,7 +2454,7 @@ LIRGenerator::visitSetElementCache(MSetElementCache *ins)
 
     LInstruction *lir;
     if (ins->value()->type() == MIRType_Value) {
-        lir = new LSetElementCacheV(useRegister(ins->object()), temp());
+        lir = new LSetElementCacheV(useRegister(ins->object()), temp(), temp());
 
         if (!useBox(lir, LSetElementCacheV::Index, ins->index()))
             return false;
@@ -2464,7 +2464,7 @@ LIRGenerator::visitSetElementCache(MSetElementCache *ins)
         lir = new LSetElementCacheT(
             useRegister(ins->object()),
             useRegisterOrConstant(ins->value()),
-            temp());
+            temp(), temp());
 
         if (!useBox(lir, LSetElementCacheT::Index, ins->index()))
             return false;

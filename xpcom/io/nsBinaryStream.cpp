@@ -20,7 +20,6 @@
 #include <string.h>
 #include "nsBinaryStream.h"
 #include "nsCRT.h"
-#include "prlong.h"
 #include "nsString.h"
 #include "nsISerializable.h"
 #include "nsIClassInfo.h"

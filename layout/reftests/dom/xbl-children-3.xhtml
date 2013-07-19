@@ -32,8 +32,8 @@
 <body>
   <!-- Control case: our (only) child matches the children element. -->
   <div id="first" style="-moz-binding: url(#derived)"><span style="color: green">should be green in a green border</span></div>
-  <!-- Make sure we ignore xul:template and xul:observer elements! -->
-  <div style="-moz-binding: url(#derived)"><xul:template /><xul:observer /><span style="color: green">should be green in a green border</span></div>
+  <!-- Make sure we ignore xul:template and xul:observes elements! -->
+  <div style="-moz-binding: url(#derived)"><xul:template /><xul:observes /><span style="color: green">should be green in a green border</span></div>
   <!-- Case where our (only) child doesn't match any children elements. -->
   <div id="second" style="-moz-binding: url(#derived)"><div>Should be uncolored with no border</div></div>
   <!-- But make sure the binding was still applied! -->
@@ -55,7 +55,7 @@
   <div style="-moz-binding: url(#nochildren)" />
   <!-- Case where we have a child but no <children> in the binding. -->
   <div style="-moz-binding: url(#nochildren)"><span style="color: green">PASS</span></div>
-  <!-- But we must ignore xul:template and xul:observer elements! -->
-  <div style="-moz-binding: url(#nochildren)"><xul:template /><xul:observer /></div>
+  <!-- But we must ignore xul:template and xul:observes elements! -->
+  <div style="-moz-binding: url(#nochildren)"><xul:template /><xul:observes /></div>
 </body>
 </html>

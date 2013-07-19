@@ -33,39 +33,16 @@ js::AutoCompartment::AutoCompartment(JSContext *cx, JSObject *target)
     cx_->enterCompartment(target->compartment());
 }
 
+js::AutoCompartment::AutoCompartment(ExclusiveContext *cx, JSCompartment *target)
+  : cx_(cx->asJSContext()),
+    origin_(cx_->compartment())
+{
+    cx_->enterCompartment(target);
+}
+
 js::AutoCompartment::~AutoCompartment()
 {
     cx_->leaveCompartment(origin_);
 }
-
-namespace js {
-
-/*
- * Entering the atoms compartment is not possible with AutoCompartment
- * since the atoms compartment does not have a global.
- *
- * Note: since most of the VM assumes that cx->global is non-null, only a
- * restricted set of (atom creating/destroying) operations may be used from
- * inside the atoms compartment.
- */
-class AutoEnterAtomsCompartment
-{
-    ExclusiveContext *cx;
-    JSCompartment *oldCompartment;
-  public:
-    AutoEnterAtomsCompartment(ExclusiveContext *cx)
-      : cx(cx),
-        oldCompartment(cx->compartment_)
-    {
-        cx->privateSetCompartment(cx->runtime_->atomsCompartment);
-    }
-
-    ~AutoEnterAtomsCompartment()
-    {
-        cx->privateSetCompartment(oldCompartment);
-    }
-};
-
-} /* namespace js */
 
 #endif /* jscompartmentinlines_h */
