@@ -24,19 +24,7 @@ WebappsHandler.init();
 
 // On firstrun, set permissions to their default values.
 if (!Services.prefs.getBoolPref("webapprt.firstrun")) {
-  Cu.import("resource://webapprt/modules/WebappRT.jsm");
-  let uri = Services.io.newURI(WebappRT.config.app.origin, null, null);
-
-  // Set AppCache-related permissions.
-  Services.perms.add(uri, "pin-app",
-                     Ci.nsIPermissionManager.ALLOW_ACTION);
-  Services.perms.add(uri, "offline-app",
-                     Ci.nsIPermissionManager.ALLOW_ACTION);
-
-  Services.perms.add(uri, "indexedDB",
-                     Ci.nsIPermissionManager.ALLOW_ACTION);
-  Services.perms.add(uri, "indexedDB-unlimited",
-                     Ci.nsIPermissionManager.ALLOW_ACTION);
+  // Once we support packaged apps, set their permissions here on firstrun.
 
   // Now that we've set the appropriate permissions, twiddle the firstrun
   // flag so we don't try to do so again.

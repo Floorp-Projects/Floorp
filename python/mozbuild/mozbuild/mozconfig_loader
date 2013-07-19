@@ -11,7 +11,7 @@ set -e
 
 ac_add_options() {
   local opt
-  for opt in $*; do
+  for opt; do
     echo "------BEGIN_AC_OPTION"
     echo $opt
     echo "------END_AC_OPTION"
@@ -19,7 +19,7 @@ ac_add_options() {
 }
 
 ac_add_app_options() {
-  local app opt
+  local app
   app=$1
   shift
   echo "------BEGIN_AC_APP_OPTION"
@@ -30,7 +30,7 @@ ac_add_app_options() {
 
 mk_add_options() {
   local opt
-  for opt in $*; do
+  for opt; do
     echo "------BEGIN_MK_OPTION"
     echo $opt
     echo "------END_MK_OPTION"

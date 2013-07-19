@@ -10,6 +10,10 @@
 
 var srv, dir, dirEntries;
 
+XPCOMUtils.defineLazyGetter(this, 'BASE_URL', function() {
+  return "http://localhost:" + srv.identity.primaryPort + "/";
+});
+
 function run_test()
 {
   createTestDirectory();
@@ -20,7 +24,7 @@ function run_test()
   var nameDir = do_get_file("data/name-scheme/");
   srv.registerDirectory("/bar/", nameDir);
 
-  srv.start(4444);
+  srv.start(-1);
 
   function done()
   {
@@ -255,38 +259,32 @@ function makeFile(name, isDirectory, parentDir, lst)
  * TESTS *
  *********/
 
-var tests = [];
-var test;
+XPCOMUtils.defineLazyGetter(this, "tests", function() {
+  return [
+    new Test(BASE_URL, null, start, stopRootDirectory),
+    new Test(BASE_URL + "foo/", null, start, stopFooDirectory),
+    new Test(BASE_URL + "bar/folder^/", null, start, stopTrailingCaretDirectory),
+  ];
+});
 
 // check top-level directory listing
-test = new Test("http://localhost:4444/",
-                null, start, stopRootDirectory),
-tests.push(test);
 function start(ch)
 {
   do_check_eq(ch.getResponseHeader("Content-Type"), "text/html;charset=utf-8");
 }
 function stopRootDirectory(ch, cx, status, data)
 {
-  dataCheck(data, "http://localhost:4444/", "/", dirEntries[0]);
+  dataCheck(data, BASE_URL, "/", dirEntries[0]);
 }
-
 
 // check non-top-level, too
-test = new Test("http://localhost:4444/foo/",
-                null, start, stopFooDirectory),
-tests.push(test);
 function stopFooDirectory(ch, cx, status, data)
 {
-  dataCheck(data, "http://localhost:4444/foo/", "/foo/", dirEntries[1]);
+  dataCheck(data, BASE_URL + "foo/", "/foo/", dirEntries[1]);
 }
 
-
 // trailing-caret leaf with hidden files
-test = new Test("http://localhost:4444/bar/folder^/",
-                null, start, stopTrailingCaretDirectory),
-tests.push(test);
 function stopTrailingCaretDirectory(ch, cx, status, data)
 {
-  hiddenDataCheck(data, "http://localhost:4444/bar/folder^/", "/bar/folder^/");
+  hiddenDataCheck(data, BASE_URL + "bar/folder^/", "/bar/folder^/");
 }

@@ -654,6 +654,20 @@ nsCoreUtils::ScrollTo(nsIPresShell* aPresShell, nsIContent* aContent,
                                     nsIPresShell::SCROLL_OVERFLOW_HIDDEN);
 }
 
+bool
+nsCoreUtils::IsWhitespaceString(const nsSubstring& aString)
+{
+  nsSubstring::const_char_iterator iterBegin, iterEnd;
+
+  aString.BeginReading(iterBegin);
+  aString.EndReading(iterEnd);
+
+  while (iterBegin != iterEnd && IsWhitespace(*iterBegin))
+    ++iterBegin;
+
+  return iterBegin == iterEnd;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsAccessibleDOMStringList

@@ -77,6 +77,7 @@
     <dimen name="validation_message_margin_top">6dp</dimen>
     <dimen name="forward_default_offset">-13dip</dimen>
     <dimen name="addressbar_offset_left">32dp</dimen>
+    <dimen name="toast_button_padding">8dp</dimen>
 
     <!-- PageActionButtons dimensions -->
     <dimen name="page_action_button_width">32dp</dimen>

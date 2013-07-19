@@ -23,6 +23,10 @@ addLoadEvent(function() {
   }
 
   expectException(function() {
+    ctx.createMediaStreamDestination();
+  }, DOMException.NOT_SUPPORTED_ERR);
+
+  expectException(function() {
     new OfflineAudioContext(2, 100, 0);
   }, DOMException.NOT_SUPPORTED_ERR);
   expectException(function() {

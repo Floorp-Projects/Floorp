@@ -37,6 +37,39 @@
       ok(data.b === false, "boolean property");
       ok(data.s === "bye", "string property");
       ok(data.x === null, "nested property");
+
+      let throwing = message.objects.throwing;
+      // Based on the table on:
+      // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy
+      let tests = [
+        () => Object.getOwnPropertyDescriptor(throwing, 'test'),
+        () => Object.getOwnPropertyNames(throwing),
+        () => Object.defineProperty(throwing, 'test', {value: 1}),
+        () => delete throwing.test,
+        () => "test" in throwing,
+        () => Object.prototype.hasOwnProperty.call(throwing, 'test'),
+        () => throwing.test,
+        () => { throwing.test = 1 },
+        // () => { for (let prop in throwing) {} }, Bug 783829
+        () => { for (let prop of throwing) {} },
+        () => Object.keys(throwing),
+        () => Function.prototype.call.call(throwing),
+        () => new throwing,
+        () => Object.preventExtensions(throwing),
+        () => Object.freeze(throwing),
+        () => Object.seal(throwing),
+      ]
+
+      for (let test of tests) {
+        let threw = false;
+        try {
+          test()
+        } catch (e) {
+          threw = true;
+        }
+        ok(threw, "proxy operation threw exception");
+      }
+
     }
 
     function recvAsyncMessage(message) {
@@ -57,7 +90,7 @@
         run_tests("inprocess");
         return;
       }
-        
+
       finish();
     }
 

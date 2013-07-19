@@ -296,7 +296,7 @@ static const PhaseInfo phases[] = {
     { PHASE_SWEEP_TABLES, "Sweep Tables", PHASE_SWEEP_COMPARTMENTS },
     { PHASE_SWEEP_TABLES_WRAPPER, "Sweep Cross Compartment Wrappers", PHASE_SWEEP_TABLES },
     { PHASE_SWEEP_TABLES_BASE_SHAPE, "Sweep Base Shapes", PHASE_SWEEP_TABLES },
-    { PHASE_SWEEP_TABLES_INITIAL_SHAPE, "Sweep Intital Shapes", PHASE_SWEEP_TABLES },
+    { PHASE_SWEEP_TABLES_INITIAL_SHAPE, "Sweep Initial Shapes", PHASE_SWEEP_TABLES },
     { PHASE_SWEEP_TABLES_TYPE_OBJECT, "Sweep Type Objects", PHASE_SWEEP_TABLES },
     { PHASE_SWEEP_TABLES_BREAKPOINT, "Sweep Breakpoints", PHASE_SWEEP_TABLES },
     { PHASE_SWEEP_TABLES_REGEXP, "Sweep Regexps", PHASE_SWEEP_TABLES },
@@ -361,6 +361,10 @@ Statistics::formatData(StatisticsSerializer &ss, uint64_t timestamp)
     ss.beginObject(NULL);
     if (ss.isJSON())
         ss.appendNumber("Timestamp", "%llu", "", (unsigned long long)timestamp);
+    if (slices.length() > 1 || ss.isJSON())
+        ss.appendDecimal("Max Pause", "ms", t(longest));
+    else
+        ss.appendString("Reason", ExplainReason(slices[0].reason));
     ss.appendDecimal("Total Time", "ms", t(total));
     ss.appendNumber("Compartments Collected", "%d", "", collectedCount);
     ss.appendNumber("Total Compartments", "%d", "", compartmentCount);
@@ -369,10 +373,6 @@ Statistics::formatData(StatisticsSerializer &ss, uint64_t timestamp)
     ss.appendNumber("MMU (50ms)", "%d", "%", int(mmu50 * 100));
     ss.appendDecimal("SCC Sweep Total", "ms", t(sccTotal));
     ss.appendDecimal("SCC Sweep Max Pause", "ms", t(sccLongest));
-    if (slices.length() > 1 || ss.isJSON())
-        ss.appendDecimal("Max Pause", "ms", t(longest));
-    else
-        ss.appendString("Reason", ExplainReason(slices[0].reason));
     if (nonincrementalReason || ss.isJSON()) {
         ss.appendString("Nonincremental Reason",
                         nonincrementalReason ? nonincrementalReason : "none");

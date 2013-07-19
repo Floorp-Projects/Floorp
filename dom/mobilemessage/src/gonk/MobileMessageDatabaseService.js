@@ -172,59 +172,67 @@ MobileMessageDatabaseService.prototype = {
       let db = event.target.result;
 
       let currentVersion = event.oldVersion;
-      while (currentVersion != event.newVersion) {
+
+      function update(currentVersion) {
+        let next = update.bind(self, currentVersion + 1);
+
         switch (currentVersion) {
           case 0:
             if (DEBUG) debug("New database");
-            self.createSchema(db);
+            self.createSchema(db, next);
             break;
           case 1:
             if (DEBUG) debug("Upgrade to version 2. Including `read` index");
-            self.upgradeSchema(event.target.transaction);
+            self.upgradeSchema(event.target.transaction, next);
             break;
           case 2:
             if (DEBUG) debug("Upgrade to version 3. Fix existing entries.");
-            self.upgradeSchema2(event.target.transaction);
+            self.upgradeSchema2(event.target.transaction, next);
             break;
           case 3:
             if (DEBUG) debug("Upgrade to version 4. Add quick threads view.");
-            self.upgradeSchema3(db, event.target.transaction);
+            self.upgradeSchema3(db, event.target.transaction, next);
             break;
           case 4:
             if (DEBUG) debug("Upgrade to version 5. Populate quick threads view.");
-            self.upgradeSchema4(event.target.transaction);
+            self.upgradeSchema4(event.target.transaction, next);
             break;
           case 5:
             if (DEBUG) debug("Upgrade to version 6. Use PhonenumberJS.");
-            self.upgradeSchema5(event.target.transaction);
+            self.upgradeSchema5(event.target.transaction, next);
             break;
           case 6:
             if (DEBUG) debug("Upgrade to version 7. Use multiple entry indexes.");
-            self.upgradeSchema6(event.target.transaction);
+            self.upgradeSchema6(event.target.transaction, next);
             break;
           case 7:
             if (DEBUG) debug("Upgrade to version 8. Add participant/thread stores.");
-            self.upgradeSchema7(db, event.target.transaction);
+            self.upgradeSchema7(db, event.target.transaction, next);
             break;
           case 8:
             if (DEBUG) debug("Upgrade to version 9. Add transactionId index for incoming MMS.");
-            self.upgradeSchema8(event.target.transaction);
+            self.upgradeSchema8(event.target.transaction, next);
             break;
           case 9:
             if (DEBUG) debug("Upgrade to version 10. Upgrade type if it's not existing.");
-            self.upgradeSchema9(event.target.transaction);
+            self.upgradeSchema9(event.target.transaction, next);
             break;
           case 10:
             if (DEBUG) debug("Upgrade to version 11. Add last message type into threadRecord.");
-            self.upgradeSchema10(event.target.transaction);
+            self.upgradeSchema10(event.target.transaction, next);
             break;
+	  case 11:
+	    // This will need to be moved for each new version
+	    if (DEBUG) debug("Upgrade finished.");
+	    break;
           default:
             event.target.transaction.abort();
             callback("Old database version: " + event.oldVersion, null);
             break;
         }
-        currentVersion++;
       }
+
+      update(currentVersion);
     };
     request.onerror = function (event) {
       //TODO look at event.target.Code and change error constant accordingly
@@ -363,26 +371,29 @@ MobileMessageDatabaseService.prototype = {
    * TODO need to worry about number normalization somewhere...
    * TODO full text search on body???
    */
-  createSchema: function createSchema(db) {
+  createSchema: function createSchema(db, next) {
     // This messageStore holds the main mobile message data.
     let messageStore = db.createObjectStore(MESSAGE_STORE_NAME, { keyPath: "id" });
     messageStore.createIndex("timestamp", "timestamp", { unique: false });
     if (DEBUG) debug("Created object stores and indexes");
+    next();
   },
 
   /**
    * Upgrade to the corresponding database schema version.
    */
-  upgradeSchema: function upgradeSchema(transaction) {
+  upgradeSchema: function upgradeSchema(transaction, next) {
     let messageStore = transaction.objectStore(MESSAGE_STORE_NAME);
     messageStore.createIndex("read", "read", { unique: false });
+    next();
   },
 
-  upgradeSchema2: function upgradeSchema2(transaction) {
+  upgradeSchema2: function upgradeSchema2(transaction, next) {
     let messageStore = transaction.objectStore(MESSAGE_STORE_NAME);
     messageStore.openCursor().onsuccess = function(event) {
       let cursor = event.target.result;
       if (!cursor) {
+        next();
         return;
       }
 
@@ -394,7 +405,7 @@ MobileMessageDatabaseService.prototype = {
     };
   },
 
-  upgradeSchema3: function upgradeSchema3(db, transaction) {
+  upgradeSchema3: function upgradeSchema3(db, transaction, next) {
     // Delete redundant "id" index.
     let messageStore = transaction.objectStore(MESSAGE_STORE_NAME);
     if (messageStore.indexNames.contains("id")) {
@@ -415,9 +426,10 @@ MobileMessageDatabaseService.prototype = {
     let mostRecentStore = db.createObjectStore(MOST_RECENT_STORE_NAME,
                                                { keyPath: "senderOrReceiver" });
     mostRecentStore.createIndex("timestamp", "timestamp");
+    next();
   },
 
-  upgradeSchema4: function upgradeSchema4(transaction) {
+  upgradeSchema4: function upgradeSchema4(transaction, next) {
     let threads = {};
     let messageStore = transaction.objectStore(MESSAGE_STORE_NAME);
     let mostRecentStore = transaction.objectStore(MOST_RECENT_STORE_NAME);
@@ -428,6 +440,7 @@ MobileMessageDatabaseService.prototype = {
         for (let thread in threads) {
           mostRecentStore.put(threads[thread]);
         }
+        next();
         return;
       }
 
@@ -457,11 +470,12 @@ MobileMessageDatabaseService.prototype = {
     };
   },
 
-  upgradeSchema5: function upgradeSchema5(transaction) {
+  upgradeSchema5: function upgradeSchema5(transaction, next) {
     // Don't perform any upgrade. See Bug 819560.
+    next();
   },
 
-  upgradeSchema6: function upgradeSchema6(transaction) {
+  upgradeSchema6: function upgradeSchema6(transaction, next) {
     let messageStore = transaction.objectStore(MESSAGE_STORE_NAME);
 
     // Delete "delivery" index.
@@ -490,6 +504,7 @@ MobileMessageDatabaseService.prototype = {
     messageStore.openCursor().onsuccess = function(event) {
       let cursor = event.target.result;
       if (!cursor) {
+        next();
         return;
       }
 
@@ -522,7 +537,7 @@ MobileMessageDatabaseService.prototype = {
    * Fetching threads list is now simply walking through the thread sotre. The
    * "mostRecentStore" is dropped.
    */
-  upgradeSchema7: function upgradeSchema7(db, transaction) {
+  upgradeSchema7: function upgradeSchema7(db, transaction, next) {
     /**
      * This "participant" object store keeps mappings of multiple phone numbers
      * of the same recipient to an integer participant id. Each entry looks
@@ -576,6 +591,7 @@ MobileMessageDatabaseService.prototype = {
         // No longer need the "number" index in messageStore, use
         // "participantIds" index instead.
         messageStore.deleteIndex("number");
+        next();
         return;
       }
 
@@ -653,7 +669,7 @@ MobileMessageDatabaseService.prototype = {
   /**
    * Add transactionId index for MMS.
    */
-  upgradeSchema8: function upgradeSchema8(transaction) {
+  upgradeSchema8: function upgradeSchema8(transaction, next) {
     let messageStore = transaction.objectStore(MESSAGE_STORE_NAME);
 
     // Delete "transactionId" index.
@@ -668,6 +684,7 @@ MobileMessageDatabaseService.prototype = {
     messageStore.openCursor().onsuccess = function(event) {
       let cursor = event.target.result;
       if (!cursor) {
+        next();
         return;
       }
 
@@ -683,13 +700,14 @@ MobileMessageDatabaseService.prototype = {
     };
   },
 
-  upgradeSchema9: function upgradeSchema9(transaction) {
+  upgradeSchema9: function upgradeSchema9(transaction, next) {
     let messageStore = transaction.objectStore(MESSAGE_STORE_NAME);
 
     // Update type attributes.
     messageStore.openCursor().onsuccess = function(event) {
       let cursor = event.target.result;
       if (!cursor) {
+        next();
         return;
       }
 
@@ -702,13 +720,14 @@ MobileMessageDatabaseService.prototype = {
     };
   },
 
-  upgradeSchema10: function upgradeSchema10(transaction) {
+  upgradeSchema10: function upgradeSchema10(transaction, next) {
     let threadStore = transaction.objectStore(THREAD_STORE_NAME);
 
     // Add 'lastMessageType' to each thread record.
     threadStore.openCursor().onsuccess = function(event) {
       let cursor = event.target.result;
       if (!cursor) {
+        next();
         return;
       }
 
@@ -834,7 +853,7 @@ MobileMessageDatabaseService.prototype = {
     let normalizedAddress = PhoneNumberUtils.normalize(aAddress, false);
     let allPossibleAddresses = [normalizedAddress];
     let parsedAddress = PhoneNumberUtils.parse(normalizedAddress);
-    if (parsedAddress &&
+    if (parsedAddress && parsedAddress.internationalNumber &&
         allPossibleAddresses.indexOf(parsedAddress.internationalNumber) < 0) {
       // We only stores international numbers into participant store because
       // the parsed national number doesn't contain country info and may

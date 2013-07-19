@@ -258,7 +258,7 @@ child:
      */
     ActivateA11y();
 
-    AppInfo(nsCString version, nsCString buildID);
+    AppInfo(nsCString version, nsCString buildID, nsCString name, nsCString UAName);
 
     // Notify child that last-pb-context-exited notification was observed
     LastPrivateDocShellDestroyed();

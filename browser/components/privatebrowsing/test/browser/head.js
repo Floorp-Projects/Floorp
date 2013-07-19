@@ -31,6 +31,20 @@ function whenNewWindowLoaded(aOptions, aCallback) {
   return win;
 }
 
+function openWindow(aParent, aOptions, a3) {
+  let { Promise: { defer } } = Components.utils.import("resource://gre/modules/Promise.jsm", {});
+  let { promise, resolve } = defer();
+
+  let win = aParent.OpenBrowserWindow(aOptions);
+
+  win.addEventListener("load", function onLoad() {
+    win.removeEventListener("load", onLoad, false);
+    resolve(win);
+  }, false);
+
+  return promise;
+}
+
 function newDirectory() {
   let FileUtils =
     Cu.import("resource://gre/modules/FileUtils.jsm", {}).FileUtils;
@@ -62,4 +76,3 @@ function _initTest() {
 }
 
 _initTest();
-

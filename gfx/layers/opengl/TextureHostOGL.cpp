@@ -13,6 +13,9 @@
 #include "SharedSurface.h"
 #include "SharedSurfaceGL.h"
 #include "SharedSurfaceEGL.h"
+#ifdef XP_MACOSX
+#include "SharedSurfaceIO.h"
+#endif
 #include "mozilla/layers/CompositorOGL.h"
 
 using namespace mozilla::gl;
@@ -388,6 +391,7 @@ SurfaceStreamHostOGL::Lock()
       SharedSurface_GLTexture* glTexSurf = SharedSurface_GLTexture::Cast(sharedSurf);
       glTexSurf->SetConsumerGL(mGL);
       mTextureHandle = glTexSurf->Texture();
+      mTextureTarget = glTexSurf->TextureTarget();
       MOZ_ASSERT(mTextureHandle);
       mFormat = sharedSurf->HasAlpha() ? FORMAT_R8G8B8A8
                                        : FORMAT_R8G8B8X8;
@@ -398,6 +402,7 @@ SurfaceStreamHostOGL::Lock()
           SharedSurface_EGLImage::Cast(sharedSurf);
 
       mTextureHandle = eglImageSurf->AcquireConsumerTexture(mGL);
+      mTextureTarget = eglImageSurf->TextureTarget();
       if (!mTextureHandle) {
         toUpload = eglImageSurf->GetPixels();
         MOZ_ASSERT(toUpload);
@@ -407,6 +412,17 @@ SurfaceStreamHostOGL::Lock()
       }
       break;
     }
+#ifdef XP_MACOSX
+    case SharedSurfaceType::IOSurface: {
+      SharedSurface_IOSurface* glTexSurf = SharedSurface_IOSurface::Cast(sharedSurf);
+      mTextureHandle = glTexSurf->Texture();
+      mTextureTarget = glTexSurf->TextureTarget();
+      MOZ_ASSERT(mTextureHandle);
+      mFormat = sharedSurf->HasAlpha() ? FORMAT_R8G8B8A8
+                                       : FORMAT_R8G8B8X8;
+      break;
+    }
+#endif
     case SharedSurfaceType::Basic: {
       toUpload = SharedSurface_Basic::Cast(sharedSurf)->GetData();
       MOZ_ASSERT(toUpload);
@@ -426,14 +442,15 @@ SurfaceStreamHostOGL::Lock()
                                           mUploadTexture,
                                           true);
     mTextureHandle = mUploadTexture;
+    mTextureTarget = LOCAL_GL_TEXTURE_2D;
   }
 
   MOZ_ASSERT(mTextureHandle);
-  mGL->fBindTexture(LOCAL_GL_TEXTURE_2D, mTextureHandle);
-  mGL->fTexParameteri(LOCAL_GL_TEXTURE_2D,
+  mGL->fBindTexture(mTextureTarget, mTextureHandle);
+  mGL->fTexParameteri(mTextureTarget,
                       LOCAL_GL_TEXTURE_WRAP_S,
                       LOCAL_GL_CLAMP_TO_EDGE);
-  mGL->fTexParameteri(LOCAL_GL_TEXTURE_2D,
+  mGL->fTexParameteri(mTextureTarget,
                       LOCAL_GL_TEXTURE_WRAP_T,
                       LOCAL_GL_CLAMP_TO_EDGE);
   return true;

@@ -123,6 +123,15 @@ public:
     // Send OnChannelConnected notification to listeners.
     void DispatchOnChannelConnected(int32_t peer_pid);
 
+    // Unsound_IsClosed and Unsound_NumQueuedMessages are safe to call from any
+    // thread, but they make no guarantees about whether you'll get an
+    // up-to-date value; the values are written on one thread and read without
+    // locking, on potentially different threads.  Thus you should only use
+    // them when you don't particularly care about getting a recent value (e.g.
+    // in a memory report).
+    bool Unsound_IsClosed() const;
+    uint32_t Unsound_NumQueuedMessages() const;
+
     //
     // Each AsyncChannel is associated with either a ProcessLink or a
     // ThreadLink via the field mLink.  The type of link is determined
@@ -146,6 +155,9 @@ public:
         virtual void EchoMessage(Message *msg) = 0;
         virtual void SendMessage(Message *msg) = 0;
         virtual void SendClose() = 0;
+
+        virtual bool Unsound_IsClosed() const = 0;
+        virtual uint32_t Unsound_NumQueuedMessages() const = 0;
     };
 
     class ProcessLink : public Link, public Transport::Listener {
@@ -181,6 +193,9 @@ public:
         virtual void EchoMessage(Message *msg) MOZ_OVERRIDE;
         virtual void SendMessage(Message *msg) MOZ_OVERRIDE;
         virtual void SendClose() MOZ_OVERRIDE;
+
+        virtual bool Unsound_IsClosed() const MOZ_OVERRIDE;
+        virtual uint32_t Unsound_NumQueuedMessages() const MOZ_OVERRIDE;
     };
     
     class ThreadLink : public Link {
@@ -194,6 +209,9 @@ public:
         virtual void EchoMessage(Message *msg) MOZ_OVERRIDE;
         virtual void SendMessage(Message *msg) MOZ_OVERRIDE;
         virtual void SendClose() MOZ_OVERRIDE;
+
+        virtual bool Unsound_IsClosed() const MOZ_OVERRIDE;
+        virtual uint32_t Unsound_NumQueuedMessages() const MOZ_OVERRIDE;
     };
 
 protected:

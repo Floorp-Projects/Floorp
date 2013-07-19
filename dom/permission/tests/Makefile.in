@@ -17,7 +17,6 @@ MOCHITEST_FILES = \
   test_idle.html \
   test_permissions.html \
   test_power.html \
-  test_settings.html \
   test_systemXHR.html \
   test_tcp-socket.html \
   test_webapps-manage.html \
