@@ -1465,6 +1465,8 @@ public:
         NS_ENSURE_STATE(mStream);
         MozillaRegisterDebugFILE(mStream);
 
+        fprintf(mStream, "# WantAllTraces=%s\n", mWantAllTraces ? "true" : "false");
+
         return NS_OK;
     }
     NS_IMETHOD NoteRefCountedObject(uint64_t aAddress, uint32_t refCount,
