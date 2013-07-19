@@ -647,19 +647,6 @@
           </hbox>
         </toolbaritem>
 
-        <toolbarbutton id="reload-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
-                       label="&reloadCmd.label;" removable="true"
-                       command="Browser:ReloadOrDuplicate"
-                       onclick="checkForMiddleClick(this, event);"
-                       tooltiptext="&reloadButton.tooltip;"
-                       nooverflow="true"/>
-
-        <toolbarbutton id="stop-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
-                       label="&stopCmd.label;" removable="true"
-                       command="Browser:Stop"
-                       tooltiptext="&stopButton.tooltip;"
-                       nooverflow="true"/>
-
         <toolbaritem id="search-container" title="&searchItem.title;"
                      align="center" class="chromeclass-toolbar-additional"
                      flex="100" persist="width" removable="true">
