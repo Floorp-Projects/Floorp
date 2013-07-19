@@ -9,14 +9,12 @@ EXPORTS.mozilla.dom.network += [
     'TCPSocketChild.h',
     'TCPSocketParent.h',
     'Types.h',
-    'Utils.h',
 ]
 
 CPP_SOURCES += [
     'Connection.cpp',
     'TCPSocketChild.cpp',
     'TCPSocketParent.cpp',
-    'Utils.cpp',
 ]
 
 if CONFIG['MOZ_B2G_RIL']:

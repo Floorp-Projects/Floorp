@@ -248,6 +248,7 @@ MOCHITEST_FILES_A = \
 		test_bug811701.xhtml \
 		test_bug820909.html \
 		test_bug704063.html \
+		test_bug894874.html \
 		$(NULL)
 
 MOCHITEST_FILES_B = \
@@ -638,6 +639,7 @@ MOCHITEST_FILES_C= \
 		test_bug890580.html \
 		test_declare_stylesheet_obsolete.html \
 		variable_style_sheet.sjs \
+		test_processing_instruction_update_stylesheet.xhtml \
 		$(NULL)
 
 # OOP tests don't work on Windows (bug 763081) or native-fennec

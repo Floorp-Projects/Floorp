@@ -9,25 +9,10 @@
 
 #include "mozilla/MemoryReporting.h"
 #include "nsIDOMNavigator.h"
-#include "nsIDOMNavigatorGeolocation.h"
-#include "nsIDOMNavigatorDeviceStorage.h"
-#include "nsIDOMNavigatorDesktopNotification.h"
-#include "nsIDOMClientInformation.h"
-#include "nsINavigatorBattery.h"
-#include "nsIDOMNavigatorSms.h"
-#include "nsIDOMNavigatorMobileMessage.h"
-#include "nsIDOMNavigatorNetwork.h"
-#ifdef MOZ_AUDIO_CHANNEL_MANAGER
-#include "nsINavigatorAudioChannelManager.h"
-#endif
-#ifdef MOZ_B2G_RIL
-#include "nsINavigatorMobileConnection.h"
-#include "nsINavigatorCellBroadcast.h"
-#include "nsINavigatorVoicemail.h"
-#include "nsINavigatorIccManager.h"
-#endif
+#include "nsIDOMSmsManager.h"
+#include "nsIDOMMobileMessageManager.h"
+#include "nsIMozNavigatorNetwork.h"
 #include "nsAutoPtr.h"
-#include "nsIDOMNavigatorTime.h"
 #include "nsWeakReference.h"
 #include "DeviceStorage.h"
 #include "nsWrapperCache.h"
@@ -49,22 +34,20 @@ class systemMessageCallback;
 #endif
 
 #ifdef MOZ_B2G_RIL
-#include "nsIDOMNavigatorTelephony.h"
 class nsIDOMTelephony;
-#endif
+class nsIDOMMozMobileConnection;
+class nsIDOMMozCellBroadcast;
+class nsIDOMMozVoicemail;
+class nsIDOMMozIccManager;
+#endif // MOZ_B2G_RIL
 
 #ifdef MOZ_B2G_BT
-#include "nsIDOMNavigatorBluetooth.h"
-#endif
+class nsIDOMBluetoothManager;
+#endif // MOZ_B2G_BT
 
 #include "nsIDOMNavigatorSystemMessages.h"
 
-#include "nsIDOMNavigatorCamera.h"
 #include "DOMCameraManager.h"
-
-#ifdef MOZ_GAMEPAD
-#include "nsINavigatorGamepads.h"
-#endif
 
 //*****************************************************************************
 // Navigator: Script "navigator" object
@@ -120,41 +103,7 @@ class AudioChannelManager;
 } // namespace system
 
 class Navigator : public nsIDOMNavigator
-                , public nsIDOMClientInformation
-                , public nsIDOMNavigatorDeviceStorage
-                , public nsIDOMNavigatorGeolocation
-                , public nsIDOMNavigatorDesktopNotification
-                , public nsINavigatorBattery
-                , public nsIDOMMozNavigatorSms
-                , public nsIDOMMozNavigatorMobileMessage
-#ifdef MOZ_MEDIA_NAVIGATOR
-                , public nsINavigatorUserMedia
-                , public nsIDOMNavigatorUserMedia
-#endif
-#ifdef MOZ_B2G_RIL
-                , public nsIDOMNavigatorTelephony
-#endif
-#ifdef MOZ_GAMEPAD
-                , public nsINavigatorGamepads
-#endif
-                , public nsIDOMMozNavigatorNetwork
-#ifdef MOZ_B2G_RIL
-                , public nsIMozNavigatorMobileConnection
-                , public nsIMozNavigatorCellBroadcast
-                , public nsIMozNavigatorVoicemail
-                , public nsIMozNavigatorIccManager
-#endif
-#ifdef MOZ_B2G_BT
-                , public nsIDOMNavigatorBluetooth
-#endif
-                , public nsIDOMNavigatorCamera
-                , public nsIDOMNavigatorSystemMessages
-#ifdef MOZ_TIME_MANAGER
-                , public nsIDOMMozNavigatorTime
-#endif
-#ifdef MOZ_AUDIO_CHANNEL_MANAGER
-                , public nsIMozNavigatorAudioChannelManager
-#endif
+                , public nsIMozNavigatorNetwork
                 , public nsWrapperCache
 {
 public:
@@ -165,42 +114,8 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(Navigator,
                                                          nsIDOMNavigator)
   NS_DECL_NSIDOMNAVIGATOR
-  NS_DECL_NSIDOMCLIENTINFORMATION
-  NS_DECL_NSIDOMNAVIGATORDEVICESTORAGE
-  NS_DECL_NSIDOMNAVIGATORGEOLOCATION
-  NS_DECL_NSIDOMNAVIGATORDESKTOPNOTIFICATION
-  NS_DECL_NSINAVIGATORBATTERY
-  NS_DECL_NSIDOMMOZNAVIGATORSMS
-  NS_DECL_NSIDOMMOZNAVIGATORMOBILEMESSAGE
-#ifdef MOZ_MEDIA_NAVIGATOR
-  NS_DECL_NSINAVIGATORUSERMEDIA
-  NS_DECL_NSIDOMNAVIGATORUSERMEDIA
-#endif
-#ifdef MOZ_B2G_RIL
-  NS_DECL_NSIDOMNAVIGATORTELEPHONY
-#endif
-#ifdef MOZ_GAMEPAD
-  NS_DECL_NSINAVIGATORGAMEPADS
-#endif
-  NS_DECL_NSIDOMMOZNAVIGATORNETWORK
-#ifdef MOZ_B2G_RIL
-  NS_DECL_NSIMOZNAVIGATORMOBILECONNECTION
-  NS_DECL_NSIMOZNAVIGATORCELLBROADCAST
-  NS_DECL_NSIMOZNAVIGATORVOICEMAIL
-  NS_DECL_NSIMOZNAVIGATORICCMANAGER
-#endif
+  NS_DECL_NSIMOZNAVIGATORNETWORK
 
-#ifdef MOZ_B2G_BT
-  NS_DECL_NSIDOMNAVIGATORBLUETOOTH
-#endif
-  NS_DECL_NSIDOMNAVIGATORSYSTEMMESSAGES
-#ifdef MOZ_TIME_MANAGER
-  NS_DECL_NSIDOMMOZNAVIGATORTIME
-#endif
-
-#ifdef MOZ_AUDIO_CHANNEL_MANAGER
-  NS_DECL_NSIMOZNAVIGATORAUDIOCHANNELMANAGER
-#endif
   static void Init();
 
   void Invalidate();
@@ -228,8 +143,6 @@ public:
   // Helper to initialize mMessagesManager.
   nsresult EnsureMessagesManager();
 
-  NS_DECL_NSIDOMNAVIGATORCAMERA
-
   // WebIDL API
   void GetAppName(nsString& aAppName)
   {
@@ -251,15 +164,9 @@ public:
   // The XPCOM GetLanguage is OK
   bool OnLine();
   void RegisterProtocolHandler(const nsAString& aScheme, const nsAString& aURL,
-                               const nsAString& aTitle, ErrorResult& rv)
-  {
-    rv = RegisterProtocolHandler(aScheme, aURL, aTitle);
-  }
+                               const nsAString& aTitle, ErrorResult& aRv);
   void RegisterContentHandler(const nsAString& aMIMEType, const nsAString& aURL,
-                              const nsAString& aTitle, ErrorResult& rv)
-  {
-    rv = RegisterContentHandler(aMIMEType, aURL, aTitle);
-  }
+                              const nsAString& aTitle, ErrorResult& aRv);
   nsMimeTypeArray* GetMimeTypes(ErrorResult& aRv);
   nsPluginArray* GetPlugins(ErrorResult& aRv);
   // The XPCOM GetDoNotTrack is ok
@@ -300,12 +207,7 @@ public:
                          ErrorResult& aRv);
   DesktopNotificationCenter* GetMozNotification(ErrorResult& aRv);
   bool MozIsLocallyAvailable(const nsAString& aURI, bool aWhenOffline,
-                             ErrorResult& aRv)
-  {
-    bool available = false;
-    aRv = MozIsLocallyAvailable(aURI, aWhenOffline, &available);
-    return available;
-  }
+                             ErrorResult& aRv);
   nsIDOMMozSmsManager* GetMozSms();
   nsIDOMMozMobileMessageManager* GetMozMobileMessage();
   nsIDOMMozConnection* GetMozConnection();
@@ -338,15 +240,8 @@ public:
                        MozDOMGetUserMediaSuccessCallback* aOnSuccess,
                        MozDOMGetUserMediaErrorCallback* aOnError,
                        ErrorResult& aRv);
-  void MozGetUserMedia(nsIMediaStreamOptions* aParams,
-                       nsIDOMGetUserMediaSuccessCallback* aOnSuccess,
-                       nsIDOMGetUserMediaErrorCallback* aOnError,
-                       ErrorResult& aRv);
   void MozGetUserMediaDevices(MozGetUserMediaDevicesSuccessCallback* aOnSuccess,
                               MozDOMGetUserMediaErrorCallback* aOnError,
-                              ErrorResult& aRv);
-  void MozGetUserMediaDevices(nsIGetUserMediaDevicesSuccessCallback* aOnSuccess,
-                              nsIDOMGetUserMediaErrorCallback* aOnError,
                               ErrorResult& aRv);
 #endif // MOZ_MEDIA_NAVIGATOR
   bool DoNewResolve(JSContext* aCx, JS::Handle<JSObject*> aObject,
@@ -401,15 +296,9 @@ public:
 private:
   bool CheckPermission(const char* type);
   static bool CheckPermission(nsPIDOMWindow* aWindow, const char* aType);
-  static bool HasMobileMessageSupport(nsPIDOMWindow* aWindow);
   // GetWindowFromGlobal returns the inner window for this global, if
   // any, else null.
   static already_AddRefed<nsPIDOMWindow> GetWindowFromGlobal(JSObject* aGlobal);
-
-  // Methods to common up the XPCOM and WebIDL implementations of
-  // Add/RemoveIdleObserver.
-  void AddIdleObserver(nsIIdleObserver& aIdleObserver);
-  void RemoveIdleObserver(nsIIdleObserver& aIdleObserver);
 
   nsRefPtr<nsMimeTypeArray> mMimeTypes;
   nsRefPtr<nsPluginArray> mPlugins;

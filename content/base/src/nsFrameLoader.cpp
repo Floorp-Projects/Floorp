@@ -294,6 +294,15 @@ nsFrameLoader::nsFrameLoader(Element* aOwner, bool aNetworkCreated)
   ResetPermissionManagerStatus();
 }
 
+nsFrameLoader::~nsFrameLoader()
+{
+  mNeedsAsyncDestroy = true;
+  if (mMessageManager) {
+    mMessageManager->Disconnect();
+  }
+  nsFrameLoader::Destroy();
+}
+
 nsFrameLoader*
 nsFrameLoader::Create(Element* aOwner, bool aNetworkCreated)
 {
@@ -2067,7 +2076,7 @@ nsFrameLoader::TryRemoteBrowser()
     rootChromeWin->GetBrowserDOMWindow(getter_AddRefs(browserDOMWin));
     mRemoteBrowser->SetBrowserDOMWindow(browserDOMWin);
 
-    mChildHost = mRemoteBrowser->Manager();
+    mContentParent = mRemoteBrowser->Manager();
   }
   return true;
 }

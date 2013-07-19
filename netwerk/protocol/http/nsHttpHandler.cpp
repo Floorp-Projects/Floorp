@@ -18,7 +18,7 @@
 #include "nsIDOMConnection.h"
 #include "nsIDOMWindow.h"
 #include "nsIDOMNavigator.h"
-#include "nsIDOMNavigatorNetwork.h"
+#include "nsIMozNavigatorNetwork.h"
 #include "nsINetworkProperties.h"
 #include "nsIHttpChannel.h"
 #include "nsIURL.h"
@@ -1906,7 +1906,7 @@ nsHttpHandler::TickleWifi(nsIInterfaceRequestor *cb)
 
     nsCOMPtr<nsIDOMNavigator> domNavigator;
     domWindow->GetNavigator(getter_AddRefs(domNavigator));
-    nsCOMPtr<nsIDOMMozNavigatorNetwork> networkNavigator =
+    nsCOMPtr<nsIMozNavigatorNetwork> networkNavigator =
         do_QueryInterface(domNavigator);
     if (!networkNavigator)
         return;

@@ -39,16 +39,6 @@ XPCOMUtils.defineLazyServiceGetter(this, 'gSystemMessenger',
                                    '@mozilla.org/system-message-internal;1',
                                    'nsISystemMessagesInternal');
 
-#ifdef MOZ_WIDGET_GONK
-XPCOMUtils.defineLazyServiceGetter(Services, 'audioManager',
-                                   '@mozilla.org/telephony/audiomanager;1',
-                                   'nsIAudioManager');
-#else
-Services.audioManager = {
-  'masterVolume': 0
-};
-#endif
-
 XPCOMUtils.defineLazyServiceGetter(Services, 'fm',
                                    '@mozilla.org/focus-manager;1',
                                    'nsIFocusManager');
@@ -344,9 +334,6 @@ var shell = {
       this.timer = null;
     }
 
-#ifndef MOZ_WIDGET_GONK
-    delete Services.audioManager;
-#endif
     UserAgentOverrides.uninit();
     IndexedDBPromptHelper.uninit();
   },

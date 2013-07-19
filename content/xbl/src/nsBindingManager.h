@@ -43,12 +43,10 @@ public:
   nsBindingManager(nsIDocument* aDocument);
   ~nsBindingManager();
 
-  nsXBLBinding* GetBinding(nsIContent* aContent);
   nsXBLBinding* GetBindingWithContent(nsIContent* aContent);
-  nsresult SetBinding(nsIContent* aContent, nsXBLBinding* aBinding);
 
-  nsIContent* GetInsertionParent(nsIContent* aContent);
-  nsresult SetInsertionParent(nsIContent* aContent, nsIContent* aResult);
+  void AddBoundContent(nsIContent* aContent);
+  void RemoveBoundContent(nsIContent* aContent);
 
   /**
    * Notify the binding manager that an element
@@ -85,6 +83,7 @@ public:
                                nsIPrincipal* aOriginPrincipal);
 
   nsresult AddToAttachedQueue(nsXBLBinding* aBinding);
+  void RemoveFromAttachedQueue(nsXBLBinding* aBinding);
   void ProcessAttachedQueue(uint32_t aSkipSize = 0);
 
   void ExecuteDetachedHandlers();
@@ -160,14 +159,8 @@ protected:
 
 // MEMBER VARIABLES
 protected: 
-  // A mapping from nsIContent* to the nsXBLBinding* that is
-  // installed on that element.
-  nsRefPtrHashtable<nsISupportsHashKey,nsXBLBinding> mBindingTable;
-
-  // A mapping from nsIContent* to nsIContent*.  The insertion parent
-  // is our one true parent in the transformed DOM.  This gives us a
-  // more-or-less O(1) way of obtaining our transformed parent.
-  PLDHashTable mInsertionParentTable;
+  // A set of nsIContent that currently have a binding installed.
+  nsTHashtable<nsRefPtrHashKey<nsIContent> > mBoundContentSet;
 
   // A mapping from nsIContent* to nsIXPWrappedJS* (an XPConnect
   // wrapper for JS objects).  For XBL bindings that implement XPIDL

@@ -4,6 +4,8 @@
 Cu.import("resource://services-common/storageservice.js");
 Cu.import("resource://testing-common/services-common/storageserver.js");
 
+const BASE_URI = "http://localhost:8080/2.0";
+
 function run_test() {
   initTestLogging("Trace");
 
@@ -25,11 +27,8 @@ function getEmptyServer(user=getRandomUser(), password="password") {
   });
 }
 
-function getClient(server, user=getRandomUser(), password="password") {
-  let identity = server.server.identity;
-  let url = identity.primaryScheme + "://" + identity.primaryHost + ":" +
-            identity.primaryPort + "/2.0/" + user;
-  let client = new StorageServiceClient(url);
+function getClient(user=getRandomUser(), password="password") {
+  let client = new StorageServiceClient(BASE_URI + "/" + user);
   client.addListener({
     onDispatch: function onDispatch(request) {
       let up = user + ":" + password;
@@ -42,7 +41,7 @@ function getClient(server, user=getRandomUser(), password="password") {
 
 function getServerAndClient(user=getRandomUser(), password="password") {
   let server = getEmptyServer(user, password);
-  let client = getClient(server, user, password);
+  let client = getClient(user, password);
 
   return [server, client, user, password];
 }
@@ -51,7 +50,7 @@ add_test(function test_auth_failure_listener() {
   _("Ensure the onAuthFailure listener is invoked.");
 
   let server = getEmptyServer();
-  let client = getClient(server, "324", "INVALID");
+  let client = getClient("324", "INVALID");
   client.addListener({
     onAuthFailure: function onAuthFailure(client, request) {
       _("onAuthFailure");
@@ -67,7 +66,7 @@ add_test(function test_duplicate_listeners() {
   _("Ensure that duplicate listeners aren't installed multiple times.");
 
   let server = getEmptyServer();
-  let client = getClient(server, "1234567", "BAD_PASSWORD");
+  let client = getClient("1234567", "BAD_PASSWORD");
 
   let invokeCount = 0;
   let listener = {
@@ -587,9 +586,8 @@ add_test(function test_set_bso_conditional() {
 add_test(function test_set_bso_argument_errors() {
   _("Ensure BSO set detects invalid arguments.");
 
-  let server = getEmptyServer();
   let bso = new BasicStorageObject();
-  let client = getClient(server);
+  let client = getClient();
 
   let threw = false;
   try {
@@ -627,7 +625,7 @@ add_test(function test_set_bso_argument_errors() {
     threw = false;
   }
 
-  server.stop(run_next_test);
+  run_next_test();
 });
 
 add_test(function test_set_bsos_simple() {
@@ -661,8 +659,7 @@ add_test(function test_set_bsos_simple() {
 add_test(function test_set_bsos_invalid_bso() {
   _("Ensure that adding an invalid BSO throws.");
 
-  let server = getEmptyServer();
-  let client = getClient(server);
+  let client = getClient();
   let request = client.setBSOs("testcoll");
 
   let threw = false;
@@ -687,7 +684,7 @@ add_test(function test_set_bsos_invalid_bso() {
     threw = false;
   }
 
-  server.stop(run_next_test);
+  run_next_test();
 });
 
 add_test(function test_set_bsos_newline() {

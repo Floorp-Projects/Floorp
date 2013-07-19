@@ -7,7 +7,6 @@
 
 #include <stdio.h>
 #include "xptcall.h"
-#include "prlong.h"
 #include "prinrval.h"
 #include "nsMemory.h"
 

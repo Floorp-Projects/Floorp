@@ -94,6 +94,8 @@ const RIL_IPC_MSG_NAMES = [
   "RIL:GetCallBarringOption",
   "RIL:SetCallWaitingOption",
   "RIL:GetCallWaitingOption",
+  "RIL:SetCallingLineIdRestriction",
+  "RIL:GetCallingLineIdRestriction",
   "RIL:CellBroadcastReceived",
   "RIL:CfStateChanged",
   "RIL:IccOpenChannel",
@@ -179,7 +181,6 @@ MobileConnectionInfo.prototype = {
   emergencyCallsOnly: false,
   roaming: false,
   network: null,
-  lastKnownMcc: null,
   cell: null,
   type: null,
   signalStrength: null,
@@ -359,6 +360,15 @@ DOMMMIResult.prototype = {
                      additionalInformation: 'r'}
 };
 
+function DOMCLIRStatus(option) {
+  this.n = option.n;
+  this.m = option.m;
+};
+DOMCLIRStatus.prototype = {
+  __exposedProps__ : {n: 'r',
+                      m: 'r'}
+};
+
 function DOMMMIError() {
 };
 DOMMMIError.prototype = {
@@ -379,7 +389,6 @@ DOMMMIError.prototype = {
 function RILContentHelper() {
   this.rilContext = {
     cardState:            RIL.GECKO_CARDSTATE_UNKNOWN,
-    retryCount:           0,
     networkSelectionMode: RIL.GECKO_NETWORK_SELECTION_UNKNOWN,
     iccInfo:              new IccInfo(),
     voiceConnectionInfo:  new MobileConnectionInfo(),
@@ -471,7 +480,6 @@ RILContentHelper.prototype = {
       return;
     }
     this.rilContext.cardState = rilContext.cardState;
-    this.rilContext.retryCount = rilContext.retryCount;
     this.rilContext.networkSelectionMode = rilContext.networkSelectionMode;
     this.updateInfo(rilContext.iccInfo, this.rilContext.iccInfo);
     this.updateConnectionInfo(rilContext.voice, this.rilContext.voiceConnectionInfo);
@@ -502,11 +510,6 @@ RILContentHelper.prototype = {
   get cardState() {
     let context = this.getRilContext();
     return context && context.cardState;
-  },
-
-  get retryCount() {
-    let context = this.getRilContext();
-    return context && context.retryCount;
   },
 
   get networkSelectionMode() {
@@ -1042,6 +1045,45 @@ RILContentHelper.prototype = {
     return request;
   },
 
+  getCallingLineIdRestriction: function getCallingLineIdRestriction(window) {
+    if (window == null) {
+      throw Components.Exception("Can't get window object",
+                                  Cr.NS_ERROR_UNEXPECTED);
+    }
+    let request = Services.DOMRequest.createRequest(window);
+    let requestId = this.getRequestId(request);
+
+    cpmm.sendAsyncMessage("RIL:GetCallingLineIdRestriction", {
+      clientId: 0,
+      data: {
+        requestId: requestId
+      }
+    });
+
+    return request;
+  },
+
+  setCallingLineIdRestriction:
+    function setCallingLineIdRestriction(window, clirMode) {
+
+    if (window == null) {
+      throw Components.Exception("Can't get window object",
+                                  Cr.NS_ERROR_UNEXPECTED);
+    }
+    let request = Services.DOMRequest.createRequest(window);
+    let requestId = this.getRequestId(request);
+
+    cpmm.sendAsyncMessage("RIL:SetCallingLineIdRestriction", {
+      clientId: 0,
+      data: {
+        requestId: requestId,
+        clirMode: clirMode
+      }
+    });
+
+    return request;
+  },
+
   _mobileConnectionListeners: null,
   _telephonyListeners: null,
   _cellBroadcastListeners: null,
@@ -1326,7 +1368,6 @@ RILContentHelper.prototype = {
     switch (msg.name) {
       case "RIL:CardStateChanged": {
         let data = msg.json.data;
-        this.rilContext.retryCount = data.retryCount;
         if (this.rilContext.cardState != data.cardState) {
           this.rilContext.cardState = data.cardState;
           this._deliverEvent("_iccListeners",
@@ -1483,6 +1524,12 @@ RILContentHelper.prototype = {
                             data.timeSeconds, data.serviceClass]);
         break;
       }
+      case "RIL:GetCallingLineIdRestriction":
+        this.handleGetCallingLineIdRestriction(msg.json);
+        break;
+      case "RIL:SetCallingLineIdRestriction":
+        this.handleSetCallingLineIdRestriction(msg.json);
+        break;
       case "RIL:CellBroadcastReceived": {
         let message = new CellBroadcastMessage(msg.json.data);
         this._deliverEvent("_cellBroadcastListeners",
@@ -1731,6 +1778,38 @@ RILContentHelper.prototype = {
   },
 
   handleSetCallWaitingOption: function handleSetCallWaitingOption(message) {
+    let requestId = message.requestId;
+    let request = this.takeRequest(requestId);
+    if (!request) {
+      return;
+    }
+
+    if (!message.success) {
+      Services.DOMRequest.fireError(request, message.errorMsg);
+      return;
+    }
+    Services.DOMRequest.fireSuccess(request, null);
+  },
+
+  handleGetCallingLineIdRestriction:
+    function handleGetCallingLineIdRestriction(message) {
+    let requestId = message.requestId;
+    let request = this.takeRequest(requestId);
+    if (!request) {
+      return;
+    }
+
+    if (!message.success) {
+      Services.DOMRequest.fireError(request, message.errorMsg);
+      return;
+    }
+
+    let status = new DOMCLIRStatus(message);
+    Services.DOMRequest.fireSuccess(request, status);
+  },
+
+  handleSetCallingLineIdRestriction:
+    function handleSetCallingLineIdRestriction(message) {
     let requestId = message.requestId;
     let request = this.takeRequest(requestId);
     if (!request) {

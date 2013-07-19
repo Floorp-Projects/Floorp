@@ -71,7 +71,8 @@ var Appbar = {
   },
 
   onDownloadButton: function() {
-    PanelUI.show("downloads-container");
+    // TODO: Bug 883962: Toggle the downloads infobar when the
+    // download button is clicked
     ContextUI.dismiss();
   },
 
@@ -161,6 +162,9 @@ var Appbar = {
   },
 
   showContextualActions: function(aVerbs, aNoun, aQty) {
+    // When the appbar is not visible, we want the icons to refresh right away
+    let immediate = !Elements.contextappbar.isShowing;
+
     if (aVerbs.length)
       Elements.contextappbar.show();
     else
@@ -192,6 +196,19 @@ var Appbar = {
         toHide.push(button);
       }
     }
+
+    if (immediate) {
+      toShow.forEach(function(element) {
+        element.removeAttribute("fade");
+        element.hidden = false;
+      });
+      toHide.forEach(function(element) {
+        element.setAttribute("fade", true);
+        element.hidden = true;
+      });
+      return;
+    }
+
     return Task.spawn(function() {
       if (toHide.length) {
         yield Util.transitionElementVisibility(toHide, false);

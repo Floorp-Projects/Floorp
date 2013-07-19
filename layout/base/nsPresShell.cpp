@@ -136,7 +136,6 @@
 #include "nsIURI.h"
 #include "nsIScrollableFrame.h"
 #include "prtime.h"
-#include "prlong.h"
 #include "nsIDragService.h"
 #include "nsCopySupport.h"
 #include "nsIDOMHTMLAnchorElement.h"

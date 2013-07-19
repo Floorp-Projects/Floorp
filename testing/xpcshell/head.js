@@ -87,7 +87,7 @@ try { // nsIXULRuntime is not available in some configurations.
           Components.classes["@mozilla.org/toolkit/crash-reporter;1"]
           .getService(Components.interfaces.nsICrashReporter)) {
       crashReporter.enabled = true;
-      crashReporter.minidumpPath = do_get_cwd();
+      crashReporter.minidumpPath = do_get_tempdir();
     }
   }
 }

@@ -1748,8 +1748,7 @@ bool
 nsContentUtils::LookupBindingMember(JSContext* aCx, nsIContent *aContent,
                                     JS::HandleId aId, JSPropertyDescriptor* aDesc)
 {
-  nsXBLBinding* binding = aContent->OwnerDoc()->BindingManager()
-                                  ->GetBinding(aContent);
+  nsXBLBinding* binding = aContent->GetXBLBinding();
   if (!binding)
     return true;
   return binding->LookupMember(aCx, aId, aDesc);
@@ -3568,8 +3567,7 @@ nsContentUtils::HasMutationListeners(nsINode* aNode,
 
     if (aNode->IsNodeOfType(nsINode::eCONTENT)) {
       nsIContent* content = static_cast<nsIContent*>(aNode);
-      nsIContent* insertionParent =
-        doc->BindingManager()->GetInsertionParent(content);
+      nsIContent* insertionParent = content->GetXBLInsertionParent();
       if (insertionParent) {
         aNode = insertionParent;
         continue;

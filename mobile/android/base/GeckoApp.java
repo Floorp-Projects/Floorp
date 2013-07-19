@@ -25,6 +25,7 @@ import org.mozilla.gecko.util.GeckoEventResponder;
 import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.util.UiAsyncTask;
+import org.mozilla.gecko.widget.ButtonToast;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -44,6 +45,7 @@ import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.drawable.Drawable;
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.hardware.Sensor;
@@ -187,6 +189,7 @@ abstract public class GeckoApp
     protected DoorHangerPopup mDoorHangerPopup;
     protected FormAssistPopup mFormAssistPopup;
     protected TabsPanel mTabsPanel;
+    protected ButtonToast mToast;
 
     // Handles notification messages from javascript
     protected NotificationHelper mNotificationHelper;
@@ -545,8 +548,16 @@ abstract public class GeckoApp
         try {
             if (event.equals("Toast:Show")) {
                 final String msg = message.getString("message");
-                final String duration = message.getString("duration");
-                handleShowToast(msg, duration);
+                final JSONObject button = message.optJSONObject("button");
+                if (button != null) {
+                    final String label = button.optString("label");
+                    final String icon = button.optString("icon");
+                    final String id = button.optString("id");
+                    showButtonToast(msg, label, icon, id);
+                } else {
+                    final String duration = message.getString("duration");
+                    showNormalToast(msg, duration);
+                }
             } else if (event.equals("log")) {
                 // generic log listener
                 final String msg = message.getString("msg");
@@ -810,16 +821,38 @@ abstract public class GeckoApp
         });
     }
 
-    void handleShowToast(final String message, final String duration) {
+    public void showNormalToast(final String message, final String duration) {
         ThreadUtils.postToUiThread(new Runnable() {
             @Override
             public void run() {
                 Toast toast;
-                if (duration.equals("long"))
+                if (duration.equals("long")) {
                     toast = Toast.makeText(GeckoApp.this, message, Toast.LENGTH_LONG);
-                else
+                } else {
                     toast = Toast.makeText(GeckoApp.this, message, Toast.LENGTH_SHORT);
+                }
                 toast.show();
+            }
+        });
+    }
+
+    void showButtonToast(final String message, final String buttonText,
+                         final String buttonIcon, final String buttonId) {
+        BitmapUtils.getDrawable(GeckoApp.this, buttonIcon, new BitmapUtils.BitmapLoader() {
+            public void onBitmapFound(Drawable d) {
+                mToast.show(false, message, buttonText, d, new ButtonToast.ToastListener() {
+                    @Override
+                    public void onButtonClicked() {
+                        GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Toast:Click", buttonId));
+                    }
+
+                    @Override
+                    public void onToastHidden(ButtonToast.ReasonHidden reason) {
+                        if (reason == ButtonToast.ReasonHidden.TIMEOUT) {
+                            GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Toast:Hidden", buttonId));
+                        }
+                    }
+                });
             }
         });
     }
@@ -1278,6 +1311,7 @@ abstract public class GeckoApp
         // Set up tabs panel.
         mTabsPanel = (TabsPanel) findViewById(R.id.tabs_panel);
         mNotificationHelper = new NotificationHelper(this);
+        mToast = new ButtonToast(findViewById(R.id.toast));
 
         // Check if the last run was exited due to a normal kill while
         // we were in the background, or a more harsh kill while we were
