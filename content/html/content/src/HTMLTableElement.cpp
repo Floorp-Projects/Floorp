@@ -6,6 +6,7 @@
 #include "mozilla/Util.h"
 
 #include "mozilla/dom/HTMLTableElement.h"
+#include "nsIDOMHTMLTableSectionElement.h"
 #include "nsAttrValueInlines.h"
 #include "nsRuleData.h"
 #include "nsHTMLStyleSheet.h"
