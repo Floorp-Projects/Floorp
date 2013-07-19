@@ -150,6 +150,7 @@ let CustomizableUIInternal = {
         "downloads-button",
         "home-button",
         "social-share-button",
+        "social-toolbar-item",
       ]
     });
 #ifndef XP_MACOSX
