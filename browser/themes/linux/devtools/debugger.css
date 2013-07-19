@@ -103,8 +103,12 @@
   -moz-margin-start: 1px;
 }
 
-#searchbox-panel-description {
-  margin-top: 0;
+#filter-label {
+  -moz-margin-start: 2px;
+}
+
+#searchbox-panel-operators {
+  margin-top: 5px;
   margin-bottom: 8px;
   -moz-margin-start: 2px;
 }

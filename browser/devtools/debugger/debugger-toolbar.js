@@ -707,6 +707,7 @@ FilterView.prototype = {
 
     this._searchbox = document.getElementById("searchbox");
     this._searchboxHelpPanel = document.getElementById("searchbox-help-panel");
+    this._filterLabel = document.getElementById("filter-label");
     this._globalOperatorButton = document.getElementById("global-operator-button");
     this._globalOperatorLabel = document.getElementById("global-operator-label");
     this._functionOperatorButton = document.getElementById("function-operator-button");
@@ -737,6 +738,8 @@ FilterView.prototype = {
     this._lineOperatorButton.setAttribute("label", SEARCH_LINE_FLAG);
     this._variableOperatorButton.setAttribute("label", SEARCH_VARIABLE_FLAG);
 
+    this._filterLabel.setAttribute("value",
+      L10N.getFormatStr("searchPanelFilter", this._fileSearchKey));
     this._globalOperatorLabel.setAttribute("value",
       L10N.getFormatStr("searchPanelGlobal", this._globalSearchKey));
     this._functionOperatorLabel.setAttribute("value",
@@ -780,7 +783,7 @@ FilterView.prototype = {
         placeholder = L10N.getFormatStr("emptyChromeGlobalsFilterText", this._fileSearchKey);
         break;
       case DebuggerView.Sources:
-        placeholder = L10N.getFormatStr("emptyFilterText", this._fileSearchKey);
+        placeholder = L10N.getFormatStr("emptySearchText", this._fileSearchKey);
         break;
     }
     this._searchbox.setAttribute("placeholder", placeholder);

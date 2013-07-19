@@ -51,9 +51,9 @@
 <!ENTITY debuggerUI.showOriginalSource      "Show original sources">
 <!ENTITY debuggerUI.showOriginalSource.key  "O">
 
-<!-- LOCALIZATION NOTE (debuggerUI.searchPanelTitle): This is the text that
-  -  appears in the filter panel popup as a description. -->
-<!ENTITY debuggerUI.searchPanelTitle    "Operators">
+<!-- LOCALIZATION NOTE (debuggerUI.searchPanelOperators): This is the text that
+  -  appears in the filter panel popup as a header for the operators part. -->
+<!ENTITY debuggerUI.searchPanelOperators    "Operators:">
 
 <!-- LOCALIZATION NOTE (debuggerUI.searchFile): This is the text that appears
   -  in the source editor's context menu for the scripts search operation. -->
