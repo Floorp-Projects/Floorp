@@ -244,7 +244,7 @@ nsServerSocket::KeepWhenOffline(bool *aKeepWhenOffline)
 // nsServerSocket::nsISupports
 //-----------------------------------------------------------------------------
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsServerSocket, nsIServerSocket)
+NS_IMPL_ISUPPORTS1(nsServerSocket, nsIServerSocket)
 
 
 //-----------------------------------------------------------------------------
@@ -364,7 +364,7 @@ public:
     , mTargetThread(do_GetCurrentThread())
   { }
 
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSISERVERSOCKETLISTENER
 
   class OnSocketAcceptedRunnable : public nsRunnable
@@ -410,8 +410,8 @@ private:
   nsCOMPtr<nsIEventTarget> mTargetThread;
 };
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(ServerSocketListenerProxy,
-                              nsIServerSocketListener)
+NS_IMPL_ISUPPORTS1(ServerSocketListenerProxy,
+                   nsIServerSocketListener)
 
 NS_IMETHODIMP
 ServerSocketListenerProxy::OnSocketAccepted(nsIServerSocket* aServ,

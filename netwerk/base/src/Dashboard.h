@@ -24,7 +24,7 @@ class Dashboard:
     public nsIDashboardEventNotifier
 {
 public:
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSIDASHBOARD
     NS_DECL_NSIDASHBOARDEVENTNOTIFIER
 

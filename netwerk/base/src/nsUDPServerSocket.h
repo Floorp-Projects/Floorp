@@ -17,7 +17,7 @@ class nsUDPServerSocket : public nsASocketHandler
                         , public nsIUDPServerSocket
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIUDPSERVERSOCKET
 
   // nsASocketHandler methods:
@@ -61,7 +61,7 @@ private:
 class nsUDPMessage : public nsIUDPMessage
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIUDPMESSAGE
 
   nsUDPMessage(PRNetAddr* aAddr,
@@ -82,7 +82,7 @@ private:
 class nsUDPOutputStream : public nsIOutputStream
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIOUTPUTSTREAM
 
   nsUDPOutputStream(nsUDPServerSocket* aServer,

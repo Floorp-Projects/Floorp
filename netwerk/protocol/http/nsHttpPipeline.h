@@ -19,7 +19,7 @@ class nsHttpPipeline : public nsAHttpConnection
                      , public nsAHttpSegmentReader
 {
 public:
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSAHTTPCONNECTION(mConnection)
     NS_DECL_NSAHTTPTRANSACTION
     NS_DECL_NSAHTTPSEGMENTREADER

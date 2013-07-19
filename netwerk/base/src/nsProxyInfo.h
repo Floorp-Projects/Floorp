@@ -27,7 +27,7 @@ class nsProxyInfo MOZ_FINAL : public nsIProxyInfo
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_PROXYINFO_IID)
 
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIPROXYINFO
 
   // Cheap accessors for use within Necko

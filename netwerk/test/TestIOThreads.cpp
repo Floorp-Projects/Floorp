@@ -21,7 +21,7 @@ static PRLogModuleInfo *gTestLog = nullptr;
 
 class nsIOEvent : public nsIRunnable {
 public:
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
 
     nsIOEvent(int i) : mIndex(i) {}
 
@@ -33,7 +33,7 @@ public:
 private:
     int mIndex;
 };
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsIOEvent, nsIRunnable)
+NS_IMPL_ISUPPORTS1(nsIOEvent, nsIRunnable)
 
 static nsresult RunTest()
 {

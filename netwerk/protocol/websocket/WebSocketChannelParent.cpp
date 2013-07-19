@@ -15,7 +15,7 @@ using namespace mozilla::ipc;
 namespace mozilla {
 namespace net {
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(WebSocketChannelParent,
+NS_IMPL_ISUPPORTS2(WebSocketChannelParent,
                               nsIWebSocketListener,
                               nsIInterfaceRequestor)
 

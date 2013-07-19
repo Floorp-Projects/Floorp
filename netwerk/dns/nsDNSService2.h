@@ -20,7 +20,7 @@ class nsDNSService MOZ_FINAL : public nsPIDNSService
                              , public nsIObserver
 {
 public:
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSPIDNSSERVICE
     NS_DECL_NSIDNSSERVICE
     NS_DECL_NSIOBSERVER

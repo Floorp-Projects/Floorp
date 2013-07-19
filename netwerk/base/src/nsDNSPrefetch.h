@@ -19,7 +19,7 @@ class nsIDNSService;
 class nsDNSPrefetch MOZ_FINAL : public nsIDNSListener
 {
 public:
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSIDNSLISTENER
   
     nsDNSPrefetch(nsIURI *aURI, bool storeTiming);

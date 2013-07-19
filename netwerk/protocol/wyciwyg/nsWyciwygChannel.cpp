@@ -95,14 +95,14 @@ nsWyciwygChannel::~nsWyciwygChannel()
 {
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS7(nsWyciwygChannel,
-                              nsIChannel,
-                              nsIRequest,
-                              nsIStreamListener,
-                              nsIRequestObserver,
-                              nsICacheListener,
-                              nsIWyciwygChannel,
-                              nsIPrivateBrowsingChannel)
+NS_IMPL_ISUPPORTS7(nsWyciwygChannel,
+                   nsIChannel,
+                   nsIRequest,
+                   nsIStreamListener,
+                   nsIRequestObserver,
+                   nsICacheListener,
+                   nsIWyciwygChannel,
+                   nsIPrivateBrowsingChannel)
 
 nsresult
 nsWyciwygChannel::Init(nsIURI* uri)

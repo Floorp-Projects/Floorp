@@ -5,11 +5,11 @@
 #include "nsStreamListenerTee.h"
 #include "nsProxyRelease.h"
 
-NS_IMPL_THREADSAFE_ISUPPORTS4(nsStreamListenerTee,
-                              nsIStreamListener,
-                              nsIRequestObserver,
-                              nsIStreamListenerTee,
-                              nsIThreadRetargetableStreamListener)
+NS_IMPL_ISUPPORTS4(nsStreamListenerTee,
+                   nsIStreamListener,
+                   nsIRequestObserver,
+                   nsIStreamListenerTee,
+                   nsIThreadRetargetableStreamListener)
 
 NS_IMETHODIMP
 nsStreamListenerTee::OnStartRequest(nsIRequest *request,

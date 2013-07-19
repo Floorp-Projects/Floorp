@@ -47,7 +47,7 @@ class nsSocketTransportService : public nsPISocketTransportService
     typedef mozilla::Mutex Mutex;
 
 public:
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSPISOCKETTRANSPORTSERVICE
     NS_DECL_NSISOCKETTRANSPORTSERVICE
     NS_DECL_NSIEVENTTARGET

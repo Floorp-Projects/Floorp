@@ -22,7 +22,7 @@
 class myDNSListener : public nsIDNSListener
 {
 public:
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
 
     myDNSListener(const char *host, int32_t index)
         : mHost(host)
@@ -57,7 +57,7 @@ private:
     int32_t   mIndex;
 };
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(myDNSListener, nsIDNSListener)
+NS_IMPL_ISUPPORTS1(myDNSListener, nsIDNSListener)
 
 static bool IsAscii(const char *s)
 {

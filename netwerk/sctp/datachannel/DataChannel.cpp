@@ -272,8 +272,8 @@ void DataChannelConnection::DestroyOnSTS(struct socket *aMasterSocket,
   disconnect_all();
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(DataChannelConnection,
-                              nsITimerCallback)
+NS_IMPL_ISUPPORTS1(DataChannelConnection,
+                   nsITimerCallback)
 
 bool
 DataChannelConnection::Init(unsigned short aPort, uint16_t aNumStreams, bool aUsingDtls)

@@ -40,7 +40,7 @@ typedef enum    {
 class nsHTTPCompressConv	: public nsIStreamConverter	{
 public:
     // nsISupports methods
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
 
 	NS_DECL_NSIREQUESTOBSERVER
     NS_DECL_NSISTREAMLISTENER
