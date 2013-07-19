@@ -340,6 +340,9 @@ let CustomizableUIInternal = {
       }
 
       this.ensureButtonContextMenu(node, aArea == CustomizableUI.AREA_PANEL);
+      if (node.localName == "toolbarbutton" && aArea == CustomizableUI.AREA_PANEL) {
+        node.setAttribute("tabindex", "0");
+      }
 
       this.insertWidgetBefore(node, currentNode, container, aArea);
       this._addParentFlex(node);
@@ -472,6 +475,7 @@ let CustomizableUIInternal = {
     let document = aPanel.ownerDocument;
 
     for (let btn of aPanel.querySelectorAll("toolbarbutton")) {
+      btn.setAttribute("tabindex", "0");
       this.ensureButtonContextMenu(btn, true);
     }
 
@@ -516,6 +520,9 @@ let CustomizableUIInternal = {
       let [provider, widgetNode] = this.getWidgetNode(aWidgetId, window);
 
       this.ensureButtonContextMenu(widgetNode, aArea == CustomizableUI.AREA_PANEL);
+      if (widgetNode.localName == "toolbarbutton" && aArea == CustomizableUI.AREA_PANEL) {
+        widgetNode.setAttribute("tabindex", "0");
+      }
 
       let nextNode = nextNodeId ? container.querySelector(idToSelector(nextNodeId))
                                 : null;
@@ -558,6 +565,7 @@ let CustomizableUIInternal = {
         container.removeChild(widgetNode);
       } else {
         this.removeLocationAttributes(widgetNode);
+        widgetNode.removeAttribute("tabindex");
         areaNode.toolbox.palette.appendChild(widgetNode);
       }
       if (area.type == this.TYPE_TOOLBAR) {
