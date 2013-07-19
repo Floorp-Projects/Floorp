@@ -16,20 +16,22 @@ function init(aEvent)
     var distroId = Services.prefs.getCharPref("distribution.id");
     if (distroId) {
       var distroVersion = Services.prefs.getCharPref("distribution.version");
-      var distroAbout = Services.prefs.getComplexValue("distribution.about",
-        Components.interfaces.nsISupportsString);
-
-      var distroField = document.getElementById("distribution");
-      distroField.value = distroAbout;
-      distroField.style.display = "block";
 
       var distroIdField = document.getElementById("distributionId");
       distroIdField.value = distroId + " - " + distroVersion;
       distroIdField.style.display = "block";
+
+      // This must be set last because it might not exist due to bug 895473.
+      var distroAbout = Services.prefs.getComplexValue("distribution.about",
+        Components.interfaces.nsISupportsString);
+      var distroField = document.getElementById("distribution");
+      distroField.value = distroAbout;
+      distroField.style.display = "block";
     }
   }
   catch (e) {
     // Pref is unset
+    Components.utils.reportError(e);
   }
 
   // Include the build ID and display warning if this is an "a#" (nightly or aurora) build
