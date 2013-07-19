@@ -828,7 +828,7 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnDataAvailable(nsIRequest *request,
       if (!mDataForwardToRequest)
         return NS_ERROR_FAILURE;
       
-      int64_t absoluteOffset64 = LL_ZERO;
+      int64_t absoluteOffset64 = 0;
       brr->GetStartRange(&absoluteOffset64);
       
       // XXX handle 64-bit for real
@@ -909,7 +909,7 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnStopRequest(nsIRequest *request,
   // for ByteRangeRequest we're just updating the mDataForwardToRequest hash and return.
   nsCOMPtr<nsIByteRangeRequest> brr = do_QueryInterface(request);
   if (brr) {
-    int64_t absoluteOffset64 = LL_ZERO;
+    int64_t absoluteOffset64 = 0;
     brr->GetStartRange(&absoluteOffset64);
     // XXX support 64-bit offsets
     int32_t absoluteOffset = (int32_t)int64_t(absoluteOffset64);

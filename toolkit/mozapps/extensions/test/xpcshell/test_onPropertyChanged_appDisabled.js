@@ -26,12 +26,12 @@ function run_test() {
   AddonManager.getAddonByID("addon1@tests.mozilla.org", function(aAddon) {
     do_check_neq(aAddon, null);
     aAddon.userDisabled = true;
-    restartManager();
-    run_test_1();
+    do_execute_soon(run_test_1);
   });
 }
 
 function run_test_1() {
+  restartManager();
   AddonManager.getAddonByID("addon1@tests.mozilla.org", function(aAddon) {
     do_check_neq(aAddon, null);
     do_check_true(aAddon.userDisabled);

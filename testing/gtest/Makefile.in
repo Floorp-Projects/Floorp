@@ -30,9 +30,11 @@ LOCAL_INCLUDES += \
 include $(topsrcdir)/config/rules.mk
 
 ifeq (browser,$(MOZ_BUILD_APP))
-# Disable because of metro linking error:
+# Disable because of metro linking error bug 883339:
 # LNK1181: cannot open input file 'runtimeobject.lib'
-ifndef MOZ_METRO
+# And non metro linking error bug 886656:
+# LNK1112: module machine type 'x64' conflicts with target machine type 'X86'
+ifneq ($(OS_ARCH),WINNT)
 check gtest::
 	$(MAKE) -C $(DEPTH)/toolkit/library gtestxul
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))

@@ -153,7 +153,7 @@ function run_test_2() {
   });
 }
 
-// Disabling then enabling withut restart should fire onOperationCancelled.
+// Disabling then enabling without restart should fire onOperationCancelled.
 function run_test_3() {
   prepare_test({
     "addon1@tests.mozilla.org": [

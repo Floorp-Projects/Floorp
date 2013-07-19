@@ -1389,7 +1389,7 @@ public:
 
     // Floating-point operations:
 
-    bool supportsFloatingPoint() const
+    static bool supportsFloatingPoint()
     {
 #if WTF_MIPS_DOUBLE_FLOAT
         return true;
@@ -1398,7 +1398,7 @@ public:
 #endif
     }
 
-    bool supportsFloatingPointTruncate() const
+    static bool supportsFloatingPointTruncate()
     {
 #if WTF_MIPS_DOUBLE_FLOAT && WTF_MIPS_ISA_AT_LEAST(2)
         return true;
@@ -1407,7 +1407,7 @@ public:
 #endif
     }
 
-    bool supportsFloatingPointSqrt() const
+    static bool supportsFloatingPointSqrt()
     {
 #if WTF_MIPS_DOUBLE_FLOAT && WTF_MIPS_ISA_AT_LEAST(2)
         return true;
