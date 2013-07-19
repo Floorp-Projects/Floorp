@@ -39,7 +39,7 @@ class nsJARURI : public nsIJARURI,
                  public nsIIPCSerializableURI
 {
 public:
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSIURI
     NS_DECL_NSIURL
     NS_DECL_NSIJARURI
