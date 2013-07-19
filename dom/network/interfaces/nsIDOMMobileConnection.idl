@@ -11,7 +11,7 @@ interface nsIDOMMozMobileNetworkInfo;
 interface nsIDOMMozMobileCellInfo;
 interface nsIDOMMozMobileCFInfo;
 
-[scriptable, builtinclass, uuid(7fd42b7e-8100-4f2b-bc85-858603d499c8)]
+[scriptable, builtinclass, uuid(61e5729c-100f-436e-bc20-b7706ec40229)]
 interface nsIDOMMozMobileConnection : nsIDOMEventTarget
 {
   const long ICC_SERVICE_CLASS_VOICE = (1 << 0);
@@ -58,14 +58,6 @@ interface nsIDOMMozMobileConnection : nsIDOMEventTarget
    */
   readonly attribute DOMString lastKnownNetwork;
   readonly attribute DOMString lastKnownHomeNetwork;
-
-  /**
-   * Indicates the number of retries remaining when cardState equals 'pinRequired'
-   * or 'pukRequired'.  0 denotes the retry count is unavailable.
-   *
-   * Value is undefined for other cardState values.
-   */
-  readonly attribute long retryCount;
 
   /**
    * Information about the voice connection.
