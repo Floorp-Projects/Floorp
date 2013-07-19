@@ -5,12 +5,6 @@
 
 <resources>
 
-    <dimen name="abouthome_gutter_small">0dp</dimen>
-    <dimen name="abouthome_gutter_large">0dp</dimen>
-    <dimen name="abouthome_icon_crop">-14dp</dimen>
-    <dimen name="abouthome_icon_radius">2dp</dimen>
-    <dimen name="abouthome_rowitem_height">46dip</dimen>
-    <dimen name="abouthome_rowitem_left_padding">12dip</dimen>
     <dimen name="abouthome_topsite_pinsize">20dp</dimen>
     <dimen name="autocomplete_min_width">200dp</dimen>
     <dimen name="autocomplete_row_height">32dp</dimen>

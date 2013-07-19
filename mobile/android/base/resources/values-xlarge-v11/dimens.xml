@@ -5,9 +5,6 @@
 
 <resources>
 
-    <dimen name="abouthome_gutter_small">20dp</dimen>
-    <dimen name="abouthome_gutter_large">40dp</dimen>
-    <dimen name="abouthome_icon_crop">0dp</dimen>
     <dimen name="browser_toolbar_height">56dp</dimen>
     <dimen name="remote_tab_child_row_height">56dp</dimen>
     <dimen name="remote_tab_group_row_height">34dp</dimen>
