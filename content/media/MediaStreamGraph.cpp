@@ -4,6 +4,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "MediaStreamGraphImpl.h"
+#include "mozilla/LinkedList.h"
 
 #include "AudioSegment.h"
 #include "VideoSegment.h"
@@ -465,22 +466,24 @@ MediaStreamGraphImpl::MarkConsumed(MediaStream* aStream)
 }
 
 void
-MediaStreamGraphImpl::UpdateStreamOrderForStream(nsTArray<MediaStream*>* aStack,
+MediaStreamGraphImpl::UpdateStreamOrderForStream(mozilla::LinkedList<MediaStream>* aStack,
                                                  already_AddRefed<MediaStream> aStream)
 {
   nsRefPtr<MediaStream> stream = aStream;
   NS_ASSERTION(!stream->mHasBeenOrdered, "stream should not have already been ordered");
   if (stream->mIsOnOrderingStack) {
-    for (int32_t i = aStack->Length() - 1; ; --i) {
-      aStack->ElementAt(i)->AsProcessedStream()->mInCycle = true;
-      if (aStack->ElementAt(i) == stream)
-        break;
+    MediaStream* iter = aStack->getLast();
+    if (iter) {
+      do {
+        iter->AsProcessedStream()->mInCycle = true;
+        iter = iter->getPrevious();
+      } while (iter && iter != stream);
     }
     return;
   }
   ProcessedMediaStream* ps = stream->AsProcessedStream();
   if (ps) {
-    aStack->AppendElement(stream);
+    aStack->insertBack(stream);
     stream->mIsOnOrderingStack = true;
     for (uint32_t i = 0; i < ps->mInputs.Length(); ++i) {
       MediaStream* source = ps->mInputs[i]->mSource;
@@ -489,7 +492,7 @@ MediaStreamGraphImpl::UpdateStreamOrderForStream(nsTArray<MediaStream*>* aStack,
         UpdateStreamOrderForStream(aStack, s.forget());
       }
     }
-    aStack->RemoveElementAt(aStack->Length() - 1);
+    aStack->popLast();
     stream->mIsOnOrderingStack = false;
   }
 
@@ -514,7 +517,7 @@ MediaStreamGraphImpl::UpdateStreamOrder()
     }
   }
 
-  nsAutoTArray<MediaStream*,10> stack;
+  mozilla::LinkedList<MediaStream> stack;
   for (uint32_t i = 0; i < mOldStreams.Length(); ++i) {
     nsRefPtr<MediaStream>& s = mOldStreams[i];
     if (!s->mAudioOutputs.IsEmpty() || !s->mVideoOutputs.IsEmpty()) {
