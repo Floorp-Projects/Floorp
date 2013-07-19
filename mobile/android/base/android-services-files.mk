@@ -298,15 +298,15 @@ SYNC_JAVA_FILES := \
   $(NULL)
 
 SYNC_RES_DRAWABLE := \
-  mobile/android/base/resources/drawable/pin_background.xml \
+  res/drawable/pin_background.xml \
   $(NULL)
 
 SYNC_RES_DRAWABLE_LDPI := \
   $(NULL)
 
 SYNC_RES_DRAWABLE_MDPI := \
-  mobile/android/base/resources/drawable-mdpi/desktop.png \
-  mobile/android/base/resources/drawable-mdpi/mobile.png \
+  res/drawable-mdpi/desktop.png \
+  res/drawable-mdpi/mobile.png \
   $(NULL)
 
 SYNC_RES_DRAWABLE_HDPI := \
