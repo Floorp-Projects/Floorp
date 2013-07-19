@@ -762,7 +762,3 @@ pref("media.useAudioChannelService", false);
 
 // Turn on the CSP 1.0 parser for Content Security Policy headers
 pref("security.csp.speccompliant", true);
-
-// Enable hardware-accelerated Skia canvas
-pref("gfx.canvas.azure.backends", "skia");
-pref("gfx.canvas.azure.accelerated", true);
