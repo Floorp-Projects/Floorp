@@ -34,7 +34,7 @@
  */
 class nsMIMEInfoBase : public nsIMIMEInfo {
   public:
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
 
     // I'd use NS_DECL_NSIMIMEINFO, but I don't want GetHasDefaultHandler
     NS_IMETHOD GetFileExtensions(nsIUTF8StringEnumerator **_retval);

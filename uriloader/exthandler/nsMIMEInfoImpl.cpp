@@ -16,8 +16,8 @@
 #include "nsCURILoader.h"
 
 // nsISupports methods
-NS_IMPL_THREADSAFE_ADDREF(nsMIMEInfoBase)
-NS_IMPL_THREADSAFE_RELEASE(nsMIMEInfoBase)
+NS_IMPL_ADDREF(nsMIMEInfoBase)
+NS_IMPL_RELEASE(nsMIMEInfoBase)
 
 NS_INTERFACE_MAP_BEGIN(nsMIMEInfoBase)
     NS_INTERFACE_MAP_ENTRY(nsIHandlerInfo)

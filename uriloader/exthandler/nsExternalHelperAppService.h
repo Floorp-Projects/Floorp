@@ -208,7 +208,7 @@ class nsExternalAppHandler MOZ_FINAL : public nsIStreamListener,
                                        public nsIBackgroundFileSaverObserver
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSISTREAMLISTENER
   NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSIHELPERAPPLAUNCHER
