@@ -123,6 +123,38 @@ add_task(function cleanup()
   PlacesUtils.bookmarks.removeObserver(observer, false);
 });
 
+add_task(function shutdown()
+{
+  // Check that async observers don't try to create async statements after
+  // shutdown.  That would cause assertions, since the async thread is gone
+  // already.  Note that in such a case the notifications are not fired, so we
+  // cannot test for them.
+  // Put an history notification that triggers AsyncGetBookmarksForURI between
+  // asyncClose() and the actual connection closing.  Enqueuing a main-thread
+  // event just after places-will-close-connection should ensure it runs before
+  // places-connection-closed.
+  // Notice this code is not using helpers cause it depends on a very specific
+  // order, a change in the helpers code could make this test useless.
+  let deferred = Promise.defer();
+
+  Services.obs.addObserver(function onNotification() {
+    Services.obs.removeObserver(onNotification, "places-will-close-connection");
+    do_check_true(true, "Observed fake places shutdown");
+
+    Services.tm.mainThread.dispatch(() => {
+      // WARNING: this is very bad, never use out of testing code.
+      PlacesUtils.bookmarks.QueryInterface(Ci.nsINavHistoryObserver)
+                           .onPageChanged(NetUtil.newURI("http://book.ma.rk/"),
+                                          Ci.nsINavHistoryObserver.ATTRIBUTE_FAVICON,
+                                          "test", "test");
+      deferred.resolve(promiseTopicObserved("places-connection-closed"));
+    }, Ci.nsIThread.DISPATCH_NORMAL);
+  }, "places-will-close-connection", false);
+  shutdownPlaces();
+
+  yield deferred.promise;
+});
+
 function run_test()
 {
   // Add multiple bookmarks to the same uri.
