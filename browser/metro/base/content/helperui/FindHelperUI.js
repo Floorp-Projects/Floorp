@@ -48,7 +48,7 @@ var FindHelperUI = {
     this._cmdPrevious = document.getElementById(this.commands.previous);
     this._cmdNext = document.getElementById(this.commands.next);
 
-    this._textbox.addEventListener('keydown', this);
+    this._textbox.addEventListener("keydown", this);
 
     // Listen for find assistant messages from content
     messageManager.addMessageListener("FindAssist:Show", this);
@@ -57,7 +57,7 @@ var FindHelperUI = {
     // Listen for events where form assistant should be closed
     Elements.tabList.addEventListener("TabSelect", this, true);
     Elements.browsers.addEventListener("URLChanged", this, true);
-    window.addEventListener("MozContextUIShow", this, true);
+    window.addEventListener("MozAppbarShowing", this);
   },
 
   receiveMessage: function findHelperReceiveMessage(aMessage) {
@@ -79,7 +79,6 @@ var FindHelperUI = {
 
   handleEvent: function findHelperHandleEvent(aEvent) {
     switch (aEvent.type) {
-      case "MozContextUIShow":
       case "TabSelect":
         this.hide();
         break;
@@ -91,11 +90,16 @@ var FindHelperUI = {
 
       case "keydown":
         if (aEvent.keyCode == Ci.nsIDOMKeyEvent.DOM_VK_RETURN) {
-	  if (aEvent.shiftKey) {
-	    this.goToPrevious();
-	  } else {
-	    this.goToNext();
-	  }
+          if (aEvent.shiftKey) {
+            this.goToPrevious();
+          } else {
+            this.goToNext();
+          }
+        }
+
+      case "MozAppbarShowing":
+        if (aEvent.target != this._container) {
+          this.hide();
         }
     }
   },

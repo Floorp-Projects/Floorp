@@ -35,6 +35,32 @@ gTests.push({
 });
 
 gTests.push({
+  desc: "Findbar/navbar interaction",
+  run: function() {
+    let tab = yield addTab(chromeRoot + "browser_findbar.html");
+    yield waitForCondition(() => BrowserUI.ready);
+    is(ContextUI.navbarVisible, false, "Navbar is hidden by default");
+    is(Elements.findbar.isShowing, false, "Find bar is hidden by default");
+
+    yield showNavBar();
+    is(ContextUI.navbarVisible, true, "Navbar is visible");
+    is(Elements.findbar.isShowing, false, "Find bar is still hidden");
+
+    EventUtils.synthesizeKey("f", { accelKey: true });
+    yield waitForEvent(Elements.navbar, "transitionend");
+    is(ContextUI.navbarVisible, false, "Navbar is hidden");
+    is(Elements.findbar.isShowing, true, "Findbar is visible");
+
+    yield showNavBar();
+    is(ContextUI.navbarVisible, true, "Navbar is visible again");
+    is(Elements.findbar.isShowing, false, "Find bar is hidden again");
+
+    Browser.closeTab(tab);
+  }
+});
+
+
+gTests.push({
   desc: "Show and hide the find bar with mouse",
   run: function() {
     let tab = yield addTab(chromeRoot + "browser_findbar.html");
