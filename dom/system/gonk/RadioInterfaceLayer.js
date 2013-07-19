@@ -637,7 +637,6 @@ function RadioInterface(options) {
   this.rilContext = {
     radioState:     RIL.GECKO_RADIOSTATE_UNAVAILABLE,
     cardState:      RIL.GECKO_CARDSTATE_UNKNOWN,
-    retryCount:     0,  // TODO: Please see bug 868896
     networkSelectionMode: RIL.GECKO_NETWORK_SELECTION_UNKNOWN,
     iccInfo:        null,
     imsi:           null,
@@ -650,7 +649,6 @@ function RadioInterface(options) {
                      emergencyCallsOnly: false,
                      roaming: false,
                      network: null,
-                     lastKnownMcc: null,
                      cell: null,
                      type: null,
                      signalStrength: null,
@@ -659,17 +657,11 @@ function RadioInterface(options) {
                      emergencyCallsOnly: false,
                      roaming: false,
                      network: null,
-                     lastKnownMcc: null,
                      cell: null,
                      type: null,
                      signalStrength: null,
                      relSignalStrength: null},
   };
-
-  try {
-    this.rilContext.voice.lastKnownMcc =
-      Services.prefs.getCharPref("ril.lastKnownMcc");
-  } catch (e) {}
 
   this.voicemailInfo = {
     number: null,
@@ -1346,18 +1338,6 @@ RadioInterface.prototype = {
     let data = this.rilContext.data;
 
     if (this.networkChanged(message, voice.network)) {
-      // Update lastKnownMcc.
-      if (message.mcc) {
-        voice.lastKnownMcc = message.mcc;
-        // Update pref if mcc is changed.
-        // !voice.network is in case voice.network is still null.
-        if (!voice.network || voice.network.mcc != message.mcc) {
-          try {
-            Services.prefs.setCharPref("ril.lastKnownMcc", message.mcc);
-          } catch (e) {}
-        }
-      }
-
       // Update lastKnownNetwork
       if (message.mcc && message.mnc) {
         try {
@@ -2170,6 +2150,14 @@ RadioInterface.prototype = {
     // when the MCC or MNC codes have changed.
     gMessageManager.sendIccMessage("RIL:IccInfoChanged",
                                    this.clientId, message);
+
+    // Update lastKnownSimMcc.
+    if (message.mcc) {
+      try {
+        Services.prefs.setCharPref("ril.lastKnownSimMcc",
+                                   message.mcc.toString());
+      } catch (e) {}
+    }
 
     // Update lastKnownHomeNetwork.
     if (message.mcc && message.mnc) {
