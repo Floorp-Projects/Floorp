@@ -898,28 +898,47 @@ MediaStreamGraphImpl::PlayVideo(MediaStream* aStream)
   }
 }
 
+bool
+MediaStreamGraphImpl::ShouldUpdateMainThread()
+{
+  if (mRealtime) {
+    return true;
+  }
+
+  TimeStamp now = TimeStamp::Now();
+  if ((now - mLastMainThreadUpdate).ToMilliseconds() > MEDIA_GRAPH_TARGET_PERIOD_MS) {
+    mLastMainThreadUpdate = now;
+    return true;
+  }
+  return false;
+}
+
 void
 MediaStreamGraphImpl::PrepareUpdatesToMainThreadState(bool aFinalUpdate)
 {
   mMonitor.AssertCurrentThreadOwns();
 
-  mStreamUpdates.SetCapacity(mStreamUpdates.Length() + mStreams.Length());
-  for (uint32_t i = 0; i < mStreams.Length(); ++i) {
-    MediaStream* stream = mStreams[i];
-    if (!stream->MainThreadNeedsUpdates()) {
-      continue;
+  // We don't want to update the main thread about timing update when we are not
+  // running in realtime.
+  if (ShouldUpdateMainThread()) {
+    mStreamUpdates.SetCapacity(mStreamUpdates.Length() + mStreams.Length());
+    for (uint32_t i = 0; i < mStreams.Length(); ++i) {
+      MediaStream* stream = mStreams[i];
+      if (!stream->MainThreadNeedsUpdates()) {
+        continue;
+      }
+      StreamUpdate* update = mStreamUpdates.AppendElement();
+      update->mGraphUpdateIndex = stream->mGraphUpdateIndices.GetAt(mCurrentTime);
+      update->mStream = stream;
+      update->mNextMainThreadCurrentTime =
+        GraphTimeToStreamTime(stream, mCurrentTime);
+      update->mNextMainThreadFinished =
+        stream->mFinished &&
+        StreamTimeToGraphTime(stream, stream->GetBufferEnd()) <= mCurrentTime;
     }
-    StreamUpdate* update = mStreamUpdates.AppendElement();
-    update->mGraphUpdateIndex = stream->mGraphUpdateIndices.GetAt(mCurrentTime);
-    update->mStream = stream;
-    update->mNextMainThreadCurrentTime =
-      GraphTimeToStreamTime(stream, mCurrentTime);
-    update->mNextMainThreadFinished =
-      stream->mFinished &&
-      StreamTimeToGraphTime(stream, stream->GetBufferEnd()) <= mCurrentTime;
-  }
-  if (!mPendingUpdateRunnables.IsEmpty()) {
-    mUpdateRunnables.MoveElementsFrom(mPendingUpdateRunnables);
+    if (!mPendingUpdateRunnables.IsEmpty()) {
+      mUpdateRunnables.MoveElementsFrom(mPendingUpdateRunnables);
+    }
   }
 
   // Don't send the message to the main thread if it's not going to have
@@ -2178,7 +2197,7 @@ MediaStreamGraphImpl::MediaStreamGraphImpl(bool aRealtime)
   }
 #endif
 
-  mCurrentTimeStamp = mInitialTimeStamp = TimeStamp::Now();
+  mCurrentTimeStamp = mInitialTimeStamp = mLastMainThreadUpdate = TimeStamp::Now();
 }
 
 NS_IMPL_ISUPPORTS1(MediaStreamGraphShutdownObserver, nsIObserver)

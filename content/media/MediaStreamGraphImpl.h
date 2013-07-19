@@ -190,6 +190,12 @@ public:
    * mMonitor must be held.
    */
   void PrepareUpdatesToMainThreadState(bool aFinalUpdate);
+  /**
+   * If we are rendering in non-realtime mode, we don't want to send messages to
+   * the main thread at each iteration for performance reasons. We instead
+   * notify the main thread at the same rate
+   */
+  bool ShouldUpdateMainThread();
   // The following methods are the various stages of RunThread processing.
   /**
    * Compute a new current time for the graph and advance all on-graph-thread
@@ -394,6 +400,10 @@ public:
    * The real timestamp of the latest run of UpdateCurrentTime.
    */
   TimeStamp mCurrentTimeStamp;
+  /**
+   * Date of the last time we updated the main thread with the graph state.
+   */
+  TimeStamp mLastMainThreadUpdate;
   /**
    * Which update batch we are currently processing.
    */
