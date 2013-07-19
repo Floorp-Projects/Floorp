@@ -84,11 +84,6 @@ function testUnregistered() {
 }
 
 function testSearching() {
-  // For some reason, requesting the "searching" state puts the fake modem
-  // into "registered"... Skipping this test for now.
-  testDenied();
-  return;
-
   setEmulatorVoiceState("searching");
 
   connection.addEventListener("voicechange", function onvoicechange() {
