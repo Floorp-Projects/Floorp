@@ -1342,19 +1342,19 @@ $(FENNEC_PP_JAVA_VIEW_FILES): GeckoView.java.frag
 	@rm -f $@
 	cat $< | sed s,@VIEWTYPE@,$(patsubst Gecko%.java,%,$@),g >> $@ ; \
 
-res/drawable-mdpi/icon.png: $(MOZ_APP_ICON)
+res/drawable-mdpi/icon.png: $(ICON_PATH)
 	$(NSINSTALL) -D res/drawable-mdpi
 	cp $(ICON_PATH) $@
 
-res/drawable-hdpi/icon.png: $(MOZ_APP_ICON)
+res/drawable-hdpi/icon.png: $(ICON_PATH_HDPI)
 	$(NSINSTALL) -D res/drawable-hdpi
 	cp $(ICON_PATH_HDPI) $@
 
-res/drawable-xhdpi/icon.png: $(MOZ_APP_ICON)
+res/drawable-xhdpi/icon.png: $(ICON_PATH_XHDPI)
 	$(NSINSTALL) -D res/drawable-xhdpi
 	cp $(ICON_PATH_XHDPI) $@
 
-res/drawable-xxhdpi/icon.png: $(MOZ_APP_ICON)
+res/drawable-xxhdpi/icon.png: $(ICON_PATH_XXHDPI)
 	$(NSINSTALL) -D res/drawable-xxhdpi
 	cp $(ICON_PATH_XXHDPI) $@
 
