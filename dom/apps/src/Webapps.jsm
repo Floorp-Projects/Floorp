@@ -303,6 +303,9 @@ this.DOMApplicationRegistry = {
       baseDir = FileUtils.getDir("coreAppsDir", ["webapps", aId], false);
       if (!baseDir.exists()) {
         return;
+      } else if (!baseDir.directoryEntries.hasMoreElements()) {
+        debug("Error: Core app in " + baseDir.path + " is empty");
+        return;
       }
     } catch(e) {
       // In ENG builds, we don't have apps in coreAppsDir.
@@ -339,7 +342,11 @@ this.DOMApplicationRegistry = {
     filesToMove.forEach(function(aFile) {
         let file = baseDir.clone();
         file.append(aFile);
-        file.copyTo(destDir, aFile);
+        try {
+          file.copyTo(destDir, aFile);
+        } catch(e) {
+          debug("Error: Failed to copy " + file.path + " to " + destDir.path);
+        }
       });
 
     app.installState = "installed";
@@ -2782,7 +2789,9 @@ this.DOMApplicationRegistry = {
       this.broadcastMessage("Webapps:Uninstall:Broadcast:Return:OK", appClone);
       // Catch exception on callback call to ensure notifying observers after
       try {
-        aOnSuccess();
+        if (aOnSuccess) {
+          aOnSuccess();
+        }
       } catch(ex) {
         Cu.reportError("DOMApplicationRegistry: Exception on app uninstall: " +
                        ex + "\n" + ex.stack);
