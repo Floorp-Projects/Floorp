@@ -11,7 +11,7 @@
 class XPCJSStackFrame : public nsIStackFrame
 {
 public:
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSISTACKFRAME
 
     static nsresult CreateStack(JSContext* cx, XPCJSStackFrame** stack);
@@ -87,7 +87,7 @@ XPCJSStackFrame::~XPCJSStackFrame()
         nsMemory::Free(mFunname);
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(XPCJSStackFrame, nsIStackFrame)
+NS_IMPL_ISUPPORTS1(XPCJSStackFrame, nsIStackFrame)
 
 nsresult
 XPCJSStackFrame::CreateStack(JSContext* cx, XPCJSStackFrame** stack)

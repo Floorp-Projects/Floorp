@@ -1075,8 +1075,8 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(XPCWrappedNative)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXPConnectWrappedNative)
 NS_INTERFACE_MAP_END_THREADSAFE
 
-NS_IMPL_THREADSAFE_ADDREF(XPCWrappedNative)
-NS_IMPL_THREADSAFE_RELEASE(XPCWrappedNative)
+NS_IMPL_ADDREF(XPCWrappedNative)
+NS_IMPL_RELEASE(XPCWrappedNative)
 
 /*
  *  Wrapped Native lifetime management is messy!
@@ -3379,7 +3379,7 @@ void DEBUG_ReportShadowedMembers(XPCNativeSet* set,
 }
 #endif
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(XPCJSObjectHolder, nsIXPConnectJSObjectHolder)
+NS_IMPL_ISUPPORTS1(XPCJSObjectHolder, nsIXPConnectJSObjectHolder)
 
 JSObject*
 XPCJSObjectHolder::GetJSObject()
