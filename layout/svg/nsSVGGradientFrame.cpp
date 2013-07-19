@@ -12,7 +12,6 @@
 #include "mozilla/dom/SVGGradientElement.h"
 #include "mozilla/dom/SVGStopElement.h"
 #include "nsContentUtils.h"
-#include "nsIDOMSVGAnimatedNumber.h"
 #include "nsSVGEffects.h"
 #include "nsSVGAnimatedTransformList.h"
 

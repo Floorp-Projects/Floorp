@@ -16,6 +16,14 @@ class nsIWidget;
 class nsWindow;
 struct nsIntRect;
 
+namespace mozilla {
+namespace widget {
+
+struct MSGResult;
+
+} // namespace widget
+} // namespace mozilla
+
 class nsIMEContext
 {
 public:
@@ -101,18 +109,15 @@ protected:
 
 class nsIMM32Handler
 {
+  typedef mozilla::widget::MSGResult MSGResult;
 public:
   static void Initialize();
   static void Terminate();
-  // The result of Process* method mean "The message was processed, don't
-  // process the message in the caller (nsWindow)" when it's TRUE.  At that
-  // time, aEatMessage means that the message should be passed to next WndProc
-  // when it's FALSE, otherwise, the message should be eaten by us.  When the
-  // result is FALSE, aEatMessage doesn't have any meaning.  Then, the caller
-  // should continue to process the message.
+
+  // If Process*() returns true, the caller shouldn't do anything anymore.
   static bool ProcessMessage(nsWindow* aWindow, UINT msg,
-                               WPARAM &wParam, LPARAM &lParam,
-                               LRESULT *aRetValue, bool &aEatMessage);
+                             WPARAM& wParam, LPARAM& lParam,
+                             MSGResult& aResult);
   static bool IsComposing()
   {
     return IsComposingOnOurEditor() || IsComposingOnPlugin();
@@ -157,51 +162,57 @@ protected:
   static bool ProcessInputLangChangeMessage(nsWindow* aWindow,
                                               WPARAM wParam,
                                               LPARAM lParam,
-                                              LRESULT *aRetValue,
-                                              bool &aEatMessage);
+                                              MSGResult& aResult);
   static bool ProcessMessageForPlugin(nsWindow* aWindow, UINT msg,
                                         WPARAM &wParam, LPARAM &lParam,
-                                        LRESULT *aRetValue,
-                                        bool &aEatMessage);
+                                        MSGResult& aResult);
 
   nsIMM32Handler();
   ~nsIMM32Handler();
 
-  // The result of following On*Event methods means "The message was processed,
-  // don't process the message in the caller (nsWindow)".
-  bool OnMouseEvent(nsWindow* aWindow, LPARAM lParam, int aAction);
+  // On*() methods return true if the caller of message handler shouldn't do
+  // anything anymore.  Otherwise, false.
+  bool OnMouseEvent(nsWindow* aWindow, LPARAM lParam, int aAction,
+                    MSGResult& aResult);
   static bool OnKeyDownEvent(nsWindow* aWindow, WPARAM wParam, LPARAM lParam,
-                               bool &aEatMessage);
+                             MSGResult& aResult);
 
-  // The result of On* methods mean "eat this message" when it's TRUE.
-  bool OnIMEStartComposition(nsWindow* aWindow);
+  bool OnIMEStartComposition(nsWindow* aWindow, MSGResult& aResult);
   bool OnIMEStartCompositionOnPlugin(nsWindow* aWindow,
-                                       WPARAM wParam, LPARAM lParam);
-  bool OnIMEComposition(nsWindow* aWindow, WPARAM wParam, LPARAM lParam);
-  bool OnIMECompositionOnPlugin(nsWindow* aWindow,
-                                  WPARAM wParam, LPARAM lParam);
-  bool OnIMEEndComposition(nsWindow* aWindow);
-  bool OnIMEEndCompositionOnPlugin(nsWindow* aWindow,
-                                     WPARAM wParam, LPARAM lParam);
+                                     WPARAM wParam, LPARAM lParam,
+                                     MSGResult& aResult);
+  bool OnIMEComposition(nsWindow* aWindow, WPARAM wParam, LPARAM lParam,
+                        MSGResult& aResult);
+  bool OnIMECompositionOnPlugin(nsWindow* aWindow, WPARAM wParam, LPARAM lParam,
+                                MSGResult& aResult);
+  bool OnIMEEndComposition(nsWindow* aWindow, MSGResult& aResult);
+  bool OnIMEEndCompositionOnPlugin(nsWindow* aWindow, WPARAM wParam,
+                                   LPARAM lParam, MSGResult& aResult);
   bool OnIMERequest(nsWindow* aWindow, WPARAM wParam, LPARAM lParam,
-                      LRESULT *aResult);
-  bool OnIMECharOnPlugin(nsWindow* aWindow, WPARAM wParam, LPARAM lParam);
-  bool OnChar(nsWindow* aWindow, WPARAM wParam, LPARAM lParam);
-  bool OnCharOnPlugin(nsWindow* aWindow, WPARAM wParam, LPARAM lParam);
-  bool OnInputLangChange(nsWindow* aWindow, WPARAM wParam, LPARAM lParam);
+                    MSGResult& aResult);
+  bool OnIMECharOnPlugin(nsWindow* aWindow, WPARAM wParam, LPARAM lParam,
+                         MSGResult& aResult);
+  bool OnChar(nsWindow* aWindow, WPARAM wParam, LPARAM lParam,
+              MSGResult& aResult);
+  bool OnCharOnPlugin(nsWindow* aWindow, WPARAM wParam, LPARAM lParam,
+                      MSGResult& aResult);
+  void OnInputLangChange(nsWindow* aWindow, WPARAM wParam, LPARAM lParam,
+                         MSGResult& aResult);
 
   // These message handlers don't use instance members, we should not create
   // the instance by the messages.  So, they should be static.
-  static bool OnIMEChar(nsWindow* aWindow, WPARAM wParam, LPARAM lParam);
-  static bool OnIMESetContext(nsWindow* aWindow,
-                                WPARAM wParam, LPARAM lParam,
-                                LRESULT *aResult);
+  static bool OnIMEChar(nsWindow* aWindow, WPARAM wParam, LPARAM lParam,
+                        MSGResult& aResult);
+  static bool OnIMESetContext(nsWindow* aWindow, WPARAM wParam, LPARAM lParam,
+                              MSGResult& aResult);
   static bool OnIMESetContextOnPlugin(nsWindow* aWindow,
-                                        WPARAM wParam, LPARAM lParam,
-                                        LRESULT *aResult);
-  static bool OnIMECompositionFull(nsWindow* aWindow);
-  static bool OnIMENotify(nsWindow* aWindow, WPARAM wParam, LPARAM lParam);
-  static bool OnIMESelect(nsWindow* aWindow, WPARAM wParam, LPARAM lParam);
+                                      WPARAM wParam, LPARAM lParam,
+                                      MSGResult& aResult);
+  static bool OnIMECompositionFull(nsWindow* aWindow, MSGResult& aResult);
+  static bool OnIMENotify(nsWindow* aWindow, WPARAM wParam, LPARAM lParam,
+                          MSGResult& aResult);
+  static bool OnIMESelect(nsWindow* aWindow, WPARAM wParam, LPARAM lParam,
+                          MSGResult& aResult);
 
   // The result of Handle* method mean "Processed" when it's TRUE.
   void HandleStartComposition(nsWindow* aWindow,

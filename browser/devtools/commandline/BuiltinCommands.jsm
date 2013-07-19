@@ -2167,3 +2167,49 @@ gcli.addCommand({
     }
   });
 }(this));
+
+/* CmdMedia ------------------------------------------------------- */
+
+(function(module) {
+  /**
+   * 'media' command
+   */
+
+  gcli.addCommand({
+    name: "media",
+    description: gcli.lookup("mediaDesc")
+  });
+
+  gcli.addCommand({
+    name: "media emulate",
+    description: gcli.lookup("mediaEmulateDesc"),
+    manual: gcli.lookup("mediaEmulateManual"),
+    params: [
+      {
+        name: "type",
+        description: gcli.lookup("mediaEmulateType"),
+        type: {
+               name: "selection",
+               data: ["braille", "embossed", "handheld", "print", "projection",
+                      "screen", "speech", "tty", "tv"]
+              }
+      }
+    ],
+    exec: function(args, context) {
+      let markupDocumentViewer = context.environment.chromeWindow
+                                        .gBrowser.markupDocumentViewer;
+      markupDocumentViewer.emulateMedium(args.type);
+    }
+  });
+
+  gcli.addCommand({
+    name: "media reset",
+    description: gcli.lookup("mediaResetDesc"),
+    manual: gcli.lookup("mediaEmulateManual"),
+    exec: function(args, context) {
+      let markupDocumentViewer = context.environment.chromeWindow
+                                        .gBrowser.markupDocumentViewer;
+      markupDocumentViewer.stopEmulatingMedium();
+    }
+  });
+}(this));

@@ -97,7 +97,7 @@ class TestNavigate(MarionetteTestCase):
             self.assertTrue(self.marionette.find_element("id", "mozLink"))
             self.fail("Should have thrown a MarionetteException")
         except MarionetteException as e:
-            self.assertEqual(str(e), "Error loading page, timed out")
+            self.assertTrue("Error loading page, timed out" in str(e))
         except Exception as inst:
             import traceback
             print traceback.format_exc()

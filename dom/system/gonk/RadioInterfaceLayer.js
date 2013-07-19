@@ -104,7 +104,9 @@ const RIL_IPC_MOBILECONNECTION_MSG_NAMES = [
   "RIL:SetCallBarringOption",
   "RIL:GetCallBarringOption",
   "RIL:SetCallWaitingOption",
-  "RIL:GetCallWaitingOption"
+  "RIL:GetCallWaitingOption",
+  "RIL:SetCallingLineIdRestriction",
+  "RIL:GetCallingLineIdRestriction"
 ];
 
 const RIL_IPC_ICCMANAGER_MSG_NAMES = [
@@ -871,6 +873,14 @@ RadioInterface.prototype = {
         gMessageManager.saveRequestTarget(msg);
         this.getCallWaitingOption(msg.json.data);
         break;
+      case "RIL:SetCallingLineIdRestriction":
+        gMessageManager.saveRequestTarget(msg);
+        this.setCallingLineIdRestriction(msg.json.data);
+        break;
+      case "RIL:GetCallingLineIdRestriction":
+        gMessageManager.saveRequestTarget(msg);
+        this.getCallingLineIdRestriction(msg.json.data);
+        break;
       case "RIL:GetVoicemailInfo":
         // This message is sync.
         return this.voicemailInfo;
@@ -1056,6 +1066,12 @@ RadioInterface.prototype = {
         break;
       case "setCallWaiting":
         this.handleSetCallWaiting(message);
+        break;
+      case "getCLIR":
+        this.handleGetCLIR(message);
+        break;
+      case "setCLIR":
+        this.handleSetCLIR(message);
         break;
       case "setCellBroadcastSearchList":
         this.handleSetCellBroadcastSearchList(message);
@@ -2258,6 +2274,18 @@ RadioInterface.prototype = {
     gMessageManager.sendRequestResults("RIL:SetCallWaitingOption", message);
   },
 
+  handleGetCLIR: function handleGetCLIR(message) {
+    if (DEBUG) this.debug("handleGetCLIR: " + JSON.stringify(message));
+    gMessageManager.sendRequestResults("RIL:GetCallingLineIdRestriction",
+                                       message);
+  },
+
+  handleSetCLIR: function handleSetCLIR(message) {
+    if (DEBUG) this.debug("handleSetCLIR: " + JSON.stringify(message));
+    gMessageManager.sendRequestResults("RIL:SetCallingLineIdRestriction",
+                                       message);
+  },
+
   // nsIObserver
 
   observe: function observe(subject, topic, data) {
@@ -2628,6 +2656,22 @@ RadioInterface.prototype = {
   getCallWaitingOption: function getCallWaitingOption(message) {
     if (DEBUG) this.debug("getCallWaitingOption: " + JSON.stringify(message));
     message.rilMessageType = "queryCallWaiting";
+    this.worker.postMessage(message);
+  },
+
+  setCallingLineIdRestriction: function setCallingLineIdRestriction(message) {
+    if (DEBUG) {
+      this.debug("setCallingLineIdRestriction: " + JSON.stringify(message));
+    }
+    message.rilMessageType = "setCLIR";
+    this.worker.postMessage(message);
+  },
+
+  getCallingLineIdRestriction: function getCallingLineIdRestriction(message) {
+    if (DEBUG) {
+      this.debug("getCallingLineIdRestriction: " + JSON.stringify(message));
+    }
+    message.rilMessageType = "getCLIR";
     this.worker.postMessage(message);
   },
 

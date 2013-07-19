@@ -144,7 +144,7 @@ MOCHITEST_CHROME_FILES = \
   dom_worker_helper.js \
   test_bug883784.xul \
   test_bug883784.jsm \
-  url_worker.js \
+  jsm_url_worker.js \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk

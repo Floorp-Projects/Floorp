@@ -8,148 +8,159 @@
 //////////////////////////////////////////////////////////////////////////
 // Test helpers
 
-function mockLinks(aLinks) {
-  // create link objects where index. corresponds to grid position
-  // falsy values are set to null
-  let links = (typeof aLinks == "string") ?
-              aLinks.split(/\s*,\s*/) : aLinks;
+let TopSitesTestHelper = {
+  setup: function() {
+    return Task.spawn(function(){
+      if (StartUI.isStartPageVisible)
+        return;
 
-  links = links.map(function (id) {
-    return (id) ? {url: "http://example.com/#" + id, title: id} : null;
-  });
-  return links;
-}
+      yield addTab("about:start");
 
-function siteFromNode(aNode) {
-  return {
-    url: aNode.getAttribute("value"),
-    title: aNode.getAttribute("label")
-  };
-}
+      yield waitForCondition(() => StartUI.isStartPageVisible);
+    });
+  },
+  mockLinks: function th_mockLinks(aLinks) {
+    // create link objects where index. corresponds to grid position
+    // falsy values are set to null
+    let links = (typeof aLinks == "string") ?
+                aLinks.split(/\s*,\s*/) : aLinks;
 
-function clearHistory() {
-  PlacesUtils.history.removeAllPages();
-}
+    links = links.map(function (id) {
+      return (id) ? {url: "http://example.com/#" + id, title: id} : null;
+    });
+    return links;
+  },
+  siteFromNode: function th_siteFromNode(aNode) {
+    return {
+      url: aNode.getAttribute("value"),
+      title: aNode.getAttribute("label")
+    }
+  },
+  clearHistory: function th_clearHistory() {
+    PlacesUtils.history.removeAllPages();
+  },
+  fillHistory: function th_fillHistory(aLinks) {
+    return Task.spawn(function(){
+      let numLinks = aLinks.length;
+      let transitionLink = Ci.nsINavHistoryService.TRANSITION_LINK;
 
-function fillHistory(aLinks) {
-  return Task.spawn(function(){
-    let numLinks = aLinks.length;
-    let transitionLink = Ci.nsINavHistoryService.TRANSITION_LINK;
+      let updateDeferred = Promise.defer();
 
-    let updateDeferred = Promise.defer();
-
-    for (let link of aLinks.reverse()) {
-      let place = {
-        uri: Util.makeURI(link.url),
-        title: link.title,
-        visits: [{visitDate: Date.now() * 1000, transitionType: transitionLink}]
-      };
-      try {
-        PlacesUtils.asyncHistory.updatePlaces(place, {
-          handleError: function (aError) {
-            ok(false, "couldn't add visit to history");
-            throw new Task.Result(aError);
-          },
-          handleResult: function () {},
-          handleCompletion: function () {
-            if(--numLinks <= 0) {
-              updateDeferred.resolve(true);
+      for (let link of aLinks.reverse()) {
+        let place = {
+          uri: Util.makeURI(link.url),
+          title: link.title,
+          visits: [{visitDate: Date.now() * 1000, transitionType: transitionLink}]
+        };
+        try {
+          PlacesUtils.asyncHistory.updatePlaces(place, {
+            handleError: function (aError) {
+              ok(false, "couldn't add visit to history");
+              throw new Task.Result(aError);
+            },
+            handleResult: function () {},
+            handleCompletion: function () {
+              if(--numLinks <= 0) {
+                updateDeferred.resolve(true);
+              }
             }
-          }
-        });
-      } catch(e) {
-        ok(false, "because: " + e);
+          });
+        } catch(e) {
+          ok(false, "because: " + e);
+        }
       }
+      return updateDeferred.promise;
+    });
+  },
+
+  /**
+   * Allows to specify the list of pinned links (that have a fixed position in
+   * the grid.
+   * @param aLinksPattern the pattern (see below)
+   *
+   * Example: setPinnedLinks("foo,,bar")
+   * Result: 'http://example.com/#foo' is pinned in the first cell. 'http://example.com/#bar' is
+   *         pinned in the third cell.
+   */
+  setPinnedLinks: function th_setPinnedLinks(aLinks) {
+    let links = TopSitesTestHelper.mockLinks(aLinks);
+
+    // (we trust that NewTabUtils works, and test our consumption of it)
+    // clear all existing pins
+    Array.forEach(NewTabUtils.pinnedLinks.links, function(aLink){
+      if(aLink)
+        NewTabUtils.pinnedLinks.unpin(aLink);
+    });
+
+    links.forEach(function(aLink, aIndex){
+      if(aLink) {
+        NewTabUtils.pinnedLinks.pin(aLink, aIndex);
+      }
+    });
+    NewTabUtils.pinnedLinks.save();
+  },
+
+  /**
+   * Allows to provide a list of links that is used to construct the grid.
+   * @param aLinksPattern the pattern (see below)
+   * @param aPinnedLinksPattern the pattern (see below)
+   *
+   * Example: setLinks("dougal,florence,zebedee")
+   * Result: [{url: "http://example.com/#dougal", title: "dougal"},
+   *          {url: "http://example.com/#florence", title: "florence"}
+   *          {url: "http://example.com/#zebedee", title: "zebedee"}]
+   * Example: setLinks("dougal,florence,zebedee","dougal,,zebedee")
+   * Result: http://example.com/#dougal is pinned at index 0, http://example.com/#florence at index 2
+   */
+
+  setLinks: function th_setLinks(aLinks, aPinnedLinks) {
+    let links = TopSitesTestHelper.mockLinks(aLinks);
+    if (links.filter(function(aLink){
+      return !aLink;
+    }).length) {
+      throw new Error("null link objects in setLinks");
     }
-    return updateDeferred.promise;
-  });
-}
 
-/**
- * Allows to specify the list of pinned links (that have a fixed position in
- * the grid.
- * @param aLinksPattern the pattern (see below)
- *
- * Example: setPinnedLinks("foo,,bar")
- * Result: 'http://example.com/#foo' is pinned in the first cell. 'http://example.com/#bar' is
- *         pinned in the third cell.
- */
-function setPinnedLinks(aLinks) {
-  let links = mockLinks(aLinks);
+    return Task.spawn(function() {
+      TopSitesTestHelper.clearHistory();
 
-  // (we trust that NewTabUtils works, and test our consumption of it)
-  // clear all existing pins
-  Array.forEach(NewTabUtils.pinnedLinks.links, function(aLink){
-    if(aLink)
-      NewTabUtils.pinnedLinks.unpin(aLink);
-  });
+      yield Task.spawn(TopSitesTestHelper.fillHistory(links));
 
-  links.forEach(function(aLink, aIndex){
-    if(aLink) {
-      NewTabUtils.pinnedLinks.pin(aLink, aIndex);
-    }
-  });
-  NewTabUtils.pinnedLinks.save();
-}
+      if(aPinnedLinks) {
+        TopSitesTestHelper.setPinnedLinks(aPinnedLinks);
+      }
 
-/**
- * Allows to provide a list of links that is used to construct the grid.
- * @param aLinksPattern the pattern (see below)
- * @param aPinnedLinksPattern the pattern (see below)
- *
- * Example: setLinks("dougal,florence,zebedee")
- * Result: [{url: "http://example.com/#dougal", title: "dougal"},
- *          {url: "http://example.com/#florence", title: "florence"}
- *          {url: "http://example.com/#zebedee", title: "zebedee"}]
- * Example: setLinks("dougal,florence,zebedee","dougal,,zebedee")
- * Result: http://example.com/#dougal is pinned at index 0, http://example.com/#florence at index 2
- */
+      // reset the TopSites state, have it update its cache with the new data fillHistory put there
+      yield TopSites.prepareCache(true);
+    });
+  },
 
-function setLinks(aLinks, aPinnedLinks) {
-  let links = mockLinks(aLinks);
-  if (links.filter(function(aLink){
-    return !aLink;
-  }).length) {
-    throw new Error("null link objects in setLinks");
+  updatePagesAndWait: function th_updatePagesAndWait() {
+    let deferredUpdate = Promise.defer();
+    let updater = {
+      update: function() {
+        NewTabUtils.allPages.unregister(updater);
+        deferredUpdate.resolve(true);
+      }
+    };
+    NewTabUtils.allPages.register(updater);
+    setTimeout(function() {
+      NewTabUtils.allPages.update();
+    }, 0);
+    return deferredUpdate.promise;
+  },
+
+  tearDown: function th_tearDown() {
+    TopSitesTestHelper.clearHistory();
   }
+};
 
-  return Task.spawn(function() {
-    clearHistory();
-
-    yield Task.spawn(fillHistory(links));
-
-    if(aPinnedLinks) {
-      setPinnedLinks(aPinnedLinks);
-    }
-
-    // reset the TopSites state, have it update its cache with the new data fillHistory put there
-    yield TopSites.prepareCache(true);
-  });
-}
-
-function updatePagesAndWait() {
-  let deferredUpdate = Promise.defer();
-  let updater = {
-    update: function() {
-      NewTabUtils.allPages.unregister(updater);
-      deferredUpdate.resolve(true);
-    }
-  };
-  NewTabUtils.allPages.register(updater);
-  setTimeout(function() {
-    NewTabUtils.allPages.update();
-  }, 0);
-  return deferredUpdate.promise;
-}
 
 //////////////////////////////////////////////////////////////////////////
 
-function tearDown() {
-  clearHistory();
-}
 
 function test() {
-  registerCleanupFunction(tearDown);
+  registerCleanupFunction(TopSitesTestHelper.tearDown);
   runTests();
 }
 
@@ -164,15 +175,16 @@ gTests.push({
 gTests.push({
   desc: "load and display top sites",
   setUp: function() {
-    // setup - set history to known state
-    yield setLinks("brian,dougal,dylan,ermintrude,florence,moose,sgtsam,train,zebedee,zeebad");
+    yield TopSitesTestHelper.setup();
     let grid = document.getElementById("start-topsites-grid");
 
-    yield updatePagesAndWait();
+    // setup - set history to known state
+    yield TopSitesTestHelper.setLinks("brian,dougal,dylan,ermintrude,florence,moose,sgtsam,train,zebedee,zeebad");
+
+    let arrangedPromise = waitForEvent(grid, "arranged");
+    yield TopSitesTestHelper.updatePagesAndWait();
+    yield arrangedPromise;
     // pause until the update has fired and the view is finishd updating
-    yield waitForCondition(function(){
-      return !grid.controller.isUpdating;
-    });
   },
   run: function() {
     let grid = document.getElementById("start-topsites-grid");
@@ -198,17 +210,16 @@ gTests.push({
   desc: "pinned sites",
   pins: "dangermouse,zebedee,,,dougal",
   setUp: function() {
+    yield TopSitesTestHelper.setup();
     // setup - set history to known state
-    yield setLinks(
+    yield TopSitesTestHelper.setLinks(
       "brian,dougal,dylan,ermintrude,florence,moose,sgtsam,train,zebedee,zeebad",
       this.pins
     );
-    yield updatePagesAndWait();
-    // pause until the update has fired and the view is finished updating
-    yield waitForCondition(function(){
-      let grid = document.getElementById("start-topsites-grid");
-      return !grid.controller.isUpdating;
-    });
+    // pause until the update has fired and the view is finishd updating
+    let arrangedPromise = waitForEvent(document.getElementById("start-topsites-grid"), "arranged");
+    yield TopSitesTestHelper.updatePagesAndWait();
+    yield arrangedPromise;
   },
   run: function() {
     // test that pinned state of each site as rendered matches our expectations
@@ -243,14 +254,13 @@ gTests.push({
 gTests.push({
   desc: "pin site",
   setUp: function() {
+    yield TopSitesTestHelper.setup();
     // setup - set history to known state
-    yield setLinks("sgtsam,train,zebedee,zeebad", []); // nothing initially pinned
-    yield updatePagesAndWait();
-    // pause until the update has fired and the view is finished updating
-    yield waitForCondition(function(){
-      let grid = document.getElementById("start-topsites-grid");
-      return !grid.controller.isUpdating;
-    });
+    yield TopSitesTestHelper.setLinks("sgtsam,train,zebedee,zeebad", []); // nothing initially pinned
+    // pause until the update has fired and the view is finishd updating
+    let arrangedPromise = waitForEvent(document.getElementById("start-topsites-grid"), "arranged");
+    yield TopSitesTestHelper.updatePagesAndWait();
+    yield arrangedPromise;
   },
   run: function() {
     // pin a site
@@ -270,6 +280,7 @@ gTests.push({
           title: title
         }], [2]);
 
+    // pinning shouldn't require re-arranging - just wait for isUpdating flag to flip
     yield waitForCondition(function(){
       return !grid.controller.isUpdating;
     });
@@ -278,16 +289,14 @@ gTests.push({
     ok( thirdTile.hasAttribute("pinned"), thirdTile.getAttribute("value")+ " should look pinned" );
 
     // visit some more sites
-    yield fillHistory( mockLinks("brian,dougal,dylan,ermintrude,florence,moose") );
+    yield TopSitesTestHelper.fillHistory( TopSitesTestHelper.mockLinks("brian,dougal,dylan,ermintrude,florence,moose") );
 
     // force flush and repopulation of links cache
     yield TopSites.prepareCache(true);
-    yield updatePagesAndWait();
-
     // pause until the update has fired and the view is finishd updating
-    yield waitForCondition(function(){
-      return !grid.controller.isUpdating;
-    });
+    let arrangedPromise = waitForEvent(grid, "arranged");
+    yield TopSitesTestHelper.updatePagesAndWait();
+    yield arrangedPromise;
 
     // check zebedee is still pinned at index 2
     is( items[2].getAttribute("label"), "zebedee", "Pinned site remained at its index" );
@@ -299,23 +308,16 @@ gTests.push({
   desc: "unpin site",
   pins: ",zebedee",
   setUp: function() {
-    try {
-      // setup - set history to known state
-      yield setLinks(
-        "brian,dougal,dylan,ermintrude,florence,moose,sgtsam,train,zebedee,zeebad",
-        this.pins
-      );
-      yield updatePagesAndWait();
-
-      // pause until the update has fired and the view is finished updating
-      yield waitForCondition(function(){
-        let grid = document.getElementById("start-topsites-grid");
-        return !grid.controller.isUpdating;
-      });
-    } catch(e) {
-      info("caught error in setUp: " + e);
-      info("trace: " + e.stack);
-    }
+    yield TopSitesTestHelper.setup();
+    // setup - set history to known state
+    yield TopSitesTestHelper.setLinks(
+      "brian,dougal,dylan,ermintrude,florence,moose,sgtsam,train,zebedee,zeebad",
+      this.pins
+    );
+    // pause until the update has fired and the view is finishd updating
+    let arrangedPromise = waitForEvent(document.getElementById("start-topsites-grid"), "arranged");
+    yield TopSitesTestHelper.updatePagesAndWait();
+    yield arrangedPromise;
   },
   run: function() {
     // unpin a pinned site
@@ -331,6 +333,7 @@ gTests.push({
     ok( NewTabUtils.pinnedLinks.isPinned(site), "2nd item is pinned" );
     ok( items[1].hasAttribute("pinned"), "2nd item has pinned attribute" );
 
+    // unpinning shouldn't require re-arranging - just wait for isUpdating flag to flip
     TopSites.unpinSites([site]);
 
     yield waitForCondition(function(){
@@ -346,18 +349,16 @@ gTests.push({
 gTests.push({
   desc: "block/unblock sites",
   setUp: function() {
+    yield TopSitesTestHelper.setup();
     // setup - set topsites to known state
-    yield setLinks(
+    yield TopSitesTestHelper.setLinks(
       "brian,dougal,dylan,ermintrude,florence,moose,sgtsam,train,zebedee,zeebad,basic,coral",
       ",dougal"
     );
-    yield updatePagesAndWait();
-
-    // pause until the update has fired and the view is finished updating
-    yield waitForCondition(function(){
-      let grid = document.getElementById("start-topsites-grid");
-      return !grid.controller.isUpdating;
-    });
+    // pause until the update has fired and the view is finishd updating
+    let arrangedPromise = waitForEvent(document.getElementById("start-topsites-grid"), "arranged");
+    yield TopSitesTestHelper.updatePagesAndWait();
+    yield arrangedPromise;
   },
   run: function() {
     try {
@@ -367,17 +368,15 @@ gTests.push({
           items = grid.children;
       is(items.length, 8, this.desc + ": should be 8 topsites");
 
-      let brianSite = siteFromNode(items[0]);
-      let dougalSite = siteFromNode(items[1]);
-      let dylanSite = siteFromNode(items[2]);
+      let brianSite = TopSitesTestHelper.siteFromNode(items[0]);
+      let dougalSite = TopSitesTestHelper.siteFromNode(items[1]);
+      let dylanSite = TopSitesTestHelper.siteFromNode(items[2]);
 
+      let arrangedPromise = waitForEvent(grid, "arranged");
       // we'll block brian (he's not pinned)
       TopSites.hideSites([brianSite]);
-
       // pause until the update has fired and the view is finished updating
-      yield waitForCondition(function(){
-        return !grid.controller.isUpdating;
-      });
+      yield arrangedPromise;
 
       // verify brian is blocked and removed from the grid
       ok( (new Site(brianSite)).blocked, "Site has truthy blocked property" );
@@ -387,13 +386,11 @@ gTests.push({
       // make sure the empty slot was backfilled
       is(items.length, 8, this.desc + ": should be 8 topsites");
 
+      arrangedPromise = waitForEvent(grid, "arranged");
       // block dougal,dylan. dougal is currently pinned at index 1
       TopSites.hideSites([dougalSite, dylanSite]);
-
       // pause until the update has fired and the view is finished updating
-      yield waitForCondition(function(){
-        return !grid.controller.isUpdating;
-      });
+      yield arrangedPromise;
 
       // verify dougal is blocked and removed from the grid
       ok( (new Site(dougalSite)).blocked, "Site has truthy blocked property" );
@@ -410,11 +407,10 @@ gTests.push({
       // make sure the empty slots were backfilled
       is(items.length, 8, this.desc + ": should be 8 topsites");
 
+      arrangedPromise = waitForEvent(grid, "arranged");
       TopSites.restoreSites([brianSite, dougalSite, dylanSite]);
-
-      yield waitForCondition(function(){
-        return !grid.controller.isUpdating;
-      });
+      // pause until the update has fired and the view is finished updating
+      yield arrangedPromise;
 
       // verify brian, dougal and dyland are unblocked and back in the grid
       ok( !NewTabUtils.blockedLinks.isBlocked(brianSite), "site was unblocked" );
@@ -434,6 +430,87 @@ gTests.push({
       ok(false, this.desc+": Caught exception in test: " + ex);
       info("trace: " + ex.stack);
     }
+  }
+});
+
+gTests.push({
+  desc: "delete and restore site tiles",
+  pins: "brian",
+  setUp: function() {
+    yield TopSitesTestHelper.setup();
+    // setup - set history to known state
+    yield TopSitesTestHelper.setLinks(
+      "brian,dougal,dylan,ermintrude",
+      this.pins
+    );
+    // pause until the update has fired and the view is finishd updating
+    let arrangedPromise = waitForEvent(document.getElementById("start-topsites-grid"), "arranged");
+    yield TopSitesTestHelper.updatePagesAndWait();
+    yield arrangedPromise;
+  },
+  run: function() {
+    // delete a both pinned and unpinned sites
+    // test that sites are removed from the grid
+    let grid = document.getElementById("start-topsites-grid"),
+        items = grid.children;
+    is(items.length, 4, this.desc + ": should be 4 topsites");
+
+    let brianTile = grid.querySelector('richgriditem[value$="brian"]');
+    let dougalTile = grid.querySelector('richgriditem[value$="dougal"]')
+
+    // verify assumptions before deleting sites
+    ok( brianTile, "Tile for Brian was created");
+    ok( dougalTile, "Tile for Dougal was created");
+
+    let brianSite = TopSitesTestHelper.siteFromNode(brianTile);
+    let dougalSite = TopSitesTestHelper.siteFromNode(dougalTile);
+    ok( NewTabUtils.pinnedLinks.isPinned( brianSite ), "Brian tile is pinned" );
+
+    // select the 2 tiles
+    grid.toggleItemSelection(brianTile);
+    grid.toggleItemSelection(dougalTile);
+    is(grid.selectedItems.length, 2, "2 tiles were selected");
+
+    // pause until the update has fired and the view is finishd updating
+    let arrangedPromise = waitForEvent(grid, "arranged");
+
+    // raise a mock context-action event to trigger deletion of the selection
+    let event = document.createEvent("Events");
+    event.action = "delete";
+    event.initEvent("context-action", true, true); // is cancelable
+    grid.dispatchEvent(event);
+
+    yield arrangedPromise;
+
+    // those sites are blocked and their tiles have been removed from the grid?
+    ok( !grid.querySelector('richgriditem[value="'+brianSite.value+'"]'));
+    ok( !grid.querySelector('richgriditem[value="'+dougalSite.value+'"]'));
+    ok( NewTabUtils.blockedLinks.isBlocked(brianSite), "Brian site was blocked" );
+    ok( NewTabUtils.blockedLinks.isBlocked(dougalSite), "Dougal site was blocked" );
+    // with the tiles deleted, selection should be empty
+    is( grid.selectedItems.length, 0, "Gris selection is empty after deletion" );
+
+    // raise a mock context-action event to trigger restore
+    arrangedPromise = waitForEvent(grid, "arranged");
+    event = document.createEvent("Events");
+    event.action = "restore";
+    event.initEvent("context-action", true, true); // is cancelable
+    grid.dispatchEvent(event);
+
+    yield arrangedPromise;
+    brianTile = grid.querySelector('richgriditem[value$="brian"]');
+    dougalTile = grid.querySelector('richgriditem[value$="dougal"]');
+
+    // those tiles have been restored to the grid?
+    ok( brianTile, "First tile was restored to the grid" );
+    ok( dougalTile, "2nd tile was restored to the grid" );
+
+    is(grid.selectedItems.length, 2, "2 tiles are still selected");
+    is( grid.selectedItems[0], brianTile, "Brian is still selected" );
+    is( grid.selectedItems[1], dougalTile, "Dougal is still selected" );
+    ok( NewTabUtils.pinnedLinks.isPinned( brianSite ), "Brian tile is still pinned" );
+    ok( !NewTabUtils.blockedLinks.isBlocked(brianSite), "Brian site was unblocked" );
+    ok( !NewTabUtils.blockedLinks.isBlocked(dougalSite), "Dougal site was unblocked" );
 
   }
 });

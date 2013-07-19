@@ -7,15 +7,18 @@
 // Request handlers may throw exceptions, and those exception should be caught
 // by the server and converted into the proper error codes.
 
-var tests =
-  [
-   new Test("http://localhost:4444/throws/exception",
+XPCOMUtils.defineLazyGetter(this, "tests", function() {
+  return [
+    new Test("http://localhost:" + srv.identity.primaryPort + "/throws/exception",
             null, start_throws_exception, succeeded),
-   new Test("http://localhost:4444/this/file/does/not/exist/and/404s",
+    new Test("http://localhost:" + srv.identity.primaryPort +
+            "/this/file/does/not/exist/and/404s",
             null, start_nonexistent_404_fails_so_400, succeeded),
-   new Test("http://localhost:4444/attempts/404/fails/so/400/fails/so/500s",
+    new Test("http://localhost:" + srv.identity.primaryPort +
+            "/attempts/404/fails/so/400/fails/so/500s",
             register400Handler, start_multiple_exceptions_500, succeeded),
   ];
+});
 
 var srv;
 
@@ -26,7 +29,7 @@ function run_test()
   srv.registerErrorHandler(404, throwsException);
   srv.registerPathHandler("/throws/exception", throwsException);
 
-  srv.start(4444);
+  srv.start(-1);
 
   runHttpTests(tests, testComplete(srv));
 }

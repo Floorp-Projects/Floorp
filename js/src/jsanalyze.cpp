@@ -7,6 +7,7 @@
 #include "jsanalyze.h"
 
 #include "mozilla/DebugOnly.h"
+#include "mozilla/MathAlgorithms.h"
 #include "mozilla/PodOperations.h"
 
 #include "jscompartment.h"
@@ -22,6 +23,7 @@ using namespace js::analyze;
 using mozilla::DebugOnly;
 using mozilla::PodCopy;
 using mozilla::PodZero;
+using mozilla::FloorLog2;
 
 /////////////////////////////////////////////////////////////////////
 // Bytecode
@@ -1473,9 +1475,7 @@ PhiNodeCapacity(unsigned length)
     if (length <= 4)
         return 4;
 
-    unsigned log2;
-    JS_FLOOR_LOG2(log2, length - 1);
-    return 1 << (log2 + 1);
+    return 1 << (FloorLog2(length - 1) + 1);
 }
 
 bool

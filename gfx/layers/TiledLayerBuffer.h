@@ -225,6 +225,7 @@ TiledLayerBuffer<Derived, Tile>::GetTile(const nsIntPoint& aTileOrigin) const
   // TODO Cache firstTileOriginX/firstTileOriginY
   // Find the tile x/y of the first tile and the target tile relative to the (0, 0)
   // origin, the difference is the tile x/y relative to the start of the tile buffer.
+  volatile float resolution = mResolution; // bug 881018 investigation
   int firstTileX = floor_div(mValidRegion.GetBounds().x, GetScaledTileLength());
   int firstTileY = floor_div(mValidRegion.GetBounds().y, GetScaledTileLength());
   return GetTile(floor_div(aTileOrigin.x, GetScaledTileLength()) - firstTileX,
