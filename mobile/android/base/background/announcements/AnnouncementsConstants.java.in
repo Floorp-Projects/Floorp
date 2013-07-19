@@ -42,8 +42,8 @@ public class AnnouncementsConstants {
 
   // Don't track last launch if the timestamp is ridiculously out of range:
   // four years after build.
-  public static long LATEST_ACCEPTED_LAUNCH_TIMESTAMP = GlobalConstants.BUILD_TIMESTAMP +
-                                                        4 * 365 * MILLISECONDS_PER_DAY;
+  public static long LATEST_ACCEPTED_LAUNCH_TIMESTAMP_MSEC = GlobalConstants.BUILD_TIMESTAMP_MSEC +
+                                                             4 * 365 * MILLISECONDS_PER_DAY;
 
   public static String ANNOUNCE_USER_AGENT = "Firefox Announcements " + GlobalConstants.MOZ_APP_VERSION;
   public static String ANNOUNCE_CHANNEL = GlobalConstants.MOZ_UPDATE_CHANNEL.replace("default", GlobalConstants.MOZ_OFFICIAL_BRANDING ? "release" : "dev");
