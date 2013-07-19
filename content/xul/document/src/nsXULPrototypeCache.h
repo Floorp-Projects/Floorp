@@ -36,7 +36,7 @@ class nsXULPrototypeCache : public nsIObserver
 {
 public:
     // nsISupports
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSIOBSERVER
 
     bool IsCached(nsIURI* aURI) {
