@@ -129,6 +129,7 @@ extern boolean gsmsdp_update_local_sdp_media_capability(fsmdef_dcb_t *dcb_p,
                                               boolean refresh, boolean hold);
 boolean is_gsmsdp_media_ip_updated_to_latest( fsmdef_dcb_t * dcb );
 
+cc_causes_t gsmsdp_check_ice_attributes_exist(fsm_fcb_t *fcb_p);
 cc_causes_t gsmsdp_install_peer_ice_attributes(fsm_fcb_t *fcb_p);
 cc_causes_t gsmsdp_configure_dtls_data_attributes(fsm_fcb_t *fcb_p);
 cc_causes_t gsmsdp_find_level_from_mid(fsmdef_dcb_t * dcb, const char * mid, uint16_t *level);
