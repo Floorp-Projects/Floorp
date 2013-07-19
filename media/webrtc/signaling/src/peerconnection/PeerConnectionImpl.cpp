@@ -316,7 +316,7 @@ private:
   nsRefPtr<RemoteSourceStreamInfo> mRemoteStream;
 };
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(PeerConnectionImpl, IPeerConnection)
+NS_IMPL_ISUPPORTS1(PeerConnectionImpl, IPeerConnection)
 
 PeerConnectionImpl::PeerConnectionImpl()
 : mRole(kRoleUnknown)

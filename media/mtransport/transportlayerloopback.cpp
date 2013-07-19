@@ -108,8 +108,7 @@ void TransportLayerLoopback::DeliverPackets() {
   }
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(TransportLayerLoopback::Deliverer,
-                              nsITimerCallback)
+NS_IMPL_ISUPPORTS1(TransportLayerLoopback::Deliverer, nsITimerCallback)
 
 NS_IMETHODIMP TransportLayerLoopback::Deliverer::Notify(nsITimer *timer) {
   if (!layer_)

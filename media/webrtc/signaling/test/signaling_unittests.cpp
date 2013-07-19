@@ -177,7 +177,7 @@ public:
 
   std::vector<DOMMediaStream *> GetStreams() { return streams; }
 
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_IPEERCONNECTIONOBSERVER
 
   ResponseState state;
@@ -193,9 +193,9 @@ private:
   std::vector<DOMMediaStream *> streams;
 };
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(TestObserver,
-                              IPeerConnectionObserver,
-                              nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS2(TestObserver,
+                   IPeerConnectionObserver,
+                   nsISupportsWeakReference)
 
 NS_IMETHODIMP
 TestObserver::OnCreateOfferSuccess(const char* offer)
