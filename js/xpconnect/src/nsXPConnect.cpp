@@ -54,12 +54,12 @@ using namespace mozilla::dom;
 using namespace xpc;
 using namespace JS;
 
-NS_IMPL_THREADSAFE_ISUPPORTS5(nsXPConnect,
-                              nsIXPConnect,
-                              nsISupportsWeakReference,
-                              nsIThreadObserver,
-                              nsIJSRuntimeService,
-                              nsIJSEngineTelemetryStats)
+NS_IMPL_ISUPPORTS5(nsXPConnect,
+                   nsIXPConnect,
+                   nsISupportsWeakReference,
+                   nsIThreadObserver,
+                   nsIJSRuntimeService,
+                   nsIJSEngineTelemetryStats)
 
 nsXPConnect* nsXPConnect::gSelf = nullptr;
 JSBool       nsXPConnect::gOnceAliveNowDead = false;

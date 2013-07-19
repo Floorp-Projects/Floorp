@@ -19,7 +19,7 @@ using namespace JS;
 /***************************************************************************/
 // nsJSID
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsJSID, nsIJSID)
+NS_IMPL_ISUPPORTS1(nsJSID, nsIJSID)
 
 char nsJSID::gNoString[] = "";
 
@@ -212,7 +212,7 @@ nsJSID::NewID(const nsID& id)
 class SharedScriptableHelperForJSIID MOZ_FINAL : public nsIXPCScriptable
 {
 public:
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSIXPCSCRIPTABLE
     SharedScriptableHelperForJSIID() {}
 };
@@ -222,8 +222,8 @@ NS_INTERFACE_MAP_BEGIN(SharedScriptableHelperForJSIID)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXPCScriptable)
 NS_INTERFACE_MAP_END_THREADSAFE
 
-NS_IMPL_THREADSAFE_ADDREF(SharedScriptableHelperForJSIID)
-NS_IMPL_THREADSAFE_RELEASE(SharedScriptableHelperForJSIID)
+NS_IMPL_ADDREF(SharedScriptableHelperForJSIID)
+NS_IMPL_RELEASE(SharedScriptableHelperForJSIID)
 
 // The nsIXPCScriptable map declaration that will generate stubs for us...
 #define XPC_MAP_CLASSNAME           SharedScriptableHelperForJSIID
@@ -292,8 +292,8 @@ NS_INTERFACE_MAP_BEGIN(nsJSIID)
   NS_IMPL_QUERY_CLASSINFO(nsJSIID)
 NS_INTERFACE_MAP_END_THREADSAFE
 
-NS_IMPL_THREADSAFE_ADDREF(nsJSIID)
-NS_IMPL_THREADSAFE_RELEASE(nsJSIID)
+NS_IMPL_ADDREF(nsJSIID)
+NS_IMPL_RELEASE(nsJSIID)
 NS_IMPL_CI_INTERFACE_GETTER2(nsJSIID, nsIJSID, nsIJSIID)
 
 // The nsIXPCScriptable map declaration that will generate stubs for us...
@@ -610,8 +610,8 @@ NS_INTERFACE_MAP_BEGIN(nsJSCID)
   NS_IMPL_QUERY_CLASSINFO(nsJSCID)
 NS_INTERFACE_MAP_END_THREADSAFE
 
-NS_IMPL_THREADSAFE_ADDREF(nsJSCID)
-NS_IMPL_THREADSAFE_RELEASE(nsJSCID)
+NS_IMPL_ADDREF(nsJSCID)
+NS_IMPL_RELEASE(nsJSCID)
 NS_IMPL_CI_INTERFACE_GETTER2(nsJSCID, nsIJSID, nsIJSCID)
 
 // The nsIXPCScriptable map declaration that will generate stubs for us...

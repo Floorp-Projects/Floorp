@@ -21,7 +21,7 @@
 using namespace xpc;
 using namespace JS;
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsXPCWrappedJSClass, nsIXPCWrappedJSClass)
+NS_IMPL_ISUPPORTS1(nsXPCWrappedJSClass, nsIXPCWrappedJSClass)
 
 // the value of this variable is never used - we use its address as a sentinel
 static uint32_t zero_methods_descriptor;

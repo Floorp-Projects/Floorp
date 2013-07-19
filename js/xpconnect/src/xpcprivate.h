@@ -439,7 +439,7 @@ class nsXPConnect : public nsIXPConnect,
 {
 public:
     // all the interface method declarations...
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSIXPCONNECT
     NS_DECL_NSITHREADOBSERVER
     NS_DECL_NSIJSRUNTIMESERVICE
@@ -2228,7 +2228,7 @@ void *xpc_GetJSPrivate(JSObject *obj);
 class XPCWrappedNative : public nsIXPConnectWrappedNative
 {
 public:
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSIXPCONNECTJSOBJECTHOLDER
     NS_DECL_NSIXPCONNECTWRAPPEDNATIVE
     // No need to unlink the JS objects, if the XPCWrappedNative will be cycle
@@ -2618,7 +2618,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIXPCWrappedJSClass,
 class nsXPCWrappedJSClass : public nsIXPCWrappedJSClass
 {
     // all the interface method declarations...
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
     NS_IMETHOD DebugDump(int16_t depth);
 public:
 
@@ -2715,7 +2715,7 @@ class nsXPCWrappedJS : protected nsAutoXPTCStub,
                        public XPCRootSetElem
 {
 public:
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSIXPCONNECTJSOBJECTHOLDER
     NS_DECL_NSIXPCONNECTWRAPPEDJS
     NS_DECL_NSISUPPORTSWEAKREFERENCE
@@ -2812,7 +2812,7 @@ class XPCJSObjectHolder : public nsIXPConnectJSObjectHolder,
 {
 public:
     // all the interface method declarations...
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSIXPCONNECTJSOBJECTHOLDER
 
     // non-interface implementation
@@ -3026,7 +3026,7 @@ class nsXPCException :
 public:
     NS_DEFINE_STATIC_CID_ACCESSOR(NS_XPCEXCEPTION_CID)
 
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSIEXCEPTION
     NS_DECL_NSIXPCEXCEPTION
 
@@ -3085,7 +3085,7 @@ class nsJSID : public nsIJSID
 public:
     NS_DEFINE_STATIC_CID_ACCESSOR(NS_JS_ID_CID)
 
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSIJSID
 
     bool InitWithName(const nsID& id, const char *nameString);
@@ -3120,7 +3120,7 @@ class nsJSIID : public nsIJSIID,
                 public nsISecurityCheckedComponent
 {
 public:
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
 
     // we manually delagate these to nsJSID
     NS_DECL_NSIJSID
@@ -3145,7 +3145,7 @@ private:
 class nsJSCID : public nsIJSCID, public nsIXPCScriptable
 {
 public:
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
 
     // we manually delagate these to nsJSID
     NS_DECL_NSIJSID
@@ -3243,7 +3243,7 @@ class nsXPCComponents : public nsIXPCComponents,
                         public nsISecurityCheckedComponent
 {
 public:
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSIXPCCOMPONENTS
     NS_DECL_NSIXPCSCRIPTABLE
     NS_DECL_NSICLASSINFO
@@ -3319,7 +3319,7 @@ public:
 
   // TODO - do something reasonable on getting null from these babies.
 
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSICONSOLEMESSAGE
     NS_DECL_NSISCRIPTERROR
 
