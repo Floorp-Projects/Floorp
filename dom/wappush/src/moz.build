@@ -5,8 +5,9 @@
 
 if CONFIG['MOZ_B2G_RIL']:
     EXTRA_JS_MODULES = [
+        'gonk/CpPduHelper.jsm',
         'gonk/SiPduHelper.jsm',
         'gonk/SlPduHelper.jsm',
         'gonk/WapPushManager.js',
-        'gonk/WbxmlPduHelper.jsm',
+        'gonk/WbxmlPduHelper.jsm'
     ]
