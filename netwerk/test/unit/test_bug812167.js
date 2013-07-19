@@ -15,9 +15,16 @@ Cu.import("resource://testing-common/httpd.js");
 var httpserver = null;
 // Need to randomize, because apparently no one clears our cache
 var randomPath1 = "/redirect-no-store/" + Math.random();
-var randomURI1 = "http://localhost:4444" + randomPath1;
+
+XPCOMUtils.defineLazyGetter(this, "randomURI1", function() {
+  return "http://localhost:" + httpserver.identity.primaryPort + randomPath1;
+});
+
 var randomPath2 = "/redirect-expires-past/" + Math.random();
-var randomURI2 = "http://localhost:4444" + randomPath2;
+
+XPCOMUtils.defineLazyGetter(this, "randomURI2", function() {
+  return "http://localhost:" + httpserver.identity.primaryPort + randomPath2;
+});
 
 function make_channel(url, callback, ctx) {
   var ios = Cc["@mozilla.org/network/io-service;1"].
@@ -30,7 +37,8 @@ const responseBody = "response body";
 function redirectHandler_NoStore(metadata, response)
 {
   response.setStatusLine(metadata.httpVersion, 302, "Found");
-  response.setHeader("Location", "http://localhost:4444/content", false);
+  response.setHeader("Location", "http://localhost:" +
+                     httpserver.identity.primaryPort + "/content", false);
   response.setHeader("Cache-control", "no-store");
   return;
 }
@@ -38,7 +46,8 @@ function redirectHandler_NoStore(metadata, response)
 function redirectHandler_ExpiresInPast(metadata, response)
 {
   response.setStatusLine(metadata.httpVersion, 302, "Found");
-  response.setHeader("Location", "http://localhost:4444/content", false);
+  response.setHeader("Location", "http://localhost:" +
+                     httpserver.identity.primaryPort + "/content", false);
   response.setHeader("Expires", "-1");
   return;
 }
@@ -89,7 +98,7 @@ function run_test()
   httpserver.registerPathHandler(randomPath1, redirectHandler_NoStore);
   httpserver.registerPathHandler(randomPath2, redirectHandler_ExpiresInPast);
   httpserver.registerPathHandler("/content", contentHandler);
-  httpserver.start(4444);
+  httpserver.start(-1);
 
   run_test_no_store();
   do_test_pending();

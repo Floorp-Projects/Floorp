@@ -46,7 +46,8 @@ var listener_3 = {
     }
 };
 
-var listener_2 = {
+XPCOMUtils.defineLazyGetter(this, "listener_2", function() {
+    return {
     // this listener is used to process the revalidation of the
     // corrupted cache entry. its revalidation prompts it to be cleaned
 
@@ -73,12 +74,16 @@ var listener_2 = {
     onStopRequest: function test_onStopR(request, ctx, status) {
 	var channel = request.QueryInterface(Ci.nsIHttpChannel);
 
-	var chan = ios.newChannel("http://localhost:4444/test1", "", null);
+	var chan = ios.newChannel("http://localhost:" +
+				  httpserver.identity.primaryPort +
+				  "/test1", "", null);
 	chan.asyncOpen(listener_3, null);
     }
 };
+});
 
-var listener_1 = {
+XPCOMUtils.defineLazyGetter(this, "listener_1", function() {
+    return {
     // this listener processes the initial request from a empty cache.
     // the server responds with the wrong data ('A')
 
@@ -101,10 +106,13 @@ var listener_1 = {
     onStopRequest: function test_onStopR(request, ctx, status) {
 	var channel = request.QueryInterface(Ci.nsIHttpChannel);
 
-	var chan = ios.newChannel("http://localhost:4444/test1", "", null);
+	var chan = ios.newChannel("http://localhost:" +
+				  httpserver.identity.primaryPort +
+				  "/test1", "", null);
 	chan.asyncOpen(listener_2, null);
     }
 };
+});
 
 function run_test() {
     do_get_profile();
@@ -114,9 +122,11 @@ function run_test() {
     evict_cache_entries();
 
     httpserver.registerPathHandler("/test1", handler);
-    httpserver.start(4444);
+    httpserver.start(-1);
 
-    var chan = ios.newChannel("http://localhost:4444/test1", "", null);
+    var port = httpserver.identity.primaryPort;
+
+    var chan = ios.newChannel("http://localhost:" + port + "/test1", "", null);
     chan.asyncOpen(listener_1, null);
 
     do_test_pending();

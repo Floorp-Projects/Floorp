@@ -12,7 +12,9 @@ Cu.import("resource://testing-common/httpd.js");
 var httpServer = null;
 
 var BadRedirectPath = "/BadRedirect";
-var BadRedirectURI = "http://localhost:4444" + BadRedirectPath;
+XPCOMUtils.defineLazyGetter(this, "BadRedirectURI", function() {
+  return "http://localhost:" + httpServer.identity.primaryPort + BadRedirectPath;
+});
 
 function make_channel(url, callback, ctx) {
   var ios = Cc["@mozilla.org/network/io-service;1"].
@@ -38,7 +40,7 @@ function run_test()
 {
   httpServer = new HttpServer();
   httpServer.registerPathHandler(BadRedirectPath, BadRedirectHandler);
-  httpServer.start(4444);
+  httpServer.start(-1);
 
   var chan = make_channel(BadRedirectURI);
   chan.asyncOpen(new ChannelListener(checkFailed, null, CL_EXPECT_FAILURE),

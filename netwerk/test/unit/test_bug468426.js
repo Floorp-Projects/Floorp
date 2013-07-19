@@ -40,7 +40,8 @@ var tests = [
 function setupChannel(suffix, value, cookie) {
     var ios = Components.classes["@mozilla.org/network/io-service;1"]
             .getService(Ci.nsIIOService);
-    var chan = ios.newChannel("http://localhost:4444" + suffix, "", null);
+    var chan = ios.newChannel("http://localhost:" +
+                             httpserver.identity.primaryPort + suffix, "", null);
     var httpChan = chan.QueryInterface(Components.interfaces.nsIHttpChannel);
     httpChan.requestMethod = "GET";
     httpChan.setRequestHeader("x-request", value, false);
@@ -69,7 +70,7 @@ function checkValueAndTrigger(request, data, ctx) {
 
 function run_test() {
     httpserver.registerPathHandler("/bug468426", handler);
-    httpserver.start(4444);
+    httpserver.start(-1);
 
     // Clear cache and trigger the first test
     evict_cache_entries();

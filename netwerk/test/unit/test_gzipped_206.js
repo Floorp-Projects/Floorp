@@ -61,7 +61,8 @@ function cachedHandler(metadata, response) {
 
 function continue_test(request, data) {
   do_check_true(17 == data.length);
-  var chan = make_channel("http://localhost:4444/cached/test.gz");
+  var chan = make_channel("http://localhost:" +
+                          httpserver.identity.primaryPort + "/cached/test.gz");
   chan.asyncOpen(new ChannelListener(finish_test, null, CL_EXPECT_GZIP), null);
 }
 
@@ -77,12 +78,13 @@ function finish_test(request, data, ctx) {
 function run_test() {
   httpserver = new HttpServer();
   httpserver.registerPathHandler("/cached/test.gz", cachedHandler);
-  httpserver.start(4444);
+  httpserver.start(-1);
 
   // wipe out cached content
   evict_cache_entries();
 
-  var chan = make_channel("http://localhost:4444/cached/test.gz");
+  var chan = make_channel("http://localhost:" +
+                          httpserver.identity.primaryPort + "/cached/test.gz");
   chan.asyncOpen(new ChannelListener(continue_test, null, CL_EXPECT_GZIP), null);
   do_test_pending();
 }

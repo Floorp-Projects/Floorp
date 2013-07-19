@@ -226,12 +226,12 @@ function run_test() {
   httpserv = new HttpServer();
   httpserv.registerPathHandler("/", proxyAuthHandler);
   httpserv.identity.add("http", "somesite", 80);
-  httpserv.start(4444);
+  httpserv.start(-1);
 
   const prefs = Cc["@mozilla.org/preferences-service;1"]
                          .getService(Ci.nsIPrefBranch);
   prefs.setCharPref("network.proxy.http", "localhost");
-  prefs.setIntPref("network.proxy.http_port", 4444);
+  prefs.setIntPref("network.proxy.http_port", httpserv.identity.primaryPort);
   prefs.setCharPref("network.proxy.no_proxies_on", "");
   prefs.setIntPref("network.proxy.type", 1);
 

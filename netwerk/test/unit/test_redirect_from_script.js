@@ -36,31 +36,52 @@ redirectHook = "http-on-modify-request";
 
 var httpServer = null, httpServer2 = null;
 
+XPCOMUtils.defineLazyGetter(this, "port1", function() {
+  return httpServer.identity.primaryPort;
+});
+
+XPCOMUtils.defineLazyGetter(this, "port2", function() {
+  return httpServer2.identity.primaryPort;
+});
+
 // Test Part 1: a cross-path redirect on a single HTTP server
-// http://localhost:4444/bait -> http://localhost:4444/switch
+// http://localhost:port1/bait -> http://localhost:port1/switch
 var baitPath = "/bait";
-var baitURI = "http://localhost:4444" + baitPath;
+XPCOMUtils.defineLazyGetter(this, "baitURI", function() {
+  return "http://localhost:" + port1 + baitPath;
+});
 var baitText = "you got the worm";
 
 var redirectedPath = "/switch";
-var redirectedURI = "http://localhost:4444" + redirectedPath;
+XPCOMUtils.defineLazyGetter(this, "redirectedURI", function() {
+  return "http://localhost:" + port1 + redirectedPath;
+});
 var redirectedText = "worms are not tasty";
 
 // Test Part 2: Now, a redirect to a different server
-// http://localhost:4444/bait2 -> http://localhost:4445/switch
+// http://localhost:port1/bait2 -> http://localhost:port2/switch
 var bait2Path = "/bait2";
-var bait2URI = "http://localhost:4444" + bait2Path;
-var redirected2URI = "http://localhost:4445" + redirectedPath;
+XPCOMUtils.defineLazyGetter(this, "bait2URI", function() {
+  return "http://localhost:" + port1 + bait2Path;
+});
+
+XPCOMUtils.defineLazyGetter(this, "redirected2URI", function() {
+  return "http://localhost:" + port2 + redirectedPath;
+});
 
 // Test Part 3, begin with a serverside redirect that itself turns into an instance
 // of Test Part 1
 var bait3Path = "/bait3";
-var bait3URI = "http://localhost:4444" + bait3Path;
+XPCOMUtils.defineLazyGetter(this, "bait3URI", function() {
+  return "http://localhost:" + port1 + bait3Path;
+});
 
 // Test Part 4, begin with this client-side redirect and which then redirects
 // to an instance of Test Part 1
 var bait4Path = "/bait4";
-var bait4URI = "http://localhost:4444" + bait4Path;
+XPCOMUtils.defineLazyGetter(this, "bait4URI", function() {
+  return "http://localhost:" + port1 + bait4Path;
+});
 
 var testHeaderName = "X-Redirected-By-Script"
 var testHeaderVal = "Success";
@@ -175,15 +196,12 @@ function makeAsyncTest(uri, headerValue, nextTask)
   return test;
 }
 
-
-// The tests depend on each other, and therefore need to be defined in the
-// reverse of the order they are called in.  It is therefore best to read this
-// stanza backwards!
-
-var testViaAsyncOpen4 = makeAsyncTest(bait4URI, testHeaderVal, done);
-var testViaAsyncOpen3 = makeAsyncTest(bait3URI, testHeaderVal, testViaAsyncOpen4);
-var testViaAsyncOpen2 = makeAsyncTest(bait2URI, testHeaderVal2, testViaAsyncOpen3);
-var testViaAsyncOpen  = makeAsyncTest(baitURI,  testHeaderVal, testViaAsyncOpen2);
+// will be defined in run_test because of the lazy getters,
+// since the server's port is defined dynamically
+var testViaAsyncOpen4 = null;
+var testViaAsyncOpen3 = null;
+var testViaAsyncOpen2 = null;
+var testViaAsyncOpen  = null;
 
 function testViaXHR()
 {
@@ -226,10 +244,18 @@ function run_test()
   httpServer.registerPathHandler(bait3Path, bait3Handler);
   httpServer.registerPathHandler(bait4Path, baitHandler);
   httpServer.registerPathHandler(redirectedPath, redirectedHandler);
-  httpServer.start(4444);
+  httpServer.start(-1);
   httpServer2 = new HttpServer();
   httpServer2.registerPathHandler(redirectedPath, redirected2Handler);
-  httpServer2.start(4445);
+  httpServer2.start(-1);
+
+  // The tests depend on each other, and therefore need to be defined in the
+  // reverse of the order they are called in.  It is therefore best to read this
+  // stanza backwards!
+  testViaAsyncOpen4 = makeAsyncTest(bait4URI, testHeaderVal, done);
+  testViaAsyncOpen3 = makeAsyncTest(bait3URI, testHeaderVal, testViaAsyncOpen4);
+  testViaAsyncOpen2 = makeAsyncTest(bait2URI, testHeaderVal2, testViaAsyncOpen3);
+  testViaAsyncOpen  = makeAsyncTest(baitURI,  testHeaderVal, testViaAsyncOpen2);
 
   testViaXHR();
   testViaAsyncOpen();  // will call done() asynchronously for cleanup

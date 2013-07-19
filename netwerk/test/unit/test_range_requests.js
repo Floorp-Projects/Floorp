@@ -33,6 +33,7 @@ const decodedBody = [0x54, 0x68, 0x69, 0x73, 0x20, 0x69, 0x73, 0x20, 0x61, 0x20,
                      0x6c, 0x79, 0x20, 0x6c, 0x6f, 0x6e, 0x67, 0x65, 0x72, 0x20, 0x74, 0x65, 0x73, 0x74, 0x0a, 0x0a];
 
 const partial_data_length = 4;
+var port = null; // set in run_test
 
 function make_channel(url, callback, ctx) {
   var ios = Cc["@mozilla.org/network/io-service;1"].
@@ -107,7 +108,7 @@ function handler_2(metadata, response) {
 }
 function received_partial_2(request, data) {
   do_check_eq(data, undefined);
-  var chan = make_channel("http://localhost:4444/test_2");
+  var chan = make_channel("http://localhost:" + port + "/test_2");
   chan.asyncOpen(new ChannelListener(received_cleartext, null), null);
 }
 
@@ -135,7 +136,7 @@ function handler_3(metadata, response) {
 }
 function received_partial_3(request, data) {
   do_check_eq(partial_data_length, data.length);
-  var chan = make_channel("http://localhost:4444/test_3");
+  var chan = make_channel("http://localhost:" + port + "/test_3");
   chan.asyncOpen(new ChannelListener(received_cleartext, null), null);
 }
 
@@ -168,7 +169,7 @@ function handler_4(metadata, response) {
 function received_partial_4(request, data) {
 // checking length does not work with encoded data
 //  do_check_eq(partial_data_length, data.length);
-  var chan = make_channel("http://localhost:4444/test_4");
+  var chan = make_channel("http://localhost:" + port + "/test_4");
   chan.asyncOpen(new MyListener(received_cleartext), null);
 }
 
@@ -195,7 +196,7 @@ function handler_5(metadata, response) {
 }
 function received_partial_5(request, data) {
   do_check_eq(partial_data_length, data.length);
-  var chan = make_channel("http://localhost:4444/test_5");
+  var chan = make_channel("http://localhost:" + port + "/test_5");
   chan.setRequestHeader("If-Match", "Some eTag", false);
   chan.asyncOpen(new ChannelListener(received_cleartext, null), null);
 }
@@ -226,7 +227,7 @@ function handler_6(metadata, response) {
 function received_partial_6(request, data) {
 // would like to verify that the response does not have Accept-Ranges
   do_check_eq(partial_data_length, data.length);
-  var chan = make_channel("http://localhost:4444/test_6");
+  var chan = make_channel("http://localhost:" + port + "/test_6");
   chan.asyncOpen(new ChannelListener(received_cleartext, null), null);
 }
 
@@ -244,29 +245,31 @@ function run_test() {
   httpserver.registerPathHandler("/test_4", handler_4);
   httpserver.registerPathHandler("/test_5", handler_5);
   httpserver.registerPathHandler("/test_6", handler_6);
-  httpserver.start(4444);
+  httpserver.start(-1);
+
+  port = httpserver.identity.primaryPort;
 
   // wipe out cached content
   evict_cache_entries();
 
   // Case 2: zero-length partial entry must not trigger range-request
-  var chan = make_channel("http://localhost:4444/test_2");
+  var chan = make_channel("http://localhost:" + port + "/test_2");
   chan.asyncOpen(new Canceler(received_partial_2), null);
 
   // Case 3: no-store response must not trigger range-request
-  var chan = make_channel("http://localhost:4444/test_3");
+  var chan = make_channel("http://localhost:" + port + "/test_3");
   chan.asyncOpen(new MyListener(received_partial_3), null);
 
   // Case 4: response with content-encoding must not trigger range-request
-  var chan = make_channel("http://localhost:4444/test_4");
+  var chan = make_channel("http://localhost:" + port + "/test_4");
   chan.asyncOpen(new MyListener(received_partial_4), null);
 
   // Case 5: conditional request-header set by client
-  var chan = make_channel("http://localhost:4444/test_5");
+  var chan = make_channel("http://localhost:" + port + "/test_5");
   chan.asyncOpen(new MyListener(received_partial_5), null);
 
   // Case 6: response is not resumable (drop the Accept-Ranges header)
-  var chan = make_channel("http://localhost:4444/test_6");
+  var chan = make_channel("http://localhost:" + port + "/test_6");
   chan.asyncOpen(new MyListener(received_partial_6), null);
 
   do_test_pending();

@@ -1,3 +1,5 @@
+Components.utils.import('resource://gre/modules/XPCOMUtils.jsm');
+
 var _CSvc;
 function get_cache_service() {
   if (_CSvc)

@@ -10,7 +10,10 @@ const Cr = Components.results;
 
 Cu.import("resource://testing-common/httpd.js");
 
-var httpserver = null;
+var httpserver = new HttpServer();
+httpserver.start(-1);
+const PORT = httpserver.identity.primaryPort;
+
 var pipe = null;
 var streamSink = null;
 
@@ -31,9 +34,9 @@ TracingListener.prototype = {
 /*
     do_check_eq(request.localAddress, "127.0.0.1");
     do_check_eq(request.localPort > 0, true);
-    do_check_neq(request.localPort, 4444);
+    do_check_neq(request.localPort, PORT);
     do_check_eq(request.remoteAddress, "127.0.0.1");
-    do_check_eq(request.remotePort, 4444);
+    do_check_eq(request.remotePort, PORT);
 */
 
     // Make sure listener can't be replaced after OnStartRequest was called.
@@ -147,11 +150,9 @@ function run_test() {
   var observer = new HttpResponseExaminer();
   observer.register();
 
-  httpserver = new HttpServer();
   httpserver.registerPathHandler("/testdir", test_handler);
-  httpserver.start(4444);
 
-  var channel = make_channel("http://localhost:4444/testdir");
+  var channel = make_channel("http://localhost:" + PORT + "/testdir");
   channel.asyncOpen(new ChannelListener(channel_finished), null);
   do_test_pending();
 }

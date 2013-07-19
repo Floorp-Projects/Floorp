@@ -10,29 +10,31 @@ var httpserv = null;
 const CID = Components.ID("{5645d2c1-d6d8-4091-b117-fe7ee4027db7}");
 const contractID = "@mozilla.org/system-proxy-settings;1"
 
-var systemSettings = {
-  QueryInterface: function (iid) {
-    if (iid.equals(Components.interfaces.nsISupports) ||
-        iid.equals(Components.interfaces.nsIFactory) ||
-        iid.equals(Components.interfaces.nsISystemProxySettings))
-      return this;
-    throw Components.results.NS_ERROR_NO_INTERFACE;
-  },
-  createInstance: function (outer, iid) {
-    if (outer)
-      throw Components.results.NS_ERROR_NO_AGGREGATION;
-    return this.QueryInterface(iid);
-  },
-  lockFactory: function (lock) {
-    throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
-  },
-  
-  mainThreadOnly: true,
-  PACURI: "http://localhost:4444/redirect",
-  getProxyForURI: function(aURI) {
-    throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
-  }
-};
+XPCOMUtils.defineLazyGetter(this, "systemSettings", function() {
+  return {
+    QueryInterface: function (iid) {
+      if (iid.equals(Components.interfaces.nsISupports) ||
+          iid.equals(Components.interfaces.nsIFactory) ||
+          iid.equals(Components.interfaces.nsISystemProxySettings))
+        return this;
+      throw Components.results.NS_ERROR_NO_INTERFACE;
+    },
+    createInstance: function (outer, iid) {
+      if (outer)
+        throw Components.results.NS_ERROR_NO_AGGREGATION;
+      return this.QueryInterface(iid);
+    },
+    lockFactory: function (lock) {
+      throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+    },
+
+    mainThreadOnly: true,
+    PACURI: "http://localhost:" + httpserv.identity.primaryPort + "/redirect",
+    getProxyForURI: function(aURI) {
+      throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+    }
+  };
+});
 
 function checkValue(request, data, ctx) {
   do_check_true(called);
@@ -54,7 +56,7 @@ function run_test() {
   httpserv.registerPathHandler("/redirect", redirect);
   httpserv.registerPathHandler("/pac", pac);
   httpserv.registerPathHandler("/target", target);
-  httpserv.start(4444);
+  httpserv.start(-1);
 
   Components.manager.nsIComponentRegistrar.registerFactory(
     CID,
@@ -71,7 +73,8 @@ function run_test() {
   // clear cache
   evict_cache_entries();
 
-  var chan = makeChan("http://localhost:4444/target");
+  var chan = makeChan("http://localhost:" + httpserv.identity.primaryPort +
+                      "/target");
   chan.asyncOpen(new ChannelListener(checkValue, null), null);
 
   do_test_pending();
