@@ -150,7 +150,6 @@ FENNEC_JAVA_FILES = \
   ServiceNotificationClient.java \
   ScrollAnimator.java \
   SessionParser.java \
-  SetupScreen.java \
   ShapedButton.java \
   SharedPreferencesHelper.java \
   SiteIdentityPopup.java \
@@ -477,7 +476,6 @@ RES_LAYOUT = \
   res/layout/search_engine_row.xml \
   res/layout/site_setting_item.xml \
   res/layout/site_setting_title.xml \
-  res/layout/setup_screen.xml \
   res/layout/shared_ui_components.xml \
   res/layout/site_identity.xml \
   res/layout/suggestion_item.xml \
@@ -1130,10 +1128,40 @@ RES_DRAWABLE += \
   res/drawable/webapp_titlebar_bg.xml                 \
   $(NULL)
 
-MOZ_BRANDING_DRAWABLE_MDPI = $(shell if test -e $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/android-resources.mn; then cat $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/android-resources.mn | tr '\n' ' ';  fi)
-
-RESOURCES=$(RES_LAYOUT) $(RES_LAYOUT_LARGE_LAND_V11) $(RES_LAYOUT_LARGE_V11) $(RES_LAYOUT_XLARGE_V11) $(RES_LAYOUT_XLARGE_LAND_V11) $(RES_VALUES) $(RES_VALUES_LAND) $(RES_VALUES_V11) $(RES_VALUES_LARGE_V11) $(RES_VALUES_LARGE_LAND_V11) $(RES_VALUES_XLARGE_V11) $(RES_VALUES_LAND_V14) $(RES_VALUES_V14) $(RES_XML) $(RES_XML_V11) $(RES_ANIM) $(RES_DRAWABLE_MDPI) $(RES_DRAWABLE_LDPI) $(RES_DRAWABLE_HDPI) $(RES_DRAWABLE_XHDPI) $(RES_DRAWABLE_MDPI_V11) $(RES_DRAWABLE_HDPI_V11) $(RES_DRAWABLE_XHDPI_V11) $(RES_DRAWABLE_LARGE_MDPI_V11) $(RES_DRAWABLE_LARGE_HDPI_V11) $(RES_DRAWABLE_LARGE_XHDPI_V11) $(RES_DRAWABLE_XLARGE_MDPI_V11) $(RES_DRAWABLE_XLARGE_HDPI_V11) $(RES_DRAWABLE_XLARGE_XHDPI_V11) $(RES_COLOR) $(RES_MENU)
-RESOURCES += $(RES_DRAWABLE)
+RESOURCES = \
+  $(RES_ANIM) \
+  $(RES_COLOR) \
+  $(RES_DRAWABLE) \
+  $(RES_DRAWABLE_HDPI) \
+  $(RES_DRAWABLE_HDPI_V11) \
+  $(RES_DRAWABLE_LARGE_HDPI_V11) \
+  $(RES_DRAWABLE_LARGE_MDPI_V11) \
+  $(RES_DRAWABLE_LARGE_XHDPI_V11) \
+  $(RES_DRAWABLE_LDPI) \
+  $(RES_DRAWABLE_MDPI) \
+  $(RES_DRAWABLE_MDPI_V11) \
+  $(RES_DRAWABLE_XHDPI) \
+  $(RES_DRAWABLE_XHDPI_V11) \
+  $(RES_DRAWABLE_XLARGE_HDPI_V11) \
+  $(RES_DRAWABLE_XLARGE_MDPI_V11) \
+  $(RES_DRAWABLE_XLARGE_XHDPI_V11) \
+  $(RES_LAYOUT) \
+  $(RES_LAYOUT_LARGE_LAND_V11) \
+  $(RES_LAYOUT_LARGE_V11) \
+  $(RES_LAYOUT_XLARGE_LAND_V11) \
+  $(RES_LAYOUT_XLARGE_V11) \
+  $(RES_MENU) \
+  $(RES_VALUES) \
+  $(RES_VALUES_LAND) \
+  $(RES_VALUES_LAND_V14) \
+  $(RES_VALUES_LARGE_LAND_V11) \
+  $(RES_VALUES_LARGE_V11) \
+  $(RES_VALUES_V11) \
+  $(RES_VALUES_V14) \
+  $(RES_VALUES_XLARGE_V11) \
+  $(RES_XML) \
+  $(RES_XML_V11) \
+  $(NULL)
 
 RES_DIRS= \
   res/layout                    \
@@ -1330,11 +1358,6 @@ res/drawable-xxhdpi/icon.png: $(MOZ_APP_ICON)
 	$(NSINSTALL) -D res/drawable-xxhdpi
 	cp $(ICON_PATH_XXHDPI) $@
 
-RES_BRANDING_DRAWABLE_MDPI = $(addprefix res/drawable-mdpi/,$(notdir $(MOZ_BRANDING_DRAWABLE_MDPI)))
-$(RES_BRANDING_DRAWABLE_MDPI): $(addprefix $(topsrcdir)/,$(MOZ_BRANDING_DRAWABLE_MDPI))
-	$(NSINSTALL) -D res/drawable-mdpi
-	$(NSINSTALL) $^ res/drawable-mdpi/
-
 $(RES_DIRS): $(subst res/,$(srcdir)/resources/,$(RESOURCES))
 	$(RM) -r $@
 	$(NSINSTALL) -D $@
@@ -1347,7 +1370,6 @@ res/values/strings.xml:
 	$(MAKE) -C locales
 
 all_resources = \
-  res/drawable-mdpi/logo.png \
   res/drawable-mdpi/icon.png \
   res/drawable-hdpi/icon.png \
   res/drawable-xhdpi/icon.png \
@@ -1356,7 +1378,6 @@ all_resources = \
   AndroidManifest.xml \
   $(RESOURCES) \
   $(PP_RES_XML) \
-  $(RES_BRANDING_DRAWABLE_MDPI) \
   $(NULL)
 
 R.java: $(all_resources)

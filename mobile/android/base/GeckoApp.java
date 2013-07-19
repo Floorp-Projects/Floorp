@@ -2247,48 +2247,7 @@ abstract public class GeckoApp
                     // Do a migration run on the first start after an upgrade.
                     if (!GeckoApp.sIsUsingCustomProfile &&
                         !profileMigrator.hasMigrationRun()) {
-                        // Show the "Setting up Fennec" screen if this takes
-                        // a while.
 
-                        // Create a "final" holder for the setup screen so that we can
-                        // create it in startCallback and still find a reference to it
-                        // in stopCallback. (We must create it on the UI thread to fix
-                        // bug 788216). Note that synchronization is not a problem here
-                        // since it is only ever touched on the UI thread.
-                        final SetupScreen[] setupScreenHolder = new SetupScreen[1];
-
-                        final Runnable startCallback = new Runnable() {
-                            @Override
-                            public void run() {
-                                ThreadUtils.postToUiThread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        setupScreenHolder[0] = new SetupScreen(app);
-                                        setupScreenHolder[0].show();
-                                    }
-                                });
-                            }
-                        };
-
-                        final Runnable stopCallback = new Runnable() {
-                            @Override
-                            public void run() {
-                                ThreadUtils.postToUiThread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        SetupScreen screen = setupScreenHolder[0];
-                                        // screen will never be null if this code runs, but
-                                        // stranger things have happened...
-                                        if (screen != null) {
-                                            screen.dismiss();
-                                        }
-                                    }
-                                });
-                            }
-                        };
-
-                        profileMigrator.setLongOperationCallbacks(startCallback,
-                                                                  stopCallback);
                         profileMigrator.launchPlaces(profileDir);
                         finishProfileMigration();
                     }
