@@ -18,9 +18,9 @@ namespace storage {
 ////////////////////////////////////////////////////////////////////////////////
 //// Variant_base
 
-inline NS_IMPL_THREADSAFE_ADDREF(Variant_base)
-inline NS_IMPL_THREADSAFE_RELEASE(Variant_base)
-inline NS_IMPL_THREADSAFE_QUERY_INTERFACE1(
+inline NS_IMPL_ADDREF(Variant_base)
+inline NS_IMPL_RELEASE(Variant_base)
+inline NS_IMPL_QUERY_INTERFACE1(
   Variant_base,
   nsIVariant
 )

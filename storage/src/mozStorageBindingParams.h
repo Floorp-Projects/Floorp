@@ -25,7 +25,7 @@ class BindingParams : public mozIStorageBindingParams
                     , public IStorageBindingParamsInternal
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_MOZISTORAGEBINDINGPARAMS
   NS_DECL_ISTORAGEBINDINGPARAMSINTERNAL
 

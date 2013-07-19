@@ -17,7 +17,7 @@ namespace storage {
 class Error MOZ_FINAL : public mozIStorageError
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_MOZISTORAGEERROR
 
   Error(int aResult, const char *aMessage);
