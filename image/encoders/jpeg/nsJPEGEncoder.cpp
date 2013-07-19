@@ -14,7 +14,7 @@
 
 using namespace mozilla;
 
-NS_IMPL_THREADSAFE_ISUPPORTS3(nsJPEGEncoder, imgIEncoder, nsIInputStream, nsIAsyncInputStream)
+NS_IMPL_ISUPPORTS3(nsJPEGEncoder, imgIEncoder, nsIInputStream, nsIAsyncInputStream)
 
 // used to pass error info through the JPEG library
 struct encoder_error_mgr {

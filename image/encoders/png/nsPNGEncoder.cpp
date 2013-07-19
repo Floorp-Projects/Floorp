@@ -11,7 +11,7 @@
 
 using namespace mozilla;
 
-NS_IMPL_THREADSAFE_ISUPPORTS3(nsPNGEncoder, imgIEncoder, nsIInputStream, nsIAsyncInputStream)
+NS_IMPL_ISUPPORTS3(nsPNGEncoder, imgIEncoder, nsIInputStream, nsIAsyncInputStream)
 
 nsPNGEncoder::nsPNGEncoder() : mPNG(nullptr), mPNGinfo(nullptr),
                                mIsAnimation(false),

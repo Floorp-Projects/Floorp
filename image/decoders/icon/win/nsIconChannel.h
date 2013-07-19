@@ -27,7 +27,7 @@ class nsIFile;
 class nsIconChannel MOZ_FINAL : public nsIChannel, public nsIStreamListener
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIREQUEST
   NS_DECL_NSICHANNEL
   NS_DECL_NSIREQUESTOBSERVER
