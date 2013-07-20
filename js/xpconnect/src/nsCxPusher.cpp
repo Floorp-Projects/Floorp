@@ -106,17 +106,18 @@ nsCxPusher::Push(JSContext *cx)
   MOZ_ASSERT(!mPushedSomething, "No double pushing with nsCxPusher::Push()!");
   MOZ_ASSERT(cx);
 
-  // Hold a strong ref to the nsIScriptContext, just in case
-  // XXXbz do we really need to?  If we don't get one of these in Pop(), is
-  // that really a problem?  Or do we need to do this to effectively root |cx|?
-  mScx = GetScriptContextFromJSContext(cx);
-
   DoPush(cx);
 }
 
 void
 nsCxPusher::DoPush(JSContext* cx)
 {
+  // If we have a cx, hold a strong ref to the nsIScriptContext, just in case.
+  // XXXbz do we really need to?  If we don't get one of these in Pop(), is
+  // that really a problem?  Or do we need to do this to effectively root |cx|?
+  if (cx)
+    mScx = GetScriptContextFromJSContext(cx);
+
   // NB: The GetDynamicScriptContext is historical and might not be sane.
   if (cx && nsJSUtils::GetDynamicScriptContext(cx) &&
       xpc::IsJSContextOnStack(cx))
