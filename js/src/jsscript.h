@@ -348,13 +348,13 @@ class ScriptSource
     template <XDRMode mode>
     bool performXDR(XDRState<mode> *xdr);
 
-    bool setFilename(JSContext *cx, const char *filename);
+    bool setFilename(ExclusiveContext *cx, const char *filename);
     const char *filename() const {
         return filename_;
     }
 
     // Source maps
-    bool setSourceMap(JSContext *cx, jschar *sourceMapURL);
+    bool setSourceMap(ExclusiveContext *cx, jschar *sourceMapURL);
     const jschar *sourceMap();
     bool hasSourceMap() const { return sourceMap_ != NULL; }
 
@@ -388,7 +388,7 @@ class ScriptSourceObject : public JSObject
     static Class class_;
 
     static void finalize(FreeOp *fop, JSObject *obj);
-    static ScriptSourceObject *create(JSContext *cx, ScriptSource *source);
+    static ScriptSourceObject *create(ExclusiveContext *cx, ScriptSource *source);
 
     ScriptSource *source() {
         return static_cast<ScriptSource *>(getReservedSlot(SOURCE_SLOT).toPrivate());

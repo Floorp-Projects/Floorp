@@ -186,7 +186,10 @@ struct Zone : private JS::shadow::Zone,
 
     void scheduleGC() {
         JS_ASSERT(!rt->isHeapBusy());
-        gcScheduled = true;
+
+        /* Note: zones cannot be collected while in use by other threads. */
+        if (!usedByExclusiveThread)
+            gcScheduled = true;
     }
 
     void unscheduleGC() {
@@ -234,6 +237,9 @@ struct Zone : private JS::shadow::Zone,
     double                       gcHeapGrowthFactor;
 
     bool                         isSystem;
+
+    /* Whether this zone is being used by a thread with an ExclusiveContext. */
+    bool usedByExclusiveThread;
 
     /*
      * These flags help us to discover if a compartment that shouldn't be alive

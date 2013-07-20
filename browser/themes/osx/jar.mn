@@ -331,6 +331,12 @@ browser.jar:
   skin/classic/browser/webapps-16.png
   skin/classic/browser/webapps-16@2x.png
   skin/classic/browser/webapps-64.png
+  skin/classic/browser/notification-pluginNormal.png  (../shared/plugins/notification-pluginNormal.png)
+  skin/classic/browser/notification-pluginAlert.png   (../shared/plugins/notification-pluginAlert.png)
+  skin/classic/browser/notification-pluginBlocked.png (../shared/plugins/notification-pluginBlocked.png)
+  skin/classic/browser/notification-pluginNormal@2x.png  (../shared/plugins/notification-pluginNormal@2x.png)
+  skin/classic/browser/notification-pluginAlert@2x.png   (../shared/plugins/notification-pluginAlert@2x.png)
+  skin/classic/browser/notification-pluginBlocked@2x.png (../shared/plugins/notification-pluginBlocked@2x.png)
 
 % override chrome://browser/skin/keyhole-circle.png                        chrome://browser/skin/lion/keyhole-circle.png                           os=Darwin osversion>=10.7
 % override chrome://browser/skin/Toolbar.png                               chrome://browser/skin/lion/Toolbar.png                                  os=Darwin osversion>=10.7

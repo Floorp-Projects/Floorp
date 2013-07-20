@@ -78,6 +78,7 @@ using mozilla::Swap;
 #include "jsobjinlines.h"
 
 #include "vm/String-inl.h"
+#include "vm/Runtime-inl.h"
 #include "vm/Stack-inl.h"
 
 #ifdef XP_WIN
@@ -2594,8 +2595,10 @@ PurgeRuntime(JSRuntime *rt)
     rt->sourceDataCache.purge();
     rt->evalCache.clear();
 
-    // FIXME bug 875125 this should check all instances of PerThreadData.
-    if (!rt->mainThread.activeCompilations)
+    bool activeCompilations = false;
+    for (ThreadDataIter iter(rt); !iter.done(); iter.next())
+        activeCompilations |= iter->activeCompilations;
+    if (!activeCompilations)
         rt->parseMapPool.purgeAll();
 }
 
@@ -2768,8 +2771,11 @@ BeginMarkPhase(JSRuntime *rt)
      */
     Zone *atomsZone = rt->atomsCompartment->zone();
 
-    // FIXME bug 875125 this should check all instances of PerThreadData.
-    if (atomsZone->isGCScheduled() && rt->gcIsFull && !rt->mainThread.gcKeepAtoms) {
+    bool keepAtoms = false;
+    for (ThreadDataIter iter(rt); !iter.done(); iter.next())
+        keepAtoms |= iter->gcKeepAtoms;
+
+    if (atomsZone->isGCScheduled() && rt->gcIsFull && !keepAtoms) {
         JS_ASSERT(!atomsZone->isCollecting());
         atomsZone->setGCState(Zone::Mark);
     }
@@ -4012,7 +4018,8 @@ class AutoGCSession : AutoTraceSession {
 /* Start a new heap session. */
 AutoTraceSession::AutoTraceSession(JSRuntime *rt, js::HeapState heapState)
   : runtime(rt),
-    prevState(rt->heapState)
+    prevState(rt->heapState),
+    pause(rt)
 {
     JS_ASSERT(!rt->noGCOrAllocationCheck);
     JS_ASSERT(!rt->isHeapBusy());
@@ -4343,8 +4350,11 @@ gc::IsIncrementalGCSafe(JSRuntime *rt)
 {
     JS_ASSERT(!rt->mainThread.suppressGC);
 
-    // FIXME bug 875125 this should check all instances of PerThreadData.
-    if (rt->mainThread.gcKeepAtoms)
+    bool keepAtoms = false;
+    for (ThreadDataIter iter(rt); !iter.done(); iter.next())
+        keepAtoms |= iter->gcKeepAtoms;
+
+    if (keepAtoms)
         return IncrementalSafety::Unsafe("gcKeepAtoms set");
 
     if (!rt->gcIncrementalEnabled)
@@ -4667,6 +4677,11 @@ void
 js::MinorGC(JSRuntime *rt, JS::gcreason::Reason reason)
 {
 #ifdef JSGC_GENERATIONAL
+#if JS_TRACE_LOGGING
+    AutoTraceLog logger(TraceLogging::defaultLogger(),
+                        TraceLogging::MINOR_GC_START,
+                        TraceLogging::MINOR_GC_STOP);
+#endif
     rt->gcNursery.collect(rt, reason);
 #endif
 }

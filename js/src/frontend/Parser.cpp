@@ -2223,6 +2223,8 @@ Parser<ParseHandler>::functionArgsAndBodyGeneric(Node pn, HandleFunction fun, Fu
     // function without concern for conversion to strict mode, use of lazy
     // parsing and such.
 
+    context->maybePause();
+
     Node prelude = null();
     bool hasRest;
     if (!functionArguments(kind, &prelude, pn, hasRest))

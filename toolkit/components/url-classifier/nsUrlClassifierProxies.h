@@ -171,7 +171,7 @@ public:
   class LookupCompleteRunnable : public nsRunnable
   {
   public:
-    LookupCompleteRunnable(nsMainThreadPtrHolder<nsIUrlClassifierLookupCallback>* aTarget,
+    LookupCompleteRunnable(const nsMainThreadPtrHandle<nsIUrlClassifierLookupCallback>& aTarget,
                            mozilla::safebrowsing::LookupResultArray *aResults)
       : mTarget(aTarget)
       , mResults(aResults)
@@ -201,7 +201,7 @@ public:
   class HandleEventRunnable : public nsRunnable
   {
   public:
-    HandleEventRunnable(nsMainThreadPtrHolder<nsIUrlClassifierCallback>* aTarget,
+    HandleEventRunnable(const nsMainThreadPtrHandle<nsIUrlClassifierCallback>& aTarget,
                         const nsACString& aValue)
       : mTarget(aTarget)
       , mValue(aValue)
@@ -232,7 +232,7 @@ public:
   class UpdateUrlRequestedRunnable : public nsRunnable
   {
   public:
-    UpdateUrlRequestedRunnable(nsMainThreadPtrHolder<nsIUrlClassifierUpdateObserver>* aTarget,
+    UpdateUrlRequestedRunnable(const nsMainThreadPtrHandle<nsIUrlClassifierUpdateObserver>& aTarget,
                                const nsACString& aURL,
                                const nsACString& aTable,
                                const nsACString& aServerMAC)
@@ -252,7 +252,7 @@ public:
   class RekeyRequestedRunnable : public nsRunnable
   {
   public:
-    RekeyRequestedRunnable(nsMainThreadPtrHolder<nsIUrlClassifierUpdateObserver>* aTarget)
+    RekeyRequestedRunnable(const nsMainThreadPtrHandle<nsIUrlClassifierUpdateObserver>& aTarget)
       : mTarget(aTarget)
     { }
 
@@ -265,7 +265,7 @@ public:
   class StreamFinishedRunnable : public nsRunnable
   {
   public:
-    StreamFinishedRunnable(nsMainThreadPtrHolder<nsIUrlClassifierUpdateObserver>* aTarget,
+    StreamFinishedRunnable(const nsMainThreadPtrHandle<nsIUrlClassifierUpdateObserver>& aTarget,
                            nsresult aStatus, uint32_t aDelay)
       : mTarget(aTarget)
       , mStatus(aStatus)
@@ -283,7 +283,7 @@ public:
   class UpdateErrorRunnable : public nsRunnable
   {
   public:
-    UpdateErrorRunnable(nsMainThreadPtrHolder<nsIUrlClassifierUpdateObserver>* aTarget,
+    UpdateErrorRunnable(const nsMainThreadPtrHandle<nsIUrlClassifierUpdateObserver>& aTarget,
                         nsresult aError)
       : mTarget(aTarget)
       , mError(aError)
@@ -299,7 +299,7 @@ public:
   class UpdateSuccessRunnable : public nsRunnable
   {
   public:
-    UpdateSuccessRunnable(nsMainThreadPtrHolder<nsIUrlClassifierUpdateObserver>* aTarget,
+    UpdateSuccessRunnable(const nsMainThreadPtrHandle<nsIUrlClassifierUpdateObserver>& aTarget,
                           uint32_t aRequestedTimeout)
       : mTarget(aTarget)
       , mRequestedTimeout(aRequestedTimeout)

@@ -21,6 +21,7 @@
 #include "js/MemoryMetrics.h"
 #include "yarr/BumpPointerAllocator.h"
 
+#include "jscntxtinlines.h"
 #include "jsgcinlines.h"
 
 using namespace js;
@@ -46,6 +47,9 @@ NewObjectCache::clearNurseryObjects(JSRuntime *rt)
 void
 JSRuntime::sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf, JS::RuntimeSizes *rtSizes)
 {
+    // Several tables in the runtime enumerated below can be used off thread.
+    AutoLockForExclusiveAccess lock(this);
+
     rtSizes->object = mallocSizeOf(this);
 
     rtSizes->atomsTable = atoms.sizeOfExcludingThis(mallocSizeOf);

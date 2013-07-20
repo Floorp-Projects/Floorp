@@ -54,6 +54,21 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=410052
       testUnselectTableColumn("grid2", 0, cellsArray);
       testUnselectTableRow("grid2", 0, cellsArray);
 
+      //////////////////////////////////////////////////////////////////////////
+      // ARIA grid (column and row headers)
+
+      cellsArray =
+      [
+        [ undefined, true, false],
+        [ undefined, true, false]
+      ];
+
+      testTableSelection("grid3", cellsArray);
+      testSelectTableColumn("grid3", 0, cellsArray);
+      testSelectTableRow("grid3", 0, cellsArray);
+      testUnselectTableColumn("grid3", 0, cellsArray);
+      testUnselectTableRow("grid3", 0, cellsArray);
+
       SimpleTest.finish();
     }
 
@@ -65,10 +80,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=410052
 
   <a target="_blank"
      title="implement nsIAccessibleTable selection methods for ARIA grids"
-     href="https://bugzilla.mozilla.org/show_bug.cgi?id=410052">Mozilla Bug 410052</a>
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=410052">Bug 410052</a>
   <a target="_blank"
      title="nsHTMLTableCellAccessible is used in dojo's crazy ARIA grid"
-     href="https://bugzilla.mozilla.org/show_bug.cgi?id=513848">Mozilla Bug 513848</a>
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=513848">Bug 513848</a>
+  <a target="_blank"
+     title="ARIA columnheader/rowheader shouldn't be selectable by default"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=888247">Bug 888247</a>
 
   <p id="display"></p>
   <div id="content" style="display: none"></div>
@@ -112,8 +130,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=410052
     <div role="row">
       <table role="presentation">
         <tr>
-          <td role="columnheader">header1</td>
-          <td role="columnheader">header2</td>
+          <td role="columnheader" aria-selected="false">header1</td>
+          <td role="columnheader" aria-selected="false">header2</td>
         </tr>
       </table>
     </div>
@@ -127,5 +145,17 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=410052
     </div>
   </div>
 
+  <div role="grid" id="grid3">
+    <div role="row">
+      <div role="columnheader" id="colheader_default">col header1</div>
+      <div role="columnheader" id="colheader_selected" aria-selected="true">col header2</div>
+      <div role="columnheader" id="colheader_notselected" aria-selected="false">col header3</div>
+    </div>
+    <div role="row">
+      <div role="rowheader" id="rowheader_default">row header1</div>
+      <div role="rowheader" id="rowheader_selected" aria-selected="true">row header2</div>
+      <div role="rowheader" id="rowheader_notselected" aria-selected="false">row header3</div>
+    </div>
+  </div>
 </body>
 </html>
