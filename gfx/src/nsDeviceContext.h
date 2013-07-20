@@ -163,7 +163,7 @@ public:
      * EndDocument() or AbortDocument().
      *
      * @param aTitle - title of Document
-     * @param aPrintToFileName - name of file to print to, if NULL
+     * @param aPrintToFileName - name of file to print to, if nullptr
      * then don't print to file
      * @param aStartPage - starting page number (must be greater than zero)
      * @param aEndPage - ending page number (must be less than or
