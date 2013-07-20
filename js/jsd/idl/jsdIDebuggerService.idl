@@ -45,7 +45,7 @@ interface jsdIActivationCallback;
  * Debugger service. It is not a good idea to have more than one active client
  * of the debugger service.
  */
-[scriptable, uuid(9be5b327-6818-464d-9695-f33885fd8377)]
+[scriptable, uuid(029b8f0a-aa84-47eb-a60f-1a4752b7ad06)]
 interface jsdIDebuggerService : nsISupports
 {
     /** Internal use only. */
@@ -87,29 +87,6 @@ interface jsdIDebuggerService : nsISupports
      * Called before and after a function is called.
      */
     attribute jsdICallHook      functionHook;
-
-
-    /**
-     * VERSION_* values must be kept in sync with the JSVersion enumeration in
-     * jspubtd.h.
-     */
-
-    /**
-     * Possible values for jsdIScript::version and jsdIContext::version.
-     */
-    const long VERSION_1_0     = 100;
-    const long VERSION_1_1     = 110;
-    const long VERSION_1_2     = 120;
-    const long VERSION_1_3     = 130;
-    const long VERSION_1_4     = 140;
-    const long VERSION_1_5     = 150;
-    const long VERSION_DEFAULT = 0;
-    const long VERSION_UNKNOWN = -1;
-
-    /**
-     * These flags need to be kept in sync with the context flags defined in
-     * jsdebug.h
-     */
 
     /**
      * Link native frames in call stacks.
@@ -721,13 +698,6 @@ interface jsdIContext : jsdIEphemeral
      * OPT_* values above, OR'd together.
      */
     attribute unsigned long          options;
-
-    /**
-     * Last version set on this context.
-     * Scripts typically select this with the "language" attribute.
-     * See the VERSION_* consts on jsdIDebuggerService.
-     */
-    attribute long                   version;
 
     /**
      * Unique tag among all valid jsdIContext objects, useful as a hash key.
