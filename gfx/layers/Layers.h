@@ -491,12 +491,12 @@ public:
    * Dump information about this layer manager and its managed tree to
    * aFile, which defaults to stderr.
    */
-  void Dump(FILE* aFile=NULL, const char* aPrefix="", bool aDumpHtml=false);
+  void Dump(FILE* aFile=nullptr, const char* aPrefix="", bool aDumpHtml=false);
   /**
    * Dump information about just this layer manager itself to aFile,
    * which defaults to stderr.
    */
-  void DumpSelf(FILE* aFile=NULL, const char* aPrefix="");
+  void DumpSelf(FILE* aFile=nullptr, const char* aPrefix="");
 
   /**
    * Log information about this layer manager and its managed tree to
@@ -1118,12 +1118,12 @@ public:
    * Dump information about this layer manager and its managed tree to
    * aFile, which defaults to stderr.
    */
-  void Dump(FILE* aFile=NULL, const char* aPrefix="", bool aDumpHtml=false);
+  void Dump(FILE* aFile=nullptr, const char* aPrefix="", bool aDumpHtml=false);
   /**
    * Dump information about just this layer manager itself to aFile,
    * which defaults to stderr.
    */
-  void DumpSelf(FILE* aFile=NULL, const char* aPrefix="");
+  void DumpSelf(FILE* aFile=nullptr, const char* aPrefix="");
 
   /**
    * Log information about this layer manager and its managed tree to
