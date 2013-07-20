@@ -287,8 +287,6 @@ js::NewContext(JSRuntime *rt, size_t stackChunkSize)
     if (!cx)
         return NULL;
 
-    JS_ASSERT(cx->findVersion() == JSVERSION_DEFAULT);
-
     if (!cx->cycleDetectorSet.init()) {
         js_delete(cx);
         return NULL;
@@ -1168,7 +1166,6 @@ ThreadSafeContext::asForkJoinSlice()
 
 JSContext::JSContext(JSRuntime *rt)
   : ThreadSafeContext(rt, &rt->mainThread, Context_JS),
-    defaultVersion(JSVERSION_DEFAULT),
     throwing(false),
     exception(UndefinedValue()),
     options_(0),
@@ -1526,7 +1523,7 @@ JSContext::findVersion() const
     if (compartment() && compartment()->options().hasVersion)
         return compartment()->options().version;
 
-    return defaultVersion;
+    return runtime()->defaultVersion();
 }
 
 #if defined JS_THREADSAFE && defined DEBUG
