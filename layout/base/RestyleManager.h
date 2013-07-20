@@ -179,6 +179,11 @@ public:
     PostRestyleEventInternal(true);
   }
 
+  void SetInStyleRefresh(bool aInStyleRefresh)
+  {
+    mInStyleRefresh = aInStyleRefresh;
+  }
+
   void FlushOverflowChangedTracker()
   {
     mOverflowChangedTracker.Flush();
@@ -255,7 +260,7 @@ public:
 private:
   /* aMinHint is the minimal change that should be made to the element */
   // XXXbz do we really need the aPrimaryFrame argument here?
-  void RestyleElement(Element* aElement,
+  void RestyleElement(Element*        aElement,
                       nsIFrame*       aPrimaryFrame,
                       nsChangeHint    aMinHint,
                       RestyleTracker& aRestyleTracker,
