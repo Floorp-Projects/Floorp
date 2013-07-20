@@ -1883,6 +1883,15 @@ JS_GetVersion(JSContext *cx);
 extern JS_PUBLIC_API(JSVersion)
 JS_SetVersion(JSContext *cx, JSVersion version);
 
+// Mutate the version on the compartment. This is generally discouraged, but
+// necessary to support the version mutation in the js and xpc shell command
+// set.
+//
+// It would be nice to put this in jsfriendapi, but the linkage requirements
+// of the shells make that impossible.
+JS_PUBLIC_API(void)
+JS_SetVersionForCompartment(JSCompartment *compartment, JSVersion version);
+
 extern JS_PUBLIC_API(const char *)
 JS_VersionToString(JSVersion version);
 
