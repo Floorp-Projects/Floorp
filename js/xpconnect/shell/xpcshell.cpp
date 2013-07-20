@@ -491,10 +491,11 @@ Load(JSContext *cx, unsigned argc, jsval *vp)
 static JSBool
 Version(JSContext *cx, unsigned argc, jsval *vp)
 {
+    JSVersion origVersion = JS_GetVersion(cx);
+    JS_SET_RVAL(cx, vp, INT_TO_JSVAL(origVersion));
     if (argc > 0 && JSVAL_IS_INT(JS_ARGV(cx, vp)[0]))
-        JS_SET_RVAL(cx, vp, INT_TO_JSVAL(JS_SetVersion(cx, JSVersion(JSVAL_TO_INT(JS_ARGV(cx, vp)[0])))));
-    else
-        JS_SET_RVAL(cx, vp, INT_TO_JSVAL(JS_GetVersion(cx)));
+        JS_SetVersionForCompartment(js::GetContextCompartment(cx),
+                                    JSVersion(JSVAL_TO_INT(JS_ARGV(cx, vp)[0])));
     return true;
 }
 
@@ -1318,7 +1319,8 @@ ProcessArgs(JSContext *cx, JS::Handle<JSObject*> obj, char **argv, int argc, XPC
             if (++i == argc) {
                 return usage();
             }
-            JS_SetVersion(cx, JSVersion(atoi(argv[i])));
+            JS_SetVersionForCompartment(js::GetContextCompartment(cx),
+                                        JSVersion(atoi(argv[i])));
             break;
         case 'W':
             reportWarnings = false;
