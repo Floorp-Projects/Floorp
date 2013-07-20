@@ -92,6 +92,11 @@ class RemoteOptions(ReftestOptions):
                     help = "remote directory to use as test root (eg. /mnt/sdcard/tests or /data/local/tests)")
         defaults["remoteTestRoot"] = None
 
+        self.add_option("--httpd-path", action = "store",
+                    type = "string", dest = "httpdPath",
+                    help = "path to the httpd.js file")
+        defaults["httpdPath"] = None
+
         defaults["localLogName"] = None
 
         self.set_defaults(**defaults)
@@ -150,6 +155,12 @@ class RemoteOptions(ReftestOptions):
             f.write("%s" % os.getpid())
             f.close()
 
+        # httpd-path is specified by standard makefile targets and may be specified
+        # on the command line to select a particular version of httpd.js. If not
+        # specified, try to select the one from hostutils.zip, as required in bug 882932.
+        if not options.httpdPath:
+            options.httpdPath = os.path.join(options.utilityPath, "components")
+
         # TODO: Copied from main, but I think these are no longer used in a post xulrunner world
         #options.xrePath = options.remoteTestRoot + self._automation._product + '/xulrunner'
         #options.utilityPath = options.testRoot + self._automation._product + '/bin'
@@ -171,6 +182,7 @@ class ReftestServer:
         self.httpPort = options.httpPort
         self.scriptDir = scriptDir
         self.pidFile = options.pidFile
+        self._httpdPath = options.httpdPath
         self.shutdownURL = "http://%(server)s:%(port)s/server/shutdown" % { "server" : self.webServer, "port" : self.httpPort }
 
     def start(self):
@@ -183,7 +195,7 @@ class ReftestServer:
 
         args = ["-g", self._xrePath,
                 "-v", "170",
-                "-f", os.path.join(self.scriptDir, "reftest/components/httpd.js"),
+                "-f", os.path.join(self._httpdPath, "httpd.js"),
                 "-e", "const _PROFILE_PATH = '%(profile)s';const _SERVER_PORT = '%(port)s'; const _SERVER_ADDR ='%(server)s';" %
                        {"profile" : self._profileDir.replace('\\', '\\\\'), "port" : self.httpPort, "server" : self.webServer },
                 "-f", os.path.join(self.scriptDir, "server.js")]

@@ -316,6 +316,7 @@ See <http://mochikit.com/doc/html/MochiKit/Logging.html> for details on the logg
     options.httpPort = self._automation.DEFAULT_HTTP_PORT
     options.sslPort = self._automation.DEFAULT_SSL_PORT
     options.webSocketPort = self._automation.DEFAULT_WEBSOCKET_PORT
+    options.httpdPath = '.' 
 
     if options.vmwareRecording:
       if not self._automation.IS_WIN32:
@@ -410,6 +411,7 @@ class MochitestServer:
     self.httpPort = options.httpPort
     self.shutdownURL = "http://%(server)s:%(port)s/server/shutdown" % { "server" : self.webServer, "port" : self.httpPort }
     self.testPrefix = "'webapprt_'" if options.webapprtContent else "undefined"
+    self._httpdPath = options.httpdPath
 
   def start(self):
     "Run the Mochitest server, returning the process ID of the server."
@@ -428,7 +430,7 @@ class MochitestServer:
 
     args = ["-g", self._xrePath,
             "-v", "170",
-            "-f", "./" + "httpd.js",
+            "-f", self._httpdPath + "/httpd.js",
             "-e", """const _PROFILE_PATH = '%(profile)s';const _SERVER_PORT = '%(port)s'; const _SERVER_ADDR = '%(server)s';
                      const _TEST_PREFIX = %(testPrefix)s; const _DISPLAY_RESULTS = %(displayResults)s;""" %
                    {"profile" : self._profileDir.replace('\\', '\\\\'), "port" : self.httpPort, "server" : self.webServer,
