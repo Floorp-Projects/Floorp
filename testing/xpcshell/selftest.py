@@ -175,7 +175,8 @@ tail =
                                           mozInfo={},
                                           shuffle=shuffle,
                                           testsRootDir=self.tempdir,
-                                          xunitFilename=xunitFilename),
+                                          xunitFilename=xunitFilename,
+                                          sequential=True),
                           msg="""Tests should have %s, log:
 ========
 %s
