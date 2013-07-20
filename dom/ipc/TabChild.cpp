@@ -2423,9 +2423,7 @@ TabChildGlobal::Atob(const nsAString& aAsciiString,
 JSContext*
 TabChildGlobal::GetJSContextForEventHandlers()
 {
-  if (!mTabChild)
-    return nullptr;
-  return mTabChild->GetJSContext();
+  return nsContentUtils::GetSafeJSContext();
 }
 
 nsIPrincipal* 
