@@ -3909,12 +3909,11 @@ xpc_EvalInSandbox(JSContext *cx, HandleObject sandboxArg, const nsAString& sourc
         pusher.Push(sandcx);
         JSAutoCompartment ac(sandcx, sandbox);
 
-        if (jsVersion != JSVERSION_DEFAULT)
-            JS_SetVersion(sandcx, jsVersion);
-
         JS::CompileOptions options(sandcx);
         options.setPrincipals(nsJSPrincipals::get(prin))
                .setFileAndLine(filename, lineNo);
+        if (jsVersion != JSVERSION_DEFAULT)
+               options.setVersion(jsVersion);
         JS::RootedObject rootedSandbox(sandcx, sandbox);
         ok = JS::Evaluate(sandcx, rootedSandbox, options,
                           PromiseFlatString(source).get(), source.Length(),
