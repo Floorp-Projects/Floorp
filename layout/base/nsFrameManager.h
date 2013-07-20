@@ -25,9 +25,7 @@
 #include "nsFrameManagerBase.h"
 
 namespace mozilla {
-namespace css {
 class RestyleTracker;
-} // namespace css
 } // namespace mozilla
 
 struct TreeMatchContext;
@@ -45,7 +43,7 @@ struct TreeMatchContext;
 
 class nsFrameManager : public nsFrameManagerBase
 {
-  typedef mozilla::css::RestyleTracker RestyleTracker;
+  typedef mozilla::RestyleTracker RestyleTracker;
   typedef nsIFrame::ChildListID ChildListID;
 
 public:
