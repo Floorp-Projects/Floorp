@@ -106,8 +106,7 @@ public class NotificationHelper implements GeckoEventListener {
         PendingIntent pi = PendingIntent.getActivity(mContext, 0, notificationIntent, 0);
         builder.setContentIntent(pi);
 
-        NotificationManager manager = (NotificationManager) mContext.getSystemService(Context.NOTIFICATION_SERVICE);
-        manager.notify(id.hashCode(), builder.build());
+        GeckoAppShell.sNotificationClient.add(id.hashCode(), builder.build());
         if (!mShowing.contains(id)) {
             mShowing.add(id);
         }
@@ -126,8 +125,7 @@ public class NotificationHelper implements GeckoEventListener {
     }
 
     public void hideNotification(String id) {
-        NotificationManager manager = (NotificationManager) mContext.getSystemService(Context.NOTIFICATION_SERVICE);
-        manager.cancel(id.hashCode());
+        GeckoAppShell.sNotificationClient.remove(id.hashCode());
         mShowing.remove(id);
     }
 

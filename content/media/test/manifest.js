@@ -38,7 +38,6 @@ var gProgressTests = [
 // Used by test_played.html
 var gPlayedTests = [
   { name:"big.wav", type:"audio/x-wav", duration:9.0 },
-  { name:"sound.ogg", type:"audio/ogg", duration:4.0 },
   { name:"seek.ogv", type:"video/ogg", duration:3.966 },
   { name:"seek.webm", type:"video/webm", duration:3.966 },
   { name:"gizmo.mp4", type:"video/mp4", duration:5.56 },

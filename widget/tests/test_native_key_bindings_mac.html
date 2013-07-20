@@ -14,7 +14,6 @@
   </head>
   <body>
     <div id="editable" contenteditable>
-
       <p>Stretching attack nullam stuck in a tree zzz, suspendisse cras nec
       suspendisse lick suscipit. Nunc egestas amet litter box, nullam climb the
       curtains biting I don't like that food tristique biting sleep on your
@@ -46,13 +45,56 @@
       Judging you rutrum bat sunbathe sleep on your face, jump on the table leap
       tincidunt a faucibus sleep in the sink. Stuck in a tree tristique zzz hiss
       in viverra nullam, quis tortor pharetra attack.</p>
-
     </div>
+
+    <textarea id="textarea" cols="80">
+      Stretching attack nullam stuck in a tree zzz, suspendisse cras nec
+      suspendisse lick suscipit. Nunc egestas amet litter box, nullam climb the
+      curtains biting I don't like that food tristique biting sleep on your
+      keyboard non. Lay down in your way cras nec tempus chase the red dot cras
+      nec, pharetra pharetra eat the grass leap run orci turpis attack.
+      Consectetur sleep in the sink eat I don't like that food, knock over the
+      lamp catnip in viverra tail flick zzz meow etiam enim. Ac ac hiss shed
+      everywhere kittens rhoncus, attack your ankles zzz iaculis kittens. Nullam
+      pellentesque rip the couch iaculis rhoncus nibh, give me fish orci turpis
+      purr sleep on your face quis nunc bibendum.
+
+      Neque jump on the table bat iaculis, adipiscing sleep on your keyboard
+      jump vel justo shed everywhere suspendisse lick. Zzz enim faucibus
+      hairball faucibus, pharetra sunbathe biting bat leap rip the couch attack.
+      Tortor nibh in viverra quis hairball nam, vulputate adipiscing sleep on
+      your keyboard purr knock over the lamp orci turpis. Vestibulum I don't
+      like that food et chase the red dot, adipiscing neque bibendum rutrum
+      accumsan quis rhoncus claw. Leap accumsan vehicula enim biting sleep on
+      your face, pharetra nam accumsan egestas kittens sunbathe. Pharetra chase
+      the red dot sniff non eat the grass, vulputate fluffy fur aliquam puking
+      judging you.
+
+      Claw purr sollicitudin sollicitudin lay down in your way consectetur,
+      pellentesque vehicula zzz orci turpis consectetur. I don't like that food
+      rhoncus pellentesque sniff attack, rhoncus tortor attack your ankles
+      iaculis scratched hiss vel. Tortor zzz tortor nullam rip the couch rutrum,
+      bat enim ut leap hairball iaculis. Bibendum sunbathe elit suspendisse
+      nibh, puking adipiscing sleep on your face sleep on your face zzz catnip.
+      Judging you rutrum bat sunbathe sleep on your face, jump on the table leap
+      tincidunt a faucibus sleep in the sink. Stuck in a tree tristique zzz hiss
+      in viverra nullam, quis tortor pharetra attack.
+    </textarea>
+
+    <input id="input" type="text"
+      value="Stretching attack nullam stuck in a tree zzz, suspendisse cras nec
+      suspendisse lick suscipit. Nunc egestas amet litter box, nullam climb the
+      curtains biting I don't like that food tristique biting sleep on your
+      keyboard non. Lay down in your way cras nec tempus chase the red dot cras
+      nec, pharetra pharetra eat the grass leap run orci turpis attack.
+      Consectetur sleep in the sink eat I don't like that food, knock over the
+      lamp catnip in viverra tail flick zzz meow etiam enim. Ac ac hiss shed
+      everywhere kittens rhoncus, attack your ankles zzz iaculis kittens.
+      Nullam pellentesque rip the couch iaculis rhoncus nibh, give me fish orci
+      turpis purr sleep on your face quis nunc bibendum.">
 
     <script type="text/javascript;version=1.8">
       SimpleTest.waitForExplicitFinish();
-
-      let editNode = document.getElementById("editable");
 
       let utils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
                          getInterface(Components.interfaces.nsIDOMWindowUtils);
@@ -65,6 +107,189 @@
         "Dvorak-Qwerty":   4,
         "Thai":            5
       };
+
+      let synthesizedKeys = [];
+      let expectations = [];
+
+      // Move to beginning of line
+      synthesizedKeys.push([layouts.US, MAC_VK_LeftArrow,
+                            {ctrl: true}, "\uf702", "\uf702"]);
+      expectations.push({
+        editable: [0, 0],
+        textarea: [0, 0],
+        input:    [0, 0]
+      });
+
+      // Move to end of line
+      synthesizedKeys.push([layouts.US, MAC_VK_RightArrow,
+                            {ctrl: true}, "\uf703", "\uf703"]);
+      expectations.push({
+        editable: [73, 73],
+        textarea: [72, 72],
+        input:    [732, 732]
+      });
+
+      // Move down
+      synthesizedKeys.push([layouts.US, MAC_VK_ANSI_N,
+                            {ctrl: true}, "\u000e", "n"]);
+      expectations.push({
+        editable: [140, 140],
+        textarea: [145, 145],
+        input:    [732, 732]
+      });
+
+      // Move to beginning of line
+      synthesizedKeys.push([layouts.US, MAC_VK_LeftArrow,
+                            {ctrl: true}, "\uf702", "\uf702"]);
+      expectations.push({
+        editable: [73, 73],
+        textarea: [73, 73],
+        input:    [0, 0]
+      });
+
+      // Move word right and modify selection
+      synthesizedKeys.push([layouts.US, MAC_VK_RightArrow,
+                            {alt: true, shift: true}, "\uf703", "\uf703"]);
+      expectations.push({
+        editable: [73, 84],
+        textarea: [73, 90],
+        input:    [0, 10]
+      });
+
+      // Move word right
+      synthesizedKeys.push([layouts.US, MAC_VK_RightArrow,
+                            {alt: true}, "\uf703", "\uf703"]);
+      expectations.push({
+        editable: [84, 84],
+        textarea: [90, 90],
+        input:    [10, 10]
+      });
+
+      // Move word right
+      synthesizedKeys.push([layouts.US, MAC_VK_RightArrow,
+                            {alt: true}, "\uf703", "\uf703"]);
+      expectations.push({
+        editable: [89, 89],
+        textarea: [95, 95],
+        input:    [17, 17]
+      });
+
+      // Move down and modify selection
+      synthesizedKeys.push([layouts.US, MAC_VK_DownArrow,
+                            {shift: true}, "\uf701", "\uf701"]);
+      expectations.push({
+        editable: [89, 171],
+        textarea: [95, 175],
+        input:    [17, 732]
+      });
+
+      // Move backward and modify selection
+      synthesizedKeys.push([layouts.US, MAC_VK_ANSI_B,
+                            {ctrl: true, shift: true}, "\u0002", "B"]);
+      expectations.push({
+        editable: [89, 170],
+        textarea: [95, 174],
+        input:    [17, 731]
+      });
+
+      // Delete forward
+      synthesizedKeys.push([layouts.US, MAC_VK_ANSI_D,
+                            {ctrl: true}, "\u0004", "d"]);
+      expectations.push({
+        editable: [89, 89],
+        textarea: [95, 95],
+        input:    [17, 17]
+      });
+
+      // Delete backward
+      synthesizedKeys.push([layouts.US, MAC_VK_ANSI_H,
+                            {ctrl: true}, "\u0008", "h"]);
+      expectations.push({
+        editable: [88, 88],
+        textarea: [94, 94],
+        input:    [16, 16]
+      });
+
+      // Move backward
+      synthesizedKeys.push([layouts.US, MAC_VK_ANSI_B,
+                            {ctrl: true}, "\u0002", "b"]);
+      expectations.push({
+        editable: [87, 87],
+        textarea: [93, 93],
+        input:    [15, 15]
+      });
+
+      // Move to beginning of paragraph (line for now)
+      synthesizedKeys.push([layouts.US, MAC_VK_ANSI_A,
+                            {ctrl: true}, "\u0001", "a"]);
+      expectations.push({
+        editable: [73, 73],
+        textarea: [73, 73],
+        input:    [0, 0]
+      });
+
+      // Move forward
+      synthesizedKeys.push([layouts.US, MAC_VK_ANSI_F,
+                            {ctrl: true}, "\u0006", "f"]);
+      expectations.push({
+        editable: [74, 74],
+        textarea: [74, 74],
+        input:    [1, 1]
+      });
+
+      // Move word right
+      synthesizedKeys.push([layouts.US, MAC_VK_RightArrow,
+                            {alt: true}, "\uf703", "\uf703"]);
+      expectations.push({
+        editable: [84, 84],
+        textarea: [90, 90],
+        input:    [10, 10]
+      });
+
+      // Move word right
+      synthesizedKeys.push([layouts.US, MAC_VK_RightArrow,
+                            {alt: true}, "\uf703", "\uf703"]);
+      expectations.push({
+        editable: [88, 88],
+        textarea: [94, 94],
+        input:    [17, 17]
+      });
+
+      // Delete to end of paragraph (line for now)
+      synthesizedKeys.push([layouts.US, MAC_VK_ANSI_K,
+                            {ctrl: true}, "\u000b", "k"]);
+      expectations.push({
+        editable: [88, 88],
+        textarea: [94, 94],
+        input:    [17, 17]
+      });
+
+      // Move backward and modify selection
+      synthesizedKeys.push([layouts.US, MAC_VK_ANSI_B,
+                            {ctrl: true, shift: true}, "\u0002", "B"]);
+      expectations.push({
+        editable: [88, 87],
+        textarea: [93, 94],
+        input:    [16, 17]
+      });
+
+      // Move to end of paragraph (line for now)
+      synthesizedKeys.push([layouts.US, MAC_VK_ANSI_E,
+                            {ctrl: true}, "\u0005", "e"]);
+      expectations.push({
+        editable: [144, 144],
+        textarea: [94, 94],
+        input:    [17, 17]
+      });
+
+      // Move up
+      synthesizedKeys.push([layouts.US, MAC_VK_ANSI_P,
+                            {ctrl: true}, "\u0010", "p"]);
+      expectations.push({
+        editable: [73, 73],
+        textarea: [21, 21],
+        input:    [0, 0]
+      });
 
       function synthesizeNativeKey(aLayout, aKeyCode, aModifiers, aSystemChars,
                                    aSystemUnmodifiedChars)
@@ -88,61 +313,43 @@
                                  aSystemChars, aSystemUnmodifiedChars);
       }
 
-      function testSelection(aAnchorOffset, aFocusOffset)
+      function checkWindowSelection(aElement, aSelection)
       {
         let selection = window.getSelection();
 
-        is(selection.anchorOffset, aAnchorOffset, "Incorrect anchor offset");
-        is(selection.focusOffset, aFocusOffset, "Incorrect focus offset");
+        is(selection.anchorOffset, aSelection[aElement.id][0],
+           aElement.id + ": Incorrect anchor offset");
+        is(selection.focusOffset, aSelection[aElement.id][1],
+           aElement.id + ": Incorrect focus offset");
+      }
+
+      function checkElementSelection(aElement, aSelection)
+      {
+        is(aElement.selectionStart, aSelection[aElement.id][0],
+           aElement.id + ": Incorrect selection start");
+        is(aElement.selectionEnd, aSelection[aElement.id][1],
+           aElement.id + ": Incorrect selection end");
+      }
+
+      function testRun(aElement, aSelectionCheck)
+      {
+        if (document.activeElement) {
+          document.activeElement.blur();
+        }
+
+        aElement.focus();
+
+        for (let i = 0; i < synthesizedKeys.length; i++) {
+          synthesizeNativeKey.apply(null, synthesizedKeys[i]);
+          aSelectionCheck.call(null, aElement, expectations[i]);
+        }
       }
 
       function doTest()
       {
-        editNode.focus();
-
-        // Move to beginning of line
-        synthesizeNativeKey(layouts.US, MAC_VK_LeftArrow,
-                            {ctrl: true}, "\uf702", "\uf702");
-        testSelection(0, 0);
-
-        // Move to end of line
-        synthesizeNativeKey(layouts.US, MAC_VK_RightArrow,
-                            {ctrl: true}, "\uf703", "\uf703");
-        testSelection(73, 73);
-
-        // Move down
-        synthesizeNativeKey(layouts.US, MAC_VK_ANSI_N, {ctrl: true}, "n", "n");
-        testSelection(140, 140);
-
-        // Move to beginning of line
-        synthesizeNativeKey(layouts.US, MAC_VK_LeftArrow,
-                            {ctrl: true}, "\uf702", "\uf702");
-        testSelection(73, 73);
-
-        // Move word right and modify selection
-        synthesizeNativeKey(layouts.US, MAC_VK_RightArrow,
-                            {alt: true, shift: true}, "\uf703", "\uf703");
-        testSelection(73, 84);
-
-        // Move word right
-        synthesizeNativeKey(layouts.US, MAC_VK_RightArrow,
-                            {alt: true}, "\uf703", "\uf703");
-        testSelection(84, 84);
-
-        // Move word right
-        synthesizeNativeKey(layouts.US, MAC_VK_RightArrow,
-                            {alt: true}, "\uf703", "\uf703");
-        testSelection(89, 89);
-
-        // Move down and modify selection
-        synthesizeNativeKey(layouts.US, MAC_VK_DownArrow,
-                            {shift: true}, "\uf701", "\uf701");
-        testSelection(89, 171);
-
-        // Move backward and modify selection
-        synthesizeNativeKey(layouts.US, MAC_VK_ANSI_B,
-                            {ctrl: true, shift: true}, "B", "B");
-        testSelection(89, 170);
+        testRun(document.getElementById("editable"), checkWindowSelection);
+        testRun(document.getElementById("textarea"), checkElementSelection);
+        testRun(document.getElementById("input"), checkElementSelection);
 
         SimpleTest.finish();
       }

@@ -492,7 +492,7 @@ SendFunctionsToPerf(JSContext *cx, AsmJSModule &module)
     unsigned long base = (unsigned long) module.functionCode();
 
     const AsmJSModule::PostLinkFailureInfo &info = module.postLinkFailureInfo();
-    const char *filename = const_cast<char *>(info.scriptSource_->filename());
+    const char *filename = const_cast<char *>(info.scriptSource->filename());
 
     for (unsigned i = 0; i < module.numPerfFunctions(); i++) {
         const AsmJSModule::ProfiledFunction &func = module.perfProfiledFunction(i);
@@ -527,7 +527,7 @@ SendBlocksToPerf(JSContext *cx, AsmJSModule &module)
     unsigned long funcBaseAddress = (unsigned long) module.functionCode();
 
     const AsmJSModule::PostLinkFailureInfo &info = module.postLinkFailureInfo();
-    const char *filename = const_cast<char *>(info.scriptSource_->filename());
+    const char *filename = const_cast<char *>(info.scriptSource->filename());
 
     for (unsigned i = 0; i < module.numPerfBlocksFunctions(); i++) {
         const AsmJSModule::ProfiledBlocksFunction &func = module.perfProfiledBlocksFunction(i);

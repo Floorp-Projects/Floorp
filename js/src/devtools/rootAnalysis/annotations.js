@@ -94,10 +94,6 @@ function ignoreEdgeUse(edge, variable)
             var name = callee.Variable.Name[0];
             if (/~Anchor/.test(name))
                 return true;
-            if (/::Unrooted\(\)/.test(name))
-                return true;
-            if (/::~Unrooted\(\)/.test(name))
-                return true;
             if (/~DebugOnly/.test(name))
                 return true;
         }

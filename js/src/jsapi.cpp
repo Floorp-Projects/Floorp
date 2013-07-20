@@ -686,6 +686,9 @@ PerThreadData::~PerThreadData()
 {
     if (dtoaState)
         js_DestroyDtoaState(dtoaState);
+
+    if (isInList())
+        removeFromThreadList();
 }
 
 bool
@@ -698,6 +701,22 @@ PerThreadData::init()
     return true;
 }
 
+void
+PerThreadData::addToThreadList()
+{
+    // PerThreadData which are created/destroyed off the main thread do not
+    // show up in the runtime's thread list.
+    runtime_->assertValidThread();
+    runtime_->threadList.insertBack(this);
+}
+
+void
+PerThreadData::removeFromThreadList()
+{
+    runtime_->assertValidThread();
+    removeFrom(runtime_->threadList);
+}
+
 JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
   : mainThread(this),
     interrupt(0),
@@ -706,6 +725,10 @@ JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
 #ifdef DEBUG
     operationCallbackOwner(NULL),
 #endif
+    exclusiveAccessLock(NULL),
+    exclusiveAccessOwner(NULL),
+    mainThreadHasExclusiveAccess(false),
+    numExclusiveThreads(0),
 #endif
     atomsCompartment(NULL),
     systemZone(NULL),
@@ -891,12 +914,17 @@ JSRuntime::init(uint32_t maxbytes)
     operationCallbackLock = PR_NewLock();
     if (!operationCallbackLock)
         return false;
+
+    exclusiveAccessLock = PR_NewLock();
+    if (!exclusiveAccessLock)
+        return false;
 #endif
 
     if (!mainThread.init())
         return false;
 
     js::TlsPerThreadData.set(&mainThread);
+    mainThread.addToThreadList();
 
     if (!js_InitGC(this, maxbytes))
         return false;
@@ -957,19 +985,7 @@ JSRuntime::init(uint32_t maxbytes)
 
 JSRuntime::~JSRuntime()
 {
-#ifdef JS_THREADSAFE
-    clearOwnerThread();
-
-    JS_ASSERT(!operationCallbackOwner);
-    if (operationCallbackLock)
-        PR_DestroyLock(operationCallbackLock);
-#endif
-
-    /*
-     * Even though all objects in the compartment are dead, we may have keep
-     * some filenames around because of gcKeepAtoms.
-     */
-    FreeScriptData(this);
+    mainThread.removeFromThreadList();
 
 #ifdef JS_THREADSAFE
 # ifdef JS_ION
@@ -977,7 +993,23 @@ JSRuntime::~JSRuntime()
         js_delete(workerThreadState);
 # endif
     sourceCompressorThread.finish();
+
+    clearOwnerThread();
+
+    JS_ASSERT(!operationCallbackOwner);
+    if (operationCallbackLock)
+        PR_DestroyLock(operationCallbackLock);
+
+    JS_ASSERT(!exclusiveAccessOwner);
+    if (exclusiveAccessLock)
+        PR_DestroyLock(exclusiveAccessLock);
 #endif
+
+    /*
+     * Even though all objects in the compartment are dead, we may have keep
+     * some filenames around because of gcKeepAtoms.
+     */
+    FreeScriptData(this);
 
 #ifdef DEBUG
     /* Don't hurt everyone in leaky ol' Mozilla with a fatal JS_ASSERT! */
@@ -5204,7 +5236,7 @@ JS::Compile(JSContext *cx, HandleObject obj, CompileOptions options,
     JS_ASSERT_IF(options.principals, cx->compartment()->principals == options.principals);
     AutoLastFrameCheck lfc(cx);
 
-    return frontend::CompileScript(cx, obj, NullPtr(), options, chars, length);
+    return frontend::CompileScript(cx, &cx->tempLifoAlloc(), obj, NullPtr(), options, chars, length);
 }
 
 JSScript *
@@ -5545,7 +5577,8 @@ JS::Evaluate(JSContext *cx, HandleObject obj, CompileOptions options,
     options.setCompileAndGo(true);
     options.setNoScriptRval(!rval);
     SourceCompressionToken sct(cx);
-    RootedScript script(cx, frontend::CompileScript(cx, obj, NullPtr(), options,
+    RootedScript script(cx, frontend::CompileScript(cx, &cx->tempLifoAlloc(),
+                                                    obj, NullPtr(), options,
                                                     chars, length, NULL, 0, &sct));
     if (!script)
         return false;

@@ -300,6 +300,16 @@ aria::MapToState(EStateRule aRule, dom::Element* aElement, uint64_t* aState)
       return true;
     }
 
+    case eARIASelectableIfDefined:
+    {
+      static const TokenTypeData data(
+        nsGkAtoms::aria_selected, eBoolType,
+        states::SELECTABLE, states::SELECTED);
+
+      MapTokenType(aElement, aState, data);
+      return true;
+    }
+
     case eReadonlyUntilEditable:
     {
       if (!(*aState & states::EDITABLE))

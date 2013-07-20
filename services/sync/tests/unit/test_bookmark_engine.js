@@ -13,10 +13,11 @@ Cu.import("resource://testing-common/services/sync/utils.js");
 Cu.import("resource://gre/modules/Promise.jsm");
 
 Service.engineManager.register(BookmarksEngine);
-var syncTesting = new SyncTestingInfrastructure();
 
 add_test(function bad_record_allIDs() {
-  let syncTesting = new SyncTestingInfrastructure();
+  let server = new SyncServer();
+  server.start();
+  let syncTesting = new SyncTestingInfrastructure(server.server);
 
   _("Ensure that bad Places queries don't cause an error in getAllIDs.");
   let engine = new BookmarksEngine(Service);
@@ -43,11 +44,13 @@ add_test(function bad_record_allIDs() {
 
   _("Clean up.");
   PlacesUtils.bookmarks.removeItem(badRecordID);
-  run_next_test();
+  server.stop(run_next_test);
 });
 
 add_test(function test_ID_caching() {
-  let syncTesting = new SyncTestingInfrastructure();
+  let server = new SyncServer();
+  server.start();
+  let syncTesting = new SyncTestingInfrastructure(server.server);
 
   _("Ensure that Places IDs are not cached.");
   let engine = new BookmarksEngine(Service);
@@ -83,7 +86,7 @@ add_test(function test_ID_caching() {
   do_check_eq(newMobileID, store.idForGUID("mobile", false));
 
   do_check_eq(store.GUIDForId(mobileID), "abcdefghijkl");
-  run_next_test();
+  server.stop(run_next_test);
 });
 
 function serverForFoo(engine) {
@@ -96,11 +99,11 @@ function serverForFoo(engine) {
 
 add_test(function test_processIncoming_error_orderChildren() {
   _("Ensure that _orderChildren() is called even when _processIncoming() throws an error.");
-  new SyncTestingInfrastructure();
 
   let engine = new BookmarksEngine(Service);
   let store  = engine._store;
   let server = serverForFoo(engine);
+  new SyncTestingInfrastructure(server.server);
 
   let collection = server.user("foo").collection("bookmarks");
 
@@ -166,11 +169,10 @@ add_test(function test_processIncoming_error_orderChildren() {
 
 add_task(function test_restorePromptsReupload() {
   _("Ensure that restoring from a backup will reupload all records.");
-  new SyncTestingInfrastructure();
-
   let engine = new BookmarksEngine(Service);
   let store  = engine._store;
   let server = serverForFoo(engine);
+  new SyncTestingInfrastructure(server.server);
 
   let collection = server.user("foo").collection("bookmarks");
 
@@ -333,11 +335,10 @@ add_test(function test_mismatched_types() {
     "parentid": "toolbar"
   };
 
-  new SyncTestingInfrastructure();
-
   let engine = new BookmarksEngine(Service);
   let store  = engine._store;
   let server = serverForFoo(engine);
+  new SyncTestingInfrastructure(server.server);
 
   _("GUID: " + store.GUIDForId(6, true));
 
@@ -376,14 +377,13 @@ add_test(function test_mismatched_types() {
 add_test(function test_bookmark_guidMap_fail() {
   _("Ensure that failures building the GUID map cause early death.");
 
-  new SyncTestingInfrastructure();
-
   let engine = new BookmarksEngine(Service);
   let store = engine._store;
 
   let store  = engine._store;
   let server = serverForFoo(engine);
   let coll   = server.user("foo").collection("bookmarks");
+  new SyncTestingInfrastructure(server.server);
 
   // Add one item to the server.
   let itemID = PlacesUtils.bookmarks.createFolder(
@@ -475,10 +475,9 @@ add_test(function test_bookmark_tag_but_no_uri() {
 add_test(function test_misreconciled_root() {
   _("Ensure that we don't reconcile an arbitrary record with a root.");
 
-  new SyncTestingInfrastructure();
-
   let engine = new BookmarksEngine(Service);
   let store = engine._store;
+  let server = serverForFoo(engine);
 
   // Log real hard for this test.
   store._log.trace = store._log.debug;
@@ -534,7 +533,7 @@ add_test(function test_misreconciled_root() {
   do_check_eq(parentGUIDBefore, parentGUIDAfter);
   do_check_eq(parentIDBefore, parentIDAfter);
 
-  run_next_test();
+  server.stop(run_next_test);
 });
 
 function run_test() {

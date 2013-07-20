@@ -1032,6 +1032,10 @@ ion::BailoutIonToBaseline(JSContext *cx, JitActivation *activation, IonBailoutIt
     JS_ASSERT(bailoutInfo != NULL);
     JS_ASSERT(*bailoutInfo == NULL);
 
+#if JS_TRACE_LOGGING
+    TraceLogging::defaultLogger()->log(TraceLogging::INFO_ENGINE_BASELINE);
+#endif
+
     // The caller of the top frame must be one of the following:
     //      OptimizedJS - Ion calling into Ion.
     //      BaselineStub - Baseline calling into Ion.
@@ -1107,6 +1111,12 @@ ion::BailoutIonToBaseline(JSContext *cx, JitActivation *activation, IonBailoutIt
     RootedScript scr(cx, iter.script());
     AutoValueVector startFrameFormals(cx);
     while (true) {
+#if JS_TRACE_LOGGING
+        if (frameNo > 0) {
+            TraceLogging::defaultLogger()->log(TraceLogging::SCRIPT_START, scr);
+            TraceLogging::defaultLogger()->log(TraceLogging::INFO_ENGINE_BASELINE);
+        }
+#endif
         IonSpew(IonSpew_BaselineBailouts, "    FrameNo %d", frameNo);
         jsbytecode *callPC = NULL;
         RootedFunction nextCallee(cx, NULL);
