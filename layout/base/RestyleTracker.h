@@ -8,8 +8,8 @@
  * of what nodes restyles need to happen on and so forth.
  */
 
-#ifndef mozilla_css_RestyleTracker_h
-#define mozilla_css_RestyleTracker_h
+#ifndef mozilla_RestyleTracker_h
+#define mozilla_RestyleTracker_h
 
 #include "mozilla/dom/Element.h"
 #include "nsDataHashtable.h"
@@ -20,7 +20,6 @@
 class nsCSSFrameConstructor;
 
 namespace mozilla {
-namespace css {
 
 /** 
  * Helper class that collects a list of frames that need
@@ -359,7 +358,6 @@ inline bool RestyleTracker::AddPendingRestyle(Element* aElement,
   return hadRestyleLaterSiblings;
 }
 
-} // namespace css
 } // namespace mozilla
 
-#endif /* mozilla_css_RestyleTracker_h */
+#endif /* mozilla_RestyleTracker_h */

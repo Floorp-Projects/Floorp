@@ -59,8 +59,8 @@ class nsCSSFrameConstructor : public nsFrameManager
 
 public:
   typedef mozilla::dom::Element Element;
-  typedef mozilla::css::RestyleTracker RestyleTracker;
-  typedef mozilla::css::OverflowChangedTracker OverflowChangedTracker;
+  typedef mozilla::RestyleTracker RestyleTracker;
+  typedef mozilla::OverflowChangedTracker OverflowChangedTracker;
 
   nsCSSFrameConstructor(nsIDocument *aDocument, nsIPresShell* aPresShell,
                         nsStyleSet* aStyleSet);
@@ -251,7 +251,7 @@ public:
 
 private:
 
-  friend class mozilla::css::RestyleTracker;
+  friend class mozilla::RestyleTracker;
 
   void RestyleForEmptyChange(Element* aContainer);
 

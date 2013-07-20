@@ -14,7 +14,6 @@
 #include "GeckoProfiler.h"
 
 namespace mozilla {
-namespace css {
 
 inline nsIDocument*
 RestyleTracker::Document() const {
@@ -290,6 +289,5 @@ RestyleTracker::GetRestyleData(Element* aElement, RestyleData* aData)
   return true;
 }
 
-} // namespace css
 } // namespace mozilla
 
