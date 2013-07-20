@@ -44,10 +44,14 @@ MOCHITEST_BROWSER_FILES = \
   browser_cmd_screenshot.html \
   browser_cmd_screenshot.js \
   browser_cmd_settings.js \
+  browser_gcli_async.js \
   browser_gcli_canon.js \
   browser_gcli_cli.js \
   browser_gcli_completion.js \
+  browser_gcli_date.js \
   browser_gcli_exec.js \
+  browser_gcli_fail.js \
+  browser_gcli_file.js \
   browser_gcli_focus.js \
   browser_gcli_history.js \
   browser_gcli_incomplete.js \
