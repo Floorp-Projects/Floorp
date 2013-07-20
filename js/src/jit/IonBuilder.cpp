@@ -4589,7 +4589,7 @@ IonBuilder::createThisScriptedSingleton(HandleFunction target, MDefinition *call
         return NULL;
 
     // Trigger recompilation if the templateObject changes.
-    if (templateObject->type()->newScript)
+    if (templateObject->type()->hasNewScript())
         types::HeapTypeSet::WatchObjectStateChange(cx, templateObject->type());
 
     MCreateThisWithTemplate *createThis = MCreateThisWithTemplate::New(templateObject);
