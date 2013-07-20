@@ -193,7 +193,7 @@ AutoJSContext::Init(bool aSafe MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
 
   if (!mCx) {
     mCx = xpc->GetSafeJSContext();
-    mPusher.Push(mCx);
+    mPusher.construct(mCx);
   }
 }
 
@@ -210,7 +210,7 @@ AutoSafeJSContext::AutoSafeJSContext(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM_IN_IMP
 AutoPushJSContext::AutoPushJSContext(JSContext *aCx) : mCx(aCx)
 {
   if (mCx && mCx != nsXPConnect::XPConnect()->GetCurrentJSContext()) {
-    mPusher.Push(mCx);
+    mPusher.construct(mCx);
   }
 }
 
