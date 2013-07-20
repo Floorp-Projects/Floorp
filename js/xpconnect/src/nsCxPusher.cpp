@@ -106,9 +106,9 @@ AutoCxPusher::AutoCxPusher(JSContext* cx, bool allowNull) : mScriptIsRunning(fal
 {
   MOZ_ASSERT_IF(!allowNull, cx);
 
-  // If we have a cx, hold a strong ref to the nsIScriptContext, just in case.
-  // XXXbz do we really need to?  If we don't get one of these in Pop(), is
-  // that really a problem?  Or do we need to do this to effectively root |cx|?
+  // Hold a strong ref to the nsIScriptContext, if any. This ensures that we
+  // only destroy the mContext of an nsJSContext when it is not on the cx stack
+  // (and therefore not in use). See nsJSContext::DestroyJSContext().
   if (cx)
     mScx = GetScriptContextFromJSContext(cx);
 
