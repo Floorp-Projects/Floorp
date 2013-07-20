@@ -182,7 +182,7 @@ class ReftestServer:
         self.httpPort = options.httpPort
         self.scriptDir = scriptDir
         self.pidFile = options.pidFile
-        self._httpdPath = options.httpdPath
+        self._httpdPath = os.path.abspath(options.httpdPath)
         self.shutdownURL = "http://%(server)s:%(port)s/server/shutdown" % { "server" : self.webServer, "port" : self.httpPort }
 
     def start(self):
