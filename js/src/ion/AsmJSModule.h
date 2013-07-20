@@ -703,6 +703,7 @@ class AsmJSModule
 
     void initPostLinkFailureInfo(CompileOptions options,
                                  ScriptSource *scriptSource, uint32_t bufStart, uint32_t bufEnd) {
+        options.filename = scriptSource->filename();
         postLinkFailureInfo_.init(options, scriptSource, bufStart, bufEnd);
     }
 
