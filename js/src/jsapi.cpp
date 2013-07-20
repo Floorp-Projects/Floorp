@@ -73,7 +73,7 @@
 #if ENABLE_INTL_API
 #include "unicode/uclean.h"
 #include "unicode/utypes.h"
-#endif
+#endif // ENABLE_INTL_API
 #include "vm/DateObject.h"
 #include "vm/Debugger.h"
 #include "vm/ErrorObject.h"
@@ -698,6 +698,13 @@ JS_Init(void)
     if (!ForkJoinSlice::InitializeTLS())
         return false;
 
+#if ENABLE_INTL_API
+    UErrorCode err = U_ZERO_ERROR;
+    u_init(&err);
+    if (U_FAILURE(err))
+        return false;
+#endif // ENABLE_INTL_API
+
     jsInitState = Running;
     return true;
 }
@@ -711,6 +718,10 @@ JS_ShutDown(void)
                "forgot to destroy a runtime before shutting down");
 
     PRMJ_NowShutdown();
+
+#if ENABLE_INTL_API
+    u_cleanup();
+#endif // ENABLE_INTL_API
 
     jsInitState = ShutDown;
 }
