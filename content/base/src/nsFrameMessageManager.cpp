@@ -633,9 +633,6 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
         if (!object) {
           continue;
         }
-        nsCxPusher pusher;
-        pusher.Push(ctx);
-
         JSAutoCompartment ac(ctx, object);
 
         // The parameter for the listener function.
