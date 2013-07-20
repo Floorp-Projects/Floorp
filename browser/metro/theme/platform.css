@@ -664,8 +664,8 @@ arrowbox {
   visibility: collapse;
 }
 
-#start[viewstate="snapped"] .meta-section-title.narrow-title,
-#start:not([viewstate="snapped"]) .meta-section-title.wide-title {
+#start-container[viewstate="snapped"] .meta-section-title.narrow-title,
+#start-container:not([viewstate="snapped"]) .meta-section-title.wide-title {
   visibility: visible;
 }
 

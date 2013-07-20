@@ -1182,6 +1182,18 @@ var StartUI = {
       ContextUI.dismissTabs();
   },
 
+  onNarrowTitleClick: function onNarrowTitleClick(gridId) {
+    let grid = document.getElementById(gridId);
+
+    if (grid.hasAttribute("expanded"))
+      return;
+
+    for (let expandedGrid of Elements.startUI.querySelectorAll("[expanded]"))
+      expandedGrid.removeAttribute("expanded")
+
+    grid.setAttribute("expanded", "true");
+  },
+
   handleEvent: function handleEvent(aEvent) {
     switch (aEvent.type) {
       case "contextmenu":
