@@ -18,6 +18,7 @@
 
 class nsRefreshDriver;
 class nsIFrame;
+struct TreeMatchContext;
 
 namespace mozilla {
 
@@ -76,6 +77,35 @@ public:
   // Get a counter that increments on every style change, that we use to
   // track whether off-main-thread animations are up-to-date.
   uint64_t GetAnimationGeneration() const { return mAnimationGeneration; }
+
+  /**
+   * Reparent the style contexts of this frame subtree.  The parent frame of
+   * aFrame must be changed to the new parent before this function is called;
+   * the new parent style context will be automatically computed based on the
+   * new position in the frame tree.
+   *
+   * @param aFrame the root of the subtree to reparent.  Must not be null.
+   */
+  NS_HIDDEN_(nsresult) ReparentStyleContext(nsIFrame* aFrame);
+
+  /**
+   * Re-resolve the style contexts for a frame tree, building
+   * aChangeList based on the resulting style changes, plus aMinChange
+   * applied to aFrame.
+   */
+  NS_HIDDEN_(void)
+    ComputeStyleChangeFor(nsIFrame* aFrame,
+                          nsStyleChangeList* aChangeList,
+                          nsChangeHint aMinChange,
+                          RestyleTracker& aRestyleTracker,
+                          bool aRestyleDescendants);
+
+#ifdef DEBUG
+  /**
+   * DEBUG ONLY method to verify integrity of style tree versus frame tree
+   */
+  NS_HIDDEN_(void) DebugVerifyStyleTree(nsIFrame* aFrame);
+#endif
 
   // Note: It's the caller's responsibility to make sure to wrap a
   // ProcessRestyledFrames call in a view update batch and a script blocker.
@@ -155,6 +185,36 @@ public:
   }
 
 private:
+  enum DesiredA11yNotifications {
+    eSkipNotifications,
+    eSendAllNotifications,
+    eNotifyIfShown
+  };
+
+  enum A11yNotificationType {
+    eDontNotify,
+    eNotifyShown,
+    eNotifyHidden
+  };
+
+  // Use eRestyle_Self for the aRestyleHint argument to mean
+  // "reresolve our style context but not kids", use eRestyle_Subtree
+  // to mean "reresolve our style context and kids", and use
+  // nsRestyleHint(0) to mean recompute a new style context for our
+  // current parent and existing rulenode, and the same for kids.
+  NS_HIDDEN_(nsChangeHint)
+    ReResolveStyleContext(nsPresContext* aPresContext,
+                          nsIFrame* aFrame,
+                          nsIContent* aParentContent,
+                          nsStyleChangeList* aChangeList,
+                          nsChangeHint aMinChange,
+                          nsChangeHint aParentFrameHintsNotHandledForDescendants,
+                          nsRestyleHint aRestyleHint,
+                          RestyleTracker& aRestyleTracker,
+                          DesiredA11yNotifications aDesiredA11yNotifications,
+                          nsTArray<nsIContent*>& aVisibleKidsOfHiddenElement,
+                          TreeMatchContext& aTreeMatchContext);
+
   /**
    * Notify the frame constructor that an element needs to have its
    * style recomputed.
