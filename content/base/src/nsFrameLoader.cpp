@@ -2212,7 +2212,7 @@ public:
 
       nsRefPtr<nsFrameMessageManager> mm = tabChild->GetInnerManager();
       mm->ReceiveMessage(static_cast<EventTarget*>(tabChild), mMessage,
-                         false, &data, JS::NullPtr(), nullptr, nullptr);
+                         false, &data, JS::NullPtr(), nullptr);
     }
     return NS_OK;
   }
