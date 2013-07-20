@@ -1797,6 +1797,7 @@ struct JSContext : js::ThreadSafeContext,
      * Return:
      * - The override version, if there is an override version.
      * - The newest scripted frame's version, if there is such a frame.
+     * - The version from the compartment.
      * - The default version.
      *
      * Note: if this ever shows up in a profile, just add caching!
