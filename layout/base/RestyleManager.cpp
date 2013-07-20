@@ -298,6 +298,156 @@ ApplyRenderingChangeToTree(nsPresContext* aPresContext,
 #endif
 }
 
+bool
+RestyleManager::RecomputePosition(nsIFrame* aFrame)
+{
+  // Don't process position changes on table frames, since we already handle
+  // the dynamic position change on the outer table frame, and the reflow-based
+  // fallback code path also ignores positions on inner table frames.
+  if (aFrame->GetType() == nsGkAtoms::tableFrame) {
+    return true;
+  }
+
+  // Don't process position changes on frames which have views or the ones which
+  // have a view somewhere in their descendants, because the corresponding view
+  // needs to be repositioned properly as well.
+  if (aFrame->HasView() ||
+      (aFrame->GetStateBits() & NS_FRAME_HAS_CHILD_WITH_VIEW)) {
+    StyleChangeReflow(aFrame, nsChangeHint_NeedReflow);
+    return false;
+  }
+
+  const nsStyleDisplay* display = aFrame->StyleDisplay();
+  // Changes to the offsets of a non-positioned element can safely be ignored.
+  if (display->mPosition == NS_STYLE_POSITION_STATIC) {
+    return true;
+  }
+
+  aFrame->SchedulePaint();
+
+  // For relative positioning, we can simply update the frame rect
+  if (display->mPosition == NS_STYLE_POSITION_RELATIVE) {
+    switch (display->mDisplay) {
+      case NS_STYLE_DISPLAY_TABLE_CAPTION:
+      case NS_STYLE_DISPLAY_TABLE_CELL:
+      case NS_STYLE_DISPLAY_TABLE_ROW:
+      case NS_STYLE_DISPLAY_TABLE_ROW_GROUP:
+      case NS_STYLE_DISPLAY_TABLE_HEADER_GROUP:
+      case NS_STYLE_DISPLAY_TABLE_FOOTER_GROUP:
+      case NS_STYLE_DISPLAY_TABLE_COLUMN:
+      case NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP:
+        // We don't currently support relative positioning of inner
+        // table elements.  If we apply offsets to things we haven't
+        // previously offset, we'll get confused.  So bail.
+        return true;
+      default:
+        break;
+    }
+
+    nsIFrame* cb = aFrame->GetContainingBlock();
+    const nsSize size = cb->GetSize();
+    const nsPoint oldOffsets = aFrame->GetRelativeOffset();
+    nsMargin newOffsets;
+
+    // Move the frame
+    nsHTMLReflowState::ComputeRelativeOffsets(
+        cb->StyleVisibility()->mDirection,
+        aFrame, size.width, size.height, newOffsets);
+    NS_ASSERTION(newOffsets.left == -newOffsets.right &&
+                 newOffsets.top == -newOffsets.bottom,
+                 "ComputeRelativeOffsets should return valid results");
+    aFrame->SetPosition(aFrame->GetPosition() - oldOffsets +
+                        nsPoint(newOffsets.left, newOffsets.top));
+
+    return true;
+  }
+
+  // For absolute positioning, the width can potentially change if width is
+  // auto and either of left or right are not.  The height can also potentially
+  // change if height is auto and either of top or bottom are not.  In these
+  // cases we fall back to a reflow, and in all other cases, we attempt to
+  // move the frame here.
+  // Note that it is possible for the dimensions to not change in the above
+  // cases, so we should be a little smarter here and only fall back to reflow
+  // when the dimensions will really change (bug 745485).
+  const nsStylePosition* position = aFrame->StylePosition();
+  if (position->mWidth.GetUnit() != eStyleUnit_Auto &&
+      position->mHeight.GetUnit() != eStyleUnit_Auto) {
+    // For the absolute positioning case, set up a fake HTML reflow state for
+    // the frame, and then get the offsets from it.
+    nsRefPtr<nsRenderingContext> rc = aFrame->PresContext()->GetPresShell()->
+      GetReferenceRenderingContext();
+
+    // Construct a bogus parent reflow state so that there's a usable
+    // containing block reflow state.
+    nsIFrame* parentFrame = aFrame->GetParent();
+    nsSize parentSize = parentFrame->GetSize();
+
+    nsFrameState savedState = parentFrame->GetStateBits();
+    nsHTMLReflowState parentReflowState(aFrame->PresContext(), parentFrame,
+                                        rc, parentSize);
+    parentFrame->RemoveStateBits(~nsFrameState(0));
+    parentFrame->AddStateBits(savedState);
+
+    NS_WARN_IF_FALSE(parentSize.width != NS_INTRINSICSIZE &&
+                     parentSize.height != NS_INTRINSICSIZE,
+                     "parentSize should be valid");
+    parentReflowState.SetComputedWidth(std::max(parentSize.width, 0));
+    parentReflowState.SetComputedHeight(std::max(parentSize.height, 0));
+    parentReflowState.mComputedMargin.SizeTo(0, 0, 0, 0);
+    parentSize.height = NS_AUTOHEIGHT;
+
+    parentReflowState.mComputedPadding = parentFrame->GetUsedPadding();
+    parentReflowState.mComputedBorderPadding =
+      parentFrame->GetUsedBorderAndPadding();
+
+    nsSize availSize(parentSize.width, NS_INTRINSICSIZE);
+
+    nsSize size = aFrame->GetSize();
+    ViewportFrame* viewport = do_QueryFrame(parentFrame);
+    nsSize cbSize = viewport ?
+      viewport->AdjustReflowStateAsContainingBlock(&parentReflowState).Size()
+      : aFrame->GetContainingBlock()->GetSize();
+    const nsMargin& parentBorder =
+      parentReflowState.mStyleBorder->GetComputedBorder();
+    cbSize -= nsSize(parentBorder.LeftRight(), parentBorder.TopBottom());
+    nsHTMLReflowState reflowState(aFrame->PresContext(), parentReflowState,
+                                  aFrame, availSize, cbSize.width,
+                                  cbSize.height);
+
+    // If we're solving for 'left' or 'top', then compute it here, in order to
+    // match the reflow code path.
+    if (NS_AUTOOFFSET == reflowState.mComputedOffsets.left) {
+      reflowState.mComputedOffsets.left = cbSize.width -
+                                          reflowState.mComputedOffsets.right -
+                                          reflowState.mComputedMargin.right -
+                                          size.width -
+                                          reflowState.mComputedMargin.left;
+    }
+
+    if (NS_AUTOOFFSET == reflowState.mComputedOffsets.top) {
+      reflowState.mComputedOffsets.top = cbSize.height -
+                                         reflowState.mComputedOffsets.bottom -
+                                         reflowState.mComputedMargin.bottom -
+                                         size.height -
+                                         reflowState.mComputedMargin.top;
+    }
+
+    // Move the frame
+    nsPoint pos(parentBorder.left + reflowState.mComputedOffsets.left +
+                reflowState.mComputedMargin.left,
+                parentBorder.top + reflowState.mComputedOffsets.top +
+                reflowState.mComputedMargin.top);
+    aFrame->SetPosition(pos);
+
+    return true;
+  }
+
+  // Fall back to a reflow
+  StyleChangeReflow(aFrame, nsChangeHint_NeedReflow);
+  return false;
+}
+
 nsresult
 RestyleManager::StyleChangeReflow(nsIFrame* aFrame, nsChangeHint aHint)
 {
@@ -1301,156 +1451,6 @@ RestyleManager::PostRebuildAllStyleDataEvent(nsChangeHint aExtraHint)
 
   // Get a restyle event posted if necessary
   PostRestyleEventInternal(false);
-}
-
-bool
-RestyleManager::RecomputePosition(nsIFrame* aFrame)
-{
-  // Don't process position changes on table frames, since we already handle
-  // the dynamic position change on the outer table frame, and the reflow-based
-  // fallback code path also ignores positions on inner table frames.
-  if (aFrame->GetType() == nsGkAtoms::tableFrame) {
-    return true;
-  }
-
-  // Don't process position changes on frames which have views or the ones which
-  // have a view somewhere in their descendants, because the corresponding view
-  // needs to be repositioned properly as well.
-  if (aFrame->HasView() ||
-      (aFrame->GetStateBits() & NS_FRAME_HAS_CHILD_WITH_VIEW)) {
-    StyleChangeReflow(aFrame, nsChangeHint_NeedReflow);
-    return false;
-  }
-
-  const nsStyleDisplay* display = aFrame->StyleDisplay();
-  // Changes to the offsets of a non-positioned element can safely be ignored.
-  if (display->mPosition == NS_STYLE_POSITION_STATIC) {
-    return true;
-  }
-
-  aFrame->SchedulePaint();
-
-  // For relative positioning, we can simply update the frame rect
-  if (display->mPosition == NS_STYLE_POSITION_RELATIVE) {
-    switch (display->mDisplay) {
-      case NS_STYLE_DISPLAY_TABLE_CAPTION:
-      case NS_STYLE_DISPLAY_TABLE_CELL:
-      case NS_STYLE_DISPLAY_TABLE_ROW:
-      case NS_STYLE_DISPLAY_TABLE_ROW_GROUP:
-      case NS_STYLE_DISPLAY_TABLE_HEADER_GROUP:
-      case NS_STYLE_DISPLAY_TABLE_FOOTER_GROUP:
-      case NS_STYLE_DISPLAY_TABLE_COLUMN:
-      case NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP:
-        // We don't currently support relative positioning of inner
-        // table elements.  If we apply offsets to things we haven't
-        // previously offset, we'll get confused.  So bail.
-        return true;
-      default:
-        break;
-    }
-
-    nsIFrame* cb = aFrame->GetContainingBlock();
-    const nsSize size = cb->GetSize();
-    const nsPoint oldOffsets = aFrame->GetRelativeOffset();
-    nsMargin newOffsets;
-
-    // Move the frame
-    nsHTMLReflowState::ComputeRelativeOffsets(
-        cb->StyleVisibility()->mDirection,
-        aFrame, size.width, size.height, newOffsets);
-    NS_ASSERTION(newOffsets.left == -newOffsets.right &&
-                 newOffsets.top == -newOffsets.bottom,
-                 "ComputeRelativeOffsets should return valid results");
-    aFrame->SetPosition(aFrame->GetPosition() - oldOffsets +
-                        nsPoint(newOffsets.left, newOffsets.top));
-
-    return true;
-  }
-
-  // For absolute positioning, the width can potentially change if width is
-  // auto and either of left or right are not.  The height can also potentially
-  // change if height is auto and either of top or bottom are not.  In these
-  // cases we fall back to a reflow, and in all other cases, we attempt to
-  // move the frame here.
-  // Note that it is possible for the dimensions to not change in the above
-  // cases, so we should be a little smarter here and only fall back to reflow
-  // when the dimensions will really change (bug 745485).
-  const nsStylePosition* position = aFrame->StylePosition();
-  if (position->mWidth.GetUnit() != eStyleUnit_Auto &&
-      position->mHeight.GetUnit() != eStyleUnit_Auto) {
-    // For the absolute positioning case, set up a fake HTML reflow state for
-    // the frame, and then get the offsets from it.
-    nsRefPtr<nsRenderingContext> rc = aFrame->PresContext()->GetPresShell()->
-      GetReferenceRenderingContext();
-
-    // Construct a bogus parent reflow state so that there's a usable
-    // containing block reflow state.
-    nsIFrame* parentFrame = aFrame->GetParent();
-    nsSize parentSize = parentFrame->GetSize();
-
-    nsFrameState savedState = parentFrame->GetStateBits();
-    nsHTMLReflowState parentReflowState(aFrame->PresContext(), parentFrame,
-                                        rc, parentSize);
-    parentFrame->RemoveStateBits(~nsFrameState(0));
-    parentFrame->AddStateBits(savedState);
-
-    NS_WARN_IF_FALSE(parentSize.width != NS_INTRINSICSIZE &&
-                     parentSize.height != NS_INTRINSICSIZE,
-                     "parentSize should be valid");
-    parentReflowState.SetComputedWidth(std::max(parentSize.width, 0));
-    parentReflowState.SetComputedHeight(std::max(parentSize.height, 0));
-    parentReflowState.mComputedMargin.SizeTo(0, 0, 0, 0);
-    parentSize.height = NS_AUTOHEIGHT;
-
-    parentReflowState.mComputedPadding = parentFrame->GetUsedPadding();
-    parentReflowState.mComputedBorderPadding =
-      parentFrame->GetUsedBorderAndPadding();
-
-    nsSize availSize(parentSize.width, NS_INTRINSICSIZE);
-
-    nsSize size = aFrame->GetSize();
-    ViewportFrame* viewport = do_QueryFrame(parentFrame);
-    nsSize cbSize = viewport ?
-      viewport->AdjustReflowStateAsContainingBlock(&parentReflowState).Size()
-      : aFrame->GetContainingBlock()->GetSize();
-    const nsMargin& parentBorder =
-      parentReflowState.mStyleBorder->GetComputedBorder();
-    cbSize -= nsSize(parentBorder.LeftRight(), parentBorder.TopBottom());
-    nsHTMLReflowState reflowState(aFrame->PresContext(), parentReflowState,
-                                  aFrame, availSize, cbSize.width,
-                                  cbSize.height);
-
-    // If we're solving for 'left' or 'top', then compute it here, in order to
-    // match the reflow code path.
-    if (NS_AUTOOFFSET == reflowState.mComputedOffsets.left) {
-      reflowState.mComputedOffsets.left = cbSize.width -
-                                          reflowState.mComputedOffsets.right -
-                                          reflowState.mComputedMargin.right -
-                                          size.width -
-                                          reflowState.mComputedMargin.left;
-    }
-
-    if (NS_AUTOOFFSET == reflowState.mComputedOffsets.top) {
-      reflowState.mComputedOffsets.top = cbSize.height -
-                                         reflowState.mComputedOffsets.bottom -
-                                         reflowState.mComputedMargin.bottom -
-                                         size.height -
-                                         reflowState.mComputedMargin.top;
-    }
-
-    // Move the frame
-    nsPoint pos(parentBorder.left + reflowState.mComputedOffsets.left +
-                reflowState.mComputedMargin.left,
-                parentBorder.top + reflowState.mComputedOffsets.top +
-                reflowState.mComputedMargin.top);
-    aFrame->SetPosition(pos);
-
-    return true;
-  }
-
-  // Fall back to a reflow
-  StyleChangeReflow(aFrame, nsChangeHint_NeedReflow);
-  return false;
 }
 
 #ifdef DEBUG
