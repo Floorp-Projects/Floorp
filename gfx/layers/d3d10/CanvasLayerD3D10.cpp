@@ -68,7 +68,7 @@ CanvasLayerD3D10::Initialize(const Data& aData)
                    "CanvasLayer can't have both surface and WebGLContext/Surface");
 
       mBounds.SetRect(0, 0, aData.mSize.width, aData.mSize.height);
-      device()->CreateShaderResourceView(mTexture, NULL, getter_AddRefs(mSRView));
+      device()->CreateShaderResourceView(mTexture, nullptr, getter_AddRefs(mSRView));
       return;
     } 
     
@@ -86,7 +86,7 @@ CanvasLayerD3D10::Initialize(const Data& aData)
     if (data) {
       mTexture = static_cast<ID3D10Texture2D*>(data);
       mIsD2DTexture = true;
-      device()->CreateShaderResourceView(mTexture, NULL, getter_AddRefs(mSRView));
+      device()->CreateShaderResourceView(mTexture, nullptr, getter_AddRefs(mSRView));
       mHasAlpha =
         mSurface->GetContentType() == gfxASurface::CONTENT_COLOR_ALPHA;
       return;
@@ -100,13 +100,13 @@ CanvasLayerD3D10::Initialize(const Data& aData)
   desc.Usage = D3D10_USAGE_DYNAMIC;
   desc.CPUAccessFlags = D3D10_CPU_ACCESS_WRITE;
 
-  HRESULT hr = device()->CreateTexture2D(&desc, NULL, getter_AddRefs(mTexture));
+  HRESULT hr = device()->CreateTexture2D(&desc, nullptr, getter_AddRefs(mTexture));
   if (FAILED(hr)) {
     NS_WARNING("Failed to create texture for CanvasLayer!");
     return;
   }
 
-  device()->CreateShaderResourceView(mTexture, NULL, getter_AddRefs(mUploadSRView));
+  device()->CreateShaderResourceView(mTexture, nullptr, getter_AddRefs(mUploadSRView));
 }
 
 void
