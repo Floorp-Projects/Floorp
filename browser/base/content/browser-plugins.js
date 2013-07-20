@@ -217,14 +217,21 @@ var gPluginHandler = {
   },
 
   handleEvent : function(event) {
-    let plugin = event.target;
-    let doc = plugin.ownerDocument;
-
-    // We're expecting the target to be a plugin.
-    if (!(plugin instanceof Ci.nsIObjectLoadingContent))
-      return;
+    let plugin;
+    let doc;
 
     let eventType = event.type;
+    if (eventType === "PluginRemoved") {
+      doc = event.target;
+    }
+    else {
+      plugin = event.target;
+      doc = plugin.ownerDocument;
+
+      if (!(plugin instanceof Ci.nsIObjectLoadingContent))
+        return;
+    }
+
     if (eventType == "PluginBindingAttached") {
       // The plugin binding fires this event when it is created.
       // As an untrusted event, ensure that this object actually has a binding
@@ -243,6 +250,7 @@ var gPluginHandler = {
       }
     }
 
+    let shouldShowNotification = false;
     let browser = gBrowser.getBrowserForDocument(doc.defaultView.top.document);
 
     switch (eventType) {
@@ -268,7 +276,7 @@ var gPluginHandler = {
 
       case "PluginBlocklisted":
       case "PluginOutdated":
-        this._showClickToPlayNotification(browser);
+        shouldShowNotification = true;
         break;
 
       case "PluginVulnerableUpdatable":
@@ -290,7 +298,7 @@ var gPluginHandler = {
           let vulnerabilityText = doc.getAnonymousElementByAttribute(plugin, "anonid", "vulnerabilityStatus");
           vulnerabilityText.textContent = vulnerabilityString;
         }
-        this._showClickToPlayNotification(browser);
+        shouldShowNotification = true;
         break;
 
       case "PluginPlayPreview":
@@ -300,19 +308,26 @@ var gPluginHandler = {
       case "PluginDisabled":
         let manageLink = doc.getAnonymousElementByAttribute(plugin, "class", "managePluginsLink");
         this.addLinkClickCallback(manageLink, "managePlugins");
-        this._showClickToPlayNotification(browser);
+        shouldShowNotification = true;
         break;
 
       case "PluginInstantiated":
-        this._showClickToPlayNotification(browser);
+      case "PluginRemoved":
+        shouldShowNotification = true;
         break;
     }
 
     // Hide the in-content UI if it's too big. The crashed plugin handler already did this.
-    if (eventType != "PluginCrashed") {
+    if (eventType != "PluginCrashed" && eventType != "PluginRemoved") {
       let overlay = doc.getAnonymousElementByAttribute(plugin, "class", "mainBox");
       if (overlay != null && this.isTooSmall(plugin, overlay))
         overlay.style.visibility = "hidden";
+    }
+
+    // Only show the notification after we've done the isTooSmall check, so
+    // that the notification can decide whether to show the "alert" icon
+    if (shouldShowNotification) {
+      this._showClickToPlayNotification(browser);
     }
   },
 
@@ -686,18 +701,12 @@ var gPluginHandler = {
 
     switch (aNewState) {
       case "allownow":
-        if (aPluginInfo.fallbackType == Ci.nsIObjectLoadingContent.PLUGIN_ACTIVE) {
-          return;
-        }
         permission = Ci.nsIPermissionManager.ALLOW_ACTION;
         expireType = Ci.nsIPermissionManager.EXPIRE_SESSION;
         expireTime = Date.now() + Services.prefs.getIntPref(this.PREF_SESSION_PERSIST_MINUTES) * 60 * 1000;
         break;
 
       case "allowalways":
-        if (aPluginInfo.fallbackType == Ci.nsIObjectLoadingContent.PLUGIN_ACTIVE) {
-          return;
-        }
         permission = Ci.nsIPermissionManager.ALLOW_ACTION;
         expireType = Ci.nsIPermissionManager.EXPIRE_TIME;
         expireTime = Date.now() +
@@ -705,25 +714,28 @@ var gPluginHandler = {
         break;
 
       case "block":
-        if (aPluginInfo.fallbackType != Ci.nsIObjectLoadingContent.PLUGIN_ACTIVE) {
-          return;
-        }
         permission = Ci.nsIPermissionManager.PROMPT_ACTION;
         expireType = Ci.nsIPermissionManager.EXPIRE_NEVER;
         expireTime = 0;
         break;
 
+      // In case a plugin has already been allowed in another tab, the "continue allowing" button
+      // shouldn't change any permissions but should run the plugin-enablement code below.
+      case "continue":
+        break;
       default:
         Cu.reportError(Error("Unexpected plugin state: " + aNewState));
         return;
     }
 
     let browser = aNotification.browser;
-    Services.perms.add(browser.currentURI, aPluginInfo.permissionString,
-                       permission, expireType, expireTime);
+    if (aNewState != "continue") {
+      Services.perms.add(browser.currentURI, aPluginInfo.permissionString,
+                         permission, expireType, expireTime);
 
-    if (aNewState == "block") {
-      return;
+      if (aNewState == "block") {
+        return;
+      }
     }
 
     // Manually activate the plugins that would have been automatically
@@ -749,6 +761,7 @@ var gPluginHandler = {
     let notification = PopupNotifications.getNotification("click-to-play-plugins", aBrowser);
 
     let contentWindow = aBrowser.contentWindow;
+    let contentDoc = aBrowser.contentDocument;
     let cwu = contentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
                            .getInterface(Ci.nsIDOMWindowUtils);
     let plugins = cwu.plugins;
@@ -759,15 +772,25 @@ var gPluginHandler = {
       return;
     }
 
-    let haveVulnerablePlugin = plugins.some(function(plugin) {
+    let icon = 'plugins-notification-icon';
+    for (let plugin of plugins) {
       let fallbackType = plugin.pluginFallbackType;
-      return fallbackType == plugin.PLUGIN_VULNERABLE_UPDATABLE ||
-        fallbackType == plugin.PLUGIN_VULNERABLE_NO_UPDATE ||
-        fallbackType == plugin.PLUGIN_BLOCKLISTED;
-    });
+      if (fallbackType == plugin.PLUGIN_VULNERABLE_UPDATABLE ||
+          fallbackType == plugin.PLUGIN_VULNERABLE_NO_UPDATE ||
+          fallbackType == plugin.PLUGIN_BLOCKLISTED) {
+        icon = 'blocked-plugins-notification-icon';
+        break;
+      }
+      if (fallbackType == plugin.PLUGIN_CLICK_TO_PLAY) {
+        let overlay = contentDoc.getAnonymousElementByAttribute(plugin, "class", "mainBox");
+        if (!overlay || overlay.style.visibility == 'hidden') {
+          icon = 'alert-plugins-notification-icon';
+        }
+      }
+    }
+
     let dismissed = notification ? notification.dismissed : true;
-    // Always show the doorhanger if the anchor is not available.
-    if (!isElementVisible(gURLBar) || aPrimaryPlugin)
+    if (aPrimaryPlugin)
       dismissed = false;
 
     let primaryPluginPermission = null;
@@ -780,7 +803,6 @@ var gPluginHandler = {
       eventCallback: this._clickToPlayNotificationEventCallback,
       primaryPlugin: primaryPluginPermission
     };
-    let icon = haveVulnerablePlugin ? "blocked-plugins-notification-icon" : "plugins-notification-icon";
     PopupNotifications.show(aBrowser, "click-to-play-plugins",
                             "", icon,
                             null, null, options);

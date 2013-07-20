@@ -31,7 +31,7 @@ AC_LANG_RESTORE
 
 AC_MSG_RESULT($ac_have_gcc_pr39608)
 if test "$ac_have_gcc_pr39608" = "yes"; then
-   echo This compiler would fail to build firefox, plase upgrade.
+   echo This compiler would fail to build firefox, please upgrade.
    exit 1
 fi
 ])

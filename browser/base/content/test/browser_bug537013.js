@@ -98,6 +98,8 @@ function checkNewWindow() {
   ok(!newWindow.gFindBar.hidden, "New window shows find bar!");
   is(newWindow.gFindBar._findField.value, texts[1],
      "New window find bar has correct find value!");
+  ok(!newWindow.gFindBar.getElement("find-next").disabled,
+     "New window findbar has enabled buttons!");
   newWindow.close();
   finish();
 }

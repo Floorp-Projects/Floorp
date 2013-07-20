@@ -4461,6 +4461,8 @@ EmitFor(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t top
 static JS_NEVER_INLINE bool
 EmitFunc(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 {
+    cx->maybePause();
+
     FunctionBox *funbox = pn->pn_funbox;
     RootedFunction fun(cx, funbox->function());
     JS_ASSERT_IF(fun->isInterpretedLazy(), fun->lazyScript());
@@ -4522,9 +4524,6 @@ EmitFunc(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
                    .setNoScriptRval(false)
                    .setForEval(false)
                    .setVersion(parent->getVersion());
-
-            if (!cx->shouldBeJSContext())
-                return false;
 
             Rooted<JSObject*> enclosingScope(cx, EnclosingStaticScope(bce));
             Rooted<ScriptSourceObject *> sourceObject(cx, bce->script->sourceObject());

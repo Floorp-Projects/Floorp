@@ -64,14 +64,9 @@ NativeKeyBindings::Init(NativeKeyBindingsType aType)
 
   // TODO: deleteTo* selectors are also supposed to add text to a kill buffer
   SEL_TO_COMMAND(deleteToBeginningOfLine:, "cmd_deleteToBeginningOfLine");
-  if (aType == eNativeKeyBindingsType_Input) {
-    SEL_TO_COMMAND(deleteToBeginningOfParagraph:,
-      "cmd_deleteToBeginningOfLine");
-  }
+  SEL_TO_COMMAND(deleteToBeginningOfParagraph:, "cmd_deleteToBeginningOfLine");
   SEL_TO_COMMAND(deleteToEndOfLine:, "cmd_deleteToEndOfLine");
-  if (aType == eNativeKeyBindingsType_Input) {
-    SEL_TO_COMMAND(deleteToEndOfParagraph:, "cmd_deleteToEndOfLine");
-  }
+  SEL_TO_COMMAND(deleteToEndOfParagraph:, "cmd_deleteToEndOfLine");
   // SEL_TO_COMMAND(deleteToMark:, );
 
   SEL_TO_COMMAND(deleteWordBackward:, "cmd_deleteWordBackward");
@@ -100,12 +95,9 @@ NativeKeyBindings::Init(NativeKeyBindingsType aType)
   SEL_TO_COMMAND(moveForwardAndModifySelection:, "cmd_selectCharNext");
   SEL_TO_COMMAND(moveLeft:, "cmd_charPrevious");
   SEL_TO_COMMAND(moveLeftAndModifySelection:, "cmd_selectCharPrevious");
-  if (aType == eNativeKeyBindingsType_Input) {
-    SEL_TO_COMMAND(moveParagraphBackwardAndModifySelection:,
-      "cmd_selectBeginLine");
-    SEL_TO_COMMAND(moveParagraphForwardAndModifySelection:,
-      "cmd_selectEndLine");
-  }
+  SEL_TO_COMMAND(moveParagraphBackwardAndModifySelection:,
+    "cmd_selectBeginLine");
+  SEL_TO_COMMAND(moveParagraphForwardAndModifySelection:, "cmd_selectEndLine");
   SEL_TO_COMMAND(moveRight:, "cmd_charNext");
   SEL_TO_COMMAND(moveRightAndModifySelection:, "cmd_selectCharNext");
   SEL_TO_COMMAND(moveToBeginningOfDocument:, "cmd_moveTop");
@@ -113,20 +105,15 @@ NativeKeyBindings::Init(NativeKeyBindingsType aType)
   SEL_TO_COMMAND(moveToBeginningOfLine:, "cmd_beginLine");
   SEL_TO_COMMAND(moveToBeginningOfLineAndModifySelection:,
     "cmd_selectBeginLine");
-  if (aType == eNativeKeyBindingsType_Input) {
-    SEL_TO_COMMAND(moveToBeginningOfParagraph:, "cmd_beginLine");
-    SEL_TO_COMMAND(moveToBeginningOfParagraphAndModifySelection:,
-      "cmd_selectBeginLine");
-  }
+  SEL_TO_COMMAND(moveToBeginningOfParagraph:, "cmd_beginLine");
+  SEL_TO_COMMAND(moveToBeginningOfParagraphAndModifySelection:,
+    "cmd_selectBeginLine");
   SEL_TO_COMMAND(moveToEndOfDocument:, "cmd_moveBottom");
   SEL_TO_COMMAND(moveToEndOfDocumentAndModifySelection:, "cmd_selectBottom");
   SEL_TO_COMMAND(moveToEndOfLine:, "cmd_endLine");
   SEL_TO_COMMAND(moveToEndOfLineAndModifySelection:, "cmd_selectEndLine");
-  if (aType == eNativeKeyBindingsType_Input) {
-    SEL_TO_COMMAND(moveToEndOfParagraph:, "cmd_endLine");
-    SEL_TO_COMMAND(moveToEndOfParagraphAndModifySelection:,
-      "cmd_selectEndLine");
-  }
+  SEL_TO_COMMAND(moveToEndOfParagraph:, "cmd_endLine");
+  SEL_TO_COMMAND(moveToEndOfParagraphAndModifySelection:, "cmd_selectEndLine");
   SEL_TO_COMMAND(moveToLeftEndOfLine:, "cmd_beginLine");
   SEL_TO_COMMAND(moveToLeftEndOfLineAndModifySelection:, "cmd_selectBeginLine");
   SEL_TO_COMMAND(moveToRightEndOfLine:, "cmd_endLine");

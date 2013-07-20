@@ -173,9 +173,11 @@
                 this.isDragging = isDragging;
                 if (isDragging) {
                     this.wasPausedBeforeDrag = this.Utils.video.paused;
+                    this.previousPlaybackRate = this.Utils.video.playbackRate;
                     this.Utils.video.pause();
                 } else if (!this.wasPausedBeforeDrag) {
                     // After the drag ends, resume playing.
+                    this.Utils.video.playbackRate = this.previousPlaybackRate;
                     this.Utils.video.play();
                 }
             }
@@ -1004,6 +1006,7 @@
                     if (this.video.paused || this.video.ended) {
                         this._triggeredByControls = true;
                         this.hideClickToPlay();
+                        this.video.playbackRate = this.video.defaultPlaybackRate;
                         this.video.play();
                     } else {
                         this.video.pause();

@@ -750,7 +750,7 @@ JSTrapStatus
 Debugger::handleUncaughtExceptionHelper(Maybe<AutoCompartment> &ac,
                                         MutableHandleValue *vp, bool callHook)
 {
-    JSContext *cx = ac.ref().context();
+    JSContext *cx = ac.ref().context()->asJSContext();
     if (cx->isExceptionPending()) {
         if (callHook && uncaughtExceptionHook) {
             Value fval = ObjectValue(*uncaughtExceptionHook);
@@ -849,7 +849,7 @@ bool
 Debugger::receiveCompletionValue(Maybe<AutoCompartment> &ac, bool ok, Value val,
                                  MutableHandleValue vp)
 {
-    JSContext *cx = ac.ref().context();
+    JSContext *cx = ac.ref().context()->asJSContext();
 
     JSTrapStatus status;
     RootedValue value(cx);
@@ -875,7 +875,7 @@ Debugger::parseResumptionValue(Maybe<AutoCompartment> &ac, bool ok, const Value 
     }
 
     /* Check that rv is {return: val} or {throw: val}. */
-    JSContext *cx = ac.ref().context();
+    JSContext *cx = ac.ref().context()->asJSContext();
     Rooted<JSObject*> obj(cx);
     RootedShape shape(cx);
     RootedId returnId(cx, NameToId(cx->names().return_));
@@ -4126,7 +4126,7 @@ js::EvaluateInEnv(JSContext *cx, Handle<Env*> env, HandleValue thisv, AbstractFr
            .setFileAndLine(filename, lineno)
            .setCanLazilyParse(false);
     RootedScript callerScript(cx, frame ? frame.script() : NULL);
-    RootedScript script(cx, frontend::CompileScript(cx, env, callerScript,
+    RootedScript script(cx, frontend::CompileScript(cx, &cx->tempLifoAlloc(), env, callerScript,
                                                     options, chars.get(), length,
                                                     /* source = */ NULL,
                                                     /* staticLevel = */ frame ? 1 : 0));

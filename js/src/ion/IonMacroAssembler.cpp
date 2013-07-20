@@ -1233,6 +1233,74 @@ MacroAssembler::printf(const char *output, Register value)
     PopRegsInMask(RegisterSet::Volatile());
 }
 
+#if JS_TRACE_LOGGING
+void
+MacroAssembler::tracelogStart(JSScript *script)
+{
+    void (&TraceLogStart)(TraceLogging*, TraceLogging::Type, JSScript*) = TraceLog;
+    RegisterSet regs = RegisterSet::Volatile();
+    PushRegsInMask(regs);
+
+    Register temp = regs.takeGeneral();
+    Register logger = regs.takeGeneral();
+    Register type = regs.takeGeneral();
+    Register rscript = regs.takeGeneral();
+
+    setupUnalignedABICall(3, temp);
+    movePtr(ImmWord((void *)TraceLogging::defaultLogger()), logger);
+    passABIArg(logger);
+    move32(Imm32(TraceLogging::SCRIPT_START), type);
+    passABIArg(type);
+    movePtr(ImmGCPtr(script), rscript);
+    passABIArg(rscript);
+    callWithABI(JS_FUNC_TO_DATA_PTR(void *, TraceLogStart));
+
+    PopRegsInMask(RegisterSet::Volatile());
+}
+
+void
+MacroAssembler::tracelogStop()
+{
+    void (&TraceLogStop)(TraceLogging*, TraceLogging::Type) = TraceLog;
+    RegisterSet regs = RegisterSet::Volatile();
+    PushRegsInMask(regs);
+
+    Register temp = regs.takeGeneral();
+    Register logger = regs.takeGeneral();
+    Register type = regs.takeGeneral();
+
+    setupUnalignedABICall(2, temp);
+    movePtr(ImmWord((void *)TraceLogging::defaultLogger()), logger);
+    passABIArg(logger);
+    move32(Imm32(TraceLogging::SCRIPT_STOP), type);
+    passABIArg(type);
+    callWithABI(JS_FUNC_TO_DATA_PTR(void *, TraceLogStop));
+
+    PopRegsInMask(RegisterSet::Volatile());
+}
+
+void
+MacroAssembler::tracelogLog(TraceLogging::Type type)
+{
+    void (&TraceLogStop)(TraceLogging*, TraceLogging::Type) = TraceLog;
+    RegisterSet regs = RegisterSet::Volatile();
+    PushRegsInMask(regs);
+
+    Register temp = regs.takeGeneral();
+    Register logger = regs.takeGeneral();
+    Register rtype = regs.takeGeneral();
+
+    setupUnalignedABICall(2, temp);
+    movePtr(ImmWord((void *)TraceLogging::defaultLogger()), logger);
+    passABIArg(logger);
+    move32(Imm32(type), rtype);
+    passABIArg(rtype);
+    callWithABI(JS_FUNC_TO_DATA_PTR(void *, TraceLogStop));
+
+    PopRegsInMask(RegisterSet::Volatile());
+}
+#endif
+
 void
 MacroAssembler::convertInt32ValueToDouble(const Address &address, Register scratch, Label *done)
 {
