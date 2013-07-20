@@ -68,6 +68,7 @@
 #include "mozilla/css/ImageLoader.h"
 #include "mozilla/dom/PBrowserChild.h"
 #include "mozilla/dom/TabChild.h"
+#include "RestyleManager.h"
 
 #ifdef IBMBIDI
 #include "nsBidiPresUtils.h"
@@ -931,6 +932,9 @@ nsPresContext::Init(nsDeviceContext* aDeviceContext)
 
   mAnimationManager = new nsAnimationManager(this);
 
+  // FIXME: Why is mozilla:: needed?
+  mRestyleManager = new mozilla::RestyleManager(this);
+
   if (mDocument->GetDisplayDocument()) {
     NS_ASSERTION(mDocument->GetDisplayDocument()->GetShell() &&
                  mDocument->GetDisplayDocument()->GetShell()->GetPresContext(),
@@ -1098,6 +1102,10 @@ nsPresContext::SetShell(nsIPresShell* aShell)
     if (mAnimationManager) {
       mAnimationManager->Disconnect();
       mAnimationManager = nullptr;
+    }
+    if (mRestyleManager) {
+      mRestyleManager->Disconnect();
+      mRestyleManager = nullptr;
     }
 
     if (IsRoot()) {

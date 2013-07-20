@@ -84,6 +84,7 @@ CPP_SOURCES += [
     'MaskLayerImageCache.cpp',
     'PaintTracker.cpp',
     'PositionedEventTargeting.cpp',
+    'RestyleManager.cpp',
     'RestyleTracker.cpp',
     'StackArena.cpp',
     'nsCSSColorUtils.cpp',
