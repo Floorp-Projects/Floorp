@@ -2350,7 +2350,6 @@ TabChildGlobal::Init()
   NS_ASSERTION(!mMessageManager, "Re-initializing?!?");
   mMessageManager = new nsFrameMessageManager(mTabChild,
                                               nullptr,
-                                              mTabChild->GetJSContext(),
                                               MM_CHILD);
 }
 
