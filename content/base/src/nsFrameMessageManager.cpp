@@ -822,81 +822,6 @@ NS_NewGlobalMessageManager(nsIMessageBroadcaster** aResult)
   return CallQueryInterface(mm, aResult);
 }
 
-void
-ContentScriptErrorReporter(JSContext* aCx,
-                           const char* aMessage,
-                           JSErrorReport* aReport)
-{
-  nsresult rv;
-  nsCOMPtr<nsIScriptError> scriptError =
-      do_CreateInstance(NS_SCRIPTERROR_CONTRACTID, &rv);
-  if (NS_FAILED(rv)) {
-    return;
-  }
-  nsAutoString message, filename, line;
-  uint32_t lineNumber, columnNumber, flags, errorNumber;
-
-  if (aReport) {
-    if (aReport->ucmessage) {
-      message.Assign(static_cast<const PRUnichar*>(aReport->ucmessage));
-    }
-    filename.AssignWithConversion(aReport->filename);
-    line.Assign(static_cast<const PRUnichar*>(aReport->uclinebuf));
-    lineNumber = aReport->lineno;
-    columnNumber = aReport->uctokenptr - aReport->uclinebuf;
-    flags = aReport->flags;
-    errorNumber = aReport->errorNumber;
-  } else {
-    lineNumber = columnNumber = errorNumber = 0;
-    flags = nsIScriptError::errorFlag | nsIScriptError::exceptionFlag;
-  }
-
-  if (message.IsEmpty()) {
-    message.AssignWithConversion(aMessage);
-  }
-
-  rv = scriptError->Init(message, filename, line,
-                         lineNumber, columnNumber, flags,
-                         "Message manager content script");
-  if (NS_FAILED(rv)) {
-    return;
-  }
-
-  nsCOMPtr<nsIConsoleService> consoleService =
-      do_GetService(NS_CONSOLESERVICE_CONTRACTID);
-  if (consoleService) {
-    (void) consoleService->LogMessage(scriptError);
-  }
-
-#ifdef DEBUG
-  // Print it to stderr as well, for the benefit of those invoking
-  // mozilla with -console.
-  nsAutoCString error;
-  error.Assign("JavaScript ");
-  if (JSREPORT_IS_STRICT(flags)) {
-    error.Append("strict ");
-  }
-  if (JSREPORT_IS_WARNING(flags)) {
-    error.Append("warning: ");
-  } else {
-    error.Append("error: ");
-  }
-  error.Append(aReport->filename);
-  error.Append(", line ");
-  error.AppendInt(lineNumber, 10);
-  error.Append(": ");
-  if (aReport->ucmessage) {
-    AppendUTF16toUTF8(static_cast<const PRUnichar*>(aReport->ucmessage),
-                      error);
-  } else {
-    error.Append(aMessage);
-  }
-
-  fprintf(stderr, "%s\n", error.get());
-  fflush(stderr);
-#endif
-}
-
 nsDataHashtable<nsStringHashKey, nsFrameJSScriptExecutorHolder*>*
   nsFrameScriptExecutor::sCachedScripts = nullptr;
 nsScriptCacheCleaner* nsFrameScriptExecutor::sScriptCacheCleaner = nullptr;
@@ -919,20 +844,6 @@ nsFrameScriptExecutor::DidCreateGlobal()
 void
 nsFrameScriptExecutor::DestroyCx()
 {
-  if (mCxStackRefCnt) {
-    mDelayedCxDestroy = true;
-    return;
-  }
-  mDelayedCxDestroy = false;
-  if (mCx) {
-    nsIXPConnect* xpc = nsContentUtils::XPConnect();
-    if (xpc) {
-      xpc->ReleaseJSContext(mCx, true);
-    } else {
-      JS_DestroyContext(mCx);
-    }
-  }
-  mCx = nullptr;
   mGlobal = nullptr;
 }
 
@@ -1076,26 +987,16 @@ nsFrameScriptExecutor::InitTabChildGlobalInternal(nsISupports* aScope,
   runtimeSvc->GetRuntime(&rt);
   NS_ENSURE_TRUE(rt, false);
 
-  JSContext* cx_ = JS_NewContext(rt, 8192);
-  NS_ENSURE_TRUE(cx_, false);
-  AutoPushJSContext cx(cx_);
-
-  mCx = cx;
-
+  AutoSafeJSContext cx;
   nsContentUtils::GetSecurityManager()->GetSystemPrincipal(getter_AddRefs(mPrincipal));
-
-  JS_SetOptions(cx, JS_GetOptions(cx) | JSOPTION_PRIVATE_IS_NSISUPPORTS);
-  JS_SetErrorReporter(cx, ContentScriptErrorReporter);
 
   nsIXPConnect* xpc = nsContentUtils::XPConnect();
   const uint32_t flags = nsIXPConnect::INIT_JS_STANDARD_CLASSES;
 
-
-  JS_SetContextPrivate(cx, aScope);
-
   JS::CompartmentOptions options;
   options.setZone(JS::SystemZone)
          .setVersion(JSVERSION_LATEST);
+
   nsresult rv =
     xpc->InitClassesWithNewWrappedGlobal(cx, aScope, mPrincipal,
                                          flags, options, getter_AddRefs(mGlobal));
@@ -1104,8 +1005,6 @@ nsFrameScriptExecutor::InitTabChildGlobalInternal(nsISupports* aScope,
 
   JS::Rooted<JSObject*> global(cx, mGlobal->GetJSObject());
   NS_ENSURE_TRUE(global, false);
-
-  JS_SetGlobalObject(cx, global);
 
   // Set the location information for the new global, so that tools like
   // about:memory may use that information.
@@ -1121,21 +1020,13 @@ nsFrameScriptExecutor::Traverse(nsFrameScriptExecutor *tmp,
                                 nsCycleCollectionTraversalCallback &cb)
 {
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mGlobal)
-  nsIXPConnect* xpc = nsContentUtils::XPConnect();
-  if (xpc) {
-    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mCx");
-    xpc->NoteJSContext(tmp->mCx, cb);
-  }
 }
 
 // static
 void
 nsFrameScriptExecutor::Unlink(nsFrameScriptExecutor* aTmp)
 {
-  if (aTmp->mCx) {
-    JSAutoRequest ar(aTmp->mCx);
-    JS_SetGlobalObject(aTmp->mCx, nullptr);
-  }
+  aTmp->mGlobal = nullptr;
 }
 
 NS_IMPL_ISUPPORTS1(nsScriptCacheCleaner, nsIObserver)
