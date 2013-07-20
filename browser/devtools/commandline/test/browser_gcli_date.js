@@ -1,7 +1,17 @@
 /*
- * Copyright 2009-2011 Mozilla Foundation and contributors
- * Licensed under the New BSD license. See LICENSE.txt or:
- * http://opensource.org/licenses/BSD-3-Clause
+ * Copyright 2012, Mozilla Foundation and contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 // define(function(require, exports, module) {
@@ -80,8 +90,10 @@ exports.testIncrement = function(options) {
 };
 
 exports.testInput = function(options) {
-  helpers.audit(options, [
+  return helpers.audit(options, [
     {
+      // See bug 892901
+      skipRemainingIf: options.isFirefox,
       setup:    'tsdate 2001-01-01 1980-01-03',
       check: {
         input:  'tsdate 2001-01-01 1980-01-03',
@@ -132,8 +144,10 @@ exports.testInput = function(options) {
 };
 
 exports.testIncrDecr = function(options) {
-  helpers.audit(options, [
+  return helpers.audit(options, [
     {
+      // See bug 892901
+      skipRemainingIf: options.isFirefox,
       setup:    'tsdate 2001-01-01<UP>',
       check: {
         input:  'tsdate 2001-01-02',
@@ -224,14 +238,14 @@ exports.testIncrDecr = function(options) {
             message: ''
           },
           d2: {
-            value: function(d1) {
-              assert.is(d1.getFullYear(), 2000, 'd1 year');
-              assert.is(d1.getMonth(), 1, 'd1 month');
-              assert.is(d1.getDate(), 28, 'd1 date');
-              assert.is(d1.getHours(), 0, 'd1 hours');
-              assert.is(d1.getMinutes(), 0, 'd1 minutes');
-              assert.is(d1.getSeconds(), 0, 'd1 seconds');
-              assert.is(d1.getMilliseconds(), 0, 'd1 millis');
+            value: function(d2) {
+              assert.is(d2.getFullYear(), 2000, 'd2 year');
+              assert.is(d2.getMonth(), 1, 'd2 month');
+              assert.is(d2.getDate(), 28, 'd2 date');
+              assert.is(d2.getHours(), 0, 'd2 hours');
+              assert.is(d2.getMinutes(), 0, 'd2 minutes');
+              assert.is(d2.getSeconds(), 0, 'd2 seconds');
+              assert.is(d2.getMilliseconds(), 0, 'd2 millis');
             },
             arg: ' "2000-02-28"',
             status: 'VALID',
