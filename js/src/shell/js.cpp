@@ -4807,8 +4807,9 @@ DestroyContext(JSContext *cx, bool withGC)
 static JSObject *
 NewGlobalObject(JSContext *cx, JSObject *sameZoneAs)
 {
-    JS::ZoneSpecifier spec = sameZoneAs ? JS::SameZoneAs(sameZoneAs) : JS::FreshZone;
-    RootedObject glob(cx, JS_NewGlobalObject(cx, &global_class, NULL, spec));
+    JS::CompartmentOptions options;
+    options.setZone(sameZoneAs ? JS::SameZoneAs(sameZoneAs) : JS::FreshZone);
+    RootedObject glob(cx, JS_NewGlobalObject(cx, &global_class, NULL, options));
     if (!glob)
         return NULL;
 

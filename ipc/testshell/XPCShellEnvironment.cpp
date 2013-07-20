@@ -783,11 +783,13 @@ XPCShellEnvironment::Init()
         return false;
     }
 
+    JS::CompartmentOptions options;
+    options.setZone(JS::SystemZone);
     nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
     rv = xpc->InitClassesWithNewWrappedGlobal(cx,
                                               static_cast<nsIGlobalObject *>(backstagePass),
                                               principal, 0,
-                                              JS::SystemZone,
+                                              options,
                                               getter_AddRefs(holder));
     if (NS_FAILED(rv)) {
         NS_ERROR("InitClassesWithNewWrappedGlobal failed!");

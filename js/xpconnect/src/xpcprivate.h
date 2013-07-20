@@ -2417,7 +2417,7 @@ public:
     static nsresult
     WrapNewGlobal(xpcObjectHelper &nativeHelper,
                   nsIPrincipal *principal, bool initStandardClasses,
-                  JS::ZoneSpecifier zoneSpec,
+                  JS::CompartmentOptions& aOptions,
                   XPCWrappedNative **wrappedGlobal);
 
     static nsresult
@@ -3725,7 +3725,7 @@ struct SandboxOptions {
 
 JSObject *
 CreateGlobalObject(JSContext *cx, JSClass *clasp, nsIPrincipal *principal,
-                   JS::ZoneSpecifier zoneSpec);
+                   JS::CompartmentOptions& aOptions);
 }
 
 // Helper for creating a sandbox object to use for evaluating

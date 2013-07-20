@@ -727,11 +727,13 @@ mozJSComponentLoader::PrepareObjectForLocation(JSCLContextHelper& aCx,
         rv = NS_NewBackstagePass(getter_AddRefs(backstagePass));
         NS_ENSURE_SUCCESS(rv, nullptr);
 
+        JS::CompartmentOptions options;
+        options.setZone(JS::SystemZone);
         rv = xpc->InitClassesWithNewWrappedGlobal(aCx,
                                                   static_cast<nsIGlobalObject *>(backstagePass),
                                                   mSystemPrincipal,
                                                   0,
-                                                  JS::SystemZone,
+                                                  options,
                                                   getter_AddRefs(holder));
         NS_ENSURE_SUCCESS(rv, nullptr);
 
