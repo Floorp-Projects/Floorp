@@ -120,35 +120,6 @@ JS::detail::CallMethodIfWrapped(JSContext *cx, IsAcceptableThis test, NativeImpl
     return false;
 }
 
-
-/*
- * This class is a version-establishing barrier at the head of a VM entry or
- * re-entry. It ensures that |newVersion| is the starting (default) version
- * used for the runtime.
- */
-class AutoVersionAPI
-{
-    JSRuntime   * const rt;
-    JSVersion   oldDefaultVersion;
-    JSVersion   newVersion;
-
-  public:
-    AutoVersionAPI(JSRuntime *rt, JSVersion newVersion)
-      : rt(rt),
-        oldDefaultVersion(rt->defaultVersion())
-    {
-        this->newVersion = newVersion;
-        rt->setDefaultVersion(newVersion);
-    }
-
-    ~AutoVersionAPI() {
-        rt->setDefaultVersion(oldDefaultVersion);
-    }
-
-    /* The version that this scoped-entity establishes. */
-    JSVersion version() const { return newVersion; }
-};
-
 #ifdef HAVE_VA_LIST_AS_ARRAY
 #define JS_ADDRESSOF_VA_LIST(ap) ((va_list *)(ap))
 #else
@@ -5160,13 +5131,6 @@ JSScript *
 JS::Compile(JSContext *cx, HandleObject obj, CompileOptions options,
             const jschar *chars, size_t length)
 {
-    Maybe<AutoVersionAPI> mava;
-    if (options.versionSet) {
-        mava.construct(cx->runtime(), options.version);
-        // AutoVersionAPI propagates some compilation flags through.
-        options.version = mava.ref().version();
-    }
-
     JS_THREADSAFE_ASSERT(cx->compartment() != cx->runtime()->atomsCompartment);
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
@@ -5319,13 +5283,6 @@ JS::CompileFunction(JSContext *cx, HandleObject obj, CompileOptions options,
                     const char *name, unsigned nargs, const char **argnames,
                     const jschar *chars, size_t length)
 {
-    Maybe<AutoVersionAPI> mava;
-    if (options.versionSet) {
-        mava.construct(cx->runtime(), options.version);
-        // AutoVersionAPI propagates some compilation flags through.
-        options.version = mava.ref().version();
-    }
-
     JS_THREADSAFE_ASSERT(cx->compartment() != cx->runtime()->atomsCompartment);
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
@@ -5501,7 +5458,6 @@ JS_ExecuteScriptVersion(JSContext *cx, JSObject *objArg, JSScript *script, jsval
                         JSVersion version)
 {
     RootedObject obj(cx, objArg);
-    AutoVersionAPI ava(cx->runtime(), version);
     return JS_ExecuteScript(cx, obj, script, rval);
 }
 
@@ -5511,13 +5467,6 @@ extern JS_PUBLIC_API(bool)
 JS::Evaluate(JSContext *cx, HandleObject obj, CompileOptions options,
              const jschar *chars, size_t length, jsval *rval)
 {
-    Maybe<AutoVersionAPI> mava;
-    if (options.versionSet) {
-        mava.construct(cx->runtime(), options.version);
-        // AutoVersionAPI propagates some compilation flags through.
-        options.version = mava.ref().version();
-    }
-
     JS_THREADSAFE_ASSERT(cx->compartment() != cx->runtime()->atomsCompartment);
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
