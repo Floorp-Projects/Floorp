@@ -301,7 +301,6 @@ class JSAPITest
         if (!cx)
             return NULL;
         JS_SetOptions(cx, JSOPTION_VAROBJFIX);
-        JS_SetVersion(cx, JSVERSION_LATEST);
         JS_SetErrorReporter(cx, &reportError);
         return cx;
     }
