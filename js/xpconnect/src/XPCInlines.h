@@ -261,14 +261,6 @@ XPCCallContext::SetMethodIndex(uint16_t index)
     mMethodIndex = index;
 }
 
-inline void
-XPCCallContext::SetDestroyJSContextInDestructor()
-{
-    CHECK_STATE(HAVE_CONTEXT);
-    MOZ_ASSERT(mJSContext);
-    mCxDestroyer.construct(mJSContext);
-}
-
 /***************************************************************************/
 
 inline const nsIID*

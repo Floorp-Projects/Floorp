@@ -1026,17 +1026,6 @@ private:
 //
 // Note that most accessors are inlined.
 
-// This is a dumb little thing to ensure that the XPCCallContext destructor
-// calls JS_DestroyContext after the JSAutoRequest is destroyed (if at all).
-// This will go away in a few days when bug 860085 removes this machinery.
-class AutoJSContextDestroyer
-{
-    JSContext *mCx;
-  public:
-    AutoJSContextDestroyer(JSContext *aCx) : mCx(aCx) {}
-    ~AutoJSContextDestroyer() { JS_DestroyContext(mCx); }
-};
-
 class MOZ_STACK_CLASS XPCCallContext : public nsAXPCNativeCallContext
 {
 public:
@@ -1100,8 +1089,6 @@ public:
     inline uint16_t                     GetMethodIndex() const ;
     inline void                         SetMethodIndex(uint16_t index) ;
 
-    inline void     SetDestroyJSContextInDestructor();
-
     inline jsid GetResolveName() const;
     inline jsid SetResolveName(JS::HandleId name);
 
@@ -1150,8 +1137,6 @@ inline void CHECK_STATE(int s) const {NS_ASSERTION(mState >= s, "bad state");}
 #endif
 
 private:
-    mozilla::Maybe<AutoJSContextDestroyer>   mCxDestroyer;
-
     mozilla::AutoPushJSContext      mPusher;
     State                           mState;
 
