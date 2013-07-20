@@ -26,6 +26,39 @@
 
 namespace mozilla {
 class RestyleTracker;
+
+/**
+ * Node in a linked list, containing the style for an element that
+ * does not have a frame but whose parent does have a frame.
+ */
+struct UndisplayedNode {
+  UndisplayedNode(nsIContent* aContent, nsStyleContext* aStyle)
+    : mContent(aContent),
+      mStyle(aStyle),
+      mNext(nullptr)
+  {
+    MOZ_COUNT_CTOR(mozilla::UndisplayedNode);
+  }
+
+  NS_HIDDEN ~UndisplayedNode()
+  {
+    MOZ_COUNT_DTOR(mozilla::UndisplayedNode);
+
+    // Delete mNext iteratively to avoid blowing up the stack (bug 460461).
+    UndisplayedNode* cur = mNext;
+    while (cur) {
+      UndisplayedNode* next = cur->mNext;
+      cur->mNext = nullptr;
+      delete cur;
+      cur = next;
+    }
+  }
+
+  nsCOMPtr<nsIContent>      mContent;
+  nsRefPtr<nsStyleContext>  mStyle;
+  UndisplayedNode*          mNext;
+};
+
 } // namespace mozilla
 
 struct TreeMatchContext;
@@ -74,6 +107,8 @@ public:
 
   // Mapping undisplayed content
   NS_HIDDEN_(nsStyleContext*) GetUndisplayedContent(nsIContent* aContent);
+  NS_HIDDEN_(mozilla::UndisplayedNode*)
+    GetAllUndisplayedContentIn(nsIContent* aParentContent);
   NS_HIDDEN_(void) SetUndisplayedContent(nsIContent* aContent,
                                          nsStyleContext* aStyleContext);
   NS_HIDDEN_(void) ChangeUndisplayedContent(nsIContent* aContent,

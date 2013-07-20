@@ -126,35 +126,6 @@ static PLDHashTableOps PlaceholderMapOps = {
 // XXXldb This seems too complicated for what I think it's doing, and it
 // should also be using pldhash rather than plhash to use less memory.
 
-class UndisplayedNode {
-public:
-  UndisplayedNode(nsIContent* aContent, nsStyleContext* aStyle)
-    : mContent(aContent),
-      mStyle(aStyle),
-      mNext(nullptr)
-  {
-    MOZ_COUNT_CTOR(UndisplayedNode);
-  }
-
-  NS_HIDDEN ~UndisplayedNode()
-  {
-    MOZ_COUNT_DTOR(UndisplayedNode);
-
-    // Delete mNext iteratively to avoid blowing up the stack (bug 460461).
-    UndisplayedNode *cur = mNext;
-    while (cur) {
-      UndisplayedNode *next = cur->mNext;
-      cur->mNext = nullptr;
-      delete cur;
-      cur = next;
-    }
-  }
-
-  nsCOMPtr<nsIContent>      mContent;
-  nsRefPtr<nsStyleContext>  mStyle;
-  UndisplayedNode*          mNext;
-};
-
 class nsFrameManagerBase::UndisplayedMap {
 public:
   UndisplayedMap(uint32_t aNumBuckets = 16) NS_HIDDEN;
@@ -311,7 +282,16 @@ nsFrameManager::GetUndisplayedContent(nsIContent* aContent)
 
   return nullptr;
 }
-  
+
+UndisplayedNode*
+nsFrameManager::GetAllUndisplayedContentIn(nsIContent* aParentContent)
+{
+  if (!mUndisplayedMap)
+    return nullptr;
+
+  return mUndisplayedMap->GetFirstNode(aParentContent);
+}
+
 void
 nsFrameManager::SetUndisplayedContent(nsIContent* aContent, 
                                       nsStyleContext* aStyleContext)
