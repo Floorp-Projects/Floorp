@@ -3138,11 +3138,16 @@ SameZoneAs(JSObject *obj)
 
 struct JS_PUBLIC_API(CompartmentOptions) {
     ZoneSpecifier zoneSpec;
+    bool hasVersion;
+    JSVersion version;
 
     explicit CompartmentOptions() : zoneSpec(JS::FreshZone)
+                                  , hasVersion(false)
+                                  , version(JSVERSION_UNKNOWN)
     {}
 
     CompartmentOptions &setZone(ZoneSpecifier spec) { zoneSpec = spec; return *this; }
+    CompartmentOptions &setVersion(JSVersion version_) { hasVersion = true; version = version_; return *this; }
 };
 
 } /* namespace JS */
