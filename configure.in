@@ -1371,7 +1371,6 @@ if test "$GNU_CC"; then
                      [HAVE_TOOLCHAIN_SUPPORT_MSSSE3=1],
                      AC_MSG_RESULT([no]))
     CFLAGS=$_SAVE_CFLAGS
-    AC_SUBST(HAVE_TOOLCHAIN_SUPPORT_MSSSE3)
 
     # Check for -msse4.1 on $CC
     AC_MSG_CHECKING([if toolchain supports -msse4.1 option])
@@ -1382,7 +1381,6 @@ if test "$GNU_CC"; then
                      [HAVE_TOOLCHAIN_SUPPORT_MSSE4_1=1],
                      AC_MSG_RESULT([no]))
     CFLAGS=$_SAVE_CFLAGS
-    AC_SUBST(HAVE_TOOLCHAIN_SUPPORT_MSSE4_1)
 
     # Turn on GNU-specific warnings:
     # -Wall - turn on a lot of warnings
@@ -2173,11 +2171,10 @@ ia64*-hpux*)
         dnl Probably also a compiler bug, but what can you do?
         PROFILE_USE_LDFLAGS="-LTCG:PGUPDATE"
         LDFLAGS="$LDFLAGS -DYNAMICBASE"
-        if test "$_MSC_VER" -ge 1500; then
-            dnl VS2008 or later supports SSSE3
-            HAVE_TOOLCHAIN_SUPPORT_MSSSE3=1
-            AC_SUBST(HAVE_TOOLCHAIN_SUPPORT_MSSSE3)
-        fi
+        dnl Minimum reqiurement of Gecko is VS2010 or later which supports
+        dnl both SSSE3 and SSE4.1.
+        HAVE_TOOLCHAIN_SUPPORT_MSSSE3=1
+        HAVE_TOOLCHAIN_SUPPORT_MSSE4_1=1
     fi
     AC_DEFINE(HAVE_SNPRINTF)
     AC_DEFINE(_WINDOWS)
@@ -8971,6 +8968,8 @@ AC_SUBST(OS_RELEASE)
 AC_SUBST(OS_TEST)
 AC_SUBST(CPU_ARCH)
 AC_SUBST(INTEL_ARCHITECTURE)
+AC_SUBST(HAVE_TOOLCHAIN_SUPPORT_MSSSE3)
+AC_SUBST(HAVE_TOOLCHAIN_SUPPORT_MSSE4_1)
 
 AC_SUBST(MOZ_CHROME_FILE_FORMAT)
 
