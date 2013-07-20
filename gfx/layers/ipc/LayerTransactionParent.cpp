@@ -185,7 +185,7 @@ LayerTransactionParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
 
   EditReplyVector replyv;
 
-  layer_manager()->BeginTransactionWithTarget(NULL);
+  layer_manager()->BeginTransactionWithTarget(nullptr);
 
   for (EditArray::index_type i = 0; i < cset.Length(); ++i) {
     const Edit& edit = cset[i];
@@ -251,7 +251,7 @@ LayerTransactionParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
       layer->SetVisibleRegion(common.visibleRegion());
       layer->SetContentFlags(common.contentFlags());
       layer->SetOpacity(common.opacity());
-      layer->SetClipRect(common.useClipRect() ? &common.clipRect() : NULL);
+      layer->SetClipRect(common.useClipRect() ? &common.clipRect() : nullptr);
       layer->SetBaseTransform(common.transform().value());
       layer->SetPostScale(common.postXScale(), common.postYScale());
       layer->SetIsFixedPosition(common.isFixedPosition());
@@ -260,7 +260,7 @@ LayerTransactionParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
       if (PLayerParent* maskLayer = common.maskLayerParent()) {
         layer->SetMaskLayer(cast(maskLayer)->AsLayer());
       } else {
-        layer->SetMaskLayer(NULL);
+        layer->SetMaskLayer(nullptr);
       }
       layer->SetAnimations(common.animations());
 
@@ -361,7 +361,7 @@ LayerTransactionParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
 
       const OpAppendChild& oac = edit.get_OpAppendChild();
       ShadowContainer(oac)->AsContainer()->InsertAfter(
-        ShadowChild(oac)->AsLayer(), NULL);
+        ShadowChild(oac)->AsLayer(), nullptr);
       break;
     }
     case Edit::TOpRemoveChild: {
@@ -385,7 +385,7 @@ LayerTransactionParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
 
       const OpRaiseToTopChild& rtc = edit.get_OpRaiseToTopChild();
       ShadowContainer(rtc)->AsContainer()->RepositionChild(
-        ShadowChild(rtc)->AsLayer(), NULL);
+        ShadowChild(rtc)->AsLayer(), nullptr);
       break;
     }
     case Edit::TCompositableOperation: {
@@ -411,7 +411,7 @@ LayerTransactionParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
     }
   }
 
-  layer_manager()->EndTransaction(NULL, NULL, LayerManager::END_NO_IMMEDIATE_REDRAW);
+  layer_manager()->EndTransaction(nullptr, nullptr, LayerManager::END_NO_IMMEDIATE_REDRAW);
 
   if (reply) {
     reply->SetCapacity(replyv.size());
