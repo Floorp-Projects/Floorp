@@ -47,7 +47,7 @@ exports.shutdown = function(options) {
 };
 
 exports.testNewLine = function(options) {
-  helpers.audit(options, [
+  return helpers.audit(options, [
     {
       setup:    'echo a\\nb',
       check: {
@@ -72,7 +72,7 @@ exports.testNewLine = function(options) {
 };
 
 exports.testTab = function(options) {
-  helpers.audit(options, [
+  return helpers.audit(options, [
     {
       setup:    'echo a\\tb',
       check: {
@@ -97,7 +97,7 @@ exports.testTab = function(options) {
 };
 
 exports.testEscape = function(options) {
-  helpers.audit(options, [
+  return helpers.audit(options, [
     {
       // What's typed is actually:
       //         tsrsrsr a\\ b c
@@ -143,7 +143,7 @@ exports.testEscape = function(options) {
 };
 
 exports.testBlank = function(options) {
-  helpers.audit(options, [
+  return helpers.audit(options, [
     {
       setup:    'tsrsrsr a "" c',
       check: {
@@ -213,7 +213,7 @@ exports.testBlank = function(options) {
 };
 
 exports.testBlankWithParam = function(options) {
-  helpers.audit(options, [
+  return helpers.audit(options, [
     {
       setup:    'tsrsrsr  a --p3',
       check: {

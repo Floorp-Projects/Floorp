@@ -30,6 +30,7 @@ let promise = (Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js", 
 let assert = { ok: ok, is: is, log: info };
 
 var util = require('util/util');
+var cli = require('gcli/cli');
 
 var converters = require('gcli/converters');
 
@@ -566,7 +567,7 @@ helpers._check = function(options, name, checks) {
 
   if ('predictions' in checks) {
     var predictionsCheck = function(actualPredictions) {
-      helpers._arrayIs(actualPredictions,
+      helpers.arrayIs(actualPredictions,
                        checks.predictions,
                        'predictions' + suffix);
     };
@@ -585,7 +586,7 @@ helpers._check = function(options, name, checks) {
   }
 
   if ('unassigned' in checks) {
-    helpers._arrayIs(helpers._actual.unassigned(options),
+    helpers.arrayIs(helpers._actual.unassigned(options),
                      checks.unassigned,
                      'unassigned' + suffix);
   }
@@ -613,7 +614,7 @@ helpers._check = function(options, name, checks) {
   }
 
   if ('options' in checks) {
-    helpers._arrayIs(helpers._actual.options(options),
+    helpers.arrayIs(helpers._actual.options(options),
                      checks.options,
                      'options' + suffix);
   }
@@ -718,6 +719,11 @@ helpers._exec = function(options, name, expected) {
     return promise.resolve({});
   }
 
+  var origLogErrors = cli.logErrors;
+  if (expected.error) {
+    cli.logErrors = false;
+  }
+
   var output;
   try {
     output = options.display.requisition.exec({ hidden: true });
@@ -726,6 +732,9 @@ helpers._exec = function(options, name, expected) {
     assert.ok(false, 'Failure executing \'' + name + '\': ' + ex);
     util.errorHandler(ex);
 
+    if (expected.error) {
+      cli.logErrors = origLogErrors;
+    }
     return promise.resolve({});
   }
 
@@ -737,10 +746,17 @@ helpers._exec = function(options, name, expected) {
 
   if (!options.window.document.createElement) {
     assert.log('skipping output tests (missing doc.createElement) for ' + name);
+
+    if (expected.error) {
+      cli.logErrors = origLogErrors;
+    }
     return promise.resolve({ output: output });
   }
 
   if (!('output' in expected)) {
+    if (expected.error) {
+      cli.logErrors = origLogErrors;
+    }
     return promise.resolve({ output: output });
   }
 
@@ -788,6 +804,9 @@ helpers._exec = function(options, name, expected) {
         doTest(expected.output, actualOutput);
       }
 
+      if (expected.error) {
+        cli.logErrors = origLogErrors;
+      }
       return { output: output, text: actualOutput };
     });
   };
@@ -940,17 +959,6 @@ helpers.audit = function(options, audits) {
       log('- START \'' + name + '\' in ' + assert.currentTest);
     }
 
-    if (audit.skipIf) {
-      var skip = (typeof audit.skipIf === 'function') ?
-          audit.skipIf(options) :
-          !!audit.skipIf;
-      if (skip) {
-        var reason = audit.skipIf.name ? 'due to ' + audit.skipIf.name : '';
-        assert.log('Skipped ' + name + ' ' + reason);
-        return promise.resolve(undefined);
-      }
-    }
-
     if (audit.skipRemainingIf) {
       var skipRemainingIf = (typeof audit.skipRemainingIf === 'function') ?
           audit.skipRemainingIf(options) :
@@ -960,6 +968,17 @@ helpers.audit = function(options, audits) {
             'due to ' + audit.skipRemainingIf.name :
             '';
         assert.log('Skipped ' + name + ' ' + skipReason);
+        return promise.resolve(undefined);
+      }
+    }
+
+    if (audit.skipIf) {
+      var skip = (typeof audit.skipIf === 'function') ?
+          audit.skipIf(options) :
+          !!audit.skipIf;
+      if (skip) {
+        var reason = audit.skipIf.name ? 'due to ' + audit.skipIf.name : '';
+        assert.log('Skipped ' + name + ' ' + reason);
         return promise.resolve(undefined);
       }
     }
@@ -1008,7 +1027,7 @@ helpers.audit = function(options, audits) {
 /**
  * Compare 2 arrays.
  */
-helpers._arrayIs = function(actual, expected, message) {
+helpers.arrayIs = function(actual, expected, message) {
   assert.ok(Array.isArray(actual), 'actual is not an array: ' + message);
   assert.ok(Array.isArray(expected), 'expected is not an array: ' + message);
 
