@@ -977,7 +977,7 @@ nsFrameScriptExecutor::Shutdown()
 void
 nsFrameScriptExecutor::LoadFrameScriptInternal(const nsAString& aURL)
 {
-  if (!mGlobal || !mCx || !sCachedScripts) {
+  if (!mGlobal || !sCachedScripts) {
     return;
   }
 
@@ -988,11 +988,11 @@ nsFrameScriptExecutor::LoadFrameScriptInternal(const nsAString& aURL)
   }
 
   if (holder) {
-    nsCxPusher pusher;
-    pusher.Push(mCx);
-    JS::Rooted<JSObject*> global(mCx, mGlobal->GetJSObject());
+    AutoSafeJSContext cx;
+    JS::Rooted<JSObject*> global(cx, mGlobal->GetJSObject());
     if (global) {
-      (void) JS_ExecuteScript(mCx, global, holder->mScript, nullptr);
+      JSAutoCompartment ac(cx, global);
+      (void) JS_ExecuteScript(cx, global, holder->mScript, nullptr);
     }
   }
 }
@@ -1041,18 +1041,17 @@ nsFrameScriptExecutor::TryCacheLoadAndCompileScript(const nsAString& aURL,
   }
 
   if (!dataString.IsEmpty()) {
-    nsCxPusher pusher;
-    pusher.Push(mCx);
-    JS::Rooted<JSObject*> global(mCx, mGlobal->GetJSObject());
+    AutoSafeJSContext cx;
+    JS::Rooted<JSObject*> global(cx, mGlobal->GetJSObject());
     if (global) {
-      JSAutoCompartment ac(mCx, global);
-      JS::CompileOptions options(mCx);
+      JSAutoCompartment ac(cx, global);
+      JS::CompileOptions options(cx);
       options.setNoScriptRval(true)
              .setFileAndLine(url.get(), 1)
              .setPrincipals(nsJSPrincipals::get(mPrincipal));
-      JS::RootedObject empty(mCx, nullptr);
-      JS::Rooted<JSScript*> script(mCx,
-        JS::Compile(mCx, empty, options, dataString.get(),
+      JS::RootedObject empty(cx, nullptr);
+      JS::Rooted<JSScript*> script(cx,
+        JS::Compile(cx, empty, options, dataString.get(),
                     dataString.Length()));
 
       if (script) {
@@ -1063,11 +1062,11 @@ nsFrameScriptExecutor::TryCacheLoadAndCompileScript(const nsAString& aURL,
           nsFrameJSScriptExecutorHolder* holder =
             new nsFrameJSScriptExecutorHolder(script);
           // Root the object also for caching.
-          JS_AddNamedScriptRoot(mCx, &(holder->mScript),
+          JS_AddNamedScriptRoot(cx, &(holder->mScript),
                                 "Cached message manager script");
           sCachedScripts->Put(aURL, holder);
         } else if (aBehavior == EXECUTE_IF_CANT_CACHE) {
-          (void) JS_ExecuteScript(mCx, global, script, nullptr);
+          (void) JS_ExecuteScript(cx, global, script, nullptr);
         }
       }
     }
