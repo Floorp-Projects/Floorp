@@ -168,6 +168,7 @@
 
 #include "SandboxPrivate.h"
 #include "BackstagePass.h"
+#include "nsCxPusher.h"
 
 #ifdef XP_WIN
 // Nasty MS defines
@@ -1151,14 +1152,13 @@ inline void CHECK_STATE(int s) const {NS_ASSERTION(mState >= s, "bad state");}
 private:
     mozilla::Maybe<AutoJSContextDestroyer>   mCxDestroyer;
 
-    JSAutoRequest                   mAr;
+    mozilla::AutoPushJSContext      mPusher;
     State                           mState;
 
     nsXPConnect*                    mXPC;
 
     XPCContext*                     mXPCContext;
     JSContext*                      mJSContext;
-    JSBool                          mContextPopRequired;
 
     XPCContext::LangType            mCallerLanguage;
 
