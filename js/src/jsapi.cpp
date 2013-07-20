@@ -124,25 +124,25 @@ JS::detail::CallMethodIfWrapped(JSContext *cx, IsAcceptableThis test, NativeImpl
 /*
  * This class is a version-establishing barrier at the head of a VM entry or
  * re-entry. It ensures that |newVersion| is the starting (default) version
- * used for the context.
+ * used for the runtime.
  */
 class AutoVersionAPI
 {
-    JSContext   * const cx;
+    JSRuntime   * const rt;
     JSVersion   oldDefaultVersion;
     JSVersion   newVersion;
 
   public:
-    AutoVersionAPI(JSContext *cx, JSVersion newVersion)
-      : cx(cx),
-        oldDefaultVersion(cx->getDefaultVersion())
+    AutoVersionAPI(JSRuntime *rt, JSVersion newVersion)
+      : rt(rt),
+        oldDefaultVersion(rt->defaultVersion())
     {
         this->newVersion = newVersion;
-        cx->setDefaultVersion(newVersion);
+        rt->setDefaultVersion(newVersion);
     }
 
     ~AutoVersionAPI() {
-        cx->setDefaultVersion(oldDefaultVersion);
+        rt->setDefaultVersion(oldDefaultVersion);
     }
 
     /* The version that this scoped-entity establishes. */
@@ -721,6 +721,7 @@ JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
     numCompartments(0),
     localeCallbacks(NULL),
     defaultLocale(NULL),
+    defaultVersion_(JSVERSION_DEFAULT),
 #ifdef JS_THREADSAFE
     ownerThread_(NULL),
 #endif
@@ -5161,7 +5162,7 @@ JS::Compile(JSContext *cx, HandleObject obj, CompileOptions options,
 {
     Maybe<AutoVersionAPI> mava;
     if (options.versionSet) {
-        mava.construct(cx, options.version);
+        mava.construct(cx->runtime(), options.version);
         // AutoVersionAPI propagates some compilation flags through.
         options.version = mava.ref().version();
     }
@@ -5320,7 +5321,7 @@ JS::CompileFunction(JSContext *cx, HandleObject obj, CompileOptions options,
 {
     Maybe<AutoVersionAPI> mava;
     if (options.versionSet) {
-        mava.construct(cx, options.version);
+        mava.construct(cx->runtime(), options.version);
         // AutoVersionAPI propagates some compilation flags through.
         options.version = mava.ref().version();
     }
@@ -5500,7 +5501,7 @@ JS_ExecuteScriptVersion(JSContext *cx, JSObject *objArg, JSScript *script, jsval
                         JSVersion version)
 {
     RootedObject obj(cx, objArg);
-    AutoVersionAPI ava(cx, version);
+    AutoVersionAPI ava(cx->runtime(), version);
     return JS_ExecuteScript(cx, obj, script, rval);
 }
 
@@ -5512,7 +5513,7 @@ JS::Evaluate(JSContext *cx, HandleObject obj, CompileOptions options,
 {
     Maybe<AutoVersionAPI> mava;
     if (options.versionSet) {
-        mava.construct(cx, options.version);
+        mava.construct(cx->runtime(), options.version);
         // AutoVersionAPI propagates some compilation flags through.
         options.version = mava.ref().version();
     }
