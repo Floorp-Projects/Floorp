@@ -1147,10 +1147,8 @@ TabChild::~TabChild()
     if (webBrowser) {
       webBrowser->SetContainerWindow(nullptr);
     }
-    if (mGlobal) {
-      DestroyCx();
-    }
-    
+    mGlobal = nullptr;
+
     if (mTabChildGlobal) {
       nsEventListenerManager* elm = mTabChildGlobal->GetListenerManager(false);
       if (elm) {
