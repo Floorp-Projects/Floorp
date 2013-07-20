@@ -8,7 +8,7 @@
 /*****************************************************************************/
 
 #include "mozilla/StandardInteger.h"
-const PRTime gPreloadListExpirationTime = INT64_C(1384596271277000);
+const PRTime gPreloadListExpirationTime = INT64_C(1385202156273000);
 
 class nsSTSPreload
 {
@@ -18,6 +18,7 @@ class nsSTSPreload
 };
 
 static const nsSTSPreload kSTSPreloadList[] = {
+  { "aladdinschools.appspot.com", false },
   { "alpha.irccloud.com", false },
   { "api.intercom.io", false },
   { "app.recurly.com", false },
@@ -32,7 +33,9 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "business.medbank.com.mt", true },
   { "carezone.com", false },
   { "check.torproject.org", false },
+  { "chromiumcodereview.appspot.com", false },
   { "cloudsecurityalliance.org", true },
+  { "codereview.appspot.com", false },
   { "conformal.com", true },
   { "controlcenter.gigahost.dk", true },
   { "crate.io", true },
@@ -82,10 +85,9 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "paste.linode.com", false },
   { "pastebin.linode.com", false },
   { "pay.gigahost.dk", true },
-  { "paymill.com", true },
-  { "paymill.de", true },
   { "piratenlogin.de", true },
   { "pixi.me", true },
+  { "rapidresearch.me", true },
   { "riseup.net", true },
   { "roundcube.mayfirst.org", false },
   { "sandbox.mydigipass.com", false },
@@ -122,5 +124,4 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "www.therapynotes.com", false },
   { "www.torproject.org", false },
   { "www.twitter.com", false },
-  { "zoo24.de", true },
 };
