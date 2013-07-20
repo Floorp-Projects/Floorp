@@ -1584,6 +1584,20 @@ TypeObject::readBarrier(TypeObject *type)
 }
 
 inline void
+TypeObjectAddendum::writeBarrierPre(TypeObjectAddendum *type)
+{
+#ifdef JSGC_INCREMENTAL
+    if (!type)
+        return;
+
+    switch (type->kind) {
+      case NewScript:
+        return TypeNewScript::writeBarrierPre(type->asNewScript());
+    }
+#endif
+}
+
+inline void
 TypeNewScript::writeBarrierPre(TypeNewScript *newScript)
 {
 #ifdef JSGC_INCREMENTAL
