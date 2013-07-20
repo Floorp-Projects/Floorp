@@ -625,9 +625,10 @@ static JSBool
 Version(JSContext *cx, unsigned argc, jsval *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
+    JSVersion origVersion = JS_GetVersion(cx);
     if (args.length() == 0 || JSVAL_IS_VOID(args[0])) {
         /* Get version. */
-        args.rval().setInt32(JS_GetVersion(cx));
+        args.rval().setInt32(origVersion);
     } else {
         /* Set version. */
         int32_t v = -1;
@@ -642,7 +643,8 @@ Version(JSContext *cx, unsigned argc, jsval *vp)
             JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL, JSSMSG_INVALID_ARGS, "version");
             return false;
         }
-        args.rval().setInt32(JS_SetVersion(cx, JSVersion(v)));
+        JS_SetVersionForCompartment(js::GetContextCompartment(cx), JSVersion(v));
+        args.rval().setInt32(origVersion);
     }
     return true;
 }

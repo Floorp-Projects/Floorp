@@ -305,10 +305,10 @@ Version(JSContext *cx,
         JS::Value *vp)
 {
     JS::Value *argv = JS_ARGV(cx, vp);
+    JS_SET_RVAL(cx, vp, INT_TO_JSVAL(JS_GetVersion(cx)));
     if (argc > 0 && JSVAL_IS_INT(argv[0]))
-        JS_SET_RVAL(cx, vp, INT_TO_JSVAL(JS_SetVersion(cx, JSVersion(JSVAL_TO_INT(argv[0])))));
-    else
-        JS_SET_RVAL(cx, vp, INT_TO_JSVAL(JS_GetVersion(cx)));
+        JS_SetVersionForCompartment(js::GetContextCompartment(cx),
+                                    JSVersion(JSVAL_TO_INT(argv[0])));
     return JS_TRUE;
 }
 
