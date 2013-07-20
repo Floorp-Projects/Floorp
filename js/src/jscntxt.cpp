@@ -1169,7 +1169,6 @@ ThreadSafeContext::asForkJoinSlice()
 JSContext::JSContext(JSRuntime *rt)
   : ThreadSafeContext(rt, &rt->mainThread, Context_JS),
     defaultVersion(JSVERSION_DEFAULT),
-    hasVersionOverride(false),
     throwing(false),
     exception(UndefinedValue()),
     options_(0),
@@ -1521,9 +1520,6 @@ JSContext::mark(JSTracer *trc)
 JSVersion
 JSContext::findVersion() const
 {
-    if (hasVersionOverride)
-        return versionOverride;
-
     if (JSScript *script = currentScript(NULL, ALLOW_CROSS_COMPARTMENT))
         return script->getVersion();
 
