@@ -1165,6 +1165,11 @@ nsJSContext::~nsJSContext()
   }
 }
 
+// This function is called either by the destructor or unlink, which means that
+// it can never be called when there is an outstanding ref to the
+// nsIScriptContext on the stack. Our stack-scoped cx pushers hold such a ref,
+// so we can assume here that mContext is not on the stack (and therefore not
+// in use).
 void
 nsJSContext::DestroyJSContext()
 {
@@ -1182,14 +1187,8 @@ nsJSContext::DestroyJSContext()
   if (mGCOnDestruction) {
     PokeGC(JS::gcreason::NSJSCONTEXT_DESTROY);
   }
-        
-  // Let xpconnect destroy the JSContext when it thinks the time is right.
-  nsIXPConnect *xpc = nsContentUtils::XPConnect();
-  if (xpc) {
-    xpc->ReleaseJSContext(mContext, true);
-  } else {
-    ::JS_DestroyContextNoGC(mContext);
-  }
+
+  JS_DestroyContextNoGC(mContext);
   mContext = nullptr;
 }
 
