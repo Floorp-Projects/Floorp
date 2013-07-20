@@ -4,22 +4,35 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import re, sys, os, os.path, logging, shutil, signal, math, time, traceback
+import copy
+import re, sys, os, os.path, logging, shutil, math, time, traceback
 import xml.dom.minidom
+from collections import deque
 from distutils import dir_util
 from glob import glob
+from multiprocessing import cpu_count
 from optparse import OptionParser
 from subprocess import Popen, PIPE, STDOUT
 from tempfile import mkdtemp, gettempdir
-from threading import Timer
+from threading import Timer, Thread, Event
 import random
+import signal
 import socket
 import time
+
+try:
+    import psutil
+    HAVE_PSUTIL = True
+except ImportError:
+    HAVE_PSUTIL = False
 
 from automation import Automation, getGlobalLog, resetGlobalLog
 from automationutils import *
 
 HARNESS_TIMEOUT = 5 * 60
+
+# benchmarking on tbpl revealed that this works best for now
+NUM_THREADS = int(cpu_count() * 4)
 
 # --------------------------------------------------------------
 # TODO: this is a hack for mozbase without virtualenv, remove with bug 849900
@@ -48,6 +61,504 @@ gotSIGINT = False
 def markGotSIGINT(signum, stackFrame):
     global gotSIGINT
     gotSIGINT = True
+
+class XPCShellTestThread(Thread):
+    def __init__(self, test_object, event, cleanup_dir_list, tests_root_dir=None,
+            app_dir_key=None, interactive=False, verbose=False, pStdout=None,
+            pStderr=None, keep_going=False, log=None, **kwargs):
+        Thread.__init__(self)
+        self.daemon = True
+
+        self.test_object = test_object
+        self.cleanup_dir_list = cleanup_dir_list
+
+        self.appPath = kwargs.get('appPath')
+        self.xrePath = kwargs.get('xrePath')
+        self.testingModulesDir = kwargs.get('testingModulesDir')
+        self.debuggerInfo = kwargs.get('debuggerInfo')
+        self.pluginsPath = kwargs.get('pluginsPath')
+        self.httpdManifest = kwargs.get('httpdManifest')
+        self.httpdJSPath = kwargs.get('httpdJSPath')
+        self.headJSPath = kwargs.get('headJSPath')
+        self.testharnessdir = kwargs.get('testharnessdir')
+        self.profileName = kwargs.get('profileName')
+        self.singleFile = kwargs.get('singleFile')
+        self.env = copy.deepcopy(kwargs.get('env'))
+        self.symbolsPath = kwargs.get('symbolsPath')
+        self.logfiles = kwargs.get('logfiles')
+        self.xpcshell = kwargs.get('xpcshell')
+        self.xpcsRunArgs = kwargs.get('xpcsRunArgs')
+
+        self.tests_root_dir = tests_root_dir
+        self.app_dir_key = app_dir_key
+        self.interactive = interactive
+        self.verbose = verbose
+        self.pStdout = pStdout
+        self.pStderr = pStderr
+        self.keep_going = keep_going
+        self.log = log
+
+        # only one of these will be set to 1. adding them to the totals in
+        # the harness
+        self.passCount = 0
+        self.todoCount = 0
+        self.failCount = 0
+
+        # event from main thread to signal work done
+        self.event = event
+
+    def run(self):
+        try:
+            self.run_test()
+        except Exception as e:
+            self.exception = e
+            self.traceback = traceback.format_exc()
+        else:
+            self.exception = None
+            self.traceback = None
+        self.event.set()
+
+    def kill(self, proc):
+        """
+          Simple wrapper to kill a process.
+          On a remote system, this is overloaded to handle remote process communication.
+        """
+        return proc.kill()
+
+    def removeDir(self, dirname):
+        """
+          Simple wrapper to remove (recursively) a given directory.
+          On a remote system, we need to overload this to work on the remote filesystem.
+        """
+        shutil.rmtree(dirname)
+
+    def poll(self, proc):
+        """
+          Simple wrapper to check if a process has terminated.
+          On a remote system, this is overloaded to handle remote process communication.
+        """
+        return proc.poll()
+
+    def createLogFile(self, test_file, stdout):
+        """
+          For a given test file and stdout buffer, create a log file.
+          On a remote system we have to fix the test name since it can contain directories.
+        """
+        with open(test_file + ".log", "w") as f:
+            f.write(stdout)
+
+    def getReturnCode(self, proc):
+        """
+          Simple wrapper to get the return code for a given process.
+          On a remote system we overload this to work with the remote process management.
+        """
+        return proc.returncode
+
+    def communicate(self, proc):
+        """
+          Simple wrapper to communicate with a process.
+          On a remote system, this is overloaded to handle remote process communication.
+        """
+        return proc.communicate()
+
+    def launchProcess(self, cmd, stdout, stderr, env, cwd):
+        """
+          Simple wrapper to launch a process.
+          On a remote system, this is more complex and we need to overload this function.
+        """
+        if HAVE_PSUTIL:
+            popen_func = psutil.Popen
+        else:
+            popen_func = Popen
+        proc = popen_func(cmd, stdout=stdout, stderr=stderr,
+                    env=env, cwd=cwd)
+        return proc
+
+    def logCommand(self, name, completeCmd, testdir):
+        self.log.info("TEST-INFO | %s | full command: %r" % (name, completeCmd))
+        self.log.info("TEST-INFO | %s | current directory: %r" % (name, testdir))
+        # Show only those environment variables that are changed from
+        # the ambient environment.
+        changedEnv = (set("%s=%s" % i for i in self.env.iteritems())
+                      - set("%s=%s" % i for i in os.environ.iteritems()))
+        self.log.info("TEST-INFO | %s | environment: %s" % (name, list(changedEnv)))
+
+    def testTimeout(self, test_file, processPID):
+        self.log.error("TEST-UNEXPECTED-FAIL | %s | Test timed out" % test_file)
+        Automation().killAndGetStackNoScreenshot(processPID, self.appPath, self.debuggerInfo)
+
+    def buildCmdTestFile(self, name):
+        """
+          Build the command line arguments for the test file.
+          On a remote system, this may be overloaded to use a remote path structure.
+        """
+        return ['-e', 'const _TEST_FILE = ["%s"];' %
+                  replaceBackSlashes(name)]
+
+    def setupTempDir(self):
+        tempDir = mkdtemp()
+        self.env["XPCSHELL_TEST_TEMP_DIR"] = tempDir
+        if self.interactive:
+            self.log.info("TEST-INFO | temp dir is %s" % tempDir)
+        return tempDir
+
+    def setupPluginsDir(self):
+        if not os.path.isdir(self.pluginsPath):
+            return None
+
+        pluginsDir = mkdtemp()
+        # shutil.copytree requires dst to not exist. Deleting the tempdir
+        # would make a race condition possible in a concurrent environment,
+        # so we are using dir_utils.copy_tree which accepts an existing dst
+        dir_util.copy_tree(self.pluginsPath, pluginsDir)
+        if self.interactive:
+            self.log.info("TEST-INFO | plugins dir is %s" % pluginsDir)
+        return pluginsDir
+
+    def setupProfileDir(self):
+        """
+          Create a temporary folder for the profile and set appropriate environment variables.
+          When running check-interactive and check-one, the directory is well-defined and
+          retained for inspection once the tests complete.
+
+          On a remote system, this may be overloaded to use a remote path structure.
+        """
+        if self.interactive or self.singleFile:
+            profileDir = os.path.join(gettempdir(), self.profileName, "xpcshellprofile")
+            try:
+                # This could be left over from previous runs
+                self.removeDir(profileDir)
+            except:
+                pass
+            os.makedirs(profileDir)
+        else:
+            profileDir = mkdtemp()
+        self.env["XPCSHELL_TEST_PROFILE_DIR"] = profileDir
+        if self.interactive or self.singleFile:
+            self.log.info("TEST-INFO | profile dir is %s" % profileDir)
+        return profileDir
+
+    def buildCmdHead(self, headfiles, tailfiles, xpcscmd):
+        """
+          Build the command line arguments for the head and tail files,
+          along with the address of the webserver which some tests require.
+
+          On a remote system, this is overloaded to resolve quoting issues over a secondary command line.
+        """
+        cmdH = ", ".join(['"' + replaceBackSlashes(f) + '"'
+                       for f in headfiles])
+        cmdT = ", ".join(['"' + replaceBackSlashes(f) + '"'
+                       for f in tailfiles])
+        return xpcscmd + \
+                ['-e', 'const _SERVER_ADDR = "localhost"',
+                 '-e', 'const _HEAD_FILES = [%s];' % cmdH,
+                 '-e', 'const _TAIL_FILES = [%s];' % cmdT]
+
+    def getHeadAndTailFiles(self, test_object):
+        """Obtain the list of head and tail files.
+
+        Returns a 2-tuple. The first element is a list of head files. The second
+        is a list of tail files.
+        """
+        def sanitize_list(s, kind):
+            for f in s.strip().split(' '):
+                f = f.strip()
+                if len(f) < 1:
+                    continue
+
+                path = os.path.normpath(os.path.join(test_object['here'], f))
+                if not os.path.exists(path):
+                    raise Exception('%s file does not exist: %s' % (kind, path))
+
+                if not os.path.isfile(path):
+                    raise Exception('%s file is not a file: %s' % (kind, path))
+
+                yield path
+
+        return (list(sanitize_list(test_object['head'], 'head')),
+                list(sanitize_list(test_object['tail'], 'tail')))
+
+    def buildXpcsCmd(self, testdir):
+        """
+          Load the root head.js file as the first file in our test path, before other head, test, and tail files.
+          On a remote system, we overload this to add additional command line arguments, so this gets overloaded.
+        """
+        # - NOTE: if you rename/add any of the constants set here, update
+        #   do_load_child_test_harness() in head.js
+        if not self.appPath:
+            self.appPath = self.xrePath
+
+        self.xpcsCmd = [
+            self.xpcshell,
+            '-g', self.xrePath,
+            '-a', self.appPath,
+            '-r', self.httpdManifest,
+            '-m',
+            '-n',
+            '-s',
+            '-e', 'const _HTTPD_JS_PATH = "%s";' % self.httpdJSPath,
+            '-e', 'const _HEAD_JS_PATH = "%s";' % self.headJSPath
+        ]
+
+        if self.testingModulesDir:
+            # Escape backslashes in string literal.
+            sanitized = self.testingModulesDir.replace('\\', '\\\\')
+            self.xpcsCmd.extend([
+                '-e',
+                'const _TESTING_MODULES_DIR = "%s";' % sanitized
+            ])
+
+        self.xpcsCmd.extend(['-f', os.path.join(self.testharnessdir, 'head.js')])
+
+        if self.debuggerInfo:
+            self.xpcsCmd = [self.debuggerInfo["path"]] + self.debuggerInfo["args"] + self.xpcsCmd
+
+        # Automation doesn't specify a pluginsPath and xpcshell defaults to
+        # $APPDIR/plugins. We do the same here so we can carry on with
+        # setting up every test with its own plugins directory.
+        if not self.pluginsPath:
+            self.pluginsPath = os.path.join(self.appPath, 'plugins')
+
+        self.pluginsDir = self.setupPluginsDir()
+        if self.pluginsDir:
+            self.xpcsCmd.extend(['-p', self.pluginsDir])
+
+    def print_stdout(self, stdout):
+        """Print stdout line-by-line to avoid overflowing buffers."""
+        self.log.info(">>>>>>>")
+        if stdout:
+            for line in stdout.splitlines():
+                self.log.info(line)
+        self.log.info("<<<<<<<")
+
+    def cleanupDir(self, directory, name, stdout, xunit_result):
+        TRY_LIMIT = 25 # up to TRY_LIMIT attempts (one every second), because
+                       # the Windows filesystem is slow to react to the changes
+        try_count = 0
+        while try_count < TRY_LIMIT:
+            try:
+                self.removeDir(directory)
+            except OSError:
+                self.log.info("TEST-INFO | Failed to remove directory: %s. Waiting." % directory)
+                # We suspect the filesystem may still be making changes. Wait a
+                # little bit and try again.
+                time.sleep(1)
+                try_count += 1
+            else:
+                # removed fine
+                return
+
+        # we try again later at the end of the run for plugin dirs (because windows!)
+        if directory == self.pluginsDir:
+            self.cleanup_dir_list.append(directory)
+            return
+
+        # we couldn't clean up the directory, and it's not the plugins dir,
+        # which means that something wrong has probably happened
+        message = "TEST-UNEXPECTED-FAIL | %s | Failed to clean up directory: %s" % (name, sys.exc_info()[1])
+        self.log.error(message)
+        self.print_stdout(stdout)
+        self.print_stdout(traceback.format_exc())
+
+        self.failCount += 1
+        xunit_result["passed"] = False
+        xunit_result["failure"] = {
+            "type": "TEST-UNEXPECTED-FAIL",
+            "message": message,
+            "text": "%s\n%s" % (stdout, traceback.format_exc())
+        }
+
+    def run_test(self):
+        """Run an individual xpcshell test."""
+        global gotSIGINT
+
+        name = self.test_object['path']
+
+        self.xunit_result = {'name': self.test_object['name'], 'classname': 'xpcshell'}
+
+        # The xUnit package is defined as the path component between the root
+        # dir and the test with path characters replaced with '.' (using Java
+        # class notation).
+        if self.tests_root_dir is not None:
+            self.tests_root_dir = os.path.normpath(self.tests_root_dir)
+            if self.test_object['here'].find(self.tests_root_dir) != 0:
+                raise Exception('tests_root_dir is not a parent path of %s' %
+                    self.test_object['here'])
+            relpath = self.test_object['here'][len(self.tests_root_dir):].lstrip('/\\')
+            self.xunit_result['classname'] = relpath.replace('/', '.').replace('\\', '.')
+
+        # Check for skipped tests
+        if 'disabled' in self.test_object:
+            self.log.info('TEST-INFO | skipping %s | %s' %
+                (name, self.test_object['disabled']))
+
+            self.xunit_result['skipped'] = True
+
+            self.keep_going = True
+            return
+
+        # Check for known-fail tests
+        expected = self.test_object['expected'] == 'pass'
+
+        # By default self.appPath will equal the gre dir. If specified in the
+        # xpcshell.ini file, set a different app dir for this test.
+        if self.app_dir_key and self.app_dir_key in self.test_object:
+            rel_app_dir = self.test_object[self.app_dir_key]
+            rel_app_dir = os.path.join(self.xrePath, rel_app_dir)
+            self.appPath = os.path.abspath(rel_app_dir)
+        else:
+            self.appPath = None
+
+        test_dir = os.path.dirname(name)
+        self.buildXpcsCmd(test_dir)
+        head_files, tail_files = self.getHeadAndTailFiles(self.test_object)
+        cmdH = self.buildCmdHead(head_files, tail_files, self.xpcsCmd)
+
+        # Create a profile and a temp dir that the JS harness can stick
+        # a profile and temporary data in
+        self.profileDir = self.setupProfileDir()
+        self.tempDir = self.setupTempDir()
+
+        # The test file will have to be loaded after the head files.
+        cmdT = self.buildCmdTestFile(name)
+
+        args = self.xpcsRunArgs[:]
+        if 'debug' in self.test_object:
+            args.insert(0, '-d')
+
+        completeCmd = cmdH + cmdT + args
+
+        testTimer = None
+        if not self.interactive and not self.debuggerInfo:
+            testTimer = Timer(HARNESS_TIMEOUT, lambda: self.testTimeout(name, proc.pid))
+            testTimer.start()
+
+        proc = None
+        stdout = None
+        stderr = None
+
+        try:
+            self.log.info("TEST-INFO | %s | running test ..." % name)
+            if self.verbose:
+                self.logCommand(name, completeCmd, test_dir)
+
+            startTime = time.time()
+            proc = self.launchProcess(completeCmd,
+                stdout=self.pStdout, stderr=self.pStderr, env=self.env, cwd=test_dir)
+
+            if self.interactive:
+                self.log.info("TEST-INFO | %s | Process ID: %d" % (name, proc.pid))
+
+            stdout, stderr = self.communicate(proc)
+
+            if self.interactive:
+                # Not sure what else to do here...
+                self.keep_going = True
+                return
+
+            if testTimer:
+                testTimer.cancel()
+
+            result = not ((self.getReturnCode(proc) != 0) or
+                          # if do_throw or do_check failed
+                          (stdout and re.search("^((parent|child): )?TEST-UNEXPECTED-",
+                                                stdout, re.MULTILINE)) or
+                          # if syntax error in xpcshell file
+                          (stdout and re.search(": SyntaxError:", stdout,
+                                                re.MULTILINE)) or
+                          # if e10s test started but never finished (child process crash)
+                          (stdout and re.search("^child: CHILD-TEST-STARTED",
+                                                stdout, re.MULTILINE)
+                                  and not re.search("^child: CHILD-TEST-COMPLETED",
+                                                    stdout, re.MULTILINE)))
+
+            if result != expected:
+                failureType = "TEST-UNEXPECTED-%s" % ("FAIL" if expected else "PASS")
+                message = "%s | %s | test failed (with xpcshell return code: %d), see following log:" % (
+                              failureType, name, self.getReturnCode(proc))
+                self.log.error(message)
+                self.print_stdout(stdout)
+                self.failCount += 1
+                self.xunit_result["passed"] = False
+
+                self.xunit_result["failure"] = {
+                  "type": failureType,
+                  "message": message,
+                  "text": stdout
+                }
+            else:
+                now = time.time()
+                timeTaken = (now - startTime) * 1000
+                self.xunit_result["time"] = now - startTime
+                self.log.info("TEST-%s | %s | test passed (time: %.3fms)" % ("PASS" if expected else "KNOWN-FAIL", name, timeTaken))
+                if self.verbose:
+                    self.print_stdout(stdout)
+
+                self.xunit_result["passed"] = True
+
+                if expected:
+                    self.passCount = 1
+                else:
+                    self.todoCount = 1
+                    self.xunit_result["todo"] = True
+
+            if mozcrash.check_for_crashes(test_dir, self.symbolsPath, test_name=name):
+                message = "PROCESS-CRASH | %s | application crashed" % name
+                self.failCount = 1
+                self.xunit_result["passed"] = False
+                self.xunit_result["failure"] = {
+                    "type": "PROCESS-CRASH",
+                    "message": message,
+                    "text": stdout
+                }
+
+            if self.logfiles and stdout:
+                self.createLogFile(name, stdout)
+
+        finally:
+            # We can sometimes get here before the process has terminated, which would
+            # cause removeDir() to fail - so check for the process & kill it it needed.
+            if proc and self.poll(proc) is None:
+                message = "TEST-UNEXPECTED-FAIL | %s | Process still running after test!" % name
+                self.log.error(message)
+                self.print_stdout(stdout)
+                self.failCount = 1
+                self.xunit_result["passed"] = False
+                self.xunit_result["failure"] = {
+                  "type": "TEST-UNEXPECTED-FAIL",
+                  "message": message,
+                  "text": stdout
+                }
+                self.kill(proc)
+
+
+            # We don't want to delete the profile when running check-interactive
+            # or check-one.
+            if self.profileDir and not self.interactive and not self.singleFile:
+                self.cleanupDir(self.profileDir, name, stdout, self.xunit_result)
+
+            self.cleanupDir(self.tempDir, name, stdout, self.xunit_result)
+
+            if self.pluginsDir:
+                self.cleanupDir(self.pluginsDir, name, stdout, self.xunit_result)
+
+        if gotSIGINT:
+            self.xunit_result["passed"] = False
+            self.xunit_result["time"] = "0.0"
+            self.xunit_result["failure"] = {
+                "type": "SIGINT",
+                "message": "Received SIGINT",
+                "text": "Received SIGINT (control-C) during test execution."
+            }
+
+            self.log.error("TEST-UNEXPECTED-FAIL | Received SIGINT (control-C) during test execution")
+            if self.keep_going:
+                gotSIGINT = False
+            else:
+                self.keep_going = False
+                return
+
+        self.keep_going = True
 
 class XPCShellTests(object):
 
@@ -172,17 +683,6 @@ class XPCShellTests(object):
 
         return self.env
 
-    def buildXpcsRunArgs(self):
-        """
-          Add arguments to run the test or make it interactive.
-        """
-        if self.interactive:
-            self.xpcsRunArgs = [
-            '-e', 'print("To start the test, type |_execute_test();|.");',
-            '-i']
-        else:
-            self.xpcsRunArgs = ['-e', '_execute_test(); quit(0);']
-
     def getPipes(self):
         """
           Determine the value of the stdout and stderr for the test.
@@ -202,51 +702,6 @@ class XPCShellTests(object):
                     pStdout = PIPE
                 pStderr = STDOUT
         return pStdout, pStderr
-
-    def buildXpcsCmd(self, testdir):
-        """
-          Load the root head.js file as the first file in our test path, before other head, test, and tail files.
-          On a remote system, we overload this to add additional command line arguments, so this gets overloaded.
-        """
-        # - NOTE: if you rename/add any of the constants set here, update
-        #   do_load_child_test_harness() in head.js
-        if not self.appPath:
-            self.appPath = self.xrePath
-
-        self.xpcsCmd = [
-            self.xpcshell,
-            '-g', self.xrePath,
-            '-a', self.appPath,
-            '-r', self.httpdManifest,
-            '-m',
-            '-n',
-            '-s',
-            '-e', 'const _HTTPD_JS_PATH = "%s";' % self.httpdJSPath,
-            '-e', 'const _HEAD_JS_PATH = "%s";' % self.headJSPath
-        ]
-
-        if self.testingModulesDir:
-            # Escape backslashes in string literal.
-            sanitized = self.testingModulesDir.replace('\\', '\\\\')
-            self.xpcsCmd.extend([
-                '-e',
-                'const _TESTING_MODULES_DIR = "%s";' % sanitized
-            ])
-
-        self.xpcsCmd.extend(['-f', os.path.join(self.testharnessdir, 'head.js')])
-
-        if self.debuggerInfo:
-            self.xpcsCmd = [self.debuggerInfo["path"]] + self.debuggerInfo["args"] + self.xpcsCmd
-
-        # Automation doesn't specify a pluginsPath and xpcshell defaults to
-        # $APPDIR/plugins. We do the same here so we can carry on with
-        # setting up every test with its own plugins directory.
-        if not self.pluginsPath:
-            self.pluginsPath = os.path.join(self.appPath, 'plugins')
-
-        self.pluginsDir = self.setupPluginsDir()
-        if self.pluginsDir:
-            self.xpcsCmd.extend(['-p', self.pluginsDir])
 
     def buildTestPath(self):
         """
@@ -273,178 +728,12 @@ class XPCShellTests(object):
                 # Simply remove optional ending separator.
                 self.testPath = self.testPath.rstrip("/")
 
-    def getHeadAndTailFiles(self, test):
-        """Obtain the list of head and tail files.
-
-        Returns a 2-tuple. The first element is a list of head files. The second
-        is a list of tail files.
-        """
-        def sanitize_list(s, kind):
-            for f in s.strip().split(' '):
-                f = f.strip()
-                if len(f) < 1:
-                    continue
-
-                path = os.path.normpath(os.path.join(test['here'], f))
-                if not os.path.exists(path):
-                    raise Exception('%s file does not exist: %s' % (kind, path))
-
-                if not os.path.isfile(path):
-                    raise Exception('%s file is not a file: %s' % (kind, path))
-
-                yield path
-
-        return (list(sanitize_list(test['head'], 'head')),
-                list(sanitize_list(test['tail'], 'tail')))
-
-    def setupPluginsDir(self):
-        if not os.path.isdir(self.pluginsPath):
-            return None
-
-        pluginsDir = mkdtemp()
-        # shutil.copytree requires dst to not exist. Deleting the tempdir
-        # would make a race condition possible in a concurrent environment,
-        # so we are using dir_utils.copy_tree which accepts an existing dst
-        dir_util.copy_tree(self.pluginsPath, pluginsDir)
-        if self.interactive:
-            self.log.info("TEST-INFO | plugins dir is %s" % pluginsDir)
-        return pluginsDir
-
-    def setupProfileDir(self):
-        """
-          Create a temporary folder for the profile and set appropriate environment variables.
-          When running check-interactive and check-one, the directory is well-defined and
-          retained for inspection once the tests complete.
-
-          On a remote system, this may be overloaded to use a remote path structure.
-        """
-        if self.interactive or self.singleFile:
-            profileDir = os.path.join(gettempdir(), self.profileName, "xpcshellprofile")
-            try:
-                # This could be left over from previous runs
-                self.removeDir(profileDir)
-            except:
-                pass
-            os.makedirs(profileDir)
-        else:
-            profileDir = mkdtemp()
-        self.env["XPCSHELL_TEST_PROFILE_DIR"] = profileDir
-        if self.interactive or self.singleFile:
-            self.log.info("TEST-INFO | profile dir is %s" % profileDir)
-        return profileDir
-
-    def setupTempDir(self):
-        tempDir = mkdtemp()
-        self.env["XPCSHELL_TEST_TEMP_DIR"] = tempDir
-        if self.interactive:
-            self.log.info("TEST-INFO | temp dir is %s" % tempDir)
-        return tempDir
-
-    def setupLeakLogging(self):
-        """
-          Enable leaks (only) detection to its own log file and set environment variables.
-
-          On a remote system, this may be overloaded to use a remote filename and path structure
-        """
-        filename = "runxpcshelltests_leaks.log"
-
-        leakLogFile = os.path.join(self.profileDir,  filename)
-        self.env["XPCOM_MEM_LEAK_LOG"] = leakLogFile
-        return leakLogFile
-
-    def launchProcess(self, cmd, stdout, stderr, env, cwd):
-        """
-          Simple wrapper to launch a process.
-          On a remote system, this is more complex and we need to overload this function.
-        """
-        cmd = wrapCommand(cmd)
-        proc = Popen(cmd, stdout=stdout, stderr=stderr,
-                    env=env, cwd=cwd)
-        return proc
-
-    def communicate(self, proc):
-        """
-          Simple wrapper to communicate with a process.
-          On a remote system, this is overloaded to handle remote process communication.
-        """
-        return proc.communicate()
-
-    def poll(self, proc):
-        """
-          Simple wrapper to check if a process has terminated.
-          On a remote system, this is overloaded to handle remote process communication.
-        """
-        return proc.poll()
-
-    def kill(self, proc):
-        """
-          Simple wrapper to kill a process.
-          On a remote system, this is overloaded to handle remote process communication.
-        """
-        return proc.kill()
-
-    def removeDir(self, dirname):
-        """
-          Simple wrapper to remove (recursively) a given directory.
-          On a remote system, we need to overload this to work on the remote filesystem.
-        """
-        shutil.rmtree(dirname)
-
     def verifyDirPath(self, dirname):
         """
           Simple wrapper to get the absolute path for a given directory name.
           On a remote system, we need to overload this to work on the remote filesystem.
         """
         return os.path.abspath(dirname)
-
-    def getReturnCode(self, proc):
-        """
-          Simple wrapper to get the return code for a given process.
-          On a remote system we overload this to work with the remote process management.
-        """
-        return proc.returncode
-
-    def createLogFile(self, test, stdout, leakLogs):
-        """
-          For a given test and stdout buffer, create a log file.  also log any found leaks.
-          On a remote system we have to fix the test name since it can contain directories.
-        """
-        try:
-            f = open(test + ".log", "w")
-            f.write(stdout)
-
-            for leakLog in leakLogs:
-                if os.path.exists(leakLog):
-                    leaks = open(leakLog, "r")
-                    f.write(leaks.read())
-                    leaks.close()
-        finally:
-            if f:
-                f.close()
-
-    def buildCmdHead(self, headfiles, tailfiles, xpcscmd):
-        """
-          Build the command line arguments for the head and tail files,
-          along with the address of the webserver which some tests require.
-
-          On a remote system, this is overloaded to resolve quoting issues over a secondary command line.
-        """
-        cmdH = ", ".join(['"' + replaceBackSlashes(f) + '"'
-                       for f in headfiles])
-        cmdT = ", ".join(['"' + replaceBackSlashes(f) + '"'
-                       for f in tailfiles])
-        return xpcscmd + \
-                ['-e', 'const _SERVER_ADDR = "localhost"',
-                 '-e', 'const _HEAD_FILES = [%s];' % cmdH,
-                 '-e', 'const _TAIL_FILES = [%s];' % cmdT]
-
-    def buildCmdTestFile(self, name):
-        """
-          Build the command line arguments for the test file.
-          On a remote system, this may be overloaded to use a remote path structure.
-        """
-        return ['-e', 'const _TEST_FILE = ["%s"];' %
-                  replaceBackSlashes(name)]
 
     def trySetupNode(self):
         """
@@ -598,10 +887,6 @@ class XPCShellTests(object):
 
         doc.writexml(fh, addindent="  ", newl="\n", encoding="utf-8")
 
-    def testTimeout(self, test, processPID):
-        self.log.error("TEST-UNEXPECTED-FAIL | %s | Test timed out" % test)
-        Automation().killAndGetStackNoScreenshot(processPID, self.appPath, self.debuggerInfo)
-
     def post_to_autolog(self, results, name):
         from moztest.results import TestContext, TestResult, TestResultCollection
         from moztest.output.autolog import AutologOutput
@@ -644,24 +929,32 @@ class XPCShellTests(object):
         out = AutologOutput()
         out.post(out.make_testgroups(collection))
 
-    def logCommand(self, name, completeCmd, testdir):
-        self.log.info("TEST-INFO | %s | full command: %r" % (name, completeCmd))
-        self.log.info("TEST-INFO | %s | current directory: %r" % (name, testdir))
-        # Show only those environment variables that are changed from
-        # the ambient environment.
-        changedEnv = (set("%s=%s" % i for i in self.env.iteritems())
-                      - set("%s=%s" % i for i in os.environ.iteritems()))
-        self.log.info("TEST-INFO | %s | environment: %s" % (name, list(changedEnv)))
+    def buildXpcsRunArgs(self):
+        """
+          Add arguments to run the test or make it interactive.
+        """
+        if self.interactive:
+            self.xpcsRunArgs = [
+            '-e', 'print("To start the test, type |_execute_test();|.");',
+            '-i']
+        else:
+            self.xpcsRunArgs = ['-e', '_execute_test(); quit(0);']
+
+    def addTestResults(self, test):
+        self.passCount += test.passCount
+        self.failCount += test.failCount
+        self.todoCount += test.todoCount
+        self.xunitResults.append(test.xunit_result)
 
     def runTests(self, xpcshell, xrePath=None, appPath=None, symbolsPath=None,
-                 manifest=None, testdirs=None, testPath=None,
+                 manifest=None, testdirs=None, testPath=None, mobileArgs=None,
                  interactive=False, verbose=False, keepGoing=False, logfiles=True,
                  thisChunk=1, totalChunks=1, debugger=None,
                  debuggerArgs=None, debuggerInteractive=False,
-                 profileName=None, mozInfo=None, shuffle=False,
+                 profileName=None, mozInfo=None, sequential=False, shuffle=False,
                  testsRootDir=None, xunitFilename=None, xunitName=None,
                  testingModulesDir=None, autolog=False, pluginsPath=None,
-                 **otherOptions):
+                 testClass=XPCShellTestThread, **otherOptions):
         """Run xpcshell tests.
 
         |xpcshell|, is the xpcshell executable to use to run the tests.
@@ -757,10 +1050,7 @@ class XPCShellTests(object):
         self.mozInfo = mozInfo
         self.testingModulesDir = testingModulesDir
         self.pluginsPath = pluginsPath
-
-        # If we have an interactive debugger, disable ctrl-c.
-        if self.debuggerInfo and self.debuggerInfo["interactive"]:
-            signal.signal(signal.SIGINT, lambda signum, frame: None)
+        self.sequential = sequential
 
         if not testdirs and not manifest:
             # nothing to test!
@@ -775,6 +1065,8 @@ class XPCShellTests(object):
         self.setAbsPath()
         self.buildXpcsRunArgs()
         self.buildEnvironment()
+
+        self.event = Event()
 
         # Handle filenames in mozInfo
         if not isinstance(self.mozInfo, dict):
@@ -804,10 +1096,47 @@ class XPCShellTests(object):
         if shuffle:
             random.shuffle(self.alltests)
 
-        xunitResults = []
+        self.xunitResults = []
+        self.cleanup_dir_list = []
 
-        for test in self.alltests:
-            name = test['path']
+        kwargs = {
+            'appPath': self.appPath,
+            'xrePath': self.xrePath,
+            'testingModulesDir': self.testingModulesDir,
+            'debuggerInfo': self.debuggerInfo,
+            'pluginsPath': self.pluginsPath,
+            'httpdManifest': self.httpdManifest,
+            'httpdJSPath': self.httpdJSPath,
+            'headJSPath': self.headJSPath,
+            'testharnessdir': self.testharnessdir,
+            'profileName': self.profileName,
+            'singleFile': self.singleFile,
+            'env': self.env, # making a copy of this in the testthreads
+            'symbolsPath': self.symbolsPath,
+            'logfiles': self.logfiles,
+            'xpcshell': self.xpcshell,
+            'xpcsRunArgs': self.xpcsRunArgs,
+        }
+
+        if self.sequential:
+            # Allow user to kill hung xpcshell subprocess with SIGINT
+            # when we are only running tests sequentially.
+            signal.signal(signal.SIGINT, markGotSIGINT)
+
+        if self.debuggerInfo:
+            # Force a sequential run
+            self.sequential = True
+
+            # If we have an interactive debugger, disable SIGINT entirely.
+            if self.debuggerInfo["interactive"]:
+                signal.signal(signal.SIGINT, lambda signum, frame: None)
+
+        # create a queue of all tests that will run
+        tests_queue = deque()
+        # also a list for the tests that need to be run sequentially
+        sequential_tests = []
+        for test_object in self.alltests:
+            name = test_object['path']
             if self.singleFile and not name.endswith(self.singleFile):
                 continue
 
@@ -816,17 +1145,99 @@ class XPCShellTests(object):
 
             self.testCount += 1
 
-            keep_going, xunitResult = self.run_test(test,
-                tests_root_dir=testsRootDir, app_dir_key=appDirKey,
-                interactive=interactive, verbose=verbose, pStdout=pStdout,
-                pStderr=pStderr, keep_going=keepGoing)
+            test = testClass(test_object, self.event, self.cleanup_dir_list,
+                    tests_root_dir=testsRootDir, app_dir_key=appDirKey,
+                    interactive=interactive, verbose=verbose, pStdout=pStdout,
+                    pStderr=pStderr, keep_going=keepGoing, log=self.log,
+                    mobileArgs=mobileArgs, **kwargs)
+            if 'run-sequentially' in test_object or self.sequential:
+                sequential_tests.append(test)
+            else:
+                tests_queue.append(test)
 
-            xunitResults.append(xunitResult)
+        if sequential:
+            self.log.info("INFO | Running tests sequentially.")
+        else:
+            self.log.info("INFO | Using at most %d threads." % NUM_THREADS)
 
-            if not keep_going:
+        # keep a set of NUM_THREADS running tests and start running the
+        # tests in the queue at most NUM_THREADS at a time
+        running_tests = set()
+        keep_going = True
+        exceptions = []
+        tracebacks = []
+        while tests_queue or running_tests:
+            # if we're not supposed to continue and all of the running tests
+            # are done, stop
+            if not keep_going and not running_tests:
                 break
 
+            # if there's room to run more tests, start running them
+            while keep_going and tests_queue and (len(running_tests) < NUM_THREADS):
+                test = tests_queue.popleft()
+                running_tests.add(test)
+                test.start()
+
+            # queue is full (for now) or no more new tests,
+            # process the finished tests so far
+
+            # wait for at least one of the tests to finish
+            self.event.wait(1)
+            self.event.clear()
+
+            # find what tests are done (might be more than 1)
+            done_tests = set()
+            for test in running_tests:
+                if not test.is_alive():
+                    done_tests.add(test)
+                    test.join()
+                    # did the test encounter any exception?
+                    if test.exception:
+                        exceptions.append(test.exception)
+                        tracebacks.append(test.traceback)
+                        # we won't add any more tests, will just wait for
+                        # the currently running ones to finish
+                        keep_going = False
+                    keep_going = keep_going and test.keep_going
+                    self.addTestResults(test)
+
+            # make room for new tests to run
+            running_tests.difference_update(done_tests)
+
+        if keep_going:
+            # run the other tests sequentially
+            for test in sequential_tests:
+                if not keep_going:
+                    self.log.error("TEST-UNEXPECTED-FAIL | Received SIGINT (control-C), so stopped run. " \
+                                   "(Use --keep-going to keep running tests after killing one with SIGINT)")
+                    break
+                test.start()
+                test.join()
+                # did the test encounter any exception?
+                if test.exception:
+                    raise test.exception
+                keep_going = test.keep_going
+                self.addTestResults(test)
+
+        # restore default SIGINT behaviour
+        signal.signal(signal.SIGINT, signal.SIG_DFL)
+
         self.shutdownNode()
+        # Clean up any slacker directories that might be lying around (Windows).
+        # Some might fail because of windows taking too long to unlock them.
+        # We don't do anything if this fails because the test slaves will have
+        # their $TEMP dirs cleaned up on reboot anyway.
+        for directory in self.cleanup_dir_list:
+            try:
+                shutil.rmtree(directory)
+            except:
+                self.log.info("INFO | %s could not be cleaned up." % directory)
+
+        if exceptions:
+            self.log.info("INFO | Following exceptions were raised:")
+            for t in tracebacks:
+                self.log.error(t)
+            raise exceptions[0]
 
         if self.testCount == 0:
             self.log.error("TEST-UNEXPECTED-FAIL | runxpcshelltests.py | No tests run. Did you pass an invalid --test-path?")
@@ -838,10 +1249,10 @@ class XPCShellTests(object):
         self.log.info("INFO | Todo: %d" % self.todoCount)
 
         if autolog:
-            self.post_to_autolog(xunitResults, xunitName)
+            self.post_to_autolog(self.xunitResults, xunitName)
 
         if xunitFilename is not None:
-            self.writeXunitResults(filename=xunitFilename, results=xunitResults,
+            self.writeXunitResults(filename=xunitFilename, results=self.xunitResults,
                                    name=xunitName)
 
         if gotSIGINT and not keepGoing:
@@ -850,245 +1261,6 @@ class XPCShellTests(object):
             return False
 
         return self.failCount == 0
-
-    def print_stdout(self, stdout):
-        """Print stdout line-by-line to avoid overflowing buffers."""
-        self.log.info(">>>>>>>")
-        if (stdout):
-            for line in stdout.splitlines():
-                self.log.info(line)
-        self.log.info("<<<<<<<")
-
-    def cleanupDir(self, directory, name, stdout, xunit_result):
-        try:
-            self.removeDir(directory)
-        except Exception:
-            self.log.info("TEST-INFO | Failed to remove directory: %s. Waiting." % directory)
-
-            # We suspect the filesystem may still be making changes. Wait a
-            # little bit and try again.
-            time.sleep(5)
-
-            try:
-                self.removeDir(directory)
-            except Exception:
-                message = "TEST-UNEXPECTED-FAIL | %s | Failed to clean up directory: %s" % (name, sys.exc_info()[1])
-                self.log.error(message)
-                self.print_stdout(stdout)
-                self.print_stdout(traceback.format_exc())
-
-                self.failCount += 1
-                xunit_result["passed"] = False
-                xunit_result["failure"] = {
-                    "type": "TEST-UNEXPECTED-FAIL",
-                    "message": message,
-                    "text": "%s\n%s" % (stdout, traceback.format_exc())
-                }
-
-    def run_test(self, test, tests_root_dir=None, app_dir_key=None,
-            interactive=False, verbose=False, pStdout=None, pStderr=None,
-            keep_going=False):
-        """Run an individual xpcshell test."""
-        global gotSIGINT
-
-        name = test['path']
-
-        xunit_result = {'name': test['name'], 'classname': 'xpcshell'}
-
-        # The xUnit package is defined as the path component between the root
-        # dir and the test with path characters replaced with '.' (using Java
-        # class notation).
-        if tests_root_dir is not None:
-            tests_root_dir = os.path.normpath(tests_root_dir)
-            if test['here'].find(tests_root_dir) != 0:
-                raise Exception('tests_root_dir is not a parent path of %s' %
-                    test['here'])
-            relpath = test['here'][len(tests_root_dir):].lstrip('/\\')
-            xunit_result['classname'] = relpath.replace('/', '.').replace('\\', '.')
-
-        # Check for skipped tests
-        if 'disabled' in test:
-            self.log.info('TEST-INFO | skipping %s | %s' %
-                (name, test['disabled']))
-
-            xunit_result['skipped'] = True
-
-            return True, xunit_result
-
-        # Check for known-fail tests
-        expected = test['expected'] == 'pass'
-
-        # By default self.appPath will equal the gre dir. If specified in the
-        # xpcshell.ini file, set a different app dir for this test.
-        if app_dir_key and app_dir_key in test:
-            rel_app_dir = test[app_dir_key]
-            rel_app_dir = os.path.join(self.xrePath, rel_app_dir)
-            self.appPath = os.path.abspath(rel_app_dir)
-        else:
-            self.appPath = None
-
-        test_dir = os.path.dirname(name)
-        self.buildXpcsCmd(test_dir)
-        head_files, tail_files = self.getHeadAndTailFiles(test)
-        cmdH = self.buildCmdHead(head_files, tail_files, self.xpcsCmd)
-
-        # Create a profile and a temp dir that the JS harness can stick
-        # a profile and temporary data in
-        self.profileDir = self.setupProfileDir()
-        self.tempDir = self.setupTempDir()
-        self.leakLogFile = self.setupLeakLogging()
-
-        # The test file will have to be loaded after the head files.
-        cmdT = self.buildCmdTestFile(name)
-
-        args = self.xpcsRunArgs[:]
-        if 'debug' in test:
-            args.insert(0, '-d')
-
-        completeCmd = cmdH + cmdT + args
-
-        testTimer = None
-        if not interactive and not self.debuggerInfo:
-            testTimer = Timer(HARNESS_TIMEOUT, lambda: self.testTimeout(name, proc.pid))
-            testTimer.start()
-
-        proc = None
-
-        try:
-            self.log.info("TEST-INFO | %s | running test ..." % name)
-            if verbose:
-                self.logCommand(name, completeCmd, test_dir)
-
-            startTime = time.time()
-            proc = self.launchProcess(completeCmd,
-                stdout=pStdout, stderr=pStderr, env=self.env, cwd=test_dir)
-
-            if interactive:
-                self.log.info("TEST-INFO | %s | Process ID: %d" % (name, proc.pid))
-
-            # Allow user to kill hung subprocess with SIGINT w/o killing this script
-            # - don't move this line above launchProcess, or child will inherit the SIG_IGN
-            signal.signal(signal.SIGINT, markGotSIGINT)
-            # |stderr == None| as |pStderr| was either |None| or redirected to |stdout|.
-            stdout, stderr = self.communicate(proc)
-            signal.signal(signal.SIGINT, signal.SIG_DFL)
-
-            if interactive:
-                # Not sure what else to do here...
-                return True, xunit_result
-
-            if testTimer:
-                testTimer.cancel()
-
-            result = not ((self.getReturnCode(proc) != 0) or
-                          # if do_throw or do_check failed
-                          (stdout and re.search("^((parent|child): )?TEST-UNEXPECTED-",
-                                                stdout, re.MULTILINE)) or
-                          # if syntax error in xpcshell file
-                          (stdout and re.search(": SyntaxError:", stdout,
-                                                re.MULTILINE)) or
-                          # if e10s test started but never finished (child process crash)
-                          (stdout and re.search("^child: CHILD-TEST-STARTED",
-                                                stdout, re.MULTILINE)
-                                  and not re.search("^child: CHILD-TEST-COMPLETED",
-                                                    stdout, re.MULTILINE)))
-
-            if result != expected:
-                failureType = "TEST-UNEXPECTED-%s" % ("FAIL" if expected else "PASS")
-                message = "%s | %s | test failed (with xpcshell return code: %d), see following log:" % (
-                              failureType, name, self.getReturnCode(proc))
-                self.log.error(message)
-                self.print_stdout(stdout)
-                self.failCount += 1
-                xunit_result["passed"] = False
-
-                xunit_result["failure"] = {
-                  "type": failureType,
-                  "message": message,
-                  "text": stdout
-                }
-            else:
-                now = time.time()
-                timeTaken = (now - startTime) * 1000
-                xunit_result["time"] = now - startTime
-                self.log.info("TEST-%s | %s | test passed (time: %.3fms)" % ("PASS" if expected else "KNOWN-FAIL", name, timeTaken))
-                if verbose:
-                    self.print_stdout(stdout)
-
-                xunit_result["passed"] = True
-
-                if expected:
-                    self.passCount += 1
-                else:
-                    self.todoCount += 1
-                    xunit_result["todo"] = True
-
-            if mozcrash.check_for_crashes(test_dir, self.symbolsPath, test_name=name):
-                message = "PROCESS-CRASH | %s | application crashed" % name
-                self.failCount += 1
-                xunit_result["passed"] = False
-                xunit_result["failure"] = {
-                    "type": "PROCESS-CRASH",
-                    "message": message,
-                    "text": stdout
-                }
-
-            # Find child process(es) leak log(s), if any: See InitLog() in
-            # xpcom/base/nsTraceRefcntImpl.cpp for logfile naming logic
-            leakLogs = [self.leakLogFile]
-            for childLog in glob(os.path.join(self.profileDir, "runxpcshelltests_leaks_*_pid*.log")):
-                if os.path.isfile(childLog):
-                    leakLogs += [childLog]
-            for log in leakLogs:
-                dumpLeakLog(log, True)
-
-            if self.logfiles and stdout:
-                self.createLogFile(name, stdout, leakLogs)
-
-        finally:
-            # We can sometimes get here before the process has terminated, which would
-            # cause removeDir() to fail - so check for the process & kill it it needed.
-            if proc and self.poll(proc) is None:
-                message = "TEST-UNEXPECTED-FAIL | %s | Process still running after test!" % name
-                self.log.error(message)
-                self.print_stdout(stdout)
-                self.failCount += 1
-                xunit_result["passed"] = False
-                xunit_result["failure"] = {
-                  "type": "TEST-UNEXPECTED-FAIL",
-                  "message": message,
-                  "text": stdout
-                }
-                self.kill(proc)
-
-
-            # We don't want to delete the profile when running check-interactive
-            # or check-one.
-            if self.profileDir and not self.interactive and not self.singleFile:
-                self.cleanupDir(self.profileDir, name, stdout, xunit_result)
-
-            self.cleanupDir(self.tempDir, name, stdout, xunit_result)
-
-            if self.pluginsDir:
-                self.cleanupDir(self.pluginsDir, name, stdout, xunit_result)
-
-        if gotSIGINT:
-            xunit_result["passed"] = False
-            xunit_result["time"] = "0.0"
-            xunit_result["failure"] = {
-                "type": "SIGINT",
-                "message": "Received SIGINT",
-                "text": "Received SIGINT (control-C) during test execution."
-            }
-
-            self.log.error("TEST-UNEXPECTED-FAIL | Received SIGINT (control-C) during test execution")
-            if (keep_going):
-                gotSIGINT = False
-            else:
-                return False, xunit_result
-
-        return True, xunit_result
-
 
 class XPCShellOptions(OptionParser):
     def __init__(self):
@@ -1120,6 +1292,9 @@ class XPCShellOptions(OptionParser):
         self.add_option("--no-logfiles",
                         action="store_false", dest="logfiles",
                         help="don't create log files")
+        self.add_option("--sequential",
+                        action="store_true", dest="sequential", default=False,
+                        help="Run all tests sequentially")
         self.add_option("--test-path",
                         type="string", dest="testPath", default=None,
                         help="single path and/or test filename to test")
@@ -1172,6 +1347,10 @@ def main():
     if options.interactive and not options.testPath:
         print >>sys.stderr, "Error: You must specify a test filename in interactive mode!"
         sys.exit(1)
+
+    # running sequentially for safety reasons for now (in automation)
+    # mach will run tests in parallel by default
+    options.sequential = True
 
     if not xpcsh.runTests(args[0], testdirs=args[1:], **options.__dict__):
         sys.exit(1)
