@@ -37,17 +37,25 @@ function run_test() {
   let johnColls  = johnHelper.collections;
 
   do_test_pending();
-  let server = httpd_setup({
+
+  let server;
+  function weaveHandler (request, response) {
+    response.setStatusLine(request.httpVersion, 200, "OK");
+    let body = server.baseURI + "/api/";
+    response.bodyOutputStream.write(body, body.length);
+  }
+
+  server = httpd_setup({
     "/api/1.1/johndoe/info/collections": login_handling(johnHelper.handler),
     "/api/1.1/janedoe/info/collections": service_unavailable,
 
     "/api/1.1/johndoe/storage/crypto/keys": johnU("crypto", new ServerWBO("keys").handler()),
     "/api/1.1/johndoe/storage/meta/global": johnU("meta",   new ServerWBO("global").handler()),
-    "/user/1.0/johndoe/node/weave": httpd_handler(200, "OK", "http://localhost:8080/api/")
+    "/user/1.0/johndoe/node/weave": weaveHandler,
   });
 
   try {
-    Service.serverURL = TEST_SERVER_URL;
+    Service.serverURL = server.baseURI;
 
     _("Force the initial state.");
     Service.status.service = STATUS_OK;
@@ -67,7 +75,7 @@ function run_test() {
     do_check_eq(Service.status.login, LOGIN_FAILED_NO_PASSPHRASE);
 
     _("verifyLogin() has found out the user's cluster URL, though.");
-    do_check_eq(Service.clusterURL, "http://localhost:8080/api/");
+    do_check_eq(Service.clusterURL, server.baseURI + "/api/");
 
     _("Success if passphrase is set.");
     Service.status.resetSync();

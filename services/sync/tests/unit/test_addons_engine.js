@@ -158,7 +158,9 @@ add_test(function test_disabled_install_semantics() {
   const PASSPHRASE = "abcdeabcdeabcdeabcdeabcdea";
   const ADDON_ID   = "addon1@tests.mozilla.org";
 
-  new SyncTestingInfrastructure(USER, PASSWORD, PASSPHRASE);
+  let server = new SyncServer();
+  server.start();
+  new SyncTestingInfrastructure(server.server, USER, PASSWORD, PASSPHRASE);
 
   generateNewKeys(Service.collectionKeys);
 
@@ -169,10 +171,8 @@ add_test(function test_disabled_install_semantics() {
     addons: {}
   };
 
-  let server = new SyncServer();
   server.registerUser(USER, "password");
   server.createContents(USER, contents);
-  server.start();
 
   let amoServer = new HttpServer();
   amoServer.registerFile("/search/guid:addon1%40tests.mozilla.org",
@@ -246,8 +246,6 @@ function run_test() {
     Log4Moz.Level.Trace;
   Log4Moz.repository.getLogger("Sync.AddonsRepository").level =
     Log4Moz.Level.Trace;
-
-  new SyncTestingInfrastructure();
 
   reconciler.startListening();
 

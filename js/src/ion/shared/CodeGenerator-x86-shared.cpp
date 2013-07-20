@@ -49,6 +49,10 @@ CodeGeneratorX86Shared::generateEpilogue()
 {
     masm.bind(&returnLabel_);
 
+#if JS_TRACE_LOGGING
+    masm.tracelogStop();
+#endif
+
     // Pop the stack we allocated at the start of the function.
     masm.freeStack(frameSize());
     JS_ASSERT(masm.framePushed() == 0);

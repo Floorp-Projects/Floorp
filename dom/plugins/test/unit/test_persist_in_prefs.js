@@ -50,7 +50,7 @@ function run_test() {
     do_throw("Plugin library not found");
 
   const pluginDir = file.parent;
-  const parentDir = pluginDir.parent;
+  const tempDir = do_get_tempdir();
   const suffix = get_platform_specific_plugin_suffix();
   const pluginName = file.leafName.substring(0, file.leafName.length - suffix.length).toLowerCase();
   const pluginHost = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost);
@@ -90,7 +90,7 @@ function run_test() {
   file.copyTo(null, "nptestcopy" + suffix);
   let copy = pluginDir.clone();
   copy.append("nptestcopy" + suffix);
-  file.moveTo(parentDir, null);
+  file.moveTo(tempDir, null);
 
   // test that the settings persist through a few variations of test-plugin names
   let testNames = [
@@ -109,7 +109,7 @@ function run_test() {
   });
 
   // check that the state persists even if the plugin is not always present
-  copy.moveTo(parentDir, null);
+  copy.moveTo(tempDir, null);
   pluginHost.reloadPlugins(false);
   copy.moveTo(pluginDir, null);
   pluginHost.reloadPlugins(false);

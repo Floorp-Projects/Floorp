@@ -136,7 +136,7 @@ js::TransparentObjectWrapper(JSContext *cx, HandleObject existing, HandleObject 
 
 ErrorCopier::~ErrorCopier()
 {
-    JSContext *cx = ac.ref().context();
+    JSContext *cx = ac.ref().context()->asJSContext();
     if (ac.ref().origin() != cx->compartment() && cx->isExceptionPending()) {
         RootedValue exc(cx, cx->getPendingException());
         if (exc.isObject() && exc.toObject().is<ErrorObject>() &&
