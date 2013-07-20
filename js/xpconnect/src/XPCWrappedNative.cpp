@@ -283,7 +283,7 @@ FinishCreate(XPCWrappedNativeScope* Scope,
 nsresult
 XPCWrappedNative::WrapNewGlobal(xpcObjectHelper &nativeHelper,
                                 nsIPrincipal *principal, bool initStandardClasses,
-                                ZoneSpecifier zoneSpec,
+                                JS::CompartmentOptions& aOptions,
                                 XPCWrappedNative **wrappedGlobal)
 {
     AutoJSContext cx;
@@ -313,7 +313,7 @@ XPCWrappedNative::WrapNewGlobal(xpcObjectHelper &nativeHelper,
     MOZ_ASSERT(clasp->flags & JSCLASS_IS_GLOBAL);
 
     // Create the global.
-    RootedObject global(cx, xpc::CreateGlobalObject(cx, clasp, principal, zoneSpec));
+    RootedObject global(cx, xpc::CreateGlobalObject(cx, clasp, principal, aOptions));
     if (!global)
         return NS_ERROR_FAILURE;
     XPCWrappedNativeScope *scope = GetCompartmentPrivate(global)->scope;

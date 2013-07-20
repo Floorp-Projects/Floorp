@@ -1716,12 +1716,14 @@ main(int argc, char **argv, char **envp)
             return 1;
         }
 
+        JS::CompartmentOptions options;
+        options.setZone(JS::SystemZone);
         nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
         rv = xpc->InitClassesWithNewWrappedGlobal(cx,
                                                   static_cast<nsIGlobalObject *>(backstagePass),
                                                   systemprincipal,
                                                   0,
-                                                  JS::SystemZone,
+                                                  options,
                                                   getter_AddRefs(holder));
         if (NS_FAILED(rv))
             return 1;
