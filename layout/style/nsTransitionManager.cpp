@@ -430,10 +430,9 @@ nsTransitionManager::UpdateAllThrottledStyles()
     }
   }
 
-  mPresContext->PresShell()->FrameConstructor()->
-    ProcessRestyledFrames(changeList);
-  mPresContext->PresShell()->FrameConstructor()->
-    FlushOverflowChangedTracker();
+  RestyleManager* restyleManager = mPresContext->RestyleManager();
+  restyleManager->ProcessRestyledFrames(changeList);
+  restyleManager->FlushOverflowChangedTracker();
 }
 
 void

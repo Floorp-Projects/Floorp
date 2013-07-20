@@ -502,7 +502,7 @@ nsMathMLmtableOuterFrame::AttributeChanged(int32_t  aNameSpaceID,
   }
 
   // Explicitly request a re-resolve and reflow in our subtree to pick up any changes
-  presContext->PresShell()->FrameConstructor()->
+  presContext->RestyleManager()->
     PostRestyleEvent(mContent->AsElement(), eRestyle_Subtree,
                      nsChangeHint_AllReflowHints);
 
@@ -683,7 +683,7 @@ nsMathMLmtableFrame::RestyleTable()
   MapAllAttributesIntoCSS(this);
 
   // Explicitly request a re-resolve and reflow in our subtree to pick up any changes
-  PresContext()->PresShell()->FrameConstructor()->
+  PresContext()->RestyleManager()->
     PostRestyleEvent(mContent->AsElement(), eRestyle_Subtree,
                      nsChangeHint_AllReflowHints);
 }
@@ -711,7 +711,7 @@ nsMathMLmtrFrame::AttributeChanged(int32_t  aNameSpaceID,
   // Attributes specific to <mtr>:
   // groupalign  : Not yet supported.
   // rowalign    : Fully specified in mathml.css, and so HasAttributeDependentStyle() will
-  //               pick it up and nsCSSFrameConstructor will issue a PostRestyleEvent().
+  //               pick it up and RestyleManager will issue a PostRestyleEvent().
   // columnalign : Need an explicit re-style call.
 
   if (aAttribute == nsGkAtoms::rowalign_) {
@@ -744,7 +744,7 @@ nsMathMLmtrFrame::AttributeChanged(int32_t  aNameSpaceID,
   }
 
   // Explicitly request a re-resolve and reflow in our subtree to pick up any changes
-  presContext->PresShell()->FrameConstructor()->
+  presContext->RestyleManager()->
     PostRestyleEvent(mContent->AsElement(), eRestyle_Subtree,
                      nsChangeHint_AllReflowHints);
 

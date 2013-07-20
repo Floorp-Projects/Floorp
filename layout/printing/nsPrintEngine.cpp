@@ -2359,7 +2359,7 @@ nsPrintEngine::PromoteReflowsToReframeRoot()
     nsPrintObject* po = mPrt->mPrintDocList.ElementAt(i);
     NS_ASSERTION(po, "nsPrintObject can't be null!");
     if (po->mPresContext) {
-      po->mPresContext->PresShell()->FrameConstructor()->SetPromoteReflowsToReframeRoot(true);
+      po->mPresContext->RestyleManager()->SetPromoteReflowsToReframeRoot(true);
     }
   }
 }

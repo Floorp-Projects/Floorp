@@ -17,9 +17,9 @@
 #include "nsTPriorityQueue.h"
 #include "mozilla/SplayTree.h"
 
-class nsCSSFrameConstructor;
-
 namespace mozilla {
+
+class RestyleManager;
 
 /** 
  * Helper class that collects a list of frames that need
@@ -190,8 +190,8 @@ public:
                     "Shouldn't have both root flags");
   }
 
-  void Init(nsCSSFrameConstructor* aFrameConstructor) {
-    mFrameConstructor = aFrameConstructor;
+  void Init(RestyleManager* aRestyleManager) {
+    mRestyleManager = aRestyleManager;
     mPendingRestyles.Init();
   }
 
@@ -275,7 +275,7 @@ private:
   // will include one flag from ELEMENT_PENDING_RESTYLE_FLAGS and one flag
   // that's not in ELEMENT_PENDING_RESTYLE_FLAGS.
   uint32_t mRestyleBits;
-  nsCSSFrameConstructor* mFrameConstructor; // Owns us
+  RestyleManager* mRestyleManager; // Owns us
   // A hashtable that maps elements to RestyleData structs.  The
   // values only make sense if the element's current document is our
   // document and it has our RestyleBit() flag set.  In particular,

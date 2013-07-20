@@ -242,10 +242,13 @@ public:
   }
 
 #ifdef _IMPL_NS_LAYOUT
-  nsStyleSet* StyleSet() { return GetPresShell()->StyleSet(); }
+  nsStyleSet* StyleSet() { return PresShell()->StyleSet(); }
 
   nsFrameManager* FrameManager()
-    { return GetPresShell()->FrameManager(); }
+    { return PresShell()->FrameManager(); }
+
+  nsCSSFrameConstructor* FrameConstructor()
+    { return PresShell()->FrameConstructor(); }
 
   nsTransitionManager* TransitionManager() { return mTransitionManager; }
   nsAnimationManager* AnimationManager() { return mAnimationManager; }
