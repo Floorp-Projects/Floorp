@@ -16,7 +16,6 @@ MOCHITEST_BROWSER_FILES = \
   browser_Deprecated.js \
   browser_Geometry.js \
   browser_InlineSpellChecker.js \
-  browser_Services.js \
   browser_Troubleshoot.js \
   
   $(NULL)
