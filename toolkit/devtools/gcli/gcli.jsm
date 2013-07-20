@@ -10666,8 +10666,8 @@ var connect = {
 var disconnect = {
   item: 'command',
   name: 'disconnect',
-  description: l10n.lookup('disconnectDesc'),
-  manual: l10n.lookup('disconnectManual'),
+  description: l10n.lookup('disconnectDesc2'),
+  manual: l10n.lookup('disconnectManual2'),
   params: [
     {
       name: 'prefix',
