@@ -6253,7 +6253,7 @@ nsCSSFrameConstructor::MaybeConstructLazily(Operation aOperation,
     }
   }
 
-  PostRestyleEventForLazyConstruction();
+  RestyleManager()->PostRestyleEventForLazyConstruction();
   return true;
 }
 
@@ -8526,8 +8526,8 @@ nsCSSFrameConstructor::RecreateFramesForContent(nsIContent* aContent,
       // ContentRemoved triggered reconstruction, then we don't need to do this
       // because the frames will already have been built.
       if (aAsyncInsert) {
-        PostRestyleEvent(aContent->AsElement(), nsRestyleHint(0),
-                         nsChangeHint_ReconstructFrame);
+        RestyleManager()->PostRestyleEvent(
+          aContent->AsElement(), nsRestyleHint(0), nsChangeHint_ReconstructFrame);
       } else {
         rv = ContentInserted(container, aContent, mTempFrameTreeState, false);
       }

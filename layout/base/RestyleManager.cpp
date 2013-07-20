@@ -70,7 +70,6 @@ static bool gInApplyRenderingChangeToTree = false;
 
 static void
 DoApplyRenderingChangeToTree(nsIFrame* aFrame,
-                             nsFrameManager* aFrameManager,
                              nsChangeHint aChange);
 
 /**
@@ -83,7 +82,6 @@ DoApplyRenderingChangeToTree(nsIFrame* aFrame,
 */
 static void
 SyncViewsAndInvalidateDescendants(nsIFrame* aFrame,
-                                  nsFrameManager* aFrameManager,
                                   nsChangeHint aChange)
 {
   NS_PRECONDITION(gInApplyRenderingChangeToTree,
@@ -112,13 +110,11 @@ SyncViewsAndInvalidateDescendants(nsIFrame* aFrame,
           // do the out-of-flow frame and its continuations
           nsIFrame* outOfFlowFrame =
             nsPlaceholderFrame::GetRealFrameForPlaceholder(child);
-          DoApplyRenderingChangeToTree(outOfFlowFrame, aFrameManager,
-                                       aChange);
+          DoApplyRenderingChangeToTree(outOfFlowFrame, aChange);
         } else if (lists.CurrentID() == nsIFrame::kPopupList) {
-          DoApplyRenderingChangeToTree(child, aFrameManager,
-                                       aChange);
+          DoApplyRenderingChangeToTree(child, aChange);
         } else {  // regular frame
-          SyncViewsAndInvalidateDescendants(child, aFrameManager, aChange);
+          SyncViewsAndInvalidateDescendants(child, aChange);
         }
       }
     }
@@ -168,7 +164,6 @@ GetFrameForChildrenOnlyTransformHint(nsIFrame *aFrame)
 
 static void
 DoApplyRenderingChangeToTree(nsIFrame* aFrame,
-                             nsFrameManager* aFrameManager,
                              nsChangeHint aChange)
 {
   NS_PRECONDITION(gInApplyRenderingChangeToTree,
@@ -180,7 +175,7 @@ DoApplyRenderingChangeToTree(nsIFrame* aFrame,
     // there can't be any out-of-flows or popups that need to be transformed;
     // all out-of-flow descendants of the transformed element must also be
     // descendants of the transformed frame.
-    SyncViewsAndInvalidateDescendants(aFrame, aFrameManager,
+    SyncViewsAndInvalidateDescendants(aFrame,
       nsChangeHint(aChange & (nsChangeHint_RepaintFrame |
                               nsChangeHint_SyncFrameView |
                               nsChangeHint_UpdateOpacityLayer)));
@@ -297,7 +292,7 @@ ApplyRenderingChangeToTree(nsPresContext* aPresContext,
 #ifdef DEBUG
   gInApplyRenderingChangeToTree = true;
 #endif
-  DoApplyRenderingChangeToTree(aFrame, shell->FrameManager(), aChange);
+  DoApplyRenderingChangeToTree(aFrame, aChange);
 #ifdef DEBUG
   gInApplyRenderingChangeToTree = false;
 #endif
