@@ -61,13 +61,6 @@ XPCCallContext::GetJSContext() const
     return mJSContext;
 }
 
-inline JSBool
-XPCCallContext::GetContextPopRequired() const
-{
-    CHECK_STATE(HAVE_CONTEXT);
-    return mContextPopRequired;
-}
-
 inline XPCContext::LangType
 XPCCallContext::GetCallerLanguage() const
 {
