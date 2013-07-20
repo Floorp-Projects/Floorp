@@ -2202,6 +2202,7 @@ public:
     nsInProcessTabChildGlobal* tabChild =
       static_cast<nsInProcessTabChildGlobal*>(mFrameLoader->mChildMessageManager.get());
     if (tabChild && tabChild->GetInnerManager()) {
+      nsCOMPtr<nsIXPConnectJSObjectHolder> kungFuDeathGrip(tabChild->GetGlobal());
       nsFrameScriptCx cx(static_cast<EventTarget*>(tabChild), tabChild);
 
       StructuredCloneData data;
