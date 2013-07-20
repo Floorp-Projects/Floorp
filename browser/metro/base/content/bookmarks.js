@@ -93,7 +93,7 @@ function BookmarksView(aSet, aLimit, aRoot, aFilterUnpinned) {
   this.root = aRoot;
 }
 
-BookmarksView.prototype = {
+BookmarksView.prototype = Util.extend(Object.create(View.prototype), {
   _limit: null,
   _set: null,
   _changes: null,
@@ -216,33 +216,13 @@ BookmarksView.prototype = {
     let item = this._set.insertItemAt(aPos || index, title, uri.spec, this._inBatch);
     item.setAttribute("bookmarkId", aBookmarkId);
     this._setContextActions(item);
-    this._updateFavicon(aBookmarkId, item, uri);
+    this._updateFavicon(item, uri);
   },
 
   _setContextActions: function bv__setContextActions(aItem) {
     let itemId = this._getBookmarkIdForItem(aItem);
     aItem.setAttribute("data-contextactions", "delete," + (this._pinHelper.isPinned(itemId) ? "unpin" : "pin"));
     if (aItem.refresh) aItem.refresh();
-  },
-
-  _updateFavicon: function bv__updateFavicon(aBookmarkId, aItem, aUri) {
-    PlacesUtils.favicons.getFaviconURLForPage(aUri, this._gotIcon.bind(this, aBookmarkId, aItem));
-  },
-
-  _gotIcon: function bv__gotIcon(aBookmarkId, aItem, aIconUri) {
-    aItem.setAttribute("iconURI", aIconUri ? aIconUri.spec : "");
-    if (!aIconUri) {
-      return;
-    }
-    let successAction = function(foregroundColor, backgroundColor) {
-      aItem.style.color = foregroundColor; //color text
-      aItem.setAttribute("customColor", backgroundColor); //set background
-      if (aItem.refresh) {
-        aItem.refresh();
-      }
-    };
-    let failureAction = function() {};
-    ColorUtils.getForegroundAndBackgroundIconColors(aIconUri, successAction, failureAction);
   },
 
   _sendNeedsRefresh: function bv__sendNeedsRefresh(){
@@ -273,7 +253,7 @@ BookmarksView.prototype = {
     item.setAttribute("value", uri.spec);
     item.setAttribute("label", title);
 
-    this._updateFavicon(aBookmarkId, item, uri);
+    this._updateFavicon(item, uri);
   },
 
   removeBookmark: function bv_removeBookmark(aBookmarkId) {
@@ -370,7 +350,7 @@ BookmarksView.prototype = {
         break;
     }
   }
-};
+});
 
 var BookmarksStartView = {
   _view: null,

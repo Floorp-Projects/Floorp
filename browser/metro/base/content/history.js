@@ -1,7 +1,7 @@
-// -*- Mode: js2; tab-width: 2; indent-tabs-mode: nil; js2-basic-offset: 2; js2-skip-preprocessor-directives: t; -*-
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 'use strict';
 
 function HistoryView(aSet, aLimit, aFilterUnpinned) {
@@ -20,7 +20,7 @@ function HistoryView(aSet, aLimit, aFilterUnpinned) {
   window.addEventListener('HistoryNeedsRefresh', this, false);
 }
 
-HistoryView.prototype = {
+HistoryView.prototype = Util.extend(Object.create(View.prototype), {
   _set: null,
   _toRemove: null,
 
@@ -97,8 +97,8 @@ HistoryView.prototype = {
 
   addItemToSet: function addItemToSet(aURI, aTitle, aIcon, aPos) {
     let item = this._set.insertItemAt(aPos || 0, aTitle, aURI, this._inBatch);
-    item.setAttribute("iconURI", aIcon);
     this._setContextActions(item);
+    this._updateFavicon(item, aURI);
   },
 
   _setContextActions: function bv__setContextActions(aItem) {
@@ -273,7 +273,7 @@ HistoryView.prototype = {
     }
     throw Cr.NS_ERROR_NO_INTERFACE;
   }
-};
+});
 
 let HistoryStartView = {
   _view: null,
