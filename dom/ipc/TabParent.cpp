@@ -1091,7 +1091,7 @@ TabParent::ReceiveMessage(const nsString& aMessage,
   if (frameLoader && frameLoader->GetFrameMessageManager()) {
     nsRefPtr<nsFrameMessageManager> manager =
       frameLoader->GetFrameMessageManager();
-    AutoPushJSContext ctx(manager->GetJSContext());
+    AutoSafeJSContext ctx;
     uint32_t len = 0; //TODO: obtain a real value in bug 572685
     // Because we want JS messages to have always the same properties,
     // create array even if len == 0.
