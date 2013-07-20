@@ -1110,41 +1110,6 @@ XPC_WN_JSOp_Enumerate(JSContext *cx, HandleObject obj, JSIterateOp enum_op,
     return JS_EnumerateState(cx, obj, enum_op, statep, idp);
 }
 
-namespace {
-
-class MOZ_STACK_CLASS AutoPopJSContext
-{
-public:
-  AutoPopJSContext(XPCJSContextStack *stack)
-  : mCx(nullptr), mStack(stack)
-  {
-      NS_ASSERTION(stack, "Null stack!");
-  }
-
-  ~AutoPopJSContext()
-  {
-      if (mCx)
-          mStack->Pop();
-  }
-
-  void PushIfNotTop(JSContext *cx)
-  {
-      NS_ASSERTION(cx, "Null context!");
-      NS_ASSERTION(!mCx, "This class is only meant to be used once!");
-
-      JSContext *cxTop = mStack->Peek();
-
-      if (cxTop != cx && mStack->Push(cx))
-          mCx = cx;
-  }
-
-private:
-  JSContext *mCx;
-  XPCJSContextStack *mStack;
-};
-
-} // namespace
-
 JSObject*
 XPC_WN_JSOp_ThisObject(JSContext *cx, HandleObject obj)
 {
