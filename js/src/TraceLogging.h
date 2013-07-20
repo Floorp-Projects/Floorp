@@ -15,26 +15,19 @@ class TraceLogging
 {
   public:
     enum Type {
+        SCRIPT_START,
+        SCRIPT_STOP,
         ION_COMPILE_START,
         ION_COMPILE_STOP,
-        ION_CANNON_START,
-        ION_CANNON_STOP,
-        ION_CANNON_BAIL,
-        ION_SIDE_CANNON_START,
-        ION_SIDE_CANNON_STOP,
-        ION_SIDE_CANNON_BAIL,
         YARR_JIT_START,
         YARR_JIT_STOP,
-        JM_SAFEPOINT_START,
-        JM_SAFEPOINT_STOP,
-        JM_START,
-        JM_STOP,
-        JM_COMPILE_START,
-        JM_COMPILE_STOP,
         GC_START,
         GC_STOP,
-        INTERPRETER_START,
-        INTERPRETER_STOP,
+        MINOR_GC_START,
+        MINOR_GC_STOP,
+        INFO_ENGINE_INTERPRETER,
+        INFO_ENGINE_BASELINE,
+        INFO_ENGINE_IONMONKEY,
         INFO
     };
 

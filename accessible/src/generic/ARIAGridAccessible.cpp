@@ -465,8 +465,8 @@ ARIAGridAccessible::SetARIASelected(Accessible* aAccessible,
     rv = content->SetAttr(kNameSpaceID_None, nsGkAtoms::aria_selected,
                           NS_LITERAL_STRING("true"), aNotify);
   else
-    rv = content->UnsetAttr(kNameSpaceID_None,
-                            nsGkAtoms::aria_selected, aNotify);
+    rv = content->SetAttr(kNameSpaceID_None, nsGkAtoms::aria_selected,
+                          NS_LITERAL_STRING("false"), aNotify);
 
   NS_ENSURE_SUCCESS(rv, rv);
 

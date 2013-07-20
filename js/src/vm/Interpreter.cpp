@@ -1373,10 +1373,8 @@ Interpret(JSContext *cx, RunState &state)
     SET_SCRIPT(regs.fp()->script());
 
 #if JS_TRACE_LOGGING
-    AutoTraceLog logger(TraceLogging::defaultLogger(),
-                        TraceLogging::INTERPRETER_START,
-                        TraceLogging::INTERPRETER_STOP,
-                        script);
+    TraceLogging::defaultLogger()->log(TraceLogging::SCRIPT_START, script);
+    TraceLogging::defaultLogger()->log(TraceLogging::INFO_ENGINE_INTERPRETER);
 #endif
 
     /*
@@ -1688,6 +1686,10 @@ BEGIN_CASE(JSOP_STOP)
      * false after the inline_return label.
      */
     CHECK_BRANCH();
+
+#if JS_TRACE_LOGGING
+    TraceLogging::defaultLogger()->log(TraceLogging::SCRIPT_STOP);
+#endif
 
     interpReturnOK = true;
     if (entryFrame != regs.fp())
@@ -2550,6 +2552,11 @@ BEGIN_CASE(JSOP_FUNCALL)
         regs.fp()->setUseNewType();
 
     SET_SCRIPT(regs.fp()->script());
+
+#if JS_TRACE_LOGGING
+    TraceLogging::defaultLogger()->log(TraceLogging::SCRIPT_START, script);
+    TraceLogging::defaultLogger()->log(TraceLogging::INFO_ENGINE_INTERPRETER);
+#endif
 
     if (!regs.fp()->prologue(cx))
         goto error;
