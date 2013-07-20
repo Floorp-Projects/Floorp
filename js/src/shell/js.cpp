@@ -5422,6 +5422,10 @@ main(int argc, char **argv, char **envp)
 #endif
 #endif
 
+    // Start the engine.
+    if (!JS_Init())
+        return 1;
+
     /* Use the same parameters as the browser in xpcjsruntime.cpp. */
     rt = JS_NewRuntime(32L * 1024L * 1024L, JS_USE_HELPER_THREADS);
     if (!rt)
