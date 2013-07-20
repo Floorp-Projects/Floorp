@@ -1482,7 +1482,6 @@ ContextCallback(JSContext *cx, unsigned contextOp)
 
     if (contextOp == JSCONTEXT_NEW) {
         JS_SetErrorReporter(cx, my_ErrorReporter);
-        JS_SetVersion(cx, JSVERSION_LATEST);
     }
     return true;
 }
@@ -1717,7 +1716,8 @@ main(int argc, char **argv, char **envp)
         }
 
         JS::CompartmentOptions options;
-        options.setZone(JS::SystemZone);
+        options.setZone(JS::SystemZone)
+               .setVersion(JSVERSION_LATEST);
         nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
         rv = xpc->InitClassesWithNewWrappedGlobal(cx,
                                                   static_cast<nsIGlobalObject *>(backstagePass),
