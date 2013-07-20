@@ -437,31 +437,6 @@ CallSetter(JSContext *cx, HandleObject obj, HandleId id, StrictPropertyOp op, un
 
 }  /* namespace js */
 
-inline bool
-JSContext::canSetDefaultVersion() const
-{
-    return !currentlyRunning() && !hasVersionOverride;
-}
-
-inline void
-JSContext::overrideVersion(JSVersion newVersion)
-{
-    JS_ASSERT(!canSetDefaultVersion());
-    versionOverride = newVersion;
-    hasVersionOverride = true;
-}
-
-inline bool
-JSContext::maybeOverrideVersion(JSVersion newVersion)
-{
-    if (canSetDefaultVersion()) {
-        setDefaultVersion(newVersion);
-        return false;
-    }
-    overrideVersion(newVersion);
-    return true;
-}
-
 inline js::LifoAlloc &
 JSContext::analysisLifoAlloc()
 {
