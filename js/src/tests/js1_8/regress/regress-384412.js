@@ -137,19 +137,6 @@ function test()
   expect(["a1", "a2", "a3", "b1", "b2", "b3", "c1", "c2", "c3"] + "",
          ([a + b for (a in 'abc') for (b in '123')]) + "");
 
-/*
- * Version switching
- */
-  if (typeof version == 'function')
-  {
-    var v = version(150);
-    f = new Function("return version(arguments[0])");
-    revertVersion();
-    expect(150, f());
-    expect(150, eval("f()"));
-    expect(0, eval("f(0); f()"));
-    revertVersion();
-  }
   print("End of Tests");
 
 /*
