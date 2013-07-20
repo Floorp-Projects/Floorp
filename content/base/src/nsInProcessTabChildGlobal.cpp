@@ -118,7 +118,6 @@ nsInProcessTabChildGlobal::nsInProcessTabChildGlobal(nsIDocShell* aShell,
 
 nsInProcessTabChildGlobal::~nsInProcessTabChildGlobal()
 {
-  NS_ASSERTION(!mCx, "Couldn't release JSContext?!?");
 }
 
 /* [notxpcom] boolean markForCC (); */
