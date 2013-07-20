@@ -1712,9 +1712,9 @@ bool
 ForkJoinSlice::InitializeTLS()
 {
     if (!TLSInitialized) {
+        if (PR_NewThreadPrivateIndex(&ThreadPrivateIndex, NULL) != PR_SUCCESS)
+            return false;
         TLSInitialized = true;
-        PRStatus status = PR_NewThreadPrivateIndex(&ThreadPrivateIndex, NULL);
-        return status == PR_SUCCESS;
     }
     return true;
 }
