@@ -3818,6 +3818,13 @@ nsXPCComponents_Utils::EvalInSandbox(const nsAString& source,
             return NS_ERROR_INVALID_ARG;
 
         jsVersion = JS_StringToVersion(bytes.ptr());
+        // Explicitly check for "latest", which we support for sandboxes but
+        // isn't in the set of web-exposed version strings.
+        if (jsVersion == JSVERSION_UNKNOWN &&
+            !strcmp(bytes.ptr(), "latest"))
+        {
+            jsVersion = JSVERSION_LATEST;
+        }
         if (jsVersion == JSVERSION_UNKNOWN)
             return NS_ERROR_INVALID_ARG;
     }

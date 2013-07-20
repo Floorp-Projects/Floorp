@@ -2728,7 +2728,7 @@ ServerHandler.prototype =
           // getting the line number where we evaluate the SJS file.  Don't
           // separate these two lines!
           var line = new Error().lineNumber;
-          Cu.evalInSandbox(sis.read(file.fileSize), s);
+          Cu.evalInSandbox(sis.read(file.fileSize), s, "latest");
         }
         catch (e)
         {
