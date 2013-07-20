@@ -141,7 +141,6 @@ nsInProcessTabChildGlobal::Init()
                    "Couldn't initialize nsInProcessTabChildGlobal");
   mMessageManager = new nsFrameMessageManager(this,
                                               nullptr,
-                                              mCx,
                                               mozilla::dom::ipc::MM_CHILD);
   return NS_OK;
 }
