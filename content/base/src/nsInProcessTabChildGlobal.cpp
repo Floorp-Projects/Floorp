@@ -74,7 +74,7 @@ public:
 
       nsRefPtr<nsFrameMessageManager> mm = mTabChild->mChromeMessageManager;
       mm->ReceiveMessage(mTabChild->mOwner, mMessage, false, &data,
-                         JS::NullPtr(), nullptr, nullptr);
+                         JS::NullPtr(), nullptr);
     }
     return NS_OK;
   }

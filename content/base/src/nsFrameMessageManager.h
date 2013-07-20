@@ -183,8 +183,7 @@ public:
   nsresult ReceiveMessage(nsISupports* aTarget, const nsAString& aMessage,
                           bool aSync, const StructuredCloneData* aCloneData,
                           JS::Handle<JSObject*> aObjectsArray,
-                          InfallibleTArray<nsString>* aJSONRetVal,
-                          JSContext* aContext = nullptr);
+                          InfallibleTArray<nsString>* aJSONRetVal);
 
   void AddChildManager(nsFrameMessageManager* aManager,
                        bool aLoadScripts = true);
