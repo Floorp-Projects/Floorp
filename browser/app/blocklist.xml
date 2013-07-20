@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1373408730000">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1374187152000">
   <emItems>
       <emItem  blockID="i350" id="sqlmoz@facebook.com">
                         <versionRange  minVersion="0" maxVersion="*" severity="3">
@@ -1051,6 +1051,9 @@
                               <versionRange  minVersion="17.0" maxVersion="*" />
                           </targetApplication>
                   </versionRange>
+                  </pluginItem>
+      <pluginItem  blockID="p428">
+                  <match name="filename" exp="np[dD]eployJava1\.dll" />                      <versionRange  severity="0" vulnerabilitystatus="2"></versionRange>
                   </pluginItem>
     </pluginItems>
 
