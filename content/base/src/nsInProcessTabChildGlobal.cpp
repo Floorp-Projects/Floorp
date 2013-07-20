@@ -246,9 +246,7 @@ nsInProcessTabChildGlobal::DelayedDisconnect()
 
   if (!mLoadingScript) {
     nsContentUtils::ReleaseWrapper(static_cast<EventTarget*>(this), this);
-    if (mGlobal) {
-      DestroyCx();
-    }
+    mGlobal = nullptr;
   } else {
     mDelayedDisconnect = true;
   }
