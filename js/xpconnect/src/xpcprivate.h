@@ -3229,6 +3229,18 @@ struct XPCJSContextInfo {
     bool savedFrameChain;
 };
 
+namespace xpc {
+
+// These functions are used in a few places where a callback model makes it
+// impossible to push a JSContext using one of our stack-scoped classes. We
+// depend on those stack-scoped classes to maintain nsIScriptContext
+// invariants, so these functions may only be used of the context is not
+// associated with an nsJSContext/nsIScriptContext.
+bool PushJSContextNoScriptContext(JSContext *aCx);
+void PopJSContextNoScriptContext();
+
+} /* namespace xpc */
+
 class XPCJSContextStack
 {
 public:
@@ -3868,11 +3880,6 @@ GetObjectScope(JSObject *obj)
 
 extern JSBool gDebugMode;
 extern JSBool gDesiredDebugMode;
-
-// Internal use only.
-bool PushJSContext(JSContext *aCx);
-void PopJSContext();
-bool IsJSContextOnStack(JSContext *aCx);
 
 } // namespace xpc
 
