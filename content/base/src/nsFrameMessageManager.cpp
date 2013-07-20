@@ -912,9 +912,9 @@ nsDataHashtable<nsStringHashKey, nsFrameJSScriptExecutorHolder*>*
 nsScriptCacheCleaner* nsFrameScriptExecutor::sScriptCacheCleaner = nullptr;
 
 void
-nsFrameScriptExecutor::DidCreateCx()
+nsFrameScriptExecutor::DidCreateGlobal()
 {
-  NS_ASSERTION(mCx, "Should have mCx!");
+  NS_ASSERTION(mGlobal, "Should have mGlobal!");
   if (!sCachedScripts) {
     sCachedScripts =
       new nsDataHashtable<nsStringHashKey, nsFrameJSScriptExecutorHolder*>;
@@ -1121,7 +1121,7 @@ nsFrameScriptExecutor::InitTabChildGlobalInternal(nsISupports* aScope,
   // about:memory may use that information.
   xpc::SetLocationForGlobal(global, aID);
 
-  DidCreateCx();
+  DidCreateGlobal();
   return true;
 }
 
