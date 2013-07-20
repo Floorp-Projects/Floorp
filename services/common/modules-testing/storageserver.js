@@ -882,7 +882,6 @@ this.StorageServer = function StorageServer(callback) {
 StorageServer.prototype = {
   DEFAULT_QUOTA: 1024 * 1024, // # bytes.
 
-  port:   8080,
   server: null,    // HttpServer.
   users:  null,    // Map of username => {collections, password}.
 
@@ -898,8 +897,8 @@ StorageServer.prototype = {
    * Start the StorageServer's underlying HTTP server.
    *
    * @param port
-   *        The numeric port on which to start. A falsy value implies the
-   *        default (8080).
+   *        The numeric port on which to start. A falsy value implies to
+   *        select any available port.
    * @param cb
    *        A callback function (of no arguments) which is invoked after
    *        startup.
@@ -909,11 +908,14 @@ StorageServer.prototype = {
       this._log.warn("Warning: server already started on " + this.port);
       return;
     }
-    if (port) {
-      this.port = port;
+    if (!port) {
+      port = -1;
     }
+    this.port = port;
+
     try {
       this.server.start(this.port);
+      this.port = this.server.identity.primaryPort;
       this.started = true;
       if (cb) {
         cb();
@@ -932,10 +934,10 @@ StorageServer.prototype = {
    * Start the server synchronously.
    *
    * @param port
-   *        The numeric port on which to start. A falsy value implies the
-   *        default (8080).
+   *        The numeric port on which to start. The default is to choose
+   *        any available port.
    */
-  startSynchronous: function startSynchronous(port) {
+  startSynchronous: function startSynchronous(port=-1) {
     let cb = Async.makeSpinningCallback();
     this.start(port, cb);
     cb.wait();

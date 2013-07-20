@@ -447,7 +447,8 @@ namespace js {
  * JSRuntime as the field |mainThread|.  During Parallel JS sections,
  * however, there will be one instance per worker thread.
  */
-class PerThreadData : public js::PerThreadDataFriendFields
+class PerThreadData : public PerThreadDataFriendFields,
+                      public mozilla::LinkedListElement<PerThreadData>
 {
     /*
      * Backpointer to the full shared JSRuntime* with which this
@@ -556,6 +557,8 @@ class PerThreadData : public js::PerThreadDataFriendFields
     ~PerThreadData();
 
     bool init();
+    void addToThreadList();
+    void removeFromThreadList();
 
     bool associatedWith(const JSRuntime *rt) { return runtime_ == rt; }
 };
@@ -640,6 +643,8 @@ class MarkingValidator;
 
 typedef Vector<JS::Zone *, 1, SystemAllocPolicy> ZoneVector;
 
+class AutoLockForExclusiveAccess;
+
 } // namespace js
 
 struct JSRuntime : public JS::shadow::Runtime,
@@ -655,7 +660,13 @@ struct JSRuntime : public JS::shadow::Runtime,
      * sizeof(js::shadow::Runtime). See
      * PerThreadDataFriendFields::getMainThread.
      */
-    js::PerThreadData   mainThread;
+    js::PerThreadData mainThread;
+
+    /*
+     * List of per-thread data in the runtime, including mainThread. Currently
+     * this does not include instances of PerThreadData created for PJS.
+     */
+    mozilla::LinkedList<js::PerThreadData> threadList;
 
     /*
      * If non-zero, we were been asked to call the operation callback as soon
@@ -707,6 +718,37 @@ struct JSRuntime : public JS::shadow::Runtime,
     bool currentThreadOwnsOperationCallbackLock() {
 #if defined(JS_THREADSAFE) && defined(DEBUG)
         return operationCallbackOwner == PR_GetCurrentThread();
+#else
+        return true;
+#endif
+    }
+
+#ifdef JS_THREADSAFE
+  private:
+    /*
+     * Lock taken when using per-runtime or per-zone data that could otherwise
+     * be accessed simultaneously by both the main thread and another thread
+     * with an ExclusiveContext.
+     *
+     * Locking this only occurs if there is actually a thread other than the
+     * main thread with an ExclusiveContext which could access such data.
+     */
+    PRLock *exclusiveAccessLock;
+    mozilla::DebugOnly<PRThread *> exclusiveAccessOwner;
+    mozilla::DebugOnly<bool> mainThreadHasExclusiveAccess;
+
+    /* Number of non-main threads with an ExclusiveContext. */
+    size_t numExclusiveThreads;
+
+    friend class js::AutoLockForExclusiveAccess;
+
+  public:
+#endif // JS_THREADSAFE
+
+    bool currentThreadHasExclusiveAccess() {
+#if defined(JS_THREADSAFE) && defined(DEBUG)
+        return (!numExclusiveThreads && mainThreadHasExclusiveAccess) ||
+            exclusiveAccessOwner == PR_GetCurrentThread();
 #else
         return true;
 #endif
@@ -1712,6 +1754,38 @@ class RuntimeAllocPolicy
     void *realloc_(void *p, size_t bytes) { return runtime->realloc_(p, bytes); }
     void free_(void *p) { js_free(p); }
     void reportAllocOverflow() const {}
+};
+
+/*
+ * Enumerate all the per thread data in a runtime.
+ */
+class ThreadDataIter {
+    PerThreadData *iter;
+
+public:
+    explicit inline ThreadDataIter(JSRuntime *rt);
+
+    bool done() const {
+        return !iter;
+    }
+
+    void next() {
+        JS_ASSERT(!done());
+        iter = iter->getNext();
+    }
+
+    PerThreadData *get() const {
+        JS_ASSERT(!done());
+        return iter;
+    }
+
+    operator PerThreadData *() const {
+        return get();
+    }
+
+    PerThreadData *operator ->() const {
+        return get();
+    }
 };
 
 } /* namespace js */

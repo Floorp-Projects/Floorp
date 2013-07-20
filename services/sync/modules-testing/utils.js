@@ -5,8 +5,6 @@
 "use strict";
 
 this.EXPORTED_SYMBOLS = [
-  "TEST_CLUSTER_URL",
-  "TEST_SERVER_URL",
   "btoa", // It comes from a module import.
   "encryptPayload",
   "setBasicCredentials",
@@ -20,9 +18,6 @@ Cu.import("resource://services-common/utils.js");
 Cu.import("resource://services-crypto/utils.js");
 Cu.import("resource://testing-common/services-common/logging.js");
 Cu.import("resource://testing-common/services/sync/fakeservices.js");
-
-this.TEST_SERVER_URL = "http://localhost:8080/";
-this.TEST_CLUSTER_URL = TEST_SERVER_URL;
 
 /**
  * First wait >100ms (nsITimers can take up to that much time to fire, so
@@ -53,8 +48,7 @@ this.setBasicCredentials =
   auth.syncKey = syncKey;
 }
 
-this.SyncTestingInfrastructure =
- function SyncTestingInfrastructure(username, password, syncKey) {
+this.SyncTestingInfrastructure = function (server, username, password, syncKey) {
   let ns = {};
   Cu.import("resource://services-sync/service.js", ns);
 
@@ -63,8 +57,12 @@ this.SyncTestingInfrastructure =
   auth.basicPassword = password || "password";
   auth.syncKey = syncKey || "abcdeabcdeabcdeabcdeabcdea";
 
-  ns.Service.serverURL = TEST_SERVER_URL;
-  ns.Service.clusterURL = TEST_CLUSTER_URL;
+  let i = server.identity;
+  let uri = i.primaryScheme + "://" + i.primaryHost + ":" +
+            i.primaryPort + "/";
+
+  ns.Service.serverURL = uri;
+  ns.Service.clusterURL = uri;
 
   this.logStats = initTestLogging();
   this.fakeFilesystem = new FakeFilesystemService({});

@@ -17,7 +17,8 @@ findbar {
 }
 
 findbar[position="top"] {
-  box-shadow: 0 -1px 1px rgba(0,0,0,.1) inset;
+  background-image: none;
+  box-shadow: 0 -1px 0 rgba(0,0,0,.1) inset;
   transition-property: margin-top, opacity, visibility;
 }
 

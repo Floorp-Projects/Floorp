@@ -11,7 +11,7 @@ Cu.import("resource://services-sync/status.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://testing-common/services/sync/utils.js");
 
-const TEST_MAINTENANCE_URL = "http://localhost:8080/maintenance/";
+const FAKE_SERVER_URL = "http://dummy:9000/";
 const logsdir = FileUtils.getDir("ProfD", ["weave", "logs"], true);
 const LOG_PREFIX_SUCCESS = "success-";
 const LOG_PREFIX_ERROR   = "error-";
@@ -125,10 +125,10 @@ function sync_httpd_setup() {
   });
 }
 
-function setUp() {
+function setUp(server) {
   setBasicCredentials("johndoe", "ilovejane", "abcdeabcdeabcdeabcdeabcdea");
-  Service.serverURL  = TEST_SERVER_URL;
-  Service.clusterURL = TEST_CLUSTER_URL;
+  Service.serverURL  = server.baseURI + "/";
+  Service.clusterURL = server.baseURI + "/";
 
   return generateAndUploadKeys();
 }
@@ -148,7 +148,7 @@ function clean() {
 
 add_test(function test_401_logout() {
   let server = sync_httpd_setup();
-  setUp();
+  setUp(server);
 
   // By calling sync, we ensure we're logged in.
   Service.sync();
@@ -188,7 +188,7 @@ add_test(function test_401_logout() {
 
 add_test(function test_credentials_changed_logout() {
   let server = sync_httpd_setup();
-  setUp();
+  setUp(server);
 
   // By calling sync, we ensure we're logged in.
   Service.sync();
@@ -228,8 +228,8 @@ add_test(function test_shouldReportError() {
 
   // Give ourselves a clusterURL so that the temporary 401 no-error situation
   // doesn't come into play.
-  Service.serverURL  = TEST_SERVER_URL;
-  Service.clusterURL = TEST_CLUSTER_URL;
+  Service.serverURL  = FAKE_SERVER_URL;
+  Service.clusterURL = FAKE_SERVER_URL;
 
   // Test dontIgnoreErrors, non-network, non-prolonged, login error reported
   Status.resetSync();
@@ -407,7 +407,7 @@ add_test(function test_shouldReportError() {
 add_test(function test_shouldReportError_master_password() {
   _("Test error ignored due to locked master password");
   let server = sync_httpd_setup();
-  setUp();
+  setUp(server);
 
   // Monkey patch Service.verifyLogin to imitate
   // master password being locked.
@@ -431,7 +431,7 @@ add_test(function test_login_syncAndReportErrors_non_network_error() {
   // Test non-network errors are reported
   // when calling syncAndReportErrors
   let server = sync_httpd_setup();
-  setUp();
+  setUp(server);
   Service.identity.basicPassword = null;
 
   Svc.Obs.add("weave:ui:login:error", function onSyncError() {
@@ -450,7 +450,7 @@ add_test(function test_sync_syncAndReportErrors_non_network_error() {
   // Test non-network errors are reported
   // when calling syncAndReportErrors
   let server = sync_httpd_setup();
-  setUp();
+  setUp(server);
 
   // By calling sync, we ensure we're logged in.
   Service.sync();
@@ -475,7 +475,7 @@ add_test(function test_login_syncAndReportErrors_prolonged_non_network_error() {
   // Test prolonged, non-network errors are
   // reported when calling syncAndReportErrors.
   let server = sync_httpd_setup();
-  setUp();
+  setUp(server);
   Service.identity.basicPassword = null;
 
   Svc.Obs.add("weave:ui:login:error", function onSyncError() {
@@ -494,7 +494,7 @@ add_test(function test_sync_syncAndReportErrors_prolonged_non_network_error() {
   // Test prolonged, non-network errors are
   // reported when calling syncAndReportErrors.
   let server = sync_httpd_setup();
-  setUp();
+  setUp(server);
 
   // By calling sync, we ensure we're logged in.
   Service.sync();
@@ -518,8 +518,8 @@ add_test(function test_sync_syncAndReportErrors_prolonged_non_network_error() {
 add_test(function test_login_syncAndReportErrors_network_error() {
   // Test network errors are reported when calling syncAndReportErrors.
   setBasicCredentials("broken.wipe", "ilovejane", "abcdeabcdeabcdeabcdeabcdea");
-  Service.serverURL  = TEST_SERVER_URL;
-  Service.clusterURL = TEST_CLUSTER_URL;
+  Service.serverURL  = FAKE_SERVER_URL;
+  Service.clusterURL = FAKE_SERVER_URL;
 
   Svc.Obs.add("weave:ui:login:error", function onSyncError() {
     Svc.Obs.remove("weave:ui:login:error", onSyncError);
@@ -555,8 +555,8 @@ add_test(function test_login_syncAndReportErrors_prolonged_network_error() {
   // Test prolonged, network errors are reported
   // when calling syncAndReportErrors.
   setBasicCredentials("johndoe", "ilovejane", "abcdeabcdeabcdeabcdeabcdea");
-  Service.serverURL  = TEST_SERVER_URL;
-  Service.clusterURL = TEST_CLUSTER_URL;
+  Service.serverURL  = FAKE_SERVER_URL;
+  Service.clusterURL = FAKE_SERVER_URL;
 
   Svc.Obs.add("weave:ui:login:error", function onSyncError() {
     Svc.Obs.remove("weave:ui:login:error", onSyncError);
@@ -591,7 +591,7 @@ add_test(function test_sync_syncAndReportErrors_prolonged_network_error() {
 add_test(function test_login_prolonged_non_network_error() {
   // Test prolonged, non-network errors are reported
   let server = sync_httpd_setup();
-  setUp();
+  setUp(server);
   Service.identity.basicPassword = null;
 
   Svc.Obs.add("weave:ui:login:error", function onSyncError() {
@@ -609,7 +609,7 @@ add_test(function test_login_prolonged_non_network_error() {
 add_test(function test_sync_prolonged_non_network_error() {
   // Test prolonged, non-network errors are reported
   let server = sync_httpd_setup();
-  setUp();
+  setUp(server);
 
   // By calling sync, we ensure we're logged in.
   Service.sync();
@@ -633,8 +633,8 @@ add_test(function test_sync_prolonged_non_network_error() {
 add_test(function test_login_prolonged_network_error() {
   // Test prolonged, network errors are reported
   setBasicCredentials("johndoe", "ilovejane", "abcdeabcdeabcdeabcdeabcdea");
-  Service.serverURL  = TEST_SERVER_URL;
-  Service.clusterURL = TEST_CLUSTER_URL;
+  Service.serverURL  = FAKE_SERVER_URL;
+  Service.clusterURL = FAKE_SERVER_URL;
 
   Svc.Obs.add("weave:ui:login:error", function onSyncError() {
     Svc.Obs.remove("weave:ui:login:error", onSyncError);
@@ -668,7 +668,7 @@ add_test(function test_sync_prolonged_network_error() {
 add_test(function test_login_non_network_error() {
   // Test non-network errors are reported
   let server = sync_httpd_setup();
-  setUp();
+  setUp(server);
   Service.identity.basicPassword = null;
 
   Svc.Obs.add("weave:ui:login:error", function onSyncError() {
@@ -686,7 +686,7 @@ add_test(function test_login_non_network_error() {
 add_test(function test_sync_non_network_error() {
   // Test non-network errors are reported
   let server = sync_httpd_setup();
-  setUp();
+  setUp(server);
 
   // By calling sync, we ensure we're logged in.
   Service.sync();
@@ -709,8 +709,8 @@ add_test(function test_sync_non_network_error() {
 
 add_test(function test_login_network_error() {
   setBasicCredentials("johndoe", "ilovejane", "abcdeabcdeabcdeabcdeabcdea");
-  Service.serverURL  = TEST_SERVER_URL;
-  Service.clusterURL = TEST_CLUSTER_URL;
+  Service.serverURL  = FAKE_SERVER_URL;
+  Service.clusterURL = FAKE_SERVER_URL;
 
   // Test network errors are not reported.
   Svc.Obs.add("weave:ui:clear-error", function onClearError() {
@@ -747,7 +747,7 @@ add_test(function test_sync_network_error() {
 add_test(function test_sync_server_maintenance_error() {
   // Test server maintenance errors are not reported.
   let server = sync_httpd_setup();
-  setUp();
+  setUp(server);
 
   const BACKOFF = 42;
   let engine = engineManager.get("catapult");
@@ -780,12 +780,12 @@ add_test(function test_sync_server_maintenance_error() {
 add_test(function test_info_collections_login_server_maintenance_error() {
   // Test info/collections server maintenance errors are not reported.
   let server = sync_httpd_setup();
-  setUp();
+  setUp(server);
 
   Service.username = "broken.info";
   setBasicCredentials("broken.info", "irrelevant", "irrelevant");
-  Service.serverURL = TEST_MAINTENANCE_URL;
-  Service.clusterURL = TEST_MAINTENANCE_URL;
+  Service.serverURL = server.baseURI + "/maintenance/";
+  Service.clusterURL = server.baseURI + "/maintenance/";
 
   let backoffInterval;
   Svc.Obs.add("weave:service:backoff:interval", function observe(subject, data) {
@@ -821,11 +821,11 @@ add_test(function test_info_collections_login_server_maintenance_error() {
 add_test(function test_meta_global_login_server_maintenance_error() {
   // Test meta/global server maintenance errors are not reported.
   let server = sync_httpd_setup();
-  setUp();
+  setUp(server);
 
   setBasicCredentials("broken.meta", "irrelevant", "irrelevant");
-  Service.serverURL = TEST_MAINTENANCE_URL;
-  Service.clusterURL = TEST_MAINTENANCE_URL;
+  Service.serverURL = server.baseURI + "/maintenance/";
+  Service.clusterURL = server.baseURI + "/maintenance/";
 
   let backoffInterval;
   Svc.Obs.add("weave:service:backoff:interval", function observe(subject, data) {
@@ -861,11 +861,11 @@ add_test(function test_meta_global_login_server_maintenance_error() {
 add_test(function test_crypto_keys_login_server_maintenance_error() {
   // Test crypto/keys server maintenance errors are not reported.
   let server = sync_httpd_setup();
-  setUp();
+  setUp(server);
 
   setBasicCredentials("broken.keys", "irrelevant", "irrelevant");
-  Service.serverURL = TEST_MAINTENANCE_URL;
-  Service.clusterURL = TEST_MAINTENANCE_URL;
+  Service.serverURL = server.baseURI + "/maintenance/";
+  Service.clusterURL = server.baseURI + "/maintenance/";
 
   // Force re-download of keys
   Service.collectionKeys.clear();
@@ -904,7 +904,7 @@ add_test(function test_crypto_keys_login_server_maintenance_error() {
 add_test(function test_sync_prolonged_server_maintenance_error() {
   // Test prolonged server maintenance errors are reported.
   let server = sync_httpd_setup();
-  setUp();
+  setUp(server);
 
   const BACKOFF = 42;
   let engine = engineManager.get("catapult");
@@ -930,11 +930,11 @@ add_test(function test_sync_prolonged_server_maintenance_error() {
 add_test(function test_info_collections_login_prolonged_server_maintenance_error(){
   // Test info/collections prolonged server maintenance errors are reported.
   let server = sync_httpd_setup();
-  setUp();
+  setUp(server);
 
   setBasicCredentials("broken.info", "irrelevant", "irrelevant");
-  Service.serverURL = TEST_MAINTENANCE_URL;
-  Service.clusterURL = TEST_MAINTENANCE_URL;
+  Service.serverURL = server.baseURI + "/maintenance/";
+  Service.clusterURL = server.baseURI + "/maintenance/";
 
   let backoffInterval;
   Svc.Obs.add("weave:service:backoff:interval", function observe(subject, data) {
@@ -963,11 +963,11 @@ add_test(function test_info_collections_login_prolonged_server_maintenance_error
 add_test(function test_meta_global_login_prolonged_server_maintenance_error(){
   // Test meta/global prolonged server maintenance errors are reported.
   let server = sync_httpd_setup();
-  setUp();
+  setUp(server);
 
   setBasicCredentials("broken.meta", "irrelevant", "irrelevant");
-  Service.serverURL = TEST_MAINTENANCE_URL;
-  Service.clusterURL = TEST_MAINTENANCE_URL;
+  Service.serverURL = server.baseURI + "/maintenance/";
+  Service.clusterURL = server.baseURI + "/maintenance/";
 
   let backoffInterval;
   Svc.Obs.add("weave:service:backoff:interval", function observe(subject, data) {
@@ -996,11 +996,11 @@ add_test(function test_meta_global_login_prolonged_server_maintenance_error(){
 add_test(function test_download_crypto_keys_login_prolonged_server_maintenance_error(){
   // Test crypto/keys prolonged server maintenance errors are reported.
   let server = sync_httpd_setup();
-  setUp();
+  setUp(server);
 
   setBasicCredentials("broken.keys", "irrelevant", "irrelevant");
-  Service.serverURL = TEST_MAINTENANCE_URL;
-  Service.clusterURL = TEST_MAINTENANCE_URL;
+  Service.serverURL = server.baseURI + "/maintenance/";
+  Service.clusterURL = server.baseURI + "/maintenance/";
   // Force re-download of keys
   Service.collectionKeys.clear();
 
@@ -1034,8 +1034,8 @@ add_test(function test_upload_crypto_keys_login_prolonged_server_maintenance_err
 
   // Start off with an empty account, do not upload a key.
   setBasicCredentials("broken.keys", "ilovejane", "abcdeabcdeabcdeabcdeabcdea");
-  Service.serverURL = TEST_MAINTENANCE_URL;
-  Service.clusterURL = TEST_MAINTENANCE_URL;
+  Service.serverURL = server.baseURI + "/maintenance/";
+  Service.clusterURL = server.baseURI + "/maintenance/";
 
   let backoffInterval;
   Svc.Obs.add("weave:service:backoff:interval", function observe(subject, data) {
@@ -1068,8 +1068,8 @@ add_test(function test_wipeServer_login_prolonged_server_maintenance_error(){
 
   // Start off with an empty account, do not upload a key.
   setBasicCredentials("broken.wipe", "ilovejane", "abcdeabcdeabcdeabcdeabcdea");
-  Service.serverURL = TEST_MAINTENANCE_URL;
-  Service.clusterURL = TEST_MAINTENANCE_URL;
+  Service.serverURL = server.baseURI + "/maintenance/";
+  Service.clusterURL = server.baseURI + "/maintenance/";
 
   let backoffInterval;
   Svc.Obs.add("weave:service:backoff:interval", function observe(subject, data) {
@@ -1102,8 +1102,8 @@ add_test(function test_wipeRemote_prolonged_server_maintenance_error(){
 
   server.registerPathHandler("/1.1/broken.wipe/storage/catapult", service_unavailable);
   setBasicCredentials("broken.wipe", "ilovejane", "abcdeabcdeabcdeabcdeabcdea");
-  Service.serverURL = TEST_MAINTENANCE_URL;
-  Service.clusterURL = TEST_MAINTENANCE_URL;
+  Service.serverURL = server.baseURI + "/maintenance/";
+  Service.clusterURL = server.baseURI + "/maintenance/";
   generateAndUploadKeys();
 
   let engine = engineManager.get("catapult");
@@ -1140,7 +1140,7 @@ add_test(function test_sync_syncAndReportErrors_server_maintenance_error() {
   // Test server maintenance errors are reported
   // when calling syncAndReportErrors.
   let server = sync_httpd_setup();
-  setUp();
+  setUp(server);
 
   const BACKOFF = 42;
   let engine = engineManager.get("catapult");
@@ -1167,11 +1167,11 @@ add_test(function test_info_collections_login_syncAndReportErrors_server_mainten
   // Test info/collections server maintenance errors are reported
   // when calling syncAndReportErrors.
   let server = sync_httpd_setup();
-  setUp();
+  setUp(server);
 
   setBasicCredentials("broken.info", "irrelevant", "irrelevant");
-  Service.serverURL = TEST_MAINTENANCE_URL;
-  Service.clusterURL = TEST_MAINTENANCE_URL;
+  Service.serverURL = server.baseURI + "/maintenance/";
+  Service.clusterURL = server.baseURI + "/maintenance/";
 
   let backoffInterval;
   Svc.Obs.add("weave:service:backoff:interval", function observe(subject, data) {
@@ -1201,11 +1201,11 @@ add_test(function test_meta_global_login_syncAndReportErrors_server_maintenance_
   // Test meta/global server maintenance errors are reported
   // when calling syncAndReportErrors.
   let server = sync_httpd_setup();
-  setUp();
+  setUp(server);
 
   setBasicCredentials("broken.meta", "irrelevant", "irrelevant");
-  Service.serverURL = TEST_MAINTENANCE_URL;
-  Service.clusterURL = TEST_MAINTENANCE_URL;
+  Service.serverURL = server.baseURI + "/maintenance/";
+  Service.clusterURL = server.baseURI + "/maintenance/";
 
   let backoffInterval;
   Svc.Obs.add("weave:service:backoff:interval", function observe(subject, data) {
@@ -1235,11 +1235,11 @@ add_test(function test_download_crypto_keys_login_syncAndReportErrors_server_mai
   // Test crypto/keys server maintenance errors are reported
   // when calling syncAndReportErrors.
   let server = sync_httpd_setup();
-  setUp();
+  setUp(server);
 
   setBasicCredentials("broken.keys", "irrelevant", "irrelevant");
-  Service.serverURL = TEST_MAINTENANCE_URL;
-  Service.clusterURL = TEST_MAINTENANCE_URL;
+  Service.serverURL = server.baseURI + "/maintenance/";
+  Service.clusterURL = server.baseURI + "/maintenance/";
   // Force re-download of keys
   Service.collectionKeys.clear();
 
@@ -1274,8 +1274,8 @@ add_test(function test_upload_crypto_keys_login_syncAndReportErrors_server_maint
 
   // Start off with an empty account, do not upload a key.
   setBasicCredentials("broken.keys", "ilovejane", "abcdeabcdeabcdeabcdeabcdea");
-  Service.serverURL = TEST_MAINTENANCE_URL;
-  Service.clusterURL = TEST_MAINTENANCE_URL;
+  Service.serverURL = server.baseURI + "/maintenance/";
+  Service.clusterURL = server.baseURI + "/maintenance/";
 
   let backoffInterval;
   Svc.Obs.add("weave:service:backoff:interval", function observe(subject, data) {
@@ -1308,8 +1308,8 @@ add_test(function test_wipeServer_login_syncAndReportErrors_server_maintenance_e
 
   // Start off with an empty account, do not upload a key.
   setBasicCredentials("broken.wipe", "ilovejane", "abcdeabcdeabcdeabcdeabcdea");
-  Service.serverURL = TEST_MAINTENANCE_URL;
-  Service.clusterURL = TEST_MAINTENANCE_URL;
+  Service.serverURL = server.baseURI + "/maintenance/";
+  Service.clusterURL = server.baseURI + "/maintenance/";
 
   let backoffInterval;
   Svc.Obs.add("weave:service:backoff:interval", function observe(subject, data) {
@@ -1341,8 +1341,8 @@ add_test(function test_wipeRemote_syncAndReportErrors_server_maintenance_error()
   let server = sync_httpd_setup();
 
   setBasicCredentials("broken.wipe", "ilovejane", "abcdeabcdeabcdeabcdeabcdea");
-  Service.serverURL = TEST_MAINTENANCE_URL;
-  Service.clusterURL = TEST_MAINTENANCE_URL;
+  Service.serverURL = server.baseURI + "/maintenance/";
+  Service.clusterURL = server.baseURI + "/maintenance/";
   generateAndUploadKeys();
 
   let engine = engineManager.get("catapult");
@@ -1379,7 +1379,7 @@ add_test(function test_sync_syncAndReportErrors_prolonged_server_maintenance_err
   // Test prolonged server maintenance errors are
   // reported when calling syncAndReportErrors.
   let server = sync_httpd_setup();
-  setUp();
+  setUp(server);
 
   const BACKOFF = 42;
   let engine = engineManager.get("catapult");
@@ -1406,11 +1406,11 @@ add_test(function test_info_collections_login_syncAndReportErrors_prolonged_serv
   // Test info/collections server maintenance errors are reported
   // when calling syncAndReportErrors.
   let server = sync_httpd_setup();
-  setUp();
+  setUp(server);
 
   setBasicCredentials("broken.info", "irrelevant", "irrelevant");
-  Service.serverURL = TEST_MAINTENANCE_URL;
-  Service.clusterURL = TEST_MAINTENANCE_URL;
+  Service.serverURL = server.baseURI + "/maintenance/";
+  Service.clusterURL = server.baseURI + "/maintenance/";
 
   let backoffInterval;
   Svc.Obs.add("weave:service:backoff:interval", function observe(subject, data) {
@@ -1440,11 +1440,11 @@ add_test(function test_meta_global_login_syncAndReportErrors_prolonged_server_ma
   // Test meta/global server maintenance errors are reported
   // when calling syncAndReportErrors.
   let server = sync_httpd_setup();
-  setUp();
+  setUp(server);
 
   setBasicCredentials("broken.meta", "irrelevant", "irrelevant");
-  Service.serverURL = TEST_MAINTENANCE_URL;
-  Service.clusterURL = TEST_MAINTENANCE_URL;
+  Service.serverURL = server.baseURI + "/maintenance/";
+  Service.clusterURL = server.baseURI + "/maintenance/";
 
   let backoffInterval;
   Svc.Obs.add("weave:service:backoff:interval", function observe(subject, data) {
@@ -1474,11 +1474,11 @@ add_test(function test_download_crypto_keys_login_syncAndReportErrors_prolonged_
   // Test crypto/keys server maintenance errors are reported
   // when calling syncAndReportErrors.
   let server = sync_httpd_setup();
-  setUp();
+  setUp(server);
 
   setBasicCredentials("broken.keys", "irrelevant", "irrelevant");
-  Service.serverURL = TEST_MAINTENANCE_URL;
-  Service.clusterURL = TEST_MAINTENANCE_URL;
+  Service.serverURL = server.baseURI + "/maintenance/";
+  Service.clusterURL = server.baseURI + "/maintenance/";
   // Force re-download of keys
   Service.collectionKeys.clear();
 
@@ -1513,8 +1513,8 @@ add_test(function test_upload_crypto_keys_login_syncAndReportErrors_prolonged_se
 
   // Start off with an empty account, do not upload a key.
   setBasicCredentials("broken.keys", "ilovejane", "abcdeabcdeabcdeabcdeabcdea");
-  Service.serverURL = TEST_MAINTENANCE_URL;
-  Service.clusterURL = TEST_MAINTENANCE_URL;
+  Service.serverURL = server.baseURI + "/maintenance/";
+  Service.clusterURL = server.baseURI + "/maintenance/";
 
   let backoffInterval;
   Svc.Obs.add("weave:service:backoff:interval", function observe(subject, data) {
@@ -1547,8 +1547,8 @@ add_test(function test_wipeServer_login_syncAndReportErrors_prolonged_server_mai
 
   // Start off with an empty account, do not upload a key.
   setBasicCredentials("broken.wipe", "ilovejane", "abcdeabcdeabcdeabcdeabcdea");
-  Service.serverURL = TEST_MAINTENANCE_URL;
-  Service.clusterURL = TEST_MAINTENANCE_URL;
+  Service.serverURL = server.baseURI + "/maintenance/";
+  Service.clusterURL = server.baseURI + "/maintenance/";
 
   let backoffInterval;
   Svc.Obs.add("weave:service:backoff:interval", function observe(subject, data) {
@@ -1615,7 +1615,7 @@ add_test(function test_sync_engine_generic_fail() {
     });
   });
 
-  do_check_true(setUp());
+  do_check_true(setUp(server));
   Service.sync();
 });
 
@@ -1708,6 +1708,6 @@ add_test(function test_engine_applyFailed() {
   });
 
   do_check_eq(Status.engines["catapult"], undefined);
-  do_check_true(setUp());
+  do_check_true(setUp(server));
   Service.sync();
 });
