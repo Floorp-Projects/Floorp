@@ -19,7 +19,7 @@ class ColorLayerOGL : public ColorLayer,
 {
 public:
   ColorLayerOGL(LayerManagerOGL *aManager)
-    : ColorLayer(aManager, NULL)
+    : ColorLayer(aManager, nullptr)
     , LayerOGL(aManager)
   { 
     mImplData = static_cast<LayerOGL*>(this);
