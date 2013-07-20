@@ -77,7 +77,7 @@ GetGradientStops(GradientStops *aStops)
 struct AdjustedPattern
 {
   AdjustedPattern(const Pattern &aPattern)
-    : mPattern(NULL)
+    : mPattern(nullptr)
   {
     mOrigPattern = const_cast<Pattern*>(&aPattern);
   }
@@ -186,7 +186,7 @@ Path*
 DrawTargetRecording::GetPathForPathRecording(const Path *aPath) const
 {
   if (aPath->GetBackendType() != BACKEND_RECORDING) {
-    return NULL;
+    return nullptr;
   }
 
   return static_cast<const PathRecording*>(aPath)->mPath;
