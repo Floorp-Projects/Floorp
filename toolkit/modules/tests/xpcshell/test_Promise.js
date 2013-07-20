@@ -8,8 +8,6 @@ Components.utils.import("resource://gre/modules/Promise.jsm");
 //// Test runner
 
 let run_promise_tests = function run_promise_tests(tests, cb) {
-  let timer = Components.classes["@mozilla.org/timer;1"]
-     .createInstance(Components.interfaces.nsITimer);
   let loop = function loop(index) {
     if (index >= tests.length) {
       if (cb) {
@@ -583,6 +581,84 @@ tests.push(
     source.resolve("");
 
     return promise;
+  }));
+
+// Test that the values of the promise return by Promise.every() are kept in the
+// given order even if the given promises are resolved in arbitrary order
+tests.push(
+  make_promise_test(function every_resolve(test) {
+    let d1 = Promise.defer();
+    let d2 = Promise.defer();
+    let d3 = Promise.defer();
+
+    d3.resolve(4);
+    d2.resolve(2);
+    do_execute_soon(() => d1.resolve(1));
+
+    let promises = [d1.promise, d2.promise, 3, d3.promise];
+
+    return Promise.every(promises).then(
+      function onResolve([val1, val2, val3, val4]) {
+        do_check_eq(val1, 1);
+        do_check_eq(val2, 2);
+        do_check_eq(val3, 3);
+        do_check_eq(val4, 4);
+      }
+    );
+  }));
+
+// Test that rejecting one of the promises passed to Promise.every()
+// rejects the promise return by Promise.every()
+tests.push(
+  make_promise_test(function every_reject(test) {
+    let error = new Error("Boom");
+
+    let d1 = Promise.defer();
+    let d2 = Promise.defer();
+    let d3 = Promise.defer();
+
+    d3.resolve(3);
+    d2.resolve(2);
+    do_execute_soon(() => d1.reject(error));
+
+    let promises = [d1.promise, d2.promise, d3.promise];
+
+    return Promise.every(promises).then(
+      function onResolve() {
+        do_throw("Incorrect call to onResolve listener");
+      },
+      function onReject(reason) {
+        do_check_eq(reason, error, "Rejection lead to the expected reason");
+      }
+    );
+  }));
+
+// Test that passing only values (not promises) to Promise.every()
+// forwards them all as resolution values.
+tests.push(
+  make_promise_test(function every_resolve_no_promises(test) {
+    try {
+      Promise.every(null);
+      do_check_true(false, "every() should only accept arrays.");
+    } catch (e) {
+      do_check_true(true, "every() fails when first the arg is not an array.");
+    }
+
+    let p1 = Promise.every([]).then(
+      function onResolve(val) {
+        do_check_eq(typeof(val), "undefined");
+      }
+    );
+
+    let p2 = Promise.every([1, 2, 3]).then(
+      function onResolve([val1, val2, val3]) {
+        do_check_eq(val1, 1);
+        do_check_eq(val2, 2);
+        do_check_eq(val3, 3);
+      }
+    );
+
+    return Promise.every([p1, p2]);
   }));
 
 function run_test()
