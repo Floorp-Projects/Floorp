@@ -115,7 +115,6 @@ class nsFrameMessageManager MOZ_FINAL : public nsIContentFrameMessageManager,
 public:
   nsFrameMessageManager(mozilla::dom::ipc::MessageManagerCallback* aCallback,
                         nsFrameMessageManager* aParentManager,
-                        JSContext* aContext,
                         /* mozilla::dom::ipc::MessageManagerFlags */ uint32_t aFlags)
   : mChrome(!!(aFlags & mozilla::dom::ipc::MM_CHROME)),
     mGlobal(!!(aFlags & mozilla::dom::ipc::MM_GLOBAL)),
@@ -125,11 +124,8 @@ public:
     mHandlingMessage(false),
     mDisconnected(false),
     mCallback(aCallback),
-    mParentManager(aParentManager),
-    mContext(aContext)
+    mParentManager(aParentManager)
   {
-    NS_ASSERTION(mContext || (mChrome && !mParentManager) || mIsProcessManager,
-                 "Should have mContext in non-global/non-process manager!");
     NS_ASSERTION(mChrome || !aParentManager, "Should not set parent manager!");
     NS_ASSERTION(!mIsBroadcaster || !mCallback,
                  "Broadcasters cannot have callbacks!");
@@ -206,8 +202,6 @@ public:
                                 uint8_t aArgc);
   nsresult DispatchAsyncMessageInternal(const nsAString& aMessage,
                                         const StructuredCloneData& aData);
-  JSContext* GetJSContext() { return mContext; }
-  void SetJSContext(JSContext* aCx) { mContext = aCx; }
   void RemoveFromParent();
   nsFrameMessageManager* GetParentManager() { return mParentManager; }
   void SetParentManager(nsFrameMessageManager* aParent)
@@ -241,7 +235,6 @@ protected:
   mozilla::dom::ipc::MessageManagerCallback* mCallback;
   nsAutoPtr<mozilla::dom::ipc::MessageManagerCallback> mOwnedCallback;
   nsFrameMessageManager* mParentManager;
-  JSContext* mContext;
   nsTArray<nsString> mPendingScripts;
 public:
   static nsFrameMessageManager* sParentProcessManager;
