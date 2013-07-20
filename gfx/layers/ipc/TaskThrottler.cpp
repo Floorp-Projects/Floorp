@@ -45,11 +45,11 @@ TaskThrottler::TaskComplete(const TimeStamp& aTimeStamp)
 
   // Remove the oldest sample we have if adding a new sample takes us over our
   // desired number of samples.
-  if (mDurations.Length() >= mMaxDurations) {
-    mDurations.RemoveElementAt(0);
-  }
-  if (mMaxDurations) {
-    mDurations.AppendElement(aTimeStamp - mStartTime);
+  if (mMaxDurations > 0) {
+      if (mDurations.Length() >= mMaxDurations) {
+          mDurations.RemoveElementAt(0);
+      }
+      mDurations.AppendElement(aTimeStamp - mStartTime);
   }
 
   if (mQueuedTask) {
