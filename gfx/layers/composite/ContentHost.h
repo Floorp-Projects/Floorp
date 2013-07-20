@@ -97,7 +97,7 @@ public:
   }
 #endif
 
-  virtual void Dump(FILE* aFile=NULL,
+  virtual void Dump(FILE* aFile=nullptr,
                     const char* aPrefix="",
                     bool aDumpHtml=false) MOZ_OVERRIDE;
 
@@ -159,7 +159,7 @@ public:
                                  const TextureInfo& aTextureInfo) MOZ_OVERRIDE;
   virtual void DestroyTextures() MOZ_OVERRIDE;
 
-  virtual void Dump(FILE* aFile=NULL,
+  virtual void Dump(FILE* aFile=nullptr,
                     const char* aPrefix="",
                     bool aDumpHtml=false) MOZ_OVERRIDE;
 
