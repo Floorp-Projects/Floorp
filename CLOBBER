@@ -17,5 +17,5 @@
 #
 # Modifying this file will now automatically clobber the buildbot machines \o/
 #
-Bug 885962 - Polish mixed content blocking UI
+Bug 895670 - Remove SetupScreen and associated assets
 Android-only resource clobber (just rm objdir/mobile/android/base/res)
