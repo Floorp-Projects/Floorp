@@ -392,7 +392,7 @@ namespace xpc {
 
 JSObject*
 CreateGlobalObject(JSContext *cx, JSClass *clasp, nsIPrincipal *principal,
-                   JS::ZoneSpecifier zoneSpec)
+                   JS::CompartmentOptions& aOptions)
 {
     // Make sure that Type Inference is enabled for everything non-chrome.
     // Sandboxes and compilation scopes are exceptions. See bug 744034.
@@ -402,7 +402,7 @@ CreateGlobalObject(JSContext *cx, JSClass *clasp, nsIPrincipal *principal,
     MOZ_ASSERT(principal);
 
     RootedObject global(cx,
-                        JS_NewGlobalObject(cx, clasp, nsJSPrincipals::get(principal), zoneSpec));
+                        JS_NewGlobalObject(cx, clasp, nsJSPrincipals::get(principal), aOptions));
     if (!global)
         return nullptr;
     JSAutoCompartment ac(cx, global);
@@ -438,7 +438,7 @@ nsXPConnect::InitClassesWithNewWrappedGlobal(JSContext * aJSContext,
                                              nsISupports *aCOMObj,
                                              nsIPrincipal * aPrincipal,
                                              uint32_t aFlags,
-                                             JS::ZoneSpecifier zoneSpec,
+                                             JS::CompartmentOptions& aOptions,
                                              nsIXPConnectJSObjectHolder **_retval)
 {
     NS_ASSERTION(aJSContext, "bad param");
@@ -457,8 +457,7 @@ nsXPConnect::InitClassesWithNewWrappedGlobal(JSContext * aJSContext,
     nsresult rv =
         XPCWrappedNative::WrapNewGlobal(helper, aPrincipal,
                                         aFlags & nsIXPConnect::INIT_JS_STANDARD_CLASSES,
-                                        zoneSpec,
-                                        getter_AddRefs(wrappedGlobal));
+                                        aOptions, getter_AddRefs(wrappedGlobal));
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Grab a copy of the global and enter its compartment.
