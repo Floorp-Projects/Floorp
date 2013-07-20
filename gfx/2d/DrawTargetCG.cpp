@@ -757,8 +757,29 @@ DrawTargetCG::FillRect(const Rect &aRect,
     CGContextClipToRect(cg, RectToCGRect(aRect));
     DrawGradient(cg, aPattern, RectToCGRect(aRect));
   } else {
-    SetFillFromPattern(cg, mColorSpace, aPattern);
-    CGContextFillRect(cg, RectToCGRect(aRect));
+    if (aPattern.GetType() == PATTERN_SURFACE && static_cast<const SurfacePattern&>(aPattern).mExtendMode != EXTEND_REPEAT) {
+      // SetFillFromPattern can handle this case but using CGContextDrawImage
+      // should give us better performance, better output, smaller PDF and
+      // matches what cairo does.
+      const SurfacePattern& pat = static_cast<const SurfacePattern&>(aPattern);
+      CGImageRef image = GetImageFromSourceSurface(pat.mSurface.get());
+      CGContextClipToRect(cg, RectToCGRect(aRect));
+      CGContextConcatCTM(cg, GfxMatrixToCGAffineTransform(pat.mMatrix));
+      CGContextTranslateCTM(cg, 0, CGImageGetHeight(image));
+      CGContextScaleCTM(cg, 1, -1);
+
+      CGRect imageRect = CGRectMake(0, 0, CGImageGetWidth(image), CGImageGetHeight(image));
+
+      if (pat.mFilter == FILTER_POINT)
+        CGContextSetInterpolationQuality(cg, kCGInterpolationNone);
+      else
+        CGContextSetInterpolationQuality(cg, kCGInterpolationLow);
+
+      CGContextDrawImage(cg, imageRect, image);
+    } else {
+      SetFillFromPattern(cg, mColorSpace, aPattern);
+      CGContextFillRect(cg, RectToCGRect(aRect));
+    }
   }
 
   fixer.Fix(mCg);
