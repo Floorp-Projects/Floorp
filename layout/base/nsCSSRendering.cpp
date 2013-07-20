@@ -2262,6 +2262,8 @@ nsCSSRendering::PaintGradient(nsPresContext* aPresContext,
   // stop positions will be normalized below by subtracting firstStop and then
   // multiplying by stopScale.
   double stopScale;
+  double stopOrigin = firstStop;
+  double stopEnd = lastStop;
   double stopDelta = lastStop - firstStop;
   bool zeroRadius = aGradient->mShape != NS_STYLE_GRADIENT_SHAPE_LINEAR &&
                       (radiusX < 1e-6 || radiusY < 1e-6);
@@ -2270,14 +2272,22 @@ nsCSSRendering::PaintGradient(nsPresContext* aPresContext,
     // For repeating radial gradients, or for any radial gradients with
     // a zero radius, we need to fill with the last stop color, so just set
     // both radii to 0.
-    stopScale = 0.0;
     if (aGradient->mRepeating || zeroRadius) {
       radiusX = radiusY = 0.0;
     }
+    stopDelta = 0.0;
     lastStop = firstStop;
-  } else {
-    stopScale = 1.0/stopDelta;
   }
+
+  // Don't normalize non-repeating or degenerate gradients below 0..1
+  // This keeps the gradient line as large as the box and doesn't
+  // lets us avoiding having to get padding correct for stops
+  // at 0 and 1
+  if (!aGradient->mRepeating || stopDelta == 0.0) {
+    stopOrigin = std::min(stopOrigin, 0.0);
+    stopEnd = std::max(stopEnd, 1.0);
+  }
+  stopScale = 1.0/(stopEnd - stopOrigin);
 
   // Create the gradient pattern.
   nsRefPtr<gfxPattern> gradientPattern;
@@ -2285,10 +2295,10 @@ nsCSSRendering::PaintGradient(nsPresContext* aPresContext,
   if (aGradient->mShape == NS_STYLE_GRADIENT_SHAPE_LINEAR) {
     // Compute the actual gradient line ends we need to pass to cairo after
     // stops have been normalized.
-    gfxPoint gradientStart = lineStart + (lineEnd - lineStart)*firstStop;
-    gfxPoint gradientEnd = lineStart + (lineEnd - lineStart)*lastStop;
+    gfxPoint gradientStart = lineStart + (lineEnd - lineStart)*stopOrigin;
+    gfxPoint gradientEnd = lineStart + (lineEnd - lineStart)*stopEnd;
 
-    if (stopScale == 0.0) {
+    if (stopDelta == 0.0) {
       // Stops are all at the same place. For repeating gradients, this will
       // just paint the last stop color. We don't need to do anything.
       // For non-repeating gradients, this should render as two colors, one
@@ -2317,9 +2327,9 @@ nsCSSRendering::PaintGradient(nsPresContext* aPresContext,
 
     // To form an ellipse, we'll stretch a circle vertically, if necessary.
     // So our radii are based on radiusX.
-    double innerRadius = radiusX*firstStop;
-    double outerRadius = radiusX*lastStop;
-    if (stopScale == 0.0) {
+    double innerRadius = radiusX*stopOrigin;
+    double outerRadius = radiusX*stopEnd;
+    if (stopDelta == 0.0) {
       // Stops are all at the same place.  See above (except we now have
       // the inside vs. outside of an ellipse).
       outerRadius = innerRadius + 1;
@@ -2342,7 +2352,7 @@ nsCSSRendering::PaintGradient(nsPresContext* aPresContext,
   if (gradientPattern->CairoStatus())
     return;
 
-  if (stopScale == 0.0) {
+  if (stopDelta == 0.0) {
     // Non-repeating gradient with all stops in same place -> just add
     // first stop and last stop, both at position 0.
     // Repeating gradient with all stops in the same place, or radial
@@ -2372,7 +2382,7 @@ nsCSSRendering::PaintGradient(nsPresContext* aPresContext,
     rawStops.SetLength(stops.Length());
     for(uint32_t i = 0; i < stops.Length(); i++) {
       rawStops[i].color = gfx::Color(stops[i].mColor.r, stops[i].mColor.g, stops[i].mColor.b, stops[i].mColor.a);
-      rawStops[i].offset =  stopScale * (stops[i].mPosition - firstStop);
+      rawStops[i].offset =  stopScale * (stops[i].mPosition - stopOrigin);
     }
     GradientCacheData* cached = gGradientCache->Lookup(rawStops, isRepeat, backendType);
     mozilla::RefPtr<mozilla::gfx::GradientStops> gs = cached ? cached->mStops : nullptr;
@@ -2387,7 +2397,7 @@ nsCSSRendering::PaintGradient(nsPresContext* aPresContext,
     gradientPattern->SetColorStops(gs);
   } else {
     for (uint32_t i = 0; i < stops.Length(); i++) {
-      double pos = stopScale*(stops[i].mPosition - firstStop);
+      double pos = stopScale*(stops[i].mPosition - stopOrigin);
       gradientPattern->AddColorStop(pos, stops[i].mColor);
     }
     // Set repeat mode. Default cairo extend mode is PAD.
