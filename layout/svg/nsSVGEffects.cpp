@@ -259,7 +259,7 @@ nsSVGFilterProperty::DoUpdate()
   if (!(mFrame->GetStateBits() & NS_FRAME_IN_REFLOW)) {
     NS_UpdateHint(changeHint, nsChangeHint_UpdateOverflow);
   }
-  mFramePresShell->FrameConstructor()->PostRestyleEvent(
+  mFramePresShell->GetPresContext()->RestyleManager()->PostRestyleEvent(
     mFrame->GetContent()->AsElement(), nsRestyleHint(0), changeHint);
 }
 
@@ -284,7 +284,7 @@ nsSVGMarkerProperty::DoUpdate()
     // XXXSDL KILL THIS!!!
     nsSVGUtils::ScheduleReflowSVG(mFrame);
   }
-  mFramePresShell->FrameConstructor()->PostRestyleEvent(
+  mFramePresShell->GetPresContext()->RestyleManager()->PostRestyleEvent(
     mFrame->GetContent()->AsElement(), nsRestyleHint(0), changeHint);
 }
 
@@ -325,7 +325,7 @@ nsSVGTextPathProperty::DoUpdate()
   // Repaint asynchronously in case the path frame is being torn down
   nsChangeHint changeHint =
     nsChangeHint(nsChangeHint_RepaintFrame | nsChangeHint_UpdateTextPath);
-  mFramePresShell->FrameConstructor()->PostRestyleEvent(
+  mFramePresShell->GetPresContext()->RestyleManager()->PostRestyleEvent(
     mFrame->GetContent()->AsElement(), nsRestyleHint(0), changeHint);
 }
 

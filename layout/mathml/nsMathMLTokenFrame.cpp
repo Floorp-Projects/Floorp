@@ -251,7 +251,7 @@ nsMathMLTokenFrame::ProcessTextData()
     return;
 
   // explicitly request a re-resolve to pick up the change of style
-  PresContext()->PresShell()->FrameConstructor()->
+  PresContext()->RestyleManager()->
     PostRestyleEvent(mContent->AsElement(), eRestyle_Subtree, NS_STYLE_HINT_NONE);
 }
 
