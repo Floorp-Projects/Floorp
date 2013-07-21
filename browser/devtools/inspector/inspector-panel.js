@@ -224,18 +224,19 @@ InspectorPanel.prototype = {
     } else if (this.target.window) {
       searchDoc = this.target.window.document;
     } else {
-      return;
+      searchDoc = null;
     }
     // Initiate the selectors search object.
-    let setNodeFunction = function(node) {
-      this.selection.setNode(node, "selectorsearch");
+    let setNodeFunction = function(eventName, node) {
+      this.selection.setNodeFront(node, "selectorsearch");
     }.bind(this);
     if (this.searchSuggestions) {
       this.searchSuggestions.destroy();
       this.searchSuggestions = null;
     }
     this.searchBox = this.panelDoc.getElementById("inspector-searchbox");
-    this.searchSuggestions = new SelectorSearch(searchDoc, this.searchBox, setNodeFunction);
+    this.searchSuggestions = new SelectorSearch(this, searchDoc, this.searchBox);
+    this.searchSuggestions.on("node-selected", setNodeFunction);
   },
 
   /**
@@ -635,10 +636,7 @@ InspectorPanel.prototype = {
     if (!this.selection.isNode()) {
       return;
     }
-    let toCopy = this.selection.node.innerHTML;
-    if (toCopy) {
-      clipboardHelper.copyString(toCopy);
-    }
+    this._copyLongStr(this.walker.innerHTML(this.selection.nodeFront));
   },
 
   /**
@@ -649,10 +647,17 @@ InspectorPanel.prototype = {
     if (!this.selection.isNode()) {
       return;
     }
-    let toCopy = this.selection.node.outerHTML;
-    if (toCopy) {
-      clipboardHelper.copyString(toCopy);
-    }
+
+    this._copyLongStr(this.walker.outerHTML(this.selection.nodeFront));
+  },
+
+  _copyLongStr: function(promise) {
+    return promise.then(longstr => {
+      return longstr.string().then(toCopy => {
+        longstr.release().then(null, console.error);
+        clipboardHelper.copyString(toCopy);
+      });
+    }).then(null, console.error);
   },
 
   /**
@@ -685,8 +690,7 @@ InspectorPanel.prototype = {
       this.markup.deleteNode(this.selection.nodeFront);
     } else {
       // remove the node from content
-      let parent = this.selection.node.parentNode;
-      parent.removeChild(this.selection.node);
+      this.walker.removeNode(this.selection.nodeFront);
     }
   },
 

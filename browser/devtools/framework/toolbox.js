@@ -207,6 +207,7 @@ Toolbox.prototype = {
         this._buildTabs();
         this._buildButtons();
         this._addKeysToWindow();
+        this._addToolSwitchingKeys();
 
         this._telemetry.toolOpened("toolbox");
 
@@ -228,6 +229,13 @@ Toolbox.prototype = {
     key.addEventListener("command", function(toolId) {
       this.selectTool(toolId);
     }.bind(this, "options"), true);
+  },
+
+  _addToolSwitchingKeys: function TBOX__addToolSwitchingKeys() {
+    let nextKey = this.doc.getElementById("toolbox-next-tool-key");
+    nextKey.addEventListener("command", this.selectNextTool.bind(this), true);
+    let prevKey = this.doc.getElementById("toolbox-previous-tool-key");
+    prevKey.addEventListener("command", this.selectPreviousTool.bind(this), true);
   },
 
   /**
@@ -537,6 +545,26 @@ Toolbox.prototype = {
       this.emit(id + "-selected", panel);
       return panel;
     });
+  },
+
+  /**
+   * Loads the tool next to the currently selected tool.
+   */
+  selectNextTool: function TBOX_selectNextTool() {
+    let selected = this.doc.querySelector(".devtools-tab[selected]");
+    let next = selected.nextSibling || selected.parentNode.firstChild;
+    let tool = next.getAttribute("toolid");
+    return this.selectTool(tool);
+  },
+
+  /**
+   * Loads the tool just left to the currently selected tool.
+   */
+  selectPreviousTool: function TBOX_selectPreviousTool() {
+    let selected = this.doc.querySelector(".devtools-tab[selected]");
+    let previous = selected.previousSibling || selected.parentNode.lastChild;
+    let tool = previous.getAttribute("toolid");
+    return this.selectTool(tool);
   },
 
   /**

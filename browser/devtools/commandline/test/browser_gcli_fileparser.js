@@ -23,7 +23,7 @@
 
 var exports = {};
 
-const TEST_URI = "data:text/html;charset=utf-8,<p id='gcli-input'>gcli-testMenu.js</p>";
+const TEST_URI = "data:text/html;charset=utf-8,<p id='gcli-input'>gcli-testFileparser.js</p>";
 
 function test() {
   helpers.addTabWithToolbar(TEST_URI, function(options) {
@@ -35,40 +35,23 @@ function test() {
 
 'use strict';
 
-// var helpers = require('gclitest/helpers');
-// var mockCommands = require('gclitest/mockCommands');
+// var assert = require('test/assert');
+var fileparser = require('util/fileparser');
 
-exports.setup = function(options) {
-  mockCommands.setup();
+var local = false;
+
+exports.testGetPredictor = function(options) {
+  if (!options.isNode || !local) {
+    return;
+  }
+
+  var options = { filetype: 'file', existing: 'yes' };
+  var predictor = fileparser.getPredictor('/usr/locl/bin/nmp', options);
+  return predictor().then(function(replies) {
+    assert.is(replies[0].name,
+              '/usr/local/bin/npm',
+              'predict npm');
+  });
 };
-
-exports.shutdown = function(options) {
-  mockCommands.shutdown();
-};
-
-exports.testOptions = function(options) {
-  return helpers.audit(options, [
-    {
-      setup:    'tslong',
-      check: {
-        input:  'tslong',
-        markup: 'VVVVVV',
-        status: 'ERROR',
-        hints: ' <msg> [options]',
-        args: {
-          msg: { value: undefined, status: 'INCOMPLETE' },
-          num: { value: undefined, status: 'VALID' },
-          sel: { value: undefined, status: 'VALID' },
-          bool: { value: false, status: 'VALID' },
-          bool2: { value: false, status: 'VALID' },
-          sel2: { value: undefined, status: 'VALID' },
-          num2: { value: undefined, status: 'VALID' }
-        }
-      }
-    }
-  ]);
-};
-
 
 // });
-
