@@ -96,11 +96,12 @@ public:
         const WebRtc_Word16 speechData10ms[], int lengthSamples,
         int samplingFreqHz, int current_delay_ms) = 0;
 
+
     // This function gets audio for an external playout sink.
     // During transmission, this function should be called every ~10 ms
     // to obtain a new 10 ms frame of audio. The length of the block will
-    // be 160, 320, 440 or 480 samples (for 16, 32, 44 or 48 kHz sampling
-    // rates respectively).
+    // be 160, 320, 441 or 480 samples (for 16000, 32000, 44100 or 48000
+    // kHz sampling rates respectively).
     virtual int ExternalPlayoutGetData(
         WebRtc_Word16 speechData10ms[], int samplingFreqHz,
         int current_delay_ms, int& lengthSamples) = 0;
@@ -108,7 +109,7 @@ public:
     // Pulls an audio frame from the specified |channel| for external mixing.
     // If the |desired_sample_rate_hz| is 0, the signal will be returned with
     // its native frequency, otherwise it will be resampled. Valid frequencies
-    // are 16, 22, 32, 44 or 48 kHz.
+    // are 16000, 22050, 32000, 44100 or 48000 kHz.
     virtual int GetAudioFrame(int channel, int desired_sample_rate_hz,
                               AudioFrame* frame) = 0;
 

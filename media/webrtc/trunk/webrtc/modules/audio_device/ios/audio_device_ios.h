@@ -19,8 +19,8 @@
 namespace webrtc {
 class ThreadWrapper;
 
-const WebRtc_UWord32 N_REC_SAMPLES_PER_SEC = 44000;
-const WebRtc_UWord32 N_PLAY_SAMPLES_PER_SEC = 44000;
+const WebRtc_UWord32 N_REC_SAMPLES_PER_SEC = 44100;
+const WebRtc_UWord32 N_PLAY_SAMPLES_PER_SEC = 44100;
 
 const WebRtc_UWord32 N_REC_CHANNELS = 1;  // default is mono recording
 const WebRtc_UWord32 N_PLAY_CHANNELS = 1;  // default is mono playout
