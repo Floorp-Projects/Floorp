@@ -172,6 +172,60 @@ this.Promise = Object.freeze({
     PromiseWalker.completePromise(promise, STATUS_REJECTED, aReason);
     return promise;
   },
+
+  /**
+   * Returns a promise that is resolved or rejected when all values are
+   * resolved or any is rejected.
+   *
+   * @param aValues
+   *        Array of promises that may be pending, resolved, or rejected. When
+   *        all are resolved or any is rejected, the returned promise will be
+   *        resolved or rejected as well.
+   *
+   * @return A new promise that is fulfilled when all values are resolved or
+   *         that is rejected when any of the values are rejected. Its
+   *         resolution value will be an array of all resolved values in the
+   *         given order, or undefined if aValues is an empty array. The reject
+   *         reason will be forwarded from the first promise in the list of
+   *         given promises to be rejected.
+   */
+  every: function (aValues)
+  {
+    if (!Array.isArray(aValues)) {
+      throw new Error("Promise.every() expects an array of promises or values.");
+    }
+
+    if (!aValues.length) {
+      return Promise.resolve(undefined);
+    }
+
+    let countdown = aValues.length;
+    let deferred = Promise.defer();
+    let resolutionValues = new Array(countdown);
+
+    function checkForCompletion(aValue, aIndex) {
+      resolutionValues[aIndex] = aValue;
+
+      if (--countdown === 0) {
+        deferred.resolve(resolutionValues);
+      }
+    }
+
+    for (let i = 0; i < aValues.length; i++) {
+      let index = i;
+      let value = aValues[i];
+      let resolve = val => checkForCompletion(val, index);
+
+      if (value && typeof(value.then) == "function") {
+        value.then(resolve, deferred.reject);
+      } else {
+        // Given value is not a promise, forward it as a resolution value.
+        resolve(value);
+      }
+    }
+
+    return deferred.promise;
+  },
 });
 
 ////////////////////////////////////////////////////////////////////////////////
