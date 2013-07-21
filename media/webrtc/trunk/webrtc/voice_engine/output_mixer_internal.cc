@@ -35,7 +35,7 @@ int RemixAndResample(const AudioFrame& src_frame,
   }
 
   const ResamplerType resampler_type = audio_ptr_num_channels == 1 ?
-      kResamplerSynchronous : kResamplerSynchronousStereo;
+      kResamplerFixedSynchronous : kResamplerFixedSynchronousStereo;
   if (resampler->ResetIfNeeded(src_frame.sample_rate_hz_,
                                dst_frame->sample_rate_hz_,
                                resampler_type) == -1) {
