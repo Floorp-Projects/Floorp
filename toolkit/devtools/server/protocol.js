@@ -108,6 +108,17 @@ types.getType = function(type) {
 }
 
 /**
+ * Don't allow undefined when writing primitive types to packets.  If
+ * you want to allow undefined, use a nullable type.
+ */
+function identityWrite(v) {
+  if (v === undefined) {
+    throw Error("undefined passed where a value is required");
+  }
+  return v;
+}
+
+/**
  * Add a type to the type system.
  *
  * When registering a type, you can provide `read` and `write` methods.
@@ -138,8 +149,8 @@ types.addType = function(name, typeObject={}, options={}) {
   let type = object.merge({
     name: name,
     primitive: !(typeObject.read || typeObject.write),
-    read: v => v,
-    write: v => v
+    read: identityWrite,
+    write: identityWrite
   }, typeObject);
 
   registeredTypes.set(name, type);
@@ -384,32 +395,19 @@ types.JSON = types.addType("json");
  *    The argument index to place at this position.
  * @param type type
  *    The argument should be marshalled as this type.
- * @param object options
- *    Argument options:
- *      optional: true if the argument can be undefined or null.
  * @constructor
  */
 let Arg = Class({
-  initialize: function(index, type, options={}) {
+  initialize: function(index, type) {
     this.index = index;
     this.type = types.getType(type);
-    this.optional = !!options.optional;
   },
 
   write: function(arg, ctx) {
-    if (arg === undefined || arg === null) {
-      if (!this.optional) throw Error("Required argument " + this.name + " not specified.");
-      return undefined;
-    }
     return this.type.write(arg, ctx);
   },
 
   read: function(v, ctx, outArgs) {
-    if (v === undefined || v === null) {
-      if (!this.optional) throw Error("Required argument " + this.name + " not specified.");
-      outArgs[this.index] = v;
-      return;
-    }
     outArgs[this.index] = this.type.read(v, ctx);
   }
 });
@@ -466,34 +464,18 @@ exports.Option = Option;
  *
  * @param type type
  *    The return value should be marshalled as this type.
- * @param object options
- *    Argument options:
- *      optional: true if the argument can be undefined or null.
  */
 let RetVal = Class({
-  initialize: function(type, options={}) {
+  initialize: function(type) {
     this.type = types.getType(type);
-    this.optional = !!options.optional;
   },
 
   write: function(v, ctx) {
-    if (v !== undefined && v != null) {
-      return this.type.write(v, ctx);
-    }
-    if (!this.optional) {
-      throw Error("Return value not specified.");
-    }
-    return v;
+    return this.type.write(v, ctx);
   },
 
   read: function(v, ctx) {
-    if (v !== undefined && v != null) {
-      return this.type.read(v, ctx);
-    }
-    if (!this.optional) {
-      throw Error("Return value not specified.");
-    }
-    return v;
+    return this.type.read(v, ctx);
   }
 });
 
