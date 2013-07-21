@@ -1,0 +1,27 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test that reloading media recorder object</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=894348">Mozill
+a Bug 894348</a>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+  for (i = 0; i< 5; i++) {
+    try { o0 = document.createElement('audio') } catch(e) { }
+    try { o0.src = "sound.ogg" } catch(e) { }
+    try { (document.body || document.documentElement).appendChild(o0) } catch(e) { }
+    try { o1 = o0.mozCaptureStreamUntilEnded(); } catch(e) { }
+    try { o2 = new MediaRecorder(o1) } catch(e) { }
+    try { o2.start(0) } catch(e) { }
+    SpecialPowers.gc();
+  }
+  ok(true, "pass the crash test");
+</script>
+</pre>
+</body>
+</html>
