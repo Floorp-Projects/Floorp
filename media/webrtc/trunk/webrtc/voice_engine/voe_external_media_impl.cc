@@ -191,7 +191,7 @@ int VoEExternalMediaImpl::ExternalRecordingInsertData(
         return -1;
     }
     if ((16000 != samplingFreqHz) && (32000 != samplingFreqHz) &&
-        (48000 != samplingFreqHz) && (44000 != samplingFreqHz))
+        (48000 != samplingFreqHz) && (44100 != samplingFreqHz))
     {
          shared_->SetLastError(VE_INVALID_ARGUMENT, kTraceError,
              "SetExternalRecordingStatus() invalid sample rate");
@@ -300,7 +300,7 @@ int VoEExternalMediaImpl::ExternalPlayoutGetData(
         return -1;
     }
     if ((16000 != samplingFreqHz) && (32000 != samplingFreqHz) &&
-        (48000 != samplingFreqHz) && (44000 != samplingFreqHz))
+        (48000 != samplingFreqHz) && (44100 != samplingFreqHz))
     {
         shared_->SetLastError(VE_INVALID_ARGUMENT, kTraceError,
             "ExternalPlayoutGetData() invalid sample rate");

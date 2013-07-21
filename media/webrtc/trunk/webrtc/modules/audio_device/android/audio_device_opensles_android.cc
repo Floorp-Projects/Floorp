@@ -742,11 +742,7 @@ int32_t AudioDeviceAndroidOpenSLES::InitPlayout() {
   // Setup the data source structure for the buffer queue.
   player_pcm_.formatType = SL_DATAFORMAT_PCM;
   player_pcm_.numChannels = N_PLAY_CHANNELS;
-  if (speaker_sampling_rate_ == 44000) {
-      player_pcm_.samplesPerSec = 44100 * 1000;
-  } else {
-    player_pcm_.samplesPerSec = speaker_sampling_rate_ * 1000;
-  }
+  player_pcm_.samplesPerSec = speaker_sampling_rate_ * 1000;
   player_pcm_.bitsPerSample = SL_PCMSAMPLEFORMAT_FIXED_16;
   player_pcm_.containerSize = SL_PCMSAMPLEFORMAT_FIXED_16;
   if (1 == player_pcm_.numChannels) {
@@ -866,11 +862,7 @@ int32_t AudioDeviceAndroidOpenSLES::InitRecording() {
   // Setup the format of the content in the buffer queue
   record_pcm_.formatType = SL_DATAFORMAT_PCM;
   record_pcm_.numChannels = N_REC_CHANNELS;
-  if (speaker_sampling_rate_ == 44000) {
-    record_pcm_.samplesPerSec = 44100 * 1000;
-  } else {
-    record_pcm_.samplesPerSec = speaker_sampling_rate_ * 1000;
-  }
+  record_pcm_.samplesPerSec = speaker_sampling_rate_ * 1000;
   record_pcm_.bitsPerSample = SL_PCMSAMPLEFORMAT_FIXED_16;
   record_pcm_.containerSize = SL_PCMSAMPLEFORMAT_FIXED_16;
   if (1 == record_pcm_.numChannels) {
