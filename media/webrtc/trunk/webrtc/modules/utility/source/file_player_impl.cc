@@ -95,7 +95,7 @@ WebRtc_Word32 FilePlayerImpl::Frequency() const
     {
         return 32000;
     }
-    else if(_codec.plfreq == 44000)
+    else if(_codec.plfreq == 44100 || _codec.plfreq == 44000 ) // XXX just 44100?
     {
         return 32000;
     }
