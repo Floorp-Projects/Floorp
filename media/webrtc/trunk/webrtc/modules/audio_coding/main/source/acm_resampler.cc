@@ -47,8 +47,8 @@ WebRtc_Word16 ACMResampler::Resample10Msec(const WebRtc_Word16* in_audio,
 
   WebRtc_Word32 ret;
   ResamplerType type;
-  type = (num_audio_channels == 1) ? kResamplerSynchronous :
-      kResamplerSynchronousStereo;
+  type = (num_audio_channels == 1) ? kResamplerFixedSynchronous :
+      kResamplerFixedSynchronousStereo;
 
   ret = resampler_.ResetIfNeeded(in_freq_hz, out_freq_hz, type);
   if (ret < 0) {

@@ -80,13 +80,14 @@ void VerifyParams(const AudioFrame& ref_frame, const AudioFrame& test_frame) {
 }
 
 // Computes the best SNR based on the error between |ref_frame| and
-// |test_frame|. It allows for up to a 30 sample delay between the signals to
+// |test_frame|. It allows for a sample delay between the signals to
 // compensate for the resampling delay.
-float ComputeSNR(const AudioFrame& ref_frame, const AudioFrame& test_frame) {
+float ComputeSNR(const AudioFrame& ref_frame, const AudioFrame& test_frame,
+                 int max_delay) {
   VerifyParams(ref_frame, test_frame);
   float best_snr = 0;
   int best_delay = 0;
-  for (int delay = 0; delay < 30; delay++) {
+  for (int delay = 0; delay < max_delay; delay++) {
     float mse = 0;
     float variance = 0;
     for (int i = 0; i < ref_frame.samples_per_channel_ *
@@ -147,18 +148,23 @@ void OutputMixerTest::RunResampleTest(int src_channels,
       SetStereoFrame(&golden_frame_, kDstLeft, kDstRight, dst_sample_rate_hz);
   }
 
+  // The speex resampler has a known delay dependent on quality and rates,
+  // which we approximate here. Multiplying by two gives us a crude maximum
+  // for any resampling, as the old resampler typically (but not always)
+  // has lower delay.  The actual delay is calculated internally based on the
+  // filter length in the QualityMap.
+  static const int kInputKernelDelaySamples = 16*3;
+  const int max_delay = std::min(1.0f, 1/kResamplingFactor) *
+                        kInputKernelDelaySamples * dst_channels * 2;
   printf("(%d, %d Hz) -> (%d, %d Hz) ",  // SNR reported on the same line later.
       src_channels, src_sample_rate_hz, dst_channels, dst_sample_rate_hz);
   EXPECT_EQ(0, RemixAndResample(src_frame_, &resampler, &dst_frame_));
-  EXPECT_GT(ComputeSNR(golden_frame_, dst_frame_), 40.0f);
+  EXPECT_GT(ComputeSNR(golden_frame_, dst_frame_, max_delay), 40.0f);
 }
 
-TEST_F(OutputMixerTest, RemixAndResampleFailsWithBadSampleRate) {
-  SetMonoFrame(&dst_frame_, 10, 44100);
-  EXPECT_EQ(-1, RemixAndResample(src_frame_, &resampler_, &dst_frame_));
-  VerifyFramesAreEqual(src_frame_, dst_frame_);
-}
-
+// These two tests assume memcpy() (no delay and no filtering) for input
+// freq == output freq && same channels.  RemixAndResample uses 'Fixed'
+// resamplers to enable this behavior
 TEST_F(OutputMixerTest, RemixAndResampleCopyFrameSucceeds) {
   // Stereo -> stereo.
   SetStereoFrame(&src_frame_, 10, 10);
@@ -193,7 +199,7 @@ TEST_F(OutputMixerTest, RemixAndResampleSucceeds) {
   // We don't attempt to be exhaustive here, but just get good coverage. Some
   // combinations of rates will not be resampled, and some give an odd
   // resampling factor which makes it more difficult to evaluate.
-  const int kSampleRates[] = {16000, 32000, 48000};
+  const int kSampleRates[] = {16000, 32000, 44100, 48000};
   const int kSampleRatesSize = sizeof(kSampleRates) / sizeof(*kSampleRates);
   const int kChannels[] = {1, 2};
   const int kChannelsSize = sizeof(kChannels) / sizeof(*kChannels);
