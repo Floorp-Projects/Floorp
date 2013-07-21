@@ -549,7 +549,7 @@ KeymapWrapper::OnKeysChanged(GdkKeymap *aGdkKeymap,
 
     // Reset the bidi keyboard settings for the new GdkKeymap
     if (!sBidiKeyboard) {
-        nsresult rv = CallGetService("@mozilla.org/widget/bidikeyboard;1", &sBidiKeyboard);
+        CallGetService("@mozilla.org/widget/bidikeyboard;1", &sBidiKeyboard);
     }
     if (sBidiKeyboard) {
         sBidiKeyboard->Reset();
