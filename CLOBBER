@@ -17,4 +17,5 @@
 #
 # Modifying this file will now automatically clobber the buildbot machines \o/
 #
-Bug 880917 needs a clobber for the removal of testVersion.cpp
+Bug 886886 - replace fixed-ratio capture resampler in webrtc with speex resampler
+Requires a clobber due to modification of a .gypi file without a .gyp or configure.in change
