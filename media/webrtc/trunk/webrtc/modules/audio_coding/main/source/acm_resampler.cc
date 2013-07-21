@@ -47,8 +47,8 @@ int16_t ACMResampler::Resample10Msec(const int16_t* in_audio,
 
   int32_t ret;
   ResamplerType type;
-  type = (num_audio_channels == 1) ? kResamplerSynchronous :
-      kResamplerSynchronousStereo;
+  type = (num_audio_channels == 1) ? kResamplerFixedSynchronous :
+      kResamplerFixedSynchronousStereo;
 
   ret = resampler_.ResetIfNeeded(in_freq_hz, out_freq_hz, type);
   if (ret < 0) {
