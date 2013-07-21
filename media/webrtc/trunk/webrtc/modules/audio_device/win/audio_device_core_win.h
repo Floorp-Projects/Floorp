@@ -67,7 +67,7 @@ class ScopedCOMInitializer {
   }
 
   bool succeeded() const { return SUCCEEDED(hr_); }
- 
+
  private:
   void Initialize(COINIT init) {
     hr_ = CoInitializeEx(NULL, init);
@@ -268,8 +268,6 @@ private:
     WebRtc_Word32 _GetDefaultDevice(EDataFlow dir, ERole role, IMMDevice** ppDevice);
     WebRtc_Word32 _GetListDevice(EDataFlow dir, int index, IMMDevice** ppDevice);
 
-    void _Get44kHzDrift();
-
     // Converts from wide-char to UTF-8 if UNICODE is defined.
     // Does nothing if UNICODE is undefined.
     char* WideToUTF8(const TCHAR* src) const;
@@ -335,9 +333,6 @@ private:  // WASAPI
     WebRtc_UWord32                          _recChannels;
     UINT64                                  _readSamples;
     WebRtc_UWord32                          _sndCardRecDelay;
-
-    float                                   _sampleDriftAt48kHz;
-    float                                   _driftAccumulator;
 
     WebRtc_UWord16                          _recChannelsPrioList[2];
     WebRtc_UWord16                          _playChannelsPrioList[2];
