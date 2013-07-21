@@ -81,6 +81,8 @@ types.getType = function(type) {
 
     if (collection === "array") {
       return types.addArrayType(subtype);
+    } else if (collection === "nullable") {
+      return types.addNullableType(subtype);
     }
 
     if (registeredLifetimes.has(collection)) {
@@ -270,6 +272,24 @@ types.addActorType = function(name) {
     thawed: true
   });
   return type;
+}
+
+types.addNullableType = function(subtype) {
+  subtype = types.getType(subtype);
+  return types.addType("nullable:" + subtype.name, {
+    read: (value, ctx) => {
+      if (value == null) {
+        return value;
+      }
+      return subtype.read(value, ctx);
+    },
+    write: (value, ctx) => {
+      if (value == null) {
+        return value;
+      }
+      return subtype.write(value, ctx);
+    }
+  });
 }
 
 /**
