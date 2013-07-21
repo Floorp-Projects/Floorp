@@ -17,5 +17,5 @@
 #
 # Modifying this file will now automatically clobber the buildbot machines \o/
 #
-Bug 895670 - Remove SetupScreen and associated assets
-Android-only resource clobber (just rm objdir/mobile/android/base/res)
+Bug 886886 - replace fixed-ratio capture resampler in webrtc with speex resampler
+Requires a clobber due to modification of a .gypi file without a .gyp or configure.in change
