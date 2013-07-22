@@ -3205,6 +3205,7 @@ WifiWorker.prototype = {
     // hotspot status. Toggle settings to let gaia know that wifi hotspot
     // is enabled.
     this.tetheringSettings[SETTINGS_WIFI_TETHERING_ENABLED] = true;
+    this._oldWifiTetheringEnabledState = true;
     gSettingsService.createLock().set(
       SETTINGS_WIFI_TETHERING_ENABLED, true, null, "fromInternalSetting");
     // Check for the next request.
@@ -3216,6 +3217,7 @@ WifiWorker.prototype = {
     // hotspot status. Toggle settings to let gaia know that wifi hotspot
     // is disabled.
     this.tetheringSettings[SETTINGS_WIFI_TETHERING_ENABLED] = false;
+    this._oldWifiTetheringEnabledState = false;
     gSettingsService.createLock().set(
       SETTINGS_WIFI_TETHERING_ENABLED, false, null, "fromInternalSetting");
     // Check for the next request.
@@ -3333,6 +3335,7 @@ WifiWorker.prototype = {
           break;
         }
 
+        this._oldWifiTetheringEnabledState = this.tetheringSettings[SETTINGS_WIFI_TETHERING_ENABLED];
         this.handleWifiTetheringEnabled(aResult)
         break;
     };
