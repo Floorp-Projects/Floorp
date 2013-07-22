@@ -1450,6 +1450,17 @@ CodeGeneratorARM::visitCompareVAndBranch(LCompareVAndBranch *lir)
 }
 
 bool
+CodeGeneratorARM::visitBitAndAndBranch(LBitAndAndBranch *baab)
+{
+    if (baab->right()->isConstant())
+        masm.ma_tst(ToRegister(baab->left()), Imm32(ToInt32(baab->right())));
+    else
+        masm.ma_tst(ToRegister(baab->left()), ToRegister(baab->right()));
+    emitBranch(Assembler::NonZero, baab->ifTrue(), baab->ifFalse());
+    return true;
+}
+
+bool
 CodeGeneratorARM::visitUInt32ToDouble(LUInt32ToDouble *lir)
 {
     masm.convertUInt32ToDouble(ToRegister(lir->input()), ToFloatRegister(lir->output()));

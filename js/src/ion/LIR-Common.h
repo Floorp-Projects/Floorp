@@ -1677,6 +1677,33 @@ class LCompareVM : public LCallInstructionHelper<1, 2 * BOX_PIECES, 0>
     }
 };
 
+class LBitAndAndBranch : public LControlInstructionHelper<2, 2, 0>
+{
+  public:
+    LIR_HEADER(BitAndAndBranch)
+    LBitAndAndBranch(MBasicBlock *ifTrue, MBasicBlock *ifFalse)
+    {
+        setSuccessor(0, ifTrue);
+        setSuccessor(1, ifFalse);
+    }
+
+    MBasicBlock *ifTrue() const {
+        return getSuccessor(0);
+    }
+    MBasicBlock *ifFalse() const {
+        return getSuccessor(1);
+    }
+    const LAllocation *left() {
+        return getOperand(0);
+    }
+    const LAllocation *right() {
+        return getOperand(1);
+    }
+    MCompare *mir() {
+        return mir_->toCompare();
+    }
+};
+
 class LIsNullOrLikeUndefined : public LInstructionHelper<1, BOX_PIECES, 2>
 {
   public:
