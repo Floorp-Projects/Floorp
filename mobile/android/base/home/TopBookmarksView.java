@@ -106,6 +106,15 @@ public class TopBookmarksView extends GridView {
         });
     }
 
+    @Override
+    public void onDetachedFromWindow() {
+        super.onDetachedFromWindow();
+
+        mUrlOpenListener = null;
+        mPinBookmarkListener = null;
+        mThumbnailsCache = null;
+    }
+
     /**
      * {@inheritDoc}
      */
