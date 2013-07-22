@@ -78,6 +78,12 @@ var gTrackTests = [
   { name:"bogus.duh", type:"bogus/duh" }
 ];
 
+// Used by any media recorder test. Need one test file per decoder backend
+// currently supported by the media encoder.
+var gMediaRecorderTests = [
+  { name:"detodos.opus", type:"audio/ogg; codecs=opus", duration:2.9135 }
+];
+
 // These are files that we want to make sure we can play through.  We can
 // also check metadata.  Put files of the same type together in this list so if
 // something crashes we have some idea of which backend is responsible.

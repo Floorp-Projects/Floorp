@@ -1,0 +1,45 @@
+﻿<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test MediaRecorder Creation</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+var manager = new MediaTestManager;
+
+/**
+ * Starts a test on every media recorder file included to check that
+ * a media recorder object created with a stream derived from a media
+ * element with that file produces the correct starting attribute values.
+ */
+function startTest(test, token) {
+  var element = document.createElement('audio');
+
+  element.token = token;
+  manager.started(token);
+
+  element.src = test.name;
+  element.test = test;
+  element.stream = element.mozCaptureStreamUntilEnded();
+
+  var mediaRecorder = new MediaRecorder(element.stream);
+
+  is(mediaRecorder.stream, element.stream,
+     'Stream should be provided stream on creation');
+  is(mediaRecorder.mimeType, '',
+     'mimeType should be an empty string on creation');
+  is(mediaRecorder.state, 'inactive',
+     'state should be inactive on creation');
+
+  manager.finished(token);
+}
+
+manager.runTests(gMediaRecorderTests, startTest);
+</script>
+</pre>
+</body>
+</html>
