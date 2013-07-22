@@ -237,6 +237,7 @@
   <string name="home_last_tabs_title">&home_last_tabs_title;</string>
   <string name="home_last_tabs_open">&home_last_tabs_open;</string>
   <string name="home_visited_empty">&home_visited_empty;</string>
+  <string name="pin_bookmark_dialog_hint">&pin_bookmark_dialog_hint;</string>
 
   <string name="filepicker_title">&filepicker_title;</string>
   <string name="filepicker_audio_title">&filepicker_audio_title;</string>
