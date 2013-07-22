@@ -1157,12 +1157,13 @@ var GestureModule = {
  */
 var InputSourceHelper = {
   isPrecise: false,
+  touchIsActive: false,
 
   init: function ish_init() {
-    // debug feature, make all input imprecise
     window.addEventListener("mousemove", this, true);
     window.addEventListener("mousedown", this, true);
     window.addEventListener("touchstart", this, true);
+    window.addEventListener("touchend", this, true);
   },
 
   _precise: function () {
@@ -1180,20 +1181,31 @@ var InputSourceHelper = {
   },
 
   handleEvent: function ish_handleEvent(aEvent) {
-    if (aEvent.type == "touchstart") {
-      this._imprecise();
-      return;
-    }
-    switch (aEvent.mozInputSource) {
-      case Ci.nsIDOMMouseEvent.MOZ_SOURCE_MOUSE:
-      case Ci.nsIDOMMouseEvent.MOZ_SOURCE_PEN:
-      case Ci.nsIDOMMouseEvent.MOZ_SOURCE_ERASER:
-      case Ci.nsIDOMMouseEvent.MOZ_SOURCE_CURSOR:
-        this._precise();
-        break;
-
-      case Ci.nsIDOMMouseEvent.MOZ_SOURCE_TOUCH:
+    switch(aEvent.type) {
+      case "touchstart":
         this._imprecise();
+        this.touchIsActive = true;
+        break;
+      case "touchend":
+        this.touchIsActive = false;
+        break;
+      default:
+        // Ignore mouse movement when touch is active. Prevents both mouse scrollbars
+        // and touch scrollbars from displaying at the same time. Also works around
+        // odd win8 bug involving an erant mousemove event after a touch sequence
+        // starts (bug 896017).
+        if (this.touchIsActive) {
+          return;
+        }
+
+        switch (aEvent.mozInputSource) {
+          case Ci.nsIDOMMouseEvent.MOZ_SOURCE_MOUSE:
+          case Ci.nsIDOMMouseEvent.MOZ_SOURCE_PEN:
+          case Ci.nsIDOMMouseEvent.MOZ_SOURCE_ERASER:
+          case Ci.nsIDOMMouseEvent.MOZ_SOURCE_CURSOR:
+            this._precise();
+            break;
+        }
         break;
     }
   },
