@@ -8,11 +8,18 @@
 
 <script class="testbody" type="application/javascript">
 <![CDATA[
+
+var child;
+function childDone() {
+  child.close();
+  SimpleTest.executeSoon(SimpleTest.finish);
+}
+
 if (navigator.platform.indexOf("Mac") == 0) {
   todo(false, "Mac plugins do not run in windowed mode");
 } else {
-  window.open("plugin_clipping_helper_transformed.xhtml", "", "width=620,height=320");
   SimpleTest.waitForExplicitFinish();
+  child = window.open("plugin_clipping_helper_transformed.xhtml", "", "width=620,height=320");
 }
 ]]>
 </script>
