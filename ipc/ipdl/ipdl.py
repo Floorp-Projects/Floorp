@@ -42,6 +42,60 @@ includedirs = [ os.path.abspath(incdir) for incdir in options.includedirs ]
 if not len(files):
     op.error("No IPDL files specified")
 
+ipcmessagestartpath = os.path.join(headersdir, 'IPCMessageStart.h')
+
+# Compiling the IPDL files can take a long time, even on a fast machine.
+# Check to see whether we need to do any work.
+latestipdlmod = max(os.stat(f).st_mtime for f in files)
+
+def outputModTime(f):
+    # A non-existant file is newer than everything.
+    if not os.path.exists(f):
+        return 0
+    return os.stat(f).st_mtime
+
+# Because the IPDL headers are placed into directories reflecting their
+# namespace, collect a list here so we can easily map output names without
+# parsing the actual IPDL files themselves.
+headersmap = {}
+for (path, dirs, headers) in os.walk(headersdir):
+    for h in headers:
+        base = os.path.basename(h)
+        if base in headersmap:
+            root, ext = os.path.splitext(base)
+            print >>sys.stderr, 'A protocol named', root, 'exists in multiple namespaces'
+            sys.exit(1)
+        headersmap[base] = os.path.join(path, h)
+
+def outputfiles(f):
+    base = os.path.basename(f)
+    root, ext = os.path.splitext(base)
+
+    suffixes = ['']
+    if ext == '.ipdl':
+        suffixes += ['Child', 'Parent']
+
+    for suffix in suffixes:
+        yield os.path.join(cppdir, "%s%s.cpp" % (root, suffix))
+        header = "%s%s.h" % (root, suffix)
+        # If the header already exists on disk, use that.  Otherwise,
+        # just claim that the header is found in headersdir.
+        if header in headersmap:
+            yield headersmap[header]
+        else:
+            yield os.path.join(headersdir, header)
+
+def alloutputfiles():
+    for f in files:
+        for s in outputfiles(f):
+            yield s
+    yield ipcmessagestartpath
+
+earliestoutputmod = min(outputModTime(f) for f in alloutputfiles())
+
+if latestipdlmod < earliestoutputmod:
+    sys.exit(0)
+
 log(2, 'Generated C++ headers will be generated relative to "%s"', headersdir)
 log(2, 'Generated C++ sources will be generated in "%s"', cppdir)
 
@@ -114,5 +168,4 @@ COMPILE_ASSERT(LastMsgIndex <= 65536, need_to_update_IPC_MESSAGE_MACRO);
 #endif // ifndef IPCMessageStart_h
 """
 
-ipdl.writeifmodified(ipcmsgstart.getvalue(),
-                     os.path.join(headersdir, 'IPCMessageStart.h'))
+ipdl.writeifmodified(ipcmsgstart.getvalue(), ipcmessagestartpath)
