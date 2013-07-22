@@ -218,8 +218,8 @@ public class BookmarksPage extends HomeFragment {
                 isPrivate = tab.isPrivate();
             }
 
-            menu.findItem(R.id.open_new_tab).setVisible(!isPrivate);
-            menu.findItem(R.id.open_private_tab).setVisible(isPrivate);
+            menu.findItem(R.id.top_bookmarks_open_new_tab).setVisible(!isPrivate);
+            menu.findItem(R.id.top_bookmarks_open_private_tab).setVisible(isPrivate);
 
             if (info.isPinned) {
                 menu.findItem(R.id.top_bookmarks_pin).setVisible(false);
@@ -227,8 +227,8 @@ public class BookmarksPage extends HomeFragment {
                 menu.findItem(R.id.top_bookmarks_unpin).setVisible(false);
             }
         } else {
-            menu.findItem(R.id.open_new_tab).setVisible(false);
-            menu.findItem(R.id.open_private_tab).setVisible(false);
+            menu.findItem(R.id.top_bookmarks_open_new_tab).setVisible(false);
+            menu.findItem(R.id.top_bookmarks_open_private_tab).setVisible(false);
             menu.findItem(R.id.top_bookmarks_pin).setVisible(false);
             menu.findItem(R.id.top_bookmarks_unpin).setVisible(false);
         }
@@ -247,15 +247,15 @@ public class BookmarksPage extends HomeFragment {
         final Activity activity = getActivity();
 
         switch(item.getItemId()) {
-            case R.id.open_new_tab:
-            case R.id.open_private_tab: {
+            case R.id.top_bookmarks_open_new_tab:
+            case R.id.top_bookmarks_open_private_tab: {
                 if (info.url == null) {
                     Log.e(LOGTAG, "Can't open in new tab because URL is null");
                     break;
                 }
 
                 int flags = Tabs.LOADURL_NEW_TAB | Tabs.LOADURL_BACKGROUND;
-                if (item.getItemId() == R.id.open_private_tab)
+                if (item.getItemId() == R.id.top_bookmarks_open_private_tab)
                     flags |= Tabs.LOADURL_PRIVATE;
 
                 Tabs.getInstance().loadUrl(info.url, flags);
