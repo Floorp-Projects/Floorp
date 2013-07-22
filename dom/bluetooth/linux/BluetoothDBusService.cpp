@@ -1127,44 +1127,31 @@ static const DBusObjectPathVTable agentVtable = {
 // calling CreatePairedDevice, we'll get signal which should be passed to
 // device agent.
 static bool
-RegisterLocalAgent(const char* adapterPath,
-                   const char* agentPath,
-                   const char* capabilities)
+RegisterLocalAgent(const char* aAdapterPath,
+                   const char* aAgentPath,
+                   const char* aCapabilities)
 {
   MOZ_ASSERT(!NS_IsMainThread());
 
   if (!dbus_connection_register_object_path(gThreadConnection->GetConnection(),
-                                            agentPath,
+                                            aAgentPath,
                                             &agentVtable,
                                             NULL)) {
     BT_WARNING("%s: Can't register object path %s for agent!",
-                __FUNCTION__, agentPath);
-    return false;
-  }
-
-  DBusMessage* msg =
-    dbus_message_new_method_call("org.bluez", adapterPath,
-                                 DBUS_ADAPTER_IFACE, "RegisterAgent");
-  if (!msg) {
-    BT_WARNING("%s: Can't allocate new method call for agent!", __FUNCTION__);
-    return false;
-  }
-
-  if (!dbus_message_append_args(msg,
-                                DBUS_TYPE_OBJECT_PATH, &agentPath,
-                                DBUS_TYPE_STRING, &capabilities,
-                                DBUS_TYPE_INVALID)) {
-    BT_WARNING("%s: Couldn't append arguments to dbus message.", __FUNCTION__);
+                __FUNCTION__, aAgentPath);
     return false;
   }
 
   DBusError err;
   dbus_error_init(&err);
 
-  DBusMessage* reply =
-    dbus_connection_send_with_reply_and_block(gThreadConnection->GetConnection(),
-                                              msg, -1, &err);
-  dbus_message_unref(msg);
+  DBusMessage* reply = dbus_func_args_error(gThreadConnection->GetConnection(),
+                                            &err,
+                                            NS_ConvertUTF16toUTF8(sAdapterPath).get(),
+                                            DBUS_ADAPTER_IFACE, "RegisterAgent",
+                                            DBUS_TYPE_OBJECT_PATH, &aAgentPath,
+                                            DBUS_TYPE_STRING, &aCapabilities,
+                                            DBUS_TYPE_INVALID);
 
   if (!reply) {
     if (dbus_error_is_set(&err)) {
@@ -1183,7 +1170,6 @@ RegisterLocalAgent(const char* adapterPath,
     dbus_message_unref(reply);
   }
 
-  dbus_connection_flush(gThreadConnection->GetConnection());
   return true;
 }
 
