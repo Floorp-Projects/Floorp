@@ -391,7 +391,7 @@ function setIpForwardingEnabled(params, callback) {
   } else {
     // Don't disable ip forwarding because others interface still need it.
     // Send the dummy command to continue the function chain.
-    if (params.interfaceList.length > 1) {
+    if ("interfaceList" in params && params.interfaceList.length > 1) {
       command = DUMMY_COMMAND;
     } else {
       command = "ipfwd disable";
@@ -423,7 +423,7 @@ function stopTethering(params, callback) {
 
   // Don't stop tethering because others interface still need it.
   // Send the dummy to continue the function chain.
-  if (params.interfaceList.length > 1) {
+  if ("interfaceList" in params && params.interfaceList.length > 1) {
     command = DUMMY_COMMAND;
   } else {
     command = "tether stop";
@@ -470,7 +470,7 @@ function disableNat(params, callback) {
 
   // Don't disable nat because others interface still need it.
   // Send the dummy command to continue the function chain.
-  if (params.interfaceList.length > 1) {
+  if ("interfaceList" in params && params.interfaceList.length > 1) {
     command = DUMMY_COMMAND;
   } else {
     command = "nat disable " + params.internalIfname + " " +
@@ -626,8 +626,10 @@ function dumpParams(params, type) {
   debug("     ip: " + params.ip);
   debug("     link: " + params.link);
   debug("     prefix: " + params.prefix);
-  debug("     startIp: " + params.startIp);
-  debug("     endIp: " + params.endIp);
+  debug("     wifiStartIp: " + params.wifiStartIp);
+  debug("     wifiEndIp: " + params.wifiEndIp);
+  debug("     usbStartIp: " + params.usbStartIp);
+  debug("     usbEndIp: " + params.usbEndIp);
   debug("     dnsserver1: " + params.dns1);
   debug("     dnsserver2: " + params.dns2);
   debug("     internalIfname: " + params.internalIfname);
