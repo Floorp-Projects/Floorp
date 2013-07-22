@@ -116,7 +116,7 @@ public final class GeckoProfile {
             throw new IllegalArgumentException("context must be non-null");
         }
         try {
-            File guestDir = context.getDir("guest", context.MODE_PRIVATE);
+            File guestDir = context.getDir("guest", Context.MODE_PRIVATE);
             if (guestDir.exists())
                 guestDir.delete();
             guestDir.mkdir();

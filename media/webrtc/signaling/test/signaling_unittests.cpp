@@ -2283,15 +2283,10 @@ TEST_F(SignalingTest, missingUfrag)
   // FSM. This may change in the future.
   a1_.CreateOffer(constraints, OFFER_AV, SHOULD_SENDRECV_AV);
   a1_.SetLocal(TestObserver::OFFER, offer, true);
-  // Really we should detect failure at the SetRemote point,
-  // since without a ufrag, we aren't going to be successful.
-  // But for now, this isn't detected till SIPCC tries to impose
-  // the parameters on the ICE stack in SetLocal. Bug 892161.
-  a2_.SetRemote(TestObserver::OFFER, offer, true);
-  a2_.CreateAnswer(constraints, offer, OFFER_AV | ANSWER_AV);
-  a2_.SetLocal(TestObserver::ANSWER, a2_.answer(),
-               true, sipcc::PeerConnectionImpl::kSignalingHaveRemoteOffer);
-  // Since things have now failed, just stop.
+  // We now detect the missing ICE parameters at SetRemoteDescription
+  a2_.SetRemote(TestObserver::OFFER, offer, true, 
+    sipcc::PeerConnectionImpl::kSignalingStable);
+  ASSERT_TRUE(a2_.pObserver->state == TestObserver::stateError);
 }
 
 } // End namespace test.

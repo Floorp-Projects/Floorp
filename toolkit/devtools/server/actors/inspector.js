@@ -1382,6 +1382,46 @@ var WalkerActor = protocol.ActorClass({
   }),
 
   /**
+   * Removes a node from its parent node.
+   *
+   * @returns The node's nextSibling before it was removed.
+   */
+  removeNode: method(function(node) {
+    if ((node.rawNode.ownerDocument &&
+         node.rawNode.ownerDocument.documentElement === this.rawNode) ||
+         node.rawNode.nodeType === Ci.nsIDOMNode.DOCUMENT_NODE) {
+      throw Error("Cannot remove document or document elements.");
+    }
+    let nextSibling = this.nextSibling(node);
+    if (node.rawNode.parentNode) {
+      node.rawNode.parentNode.removeChild(node.rawNode);
+      // Mutation events will take care of the rest.
+    }
+    return nextSibling;
+  }, {
+    request: {
+      node: Arg(0, "domnode")
+    },
+    response: {
+      nextSibling: RetVal("domnode", { optional: true })
+    }
+  }),
+
+  /**
+   * Insert a node into the DOM.
+   */
+  insertBefore: method(function(node, parent, sibling) {
+    parent.rawNode.insertBefore(node.rawNode, sibling ? sibling.rawNode : null);
+  }, {
+    request: {
+      node: Arg(0, "domnode"),
+      parent: Arg(1, "domnode"),
+      sibling: Arg(2, "domnode", { optional: true })
+    },
+    response: {}
+  }),
+
+  /**
    * Get any pending mutation records.  Must be called by the client after
    * the `new-mutations` notification is received.  Returns an array of
    * mutation records.
@@ -2003,7 +2043,7 @@ function nodeDocument(node) {
 function DocumentWalker(aNode, aShow, aFilter, aExpandEntityReferences)
 {
   let doc = nodeDocument(aNode);
-  this.walker = doc.createTreeWalker(nodeDocument(aNode),
+  this.walker = doc.createTreeWalker(doc,
     aShow, aFilter, aExpandEntityReferences);
   this.walker.currentNode = aNode;
   this.filter = aFilter;

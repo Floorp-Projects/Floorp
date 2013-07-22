@@ -38,39 +38,9 @@ function defineNow(policy, now) {
   });
 }
 
-function getJustReporter(name, uri=DUMMY_URI, inspected=false) {
-  let branch = "healthreport.testing." + name + ".";
-
-  let prefs = new Preferences(branch + "healthreport.");
-  prefs.set("documentServerURI", uri);
-  prefs.set("dbName", name);
-
-  let reporter;
-
-  let policyPrefs = new Preferences(branch + "policy.");
-  let policy = new DataReportingPolicy(policyPrefs, prefs, {
-    onRequestDataUpload: function (request) {
-      reporter.requestDataUpload(request);
-    },
-
-    onNotifyDataPolicy: function (request) { },
-
-    onRequestRemoteDelete: function (request) {
-      reporter.deleteRemoteData(request);
-    },
-  });
-
-  let type = inspected ? InspectedHealthReporter : HealthReporter;
-  // Define per-instance state file so tests don't interfere with each other.
-  reporter = new type(branch + "healthreport.", policy, null,
-                      "state-" + name + ".json");
-
-  return reporter;
-}
-
 function getReporter(name, uri, inspected) {
   return Task.spawn(function init() {
-    let reporter = getJustReporter(name, uri, inspected);
+    let reporter = getHealthReporter(name, uri, inspected);
     yield reporter.init();
 
     yield reporter._providerManager.registerProviderFromType(
@@ -164,7 +134,7 @@ add_task(function test_shutdown_normal() {
 });
 
 add_task(function test_shutdown_storage_in_progress() {
-  let reporter = yield getJustReporter("shutdown_storage_in_progress", DUMMY_URI, true);
+  let reporter = yield getHealthReporter("shutdown_storage_in_progress", DUMMY_URI, true);
 
   reporter.onStorageCreated = function () {
     print("Faking shutdown during storage initialization.");
@@ -181,8 +151,8 @@ add_task(function test_shutdown_storage_in_progress() {
 // Ensure that a shutdown triggered while provider manager is initializing
 // results in shutdown and storage closure.
 add_task(function test_shutdown_provider_manager_in_progress() {
-  let reporter = yield getJustReporter("shutdown_provider_manager_in_progress",
-                                       DUMMY_URI, true);
+  let reporter = yield getHealthReporter("shutdown_provider_manager_in_progress",
+                                         DUMMY_URI, true);
 
   reporter.onProviderManagerInitialized = function () {
     print("Faking shutdown during provider manager initialization.");
@@ -199,7 +169,7 @@ add_task(function test_shutdown_provider_manager_in_progress() {
 
 // Simulates an error during provider manager initialization and verifies we shut down.
 add_task(function test_shutdown_when_provider_manager_errors() {
-  let reporter = yield getJustReporter("shutdown_when_provider_manager_errors",
+  let reporter = yield getHealthReporter("shutdown_when_provider_manager_errors",
                                        DUMMY_URI, true);
 
   reporter.onInitializeProviderManagerFinished = function () {
@@ -283,7 +253,7 @@ add_task(function test_collect_daily() {
 });
 
 add_task(function test_remove_old_lastpayload() {
-  let reporter = getJustReporter("remove-old-lastpayload");
+  let reporter = getHealthReporter("remove-old-lastpayload");
   let lastPayloadPath = reporter._state._lastPayloadPath;
   let paths = [lastPayloadPath, lastPayloadPath + ".tmp"];
   let createFiles = function () {
@@ -308,7 +278,7 @@ add_task(function test_remove_old_lastpayload() {
     do_check_true(o.removedOutdatedLastpayload);
 
     yield createFiles();
-    reporter = getJustReporter("remove-old-lastpayload");
+    reporter = getHealthReporter("remove-old-lastpayload");
     yield reporter.init();
     for (let path of paths) {
       do_check_true(yield OS.File.exists(path));
@@ -821,7 +791,7 @@ add_task(function test_basic_appinfo() {
 
 // Ensure collection occurs if upload is disabled.
 add_task(function test_collect_when_upload_disabled() {
-  let reporter = getJustReporter("collect_when_upload_disabled");
+  let reporter = getHealthReporter("collect_when_upload_disabled");
   reporter._policy.recordHealthReportUploadEnabled(false, "testing-collect");
   do_check_false(reporter._policy.healthReportUploadEnabled);
 
@@ -872,7 +842,7 @@ add_task(function test_failure_if_not_initialized() {
 add_task(function test_upload_on_init_failure() {
   let server = new BagheeraServer();
   server.start();
-  let reporter = yield getJustReporter("upload_on_init_failure", server.serverURI, true);
+  let reporter = yield getHealthReporter("upload_on_init_failure", server.serverURI, true);
   server.createNamespace(reporter.serverNamespace);
 
   reporter.onInitializeProviderManagerFinished = function () {
@@ -921,7 +891,7 @@ add_task(function test_upload_on_init_failure() {
 });
 
 add_task(function test_state_prefs_conversion_simple() {
-  let reporter = getJustReporter("state_prefs_conversion");
+  let reporter = getHealthReporter("state_prefs_conversion");
   let prefs = reporter._prefs;
 
   let lastSubmit = new Date();
@@ -949,7 +919,7 @@ add_task(function test_state_prefs_conversion_simple() {
 // If the saved JSON file does not contain an object, we should reset
 // automatically.
 add_task(function test_state_no_json_object() {
-  let reporter = getJustReporter("state_shared");
+  let reporter = getHealthReporter("state_shared");
   yield CommonUtils.writeJSON("hello", reporter._state._filename);
 
   try {
@@ -970,7 +940,7 @@ add_task(function test_state_no_json_object() {
 
 // If we encounter a future version, we reset state to the current version.
 add_task(function test_state_future_version() {
-  let reporter = getJustReporter("state_shared");
+  let reporter = getHealthReporter("state_shared");
   yield CommonUtils.writeJSON({v: 2, remoteIDs: ["foo"], lastPingTime: 2412},
                               reporter._state._filename);
   try {
@@ -991,7 +961,7 @@ add_task(function test_state_future_version() {
 
 // Test recovery if the state file contains invalid JSON.
 add_task(function test_state_invalid_json() {
-  let reporter = getJustReporter("state_shared");
+  let reporter = getHealthReporter("state_shared");
 
   let encoder = new TextEncoder();
   let arr = encoder.encode("{foo: bad value, 'bad': as2,}");
@@ -1052,7 +1022,7 @@ add_task(function test_state_multiple_remote_ids() {
 // If we have a state file then downgrade to prefs, the prefs should be
 // reimported and should supplement existing state.
 add_task(function test_state_downgrade_upgrade() {
-  let reporter = getJustReporter("state_shared");
+  let reporter = getHealthReporter("state_shared");
 
   let now = new Date();
 

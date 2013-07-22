@@ -43,7 +43,7 @@
 #include "nsFrameManager.h"
 #include "nsLayoutUtils.h"
 #include "nsViewManager.h"
-#include "nsCSSFrameConstructor.h"
+#include "RestyleManager.h"
 #include "nsCSSRuleProcessor.h"
 #include "nsStyleChangeList.h"
 #include "nsRuleNode.h"
@@ -68,6 +68,7 @@
 #include "mozilla/css/ImageLoader.h"
 #include "mozilla/dom/PBrowserChild.h"
 #include "mozilla/dom/TabChild.h"
+#include "RestyleManager.h"
 
 #ifdef IBMBIDI
 #include "nsBidiPresUtils.h"
@@ -931,6 +932,9 @@ nsPresContext::Init(nsDeviceContext* aDeviceContext)
 
   mAnimationManager = new nsAnimationManager(this);
 
+  // FIXME: Why is mozilla:: needed?
+  mRestyleManager = new mozilla::RestyleManager(this);
+
   if (mDocument->GetDisplayDocument()) {
     NS_ASSERTION(mDocument->GetDisplayDocument()->GetShell() &&
                  mDocument->GetDisplayDocument()->GetShell()->GetPresContext(),
@@ -1098,6 +1102,10 @@ nsPresContext::SetShell(nsIPresShell* aShell)
     if (mAnimationManager) {
       mAnimationManager->Disconnect();
       mAnimationManager = nullptr;
+    }
+    if (mRestyleManager) {
+      mRestyleManager->Disconnect();
+      mRestyleManager = nullptr;
     }
 
     if (IsRoot()) {
@@ -1729,7 +1737,7 @@ nsPresContext::RebuildAllStyleData(nsChangeHint aExtraHint)
   RebuildUserFontSet();
   AnimationManager()->KeyframesListIsDirty();
 
-  mShell->FrameConstructor()->RebuildAllStyleData(aExtraHint);
+  RestyleManager()->RebuildAllStyleData(aExtraHint);
 }
 
 void
@@ -1739,7 +1747,7 @@ nsPresContext::PostRebuildAllStyleDataEvent(nsChangeHint aExtraHint)
     // We must have been torn down. Nothing to do here.
     return;
   }
-  mShell->FrameConstructor()->PostRebuildAllStyleDataEvent(aExtraHint);
+  RestyleManager()->PostRebuildAllStyleDataEvent(aExtraHint);
 }
 
 void
