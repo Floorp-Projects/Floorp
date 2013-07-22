@@ -30,7 +30,7 @@ class SearchLoader {
 
     public static Loader<Cursor> createInstance(Context context, Bundle args) {
         if (args != null) {
-            final String searchTerm = args.getString(KEY_SEARCH_TERM, "");
+            final String searchTerm = args.getString(KEY_SEARCH_TERM);
             final boolean performEmptySearch = args.getBoolean(KEY_PERFORM_EMPTY_SEARCH, false);
             return new SearchCursorLoader(context, searchTerm, performEmptySearch);
         } else {
