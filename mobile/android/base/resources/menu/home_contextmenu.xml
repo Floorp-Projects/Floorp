@@ -5,25 +5,25 @@
 
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <item android:id="@+id/open_new_tab"
+    <item android:id="@+id/home_open_new_tab"
           android:title="@string/contextmenu_open_new_tab"/>
 
-    <item android:id="@+id/open_private_tab"
+    <item android:id="@+id/home_open_private_tab"
           android:title="@string/contextmenu_open_private_tab"/>
 
-    <item android:id="@+id/open_in_reader"
+    <item android:id="@+id/home_open_in_reader"
           android:title="@string/contextmenu_open_in_reader"/>
 
     <item android:id="@+id/home_share"
           android:title="@string/contextmenu_share"/>
 
-    <item android:id="@+id/edit_bookmark"
+    <item android:id="@+id/home_edit_bookmark"
           android:title="@string/contextmenu_edit_bookmark"/>
 
-    <item android:id="@+id/remove_history"
+    <item android:id="@+id/home_remove_history"
           android:title="@string/contextmenu_remove_history"/>
 
-    <item android:id="@+id/remove_bookmark"
+    <item android:id="@+id/home_remove_bookmark"
           android:title="@string/contextmenu_remove_bookmark"/>
 
     <item android:id="@+id/home_add_to_launcher"

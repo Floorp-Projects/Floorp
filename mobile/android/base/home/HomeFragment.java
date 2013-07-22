@@ -72,17 +72,17 @@ class HomeFragment extends Fragment {
         if (tab != null) {
             isPrivate = tab.isPrivate();
         }
-        menu.findItem(R.id.open_new_tab).setVisible(!isPrivate);
-        menu.findItem(R.id.open_private_tab).setVisible(isPrivate);
+        menu.findItem(R.id.home_open_new_tab).setVisible(!isPrivate);
+        menu.findItem(R.id.home_open_private_tab).setVisible(isPrivate);
 
         // Hide "Remove" item if there isn't a valid history ID
         if (info.rowId < 0) {
-            menu.findItem(R.id.remove_history).setVisible(false);
+            menu.findItem(R.id.home_remove_history).setVisible(false);
         }
         menu.setHeaderTitle(info.title);
 
-        menu.findItem(R.id.remove_history).setVisible(false);
-        menu.findItem(R.id.open_in_reader).setVisible(false);
+        menu.findItem(R.id.home_remove_history).setVisible(false);
+        menu.findItem(R.id.home_open_in_reader).setVisible(false);
     }
 
     @Override
@@ -128,15 +128,15 @@ class HomeFragment extends Fragment {
                 return true;
             }
 
-            case R.id.open_private_tab:
-            case R.id.open_new_tab: {
+            case R.id.home_open_private_tab:
+            case R.id.home_open_new_tab: {
                 if (info.url == null) {
                     Log.e(LOGTAG, "Can't open in new tab because URL is null");
                     break;
                 }
 
                 int flags = Tabs.LOADURL_NEW_TAB | Tabs.LOADURL_BACKGROUND;
-                if (item.getItemId() == R.id.open_private_tab)
+                if (item.getItemId() == R.id.home_open_private_tab)
                     flags |= Tabs.LOADURL_PRIVATE;
 
                 Tabs.getInstance().loadUrl(info.url, flags);
@@ -144,12 +144,12 @@ class HomeFragment extends Fragment {
                 return true;
             }
 
-            case R.id.edit_bookmark: {
+            case R.id.home_edit_bookmark: {
                 new EditBookmarkDialog(activity).show(info.url);
                 return true;
             }
 
-            case R.id.remove_bookmark: {
+            case R.id.home_remove_bookmark: {
                 final int rowId = info.rowId;
                 final String url = info.url;
                 final boolean inReadingList = info.inReadingList;
