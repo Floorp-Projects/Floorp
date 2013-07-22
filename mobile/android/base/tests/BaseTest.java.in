@@ -41,7 +41,7 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
     public static final int TEST_TALOS = 1;
 
     private static final String TARGET_PACKAGE_ID = "org.mozilla.gecko";
-    private static final String LAUNCH_ACTIVITY_FULL_CLASSNAME="@ANDROID_PACKAGE_NAME@.App";
+    private static final String LAUNCH_ACTIVITY_FULL_CLASSNAME ="@ANDROID_PACKAGE_NAME@.App";
     private static final int VERIFY_URL_TIMEOUT = 2000;
     private static final int MAX_LIST_ATTEMPTS = 3;
     private static final int MAX_WAIT_ENABLED_TEXT_MS = 10000;
@@ -64,6 +64,10 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
     private static final String BROWSER_TOOLBAR_ID = "browser_toolbar";
     protected static final String URL_EDIT_TEXT_ID = "url_edit_text";
     protected static final String URL_BAR_TITLE_ID = "url_bar_title";
+
+    // Strings for about:home
+    private static final String TITLE_PLACEHOLDER_TEXT = "Enter Search or Address";
+    private static final String ABOUT_HOME_BOOKMARKS_TAB_TITLE = "BOOKMARKS";
 
     private static Class<Activity> mLauncherActivityClass;
     private Activity mActivity;
@@ -634,8 +638,10 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
         }, MAX_WAIT_MS);
         mAsserter.ok(success, "waiting for add tab view", "add tab view available");
         mAsserter.ok(addTab.click(), "checking that add_tab clicked", "add_tab element clicked");
+        waitForText(ABOUT_HOME_BOOKMARKS_TAB_TITLE); // Make sure about:home is loaded
 
-        mDriver.findElement(mActivity, URL_EDIT_TEXT_ID).click();
+        // The new tab will have a blank title, so click on the urlbar placeholder text
+        mSolo.clickOnText(TITLE_PLACEHOLDER_TEXT);
 
         // cannot use loadUrl(): getText fails because we are using a different urlbar
         mActions.sendKeys(url);
