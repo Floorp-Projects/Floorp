@@ -14,14 +14,19 @@ import org.mozilla.gecko.db.BrowserDB.URLColumns;
 import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.home.BookmarksListAdapter.OnRefreshFolderListener;
 import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
+import org.mozilla.gecko.home.PinBookmarkDialog.OnBookmarkSelectedListener;
+import org.mozilla.gecko.home.TopBookmarksView.OnPinBookmarkListener;
 import org.mozilla.gecko.home.TopBookmarksView.Thumbnail;
+import org.mozilla.gecko.util.ThreadUtils;
 
+import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.res.Configuration;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.support.v4.app.FragmentManager;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.AsyncTaskLoader;
@@ -76,6 +81,9 @@ public class BookmarksPage extends HomeFragment {
     // Callback for thumbnail loader.
     private ThumbnailsLoaderCallbacks mThumbnailsLoaderCallbacks;
 
+    // Listener for pinning bookmarks.
+    private PinBookmarkListener mPinBookmarkListener;
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         BookmarksListView list = (BookmarksListView) inflater.inflate(R.layout.home_bookmarks_page, container, false);
@@ -98,12 +106,15 @@ public class BookmarksPage extends HomeFragment {
                     + " must implement HomePager.OnUrlOpenListener");
         }
 
+        mPinBookmarkListener = new PinBookmarkListener();
+
         mList = (BookmarksListView) view.findViewById(R.id.bookmarks_list);
         mList.setOnUrlOpenListener(listener);
 
         registerForContextMenu(mList);
 
         mTopBookmarks.setOnUrlOpenListener(listener);
+        mTopBookmarks.setOnPinBookmarkListener(mPinBookmarkListener);
     }
 
     @Override
@@ -143,6 +154,7 @@ public class BookmarksPage extends HomeFragment {
         mListAdapter = null;
         mTopBookmarks = null;
         mTopBookmarksAdapter = null;
+        mPinBookmarkListener = null;
         super.onDestroyView();
     }
 
@@ -163,6 +175,44 @@ public class BookmarksPage extends HomeFragment {
                                 .detach(this)
                                 .attach(this)
                                 .commitAllowingStateLoss();
+        }
+    }
+
+    /**
+     * Listener for pinning bookmarks.
+     */
+    private class PinBookmarkListener implements OnPinBookmarkListener,
+                                                 OnBookmarkSelectedListener {
+        // Tag for the PinBookmarkDialog fragment.
+        private static final String TAG_PIN_BOOKMARK = "pin_bookmark";
+
+        // Position of the pin.
+        private int mPosition;
+
+        @Override
+        public void onPinBookmark(int position) {
+            mPosition = position;
+
+            final FragmentManager manager = getActivity().getSupportFragmentManager();
+            PinBookmarkDialog dialog = (PinBookmarkDialog) manager.findFragmentByTag(TAG_PIN_BOOKMARK);
+            if (dialog == null) {
+                dialog = PinBookmarkDialog.newInstance();
+            }
+
+            dialog.setOnBookmarkSelectedListener(this);
+            dialog.show(manager, TAG_PIN_BOOKMARK);
+        }
+
+        @Override
+        public void onBookmarkSelected(final String url, final String title) {
+            final int position = mPosition;
+            final Context context = getActivity().getApplicationContext();
+            ThreadUtils.postToBackgroundThread(new Runnable() {
+                @Override
+                public void run() {
+                    BrowserDB.pinSite(context.getContentResolver(), url, title, position);
+                }
+            });
         }
     }
 
