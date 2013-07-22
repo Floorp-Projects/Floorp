@@ -7,43 +7,69 @@
 </head>
 <body>
 
-<p><input type="text" id="input">
-<p><embed id="p1" type="application/x-test" wmode="window"></embed><embed id="p2" type="application/x-test"></embed>
+<p><input type="text" id="input"></input>
+<p><embed id="p1" type="application/x-test" wmode="window" paintscript="didPaint('p1')">
+   <embed id="p2" type="application/x-test" paintscript="didPaint('p2')"></p>
 
-<script>
+<script type="text/javascript">
 var SimpleTest = window.opener.SimpleTest;
 var is = window.opener.is;
 var ok = window.opener.ok;
 var todo = window.opener.todo;
+var info = window.opener.info;
 
-netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-var gWindowUtils = window.QueryInterface(Ci.nsIInterfaceRequestor).
-                     getInterface(Ci.nsIDOMWindowUtils);
+SimpleTest.waitForExplicitFinish();
+
+// We don't want to trigger native mouse events until the document is fully
+// loaded and each plugin has painted once.
+var expectPaints = 2;
+var loaded = false;
+function didPaint(id) {
+  ok(--expectPaints >= 0, "Got plugin painted event from "+id);
+  document.getElementById(id).setAttribute("paintscript", null);
+  if (expectPaints == 0) {
+    if (document.readyState == "complete") {
+      theTest();
+    } else {
+      info("Waiting for document load to continue");
+      window.addEventListener("load", function() { theTest(); });
+    }
+  }
+}
+
+//
+// Begin the test
+//
+function theTest() {
+
+const Cc = SpecialPowers.Cc;
+const Ci = SpecialPowers.Ci;
+var gWindowUtils = SpecialPowers.wrap(window)
+                                .QueryInterface(Ci.nsIInterfaceRequestor)
+                                .getInterface(Ci.nsIDOMWindowUtils);
 
 var nativeMouseDown;
 var nativeMouseUp;
 
-SimpleTest.waitForExplicitFinish();
-
 function activatePlugin(id) {
   return function() {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 
     var element = document.getElementById(id);
     var bounds = element.getBoundingClientRect();
     var x = (bounds.left + window.mozInnerScreenX + 10);
     var y = (bounds.top + window.mozInnerScreenY + 10);
 
-    gWindowUtils.sendNativeMouseEvent(x, y, nativeMouseDown, 0, element);
-    gWindowUtils.sendNativeMouseEvent(x, y, nativeMouseUp, 0, element);
+    SimpleTest.executeSoon(function () {
+      gWindowUtils.sendNativeMouseEvent(x, y, nativeMouseDown, 0, element);
+      SimpleTest.executeSoon(function () {
+        gWindowUtils.sendNativeMouseEvent(x, y, nativeMouseUp, 0, element);
+      });
+    });
   };
 }
 
 function done() {
-  SimpleTest.finish();
-  window.close();
+  window.opener.childDone();
 }
 
 var step = 0;
@@ -64,8 +90,7 @@ function handleEvent(event) {
   is(event.target.id, s.id, "Check event target");
 
   if (s.action) {
-    // Do the action after this event cycle is done
-    setTimeout(s.action, 1000);
+    SimpleTest.executeSoon(s.action);
   }
 }
 
@@ -89,9 +114,12 @@ if (navigator.platform.indexOf("Mac") >= 0) {
   nativeMouseUp = 4; // MOUSEEVENTF_LEFTUP
   SimpleTest.waitForFocus(doTest, window);
 } else {
+  // XXX(johns): our gtk2 sendNativeMouseEvent doesn't support clicks
   todo(false, "Platform not supported");
   done();
 }
+
+} // function theTest
 </script>
 
 </body>
