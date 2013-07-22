@@ -23,6 +23,14 @@
          key="&toolboxOptionsButton.key;"
          oncommand="void(0);"
          modifiers="shift, accel"/>
+    <key id="toolbox-next-tool-key"
+         key="&toolboxNextTool.key;"
+         oncommand="void(0);"
+         modifiers="accel"/>
+    <key id="toolbox-previous-tool-key"
+         key="&toolboxPreviousTool.key;"
+         oncommand="void(0);"
+         modifiers="accel"/>
   </keyset>
 
   <notificationbox id="toolbox-notificationbox" flex="1">
