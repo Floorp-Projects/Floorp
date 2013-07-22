@@ -422,7 +422,7 @@ abstract public class BrowserApp extends GeckoApp
 
         mBrowserToolbar.setOnActivateListener(new BrowserToolbar.OnActivateListener() {
             public void onActivate() {
-                enterEditingMode(EditingTarget.CURRENT_TAB);
+                enterEditingMode(EditingTarget.CURRENT_TAB, HomePager.Page.VISITED);
             }
         });
 
@@ -1296,10 +1296,18 @@ abstract public class BrowserApp extends GeckoApp
     }
 
     public boolean enterEditingMode(EditingTarget target) {
-        return enterEditingMode(target, null);
+        return enterEditingMode(target, null, HomePager.Page.BOOKMARKS);
     }
 
-    boolean enterEditingMode(EditingTarget target, String url) {
+    public boolean enterEditingMode(EditingTarget target, String url) {
+        return enterEditingMode(target, url, HomePager.Page.BOOKMARKS);
+    }
+
+    public boolean enterEditingMode(EditingTarget target, HomePager.Page page) {
+        return enterEditingMode(target, null, page);
+    }
+
+    boolean enterEditingMode(EditingTarget target, String url, HomePager.Page page) {
         // If we're editing the current tab, show its URL.
         if (TextUtils.isEmpty(url) && target == EditingTarget.CURRENT_TAB) {
             Tab tab = Tabs.getInstance().getSelectedTab();
@@ -1314,7 +1322,7 @@ abstract public class BrowserApp extends GeckoApp
         }
 
         mBrowserToolbar.startEditing(target, url);
-        animateShowHomePager();
+        animateShowHomePager(page);
 
         return true;
     }
@@ -1359,11 +1367,11 @@ abstract public class BrowserApp extends GeckoApp
         }
     }
 
-    private void animateShowHomePager() {
-        showHomePagerWithAnimation(true, HomePager.Page.BOOKMARKS);
+    private void animateShowHomePager(HomePager.Page page) {
+        showHomePagerWithAnimation(true, page);
     }
 
-     private void showHomePager(HomePager.Page page) {
+    private void showHomePager(HomePager.Page page) {
         showHomePagerWithAnimation(false, page);
     }
 
