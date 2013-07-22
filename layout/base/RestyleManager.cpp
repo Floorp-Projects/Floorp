@@ -43,7 +43,6 @@ RestyleManager::RestyleManager(nsPresContext* aPresContext)
   , mRebuildAllStyleData(false)
   , mObservingRefreshDriver(false)
   , mInStyleRefresh(false)
-  , mPromoteReflowsToReframeRoot(false)
   , mHoverGeneration(0)
   , mRebuildAllExtraHint(nsChangeHint(0))
   , mAnimationGeneration(0)
@@ -616,21 +615,6 @@ RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
       frame = nullptr;
       if (!(hint & nsChangeHint_ReconstructFrame)) {
         continue;
-      }
-    }
-
-    if (mPromoteReflowsToReframeRoot &&
-        (hint & (nsChangeHint_ReconstructFrame | nsChangeHint_NeedReflow))) {
-      nsIFrame* reflowRoot = FindReflowRootFor(frame);
-      if (!reflowRoot) {
-        // Reflow root is the viewport. Better reframe the document.
-        // We don't do this for elements which are inside a reflow root --- they
-        // should be OK.
-        nsIContent* root = mPresContext->Document()->GetRootElement();
-        if (root) {
-          NS_UpdateHint(hint, nsChangeHint_ReconstructFrame);
-          content = root;
-        }
       }
     }
 
