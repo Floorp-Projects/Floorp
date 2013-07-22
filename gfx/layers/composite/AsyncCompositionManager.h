@@ -149,10 +149,14 @@ private:
    * chosen so that the layer's anchor point relative to aTransformedSubtreeRoot's
    * parent layer is the same as it was when aTransformedSubtreeRoot's
    * GetLocalTransform() was aPreviousTransformForRoot.
+   * This function will also adjust layers so that the given content document
+   * fixed position margins will be respected during asynchronous panning and
+   * zooming.
    */
   void AlignFixedLayersForAnchorPoint(Layer* aLayer,
                                       Layer* aTransformedSubtreeRoot,
-                                      const gfx3DMatrix& aPreviousTransformForRoot);
+                                      const gfx3DMatrix& aPreviousTransformForRoot,
+                                      const gfx::Margin& aFixedLayerMargins);
 
   /**
    * DRAWING PHASE ONLY

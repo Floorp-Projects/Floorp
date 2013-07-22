@@ -117,10 +117,96 @@ GetBaseTransform2D(Layer* aLayer, gfxMatrix* aTransform)
           aLayer->GetLocalTransform() : aLayer->GetTransform()).Is2D(aTransform);
 }
 
+static void
+TranslateShadowLayer2D(Layer* aLayer,
+                       const gfxPoint& aTranslation)
+{
+  gfxMatrix layerTransform;
+  if (!GetBaseTransform2D(aLayer, &layerTransform)) {
+    return;
+  }
+
+  // Apply the 2D translation to the layer transform.
+  layerTransform.x0 += aTranslation.x;
+  layerTransform.y0 += aTranslation.y;
+
+  // The transform already takes the resolution scale into account.  Since we
+  // will apply the resolution scale again when computing the effective
+  // transform, we must apply the inverse resolution scale here.
+  gfx3DMatrix layerTransform3D = gfx3DMatrix::From2D(layerTransform);
+  if (ContainerLayer* c = aLayer->AsContainerLayer()) {
+    layerTransform3D.Scale(1.0f/c->GetPreXScale(),
+                           1.0f/c->GetPreYScale(),
+                           1);
+  }
+  layerTransform3D.ScalePost(1.0f/aLayer->GetPostXScale(),
+                             1.0f/aLayer->GetPostYScale(),
+                             1);
+
+  LayerComposite* layerComposite = aLayer->AsLayerComposite();
+  layerComposite->SetShadowTransform(layerTransform3D);
+  layerComposite->SetShadowTransformSetByAnimation(false);
+
+  const nsIntRect* clipRect = aLayer->GetClipRect();
+  if (clipRect) {
+    nsIntRect transformedClipRect(*clipRect);
+    transformedClipRect.MoveBy(aTranslation.x, aTranslation.y);
+    layerComposite->SetShadowClipRect(&transformedClipRect);
+  }
+}
+
+static bool
+AccumulateLayerTransforms2D(Layer* aLayer,
+                            Layer* aAncestor,
+                            gfxMatrix& aMatrix)
+{
+  // Accumulate the transforms between this layer and the subtree root layer.
+  for (Layer* l = aLayer; l && l != aAncestor; l = l->GetParent()) {
+    gfxMatrix l2D;
+    if (!GetBaseTransform2D(l, &l2D)) {
+      return false;
+    }
+    aMatrix.Multiply(l2D);
+  }
+
+  return true;
+}
+
+static gfxPoint
+GetLayerFixedMarginsOffset(Layer* aLayer,
+                           const gfx::Margin& aFixedLayerMargins)
+{
+  // Work out the necessary translation, in root scrollable layer space.
+  // Because fixed layer margins are stored relative to the root scrollable
+  // layer, we can just take the difference between these values.
+  gfxPoint translation;
+  const gfxPoint& anchor = aLayer->GetFixedPositionAnchor();
+  const gfx::Margin& fixedMargins = aLayer->GetFixedPositionMargins();
+
+  if (fixedMargins.left >= 0) {
+    if (anchor.x > 0) {
+      translation.x -= aFixedLayerMargins.right - fixedMargins.right;
+    } else {
+      translation.x += aFixedLayerMargins.left - fixedMargins.left;
+    }
+  }
+
+  if (fixedMargins.top >= 0) {
+    if (anchor.y > 0) {
+      translation.y -= aFixedLayerMargins.bottom - fixedMargins.bottom;
+    } else {
+      translation.y += aFixedLayerMargins.top - fixedMargins.top;
+    }
+  }
+
+  return translation;
+}
+
 void
 AsyncCompositionManager::AlignFixedLayersForAnchorPoint(Layer* aLayer,
                                                         Layer* aTransformedSubtreeRoot,
-                                                        const gfx3DMatrix& aPreviousTransformForRoot)
+                                                        const gfx3DMatrix& aPreviousTransformForRoot,
+                                                        const gfx::Margin& aFixedLayerMargins)
 {
   if (aLayer != aTransformedSubtreeRoot && aLayer->GetIsFixedPosition() &&
       !aLayer->GetParent()->GetIsFixedPosition()) {
@@ -130,13 +216,9 @@ AsyncCompositionManager::AlignFixedLayersForAnchorPoint(Layer* aLayer,
 
     // Accumulate the transforms between this layer and the subtree root layer.
     gfxMatrix ancestorTransform;
-    for (Layer* l = aLayer->GetParent(); l != aTransformedSubtreeRoot;
-         l = l->GetParent()) {
-      gfxMatrix l2D;
-      if (!GetBaseTransform2D(l, &l2D)) {
-        return;
-      }
-      ancestorTransform.Multiply(l2D);
+    if (!AccumulateLayerTransforms2D(aLayer->GetParent(), aTransformedSubtreeRoot,
+                                     ancestorTransform)) {
+      return;
     }
 
     gfxMatrix oldRootTransform;
@@ -156,6 +238,11 @@ AsyncCompositionManager::AlignFixedLayersForAnchorPoint(Layer* aLayer,
     gfxMatrix newCumulativeTransformInverse = newCumulativeTransform;
     newCumulativeTransformInverse.Invert();
 
+    // Calculate any offset necessary, in previous transform sub-tree root
+    // space. This is used to make sure fixed position content respects
+    // content document fixed position margins.
+    gfxPoint offsetInOldSpace = GetLayerFixedMarginsOffset(aLayer, aFixedLayerMargins);
+
     // Now work out the translation necessary to make sure the layer doesn't
     // move given the new sub-tree root transform.
     // Transforming the locallyTransformedAnchor by oldCumulativeTransform
@@ -169,40 +256,18 @@ AsyncCompositionManager::AlignFixedLayersForAnchorPoint(Layer* aLayer,
     if (!GetBaseTransform2D(aLayer, &layerTransform)) {
       return;
     }
-    gfxPoint locallyTransformedAnchor =
-      layerTransform.Transform(aLayer->GetFixedPositionAnchor());
+
+    const gfxPoint& anchor = aLayer->GetFixedPositionAnchor();
+    gfxPoint locallyTransformedAnchor = layerTransform.Transform(anchor);
+    gfxPoint locallyTransformedOffsetAnchor = layerTransform.Transform(anchor + offsetInOldSpace);
+
     gfxPoint oldAnchorPositionInNewSpace =
       newCumulativeTransformInverse.Transform(
-        oldCumulativeTransform.Transform(locallyTransformedAnchor));
+        oldCumulativeTransform.Transform(locallyTransformedOffsetAnchor));
     gfxPoint translation = oldAnchorPositionInNewSpace - locallyTransformedAnchor;
 
     // Finally, apply the 2D translation to the layer transform.
-    layerTransform.x0 += translation.x;
-    layerTransform.y0 += translation.y;
-
-    // The transform already takes the resolution scale into account.  Since we
-    // will apply the resolution scale again when computing the effective
-    // transform, we must apply the inverse resolution scale here.
-    gfx3DMatrix layerTransform3D = gfx3DMatrix::From2D(layerTransform);
-    if (ContainerLayer* c = aLayer->AsContainerLayer()) {
-      layerTransform3D.Scale(1.0f/c->GetPreXScale(),
-                             1.0f/c->GetPreYScale(),
-                             1);
-    }
-    layerTransform3D.ScalePost(1.0f/aLayer->GetPostXScale(),
-                               1.0f/aLayer->GetPostYScale(),
-                               1);
-
-    LayerComposite* layerComposite = aLayer->AsLayerComposite();
-    layerComposite->SetShadowTransform(layerTransform3D);
-    layerComposite->SetShadowTransformSetByAnimation(false);
-
-    const nsIntRect* clipRect = aLayer->GetClipRect();
-    if (clipRect) {
-      nsIntRect transformedClipRect(*clipRect);
-      transformedClipRect.MoveBy(translation.x, translation.y);
-      layerComposite->SetShadowClipRect(&transformedClipRect);
-    }
+    TranslateShadowLayer2D(aLayer, translation);
 
     // The transform has now been applied, so there's no need to iterate over
     // child layers.
@@ -211,7 +276,8 @@ AsyncCompositionManager::AlignFixedLayersForAnchorPoint(Layer* aLayer,
 
   for (Layer* child = aLayer->GetFirstChild();
        child; child = child->GetNextSibling()) {
-    AlignFixedLayersForAnchorPoint(child, aTransformedSubtreeRoot, aPreviousTransformForRoot);
+    AlignFixedLayersForAnchorPoint(child, aTransformedSubtreeRoot,
+                                   aPreviousTransformForRoot, aFixedLayerMargins);
   }
 }
 
@@ -416,7 +482,7 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(TimeStamp aCurrentFram
 #endif
     oldTransform.Scale(resolution.scale, resolution.scale, 1);
 
-    AlignFixedLayersForAnchorPoint(aLayer, aLayer, oldTransform);
+    AlignFixedLayersForAnchorPoint(aLayer, aLayer, oldTransform, fixedLayerMargins);
 
     appliedTransform = true;
   }
@@ -517,7 +583,7 @@ AsyncCompositionManager::TransformScrollableLayer(Layer* aLayer, const LayoutDev
 
   // Make sure fixed position layers don't move away from their anchor points
   // when we're asynchronously panning or zooming
-  AlignFixedLayersForAnchorPoint(aLayer, aLayer, oldTransform);
+  AlignFixedLayersForAnchorPoint(aLayer, aLayer, oldTransform, fixedLayerMargins);
 }
 
 bool
