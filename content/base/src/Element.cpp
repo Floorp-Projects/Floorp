@@ -416,6 +416,34 @@ Element::WrapObject(JSContext *aCx, JS::Handle<JSObject*> aScope)
   return obj;
 }
 
+Element*
+Element::GetFirstElementChild() const
+{
+  uint32_t i, count = mAttrsAndChildren.ChildCount();
+  for (i = 0; i < count; ++i) {
+    nsIContent* child = mAttrsAndChildren.ChildAt(i);
+    if (child->IsElement()) {
+      return child->AsElement();
+    }
+  }
+  
+  return nullptr;
+}
+
+Element*
+Element::GetLastElementChild() const
+{
+  uint32_t i = mAttrsAndChildren.ChildCount();
+  while (i > 0) {
+    nsIContent* child = mAttrsAndChildren.ChildAt(--i);
+    if (child->IsElement()) {
+      return child->AsElement();
+    }
+  }
+  
+  return nullptr;
+}
+
 nsDOMTokenList*
 Element::GetClassList()
 {

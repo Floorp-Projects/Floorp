@@ -1590,17 +1590,10 @@ public:
     return rv.ErrorCode();
   }
 
-  // ChildNode methods
-  mozilla::dom::Element* GetPreviousElementSibling() const;
-  mozilla::dom::Element* GetNextElementSibling() const;
   /**
    * Remove this node from its parent, if any.
    */
   void Remove();
-
-  // ParentNode methods
-  mozilla::dom::Element* GetFirstElementChild() const;
-  mozilla::dom::Element* GetLastElementChild() const;
 
 protected:
 

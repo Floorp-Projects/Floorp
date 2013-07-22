@@ -1793,7 +1793,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsDocument)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mStateObjectCached)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mUndoManager)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTemplateContentsOwner)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mChildrenCollection)
 
   // Traverse all our nsCOMArrays.
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mStyleSheets)
@@ -1878,7 +1877,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDocument)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mCachedEncoder)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mUndoManager)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mTemplateContentsOwner)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mChildrenCollection)
 
   tmp->mParentDocument = nullptr;
 
@@ -9475,25 +9473,6 @@ nsIDocument::ObsoleteSheet(const nsAString& aSheetURI, ErrorResult& rv)
   if (NS_FAILED(res)) {
     rv.Throw(res);
   }
-}
-
-nsIHTMLCollection*
-nsIDocument::Children()
-{
-  if (!mChildrenCollection) {
-    mChildrenCollection = new nsContentList(this, kNameSpaceID_Wildcard,
-                                            nsGkAtoms::_asterix,
-                                            nsGkAtoms::_asterix,
-                                            false);
-  }
-
-  return mChildrenCollection;
-}
-
-uint32_t
-nsIDocument::ChildElementCount()
-{
-  return Children()->Length();
 }
 
 namespace mozilla {
