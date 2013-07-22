@@ -1116,86 +1116,84 @@ handle_error:
   return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
 }
 
-static const DBusObjectPathVTable agentVtable = {
-  NULL, AgentEventFilter, NULL, NULL, NULL, NULL
+class RegisterAgentReplyHandler : public DBusReplyHandler
+{
+public:
+  RegisterAgentReplyHandler(const DBusObjectPathVTable* aAgentVTable)
+    : mAgentVTable(aAgentVTable)
+  {
+    MOZ_ASSERT(aAgentVTable);
+  }
+
+  void Handle(DBusMessage* aReply)
+  {
+    MOZ_ASSERT(!NS_IsMainThread()); // DBus thread
+
+    if (!aReply || (dbus_message_get_type(aReply) == DBUS_MESSAGE_TYPE_ERROR)) {
+      return;
+    }
+
+    nsRefPtr<RawDBusConnection> threadConnection = gThreadConnection;
+
+    if (!threadConnection.get()) {
+      BT_WARNING("%s: DBus connection has been closed.", __FUNCTION__);
+      return;
+    }
+
+    // There is no "RegisterAgent" function defined in device interface.
+    // When we call "CreatePairedDevice", it will do device agent registration
+    // for us. (See maemo.org/api_refs/5.0/beta/bluez/adapter.html)
+    if (!dbus_connection_register_object_path(threadConnection->GetConnection(),
+                                              KEY_REMOTE_AGENT,
+                                              mAgentVTable,
+                                              NULL)) {
+      BT_WARNING("%s: Can't register object path %s for remote device agent!",
+                 __FUNCTION__, KEY_REMOTE_AGENT);
+      return;
+    }
+
+    NS_DispatchToMainThread(new PrepareProfileManagersRunnable());
+  }
+
+private:
+  const DBusObjectPathVTable* mAgentVTable;
 };
 
-// Local agent means agent for Adapter, not agent for Device. Some signals
-// will be passed to local agent, some will be passed to device agent.
-// For example, if a remote device would like to pair with us, then the
-// signal will be passed to local agent. If we start pairing process with
-// calling CreatePairedDevice, we'll get signal which should be passed to
-// device agent.
-static bool
-RegisterLocalAgent(const char* aAdapterPath,
-                   const char* aAgentPath,
-                   const char* aCapabilities)
+static bool RegisterAgent(const DBusObjectPathVTable* aAgentVTable)
 {
   MOZ_ASSERT(!NS_IsMainThread());
 
+  const char* agentPath = KEY_LOCAL_AGENT;
+  const char* capabilities = B2G_AGENT_CAPABILITIES;
+
+  // Local agent means agent for Adapter, not agent for Device. Some signals
+  // will be passed to local agent, some will be passed to device agent.
+  // For example, if a remote device would like to pair with us, then the
+  // signal will be passed to local agent. If we start pairing process with
+  // calling CreatePairedDevice, we'll get signal which should be passed to
+  // device agent.
   if (!dbus_connection_register_object_path(gThreadConnection->GetConnection(),
-                                            aAgentPath,
-                                            &agentVtable,
+                                            KEY_LOCAL_AGENT,
+                                            aAgentVTable,
                                             NULL)) {
     BT_WARNING("%s: Can't register object path %s for agent!",
-                __FUNCTION__, aAgentPath);
+               __FUNCTION__, KEY_LOCAL_AGENT);
     return false;
   }
 
-  DBusError err;
-  dbus_error_init(&err);
+  nsRefPtr<RegisterAgentReplyHandler> handler = new RegisterAgentReplyHandler(aAgentVTable);
+  MOZ_ASSERT(handler.get());
 
-  DBusMessage* reply = dbus_func_args_error(gThreadConnection->GetConnection(),
-                                            &err,
-                                            NS_ConvertUTF16toUTF8(sAdapterPath).get(),
-                                            DBUS_ADAPTER_IFACE, "RegisterAgent",
-                                            DBUS_TYPE_OBJECT_PATH, &aAgentPath,
-                                            DBUS_TYPE_STRING, &aCapabilities,
-                                            DBUS_TYPE_INVALID);
+  bool success = dbus_func_args_async(gThreadConnection->GetConnection(), -1,
+                                      RegisterAgentReplyHandler::Callback, handler.get(),
+                                      NS_ConvertUTF16toUTF8(sAdapterPath).get(),
+                                      DBUS_ADAPTER_IFACE, "RegisterAgent",
+                                      DBUS_TYPE_OBJECT_PATH, &agentPath,
+                                      DBUS_TYPE_STRING, &capabilities,
+                                      DBUS_TYPE_INVALID);
+  NS_ENSURE_TRUE(success, false);
 
-  if (!reply) {
-    if (dbus_error_is_set(&err)) {
-      if (!strcmp(err.name, "org.bluez.Error.AlreadyExists")) {
-        LOG_AND_FREE_DBUS_ERROR(&err);
-#ifdef DEBUG
-        BT_WARNING("Agent already registered, still returning true");
-#endif
-      } else {
-        LOG_AND_FREE_DBUS_ERROR(&err);
-        BT_WARNING("%s: Can't register agent!", __FUNCTION__);
-        return false;
-      }
-    }
-  } else {
-    dbus_message_unref(reply);
-  }
-
-  return true;
-}
-
-static bool
-RegisterAgent()
-{
-  MOZ_ASSERT(!NS_IsMainThread());
-
-  if (!RegisterLocalAgent(NS_ConvertUTF16toUTF8(sAdapterPath).get(),
-                          KEY_LOCAL_AGENT,
-                          B2G_AGENT_CAPABILITIES)) {
-    return false;
-  }
-
-  // There is no "RegisterAgent" function defined in device interface.
-  // When we call "CreatePairedDevice", it will do device agent registration
-  // for us. (See maemo.org/api_refs/5.0/beta/bluez/adapter.html)
-  if (!dbus_connection_register_object_path(gThreadConnection->GetConnection(),
-                                            KEY_REMOTE_AGENT,
-                                            &agentVtable,
-                                            NULL)) {
-    BT_WARNING("%s: Can't register object path %s for remote device agent!",
-               __FUNCTION__, KEY_REMOTE_AGENT);
-
-    return false;
-  }
+  handler.forget();
 
   return true;
 }
@@ -1203,8 +1201,12 @@ RegisterAgent()
 class PrepareAdapterRunnable : public nsRunnable
 {
 public:
-  nsresult Run()
+  NS_IMETHOD Run()
   {
+    static const DBusObjectPathVTable sAgentVTable = {
+      NULL, AgentEventFilter, NULL, NULL, NULL, NULL
+    };
+
     MOZ_ASSERT(!NS_IsMainThread());
     nsTArray<uint32_t> uuids;
 
@@ -1223,12 +1225,11 @@ public:
 #endif
     }
 
-    if(!RegisterAgent()) {
+    if(!RegisterAgent(&sAgentVTable)) {
       NS_WARNING("Failed to register agent");
       return NS_ERROR_FAILURE;
     }
 
-    NS_DispatchToMainThread(new PrepareProfileManagersRunnable());
     return NS_OK;
   }
 };
