@@ -362,7 +362,6 @@ CompositorD3D11::CreateRenderTarget(const gfx::IntRect& aRect,
   return rt;
 }
 
-// TODO[Bas] this method doesn't actually use aSource
 TemporaryRef<CompositingRenderTarget>
 CompositorD3D11::CreateRenderTargetFromSource(const gfx::IntRect &aRect,
                                               const CompositingRenderTarget* aSource)
@@ -373,6 +372,30 @@ CompositorD3D11::CreateRenderTargetFromSource(const gfx::IntRect &aRect,
 
   RefPtr<ID3D11Texture2D> texture;
   mDevice->CreateTexture2D(&desc, nullptr, byRef(texture));
+
+  if (aSource) {
+    const CompositingRenderTargetD3D11* sourceD3D11 =
+      static_cast<const CompositingRenderTargetD3D11*>(aSource);
+
+    D3D11_BOX srcBox;
+    srcBox.left = aRect.x;
+    srcBox.top = aRect.y;
+    srcBox.front = 0;
+    srcBox.right = aRect.XMost();
+    srcBox.bottom = aRect.YMost();
+    srcBox.back = 0;
+
+    const IntSize& srcSize = sourceD3D11->GetSize();
+    if (srcBox.right <= srcSize.width &&
+        srcBox.bottom <= srcSize.height) {
+      mContext->CopySubresourceRegion(texture, 0,
+                                      0, 0, 0,
+                                      sourceD3D11->GetD3D11Texture(), 0,
+                                      &srcBox);
+    } else {
+      NS_WARNING("Could not copy render target - source rect out of bounds");
+    }
+  }
 
   RefPtr<CompositingRenderTargetD3D11> rt =
     new CompositingRenderTargetD3D11(texture);
@@ -675,8 +698,7 @@ CompositorD3D11::UpdateRenderTarget()
     return;
   }
 
-  mDefaultRT = new CompositingRenderTargetD3D11(nullptr);
-  mDevice->CreateRenderTargetView(backBuf, nullptr, byRef(mDefaultRT->mRTView));
+  mDefaultRT = new CompositingRenderTargetD3D11(backBuf);
 }
 
 bool

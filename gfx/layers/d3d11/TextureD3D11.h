@@ -50,7 +50,6 @@ class CompositingRenderTargetD3D11 : public CompositingRenderTarget,
                                      public TextureSourceD3D11
 {
 public:
-  // Use aTexture == nullptr for rendering to the window
   CompositingRenderTargetD3D11(ID3D11Texture2D* aTexture);
 
   virtual TextureSourceD3D11* AsSourceD3D11() MOZ_OVERRIDE { return this; }
