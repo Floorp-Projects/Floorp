@@ -1855,20 +1855,50 @@ CodeGeneratorARM::visitAsmJSPassStackArg(LAsmJSPassStackArg *ins)
     return true;
 }
 
-
 bool
-CodeGeneratorARM::visitUDivOrMod(LUDivOrMod *ins)
+CodeGeneratorARM::visitUDiv(LUDiv *ins)
 {
-    //Register remainder = ToRegister(ins->remainder());
     Register lhs = ToRegister(ins->lhs());
     Register rhs = ToRegister(ins->rhs());
     Register output = ToRegister(ins->output());
 
-    //JS_ASSERT(remainder == edx);
-    //JS_ASSERT(lhs == eax);
+    masm.ma_udiv(lhs, rhs, output);
+    return true;
+}
+
+bool
+CodeGeneratorARM::visitUMod(LUMod *ins)
+{
+    Register lhs = ToRegister(ins->lhs());
+    Register rhs = ToRegister(ins->rhs());
+    Register output = ToRegister(ins->output());
+    Label notzero;
+    Label done;
+
+    masm.ma_cmp(rhs, Imm32(0));
+    masm.ma_b(&notzero, Assembler::NonZero);
+    masm.ma_mov(Imm32(0), output);
+    masm.ma_b(&done);
+
+    masm.bind(&notzero);
+    masm.ma_umod(lhs, rhs, output);
+
+    masm.bind(&done);
+    return true;
+}
+
+bool
+CodeGeneratorARM::visitSoftUDivOrMod(LSoftUDivOrMod *ins)
+{
+    Register lhs = ToRegister(ins->lhs());
+    Register rhs = ToRegister(ins->rhs());
+    Register output = ToRegister(ins->output());
+
+    JS_ASSERT(lhs == r0);
+    JS_ASSERT(rhs == r1);
     JS_ASSERT(ins->mirRaw()->isAsmJSUDiv() || ins->mirRaw()->isAsmJSUMod());
-    //JS_ASSERT_IF(ins->mirRaw()->isAsmUDiv(), output == eax);
-    //JS_ASSERT_IF(ins->mirRaw()->isAsmUMod(), output == edx);
+    JS_ASSERT_IF(ins->mirRaw()->isAsmJSUDiv(), output == r0);
+    JS_ASSERT_IF(ins->mirRaw()->isAsmJSUMod(), output == r1);
 
     Label afterDiv;
 

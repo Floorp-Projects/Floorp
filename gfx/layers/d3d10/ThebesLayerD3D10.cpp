@@ -32,7 +32,7 @@ namespace mozilla {
 namespace layers {
 
 ThebesLayerD3D10::ThebesLayerD3D10(LayerManagerD3D10 *aManager)
-  : ThebesLayer(aManager, NULL)
+  : ThebesLayer(aManager, nullptr)
   , LayerD3D10(aManager)
   , mCurrentSurfaceMode(SURFACE_OPAQUE)
 {
@@ -250,7 +250,7 @@ ThebesLayerD3D10::Validate(ReadbackProcessor *aReadback)
                                  D3D10_CPU_ACCESS_READ);
 
       nsRefPtr<ID3D10Texture2D> readbackTexture;
-      HRESULT hr = device()->CreateTexture2D(&desc, NULL, getter_AddRefs(readbackTexture));
+      HRESULT hr = device()->CreateTexture2D(&desc, nullptr, getter_AddRefs(readbackTexture));
       if (FAILED(hr)) {
         LayerManagerD3D10::ReportFailure(NS_LITERAL_CSTRING("ThebesLayerD3D10::Validate(): Failed to create texture"),
                                          hr);
@@ -333,12 +333,12 @@ ThebesLayerD3D10::FillTexturesBlackWhite(const nsIntRegion& aRegion, const nsInt
     // and probably not worth the win here as this will often be a single
     // rect.
     nsRefPtr<ID3D10RenderTargetView> oldRT;
-    device()->OMGetRenderTargets(1, getter_AddRefs(oldRT), NULL);
+    device()->OMGetRenderTargets(1, getter_AddRefs(oldRT), nullptr);
 
     nsRefPtr<ID3D10RenderTargetView> viewBlack;
     nsRefPtr<ID3D10RenderTargetView> viewWhite;
-    device()->CreateRenderTargetView(mTexture, NULL, getter_AddRefs(viewBlack));
-    device()->CreateRenderTargetView(mTextureOnWhite, NULL, getter_AddRefs(viewWhite));
+    device()->CreateRenderTargetView(mTexture, nullptr, getter_AddRefs(viewBlack));
+    device()->CreateRenderTargetView(mTextureOnWhite, nullptr, getter_AddRefs(viewWhite));
 
     D3D10_RECT oldScissor;
     UINT numRects = 1;
@@ -356,7 +356,7 @@ ThebesLayerD3D10::FillTexturesBlackWhite(const nsIntRegion& aRegion, const nsInt
     mD3DManager->SetViewport(nsIntSize(desc.Width, desc.Height));
 
     ID3D10RenderTargetView *views[2] = { viewBlack, viewWhite };
-    device()->OMSetRenderTargets(2, views, NULL);
+    device()->OMSetRenderTargets(2, views, nullptr);
 
     gfx3DMatrix transform;
     transform.Translate(gfxPoint3D(-aOffset.x, -aOffset.y, 0));
@@ -383,7 +383,7 @@ ThebesLayerD3D10::FillTexturesBlackWhite(const nsIntRegion& aRegion, const nsInt
     }
 
     views[0] = oldRT;
-    device()->OMSetRenderTargets(1, views, NULL);
+    device()->OMSetRenderTargets(1, views, nullptr);
     mD3DManager->SetViewport(oldVP);
     device()->RSSetScissorRects(1, &oldScissor);
   }
@@ -464,14 +464,14 @@ ThebesLayerD3D10::CreateNewTextures(const gfxIntSize &aSize, SurfaceMode aMode)
   HRESULT hr;
 
   if (!mTexture) {
-    hr = device()->CreateTexture2D(&desc, NULL, getter_AddRefs(mTexture));
+    hr = device()->CreateTexture2D(&desc, nullptr, getter_AddRefs(mTexture));
 
     if (FAILED(hr)) {
       NS_WARNING("Failed to create new texture for ThebesLayerD3D10!");
       return;
     }
 
-    hr = device()->CreateShaderResourceView(mTexture, NULL, getter_AddRefs(mSRView));
+    hr = device()->CreateShaderResourceView(mTexture, nullptr, getter_AddRefs(mSRView));
 
     if (FAILED(hr)) {
       NS_WARNING("Failed to create shader resource view for ThebesLayerD3D10.");
@@ -483,7 +483,7 @@ ThebesLayerD3D10::CreateNewTextures(const gfxIntSize &aSize, SurfaceMode aMode)
 
       if (!mD2DSurface || mD2DSurface->CairoStatus()) {
         NS_WARNING("Failed to create surface for ThebesLayerD3D10.");
-        mD2DSurface = NULL;
+        mD2DSurface = nullptr;
         return;
       }
     } else {
@@ -492,14 +492,14 @@ ThebesLayerD3D10::CreateNewTextures(const gfxIntSize &aSize, SurfaceMode aMode)
   }
 
   if (aMode == SURFACE_COMPONENT_ALPHA && !mTextureOnWhite) {
-    hr = device()->CreateTexture2D(&desc, NULL, getter_AddRefs(mTextureOnWhite));
+    hr = device()->CreateTexture2D(&desc, nullptr, getter_AddRefs(mTextureOnWhite));
 
     if (FAILED(hr)) {
       NS_WARNING("Failed to create new texture for ThebesLayerD3D10!");
       return;
     }
 
-    hr = device()->CreateShaderResourceView(mTextureOnWhite, NULL, getter_AddRefs(mSRViewOnWhite));
+    hr = device()->CreateShaderResourceView(mTextureOnWhite, nullptr, getter_AddRefs(mSRViewOnWhite));
 
     if (FAILED(hr)) {
       NS_WARNING("Failed to create shader resource view for ThebesLayerD3D10.");

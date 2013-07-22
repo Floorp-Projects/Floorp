@@ -51,17 +51,17 @@ NS_DEFINE_NAMED_CID(NS_SCRIPTABLE_REGION_CID);
 NS_DEFINE_NAMED_CID(NS_GFX_INITIALIZATION_CID);
 
 static const mozilla::Module::CIDEntry kThebesCIDs[] = {
-    { &kNS_FONT_ENUMERATOR_CID, false, NULL, nsThebesFontEnumeratorConstructor },
-    { &kNS_SCRIPTABLE_REGION_CID, false, NULL, nsScriptableRegionConstructor },
-    { &kNS_GFX_INITIALIZATION_CID, false, NULL, GfxInitializationConstructor },
-    { NULL }
+    { &kNS_FONT_ENUMERATOR_CID, false, nullptr, nsThebesFontEnumeratorConstructor },
+    { &kNS_SCRIPTABLE_REGION_CID, false, nullptr, nsScriptableRegionConstructor },
+    { &kNS_GFX_INITIALIZATION_CID, false, nullptr, GfxInitializationConstructor },
+    { nullptr }
 };
 
 static const mozilla::Module::ContractIDEntry kThebesContracts[] = {
     { "@mozilla.org/gfx/fontenumerator;1", &kNS_FONT_ENUMERATOR_CID },
     { "@mozilla.org/gfx/region;1", &kNS_SCRIPTABLE_REGION_CID },
     { "@mozilla.org/gfx/init;1", &kNS_GFX_INITIALIZATION_CID },
-    { NULL }
+    { nullptr }
 };
 
 static void
@@ -74,9 +74,9 @@ static const mozilla::Module kThebesModule = {
     mozilla::Module::kVersion,
     kThebesCIDs,
     kThebesContracts,
-    NULL,
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
+    nullptr,
     nsThebesGfxModuleDtor
 };
 
