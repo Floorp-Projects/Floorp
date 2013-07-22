@@ -389,8 +389,12 @@ endif
 ifdef MOZ_WEBGL
 webidl_files += \
   WebGLRenderingContext.webidl \
+  $(NULL)
+ifndef RELEASE_BUILD
+webidl_files += \
   WebGL2RenderingContext.webidl \
   $(NULL)
+endif
 endif
 
 ifdef MOZ_WEBRTC
