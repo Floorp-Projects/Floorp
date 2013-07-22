@@ -229,9 +229,11 @@ FENNEC_JAVA_FILES = \
   home/FadedTextView.java \
   home/FaviconsLoader.java \
   home/LastTabsPage.java \
+  home/PinBookmarkDialog.java \
   home/ReadingListPage.java \
   home/SearchEngine.java \
   home/SearchEngineRow.java \
+  home/SearchLoader.java \
   home/SimpleCursorLoader.java \
   home/SuggestClient.java \
   home/TopBookmarkItemView.java \
@@ -473,6 +475,7 @@ RES_LAYOUT = \
   res/layout/notification_icon_text.xml \
   res/layout/notification_progress.xml \
   res/layout/notification_progress_text.xml \
+  res/layout/pin_bookmark_dialog.xml \
   res/layout/preference_rightalign_icon.xml \
   res/layout/search_engine_row.xml \
   res/layout/site_setting_item.xml \

@@ -27,6 +27,11 @@ import java.util.Map;
 public class TopBookmarksView extends GridView {
     private static final String LOGTAG = "GeckoTopBookmarksView";
 
+    // Listener for pinning bookmarks.
+    public static interface OnPinBookmarkListener {
+        public void onPinBookmark(int position);
+    }
+
     // Max number of bookmarks that needs to be shown.
     private final int mMaxBookmarks;
 
@@ -35,6 +40,9 @@ public class TopBookmarksView extends GridView {
 
     // On URL open listener.
     private OnUrlOpenListener mUrlOpenListener;
+
+    // Pin bookmark listener.
+    private OnPinBookmarkListener mPinBookmarkListener;
 
     // Temporary cache to store the thumbnails until the next layout pass.
     private Map<String, Thumbnail> mThumbnailsCache;
@@ -83,8 +91,16 @@ public class TopBookmarksView extends GridView {
                 TopBookmarkItemView row = (TopBookmarkItemView) view;
                 String url = row.getUrl();
 
-                if (mUrlOpenListener != null && !TextUtils.isEmpty(url)) {
-                    mUrlOpenListener.onUrlOpen(url);
+                // If the url is empty, the user can pin a bookmark.
+                // If not, navigate to the page given by the url.
+                if (!TextUtils.isEmpty(url)) {
+                    if (mUrlOpenListener != null) {
+                        mUrlOpenListener.onUrlOpen(url);
+                    }
+                } else {
+                    if (mPinBookmarkListener != null) {
+                        mPinBookmarkListener.onPinBookmark(position);
+                    }
                 }
             }
         });
@@ -173,6 +189,15 @@ public class TopBookmarksView extends GridView {
      */
     public void setOnUrlOpenListener(OnUrlOpenListener listener) {
         mUrlOpenListener = listener;
+    }
+
+    /**
+     * Set a pin bookmark listener to be used by this view.
+     *
+     * @param listener A pin bookmark listener for this view.
+     */
+    public void setOnPinBookmarkListener(OnPinBookmarkListener listener) {
+        mPinBookmarkListener = listener;
     }
 
     /**

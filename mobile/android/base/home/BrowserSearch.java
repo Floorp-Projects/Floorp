@@ -11,43 +11,35 @@ import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
-import org.mozilla.gecko.db.BrowserContract.Combined;
-import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.BrowserDB.URLColumns;
 import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
+import org.mozilla.gecko.home.SearchLoader.SearchCursorLoader;
 import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.StringUtils;
 import org.mozilla.gecko.util.ThreadUtils;
-import org.mozilla.gecko.widget.FaviconView;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.app.Activity;
-import android.content.ContentResolver;
 import android.content.Context;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.LoaderManager;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.AsyncTaskLoader;
 import android.support.v4.content.Loader;
 import android.support.v4.widget.SimpleCursorAdapter;
 import android.text.TextUtils;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.LayoutInflater;
 import android.widget.AdapterView;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.ListView;
-import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -400,35 +392,8 @@ public class BrowserSearch extends HomeFragment
             mAdapter.notifyDataSetChanged();
 
             // Restart loaders with the new search term
-            getLoaderManager().restartLoader(SEARCH_LOADER_ID, null, mCursorLoaderCallbacks);
+            SearchLoader.restart(getLoaderManager(), SEARCH_LOADER_ID, mCursorLoaderCallbacks, mSearchTerm, false);
             filterSuggestions();
-        }
-    }
-
-    private static class SearchCursorLoader extends SimpleCursorLoader {
-        // Max number of search results
-        private static final int SEARCH_LIMIT = 100;
-
-        // The target search term associated with the loader
-        private final String mSearchTerm;
-
-        public SearchCursorLoader(Context context, String searchTerm) {
-            super(context);
-            mSearchTerm = searchTerm;
-        }
-
-        @Override
-        public Cursor loadCursor() {
-            if (TextUtils.isEmpty(mSearchTerm)) {
-                return null;
-            }
-
-            final ContentResolver cr = getContext().getContentResolver();
-            return BrowserDB.filter(cr, mSearchTerm, SEARCH_LIMIT);
-        }
-
-        public String getSearchTerm() {
-            return mSearchTerm;
         }
     }
 
@@ -616,7 +581,7 @@ public class BrowserSearch extends HomeFragment
         public Loader<Cursor> onCreateLoader(int id, Bundle args) {
             switch(id) {
             case SEARCH_LOADER_ID:
-                return new SearchCursorLoader(getActivity(), mSearchTerm);
+                return SearchLoader.createInstance(getActivity(), args);
 
             case FAVICONS_LOADER_ID:
                 return FaviconsLoader.createInstance(getActivity(), args);
