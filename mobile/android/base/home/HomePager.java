@@ -28,7 +28,7 @@ public class HomePager extends ViewPager {
     private volatile boolean mLoaded;
 
     // List of pages in order.
-    private enum Page {
+    public enum Page {
         VISITED,
         BOOKMARKS,
         READING_LIST
@@ -59,7 +59,7 @@ public class HomePager extends ViewPager {
      *
      * @param fm FragmentManager for the adapter
      */
-    public void show(FragmentManager fm) {
+    public void show(FragmentManager fm, Page page) {
         mLoaded = true;
         TabsAdapter adapter = new TabsAdapter(fm);
 
@@ -70,8 +70,7 @@ public class HomePager extends ViewPager {
 
         setAdapter(adapter);
 
-        // Set the bookmarks page as the landing page.
-        setCurrentItem(1, false);
+        setCurrentItem(adapter.getItemPosition(page), false);
         setVisibility(VISIBLE);
     }
 
@@ -121,6 +120,17 @@ public class HomePager extends ViewPager {
             TabInfo info = new TabInfo(page, clss, args, title);
             mTabs.add(info);
             notifyDataSetChanged();
+        }
+
+        public int getItemPosition(Page page) {
+            for (int i = 0; i < mTabs.size(); i++) {
+                TabInfo info = mTabs.get(i);
+                if (info.page == page) {
+                    return i;
+                }
+            }
+
+            return -1;
         }
 
         @Override

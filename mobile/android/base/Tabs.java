@@ -6,6 +6,7 @@
 package org.mozilla.gecko;
 
 import org.mozilla.gecko.db.BrowserDB;
+import org.mozilla.gecko.home.HomePager;
 import org.mozilla.gecko.sync.setup.SyncAccounts;
 import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.ThreadUtils;
@@ -57,6 +58,7 @@ public class Tabs implements GeckoEventListener {
     public static final int LOADURL_DELAY_LOAD = 16;
     public static final int LOADURL_DESKTOP = 32;
     public static final int LOADURL_BACKGROUND = 64;
+    public static final int LOADURL_READING_LIST = 128;
 
     private static final long PERSIST_TABS_AFTER_MILLISECONDS = 1000 * 5;
 
@@ -650,6 +652,7 @@ public class Tabs implements GeckoEventListener {
             args.put("delayLoad", delayLoad);
             args.put("desktopMode", desktopMode);
             args.put("selected", !background);
+            args.put("aboutHomePage", (flags & LOADURL_READING_LIST) != 0 ? HomePager.Page.READING_LIST : "");
 
             if ((flags & LOADURL_NEW_TAB) != 0) {
                 int tabId = getNextTabId();

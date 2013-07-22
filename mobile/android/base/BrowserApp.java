@@ -181,7 +181,7 @@ abstract public class BrowserApp extends GeckoApp
             case SELECTED:
                 if (Tabs.getInstance().isSelectedTab(tab)) {
                     if (isAboutHome(tab)) {
-                        showHomePager();
+                        showHomePager(tab.getAboutHomePage());
 
                         if (isDynamicToolbarEnabled()) {
                             // Show the toolbar.
@@ -466,6 +466,7 @@ abstract public class BrowserApp extends GeckoApp
         registerEventListener("Telemetry:Gather");
         registerEventListener("Settings:Show");
         registerEventListener("Updater:Launch");
+        registerEventListener("Reader:GoToReadingList");
 
         Distribution.init(this, getPackageResourcePath());
         JavaAddonManager.getInstance().init(getApplicationContext());
@@ -735,6 +736,7 @@ abstract public class BrowserApp extends GeckoApp
         unregisterEventListener("Telemetry:Gather");
         unregisterEventListener("Settings:Show");
         unregisterEventListener("Updater:Launch");
+        unregisterEventListener("Reader:GoToReadingList");
 
         if (AppConstants.MOZ_ANDROID_BEAM && Build.VERSION.SDK_INT >= 14) {
             NfcAdapter nfc = NfcAdapter.getDefaultAdapter(this);
@@ -1095,6 +1097,8 @@ abstract public class BrowserApp extends GeckoApp
                 startActivity(settingsIntent);
             } else if (event.equals("Updater:Launch")) {
                 handleUpdaterLaunch();
+            } else if (event.equals("Reader:GoToReadingList")) {
+                openReadingList();
             } else {
                 super.handleMessage(event, message);
             }
@@ -1248,6 +1252,10 @@ abstract public class BrowserApp extends GeckoApp
         mBrowserToolbar.cancelEdit();
     }
 
+    private void openReadingList() {
+        Tabs.getInstance().loadUrl(ABOUT_HOME, Tabs.LOADURL_READING_LIST);
+    }
+
     /* Favicon methods */
     private void loadFavicon(final Tab tab) {
         maybeCancelFaviconLoad(tab);
@@ -1356,14 +1364,14 @@ abstract public class BrowserApp extends GeckoApp
     }
 
     private void animateShowHomePager() {
-        showHomePagerWithAnimation(true);
+        showHomePagerWithAnimation(true, HomePager.Page.BOOKMARKS);
     }
 
-     private void showHomePager() {
-        showHomePagerWithAnimation(false);
+     private void showHomePager(HomePager.Page page) {
+        showHomePagerWithAnimation(false, page);
     }
 
-    private void showHomePagerWithAnimation(boolean animate) {
+    private void showHomePagerWithAnimation(boolean animate, HomePager.Page page) {
         if (mHomePager.isVisible()) {
             return;
         }
@@ -1378,7 +1386,7 @@ abstract public class BrowserApp extends GeckoApp
         }
 
         // FIXME: do animation if animate is true
-        mHomePager.show(getSupportFragmentManager());
+        mHomePager.show(getSupportFragmentManager(), page);
     }
 
     private void animateHideHomePager() {
