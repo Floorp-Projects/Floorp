@@ -4787,9 +4787,6 @@ IonBuilder::jsop_call(uint32_t argc, bool constructing)
     if (!callInfo.init(current, argc))
         return false;
 
-    if (gotLambda && targets.length() > 0)
-        callInfo.setLambda(true);
-
     // Try inlining
     InliningStatus status = inlineCallsite(targets, originals, gotLambda, callInfo);
     if (status == InliningStatus_Inlined)
