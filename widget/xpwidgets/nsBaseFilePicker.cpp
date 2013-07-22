@@ -113,8 +113,9 @@ private:
 
 NS_IMPL_ISUPPORTS1(nsBaseFilePickerEnumerator, nsISimpleEnumerator)
 
-nsBaseFilePicker::nsBaseFilePicker() :
-  mAddToRecentDocs(true)
+nsBaseFilePicker::nsBaseFilePicker()
+  : mAddToRecentDocs(true)
+  , mMode(nsIFilePicker::modeOpen)
 {
 
 }
@@ -133,7 +134,8 @@ NS_IMETHODIMP nsBaseFilePicker::Init(nsIDOMWindow *aParent,
   nsCOMPtr<nsIWidget> widget = WidgetUtils::DOMWindowToWidget(aParent);
   NS_ENSURE_TRUE(widget, NS_ERROR_FAILURE);
 
-  InitNative(widget, aTitle, aMode);
+  mMode = aMode;
+  InitNative(widget, aTitle);
 
   return NS_OK;
 }

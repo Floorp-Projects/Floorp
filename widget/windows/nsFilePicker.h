@@ -95,8 +95,7 @@ protected:
 
   /* method from nsBaseFilePicker */
   virtual void InitNative(nsIWidget *aParent,
-                          const nsAString& aTitle,
-                          int16_t aMode);
+                          const nsAString& aTitle);
   static void GetQualifiedPath(const PRUnichar *aInPath, nsString &aOutPath);
   void GetFilterListArray(nsString& aFilterList);
   bool FilePickerWrapper(OPENFILENAMEW* ofn, PickerType aType);
@@ -118,7 +117,6 @@ protected:
   nsCOMPtr<nsILoadContext> mLoadContext;
   nsCOMPtr<nsIWidget>    mParentWidget;
   nsString               mTitle;
-  int16_t                mMode;
   nsCString              mFile;
   nsString               mFilterList;
   int16_t                mSelectedType;

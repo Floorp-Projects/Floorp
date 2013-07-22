@@ -49,8 +49,7 @@ public:
 
 protected:
   /* method from nsBaseFilePicker */
-  virtual void InitNative(nsIWidget *aParent, const nsAString& aTitle,
-                          int16_t aMode);
+  virtual void InitNative(nsIWidget *aParent, const nsAString& aTitle);
 
 
   void GetFilterListArray(nsString& aFilterList);
@@ -60,7 +59,6 @@ protected:
 
   HWND                   mWnd;
   nsString               mTitle;
-  int16_t                mMode;
   nsCString              mFile;
   nsString               mDefault;
   nsString               mDefaultExtension;
