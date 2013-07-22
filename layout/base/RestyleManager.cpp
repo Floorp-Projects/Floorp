@@ -344,7 +344,7 @@ RestyleManager::RecomputePosition(nsIFrame* aFrame)
     }
 
     nsIFrame* cb = aFrame->GetContainingBlock();
-    const nsSize size = cb->GetSize();
+    const nsSize size = cb->GetContentRectRelativeToSelf().Size();
     const nsPoint oldOffsets = aFrame->GetRelativeOffset();
     nsMargin newOffsets;
 
