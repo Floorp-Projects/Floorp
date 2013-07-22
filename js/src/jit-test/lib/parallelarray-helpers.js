@@ -10,7 +10,7 @@
 // detect a failure.
 //
 // The maximum number of items processed by sequential warmups for
-// ParallelArrayBuild is:
+// ArrayBuildPar is:
 //      maxSeqItems = maxBailouts * numSlices * CHUNK_SIZE
 //
 // For maxBailouts = 3, maxSeqItems == 3 * 8 * 32 == 768
@@ -217,6 +217,25 @@ function assertParallelExecSucceeds(opFunction, cmpFunction) {
   cmpFunction(result);
 }
 
+// Compares an Array constructed in parallel against one constructed
+// sequentially. `func` should be the closure to provide as argument. For
+// example:
+//
+//    assertArraySeqParResultsEq([1, 2, 3], "map", i => i + 1)
+//
+// would check that `[1, 2, 3].map(i => i+1)` and `[1, 2, 3].mapPar(i => i+1)`
+// yield the same result.
+//
+// Based on `assertParallelExecSucceeds`
+function assertArraySeqParResultsEq(arr, op, func, cmpFunc) {
+  if (!cmpFunc)
+    cmpFunc = assertStructuralEq;
+  var expected = arr[op].apply(arr, [func]);
+  assertParallelExecSucceeds(
+    function (m) { return arr[op + "Par"].apply(arr, [func, m]); },
+    function (r) { cmpFunc(expected, r); });
+}
+
 // Compares a ParallelArray function against its equivalent on the
 // `Array` prototype. `func` should be the closure to provide as
 // argument. For example:
@@ -243,11 +262,10 @@ function compareAgainstArray(jsarray, opname, func, cmpFunction) {
 
 // Similar to `compareAgainstArray`, but for the `scan` method which
 // does not appear on array.
-function testScan(jsarray, func, cmpFunction) {
+function testArrayScanPar(jsarray, func, cmpFunction) {
   if (!cmpFunction)
     cmpFunction = assertStructuralEq;
   var expected = seq_scan(jsarray, func);
-  var parray = new ParallelArray(jsarray);
 
   // Unfortunately, it sometimes happens that running 'par' twice in a
   // row causes bailouts and other unfortunate things!
@@ -255,7 +273,7 @@ function testScan(jsarray, func, cmpFunction) {
   assertParallelExecSucceeds(
     function(m) {
       print(m.mode + " " + m.expect);
-      var p = parray.scan(func, m);
+      var p = jsarray.scanPar(func, m);
       return p;
     },
     function(r) {
@@ -283,7 +301,7 @@ function testScatter(opFunction, cmpFunction) {
 
 // Checks that `opFunction`, when run with each of the modes
 // in `modes`, returns the same value each time.
-function assertParallelArrayModesCommute(modes, opFunction) {
+function assertParallelModesCommute(modes, opFunction) {
   var expected = undefined;
   var acc = opFunction(modes[0]);
   assertParallelExecSucceeds(
