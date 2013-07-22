@@ -56,8 +56,8 @@ add_task(function test_locally_changed_keys() {
     };
 
     setBasicCredentials("johndoe", "password", passphrase);
-    Service.serverURL = server.baseURI;
-    Service.clusterURL = server.baseURI;
+    Service.serverURL = TEST_SERVER_URL;
+    Service.clusterURL = TEST_CLUSTER_URL;
 
     Service.engineManager.register(HistoryEngine);
 
