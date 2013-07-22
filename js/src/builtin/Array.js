@@ -1281,13 +1281,27 @@ function ArrayFilterPar(func, mode) {
 }
 
 /**
- * "Comprehension form": This is the function invoked for |Array.buildPar(len,
- * fn)| It creates a new array with length |len| where index |i| is equal to
- * |fn(i)|.
+ * "Comprehension form": This is the function invoked for
+ * |Array.{build,buildPar}(len, fn)| It creates a new array with length |len|
+ * where index |i| is equal to |fn(i)|.
  *
  * The final |mode| argument is an internal argument used only during our
  * unit-testing.
  */
+function ArrayStaticBuild(length, func) {
+  if (!IS_UINT32(length))
+    ThrowError(JSMSG_BAD_ARRAY_LENGTH);
+  if (!IsCallable(func))
+    ThrowError(JSMSG_NOT_FUNCTION, DecompileArg(1, func));
+
+  var buffer = NewDenseArray(length);
+
+  for (var i = 0; i < length; i++)
+    UnsafePutElements(buffer, i, func(i));
+
+  return buffer;
+}
+
 function ArrayStaticBuildPar(length, func, mode) {
   if (!IS_UINT32(length))
     ThrowError(JSMSG_BAD_ARRAY_LENGTH);
