@@ -87,6 +87,11 @@ class HomeFragment extends Fragment {
 
     @Override
     public boolean onContextItemSelected(MenuItem item) {
+        // onContextItemSelected() is first dispatched to the activity and
+        // then dispatched to its fragments. Since fragments cannot "override"
+        // menu item selection handling, it's better to avoid menu id collisions
+        // between the activity and its fragments.
+
         ContextMenuInfo menuInfo = item.getMenuInfo();
         if (menuInfo == null || !(menuInfo instanceof HomeContextMenuInfo)) {
             return false;
@@ -96,7 +101,7 @@ class HomeFragment extends Fragment {
         final Activity activity = getActivity();
 
         switch(item.getItemId()) {
-            case R.id.share: {
+            case R.id.home_share: {
                 if (info.url == null) {
                     Log.e(LOGTAG, "Can't share because URL is null");
                     break;
@@ -107,7 +112,7 @@ class HomeFragment extends Fragment {
                 return true;
             }
 
-            case R.id.add_to_launcher: {
+            case R.id.home_add_to_launcher: {
                 if (info.url == null) {
                     Log.e(LOGTAG, "Can't add to home screen because URL is null");
                     break;
