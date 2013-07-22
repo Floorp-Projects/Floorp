@@ -6,8 +6,8 @@
 package org.mozilla.gecko.home;
 
 import org.mozilla.gecko.EditBookmarkDialog;
-import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
@@ -52,7 +52,7 @@ class HomeFragment extends Fragment {
 
     @Override
     public void onCreateContextMenu(ContextMenu menu, View view, ContextMenuInfo menuInfo) {
-        if (!(menuInfo instanceof HomeContextMenuInfo)) {
+        if (menuInfo == null || !(menuInfo instanceof HomeContextMenuInfo)) {
             return;
         }
 
@@ -87,15 +87,13 @@ class HomeFragment extends Fragment {
 
     @Override
     public boolean onContextItemSelected(MenuItem item) {
-        final Activity activity = getActivity();
-        HomeContextMenuInfo info = null;
-
-        try {
-            ContextMenuInfo menuInfo = item.getMenuInfo();
-            info = (HomeContextMenuInfo) menuInfo;
-        } catch(ClassCastException e) {
-            throw new IllegalArgumentException("ContextMenuInfo is not of type HomeContextMenuInfo");
+        ContextMenuInfo menuInfo = item.getMenuInfo();
+        if (menuInfo == null || !(menuInfo instanceof HomeContextMenuInfo)) {
+            return false;
         }
+
+        HomeContextMenuInfo info = (HomeContextMenuInfo) menuInfo;
+        final Activity activity = getActivity();
 
         switch(item.getItemId()) {
             case R.id.share: {

@@ -7,16 +7,20 @@ package org.mozilla.gecko.home;
 
 import org.mozilla.gecko.Favicons;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.Tab;
+import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.db.BrowserContract.Bookmarks;
 import org.mozilla.gecko.db.BrowserContract.Thumbnails;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.BrowserDB.URLColumns;
 import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.home.BookmarksListAdapter.OnRefreshFolderListener;
+import org.mozilla.gecko.home.HomeListView.HomeContextMenuInfo;
 import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
 import org.mozilla.gecko.home.PinBookmarkDialog.OnBookmarkSelectedListener;
 import org.mozilla.gecko.home.TopBookmarksView.OnPinBookmarkListener;
 import org.mozilla.gecko.home.TopBookmarksView.Thumbnail;
+import org.mozilla.gecko.home.TopBookmarksView.TopBookmarksContextMenuInfo;
 import org.mozilla.gecko.util.ThreadUtils;
 
 import android.app.Activity;
@@ -31,9 +35,16 @@ import android.support.v4.app.LoaderManager;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.AsyncTaskLoader;
 import android.support.v4.content.Loader;
+import android.text.TextUtils;
+import android.util.Log;
+import android.view.ContextMenu;
+import android.view.ContextMenu.ContextMenuInfo;
 import android.view.LayoutInflater;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -111,10 +122,11 @@ public class BookmarksPage extends HomeFragment {
         mList = (BookmarksListView) view.findViewById(R.id.bookmarks_list);
         mList.setOnUrlOpenListener(listener);
 
-        registerForContextMenu(mList);
-
         mTopBookmarks.setOnUrlOpenListener(listener);
         mTopBookmarks.setOnPinBookmarkListener(mPinBookmarkListener);
+
+        registerForContextMenu(mList);
+        registerForContextMenu(mTopBookmarks);
     }
 
     @Override
@@ -176,6 +188,118 @@ public class BookmarksPage extends HomeFragment {
                                 .attach(this)
                                 .commitAllowingStateLoss();
         }
+    }
+
+    @Override
+    public void onCreateContextMenu(ContextMenu menu, View view, ContextMenuInfo menuInfo) {
+        if (menuInfo == null) {
+            return;
+        }
+
+        // HomeFragment will handle the default case.
+        if (menuInfo instanceof HomeContextMenuInfo) {
+            super.onCreateContextMenu(menu, view, menuInfo);
+        }
+
+        if (!(menuInfo instanceof TopBookmarksContextMenuInfo)) {
+            return;
+        }
+
+        MenuInflater inflater = new MenuInflater(view.getContext());
+        inflater.inflate(R.menu.top_bookmarks_contextmenu, menu);
+
+        TopBookmarksContextMenuInfo info = (TopBookmarksContextMenuInfo) menuInfo;
+
+        if (!TextUtils.isEmpty(info.url)) {
+            // Show Open Private Tab if we're in private mode, Open New Tab otherwise
+            boolean isPrivate = false;
+            Tab tab = Tabs.getInstance().getSelectedTab();
+            if (tab != null) {
+                isPrivate = tab.isPrivate();
+            }
+
+            menu.findItem(R.id.open_new_tab).setVisible(!isPrivate);
+            menu.findItem(R.id.open_private_tab).setVisible(isPrivate);
+
+            if (info.isPinned) {
+                menu.findItem(R.id.top_bookmarks_pin).setVisible(false);
+            } else {
+                menu.findItem(R.id.top_bookmarks_unpin).setVisible(false);
+            }
+        } else {
+            menu.findItem(R.id.open_new_tab).setVisible(false);
+            menu.findItem(R.id.open_private_tab).setVisible(false);
+            menu.findItem(R.id.top_bookmarks_pin).setVisible(false);
+            menu.findItem(R.id.top_bookmarks_unpin).setVisible(false);
+        }
+    }
+
+    @Override
+    public boolean onContextItemSelected(MenuItem item) {
+        ContextMenuInfo menuInfo = item.getMenuInfo();
+
+        // HomeFragment will handle the default case.
+        if (menuInfo == null || !(menuInfo instanceof TopBookmarksContextMenuInfo)) {
+            return false;
+        }
+
+        TopBookmarksContextMenuInfo info = (TopBookmarksContextMenuInfo) menuInfo;
+        final Activity activity = getActivity();
+
+        switch(item.getItemId()) {
+            case R.id.open_new_tab:
+            case R.id.open_private_tab: {
+                if (info.url == null) {
+                    Log.e(LOGTAG, "Can't open in new tab because URL is null");
+                    break;
+                }
+
+                int flags = Tabs.LOADURL_NEW_TAB | Tabs.LOADURL_BACKGROUND;
+                if (item.getItemId() == R.id.open_private_tab)
+                    flags |= Tabs.LOADURL_PRIVATE;
+
+                Tabs.getInstance().loadUrl(info.url, flags);
+                Toast.makeText(activity, R.string.new_tab_opened, Toast.LENGTH_SHORT).show();
+                return true;
+            }
+
+            case R.id.top_bookmarks_pin: {
+                final String url = info.url;
+                final String title = info.title;
+                final int position = info.position;
+                final Context context = getActivity().getApplicationContext();
+
+                ThreadUtils.postToBackgroundThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        BrowserDB.pinSite(context.getContentResolver(), url, title, position);
+                    }
+                });
+
+                return true;
+            }
+
+            case R.id.top_bookmarks_unpin: {
+                final int position = info.position;
+                final Context context = getActivity().getApplicationContext();
+
+                ThreadUtils.postToBackgroundThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        BrowserDB.unpinSite(context.getContentResolver(), position);
+                    }
+                });
+
+                return true;
+            }
+
+            case R.id.top_bookmarks_edit: {
+                mPinBookmarkListener.onPinBookmark(info.position);
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
