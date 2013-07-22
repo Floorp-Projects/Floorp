@@ -223,6 +223,9 @@ size. -->
 <!ENTITY contextmenu_edit_bookmark "Edit">
 <!ENTITY contextmenu_subscribe "Subscribe to Page">
 <!ENTITY contextmenu_site_settings "Edit Site Settings">
+<!ENTITY contextmenu_top_bookmarks_edit "Edit">
+<!ENTITY contextmenu_top_bookmarks_pin "Pin Site">
+<!ENTITY contextmenu_top_bookmarks_unpin "Unpin Site">
 
 <!ENTITY pref_titlebar_mode "Title bar">
 <!ENTITY pref_titlebar_mode_title "Show page title">

@@ -7,12 +7,16 @@ package org.mozilla.gecko.home;
 
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.ThumbnailHelper;
+import org.mozilla.gecko.db.BrowserDB.TopSitesCursorWrapper;
+import org.mozilla.gecko.db.BrowserDB.URLColumns;
 import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
 
 import android.content.Context;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.text.TextUtils;
 import android.util.AttributeSet;
+import android.view.ContextMenu.ContextMenuInfo;
 import android.view.View;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
@@ -43,6 +47,9 @@ public class TopBookmarksView extends GridView {
 
     // Pin bookmark listener.
     private OnPinBookmarkListener mPinBookmarkListener;
+
+    // Context menu info.
+    private TopBookmarksContextMenuInfo mContextMenuInfo;
 
     // Temporary cache to store the thumbnails until the next layout pass.
     private Map<String, Thumbnail> mThumbnailsCache;
@@ -102,6 +109,15 @@ public class TopBookmarksView extends GridView {
                         mPinBookmarkListener.onPinBookmark(position);
                     }
                 }
+            }
+        });
+
+        setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+            @Override
+            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+                Cursor cursor = (Cursor) parent.getItemAtPosition(position);
+                mContextMenuInfo = new TopBookmarksContextMenuInfo(view, position, id, cursor);
+                return showContextMenuForChild(TopBookmarksView.this);
             }
         });
     }
@@ -191,6 +207,11 @@ public class TopBookmarksView extends GridView {
         }
     }
 
+    @Override
+    public ContextMenuInfo getContextMenuInfo() {
+        return mContextMenuInfo;
+    }
+
     /**
      * Set an url open listener to be used by this view.
      *
@@ -253,6 +274,27 @@ public class TopBookmarksView extends GridView {
                     view.displayFavicon(thumbnail.bitmap);
                 }
             }
+        }
+    }
+
+    /**
+     * A ContextMenuInfo for TopBoomarksView that adds details from the cursor.
+     */
+    public static class TopBookmarksContextMenuInfo extends AdapterContextMenuInfo {
+        public String url;
+        public String title;
+        public boolean isPinned;
+
+        public TopBookmarksContextMenuInfo(View targetView, int position, long id, Cursor cursor) {
+            super(targetView, position, id);
+
+            if (cursor == null) {
+                return;
+            }
+
+            url = cursor.getString(cursor.getColumnIndexOrThrow(URLColumns.URL));
+            title = cursor.getString(cursor.getColumnIndexOrThrow(URLColumns.TITLE));
+            isPinned = ((TopSitesCursorWrapper) cursor).isPinned();
         }
     }
 }
