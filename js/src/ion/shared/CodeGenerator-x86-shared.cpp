@@ -128,17 +128,6 @@ CodeGeneratorX86Shared::visitTestDAndBranch(LTestDAndBranch *test)
     return true;
 }
 
-bool
-CodeGeneratorX86Shared::visitBitAndAndBranch(LBitAndAndBranch *baab)
-{
-    if (baab->right()->isConstant())
-        masm.testl(ToRegister(baab->left()), Imm32(ToInt32(baab->right())));
-    else
-        masm.testl(ToRegister(baab->left()), ToRegister(baab->right()));
-    emitBranch(Assembler::NonZero, baab->ifTrue(), baab->ifFalse());
-    return true;
-}
-
 void
 CodeGeneratorX86Shared::emitCompare(MCompare::CompareType type, const LAllocation *left, const LAllocation *right)
 {
