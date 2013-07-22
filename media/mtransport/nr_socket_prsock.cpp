@@ -391,8 +391,10 @@ int NrSocket::sendto(const void *msg, size_t len,
   // TODO: Convert flags?
   status = PR_SendTo(fd_, msg, len, flags, &naddr, PR_INTERVAL_NO_WAIT);
   if (status < 0 || (size_t)status != len) {
-    r_log_e(LOG_GENERIC, LOG_INFO, "Error in sendto %s", to->as_string);
+    if (PR_GetError() == PR_WOULD_BLOCK_ERROR)
+      ABORT(R_WOULDBLOCK);
 
+    r_log_e(LOG_GENERIC, LOG_INFO, "Error in sendto %s", to->as_string);
     ABORT(R_IO_ERROR);
   }
 
