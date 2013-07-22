@@ -12,6 +12,13 @@ set -e
 ac_add_options() {
   local opt
   for opt; do
+    case "$opt" in
+    --target=*)
+      echo "------BEGIN_MK_OPTION"
+      echo $opt | sed s/--target/CONFIG_GUESS/
+      echo "------END_MK_OPTION"
+      ;;
+    esac
     echo "------BEGIN_AC_OPTION"
     echo $opt
     echo "------END_AC_OPTION"

@@ -283,6 +283,10 @@ class MozbuildObject(ProcessExecutionMixin):
     @property
     def _config_guess(self):
         if self._config_guess_output is None:
+            make_extra = dict(m.split('=', 1) for m in self.mozconfig['make_extra'])
+            self._config_guess_output = make_extra.get('CONFIG_GUESS', None)
+
+        if self._config_guess_output is None:
             p = os.path.join(self.topsrcdir, 'build', 'autoconf',
                 'config.guess')
             args = self._normalize_command([p], True)

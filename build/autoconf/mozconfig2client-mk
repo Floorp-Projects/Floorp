@@ -19,7 +19,17 @@ EOF
 }
 
 ac_add_options() {
-  echo "# $* is used by configure (not client.mk)"
+  for _opt
+  do
+    case "$_opt" in
+    --target=*)
+      echo $_opt | sed s/--target/CONFIG_GUESS/
+      ;;
+    *)
+      echo "# $_opt is used by configure (not client.mk)"
+      ;;
+    esac
+  done
 }
 
 ac_add_app_options() {
