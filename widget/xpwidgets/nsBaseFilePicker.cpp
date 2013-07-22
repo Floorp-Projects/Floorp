@@ -292,6 +292,13 @@ nsBaseFilePicker::SetAddToRecentDocs(bool aFlag)
 }
 
 NS_IMETHODIMP
+nsBaseFilePicker::GetMode(int16_t* aMode)
+{
+  *aMode = mMode;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsBaseFilePicker::GetDomfile(nsIDOMFile** aDomfile)
 {
   nsCOMPtr<nsIFile> localFile;
