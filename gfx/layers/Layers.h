@@ -859,7 +859,7 @@ public:
    * same position when compositing the layer tree with a transformation
    * (such as when asynchronously scrolling and zooming).
    */
-  void SetFixedPositionAnchor(const gfxPoint& aAnchor)
+  void SetFixedPositionAnchor(const LayerPoint& aAnchor)
   {
     if (mAnchor != aAnchor) {
       MOZ_LAYERS_LOG_IF_SHADOWABLE(this, ("Layer::Mutated(%p) FixedPositionAnchor", this));
@@ -905,7 +905,7 @@ public:
   float GetPostXScale() const { return mPostXScale; }
   float GetPostYScale() const { return mPostYScale; }
   bool GetIsFixedPosition() { return mIsFixedPosition; }
-  gfxPoint GetFixedPositionAnchor() { return mAnchor; }
+  LayerPoint GetFixedPositionAnchor() { return mAnchor; }
   const gfx::Margin& GetFixedPositionMargins() { return mMargins; }
   Layer* GetMaskLayer() const { return mMaskLayer; }
 
@@ -1260,7 +1260,7 @@ protected:
   bool mUseClipRect;
   bool mUseTileSourceRect;
   bool mIsFixedPosition;
-  gfxPoint mAnchor;
+  LayerPoint mAnchor;
   gfx::Margin mMargins;
   DebugOnly<uint32_t> mDebugColorIndex;
   // If this layer is used for OMTA, then this counter is used to ensure we

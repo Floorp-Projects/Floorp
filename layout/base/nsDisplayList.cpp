@@ -3094,16 +3094,16 @@ nsDisplayFixedPosition::BuildLayer(nsDisplayListBuilder* aBuilder,
   // coordinate-space of the built layer.
   float factor = presContext->AppUnitsPerDevPixel();
   nsPoint origin = viewportFrame->GetOffsetToCrossDoc(ReferenceFrame());
-  gfxRect anchorRect(NSAppUnitsToFloatPixels(origin.x, factor) *
-                       aContainerParameters.mXScale,
-                     NSAppUnitsToFloatPixels(origin.y, factor) *
-                       aContainerParameters.mYScale,
-                     NSAppUnitsToFloatPixels(containingBlockSize.width, factor) *
-                       aContainerParameters.mXScale,
-                     NSAppUnitsToFloatPixels(containingBlockSize.height, factor) *
-                       aContainerParameters.mYScale);
+  LayerRect anchorRect(NSAppUnitsToFloatPixels(origin.x, factor) *
+                         aContainerParameters.mXScale,
+                       NSAppUnitsToFloatPixels(origin.y, factor) *
+                         aContainerParameters.mYScale,
+                       NSAppUnitsToFloatPixels(containingBlockSize.width, factor) *
+                         aContainerParameters.mXScale,
+                       NSAppUnitsToFloatPixels(containingBlockSize.height, factor) *
+                         aContainerParameters.mYScale);
 
-  gfxPoint anchor(anchorRect.x, anchorRect.y);
+  LayerPoint anchor = anchorRect.TopLeft();
 
   const nsStylePosition* position = mFixedPosFrame->StylePosition();
   if (position->mOffset.GetRightUnit() != eStyleUnit_Auto)
