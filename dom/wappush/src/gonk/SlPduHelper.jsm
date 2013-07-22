@@ -26,61 +26,61 @@ this.PduHelper = {
   /**
    * @param data
    *        A wrapped object containing raw PDU data.
-   * @param contentType [optional]
+   * @param contentType
    *        Content type of incoming SL message, should be "text/vnd.wap.sl" or
    *        "application/vnd.wap.slc".
-   *        Default value is "application/vnd.wap.slc".
    *
-   * @return A SL message object or null in case of errors found.
+   * @return A message object containing attribute content and contentType.
+   *         |content| will contain string of decoded SL message if successfully
+   *         decoded, or raw data if failed.
+   *         |contentType| will be string representing corresponding type of
+   *         content.
    */
   parse: function parse_sl(data, contentType) {
-    let msg = {};
+    // We only need content and contentType
+    let msg = {
+      contentType: contentType
+    };
 
     /**
      * Message is compressed by WBXML, decode into string.
      *
      * @see WAP-192-WBXML-20010725-A
      */
-    if (!contentType || contentType === "application/vnd.wap.slc") {
+    if (contentType === "application/vnd.wap.slc") {
       let appToken = {
         publicId: PUBLIC_IDENTIFIER_SL,
-        tagToken: SL_TAG_FIELDS,
-        attrToken: SL_ATTRIBUTE_FIELDS,
+        tagTokenList: SL_TAG_FIELDS,
+        attrTokenList: SL_ATTRIBUTE_FIELDS,
+        valueTokenList: SL_VALUE_FIELDS,
         globalTokenOverride: null
       }
 
-      WBXML.PduHelper.parse(data, appToken, msg);
+      try {
+        let parseResult = WBXML.PduHelper.parse(data, appToken);
+        msg.content = parseResult.content;
+        msg.contentType = "text/vnd.wap.sl";
+      } catch (e) {
+        // Provide raw data if we failed to parse.
+        msg.content = data.array;
+      }
 
-      msg.contentType = "text/vnd.wap.sl";
       return msg;
     }
 
     /**
      * Message is plain text, transform raw to string.
      */
-    if (contentType === "text/vnd.wap.sl") {
+    try {
       let stringData = WSP.Octet.decodeMultiple(data, data.array.length);
-      msg.publicId = PUBLIC_IDENTIFIER_SL;
       msg.content = WSP.PduHelper.decodeStringContent(stringData, "UTF-8");
-      msg.contentType = "text/vnd.wap.sl";
-      return msg;
+    } catch (e) {
+      // Provide raw data if we failed to parse.
+      msg.content = data.array;
     }
+    return msg;
 
-    return null;
-  },
-
-  /**
-   * @param multiStream
-   *        An exsiting nsIMultiplexInputStream.
-   * @param msg
-   *        A SL message object.
-   *
-   * @return An instance of nsIMultiplexInputStream or null in case of errors.
-   */
-  compose: function compose_sl(multiStream, msg) {
-    // Composing SL message is not supported
-    return null;
-  },
+  }
 };
 
 /**
@@ -95,7 +95,7 @@ const SL_TAG_FIELDS = (function () {
       name: name,
       number: number,
     };
-    names[name] = names[number] = entry;
+    names[number] = entry;
   }
 
   add("sl",           0x05);
@@ -116,7 +116,7 @@ const SL_ATTRIBUTE_FIELDS = (function () {
       value: value,
       number: number,
     };
-    names[name] = names[number] = entry;
+    names[number] = entry;
   }
 
   add("action",       "execute-low",    0x05);
@@ -127,10 +127,24 @@ const SL_ATTRIBUTE_FIELDS = (function () {
   add("href",         "http://www.",    0x0A);
   add("href",         "https://",       0x0B);
   add("href",         "https://www.",   0x0C);
-  add("",             ".com/",          0x85);
-  add("",             ".edu/",          0x86);
-  add("",             ".net/",          0x87);
-  add("",             ".org/",          0x88);
+
+  return names;
+})();
+
+const SL_VALUE_FIELDS = (function () {
+  let names = {};
+  function add(value, number) {
+    let entry = {
+      value: value,
+      number: number,
+    };
+    names[number] = entry;
+  }
+
+  add(".com/",          0x85);
+  add(".edu/",          0x86);
+  add(".net/",          0x87);
+  add(".org/",          0x88);
 
   return names;
 })();
