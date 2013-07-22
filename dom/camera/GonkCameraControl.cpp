@@ -1054,7 +1054,7 @@ nsGonkCameraControl::TakePictureError()
 void
 nsGonkCameraControl::SetPreviewSize(uint32_t aWidth, uint32_t aHeight)
 {
-  Vector<Size> previewSizes;
+  android::Vector<Size> previewSizes;
   uint32_t bestWidth = aWidth;
   uint32_t bestHeight = aHeight;
   uint32_t minSizeDelta = UINT32_MAX;
@@ -1437,7 +1437,7 @@ nsGonkCameraControl::GetVideoSizes(nsTArray<idl::CameraSize>& aVideoSizes)
 {
   aVideoSizes.Clear();
 
-  Vector<Size> sizes;
+  android::Vector<Size> sizes;
   mParams.getSupportedVideoSizes(sizes);
   if (sizes.size() == 0) {
     DOM_CAMERA_LOGI("Camera doesn't support video independent of the preview\n");

@@ -73,6 +73,7 @@
 #include "vm/StringBuffer.h"
 #include "vm/TypedArrayObject.h"
 #include "vm/WeakMapObject.h"
+#include "vm/WrapperObject.h"
 #include "vm/Xdr.h"
 #include "yarr/BumpPointerAllocator.h"
 
@@ -654,7 +655,7 @@ static bool
 JitSupportsFloatingPoint()
 {
 #if defined(JS_ION)
-    if (!JSC::MacroAssembler().supportsFloatingPoint())
+    if (!JSC::MacroAssembler::supportsFloatingPoint())
         return false;
 
 #if defined(JS_ION) && WTF_ARM_ARCH_VERSION == 6
@@ -686,6 +687,9 @@ PerThreadData::~PerThreadData()
 {
     if (dtoaState)
         js_DestroyDtoaState(dtoaState);
+
+    if (isInList())
+        removeFromThreadList();
 }
 
 bool
@@ -698,6 +702,22 @@ PerThreadData::init()
     return true;
 }
 
+void
+PerThreadData::addToThreadList()
+{
+    // PerThreadData which are created/destroyed off the main thread do not
+    // show up in the runtime's thread list.
+    runtime_->assertValidThread();
+    runtime_->threadList.insertBack(this);
+}
+
+void
+PerThreadData::removeFromThreadList()
+{
+    runtime_->assertValidThread();
+    removeFrom(runtime_->threadList);
+}
+
 JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
   : mainThread(this),
     interrupt(0),
@@ -706,6 +726,10 @@ JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
 #ifdef DEBUG
     operationCallbackOwner(NULL),
 #endif
+    exclusiveAccessLock(NULL),
+    exclusiveAccessOwner(NULL),
+    mainThreadHasExclusiveAccess(false),
+    numExclusiveThreads(0),
 #endif
     atomsCompartment(NULL),
     systemZone(NULL),
@@ -891,12 +915,17 @@ JSRuntime::init(uint32_t maxbytes)
     operationCallbackLock = PR_NewLock();
     if (!operationCallbackLock)
         return false;
+
+    exclusiveAccessLock = PR_NewLock();
+    if (!exclusiveAccessLock)
+        return false;
 #endif
 
     if (!mainThread.init())
         return false;
 
     js::TlsPerThreadData.set(&mainThread);
+    mainThread.addToThreadList();
 
     if (!js_InitGC(this, maxbytes))
         return false;
@@ -957,19 +986,7 @@ JSRuntime::init(uint32_t maxbytes)
 
 JSRuntime::~JSRuntime()
 {
-#ifdef JS_THREADSAFE
-    clearOwnerThread();
-
-    JS_ASSERT(!operationCallbackOwner);
-    if (operationCallbackLock)
-        PR_DestroyLock(operationCallbackLock);
-#endif
-
-    /*
-     * Even though all objects in the compartment are dead, we may have keep
-     * some filenames around because of gcKeepAtoms.
-     */
-    FreeScriptData(this);
+    mainThread.removeFromThreadList();
 
 #ifdef JS_THREADSAFE
 # ifdef JS_ION
@@ -977,7 +994,23 @@ JSRuntime::~JSRuntime()
         js_delete(workerThreadState);
 # endif
     sourceCompressorThread.finish();
+
+    clearOwnerThread();
+
+    JS_ASSERT(!operationCallbackOwner);
+    if (operationCallbackLock)
+        PR_DestroyLock(operationCallbackLock);
+
+    JS_ASSERT(!exclusiveAccessOwner);
+    if (exclusiveAccessLock)
+        PR_DestroyLock(exclusiveAccessLock);
 #endif
+
+    /*
+     * Even though all objects in the compartment are dead, we may have keep
+     * some filenames around because of gcKeepAtoms.
+     */
+    FreeScriptData(this);
 
 #ifdef DEBUG
     /* Don't hurt everyone in leaky ol' Mozilla with a fatal JS_ASSERT! */
@@ -1245,12 +1278,14 @@ JS_NewContext(JSRuntime *rt, size_t stackChunkSize)
 JS_PUBLIC_API(void)
 JS_DestroyContext(JSContext *cx)
 {
+    JS_ASSERT(!cx->compartment());
     DestroyContext(cx, DCM_FORCE_GC);
 }
 
 JS_PUBLIC_API(void)
 JS_DestroyContextNoGC(JSContext *cx)
 {
+    JS_ASSERT(!cx->compartment());
     DestroyContext(cx, DCM_NO_GC);
 }
 
@@ -1554,8 +1589,8 @@ JS_TransplantObject(JSContext *cx, HandleObject origobj, HandleObject target)
 {
     AssertHeapIsIdle(cx);
     JS_ASSERT(origobj != target);
-    JS_ASSERT(!IsCrossCompartmentWrapper(origobj));
-    JS_ASSERT(!IsCrossCompartmentWrapper(target));
+    JS_ASSERT(!origobj->is<CrossCompartmentWrapperObject>());
+    JS_ASSERT(!target->is<CrossCompartmentWrapperObject>());
 
     AutoMaybeTouchDeadZones agc(cx);
     AutoDisableProxyCheck adpc(cx->runtime());
@@ -1630,10 +1665,10 @@ js_TransplantObjectWithWrapper(JSContext *cx,
     AutoDisableProxyCheck adpc(cx->runtime());
 
     AssertHeapIsIdle(cx);
-    JS_ASSERT(!IsCrossCompartmentWrapper(origobj));
-    JS_ASSERT(!IsCrossCompartmentWrapper(origwrapper));
-    JS_ASSERT(!IsCrossCompartmentWrapper(targetobj));
-    JS_ASSERT(!IsCrossCompartmentWrapper(targetwrapper));
+    JS_ASSERT(!origobj->is<CrossCompartmentWrapperObject>());
+    JS_ASSERT(!origwrapper->is<CrossCompartmentWrapperObject>());
+    JS_ASSERT(!targetobj->is<CrossCompartmentWrapperObject>());
+    JS_ASSERT(!targetwrapper->is<CrossCompartmentWrapperObject>());
 
     RootedObject newWrapper(cx);
     JSCompartment *destination = targetobj->compartment();
@@ -2032,7 +2067,7 @@ JS_IdentifyClassPrototype(JSContext *cx, JSObject *obj)
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj);
-    JS_ASSERT(!IsCrossCompartmentWrapper(obj));
+    JS_ASSERT(!obj->is<CrossCompartmentWrapperObject>());
     return js_IdentifyClassPrototype(obj);
 }
 
@@ -2087,6 +2122,8 @@ JS_GetGlobalForScopeChain(JSContext *cx)
 {
     AssertHeapIsIdleOrIterating(cx);
     CHECK_REQUEST(cx);
+    if (!cx->compartment())
+        return NULL;
     return cx->global();
 }
 
@@ -3316,10 +3353,12 @@ JS_NewGlobalObject(JSContext *cx, JSClass *clasp, JSPrincipals *principals,
 
     AutoHoldZone hold(compartment->zone());
 
-    JSCompartment *saved = cx->compartment();
-    cx->setCompartment(compartment);
-    Rooted<GlobalObject *> global(cx, GlobalObject::create(cx, Valueify(clasp)));
-    cx->setCompartment(saved);
+    Rooted<GlobalObject *> global(cx);
+    {
+        AutoCompartment ac(cx, compartment);
+        global = GlobalObject::create(cx, Valueify(clasp));
+    }
+
     if (!global)
         return NULL;
 
@@ -5198,7 +5237,7 @@ JS::Compile(JSContext *cx, HandleObject obj, CompileOptions options,
     JS_ASSERT_IF(options.principals, cx->compartment()->principals == options.principals);
     AutoLastFrameCheck lfc(cx);
 
-    return frontend::CompileScript(cx, obj, NullPtr(), options, chars, length);
+    return frontend::CompileScript(cx, &cx->tempLifoAlloc(), obj, NullPtr(), options, chars, length);
 }
 
 JSScript *
@@ -5539,7 +5578,8 @@ JS::Evaluate(JSContext *cx, HandleObject obj, CompileOptions options,
     options.setCompileAndGo(true);
     options.setNoScriptRval(!rval);
     SourceCompressionToken sct(cx);
-    RootedScript script(cx, frontend::CompileScript(cx, obj, NullPtr(), options,
+    RootedScript script(cx, frontend::CompileScript(cx, &cx->tempLifoAlloc(),
+                                                    obj, NullPtr(), options,
                                                     chars, length, NULL, 0, &sct));
     if (!script)
         return false;
@@ -7206,12 +7246,11 @@ JS_GetScriptedGlobal(JSContext *cx)
 JS_PUBLIC_API(JSBool)
 JS_PreventExtensions(JSContext *cx, JS::HandleObject obj)
 {
-    JSBool extensible;
-    if (!JS_IsExtensible(cx, obj, &extensible))
-        return JS_TRUE;
-    if (extensible)
-        return JS_TRUE;
-
+    bool extensible;
+    if (!JSObject::isExtensible(cx, obj, &extensible))
+        return false;
+    if (!extensible)
+        return true;
     return JSObject::preventExtensions(cx, obj);
 }
 

@@ -621,15 +621,86 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
             return false;
     }
 
-    IonSpew(IonSpew_BaselineBailouts, "      pushing %d expression stack slots",
-                                      (int) exprStackSlots);
-    for (uint32_t i = 0; i < exprStackSlots; i++) {
+    // Get the PC
+    jsbytecode *pc = script->code + iter.pcOffset();
+    JSOp op = JSOp(*pc);
+    bool resumeAfter = iter.resumeAfter();
+
+    // Fixup inlined JSOP_FUNCALL and JSOP_FUNAPPLY on the caller side.
+    // On the caller side this must represent like the function wasn't inlined.
+    uint32_t pushedSlots = 0;
+    AutoValueVector funapplyargs(cx);
+    if (iter.moreFrames() &&
+        (op == JSOP_FUNCALL || op == JSOP_FUNAPPLY))
+    {
+        uint32_t inlined_args = 0;
+        if (op == JSOP_FUNCALL)
+            inlined_args = 2 + GET_ARGC(pc) - 1;
+        else
+            inlined_args = 2 + blFrame->numActualArgs();
+
+        JS_ASSERT(exprStackSlots >= inlined_args);
+        pushedSlots = exprStackSlots - inlined_args;
+
+        IonSpew(IonSpew_BaselineBailouts,
+                "      pushing %u expression stack slots before fixup",
+                pushedSlots);
+        for (uint32_t i = 0; i < pushedSlots; i++) {
+            Value v = iter.read();
+            if (!builder.writeValue(v, "StackValue"))
+                return false;
+        }
+
+        if (op == JSOP_FUNCALL) {
+            // When funcall got inlined and the native js_fun_call was bypassed,
+            // the stack state is incorrect. To restore correctly it must look like
+            // js_fun_call was actually called. This means transforming the stack
+            // from |target, this, args| to |js_fun_call, target, this, args|
+            // The js_fun_call is never read, so just pushing undefined now.
+            IonSpew(IonSpew_BaselineBailouts, "      pushing undefined to fixup funcall");
+            if (!builder.writeValue(UndefinedValue(), "StackValue"))
+                return false;
+        }
+
+        if (op == JSOP_FUNAPPLY) {
+            // When funapply gets inlined we take all arguments out of the
+            // arguments array. So the stack state is incorrect. To restore
+            // correctly it must look like js_fun_apply was actually called.
+            // This means transforming the stack from |target, this, arg1, ...|
+            // to |js_fun_apply, target, this, argObject|.
+            // Since the information is never read, we can just push undefined
+            // for all values.
+            IonSpew(IonSpew_BaselineBailouts, "      pushing 4x undefined to fixup funapply");
+            if (!builder.writeValue(UndefinedValue(), "StackValue"))
+                return false;
+            if (!builder.writeValue(UndefinedValue(), "StackValue"))
+                return false;
+            if (!builder.writeValue(UndefinedValue(), "StackValue"))
+                return false;
+            if (!builder.writeValue(UndefinedValue(), "StackValue"))
+                return false;
+
+            // Save the actual arguments. They are needed on the callee side
+            // as the arguments. Else we can't recover them.
+            if (!funapplyargs.resize(inlined_args))
+                return false;
+            for (uint32_t i = 0; i < inlined_args; i++)
+                funapplyargs[i] = iter.read();
+            pushedSlots = exprStackSlots;
+        }
+    }
+
+    IonSpew(IonSpew_BaselineBailouts, "      pushing %u expression stack slots",
+                                      exprStackSlots - pushedSlots);
+    for (uint32_t i = pushedSlots; i < exprStackSlots; i++) {
         Value v;
 
         // If coming from an invalidation bailout, and this is the topmost
         // value, and a value override has been specified, don't read from the
         // iterator. Otherwise, we risk using a garbage value.
-        if (!iter.moreFrames() && i == exprStackSlots - 1 && cx->runtime()->hasIonReturnOverride()) {
+        if (!iter.moreFrames() && i == exprStackSlots - 1 &&
+            cx->runtime()->hasIonReturnOverride())
+        {
             JS_ASSERT(invalidate);
             iter.skip();
             IonSpew(IonSpew_BaselineBailouts, "      [Return Override]");
@@ -642,11 +713,6 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
     }
 
     size_t endOfBaselineJSFrameStack = builder.framePushed();
-
-    // Get the PC
-    jsbytecode *pc = script->code + iter.pcOffset();
-    JSOp op = JSOp(*pc);
-    bool resumeAfter = iter.resumeAfter();
 
     // If we are resuming at a LOOPENTRY op, resume at the next op to avoid
     // a bailout -> enter Ion -> bailout loop with --ion-eager. See also
@@ -894,19 +960,32 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
     // Arguments are reversed on the BaselineJS frame's stack values.
     JS_ASSERT(isCall);
     unsigned actualArgc = GET_ARGC(pc);
-    if (op == JSOP_FUNAPPLY)
+    if (op == JSOP_FUNAPPLY) {
+        // For FUNAPPLY the arguments are not on the stack anymore,
+        // but they are copied in a vector and are written here.
         actualArgc = blFrame->numActualArgs();
-    if (op == JSOP_FUNCALL) {
-        JS_ASSERT(actualArgc > 0);
-        actualArgc--;
+
+        JS_ASSERT(actualArgc + 2 <= exprStackSlots);
+        JS_ASSERT(funapplyargs.length() == actualArgc + 2);
+        for (unsigned i = 0; i < actualArgc + 1; i++) {
+            size_t arg = funapplyargs.length() - (i + 1);
+            if (!builder.writeValue(funapplyargs[arg], "ArgVal"))
+                return false;
+        }
+    } else {
+        if (op == JSOP_FUNCALL) {
+            JS_ASSERT(actualArgc > 0);
+            actualArgc--;
+        }
+
+        JS_ASSERT(actualArgc + 2 <= exprStackSlots);
+        for (unsigned i = 0; i < actualArgc + 1; i++) {
+            size_t argSlot = (script->nfixed + exprStackSlots) - (i + 1);
+            if (!builder.writeValue(*blFrame->valueSlot(argSlot), "ArgVal"))
+                return false;
+        }
     }
 
-    JS_ASSERT(actualArgc + 2 <= exprStackSlots);
-    for (unsigned i = 0; i < actualArgc + 1; i++) {
-        size_t argSlot = (script->nfixed + exprStackSlots) - (i + 1);
-        if (!builder.writeValue(*blFrame->valueSlot(argSlot), "ArgVal"))
-            return false;
-    }
     // In case these arguments need to be copied on the stack again for a rectifier frame,
     // save the framePushed values here for later use.
     size_t endOfBaselineStubArgs = builder.framePushed();
@@ -921,11 +1000,18 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
         return false;
 
     // Push callee token (must be a JS Function)
-    uint32_t calleeStackSlot = exprStackSlots - uint32_t(actualArgc + 2);
-    size_t calleeOffset = (builder.framePushed() - endOfBaselineJSFrameStack)
-                            + ((exprStackSlots - (calleeStackSlot + 1)) * sizeof(Value));
-    Value callee = *builder.valuePointerAtStackOffset(calleeOffset);
-    IonSpew(IonSpew_BaselineBailouts, "      CalleeStackSlot=%d", (int) calleeStackSlot);
+    Value callee;
+    if (op == JSOP_FUNAPPLY) {
+        // The arguments of FUNAPPLY are not writen to the stack.
+        // So get the callee from the specially saved vector.
+        callee = funapplyargs[0];
+    } else {
+        uint32_t calleeStackSlot = exprStackSlots - uint32_t(actualArgc + 2);
+        size_t calleeOffset = (builder.framePushed() - endOfBaselineJSFrameStack)
+            + ((exprStackSlots - (calleeStackSlot + 1)) * sizeof(Value));
+        callee = *builder.valuePointerAtStackOffset(calleeOffset);
+        IonSpew(IonSpew_BaselineBailouts, "      CalleeStackSlot=%d", (int) calleeStackSlot);
+    }
     IonSpew(IonSpew_BaselineBailouts, "      Callee = %016llx", *((uint64_t *) &callee));
     JS_ASSERT(callee.isObject() && callee.toObject().is<JSFunction>());
     JSFunction *calleeFun = &callee.toObject().as<JSFunction>();
@@ -1032,6 +1118,10 @@ ion::BailoutIonToBaseline(JSContext *cx, JitActivation *activation, IonBailoutIt
     JS_ASSERT(bailoutInfo != NULL);
     JS_ASSERT(*bailoutInfo == NULL);
 
+#if JS_TRACE_LOGGING
+    TraceLogging::defaultLogger()->log(TraceLogging::INFO_ENGINE_BASELINE);
+#endif
+
     // The caller of the top frame must be one of the following:
     //      OptimizedJS - Ion calling into Ion.
     //      BaselineStub - Baseline calling into Ion.
@@ -1107,6 +1197,12 @@ ion::BailoutIonToBaseline(JSContext *cx, JitActivation *activation, IonBailoutIt
     RootedScript scr(cx, iter.script());
     AutoValueVector startFrameFormals(cx);
     while (true) {
+#if JS_TRACE_LOGGING
+        if (frameNo > 0) {
+            TraceLogging::defaultLogger()->log(TraceLogging::SCRIPT_START, scr);
+            TraceLogging::defaultLogger()->log(TraceLogging::INFO_ENGINE_BASELINE);
+        }
+#endif
         IonSpew(IonSpew_BaselineBailouts, "    FrameNo %d", frameNo);
         jsbytecode *callPC = NULL;
         RootedFunction nextCallee(cx, NULL);

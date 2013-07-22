@@ -17,6 +17,7 @@
 #include "gc/Marking.h"
 #include "ion/BaselineJIT.h"
 #include "js/Vector.h"
+#include "vm/WrapperObject.h"
 
 #include "jsfuninlines.h"
 #include "jsgcinlines.h"
@@ -750,7 +751,7 @@ JSTrapStatus
 Debugger::handleUncaughtExceptionHelper(Maybe<AutoCompartment> &ac,
                                         MutableHandleValue *vp, bool callHook)
 {
-    JSContext *cx = ac.ref().context();
+    JSContext *cx = ac.ref().context()->asJSContext();
     if (cx->isExceptionPending()) {
         if (callHook && uncaughtExceptionHook) {
             Value fval = ObjectValue(*uncaughtExceptionHook);
@@ -849,7 +850,7 @@ bool
 Debugger::receiveCompletionValue(Maybe<AutoCompartment> &ac, bool ok, Value val,
                                  MutableHandleValue vp)
 {
-    JSContext *cx = ac.ref().context();
+    JSContext *cx = ac.ref().context()->asJSContext();
 
     JSTrapStatus status;
     RootedValue value(cx);
@@ -875,7 +876,7 @@ Debugger::parseResumptionValue(Maybe<AutoCompartment> &ac, bool ok, const Value 
     }
 
     /* Check that rv is {return: val} or {throw: val}. */
-    JSContext *cx = ac.ref().context();
+    JSContext *cx = ac.ref().context()->asJSContext();
     Rooted<JSObject*> obj(cx);
     RootedShape shape(cx);
     RootedId returnId(cx, NameToId(cx->names().return_));
@@ -2063,7 +2064,7 @@ Debugger::construct(JSContext *cx, unsigned argc, Value *vp)
         if (!arg.isObject())
             return ReportObjectRequired(cx);
         JSObject *argobj = &arg.toObject();
-        if (!IsCrossCompartmentWrapper(argobj)) {
+        if (!argobj->is<CrossCompartmentWrapperObject>()) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CCW_REQUIRED, "Debugger");
             return false;
         }
@@ -4126,7 +4127,7 @@ js::EvaluateInEnv(JSContext *cx, Handle<Env*> env, HandleValue thisv, AbstractFr
            .setFileAndLine(filename, lineno)
            .setCanLazilyParse(false);
     RootedScript callerScript(cx, frame ? frame.script() : NULL);
-    RootedScript script(cx, frontend::CompileScript(cx, env, callerScript,
+    RootedScript script(cx, frontend::CompileScript(cx, &cx->tempLifoAlloc(), env, callerScript,
                                                     options, chars.get(), length,
                                                     /* source = */ NULL,
                                                     /* staticLevel = */ frame ? 1 : 0));
@@ -4139,8 +4140,8 @@ js::EvaluateInEnv(JSContext *cx, Handle<Env*> env, HandleValue thisv, AbstractFr
 }
 
 static JSBool
-DebuggerGenericEval(JSContext *cx, const char *fullMethodName,
-                    const Value &code, Value *bindings, MutableHandleValue vp,
+DebuggerGenericEval(JSContext *cx, const char *fullMethodName, const Value &code,
+                    Value *bindings, HandleValue options, MutableHandleValue vp,
                     Debugger *dbg, HandleObject scope, ScriptFrameIter *iter)
 {
     /* Either we're specifying the frame, or a global. */
@@ -4179,6 +4180,33 @@ DebuggerGenericEval(JSContext *cx, const char *fullMethodName,
             {
                 return false;
             }
+        }
+    }
+
+    /* Set options from object if provided. */
+    char *url = NULL;
+    unsigned lineNumber = 1;
+
+    if (options.isObject()) {
+        RootedObject opts(cx, &options.toObject());
+        RootedValue v(cx);
+
+        if (!JS_GetProperty(cx, opts, "url", v.address()))
+            return false;
+        if (!v.isUndefined()) {
+            RootedString url_str(cx, JS_ValueToString(cx, v));
+            if (!url_str)
+                return false;
+            url = JS_EncodeString(cx, url_str);
+        }
+
+        if (!JS_GetProperty(cx, opts, "lineNumber", v.address()))
+            return false;
+        if (!v.isUndefined()) {
+            uint32_t lineno;
+            if (!JS_ValueToECMAUint32(cx, v, &lineno))
+                return false;
+            lineNumber = lineno;
         }
     }
 
@@ -4226,7 +4254,9 @@ DebuggerGenericEval(JSContext *cx, const char *fullMethodName,
     JS::Anchor<JSString *> anchor(stable);
     AbstractFramePtr frame = iter ? iter->abstractFramePtr() : NullFramePtr();
     bool ok = EvaluateInEnv(cx, env, thisv, frame, stable->chars(), stable->length(),
-                            "debugger eval code", 1, &rval);
+                            url ? url : "debugger eval code", lineNumber, &rval);
+    if (url)
+        JS_free(cx, url);
     return dbg->receiveCompletionValue(ac, ok, rval, vp);
 }
 
@@ -4237,7 +4267,8 @@ DebuggerFrame_eval(JSContext *cx, unsigned argc, Value *vp)
     REQUIRE_ARGC("Debugger.Frame.prototype.eval", 1);
     Debugger *dbg = Debugger::fromChildJSObject(thisobj);
     return DebuggerGenericEval(cx, "Debugger.Frame.prototype.eval",
-                               args[0], NULL, args.rval(), dbg, NullPtr(), &iter);
+                               args[0], NULL, args.handleOrUndefinedAt(1),
+                               args.rval(), dbg, NullPtr(), &iter);
 }
 
 static JSBool
@@ -4247,7 +4278,8 @@ DebuggerFrame_evalWithBindings(JSContext *cx, unsigned argc, Value *vp)
     REQUIRE_ARGC("Debugger.Frame.prototype.evalWithBindings", 2);
     Debugger *dbg = Debugger::fromChildJSObject(thisobj);
     return DebuggerGenericEval(cx, "Debugger.Frame.prototype.evalWithBindings",
-                               args[0], &args[1], args.rval(), dbg, NullPtr(), &iter);
+                               args[0], &args[1], args.handleOrUndefinedAt(2),
+                               args.rval(), dbg, NullPtr(), &iter);
 }
 
 static JSBool
@@ -4978,7 +5010,7 @@ RequireGlobalObject(JSContext *cx, HandleValue dbgobj, HandleObject obj)
 {
     if (!obj->is<GlobalObject>()) {
         /* Help the poor programmer by pointing out wrappers around globals. */
-        if (obj->isWrapper()) {
+        if (obj->is<WrapperObject>()) {
             JSObject *unwrapped = js::UncheckedUnwrap(obj);
             if (unwrapped->is<GlobalObject>()) {
                 js_ReportValueErrorFlags(cx, JSREPORT_ERROR, JSMSG_DEBUG_WRAPPER_IN_WAY,
@@ -5006,7 +5038,8 @@ DebuggerObject_evalInGlobal(JSContext *cx, unsigned argc, Value *vp)
         return false;
 
     return DebuggerGenericEval(cx, "Debugger.Object.prototype.evalInGlobal",
-                               args[0], NULL, args.rval(), dbg, referent, NULL);
+                               args[0], NULL, args.handleOrUndefinedAt(1),
+                               args.rval(), dbg, referent, NULL);
 }
 
 static JSBool
@@ -5018,7 +5051,8 @@ DebuggerObject_evalInGlobalWithBindings(JSContext *cx, unsigned argc, Value *vp)
         return false;
 
     return DebuggerGenericEval(cx, "Debugger.Object.prototype.evalInGlobalWithBindings",
-                               args[0], &args[1], args.rval(), dbg, referent, NULL);
+                               args[0], &args[1], args.handleOrUndefinedAt(2),
+                               args.rval(), dbg, referent, NULL);
 }
 
 static JSBool

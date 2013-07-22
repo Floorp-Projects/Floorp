@@ -110,6 +110,19 @@ class MacroAssembler : public MacroAssemblerSpecific
 #endif
     }
 
+    // asm.js compilation handles its own IonContet-pushing
+    struct AsmJSToken {};
+    MacroAssembler(AsmJSToken)
+      : enoughMemory_(true),
+        embedsNurseryPointers_(false),
+        sps_(NULL)
+    {
+#ifdef JS_CPU_ARM
+        initWithAllocator();
+        m_buffer.id = 0;
+#endif
+    }
+
     void setInstrumentation(IonInstrumentation *sps) {
         sps_ = sps;
     }
@@ -931,6 +944,12 @@ class MacroAssembler : public MacroAssemblerSpecific
     void printf(const char *output);
     void printf(const char *output, Register value);
 
+#if JS_TRACE_LOGGING
+    void tracelogStart(JSScript *script);
+    void tracelogStop();
+    void tracelogLog(TraceLogging::Type type);
+#endif
+
     void convertInt32ValueToDouble(const Address &address, Register scratch, Label *done);
     void convertValueToDouble(ValueOperand value, FloatRegister output, Label *fail);
     void convertValueToInt32(ValueOperand value, FloatRegister temp, Register output, Label *fail);
@@ -1005,28 +1024,6 @@ JSOpToCondition(JSOp op, bool isSigned)
         }
     }
 }
-
-typedef Vector<MIRType, 8> MIRTypeVector;
-
-class ABIArgIter
-{
-    ABIArgGenerator gen_;
-    const MIRTypeVector &types_;
-    unsigned i_;
-
-  public:
-    ABIArgIter(const MIRTypeVector &argTypes);
-
-    void operator++(int);
-    bool done() const { return i_ == types_.length(); }
-
-    ABIArg *operator->() { JS_ASSERT(!done()); return &gen_.current(); }
-    ABIArg &operator*() { JS_ASSERT(!done()); return gen_.current(); }
-
-    unsigned index() const { JS_ASSERT(!done()); return i_; }
-    MIRType mirType() const { JS_ASSERT(!done()); return types_[i_]; }
-    uint32_t stackBytesConsumedSoFar() const { return gen_.stackBytesConsumedSoFar(); }
-};
 
 } // namespace ion
 } // namespace js

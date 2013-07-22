@@ -11,13 +11,11 @@ const Cr = Components.results;
 Cu.import('resource://gre/modules/CSPUtils.jsm');
 Cu.import('resource://gre/modules/NetUtil.jsm');
 
-// load the HTTP server
-Cu.import("resource://testing-common/httpd.js");
-
 var httpServer = new HttpServer();
+httpServer.start(-1);
 
 const POLICY_FROM_URI = "default-src 'self'; img-src *";
-const POLICY_PORT = 9000;
+const POLICY_PORT = httpServer.identity.primaryPort;
 const POLICY_URI = "http://localhost:" + POLICY_PORT + "/policy";
 const POLICY_URI_RELATIVE = "/policy";
 
@@ -1048,7 +1046,6 @@ function run_test() {
   }
   //server.registerDirectory("/", nsILocalFileForBasePath);
   httpServer.registerPathHandler("/policy", policyresponder);
-  httpServer.start(POLICY_PORT);
 
   for(let i in tests) {
     tests[i]();

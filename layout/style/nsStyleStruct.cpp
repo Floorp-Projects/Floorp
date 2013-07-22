@@ -1709,6 +1709,28 @@ nsStyleImage::IsComplete() const
   }
 }
 
+bool
+nsStyleImage::IsLoaded() const
+{
+  switch (mType) {
+    case eStyleImageType_Null:
+      return false;
+    case eStyleImageType_Gradient:
+    case eStyleImageType_Element:
+      return true;
+    case eStyleImageType_Image:
+    {
+      uint32_t status = imgIRequest::STATUS_ERROR;
+      return NS_SUCCEEDED(mImage->GetImageStatus(&status)) &&
+             !(status & imgIRequest::STATUS_ERROR) &&
+             (status & imgIRequest::STATUS_LOAD_COMPLETE);
+    }
+    default:
+      NS_NOTREACHED("unexpected image type");
+      return false;
+  }
+}
+
 static inline bool
 EqualRects(const nsStyleSides* aRect1, const nsStyleSides* aRect2)
 {
@@ -2213,34 +2235,18 @@ nsStyleDisplay::nsStyleDisplay(const nsStyleDisplay& aSource)
   mPerspectiveOrigin[1] = aSource.mPerspectiveOrigin[1];
 }
 
-static uint8_t
-MapRelativePositionToStatic(uint8_t aPositionValue)
-{
-  return aPositionValue == NS_STYLE_POSITION_RELATIVE ?
-      NS_STYLE_POSITION_STATIC : aPositionValue;
-}
-
 nsChangeHint nsStyleDisplay::CalcDifference(const nsStyleDisplay& aOther) const
 {
   nsChangeHint hint = nsChangeHint(0);
 
-  // Changes between position:static and position:relative don't need
-  // to reconstruct frames.
   if (!EqualURIs(mBinding, aOther.mBinding)
-      || MapRelativePositionToStatic(mPosition) !=
-           MapRelativePositionToStatic(aOther.mPosition)
+      || mPosition != aOther.mPosition
       || mDisplay != aOther.mDisplay
       || (mFloats == NS_STYLE_FLOAT_NONE) != (aOther.mFloats == NS_STYLE_FLOAT_NONE)
       || mOverflowX != aOther.mOverflowX
       || mOverflowY != aOther.mOverflowY
-      || mResize != aOther.mResize) {
+      || mResize != aOther.mResize)
     NS_UpdateHint(hint, nsChangeHint_ReconstructFrame);
-  }
-
-  if (mPosition != aOther.mPosition) {
-    NS_UpdateHint(hint,
-      NS_CombineHint(nsChangeHint_NeedReflow, nsChangeHint_RepaintFrame));
-  }
 
   if (mFloats != aOther.mFloats) {
     // Changing which side we float on doesn't affect descendants directly

@@ -51,7 +51,7 @@ _SUBDIR_CONFIG_ARGS="$ac_configure_args"
 dnl Set the version number of the libs included with mozilla
 dnl ========================================================
 MOZJPEG=62
-MOZPNG=10516
+MOZPNG=10517
 NSPR_VERSION=4
 NSS_VERSION=3
 
@@ -194,7 +194,7 @@ if test -n "$gonkdir" ; then
         AC_MSG_ERROR([Couldn't find path to stlport sources in the gonk tree])
     fi
     STLPORT_CPPFLAGS="-I$_topsrcdir/build/stlport/stlport -I$gonkdir/ndk/sources/cxx-stl/system/include"
-    STLPORT_LIBS="$_objdir/build/stlport/libstlport_static.a -static-libstdc++"
+    STLPORT_LIBS="$_objdir/build/stlport/libstlport_static.a"
 
     case "$target_cpu" in
     arm)
@@ -1371,7 +1371,6 @@ if test "$GNU_CC"; then
                      [HAVE_TOOLCHAIN_SUPPORT_MSSSE3=1],
                      AC_MSG_RESULT([no]))
     CFLAGS=$_SAVE_CFLAGS
-    AC_SUBST(HAVE_TOOLCHAIN_SUPPORT_MSSSE3)
 
     # Check for -msse4.1 on $CC
     AC_MSG_CHECKING([if toolchain supports -msse4.1 option])
@@ -1382,7 +1381,6 @@ if test "$GNU_CC"; then
                      [HAVE_TOOLCHAIN_SUPPORT_MSSE4_1=1],
                      AC_MSG_RESULT([no]))
     CFLAGS=$_SAVE_CFLAGS
-    AC_SUBST(HAVE_TOOLCHAIN_SUPPORT_MSSE4_1)
 
     # Turn on GNU-specific warnings:
     # -Wall - turn on a lot of warnings
@@ -2173,11 +2171,10 @@ ia64*-hpux*)
         dnl Probably also a compiler bug, but what can you do?
         PROFILE_USE_LDFLAGS="-LTCG:PGUPDATE"
         LDFLAGS="$LDFLAGS -DYNAMICBASE"
-        if test "$_MSC_VER" -ge 1500; then
-            dnl VS2008 or later supports SSSE3
-            HAVE_TOOLCHAIN_SUPPORT_MSSSE3=1
-            AC_SUBST(HAVE_TOOLCHAIN_SUPPORT_MSSSE3)
-        fi
+        dnl Minimum reqiurement of Gecko is VS2010 or later which supports
+        dnl both SSSE3 and SSE4.1.
+        HAVE_TOOLCHAIN_SUPPORT_MSSSE3=1
+        HAVE_TOOLCHAIN_SUPPORT_MSSE4_1=1
     fi
     AC_DEFINE(HAVE_SNPRINTF)
     AC_DEFINE(_WINDOWS)
@@ -2465,6 +2462,13 @@ ia64*-hpux*)
 
 esac
 
+case "$target" in
+*-*linux*)
+    # Includes linux-android
+    AC_DEFINE(XP_LINUX)
+    ;;
+esac
+
 AC_SUBST(MOZ_LINKER)
 if test -n "$MOZ_LINKER"; then
   AC_DEFINE(MOZ_LINKER)
@@ -2735,11 +2739,10 @@ else
     AC_MSG_RESULT(no)
 fi
 
-dnl Check whether we can use gcc's c++0x mode
+dnl Check whether gcc's c++0x mode works
 AC_LANG_CPLUSPLUS
 
 if test "$GNU_CXX"; then
-    _SAVE_CXXFLAGS=$CXXFLAGS
     CXXFLAGS="$CXXFLAGS -std=gnu++0x"
 
     AC_CACHE_CHECK(for gcc c++0x headers bug without rtti,
@@ -2757,10 +2760,10 @@ if test "$GNU_CXX"; then
                             ac_cv_cxx0x_clang_workaround="no")])
 
         if test "ac_cv_cxx0x_clang_workaround" = "no"; then
-            CXXFLAGS="$_SAVE_CXXFLAGS"
+            AC_MSG_ERROR([Your toolchain does not support C++0x/C++11 mode properly. Please upgrade your toolchain])
         fi
     elif test "$ac_cv_cxx0x_headers_bug" = "yes"; then
-        CXXFLAGS="$_SAVE_CXXFLAGS"
+        AC_MSG_ERROR([Your toolchain does not support C++0x/C++11 mode properly. Please upgrade your toolchain])
     fi
 fi
 
@@ -4172,6 +4175,12 @@ if test "${PNG_DIR}" -a -d "${PNG_DIR}" -a "$MOZ_NATIVE_PNG" = 1; then
     MOZ_PNG_LIBS="-L${PNG_DIR}/lib ${MOZ_PNG_LIBS}"
 fi
 
+MOZ_PNG_ARM_NEON=
+if test "$MOZ_NATIVE_PNG" != 1 -a "$CPU_ARCH" = "arm" ; then
+    MOZ_PNG_ARM_NEON=1
+fi
+AC_SUBST(MOZ_PNG_ARM_NEON)
+
 fi # SKIP_LIBRARY_CHECKS
 
 dnl system HunSpell Support
@@ -4293,7 +4302,6 @@ NS_PRINTING=1
 MOZ_PDF_PRINTING=
 MOZ_DISABLE_CRYPTOLEGACY=
 NSS_DISABLE_DBM=
-NECKO_WIFI=1
 NECKO_COOKIES=1
 NECKO_PROTOCOLS_DEFAULT="about data file ftp http res viewsource websocket wyciwyg device"
 USE_ARM_KUSER=
@@ -4323,11 +4331,6 @@ case "${target}" in
         fi
 
         NSS_DISABLE_DBM=1
-        if test -z "$gonkdir"; then
-          NECKO_WIFI=
-        else
-          NECKO_WIFI=1
-        fi
         MOZ_THEME_FASTSTRIPE=1
         MOZ_TREE_FREETYPE=1
         MOZ_MEMORY=1
@@ -4507,6 +4510,14 @@ if test -z "$gonkdir" ; then
     case "$MOZ_BUILD_APP" in
     mobile/android)
         android_min_api_level=16
+        case "$target" in
+        *-android*|*-linuxandroid*)
+            :
+            ;;
+        *)
+            AC_MSG_ERROR([You must specify --target=arm-linux-androideabi (or some other valid android target) when building with --enable-application=mobile/android. See https://wiki.mozilla.org/Mobile/Fennec/Android#Setup_Fennec_mozconfig for more information about the necessary options])
+            ;;
+        esac
         ;;
     esac
 
@@ -4790,7 +4801,7 @@ then
     else
         HOST_QMAKE="$QTDIR/bin/qmake"
     fi
-    QT_VERSION=`$HOST_QMAKE -v | grep 'Using Qt version' | grep -oP '\d+\.\d+\.\d+'`
+    QT_VERSION=`$HOST_QMAKE -v | grep 'Using Qt version' | egrep -o '[[0-9]]+\.[[0-9]]+\.[[0-9]]+'`
 
     if test -z "$QTDIR"; then
         case $QT_VERSION in
@@ -5812,9 +5823,14 @@ MOZ_PULSEAUDIO=)
 
 if test -n "$MOZ_PULSEAUDIO"; then
     AC_DEFINE(MOZ_CUBEB)
-    PKG_CHECK_MODULES(MOZ_PULSEAUDIO, libpulse, ,
-         [echo "$MOZ_PULSEAUDIO_PKG_ERRORS"
-          AC_MSG_ERROR([pulseaudio audio backend requires libpulse package])])
+    if test -z "$gonkdir"; then
+        PKG_CHECK_MODULES(MOZ_PULSEAUDIO, libpulse, ,
+             [echo "$MOZ_PULSEAUDIO_PKG_ERRORS"
+              AC_MSG_ERROR([pulseaudio audio backend requires libpulse development package])])
+    else
+        MOZ_PULSEAUDIO_CFLAGS="-I$gonkdir/external/pulseaudio/pulseaudio/src"
+        MOZ_PULSEAUDIO_LIBS="-lpulse"
+    fi
 fi
 
 AC_SUBST(MOZ_PULSEAUDIO)
@@ -6117,8 +6133,15 @@ esac
 
 MOZ_ARG_DISABLE_BOOL(crashreporter,
 [  --disable-crashreporter Disable breakpad crash reporting],
-    MOZ_CRASHREPORTER=,
-    MOZ_CRASHREPORTER=1)
+    [MOZ_CRASHREPORTER=],
+    [MOZ_CRASHREPORTER=F # Force enable breakpad])
+
+if test "$OS_ARCH" != "$HOST_OS_ARCH" -a "$OS_ARCH" != "WINNT"; then
+  if "$MOZ_CRASHREPORTER" = F; then
+    AC_MSG_ERROR([Cannot --enable-crashreporter, as breakpad tools do not support compiling on $HOST_OS_ARCH while targeting $OS_ARCH.])
+  fi
+  MOZ_CRASHREPORTER=
+fi
 
 if test -n "$MOZ_CRASHREPORTER"; then
    AC_DEFINE(MOZ_CRASHREPORTER)
@@ -6128,10 +6151,6 @@ if test -n "$MOZ_CRASHREPORTER"; then
     PKG_CHECK_MODULES(MOZ_GTHREAD, gthread-2.0)
     AC_SUBST(MOZ_GTHREAD_CFLAGS)
     AC_SUBST(MOZ_GTHREAD_LIBS)
-  fi
-
-  if test "$OS_ARCH" != "$HOST_OS_ARCH" -a "$OS_ARCH" != "WINNT"; then
-    AC_MSG_ERROR([Breakpad tools do not support compiling on $HOST_OS_ARCH while targeting $OS_ARCH.  Use --disable-crashreporter.])
   fi
 
   if test "$OS_ARCH" = "WINNT"; then
@@ -8124,6 +8143,13 @@ dnl ========================================================
 dnl Graphics checks.
 dnl ========================================================
 
+if test "${OS_TARGET}" = "WINNT"; then
+  if $PERL -e "exit($MOZ_WINSDK_MAXVER < 0x06020000)"; then
+    MOZ_ENABLE_DIRECT2D1_1=1
+    AC_SUBST(MOZ_ENABLE_DIRECT2D1_1)
+  fi
+fi
+
 if test "${OS_TARGET}" = "WINNT" -o "${OS_ARCH}" = "Darwin" -o "${MOZ_WIDGET_TOOLKIT}" = "android" -o "${MOZ_WIDGET_TOOLKIT}" = "gtk2"; then
     case "${target_cpu}" in
     i*86*|x86_64|arm)
@@ -8471,28 +8497,36 @@ done
 dnl
 dnl option to disable necko's wifi scanner
 dnl
+
+case "$OS_TARGET" in
+  Android)
+    if test -n "$gonkdir"; then
+      NECKO_WIFI=1
+    fi
+    ;;
+  Darwin|SunOS|WINNT)
+    NECKO_WIFI=1
+    ;;
+  Linux)
+    if test -z "$MOZ_ENABLE_DBUS"; then
+      AC_MSG_ERROR([Necko WiFi scanning needs DBus on your platform, remove --disable-dbus or use --disable-necko-wifi])
+    fi
+    NECKO_WIFI=1
+    NECKO_WIFI_DBUS=1
+    ;;
+esac
+
 MOZ_ARG_DISABLE_BOOL(necko-wifi,
 [  --disable-necko-wifi    Disable necko wifi scanner],
     NECKO_WIFI=,
     NECKO_WIFI=1)
-
-if test "$OS_ARCH" = "OS2"; then
-  dnl OS/2 implementation of Necko-WiFi support will be added in bug 506566
-  NECKO_WIFI=
-fi
-if test "$NECKO_WIFI" -a \
-        "$OS_ARCH" != "Linux" -a \
-        "$OS_ARCH" != "Darwin" -a \
-        "$OS_ARCH" != "SunOS" -a \
-        "$OS_ARCH" != "WINNT"; then
-  AC_MSG_ERROR([Necko WiFi scanning not supported on your platform, use --disable-necko-wifi])
-fi
 
 if test "$NECKO_WIFI"; then
   AC_DEFINE(NECKO_WIFI)
   _NON_GLOBAL_ACDEFINES="$_NON_GLOBAL_ACDEFINES NECKO_WIFI"
 fi
 AC_SUBST(NECKO_WIFI)
+AC_SUBST(NECKO_WIFI_DBUS)
 
 dnl
 dnl option to disable cookies
@@ -8942,6 +8976,8 @@ AC_SUBST(OS_RELEASE)
 AC_SUBST(OS_TEST)
 AC_SUBST(CPU_ARCH)
 AC_SUBST(INTEL_ARCHITECTURE)
+AC_SUBST(HAVE_TOOLCHAIN_SUPPORT_MSSSE3)
+AC_SUBST(HAVE_TOOLCHAIN_SUPPORT_MSSE4_1)
 
 AC_SUBST(MOZ_CHROME_FILE_FORMAT)
 

@@ -276,6 +276,18 @@ let Util = {
   },
 
   /*
+   * DownloadUtils.convertByteUnits returns [size, localized-unit-string]
+   * so they are joined for a single download size string.
+   */
+  getDownloadSize: function dv__getDownloadSize (aSize) {
+    let [size, units] = DownloadUtils.convertByteUnits(aSize);
+    if (size > 0)
+      return size + units;
+    else
+      return Strings.browser.GetStringFromName("downloadsUnknownSize");
+  },
+
+  /*
    * URIs and schemes
    */
 

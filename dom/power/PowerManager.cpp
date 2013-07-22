@@ -22,15 +22,17 @@ namespace mozilla {
 namespace dom {
 namespace power {
 
-NS_INTERFACE_MAP_BEGIN(PowerManager)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(PowerManager)
   NS_INTERFACE_MAP_ENTRY(nsIDOMMozPowerManager)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMMozPowerManager)
   NS_INTERFACE_MAP_ENTRY(nsIDOMMozWakeLockListener)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(MozPowerManager)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_ADDREF(PowerManager)
-NS_IMPL_RELEASE(PowerManager)
+NS_IMPL_CYCLE_COLLECTION_1(PowerManager, mListeners)
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(PowerManager)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(PowerManager)
 
 nsresult
 PowerManager::Init(nsIDOMWindow *aWindow)

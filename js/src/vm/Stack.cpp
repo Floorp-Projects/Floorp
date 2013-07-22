@@ -1220,6 +1220,14 @@ ScriptFrameIter::frameSlotValue(size_t index) const
 # pragma optimize("", on)
 #endif
 
+#ifdef DEBUG
+/* static */
+bool NonBuiltinScriptFrameIter::includeSelfhostedFrames() {
+    static char* env = getenv("MOZ_SHOW_ALL_JS_FRAMES");
+    return (bool)env;
+}
+#endif
+
 /*****************************************************************************/
 
 JSObject *

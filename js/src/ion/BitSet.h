@@ -7,6 +7,8 @@
 #ifndef ion_BitSet_h
 #define ion_BitSet_h
 
+#include "mozilla/MathAlgorithms.h"
+
 #include "ion/IonAllocPolicy.h"
 
 namespace js {
@@ -150,10 +152,9 @@ class BitSet::Iterator
             value_ = set_.bits_[word_];
         }
 
-        // The result of js_bitscan_ctz32 is undefined if the input is 0.
-        JS_ASSERT(value_ != 0);
-
-        int numZeros = js_bitscan_ctz32(value_);
+        // Be careful: the result of CountTrailingZeroes32 is undefined if the
+        // input is 0.
+        int numZeros = mozilla::CountTrailingZeroes32(value_);
         index_ += numZeros;
         value_ >>= numZeros;
 

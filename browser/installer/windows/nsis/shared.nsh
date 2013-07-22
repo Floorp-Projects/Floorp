@@ -150,6 +150,9 @@ FunctionEnd
 
   ${RemoveDeprecatedFiles}
 
+  ; Fix the distribution.ini file if applicable
+  ${FixDistributionsINI}
+
   RmDir /r /REBOOTOK "$INSTDIR\${TO_BE_DELETED}"
 
 !ifdef MOZ_MAINTENANCE_SERVICE
@@ -178,10 +181,10 @@ FunctionEnd
     ; If the maintenance service is already installed, do nothing.
     ; The maintenance service will launch:
     ; maintenanceservice_installer.exe /Upgrade to upgrade the maintenance
-    ; service if necessary.   If the update was done from updater.exe without 
-    ; the service (i.e. service is failing), updater.exe will do the update of 
-    ; the service.  The reasons we do not do it here is because we don't want 
-    ; to have to prompt for limited user accounts when the service isn't used 
+    ; service if necessary.   If the update was done from updater.exe without
+    ; the service (i.e. service is failing), updater.exe will do the update of
+    ; the service.  The reasons we do not do it here is because we don't want
+    ; to have to prompt for limited user accounts when the service isn't used
     ; and we currently call the PostUpdate twice, once for the user and once
     ; for the SYSTEM account.  Also, this would stop the maintenance service
     ; and we need a return result back to the service when run that way.
@@ -189,9 +192,9 @@ FunctionEnd
       ; An install of maintenance service was never attempted.
       ; We know we are an Admin and that we have write access into HKLM
       ; based on the above checks, so attempt to just run the EXE.
-      ; In the worst case, in case there is some edge case with the 
+      ; In the worst case, in case there is some edge case with the
       ; IsAdmin check and the permissions check, the maintenance service
-      ; will just fail to be attempted to be installed. 
+      ; will just fail to be attempted to be installed.
       nsExec::Exec "$\"$INSTDIR\maintenanceservice_installer.exe$\""
     ${EndIf}
   ${EndIf}
@@ -699,7 +702,7 @@ FunctionEnd
       SetRegView lastused
     ${EndIf}
     ClearErrors
-  ${EndIf} 
+  ${EndIf}
   ; Restore the previously used value back
   Pop $R0
 !macroend
@@ -923,6 +926,100 @@ FunctionEnd
   ${EndIf}
 !macroend
 !define RemoveDeprecatedFiles "!insertmacro RemoveDeprecatedFiles"
+
+; Converts specific partner distribution.ini from ansi to utf-8 (bug 882989)
+!macro FixDistributionsINI
+  StrCpy $1 "$INSTDIR\distribution\distribution.ini"
+  StrCpy $2 "$INSTDIR\distribution\utf8fix"
+  StrCpy $0 "0" ; Default to not attempting to fix
+
+  ; Check if the distribution.ini settings are for a partner build that needs
+  ; to have its distribution.ini converted from ansi to utf-8.
+  ${If} ${FileExists} "$1"
+    ${Unless} ${FileExists} "$2"
+      ReadINIStr $3 "$1" "Preferences" "app.distributor"
+      ${If} "$3" == "yahoo"
+        ReadINIStr $3 "$1" "Preferences" "app.distributor.channel"
+        ${If} "$3" == "de"
+        ${OrIf} "$3" == "es"
+        ${OrIf} "$3" == "e1"
+        ${OrIf} "$3" == "mx"
+          StrCpy $0 "1"
+        ${EndIf}
+      ${EndIf}
+      ; Create the utf8fix so this only runs once
+      FileOpen $3 "$2" w
+      FileClose $3
+    ${EndUnless}
+  ${EndIf}
+
+  ${If} "$0" == "1"
+    StrCpy $0 "0"
+    ClearErrors
+    ReadINIStr $3 "$1" "Global" "version"
+    ${Unless} ${Errors}
+      StrCpy $4 "$3" 2
+      ${If} "$4" == "1."
+        StrCpy $4 "$3" "" 2 ; Everything after "1."
+        ${If} $4 < 23
+          StrCpy $0 "1"
+        ${EndIf}
+      ${EndIf}
+    ${EndUnless}
+  ${EndIf}
+
+  ${If} "$0" == "1"
+    ClearErrors
+    FileOpen $3 "$1" r
+    ${If} ${Errors}
+      FileClose $3
+    ${Else}
+      StrCpy $2 "$INSTDIR\distribution\distribution.new"
+      ClearErrors
+      FileOpen $4 "$2" w
+      ${If} ${Errors}
+        FileClose $3
+        FileClose $4
+      ${Else}
+        StrCpy $0 "0" ; Default to not replacing the original distribution.ini
+        ${Do}
+          FileReadByte $3 $5
+          ${If} $5 == ""
+            ${Break}
+          ${EndIf}
+          ${If} $5 == 233 ; ansi é
+            StrCpy $0 "1"
+            FileWriteByte $4 195
+            FileWriteByte $4 169
+          ${ElseIf} $5 == 241 ; ansi ñ
+            StrCpy $0 "1"
+            FileWriteByte $4 195
+            FileWriteByte $4 177
+          ${ElseIf} $5 == 252 ; ansi ü
+            StrCpy $0 "1"
+            FileWriteByte $4 195
+            FileWriteByte $4 188
+          ${ElseIf} $5 < 128
+            FileWriteByte $4 $5
+          ${EndIf}
+        ${Loop}
+        FileClose $3
+        FileClose $4
+        ${If} "$0" == "1"
+          ClearErrors
+          Rename "$1" "$1.bak"
+          ${Unless} ${Errors}
+            Rename "$2" "$1"
+            Delete "$1.bak"
+          ${EndUnless}
+        ${Else}
+          Delete "$2"
+        ${EndIf}
+      ${EndIf}
+    ${EndIf}
+  ${EndIf}
+!macroend
+!define FixDistributionsINI "!insertmacro FixDistributionsINI"
 
 ; Adds a pinned shortcut to Task Bar on update for Windows 7 and above if this
 ; macro has never been called before and the application is default (see

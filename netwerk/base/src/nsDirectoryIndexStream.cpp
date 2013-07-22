@@ -19,7 +19,6 @@
 #include "nsXPIDLString.h"
 #include "prio.h"
 #include "prlog.h"
-#include "prlong.h"
 #ifdef PR_LOGGING
 static PRLogModuleInfo* gLog;
 #endif

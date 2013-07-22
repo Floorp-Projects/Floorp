@@ -18,8 +18,6 @@
 <resources>
   <string name="moz_app_displayname">@MOZ_APP_DISPLAYNAME@</string>
 #include ../services/strings.xml.in
-  <string name="splash_settingup">&splash_settingup;</string>
-  <string name="splash_bookmarks_history">&splash_bookmarks_history;</string>
   <string name="no_space_to_start_error">&no_space_to_start_error;</string>
   <string name="error_loading_file">&error_loading_file;</string>
 
@@ -194,6 +192,8 @@
   <string name="reading_list_failed">&reading_list_failed;</string>
   <string name="reading_list_duplicate">&reading_list_duplicate;</string>
 
+  <string name="page_action_dropmarker_description">&page_action_dropmarker_description;</string>
+
   <string name="contextmenu_open_new_tab">&contextmenu_open_new_tab;</string>
   <string name="contextmenu_open_private_tab">&contextmenu_open_private_tab;</string>
   <string name="contextmenu_open_in_reader">&contextmenu_open_in_reader;</string>
@@ -285,12 +285,12 @@
   <!-- Updater notifications -->
   <string name="updater_start_title">&updater_start_title2;</string>
   <string name="updater_start_select">&updater_start_select2;</string>
- 
+
   <string name="updater_downloading_title">&updater_downloading_title2;</string>
   <string name="updater_downloading_title_failed">&updater_downloading_title_failed2;</string>
   <string name="updater_downloading_select">&updater_downloading_select2;</string>
   <string name="updater_downloading_retry">&updater_downloading_retry2;</string>
-   
+
   <string name="updater_apply_title">&updater_apply_title2;</string>
   <string name="updater_apply_select">&updater_apply_select2;</string>
 
@@ -302,4 +302,8 @@
   <string name="wallpaper_progress">&wallpaper_progress;</string>
   <string name="wallpaper_fail">&wallpaper_fail;</string>
 
+
+  <!-- Guest mode -->
+  <string name="enter_guest_mode">&enter_guest_mode;</string>
+  <string name="exit_guest_mode">&exit_guest_mode;</string>
 </resources>

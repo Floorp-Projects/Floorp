@@ -1574,12 +1574,19 @@
           this.appendChild(item);
           this._items.push(item);
         }
-        if (this.notification.options.centerActions.length == 1) {
-          this._setState(this._states.SINGLE);
-        } else if (this.notification.options.primaryPlugin) {
-          this._setState(this._states.MULTI_COLLAPSED);
-        } else {
-          this._setState(this._states.MULTI_EXPANDED);
+        switch (this.notification.options.centerActions.length) {
+          case 0:
+            PopupNotifications._dismiss();
+            break;
+          case 1:
+            this._setState(this._states.SINGLE);
+            break;
+          default:
+            if (this.notification.options.primaryPlugin) {
+              this._setState(this._states.MULTI_COLLAPSED);
+            } else {
+              this._setState(this._states.MULTI_EXPANDED);
+            }
         }
       ]]></constructor>
       <method name="_setState">
@@ -1645,7 +1652,7 @@
             button2 = {
               label: "pluginContinue.label",
               accesskey: "pluginContinue.accesskey",
-              action: "_cancel",
+              action: "_singleContinue",
               default: true
             };
             switch (action.blocklistState) {
@@ -1816,6 +1823,14 @@
           gPluginHandler._updatePluginPermission(this.notification,
             this.notification.options.centerActions[0],
             "allowalways");
+          this._cancel();
+        ]]></body>
+      </method>
+      <method name="_singleContinue">
+        <body><![CDATA[
+          gPluginHandler._updatePluginPermission(this.notification,
+            this.notification.options.centerActions[0],
+            "continue");
           this._cancel();
         ]]></body>
       </method>

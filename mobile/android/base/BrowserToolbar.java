@@ -765,7 +765,8 @@ public class BrowserToolbar extends GeckoRelativeLayout
 
         // If the edit text has a composition string, don't call updateGoButton().
         // That method resets IME and composition state will be broken.
-        if (!hasCompositionString(s)) {
+        if (!hasCompositionString(s) ||
+            InputMethods.isGestureKeyboard(mUrlEditText.getContext())) {
             updateGoButton(text);
         }
 

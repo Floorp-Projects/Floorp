@@ -897,6 +897,10 @@ CodeGenerator::visitOsrEntry(LOsrEntry *lir)
     masm.flushBuffer();
     setOsrEntryOffset(masm.size());
 
+#if JS_TRACE_LOGGING
+    masm.tracelogLog(TraceLogging::INFO_ENGINE_IONMONKEY);
+#endif
+
     // Allocate the full frame for this function.
     uint32_t size = frameSize();
     if (size != 0)
@@ -5421,6 +5425,11 @@ CodeGenerator::generate()
     if (!safepoints_.init(graph.totalSlotCount()))
         return false;
 
+#if JS_TRACE_LOGGING
+    masm.tracelogStart(gen->info().script());
+    masm.tracelogLog(TraceLogging::INFO_ENGINE_IONMONKEY);
+#endif
+
     // Before generating any code, we generate type checks for all parameters.
     // This comes before deoptTable_, because we can't use deopt tables without
     // creating the actual frame.
@@ -5433,9 +5442,20 @@ CodeGenerator::generate()
             return false;
     }
 
+#if JS_TRACE_LOGGING
+    Label skip;
+    masm.jump(&skip);
+#endif
+
     // Remember the entry offset to skip the argument check.
     masm.flushBuffer();
     setSkipArgCheckEntryOffset(masm.size());
+
+#if JS_TRACE_LOGGING
+    masm.tracelogStart(gen->info().script());
+    masm.tracelogLog(TraceLogging::INFO_ENGINE_IONMONKEY);
+    masm.bind(&skip);
+#endif
 
     if (!generatePrologue())
         return false;
@@ -5956,11 +5976,12 @@ bool
 CodeGenerator::visitSetElementCacheV(LSetElementCacheV *ins)
 {
     Register obj = ToRegister(ins->object());
-    Register temp = ToRegister(ins->temp());
+    Register temp0 = ToRegister(ins->temp0());
+    Register temp1 = ToRegister(ins->temp1());
     ValueOperand index = ToValue(ins, LSetElementCacheV::Index);
     ConstantOrRegister value = TypedOrValueRegister(ToValue(ins, LSetElementCacheV::Value));
 
-    SetElementIC cache(obj, temp, index, value, ins->mir()->strict());
+    SetElementIC cache(obj, temp0, temp1, index, value, ins->mir()->strict());
 
     return addCache(ins, allocateCache(cache));
 }
@@ -5969,7 +5990,8 @@ bool
 CodeGenerator::visitSetElementCacheT(LSetElementCacheT *ins)
 {
     Register obj = ToRegister(ins->object());
-    Register temp = ToRegister(ins->temp());
+    Register temp0 = ToRegister(ins->temp0());
+    Register temp1 = ToRegister(ins->temp1());
     ValueOperand index = ToValue(ins, LSetElementCacheT::Index);
     ConstantOrRegister value;
     const LAllocation *tmp = ins->value();
@@ -5978,7 +6000,7 @@ CodeGenerator::visitSetElementCacheT(LSetElementCacheT *ins)
     else
         value = TypedOrValueRegister(ins->mir()->value()->type(), ToAnyRegister(tmp));
 
-    SetElementIC cache(obj, temp, index, value, ins->mir()->strict());
+    SetElementIC cache(obj, temp0, temp1, index, value, ins->mir()->strict());
 
     return addCache(ins, allocateCache(cache));
 }

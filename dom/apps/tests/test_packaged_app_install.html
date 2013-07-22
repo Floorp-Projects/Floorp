@@ -58,20 +58,33 @@ function finish() {
   SimpleTest.finish();
 }
 
-function cbError(aError) {
-  ok(false, "Error callback invoked " + aError);
+function mozAppsError() {
+  ok(false, "mozApps error: " + this.error.name);
+  finish();
+}
+
+function xhrError(event, url) {
+  var xhr = event.target;
+  ok(false, "XHR error loading " + url + ": " + xhr.status + " - " +
+            xhr.statusText);
+  finish();
+}
+
+function xhrAbort(url) {
+  ok(false, "XHR abort loading " + url);
   finish();
 }
 
 function setAppVersion(aVersion, aCb) {
   var xhr = new XMLHttpRequest();
+  var url = gSJS + "?setVersion=" + aVersion;
   xhr.addEventListener("load", function() {
-    is(xhr.responseText, "OK", "setVersion OK");
+    is(xhr.responseText, "OK", "setAppVersion OK");
     aCb();
   });
-  xhr.addEventListener("error", cbError);
-  xhr.addEventListener("abort", cbError);
-  xhr.open("GET", gSJS + "?setVersion=" + aVersion, true);
+  xhr.addEventListener("error", event => xhrError(event, url));
+  xhr.addEventListener("abort", event => xhrAbort(url));
+  xhr.open("GET", url, true);
   xhr.send();
 }
 
@@ -380,9 +393,7 @@ var steps = [
     };
 
     var request = navigator.mozApps.installPackage(miniManifestURL);
-    request.onerror = function(evt) {
-      cbError(evt.target.error.name);
-    };
+    request.onerror = mozAppsError;
     request.onsuccess = function() {
       ok(true, "Application installed");
     };

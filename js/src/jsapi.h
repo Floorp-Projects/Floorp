@@ -242,8 +242,8 @@ class AutoVectorRooter : protected AutoGCRooter
     bool empty() const { return vector.empty(); }
 
     bool append(const T &v) { return vector.append(v); }
-    bool append(const AutoVectorRooter<T> &other) {
-        return vector.append(other.vector);
+    bool appendAll(const AutoVectorRooter<T> &other) {
+        return vector.appendAll(other.vector);
     }
 
     bool insert(T *p, const T &val) { return vector.insert(p, val); }

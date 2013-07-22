@@ -66,7 +66,7 @@ CanvasClient2D::Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer)
                                               : gfxASurface::CONTENT_COLOR_ALPHA;
   mDeprecatedTextureClient->EnsureAllocated(aSize, contentType);
 
-  gfxASurface* surface = mDeprecatedTextureClient->LockSurface();
+  gfxASurface* surface = mDeprecatedTextureClient->LockImageSurface();
   aLayer->UpdateSurface(surface);
   mDeprecatedTextureClient->Unlock();
 }
@@ -125,6 +125,12 @@ CanvasClientWebGL::Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer)
   } else {
     SurfaceStreamHandle handle = stream->GetShareHandle();
     mDeprecatedTextureClient->SetDescriptor(SurfaceStreamDescriptor(handle, false));
+
+    // Bug 894405
+    //
+    // Ref this so the SurfaceStream doesn't disappear unexpectedly. The
+    // Compositor will need to unref it when finished.
+    aLayer->mGLContext->AddRef();
   }
 
   aLayer->Painted();

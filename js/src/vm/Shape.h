@@ -10,6 +10,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/GuardObjects.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/TemplateLib.h"
 
 #include "jspropertytree.h"
 #include "jstypes.h"
@@ -108,7 +109,7 @@ static const uint32_t SHAPE_MAXIMUM_SLOT = JS_BIT(24) - 2;
  * minimize footprint.
  */
 struct ShapeTable {
-    static const uint32_t HASH_BITS     = tl::BitSize<HashNumber>::result;
+    static const uint32_t HASH_BITS     = mozilla::tl::BitSize<HashNumber>::value;
     static const uint32_t MIN_ENTRIES   = 7;
     static const uint32_t MIN_SIZE_LOG2 = 4;
     static const uint32_t MIN_SIZE      = JS_BIT(MIN_SIZE_LOG2);
@@ -1100,7 +1101,7 @@ inline void
 SHAPE_STORE_PRESERVING_COLLISION(js::Shape **spp, js::Shape *shape)
 {
     *spp = reinterpret_cast<js::Shape*>(uintptr_t(shape) |
-                                        SHAPE_HAD_COLLISION(*spp));
+                                        uintptr_t(SHAPE_HAD_COLLISION(*spp)));
 }
 
 namespace js {

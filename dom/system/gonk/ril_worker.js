@@ -88,7 +88,7 @@ let RILQUIRKS_SIM_APP_STATE_EXTRA_FIELDS = libcutils.property_get("ro.moz.ril.si
 // Needed for call-waiting on Peak device
 let RILQUIRKS_EXTRA_UINT32_2ND_CALL = libcutils.property_get("ro.moz.ril.extra_int_2nd_call", "false") == "true";
 // On the emulator we support querying the number of lock retries
-let RILQUIRKS_HAVE_QUERY_ICC_LOCK_RETRY_COUNT = libcutils.property_get("ro.moz.ril.have_query_icc_lock_retry_count", "false") == "true";
+let RILQUIRKS_HAVE_QUERY_ICC_LOCK_RETRY_COUNT = libcutils.property_get("ro.moz.ril.query_icc_count", "false") == "true";
 
 // Marker object.
 let PENDING_NETWORK_TYPE = {};
@@ -1490,6 +1490,29 @@ let RIL = {
   },
 
   /**
+   * Queries current CLIR status.
+   *
+   */
+  getCLIR: function getCLIR(options) {
+    Buf.simpleRequest(REQUEST_GET_CLIR, options);
+  },
+
+  /**
+   * Enables or disables the presentation of the calling line identity (CLI) to
+   * the called party when originating a call.
+   *
+   * @param options.clirMode
+   *        Is one of the CLIR_* constants in
+   *        nsIDOMMozMobileConnection interface.
+   */
+  setCLIR: function setCLIR(options) {
+    Buf.newParcel(REQUEST_SET_CLIR, options);
+    Buf.writeUint32(1);
+    Buf.writeUint32(options.clirMode);
+    Buf.sendParcel();
+  },
+
+  /**
    * Set screen state.
    *
    * @param on
@@ -2442,6 +2465,27 @@ let RIL = {
         }
         return;
 
+      // CLIR (non-temporary ones)
+      case MMI_SC_CLIR:
+        options.mmiServiceCode = MMI_KS_SC_CLIR;
+        options.procedure = mmi.procedure;
+        switch (options.procedure) {
+          case MMI_PROCEDURE_INTERROGATION:
+            this.getCLIR(options);
+            return;
+          case MMI_PROCEDURE_ACTIVATION:
+            options.clirMode = CLIR_INVOCATION;
+            break;
+          case MMI_PROCEDURE_DEACTIVATION:
+            options.clirMode = CLIR_SUPPRESSION;
+            break;
+          default:
+            _sendMMIError(MMI_ERROR_KS_ERROR);
+            return;
+        }
+        this.setCLIR(options);
+        return;
+
       // Call barring
       case MMI_SC_BAOC:
       case MMI_SC_BAOIC:
@@ -2453,8 +2497,6 @@ let RIL = {
       case MMI_SC_BA_MT:
       // Call waiting
       case MMI_SC_CALL_WAITING:
-      // CLIR
-      case MMI_SC_CLIR:
         _sendMMIError(MMI_ERROR_KS_NOT_SUPPORTED);
         return;
     }
@@ -4942,8 +4984,108 @@ RIL[REQUEST_CANCEL_USSD] = function REQUEST_CANCEL_USSD(length, options) {
   options.errorMsg = RIL_ERROR_TO_GECKO_ERROR[options.rilRequestError];
   this.sendDOMMessage(options);
 };
-RIL[REQUEST_GET_CLIR] = null;
-RIL[REQUEST_SET_CLIR] = null;
+RIL[REQUEST_GET_CLIR] = function REQUEST_GET_CLIR(length, options) {
+  options.success = (options.rilRequestError === 0);
+  if (!options.success) {
+    options.errorMsg = RIL_ERROR_TO_GECKO_ERROR[options.rilRequestError];
+    this.sendDOMMessage(options);
+    return;
+  }
+
+  let bufLength = Buf.readUint32();
+  if (!bufLength || bufLength < 2) {
+    options.success = false;
+    options.errorMsg = GECKO_ERROR_GENERIC_FAILURE;
+    this.sendDOMMessage(options);
+    return;
+  }
+
+  options.n = Buf.readUint32(); // Will be TS 27.007 +CLIR parameter 'n'.
+  options.m = Buf.readUint32(); // Will be TS 27.007 +CLIR parameter 'm'.
+
+  if (options.rilMessageType === "sendMMI") {
+    // TS 27.007 +CLIR parameter 'm'.
+    switch (options.m) {
+      // CLIR not provisioned.
+      case 0:
+        options.statusMessage = MMI_SM_KS_SERVICE_NOT_PROVISIONED;
+        break;
+      // CLIR provisioned in permanent mode.
+      case 1:
+        options.statusMessage = MMI_SM_KS_CLIR_PERMANENT;
+        break;
+      // Unknown (e.g. no network, etc.).
+      case 2:
+        options.success = false;
+        options.errorMsg = MMI_ERROR_KS_ERROR;
+        break;
+      // CLIR temporary mode presentation restricted.
+      case 3:
+        // TS 27.007 +CLIR parameter 'n'.
+        switch (options.n) {
+          // Default.
+          case 0:
+          // CLIR invocation.
+          case 1:
+            options.statusMessage = MMI_SM_KS_CLIR_DEFAULT_ON_NEXT_CALL_ON;
+            break;
+          // CLIR suppression.
+          case 2:
+            options.statusMessage = MMI_SM_KS_CLIR_DEFAULT_ON_NEXT_CALL_OFF;
+            break;
+          default:
+            options.success = false;
+            options.errorMsg = GECKO_ERROR_GENERIC_FAILURE;
+            break;
+        }
+        break;
+      // CLIR temporary mode presentation allowed.
+      case 4:
+        // TS 27.007 +CLIR parameter 'n'.
+        switch (options.n) {
+          // Default.
+          case 0:
+          // CLIR suppression.
+          case 2:
+            options.statusMessage = MMI_SM_KS_CLIR_DEFAULT_OFF_NEXT_CALL_OFF;
+            break;
+          // CLIR invocation.
+          case 1:
+            options.statusMessage = MMI_SM_KS_CLIR_DEFAULT_OFF_NEXT_CALL_ON;
+            break;
+          default:
+            options.success = false;
+            options.errorMsg = GECKO_ERROR_GENERIC_FAILURE;
+            break;
+        }
+        break;
+      default:
+        options.success = false;
+        options.errorMsg = GECKO_ERROR_GENERIC_FAILURE;
+        break;
+    }
+  }
+
+  this.sendDOMMessage(options);
+};
+RIL[REQUEST_SET_CLIR] = function REQUEST_SET_CLIR(length, options) {
+  options.success = (options.rilRequestError === 0);
+  if (!options.success) {
+    options.errorMsg = RIL_ERROR_TO_GECKO_ERROR[options.rilRequestError];
+  }
+  if (options.success && (options.rilMessageType === "sendMMI")) {
+    switch (options.procedure) {
+      case MMI_PROCEDURE_ACTIVATION:
+        options.statusMessage = MMI_SM_KS_SERVICE_ENABLED;
+        break;
+      case MMI_PROCEDURE_DEACTIVATION:
+        options.statusMessage = MMI_SM_KS_SERVICE_DISABLED;
+        break;
+    }
+  }
+  this.sendDOMMessage(options);
+};
+
 RIL[REQUEST_QUERY_CALL_FORWARD_STATUS] =
   function REQUEST_QUERY_CALL_FORWARD_STATUS(length, options) {
     options.success = (options.rilRequestError === 0);

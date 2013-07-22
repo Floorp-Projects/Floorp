@@ -112,8 +112,6 @@ let gDownloadRowTemplate = {
 // Test Infrastructure
 
 function test() {
-  DownloadsPanelView._view.clearDownloads();
-  PanelUI.show("downloads-container");
   runTests();
 }
 
@@ -212,43 +210,11 @@ function gen_addDownloadRows(aDataRows){
 /////////////////////////////////////
 // Test implementations
 
-/**
- * Test that:
- *  view can represent all possible download states
- *  clearDownloads does in fact empty the view
- *  addDownload adds an item, to the right place
- *  removeDownload removes an item, leaving the view in the correct state
- */
-gTests.push({
-  desc: "UI sanity check",
-  run: function(){
-
-    ok(document.getElementById('downloads-list'), "Downloads panel grid is present");
-    ok(DownloadsPanelView, "Downloads panel object is present");
-
-    PanelUI.show('downloads-container');
-    ok(DownloadsPanelView.visible, "Downloads panel is visible after being shown");
-  }
-});
-
 gTests.push({
   desc: "zero downloads",
   run: function () {
-
     yield resetDownloads();
-
-    let downloadsList = document.getElementById("downloads-list");
-
-    // wait for the richgrid to announce its readiness
-    // .. fail a test if the timeout is exceeded
-    let isReady = waitForEvent(downloadsList, "DownloadsReady", 2000);
-    // tickle the view to cause it to refresh itself
-    DownloadsPanelView._view.getDownloads();
-
-    yield isReady;
-
-    let count = downloadsList.children.length;
-    is(count, 0, "Zero items in grid view with empty downloads db");
+    todo(false, "Test there are no visible notifications with an empty db.");
   }
 });
 
@@ -276,74 +242,30 @@ gTests.push({
 
     yield resetDownloads();
 
-    // Test item data and count.  This also tests the ordering of the display.
-    let downloadsList = document.getElementById("downloads-list");
-    // wait for the richgrid to announce its readiness
-    // .. fail a test if the timeout is exceeded
-    let isReady = waitForEvent(downloadsList, "DownloadsReady", 2000);
-
-    // NB: beware display limits which might cause mismatch btw. rendered item and db rows
-
     try {
       // Populate the downloads database with the data required by this test.
       // we're going to add stuff to the downloads db.
       yield spawn( gen_addDownloadRows( DownloadData ) );
 
-      // tickle the view to cause it to refresh itself
-      DownloadsPanelView._view.getDownloads();
+      todo( false, "Check that Downloads._progressNotificationInfo and Downloads._downloadCount \
+        have the correct length (DownloadData.length) \
+        May also test that the correct notifications show up for various states.");
 
-      yield isReady;
-
-      if (!isReady || isReady instanceof Error){
-        ok(false, "DownloadsReady event never fired");
-      }
-
-      is(downloadsList.children.length, DownloadData.length,
-         "There is the correct number of richlistitems");
-
-      for (let i = 0; i < downloadsList.children.length; i++) {
-        let element = downloadsList.children[i];
-        let id = element.getAttribute("downloadId");
-        let dataItem = Downloads.manager.getDownload(id); // nsIDownload object
-
-        ok( equalStrings(
-              element.getAttribute("name"),
-              dataItem.displayName,
-              DownloadData[i].name
-            ), "Download names match up");
-
-        ok( equalNumbers(
-                element.getAttribute("state"),
-                dataItem.state,
-                DownloadData[i].state
-            ), "Download states match up");
-
-        ok( equalStrings(
-              element.getAttribute("target"),
-              dataItem.target.spec,
-              DownloadData[i].target
-            ), "Download targets match up");
-
-        if (DownloadData[i].source && dataItem.referrer){
-          ok( equalStrings(
-                dataItem.referrer.spec,
-                DownloadData[i].source
-              ), "Download sources match up");
-        }
-      }
+      todo(false, "Iterate through download objects in Downloads._progressNotificationInfo \
+        and confirm that the downloads they refer to are the same as those in \
+        DownloadData.");
     } catch(e) {
       info("Show downloads, some error: " + e);
     }
     finally {
       // Clean up when the test finishes.
-      DownloadsPanelView._view.clearDownloads();
       yield resetDownloads();
     }
   }
 });
 
 /**
- * Make sure the downloads can be removed with the expected result on the panel and its listing
+ * Make sure the downloads can be removed with the expected result on the notifications
  */
 gTests.push({
   desc: "Remove downloads",
@@ -356,25 +278,10 @@ gTests.push({
     ];
 
     yield resetDownloads();
-    DownloadsPanelView._view.getDownloads();
 
     try {
       // Populate the downloads database with the data required by this test.
       yield spawn( gen_addDownloadRows( DownloadData ) );
-
-      // Test item data and count.  This also tests the ordering of the display.
-      let downloadsList = document.getElementById("downloads-list");
-      // wait for the richgrid to announce its readiness
-      // .. fail a test if the timeout is exceeded
-      let isReady = waitForEvent(downloadsList, "DownloadsReady", 2000);
-      // tickle the view to cause it to refresh itself
-      DownloadsPanelView._view.getDownloads();
-
-      yield isReady;
-
-      if (!isReady || isReady instanceof Error){
-        is(false, "DownloadsReady event never fired");
-      }
 
       let downloadRows = null,
           promisedDownloads;
@@ -392,15 +299,9 @@ gTests.push({
 
       is(downloadRows.length, 3, "Correct number of downloads in the db before removal");
 
-      // remove the first one
-      let itemNode = downloadsList.children[0];
-      let id = itemNode.getAttribute("downloadId");
-      // check the file exists
-      let download = Downloads.manager.getDownload( id );
-      let file = download.targetFile;
-      ok(file && file.exists());
+      todo(false, "Get some download from Downloads._progressNotificationInfo, \
+        confirm that its file exists, then remove it.");
 
-      Downloads.manager.removeDownload( id );
       // remove is async(?), wait a bit
       yield waitForMs(0);
 
@@ -417,18 +318,14 @@ gTests.push({
       });
       yield promisedDownloads;
 
-      is(downloadRows.length, 2, "Correct number of downloads in the db after removal");
-
-      is(2, downloadsList.children.length,
-         "Removing a download updates the items list");
-      ok(file && file.exists(), "File still exists after download removal");
+      todo(false, "confirm that the removed download is no longer in the database \
+        and its file no longer exists.");
 
     } catch(e) {
       info("Remove downloads, some error: " + e);
     }
     finally {
       // Clean up when the test finishes.
-      DownloadsPanelView._view.clearDownloads();
       yield resetDownloads();
     }
   }

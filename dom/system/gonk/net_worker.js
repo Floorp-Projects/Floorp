@@ -198,6 +198,20 @@ self.onmessage = function onmessage(event) {
 };
 
 /**
+* Set DNS servers for given network interface.
+*/
+function setDNS(options) {
+  let ifprops = getIFProperties(options.ifname);
+  let dns1_str = options.dns1_str || ifprops.dns1_str;
+  let dns2_str = options.dns2_str || ifprops.dns2_str;
+  libcutils.property_set("net.dns1", dns1_str);
+  libcutils.property_set("net.dns2", dns2_str);
+  // Bump the DNS change property.
+  let dnschange = libcutils.property_get("net.dnschange", "0");
+  libcutils.property_set("net.dnschange", (parseInt(dnschange, 10) + 1).toString());
+}
+
+/**
  * Set default route and DNS servers for given network interface.
  */
 function setDefaultRouteAndDNS(options) {

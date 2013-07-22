@@ -36,6 +36,26 @@ LinkFail(JSContext *cx, const char *str)
 }
 
 static bool
+GetDataProperty(JSContext *cx, const Value &objVal, HandlePropertyName field, MutableHandleValue v)
+{
+    if (!objVal.isObject())
+        return LinkFail(cx, "accessing property of non-object");
+
+    JSPropertyDescriptor desc;
+    if (!JS_GetPropertyDescriptorById(cx, &objVal.toObject(), NameToId(field), 0, &desc))
+        return false;
+
+    if (!desc.obj)
+        return LinkFail(cx, "property not present on object");
+
+    if (desc.attrs & (JSPROP_GETTER | JSPROP_SETTER))
+        return LinkFail(cx, "property is not a data property");
+
+    v.set(desc.value);
+    return true;
+}
+
+static bool
 ValidateGlobalVariable(JSContext *cx, const AsmJSModule &module, AsmJSModule::Global &global,
                        HandleValue importVal)
 {
@@ -55,7 +75,7 @@ ValidateGlobalVariable(JSContext *cx, const AsmJSModule &module, AsmJSModule::Gl
       case AsmJSModule::Global::InitImport: {
         RootedPropertyName field(cx, global.varImportField());
         RootedValue v(cx);
-        if (!GetProperty(cx, importVal, field, &v))
+        if (!GetDataProperty(cx, importVal, field, &v))
             return false;
 
         switch (global.varImportCoercion()) {
@@ -81,7 +101,7 @@ ValidateFFI(JSContext *cx, AsmJSModule::Global &global, HandleValue importVal,
 {
     RootedPropertyName field(cx, global.ffiField());
     RootedValue v(cx);
-    if (!GetProperty(cx, importVal, field, &v))
+    if (!GetDataProperty(cx, importVal, field, &v))
         return false;
 
     if (!v.isObject() || !v.toObject().is<JSFunction>())
@@ -97,7 +117,7 @@ ValidateArrayView(JSContext *cx, AsmJSModule::Global &global, HandleValue global
 {
     RootedPropertyName field(cx, global.viewName());
     RootedValue v(cx);
-    if (!GetProperty(cx, globalVal, field, &v))
+    if (!GetDataProperty(cx, globalVal, field, &v))
         return false;
 
     if (!IsTypedArrayConstructor(v, global.viewType()))
@@ -110,10 +130,10 @@ static bool
 ValidateMathBuiltin(JSContext *cx, AsmJSModule::Global &global, HandleValue globalVal)
 {
     RootedValue v(cx);
-    if (!GetProperty(cx, globalVal, cx->names().Math, &v))
+    if (!GetDataProperty(cx, globalVal, cx->names().Math, &v))
         return false;
     RootedPropertyName field(cx, global.mathName());
-    if (!GetProperty(cx, v, field, &v))
+    if (!GetDataProperty(cx, v, field, &v))
         return false;
 
     Native native = NULL;
@@ -146,7 +166,7 @@ ValidateGlobalConstant(JSContext *cx, AsmJSModule::Global &global, HandleValue g
 {
     RootedPropertyName field(cx, global.constantName());
     RootedValue v(cx);
-    if (!GetProperty(cx, globalVal, field, &v))
+    if (!GetDataProperty(cx, globalVal, field, &v))
         return false;
 
     if (!v.isNumber())
@@ -253,7 +273,7 @@ DynamicallyLinkModule(JSContext *cx, CallArgs args, AsmJSModule &module)
     return true;
 }
 
-AsmJSActivation::AsmJSActivation(JSContext *cx, const AsmJSModule &module)
+AsmJSActivation::AsmJSActivation(JSContext *cx, AsmJSModule &module)
   : cx_(cx),
     module_(module),
     errorRejoinSP_(NULL),
@@ -261,8 +281,12 @@ AsmJSActivation::AsmJSActivation(JSContext *cx, const AsmJSModule &module)
     resumePC_(NULL)
 {
     if (cx->runtime()->spsProfiler.enabled()) {
+        // Use a profiler string that matches jsMatch regex in
+        // browser/devtools/profiler/cleopatra/js/parserWorker.js.
+        // (For now use a single static string to avoid further slowing down
+        // calls into asm.js.)
         profiler_ = &cx->runtime()->spsProfiler;
-        profiler_->enterNative("asm.js code", this);
+        profiler_->enterNative("asm.js code :0", this);
     }
 
     prev_ = cx_->runtime()->mainThread.asmJSActivationStack_;
@@ -297,7 +321,7 @@ js::CallAsmJS(JSContext *cx, unsigned argc, Value *vp)
     //  - a pointer to the module from which it was returned
     //  - its index in the ordered list of exported functions
     RootedObject moduleObj(cx, &callee->getExtendedSlot(ASM_MODULE_SLOT).toObject());
-    const AsmJSModule &module = AsmJSModuleObjectToModule(moduleObj);
+    AsmJSModule &module = AsmJSModuleObjectToModule(moduleObj);
 
     // An exported function points to the code as well as the exported
     // function's signature, which implies the dynamic coercions performed on
@@ -386,11 +410,10 @@ HandleDynamicLinkFailure(JSContext *cx, CallArgs args, AsmJSModule &module, Hand
 
     const AsmJSModule::PostLinkFailureInfo &info = module.postLinkFailureInfo();
 
-    uint32_t length = info.bufEnd_ - info.bufStart_;
-    Rooted<JSStableString*> src(cx, info.scriptSource_->substring(cx, info.bufStart_, info.bufEnd_));
+    uint32_t length = info.bufEnd - info.bufStart;
+    Rooted<JSStableString*> src(cx, info.scriptSource->substring(cx, info.bufStart, info.bufEnd));
     if (!src)
         return false;
-    const jschar *chars = src->chars().get();
 
     RootedFunction fun(cx, NewFunction(cx, NullPtr(), NULL, 0, JSFunction::INTERPRETED,
                                        cx->global(), name, JSFunction::FinalizeKind,
@@ -407,8 +430,13 @@ HandleDynamicLinkFailure(JSContext *cx, CallArgs args, AsmJSModule &module, Hand
     if (module.bufferArgumentName())
         formals.infallibleAppend(module.bufferArgumentName());
 
-    if (!frontend::CompileFunctionBody(cx, &fun, info.options_, formals, chars, length,
-                                       /* isAsmJSRecompile = */ true))
+    CompileOptions options(cx);
+    options.setPrincipals(cx->compartment()->principals)
+           .setOriginPrincipals(info.originPrincipals)
+           .setCompileAndGo(false)
+           .setNoScriptRval(false);
+
+    if (!frontend::CompileFunctionBody(cx, &fun, options, formals, src->chars().get(), length))
         return false;
 
     // Call the function we just recompiled.
@@ -484,7 +512,7 @@ SendFunctionsToPerf(JSContext *cx, AsmJSModule &module)
     unsigned long base = (unsigned long) module.functionCode();
 
     const AsmJSModule::PostLinkFailureInfo &info = module.postLinkFailureInfo();
-    const char *filename = const_cast<char *>(info.scriptSource_->filename());
+    const char *filename = const_cast<char *>(info.scriptSource->filename());
 
     for (unsigned i = 0; i < module.numPerfFunctions(); i++) {
         const AsmJSModule::ProfiledFunction &func = module.perfProfiledFunction(i);
@@ -519,7 +547,7 @@ SendBlocksToPerf(JSContext *cx, AsmJSModule &module)
     unsigned long funcBaseAddress = (unsigned long) module.functionCode();
 
     const AsmJSModule::PostLinkFailureInfo &info = module.postLinkFailureInfo();
-    const char *filename = const_cast<char *>(info.scriptSource_->filename());
+    const char *filename = const_cast<char *>(info.scriptSource->filename());
 
     for (unsigned i = 0; i < module.numPerfBlocksFunctions(); i++) {
         const AsmJSModule::ProfiledBlocksFunction &func = module.perfProfiledBlocksFunction(i);

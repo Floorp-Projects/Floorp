@@ -14,11 +14,9 @@ LIBRARY_NAME = exception_handler_s
 MSVC_ENABLE_PGO := 1
 
 ifeq ($(OS_ARCH),Linux)
-# There's no define for XP_LINUX normally.
 # MOZ_APP_NAME is needed on Android, where we
 # need to launch by package name.
 DEFINES += \
-  -DXP_LINUX \
   -DANDROID_PACKAGE_NAME=\"$(ANDROID_PACKAGE_NAME)\"
   $(NULL)
 endif

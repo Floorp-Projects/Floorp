@@ -37,6 +37,13 @@ let gEnableLogging = Services.prefs.getBoolPref("devtools.debugger.log");
 Services.prefs.setBoolPref("devtools.debugger.remote-enabled", true);
 Services.prefs.setBoolPref("devtools.debugger.log", true);
 
+// Redeclare dbg_assert with a fatal behavior.
+function dbg_assert(cond, e) {
+  if (!cond) {
+    throw e;
+  }
+}
+
 registerCleanupFunction(function() {
   Services.prefs.setBoolPref("devtools.debugger.remote-enabled", gEnableRemote);
   Services.prefs.setBoolPref("devtools.debugger.log", gEnableLogging);
@@ -143,11 +150,11 @@ function attach_tab_actor_for_url(aClient, aURL, aCallback) {
 
 function attach_thread_actor_for_url(aClient, aURL, aCallback) {
   attach_tab_actor_for_url(aClient, aURL, function(aTabActor, aResponse) {
-    aClient.attachThread(actor.threadActor, function(aResponse, aThreadClient) {
+    aClient.attachThread(aResponse.threadActor, function(aResponse, aThreadClient) {
       // We don't care about the pause right now (use
       // get_actor_for_url() if you do), so resume it.
       aThreadClient.resume(function(aResponse) {
-        aCallback(actor);
+        aCallback(aThreadClient);
       });
     });
   });

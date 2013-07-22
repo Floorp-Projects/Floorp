@@ -8,6 +8,14 @@ const Cr = Components.results;
 
 Cu.import("resource://testing-common/httpd.js");
 
+XPCOMUtils.defineLazyGetter(this, "URL", function() {
+  return "http://localhost:" + httpserv.identity.primaryPort;
+});
+
+XPCOMUtils.defineLazyGetter(this, "PORT", function() {
+  return httpserv.identity.primaryPort;
+});
+
 const FLAG_RETURN_FALSE   = 1 << 0;
 const FLAG_WRONG_PASSWORD = 1 << 1;
 const FLAG_BOGUS_USER = 1 << 2;
@@ -42,12 +50,12 @@ AuthPrompt1.prototype = {
     function ap1_promptUP(title, text, realm, savePW, user, pw)
   {
     // Note that the realm here isn't actually the realm. it's a pw mgr key.
-    do_check_eq("http://localhost:4444 (" + this.expectedRealm + ")", realm);
+    do_check_eq(URL + " (" + this.expectedRealm + ")", realm);
     if (text.indexOf(this.expectedRealm) == -1)
       do_throw("Text must indicate the realm");
     if (text.indexOf("localhost") == -1)
       do_throw("Text must indicate the hostname");
-    if (text.indexOf("4444") == -1)
+    if (text.indexOf(String(PORT)) == -1)
       do_throw("Text must indicate the port");
     if (text.indexOf("-1") != -1)
       do_throw("Text must contain negative numbers");
@@ -291,13 +299,13 @@ function run_test() {
   httpserv.registerPathHandler("/auth/realm", authRealm);
   httpserv.registerPathHandler("/auth/digest", authDigest);
 
-  httpserv.start(4444);
+  httpserv.start(-1);
 
   tests[0]();
 }
 
 function test_noauth() {
-  var chan = makeChan("http://localhost:4444/auth");
+  var chan = makeChan(URL + "/auth");
 
   listener.expectedCode = 401; // Unauthorized
   chan.asyncOpen(listener, null);
@@ -306,7 +314,7 @@ function test_noauth() {
 }
 
 function test_returnfalse1() {
-  var chan = makeChan("http://localhost:4444/auth");
+  var chan = makeChan(URL + "/auth");
 
   chan.notificationCallbacks = new Requestor(FLAG_RETURN_FALSE, 1);
   listener.expectedCode = 401; // Unauthorized
@@ -316,7 +324,7 @@ function test_returnfalse1() {
 }
 
 function test_wrongpw1() {
-  var chan = makeChan("http://localhost:4444/auth");
+  var chan = makeChan(URL + "/auth");
 
   chan.notificationCallbacks = new Requestor(FLAG_WRONG_PASSWORD, 1);
   listener.expectedCode = 200; // OK
@@ -326,7 +334,7 @@ function test_wrongpw1() {
 }
 
 function test_prompt1() {
-  var chan = makeChan("http://localhost:4444/auth");
+  var chan = makeChan(URL + "/auth");
 
   chan.notificationCallbacks = new Requestor(0, 1);
   listener.expectedCode = 200; // OK
@@ -336,7 +344,7 @@ function test_prompt1() {
 }
 
 function test_returnfalse2() {
-  var chan = makeChan("http://localhost:4444/auth");
+  var chan = makeChan(URL + "/auth");
 
   chan.notificationCallbacks = new Requestor(FLAG_RETURN_FALSE, 2);
   listener.expectedCode = 401; // Unauthorized
@@ -346,7 +354,7 @@ function test_returnfalse2() {
 }
 
 function test_wrongpw2() {
-  var chan = makeChan("http://localhost:4444/auth");
+  var chan = makeChan(URL + "/auth");
 
   chan.notificationCallbacks = new Requestor(FLAG_WRONG_PASSWORD, 2);
   listener.expectedCode = 200; // OK
@@ -356,7 +364,7 @@ function test_wrongpw2() {
 }
 
 function test_prompt2() {
-  var chan = makeChan("http://localhost:4444/auth");
+  var chan = makeChan(URL + "/auth");
 
   chan.notificationCallbacks = new Requestor(0, 2);
   listener.expectedCode = 200; // OK
@@ -366,7 +374,7 @@ function test_prompt2() {
 }
 
 function test_ntlm() {
-  var chan = makeChan("http://localhost:4444/auth/ntlm/simple");
+  var chan = makeChan(URL + "/auth/ntlm/simple");
 
   chan.notificationCallbacks = new Requestor(FLAG_RETURN_FALSE, 2);
   listener.expectedCode = 401; // Unauthorized
@@ -376,7 +384,7 @@ function test_ntlm() {
 }
 
 function test_auth() {
-  var chan = makeChan("http://localhost:4444/auth/realm");
+  var chan = makeChan(URL + "/auth/realm");
 
   chan.notificationCallbacks = new RealmTestRequestor();
   listener.expectedCode = 401; // Unauthorized
@@ -386,7 +394,7 @@ function test_auth() {
 }
 
 function test_digest_noauth() {
-  var chan = makeChan("http://localhost:4444/auth/digest");
+  var chan = makeChan(URL + "/auth/digest");
 
   //chan.notificationCallbacks = new Requestor(FLAG_RETURN_FALSE, 2);
   listener.expectedCode = 401; // Unauthorized
@@ -396,7 +404,7 @@ function test_digest_noauth() {
 }
 
 function test_digest() {
-  var chan = makeChan("http://localhost:4444/auth/digest");
+  var chan = makeChan(URL + "/auth/digest");
 
   chan.notificationCallbacks = new Requestor(0, 2);
   listener.expectedCode = 200; // OK
@@ -406,7 +414,7 @@ function test_digest() {
 }
 
 function test_digest_bogus_user() {
-  var chan = makeChan("http://localhost:4444/auth/digest");
+  var chan = makeChan(URL + "/auth/digest");
   chan.notificationCallbacks =  new Requestor(FLAG_BOGUS_USER, 2);
   listener.expectedCode = 401; // unauthorized
   chan.asyncOpen(listener, null);
