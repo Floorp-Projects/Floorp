@@ -549,17 +549,6 @@ NeedToReframeForAddingOrRemovingTransform(nsIFrame* aFrame)
   return false;
 }
 
-static nsIFrame*
-FindReflowRootFor(nsIFrame* aFrame)
-{
-  for (nsIFrame* f = aFrame; f; f = f->GetParent()) {
-    if (f->GetStateBits() & NS_FRAME_REFLOW_ROOT) {
-      return f;
-    }
-  }
-  return nullptr;
-}
-
 nsresult
 RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
 {
