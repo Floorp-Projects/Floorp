@@ -23,8 +23,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "NetworkHelper",
   "resource://gre/modules/devtools/NetworkHelper.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "clipboardHelper",
-                                   "@mozilla.org/widget/clipboardhelper;1",
-                                   "nsIClipboardHelper");
+  "@mozilla.org/widget/clipboardhelper;1", "nsIClipboardHelper");
 
 const NET_STRINGS_URI = "chrome://browser/locale/devtools/netmonitor.properties";
 const LISTENERS = [ "NetworkActivity" ];
