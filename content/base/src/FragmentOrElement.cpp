@@ -339,10 +339,10 @@ GetJSObjectChild(nsWrapperCache* aCache)
 }
 
 static bool
-NeedsScriptTraverse(nsWrapperCache* aCache)
+NeedsScriptTraverse(nsINode* aNode)
 {
-  JSObject* o = GetJSObjectChild(aCache);
-  return o && xpc_IsGrayGCThing(o);
+  return aNode->PreservingWrapper() && aNode->GetWrapperPreserveColor() &&
+         !aNode->IsBlackAndDoesNotNeedTracing(aNode);
 }
 
 //----------------------------------------------------------------------
@@ -358,11 +358,11 @@ NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_0(nsChildContentList)
 // nsChildContentList only ever has a single child, its wrapper, so if
 // the wrapper is black, the list can't be part of a garbage cycle.
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_BEGIN(nsChildContentList)
-  return !NeedsScriptTraverse(tmp);
+  return tmp->IsBlack();
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_END
 
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_IN_CC_BEGIN(nsChildContentList)
-  return !NeedsScriptTraverse(tmp);
+  return tmp->IsBlackAndDoesNotNeedTracing(tmp);
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_IN_CC_END
 
 // CanSkipThis returns false to avoid problems with incomplete unlinking.
