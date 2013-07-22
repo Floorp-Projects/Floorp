@@ -34,8 +34,6 @@ class LIRGeneratorX86Shared : public LIRGeneratorShared
                      MDefinition *rhs);
     bool lowerForFPU(LInstructionHelper<1, 2, 0> *ins, MDefinition *mir, MDefinition *lhs,
                      MDefinition *rhs);
-    bool lowerForBitAndAndBranch(LBitAndAndBranch *baab, MInstruction *mir,
-                                 MDefinition *lhs, MDefinition *rhs);
     bool visitConstant(MConstant *ins);
     bool visitAsmJSNeg(MAsmJSNeg *ins);
     bool visitAsmJSUDiv(MAsmJSUDiv *ins);
