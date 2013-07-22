@@ -116,21 +116,10 @@ SelectionCopyHelper(nsISelection *aSel, nsIDocument *aDoc,
   rv = docEncoder->EncodeToString(buf);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = docEncoder->GetMimeType(mimeType);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (!selForcedTextPlain && mimeType.EqualsLiteral(kTextMime)) {
-    // SetSelection and EncodeToString use this case to signal that text/plain
-    // was forced because the document is either not an nsIHTMLDocument or it's
-    // XHTML.  We want to pretty print XHTML but not non-nsIHTMLDocuments.
-    nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(aDoc);
-    if (!htmlDoc) {
-      selForcedTextPlain = true;
-    }
-  }
-
   // The mime type is ultimately text/html if the encoder successfully encoded
   // the selection as text/html.
+  rv = docEncoder->GetMimeType(mimeType);
+  NS_ENSURE_SUCCESS(rv, rv);
   bool encodedTextHTML = mimeType.EqualsLiteral(kHTMLMime);
 
   // First, prepare the text/plain clipboard flavor.
