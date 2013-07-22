@@ -2022,6 +2022,37 @@ const T& Constify(T& arg)
   return arg;
 }
 
+// Helper for turning (Owning)NonNull<T> into T&
+template<typename T>
+T& NonNullHelper(T& aArg)
+{
+  return aArg;
+}
+
+template<typename T>
+T& NonNullHelper(NonNull<T>& aArg)
+{
+  return aArg;
+}
+
+template<typename T>
+const T& NonNullHelper(const NonNull<T>& aArg)
+{
+  return aArg;
+}
+
+template<typename T>
+T& NonNullHelper(OwningNonNull<T>& aArg)
+{
+  return aArg;
+}
+
+template<typename T>
+const T& NonNullHelper(const OwningNonNull<T>& aArg)
+{
+  return aArg;
+}
+
 // Reparent the wrapper of aObj to whatever its native now thinks its
 // parent should be.
 nsresult

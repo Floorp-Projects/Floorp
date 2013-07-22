@@ -12,10 +12,10 @@
 namespace mozilla {
 namespace gl {
 
-static GLContext* sActiveContext = NULL;
+static GLContext* sActiveContext = nullptr;
 
-static Monitor* sMonitor = NULL;
-static nsDeque* sTextures = NULL;
+static Monitor* sMonitor = nullptr;
+static nsDeque* sTextures = nullptr;
 
 GLuint TexturePoolOGL::AcquireTexture()
 {
@@ -89,7 +89,7 @@ void TexturePoolOGL::Fill(GLContext* aContext)
 
   sActiveContext->MakeCurrent();
 
-  GLuint* texture = NULL;
+  GLuint* texture = nullptr;
   while (sTextures->GetSize() < TEXTURE_POOL_SIZE) {
     texture = (GLuint*)malloc(sizeof(GLuint));
     sActiveContext->fGenTextures(1, texture);

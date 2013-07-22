@@ -26,7 +26,7 @@ class CanvasLayerOGL :
 {
 public:
   CanvasLayerOGL(LayerManagerOGL *aManager)
-    : CanvasLayer(aManager, NULL)
+    : CanvasLayer(aManager, nullptr)
     , LayerOGL(aManager)
     , mLayerProgram(RGBALayerProgramType)
     , mTexture(0)

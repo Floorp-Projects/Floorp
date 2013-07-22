@@ -608,16 +608,28 @@ DataChannelTest.prototype = Object.create(PeerConnectionTest.prototype, {
         }
       }
 
-      // Register handlers for the remote peer
-      this.pcRemote.registerDataChannelOpenEvents(function (channel) {
-        remoteChannel = channel;
-        check_next_test();
-      });
+      if (!options.negotiated) {
+        // Register handlers for the remote peer
+        this.pcRemote.registerDataChannelOpenEvents(function (channel) {
+          remoteChannel = channel;
+          check_next_test();
+        });
+      }
 
-      // Creat the datachannel and handle the local 'onopen' event
+      // Create the datachannel and handle the local 'onopen' event
       this.pcLocal.createDataChannel(options, function (channel) {
         localChannel = channel;
-        check_next_test();
+
+        if (options.negotiated) {
+          // externally negotiated - we need to open from both ends
+          options.id = options.id || channel.id;  // allow for no id to let the impl choose
+          self.pcRemote.createDataChannel(options, function (channel) {
+            remoteChannel = channel;
+            check_next_test();
+          });
+        } else {
+          check_next_test();
+	}
       });
     }
   },
@@ -824,6 +836,35 @@ DataChannelWrapper.prototype = {
   get label() {
     return this._channel.label;
   },
+
+  /**
+   * Returns the protocol of the underlying data channel
+   *
+   * @returns {String} The protocol
+   */
+  get protocol() {
+    return this._channel.protocol;
+  },
+
+  /**
+   * Returns the id of the underlying data channel
+   *
+   * @returns {number} The stream id
+   */
+  get id() {
+    return this._channel.id;
+  },
+
+  /**
+   * Returns the reliable state of the underlying data channel
+   *
+   * @returns {bool} The stream's reliable state
+   */
+  get reliable() {
+    return this._channel.reliable;
+  },
+
+  // ordered, maxRetransmits and maxRetransmitTime not exposed yet
 
   /**
    * Returns the readyState bit of the data channel
