@@ -726,6 +726,9 @@ protected:
   // if it's coming from a transferable object), in which case aTrustedInput should
   // be set to false, otherwise, the caller should set it to true, which means that
   // the HTML will be inserted in the DOM verbatim.
+  //
+  // aClearStyle should be set to false if you want the paste to be affected by
+  // local style (e.g., for the insertHTML command).
   nsresult DoInsertHTMLWithContext(const nsAString& aInputString,
                                    const nsAString& aContextStr,
                                    const nsAString& aInfoStr,
@@ -734,7 +737,8 @@ protected:
                                    nsIDOMNode* aDestNode,
                                    int32_t aDestOffset,
                                    bool aDeleteSelection,
-                                   bool aTrustedInput);
+                                   bool aTrustedInput,
+                                   bool aClearStyle = true);
 
   nsresult ClearStyle(nsCOMPtr<nsIDOMNode>* aNode, int32_t* aOffset,
                       nsIAtom* aProperty, const nsAString* aAttribute);

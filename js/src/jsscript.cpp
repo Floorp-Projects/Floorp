@@ -39,6 +39,7 @@
 #include "jsscriptinlines.h"
 
 #include "vm/ScopeObject-inl.h"
+#include "vm/Runtime-inl.h"
 #include "vm/Stack-inl.h"
 
 using namespace js;
@@ -945,7 +946,7 @@ Class ScriptSourceObject::class_ = {
 };
 
 ScriptSourceObject *
-ScriptSourceObject::create(JSContext *cx, ScriptSource *source)
+ScriptSourceObject::create(ExclusiveContext *cx, ScriptSource *source)
 {
     RootedObject object(cx, NewObjectWithGivenProto(cx, &class_, NULL, cx->global()));
     if (!object)
@@ -1456,7 +1457,7 @@ ScriptSource::performXDR(XDRState<mode> *xdr)
 }
 
 bool
-ScriptSource::setFilename(JSContext *cx, const char *filename)
+ScriptSource::setFilename(ExclusiveContext *cx, const char *filename)
 {
     JS_ASSERT(!filename_);
     size_t len = strlen(filename) + 1;
@@ -1470,12 +1471,14 @@ ScriptSource::setFilename(JSContext *cx, const char *filename)
 }
 
 bool
-ScriptSource::setSourceMap(JSContext *cx, jschar *sourceMapURL, const char *filename)
+ScriptSource::setSourceMap(ExclusiveContext *cx, jschar *sourceMapURL)
 {
     JS_ASSERT(sourceMapURL);
     if (hasSourceMap()) {
-        if (!JS_ReportErrorFlagsAndNumber(cx, JSREPORT_WARNING, js_GetErrorMessage, NULL,
-                                          JSMSG_ALREADY_HAS_SOURCEMAP, filename)) {
+        if (cx->isJSContext() &&
+            !JS_ReportErrorFlagsAndNumber(cx->asJSContext(), JSREPORT_WARNING, js_GetErrorMessage,
+                                          NULL, JSMSG_ALREADY_HAS_SOURCEMAP, filename_))
+        {
             js_free(sourceMapURL);
             return false;
         }
@@ -1520,6 +1523,8 @@ js::SaveSharedScriptData(ExclusiveContext *cx, Handle<JSScript *> script, Shared
     ASSERT(script != NULL);
     ASSERT(ssd != NULL);
 
+    AutoLockForExclusiveAccess lock(cx);
+
     ScriptBytecodeHasher::Lookup l(ssd);
 
     ScriptDataTable::AddPtr p = cx->scriptDataTable().lookupForAdd(l);
@@ -1558,12 +1563,16 @@ js::SweepScriptData(JSRuntime *rt)
 {
     JS_ASSERT(rt->gcIsFull);
     ScriptDataTable &table = rt->scriptDataTable;
+
+    bool keepAtoms = false;
+    for (ThreadDataIter iter(rt); !iter.done(); iter.next())
+        keepAtoms |= iter->gcKeepAtoms;
+
     for (ScriptDataTable::Enum e(table); !e.empty(); e.popFront()) {
         SharedScriptData *entry = e.front();
         if (entry->marked) {
             entry->marked = false;
-        } else if (!rt->mainThread.gcKeepAtoms) {
-            // FIXME bug 875125 this should check all instances of PerThreadData.
+        } else if (!keepAtoms) {
             js_free(entry);
             e.removeFront();
         }

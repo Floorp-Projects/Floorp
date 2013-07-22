@@ -59,6 +59,9 @@ this.AppDownloadManager = {
    */
   get: function app_dlMgr_get(aManifestURL) {
     debug("Getting " + aManifestURL);
+    if (!this.downloads[aManifestURL]) {
+      return null;
+    }
     return this.downloads[aManifestURL];
   },
 

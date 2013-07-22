@@ -259,6 +259,11 @@ IonBuilder::canInlineTarget(JSFunction *target)
         return false;
     }
 
+    if (!target->hasScript()) {
+        IonSpew(IonSpew_Inlining, "Cannot inline due to lack of Non-Lazy script");
+        return false;
+    }
+
     RootedScript inlineScript(cx, target->nonLazyScript());
     ExecutionMode executionMode = info().executionMode();
     if (!CanIonCompile(inlineScript, executionMode)) {
@@ -3464,11 +3469,13 @@ IonBuilder::inlineScriptedCall(CallInfo &callInfo, JSFunction *target)
     // Improve type information of |this| when not set.
     if (callInfo.constructing() && !callInfo.thisArg()->resultTypeSet()) {
         types::StackTypeSet *types = types::TypeScript::ThisTypes(calleeScript);
-        MTypeBarrier *barrier = MTypeBarrier::New(callInfo.thisArg(), cloneTypeSet(types), Bailout_Normal);
-        current->add(barrier);
-        MUnbox *unbox = MUnbox::New(barrier, MIRType_Object, MUnbox::Infallible);
-        current->add(unbox);
-        callInfo.setThis(unbox);
+        if (!types->unknown()) {
+            MTypeBarrier *barrier = MTypeBarrier::New(callInfo.thisArg(), cloneTypeSet(types), Bailout_Normal);
+            current->add(barrier);
+            MUnbox *unbox = MUnbox::New(barrier, MIRType_Object, MUnbox::Infallible);
+            current->add(unbox);
+            callInfo.setThis(unbox);
+        }
     }
 
     // Start inlining.
@@ -4098,12 +4105,16 @@ IonBuilder::inlineCalls(CallInfo &callInfo, AutoObjectVector &targets,
     callInfo.pushFormals(dispatchBlock);
 
     // Patch any InlinePropertyTable to only contain functions that are inlineable.
-    // Also guarantee that the table uses functions from |targets| instead of |originals|.
+    //
+    // Note that we trim using originals, as callsite clones are not user
+    // visible. We don't patch the entries inside the table with the cloned
+    // targets, as the entries should only be used for comparison.
+    //
     // The InlinePropertyTable will also be patched at the end to exclude native functions
     // that vetoed inlining.
     if (maybeCache) {
         InlinePropertyTable *propTable = maybeCache->propTable();
-        propTable->trimToAndMaybePatchTargets(targets, originals);
+        propTable->trimToTargets(originals);
         if (propTable->numEntries() == 0)
             maybeCache = NULL;
     }
@@ -4153,6 +4164,10 @@ IonBuilder::inlineCalls(CallInfo &callInfo, AutoObjectVector &targets,
     // Inline each of the inlineable targets.
     JS_ASSERT(targets.length() == originals.length());
     for (uint32_t i = 0; i < targets.length(); i++) {
+        // When original != target, the target is a callsite clone. The
+        // original should be used for guards, and the target should be the
+        // actual function inlined.
+        JSFunction *original = &originals[i]->as<JSFunction>();
         JSFunction *target = &targets[i]->as<JSFunction>();
 
         // Target must be inlineable.
@@ -4160,7 +4175,7 @@ IonBuilder::inlineCalls(CallInfo &callInfo, AutoObjectVector &targets,
             continue;
 
         // Target must be reachable by the MDispatchInstruction.
-        if (maybeCache && !maybeCache->propTable()->hasFunction(target)) {
+        if (maybeCache && !maybeCache->propTable()->hasFunction(original)) {
             choiceSet[i] = false;
             continue;
         }
@@ -6727,18 +6742,25 @@ IonBuilder::jsop_setelem()
         return jsop_setelem_typed(arrayType, SetElem_Normal,
                                   object, index, value);
 
-    if (!PropertyWriteNeedsTypeBarrier(cx, current, &object, NULL, &value)) {
-        if (ElementAccessIsDenseNative(object, index)) {
+    if (ElementAccessIsDenseNative(object, index)) {
+        do {
+            if (PropertyWriteNeedsTypeBarrier(cx, current, &object, NULL, &value))
+                break;
+            if (!object->resultTypeSet())
+                break;
+
             types::StackTypeSet::DoubleConversion conversion =
                 object->resultTypeSet()->convertDoubleElements(cx);
 
             // If AmbiguousDoubleConversion, only handle int32 values for now.
-            if (conversion != types::StackTypeSet::AmbiguousDoubleConversion ||
-                value->type() == MIRType_Int32)
+            if (conversion == types::StackTypeSet::AmbiguousDoubleConversion &&
+                value->type() != MIRType_Int32)
             {
-                return jsop_setelem_dense(conversion, SetElem_Normal, object, index, value);
+                break;
             }
-        }
+
+            return jsop_setelem_dense(conversion, SetElem_Normal, object, index, value);
+        } while(false);
     }
 
     if (object->type() == MIRType_Magic)

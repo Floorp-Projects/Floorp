@@ -1565,13 +1565,9 @@
               throw new Error("Invalid argument: " + aCloseTabs);
           }
 
-          if (tabsToClose <= 1)
-            return true;
-
-          const pref = aCloseTabs == this.closingTabsEnum.ALL ?
-                       "browser.tabs.warnOnClose" : "browser.tabs.warnOnCloseOtherTabs";
-          var shouldPrompt = Services.prefs.getBoolPref(pref);
-          if (!shouldPrompt)
+          if (tabsToClose <= 1 ||
+              aCloseTabs != this.closingTabsEnum.ALL ||
+              !Services.prefs.getBoolPref("browser.tabs.warnOnClose"))
             return true;
 
           var ps = Services.prompt;
@@ -1595,13 +1591,12 @@
                          + (ps.BUTTON_TITLE_CANCEL * ps.BUTTON_POS_1),
                          bundle.getString("tabs.closeButtonMultiple"),
                          null, null,
-                         aCloseTabs == this.closingTabsEnum.ALL ?
-                           bundle.getString("tabs.closeWarningPromptMe") : null,
+                         bundle.getString("tabs.closeWarningPromptMe"),
                          warnOnClose);
           var reallyClose = (buttonPressed == 0);
 
           // don't set the pref unless they press OK and it's false
-          if (aCloseTabs == this.closingTabsEnum.ALL && reallyClose && !warnOnClose.value)
+          if (reallyClose && !warnOnClose.value)
             Services.prefs.setBoolPref(pref, false);
 
           return reallyClose;
@@ -1629,9 +1624,13 @@
           <![CDATA[
             if (this.warnAboutClosingTabs(this.closingTabsEnum.TO_END, aTab)) {
               let tabs = this.getTabsToTheEndFrom(aTab);
-              for (let i = tabs.length - 1; i >= 0; --i) {
+              let numberOfTabsToClose = tabs.length;
+              for (let i = numberOfTabsToClose - 1; i >= 0; --i) {
                 this.removeTab(tabs[i], {animate: true});
               }
+              let ss = Cc["@mozilla.org/browser/sessionstore;1"].
+                       getService(Ci.nsISessionStore);
+              ss.setNumberOfTabsClosedLast(window, numberOfTabsToClose);
             }
           ]]>
         </body>
@@ -1648,10 +1647,16 @@
               let tabs = this.visibleTabs;
               this.selectedTab = aTab;
 
+              let closedTabs = 0;
               for (let i = tabs.length - 1; i >= 0; --i) {
-                if (tabs[i] != aTab && !tabs[i].pinned)
+                if (tabs[i] != aTab && !tabs[i].pinned) {
                   this.removeTab(tabs[i]);
+                  closedTabs++;
+                }
               }
+              let ss = Cc["@mozilla.org/browser/sessionstore;1"].
+                       getService(Ci.nsISessionStore);
+              ss.setNumberOfTabsClosedLast(window, closedTabs);
             }
           ]]>
         </body>
@@ -1679,6 +1684,10 @@
               var animate = aParams.animate;
               var byMouse = aParams.byMouse;
             }
+
+            let ss = Cc["@mozilla.org/browser/sessionstore;1"].
+                     getService(Ci.nsISessionStore);
+            ss.setNumberOfTabsClosedLast(window, 1);
 
             // Handle requests for synchronously removing an already
             // asynchronously closing tab.
@@ -2089,8 +2098,9 @@
             if (otherFindBar &&
                 otherFindBar.findMode == otherFindBar.FIND_NORMAL) {
               let ourFindBar = this.getFindBar(aOurTab);
-              ourFindBar.hidden = otherFindBar.hidden;
               ourFindBar._findField.value = otherFindBar._findField.value;
+              if (!otherFindBar.hidden)
+                ourFindBar.onFindCommand();
             }
 
             // Finish tearing down the tab that's going away.

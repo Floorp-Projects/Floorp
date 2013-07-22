@@ -238,6 +238,9 @@ class MacroAssemblerARM : public Assembler
     // implicitly assumes that we can overwrite dest at the beginning of the sequence
     void ma_mod_mask(Register src, Register dest, Register hold, int32_t shift);
 
+    // mod, depends on sdiv being supported
+    void ma_smod(Register num, Register div, Register dest);
+
     // division
     void ma_sdiv(Register num, Register div, Register dest, Condition cond = Always);
 

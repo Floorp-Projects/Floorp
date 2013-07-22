@@ -494,7 +494,7 @@
         <item name="android:textAppearance">?android:textAppearanceSmall</item>
         <item name="android:paddingTop">0dp</item>
         <item name="android:paddingBottom">0dp</item>
-        <item name="android:paddingLeft">8dp</item>
+        <item name="android:paddingLeft">@dimen/toast_button_padding</item>
         <item name="android:paddingRight">0dp</item>
         <item name="android:layout_marginTop">0dp</item>
         <item name="android:layout_marginBottom">0dp</item>

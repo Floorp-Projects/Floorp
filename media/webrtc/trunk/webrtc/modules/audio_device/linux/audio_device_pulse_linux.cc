@@ -79,7 +79,7 @@ AudioDeviceLinuxPulse::AudioDeviceLinuxPulse(const int32_t id) :
     _outputDeviceIndex(0),
     _inputDeviceIsSpecified(false),
     _outputDeviceIsSpecified(false),
-    _samplingFreq(0),
+    sample_rate_hz_(0),
     _recChannels(1),
     _playChannels(1),
     _playBufType(AudioDeviceModule::kFixedBufferSize),
@@ -370,7 +370,7 @@ int32_t AudioDeviceLinuxPulse::SpeakerIsAvailable(bool& available)
     }
 
     // Given that InitSpeaker was successful, we know that a valid speaker exists
-    // 
+    //
     available = true;
 
     // Close the initialized output mixer
@@ -804,13 +804,11 @@ int32_t AudioDeviceLinuxPulse::StereoRecordingIsAvailable(bool& available)
         return 0;
     }
 
-#ifndef WEBRTC_PA_GTALK
     // Check if the selected microphone can record stereo.
     bool isAvailable(false);
     error = _mixerManager.StereoRecordingIsAvailable(isAvailable);
     if (!error)
       available = isAvailable;
-#endif
 
     // Close the initialized input mixer
     if (!wasInitialized)
@@ -824,12 +822,10 @@ int32_t AudioDeviceLinuxPulse::StereoRecordingIsAvailable(bool& available)
 int32_t AudioDeviceLinuxPulse::SetStereoRecording(bool enable)
 {
 
-#ifndef WEBRTC_PA_GTALK
     if (enable)
         _recChannels = 2;
     else
         _recChannels = 1;
-#endif
 
     return 0;
 }
@@ -863,13 +859,11 @@ int32_t AudioDeviceLinuxPulse::StereoPlayoutIsAvailable(bool& available)
         return -1;
     }
 
-#ifndef WEBRTC_PA_GTALK
     // Check if the selected speaker can play stereo.
     bool isAvailable(false);
     error = _mixerManager.StereoPlayoutIsAvailable(isAvailable);
     if (!error)
       available = isAvailable;
-#endif
 
     // Close the initialized input mixer
     if (!wasInitialized)
@@ -883,12 +877,10 @@ int32_t AudioDeviceLinuxPulse::StereoPlayoutIsAvailable(bool& available)
 int32_t AudioDeviceLinuxPulse::SetStereoPlayout(bool enable)
 {
 
-#ifndef WEBRTC_PA_GTALK
     if (enable)
         _playChannels = 2;
     else
         _playChannels = 1;
-#endif
 
     return 0;
 }
@@ -1276,18 +1268,11 @@ int32_t AudioDeviceLinuxPulse::InitPlayout()
                      "  InitSpeaker() failed");
     }
 
-    // Set sampling rate to use
-    uint32_t samplingRate = _samplingFreq * 1000;
-    if (samplingRate == 44000)
-    {
-        samplingRate = 44100;
-    }
-
     // Set the play sample specification
     pa_sample_spec playSampleSpec;
     playSampleSpec.channels = _playChannels;
     playSampleSpec.format = PA_SAMPLE_S16LE;
-    playSampleSpec.rate = samplingRate;
+    playSampleSpec.rate = sample_rate_hz_;
 
     // Create a new play stream
     _playStream = LATE(pa_stream_new)(_paContext, "playStream",
@@ -1307,7 +1292,7 @@ int32_t AudioDeviceLinuxPulse::InitPlayout()
     if (_ptrAudioBuffer)
     {
         // Update audio buffer with the selected parameters
-        _ptrAudioBuffer->SetPlayoutSampleRate(_samplingFreq * 1000);
+        _ptrAudioBuffer->SetPlayoutSampleRate(sample_rate_hz_);
         _ptrAudioBuffer->SetPlayoutChannels((uint8_t) _playChannels);
     }
 
@@ -1356,7 +1341,7 @@ int32_t AudioDeviceLinuxPulse::InitPlayout()
     }
 
     // num samples in bytes * num channels
-    _playbackBufferSize = _samplingFreq * 10 * 2 * _playChannels;
+    _playbackBufferSize = sample_rate_hz_ / 100 * 2 * _playChannels;
     _playbackBufferUnused = _playbackBufferSize;
     _playBuffer = new int8_t[_playbackBufferSize];
 
@@ -1402,18 +1387,11 @@ int32_t AudioDeviceLinuxPulse::InitRecording()
                      "  InitMicrophone() failed");
     }
 
-    // Set sampling rate to use
-    uint32_t samplingRate = _samplingFreq * 1000;
-    if (samplingRate == 44000)
-    {
-        samplingRate = 44100;
-    }
-
     // Set the rec sample specification
     pa_sample_spec recSampleSpec;
     recSampleSpec.channels = _recChannels;
     recSampleSpec.format = PA_SAMPLE_S16LE;
-    recSampleSpec.rate = samplingRate;
+    recSampleSpec.rate = sample_rate_hz_;
 
     // Create a new rec stream
     _recStream = LATE(pa_stream_new)(_paContext, "recStream", &recSampleSpec,
@@ -1432,7 +1410,7 @@ int32_t AudioDeviceLinuxPulse::InitRecording()
     if (_ptrAudioBuffer)
     {
         // Update audio buffer with the selected parameters
-        _ptrAudioBuffer->SetRecordingSampleRate(_samplingFreq * 1000);
+        _ptrAudioBuffer->SetRecordingSampleRate(sample_rate_hz_);
         _ptrAudioBuffer->SetRecordingChannels((uint8_t) _recChannels);
     }
 
@@ -1475,7 +1453,7 @@ int32_t AudioDeviceLinuxPulse::InitRecording()
         _configuredLatencyRec = latency;
     }
 
-    _recordBufferSize = _samplingFreq * 10 * 2 * _recChannels;
+    _recordBufferSize = sample_rate_hz_ / 100 * 2 * _recChannels;
     _recordBufferUsed = 0;
     _recBuffer = new int8_t[_recordBufferSize];
 
@@ -1985,17 +1963,7 @@ void AudioDeviceLinuxPulse::PaSourceInfoCallbackHandler(
 void AudioDeviceLinuxPulse::PaServerInfoCallbackHandler(const pa_server_info *i)
 {
     // Use PA native sampling rate
-    uint32_t paSampleRate = i->sample_spec.rate;
-    if (paSampleRate == 44100)
-    {
-#ifdef WEBRTC_PA_GTALK
-        paSampleRate = 48000;
-#else
-        paSampleRate = 44000;
-#endif
-    }
-
-    _samplingFreq = paSampleRate / 1000;
+    sample_rate_hz_ = i->sample_spec.rate;
 
     // Copy the PA server version
     strncpy(_paServerVersion, i->server_version, 31);
@@ -2052,13 +2020,6 @@ void AudioDeviceLinuxPulse::PaStreamStateCallbackHandler(pa_stream *p)
 
 int32_t AudioDeviceLinuxPulse::CheckPulseAudioVersion()
 {
-    /*int32_t index = 0;
-     int32_t partIndex = 0;
-     int32_t partNum = 1;
-     int32_t minVersion[3] = {0, 9, 15};
-     bool versionOk = false;
-     char str[8] = {0};*/
-
     PaLock();
 
     pa_operation* paOperation = NULL;
@@ -2074,54 +2035,6 @@ int32_t AudioDeviceLinuxPulse::CheckPulseAudioVersion()
     WEBRTC_TRACE(kTraceStateInfo, kTraceAudioDevice, -1,
                  "  checking PulseAudio version: %s", _paServerVersion);
 
-    /* Saved because it may turn out that we need to check the version in the future
-     while (true)
-     {
-     if (_paServerVersion[index] == '.')
-     {
-     index++;
-     str[partIndex] = '\0';
-     partIndex = 0;
-
-     if(partNum == 2)
-     {
-     if (atoi(str) < minVersion[1])
-     {
-     break;
-     }
-     partNum = 3;
-     }
-     else
-     {
-     if (atoi(str) > minVersion[0])
-     {
-     versionOk = true;
-     break;
-     }
-     partNum = 2;
-     }
-     }
-     else if (_paServerVersion[index] == '\0' || _paServerVersion[index] == '-')
-     {
-     str[partIndex] = '\0';
-     if (atoi(str) >= minVersion[2])
-     {
-     versionOk = true;
-     }
-     break;
-     }
-
-     str[partIndex] = _paServerVersion[index];
-     index++;
-     partIndex++;
-     }
-
-     if (!versionOk)
-     {
-     return -1;
-     }
-     */
-
     return 0;
 }
 
@@ -2131,7 +2044,7 @@ int32_t AudioDeviceLinuxPulse::InitSamplingFrequency()
 
     pa_operation* paOperation = NULL;
 
-    // Get the server info and update _samplingFreq
+    // Get the server info and update sample_rate_hz_
     paOperation = LATE(pa_context_get_server_info)(_paContext,
                                                    PaServerInfoCallback, this);
 
@@ -2354,11 +2267,11 @@ int32_t AudioDeviceLinuxPulse::InitPulseAudio()
     }
 
     // Initialize sampling frequency
-    if (InitSamplingFrequency() < 0 || _samplingFreq == 0)
+    if (InitSamplingFrequency() < 0 || sample_rate_hz_ == 0)
     {
         WEBRTC_TRACE(kTraceError, kTraceAudioDevice, _id,
-                     "  failed to initialize sampling frequency, set to %d",
-                     _samplingFreq);
+                     "  failed to initialize sampling frequency, set to %d Hz",
+                     sample_rate_hz_);
         return -1;
     }
 

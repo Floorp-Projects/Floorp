@@ -1,10 +1,10 @@
 {
     "talos.zip": {
-        "url": "http://build.mozilla.org/talos/zips/talos.a11542b55a70.zip",
+        "url": "http://build.mozilla.org/talos/zips/talos.fcbb9d7d3c78.zip",
         "path": ""
     },
     "global": {
-        "talos_url": "http://puppetagain.pub.build.mozilla.org/data/python/packages/talos-7d4ae29b7d1f.tar.gz",
+        "talos_repo": "http://hg.mozilla.org/build/talos",
         "talos_revision": "7d4ae29b7d1f"
     },
     "suites": {

@@ -5,7 +5,7 @@ fails-if(Android) == canvas-outside-document.html canvas-inside-document.html
 skip-if(B2G) == mozsetimageelement-02.html about:blank # bug 773482
 skip-if(B2G) == image-outside-document-invalidate.html about:blank # bug 773482
 skip-if(B2G) == canvas-outside-document-invalidate-01.html about:blank # bug 773482
-skip-if(B2G) fails-if(azureSkia&&winWidget) fails-if(cocoaWidget) == canvas-outside-document-invalidate-02.html about:blank # See bug 666800 # bug 773482
+skip-if(B2G) fails-if(azureSkia) fails-if(cocoaWidget) == canvas-outside-document-invalidate-02.html about:blank # See bug 666800 # bug 773482
 #fails with Skia due to Skia bug http://code.google.com/p/skia/issues/detail?id=568
 == element-paint-simple.html element-paint-simple-ref.html
 == element-paint-repeated.html element-paint-repeated-ref.html

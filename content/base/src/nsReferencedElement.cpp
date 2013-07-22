@@ -48,7 +48,7 @@ nsReferencedElement::Reset(nsIContent* aFromContent, nsIURI* aURI,
 
   nsIContent* bindingParent = aFromContent->GetBindingParent();
   if (bindingParent) {
-    nsXBLBinding* binding = doc->BindingManager()->GetBinding(bindingParent);
+    nsXBLBinding* binding = bindingParent->GetXBLBinding();
     if (binding) {
       bool isEqualExceptRef;
       rv = aURI->EqualsExceptRef(binding->PrototypeBinding()->DocURI(),

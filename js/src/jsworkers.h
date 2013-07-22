@@ -30,10 +30,11 @@ namespace ion {
 }
 
 #if defined(JS_THREADSAFE) && defined(JS_ION)
-# define JS_PARALLEL_COMPILATION
+# define JS_WORKER_THREADS
 
 struct WorkerThread;
 struct AsmJSParallelTask;
+struct ParseTask;
 
 /* Per-runtime state for off thread work items. */
 class WorkerThreadState
@@ -43,23 +44,35 @@ class WorkerThreadState
     WorkerThread *threads;
     size_t numThreads;
 
+    /*
+     * Whether all worker threads thread should pause their activity. This acts
+     * like the runtime's interrupt field and may be read without locking.
+     */
+    volatile size_t shouldPause;
+
+    /* After shouldPause is set, the number of threads which are paused. */
+    uint32_t numPaused;
+
     enum CondVar {
         MAIN,
         WORKER
     };
 
     /* Shared worklist for Ion worker threads. */
-    js::Vector<ion::IonBuilder*, 0, SystemAllocPolicy> ionWorklist;
+    Vector<ion::IonBuilder*, 0, SystemAllocPolicy> ionWorklist;
 
     /* Worklist for AsmJS worker threads. */
-    js::Vector<AsmJSParallelTask*, 0, SystemAllocPolicy> asmJSWorklist;
+    Vector<AsmJSParallelTask*, 0, SystemAllocPolicy> asmJSWorklist;
 
     /*
      * Finished list for AsmJS worker threads.
      * Simultaneous AsmJS compilations all service the same AsmJS module.
      * The main thread must pick up finished optimizations and perform codegen.
      */
-    js::Vector<AsmJSParallelTask*, 0, SystemAllocPolicy> asmJSFinishedList;
+    Vector<AsmJSParallelTask*, 0, SystemAllocPolicy> asmJSFinishedList;
+
+    /* Shared worklist for parsing/emitting scripts on worker threads. */
+    Vector<ParseTask*, 0, SystemAllocPolicy> parseWorklist, parseFinishedList;
 
     WorkerThreadState() { mozilla::PodZero(this); }
     ~WorkerThreadState();
@@ -86,11 +99,11 @@ class WorkerThreadState
         numAsmJSFailedJobs = 0;
         return n;
     }
-    void noteAsmJSFailure(int32_t func) {
+    void noteAsmJSFailure(void *func) {
         // Be mindful to signal the main thread after calling this function.
         JS_ASSERT(isLocked());
-        if (asmJSFailedFunctionIndex < 0)
-            asmJSFailedFunctionIndex = func;
+        if (!asmJSFailedFunction)
+            asmJSFailedFunction = func;
         numAsmJSFailedJobs++;
     }
     bool asmJSWorkerFailed() const {
@@ -98,10 +111,10 @@ class WorkerThreadState
     }
     void resetAsmJSFailureState() {
         numAsmJSFailedJobs = 0;
-        asmJSFailedFunctionIndex = -1;
+        asmJSFailedFunction = NULL;
     }
-    int32_t maybeGetAsmJSFailedFunctionIndex() const {
-        return asmJSFailedFunctionIndex;
+    void *maybeAsmJSFailedFunction() const {
+        return asmJSFailedFunction;
     }
 
   private:
@@ -132,7 +145,7 @@ class WorkerThreadState
      * Function index |i| in |Module.function(i)| of first failed AsmJS function.
      * -1 if no function has failed.
      */
-    int32_t asmJSFailedFunctionIndex;
+    void *asmJSFailedFunction;
 };
 
 /* Individual helper thread, one allocated per core. */
@@ -152,10 +165,19 @@ struct WorkerThread
     /* Any AsmJS data currently being optimized by Ion on this thread. */
     AsmJSParallelTask *asmData;
 
+    /* Any source being parsed/emitted on this thread */
+    ParseTask *parseTask;
+
+    bool idle() const {
+        return !ionBuilder && !asmData && !parseTask;
+    }
+
+    void pause();
     void destroy();
 
     void handleAsmJSWorkload(WorkerThreadState &state);
     void handleIonWorkload(WorkerThreadState &state);
+    void handleParseWorkload(WorkerThreadState &state);
 
     static void ThreadMain(void *arg);
     void threadLoop();
@@ -166,7 +188,7 @@ struct WorkerThread
 inline bool
 OffThreadCompilationEnabled(JSContext *cx)
 {
-#ifdef JS_PARALLEL_COMPILATION
+#ifdef JS_WORKER_THREADS
     return ion::js_IonOptions.parallelCompilation
         && cx->runtime()->useHelperThreads()
         && cx->runtime()->helperThreadCount() != 0;
@@ -179,7 +201,7 @@ OffThreadCompilationEnabled(JSContext *cx)
 
 /* Initialize worker threads unless already initialized. */
 bool
-EnsureParallelCompilationInitialized(JSRuntime *rt);
+EnsureWorkerThreadsInitialized(JSRuntime *rt);
 
 /* Perform MIR optimization and LIR generation on a single function. */
 bool
@@ -199,6 +221,18 @@ StartOffThreadIonCompile(JSContext *cx, ion::IonBuilder *builder);
 void
 CancelOffThreadIonCompile(JSCompartment *compartment, JSScript *script);
 
+/*
+ * Start a parse/emit cycle for a stream of source. The characters must stay
+ * alive until the compilation finishes.
+ */
+bool
+StartOffThreadParseScript(JSContext *cx, const CompileOptions &options,
+                          const jschar *chars, size_t length);
+
+/* Block until in progress and pending off thread parse jobs have finished. */
+void
+WaitForOffThreadParsingToFinish(JSRuntime *rt);
+
 class AutoLockWorkerThreadState
 {
     JSRuntime *rt;
@@ -211,7 +245,7 @@ class AutoLockWorkerThreadState
       : rt(rt)
     {
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-#ifdef JS_PARALLEL_COMPILATION
+#ifdef JS_WORKER_THREADS
         JS_ASSERT(rt->workerThreadState);
         rt->workerThreadState->lock();
 #else
@@ -221,7 +255,7 @@ class AutoLockWorkerThreadState
 
     ~AutoLockWorkerThreadState()
     {
-#ifdef JS_PARALLEL_COMPILATION
+#ifdef JS_WORKER_THREADS
         rt->workerThreadState->unlock();
 #endif
     }
@@ -239,7 +273,7 @@ class AutoUnlockWorkerThreadState
       : rt(rt)
     {
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-#ifdef JS_PARALLEL_COMPILATION
+#ifdef JS_WORKER_THREADS
         JS_ASSERT(rt->workerThreadState);
         rt->workerThreadState->unlock();
 #else
@@ -249,10 +283,46 @@ class AutoUnlockWorkerThreadState
 
     ~AutoUnlockWorkerThreadState()
     {
-#ifdef JS_PARALLEL_COMPILATION
+#ifdef JS_WORKER_THREADS
         rt->workerThreadState->lock();
 #endif
     }
+};
+
+/* Pause any threads that are running jobs off thread during GC activity. */
+class AutoPauseWorkersForGC
+{
+    JSRuntime *runtime;
+    bool needsUnpause;
+    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
+
+  public:
+    AutoPauseWorkersForGC(JSRuntime *rt MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
+    ~AutoPauseWorkersForGC();
+};
+
+/* Wait for any in progress off thread parses to halt. */
+void
+PauseOffThreadParsing();
+
+/* Resume any paused off thread parses. */
+void
+ResumeOffThreadParsing();
+
+struct ParseTask
+{
+    JSRuntime *runtime;
+    ExclusiveContext *cx;
+    CompileOptions options;
+    const jschar *chars;
+    size_t length;
+    LifoAlloc alloc;
+
+    JSScript *script;
+
+    ParseTask(JSRuntime *rt, ExclusiveContext *cx, const CompileOptions &options,
+              const jschar *chars, size_t length);
+    ~ParseTask();
 };
 
 } /* namespace js */

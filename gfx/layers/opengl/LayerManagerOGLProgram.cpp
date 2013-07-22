@@ -22,6 +22,7 @@ AddCommonArgs(ProgramProfileOGL& aProfile)
 {
   aProfile.mUniforms.AppendElement(Argument("uLayerTransform"));
   aProfile.mUniforms.AppendElement(Argument("uLayerQuadTransform"));
+  aProfile.mUniforms.AppendElement(Argument("uTextureTransform"));
   aProfile.mUniforms.AppendElement(Argument("uMatrixProj"));
   aProfile.mHasMatrixProj = true;
   aProfile.mUniforms.AppendElement(Argument("uRenderTargetOffset"));
@@ -56,23 +57,6 @@ ProgramProfileOGL::GetProfileFor(ShaderProgramType aType,
     }
     AddCommonArgs(result);
     AddCommonTextureArgs(result);
-    result.mTextureCount = 1;
-    break;
-  case RGBALayerExternalProgramType:
-    if (aMask == Mask3d) {
-      result.mVertexShaderString = sLayerMask3DVS;
-      result.mFragmentShaderString = sRGBATextureLayerExternalMask3DFS;
-    } else if (aMask == Mask2d) {
-      result.mVertexShaderString = sLayerMaskVS;
-      result.mFragmentShaderString = sRGBATextureLayerExternalMaskFS;
-    } else {
-      result.mVertexShaderString = sLayerVS;
-      result.mFragmentShaderString = sRGBATextureLayerExternalFS;
-    }
-    AddCommonArgs(result);
-    AddCommonTextureArgs(result);
-    result.mUniforms.AppendElement(Argument("uTextureTransform"));
-    result.mHasTextureTransform = true;
     result.mTextureCount = 1;
     break;
   case BGRALayerProgramType:
@@ -121,6 +105,21 @@ ProgramProfileOGL::GetProfileFor(ShaderProgramType aType,
     } else {
       result.mVertexShaderString = sLayerVS;
       result.mFragmentShaderString = sRGBARectTextureLayerFS;
+    }
+    AddCommonArgs(result);
+    AddCommonTextureArgs(result);
+    result.mTextureCount = 1;
+    break;
+  case RGBXRectLayerProgramType:
+    if (aMask == Mask3d) {
+      result.mVertexShaderString = sLayerMask3DVS;
+      result.mFragmentShaderString = sRGBXRectTextureLayerMask3DFS;
+    } else if (aMask == Mask2d) {
+      result.mVertexShaderString = sLayerMaskVS;
+      result.mFragmentShaderString = sRGBXRectTextureLayerMaskFS;
+    } else {
+      result.mVertexShaderString = sLayerVS;
+      result.mFragmentShaderString = sRGBXRectTextureLayerFS;
     }
     AddCommonArgs(result);
     AddCommonTextureArgs(result);

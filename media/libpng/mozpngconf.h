@@ -23,6 +23,10 @@
 #define PNG_NO_PEDANTIC_WARNINGS
 #endif
 
+#ifdef __ARM_NEON__
+#  define PNG_ALIGNED_MEMORY_SUPPORTED
+#endif
+
 #ifdef MOZ_PNG_READ
 #define PNG_READ_SUPPORTED
 #define PNG_READ_APNG_SUPPORTED

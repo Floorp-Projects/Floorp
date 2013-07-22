@@ -5,6 +5,7 @@
 
 #include "mozilla/layers/Compositor.h"
 #include "mozilla/layers/Effects.h"
+#include "mozilla/layers/CompositorParent.h"
 
 namespace mozilla {
 namespace layers {
@@ -13,6 +14,9 @@ namespace layers {
 /* static */ LayersBackend
 Compositor::GetBackend()
 {
+  MOZ_ASSERT(CompositorParent::CompositorLoop() ==
+             MessageLoop::current(),
+             "Can only call this from the compositor thread!");
   return sBackend;
 }
 

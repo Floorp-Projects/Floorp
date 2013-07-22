@@ -13,6 +13,10 @@ const Cr = Components.results;
 
 Cu.import("resource://testing-common/httpd.js");
 
+XPCOMUtils.defineLazyGetter(this, "URL", function() {
+  return "http://localhost:" + httpserver.identity.primaryPort;
+});
+
 var httpserver = new HttpServer();
 var index = 0;
 var test_flags = new Array();
@@ -20,7 +24,7 @@ var testPathBase = "/dupe_hdrs";
 
 function run_test()
 {
-  httpserver.start(4444);
+  httpserver.start(-1);
 
   do_test_pending();
   run_test_number(1);
@@ -41,7 +45,7 @@ function setupChannel(url)
 {
   var ios = Components.classes["@mozilla.org/network/io-service;1"].
                        getService(Ci.nsIIOService);
-  var chan = ios.newChannel("http://localhost:4444" + url, "", null);
+  var chan = ios.newChannel(URL + url, "", null);
   var httpChan = chan.QueryInterface(Components.interfaces.nsIHttpChannel);
   return httpChan;
 }
@@ -197,7 +201,7 @@ function handler6(metadata, response)
   response.write("HTTP/1.0 301 Moved\r\n");
   response.write("Content-Type: text/plain\r\n");
   response.write("Content-Length: 30\r\n");
-  response.write("Location: http://localhost:4444/content\r\n");
+  response.write("Location: " + URL + "/content\r\n");
   response.write("Location: http://www.microsoft.com/\r\n");
   response.write("Connection: close\r\n");
   response.write("\r\n");
@@ -224,8 +228,8 @@ function handler7(metadata, response)
   response.write("Content-Type: text/plain\r\n");
   response.write("Content-Length: 30\r\n");
   // redirect to previous test handler that completes OK: test 5
-  response.write("Location: http://localhost:4444" + testPathBase + "5\r\n");
-  response.write("Location: http://localhost:4444" + testPathBase + "5\r\n");
+  response.write("Location: " + URL + testPathBase + "5\r\n");
+  response.write("Location: " + URL + testPathBase + "5\r\n");
   response.write("Connection: close\r\n");
   response.write("\r\n");
   response.write(body);
@@ -259,7 +263,7 @@ function handler8(metadata, response)
   response.write("Content-Type: text/plain\r\n");
   response.write("Content-Length: 30\r\n");
   // redirect to previous test handler that completes OK: test 4
-  response.write("Location: http://localhost:4444" + testPathBase + "4\r\n");
+  response.write("Location: " + URL + testPathBase + "4\r\n");
   response.write("Location:\r\n");
   response.write("Connection: close\r\n");
   response.write("\r\n");
@@ -287,10 +291,10 @@ function handler9(metadata, response)
   response.write("Content-Type: text/plain\r\n");
   response.write("Content-Length: 30\r\n");
   // redirect to previous test handler that completes OK: test 2 
-  response.write("Location: http://localhost:4444" + testPathBase + "2\r\n");
+  response.write("Location: " + URL + testPathBase + "2\r\n");
   response.write("Location:\r\n");
   // redirect to previous test handler that completes OK: test 4
-  response.write("Location: http://localhost:4444" + testPathBase + "4\r\n");
+  response.write("Location: " + URL + testPathBase + "4\r\n");
   response.write("Connection: close\r\n");
   response.write("\r\n");
   response.write(body);
@@ -588,7 +592,7 @@ function handler20(metadata, response)
   response.write("Content-Length: 30\r\n");
   // redirect to previous test handler that completes OK: test 4
   response.write("Location:\r\n");
-  response.write("Location: http://localhost:4444" + testPathBase + "4\r\n");
+  response.write("Location: " + URL + testPathBase + "4\r\n");
   response.write("Connection: close\r\n");
   response.write("\r\n");
   response.write(body);

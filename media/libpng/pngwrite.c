@@ -314,7 +314,6 @@ png_write_end(png_structp png_ptr, png_infop info_ptr)
       png_benign_error(png_ptr, "Wrote palette index exceeding num_palette");
 #endif
 
-    /* See if user wants us to write information chunks */
 #ifdef PNG_WRITE_APNG_SUPPORTED
    if (png_ptr->num_frames_written != png_ptr->num_frames_to_write)
       png_error(png_ptr, "Not enough frames written");

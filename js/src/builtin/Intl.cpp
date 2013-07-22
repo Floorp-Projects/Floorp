@@ -586,11 +586,10 @@ static const JSFunctionSpec collator_methods[] = {
  * Spec: ECMAScript Internationalization API Specification, 10.1
  */
 static bool
-Collator(JSContext *cx, CallArgs args)
+Collator(JSContext *cx, CallArgs args, bool construct)
 {
     RootedObject obj(cx);
 
-    bool construct = args.isConstructing();
     if (!construct) {
         // 10.1.2.1 step 3
         JSObject *intl = cx->global()->getOrCreateIntlObject(cx);
@@ -643,7 +642,7 @@ static JSBool
 Collator(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    return Collator(cx, args);
+    return Collator(cx, args, args.isConstructing());
 }
 
 JSBool
@@ -651,7 +650,9 @@ js::intl_Collator(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     JS_ASSERT(args.length() == 2);
-    return Collator(cx, args);
+    // intl_Collator is an intrinsic for self-hosted JavaScript, so it cannot
+    // be used with "new", but it still has to be treated as a constructor.
+    return Collator(cx, args, true);
 }
 
 static void
@@ -1068,10 +1069,9 @@ static const JSFunctionSpec numberFormat_methods[] = {
  * Spec: ECMAScript Internationalization API Specification, 11.1
  */
 static bool
-NumberFormat(JSContext *cx, CallArgs args)
+NumberFormat(JSContext *cx, CallArgs args, bool construct)
 {
     RootedObject obj(cx);
-    bool construct = args.isConstructing();
 
     if (!construct) {
         // 11.1.2.1 step 3
@@ -1125,7 +1125,7 @@ static JSBool
 NumberFormat(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    return NumberFormat(cx, args);
+    return NumberFormat(cx, args, args.isConstructing());
 }
 
 JSBool
@@ -1133,7 +1133,10 @@ js::intl_NumberFormat(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     JS_ASSERT(args.length() == 2);
-    return NumberFormat(cx, args);
+    // intl_NumberFormat is an intrinsic for self-hosted JavaScript, so it
+    // cannot be used with "new", but it still has to be treated as a
+    // constructor.
+    return NumberFormat(cx, args, true);
 }
 
 static void
@@ -1522,10 +1525,9 @@ static const JSFunctionSpec dateTimeFormat_methods[] = {
  * Spec: ECMAScript Internationalization API Specification, 12.1
  */
 static bool
-DateTimeFormat(JSContext *cx, CallArgs args)
+DateTimeFormat(JSContext *cx, CallArgs args, bool construct)
 {
     RootedObject obj(cx);
-    bool construct = args.isConstructing();
 
     if (!construct) {
         // 12.1.2.1 step 3
@@ -1579,7 +1581,7 @@ static JSBool
 DateTimeFormat(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    return DateTimeFormat(cx, args);
+    return DateTimeFormat(cx, args, args.isConstructing());
 }
 
 JSBool
@@ -1587,7 +1589,10 @@ js::intl_DateTimeFormat(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     JS_ASSERT(args.length() == 2);
-    return DateTimeFormat(cx, args);
+    // intl_DateTimeFormat is an intrinsic for self-hosted JavaScript, so it
+    // cannot be used with "new", but it still has to be treated as a
+    // constructor.
+    return DateTimeFormat(cx, args, true);
 }
 
 static void

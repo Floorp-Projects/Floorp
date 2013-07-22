@@ -242,6 +242,8 @@ AtomizeAndTakeOwnership(ExclusiveContext *cx, jschar *tbchars, size_t length, In
         return s;
     }
 
+    AutoLockForExclusiveAccess lock(cx);
+
     /*
      * If a GC occurs at js_NewStringCopy then |p| will still have the correct
      * hash, allowing us to avoid rehashing it. Even though the hash is
@@ -258,7 +260,7 @@ AtomizeAndTakeOwnership(ExclusiveContext *cx, jschar *tbchars, size_t length, In
         return atom;
     }
 
-    AutoEnterAtomsCompartment ac(cx);
+    AutoCompartment ac(cx, cx->atomsCompartment());
 
     JSFlatString *flat = js_NewString<CanGC>(cx, tbchars, length);
     if (!flat) {
@@ -293,6 +295,8 @@ AtomizeAndCopyChars(ExclusiveContext *cx, const jschar *tbchars, size_t length, 
      * GC will potentially free some table entries.
      */
 
+    AutoLockForExclusiveAccess lock(cx);
+
     AtomSet& atoms = cx->atoms();
     AtomSet::AddPtr p = atoms.lookupForAdd(AtomHasher::Lookup(tbchars, length));
     SkipRoot skipHash(cx, &p); /* Prevent the hash from being poisoned. */
@@ -302,7 +306,7 @@ AtomizeAndCopyChars(ExclusiveContext *cx, const jschar *tbchars, size_t length, 
         return atom;
     }
 
-    AutoEnterAtomsCompartment ac(cx);
+    AutoCompartment ac(cx, cx->atomsCompartment());
 
     JSFlatString *flat = js_NewStringCopyN<allowGC>(cx, tbchars, length);
     if (!flat)
@@ -312,7 +316,8 @@ AtomizeAndCopyChars(ExclusiveContext *cx, const jschar *tbchars, size_t length, 
 
     if (!atoms.relookupOrAdd(p, AtomHasher::Lookup(tbchars, length),
                              AtomStateEntry(atom, bool(ib)))) {
-        js_ReportOutOfMemory(cx); /* SystemAllocPolicy does not report OOM. */
+        if (allowGC)
+            js_ReportOutOfMemory(cx); /* SystemAllocPolicy does not report OOM. */
         return NULL;
     }
 
@@ -329,6 +334,8 @@ js::AtomizeString(ExclusiveContext *cx, JSString *str,
         /* N.B. static atoms are effectively always interned. */
         if (ib != InternAtom || js::StaticStrings::isStatic(&atom))
             return &atom;
+
+        AutoLockForExclusiveAccess lock(cx);
 
         AtomSet::Ptr p = cx->atoms().lookup(AtomHasher::Lookup(&atom));
         JS_ASSERT(p); /* Non-static atom must exist in atom state set. */

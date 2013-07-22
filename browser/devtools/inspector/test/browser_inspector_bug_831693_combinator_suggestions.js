@@ -60,6 +60,7 @@ function test()
   function startTest(aInspector)
   {
     inspector = aInspector;
+
     searchBox =
       inspector.panelWin.document.getElementById("inspector-searchbox");
     popup = inspector.searchSuggestions.searchPopup;
@@ -85,7 +86,7 @@ function test()
   }
 
   function checkState(event) {
-    executeSoon(function() {
+    inspector.searchSuggestions._lastQuery.then(() => {
       let [key, suggestions] = keyStates[state];
       let actualSuggestions = popup.getItems();
       is(popup._panel.state == "open" || popup._panel.state == "showing"

@@ -136,7 +136,6 @@
 #include "nsIURI.h"
 #include "nsIScrollableFrame.h"
 #include "prtime.h"
-#include "prlong.h"
 #include "nsIDragService.h"
 #include "nsCopySupport.h"
 #include "nsIDOMHTMLAnchorElement.h"
@@ -540,7 +539,7 @@ VerifyStyleTree(nsPresContext* aPresContext, nsFrameManager* aFrameManager)
 {
   if (nsFrame::GetVerifyStyleTreeEnable()) {
     nsIFrame* rootFrame = aFrameManager->GetRootFrame();
-    aFrameManager->DebugVerifyStyleTree(rootFrame);
+    aPresContext->RestyleManager()->DebugVerifyStyleTree(rootFrame);
   }
 }
 #define VERIFY_STYLE_TREE ::VerifyStyleTree(mPresContext, mFrameConstructor)
@@ -1721,7 +1720,7 @@ PresShell::Initialize(nscoord aWidth, nscoord aHeight)
     {
       nsAutoScriptBlocker scriptBlocker;
       mFrameConstructor->CreateNeededFrames();
-      mFrameConstructor->ProcessPendingRestyles();
+      mPresContext->RestyleManager()->ProcessPendingRestyles();
     }
 
     // And that might have run _more_ XBL constructors
@@ -1863,7 +1862,7 @@ PresShell::ResizeReflowIgnoreOverride(nscoord aWidth, nscoord aHeight)
     {
       nsAutoScriptBlocker scriptBlocker;
       mFrameConstructor->CreateNeededFrames();
-      mFrameConstructor->ProcessPendingRestyles();
+      mPresContext->RestyleManager()->ProcessPendingRestyles();
     }
 
     rootFrame = mFrameConstructor->GetRootFrame();
@@ -2693,25 +2692,26 @@ PresShell::RecreateFramesFor(nsIContent* aContent)
 
   // Mark ourselves as not safe to flush while we're doing frame construction.
   ++mChangeNestCount;
-  nsresult rv = mFrameConstructor->ProcessRestyledFrames(changeList);
-  mFrameConstructor->FlushOverflowChangedTracker();
+  RestyleManager* restyleManager = mPresContext->RestyleManager();
+  nsresult rv = restyleManager->ProcessRestyledFrames(changeList);
+  restyleManager->FlushOverflowChangedTracker();
   --mChangeNestCount;
-  
+
   return rv;
 }
 
 void
 nsIPresShell::PostRecreateFramesFor(Element* aElement)
 {
-  FrameConstructor()->PostRestyleEvent(aElement, nsRestyleHint(0),
-                                       nsChangeHint_ReconstructFrame);
+  mPresContext->RestyleManager()->PostRestyleEvent(aElement, nsRestyleHint(0),
+                                                   nsChangeHint_ReconstructFrame);
 }
 
 void
 nsIPresShell::RestyleForAnimation(Element* aElement, nsRestyleHint aHint)
 {
-  FrameConstructor()->PostAnimationRestyleEvent(aElement, aHint,
-                                                NS_STYLE_HINT_NONE);
+  mPresContext->RestyleManager()->PostAnimationRestyleEvent(aElement, aHint,
+                                                            NS_STYLE_HINT_NONE);
 }
 
 void
@@ -3427,14 +3427,15 @@ void
 PresShell::DispatchSynthMouseMove(nsGUIEvent *aEvent,
                                   bool aFlushOnHoverChange)
 {
-  uint32_t hoverGenerationBefore = mFrameConstructor->GetHoverGeneration();
+  RestyleManager* restyleManager = mPresContext->RestyleManager();
+  uint32_t hoverGenerationBefore = restyleManager->GetHoverGeneration();
   nsEventStatus status;
   nsView* targetView = nsView::GetViewFor(aEvent->widget);
   if (!targetView)
     return;
   targetView->GetViewManager()->DispatchEvent(aEvent, targetView, &status);
   if (aFlushOnHoverChange &&
-      hoverGenerationBefore != mFrameConstructor->GetHoverGeneration()) {
+      hoverGenerationBefore != restyleManager->GetHoverGeneration()) {
     // Flush so that the resulting reflow happens now so that our caller
     // can suppress any synthesized mouse moves caused by that reflow.
     FlushPendingNotifications(Flush_Layout);
@@ -3855,7 +3856,7 @@ PresShell::FlushPendingNotifications(mozilla::ChangesToFlush aFlush)
       if (!mIsDestroying) {
         nsAutoScriptBlocker scriptBlocker;
         mFrameConstructor->CreateNeededFrames();
-        mFrameConstructor->ProcessPendingRestyles();
+        mPresContext->RestyleManager()->ProcessPendingRestyles();
       }
     }
 
@@ -3882,7 +3883,7 @@ PresShell::FlushPendingNotifications(mozilla::ChangesToFlush aFlush)
     if (!mIsDestroying) {
       nsAutoScriptBlocker scriptBlocker;
       mFrameConstructor->CreateNeededFrames();
-      mFrameConstructor->ProcessPendingRestyles();
+      mPresContext->RestyleManager()->ProcessPendingRestyles();
     }
 
 
@@ -3918,14 +3919,12 @@ PresShell::FlushPendingNotifications(mozilla::ChangesToFlush aFlush)
 }
 
 void
-PresShell::CharacterDataChanged(nsIDocument *aDocument,
-                                nsIContent*  aContent,
-                                CharacterDataChangeInfo* aInfo)
+PresShell::CharacterDataWillChange(nsIDocument *aDocument,
+                                   nsIContent*  aContent,
+                                   CharacterDataChangeInfo* aInfo)
 {
   NS_PRECONDITION(!mIsDocumentGone, "Unexpected CharacterDataChanged");
   NS_PRECONDITION(aDocument == mDocument, "Unexpected aDocument");
-
-  nsAutoCauseReflowNotifier crNotifier(this);
 
   if (mCaret) {
     // Invalidate the caret's current location before we call into the frame
@@ -3934,8 +3933,23 @@ PresShell::CharacterDataChanged(nsIDocument *aDocument,
     // text frame the caret is in to forget what part of the content they
     // refer to, making it hard for them to return the correct continuation
     // frame to the caret.
+    //
+    // It's also important to do this before the content actually changes, since
+    // in bidi text the caret needs to look at the content to determine its
+    // position and shape.
     mCaret->InvalidateOutsideCaret();
   }
+}
+
+void
+PresShell::CharacterDataChanged(nsIDocument *aDocument,
+                                nsIContent*  aContent,
+                                CharacterDataChangeInfo* aInfo)
+{
+  NS_PRECONDITION(!mIsDocumentGone, "Unexpected CharacterDataChanged");
+  NS_PRECONDITION(aDocument == mDocument, "Unexpected aDocument");
+
+  nsAutoCauseReflowNotifier crNotifier(this);
 
   // Call this here so it only happens for real content mutations and
   // not cases when the frame constructor calls its own methods to force
@@ -3946,9 +3960,9 @@ PresShell::CharacterDataChanged(nsIDocument *aDocument,
   if (selectorFlags != 0 && !aContent->IsRootOfAnonymousSubtree()) {
     Element* element = container->AsElement();
     if (aInfo->mAppend && !aContent->GetNextSibling())
-      mFrameConstructor->RestyleForAppend(element, aContent);
+      mPresContext->RestyleManager()->RestyleForAppend(element, aContent);
     else
-      mFrameConstructor->RestyleForInsertOrChange(element, aContent);
+      mPresContext->RestyleManager()->RestyleForInsertOrChange(element, aContent);
   }
 
   mFrameConstructor->CharacterDataChanged(aContent, aInfo);
@@ -3965,7 +3979,7 @@ PresShell::ContentStateChanged(nsIDocument* aDocument,
 
   if (mDidInitialize) {
     nsAutoCauseReflowNotifier crNotifier(this);
-    mFrameConstructor->ContentStateChanged(aContent, aStateMask);
+    mPresContext->RestyleManager()->ContentStateChanged(aContent, aStateMask);
     VERIFY_STYLE_TREE;
   }
 }
@@ -3981,8 +3995,9 @@ PresShell::DocumentStatesChanged(nsIDocument* aDocument,
       mStyleSet->HasDocumentStateDependentStyle(mPresContext,
                                                 mDocument->GetRootElement(),
                                                 aStateMask)) {
-    mFrameConstructor->PostRestyleEvent(mDocument->GetRootElement(),
-                                        eRestyle_Subtree, NS_STYLE_HINT_NONE);
+    mPresContext->RestyleManager()->PostRestyleEvent(mDocument->GetRootElement(),
+                                                     eRestyle_Subtree,
+                                                     NS_STYLE_HINT_NONE);
     VERIFY_STYLE_TREE;
   }
 
@@ -4013,8 +4028,8 @@ PresShell::AttributeWillChange(nsIDocument* aDocument,
   // squelch any other inappropriate notifications as well.
   if (mDidInitialize) {
     nsAutoCauseReflowNotifier crNotifier(this);
-    mFrameConstructor->AttributeWillChange(aElement, aNameSpaceID,
-                                           aAttribute, aModType);
+    mPresContext->RestyleManager()->AttributeWillChange(aElement, aNameSpaceID,
+                                                        aAttribute, aModType);
     VERIFY_STYLE_TREE;
   }
 }
@@ -4034,8 +4049,8 @@ PresShell::AttributeChanged(nsIDocument* aDocument,
   // squelch any other inappropriate notifications as well.
   if (mDidInitialize) {
     nsAutoCauseReflowNotifier crNotifier(this);
-    mFrameConstructor->AttributeChanged(aElement, aNameSpaceID,
-                                        aAttribute, aModType);
+    mPresContext->RestyleManager()->AttributeChanged(aElement, aNameSpaceID,
+                                                     aAttribute, aModType);
     VERIFY_STYLE_TREE;
   }
 }
@@ -4059,7 +4074,8 @@ PresShell::ContentAppended(nsIDocument *aDocument,
   // Call this here so it only happens for real content mutations and
   // not cases when the frame constructor calls its own methods to force
   // frame reconstruction.
-  mFrameConstructor->RestyleForAppend(aContainer->AsElement(), aFirstNewContent);
+  mPresContext->RestyleManager()->
+    RestyleForAppend(aContainer->AsElement(), aFirstNewContent);
 
   mFrameConstructor->ContentAppended(aContainer, aFirstNewContent, true);
 
@@ -4089,8 +4105,10 @@ PresShell::ContentInserted(nsIDocument* aDocument,
   // Call this here so it only happens for real content mutations and
   // not cases when the frame constructor calls its own methods to force
   // frame reconstruction.
-  if (aContainer)
-    mFrameConstructor->RestyleForInsertOrChange(aContainer->AsElement(), aChild);
+  if (aContainer) {
+    mPresContext->RestyleManager()->
+      RestyleForInsertOrChange(aContainer->AsElement(), aChild);
+  }
 
   mFrameConstructor->ContentInserted(aContainer, aChild, nullptr, true);
 
@@ -4141,8 +4159,8 @@ PresShell::ContentRemoved(nsIDocument *aDocument,
   }
   
   if (aContainer && aContainer->IsElement()) {
-    mFrameConstructor->RestyleForRemove(aContainer->AsElement(), aChild,
-                                        oldNextSibling);
+    mPresContext->RestyleManager()->
+      RestyleForRemove(aContainer->AsElement(), aChild, oldNextSibling);
   }
 
   bool didReconstruct;
@@ -4219,18 +4237,19 @@ nsIPresShell::ReconstructStyleDataInternal()
     // No content to restyle
     return;
   }
-  
+
+  RestyleManager* restyleManager = mPresContext->RestyleManager();
   if (scopeRoots.IsEmpty()) {
     // If scopeRoots is empty, we know that mStylesHaveChanged was true at
     // the beginning of this function, and that we need to restyle the whole
     // document.
-    mFrameConstructor->PostRestyleEvent(root, eRestyle_Subtree,
-                                        NS_STYLE_HINT_NONE);
+    restyleManager->PostRestyleEvent(root, eRestyle_Subtree,
+                                     NS_STYLE_HINT_NONE);
   } else {
     for (uint32_t i = 0; i < scopeRoots.Length(); i++) {
       Element* scopeRoot = scopeRoots[i];
-      mFrameConstructor->PostRestyleEvent(scopeRoot, eRestyle_Subtree,
-                                          NS_STYLE_HINT_NONE);
+      restyleManager->PostRestyleEvent(scopeRoot, eRestyle_Subtree,
+                                       NS_STYLE_HINT_NONE);
     }
   }
 }
@@ -8141,8 +8160,9 @@ PresShell::Observe(nsISupports* aSubject,
         {
           nsAutoScriptBlocker scriptBlocker;
           ++mChangeNestCount;
-          mFrameConstructor->ProcessRestyledFrames(changeList);
-          mFrameConstructor->FlushOverflowChangedTracker();
+          RestyleManager* restyleManager = mPresContext->RestyleManager();
+          restyleManager->ProcessRestyledFrames(changeList);
+          restyleManager->FlushOverflowChangedTracker();
           --mChangeNestCount;
         }
       }

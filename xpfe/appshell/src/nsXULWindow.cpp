@@ -1020,15 +1020,14 @@ void nsXULWindow::OnChromeLoaded()
 
 bool nsXULWindow::LoadPositionFromXUL()
 {
-  nsresult rv;
   bool     gotPosition = false;
-  
+
   // if we're the hidden window, don't try to validate our size/position. We're
   // special.
   if (mIsHiddenWindow)
     return false;
 
-  nsCOMPtr<nsIDOMElement> windowElement = GetWindowDOMElement();
+  nsCOMPtr<dom::Element> windowElement = GetWindowDOMElement();
   NS_ENSURE_TRUE(windowElement, false);
 
   int32_t currX = 0;
@@ -1053,23 +1052,19 @@ bool nsXULWindow::LoadPositionFromXUL()
   int32_t specY = currY;
   nsAutoString posString;
 
-  rv = windowElement->GetAttribute(SCREENX_ATTRIBUTE, posString);
-  if (NS_SUCCEEDED(rv)) {
-    temp = posString.ToInteger(&errorCode);
-    if (NS_SUCCEEDED(errorCode)) {
-      specX = temp;
-      gotPosition = true;
-    }
+  windowElement->GetAttribute(SCREENX_ATTRIBUTE, posString);
+  temp = posString.ToInteger(&errorCode);
+  if (NS_SUCCEEDED(errorCode)) {
+    specX = temp;
+    gotPosition = true;
   }
-  rv = windowElement->GetAttribute(SCREENY_ATTRIBUTE, posString);
-  if (NS_SUCCEEDED(rv)) {
-    temp = posString.ToInteger(&errorCode);
-    if (NS_SUCCEEDED(errorCode)) {
-      specY = temp;
-      gotPosition = true;
-    }
+  windowElement->GetAttribute(SCREENY_ATTRIBUTE, posString);
+  temp = posString.ToInteger(&errorCode);
+  if (NS_SUCCEEDED(errorCode)) {
+    specY = temp;
+    gotPosition = true;
   }
-    
+
   if (gotPosition) {
     // our position will be relative to our parent, if any
     nsCOMPtr<nsIBaseWindow> parent(do_QueryReferent(mParentWindow));
@@ -1100,15 +1095,14 @@ bool nsXULWindow::LoadPositionFromXUL()
 
 bool nsXULWindow::LoadSizeFromXUL()
 {
-  nsresult rv;
   bool     gotSize = false;
-  
+
   // if we're the hidden window, don't try to validate our size/position. We're
   // special.
   if (mIsHiddenWindow)
     return false;
 
-  nsCOMPtr<nsIDOMElement> windowElement = GetWindowDOMElement();
+  nsCOMPtr<dom::Element> windowElement = GetWindowDOMElement();
   NS_ENSURE_TRUE(windowElement, false);
 
   int32_t currWidth = 0;
@@ -1128,21 +1122,17 @@ bool nsXULWindow::LoadSizeFromXUL()
   int32_t specHeight = currHeight;
   nsAutoString sizeString;
 
-  rv = windowElement->GetAttribute(WIDTH_ATTRIBUTE, sizeString);
-  if (NS_SUCCEEDED(rv)) {
-    temp = sizeString.ToInteger(&errorCode);
-    if (NS_SUCCEEDED(errorCode) && temp > 0) {
-      specWidth = std::max(temp, 100);
-      gotSize = true;
-    }
+  windowElement->GetAttribute(WIDTH_ATTRIBUTE, sizeString);
+  temp = sizeString.ToInteger(&errorCode);
+  if (NS_SUCCEEDED(errorCode) && temp > 0) {
+    specWidth = std::max(temp, 100);
+    gotSize = true;
   }
-  rv = windowElement->GetAttribute(HEIGHT_ATTRIBUTE, sizeString);
-  if (NS_SUCCEEDED(rv)) {
-    temp = sizeString.ToInteger(&errorCode);
-    if (NS_SUCCEEDED(errorCode) && temp > 0) {
-      specHeight = std::max(temp, 100);
-      gotSize = true;
-    }
+  windowElement->GetAttribute(HEIGHT_ATTRIBUTE, sizeString);
+  temp = sizeString.ToInteger(&errorCode);
+  if (NS_SUCCEEDED(errorCode) && temp > 0) {
+    specHeight = std::max(temp, 100);
+    gotSize = true;
   }
 
   if (gotSize) {
@@ -1180,9 +1170,8 @@ bool nsXULWindow::LoadSizeFromXUL()
    attributes (sizemode) and they require extra processing. */
 bool nsXULWindow::LoadMiscPersistentAttributesFromXUL()
 {
-  nsresult rv;
   bool     gotState = false;
-  
+
   /* There are no misc attributes of interest to the hidden window.
      It's especially important not to try to validate that window's
      size or position, because some platforms (Mac OS X) need to
@@ -1190,62 +1179,61 @@ bool nsXULWindow::LoadMiscPersistentAttributesFromXUL()
   if (mIsHiddenWindow)
     return false;
 
-  nsCOMPtr<nsIDOMElement> windowElement = GetWindowDOMElement();
+  nsCOMPtr<dom::Element> windowElement = GetWindowDOMElement();
   NS_ENSURE_TRUE(windowElement, false);
 
   nsAutoString stateString;
 
   // sizemode
-  rv = windowElement->GetAttribute(MODE_ATTRIBUTE, stateString);
-  if (NS_SUCCEEDED(rv)) {
-    int32_t sizeMode = nsSizeMode_Normal;
-    /* ignore request to minimize, to not confuse novices
-    if (stateString.Equals(SIZEMODE_MINIMIZED))
-      sizeMode = nsSizeMode_Minimized;
-    */
-    if (!mIgnoreXULSizeMode &&
-        (stateString.Equals(SIZEMODE_MAXIMIZED) || stateString.Equals(SIZEMODE_FULLSCREEN))) {
-      /* Honor request to maximize only if the window is sizable.
-         An unsizable, unmaximizable, yet maximized window confuses
-         Windows OS and is something of a travesty, anyway. */
-      if (mChromeFlags & nsIWebBrowserChrome::CHROME_WINDOW_RESIZE) {
-        mIntrinsicallySized = false;
-        
-        if (stateString.Equals(SIZEMODE_MAXIMIZED))
-          sizeMode = nsSizeMode_Maximized;
-        else
-          sizeMode = nsSizeMode_Fullscreen;
-      }
-    }
+  windowElement->GetAttribute(MODE_ATTRIBUTE, stateString);
+  int32_t sizeMode = nsSizeMode_Normal;
+  /* ignore request to minimize, to not confuse novices
+  if (stateString.Equals(SIZEMODE_MINIMIZED))
+    sizeMode = nsSizeMode_Minimized;
+  */
+  if (!mIgnoreXULSizeMode &&
+      (stateString.Equals(SIZEMODE_MAXIMIZED) || stateString.Equals(SIZEMODE_FULLSCREEN))) {
+    /* Honor request to maximize only if the window is sizable.
+       An unsizable, unmaximizable, yet maximized window confuses
+       Windows OS and is something of a travesty, anyway. */
+    if (mChromeFlags & nsIWebBrowserChrome::CHROME_WINDOW_RESIZE) {
+      mIntrinsicallySized = false;
 
-    // If we are told to ignore the size mode attribute update the
-    // document so the attribute and window are in sync.
-    if (mIgnoreXULSizeMode) {
-      nsAutoString sizeString;
-      if (sizeMode == nsSizeMode_Maximized)
-        sizeString.Assign(SIZEMODE_MAXIMIZED);
-      else if (sizeMode == nsSizeMode_Fullscreen)
-        sizeString.Assign(SIZEMODE_FULLSCREEN);
-      else if (sizeMode == nsSizeMode_Normal)
-        sizeString.Assign(SIZEMODE_NORMAL);
-      if (!sizeString.IsEmpty()) {
-        windowElement->SetAttribute(MODE_ATTRIBUTE, sizeString);
-      }
+      if (stateString.Equals(SIZEMODE_MAXIMIZED))
+        sizeMode = nsSizeMode_Maximized;
+      else
+        sizeMode = nsSizeMode_Fullscreen;
     }
-
-    if (sizeMode == nsSizeMode_Fullscreen) {
-      nsCOMPtr<nsIDOMWindow> ourWindow;
-      GetWindowDOMWindow(getter_AddRefs(ourWindow));
-      ourWindow->SetFullScreen(true);
-    } else {
-      mWindow->SetSizeMode(sizeMode);
-    }
-    gotState = true;
   }
 
+  // If we are told to ignore the size mode attribute update the
+  // document so the attribute and window are in sync.
+  if (mIgnoreXULSizeMode) {
+    nsAutoString sizeString;
+    if (sizeMode == nsSizeMode_Maximized)
+      sizeString.Assign(SIZEMODE_MAXIMIZED);
+    else if (sizeMode == nsSizeMode_Fullscreen)
+      sizeString.Assign(SIZEMODE_FULLSCREEN);
+    else if (sizeMode == nsSizeMode_Normal)
+      sizeString.Assign(SIZEMODE_NORMAL);
+    if (!sizeString.IsEmpty()) {
+      ErrorResult rv;
+      windowElement->SetAttribute(MODE_ATTRIBUTE, sizeString, rv);
+    }
+  }
+
+  if (sizeMode == nsSizeMode_Fullscreen) {
+    nsCOMPtr<nsIDOMWindow> ourWindow;
+    GetWindowDOMWindow(getter_AddRefs(ourWindow));
+    ourWindow->SetFullScreen(true);
+  } else {
+    mWindow->SetSizeMode(sizeMode);
+  }
+  gotState = true;
+
   // zlevel
-  rv = windowElement->GetAttribute(ZLEVEL_ATTRIBUTE, stateString);
-  if (NS_SUCCEEDED(rv) && stateString.Length() > 0) {
+  windowElement->GetAttribute(ZLEVEL_ATTRIBUTE, stateString);
+  if (!stateString.IsEmpty()) {
     nsresult errorCode;
     int32_t zLevel = stateString.ToInteger(&errorCode);
     if (NS_SUCCEEDED(errorCode) && zLevel >= lowestZ && zLevel <= highestZ)
@@ -1266,7 +1254,6 @@ void nsXULWindow::StaggerPosition(int32_t &aRequestedX, int32_t &aRequestedY,
   const int32_t kOffset = 22;
   const uint32_t kSlop  = 4;
 
-  nsresult rv;
   bool     keepTrying;
   int      bouncedX = 0, // bounced off vertical edge of screen
            bouncedY = 0; // bounced off horizontal edge
@@ -1276,16 +1263,14 @@ void nsXULWindow::StaggerPosition(int32_t &aRequestedX, int32_t &aRequestedY,
   if (!wm)
     return;
 
-  nsCOMPtr<nsIDOMElement> windowElement = GetWindowDOMElement();
+  nsCOMPtr<dom::Element> windowElement = GetWindowDOMElement();
   if (!windowElement)
     return;
 
   nsCOMPtr<nsIXULWindow> ourXULWindow(this);
 
   nsAutoString windowType;
-  rv = windowElement->GetAttribute(WINDOWTYPE_ATTRIBUTE, windowType);
-  if (NS_FAILED(rv))
-    return;
+  windowElement->GetAttribute(WINDOWTYPE_ATTRIBUTE, windowType);
 
   int32_t screenTop = 0,    // it's pointless to initialize these ...
           screenRight = 0,  // ... but to prevent oversalubrious and ...
@@ -1384,60 +1369,53 @@ void nsXULWindow::StaggerPosition(int32_t &aRequestedX, int32_t &aRequestedY,
 
 void nsXULWindow::SyncAttributesToWidget()
 {
-  nsCOMPtr<nsIDOMElement> windowElement = GetWindowDOMElement();
+  nsCOMPtr<dom::Element> windowElement = GetWindowDOMElement();
   if (!windowElement)
     return;
 
   nsAutoString attr;
 
   // "hidechrome" attribute
-  nsresult rv = windowElement->GetAttribute(NS_LITERAL_STRING("hidechrome"), attr);
-  if (NS_SUCCEEDED(rv) && attr.EqualsLiteral("true")) {
+  if (windowElement->AttrValueIs(kNameSpaceID_None, nsGkAtoms::hidechrome,
+                                 nsGkAtoms::_true, eCaseMatters)) {
     mWindow->HideWindowChrome(true);
   }
 
   // "chromemargin" attribute
   nsIntMargin margins;
-  rv = windowElement->GetAttribute(NS_LITERAL_STRING("chromemargin"), attr);
-  if (NS_SUCCEEDED(rv) && nsContentUtils::ParseIntMarginValue(attr, margins)) {
+  windowElement->GetAttribute(NS_LITERAL_STRING("chromemargin"), attr);
+  if (nsContentUtils::ParseIntMarginValue(attr, margins)) {
     mWindow->SetNonClientMargins(margins);
   }
 
   // "accelerated" attribute
-  bool isAccelerated;
-  rv = windowElement->HasAttribute(NS_LITERAL_STRING("accelerated"), &isAccelerated);
-  if (NS_SUCCEEDED(rv)) {
-    mWindow->SetLayersAcceleration(isAccelerated);
-  }
+  bool isAccelerated = windowElement->HasAttribute(NS_LITERAL_STRING("accelerated"));
+  mWindow->SetLayersAcceleration(isAccelerated);
 
   // "windowtype" attribute
-  rv = windowElement->GetAttribute(WINDOWTYPE_ATTRIBUTE, attr);
-  if (NS_SUCCEEDED(rv) && !attr.IsEmpty()) {
+  windowElement->GetAttribute(WINDOWTYPE_ATTRIBUTE, attr);
+  if (!attr.IsEmpty()) {
     mWindow->SetWindowClass(attr);
   }
 
   // "id" attribute for icon
-  rv = windowElement->GetAttribute(NS_LITERAL_STRING("id"), attr);
-  if (NS_FAILED(rv) || attr.IsEmpty()) {
+  windowElement->GetAttribute(NS_LITERAL_STRING("id"), attr);
+  if (attr.IsEmpty()) {
     attr.AssignLiteral("default");
   }
   mWindow->SetIcon(attr);
 
   // "toggletoolbar" attribute
-  rv = windowElement->GetAttribute(NS_LITERAL_STRING("toggletoolbar"), attr);
-  if (NS_SUCCEEDED(rv)) {
-    mWindow->SetShowsToolbarButton(attr.LowerCaseEqualsLiteral("true"));
-  }
+  windowElement->GetAttribute(NS_LITERAL_STRING("toggletoolbar"), attr);
+  mWindow->SetShowsToolbarButton(attr.LowerCaseEqualsLiteral("true"));
 
   // "fullscreenbutton" attribute
-  rv = windowElement->GetAttribute(NS_LITERAL_STRING("fullscreenbutton"), attr);
-  if (NS_SUCCEEDED(rv)) {
-    mWindow->SetShowsFullScreenButton(attr.LowerCaseEqualsLiteral("true"));
-  }
+  windowElement->GetAttribute(NS_LITERAL_STRING("fullscreenbutton"), attr);
+  mWindow->SetShowsFullScreenButton(attr.LowerCaseEqualsLiteral("true"));
 
   // "macanimationtype" attribute
-  rv = windowElement->GetAttribute(NS_LITERAL_STRING("macanimationtype"), attr);
-  if (NS_SUCCEEDED(rv) && attr.EqualsLiteral("document")) {
+  windowElement->GetAttribute(NS_LITERAL_STRING("macanimationtype"), attr);
+  if (attr.EqualsLiteral("document")) {
     mWindow->SetWindowAnimationType(nsIWidget::eDocumentWindowAnimation);
   }
 }
@@ -1449,7 +1427,7 @@ NS_IMETHODIMP nsXULWindow::SavePersistentAttributes()
   if (!mDocShell)
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIDOMElement> docShellElement = GetWindowDOMElement();
+  nsCOMPtr<dom::Element> docShellElement = GetWindowDOMElement();
   if (!docShellElement)
     return NS_ERROR_FAILURE;
 
@@ -1482,29 +1460,27 @@ NS_IMETHODIMP nsXULWindow::SavePersistentAttributes()
   nsAutoString                windowElementId;
   nsCOMPtr<nsIDOMXULDocument> ownerXULDoc;
 
-  { // fetch docShellElement's ID and XUL owner document
-    nsCOMPtr<nsIDOMDocument> ownerDoc;
-    docShellElement->GetOwnerDocument(getter_AddRefs(ownerDoc));
-    ownerXULDoc = do_QueryInterface(ownerDoc);
-    nsCOMPtr<mozilla::dom::Element> XULElement(do_QueryInterface(docShellElement));
-    if (XULElement && XULElement->IsXUL())
-      XULElement->GetId(windowElementId);
+  // fetch docShellElement's ID and XUL owner document
+  ownerXULDoc = do_QueryInterface(docShellElement->OwnerDoc());
+  if (docShellElement->IsXUL()) {
+    docShellElement->GetId(windowElementId);
   }
 
+  ErrorResult rv;
   // (only for size elements which are persisted)
   if ((mPersistentAttributesDirty & PAD_POSITION) &&
       sizeMode == nsSizeMode_Normal) {
     if (persistString.Find("screenX") >= 0) {
       PR_snprintf(sizeBuf, sizeof(sizeBuf), "%d", NSToIntRound(x / scale));
       sizeString.AssignWithConversion(sizeBuf);
-      docShellElement->SetAttribute(SCREENX_ATTRIBUTE, sizeString);
+      docShellElement->SetAttribute(SCREENX_ATTRIBUTE, sizeString, rv);
       if (ownerXULDoc) // force persistence in case the value didn't change
         ownerXULDoc->Persist(windowElementId, SCREENX_ATTRIBUTE);
     }
     if (persistString.Find("screenY") >= 0) {
       PR_snprintf(sizeBuf, sizeof(sizeBuf), "%d", NSToIntRound(y / scale));
       sizeString.AssignWithConversion(sizeBuf);
-      docShellElement->SetAttribute(SCREENY_ATTRIBUTE, sizeString);
+      docShellElement->SetAttribute(SCREENY_ATTRIBUTE, sizeString, rv);
       if (ownerXULDoc)
         ownerXULDoc->Persist(windowElementId, SCREENY_ATTRIBUTE);
     }
@@ -1515,14 +1491,14 @@ NS_IMETHODIMP nsXULWindow::SavePersistentAttributes()
     if (persistString.Find("width") >= 0) {
       PR_snprintf(sizeBuf, sizeof(sizeBuf), "%d", NSToIntRound(cx / scale));
       sizeString.AssignWithConversion(sizeBuf);
-      docShellElement->SetAttribute(WIDTH_ATTRIBUTE, sizeString);
+      docShellElement->SetAttribute(WIDTH_ATTRIBUTE, sizeString, rv);
       if (ownerXULDoc)
         ownerXULDoc->Persist(windowElementId, WIDTH_ATTRIBUTE);
     }
     if (persistString.Find("height") >= 0) {
       PR_snprintf(sizeBuf, sizeof(sizeBuf), "%d", NSToIntRound(cy / scale));
       sizeString.AssignWithConversion(sizeBuf);
-      docShellElement->SetAttribute(HEIGHT_ATTRIBUTE, sizeString);
+      docShellElement->SetAttribute(HEIGHT_ATTRIBUTE, sizeString, rv);
       if (ownerXULDoc)
         ownerXULDoc->Persist(windowElementId, HEIGHT_ATTRIBUTE);
     }
@@ -1536,7 +1512,7 @@ NS_IMETHODIMP nsXULWindow::SavePersistentAttributes()
         sizeString.Assign(SIZEMODE_FULLSCREEN);
       else
         sizeString.Assign(SIZEMODE_NORMAL);
-      docShellElement->SetAttribute(MODE_ATTRIBUTE, sizeString);
+      docShellElement->SetAttribute(MODE_ATTRIBUTE, sizeString, rv);
       if (ownerXULDoc && persistString.Find("sizemode") >= 0)
         ownerXULDoc->Persist(windowElementId, MODE_ATTRIBUTE);
     }
@@ -1547,7 +1523,7 @@ NS_IMETHODIMP nsXULWindow::SavePersistentAttributes()
         mediator->GetZLevel(this, &zLevel);
         PR_snprintf(sizeBuf, sizeof(sizeBuf), "%lu", (unsigned long)zLevel);
         sizeString.AssignWithConversion(sizeBuf);
-        docShellElement->SetAttribute(ZLEVEL_ATTRIBUTE, sizeString);
+        docShellElement->SetAttribute(ZLEVEL_ATTRIBUTE, sizeString, rv);
         ownerXULDoc->Persist(windowElementId, ZLEVEL_ATTRIBUTE);
       }
     }
@@ -1570,7 +1546,7 @@ NS_IMETHODIMP nsXULWindow::GetWindowDOMWindow(nsIDOMWindow** aDOMWindow)
   return NS_OK;
 }
 
-nsIDOMElement*
+dom::Element*
 nsXULWindow::GetWindowDOMElement() const
 {
   NS_ENSURE_TRUE(mDocShell, nullptr);
@@ -1582,10 +1558,7 @@ nsXULWindow::GetWindowDOMElement() const
   const nsIDocument* document = cv->GetDocument();
   NS_ENSURE_TRUE(document, nullptr);
 
-  dom::Element* element = document->GetRootElement();
-  NS_ENSURE_TRUE(element, nullptr);
-
-  return static_cast<nsIDOMElement*>(element->AsDOMNode());
+  return document->GetRootElement();
 }
 
 nsresult nsXULWindow::ContentShellAdded(nsIDocShellTreeItem* aContentShell,
@@ -2024,7 +1997,7 @@ void nsXULWindow::PersistentAttributesDirty(uint32_t aDirtyFlags)
 
 NS_IMETHODIMP nsXULWindow::ApplyChromeFlags()
 {
-  nsCOMPtr<nsIDOMElement> window = GetWindowDOMElement();
+  nsCOMPtr<dom::Element> window = GetWindowDOMElement();
   NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
 
   if (mChromeLoaded) {
@@ -2032,7 +2005,7 @@ NS_IMETHODIMP nsXULWindow::ApplyChromeFlags()
     // don't cause a global restyle on the document.  Not only that, but the
     // scrollbar stuff needs a content area to toggle the scrollbars on anyway.
     // So just don't do these until mChromeLoaded is true.
-    
+
     // Scrollbars have their own special treatment.
     SetContentScrollbarVisibility(mChromeFlags &
                                   nsIWebBrowserChrome::CHROME_SCROLLBARS ?
@@ -2064,7 +2037,8 @@ NS_IMETHODIMP nsXULWindow::ApplyChromeFlags()
 
   // Note that if we're not actually changing the value this will be a no-op,
   // so no need to compare to the old value.
-  window->SetAttribute(NS_LITERAL_STRING("chromehidden"), newvalue);
+  ErrorResult rv;
+  window->SetAttribute(NS_LITERAL_STRING("chromehidden"), newvalue, rv);
 
   return NS_OK;
 }

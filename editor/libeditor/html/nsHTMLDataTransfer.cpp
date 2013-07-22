@@ -226,7 +226,7 @@ nsHTMLEditor::InsertHTMLWithContext(const nsAString & aInputString,
 {
   return DoInsertHTMLWithContext(aInputString, aContextStr, aInfoStr,
       aFlavor, aSourceDoc, aDestNode, aDestOffset, aDeleteSelection,
-      true);
+      /* trusted input */ true, /* clear style */ false);
 }
 
 nsresult
@@ -238,7 +238,8 @@ nsHTMLEditor::DoInsertHTMLWithContext(const nsAString & aInputString,
                                       nsIDOMNode *aDestNode,
                                       int32_t aDestOffset,
                                       bool aDeleteSelection,
-                                      bool aTrustedInput)
+                                      bool aTrustedInput,
+                                      bool aClearStyle)
 {
   NS_ENSURE_TRUE(mRules, NS_ERROR_NOT_INITIALIZED);
 
@@ -366,12 +367,14 @@ nsHTMLEditor::DoInsertHTMLWithContext(const nsAString & aInputString,
     rv = DeleteSelectionAndPrepareToCreateNode();
     NS_ENSURE_SUCCESS(rv, rv);
 
-    // pasting does not inherit local inline styles
-    nsCOMPtr<nsIDOMNode> tmpNode =
-      do_QueryInterface(selection->GetAnchorNode());
-    int32_t tmpOffset = selection->GetAnchorOffset();
-    rv = ClearStyle(address_of(tmpNode), &tmpOffset, nullptr, nullptr);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (aClearStyle) {
+      // pasting does not inherit local inline styles
+      nsCOMPtr<nsIDOMNode> tmpNode =
+        do_QueryInterface(selection->GetAnchorNode());
+      int32_t tmpOffset = selection->GetAnchorOffset();
+      rv = ClearStyle(address_of(tmpNode), &tmpOffset, nullptr, nullptr);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
   }
   else
   {

@@ -22,13 +22,14 @@ function run_test() {
 
   httpserv.registerPathHandler("/bug412945", bug412945);
 
-  httpserv.start(4444);
+  httpserv.start(-1);
 
   // make request
   var channel =
       Components.classes["@mozilla.org/network/io-service;1"].
       getService(Components.interfaces.nsIIOService).
-      newChannel("http://localhost:4444/bug412945", null, null);
+      newChannel("http://localhost:" + httpserv.identity.primaryPort +
+                 "/bug412945", null, null);
 
   channel.QueryInterface(Components.interfaces.nsIHttpChannel);
   channel.requestMethod = "post";

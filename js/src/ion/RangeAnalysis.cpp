@@ -24,10 +24,12 @@ using namespace js;
 using namespace js::ion;
 
 using mozilla::Abs;
+using mozilla::CountLeadingZeroes32;
 using mozilla::ExponentComponent;
 using mozilla::IsInfinite;
 using mozilla::IsNaN;
 using mozilla::IsNegative;
+using mozilla::Swap;
 
 // This algorithm is based on the paper "Eliminating Range Checks Using
 // Static Single Assignment Form" by Gough and Klaren.
@@ -464,24 +466,51 @@ Range::and_(const Range *lhs, const Range *rhs)
 Range *
 Range::or_(const Range *lhs, const Range *rhs)
 {
+    // When one operand is always 0 or always -1, it's a special case where we
+    // can compute a fully precise result. Handling these up front also
+    // protects the code below from calling CountLeadingZeroes32 with a zero
+    // operand or from shifting an int32_t by 32.
+    if (lhs->lower_ == lhs->upper_) {
+        if (lhs->lower_ == 0)
+            return new Range(*rhs);
+        if (lhs->lower_ == -1)
+            return new Range(*lhs);;
+    }
+    if (rhs->lower_ == rhs->upper_) {
+        if (rhs->lower_ == 0)
+            return new Range(*lhs);
+        if (rhs->lower_ == -1)
+            return new Range(*rhs);;
+    }
+
+    // The code below uses CountLeadingZeroes32, which has undefined behavior
+    // if its operand is 0. We rely on the code above to protect it.
+    JS_ASSERT_IF(lhs->lower_ >= 0, lhs->upper_ != 0);
+    JS_ASSERT_IF(rhs->lower_ >= 0, rhs->upper_ != 0);
+    JS_ASSERT_IF(lhs->upper_ < 0, lhs->lower_ != -1);
+    JS_ASSERT_IF(rhs->upper_ < 0, rhs->lower_ != -1);
+
     int64_t lower = INT32_MIN;
     int64_t upper = INT32_MAX;
 
     if (lhs->lower_ >= 0 && rhs->lower_ >= 0) {
-        // Both operands are non-negative, so the result won't be greater than either.
+        // Both operands are non-negative, so the result won't be less than either.
         lower = Max(lhs->lower_, rhs->lower_);
         // The result will have leading zeros where both operands have leading zeros.
-        upper = UINT32_MAX >> Min(js_bitscan_clz32(lhs->upper_),
-                                  js_bitscan_clz32(rhs->upper_));
+        upper = UINT32_MAX >> Min(CountLeadingZeroes32(lhs->upper_),
+                                  CountLeadingZeroes32(rhs->upper_));
     } else {
         // The result will have leading ones where either operand has leading ones.
-        if (lhs->upper_ < 0)
-            lower = Max(lower, (int64_t)(int32_t)~(UINT32_MAX >> js_bitscan_clz32(~lhs->lower_)));
-        if (rhs->upper_ < 0)
-            lower = Max(lower, (int64_t)(int32_t)~(UINT32_MAX >> js_bitscan_clz32(~rhs->lower_)));
-        // If either operand is negative, the result is negative.
-        if (lhs->upper_ < 0 && rhs->upper_ < 0)
+        if (lhs->upper_ < 0) {
+            unsigned leadingOnes = CountLeadingZeroes32(~lhs->lower_);
+            lower = Max(lower, int64_t(~int32_t(UINT32_MAX >> leadingOnes)));
             upper = -1;
+        }
+        if (rhs->upper_ < 0) {
+            unsigned leadingOnes = CountLeadingZeroes32(~rhs->lower_);
+            lower = Max(lower, int64_t(~int32_t(UINT32_MAX >> leadingOnes)));
+            upper = -1;
+        }
     }
 
     return new Range(lower, upper);
@@ -490,33 +519,60 @@ Range::or_(const Range *lhs, const Range *rhs)
 Range *
 Range::xor_(const Range *lhs, const Range *rhs)
 {
-    int64_t lower = INT32_MIN;
-    int64_t upper = INT32_MAX;
+    int32_t lhsLower = lhs->lower_;
+    int32_t lhsUpper = lhs->upper_;
+    int32_t rhsLower = rhs->lower_;
+    int32_t rhsUpper = rhs->upper_;
+    bool invertAfter = false;
 
-    if (lhs->lower_ >= 0 && rhs->lower_ >= 0) {
-        // Both operands are non-negative. The result will be non-negative and
-        // not greater than either.
+    // If either operand is negative, bitwise-negate it, and arrange to negate
+    // the result; ~((~x)^y) == x^y. If both are negative the negations on the
+    // result cancel each other out; effectively this is (~x)^(~y) == x^y.
+    // These transformations reduce the number of cases we have to handle below.
+    if (lhsUpper < 0) {
+        lhsLower = ~lhsLower;
+        lhsUpper = ~lhsUpper;
+        Swap(lhsLower, lhsUpper);
+        invertAfter = !invertAfter;
+    }
+    if (rhsUpper < 0) {
+        rhsLower = ~rhsLower;
+        rhsUpper = ~rhsUpper;
+        Swap(rhsLower, rhsUpper);
+        invertAfter = !invertAfter;
+    }
+
+    // Handle cases where lhs or rhs is always zero specially, because they're
+    // easy cases where we can be perfectly precise, and because it protects the
+    // CountLeadingZeroes32 calls below from seeing 0 operands, which would be
+    // undefined behavior.
+    int32_t lower = INT32_MIN;
+    int32_t upper = INT32_MAX;
+    if (lhsLower == 0 && lhsUpper == 0) {
+        upper = rhsUpper;
+        lower = rhsLower;
+    } else if (rhsLower == 0 && rhsUpper == 0) {
+        upper = lhsUpper;
+        lower = lhsLower;
+    } else if (lhsLower >= 0 && rhsLower >= 0) {
+        // Both operands are non-negative. The result will be non-negative.
         lower = 0;
-        upper = UINT32_MAX >> Min(js_bitscan_clz32(lhs->upper_),
-                                  js_bitscan_clz32(rhs->upper_));
-    } else if (lhs->upper_ < 0 && rhs->upper_ < 0) {
-        // Both operands are negative. The result will be non-negative and
-        // will have leading zeros where both operands have leading ones.
-        lower = 0;
-        upper = UINT32_MAX >> Min(js_bitscan_clz32(~lhs->lower_),
-                                  js_bitscan_clz32(~rhs->lower_));
-    } else if (lhs->upper_ < 0 && rhs->lower_ >= 0) {
-        // One operand is negative and the other is non-negative. The result
-        // will have leading ones where the negative operand has leading ones
-        // and the non-negative operand has leading zeros.
-        upper = -1;
-        lower = (int32_t)~(UINT32_MAX >> Min(js_bitscan_clz32(~lhs->lower_),
-                                             js_bitscan_clz32(rhs->upper_)));
-    } else if (lhs->lower_ >= 0 && rhs->upper_ < 0) {
-        // One operand is negative and the other is non-negative. As above.
-        upper = -1;
-        lower = (int32_t)~(UINT32_MAX >> Min(js_bitscan_clz32(lhs->upper_),
-                                             js_bitscan_clz32(~rhs->lower_)));
+        // To compute the upper value, take each operand's upper value and
+        // set all bits that don't correspond to leading zero bits in the
+        // other to one. For each one, this gives an upper bound for the
+        // result, so we can take the minimum between the two.
+        unsigned lhsLeadingZeros = CountLeadingZeroes32(lhsUpper);
+        unsigned rhsLeadingZeros = CountLeadingZeroes32(rhsUpper);
+        upper = Min(rhsUpper | int32_t(UINT32_MAX >> lhsLeadingZeros),
+                    lhsUpper | int32_t(UINT32_MAX >> rhsLeadingZeros));
+    }
+
+    // If we bitwise-negated one (but not both) of the operands above, apply the
+    // bitwise-negate to the result, completing ~((~x)^y) == x^y.
+    if (invertAfter) {
+        lower = ~lower;
+        upper = ~upper;
+        Swap(lower, upper);
     }
 
     return new Range(lower, upper);
@@ -1370,24 +1426,27 @@ ConvertLinearSum(MBasicBlock *block, const LinearSum &sum)
             } else {
                 def = term.term;
             }
-        } else {
+        } else if (term.scale == -1) {
             if (!def) {
                 def = MConstant::New(Int32Value(0));
                 block->insertBefore(block->lastIns(), def->toInstruction());
             }
-            if (term.scale == -1) {
-                def = MSub::New(def, term.term);
-                def->toSub()->setInt32();
-                block->insertBefore(block->lastIns(), def->toInstruction());
-            } else {
-                MConstant *factor = MConstant::New(Int32Value(term.scale));
-                block->insertBefore(block->lastIns(), factor);
-                MMul *mul = MMul::New(term.term, factor);
-                mul->setInt32();
-                block->insertBefore(block->lastIns(), mul);
+            def = MSub::New(def, term.term);
+            def->toSub()->setInt32();
+            block->insertBefore(block->lastIns(), def->toInstruction());
+        } else {
+            JS_ASSERT(term.scale != 0);
+            MConstant *factor = MConstant::New(Int32Value(term.scale));
+            block->insertBefore(block->lastIns(), factor);
+            MMul *mul = MMul::New(term.term, factor);
+            mul->setInt32();
+            block->insertBefore(block->lastIns(), mul);
+            if (def) {
                 def = MAdd::New(def, mul);
                 def->toAdd()->setInt32();
                 block->insertBefore(block->lastIns(), def->toInstruction());
+            } else {
+                def = mul;
             }
         }
     }

@@ -334,22 +334,8 @@ protected:
                      nsSelectionAmount aAmount,
                      EWordMovementType aWordMovementType = eDefaultBehavior);
 
-  /*
-   * This does the work for nsIAccessibleText::GetText[At|Before|After]Offset
-   * @param aType, eGetBefore, eGetAt, eGetAfter
-   * @param aBoundaryType, char/word-start/word-end/line-start/line-end/paragraph/attribute
-   * @param aOffset, offset into the hypertext to start from
-   * @param *aStartOffset, the resulting start offset for the returned substring
-   * @param *aEndOffset, the resulting end offset for the returned substring
-   * @param aText, the resulting substring
-   * @return success/failure code
-   */
-  nsresult GetTextHelper(EGetTextType aType, AccessibleTextBoundary aBoundaryType,
-                         int32_t aOffset, int32_t *aStartOffset, int32_t *aEndOffset,
-                         nsAString & aText);
-
   /**
-    * Used by GetTextHelper() to move backward/forward from a given point
+    * Used by FindOffset() to move backward/forward from a given point
     * by word/line/etc.
     *
     * @param  aPresShell       the current presshell we're moving in

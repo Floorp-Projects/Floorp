@@ -32,6 +32,7 @@
     <dimen name="doorhanger_input_width">250dp</dimen>
     <dimen name="doorhanger_spinner_textsize">9sp</dimen>
     <dimen name="doorhanger_padding">15dp</dimen>
+    <dimen name="doorhanger_textsize_small">8sp</dimen>
 
     <dimen name="flow_layout_spacing">6dp</dimen>
     <dimen name="menu_item_action_icon">80dp</dimen>
@@ -70,6 +71,7 @@
     <dimen name="validation_message_margin_top">6dp</dimen>
     <dimen name="forward_default_offset">-13dip</dimen>
     <dimen name="url_bar_offset_left">32dp</dimen>
+    <dimen name="toast_button_padding">8dp</dimen>
 
     <!-- PageActionButtons dimensions -->
     <dimen name="page_action_button_width">32dp</dimen>

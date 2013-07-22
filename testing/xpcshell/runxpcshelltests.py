@@ -6,6 +6,7 @@
 
 import re, sys, os, os.path, logging, shutil, signal, math, time, traceback
 import xml.dom.minidom
+from distutils import dir_util
 from glob import glob
 from optparse import OptionParser
 from subprocess import Popen, PIPE, STDOUT
@@ -238,7 +239,10 @@ class XPCShellTests(object):
             self.xpcsCmd = [self.debuggerInfo["path"]] + self.debuggerInfo["args"] + self.xpcsCmd
 
         if self.pluginsPath:
-            self.xpcsCmd.extend(['-p', os.path.abspath(self.pluginsPath)])
+            self.pluginsDir = self.setupPluginsDir()
+            self.xpcsCmd.extend(['-p', self.pluginsDir])
+        else:
+            self.pluginsDir = None
 
     def buildTestPath(self):
         """
@@ -288,6 +292,16 @@ class XPCShellTests(object):
 
         return (list(sanitize_list(test['head'], 'head')),
                 list(sanitize_list(test['tail'], 'tail')))
+
+    def setupPluginsDir(self):
+        pluginsDir = mkdtemp()
+        # shutil.copytree requires dst to not exist. Deleting the tempdir
+        # would make a race condition possible in a concurrent environment,
+        # so we are using dir_utils.copy_tree which accepts an existing dst
+        dir_util.copy_tree(self.pluginsPath, pluginsDir)
+        if self.interactive:
+            self.log.info("TEST-INFO | plugins dir is %s" % pluginsDir)
+        return pluginsDir
 
     def setupProfileDir(self):
         """
@@ -1047,6 +1061,9 @@ class XPCShellTests(object):
                 self.cleanupDir(self.profileDir, name, stdout, xunit_result)
 
             self.cleanupDir(self.tempDir, name, stdout, xunit_result)
+
+            if self.pluginsDir:
+                self.cleanupDir(self.pluginsDir, name, stdout, xunit_result)
 
         if gotSIGINT:
             xunit_result["passed"] = False

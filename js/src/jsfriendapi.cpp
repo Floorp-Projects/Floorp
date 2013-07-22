@@ -19,6 +19,7 @@
 #include "prmjtime.h"
 
 #include "builtin/TestingFunctions.h"
+#include "vm/WrapperObject.h"
 
 #include "jsfuninlines.h"
 #include "jsobjinlines.h"
@@ -72,7 +73,7 @@ JS_FindCompilationScope(JSContext *cx, JSObject *objArg)
      * We unwrap wrappers here. This is a little weird, but it's what's being
      * asked of us.
      */
-    if (obj->isWrapper())
+    if (obj->is<WrapperObject>())
         obj = UncheckedUnwrap(obj);
 
     /*
@@ -312,28 +313,6 @@ JS_FRIEND_API(const char *)
 js_ObjectClassName(JSContext *cx, HandleObject obj)
 {
     return JSObject::className(cx, obj);
-}
-
-AutoSwitchCompartment::AutoSwitchCompartment(JSContext *cx, JSCompartment *newCompartment
-                                             MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
-  : cx(cx), oldCompartment(cx->compartment())
-{
-    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    cx->setCompartment(newCompartment);
-}
-
-AutoSwitchCompartment::AutoSwitchCompartment(JSContext *cx, HandleObject target
-                                             MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
-  : cx(cx), oldCompartment(cx->compartment())
-{
-    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    cx->setCompartment(target->compartment());
-}
-
-AutoSwitchCompartment::~AutoSwitchCompartment()
-{
-    /* The old compartment may have been destroyed, so we can't use cx->setCompartment. */
-    cx->setCompartment(oldCompartment);
 }
 
 JS_FRIEND_API(JS::Zone *)
@@ -752,6 +731,7 @@ js::DumpHeapComplete(JSRuntime *rt, FILE *fp)
     JSDumpHeapTracer dtrc(fp);
 
     JS_TracerInit(&dtrc, rt, DumpHeapVisitRoot);
+    dtrc.eagerlyTraceWeakMaps = TraceWeakMapKeysValues;
     TraceRuntime(&dtrc);
 
     fprintf(dtrc.output, "==========\n");

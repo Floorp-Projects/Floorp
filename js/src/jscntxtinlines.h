@@ -13,6 +13,7 @@
 #include "jsfriendapi.h"
 #include "jsgc.h"
 #include "jsiter.h"
+#include "jsworkers.h"
 
 #include "builtin/Object.h" // For js::obj_construct
 #include "frontend/ParseMaps.h"
@@ -30,12 +31,11 @@ namespace js {
 #ifdef JS_CRASH_DIAGNOSTICS
 class CompartmentChecker
 {
-    ExclusiveContext *context;
     JSCompartment *compartment;
 
   public:
     explicit CompartmentChecker(ExclusiveContext *cx)
-      : context(cx), compartment(cx->compartment_)
+      : compartment(cx->compartment_)
     {}
 
     /*
@@ -375,6 +375,69 @@ ExclusiveContext::dtoaCache()
     return compartment_->dtoaCache;
 }
 
+inline void
+ExclusiveContext::maybePause() const
+{
+#ifdef JS_WORKER_THREADS
+    if (workerThread && runtime_->workerThreadState->shouldPause) {
+        AutoLockWorkerThreadState lock(runtime_);
+        workerThread->pause();
+    }
+#endif
+}
+
+class AutoLockForExclusiveAccess
+{
+#ifdef JS_THREADSAFE
+    JSRuntime *runtime;
+
+    void init(JSRuntime *rt) {
+        runtime = rt;
+        if (runtime->numExclusiveThreads) {
+            PR_Lock(runtime->exclusiveAccessLock);
+#ifdef DEBUG
+            runtime->exclusiveAccessOwner = PR_GetCurrentThread();
+#endif
+        } else {
+            JS_ASSERT(!runtime->mainThreadHasExclusiveAccess);
+            runtime->mainThreadHasExclusiveAccess = true;
+        }
+    }
+
+  public:
+    AutoLockForExclusiveAccess(ExclusiveContext *cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM) {
+        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+        init(cx->runtime_);
+    }
+    AutoLockForExclusiveAccess(JSRuntime *rt MOZ_GUARD_OBJECT_NOTIFIER_PARAM) {
+        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+        init(rt);
+    }
+    ~AutoLockForExclusiveAccess() {
+        if (runtime->numExclusiveThreads) {
+            JS_ASSERT(runtime->exclusiveAccessOwner == PR_GetCurrentThread());
+#ifdef DEBUG
+            runtime->exclusiveAccessOwner = NULL;
+#endif
+            PR_Unlock(runtime->exclusiveAccessLock);
+        } else {
+            JS_ASSERT(runtime->mainThreadHasExclusiveAccess);
+            runtime->mainThreadHasExclusiveAccess = false;
+        }
+    }
+#else // JS_THREADSAFE
+  public:
+    AutoLockForExclusiveAccess(ExclusiveContext *cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM) {
+        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+    }
+    AutoLockForExclusiveAccess(JSRuntime *rt MOZ_GUARD_OBJECT_NOTIFIER_PARAM) {
+        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+    }
+#endif // JS_THREADSAFE
+
+    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
+
 }  /* namespace js */
 
 inline js::LifoAlloc &
@@ -401,19 +464,6 @@ inline void
 JSContext::setDefaultCompartmentObject(JSObject *obj)
 {
     defaultCompartmentObject_ = obj;
-
-    if (!hasEnteredCompartment()) {
-        /*
-         * If JSAPI callers want to JS_SetGlobalObject while code is running,
-         * they must have entered a compartment (otherwise there will be no
-         * final leaveCompartment call to set the context's compartment back to
-         * defaultCompartmentObject->compartment()).
-         */
-        JS_ASSERT(!currentlyRunning());
-        setCompartment(obj ? obj->compartment() : NULL);
-        if (throwing)
-            wrapPendingException();
-    }
 }
 
 inline void
@@ -424,58 +474,63 @@ JSContext::setDefaultCompartmentObjectIfUnset(JSObject *obj)
 }
 
 inline void
-JSContext::enterCompartment(JSCompartment *c)
+js::ExclusiveContext::enterCompartment(JSCompartment *c)
 {
     enterCompartmentDepth_++;
-    setCompartment(c);
     c->enter();
-    if (throwing)
-        wrapPendingException();
+    setCompartment(c);
+
+    if (JSContext *cx = maybeJSContext()) {
+        if (cx->throwing)
+            cx->wrapPendingException();
+    }
 }
 
 inline void
-JSContext::leaveCompartment(JSCompartment *oldCompartment)
+js::ExclusiveContext::leaveCompartment(JSCompartment *oldCompartment)
 {
     JS_ASSERT(hasEnteredCompartment());
     enterCompartmentDepth_--;
 
-    compartment()->leave();
+    // Only call leave() after we've setCompartment()-ed away from the current
+    // compartment.
+    JSCompartment *startingCompartment = compartment_;
+    setCompartment(oldCompartment);
+    startingCompartment->leave();
 
-    /*
-     * Before we entered the current compartment, 'compartment' was
-     * 'oldCompartment', so we might want to simply set it back. However, we
-     * currently have this terrible scheme whereby defaultCompartmentObject_ can
-     * be updated while enterCompartmentDepth_ > 0. In this case, oldCompartment
-     * != defaultCompartmentObject_->compartment and we must ignore
-     * oldCompartment.
-     */
-    if (hasEnteredCompartment() || !defaultCompartmentObject_)
-        setCompartment(oldCompartment);
-    else
-        setCompartment(defaultCompartmentObject_->compartment());
-
-    if (throwing)
-        wrapPendingException();
+    if (JSContext *cx = maybeJSContext()) {
+        if (cx->throwing && oldCompartment)
+            cx->wrapPendingException();
+    }
 }
 
 inline void
-JSContext::setCompartment(JSCompartment *comp)
+js::ExclusiveContext::setCompartment(JSCompartment *comp)
 {
+    // ExclusiveContexts can only be in the atoms zone or in exclusive zones.
+    JS_ASSERT_IF(!isJSContext() && comp != runtime_->atomsCompartment,
+                 comp->zone()->usedByExclusiveThread);
+
+    // Normal JSContexts cannot enter exclusive zones.
+    JS_ASSERT_IF(isJSContext() && comp,
+                 !comp->zone()->usedByExclusiveThread);
+
+    // Only one thread can be in the atoms compartment at a time.
+    JS_ASSERT_IF(comp == runtime_->atomsCompartment,
+                 runtime_->currentThreadHasExclusiveAccess());
+
+    // Make sure that the atoms compartment has its own zone.
+    JS_ASSERT_IF(comp && comp != runtime_->atomsCompartment,
+                 comp->zone() != runtime_->atomsCompartment->zone());
+
+    // Both the current and the new compartment should be properly marked as
+    // entered at this point.
+    JS_ASSERT_IF(compartment_, compartment_->hasBeenEntered());
+    JS_ASSERT_IF(comp, comp->hasBeenEntered());
+
     compartment_ = comp;
     zone_ = comp ? comp->zone() : NULL;
     allocator_ = zone_ ? &zone_->allocator : NULL;
-}
-
-inline void
-js::ExclusiveContext::privateSetCompartment(JSCompartment *comp)
-{
-    if (isJSContext()) {
-        asJSContext()->setCompartment(comp);
-    } else {
-        compartment_ = comp;
-        if (zone_ != comp->zone())
-            MOZ_CRASH();
-    }
 }
 
 inline JSScript *

@@ -5076,7 +5076,7 @@ nsLayoutUtils::PostRestyleEvent(Element* aElement,
   if (doc) {
     nsCOMPtr<nsIPresShell> presShell = doc->GetShell();
     if (presShell) {
-      presShell->FrameConstructor()->PostRestyleEvent(
+      presShell->GetPresContext()->RestyleManager()->PostRestyleEvent(
         aElement, aRestyleHint, aMinChangeHint);
     }
   }

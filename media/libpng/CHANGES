@@ -4111,6 +4111,44 @@ Version 1.5.16rc01 [May 16, 2013]
   No changes.
 
 Version 1.5.16 [May 23, 2013]
+  No changes.
+
+Version 1.5.17beta01 [June 8, 2013]
+  Removed a redundant test from png_set_IHDR().
+  Added set(CMAKE_CONFIGURATION_TYPES ...) to CMakeLists.txt (Andrew Hundt)
+  Deleted set(CMAKE_BUILD_TYPE) block from CMakeLists.txt
+  Make ARM NEON support work at compile time (not just configure time).
+    This moves the test on __ARM_NEON__ into pngconf.h to avoid issues when
+    using a compiler that compiles for multiple architectures at one time.
+  Removed PNG_FILTER_OPTIMIZATIONS and PNG_ARM_NEON_SUPPORTED from
+    pnglibconf.h, allowing more of the decisions to be made internally
+    (pngpriv.h) during the compile.  Without this, symbol prefixing is broken
+    under certain circumstances on ARM platforms.  Now only the API parts of
+    the optimizations ('check' vs 'api') are exposed in the public header files
+    except that the new setting PNG_ARM_NEON_OPT documents how libpng makes the
+    decision about whether or not to use the optimizations.
+  Protect symbol prefixing against CC/CPPFLAGS/CFLAGS useage.
+    Previous iOS/Xcode fixes for the ARM NEON optimizations moved the test
+    on __ARM_NEON__ from configure time to compile time.  This breaks symbol
+    prefixing because the definition of the special png_init_filter_functions
+    call was hidden at configure time if the relevant compiler arguments are
+    passed in CFLAGS as opposed to CC.  This change attempts to avoid all
+    the confusion that would result by declaring the init function even when
+    it is not used, so that it will always get prefixed.
+
+Version 1.5.17rc01 [June 17, 2013]
+  No changes.
+
+Version 1.5.17rc02 [June 18, 2013]
+  Revised libpng.3 so that "doclifter" can process it.
+
+Version 1.5.17rc03 [June 25, 2013]
+  Revised example.c to illustrate use of PNG_DEFAULT_sRGB and PNG_GAMMA_MAC_18
+    as parameters for png_set_gamma().  These have been available since
+    libpng-1.5.4.
+
+Version 1.5.17 [June 27, 2013]
+  No changes.
 
 Send comments/corrections/commendations to png-mng-implement at lists.sf.net
 (subscription required; visit

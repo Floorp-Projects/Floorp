@@ -63,7 +63,7 @@ function do_test() {
       "purple", "red", "rosybrown", "royalblue", "saddlebrown", "salmon", "sandybrown", "seagreen",
       "seashell", "sienna", "silver", "skyblue", "slateblue", "slategray", "slategrey", "snow", "springgreen",
       "steelblue", "tan", "teal", "thistle", "tomato", "transparent", "turquoise", "violet", "wheat",
-      "white", "whitesmoke", "yellow", "yellowgreen" ];
+      "white", "whitesmoke", "yellow", "yellowgreen", "rgb", "hsl", "-moz-rgba", "-moz-hsla", "rgba", "hsla" ];
   ok(testValues(values, expected), "property color's values.");
 
   // test a shorthand property
@@ -91,7 +91,7 @@ function do_test() {
       "violet", "wheat", "white", "whitesmoke", "yellow", "yellowgreen", "no-repeat", "repeat",
       "repeat-x", "repeat-y", "fixed", "scroll", "center", "top", "bottom", "left", "right",
       "border-box", "padding-box", "content-box", "border-box", "padding-box", "content-box", "contain",
-      "cover" ];
+      "cover", "rgb", "hsl", "-moz-rgba", "-moz-hsla", "rgba", "hsla", "none", "-moz-element", "-moz-image-rect" ];
   ok(testValues(values, expected), "Shorthand property values.");
 
   // test keywords only
@@ -118,13 +118,13 @@ function do_test() {
       "purple", "red", "rosybrown", "royalblue", "saddlebrown", "salmon", "sandybrown", "seagreen", "seashell",
       "sienna", "silver", "skyblue", "slateblue", "slategray", "slategrey", "snow", "springgreen", "steelblue",
       "tan", "teal", "thistle", "tomato", "transparent", "turquoise", "violet", "wheat", "white", "whitesmoke",
-      "yellow", "yellowgreen" ];
+      "yellow", "yellowgreen", "calc", "-moz-calc", "rgb", "hsl", "-moz-rgba", "-moz-hsla", "rgba", "hsla" ];
   ok(testValues(values, expected), "property border-top's values.");
 
   // tests no keywords or colors
   var prop = "padding-bottom";
   var values = utils.getCSSValuesForProperty(prop);
-  var expected = [ "-moz-initial", "inherit" ];
+  var expected = [ "-moz-initial", "inherit", "calc", "-moz-calc" ];
   ok(testValues(values, expected), "property padding-bottom's values.");
 
   // test proprety
@@ -142,6 +142,26 @@ function do_test() {
   var values = utils.getCSSValuesForProperty(prop);
   var expected = [ "-moz-initial", "inherit", "none", "left", "right" ];
   ok(testValues(values, expected), "proprety float values");
+
+  // Test property with "auto"
+  var prop = "margin";
+  var values = utils.getCSSValuesForProperty(prop);
+  var expected = [ "-moz-calc", "-moz-initial", "auto", "calc", "inherit", "logical", "physical" ];
+  ok(testValues(values, expected), "property margin's values.");
+
+  // Test property with "normal"
+  var prop = "font-style";
+  var values = utils.getCSSValuesForProperty(prop);
+  var expected = [ "-moz-initial", "inherit", "italic", "normal", "oblique" ];
+  ok(testValues(values, expected), "property font-style's values.");
+
+  // Test property with "cubic-bezier" and "step".
+  var prop = "-moz-transition";
+  var values = utils.getCSSValuesForProperty(prop);
+  var expected = [ "-moz-initial", "all", "cubic-bezier", "ease", "ease-in", "ease-in-out",
+                   "ease-out", "inherit", "linear", "none", "step-end", "step-start",
+                   "steps" ];
+  ok(testValues(values, expected), "property -moz-transition's values.");
 
   // test invalid property
   var prop = "invalidProperty";

@@ -156,9 +156,7 @@ function prepare_profile() {
   
                 a5.findUpdates({
                   onUpdateFinished: function() {
-                    shutdownManager();
-  
-                    perform_migration();
+                    do_execute_soon(perform_migration);
                   }
                 }, AddonManager.UPDATE_WHEN_USER_REQUESTED);
               });
@@ -171,6 +169,8 @@ function prepare_profile() {
 }
 
 function perform_migration() {
+  shutdownManager();
+  
   // Turn on disabling for all scopes
   Services.prefs.setIntPref("extensions.autoDisableScopes", 15);
 

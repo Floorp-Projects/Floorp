@@ -113,7 +113,7 @@
               android:textSelectHandleRight="@drawable/handle_end"
               android:textCursorDrawable="@null"
               android:inputType="textUri|textNoSuggestions"
-              android:imeOptions="actionSearch|flagNoExtractUi|flagNoFullscreen"
+              android:imeOptions="actionGo|flagNoExtractUi|flagNoFullscreen"
               android:selectAllOnFocus="true"
               android:singleLine="true"
               android:gravity="center_vertical|left"

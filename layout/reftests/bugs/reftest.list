@@ -1128,7 +1128,7 @@ skip-if(B2G) == 430412-1.html 430412-1-ref.html
 == 431520-1.html 431520-1-ref.html
 == 431948-1.html 431948-1-ref.html
 == 433640-1.html 433640-1-ref.html
-fails-if(Android) == 433700.html 433700-ref.html
+== 433700.html 433700-ref.html
 == 436356-1.html 436356-1-ref.html
 == 436356-2.html 436356-2-ref.html
 == 438537-1.html 438537-1-ref.html
@@ -1490,7 +1490,7 @@ skip-if(B2G) fuzzy-if(Android&&AndroidVersion>=15,12,300) == 551463-1.html 55146
 # 553571 depends on MS Indic shaping behavior and Win7 font support;
 # not expected to be reliable on XP or non-Windows platforms
 random-if(!winWidget) random-if(/^Windows\x20NT\x205/.test(http.oscpu)) != 553571-1.html 553571-1-notref.html # expect dotted circle in test, not in ref
-fuzzy-if(!contentSameGfxBackendAsCanvas,2,91) random-if(d2d) == 555388-1.html 555388-1-ref.html
+fuzzy-if(!contentSameGfxBackendAsCanvas,2,91) random-if(d2d) skip-if(azureSkiaGL) == 555388-1.html 555388-1-ref.html
 == 556661-1.html 556661-1-ref.html
 skip-if(B2G) fails-if(Android) == 557087-1.html 557087-ref.html
 skip-if(B2G) fails-if(Android) == 557087-2.html 557087-ref.html
@@ -1676,7 +1676,7 @@ skip-if(B2G) == 665597-1.html 665597-1-ref.html
 skip-if(B2G) == 665597-2.html 665597-2-ref.html
 == 668319-1.xul about:blank
 != 669015-1.xul 669015-1-notref.xul
-== 670442-1.html 670442-1-ref.html
+fuzzy-if(azureSkiaGL,14,2000) == 670442-1.html 670442-1-ref.html
 == 670467-1.html 670467-1-ref.html
 == 670467-2.html 670467-2-ref.html
 == 690164-1.html 690164-1-ref.html
@@ -1770,3 +1770,4 @@ random-if(Android&&AndroidVersion>=15) == 875060-1.html 875060-1-ref.html #Bug 8
 == 883987-1e.html 883987-1-ref.html
 == 883987-1f.html 883987-1-ref.html
 == 890495-1.html 890495-1-ref.html
+== 894931-1.html 894931-1-ref.html

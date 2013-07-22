@@ -1,0 +1,15 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<body>
+<div id="d" style="margin-top:100px;">
+  <div style="background:yellow; width:100px; height:100px; position:absolute; top:0; left:0"></div>
+</div>
+<script>
+function doTest() {
+  document.getElementById("d").style.position = "relative";
+  document.documentElement.removeAttribute("class");
+}
+window.addEventListener("MozReftestInvalidate", doTest, false);
+</script>
+</body>
+</html>

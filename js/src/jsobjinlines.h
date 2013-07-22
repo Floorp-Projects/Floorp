@@ -9,8 +9,6 @@
 
 #include "jsobj.h"
 
-#include "jswrapper.h"
-
 #include "vm/ArrayObject.h"
 #include "vm/DateObject.h"
 #include "vm/NumberObject.h"
@@ -760,18 +758,6 @@ JSObject::getElementAttributes(JSContext *cx, js::HandleObject obj,
     if (!js::IndexToId(cx, index, &id))
         return false;
     return getGenericAttributes(cx, obj, id, attrsp);
-}
-
-inline bool
-JSObject::isCrossCompartmentWrapper() const
-{
-    return js::IsCrossCompartmentWrapper(const_cast<JSObject*>(this));
-}
-
-inline bool
-JSObject::isWrapper() const
-{
-    return js::IsWrapper(const_cast<JSObject*>(this));
 }
 
 inline js::GlobalObject &
