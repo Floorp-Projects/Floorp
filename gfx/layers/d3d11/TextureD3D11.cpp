@@ -88,7 +88,7 @@ DeprecatedTextureClientD3D11::EnsureAllocated(gfx::IntSize aSize,
   if (mTexture) {
     mTexture->GetDesc(&desc);
 
-    if (desc.Width == aSize.width || desc.Height == aSize.height) {
+    if (desc.Width == aSize.width && desc.Height == aSize.height) {
       return;
     }
 
