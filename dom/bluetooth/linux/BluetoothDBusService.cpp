@@ -148,7 +148,7 @@ static const char* sBluetoothDBusSignals[] =
  * used by any other thread.
  *
  */
-static nsAutoPtr<RawDBusConnection> gThreadConnection;
+static nsRefPtr<RawDBusConnection> gThreadConnection;
 static nsDataHashtable<nsStringHashKey, DBusMessage* > sPairingReqTable;
 static nsDataHashtable<nsStringHashKey, DBusMessage* > sAuthorizeReqTable;
 static Atomic<int32_t> sIsPairing;
