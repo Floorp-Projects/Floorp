@@ -172,15 +172,15 @@ AccumulateLayerTransforms2D(Layer* aLayer,
   return true;
 }
 
-static gfxPoint
+static LayerPoint
 GetLayerFixedMarginsOffset(Layer* aLayer,
                            const gfx::Margin& aFixedLayerMargins)
 {
   // Work out the necessary translation, in root scrollable layer space.
   // Because fixed layer margins are stored relative to the root scrollable
   // layer, we can just take the difference between these values.
-  gfxPoint translation;
-  const gfxPoint& anchor = aLayer->GetFixedPositionAnchor();
+  LayerPoint translation;
+  const LayerPoint& anchor = aLayer->GetFixedPositionAnchor();
   const gfx::Margin& fixedMargins = aLayer->GetFixedPositionMargins();
 
   if (fixedMargins.left >= 0) {
@@ -238,13 +238,30 @@ AsyncCompositionManager::AlignFixedLayersForAnchorPoint(Layer* aLayer,
     gfxMatrix newCumulativeTransformInverse = newCumulativeTransform;
     newCumulativeTransformInverse.Invert();
 
+    // Now work out the translation necessary to make sure the layer doesn't
+    // move given the new sub-tree root transform.
+    gfxMatrix layerTransform;
+    if (!GetBaseTransform2D(aLayer, &layerTransform)) {
+      return;
+    }
+
     // Calculate any offset necessary, in previous transform sub-tree root
     // space. This is used to make sure fixed position content respects
     // content document fixed position margins.
-    gfxPoint offsetInOldSpace = GetLayerFixedMarginsOffset(aLayer, aFixedLayerMargins);
+    LayerPoint offsetInOldSubtreeLayerSpace = GetLayerFixedMarginsOffset(aLayer, aFixedLayerMargins);
 
-    // Now work out the translation necessary to make sure the layer doesn't
-    // move given the new sub-tree root transform.
+    // Add the above offset to the anchor point so we can offset the layer by
+    // and amount that's specified in old subtree layer space.
+    const LayerPoint& anchorInOldSubtreeLayerSpace = aLayer->GetFixedPositionAnchor();
+    LayerPoint offsetAnchorInOldSubtreeLayerSpace = anchorInOldSubtreeLayerSpace + offsetInOldSubtreeLayerSpace;
+
+    // Add the local layer transform to the two points to make the equation
+    // below this section more convenient.
+    gfxPoint anchor(anchorInOldSubtreeLayerSpace.x, anchorInOldSubtreeLayerSpace.y);
+    gfxPoint offsetAnchor(offsetAnchorInOldSubtreeLayerSpace.x, offsetAnchorInOldSubtreeLayerSpace.y);
+    gfxPoint locallyTransformedAnchor = layerTransform.Transform(anchor);
+    gfxPoint locallyTransformedOffsetAnchor = layerTransform.Transform(offsetAnchor);
+
     // Transforming the locallyTransformedAnchor by oldCumulativeTransform
     // returns the layer's anchor point relative to the parent of
     // aTransformedSubtreeRoot, before the new transform was applied.
@@ -252,15 +269,6 @@ AsyncCompositionManager::AlignFixedLayersForAnchorPoint(Layer* aLayer,
     // to the layer's parent, which is the same coordinate space as
     // locallyTransformedAnchor again, allowing us to subtract them and find
     // out the offset necessary to make sure the layer stays stationary.
-    gfxMatrix layerTransform;
-    if (!GetBaseTransform2D(aLayer, &layerTransform)) {
-      return;
-    }
-
-    const gfxPoint& anchor = aLayer->GetFixedPositionAnchor();
-    gfxPoint locallyTransformedAnchor = layerTransform.Transform(anchor);
-    gfxPoint locallyTransformedOffsetAnchor = layerTransform.Transform(anchor + offsetInOldSpace);
-
     gfxPoint oldAnchorPositionInNewSpace =
       newCumulativeTransformInverse.Transform(
         oldCumulativeTransform.Transform(locallyTransformedOffsetAnchor));
