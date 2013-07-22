@@ -1,6 +1,7 @@
 oes-standard-derivatives.html
 ext-texture-filter-anisotropic.html
 oes-texture-float.html
+oes-vertex-array-object.html
 webgl-debug-renderer-info.html
 webgl-debug-shaders.html
 --min-version 1.0.2 webgl-compressed-texture-s3tc.html
