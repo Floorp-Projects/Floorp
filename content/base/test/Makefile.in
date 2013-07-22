@@ -333,8 +333,6 @@ MOCHITEST_FILES_B = \
 		test_bug564863.xhtml \
 		test_bug588990.html \
 		test_copypaste.html \
-		test_copypaste.xhtml \
-		copypaste.js \
 		test_bug503481.html \
 		file_bug503481.sjs \
 		test_bug503481b.html \
@@ -657,7 +655,6 @@ endif
 
 MOCHITEST_CHROME_FILES =	\
 		test_bug357450.js \
-		test_copypaste.xul \
 		$(NULL)
 
 # This test fails on the Mac for some reason
