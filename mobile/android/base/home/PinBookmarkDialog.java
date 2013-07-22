@@ -165,6 +165,7 @@ class PinBookmarkDialog extends DialogFragment {
         @Override
         public void bindView(View view, Context context, Cursor cursor) {
             TwoLinePageRow row = (TwoLinePageRow) view;
+            row.setShowIcons(false);
             row.updateFromCursor(cursor);
         }
 
