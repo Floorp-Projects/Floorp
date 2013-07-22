@@ -17,7 +17,6 @@ import android.util.AttributeSet;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.MotionEvent;
 import android.view.View;
-
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemLongClickListener;
 import android.widget.ListView;
@@ -68,9 +67,17 @@ public class HomeListView extends ListView
 
     @Override
     public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
-        Cursor cursor = (Cursor) parent.getItemAtPosition(position);
-        mContextMenuInfo = new HomeContextMenuInfo(view, position, id, cursor);
-        return showContextMenuForChild(HomeListView.this);
+        Object item = parent.getItemAtPosition(position);
+
+        // HomeListView could hold headers too. Add a context menu info only for its children.
+        if (item instanceof Cursor) {
+            Cursor cursor = (Cursor) item;
+            mContextMenuInfo = new HomeContextMenuInfo(view, position, id, cursor);
+            return showContextMenuForChild(HomeListView.this);
+        } else {
+            mContextMenuInfo = null;
+            return false;
+        }
     }
 
     @Override

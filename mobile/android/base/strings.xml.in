@@ -207,6 +207,9 @@
   <string name="contextmenu_edit_bookmark">&contextmenu_edit_bookmark;</string>
   <string name="contextmenu_subscribe">&contextmenu_subscribe;</string>
   <string name="contextmenu_site_settings">&contextmenu_site_settings;</string>
+  <string name="contextmenu_top_bookmarks_edit">&contextmenu_top_bookmarks_edit;</string>
+  <string name="contextmenu_top_bookmarks_pin">&contextmenu_top_bookmarks_pin;</string>
+  <string name="contextmenu_top_bookmarks_unpin">&contextmenu_top_bookmarks_unpin;</string>
 
   <string name="pref_titlebar_mode">&pref_titlebar_mode;</string>
   <string name="pref_titlebar_mode_title">&pref_titlebar_mode_title;</string>
