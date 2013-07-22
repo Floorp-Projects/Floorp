@@ -6,7 +6,7 @@
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
-<body onload="runTests()">
+<body onload="begin()">
   <p id="display"></p>
 
   <div id="div1">
@@ -28,37 +28,32 @@
   var d2 = document.getElementById('div2');
 
   var destroyed = false;
-  function onDestroy() {
-    destroyed = true;
+
+  function begin() {
+    runTests(function() {
+      // Callback when finished - set plugin to windowed and repeat the tests
+
+      info("Repeating tests with wmode=window");
+      p.setAttribute("wmode", "window");
+      d1.appendChild(p);
+
+      // Forces the plugin to be respawned
+      p.src = p.src;
+
+      destroyed = false;
+      exceptionThrown = false;
+      runTests(function () {
+        SimpleTest.finish();
+      });
+    });
   }
 
-  function testsFinished() {
-    p.stopWatchingInstanceCount();
-    SimpleTest.finish();
-  }
-
-  function continueTests2() {
-    try {
-      is(p.getInstanceCount(), 1, "One new instance should have been created at this point.");
-    } catch (e) {
-      exceptionThrown = true;
-    }
-    is(exceptionThrown, false, "Testing for exception getting instance count from plugin.");
-
-    testsFinished();
-  }
-
-  function continueTests1() {
-    // Adding to the document will kick off the plugin load. Need to have a timeout
-    // before we can safely call into it.
-    d2.appendChild(p);
-    setTimeout('continueTests2();', 0);
-  }
-
-  function runTests() {
+  function runTests(callback) {
     // First tests involve moving the instance from one div to another.
     p.startWatchingInstanceCount();
-    p.callOnDestroy(onDestroy);
+    p.callOnDestroy(function() {
+      destroyed = true;
+    });
 
     try {
       d1.removeChild(p);
@@ -77,9 +72,28 @@
     is(destroyed, false, "No instances should have been destroyed at this point.");
     is(p.getInstanceCount(), 0, "No new instances should have been created at this point.");
 
-    // Now remove the instance from the document and let it die.
-    d2.removeChild(p);
-    setTimeout('continueTests1();', 0);
+    // Wait for the event loop to spin and ensure the plugin still wasn't touched
+    SimpleTest.executeSoon(function() {
+      is(destroyed, false, "No instances should have been destroyed at this point.");
+      is(p.getInstanceCount(), 0, "No new instances should have been created at this point.");
+
+      // Removing the instance for a full event loop *should* respawn
+      d2.removeChild(p);
+      SimpleTest.executeSoon(function() {
+        d2.appendChild(p);
+        SimpleTest.executeSoon(function() {
+          try {
+            is(p.getInstanceCount(), 1, "One new instance should have been created at this point.");
+          } catch (e) {
+            exceptionThrown = true;
+          }
+          is(exceptionThrown, false, "Testing for exception getting instance count from plugin.");
+
+          p.stopWatchingInstanceCount();
+          callback.apply(null);
+        });
+      });
+    });
   }
   </script>
 </body>
