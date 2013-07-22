@@ -43,7 +43,7 @@
         <xul:textbox anonid="input" class="tree-input" left="0" top="0" hidden="true"/>
       </xul:stack>
       <xul:hbox xbl:inherits="collapsed=hidehscroll">
-        <xul:scrollbar orient="horizontal" flex="1" increment="16"/>
+        <xul:scrollbar orient="horizontal" flex="1" increment="16" style="position:relative; z-index:2147483647;"/>
         <xul:scrollcorner xbl:inherits="collapsed=hidevscroll"/>
       </xul:hbox>
     </content>
@@ -965,7 +965,7 @@
       <xul:hbox flex="1" class="tree-bodybox">
         <children/>
       </xul:hbox>
-      <xul:scrollbar height="0" minwidth="0" minheight="0" orient="vertical" xbl:inherits="collapsed=hidevscroll"/>
+      <xul:scrollbar height="0" minwidth="0" minheight="0" orient="vertical" xbl:inherits="collapsed=hidevscroll" style="position:relative; z-index:2147483647;"/>
     </content>
     <handlers>
       <handler event="underflow">
