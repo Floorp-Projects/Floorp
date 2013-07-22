@@ -334,3 +334,4 @@ Document implements XPathEvaluator;
 Document implements GlobalEventHandlers;
 Document implements NodeEventHandlers;
 Document implements TouchEventHandlers;
+Document implements ParentNode;
