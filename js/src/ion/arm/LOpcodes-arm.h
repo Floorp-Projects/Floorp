@@ -21,8 +21,9 @@
     _(ModMaskI)                 \
     _(PowHalfD)                 \
     _(UInt32ToDouble)           \
-    _(UDivOrMod)                \
+    _(UDiv)                     \
+    _(UMod)                     \
+    _(SoftUDivOrMod)            \
     _(AsmJSLoadFuncPtr)
-
 
 #endif /* ion_arm_LOpcodes_arm_h */
