@@ -254,9 +254,6 @@ public:
    */
   void PostRebuildAllStyleDataEvent(nsChangeHint aExtraHint);
 
-  void SetPromoteReflowsToReframeRoot(bool aPromote)
-    { mPromoteReflowsToReframeRoot = aPromote; }
-
 private:
   /* aMinHint is the minimal change that should be made to the element */
   // XXXbz do we really need the aPrimaryFrame argument here?
@@ -281,9 +278,6 @@ private:
   bool mObservingRefreshDriver : 1;
   // True if we're in the middle of a nsRefreshDriver refresh
   bool mInStyleRefresh : 1;
-  // True if reflows/frame reconstruction should be promoted to reframe
-  // the root element
-  bool mPromoteReflowsToReframeRoot : 1;
   uint32_t mHoverGeneration;
   nsChangeHint mRebuildAllExtraHint;
 
