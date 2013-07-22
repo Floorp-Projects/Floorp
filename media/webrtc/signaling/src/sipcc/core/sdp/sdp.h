@@ -729,7 +729,7 @@ typedef struct sdp_fmtp {
     tinybool                  redundant_pic_cap;
     u32                       deint_buf_cap;
     u32                       max_rcmd_nalu_size;
-    tinybool                  parameter_add;
+    u16                       parameter_add;
 
     tinybool                  annex_d;
 
@@ -1581,7 +1581,7 @@ extern sdp_result_e sdp_attr_set_fmtp_h264_parameter_add (void *sdp_ptr,
                                                           u16 level,
                                                           u8 cap_num,
                                                           u16 inst_num,
-                                                          tinybool parameter_add);
+                                                          u16 parameter_add);
 
 extern sdp_result_e sdp_attr_set_fmtp_h261_annex_params (void *sdp_ptr,
                                                          u16 level,
