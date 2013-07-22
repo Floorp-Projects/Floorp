@@ -3395,6 +3395,101 @@ let RIL = {
   },
 
   /**
+   * Normalize the signal strength in dBm to the signal level from 0 to 100.
+   *
+   * @param signal
+   *        The signal strength in dBm to normalize.
+   * @param min
+   *        The signal strength in dBm maps to level 0.
+   * @param max
+   *        The signal strength in dBm maps to level 100.
+   *
+   * @return level
+   *         The signal level from 0 to 100.
+   */
+  _processSignalLevel: function _processSignalLevel(signal, min, max) {
+    if (signal <= min) {
+      return 0;
+    }
+
+    if (signal >= max) {
+      return 100;
+    }
+
+    return Math.floor((signal - min) * 100 / (max - min));
+  },
+
+  _processSignalStrength: function _processSignalStrength(signal) {
+    let info = {
+      voice: {
+        signalStrength:    null,
+        relSignalStrength: null
+      },
+      data: {
+        signalStrength:    null,
+        relSignalStrength: null
+      }
+    };
+
+    if (this._isCdma) {
+      // CDMA RSSI.
+      // Valid values are positive integers. This value is the actual RSSI value
+      // multiplied by -1. Example: If the actual RSSI is -75, then this
+      // response value will be 75.
+      if (signal.cdmaDBM && signal.cdmaDBM > 0) {
+        let signalStrength = -1 * signal.cdmaDBM;
+        info.voice.signalStrength = signalStrength;
+
+        // -105 and -70 are referred to AOSP's implementation. These values are
+        // not constants and can be customized based on different requirement.
+        let signalLevel = this._processSignalLevel(signalStrength, -105, -70);
+        info.voice.relSignalStrength = signalLevel;
+      }
+
+      // EVDO RSSI.
+      // Valid values are positive integers. This value is the actual RSSI value
+      // multiplied by -1. Example: If the actual RSSI is -75, then this
+      // response value will be 75.
+      if (signal.evdoDBM && signal.evdoDBM > 0) {
+        let signalStrength = -1 * signal.evdoDBM;
+        info.data.signalStrength = signalStrength;
+
+        // -105 and -70 are referred to AOSP's implementation. These values are
+        // not constants and can be customized based on different requirement.
+        let signalLevel = this._processSignalLevel(signalStrength, -105, -70);
+        info.data.relSignalStrength = signalLevel;
+      }
+    } else {
+      // GSM signal strength.
+      // Valid values are 0-31 as defined in TS 27.007 8.5.
+      // 0     : -113 dBm or less
+      // 1     : -111 dBm
+      // 2...30: -109...-53 dBm
+      // 31    : -51 dBm
+      if (signal.gsmSignalStrength &&
+          signal.gsmSignalStrength >= 0 &&
+          signal.gsmSignalStrength <= 31) {
+        let signalStrength = -113 + 2 * signal.gsmSignalStrength;
+        info.voice.signalStrength = info.data.signalStrength = signalStrength;
+
+        // -115 and -85 are referred to AOSP's implementation. These values are
+        // not constants and can be customized based on different requirement.
+        let signalLevel = this._processSignalLevel(signalStrength, -110, -85);
+        info.voice.relSignalStrength = info.data.relSignalStrength = signalLevel;
+      }
+    }
+
+    info.rilMessageType = "signalstrengthchange";
+    this.sendChromeMessage(info);
+
+    if (this.cachedDialRequest && info.voice.signalStrength) {
+      // Radio is ready for making the cached emergency call.
+      this.cachedDialRequest.callback();
+      this.cachedDialRequest = null;
+    }
+  },
+
+  /**
    * Process the network registration flags.
    *
    * @return true if the state changed, false otherwise.
@@ -4899,63 +4994,27 @@ RIL[REQUEST_SIGNAL_STRENGTH] = function REQUEST_SIGNAL_STRENGTH(length, options)
     return;
   }
 
-  let obj = {};
+  let signal = {
+    gsmSignalStrength: Buf.readUint32(),
+    gsmBitErrorRate:   Buf.readUint32(),
+    cdmaDBM:           Buf.readUint32(),
+    cdmaECIO:          Buf.readUint32(),
+    evdoDBM:           Buf.readUint32(),
+    evdoECIO:          Buf.readUint32(),
+    evdoSNR:           Buf.readUint32()
+  };
 
-  // GSM
-  // Valid values are (0-31, 99) as defined in TS 27.007 8.5.
-  let gsmSignalStrength = Buf.readUint32();
-  obj.gsmSignalStrength = gsmSignalStrength & 0xff;
-  // GSM bit error rate (0-7, 99) as defined in TS 27.007 8.5.
-  obj.gsmBitErrorRate = Buf.readUint32();
-
-  obj.gsmDBM = null;
-  obj.gsmRelative = null;
-  if (obj.gsmSignalStrength >= 0 && obj.gsmSignalStrength <= 31) {
-    obj.gsmDBM = -113 + obj.gsmSignalStrength * 2;
-    obj.gsmRelative = Math.floor(obj.gsmSignalStrength * 100 / 31);
-  }
-
-  // The SGS2 seems to compute the number of bars (0-4) for us and
-  // expose those instead of the actual signal strength. Since the RIL
-  // needs to be "warmed up" first for the quirk detection to work,
-  // we're detecting this ad-hoc and not upfront.
-  if (obj.gsmSignalStrength == 99) {
-    obj.gsmRelative = (gsmSignalStrength >> 8) * 25;
-  }
-
-  // CDMA
-  obj.cdmaDBM = Buf.readUint32();
-  // The CDMA EC/IO.
-  obj.cdmaECIO = Buf.readUint32();
-  // The EVDO RSSI value.
-
-  // EVDO
-  obj.evdoDBM = Buf.readUint32();
-  // The EVDO EC/IO.
-  obj.evdoECIO = Buf.readUint32();
-  // Signal-to-noise ratio. Valid values are 0 to 8.
-  obj.evdoSNR = Buf.readUint32();
-
-  // LTE
   if (!RILQUIRKS_V5_LEGACY) {
-    // Valid values are (0-31, 99) as defined in TS 27.007 8.5.
-    obj.lteSignalStrength = Buf.readUint32();
-    // Reference signal receive power in dBm, multiplied by -1.
-    // Valid values are 44 to 140.
-    obj.lteRSRP = Buf.readUint32();
-    // Reference signal receive quality in dB, multiplied by -1.
-    // Valid values are 3 to 20.
-    obj.lteRSRQ = Buf.readUint32();
-    // Signal-to-noise ratio for the reference signal.
-    // Valid values are -200 (20.0 dB) to +300 (30 dB).
-    obj.lteRSSNR = Buf.readUint32();
-    // Channel Quality Indicator, valid values are 0 to 15.
-    obj.lteCQI = Buf.readUint32();
+    signal.lteSignalStrength = Buf.readUint32();
+    signal.lteRSRP =           Buf.readUint32();
+    signal.lteRSRQ =           Buf.readUint32();
+    signal.lteRSSNR =          Buf.readUint32();
+    signal.lteCQI =            Buf.readUint32();
   }
 
-  if (DEBUG) debug("Signal strength " + JSON.stringify(obj));
-  obj.rilMessageType = "signalstrengthchange";
-  this.sendChromeMessage(obj);
+  if (DEBUG) debug("signal strength: " + JSON.stringify(signal));
+
+  this._processSignalStrength(signal);
 };
 RIL[REQUEST_VOICE_REGISTRATION_STATE] = function REQUEST_VOICE_REGISTRATION_STATE(length, options) {
   this._receivedNetworkInfo(NETWORK_INFO_VOICE_REGISTRATION_STATE);
