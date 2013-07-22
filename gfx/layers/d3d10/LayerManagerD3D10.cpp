@@ -89,7 +89,7 @@ LayerManagerD3D10::~LayerManagerD3D10()
       mDevice->GetPrivateData(sDeviceAttachments, &size, &attachments);
       // No LayerManagers left for this device. Clear out interfaces stored which
       // hold a reference to the device.
-      mDevice->SetPrivateData(sDeviceAttachments, 0, NULL);
+      mDevice->SetPrivateData(sDeviceAttachments, 0, nullptr);
 
       delete attachments;
     }
@@ -136,7 +136,7 @@ LayerManagerD3D10::Initialize(bool force, HRESULT* aHresultPtr)
    * Do some post device creation setup
    */
   if (mNv3DVUtils) {
-    IUnknown* devUnknown = NULL;
+    IUnknown* devUnknown = nullptr;
     if (mDevice) {
       mDevice->QueryInterface(IID_IUnknown, (void **)&devUnknown);
     }
@@ -168,7 +168,7 @@ LayerManagerD3D10::Initialize(bool force, HRESULT* aHresultPtr)
                       sizeof(g_main),
                       D3D10_EFFECT_SINGLE_THREADED,
                       mDevice,
-                      NULL,
+                      nullptr,
                       getter_AddRefs(mEffect));
     
     if (FAILED(hr)) {
@@ -463,7 +463,7 @@ LayerManagerD3D10::CreateOptimalSurface(const gfxIntSize &aSize,
   desc.BindFlags = D3D10_BIND_RENDER_TARGET | D3D10_BIND_SHADER_RESOURCE;
   desc.MiscFlags = D3D10_RESOURCE_MISC_GDI_COMPATIBLE;
   
-  HRESULT hr = device()->CreateTexture2D(&desc, NULL, getter_AddRefs(texture));
+  HRESULT hr = device()->CreateTexture2D(&desc, nullptr, getter_AddRefs(texture));
 
   if (FAILED(hr)) {
     NS_WARNING("Failed to create new texture for CreateOptimalSurface!");
@@ -508,7 +508,7 @@ LayerManagerD3D10::CreateDrawTarget(const IntSize &aSize,
   CD3D10_TEXTURE2D_DESC desc(DXGI_FORMAT_B8G8R8A8_UNORM, aSize.width, aSize.height, 1, 1);
   desc.BindFlags = D3D10_BIND_RENDER_TARGET | D3D10_BIND_SHADER_RESOURCE;
   
-  HRESULT hr = device()->CreateTexture2D(&desc, NULL, getter_AddRefs(texture));
+  HRESULT hr = device()->CreateTexture2D(&desc, nullptr, getter_AddRefs(texture));
 
   if (FAILED(hr)) {
     NS_WARNING("Failed to create new texture for CreateOptimalSurface!");
@@ -599,7 +599,7 @@ LayerManagerD3D10::SetupPipeline()
   }
 
   ID3D10RenderTargetView *view = mRTView;
-  mDevice->OMSetRenderTargets(1, &view, NULL);
+  mDevice->OMSetRenderTargets(1, &view, nullptr);
 
   SetupInputAssembler();
 
@@ -620,7 +620,7 @@ LayerManagerD3D10::UpdateRenderTarget()
   if (FAILED(hr)) {
     return;
   }
-  mDevice->CreateRenderTargetView(backBuf, NULL, getter_AddRefs(mRTView));
+  mDevice->CreateRenderTargetView(backBuf, nullptr, getter_AddRefs(mRTView));
 }
 
 void
@@ -753,7 +753,7 @@ LayerManagerD3D10::PaintToTarget()
 
   nsRefPtr<ID3D10Texture2D> readTexture;
 
-  HRESULT hr = device()->CreateTexture2D(&softDesc, NULL, getter_AddRefs(readTexture));
+  HRESULT hr = device()->CreateTexture2D(&softDesc, nullptr, getter_AddRefs(readTexture));
   if (FAILED(hr)) {
     ReportFailure(NS_LITERAL_CSTRING("LayerManagerD3D10::PaintToTarget(): Failed to create texture"),
                   hr);

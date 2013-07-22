@@ -56,7 +56,7 @@ BasicTextureImage::BeginUpdate(nsIntRegion& aRegion)
     nsIntRect rgnSize = mUpdateRegion.GetBounds();
     if (!nsIntRect(nsIntPoint(0, 0), mSize).Contains(rgnSize)) {
         NS_ERROR("update outside of image");
-        return NULL;
+        return nullptr;
     }
 
     ImageFormat format =
@@ -66,8 +66,8 @@ BasicTextureImage::BeginUpdate(nsIntRegion& aRegion)
         GetSurfaceForUpdate(gfxIntSize(rgnSize.width, rgnSize.height), format);
 
     if (!mUpdateSurface || mUpdateSurface->CairoStatus()) {
-        mUpdateSurface = NULL;
-        return NULL;
+        mUpdateSurface = nullptr;
+        return nullptr;
     }
 
     mUpdateSurface->SetDeviceOffset(gfxPoint(-rgnSize.x, -rgnSize.y));
@@ -182,7 +182,7 @@ BasicTextureImage::Resize(const nsIntSize& aSize)
                             0,
                             LOCAL_GL_RGBA,
                             LOCAL_GL_UNSIGNED_BYTE,
-                            NULL);
+                            nullptr);
 
     mTextureState = Allocated;
     mSize = aSize;

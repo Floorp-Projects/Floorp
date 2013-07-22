@@ -44,8 +44,8 @@ DefaultXDisplay()
 /**
  * Sets *aVisual to point to aDisplay's Visual struct corresponding to
  * aVisualID, and *aDepth to its depth.  When aVisualID is None, these are set
- * to NULL and 0 respectively.  Both out-parameter pointers are assumed
- * non-NULL.
+ * to nullptr and 0 respectively.  Both out-parameter pointers are assumed
+ * non-nullptr.
  */
 void
 FindVisualAndDepth(Display* aDisplay, VisualID aVisualID,
@@ -72,8 +72,8 @@ template <typename T>
 struct ScopedXFreePtrTraits
 {
   typedef T *type;
-  static T *empty() { return NULL; }
-  static void release(T *ptr) { if (ptr!=NULL) XFree(ptr); }
+  static T *empty() { return nullptr; }
+  static void release(T *ptr) { if (ptr != nullptr) XFree(ptr); }
 };
 SCOPED_TEMPLATE(ScopedXFree, ScopedXFreePtrTraits)
 
