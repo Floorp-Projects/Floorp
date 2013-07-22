@@ -93,11 +93,11 @@
       function removeAttr(obj, attr) {
         return document.body.constructor.prototype.removeAttribute.call(obj, attr);
       }
-      function setDisplay(obj, val) {
-        if (val)
+      function setDisplayed(obj, display) {
+        if (display)
           removeAttr(obj, 'style');
         else
-          setAttr(obj, 'style', "display none;");
+          setAttr(obj, 'style', "display: none;");
       }
       function displayed(obj) {
         // Hacky, but that's all we use style for.
@@ -234,10 +234,10 @@
           state.pluginExtension = false;
         },
         displayNone: function(obj, state) {
-          setDisplay(obj, "none");
+          setDisplayed(obj, false);
         },
         displayInherit: function(obj, state) {
-          setDisplay(obj, "inherit");
+          setDisplayed(obj, true);
         }
       };
 
@@ -300,22 +300,23 @@
 
         is(actualMode, expectedMode, "check loaded mode");
 
-        // If we're a plugin, check that we spawned successfully
-        // Except for _loading...
-        let shouldSpawn = expectedMode == "plugin" && (!state.loading || state.initialPlugin);
+        // If we're a plugin, check that we spawned successfully. state.loading
+        // is set if we haven't had an event loop since applying state, in which
+        // case the plugin would not have stopped yet if it was initially a
+        // plugin.
+        let shouldBeSpawnable = expectedMode == "plugin" && displayed(obj);
+        let shouldSpawn = shouldBeSpawnable && (!state.loading || state.initialPlugin);
         let didSpawn = runningPlugin(obj, state);
         is(didSpawn, !!shouldSpawn, "check plugin spawned is " + !!shouldSpawn);
 
         // If we are a plugin, scripting should work. If we're not spawned we
         // should spawn synchronously.
-        if (expectedMode == "plugin") {
-          let scripted = false;
-          try {
-            let x = obj.getObjectValue();
-            scripted = true;
-          } catch(e) {}
-          ok(scripted, "check plugin scriptability");
-        }
+        let scripted = false;
+        try {
+          let x = obj.getObjectValue();
+          scripted = true;
+        } catch(e) {}
+        is(scripted, shouldBeSpawnable, "check plugin scriptability");
 
         // If this tag previously had other spawned plugins, make sure it
         // respawned between then and now
