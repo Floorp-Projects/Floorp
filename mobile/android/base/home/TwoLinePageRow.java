@@ -32,6 +32,7 @@ public class TwoLinePageRow extends LinearLayout {
 
     private int mUrlIconId;
     private int mBookmarkIconId;
+    private boolean mShowIcons;
 
     public TwoLinePageRow(Context context) {
         this(context, null);
@@ -44,6 +45,7 @@ public class TwoLinePageRow extends LinearLayout {
 
         mUrlIconId = NO_ICON;
         mBookmarkIconId = NO_ICON;
+        mShowIcons = true;
 
         LayoutInflater.from(context).inflate(R.layout.two_line_page_row, this);
         mTitle = (TextView) findViewById(R.id.title);
@@ -85,6 +87,10 @@ public class TwoLinePageRow extends LinearLayout {
         mUrl.setCompoundDrawablesWithIntrinsicBounds(mUrlIconId, 0, mBookmarkIconId, 0);
     }
 
+    public void setShowIcons(boolean showIcons) {
+        mShowIcons = showIcons;
+    }
+
     public void updateFromCursor(Cursor cursor) {
         if (cursor == null) {
             return;
@@ -101,12 +107,12 @@ public class TwoLinePageRow extends LinearLayout {
         setTitle(TextUtils.isEmpty(title) ? url : title);
 
         // Update the url with "Switch to tab" if needed.
-        if (Tabs.getInstance().hasUrl(url)) {
-            setUrl(R.string.switch_to_tab);
-            setUrlIcon(R.drawable.ic_url_bar_tab);
-        } else {
+        if (!mShowIcons || !Tabs.getInstance().hasUrl(url)) {
             setUrl(url);
             setUrlIcon(NO_ICON);
+        } else {
+            setUrl(R.string.switch_to_tab);
+            setUrlIcon(R.drawable.ic_url_bar_tab);
         }
 
         int faviconIndex = cursor.getColumnIndex(URLColumns.FAVICON);
@@ -125,6 +131,11 @@ public class TwoLinePageRow extends LinearLayout {
         } else {
             // If favicons is not on the cursor, try to fetch it from the memory cache
             setFaviconWithUrl(Favicons.getInstance().getFaviconFromMemCache(url), url);
+        }
+
+        // Don't show bookmark/reading list icon, if not needed.
+        if (!mShowIcons) {
+            return;
         }
 
         final int bookmarkIdIndex = cursor.getColumnIndex(Combined.BOOKMARK_ID);
