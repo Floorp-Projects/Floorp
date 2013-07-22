@@ -38,6 +38,7 @@
 #include "nsEvent.h"
 #include "nsAttrValue.h"
 #include "mozilla/dom/BindingDeclarations.h"
+#include "nsIHTMLCollection.h"
 #include "Units.h"
 
 class nsIDOMEventListener;
@@ -599,6 +600,36 @@ public:
                            ErrorResult& aError);
   already_AddRefed<nsIHTMLCollection>
     GetElementsByClassName(const nsAString& aClassNames);
+  Element* GetFirstElementChild() const;
+  Element* GetLastElementChild() const;
+  Element* GetPreviousElementSibling() const
+  {
+    nsIContent* previousSibling = GetPreviousSibling();
+    while (previousSibling) {
+      if (previousSibling->IsElement()) {
+        return previousSibling->AsElement();
+      }
+      previousSibling = previousSibling->GetPreviousSibling();
+    }
+
+    return nullptr;
+  }
+  Element* GetNextElementSibling() const
+  {
+    nsIContent* nextSibling = GetNextSibling();
+    while (nextSibling) {
+      if (nextSibling->IsElement()) {
+        return nextSibling->AsElement();
+      }
+      nextSibling = nextSibling->GetNextSibling();
+    }
+
+    return nullptr;
+  }
+  uint32_t ChildElementCount()
+  {
+    return Children()->Length();
+  }
   bool MozMatchesSelector(const nsAString& aSelector,
                           ErrorResult& aError);
   void SetCapture(bool aRetargetToElement)

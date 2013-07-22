@@ -275,6 +275,7 @@ public:
   TestInterface* ReceiveWeakSelf();
   TestInterface* ReceiveWeakNullableSelf();
   void PassSelf(TestInterface&);
+  void PassSelf2(NonNull<TestInterface>&);
   void PassNullableSelf(TestInterface*);
   already_AddRefed<TestInterface> NonNullSelf();
   void SetNonNullSelf(TestInterface&);
@@ -296,6 +297,7 @@ public:
   IndirectlyImplementedInterface* ReceiveWeakOther();
   IndirectlyImplementedInterface* ReceiveWeakNullableOther();
   void PassOther(IndirectlyImplementedInterface&);
+  void PassOther2(NonNull<IndirectlyImplementedInterface>&);
   void PassNullableOther(IndirectlyImplementedInterface*);
   already_AddRefed<IndirectlyImplementedInterface> NonNullOther();
   void SetNonNullOther(IndirectlyImplementedInterface&);
@@ -310,6 +312,7 @@ public:
   TestExternalInterface* ReceiveWeakExternal();
   TestExternalInterface* ReceiveWeakNullableExternal();
   void PassExternal(TestExternalInterface*);
+  void PassExternal2(TestExternalInterface*);
   void PassNullableExternal(TestExternalInterface*);
   already_AddRefed<TestExternalInterface> NonNullExternal();
   void SetNonNullExternal(TestExternalInterface*);
@@ -324,6 +327,7 @@ public:
   TestCallbackInterface* ReceiveWeakCallbackInterface();
   TestCallbackInterface* ReceiveWeakNullableCallbackInterface();
   void PassCallbackInterface(TestCallbackInterface&);
+  void PassCallbackInterface2(OwningNonNull<TestCallbackInterface>);
   void PassNullableCallbackInterface(TestCallbackInterface*);
   already_AddRefed<TestCallbackInterface> NonNullCallbackInterface();
   void SetNonNullCallbackInterface(TestCallbackInterface&);
@@ -804,28 +808,6 @@ private:
   void PassVariadicAny(JSContext*, Sequence<JS::Value>&) MOZ_DELETE;
   void PassVariadicObject(JSContext*, Sequence<JSObject*>&) MOZ_DELETE;
   void PassVariadicNullableObject(JSContext*, Sequence<JSObject*>&) MOZ_DELETE;
-
-  // Ensure NonNull does not leak in
-  void PassSelf(NonNull<TestInterface>&) MOZ_DELETE;
-  void PassSelf(OwningNonNull<TestInterface>&) MOZ_DELETE;
-  void PassSelf(const NonNull<TestInterface>&) MOZ_DELETE;
-  void PassSelf(const OwningNonNull<TestInterface>&) MOZ_DELETE;
-  void PassOther(NonNull<IndirectlyImplementedInterface>&) MOZ_DELETE;
-  void PassOther(const NonNull<IndirectlyImplementedInterface>&) MOZ_DELETE;
-  void PassOther(OwningNonNull<IndirectlyImplementedInterface>&) MOZ_DELETE;
-  void PassOther(const OwningNonNull<IndirectlyImplementedInterface>&) MOZ_DELETE;
-  void PassCallbackInterface(OwningNonNull<TestCallbackInterface>&) MOZ_DELETE;
-  void PassCallbackInterface(const OwningNonNull<TestCallbackInterface>&) MOZ_DELETE;
-  void PassCallbackInterface(NonNull<TestCallbackInterface>&) MOZ_DELETE;
-  void PassCallbackInterface(const NonNull<TestCallbackInterface>&) MOZ_DELETE;
-  void PassCallback(OwningNonNull<TestCallback>&) MOZ_DELETE;
-  void PassCallback(const OwningNonNull<TestCallback>&) MOZ_DELETE;
-  void PassCallback(NonNull<TestCallback>&) MOZ_DELETE;
-  void PassCallback(const NonNull<TestCallback>&) MOZ_DELETE;
-  void PassString(const NonNull<nsAString>&) MOZ_DELETE;
-  void PassString(NonNull<nsAString>&) MOZ_DELETE;
-  void PassString(const OwningNonNull<nsAString>&) MOZ_DELETE;
-  void PassString(OwningNonNull<nsAString>&) MOZ_DELETE;
 };
 
 class TestIndexedGetterInterface : public nsISupports,
