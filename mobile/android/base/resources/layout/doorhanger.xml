@@ -5,14 +5,26 @@
 
 <merge xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <TextView android:id="@+id/doorhanger_title"
-              android:focusable="true"
-              android:layout_width="fill_parent"
-              android:layout_height="wrap_content"
-              android:textAppearance="?android:attr/textAppearanceMedium"
-              android:textColor="@color/doorhanger_text"
-              android:textColorLink="@color/doorhanger_link"
-              android:padding="@dimen/doorhanger_padding"/>
+    <LinearLayout android:layout_width="wrap_content"
+                  android:layout_height="wrap_content"
+                  android:orientation="horizontal"
+                  android:padding="@dimen/doorhanger_padding">
+
+        <ImageView android:id="@+id/doorhanger_icon"
+                   android:layout_width="wrap_content"
+                   android:layout_height="wrap_content"
+                   android:paddingRight="@dimen/doorhanger_padding"
+                   android:visibility="gone"/>
+
+        <TextView android:id="@+id/doorhanger_title"
+                  android:focusable="true"
+                  android:layout_width="fill_parent"
+                  android:layout_height="wrap_content"
+                  android:textAppearance="?android:attr/textAppearanceMedium"
+                  android:textColor="@color/doorhanger_text"
+                  android:textColorLink="@color/doorhanger_link"/>
+
+    </LinearLayout>
 
     <LinearLayout android:id="@+id/doorhanger_inputs"
               android:layout_width="wrap_content"
@@ -31,7 +43,6 @@
     <View android:id="@+id/divider_choices"
           android:layout_width="fill_parent"
           android:layout_height="1dp"
-          android:background="#FFD1D5DA"
           android:visibility="gone"/>
 
     <LinearLayout android:id="@+id/doorhanger_choices"

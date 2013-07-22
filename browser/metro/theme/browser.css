@@ -204,18 +204,15 @@ documenttab[selected] .documenttab-selection {
 }
 
 #tabs-controls {
-  margin-top: @metro_spacing_small@;
   -moz-box-align: start;
   -moz-box-orient: vertical;
-  padding: 0 @metro_spacing_small@;
-}
-
-#tabs-controls toolbarbutton {
-  margin: @toolbar_vertical_spacing@ @toolbar_horizontal_spacing@;
 }
 
 #newtab-button {
   list-style-image: url(chrome://browser/skin/images/newtab-default.png);
+
+  /* Add some extra padding for a larger target */
+  padding: 18px 25px 30px;
 }
 
 /* Selection overlay and monocles ----------------------------------------------- */

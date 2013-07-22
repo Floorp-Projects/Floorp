@@ -11,7 +11,7 @@ relativesrcdir  = @relativesrcdir@
 include $(DEPTH)/config/autoconf.mk
 
 ifndef MOZ_DEBUG
-PERF_TEST_FILES = \
+MOCHITEST_METRO_FILES = \
   ../mochitest/head.js \
   perfhelpers.js \
   browser_miscgfx_01.js \
@@ -22,20 +22,6 @@ PERF_TEST_FILES = \
   browser_layers_01.js \
   browser_firstx.js \
   $(NULL)
-
-PERF_RESOURCE_FILES = \
-  res/ripples.html \
-  res/scroll_test.html \
-  res/tidevideo.html \
-  res/tide.mp4 \
-  res/divs_test.html \
-  res/fx.png \
-  $(NULL)
-
-PERF_TEST_DEST := $(DEPTH)/_tests/testing/mochitest/metro/$(relativesrcdir)
-PERF_RESOURCE_DEST := $(DEPTH)/_tests/testing/mochitest/metro/$(relativesrcdir)/res
-
-INSTALL_TARGETS += PERF_TEST PERF_RESOURCE
 endif
 
 include $(topsrcdir)/config/rules.mk

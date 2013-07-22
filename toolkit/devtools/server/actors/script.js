@@ -31,10 +31,13 @@ function ThreadActor(aHooks, aGlobal)
   this._environmentActors = [];
   this._hooks = aHooks;
   this.global = aGlobal;
+  // A map of actorID -> actor for breakpoints created and managed by the server.
+  this._hiddenBreakpoints = new Map();
 
   this.findGlobals = this.globalManager.findGlobals.bind(this);
   this.onNewGlobal = this.globalManager.onNewGlobal.bind(this);
   this.onNewSource = this.onNewSource.bind(this);
+  this._allEventsListener = this._allEventsListener.bind(this);
 
   this._options = {
     useSourceMaps: false
@@ -85,14 +88,18 @@ ThreadActor.prototype = {
 
   /**
    * Add a debuggee global to the Debugger object.
+   *
+   * @returns the Debugger.Object that corresponds to the global.
    */
   addDebuggee: function TA_addDebuggee(aGlobal) {
+    let globalDebugObject;
     try {
-      this.dbg.addDebuggee(aGlobal);
+      globalDebugObject = this.dbg.addDebuggee(aGlobal);
     } catch (e) {
       // Ignore attempts to add the debugger's compartment as a debuggee.
       dumpn("Ignoring request to add the debugger's compartment as a debuggee");
     }
+    return globalDebugObject;
   },
 
   /**
@@ -122,15 +129,18 @@ ThreadActor.prototype = {
 
   /**
    * Add the provided window and all windows in its frame tree as debuggees.
+   *
+   * @returns the Debugger.Object that corresponds to the window.
    */
   _addDebuggees: function TA__addDebuggees(aWindow) {
-    this.addDebuggee(aWindow);
+    let globalDebugObject = this.addDebuggee(aWindow);
     let frames = aWindow.frames;
     if (frames) {
       for (let i = 0; i < frames.length; i++) {
         this._addDebuggees(frames[i]);
       }
     }
+    return globalDebugObject;
   },
 
   /**
@@ -139,7 +149,7 @@ ThreadActor.prototype = {
    */
   globalManager: {
     findGlobals: function TA_findGlobals() {
-      this._addDebuggees(this.global);
+      this.globalDebugObject = this._addDebuggees(this.global);
     },
 
     /**
@@ -413,12 +423,31 @@ ThreadActor.prototype = {
             stepFrame.onPop = onPop;
         }
       }
+    } else {
+      // Clear any previous stepping hooks on a plain resumption.
+      let frame = this.youngestFrame;
+      while (frame) {
+        frame.onStep = undefined;
+        frame.onPop = undefined;
+        frame = frame.older;
+      }
     }
 
     if (aRequest) {
       this._options.pauseOnExceptions = aRequest.pauseOnExceptions;
       this.maybePauseOnExceptions();
+      // Break-on-DOMEvents is only supported in content debugging.
+      let events = aRequest.pauseOnDOMEvents;
+      if (this.global && events &&
+          (events == "*" ||
+          (Array.isArray(events) && events.length))) {
+        this._pauseOnDOMEvents = events;
+        let els = Cc["@mozilla.org/eventlistenerservice;1"]
+                  .getService(Ci.nsIEventListenerService);
+        els.addListenerForAllEvents(this.global, this._allEventsListener, true);
+      }
     }
+
     let packet = this._resumed();
     DebuggerServer.xpcInspector.exitNestedEventLoop();
     return packet;
@@ -430,6 +459,86 @@ ThreadActor.prototype = {
   maybePauseOnExceptions: function() {
     if (this._options.pauseOnExceptions) {
       this.dbg.onExceptionUnwind = this.onExceptionUnwind.bind(this);
+    }
+  },
+
+  /**
+   * A listener that gets called for every event fired on the page, when a list
+   * of interesting events was provided with the pauseOnDOMEvents property. It
+   * is used to set server-managed breakpoints on any existing event listeners
+   * for those events.
+   *
+   * @param Event event
+   *        The event that was fired.
+   */
+  _allEventsListener: function(event) {
+    if (this._pauseOnDOMEvents == "*" ||
+        this._pauseOnDOMEvents.indexOf(event.type) != -1) {
+      for (let listener of this._getAllEventListeners(event.target)) {
+        if (event.type == listener.type || this._pauseOnDOMEvents == "*") {
+          this._breakOnEnter(listener.script);
+        }
+      }
+    }
+  },
+
+  /**
+   * Return an array containing all the event listeners attached to the
+   * specified event target and its ancestors in the event target chain.
+   *
+   * @param EventTarget eventTarget
+   *        The target the event was dispatched on.
+   * @returns Array
+   */
+  _getAllEventListeners: function(eventTarget) {
+    let els = Cc["@mozilla.org/eventlistenerservice;1"]
+                .getService(Ci.nsIEventListenerService);
+
+    let targets = els.getEventTargetChainFor(eventTarget);
+    let listeners = [];
+
+    for (let target of targets) {
+      let handlers = els.getListenerInfoFor(target);
+      for (let handler of handlers) {
+        // Null is returned for all-events handlers, and native event listeners
+        // don't provide any listenerObject, which makes them not that useful to
+        // a JS debugger.
+        if (!handler || !handler.listenerObject || !handler.type)
+          continue;
+        // Create a listener-like object suitable for our purposes.
+        let l = Object.create(null);
+        l.type = handler.type;
+        let listener = handler.listenerObject;
+        l.script = this.globalDebugObject.makeDebuggeeValue(listener).script;
+        // Chrome listeners won't be converted to debuggee values, since their
+        // compartment is not added as a debuggee.
+        if (!l.script)
+          continue;
+        listeners.push(l);
+      }
+    }
+    return listeners;
+  },
+
+  /**
+   * Set a breakpoint on the first bytecode offset in the provided script.
+   */
+  _breakOnEnter: function(script) {
+    let offsets = script.getAllOffsets();
+    for (let line = 0, n = offsets.length; line < n; line++) {
+      if (offsets[line]) {
+        let location = { url: script.url, line: line };
+        let resp = this._createAndStoreBreakpoint(location);
+        dbg_assert(!resp.actualLocation, "No actualLocation should be returned");
+        if (resp.error) {
+          reportError(new Error("Unable to set breakpoint on event listener"));
+          return;
+        }
+        let bpActor = this._breakpointStore[location.url][location.line].actor;
+        dbg_assert(bpActor, "Breakpoint actor must be created");
+        this._hiddenBreakpoints.set(bpActor.actorID, bpActor);
+        break;
+      }
     }
   },
 
@@ -568,19 +677,7 @@ ThreadActor.prototype = {
         return { error: "noScript" };
       }
 
-      // Add the breakpoint to the store for later reuse, in case it belongs to a
-      // script that hasn't appeared yet.
-      if (!this._breakpointStore[aLocation.url]) {
-        this._breakpointStore[aLocation.url] = [];
-      }
-      let scriptBreakpoints = this._breakpointStore[aLocation.url];
-      scriptBreakpoints[line] = {
-        url: aLocation.url,
-        line: line,
-        column: aLocation.column
-      };
-
-      let response = this._setBreakpoint(aLocation);
+      let response = this._createAndStoreBreakpoint(aLocation);
       // If the original location of our generated location is different from
       // the original location we attempted to set the breakpoint on, we will
       // need to know so that we can set actualLocation on the response.
@@ -607,6 +704,25 @@ ThreadActor.prototype = {
           return aResponse;
         });
     });
+  },
+
+  /**
+   * Create a breakpoint at the specified location and store it in the cache.
+   */
+  _createAndStoreBreakpoint: function (aLocation) {
+      // Add the breakpoint to the store for later reuse, in case it belongs to
+      // a script that hasn't appeared yet.
+      if (!this._breakpointStore[aLocation.url]) {
+        this._breakpointStore[aLocation.url] = [];
+      }
+      let scriptBreakpoints = this._breakpointStore[aLocation.url];
+      scriptBreakpoints[aLocation.line] = {
+        url: aLocation.url,
+        line: aLocation.line,
+        column: aLocation.column
+      };
+
+      return this._setBreakpoint(aLocation);
   },
 
   /**
@@ -829,6 +945,59 @@ ThreadActor.prototype = {
   },
 
   /**
+   * Handle a protocol request to retrieve all the event listeners on the page.
+   */
+  onEventListeners: function TA_onEventListeners(aRequest) {
+    // This request is only supported in content debugging.
+    if (!this.global) {
+      return {
+        error: "notImplemented",
+        message: "eventListeners request is only supported in content debugging"
+      }
+    }
+
+    let els = Cc["@mozilla.org/eventlistenerservice;1"]
+                .getService(Ci.nsIEventListenerService);
+
+    let nodes = this.global.document.getElementsByTagName("*");
+    nodes = [this.global].concat([].slice.call(nodes));
+    let listeners = [];
+
+    for (let node of nodes) {
+      let handlers = els.getListenerInfoFor(node);
+
+      for (let handler of handlers) {
+        // Create a form object for serializing the listener via the protocol.
+        let listenerForm = Object.create(null);
+        let listener = handler.listenerObject;
+        // Native event listeners don't provide any listenerObject and are not
+        // that useful to a JS debugger.
+        if (!listener) {
+          continue;
+        }
+
+        // There will be no tagName if the event listener is set on the window.
+        let selector = node.tagName ? findCssSelector(node) : "window";
+        let nodeDO = this.globalDebugObject.makeDebuggeeValue(node);
+        listenerForm.node = {
+          selector: selector,
+          object: this.createValueGrip(nodeDO)
+        };
+        listenerForm.type = handler.type;
+        listenerForm.capturing = handler.capturing;
+        listenerForm.allowsUntrusted = handler.allowsUntrusted;
+        listenerForm.inSystemEventGroup = handler.inSystemEventGroup;
+        listenerForm.isEventHandler = !!node["on" + listenerForm.type];
+        // Get the Debugger.Object for the listener object.
+        let listenerDO = this.globalDebugObject.makeDebuggeeValue(listener);
+        listenerForm.function = this.createValueGrip(listenerDO);
+        listeners.push(listenerForm);
+      }
+    }
+    return { listeners: listeners };
+  },
+
+  /**
    * Return the Debug.Frame for a frame mentioned by the protocol.
    */
   _requestFrame: function TA_requestFrame(aFrameID) {
@@ -862,6 +1031,18 @@ ThreadActor.prototype = {
       aFrame.onStep = undefined;
       aFrame.onPop = undefined;
     }
+    // Clear DOM event breakpoints.
+    // XPCShell tests don't use actual DOM windows for globals and cause
+    // removeListenerForAllEvents to throw.
+    if (this.global && !this.global.toString().contains("Sandbox")) {
+      let els = Cc["@mozilla.org/eventlistenerservice;1"]
+                .getService(Ci.nsIEventListenerService);
+      els.removeListenerForAllEvents(this.global, this._allEventsListener, true);
+      for (let [,bp] of this._hiddenBreakpoints) {
+        bp.onDelete();
+      }
+      this._hiddenBreakpoints.clear();
+    }
 
     this._state = "paused";
 
@@ -871,7 +1052,7 @@ ThreadActor.prototype = {
 
     // Create the actor pool that will hold the pause actor and its
     // children.
-    dbg_assert(!this._pausePool);
+    dbg_assert(!this._pausePool, "No pause pool should exist yet");
     this._pausePool = new ActorPool(this.conn);
     this.conn.addActorPool(this._pausePool);
 
@@ -880,7 +1061,7 @@ ThreadActor.prototype = {
     this._pausePool.threadActor = this;
 
     // Create the pause actor itself...
-    dbg_assert(!this._pauseActor);
+    dbg_assert(!this._pauseActor, "No pause actor should exist yet");
     this._pauseActor = new PauseActor(this._pausePool);
     this._pausePool.addActor(this._pauseActor);
 
@@ -912,7 +1093,7 @@ ThreadActor.prototype = {
     requestor.connection = this.conn;
     DebuggerServer.xpcInspector.enterNestedEventLoop(requestor);
 
-    dbg_assert(this.state === "running");
+    dbg_assert(this.state === "running", "Should be in the running state");
 
     if (this._hooks.postNest) {
       this._hooks.postNest(nestData)
@@ -1218,7 +1399,9 @@ ThreadActor.prototype = {
    *        The stack frame that contained the debugger statement.
    */
   onDebuggerStatement: function TA_onDebuggerStatement(aFrame) {
-    if (this.sources.isBlackBoxed(aFrame.script.url)) {
+    // Don't pause if we are currently stepping (in or over) or the frame is
+    // black-boxed.
+    if (this.sources.isBlackBoxed(aFrame.script.url) || aFrame.onStep) {
       return undefined;
     }
     return this._pauseAndRespond(aFrame, { type: "debuggerStatement" });
@@ -1348,6 +1531,7 @@ ThreadActor.prototype.requestTypes = {
   "clientEvaluate": ThreadActor.prototype.onClientEvaluate,
   "frames": ThreadActor.prototype.onFrames,
   "interrupt": ThreadActor.prototype.onInterrupt,
+  "eventListeners": ThreadActor.prototype.onEventListeners,
   "releaseMany": ThreadActor.prototype.onReleaseMany,
   "setBreakpoint": ThreadActor.prototype.onSetBreakpoint,
   "sources": ThreadActor.prototype.onSources,
@@ -1582,6 +1766,12 @@ ObjectActor.prototype = {
       let desc = this.obj.getOwnPropertyDescriptor("displayName");
       if (desc && desc.value && typeof desc.value == "string") {
         g.userDisplayName = this.threadActor.createValueGrip(desc.value);
+      }
+
+      // Add source location information.
+      if (this.obj.script) {
+        g.url = this.obj.script.url;
+        g.line = this.obj.script.startLine;
       }
     }
 
@@ -2192,12 +2382,21 @@ BreakpointActor.prototype = {
    *        The stack frame that contained the breakpoint.
    */
   hit: function BA_hit(aFrame) {
-    if (this.threadActor.sources.isBlackBoxed(this.location.url)) {
+    // Don't pause if we are currently stepping (in or over) or the frame is
+    // black-boxed.
+    if (this.threadActor.sources.isBlackBoxed(this.location.url) ||
+        aFrame.onStep) {
       return undefined;
     }
 
-    // TODO: add the rest of the breakpoints on that line (bug 676602).
-    let reason = { type: "breakpoint", actors: [ this.actorID ] };
+    let reason = {};
+    if (this.threadActor._hiddenBreakpoints.has(this.actorID)) {
+      reason.type = "pauseOnDOMEvents";
+    } else {
+      reason.type = "breakpoint";
+      // TODO: add the rest of the breakpoints on that line (bug 676602).
+      reason.actors = [ this.actorID ];
+    }
     return this.threadActor._pauseAndRespond(aFrame, reason, (aPacket) => {
       let { url, line } = aPacket.frame.where;
       return this.threadActor.sources.getOriginalLocation(url, line)
@@ -2632,7 +2831,7 @@ ThreadSources.prototype = {
     if (aScript.url in this._sourceMapsByGeneratedSource) {
       return this._sourceMapsByGeneratedSource[aScript.url];
     }
-    dbg_assert(aScript.sourceMapURL);
+    dbg_assert(aScript.sourceMapURL, "Script should have a sourceMapURL");
     let sourceMapURL = this._normalize(aScript.sourceMapURL, aScript.url);
     let map = this._fetchSourceMap(sourceMapURL)
       .then((aSourceMap) => {
@@ -2770,7 +2969,7 @@ ThreadSources.prototype = {
    * Normalize multiple relative paths towards the base paths on the right.
    */
   _normalize: function TS__normalize(...aURLs) {
-    dbg_assert(aURLs.length > 1);
+    dbg_assert(aURLs.length > 1, "Should have more than 1 URL");
     let base = Services.io.newURI(aURLs.pop(), null, null);
     let url;
     while ((url = aURLs.pop())) {
@@ -2938,4 +3137,81 @@ function reportError(aError, aPrefix="") {
   let msg = aPrefix + aError.message + ":\n" + aError.stack;
   Cu.reportError(msg);
   dumpn(msg);
+}
+
+// The following are copied here verbatim from css-logic.js, until we create a
+// server-friendly helper module.
+
+/**
+ * Find a unique CSS selector for a given element
+ * @returns a string such that ele.ownerDocument.querySelector(reply) === ele
+ * and ele.ownerDocument.querySelectorAll(reply).length === 1
+ */
+function findCssSelector(ele) {
+  var document = ele.ownerDocument;
+  if (ele.id && document.getElementById(ele.id) === ele) {
+    return '#' + ele.id;
+  }
+
+  // Inherently unique by tag name
+  var tagName = ele.tagName.toLowerCase();
+  if (tagName === 'html') {
+    return 'html';
+  }
+  if (tagName === 'head') {
+    return 'head';
+  }
+  if (tagName === 'body') {
+    return 'body';
+  }
+
+  if (ele.parentNode == null) {
+    console.log('danger: ' + tagName);
+  }
+
+  // We might be able to find a unique class name
+  var selector, index, matches;
+  if (ele.classList.length > 0) {
+    for (var i = 0; i < ele.classList.length; i++) {
+      // Is this className unique by itself?
+      selector = '.' + ele.classList.item(i);
+      matches = document.querySelectorAll(selector);
+      if (matches.length === 1) {
+        return selector;
+      }
+      // Maybe it's unique with a tag name?
+      selector = tagName + selector;
+      matches = document.querySelectorAll(selector);
+      if (matches.length === 1) {
+        return selector;
+      }
+      // Maybe it's unique using a tag name and nth-child
+      index = positionInNodeList(ele, ele.parentNode.children) + 1;
+      selector = selector + ':nth-child(' + index + ')';
+      matches = document.querySelectorAll(selector);
+      if (matches.length === 1) {
+        return selector;
+      }
+    }
+  }
+
+  // So we can be unique w.r.t. our parent, and use recursion
+  index = positionInNodeList(ele, ele.parentNode.children) + 1;
+  selector = findCssSelector(ele.parentNode) + ' > ' +
+          tagName + ':nth-child(' + index + ')';
+
+  return selector;
+};
+
+/**
+ * Find the position of [element] in [nodeList].
+ * @returns an index of the match, or -1 if there is no match
+ */
+function positionInNodeList(element, nodeList) {
+  for (var i = 0; i < nodeList.length; i++) {
+    if (element === nodeList[i]) {
+      return i;
+    }
+  }
+  return -1;
 }
