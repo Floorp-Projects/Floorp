@@ -36,6 +36,7 @@ MOCHITEST_METRO_FILES = \
   browser_form_auto_complete.js \
   browser_form_auto_complete.html \
   browser_crashprompt.js \
+  browser_inputsource.js \
   $(NULL)
 
 ifndef MOZ_DEBUG
