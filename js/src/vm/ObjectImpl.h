@@ -1305,6 +1305,8 @@ class ObjectImpl : public gc::Cell
     bool toDictionaryMode(ExclusiveContext *cx);
 
   private:
+    friend class Nursery;
+
     /*
      * Get internal pointers to the range of values starting at start and
      * running for length.
@@ -1598,7 +1600,7 @@ class ObjectImpl : public gc::Cell
         if (span <= SLOT_CAPACITY_MIN)
             return SLOT_CAPACITY_MIN;
 
-        uint32_t slots = RoundUpPow2(span);
+        uint32_t slots = mozilla::RoundUpPow2(span);
         MOZ_ASSERT(slots >= span);
         return slots;
     }

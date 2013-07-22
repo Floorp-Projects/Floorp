@@ -6,6 +6,7 @@ this.EXPORTED_SYMBOLS = ["Services"];
 
 const Ci = Components.interfaces;
 const Cc = Components.classes;
+const Cr = Components.results;
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
@@ -18,9 +19,15 @@ XPCOMUtils.defineLazyGetter(Services, "prefs", function () {
 });
 
 XPCOMUtils.defineLazyGetter(Services, "appinfo", function () {
-  return Cc["@mozilla.org/xre/app-info;1"]
-           .getService(Ci.nsIXULAppInfo)
-           .QueryInterface(Ci.nsIXULRuntime);
+  let appinfo = Cc["@mozilla.org/xre/app-info;1"]
+                  .getService(Ci.nsIXULRuntime);
+  try {
+    appinfo.QueryInterface(Ci.nsIXULAppInfo);
+  } catch (ex if ex instanceof Components.Exception &&
+                 ex.result == Cr.NS_NOINTERFACE) {
+    // Not all applications implement nsIXULAppInfo (e.g. xpcshell doesn't).
+  }
+  return appinfo;
 });
 
 XPCOMUtils.defineLazyGetter(Services, "dirsvc", function () {

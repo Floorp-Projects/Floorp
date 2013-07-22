@@ -2039,9 +2039,12 @@ nsGfxScrollFrameInner::AppendScrollPartsTo(nsDisplayListBuilder*   aBuilder,
                                            bool&                   aCreateLayer,
                                            bool                    aPositioned)
 {
+  bool overlayScrollbars =
+    LookAndFeel::GetInt(LookAndFeel::eIntID_UseOverlayScrollbars) != 0;
+
   for (nsIFrame* kid = mOuter->GetFirstPrincipalChild(); kid; kid = kid->GetNextSibling()) {
     if (kid == mScrolledFrame ||
-        (kid->IsPositioned() != aPositioned))
+        (kid->IsPositioned() || overlayScrollbars) != aPositioned)
       continue;
 
     nsDisplayListCollection partList;

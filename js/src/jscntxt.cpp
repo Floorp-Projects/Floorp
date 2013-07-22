@@ -260,9 +260,10 @@ js::DestroyContext(JSContext *cx, DestroyContextMode mode)
         for (CompartmentsIter c(rt); !c.done(); c.next())
             c->types.print(cx, false);
 
-        /* Off thread ion compilations depend on atoms still existing. */
+        /* Off thread compilation and parsing depend on atoms still existing. */
         for (CompartmentsIter c(rt); !c.done(); c.next())
             CancelOffThreadIonCompile(c, NULL);
+        WaitForOffThreadParsingToFinish(rt);
 
         /* Unpin all common names before final GC. */
         FinishCommonNames(rt);
@@ -1034,7 +1035,8 @@ js_HandleExecutionInterrupt(JSContext *cx)
 js::ThreadSafeContext::ThreadSafeContext(JSRuntime *rt, PerThreadData *pt, ContextKind kind)
   : ContextFriendFields(rt),
     contextKind_(kind),
-    perThreadData(pt)
+    perThreadData(pt),
+    allocator_(NULL)
 { }
 
 bool
@@ -1058,7 +1060,6 @@ JSContext::JSContext(JSRuntime *rt)
     reportGranularity(JS_DEFAULT_JITREPORT_GRANULARITY),
     resolvingList(NULL),
     generatingError(false),
-    enterCompartmentDepth_(0),
     savedFrameChains_(),
     defaultCompartmentObject_(NULL),
     cycleDetectorSet(MOZ_THIS_IN_INITIALIZER_LIST()),
@@ -1138,14 +1139,9 @@ JSContext::saveFrameChain()
     if (Activation *act = mainThread().activation())
         act->saveFrameChain();
 
-    if (defaultCompartmentObject_)
-        setCompartment(defaultCompartmentObject_->compartment());
-    else
-        setCompartment(NULL);
+    setCompartment(NULL);
     enterCompartmentDepth_ = 0;
 
-    if (isExceptionPending())
-        wrapPendingException();
     return true;
 }
 

@@ -62,12 +62,14 @@
   <color name="splash_msgfont">#ffffff</color>
   <color name="splash_urlfont">#000000</color>
   <color name="splash_content">#ffffff</color>
+
   <color name="doorhanger_text">#FF222222</color>
-  <color name="doorhanger_link">#ACC4D5</color>
+  <color name="doorhanger_link">#FF2AA1FE</color>
+  <color name="doorhanger_divider_light">#FFD1D5DA</color>
+  <color name="doorhanger_divider_dark">#FFB3C2CE</color>
+  <color name="doorhanger_background_dark">#FFDDE4EA</color>
+
   <color name="validation_message_text">#ffffff</color>
-  <color name="identity_verified">#FF3298FF</color>
-  <color name="identity_identified">#FF89C450</color>
-  <color name="identity_mixed_content">#FF000000</color>
   <color name="url_bar_text_highlight">#FFFF9500</color>
   <color name="url_bar_text_highlight_pb">#FFD06BFF</color>
   <color name="suggestion_primary">#dddddd</color>

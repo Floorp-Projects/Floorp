@@ -113,7 +113,7 @@ function test_data_channel() {
 
 function test_http_channel() {
   test_channel(function() {
-    return makeChan("http://localhost:4444/");
+    return makeChan("http://localhost:" + httpserv.identity.primaryPort + "/");
   });
 }
 
@@ -138,7 +138,7 @@ function end() {
 function run_test() {
   // start server
   httpserv = new HttpServer();
-  httpserv.start(4444);
+  httpserv.start(-1);
 
   run_next_test();
 }

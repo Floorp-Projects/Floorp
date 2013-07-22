@@ -111,7 +111,9 @@ function runNextTest()
   let set = DownloadListener.set = tests[currentTest];
   currentTest++;
 
-  let channel = NetUtil.newChannel("http://localhost:4444" + set.serverURL);
+  let channel = NetUtil.newChannel("http://localhost:" +
+                                   httpserver.identity.primaryPort +
+                                   set.serverURL);
   let uriloader = Cc["@mozilla.org/uriloader;1"].getService(Ci.nsIURILoader);
   uriloader.openURI(channel, true, new WindowContext());
 }
@@ -148,7 +150,7 @@ function run_test() {
   Services.prefs.setBoolPref("browser.download.manager.showWhenStarting", false);
 
   httpserver = new HttpServer();
-  httpserver.start(4444);
+  httpserver.start(-1);
   do_test_pending();
 
   // setup files to be download, each with the same suggested filename

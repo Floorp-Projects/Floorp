@@ -181,6 +181,7 @@ ThebesLayerBufferOGL::RenderTo(const nsIntPoint& aOffset,
 
     program->SetLayerOpacity(mLayer->GetEffectiveOpacity());
     program->SetLayerTransform(mLayer->GetEffectiveTransform());
+    program->SetTextureTransform(gfx3DMatrix());
     program->SetRenderOffset(aOffset);
     program->LoadMask(mLayer->GetMaskLayer());
 

@@ -7,10 +7,13 @@
 // checks if a byte range request and non-byte range request retrieve the
 // correct data.
 
-const PREFIX = "http://localhost:4444";
+var srv;
+XPCOMUtils.defineLazyGetter(this, "PREFIX", function() {
+  return "http://localhost:" + srv.identity.primaryPort;
+});
 
-var tests =
-  [
+XPCOMUtils.defineLazyGetter(this, "tests", function() {
+  return [
    new Test(PREFIX + "/range.txt",
             init_byterange, start_byterange, stop_byterange),
    new Test(PREFIX + "/range.txt",
@@ -40,14 +43,15 @@ var tests =
    new Test(PREFIX + "/range.txt",
             null, start_normal, stop_normal)
    ];
+});
 
 function run_test()
 {
-  var srv = createServer();
+  srv = createServer();
   var dir = do_get_file("data/ranges/");
   srv.registerDirectory("/", dir);
 
-  srv.start(4444);
+  srv.start(-1);
 
   runHttpTests(tests, testComplete(srv));
 }

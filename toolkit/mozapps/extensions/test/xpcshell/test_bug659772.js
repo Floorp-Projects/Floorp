@@ -185,7 +185,7 @@ function run_test_1() {
         do_check_false(a4.isActive);
         do_check_false(isExtensionInAddonsList(profileDir, addon4.id));
 
-        // Check that install and uninstall haven't been called on the bootstrapped adddon
+        // Check that install and uninstall haven't been called on the bootstrapped addon
         do_check_false(Services.prefs.prefHasUserValue("bootstraptest.install_reason"));
         do_check_false(Services.prefs.prefHasUserValue("bootstraptest.uninstall_reason"));
 
@@ -193,11 +193,7 @@ function run_test_1() {
         a2.uninstall();
         a3.uninstall();
         a4.uninstall();
-        restartManager();
-
-        shutdownManager();
-
-        run_test_2();
+        do_execute_soon(run_test_2);
       });
     });
   });
@@ -205,6 +201,10 @@ function run_test_1() {
 
 // Tests whether a schema migration with app version change works
 function run_test_2() {
+  restartManager();
+
+  shutdownManager();
+
   writeInstallRDFForExtension(addon1, profileDir);
   writeInstallRDFForExtension(addon2, profileDir);
   writeInstallRDFForExtension(addon3, profileDir);
@@ -249,7 +249,9 @@ function run_test_2() {
     installAllFiles([
       do_get_addon("test_bug659772"),
       do_get_addon("test_bootstrap1_1")
-    ], function() {
+    ], function() { do_execute_soon(prepare_schema_migrate); });
+
+    function prepare_schema_migrate() {
       shutdownManager();
 
       // Make it look like the next time the app is started it has a new DB schema
@@ -331,7 +333,7 @@ function run_test_2() {
         do_check_true(a4.isActive);
         do_check_true(isExtensionInAddonsList(profileDir, addon4.id));
 
-        // Check that install and uninstall haven't been called on the bootstrapped adddon
+        // Check that install and uninstall haven't been called on the bootstrapped addon
         do_check_false(Services.prefs.prefHasUserValue("bootstraptest.install_reason"));
         do_check_false(Services.prefs.prefHasUserValue("bootstraptest.uninstall_reason"));
 
@@ -345,6 +347,6 @@ function run_test_2() {
 
         do_test_finished();
       });
-    });
+    };
   });
 }

@@ -22,6 +22,7 @@
 
 #ifdef XP_MACOSX
 #include "mozilla/gfx/MacIOSurface.h"
+#include "SharedSurfaceIO.h"
 #endif
 
 #ifdef XP_WIN
@@ -80,9 +81,7 @@ MakeIOSurfaceTexture(void* aCGIOSurfaceContext, mozilla::gl::GLContext* aGL)
   RefPtr<MacIOSurface> ioSurface = MacIOSurface::IOSurfaceContextGetSurface((CGContextRef)aCGIOSurfaceContext);
   void *nativeCtx = aGL->GetNativeData(GLContext::NativeGLContext);
 
-  ioSurface->CGLTexImageIOSurface2D(nativeCtx,
-                                    LOCAL_GL_RGBA, LOCAL_GL_BGRA,
-                                    LOCAL_GL_UNSIGNED_INT_8_8_8_8_REV, 0);
+  ioSurface->CGLTexImageIOSurface2D(nativeCtx);
 
   aGL->fBindTexture(LOCAL_GL_TEXTURE_RECTANGLE_ARB, 0);
 
@@ -218,6 +217,15 @@ CanvasLayerOGL::UpdateSurface()
           mTexture = textureSurf->Texture();
           break;
         }
+#ifdef XP_MACOSX
+        case SharedSurfaceType::IOSurface: {
+          SharedSurface_IOSurface *ioSurf = SharedSurface_IOSurface::Cast(surf);
+          mTexture = ioSurf->Texture();
+          mTextureTarget = ioSurf->TextureTarget();
+          mLayerProgram = ioSurf->HasAlpha() ? RGBARectLayerProgramType : RGBXRectLayerProgramType;
+          break;
+        }
+#endif
         default:
           MOZ_CRASH("Unacceptable SharedSurface type.");
       }
@@ -315,12 +323,14 @@ CanvasLayerOGL::RenderLayer(int aPreviousDestination,
   gl()->ApplyFilterToBoundTexture(mFilter);
 
   program->Activate();
-  if (mLayerProgram == RGBARectLayerProgramType) {
+  if (mLayerProgram == RGBARectLayerProgramType ||
+      mLayerProgram == RGBXRectLayerProgramType) {
     // This is used by IOSurface that use 0,0...w,h coordinate rather then 0,0..1,1.
-    program->SetTexCoordMultiplier(mDrawTarget->GetSize().width, mDrawTarget->GetSize().height);
+    program->SetTexCoordMultiplier(mBounds.width, mBounds.height);
   }
   program->SetLayerQuadRect(drawRect);
   program->SetLayerTransform(GetEffectiveTransform());
+  program->SetTextureTransform(gfx3DMatrix());
   program->SetLayerOpacity(GetEffectiveOpacity());
   program->SetRenderOffset(aOffset);
   program->SetTextureUnit(0);

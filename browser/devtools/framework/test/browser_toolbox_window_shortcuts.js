@@ -17,8 +17,7 @@ function test() {
   addTab("about:blank", function() {
     toolIDs = [];
     for (let [id, definition] of gDevTools._tools) {
-      // Skipping Profiler due to bug 838069. Re-enable when bug 845752 is fixed
-      if (definition.key && id != "jsprofiler") {
+      if (definition.key) {
         toolIDs.push(id);
       }
     }

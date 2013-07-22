@@ -14,7 +14,7 @@ function test() {
       ["http://example.com/webapprtChrome/webapprt/test/chrome/window-title.html",
        "http://example.com" + " - " + WebappRT.config.app.manifest.name,
        "window title should show origin of page at different origin"],
-      ["http://mochi.test:8888/webapprtChrome/webapprt/test/chrome/window-title.html",
+      ["http://test/webapprtChrome/webapprt/test/chrome/window-title.html",
        WebappRT.config.app.manifest.name,
        "after returning to app origin, window title should no longer show origin"],
     ];

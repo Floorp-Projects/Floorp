@@ -395,6 +395,7 @@ Parser<ParseHandler>::Parser(ExclusiveContext *cx, LifoAlloc *alloc,
     traceListHead(NULL),
     pc(NULL),
     sct(NULL),
+    ss(NULL),
     keepAtoms(cx->perThreadData),
     foldConstants(foldConstants),
     abortedSyntaxParse(false),
@@ -460,16 +461,19 @@ FunctionBox::FunctionBox(ExclusiveContext *cx, ObjectBox* traceListHead, JSFunct
     bindings(),
     bufStart(0),
     bufEnd(0),
-    asmStart(0),
     ndefaults(0),
     inWith(false),                  // initialized below
     inGenexpLambda(false),
-    useAsm(false),
+    hasDestructuringArgs(false),
+    useAsm(directives.asmJS()),
     insideUseAsm(outerpc && outerpc->useAsmOrInsideUseAsm()),
     usesArguments(false),
     usesApply(false),
     funCxFlags()
 {
+    // Functions created at parse time may be set singleton after parsing and
+    // baked into JIT code, so they must be allocated tenured. They are held by
+    // the JSScript so cannot be collected during a minor GC anyway.
     JS_ASSERT(fun->isTenured());
 
     if (!outerpc) {
@@ -517,7 +521,7 @@ FunctionBox::FunctionBox(ExclusiveContext *cx, ObjectBox* traceListHead, JSFunct
 
 template <typename ParseHandler>
 FunctionBox *
-Parser<ParseHandler>::newFunctionBox(JSFunction *fun, ParseContext<ParseHandler> *outerpc,
+Parser<ParseHandler>::newFunctionBox(Node fn, JSFunction *fun, ParseContext<ParseHandler> *outerpc,
                                      Directives inheritedDirectives)
 {
     JS_ASSERT(fun && !IsPoisonedPtr(fun));
@@ -538,6 +542,8 @@ Parser<ParseHandler>::newFunctionBox(JSFunction *fun, ParseContext<ParseHandler>
     }
 
     traceListHead = funbox;
+    if (fn)
+        handler.setFunctionBox(fn, funbox);
 
     return funbox;
 }
@@ -605,9 +611,9 @@ Parser<ParseHandler>::parse(JSObject *chain)
      */
     Directives directives(options().strictOption);
     GlobalSharedContext globalsc(context, chain, directives, options().extraWarningsOption);
-    ParseContext<ParseHandler> globalpc(this, /* parent = */ NULL, &globalsc,
-                                        /* newDirectives = */ NULL, /* staticLevel = */ 0,
-                                        /* bodyid = */ 0);
+    ParseContext<ParseHandler> globalpc(this, /* parent = */ NULL, ParseHandler::null(),
+                                        &globalsc, /* newDirectives = */ NULL,
+                                        /* staticLevel = */ 0, /* bodyid = */ 0);
     if (!globalpc.init())
         return null();
 
@@ -860,12 +866,12 @@ Parser<FullParseHandler>::standaloneFunctionBody(HandleFunction fun, const AutoN
     argsbody->makeEmpty();
     fn->pn_body = argsbody;
 
-    FunctionBox *funbox = newFunctionBox(fun, /* outerpc = */ NULL, inheritedDirectives);
+    FunctionBox *funbox = newFunctionBox(fn, fun, /* outerpc = */ NULL, inheritedDirectives);
     if (!funbox)
         return null();
     handler.setFunctionBox(fn, funbox);
 
-    ParseContext<FullParseHandler> funpc(this, pc, funbox, newDirectives,
+    ParseContext<FullParseHandler> funpc(this, pc, fn, funbox, newDirectives,
                                          /* staticLevel = */ 0, /* bodyid = */ 0);
     if (!funpc.init())
         return null();
@@ -1531,7 +1537,6 @@ Parser<ParseHandler>::functionArguments(FunctionSyntaxKind kind, Node *listp, No
     if (parenFreeArrow || !tokenStream.matchToken(TOK_RP)) {
         bool hasDefaults = false;
         Node duplicatedArg = null();
-        bool destructuringArg = false;
 #if JS_HAS_DESTRUCTURING
         Node list = null();
 #endif
@@ -1560,7 +1565,7 @@ Parser<ParseHandler>::functionArguments(FunctionSyntaxKind kind, Node *listp, No
                     return false;
                 }
 
-                destructuringArg = true;
+                funbox->hasDestructuringArgs = true;
 
                 /*
                  * A destructuring formal parameter turns into one or more
@@ -1622,7 +1627,7 @@ Parser<ParseHandler>::functionArguments(FunctionSyntaxKind kind, Node *listp, No
                     funbox->setStart(tokenStream);
 
                 RootedPropertyName name(context, tokenStream.currentToken().name());
-                bool disallowDuplicateArgs = destructuringArg || hasDefaults;
+                bool disallowDuplicateArgs = funbox->hasDestructuringArgs || hasDefaults;
                 if (!defineArg(funcpn, name, disallowDuplicateArgs, &duplicatedArg))
                     return false;
 
@@ -1797,10 +1802,9 @@ Parser<FullParseHandler>::checkFunctionDefinition(HandlePropertyName funName,
     // so we can skip over them after accounting for their free variables.
     if (LazyScript *lazyOuter = handler.lazyOuterFunction()) {
         JSFunction *fun = handler.nextLazyInnerFunction();
-        FunctionBox *funbox = newFunctionBox(fun, pc, Directives(/* strict = */ false));
+        FunctionBox *funbox = newFunctionBox(pn, fun, pc, Directives(/* strict = */ false));
         if (!funbox)
             return false;
-        handler.setFunctionBox(pn, funbox);
 
         if (!addFreeVariablesFromLazyFunction(fun, pc))
             return false;
@@ -1947,6 +1951,7 @@ Parser<ParseHandler>::functionDef(HandlePropertyName funName, const TokenStream:
 
         // Assignment must be monotonic to prevent reparsing iloops
         JS_ASSERT_IF(directives.strict(), newDirectives.strict());
+        JS_ASSERT_IF(directives.asmJS(), newDirectives.asmJS());
         directives = newDirectives;
 
         tokenStream.seek(start);
@@ -2002,7 +2007,7 @@ Parser<FullParseHandler>::finishFunctionDefinition(ParseNode *pn, FunctionBox *f
     }
 #endif
 
-    pn->pn_funbox = funbox;
+    JS_ASSERT(pn->pn_funbox == funbox);
     pn->pn_body->append(body);
     pn->pn_body->pn_pos = body->pn_pos;
 
@@ -2061,7 +2066,7 @@ Parser<FullParseHandler>::functionArgsAndBody(ParseNode *pn, HandleFunction fun,
     ParseContext<FullParseHandler> *outerpc = pc;
 
     // Create box for fun->object early to protect against last-ditch GC.
-    FunctionBox *funbox = newFunctionBox(fun, pc, inheritedDirectives);
+    FunctionBox *funbox = newFunctionBox(pn, fun, pc, inheritedDirectives);
     if (!funbox)
         return false;
 
@@ -2077,8 +2082,9 @@ Parser<FullParseHandler>::functionArgsAndBody(ParseNode *pn, HandleFunction fun,
             tokenStream.tell(&position);
             parser->tokenStream.seek(position, tokenStream);
 
-            ParseContext<SyntaxParseHandler> funpc(parser, outerpc, funbox, newDirectives,
-                                                   outerpc->staticLevel + 1, outerpc->blockidGen);
+            ParseContext<SyntaxParseHandler> funpc(parser, outerpc, SyntaxParseHandler::null(), funbox,
+                                                   newDirectives, outerpc->staticLevel + 1,
+                                                   outerpc->blockidGen);
             if (!funpc.init())
                 return false;
 
@@ -2100,8 +2106,6 @@ Parser<FullParseHandler>::functionArgsAndBody(ParseNode *pn, HandleFunction fun,
             tokenStream.seek(position, parser->tokenStream);
         }
 
-        pn->pn_funbox = funbox;
-
         if (!addFreeVariablesFromLazyFunction(fun, pc))
             return false;
 
@@ -2111,7 +2115,7 @@ Parser<FullParseHandler>::functionArgsAndBody(ParseNode *pn, HandleFunction fun,
     } while (false);
 
     // Continue doing a full parse for this inner function.
-    ParseContext<FullParseHandler> funpc(this, pc, funbox, newDirectives,
+    ParseContext<FullParseHandler> funpc(this, pc, pn, funbox, newDirectives,
                                          outerpc->staticLevel + 1, outerpc->blockidGen);
     if (!funpc.init())
         return false;
@@ -2144,12 +2148,12 @@ Parser<SyntaxParseHandler>::functionArgsAndBody(Node pn, HandleFunction fun,
     ParseContext<SyntaxParseHandler> *outerpc = pc;
 
     // Create box for fun->object early to protect against last-ditch GC.
-    FunctionBox *funbox = newFunctionBox(fun, pc, inheritedDirectives);
+    FunctionBox *funbox = newFunctionBox(pn, fun, pc, inheritedDirectives);
     if (!funbox)
         return false;
 
     // Initialize early for possible flags mutation via destructuringExpr.
-    ParseContext<SyntaxParseHandler> funpc(this, pc, funbox, newDirectives,
+    ParseContext<SyntaxParseHandler> funpc(this, pc, handler.null(), funbox, newDirectives,
                                            outerpc->staticLevel + 1, outerpc->blockidGen);
     if (!funpc.init())
         return false;
@@ -2177,13 +2181,12 @@ Parser<FullParseHandler>::standaloneLazyFunction(HandleFunction fun, unsigned st
         return null();
 
     Directives directives(/* strict = */ strict);
-    FunctionBox *funbox = newFunctionBox(fun, /* outerpc = */ NULL, directives);
+    FunctionBox *funbox = newFunctionBox(pn, fun, /* outerpc = */ NULL, directives);
     if (!funbox)
         return null();
-    handler.setFunctionBox(pn, funbox);
 
     Directives newDirectives = directives;
-    ParseContext<FullParseHandler> funpc(this, /* parent = */ NULL, funbox,
+    ParseContext<FullParseHandler> funpc(this, /* parent = */ NULL, pn, funbox,
                                          &newDirectives, staticLevel, /* bodyid = */ 0);
     if (!funpc.init())
         return null();
@@ -2219,6 +2222,8 @@ Parser<ParseHandler>::functionArgsAndBodyGeneric(Node pn, HandleFunction fun, Fu
     // Given a properly initialized parse context, try to parse an actual
     // function without concern for conversion to strict mode, use of lazy
     // parsing and such.
+
+    context->maybePause();
 
     Node prelude = null();
     bool hasRest;
@@ -2314,8 +2319,9 @@ Parser<FullParseHandler>::moduleDecl()
         return NULL;
     pn->pn_modulebox = modulebox;
 
-    ParseContext<FullParseHandler> modulepc(this, pc, modulebox, /* newDirectives = */ NULL,
-                                            pc->staticLevel + 1, pc->blockidGen);
+    ParseContext<FullParseHandler> modulepc(this, pc, /* function = */ NULL, modulebox,
+                                            /* newDirectives = */ NULL, pc->staticLevel + 1,
+                                            pc->blockidGen);
     if (!modulepc.init())
         return NULL;
     MUST_MATCH_TOKEN(TOK_LC, JSMSG_CURLY_BEFORE_MODULE);
@@ -2394,6 +2400,55 @@ IsEscapeFreeStringLiteral(const TokenPos &pos, JSAtom *str)
     return pos.begin + str->length() + 2 == pos.end;
 }
 
+template <>
+bool
+Parser<SyntaxParseHandler>::asmJS(Node list)
+{
+    // While asm.js could technically be validated and compiled during syntax
+    // parsing, we have no guarantee that some later JS wouldn't abort the
+    // syntax parse and cause us to re-parse (and re-compile) the asm.js module.
+    // For simplicity, unconditionally abort the syntax parse when "use asm" is
+    // encountered so that asm.js is always validated/compiled exactly once
+    // during a full parse.
+    JS_ALWAYS_FALSE(abortIfSyntaxParser());
+    return false;
+}
+
+template <>
+bool
+Parser<FullParseHandler>::asmJS(Node list)
+{
+    // If we are already inside "use asm" that means we are either actively
+    // compiling or we are reparsing after asm.js validation failure. In either
+    // case, nothing to do here.
+    if (pc->useAsmOrInsideUseAsm())
+        return true;
+
+    // If there is no ScriptSource, then we are doing a non-compiling parse and
+    // so we shouldn't (and can't, without a ScriptSource) compile.
+    if (ss == NULL)
+        return true;
+
+    pc->sc->asFunctionBox()->useAsm = true;
+
+#ifdef JS_ION
+    // Attempt to validate and compile this asm.js module. On success, the
+    // tokenStream has been advanced to the closing }. On failure, the
+    // tokenStream is in an indeterminate state and we must reparse the
+    // function from the beginning. Reparsing is triggered by marking that a
+    // new directive has been encountered and returning 'false'.
+    bool validated;
+    if (!CompileAsmJS(context->asJSContext(), *this, list, &validated))
+        return false;
+    if (!validated) {
+        pc->newDirectives->setAsmJS();
+        return false;
+    }
+#endif
+
+    return true;
+}
+
 /*
  * Recognize Directive Prologue members and directives. Assuming |pn| is a
  * candidate for membership in a directive prologue, recognize directives and
@@ -2415,7 +2470,7 @@ IsEscapeFreeStringLiteral(const TokenPos &pos, JSAtom *str)
  */
 template <typename ParseHandler>
 bool
-Parser<ParseHandler>::maybeParseDirective(Node pn, bool *cont)
+Parser<ParseHandler>::maybeParseDirective(Node list, Node pn, bool *cont)
 {
     TokenPos directivePos;
     JSAtom *directive = handler.isStringExprStatement(pn, &directivePos);
@@ -2458,15 +2513,9 @@ Parser<ParseHandler>::maybeParseDirective(Node pn, bool *cont)
                 }
             }
         } else if (directive == context->names().useAsm) {
-            if (pc->sc->isFunctionBox()) {
-                pc->sc->asFunctionBox()->useAsm = true;
-                pc->sc->asFunctionBox()->asmStart = handler.getPosition(pn).begin;
-                if (!abortIfSyntaxParser())
-                    return false;
-            } else {
-                if (!report(ParseWarning, false, pn, JSMSG_USE_ASM_DIRECTIVE_FAIL))
-                    return false;
-            }
+            if (pc->sc->isFunctionBox())
+                return asmJS(list);
+            return report(ParseWarning, false, pn, JSMSG_USE_ASM_DIRECTIVE_FAIL);
         }
     }
     return true;
@@ -2509,7 +2558,7 @@ Parser<ParseHandler>::statements()
         }
 
         if (canHaveDirectives) {
-            if (!maybeParseDirective(next, &canHaveDirectives))
+            if (!maybeParseDirective(pn, next, &canHaveDirectives))
                 return null();
         }
 
@@ -5988,12 +6037,13 @@ Parser<FullParseHandler>::generatorExpr(ParseNode *kid)
 
         /* Create box for fun->object early to protect against last-ditch GC. */
         Directives directives(/* strict = */ outerpc->sc->strict);
-        FunctionBox *genFunbox = newFunctionBox(fun, outerpc, directives);
+        FunctionBox *genFunbox = newFunctionBox(genfn, fun, outerpc, directives);
         if (!genFunbox)
             return null();
 
-        ParseContext<FullParseHandler> genpc(this, outerpc, genFunbox, /* newDirectives = */ NULL,
-                                             outerpc->staticLevel + 1, outerpc->blockidGen);
+        ParseContext<FullParseHandler> genpc(this, outerpc, genfn, genFunbox,
+                                             /* newDirectives = */ NULL, outerpc->staticLevel + 1,
+                                             outerpc->blockidGen);
         if (!genpc.init())
             return null();
 
@@ -6009,7 +6059,6 @@ Parser<FullParseHandler>::generatorExpr(ParseNode *kid)
 
         genFunbox->setIsGenerator();
         genFunbox->inGenexpLambda = true;
-        genfn->pn_funbox = genFunbox;
         genfn->pn_blockid = genpc.bodyid;
 
         ParseNode *body = comprehensionTail(pn, outerpc->blockid(), true, outerpc);

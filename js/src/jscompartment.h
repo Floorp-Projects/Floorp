@@ -143,6 +143,7 @@ struct JSCompartment
   public:
     void enter() { enterCompartmentDepth++; }
     void leave() { enterCompartmentDepth--; }
+    bool hasBeenEntered() { return !!enterCompartmentDepth; }
 
     JS::Zone *zone() { return zone_; }
     const JS::Zone *zone() const { return zone_; }
@@ -455,14 +456,15 @@ class AssertCompartmentUnchanged
 
 class AutoCompartment
 {
-    JSContext * const cx_;
+    ExclusiveContext * const cx_;
     JSCompartment * const origin_;
 
   public:
-    inline AutoCompartment(JSContext *cx, JSObject *target);
+    inline AutoCompartment(ExclusiveContext *cx, JSObject *target);
+    inline AutoCompartment(ExclusiveContext *cx, JSCompartment *target);
     inline ~AutoCompartment();
 
-    JSContext *context() const { return cx_; }
+    ExclusiveContext *context() const { return cx_; }
     JSCompartment *origin() const { return origin_; }
 
   private:

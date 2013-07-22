@@ -2,8 +2,8 @@
 
 "use strict";
 
-load('utility.js');
-load('annotations.js');
+loadRelativeToScript('utility.js');
+loadRelativeToScript('annotations.js');
 
 function processCSU(csu, body)
 {
@@ -94,6 +94,7 @@ addGCType('JSString');
 addGCType('js::Shape');
 addGCType('js::BaseShape');
 addGCType('JSScript');
+addGCType('js::LazyScript');
 addGCType('js::ion::IonCode');
 addGCPointer('JS::Value');
 addGCPointer('jsid');

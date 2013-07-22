@@ -180,8 +180,6 @@ class nsMainThreadPtrHandle
     return *this;
   }
 
-  operator nsMainThreadPtrHolder<T>*() { return mPtr.get(); }
-
   // These all call through to nsMainThreadPtrHolder, and thus implicitly
   // assert that we're on the main thread. Off-main-thread consumers must treat
   // these handles as opaque.
@@ -202,8 +200,6 @@ class nsMainThreadPtrHandle
 
   operator T*() { return get(); }
   T* operator->() { return get(); }
-
-  operator bool() { return get(); }
 
   // These are safe to call on other threads with appropriate external locking.
   bool operator==(const nsMainThreadPtrHandle<T>& aOther) const {

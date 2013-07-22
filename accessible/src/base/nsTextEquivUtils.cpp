@@ -45,7 +45,7 @@ nsTextEquivUtils::GetNameFromSubtree(Accessible* aAccessible,
       nsAutoString name;
       AppendFromAccessibleChildren(aAccessible, &name);
       name.CompressWhitespace();
-      if (!IsWhitespaceString(name))
+      if (!nsCoreUtils::IsWhitespaceString(name))
         aName = name;
     }
   }
@@ -351,36 +351,15 @@ nsTextEquivUtils::AppendString(nsAString *aString,
     return false;
 
   // Insert spaces to insure that words from controls aren't jammed together.
-  if (!aString->IsEmpty() && !IsWhitespace(aString->Last()))
+  if (!aString->IsEmpty() && !nsCoreUtils::IsWhitespace(aString->Last()))
     aString->Append(PRUnichar(' '));
 
   aString->Append(aTextEquivalent);
 
-  if (!IsWhitespace(aString->Last()))
+  if (!nsCoreUtils::IsWhitespace(aString->Last()))
     aString->Append(PRUnichar(' '));
 
   return true;
-}
-
-bool
-nsTextEquivUtils::IsWhitespaceString(const nsSubstring& aString)
-{
-  nsSubstring::const_char_iterator iterBegin, iterEnd;
-
-  aString.BeginReading(iterBegin);
-  aString.EndReading(iterEnd);
-
-  while (iterBegin != iterEnd && IsWhitespace(*iterBegin))
-    ++iterBegin;
-
-  return iterBegin == iterEnd;
-}
-
-bool
-nsTextEquivUtils::IsWhitespace(PRUnichar aChar)
-{
-  return aChar == ' ' || aChar == '\n' ||
-    aChar == '\r' || aChar == '\t' || aChar == 0xa0;
 }
 
 uint32_t 

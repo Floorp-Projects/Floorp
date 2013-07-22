@@ -657,7 +657,6 @@ png_push_read_chunk(png_structp png_ptr, png_infop info_ptr)
    }
 
 #endif
-
 #ifdef PNG_READ_APNG_SUPPORTED
    else if (chunk_name == png_acTL)
    {

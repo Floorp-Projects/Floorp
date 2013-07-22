@@ -20,6 +20,8 @@ AtomThingMapPtr<Map>::ensureMap(ExclusiveContext *cx)
 {
     if (map_)
         return true;
+
+    AutoLockForExclusiveAccess lock(cx);
     map_ = cx->parseMapPool().acquire<Map>();
     return !!map_;
 }
@@ -30,6 +32,8 @@ AtomThingMapPtr<Map>::releaseMap(ExclusiveContext *cx)
 {
     if (!map_)
         return;
+
+    AutoLockForExclusiveAccess lock(cx);
     cx->parseMapPool().release(map_);
     map_ = NULL;
 }
@@ -38,6 +42,7 @@ template <typename ParseHandler>
 inline bool
 AtomDecls<ParseHandler>::init()
 {
+    AutoLockForExclusiveAccess lock(cx);
     map = cx->parseMapPool().acquire<AtomDefnListMap>();
     return map;
 }
@@ -46,8 +51,10 @@ template <typename ParseHandler>
 inline
 AtomDecls<ParseHandler>::~AtomDecls()
 {
-    if (map)
+    if (map) {
+        AutoLockForExclusiveAccess lock(cx);
         cx->parseMapPool().release(map);
+    }
 }
 
 } /* namespace frontend */

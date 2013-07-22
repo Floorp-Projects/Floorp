@@ -37,7 +37,7 @@ skip-if(B2G) asserts-if(cocoaWidget,0-2) == size-change-1.html size-change-1-ref
 
 == text-no-frame-test.html text-no-frame-ref.html
 == text-no-frame-2-test.html text-not-in-doc-ref.html
-== text-not-in-doc-test.html text-not-in-doc-ref.html
+fuzzy-if(azureSkiaGL,10,400) == text-not-in-doc-test.html text-not-in-doc-ref.html
 
 == text-bidi-ltr-test.html text-bidi-ltr-ref.html
 != text-bidi-ltr-test.html text-bidi-ltr-notref.html # for bug 698185
@@ -62,10 +62,10 @@ random-if(!cocoaWidget||OSX==10.6||OSX==10.7) != text-emoji.html text-emoji-notr
 # azure quartz uses CGDrawLinearGradient instead of DrawShading
 # so we have less control over degenerate behaviour as tested by this
 # test
-fails-if(azureQuartz) == linear-gradient-1a.html linear-gradient-1-ref.html
+fuzzy-if(azureSkiaGL,256,601) fails-if(azureQuartz) == linear-gradient-1a.html linear-gradient-1-ref.html
 
 # this passes with cairo on 10.7 and 10.8 but not with azure for reasons unknown
-fails-if(OSX==10.6||(azureQuartz&&(OSX==10.7||OSX==10.8))) == linear-gradient-1b.html linear-gradient-1-ref.html
+fails-if(azureSkiaGL||OSX==10.6||(azureQuartz&&(OSX==10.7||OSX==10.8))) == linear-gradient-1b.html linear-gradient-1-ref.html
 
 == zero-dimensions.html zero-dimensions-ref.html
 

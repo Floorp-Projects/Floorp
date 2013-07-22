@@ -1,4 +1,5 @@
 . "$topsrcdir/b2g/config/mozconfigs/common"
+. "$topsrcdir/build/unix/mozconfig.linux32"
 
 ac_add_options --enable-update-channel=${MOZ_UPDATE_CHANNEL}
 ac_add_options --enable-update-packaging
@@ -7,9 +8,6 @@ ac_add_options --enable-signmar
 
 # Nightlies only since this has a cost in performance
 #ac_add_options --enable-js-diagnostics
-
-# Avoid dependency on libstdc++ 4.5
-ac_add_options --enable-stdcxx-compat
 
 # This will overwrite the default of stripping everything and keep the symbol table.
 # This is useful for profiling and debugging and only increases the package size

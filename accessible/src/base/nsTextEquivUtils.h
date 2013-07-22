@@ -138,18 +138,6 @@ private:
                              const nsAString& aTextEquivalent);
 
   /**
-   * Returns true if the given string is empty or contains whitespace symbols
-   * only. In contrast to nsWhitespaceTokenizer class it takes into account
-   * non-breaking space (0xa0).
-   */
-  static bool IsWhitespaceString(const nsSubstring& aString);
-
-  /**
-   * Returns true if the given character is whitespace symbol.
-   */
-  static bool IsWhitespace(PRUnichar aChar);
-
-  /**
    * Returns the rule (constant of ETextEquivRule) for a given role.
    */
   static uint32_t GetRoleRule(mozilla::a11y::roles::Role aRole);

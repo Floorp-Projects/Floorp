@@ -2,9 +2,6 @@ ac_add_options --with-l10n-base=../../l10n
 ac_add_options --enable-update-channel=${MOZ_UPDATE_CHANNEL}
 ac_add_options --enable-update-packaging
 
-# Avoid dependency on libstdc++ 4.5
-ac_add_options --enable-stdcxx-compat
-
 . $topsrcdir/build/unix/mozconfig.linux32
 
 export MOZILLA_OFFICIAL=1
