@@ -4420,6 +4420,11 @@ class CGCallGenerator(CGThing):
                 return False
             if needsConst(a):
                 arg = CGWrapper(arg, pre="Constify(", post=")")
+            # And convert NonNull<T> to T&
+            if (((a.type.isInterface() or a.type.isCallback()) and
+                 not a.type.nullable()) or
+                a.type.isDOMString()):
+                arg = CGWrapper(arg, pre="NonNullHelper(", post=")")
             args.append(arg)
 
         # Return values that go in outparams go here

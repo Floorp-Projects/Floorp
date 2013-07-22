@@ -141,14 +141,14 @@ public:
 
   // WebIDL
   already_AddRefed<nsIIDBOpenDBRequest>
-  Open(const NonNull<nsAString>& aName, const Optional<uint64_t>& aVersion,
+  Open(const nsAString& aName, const Optional<uint64_t>& aVersion,
        ErrorResult& aRv)
   {
     return Open(nullptr, aName, aVersion, false, aRv);
   }
 
   already_AddRefed<nsIIDBOpenDBRequest>
-  DeleteDatabase(const NonNull<nsAString>& aName, ErrorResult& aRv)
+  DeleteDatabase(const nsAString& aName, ErrorResult& aRv)
   {
     return Open(nullptr, aName, Optional<uint64_t>(), true, aRv);
   }
@@ -158,11 +158,11 @@ public:
       JS::Handle<JS::Value> aSecond, ErrorResult& aRv);
 
   already_AddRefed<nsIIDBOpenDBRequest>
-  OpenForPrincipal(nsIPrincipal* aPrincipal, const NonNull<nsAString>& aName,
+  OpenForPrincipal(nsIPrincipal* aPrincipal, const nsAString& aName,
                    const Optional<uint64_t>& aVersion, ErrorResult& aRv);
 
   already_AddRefed<nsIIDBOpenDBRequest>
-  DeleteForPrincipal(nsIPrincipal* aPrincipal, const NonNull<nsAString>& aName,
+  DeleteForPrincipal(nsIPrincipal* aPrincipal, const nsAString& aName,
                      ErrorResult& aRv);
 
 private:
