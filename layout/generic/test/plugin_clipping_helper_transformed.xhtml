@@ -32,8 +32,7 @@ function runTests() {
   checkClipRegionNoBounds("p1", []);
   checkClipRegionNoBounds("p2", []);
 
-  window.opener.SimpleTest.finish();
-  window.close();
+  window.opener.childDone();
 }
 
 ]]>
