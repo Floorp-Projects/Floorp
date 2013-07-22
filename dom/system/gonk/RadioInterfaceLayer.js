@@ -1327,20 +1327,19 @@ RadioInterface.prototype = {
 
   handleSignalStrengthChange: function handleSignalStrengthChange(message) {
     let voiceInfo = this.rilContext.voice;
-    // TODO CDMA, EVDO, LTE, etc. (see bug 726098)
-    if (voiceInfo.signalStrength != message.gsmDBM ||
-        voiceInfo.relSignalStrength != message.gsmRelative) {
-      voiceInfo.signalStrength = message.gsmDBM;
-      voiceInfo.relSignalStrength = message.gsmRelative;
+    if (voiceInfo.signalStrength != message.voice.signalStrength ||
+        voiceInfo.relSignalStrength != message.voice.relSignalStrength) {
+      voiceInfo.signalStrength = message.voice.signalStrength;
+      voiceInfo.relSignalStrength = message.voice.relSignalStrength;
       gMessageManager.sendMobileConnectionMessage("RIL:VoiceInfoChanged",
                                                   this.clientId, voiceInfo);
     }
 
     let dataInfo = this.rilContext.data;
-    if (dataInfo.signalStrength != message.gsmDBM ||
-        dataInfo.relSignalStrength != message.gsmRelative) {
-      dataInfo.signalStrength = message.gsmDBM;
-      dataInfo.relSignalStrength = message.gsmRelative;
+    if (dataInfo.signalStrength != message.data.signalStrength ||
+        dataInfo.relSignalStrength != message.data.relSignalStrength) {
+      dataInfo.signalStrength = message.data.signalStrength;
+      dataInfo.relSignalStrength = message.data.relSignalStrength;
       gMessageManager.sendMobileConnectionMessage("RIL:DataInfoChanged",
                                                   this.clientId, dataInfo);
     }
