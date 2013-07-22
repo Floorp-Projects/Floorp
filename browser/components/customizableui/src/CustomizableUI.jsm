@@ -265,18 +265,14 @@ let CustomizableUIInternal = {
   registerToolbar: function(aToolbar) {
     let document = aToolbar.ownerDocument;
     let area = aToolbar.id;
+    let areaProperties = gAreas.get(area);
 
-    if (!gAreas.has(area)) {
+    if (!areaProperties) {
       throw new Error("Unknown customization area: " + area);
     }
 
-    if (this.isBuildAreaRegistered(area, aToolbar)) {
-      return;
-    }
-
-    let areaProperties = gAreas.get(area);
-
-    if (!gPlacements.has(area) && areaProperties.has("legacy")) {
+    let placements = gPlacements.get(area);
+    if (!placements && areaProperties.has("legacy")) {
       let legacyState = aToolbar.getAttribute("currentset");
       if (legacyState) {
         legacyState = legacyState.split(",").filter(s => s);
@@ -284,6 +280,7 @@ let CustomizableUIInternal = {
 
       // Manually restore the state here, so the legacy state can be converted. 
       this.restoreStateForArea(area, legacyState);
+      placements = gPlacements.get(area);
     }
 
     if (areaProperties.has("overflowable")) {
@@ -291,8 +288,6 @@ let CustomizableUIInternal = {
     }
 
     this.registerBuildArea(area, aToolbar);
-
-    let placements = gPlacements.get(area);
     this.buildArea(area, placements, aToolbar);
     aToolbar.setAttribute("currentset", placements.join(","));
   },
@@ -314,7 +309,7 @@ let CustomizableUIInternal = {
     for (let id of aPlacements) {
       if (currentNode && currentNode.id == id) {
         this._addParentFlex(currentNode);
-        this.setLocationAttributes(currentNode, container, aArea);
+        this.setLocationAttributes(currentNode, aArea);
 
         // Normalize removable attribute. It defaults to false if the widget is
         // originally defined as a child of a build area.
@@ -371,7 +366,7 @@ let CustomizableUIInternal = {
               container.removeChild(node);
             }
           } else if (node.getAttribute("skipintoolbarset") != "true") {
-            this.setLocationAttributes(currentNode, container, aArea);
+            this.setLocationAttributes(currentNode, aArea);
             node.setAttribute("removable", false);
             LOG("Adding non-removable widget to placements of " + aArea + ": " +
                 node.id);
@@ -468,7 +463,8 @@ let CustomizableUIInternal = {
   },
 
   registerMenuPanel: function(aPanel) {
-    if (this.isBuildAreaRegistered(CustomizableUI.AREA_PANEL, aPanel)) {
+    if (gBuildAreas.has(CustomizableUI.AREA_PANEL) &&
+        gBuildAreas.get(CustomizableUI.AREA_PANEL).has(aPanel)) {
       return;
     }
 
@@ -617,13 +613,6 @@ let CustomizableUIInternal = {
     }
   },
 
-  isBuildAreaRegistered: function(aArea, aInstance) {
-    if (!gBuildAreas.has(aArea)) {
-      return false;
-    }
-    return gBuildAreas.get(aArea).has(aInstance);
-  },
-
   registerBuildArea: function(aArea, aNode) {
     // We ensure that the window is registered to have its customization data
     // cleaned up when unloading.
@@ -677,7 +666,7 @@ let CustomizableUIInternal = {
     }
   },
 
-  setLocationAttributes: function(aNode, aContainer, aArea) {
+  setLocationAttributes: function(aNode, aArea) {
     let props = gAreas.get(aArea);
     if (!props) {
       throw new Error("Expected area " + aArea + " to have a properties Map " +
@@ -694,7 +683,7 @@ let CustomizableUIInternal = {
   },
 
   insertWidgetBefore: function(aNode, aNextNode, aContainer, aArea) {
-    this.setLocationAttributes(aNode, aContainer, aArea);
+    this.setLocationAttributes(aNode, aArea);
     aContainer.insertBefore(aNode, aNextNode);
   },
 
@@ -1749,10 +1738,11 @@ let CustomizableUIInternal = {
 
   _addParentFlex: function(aElement) {
     // If necessary, add flex to accomodate new child.
-    if (aElement.hasAttribute("flex")) {
+    let elementFlex = aElement.getAttribute("flex");
+    if (elementFlex) {
       let parent = aElement.parentNode;
-      let parentFlex = parent.hasAttribute("flex") ? parseInt(parent.getAttribute("flex"), 10) : 0;
-      let elementFlex = parseInt(aElement.getAttribute("flex"), 10);
+      let parentFlex = +parent.getAttribute("flex") || 0;
+      elementFlex = +elementFlex || 0;
       parent.setAttribute("flex", parentFlex + elementFlex);
     }
   },
