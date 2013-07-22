@@ -17,5 +17,5 @@
 #
 # Modifying this file will now automatically clobber the buildbot machines \o/
 #
-Bug 886886 - replace fixed-ratio capture resampler in webrtc with speex resampler
-Requires a clobber due to modification of a .gypi file without a .gyp or configure.in change
+Bug 895173: Rename context menu id's to "home_" for home context menu.
+Android resource changes
