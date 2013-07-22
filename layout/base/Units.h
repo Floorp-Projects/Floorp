@@ -25,6 +25,7 @@ typedef gfx::SizeTyped<CSSPixel> CSSSize;
 typedef gfx::IntSizeTyped<CSSPixel> CSSIntSize;
 typedef gfx::RectTyped<CSSPixel> CSSRect;
 typedef gfx::IntRectTyped<CSSPixel> CSSIntRect;
+typedef gfx::MarginTyped<CSSPixel> CSSMargin;
 
 typedef gfx::PointTyped<LayoutDevicePixel> LayoutDevicePoint;
 typedef gfx::IntPointTyped<LayoutDevicePixel> LayoutDeviceIntPoint;
@@ -32,6 +33,7 @@ typedef gfx::SizeTyped<LayoutDevicePixel> LayoutDeviceSize;
 typedef gfx::IntSizeTyped<LayoutDevicePixel> LayoutDeviceIntSize;
 typedef gfx::RectTyped<LayoutDevicePixel> LayoutDeviceRect;
 typedef gfx::IntRectTyped<LayoutDevicePixel> LayoutDeviceIntRect;
+typedef gfx::MarginTyped<LayoutDevicePixel> LayoutDeviceMargin;
 
 typedef gfx::PointTyped<LayerPixel> LayerPoint;
 typedef gfx::IntPointTyped<LayerPixel> LayerIntPoint;
@@ -39,6 +41,7 @@ typedef gfx::SizeTyped<LayerPixel> LayerSize;
 typedef gfx::IntSizeTyped<LayerPixel> LayerIntSize;
 typedef gfx::RectTyped<LayerPixel> LayerRect;
 typedef gfx::IntRectTyped<LayerPixel> LayerIntRect;
+typedef gfx::MarginTyped<LayerPixel> LayerMargin;
 
 typedef gfx::PointTyped<ScreenPixel> ScreenPoint;
 typedef gfx::IntPointTyped<ScreenPixel> ScreenIntPoint;
@@ -46,6 +49,7 @@ typedef gfx::SizeTyped<ScreenPixel> ScreenSize;
 typedef gfx::IntSizeTyped<ScreenPixel> ScreenIntSize;
 typedef gfx::RectTyped<ScreenPixel> ScreenRect;
 typedef gfx::IntRectTyped<ScreenPixel> ScreenIntRect;
+typedef gfx::MarginTyped<ScreenPixel> ScreenMargin;
 
 typedef gfx::ScaleFactor<CSSPixel, LayoutDevicePixel> CSSToLayoutDeviceScale;
 typedef gfx::ScaleFactor<LayoutDevicePixel, CSSPixel> LayoutDeviceToCSSScale;
