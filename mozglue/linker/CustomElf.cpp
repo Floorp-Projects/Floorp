@@ -381,9 +381,10 @@ CustomElf::LoadSegment(const Phdr *pt_load) const
 
   /* Mmap at page boundary */
   Addr align = PageSize();
+  Addr align_offset;
   void *mapped, *where;
   do {
-    Addr align_offset = pt_load->p_vaddr - AlignedPtr(pt_load->p_vaddr, align);
+    align_offset = pt_load->p_vaddr - AlignedPtr(pt_load->p_vaddr, align);
     where = GetPtr(pt_load->p_vaddr - align_offset);
     DEBUG_LOG("%s: Loading segment @%p %c%c%c", GetPath(), where,
                                                 prot & PROT_READ ? 'r' : '-',
@@ -420,22 +421,28 @@ CustomElf::LoadSegment(const Phdr *pt_load) const
   const char *ondemand = getenv("MOZ_LINKER_ONDEMAND");
   if (!ElfLoader::Singleton.hasRegisteredHandler() ||
       (ondemand && !strncmp(ondemand, "0", 2 /* Including '\0' */))) {
-    for (Addr off = 0; off < pt_load->p_filesz; off += PageSize()) {
+    for (Addr off = 0; off < pt_load->p_filesz + align_offset;
+         off += PageSize()) {
       mappable->ensure(reinterpret_cast<char *>(mapped) + off);
     }
   }
   /* When p_memsz is greater than p_filesz, we need to have nulled out memory
    * after p_filesz and before p_memsz.
-   * Mappable::mmap already guarantees that after p_filesz and up to the end
-   * of the page p_filesz is in, memory is nulled out.
-   * Above the end of that page, and up to p_memsz, we already have nulled out
-   * memory because we mapped anonymous memory on the whole library virtual
+   * Above the end of the last page, and up to p_memsz, we already have nulled
+   * out memory because we mapped anonymous memory on the whole library virtual
    * address space. We just need to adjust this anonymous memory protection
    * flags. */
   if (pt_load->p_memsz > pt_load->p_filesz) {
     Addr file_end = pt_load->p_vaddr + pt_load->p_filesz;
     Addr mem_end = pt_load->p_vaddr + pt_load->p_memsz;
     Addr next_page = PageAlignedEndPtr(file_end);
+    if (next_page > file_end) {
+      /* The library is not registered at this point, so we can't rely on
+       * on-demand decompression to handle missing pages here. */
+      void *ptr = GetPtr(file_end);
+      mappable->ensure(ptr);
+      memset(ptr, 0, next_page - file_end);
+    }
     if (mem_end > next_page) {
       if (mprotect(GetPtr(next_page), mem_end - next_page, prot) < 0) {
         LOG("%s: Failed to mprotect", GetPath());
