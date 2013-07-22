@@ -40,11 +40,11 @@ public:
 
 protected:
 
-  virtual void InitNative(nsIWidget *aParent, const nsAString& aTitle,
-                          int16_t aMode) = 0;
+  virtual void InitNative(nsIWidget *aParent, const nsAString& aTitle) = 0;
 
   bool mAddToRecentDocs;
   nsCOMPtr<nsIFile> mDisplayDirectory;
+  int16_t mMode;
 };
 
 #endif // nsBaseFilePicker_h__
