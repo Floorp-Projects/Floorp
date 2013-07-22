@@ -238,7 +238,11 @@ sdp_result_e sdp_add_new_attr (void *sdp_ptr, u16 level, u8 cap_num,
 	fmtp_p->qcif = 0;
         fmtp_p->profile = SDP_INVALID_VALUE;
         fmtp_p->level = SDP_INVALID_VALUE;
-        fmtp_p->parameter_add = TRUE;
+        fmtp_p->parameter_add = FALSE;
+        fmtp_p->usedtx = SDP_FMTP_UNUSED;
+        fmtp_p->stereo = SDP_FMTP_UNUSED;
+        fmtp_p->useinbandfec = SDP_FMTP_UNUSED;
+        fmtp_p->cbr = SDP_FMTP_UNUSED;
 	for (i=0; i < SDP_NE_NUM_BMAP_WORDS; i++) {
             fmtp_p->bmap[i] = 0;
         }

@@ -656,6 +656,8 @@ typedef struct sdp_encryptspec {
 #define SDP_MAX_RCMD_NALU_SIZE_FLAG   0x4
 #define SDP_DEINT_BUF_CAP_FLAG   0x8
 
+#define SDP_FMTP_UNUSED          0xFFFF
+
 typedef struct sdp_fmtp {
     u16                       payload_num;
     u32                       maxval;  /* maxval optimizes bmap search */
