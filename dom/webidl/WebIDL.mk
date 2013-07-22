@@ -209,7 +209,6 @@ webidl_files = \
   PaintRequest.webidl \
   PaintRequestList.webidl \
   PannerNode.webidl \
-  ParentNode.webidl \
   Performance.webidl \
   PerformanceNavigation.webidl \
   PerformanceTiming.webidl \

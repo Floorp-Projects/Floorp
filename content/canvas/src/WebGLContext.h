@@ -522,8 +522,7 @@ public:
     template<class ElementType>
     void TexImage2D(WebGLenum target, WebGLint level,
                     WebGLenum internalformat, WebGLenum format, WebGLenum type,
-                    ElementType& elt, ErrorResult& rv)
-    {
+                    const ElementType& elt, ErrorResult& rv) {
         if (!IsContextStable())
             return;
         nsRefPtr<gfxImageSurface> isurf;
@@ -560,8 +559,7 @@ public:
     template<class ElementType>
     void TexSubImage2D(WebGLenum target, WebGLint level,
                        WebGLint xoffset, WebGLint yoffset, WebGLenum format,
-                       WebGLenum type, ElementType& elt, ErrorResult& rv)
-    {
+                       WebGLenum type, const ElementType& elt, ErrorResult& rv) {
         if (!IsContextStable())
             return;
         nsRefPtr<gfxImageSurface> isurf;
@@ -978,9 +976,8 @@ protected:
         return nsLayoutUtils::SurfaceFromElement(aElement, flags);
     }
     template<class ElementType>
-    nsLayoutUtils::SurfaceFromElementResult SurfaceFromElement(ElementType& aElement)
-    {
-      return SurfaceFromElement(&aElement);
+    nsLayoutUtils::SurfaceFromElementResult SurfaceFromElement(const dom::NonNull<ElementType>& aElement) {
+      return SurfaceFromElement(aElement.get());
     }
 
     nsresult SurfaceFromElementResultToImageSurface(nsLayoutUtils::SurfaceFromElementResult& res,
