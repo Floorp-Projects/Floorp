@@ -879,7 +879,7 @@ public:
    * layer represents are auto-positioned, and so fixed position margins should
    * not have an effect on the corresponding axis.
    */
-  void SetFixedPositionMargins(const gfx::Margin& aMargins)
+  void SetFixedPositionMargins(const LayerMargin& aMargins)
   {
     if (mMargins != aMargins) {
       MOZ_LAYERS_LOG_IF_SHADOWABLE(this, ("Layer::Mutated(%p) FixedPositionMargins", this));
@@ -906,7 +906,7 @@ public:
   float GetPostYScale() const { return mPostYScale; }
   bool GetIsFixedPosition() { return mIsFixedPosition; }
   LayerPoint GetFixedPositionAnchor() { return mAnchor; }
-  const gfx::Margin& GetFixedPositionMargins() { return mMargins; }
+  const LayerMargin& GetFixedPositionMargins() { return mMargins; }
   Layer* GetMaskLayer() const { return mMaskLayer; }
 
   // Note that all lengths in animation data are either in CSS pixels or app
@@ -1261,7 +1261,7 @@ protected:
   bool mUseTileSourceRect;
   bool mIsFixedPosition;
   LayerPoint mAnchor;
-  gfx::Margin mMargins;
+  LayerMargin mMargins;
   DebugOnly<uint32_t> mDebugColorIndex;
   // If this layer is used for OMTA, then this counter is used to ensure we
   // stay in sync with the animation manager

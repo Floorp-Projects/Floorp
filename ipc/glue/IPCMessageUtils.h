@@ -924,6 +924,28 @@ struct ParamTraits<mozilla::gfx::Margin>
   }
 };
 
+template<class T>
+struct ParamTraits< mozilla::gfx::MarginTyped<T> >
+{
+  typedef mozilla::gfx::MarginTyped<T> paramType;
+
+  static void Write(Message* msg, const paramType& param)
+  {
+    WriteParam(msg, param.top);
+    WriteParam(msg, param.right);
+    WriteParam(msg, param.bottom);
+    WriteParam(msg, param.left);
+  }
+
+  static bool Read(const Message* msg, void** iter, paramType* result)
+  {
+    return (ReadParam(msg, iter, &result->top) &&
+            ReadParam(msg, iter, &result->right) &&
+            ReadParam(msg, iter, &result->bottom) &&
+            ReadParam(msg, iter, &result->left));
+  }
+};
+
 template<>
 struct ParamTraits<nsRect>
 {

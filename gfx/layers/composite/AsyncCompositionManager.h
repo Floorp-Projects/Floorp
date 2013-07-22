@@ -131,7 +131,7 @@ private:
                         bool aLayersUpdated,
                         ScreenPoint& aScrollOffset,
                         CSSToScreenScale& aScale,
-                        gfx::Margin& aFixedLayerMargins,
+                        LayerMargin& aFixedLayerMargins,
                         ScreenPoint& aOffset);
   void SyncFrameMetrics(const ScreenPoint& aScrollOffset,
                         float aZoom,
@@ -140,7 +140,7 @@ private:
                         const CSSRect& aDisplayPort,
                         const CSSToLayerScale& aDisplayResolution,
                         bool aIsFirstPaint,
-                        gfx::Margin& aFixedLayerMargins,
+                        LayerMargin& aFixedLayerMargins,
                         ScreenPoint& aOffset);
 
   /**
@@ -156,7 +156,7 @@ private:
   void AlignFixedLayersForAnchorPoint(Layer* aLayer,
                                       Layer* aTransformedSubtreeRoot,
                                       const gfx3DMatrix& aPreviousTransformForRoot,
-                                      const gfx::Margin& aFixedLayerMargins);
+                                      const LayerMargin& aFixedLayerMargins);
 
   /**
    * DRAWING PHASE ONLY
