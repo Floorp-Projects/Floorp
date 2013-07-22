@@ -647,7 +647,7 @@ IDBFactory::Cmp(JSContext* aCx, JS::Handle<JS::Value> aFirst,
 
 already_AddRefed<nsIIDBOpenDBRequest>
 IDBFactory::OpenForPrincipal(nsIPrincipal* aPrincipal,
-                             const NonNull<nsAString>& aName,
+                             const nsAString& aName,
                              const Optional<uint64_t>& aVersion,
                              ErrorResult& aRv)
 {
@@ -661,7 +661,7 @@ IDBFactory::OpenForPrincipal(nsIPrincipal* aPrincipal,
 
 already_AddRefed<nsIIDBOpenDBRequest>
 IDBFactory::DeleteForPrincipal(nsIPrincipal* aPrincipal,
-                               const NonNull<nsAString>& aName,
+                               const nsAString& aName,
                                ErrorResult& aRv)
 {
   // Just to be on the extra-safe side
