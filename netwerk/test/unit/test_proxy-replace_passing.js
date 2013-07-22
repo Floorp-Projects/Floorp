@@ -31,17 +31,19 @@ function run_test()
 {
   httpServer = new HttpServer();
   httpServer.registerPathHandler("/content", contentHandler);
-  httpServer.start(4444);
+  httpServer.start(-1);
 
   var prefserv = Cc["@mozilla.org/preferences-service;1"].
                  getService(Ci.nsIPrefService);
   var prefs = prefserv.getBranch("network.proxy.");
   prefs.setIntPref("type", 2);
   prefs.setCharPref("autoconfig_url", "data:text/plain," +
-    "function FindProxyForURL(url, host) {return 'PROXY localhost:4444';}"
+    "function FindProxyForURL(url, host) {return 'PROXY localhost:" +
+    httpServer.identity.primaryPort + "';}"
   );
 
-  var chan = make_channel("http://localhost:4444/content");
+  var chan = make_channel("http://localhost:" +
+                          httpServer.identity.primaryPort + "/content");
   chan.asyncOpen(new ChannelListener(finish_test, null), null);
   do_test_pending();
 }
