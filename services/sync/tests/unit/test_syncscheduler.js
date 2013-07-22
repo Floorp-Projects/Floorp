@@ -52,9 +52,9 @@ function sync_httpd_setup() {
   });
 }
 
-function setUp(server) {
+function setUp() {
   setBasicCredentials("johndoe", "ilovejane", "abcdeabcdeabcdeabcdeabcdea");
-  Service.clusterURL = server.baseURI + "/";
+  Service.clusterURL = TEST_CLUSTER_URL;
 
   generateNewKeys(Service.collectionKeys);
   let serverKeys = Service.collectionKeys.asWBO("crypto", "keys");
@@ -196,7 +196,7 @@ add_test(function test_masterpassword_locked_retry_interval() {
   };
 
   let server = sync_httpd_setup();
-  setUp(server);
+  setUp();
 
   Service.sync();
 
@@ -239,7 +239,7 @@ add_test(function test_scheduleNextSync_nowOrPast() {
   });
 
   let server = sync_httpd_setup();
-  setUp(server);
+  setUp();
 
   // We're late for a sync...
   scheduler.scheduleNextSync(-1);
@@ -346,7 +346,7 @@ add_test(function test_scheduleNextSync_future_backoff() {
 
 add_test(function test_handleSyncError() {
   let server = sync_httpd_setup();
-  setUp(server);
+  setUp();
 
   // Force sync to fail.
   Svc.Prefs.set("firstSync", "notReady");
@@ -404,7 +404,7 @@ add_test(function test_handleSyncError() {
 
 add_test(function test_client_sync_finish_updateClientMode() {
   let server = sync_httpd_setup();
-  setUp(server);
+  setUp();
 
   // Confirm defaults.
   do_check_eq(scheduler.syncThreshold, SINGLE_USER_THRESHOLD);
@@ -445,7 +445,7 @@ add_test(function test_autoconnect_nextSync_past() {
   });
 
   let server = sync_httpd_setup();
-  setUp(server);
+  setUp();
 
   scheduler.delayedAutoConnect(0);
 });
@@ -477,7 +477,7 @@ add_test(function test_autoconnect_nextSync_future() {
 
 add_test(function test_autoconnect_mp_locked() {
   let server = sync_httpd_setup();
-  setUp(server);
+  setUp();
 
   // Pretend user did not unlock master password.
   let origLocked = Utils.mpLocked;
@@ -512,7 +512,7 @@ add_test(function test_autoconnect_mp_locked() {
 
 add_test(function test_no_autoconnect_during_wizard() {
   let server = sync_httpd_setup();
-  setUp(server);
+  setUp();
 
   // Simulate the Sync setup wizard.
   Svc.Prefs.set("firstSync", "notReady");
@@ -561,7 +561,7 @@ add_test(function test_autoconnectDelay_pref() {
   Svc.Prefs.set("autoconnectDelay", 1);
 
   let server = sync_httpd_setup();
-  setUp(server);
+  setUp();
 
   Svc.Obs.notify("weave:service:ready");
 
@@ -670,9 +670,9 @@ add_test(function test_no_sync_node() {
   // Test when Status.sync == NO_SYNC_NODE_FOUND
   // it is not overwritten on sync:finish
   let server = sync_httpd_setup();
-  setUp(server);
+  setUp();
 
-  Service.serverURL = server.baseURI + "/";
+  Service.serverURL = TEST_SERVER_URL;
 
   Service.sync();
   do_check_eq(Status.sync, NO_SYNC_NODE_FOUND);
@@ -692,7 +692,7 @@ add_test(function test_sync_failed_partial_500s() {
 
   do_check_eq(Status.sync, SYNC_SUCCEEDED);
 
-  do_check_true(setUp(server));
+  do_check_true(setUp());
 
   Service.sync();
 
@@ -722,7 +722,7 @@ add_test(function test_sync_failed_partial_400s() {
 
   do_check_eq(Status.sync, SYNC_SUCCEEDED);
 
-  do_check_true(setUp(server));
+  do_check_true(setUp());
 
   Service.sync();
 
@@ -740,7 +740,7 @@ add_test(function test_sync_failed_partial_400s() {
 
 add_test(function test_sync_X_Weave_Backoff() {
   let server = sync_httpd_setup();
-  setUp(server);
+  setUp();
 
   // Use an odd value on purpose so that it doesn't happen to coincide with one
   // of the sync intervals.
@@ -795,7 +795,7 @@ add_test(function test_sync_X_Weave_Backoff() {
 
 add_test(function test_sync_503_Retry_After() {
   let server = sync_httpd_setup();
-  setUp(server);
+  setUp();
 
   // Use an odd value on purpose so that it doesn't happen to coincide with one
   // of the sync intervals.
@@ -855,8 +855,8 @@ add_test(function test_sync_503_Retry_After() {
 add_test(function test_loginError_recoverable_reschedules() {
   _("Verify that a recoverable login error schedules a new sync.");
   setBasicCredentials("johndoe", "ilovejane", "abcdeabcdeabcdeabcdeabcdea");
-  Service.serverURL = "http://localhost:1234/";
-  Service.clusterURL = Service.serverURL;
+  Service.serverURL = TEST_SERVER_URL;
+  Service.clusterURL = TEST_CLUSTER_URL;
   Service.persistLogin();
   Status.resetSync(); // reset Status.login
 
@@ -897,15 +897,14 @@ add_test(function test_loginError_recoverable_reschedules() {
 add_test(function test_loginError_fatal_clearsTriggers() {
   _("Verify that a fatal login error clears sync triggers.");
   setBasicCredentials("johndoe", "ilovejane", "abcdeabcdeabcdeabcdeabcdea");
+  Service.serverURL = TEST_SERVER_URL;
+  Service.clusterURL = TEST_CLUSTER_URL;
+  Service.persistLogin();
+  Status.resetSync(); // reset Status.login
 
   let server = httpd_setup({
     "/1.1/johndoe/info/collections": httpd_handler(401, "Unauthorized")
   });
-
-  Service.serverURL = server.baseURI + "/";
-  Service.clusterURL = Service.serverURL;
-  Service.persistLogin();
-  Status.resetSync(); // reset Status.login
 
   Svc.Obs.add("weave:service:login:error", function onLoginError() {
     Svc.Obs.remove("weave:service:login:error", onLoginError);

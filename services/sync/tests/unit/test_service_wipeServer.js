@@ -28,11 +28,11 @@ FakeCollection.prototype = {
   }
 };
 
-function setUpTestFixtures(server) {
+function setUpTestFixtures() {
   let cryptoService = new FakeCryptoService();
 
-  Service.serverURL = server.baseURI + "/";
-  Service.clusterURL = server.baseURI + "/";
+  Service.serverURL = TEST_SERVER_URL;
+  Service.clusterURL = TEST_CLUSTER_URL;
 
   setBasicCredentials("johndoe", null, "aabcdeabcdeabcdeabcdeabcde");
 }
@@ -56,8 +56,8 @@ add_test(function test_wipeServer_list_success() {
   });
 
   try {
-    setUpTestFixtures(server);
-    new SyncTestingInfrastructure(server, "johndoe", "irrelevant", "irrelevant");
+    setUpTestFixtures();
+    new SyncTestingInfrastructure("johndoe", "irrelevant", "irrelevant");
 
     _("Confirm initial environment.");
     do_check_false(steam_coll.deleted);
@@ -90,8 +90,8 @@ add_test(function test_wipeServer_list_503() {
   });
 
   try {
-    setUpTestFixtures(server);
-    new SyncTestingInfrastructure(server, "johndoe", "irrelevant", "irrelevant");
+    setUpTestFixtures();
+    new SyncTestingInfrastructure("johndoe", "irrelevant", "irrelevant");
 
     _("Confirm initial environment.");
     do_check_false(steam_coll.deleted);
@@ -136,10 +136,10 @@ add_test(function test_wipeServer_all_success() {
   let server = httpd_setup({
     "/1.1/johndoe/storage": storageHandler
   });
-  setUpTestFixtures(server);
+  setUpTestFixtures();
 
   _("Try deletion.");
-  new SyncTestingInfrastructure(server, "johndoe", "irrelevant", "irrelevant");
+  new SyncTestingInfrastructure("johndoe", "irrelevant", "irrelevant");
   let returnedTimestamp = Service.wipeServer();
   do_check_true(deleted);
   do_check_eq(returnedTimestamp, serverTimestamp);
@@ -168,10 +168,10 @@ add_test(function test_wipeServer_all_404() {
   let server = httpd_setup({
     "/1.1/johndoe/storage": storageHandler
   });
-  setUpTestFixtures(server);
+  setUpTestFixtures();
 
   _("Try deletion.");
-  new SyncTestingInfrastructure(server, "johndoe", "irrelevant", "irrelevant");
+  new SyncTestingInfrastructure("johndoe", "irrelevant", "irrelevant");
   let returnedTimestamp = Service.wipeServer();
   do_check_true(deleted);
   do_check_eq(returnedTimestamp, serverTimestamp);
@@ -195,12 +195,12 @@ add_test(function test_wipeServer_all_503() {
   let server = httpd_setup({
     "/1.1/johndoe/storage": storageHandler
   });
-  setUpTestFixtures(server);
+  setUpTestFixtures();
 
   _("Try deletion.");
   let error;
   try {
-    new SyncTestingInfrastructure(server, "johndoe", "irrelevant", "irrelevant");
+    new SyncTestingInfrastructure("johndoe", "irrelevant", "irrelevant");
     Service.wipeServer();
     do_throw("Should have thrown!");
   } catch (ex) {
@@ -214,11 +214,7 @@ add_test(function test_wipeServer_all_503() {
 
 add_test(function test_wipeServer_all_connectionRefused() {
   _("Service.wipeServer() throws if it encounters a network problem.");
-  let server = httpd_setup({});
-  setUpTestFixtures(server);
-
-  Service.serverURL = "http://localhost:4352/";
-  Service.clusterURL = "http://localhost:4352/";
+  setUpTestFixtures();
 
   _("Try deletion.");
   try {
@@ -228,6 +224,6 @@ add_test(function test_wipeServer_all_connectionRefused() {
     do_check_eq(ex.result, Cr.NS_ERROR_CONNECTION_REFUSED);
   }
 
+  run_next_test();
   Svc.Prefs.resetBranch("");
-  server.stop(run_next_test);
 });
