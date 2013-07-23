@@ -158,7 +158,7 @@ class TestInstallManifest(TestWithTmpDir):
         m = self._get_test_manifest()
         c = FileCopier()
         m.populate_registry(c)
-        c.copy(dest)
+        result = c.copy(dest)
 
         self.assertTrue(os.path.exists(self.tmppath('dest/s_dest')))
         self.assertTrue(os.path.exists(self.tmppath('dest/c_dest')))
@@ -170,6 +170,14 @@ class TestInstallManifest(TestWithTmpDir):
 
         with open(self.tmppath('dest/c_dest'), 'rt') as fh:
             self.assertEqual(fh.read(), 'copy!')
+
+        self.assertEqual(result.updated_files, set(self.tmppath(p) for p in (
+            'dest/s_dest', 'dest/c_dest', 'dest/e_dest')))
+        self.assertEqual(result.existing_files, set())
+        self.assertEqual(result.removed_files, {to_delete})
+        self.assertEqual(result.removed_directories, set())
+
+
 
 
 if __name__ == '__main__':
