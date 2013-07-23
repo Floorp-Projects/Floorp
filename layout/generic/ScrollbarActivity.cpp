@@ -433,11 +433,8 @@ ScrollbarActivity::HoveredScrollbar(nsIContent* aScrollbar)
 nsRefreshDriver*
 ScrollbarActivity::GetRefreshDriver()
 {
-  nsIFrame* box = mScrollableFrame->GetScrollbarBox(false);
-  if (!box) {
-    box = mScrollableFrame->GetScrollbarBox(true);
-  }
-  return box ? box->PresContext()->RefreshDriver() : nullptr;
+  nsIFrame* scrollableFrame = do_QueryFrame(mScrollableFrame);
+  return scrollableFrame->PresContext()->RefreshDriver();
 }
 
 nsIContent*
