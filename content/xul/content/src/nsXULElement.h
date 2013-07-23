@@ -243,7 +243,7 @@ public:
     // &mScriptObject pointer can't go stale.
     JS::Handle<JSScript*> GetScriptObject()
     {
-        return JS::Handle<JSScript*>(mScriptObject);
+        return JS::Handle<JSScript*>::fromMarkedLocation(mScriptObject.address());
     }
 
     void TraceScriptObject(JSTracer* aTrc)
