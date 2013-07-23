@@ -7,7 +7,6 @@ package org.mozilla.gecko.home;
 
 import org.mozilla.gecko.Favicons;
 import org.mozilla.gecko.R;
-import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.db.BrowserContract.Bookmarks;
 import org.mozilla.gecko.db.BrowserContract.Thumbnails;
@@ -211,16 +210,6 @@ public class BookmarksPage extends HomeFragment {
         TopBookmarksContextMenuInfo info = (TopBookmarksContextMenuInfo) menuInfo;
 
         if (!TextUtils.isEmpty(info.url)) {
-            // Show Open Private Tab if we're in private mode, Open New Tab otherwise
-            boolean isPrivate = false;
-            Tab tab = Tabs.getInstance().getSelectedTab();
-            if (tab != null) {
-                isPrivate = tab.isPrivate();
-            }
-
-            menu.findItem(R.id.top_bookmarks_open_new_tab).setVisible(!isPrivate);
-            menu.findItem(R.id.top_bookmarks_open_private_tab).setVisible(isPrivate);
-
             if (info.isPinned) {
                 menu.findItem(R.id.top_bookmarks_pin).setVisible(false);
             } else {
