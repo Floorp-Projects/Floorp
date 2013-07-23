@@ -2380,7 +2380,12 @@ nsXULPrototypeScript::Serialize(nsIObjectOutputStream* aStream,
     if (NS_FAILED(rv)) return rv;
     rv = aStream->Write32(mLangVersion);
     if (NS_FAILED(rv)) return rv;
-    // And delegate the writing to the nsIScriptContext
+
+    // And delegate the writing to the nsIScriptContext.
+    //
+    // Calling fromMarkedLocation() is safe because we trace mScriptObject in
+    // TraceScriptObject() and because its value is never changed after it has
+    // been set.
     JS::Handle<JSScript*> script =
         JS::Handle<JSScript*>::fromMarkedLocation(mScriptObject.address());
     rv = context->Serialize(aStream, script);

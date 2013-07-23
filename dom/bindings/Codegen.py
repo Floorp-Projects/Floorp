@@ -1892,7 +1892,13 @@ class CGGetPerInterfaceObject(CGAbstractMethod):
     CreateInterfaceObjects(aCx, aGlobal, protoAndIfaceArray);
   }
 
-  /* The object might _still_ be null, but that's OK */
+  /* 
+   * The object might _still_ be null, but that's OK.
+   *
+   * Calling fromMarkedLocation() is safe because protoAndIfaceArray is
+   * traced by TraceProtoAndIfaceCache() and its contents are never
+   * changed after they have been set.
+   */
   return JS::Handle<JSObject*>::fromMarkedLocation(protoAndIfaceArray[%s].address());""" %
                 (self.id, self.id))
 
