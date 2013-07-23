@@ -371,6 +371,10 @@
                       label="&appMenuGettingStarted.label;"
                       oncommand="gBrowser.loadOneTab('https://www.mozilla.org/firefox/central/', {inBackground: false});"
                       onclick="checkForMiddleClick(this, event);"/>
+            <menuitem id="appmenu_keyboardShortcuts"
+                      label="&helpKeyboardShortcuts.label;"
+                      oncommand="openHelpLink('keyboard-shortcuts')"
+                      onclick="checkForMiddleClick(this, event);"/>
 #ifdef MOZ_SERVICES_HEALTHREPORT
             <menuitem id="appmenu_healthReport"
                       label="&healthReport.label;"
