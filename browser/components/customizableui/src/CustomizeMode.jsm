@@ -699,8 +699,13 @@ CustomizeMode.prototype = {
     // item as it appeared before it was hidden.
     let win = aEvent.target.ownerDocument.defaultView;
     win.setTimeout(function() {
-      item.hidden = true;
-      this._showPanelCustomizationPlaceholders();
+      // For automated tests, we sometimes start exiting customization mode
+      // before this fires, which leaves us with placeholders inserted after
+      // we've exited. So we need to check that we are indeed customizing.
+      if (this._customizing && !this._transitioning) {
+        item.hidden = true;
+        this._showPanelCustomizationPlaceholders();
+      }
     }.bind(this), 0);
   },
 
