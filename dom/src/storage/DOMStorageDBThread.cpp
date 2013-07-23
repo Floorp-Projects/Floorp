@@ -855,7 +855,7 @@ DOMStorageDBThread::DBOperation::Perform(DOMStorageDBThread* aThread)
     rv = stmt->ExecuteStep(&exists);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    int64_t usage;
+    int64_t usage = 0;
     if (exists) {
       rv = stmt->GetInt64(0, &usage);
       NS_ENSURE_SUCCESS(rv, rv);
