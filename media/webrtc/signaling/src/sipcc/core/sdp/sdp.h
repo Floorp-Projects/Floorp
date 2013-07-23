@@ -1134,7 +1134,6 @@ extern void sdp_debug(sdp_t *sdp_ptr, sdp_debug_e debug_type, tinybool debug_fla
 extern void sdp_set_string_debug(sdp_t *sdp_ptr, const char *debug_str);
 extern sdp_result_e sdp_parse(sdp_t *sdp_ptr, char **bufp, u16 len);
 extern sdp_result_e sdp_build(sdp_t *sdp_ptr, flex_string *fs);
-extern sdp_t *sdp_copy(sdp_t *sdp_ptr);
 extern sdp_result_e sdp_free_description(sdp_t *sdp_ptr);
 extern void sdp_parse_error(const char *peerconnection, const char *format, ...);
 

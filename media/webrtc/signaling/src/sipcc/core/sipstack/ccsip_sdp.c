@@ -57,9 +57,6 @@
 #include "phone_debug.h"
 
 
-
-static void *ccsip_sdp_config = NULL; /* SDP parser/builder configuration */
-
 /*
  * sip_sdp_init
  *
@@ -69,39 +66,38 @@ static void *ccsip_sdp_config = NULL; /* SDP parser/builder configuration */
  *
  * The function must be called once.
  *
- * Returns TRUE  - successful
- *         FALSE - failed
+ * Returns a pointer to the SDP configuration profile, or NULL on failure.
  */
-boolean
+static void *
 sip_sdp_init (void)
 {
-    ccsip_sdp_config = sdp_init_config();
-    if (!ccsip_sdp_config) {
-        CCSIP_ERR_MSG("sdp_init_config() failure");
-        return FALSE;
+    void *sdp_config;
+
+    sdp_config = sdp_init_config();
+
+    if (sdp_config) {
+        sdp_media_supported(sdp_config, SDP_MEDIA_AUDIO, TRUE);
+        sdp_media_supported(sdp_config, SDP_MEDIA_VIDEO, TRUE);
+        sdp_media_supported(sdp_config, SDP_MEDIA_APPLICATION, TRUE);
+        sdp_media_supported(sdp_config, SDP_MEDIA_DATA, TRUE);
+        sdp_media_supported(sdp_config, SDP_MEDIA_CONTROL, TRUE);
+        sdp_media_supported(sdp_config, SDP_MEDIA_NAS_RADIUS, TRUE);
+        sdp_media_supported(sdp_config, SDP_MEDIA_NAS_TACACS, TRUE);
+        sdp_media_supported(sdp_config, SDP_MEDIA_NAS_DIAMETER, TRUE);
+        sdp_media_supported(sdp_config, SDP_MEDIA_NAS_L2TP, TRUE);
+        sdp_media_supported(sdp_config, SDP_MEDIA_NAS_LOGIN, TRUE);
+        sdp_media_supported(sdp_config, SDP_MEDIA_NAS_NONE, TRUE);
+        sdp_media_supported(sdp_config, SDP_MEDIA_IMAGE, TRUE);
+        sdp_media_supported(sdp_config, SDP_MEDIA_TEXT, TRUE);
+        sdp_nettype_supported(sdp_config, SDP_NT_INTERNET, TRUE);
+        sdp_addrtype_supported(sdp_config, SDP_AT_IP4, TRUE);
+        sdp_addrtype_supported(sdp_config, SDP_AT_IP6, TRUE);
+        sdp_transport_supported(sdp_config, SDP_TRANSPORT_RTPAVP, TRUE);
+        sdp_transport_supported(sdp_config, SDP_TRANSPORT_UDPTL, TRUE);
+        sdp_require_session_name(sdp_config, FALSE);
     }
 
-    sdp_media_supported(ccsip_sdp_config, SDP_MEDIA_AUDIO, TRUE);
-    sdp_media_supported(ccsip_sdp_config, SDP_MEDIA_VIDEO, TRUE);
-    sdp_media_supported(ccsip_sdp_config, SDP_MEDIA_APPLICATION, TRUE);
-    sdp_media_supported(ccsip_sdp_config, SDP_MEDIA_DATA, TRUE);
-    sdp_media_supported(ccsip_sdp_config, SDP_MEDIA_CONTROL, TRUE);
-    sdp_media_supported(ccsip_sdp_config, SDP_MEDIA_NAS_RADIUS, TRUE);
-    sdp_media_supported(ccsip_sdp_config, SDP_MEDIA_NAS_TACACS, TRUE);
-    sdp_media_supported(ccsip_sdp_config, SDP_MEDIA_NAS_DIAMETER, TRUE);
-    sdp_media_supported(ccsip_sdp_config, SDP_MEDIA_NAS_L2TP, TRUE);
-    sdp_media_supported(ccsip_sdp_config, SDP_MEDIA_NAS_LOGIN, TRUE);
-    sdp_media_supported(ccsip_sdp_config, SDP_MEDIA_NAS_NONE, TRUE);
-    sdp_media_supported(ccsip_sdp_config, SDP_MEDIA_IMAGE, TRUE);
-    sdp_media_supported(ccsip_sdp_config, SDP_MEDIA_TEXT, TRUE);
-    sdp_nettype_supported(ccsip_sdp_config, SDP_NT_INTERNET, TRUE);
-    sdp_addrtype_supported(ccsip_sdp_config, SDP_AT_IP4, TRUE);
-    sdp_addrtype_supported(ccsip_sdp_config, SDP_AT_IP6, TRUE);
-    sdp_transport_supported(ccsip_sdp_config, SDP_TRANSPORT_RTPAVP, TRUE);
-    sdp_transport_supported(ccsip_sdp_config, SDP_TRANSPORT_UDPTL, TRUE);
-    sdp_require_session_name(ccsip_sdp_config, FALSE);
-
-    return (TRUE);
+    return sdp_config;
 }
 
 /*
@@ -114,8 +110,15 @@ sdp_t *
 sipsdp_create (const char *peerconnection)
 {
     sdp_t *sdp;
+    void *sdp_config;
 
-    sdp = sdp_init_description(peerconnection, ccsip_sdp_config);
+    sdp_config = sip_sdp_init();
+    if (!sdp_config) {
+        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"SDP config init failure", __FUNCTION__);
+        return (NULL);
+    }
+
+    sdp = sdp_init_description(peerconnection, sdp_config);
     if (!sdp) {
         CCSIP_DEBUG_ERROR(SIP_F_PREFIX"SDP allocation failure", __FUNCTION__);
         return (NULL);
