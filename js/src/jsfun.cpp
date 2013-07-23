@@ -235,9 +235,9 @@ ResolveInterpretedFunctionPrototype(JSContext *cx, HandleObject obj)
     return proto;
 }
 
-static JSBool
-fun_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
-            MutableHandleObject objp)
+JSBool
+js::fun_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
+                MutableHandleObject objp)
 {
     if (!JSID_IS_ATOM(id))
         return true;
@@ -498,7 +498,7 @@ Class JSFunction::class_ = {
     JS_PropertyStub,         /* getProperty */
     JS_StrictPropertyStub,   /* setProperty */
     fun_enumerate,
-    (JSResolveOp)fun_resolve,
+    (JSResolveOp)js::fun_resolve,
     JS_ConvertStub,
     NULL,                    /* finalize    */
     NULL,                    /* checkAccess */
@@ -1774,7 +1774,7 @@ JSObject::hasIdempotentProtoChain() const
             return false;
 
         JSResolveOp resolve = obj->getClass()->resolve;
-        if (resolve != JS_ResolveStub && resolve != (JSResolveOp) fun_resolve)
+        if (resolve != JS_ResolveStub && resolve != (JSResolveOp) js::fun_resolve)
             return false;
 
         if (obj->getOps()->lookupProperty || obj->getOps()->lookupGeneric || obj->getOps()->lookupElement)
