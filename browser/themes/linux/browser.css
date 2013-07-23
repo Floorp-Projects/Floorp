@@ -572,10 +572,10 @@ menuitem:not([type]):not(.menuitem-tooltip):not(.menuitem-iconic-tooltip) {
   transition: @forwardTransitionLength@ ease-out;
 }
 
-#home-button {
+#home-button[customizableui-areatype="toolbar"] {
   list-style-image: url("moz-icon://stock/gtk-home?size=toolbar");
 }
-#home-button[disabled="true"] {
+#home-button[disabled="true"][customizableui-areatype="toolbar"] {
   list-style-image: url("moz-icon://stock/gtk-home?size=toolbar&state=disabled");
 }
 
@@ -620,10 +620,10 @@ toolbar > .customization-target > toolbarpaletteitem > #history-panelmenu {
   -moz-image-region: rect(0px 72px 24px 48px);
 }
 
-#print-button {
+#print-button[customizableui-areatype="toolbar"] {
   list-style-image: url("moz-icon://stock/gtk-print?size=toolbar");
 }
-:not(toolbarpaletteitem) > #print-button[disabled="true"] {
+#print-button[disabled="true"][customizableui-areatype="toolbar"] {
   list-style-image: url("moz-icon://stock/gtk-print?size=toolbar&state=disabled");
 }
 
@@ -635,37 +635,61 @@ toolbar > .customization-target > toolbarpaletteitem > #history-panelmenu {
   -moz-image-region: rect(0px 120px 24px 96px);
 }
 
-#cut-button {
+#edit-controls[customizableui-areatype="toolbar"] > #cut-button {
   list-style-image: url("moz-icon://stock/gtk-cut?size=toolbar") !important;
 }
-:not(toolbarpaletteitem) > #edit-controls > #cut-button[disabled="true"] {
+#edit-controls[customizableui-areatype="toolbar"] > #cut-button[disabled="true"] {
   list-style-image: url("moz-icon://stock/gtk-cut?size=toolbar&state=disabled") !important;
 }
 
-#copy-button {
+#edit-controls[customizableui-areatype="toolbar"] > #copy-button {
   list-style-image: url("moz-icon://stock/gtk-copy?size=toolbar") !important;
 }
-:not(toolbarpaletteitem) > #edit-controls > #copy-button[disabled="true"] {
+#edit-controls[customizableui-areatype="toolbar"] > #copy-button[disabled="true"] {
   list-style-image: url("moz-icon://stock/gtk-copy?size=toolbar&state=disabled") !important;
 }
 
-#paste-button {
+#edit-controls[customizableui-areatype="toolbar"] > #paste-button {
   list-style-image: url("moz-icon://stock/gtk-paste?size=toolbar") !important;
 }
-:not(toolbarpaletteitem) > #edit-controls > #paste-button[disabled="true"] {
+#edit-controls[customizableui-areatype="toolbar"] > #paste-button[disabled="true"] {
   list-style-image: url("moz-icon://stock/gtk-paste?size=toolbar&state=disabled") !important;
 }
 
-#zoom-out-button {
+#zoom-controls[customizableui-areatype="toolbar"] > #zoom-out-button {
   list-style-image: url("moz-icon://stock/gtk-zoom-out?size=toolbar") !important;
 }
 
-#zoom-in-button {
+#zoom-controls[customizableui-areatype="toolbar"] > #zoom-in-button {
   list-style-image: url("moz-icon://stock/gtk-zoom-in?size=toolbar") !important;
 }
 
-#fullscreen-button {
+#fullscreen-button[customizableui-areatype="toolbar"] {
   list-style-image: url("moz-icon://stock/gtk-fullscreen?size=toolbar");
+}
+
+#open-file-button[customizableui-areatype="toolbar"] {
+  list-style-image: url("moz-icon://stock/gtk-open?size=toolbar");
+}
+
+#privatebrowsing-button[customizableui-areatype="toolbar"] {
+  list-style-image: url("chrome://browser/skin/Privacy-16.png");
+}
+
+#save-page-button[customizableui-areatype="toolbar"] {
+  list-style-image: url("moz-icon://stock/gtk-save-as?size=toolbar");
+}
+
+#preferences-button[customizableui-areatype="toolbar"] {
+  list-style-image: url("moz-icon://stock/gtk-preferences?size=toolbar");
+}
+
+#find-button[customizableui-areatype="toolbar"] {
+  list-style-image: url("moz-icon://stock/gtk-find?size=toolbar");
+}
+
+#add-ons-button[customizableui-areatype="toolbar"] {
+  list-style-image: url("chrome://mozapps/skin/extensions/extensionGeneric-16.png");
 }
 
 #sync-button {
@@ -680,7 +704,7 @@ toolbar > .customization-target > toolbarpaletteitem > #history-panelmenu {
   -moz-image-region: rect(0px 168px 24px 144px);
 }
 
-:not(toolbarpaletteitem) > #feed-button[disabled] > .toolbarbutton-icon {
+#feed-button[disabled] > .toolbarbutton-icon {
   opacity: .4;
 }
 
@@ -703,7 +727,7 @@ toolbar > .customization-target > toolbarpaletteitem > #history-panelmenu {
 #home-button.bookmark-item {
   list-style-image: url("moz-icon://stock/gtk-home?size=menu");
 }
-:not(toolbarpaletteitem) > #home-button.bookmark-item[disabled="true"] {
+#home-button.bookmark-item[disabled="true"] {
   list-style-image: url("moz-icon://stock/gtk-home?size=menu&state=disabled");
 }
 
@@ -1338,31 +1362,31 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 
 /* bookmarks menu-button */
 
-#bookmarks-menu-button {
+#bookmarks-menu-button[customizableui-areatype="toolbar"] {
   list-style-image: url("chrome://browser/skin/Toolbar.png");
   -moz-image-region: rect(0px 216px 24px 192px);
 }
 
-#bookmarks-menu-button[starred] {
+#bookmarks-menu-button[starred][customizableui-areatype="toolbar"] {
   -moz-image-region: rect(24px 216px 48px 192px);
 }
 
-toolbar[iconsize="small"] #bookmarks-menu-button,
+toolbar[iconsize="small"] #bookmarks-menu-button[customizableui-areatype="toolbar"],
 #bookmarks-menu-button.bookmark-item {
   list-style-image: url("chrome://browser/skin/Toolbar-small.png");
   -moz-image-region: rect(0px 144px 16px 128px);
 }
 
-toolbar[iconsize="small"] #bookmarks-menu-button[starred],
+toolbar[iconsize="small"] #bookmarks-menu-button[starred][customizableui-areatype="toolbar"],
 #bookmarks-menu-button.bookmark-item[starred] {
   -moz-image-region: rect(16px 144px 32px 128px);
 }
 
-:not(toolbarpaletteitem) > #bookmarks-menu-button[disabled] > .toolbarbutton-icon,
-:not(toolbarpaletteitem) > #bookmarks-menu-button[disabled] > .toolbarbutton-menu-dropmarker,
-:not(toolbarpaletteitem) > #bookmarks-menu-button[disabled] > .toolbarbutton-menubutton-dropmarker,
-:not(toolbarpaletteitem) > #bookmarks-menu-button[disabled] > .toolbarbutton-menubutton-button > .toolbarbutton-icon,
-:not(toolbarpaletteitem) > #bookmarks-menu-button > .toolbarbutton-menubutton-button[disabled] > .toolbarbutton-icon {
+#bookmarks-menu-button[disabled][customizableui-areatype="toolbar"] > .toolbarbutton-icon,
+#bookmarks-menu-button[disabled][customizableui-areatype="toolbar"] > .toolbarbutton-menu-dropmarker,
+#bookmarks-menu-button[disabled][customizableui-areatype="toolbar"] > .toolbarbutton-menubutton-dropmarker,
+#bookmarks-menu-button[disabled][customizableui-areatype="toolbar"] > .toolbarbutton-menubutton-button > .toolbarbutton-icon,
+#bookmarks-menu-button[customizableui-areatype="toolbar"] > .toolbarbutton-menubutton-button[disabled] > .toolbarbutton-icon {
   opacity: .4;
 }
 
