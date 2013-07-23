@@ -95,7 +95,7 @@ public class LastTabsPage extends HomeFragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.home_list_with_title, container, false);
+        return inflater.inflate(R.layout.home_last_tabs_page, container, false);
     }
 
     @Override
