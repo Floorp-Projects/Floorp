@@ -636,6 +636,7 @@ const int32_t nsCSSProps::kTransformStyleKTable[] = {
 const int32_t nsCSSProps::kBackgroundAttachmentKTable[] = {
   eCSSKeyword_fixed, NS_STYLE_BG_ATTACHMENT_FIXED,
   eCSSKeyword_scroll, NS_STYLE_BG_ATTACHMENT_SCROLL,
+  eCSSKeyword_local, NS_STYLE_BG_ATTACHMENT_LOCAL,
   eCSSKeyword_UNKNOWN,-1
 };
 
