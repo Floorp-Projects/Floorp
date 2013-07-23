@@ -277,7 +277,7 @@ private:
         nsTArray<nsHttpTransaction*> mPendingQ;    // pending transaction queue
         nsTArray<nsHttpConnection*>  mActiveConns; // active connections
         nsTArray<nsHttpConnection*>  mIdleConns;   // idle persistent connections
-        nsTArray<nsHalfOpenSocket*>  mHalfOpens;
+        nsTArray<nsHalfOpenSocket*>  mHalfOpens;   // half open connections
 
         // calculate the number of half open sockets that have not had at least 1
         // connection complete
