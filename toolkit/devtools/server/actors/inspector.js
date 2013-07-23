@@ -156,7 +156,7 @@ var NodeActor = protocol.ActorClass({
       actor: this.actorID,
       parent: parentNode ? parentNode.actorID : undefined,
       nodeType: this.rawNode.nodeType,
-      namespaceURI: this.namespaceURI,
+      namespaceURI: this.rawNode.namespaceURI,
       nodeName: this.rawNode.nodeName,
       numChildren: numChildren,
 
