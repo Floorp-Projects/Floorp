@@ -1,0 +1,142 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug </title>
+
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  <script type="application/javascript;version=1.8" src="inspector-helpers.js"></script>
+  <script type="application/javascript;version=1.8">
+Components.utils.import("resource://gre/modules/devtools/Loader.jsm");
+
+const promise = devtools.require("sdk/core/promise");
+const inspector = devtools.require("devtools/server/actors/inspector");
+
+window.onload = function() {
+  SimpleTest.waitForExplicitFinish();
+  runNextTest();
+}
+
+var gWalker = null;
+var gStyles = null;
+var gClient = null;
+
+addTest(function setup() {
+  let url = document.getElementById("inspectorContent").href;
+  attachURL(url, function(err, client, tab, doc) {
+    gInspectee = doc;
+    let {InspectorFront} = devtools.require("devtools/server/actors/inspector");
+    let inspector = InspectorFront(client, tab);
+    promiseDone(inspector.getWalker().then(walker => {
+      ok(walker, "getWalker() should return an actor.");
+      gClient = client;
+      gWalker = walker;
+      return inspector.getPageStyle();
+    }).then(styles => {
+      gStyles = styles;
+    }).then(runNextTest));
+  });
+});
+
+addTest(function testComputed() {
+  let localNode = gInspectee.querySelector("#computed-test-node");
+  let elementStyle = null;
+  promiseDone(gWalker.querySelector(gWalker.rootNode, "#computed-test-node").then(node => {
+    return gStyles.getComputed(node, {});
+  }).then(computed => {
+    // Test a smattering of properties that include some system-defined
+    // props, some props that were defined in this node's stylesheet,
+    // and some default props.
+    is(computed["white-space"].value, "normal", "Default value should appear");
+    is(computed["display"].value, "block", "System stylesheet item should appear");
+    is(computed["cursor"].value, "crosshair", "Included stylesheet rule should appear");
+    is(computed["color"].value, "rgb(255, 0, 0)", "Inherited style attribute should appear");
+    is(computed["font-size"].value, "15px", "Inherited inline rule should appear");
+
+    // We didn't request markMatched, so these shouldn't be set
+    ok(!computed["cursor"].matched, "Didn't ask for matched, shouldn't get it");
+    ok(!computed["color"].matched, "Didn't ask for matched, shouldn't get it");
+    ok(!computed["font-size"].matched, "Didn't ask for matched, shouldn't get it");
+  }).then(runNextTest));
+});
+
+addTest(function testComputedUserMatched() {
+  let localNode = gInspectee.querySelector("#computed-test-node");
+  let elementStyle = null;
+  promiseDone(gWalker.querySelector(gWalker.rootNode, "#computed-test-node").then(node => {
+    return gStyles.getComputed(node, { filter: "user", markMatched: true });
+  }).then(computed => {
+    ok(!computed["white-space"].matched, "Default style shouldn't match");
+    ok(!computed["display"].matched, "Only user styles should match");
+    ok(computed["cursor"].matched, "Asked for matched, should get it");
+    ok(computed["color"].matched, "Asked for matched, should get it");
+    ok(computed["font-size"].matched, "Asked for matched, should get it");
+  }).then(runNextTest));
+});
+
+addTest(function testComputedSystemMatched() {
+  let localNode = gInspectee.querySelector("#computed-test-node");
+  let elementStyle = null;
+  promiseDone(gWalker.querySelector(gWalker.rootNode, "#computed-test-node").then(node => {
+    return gStyles.getComputed(node, { filter: "ua", markMatched: true });
+  }).then(computed => {
+    ok(!computed["white-space"].matched, "Default style shouldn't match");
+    ok(computed["display"].matched, "System stylesheets should match");
+    ok(computed["cursor"].matched, "Asked for matched, should get it");
+    ok(computed["color"].matched, "Asked for matched, should get it");
+    ok(computed["font-size"].matched, "Asked for matched, should get it");
+  }).then(runNextTest));
+});
+
+addTest(function testComputedUserOnlyMatched() {
+  let localNode = gInspectee.querySelector("#computed-test-node");
+  let elementStyle = null;
+  promiseDone(gWalker.querySelector(gWalker.rootNode, "#computed-test-node").then(node => {
+    return gStyles.getComputed(node, { filter: "user", onlyMatched: true });
+  }).then(computed => {
+    ok(!("white-space" in computed), "Default style shouldn't exist");
+    ok(!("display" in computed), "System stylesheets shouldn't exist");
+    ok(("cursor" in computed), "User items should exist.");
+    ok(("color" in computed), "User items should exist.");
+    ok(("font-size" in computed), "User items should exist.");
+  }).then(runNextTest));
+});
+
+addTest(function testComputedSystemOnlyMatched() {
+  let localNode = gInspectee.querySelector("#computed-test-node");
+  let elementStyle = null;
+  promiseDone(gWalker.querySelector(gWalker.rootNode, "#computed-test-node").then(node => {
+    return gStyles.getComputed(node, { filter: "ua", onlyMatched: true });
+  }).then(computed => {
+    ok(!("white-space" in computed), "Default style shouldn't exist");
+    ok(("display" in computed), "System stylesheets should exist");
+    ok(("cursor" in computed), "User items should exist.");
+    ok(("color" in computed), "User items should exist.");
+    ok(("font-size" in computed), "User items should exist.");
+  }).then(runNextTest));
+});
+
+addTest(function cleanup() {
+  delete gStyles;
+  delete gWalker;
+  delete gClient;
+  runNextTest();
+});
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=">Mozilla Bug </a>
+<a id="inspectorContent" target="_blank" href="inspector-styles-data.html">Test Document</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>
