@@ -2177,13 +2177,52 @@ let RIL = {
   },
 
   /**
-   * Helper to parse and process a MMI string.
+   * Helper to parse MMI/USSD string. TS.22.030 Figure 3.5.3.2.
    */
   _parseMMI: function _parseMMI(mmiString) {
     if (!mmiString || !mmiString.length) {
       return null;
     }
 
+    let matches = this._matchMMIRegexp(mmiString);
+    if (matches) {
+      // After successfully executing the regular expresion over the MMI string,
+      // the following match groups should contain:
+      // 1 = full MMI string that might be used as a USSD request.
+      // 2 = MMI procedure.
+      // 3 = Service code.
+      // 5 = SIA.
+      // 7 = SIB.
+      // 9 = SIC.
+      // 11 = Password registration.
+      // 12 = Dialing number.
+      return {
+        fullMMI: matches[MMI_MATCH_GROUP_FULL_MMI],
+        procedure: matches[MMI_MATCH_GROUP_MMI_PROCEDURE],
+        serviceCode: matches[MMI_MATCH_GROUP_SERVICE_CODE],
+        sia: matches[MMI_MATCH_GROUP_SIA],
+        sib: matches[MMI_MATCH_GROUP_SIB],
+        sic: matches[MMI_MATCH_GROUP_SIC],
+        pwd: matches[MMI_MATCH_GROUP_PWD_CONFIRM],
+        dialNumber: matches[MMI_MATCH_GROUP_DIALING_NUMBER]
+      };
+    }
+
+    if (this._isPoundString(mmiString) ||
+        this._isMMIShortString(mmiString)) {
+      return {
+        fullMMI: mmiString
+      };
+    }
+
+    return null;
+  },
+
+  /**
+   * Helper to parse MMI string via regular expression. TS.22.030 Figure
+   * 3.5.3.2.
+   */
+  _matchMMIRegexp: function _matchMMIRegexp(mmiString) {
     // Regexp to parse and process the MMI code.
     if (this._mmiRegExp == null) {
       // The first group of the regexp takes the whole MMI string.
@@ -2226,41 +2265,41 @@ let RIL = {
 
       this._mmiRegExp = new RegExp(pattern);
     }
-    let matches = this._mmiRegExp.exec(mmiString);
 
-    // If the regex does not apply over the MMI string, it can still be an MMI
-    // code. If the MMI String is a #-string (entry of any characters defined
-    // in the TS.23.038 Default Alphabet followed by #SEND) it shall be treated
-    // as a USSD code.
-    if (matches == null) {
-      if (mmiString.charAt(mmiString.length - 1) == MMI_END_OF_USSD) {
-        return {
-          fullMMI: mmiString
-        };
-      }
-      return null;
+    // Regex only applys for those well-defined MMI strings (refer to TS.22.030
+    // Annex B), otherwise, null should be the expected return value.
+    return this._mmiRegExp.exec(mmiString);
+  },
+
+  /**
+   * Helper to parse # string. TS.22.030 Figure 3.5.3.2.
+   */
+  _isPoundString: function _isPoundString(mmiString) {
+    return (mmiString.charAt(mmiString.length - 1) === MMI_END_OF_USSD);
+  },
+
+  /**
+   * Helper to parse short string. TS.22.030 Figure 3.5.3.2.
+   */
+  _isMMIShortString: function _isMMIShortString(mmiString) {
+    if (mmiString.length > 2) {
+      return false;
     }
 
-    // After successfully executing the regular expresion over the MMI string,
-    // the following match groups should contain:
-    // 1 = full MMI string that might be used as a USSD request.
-    // 2 = MMI procedure.
-    // 3 = Service code.
-    // 5 = SIA.
-    // 7 = SIB.
-    // 9 = SIC.
-    // 11 = Password registration.
-    // 12 = Dialing number.
-    return {
-      fullMMI: matches[MMI_MATCH_GROUP_FULL_MMI],
-      procedure: matches[MMI_MATCH_GROUP_MMI_PROCEDURE],
-      serviceCode: matches[MMI_MATCH_GROUP_SERVICE_CODE],
-      sia: matches[MMI_MATCH_GROUP_SIA],
-      sib: matches[MMI_MATCH_GROUP_SIB],
-      sic: matches[MMI_MATCH_GROUP_SIC],
-      pwd: matches[MMI_MATCH_GROUP_PWD_CONFIRM],
-      dialNumber: matches[MMI_MATCH_GROUP_DIALING_NUMBER]
-    };
+    if (this._isEmergencyNumber(mmiString)) {
+      return false;
+    }
+
+    // In a call case.
+    if (Object.getOwnPropertyNames(this.currentCalls).length > 0) {
+      return true;
+    }
+
+    if ((mmiString.length != 2) || (mmiString.charAt(0) !== '1')) {
+      return true;
+    }
+
+    return false;
   },
 
   sendMMI: function sendMMI(options) {
@@ -2501,10 +2540,9 @@ let RIL = {
         return;
     }
 
-    // If the MMI code is not a known code and is a recognized USSD request or
-    // a #-string, it shall still be sent as a USSD request.
-    if (mmi.fullMMI &&
-        (mmiString.charAt(mmiString.length - 1) == MMI_END_OF_USSD)) {
+    // If the MMI code is not a known code and is a recognized USSD request,
+    // it shall still be sent as a USSD request.
+    if (mmi.fullMMI) {
       if (!_isRadioAvailable(MMI_KS_SC_USSD)) {
         return;
       }
