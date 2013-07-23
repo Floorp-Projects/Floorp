@@ -66,14 +66,16 @@ enum SrcNoteType {
 
     SRC_CATCH       = 16,       /* catch block has guard */
 
+    SRC_TRY         = 17,       /* JSOP_TRY, offset points to goto at the
+                                   end of the try block. */
+
     /* All notes below here are "gettable".  See SN_IS_GETTABLE below. */
-    SRC_LAST_GETTABLE = SRC_CATCH,
+    SRC_LAST_GETTABLE = SRC_TRY,
 
-    SRC_COLSPAN     = 17,       /* number of columns this opcode spans */
-    SRC_NEWLINE     = 18,       /* bytecode follows a source newline */
-    SRC_SETLINE     = 19,       /* a file-absolute source line number note */
+    SRC_COLSPAN     = 18,       /* number of columns this opcode spans */
+    SRC_NEWLINE     = 19,       /* bytecode follows a source newline */
+    SRC_SETLINE     = 20,       /* a file-absolute source line number note */
 
-    SRC_UNUSED20    = 20,
     SRC_UNUSED21    = 21,
     SRC_UNUSED22    = 22,
     SRC_UNUSED23    = 23,
