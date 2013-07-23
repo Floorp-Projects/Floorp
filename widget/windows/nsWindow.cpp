@@ -5496,7 +5496,8 @@ nsWindow::ClientMarginHitTestPoint(int32_t mx, int32_t my)
                                      kResizableBorderMinSize));
 
   bool allowContentOverride = false;
-  // Only allow content overrides on Windows Vista and later.
+  // We can skip content hit testing pre-Vista because there's no Aero Snap
+  // or similar, so there is no need for OS integration:
   if (WinUtils::GetWindowsVersion() >= WinUtils::VISTA_VERSION) {
     allowContentOverride = mSizeMode == nsSizeMode_Maximized ||
                            (mx >= winRect.left + nonClientSize.left &&
