@@ -19,11 +19,10 @@ add_test(function test_findCluster() {
   _("Test Service._findCluster()");
   let server;
   try {
-    Service.serverURL = TEST_SERVER_URL;
-    Service.identity.account = "johndoe";
-
     _("_findCluster() throws on network errors (e.g. connection refused).");
     do_check_throws(function() {
+      Service.serverURL = "http://dummy:9000/";
+      Service.identify.account = "johndoe";
       Service._clusterManager._findCluster();
     });
 
@@ -34,6 +33,9 @@ add_test(function test_findCluster() {
       "/user/1.0/juliadoe/node/weave": httpd_handler(400, "Bad Request", "Bad Request"),
       "/user/1.0/joedoe/node/weave": httpd_handler(500, "Server Error", "Server Error")
     });
+
+    Service.serverURL = server.baseURI;
+    Service.identity.account = "johndoe";
 
     _("_findCluster() returns the user's cluster node");
     let cluster = Service._clusterManager._findCluster();
@@ -76,7 +78,7 @@ add_test(function test_setCluster() {
     "/user/1.0/jimdoe/node/weave": httpd_handler(200, "OK", "null")
   });
   try {
-    Service.serverURL = TEST_SERVER_URL;
+    Service.serverURL = server.baseURI;
     Service.identity.account = "johndoe";
 
     _("Check initial state.");
