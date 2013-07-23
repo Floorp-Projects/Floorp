@@ -197,11 +197,7 @@ nsXULPrototypeCache::PutStyleSheet(nsCSSStyleSheet* aStyleSheet)
 JSScript*
 nsXULPrototypeCache::GetScript(nsIURI* aURI)
 {
-    JSScript* script;
-    if (!mScriptTable.Get(aURI, &script)) {
-        return nullptr;
-    }
-    return script;
+    return mScriptTable.Get(aURI);
 }
 
 nsresult
@@ -209,8 +205,7 @@ nsXULPrototypeCache::PutScript(nsIURI* aURI,
                                JS::Handle<JSScript*> aScriptObject)
 {
 #ifdef DEBUG
-    JSScript* existingScript;
-    if (mScriptTable.Get(aURI, &existingScript)) {
+    if (JSScript* existingScript = mScriptTable.Get(aURI)) {
         nsAutoCString scriptName;
         aURI->GetSpec(scriptName);
         nsAutoCString message("Loaded script ");
