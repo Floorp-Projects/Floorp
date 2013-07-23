@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "MediaStreamAudioDestinationNode.h"
+#include "nsIDocument.h"
 #include "mozilla/dom/AudioStreamTrack.h"
 #include "mozilla/dom/MediaStreamAudioDestinationNodeBinding.h"
 #include "AudioNodeEngine.h"
@@ -73,6 +74,11 @@ MediaStreamAudioDestinationNode::MediaStreamAudioDestinationNode(AudioContext* a
   MediaStreamDestinationEngine* engine = new MediaStreamDestinationEngine(this, tus);
   mStream = aContext->Graph()->CreateAudioNodeStream(engine, MediaStreamGraph::INTERNAL_STREAM);
   mPort = tus->AllocateInputPort(mStream, 0);
+
+  nsIDocument* doc = aContext->GetParentObject()->GetExtantDoc();
+  if (doc) {
+    mDOMStream->CombineWithPrincipal(doc->NodePrincipal());
+  }
 }
 
 void
