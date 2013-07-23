@@ -51,6 +51,8 @@ const NETD_COMMAND_UNSOLICITED  = 600;
 const NETD_COMMAND_INTERFACE_CHANGE     = 600;
 const NETD_COMMAND_BANDWIDTH_CONTROLLER = 601;
 
+const INTERFACE_DELIMIT = "\0";
+
 importScripts("systemlibs.js");
 
 function netdResponseType(code) {
@@ -342,7 +344,8 @@ function onNetdMessage(data) {
   }
 
   if (gCurrentCallback) {
-    gCurrentCallback(isError(code), {code: code, reason: gReason.join(" ")});
+    gCurrentCallback(isError(code),
+                     {code: code, reason: gReason.join(INTERFACE_DELIMIT)});
     gReason = [];
   }
 
@@ -442,7 +445,7 @@ function preTetherInterfaceList(params, callback) {
 }
 
 function postTetherInterfaceList(params, callback) {
-  params.interfaceList = params.resultReason.split(" ");
+  params.interfaceList = params.resultReason.split(INTERFACE_DELIMIT);
 
   // Send the dummy command to continue the function chain.
   let command = DUMMY_COMMAND;
