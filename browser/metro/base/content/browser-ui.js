@@ -1211,7 +1211,6 @@ var StartUI = {
 
 var PanelUI = {
   get _panels() { return document.getElementById("panel-items"); },
-  get _switcher() { return document.getElementById("panel-view-switcher"); },
 
   get isVisible() {
     return !Elements.panelUI.hidden;
@@ -1259,7 +1258,6 @@ var PanelUI = {
 
     if (oldPanel != panel) {
       this._panels.selectedPanel = panel;
-      this._switcher.value = panel.id;
 
       this._fire("ToolPanelHidden", oldPanel);
     }

@@ -29,7 +29,8 @@ using mozilla::ScreenRotation;
 using nsCSSProperty;
 using mozilla::dom::ScreenOrientation;
 using mozilla::layers::TextureInfo;
-using mozilla::gfx::Margin;
+using mozilla::LayerMargin;
+using mozilla::LayerPoint;
 using mozilla::layers::ImageLayer::ScaleMode;
 
 namespace mozilla {
@@ -186,8 +187,8 @@ struct CommonLayerAttributes {
   bool useClipRect;
   nsIntRect clipRect;
   bool isFixedPosition;
-  gfxPoint fixedPositionAnchor;
-  Margin fixedPositionMargin;
+  LayerPoint fixedPositionAnchor;
+  LayerMargin fixedPositionMargin;
   nullable PLayer maskLayer;
   // Animated colors will only honored for ColorLayers.
   Animation[] animations;

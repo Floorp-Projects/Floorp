@@ -197,7 +197,7 @@ public:
     float GetX(JNIEnv *env);
     float GetY(JNIEnv *env);
     float GetScale(JNIEnv *env);
-    void GetFixedLayerMargins(JNIEnv *env, gfx::Margin &aFixedLayerMargins);
+    void GetFixedLayerMargins(JNIEnv *env, LayerMargin &aFixedLayerMargins);
     float GetOffsetX(JNIEnv *env);
     float GetOffsetY(JNIEnv *env);
 
@@ -273,10 +273,10 @@ public:
     void SetPageRect(const CSSRect& aCssPageRect);
     void SyncViewportInfo(const LayerIntRect& aDisplayPort, const CSSToLayerScale& aDisplayResolution,
                           bool aLayersUpdated, ScreenPoint& aScrollOffset, CSSToScreenScale& aScale,
-                          gfx::Margin& aFixedLayerMargins, ScreenPoint& aOffset);
+                          LayerMargin& aFixedLayerMargins, ScreenPoint& aOffset);
     void SyncFrameMetrics(const ScreenPoint& aScrollOffset, float aZoom, const CSSRect& aCssPageRect,
                           bool aLayersUpdated, const CSSRect& aDisplayPort, const CSSToLayerScale& aDisplayResolution,
-                          bool aIsFirstPaint, gfx::Margin& aFixedLayerMargins, ScreenPoint& aOffset);
+                          bool aIsFirstPaint, LayerMargin& aFixedLayerMargins, ScreenPoint& aOffset);
     bool ProgressiveUpdateCallback(bool aHasPendingNewThebesContent, const LayerRect& aDisplayPort, float aDisplayResolution, bool aDrawingCritical, gfx::Rect& aViewport, float& aScaleX, float& aScaleY);
     bool CreateFrame(AutoLocalJNIFrame *jniFrame, AndroidLayerRendererFrame& aFrame);
     bool ActivateProgram(AutoLocalJNIFrame *jniFrame);

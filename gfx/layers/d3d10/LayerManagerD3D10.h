@@ -178,7 +178,7 @@ private:
   nsAutoPtr<Nv3DVUtils> mNv3DVUtils; 
 
   /*
-   * Context target, NULL when drawing directly to our swap chain.
+   * Context target, nullptr when drawing directly to our swap chain.
    */
   nsRefPtr<gfxContext> mTarget;
 

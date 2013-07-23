@@ -18,7 +18,7 @@ static int colorId = 0;
 static gfx3DMatrix GetRootTransform(Layer *aLayer) {
   gfx3DMatrix layerTrans = aLayer->GetTransform();
   layerTrans.ProjectTo2D();
-  if (aLayer->GetParent() != NULL) {
+  if (aLayer->GetParent() != nullptr) {
     return GetRootTransform(aLayer->GetParent()) * layerTrans;
   }
   return layerTrans;
