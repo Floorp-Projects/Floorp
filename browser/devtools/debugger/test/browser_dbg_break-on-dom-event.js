@@ -67,8 +67,21 @@ function testBreakOnAll()
       });
 
       gThreadClient.resume(function() {
+        // Make sure that the focus is not on the input box so that a focus event
+        // will be triggered.
+        window.focus();
+        gBrowser.selectedBrowser.focus();
+        gButton.focus();
+
+        // Focus the element and wait for focus event.
+        gInput.addEventListener("focus", function onfocus() {
+          gInput.removeEventListener("focus", onfocus, false);
+          executeSoon(function() {
+            EventUtils.synthesizeKey("e", { shiftKey: 1 }, content);
+          });
+        }, false);
+
         gInput.focus();
-        EventUtils.synthesizeKey("e", { shiftKey: 1 }, content);
       });
     });
   });
@@ -94,8 +107,21 @@ function testBreakOnDisabled()
       testBreakOnNone();
     }, false);
 
+    // Make sure that the focus is not on the input box so that a focus event
+    // will be triggered.
+    window.focus();
+    gBrowser.selectedBrowser.focus();
+    gButton.focus();
+
+    // Focus the element and wait for focus event.
+    gInput.addEventListener("focus", function onfocus() {
+      gInput.removeEventListener("focus", onfocus, false);
+      executeSoon(function() {
+        EventUtils.synthesizeKey("e", { shiftKey: 1 }, content);
+      });
+    }, false);
+
     gInput.focus();
-    EventUtils.synthesizeKey("e", { shiftKey: 1 }, content);
   });
 }
 
@@ -117,8 +143,21 @@ function testBreakOnNone()
       testBreakOnClick();
     }, false);
 
+    // Make sure that the focus is not on the input box so that a focus event
+    // will be triggered.
+    window.focus();
+    gBrowser.selectedBrowser.focus();
+    gButton.focus();
+
+    // Focus the element and wait for focus event.
+    gInput.addEventListener("focus", function onfocus() {
+      gInput.removeEventListener("focus", onfocus, false);
+      executeSoon(function() {
+        EventUtils.synthesizeKey("g", { shiftKey: 1 }, content);
+      });
+    }, false);
+
     gInput.focus();
-    EventUtils.synthesizeKey("g", { shiftKey: 1 }, content);
   });
 }
 
