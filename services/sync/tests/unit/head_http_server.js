@@ -535,6 +535,7 @@ function SyncServer(callback) {
   handler._handleDefault = this.handleDefault.bind(this, handler);
 }
 SyncServer.prototype = {
+  port:   8080,
   server: null,    // HttpServer.
   users:  null,    // Map of username => {collections, password}.
 
@@ -543,7 +544,7 @@ SyncServer.prototype = {
    *
    * @param port
    *        The numeric port on which to start. A falsy value implies the
-   *        default, a randomly chosen port.
+   *        default (8080).
    * @param cb
    *        A callback function (of no arguments) which is invoked after
    *        startup.
@@ -553,25 +554,23 @@ SyncServer.prototype = {
       this._log.warn("Warning: server already started on " + this.port);
       return;
     }
+    if (port) {
+      this.port = port;
+    }
     try {
-      this.server.start(port);
-      let i = this.server.identity;
-      this.port = i.primaryPort;
-      this.baseURI = i.primaryScheme + "://" + i.primaryHost + ":" +
-                     i.primaryPort + "/";
+      this.server.start(this.port);
       this.started = true;
       if (cb) {
         cb();
       }
     } catch (ex) {
       _("==========================================");
-      _("Got exception starting Sync HTTP server.");
+      _("Got exception starting Sync HTTP server on port " + this.port);
       _("Error: " + Utils.exceptionStr(ex));
-      _("Is there a process already listening on port " + port + "?");
+      _("Is there a process already listening on port " + this.port + "?");
       _("==========================================");
       do_throw(ex);
     }
-
   },
 
   /**

@@ -176,9 +176,9 @@ function run_test() {
   // This apparently has to come first in order for our PAC URL to be hit.
   // Don't put any other HTTP requests earlier in the file!
   _("Testing handling of proxy auth redirection.");
-  PACSystemSettings.PACURI = server.baseURI + "/pac1";
+  PACSystemSettings.PACURI = "http://localhost:8080/pac1";
   installFakePAC();
-  let proxiedRes = new Resource(server.baseURI + "/open");
+  let proxiedRes = new Resource("http://localhost:8080/open");
   let content = proxiedRes.get();
   do_check_true(pacFetched);
   do_check_true(fetched);
@@ -187,10 +187,10 @@ function run_test() {
   uninstallFakePAC();
 
   _("Resource object members");
-  let res = new Resource(server.baseURI + "/open");
+  let res = new Resource("http://localhost:8080/open");
   do_check_true(res.uri instanceof Ci.nsIURI);
-  do_check_eq(res.uri.spec, server.baseURI + "/open");
-  do_check_eq(res.spec, server.baseURI + "/open");
+  do_check_eq(res.uri.spec, "http://localhost:8080/open");
+  do_check_eq(res.spec, "http://localhost:8080/open");
   do_check_eq(typeof res.headers, "object");
   do_check_eq(typeof res.authenticator, "object");
   // Initially res.data is null since we haven't performed a GET or
@@ -230,19 +230,19 @@ function run_test() {
   logger.debug = dbg;
 
   _("Test that the BasicAuthenticator doesn't screw up header case.");
-  let res1 = new Resource(server.baseURI + "/foo");
+  let res1 = new Resource("http://localhost:8080/foo");
   res1.setHeader("Authorization", "Basic foobar");
   do_check_eq(res1.headers["authorization"], "Basic foobar");
 
   _("GET a password protected resource (test that it'll fail w/o pass, no throw)");
-  let res2 = new Resource(server.baseURI + "/protected");
+  let res2 = new Resource("http://localhost:8080/protected");
   content = res2.get();
   do_check_eq(content, "This path exists and is protected - failed");
   do_check_eq(content.status, 401);
   do_check_false(content.success);
 
   _("GET a password protected resource");
-  let res3 = new Resource(server.baseURI + "/protected");
+  let res3 = new Resource("http://localhost:8080/protected");
   let identity = new IdentityManager();
   let auth = identity.getBasicResourceAuthenticator("guest", "guest");
   res3.authenticator = auth;
@@ -253,7 +253,7 @@ function run_test() {
   do_check_true(content.success);
 
   _("GET a non-existent resource (test that it'll fail, but not throw)");
-  let res4 = new Resource(server.baseURI + "/404");
+  let res4 = new Resource("http://localhost:8080/404");
   content = res4.get();
   do_check_eq(content, "File not found");
   do_check_eq(content.status, 404);
@@ -265,7 +265,7 @@ function run_test() {
   do_check_eq(content.headers["content-length"], 14);
 
   _("PUT to a resource (string)");
-  let res5 = new Resource(server.baseURI + "/upload");
+  let res5 = new Resource("http://localhost:8080/upload");
   content = res5.put(JSON.stringify(sample_data));
   do_check_eq(content, "Valid data upload via PUT");
   do_check_eq(content.status, 200);
@@ -318,13 +318,13 @@ function run_test() {
   do_check_eq(res5.data, content);
 
   _("DELETE a resource");
-  let res6 = new Resource(server.baseURI + "/delete");
+  let res6 = new Resource("http://localhost:8080/delete");
   content = res6.delete();
   do_check_eq(content, "This resource has been deleted")
   do_check_eq(content.status, 200);
 
   _("JSON conversion of response body");
-  let res7 = new Resource(server.baseURI + "/json");
+  let res7 = new Resource("http://localhost:8080/json");
   content = res7.get();
   do_check_eq(content, JSON.stringify(sample_data));
   do_check_eq(content.status, 200);
@@ -334,12 +334,12 @@ function run_test() {
   // Before having received any response containing the
   // X-Weave-Timestamp header, AsyncResource.serverTime is null.
   do_check_eq(AsyncResource.serverTime, null);
-  let res8 = new Resource(server.baseURI + "/timestamp");
+  let res8 = new Resource("http://localhost:8080/timestamp");
   content = res8.get();
   do_check_eq(AsyncResource.serverTime, TIMESTAMP);
 
   _("GET: no special request headers");
-  let res9 = new Resource(server.baseURI + "/headers");
+  let res9 = new Resource("http://localhost:8080/headers");
   content = res9.get();
   do_check_eq(content, '{}');
 
@@ -387,7 +387,7 @@ function run_test() {
   }
   Observers.add("weave:service:backoff:interval", onBackoff);
 
-  let res10 = new Resource(server.baseURI + "/backoff");
+  let res10 = new Resource("http://localhost:8080/backoff");
   content = res10.get();
   do_check_eq(backoffInterval, 600);
 
@@ -399,12 +399,12 @@ function run_test() {
   }
   Observers.add("weave:service:quota:remaining", onQuota);
 
-  res10 = new Resource(server.baseURI + "/quota-error");
+  res10 = new Resource("http://localhost:8080/quota-error");
   content = res10.get();
   do_check_eq(content.status, 400);
   do_check_eq(quotaValue, undefined); // HTTP 400, so no observer notification.
 
-  res10 = new Resource(server.baseURI + "/quota-notice");
+  res10 = new Resource("http://localhost:8080/quota-notice");
   content = res10.get();
   do_check_eq(content.status, 200);
   do_check_eq(quotaValue, 1048576);
@@ -423,7 +423,7 @@ function run_test() {
   do_check_eq(typeof error.stack, "string");
 
   _("Checking handling of errors in onProgress.");
-  let res18 = new Resource(server.baseURI + "/json");
+  let res18 = new Resource("http://localhost:8080/json");
   let onProgress = function(rec) {
     // Provoke an XPC exception without a Javascript wrapper.
     Services.io.newURI("::::::::", null, null);
@@ -444,10 +444,10 @@ function run_test() {
   do_check_eq(error, "Error: NS_ERROR_MALFORMED_URI");
   do_check_eq(warnings.pop(),
               "Got exception calling onProgress handler during fetch of " +
-              server.baseURI + "/json");
+              "http://localhost:8080/json");
 
   // And this is what happens if JS throws an exception.
-  res18 = new Resource(server.baseURI + "/json");
+  res18 = new Resource("http://localhost:8080/json");
   onProgress = function(rec) {
     throw "BOO!";
   };
@@ -467,11 +467,11 @@ function run_test() {
   do_check_eq(error, "Error: NS_ERROR_XPC_JS_THREW_STRING");
   do_check_eq(warnings.pop(),
               "Got exception calling onProgress handler during fetch of " +
-              server.baseURI + "/json");
+              "http://localhost:8080/json");
 
 
   _("Ensure channel timeouts are thrown appropriately.");
-  let res19 = new Resource(server.baseURI + "/json");
+  let res19 = new Resource("http://localhost:8080/json");
   res19.ABORT_TIMEOUT = 0;
   error = undefined;
   try {
