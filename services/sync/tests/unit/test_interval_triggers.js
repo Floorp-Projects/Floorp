@@ -35,10 +35,10 @@ function sync_httpd_setup() {
   });
 }
 
-function setUp() {
+function setUp(server) {
   setBasicCredentials("johndoe", "ilovejane", "abcdeabcdeabcdeabcdeabcdea");
-  Service.serverURL = TEST_SERVER_URL;
-  Service.clusterURL = TEST_CLUSTER_URL;
+  Service.serverURL = server.baseURI + "/";
+  Service.clusterURL = server.baseURI + "/";
 
   generateNewKeys(Service.collectionKeys);
   let serverKeys = Service.collectionKeys.asWBO("crypto", "keys");
@@ -65,7 +65,7 @@ add_test(function test_successful_sync_adjustSyncInterval() {
   Svc.Obs.add("weave:service:sync:finish", onSyncFinish);
 
   let server = sync_httpd_setup();
-  setUp();
+  setUp(server);
 
   // Confirm defaults
   do_check_false(scheduler.idle);
@@ -169,7 +169,7 @@ add_test(function test_unsuccessful_sync_adjustSyncInterval() {
   Svc.Prefs.set("firstSync", "notReady");
 
   let server = sync_httpd_setup();
-  setUp();
+  setUp(server);
 
   // Confirm defaults
   do_check_false(scheduler.idle);
@@ -261,7 +261,7 @@ add_test(function test_unsuccessful_sync_adjustSyncInterval() {
 
 add_test(function test_back_triggers_sync() {
   let server = sync_httpd_setup();
-  setUp();
+  setUp(server);
 
   // Single device: no sync triggered.
   scheduler.idle = true;
@@ -291,7 +291,7 @@ add_test(function test_back_triggers_sync() {
 
 add_test(function test_adjust_interval_on_sync_error() {
   let server = sync_httpd_setup();
-  setUp();
+  setUp(server);
 
   let syncFailures = 0;
   function onSyncError() {
@@ -327,7 +327,7 @@ add_test(function test_bug671378_scenario() {
   // setting nextSync to a non-zero value and preventing the timer from
   // being adjusted in the next call to scheduleNextSync().
   let server = sync_httpd_setup();
-  setUp();
+  setUp(server);
 
   let syncSuccesses = 0;
   function onSyncFinish() {
