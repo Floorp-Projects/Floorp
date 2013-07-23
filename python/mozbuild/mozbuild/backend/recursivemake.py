@@ -386,10 +386,9 @@ class RecursiveMakeBackend(BuildBackend):
 
         for k, manifest in self._purge_manifests.items():
             purger.add(k)
-            full = os.path.join(man_dir, k)
 
             fh = FileAvoidWrite(os.path.join(man_dir, k))
-            manifest.write_fileobj(fh)
+            manifest.write(fileobj=fh)
             self._update_from_avoid_write(fh.close())
 
         purger.purge(man_dir)

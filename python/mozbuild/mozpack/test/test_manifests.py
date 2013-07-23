@@ -27,11 +27,11 @@ class TestPurgeManifest(TestWithTmpDir):
         m.add('foo')
         m.add('bar')
         p = self.tmppath('m')
-        m.write_file(p)
+        m.write(path=p)
 
         self.assertTrue(os.path.exists(p))
 
-        m2 = PurgeManifest.from_path(p)
+        m2 = PurgeManifest(path=p)
         self.assertEqual(m.relpath, m2.relpath)
         self.assertEqual(m.entries, m2.entries)
         self.assertEqual(m, m2)
@@ -44,7 +44,7 @@ class TestPurgeManifest(TestWithTmpDir):
             fh.write('not relevant')
 
         with self.assertRaises(UnreadablePurgeManifest):
-            PurgeManifest.from_path(p)
+            PurgeManifest(path=p)
 
 
 if __name__ == '__main__':

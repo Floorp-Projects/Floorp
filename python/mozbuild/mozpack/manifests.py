@@ -4,8 +4,29 @@
 
 from __future__ import unicode_literals
 
+from contextlib import contextmanager
+
 from .copier import FilePurger
 import mozpack.path as mozpath
+
+
+# This probably belongs in a more generic module. Where?
+@contextmanager
+def _auto_fileobj(path, fileobj, mode='r'):
+    if path and fileobj:
+        raise AssertionError('Only 1 of path or fileobj may be defined.')
+
+    if not path and not fileobj:
+        raise AssertionError('Must specified 1 of path or fileobj.')
+
+    if path:
+        fileobj = open(path, mode)
+
+    try:
+        yield fileobj
+    finally:
+        if path:
+            fileobj.close()
 
 
 class UnreadablePurgeManifest(Exception):
@@ -26,9 +47,15 @@ class PurgeManifest(object):
     Don't be confused by the name of this class: entries are files that are
     *not* purged.
     """
-    def __init__(self, relpath=''):
+    def __init__(self, relpath='', path=None, fileobj=None):
         self.relpath = relpath
         self.entries = set()
+
+        if not path and not fileobj:
+            return
+
+        with _auto_fileobj(path, fileobj, mode='rt') as fh:
+            self._read_from_fh(fh)
 
     def __eq__(self, other):
         if not isinstance(other, PurgeManifest):
@@ -36,41 +63,28 @@ class PurgeManifest(object):
 
         return other.relpath == self.relpath and other.entries == self.entries
 
-    @staticmethod
-    def from_path(path):
-        with open(path, 'rt') as fh:
-            return PurgeManifest.from_fileobj(fh)
-
-    @staticmethod
-    def from_fileobj(fh):
-        m = PurgeManifest()
-
-        version = fh.readline().rstrip()
+    def _read_from_fh(self, fileobj):
+        version = fileobj.readline().rstrip()
         if version != '1':
             raise UnreadablePurgeManifest('Unknown manifest version: %s' %
                 version)
 
-        m.relpath = fh.readline().rstrip()
+        self.relpath = fileobj.readline().rstrip()
 
-        for entry in fh:
-            m.entries.add(entry.rstrip())
-
-        return m
+        for entry in fileobj:
+            self.entries.add(entry.rstrip())
 
     def add(self, path):
         return self.entries.add(path)
 
-    def write_file(self, path):
-        with open(path, 'wt') as fh:
-            return self.write_fileobj(fh)
+    def write(self, path=None, fileobj=None):
+        with _auto_fileobj(path, fileobj, 'wt') as fh:
+            fh.write('1\n')
+            fh.write('%s\n' % self.relpath)
 
-    def write_fileobj(self, fh):
-        fh.write('1\n')
-        fh.write('%s\n' % self.relpath)
-
-        # We write sorted so written output is consistent.
-        for entry in sorted(self.entries):
-            fh.write('%s\n' % entry)
+            # We write sorted so written output is consistent.
+            for entry in sorted(self.entries):
+                fh.write('%s\n' % entry)
 
     def get_purger(self, prepend_relpath=False):
         """Obtain a FilePurger instance from this manifest.
