@@ -50,7 +50,7 @@ CompositingRenderTargetD3D11::CompositingRenderTargetD3D11(ID3D11Texture2D *aTex
   RefPtr<ID3D11Device> device;
   mTextures[0]->GetDevice(byRef(device));
 
-  HRESULT hr = device->CreateRenderTargetView(mTextures[0], NULL, byRef(mRTView));
+  HRESULT hr = device->CreateRenderTargetView(mTextures[0], nullptr, byRef(mRTView));
 
   if (FAILED(hr)) {
     LOGD3D11("Failed to create RenderTargetView.");
@@ -249,7 +249,7 @@ DeprecatedTextureClientD3D11::ReleaseTexture()
 void
 DeprecatedTextureClientD3D11::ClearDT()
 {
-  // An Azure DrawTarget needs to be locked when it gets NULL'ed as this is
+  // An Azure DrawTarget needs to be locked when it gets nullptr'ed as this is
   // when it calls EndDraw. This EndDraw should not execute anything so it
   // shouldn't -really- need the lock but the debug layer chokes on this.
   //

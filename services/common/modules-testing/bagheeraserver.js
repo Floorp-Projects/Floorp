@@ -22,10 +22,12 @@ Cu.import("resource://testing-common/httpd.js");
  *
  * The Bagheera server is essentially a glorified document store.
  */
-this.BagheeraServer = function BagheeraServer() {
+this.BagheeraServer = function BagheeraServer(serverURI="http://localhost") {
   this._log = Log4Moz.repository.getLogger("metrics.BagheeraServer");
 
+  this.serverURI = serverURI;
   this.server = new HttpServer();
+  this.port = 8080;
   this.namespaces = {};
 
   this.allowAllNamespaces = false;
@@ -124,14 +126,15 @@ BagheeraServer.prototype = {
     this.namespaces[ns] = {};
   },
 
-  start: function start(port=-1) {
+  start: function start(port) {
+    if (!port) {
+      throw new Error("port argument must be specified.");
+    }
+
+    this.port = port;
+
     this.server.registerPrefixHandler("/", this._handleRequest.bind(this));
     this.server.start(port);
-    let i = this.server.identity;
-
-    this.serverURI = i.primaryScheme + "://" + i.primaryHost + ":" +
-                     i.primaryPort + "/";
-    this.port = i.primaryPort;
   },
 
   stop: function stop(cb) {

@@ -66,10 +66,10 @@ public:
 
     /**
      * Returns a gfxASurface for updating |aRegion| of the client's
-     * image if successul, NULL if not.  |aRegion|'s bounds must fit
+     * image if successul, nullptr if not.  |aRegion|'s bounds must fit
      * within Size(); its coordinate space (if any) is ignored.  If
      * the update begins successfully, the returned gfxASurface is
-     * owned by this.  Otherwise, NULL is returned.
+     * owned by this.  Otherwise, nullptr is returned.
      *
      * |aRegion| is an inout param: the returned region is what the
      * client must repaint.  Category (1) regions above can

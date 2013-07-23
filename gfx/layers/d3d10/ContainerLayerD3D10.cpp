@@ -16,7 +16,7 @@ namespace mozilla {
 namespace layers {
 
 ContainerLayerD3D10::ContainerLayerD3D10(LayerManagerD3D10 *aManager)
-  : ContainerLayer(aManager, NULL)
+  : ContainerLayer(aManager, nullptr)
   , LayerD3D10(aManager)
 {
   mImplData = static_cast<LayerD3D10*>(this);
@@ -215,7 +215,7 @@ ContainerLayerD3D10::RenderLayer()
   gfx3DMatrix oldViewMatrix;
 
   if (useIntermediate) {
-    device()->OMGetRenderTargets(1, getter_AddRefs(previousRTView), NULL);
+    device()->OMGetRenderTargets(1, getter_AddRefs(previousRTView), nullptr);
  
     D3D10_TEXTURE2D_DESC desc;
     memset(&desc, 0, sizeof(D3D10_TEXTURE2D_DESC));
@@ -227,7 +227,7 @@ ContainerLayerD3D10::RenderLayer()
     desc.SampleDesc.Count = 1;
     desc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
     HRESULT hr;
-    hr = device()->CreateTexture2D(&desc, NULL, getter_AddRefs(renderTexture));
+    hr = device()->CreateTexture2D(&desc, nullptr, getter_AddRefs(renderTexture));
 
     if (FAILED(hr)) {
       LayerManagerD3D10::ReportFailure(NS_LITERAL_CSTRING("Failed to create new texture for ContainerLayerD3D10!"), 
@@ -235,7 +235,7 @@ ContainerLayerD3D10::RenderLayer()
       return;
     }
 
-    hr = device()->CreateRenderTargetView(renderTexture, NULL, getter_AddRefs(rtView));
+    hr = device()->CreateRenderTargetView(renderTexture, nullptr, getter_AddRefs(rtView));
     NS_ASSERTION(SUCCEEDED(hr), "Failed to create render target view for ContainerLayerD3D10!");
 
     effect()->GetVariableByName("vRenderTargetOffset")->
@@ -277,7 +277,7 @@ ContainerLayerD3D10::RenderLayer()
     }
 
     ID3D10RenderTargetView *rtViewPtr = rtView;
-    device()->OMSetRenderTargets(1, &rtViewPtr, NULL);
+    device()->OMSetRenderTargets(1, &rtViewPtr, nullptr);
 
     renderTargetOffset[0] = (float)visibleRect.x;
     renderTargetOffset[1] = (float)visibleRect.y;
@@ -332,7 +332,7 @@ ContainerLayerD3D10::RenderLayer()
   if (useIntermediate) {
     mD3DManager->SetViewport(previousViewportSize);
     ID3D10RenderTargetView *rtView = previousRTView;
-    device()->OMSetRenderTargets(1, &rtView, NULL);
+    device()->OMSetRenderTargets(1, &rtView, nullptr);
     effect()->GetVariableByName("vRenderTargetOffset")->
       SetRawValue(previousRenderTargetOffset, 0, 8);
 
@@ -360,7 +360,7 @@ ContainerLayerD3D10::RenderLayer()
     technique->GetPassByIndex(0)->Apply(0);
 
     ID3D10ShaderResourceView *view;
-    device()->CreateShaderResourceView(renderTexture, NULL, &view);
+    device()->CreateShaderResourceView(renderTexture, nullptr, &view);
     device()->PSSetShaderResources(0, 1, &view);    
     device()->Draw(4, 0);
     view->Release();

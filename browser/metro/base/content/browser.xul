@@ -302,15 +302,6 @@
     <vbox id="panel-container" hidden="true" class="window-width window-height meta" observes="bcast_windowState">
       <hbox id="panel-header">
         <toolbarbutton id="panel-close-button" command="cmd_panel"/>
-
-        <menulist id="panel-view-switcher" oncommand="PanelUI.switchPane(this.value);">
-          <menupopup>
-            <menuitem label="&bookmarksHeader.label;" value="bookmarks-container" id="menuitem-bookmarks"/>
-            <menuitem label="&startHistoryHeader.label;" value="history-container" id="menuitem-history"/>
-            <menuitem label="&startRemoteTabsHeader.label;" value="remotetabs-container" id="menuitem-remotetabs"/>
-            <menuitem label="&consoleHeader.label;" value="console-container" id="menuitem-console"/>
-          </menupopup>
-        </menulist>
       </hbox>
 
       <deck id="panel-items" selectedIndex="0" flex="1" >

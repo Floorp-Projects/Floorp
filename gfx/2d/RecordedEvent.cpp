@@ -60,7 +60,7 @@ RecordedEvent::LoadEventFromStream(std::istream &aStream, EventType aType)
     LOAD_EVENT_TYPE(SCALEDFONTDESTRUCTION, RecordedScaledFontDestruction);
     LOAD_EVENT_TYPE(MASKSURFACE, RecordedMaskSurface);
   default:
-    return NULL;
+    return nullptr;
   }
 }
 
@@ -342,7 +342,7 @@ RecordedDrawTargetDestruction::OutputSimpleEventInfo(stringstream &aStringStream
 struct GenericPattern
 {
   GenericPattern(const PatternStorage &aStorage, Translator *aTranslator)
-    : mPattern(NULL), mTranslator(aTranslator)
+    : mPattern(nullptr), mTranslator(aTranslator)
   {
     mStorage = const_cast<PatternStorage*>(&aStorage);
   }

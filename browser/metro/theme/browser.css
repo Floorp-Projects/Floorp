@@ -826,20 +826,6 @@ setting[type="radio"] > vbox {
   opacity: .5;
 }
 
-#panel-view-switcher {
-  border: 0 none !important;
-  color: #000 !important;
-  background: transparent;
-  padding: 0;
-  font-size: @metro_font_xlarge@;
-  font-weight: 100;
-  margin: 0;
-}
-
-#panel-container[viewstate="snapped"] #panel-view-switcher {
-  font-size: @metro_font_large@;
-}
-
 #panel-items {
   padding-top: 20px;
   -moz-padding-start: 88px;

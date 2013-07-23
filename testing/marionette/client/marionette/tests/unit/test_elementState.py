@@ -44,10 +44,11 @@ class TestStateChrome(MarionetteTestCase):
         self.assertFalse(l.is_enabled())
         self.marionette.execute_script("arguments[0].disabled = false;", [l])
 
+    ''' Switched on in Bug 896043 to be turned on in Bug 896046
     def test_isDisplayed(self):
         l = self.marionette.find_element("id", "textInput")
         self.assertTrue(l.is_displayed())
         self.marionette.execute_script("arguments[0].hidden = true;", [l])
         self.assertFalse(l.is_displayed())
         self.marionette.execute_script("arguments[0].hidden = false;", [l])
-
+    '''

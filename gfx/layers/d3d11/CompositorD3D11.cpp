@@ -80,7 +80,7 @@ CompositorD3D11::~CompositorD3D11()
       mDevice->GetPrivateData(sDeviceAttachmentsD3D11, &size, &attachments);
       // No LayerManagers left for this device. Clear out interfaces stored which
       // hold a reference to the device.
-      mDevice->SetPrivateData(sDeviceAttachmentsD3D11, 0, NULL);
+      mDevice->SetPrivateData(sDeviceAttachmentsD3D11, 0, nullptr);
 
       delete attachments;
     }
@@ -338,7 +338,7 @@ CompositorD3D11::CreateRenderTarget(const gfx::IntRect &aRect,
                              D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET);
 
   RefPtr<ID3D11Texture2D> texture;
-  mDevice->CreateTexture2D(&desc, NULL, byRef(texture));
+  mDevice->CreateTexture2D(&desc, nullptr, byRef(texture));
 
   RefPtr<CompositingRenderTargetD3D11> rt = new CompositingRenderTargetD3D11(texture);
   rt->SetSize(IntSize(aRect.width, aRect.height));
@@ -360,7 +360,7 @@ CompositorD3D11::CreateRenderTargetFromSource(const gfx::IntRect &aRect,
                              D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET);
 
   RefPtr<ID3D11Texture2D> texture;
-  mDevice->CreateTexture2D(&desc, NULL, byRef(texture));
+  mDevice->CreateTexture2D(&desc, nullptr, byRef(texture));
 
   RefPtr<CompositingRenderTargetD3D11> rt = new CompositingRenderTargetD3D11(texture);
   rt->SetSize(IntSize(aRect.width, aRect.height));
@@ -658,7 +658,7 @@ CompositorD3D11::UpdateRenderTarget()
   }
 
   mDefaultRT = new CompositingRenderTargetD3D11(nullptr);
-  mDevice->CreateRenderTargetView(backBuf, NULL, byRef(mDefaultRT->mRTView));
+  mDevice->CreateRenderTargetView(backBuf, nullptr, byRef(mDefaultRT->mRTView));
 }
 
 bool
@@ -759,7 +759,7 @@ CompositorD3D11::PaintToTarget()
 
   nsRefPtr<ID3D11Texture2D> readTexture;
 
-  HRESULT hr = mDevice->CreateTexture2D(&softDesc, NULL, getter_AddRefs(readTexture));
+  HRESULT hr = mDevice->CreateTexture2D(&softDesc, nullptr, getter_AddRefs(readTexture));
   mContext->CopyResource(readTexture, backBuf);
 
   D3D11_MAPPED_SUBRESOURCE map;
