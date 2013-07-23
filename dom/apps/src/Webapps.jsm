@@ -2545,31 +2545,6 @@ this.DOMApplicationRegistry = {
                   throw "INSTALL_FROM_DENIED";
                 }
 
-                // Get ids.json if the file is signed
-                if (isSigned) {
-                  let idsStream;
-                  try {
-                    idsStream = zipReader.getInputStream("META-INF/ids.json");
-                  } catch (e) {
-                    throw zipReader.hasEntry("META-INF/ids.json")
-                          ? e
-                          : "MISSING_IDS_JSON";
-                  }
-                  let ids =
-                    JSON.parse(
-                      converter.ConvertToUnicode(
-                        NetUtil.readInputStreamToString(
-                          idsStream, idsStream.available()) || ""));
-                  if ((!ids.id) || !Number.isInteger(ids.version) ||
-                      (ids.version <= 0)) {
-                     throw "INVALID_IDS_JSON";
-                  }
-                  let storeId = aApp.installOrigin + "#" + ids.id;
-                  checkForStoreIdMatch(storeId, ids.version);
-                  app.storeId = storeId;
-                  app.storeVersion = ids.version;
-                }
-
                 let maxStatus = isSigned ? Ci.nsIPrincipal.APP_STATUS_PRIVILEGED
                                          : Ci.nsIPrincipal.APP_STATUS_INSTALLED;
 
@@ -2614,38 +2589,67 @@ this.DOMApplicationRegistry = {
                     throw "INVALID_ORIGIN";
                   }
 
-                  // Changing the origin during an update is not allowed.
-                  if (aIsUpdate && uri.prePath != app.origin) {
-                    throw "INVALID_ORIGIN_CHANGE";
+                  if (aIsUpdate) {
+                    // Changing the origin during an update is not allowed.
+                    if (uri.prePath != app.origin) {
+                      throw "INVALID_ORIGIN_CHANGE";
+                    }
+                    // Nothing else to do for an update... since the
+                    // origin can't change we don't need to move the
+                    // app nor can we have a duplicated origin
+                  } else {
+                    debug("Setting origin to " + uri.prePath +
+                          " for " + app.manifestURL);
+                    let newId = uri.prePath.substring(6); // "app://".length
+
+                    if (newId in self.webapps) {
+                      throw "DUPLICATE_ORIGIN";
+                    }
+                    app.origin = uri.prePath;
+
+                    app.id = newId;
+                    self.webapps[newId] = app;
+                    delete self.webapps[id];
+
+                    // Rename the directories where the files are installed.
+                    [DIRECTORY_NAME, "TmpD"].forEach(function(aDir) {
+                        let parent = FileUtils.getDir(aDir,
+                          ["webapps"], true, true);
+                        let dir = FileUtils.getDir(aDir,
+                          ["webapps", id], true, true);
+                        dir.moveTo(parent, newId);
+                    });
+
+                    // Signals that we need to swap the old id with the new app.
+                    self.broadcastMessage("Webapps:RemoveApp", { id: id });
+                    self.broadcastMessage("Webapps:AddApp", { id: newId,
+                                                              app: app });
                   }
+                }
 
-                  debug("Setting origin to " + uri.prePath +
-                        " for " + app.manifestURL);
-                  let newId = uri.prePath.substring(6); // "app://".length
-
-                  if (newId in self.webapps) {
-                    throw "DUPLICATE_ORIGIN";
+                // Get ids.json if the file is signed
+                if (isSigned) {
+                  let idsStream;
+                  try {
+                    idsStream = zipReader.getInputStream("META-INF/ids.json");
+                  } catch (e) {
+                    throw zipReader.hasEntry("META-INF/ids.json")
+                          ? e
+                          : "MISSING_IDS_JSON";
                   }
-                  app.origin = uri.prePath;
-
-                  // Update the registry.
-                  app.id = newId;
-                  self.webapps[newId] = app;
-                  delete self.webapps[id];
-
-                  // Rename the directories where the files are installed.
-                  [DIRECTORY_NAME, "TmpD"].forEach(function(aDir) {
-                    let parent = FileUtils.getDir(aDir,
-                                             ["webapps"], true, true);
-                    let dir = FileUtils.getDir(aDir,
-                                             ["webapps", id], true, true);
-                    dir.moveTo(parent, newId);
-                  });
-
-                  // Signals that we need to swap the old id with the new app.
-                  self.broadcastMessage("Webapps:RemoveApp", { id: id });
-                  self.broadcastMessage("Webapps:AddApp", { id: newId,
-                                                            app: app });
+                  let ids =
+                    JSON.parse(
+                      converter.ConvertToUnicode(
+                        NetUtil.readInputStreamToString(
+                          idsStream, idsStream.available()) || ""));
+                  if ((!ids.id) || !Number.isInteger(ids.version) ||
+                      (ids.version <= 0)) {
+                     throw "INVALID_IDS_JSON";
+                  }
+                  let storeId = aApp.installOrigin + "#" + ids.id;
+                  checkForStoreIdMatch(storeId, ids.version);
+                  app.storeId = storeId;
+                  app.storeVersion = ids.version;
                 }
 
                 if (aOnSuccess) {
