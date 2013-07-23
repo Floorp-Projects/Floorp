@@ -204,18 +204,15 @@ documenttab[selected] .documenttab-selection {
 }
 
 #tabs-controls {
-  margin-top: @metro_spacing_small@;
   -moz-box-align: start;
   -moz-box-orient: vertical;
-  padding: 0 @metro_spacing_small@;
-}
-
-#tabs-controls toolbarbutton {
-  margin: @toolbar_vertical_spacing@ @toolbar_horizontal_spacing@;
 }
 
 #newtab-button {
   list-style-image: url(chrome://browser/skin/images/newtab-default.png);
+
+  /* Add some extra padding for a larger target */
+  padding: 18px 25px 30px;
 }
 
 /* Selection overlay and monocles ----------------------------------------------- */
@@ -827,20 +824,6 @@ setting[type="radio"] > vbox {
 
 #panel-close-button[disabled] {
   opacity: .5;
-}
-
-#panel-view-switcher {
-  border: 0 none !important;
-  color: #000 !important;
-  background: transparent;
-  padding: 0;
-  font-size: @metro_font_xlarge@;
-  font-weight: 100;
-  margin: 0;
-}
-
-#panel-container[viewstate="snapped"] #panel-view-switcher {
-  font-size: @metro_font_large@;
 }
 
 #panel-items {

@@ -12,17 +12,19 @@ Cu.import("resource://testing-common/httpd.js");
  * URI when the original URI ends in a slash).
  */
 
-var httpServer = null;
+var httpServer = new HttpServer();
+httpServer.start(-1);
+const PORT = httpServer.identity.primaryPort;
 
 var fullLoopPath = "/fullLoop"; 
-var fullLoopURI = "http://localhost:4444" + fullLoopPath;
+var fullLoopURI = "http://localhost:" + PORT + fullLoopPath;
 
 var relativeLoopPath = "/relativeLoop"; 
-var relativeLoopURI = "http://localhost:4444" + relativeLoopPath;
+var relativeLoopURI = "http://localhost:" + PORT + relativeLoopPath;
 
 // must use directory-style URI, so empty Location redirects back to self
 var emptyLoopPath = "/empty/";
-var emptyLoopURI = "http://localhost:4444" + emptyLoopPath;
+var emptyLoopURI = "http://localhost:" + PORT + emptyLoopPath;
 
 function make_channel(url, callback, ctx) {
   var ios = Cc["@mozilla.org/network/io-service;1"].
@@ -33,7 +35,7 @@ function make_channel(url, callback, ctx) {
 function fullLoopHandler(metadata, response)
 {
   response.setStatusLine(metadata.httpVersion, 301, "Moved");
-  response.setHeader("Location", "http://localhost:4444/fullLoop", false);
+  response.setHeader("Location", "http://localhost:" + PORT + "/fullLoop", false);
 }
 
 function relativeLoopHandler(metadata, response)
@@ -82,11 +84,9 @@ function testEmptyLoop(request, buffer)
 
 function run_test()
 {
-  httpServer = new HttpServer();
   httpServer.registerPathHandler(fullLoopPath, fullLoopHandler);
   httpServer.registerPathHandler(relativeLoopPath, relativeLoopHandler);
   httpServer.registerPathHandler(emptyLoopPath, emptyLoopHandler);
-  httpServer.start(4444);
 
   var chan = make_channel(fullLoopURI);
   chan.asyncOpen(new ChannelListener(testFullLoop, null, CL_EXPECT_FAILURE),

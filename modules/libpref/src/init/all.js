@@ -319,7 +319,9 @@ pref("gfx.content.azure.enabled", true);
 #else
 pref("gfx.content.azure.enabled", false);
 #ifdef XP_MACOSX
+pref("gfx.content.azure.backends", "cg");
 pref("gfx.canvas.azure.backends", "cg");
+pref("gfx.content.azure.enabled", true);
 // Accelerated cg canvas where available (10.7+)
 pref("gfx.canvas.azure.accelerated", false);
 #else

@@ -185,7 +185,7 @@ function TopSitesView(aGrid, aMaxSites, aUseThumbnails) {
   }.bind(this));
 }
 
-TopSitesView.prototype = {
+TopSitesView.prototype = Util.extend(Object.create(View.prototype), {
   _set:null,
   _topSitesMax: null,
   // _lastSelectedSites used to temporarily store blocked/removed sites for undo/restore-ing
@@ -307,23 +307,7 @@ TopSitesView.prototype = {
   },
 
   updateTile: function(aTileNode, aSite, aArrangeGrid) {
-    PlacesUtils.favicons.getFaviconURLForPage(Util.makeURI(aSite.url), function(iconURLfromSiteURL) {
-      if (!iconURLfromSiteURL) {
-        return;
-      }
-      aTileNode.iconSrc = iconURLfromSiteURL.spec;
-      let faviconURL = (PlacesUtils.favicons.getFaviconLinkForIcon(iconURLfromSiteURL)).spec;
-      let xpFaviconURI = Util.makeURI(faviconURL.replace("moz-anno:favicon:",""));
-      let successAction = function(foreground, background) {
-	      aTileNode.style.color = foreground; //color text
-        aTileNode.setAttribute("customColor", background);
-        if (aTileNode.refresh) {
-          aTileNode.refresh();
-        }
-      };
-      let failureAction = function() {};
-      ColorUtils.getForegroundAndBackgroundIconColors(xpFaviconURI, successAction, failureAction);
-    });
+    this._updateFavicon(aTileNode, Util.makeURI(aSite.url));
 
     if (this._useThumbs) {
       Task.spawn(function() {
@@ -437,7 +421,7 @@ TopSitesView.prototype = {
     throw Cr.NS_ERROR_NO_INTERFACE;
   }
 
-};
+});
 
 let TopSitesStartView = {
   _view: null,

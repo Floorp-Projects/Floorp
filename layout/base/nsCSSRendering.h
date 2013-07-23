@@ -19,13 +19,83 @@ class nsStyleContext;
 class nsPresContext;
 class nsRenderingContext;
 
+namespace mozilla {
+
+// A CSSSizeOrRatio represents a (possibly partially specified) size for use
+// in computing image sizes. Either or both of the width and height might be
+// given. A ratio of width to height may also be given. If we at least two
+// of these then we can compute a concrete size, that is a width and height.
+struct CSSSizeOrRatio
+{
+  CSSSizeOrRatio()
+    : mRatio(0, 0)
+    , mHasWidth(false)
+    , mHasHeight(false) {}
+
+  bool CanComputeConcreteSize() const
+  {
+    return mHasWidth + mHasHeight + HasRatio() >= 2;
+  }
+  bool IsConcrete() const { return mHasWidth && mHasHeight; }
+  bool HasRatio() const { return mRatio.width > 0 && mRatio.height > 0; }
+  bool IsEmpty() const
+  {
+    return (mHasWidth && mWidth <= 0) ||
+           (mHasHeight && mHeight <= 0) ||
+           mRatio.width <= 0 || mRatio.height <= 0; 
+  }
+
+  // CanComputeConcreteSize must return true when ComputeConcreteSize is
+  // called.
+  nsSize ComputeConcreteSize() const;
+
+  void SetWidth(nscoord aWidth)
+  {
+    mWidth = aWidth;
+    mHasWidth = true;
+    if (mHasHeight) {
+      mRatio = nsSize(mWidth, mHeight);
+    }
+  }
+  void SetHeight(nscoord aHeight)
+  {
+    mHeight = aHeight;
+    mHasHeight = true;
+    if (mHasWidth) {
+      mRatio = nsSize(mWidth, mHeight);
+    }
+  }
+  void SetSize(const nsSize& aSize)
+  {
+    mWidth = aSize.width;
+    mHeight = aSize.height;
+    mHasWidth = true;
+    mHasHeight = true;
+    mRatio = aSize;    
+  }
+  void SetRatio(const nsSize& aRatio)
+  {
+    MOZ_ASSERT(!mHasWidth || !mHasHeight,
+               "Probably shouldn't be setting a ratio if we have a concrete size");
+    mRatio = aRatio;
+  }
+
+  nsSize mRatio;
+  nscoord mWidth;
+  nscoord mHeight;
+  bool mHasWidth;
+  bool mHasHeight;
+};
+
+}
+
 /**
  * This is a small wrapper class to encapsulate image drawing that can draw an
  * nsStyleImage image, which may internally be a real image, a sub image, or a
  * CSS gradient.
  *
  * @note Always call the member functions in the order of PrepareImage(),
- * ComputeSize(), and Draw().
+ * SetSize(), and Draw*().
  */
 class nsImageRenderer {
 public:
@@ -36,6 +106,12 @@ public:
     FLAG_SYNC_DECODE_IMAGES = 0x01,
     FLAG_PAINTING_TO_WINDOW = 0x02
   };
+  enum FitType
+  {
+    CONTAIN,
+    COVER
+  };
+
   nsImageRenderer(nsIFrame* aForFrame, const nsStyleImage* aImage, uint32_t aFlags);
   ~nsImageRenderer();
   /**
@@ -44,52 +120,75 @@ public:
    * draw.
    */
   bool PrepareImage();
+
   /**
-   * @return the image size in appunits when rendered, after accounting for the
-   * background positioning area, background-size, and the image's intrinsic
-   * dimensions (if any).
+   * The three Compute*Size functions correspond to the sizing algorthms and
+   * definitions from the CSS Image Values and Replaced Content spec. See
+   * http://dev.w3.org/csswg/css-images-3/#sizing .
    */
-  nsSize ComputeSize(const nsStyleBackground::Size& aLayerSize,
-                     const nsSize& aBgPositioningArea);
+   
+  /**
+   * Compute the intrinsic size of the image as defined in the CSS Image Values
+   * spec. The intrinsic size is the unscaled size which the image would ideally
+   * like to be in app units.
+   */
+  mozilla::CSSSizeOrRatio ComputeIntrinsicSize();
+
+  /**
+   * Compute the size of the rendered image using either the 'cover' or
+   * 'contain' constraints (aFitType).
+   * aIntrinsicRatio may be an invalid ratio, that is one or both of its
+   * dimensions can be less than or equal to zero.
+   */
+  static nsSize ComputeConstrainedSize(const nsSize& aConstrainingSize,
+                                       const nsSize& aIntrinsicRatio,
+                                       FitType aFitType);
+  /**
+   * Compute the size of the rendered image (the concrete size) where no cover/
+   * contain constraints are given. The 'default algorithm' from the CSS Image
+   * Values spec.
+   */
+  static nsSize ComputeConcreteSize(const mozilla::CSSSizeOrRatio& aSpecifiedSize,
+                                    const mozilla::CSSSizeOrRatio& aIntrinsicSize,
+                                    const nsSize& aDefaultSize);
+
+  /**
+   * Set this image's preferred size. This will be its intrinsic size where
+   * specified and the default size where it is not. Used as the unscaled size
+   * when rendering the image.
+   */
+  void SetPreferredSize(const mozilla::CSSSizeOrRatio& aIntrinsicSize,
+                        const nsSize& aDefaultSize);
+
   /**
    * Draws the image to the target rendering context.
-   * @see nsLayoutUtils::DrawImage() for other parameters
+   * @see nsLayoutUtils::DrawImage() for other parameters.
    */
   void Draw(nsPresContext*       aPresContext,
-            nsRenderingContext& aRenderingContext,
-            const nsRect&        aDest,
+            nsRenderingContext&  aRenderingContext,
+            const nsRect&        aDirtyRect,
             const nsRect&        aFill,
-            const nsPoint&       aAnchor,
-            const nsRect&        aDirty);
+            const nsRect&        aDest,
+            uint32_t             aFlags = imgIContainer::FLAG_NONE);
+  /**
+   * Draws the image to the target rendering context using background-specific
+   * arguments.
+   * @see nsLayoutUtils::DrawImage() for parameters.
+   */
+  void DrawBackground(nsPresContext*       aPresContext,
+                      nsRenderingContext&  aRenderingContext,
+                      const nsRect&        aDest,
+                      const nsRect&        aFill,
+                      const nsPoint&       aAnchor,
+                      const nsRect&        aDirty);
 
   bool IsRasterImage();
   bool IsAnimatedImage();
   already_AddRefed<ImageContainer> GetContainer(LayerManager* aManager);
 
+  bool IsReady() { return mIsReady; }
+
 private:
-  /*
-   * Compute the "unscaled" dimensions of the image in aUnscaled{Width,Height}
-   * and aRatio.  Whether the image has a height and width are indicated by
-   * aHaveWidth and aHaveHeight.  If the image doesn't have a ratio, aRatio will
-   * be (0, 0).
-   */
-  void ComputeUnscaledDimensions(const nsSize& aBgPositioningArea,
-                                 nscoord& aUnscaledWidth, bool& aHaveWidth,
-                                 nscoord& aUnscaledHeight, bool& aHaveHeight,
-                                 nsSize& aRatio);
-
-  /*
-   * Using the previously-computed unscaled width and height (if each are
-   * valid, as indicated by aHaveWidth/aHaveHeight), compute the size at which
-   * the image should actually render.
-   */
-  nsSize
-  ComputeDrawnSize(const nsStyleBackground::Size& aLayerSize,
-                   const nsSize& aBgPositioningArea,
-                   nscoord aUnscaledWidth, bool aHaveWidth,
-                   nscoord aUnscaledHeight, bool aHaveHeight,
-                   const nsSize& aIntrinsicRatio);
-
   nsIFrame*                 mForFrame;
   const nsStyleImage*       mImage;
   nsStyleImageType          mType;

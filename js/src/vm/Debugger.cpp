@@ -17,6 +17,7 @@
 #include "gc/Marking.h"
 #include "ion/BaselineJIT.h"
 #include "js/Vector.h"
+#include "vm/WrapperObject.h"
 
 #include "jsfuninlines.h"
 #include "jsgcinlines.h"
@@ -2063,7 +2064,7 @@ Debugger::construct(JSContext *cx, unsigned argc, Value *vp)
         if (!arg.isObject())
             return ReportObjectRequired(cx);
         JSObject *argobj = &arg.toObject();
-        if (!IsCrossCompartmentWrapper(argobj)) {
+        if (!argobj->is<CrossCompartmentWrapperObject>()) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CCW_REQUIRED, "Debugger");
             return false;
         }
@@ -5009,7 +5010,7 @@ RequireGlobalObject(JSContext *cx, HandleValue dbgobj, HandleObject obj)
 {
     if (!obj->is<GlobalObject>()) {
         /* Help the poor programmer by pointing out wrappers around globals. */
-        if (obj->isWrapper()) {
+        if (obj->is<WrapperObject>()) {
             JSObject *unwrapped = js::UncheckedUnwrap(obj);
             if (unwrapped->is<GlobalObject>()) {
                 js_ReportValueErrorFlags(cx, JSREPORT_ERROR, JSMSG_DEBUG_WRAPPER_IN_WAY,
