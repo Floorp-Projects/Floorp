@@ -1230,10 +1230,7 @@ var PanelUI = {
   },
 
   views: {
-    "bookmarks-container": "BookmarksPanelView",
     "console-container": "ConsolePanelView",
-    "remotetabs-container": "RemoteTabsPanelView",
-    "history-container" : "HistoryPanelView"
   },
 
   init: function() {

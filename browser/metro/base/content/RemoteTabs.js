@@ -122,25 +122,3 @@ let RemoteTabsStartView = {
     this._grid.arrangeItems();
   }
 };
-
-let RemoteTabsPanelView = {
-  _view: null,
-
-  get _grid() { return document.getElementById("remotetabs-list"); },
-  get visible() { return PanelUI.isPaneVisible("remotetabs-container"); },
-
-  init: function init() {
-    //decks are fragile, don't hide the tab panel(bad things happen), hide link in menu.
-    let snappedEntry = document.getElementById("snappedRemoteTabsLabel");
-    let uiList = [snappedEntry];
-    this._view = new RemoteTabsView(this._grid, uiList);
-  },
-
-  show: function show() {
-    this._grid.arrangeItems();
-  },
-
-  uninit: function uninit() {
-    this._view.destruct();
-  }
-};
