@@ -20,6 +20,9 @@ interface nsIDOMCSSStyleSheet;
 interface inIDOMUtils : nsISupports
 {
   // CSS utilities
+  void getAllStyleSheets (in nsIDOMDocument aDoc,
+                          [optional] out unsigned long aLength,
+                          [array, size_is (aLength), retval] out nsISupports aSheets);
   nsISupportsArray getCSSStyleRules(in nsIDOMElement aElement, [optional] in DOMString aPseudo);
   unsigned long getRuleLine(in nsIDOMCSSStyleRule aRule);
   unsigned long getRuleColumn(in nsIDOMCSSStyleRule aRule);
