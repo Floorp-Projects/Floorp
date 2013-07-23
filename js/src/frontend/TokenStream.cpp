@@ -1003,7 +1003,7 @@ enum FirstCharKind {
     Dec,
     Colon,
     Plus,
-    HexOct,
+    BasePrefix,
 
     /* These two must be last, so that |c >= Space| matches both. */
     Space,
@@ -1022,7 +1022,7 @@ enum FirstCharKind {
  * Dec:     49..57: '1'..'9'
  * Colon:   58: ':'
  * Plus:    43: '+'
- * HexOct:  48: '0'
+ * BasePrefix:  48: '0'
  * Space:   9, 11, 12: '\t', '\v', '\f'
  * EOL:     10, 13: '\n', '\r'
  */
@@ -1032,7 +1032,7 @@ static const uint8_t firstCharKinds[] = {
 /*  10+ */     EOL,   Space,   Space,     EOL, _______, _______, _______, _______, _______, _______,
 /*  20+ */ _______, _______, _______, _______, _______, _______, _______, _______, _______, _______,
 /*  30+ */ _______, _______,   Space, _______,  String, _______,   Ident, _______, _______,  String,
-/*  40+ */ OneChar, OneChar, _______,    Plus, OneChar, _______,     Dot, _______,  HexOct,     Dec,
+/*  40+ */ OneChar, OneChar, _______,    Plus, OneChar, _______,     Dot, _______, BasePrefix,  Dec,
 /*  50+ */     Dec,     Dec,     Dec,     Dec,     Dec,     Dec,     Dec,     Dec,   Colon, OneChar,
 /*  60+ */ _______,  Equals, _______, OneChar, _______,   Ident,   Ident,   Ident,   Ident,   Ident,
 /*  70+ */   Ident,   Ident,   Ident,   Ident,   Ident,   Ident,   Ident,   Ident,   Ident,   Ident,
@@ -1397,10 +1397,8 @@ TokenStream::getTokenInternal()
         goto out;
     }
 
-    /*
-     * Look for a hexadecimal or octal number.
-     */
-    if (c1kind == HexOct) {
+    // Look for a hexadecimal, octal, or binary number.
+    if (c1kind == BasePrefix) {
         int radix;
         c = getCharIgnoreEOL();
         if (c == 'x' || c == 'X') {
@@ -1413,6 +1411,28 @@ TokenStream::getTokenInternal()
             }
             numStart = userbuf.addressOfNextRawChar() - 1;  /* one past the '0x' */
             while (JS7_ISHEX(c))
+                c = getCharIgnoreEOL();
+        } else if (c == 'b' || c == 'B') {
+            radix = 2;
+            c = getCharIgnoreEOL();
+            if (c != '0' && c != '1') {
+                ungetCharIgnoreEOL(c);
+                reportError(JSMSG_MISSING_BINARY_DIGITS);
+                goto error;
+            }
+            numStart = userbuf.addressOfNextRawChar() - 1;  /* one past the '0b' */
+            while (c == '0' || c == '1')
+                c = getCharIgnoreEOL();
+        } else if (c == 'o' || c == 'O') {
+            radix = 8;
+            c = getCharIgnoreEOL();
+            if (c < '0' || c > '7') {
+                ungetCharIgnoreEOL(c);
+                reportError(JSMSG_MISSING_OCTAL_DIGITS);
+                goto error;
+            }
+            numStart = userbuf.addressOfNextRawChar() - 1;  /* one past the '0o' */
+            while ('0' <= c && c <= '7')
                 c = getCharIgnoreEOL();
         } else if (JS7_ISDEC(c)) {
             radix = 8;
