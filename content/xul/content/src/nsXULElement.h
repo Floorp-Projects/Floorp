@@ -243,6 +243,9 @@ public:
     // &mScriptObject pointer can't go stale.
     JS::Handle<JSScript*> GetScriptObject()
     {
+        // Calling fromMarkedLocation() is safe because we trace mScriptObject in
+        // TraceScriptObject() and because its value is never changed after it has
+        // been set.
         return JS::Handle<JSScript*>::fromMarkedLocation(mScriptObject.address());
     }
 

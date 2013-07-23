@@ -409,11 +409,19 @@ class MOZ_NONHEAP_CLASS Handle : public js::HandleBase<T>
     }
 
     /*
-     * This may be called only if the location of the T is guaranteed
-     * to be marked (for some reason other than being a Rooted),
-     * e.g., if it is guaranteed to be reachable from an implicit root.
+     * Take care when calling this method!
      *
-     * Create a Handle from a raw location of a T.
+     * This creates a Handle from the raw location of a T.
+     *
+     * It should be called only if the following conditions hold:
+     *
+     *  1) the location of the T is guaranteed to be marked (for some reason
+     *     other than being a Rooted), e.g., if it is guaranteed to be reachable
+     *     from an implicit root.
+     *
+     *  2) the contents of the location are immutable, or at least cannot change
+     *     for the lifetime of the handle, as its users may not expect its value
+     *     to change underneath them.
      */
     static Handle fromMarkedLocation(const T *p) {
         Handle h;
