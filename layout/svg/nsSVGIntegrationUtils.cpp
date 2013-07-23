@@ -150,7 +150,7 @@ nsSVGIntegrationUtils::UsingEffectsForFrame(const nsIFrame* aFrame)
   // checking the SDL prefs here, since we don't know if we're being called for
   // painting or hit-testing anyway.
   const nsStyleSVGReset *style = aFrame->StyleSVGReset();
-  return (style->mFilter || style->mClipPath || style->mMask);
+  return (style->SingleFilter() || style->mClipPath || style->mMask);
 }
 
 /* static */ nsPoint
