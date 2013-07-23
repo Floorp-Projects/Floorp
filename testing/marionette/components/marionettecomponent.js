@@ -30,7 +30,7 @@ function MarionetteComponent() {
 
   // set up the logger
   this.logger = Log4Moz.repository.getLogger("Marionette");
-  this.logger.level = Log4Moz.Level["Info"];
+  this.logger.level = Log4Moz.Level["Trace"];
   let logf = FileUtils.getFile('ProfD', ['marionette.log']);
 
   let dumper = false;
