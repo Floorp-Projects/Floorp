@@ -68,8 +68,14 @@ self.onmessage = function(e) {
     break;
   case "wait_for_event":
     var ret = libhardware_legacy.wait_for_event(cbuf, 4096);
-    var event = cbuf.readString().substr(0, ret.value);
-    postMessage({ id: id, event: event });
+    // Check the array index.
+    if (ret > 0 && ret < 4096) {
+      // Make sure the string buffer is null terminated.
+      cbuf[ret] = 0;
+      // Use readStringReplaceMalformed() to handle non-UTF8-encoded string.
+      var event = cbuf.readStringReplaceMalformed();
+      postMessage({ id: id, event: event });
+    }
     break;
   case "ifc_reset_connections":
     var ret = libnetutils.ifc_reset_connections(data.ifname,

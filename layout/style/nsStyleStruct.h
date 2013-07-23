@@ -243,6 +243,12 @@ struct nsStyleImage {
    */
   bool IsComplete() const;
   /**
+   * @return true if this image is loaded without error;
+   * always returns true if |mType| is |eStyleImageType_Gradient| or
+   * |eStyleImageType_Element|.
+   */
+  bool IsLoaded() const;
+  /**
    * @return true if it is 100% confident that this image contains no pixel
    * to draw.
    */

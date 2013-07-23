@@ -46,10 +46,7 @@ public class SiteIdentityPopup extends ArrowPopup
 
     private TextView mHost;
     private TextView mOwner;
-    private TextView mSupplemental;
     private TextView mVerifier;
-    private TextView mEncrypted;
-    private ImageView mLarry;
 
     private DoorHanger mMixedContentNotification;
 
@@ -90,7 +87,6 @@ public class SiteIdentityPopup extends ArrowPopup
         mHost = (TextView) layout.findViewById(R.id.host);
         mOwner = (TextView) layout.findViewById(R.id.owner);
         mVerifier = (TextView) layout.findViewById(R.id.verifier);
-        mLarry = (ImageView) layout.findViewById(R.id.larry);
     }
 
     private void setIdentity(JSONObject identityData) {
@@ -139,7 +135,7 @@ public class SiteIdentityPopup extends ArrowPopup
     private void addMixedContentNotification(boolean blocked) {
         // Remove any exixting mixed content notification.
         removeMixedContentNotification();
-        mMixedContentNotification = new DoorHanger(mActivity);
+        mMixedContentNotification = new DoorHanger(mActivity, DoorHanger.Theme.DARK);
 
         String message;
         if (blocked) {
@@ -152,12 +148,13 @@ public class SiteIdentityPopup extends ArrowPopup
         mMixedContentNotification.addLink(mActivity.getString(R.string.learn_more), MIXED_CONTENT_SUPPORT_URL, "\n\n");
 
         if (blocked) {
+            mMixedContentNotification.setIcon(R.drawable.shield_doorhanger);
             mMixedContentNotification.addButton(mActivity.getString(R.string.disable_protection), "disable", this);
             mMixedContentNotification.addButton(mActivity.getString(R.string.keep_blocking), "keepBlocking", this);
         } else {
+            mMixedContentNotification.setIcon(R.drawable.warning_doorhanger);
             mMixedContentNotification.addButton(mActivity.getString(R.string.enable_protection), "enable", this);
         }
-        mMixedContentNotification.setBackgroundColor(0xFFDDE4EA);
 
         mContent.addView(mMixedContentNotification);
     }
@@ -191,23 +188,7 @@ public class SiteIdentityPopup extends ArrowPopup
 
         setIdentity(identityData);
 
-        if (VERIFIED.equals(mode)) {
-            // Use a blue theme for SSL
-            mLarry.setImageResource(R.drawable.larry_blue);
-            mHost.setTextColor(mResources.getColor(R.color.identity_verified));
-            mOwner.setTextColor(mResources.getColor(R.color.identity_verified));
-        } else if (IDENTIFIED.equals(mode)) {
-            // Use a green theme for EV
-            mLarry.setImageResource(R.drawable.larry_green);
-            mHost.setTextColor(mResources.getColor(R.color.identity_identified));
-            mOwner.setTextColor(mResources.getColor(R.color.identity_identified));
-        } else {
-            // Use a gray theme for sites with mixed content
-            // FIXME: Get a gray larry
-            mLarry.setImageResource(R.drawable.larry_blue);
-            mHost.setTextColor(mResources.getColor(R.color.identity_mixed_content));
-            mOwner.setTextColor(mResources.getColor(R.color.identity_mixed_content));
-
+        if (MIXED_CONTENT_BLOCKED.equals(mode) || MIXED_CONTENT_LOADED.equals(mode)) {
             addMixedContentNotification(MIXED_CONTENT_BLOCKED.equals(mode));
         }
     }

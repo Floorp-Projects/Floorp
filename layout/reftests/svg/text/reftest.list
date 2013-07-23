@@ -164,7 +164,7 @@ fuzzy-if(/^Windows\x20NT\x206\.[12]/.test(http.oscpu),1,6) == textLength-3.svg t
 == dynamic-font-size-4.svg dynamic-font-size-4-ref.svg
 == dynamic-dominant-baseline.svg dynamic-dominant-baseline-ref.svg
 == dynamic-multiple-x.svg dynamic-multiple-x-ref.svg
-fuzzy-if(!d2d,14,2) == dynamic-non-scaling-stroke.svg dynamic-non-scaling-stroke-ref.svg #Bug 885316
+fuzzy-if(!d2d,14,2) fuzzy-if(azureQuartz,1,6) == dynamic-non-scaling-stroke.svg dynamic-non-scaling-stroke-ref.svg #Bug 885316
 
 # text and masks
 HTTP(../..) == mask-applied.svg mask-applied-ref.svg

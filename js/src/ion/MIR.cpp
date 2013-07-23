@@ -122,6 +122,11 @@ EvaluateConstantOperands(MBinaryInstruction *ins, bool *ptypeChange = NULL)
         MOZ_ASSUME_UNREACHABLE("NYI");
     }
 
+    // setNumber eagerly transforms a number to int32.
+    // Transform back to double, if the output type is double.
+    if (ins->type() == MIRType_Double && ret.isInt32())
+        ret.setDouble(ret.toNumber());
+
     if (ins->type() != MIRTypeFromValue(ret)) {
         if (ptypeChange)
             *ptypeChange = true;

@@ -238,7 +238,11 @@ sdp_result_e sdp_add_new_attr (void *sdp_ptr, u16 level, u8 cap_num,
 	fmtp_p->qcif = 0;
         fmtp_p->profile = SDP_INVALID_VALUE;
         fmtp_p->level = SDP_INVALID_VALUE;
-        fmtp_p->parameter_add = TRUE;
+        fmtp_p->parameter_add = SDP_FMTP_UNUSED;
+        fmtp_p->usedtx = SDP_FMTP_UNUSED;
+        fmtp_p->stereo = SDP_FMTP_UNUSED;
+        fmtp_p->useinbandfec = SDP_FMTP_UNUSED;
+        fmtp_p->cbr = SDP_FMTP_UNUSED;
 	for (i=0; i < SDP_NE_NUM_BMAP_WORDS; i++) {
             fmtp_p->bmap[i] = 0;
         }
@@ -6889,7 +6893,7 @@ sdp_result_e sdp_attr_set_fmtp_deint_buf_cap (void *sdp_ptr, u16 level,
 
 sdp_result_e sdp_attr_set_fmtp_h264_parameter_add (void *sdp_ptr, u16 level,
                                               u8 cap_num, u16 inst_num,
-                                              tinybool parameter_add)
+                                              u16 parameter_add)
 {
 
     sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
@@ -8306,7 +8310,9 @@ tinybool sdp_attr_fmtp_is_parameter_add (void *sdp_ptr, u16 level,
         sdp_p->conf_p->num_invalid_param++;
         return (FALSE);
     } else {
-        return (attr_p->attr.fmtp.parameter_add);
+        /* Both 1 and SDP_FMTP_UNUSED (parameter not present) should be
+         * treated as TRUE, per RFC 3984, page 45 */
+        return (attr_p->attr.fmtp.parameter_add != 0);
     }
 }
 

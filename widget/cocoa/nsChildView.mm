@@ -66,6 +66,9 @@
 #include "nsAccessibilityService.h"
 #include "mozilla/a11y/Platform.h"
 #endif
+#ifdef MOZ_CRASHREPORTER
+#include "nsExceptionHandler.h"
+#endif
 
 #include "mozilla/Preferences.h"
 
@@ -5209,16 +5212,43 @@ static int32_t RoundUp(double aDouble)
 
 #if !defined(RELEASE_BUILD) || defined(DEBUG)
   if (mGeckoChild && mTextInputHandler && mTextInputHandler->IsFocused()) {
+#ifdef MOZ_CRASHREPORTER
+    NSWindow* window = [self window];
+    NSString* info = [NSString stringWithFormat:@"view [%@], window [%@], key event [%@], window is key %i, app is active %i",
+                      self, window, theEvent, [window isKeyWindow], [NSApp isActive]];
+    nsAutoCString additionalInfo([info UTF8String]);
+#endif
     if (mIsPluginView) {
       if (TextInputHandler::IsSecureEventInputEnabled()) {
-        MOZ_CRASH("While a plugin has focus, we must not be in secure mode");
+        #define CRASH_MESSAGE "While a plugin has focus, we must not be in secure mode"
+#ifdef MOZ_CRASHREPORTER
+        CrashReporter::AppendAppNotesToCrashReport(NS_LITERAL_CSTRING("\nBug 893973: ") +
+                                                   NS_LITERAL_CSTRING(CRASH_MESSAGE));
+        CrashReporter::AppendAppNotesToCrashReport(additionalInfo);
+#endif
+        MOZ_CRASH(CRASH_MESSAGE);
+        #undef CRASH_MESSAGE
       }
     } else if (mGeckoChild->GetInputContext().IsPasswordEditor() &&
                !TextInputHandler::IsSecureEventInputEnabled()) {
-      MOZ_CRASH("A password editor has focus, but not in secure input mode");
+      #define CRASH_MESSAGE "A password editor has focus, but not in secure input mode"
+#ifdef MOZ_CRASHREPORTER
+      CrashReporter::AppendAppNotesToCrashReport(NS_LITERAL_CSTRING("\nBug 893973: ") +
+                                                 NS_LITERAL_CSTRING(CRASH_MESSAGE));
+      CrashReporter::AppendAppNotesToCrashReport(additionalInfo);
+#endif
+      MOZ_CRASH(CRASH_MESSAGE);
+      #undef CRASH_MESSAGE
     } else if (!mGeckoChild->GetInputContext().IsPasswordEditor() &&
                TextInputHandler::IsSecureEventInputEnabled()) {
-      MOZ_CRASH("A non-password editor has focus, but in secure input mode");
+      #define CRASH_MESSAGE "A non-password editor has focus, but in secure input mode"
+#ifdef MOZ_CRASHREPORTER
+      CrashReporter::AppendAppNotesToCrashReport(NS_LITERAL_CSTRING("\nBug 893973: ") +
+                                                 NS_LITERAL_CSTRING(CRASH_MESSAGE));
+      CrashReporter::AppendAppNotesToCrashReport(additionalInfo);
+#endif
+      MOZ_CRASH(CRASH_MESSAGE);
+      #undef CRASH_MESSAGE
     }
   }
 #endif // #if !defined(RELEASE_BUILD) || defined(DEBUG)

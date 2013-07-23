@@ -17,6 +17,8 @@ add_test(function test_processIncoming_mobile_history_batched() {
 
   let FAKE_DOWNLOAD_LIMIT = 100;
 
+  new SyncTestingInfrastructure();
+
   Svc.Prefs.set("client.type", "mobile");
   PlacesUtils.history.removeAllPages();
   Service.engineManager.register(HistoryEngine);
@@ -29,12 +31,6 @@ add_test(function test_processIncoming_mobile_history_batched() {
     this.get_log.push(options);
     return this._get(options);
   };
-
-  let server = sync_httpd_setup({
-    "/1.1/foo/storage/history": collection.handler()
-  });
-
-  new SyncTestingInfrastructure(server);
 
   // Let's create some 234 server side history records. They're all at least
   // 10 minutes old.
@@ -54,6 +50,10 @@ add_test(function test_processIncoming_mobile_history_batched() {
     wbo.modified = modified;
     collection.insertWBO(wbo);
   }
+
+  let server = sync_httpd_setup({
+      "/1.1/foo/storage/history": collection.handler()
+  });
 
   let engine = Service.engineManager.get("history");
   let meta_global = Service.recordManager.set(engine.metaURL,

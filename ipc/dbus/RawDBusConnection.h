@@ -14,6 +14,7 @@
 #include <stdlib.h>
 #include "nscore.h"
 #include "mozilla/Scoped.h"
+#include <mozilla/RefPtr.h>
 #include <mozilla/Mutex.h>
 
 struct DBusConnection;
@@ -21,7 +22,7 @@ struct DBusConnection;
 namespace mozilla {
 namespace ipc {
 
-class RawDBusConnection
+class RawDBusConnection : public detail::RefCounted<RawDBusConnection, detail::AtomicRefCount>
 {
   struct ScopedDBusConnectionPtrTraits : ScopedFreePtrTraits<DBusConnection>
   {
@@ -30,7 +31,7 @@ class RawDBusConnection
 
 public:
   RawDBusConnection();
-  ~RawDBusConnection();
+  virtual ~RawDBusConnection();
   nsresult EstablishDBusConnection();
   DBusConnection* GetConnection() {
     return mConnection;

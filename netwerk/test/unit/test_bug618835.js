@@ -34,7 +34,8 @@ InitialListener.prototype = {
     onStopRequest: function(request, context, status) {
         do_check_eq(1, numberOfCLHandlerCalls);
         do_execute_soon(function() {
-            var channel = setupChannel("http://localhost:4444/post");
+            var channel = setupChannel("http://localhost:" +
+                                       httpserv.identity.primaryPort + "/post");
             channel.requestMethod = "post";
             channel.asyncOpen(new RedirectingListener(), null);
         });
@@ -48,7 +49,8 @@ RedirectingListener.prototype = {
     onStopRequest: function(request, context, status) {
         do_check_eq(1, numberOfHandlerCalls);
         do_execute_soon(function() {
-            var channel = setupChannel("http://localhost:4444/post");
+            var channel = setupChannel("http://localhost:" +
+                                       httpserv.identity.primaryPort + "/post");
             channel.requestMethod = "post";
             channel.asyncOpen(new VerifyingListener(), null);
         });
@@ -62,7 +64,8 @@ VerifyingListener.prototype = {
     onStartRequest: function(request, context) { },
     onStopRequest: function(request, context, status) {
         do_check_eq(2, numberOfHandlerCalls);
-        var channel = setupChannel("http://localhost:4444/cl");
+        var channel = setupChannel("http://localhost:" +
+                                   httpserv.identity.primaryPort + "/cl");
         channel.asyncOpen(new FinalListener(), null);
     }
 };
@@ -83,13 +86,14 @@ function run_test() {
   httpserv.registerPathHandler("/cl", content_location);
   httpserv.registerPathHandler("/post", post_target);
   httpserv.registerPathHandler("/redirect", redirect_target);
-  httpserv.start(4444);
+  httpserv.start(-1);
 
   // Clear cache
   evict_cache_entries();
 
   // Load Content-Location URI into cache and start the chain of loads
-  var channel = setupChannel("http://localhost:4444/cl");
+  var channel = setupChannel("http://localhost:" +
+                             httpserv.identity.primaryPort + "/cl");
   channel.asyncOpen(new InitialListener(), null);
 
   do_test_pending();
