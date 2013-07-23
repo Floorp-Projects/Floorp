@@ -1813,6 +1813,11 @@ SrcNotes(JSContext *cx, HandleScript script, Sprinter *sp)
             break;
           }
 
+          case SRC_TRY:
+            JS_ASSERT(JSOp(script->code[offset]) == JSOP_TRY);
+            Sprint(sp, " offset to jump %u", unsigned(js_GetSrcNoteOffset(sn, 0)));
+            break;
+
           default:
             JS_ASSERT(0);
             break;
