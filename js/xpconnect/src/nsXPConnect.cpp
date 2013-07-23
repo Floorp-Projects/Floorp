@@ -595,9 +595,9 @@ nsXPConnect::WrapNative(JSContext * aJSContext,
     NS_ASSERTION(aCOMObj, "bad param");
 
     RootedObject aScope(aJSContext, aScopeArg);
-    jsval v;
+    RootedValue v(aJSContext);
     return NativeInterface2JSObject(aScope, aCOMObj, nullptr, &aIID,
-                                    false, &v, aHolder);
+                                    false, v.address(), aHolder);
 }
 
 /* void wrapNativeToJSVal (in JSContextPtr aJSContext, in JSObjectPtr aScope, in nsISupports aCOMObj, in nsIIDPtr aIID, out jsval aVal, out nsIXPConnectJSObjectHolder aHolder); */
@@ -1389,8 +1389,8 @@ Base64Encode(JSContext *cx, JS::Value val, JS::Value *out)
     MOZ_ASSERT(cx);
     MOZ_ASSERT(out);
 
-    JS::Value root = val;
-    xpc_qsACString encodedString(cx, root, &root, xpc_qsACString::eNull,
+    JS::RootedValue root(cx, val);
+    xpc_qsACString encodedString(cx, root, root.address(), xpc_qsACString::eNull,
                                  xpc_qsACString::eStringify);
     if (!encodedString.IsValid())
         return false;
@@ -1415,8 +1415,8 @@ Base64Decode(JSContext *cx, JS::Value val, JS::Value *out)
     MOZ_ASSERT(cx);
     MOZ_ASSERT(out);
 
-    JS::Value root = val;
-    xpc_qsACString encodedString(cx, root, &root, xpc_qsACString::eNull,
+    JS::RootedValue root(cx, val);
+    xpc_qsACString encodedString(cx, root, root.address(), xpc_qsACString::eNull,
                                  xpc_qsACString::eNull);
     if (!encodedString.IsValid())
         return false;
