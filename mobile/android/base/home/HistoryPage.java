@@ -103,7 +103,7 @@ public class HistoryPage extends HomeFragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.home_list_with_title, container, false);
+        return inflater.inflate(R.layout.home_history_page, container, false);
     }
 
     @Override
