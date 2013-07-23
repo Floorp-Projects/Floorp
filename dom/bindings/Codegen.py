@@ -1893,7 +1893,7 @@ class CGGetPerInterfaceObject(CGAbstractMethod):
   }
 
   /* The object might _still_ be null, but that's OK */
-  return JS::Handle<JSObject*>(protoAndIfaceArray[%s]);""" %
+  return JS::Handle<JSObject*>::fromMarkedLocation(protoAndIfaceArray[%s].address());""" %
                 (self.id, self.id))
 
 class CGGetProtoObjectMethod(CGGetPerInterfaceObject):
@@ -9842,7 +9842,7 @@ class CallbackOperationBase(CallbackMethod):
         # This relies on getCallableDecl declaring a boolean
         # isCallable in the case when we're a single-operation
         # interface.
-        return "isCallable ? aThisObj : mCallback"
+        return "isCallable ? aThisObj.get() : mCallback"
 
     def getCallableDecl(self):
         replacements = {

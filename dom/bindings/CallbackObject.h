@@ -76,7 +76,7 @@ public:
    */
   JS::Handle<JSObject*> CallbackPreserveColor() const
   {
-    return mCallback;
+    return JS::Handle<JSObject*>::fromMarkedLocation(mCallback.address());
   }
 
   enum ExceptionHandling {
