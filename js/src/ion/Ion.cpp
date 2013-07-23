@@ -171,6 +171,7 @@ ion::InitializeIon()
 IonRuntime::IonRuntime()
   : execAlloc_(NULL),
     exceptionTail_(NULL),
+    bailoutTail_(NULL),
     enterJIT_(NULL),
     bailoutHandler_(NULL),
     argumentsRectifier_(NULL),
@@ -212,6 +213,10 @@ IonRuntime::initialize(JSContext *cx)
 
     exceptionTail_ = generateExceptionTailStub(cx);
     if (!exceptionTail_)
+        return false;
+
+    bailoutTail_ = generateBailoutTailStub(cx);
+    if (!bailoutTail_)
         return false;
 
     if (cx->runtime()->jitSupportsFloatingPoint) {
