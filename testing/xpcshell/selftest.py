@@ -64,7 +64,7 @@ function run_test () { run_next_test(); }
 add_test(function test_child_simple () {
   do_test_pending("hang test");
   do_load_child_test_harness();
-  sendCommand("_dump('CHILD-TEST-STARTED'); " +
+  sendCommand("_log('child_test_start', {_message: 'CHILD-TEST-STARTED'}); " +
               + "const _TEST_FILE=['test_pass.js']; _execute_test(); ",
               do_test_finished);
   run_next_test();
