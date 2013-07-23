@@ -1267,10 +1267,15 @@ public class BrowserToolbar extends GeckoRelativeLayout
                                PropertyAnimator.Property.TRANSLATION_X,
                                curveTranslation);
 
-        if (mHasSoftMenuButton)
+        if (mHasSoftMenuButton) {
             contentAnimator.attach(mMenu,
                                    PropertyAnimator.Property.TRANSLATION_X,
                                    curveTranslation);
+
+            contentAnimator.attach(mMenuIcon,
+                                   PropertyAnimator.Property.TRANSLATION_X,
+                                   curveTranslation);
+        }
 
         contentAnimator.setPropertyAnimationListener(new PropertyAnimator.PropertyAnimationListener() {
             @Override
@@ -1345,10 +1350,15 @@ public class BrowserToolbar extends GeckoRelativeLayout
                                PropertyAnimator.Property.TRANSLATION_X,
                                0);
 
-        if (mHasSoftMenuButton)
+        if (mHasSoftMenuButton) {
             contentAnimator.attach(mMenu,
                                    PropertyAnimator.Property.TRANSLATION_X,
                                    0);
+
+            contentAnimator.attach(mMenuIcon,
+                                   PropertyAnimator.Property.TRANSLATION_X,
+                                   0);
+        }
 
         contentAnimator.setPropertyAnimationListener(new PropertyAnimator.PropertyAnimationListener() {
             @Override
