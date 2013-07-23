@@ -1021,8 +1021,14 @@ nsXPCWrappedJSClass::CheckForException(XPCCallContext & ccx,
             // Try to use the error reporter set on the context to handle this
             // error if it came from a JS exception.
             if (reportable && is_js_exception &&
-                JS_GetErrorReporter(cx) != xpcWrappedJSErrorReporter) {
+                JS_GetErrorReporter(cx) != xpcWrappedJSErrorReporter)
+            {
+                // If the error reporter ignores the error, it will call
+                // xpc->MarkErrorUnreported().
+                xpcc->ClearUnreportedError();
                 reportable = !JS_ReportPendingException(cx);
+                if (!xpcc->WasErrorReported())
+                    reportable = true;
             }
 
             if (reportable) {

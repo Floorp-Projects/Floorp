@@ -957,6 +957,10 @@ public:
     void AddScope(PRCList *scope) { PR_INSERT_AFTER(scope, &mScopes); }
     void RemoveScope(PRCList *scope) { PR_REMOVE_LINK(scope); }
 
+    void MarkErrorUnreported() { mErrorUnreported = true; }
+    void ClearUnreportedError() { mErrorUnreported = false; }
+    bool WasErrorReported() { return !mErrorUnreported; }
+
     ~XPCContext();
 
 private:
@@ -972,6 +976,7 @@ private:
     nsresult mPendingResult;
     nsIException* mException;
     LangType mCallingLangType;
+    bool mErrorUnreported;
 
     // A linked list of scopes to notify when we are destroyed.
     PRCList mScopes;
