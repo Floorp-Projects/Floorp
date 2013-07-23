@@ -24,6 +24,23 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=753984
           accOrElmOrID: "anchor",
           expected: [["link", "title"], ["title", "link"]]
         }, {
+          accOrElmOrID: "anchor_titleandtext",
+          expected: [[
+            "link", "goes to the tests -", "Tests"
+          ], [
+            "Tests", "- goes to the tests", "link"
+          ]]
+        }, {
+          accOrElmOrID: "anchor_duplicatedtitleandtext",
+          expected: [["link", "Tests"], ["Tests", "link"]]
+        }, {
+          accOrElmOrID: "anchor_arialabelandtext",
+          expected: [[
+            "link", "goes to the tests - Tests"
+          ], [
+            "Tests - goes to the tests", "link"
+          ]]
+        }, {
           accOrElmOrID: "textarea",
           expected: [[
             "text area", "This is the text area text."
@@ -142,10 +159,17 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=753984
          href="https://bugzilla.mozilla.org/show_bug.cgi?id=753984"
          title="[AccessFu] utterance order test">
          Mozilla Bug 753984</a>
+      <a target="_blank"
+         href="https://bugzilla.mozilla.org/show_bug.cgi?id=758675"
+         title="[AccessFu] Add support for accDescription">
+         Mozilla Bug 758675</a>
       <p id="display"></p>
       <div id="content" style="display: none"></div>
       <pre id="test"></pre>
       <a id="anchor" href="#test" title="title"></a>
+      <a id="anchor_titleandtext" href="#test" title="goes to the tests">Tests</a>
+      <a id="anchor_duplicatedtitleandtext" href="#test" title="Tests">Tests</a>
+      <a id="anchor_arialabelandtext" href="#test" aria-label="Tests" title="goes to the tests">Tests</a>
       <textarea id="textarea" cols="80" rows="5">
         This is the text area text.
       </textarea>
