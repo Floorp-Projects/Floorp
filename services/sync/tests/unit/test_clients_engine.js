@@ -58,7 +58,8 @@ add_test(function test_bad_hmac() {
 
   try {
     let passphrase     = "abcdeabcdeabcdeabcdeabcdea";
-    Service.serverURL  = server.baseURI;
+    Service.serverURL  = TEST_SERVER_URL;
+    Service.clusterURL = TEST_CLUSTER_URL;
     Service.login("foo", "ilovejane", passphrase);
 
     generateNewKeys(Service.collectionKeys);
@@ -168,6 +169,9 @@ add_test(function test_properties() {
 add_test(function test_sync() {
   _("Ensure that Clients engine uploads a new client record once a week.");
 
+  new SyncTestingInfrastructure();
+  generateNewKeys(Service.collectionKeys);
+
   let contents = {
     meta: {global: {engines: {clients: {version: engine.version,
                                         syncID: engine.syncID}}}},
@@ -176,9 +180,6 @@ add_test(function test_sync() {
   };
   let server = serverForUsers({"foo": "password"}, contents);
   let user   = server.user("foo");
-
-  new SyncTestingInfrastructure(server.server);
-  generateNewKeys(Service.collectionKeys);
 
   function clientWBO() {
     return user.collection("clients").wbo(engine.localID);
@@ -406,6 +407,8 @@ add_test(function test_process_incoming_commands() {
 add_test(function test_command_sync() {
   _("Ensure that commands are synced across clients.");
 
+  new SyncTestingInfrastructure();
+
   engine._store.wipe();
   generateNewKeys(Service.collectionKeys);
 
@@ -416,8 +419,6 @@ add_test(function test_command_sync() {
     crypto: {}
   };
   let server   = serverForUsers({"foo": "password"}, contents);
-  new SyncTestingInfrastructure(server.server);
-
   let user     = server.user("foo");
   let remoteId = Utils.makeGUID();
 

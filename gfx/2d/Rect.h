@@ -14,16 +14,20 @@
 namespace mozilla {
 namespace gfx {
 
-struct Margin :
-  public BaseMargin<Float, Margin> {
-  typedef BaseMargin<Float, Margin> Super;
+template<class units>
+struct MarginTyped:
+    public BaseMargin<Float, MarginTyped<units> >,
+    public units {
+    typedef BaseMargin<Float, MarginTyped<units> > Super;
 
-  // Constructors
-  Margin() : Super(0, 0, 0, 0) {}
-  Margin(const Margin& aMargin) : Super(aMargin) {}
-  Margin(Float aTop, Float aRight, Float aBottom, Float aLeft)
-    : Super(aTop, aRight, aBottom, aLeft) {}
+    MarginTyped() : Super(0, 0, 0, 0) {}
+    MarginTyped(const MarginTyped<units>& aMargin) :
+        Super(float(aMargin.top), float(aMargin.right),
+              float(aMargin.bottom), float(aMargin.left)) {}
+    MarginTyped(Float aTop, Float aRight, Float aBottom, Float aLeft) :
+        Super(aTop, aRight, aBottom, aLeft) {}
 };
+typedef MarginTyped<UnknownUnits> Margin;
 
 template<class units>
 struct IntRectTyped :
