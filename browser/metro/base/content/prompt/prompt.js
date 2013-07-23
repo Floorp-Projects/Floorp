@@ -83,7 +83,7 @@ var CrashPrompt = {
     let vendorName = Services.strings.createBundle("chrome://branding/locale/brand.properties")
                                      .GetStringFromName("vendorShortName");
     let crashBundle = Services.strings.createBundle("chrome://browser/locale/crashprompt.properties");
-    let message = crashBundle.formatStringFromName("crashprompt.messagebody", [brandName, vendorName, brandName], 3);
+    let message = crashBundle.formatStringFromName("crashprompt.messagebody2", [brandName, vendorName], 2);
     let descElement = document.getElementById("privacy-crash-blurb");
     descElement.textContent = message;
 
