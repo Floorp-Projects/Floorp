@@ -3349,6 +3349,11 @@ nsHttpConnectionMgr::ReadConnectionEntry(const nsACString &key,
         info.SetHTTP1ProtocolVersion(ent->mIdleConns[i]->GetLastHttpResponseVersion());
         data.idle.AppendElement(info);
     }
+    for(uint32_t i = 0; i < ent->mHalfOpens.Length(); i++) {
+        HalfOpenSockets hSocket;
+        hSocket.speculative = ent->mHalfOpens[i]->IsSpeculative();
+        data.halfOpens.AppendElement(hSocket);
+    }
     data.spdy = ent->mUsingSpdy;
     data.ssl = ent->mConnInfo->UsingSSL();
     args->AppendElement(data);
