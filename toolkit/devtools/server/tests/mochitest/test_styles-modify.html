@@ -1,0 +1,103 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug </title>
+
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  <script type="application/javascript;version=1.8" src="inspector-helpers.js"></script>
+  <script type="application/javascript;version=1.8">
+Components.utils.import("resource://gre/modules/devtools/Loader.jsm");
+
+const promise = devtools.require("sdk/core/promise");
+const inspector = devtools.require("devtools/server/actors/inspector");
+
+window.onload = function() {
+  SimpleTest.waitForExplicitFinish();
+  runNextTest();
+}
+
+var gWalker = null;
+var gStyles = null;
+var gClient = null;
+
+addTest(function setup() {
+  let url = document.getElementById("inspectorContent").href;
+  attachURL(url, function(err, client, tab, doc) {
+    gInspectee = doc;
+    let {InspectorFront} = devtools.require("devtools/server/actors/inspector");
+    let inspector = InspectorFront(client, tab);
+    promiseDone(inspector.getWalker().then(walker => {
+      ok(walker, "getWalker() should return an actor.");
+      gClient = client;
+      gWalker = walker;
+      return inspector.getPageStyle();
+    }).then(styles => {
+      gStyles = styles;
+    }).then(runNextTest));
+  });
+});
+
+addTest(function modifyProperties() {
+  let localNode = gInspectee.querySelector("#inheritable-rule-inheritable-style");
+  let elementStyle = null;
+  promiseDone(gWalker.querySelector(gWalker.rootNode, "#inheritable-rule-inheritable-style").then(node => {
+    return gStyles.getApplied(node, { inherited: false, filter: "user" });
+  }).then(applied => {
+    elementStyle = applied[0].rule;
+    is(elementStyle.cssText, localNode.style.cssText, "Got expected css text");
+
+    // Will start with "color:blue"
+    let changes = elementStyle.startModifyingProperties();
+
+    // Change an existing property...
+    changes.setProperty("color", "black");
+    // Create a new property
+    changes.setProperty("background-color", "green");
+
+    // Create a new property and then change it immediately.
+    changes.setProperty("border", "1px solid black");
+    changes.setProperty("border", "2px solid black");
+
+    return changes.apply();
+  }).then(() => {
+    is(elementStyle.cssText, "color: black; background-color: green; border: 2px solid black;", "Should have expected cssText");
+    is(elementStyle.cssText, localNode.style.cssText, "Local node and style front match.");
+
+    // Remove all the properties
+    let changes = elementStyle.startModifyingProperties();
+    changes.removeProperty("color");
+    changes.removeProperty("background-color");
+    changes.removeProperty("border");
+
+    return changes.apply();
+  }).then(() => {
+    is(elementStyle.cssText, "", "Should have expected cssText");
+    is(elementStyle.cssText, localNode.style.cssText, "Local node and style front match.");
+  }).then(runNextTest));
+});
+
+addTest(function cleanup() {
+  delete gStyles;
+  delete gWalker;
+  delete gClient;
+  runNextTest();
+});
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=">Mozilla Bug </a>
+<a id="inspectorContent" target="_blank" href="inspector-styles-data.html">Test Document</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

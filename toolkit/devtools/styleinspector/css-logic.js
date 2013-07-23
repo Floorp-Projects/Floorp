@@ -63,8 +63,9 @@ exports.CssLogic = CssLogic;
  * Special values for filter, in addition to an href these values can be used
  */
 CssLogic.FILTER = {
-  ALL: "all", // show properties from all user style sheets.
-  UA: "ua",   // ALL, plus user-agent (i.e. browser) style sheets
+  ALL: "user", // show properties from all user style sheets
+  USER: "user",
+  UA: "ua",    // ALL, plus user-agent (i.e. browser) style sheets
 };
 
 /**

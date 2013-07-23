@@ -1,0 +1,153 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug </title>
+
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  <script type="application/javascript;version=1.8" src="inspector-helpers.js"></script>
+  <script type="application/javascript;version=1.8">
+Components.utils.import("resource://gre/modules/devtools/Loader.jsm");
+
+const promise = devtools.require("sdk/core/promise");
+const inspector = devtools.require("devtools/server/actors/inspector");
+
+window.onload = function() {
+  SimpleTest.waitForExplicitFinish();
+  runNextTest();
+}
+
+var gWalker = null;
+var gStyles = null;
+var gClient = null;
+
+addTest(function setup() {
+  let url = document.getElementById("inspectorContent").href;
+  attachURL(url, function(err, client, tab, doc) {
+    gInspectee = doc;
+    let {InspectorFront} = devtools.require("devtools/server/actors/inspector");
+    let inspector = InspectorFront(client, tab);
+    promiseDone(inspector.getWalker().then(walker => {
+      ok(walker, "getWalker() should return an actor.");
+      gClient = client;
+      gWalker = walker;
+      return inspector.getPageStyle();
+    }).then(styles => {
+      gStyles = styles;
+    }).then(runNextTest));
+  });
+});
+
+addTest(function inheritedUserStyles() {
+  let node = node;
+  promiseDone(gWalker.querySelector(gWalker.rootNode, "#test-node").then(node => {
+    return gStyles.getApplied(node, { inherited: true, filter: "user" });
+  }).then(applied => {
+    ok(!applied[0].inherited, "Entry 0 should be uninherited");
+    is(applied[0].rule.type, 100, "Entry 0 should be an element style");
+    ok(!!applied[0].rule.href, "Element styles should have a URL");
+    is(applied[0].rule.cssText, "", "Entry 0 should be an empty style");
+
+    is(applied[1].inherited.id, "uninheritable-rule-inheritable-style",
+       "Entry 1 should be inherited from the parent");
+    is(applied[1].rule.type, 100, "Entry 1 should be an element style");
+    is(applied[1].rule.cssText, "color: red;", "Entry 1 should have the expected cssText");
+
+    is(applied[2].inherited.id, "inheritable-rule-inheritable-style",
+       "Entry 2 should be inherited from the parent's parent");
+    is(applied[2].rule.type, 100, "Entry 2 should be an element style");
+    is(applied[2].rule.cssText, "color: blue;", "Entry 2 should have the expected cssText");
+
+    is(applied[3].inherited.id, "inheritable-rule-inheritable-style",
+       "Entry 3 should be inherited from the parent's parent");
+    is(applied[3].rule.type, 1, "Entry 3 should be a rule style");
+    is(applied[3].rule.cssText, "font-size: 15px;", "Entry 3 should have the expected cssText");
+    ok(!applied[3].matchedSelectors, "Shouldn't get matchedSelectors with this request.");
+
+    is(applied[4].inherited.id, "inheritable-rule-uninheritable-style",
+       "Entry 4 should be inherited from the parent's parent");
+    is(applied[4].rule.type, 1, "Entry 4 should be an rule style");
+    is(applied[4].rule.cssText, "font-size: 15px;", "Entry 4 should have the expected cssText");
+    ok(!applied[4].matchedSelectors, "Shouldn't get matchedSelectors with this request.");
+
+    is(applied.length, 5, "Should have 5 rules.");
+  }).then(runNextTest));
+});
+
+addTest(function inheritedSystemStyles() {
+  let node = node;
+  promiseDone(gWalker.querySelector(gWalker.rootNode, "#test-node").then(node => {
+    return gStyles.getApplied(node, { inherited: true, filter: "ua" });
+  }).then(applied => {
+    // If our system stylesheets are prone to churn, this might be a fragile
+    // test.  If you're here because of that I apologize, file a bug
+    // and we can find a different way to test.
+
+    ok(!applied[1].inherited, "Entry 1 should not be inherited");
+    ok(!applied[1].rule.parentStyleSheet.system, "Entry 1 should be a system style");
+    is(applied[1].rule.type, 1, "Entry 1 should be a rule style");
+
+    is(applied.length, 7, "Should have 7 rules.");
+  }).then(runNextTest));
+});
+
+addTest(function noInheritedStyles() {
+  let node = node;
+  promiseDone(gWalker.querySelector(gWalker.rootNode, "#test-node").then(node => {
+    return gStyles.getApplied(node, { inherited: false, filter: "user" });
+  }).then(applied => {
+    ok(!applied[0].inherited, "Entry 0 should be uninherited");
+    is(applied[0].rule.type, 100, "Entry 0 should be an element style");
+    is(applied[0].rule.cssText, "", "Entry 0 should be an empty style");
+    is(applied.length, 1, "Should have 1 rule.");
+  }).then(runNextTest));
+});
+
+addTest(function matchedSelectors() {
+  promiseDone(gWalker.querySelector(gWalker.rootNode, "#test-node").then(node => {
+    return gStyles.getApplied(node, {
+      inherited: true, filter: "user", matchedSelectors: true
+    });
+  }).then(applied => {
+    is(applied[3].matchedSelectors[0], ".inheritable-rule", "Entry 3 should have a matched selector");
+    is(applied[4].matchedSelectors[0], ".inheritable-rule", "Entry 4 should have a matched selector");
+  }).then(runNextTest));
+});
+
+addTest(function testMediaQuery() {
+  let node = node;
+  promiseDone(gWalker.querySelector(gWalker.rootNode, "#mediaqueried").then(node => {
+    return gStyles.getApplied(node, {
+      inherited: false, filter: "user", matchedSelectors: true
+    });
+  }).then(applied => {
+    is(applied[1].rule.type, 1, "Entry 1 is a rule style");
+    is(applied[1].rule.parentRule.type, 4, "Entry 1's parent rule is a media rule");
+    is(applied[1].rule.parentRule.media[0], "screen", "Entry 1's parent rule has the expected medium");
+  }).then(runNextTest));
+});
+
+addTest(function cleanup() {
+  delete gStyles;
+  delete gWalker;
+  delete gClient;
+  runNextTest();
+});
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=">Mozilla Bug </a>
+<a id="inspectorContent" target="_blank" href="inspector-styles-data.html">Test Document</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>
