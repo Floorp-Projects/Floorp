@@ -638,12 +638,9 @@ GetNativeStackLimit(JSContext *cx)
         }                                                                       \
     JS_END_MACRO
 
-#define JS_CHECK_RECURSION_WITH_EXTRA_DONT_REPORT(cx, extra, onerror)           \
+#define JS_CHECK_RECURSION_WITH_SP_DONT_REPORT(cx, sp, onerror)                 \
     JS_BEGIN_MACRO                                                              \
-        uint8_t stackDummy_;                                                    \
-        if (!JS_CHECK_STACK_SIZE(js::GetNativeStackLimit(cx),                   \
-                                 &stackDummy_ - (extra)))                       \
-        {                                                                       \
+        if (!JS_CHECK_STACK_SIZE(js::GetNativeStackLimit(cx), sp)) {            \
             onerror;                                                            \
         }                                                                       \
     JS_END_MACRO
