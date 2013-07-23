@@ -17,6 +17,27 @@
   -moz-border-start-color: transparent;
 }
 
+.side-menu-widget-item-checkbox {
+ -moz-appearance: none;
+  padding: 0;
+  margin: 0 -4px 0 4px;
+}
+
+.side-menu-widget-item-checkbox > .checkbox-check {
+  -moz-appearance: none;
+  background: none;
+  background-image: url(itemToggle.png);
+  background-repeat: no-repeat;
+  background-clip: content-box;
+  background-position: -24px 0;
+  width: 24px;
+  height: 24px;
+}
+
+.side-menu-widget-item-checkbox[checked] > .checkbox-check {
+  background-position: 0 0;
+}
+
 /* ListWidget items */
 
 .list-widget-item {
