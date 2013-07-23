@@ -450,7 +450,7 @@ nsSVGEffects::GetEffectProperties(nsIFrame *aFrame)
   EffectProperties result;
   const nsStyleSVGReset *style = aFrame->StyleSVGReset();
   result.mFilter = static_cast<nsSVGFilterProperty*>
-    (GetEffectProperty(style->SingleFilter(), aFrame, FilterProperty(),
+    (GetEffectProperty(style->mFilter, aFrame, FilterProperty(),
                        CreateFilterProperty));
   result.mClipPath =
     GetPaintingProperty(style->mClipPath, aFrame, ClipPathProperty());
@@ -526,7 +526,7 @@ nsSVGEffects::UpdateEffects(nsIFrame *aFrame)
 
   // Ensure that the filter is repainted correctly
   // We can't do that in DoUpdate as the referenced frame may not be valid
-  GetEffectProperty(aFrame->StyleSVGReset()->SingleFilter(),
+  GetEffectProperty(aFrame->StyleSVGReset()->mFilter,
                     aFrame, FilterProperty(), CreateFilterProperty);
 
   if (aFrame->GetType() == nsGkAtoms::svgPathGeometryFrame &&
@@ -547,7 +547,7 @@ nsSVGEffects::GetFilterProperty(nsIFrame *aFrame)
 {
   NS_ASSERTION(!aFrame->GetPrevContinuation(), "aFrame should be first continuation");
 
-  if (!aFrame->StyleSVGReset()->SingleFilter())
+  if (!aFrame->StyleSVGReset()->mFilter)
     return nullptr;
 
   return static_cast<nsSVGFilterProperty *>
