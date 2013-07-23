@@ -6,7 +6,8 @@
     <!-- Any copyright is dedicated to the Public Domain.
          http://creativecommons.org/publicdomain/zero/1.0/ -->
     <script type="text/javascript">
-      window.addEventListener("load", function() {
+      window.addEventListener("load", function onload() {
+        window.removeEventListener("load", onload);
         function initialSetup(event) {
           debugger;
           var button = document.querySelector("button");
