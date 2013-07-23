@@ -43,32 +43,32 @@ function testBreakOnAll()
         is(packet.why.type, "pauseOnDOMEvents", "A hidden breakpoint was hit.");
         is(packet.frame.callee.name, "keyupHandler", "The keyupHandler is entered.");
 
-        gThreadClient.resume(function() {
+        gClient.addOneTimeListener("paused", function(event, packet) {
+          is(packet.why.type, "pauseOnDOMEvents", "A hidden breakpoint was hit.");
+          is(packet.frame.callee.name, "clickHandler", "The clickHandler is entered.");
+
           gClient.addOneTimeListener("paused", function(event, packet) {
             is(packet.why.type, "pauseOnDOMEvents", "A hidden breakpoint was hit.");
-            is(packet.frame.callee.name, "clickHandler", "The clickHandler is entered.");
+            is(packet.frame.callee.name, "onchange", "The onchange handler is entered.");
 
-            gThreadClient.resume(function() {
-              gClient.addOneTimeListener("paused", function(event, packet) {
-                is(packet.why.type, "pauseOnDOMEvents", "A hidden breakpoint was hit.");
-                is(packet.frame.callee.name, "onchange", "The onchange handler is entered.");
-
-                gThreadClient.resume(testBreakOnDisabled);
-              });
-
-              gInput.focus();
-              gInput.value = "foo";
-              gInput.blur();
-            });
+            gThreadClient.resume(testBreakOnDisabled);
           });
 
+          gThreadClient.resume(function() {
+            gInput.focus();
+            gInput.value = "foo";
+            gInput.blur();
+          });
+        });
+
+        gThreadClient.resume(function() {
           EventUtils.sendMouseEvent({ type: "click" }, gButton);
         });
       });
 
       gThreadClient.resume(function() {
         gInput.focus();
-        EventUtils.synthesizeKey("e", {}, content);
+        EventUtils.synthesizeKey("e", { shiftKey: 1 }, content);
       });
     });
   });
@@ -95,7 +95,7 @@ function testBreakOnDisabled()
     }, false);
 
     gInput.focus();
-    EventUtils.synthesizeKey("e", {}, content);
+    EventUtils.synthesizeKey("e", { shiftKey: 1 }, content);
   });
 }
 
@@ -118,7 +118,7 @@ function testBreakOnNone()
     }, false);
 
     gInput.focus();
-    EventUtils.synthesizeKey("g", {}, content);
+    EventUtils.synthesizeKey("g", { shiftKey: 1 }, content);
   });
 }
 
