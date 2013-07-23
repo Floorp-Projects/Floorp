@@ -44,14 +44,6 @@ function runTests()
       ok(!notificationBox.currentNotification,
          "there is no notification in content context");
 
-      let dsp = sp.contentSandbox.__SCRATCHPAD__;
-
-      ok(sp.contentSandbox.__SCRATCHPAD__,
-          "there is a variable named __SCRATCHPAD__");
-
-      ok(sp.contentSandbox.__SCRATCHPAD__.editor,
-          "scratchpad is actually an instance of Scratchpad");
-
       sp.setText("window.foobarBug636725 = 'aloha';");
 
       ok(!content.wrappedJSObject.foobarBug636725,
@@ -75,12 +67,6 @@ function runTests()
 
       isnot(contentMenu.getAttribute("checked"), "true",
          "content menuitem is not checked");
-
-      ok(sp.chromeSandbox.__SCRATCHPAD__,
-        "there is a variable named __SCRATCHPAD__");
-
-      ok(sp.chromeSandbox.__SCRATCHPAD__.editor,
-          "scratchpad is actually an instance of Scratchpad");
 
       ok(notificationBox.currentNotification,
          "there is a notification in browser context");
@@ -107,7 +93,7 @@ function runTests()
          "setText() worked with no end for the replace range");
     },
     then: function([, , result]) {
-      is(typeof result.addTab, "function",
+      is(result.class, "XULElement",
          "chrome context has access to chrome objects");
     }
   },
@@ -130,17 +116,6 @@ function runTests()
     then: function([, , result]) {
       is(result, "string",
          "global variable exists across two different executions");
-    }
-  },
-  {
-    method: "run",
-    prepare: function() {
-      sp.resetContext();
-      sp.setText("typeof foobarBug636725cache;");
-    },
-    then: function([, , result]) {
-      is(result, "undefined",
-         "global variable no longer exists after calling resetContext()");
     }
   },
   {
@@ -170,5 +145,10 @@ function runTests()
     }
   }];
 
-  runAsyncCallbackTests(sp, tests).then(finish);
+  runAsyncCallbackTests(sp, tests).then(() => {
+    sp.setBrowserContext();
+    sp.setText("delete foobarBug636725cache;" +
+               "delete foobarBug636725cache2;");
+    sp.run().then(finish);
+  });
 }

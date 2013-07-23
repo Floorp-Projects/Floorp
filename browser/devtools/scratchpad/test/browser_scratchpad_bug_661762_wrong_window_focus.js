@@ -89,6 +89,6 @@ function testFocus(sw, hud) {
   sp.run().then(function ([selection, error, result]) {
     is(selection, "console.log('foo');", "selection is correct");
     is(error, undefined, "error is correct");
-    is(result, undefined, "result is correct");
+    is(result.type, "undefined", "result is correct");
   });
 }
