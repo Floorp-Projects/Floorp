@@ -395,7 +395,7 @@ UploadYUVToTexture(GLContext* gl, const PlanarYCbCrImage::Data& aData,
 }
 
 ImageLayerOGL::ImageLayerOGL(LayerManagerOGL *aManager)
-  : ImageLayer(aManager, NULL)
+  : ImageLayer(aManager, nullptr)
   , LayerOGL(aManager)
   , mTextureRecycleBin(new TextureRecycleBin())
 { 

@@ -173,7 +173,7 @@ public:
 
 #ifdef DEBUG
     static void StaticInit() {
-        PR_NewThreadPrivateIndex(&sCurrentGLContextTLS, NULL);
+        PR_NewThreadPrivateIndex(&sCurrentGLContextTLS, nullptr);
     }
 #endif
 
@@ -213,7 +213,7 @@ public:
         mUserData.Put(aKey, aValue);
     }
 
-    // Mark this context as destroyed.  This will NULL out all
+    // Mark this context as destroyed.  This will nullptr out all
     // the GL function pointers!
     void MarkDestroyed();
 
@@ -229,7 +229,7 @@ public:
       NativeDataTypeMax
     };
 
-    virtual void *GetNativeData(NativeDataType aType) { return NULL; }
+    virtual void *GetNativeData(NativeDataType aType) { return nullptr; }
     GLContext *GetSharedContext() { return mSharedContext; }
 
     bool IsGlobalSharedContext() { return mIsGlobalSharedContext; }
@@ -786,7 +786,7 @@ public:
      * default, GL_LINEAR filtering.  Specify
      * |aFlags=UseNearestFilter| for GL_NEAREST filtering. Specify
      * |aFlags=NeedsYFlip| if the image is flipped. Return
-     * NULL if creating the TextureImage fails.
+     * nullptr if creating the TextureImage fails.
      *
      * The returned TextureImage may only be used with this GLContext.
      * Attempting to use the returned TextureImage after this
@@ -982,7 +982,7 @@ public:
         /**
          * these return a float pointer to the start of each array respectively.
          * Use it for glVertexAttribPointer calls.
-         * We can return NULL if we choose to use Vertex Buffer Objects here.
+         * We can return nullptr if we choose to use Vertex Buffer Objects here.
          */
         float* vertexPointer() {
             return &vertexCoords[0].x;
@@ -1500,7 +1500,7 @@ public:
     void BeforeGLCall(const char* glFunction) {
         MOZ_ASSERT(IsCurrent());
         if (DebugMode()) {
-            GLContext *currentGLContext = NULL;
+            GLContext *currentGLContext = nullptr;
 
             currentGLContext = (GLContext*)PR_GetThreadPrivate(sCurrentGLContextTLS);
 

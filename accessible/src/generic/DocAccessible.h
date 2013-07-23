@@ -242,15 +242,20 @@ public:
    * Return an accessible for the given DOM node or container accessible if
    * the node is not accessible.
    */
-  Accessible* GetAccessibleOrContainer(nsINode* aNode);
+  Accessible* GetAccessibleOrContainer(nsINode* aNode) const;
 
   /**
    * Return a container accessible for the given DOM node.
    */
-  Accessible* GetContainerAccessible(nsINode* aNode)
+  Accessible* GetContainerAccessible(nsINode* aNode) const
   {
     return aNode ? GetAccessibleOrContainer(aNode->GetParentNode()) : nullptr;
   }
+
+  /**
+   * Return an accessible for the given node or its first accessible descendant.
+   */
+  Accessible* GetAccessibleOrDescendant(nsINode* aNode) const;
 
   /**
    * Return true if the given ID is referred by relation attribute.

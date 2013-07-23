@@ -67,7 +67,7 @@ using namespace android;
 // a little helper
 class AutoDestroyHWND {
 public:
-    AutoDestroyHWND(HWND aWnd = NULL)
+    AutoDestroyHWND(HWND aWnd = nullptr)
         : mWnd(aWnd)
     {
     }
@@ -84,7 +84,7 @@ public:
 
     HWND forget() {
         HWND w = mWnd;
-        mWnd = NULL;
+        mWnd = nullptr;
         return w;
     }
 
@@ -555,7 +555,7 @@ public:
 #else
             EGLConfig config;
             CreateConfig(&config);
-            mSurface = CreateSurfaceForWindow(NULL, config);
+            mSurface = CreateSurfaceForWindow(nullptr, config);
 #endif
         }
         return sEGLLibrary.fMakeCurrent(EGL_DISPLAY(),
@@ -570,7 +570,7 @@ public:
             sEGLLibrary.fMakeCurrent(EGL_DISPLAY(), EGL_NO_SURFACE, EGL_NO_SURFACE,
                                      EGL_NO_CONTEXT);
             sEGLLibrary.fDestroySurface(EGL_DISPLAY(), mSurface);
-            mSurface = NULL;
+            mSurface = nullptr;
         }
     }
 
@@ -1191,7 +1191,7 @@ public:
         //printf_stderr("BeginUpdate with updateRect [%d %d %d %d]\n", mUpdateRect.x, mUpdateRect.y, mUpdateRect.width, mUpdateRect.height);
         if (!nsIntRect(nsIntPoint(0, 0), mSize).Contains(mUpdateRect)) {
             NS_ERROR("update outside of image");
-            return NULL;
+            return nullptr;
         }
 
         if (mBackingSurface) {
@@ -1357,7 +1357,7 @@ public:
                                     0,
                                     GLFormatForImage(mUpdateFormat),
                                     GLTypeForImage(mUpdateFormat),
-                                    NULL);
+                                    nullptr);
         }
 
         mTextureState = Allocated;
