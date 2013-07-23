@@ -47,6 +47,13 @@
     <uses-feature android:name="android.hardware.location.gps" android:required="false"/>
     <uses-feature android:name="android.hardware.touchscreen"/>
 
+#ifdef NIGHTLY_BUILD
+    <!-- Contacts API -->
+    <uses-permission android:name="android.permission.READ_CONTACTS"/>
+    <uses-permission android:name="android.permission.WRITE_CONTACTS"/>
+    <uses-permission android:name="android.permission.GET_ACCOUNTS"/>
+#endif
+
 #ifdef MOZ_ANDROID_BEAM
     <!-- Android Beam support -->
     <uses-permission android:name="android.permission.NFC"/>
