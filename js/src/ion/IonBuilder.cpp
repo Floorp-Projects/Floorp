@@ -5362,7 +5362,8 @@ CanEffectlesslyCallLookupGenericOnObject(JSContext *cx, JSObject *obj, jsid id)
             return false;
         if (obj->nativeLookup(cx, id))
             return true;
-        if (obj->getClass()->resolve != JS_ResolveStub)
+        if (obj->getClass()->resolve != JS_ResolveStub &&
+            obj->getClass()->resolve != (JSResolveOp)fun_resolve)
             return false;
         obj = obj->getProto();
     }
