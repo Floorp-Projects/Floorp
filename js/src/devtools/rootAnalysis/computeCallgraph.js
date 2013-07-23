@@ -25,6 +25,7 @@ function addClassEntry(index, name, other)
     index[name].push(other);
 }
 
+// CSU is "Class/Struct/Union"
 function processCSU(csuName, csu)
 {
     if (!("FunctionField" in csu))

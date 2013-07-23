@@ -102,10 +102,6 @@ function loadCallgraph(file)
     for (var gcName of [ 'jsgc.cpp:void Collect(JSRuntime*, uint8, int64, uint32, uint32)',
                          'void js::MinorGC(JSRuntime*, uint32)' ])
     {
-        if (!callerGraph[gcName]) {
-            debugger;
-            print(callerGraph)
-        }
         assert(gcName in callerGraph);
         addGCFunction(gcName, "GC");
     }
