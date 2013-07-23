@@ -68,7 +68,7 @@ function testBreakOnAll()
 
       gThreadClient.resume(function() {
         gInput.focus();
-        EventUtils.synthesizeKey("e", {}, content);
+        EventUtils.synthesizeKey("e", { shiftKey: 1 }, content);
       });
     });
   });
@@ -95,7 +95,7 @@ function testBreakOnDisabled()
     }, false);
 
     gInput.focus();
-    EventUtils.synthesizeKey("e", {}, content);
+    EventUtils.synthesizeKey("e", { shiftKey: 1 }, content);
   });
 }
 
@@ -118,7 +118,7 @@ function testBreakOnNone()
     }, false);
 
     gInput.focus();
-    EventUtils.synthesizeKey("g", {}, content);
+    EventUtils.synthesizeKey("g", { shiftKey: 1 }, content);
   });
 }
 
