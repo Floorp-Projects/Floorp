@@ -5509,7 +5509,36 @@ ICGetProp_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
     masm.push(BaselineStubReg);
     masm.pushBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
 
-    return tailCallVM(DoGetPropFallbackInfo, masm);
+    if (!tailCallVM(DoGetPropFallbackInfo, masm))
+        return false;
+
+    // What follows is bailout-only code for inlined scripted getters
+    // The return address pointed to by the baseline stack points here.
+    returnOffset_ = masm.currentOffset();
+
+    // Even though the fallback frame doesn't enter a stub frame, the CallScripted
+    // frame that we are emulating does. Again, we lie.
+    entersStubFrame_ = true;
+
+    leaveStubFrame(masm, true);
+
+    // When we get here, BaselineStubReg contains the ICGetProp_Fallback stub,
+    // which we can't use to enter the TypeMonitor IC, because it's a MonitoredFallbackStub
+    // instead of a MonitoredStub. So, we cheat.
+    masm.loadPtr(Address(BaselineStubReg, ICMonitoredFallbackStub::offsetOfFallbackMonitorStub()),
+                 BaselineStubReg);
+    EmitEnterTypeMonitorIC(masm, ICTypeMonitor_Fallback::offsetOfFirstMonitorStub());
+
+    return true;
+}
+
+bool
+ICGetProp_Fallback::Compiler::postGenerateStubCode(MacroAssembler &masm, Handle<IonCode *> code)
+{
+    CodeOffsetLabel offset(returnOffset_);
+    offset.fixup(&masm);
+    cx->compartment()->ionCompartment()->initBaselineGetPropReturnAddr(code->raw() + offset.offset());
+    return true;
 }
 
 bool
@@ -6348,7 +6377,33 @@ ICSetProp_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
     masm.push(BaselineStubReg);
     masm.pushBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
 
-    return tailCallVM(DoSetPropFallbackInfo, masm);
+    if (!tailCallVM(DoSetPropFallbackInfo, masm))
+        return false;
+
+    // What follows is bailout-only code for inlined scripted getters
+    // The return address pointed to by the baseline stack points here.
+    returnOffset_ = masm.currentOffset();
+
+    // Even though the fallback frame doesn't enter a stub frame, the CallScripted
+    // frame that we are emulating does. Again, we lie.
+    entersStubFrame_ = true;
+
+    leaveStubFrame(masm, true);
+
+    // Retrieve the stashed initial argument from the caller's frame before returning
+    EmitUnstowICValues(masm, 1);
+    EmitReturnFromIC(masm);
+
+    return true;
+}
+
+bool
+ICSetProp_Fallback::Compiler::postGenerateStubCode(MacroAssembler &masm, Handle<IonCode *> code)
+{
+    CodeOffsetLabel offset(returnOffset_);
+    offset.fixup(&masm);
+    cx->compartment()->ionCompartment()->initBaselineSetPropReturnAddr(code->raw() + offset.offset());
+    return true;
 }
 
 bool

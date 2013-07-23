@@ -1321,6 +1321,10 @@ InlineFrameIteratorMaybeGC<allowGC>::findNextFrame()
         if (JSOp(*pc_) == JSOP_FUNCALL) {
             JS_ASSERT(GET_ARGC(pc_) > 0);
             numActualArgs_ = GET_ARGC(pc_) - 1;
+        } else if (IsGetterPC(pc_)) {
+            numActualArgs_ = 0;
+        } else if (IsSetterPC(pc_)) {
+            numActualArgs_ = 1;
         }
 
         JS_ASSERT(numActualArgs_ != 0xbadbad);
