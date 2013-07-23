@@ -2829,7 +2829,7 @@ private:
     XPCJSObjectHolder(JSObject* obj);
     XPCJSObjectHolder(); // not implemented
 
-    JSObject* mJSObj;
+    JS::Heap<JSObject*> mJSObj;
 };
 
 /***************************************************************************
@@ -3640,7 +3640,7 @@ protected:
 
 protected:
     nsDiscriminatedUnion mData;
-    jsval                mJSVal;
+    JS::Heap<JS::Value>  mJSVal;
     bool                 mReturnRawObject : 1;
     uint32_t             mCCGeneration : 31;
 };
