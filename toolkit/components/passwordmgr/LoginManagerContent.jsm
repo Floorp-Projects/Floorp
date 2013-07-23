@@ -128,6 +128,8 @@ var LoginManagerContent = {
             return;
 
         var acForm = acInputField.form;
+        if (!acForm)
+            return;
 
         // If the username is blank, bail out now -- we don't want
         // fillForm() to try filling in a login without a username
