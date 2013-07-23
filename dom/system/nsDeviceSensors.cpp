@@ -8,10 +8,10 @@
 #include "nsDeviceSensors.h"
 
 #include "nsAutoPtr.h"
+#include "nsIDocument.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMWindow.h"
 #include "nsPIDOMWindow.h"
-#include "nsIDOMDocument.h"
 #include "nsIServiceManager.h"
 #include "nsIServiceManager.h"
 #include "GeneratedEvents.h"
@@ -19,11 +19,15 @@
 #include "mozilla/Attributes.h"
 #include "nsIPermissionManager.h"
 
+
 using namespace mozilla;
 using namespace mozilla::dom;
 using namespace hal;
 
 #undef near
+
+// Microsoft's API Name hackery sucks
+#undef CreateEvent
 
 // also see sDefaultSensorHint in mobile/android/base/GeckoAppShell.java
 #define DEFAULT_SENSOR_POLL 100
@@ -212,17 +216,16 @@ nsDeviceSensors::Notify(const mozilla::hal::SensorData& aSensorData)
         continue;
     }
 
-    nsCOMPtr<nsIDOMDocument> domdoc;
-    windowListeners[i]->GetDocument(getter_AddRefs(domdoc));
+    nsCOMPtr<nsIDocument> doc = pwindow->GetDoc();
 
-    if (domdoc) {
+    if (doc) {
       nsCOMPtr<mozilla::dom::EventTarget> target = do_QueryInterface(windowListeners[i]);
       if (type == nsIDeviceSensorData::TYPE_ACCELERATION ||
         type == nsIDeviceSensorData::TYPE_LINEAR_ACCELERATION ||
         type == nsIDeviceSensorData::TYPE_GYROSCOPE)
-        FireDOMMotionEvent(domdoc, target, type, x, y, z);
+        FireDOMMotionEvent(doc, target, type, x, y, z);
       else if (type == nsIDeviceSensorData::TYPE_ORIENTATION)
-        FireDOMOrientationEvent(domdoc, target, x, y, z);
+        FireDOMOrientationEvent(doc, target, x, y, z);
       else if (type == nsIDeviceSensorData::TYPE_PROXIMITY)
         FireDOMProximityEvent(target, x, y, z);
       else if (type == nsIDeviceSensorData::TYPE_LIGHT)
@@ -305,17 +308,17 @@ nsDeviceSensors::FireDOMUserProximityEvent(mozilla::dom::EventTarget* aTarget,
 }
 
 void
-nsDeviceSensors::FireDOMOrientationEvent(nsIDOMDocument* domdoc,
+nsDeviceSensors::FireDOMOrientationEvent(nsIDocument* doc,
                                          EventTarget* target,
                                          double alpha,
                                          double beta,
                                          double gamma)
 {
-  nsCOMPtr<nsIDOMEvent> event;
+  ErrorResult rv;
+  nsRefPtr<nsDOMEvent> event = doc->CreateEvent(NS_LITERAL_STRING("DeviceOrientationEvent"), rv);
   bool defaultActionEnabled = true;
-  domdoc->CreateEvent(NS_LITERAL_STRING("DeviceOrientationEvent"), getter_AddRefs(event));
 
-  nsCOMPtr<nsIDOMDeviceOrientationEvent> oe = do_QueryInterface(event);
+  nsCOMPtr<nsIDOMDeviceOrientationEvent> oe = do_QueryObject(event);
 
   if (!oe) {
     return;
@@ -336,7 +339,7 @@ nsDeviceSensors::FireDOMOrientationEvent(nsIDOMDocument* domdoc,
 
 
 void
-nsDeviceSensors::FireDOMMotionEvent(nsIDOMDocument *domdoc,
+nsDeviceSensors::FireDOMMotionEvent(nsIDocument* doc,
                                     EventTarget* target,
                                     uint32_t type,
                                     double x,
@@ -362,10 +365,10 @@ nsDeviceSensors::FireDOMMotionEvent(nsIDOMDocument *domdoc,
     return;
   }
 
-  nsCOMPtr<nsIDOMEvent> event;
-  domdoc->CreateEvent(NS_LITERAL_STRING("DeviceMotionEvent"), getter_AddRefs(event));
+  ErrorResult rv;
+  nsRefPtr<nsDOMEvent> event = doc->CreateEvent(NS_LITERAL_STRING("DeviceMotionEvent"), rv);
 
-  nsCOMPtr<nsIDOMDeviceMotionEvent> me = do_QueryInterface(event);
+  nsCOMPtr<nsIDOMDeviceMotionEvent> me = do_QueryObject(event);
 
   if (!me)
     return;

@@ -37,6 +37,7 @@
 #include "nsError.h"
 #include "nsFocusManager.h"
 #include "mozilla/Services.h"
+#include "mozilla/dom/Element.h"
 
 #if DEBUG
 #include "nsIWebNavigation.h"
@@ -851,7 +852,8 @@ nsresult nsWebBrowserFind::OnFind(nsIDOMWindow *aFoundWindow)
       nsCOMPtr<nsPIDOMWindow> window(do_QueryInterface(aFoundWindow));
       NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
 
-      nsCOMPtr<nsIDOMElement> frameElement = window->GetFrameElementInternal();
+      nsCOMPtr<nsIDOMElement> frameElement =
+        do_QueryInterface(window->GetFrameElementInternal());
       if (frameElement)
         fm->SetFocus(frameElement, 0);
 
