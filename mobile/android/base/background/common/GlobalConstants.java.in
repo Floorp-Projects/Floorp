@@ -22,8 +22,8 @@ public class GlobalConstants {
   public static final boolean MOZ_OFFICIAL_BRANDING = false;
 #endif
 
-  public static final long BUILD_TIMESTAMP_SECONDS = @MOZ_BUILD_TIMESTAMP@;
-  public static final long BUILD_TIMESTAMP_MSEC = 1000 * @MOZ_BUILD_TIMESTAMP@;
+  public static final long BUILD_TIMESTAMP_SECONDS = @MOZ_BUILD_TIMESTAMP@L;
+  public static final long BUILD_TIMESTAMP_MSEC = 1000L * @MOZ_BUILD_TIMESTAMP@L;
 
   public static final String MOZ_APP_DISPLAYNAME = "@MOZ_APP_DISPLAYNAME@";
   public static final String MOZ_APP_VERSION = "@MOZ_APP_VERSION@";
