@@ -30,10 +30,6 @@ gTests.push({
     let vbox = document.getElementById("start-remotetabs");
     ok(vbox.hidden, "remote tabs in the start page should be hidden when sync is not enabled");
 
-    // check container link is hidden
-    let menulink = document.getElementById("menuitem-remotetabs");
-    ok(menulink.hidden, "link to container should be hidden when sync is not enabled");
-
     RemoteTabsStartView._view.setUIAccessVisible(true);
 
     // start page grid should be visible
@@ -43,6 +39,5 @@ gTests.push({
     RemoteTabsStartView._view.setUIAccessVisible(false);
 
     ok(vbox.hidden, "remote tabs in the start page should be hidden when sync is not enabled");
-    ok(menulink.hidden, "link to container should be hidden when sync is not enabled");
   }
 });

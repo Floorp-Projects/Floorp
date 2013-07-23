@@ -101,7 +101,9 @@ function logit(i, data, ctx) {
 function setupChannel(suffix, value) {
     var ios = Components.classes["@mozilla.org/network/io-service;1"].
                          getService(Ci.nsIIOService);
-    var chan = ios.newChannel("http://localhost:4444" + suffix, "", null);
+    var chan = ios.newChannel("http://localhost:" +
+                              httpserver.identity.primaryPort + suffix,
+                              "", null);
     var httpChan = chan.QueryInterface(Components.interfaces.nsIHttpChannel);
     httpChan.requestMethod = "GET"; // default value, just being paranoid...
     httpChan.setRequestHeader("x-request", value, false);
@@ -131,7 +133,7 @@ function checkValueAndTrigger(request, data, ctx) {
 
 function run_test() {
     httpserver.registerPathHandler("/precedence", handler);
-    httpserver.start(4444);
+    httpserver.start(-1);
 
     // clear cache
     evict_cache_entries();

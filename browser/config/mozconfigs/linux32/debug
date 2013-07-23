@@ -4,9 +4,6 @@ ac_add_options --enable-signmar
 
 . $topsrcdir/build/unix/mozconfig.linux32
 
-# Avoid dependency on libstdc++ 4.5
-ac_add_options --enable-stdcxx-compat
-
 # Needed to enable breakpad in application.ini
 export MOZILLA_OFFICIAL=1
 

@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <head>
+    <link rel="stylesheet" type="text/css" href="style.css">
+  </head>
+  <body>
+    <div id="container" style="border-width: 10px; padding: 50px"
+      >surrounding <span id="rel"
+        style="left: 0; top: 0;"
+        >position&#10;relative</span> text</div>
+    <script>
+      document.addEventListener("MozReftestInvalidate", function() {
+        var rel = document.getElementById("rel");
+        rel.style.top = "50%";
+        rel.style.left = "50%";
+        document.documentElement.removeAttribute("class");
+      }, false);
+    </script>
+  </body>
+</html>

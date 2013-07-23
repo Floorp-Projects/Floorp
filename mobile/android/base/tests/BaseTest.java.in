@@ -704,6 +704,28 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
         hitEnterAndWait();
     }
 
+    /**
+    * This method parses the string received as event data from blockForEventData()
+    * blockForEventData returns the data from a Gecko event as a string. 
+    * The data contains tuples structured like this: "property":"value" separated by "," in most cases but this may vary
+    * The method takes as input the event data string and a string of delimiters to parse after.
+    * @return an ArrayList<String> with the 2*k (even) index the property and the 2k+1 (odd) index the value, 0<=k<=ArrayList.size()/2
+    */
+    public ArrayList<String> parseEventData(String eventData, String dataDelimiters) {
+        ArrayList<String> parsedEventData = new ArrayList<String>();
+        String[] parseData = eventData.split(dataDelimiters);
+        for (String data:parseData) {
+            // Sometimes the property can contain : so only split the string when we have "String":"String"
+            String[] parseDataEntry = data.split("\":");
+            for (String dataContent:parseDataEntry) {
+                // Strip extra characters like event data beginning and ending brakets, remaining extra quote marks
+                dataContent = dataContent.replaceAll("[}{\"]",""); 
+                parsedEventData.add(dataContent);
+            }
+        }
+        return parsedEventData;
+    }
+
     public final void runOnUiThreadSync(Runnable runnable) {
         RobocopUtils.runOnUiThreadSync(mActivity, runnable);
     }

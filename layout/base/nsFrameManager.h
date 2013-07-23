@@ -25,12 +25,39 @@
 #include "nsFrameManagerBase.h"
 
 namespace mozilla {
-namespace css {
-class RestyleTracker;
-} // namespace css
-} // namespace mozilla
+/**
+ * Node in a linked list, containing the style for an element that
+ * does not have a frame but whose parent does have a frame.
+ */
+struct UndisplayedNode {
+  UndisplayedNode(nsIContent* aContent, nsStyleContext* aStyle)
+    : mContent(aContent),
+      mStyle(aStyle),
+      mNext(nullptr)
+  {
+    MOZ_COUNT_CTOR(mozilla::UndisplayedNode);
+  }
 
-struct TreeMatchContext;
+  NS_HIDDEN ~UndisplayedNode()
+  {
+    MOZ_COUNT_DTOR(mozilla::UndisplayedNode);
+
+    // Delete mNext iteratively to avoid blowing up the stack (bug 460461).
+    UndisplayedNode* cur = mNext;
+    while (cur) {
+      UndisplayedNode* next = cur->mNext;
+      cur->mNext = nullptr;
+      delete cur;
+      cur = next;
+    }
+  }
+
+  nsCOMPtr<nsIContent>      mContent;
+  nsRefPtr<nsStyleContext>  mStyle;
+  UndisplayedNode*          mNext;
+};
+
+} // namespace mozilla
 
 /**
  * Frame manager interface. The frame manager serves two purposes:
@@ -45,7 +72,6 @@ struct TreeMatchContext;
 
 class nsFrameManager : public nsFrameManagerBase
 {
-  typedef mozilla::css::RestyleTracker RestyleTracker;
   typedef nsIFrame::ChildListID ChildListID;
 
 public:
@@ -76,6 +102,8 @@ public:
 
   // Mapping undisplayed content
   NS_HIDDEN_(nsStyleContext*) GetUndisplayedContent(nsIContent* aContent);
+  NS_HIDDEN_(mozilla::UndisplayedNode*)
+    GetAllUndisplayedContentIn(nsIContent* aParentContent);
   NS_HIDDEN_(void) SetUndisplayedContent(nsIContent* aContent,
                                          nsStyleContext* aStyleContext);
   NS_HIDDEN_(void) ChangeUndisplayedContent(nsIContent* aContent,
@@ -104,28 +132,6 @@ public:
   NS_HIDDEN_(void)     NotifyDestroyingFrame(nsIFrame* aFrame);
 
   /*
-   * Reparent the style contexts of this frame subtree.  The parent frame of
-   * aFrame must be changed to the new parent before this function is called;
-   * the new parent style context will be automatically computed based on the
-   * new position in the frame tree.
-   *
-   * @param aFrame the root of the subtree to reparent.  Must not be null.
-   */
-  NS_HIDDEN_(nsresult) ReparentStyleContext(nsIFrame* aFrame);
-
-  /*
-   * Re-resolve the style contexts for a frame tree, building
-   * aChangeList based on the resulting style changes, plus aMinChange
-   * applied to aFrame.
-   */
-  NS_HIDDEN_(void)
-    ComputeStyleChangeFor(nsIFrame* aFrame,
-                          nsStyleChangeList* aChangeList,
-                          nsChangeHint aMinChange,
-                          RestyleTracker& aRestyleTracker,
-                          bool aRestyleDescendants);
-
-  /*
    * Capture/restore frame state for the frame subtree rooted at aFrame.
    * aState is the document state storage object onto which each frame
    * stores its state.  Callers of CaptureFrameState are responsible for
@@ -149,48 +155,10 @@ public:
   NS_HIDDEN_(void) RestoreFrameStateFor(nsIFrame*              aFrame,
                                         nsILayoutHistoryState* aState);
 
-#ifdef DEBUG
-  /**
-   * DEBUG ONLY method to verify integrity of style tree versus frame tree
-   */
-  NS_HIDDEN_(void) DebugVerifyStyleTree(nsIFrame* aFrame);
-#endif
-
   NS_HIDDEN_(nsIPresShell*) GetPresShell() const { return mPresShell; }
   NS_HIDDEN_(nsPresContext*) GetPresContext() const {
     return mPresShell->GetPresContext();
   }
-
-private:
-  enum DesiredA11yNotifications {
-    eSkipNotifications,
-    eSendAllNotifications,
-    eNotifyIfShown
-  };
-
-  enum A11yNotificationType {
-    eDontNotify,
-    eNotifyShown,
-    eNotifyHidden
-  };
-
-  // Use eRestyle_Self for the aRestyleHint argument to mean
-  // "reresolve our style context but not kids", use eRestyle_Subtree
-  // to mean "reresolve our style context and kids", and use
-  // nsRestyleHint(0) to mean recompute a new style context for our
-  // current parent and existing rulenode, and the same for kids.
-  NS_HIDDEN_(nsChangeHint)
-    ReResolveStyleContext(nsPresContext    *aPresContext,
-                          nsIFrame          *aFrame,
-                          nsIContent        *aParentContent,
-                          nsStyleChangeList *aChangeList, 
-                          nsChangeHint       aMinChange,
-                          nsChangeHint       aParentFrameHintsNotHandledForDescendants,
-                          nsRestyleHint      aRestyleHint,
-                          RestyleTracker&    aRestyleTracker,
-                          DesiredA11yNotifications aDesiredA11yNotifications,
-                          nsTArray<nsIContent*>& aVisibleKidsOfHiddenElement,
-                          TreeMatchContext &aTreeMatchContext);
 };
 
 #endif

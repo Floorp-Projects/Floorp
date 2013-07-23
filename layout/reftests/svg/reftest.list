@@ -32,7 +32,7 @@ include svg-integration/reftest.list
 == clip-02a.svg clip-02-ref.svg
 == clip-02b.svg clip-02-ref.svg
 == clipPath-advanced-01.svg pass.svg
-fuzzy-if(/^Windows\x20NT\x206\.[12]/.test(http.oscpu),1,5) == clipPath-and-shape-rendering-01.svg clipPath-and-shape-rendering-01-ref.svg # bug 614840
+fuzzy-if(/^Windows\x20NT\x206\.[12]/.test(http.oscpu),1,5) fuzzy-if(azureQuartz,1,6) == clipPath-and-shape-rendering-01.svg clipPath-and-shape-rendering-01-ref.svg # bug 614840
 == clipPath-and-transform-01.svg pass.svg
 == clipPath-basic-01.svg pass.svg
 == clipPath-basic-02.svg pass.svg
@@ -213,7 +213,7 @@ random-if(gtk2Widget) == objectBoundingBox-and-fePointLight-02.svg objectBoundin
 == objectBoundingBox-and-pattern-02.svg pass.svg
 == objectBoundingBox-and-pattern-03.svg objectBoundingBox-and-pattern-03-ref.svg
 == opacity-and-gradient-01.svg pass.svg
-skip-if(d2d) == opacity-and-gradient-02.svg opacity-and-gradient-02-ref.svg
+skip-if(d2d) fuzzy-if(azureQuartz,1,99974) == opacity-and-gradient-02.svg opacity-and-gradient-02-ref.svg
 == opacity-and-pattern-01.svg pass.svg
 == opacity-and-transform-01.svg opacity-and-transform-01-ref.svg
 fuzzy-if(Android&&AndroidVersion>=15,8,200) == outer-svg-border-and-padding-01.svg outer-svg-border-and-padding-01-ref.svg 
@@ -310,7 +310,7 @@ pref(svg.text.css-frames.enabled,true) == text-layout-08.svg text-layout-08-ref.
 HTTP(..) == text-scale-02.svg text-scale-02-ref.svg
 HTTP(..) == text-scale-03.svg text-scale-03-ref.svg
 == text-stroke-scaling-01.svg text-stroke-scaling-01-ref.svg
-== stroke-dasharray-01.svg stroke-dasharray-01-ref.svg
+fails-if(OSX==10.8) == stroke-dasharray-01.svg stroke-dasharray-01-ref.svg # bug 896487
 == stroke-dasharray-and-pathLength-01.svg pass.svg
 == stroke-dasharray-and-text-01.svg stroke-dasharray-and-text-01-ref.svg 
 == stroke-linecap-square-w-zero-length-segs-01.svg pass.svg

@@ -12,6 +12,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.content.Context;
+import android.content.res.Resources;
 import android.graphics.Rect;
 import android.os.Build;
 import android.text.SpannableString;
@@ -25,6 +26,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.SpinnerAdapter;
@@ -33,7 +35,7 @@ import android.widget.TextView;
 import java.util.ArrayList;
 import java.util.List;
 
-public class DoorHanger extends LinearLayout {
+class DoorHanger extends LinearLayout {
     private static final String LOGTAG = "GeckoDoorHanger";
 
     private static int sInputPadding = -1;
@@ -46,6 +48,7 @@ public class DoorHanger extends LinearLayout {
     }
 
     private final TextView mTextView;
+    private final ImageView mIcon;
     private final LinearLayout mChoicesLayout;
 
     // Divider between doorhangers.
@@ -57,6 +60,8 @@ public class DoorHanger extends LinearLayout {
     // Value used to identify the notification.
     private final String mValue;
 
+    private Resources mResources;
+
     private List<PromptInput> mInputs;
     private CheckBox mCheckBox;
 
@@ -64,36 +69,67 @@ public class DoorHanger extends LinearLayout {
     private boolean mPersistWhileVisible = false;
     private long mTimeout = 0;
 
-    public interface OnButtonClickListener {
+    // Color used for dividers above and between buttons.
+    private int mDividerColor;
+
+    static enum Theme {
+        LIGHT,
+        DARK
+    }
+
+    interface OnButtonClickListener {
         public void onButtonClick(DoorHanger dh, String tag);
     }
 
-    DoorHanger(Context context) {
-        this(context, 0, null);
+    DoorHanger(Context context, Theme theme) {
+        this(context, 0, null, theme);
     }
 
     DoorHanger(Context context, int tabId, String value) {
+        this(context, tabId, value, Theme.LIGHT);
+    }
+
+    private DoorHanger(Context context, int tabId, String value, Theme theme) {
         super(context);
 
         mTabId = tabId;
         mValue = value;
+        mResources = getResources();
 
         if (sInputPadding == -1) {
-            sInputPadding = getResources().getDimensionPixelSize(R.dimen.doorhanger_padding);
+            sInputPadding = mResources.getDimensionPixelSize(R.dimen.doorhanger_padding);
         }
         if (sSpinnerTextColor == -1) {
-            sSpinnerTextColor = getResources().getColor(R.color.text_color_primary_disable_only);
+            sSpinnerTextColor = mResources.getColor(R.color.text_color_primary_disable_only);
         }
         if (sSpinnerTextSize == -1) {
-            sSpinnerTextSize = getResources().getDimensionPixelSize(R.dimen.doorhanger_spinner_textsize);
+            sSpinnerTextSize = mResources.getDimensionPixelSize(R.dimen.doorhanger_spinner_textsize);
         }
 
         setOrientation(VERTICAL);
 
         LayoutInflater.from(context).inflate(R.layout.doorhanger, this);
         mTextView = (TextView) findViewById(R.id.doorhanger_title);
+        mIcon = (ImageView) findViewById(R.id.doorhanger_icon);
         mChoicesLayout = (LinearLayout) findViewById(R.id.doorhanger_choices);
         mDivider = findViewById(R.id.divider_doorhanger);
+
+        setTheme(theme);
+    }
+
+    private void setTheme(Theme theme) {
+        if (theme == Theme.LIGHT) {
+            // The default styles declared in doorhanger.xml are light-themed, so we just
+            // need to set the divider color that we'll use in addButton.
+            mDividerColor = mResources.getColor(R.color.doorhanger_divider_light);
+
+        } else if (theme == Theme.DARK) {
+            mDividerColor = mResources.getColor(R.color.doorhanger_divider_dark);
+
+            // Set a dark background, and use a smaller text size for dark-themed DoorHangers.
+            setBackgroundColor(mResources.getColor(R.color.doorhanger_background_dark));
+            mTextView.setTextSize(mResources.getDimension(R.dimen.doorhanger_textsize_small));
+        }
     }
 
     int getTabId() {
@@ -122,6 +158,11 @@ public class DoorHanger extends LinearLayout {
 
     void setMessage(String message) {
         mTextView.setText(message);
+    }
+
+    void setIcon(int resId) {
+        mIcon.setImageResource(resId);
+        mIcon.setVisibility(View.VISIBLE);
     }
 
     void addLink(String label, String url, String delimiter) {
@@ -158,12 +199,15 @@ public class DoorHanger extends LinearLayout {
         if (mChoicesLayout.getChildCount() == 0) {
             // If this is the first button we're adding, make the choices layout visible.
             mChoicesLayout.setVisibility(View.VISIBLE);
-            findViewById(R.id.divider_choices).setVisibility(View.VISIBLE);
+            // Make the divider above the buttons visible.
+            View divider = findViewById(R.id.divider_choices);
+            divider.setVisibility(View.VISIBLE);
+            divider.setBackgroundColor(mDividerColor);
         } else {
-            // Add a divider for additional buttons.
+            // Add a vertical divider between additional buttons.
             Divider divider = new Divider(getContext(), null);
             divider.setOrientation(Divider.Orientation.VERTICAL);
-            divider.setBackgroundColor(0xFFD1D5DA);
+            divider.setBackgroundColor(mDividerColor);
             mChoicesLayout.addView(divider);
         }
 

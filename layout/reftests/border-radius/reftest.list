@@ -63,8 +63,8 @@ fuzzy-if(true,1,33) fuzzy-if(cocoaWidget,1,332) fuzzy-if(Android&&browserIsRemot
 == table-collapse-1.html table-collapse-1-ref.html # border-radius is ignored on internal table elements
 # when border-collapse: collapse
 
-skip-if(B2G) == invalidate-1a.html invalidate-1-ref.html
-skip-if(B2G) == invalidate-1b.html invalidate-1-ref.html
+fuzzy-if(azureQuartz,1,3) skip-if(B2G) == invalidate-1a.html invalidate-1-ref.html
+fuzzy-if(azureQuartz,1,3) skip-if(B2G) == invalidate-1b.html invalidate-1-ref.html
 
 # test that border-radius is reduced for scrollbars
 skip-if(B2G) fails-if(Android) == scrollbar-clamping-1.html scrollbar-clamping-1-ref.html
