@@ -65,9 +65,9 @@ add_test(function test_url_parsing() {
 });
 
 Cu.import("resource://services-common/rest.js");
-function localRequest(path) {
+function localRequest(server, path) {
   _("localRequest: " + path);
-  let url = "http://127.0.0.1:8080" + path;
+  let url = server.baseURI.substr(0, server.baseURI.length - 1) + path;
   _("url: " + url);
   return new RESTRequest(url);
 }
@@ -76,11 +76,10 @@ add_test(function test_basic_http() {
   let server = new SyncServer();
   server.registerUser("john", "password");
   do_check_true(server.userExists("john"));
-  server.start(8080, function () {
+  server.start(null, function () {
     _("Started on " + server.port);
-    do_check_eq(server.port, 8080);
     Utils.nextTick(function () {
-      let req = localRequest("/1.1/john/storage/crypto/keys");
+      let req = localRequest(server, "/1.1/john/storage/crypto/keys");
       _("req is " + req);
       req.get(function (err) {
         do_check_eq(null, err);
@@ -103,10 +102,9 @@ add_test(function test_info_collections() {
   }
 
   server.registerUser("john", "password");
-  server.start(8080, function () {
-    do_check_eq(server.port, 8080);
+  server.start(null, function () {
     Utils.nextTick(function () {
-      let req = localRequest("/1.1/john/info/collections");
+      let req = localRequest(server, "/1.1/john/info/collections");
       req.get(function (err) {
         // Initial info/collections fetch is empty.
         do_check_eq(null, err);
@@ -121,7 +119,7 @@ add_test(function test_info_collections() {
             let putResponseBody = this.response.body;
             _("PUT response body: " + JSON.stringify(putResponseBody));
 
-            req = localRequest("/1.1/john/info/collections");
+            req = localRequest(server, "/1.1/john/info/collections");
             req.get(function (err) {
               do_check_eq(null, err);
               responseHasCorrectHeaders(this.response);
@@ -137,7 +135,7 @@ add_test(function test_info_collections() {
             });
           }
           let payload = JSON.stringify({foo: "bar"});
-          localRequest("/1.1/john/storage/crypto/keys").put(payload, cb);
+          localRequest(server, "/1.1/john/storage/crypto/keys").put(payload, cb);
         });
       });
     });
@@ -163,7 +161,7 @@ add_test(function test_storage_request() {
   do_check_true(coll.timestamp >= creation);
 
   function retrieveWBONotExists(next) {
-    let req = localRequest(keysURL);
+    let req = localRequest(server, keysURL);
     req.get(function (err) {
       _("Body is " + this.response.body);
       _("Modified is " + this.response.newModified);
@@ -174,7 +172,7 @@ add_test(function test_storage_request() {
     });
   }
   function retrieveWBOExists(next) {
-    let req = localRequest(foosURL);
+    let req = localRequest(server, foosURL);
     req.get(function (err) {
       _("Body is " + this.response.body);
       _("Modified is " + this.response.newModified);
@@ -186,7 +184,7 @@ add_test(function test_storage_request() {
     });
   }
   function deleteWBONotExists(next) {
-    let req = localRequest(keysURL);
+    let req = localRequest(server, keysURL);
     server.callback.onItemDeleted = function (username, collection, wboID) {
       do_throw("onItemDeleted should not have been called.");
     };
@@ -200,7 +198,7 @@ add_test(function test_storage_request() {
     });
   }
   function deleteWBOExists(next) {
-    let req = localRequest(foosURL);
+    let req = localRequest(server, foosURL);
     server.callback.onItemDeleted = function (username, collection, wboID) {
       _("onItemDeleted called for " + collection + "/" + wboID);
       delete server.callback.onItemDeleted;
@@ -220,7 +218,7 @@ add_test(function test_storage_request() {
     _("Testing DELETE on /storage.");
     let now = server.timestamp();
     _("Timestamp: " + now);
-    let req = localRequest(storageURL);
+    let req = localRequest(server, storageURL);
     req.delete(function (err) {
       _("Body is " + this.response.body);
       _("Modified is " + this.response.newModified);
@@ -232,7 +230,7 @@ add_test(function test_storage_request() {
   }
   function getStorageFails(next) {
     _("Testing that GET on /storage fails.");
-    let req = localRequest(storageURL);
+    let req = localRequest(server, storageURL);
     req.get(function (err) {
       do_check_eq(this.response.status, 405);
       do_check_eq(this.response.headers["allow"], "DELETE");
@@ -241,14 +239,14 @@ add_test(function test_storage_request() {
   }
   function getMissingCollectionWBO(next) {
     _("Testing that fetching a WBO from an on-existent collection 404s.");
-    let req = localRequest(storageURL + "/foobar/baz");
+    let req = localRequest(server, storageURL + "/foobar/baz");
     req.get(function (err) {
       do_check_eq(this.response.status, 404);
       Utils.nextTick(next);
     });
   }
 
-  server.start(8080,
+  server.start(null,
     Async.chain(
       retrieveWBONotExists,
       retrieveWBOExists,
@@ -270,12 +268,12 @@ add_test(function test_x_weave_records() {
     crypto: {foos: {foo: "bar"},
              bars: {foo: "baz"}}
   });
-  server.start(8080, function () {
-    let wbo = localRequest("/1.1/john/storage/crypto/foos");
+  server.start(null, function () {
+    let wbo = localRequest(server, "/1.1/john/storage/crypto/foos");
     wbo.get(function (err) {
       // WBO fetches don't have one.
       do_check_false("x-weave-records" in this.response.headers);
-      let col = localRequest("/1.1/john/storage/crypto");
+      let col = localRequest(server, "/1.1/john/storage/crypto");
       col.get(function (err) {
         // Collection fetches do.
         do_check_eq(this.response.headers["x-weave-records"], "2");

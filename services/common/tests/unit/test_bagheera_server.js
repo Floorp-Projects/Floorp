@@ -5,8 +5,6 @@
 
 Cu.import("resource://testing-common/services-common/bagheeraserver.js");
 
-const PORT = 8080;
-
 function run_test() {
   run_next_test();
 }
@@ -24,22 +22,9 @@ add_test(function test_server_empty() {
   run_next_test();
 });
 
-add_test(function test_server_start_no_port() {
-  let server = new BagheeraServer();
-
-  try {
-    server.start();
-  } catch (ex) {
-    do_check_true(ex.message.startsWith("port argument must be"));
-  }
-
-  run_next_test();
-});
-
 add_test(function test_server_start() {
   let server = new BagheeraServer();
-  server.start(PORT);
-
+  server.start();
   server.stop(run_next_test);
 });
 
