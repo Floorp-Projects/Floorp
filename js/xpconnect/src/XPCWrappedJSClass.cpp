@@ -960,13 +960,13 @@ nsXPCWrappedJSClass::CheckForException(XPCCallContext & ccx,
     // to run on this JSContext
     nsresult pending_result = xpcc->GetPendingResult();
 
-    jsval js_exception;
-    JSBool is_js_exception = JS_GetPendingException(cx, &js_exception);
+    RootedValue js_exception(cx);
+    JSBool is_js_exception = JS_GetPendingException(cx, js_exception.address());
 
     /* JS might throw an expection whether the reporter was called or not */
     if (is_js_exception) {
         if (!xpc_exception)
-            XPCConvert::JSValToXPCException(js_exception, anInterfaceName,
+            XPCConvert::JSValToXPCException(&js_exception, anInterfaceName,
                                             aPropertyName,
                                             getter_AddRefs(xpc_exception));
 

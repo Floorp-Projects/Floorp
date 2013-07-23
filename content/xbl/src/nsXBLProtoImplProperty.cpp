@@ -357,13 +357,22 @@ nsXBLProtoImplProperty::Write(nsIScriptContext* aContext,
   rv = aStream->WriteWStringZ(mName);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // The calls to fromMarkedLocation() below are safe because mSetter and
+  // mGetter are traced by the Trace() method above, and because their values
+  // are never changed after they have been set to a compiled function.
+  MOZ_ASSERT_IF(mJSAttributes & (JSPROP_GETTER | JSPROP_SETTER), mIsCompiled);
+
   if (mJSAttributes & JSPROP_GETTER) {
-    rv = XBL_SerializeFunction(aContext, aStream, mGetter.AsHeapObject());
+    JS::Handle<JSObject*> function =
+      JS::Handle<JSObject*>::fromMarkedLocation(mGetter.AsHeapObject().address());
+    rv = XBL_SerializeFunction(aContext, aStream, function);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
   if (mJSAttributes & JSPROP_SETTER) {
-    rv = XBL_SerializeFunction(aContext, aStream, mSetter.AsHeapObject());
+     JS::Handle<JSObject*> function =
+      JS::Handle<JSObject*>::fromMarkedLocation(mSetter.AsHeapObject().address());
+    rv = XBL_SerializeFunction(aContext, aStream, function);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 

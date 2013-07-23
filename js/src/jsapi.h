@@ -2586,13 +2586,11 @@ JS_CallHashSetObjectTracer(JSTracer *trc, HashSetEnum &e, JSObject *const &key, 
 }
 
 /*
- * The JS_CallMaskedObjectTracer variant traces a JSObject* that is stored
- * with flags embedded in the low bits of the word. The flagMask parameter
- * expects |*objp & flagMask| to yield the flags with the pointer value
- * stripped and |*objp & ~flagMask| to yield a valid GC pointer.
+ * Trace an object that is known to always be tenured.  No post barriers are
+ * required in this case.
  */
 extern JS_PUBLIC_API(void)
-JS_CallMaskedObjectTracer(JSTracer *trc, uintptr_t *objp, uintptr_t flagMask, const char *name);
+JS_CallTenuredObjectTracer(JSTracer *trc, JS::TenuredHeap<JSObject *> *objp, const char *name);
 
 /*
  * API for JSTraceCallback implementations.

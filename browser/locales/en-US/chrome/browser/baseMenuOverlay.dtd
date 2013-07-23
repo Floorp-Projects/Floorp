@@ -19,6 +19,10 @@
 <!ENTITY productHelp.label        "&brandShortName; Help">
 <!ENTITY productHelp.accesskey    "H">
 <!ENTITY helpMac.commandkey       "?">
+
+<!ENTITY helpKeyboardShortcuts.label     "Keyboard Shortcuts">
+<!ENTITY helpKeyboardShortcuts.accesskey "K">
+
 <!ENTITY helpSafeMode.label       "Restart with Add-ons Disabled…">
 <!ENTITY helpSafeMode.accesskey   "R">
 

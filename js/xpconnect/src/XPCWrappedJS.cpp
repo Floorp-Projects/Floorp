@@ -275,7 +275,7 @@ CheckMainThreadOnly(nsXPCWrappedJS *aWrapper)
 
 // static
 nsresult
-nsXPCWrappedJS::GetNewOrUsed(JSObject* aJSObj,
+nsXPCWrappedJS::GetNewOrUsed(JS::HandleObject jsObj,
                              REFNSIID aIID,
                              nsISupports* aOuter,
                              nsXPCWrappedJS** wrapperResult)
@@ -285,7 +285,6 @@ nsXPCWrappedJS::GetNewOrUsed(JSObject* aJSObj,
         MOZ_CRASH();
 
     AutoJSContext cx;
-    JS::RootedObject jsObj(cx, aJSObj);
     JSObject2WrappedJSMap* map;
     nsXPCWrappedJS* root = nullptr;
     nsXPCWrappedJS* wrapper = nullptr;
