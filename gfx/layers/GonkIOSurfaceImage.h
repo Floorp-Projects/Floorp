@@ -55,7 +55,7 @@ public:
     gfxIntSize mPicSize;
   };
   GonkIOSurfaceImage()
-    : Image(NULL, GONK_IO_SURFACE)
+    : Image(nullptr, GONK_IO_SURFACE)
     , mSize(0, 0)
     {}
 

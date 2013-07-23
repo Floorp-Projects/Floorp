@@ -191,7 +191,7 @@ ContainerRender(Container* aContainer,
       HRESULT hr = aManager->device()->CreateTexture(visibleRect.width, visibleRect.height, 1,
                                                      D3DUSAGE_RENDERTARGET, D3DFMT_A8R8G8B8,
                                                      D3DPOOL_DEFAULT, getter_AddRefs(renderTexture),
-                                                     NULL);
+                                                     nullptr);
       if (FAILED(hr)) {
         aManager->ReportFailure(NS_LITERAL_CSTRING("ContainerLayerD3D9::ContainerRender(): Failed to create texture"),
                                 hr);
@@ -324,7 +324,7 @@ ContainerRender(Container* aContainer,
 
 
 ContainerLayerD3D9::ContainerLayerD3D9(LayerManagerD3D9 *aManager)
-  : ContainerLayer(aManager, NULL)
+  : ContainerLayer(aManager, nullptr)
   , LayerD3D9(aManager)
 {
   mImplData = static_cast<LayerD3D9*>(this);

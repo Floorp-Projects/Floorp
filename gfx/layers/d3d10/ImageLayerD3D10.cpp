@@ -50,7 +50,7 @@ SurfaceToTexture(ID3D10Device *aDevice,
                  const gfxIntSize &aSize)
 {
   if (!aSurface) {
-    return NULL;
+    return nullptr;
   }
 
   if (aSurface->GetType() == gfxASurface::SurfaceTypeD2D) {
@@ -106,7 +106,7 @@ ImageLayerD3D10::GetImageSRView(Image* aImage, bool& aHasAlpha, IDXGIKeyedMutex 
       dat->mTexture = DataToTexture(device(), remoteImage->mData, remoteImage->mStride, remoteImage->mSize);
 
       if (dat->mTexture) {
-        device()->CreateShaderResourceView(dat->mTexture, NULL, getter_AddRefs(dat->mSRView));
+        device()->CreateShaderResourceView(dat->mTexture, nullptr, getter_AddRefs(dat->mSRView));
         aImage->SetBackendData(mozilla::layers::LAYERS_D3D10, dat.forget());
       }
     }
@@ -132,7 +132,7 @@ ImageLayerD3D10::GetImageSRView(Image* aImage, bool& aHasAlpha, IDXGIKeyedMutex 
       dat->mTexture = SurfaceToTexture(device(), cairoImage->mSurface, cairoImage->mSize);
 
       if (dat->mTexture) {
-        device()->CreateShaderResourceView(dat->mTexture, NULL, getter_AddRefs(dat->mSRView));
+        device()->CreateShaderResourceView(dat->mTexture, nullptr, getter_AddRefs(dat->mSRView));
         aImage->SetBackendData(mozilla::layers::LAYERS_D3D10, dat.forget());
       }
     }
@@ -152,7 +152,7 @@ ImageLayerD3D10::GetImageSRView(Image* aImage, bool& aHasAlpha, IDXGIKeyedMutex 
       nsAutoPtr<TextureD3D10BackendData> dat(new TextureD3D10BackendData());
       dat->mTexture = texture;
 
-      hr = device()->CreateShaderResourceView(dat->mTexture, NULL, getter_AddRefs(dat->mSRView));
+      hr = device()->CreateShaderResourceView(dat->mTexture, nullptr, getter_AddRefs(dat->mSRView));
       NS_ENSURE_TRUE(SUCCEEDED(hr) && dat->mSRView, nullptr);
 
       aImage->SetBackendData(mozilla::layers::LAYERS_D3D10, dat.forget());
@@ -307,7 +307,7 @@ ImageLayerD3D10::RenderLayer()
       if (yuvImage->GetData()->mStereoMode != STEREO_MODE_MONO) {
         // Dst resource is optional
         GetNv3DVUtils()->SendNv3DVMetaData((unsigned int)yuvImage->GetData()->mYSize.width,
-                                           (unsigned int)yuvImage->GetData()->mYSize.height, (HANDLE)(data->mYTexture), (HANDLE)(NULL));
+                                           (unsigned int)yuvImage->GetData()->mYSize.height, (HANDLE)(data->mYTexture), (HANDLE)(nullptr));
       }
     }
 
@@ -385,9 +385,9 @@ void ImageLayerD3D10::AllocateTexturesYCbCr(PlanarYCbCrImage *aImage)
                                      hr);
     return;
   }
-  device()->CreateShaderResourceView(backendData->mYTexture, NULL, getter_AddRefs(backendData->mYView));
-  device()->CreateShaderResourceView(backendData->mCbTexture, NULL, getter_AddRefs(backendData->mCbView));
-  device()->CreateShaderResourceView(backendData->mCrTexture, NULL, getter_AddRefs(backendData->mCrView));
+  device()->CreateShaderResourceView(backendData->mYTexture, nullptr, getter_AddRefs(backendData->mYView));
+  device()->CreateShaderResourceView(backendData->mCbTexture, nullptr, getter_AddRefs(backendData->mCbView));
+  device()->CreateShaderResourceView(backendData->mCrTexture, nullptr, getter_AddRefs(backendData->mCrView));
 
   aImage->SetBackendData(mozilla::layers::LAYERS_D3D10, backendData.forget());
 }
@@ -454,7 +454,7 @@ RemoteDXGITextureImage::GetAsSurface()
   desc.Usage = D3D10_USAGE_STAGING;
 
   nsRefPtr<ID3D10Texture2D> softTexture;
-  HRESULT hr = device->CreateTexture2D(&desc, NULL, getter_AddRefs(softTexture));
+  HRESULT hr = device->CreateTexture2D(&desc, nullptr, getter_AddRefs(softTexture));
 
   if (FAILED(hr)) {
     NS_WARNING("Failed to create 2D staging texture.");
@@ -514,7 +514,7 @@ RemoteDXGITextureImage::GetD3D10TextureBackendData(ID3D10Device *aDevice)
 
   data->mTexture = texture;
 
-  aDevice->CreateShaderResourceView(texture, NULL, getter_AddRefs(data->mSRView));
+  aDevice->CreateShaderResourceView(texture, nullptr, getter_AddRefs(data->mSRView));
 
   SetBackendData(mozilla::layers::LAYERS_D3D10, data);
 

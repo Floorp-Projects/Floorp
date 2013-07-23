@@ -29,7 +29,8 @@ add_test(function test_change_password() {
   }
 
   try {
-    Service.baseURI = "http://localhost:9999/";
+    Service.serverURL = TEST_SERVER_URL;
+    Service.clusterURL = TEST_CLUSTER_URL;
     setBasicCredentials("johndoe", "ilovejane");
 
     _("changePassword() returns false for a network error, the password won't change.");
@@ -43,7 +44,6 @@ add_test(function test_change_password() {
       "/user/1.0/janedoe/password": send(401, "Unauthorized", "Forbidden!")
     });
 
-    Service.serverURL = server.baseURI;
     res = Service.changePassword("ILoveJane83");
     do_check_true(res);
     do_check_eq(Service.identity.basicPassword, "ILoveJane83");

@@ -345,8 +345,8 @@ var gPluginHandler = {
 
     let pluginHost = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost);
     let permissionString = pluginHost.getPermissionStringForType(objLoadingContent.actualType);
-    let browser = gBrowser.getBrowserForDocument(objLoadingContent.ownerDocument.defaultView.top.document);
-    let pluginPermission = Services.perms.testPermission(browser.currentURI, permissionString);
+    let principal = objLoadingContent.ownerDocument.defaultView.top.document.nodePrincipal;
+    let pluginPermission = Services.perms.testPermissionFromPrincipal(principal, permissionString);
 
     let isFallbackTypeValid =
       objLoadingContent.pluginFallbackType >= Ci.nsIObjectLoadingContent.PLUGIN_CLICK_TO_PLAY &&
@@ -511,7 +511,8 @@ var gPluginHandler = {
     if (!gPluginHandler.isKnownPlugin(objLoadingContent))
       return;
     let permissionString = pluginHost.getPermissionStringForType(objLoadingContent.actualType);
-    let pluginPermission = Services.perms.testPermission(browser.currentURI, permissionString);
+    let principal = doc.defaultView.top.document.nodePrincipal;
+    let pluginPermission = Services.perms.testPermissionFromPrincipal(principal, permissionString);
 
     let overlay = doc.getAnonymousElementByAttribute(aPlugin, "class", "mainBox");
 
@@ -630,13 +631,28 @@ var gPluginHandler = {
     }
   },
 
+  // Match the behaviour of nsPermissionManager
+  _getHostFromPrincipal: function PH_getHostFromPrincipal(principal) {
+    if (!principal.URI || principal.URI.schemeIs("moz-nullprincipal")) {
+      return "(null)";
+    }
+
+    try {
+      if (principal.URI.host)
+        return principal.URI.host;
+    } catch (e) {}
+
+    return principal.origin;
+  },
+
   _makeCenterActions: function PH_makeCenterActions(notification) {
-    let browser = notification.browser;
-    let contentWindow = browser.contentWindow;
+    let contentWindow = notification.browser.contentWindow;
     let cwu = contentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
                            .getInterface(Ci.nsIDOMWindowUtils);
 
-    let principal = Services.scriptSecurityManager.getNoAppCodebasePrincipal(browser.currentURI);
+    let principal = contentWindow.document.nodePrincipal;
+    // This matches the behavior of nsPermssionManager, used for display purposes only
+    let principalHost = this._getHostFromPrincipal(principal);
 
     let centerActions = [];
     let pluginsFound = new Set();
@@ -666,7 +682,7 @@ var gPluginHandler = {
         pluginInfo.pluginPermissionType = permissionObj.expireType;
       }
       else {
-        pluginInfo.pluginPermissionHost = browser.currentURI.host;
+        pluginInfo.pluginPermissionHost = principalHost;
         pluginInfo.pluginPermissionType = undefined;
       }
 
@@ -729,9 +745,11 @@ var gPluginHandler = {
     }
 
     let browser = aNotification.browser;
+    let contentWindow = browser.contentWindow;
     if (aNewState != "continue") {
-      Services.perms.add(browser.currentURI, aPluginInfo.permissionString,
-                         permission, expireType, expireTime);
+      let principal = contentWindow.document.nodePrincipal;
+      Services.perms.addFromPrincipal(principal, aPluginInfo.permissionString,
+                                      permission, expireType, expireTime);
 
       if (aNewState == "block") {
         return;
@@ -740,7 +758,6 @@ var gPluginHandler = {
 
     // Manually activate the plugins that would have been automatically
     // activated.
-    let contentWindow = browser.contentWindow;
     let cwu = contentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
                            .getInterface(Ci.nsIDOMWindowUtils);
     let plugins = cwu.plugins;

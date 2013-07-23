@@ -132,7 +132,7 @@ CompositorParent::CompositorParent(nsIWidget* aWidget,
                                    bool aUseExternalSurfaceSize,
                                    int aSurfaceWidth, int aSurfaceHeight)
   : mWidget(aWidget)
-  , mCurrentCompositeTask(NULL)
+  , mCurrentCompositeTask(nullptr)
   , mIsTesting(false)
   , mPaused(false)
   , mUseExternalSurfaceSize(aUseExternalSurfaceSize)
@@ -527,7 +527,7 @@ CompositorParent::ShadowLayersUpdated(LayerTransactionParent* aLayerTree,
   if (!isFirstPaint &&
       !mCompositionManager->IsFirstPaint() &&
       mCompositionManager->RequiresReorientation(aTargetConfig.orientation())) {
-    if (mForceCompositionTask != NULL) {
+    if (mForceCompositionTask != nullptr) {
       mForceCompositionTask->Cancel();
     }
     mForceCompositionTask = NewRunnableMethod(this, &CompositorParent::ForceComposition);

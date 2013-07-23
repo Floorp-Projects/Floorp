@@ -50,7 +50,7 @@ SharedDIBSurface::InitSurface(uint32_t aWidth, uint32_t aHeight,
   gfxImageSurface::InitWithData(data, gfxIntSize(aWidth, aHeight),
                                 stride, format);
 
-  cairo_surface_set_user_data(mSurface, &SHAREDDIB_KEY, this, NULL);
+  cairo_surface_set_user_data(mSurface, &SHAREDDIB_KEY, this, nullptr);
 }
 
 bool
