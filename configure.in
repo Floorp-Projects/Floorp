@@ -8605,12 +8605,6 @@ if test -n "$MOZ_CAPTIVEDETECT"; then
   AC_DEFINE(MOZ_CAPTIVEDETECT)
 fi
 
-dnl Build WBMP decoder if required
-AC_SUBST(MOZ_WBMP)
-if test -n "$MOZ_WBMP"; then
-  AC_DEFINE(MOZ_WBMP)
-fi
-
 dnl ========================================================
 if test "$MOZ_DEBUG" -o "$NS_TRACE_MALLOC" -o "$MOZ_DMD"; then
     MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS=
