@@ -12,6 +12,10 @@ include $(DEPTH)/config/autoconf.mk
 
 MOCHITEST_BROWSER_TESTS = \
 	browser_dbg_aaa_run_first_leaktest.js \
+	browser_dbg_blackboxing-01.js \
+	browser_dbg_blackboxing-02.js \
+	browser_dbg_blackboxing-03.js \
+	browser_dbg_blackboxing-04.js \
 	browser_dbg_clean-exit.js \
 	browser_dbg_cmd.js \
 	browser_dbg_cmd_break.js \
@@ -112,6 +116,11 @@ MOCHITEST_BROWSER_TESTS = \
 	$(NULL)
 
 MOCHITEST_BROWSER_PAGES = \
+	browser_dbg_blackboxing.html \
+	blackboxing_blackboxme.js \
+	blackboxing_one.js \
+	blackboxing_two.js \
+	blackboxing_three.js \
 	browser_dbg_cmd_break.html \
 	browser_dbg_cmd.html \
 	testactors.js \
