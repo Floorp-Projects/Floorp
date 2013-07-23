@@ -3327,9 +3327,9 @@ CSS_PROP_SVGRESET(
     filter,
     filter,
     Filter,
-    CSS_PROPERTY_PARSE_VALUE,
+    CSS_PROPERTY_PARSE_FUNCTION,
     "",
-    VARIANT_HUO,
+    0,
     nullptr,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)

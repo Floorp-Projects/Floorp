@@ -4468,19 +4468,96 @@ nsComputedDOMStyle::DoGetClipPath()
   return val;
 }
 
+void
+nsComputedDOMStyle::SetCssTextToCoord(nsAString& aCssText,
+                                      const nsStyleCoord& aCoord)
+{
+  nsROCSSPrimitiveValue* value = new nsROCSSPrimitiveValue;
+  bool clampNegativeCalc = true;
+  SetValueToCoord(value, aCoord, clampNegativeCalc);
+  value->GetCssText(aCssText);
+  delete value;
+}
+
+static void
+GetFilterFunctionName(nsAString& aString, nsStyleFilter::Type mType)
+{
+  switch (mType) {
+    case nsStyleFilter::Type::eBlur:
+      aString.AssignLiteral("blur(");
+      break;
+    case nsStyleFilter::Type::eBrightness:
+      aString.AssignLiteral("brightness(");
+      break;
+    case nsStyleFilter::Type::eContrast:
+      aString.AssignLiteral("contrast(");
+      break;
+    case nsStyleFilter::Type::eGrayscale:
+      aString.AssignLiteral("grayscale(");
+      break;
+    case nsStyleFilter::Type::eInvert:
+      aString.AssignLiteral("invert(");
+      break;
+    case nsStyleFilter::Type::eOpacity:
+      aString.AssignLiteral("opacity(");
+      break;
+    case nsStyleFilter::Type::eSaturate:
+      aString.AssignLiteral("saturate(");
+      break;
+    case nsStyleFilter::Type::eSepia:
+      aString.AssignLiteral("sepia(");
+      break;
+    default:
+      NS_NOTREACHED("unrecognized filter type");
+  }
+}
+
+nsROCSSPrimitiveValue*
+nsComputedDOMStyle::CreatePrimitiveValueForStyleFilter(
+  const nsStyleFilter& aStyleFilter)
+{
+  nsROCSSPrimitiveValue* value = new nsROCSSPrimitiveValue;
+
+  // Handle url().
+  if (nsStyleFilter::Type::eURL == aStyleFilter.mType) {
+    value->SetURI(aStyleFilter.mURL);
+    return value;
+  }
+
+  // Filter function name and opening parenthesis.
+  nsAutoString filterFunctionString;
+  GetFilterFunctionName(filterFunctionString, aStyleFilter.mType);
+
+  // Filter function argument.
+  nsAutoString argumentString;
+  SetCssTextToCoord(argumentString, aStyleFilter.mCoord);
+  filterFunctionString.Append(argumentString);
+
+  // Filter function closing parenthesis.
+  filterFunctionString.AppendLiteral(")");
+
+  value->SetString(filterFunctionString);
+  return value;
+}
+
 CSSValue*
 nsComputedDOMStyle::DoGetFilter()
 {
-  nsROCSSPrimitiveValue* val = new nsROCSSPrimitiveValue;
+  const nsTArray<nsStyleFilter>& filters = StyleSVGReset()->mFilters;
 
-  const nsStyleSVGReset* svg = StyleSVGReset();
+  if (filters.IsEmpty()) {
+    nsROCSSPrimitiveValue* value = new nsROCSSPrimitiveValue;
+    value->SetIdent(eCSSKeyword_none);
+    return value;
+  }
 
-  if (svg->mFilter)
-    val->SetURI(svg->mFilter);
-  else
-    val->SetIdent(eCSSKeyword_none);
-
-  return val;
+  nsDOMCSSValueList* valueList = GetROCSSValueList(false);
+  for(uint32_t i = 0; i < filters.Length(); i++) {
+    nsROCSSPrimitiveValue* value =
+      CreatePrimitiveValueForStyleFilter(filters[i]);
+    valueList->AppendCSSValue(value);
+  }
+  return valueList;
 }
 
 CSSValue*
