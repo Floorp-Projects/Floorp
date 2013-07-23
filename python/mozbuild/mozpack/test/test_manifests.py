@@ -172,8 +172,9 @@ class TestInstallManifest(TestWithTmpDir):
             self.assertEqual(fh.read(), 'copy!')
 
         self.assertEqual(result.updated_files, set(self.tmppath(p) for p in (
-            'dest/s_dest', 'dest/c_dest', 'dest/e_dest')))
-        self.assertEqual(result.existing_files, set())
+            'dest/s_dest', 'dest/c_dest')))
+        self.assertEqual(result.existing_files,
+            set([self.tmppath('dest/e_dest')]))
         self.assertEqual(result.removed_files, {to_delete})
         self.assertEqual(result.removed_directories, set())
 
