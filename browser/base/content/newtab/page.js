@@ -34,15 +34,23 @@ let gPage = {
   /**
    * Listens for notifications specific to this page.
    */
-  observe: function Page_observe() {
-    let enabled = gAllPages.enabled;
-    this._updateAttributes(enabled);
+  observe: function Page_observe(aSubject, aTopic, aData) {
+    if (aTopic == "nsPref:changed") {
+      let enabled = gAllPages.enabled;
+      this._updateAttributes(enabled);
 
-    // Initialize the whole page if we haven't done that, yet.
-    if (enabled) {
-      this._init();
-    } else {
-      gUndoDialog.hide();
+      // Initialize the whole page if we haven't done that, yet.
+      if (enabled) {
+        this._init();
+      } else {
+        gUndoDialog.hide();
+      }
+    } else if (aTopic == "page-thumbnail:create" && gGrid.ready) {
+      for (let site of gGrid.sites) {
+        if (site && site.url === aData) {
+          site.refreshThumbnail();
+        }
+      }
     }
   },
 
