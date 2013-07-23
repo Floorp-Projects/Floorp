@@ -10,7 +10,7 @@
 #include "SerializedLoadContext.h"
 #include "mozilla/Attributes.h"
 #include "nsWeakReference.h"
-#include "nsIDOMElement.h"
+#include "mozilla/dom/Element.h"
 
 class mozIApplication;
 
@@ -35,7 +35,7 @@ public:
   // AppId/inBrowser arguments override those in SerializedLoadContext provided
   // by child process.
   LoadContext(const IPC::SerializedLoadContext& aToCopy,
-              nsIDOMElement* aTopFrameElement,
+              dom::Element* aTopFrameElement,
               uint32_t aAppId, bool aInBrowser)
     : mTopFrameElement(do_GetWeakReference(aTopFrameElement))
     , mAppId(aAppId)

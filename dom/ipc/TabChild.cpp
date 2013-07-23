@@ -544,13 +544,13 @@ TabChild::HandlePossibleViewportChange()
 
   float minScale = 1.0f;
 
-  nsCOMPtr<nsIDOMElement> htmlDOMElement = do_QueryInterface(document->GetHtmlElement());
+  nsCOMPtr<Element> htmlDOMElement = document->GetHtmlElement();
   HTMLBodyElement* bodyDOMElement = document->GetBodyElement();
 
   int32_t htmlWidth = 0, htmlHeight = 0;
   if (htmlDOMElement) {
-    htmlDOMElement->GetScrollWidth(&htmlWidth);
-    htmlDOMElement->GetScrollHeight(&htmlHeight);
+    htmlWidth = htmlDOMElement->ScrollWidth();
+    htmlHeight = htmlDOMElement->ScrollHeight();
   }
   int32_t bodyWidth = 0, bodyHeight = 0;
   if (bodyDOMElement) {

@@ -5254,7 +5254,7 @@ nsDocument::Register(JSContext* aCx, const nsAString& aName,
 
     nsINode* parentNode = oldNode->GetParentNode();
     MOZ_ASSERT(parentNode, "Node obtained by GetElementsByTagName.");
-    nsCOMPtr<nsIDOMElement> newElement = do_QueryInterface(newNode);
+    nsCOMPtr<Element> newElement = do_QueryInterface(newNode);
     MOZ_ASSERT(newElement, "Cloned of node obtained by GetElementsByTagName.");
 
     parentNode->ReplaceChild(*newNode, *oldNode, rv);
@@ -5279,8 +5279,9 @@ nsDocument::Register(JSContext* aCx, const nsAString& aName,
     nsCOMPtr<nsIDOMElementReplaceEvent> ptEvent = do_QueryInterface(event);
     MOZ_ASSERT(ptEvent);
 
+    nsCOMPtr<nsIDOMElement> element = do_QueryInterface(newElement);
     rv = ptEvent->InitElementReplaceEvent(NS_LITERAL_STRING("elementreplace"),
-                                          false, false, newElement);
+                                          false, false, element);
     if (rv.Failed()) {
       return nullptr;
     }
@@ -6619,19 +6620,16 @@ nsIDocument::AdoptNode(nsINode& aAdoptedNode, ErrorResult& rv)
     case nsIDOMNode::ATTRIBUTE_NODE:
     {
       // Remove from ownerElement.
-      nsCOMPtr<nsIDOMAttr> adoptedAttr = do_QueryInterface(adoptedNode);
-      NS_ASSERTION(adoptedAttr, "Attribute not implementing nsIDOMAttr");
+      nsRefPtr<Attr> adoptedAttr = static_cast<Attr*>(adoptedNode);
 
-      nsCOMPtr<nsIDOMElement> ownerElement;
-      rv = adoptedAttr->GetOwnerElement(getter_AddRefs(ownerElement));
+      nsCOMPtr<Element> ownerElement = adoptedAttr->GetOwnerElement(rv);
       if (rv.Failed()) {
         return nullptr;
       }
 
       if (ownerElement) {
-        nsCOMPtr<nsIDOMAttr> newAttr;
-        rv = ownerElement->RemoveAttributeNode(adoptedAttr,
-                                               getter_AddRefs(newAttr));
+        nsRefPtr<Attr> newAttr =
+          ownerElement->RemoveAttributeNode(*adoptedAttr, rv);
         if (rv.Failed()) {
           return nullptr;
         }
