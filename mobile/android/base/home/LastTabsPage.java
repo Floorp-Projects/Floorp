@@ -119,6 +119,14 @@ public class LastTabsPage extends HomeFragment {
         });
 
         registerForContextMenu(mList);
+
+        final View openAllTabsButton = view.findViewById(R.id.open_all_tabs_button);
+        openAllTabsButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                openAllTabs();
+            }
+        });
     }
 
     @Override
@@ -140,6 +148,21 @@ public class LastTabsPage extends HomeFragment {
 
         // Reconnect to the loader only if present
         getLoaderManager().initLoader(LAST_TABS_LOADER_ID, null, mCursorLoaderCallbacks);
+    }
+
+    private void openAllTabs() {
+        final Cursor c = mAdapter.getCursor();
+        if (c == null || !c.moveToFirst()) {
+            return;
+        }
+
+        final String[] urls = new String[c.getCount()];
+
+        do {
+            urls[c.getPosition()] = c.getString(c.getColumnIndexOrThrow(Combined.URL));
+        } while (c.moveToNext());
+
+        mNewTabsListener.onNewTabs(urls);
     }
 
     private static class LastTabsCursorLoader extends SimpleCursorLoader {

@@ -184,6 +184,10 @@
         <item name="android:paddingRight">10dip</item>
     </style>
 
+    <style name="Widget.Home.ActionButton" parent="Widget.Home.PageButton">
+        <item name="android:textAppearance">@style/TextAppearance.Widget.Home.PageAction</item>
+    </style>
+
     <style name="Widget.Home.PageTitle">
         <item name="android:layout_width">fill_parent</item>
         <item name="android:layout_height">32dp</item>
@@ -302,6 +306,10 @@
     </style>
 
     <style name="TextAppearance.Widget.Home.PageTitle" parent="TextAppearance.Medium" />
+
+    <style name="TextAppearance.Widget.Home.PageAction" parent="TextAppearance.Small">
+        <item name="android:textColor">#00ACFF</item>
+    </style>
 
     <!-- BrowserToolbar -->
     <style name="BrowserToolbar">
