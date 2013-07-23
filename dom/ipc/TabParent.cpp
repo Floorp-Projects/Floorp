@@ -217,7 +217,7 @@ TabParent::~TabParent()
 }
 
 void
-TabParent::SetOwnerElement(nsIDOMElement* aElement)
+TabParent::SetOwnerElement(Element* aElement)
 {
   mFrameElement = aElement;
   TryCacheDPIAndScale();
@@ -316,7 +316,8 @@ TabParent::RecvMoveFocus(const bool& aForward)
     nsCOMPtr<nsIDOMElement> dummy;
     uint32_t type = aForward ? uint32_t(nsIFocusManager::MOVEFOCUS_FORWARD)
                              : uint32_t(nsIFocusManager::MOVEFOCUS_BACKWARD);
-    fm->MoveFocus(nullptr, mFrameElement, type, nsIFocusManager::FLAG_BYKEY, 
+    nsCOMPtr<nsIDOMElement> frame = do_QueryInterface(mFrameElement);
+    fm->MoveFocus(nullptr, frame, type, nsIFocusManager::FLAG_BYKEY,
                   getter_AddRefs(dummy));
   }
   return true;
@@ -1242,9 +1243,8 @@ TabParent::HandleDelayedDialogs()
 {
   nsCOMPtr<nsIWindowWatcher> ww = do_GetService(NS_WINDOWWATCHER_CONTRACTID);
   nsCOMPtr<nsIDOMWindow> window;
-  nsCOMPtr<nsIContent> frame = do_QueryInterface(mFrameElement);
-  if (frame) {
-    window = do_QueryInterface(frame->OwnerDoc()->GetWindow());
+  if (mFrameElement) {
+    window = do_QueryInterface(mFrameElement->OwnerDoc()->GetWindow());
   }
   nsCOMPtr<nsIDialogCreator> dialogCreator = do_QueryInterface(mBrowserDOMWindow);
   while (!ShouldDelayDialogs() && mDelayedDialogs.Length()) {
@@ -1255,9 +1255,10 @@ TabParent::HandleDelayedDialogs()
     params.swap(data->mParams);
     PContentDialogParent* dialog = data->mDialog;
     if (dialogCreator) {
+      nsCOMPtr<nsIDOMElement> frame = do_QueryInterface(mFrameElement);
       dialogCreator->OpenDialog(data->mType,
                                 data->mName, data->mFeatures,
-                                params, mFrameElement);
+                                params, frame);
     } else if (ww) {
       nsAutoCString url;
       if (data->mType) {
@@ -1286,7 +1287,7 @@ TabParent::HandleDelayedDialogs()
     }
   }
   if (ShouldDelayDialogs() && mDelayedDialogs.Length()) {
-    nsContentUtils::DispatchTrustedEvent(frame->OwnerDoc(), frame,
+    nsContentUtils::DispatchTrustedEvent(mFrameElement->OwnerDoc(), mFrameElement,
                                          NS_LITERAL_STRING("MozDelayedModalDialog"),
                                          true, true);
   }
@@ -1388,11 +1389,7 @@ TabParent::TryCacheDPIAndScale()
   if (!widget && mFrameElement) {
     // Even if we don't have a widget (e.g. because we're display:none), there's
     // probably a widget somewhere in the hierarchy our frame element lives in.
-    nsCOMPtr<nsIDOMDocument> ownerDoc;
-    mFrameElement->GetOwnerDocument(getter_AddRefs(ownerDoc));
-
-    nsCOMPtr<nsIDocument> doc = do_QueryInterface(ownerDoc);
-    widget = nsContentUtils::WidgetForDocument(doc);
+    widget = nsContentUtils::WidgetForDocument(mFrameElement->OwnerDoc());
   }
 
   if (widget) {
