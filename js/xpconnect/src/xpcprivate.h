@@ -2735,7 +2735,7 @@ public:
     */
 
     static nsresult
-    GetNewOrUsed(JSObject* aJSObj,
+    GetNewOrUsed(JS::HandleObject aJSObj,
                  REFNSIID aIID,
                  nsISupports* aOuter,
                  nsXPCWrappedJS** wrapper);
@@ -2864,7 +2864,6 @@ public:
     /**
      * Convert a native object into a jsval.
      *
-     * @param ccx the context for the whole procedure
      * @param d [out] the resulting jsval
      * @param s the native object we're working with
      * @param type the type of object that s is
@@ -2886,7 +2885,6 @@ public:
     /**
      * Convert a native nsISupports into a JSObject.
      *
-     * @param ccx the context for the whole procedure
      * @param dest [out] the resulting JSObject
      * @param src the native object we're working with
      * @param iid the interface of src that we want (may be null)
@@ -2931,7 +2929,7 @@ public:
                                  const nsXPTType& type, const nsID* iid,
                                  uint32_t count, nsresult* pErr);
 
-    static JSBool JSArray2Native(void** d, jsval s,
+    static JSBool JSArray2Native(void** d, JS::HandleValue s,
                                  uint32_t count, const nsXPTType& type,
                                  const nsID* iid, nsresult* pErr);
 
@@ -2946,11 +2944,11 @@ public:
                                           uint32_t count,
                                           nsresult* pErr);
 
-    static JSBool JSStringWithSize2Native(void* d, jsval s,
+    static JSBool JSStringWithSize2Native(void* d, JS::HandleValue s,
                                           uint32_t count, const nsXPTType& type,
                                           nsresult* pErr);
 
-    static nsresult JSValToXPCException(jsval s,
+    static nsresult JSValToXPCException(JS::MutableHandleValue s,
                                         const char* ifaceName,
                                         const char* methodName,
                                         nsIException** exception);
