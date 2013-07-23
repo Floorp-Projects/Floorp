@@ -2362,17 +2362,16 @@ JS_CallObjectTracer(JSTracer *trc, JSObject **objp, const char *name)
 }
 
 JS_PUBLIC_API(void)
-JS_CallMaskedObjectTracer(JSTracer *trc, uintptr_t *objp, uintptr_t flagMask, const char *name)
+JS_CallTenuredObjectTracer(JSTracer *trc, JS::TenuredHeap<JSObject *> *objp, const char *name)
 {
-    uintptr_t flags = *objp & flagMask;
-    JSObject *obj = reinterpret_cast<JSObject *>(*objp & ~flagMask);
+    JSObject *obj = objp->getPtr();
     if (!obj)
         return;
 
     JS_SET_TRACING_LOCATION(trc, (void*)objp);
     MarkObjectUnbarriered(trc, &obj, name);
 
-    *objp = uintptr_t(obj) | flags;
+    objp->setPtr(obj);
 }
 
 JS_PUBLIC_API(void)
