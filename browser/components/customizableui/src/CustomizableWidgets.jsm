@@ -327,8 +327,14 @@ const CustomizableWidgets = [{
       let zoomResetButton = node.childNodes[1];
       let window = aDocument.defaultView;
       function updateZoomResetButton() {
+        //XXXgijs in some tests we get called very early, and there's no docShell on the
+        // tabbrowser. This breaks the zoom toolkit code (see bug 897410). Don't let that happen:
+        let zoomFactor = 100;
+        if (window.gBrowser.docShell) {
+          zoomFactor = Math.floor(window.ZoomManager.zoom * 100);
+        }
         zoomResetButton.setAttribute("label", CustomizableUI.getLocalizedProperty(
-          buttons[1], "label", [Math.floor(window.ZoomManager.zoom * 100)]
+          buttons[1], "label", [zoomFactor]
         ));
       };
 
