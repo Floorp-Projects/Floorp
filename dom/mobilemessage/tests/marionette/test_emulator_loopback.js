@@ -14,8 +14,8 @@ function cleanUp() {
   finish();
 }
 
-let manager = window.navigator.mozMobileMessage;
-ok(manager instanceof MozMobileMessageManager);
+let sms = window.navigator.mozSms;
+ok(sms instanceof MozSmsManager);
 
 function randomString16() {
   return Math.random().toString(36).substr(2, 16);
@@ -33,7 +33,7 @@ function repeat(func, array, oncomplete) {
 }
 
 function doTest(body, callback) {
-  manager.addEventListener("received", function onReceived(event) {
+  sms.addEventListener("received", function onReceived(event) {
     event.target.removeEventListener(event.type, arguments.callee);
 
     let message = event.message;
@@ -42,7 +42,7 @@ function doTest(body, callback) {
     window.setTimeout(callback, 0);
   });
 
-  let request = manager.send(SELF, body);
+  let request = sms.send(SELF, body);
   request.onerror = function onerror() {
     ok(false, "failed to send message '" + body + "' to '" + SELF + "'");
   };
