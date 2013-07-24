@@ -60,8 +60,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=558036
       testAttrs("logAssertive", {"live" : "assertive"}, true);
       testAttrs("marquee", {"live" : "off"}, true);
       testAttrs("status", {"live" : "polite"}, true);
-      testAttrs("tablist", {"live" : "polite"}, true);
       testAttrs("timer", {"live" : "off"}, true);
+      testAbsentAttrs("tablist", {"live" : "polite"});
 
       // container-live object attribute
       testAttrs("liveChild", {"container-live" : "polite"}, true);
@@ -70,8 +70,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=558036
       testAttrs("logAssertiveChild", {"container-live" : "assertive"}, true);
       testAttrs("marqueeChild", {"container-live" : "off"}, true);
       testAttrs("statusChild", {"container-live" : "polite"}, true);
-      testAttrs("tablistChild", {"container-live" : "polite"}, true);
       testAttrs("timerChild", {"container-live" : "off"}, true);
+      testAbsentAttrs("tablistChild", {"container-live" : "polite"});
 
       // container-live-role object attribute
       testAttrs("log", {"container-live-role" : "log"}, true);
@@ -84,8 +84,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=558036
       testAttrs("logAssertiveChild", {"container-live-role" : "log"}, true);
       testAttrs("marqueeChild", {"container-live-role" : "marquee"}, true);
       testAttrs("statusChild", {"container-live-role" : "status"}, true);
-      testAttrs("tablistChild", {"container-live-role" : "tablist"}, true);
       testAttrs("timerChild", {"container-live-role" : "timer"}, true);
+      testAbsentAttrs("tablistChild", {"container-live-role" : "tablist"});
 
       // absent aria-label and aria-labelledby object attribute
       testAbsentAttrs("label", {"label" : "foo"});
@@ -153,9 +153,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=558036
     Mozilla Bug 558036
   </a>
   <a target="_blank"
-     href="https://bugzilla.mozilla.org/show_bug.cgi?id=663136"
-     title="Add test coverage for tablist as implicit live region">
-    Mozilla Bug 663136
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=896400"
+     title="Tablist should no longer be an implicit live region">
+    Mozilla Bug 896400
   </a>
   <a target="_blank"
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=563862"
