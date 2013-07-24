@@ -879,8 +879,19 @@ JS::DisableGenerationalGC(JSRuntime *rt)
 {
     rt->gcGenerationalEnabled = false;
 #ifdef JSGC_GENERATIONAL
+    MinorGC(rt, JS::gcreason::API);
     rt->gcNursery.disable();
     rt->gcStoreBuffer.disable();
+#endif
+}
+
+extern JS_FRIEND_API(void)
+JS::EnableGenerationalGC(JSRuntime *rt)
+{
+    rt->gcGenerationalEnabled = true;
+#ifdef JSGC_GENERATIONAL
+    rt->gcNursery.enable();
+    rt->gcStoreBuffer.enable();
 #endif
 }
 
