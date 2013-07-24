@@ -84,18 +84,12 @@ public class BrowserToolbar extends GeckoRelativeLayout
     private static final String LOGTAG = "GeckoToolbar";
     public static final String PREF_TITLEBAR_MODE = "browser.chrome.titlebarMode";
 
-    public static enum EditingTarget {
-        NEW_TAB,
-        CURRENT_TAB,
-        PICK_SITE
-    };
-
     public interface OnActivateListener {
         public void onActivate();
     }
 
     public interface OnCommitListener {
-        public void onCommit(EditingTarget target);
+        public void onCommit();
     }
 
     public interface OnDismissListener {
@@ -133,7 +127,6 @@ public class BrowserToolbar extends GeckoRelativeLayout
     private LinearLayout mActionItemBar;
     private MenuPopup mMenuPopup;
     private List<? extends View> mFocusOrder;
-    private EditingTarget mEditingTarget;
     private OnActivateListener mActivateListener;
     private OnCommitListener mCommitListener;
     private OnDismissListener mDismissListener;
@@ -358,7 +351,7 @@ public class BrowserToolbar extends GeckoRelativeLayout
                     Editable content = mUrlEditText.getText();
                     if (!hasCompositionString(content)) {
                         if (mCommitListener != null) {
-                            mCommitListener.onCommit(mEditingTarget);
+                            mCommitListener.onCommit();
                         }
                         return true;
                     }
@@ -376,7 +369,7 @@ public class BrowserToolbar extends GeckoRelativeLayout
                         return true;
 
                     if (mCommitListener != null) {
-                        mCommitListener.onCommit(mEditingTarget);
+                        mCommitListener.onCommit();
                     }
                     return true;
                 } else if (GamepadUtils.isBackKey(event)) {
@@ -502,7 +495,7 @@ public class BrowserToolbar extends GeckoRelativeLayout
             @Override
             public void onClick(View v) {
                 if (mCommitListener != null) {
-                    mCommitListener.onCommit(mEditingTarget);
+                    mCommitListener.onCommit();
                 }
             }
         });
@@ -1198,11 +1191,8 @@ public class BrowserToolbar extends GeckoRelativeLayout
     private void showUrlEditContainer() {
         mUrlDisplayContainer.setVisibility(View.GONE);
         mUrlEditContainer.setVisibility(View.VISIBLE);
-
-        if (mEditingTarget != EditingTarget.NEW_TAB) {
-            mUrlEditText.requestFocus();
-            showSoftInput();
-        }
+        mUrlEditText.requestFocus();
+        showSoftInput();
     }
 
     private void hideUrlEditContainer() {
@@ -1210,20 +1200,15 @@ public class BrowserToolbar extends GeckoRelativeLayout
         mUrlEditContainer.setVisibility(View.GONE);
     }
 
-    public EditingTarget getEditingTarget() {
-        return (isEditing() ? mEditingTarget : null);
-    }
-
     public boolean isEditing() {
         return isSelected();
     }
 
-    public void startEditing(EditingTarget target, String url) {
+    public void startEditing(String url) {
         if (isEditing()) {
             return;
         }
 
-        mEditingTarget = target;
         mUrlEditText.setText(url != null ? url : "");
 
         // This animation doesn't make much sense in a sidebar UI
