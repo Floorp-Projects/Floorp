@@ -412,6 +412,7 @@ const CustomizableWidgets = [{
           CustomizableUI.removeListener(listener);
           Services.obs.removeObserver(updateZoomResetButton, "browser-fullZoom:zoomChange");
           Services.obs.removeObserver(updateZoomResetButton, "browser-fullZoom:zoomReset");
+          Services.obs.removeObserver(updateZoomResetButton, "browser-fullZoom:locationChange");
         }.bind(this)
       };
       CustomizableUI.addListener(listener);
