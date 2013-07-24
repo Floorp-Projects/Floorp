@@ -907,6 +907,9 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
 #endif
 
   const nsHTMLReflowState *reflowState = &aReflowState;
+  nscoord consumedHeight = GetConsumedHeight();
+  nscoord effectiveComputedHeight = GetEffectiveComputedHeight(aReflowState,
+                                                               consumedHeight);
   Maybe<nsHTMLReflowState> mutableReflowState;
   // If we have non-auto height, we're clipping our kids and we fit,
   // make sure our kids fit too.
@@ -922,7 +925,7 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
       heightExtras.top += aReflowState.mComputedMargin.top;
     }
 
-    if (GetEffectiveComputedHeight(aReflowState) + heightExtras.TopBottom() <=
+    if (effectiveComputedHeight + heightExtras.TopBottom() <=
         aReflowState.availableHeight) {
       mutableReflowState.construct(aReflowState);
       mutableReflowState.ref().availableHeight = NS_UNCONSTRAINEDSIZE;
@@ -957,8 +960,12 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
 
   bool topMarginRoot, bottomMarginRoot;
   IsMarginRoot(&topMarginRoot, &bottomMarginRoot);
+
+  // Cache the consumed height in the block reflow state so that we don't have
+  // to continually recompute it.
   nsBlockReflowState state(*reflowState, aPresContext, this,
-                           topMarginRoot, bottomMarginRoot, needFloatManager);
+                           topMarginRoot, bottomMarginRoot, needFloatManager,
+                           consumedHeight);
 
 #ifdef IBMBIDI
   if (GetStateBits() & NS_BLOCK_NEEDS_BIDI_RESOLUTION)
@@ -7076,26 +7083,6 @@ nsBlockFrame::GetNearestAncestorBlock(nsIFrame* aCandidate)
   }
   NS_NOTREACHED("Fell off frame tree looking for ancestor block!");
   return nullptr;
-}
-
-nscoord
-nsBlockFrame::GetEffectiveComputedHeight(const nsHTMLReflowState& aReflowState) const
-{
-  nscoord height = aReflowState.ComputedHeight();
-  NS_ABORT_IF_FALSE(height != NS_UNCONSTRAINEDSIZE, "Don't call me!");
-
-  if (GetPrevInFlow()) {
-    // Reduce the height by the computed height of prev-in-flows.
-    for (nsIFrame* prev = GetPrevInFlow(); prev; prev = prev->GetPrevInFlow()) {
-      height -= prev->GetRect().height;
-    }
-    // We just subtracted our top-border padding, since it was included in the
-    // first frame's height. Add it back to get the content height.
-    height += aReflowState.mComputedBorderPadding.top;
-    // We may have stretched the frame beyond its computed height. Oh well.
-    height = std::max(0, height);
-  }
-  return height;
 }
 
 #ifdef IBMBIDI
