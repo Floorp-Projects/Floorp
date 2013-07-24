@@ -2583,9 +2583,6 @@ JS_CallHeapStringTracer(JSTracer *trc, JS::Heap<JSString *> *strp, const char *n
 extern JS_PUBLIC_API(void)
 JS_CallHeapScriptTracer(JSTracer *trc, JS::Heap<JSScript *> *scriptp, const char *name);
 
-extern JS_PUBLIC_API(void)
-JS_CallGenericTracer(JSTracer *trc, void *gcthing, const char *name);
-
 template <typename HashSetEnum>
 inline void
 JS_CallHashSetObjectTracer(JSTracer *trc, HashSetEnum &e, JSObject *const &key, const char *name)
