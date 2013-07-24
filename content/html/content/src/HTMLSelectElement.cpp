@@ -201,17 +201,15 @@ HTMLSelectElement::RemoveChildAt(uint32_t aIndex, bool aNotify)
 }
 
 
-// SelectElement methods
 
-nsresult
+void
 HTMLSelectElement::InsertOptionsIntoList(nsIContent* aOptions,
                                          int32_t aListIndex,
                                          int32_t aDepth,
                                          bool aNotify)
 {
   int32_t insertIndex = aListIndex;
-  nsresult rv = InsertOptionsIntoListRecurse(aOptions, &insertIndex, aDepth);
-  NS_ENSURE_SUCCESS(rv, rv);
+  InsertOptionsIntoListRecurse(aOptions, &insertIndex, aDepth);
 
   // Deal with the selected list
   if (insertIndex - aListIndex) {
@@ -264,8 +262,6 @@ HTMLSelectElement::InsertOptionsIntoList(nsIContent* aOptions,
 
     CheckSelectSomething(aNotify);
   }
-
-  return NS_OK;
 }
 
 nsresult
@@ -320,7 +316,7 @@ HTMLSelectElement::RemoveOptionsFromList(nsIContent* aOptions,
 // If the document is such that recursing over these options gets us
 // deeper than four levels, there is something terribly wrong with the
 // world.
-nsresult
+void
 HTMLSelectElement::InsertOptionsIntoListRecurse(nsIContent* aOptions,
                                                 int32_t* aInsertIndex,
                                                 int32_t aDepth)
@@ -334,7 +330,7 @@ HTMLSelectElement::InsertOptionsIntoListRecurse(nsIContent* aOptions,
   if (optElement) {
     mOptions->InsertOptionAt(optElement, *aInsertIndex);
     (*aInsertIndex)++;
-    return NS_OK;
+    return;
   }
 
   // If it's at the top level, then we just found out there are non-options
@@ -350,13 +346,9 @@ HTMLSelectElement::InsertOptionsIntoListRecurse(nsIContent* aOptions,
     for (nsIContent* child = aOptions->GetFirstChild();
          child;
          child = child->GetNextSibling()) {
-      nsresult rv = InsertOptionsIntoListRecurse(child,
-                                                 aInsertIndex, aDepth + 1);
-      NS_ENSURE_SUCCESS(rv, rv);
+      InsertOptionsIntoListRecurse(child, aInsertIndex, aDepth + 1);
     }
   }
-
-  return NS_OK;
 }
 
 // If the document is such that recursing over these options gets us deeper than
@@ -450,7 +442,8 @@ HTMLSelectElement::WillAddOptions(nsIContent* aOptions,
     }
   }
 
-  return InsertOptionsIntoList(aOptions, ind, level, aNotify);
+  InsertOptionsIntoList(aOptions, ind, level, aNotify);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
