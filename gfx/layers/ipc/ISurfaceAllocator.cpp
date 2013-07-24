@@ -169,13 +169,12 @@ bool IsSurfaceDescriptorOwned(const SurfaceDescriptor& aDescriptor)
 }
 bool ReleaseOwnedSurfaceDescriptor(const SurfaceDescriptor& aDescriptor)
 {
-  DeprecatedSharedPlanarYCbCrImage* sharedYCbCr =
-    DeprecatedSharedPlanarYCbCrImage::FromSurfaceDescriptor(aDescriptor);
+  SharedPlanarYCbCrImage* sharedYCbCr = SharedPlanarYCbCrImage::FromSurfaceDescriptor(aDescriptor);
   if (sharedYCbCr) {
     sharedYCbCr->Release();
     return true;
   }
-  DeprecatedSharedRGBImage* sharedRGB = DeprecatedSharedRGBImage::FromSurfaceDescriptor(aDescriptor);
+  SharedRGBImage* sharedRGB = SharedRGBImage::FromSurfaceDescriptor(aDescriptor);
   if (sharedRGB) {
     sharedRGB->Release();
     return true;

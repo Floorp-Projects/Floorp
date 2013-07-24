@@ -161,7 +161,7 @@ void
 DeprecatedTextureClientShmemYCbCr::SetDescriptorFromReply(const SurfaceDescriptor& aDescriptor)
 {
   MOZ_ASSERT(aDescriptor.type() == SurfaceDescriptor::TYCbCrImage);
-  DeprecatedSharedPlanarYCbCrImage* shYCbCr = DeprecatedSharedPlanarYCbCrImage::FromSurfaceDescriptor(aDescriptor);
+  SharedPlanarYCbCrImage* shYCbCr = SharedPlanarYCbCrImage::FromSurfaceDescriptor(aDescriptor);
   if (shYCbCr) {
     shYCbCr->Release();
     mDescriptor = SurfaceDescriptor();
