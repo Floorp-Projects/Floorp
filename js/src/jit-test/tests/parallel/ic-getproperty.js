@@ -52,9 +52,24 @@ function testICArrayLength() {
   g(o1); g(o2);
 }
 
+function testICTypedArrayLength() {
+  var o1 = { length: 42 };
+  var o2 = new Int8Array(128);
+  var o3 = new Uint8Array(128);
+  var o4 = new Uint8ClampedArray(128);
+  var o5 = new Int16Array(128);
+  var o6 = new Uint16Array(128);
+  var o7 = new Int32Array(128);
+  var o8 = new Uint32Array(128);
+  var o9 = new Float32Array(128);
+  var o0 = new Float64Array(128);
+  g(o1); g(o2); g(o3); g(o4); g(o5); g(o6); g(o7); g(o8); g(o9); g(o0);
+}
+
 if (getBuildConfiguration().parallelJS) {
   testICProto();
   testICMultiple();
   testICSameShapeDifferentProto();
   testICArrayLength();
+  testICTypedArrayLength();
 }
