@@ -2,33 +2,30 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "base/basictypes.h"
-
 #include "IndexedDBParent.h"
 
-#include "nsIDOMFile.h"
-#include "nsIDOMEvent.h"
-#include "nsIXPConnect.h"
-
+#include "AsyncConnectionHelper.h"
 #include "mozilla/AppProcessChecker.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/Attributes.h"
+#include "mozilla/dom/ContentParent.h"
+#include "mozilla/dom/indexedDB/DatabaseInfo.h"
+#include "mozilla/dom/indexedDB/IDBDatabase.h"
+#include "mozilla/dom/indexedDB/IDBEvents.h"
+#include "mozilla/dom/indexedDB/IDBFactory.h"
+#include "mozilla/dom/indexedDB/IDBIndex.h"
+#include "mozilla/dom/indexedDB/IDBKeyRange.h"
+#include "mozilla/dom/indexedDB/IDBObjectStore.h"
+#include "mozilla/dom/indexedDB/IDBTransaction.h"
+#include "mozilla/dom/ipc/Blob.h"
+#include "mozilla/dom/TabParent.h"
 #include "mozilla/unused.h"
 #include "mozilla/Util.h"
-#include "mozilla/dom/ContentParent.h"
-#include "mozilla/dom/TabParent.h"
-#include "mozilla/dom/ipc/Blob.h"
 #include "nsContentUtils.h"
 #include "nsCxPusher.h"
-
-#include "AsyncConnectionHelper.h"
-#include "DatabaseInfo.h"
-#include "IDBDatabase.h"
-#include "IDBEvents.h"
-#include "IDBFactory.h"
-#include "IDBIndex.h"
-#include "IDBKeyRange.h"
-#include "IDBObjectStore.h"
-#include "IDBTransaction.h"
+#include "nsIDOMEvent.h"
+#include "nsIDOMFile.h"
+#include "nsIXPConnect.h"
 
 #define CHROME_ORIGIN "chrome"
 #define PERMISSION_PREFIX "indexedDB-chrome-"
@@ -239,7 +236,7 @@ IndexedDBParent::DeallocPIndexedDBDeleteDatabaseRequestParent(
  ******************************************************************************/
 
 IndexedDBDatabaseParent::IndexedDBDatabaseParent()
-: mEventListener(ALLOW_THIS_IN_INITIALIZER_LIST(this))
+: mEventListener(MOZ_THIS_IN_INITIALIZER_LIST())
 {
   MOZ_COUNT_CTOR(IndexedDBDatabaseParent);
 }
@@ -636,7 +633,7 @@ IndexedDBDatabaseParent::DeallocPIndexedDBTransactionParent(
  ******************************************************************************/
 
 IndexedDBTransactionParent::IndexedDBTransactionParent()
-: mEventListener(ALLOW_THIS_IN_INITIALIZER_LIST(this)),
+: mEventListener(MOZ_THIS_IN_INITIALIZER_LIST()),
   mArtificialRequestCount(false)
 {
   MOZ_COUNT_CTOR(IndexedDBTransactionParent);
@@ -2074,7 +2071,7 @@ IndexedDBCursorRequestParent::Continue(const ContinueParams& aParams)
 
 IndexedDBDeleteDatabaseRequestParent::IndexedDBDeleteDatabaseRequestParent(
                                                            IDBFactory* aFactory)
-: mEventListener(ALLOW_THIS_IN_INITIALIZER_LIST(this)), mFactory(aFactory)
+: mEventListener(MOZ_THIS_IN_INITIALIZER_LIST()), mFactory(aFactory)
 {
   MOZ_COUNT_CTOR(IndexedDBDeleteDatabaseRequestParent);
   MOZ_ASSERT(aFactory);
