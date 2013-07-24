@@ -745,14 +745,6 @@ abstract public class BrowserApp extends GeckoApp
     }
 
     @Override
-    protected void finishProfileMigration() {
-        // Update about:home with the new information.
-        updateAboutHomeTopSites();
-
-        super.finishProfileMigration();
-    }
-
-    @Override
     protected void initializeChrome() {
         super.initializeChrome();
 

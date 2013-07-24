@@ -173,18 +173,6 @@ public class BrowserContract {
         public static final String VERSION = "version";
     }
 
-    public static final class Control {
-        private Control() {}
-
-        public static final Uri CONTENT_URI = Uri.withAppendedPath(AUTHORITY_URI, "control");
-
-        // These return 1 if done/finished, 0 if not.
-        // Check if history was completely migrated, do a bunch if it wasn't.
-        public static final String ENSURE_HISTORY_MIGRATED = "ensure_history_migrated";
-        // Check if bookmarks were completely migrated, migrate them if not.
-        public static final String ENSURE_BOOKMARKS_MIGRATED = "ensure_bookmarks_migrated";
-    }
-
     public static final class Passwords {
         private Passwords() {}
         public static final Uri CONTENT_URI = Uri.withAppendedPath(PASSWORDS_AUTHORITY_URI, "passwords");

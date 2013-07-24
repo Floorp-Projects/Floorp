@@ -8,12 +8,10 @@ package org.mozilla.gecko.db;
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.Distribution;
 import org.mozilla.gecko.GeckoProfile;
-import org.mozilla.gecko.ProfileMigrator;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.db.BrowserContract.Bookmarks;
 import org.mozilla.gecko.db.BrowserContract.Combined;
 import org.mozilla.gecko.db.BrowserContract.CommonColumns;
-import org.mozilla.gecko.db.BrowserContract.Control;
 import org.mozilla.gecko.db.BrowserContract.FaviconColumns;
 import org.mozilla.gecko.db.BrowserContract.Favicons;
 import org.mozilla.gecko.db.BrowserContract.History;
@@ -2511,80 +2509,6 @@ public class BrowserProvider extends ContentProvider {
         return updated;
     }
 
-    private Cursor controlQuery(Uri uri,
-                                String[] projection, String selection,
-                                String[] selectionArgs, String sortOrder) {
-
-        trace("controlQuery projection = " + projection);
-
-        final String[] allFields = {
-            Control.ENSURE_BOOKMARKS_MIGRATED,
-            Control.ENSURE_HISTORY_MIGRATED
-        };
-
-        // null projection must return all fields.
-        if (projection == null) {
-            projection = allFields;
-        }
-
-        if (selection != null) {
-            throw new UnsupportedOperationException("No selection in virtual CONTROL queries");
-        }
-
-        File profileDir = GeckoProfile.get(mContext).getDir();
-
-        if (uri != null) {
-            String profile = uri.getQueryParameter(BrowserContract.PARAM_PROFILE);
-            if (!TextUtils.isEmpty(profile)) {
-                profileDir = GeckoProfile.get(mContext, profile).getDir();
-            }
-        }
-
-        MatrixCursor cursor = new MatrixCursor(projection);
-        MatrixCursor.RowBuilder row = cursor.newRow();
-        synchronized (this) {
-            boolean wantBookmarks = false;
-            boolean wantHistory   = false;
-
-            for (String key : projection) {
-                if (key.equals(Control.ENSURE_BOOKMARKS_MIGRATED)) {
-                    wantBookmarks = true;
-                } else if (key.equals(Control.ENSURE_HISTORY_MIGRATED)) {
-                    wantHistory = true;
-                }
-            }
-
-            if (wantHistory || wantBookmarks) {
-                ProfileMigrator migrator = new ProfileMigrator(mContext);
-
-                boolean needBookmarks = wantBookmarks && !migrator.areBookmarksMigrated();
-                boolean needHistory = wantHistory && !migrator.isHistoryMigrated();
-
-                if (needBookmarks || needHistory) {
-                    migrator.launchPlaces(profileDir);
-
-                    needBookmarks = wantBookmarks && !migrator.areBookmarksMigrated();
-                    needHistory = wantHistory && !migrator.isHistoryMigrated();
-                    // Bookmarks are expected to finish at the first run.
-                    if (needBookmarks) {
-                        Log.w(LOGTAG, "Bookmarks migration did not finish.");
-                    }
-                }
-
-                // Now set the results.
-                for (String key: projection) {
-                    if (key.equals(Control.ENSURE_BOOKMARKS_MIGRATED)) {
-                        row.add(needBookmarks ? 0 : 1);
-                    } else if (key.equals(Control.ENSURE_HISTORY_MIGRATED)) {
-                        row.add(needHistory   ? 0 : 1);
-                    }
-                }
-            }
-        }
-
-        return cursor;
-    }
-
     @Override
     public Cursor query(Uri uri, String[] projection, String selection,
             String[] selectionArgs, String sortOrder) {
@@ -2708,15 +2632,6 @@ public class BrowserProvider extends ContentProvider {
                     qb.setTables(VIEW_COMBINED);
 
                 break;
-            }
-
-            case CONTROL: {
-                debug("Query is on control: " + uri);
-
-                Cursor controlCursor =
-                    controlQuery(uri, projection, selection, selectionArgs, sortOrder);
-
-                return controlCursor;
             }
 
             case SEARCH_SUGGEST: {
