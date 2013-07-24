@@ -19,15 +19,20 @@
 // It lives while the nsSimplePageSequenceFrame lives
 class nsSharedPageData {
 public:
-  nsSharedPageData();
-  ~nsSharedPageData();
+  // This object a shared by all the nsPageFrames
+  // parented to a SimplePageSequenceFrame
+  nsSharedPageData() :
+    mPageContentXMost(0),
+    mPageContentSize(0)
+  {
+  }
 
   nsString    mDateTimeStr;
-  nsFont *    mHeadFootFont;
   nsString    mPageNumFormat;
   nsString    mPageNumAndTotalsFormat;
   nsString    mDocTitle;
   nsString    mDocURL;
+  nsFont      mHeadFootFont;
 
   nsSize      mReflowSize;
   nsMargin    mReflowMargin;
