@@ -194,10 +194,7 @@ public:
   {
     return mOptions->Length();
   }
-  void SetLength(uint32_t aLength, ErrorResult& aRv)
-  {
-    aRv = SetLength(aLength);
-  }
+  void SetLength(uint32_t aLength, ErrorResult& aRv);
   Element* IndexedGetter(uint32_t aIdx, bool& aFound) const
   {
     return mOptions->IndexedGetter(aIdx, aFound);
