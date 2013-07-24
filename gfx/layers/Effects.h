@@ -224,36 +224,40 @@ struct EffectChain
   RefPtr<Effect> mSecondaryEffects[EFFECT_MAX_SECONDARY];
 };
 
+/**
+ * Create a Textured effect corresponding to aFormat and using
+ * aSource as the (first) texture source.
+ *
+ * Note that aFormat can be different form aSource->GetFormat if, we are
+ * creating an effect that takes several texture sources (like with YCBCR
+ * where aFormat would be FOMRAT_YCBCR and each texture source would be
+ * a one-channel A8 texture)
+ */
 inline TemporaryRef<TexturedEffect>
-CreateTexturedEffect(DeprecatedTextureHost *aDeprecatedTextureHost,
-                     DeprecatedTextureHost *aDeprecatedTextureHostOnWhite,
+CreateTexturedEffect(gfx::SurfaceFormat aFormat,
+                     TextureSource* aSource,
                      const gfx::Filter& aFilter)
 {
-  if (aDeprecatedTextureHostOnWhite) {
-    MOZ_ASSERT(aDeprecatedTextureHost->GetFormat() == gfx::FORMAT_R8G8B8X8 ||
-               aDeprecatedTextureHost->GetFormat() == gfx::FORMAT_B8G8R8X8);
-    return new EffectComponentAlpha(aDeprecatedTextureHost, aDeprecatedTextureHostOnWhite, aFilter);
-  }
-
+  MOZ_ASSERT(aSource);
   RefPtr<TexturedEffect> result;
-  switch (aDeprecatedTextureHost->GetFormat()) {
+  switch (aFormat) {
   case gfx::FORMAT_B8G8R8A8:
-    result = new EffectBGRA(aDeprecatedTextureHost, true, aFilter);
+    result = new EffectBGRA(aSource, true, aFilter);
     break;
   case gfx::FORMAT_B8G8R8X8:
-    result = new EffectBGRX(aDeprecatedTextureHost, true, aFilter);
+    result = new EffectBGRX(aSource, true, aFilter);
     break;
   case gfx::FORMAT_R8G8B8X8:
-    result = new EffectRGBX(aDeprecatedTextureHost, true, aFilter);
+    result = new EffectRGBX(aSource, true, aFilter);
     break;
   case gfx::FORMAT_R5G6B5:
-    result = new EffectRGBX(aDeprecatedTextureHost, true, aFilter);
+    result = new EffectRGBX(aSource, true, aFilter);
     break;
   case gfx::FORMAT_R8G8B8A8:
-    result = new EffectRGBA(aDeprecatedTextureHost, true, aFilter);
+    result = new EffectRGBA(aSource, true, aFilter);
     break;
   case gfx::FORMAT_YUV:
-    result = new EffectYCbCr(aDeprecatedTextureHost, aFilter);
+    result = new EffectYCbCr(aSource, aFilter);
     break;
   default:
     MOZ_CRASH("unhandled program type");
@@ -262,12 +266,39 @@ CreateTexturedEffect(DeprecatedTextureHost *aDeprecatedTextureHost,
   return result;
 }
 
+/**
+ * Create a textured effect based on aSource format and the presence of
+ * aSourceOnWhite.
+ *
+ * aSourceOnWhite can be null.
+ */
 inline TemporaryRef<TexturedEffect>
-CreateTexturedEffect(DeprecatedTextureHost *aDeprecatedTextureHost,
+CreateTexturedEffect(TextureSource* aSource,
+                     TextureSource* aSourceOnWhite,
                      const gfx::Filter& aFilter)
 {
-  return CreateTexturedEffect(aDeprecatedTextureHost, nullptr, aFilter);
+  MOZ_ASSERT(aSource);
+  if (aSourceOnWhite) {
+    MOZ_ASSERT(aSource->GetFormat() == gfx::FORMAT_R8G8B8X8 ||
+               aSourceOnWhite->GetFormat() == gfx::FORMAT_B8G8R8X8);
+    return new EffectComponentAlpha(aSource, aSourceOnWhite, aFilter);
+  }
+
+  return CreateTexturedEffect(aSource->GetFormat(), aSource, aFilter);
 }
+
+/**
+ * Create a textured effect based on aSource format.
+ *
+ * This version excudes the possibility of component alpha.
+ */
+inline TemporaryRef<TexturedEffect>
+CreateTexturedEffect(TextureSource *aTexture,
+                     const gfx::Filter& aFilter)
+{
+  return CreateTexturedEffect(aTexture, nullptr, aFilter);
+}
+
 
 } // namespace layers
 } // namespace mozilla
