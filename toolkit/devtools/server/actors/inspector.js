@@ -1581,6 +1581,14 @@ var WalkerActor = protocol.ActorClass({
 
   onFrameLoad: function(window) {
     let frame = window.frameElement;
+    if (!frame && !this.rootDoc) {
+      this.rootDoc = window.document;
+      this.rootNode = this.document();
+      this.queueMutation({
+        type: "newRoot",
+        target: this.rootNode.form()
+      });
+    }
     let frameActor = this._refMap.get(frame);
     if (!frameActor) {
       return;
@@ -1641,6 +1649,11 @@ var WalkerActor = protocol.ActorClass({
       return;
     }
 
+    if (this.rootDoc === doc) {
+      this.rootDoc = null;
+      this.rootNode = null;
+    }
+
     this.queueMutation({
       type: "documentUnload",
       target: documentActor.actorID
@@ -1673,6 +1686,7 @@ var WalkerFront = exports.WalkerFront = protocol.FrontClass(WalkerActor, {
   autoCleanup: true,
 
   initialize: function(client, form) {
+    this._rootNodeDeferred = promise.defer();
     protocol.Front.prototype.initialize.call(this, client, form);
     this._orphaned = new Set();
     this._retainedOrphans = new Set();
@@ -1684,8 +1698,19 @@ var WalkerFront = exports.WalkerFront = protocol.FrontClass(WalkerActor, {
 
   // Update the object given a form representation off the wire.
   form: function(json) {
-    this.actorID = json.actorID;
+    this.actorID = json.actor;
     this.rootNode = types.getType("domnode").read(json.root, this);
+    this._rootNodeDeferred.resolve(this.rootNode);
+  },
+
+  /**
+   * Clients can use walker.rootNode to get the current root node of the
+   * walker, but during a reload the root node might be null.  This
+   * method returns a promise that will resolve to the root node when it is
+   * set.
+   */
+  getRootNode: function() {
+    return this._rootNodeDeferred.promise;
   },
 
   /**
@@ -1793,8 +1818,19 @@ var WalkerFront = exports.WalkerFront = protocol.FrontClass(WalkerActor, {
       let emitMutations = [];
       for (let change of mutations) {
         // The target is only an actorID, get the associated front.
-        let targetID = change.target;
-        let targetFront = this.get(targetID);
+        let targetID;
+        let targetFront;
+
+        if (change.type === "newRoot") {
+          this.rootNode = types.getType("domnode").read(change.target, this);
+          this._rootNodeDeferred.resolve(this.rootNode);
+          targetID = this.rootNode.actorID;
+          targetFront = this.rootNode;
+        } else {
+          targetID = change.target;
+          targetFront = this.get(targetID);
+        }
+
         if (!targetFront) {
           console.trace("Got a mutation for an unexpected actor: " + targetID + ", please file a bug on bugzilla.mozilla.org!");
           continue;
@@ -1848,6 +1884,11 @@ var WalkerFront = exports.WalkerFront = protocol.FrontClass(WalkerActor, {
             }
           }
         } else if (change.type === "documentUnload") {
+          if (targetFront === this.rootNode) {
+            this.rootNode = null;
+            this._rootNodeDeferred = promise.defer();
+          }
+
           // We try to give fronts instead of actorIDs, but these fronts need
           // to be destroyed now.
           emittedMutation.target = targetFront.actorID;
@@ -1991,7 +2032,12 @@ var InspectorActor = protocol.ActorClass({
   },
 
   getWalker: method(function(options={}) {
+    if (this._walkerPromise) {
+      return this._walkerPromise;
+    }
+
     let deferred = promise.defer();
+    this._walkerPromise = deferred.promise;
 
     let window = this.window;
 
@@ -2007,7 +2053,7 @@ var InspectorActor = protocol.ActorClass({
       domReady();
     }
 
-    return deferred.promise;
+    return this._walkerPromise;
   }, {
     request: {},
     response: {
