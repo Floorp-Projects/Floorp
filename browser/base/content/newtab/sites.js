@@ -60,7 +60,7 @@ Site.prototype = {
   },
 
   /**
-   * Unpins the site and calls the given callback when done.
+   * Unpins the site.
    */
   unpin: function Site_unpin() {
     if (this.isPinned()) {
@@ -79,8 +79,7 @@ Site.prototype = {
   },
 
   /**
-   * Blocks the site (removes it from the grid) and calls the given callback
-   * when done.
+   * Blocks the site (removes it from the grid).
    */
   block: function Site_block() {
     if (!gBlockedLinks.isBlocked(this._link)) {
@@ -194,9 +193,6 @@ Site.prototype = {
         break;
       case "dragstart":
         gDrag.start(this, aEvent);
-        break;
-      case "drag":
-        gDrag.drag(this, aEvent);
         break;
       case "dragend":
         gDrag.end(this, aEvent);
