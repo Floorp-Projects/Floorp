@@ -148,13 +148,6 @@ ifneq (gonk,$(MOZ_WIDGET_TOOLKIT))
 ifdef JS_SHARED_LIBRARY
 LIBS += $(MOZ_ZLIB_LIBS)
 endif
-
-CPP_UNIT_TESTS = \
-  sdp_unittests.cpp \
-  signaling_unittests.cpp \
-  mediapipeline_unittest.cpp \
-  mediaconduit_unittests.cpp \
-  $(NULL)
 endif
 endif
 

@@ -119,6 +119,13 @@ VARIABLES = {
        files will be installed in the /components directory of the distribution.
         """),
 
+    'CPP_UNIT_TESTS': (StrictOrderingOnAppendList, list, [],
+        """C++ source files for unit tests.
+
+        This is a list of C++ unit test sources. Entries must be files that
+        exist. These generally have .cpp extensions.
+        """),
+
     'GTEST_C_SOURCES': (StrictOrderingOnAppendList, list, [],
         """C code source files for GTest unit tests.
 

@@ -14,8 +14,4 @@ FAIL_ON_WARNINGS = 1
 
 LOCAL_INCLUDES := -I$(srcdir)/..
 
-CPP_UNIT_TESTS := \
-  TestAudioEventTimeline.cpp \
-  $(NULL)
-
 include $(topsrcdir)/config/rules.mk

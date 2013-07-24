@@ -46,11 +46,6 @@ DISABLED_SIMPLE_PROGRAMS := $(cppsrcs:.cpp=$(BIN_SUFFIX))
 #		TestUDPSocketProvider$(BIN_SUFFIX) \
 #		$(NULL)
 
-CPP_UNIT_TESTS = \
-		 TestSTSParser.cpp \
-		 TestUDPServerSocket.cpp \
-		 $(NULL)
-
 include $(topsrcdir)/config/config.mk
 
 LIBS		= $(XPCOM_LIBS) \

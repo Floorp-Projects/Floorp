@@ -26,8 +26,6 @@ endif
 #                 $(NULL)
 endif
 
-CPP_UNIT_TESTS += TestAppShellSteadyState.cpp
-
 MOCHITEST_CHROME_FILES =	test_bug343416.xul \
 		test_bug429954.xul \
 		window_bug429954.xul \

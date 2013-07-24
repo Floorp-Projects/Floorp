@@ -419,7 +419,7 @@ GetHistogramCounts(const char *testmsg, const nsACString &histogram_id,
                          snapshot_val.address())
           && (snapshot_fn = JS_ValueToFunction(cx, snapshot_val))
           && JS::Call(cx, JSVAL_TO_OBJECT(h),
-                      snapshot_fn, 0, NULL, ss.address())
+                      snapshot_fn, 0, NULL, &ss)
           && JS_GetProperty(cx, JSVAL_TO_OBJECT(ss), "counts", counts.address()));
 }
 
