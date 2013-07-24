@@ -12,8 +12,6 @@
 #include "mozilla/PodOperations.h"
 #include "mozilla/Util.h"
 
-#include "jstypes.h"
-#include "jsutil.h"
 #include "jsapi.h"
 #include "jsarray.h"
 #include "jsatom.h"
@@ -23,6 +21,8 @@
 #include "jsopcode.h"
 #include "jsproxy.h"
 #include "jsscript.h"
+#include "jstypes.h"
+#include "jsutil.h"
 
 #include "ds/Sort.h"
 #include "gc/Marking.h"
