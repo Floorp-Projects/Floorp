@@ -317,13 +317,12 @@ public:
    * @param aNotify whether to notify frames and such
    * @return whether any options were actually changed
    */
-  NS_IMETHOD SetOptionsSelectedByIndex(int32_t aStartIndex,
-                                       int32_t aEndIndex,
-                                       bool aIsSelected,
-                                       bool aClearAll,
-                                       bool aSetDisabled,
-                                       bool aNotify,
-                                       bool* aChangedSomething);
+  bool SetOptionsSelectedByIndex(int32_t aStartIndex,
+                                 int32_t aEndIndex,
+                                 bool aIsSelected,
+                                 bool aClearAll,
+                                 bool aSetDisabled,
+                                 bool aNotify);
 
   /**
    * Finds the index of a given option element
