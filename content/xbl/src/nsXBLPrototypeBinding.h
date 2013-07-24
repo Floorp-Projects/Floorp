@@ -6,17 +6,18 @@
 #ifndef nsXBLPrototypeBinding_h__
 #define nsXBLPrototypeBinding_h__
 
-#include "nsCOMPtr.h"
-#include "nsXBLPrototypeResources.h"
-#include "nsXBLPrototypeHandler.h"
-#include "nsXBLProtoImplMethod.h"
-#include "nsICSSLoaderObserver.h"
-#include "nsWeakReference.h"
-#include "nsHashtable.h"
 #include "nsClassHashtable.h"
-#include "nsXBLDocumentInfo.h"
 #include "nsCOMArray.h"
+#include "nsCOMPtr.h"
+#include "nsHashtable.h"
+#include "nsICSSLoaderObserver.h"
+#include "nsInterfaceHashtable.h"
+#include "nsWeakReference.h"
+#include "nsXBLDocumentInfo.h"
 #include "nsXBLProtoImpl.h"
+#include "nsXBLProtoImplMethod.h"
+#include "nsXBLPrototypeHandler.h"
+#include "nsXBLPrototypeResources.h"
 
 class nsIAtom;
 class nsIContent;
@@ -282,7 +283,46 @@ protected:
                                       // keys in the table. Containers are nsObjectHashtables.
                                       // This table is used to efficiently handle attribute changes.
 
-  nsSupportsHashtable* mInterfaceTable; // A table of cached interfaces that we support.
+  class IIDHashKey : public PLDHashEntryHdr
+  {
+  public:
+    typedef const nsIID& KeyType;
+    typedef const nsIID* KeyTypePointer;
+
+    IIDHashKey(const nsIID* aKey)
+      : mKey(*aKey)
+    {}
+    IIDHashKey(const IIDHashKey& aOther)
+      : mKey(aOther.GetKey())
+    {}
+    ~IIDHashKey()
+    {}
+
+    KeyType GetKey() const
+    {
+      return mKey;
+    }
+    bool KeyEquals(const KeyTypePointer aKey) const
+    {
+      return mKey.Equals(*aKey);
+    }
+
+    static KeyTypePointer KeyToPointer(KeyType aKey)
+    {
+      return &aKey;
+    }
+    static PLDHashNumber HashKey(const KeyTypePointer aKey)
+    {
+      // Just use the 32-bit m0 field.
+      return aKey->m0;
+    }
+
+    enum { ALLOW_MEMMOVE = true };
+
+  private:
+    nsIID mKey;
+  };
+  nsInterfaceHashtable<IIDHashKey, nsIContent> mInterfaceTable; // A table of cached interfaces that we support.
 
   int32_t mBaseNameSpaceID;    // If we extend a tagname/namespace, then that information will
   nsCOMPtr<nsIAtom> mBaseTag;  // be stored in here.
