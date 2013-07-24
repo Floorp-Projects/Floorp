@@ -5264,7 +5264,7 @@ nsCSSRuleListSH::GetItemAt(nsISupports *aNative, uint32_t aIndex,
   }
 #endif
 
-  return list->GetItemAt(aIndex, aResult);
+  return list->Item(aIndex);
 }
 
 
