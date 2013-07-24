@@ -2401,16 +2401,6 @@ JS_CallScriptTracer(JSTracer *trc, JSScript **scriptp, const char *name)
 }
 
 JS_PUBLIC_API(void)
-JS_CallGenericTracer(JSTracer *trc, void *gcthingArg, const char *name)
-{
-    void *gcthing = gcthingArg;
-    JSGCTraceKind kind = gc::GetGCThingTraceKind(gcthing);
-    JS_SET_TRACING_NAME(trc, name);
-    MarkKind(trc, &gcthing, kind);
-    JS_ASSERT(gcthing == gcthingArg);
-}
-
-JS_PUBLIC_API(void)
 JS_CallHeapValueTracer(JSTracer *trc, JS::Heap<JS::Value> *valuep, const char *name)
 {
     MarkValueUnbarriered(trc, valuep->unsafeGet(), name);
