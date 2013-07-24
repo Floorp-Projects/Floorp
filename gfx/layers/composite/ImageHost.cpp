@@ -17,7 +17,7 @@ using namespace gfx;
 namespace layers {
 
 void
-ImageHostSingle::SetCompositor(Compositor* aCompositor) {
+DeprecatedImageHostSingle::SetCompositor(Compositor* aCompositor) {
   CompositableHost::SetCompositor(aCompositor);
   if (mDeprecatedTextureHost) {
     mDeprecatedTextureHost->SetCompositor(aCompositor);
@@ -25,10 +25,10 @@ ImageHostSingle::SetCompositor(Compositor* aCompositor) {
 }
 
 void
-ImageHostSingle::EnsureDeprecatedTextureHost(TextureIdentifier aTextureId,
-                                   const SurfaceDescriptor& aSurface,
-                                   ISurfaceAllocator* aAllocator,
-                                   const TextureInfo& aTextureInfo)
+DeprecatedImageHostSingle::EnsureDeprecatedTextureHost(TextureIdentifier aTextureId,
+                                                       const SurfaceDescriptor& aSurface,
+                                                       ISurfaceAllocator* aAllocator,
+                                                       const TextureInfo& aTextureInfo)
 {
   if (mDeprecatedTextureHost &&
       mDeprecatedTextureHost->GetBuffer() &&
@@ -43,10 +43,10 @@ ImageHostSingle::EnsureDeprecatedTextureHost(TextureIdentifier aTextureId,
 }
 
 void
-ImageHostSingle::MakeDeprecatedTextureHost(TextureIdentifier aTextureId,
-                                 const SurfaceDescriptor& aSurface,
-                                 ISurfaceAllocator* aAllocator,
-                                 const TextureInfo& aTextureInfo)
+DeprecatedImageHostSingle::MakeDeprecatedTextureHost(TextureIdentifier aTextureId,
+                                                     const SurfaceDescriptor& aSurface,
+                                                     ISurfaceAllocator* aAllocator,
+                                                     const TextureInfo& aTextureInfo)
 {
   mDeprecatedTextureHost = DeprecatedTextureHost::CreateDeprecatedTextureHost(aSurface.type(),
                                                 mTextureInfo.mDeprecatedTextureHostFlags,
@@ -61,14 +61,14 @@ ImageHostSingle::MakeDeprecatedTextureHost(TextureIdentifier aTextureId,
 }
 
 void
-ImageHostSingle::Composite(EffectChain& aEffectChain,
-                           float aOpacity,
-                           const gfx::Matrix4x4& aTransform,
-                           const gfx::Point& aOffset,
-                           const gfx::Filter& aFilter,
-                           const gfx::Rect& aClipRect,
-                           const nsIntRegion* aVisibleRegion,
-                           TiledLayerProperties* aLayerProperties)
+DeprecatedImageHostSingle::Composite(EffectChain& aEffectChain,
+                                     float aOpacity,
+                                     const gfx::Matrix4x4& aTransform,
+                                     const gfx::Point& aOffset,
+                                     const gfx::Filter& aFilter,
+                                     const gfx::Rect& aClipRect,
+                                     const nsIntRegion* aVisibleRegion,
+                                     TiledLayerProperties* aLayerProperties)
 {
   if (!mDeprecatedTextureHost) {
     NS_WARNING("Can't composite an invalid or null DeprecatedTextureHost");
@@ -138,10 +138,10 @@ ImageHostSingle::Composite(EffectChain& aEffectChain,
 
 #ifdef MOZ_LAYERS_HAVE_LOG
 void
-ImageHostSingle::PrintInfo(nsACString& aTo, const char* aPrefix)
+DeprecatedImageHostSingle::PrintInfo(nsACString& aTo, const char* aPrefix)
 {
   aTo += aPrefix;
-  aTo += nsPrintfCString("ImageHostSingle (0x%p)", this);
+  aTo += nsPrintfCString("DeprecatedImageHostSingle (0x%p)", this);
 
   AppendToString(aTo, mPictureRect, " [picture-rect=", "]");
 
@@ -155,8 +155,8 @@ ImageHostSingle::PrintInfo(nsACString& aTo, const char* aPrefix)
 #endif
 
 bool
-ImageHostBuffered::Update(const SurfaceDescriptor& aImage,
-                          SurfaceDescriptor* aResult) {
+DeprecatedImageHostBuffered::Update(const SurfaceDescriptor& aImage,
+                                    SurfaceDescriptor* aResult) {
   if (!GetDeprecatedTextureHost()) {
     *aResult = aImage;
     return false;
@@ -166,24 +166,24 @@ ImageHostBuffered::Update(const SurfaceDescriptor& aImage,
 }
 
 void
-ImageHostBuffered::MakeDeprecatedTextureHost(TextureIdentifier aTextureId,
-                                   const SurfaceDescriptor& aSurface,
-                                   ISurfaceAllocator* aAllocator,
-                                   const TextureInfo& aTextureInfo)
+DeprecatedImageHostBuffered::MakeDeprecatedTextureHost(TextureIdentifier aTextureId,
+                                                       const SurfaceDescriptor& aSurface,
+                                                       ISurfaceAllocator* aAllocator,
+                                                       const TextureInfo& aTextureInfo)
 {
-  ImageHostSingle::MakeDeprecatedTextureHost(aTextureId,
-                                   aSurface,
-                                   aAllocator,
-                                   aTextureInfo);
+  DeprecatedImageHostSingle::MakeDeprecatedTextureHost(aTextureId,
+                                                       aSurface,
+                                                       aAllocator,
+                                                       aTextureInfo);
   if (mDeprecatedTextureHost) {
     mDeprecatedTextureHost->SetBuffer(new SurfaceDescriptor(null_t()), aAllocator);
   }
 }
 
 void
-ImageHostSingle::Dump(FILE* aFile,
-                      const char* aPrefix,
-                      bool aDumpHtml)
+DeprecatedImageHostSingle::Dump(FILE* aFile,
+                                const char* aPrefix,
+                                bool aDumpHtml)
 {
   if (!aFile) {
     aFile = stderr;
