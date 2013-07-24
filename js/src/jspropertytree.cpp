@@ -6,10 +6,10 @@
 
 #include "jspropertytree.h"
 
-#include "jstypes.h"
 #include "jsapi.h"
 #include "jscntxt.h"
 #include "jsgc.h"
+#include "jstypes.h"
 
 #include "vm/Shape.h"
 

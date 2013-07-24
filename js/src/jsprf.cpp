@@ -9,15 +9,17 @@
 **
 ** Author: Kipp E.B. Hickman
 */
+
 #include "jsprf.h"
 
 #include <stdarg.h>
 #include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
-#include "jsutil.h"
+#include <string.h>
+
 #include "jspubtd.h"
 #include "jsstr.h"
+#include "jsutil.h"
 
 using namespace js;
 
