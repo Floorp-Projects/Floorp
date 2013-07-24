@@ -14,11 +14,13 @@ import threading
 
 from mozpack.manifests import PurgeManifest
 
+
 def do_purge(purger, dest, state):
     state['result'] = purger.purge(dest)
 
+
 def process_manifest(topdir, manifest_path):
-    manifest = PurgeManifest.from_path(manifest_path)
+    manifest = PurgeManifest(path=manifest_path)
     purger = manifest.get_purger()
     full = os.path.join(topdir, manifest.relpath)
 

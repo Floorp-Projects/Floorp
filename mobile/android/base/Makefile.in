@@ -75,6 +75,7 @@ FENNEC_JAVA_FILES = \
   CanvasDelegate.java \
   CheckableLinearLayout.java \
   ClickableWhenDisabledEditText.java \
+  ContactService.java \
   ContextGetter.java \
   CustomEditText.java \
   db/BrowserDB.java \

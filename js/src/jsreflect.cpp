@@ -8,23 +8,24 @@
 
 #include "jsreflect.h"
 
-#include <stdlib.h>
-
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Util.h"
 
-#include "jspubtd.h"
+#include <stdlib.h>
+
 #include "jsarray.h"
 #include "jsatom.h"
 #include "jsobj.h"
+#include "jspubtd.h"
 
 #include "frontend/Parser.h"
-#include "frontend/ParseNode-inl.h"
 #include "frontend/TokenStream.h"
 #include "js/CharacterEncoding.h"
 #include "vm/RegExpObject.h"
 
 #include "jsobjinlines.h"
+
+#include "frontend/ParseNode-inl.h"
 
 using namespace js;
 using namespace js::frontend;

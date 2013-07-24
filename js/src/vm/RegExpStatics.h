@@ -8,9 +8,9 @@
 #define vm_RegExpStatics_h
 
 #include "gc/Marking.h"
+#include "vm/GlobalObject.h"
 #include "vm/MatchPairs.h"
 #include "vm/Runtime.h"
-#include "vm/GlobalObject.h"
 
 namespace js {
 

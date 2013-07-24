@@ -7,11 +7,12 @@
 #ifndef jsscriptinlines_h
 #define jsscriptinlines_h
 
+#include "jsscript.h"
+
 #include "jsautooplen.h"
 #include "jscntxt.h"
 #include "jsfun.h"
 #include "jsopcode.h"
-#include "jsscript.h"
 
 #include "ion/AsmJS.h"
 #include "vm/GlobalObject.h"

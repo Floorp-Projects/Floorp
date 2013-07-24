@@ -247,7 +247,7 @@
     <html:div id="overlay-plus" class="overlay-button"
               observes="cmd_back"></html:div>
 
-    <!-- Navbar -->
+    <!-- Navigation bar -->
     <appbar id="navbar" mousethrough="never" observes="bcast_windowState">
       <hbox id="progress-container" layer="true">
         <hbox id="progress-control" />
@@ -259,90 +259,116 @@
           <hbox id="urlbar-autocomplete" observes="bcast_windowState"/>
         </scrollbox>
 
-        <!-- Main Toolbar -->
-        <toolbar id="toolbar" observes="bcast_windowState" flex="1">
+        <!-- Main toolbar -->
+        <toolbar id="toolbar" flex="1">
           <observes element="bcast_windowState" attribute="*"/>
           <observes element="bcast_urlbarState" attribute="*"/>
 
-          <toolbarbutton id="back-button" class="appbar-primary" command="cmd_back"/>
-          <toolbarbutton id="forward-button" class="appbar-primary" command="cmd_forward"/>
+          <toolbarbutton id="back-button" class="appbar-primary"
+                         command="cmd_back"/>
+          <toolbarbutton id="forward-button" class="appbar-primary"
+                         command="cmd_forward"/>
 
-          <hbox id="urlbar-container" flex="1" observes="bcast_urlbarState">
-            <hbox id="urlbar" flex="1">
-              <box id="identity-box" role="button">
-                <hbox id="identity-box-inner" align="center" mousethrough="always">
-                  <image id="identity-icon"/>
-                </hbox>
-              </box>
+          <hbox id="urlbar" flex="1" observes="bcast_urlbarState">
+            <box id="identity-box" align="center" role="button">
+              <image id="identity-icon"/>
+            </box>
 
-              <textbox id="urlbar-edit"
-                       type="url"
-                       class="uri-element"
-                       autocompletesearch="history"
-                       autocompletepopup="urlbar-autocomplete"
-                       completeselectedindex="true"
-                       placeholder="&urlbar.emptytext;"
-                       flex="1"/>
-            </hbox>
+            <textbox id="urlbar-edit" type="url" flex="1"
+                     autocompletesearch="history"
+                     autocompletepopup="urlbar-autocomplete"
+                     completeselectedindex="true"
+                     placeholder="&urlbar.emptytext;"/>
 
-            <toolbarbutton id="reload-button" oncommand="CommandUpdater.doCommand(event.shiftKey ? 'cmd_forceReload' : 'cmd_reload');"/>
-            <toolbarbutton id="stop-button" command="cmd_stop"/>
+            <toolbarbutton id="go-button" class="urlbar-button"
+                           command="cmd_go"/>
+            <toolbarbutton id="reload-button" class="urlbar-button"
+                           oncommand="CommandUpdater.doCommand(
+                                        event.shiftKey ? 'cmd_forceReload'
+                                                       : 'cmd_reload');"/>
+            <toolbarbutton id="stop-button" class="urlbar-button"
+                           command="cmd_stop"/>
           </hbox>
 
-          <toolbarbutton id="download-button" class="appbar-secondary" oncommand="Appbar.onDownloadButton()"/>
-          <toolbarbutton id="star-button" class="appbar-primary" type="checkbox" oncommand="Appbar.onStarButton()"/>
-          <toolbarbutton id="pin-button" class="appbar-primary" type="checkbox" oncommand="Appbar.onPinButton()"/>
-          <toolbarbutton id="menu-button" class="appbar-primary" oncommand="Appbar.onMenuButton(event)"/>
+          <toolbarbutton id="download-button" class="appbar-secondary"
+                         oncommand="Appbar.onDownloadButton()"/>
+          <toolbarbutton id="star-button" class="appbar-primary" type="checkbox"
+                         oncommand="Appbar.onStarButton()"/>
+          <toolbarbutton id="pin-button" class="appbar-primary" type="checkbox"
+                         oncommand="Appbar.onPinButton()"/>
+          <toolbarbutton id="menu-button" class="appbar-primary"
+                         oncommand="Appbar.onMenuButton(event)"/>
         </toolbar>
       </vbox>
     </appbar>
 
-    <vbox id="panel-container" hidden="true" class="window-width window-height meta" observes="bcast_windowState">
+    <vbox id="panel-container" class="window-width window-height meta"
+          hidden="true" observes="bcast_windowState">
       <hbox id="panel-header">
-        <toolbarbutton id="panel-close-button" command="cmd_panel"/>
+        <toolbarbutton id="panel-close-button" class="appbar-primary"
+                       command="cmd_panel"/>
       </hbox>
 
       <deck id="panel-items" selectedIndex="0" flex="1" >
         <scrollbox id="bookmarks-container" flex="1">
-          <richgrid id="bookmarks-list" noun="bookmark" class="canSnapTiles" seltype="multiple" flex="1"/>
+          <richgrid id="bookmarks-list" noun="bookmark" class="canSnapTiles"
+                    seltype="multiple" flex="1"/>
         </scrollbox>
         <scrollbox id="history-container" flex="1">
-          <richgrid id="history-list" noun="history" class="canSnapTiles" seltype="multiple" flex="1"/>
+          <richgrid id="history-list" noun="history" class="canSnapTiles"
+                    seltype="multiple" flex="1"/>
         </scrollbox>
         <scrollbox id="remotetabs-container" flex="1">
-          <richgrid id="remotetabs-list" noun="tab" class="canSnapTiles" seltype="single" flex="1"/>
+          <richgrid id="remotetabs-list" noun="tab" class="canSnapTiles"
+                    seltype="single" flex="1"/>
         </scrollbox>
         <vbox id="console-container" flex="1">
           <vbox id="console-header" class="panel-list">
             <label class="panel-header" value="&consoleHeader.label;"/>
             <hbox align="center">
-              <label value="&consoleCodeEval.label;" control="console-eval-textbox"/>
-              <textbox id="console-eval-textbox" class="toolbar search-bar" value="" onkeypress="ConsolePanelView.onEvalKeyPress(event)" flex="1"/>
-              <button id="console-button-eval" class="show-text" label="&consoleEvaluate.label;" oncommand="ConsolePanelView.evaluateTypein()"/>
+              <label value="&consoleCodeEval.label;"
+                     control="console-eval-textbox"/>
+              <textbox id="console-eval-textbox" class="toolbar search-bar"
+                       value="" flex="1"
+                       onkeypress="ConsolePanelView.onEvalKeyPress(event)"/>
+              <button id="console-button-eval" class="show-text"
+                      label="&consoleEvaluate.label;"
+                      oncommand="ConsolePanelView.evaluateTypein()"/>
             </hbox>
             <hbox align="center" pack="end">
-              <radiogroup id="console-filter" oncommand="ConsolePanelView.changeMode();">
-                <radio id="console-filter-all" label="&consoleAll.label;" value="all" selected="true"/>
-                <radio id="console-filter-messages" label="&consoleMessages.label;" value="message"/>
-                <radio id="console-filter-warnings" label="&consoleWarnings.label;" value="warning"/>
-                <radio id="console-filter-errors" label="&consoleErrors.label;" value="error"/>
+              <radiogroup id="console-filter"
+                          oncommand="ConsolePanelView.changeMode();">
+                <radio id="console-filter-all" value="all" selected="true"
+                       label="&consoleAll.label;"/>
+                <radio id="console-filter-messages" value="message"
+                       label="&consoleMessages.label;" />
+                <radio id="console-filter-warnings" value="warning"
+                       label="&consoleWarnings.label;"/>
+                <radio id="console-filter-errors" value="error"
+                       label="&consoleErrors.label;"/>
               </radiogroup>
-              <button id="console-clear" class="show-text" oncommand="ConsolePanelView.clearConsole();" label="&consoleClear.label;"/>
+              <button id="console-clear" class="show-text"
+                      label="&consoleClear.label;"
+                      oncommand="ConsolePanelView.clearConsole();"/>
             </hbox>
           </vbox>
 
-          <richlistbox id="console-box" class="panel-list console-box" flex="1" onkeypress="ConsolePanelView.onConsoleBoxKeyPress(event)" oncontextmenu="ConsolePanelView.onContextMenu(event);"/>
+          <richlistbox id="console-box" class="panel-list console-box" flex="1"
+                       onkeypress="ConsolePanelView.onConsoleBoxKeyPress(event)"
+                       oncontextmenu="ConsolePanelView.onContextMenu(event);"/>
         </vbox>
       </deck>
     </vbox>
 
     <!-- Find bar -->
-    <appbar id="findbar" class="window-width findbar-box" orient="horizontal" pack="start">
-      <textbox id="findbar-textbox" class="search-bar findbar-item" oncommand="FindHelperUI.search(this.value)" oninput="FindHelperUI.updateCommands(this.value);" type="search"/>
-      <button class="findbar-item previous-button" command="cmd_findPrevious"/>
-      <button class="findbar-item next-button" command="cmd_findNext"/>
+    <appbar id="findbar" class="window-width" pack="start">
+      <textbox id="findbar-textbox" type="search"
+               oncommand="FindHelperUI.search(this.value)"
+               oninput="FindHelperUI.updateCommands(this.value); "/>
+      <button class="previous-button" command="cmd_findPrevious"/>
+      <button class="next-button" command="cmd_findNext"/>
       <spacer flex="1"/>
-      <button id="findbar-close" class="findbar-item close-button" command="cmd_findClose"/>
+      <button id="findbar-close" class="close-button" command="cmd_findClose"/>
     </appbar>
 
     <!-- Context button bar -->

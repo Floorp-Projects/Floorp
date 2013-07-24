@@ -26,6 +26,19 @@ SVGTSpanElement::SVGTSpanElement(already_AddRefed<nsINodeInfo> aNodeInfo)
 {
 }
 
+nsSVGElement::EnumAttributesInfo
+SVGTSpanElement::GetEnumInfo()
+{
+  return EnumAttributesInfo(mEnumAttributes, sEnumInfo,
+                            ArrayLength(sEnumInfo));
+}
+
+nsSVGElement::LengthAttributesInfo
+SVGTSpanElement::GetLengthInfo()
+{
+  return LengthAttributesInfo(mLengthAttributes, sLengthInfo,
+                              ArrayLength(sLengthInfo));
+}
 
 //----------------------------------------------------------------------
 // nsIDOMNode methods

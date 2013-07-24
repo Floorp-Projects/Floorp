@@ -15,9 +15,11 @@ const PREF_OVERRIDES_ENABLED = "general.useragent.site_specific_overrides";
 const DEFAULT_UA = Cc["@mozilla.org/network/protocol;1?name=http"]
                      .getService(Ci.nsIHttpProtocolHandler)
                      .userAgent;
+const MAX_OVERRIDE_FOR_HOST_CACHE_SIZE = 250;
 
 var gPrefBranch;
 var gOverrides;
+var gOverrideForHostCache = new Map;
 var gInitialized = false;
 var gOverrideFunctions = [
   function (aHttpChannel) UserAgentOverrides.getOverrideForURI(aHttpChannel.URI)
@@ -54,14 +56,27 @@ this.UserAgentOverrides = {
       return null;
 
     let host = aURI.asciiHost;
+
+    let override = gOverrideForHostCache.get(host);
+    if (override !== undefined)
+      return override;
+
+    override = null;
+
     for (let domain in gOverrides) {
       if (host == domain ||
           host.endsWith("." + domain)) {
-        return gOverrides[domain];
+        override = gOverrides[domain];
+        break;
       }
     }
 
-    return null;
+    if (gOverrideForHostCache.size >= MAX_OVERRIDE_FOR_HOST_CACHE_SIZE) {
+      gOverrideForHostCache.clear();
+    }
+    gOverrideForHostCache.set(host, override);
+
+    return override;
   },
 
   uninit: function uao_uninit() {
@@ -79,6 +94,7 @@ this.UserAgentOverrides = {
 
 function buildOverrides() {
   gOverrides = {};
+  gOverrideForHostCache.clear();
 
   if (!Services.prefs.getBoolPref(PREF_OVERRIDES_ENABLED))
     return;

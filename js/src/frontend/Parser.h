@@ -10,6 +10,7 @@
 /*
  * JS parser definitions.
  */
+
 #include "jsprvtd.h"
 #include "jspubtd.h"
 

@@ -324,6 +324,25 @@ Java_org_mozilla_gecko_GeckoJavaSampler_getProfilerTime(JNIEnv * arg0, jclass ar
 
 #ifdef JNI_STUBS
 
+typedef void (*Java_org_mozilla_gecko_gfx_NativePanZoomController_abortAnimation_t)(JNIEnv *, jobject);
+static Java_org_mozilla_gecko_gfx_NativePanZoomController_abortAnimation_t f_Java_org_mozilla_gecko_gfx_NativePanZoomController_abortAnimation;
+extern "C" NS_EXPORT void JNICALL
+Java_org_mozilla_gecko_gfx_NativePanZoomController_abortAnimation(JNIEnv * arg0, jobject arg1) {
+    if (!f_Java_org_mozilla_gecko_gfx_NativePanZoomController_abortAnimation) {
+        arg0->ThrowNew(arg0->FindClass("java/lang/UnsupportedOperationException"),
+                       "JNI Function called before it was loaded");
+        return ;
+    }
+     f_Java_org_mozilla_gecko_gfx_NativePanZoomController_abortAnimation(arg0, arg1);
+}
+#endif
+
+#ifdef JNI_BINDINGS
+  xul_dlsym("Java_org_mozilla_gecko_gfx_NativePanZoomController_abortAnimation", &f_Java_org_mozilla_gecko_gfx_NativePanZoomController_abortAnimation);
+#endif
+
+#ifdef JNI_STUBS
+
 typedef void (*Java_org_mozilla_gecko_gfx_NativePanZoomController_init_t)(JNIEnv *, jobject);
 static Java_org_mozilla_gecko_gfx_NativePanZoomController_init_t f_Java_org_mozilla_gecko_gfx_NativePanZoomController_init;
 extern "C" NS_EXPORT void JNICALL

@@ -9,15 +9,11 @@ Cu.import("resource://testing-common/services-common/bagheeraserver.js");
 Cu.import("resource://gre/modules/Promise.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 
-const PORT = 8080;
+function getClientAndServer() {
+  let server = new BagheeraServer();
+  server.start();
 
-function getClientAndServer(port=PORT) {
-  let uri = "http://localhost";
-  let server = new BagheeraServer(uri);
-
-  server.start(port);
-
-  let client = new BagheeraClient(uri + ":" + port);
+  let client = new BagheeraClient(server.serverURI);
 
   return [client, server];
 }
@@ -28,13 +24,13 @@ function run_test() {
 }
 
 add_test(function test_constructor() {
-  let client = new BagheeraClient("http://localhost:8080/");
+  let client = new BagheeraClient("http://localhost:1234/");
 
   run_next_test();
 });
 
 add_test(function test_post_json_transport_failure() {
-  let client = new BagheeraClient("http://localhost:8080/");
+  let client = new BagheeraClient("http://localhost:1234/");
 
   client.uploadJSON("foo", "bar", {}).then(function onResult(result) {
     do_check_false(result.transportSuccess);

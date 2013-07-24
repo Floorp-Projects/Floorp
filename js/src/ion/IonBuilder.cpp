@@ -3557,6 +3557,9 @@ IonBuilder::patchInlinedReturn(CallInfo &callInfo, MBasicBlock *exit, MBasicBloc
             // Known non-object return: force |this|.
             rdef = callInfo.thisArg();
         }
+    } else if (callInfo.isSetter()) {
+        // Setters return their argument, not whatever value is returned.
+        rdef = callInfo.getArg(0);
     }
 
     MGoto *replacement = MGoto::New(bottom);
@@ -5362,7 +5365,8 @@ CanEffectlesslyCallLookupGenericOnObject(JSContext *cx, JSObject *obj, jsid id)
             return false;
         if (obj->nativeLookup(cx, id))
             return true;
-        if (obj->getClass()->resolve != JS_ResolveStub)
+        if (obj->getClass()->resolve != JS_ResolveStub &&
+            obj->getClass()->resolve != (JSResolveOp)fun_resolve)
             return false;
         obj = obj->getProto();
     }
@@ -7822,8 +7826,15 @@ IonBuilder::getPropTryCommonGetter(bool *emitted, HandleId id,
     CallInfo callInfo(cx, false);
     if (!callInfo.init(current, 0))
         return false;
-    if (!makeCall(getter, callInfo, false))
-        return false;
+
+    // Inline if we can, otherwise, forget it and just generate a call.
+    if (makeInliningDecision(getter, callInfo) && getter->isInterpreted()) {
+        if (!inlineScriptedCall(callInfo, getter))
+            return false;
+    } else {
+        if (!makeCall(getter, callInfo, false))
+            return false;
+    }
 
     *emitted = true;
     return true;
@@ -8046,6 +8057,13 @@ IonBuilder::jsop_setprop(HandlePropertyName name)
         CallInfo callInfo(cx, false);
         if (!callInfo.init(current, 1))
             return false;
+        // Ensure that we know we are calling a setter in case we inline it.
+        callInfo.markAsSetter();
+
+        // Inline the setter if we can.
+        if (makeInliningDecision(setter, callInfo) && setter->isInterpreted())
+            return inlineScriptedCall(callInfo, setter);
+
         MCall *call = makeCallHelper(setter, callInfo, false);
         if (!call)
             return false;

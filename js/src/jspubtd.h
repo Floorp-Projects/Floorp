@@ -11,10 +11,10 @@
  * JS public API typedefs.
  */
 
+#include "mozilla/PodOperations.h"
+
 #include "jsprototypes.h"
 #include "jstypes.h"
-
-#include "mozilla/PodOperations.h"
 
 #if defined(JSGC_ROOT_ANALYSIS) || defined(JSGC_USE_EXACT_ROOTING) || defined(DEBUG)
 # define JSGC_TRACK_EXACT_ROOTS

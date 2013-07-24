@@ -1084,8 +1084,71 @@ public:
         Extensions_Max
     };
 
+    /**
+     * This enum introduce the possibility to check if a extension is
+     * supported, regardless it is a ARB, EXT, OES, NV, AMD, APPLE, ANGLE ...
+     * Be sure that extensions specifications are exactly same !
+     * This enum should be sorted by name.
+     */
+    enum GLExtensionPackages {
+        XXX_draw_buffers,
+        XXX_framebuffer_blit,
+        XXX_framebuffer_multisample,
+        XXX_framebuffer_object,
+        XXX_texture_float,
+        XXX_texture_non_power_of_two,
+        XXX_robustness,
+        XXX_vertex_array_object,
+        ExtensionPackages_Max
+    };
+
     bool IsExtensionSupported(GLExtensions aKnownExtension) const {
         return mAvailableExtensions[aKnownExtension];
+    }
+
+    bool IsExtensionSupported(GLExtensionPackages aKnownExtensionPackage) const
+    {
+        switch (aKnownExtensionPackage)
+        {
+        case XXX_draw_buffers:
+            return IsExtensionSupported(ARB_draw_buffers) ||
+                   IsExtensionSupported(EXT_draw_buffers);
+
+        case XXX_framebuffer_blit:
+            return IsExtensionSupported(EXT_framebuffer_blit) ||
+                   IsExtensionSupported(ANGLE_framebuffer_blit);
+
+        case XXX_framebuffer_multisample:
+            return IsExtensionSupported(EXT_framebuffer_multisample) ||
+                   IsExtensionSupported(ANGLE_framebuffer_multisample);
+
+        case XXX_framebuffer_object:
+            return IsExtensionSupported(ARB_framebuffer_object) ||
+                   IsExtensionSupported(EXT_framebuffer_object);
+
+        case XXX_texture_float:
+            return IsExtensionSupported(ARB_texture_float) ||
+                   IsExtensionSupported(OES_texture_float);
+
+        case XXX_robustness:
+            return IsExtensionSupported(ARB_robustness) ||
+                   IsExtensionSupported(EXT_robustness);
+
+        case XXX_texture_non_power_of_two:
+            return IsExtensionSupported(ARB_texture_non_power_of_two) ||
+                   IsExtensionSupported(OES_texture_npot);
+
+        case XXX_vertex_array_object:
+            return IsExtensionSupported(ARB_vertex_array_object) ||
+                   IsExtensionSupported(OES_vertex_array_object) ||
+                   IsExtensionSupported(APPLE_vertex_array_object);
+
+        default:
+            break;
+        }
+
+        MOZ_ASSERT(false, "GLContext::IsExtensionSupported : unknown <aKnownExtensionPackage>");
+        return false;
     }
 
     void MarkExtensionUnsupported(GLExtensions aKnownExtension) {

@@ -149,8 +149,7 @@ BrowserElementParent::OpenWindowOOP(TabParent* aOpenerTabParent,
                                     const nsAString& aFeatures)
 {
   // Create an iframe owned by the same document which owns openerFrameElement.
-  nsCOMPtr<Element> openerFrameElement =
-    do_QueryInterface(aOpenerTabParent->GetOwnerElement());
+  nsCOMPtr<Element> openerFrameElement = aOpenerTabParent->GetOwnerElement();
   NS_ENSURE_TRUE(openerFrameElement, false);
   nsRefPtr<HTMLIFrameElement> popupFrameElement =
     CreateIframe(openerFrameElement, aName, /* aRemote = */ true);
@@ -262,8 +261,7 @@ private:
 
 NS_IMETHODIMP DispatchAsyncScrollEventRunnable::Run()
 {
-  nsIDOMElement* element = mTabParent->GetOwnerElement();
-  nsCOMPtr<Element> frameElement = do_QueryInterface(element);
+  nsCOMPtr<Element> frameElement = mTabParent->GetOwnerElement();
   // Create the event's detail object.
   nsRefPtr<nsAsyncScrollEventDetail> detail =
     new nsAsyncScrollEventDetail(mContentRect.x, mContentRect.y,

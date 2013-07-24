@@ -73,12 +73,12 @@ findbar[position="top"][hidden] {
 }
 
 .findbar-textbox[status="notfound"] {
-  box-shadow: 0 0 0 1em #f66 inset;
+  background-color: #f66;
   color: white;
 }
 
 .findbar-textbox[flash="true"] {
-  box-shadow: 0 0 0 1em yellow inset;
+  background-color: yellow;
   color: black;
 }
 

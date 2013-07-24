@@ -292,22 +292,3 @@ let HistoryStartView = {
     this._view.destruct();
   }
 };
-
-let HistoryPanelView = {
-  _view: null,
-  get _grid() { return document.getElementById("history-list"); },
-  get visible() { return PanelUI.isPaneVisible("history-container"); },
-
-  show: function show() {
-    this._view.populateGrid(true);
-    this._grid.arrangeItems();
-  },
-
-  init: function init() {
-    this._view = new HistoryView(this._grid, StartUI.maxResultsPerSection, false);
-  },
-
-  uninit: function uninit() {
-    this._view.destruct();
-  }
-};
