@@ -56,20 +56,6 @@ GetLayoutPrintingLog()
 #define PR_PL(_p1)
 #endif
 
-// This object a shared by all the nsPageFrames 
-// parented to a SimplePageSequenceFrame
-nsSharedPageData::nsSharedPageData() :
-  mHeadFootFont(nullptr),
-  mPageContentXMost(0),
-  mPageContentSize(0)
-{
-}
-
-nsSharedPageData::~nsSharedPageData()
-{
-  delete mHeadFootFont;
-}
-
 nsIFrame*
 NS_NewSimplePageSequenceFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
@@ -92,9 +78,9 @@ nsSimplePageSequenceFrame::nsSimplePageSequenceFrame(nsStyleContext* aContext) :
   // XXX Unsafe to assume successful allocation
   mPageData = new nsSharedPageData();
   mPageData->mHeadFootFont =
-    new nsFont(*PresContext()->GetDefaultFont(kGenericFont_serif,
-                                              aContext->StyleFont()->mLanguage));
-  mPageData->mHeadFootFont->size = nsPresContext::CSSPointsToAppUnits(10);
+    *PresContext()->GetDefaultFont(kGenericFont_serif,
+                                   aContext->StyleFont()->mLanguage);
+  mPageData->mHeadFootFont.size = nsPresContext::CSSPointsToAppUnits(10);
 
   nsresult rv;
   mPageData->mPrintOptions = do_GetService(sPrintOptionsContractID, &rv);
