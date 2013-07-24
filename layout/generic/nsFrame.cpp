@@ -958,10 +958,9 @@ nsIFrame::GetUsedPadding() const
 }
 
 void
-nsIFrame::ApplySkipSides(nsMargin& aMargin,
-                         const nsHTMLReflowState* aReflowState) const
+nsIFrame::ApplySkipSides(nsMargin& aMargin) const
 {
-  int skipSides = GetSkipSides(aReflowState);
+  int skipSides = GetSkipSides();
   if (skipSides & (1 << NS_SIDE_TOP))
     aMargin.top = 0;
   if (skipSides & (1 << NS_SIDE_RIGHT))

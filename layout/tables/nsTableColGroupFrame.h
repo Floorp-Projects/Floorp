@@ -212,7 +212,7 @@ protected:
   void InsertColsReflow(int32_t                   aColIndex,
                         const nsFrameList::Slice& aCols);
 
-  virtual int GetSkipSides(const nsHTMLReflowState* aReflowState = nullptr) const MOZ_OVERRIDE;
+  virtual int GetSkipSides() const MOZ_OVERRIDE;
 
   // data members
   int32_t mColCount;

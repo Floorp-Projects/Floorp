@@ -76,54 +76,6 @@ public:
 protected:
   nsSplittableFrame(nsStyleContext* aContext) : nsFrame(aContext) {}
 
-  /**
-   * Determine the height consumed by our previous-in-flows.
-   *
-   * @note (bz) This makes laying out a splittable frame with N in-flows
-   *       O(N^2)! So, use this function with caution and minimize the number
-   *       of calls to this method.
-   */
-  nscoord GetConsumedHeight() const;
-
-  /**
-   * Retrieve the effective computed height of this frame, which is the computed
-   * height, minus the height consumed by any previous in-flows.
-   */
-  nscoord GetEffectiveComputedHeight(const nsHTMLReflowState& aReflowState,
-                                     nscoord aConsumed = NS_INTRINSICSIZE) const;
-
-  /**
-   * Compute the final height of this frame.
-   *
-   * @param aReflowState Data structure passed from parent during reflow.
-   * @param aReflowStatus A pointed to the reflow status for when we're finished
-   *        doing reflow. this will get set appropriately if the height causes
-   *        us to exceed the current available (page) height.
-   * @param aContentHeight The height of content, precomputed outside of this
-   *        function. The final height that is used in aMetrics will be set to
-   *        either this or the available height, whichever is larger, in the
-   *        case where our available height is constrained, and we overflow that
-   *        available height.
-   * @param aBorderPadding The margins representing the border padding for block
-   *        frames. Can be 0.
-   * @param aMetrics Out parameter for final height. Taken as an
-   *        nsHTMLReflowMetrics object so that aMetrics can be passed in
-   *        directly during reflow.
-   * @param aConsumed The height already consumed by our previous-in-flows.
-   */
-  void ComputeFinalHeight(const nsHTMLReflowState& aReflowState,
-                          nsReflowStatus*          aStatus,
-                          nscoord                  aContentHeight,
-                          const nsMargin&          aBorderPadding,
-                          nsHTMLReflowMetrics&     aMetrics,
-                          nscoord                  aConsumed);
-
-  /**
-   * @see nsIFrame::GetSkipSides()
-   * @see nsIFrame::ApplySkipSides()
-   */
-  virtual int GetSkipSides(const nsHTMLReflowState* aReflowState = nullptr) const;
-
 #ifdef DEBUG
   virtual void DumpBaseRegressionData(nsPresContext* aPresContext, FILE* out, int32_t aIndent) MOZ_OVERRIDE;
 #endif
