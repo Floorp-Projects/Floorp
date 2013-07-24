@@ -129,6 +129,7 @@ class TestEmitterBasic(unittest.TestCase):
             ASFILES=['fans.asm', 'tans.s'],
             CMMSRCS=['fans.mm', 'tans.mm'],
             CSRCS=['fans.c', 'tans.c'],
+            CPP_UNIT_TESTS=['foo.cpp'],
             DEFINES=['-Dfans', '-Dtans'],
             EXTRA_COMPONENTS=['fans.js', 'tans.js'],
             EXTRA_PP_COMPONENTS=['fans.pp.js', 'tans.pp.js'],
