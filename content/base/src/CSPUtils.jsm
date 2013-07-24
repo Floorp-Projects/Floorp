@@ -538,17 +538,23 @@ CSPRep.fromStringSpecCompliant = function(aStr, self, docRequest, csp) {
   // specifying either default-src or script-src, and to blocking inline
   // styles by specifying either default-src or style-src.
   if ("default-src" in dirs) {
-    aCSPR._allowInlineScripts = false;
-    aCSPR._allowInlineStyles = false;
-    aCSPR._allowEval = false;
-  } else {
-    if ("script-src" in dirs) {
+    // Parse the source list (look ahead) so we can set the defaults properly,
+    // honoring the 'unsafe-inline' and 'unsafe-eval' keywords
+    var defaultSrcValue = CSPSourceList.fromString(dirs["default-src"], null, self);
+    if (!defaultSrcValue._allowUnsafeInline) {
       aCSPR._allowInlineScripts = false;
-      aCSPR._allowEval = false;
-    }
-    if ("style-src" in dirs) {
       aCSPR._allowInlineStyles = false;
     }
+    if (!defaultSrcValue._allowUnsafeEval) {
+      aCSPR._allowEval = false;
+    }
+  }
+  if ("script-src" in dirs) {
+    aCSPR._allowInlineScripts = false;
+    aCSPR._allowEval = false;
+  }
+  if ("style-src" in dirs) {
+    aCSPR._allowInlineStyles = false;
   }
 
   directive:
