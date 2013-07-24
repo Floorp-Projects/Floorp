@@ -174,6 +174,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitIsNullOrLikeUndefinedAndBranch(LIsNullOrLikeUndefinedAndBranch *lir);
     bool visitEmulatesUndefined(LEmulatesUndefined *lir);
     bool visitEmulatesUndefinedAndBranch(LEmulatesUndefinedAndBranch *lir);
+    bool emitConcat(LInstruction *lir, Register lhs, Register rhs, Register output);
     bool visitConcat(LConcat *lir);
     bool visitParConcat(LParConcat *lir);
     bool visitCharCodeAt(LCharCodeAt *lir);
@@ -222,7 +223,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitRunOncePrologue(LRunOncePrologue *lir);
     bool emitRest(LInstruction *lir, Register array, Register numActuals,
                   Register temp0, Register temp1, unsigned numFormals,
-                  JSObject *templateObject, const VMFunction &f);
+                  JSObject *templateObject);
     bool visitRest(LRest *lir);
     bool visitParRest(LParRest *lir);
     bool visitCallSetProperty(LCallSetProperty *ins);
