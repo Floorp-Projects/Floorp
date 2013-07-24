@@ -1531,8 +1531,7 @@ HTMLSelectElement::SaveState()
     }
   }
 
-  nsPresState* presState = nullptr;
-  nsresult rv = GetPrimaryPresState(this, &presState);
+  nsPresState* presState = GetPrimaryPresState();
   if (presState) {
     presState->SetStateProperty(state);
 
@@ -1543,7 +1542,7 @@ HTMLSelectElement::SaveState()
     }
   }
 
-  return rv;
+  return NS_OK;
 }
 
 bool
