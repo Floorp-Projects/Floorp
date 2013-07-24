@@ -424,8 +424,10 @@ StackFramesView.prototype = Heritage.extend(WidgetMethods, {
    *        The line number to be displayed in the list.
    * @param number aDepth
    *        The frame depth specified by the debugger.
+   * @param boolean aIsBlackBoxed
+   *        Whether or not the frame is black boxed.
    */
-  addFrame: function(aFrameTitle, aSourceLocation, aLineNumber, aDepth) {
+  addFrame: function(aFrameTitle, aSourceLocation, aLineNumber, aDepth, aIsBlackBoxed) {
     // Create the element node and menu entry for the stack frame item.
     let frameView = this._createFrameView.apply(this, arguments);
     let menuEntry = this._createMenuEntry.apply(this, arguments);
@@ -471,29 +473,35 @@ StackFramesView.prototype = Heritage.extend(WidgetMethods, {
    *        The line number to be displayed in the list.
    * @param number aDepth
    *        The frame depth specified by the debugger.
+   * @param boolean aIsBlackBoxed
+   *        Whether or not the frame is black boxed.
    * @return nsIDOMNode
    *         The stack frame view.
    */
-  _createFrameView: function(aFrameTitle, aSourceLocation, aLineNumber, aDepth) {
-    let frameDetails =
-      SourceUtils.trimUrlLength(
-        SourceUtils.getSourceLabel(aSourceLocation),
-        STACK_FRAMES_SOURCE_URL_MAX_LENGTH,
-        STACK_FRAMES_SOURCE_URL_TRIM_SECTION) + SEARCH_LINE_FLAG + aLineNumber;
-
-    let frameTitleNode = document.createElement("label");
-    frameTitleNode.className = "plain dbg-stackframe-title breadcrumbs-widget-item-tag";
-    frameTitleNode.setAttribute("value", aFrameTitle);
-
-    let frameDetailsNode = document.createElement("label");
-    frameDetailsNode.className = "plain dbg-stackframe-details breadcrumbs-widget-item-id";
-    frameDetailsNode.setAttribute("value", frameDetails);
-
+  _createFrameView: function(aFrameTitle, aSourceLocation, aLineNumber, aDepth, aIsBlackBoxed) {
     let container = document.createElement("hbox");
     container.id = "stackframe-" + aDepth;
     container.className = "dbg-stackframe";
 
-    container.appendChild(frameTitleNode);
+    let frameDetails = SourceUtils.trimUrlLength(
+      SourceUtils.getSourceLabel(aSourceLocation),
+      STACK_FRAMES_SOURCE_URL_MAX_LENGTH,
+      STACK_FRAMES_SOURCE_URL_TRIM_SECTION);
+
+    if (aIsBlackBoxed) {
+      container.classList.add("dbg-stackframe-black-boxed");
+    } else {
+      let frameTitleNode = document.createElement("label");
+      frameTitleNode.className = "plain dbg-stackframe-title breadcrumbs-widget-item-tag";
+      frameTitleNode.setAttribute("value", aFrameTitle);
+      container.appendChild(frameTitleNode);
+
+      frameDetails += SEARCH_LINE_FLAG + aLineNumber;
+    }
+
+    let frameDetailsNode = document.createElement("label");
+    frameDetailsNode.className = "plain dbg-stackframe-details breadcrumbs-widget-item-id";
+    frameDetailsNode.setAttribute("value", frameDetails);
     container.appendChild(frameDetailsNode);
 
     return container;
@@ -510,10 +518,12 @@ StackFramesView.prototype = Heritage.extend(WidgetMethods, {
    *        The line number to be displayed in the list.
    * @param number aDepth
    *        The frame depth specified by the debugger.
+   * @param boolean aIsBlackBoxed
+   *        Whether or not the frame is black boxed.
    * @return object
    *         An object containing the stack frame command and menu item.
    */
-  _createMenuEntry: function(aFrameTitle, aSourceLocation, aLineNumber, aDepth) {
+  _createMenuEntry: function(aFrameTitle, aSourceLocation, aLineNumber, aDepth, aIsBlackBoxed) {
     let frameDescription =
       SourceUtils.trimUrlLength(
         SourceUtils.getSourceLabel(aSourceLocation),
