@@ -10,6 +10,7 @@
 #include "mozilla/Attributes.h"
 
 #include "jsscript.h"
+
 #include "builtin/Module.h"
 #include "frontend/TokenStream.h"
 

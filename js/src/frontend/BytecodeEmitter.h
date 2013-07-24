@@ -10,15 +10,15 @@
 /*
  * JS bytecode generation.
  */
+
 #include "jsatom.h"
 #include "jsopcode.h"
-#include "jsscript.h"
 #include "jspubtd.h"
+#include "jsscript.h"
 
 #include "frontend/ParseMaps.h"
 #include "frontend/SharedContext.h"
 #include "frontend/SourceNotes.h"
-
 #include "vm/ScopeObject.h"
 
 namespace js {
