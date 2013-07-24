@@ -5,7 +5,6 @@
 
 package org.mozilla.gecko;
 
-import org.mozilla.gecko.BrowserToolbar.EditingTarget;
 import org.mozilla.gecko.animation.PropertyAnimator;
 import org.mozilla.gecko.db.BrowserContract.Combined;
 import org.mozilla.gecko.db.BrowserDB;
@@ -422,13 +421,13 @@ abstract public class BrowserApp extends GeckoApp
 
         mBrowserToolbar.setOnActivateListener(new BrowserToolbar.OnActivateListener() {
             public void onActivate() {
-                enterEditingMode(EditingTarget.CURRENT_TAB, HomePager.Page.VISITED);
+                enterEditingMode();
             }
         });
 
         mBrowserToolbar.setOnCommitListener(new BrowserToolbar.OnCommitListener() {
-            public void onCommit(EditingTarget target) {
-                commitEditingMode(target);
+            public void onCommit() {
+                commitEditingMode();
             }
         });
 
@@ -611,7 +610,8 @@ abstract public class BrowserApp extends GeckoApp
 
     @Override
     public boolean onSearchRequested() {
-        return enterEditingMode(EditingTarget.CURRENT_TAB);
+        enterEditingMode();
+        return true;
     }
 
     @Override
@@ -631,7 +631,7 @@ abstract public class BrowserApp extends GeckoApp
             case R.id.paste: {
                 String text = Clipboard.getText();
                 if (!TextUtils.isEmpty(text)) {
-                    enterEditingMode(EditingTarget.CURRENT_TAB, text);
+                    enterEditingMode(text);
                 }
                 return true;
             }
@@ -1223,22 +1223,22 @@ abstract public class BrowserApp extends GeckoApp
     }
 
     private void openUrl(String url) {
-        openUrl(url, null, mBrowserToolbar.getEditingTarget());
+        openUrl(url, null, false);
     }
 
-    private void openUrl(String url, EditingTarget target) {
-        openUrl(url, null, target);
+    private void openUrl(String url, boolean newTab) {
+        openUrl(url, null, newTab);
     }
 
     private void openUrl(String url, String searchEngine) {
-        openUrl(url, searchEngine, mBrowserToolbar.getEditingTarget());
+        openUrl(url, searchEngine, false);
     }
 
-    private void openUrl(String url, String searchEngine, EditingTarget target) {
+    private void openUrl(String url, String searchEngine, boolean newTab) {
         mBrowserToolbar.setProgressVisibility(true);
 
         int flags = Tabs.LOADURL_NONE;
-        if (target == EditingTarget.NEW_TAB) {
+        if (newTab) {
             flags |= Tabs.LOADURL_NEW_TAB;
         }
 
@@ -1295,21 +1295,17 @@ abstract public class BrowserApp extends GeckoApp
         tab.setFaviconLoadId(Favicons.NOT_LOADING);
     }
 
-    public boolean enterEditingMode(EditingTarget target) {
-        return enterEditingMode(target, null, HomePager.Page.BOOKMARKS);
+    private void enterEditingMode() {
+        enterEditingMode(null);
     }
 
-    public boolean enterEditingMode(EditingTarget target, String url) {
-        return enterEditingMode(target, url, HomePager.Page.BOOKMARKS);
-    }
-
-    public boolean enterEditingMode(EditingTarget target, HomePager.Page page) {
-        return enterEditingMode(target, null, page);
-    }
-
-    boolean enterEditingMode(EditingTarget target, String url, HomePager.Page page) {
-        // If we're editing the current tab, show its URL.
-        if (TextUtils.isEmpty(url) && target == EditingTarget.CURRENT_TAB) {
+    /**
+     * Enters editing mode for the current tab. This method will
+     * always open the VISITED page on about:home.
+     */
+    private void enterEditingMode(String url) {
+        // If we don't have a specific url to show, show the current tab's url.
+        if (TextUtils.isEmpty(url)) {
             Tab tab = Tabs.getInstance().getSelectedTab();
             if (tab != null) {
                 // Check to see if there's a user-entered search term, which we save
@@ -1321,13 +1317,11 @@ abstract public class BrowserApp extends GeckoApp
             }
         }
 
-        mBrowserToolbar.startEditing(target, url);
-        animateShowHomePager(page);
-
-        return true;
+        mBrowserToolbar.startEditing(url);
+        animateShowHomePager(HomePager.Page.VISITED);
     }
 
-    void commitEditingMode(EditingTarget target) {
+    void commitEditingMode() {
         if (!mBrowserToolbar.isEditing()) {
             return;
         }
@@ -1336,13 +1330,8 @@ abstract public class BrowserApp extends GeckoApp
         animateHideHomePager();
         hideBrowserSearch();
 
-        int flags = Tabs.LOADURL_USER_ENTERED;
-        if (target == EditingTarget.NEW_TAB) {
-            flags |= Tabs.LOADURL_NEW_TAB;
-        }
-
         if (!TextUtils.isEmpty(url)) {
-            Tabs.getInstance().loadUrl(url, flags);
+            Tabs.getInstance().loadUrl(url, Tabs.LOADURL_USER_ENTERED);
         }
     }
 
@@ -1995,7 +1984,7 @@ abstract public class BrowserApp extends GeckoApp
     @Override
     public void onNewTabs(String[] urls) {
         for (String url : urls) {
-            openUrl(url, EditingTarget.NEW_TAB);
+            openUrl(url, true);
         }
     }
 
