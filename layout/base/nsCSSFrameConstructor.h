@@ -19,6 +19,7 @@
 #include "nsCounterManager.h"
 #include "nsHashKeys.h"
 #include "nsThreadUtils.h"
+#include "nsPageContentFrame.h"
 #include "nsCSSPseudoElements.h"
 #include "RestyleTracker.h"
 #include "nsIAnonymousContentCreator.h"
@@ -381,8 +382,6 @@ public:
   // Get the frame that is the parent of the root element.
   nsIFrame* GetDocElementContainingBlock()
     { return mDocElementContainingBlock; }
-
-  void SetPromoteReflowsToReframeRoot(bool aPromote) { mPromoteReflowsToReframeRoot = aPromote; }
 
 private:
   struct FrameConstructionItem;
@@ -1886,8 +1885,6 @@ private:
   bool                mObservingRefreshDriver : 1;
   // True if we're in the middle of a nsRefreshDriver refresh
   bool                mInStyleRefresh : 1;
-  // True if reflows/frame reconstruction should be promoted to reframe the root element
-  bool                mPromoteReflowsToReframeRoot : 1;
   uint32_t            mHoverGeneration;
   nsChangeHint        mRebuildAllExtraHint;
 
