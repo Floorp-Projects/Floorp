@@ -4,28 +4,17 @@
 
 #ifdef MOZ_WIDGET_COCOA
 let useHitTest = true;
+#elifdef XP_WIN
+let sysInfo = Components.classes["@mozilla.org/system-info;1"]
+              .getService(Components.interfaces.nsIPropertyBag2);
+let useHitTest = parseFloat(sysInfo.getProperty("version")) >= 6;
 #else
 let useHitTest = false;
-#endif
-
-#ifdef XP_WIN
-let hitTestUsageUpdated = false;
-function updateHitTestUsage() {
-  if (!hitTestUsageUpdated) {
-    let sysInfo = Components.classes["@mozilla.org/system-info;1"]
-                  .getService(Components.interfaces.nsIPropertyBag2);
-    useHitTest = parseFloat(sysInfo.getProperty("version")) >= 6;
-    hitTestUsageUpdated = true;
-  }
-}
 #endif
 
 this.EXPORTED_SYMBOLS = [ "WindowDraggingElement" ];
 
 this.WindowDraggingElement = function WindowDraggingElement(elem) {
-#ifdef XP_WIN
-  updateHitTestUsage();
-#endif
   this._elem = elem;
   this._window = elem.ownerDocument.defaultView;
   if (useHitTest && !this.isPanel())
