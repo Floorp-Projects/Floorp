@@ -571,12 +571,10 @@ CodeGenerator::visitPolyInlineDispatch(LPolyInlineDispatch *lir)
 }
 
 typedef JSFlatString *(*IntToStringFn)(ThreadSafeContext *, int);
-static const VMFunction IntToStringInfo =
-    FunctionInfo<IntToStringFn>(Int32ToString<CanGC>);
-
 typedef ParallelResult (*ParallelIntToStringFn)(ForkJoinSlice *, int, MutableHandleString);
-static const VMFunction ParallelIntToStringInfo =
-    FunctionInfo<ParallelIntToStringFn>(ParIntToString);
+static const VMFunctionsModal IntToStringInfo = VMFunctionsModal(
+    FunctionInfo<IntToStringFn>(Int32ToString<CanGC>),
+    FunctionInfo<ParallelIntToStringFn>(ParIntToString));
 
 bool
 CodeGenerator::visitIntToString(LIntToString *lir)
@@ -584,19 +582,8 @@ CodeGenerator::visitIntToString(LIntToString *lir)
     Register input = ToRegister(lir->input());
     Register output = ToRegister(lir->output());
 
-    OutOfLineCode *ool;
-    switch (gen->info().executionMode()) {
-      case SequentialExecution:
-        ool = oolCallVM(IntToStringInfo, lir, (ArgList(), input),
-                        StoreRegisterTo(output));
-        break;
-      case ParallelExecution:
-        ool = oolCallVM(ParallelIntToStringInfo, lir, (ArgList(), input),
-                        StoreRegisterTo(output));
-        break;
-      default:
-        MOZ_ASSUME_UNREACHABLE("No such execution mode");
-    }
+    OutOfLineCode *ool = oolCallVM(IntToStringInfo, lir, (ArgList(), input),
+                                   StoreRegisterTo(output));
     if (!ool)
         return false;
 
@@ -611,12 +598,10 @@ CodeGenerator::visitIntToString(LIntToString *lir)
 }
 
 typedef JSString *(*DoubleToStringFn)(ThreadSafeContext *, double);
-static const VMFunction DoubleToStringInfo =
-    FunctionInfo<DoubleToStringFn>(js_NumberToString<CanGC>);
-
 typedef ParallelResult (*ParallelDoubleToStringFn)(ForkJoinSlice *, double, MutableHandleString);
-static const VMFunction ParallelDoubleToStringInfo =
-    FunctionInfo<ParallelDoubleToStringFn>(ParDoubleToString);
+static const VMFunctionsModal DoubleToStringInfo = VMFunctionsModal(
+    FunctionInfo<DoubleToStringFn>(js_NumberToString<CanGC>),
+    FunctionInfo<ParallelDoubleToStringFn>(ParDoubleToString));
 
 bool
 CodeGenerator::visitDoubleToString(LDoubleToString *lir)
@@ -625,19 +610,8 @@ CodeGenerator::visitDoubleToString(LDoubleToString *lir)
     Register temp = ToRegister(lir->tempInt());
     Register output = ToRegister(lir->output());
 
-    OutOfLineCode *ool;
-    switch (gen->info().executionMode()) {
-      case SequentialExecution:
-        ool = oolCallVM(DoubleToStringInfo, lir, (ArgList(), input),
-                        StoreRegisterTo(output));
-        break;
-      case ParallelExecution:
-        ool = oolCallVM(ParallelDoubleToStringInfo, lir, (ArgList(), input),
-                        StoreRegisterTo(output));
-        break;
-      default:
-        MOZ_ASSUME_UNREACHABLE("No such execution mode");
-    }
+    OutOfLineCode *ool = oolCallVM(DoubleToStringInfo, lir, (ArgList(), input),
+                                   StoreRegisterTo(output));
     if (!ool)
         return false;
 
@@ -3682,16 +3656,13 @@ CodeGenerator::visitBinaryV(LBinaryV *lir)
 }
 
 typedef bool (*StringCompareFn)(JSContext *, HandleString, HandleString, JSBool *);
-static const VMFunction stringsEqualInfo =
-    FunctionInfo<StringCompareFn>(ion::StringsEqual<true>);
-static const VMFunction stringsNotEqualInfo =
-    FunctionInfo<StringCompareFn>(ion::StringsEqual<false>);
-
 typedef ParallelResult (*ParStringCompareFn)(ForkJoinSlice *, HandleString, HandleString, JSBool *);
-static const VMFunction parStringsEqualInfo =
-    FunctionInfo<ParStringCompareFn>(ion::ParStringsEqual);
-static const VMFunction parStringsNotEqualInfo =
-    FunctionInfo<ParStringCompareFn>(ion::ParStringsUnequal);
+static const VMFunctionsModal StringsEqualInfo = VMFunctionsModal(
+    FunctionInfo<StringCompareFn>(ion::StringsEqual<true>),
+    FunctionInfo<ParStringCompareFn>(ion::ParStringsEqual));
+static const VMFunctionsModal StringsNotEqualInfo = VMFunctionsModal(
+    FunctionInfo<StringCompareFn>(ion::StringsEqual<false>),
+    FunctionInfo<ParStringCompareFn>(ion::ParStringsUnequal));
 
 bool
 CodeGenerator::emitCompareS(LInstruction *lir, JSOp op, Register left, Register right,
@@ -3701,26 +3672,12 @@ CodeGenerator::emitCompareS(LInstruction *lir, JSOp op, Register left, Register 
 
     OutOfLineCode *ool = NULL;
 
-    switch (gen->info().executionMode()) {
-      case SequentialExecution:
-        if (op == JSOP_EQ || op == JSOP_STRICTEQ) {
-            ool = oolCallVM(stringsEqualInfo, lir, (ArgList(), left, right),  StoreRegisterTo(output));
-        } else {
-            JS_ASSERT(op == JSOP_NE || op == JSOP_STRICTNE);
-            ool = oolCallVM(stringsNotEqualInfo, lir, (ArgList(), left, right), StoreRegisterTo(output));
-        }
-        break;
-
-      case ParallelExecution:
-        if (op == JSOP_EQ || op == JSOP_STRICTEQ) {
-            ool = oolCallVM(parStringsEqualInfo, lir, (ArgList(), left, right),  StoreRegisterTo(output));
-        } else {
-            JS_ASSERT(op == JSOP_NE || op == JSOP_STRICTNE);
-            ool = oolCallVM(parStringsNotEqualInfo, lir, (ArgList(), left, right), StoreRegisterTo(output));
-        }
-        break;
+    if (op == JSOP_EQ || op == JSOP_STRICTEQ) {
+        ool = oolCallVM(StringsEqualInfo, lir, (ArgList(), left, right),  StoreRegisterTo(output));
+    } else {
+        JS_ASSERT(op == JSOP_NE || op == JSOP_STRICTNE);
+        ool = oolCallVM(StringsNotEqualInfo, lir, (ArgList(), left, right), StoreRegisterTo(output));
     }
-
     if (!ool)
         return false;
 
@@ -3771,24 +3728,32 @@ CodeGenerator::visitCompareS(LCompareS *lir)
 }
 
 typedef bool (*CompareFn)(JSContext *, MutableHandleValue, MutableHandleValue, JSBool *);
-static const VMFunction EqInfo = FunctionInfo<CompareFn>(ion::LooselyEqual<true>);
-static const VMFunction NeInfo = FunctionInfo<CompareFn>(ion::LooselyEqual<false>);
-static const VMFunction StrictEqInfo = FunctionInfo<CompareFn>(ion::StrictlyEqual<true>);
-static const VMFunction StrictNeInfo = FunctionInfo<CompareFn>(ion::StrictlyEqual<false>);
-static const VMFunction LtInfo = FunctionInfo<CompareFn>(ion::LessThan);
-static const VMFunction LeInfo = FunctionInfo<CompareFn>(ion::LessThanOrEqual);
-static const VMFunction GtInfo = FunctionInfo<CompareFn>(ion::GreaterThan);
-static const VMFunction GeInfo = FunctionInfo<CompareFn>(ion::GreaterThanOrEqual);
-
-typedef ParallelResult (*ParCompareFn)(ForkJoinSlice *, MutableHandleValue, MutableHandleValue, JSBool *);
-static const VMFunction ParLooselyEqInfo = FunctionInfo<ParCompareFn>(ion::ParLooselyEqual);
-static const VMFunction ParStrictlyEqInfo = FunctionInfo<ParCompareFn>(ion::ParStrictlyEqual);
-static const VMFunction ParLooselyNeInfo = FunctionInfo<ParCompareFn>(ion::ParLooselyUnequal);
-static const VMFunction ParStrictlyNeInfo = FunctionInfo<ParCompareFn>(ion::ParStrictlyUnequal);
-static const VMFunction ParLtInfo = FunctionInfo<ParCompareFn>(ion::ParLessThan);
-static const VMFunction ParLeInfo = FunctionInfo<ParCompareFn>(ion::ParLessThanOrEqual);
-static const VMFunction ParGtInfo = FunctionInfo<ParCompareFn>(ion::ParGreaterThan);
-static const VMFunction ParGeInfo = FunctionInfo<ParCompareFn>(ion::ParGreaterThanOrEqual);
+typedef ParallelResult (*ParCompareFn)(ForkJoinSlice *, MutableHandleValue,MutableHandleValue,
+                                       JSBool *);
+static const VMFunctionsModal EqInfo = VMFunctionsModal(
+    FunctionInfo<CompareFn>(ion::LooselyEqual<true>),
+    FunctionInfo<ParCompareFn>(ion::ParLooselyEqual));
+static const VMFunctionsModal NeInfo = VMFunctionsModal(
+    FunctionInfo<CompareFn>(ion::LooselyEqual<false>),
+    FunctionInfo<ParCompareFn>(ion::ParLooselyUnequal));
+static const VMFunctionsModal StrictEqInfo = VMFunctionsModal(
+    FunctionInfo<CompareFn>(ion::StrictlyEqual<true>),
+    FunctionInfo<ParCompareFn>(ion::ParStrictlyEqual));
+static const VMFunctionsModal StrictNeInfo = VMFunctionsModal(
+    FunctionInfo<CompareFn>(ion::StrictlyEqual<false>),
+    FunctionInfo<ParCompareFn>(ion::ParStrictlyUnequal));
+static const VMFunctionsModal LtInfo = VMFunctionsModal(
+    FunctionInfo<CompareFn>(ion::LessThan),
+    FunctionInfo<ParCompareFn>(ion::ParLessThan));
+static const VMFunctionsModal LeInfo = VMFunctionsModal(
+    FunctionInfo<CompareFn>(ion::LessThanOrEqual),
+    FunctionInfo<ParCompareFn>(ion::ParLessThanOrEqual));
+static const VMFunctionsModal GtInfo = VMFunctionsModal(
+    FunctionInfo<CompareFn>(ion::GreaterThan),
+    FunctionInfo<ParCompareFn>(ion::ParGreaterThan));
+static const VMFunctionsModal GeInfo = VMFunctionsModal(
+    FunctionInfo<CompareFn>(ion::GreaterThanOrEqual),
+    FunctionInfo<ParCompareFn>(ion::ParGreaterThanOrEqual));
 
 bool
 CodeGenerator::visitCompareVM(LCompareVM *lir)
@@ -3796,69 +3761,34 @@ CodeGenerator::visitCompareVM(LCompareVM *lir)
     pushArg(ToValue(lir, LBinaryV::RhsInput));
     pushArg(ToValue(lir, LBinaryV::LhsInput));
 
-    switch (gen->info().executionMode()) {
-      case SequentialExecution:
-        switch (lir->mir()->jsop()) {
-          case JSOP_EQ:
-            return callVM(EqInfo, lir);
+    switch (lir->mir()->jsop()) {
+      case JSOP_EQ:
+        return callVM(EqInfo, lir);
 
-          case JSOP_NE:
-            return callVM(NeInfo, lir);
+      case JSOP_NE:
+        return callVM(NeInfo, lir);
 
-          case JSOP_STRICTEQ:
-            return callVM(StrictEqInfo, lir);
+      case JSOP_STRICTEQ:
+        return callVM(StrictEqInfo, lir);
 
-          case JSOP_STRICTNE:
-            return callVM(StrictNeInfo, lir);
+      case JSOP_STRICTNE:
+        return callVM(StrictNeInfo, lir);
 
-          case JSOP_LT:
-            return callVM(LtInfo, lir);
+      case JSOP_LT:
+        return callVM(LtInfo, lir);
 
-          case JSOP_LE:
-            return callVM(LeInfo, lir);
+      case JSOP_LE:
+        return callVM(LeInfo, lir);
 
-          case JSOP_GT:
-            return callVM(GtInfo, lir);
+      case JSOP_GT:
+        return callVM(GtInfo, lir);
 
-          case JSOP_GE:
-            return callVM(GeInfo, lir);
+      case JSOP_GE:
+        return callVM(GeInfo, lir);
 
-          default:
-            MOZ_ASSUME_UNREACHABLE("Unexpected compare op");
-        }
-
-      case ParallelExecution:
-        switch (lir->mir()->jsop()) {
-          case JSOP_EQ:
-            return callVM(ParLooselyEqInfo, lir);
-
-          case JSOP_STRICTEQ:
-            return callVM(ParStrictlyEqInfo, lir);
-
-          case JSOP_NE:
-            return callVM(ParLooselyNeInfo, lir);
-
-          case JSOP_STRICTNE:
-            return callVM(ParStrictlyNeInfo, lir);
-
-          case JSOP_LT:
-            return callVM(ParLtInfo, lir);
-
-          case JSOP_LE:
-            return callVM(ParLeInfo, lir);
-
-          case JSOP_GT:
-            return callVM(ParGtInfo, lir);
-
-          case JSOP_GE:
-            return callVM(ParGeInfo, lir);
-
-          default:
-            MOZ_ASSUME_UNREACHABLE("Unexpected compare op");
-        }
+      default:
+        MOZ_ASSUME_UNREACHABLE("Unexpected compare op");
     }
-
-    MOZ_ASSUME_UNREACHABLE("Unexpected exec mode");
 }
 
 bool
@@ -4003,9 +3933,6 @@ CodeGenerator::visitIsNullOrLikeUndefinedAndBranch(LIsNullOrLikeUndefinedAndBran
     return true;
 }
 
-typedef JSString *(*ConcatStringsFn)(JSContext *, HandleString, HandleString);
-static const VMFunction ConcatStringsInfo = FunctionInfo<ConcatStringsFn>(ConcatStrings<CanGC>);
-
 bool
 CodeGenerator::visitEmulatesUndefined(LEmulatesUndefined *lir)
 {
@@ -4083,6 +4010,30 @@ CodeGenerator::visitEmulatesUndefinedAndBranch(LEmulatesUndefinedAndBranch *lir)
     return true;
 }
 
+typedef JSString *(*ConcatStringsFn)(JSContext *, HandleString, HandleString);
+typedef ParallelResult (*ParallelConcatStringsFn)(ForkJoinSlice *, HandleString, HandleString,
+                                                  MutableHandleString);
+static const VMFunctionsModal ConcatStringsInfo = VMFunctionsModal(
+    FunctionInfo<ConcatStringsFn>(ConcatStrings<CanGC>),
+    FunctionInfo<ParallelConcatStringsFn>(ParConcatStrings));
+
+bool
+CodeGenerator::emitConcat(LInstruction *lir, Register lhs, Register rhs, Register output)
+{
+    OutOfLineCode *ool = oolCallVM(ConcatStringsInfo, lir, (ArgList(), lhs, rhs),
+                                   StoreRegisterTo(output));
+    if (!ool)
+        return false;
+
+    ExecutionMode mode = gen->info().executionMode();
+    IonCode *stringConcatStub = gen->ionCompartment()->stringConcatStub(mode);
+    masm.call(stringConcatStub);
+    masm.branchTestPtr(Assembler::Zero, output, output, ool->entry());
+
+    masm.bind(ool->rejoin());
+    return true;
+}
+
 bool
 CodeGenerator::visitConcat(LConcat *lir)
 {
@@ -4099,23 +4050,8 @@ CodeGenerator::visitConcat(LConcat *lir)
     JS_ASSERT(ToRegister(lir->temp4()) == CallTempReg5);
     JS_ASSERT(output == CallTempReg6);
 
-    OutOfLineCode *ool = oolCallVM(ConcatStringsInfo, lir, (ArgList(), lhs, rhs),
-                                   StoreRegisterTo(output));
-    if (!ool)
-        return false;
-
-    IonCode *stringConcatStub = gen->ionCompartment()->stringConcatStub(SequentialExecution);
-    masm.call(stringConcatStub);
-    masm.branchTestPtr(Assembler::Zero, output, output, ool->entry());
-
-    masm.bind(ool->rejoin());
-    return true;
+    return emitConcat(lir, lhs, rhs, output);
 }
-
-typedef ParallelResult (*ParallelConcatStringsFn)(ForkJoinSlice *, HandleString, HandleString,
-                                                  MutableHandleString);
-static const VMFunction ParallelConcatStringsInfo =
-    FunctionInfo<ParallelConcatStringsFn>(ParConcatStrings);
 
 bool
 CodeGenerator::visitParConcat(LParConcat *lir)
@@ -4133,17 +4069,7 @@ CodeGenerator::visitParConcat(LParConcat *lir)
     JS_ASSERT(ToRegister(lir->temp3()) == CallTempReg4);
     JS_ASSERT(output == CallTempReg6);
 
-    OutOfLineCode *ool = oolCallVM(ParallelConcatStringsInfo, lir, (ArgList(), lhs, rhs),
-                                   StoreRegisterTo(output));
-    if (!ool)
-        return false;
-
-    IonCode *stringConcatStub = gen->ionCompartment()->stringConcatStub(ParallelExecution);
-    masm.call(stringConcatStub);
-    masm.branchTestPtr(Assembler::Zero, output, output, ool->entry());
-
-    masm.bind(ool->rejoin());
-    return true;
+    return emitConcat(lir, lhs, rhs, output);
 }
 
 static void
@@ -5299,10 +5225,20 @@ CodeGenerator::visitRunOncePrologue(LRunOncePrologue *lir)
     return callVM(RunOnceScriptPrologueInfo, lir);
 }
 
+
+typedef JSObject *(*InitRestParameterFn)(JSContext *, uint32_t, Value *, HandleObject,
+                                         HandleObject);
+typedef ParallelResult (*ParallelInitRestParameterFn)(ForkJoinSlice *, uint32_t, Value *,
+                                                      HandleObject, HandleObject,
+                                                      MutableHandleObject);
+static const VMFunctionsModal InitRestParameterInfo = VMFunctionsModal(
+    FunctionInfo<InitRestParameterFn>(InitRestParameter),
+    FunctionInfo<ParallelInitRestParameterFn>(InitRestParameter));
+
 bool
 CodeGenerator::emitRest(LInstruction *lir, Register array, Register numActuals,
                         Register temp0, Register temp1, unsigned numFormals,
-                        JSObject *templateObject, const VMFunction &f)
+                        JSObject *templateObject)
 {
     // Compute actuals() + numFormals.
     size_t actualsOffset = frameSize() + IonJSFrameLayout::offsetOfActualArgs();
@@ -5326,13 +5262,8 @@ CodeGenerator::emitRest(LInstruction *lir, Register array, Register numActuals,
     pushArg(temp1);
     pushArg(temp0);
 
-    return callVM(f, lir);
+    return callVM(InitRestParameterInfo, lir);
 }
-
-typedef JSObject *(*InitRestParameterFn)(JSContext *, uint32_t, Value *, HandleObject,
-                                         HandleObject);
-static const VMFunction InitRestParameterInfo =
-    FunctionInfo<InitRestParameterFn>(InitRestParameter);
 
 bool
 CodeGenerator::visitRest(LRest *lir)
@@ -5354,15 +5285,8 @@ CodeGenerator::visitRest(LRest *lir)
     }
     masm.bind(&joinAlloc);
 
-    return emitRest(lir, temp2, numActuals, temp0, temp1, numFormals, templateObject,
-                    InitRestParameterInfo);
+    return emitRest(lir, temp2, numActuals, temp0, temp1, numFormals, templateObject);
 }
-
-typedef ParallelResult (*ParallelInitRestParameterFn)(ForkJoinSlice *, uint32_t, Value *,
-                                                      HandleObject, HandleObject,
-                                                      MutableHandleObject);
-static const VMFunction ParallelInitRestParameterInfo =
-    FunctionInfo<ParallelInitRestParameterFn>(InitRestParameter);
 
 bool
 CodeGenerator::visitParRest(LParRest *lir)
@@ -5378,8 +5302,7 @@ CodeGenerator::visitParRest(LParRest *lir)
     if (!emitParAllocateGCThing(lir, temp2, slice, temp0, temp1, templateObject))
         return false;
 
-    return emitRest(lir, temp2, numActuals, temp0, temp1, numFormals, templateObject,
-                    ParallelInitRestParameterInfo);
+    return emitRest(lir, temp2, numActuals, temp0, temp1, numFormals, templateObject);
 }
 
 bool
