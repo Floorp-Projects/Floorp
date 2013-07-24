@@ -235,6 +235,10 @@ function isChildList(change) {
   return change.type === "childList";
 }
 
+function isNewRoot(change) {
+  return change.type === "newRoot";
+}
+
 // Make sure an iframe's src attribute changed and then
 // strip that mutation out of the list.
 function assertSrcChange(mutations) {
