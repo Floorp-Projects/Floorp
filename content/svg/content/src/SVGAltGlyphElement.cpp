@@ -31,6 +31,20 @@ SVGAltGlyphElement::SVGAltGlyphElement(already_AddRefed<nsINodeInfo> aNodeInfo)
 {
 }
 
+nsSVGElement::EnumAttributesInfo
+SVGAltGlyphElement::GetEnumInfo()
+{
+  return EnumAttributesInfo(mEnumAttributes, sEnumInfo,
+                            ArrayLength(sEnumInfo));
+}
+
+nsSVGElement::LengthAttributesInfo
+SVGAltGlyphElement::GetLengthInfo()
+{
+  return LengthAttributesInfo(mLengthAttributes, sLengthInfo,
+                              ArrayLength(sLengthInfo));
+}
+
 //----------------------------------------------------------------------
 // nsIDOMNode methods
 

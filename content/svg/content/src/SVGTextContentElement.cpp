@@ -55,38 +55,16 @@ SVGTextContentElement::FrameIsSVGText()
   return frame && frame->IsSVGText();
 }
 
-nsSVGElement::EnumAttributesInfo
-SVGTextContentElement::GetEnumInfo()
-{
-  // If we want to start supporting lengthAdjust="" on <textPath> we'll
-  // need to modify SVGTextPathElement::GetEnumInfo to return an
-  // EnumAttributesInfo for it, since GetEnumInfo isn't currently
-  // designed to include attribute information from superclasses.
-  return EnumAttributesInfo(mEnumAttributes, sEnumInfo,
-                            ArrayLength(sEnumInfo));
-}
-
-nsSVGElement::LengthAttributesInfo
-SVGTextContentElement::GetLengthInfo()
-{
-  // If we want to start supporting textLength="" on <textPath> we'll
-  // need to modify SVGTextPathElement::GetEnumInfo to return an
-  // EnumAttributesInfo for it, since GetEnumInfo isn't currently
-  // designed to include attribute information from superclasses.
-  return LengthAttributesInfo(mLengthAttributes, sLengthInfo,
-                              ArrayLength(sLengthInfo));
-}
-
 already_AddRefed<SVGAnimatedLength>
 SVGTextContentElement::TextLength()
 {
-  return mLengthAttributes[TEXTLENGTH].ToDOMAnimatedLength(this);
+  return LengthAttributes()[TEXTLENGTH].ToDOMAnimatedLength(this);
 }
 
 already_AddRefed<SVGAnimatedEnumeration>
 SVGTextContentElement::LengthAdjust()
 {
-  return mEnumAttributes[LENGTHADJUST].ToDOMAnimatedEnum(this);
+  return EnumAttributes()[LENGTHADJUST].ToDOMAnimatedEnum(this);
 }
 
 //----------------------------------------------------------------------
