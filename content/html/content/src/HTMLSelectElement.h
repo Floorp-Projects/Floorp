@@ -464,10 +464,10 @@ protected:
    * @param aListIndex the index to start adding options into the list at
    * @param aDepth the depth of aOptions (1=direct child of select ...)
    */
-  nsresult InsertOptionsIntoList(nsIContent* aOptions,
-                                 int32_t aListIndex,
-                                 int32_t aDepth,
-                                 bool aNotify);
+  void InsertOptionsIntoList(nsIContent* aOptions,
+                             int32_t aListIndex,
+                             int32_t aDepth,
+                             bool aNotify);
   /**
    * Remove option(s) from the options[] array
    * @param aOptions the option or optgroup being added
@@ -484,9 +484,9 @@ protected:
    * @param aInsertIndex the index to start adding options into the list at
    * @param aDepth the depth of aOptions (1=direct child of select ...)
    */
-  nsresult InsertOptionsIntoListRecurse(nsIContent* aOptions,
-                                        int32_t* aInsertIndex,
-                                        int32_t aDepth);
+  void InsertOptionsIntoListRecurse(nsIContent* aOptions,
+                                    int32_t* aInsertIndex,
+                                    int32_t aDepth);
   /**
    * Remove option(s) from the options[] array (called by RemoveOptionsFromList)
    * @param aOptions the option or optgroup being added
