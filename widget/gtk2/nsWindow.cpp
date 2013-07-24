@@ -6219,8 +6219,34 @@ nsWindow::SynthesizeNativeMouseEvent(nsIntPoint aPoint,
   }
 
   GdkDisplay* display = gdk_window_get_display(mGdkWindow);
-  GdkScreen* screen = gdk_window_get_screen(mGdkWindow);
-  gdk_display_warp_pointer(display, screen, aPoint.x, aPoint.y);
+
+  // When a button-release event is requested, create it here and put it in the
+  // event queue. This will not emit a motion event - this needs to be done
+  // explicitly *before* requesting a button-release. You will also need to wait
+  // for the motion event to be dispatched before requesting a button-release
+  // event to maintain the desired event order.
+  if (aNativeMessage == GDK_BUTTON_RELEASE) {
+    GdkEvent event;
+    memset(&event, 0, sizeof(GdkEvent));
+    event.type = (GdkEventType)aNativeMessage;
+    event.button.button = 1;
+    event.button.window = mGdkWindow;
+    event.button.time = GDK_CURRENT_TIME;
+
+#if (MOZ_WIDGET_GTK == 3)
+    // Get device for event source
+    GdkDeviceManager *device_manager = gdk_display_get_device_manager(display);
+    event.button.device = gdk_device_manager_get_client_pointer(device_manager);
+#endif
+
+    gdk_event_put(&event);
+  } else {
+    // We don't support specific events other than button-release. In case
+    // aNativeMessage != GDK_BUTTON_RELEASE we'll synthesize a motion event
+    // that will be emitted by gdk_display_warp_pointer().
+    GdkScreen* screen = gdk_window_get_screen(mGdkWindow);
+    gdk_display_warp_pointer(display, screen, aPoint.x, aPoint.y);
+  }
 
   return NS_OK;
 }
