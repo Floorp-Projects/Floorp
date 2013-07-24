@@ -451,9 +451,9 @@ public:
    *                      There is no requirement that the two nodes be of the same type.
    * @param aParent       The parent of aNodeToKeep
    */
-  nsresult JoinNodesImpl(nsIDOMNode *aNodeToKeep,
-                         nsIDOMNode *aNodeToJoin,
-                         nsIDOMNode *aParent);
+  nsresult JoinNodesImpl(nsINode* aNodeToKeep,
+                         nsINode* aNodeToJoin,
+                         nsINode* aParent);
 
   /**
    * Return the offset of aChild in aParent.  Asserts fatally if parent or
@@ -611,7 +611,13 @@ public:
   static nsCOMPtr<nsIDOMNode> GetNodeAtRangeOffsetPoint(nsIDOMNode* aParentOrNode, int32_t aOffset);
 
   static nsresult GetStartNodeAndOffset(nsISelection *aSelection, nsIDOMNode **outStartNode, int32_t *outStartOffset);
+  static nsresult GetStartNodeAndOffset(mozilla::Selection* aSelection,
+                                        nsINode** aStartNode,
+                                        int32_t* aStartOffset);
   static nsresult GetEndNodeAndOffset(nsISelection *aSelection, nsIDOMNode **outEndNode, int32_t *outEndOffset);
+  static nsresult GetEndNodeAndOffset(mozilla::Selection* aSelection,
+                                      nsINode** aEndNode,
+                                      int32_t* aEndOffset);
 #if DEBUG_JOE
   static void DumpNode(nsIDOMNode *aNode, int32_t indent=0);
 #endif
