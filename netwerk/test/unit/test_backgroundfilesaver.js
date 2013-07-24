@@ -459,6 +459,34 @@ add_task(function test_setTarget_multiple()
   destFile.remove(false);
 });
 
+add_task(function test_enableAppend()
+{
+  // This test checks append mode with hashing disabled.
+  let destFile = getTempFile(TEST_FILE_NAME_1);
+
+  // Test the case where the file does not already exists first, then the case
+  // where the file already exists.
+  for (let i = 0; i < 2; i++) {
+    let saver = new BackgroundFileSaverOutputStream();
+    saver.enableAppend();
+    let completionPromise = promiseSaverComplete(saver);
+
+    saver.setTarget(destFile, false);
+    yield promiseCopyToSaver(TEST_DATA_LONG, saver, true);
+
+    saver.finish(Cr.NS_OK);
+    yield completionPromise;
+
+    // Verify results.
+    let expectedContents = (i == 0 ? TEST_DATA_LONG
+                                   : TEST_DATA_LONG + TEST_DATA_LONG);
+    yield promiseVerifyContents(destFile, expectedContents);
+  }
+
+  // Clean up.
+  destFile.remove(false);
+});
+
 add_task(function test_enableAppend_hash()
 {
   // This test checks append mode, also verifying that the computed hash
