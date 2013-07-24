@@ -359,16 +359,19 @@ var DebuggerServer = {
    * transport. This connection results in straightforward calls to the onPacket
    * handlers of each side.
    *
+   * @param aPrefix string [optional]
+   *    If given, all actors in this connection will have names starting
+   *    with |aPrefix + ':'|.
    * @returns a client-side DebuggerTransport for communicating with
-   *          the newly-created connection.
+   *    the newly-created connection.
    */
-  connectPipe: function DS_connectPipe() {
+  connectPipe: function DS_connectPipe(aPrefix) {
     this._checkInit();
 
     let serverTransport = new LocalDebuggerTransport;
     let clientTransport = new LocalDebuggerTransport(serverTransport);
     serverTransport.other = clientTransport;
-    let connection = this._onConnection(serverTransport);
+    let connection = this._onConnection(serverTransport, aPrefix);
 
     // I'm putting this here because I trust you.
     //
@@ -424,16 +427,31 @@ var DebuggerServer = {
   },
 
   /**
-   * Create a new debugger connection for the given transport.  Called
-   * after connectPipe() or after an incoming socket connection.
+   * Create a new debugger connection for the given transport. Called after
+   * connectPipe(), from connectToParent, or from an incoming socket
+   * connection handler.
+   *
+   * If present, |aForwardingPrefix| is a forwarding prefix that a parent
+   * server is using to recognizes messages intended for this server. Ensure
+   * that all our actors have names beginning with |aForwardingPrefix + ':'|.
+   * In particular, the root actor's name will be |aForwardingPrefix + ':root'|.
    */
-  _onConnection: function DS_onConnection(aTransport) {
-    let connID = "conn" + this._nextConnID++ + '.';
+  _onConnection: function DS_onConnection(aTransport, aForwardingPrefix) {
+    let connID;
+    if (aForwardingPrefix) {
+      connID = aForwardingPrefix + ":";
+    } else {
+      connID = "conn" + this._nextConnID++ + '.';
+    }
     let conn = new DebuggerServerConnection(connID, aTransport);
     this._connections[connID] = conn;
 
     // Create a root actor for the connection and send the hello packet.
     conn.rootActor = this.createRootActor(conn);
+    if (aForwardingPrefix)
+      conn.rootActor.actorID = aForwardingPrefix + ":root";
+    else
+      conn.rootActor.actorID = "root";
     conn.addActor(conn.rootActor);
     aTransport.send(conn.rootActor.sayHello());
     aTransport.ready();
@@ -649,6 +667,14 @@ function DebuggerServerConnection(aPrefix, aTransport)
 
   this._actorPool = new ActorPool(this);
   this._extraPools = [];
+
+  /*
+   * We can forward packets to other servers, if the actors on that server
+   * all use a distinct prefix on their names. This is a map from prefixes
+   * to transports: it maps a prefix P to a transport T if T conveys
+   * packets to the server whose actors' names all begin with P + ":".
+   */
+  this._forwardingPrefixes = new Map;
 }
 
 DebuggerServerConnection.prototype = {
@@ -761,6 +787,35 @@ DebuggerServerConnection.prototype = {
     };
   },
 
+  /* Forwarding packets to other transports based on actor name prefixes. */
+
+  /*
+   * Arrange to forward packets to another server. This is how we
+   * forward debugging connections to child processes.
+   *
+   * If we receive a packet for an actor whose name begins with |aPrefix|
+   * followed by ':', then we will forward that packet to |aTransport|.
+   *
+   * This overrides any prior forwarding for |aPrefix|.
+   *
+   * @param aPrefix string
+   *    The actor name prefix, not including the ':'.
+   * @param aTransport object
+   *    A packet transport to which we should forward packets to actors
+   *    whose names begin with |(aPrefix + ':').|
+   */
+  setForwarding: function(aPrefix, aTransport) {
+    this._forwardingPrefixes.set(aPrefix, aTransport);
+  },
+
+  /*
+   * Stop forwarding messages to actors whose names begin with
+   * |aPrefix+':'|. Such messages will now elicit 'noSuchActor' errors.
+   */
+  cancelForwarding: function(aPrefix) {
+    this._forwardingPrefixes.delete(aPrefix);
+  },
+
   // Transport hooks.
 
   /**
@@ -770,6 +825,23 @@ DebuggerServerConnection.prototype = {
    *        The incoming packet.
    */
   onPacket: function DSC_onPacket(aPacket) {
+    // If the actor's name begins with a prefix we've been asked to
+    // forward, do so.
+    //
+    // Note that the presence of a prefix alone doesn't indicate that
+    // forwarding is needed: in DebuggerServerConnection instances in child
+    // processes, every actor has a prefixed name.
+    if (this._forwardingPrefixes.size > 0) {
+      let colon = aPacket.to.indexOf(':');
+      if (colon >= 0) {
+        let forwardTo = this._forwardingPrefixes.get(aPacket.to.substring(0, colon));
+        if (forwardTo) {
+          forwardTo.send(aPacket);
+          return;
+        }
+      }
+    }
+
     let actor = this.getActor(aPacket.to);
     if (!actor) {
       this.transport.send({ from: aPacket.to ? aPacket.to : "root",
@@ -823,18 +895,18 @@ DebuggerServerConnection.prototype = {
     }
 
     resolve(ret)
-      .then(null, (e) => {
-        return this._unknownError(
-          "error occurred while processing '" + aPacket.type,
-          e);
-      })
       .then(function (aResponse) {
         if (!aResponse.from) {
           aResponse.from = aPacket.to;
         }
         return aResponse;
       })
-      .then(this.transport.send.bind(this.transport));
+      .then(this.transport.send.bind(this.transport))
+      .then(null, (e) => {
+        return this._unknownError(
+          "error occurred while processing '" + aPacket.type,
+          e);
+      });
   },
 
   /**
