@@ -77,23 +77,3 @@ interface nsITouchEventReceiver : nsISupports {
   [implicit_jscontext] attribute jsval           ontouchleave;
   [implicit_jscontext] attribute jsval           ontouchcancel;
 };
-
-[scriptable, uuid(974cff68-6f0b-4520-8523-fa68b2754656)]
-interface nsIDOMDocumentTouch : nsITouchEventReceiver {
-  nsIDOMTouch createTouch([optional] in nsIDOMWindow view,
-                          [optional] in nsIDOMEventTarget target,
-                          [optional] in long identifier,
-                          [optional] in long pageX,
-                          [optional] in long pageY,
-                          [optional] in long screenX,
-                          [optional] in long screenY,
-                          [optional] in long clientX,
-                          [optional] in long clientY,
-                          [optional] in long radiusX,
-                          [optional] in long radiusY,
-                          [optional] in float rotationAngle,
-                          [optional] in float force);
-  
-
-  nsIDOMTouchList createTouchList([optional] in nsIVariant aPoints);
-};
