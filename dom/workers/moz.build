@@ -19,6 +19,7 @@ EXPORTS.mozilla.dom.workers.bindings += [
     'EventListenerManager.h',
     'EventTarget.h',
     'FileReaderSync.h',
+    'Navigator.h',
     'TextDecoder.h',
     'TextEncoder.h',
     'URL.h',

@@ -11,6 +11,7 @@
 #include "mozilla/dom/TextEncoderBinding.h"
 #include "mozilla/dom/XMLHttpRequestBinding.h"
 #include "mozilla/dom/XMLHttpRequestUploadBinding.h"
+#include "mozilla/dom/WorkerNavigatorBinding.h"
 
 BEGIN_WORKERS_NAMESPACE
 
@@ -19,6 +20,7 @@ class TextDecoder;
 class TextEncoder;
 class XMLHttpRequest;
 class XMLHttpRequestUpload;
+class WorkerNavigator;
 
 namespace {
 
@@ -52,6 +54,7 @@ SPECIALIZE_PROTO_TRAITS(TextDecoder)
 SPECIALIZE_PROTO_TRAITS(TextEncoder)
 SPECIALIZE_PROTO_TRAITS(XMLHttpRequest)
 SPECIALIZE_PROTO_TRAITS(XMLHttpRequestUpload)
+SPECIALIZE_PROTO_TRAITS(WorkerNavigator)
 
 #undef SPECIALIZE_PROTO_TRAITS
 
