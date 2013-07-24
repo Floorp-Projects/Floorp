@@ -156,11 +156,12 @@ this.EventManager.prototype = {
           QueryInterface(Ci.nsIAccessibleVirtualCursorChangeEvent);
         let reason = event.reason;
 
-        if (this.editState.editing)
+        if (this.editState.editing) {
           aEvent.accessibleDocument.takeFocus();
-
+        }
         this.present(
-          Presentation.pivotChanged(position, event.oldAccessible, reason));
+          Presentation.pivotChanged(position, event.oldAccessible, reason,
+                                    pivot.startOffset, pivot.endOffset));
 
         break;
       }
