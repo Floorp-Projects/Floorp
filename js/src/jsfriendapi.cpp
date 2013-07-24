@@ -13,9 +13,9 @@
 #include "jscompartment.h"
 #include "jsgc.h"
 #include "jsobj.h"
-#include "jswrapper.h"
-#include "jsweakmap.h"
 #include "jswatchpoint.h"
+#include "jsweakmap.h"
+#include "jswrapper.h"
 #include "prmjtime.h"
 
 #include "builtin/TestingFunctions.h"

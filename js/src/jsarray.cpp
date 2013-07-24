@@ -21,6 +21,7 @@
 #include "jsobj.h"
 #include "jstypes.h"
 #include "jsutil.h"
+
 #include "ds/Sort.h"
 #include "vm/ArgumentsObject.h"
 #include "vm/ForkJoin.h"
@@ -31,8 +32,8 @@
 
 #include "jsatominlines.h"
 
-#include "vm/ArrayObject-inl.h"
 #include "vm/ArgumentsObject-inl.h"
+#include "vm/ArrayObject-inl.h"
 #include "vm/Interpreter-inl.h"
 #include "vm/ObjectImpl-inl.h"
 #include "vm/Runtime-inl.h"

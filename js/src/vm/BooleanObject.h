@@ -8,6 +8,7 @@
 #define vm_BooleanObject_h
 
 #include "jsbool.h"
+#include "jsobj.h"
 
 namespace js {
 
