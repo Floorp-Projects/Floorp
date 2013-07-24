@@ -9,8 +9,8 @@ const PDU_MAX_USER_DATA_7BIT = 160;
 SpecialPowers.setBoolPref("dom.sms.enabled", true);
 SpecialPowers.addPermission("sms", true, document);
 
-let manager = window.navigator.mozMobileMessage;
-ok(manager instanceof MozMobileMessageManager, "mozMobileMessage");
+let sms = window.navigator.mozSms;
+ok(sms instanceof MozSmsManager, "mozSmsManager");
 
 let tasks = {
   // List of test fuctions. Each of them should call |tasks.next()| when
@@ -48,7 +48,7 @@ let tasks = {
 function addTest(text, segments, charsPerSegment, charsAvailableInLastSegment) {
   tasks.push(function () {
     log("Testing '" + text + "' ...");
-    let info = manager.getSegmentInfoForText(text);
+    let info = sms.getSegmentInfoForText(text);
     is(info.segments, segments, "info.segments");
     is(info.charsPerSegment, charsPerSegment, "info.charsPerSegment");
     is(info.charsAvailableInLastSegment, charsAvailableInLastSegment,
@@ -62,7 +62,7 @@ function addTestThrows(text) {
   tasks.push(function () {
     log("Testing '" + text + "' ...");
     try {
-      let info = manager.getSegmentInfoForText(text);
+      let info = sms.getSegmentInfoForText(text);
 
       ok(false, "Not thrown");
       tasks.finish();
