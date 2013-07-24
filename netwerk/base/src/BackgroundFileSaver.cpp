@@ -494,7 +494,7 @@ BackgroundFileSaver::ProcessStateChange()
 
   // When we are requested to append to an existing file, we should read the
   // existing data and ensure we include it as part of the final hash.
-  if (append && !isContinuation) {
+  if (mDigestContext && append && !isContinuation) {
     nsCOMPtr<nsIInputStream> inputStream;
     rv = NS_NewLocalFileInputStream(getter_AddRefs(inputStream),
                                     mActualTarget,

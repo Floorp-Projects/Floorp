@@ -74,7 +74,28 @@ function performTestComparisons2()
   is(i.selection.node, div2, "selection matches div2 node");
   is(getHighlitNode(), div2, "highlighter matches selection");
 
-  finish();
+  selectRoot();
+}
+
+function selectRoot()
+{
+  // Select the root document element to clear the breadcrumbs.
+  let i = getActiveInspector();
+  i.selection.setNode(doc.documentElement);
+  i.once("inspector-updated", selectIframe);
+}
+
+function selectIframe()
+{
+  // Directly select an element in an iframe (without navigating to it
+  // with mousemoves).
+  let i = getActiveInspector();
+  i.selection.setNode(div2);
+  i.once("inspector-updated", () => {
+    let breadcrumbs = i.breadcrumbs;
+    is(breadcrumbs.nodeHierarchy.length, 9, "Should have 9 items");
+    finish();
+  });
 }
 
 function test() {

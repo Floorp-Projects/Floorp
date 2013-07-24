@@ -580,6 +580,7 @@ WebConsoleActor.prototype =
     let evalOptions = {
       bindObjectActor: aRequest.bindObjectActor,
       frameActor: aRequest.frameActor,
+      url: aRequest.url,
     };
     let evalInfo = this.evalWithDebugger(input, evalOptions);
     let evalResult = evalInfo.result;
@@ -796,6 +797,8 @@ WebConsoleActor.prototype =
    *         evaluated.
    *         - result: the result of the evaluation.
    *         - helperResult: any result coming from a JSTerm helper function.
+   *         - url: the url to evaluate the script as. Defaults to
+   *         "debugger eval code".
    */
   evalWithDebugger: function WCA_evalWithDebugger(aString, aOptions = {})
   {
@@ -894,12 +897,17 @@ WebConsoleActor.prototype =
     // Ready to evaluate the string.
     helpers.evalInput = aString;
 
+    let evalOptions;
+    if (typeof aOptions.url == "string") {
+      evalOptions = { url: aOptions.url };
+    }
+
     let result;
     if (frame) {
-      result = frame.evalWithBindings(aString, bindings);
+      result = frame.evalWithBindings(aString, bindings, evalOptions);
     }
     else {
-      result = dbgWindow.evalInGlobalWithBindings(aString, bindings);
+      result = dbgWindow.evalInGlobalWithBindings(aString, bindings, evalOptions);
     }
 
     let helperResult = helpers.helperResult;
