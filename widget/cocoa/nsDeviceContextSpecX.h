@@ -19,10 +19,10 @@ public:
 
     NS_IMETHOD Init(nsIWidget *aWidget, nsIPrintSettings* aPS, bool aIsPrintPreview);
     NS_IMETHOD GetSurfaceForPrinter(gfxASurface **surface);
-    NS_IMETHOD BeginDocument(PRUnichar*  aTitle, 
-                             PRUnichar*  aPrintToFileName,
-                             int32_t     aStartPage, 
-                             int32_t     aEndPage);
+    NS_IMETHOD BeginDocument(const nsAString& aTitle,
+                             PRUnichar*       aPrintToFileName,
+                             int32_t          aStartPage,
+                             int32_t          aEndPage);
     NS_IMETHOD EndDocument();
     NS_IMETHOD BeginPage();
     NS_IMETHOD EndPage();
