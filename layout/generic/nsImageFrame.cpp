@@ -1771,7 +1771,7 @@ nsImageFrame::List(FILE* out, int32_t aIndent, uint32_t aFlags) const
 #endif
 
 int
-nsImageFrame::GetSkipSides(const nsHTMLReflowState* aReflowState) const
+nsImageFrame::GetSkipSides() const
 {
   int skip = 0;
   if (nullptr != GetPrevInFlow()) {

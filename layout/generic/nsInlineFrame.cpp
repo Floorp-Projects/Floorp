@@ -847,7 +847,7 @@ nsInlineFrame::PushFrames(nsPresContext* aPresContext,
 //////////////////////////////////////////////////////////////////////
 
 int
-nsInlineFrame::GetSkipSides(const nsHTMLReflowState* aReflowState) const
+nsInlineFrame::GetSkipSides() const
 {
   int skip = 0;
   if (!IsLeftMost()) {
