@@ -1099,12 +1099,12 @@ ScriptFrameIter::argsObj() const
 }
 
 bool
-ScriptFrameIter::computeThis() const
+ScriptFrameIter::computeThis(JSContext *cx) const
 {
     JS_ASSERT(!done());
     if (!isIon()) {
-        JS_ASSERT(data_.cx_);
-        return ComputeThis(data_.cx_, abstractFramePtr());
+        assertSameCompartment(cx, scopeChain());
+        return ComputeThis(cx, abstractFramePtr());
     }
     return true;
 }
