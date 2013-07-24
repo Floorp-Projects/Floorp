@@ -271,7 +271,7 @@ class BackgroundFileSaverOutputStream : public BackgroundFileSaver
                                       , public nsIOutputStreamCallback
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIOUTPUTSTREAM
   NS_DECL_NSIASYNCOUTPUTSTREAM
   NS_DECL_NSIOUTPUTSTREAMCALLBACK
@@ -299,7 +299,7 @@ class BackgroundFileSaverStreamListener : public BackgroundFileSaver
                                         , public nsIStreamListener
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSISTREAMLISTENER
 
@@ -351,7 +351,7 @@ class DigestOutputStream : public nsNSSShutDownObject,
                            public nsIOutputStream
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIOUTPUTSTREAM
   // Constructor. Neither parameter may be null. The caller owns both.
   DigestOutputStream(nsIOutputStream* outputStream, PK11Context* aContext);

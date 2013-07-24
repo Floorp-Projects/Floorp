@@ -35,7 +35,7 @@ class nsStringInputStream MOZ_FINAL : public nsIStringInputStream
                                     , public nsIIPCSerializableInputStream
 {
 public:
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSIINPUTSTREAM
     NS_DECL_NSISTRINGINPUTSTREAM
     NS_DECL_NSISEEKABLESTREAM
@@ -78,8 +78,8 @@ private:
 
 // This class needs to support threadsafe refcounting since people often
 // allocate a string stream, and then read it from a background thread.
-NS_IMPL_THREADSAFE_ADDREF(nsStringInputStream)
-NS_IMPL_THREADSAFE_RELEASE(nsStringInputStream)
+NS_IMPL_ADDREF(nsStringInputStream)
+NS_IMPL_RELEASE(nsStringInputStream)
 
 NS_IMPL_CLASSINFO(nsStringInputStream, NULL, nsIClassInfo::THREADSAFE,
                   NS_STRINGINPUTSTREAM_CID)

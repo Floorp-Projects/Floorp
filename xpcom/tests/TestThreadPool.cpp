@@ -16,7 +16,7 @@
 class Task : public nsIRunnable
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
 
   Task(int i) : mIndex(i) {}
 
@@ -32,7 +32,7 @@ public:
 private:
   int mIndex;
 };
-NS_IMPL_THREADSAFE_ISUPPORTS1(Task, nsIRunnable)
+NS_IMPL_ISUPPORTS1(Task, nsIRunnable)
 
 static nsresult
 RunTests()

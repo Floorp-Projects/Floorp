@@ -28,7 +28,7 @@ class nsCMSMessage : public nsICMSMessage,
                      public nsNSSShutDownObject
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSICMSMESSAGE
   NS_DECL_NSICMSMESSAGE2
 
@@ -64,7 +64,7 @@ class nsCMSDecoder : public nsICMSDecoder,
                      public nsNSSShutDownObject
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSICMSDECODER
 
   nsCMSDecoder();
@@ -87,7 +87,7 @@ class nsCMSEncoder : public nsICMSEncoder,
                      public nsNSSShutDownObject
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSICMSENCODER
 
   nsCMSEncoder();

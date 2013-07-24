@@ -116,7 +116,7 @@ extern "C" {
 // Implement the nsISupports ref counting
 namespace mozilla {
 
-NS_IMPL_THREADSAFE_ISUPPORTS0(NrSocket)
+NS_IMPL_ISUPPORTS0(NrSocket)
 
 
 // The nsASocket callbacks

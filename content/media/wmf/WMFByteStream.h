@@ -162,7 +162,7 @@ private:
   bool mIsShutdown;
 
   // IUnknown ref counting.
-  nsAutoRefCnt mRefCnt;
+  ThreadSafeAutoRefCnt mRefCnt;
   NS_DECL_OWNINGTHREAD
 };
 

@@ -90,7 +90,7 @@ class AsyncConnectionHelper : public HelperBase,
 public:
   typedef ipc::ResponseValue ResponseValue;
 
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIRUNNABLE
   NS_DECL_MOZISTORAGEPROGRESSHANDLER
 

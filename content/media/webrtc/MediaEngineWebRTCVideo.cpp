@@ -22,7 +22,7 @@ extern PRLogModuleInfo* GetMediaManagerLog();
 /**
  * Webrtc video source.
  */
-NS_IMPL_THREADSAFE_ISUPPORTS1(MediaEngineWebRTCVideoSource, nsIRunnable)
+NS_IMPL_ISUPPORTS1(MediaEngineWebRTCVideoSource, nsIRunnable)
 
 // ViEExternalRenderer Callback.
 #ifndef MOZ_B2G_CAMERA

@@ -32,7 +32,7 @@ public:
     nsMIMEInputStream();
     virtual ~nsMIMEInputStream();
 
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSIINPUTSTREAM
     NS_DECL_NSIMIMEINPUTSTREAM
     NS_DECL_NSISEEKABLESTREAM
@@ -65,8 +65,8 @@ private:
     bool mStartedReading;
 };
 
-NS_IMPL_THREADSAFE_ADDREF(nsMIMEInputStream)
-NS_IMPL_THREADSAFE_RELEASE(nsMIMEInputStream)
+NS_IMPL_ADDREF(nsMIMEInputStream)
+NS_IMPL_RELEASE(nsMIMEInputStream)
 
 NS_IMPL_CLASSINFO(nsMIMEInputStream, NULL, nsIClassInfo::THREADSAFE,
                   NS_MIMEINPUTSTREAM_CID)

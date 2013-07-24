@@ -21,7 +21,7 @@
 class nsTLSSocketProvider : public nsISocketProvider
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSISOCKETPROVIDER
 
   // nsTLSSocketProvider methods:

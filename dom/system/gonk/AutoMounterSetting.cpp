@@ -37,7 +37,7 @@ namespace system {
 class SettingsServiceCallback MOZ_FINAL : public nsISettingsServiceCallback
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
 
   SettingsServiceCallback() {}
 
@@ -57,12 +57,12 @@ public:
   }
 };
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(SettingsServiceCallback, nsISettingsServiceCallback)
+NS_IMPL_ISUPPORTS1(SettingsServiceCallback, nsISettingsServiceCallback)
 
 class CheckVolumeSettingsCallback MOZ_FINAL : public nsISettingsServiceCallback
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
 
   CheckVolumeSettingsCallback(const nsACString& aVolumeName)
   : mVolumeName(aVolumeName) {}
@@ -85,7 +85,7 @@ private:
   nsCString mVolumeName;
 };
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(CheckVolumeSettingsCallback, nsISettingsServiceCallback)
+NS_IMPL_ISUPPORTS1(CheckVolumeSettingsCallback, nsISettingsServiceCallback)
 
 AutoMounterSetting::AutoMounterSetting()
 {

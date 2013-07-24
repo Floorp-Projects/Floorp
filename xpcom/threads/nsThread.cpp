@@ -12,6 +12,7 @@
 #include "nsIProgrammingLanguage.h"
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
+#include "pratom.h"
 #include "prlog.h"
 #include "nsIObserverService.h"
 #include "mozilla/HangMonitor.h"
@@ -130,8 +131,8 @@ nsThreadClassInfo::GetClassIDNoAlloc(nsCID *result)
 
 //-----------------------------------------------------------------------------
 
-NS_IMPL_THREADSAFE_ADDREF(nsThread)
-NS_IMPL_THREADSAFE_RELEASE(nsThread)
+NS_IMPL_ADDREF(nsThread)
+NS_IMPL_RELEASE(nsThread)
 NS_INTERFACE_MAP_BEGIN(nsThread)
   NS_INTERFACE_MAP_ENTRY(nsIThread)
   NS_INTERFACE_MAP_ENTRY(nsIThreadInternal)

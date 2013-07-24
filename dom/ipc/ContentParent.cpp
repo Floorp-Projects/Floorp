@@ -1572,10 +1572,10 @@ ContentParent::RecvRecordingDeviceEvents(const nsString& aRecordingStatus)
     return true;
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS3(ContentParent,
-                              nsIObserver,
-                              nsIThreadObserver,
-                              nsIDOMGeoPositionCallback)
+NS_IMPL_ISUPPORTS3(ContentParent,
+                   nsIObserver,
+                   nsIThreadObserver,
+                   nsIDOMGeoPositionCallback)
 
 NS_IMETHODIMP
 ContentParent::Observe(nsISupports* aSubject,

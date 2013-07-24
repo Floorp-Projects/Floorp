@@ -17,7 +17,7 @@ class nsNSSCertificateFakeTransport : public nsIX509Cert,
                               public nsIClassInfo
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIX509CERT
   NS_DECL_NSISERIALIZABLE
   NS_DECL_NSICLASSINFO
