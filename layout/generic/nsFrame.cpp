@@ -1481,25 +1481,20 @@ nsIFrame::GetCaretColorAt(int32_t aOffset)
   return StyleColor()->mColor;
 }
 
-void
-nsFrame::DisplayBackgroundUnconditional(nsDisplayListBuilder*       aBuilder,
-                                        const nsDisplayListSet&     aLists,
-                                        bool                        aForceBackground,
-                                        bool*                       aAppendedThemedBackground)
+bool
+nsFrame::DisplayBackgroundUnconditional(nsDisplayListBuilder* aBuilder,
+                                        const nsDisplayListSet& aLists,
+                                        bool aForceBackground)
 {
-  if (aAppendedThemedBackground) {
-    *aAppendedThemedBackground = false;
-  }
-
   // Here we don't try to detect background propagation. Frames that might
   // receive a propagated background should just set aForceBackground to
   // true.
   if (aBuilder->IsForEventDelivery() || aForceBackground ||
       !StyleBackground()->IsTransparent() || StyleDisplay()->mAppearance) {
-    nsDisplayBackgroundImage::AppendBackgroundItemsToTop(aBuilder, this,
-                                                         aLists.BorderBackground(),
-                                                         aAppendedThemedBackground);
+    return nsDisplayBackgroundImage::AppendBackgroundItemsToTop(
+        aBuilder, this, aLists.BorderBackground());
   }
+  return false;
 }
 
 void
@@ -1519,9 +1514,8 @@ nsFrame::DisplayBorderBackgroundOutline(nsDisplayListBuilder*   aBuilder,
       nsDisplayBoxShadowOuter(aBuilder, this));
   }
 
-  bool bgIsThemed;
-  DisplayBackgroundUnconditional(aBuilder, aLists, aForceBackground,
-                                 &bgIsThemed);
+  bool bgIsThemed = DisplayBackgroundUnconditional(aBuilder, aLists,
+                                                   aForceBackground);
 
   if (shadows && shadows->HasShadowWithInset(true)) {
     aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
