@@ -34,7 +34,6 @@ namespace layers {
 
 class ImageClient;
 class SharedPlanarYCbCrImage;
-class DeprecatedSharedPlanarYCbCrImage;
 
 struct ImageBackendData
 {
@@ -721,7 +720,6 @@ public:
   PlanarYCbCrImage(BufferRecycleBin *aRecycleBin);
 
   virtual SharedPlanarYCbCrImage *AsSharedPlanarYCbCrImage() { return nullptr; }
-  virtual DeprecatedSharedPlanarYCbCrImage *AsDeprecatedSharedPlanarYCbCrImage() { return nullptr; }
 
 protected:
   /**

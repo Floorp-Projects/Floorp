@@ -54,10 +54,10 @@ CompositableHost::Create(const TextureInfo& aTextureInfo)
   RefPtr<CompositableHost> result;
   switch (aTextureInfo.mCompositableType) {
   case BUFFER_IMAGE_BUFFERED:
-    result = new DeprecatedImageHostBuffered(aTextureInfo);
+    result = new ImageHostBuffered(aTextureInfo);
     return result;
   case BUFFER_IMAGE_SINGLE:
-    result = new DeprecatedImageHostSingle(aTextureInfo);
+    result = new ImageHostSingle(aTextureInfo);
     return result;
   case BUFFER_TILED:
     result = new TiledContentHost(aTextureInfo);
