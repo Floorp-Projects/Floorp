@@ -39,23 +39,45 @@ let gTransformation = {
   },
 
   /**
+   * Fades a given node from zero to full opacity.
+   * @param aNode The node to fade.
+   * @param aCallback The callback to call when finished.
+   */
+  fadeNodeIn: function Transformation_fadeNodeIn(aNode, aCallback) {
+    this._setNodeOpacity(aNode, 1, function () {
+      // Clear the style property.
+      aNode.style.opacity = "";
+
+      if (aCallback)
+        aCallback();
+    });
+  },
+
+  /**
+   * Fades a given node from full to zero opacity.
+   * @param aNode The node to fade.
+   * @param aCallback The callback to call when finished.
+   */
+  fadeNodeOut: function Transformation_fadeNodeOut(aNode, aCallback) {
+    this._setNodeOpacity(aNode, 0, aCallback);
+  },
+
+  /**
    * Fades a given site from zero to full opacity.
    * @param aSite The site to fade.
+   * @param aCallback The callback to call when finished.
    */
-  showSite: function (aSite) {
-    let node = aSite.node;
-    return this._setNodeOpacity(node, 1).then(() => {
-      // Clear the style property.
-      node.style.opacity = "";
-    });
+  showSite: function Transformation_showSite(aSite, aCallback) {
+    this.fadeNodeIn(aSite.node, aCallback);
   },
 
   /**
    * Fades a given site from full to zero opacity.
    * @param aSite The site to fade.
+   * @param aCallback The callback to call when finished.
    */
-  hideSite: function (aSite) {
-    return this._setNodeOpacity(aSite.node, 0);
+  hideSite: function Transformation_hideSite(aSite, aCallback) {
+    this.fadeNodeOut(aSite.node, aCallback);
   },
 
   /**
@@ -107,11 +129,22 @@ let gTransformation = {
    * @param aTarget The slide target.
    * @param aOptions Set of options (see below).
    *        unfreeze - unfreeze the site after sliding
+   *        callback - the callback to call when finished
    */
-  slideSiteTo: function (aSite, aTarget, aOptions) {
+  slideSiteTo: function Transformation_slideSiteTo(aSite, aTarget, aOptions) {
     let currentPosition = this.getNodePosition(aSite.node);
     let targetPosition = this.getNodePosition(aTarget.node)
-    let promise;
+    let callback = aOptions && aOptions.callback;
+
+    let self = this;
+
+    function finish() {
+      if (aOptions && aOptions.unfreeze)
+        self.unfreezeSitePosition(aSite);
+
+      if (callback)
+        callback();
+    }
 
     // We need to take the width of a cell's border into account.
     targetPosition.left += this._cellBorderWidths.left;
@@ -120,17 +153,11 @@ let gTransformation = {
     // Nothing to do here if the positions already match.
     if (currentPosition.left == targetPosition.left &&
         currentPosition.top == targetPosition.top) {
-      promise = Promise.resolve();
+      finish();
     } else {
       this.setSitePosition(aSite, targetPosition);
-      promise = this._whenTransitionEnded(aSite.node, ["left", "top"]);
+      this._whenTransitionEnded(aSite.node, ["left", "top"], finish);
     }
-
-    if (aOptions && aOptions.unfreeze) {
-      promise = promise.then(() => this.unfreezeSitePosition(aSite));
-    }
-
-    return promise;
   },
 
   /**
@@ -139,50 +166,55 @@ let gTransformation = {
    * @param aSites An array of sites to rearrange.
    * @param aOptions Set of options (see below).
    *        unfreeze - unfreeze the site after rearranging
+   *        callback - the callback to call when finished
    */
-  rearrangeSites: function (aSites, aOptions) {
-    let self = this;
+  rearrangeSites: function Transformation_rearrangeSites(aSites, aOptions) {
+    let batch = [];
     let cells = gGrid.cells;
+    let callback = aOptions && aOptions.callback;
     let unfreeze = aOptions && aOptions.unfreeze;
 
-    function promises() {
-      let index = 0;
+    aSites.forEach(function (aSite, aIndex) {
+      // Do not re-arrange empty cells or the dragged site.
+      if (!aSite || aSite == gDrag.draggedSite)
+        return;
 
-      for (let site of aSites) {
-        if (site && site !== gDrag.draggedSite) {
-          if (!cells[index]) {
-            // The site disappeared from the grid, hide it.
-            yield self.hideSite(site);
-          } else if (self._getNodeOpacity(site.node) != 1) {
-            // The site disappeared before but is now back, show it.
-            yield self.showSite(site);
-          } else {
-            // The site's position has changed, move it around.
-            yield self._moveSite(site, index, {unfreeze: unfreeze});
-          }
-        }
-        index++;
-      }
-    }
+      let deferred = Promise.defer();
+      batch.push(deferred.promise);
+      let cb = function () deferred.resolve();
 
-    return Promise.every([p for (p of promises())]);
+      if (!cells[aIndex])
+        // The site disappeared from the grid, hide it.
+        this.hideSite(aSite, cb);
+      else if (this._getNodeOpacity(aSite.node) != 1)
+        // The site disappeared before but is now back, show it.
+        this.showSite(aSite, cb);
+      else
+        // The site's position has changed, move it around.
+        this._moveSite(aSite, aIndex, {unfreeze: unfreeze, callback: cb});
+    }, this);
+
+    let wait = Promise.promised(function () callback && callback());
+    wait.apply(null, batch);
   },
 
   /**
-   * Listens for the 'transitionend' event on a given node.
+   * Listens for the 'transitionend' event on a given node and calls the given
+   * callback.
    * @param aNode The node that is transitioned.
    * @param aProperties The properties we'll wait to be transitioned.
+   * @param aCallback The callback to call when finished.
    */
-  _whenTransitionEnded: function (aNode, aProperties) {
-    let deferred = Promise.defer();
+  _whenTransitionEnded:
+    function Transformation_whenTransitionEnded(aNode, aProperties, aCallback) {
+
     let props = new Set(aProperties);
     aNode.addEventListener("transitionend", function onEnd(e) {
       if (props.has(e.propertyName)) {
         aNode.removeEventListener("transitionend", onEnd);
-        deferred.resolve();
+        aCallback();
       }
     });
-    return deferred.promise;
   },
 
   /**
@@ -199,14 +231,21 @@ let gTransformation = {
    * Sets a given node's opacity.
    * @param aNode The node to set the opacity value for.
    * @param aOpacity The opacity value to set.
+   * @param aCallback The callback to call when finished.
    */
-  _setNodeOpacity: function (aNode, aOpacity) {
-    if (this._getNodeOpacity(aNode) == aOpacity) {
-      return Promise.resolve();
-    }
+  _setNodeOpacity:
+    function Transformation_setNodeOpacity(aNode, aOpacity, aCallback) {
 
-    aNode.style.opacity = aOpacity;
-    return this._whenTransitionEnded(aNode, ["opacity"]);
+    if (this._getNodeOpacity(aNode) == aOpacity) {
+      if (aCallback)
+        aCallback();
+    } else {
+      if (aCallback) {
+        this._whenTransitionEnded(aNode, ["opacity"], aCallback);
+      }
+
+      aNode.style.opacity = aOpacity;
+    }
   },
 
   /**
@@ -215,9 +254,9 @@ let gTransformation = {
    * @param aIndex The target cell's index.
    * @param aOptions Options that are directly passed to slideSiteTo().
    */
-  _moveSite: function (aSite, aIndex, aOptions) {
+  _moveSite: function Transformation_moveSite(aSite, aIndex, aOptions) {
     this.freezeSitePosition(aSite);
-    return this.slideSiteTo(aSite, gGrid.cells[aIndex], aOptions);
+    this.slideSiteTo(aSite, gGrid.cells[aIndex], aOptions);
   },
 
   /**
