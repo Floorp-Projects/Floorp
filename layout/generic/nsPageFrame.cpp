@@ -221,20 +221,12 @@ nsPageFrame::ProcessSpecialCodes(const nsString& aStr, nsString& aNewStr)
 
   NS_NAMED_LITERAL_STRING(kTitle, "&T");
   if (aStr.Find(kTitle) != kNotFound) {
-    if (mPD->mDocTitle != nullptr) {
-      aNewStr.ReplaceSubstring(kTitle.get(), mPD->mDocTitle);
-    } else {
-      aNewStr.ReplaceSubstring(kTitle.get(), EmptyString().get());
-    }
+    aNewStr.ReplaceSubstring(kTitle.get(), mPD->mDocTitle.get());
   }
 
   NS_NAMED_LITERAL_STRING(kDocURL, "&U");
   if (aStr.Find(kDocURL) != kNotFound) {
-    if (mPD->mDocURL != nullptr) {
-      aNewStr.ReplaceSubstring(kDocURL.get(), mPD->mDocURL);
-    } else {
-      aNewStr.ReplaceSubstring(kDocURL.get(), EmptyString().get());
-    }
+    aNewStr.ReplaceSubstring(kDocURL.get(), mPD->mDocURL.get());
   }
 
   NS_NAMED_LITERAL_STRING(kPageTotal, "&L");
