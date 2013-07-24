@@ -1576,15 +1576,14 @@ HTMLSelectElement::RestoreStateTo(SelectState* aNewSelected)
     return;
   }
 
-  uint32_t len;
-  GetLength(&len);
+  uint32_t len = Length();
 
   // First clear all
   SetOptionsSelectedByIndex(-1, -1, true, true, true, true);
 
   // Next set the proper ones
-  for (int32_t i = 0; i < int32_t(len); i++) {
-    nsIDOMHTMLOptionElement* option = mOptions->ItemAsOption(i);
+  for (uint32_t i = 0; i < len; i++) {
+    HTMLOptionElement* option = Item(i);
     if (option) {
       nsAutoString value;
       nsresult rv = option->GetValue(value);
