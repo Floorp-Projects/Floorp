@@ -805,6 +805,20 @@ MPhi::computeRange()
 }
 
 void
+MBeta::computeRange()
+{
+    bool emptyRange = false;
+
+    Range *range = Range::intersect(val_->range(), comparison_, &emptyRange);
+    if (emptyRange) {
+        IonSpew(IonSpew_Range, "Marking block for inst %d unexitable", id());
+        block()->setEarlyAbort();
+    } else {
+        setRange(range);
+    }
+}
+
+void
 MConstant::computeRange()
 {
     if (type() == MIRType_Int32) {
@@ -1915,6 +1929,22 @@ RangeAnalysis::truncate()
         AdjustTruncatedInputs(ins);
     }
 
+    // Collect range information as soon as the truncate phased is finished to
+    // ensure that we do not collect information from any operand out-side the
+    // scope of the Range Analysis.
+    //
+    // As the range is attached to the MIR nodes and we remove the bit-ops, we
+    // cannot safely access any information of the range of any operands.
+    //
+    // Example of ranges:
+    //   (x >>> 0)               range() == [0 .. +inf[
+    //   ((x >>> 0) | 0)         range() == [INT32_MIN .. INT32_MAX]
+    //   ((x >>> 0) | 0) % -1    Check   lhs->range()->lower() > 0
+    for (ReversePostorderIterator block(graph_.rpoBegin()); block != graph_.rpoEnd(); block++) {
+        for (MInstructionIterator iter(block->begin()); iter != block->end(); iter++)
+            iter->collectRangeInfo();
+    }
+
     // Fold any unnecessary bitops in the graph, such as (x | 0) on an integer
     // input. This is done after range analysis rather than during GVN as the
     // presence of the bitop can change which instructions are truncated.
@@ -1926,4 +1956,20 @@ RangeAnalysis::truncate()
     }
 
     return true;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Collect Range information of operands
+///////////////////////////////////////////////////////////////////////////////
+
+void
+MInArray::collectRangeInfo()
+{
+    needsNegativeIntCheck_ = !index()->range() || index()->range()->lower() < 0;
+}
+
+void
+MMod::collectRangeInfo()
+{
+    canBeNegativeDividend_ = !lhs()->range() || lhs()->range()->lower() < 0;
 }
