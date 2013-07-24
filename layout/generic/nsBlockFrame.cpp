@@ -5994,24 +5994,6 @@ nsBlockFrame::RecoverFloatsFor(nsIFrame*       aFrame,
 //////////////////////////////////////////////////////////////////////
 // Painting, event handling
 
-int
-nsBlockFrame::GetSkipSides() const
-{
-  if (IS_TRUE_OVERFLOW_CONTAINER(this)) {
-    return (1 << NS_SIDE_TOP) | (1 << NS_SIDE_BOTTOM);
-  }
-
-  int skip = 0;
-  if (GetPrevInFlow()) {
-    skip |= 1 << NS_SIDE_TOP;
-  }
-  nsIFrame* nif = GetNextInFlow();
-  if (nif && !IS_TRUE_OVERFLOW_CONTAINER(nif)) {
-    skip |= 1 << NS_SIDE_BOTTOM;
-  }
-  return skip;
-}
-
 #ifdef DEBUG
 static void ComputeVisualOverflowArea(nsLineList& aLines,
                                       nscoord aWidth, nscoord aHeight,

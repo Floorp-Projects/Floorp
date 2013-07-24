@@ -291,6 +291,43 @@ nsSplittableFrame::ComputeFinalHeight(const nsHTMLReflowState& aReflowState,
   }
 }
 
+int
+nsSplittableFrame::GetSkipSides(const nsHTMLReflowState* aReflowState) const
+{
+  if (IS_TRUE_OVERFLOW_CONTAINER(this)) {
+    return (1 << NS_SIDE_TOP) | (1 << NS_SIDE_BOTTOM);
+  }
+
+  int skip = 0;
+
+  if (GetPrevInFlow()) {
+    skip |= 1 << NS_SIDE_TOP;
+  }
+
+  if (aReflowState) {
+    // We're in the midst of reflow right now, so it's possible that we haven't
+    // created a nif yet. If our content height is going to exceed our available
+    // height, though, then we're going to need a next-in-flow, it just hasn't
+    // been created yet.
+
+    if (NS_UNCONSTRAINEDSIZE != aReflowState->availableHeight) {
+      nscoord effectiveCH = this->GetEffectiveComputedHeight(*aReflowState);
+      if (effectiveCH > aReflowState->availableHeight) {
+        // Our content height is going to exceed our available height, so we're
+        // going to need a next-in-flow.
+        skip |= 1 << NS_SIDE_BOTTOM;
+      }
+    }
+  } else {
+    nsIFrame* nif = GetNextInFlow();
+    if (nif && !IS_TRUE_OVERFLOW_CONTAINER(nif)) {
+      skip |= 1 << NS_SIDE_BOTTOM;
+    }
+  }
+
+ return skip;
+}
+
 #ifdef DEBUG
 void
 nsSplittableFrame::DumpBaseRegressionData(nsPresContext* aPresContext, FILE* out, int32_t aIndent)
