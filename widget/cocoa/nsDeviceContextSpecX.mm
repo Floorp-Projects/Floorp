@@ -57,15 +57,15 @@ NS_IMETHODIMP nsDeviceContextSpecX::Init(nsIWidget *aWidget,
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-NS_IMETHODIMP nsDeviceContextSpecX::BeginDocument(PRUnichar*  aTitle, 
-                                                  PRUnichar*  aPrintToFileName,
-                                                  int32_t     aStartPage, 
-                                                  int32_t     aEndPage)
+NS_IMETHODIMP nsDeviceContextSpecX::BeginDocument(const nsAString& aTitle, 
+                                                  PRUnichar*       aPrintToFileName,
+                                                  int32_t          aStartPage, 
+                                                  int32_t          aEndPage)
 {
     NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-    if (aTitle) {
-      CFStringRef cfString = ::CFStringCreateWithCharacters(NULL, aTitle, NS_strlen(aTitle));
+    if (!aTitle.IsEmpty()) {
+      CFStringRef cfString = ::CFStringCreateWithCharacters(NULL, aTitle.BeginReading(), aTitle.Length());
       if (cfString) {
         ::PMPrintSettingsSetJobName(mPrintSettings, cfString);
         ::CFRelease(cfString);
