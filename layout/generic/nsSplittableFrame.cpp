@@ -12,7 +12,6 @@
 #include "nsIContent.h"
 #include "nsPresContext.h"
 #include "nsStyleContext.h"
-#include "nsContainerFrame.h"
 
 NS_IMPL_FRAMEARENA_HELPERS(nsSplittableFrame)
 
@@ -202,130 +201,6 @@ nsSplittableFrame::RemoveFromFlow(nsIFrame* aFrame)
 
   aFrame->SetPrevInFlow(nullptr);
   aFrame->SetNextInFlow(nullptr);
-}
-
-nscoord
-nsSplittableFrame::GetConsumedHeight() const
-{
-  nscoord height = 0;
-
-  // Reduce the height by the computed height of prev-in-flows.
-  for (nsIFrame* prev = GetPrevInFlow(); prev; prev = prev->GetPrevInFlow()) {
-    height += prev->GetRect().height;
-  }
-
-  return height;
-}
-
-nscoord
-nsSplittableFrame::GetEffectiveComputedHeight(const nsHTMLReflowState& aReflowState,
-                                              nscoord aConsumedHeight) const
-{
-  nscoord height = aReflowState.ComputedHeight();
-  if (height == NS_INTRINSICSIZE) {
-    return NS_INTRINSICSIZE;
-  }
-
-  if (aConsumedHeight == NS_INTRINSICSIZE) {
-    aConsumedHeight = GetConsumedHeight();
-  }
-
-  height -= aConsumedHeight;
-
-  if (aConsumedHeight != 0 && aConsumedHeight != NS_INTRINSICSIZE) {
-    // We just subtracted our top-border padding, since it was included in the
-    // first frame's height. Add it back to get the content height.
-    height += aReflowState.mComputedBorderPadding.top;
-  }
-
-  // We may have stretched the frame beyond its computed height. Oh well.
-  height = std::max(0, height);
-
-  return height;
-}
-
-void
-nsSplittableFrame::ComputeFinalHeight(const nsHTMLReflowState& aReflowState,
-                                      nsReflowStatus*          aStatus,
-                                      nscoord                  aContentHeight,
-                                      const nsMargin&          aBorderPadding,
-                                      nsHTMLReflowMetrics&     aMetrics,
-                                      nscoord                  aConsumed)
-{
-
-  // Figure out how much of the computed height should be
-  // applied to this frame.
-  nscoord computedHeightLeftOver = GetEffectiveComputedHeight(aReflowState,
-                                                              aConsumed);
-  NS_ASSERTION(!( IS_TRUE_OVERFLOW_CONTAINER(this)
-                  && computedHeightLeftOver ),
-               "overflow container must not have computedHeightLeftOver");
-
-  aMetrics.height =
-    NSCoordSaturatingAdd(NSCoordSaturatingAdd(aBorderPadding.top,
-                                              computedHeightLeftOver),
-                         aBorderPadding.bottom);
-
-  if (NS_FRAME_IS_NOT_COMPLETE(*aStatus)
-      && aMetrics.height < aReflowState.availableHeight) {
-    // We ran out of height on this page but we're incomplete
-    // Set status to complete except for overflow
-    NS_FRAME_SET_OVERFLOW_INCOMPLETE(*aStatus);
-  }
-
-  if (NS_FRAME_IS_COMPLETE(*aStatus)) {
-    if (computedHeightLeftOver > 0 &&
-        NS_UNCONSTRAINEDSIZE != aReflowState.availableHeight &&
-        aMetrics.height > aReflowState.availableHeight) {
-      // We don't fit and we consumed some of the computed height,
-      // so we should consume all the available height and then
-      // break.  If our bottom border/padding straddles the break
-      // point, then this will increase our height and push the
-      // border/padding to the next page/column.
-      aMetrics.height = std::max(aReflowState.availableHeight,
-                                 aContentHeight);
-      NS_FRAME_SET_INCOMPLETE(*aStatus);
-      if (!GetNextInFlow())
-        *aStatus |= NS_FRAME_REFLOW_NEXTINFLOW;
-    }
-  }
-}
-
-int
-nsSplittableFrame::GetSkipSides(const nsHTMLReflowState* aReflowState) const
-{
-  if (IS_TRUE_OVERFLOW_CONTAINER(this)) {
-    return (1 << NS_SIDE_TOP) | (1 << NS_SIDE_BOTTOM);
-  }
-
-  int skip = 0;
-
-  if (GetPrevInFlow()) {
-    skip |= 1 << NS_SIDE_TOP;
-  }
-
-  if (aReflowState) {
-    // We're in the midst of reflow right now, so it's possible that we haven't
-    // created a nif yet. If our content height is going to exceed our available
-    // height, though, then we're going to need a next-in-flow, it just hasn't
-    // been created yet.
-
-    if (NS_UNCONSTRAINEDSIZE != aReflowState->availableHeight) {
-      nscoord effectiveCH = this->GetEffectiveComputedHeight(*aReflowState);
-      if (effectiveCH > aReflowState->availableHeight) {
-        // Our content height is going to exceed our available height, so we're
-        // going to need a next-in-flow.
-        skip |= 1 << NS_SIDE_BOTTOM;
-      }
-    }
-  } else {
-    nsIFrame* nif = GetNextInFlow();
-    if (nif && !IS_TRUE_OVERFLOW_CONTAINER(nif)) {
-      skip |= 1 << NS_SIDE_BOTTOM;
-    }
-  }
-
- return skip;
 }
 
 #ifdef DEBUG

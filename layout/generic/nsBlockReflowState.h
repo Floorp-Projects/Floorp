@@ -40,8 +40,7 @@ public:
                      nsPresContext* aPresContext,
                      nsBlockFrame* aFrame,
                      bool aTopMarginRoot, bool aBottomMarginRoot,
-                     bool aBlockNeedsFloatManager,
-                     nscoord aConsumedHeight = NS_INTRINSICSIZE);
+                     bool aBlockNeedsFloatManager);
 
   /**
    * Get the available reflow space (the area not occupied by floats)
@@ -110,11 +109,6 @@ public:
     }
     return result;
   }
-
-  /**
-   * Retrieve the height "consumed" by any previous-in-flows.
-   */
-  nscoord GetConsumedHeight();
 
   // Reconstruct the previous bottom margin that goes above |aLine|.
   void ReconstructMarginAbove(nsLineList::iterator aLine);
@@ -262,9 +256,6 @@ public:
   int16_t mFlags;
  
   uint8_t mFloatBreakType;
-
-  // The amount of computed height "consumed" by previous-in-flows.
-  nscoord mConsumedHeight;
 
   void SetFlag(uint32_t aFlag, bool aValue)
   {
