@@ -1339,47 +1339,13 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
   }
 
   // Compute final height
-  if (NS_UNCONSTRAINEDSIZE != aReflowState.ComputedHeight()) {
-    // Figure out how much of the computed height should be
-    // applied to this frame.
-    nscoord computedHeightLeftOver = GetEffectiveComputedHeight(aReflowState);
-    NS_ASSERTION(!( IS_TRUE_OVERFLOW_CONTAINER(this)
-                    && computedHeightLeftOver ),
-                 "overflow container must not have computedHeightLeftOver");
-
-    aMetrics.height =
-      NSCoordSaturatingAdd(NSCoordSaturatingAdd(borderPadding.top,
-                                                computedHeightLeftOver),
-                           borderPadding.bottom);
-
-    if (NS_FRAME_IS_NOT_COMPLETE(aState.mReflowStatus)
-        && aMetrics.height < aReflowState.availableHeight) {
-      // We ran out of height on this page but we're incomplete
-      // Set status to complete except for overflow
-      NS_FRAME_SET_OVERFLOW_INCOMPLETE(aState.mReflowStatus);
-    }
-
-    if (NS_FRAME_IS_COMPLETE(aState.mReflowStatus)) {
-      if (computedHeightLeftOver > 0 &&
-          NS_UNCONSTRAINEDSIZE != aReflowState.availableHeight &&
-          aMetrics.height > aReflowState.availableHeight) {
-        if (ShouldAvoidBreakInside(aReflowState)) {
-          aState.mReflowStatus = NS_INLINE_LINE_BREAK_BEFORE();
-          return;
-        }
-        // We don't fit and we consumed some of the computed height,
-        // so we should consume all the available height and then
-        // break.  If our bottom border/padding straddles the break
-        // point, then this will increase our height and push the
-        // border/padding to the next page/column.
-        aMetrics.height = std::max(aReflowState.availableHeight,
-                                 aState.mY + nonCarriedOutVerticalMargin);
-        NS_FRAME_SET_INCOMPLETE(aState.mReflowStatus);
-        if (!GetNextInFlow())
-          aState.mReflowStatus |= NS_FRAME_REFLOW_NEXTINFLOW;
-      }
-    }
-    else {
+  if (NS_UNCONSTRAINEDSIZE != aReflowState.ComputedHeight()
+      && (mParent->GetType() != nsGkAtoms::columnSetFrame ||
+          aReflowState.parentReflowState->availableHeight == NS_UNCONSTRAINEDSIZE)) {
+    ComputeFinalHeight(aReflowState, &aState.mReflowStatus,
+                       aState.mY + nonCarriedOutVerticalMargin,
+                       borderPadding, aMetrics, aState.mConsumedHeight);
+    if (!NS_FRAME_IS_COMPLETE(aState.mReflowStatus)) {
       // Use the current height; continuations will take up the rest.
       // Do extend the height to at least consume the available
       // height, otherwise our left/right borders (for example) won't
@@ -1387,8 +1353,10 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
       aMetrics.height = std::max(aReflowState.availableHeight,
                                aState.mY + nonCarriedOutVerticalMargin);
       // ... but don't take up more height than is available
+      nscoord effectiveComputedHeight =
+        GetEffectiveComputedHeight(aReflowState, aState.GetConsumedHeight());
       aMetrics.height = std::min(aMetrics.height,
-                               borderPadding.top + computedHeightLeftOver);
+                               borderPadding.top + effectiveComputedHeight);
       // XXX It's pretty wrong that our bottom border still gets drawn on
       // on its own on the last-in-flow, even if we ran out of height
       // here. We need GetSkipSides to check whether we ran out of content

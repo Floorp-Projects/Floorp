@@ -232,7 +232,7 @@ nsSplittableFrame::GetEffectiveComputedHeight(const nsHTMLReflowState& aReflowSt
 
   height -= aConsumedHeight;
 
-  if (aConsumedHeight != NS_INTRINSICSIZE) {
+  if (aConsumedHeight != 0 && aConsumedHeight != NS_INTRINSICSIZE) {
     // We just subtracted our top-border padding, since it was included in the
     // first frame's height. Add it back to get the content height.
     height += aReflowState.mComputedBorderPadding.top;
