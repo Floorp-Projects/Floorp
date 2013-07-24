@@ -1660,8 +1660,7 @@ HTMLSelectElement::SubmitNamesValues(nsFormSubmission* aFormSubmission)
   //
   // Submit
   //
-  uint32_t len;
-  GetLength(&len);
+  uint32_t len = Length();
 
   nsAutoString mozType;
   nsCOMPtr<nsIFormProcessor> keyGenProcessor;
@@ -1671,39 +1670,28 @@ HTMLSelectElement::SubmitNamesValues(nsFormSubmission* aFormSubmission)
   }
 
   for (uint32_t optIndex = 0; optIndex < len; optIndex++) {
+    HTMLOptionElement* option = Item(optIndex);
+
     // Don't send disabled options
-    bool disabled;
-    nsresult rv = IsOptionDisabled(optIndex, &disabled);
-    if (NS_FAILED(rv) || disabled) {
+    if (!option || IsOptionDisabled(option)) {
       continue;
     }
 
-    nsIDOMHTMLOptionElement* option = mOptions->ItemAsOption(optIndex);
-    NS_ENSURE_TRUE(option, NS_ERROR_UNEXPECTED);
-
-    bool isSelected;
-    rv = option->GetSelected(&isSelected);
-    NS_ENSURE_SUCCESS(rv, rv);
-    if (!isSelected) {
+    if (!option->Selected()) {
       continue;
     }
 
-    nsCOMPtr<nsIDOMHTMLOptionElement> optionElement = do_QueryInterface(option);
-    NS_ENSURE_TRUE(optionElement, NS_ERROR_UNEXPECTED);
-
-    nsAutoString value;
-    rv = optionElement->GetValue(value);
-    NS_ENSURE_SUCCESS(rv, rv);
+    nsString value;
+    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(option->GetValue(value)));
 
     if (keyGenProcessor) {
-      nsAutoString tmp(value);
-      rv = keyGenProcessor->ProcessValue(this, name, tmp);
-      if (NS_SUCCEEDED(rv)) {
+      nsString tmp(value);
+      if (NS_SUCCEEDED(keyGenProcessor->ProcessValue(this, name, tmp))) {
         value = tmp;
       }
     }
 
-    rv = aFormSubmission->AddNameValuePair(name, value);
+    aFormSubmission->AddNameValuePair(name, value);
   }
 
   return NS_OK;
