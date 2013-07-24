@@ -8,8 +8,8 @@
 #include "nsCRT.h"
 
 
-NS_IMPL_THREADSAFE_ADDREF(nsDecodeAppleFile)
-NS_IMPL_THREADSAFE_RELEASE(nsDecodeAppleFile)
+NS_IMPL_ADDREF(nsDecodeAppleFile)
+NS_IMPL_RELEASE(nsDecodeAppleFile)
 
 NS_INTERFACE_MAP_BEGIN(nsDecodeAppleFile)
    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIOutputStream)

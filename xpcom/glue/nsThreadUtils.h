@@ -236,7 +236,7 @@ extern NS_COM_GLUE nsIThread *NS_GetCurrentThread();
 class NS_COM_GLUE nsRunnable : public nsIRunnable
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIRUNNABLE
 
   nsRunnable() {
@@ -251,7 +251,7 @@ protected:
 class NS_COM_GLUE nsCancelableRunnable : public nsICancelableRunnable
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIRUNNABLE
   NS_DECL_NSICANCELABLERUNNABLE
 

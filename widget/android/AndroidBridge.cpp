@@ -44,7 +44,7 @@
 
 using namespace mozilla;
 
-NS_IMPL_THREADSAFE_ISUPPORTS0(nsFilePickerCallback)
+NS_IMPL_ISUPPORTS0(nsFilePickerCallback)
 
 nsRefPtr<AndroidBridge> AndroidBridge::sBridge = nullptr;
 static unsigned sJavaEnvThreadIndex = 0;

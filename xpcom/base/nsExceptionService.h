@@ -21,7 +21,7 @@ class nsExceptionManager;
 class nsExceptionService MOZ_FINAL : public nsIExceptionService, public nsIObserver
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIEXCEPTIONSERVICE
   NS_DECL_NSIEXCEPTIONMANAGER
   NS_DECL_NSIOBSERVER

@@ -994,7 +994,7 @@ class DefaultTooltipTextProvider MOZ_FINAL : public nsITooltipTextProvider
 public:
     DefaultTooltipTextProvider();
 
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSITOOLTIPTEXTPROVIDER
     
 protected:
@@ -1003,7 +1003,7 @@ protected:
     nsCOMPtr<nsIAtom>   mTag_window;
 };
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(DefaultTooltipTextProvider, nsITooltipTextProvider)
+NS_IMPL_ISUPPORTS1(DefaultTooltipTextProvider, nsITooltipTextProvider)
 
 DefaultTooltipTextProvider::DefaultTooltipTextProvider()
 {

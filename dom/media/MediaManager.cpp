@@ -230,7 +230,7 @@ protected:
 /**
  * nsIMediaDevice implementation.
  */
-NS_IMPL_THREADSAFE_ISUPPORTS1(MediaDevice, nsIMediaDevice)
+NS_IMPL_ISUPPORTS1(MediaDevice, nsIMediaDevice)
 
 NS_IMETHODIMP
 MediaDevice::GetName(nsAString& aName)
@@ -893,7 +893,7 @@ MediaManager::MediaManager()
   mActiveCallbacks.Init();
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(MediaManager, nsIMediaManagerService, nsIObserver)
+NS_IMPL_ISUPPORTS2(MediaManager, nsIMediaManagerService, nsIObserver)
 
 /* static */ StaticRefPtr<MediaManager> MediaManager::sSingleton;
 

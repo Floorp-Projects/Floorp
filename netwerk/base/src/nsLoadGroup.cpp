@@ -14,6 +14,7 @@
 #include "nsIServiceManager.h"
 #include "nsCOMPtr.h"
 #include "nsIURI.h"
+#include "pratom.h"
 #include "prlog.h"
 #include "nsCRT.h"
 #include "netCore.h"
@@ -1048,7 +1049,7 @@ nsresult nsLoadGroup::MergeLoadFlags(nsIRequest *aRequest, nsLoadFlags& outFlags
 class nsLoadGroupConnectionInfo MOZ_FINAL : public nsILoadGroupConnectionInfo
 {
 public:
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSILOADGROUPCONNECTIONINFO
 
     nsLoadGroupConnectionInfo();
@@ -1057,7 +1058,7 @@ private:
     nsAutoPtr<mozilla::net::SpdyPushCache3> mSpdyCache3;
 };
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsLoadGroupConnectionInfo, nsILoadGroupConnectionInfo)
+NS_IMPL_ISUPPORTS1(nsLoadGroupConnectionInfo, nsILoadGroupConnectionInfo)
 
 nsLoadGroupConnectionInfo::nsLoadGroupConnectionInfo()
     : mBlockingTransactionCount(0)

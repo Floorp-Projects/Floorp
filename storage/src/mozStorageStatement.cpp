@@ -250,8 +250,8 @@ Statement::~Statement()
 ////////////////////////////////////////////////////////////////////////////////
 //// nsISupports
 
-NS_IMPL_THREADSAFE_ADDREF(Statement)
-NS_IMPL_THREADSAFE_RELEASE(Statement)
+NS_IMPL_ADDREF(Statement)
+NS_IMPL_RELEASE(Statement)
 
 NS_INTERFACE_MAP_BEGIN(Statement)
   NS_INTERFACE_MAP_ENTRY(mozIStorageStatement)

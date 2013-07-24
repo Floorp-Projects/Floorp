@@ -59,7 +59,7 @@ friend class nsChromeTreeOwner;
 friend class nsContentTreeOwner;
 
 public:
-   NS_DECL_ISUPPORTS
+   NS_DECL_THREADSAFE_ISUPPORTS
 
    NS_DECL_NSIINTERFACEREQUESTOR
    NS_DECL_NSIXULWINDOW

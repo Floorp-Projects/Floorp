@@ -12,8 +12,8 @@
 
 //-----------------------------------------------------------------------------
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsDeviceProtocolHandler,
-                              nsIProtocolHandler)
+NS_IMPL_ISUPPORTS1(nsDeviceProtocolHandler,
+                   nsIProtocolHandler)
 
 nsresult
 nsDeviceProtocolHandler::Init(){

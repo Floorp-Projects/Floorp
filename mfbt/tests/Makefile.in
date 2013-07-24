@@ -20,6 +20,7 @@ CPP_UNIT_TESTS = \
   TestCountZeroes.cpp \
   TestEndian.cpp \
   TestEnumSet.cpp \
+  TestFloatingPoint.cpp \
   TestSHA1.cpp \
   TestTypeTraits.cpp \
   TestWeakPtr.cpp \

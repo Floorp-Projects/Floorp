@@ -488,14 +488,6 @@
                          onpopupshowing="gSyncUI.updateUI();"
 #endif
                          >
-              <menuitem id="menu_search"
-                        class="show-only-for-keyboard"
-                        label="&search.label;"
-                        accesskey="&search.accesskey;"
-                        key="key_search"
-                        command="Tools:Search"/>
-              <menuseparator id="browserToolsSeparator"
-                             class="show-only-for-keyboard"/>
               <menuitem id="menu_openDownloads"
                         label="&downloads.label;"
                         accesskey="&downloads.accesskey;"

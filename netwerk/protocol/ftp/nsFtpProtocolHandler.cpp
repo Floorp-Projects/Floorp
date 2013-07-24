@@ -94,11 +94,11 @@ nsFtpProtocolHandler::~nsFtpProtocolHandler()
     gFtpHandler = nullptr;
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS4(nsFtpProtocolHandler,
-                              nsIProtocolHandler,
-                              nsIProxiedProtocolHandler,
-                              nsIObserver,
-                              nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS4(nsFtpProtocolHandler,
+                   nsIProtocolHandler,
+                   nsIProxiedProtocolHandler,
+                   nsIObserver,
+                   nsISupportsWeakReference)
 
 nsresult
 nsFtpProtocolHandler::Init()

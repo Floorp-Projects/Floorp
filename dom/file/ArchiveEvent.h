@@ -24,7 +24,7 @@ BEGIN_FILE_NAMESPACE
 class ArchiveItem : public nsISupports
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
 
   ArchiveItem();
   virtual ~ArchiveItem();

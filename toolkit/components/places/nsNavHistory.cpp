@@ -159,8 +159,8 @@ static const char* kObservedPrefs[] = {
 , nullptr
 };
 
-NS_IMPL_THREADSAFE_ADDREF(nsNavHistory)
-NS_IMPL_THREADSAFE_RELEASE(nsNavHistory)
+NS_IMPL_ADDREF(nsNavHistory)
+NS_IMPL_RELEASE(nsNavHistory)
 
 NS_IMPL_CLASSINFO(nsNavHistory, NULL, nsIClassInfo::SINGLETON,
                   NS_NAVHISTORYSERVICE_CID)
