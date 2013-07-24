@@ -43,12 +43,12 @@ function runTests() {
   ok(oldResetButton.hasAttribute("modified"), "page is modified");
 
   // insert a new cell by dragging
-  yield simulateDrop(1);
+  yield simulateExternalDrop(1);
   checkGrid("0,99p,2,3,4,5,6,7,8");
   checkGrid("0,99p,2,3,4,5,6,7,8", oldSites);
 
   // drag a cell around
-  yield simulateDrop(1, 2);
+  yield simulateDrop(2, 1);
   checkGrid("0,2p,99p,3,4,5,6,7,8");
   checkGrid("0,2p,99p,3,4,5,6,7,8", oldSites);
 
