@@ -7,6 +7,8 @@
 
 #ifdef JSGC_GENERATIONAL
 
+#include "gc/Nursery-inl.h"
+
 #include "jscompartment.h"
 #include "jsgc.h"
 #include "jsutil.h"
@@ -17,7 +19,6 @@
 #include "vm/Debugger.h"
 #include "vm/TypedArrayObject.h"
 
-#include "gc/Nursery-inl.h"
 #include "vm/ObjectImpl-inl.h"
 
 using namespace js;

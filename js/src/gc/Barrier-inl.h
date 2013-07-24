@@ -8,6 +8,7 @@
 #define gc_Barrier_inl_h
 
 #include "gc/Barrier.h"
+
 #include "gc/Marking.h"
 #include "gc/StoreBuffer.h"
 
