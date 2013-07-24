@@ -44,21 +44,21 @@ class PushTest(unittest.TestCase):
         f.write(pushfile)
         f.flush()
 
-        subTests = [ { 'cmds': [ ("isdir /mnt/sdcard//baz", "TRUE"),
-                                 ("isdir /mnt/sdcard//baz", "TRUE"),
-                                 ("push /mnt/sdcard//baz/%s %s\r\n%s" %
+        subTests = [ { 'cmds': [ ("isdir /mnt/sdcard/baz", "TRUE"),
+                                 ("isdir /mnt/sdcard/baz", "TRUE"),
+                                 ("push /mnt/sdcard/baz/%s %s\r\n%s" %
                                   (os.path.basename(f.name), len(pushfile),
                                    pushfile),
                                   expectedFileResponse) ],
                        'expectException': False },
-                     { 'cmds': [ ("isdir /mnt/sdcard//baz", "TRUE"),
-                                 ("isdir /mnt/sdcard//baz", "TRUE"),
-                                 ("push /mnt/sdcard//baz/%s %s\r\n%s" %
+                     { 'cmds': [ ("isdir /mnt/sdcard/baz", "TRUE"),
+                                 ("isdir /mnt/sdcard/baz", "TRUE"),
+                                 ("push /mnt/sdcard/baz/%s %s\r\n%s" %
                                   (os.path.basename(f.name), len(pushfile),
                                    pushfile),
                                   "BADHASH") ],
                        'expectException': True },
-                     { 'cmds': [ ("isdir /mnt/sdcard//baz", "FALSE"),
+                     { 'cmds': [ ("isdir /mnt/sdcard/baz", "FALSE"),
                                  ("isdir /mnt", "FALSE"),
                                  ("mkdr /mnt",
                                   "##AGENT-WARNING## Could not create the directory /mnt") ],
