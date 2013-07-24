@@ -407,7 +407,7 @@ StyleSheetActor.prototype = {
     // get parent actor if this sheet was @imported
     let parent = this.styleSheet.parentStyleSheet;
     if (parent) {
-      form.parentActor = this.parentActor._sheets.get(parent);
+      form.parentActor = this.parentActor._sheets.get(parent).form();
     }
 
     try {
