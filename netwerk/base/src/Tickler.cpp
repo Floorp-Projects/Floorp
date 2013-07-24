@@ -17,7 +17,7 @@
 namespace mozilla {
 namespace net {
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(Tickler, nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS1(Tickler, nsISupportsWeakReference)
 
 Tickler::Tickler()
     : mLock("Tickler::mLock")
@@ -190,7 +190,7 @@ void Tickler::StopTickler()
 
 class TicklerTimer MOZ_FINAL : public nsITimerCallback
 {
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSITIMERCALLBACK
 
   TicklerTimer(Tickler *aTickler)
@@ -229,7 +229,7 @@ void Tickler::SetIPV4Port(uint16_t port)
   mAddr.inet.port = port;
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(TicklerTimer, nsITimerCallback)
+NS_IMPL_ISUPPORTS1(TicklerTimer, nsITimerCallback)
 
 NS_IMETHODIMP TicklerTimer::Notify(nsITimer *timer)
 {
@@ -263,7 +263,7 @@ NS_IMETHODIMP TicklerTimer::Notify(nsITimer *timer)
 
 namespace mozilla {
 namespace net {
-NS_IMPL_THREADSAFE_ISUPPORTS0(Tickler)
+NS_IMPL_ISUPPORTS0(Tickler)
 } // namespace mozilla::net
 } // namespace mozilla
 

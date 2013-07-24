@@ -150,7 +150,7 @@ DCacheHash(const char * key)
  * nsOfflineCacheEvictionFunction
  */
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsOfflineCacheEvictionFunction, mozIStorageFunction)
+NS_IMPL_ISUPPORTS1(nsOfflineCacheEvictionFunction, mozIStorageFunction)
 
 // helper function for directly exposing the same data file binding
 // path algorithm used in nsOfflineCacheBinding::Create
@@ -347,7 +347,7 @@ nsOfflineCacheDeviceInfo::GetMaximumSize(uint32_t *aMaximumSize)
 class nsOfflineCacheBinding MOZ_FINAL : public nsISupports
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
 
   static nsOfflineCacheBinding *
       Create(nsIFile *cacheDir, const nsCString *key, int generation);
@@ -363,7 +363,7 @@ public:
   void ClearNewEntry() { mFlags &= ~FLAG_NEW_ENTRY; }
 };
 
-NS_IMPL_THREADSAFE_ISUPPORTS0(nsOfflineCacheBinding)
+NS_IMPL_ISUPPORTS0(nsOfflineCacheBinding)
 
 nsOfflineCacheBinding *
 nsOfflineCacheBinding::Create(nsIFile *cacheDir,
@@ -875,7 +875,7 @@ private:
  * nsOfflineCacheDevice
  */
 
-NS_IMPL_THREADSAFE_ISUPPORTS0(nsOfflineCacheDevice)
+NS_IMPL_ISUPPORTS0(nsOfflineCacheDevice)
 
 nsOfflineCacheDevice::nsOfflineCacheDevice()
   : mDB(nullptr)

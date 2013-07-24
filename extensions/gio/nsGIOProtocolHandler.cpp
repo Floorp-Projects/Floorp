@@ -138,7 +138,7 @@ static void mount_operation_ask_password (GMountOperation   *mount_op,
 class nsGIOInputStream MOZ_FINAL : public nsIInputStream
 {
   public:
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSIINPUTSTREAM
 
     nsGIOInputStream(const nsCString &uriSpec)
@@ -580,7 +580,7 @@ nsGIOInputStream::SetContentTypeOfChannel(const char *contentType)
   return rv;
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsGIOInputStream, nsIInputStream)
+NS_IMPL_ISUPPORTS1(nsGIOInputStream, nsIInputStream)
 
 /**
  * Free all used memory and close stream.

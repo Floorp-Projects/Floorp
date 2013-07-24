@@ -129,6 +129,9 @@ class IonRuntime
     // Shared post-exception-handler tail
     IonCode *exceptionTail_;
 
+    // Shared post-bailout-handler tail.
+    IonCode *bailoutTail_;
+
     // Trampoline for entering JIT code. Contains OSR prologue.
     IonCode *enterJIT_;
 
@@ -173,6 +176,7 @@ class IonRuntime
 
   private:
     IonCode *generateExceptionTailStub(JSContext *cx);
+    IonCode *generateBailoutTailStub(JSContext *cx);
     IonCode *generateEnterJIT(JSContext *cx, EnterJitType type);
     IonCode *generateArgumentsRectifier(JSContext *cx, ExecutionMode mode, void **returnAddrOut);
     IonCode *generateBailoutTable(JSContext *cx, uint32_t frameClass);
@@ -290,6 +294,10 @@ class IonCompartment
 
     IonCode *getExceptionTail() {
         return rt->exceptionTail_;
+    }
+
+    IonCode *getBailoutTail() {
+        return rt->bailoutTail_;
     }
 
     IonCode *getBailoutTable(const FrameSizeClass &frameClass);

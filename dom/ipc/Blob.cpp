@@ -60,7 +60,7 @@ class RemoteInputStream : public nsIInputStream,
   ActorFlavorEnum mOrigin;
 
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
 
   RemoteInputStream(nsIDOMBlob* aSourceBlob, ActorFlavorEnum aOrigin)
   : mMonitor("RemoteInputStream.mMonitor"), mSourceBlob(aSourceBlob),
@@ -312,8 +312,8 @@ private:
   }
 };
 
-NS_IMPL_THREADSAFE_ADDREF(RemoteInputStream)
-NS_IMPL_THREADSAFE_RELEASE(RemoteInputStream)
+NS_IMPL_ADDREF(RemoteInputStream)
+NS_IMPL_RELEASE(RemoteInputStream)
 
 NS_INTERFACE_MAP_BEGIN(RemoteInputStream)
   NS_INTERFACE_MAP_ENTRY(nsIInputStream)

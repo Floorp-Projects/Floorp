@@ -37,7 +37,7 @@ private:
 public:
   nsHTTPListener();
 
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSISTREAMLOADEROBSERVER
 
   nsCOMPtr<nsIStreamLoader> mLoader;
@@ -81,7 +81,7 @@ public:
 class nsNSSHttpRequestSession
 {
 protected:
-  int32_t mRefCount;
+  mozilla::ThreadSafeAutoRefCnt mRefCount;
 
 public:
   static SECStatus createFcn(SEC_HTTP_SERVER_SESSION session,

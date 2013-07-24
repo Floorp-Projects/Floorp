@@ -87,7 +87,7 @@ typedef struct AndroidSystemColors {
 
 class nsFilePickerCallback : nsISupports {
 public:
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
     virtual void handleResult(nsAString& filePath) = 0;
     nsFilePickerCallback() {}
 protected:

@@ -65,7 +65,7 @@ public:
   {
   }
 
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
 
   nsresult Init()
   {
@@ -240,7 +240,7 @@ private:
   ScopedClose mShutdownPipeWrite;
 };
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(MemoryPressureWatcher, nsIRunnable, nsIObserver);
+NS_IMPL_ISUPPORTS2(MemoryPressureWatcher, nsIRunnable, nsIObserver);
 
 } // anonymous namespace
 

@@ -91,7 +91,7 @@ public:
 
     static nsresult nsLocalFileConstructor(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr);
 
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSIFILE
     NS_DECL_NSILOCALFILE
 #ifdef MOZ_WIDGET_COCOA

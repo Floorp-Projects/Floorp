@@ -196,7 +196,7 @@ public:
   virtual ~URLLoadInfo();
 
   // ISupports interface...
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
 
   const char* Name() { return mURLString.get(); }
   int64_t   mBytesRead;
@@ -216,7 +216,7 @@ URLLoadInfo::~URLLoadInfo()
 }
 
 
-NS_IMPL_THREADSAFE_ISUPPORTS0(URLLoadInfo)
+NS_IMPL_ISUPPORTS0(URLLoadInfo)
 
 //-----------------------------------------------------------------------------
 // TestChannelEventSink

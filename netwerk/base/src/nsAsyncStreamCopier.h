@@ -18,7 +18,7 @@
 class nsAsyncStreamCopier : public nsIAsyncStreamCopier
 {
 public:
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSIREQUEST
     NS_DECL_NSIASYNCSTREAMCOPIER
 

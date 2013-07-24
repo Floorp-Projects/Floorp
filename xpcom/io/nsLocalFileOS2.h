@@ -44,7 +44,7 @@ public:
     static nsresult nsLocalFileConstructor(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr);
 
     // nsISupports interface
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
 
     // nsIFile interface
     NS_DECL_NSIFILE

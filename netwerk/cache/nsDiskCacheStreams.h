@@ -26,7 +26,7 @@ public:
              nsDiskCacheStreamIO(nsDiskCacheBinding *   binding);
     virtual ~nsDiskCacheStreamIO();
     
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSIOUTPUTSTREAM
 
     nsresult    GetInputStream(uint32_t offset, nsIInputStream ** inputStream);

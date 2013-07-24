@@ -36,11 +36,11 @@ static const uint32_t NumWMFIoThreads = 4;
 // on this thread, so we need MSCOM working.
 class ThreadPoolListener MOZ_FINAL : public nsIThreadPoolListener {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSITHREADPOOLLISTENER
 };
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(ThreadPoolListener, nsIThreadPoolListener)
+NS_IMPL_ISUPPORTS1(ThreadPoolListener, nsIThreadPoolListener)
 
 NS_IMETHODIMP
 ThreadPoolListener::OnThreadCreated()
@@ -100,7 +100,6 @@ public:
 WMFByteStream::WMFByteStream(MediaResource* aResource,
                              WMFSourceReaderCallback* aSourceReaderCallback)
   : mSourceReaderCallback(aSourceReaderCallback),
-    mResourceMonitor("WMFByteStream.MediaResource"),
     mResource(aResource),
     mReentrantMonitor("WMFByteStream.Data"),
     mOffset(0),
@@ -108,7 +107,6 @@ WMFByteStream::WMFByteStream(MediaResource* aResource,
     mIsShutdown(false)
 {
   NS_ASSERTION(NS_IsMainThread(), "Must be on main thread.");
-  NS_ASSERTION(mResource, "Must have a valid media resource");
   NS_ASSERTION(mSourceReaderCallback, "Must have a source reader callback.");
 
 #ifdef PR_LOGGING
@@ -216,8 +214,8 @@ WMFByteStream::QueryInterface(REFIID aIId, void **aInterface)
   return E_NOINTERFACE;
 }
 
-NS_IMPL_THREADSAFE_ADDREF(WMFByteStream)
-NS_IMPL_THREADSAFE_RELEASE(WMFByteStream)
+NS_IMPL_ADDREF(WMFByteStream)
+NS_IMPL_RELEASE(WMFByteStream)
 
 
 // Stores data regarding an async read opreation.
@@ -241,12 +239,12 @@ public:
   ULONG mBytesRead;
 
   // IUnknown ref counting.
-  nsAutoRefCnt mRefCnt;
+  ThreadSafeAutoRefCnt mRefCnt;
   NS_DECL_OWNINGTHREAD
 };
 
-NS_IMPL_THREADSAFE_ADDREF(ReadRequest)
-NS_IMPL_THREADSAFE_RELEASE(ReadRequest)
+NS_IMPL_ADDREF(ReadRequest)
+NS_IMPL_RELEASE(ReadRequest)
 
 // IUnknown Methods
 STDMETHODIMP
@@ -329,17 +327,6 @@ WMFByteStream::BeginRead(BYTE *aBuffer,
 nsresult
 WMFByteStream::Read(ReadRequest* aRequestState)
 {
-  ReentrantMonitorAutoEnter mon(mResourceMonitor);
-
-  // Ensure the read head is at the correct offset in the resource. It may not
-  // be if the SourceReader seeked.
-  if (mResource->Tell() != aRequestState->mOffset) {
-    nsresult rv = mResource->Seek(nsISeekableStream::NS_SEEK_SET,
-                                  aRequestState->mOffset);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-  NS_ASSERTION(mResource->Tell() == aRequestState->mOffset, "State mismatch!");
-
   // Read in a loop to ensure we fill the buffer, when possible.
   ULONG totalBytesRead = 0;
   nsresult rv = NS_OK;
@@ -347,9 +334,10 @@ WMFByteStream::Read(ReadRequest* aRequestState)
     BYTE* buffer = aRequestState->mBuffer + totalBytesRead;
     ULONG bytesRead = 0;
     ULONG length = aRequestState->mBufferLength - totalBytesRead;
-    rv = mResource->Read(reinterpret_cast<char*>(buffer),
-                         length,
-                         reinterpret_cast<uint32_t*>(&bytesRead));
+    rv = mResource->ReadAt(aRequestState->mOffset + totalBytesRead,
+                           reinterpret_cast<char*>(buffer),
+                           length,
+                           reinterpret_cast<uint32_t*>(&bytesRead));
     NS_ENSURE_SUCCESS(rv, rv);
     totalBytesRead += bytesRead;
     if (bytesRead == 0) {

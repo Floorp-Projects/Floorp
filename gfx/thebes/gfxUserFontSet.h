@@ -41,20 +41,6 @@ struct gfxFontFaceSrc {
     nsCOMPtr<nsIPrincipal> mOriginPrincipal; // principal if url
 };
 
-inline bool
-operator==(const gfxFontFaceSrc& a, const gfxFontFaceSrc& b)
-{
-    bool equals;
-    return (a.mIsLocal && b.mIsLocal &&
-            a.mLocalName == b.mLocalName) ||
-           (!a.mIsLocal && !b.mIsLocal &&
-            a.mUseOriginPrincipal == b.mUseOriginPrincipal &&
-            a.mFormatFlags == b.mFormatFlags &&
-            NS_SUCCEEDED(a.mURI->Equals(b.mURI, &equals)) && equals &&
-            NS_SUCCEEDED(a.mReferrer->Equals(b.mReferrer, &equals)) && equals &&
-            a.mOriginPrincipal->Equals(b.mOriginPrincipal));
-}
-
 // Subclassed to store platform-specific code cleaned out when font entry is
 // deleted.
 // Lifetime: from when platform font is created until it is deactivated.
@@ -182,14 +168,13 @@ public:
 
 
     // add in a font face
-    // weight - 0 == unknown, [100, 900] otherwise (multiples of 100)
-    // stretch = [NS_FONT_STRETCH_ULTRA_CONDENSED, NS_FONT_STRETCH_ULTRA_EXPANDED]
+    // weight, stretch - 0 == unknown, [1, 9] otherwise
     // italic style = constants in gfxFontConstants.h, e.g. NS_FONT_STYLE_NORMAL
     // TODO: support for unicode ranges not yet implemented
     gfxFontEntry *AddFontFace(const nsAString& aFamilyName,
                               const nsTArray<gfxFontFaceSrc>& aFontFaceSrcList,
                               uint32_t aWeight,
-                              int32_t aStretch,
+                              uint32_t aStretch,
                               uint32_t aItalicStyle,
                               const nsTArray<gfxFontFeature>& aFeatureSettings,
                               const nsString& aLanguageOverride,
@@ -443,22 +428,13 @@ class gfxProxyFontEntry : public gfxFontEntry {
 public:
     gfxProxyFontEntry(const nsTArray<gfxFontFaceSrc>& aFontFaceSrcList,
                       uint32_t aWeight,
-                      int32_t aStretch,
+                      uint32_t aStretch,
                       uint32_t aItalicStyle,
                       const nsTArray<gfxFontFeature>& aFeatureSettings,
                       uint32_t aLanguageOverride,
                       gfxSparseBitSet *aUnicodeRanges);
 
     virtual ~gfxProxyFontEntry();
-
-    // Return whether the entry matches the given list of attributes
-    bool Matches(const nsTArray<gfxFontFaceSrc>& aFontFaceSrcList,
-                 uint32_t aWeight,
-                 int32_t aStretch,
-                 uint32_t aItalicStyle,
-                 const nsTArray<gfxFontFeature>& aFeatureSettings,
-                 uint32_t aLanguageOverride,
-                 gfxSparseBitSet *aUnicodeRanges);
 
     virtual gfxFont *CreateFontInstance(const gfxFontStyle *aFontStyle, bool aNeedsBold);
 

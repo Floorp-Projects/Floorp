@@ -146,8 +146,8 @@ NS_IMETHODIMP nsSupportsStringImpl::SetData(const nsAString& aData)
 
 /***************************************************************************/
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(nsSupportsPRBoolImpl, nsISupportsPRBool,
-                              nsISupportsPrimitive)
+NS_IMPL_ISUPPORTS2(nsSupportsPRBoolImpl, nsISupportsPRBool,
+                   nsISupportsPrimitive)
 
 nsSupportsPRBoolImpl::nsSupportsPRBoolImpl()
     : mData(false)
@@ -683,8 +683,8 @@ NS_IMETHODIMP nsSupportsDoubleImpl::ToString(char **_retval)
 /***************************************************************************/
 
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(nsSupportsVoidImpl, nsISupportsVoid,
-                              nsISupportsPrimitive)
+NS_IMPL_ISUPPORTS2(nsSupportsVoidImpl, nsISupportsVoid,
+                   nsISupportsPrimitive)
 
 nsSupportsVoidImpl::nsSupportsVoidImpl()
     : mData(nullptr)
@@ -725,9 +725,9 @@ NS_IMETHODIMP nsSupportsVoidImpl::ToString(char **_retval)
 /***************************************************************************/
 
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(nsSupportsInterfacePointerImpl,
-                              nsISupportsInterfacePointer,
-                              nsISupportsPrimitive)
+NS_IMPL_ISUPPORTS2(nsSupportsInterfacePointerImpl,
+                   nsISupportsInterfacePointer,
+                   nsISupportsPrimitive)
 
 nsSupportsInterfacePointerImpl::nsSupportsInterfacePointerImpl()
     : mIID(nullptr)

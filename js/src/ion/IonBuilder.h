@@ -658,7 +658,6 @@ class CallInfo
     Vector<MDefinition *> args_;
 
     bool constructing_;
-    bool lambda_;
 
   public:
     CallInfo(JSContext *cx, bool constructing)
@@ -750,13 +749,6 @@ class CallInfo
 
     bool constructing() {
         return constructing_;
-    }
-
-    bool isLambda() const {
-        return lambda_;
-    }
-    void setLambda(bool lambda) {
-        lambda_ = lambda;
     }
 
     void wrapArgs(MBasicBlock *current) {

@@ -44,7 +44,7 @@ static uint64_t sFontSetGeneration = 0;
 
 gfxProxyFontEntry::gfxProxyFontEntry(const nsTArray<gfxFontFaceSrc>& aFontFaceSrcList,
              uint32_t aWeight,
-             int32_t aStretch,
+             uint32_t aStretch,
              uint32_t aItalicStyle,
              const nsTArray<gfxFontFeature>& aFeatureSettings,
              uint32_t aLanguageOverride,
@@ -59,8 +59,6 @@ gfxProxyFontEntry::gfxProxyFontEntry(const nsTArray<gfxFontFaceSrc>& aFontFaceSr
     mSrcIndex = 0;
     mWeight = aWeight;
     mStretch = aStretch;
-    // XXX Currently, we don't distinguish 'italic' and 'oblique' styles;
-    // we need to fix this. (Bug 543715)
     mItalic = (aItalicStyle & (NS_FONT_STYLE_ITALIC | NS_FONT_STYLE_OBLIQUE)) != 0;
     mFeatureSettings.AppendElements(aFeatureSettings);
     mLanguageOverride = aLanguageOverride;
@@ -69,29 +67,6 @@ gfxProxyFontEntry::gfxProxyFontEntry(const nsTArray<gfxFontFaceSrc>& aFontFaceSr
 
 gfxProxyFontEntry::~gfxProxyFontEntry()
 {
-}
-
-bool
-gfxProxyFontEntry::Matches(const nsTArray<gfxFontFaceSrc>& aFontFaceSrcList,
-                           uint32_t aWeight,
-                           int32_t aStretch,
-                           uint32_t aItalicStyle,
-                           const nsTArray<gfxFontFeature>& aFeatureSettings,
-                           uint32_t aLanguageOverride,
-                           gfxSparseBitSet *aUnicodeRanges)
-{
-    // XXX font entries don't distinguish italic from oblique (bug 543715)
-    bool isItalic =
-        (aItalicStyle & (NS_FONT_STYLE_ITALIC | NS_FONT_STYLE_OBLIQUE)) != 0;
-
-    return mWeight == aWeight &&
-           mStretch == aStretch &&
-           mItalic == isItalic &&
-           mFeatureSettings == aFeatureSettings &&
-           mLanguageOverride == aLanguageOverride &&
-           mSrcList == aFontFaceSrcList;
-           // XXX once we support unicode-range (bug 475891),
-           // we'll need to compare that here as well
 }
 
 gfxFont*
@@ -115,12 +90,14 @@ gfxFontEntry*
 gfxUserFontSet::AddFontFace(const nsAString& aFamilyName,
                             const nsTArray<gfxFontFaceSrc>& aFontFaceSrcList,
                             uint32_t aWeight,
-                            int32_t aStretch,
+                            uint32_t aStretch,
                             uint32_t aItalicStyle,
                             const nsTArray<gfxFontFeature>& aFeatureSettings,
                             const nsString& aLanguageOverride,
                             gfxSparseBitSet *aUnicodeRanges)
 {
+    gfxProxyFontEntry *proxyEntry = nullptr;
+
     nsAutoString key(aFamilyName);
     ToLowerCase(key);
 
@@ -137,42 +114,10 @@ gfxUserFontSet::AddFontFace(const nsAString& aFamilyName,
         mFontFamilies.Put(key, family);
     }
 
+    // construct a new face and add it into the family
     uint32_t languageOverride =
         gfxFontStyle::ParseFontLanguageOverride(aLanguageOverride);
-
-    // If there's already a proxy in the family whose descriptors all match,
-    // we can just move it to the end of the list instead of adding a new
-    // face that will always "shadow" the old one.
-    // Note that we can't do this for "real" (non-proxy) entries, even if the
-    // style descriptors match, as they might have had a different source list,
-    // but we no longer have the old source list available to check.
-    nsTArray<nsRefPtr<gfxFontEntry> >& fontList = family->GetFontList();
-    for (uint32_t i = 0, count = fontList.Length(); i < count; i++) {
-        if (!fontList[i]->mIsProxy) {
-            continue;
-        }
-
-        gfxProxyFontEntry *existingProxyEntry =
-            static_cast<gfxProxyFontEntry*>(fontList[i].get());
-        if (!existingProxyEntry->Matches(aFontFaceSrcList,
-                                         aWeight, aStretch, aItalicStyle,
-                                         aFeatureSettings, languageOverride,
-                                         aUnicodeRanges)) {
-            continue;
-        }
-
-        // We've found an entry that matches the new face exactly, so advance
-        // it to the end of the list.
-        // (Hold a strong reference while doing this, in case the only thing
-        // keeping the proxyFontEntry alive is the reference from family!)
-        nsRefPtr<gfxFontEntry> ref(existingProxyEntry);
-        family->RemoveFontEntry(existingProxyEntry);
-        family->AddFontEntry(existingProxyEntry);
-        return existingProxyEntry;
-    }
-
-    // construct a new face and add it into the family
-    gfxProxyFontEntry *proxyEntry =
+    proxyEntry =
         new gfxProxyFontEntry(aFontFaceSrcList, aWeight, aStretch,
                               aItalicStyle,
                               aFeatureSettings,

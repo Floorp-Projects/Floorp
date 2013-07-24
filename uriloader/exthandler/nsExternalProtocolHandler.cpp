@@ -33,7 +33,7 @@
 class nsExtProtocolChannel : public nsIChannel
 {
 public:
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSICHANNEL
     NS_DECL_NSIREQUEST
 
@@ -56,8 +56,8 @@ private:
     nsCOMPtr<nsILoadGroup> mLoadGroup;
 };
 
-NS_IMPL_THREADSAFE_ADDREF(nsExtProtocolChannel)
-NS_IMPL_THREADSAFE_RELEASE(nsExtProtocolChannel)
+NS_IMPL_ADDREF(nsExtProtocolChannel)
+NS_IMPL_RELEASE(nsExtProtocolChannel)
 
 NS_INTERFACE_MAP_BEGIN(nsExtProtocolChannel)
    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIChannel)
@@ -315,8 +315,8 @@ nsExternalProtocolHandler::nsExternalProtocolHandler()
 nsExternalProtocolHandler::~nsExternalProtocolHandler()
 {}
 
-NS_IMPL_THREADSAFE_ADDREF(nsExternalProtocolHandler)
-NS_IMPL_THREADSAFE_RELEASE(nsExternalProtocolHandler)
+NS_IMPL_ADDREF(nsExternalProtocolHandler)
+NS_IMPL_RELEASE(nsExternalProtocolHandler)
 
 NS_INTERFACE_MAP_BEGIN(nsExternalProtocolHandler)
    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIProtocolHandler)

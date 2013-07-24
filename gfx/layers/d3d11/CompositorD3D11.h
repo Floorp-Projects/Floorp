@@ -38,56 +38,63 @@ struct DeviceAttachmentsD3D11;
 class CompositorD3D11 : public Compositor
 {
 public:
-  CompositorD3D11(nsIWidget *aWidget);
+  CompositorD3D11(nsIWidget* aWidget);
   ~CompositorD3D11();
 
-  virtual bool Initialize();
-  virtual void Destroy() { }
+  virtual bool Initialize() MOZ_OVERRIDE;
+  virtual void Destroy() MOZ_OVERRIDE {}
 
   virtual TextureFactoryIdentifier
     GetTextureFactoryIdentifier() MOZ_OVERRIDE;
 
-  virtual bool CanUseCanvasLayerForSize(const gfxIntSize &aSize) MOZ_OVERRIDE;
+  virtual bool CanUseCanvasLayerForSize(const gfxIntSize& aSize) MOZ_OVERRIDE;
   virtual int32_t GetMaxTextureSize() const MOZ_FINAL;
 
-  virtual void SetTargetContext(gfxContext *aTarget) { mTarget = aTarget; }
+  virtual void SetTargetContext(gfxContext* aTarget)  MOZ_OVERRIDE
+  {
+    mTarget = aTarget;
+  }
 
-  virtual void MakeCurrent(MakeCurrentFlags aFlags = 0) { }
+  virtual void MakeCurrent(MakeCurrentFlags aFlags = 0)  MOZ_OVERRIDE {}
 
   virtual TemporaryRef<CompositingRenderTarget>
     CreateRenderTarget(const gfx::IntRect &aRect,
                        SurfaceInitMode aInit) MOZ_OVERRIDE;
 
   virtual TemporaryRef<CompositingRenderTarget>
-    CreateRenderTargetFromSource(const gfx::IntRect &aRect,
-                                 const CompositingRenderTarget *aSource) MOZ_OVERRIDE;
+    CreateRenderTargetFromSource(const gfx::IntRect& aRect,
+                                 const CompositingRenderTarget* aSource) MOZ_OVERRIDE;
 
-  virtual void SetRenderTarget(CompositingRenderTarget *aSurface) MOZ_OVERRIDE;
+  virtual void SetRenderTarget(CompositingRenderTarget* aSurface) MOZ_OVERRIDE;
   virtual CompositingRenderTarget* GetCurrentRenderTarget() MOZ_OVERRIDE
   {
     return mCurrentRT;
   }
 
-  virtual void SetDestinationSurfaceSize(const gfx::IntSize& aSize) MOZ_OVERRIDE { }
+  virtual void SetDestinationSurfaceSize(const gfx::IntSize& aSize) MOZ_OVERRIDE {}
 
   /**
    * Declare an offset to use when rendering layers. This will be ignored when
    * rendering to a target instead of the screen.
    */
-  virtual void SetScreenRenderOffset(const ScreenPoint& aOffset) MOZ_OVERRIDE {
+  virtual void SetScreenRenderOffset(const ScreenPoint& aOffset) MOZ_OVERRIDE
+  {
     if (aOffset.x || aOffset.y) {
       NS_RUNTIMEABORT("SetScreenRenderOffset not supported by CompositorD3D11.");
     }
     // If the offset is 0, 0 that's okay.
   }
 
-  virtual void DrawQuad(const gfx::Rect &aRect, const gfx::Rect &aClipRect,
+  virtual void DrawQuad(const gfx::Rect &aRect,
+                        const gfx::Rect &aClipRect,
                         const EffectChain &aEffectChain,
-                        gfx::Float aOpacity, const gfx::Matrix4x4 &aTransform,
+                        gfx::Float aOpacity,
+                        const gfx::Matrix4x4 &aTransform,
                         const gfx::Point &aOffset) MOZ_OVERRIDE;
 
   /**
-   * Start a new frame. If aClipRectIn is null, sets *aClipRectOut to the screen dimensions. 
+   * Start a new frame. If aClipRectIn is null, sets *aClipRectOut to the
+   * screen dimensions. 
    */
   virtual void BeginFrame(const gfx::Rect *aClipRectIn,
                           const gfxMatrix& aTransform,
@@ -104,12 +111,12 @@ public:
    * Post rendering stuff if the rendering is outside of this Compositor
    * e.g., by Composer2D
    */
-  virtual void EndFrameForExternalComposition(const gfxMatrix& aTransform) MOZ_OVERRIDE { }
+  virtual void EndFrameForExternalComposition(const gfxMatrix& aTransform) MOZ_OVERRIDE {}
 
   /**
    * Tidy up if BeginFrame has been called, but EndFrame won't be
    */
-  virtual void AbortFrame() MOZ_OVERRIDE { }
+  virtual void AbortFrame() MOZ_OVERRIDE {}
 
   /**
    * Setup the viewport and projection matrix for rendering
@@ -129,7 +136,7 @@ public:
   virtual nsIWidget* GetWidget() const MOZ_OVERRIDE { return mWidget; }
   virtual const nsIntSize& GetWidgetSize() MOZ_OVERRIDE;
 
-  ID3D11Device *GetDevice() { return mDevice; }
+  ID3D11Device* GetDevice() { return mDevice; }
 
 private:
   void VerifyBufferSize();
@@ -146,12 +153,14 @@ private:
   RefPtr<CompositingRenderTargetD3D11> mDefaultRT;
   RefPtr<CompositingRenderTargetD3D11> mCurrentRT;
 
-  DeviceAttachmentsD3D11 *mAttachments;
+  DeviceAttachmentsD3D11* mAttachments;
 
   nsRefPtr<gfxContext> mTarget;
 
-  nsIWidget *mWidget;
-  // XXX - Bas - wth?
+  nsIWidget* mWidget;
+  // GetWidgetSize requires us to return a reference to an nsIntSize. Since we
+  // don't otherwise keep this value around, we need mSize to avoid a dangling
+  // reference problem.
   nsIntSize mSize;
 
   HWND mHwnd;

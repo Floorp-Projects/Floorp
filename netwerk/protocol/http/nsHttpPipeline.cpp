@@ -161,8 +161,8 @@ nsHttpPipeline::QueryPipeline()
 // nsHttpPipeline::nsISupports
 //-----------------------------------------------------------------------------
 
-NS_IMPL_THREADSAFE_ADDREF(nsHttpPipeline)
-NS_IMPL_THREADSAFE_RELEASE(nsHttpPipeline)
+NS_IMPL_ADDREF(nsHttpPipeline)
+NS_IMPL_RELEASE(nsHttpPipeline)
 
 // multiple inheritance fun :-)
 NS_INTERFACE_MAP_BEGIN(nsHttpPipeline)

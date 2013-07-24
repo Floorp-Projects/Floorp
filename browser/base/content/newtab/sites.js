@@ -131,9 +131,23 @@ Site.prototype = {
 
     if (this.isPinned())
       this._updateAttributes(true);
+    // request a staleness check for the thumbnail, which will cause page.js
+    // to be notified and call our refreshThumbnail() method.
+    PageThumbs.captureIfStale(this.url);
+    // but still display whatever thumbnail might be available now.
+    this.refreshThumbnail();
+  },
 
+  /**
+   * Refreshes the thumbnail for the site.
+   */
+  refreshThumbnail: function Site_refreshThumbnail() {
     let thumbnailURL = PageThumbs.getThumbnailURL(this.url);
     let thumbnail = this._querySelector(".newtab-thumbnail");
+    // if this is being called due to the thumbnail being updated we will
+    // be setting it to the same value it had before.  To be confident the
+    // change wont be optimized away we remove the property first.
+    thumbnail.style.removeProperty("backgroundImage");
     thumbnail.style.backgroundImage = "url(" + thumbnailURL + ")";
   },
 

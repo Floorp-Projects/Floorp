@@ -264,8 +264,9 @@ BrowserElementChild.prototype = {
   },
 
   observe: function(subject, topic, data) {
-    // Ignore notifications not about our document.
-    if (subject != content.document)
+    // Ignore notifications not about our document.  (Note that |content| /can/
+    // be null; see bug 874900.)
+    if (!content || subject != content.document)
       return;
     switch (topic) {
       case 'fullscreen-origin-change':
