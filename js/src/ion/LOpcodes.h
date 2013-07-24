@@ -81,6 +81,7 @@
     _(CompareV)                     \
     _(CompareVAndBranch)            \
     _(CompareVM)                    \
+    _(BitAndAndBranch)              \
     _(IsNullOrLikeUndefined)        \
     _(IsNullOrLikeUndefinedAndBranch)\
     _(EmulatesUndefined)            \
