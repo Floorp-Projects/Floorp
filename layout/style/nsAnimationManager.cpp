@@ -12,7 +12,6 @@
 #include "nsSMILKeySpline.h"
 #include "nsEventDispatcher.h"
 #include "nsCSSFrameConstructor.h"
-#include "nsLayoutUtils.h"
 #include <math.h>
 
 using namespace mozilla;
