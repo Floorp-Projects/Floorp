@@ -4,8 +4,9 @@
 
 #if !defined(JSGC_ROOT_ANALYSIS) && !defined(JSGC_USE_EXACT_ROOTING)
 
-#include "jsapi-tests/tests.h"
 #include "jsobj.h"
+
+#include "jsapi-tests/tests.h"
 #include "vm/String.h"
 
 #include "jsobjinlines.h"
