@@ -844,10 +844,7 @@ CanvasRenderingContext2D::EnsureTarget()
         nsCOMPtr<nsIGfxInfo> gfxInfo = do_GetService("@mozilla.org/gfx/info;1");
         nsString vendor;
 
-        if (!mForceSoftware &&
-            gfxInfo &&
-            NS_SUCCEEDED(gfxInfo->GetAdapterVendorID(vendor)) &&
-            StringBeginsWith(vendor, NS_LITERAL_STRING("NVIDIA")))
+        if (!mForceSoftware)
         {
           glContext = GLContextProvider::CreateOffscreen(gfxIntSize(size.width, size.height),
                                                          caps, GLContext::ContextFlagsNone);
