@@ -34,6 +34,11 @@ In this order:
   angle-cross-compilation.patch
     Fixes cross compilation on case sensitive OSes.
 
+  angle-line-loop-overflow.patch
+    Fixes a forgotten overflow check on drawing line loop
+    ANGLE bug : http://code.google.com/p/angleproject/issues/detail?id=444
+    ANGLE revision : 07dda9519cf4
+
 In addition to these patches, the Makefile.in files are ours, they're not present in
 upsteam ANGLE. Therefore, changes made to the Makefile.in files should not be stored
 in the local .patch files.
