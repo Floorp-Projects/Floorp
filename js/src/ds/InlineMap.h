@@ -7,6 +7,8 @@
 #ifndef ds_InlineMap_h
 #define ds_InlineMap_h
 
+#include "jsalloc.h"
+
 #include "js/HashTable.h"
 
 namespace js {
