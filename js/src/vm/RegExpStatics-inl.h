@@ -9,6 +9,8 @@
 
 #include "vm/RegExpStatics.h"
 
+#include "jsinferinlines.h"
+
 namespace js {
 
 inline void

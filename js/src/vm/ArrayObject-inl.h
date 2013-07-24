@@ -8,6 +8,7 @@
 #define vm_ArrayObject_inl_h
 
 #include "vm/ArrayObject.h"
+
 #include "vm/String.h"
 
 #include "jsinferinlines.h"
