@@ -214,24 +214,6 @@
                   </menupopup>
                 </menu>
                 <menuseparator/>
-                <menuitem id="menu_stop"
-                          class="show-only-for-keyboard"
-                          label="&stopCmd.label;"
-                          accesskey="&stopCmd.accesskey;"
-                          command="Browser:Stop"
-#ifdef XP_MACOSX
-                          key="key_stop_mac"/>
-#else
-                          key="key_stop"/>
-#endif
-                <menuitem id="menu_reload"
-                          class="show-only-for-keyboard"
-                          label="&reloadCmd.label;"
-                          accesskey="&reloadCmd.accesskey;"
-                          key="key_reload"
-                          command="Browser:ReloadOrDuplicate"
-                          onclick="checkForMiddleClick(this, event);"/>
-                <menuseparator class="show-only-for-keyboard"/>
                 <menu id="viewFullZoomMenu" label="&fullZoom.label;"
                       accesskey="&fullZoom.accesskey;"
                       onpopupshowing="FullZoom.updateMenu();">
