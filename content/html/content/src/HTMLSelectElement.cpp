@@ -227,8 +227,6 @@ HTMLSelectElement::InsertOptionsIntoList(nsIContent* aOptions,
     bool didGetFrame = false;
 
     // Actually select the options if the added options warrant it
-    nsCOMPtr<nsIDOMNode> optionNode;
-    nsCOMPtr<nsIDOMHTMLOptionElement> option;
     for (int32_t i = aListIndex; i < insertIndex; i++) {
       // Notify the frame that the option is added
       if (!didGetFrame || (selectFrame && !weakSelectFrame.IsAlive())) {
@@ -241,22 +239,17 @@ HTMLSelectElement::InsertOptionsIntoList(nsIContent* aOptions,
         selectFrame->AddOption(i);
       }
 
-      Item(i, getter_AddRefs(optionNode));
-      option = do_QueryInterface(optionNode);
-      if (option) {
-        bool selected;
-        option->GetSelected(&selected);
-        if (selected) {
-          // Clear all other options
-          if (!HasAttr(kNameSpaceID_None, nsGkAtoms::multiple)) {
-            SetOptionsSelectedByIndex(i, i, true, true, true, true, nullptr);
-          }
-
-          // This is sort of a hack ... we need to notify that the option was
-          // set and change selectedIndex even though we didn't really change
-          // its value.
-          OnOptionSelected(selectFrame, i, true, false, false);
+      nsRefPtr<HTMLOptionElement> option = Item(i);
+      if (option && option->Selected()) {
+        // Clear all other options
+        if (!HasAttr(kNameSpaceID_None, nsGkAtoms::multiple)) {
+          SetOptionsSelectedByIndex(i, i, true, true, true, true, nullptr);
         }
+
+        // This is sort of a hack ... we need to notify that the option was
+        // set and change selectedIndex even though we didn't really change
+        // its value.
+        OnOptionSelected(selectFrame, i, true, false, false);
       }
     }
 
