@@ -12,6 +12,7 @@
  * js::Class is an engine-private extension that allows more control over
  * object behavior and, e.g., allows custom slow layout.
  */
+
 #include "jsapi.h"
 #include "jsprvtd.h"
 

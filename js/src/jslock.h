@@ -7,15 +7,14 @@
 #ifndef jslock_h
 #define jslock_h
 
-#include "jsapi.h"
-
 #ifdef JS_THREADSAFE
 
+# include "jsapi.h"
 # include "pratom.h"
-# include "prlock.h"
 # include "prcvar.h"
-# include "prthread.h"
 # include "prinit.h"
+# include "prlock.h"
+# include "prthread.h"
 
 # define JS_ATOMIC_INCREMENT(p)      PR_ATOMIC_INCREMENT((int32_t *)(p))
 # define JS_ATOMIC_DECREMENT(p)      PR_ATOMIC_DECREMENT((int32_t *)(p))

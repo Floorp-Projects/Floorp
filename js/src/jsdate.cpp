@@ -26,15 +26,15 @@
 #include <math.h>
 #include <string.h>
 
-#include "jstypes.h"
-#include "jsprf.h"
-#include "prmjtime.h"
-#include "jsutil.h"
 #include "jsapi.h"
 #include "jscntxt.h"
 #include "jsnum.h"
 #include "jsobj.h"
+#include "jsprf.h"
 #include "jsstr.h"
+#include "jstypes.h"
+#include "jsutil.h"
+#include "prmjtime.h"
 
 #include "vm/DateTime.h"
 #include "vm/GlobalObject.h"

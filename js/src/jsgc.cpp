@@ -6,14 +6,12 @@
 
 /* JS Mark-and-Sweep Garbage Collector. */
 
-#include "jsgc.h"
+#include "jsgcinlines.h"
 
 #include "mozilla/DebugOnly.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Move.h"
 #include "mozilla/Util.h"
-
-#include "prmjtime.h"
 
 using mozilla::Swap;
 
@@ -47,50 +45,49 @@ using mozilla::Swap;
  */
 
 #include <string.h>     /* for memset used when DEBUG */
+#ifndef XP_WIN
+# include <unistd.h>
+#endif
 
-#include "jstypes.h"
-#include "jsutil.h"
 #include "jsapi.h"
 #include "jsatom.h"
-#include "jscompartment.h"
 #include "jscntxt.h"
+#include "jscompartment.h"
 #include "jsobj.h"
 #include "jsproxy.h"
 #include "jsscript.h"
+#include "jstypes.h"
+#include "jsutil.h"
 #include "jswatchpoint.h"
 #include "jsweakmap.h"
+#ifdef XP_WIN
+# include "jswin.h"
+#endif
+#include "prmjtime.h"
+#if JS_TRACE_LOGGING
+#include "TraceLogging.h"
+#endif
 
 #include "gc/FindSCCs.h"
 #include "gc/GCInternals.h"
 #include "gc/Marking.h"
 #include "gc/Memory.h"
-#include "vm/Debugger.h"
-#include "vm/ProxyObject.h"
-#include "vm/Shape.h"
-#include "vm/String.h"
-#include "vm/ForkJoin.h"
-#include "vm/WrapperObject.h"
-#include "ion/IonCode.h"
 #ifdef JS_ION
 # include "ion/BaselineJIT.h"
 #endif
+#include "ion/IonCode.h"
+#include "vm/Debugger.h"
+#include "vm/ForkJoin.h"
+#include "vm/ProxyObject.h"
+#include "vm/Shape.h"
+#include "vm/String.h"
+#include "vm/WrapperObject.h"
 
-#include "jsgcinlines.h"
 #include "jsobjinlines.h"
 
-#include "vm/String-inl.h"
 #include "vm/Runtime-inl.h"
 #include "vm/Stack-inl.h"
-
-#ifdef XP_WIN
-# include "jswin.h"
-#else
-# include <unistd.h>
-#endif
-
-#if JS_TRACE_LOGGING
-#include "TraceLogging.h"
-#endif
+#include "vm/String-inl.h"
 
 using namespace js;
 using namespace js::gc;

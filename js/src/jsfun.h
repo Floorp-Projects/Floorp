@@ -9,8 +9,9 @@
 /*
  * JS function definitions.
  */
-#include "jsprvtd.h"
+
 #include "jsobj.h"
+#include "jsprvtd.h"
 #include "jsscript.h"
 
 #include "gc/Barrier.h"
