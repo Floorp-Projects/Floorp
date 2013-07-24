@@ -676,19 +676,12 @@ HTMLSelectElement::Add(nsIDOMHTMLElement* aElement,
 NS_IMETHODIMP
 HTMLSelectElement::Remove(int32_t aIndex)
 {
-  nsCOMPtr<nsIDOMNode> option;
-  Item(aIndex, getter_AddRefs(option));
-
-  if (option) {
-    nsCOMPtr<nsIDOMNode> parent;
-
-    option->GetParentNode(getter_AddRefs(parent));
-    if (parent) {
-      nsCOMPtr<nsIDOMNode> ret;
-      parent->RemoveChild(option, getter_AddRefs(ret));
-    }
+  nsCOMPtr<nsINode> option = Item(static_cast<uint32_t>(aIndex));
+  if (!option) {
+    return NS_OK;
   }
 
+  option->Remove();
   return NS_OK;
 }
 
