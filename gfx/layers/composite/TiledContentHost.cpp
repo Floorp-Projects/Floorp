@@ -228,7 +228,7 @@ TiledContentHost::RenderLayerBuffer(TiledLayerBufferComposite& aLayerBuffer,
     NS_WARNING("Can't render tiled content host - no compositor");
     return;
   }
-  volatile float resolution = aLayerBuffer.GetResolution(); // bug 881018 investigation
+  float resolution = aLayerBuffer.GetResolution();
   gfxSize layerScale(1, 1);
   // We assume that the current frame resolution is the one used in our primary
   // layer buffer. Compensate for a changing frame resolution.
