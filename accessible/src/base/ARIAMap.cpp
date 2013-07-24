@@ -539,7 +539,7 @@ static nsRoleMapEntry sWAIRoleMaps[] =
     kUseMapRole,
     eNoValue,
     eNoAction,
-    ePoliteLiveAttr,
+    eNoLiveAttr,
     eSelect,
     kNoReqStates
   },
