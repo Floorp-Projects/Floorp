@@ -360,10 +360,10 @@ MediaPluginReader::ImageBufferCallback::operator()(size_t aWidth, size_t aHeight
     return nullptr;
   }
 
-  nsRefPtr<mozilla::layers::DeprecatedSharedRGBImage> rgbImage;
+  nsRefPtr<mozilla::layers::SharedRGBImage> rgbImage;
   switch(aColorFormat) {
     case MPAPI::RGB565:
-      rgbImage = mozilla::layers::DeprecatedSharedRGBImage::Create(mImageContainer,
+      rgbImage = mozilla::layers::SharedRGBImage::Create(mImageContainer,
                                                          nsIntSize(aWidth, aHeight),
                                                          gfxASurface::ImageFormatRGB16_565);
       mImage = rgbImage;
