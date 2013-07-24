@@ -53,6 +53,10 @@ AlarmsManager.prototype = {
       throw Components.results.NS_ERROR_FAILURE;
     }
 
+    if (!aDate) {
+      throw Components.results.NS_ERROR_INVALID_ARG;
+    }
+
     let isIgnoreTimezone = true;
     switch (aRespectTimezone) {
       case "honorTimezone":
@@ -64,13 +68,13 @@ AlarmsManager.prototype = {
         break;
 
       default:
-        throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+        throw Components.results.NS_ERROR_INVALID_ARG;
         break;
     }
 
     let request = this.createRequest();
     this._cpmm.sendAsyncMessage(
-      "AlarmsManager:Add", 
+      "AlarmsManager:Add",
       { requestId: this.getRequestId(request),
         date: aDate,
         ignoreTimezone: isIgnoreTimezone,
