@@ -13,6 +13,8 @@ DEFINES = ['-Dbar', '-Dfoo']
 EXTRA_COMPONENTS = ['bar.js', 'foo.js']
 EXTRA_PP_COMPONENTS = ['bar.pp.js', 'foo.pp.js']
 
+CPP_UNIT_TESTS = ['foo.cpp']
+
 GTEST_C_SOURCES = ['test1.c', 'test2.c']
 GTEST_CMM_SOURCES = ['test1.mm', 'test2.mm']
 GTEST_CPP_SOURCES = ['test1.cpp', 'test2.cpp']

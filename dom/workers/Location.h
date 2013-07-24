@@ -7,23 +7,100 @@
 #define mozilla_dom_workers_location_h__
 
 #include "Workers.h"
+#include "DOMBindingBase.h"
+#include "WorkerPrivate.h"
 
 #include "jspubtd.h"
 
 BEGIN_WORKERS_NAMESPACE
 
-namespace location {
+class WorkerLocation MOZ_FINAL : public DOMBindingBase
+{
+  nsString mHref;
+  nsString mProtocol;
+  nsString mHost;
+  nsString mHostname;
+  nsString mPort;
+  nsString mPathname;
+  nsString mSearch;
+  nsString mHash;
 
-bool
-InitClass(JSContext* aCx, JSObject* aGlobal);
+  WorkerLocation(JSContext* aCx,
+                 const nsAString& aHref,
+                 const nsAString& aProtocol,
+                 const nsAString& aHost,
+                 const nsAString& aHostname,
+                 const nsAString& aPort,
+                 const nsAString& aPathname,
+                 const nsAString& aSearch,
+                 const nsAString& aHash)
+    : DOMBindingBase(aCx)
+    , mHref(aHref)
+    , mProtocol(aProtocol)
+    , mHost(aHost)
+    , mHostname(aHostname)
+    , mPort(aPort)
+    , mPathname(aPathname)
+    , mSearch(aSearch)
+    , mHash(aHash)
+  {
+    MOZ_COUNT_CTOR(mozilla::dom::workers::WorkerLocation);
+  }
 
-JSObject*
-Create(JSContext* aCx, JS::Handle<JSString*> aHref, JS::Handle<JSString*> aProtocol,
-       JS::Handle<JSString*> aHost, JS::Handle<JSString*> aHostname,
-       JS::Handle<JSString*> aPort, JS::Handle<JSString*> aPathname,
-       JS::Handle<JSString*> aSearch, JS::Handle<JSString*> aHash);
+public:
+  static already_AddRefed<WorkerLocation>
+  Create(JSContext* aCx, JS::Handle<JSObject*> aGlobal,
+         WorkerPrivate::LocationInfo& aInfo);
 
-} // namespace location
+  virtual void
+  _trace(JSTracer* aTrc) MOZ_OVERRIDE;
+
+  virtual void
+  _finalize(JSFreeOp* aFop) MOZ_OVERRIDE;
+
+  ~WorkerLocation()
+  {
+    MOZ_COUNT_DTOR(mozilla::dom::workers::WorkerLocation);
+  }
+
+  void Stringify(nsString& aHref) const
+  {
+    aHref = mHref;
+  }
+  void GetHref(nsString& aHref) const
+  {
+    aHref = mHref;
+  }
+  void GetProtocol(nsString& aProtocol) const
+  {
+    aProtocol = mProtocol;
+  }
+  void GetHost(nsString& aHost) const
+  {
+    aHost = mHost;
+  }
+  void GetHostname(nsString& aHostname) const
+  {
+    aHostname = mHostname;
+  }
+  void GetPort(nsString& aPort) const
+  {
+    aPort = mPort;
+  }
+  void GetPathname(nsString& aPathname) const
+  {
+    aPathname = mPathname;
+  }
+  void GetSearch(nsString& aSearch) const
+  {
+    aSearch = mSearch;
+  }
+  void GetHash(nsString& aHash) const
+  {
+    aHash = mHash;
+  }
+
+};
 
 END_WORKERS_NAMESPACE
 

@@ -115,12 +115,10 @@ HTMLOptionElement::SetSelected(bool aValue)
     int32_t index;
     GetIndex(&index);
     // This should end up calling SetSelectedInternal
-    return selectInt->SetOptionsSelectedByIndex(index, index, aValue,
-                                                false, true, true,
-                                                nullptr);
+    selectInt->SetOptionsSelectedByIndex(index, index, aValue,
+                                         false, true, true);
   } else {
     SetSelectedInternal(aValue, true);
-    return NS_OK;
   }
 
   return NS_OK;
@@ -219,9 +217,8 @@ HTMLOptionElement::BeforeSetAttr(int32_t aNamespaceID, nsIAtom* aName,
   // This should end up calling SetSelectedInternal, which we will allow to
   // take effect so that parts of SetOptionsSelectedByIndex that might depend
   // on it working don't get confused.
-  rv = selectInt->SetOptionsSelectedByIndex(index, index, newSelected,
-                                            false, true, aNotify,
-                                            nullptr);
+  selectInt->SetOptionsSelectedByIndex(index, index, newSelected,
+                                       false, true, aNotify);
 
   // Now reset our members; when we finish the attr set we'll end up with the
   // rigt selected state.
@@ -229,7 +226,7 @@ HTMLOptionElement::BeforeSetAttr(int32_t aNamespaceID, nsIAtom* aName,
   mSelectedChanged = false;
   // mIsSelected doesn't matter while mSelectedChanged is false
 
-  return rv;
+  return NS_OK;
 }
 
 NS_IMETHODIMP

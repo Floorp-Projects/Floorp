@@ -43,69 +43,6 @@ endif
 # TODO: Use CPPSRCS from moz.build
 SIMPLE_PROGRAMS	:= $(cppsrcs:.cpp=$(BIN_SUFFIX))
 
-CPP_UNIT_TESTS = \
-                 ShowAlignments.cpp \
-                 ShowSSEConfig.cpp \
-                 TestAutoPtr.cpp \
-                 TestAutoRef.cpp \
-                 TestCOMArray.cpp \
-                 TestCOMPtr.cpp \
-                 TestCOMPtrEq.cpp \
-                 TestDeque.cpp \
-                 TestFile.cpp \
-                 TestHashtables.cpp \
-                 TestID.cpp \
-                 TestObserverArray.cpp \
-                 TestObserverService.cpp \
-                 TestPipe.cpp \
-                 TestRefPtr.cpp \
-                 TestTextFormatter.cpp \
-                 TestTArray.cpp \
-                 $(NULL)
-
-ifdef MOZ_MEMORY
-CPP_UNIT_TESTS += TestJemalloc.cpp
-endif
-
-# XXX Make this tests work in libxul builds.
-#CPP_UNIT_TESTS += \
-#                  TestArray.cpp \
-#                  TestCRT.cpp \
-#                  TestEncoding.cpp \
-#                  TestExpirationTracker.cpp \
-#                  TestPipes.cpp \
-#                  TestPriorityQueue.cpp \
-#                  TestStorageStream.cpp \
-#                  TestStrings.cpp \
-#                  TestSynchronization.cpp \
-#                  TestTArray.cpp \
-#                  TestThreadPool.cpp \
-#                  TestThreads.cpp \
-#                  TestTimeStamp.cpp \
-#                  TestXPIDLString.cpp \
-#                  TestUTF.cpp \
-#                  TestAtoms.cpp \
-#                  $(NULL)
-## FIXME: bug 577500 TestStaticAtoms fails when run in dist/bin
-## TestStaticAtoms.cpp
-
-ifdef MOZ_DEBUG
-# FIXME bug 523392: TestDeadlockDetector doesn't like Windows
-# FIXME bug 523378: also fails on OS X
-ifneq (,$(filter-out WINNT Darwin,$(OS_ARCH)))
-CPP_UNIT_TESTS += \
-                  TestDeadlockDetector.cpp \
-                  TestDeadlockDetectorScalability.cpp \
-                  $(NULL)
-endif
-endif
-
-ifndef MOZILLA_INTERNAL_API
-CPP_UNIT_TESTS += \
-                  TestStringAPI.cpp \
-                  $(NULL)
-endif
-
 include $(topsrcdir)/config/config.mk
 
 LIBS += $(XPCOM_LIBS)

@@ -1406,19 +1406,12 @@ nsListControlFrame::SetOptionsSelectedFromFrame(int32_t aStartIndex,
 {
   nsRefPtr<dom::HTMLSelectElement> selectElement =
     dom::HTMLSelectElement::FromContent(mContent);
-  bool wasChanged = false;
-#ifdef DEBUG
-  nsresult rv = 
-#endif
-    selectElement->SetOptionsSelectedByIndex(aStartIndex,
-                                             aEndIndex,
-                                             aValue,
-                                             aClearAll,
-                                             false,
-                                             true,
-                                             &wasChanged);
-  NS_ASSERTION(NS_SUCCEEDED(rv), "SetSelected failed");
-  return wasChanged;
+  return selectElement->SetOptionsSelectedByIndex(aStartIndex,
+                                                  aEndIndex,
+                                                  aValue,
+                                                  aClearAll,
+                                                  false,
+                                                  true);
 }
 
 bool
@@ -1444,21 +1437,12 @@ nsListControlFrame::ToggleOptionSelectedFromFrame(int32_t aIndex)
   NS_ASSERTION(NS_SUCCEEDED(rv), "GetSelected failed");
   nsRefPtr<dom::HTMLSelectElement> selectElement =
     dom::HTMLSelectElement::FromContent(mContent);
-  bool wasChanged = false;
-#ifdef DEBUG
-  rv =
-#endif
-    selectElement->SetOptionsSelectedByIndex(aIndex,
-                                             aIndex,
-                                             !value,
-                                             false,
-                                             false,
-                                             true,
-                                             &wasChanged);
-
-  NS_ASSERTION(NS_SUCCEEDED(rv), "SetSelected failed");
-
-  return wasChanged;
+  return selectElement->SetOptionsSelectedByIndex(aIndex,
+                                                  aIndex,
+                                                  !value,
+                                                  false,
+                                                  false,
+                                                  true);
 }
 
 

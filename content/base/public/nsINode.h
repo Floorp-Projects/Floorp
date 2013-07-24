@@ -254,8 +254,8 @@ private:
 
 // IID for the nsINode interface
 #define NS_INODE_IID \
-{ 0x5daa9e95, 0xe49c, 0x4b41, \
-  { 0xb2, 0x02, 0xde, 0xa9, 0xd3, 0x06, 0x21, 0x17 } }
+{ 0xe24a9ddc, 0x2979, 0x40e3, \
+  { 0x82, 0xb0, 0x9d, 0xf8, 0xb0, 0x41, 0xe5, 0x6a } }
 
 /**
  * An internal interface that abstracts some DOMNode-related parts that both
@@ -1494,12 +1494,6 @@ protected:
   }
 
 public:
-  // Optimized way to get classinfo.
-  virtual nsXPCClassInfo* GetClassInfo()
-  {
-    return nullptr;
-  }
-
   // Makes nsINode object to keep aObject alive.
   void BindObject(nsISupports* aObject);
   // After calling UnbindObject nsINode object doesn't keep

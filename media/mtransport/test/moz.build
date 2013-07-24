@@ -6,3 +6,18 @@
 
 MODULE = 'test_mtransport'
 
+if CONFIG['OS_TARGET'] != 'WINNT' and CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk':
+    CPP_UNIT_TESTS += [
+        'TestSyncRunnable.cpp',
+        'ice_unittest.cpp',
+        'nrappkit_unittest.cpp',
+        'runnable_utils_unittest.cpp',
+        'sockettransportservice_unittest.cpp',
+        'transport_unittests.cpp',
+        'turn_unittest.cpp',
+    ]
+
+    if CONFIG['MOZ_SCTP']:
+        CPP_UNIT_TESTS += [
+            'sctp_unittest.cpp',
+        ]
