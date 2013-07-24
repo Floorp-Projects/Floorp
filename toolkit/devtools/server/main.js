@@ -296,6 +296,26 @@ var DebuggerServer = {
   },
 
   /**
+   * Install tab actors in documents loaded in content childs
+   */
+  addChildActors: function () {
+    // In case of apps being loaded in parent process, DebuggerServer is already
+    // initialized and browser actors are already loaded,
+    // but childtab.js hasn't been loaded yet.
+    if (!("BrowserTabActor" in this)) {
+      this.addActors("resource://gre/modules/devtools/server/actors/webbrowser.js");
+      this.addActors("resource://gre/modules/devtools/server/actors/script.js");
+      this.addActors("resource://gre/modules/devtools/server/actors/webconsole.js");
+      this.addActors("resource://gre/modules/devtools/server/actors/gcli.js");
+      this.addActors("resource://gre/modules/devtools/server/actors/styleeditor.js");
+      this.registerModule("devtools/server/actors/inspector");
+    }
+    if (!("ContentTabActor" in DebuggerServer)) {
+      this.addActors("resource://gre/modules/devtools/server/actors/childtab.js");
+    }
+  },
+
+  /**
    * Listens on the given port for remote debugger connections.
    *
    * @param aPort int
@@ -393,6 +413,22 @@ var DebuggerServer = {
     return clientTransport;
   },
 
+  /**
+   * In a content child process, create a new connection that exchanges
+   * nsIMessageSender messages with our parent process.
+   *
+   * @param aPrefix
+   *    The prefix we should use in our nsIMessageSender message names and
+   *    actor names. This connection will use messages named
+   *    "debug:<prefix>:packet", and all its actors will have names
+   *    beginning with "<prefix>:".
+   */
+  connectToParent: function(aPrefix, aMessageManager) {
+    this._checkInit();
+
+    let transport = new ChildDebuggerTransport(aMessageManager, aPrefix);
+    return this._onConnection(transport, aPrefix, true);
+  },
 
   // nsIServerSocketListener implementation
 
@@ -436,7 +472,7 @@ var DebuggerServer = {
    * that all our actors have names beginning with |aForwardingPrefix + ':'|.
    * In particular, the root actor's name will be |aForwardingPrefix + ':root'|.
    */
-  _onConnection: function DS_onConnection(aTransport, aForwardingPrefix) {
+  _onConnection: function DS_onConnection(aTransport, aForwardingPrefix, aNoRootActor = false) {
     let connID;
     if (aForwardingPrefix) {
       connID = aForwardingPrefix + ":";
@@ -447,13 +483,15 @@ var DebuggerServer = {
     this._connections[connID] = conn;
 
     // Create a root actor for the connection and send the hello packet.
-    conn.rootActor = this.createRootActor(conn);
-    if (aForwardingPrefix)
-      conn.rootActor.actorID = aForwardingPrefix + ":root";
-    else
-      conn.rootActor.actorID = "root";
-    conn.addActor(conn.rootActor);
-    aTransport.send(conn.rootActor.sayHello());
+    if (!aNoRootActor) {
+      conn.rootActor = this.createRootActor(conn);
+      if (aForwardingPrefix)
+        conn.rootActor.actorID = aForwardingPrefix + ":root";
+      else
+        conn.rootActor.actorID = "root";
+      conn.addActor(conn.rootActor);
+      aTransport.send(conn.rootActor.sayHello());
+    }
     aTransport.ready();
 
     return conn;
