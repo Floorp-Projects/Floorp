@@ -847,6 +847,8 @@ nsFormFillController::Focus(nsIDOMEvent* aEvent)
 
   bool isReadOnly = false;
   input->GetReadOnly(&isReadOnly);
+  if (isReadOnly)
+    return NS_OK;
 
   bool autocomplete = nsContentUtils::IsAutocompleteEnabled(input);
 
@@ -862,7 +864,7 @@ nsFormFillController::Focus(nsIDOMEvent* aEvent)
   nsCOMPtr<nsIFormControl> formControl = do_QueryInterface(input);
   if (isPwmgrInput || (formControl &&
                        formControl->IsSingleLineTextControl(true) &&
-                       (hasList || autocomplete) && !isReadOnly)) {
+                       (hasList || autocomplete))) {
     StartControllingInput(input);
   }
 
