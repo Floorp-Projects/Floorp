@@ -18,6 +18,7 @@
 #include "mozilla/dom/XMLHttpRequestBinding.h"
 #include "mozilla/dom/XMLHttpRequestUploadBinding.h"
 #include "mozilla/dom/URLBinding.h"
+#include "mozilla/dom/WorkerNavigatorBinding.h"
 #include "mozilla/OSFileConstants.h"
 #include "nsTraceRefcnt.h"
 #include "xpcpublic.h"
@@ -397,12 +398,12 @@ private:
     }
 
     if (JSVAL_IS_VOID(scope->mSlots[SLOT_navigator])) {
-      JSObject* navigator = navigator::Create(aCx);
+      nsRefPtr<WorkerNavigator> navigator = WorkerNavigator::Create(aCx, aObj);
       if (!navigator) {
         return false;
       }
 
-      scope->mSlots[SLOT_navigator] = OBJECT_TO_JSVAL(navigator);
+      scope->mSlots[SLOT_navigator] = OBJECT_TO_JSVAL(navigator->GetJSObject());
     }
 
     aVp.set(scope->mSlots[SLOT_navigator]);
@@ -1037,8 +1038,7 @@ CreateDedicatedWorkerGlobalScope(JSContext* aCx)
       !file::InitClasses(aCx, global) ||
       !exceptions::InitClasses(aCx, global) ||
       !location::InitClass(aCx, global) ||
-      !imagedata::InitClass(aCx, global) ||
-      !navigator::InitClass(aCx, global)) {
+      !imagedata::InitClass(aCx, global)) {
     return NULL;
   }
 
@@ -1048,7 +1048,8 @@ CreateDedicatedWorkerGlobalScope(JSContext* aCx)
       !TextEncoderBinding_workers::GetConstructorObject(aCx, global) ||
       !XMLHttpRequestBinding_workers::GetConstructorObject(aCx, global) ||
       !XMLHttpRequestUploadBinding_workers::GetConstructorObject(aCx, global) ||
-      !URLBinding_workers::GetConstructorObject(aCx, global)) {
+      !URLBinding_workers::GetConstructorObject(aCx, global) ||
+      !WorkerNavigatorBinding_workers::GetConstructorObject(aCx, global)) {
     return NULL;
   }
 

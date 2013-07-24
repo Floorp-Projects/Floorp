@@ -369,6 +369,7 @@ webidl_files = \
   WebSocket.webidl \
   WheelEvent.webidl \
   Window.webidl \
+  WorkerNavigator.webidl \
   XMLDocument.webidl \
   XMLHttpRequest.webidl \
   XMLHttpRequestEventTarget.webidl \
