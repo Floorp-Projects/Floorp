@@ -105,9 +105,9 @@ AppsService.prototype = {
           return Services.io.newURI(to, null, null);
         }
       }
-    } else {
-      return null;
     }
+    // No matching redirect.
+    return null;
   },
 
   classID : APPS_SERVICE_CID,
