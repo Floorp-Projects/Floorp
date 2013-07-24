@@ -439,8 +439,7 @@ nsSimplePageSequenceFrame::StartPrint(nsPresContext*    aPresContext,
     }
   }
 
-  mPageNum          = 1;
-  mCurrentPageFrame = mFrames.FirstChild();
+  mPageNum = 1;
 
   if (mTotalPages == -1) {
     mTotalPages = totalPages;
@@ -510,7 +509,6 @@ nsSimplePageSequenceFrame::DetermineWhetherToPrintPage()
       mPrintThisPage = false;
     } else if (mPageNum > mToPageNum) {
       mPageNum++;
-      mCurrentPageFrame = nullptr;
       mPrintThisPage = false;
       return;
     } else {
@@ -547,10 +545,25 @@ nsSimplePageSequenceFrame::DetermineWhetherToPrintPage()
   }
 }
 
+nsIFrame*
+nsSimplePageSequenceFrame::GetCurrentPageFrame()
+{
+  int32_t i = 1;
+  for (nsFrameList::Enumerator childFrames(mFrames); !childFrames.AtEnd();
+       childFrames.Next()) {
+    if (i == mPageNum) {
+      return childFrames.get();
+    }
+    ++i;
+  }
+  return nullptr;
+}
+
 NS_IMETHODIMP
 nsSimplePageSequenceFrame::PrePrintNextPage(nsITimerCallback* aCallback, bool* aDone)
 {
-  if (!mCurrentPageFrame) {
+  nsIFrame* currentPage = GetCurrentPageFrame();
+  if (!currentPage) {
     *aDone = true;
     return NS_ERROR_FAILURE;
   }
@@ -568,7 +581,7 @@ nsSimplePageSequenceFrame::PrePrintNextPage(nsITimerCallback* aCallback, bool* a
   // process for all the canvas.
   if (!mCurrentCanvasListSetup) {
     mCurrentCanvasListSetup = true;
-    GetPrintCanvasElementsInFrame(mCurrentPageFrame, &mCurrentCanvasList);
+    GetPrintCanvasElementsInFrame(currentPage, &mCurrentCanvasList);
 
     if (mCurrentCanvasList.Length() != 0) {
       nsresult rv = NS_OK;
@@ -661,7 +674,8 @@ nsSimplePageSequenceFrame::PrintNextPage()
   // print are 1 and then two (which is different than printing a page range, where
   // the page numbers would have been 2 and then 3)
 
-  if (!mCurrentPageFrame) {
+  nsIFrame* currentPage = GetCurrentPageFrame();
+  if (!currentPage) {
     return NS_ERROR_FAILURE;
   }
 
@@ -686,14 +700,14 @@ nsSimplePageSequenceFrame::PrintNextPage()
     height -= mMargin.top + mMargin.bottom;
     width  -= mMargin.left + mMargin.right;
     nscoord selectionY = height;
-    nsIFrame* conFrame = mCurrentPageFrame->GetFirstPrincipalChild();
+    nsIFrame* conFrame = currentPage->GetFirstPrincipalChild();
     if (mSelectionHeight >= 0) {
       conFrame->SetPosition(conFrame->GetPosition() + nsPoint(0, -mYSelOffset));
       nsContainerFrame::PositionChildViews(conFrame);
     }
 
     // cast the frame to be a page frame
-    nsPageFrame * pf = static_cast<nsPageFrame*>(mCurrentPageFrame);
+    nsPageFrame * pf = static_cast<nsPageFrame*>(currentPage);
     pf->SetPageNumInfo(mPageNum, mTotalPages);
     pf->SetSharedPageData(mPageData);
 
@@ -716,10 +730,9 @@ nsSimplePageSequenceFrame::PrintNextPage()
       dc->CreateRenderingContext(*getter_AddRefs(renderingContext));
       NS_ENSURE_TRUE(renderingContext, NS_ERROR_OUT_OF_MEMORY);
 
-      nsRect drawingRect(nsPoint(0, 0),
-                         mCurrentPageFrame->GetSize());
+      nsRect drawingRect(nsPoint(0, 0), currentPage->GetSize());
       nsRegion drawingRegion(drawingRect);
-      nsLayoutUtils::PaintFrame(renderingContext, mCurrentPageFrame,
+      nsLayoutUtils::PaintFrame(renderingContext, currentPage,
                                 drawingRegion, NS_RGBA(0,0,0,0),
                                 nsLayoutUtils::PAINT_SYNC_DECODE_IMAGES);
 
@@ -754,10 +767,6 @@ nsSimplePageSequenceFrame::DoPageEnd()
   ResetPrintCanvasList();
 
   mPageNum++;
-
-  if (mCurrentPageFrame) {
-    mCurrentPageFrame = mCurrentPageFrame->GetNextSibling();
-  }
   
   return rv;
 }
