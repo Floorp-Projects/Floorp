@@ -104,11 +104,6 @@ this.DOMApplicationRegistry = {
     return AppsUtils.getManifestURLByLocalId(this.webapps, aLocalId);
   },
 
-  getAppFromObserverMessage: function getAppFromObserverMessage(aMessage) {
-    debug("getAppFromObserverMessage " + aMessage);
-    return AppsUtils.getAppFromObserverMessage(this.webapps. aMessage);
-  },
-
   getCoreAppsBasePath: function getCoreAppsBasePath() {
     debug("getCoreAppsBasePath() not yet supported on child!");
     return null;
