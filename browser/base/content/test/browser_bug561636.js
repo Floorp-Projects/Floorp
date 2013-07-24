@@ -374,13 +374,15 @@ function()
   Services.obs.addObserver(gObserver, "invalidformsubmit", false);
 
   tab.linkedBrowser.addEventListener("load", function(e) {
-    let browser = e.currentTarget;
-    browser.removeEventListener("load", arguments.callee, true);
+    // Ignore load events from the iframe.
+    if (tab.linkedBrowser.contentDocument == e.target) {
+      let browser = e.currentTarget;
+      browser.removeEventListener("load", arguments.callee, true);
 
-    isnot(gBrowser.selectedTab.linkedBrowser, browser,
-          "This tab should have been loaded in background");
-    Services.console.logStringMessage("About to click #s on URI: " + browser.contentDocument.location.href);
-    browser.contentDocument.getElementById('s').click();
+      isnot(gBrowser.selectedTab.linkedBrowser, browser,
+            "This tab should have been loaded in background");
+      browser.contentDocument.getElementById('s').click();
+    }
   }, true);
 
   tab.linkedBrowser.loadURI(uri);
