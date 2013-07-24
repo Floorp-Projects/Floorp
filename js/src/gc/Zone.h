@@ -18,8 +18,8 @@
 #include "jsinfer.h"
 #include "jsobj.h"
 
-#include "gc/StoreBuffer.h"
 #include "gc/FindSCCs.h"
+#include "gc/StoreBuffer.h"
 #include "vm/GlobalObject.h"
 #include "vm/RegExpObject.h"
 #include "vm/Shape.h"
