@@ -156,90 +156,43 @@ function waitForTabState(aTab, aState, aCallback) {
   ss.setTabState(aTab, JSON.stringify(aState));
 }
 
-/**
- * Wait for a content -> chrome message.
- */
-function waitForContentMessage(aBrowser, aTopic, aTimeout, aCallback) {
-  let mm = aBrowser.messageManager;
+// waitForSaveState waits for a state write but not necessarily for the state to
+// turn dirty.
+function waitForSaveState(aSaveStateCallback) {
   let observing = false;
-  function removeObserver() {
-    if (!observing)
-      return;
-    mm.removeMessageListener(aTopic, observer);
-    observing = false;
-  }
+  let topic = "sessionstore-state-write";
 
-  let timeout = setTimeout(function () {
-    removeObserver();
-    aCallback(false);
-  }, aTimeout);
-
-  function observer(aSubject, aTopic, aData) {
-    removeObserver();
-    timeout = clearTimeout(timeout);
-    executeSoon(() => aCallback(true));
-  }
-
-  registerCleanupFunction(function() {
-    removeObserver();
-    if (timeout) {
-      clearTimeout(timeout);
-    }
-  });
-
-  observing = true;
-  mm.addMessageListener(aTopic, observer);
-}
-
-function waitForTopic(aTopic, aTimeout, aCallback) {
-  let observing = false;
-  function removeObserver() {
-    if (!observing)
-      return;
-    Services.obs.removeObserver(observer, aTopic);
-    observing = false;
-  }
-
-  let timeout = setTimeout(function () {
-    removeObserver();
-    aCallback(false);
-  }, aTimeout);
-
-  function observer(aSubject, aTopic, aData) {
-    removeObserver();
-    timeout = clearTimeout(timeout);
-    executeSoon(() => aCallback(true));
-  }
-
-  registerCleanupFunction(function() {
-    removeObserver();
-    if (timeout) {
-      clearTimeout(timeout);
-    }
-  });
-
-  observing = true;
-  Services.obs.addObserver(observer, aTopic, false);
-}
-
-/**
- * Wait until session restore has finished collecting its data and is
- * getting ready to write that data ("sessionstore-state-write").
- *
- * This function is meant to be called immediately after the code
- * that will trigger the saving.
- *
- * Note that this does not wait for the disk write to be complete.
- *
- * @param {function} aCallback If sessionstore-state-write is sent
- * within buffering interval + 100 ms, the callback is passed |true|,
- * otherwise, it is passed |false|.
- */
-function waitForSaveState(aCallback) {
-  let timeout = 100 +
+  let sessionSaveTimeout = 1000 +
     Services.prefs.getIntPref("browser.sessionstore.interval");
-  return waitForTopic("sessionstore-state-write", timeout, aCallback);
-}
+
+  function removeObserver() {
+    if (!observing)
+      return;
+    Services.obs.removeObserver(observer, topic);
+    observing = false;
+  }
+
+  let timeout = setTimeout(function () {
+    removeObserver();
+    aSaveStateCallback();
+  }, sessionSaveTimeout);
+
+  function observer(aSubject, aTopic, aData) {
+    removeObserver();
+    timeout = clearTimeout(timeout);
+    executeSoon(aSaveStateCallback);
+  }
+
+  registerCleanupFunction(function() {
+    removeObserver();
+    if (timeout) {
+      clearTimeout(timeout);
+    }
+  });
+
+  observing = true;
+  Services.obs.addObserver(observer, topic, false);
+};
 
 function whenBrowserLoaded(aBrowser, aCallback = next) {
   aBrowser.addEventListener("load", function onLoad() {
