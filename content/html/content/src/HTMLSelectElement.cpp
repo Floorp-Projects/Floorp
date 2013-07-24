@@ -1520,19 +1520,14 @@ HTMLSelectElement::SaveState()
 {
   nsRefPtr<SelectState> state = new SelectState();
 
-  uint32_t len;
-  GetLength(&len);
+  uint32_t len = Length();
 
   for (uint32_t optIndex = 0; optIndex < len; optIndex++) {
-    nsIDOMHTMLOptionElement* option = mOptions->ItemAsOption(optIndex);
-    if (option) {
-      bool isSelected;
-      option->GetSelected(&isSelected);
-      if (isSelected) {
-        nsAutoString value;
-        option->GetValue(value);
-        state->PutOption(optIndex, value);
-      }
+    HTMLOptionElement* option = Item(optIndex);
+    if (option && option->Selected()) {
+      nsAutoString value;
+      option->GetValue(value);
+      state->PutOption(optIndex, value);
     }
   }
 
