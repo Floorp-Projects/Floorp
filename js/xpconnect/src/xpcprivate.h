@@ -595,6 +595,7 @@ public:
 // So, xpconnect can only be used on one JSRuntime within the process.
 
 class XPCJSContextStack;
+class WatchdogManager;
 class XPCJSRuntime : public mozilla::CycleCollectedJSRuntime
 {
 public:
@@ -820,14 +821,7 @@ private:
     XPCJSRuntime(); // no implementation
     XPCJSRuntime(nsXPConnect* aXPConnect);
 
-    // The caller must be holding the GC lock
-    void RescheduleWatchdog(XPCContext* ccx);
-
-    static void WatchdogMain(void *arg);
-
     void ReleaseIncrementally(nsTArray<nsISupports *> &array);
-    bool IsRuntimeActive();
-    PRTime TimeSinceLastRuntimeStateChange();
 
     static const char* mStrings[IDX_TOTAL_COUNT];
     jsid mStrIDs[IDX_TOTAL_COUNT];
@@ -855,13 +849,8 @@ private:
     XPCRootSetElem *mVariantRoots;
     XPCRootSetElem *mWrappedJSRoots;
     XPCRootSetElem *mObjectHolderRoots;
-    PRLock *mWatchdogLock;
-    PRCondVar *mWatchdogWakeup;
-    PRThread *mWatchdogThread;
     nsTArray<xpcGCCallback> extraGCCallbacks;
-    bool mWatchdogHibernating;
-    enum { RUNTIME_ACTIVE, RUNTIME_INACTIVE } mRuntimeState;
-    PRTime mTimeAtLastRuntimeStateChange;
+    nsRefPtr<WatchdogManager> mWatchdogManager;
     JS::GCSliceCallback mPrevGCSliceCallback;
     JSObject* mJunkScope;
 
@@ -886,6 +875,7 @@ private:
 
     StringWrapperEntry mScratchStrings[XPCCCX_STRING_CACHE_SIZE];
 
+    friend class Watchdog;
     friend class AutoLockWatchdog;
     friend class XPCIncrementalReleaseRunnable;
 };
