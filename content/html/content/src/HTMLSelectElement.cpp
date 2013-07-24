@@ -816,12 +816,8 @@ HTMLSelectElement::GetOptionIndex(nsIDOMHTMLOptionElement* aOption,
 bool
 HTMLSelectElement::IsOptionSelectedByIndex(int32_t aIndex)
 {
-  nsIDOMHTMLOptionElement* option = mOptions->ItemAsOption(aIndex);
-  bool isSelected = false;
-  if (option) {
-    option->GetSelected(&isSelected);
-  }
-  return isSelected;
+  HTMLOptionElement* option = Item(static_cast<uint32_t>(aIndex));
+  return option && option->Selected();
 }
 
 void
