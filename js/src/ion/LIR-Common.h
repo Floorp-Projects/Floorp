@@ -4348,18 +4348,6 @@ class LGuardThreadLocalObject : public LCallInstructionHelper<0, 2, 1>
     }
 };
 
-class LDumpPar : public LCallInstructionHelper<0, BOX_PIECES, 0>
-{
-  public:
-    LIR_HEADER(DumpPar);
-
-    static const size_t Value = 0;
-
-    const LAllocation *value() {
-        return getOperand(0);
-    }
-};
-
 // Guard that a value is in a TypeSet.
 class LTypeBarrier : public LInstructionHelper<0, BOX_PIECES, 1>
 {

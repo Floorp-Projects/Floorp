@@ -195,7 +195,6 @@ namespace ion {
     _(RestPar)                                                              \
     _(ForkJoinSlice)                                                        \
     _(GuardThreadLocalObject)                                               \
-    _(DumpPar)                                                              \
     _(CheckInterruptPar)
 
 // Forward declarations of MIR types.

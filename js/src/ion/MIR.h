@@ -7379,28 +7379,6 @@ class MGuardThreadLocalObject
     }
 };
 
-class MDumpPar
-  : public MUnaryInstruction,
-    public BoxPolicy<0>
-{
-  public:
-    INSTRUCTION_HEADER(DumpPar);
-
-    MDumpPar(MDefinition *v)
-      : MUnaryInstruction(v)
-    {
-        setResultType(MIRType_None);
-    }
-
-    MDefinition *value() const {
-        return getOperand(0);
-    }
-
-    TypePolicy *typePolicy() {
-        return this;
-    }
-};
-
 // Given a value, guard that the value is in a particular TypeSet, then returns
 // that value.
 class MTypeBarrier
