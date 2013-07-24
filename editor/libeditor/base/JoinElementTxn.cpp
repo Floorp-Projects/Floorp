@@ -93,7 +93,7 @@ NS_IMETHODIMP JoinElementTxn::DoTransaction(void)
 
   nsresult rv = mEditor->JoinNodesImpl(mRightNode->AsDOMNode(),
                                        mLeftNode->AsDOMNode(),
-                                       mParent->AsDOMNode(), false);
+                                       mParent->AsDOMNode());
 
 #ifdef DEBUG
   if (NS_SUCCEEDED(rv) && gNoisy) {

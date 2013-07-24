@@ -2841,8 +2841,7 @@ nsEditor::SplitNodeImpl(nsIDOMNode * aExistingRightNode,
 nsresult
 nsEditor::JoinNodesImpl(nsIDOMNode * aNodeToKeep,
                         nsIDOMNode * aNodeToJoin,
-                        nsIDOMNode * aParent,
-                        bool         aNodeToKeepIsFirst)
+                        nsIDOMNode * aParent)
 {
   NS_ASSERTION(aNodeToKeep && aNodeToJoin && aParent, "null arg");
   nsresult result = NS_OK;
@@ -2862,11 +2861,7 @@ nsEditor::JoinNodesImpl(nsIDOMNode * aNodeToKeep,
     // Joe or Kin should comment here on why the following line is not a copy/paste error
     if (NS_FAILED(result)) selStartNode = nullptr;
 
-    nsCOMPtr<nsIDOMNode> leftNode;
-    if (aNodeToKeepIsFirst)
-      leftNode = aNodeToKeep;
-    else
-      leftNode = aNodeToJoin;
+    nsCOMPtr<nsIDOMNode> leftNode = aNodeToJoin;
 
     uint32_t firstNodeLength;
     result = GetLengthOfDOMNode(leftNode, firstNodeLength);
@@ -2881,40 +2876,18 @@ nsEditor::JoinNodesImpl(nsIDOMNode * aNodeToKeep,
     {
       if (selStartNode == parent)
       {
-        if (aNodeToKeepIsFirst)
+        if ((selStartOffset > joinOffset) && (selStartOffset <= keepOffset))
         {
-          if ((selStartOffset > keepOffset) && (selStartOffset <= joinOffset))
-          {
-            selStartNode = aNodeToJoin; 
-            selStartOffset = 0;
-          }
-        }
-        else
-        {
-          if ((selStartOffset > joinOffset) && (selStartOffset <= keepOffset))
-          {
-            selStartNode = aNodeToJoin; 
-            selStartOffset = firstNodeLength;
-          }
+          selStartNode = aNodeToJoin;
+          selStartOffset = firstNodeLength;
         }
       }
       if (selEndNode == parent)
       {
-        if (aNodeToKeepIsFirst)
+        if ((selEndOffset > joinOffset) && (selEndOffset <= keepOffset))
         {
-          if ((selEndOffset > keepOffset) && (selEndOffset <= joinOffset))
-          {
-            selEndNode = aNodeToJoin; 
-            selEndOffset = 0;
-          }
-        }
-        else
-        {
-          if ((selEndOffset > joinOffset) && (selEndOffset <= keepOffset))
-          {
-            selEndNode = aNodeToJoin; 
-            selEndOffset = firstNodeLength;
-          }
+          selEndNode = aNodeToJoin;
+          selEndOffset = firstNodeLength;
         }
       }
     }
@@ -2926,16 +2899,8 @@ nsEditor::JoinNodesImpl(nsIDOMNode * aNodeToKeep,
     {
       nsAutoString rightText;
       nsAutoString leftText;
-      if (aNodeToKeepIsFirst)
-      {
-        keepNodeAsText->GetData(leftText);
-        joinNodeAsText->GetData(rightText);
-      }
-      else
-      {
-        keepNodeAsText->GetData(rightText);
-        joinNodeAsText->GetData(leftText);
-      }
+      keepNodeAsText->GetData(rightText);
+      joinNodeAsText->GetData(leftText);
       leftText += rightText;
       keepNodeAsText->SetData(leftText);          
     }
@@ -2947,13 +2912,11 @@ nsEditor::JoinNodesImpl(nsIDOMNode * aNodeToKeep,
       {
         int32_t i;  // must be signed int!
         uint32_t childCount=0;
-        nsCOMPtr<nsIDOMNode> firstNode; //only used if aNodeToKeepIsFirst is false
+        nsCOMPtr<nsIDOMNode> firstNode;
         childNodes->GetLength(&childCount);
-        if (!aNodeToKeepIsFirst)
-        { // remember the first child in aNodeToKeep, we'll insert all the children of aNodeToJoin in front of it
-          result = aNodeToKeep->GetFirstChild(getter_AddRefs(firstNode));  
-          // GetFirstChild returns nullptr firstNode if aNodeToKeep has no children, that's ok.
-        }
+        // remember the first child in aNodeToKeep, we'll insert all the children of aNodeToJoin in front of it
+        result = aNodeToKeep->GetFirstChild(getter_AddRefs(firstNode));
+        // GetFirstChild returns nullptr firstNode if aNodeToKeep has no children, that's ok.
         nsCOMPtr<nsIDOMNode> resultNode;
         // have to go through the list backwards to keep deletes from interfering with iteration
         nsCOMPtr<nsIDOMNode> previousChild;
@@ -2963,17 +2926,9 @@ nsEditor::JoinNodesImpl(nsIDOMNode * aNodeToKeep,
           result = childNodes->Item(i, getter_AddRefs(childNode));
           if ((NS_SUCCEEDED(result)) && (childNode))
           {
-            if (aNodeToKeepIsFirst)
-            { // append children of aNodeToJoin
-              //was result = aNodeToKeep->AppendChild(childNode, getter_AddRefs(resultNode));
-              result = aNodeToKeep->InsertBefore(childNode, previousChild, getter_AddRefs(resultNode));
-              previousChild = do_QueryInterface(childNode);
-            }
-            else
-            { // prepend children of aNodeToJoin
-              result = aNodeToKeep->InsertBefore(childNode, firstNode, getter_AddRefs(resultNode));
-              firstNode = do_QueryInterface(childNode);
-            }
+            // prepend children of aNodeToJoin
+            result = aNodeToKeep->InsertBefore(childNode, firstNode, getter_AddRefs(resultNode));
+            firstNode = do_QueryInterface(childNode);
           }
         }
       }
@@ -3002,12 +2957,8 @@ nsEditor::JoinNodesImpl(nsIDOMNode * aNodeToKeep,
         {
           bNeedToAdjust = true;
           selStartNode = aNodeToKeep;
-          if (aNodeToKeepIsFirst)
-          {
-            selStartOffset += firstNodeLength;
-          }
         }
-        else if ((selStartNode.get() == aNodeToKeep) && !aNodeToKeepIsFirst)
+        else if (selStartNode.get() == aNodeToKeep)
         {
           bNeedToAdjust = true;
           selStartOffset += firstNodeLength;
@@ -3018,12 +2969,8 @@ nsEditor::JoinNodesImpl(nsIDOMNode * aNodeToKeep,
         {
           bNeedToAdjust = true;
           selEndNode = aNodeToKeep;
-          if (aNodeToKeepIsFirst)
-          {
-            selEndOffset += firstNodeLength;
-          }
         }
-        else if ((selEndNode.get() == aNodeToKeep) && !aNodeToKeepIsFirst)
+        else if (selEndNode.get() == aNodeToKeep)
         {
           bNeedToAdjust = true;
           selEndOffset += firstNodeLength;
