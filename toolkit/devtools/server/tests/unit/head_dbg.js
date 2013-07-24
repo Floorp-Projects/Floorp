@@ -330,3 +330,8 @@ TracingTransport.prototype = {
     }
   }
 };
+
+function StubTransport() { }
+StubTransport.prototype.ready = function () {};
+StubTransport.prototype.send  = function () {};
+StubTransport.prototype.close = function () {};
