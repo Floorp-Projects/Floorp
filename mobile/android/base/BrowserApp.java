@@ -1105,7 +1105,7 @@ abstract public class BrowserApp extends GeckoApp
 
     @Override
     public void addTab() {
-        enterEditingMode(EditingTarget.NEW_TAB);
+        Tabs.getInstance().loadUrl("about:home", Tabs.LOADURL_NEW_TAB);
     }
 
     @Override
