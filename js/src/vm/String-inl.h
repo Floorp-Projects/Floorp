@@ -12,6 +12,7 @@
 #include "mozilla/PodOperations.h"
 
 #include "jscntxt.h"
+
 #include "gc/Marking.h"
 
 #include "jsgcinlines.h"

@@ -6,13 +6,13 @@
 
 #include "jscntxt.h"
 #include "jscompartment.h"
-#include "jsobj.h"
 #include "jsfriendapi.h"
+#include "jsobj.h"
+#include "selfhosted.out.h"
 
 #include "builtin/Intl.h"
 #include "builtin/ParallelArray.h"
 #include "gc/Marking.h"
-
 #include "vm/ForkJoin.h"
 #include "vm/Interpreter.h"
 
@@ -21,8 +21,6 @@
 #include "vm/BooleanObject-inl.h"
 #include "vm/NumberObject-inl.h"
 #include "vm/StringObject-inl.h"
-
-#include "selfhosted.out.h"
 
 using namespace js;
 using namespace js::selfhosted;

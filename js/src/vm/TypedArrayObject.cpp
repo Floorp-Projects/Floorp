@@ -6,21 +6,27 @@
 
 #include "vm/TypedArrayObject.h"
 
-#include <string.h>
-
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/PodOperations.h"
 
-#include "jstypes.h"
-#include "jsutil.h"
+#include <string.h>
+#ifndef XP_WIN
+# include <sys/mman.h>
+#endif
+
 #include "jsapi.h"
 #include "jsarray.h"
 #include "jscntxt.h"
 #include "jscpucfg.h"
-#include "jsversion.h"
 #include "jsgc.h"
 #include "jsnum.h"
 #include "jsobj.h"
+#include "jstypes.h"
+#include "jsutil.h"
+#include "jsversion.h"
+#ifdef XP_WIN
+# include "jswin.h"
+#endif
 #include "jswrapper.h"
 
 #include "gc/Barrier.h"
@@ -35,12 +41,6 @@
 #include "jsobjinlines.h"
 
 #include "vm/GlobalObject-inl.h"
-
-# ifdef XP_WIN
-#  include "jswin.h"
-# else
-#  include <sys/mman.h>
-# endif
 
 #if USE_NEW_OBJECT_REPRESENTATION
 // See the comment above OldObjectRepresentationHack.
