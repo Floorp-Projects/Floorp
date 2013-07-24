@@ -227,6 +227,14 @@ this.Utils = {
       return new Rect(objX.value, objY.value, objW.value, objH.value);
   },
 
+  getTextBounds: function getTextBounds(aAccessible, aStart, aEnd) {
+      let accText = aAccessible.QueryInterface(Ci.nsIAccessibleText);
+      let objX = {}, objY = {}, objW = {}, objH = {};
+      accText.getRangeExtents(aStart, aEnd, objX, objY, objW, objH,
+                              Ci.nsIAccessibleCoordinateType.COORDTYPE_SCREEN_RELATIVE);
+      return new Rect(objX.value, objY.value, objW.value, objH.value);
+  },
+
   inHiddenSubtree: function inHiddenSubtree(aAccessible) {
     for (let acc=aAccessible; acc; acc=acc.parent) {
       let hidden = Utils.getAttributes(acc).hidden;
@@ -413,10 +421,13 @@ this.Logger = {
  * PivotContext: An object that generates and caches context information
  * for a given accessible and its relationship with another accessible.
  */
-this.PivotContext = function PivotContext(aAccessible, aOldAccessible) {
+this.PivotContext = function PivotContext(aAccessible, aOldAccessible,
+                                          aStartOffset, aEndOffset) {
   this._accessible = aAccessible;
   this._oldAccessible =
     this._isDefunct(aOldAccessible) ? null : aOldAccessible;
+  this.startOffset = aStartOffset;
+  this.endOffset = aEndOffset;
 }
 
 PivotContext.prototype = {
@@ -426,6 +437,45 @@ PivotContext.prototype = {
 
   get oldAccessible() {
     return this._oldAccessible;
+  },
+
+  get textAndAdjustedOffsets() {
+    if (this.startOffset === -1 && this.endOffset === -1) {
+      return null;
+    }
+
+    if (!this._textAndAdjustedOffsets) {
+      let result = {startOffset: this.startOffset,
+                    endOffset: this.endOffset,
+                    text: this._accessible.QueryInterface(Ci.nsIAccessibleText).
+                          getText(0, Ci.nsIAccessibleText.TEXT_OFFSET_END_OF_TEXT)};
+      let hypertextAcc = this._accessible.QueryInterface(Ci.nsIAccessibleHyperText);
+
+      // Iterate through the links in backwards order so text replacements don't
+      // affect the offsets of links yet to be processed.
+      for (let i = hypertextAcc.linkCount - 1; i >= 0; i--) {
+        let link = hypertextAcc.getLinkAt(i);
+        let linkText = '';
+        if (link instanceof Ci.nsIAccessibleText) {
+          linkText = link.QueryInterface(Ci.nsIAccessibleText).
+                          getText(0, Ci.nsIAccessibleText.TEXT_OFFSET_END_OF_TEXT);
+        }
+
+        let start = link.startIndex;
+        let end = link.endIndex;
+        for (let offset of ['startOffset', 'endOffset']) {
+          if (this[offset] >= end) {
+            result[offset] += linkText.length - (end - start);
+          }
+        }
+        result.text = result.text.substring(0, start) + linkText +
+                      result.text.substring(end);
+      }
+
+      this._textAndAdjustedOffsets = result;
+    }
+
+    return this._textAndAdjustedOffsets;
   },
 
   /**
