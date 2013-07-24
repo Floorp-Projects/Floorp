@@ -596,6 +596,16 @@ public:
 
 class XPCJSContextStack;
 class WatchdogManager;
+
+enum WatchdogTimestampCategory
+{
+    TimestampRuntimeStateChange = 0,
+    TimestampWatchdogWakeup,
+    TimestampWatchdogHibernateStart,
+    TimestampWatchdogHibernateStop,
+    TimestampCount
+};
+
 class XPCJSRuntime : public mozilla::CycleCollectedJSRuntime
 {
 public:
@@ -817,6 +827,9 @@ public:
 
     JSObject* GetJunkScope();
     void DeleteJunkScope();
+
+    PRTime GetWatchdogTimestamp(WatchdogTimestampCategory aCategory);
+
 private:
     XPCJSRuntime(); // no implementation
     XPCJSRuntime(nsXPConnect* aXPConnect);

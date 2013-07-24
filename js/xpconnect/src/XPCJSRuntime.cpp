@@ -995,11 +995,15 @@ class Watchdog
 class WatchdogManager : public nsIObserver
 {
   public:
+
     NS_DECL_ISUPPORTS
     WatchdogManager(XPCJSRuntime *aRuntime) : mRuntime(aRuntime)
                                             , mRuntimeState(RUNTIME_INACTIVE)
-                                            , mTimeAtLastRuntimeStateChange(PR_Now())
     {
+        // All the timestamps start at zero except for runtime state change.
+        PodArrayZero(mTimestamps);
+        mTimestamps[TimestampRuntimeStateChange] = PR_Now();
+
         // Enable the watchdog, if appropriate.
         RefreshWatchdog();
 
@@ -1029,12 +1033,13 @@ class WatchdogManager : public nsIObserver
     RecordRuntimeActivity(bool active)
     {
         // The watchdog reads this state, so acquire the lock before writing it.
+        MOZ_ASSERT(NS_IsMainThread());
         Maybe<AutoLockWatchdog> lock;
         if (mWatchdog)
             lock.construct(mWatchdog);
 
         // Write state.
-        mTimeAtLastRuntimeStateChange = PR_Now();
+        mTimestamps[TimestampRuntimeStateChange] = PR_Now();
         mRuntimeState = active ? RUNTIME_ACTIVE : RUNTIME_INACTIVE;
 
         // The watchdog may be hibernating, waiting for the runtime to go
@@ -1045,7 +1050,26 @@ class WatchdogManager : public nsIObserver
     bool IsRuntimeActive() { return mRuntimeState == RUNTIME_ACTIVE; }
     PRTime TimeSinceLastRuntimeStateChange()
     {
-        return PR_Now() - mTimeAtLastRuntimeStateChange;
+        return PR_Now() - GetTimestamp(TimestampRuntimeStateChange);
+    }
+
+    // Note - Because of the runtime activity timestamp, these are read and
+    // written from both threads.
+    void RecordTimestamp(WatchdogTimestampCategory aCategory)
+    {
+        // The watchdog thread always holds the lock when it runs.
+        Maybe<AutoLockWatchdog> maybeLock;
+        if (NS_IsMainThread() && mWatchdog)
+            maybeLock.construct(mWatchdog);
+        mTimestamps[aCategory] = PR_Now();
+    }
+    PRTime GetTimestamp(WatchdogTimestampCategory aCategory)
+    {
+        // The watchdog thread always holds the lock when it runs.
+        Maybe<AutoLockWatchdog> maybeLock;
+        if (NS_IsMainThread() && mWatchdog)
+            maybeLock.construct(mWatchdog);
+        return mTimestamps[aCategory];
     }
 
     XPCJSRuntime* Runtime() { return mRuntime; }
@@ -1081,7 +1105,7 @@ class WatchdogManager : public nsIObserver
     nsAutoPtr<Watchdog> mWatchdog;
 
     enum { RUNTIME_ACTIVE, RUNTIME_INACTIVE } mRuntimeState;
-    PRTime mTimeAtLastRuntimeStateChange;
+    PRTime mTimestamps[TimestampCount];
 };
 
 NS_IMPL_ISUPPORTS1(WatchdogManager, nsIObserver)
@@ -1116,8 +1140,13 @@ WatchdogMain(void *arg)
         {
             self->Sleep(PR_TicksPerSecond());
         } else {
+            manager->RecordTimestamp(TimestampWatchdogHibernateStart);
             self->Hibernate();
+            manager->RecordTimestamp(TimestampWatchdogHibernateStop);
         }
+
+        // Rise and shine.
+        manager->RecordTimestamp(TimestampWatchdogWakeup);
 
         // Don't trigger the operation callback if activity started less than one second ago.
         // The callback is only used for detecting long running scripts, and triggering the
@@ -1131,6 +1160,12 @@ WatchdogMain(void *arg)
 
     // Tell the manager that we've shut down.
     self->Finished();
+}
+
+PRTime
+XPCJSRuntime::GetWatchdogTimestamp(WatchdogTimestampCategory aCategory)
+{
+    return mWatchdogManager->GetTimestamp(aCategory);
 }
 
 //static
