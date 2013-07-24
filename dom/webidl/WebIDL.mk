@@ -181,6 +181,7 @@ webidl_files = \
   MediaSource.webidl \
   MediaStream.webidl \
   MediaStreamAudioDestinationNode.webidl \
+  MediaStreamAudioSourceNode.webidl \
   MediaStreamEvent.webidl \
   MediaStreamTrack.webidl \
   MessageEvent.webidl \
