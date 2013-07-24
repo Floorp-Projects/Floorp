@@ -12,32 +12,29 @@ let gUpdater = {
   /**
    * Updates the current grid according to its pinned and blocked sites.
    * This removes old, moves existing and creates new sites to fill gaps.
-   * @param aCallback The callback to call when finished.
    */
-  updateGrid: function Updater_updateGrid(aCallback) {
+  updateGrid: function Updater_updateGrid() {
     let links = gLinks.getLinks().slice(0, gGrid.cells.length);
 
     // Find all sites that remain in the grid.
     let sites = this._findRemainingSites(links);
 
-    let self = this;
-
     // Remove sites that are no longer in the grid.
-    this._removeLegacySites(sites, function () {
+    this._removeLegacySites(sites).then(() => {
       // Freeze all site positions so that we can move their DOM nodes around
       // without any visual impact.
-      self._freezeSitePositions(sites);
+      this._freezeSitePositions(sites);
 
       // Move the sites' DOM nodes to their new position in the DOM. This will
       // have no visual effect as all the sites have been frozen and will
       // remain in their current position.
-      self._moveSiteNodes(sites);
+      this._moveSiteNodes(sites);
 
       // Now it's time to animate the sites actually moving to their new
       // positions.
-      self._rearrangeSites(sites, function () {
+      this._rearrangeSites(sites).then(() => {
         // Try to fill empty cells and finish.
-        self._fillEmptyCells(links, aCallback);
+        this._fillEmptyCells(links);
 
         // Update other pages that might be open to keep them synced.
         gAllPages.update(gPage);
@@ -112,75 +109,57 @@ let gUpdater = {
   /**
    * Rearranges the given sites and slides them to their new positions.
    * @param aSites The array of sites to re-arrange.
-   * @param aCallback The callback to call when finished.
    */
-  _rearrangeSites: function Updater_rearrangeSites(aSites, aCallback) {
-    let options = {callback: aCallback, unfreeze: true};
-    gTransformation.rearrangeSites(aSites, options);
+  _rearrangeSites: function (aSites) {
+    return gTransformation.rearrangeSites(aSites, {unfreeze: true});
   },
 
   /**
    * Removes all sites from the grid that are not in the given links array or
    * exceed the grid.
    * @param aSites The array of sites remaining in the grid.
-   * @param aCallback The callback to call when finished.
    */
-  _removeLegacySites: function Updater_removeLegacySites(aSites, aCallback) {
-    let batch = [];
+  _removeLegacySites: function (aSites) {
+    let remainingSites = new Set(aSites);
 
-    // Delete sites that were removed from the grid.
-    gGrid.sites.forEach(function (aSite) {
-      // The site must be valid and not in the current grid.
-      if (!aSite || aSites.indexOf(aSite) != -1)
-        return;
+    function promises() {
+      for (let site of gGrid.sites) {
+        // The site must be valid and not in the current grid.
+        if (site && !remainingSites.has(site)) {
+          // Hide the site and remove it from the DOM.
+          let remove = site.node.remove.bind(site.node);
+          yield gTransformation.hideSite(site).then(remove);
+        }
+      }
+    }
 
-      let deferred = Promise.defer();
-      batch.push(deferred.promise);
-
-      // Fade out the to-be-removed site.
-      gTransformation.hideSite(aSite, function () {
-        let node = aSite.node;
-
-        // Remove the site from the DOM.
-        node.parentNode.removeChild(node);
-        deferred.resolve();
-      });
-    });
-
-    let wait = Promise.promised(aCallback);
-    wait.apply(null, batch);
+    return Promise.every([p for (p of promises())]);
   },
 
   /**
    * Tries to fill empty cells with new links if available.
    * @param aLinks The array of links.
-   * @param aCallback The callback to call when finished.
    */
-  _fillEmptyCells: function Updater_fillEmptyCells(aLinks, aCallback) {
+  _fillEmptyCells: function (aLinks) {
     let {cells, sites} = gGrid;
-    let batch = [];
+    let index = 0;
 
     // Find empty cells and fill them.
-    sites.forEach(function (aSite, aIndex) {
-      if (aSite || !aLinks[aIndex])
-        return;
+    for (let site of sites) {
+      if (!site && aLinks[index]) {
+        // Create the new site and fade it in.
+        site = gGrid.createSite(aLinks[index], cells[index]);
 
-      let deferred = Promise.defer();
-      batch.push(deferred.promise);
+        // Set the site's initial opacity to zero.
+        site.node.style.opacity = 0;
 
-      // Create the new site and fade it in.
-      let site = gGrid.createSite(aLinks[aIndex], cells[aIndex]);
+        // Flush all style changes for the dynamically inserted site to make
+        // the fade-in transition work.
+        window.getComputedStyle(site.node).opacity;
+        gTransformation.showSite(site);
+      }
 
-      // Set the site's initial opacity to zero.
-      site.node.style.opacity = 0;
-
-      // Flush all style changes for the dynamically inserted site to make
-      // the fade-in transition work.
-      window.getComputedStyle(site.node).opacity;
-      gTransformation.showSite(site, function () deferred.resolve());
-    });
-
-    let wait = Promise.promised(aCallback);
-    wait.apply(null, batch);
+      index++;
+    }
   }
 };
