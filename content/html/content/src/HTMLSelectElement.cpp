@@ -837,12 +837,9 @@ HTMLSelectElement::OnOptionSelected(nsISelectControlFrame* aSelectFrame,
 
   if (aChangeOptionState) {
     // Tell the option to get its bad self selected
-    nsCOMPtr<nsIDOMNode> option;
-    Item(aIndex, getter_AddRefs(option));
+    nsRefPtr<HTMLOptionElement> option = Item(static_cast<uint32_t>(aIndex));
     if (option) {
-      nsRefPtr<HTMLOptionElement> optionElement =
-        static_cast<HTMLOptionElement*>(option.get());
-      optionElement->SetSelectedInternal(aSelected, aNotify);
+      option->SetSelectedInternal(aSelected, aNotify);
     }
   }
 
