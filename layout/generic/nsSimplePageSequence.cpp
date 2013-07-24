@@ -63,6 +63,8 @@ nsSharedPageData::nsSharedPageData() :
   mHeadFootFont(nullptr),
   mPageNumFormat(nullptr),
   mPageNumAndTotalsFormat(nullptr),
+  mDocTitle(nullptr),
+  mDocURL(nullptr),
   mReflowSize(0,0),
   mReflowMargin(0,0,0,0),
   mEdgePaperMargin(0,0,0,0),
@@ -77,6 +79,8 @@ nsSharedPageData::~nsSharedPageData()
   delete mHeadFootFont;
   nsMemory::Free(mPageNumFormat);
   nsMemory::Free(mPageNumAndTotalsFormat);
+  if (mDocTitle) nsMemory::Free(mDocTitle);
+  if (mDocURL) nsMemory::Free(mDocURL);
 }
 
 nsIFrame*
@@ -399,10 +403,10 @@ nsSimplePageSequenceFrame::SetPageNumberFormat(const char* aPropName, const char
 }
 
 NS_IMETHODIMP
-nsSimplePageSequenceFrame::StartPrint(nsPresContext*    aPresContext,
+nsSimplePageSequenceFrame::StartPrint(nsPresContext*   aPresContext,
                                       nsIPrintSettings* aPrintSettings,
-                                      const nsAString&  aDocTitle,
-                                      const nsAString&  aDocURL)
+                                      PRUnichar*        aDocTitle,
+                                      PRUnichar*        aDocURL)
 {
   NS_ENSURE_ARG_POINTER(aPresContext);
   NS_ENSURE_ARG_POINTER(aPrintSettings);
@@ -411,12 +415,9 @@ nsSimplePageSequenceFrame::StartPrint(nsPresContext*    aPresContext,
     mPageData->mPrintSettings = aPrintSettings;
   }
 
-  if (!aDocTitle.IsEmpty()) {
-    mPageData->mDocTitle = aDocTitle;
-  }
-  if (!aDocURL.IsEmpty()) {
-    mPageData->mDocURL = aDocURL;
-  }
+  // Only set them if they are not null
+  if (aDocTitle) mPageData->mDocTitle = aDocTitle;
+  if (aDocURL) mPageData->mDocURL   = aDocURL;
 
   aPrintSettings->GetStartPageRange(&mFromPageNum);
   aPrintSettings->GetEndPageRange(&mToPageNum);

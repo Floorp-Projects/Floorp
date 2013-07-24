@@ -161,7 +161,7 @@ NS_IMETHODIMP nsDeviceContextSpecQt::GetPath(const char** aPath)
 }
 
 NS_IMETHODIMP nsDeviceContextSpecQt::BeginDocument(
-        const nsAString& aTitle,
+        PRUnichar* aTitle,
         PRUnichar* aPrintToFileName,
         int32_t aStartPage,
         int32_t aEndPage)

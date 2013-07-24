@@ -41,6 +41,15 @@ public:
 
   typedef enum {eIsPrinting, eIsPrintPreview } ePrintDataType;
 
+  // This enum tells indicates what the default should be for the title
+  // if the title from the document is null
+  enum eDocTitleDefault {
+    eDocTitleDefNone,
+    eDocTitleDefBlank,
+    eDocTitleDefURLDoc
+  };
+
+
   nsPrintData(ePrintDataType aType);
   ~nsPrintData(); // non-virtual
 
