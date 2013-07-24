@@ -1622,10 +1622,11 @@ MConstant::truncate()
         return false;
 
     // Truncate the double to int, since all uses truncates it.
-    value_.setInt32(ToInt32(value_.toDouble()));
+    int32_t res = ToInt32(value_.toDouble());
+    value_.setInt32(res);
     setResultType(MIRType_Int32);
     if (range())
-        range()->clampToInt32();
+        range()->set(res, res);
     return true;
 }
 
