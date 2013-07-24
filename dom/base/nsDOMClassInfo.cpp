@@ -4760,94 +4760,6 @@ nsStringListSH::GetStringAt(nsISupports *aNative, int32_t aIndex,
 }
 
 
-// Named Array helper
-
-NS_IMETHODIMP
-nsNamedArraySH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                           JSObject *aObj, jsid aId, uint32_t flags,
-                           JSObject **objp, bool *_retval)
-{
-  JS::Rooted<JSObject*> obj(cx, aObj);
-  JS::Rooted<jsid> id(cx, aId);
-  if ((!(JSRESOLVE_ASSIGNING & flags)) && JSID_IS_STRING(id) &&
-      !ObjectIsNativeWrapper(cx, obj)) {
-
-    {
-      JS::Rooted<JSObject*> realObj(cx, wrapper ? wrapper->GetJSObject() : obj);
-
-      JSAutoCompartment ac(cx, realObj);
-      JS::Rooted<JSObject*> proto(cx);
-      if (!::JS_GetPrototype(cx, realObj, proto.address())) {
-        return NS_ERROR_FAILURE;
-      }
-
-      if (proto) {
-        JSBool hasProp;
-        if (!::JS_HasPropertyById(cx, proto, id, &hasProp)) {
-          *_retval = false;
-          return NS_ERROR_FAILURE;
-        }
-
-        if (hasProp) {
-          // We found the property we're resolving on the prototype,
-          // nothing left to do here then.
-          return NS_OK;
-        }
-      }
-    }
-
-    // Make sure rv == NS_OK here, so GetNamedItem implementations
-    // that never fail don't have to set rv.
-    nsresult rv = NS_OK;
-    nsWrapperCache *cache;
-
-    nsISupports* item = GetNamedItem(GetNative(wrapper, obj),
-                                     nsDependentJSString(id), &cache, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (item) {
-      *_retval = ::JS_DefinePropertyById(cx, obj, id, JSVAL_VOID, nullptr,
-                                         nullptr, JSPROP_ENUMERATE | JSPROP_SHARED);
-
-      *objp = obj;
-
-      return *_retval ? NS_OK : NS_ERROR_FAILURE;
-    }
-  }
-
-  return nsArraySH::NewResolve(wrapper, cx, obj, id, flags, objp, _retval);
-}
-
-NS_IMETHODIMP
-nsNamedArraySH::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                            JSObject *aObj, jsid aId, jsval *vp,
-                            bool *_retval)
-{
-  JS::Rooted<JSObject*> obj(cx, aObj);
-  JS::Rooted<jsid> id(cx, aId);
-  if (JSID_IS_STRING(id) && !ObjectIsNativeWrapper(cx, obj)) {
-    nsresult rv = NS_OK;
-    nsWrapperCache *cache = nullptr;
-    nsISupports* item = GetNamedItem(GetNative(wrapper, obj),
-                                     nsDependentJSString(id), &cache, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (item) {
-      rv = WrapNative(cx, JS_GetGlobalForScopeChain(cx), item, cache,
-                      true, vp);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      rv = NS_SUCCESS_I_DID_SOMETHING;
-    }
-
-    // Don't fall through to nsArraySH::GetProperty() here
-    return rv;
-  }
-
-  return nsArraySH::GetProperty(wrapper, cx, obj, id, vp, _retval);
-}
-
-
 // HTMLAllCollection
 
 JSClass sHTMLDocumentAllClass = {
@@ -5264,7 +5176,7 @@ nsCSSRuleListSH::GetItemAt(nsISupports *aNative, uint32_t aIndex,
   }
 #endif
 
-  return list->GetItemAt(aIndex, aResult);
+  return list->Item(aIndex);
 }
 
 

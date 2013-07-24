@@ -17,5 +17,4 @@
 #
 # Modifying this file will now automatically clobber the buildbot machines \o/
 #
-Bug 886886 - replace fixed-ratio capture resampler in webrtc with speex resampler
-Requires a clobber due to modification of a .gypi file without a .gyp or configure.in change
+Bug 878600 requires a clobber on Windows due to bug 890744

@@ -1,12 +1,13 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Provides checked integers, detecting integer overflow and divide-by-0. */
 
-#ifndef mozilla_CheckedInt_h_
-#define mozilla_CheckedInt_h_
+#ifndef mozilla_CheckedInt_h
+#define mozilla_CheckedInt_h
 
 // Enable relying of Mozilla's MFBT for possibly-available C++11 features
 #define MOZ_CHECKEDINT_USE_MFBT
@@ -875,4 +876,4 @@ typedef CheckedInt<uint64_t> CheckedUint64;
 
 } // namespace mozilla
 
-#endif /* mozilla_CheckedInt_h_ */
+#endif /* mozilla_CheckedInt_h */

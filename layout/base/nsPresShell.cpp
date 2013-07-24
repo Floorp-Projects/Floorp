@@ -3512,8 +3512,6 @@ nsIPresShell::ClearMouseCapture(nsIFrame* aFrame)
 nsresult
 PresShell::CaptureHistoryState(nsILayoutHistoryState** aState)
 {
-  nsresult rv = NS_OK;
-
   NS_PRECONDITION(nullptr != aState, "null state pointer");
 
   // We actually have to mess with the docshell here, since we want to
@@ -3534,13 +3532,7 @@ PresShell::CaptureHistoryState(nsILayoutHistoryState** aState)
   docShell->GetLayoutHistoryState(getter_AddRefs(historyState));
   if (!historyState) {
     // Create the document state object
-    rv = NS_NewLayoutHistoryState(getter_AddRefs(historyState));
-  
-    if (NS_FAILED(rv)) { 
-      *aState = nullptr;
-      return rv;
-    }    
-
+    historyState = NS_NewLayoutHistoryState();
     docShell->SetLayoutHistoryState(historyState);
   }
 

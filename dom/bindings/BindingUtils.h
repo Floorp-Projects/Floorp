@@ -7,23 +7,23 @@
 #ifndef mozilla_dom_BindingUtils_h__
 #define mozilla_dom_BindingUtils_h__
 
+#include "jsfriendapi.h"
+#include "jswrapper.h"
+#include "mozilla/dom/BindingDeclarations.h"
+#include "mozilla/dom/CallbackObject.h"
 #include "mozilla/dom/DOMJSClass.h"
 #include "mozilla/dom/DOMJSProxyHandler.h"
 #include "mozilla/dom/NonRefcountedDOMObject.h"
+#include "mozilla/dom/Nullable.h"
 #include "mozilla/dom/workers/Workers.h"
 #include "mozilla/ErrorResult.h"
-
-#include "jsfriendapi.h"
-#include "jswrapper.h"
-
+#include "mozilla/Likely.h"
 #include "nsIXPConnect.h"
+#include "nsTraceRefcnt.h"
 #include "qsObjectHelper.h"
 #include "xpcpublic.h"
-#include "nsTraceRefcnt.h"
+
 #include "nsWrapperCacheInlines.h"
-#include "mozilla/Likely.h"
-#include "mozilla/dom/BindingDeclarations.h"
-#include "mozilla/dom/CallbackObject.h"
 
 class nsPIDOMWindow;
 

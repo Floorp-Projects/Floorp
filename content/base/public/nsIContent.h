@@ -34,8 +34,8 @@ enum nsLinkState {
 
 // IID for the nsIContent interface
 #define NS_ICONTENT_IID \
-{ 0Xf22c131c, 0Xc554, 0X4d06, \
-  { 0X81, 0Xac, 0X86, 0X64, 0X2f, 0X05, 0Xcc, 0X81 } }
+{ 0x976f4cd1, 0xbdfc, 0x4a1e, \
+  { 0x82, 0x46, 0x1c, 0x13, 0x9c, 0xd3, 0x73, 0x7f } }
 
 /**
  * A node of content in a document's content model. This interface
@@ -318,18 +318,6 @@ public:
    * content nodes.
    */
   virtual nsIAtom *GetIDAttributeName() const = 0;
-
-  /**
-   * Normalizes an attribute name and returns it as a nodeinfo if an attribute
-   * with that name exists. This method is intended for character case
-   * conversion if the content object is case insensitive (e.g. HTML). Returns
-   * the nodeinfo of the attribute with the specified name if one exists or
-   * null otherwise.
-   *
-   * @param aStr the unparsed attribute string
-   * @return the node info. May be nullptr.
-   */
-  virtual already_AddRefed<nsINodeInfo> GetExistingAttrNameFromQName(const nsAString& aStr) const = 0;
 
   /**
    * Set attribute values. All attribute values are assumed to have a

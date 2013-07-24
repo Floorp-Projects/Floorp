@@ -1,4 +1,5 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -8,8 +9,8 @@
  * new headers, or to other appropriate existing headers, not here.
  */
 
-#ifndef mozilla_Util_h_
-#define mozilla_Util_h_
+#ifndef mozilla_Util_h
+#define mozilla_Util_h
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
@@ -332,4 +333,4 @@ ArrayEnd(T (&arr)[N])
 #  define MOZ_ARRAY_LENGTH(array)   (sizeof(array)/sizeof((array)[0]))
 #endif
 
-#endif  /* mozilla_Util_h_ */
+#endif /* mozilla_Util_h */
