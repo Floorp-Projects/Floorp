@@ -324,6 +324,17 @@ class CodeGeneratorShared : public LInstructionVisitor
     inline OutOfLineCode *oolCallVM(const VMFunction &fun, LInstruction *ins, const ArgSeq &args,
                                     const StoreOutputTo &out);
 
+    bool callVM(const VMFunctionsModal &f, LInstruction *ins, const Register *dynStack = NULL) {
+        return callVM(f[gen->info().executionMode()], ins, dynStack);
+    }
+
+    template <class ArgSeq, class StoreOutputTo>
+    inline OutOfLineCode *oolCallVM(const VMFunctionsModal &f, LInstruction *ins,
+                                    const ArgSeq &args, const StoreOutputTo &out)
+    {
+        return oolCallVM(f[gen->info().executionMode()], ins, args, out);
+    }
+
     bool addCache(LInstruction *lir, size_t cacheIndex);
 
   protected:
