@@ -67,18 +67,12 @@ NS_IMETHODIMP JoinElementTxn::DoTransaction(void)
   NS_PRECONDITION((mEditor && mLeftNode && mRightNode), "null arg");
   if (!mEditor || !mLeftNode || !mRightNode) { return NS_ERROR_NOT_INITIALIZED; }
 
-  nsCOMPtr<nsINode> leftNode = do_QueryInterface(mLeftNode);
-  NS_ENSURE_STATE(leftNode);
-
-  nsCOMPtr<nsINode> rightNode = do_QueryInterface(mRightNode);
-  NS_ENSURE_STATE(rightNode);
-
   // get the parent node
-  nsCOMPtr<nsINode> leftParent = leftNode->GetParentNode();
+  nsCOMPtr<nsINode> leftParent = mLeftNode->GetParentNode();
   NS_ENSURE_TRUE(leftParent, NS_ERROR_NULL_POINTER);
 
   // verify that mLeftNode and mRightNode have the same parent
-  nsCOMPtr<nsINode> rightParent = rightNode->GetParentNode();
+  nsCOMPtr<nsINode> rightParent = mRightNode->GetParentNode();
   NS_ENSURE_TRUE(rightParent, NS_ERROR_NULL_POINTER);
 
   if (leftParent != rightParent) {
@@ -89,11 +83,9 @@ NS_IMETHODIMP JoinElementTxn::DoTransaction(void)
   // set this instance mParent. 
   // Other methods will see a non-null mParent and know all is well
   mParent = leftParent;
-  mOffset = leftNode->Length();
+  mOffset = mLeftNode->Length();
 
-  nsresult rv = mEditor->JoinNodesImpl(mRightNode->AsDOMNode(),
-                                       mLeftNode->AsDOMNode(),
-                                       mParent->AsDOMNode());
+  nsresult rv = mEditor->JoinNodesImpl(mRightNode, mLeftNode, mParent);
 
 #ifdef DEBUG
   if (NS_SUCCEEDED(rv) && gNoisy) {
