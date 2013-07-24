@@ -412,8 +412,6 @@ protected:
   void SlideLine(nsBlockReflowState& aState,
                  nsLineBox* aLine, nscoord aDY);
 
-  virtual int GetSkipSides() const MOZ_OVERRIDE;
-
   void ComputeFinalSize(const nsHTMLReflowState& aReflowState,
                         nsBlockReflowState&      aState,
                         nsHTMLReflowMetrics&     aMetrics,
