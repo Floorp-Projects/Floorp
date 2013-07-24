@@ -65,7 +65,7 @@ NS_IMETHODIMP nsDeviceContextSpecX::BeginDocument(const nsAString& aTitle,
     NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
     if (!aTitle.IsEmpty()) {
-      CFStringRef cfString = ::CFStringCreateWithCharacters(NULL, aTitle, aTitle.Length());
+      CFStringRef cfString = ::CFStringCreateWithCharacters(NULL, aTitle.BeginReading(), aTitle.Length());
       if (cfString) {
         ::PMPrintSettingsSetJobName(mPrintSettings, cfString);
         ::CFRelease(cfString);
