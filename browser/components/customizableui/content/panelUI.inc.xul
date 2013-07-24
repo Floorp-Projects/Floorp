@@ -1,0 +1,86 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<panel id="PanelUI-popup"
+       role="group"
+       type="arrow"
+       level="top"
+       hidden="true"
+       consumeoutsideclicks="true"
+       noautofocus="true">
+  <panelmultiview id="PanelUI-multiView" mainViewId="PanelUI-mainView">
+    <panelview id="PanelUI-mainView" contextmenu="customizationPanelContextMenu">
+      <vbox id="PanelUI-contents" type="grid"/>
+
+      <vbox id="PanelUI-mainView-spring" flex="1"/>
+
+      <footer class="PanelUI-footer">
+        <toolbarbutton id="PanelUI-customize-btn" label="&appMenuCustomize.label;" tabindex="0"
+                       oncommand="gCustomizeMode.toggle()" flex="1"/>
+        <!-- The parentNode is used so that the footer is presented as the anchor
+             instead of just the button being the anchor. -->
+        <toolbarbutton id="PanelUI-help-btn" aria-label="&helpMenu.label;" tabindex="0"
+                       oncommand="PanelUI.showHelpView(this.parentNode);"/>
+      </footer>
+    </panelview>
+
+    <panelview id="PanelUI-history" flex="1">
+      <label value="&appMenuHistory.label;"/>
+      <toolbarbutton id="appMenuClearRecentHistory" tabindex="0"
+                     label="&appMenuHistory.clearRecent.label;"
+                     command="Tools:Sanitize"/>
+      <toolbarbutton id="appMenuRestoreLastSession" tabindex="0"
+                     label="&appMenuHistory.restoreSession.label;"
+                     command="Browser:RestoreLastSession"/>
+      <vbox id="PanelUI-historyItems"/>
+      <label value="&appMenuHistory.showAll.label;"
+             id="PanelUI-historyMore"
+             class="text-link"
+             onclick="PlacesCommandHook.showPlacesOrganizer('History'); CustomizableUI.hidePanelForNode(this);"/>
+    </panelview>
+
+    <panelview id="PanelUI-feeds" flex="1" oncommand="FeedHandler.subscribeToFeed(null, event);"></panelview>
+
+    <panelview id="PanelUI-help" flex="1">
+      <label value="&helpMenu.label;"/>
+      <vbox id="PanelUI-helpItems"/>
+    </panelview>
+
+    <panelview id="PanelUI-developer" flex="1">
+      <label value="&webDeveloperMenu.label;"/>
+      <vbox id="PanelUI-developerItems"/>
+    </panelview>
+
+  </panelmultiview>
+  <popupset id="customizationContextMenus">
+    <menupopup id="customizationContextMenu">
+      <menuitem oncommand="gCustomizeMode.addToToolbar(document.popupNode)"
+                accesskey="&customizeMenu.addToToolbar.accesskey;"
+                label="&customizeMenu.addToToolbar.label;"/>
+      <menuitem oncommand="gCustomizeMode.removeFromPanel(document.popupNode)"
+                accesskey="&customizeMenu.removeFromMenu.accesskey;"
+                label="&customizeMenu.removeFromMenu.label;"/>
+      <menuseparator/>
+      <menuitem command="cmd_CustomizeToolbars"
+                accesskey="&viewCustomizeToolbar.accesskey;"
+                label="&viewCustomizeToolbar.label;"/>
+    </menupopup>
+
+    <menupopup id="customizationPanelContextMenu">
+      <menuitem command="cmd_CustomizeToolbars"
+                accesskey="&customizeMenu.addMoreItems.accesskey;"
+                label="&customizeMenu.addMoreItems.label;"/>
+    </menupopup>
+  </popupset>
+</panel>
+
+<panel id="widget-overflow"
+       role="group"
+       type="arrow"
+       level="top"
+       hidden="true"
+       consumeoutsideclicks="true">
+  <vbox id="widget-overflow-list">
+  </vbox>
+</panel>
