@@ -1679,6 +1679,17 @@ GripClient.prototype = {
   }, {
     telemetry: "PROTOTYPE"
   }),
+
+  /**
+   * Request the display string of the object.
+   *
+   * @param aOnResponse function Called with the request's response.
+   */
+  getDisplayString: DebuggerClient.requester({
+    type: "displayString"
+  }, {
+    telemetry: "DISPLAYSTRING"
+  }),
 };
 
 /**

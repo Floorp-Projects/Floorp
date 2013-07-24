@@ -23,27 +23,53 @@ let gDropTargetShim = {
   /**
    * Initializes the drop target shim.
    */
-  init: function DropTargetShim_init() {
-    let node = gGrid.node;
+  init: function () {
+    gGrid.node.addEventListener("dragstart", this, true);
+  },
 
-    // Add drag event handlers.
-    node.addEventListener("dragstart", this, true);
-    node.addEventListener("dragend", this, true);
+  /**
+   * Add all event listeners needed during a drag operation.
+   */
+  _addEventListeners: function () {
+    gGrid.node.addEventListener("dragend", this);
+
+    let docElement = document.documentElement;
+    docElement.addEventListener("dragover", this);
+    docElement.addEventListener("dragenter", this);
+    docElement.addEventListener("drop", this);
+  },
+
+  /**
+   * Remove all event listeners that were needed during a drag operation.
+   */
+  _removeEventListeners: function () {
+    gGrid.node.removeEventListener("dragend", this);
+
+    let docElement = document.documentElement;
+    docElement.removeEventListener("dragover", this);
+    docElement.removeEventListener("dragenter", this);
+    docElement.removeEventListener("drop", this);
   },
 
   /**
    * Handles all shim events.
    */
-  handleEvent: function DropTargetShim_handleEvent(aEvent) {
+  handleEvent: function (aEvent) {
     switch (aEvent.type) {
       case "dragstart":
-        this._start(aEvent);
+        this._dragstart(aEvent);
+        break;
+      case "dragenter":
+        aEvent.preventDefault();
         break;
       case "dragover":
         this._dragover(aEvent);
         break;
+      case "drop":
+        this._drop(aEvent);
+        break;
       case "dragend":
-        this._end(aEvent);
+        this._dragend(aEvent);
         break;
     }
   },
@@ -52,20 +78,76 @@ let gDropTargetShim = {
    * Handles the 'dragstart' event.
    * @param aEvent The 'dragstart' event.
    */
-  _start: function DropTargetShim_start(aEvent) {
+  _dragstart: function (aEvent) {
     if (aEvent.target.classList.contains("newtab-link")) {
       gGrid.lock();
-
-      // XXX bug 505521 - Listen for dragover on the document.
-      document.documentElement.addEventListener("dragover", this, false);
+      this._addEventListeners();
     }
   },
 
   /**
-   * Handles the 'drag' event and determines the current drop target.
-   * @param aEvent The 'drag' event.
+   * Handles the 'dragover' event.
+   * @param aEvent The 'dragover' event.
    */
-  _drag: function DropTargetShim_drag(aEvent) {
+  _dragover: function (aEvent) {
+    // XXX bug 505521 - Use the dragover event to retrieve the
+    //                  current mouse coordinates while dragging.
+    let sourceNode = aEvent.dataTransfer.mozSourceNode.parentNode;
+    gDrag.drag(sourceNode._newtabSite, aEvent);
+
+    // Find the current drop target, if there's one.
+    this._updateDropTarget(aEvent);
+
+    // If we have a valid drop target,
+    // let the drag-and-drop service know.
+    if (this._lastDropTarget) {
+      aEvent.preventDefault();
+    }
+  },
+
+  /**
+   * Handles the 'drop' event.
+   * @param aEvent The 'drop' event.
+   */
+  _drop: function (aEvent) {
+    // We're accepting all drops.
+    aEvent.preventDefault();
+
+    // Make sure to determine the current drop target
+    // in case the dragover event hasn't been fired.
+    this._updateDropTarget(aEvent);
+
+    // A site was successfully dropped.
+    this._dispatchEvent(aEvent, "drop", this._lastDropTarget);
+  },
+
+  /**
+   * Handles the 'dragend' event.
+   * @param aEvent The 'dragend' event.
+   */
+  _dragend: function (aEvent) {
+    if (this._lastDropTarget) {
+      if (aEvent.dataTransfer.mozUserCancelled) {
+        // The drag operation was cancelled.
+        this._dispatchEvent(aEvent, "dragexit", this._lastDropTarget);
+        this._dispatchEvent(aEvent, "dragleave", this._lastDropTarget);
+      }
+
+      // Clean up.
+      this._lastDropTarget = null;
+      this._cellPositions = null;
+    }
+
+    gGrid.unlock();
+    this._removeEventListeners();
+  },
+
+  /**
+   * Tries to find the current drop target and will fire
+   * appropriate dragenter, dragexit, and dragleave events.
+   * @param aEvent The current drag event.
+   */
+  _updateDropTarget: function (aEvent) {
     // Let's see if we find a drop target.
     let target = this._findDropTarget(aEvent);
 
@@ -87,53 +169,11 @@ let gDropTargetShim = {
   },
 
   /**
-   * Handles the 'dragover' event as long as bug 505521 isn't fixed to get
-   * current mouse cursor coordinates while dragging.
-   * @param aEvent The 'dragover' event.
-   */
-  _dragover: function DropTargetShim_dragover(aEvent) {
-    let sourceNode = aEvent.dataTransfer.mozSourceNode.parentNode;
-    gDrag.drag(sourceNode._newtabSite, aEvent);
-
-    this._drag(aEvent);
-  },
-
-  /**
-   * Handles the 'dragend' event.
-   * @param aEvent The 'dragend' event.
-   */
-  _end: function DropTargetShim_end(aEvent) {
-    // Make sure to determine the current drop target in case the dragenter
-    // event hasn't been fired.
-    this._drag(aEvent);
-
-    if (this._lastDropTarget) {
-      if (aEvent.dataTransfer.mozUserCancelled) {
-        // The drag operation was cancelled.
-        this._dispatchEvent(aEvent, "dragexit", this._lastDropTarget);
-        this._dispatchEvent(aEvent, "dragleave", this._lastDropTarget);
-      } else {
-        // A site was successfully dropped.
-        this._dispatchEvent(aEvent, "drop", this._lastDropTarget);
-      }
-
-      // Clean up.
-      this._lastDropTarget = null;
-      this._cellPositions = null;
-    }
-
-    gGrid.unlock();
-
-    // XXX bug 505521 - Remove the document's dragover listener.
-    document.documentElement.removeEventListener("dragover", this, false);
-  },
-
-  /**
    * Determines the current drop target by matching the dragged site's position
    * against all cells in the grid.
    * @return The currently hovered drop target or null.
    */
-  _findDropTarget: function DropTargetShim_findDropTarget() {
+  _findDropTarget: function () {
     // These are the minimum intersection values - we want to use the cell if
     // the site is >= 50% hovering its position.
     let minWidth = gDrag.cellWidth / 2;
@@ -174,13 +214,12 @@ let gDropTargetShim = {
    * @param aType The event type.
    * @param aTarget The target node that receives the event.
    */
-  _dispatchEvent:
-    function DropTargetShim_dispatchEvent(aEvent, aType, aTarget) {
-
+  _dispatchEvent: function (aEvent, aType, aTarget) {
     let node = aTarget.node;
     let event = document.createEvent("DragEvents");
 
-    event.initDragEvent(aType, true, true, window, 0, 0, 0, 0, 0, false, false,
+    // The event should not bubble to prevent recursion.
+    event.initDragEvent(aType, false, true, window, 0, 0, 0, 0, 0, false, false,
                         false, false, 0, node, aEvent.dataTransfer);
 
     node.dispatchEvent(event);
