@@ -14,11 +14,10 @@
 #include <string.h>
 #include <time.h>
 
-#include "jstypes.h"
-#include "jsutil.h"
-
 #include "jsprf.h"
 #include "jslock.h"
+#include "jstypes.h"
+#include "jsutil.h"
 #include "prmjtime.h"
 
 #define PRMJ_DO_MILLISECONDS 1
