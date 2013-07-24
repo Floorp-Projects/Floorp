@@ -1,12 +1,13 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Cross-platform lightweight thread local data wrappers. */
 
-#ifndef mozilla_ThreadLocal_h_
-#define mozilla_ThreadLocal_h_
+#ifndef mozilla_ThreadLocal_h
+#define mozilla_ThreadLocal_h
 
 #if defined(XP_WIN)
 // This file will get included in any file that wants to add a profiler mark.
@@ -144,4 +145,4 @@ ThreadLocal<T>::set(const T value)
 
 } // namespace mozilla
 
-#endif // mozilla_ThreadLocal_h_
+#endif /* mozilla_ThreadLocal_h */
