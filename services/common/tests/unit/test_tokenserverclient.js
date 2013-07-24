@@ -36,7 +36,7 @@ add_test(function test_working_bid_exchange() {
 
   let client = new TokenServerClient();
   let cb = Async.makeSpinningCallback();
-  let url = TEST_SERVER_URL + "1.0/foo/1.0";
+  let url = server.baseURI + "/1.0/foo/1.0";
   client.getTokenFromBrowserIDAssertion(url, "assertion", cb);
   let result = cb.wait();
   do_check_eq("object", typeof(result));
@@ -93,7 +93,7 @@ add_test(function test_conditions_required_response_handling() {
   });
 
   let client = new TokenServerClient();
-  let url = TEST_SERVER_URL + "1.0/foo/1.0";
+  let url = server.baseURI + "/1.0/foo/1.0";
 
   function onResponse(error, token) {
     do_check_true(error instanceof TokenServerClientServerError);
@@ -125,7 +125,7 @@ add_test(function test_invalid_403_no_content_type() {
   });
 
   let client = new TokenServerClient();
-  let url = TEST_SERVER_URL + "1.0/foo/1.0";
+  let url = server.baseURI + "/1.0/foo/1.0";
 
   function onResponse(error, token) {
     do_check_true(error instanceof TokenServerClientServerError);
@@ -156,7 +156,7 @@ add_test(function test_invalid_403_bad_json() {
   });
 
   let client = new TokenServerClient();
-  let url = TEST_SERVER_URL + "1.0/foo/1.0";
+  let url = server.baseURI + "/1.0/foo/1.0";
 
   function onResponse(error, token) {
     do_check_true(error instanceof TokenServerClientServerError);
@@ -184,7 +184,7 @@ add_test(function test_403_no_urls() {
   });
 
   let client = new TokenServerClient();
-  let url = TEST_SERVER_URL + "1.0/foo/1.0";
+  let url = server.baseURI + "/1.0/foo/1.0";
 
   client.getTokenFromBrowserIDAssertion(url, "assertion",
                                         function onResponse(error, result) {
@@ -219,7 +219,7 @@ add_test(function test_send_conditions_accepted() {
   });
 
   let client = new TokenServerClient();
-  let url = TEST_SERVER_URL + "1.0/foo/1.0";
+  let url = server.baseURI + "/1.0/foo/1.0";
 
   function onResponse(error, token) {
     do_check_null(error);
@@ -238,7 +238,7 @@ add_test(function test_error_404_empty() {
   let server = httpd_setup();
 
   let client = new TokenServerClient();
-  let url = TEST_SERVER_URL + "foo";
+  let url = server.baseURI + "/foo";
   client.getTokenFromBrowserIDAssertion(url, "assertion", function(error, r) {
     do_check_true(error instanceof TokenServerClientServerError);
     do_check_eq(error.cause, "malformed-response");
@@ -276,7 +276,7 @@ add_test(function test_error_404_proper_response() {
   }
 
   let client = new TokenServerClient();
-  let url = TEST_SERVER_URL + "1.0/foo/1.0";
+  let url = server.baseURI + "/1.0/foo/1.0";
   client.getTokenFromBrowserIDAssertion(url, "assertion", onResponse);
 });
 
@@ -294,7 +294,7 @@ add_test(function test_bad_json() {
   });
 
   let client = new TokenServerClient();
-  let url = TEST_SERVER_URL + "1.0/foo/1.0";
+  let url = server.baseURI + "/1.0/foo/1.0";
   client.getTokenFromBrowserIDAssertion(url, "assertion", function(error, r) {
     do_check_neq(null, error);
     do_check_eq("TokenServerClientServerError", error.name);
@@ -320,7 +320,7 @@ add_test(function test_400_response() {
   });
 
   let client = new TokenServerClient();
-  let url = TEST_SERVER_URL + "1.0/foo/1.0";
+  let url = server.baseURI + "/1.0/foo/1.0";
   client.getTokenFromBrowserIDAssertion(url, "assertion", function(error, r) {
     do_check_neq(null, error);
     do_check_eq("TokenServerClientServerError", error.name);
@@ -344,7 +344,7 @@ add_test(function test_unhandled_media_type() {
     }
   });
 
-  let url = TEST_SERVER_URL + "1.0/foo/1.0";
+  let url = server.baseURI + "/1.0/foo/1.0";
   let client = new TokenServerClient();
   client.getTokenFromBrowserIDAssertion(url, "assertion", function(error, r) {
     do_check_neq(null, error);
@@ -374,7 +374,7 @@ add_test(function test_rich_media_types() {
     }
   });
 
-  let url = TEST_SERVER_URL + "foo";
+  let url = server.baseURI + "/foo";
   let client = new TokenServerClient();
   client.getTokenFromBrowserIDAssertion(url, "assertion", function(error, r) {
     do_check_eq(null, error);
@@ -401,7 +401,7 @@ add_test(function test_exception_during_callback() {
     }
   });
 
-  let url = TEST_SERVER_URL + "foo";
+  let url = server.baseURI + "/foo";
   let client = new TokenServerClient();
   let cb = Async.makeSpinningCallback();
   let callbackCount = 0;

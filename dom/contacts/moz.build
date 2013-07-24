@@ -4,7 +4,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-TEST_DIRS += ['tests']
+# Android only supports the Contacts API on the Nightly channel.
+if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'android' or CONFIG['NIGHTLY_BUILD']:
+    TEST_DIRS += ['tests']
 
 EXTRA_COMPONENTS += [
     'ContactManager.js',
@@ -13,5 +15,9 @@ EXTRA_COMPONENTS += [
 
 EXTRA_JS_MODULES += [
     'ContactDB.jsm',
-    'ContactService.jsm',
 ]
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'android':
+    EXTRA_JS_MODULES += [
+        'ContactService.jsm'
+    ]

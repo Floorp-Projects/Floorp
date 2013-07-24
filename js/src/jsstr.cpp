@@ -15,7 +15,7 @@
  * allocations in the same native method.
  */
 
-#include "jsstr.h"
+#include "jsstrinlines.h"
 
 #include "mozilla/Attributes.h"
 #include "mozilla/CheckedInt.h"
@@ -24,18 +24,20 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include "jstypes.h"
-#include "jsutil.h"
-#include "jsprf.h"
+
 #include "jsapi.h"
 #include "jsarray.h"
 #include "jsatom.h"
+#include "jsautooplen.h"
 #include "jsbool.h"
 #include "jscntxt.h"
 #include "jsgc.h"
 #include "jsnum.h"
 #include "jsobj.h"
 #include "jsopcode.h"
+#include "jsprf.h"
+#include "jstypes.h"
+#include "jsutil.h"
 #include "jsversion.h"
 
 #include "builtin/RegExp.h"
@@ -49,12 +51,10 @@
 #include "vm/StringBuffer.h"
 
 #include "jsinferinlines.h"
-#include "jsstrinlines.h"
-#include "jsautooplen.h"        // generated headers last
 
 #include "vm/Interpreter-inl.h"
-#include "vm/StringObject-inl.h"
 #include "vm/String-inl.h"
+#include "vm/StringObject-inl.h"
 
 using namespace js;
 using namespace js::gc;

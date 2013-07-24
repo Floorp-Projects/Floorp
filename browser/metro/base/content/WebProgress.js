@@ -9,17 +9,20 @@ const kProgressMarginStart = 30;
 const kProgressMarginEnd = 70;
 
 const WebProgress = {
+  get _identityBox() { return document.getElementById("identity-box"); },
+
   _progressActive: false,
 
   init: function init() {
     messageManager.addMessageListener("Content:StateChange", this);
     messageManager.addMessageListener("Content:LocationChange", this);
     messageManager.addMessageListener("Content:SecurityChange", this);
-    Elements.progress.addEventListener("transitionend", this._progressTransEnd, true);
-    Elements.tabList.addEventListener("TabSelect", this._onTabSelect, true);
+
+    Elements.progress.addEventListener("transitionend", this, true);
+    Elements.tabList.addEventListener("TabSelect", this, true);
 
     let urlBar = document.getElementById("urlbar-edit");
-    urlBar.addEventListener("input", this._onUrlBarInput, false);
+    urlBar.addEventListener("input", this, false);
 
     return this;
   },
@@ -62,6 +65,20 @@ const WebProgress = {
     }
   },
 
+  handleEvent: function handleEvent(aEvent) {
+    switch (aEvent.type) {
+      case "transitionend":
+        this._progressTransEnd(aEvent);
+        break;
+      case "TabSelect":
+        this._onTabSelect(aEvent);
+        break;
+      case "input":
+        this._onUrlBarInput(aEvent);
+        break;
+    }
+  },
+
   _securityChange: function _securityChange(aJson, aTab) {
     let state = aJson.state;
     let nsIWebProgressListener = Ci.nsIWebProgressListener;
@@ -75,8 +92,7 @@ const WebProgress = {
     }
 
     if (aTab == Browser.selectedTab) {
-      let identityBox = document.getElementById("identity-box-inner");
-      identityBox.className = aTab._identityState;
+      this._identityBox.className = aTab._identityState;
     }
   },
 
@@ -203,24 +219,22 @@ const WebProgress = {
     Elements.progress.setAttribute("fade", true);
   },
 
-  _progressTransEnd: function _progressTransEnd(data) {
+  _progressTransEnd: function _progressTransEnd(aEvent) {
     if (!Elements.progress.hasAttribute("fade"))
       return;
     // Close out fade finished, reset
-    if (data.propertyName == "opacity") {
+    if (aEvent.propertyName == "opacity") {
       Elements.progress.style.width = "0px";
       Elements.progressContainer.setAttribute("collapsed", true);
     }
   },
 
   _onTabSelect: function(aEvent) {
-    let identityBox = document.getElementById("identity-box-inner");
     let tab = Browser.getTabFromChrome(aEvent.originalTarget);
-    identityBox.className = tab._identityState || "";
+    this._identityBox.className = tab._identityState || "";
   },
 
   _onUrlBarInput: function(aEvent) {
-    let identityBox = document.getElementById("identity-box-inner");
-    Browser.selectedTab._identityState = identityBox.className = "";
+    Browser.selectedTab._identityState = this._identityBox.className = "";
   },
 };

@@ -744,41 +744,66 @@ appbar toolbar[labelled] > toolbarbutton > .toolbarbutton-text {
   -moz-image-region: rect(0 40px 40px 0);
 }
 
-.appbar-primary:not([checked]):hover:not(:active) {
+.appbar-primary:not([checked]):hover:not(:active):not([disabled]) {
   -moz-image-region: rect(0 80px 40px 40px);
 }
 
+.appbar-primary:not([checked]):active:not([disabled]),
 .appbar-primary[checked] {
   -moz-image-region: rect(0 120px 40px 80px);
 }
 
-.appbar-primary[checked]:hover:not(:active) {
+.appbar-primary[checked]:hover:not(:active):not([disabled]) {
   -moz-image-region: rect(0 160px 40px 120px);
 }
 
-.appbar-primary:active {
-  -moz-image-region: rect(0 120px 40px 80px);
+.appbar-primary[checked]:active:not([disabled]) {
+  -moz-image-region: rect(0 200px 40px 160px);
 }
 
-@media (min-resolution: 130dpi) {
+@media (min-resolution: @min_res_140pc@) {
   .appbar-primary {
     -moz-image-region: rect(0 56px 56px 0);
   }
 
-  .appbar-primary:not([checked]):hover:not(:active) {
+  .appbar-primary:not([checked]):hover:not(:active):not([disabled]) {
     -moz-image-region: rect(0 112px 56px 56px);
   }
 
+  .appbar-primary:not([checked]):active:not([disabled]),
   .appbar-primary[checked] {
-    -moz-image-region: rect(0 224px 56px 168px);
-  }
-
-  .appbar-primary[checked]:hover:not(:active) {
-    -moz-image-region: rect(0 224px 56px 168px);
-  }
-
-  .appbar-primary:active {
     -moz-image-region: rect(0 168px 56px 112px);
+  }
+
+  .appbar-primary[checked]:hover:not(:active):not([disabled]) {
+    -moz-image-region: rect(0 224px 56px 168px);
+  }
+
+  .appbar-primary[checked]:active:not([disabled]) {
+    -moz-image-region: rect(0 280px 56px 224px);
+  }
+}
+
+@media (min-resolution: @min_res_180pc@) {
+  .appbar-primary {
+    -moz-image-region: rect(0 72px 72px 0);
+  }
+
+  .appbar-primary:not([checked]):hover:not(:active):not([disabled]) {
+    -moz-image-region: rect(0 144px 72px 72px);
+  }
+
+  .appbar-primary:not([checked]):active:not([disabled]),
+  .appbar-primary[checked] {
+    -moz-image-region: rect(0 216px 72px 144px);
+  }
+
+  .appbar-primary[checked]:hover:not(:active):not([disabled]) {
+    -moz-image-region: rect(0 288px 72px 216px);
+  }
+
+  .appbar-primary[checked]:active:not([disabled]) {
+    -moz-image-region: rect(0 360px 72px 288px);
   }
 }
 
@@ -786,99 +811,4 @@ appbar toolbar[labelled] > toolbarbutton > .toolbarbutton-text {
 
 .appbar-secondary {
   list-style-image: url(chrome://browser/skin/images/appbar-icons.png);
-}
-
-/* Find bar ------------------------------------------------------------- */
-
-#findbar {
-  background-color: @metro_orange@;
-  padding: 0;
-  pointer-events: none;
-}
-
-#findbar > toolbar {
-  min-height: @findbar_height@ !important;
-}
-
-#findbar > .previous-button,
-#findbar > .next-button,
-#findbar > .close-button {
-  list-style-image: url(chrome://browser/skin/images/appbar-icons.png);
-  min-width: @touch_button_small@ !important; /* button size */
-  min-height: @touch_button_small@ !important; /* button size */
-  border: none !important;
-  background-image: none !important;
-  background-color: inherit !important;
-  pointer-events: auto;
-  -moz-user-focus: ignore !important;
-  margin: 0 @margin_normal@ !important;
-}
-
-#findbar > .close-button {
-  -moz-margin-start: 0;
-  -moz-image-region: rect(0px, 480px, 40px, 440px);
-}
-
-#findbar > .close-button:hover {
-  -moz-image-region: rect(40px, 480px, 80px, 440px);
-}
-
-#findbar > .close-button:active {
-  -moz-image-region: rect(80px, 480px, 120px, 440px);
-}
-
-#findbar > .previous-button {
-  -moz-margin-end: 0;
-  -moz-image-region: rect(0px, 400px, 40px, 360px);
-}
-
-#findbar > .previous-button:hover {
-  -moz-image-region: rect(40px, 400px, 80px, 360px);
-}
-
-#findbar > .previous-button:active{
-  -moz-image-region: rect(80px, 400px, 120px, 360px);
-}
-
-#findbar > .next-button {
-  -moz-margin-start: 0;
-  -moz-image-region: rect(0px, 440px, 40px, 400px);
-}
-
-#findbar > .next-button:hover {
-  -moz-image-region: rect(40px, 440px, 80px, 400px);
-}
-
-#findbar > .next-button:active {
-  -moz-image-region: rect(80px, 440px, 120px, 400px);
-}
-
-#findbar-textbox {
-  pointer-events: auto;
-  -moz-margin-end: 0;
-  border: none !important;
-  width: 20em;
-}
-
-.textbox-search-icon {
-  list-style-image: url("chrome://browser/skin/images/search-glass-30.png");
-  -moz-image-region: auto;
-}
-
-/* Override the default box ordering and make the find textbox appear to the
-   right of the icon */
-#findbar-textbox input {
-  -moz-box-ordinal-group: 2
-}
-
-#findbar-textbox deck {
-  margin-right: @margin_normal@;
-}
-
-#findbar-textbox[status="1"] { /* Ci.nsITypeAheadFind.FIND_NOTFOUND */
-  background: rgb(255,200,200);
-}
-
-#findbar-textbox:hover:active {
-  background: #8db8d8;
 }

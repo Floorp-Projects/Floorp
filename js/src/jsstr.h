@@ -10,6 +10,7 @@
 #include "mozilla/PodOperations.h"
 
 #include <ctype.h>
+
 #include "jsapi.h"
 #include "jsatom.h"
 #include "jslock.h"

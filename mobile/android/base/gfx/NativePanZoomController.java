@@ -69,9 +69,7 @@ class NativePanZoomController implements PanZoomController, GeckoEventListener {
         // no-op in APZC, I think
     }
 
-    public void abortAnimation() {
-        // no-op in APZC, I think
-    }
+    public native void abortAnimation();
 
     private native void init();
     private native void handleTouchEvent(GeckoEvent event);

@@ -156,6 +156,7 @@
 @BINPATH@/components/dom_quota.xpt
 @BINPATH@/components/dom_range.xpt
 @BINPATH@/components/dom_settings.xpt
+@BINPATH@/components/dom_permissionsettings.xpt
 @BINPATH@/components/dom_sidebar.xpt
 @BINPATH@/components/dom_mobilemessage.xpt
 @BINPATH@/components/dom_storage.xpt
@@ -293,6 +294,10 @@
 @BINPATH@/components/BrowserFeeds.manifest
 @BINPATH@/components/FeedConverter.js
 @BINPATH@/components/FeedWriter.js
+@BINPATH@/components/PermissionSettings.js
+@BINPATH@/components/PermissionSettings.manifest
+@BINPATH@/components/PermissionPromptService.js
+@BINPATH@/components/PermissionPromptService.manifest
 @BINPATH@/components/fuelApplication.manifest
 @BINPATH@/components/fuelApplication.js
 @BINPATH@/components/WebContentConverter.js

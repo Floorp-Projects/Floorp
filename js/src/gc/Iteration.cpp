@@ -7,8 +7,8 @@
 #include "jsapi.h"
 #include "jsgc.h"
 
-#include "js/HashTable.h"
 #include "gc/GCInternals.h"
+#include "js/HashTable.h"
 #include "vm/Runtime.h"
 
 #include "jsgcinlines.h"

@@ -6,10 +6,10 @@
 #ifndef ctypes_CTypes_h
 #define ctypes_CTypes_h
 
-#include "jscntxt.h"
-#include "jsapi.h"
-#include "prlink.h"
 #include "ffi.h"
+#include "jsapi.h"
+#include "jscntxt.h"
+#include "prlink.h"
 
 #include "js/HashTable.h"
 

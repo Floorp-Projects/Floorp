@@ -5,21 +5,29 @@
 
 /* JS shell. */
 
+#include "mozilla/DebugOnly.h"
+#include "mozilla/GuardObjects.h"
+#include "mozilla/Util.h"
+
+#ifdef XP_WIN
+# include <direct.h>
+#endif
 #include <errno.h>
+#if defined(XP_OS2) || defined(XP_WIN)
+# include <io.h>     /* for isatty() */
+#endif
 #include <locale.h>
 #include <math.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#ifdef XP_UNIX
+# include <sys/wait.h>
+# include <sys/types.h>
+# include <unistd.h>
+#endif
 
-#include "mozilla/DebugOnly.h"
-#include "mozilla/GuardObjects.h"
-#include "mozilla/Util.h"
-
-#include "jstypes.h"
-#include "jsutil.h"
-#include "jsprf.h"
 #include "jsapi.h"
 #include "jsarray.h"
 #include "jsatom.h"
@@ -33,51 +41,41 @@
 #include "jsnum.h"
 #include "jsobj.h"
 #include "json.h"
+#include "jsprf.h"
 #include "jsreflect.h"
 #include "jsscript.h"
+#include "jstypes.h"
+#include "jsutil.h"
+#ifdef XP_WIN
+# include "jswin.h"
+#endif
 #include "jsworkers.h"
 #include "jswrapper.h"
-#include "perf/jsperf.h"
+#include "prmjtime.h"
+#if JS_TRACE_LOGGING
+#include "TraceLogging.h"
+#endif
 
 #include "builtin/TestingFunctions.h"
 #include "frontend/BytecodeEmitter.h"
 #include "frontend/Parser.h"
+#include "ion/Ion.h"
+#include "perf/jsperf.h"
+#include "shell/jsheaptools.h"
+#include "shell/jsoptparse.h"
 #include "vm/Shape.h"
 #include "vm/TypedArrayObject.h"
 #include "vm/WrapperObject.h"
 
-#include "prmjtime.h"
-
-#include "shell/jsoptparse.h"
-#include "shell/jsheaptools.h"
-
 #include "jsinferinlines.h"
 #include "jsscriptinlines.h"
-#include "ion/Ion.h"
 
 #include "vm/Interpreter-inl.h"
 
-#ifdef XP_UNIX
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-#endif
-
-#if defined(XP_WIN) || defined(XP_OS2)
-#include <io.h>     /* for isatty() */
-#endif
-
 #ifdef XP_WIN
-# include <io.h>
-# include <direct.h>
-# include "jswin.h"
 # define PATH_MAX (MAX_PATH > _MAX_DIR ? MAX_PATH : _MAX_DIR)
 #else
 # include <libgen.h>
-#endif
-
-#if JS_TRACE_LOGGING
-#include "TraceLogging.h"
 #endif
 
 using namespace js;

@@ -743,6 +743,11 @@ class ICStub
           case SetProp_CallScripted:
           case SetProp_CallNative:
           case RetSub_Fallback:
+          // These two fallback stubs don't actually make non-tail calls,
+          // but the fallback code for the bailout path needs to pop the stub frame
+          // pushed during the bailout.
+          case GetProp_Fallback:
+          case SetProp_Fallback:
             return true;
           default:
             return false;
@@ -979,9 +984,9 @@ class ICStubCompiler
     // Prevent GC in the middle of stub compilation.
     js::gc::AutoSuppressGC suppressGC;
 
-    mozilla::DebugOnly<bool> entersStubFrame_;
 
   protected:
+    mozilla::DebugOnly<bool> entersStubFrame_;
     JSContext *cx;
     ICStub::Kind kind;
 
@@ -3748,7 +3753,9 @@ class ICGetProp_Fallback : public ICMonitoredFallbackStub
 
     class Compiler : public ICStubCompiler {
       protected:
+        uint32_t returnOffset_;
         bool generateStubCode(MacroAssembler &masm);
+        bool postGenerateStubCode(MacroAssembler &masm, Handle<IonCode *> code);
 
       public:
         Compiler(JSContext *cx)
@@ -4538,7 +4545,9 @@ class ICSetProp_Fallback : public ICFallbackStub
 
     class Compiler : public ICStubCompiler {
       protected:
+        uint32_t returnOffset_;
         bool generateStubCode(MacroAssembler &masm);
+        bool postGenerateStubCode(MacroAssembler &masm, Handle<IonCode *> code);
 
       public:
         Compiler(JSContext *cx)

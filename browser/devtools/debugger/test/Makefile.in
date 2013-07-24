@@ -107,7 +107,6 @@ MOCHITEST_BROWSER_TESTS = \
 	browser_dbg_source_maps-02.js \
 	browser_dbg_step-out.js \
 	browser_dbg_event-listeners.js \
-	browser_dbg_break-on-dom-event.js \
 	head.js \
 	$(NULL)
 
@@ -159,6 +158,14 @@ MOCHITEST_BROWSER_TESTS += \
 	$(NULL)
 else
 $(browser_dbg_createChrome.js disabled to fix for ubuntu hangs, bug 847558)
+endif
+
+# Bug 895426:
+#   Disable browser_dbg_break-on-dom-event.js due to frequent failures
+ifneq (Darwin,$(OS_ARCH))
+MOCHITEST_BROWSER_TESTS += \
+	browser_dbg_break-on-dom-event.js \
+	$(NULL)
 endif
 
 MOCHITEST_BROWSER_FILES_PARTS = MOCHITEST_BROWSER_TESTS MOCHITEST_BROWSER_PAGES
