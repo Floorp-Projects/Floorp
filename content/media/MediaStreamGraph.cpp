@@ -520,7 +520,7 @@ MediaStreamGraphImpl::UpdateStreamOrder()
   mozilla::LinkedList<MediaStream> stack;
   for (uint32_t i = 0; i < mOldStreams.Length(); ++i) {
     nsRefPtr<MediaStream>& s = mOldStreams[i];
-    if (!s->mAudioOutputs.IsEmpty() || !s->mVideoOutputs.IsEmpty()) {
+    if (s->IsIntrinsicallyConsumed()) {
       MarkConsumed(s);
     }
     if (!s->mHasBeenOrdered) {
