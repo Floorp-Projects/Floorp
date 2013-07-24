@@ -146,10 +146,6 @@ IonBuilder::inlineNativeCall(CallInfo &callInfo, JSNative native)
         return inlineHaveSameClass(callInfo);
     if (native == intrinsic_ToObject)
         return inlineToObject(callInfo);
-#ifdef DEBUG
-    if (native == intrinsic_Dump)
-        return inlineDump(callInfo);
-#endif
 
     return InliningStatus_NotInlined;
 }
@@ -1499,35 +1495,6 @@ IonBuilder::inlineToObject(CallInfo &callInfo)
     MDefinition *object = callInfo.getArg(0);
 
     current->push(object);
-    return InliningStatus_Inlined;
-}
-
-IonBuilder::InliningStatus
-IonBuilder::inlineDump(CallInfo &callInfo)
-{
-    // In Parallel Execution, call DumpPar.  We just need a debugging
-    // aid!
-
-    if (callInfo.constructing())
-        return InliningStatus_NotInlined;
-
-    ExecutionMode executionMode = info().executionMode();
-    switch (executionMode) {
-      case SequentialExecution:
-        return InliningStatus_NotInlined;
-      case ParallelExecution:
-        break;
-    }
-
-    callInfo.unwrapArgs();
-    JS_ASSERT(1 == callInfo.argc());
-    MDumpPar *dump = new MDumpPar(callInfo.getArg(0));
-    current->add(dump);
-
-    MConstant *udef = MConstant::New(UndefinedValue());
-    current->add(udef);
-    current->push(udef);
-
     return InliningStatus_Inlined;
 }
 

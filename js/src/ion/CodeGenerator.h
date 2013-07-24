@@ -182,7 +182,6 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitFunctionEnvironment(LFunctionEnvironment *lir);
     bool visitForkJoinSlice(LForkJoinSlice *lir);
     bool visitGuardThreadLocalObject(LGuardThreadLocalObject *lir);
-    bool visitDumpPar(LDumpPar *lir);
     bool visitCallGetProperty(LCallGetProperty *lir);
     bool visitCallGetElement(LCallGetElement *lir);
     bool visitCallSetElement(LCallSetElement *lir);
