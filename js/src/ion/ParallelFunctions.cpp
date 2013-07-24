@@ -163,14 +163,6 @@ ion::CheckInterruptPar(ForkJoinSlice *slice)
     return true;
 }
 
-void
-ion::DumpValuePar(Value *v)
-{
-#ifdef DEBUG
-    js_DumpValue(*v);
-#endif
-}
-
 JSObject *
 ion::PushPar(PushParArgs *args)
 {

@@ -20,8 +20,6 @@ bool IsThreadLocalObject(ForkJoinSlice *context, JSObject *object);
 bool CheckOverRecursedPar(ForkJoinSlice *slice);
 bool CheckInterruptPar(ForkJoinSlice *context);
 
-void DumpValuePar(Value *v);
-
 // We pass the arguments to PushPar in a structure because, in code
 // gen, it is convenient to store them on the stack to avoid
 // constraining the reg alloc for the slow path.

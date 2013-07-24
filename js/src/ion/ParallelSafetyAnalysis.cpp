@@ -251,7 +251,6 @@ class ParallelSafetyVisitor : public MInstructionVisitor
     SAFE_OP(NewDenseArrayPar)
     SAFE_OP(NewCallObjectPar)
     SAFE_OP(LambdaPar)
-    SAFE_OP(DumpPar)
     SAFE_OP(AbortPar)
     UNSAFE_OP(ArrayConcat)
     UNSAFE_OP(GetDOMProperty)

@@ -170,7 +170,6 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitForkJoinSlice(MForkJoinSlice *ins);
     bool visitGuardThreadLocalObject(MGuardThreadLocalObject *ins);
     bool visitCheckInterruptPar(MCheckInterruptPar *ins);
-    bool visitDumpPar(MDumpPar *ins);
     bool visitStoreSlot(MStoreSlot *ins);
     bool visitTypeBarrier(MTypeBarrier *ins);
     bool visitMonitorTypes(MMonitorTypes *ins);

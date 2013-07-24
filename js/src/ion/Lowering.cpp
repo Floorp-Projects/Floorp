@@ -1707,14 +1707,6 @@ LIRGenerator::visitCheckInterruptPar(MCheckInterruptPar *ins)
 }
 
 bool
-LIRGenerator::visitDumpPar(MDumpPar *ins)
-{
-    LDumpPar *lir = new LDumpPar();
-    useBoxFixed(lir, LDumpPar::Value, ins->value(), CallTempReg0, CallTempReg1);
-    return add(lir);
-}
-
-bool
 LIRGenerator::visitNewPar(MNewPar *ins)
 {
     LNewPar *lir = new LNewPar(useRegister(ins->forkJoinSlice()), temp(), temp());
