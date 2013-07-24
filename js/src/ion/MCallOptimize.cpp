@@ -1318,7 +1318,7 @@ IonBuilder::inlineNewDenseArrayForParallelExecution(CallInfo &callInfo)
 
     callInfo.unwrapArgs();
 
-    MParNewDenseArray *newObject = new MParNewDenseArray(graph().parSlice(),
+    MNewDenseArrayPar *newObject = new MNewDenseArrayPar(graph().forkJoinSlice(),
                                                          callInfo.getArg(0),
                                                          templateObject);
     current->add(newObject);
@@ -1505,7 +1505,7 @@ IonBuilder::inlineToObject(CallInfo &callInfo)
 IonBuilder::InliningStatus
 IonBuilder::inlineDump(CallInfo &callInfo)
 {
-    // In Parallel Execution, call ParDump.  We just need a debugging
+    // In Parallel Execution, call DumpPar.  We just need a debugging
     // aid!
 
     if (callInfo.constructing())
@@ -1521,7 +1521,7 @@ IonBuilder::inlineDump(CallInfo &callInfo)
 
     callInfo.unwrapArgs();
     JS_ASSERT(1 == callInfo.argc());
-    MParDump *dump = new MParDump(callInfo.getArg(0));
+    MDumpPar *dump = new MDumpPar(callInfo.getArg(0));
     current->add(dump);
 
     MConstant *udef = MConstant::New(UndefinedValue());
