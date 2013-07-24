@@ -1600,10 +1600,10 @@ ParallelIonCache::destroy()
 }
 
 /* static */ bool
-ParallelGetPropertyIC::canAttachReadSlot(LockedJSContext &cx, IonCache &cache,
-                                         TypedOrValueRegister output, JSObject *obj,
-                                         PropertyName *name, MutableHandleObject holder,
-                                         MutableHandleShape shape)
+GetPropertyParIC::canAttachReadSlot(LockedJSContext &cx, IonCache &cache,
+                                    TypedOrValueRegister output, JSObject *obj,
+                                    PropertyName *name, MutableHandleObject holder,
+                                    MutableHandleShape shape)
 {
     // Bail if we have hooks or are not native.
     if (!obj->hasIdempotentProtoChain())
@@ -1626,8 +1626,8 @@ ParallelGetPropertyIC::canAttachReadSlot(LockedJSContext &cx, IonCache &cache,
 }
 
 bool
-ParallelGetPropertyIC::attachReadSlot(LockedJSContext &cx, IonScript *ion, JSObject *obj,
-                                      JSObject *holder, Shape *shape)
+GetPropertyParIC::attachReadSlot(LockedJSContext &cx, IonScript *ion, JSObject *obj,
+                                 JSObject *holder, Shape *shape)
 {
     // Ready to generate the read slot stub.
     DispatchStubPrepender attacher(*this);
@@ -1638,7 +1638,7 @@ ParallelGetPropertyIC::attachReadSlot(LockedJSContext &cx, IonScript *ion, JSObj
 }
 
 bool
-ParallelGetPropertyIC::attachArrayLength(LockedJSContext &cx, IonScript *ion, JSObject *obj)
+GetPropertyParIC::attachArrayLength(LockedJSContext &cx, IonScript *ion, JSObject *obj)
 {
     MacroAssembler masm(cx);
     DispatchStubPrepender attacher(*this);
@@ -1649,10 +1649,10 @@ ParallelGetPropertyIC::attachArrayLength(LockedJSContext &cx, IonScript *ion, JS
 }
 
 ParallelResult
-ParallelGetPropertyIC::update(ForkJoinSlice *slice, size_t cacheIndex,
-                              HandleObject obj, MutableHandleValue vp)
+GetPropertyParIC::update(ForkJoinSlice *slice, size_t cacheIndex,
+                         HandleObject obj, MutableHandleValue vp)
 {
-    AutoFlushCache afc("ParallelGetPropertyCache");
+    AutoFlushCache afc("GetPropertyParCache");
     PerThreadData *pt = slice->perThreadData;
 
     const SafepointIndex *safepointIndex;
@@ -1660,7 +1660,7 @@ ParallelGetPropertyIC::update(ForkJoinSlice *slice, size_t cacheIndex,
     RootedScript topScript(pt, GetTopIonJSScript(pt, &safepointIndex, &returnAddr));
     IonScript *ion = topScript->parallelIonScript();
 
-    ParallelGetPropertyIC &cache = ion->getCache(cacheIndex).toParallelGetProperty();
+    GetPropertyParIC &cache = ion->getCache(cacheIndex).toGetPropertyPar();
 
     // Grab the property early, as the pure path is fast anyways and doesn't
     // need a lock. If we can't do it purely, bail out of parallel execution.
@@ -2737,9 +2737,9 @@ SetElementIC::reset()
 }
 
 bool
-ParallelGetElementIC::attachReadSlot(LockedJSContext &cx, IonScript *ion, JSObject *obj,
-                                     const Value &idval, PropertyName *name, JSObject *holder,
-                                     Shape *shape)
+GetElementParIC::attachReadSlot(LockedJSContext &cx, IonScript *ion, JSObject *obj,
+                                const Value &idval, PropertyName *name, JSObject *holder,
+                                Shape *shape)
 {
     MacroAssembler masm(cx);
     DispatchStubPrepender attacher(*this);
@@ -2756,8 +2756,8 @@ ParallelGetElementIC::attachReadSlot(LockedJSContext &cx, IonScript *ion, JSObje
 }
 
 bool
-ParallelGetElementIC::attachDenseElement(LockedJSContext &cx, IonScript *ion, JSObject *obj,
-                                         const Value &idval)
+GetElementParIC::attachDenseElement(LockedJSContext &cx, IonScript *ion, JSObject *obj,
+                                    const Value &idval)
 {
     MacroAssembler masm(cx);
     DispatchStubPrepender attacher(*this);
@@ -2768,8 +2768,8 @@ ParallelGetElementIC::attachDenseElement(LockedJSContext &cx, IonScript *ion, JS
 }
 
 bool
-ParallelGetElementIC::attachTypedArrayElement(LockedJSContext &cx, IonScript *ion,
-                                              TypedArrayObject *tarr, const Value &idval)
+GetElementParIC::attachTypedArrayElement(LockedJSContext &cx, IonScript *ion,
+                                         TypedArrayObject *tarr, const Value &idval)
 {
     MacroAssembler masm(cx);
     DispatchStubPrepender attacher(*this);
@@ -2778,10 +2778,10 @@ ParallelGetElementIC::attachTypedArrayElement(LockedJSContext &cx, IonScript *io
 }
 
 ParallelResult
-ParallelGetElementIC::update(ForkJoinSlice *slice, size_t cacheIndex, HandleObject obj,
-                             HandleValue idval, MutableHandleValue vp)
+GetElementParIC::update(ForkJoinSlice *slice, size_t cacheIndex, HandleObject obj,
+                        HandleValue idval, MutableHandleValue vp)
 {
-    AutoFlushCache afc("ParallelGetElementCache");
+    AutoFlushCache afc("GetElementParCache");
     PerThreadData *pt = slice->perThreadData;
 
     const SafepointIndex *safepointIndex;
@@ -2789,7 +2789,7 @@ ParallelGetElementIC::update(ForkJoinSlice *slice, size_t cacheIndex, HandleObje
     RootedScript topScript(pt, GetTopIonJSScript(pt, &safepointIndex, &returnAddr));
     IonScript *ion = topScript->parallelIonScript();
 
-    ParallelGetElementIC &cache = ion->getCache(cacheIndex).toParallelGetElement();
+    GetElementParIC &cache = ion->getCache(cacheIndex).toGetElementPar();
 
     // Try to get the element early, as the pure path doesn't need a lock. If
     // we can't do it purely, bail out of parallel execution.
@@ -2822,8 +2822,8 @@ ParallelGetElementIC::update(ForkJoinSlice *slice, size_t cacheIndex, HandleObje
                 RootedShape shape(cx);
                 RootedObject holder(cx);
                 PropertyName *name = JSID_TO_ATOM(id)->asPropertyName();
-                if (ParallelGetPropertyIC::canAttachReadSlot(cx, cache, cache.output(), obj,
-                                                             name, &holder, &shape))
+                if (GetPropertyParIC::canAttachReadSlot(cx, cache, cache.output(), obj,
+                                                        name, &holder, &shape))
                 {
                     if (!cache.attachReadSlot(cx, ion, obj, idval, name, holder, shape))
                         return TP_FATAL;
