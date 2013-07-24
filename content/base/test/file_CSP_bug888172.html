@@ -1,0 +1,28 @@
+<!doctype html>
+<html>
+  <body>
+    <ol>
+      <li id="unsafe-inline-script">Inline script (green if allowed, black if blocked)</li>
+      <li id="unsafe-eval-script">Eval script (green if allowed, black if blocked)</li>
+      <li id="unsafe-inline-style">Inline style (green if allowed, black if blocked)</li>
+    </ol>
+
+    <script>
+      // Use inline script to set a style attribute
+    document.getElementById("unsafe-inline-script").style.color = "green";
+
+    // Use eval to set a style attribute
+    // try/catch is used because CSP causes eval to throw an exception when it
+    // is blocked, which would derail the rest of the tests  in this file.
+    try {
+      eval('document.getElementById("unsafe-eval-script").style.color = "green";');
+    } catch (e) {}
+    </script>
+
+    <style>
+      li#unsafe-inline-style {
+        color: green;
+      }
+    </style>
+  </body>
+</html>
