@@ -165,6 +165,36 @@ public:
   }
 
   /**
+   * Get a character at the given offset (don't support magic offsets).
+   */
+  bool CharAt(int32_t aOffset, nsAString& aChar)
+  {
+    int32_t childIdx = GetChildIndexAtOffset(aOffset);
+    if (childIdx == -1)
+      return false;
+
+    Accessible* child = GetChildAt(childIdx);
+    child->AppendTextTo(aChar, aOffset - GetChildOffset(childIdx), 1);
+    return true;
+  }
+
+  /**
+   * Return true if char at the given offset equals to given char.
+   */
+  bool IsCharAt(int32_t aOffset, char aChar)
+  {
+    nsAutoString charAtOffset;
+    CharAt(aOffset, charAtOffset);
+    return charAtOffset.CharAt(0) == aChar;
+  }
+
+  /**
+   * Return true if terminal char is at the given offset.
+   */
+  bool IsLineEndCharAt(int32_t aOffset)
+    { return IsCharAt(aOffset, '\n'); }
+
+  /**
    * Get a character before/at/after the given offset.
    *
    * @param aOffset       [in] the given offset
@@ -288,12 +318,8 @@ protected:
    */
   bool IsEmptyLastLineOffset(int32_t aOffset)
   {
-    if (aOffset != static_cast<int32_t>(CharacterCount()))
-      return false;
-
-    nsAutoString lastChar;
-    GetText(aOffset -1, -1, lastChar);
-    return lastChar.EqualsLiteral("\n");
+    return aOffset == static_cast<int32_t>(CharacterCount()) &&
+      IsLineEndCharAt(aOffset - 1);
   }
 
   /**
