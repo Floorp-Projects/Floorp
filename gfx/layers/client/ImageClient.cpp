@@ -28,10 +28,10 @@ ImageClient::CreateImageClient(CompositableType aCompositableHostType,
   RefPtr<ImageClient> result = nullptr;
   switch (aCompositableHostType) {
   case BUFFER_IMAGE_SINGLE:
-    result = new ImageClientSingle(aForwarder, aFlags, BUFFER_IMAGE_SINGLE);
+    result = new DeprecatedImageClientSingle(aForwarder, aFlags, BUFFER_IMAGE_SINGLE);
     break;
   case BUFFER_IMAGE_BUFFERED:
-    result = new ImageClientSingle(aForwarder, aFlags, BUFFER_IMAGE_BUFFERED);
+    result = new DeprecatedImageClientSingle(aForwarder, aFlags, BUFFER_IMAGE_BUFFERED);
     break;
   case BUFFER_BRIDGE:
     result = new ImageClientBridge(aForwarder, aFlags);
@@ -66,9 +66,9 @@ ImageClient::UpdatePictureRect(nsIntRect aRect)
   GetForwarder()->UpdatePictureRect(this, aRect);
 }
 
-ImageClientSingle::ImageClientSingle(CompositableForwarder* aFwd,
-                                     TextureFlags aFlags,
-                                     CompositableType aType)
+DeprecatedImageClientSingle::DeprecatedImageClientSingle(CompositableForwarder* aFwd,
+                                                         TextureFlags aFlags,
+                                                         CompositableType aType)
   : ImageClient(aFwd, aType)
   , mTextureInfo(aType)
 {
@@ -76,7 +76,7 @@ ImageClientSingle::ImageClientSingle(CompositableForwarder* aFwd,
 }
 
 bool
-ImageClientSingle::EnsureDeprecatedTextureClient(DeprecatedTextureClientType aType)
+DeprecatedImageClientSingle::EnsureDeprecatedTextureClient(DeprecatedTextureClientType aType)
 {
   // We should not call this method if using ImageBridge or tiled texture
   // clients since SupportsType always fails
@@ -88,7 +88,7 @@ ImageClientSingle::EnsureDeprecatedTextureClient(DeprecatedTextureClientType aTy
 }
 
 bool
-ImageClientSingle::UpdateImage(ImageContainer* aContainer,
+DeprecatedImageClientSingle::UpdateImage(ImageContainer* aContainer,
                                uint32_t aContentFlags)
 {
   AutoLockImage autoLock(aContainer);
@@ -106,11 +106,11 @@ ImageClientSingle::UpdateImage(ImageContainer* aContainer,
       EnsureDeprecatedTextureClient(TEXTURE_YCBCR)) {
     PlanarYCbCrImage* ycbcr = static_cast<PlanarYCbCrImage*>(image);
 
-    if (ycbcr->AsSharedPlanarYCbCrImage()) {
+    if (ycbcr->AsDeprecatedSharedPlanarYCbCrImage()) {
       AutoLockDeprecatedTextureClient lock(mDeprecatedTextureClient);
 
       SurfaceDescriptor sd;
-      if (!ycbcr->AsSharedPlanarYCbCrImage()->ToSurfaceDescriptor(sd)) {
+      if (!ycbcr->AsDeprecatedSharedPlanarYCbCrImage()->ToSurfaceDescriptor(sd)) {
         return false;
       }
 
@@ -147,7 +147,7 @@ ImageClientSingle::UpdateImage(ImageContainer* aContainer,
     AutoLockDeprecatedTextureClient lock(mDeprecatedTextureClient);
 
     SurfaceDescriptor desc;
-    if (!static_cast<SharedRGBImage*>(image)->ToSurfaceDescriptor(desc)) {
+    if (!static_cast<DeprecatedSharedRGBImage*>(image)->ToSurfaceDescriptor(desc)) {
       return false;
     }
     mDeprecatedTextureClient->SetDescriptor(desc);
@@ -209,7 +209,7 @@ ImageClientSingle::UpdateImage(ImageContainer* aContainer,
 }
 
 void
-ImageClientSingle::Updated()
+DeprecatedImageClientSingle::Updated()
 {
   mForwarder->UpdateTexture(this, 1, mDeprecatedTextureClient->GetDescriptor());
 }
@@ -247,10 +247,10 @@ ImageClient::CreateImage(const uint32_t *aFormats,
   for (uint32_t i = 0; i < aNumFormats; i++) {
     switch (aFormats[i]) {
       case PLANAR_YCBCR:
-        img = new SharedPlanarYCbCrImage(GetForwarder());
+        img = new DeprecatedSharedPlanarYCbCrImage(GetForwarder());
         return img.forget();
       case SHARED_RGB:
-        img = new SharedRGBImage(GetForwarder());
+        img = new DeprecatedSharedRGBImage(GetForwarder());
         return img.forget();
 #ifdef MOZ_WIDGET_GONK
       case GONK_IO_SURFACE:
