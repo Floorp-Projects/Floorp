@@ -12,15 +12,15 @@
 #include "mozilla/PodOperations.h"
 #include "mozilla/TemplateLib.h"
 
-#include <string.h>
 #include <setjmp.h>
+#include <string.h>
 
 #include "jsapi.h"
-#include "jsfriendapi.h"
-#include "jsprvtd.h"
 #include "jsatom.h"
 #include "jsclist.h"
+#include "jsfriendapi.h"
 #include "jsgc.h"
+#include "jsprvtd.h"
 
 #include "ds/FixedSizeHash.h"
 #include "ds/LifoAlloc.h"

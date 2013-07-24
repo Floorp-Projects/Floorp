@@ -7,9 +7,9 @@
 #ifndef vm_RegExpObject_inl_h
 #define vm_RegExpObject_inl_h
 
-#include "mozilla/Util.h"
-
 #include "vm/RegExpObject.h"
+
+#include "mozilla/Util.h"
 
 namespace js {
 

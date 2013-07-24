@@ -6,23 +6,20 @@
 
 #include "jscntxt.h"
 
-#ifdef JS_THREADSAFE
-#  include "prthread.h"
-#  include "prprf.h"
-#endif
-
 #include "vm/ForkJoin.h"
 
-#if defined(JS_THREADSAFE)
-#include "ion/BaselineJIT.h"
-#include "vm/Monitor.h"
+#ifdef JS_THREADSAFE
+# include "prthread.h"
+# include "prprf.h"
+# include "ion/BaselineJIT.h"
+# include "vm/Monitor.h"
 #endif
 
 #if defined(DEBUG) && defined(JS_THREADSAFE) && defined(JS_ION)
-#  include "ion/Ion.h"
-#  include "ion/MIR.h"
-#  include "ion/MIRGraph.h"
-#  include "ion/IonCompartment.h"
+# include "ion/Ion.h"
+# include "ion/IonCompartment.h"
+# include "ion/MIR.h"
+# include "ion/MIRGraph.h"
 #endif // DEBUG && THREADSAFE && ION
 
 #include "vm/Interpreter-inl.h"

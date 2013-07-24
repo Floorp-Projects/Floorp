@@ -7,18 +7,19 @@
 #ifndef vm_Stack_inl_h
 #define vm_Stack_inl_h
 
+#include "vm/Stack.h"
+
 #include "mozilla/PodOperations.h"
 
 #include "jscntxt.h"
 #include "jscompartment.h"
 
-#include "vm/Stack.h"
 #include "ion/BaselineFrame.h"
-#include "ion/BaselineFrame-inl.h"
-#include "ion/IonFrameIterator-inl.h"
 
 #include "jsscriptinlines.h"
 
+#include "ion/BaselineFrame-inl.h"
+#include "ion/IonFrameIterator-inl.h"
 #include "vm/ArgumentsObject-inl.h"
 #include "vm/ScopeObject-inl.h"
 

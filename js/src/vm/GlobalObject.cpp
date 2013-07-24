@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "vm/GlobalObject.h"
+#include "vm/GlobalObject-inl.h"
 
 #include "jscntxt.h"
 #include "jsdate.h"
@@ -24,8 +24,6 @@
 #include "jscompartmentinlines.h"
 #include "jsfuninlines.h"
 #include "jsobjinlines.h"
-
-#include "vm/GlobalObject-inl.h"
 
 using namespace js;
 
