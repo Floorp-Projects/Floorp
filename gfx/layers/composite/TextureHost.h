@@ -74,6 +74,9 @@ public:
    * size of the current tile.
    */
   virtual gfx::IntSize GetSize() const = 0;
+
+  virtual gfx::SurfaceFormat GetFormat() const { return gfx::FORMAT_UNKNOWN; }
+
   /**
    * Cast to an TextureSource for the OpenGL backend.
    */
@@ -170,7 +173,7 @@ public:
   DeprecatedTextureHost();
   virtual ~DeprecatedTextureHost();
 
-  virtual gfx::SurfaceFormat GetFormat() const { return mFormat; }
+  virtual gfx::SurfaceFormat GetFormat() const MOZ_OVERRIDE { return mFormat; }
 
   virtual bool IsValid() const { return true; }
 
