@@ -94,7 +94,6 @@
 #include "nsTransitionManager.h"
 #include "nsSVGIntegrationUtils.h"
 #include "nsViewportFrame.h"
-#include "nsPageContentFrame.h"
 #include <algorithm>
 
 #ifdef MOZ_XUL
@@ -1423,7 +1422,6 @@ nsCSSFrameConstructor::nsCSSFrameConstructor(nsIDocument *aDocument,
   , mHasRootAbsPosContainingBlock(false)
   , mObservingRefreshDriver(false)
   , mInStyleRefresh(false)
-  , mPromoteReflowsToReframeRoot(false)
   , mHoverGeneration(0)
   , mRebuildAllExtraHint(nsChangeHint(0))
   , mAnimationGeneration(0)
@@ -8062,17 +8060,6 @@ NeedToReframeForAddingOrRemovingTransform(nsIFrame* aFrame)
   return false;
 }
 
-static nsIFrame*
-FindReflowRootFor(nsIFrame* aFrame)
-{
-  for (nsIFrame* f = aFrame; f; f = f->GetParent()) {
-    if (f->GetStateBits() & NS_FRAME_REFLOW_ROOT) {
-      return f;
-    }
-  }
-  return nullptr;
-}
-
 nsresult
 nsCSSFrameConstructor::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
 {
@@ -8129,21 +8116,6 @@ nsCSSFrameConstructor::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
       frame = nullptr;
       if (!(hint & nsChangeHint_ReconstructFrame)) {
         continue;
-      }
-    }
-
-    if (mPromoteReflowsToReframeRoot &&
-        (hint & (nsChangeHint_ReconstructFrame | nsChangeHint_NeedReflow))) {
-      nsIFrame* reflowRoot = FindReflowRootFor(frame);
-      if (!reflowRoot) {
-        // Reflow root is the viewport. Better reframe the document.
-        // We don't do this for elements which are inside a reflow root --- they
-        // should be OK.
-        nsIContent* root = mDocument->GetRootElement();
-        if (root) {
-          NS_UpdateHint(hint, nsChangeHint_ReconstructFrame);
-          content = root;
-        }
       }
     }
 
@@ -12143,7 +12115,6 @@ nsCSSFrameConstructor::PostRebuildAllStyleDataEvent(nsChangeHint aExtraHint)
 
   mRebuildAllStyleData = true;
   NS_UpdateHint(mRebuildAllExtraHint, aExtraHint);
-
   // Get a restyle event posted if necessary
   PostRestyleEventInternal(false);
 }
