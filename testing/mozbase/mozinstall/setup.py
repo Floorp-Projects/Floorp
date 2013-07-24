@@ -11,7 +11,7 @@ try:
 except IOError:
     description = None
 
-PACKAGE_VERSION = '1.6'
+PACKAGE_VERSION = '1.7'
 
 deps = ['mozinfo >= 0.4',
         'mozfile'
@@ -33,7 +33,7 @@ setup(name='mozInstall',
       keywords='mozilla',
       author='Mozilla Automation and Tools team',
       author_email='tools@lists.mozilla.org',
-      url='https://wiki.mozilla.org/Auto-tools/Projects/MozBase',
+      url='https://wiki.mozilla.org/Auto-tools/Projects/Mozbase',
       license='MPL 2.0',
       packages=['mozinstall'],
       include_package_data=True,

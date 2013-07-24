@@ -26,7 +26,7 @@ proclaunch: proclaunch.obj
 	$(LINK) $(LFLAGS) proclaunch.obj
 
 clean:
-	$(RM) proclaunch.exe projloaunch.obj
+	$(RM) proclaunch.exe proclaunch.obj
 else
 # *nix/Mac
 LFLAGS  = -L.. -liniparser
