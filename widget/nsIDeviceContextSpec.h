@@ -13,8 +13,8 @@ class nsIPrintSettings;
 class gfxASurface;
 
 #define NS_IDEVICE_CONTEXT_SPEC_IID   \
-{ 0x205c614f, 0x39f8, 0x42e1, \
-{ 0x92, 0x53, 0x04, 0x9b, 0x48, 0xc3, 0xcb, 0xd8 } }
+{ 0xb5548fb1, 0xf43e, 0x4921, \
+  { 0x82, 0x19, 0xc3, 0x82, 0x06, 0xee, 0x74, 0x5c } }
 
 class nsIDeviceContextSpec : public nsISupports
 {
@@ -34,10 +34,10 @@ public:
 
    NS_IMETHOD GetSurfaceForPrinter(gfxASurface **nativeSurface) = 0;
 
-   NS_IMETHOD BeginDocument(PRUnichar*  aTitle,
-                            PRUnichar*  aPrintToFileName,
-                            int32_t     aStartPage,
-                            int32_t     aEndPage) = 0;
+   NS_IMETHOD BeginDocument(const nsAString& aTitle,
+                            PRUnichar*       aPrintToFileName,
+                            int32_t          aStartPage,
+                            int32_t          aEndPage) = 0;
 
    NS_IMETHOD EndDocument() = 0;
    NS_IMETHOD BeginPage() = 0;

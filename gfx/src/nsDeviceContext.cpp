@@ -472,15 +472,15 @@ nsDeviceContext::InitForPrinting(nsIDeviceContextSpec *aDevice)
 }
 
 nsresult
-nsDeviceContext::BeginDocument(PRUnichar*  aTitle,
-                               PRUnichar*  aPrintToFileName,
-                               int32_t     aStartPage,
-                               int32_t     aEndPage)
+nsDeviceContext::BeginDocument(const nsAString& aTitle,
+                               PRUnichar*       aPrintToFileName,
+                               int32_t          aStartPage,
+                               int32_t          aEndPage)
 {
     static const PRUnichar kEmpty[] = { '\0' };
     nsresult rv;
 
-    rv = mPrintingSurface->BeginPrinting(nsDependentString(aTitle ? aTitle : kEmpty),
+    rv = mPrintingSurface->BeginPrinting(aTitle,
                                          nsDependentString(aPrintToFileName ? aPrintToFileName : kEmpty));
 
     if (NS_SUCCEEDED(rv) && mDeviceContextSpec)

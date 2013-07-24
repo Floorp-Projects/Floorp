@@ -15,7 +15,7 @@ public:
     NS_IMETHOD Init(nsIWidget* aWidget,
                     nsIPrintSettings* aPS,
                     bool aIsPrintPreview);
-    NS_IMETHOD BeginDocument(PRUnichar* aTitle,
+    NS_IMETHOD BeginDocument(const nsAString& aTitle,
                              PRUnichar* aPrintToFileName,
                              int32_t aStartPage,
                              int32_t aEndPage);
