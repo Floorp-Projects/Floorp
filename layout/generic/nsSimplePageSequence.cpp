@@ -61,8 +61,6 @@ GetLayoutPrintingLog()
 nsSharedPageData::nsSharedPageData() :
   mDateTimeStr(nullptr),
   mHeadFootFont(nullptr),
-  mPageNumFormat(nullptr),
-  mPageNumAndTotalsFormat(nullptr),
   mReflowSize(0,0),
   mReflowMargin(0,0,0,0),
   mEdgePaperMargin(0,0,0,0),
@@ -75,8 +73,6 @@ nsSharedPageData::~nsSharedPageData()
 {
   nsMemory::Free(mDateTimeStr);
   delete mHeadFootFont;
-  nsMemory::Free(mPageNumFormat);
-  nsMemory::Free(mPageNumAndTotalsFormat);
 }
 
 nsIFrame*
@@ -390,12 +386,7 @@ nsSimplePageSequenceFrame::SetPageNumberFormat(const char* aPropName, const char
     pageNumberFormat.AssignASCII(aDefPropVal);
   }
 
-  // Sets the format into a static data member which will own the memory and free it
-  PRUnichar* uStr = ToNewUnicode(pageNumberFormat);
-  if (uStr != nullptr) {
-    SetPageNumberFormat(uStr, aPageNumOnly); // nsPageFrame will own the memory
-  }
-
+  SetPageNumberFormat(pageNumberFormat, aPageNumOnly);
 }
 
 NS_IMETHODIMP
@@ -836,20 +827,13 @@ nsSimplePageSequenceFrame::GetType() const
 
 //------------------------------------------------------------------------------
 void
-nsSimplePageSequenceFrame::SetPageNumberFormat(PRUnichar * aFormatStr, bool aForPageNumOnly)
+nsSimplePageSequenceFrame::SetPageNumberFormat(const nsAString& aFormatStr, bool aForPageNumOnly)
 { 
-  NS_ASSERTION(aFormatStr != nullptr, "Format string cannot be null!");
   NS_ASSERTION(mPageData != nullptr, "mPageData string cannot be null!");
 
   if (aForPageNumOnly) {
-    if (mPageData->mPageNumFormat != nullptr) {
-      nsMemory::Free(mPageData->mPageNumFormat);
-    }
     mPageData->mPageNumFormat = aFormatStr;
   } else {
-    if (mPageData->mPageNumAndTotalsFormat != nullptr) {
-      nsMemory::Free(mPageData->mPageNumAndTotalsFormat);
-    }
     mPageData->mPageNumAndTotalsFormat = aFormatStr;
   }
 }
