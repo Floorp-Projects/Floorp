@@ -379,6 +379,7 @@ function()
 
     isnot(gBrowser.selectedTab.linkedBrowser, browser,
           "This tab should have been loaded in background");
+    Services.console.logStringMessage("About to click #s on URI: " + browser.contentDocument.location.href);
     browser.contentDocument.getElementById('s').click();
   }, true);
 
