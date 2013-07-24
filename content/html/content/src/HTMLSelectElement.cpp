@@ -1744,30 +1744,24 @@ HTMLSelectElement::RebuildOptionsArray(bool aNotify)
 bool
 HTMLSelectElement::IsValueMissing()
 {
-  if (!HasAttr(kNameSpaceID_None, nsGkAtoms::required)) {
+  if (!Required()) {
     return false;
   }
 
-  uint32_t length;
-  mOptions->GetLength(&length);
+  uint32_t length = Length();
 
   for (uint32_t i = 0; i < length; ++i) {
-    nsIDOMHTMLOptionElement* option = mOptions->ItemAsOption(i);
-    bool selected;
-    NS_ENSURE_SUCCESS(option->GetSelected(&selected), false);
-
-    if (!selected) {
+    nsRefPtr<HTMLOptionElement> option = Item(i);
+    if (!option->Selected()) {
       continue;
     }
 
-    bool disabled;
-    IsOptionDisabled(i, &disabled);
-    if (disabled) {
+    if (IsOptionDisabled(option)) {
       continue;
     }
 
     nsAutoString value;
-    NS_ENSURE_SUCCESS(option->GetValue(value), false);
+    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(option->GetValue(value)));
     if (!value.IsEmpty()) {
       return false;
     }
