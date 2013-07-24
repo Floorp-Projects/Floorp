@@ -12,6 +12,7 @@
 #include "nsIContent.h"
 #include "nsPresContext.h"
 #include "nsStyleContext.h"
+#include "nsContainerFrame.h"
 
 NS_IMPL_FRAMEARENA_HELPERS(nsSplittableFrame)
 
@@ -214,6 +215,80 @@ nsSplittableFrame::GetConsumedHeight() const
   }
 
   return height;
+}
+
+nscoord
+nsSplittableFrame::GetEffectiveComputedHeight(const nsHTMLReflowState& aReflowState,
+                                              nscoord aConsumedHeight) const
+{
+  nscoord height = aReflowState.ComputedHeight();
+  if (height == NS_INTRINSICSIZE) {
+    return NS_INTRINSICSIZE;
+  }
+
+  if (aConsumedHeight == NS_INTRINSICSIZE) {
+    aConsumedHeight = GetConsumedHeight();
+  }
+
+  height -= aConsumedHeight;
+
+  if (aConsumedHeight != NS_INTRINSICSIZE) {
+    // We just subtracted our top-border padding, since it was included in the
+    // first frame's height. Add it back to get the content height.
+    height += aReflowState.mComputedBorderPadding.top;
+  }
+
+  // We may have stretched the frame beyond its computed height. Oh well.
+  height = std::max(0, height);
+
+  return height;
+}
+
+void
+nsSplittableFrame::ComputeFinalHeight(const nsHTMLReflowState& aReflowState,
+                                      nsReflowStatus*          aStatus,
+                                      nscoord                  aContentHeight,
+                                      const nsMargin&          aBorderPadding,
+                                      nsHTMLReflowMetrics&     aMetrics,
+                                      nscoord                  aConsumed)
+{
+
+  // Figure out how much of the computed height should be
+  // applied to this frame.
+  nscoord computedHeightLeftOver = GetEffectiveComputedHeight(aReflowState,
+                                                              aConsumed);
+  NS_ASSERTION(!( IS_TRUE_OVERFLOW_CONTAINER(this)
+                  && computedHeightLeftOver ),
+               "overflow container must not have computedHeightLeftOver");
+
+  aMetrics.height =
+    NSCoordSaturatingAdd(NSCoordSaturatingAdd(aBorderPadding.top,
+                                              computedHeightLeftOver),
+                         aBorderPadding.bottom);
+
+  if (NS_FRAME_IS_NOT_COMPLETE(*aStatus)
+      && aMetrics.height < aReflowState.availableHeight) {
+    // We ran out of height on this page but we're incomplete
+    // Set status to complete except for overflow
+    NS_FRAME_SET_OVERFLOW_INCOMPLETE(*aStatus);
+  }
+
+  if (NS_FRAME_IS_COMPLETE(*aStatus)) {
+    if (computedHeightLeftOver > 0 &&
+        NS_UNCONSTRAINEDSIZE != aReflowState.availableHeight &&
+        aMetrics.height > aReflowState.availableHeight) {
+      // We don't fit and we consumed some of the computed height,
+      // so we should consume all the available height and then
+      // break.  If our bottom border/padding straddles the break
+      // point, then this will increase our height and push the
+      // border/padding to the next page/column.
+      aMetrics.height = std::max(aReflowState.availableHeight,
+                                 aContentHeight);
+      NS_FRAME_SET_INCOMPLETE(*aStatus);
+      if (!GetNextInFlow())
+        *aStatus |= NS_FRAME_REFLOW_NEXTINFLOW;
+    }
+  }
 }
 
 #ifdef DEBUG
