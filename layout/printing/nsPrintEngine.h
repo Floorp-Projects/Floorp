@@ -71,6 +71,7 @@ public:
   // This enum tells indicates what the default should be for the title
   // if the title from the document is null
   enum eDocTitleDefault {
+    eDocTitleDefNone,
     eDocTitleDefBlank,
     eDocTitleDefURLDoc
   };
@@ -135,7 +136,7 @@ public:
   static void CloseProgressDialog(nsIWebProgressListener* aWebProgressListener);
   void SetDocAndURLIntoProgress(nsPrintObject* aPO,
                                 nsIPrintProgressParams* aParams);
-  void EllipseLongString(nsAString& aStr, const uint32_t aLen, bool aDoFront);
+  void ElipseLongString(PRUnichar *& aStr, const uint32_t aLen, bool aDoFront);
   nsresult CheckForPrinters(nsIPrintSettings* aPrintSettings);
   void CleanupDocTitleArray(PRUnichar**& aArray, int32_t& aCount);
 
@@ -163,12 +164,12 @@ public:
   // Static Methods
   //---------------------------------------------------------------------
   static void GetDocumentTitleAndURL(nsIDocument* aDoc,
-                                     nsAString&   aTitle,
-                                     nsAString&   aURLStr);
-  void GetDisplayTitleAndURL(nsPrintObject*   aPO,
-                             nsAString&       aTitle,
-                             nsAString&       aURLStr,
-                             eDocTitleDefault aDefType);
+                                     PRUnichar** aTitle,
+                                     PRUnichar** aURLStr);
+  void GetDisplayTitleAndURL(nsPrintObject*    aPO,
+                             PRUnichar**       aTitle,
+                             PRUnichar**       aURLStr,
+                             eDocTitleDefault  aDefType);
   static void ShowPrintErrorDialog(nsresult printerror,
                                    bool aIsPrinting = true);
 

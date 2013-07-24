@@ -26,8 +26,8 @@ public:
   nsFont *    mHeadFootFont;
   PRUnichar * mPageNumFormat;
   PRUnichar * mPageNumAndTotalsFormat;
-  nsString    mDocTitle;
-  nsString    mDocURL;
+  PRUnichar * mDocTitle;
+  PRUnichar * mDocURL;
 
   nsSize      mReflowSize;
   nsMargin    mReflowMargin;
@@ -71,10 +71,10 @@ public:
   NS_IMETHOD GetSTFPercent(float& aSTFPercent) MOZ_OVERRIDE;
 
   // Async Printing
-  NS_IMETHOD StartPrint(nsPresContext*    aPresContext,
+  NS_IMETHOD StartPrint(nsPresContext*  aPresContext,
                         nsIPrintSettings* aPrintSettings,
-                        const nsAString&  aDocTitle,
-                        const nsAString&  aDocURL) MOZ_OVERRIDE;
+                        PRUnichar*        aDocTitle,
+                        PRUnichar*        aDocURL) MOZ_OVERRIDE;
   NS_IMETHOD PrePrintNextPage(nsITimerCallback* aCallback, bool* aDone) MOZ_OVERRIDE;
   NS_IMETHOD PrintNextPage() MOZ_OVERRIDE;
   NS_IMETHOD ResetPrintCanvasList() MOZ_OVERRIDE;
