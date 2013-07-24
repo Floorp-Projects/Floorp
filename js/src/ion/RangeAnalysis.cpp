@@ -370,31 +370,31 @@ Range::unionWith(const Range *other)
    max_exponent_ = max_exponent;
 }
 
-static const Range emptyRange;
+const int64_t RANGE_INF_MAX = int64_t(JSVAL_INT_MAX) + 1;
+const int64_t RANGE_INF_MIN = int64_t(JSVAL_INT_MIN) - 1;
 
 Range::Range(const MDefinition *def)
   : symbolicLower_(NULL),
     symbolicUpper_(NULL)
 {
     const Range *other = def->range();
-    if (!other)
-        other = &emptyRange;
+    if (!other) {
+        if (def->type() == MIRType_Int32)
+            set(JSVAL_INT_MIN, JSVAL_INT_MAX);
+        else if (def->type() == MIRType_Boolean)
+            set(0, 1);
+        else
+            set(RANGE_INF_MIN, RANGE_INF_MAX, true, MaxDoubleExponent);
+        symbolicLower_ = symbolicUpper_ = NULL;
+        return;
+    }
 
-    lower_ = other->lower_;
-    lower_infinite_ = other->lower_infinite_;
-    upper_ = other->upper_;
-    upper_infinite_ = other->upper_infinite_;
-    decimal_ = other->decimal_;
-    max_exponent_ = other->max_exponent_;
+    *this = *other;
+    symbolicLower_ = symbolicUpper_ = NULL;
 
-    if (def->type() == MIRType_Int32)
-        truncate();
-    else if (def->type() == MIRType_Boolean)
-        truncateToBoolean();
+    if (def->type() == MIRType_Boolean)
+        wrapAroundToBoolean();
 }
-
-const int64_t RANGE_INF_MAX = (int64_t) JSVAL_INT_MAX + 1;
-const int64_t RANGE_INF_MIN = (int64_t) JSVAL_INT_MIN - 1;
 
 static inline bool
 HasInfinite(const Range *lhs, const Range *rhs)
@@ -436,6 +436,8 @@ Range::sub(const Range *lhs, const Range *rhs)
 Range *
 Range::and_(const Range *lhs, const Range *rhs)
 {
+    JS_ASSERT(lhs->isInt32());
+    JS_ASSERT(rhs->isInt32());
     int64_t lower;
     int64_t upper;
 
@@ -466,6 +468,8 @@ Range::and_(const Range *lhs, const Range *rhs)
 Range *
 Range::or_(const Range *lhs, const Range *rhs)
 {
+    JS_ASSERT(lhs->isInt32());
+    JS_ASSERT(rhs->isInt32());
     // When one operand is always 0 or always -1, it's a special case where we
     // can compute a fully precise result. Handling these up front also
     // protects the code below from calling CountLeadingZeroes32 with a zero
@@ -519,6 +523,8 @@ Range::or_(const Range *lhs, const Range *rhs)
 Range *
 Range::xor_(const Range *lhs, const Range *rhs)
 {
+    JS_ASSERT(lhs->isInt32());
+    JS_ASSERT(rhs->isInt32());
     int32_t lhsLower = lhs->lower_;
     int32_t lhsUpper = lhs->upper_;
     int32_t rhsLower = rhs->lower_;
@@ -581,6 +587,7 @@ Range::xor_(const Range *lhs, const Range *rhs)
 Range *
 Range::not_(const Range *op)
 {
+    JS_ASSERT(op->isInt32());
     return new Range(~op->upper_, ~op->lower_);
 }
 
@@ -604,6 +611,7 @@ Range::mul(const Range *lhs, const Range *rhs)
 Range *
 Range::lsh(const Range *lhs, int32_t c)
 {
+    JS_ASSERT(lhs->isInt32());
     int32_t shift = c & 0x1f;
 
     // If the shift doesn't loose bits or shift bits into the sign bit, we
@@ -622,6 +630,7 @@ Range::lsh(const Range *lhs, int32_t c)
 Range *
 Range::rsh(const Range *lhs, int32_t c)
 {
+    JS_ASSERT(lhs->isInt32());
     int32_t shift = c & 0x1f;
     return new Range(
         (int64_t)lhs->lower_ >> shift,
@@ -650,12 +659,16 @@ Range::ursh(const Range *lhs, int32_t c)
 Range *
 Range::lsh(const Range *lhs, const Range *rhs)
 {
+    JS_ASSERT(lhs->isInt32());
+    JS_ASSERT(rhs->isInt32());
     return new Range(INT32_MIN, INT32_MAX);
 }
 
 Range *
 Range::rsh(const Range *lhs, const Range *rhs)
 {
+    JS_ASSERT(lhs->isInt32());
+    JS_ASSERT(rhs->isInt32());
     return new Range(Min(lhs->lower(), 0), Max(lhs->upper(), 0));
 }
 
@@ -789,9 +802,6 @@ MPhi::computeRange()
     }
 
     setRange(range);
-
-    if (block()->isLoopHeader()) {
-    }
 }
 
 void
@@ -869,6 +879,9 @@ MBitAnd::computeRange()
 {
     Range left(getOperand(0));
     Range right(getOperand(1));
+    left.wrapAroundToInt32();
+    right.wrapAroundToInt32();
+
     setRange(Range::and_(&left, &right));
 }
 
@@ -877,6 +890,9 @@ MBitOr::computeRange()
 {
     Range left(getOperand(0));
     Range right(getOperand(1));
+    left.wrapAroundToInt32();
+    right.wrapAroundToInt32();
+
     setRange(Range::or_(&left, &right));
 }
 
@@ -885,6 +901,9 @@ MBitXor::computeRange()
 {
     Range left(getOperand(0));
     Range right(getOperand(1));
+    left.wrapAroundToInt32();
+    right.wrapAroundToInt32();
+
     setRange(Range::xor_(&left, &right));
 }
 
@@ -892,6 +911,8 @@ void
 MBitNot::computeRange()
 {
     Range op(getOperand(0));
+    op.wrapAroundToInt32();
+
     setRange(Range::not_(&op));
 }
 
@@ -900,9 +921,11 @@ MLsh::computeRange()
 {
     Range left(getOperand(0));
     Range right(getOperand(1));
+    left.wrapAroundToInt32();
 
     MDefinition *rhs = getOperand(1);
     if (!rhs->isConstant()) {
+        right.wrapAroundToShiftCount();
         setRange(Range::lsh(&left, &right));
         return;
     }
@@ -916,9 +939,11 @@ MRsh::computeRange()
 {
     Range left(getOperand(0));
     Range right(getOperand(1));
+    left.wrapAroundToInt32();
 
     MDefinition *rhs = getOperand(1);
     if (!rhs->isConstant()) {
+        right.wrapAroundToShiftCount();
         setRange(Range::rsh(&left, &right));
         return;
     }
@@ -935,6 +960,7 @@ MUrsh::computeRange()
 
     MDefinition *rhs = getOperand(1);
     if (!rhs->isConstant()) {
+        right.wrapAroundToShiftCount();
         setRange(Range::ursh(&left, &right));
         return;
     }
@@ -1040,21 +1066,17 @@ MToDouble::computeRange()
 void
 MTruncateToInt32::computeRange()
 {
-    Range input(getOperand(0));
-    int32_t lower = input.lower();
-    int32_t upper = input.upper();
-    if (input.isLowerInfinite() || input.isUpperInfinite()) {
-        lower = JSVAL_INT_MIN;
-        upper = JSVAL_INT_MAX;
-    }
-    setRange(new Range(lower, upper));
+    Range *output = new Range(getOperand(0));
+    output->wrapAroundToInt32();
+    setRange(output);
 }
 
 void
 MToInt32::computeRange()
 {
-    Range input(getOperand(0));
-    setRange(new Range(input.lower(), input.upper()));
+    Range *output = new Range(getOperand(0));
+    output->clampToInt32();
+    setRange(output);
 }
 
 static Range *GetTypedArrayRange(int type)
@@ -1556,21 +1578,34 @@ RangeAnalysis::analyze()
 ///////////////////////////////////////////////////////////////////////////////
 
 void
-Range::truncate()
+Range::clampToInt32()
 {
     if (isInt32())
         return;
     int64_t l = isLowerInfinite() ? JSVAL_INT_MIN : lower();
     int64_t h = isUpperInfinite() ? JSVAL_INT_MAX : upper();
-    set(l, h, false, 32);
+    set(l, h);
 }
 
 void
-Range::truncateToBoolean()
+Range::wrapAroundToInt32()
 {
-    if (isBoolean())
-        return;
-    set(0, 1, false, 1);
+    if (!isInt32())
+        set(JSVAL_INT_MIN, JSVAL_INT_MAX);
+}
+
+void
+Range::wrapAroundToShiftCount()
+{
+    if (lower() < 0 || upper() >= 32)
+        set(0, 31);
+}
+
+void
+Range::wrapAroundToBoolean()
+{
+    if (!isBoolean())
+        set(0, 1);
 }
 
 bool
@@ -1590,7 +1625,7 @@ MConstant::truncate()
     value_.setInt32(ToInt32(value_.toDouble()));
     setResultType(MIRType_Int32);
     if (range())
-        range()->truncate();
+        range()->clampToInt32();
     return true;
 }
 
@@ -1607,7 +1642,7 @@ MAdd::truncate()
     specialization_ = MIRType_Int32;
     setResultType(MIRType_Int32);
     if (range())
-        range()->truncate();
+        range()->wrapAroundToInt32();
     return true;
 }
 
@@ -1624,7 +1659,7 @@ MSub::truncate()
     specialization_ = MIRType_Int32;
     setResultType(MIRType_Int32);
     if (range())
-        range()->truncate();
+        range()->wrapAroundToInt32();
     return true;
 }
 
@@ -1644,7 +1679,7 @@ MMul::truncate()
     }
 
     if (truncated && range()) {
-        range()->truncate();
+        range()->wrapAroundToInt32();
         setTruncated(true);
         setCanBeNegativeZero(false);
     }
@@ -1690,11 +1725,11 @@ MToDouble::truncate()
 {
     JS_ASSERT(type() == MIRType_Double);
 
-    // We use the return type to flag that this MToDouble sould be replaced by a
-    // MTruncateToInt32 when modifying the graph.
+    // We use the return type to flag that this MToDouble should be replaced by
+    // a MTruncateToInt32 when modifying the graph.
     setResultType(MIRType_Int32);
     if (range())
-        range()->truncate();
+        range()->wrapAroundToInt32();
 
     return true;
 }
