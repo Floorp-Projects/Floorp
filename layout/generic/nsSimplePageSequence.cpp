@@ -59,11 +59,7 @@ GetLayoutPrintingLog()
 // This object a shared by all the nsPageFrames 
 // parented to a SimplePageSequenceFrame
 nsSharedPageData::nsSharedPageData() :
-  mDateTimeStr(nullptr),
   mHeadFootFont(nullptr),
-  mReflowSize(0,0),
-  mReflowMargin(0,0,0,0),
-  mEdgePaperMargin(0,0,0,0),
   mPageContentXMost(0),
   mPageContentSize(0)
 {
@@ -71,7 +67,6 @@ nsSharedPageData::nsSharedPageData() :
 
 nsSharedPageData::~nsSharedPageData()
 {
-  nsMemory::Free(mDateTimeStr);
   delete mHeadFootFont;
 }
 
@@ -299,8 +294,7 @@ nsSimplePageSequenceFrame::Reflow(nsPresContext*          aPresContext,
                                               kTimeFormatNoSeconds,
                                               ltime,
                                               formattedDateString))) {
-    PRUnichar * uStr = ToNewUnicode(formattedDateString);
-    SetDateTimeStr(uStr); // memory will be freed
+    SetDateTimeStr(formattedDateString);
   }
 
   // Return our desired size
@@ -840,14 +834,10 @@ nsSimplePageSequenceFrame::SetPageNumberFormat(const nsAString& aFormatStr, bool
 
 //------------------------------------------------------------------------------
 void
-nsSimplePageSequenceFrame::SetDateTimeStr(PRUnichar * aDateTimeStr)
+nsSimplePageSequenceFrame::SetDateTimeStr(const nsAString& aDateTimeStr)
 { 
-  NS_ASSERTION(aDateTimeStr != nullptr, "DateTime string cannot be null!");
   NS_ASSERTION(mPageData != nullptr, "mPageData string cannot be null!");
 
-  if (mPageData->mDateTimeStr != nullptr) {
-    nsMemory::Free(mPageData->mDateTimeStr);
-  }
   mPageData->mDateTimeStr = aDateTimeStr;
 }
 

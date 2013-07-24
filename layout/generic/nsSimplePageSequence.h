@@ -22,7 +22,7 @@ public:
   nsSharedPageData();
   ~nsSharedPageData();
 
-  PRUnichar * mDateTimeStr;
+  nsString    mDateTimeStr;
   nsFont *    mHeadFootFont;
   nsString    mPageNumFormat;
   nsString    mPageNumAndTotalsFormat;
@@ -108,7 +108,7 @@ protected:
   void SetPageNumberFormat(const char* aPropName, const char* aDefPropVal, bool aPageNumOnly);
 
   // SharedPageData Helper methods
-  void SetDateTimeStr(PRUnichar * aDateTimeStr);
+  void SetDateTimeStr(const nsAString& aDateTimeStr);
   void SetPageNumberFormat(const nsAString& aFormatStr, bool aForPageNumOnly);
 
   // Sets the frame desired size to the size of the viewport, or the given
