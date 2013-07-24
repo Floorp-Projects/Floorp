@@ -316,6 +316,9 @@
   <string name="wallpaper_progress">&wallpaper_progress;</string>
   <string name="wallpaper_fail">&wallpaper_fail;</string>
 
+  <!-- Contacts API -->
+  <string name="contacts_account_chooser_dialog_title">Share contacts from...</string>
+
 
   <!-- Guest mode -->
   <string name="enter_guest_mode">&enter_guest_mode;</string>

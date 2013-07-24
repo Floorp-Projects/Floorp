@@ -10,8 +10,8 @@
 #include "mozilla/Endian.h"
 
 #include "jsapi.h"
-#include "jsprvtd.h"
 #include "jsnum.h"
+#include "jsprvtd.h"
 
 #include "vm/NumericConversions.h"
 

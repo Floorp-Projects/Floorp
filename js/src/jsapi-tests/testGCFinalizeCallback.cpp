@@ -2,12 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "jsapi-tests/tests.h"
-
 #include <stdarg.h>
 
-#include "jsfriendapi.h"
 #include "jscntxt.h"
+#include "jsfriendapi.h"
+
+#include "jsapi-tests/tests.h"
 
 #include "vm/ObjectImpl-inl.h"
 

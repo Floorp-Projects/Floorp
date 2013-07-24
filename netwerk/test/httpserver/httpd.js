@@ -547,7 +547,7 @@ nsHttpServer.prototype =
         if (!allowed)
         {
           dumpn(">>>Warning: obtained ServerSocket listens on a blocked " +
-                "port: " + socket.port);
+                "port: " + temp.port);
         }
 
         if (!allowed && this._port == -1)

@@ -18,12 +18,6 @@
 #include "jscntxt.h"
 #include "jsobj.h"
 
-#include "vm/DateTime.h"
-#include "vm/GlobalObject.h"
-#include "vm/Interpreter.h"
-#include "vm/Stack.h"
-#include "vm/StringBuffer.h"
-
 #if ENABLE_INTL_API
 #include "unicode/locid.h"
 #include "unicode/numsys.h"
@@ -36,6 +30,11 @@
 #include "unicode/ustring.h"
 #endif
 #include "unicode/utypes.h"
+#include "vm/DateTime.h"
+#include "vm/GlobalObject.h"
+#include "vm/Interpreter.h"
+#include "vm/Stack.h"
+#include "vm/StringBuffer.h"
 
 #include "jsobjinlines.h"
 

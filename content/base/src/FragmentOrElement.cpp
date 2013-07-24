@@ -504,17 +504,6 @@ nsNodeSupportsWeakRefTearoff::GetWeakReference(nsIWeakReference** aInstancePtr)
 
 //----------------------------------------------------------------------
 
-NS_IMPL_CYCLE_COLLECTION_1(nsTouchEventReceiverTearoff, mElement)
-
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsTouchEventReceiverTearoff)
-  NS_INTERFACE_MAP_ENTRY(nsITouchEventReceiver)
-NS_INTERFACE_MAP_END_AGGREGATED(mElement)
-
-NS_IMPL_CYCLE_COLLECTING_ADDREF(nsTouchEventReceiverTearoff)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(nsTouchEventReceiverTearoff)
-
-//----------------------------------------------------------------------
-
 NS_IMPL_CYCLE_COLLECTION_1(nsInlineEventHandlersTearoff, mElement)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsInlineEventHandlersTearoff)
@@ -1761,8 +1750,6 @@ NS_INTERFACE_MAP_BEGIN(FragmentOrElement)
                                  new nsNodeSupportsWeakRefTearoff(this))
   NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOMXPathNSResolver,
                                  new nsNode3Tearoff(this))
-  NS_INTERFACE_MAP_ENTRY_TEAROFF(nsITouchEventReceiver,
-                                 new nsTouchEventReceiverTearoff(this))
   NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIInlineEventHandlers,
                                  new nsInlineEventHandlersTearoff(this))
   // DOM bindings depend on the identity pointer being the

@@ -698,13 +698,22 @@ nsFrame::GetOffsets(int32_t &aStart, int32_t &aEnd) const
 /* virtual */ void
 nsFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
 {
-  if (IsSVGText() && !(mState & NS_FRAME_FIRST_REFLOW)) {
+  if (IsSVGText()) {
     nsSVGTextFrame2* svgTextFrame = static_cast<nsSVGTextFrame2*>(
         nsLayoutUtils::GetClosestFrameOfType(this, nsGkAtoms::svgTextFrame2));
+    nsIFrame* anonBlock = svgTextFrame->GetFirstPrincipalChild();
     // Just as in nsSVGTextFrame2::DidSetStyleContext, we need to ensure that
     // any non-display nsSVGTextFrame2s get reflowed when a child text frame
-    // gets new style.
-    if (svgTextFrame->GetStateBits() & NS_FRAME_IS_NONDISPLAY) {
+    // gets new style.  We don't need to do this when the frame has not yet
+    // been reflowed, since that will happen soon anyway.
+    //
+    // Note that we must check NS_FRAME_FIRST_REFLOW on our nsSVGTextFrame2's
+    // anonymous block frame rather than our self, since NS_FRAME_FIRST_REFLOW
+    // may be set on us if we're a new frame that has been inserted after the
+    // document's first reflow. (In which case this DidSetStyleContext call may
+    // be happening under frame construction under a Reflow() call.)
+    if (anonBlock && !(anonBlock->GetStateBits() & NS_FRAME_FIRST_REFLOW) &&
+        (svgTextFrame->GetStateBits() & NS_FRAME_IS_NONDISPLAY)) {
       svgTextFrame->ScheduleReflowSVGNonDisplayText();
     }
   }

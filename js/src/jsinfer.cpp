@@ -4,42 +4,41 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "jsinfer.h"
+#include "jsinferinlines.h"
 
 #include "mozilla/DebugOnly.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/PodOperations.h"
 
+#ifdef __SUNPRO_CC
+#include <alloca.h>
+#endif
+
 #include "jsapi.h"
+#include "jscntxt.h"
 #include "jsfriendapi.h"
 #include "jsgc.h"
 #include "jsobj.h"
 #include "jsscript.h"
-#include "jscntxt.h"
 #include "jsstr.h"
 #include "jsworkers.h"
 #include "prmjtime.h"
 
+#include "gc/Marking.h"
 #ifdef JS_ION
 #include "ion/BaselineJIT.h"
 #include "ion/Ion.h"
 #include "ion/IonCompartment.h"
 #endif
-#include "gc/Marking.h"
 #include "js/MemoryMetrics.h"
 #include "vm/Shape.h"
 
 #include "jsanalyzeinlines.h"
 #include "jsatominlines.h"
 #include "jsgcinlines.h"
-#include "jsinferinlines.h"
-#include "jsopcodeinlines.h"
 #include "jsobjinlines.h"
+#include "jsopcodeinlines.h"
 #include "jsscriptinlines.h"
-
-#ifdef __SUNPRO_CC
-#include <alloca.h>
-#endif
 
 using namespace js;
 using namespace js::gc;

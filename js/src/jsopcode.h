@@ -10,7 +10,9 @@
 /*
  * JS bytecode definitions.
  */
+
 #include <stddef.h>
+
 #include "jsprvtd.h"
 #include "jspubtd.h"
 #include "jsutil.h"

@@ -1776,6 +1776,18 @@ JS_NewRuntime(uint32_t maxbytes, JSUseHelperThreads useHelperThreads);
 extern JS_PUBLIC_API(void)
 JS_DestroyRuntime(JSRuntime *rt);
 
+// These are equivalent to ICU's |UMemAllocFn|, |UMemReallocFn|, and
+// |UMemFreeFn| types.  The first argument (called |context| in the ICU docs)
+// will always be NULL, and should be ignored.
+typedef void *(*JS_ICUAllocFn)(const void *, size_t size);
+typedef void *(*JS_ICUReallocFn)(const void *, void *p, size_t size);
+typedef void (*JS_ICUFreeFn)(const void *, void *p);
+
+// This function can be used to track memory used by ICU.
+// Do not use it unless you know what you are doing!
+extern JS_PUBLIC_API(bool)
+JS_SetICUMemoryFunctions(JS_ICUAllocFn allocFn, JS_ICUReallocFn reallocFn, JS_ICUFreeFn freeFn);
+
 extern JS_PUBLIC_API(void)
 JS_ShutDown(void);
 

@@ -20,9 +20,6 @@
 #include <string.h>
 #include <sys/stat.h>
 
-#include "jstypes.h"
-#include "jsutil.h"
-#include "jsprf.h"
 #include "jsarray.h"
 #include "jsatom.h"
 #include "jsbool.h"
@@ -38,31 +35,44 @@
 #include "jsmath.h"
 #include "jsnativestack.h"
 #include "jsnum.h"
-#include "json.h"
 #include "jsobj.h"
+#include "json.h"
+#include "jsprf.h"
 #include "jsproxy.h"
 #include "jsscript.h"
 #include "jsstr.h"
-#include "prmjtime.h"
+#include "jstypes.h"
+#include "jsutil.h"
 #include "jsweakmap.h"
-#include "jswrapper.h"
 #ifdef JS_THREADSAFE
 #include "jsworkers.h"
 #endif
+#include "jswrapper.h"
+#include "prmjtime.h"
 
+#if ENABLE_YARR_JIT
+#include "assembler/jit/ExecutableAllocator.h"
+#endif
 #include "builtin/Eval.h"
 #include "builtin/Intl.h"
 #include "builtin/MapObject.h"
-#include "builtin/RegExp.h"
 #include "builtin/ParallelArray.h"
+#include "builtin/RegExp.h"
 #include "frontend/BytecodeCompiler.h"
 #include "frontend/FullParseHandler.h"  // for JS_BufferIsCompileableUnit
 #include "frontend/Parser.h" // for JS_BufferIsCompileableUnit
 #include "gc/Marking.h"
 #include "gc/Memory.h"
 #include "ion/AsmJS.h"
+#ifdef JS_ION
+#include "ion/Ion.h"
+#endif
 #include "ion/PcScriptCache.h"
 #include "js/CharacterEncoding.h"
+#if ENABLE_INTL_API
+#include "unicode/uclean.h"
+#include "unicode/utypes.h"
+#endif
 #include "vm/DateObject.h"
 #include "vm/Debugger.h"
 #include "vm/ErrorObject.h"
@@ -86,14 +96,6 @@
 #include "vm/RegExpStatics-inl.h"
 #include "vm/Shape-inl.h"
 #include "vm/String-inl.h"
-
-#if ENABLE_YARR_JIT
-#include "assembler/jit/ExecutableAllocator.h"
-#endif
-
-#ifdef JS_ION
-#include "ion/Ion.h"
-#endif
 
 using namespace js;
 using namespace js::gc;
@@ -1173,6 +1175,18 @@ JS_DestroyRuntime(JSRuntime *rt)
 {
     js_free(rt->defaultLocale);
     js_delete(rt);
+}
+
+JS_PUBLIC_API(bool)
+JS_SetICUMemoryFunctions(JS_ICUAllocFn allocFn, JS_ICUReallocFn reallocFn, JS_ICUFreeFn freeFn)
+{
+#if ENABLE_INTL_API
+    UErrorCode status = U_ZERO_ERROR;
+    u_setMemoryFunctions(/* context = */ NULL, allocFn, reallocFn, freeFn, &status);
+    return U_SUCCESS(status);
+#else
+    return true;
+#endif
 }
 
 JS_PUBLIC_API(void)
