@@ -1165,9 +1165,11 @@ nsTextControlFrame::AttributeChanged(int32_t         aNameSpaceID,
     else 
     { // unset disabled
       flags &= ~(nsIPlaintextEditor::eEditorDisabledMask);
-      selCon->SetDisplaySelection(nsISelectionController::SELECTION_HIDDEN);
       if (nsContentUtils::IsFocusedContent(mContent)) {
+        selCon->SetDisplaySelection(nsISelectionController::SELECTION_ON);
         selCon->SetCaretEnabled(true);
+      } else {
+        selCon->SetDisplaySelection(nsISelectionController::SELECTION_HIDDEN);
       }
     }
     editor->SetFlags(flags);
