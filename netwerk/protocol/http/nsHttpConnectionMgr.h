@@ -40,7 +40,7 @@ class EventTokenBucket;
 class nsHttpConnectionMgr : public nsIObserver
 {
 public:
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSIOBSERVER
 
     // parameter names
@@ -277,7 +277,7 @@ private:
         nsTArray<nsHttpTransaction*> mPendingQ;    // pending transaction queue
         nsTArray<nsHttpConnection*>  mActiveConns; // active connections
         nsTArray<nsHttpConnection*>  mIdleConns;   // idle persistent connections
-        nsTArray<nsHalfOpenSocket*>  mHalfOpens;
+        nsTArray<nsHalfOpenSocket*>  mHalfOpens;   // half open connections
 
         // calculate the number of half open sockets that have not had at least 1
         // connection complete
@@ -390,7 +390,7 @@ private:
     class nsConnectionHandle : public nsAHttpConnection
     {
     public:
-        NS_DECL_ISUPPORTS
+        NS_DECL_THREADSAFE_ISUPPORTS
         NS_DECL_NSAHTTPCONNECTION(mConn)
 
         nsConnectionHandle(nsHttpConnection *conn) { NS_ADDREF(mConn = conn); }
@@ -408,7 +408,7 @@ private:
                                        public nsITimerCallback
     {
     public:
-        NS_DECL_ISUPPORTS
+        NS_DECL_THREADSAFE_ISUPPORTS
         NS_DECL_NSIOUTPUTSTREAMCALLBACK
         NS_DECL_NSITRANSPORTEVENTSINK
         NS_DECL_NSIINTERFACEREQUESTOR

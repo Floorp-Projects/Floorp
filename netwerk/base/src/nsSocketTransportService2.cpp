@@ -401,13 +401,13 @@ nsSocketTransportService::Poll(bool wait, uint32_t *interval)
 //-----------------------------------------------------------------------------
 // xpcom api
 
-NS_IMPL_THREADSAFE_ISUPPORTS6(nsSocketTransportService,
-                              nsISocketTransportService,
-                              nsIEventTarget,
-                              nsIThreadObserver,
-                              nsIRunnable,
-                              nsPISocketTransportService,
-                              nsIObserver)
+NS_IMPL_ISUPPORTS6(nsSocketTransportService,
+                   nsISocketTransportService,
+                   nsIEventTarget,
+                   nsIThreadObserver,
+                   nsIRunnable,
+                   nsPISocketTransportService,
+                   nsIObserver)
 
 // called from main thread only
 NS_IMETHODIMP

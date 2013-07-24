@@ -216,7 +216,7 @@ nsAppStartup::Init()
 // nsAppStartup->nsISupports
 //
 
-NS_IMPL_THREADSAFE_ISUPPORTS5(nsAppStartup,
+NS_IMPL_ISUPPORTS5(nsAppStartup,
                               nsIAppStartup,
                               nsIWindowCreator,
                               nsIWindowCreator2,

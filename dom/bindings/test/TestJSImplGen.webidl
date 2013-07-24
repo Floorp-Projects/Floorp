@@ -136,8 +136,6 @@ interface TestJSImplInterface {
 
   // A version to test for casting to TestJSImplInterface&
   void passSelf(TestJSImplInterface arg);
-  // A version we can use to test for the exact type passed in
-  void passSelf2(TestJSImplInterface arg);
   void passNullableSelf(TestJSImplInterface? arg);
   attribute TestJSImplInterface nonNullSelf;
   attribute TestJSImplInterface? nullableSelf;
@@ -168,10 +166,7 @@ interface TestJSImplInterface {
   //IndirectlyImplementedInterface receiveWeakOther();
   //IndirectlyImplementedInterface? receiveWeakNullableOther();
 
-  // A verstion to test for casting to IndirectlyImplementedInterface&
   void passOther(IndirectlyImplementedInterface arg);
-  // A version we can use to test for the exact type passed in
-  void passOther2(IndirectlyImplementedInterface arg);
   void passNullableOther(IndirectlyImplementedInterface? arg);
   attribute IndirectlyImplementedInterface nonNullOther;
   attribute IndirectlyImplementedInterface? nullableOther;
@@ -186,10 +181,7 @@ interface TestJSImplInterface {
   // Callback interface ignores 'resultNotAddRefed'. See bug 843272.
   //TestExternalInterface receiveWeakExternal();
   //TestExternalInterface? receiveWeakNullableExternal();
-  // A verstion to test for casting to TestExternalInterface&
   void passExternal(TestExternalInterface arg);
-  // A version we can use to test for the exact type passed in
-  void passExternal2(TestExternalInterface arg);
   void passNullableExternal(TestExternalInterface? arg);
   attribute TestExternalInterface nonNullExternal;
   attribute TestExternalInterface? nullableExternal;
@@ -204,10 +196,7 @@ interface TestJSImplInterface {
   // Callback interface ignores 'resultNotAddRefed'. See bug 843272.
   //TestCallbackInterface receiveWeakCallbackInterface();
   //TestCallbackInterface? receiveWeakNullableCallbackInterface();
-  // A verstion to test for casting to TestCallbackInterface&
   void passCallbackInterface(TestCallbackInterface arg);
-  // A version we can use to test for the exact type passed in
-  void passCallbackInterface2(TestCallbackInterface arg);
   void passNullableCallbackInterface(TestCallbackInterface? arg);
   attribute TestCallbackInterface nonNullCallbackInterface;
   attribute TestCallbackInterface? nullableCallbackInterface;

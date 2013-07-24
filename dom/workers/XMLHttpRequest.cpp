@@ -125,7 +125,7 @@ public:
   bool mInOpen;
 
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIDOMEVENTLISTENER
 
   Proxy(XMLHttpRequest* aXHRPrivate, bool aMozAnon, bool aMozSystem)
@@ -520,7 +520,7 @@ class EventRunnable : public MainThreadProxyRunnable
   nsString mResponseType;
   JSAutoStructuredCloneBuffer mResponseBuffer;
   nsTArray<nsCOMPtr<nsISupports> > mClonedObjects;
-  jsval mResponse;
+  JS::Heap<JS::Value> mResponse;
   nsString mResponseText;
   nsCString mStatusText;
   uint64_t mLoaded;
@@ -607,6 +607,28 @@ public:
     return true;
   }
 
+  class StateDataAutoRooter : private JS::CustomAutoRooter
+  {
+  public:
+    explicit StateDataAutoRooter(JSContext* aCx, XMLHttpRequest::StateData* aData
+                                 MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+    : CustomAutoRooter(aCx), mStateData(aData), mSkip(aCx, mStateData)
+    {
+      MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+    }
+
+  private:
+    virtual void trace(JSTracer* aTrc)
+    {
+      JS_CallHeapValueTracer(aTrc, &mStateData->mResponse,
+                             "XMLHttpRequest::StateData::mResponse");
+    }
+
+    XMLHttpRequest::StateData* mStateData;
+    js::SkipRoot mSkip;
+    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
+  };
+
   bool
   WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
   {
@@ -665,8 +687,7 @@ public:
     }
 
     XMLHttpRequest::StateData state;
-    // XXXbz there is no AutoValueRooter anymore?
-    JS::AutoArrayRooter rooter(aCx, 1, &state.mResponse);
+    StateDataAutoRooter rooter(aCx, &state);
 
     state.mResponseTextResult = mResponseTextResult;
     state.mResponseText = mResponseText;
@@ -1324,7 +1345,7 @@ Proxy::AddRemoveEventListeners(bool aUpload, bool aAdd)
   return true;
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(Proxy, nsIDOMEventListener)
+NS_IMPL_ISUPPORTS1(Proxy, nsIDOMEventListener)
 
 NS_IMETHODIMP
 Proxy::HandleEvent(nsIDOMEvent* aEvent)
@@ -1423,9 +1444,9 @@ void
 XMLHttpRequest::_trace(JSTracer* aTrc)
 {
   if (mUpload) {
-    mUpload->TraceJSObject(aTrc, "mUpload");
+    mUpload->TraceJSObject(aTrc, "XMLHttpRequest::mUpload");
   }
-  JS_CallValueTracer(aTrc, &mStateData.mResponse, "mResponse");
+  JS_CallHeapValueTracer(aTrc, &mStateData.mResponse, "XMLHttpRequest::mResponse");
   XMLHttpRequestEventTarget::_trace(aTrc);
 }
 
@@ -1510,13 +1531,19 @@ XMLHttpRequest::MaybePin(ErrorResult& aRv)
 
   JSContext* cx = GetJSContext();
 
-  if (!JS_AddNamedObjectRoot(cx, &mJSObject, "XMLHttpRequest mJSObject")) {
+  /*
+   * It's safe to use unsafeGet() here: the unsafeness comes from the
+   * possibility of updating the value of mJSObject without triggering the post
+   * barriers.  However if the value will always be marked, post barriers are
+   * unnecessary.
+   */
+  if (!JS_AddNamedObjectRoot(cx, mJSObject.unsafeGet(), "XMLHttpRequest::mJSObjectRooted")) {
     aRv.Throw(NS_ERROR_FAILURE);
     return;
   }
 
   if (!mWorkerPrivate->AddFeature(cx, this)) {
-    JS_RemoveObjectRoot(cx, &mJSObject);
+    JS_RemoveObjectRoot(cx, mJSObject.unsafeGet());
     aRv.Throw(NS_ERROR_FAILURE);
     return;
   }
@@ -1635,7 +1662,8 @@ XMLHttpRequest::Unpin()
 
   JSContext* cx = GetJSContext();
 
-  JS_RemoveObjectRoot(cx, &mJSObject);
+  /* See the comment in MaybePin() for why this is safe. */
+  JS_RemoveObjectRoot(cx, mJSObject.unsafeGet());
 
   mWorkerPrivate->RemoveFeature(cx, this);
 

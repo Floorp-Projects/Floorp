@@ -61,7 +61,7 @@ static PRLogModuleInfo *gJarProtocolLog = nullptr;
 class nsJARInputThunk : public nsIInputStream
 {
 public:
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSIINPUTSTREAM
 
     nsJARInputThunk(nsIZipReader *zipReader,
@@ -104,7 +104,7 @@ private:
     int64_t                     mContentLength;
 };
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsJARInputThunk, nsIInputStream)
+NS_IMPL_ISUPPORTS1(nsJARInputThunk, nsIInputStream)
 
 nsresult
 nsJARInputThunk::Init()

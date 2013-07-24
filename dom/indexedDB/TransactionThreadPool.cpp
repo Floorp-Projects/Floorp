@@ -34,7 +34,7 @@ bool gShutdown = false;
 class TransactionThreadPoolListener : public nsIThreadPoolListener
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSITHREADPOOLLISTENER
 
 private:
@@ -51,7 +51,7 @@ BEGIN_INDEXEDDB_NAMESPACE
 class FinishTransactionRunnable MOZ_FINAL : public nsIRunnable
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIRUNNABLE
 
   inline FinishTransactionRunnable(IDBTransaction* aTransaction,
@@ -566,8 +566,7 @@ TransactionThreadPool::TransactionQueue::Finish(nsIRunnable* aFinishRunnable)
   mMonitor.Notify();
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(TransactionThreadPool::TransactionQueue,
-                              nsIRunnable)
+NS_IMPL_ISUPPORTS1(TransactionThreadPool::TransactionQueue, nsIRunnable)
 
 NS_IMETHODIMP
 TransactionThreadPool::TransactionQueue::Run()
@@ -639,7 +638,7 @@ FinishTransactionRunnable::FinishTransactionRunnable(
   mFinishRunnable.swap(aFinishRunnable);
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(FinishTransactionRunnable, nsIRunnable)
+NS_IMPL_ISUPPORTS1(FinishTransactionRunnable, nsIRunnable)
 
 NS_IMETHODIMP
 FinishTransactionRunnable::Run()
@@ -665,8 +664,7 @@ FinishTransactionRunnable::Run()
 
 #ifdef MOZ_ENABLE_PROFILER_SPS
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(TransactionThreadPoolListener,
-                              nsIThreadPoolListener)
+NS_IMPL_ISUPPORTS1(TransactionThreadPoolListener, nsIThreadPoolListener)
 
 NS_IMETHODIMP
 TransactionThreadPoolListener::OnThreadCreated()

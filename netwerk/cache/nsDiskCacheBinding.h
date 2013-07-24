@@ -32,7 +32,7 @@ class nsDiskCacheDeviceDeactivateEntryEvent;
 
 class nsDiskCacheBinding : public nsISupports, public PRCList {
 public:
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
 
     nsDiskCacheBinding(nsCacheEntry* entry, nsDiskCacheRecord * record);
     virtual ~nsDiskCacheBinding();

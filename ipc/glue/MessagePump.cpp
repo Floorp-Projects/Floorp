@@ -23,7 +23,7 @@ using mozilla::ipc::MessagePump;
 using mozilla::ipc::MessagePumpForChildProcess;
 using base::TimeTicks;
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(DoWorkRunnable, nsIRunnable, nsITimerCallback)
+NS_IMPL_ISUPPORTS2(DoWorkRunnable, nsIRunnable, nsITimerCallback)
 
 NS_IMETHODIMP
 DoWorkRunnable::Run()

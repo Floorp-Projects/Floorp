@@ -14,7 +14,7 @@ class nsStreamTransportService MOZ_FINAL : public nsIStreamTransportService
                                          , public nsIObserver
 {
 public:
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSISTREAMTRANSPORTSERVICE
     NS_DECL_NSIEVENTTARGET
     NS_DECL_NSIOBSERVER

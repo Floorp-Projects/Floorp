@@ -45,7 +45,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIEquals, NS_IEQUALS_IID)
 
 class ConsumerContext MOZ_FINAL : public nsIEquals {
 public:
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
 
     ConsumerContext() { }
 
@@ -56,11 +56,11 @@ public:
     }
 };
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(ConsumerContext, nsIEquals)
+NS_IMPL_ISUPPORTS1(ConsumerContext, nsIEquals)
 
 class Consumer : public nsIStreamListener {
 public:
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSIREQUESTOBSERVER
     NS_DECL_NSISTREAMLISTENER
 
@@ -79,7 +79,7 @@ public:
 };
 
 // nsISupports implementation
-NS_IMPL_THREADSAFE_ISUPPORTS2(Consumer, nsIStreamListener, nsIRequestObserver)
+NS_IMPL_ISUPPORTS2(Consumer, nsIStreamListener, nsIRequestObserver)
 
 
 // nsIRequestObserver implementation

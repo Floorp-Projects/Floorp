@@ -54,20 +54,42 @@ Components.utils.import("resource://gre/modules/osfile/_PromiseWorker.jsm", this
 
 Components.utils.import("resource://gre/modules/Services.jsm", this);
 
+LOG("Checking profileDir", OS.Constants.Path);
+
 // If profileDir is not available, osfile.jsm has been imported before the
-// profile is setup. In this case, we need to observe "profile-do-change"
-// and set OS.Constants.Path.profileDir as soon as it becomes available.
-if (!("profileDir" in OS.Constants.Path) || !("localProfileDir" in OS.Constants.Path)) {
-  let observer = function observer() {
-    Services.obs.removeObserver(observer, "profile-do-change");
+// profile is setup. In this case, make this a lazy getter.
+if (!("profileDir" in OS.Constants.Path)) {
+  Object.defineProperty(OS.Constants.Path, "profileDir", {
+    get: function() {
+      let path = undefined;
+      try {
+        path = Services.dirsvc.get("ProfD", Components.interfaces.nsIFile).path;
+        delete OS.Constants.Path.profileDir;
+        OS.Constants.Path.profileDir = path;
+      } catch (ex) {
+        // Ignore errors: profileDir is still not available
+      }
+      return path;
+    }
+  });
+}
 
-    let profileDir = Services.dirsvc.get("ProfD", Components.interfaces.nsIFile).path;
-    OS.Constants.Path.profileDir = profileDir;
+LOG("Checking localProfileDir");
 
-    let localProfileDir = Services.dirsvc.get("ProfLD", Components.interfaces.nsIFile).path;
-    OS.Constants.Path.localProfileDir = localProfileDir;
-  };
-  Services.obs.addObserver(observer, "profile-do-change", false);
+if (!("localProfileDir" in OS.Constants.Path)) {
+  Object.defineProperty(OS.Constants.Path, "localProfileDir", {
+    get: function() {
+      let path = undefined;
+      try {
+        path = Services.dirsvc.get("ProfLD", Components.interfaces.nsIFile).path;
+        delete OS.Constants.Path.localProfileDir;
+        OS.Constants.Path.localProfileDir = path;
+      } catch (ex) {
+        // Ignore errors: localProfileDir is still not available
+      }
+      return path;
+    }
+  });
 }
 
 /**

@@ -38,7 +38,7 @@
 class nsAuthGSSAPI MOZ_FINAL : public nsIAuthModule
 {
 public:
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSIAUTHMODULE
 
     nsAuthGSSAPI(pType package);

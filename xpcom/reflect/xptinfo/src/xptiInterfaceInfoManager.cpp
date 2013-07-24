@@ -19,8 +19,8 @@
 
 using namespace mozilla;
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(XPTInterfaceInfoManager, 
-                              nsIInterfaceInfoManager)
+NS_IMPL_ISUPPORTS1(XPTInterfaceInfoManager, 
+                   nsIInterfaceInfoManager)
 
 static XPTInterfaceInfoManager* gInterfaceInfoManager = nullptr;
 #ifdef DEBUG

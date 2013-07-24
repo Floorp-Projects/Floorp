@@ -30,7 +30,7 @@ class nsVolumeService MOZ_FINAL : public nsIVolumeService,
                                   public nsIDOMMozWakeLockListener
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIVOLUMESERVICE
   NS_DECL_NSIDOMMOZWAKELOCKLISTENER
 

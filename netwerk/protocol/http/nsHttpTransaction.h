@@ -42,7 +42,7 @@ class nsHttpTransaction : public nsAHttpTransaction
                         , public nsIOutputStreamCallback
 {
 public:
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSAHTTPTRANSACTION
     NS_DECL_NSIINPUTSTREAMCALLBACK
     NS_DECL_NSIOUTPUTSTREAMCALLBACK

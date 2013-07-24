@@ -41,7 +41,7 @@ class nsHttpConnection : public nsAHttpSegmentReader
                        , public nsIInterfaceRequestor
 {
 public:
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSAHTTPSEGMENTREADER
     NS_DECL_NSAHTTPSEGMENTWRITER
     NS_DECL_NSIINPUTSTREAMCALLBACK

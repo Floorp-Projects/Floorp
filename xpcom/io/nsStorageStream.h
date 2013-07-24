@@ -37,7 +37,7 @@ class nsStorageStream MOZ_FINAL : public nsIStorageStream,
 public:
     nsStorageStream();
     
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSISTORAGESTREAM
     NS_DECL_NSIOUTPUTSTREAM
 

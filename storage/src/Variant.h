@@ -34,7 +34,7 @@ namespace storage {
 class Variant_base : public nsIVariant
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIVARIANT
 
 protected:

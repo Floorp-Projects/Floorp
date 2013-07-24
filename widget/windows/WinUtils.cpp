@@ -40,9 +40,9 @@ namespace widget {
 #ifdef MOZ_PLACES
   NS_IMPL_ISUPPORTS1(AsyncFaviconDataReady, nsIFaviconDataCallback)
 #endif
-  NS_IMPL_THREADSAFE_ISUPPORTS1(AsyncEncodeAndWriteIcon, nsIRunnable)
-  NS_IMPL_THREADSAFE_ISUPPORTS1(AsyncDeleteIconFromDisk, nsIRunnable)
-  NS_IMPL_THREADSAFE_ISUPPORTS1(AsyncDeleteAllFaviconsFromDisk, nsIRunnable)
+  NS_IMPL_ISUPPORTS1(AsyncEncodeAndWriteIcon, nsIRunnable)
+  NS_IMPL_ISUPPORTS1(AsyncDeleteIconFromDisk, nsIRunnable)
+  NS_IMPL_ISUPPORTS1(AsyncDeleteAllFaviconsFromDisk, nsIRunnable)
 
 
   const char FaviconHelper::kJumpListCacheDir[] = "jumpListCache";

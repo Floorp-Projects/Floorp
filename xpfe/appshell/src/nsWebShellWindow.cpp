@@ -453,7 +453,7 @@ public:
     : mWindow(aWindow)
   {}
 
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
 
   NS_IMETHOD Notify(nsITimer* aTimer)
   {
@@ -469,10 +469,7 @@ private:
   nsRefPtr<nsWebShellWindow> mWindow;
 };
 
-NS_IMPL_THREADSAFE_ADDREF(WebShellWindowTimerCallback)
-NS_IMPL_THREADSAFE_RELEASE(WebShellWindowTimerCallback)
-NS_IMPL_THREADSAFE_QUERY_INTERFACE1(WebShellWindowTimerCallback,
-                                    nsITimerCallback)
+NS_IMPL_ISUPPORTS1(WebShellWindowTimerCallback, nsITimerCallback)
 
 } // namespace mozilla
 

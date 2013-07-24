@@ -310,7 +310,7 @@ interface nsIMemoryReporterManager : nsISupports
 #define NS_MEMORY_REPORTER_IMPLEMENT_HELPER(_classname, _path, _kind, _units, _amountFunction, _desc, _ts) \
     class MemoryReporter_##_classname MOZ_FINAL : public nsIMemoryReporter {                  \
     public:                                                                                   \
-      NS_DECL_ISUPPORTS                                                                       \
+      NS_DECL##_ts##ISUPPORTS                                                                 \
       NS_IMETHOD GetProcess(nsACString &process) { process.Truncate(); return NS_OK; }        \
       NS_IMETHOD GetPath(nsACString &memoryPath) { memoryPath.AssignLiteral(_path); return NS_OK; }  \
       NS_IMETHOD GetKind(int *kind) { *kind = _kind; return NS_OK; }                          \
@@ -318,14 +318,14 @@ interface nsIMemoryReporterManager : nsISupports
       NS_IMETHOD GetAmount(int64_t *amount) { *amount = _amountFunction(); return NS_OK; }    \
       NS_IMETHOD GetDescription(nsACString &desc) { desc.AssignLiteral(_desc); return NS_OK; }       \
     };                                                                                        \
-    NS_IMPL##_ts##ISUPPORTS1(MemoryReporter_##_classname, nsIMemoryReporter)
+    NS_IMPL_ISUPPORTS1(MemoryReporter_##_classname, nsIMemoryReporter)
 
 // The only difference between this and NS_MEMORY_REPORTER_IMPLEMENT_HELPER
 // is that the function used to implement GetAmount is fallible.
 #define NS_FALLIBLE_MEMORY_REPORTER_IMPLEMENT_HELPER(_classname, _path, _kind, _units, _amountFunction, _desc, _ts) \
     class MemoryReporter_##_classname MOZ_FINAL : public nsIMemoryReporter {                  \
     public:                                                                                   \
-      NS_DECL_ISUPPORTS                                                                       \
+      NS_DECL##_ts##ISUPPORTS                                                                 \
       NS_IMETHOD GetProcess(nsACString &process) { process.Truncate(); return NS_OK; }        \
       NS_IMETHOD GetPath(nsACString &memoryPath) { memoryPath.AssignLiteral(_path); return NS_OK; }  \
       NS_IMETHOD GetKind(int32_t *kind) { *kind = _kind; return NS_OK; }                      \
@@ -333,7 +333,7 @@ interface nsIMemoryReporterManager : nsISupports
       NS_IMETHOD GetAmount(int64_t *amount) { return _amountFunction(amount); }               \
       NS_IMETHOD GetDescription(nsACString &desc) { desc.AssignLiteral(_desc); return NS_OK; }\
     };                                                                                        \
-    NS_IMPL##_ts##ISUPPORTS1(MemoryReporter_##_classname, nsIMemoryReporter)
+    NS_IMPL_ISUPPORTS1(MemoryReporter_##_classname, nsIMemoryReporter)
 
 #define NS_MEMORY_REPORTER_IMPLEMENT(_c, _p, _k, _u, _a, _d) \
         NS_MEMORY_REPORTER_IMPLEMENT_HELPER(_c, _p, _k, _u, _a, _d, _)
@@ -448,7 +448,7 @@ public:
 
   virtual ~MemoryReporterBase() {}
 
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
 
   NS_IMETHOD GetProcess(nsACString& aProcess)
   {

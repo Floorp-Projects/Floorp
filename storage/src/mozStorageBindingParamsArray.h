@@ -23,7 +23,7 @@ class BindingParamsArray MOZ_FINAL : public mozIStorageBindingParamsArray
   typedef nsTArray< nsCOMPtr<mozIStorageBindingParams> > array_type;
 
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_MOZISTORAGEBINDINGPARAMSARRAY
 
   BindingParamsArray(StorageBaseStatementInternal *aOwningStatement);

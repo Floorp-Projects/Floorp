@@ -227,20 +227,24 @@ function run_test() {
 
 
   function cleanup() {
-    let outMAR = do_get_file("signed_out.mar", true);
+    let outMAR = tempDir.clone();
+    outMAR.append("signed_out.mar");
     if (outMAR.exists()) {
       outMAR.remove(false);
     }
-    outMAR = do_get_file("multiple_signed_out.mar", true);
+    outMAR = tempDir.clone();
+    outMAR.append("multiple_signed_out.mar");
     if (outMAR.exists()) {
       outMAR.remove(false);
     }
-    outMAR = do_get_file("out.mar", true);
+    outMAR = tempDir.clone();
+    outMAR.append("out.mar");
     if (outMAR.exists()) {
       outMAR.remove(false);
     }
 
-    let outDir = do_get_file("out", true);
+    let outDir = tempDir.clone();
+    outDir.append("out");
     if (outDir.exists()) {
       outDir.remove(true);
     }
@@ -253,7 +257,8 @@ function run_test() {
     // Test signing a MAR file with a single signature
     test_sign_single: function() {
       let inMAR = do_get_file("data/" + refMARPrefix + "binary_data_mar.mar");
-      let outMAR = do_get_file("signed_out.mar", true);
+      let outMAR = tempDir.clone();
+      outMAR.append("signed_out.mar");
       if (outMAR.exists()) {
         outMAR.remove(false);
       }
@@ -267,7 +272,8 @@ function run_test() {
     // Test signing a MAR file with multiple signatures
     test_sign_multiple: function() {
       let inMAR = do_get_file("data/" + refMARPrefix + "binary_data_mar.mar");
-      let outMAR = do_get_file("multiple_signed_out.mar", true);
+      let outMAR = tempDir.clone();
+      outMAR.append("multiple_signed_out.mar");
       if (outMAR.exists()) {
         outMAR.remove(false);
       }
@@ -358,8 +364,10 @@ function run_test() {
       let originalMAR = do_get_file("data/" + 
                                     refMARPrefix + 
                                     "binary_data_mar.mar");
-      let signedMAR = do_get_file("signed_out.mar");
-      let outMAR = do_get_file("out.mar", true);
+      let signedMAR = tempDir.clone();
+      signedMAR.append("signed_out.mar");
+      let outMAR = tempDir.clone();
+      outMAR.append("out.mar", true);
       stripMARSignature(signedMAR, outMAR, wantSuccess);
 
       // Verify that the stripped MAR matches the original data MAR exactly
@@ -372,8 +380,10 @@ function run_test() {
       let originalMAR = do_get_file("data/" +
                                     refMARPrefix +
                                     "binary_data_mar.mar");
-      let signedMAR = do_get_file("multiple_signed_out.mar");
-      let outMAR = do_get_file("out.mar", true);
+      let signedMAR = tempDir.clone();
+      signedMAR.append("multiple_signed_out.mar");
+      let outMAR = tempDir.clone();
+      outMAR.append("out.mar");
       stripMARSignature(signedMAR, outMAR, wantSuccess);
 
       // Verify that the stripped MAR matches the original data MAR exactly
@@ -424,7 +434,8 @@ function run_test() {
     // Test signing a file that doesn't exist fails
     test_bad_path_sign_fails: function() {
       let inMAR = do_get_file("data/does_not_exist_.mar", true);
-      let outMAR = do_get_file("signed_out.mar", true);
+      let outMAR = tempDir.clone();
+      outMAR.append("signed_out.mar");
       do_check_false(inMAR.exists());
       signMAR(inMAR, outMAR, ["mycert"], wantFailure, true);
       do_check_false(outMAR.exists());
@@ -448,7 +459,8 @@ function run_test() {
       // Get the signature file for this MAR signed with the key from mycert2
       let sigFile = do_get_file("data/signed_pib_mar.signature.mycert2");
       do_check_true(sigFile.exists());
-      let outMAR = do_get_file("data/sigchanged_signed_pib_mar.mar", true);
+      let outMAR = tempDir.clone();
+      outMAR.append("sigchanged_signed_pib_mar.mar");
       if (outMAR.exists()) {
         outMAR.remove(false);
       }
@@ -483,7 +495,8 @@ function run_test() {
       // Get the signature file for this MAR signed with the key from mycert2
       let sigFile = do_get_file("data/multiple_signed_pib_mar.sig.0");
       do_check_true(sigFile.exists());
-      let outMAR = do_get_file("data/sigchanged_signed_pib_mar.mar", true);
+      let outMAR = tempDir.clone();
+      outMAR.append("sigchanged_signed_pib_mar.mar");
       if (outMAR.exists()) {
         outMAR.remove(false);
       }
@@ -509,7 +522,8 @@ function run_test() {
       // Get the signature file for this MAR signed with the key from mycert
       let sigFile = do_get_file("data/multiple_signed_pib_mar.sig.0");
       do_check_true(sigFile.exists());
-      let outMAR = do_get_file("data/sigchanged_signed_pib_mar.mar", true);
+      let outMAR = tempDir.clone();
+      outMAR.append("sigchanged_signed_pib_mar.mar");
       if (outMAR.exists()) {
         outMAR.remove(false);
       }
@@ -536,7 +550,8 @@ function run_test() {
     test_bad_path_strip_fails: function() {
       let noMAR = do_get_file("data/does_not_exist_mar", true);
       do_check_false(noMAR.exists());
-      let outMAR = do_get_file("out.mar", true);
+      let outMAR = tempDir.clone();
+      outMAR.append("out.mar");
       stripMARSignature(noMAR, outMAR, wantFailure);
     },
     // Test extracting from a bad path fails

@@ -234,7 +234,7 @@ HangReports::GetDuration(unsigned aIndex) const {
 
 class TelemetryImpl MOZ_FINAL : public nsITelemetry
 {
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSITELEMETRY
 
 public:
@@ -2061,7 +2061,7 @@ TelemetryImpl::RecordChromeHang(uint32_t duration,
 }
 #endif
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(TelemetryImpl, nsITelemetry)
+NS_IMPL_ISUPPORTS1(TelemetryImpl, nsITelemetry)
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsITelemetry, TelemetryImpl::CreateTelemetryInstance)
 
 #define NS_TELEMETRY_CID \

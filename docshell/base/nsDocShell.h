@@ -109,7 +109,7 @@ class nsRefreshTimer : public nsITimerCallback
 public:
     nsRefreshTimer();
 
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSITIMERCALLBACK
 
     int32_t GetDelay() { return mDelay ;}
@@ -899,7 +899,7 @@ public:
     public:
         InterfaceRequestorProxy(nsIInterfaceRequestor* p);
         virtual ~InterfaceRequestorProxy();
-        NS_DECL_ISUPPORTS
+        NS_DECL_THREADSAFE_ISUPPORTS
         NS_DECL_NSIINTERFACEREQUESTOR
  
     protected:
