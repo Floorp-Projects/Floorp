@@ -65,10 +65,6 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
     protected static final String URL_EDIT_TEXT_ID = "url_edit_text";
     protected static final String URL_BAR_TITLE_ID = "url_bar_title";
 
-    // Strings for about:home
-    private static final String TITLE_PLACEHOLDER_TEXT = "Enter Search or Address";
-    private static final String ABOUT_HOME_BOOKMARKS_TAB_TITLE = "BOOKMARKS";
-
     private static Class<Activity> mLauncherActivityClass;
     private Activity mActivity;
     protected Solo mSolo;
@@ -638,14 +634,9 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
         }, MAX_WAIT_MS);
         mAsserter.ok(success, "waiting for add tab view", "add tab view available");
         mAsserter.ok(addTab.click(), "checking that add_tab clicked", "add_tab element clicked");
-        waitForText(ABOUT_HOME_BOOKMARKS_TAB_TITLE); // Make sure about:home is loaded
 
-        // The new tab will have a blank title, so click on the urlbar placeholder text
-        mSolo.clickOnText(TITLE_PLACEHOLDER_TEXT);
-
-        // cannot use loadUrl(): getText fails because we are using a different urlbar
-        mActions.sendKeys(url);
-        hitEnterAndWait();
+        // Adding a new tab opens about:home, so now we just need to load the url in it.
+        loadUrl(url);
     }
 
     /**
