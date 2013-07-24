@@ -775,13 +775,13 @@ SECStatus TransportLayerDtls::GetClientAuthDataHook(void *arg, PRFileDesc *fd,
   }
 
   *pRetCert = CERT_DupCertificate(stream->identity_->cert());
-  if (!pRetCert) {
+  if (!*pRetCert) {
     PR_SetError(PR_OUT_OF_MEMORY_ERROR, 0);
     return SECFailure;
   }
 
   *pRetKey = SECKEY_CopyPrivateKey(stream->identity_->privkey());
-  if (!pRetKey) {
+  if (!*pRetKey) {
     CERT_DestroyCertificate(*pRetCert);
     *pRetCert = nullptr;
     PR_SetError(PR_OUT_OF_MEMORY_ERROR, 0);
