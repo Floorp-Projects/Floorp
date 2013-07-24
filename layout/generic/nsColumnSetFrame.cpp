@@ -146,16 +146,17 @@ GetAvailableContentWidth(const nsHTMLReflowState& aReflowState)
   return std::max(0, aReflowState.availableWidth - borderPaddingWidth);
 }
 
-static nscoord
-GetAvailableContentHeight(const nsHTMLReflowState& aReflowState)
+nscoord
+nsColumnSetFrame::GetAvailableContentHeight(const nsHTMLReflowState& aReflowState)
 {
   if (aReflowState.availableHeight == NS_INTRINSICSIZE) {
     return NS_INTRINSICSIZE;
   }
-  nscoord borderPaddingHeight =
-    aReflowState.mComputedBorderPadding.top +
-    aReflowState.mComputedBorderPadding.bottom;
-  return std::max(0, aReflowState.availableHeight - borderPaddingHeight);
+
+  nsMargin bp = aReflowState.mComputedBorderPadding;
+  ApplySkipSides(bp, &aReflowState);
+  bp.bottom = aReflowState.mComputedBorderPadding.bottom;
+  return std::max(0, aReflowState.availableHeight - bp.TopBottom());
 }
 
 static nscoord
@@ -189,11 +190,20 @@ nsColumnSetFrame::ChooseColumnStrategy(const nsHTMLReflowState& aReflowState,
   if (aReflowState.ComputedWidth() != NS_INTRINSICSIZE) {
     availContentWidth = aReflowState.ComputedWidth();
   }
+
+  nscoord consumedHeight = GetConsumedHeight();
+
+  // The effective computed height is the height of the current continuation
+  // of the column set frame. This should be the same as the computed height
+  // if we have an unconstrained available height.
+  nscoord computedHeight = GetEffectiveComputedHeight(aReflowState,
+                                                      consumedHeight);
   nscoord colHeight = GetAvailableContentHeight(aReflowState);
+
   if (aReflowState.ComputedHeight() != NS_INTRINSICSIZE) {
     colHeight = aReflowState.ComputedHeight();
   } else if (aReflowState.mComputedMaxHeight != NS_INTRINSICSIZE) {
-    colHeight = aReflowState.mComputedMaxHeight;
+    colHeight = std::min(colHeight, aReflowState.mComputedMaxHeight);
   }
 
   nscoord colGap = GetColumnGap(this, colStyle);
@@ -302,7 +312,7 @@ nsColumnSetFrame::ChooseColumnStrategy(const nsHTMLReflowState& aReflowState,
 #endif
   ReflowConfig config = { numColumns, colWidth, expectedWidthLeftOver, colGap,
                           colHeight, isBalancing, knownFeasibleHeight,
-                          knownInfeasibleHeight };
+                          knownInfeasibleHeight, computedHeight, consumedHeight };
   return config;
 }
 
@@ -453,7 +463,8 @@ nsColumnSetFrame::ReflowChildren(nsHTMLReflowMetrics&     aDesiredSize,
   }
 
   // get our border and padding
-  const nsMargin &borderPadding = aReflowState.mComputedBorderPadding;
+  nsMargin borderPadding = aReflowState.mComputedBorderPadding;
+  ApplySkipSides(borderPadding, &aReflowState);
   
   nsRect contentRect(0, 0, 0, 0);
   nsOverflowAreas overflowRects;
@@ -724,30 +735,32 @@ nsColumnSetFrame::ReflowChildren(nsHTMLReflowMetrics&     aDesiredSize,
   nsSize contentSize = nsSize(contentRect.XMost(), contentRect.YMost());
 
   // Apply computed and min/max values
-  if (aReflowState.ComputedHeight() != NS_INTRINSICSIZE) {
-    contentSize.height = aReflowState.ComputedHeight();
+  if (aConfig.mComputedHeight != NS_INTRINSICSIZE) {
+    if (aReflowState.availableHeight != NS_INTRINSICSIZE) {
+      contentSize.height = std::min(contentSize.height,
+                                    aConfig.mComputedHeight);
+    } else {
+      contentSize.height = aConfig.mComputedHeight;
+    }
   } else {
-    if (NS_UNCONSTRAINEDSIZE != aReflowState.mComputedMaxHeight) {
-      contentSize.height = std::min(aReflowState.mComputedMaxHeight, contentSize.height);
-    }
-    if (NS_UNCONSTRAINEDSIZE != aReflowState.mComputedMinHeight) {
-      contentSize.height = std::max(aReflowState.mComputedMinHeight, contentSize.height);
-    }
+    // We add the "consumed" height back in so that we're applying
+    // constraints to the correct height value, then subtract it again
+    // after we've finished with the min/max calculation. This prevents us from
+    // having a last continuation that is smaller than the min height. but which
+    // has prev-in-flows, trigger a larger height than actually required.
+    contentSize.height = aReflowState.ApplyMinMaxHeight(contentSize.height,
+                                                        aConfig.mConsumedHeight);
   }
   if (aReflowState.ComputedWidth() != NS_INTRINSICSIZE) {
     contentSize.width = aReflowState.ComputedWidth();
   } else {
-    if (NS_UNCONSTRAINEDSIZE != aReflowState.mComputedMaxWidth) {
-      contentSize.width = std::min(aReflowState.mComputedMaxWidth, contentSize.width);
-    }
-    if (NS_UNCONSTRAINEDSIZE != aReflowState.mComputedMinWidth) {
-      contentSize.width = std::max(aReflowState.mComputedMinWidth, contentSize.width);
-    }
+    contentSize.width = aReflowState.ApplyMinMaxWidth(contentSize.width);
   }
-    
-  aDesiredSize.height = borderPadding.top + contentSize.height +
-    borderPadding.bottom;
-  aDesiredSize.width = contentSize.width + borderPadding.left + borderPadding.right;
+
+  aDesiredSize.height = contentSize.height +
+                        borderPadding.TopBottom();
+  aDesiredSize.width = contentSize.width +
+                       borderPadding.LeftRight();
   aDesiredSize.mOverflowAreas = overflowRects;
   aDesiredSize.UnionOverflowAreasWithDesiredBounds();
 
@@ -798,7 +811,13 @@ nsColumnSetFrame::FindBestBalanceHeight(const nsHTMLReflowState& aReflowState,
                                         nsReflowStatus& aStatus)
 {
   bool feasible = aRunWasFeasible;
-  nscoord availableContentHeight = GetAvailableContentHeight(aReflowState);
+
+  nsMargin bp = aReflowState.mComputedBorderPadding;
+  ApplySkipSides(bp);
+  bp.bottom = aReflowState.mComputedBorderPadding.bottom;
+
+  nscoord availableContentHeight =
+    GetAvailableContentHeight(aReflowState);
 
   // Termination of the algorithm below is guaranteed because
   // aConfig.knownFeasibleHeight - aConfig.knownInfeasibleHeight decreases in every
@@ -854,7 +873,6 @@ nsColumnSetFrame::FindBestBalanceHeight(const nsHTMLReflowState& aReflowState,
     if (aConfig.mKnownInfeasibleHeight >= aConfig.mKnownFeasibleHeight - 1) {
       // aConfig.mKnownFeasibleHeight is where we want to be
       break;
-
     }
 
     if (aConfig.mKnownInfeasibleHeight >= availableContentHeight) {
@@ -957,7 +975,7 @@ nsColumnSetFrame::Reflow(nsPresContext*           aPresContext,
   // Our children depend on our height if we have a fixed height.
   if (aReflowState.ComputedHeight() != NS_AUTOHEIGHT) {
     NS_ASSERTION(aReflowState.ComputedHeight() != NS_INTRINSICSIZE,
-                 "Unexpected mComputedHeight");
+                 "Unexpected computed height");
     AddStateBits(NS_FRAME_CONTAINS_RELATIVE_HEIGHT);
   }
   else {
