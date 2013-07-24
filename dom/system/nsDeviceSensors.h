@@ -27,7 +27,6 @@
 
 #define NS_DEVICE_SENSORS_CONTRACTID "@mozilla.org/devicesensors;1"
 
-class nsIDocument;
 class nsIDOMWindow;
 
 namespace mozilla {
@@ -63,13 +62,13 @@ private:
   void FireDOMUserProximityEvent(mozilla::dom::EventTarget* aTarget,
                                  bool aNear);
 
-  void FireDOMOrientationEvent(nsIDocument* doc,
+  void FireDOMOrientationEvent(class nsIDOMDocument *domDoc,
                                mozilla::dom::EventTarget* target,
                                double alpha,
                                double beta,
                                double gamma);
 
-  void FireDOMMotionEvent(nsIDocument* doc,
+  void FireDOMMotionEvent(class nsIDOMDocument *domDoc,
                           mozilla::dom::EventTarget* target,
                           uint32_t type,
                           double x,
