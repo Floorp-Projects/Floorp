@@ -15,6 +15,7 @@ endif
 # present. If they are, this is a violation of the separation of
 # responsibility between Makefile.in and mozbuild files.
 _MOZBUILD_EXTERNAL_VARIABLES := \
+  CPP_UNIT_TESTS \
   DIRS \
   EXTRA_PP_COMPONENTS \
   GTEST_CMMSRCS \
