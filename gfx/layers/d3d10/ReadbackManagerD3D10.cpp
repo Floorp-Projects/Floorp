@@ -38,7 +38,7 @@ struct ReadbackTask {
 // destroyed by the main thread.
 class ReadbackResultWriter MOZ_FINAL : public nsIRunnable
 {
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
 public:
   ReadbackResultWriter(ReadbackTask *aTask) : mTask(aTask) {}
 
@@ -95,7 +95,7 @@ private:
   nsAutoPtr<ReadbackTask> mTask;
 };
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(ReadbackResultWriter, nsIRunnable)
+NS_IMPL_ISUPPORTS1(ReadbackResultWriter, nsIRunnable)
 
 DWORD WINAPI StartTaskThread(void *aManager)
 {

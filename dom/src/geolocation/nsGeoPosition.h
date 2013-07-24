@@ -27,7 +27,7 @@ struct JSContext;
 class nsGeoPositionCoords MOZ_FINAL : public nsIDOMGeoPositionCoords
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIDOMGEOPOSITIONCOORDS
   
   nsGeoPositionCoords(double aLat, double aLong,
@@ -47,7 +47,7 @@ private:
 class nsGeoPosition MOZ_FINAL : public nsIDOMGeoPosition
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIDOMGEOPOSITION
   
   nsGeoPosition(double aLat, double aLong,

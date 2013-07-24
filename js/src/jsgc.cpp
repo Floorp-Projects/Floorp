@@ -5107,4 +5107,11 @@ AutoDisableProxyCheck::AutoDisableProxyCheck(JSRuntime *rt
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     count++;
 }
+
+JS_FRIEND_API(void)
+JS::AssertGCThingMustBeTenured(JSObject *obj)
+{
+    JS_ASSERT((!IsNurseryAllocable(obj->tenuredGetAllocKind()) || obj->getClass()->finalize) &&
+              obj->isTenured());
+}
 #endif

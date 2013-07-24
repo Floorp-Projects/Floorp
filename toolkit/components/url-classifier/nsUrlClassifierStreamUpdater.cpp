@@ -42,7 +42,7 @@ nsUrlClassifierStreamUpdater::nsUrlClassifierStreamUpdater()
 
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS7(nsUrlClassifierStreamUpdater,
+NS_IMPL_ISUPPORTS7(nsUrlClassifierStreamUpdater,
                               nsIUrlClassifierStreamUpdater,
                               nsIUrlClassifierUpdateObserver,
                               nsIRequestObserver,

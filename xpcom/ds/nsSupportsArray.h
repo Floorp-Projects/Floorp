@@ -21,7 +21,7 @@ public:
   static nsresult
   Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
 
   NS_DECL_NSISERIALIZABLE
 

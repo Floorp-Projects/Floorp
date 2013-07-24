@@ -151,7 +151,7 @@ template <> struct MapTypeToTraceKind<JSLinearString>   { const static JSGCTrace
 template <> struct MapTypeToTraceKind<PropertyName>     { const static JSGCTraceKind kind = JSTRACE_STRING; };
 template <> struct MapTypeToTraceKind<ion::IonCode>     { const static JSGCTraceKind kind = JSTRACE_IONCODE; };
 
-#ifdef JSGC_GENERATIONAL
+#if defined(JSGC_GENERATIONAL) || defined(DEBUG)
 static inline bool
 IsNurseryAllocable(AllocKind kind)
 {

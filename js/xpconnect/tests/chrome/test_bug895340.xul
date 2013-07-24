@@ -1,0 +1,63 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=895340
+-->
+<window title="Mozilla Bug 895340"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=895340 "
+     target="_blank">Mozilla Bug 895340 </a>
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript"><![CDATA[
+
+  SimpleTest.waitForExplicitFinish();
+
+  const Cu = Components.utils;
+  Cu.import("resource://gre/modules/Services.jsm", this);
+
+  var finished = false;
+
+  var console = Components.classes["@mozilla.org/consoleservice;1"]
+                          .getService(Components.interfaces.nsIConsoleService);
+
+  let listener = {
+    QueryInterface: function(iid) {
+      if (!iid.equals(Components.interfaces.nsIConsoleListener) &&
+          !iid.equals(Components.interfaces.nsISupports))
+      {
+        throw Components.results.NS_ERROR_NO_INTERFACE;
+      }
+      return this;
+    }
+  };
+
+  listener.observe = function(aMessage) {
+    if (aMessage.message.indexOf("Will you report me?") != -1 && !finished) {
+      finished = true;
+      ok(true, "exception reported");
+      console.unregisterListener(listener);
+      SimpleTest.finish();
+    }
+  };
+
+  console.registerListener(listener);
+
+  /* Throw an exception and verify that it gets reported. */
+  let foo_obs = function() {
+    throw new Error("Will you report me?");
+  };
+
+  Services.obs.addObserver(foo_obs, "foo", false);
+  Services.obs.notifyObservers(null, "foo", "foo");
+  Services.obs.removeObserver(foo_obs, "foo");
+  ]]></script>
+</window>

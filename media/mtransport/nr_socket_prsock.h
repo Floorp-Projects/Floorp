@@ -84,7 +84,7 @@ public:
   virtual uint64_t ByteCountReceived() { return 0; }
 
   // nsISupports methods
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
 
   // Implementations of the async_event APIs
   int async_wait(int how, NR_async_cb cb, void *cb_arg,

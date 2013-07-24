@@ -21,8 +21,8 @@ NS_INTERFACE_MAP_BEGIN(BackstagePass)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXPCScriptable)
 NS_INTERFACE_MAP_END_THREADSAFE
 
-NS_IMPL_THREADSAFE_ADDREF(BackstagePass)
-NS_IMPL_THREADSAFE_RELEASE(BackstagePass)
+NS_IMPL_ADDREF(BackstagePass)
+NS_IMPL_RELEASE(BackstagePass)
 
 // The nsIXPCScriptable map declaration that will generate stubs for us...
 #define XPC_MAP_CLASSNAME           BackstagePass

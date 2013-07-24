@@ -9,7 +9,7 @@
 class nsDateTimeFormatOS2 : public nsIDateTimeFormat {
 
  public:
-   NS_DECL_ISUPPORTS
+   NS_DECL_THREADSAFE_ISUPPORTS
    
   // performs a locale sensitive date formatting operation on the time_t parameter
   NS_IMETHOD FormatTime(nsILocale* locale, 

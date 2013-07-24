@@ -124,7 +124,7 @@ nsJARProtocolHandler::RemoteOpenFileComplete(nsIHashable *aRemoteFile,
     }
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS3(nsJARProtocolHandler,
+NS_IMPL_ISUPPORTS3(nsJARProtocolHandler,
                               nsIJARProtocolHandler,
                               nsIProtocolHandler,
                               nsISupportsWeakReference)

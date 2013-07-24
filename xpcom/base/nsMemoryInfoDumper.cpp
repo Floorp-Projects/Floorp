@@ -19,6 +19,7 @@
 #include "nsGZFileWriter.h"
 #include "nsJSEnvironment.h"
 #include "nsPrintfCString.h"
+#include "pratom.h"
 
 #ifdef XP_WIN
 #include <process.h>
@@ -191,7 +192,7 @@ public:
   virtual void OnFileCanReadWithoutBlocking(int aFd) = 0;
   virtual void OnFileCanWriteWithoutBlocking(int aFd) {};
 
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
 
   /**
    * Initialize this object.  This should be called right after the object is
@@ -258,7 +259,7 @@ public:
   }
 };
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(FdWatcher, nsIObserver);
+NS_IMPL_ISUPPORTS1(FdWatcher, nsIObserver);
 
 class SignalPipeWatcher : public FdWatcher
 {

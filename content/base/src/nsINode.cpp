@@ -1404,6 +1404,34 @@ nsINode::doInsertChildAt(nsIContent* aKid, uint32_t aIndex,
   return NS_OK;
 }
 
+Element*
+nsINode::GetPreviousElementSibling() const
+{
+  nsIContent* previousSibling = GetPreviousSibling();
+  while (previousSibling) {
+    if (previousSibling->IsElement()) {
+      return previousSibling->AsElement();
+    }
+    previousSibling = previousSibling->GetPreviousSibling();
+  }
+
+  return nullptr;
+}
+
+Element*
+nsINode::GetNextElementSibling() const
+{
+  nsIContent* nextSibling = GetNextSibling();
+  while (nextSibling) {
+    if (nextSibling->IsElement()) {
+      return nextSibling->AsElement();
+    }
+    nextSibling = nextSibling->GetNextSibling();
+  }
+
+  return nullptr;
+}
+
 void
 nsINode::Remove()
 {
@@ -1417,6 +1445,34 @@ nsINode::Remove()
     return;
   }
   parent->RemoveChildAt(uint32_t(index), true);
+}
+
+Element*
+nsINode::GetFirstElementChild() const
+{
+  for (nsIContent* child = GetFirstChild();
+       child;
+       child = child->GetNextSibling()) {
+    if (child->IsElement()) {
+      return child->AsElement();
+    }
+  }
+
+  return nullptr;
+}
+
+Element*
+nsINode::GetLastElementChild() const
+{
+  for (nsIContent* child = GetLastChild();
+       child;
+       child = child->GetPreviousSibling()) {
+    if (child->IsElement()) {
+      return child->AsElement();
+    }
+  }
+
+  return nullptr;
 }
 
 void
