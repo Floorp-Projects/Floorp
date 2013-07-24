@@ -861,6 +861,19 @@ SetOperationCallback(JSContext *cx, unsigned argc, jsval *vp)
     return true;
 }
 
+static JSBool
+SimulateActivityCallback(JSContext *cx, unsigned argc, jsval *vp)
+{
+    // Sanity-check args.
+    JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+    if (args.length() != 1 || !args[0].isBoolean()) {
+        JS_ReportError(cx, "Wrong number of arguments");
+        return false;
+    }
+    xpc::SimulateActivityCallback(args[0].toBoolean());
+    return true;
+}
+
 static const JSFunctionSpec glob_functions[] = {
     JS_FS("print",           Print,          0,0),
     JS_FS("readline",        ReadLine,       1,0),
@@ -886,6 +899,7 @@ static const JSFunctionSpec glob_functions[] = {
     JS_FS("Blob",            Blob,           2,JSFUN_CONSTRUCTOR),
     JS_FS("File",            File,           2,JSFUN_CONSTRUCTOR),
     JS_FS("setOperationCallback", SetOperationCallback, 1,0),
+    JS_FS("simulateActivityCallback", SimulateActivityCallback, 1,0),
     JS_FS_END
 };
 
