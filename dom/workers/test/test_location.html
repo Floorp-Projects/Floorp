@@ -31,6 +31,7 @@ Tests of DOM Worker Location
   var basePath = path.substr(0, path.lastIndexOf("/") + 1);
 
   var strings = {
+    "toString": baseHref + workerFilename,
     "href": baseHref + workerFilename,
     "protocol": window.location.protocol,
     "host": window.location.host,
@@ -50,7 +51,6 @@ Tests of DOM Worker Location
 
   worker.onmessage = function(event) {
     if (event.data.string == "testfinished") {
-      is(event.data.value, strings["href"], "href");
       SimpleTest.finish();
       return;
     }
