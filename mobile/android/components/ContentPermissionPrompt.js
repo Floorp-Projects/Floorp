@@ -27,7 +27,7 @@ ContentPermissionPrompt.prototype = {
       request.allow();
       return true;
     }
-    if (result == Ci.nsIPermissionManager.DENY_ACTION || (result == Ci.nsIPermissionManager.UNKNOWN_ACTION && !!kEntities[request.type])) {
+    if (result == Ci.nsIPermissionManager.DENY_ACTION) {
       request.cancel();
       return true;
     }
