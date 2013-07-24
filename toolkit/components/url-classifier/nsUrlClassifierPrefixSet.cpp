@@ -40,7 +40,7 @@ public:
   nsPrefixSetReporter(nsUrlClassifierPrefixSet* aParent, const nsACString& aName);
   virtual ~nsPrefixSetReporter() {}
 
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIMEMORYREPORTER
 
 private:
@@ -48,7 +48,7 @@ private:
   nsUrlClassifierPrefixSet* mParent;
 };
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsPrefixSetReporter, nsIMemoryReporter)
+NS_IMPL_ISUPPORTS1(nsPrefixSetReporter, nsIMemoryReporter)
 
 NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(StoragePrefixSetMallocSizeOf)
 

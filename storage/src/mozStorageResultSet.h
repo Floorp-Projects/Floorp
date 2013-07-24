@@ -18,7 +18,7 @@ namespace storage {
 class ResultSet MOZ_FINAL : public mozIStorageResultSet
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_MOZISTORAGERESULTSET
 
   ResultSet();

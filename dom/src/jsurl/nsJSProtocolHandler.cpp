@@ -56,7 +56,7 @@ class nsJSThunk : public nsIInputStream
 public:
     nsJSThunk();
 
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
     NS_FORWARD_SAFE_NSIINPUTSTREAM(mInnerStream)
 
     nsresult Init(nsIURI* uri);
@@ -76,7 +76,7 @@ protected:
 //
 // nsISupports implementation...
 //
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsJSThunk, nsIInputStream)
+NS_IMPL_ISUPPORTS1(nsJSThunk, nsIInputStream)
 
 
 nsJSThunk::nsJSThunk()

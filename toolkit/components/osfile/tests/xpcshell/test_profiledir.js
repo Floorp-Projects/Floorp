@@ -13,19 +13,17 @@ function run_test() {
 
 add_test(function test_initialize_profileDir() {
   // Profile has not been set up yet, check that "profileDir" isn't either.
-  do_check_false("profileDir" in OS.Constants.Path);
-  do_check_false("localProfileDir" in OS.Constants.Path);
+  do_check_false(!!OS.Constants.Path.profileDir);
+  do_check_false(!!OS.Constants.Path.localProfileDir);
 
   // Set up profile.
   do_get_profile();
 
   // Now that profile has been set up, check that "profileDir" is set.
-  do_check_true("profileDir" in OS.Constants.Path);
   do_check_true(!!OS.Constants.Path.profileDir);
   do_check_eq(OS.Constants.Path.profileDir,
               Services.dirsvc.get("ProfD", Components.interfaces.nsIFile).path);
 
-  do_check_true("localProfileDir" in OS.Constants.Path);
   do_check_true(!!OS.Constants.Path.localProfileDir);
   do_check_eq(OS.Constants.Path.localProfileDir,
               Services.dirsvc.get("ProfLD", Components.interfaces.nsIFile).path);

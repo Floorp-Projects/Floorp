@@ -51,10 +51,10 @@ static void FreeDynamicLibraries(void)
     }
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS3(nsNotifyAddrListener,
-                              nsINetworkLinkService,
-                              nsIRunnable,
-                              nsIObserver)
+NS_IMPL_ISUPPORTS3(nsNotifyAddrListener,
+                   nsINetworkLinkService,
+                   nsIRunnable,
+                   nsIObserver)
 
 nsNotifyAddrListener::nsNotifyAddrListener()
     : mLinkUp(true)  // assume true by default

@@ -241,7 +241,7 @@ class MediaDecoder : public nsIObserver,
 public:
   typedef mozilla::layers::Image Image;
 
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIOBSERVER
 
   // Enumeration for the valid play states (see mPlayState)

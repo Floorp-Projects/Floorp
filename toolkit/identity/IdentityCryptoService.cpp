@@ -93,7 +93,7 @@ Base64UrlDecodeImpl(const nsACString & base64Input, nsACString & result)
 class KeyPair : public nsIIdentityKeyPair, public nsNSSShutDownObject
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIIDENTITYKEYPAIR
 
   KeyPair(SECKEYPrivateKey* aPrivateKey, SECKEYPublicKey* aPublicKey);
@@ -129,7 +129,7 @@ private:
   void operator=(const KeyPair &) MOZ_DELETE;
 };
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(KeyPair, nsIIdentityKeyPair)
+NS_IMPL_ISUPPORTS1(KeyPair, nsIIdentityKeyPair)
 
 class KeyGenRunnable : public nsRunnable, public nsNSSShutDownObject
 {
@@ -212,7 +212,7 @@ private:
 class IdentityCryptoService MOZ_FINAL : public nsIIdentityCryptoService
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIIDENTITYCRYPTOSERVICE
 
   IdentityCryptoService() { }
@@ -231,7 +231,7 @@ private:
   void operator=(const IdentityCryptoService &) MOZ_DELETE;
 };
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(IdentityCryptoService, nsIIdentityCryptoService)
+NS_IMPL_ISUPPORTS1(IdentityCryptoService, nsIIdentityCryptoService)
 
 NS_IMETHODIMP
 IdentityCryptoService::GenerateKeyPair(

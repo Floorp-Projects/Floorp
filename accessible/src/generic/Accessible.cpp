@@ -1681,6 +1681,12 @@ Accessible::Value(nsString& aValue)
     return;
   }
 
+  // Value of textbox is a textified subtree.
+  if (mRoleMapEntry->Is(nsGkAtoms::textbox)) {
+    nsTextEquivUtils::GetTextEquivFromSubtree(this, aValue);
+    return;
+  }
+
   // Value of combobox is a text of current or selected item.
   if (mRoleMapEntry->Is(nsGkAtoms::combobox)) {
     Accessible* option = CurrentItem();

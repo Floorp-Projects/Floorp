@@ -2820,6 +2820,7 @@ static const JSFunctionSpec array_methods[] = {
          {"find",               {NULL, NULL},       1,0, "ArrayFind"},
          {"findIndex",          {NULL, NULL},       1,0, "ArrayFindIndex"},
 
+    JS_FN("iterator",           JS_ArrayIterator,   0,0),
     JS_FS_END
 };
 
@@ -2948,14 +2949,6 @@ js_InitArrayClass(JSContext *cx, HandleObject obj)
     }
 
     if (!DefineConstructorAndPrototype(cx, global, JSProto_Array, ctor, arrayProto))
-        return NULL;
-
-    JSFunction *fun = JS_DefineFunction(cx, arrayProto, "values", JS_ArrayIterator, 0, 0);
-    if (!fun)
-        return NULL;
-
-    RootedValue funval(cx, ObjectValue(*fun));
-    if (!JS_DefineProperty(cx, arrayProto, "iterator", funval, NULL, NULL, 0))
         return NULL;
 
     return arrayProto;

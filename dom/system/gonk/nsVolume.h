@@ -19,7 +19,7 @@ class VolumeMountLock;
 class nsVolume : public nsIVolume
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIVOLUME
 
   // This constructor is used by the UpdateVolumeRunnable constructor

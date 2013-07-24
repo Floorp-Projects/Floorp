@@ -33,8 +33,8 @@ WMFSourceReaderCallback::QueryInterface(REFIID aIId, void **aInterface)
   return E_NOINTERFACE;
 }
 
-NS_IMPL_THREADSAFE_ADDREF(WMFSourceReaderCallback)
-NS_IMPL_THREADSAFE_RELEASE(WMFSourceReaderCallback)
+NS_IMPL_ADDREF(WMFSourceReaderCallback)
+NS_IMPL_RELEASE(WMFSourceReaderCallback)
 
 WMFSourceReaderCallback::WMFSourceReaderCallback()
   : mMonitor("WMFSourceReaderCallback")

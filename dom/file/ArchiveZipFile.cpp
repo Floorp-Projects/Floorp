@@ -49,7 +49,7 @@ public:
     Close();
   }
 
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIINPUTSTREAM
   NS_DECL_NSISEEKABLESTREAM
 
@@ -82,9 +82,9 @@ private: // data
   } mData;
 };
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(ArchiveInputStream,
-                              nsIInputStream,
-                              nsISeekableStream)
+NS_IMPL_ISUPPORTS2(ArchiveInputStream,
+                   nsIInputStream,
+                   nsISeekableStream)
 
 nsresult
 ArchiveInputStream::Init()

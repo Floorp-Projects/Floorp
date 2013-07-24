@@ -1068,7 +1068,7 @@ class CGClassConstructor(CGAbstractStaticMethod):
     def generate_code(self):
         preamble = """
   JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
-  JS::Rooted<JSObject*> obj(cx, JSVAL_TO_OBJECT(JS_CALLEE(cx, vp)));
+  JS::Rooted<JSObject*> obj(cx, &args.callee());
 """
         name = self._ctor.identifier.name
         nativeName = MakeNativeName(self.descriptor.binaryNames.get(name, name))
@@ -1090,7 +1090,7 @@ class CGConstructNavigatorObjectHelper(CGAbstractStaticMethod):
         CGAbstractStaticMethod.__init__(self, descriptor, name, rtype, args)
 
     def definition_body(self):
-        return genConstructorBody(self.descriptor)
+        return CGIndenter(CGGeneric(genConstructorBody(self.descriptor))).define()
 
 class CGConstructNavigatorObject(CGAbstractMethod):
     """
@@ -1485,6 +1485,15 @@ class MethodDefiner(PropertyDefiner):
                     self.chrome.append(toStringDesc)
                 else:
                     self.regular.append(toStringDesc)
+        elif (descriptor.interface.isJSImplemented() and
+              descriptor.interface.hasInterfaceObject()):
+            self.chrome.append({"name": '_create',
+                                "nativeName": ("%s::_Create" %
+                                               descriptor.name),
+                                "methodInfo": False,
+                                "length": 2,
+                                "flags": "0",
+                                "condition": MemberCondition(None, None) })
 
         if static:
             if not descriptor.interface.hasInterfaceObject():
@@ -1684,7 +1693,7 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
     def __init__(self, descriptor, properties):
         args = [Argument('JSContext*', 'aCx'),
                 Argument('JS::Handle<JSObject*>', 'aGlobal'),
-                Argument('JSObject**', 'protoAndIfaceArray')]
+                Argument('JS::Heap<JSObject*>*', 'protoAndIfaceArray')]
         CGAbstractMethod.__init__(self, descriptor, 'CreateInterfaceObjects', 'void', args)
         self.properties = properties
     def definition_body(self):
@@ -1887,13 +1896,19 @@ class CGGetPerInterfaceObject(CGAbstractMethod):
     return JS::NullPtr();
   }
   /* Check to see whether the interface objects are already installed */
-  JSObject** protoAndIfaceArray = GetProtoAndIfaceArray(aGlobal);
+  JS::Heap<JSObject*>* protoAndIfaceArray = GetProtoAndIfaceArray(aGlobal);
   if (!protoAndIfaceArray[%s]) {
     CreateInterfaceObjects(aCx, aGlobal, protoAndIfaceArray);
   }
 
-  /* The object might _still_ be null, but that's OK */
-  return JS::Handle<JSObject*>::fromMarkedLocation(&protoAndIfaceArray[%s]);""" %
+  /* 
+   * The object might _still_ be null, but that's OK.
+   *
+   * Calling fromMarkedLocation() is safe because protoAndIfaceArray is
+   * traced by TraceProtoAndIfaceCache() and its contents are never
+   * changed after they have been set.
+   */
+  return JS::Handle<JSObject*>::fromMarkedLocation(protoAndIfaceArray[%s].address());""" %
                 (self.id, self.id))
 
 class CGGetProtoObjectMethod(CGGetPerInterfaceObject):
@@ -4420,6 +4435,11 @@ class CGCallGenerator(CGThing):
                 return False
             if needsConst(a):
                 arg = CGWrapper(arg, pre="Constify(", post=")")
+            # And convert NonNull<T> to T&
+            if (((a.type.isInterface() or a.type.isCallback()) and
+                 not a.type.nullable()) or
+                a.type.isDOMString()):
+                arg = CGWrapper(arg, pre="NonNullHelper(", post=")")
             args.append(arg)
 
         # Return values that go in outparams go here
@@ -8427,7 +8447,11 @@ class CGBindingRoot(CGThing):
         requiresContentUtils = any(d.interface.hasInterfaceObject() for d in descriptors)
         def descriptorHasChromeOnly(desc):
             return (any(isChromeOnly(a) for a in desc.interface.members) or
-                    desc.interface.getExtendedAttribute("ChromeOnly") is not None)
+                    desc.interface.getExtendedAttribute("ChromeOnly") is not None or
+                    # JS-implemented interfaces with an interface object get a
+                    # chromeonly _create method.
+                    (desc.interface.isJSImplemented() and
+                     desc.interface.hasInterfaceObject()))
         hasChromeOnly = any(descriptorHasChromeOnly(d) for d in descriptors)
         # XXXkhuey ugly hack but this is going away soon.
         isEventTarget = webIDLFile.endswith("EventTarget.webidl")
@@ -9229,20 +9253,20 @@ class CGJSImplMethod(CGNativeMember):
             args = args[2:]
             constructorArgs = [arg.name for arg in args]
             initCall = """
-  // Wrap the object before calling __Init so that __DOM_IMPL__ is available.
-  nsCOMPtr<nsIGlobalObject> globalHolder = do_QueryInterface(window);
-  JS::Rooted<JSObject*> scopeObj(cx, globalHolder->GetGlobalJSObject());
-  JS::Rooted<JS::Value> wrappedVal(cx);
-  if (!WrapNewBindingObject(cx, scopeObj, impl, &wrappedVal)) {
-    MOZ_ASSERT(JS_IsExceptionPending(cx));
-    aRv.Throw(NS_ERROR_UNEXPECTED);
-    return nullptr;
-  }
-  // Initialize the object with the constructor arguments.
-  impl->mImpl->__Init(%s);
-  if (aRv.Failed()) {
-    return nullptr;
-  }""" % (", ".join(constructorArgs))
+// Wrap the object before calling __Init so that __DOM_IMPL__ is available.
+nsCOMPtr<nsIGlobalObject> globalHolder = do_QueryInterface(window);
+JS::Rooted<JSObject*> scopeObj(cx, globalHolder->GetGlobalJSObject());
+JS::Rooted<JS::Value> wrappedVal(cx);
+if (!WrapNewBindingObject(cx, scopeObj, impl, &wrappedVal)) {
+  MOZ_ASSERT(JS_IsExceptionPending(cx));
+  aRv.Throw(NS_ERROR_UNEXPECTED);
+  return nullptr;
+}
+// Initialize the object with the constructor arguments.
+impl->mImpl->__Init(%s);
+if (aRv.Failed()) {
+  return nullptr;
+}""" % (", ".join(constructorArgs))
         else:
             initCall = ""
         return genConstructorBody(self.descriptor, initCall)
@@ -9385,6 +9409,15 @@ class CGJSImplClass(CGBindingImplClass):
             baseConstructors=baseConstructors,
             body=constructorBody)
 
+        self.methodDecls.append(
+            ClassMethod("_Create",
+                        "JSBool",
+                        [Argument("JSContext*", "cx"),
+                         Argument("unsigned", "argc"),
+                         Argument("JS::Value*", "vp")],
+                        static=True,
+                        body=self.getCreateFromExistingBody()))
+
         CGClass.__init__(self, descriptor.name,
                          bases=baseClasses,
                          constructors=[constructor],
@@ -9415,6 +9448,41 @@ class CGJSImplClass(CGBindingImplClass):
 
     def getGetParentObjectBody(self):
         return "return mParent;"
+
+    def getCreateFromExistingBody(self):
+        # XXXbz we could try to get parts of this (e.g. the argument
+        # conversions) auto-generated by somehow creating an IDLMethod and
+        # adding it to our interface, but we'd still need to special-case the
+        # implementation slightly to have it not try to forward to the JS
+        # object...
+        return string.Template(
+            "JS::CallArgs args = JS::CallArgsFromVp(argc, vp);\n"
+            "if (args.length() < 2) {\n"
+            '  return ThrowErrorMessage(cx, MSG_MISSING_ARGUMENTS, "${ifaceName}._create");\n'
+            "}\n"
+            "if (!args[0].isObject()) {\n"
+            '  return ThrowErrorMessage(cx, MSG_NOT_OBJECT, "Argument 1 of ${ifaceName}._create");\n'
+            "}\n"
+            "if (!args[1].isObject()) {\n"
+            '  return ThrowErrorMessage(cx, MSG_NOT_OBJECT, "Argument 2 of ${ifaceName}._create");\n'
+            "}\n"
+            "\n"
+            "// GlobalObject will go through wrappers as needed for us, and\n"
+            "// is simpler than the right UnwrapArg incantation.\n"
+            "GlobalObject global(cx, &args[0].toObject());\n"
+            "if (global.Failed()) {\n"
+            "  return false;\n"
+            "}\n"
+            "nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(global.Get());\n"
+            "if (!window) {\n"
+            '  return ThrowErrorMessage(cx, MSG_DOES_NOT_IMPLEMENT_INTERFACE, "Argument 1 of ${ifaceName}._create");\n'
+            "}\n"
+            "JS::Rooted<JSObject*> arg(cx, &args[1].toObject());\n"
+            "nsRefPtr<${implName}> impl = new ${implName}(arg, window);\n"
+            "return WrapNewBindingObject(cx, arg, impl, args.rval());").substitute({
+                "ifaceName": self.descriptor.interface.identifier.name,
+                "implName": self.descriptor.name
+                })
 
 def isJSImplementedDescriptor(descriptorProvider):
     return (isinstance(descriptorProvider, Descriptor) and
@@ -9842,7 +9910,7 @@ class CallbackOperationBase(CallbackMethod):
         # This relies on getCallableDecl declaring a boolean
         # isCallable in the case when we're a single-operation
         # interface.
-        return "isCallable ? aThisObj : mCallback"
+        return "isCallable ? aThisObj.get() : mCallback"
 
     def getCallableDecl(self):
         replacements = {

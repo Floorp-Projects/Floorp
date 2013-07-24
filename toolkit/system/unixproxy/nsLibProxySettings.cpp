@@ -18,7 +18,7 @@ extern "C" {
 
 class nsUnixSystemProxySettings : public nsISystemProxySettings {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSISYSTEMPROXYSETTINGS
 
   nsUnixSystemProxySettings() { mProxyFactory = nullptr; }
@@ -33,7 +33,7 @@ private:
   pxProxyFactory *mProxyFactory;
 };
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsUnixSystemProxySettings, nsISystemProxySettings)
+NS_IMPL_ISUPPORTS1(nsUnixSystemProxySettings, nsISystemProxySettings)
 
 NS_IMETHODIMP
 nsUnixSystemProxySettings::GetMainThreadOnly(bool *aMainThreadOnly)

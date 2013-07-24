@@ -77,7 +77,7 @@ class WorkerGlobalScope : public workers::EventTarget
   };
 
   // Must be traced!
-  jsval mSlots[SLOT_COUNT];
+  JS::Heap<JS::Value> mSlots[SLOT_COUNT];
 
   enum
   {
@@ -128,7 +128,7 @@ protected:
   _trace(JSTracer* aTrc) MOZ_OVERRIDE
   {
     for (int32_t i = 0; i < SLOT_COUNT; i++) {
-      JS_CallValueTracer(aTrc, &mSlots[i], "WorkerGlobalScope instance slot");
+      JS_CallHeapValueTracer(aTrc, &mSlots[i], "WorkerGlobalScope instance slot");
     }
     mWorker->TraceInternal(aTrc);
     EventTarget::_trace(aTrc);

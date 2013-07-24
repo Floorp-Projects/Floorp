@@ -469,11 +469,12 @@ NS_ScriptErrorReporter(JSContext *cx,
   // We don't want to report exceptions too eagerly, but warnings in the
   // absence of werror are swallowed whole, so report those now.
   if (!JSREPORT_IS_WARNING(report->flags)) {
+    nsIXPConnect* xpc = nsContentUtils::XPConnect();
     if (JS_DescribeScriptedCaller(cx, nullptr, nullptr)) {
+      xpc->MarkErrorUnreported(cx);
       return;
     }
 
-    nsIXPConnect* xpc = nsContentUtils::XPConnect();
     if (xpc) {
       nsAXPCNativeCallContext *cc = nullptr;
       xpc->GetCurrentNativeCallContext(&cc);
@@ -483,6 +484,7 @@ NS_ScriptErrorReporter(JSContext *cx,
           uint16_t lang;
           if (NS_SUCCEEDED(prev->GetLanguage(&lang)) &&
             lang == nsAXPCNativeCallContext::LANG_JS) {
+            xpc->MarkErrorUnreported(cx);
             return;
           }
         }

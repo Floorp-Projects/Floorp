@@ -9,6 +9,7 @@
 #include "nsThreadUtils.h"
 #include "nsIObserverService.h"
 #include "nsServiceManagerUtils.h"
+#include "pratom.h"
 #include "mozilla/Services.h"
 
 // When processing the next thread event, the appshell may process native
@@ -16,8 +17,7 @@
 // next thread event for at most this many ticks:
 #define THREAD_EVENT_STARVATION_LIMIT PR_MillisecondsToInterval(20)
 
-NS_IMPL_THREADSAFE_ISUPPORTS3(nsBaseAppShell, nsIAppShell, nsIThreadObserver,
-                              nsIObserver)
+NS_IMPL_ISUPPORTS3(nsBaseAppShell, nsIAppShell, nsIThreadObserver, nsIObserver)
 
 nsBaseAppShell::nsBaseAppShell()
   : mSuspendNativeCount(0)

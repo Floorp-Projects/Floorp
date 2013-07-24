@@ -3347,7 +3347,7 @@ nsDOMWindowUtils::SetPaintFlashing(bool aPaintFlashing)
 {
   nsPresContext* presContext = GetPresContext();
   if (presContext) {
-    presContext->RefreshDriver()->SetPaintFlashing(aPaintFlashing);
+    presContext->SetPaintFlashing(aPaintFlashing);
     // Clear paint flashing colors
     nsIPresShell* presShell = GetPresShell();
     if (!aPaintFlashing && presShell) {
@@ -3366,7 +3366,7 @@ nsDOMWindowUtils::GetPaintFlashing(bool* aRetVal)
   *aRetVal = false;
   nsPresContext* presContext = GetPresContext();
   if (presContext) {
-    *aRetVal = presContext->RefreshDriver()->GetPaintFlashing();
+    *aRetVal = presContext->GetPaintFlashing();
   }
   return NS_OK;
 }

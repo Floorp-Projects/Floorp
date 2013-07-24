@@ -15,7 +15,7 @@ class nsUUIDGenerator MOZ_FINAL : public nsIUUIDGenerator {
 public:
     nsUUIDGenerator();
 
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
 
     NS_DECL_NSIUUIDGENERATOR
 

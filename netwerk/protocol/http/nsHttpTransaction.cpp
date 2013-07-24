@@ -20,7 +20,6 @@
 #include "nsNetUtil.h"
 #include "nsProxyRelease.h"
 #include "nsIOService.h"
-#include "nsAtomicRefcnt.h"
 
 #include "nsISeekableStream.h"
 #include "nsISocketTransport.h"
@@ -1681,14 +1680,14 @@ nsHttpTransaction::CancelPacing(nsresult reason)
 // nsHttpTransaction::nsISupports
 //-----------------------------------------------------------------------------
 
-NS_IMPL_THREADSAFE_ADDREF(nsHttpTransaction)
+NS_IMPL_ADDREF(nsHttpTransaction)
 
 NS_IMETHODIMP_(nsrefcnt)
 nsHttpTransaction::Release()
 {
     nsrefcnt count;
     NS_PRECONDITION(0 != mRefCnt, "dup release");
-    count = NS_AtomicDecrementRefcnt(mRefCnt);
+    count = --mRefCnt;
     NS_LOG_RELEASE(this, count, "nsHttpTransaction");
     if (0 == count) {
         mRefCnt = 1; /* stablize */
@@ -1700,9 +1699,9 @@ nsHttpTransaction::Release()
     return count;
 }
 
-NS_IMPL_THREADSAFE_QUERY_INTERFACE2(nsHttpTransaction,
-                                    nsIInputStreamCallback,
-                                    nsIOutputStreamCallback)
+NS_IMPL_QUERY_INTERFACE2(nsHttpTransaction,
+                         nsIInputStreamCallback,
+                         nsIOutputStreamCallback)
 
 //-----------------------------------------------------------------------------
 // nsHttpTransaction::nsIInputStreamCallback

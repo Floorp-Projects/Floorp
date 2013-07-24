@@ -50,7 +50,7 @@ namespace net {
 class Tickler MOZ_FINAL : public nsSupportsWeakReference
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
 
   // These methods are main thread only
   Tickler();
@@ -97,7 +97,7 @@ private:
 class Tickler MOZ_FINAL : public nsISupports
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
 
   Tickler() { }
   ~Tickler() { }

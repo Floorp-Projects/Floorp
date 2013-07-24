@@ -41,7 +41,7 @@ class AsyncExecuteStatements MOZ_FINAL : public nsIRunnable
                                        , public mozIStoragePendingStatement
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIRUNNABLE
   NS_DECL_MOZISTORAGEPENDINGSTATEMENT
 

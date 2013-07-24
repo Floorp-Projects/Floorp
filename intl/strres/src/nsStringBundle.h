@@ -22,7 +22,7 @@ public:
     nsresult LoadProperties();
     virtual ~nsStringBundle();
   
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSISTRINGBUNDLE
 
     nsCOMPtr<nsIPersistentProperties> mProps;

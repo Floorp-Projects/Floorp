@@ -65,7 +65,7 @@ XrayWrapperConstructor(JSContext *cx, unsigned argc, jsval *vp)
 }
 // static
 bool
-AttachNewConstructorObject(JSContext *aCx, JSObject *aGlobalObject)
+AttachNewConstructorObject(JSContext *aCx, JS::HandleObject aGlobalObject)
 {
   // Pushing a JSContext calls ActivateDebugger which calls this function, so
   // we can't use an AutoJSContext here until JSD is gone.

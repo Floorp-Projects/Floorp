@@ -19,7 +19,7 @@ class nsTransportStatusEvent;
 class nsTransportEventSinkProxy : public nsITransportEventSink
 {
 public:
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSITRANSPORTEVENTSINK
 
     nsTransportEventSinkProxy(nsITransportEventSink *sink,
@@ -89,7 +89,7 @@ public:
     uint64_t               mProgressMax;
 };
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsTransportEventSinkProxy, nsITransportEventSink)
+NS_IMPL_ISUPPORTS1(nsTransportEventSinkProxy, nsITransportEventSink)
 
 NS_IMETHODIMP
 nsTransportEventSinkProxy::OnTransportStatus(nsITransport *transport,

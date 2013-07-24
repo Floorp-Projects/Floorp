@@ -1300,7 +1300,7 @@ DeviceStorageFile::GetStatusInternal(nsAString& aStorageName, nsAString& aStatus
 #endif
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS0(DeviceStorageFile)
+NS_IMPL_ISUPPORTS0(DeviceStorageFile)
 
 static void
 RegisterForSDCardChanges(nsIObserver* aObserver)

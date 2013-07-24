@@ -7,7 +7,6 @@
 
 #include "xptiprivate.h"
 #include "mozilla/XPTInterfaceInfoManager.h"
-#include "nsAtomicRefcnt.h"
 
 using namespace mozilla;
 
@@ -595,7 +594,7 @@ xptiInterfaceInfo::~xptiInterfaceInfo()
 nsrefcnt
 xptiInterfaceInfo::AddRef(void)
 {
-    nsrefcnt cnt = NS_AtomicIncrementRefcnt(mRefCnt);
+    nsrefcnt cnt = ++mRefCnt;
     NS_LOG_ADDREF(this, cnt, "xptiInterfaceInfo", sizeof(*this));
     return cnt;
 }
@@ -604,7 +603,7 @@ nsrefcnt
 xptiInterfaceInfo::Release(void)
 {
     xptiInterfaceEntry* entry = mEntry;
-    nsrefcnt cnt = NS_AtomicDecrementRefcnt(mRefCnt);
+    nsrefcnt cnt = --mRefCnt;
     NS_LOG_RELEASE(this, cnt, "xptiInterfaceInfo");
     if(!cnt)
     {
