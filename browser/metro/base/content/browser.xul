@@ -403,7 +403,7 @@
         <deck id="updateDeck" orient="vertical">
           <hbox id="updateButtonBox" align="center">
             <button id="updateButton" align="start"
-                    oncommand="gAppUpdater.buttonOnCommand();"/>
+                    oncommand="FlyoutPanelsUI.AboutFlyout.appUpdater.buttonOnCommand();"/>
             <spacer flex="1"/>
           </hbox>
           <hbox id="checkingForUpdates" align="center">
