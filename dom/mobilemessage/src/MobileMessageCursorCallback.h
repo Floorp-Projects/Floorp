@@ -18,12 +18,14 @@ namespace dom {
 
 class DOMCursor;
 class MobileMessageManager;
+class SmsManager;
 
 namespace mobilemessage {
 
 class MobileMessageCursorCallback : public nsIMobileMessageCursorCallback
 {
   friend class mozilla::dom::MobileMessageManager;
+  friend class mozilla::dom::SmsManager;
 
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
