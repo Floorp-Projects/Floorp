@@ -300,6 +300,18 @@ function runTests()
   is(marker.hasAttribute("viewBox"), true, "viewBox hasAttribute");
   ok(marker.getAttribute("viewBox") === "", "empty viewBox attribute");
 
+  marker.setAttribute("viewBox", "9 10 11 12");
+  marker.removeAttribute("viewBox");
+  marker.setAttribute("viewBox", "9 10 11 12");
+  is(marker.viewBox.baseVal.x, 9, "viewBox.x baseVal after re-setting attribute to same rect value");
+  is(marker.viewBox.baseVal.y, 10, "viewBox.y baseVal after re-setting attribute to same rect value");
+  is(marker.viewBox.baseVal.width, 11, "viewBox.width baseVal after re-setting attribute to same rect value");
+  is(marker.viewBox.baseVal.height, 12, "viewBox.height baseVal after re-setting attribute to same rect value");
+  is(marker.viewBox.animVal.x, 9, "viewBox.x animVal after re-setting attribute to same rect value");
+  is(marker.viewBox.animVal.y, 10, "viewBox.y animVal after re-setting attribute to same rect value");
+  is(marker.viewBox.animVal.width, 11, "viewBox.width animVal after re-setting attribute to same rect value");
+  is(marker.viewBox.animVal.height, 12, "viewBox.height animVal after re-setting attribute to same rect value");
+
   SimpleTest.finish();
 }
 
