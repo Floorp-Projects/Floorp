@@ -12,7 +12,7 @@
 #include "nsICaseConversion.h"
 
 class nsCaseConversionImp2 : public nsICaseConversion { 
-  NS_DECL_ISUPPORTS 
+  NS_DECL_THREADSAFE_ISUPPORTS 
 
 public:
   virtual ~nsCaseConversionImp2() { }

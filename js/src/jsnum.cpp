@@ -623,8 +623,8 @@ num_toString_impl(JSContext *cx, CallArgs args)
     return true;
 }
 
-static JSBool
-num_toString(JSContext *cx, unsigned argc, Value *vp)
+JSBool
+js_num_toString(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     return CallNonGenericMethod<IsNumber, num_toString_impl>(cx, args);
@@ -911,7 +911,7 @@ static const JSFunctionSpec number_methods[] = {
 #if JS_HAS_TOSOURCE
     JS_FN(js_toSource_str,       num_toSource,          0, 0),
 #endif
-    JS_FN(js_toString_str,       num_toString,          1, 0),
+    JS_FN(js_toString_str,       js_num_toString,       1, 0),
 #if ENABLE_INTL_API
          {js_toLocaleString_str, {NULL, NULL},           0,0, "Number_toLocaleString"},
 #else

@@ -72,7 +72,7 @@ private:
 class TimerCallback MOZ_FINAL : public nsITimerCallback
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
 
   TimerCallback(nsIThread** aThreadPtr, ReentrantMonitor* aReentrantMonitor)
   : mThreadPtr(aThreadPtr), mReentrantMonitor(aReentrantMonitor) { }
@@ -94,7 +94,7 @@ private:
   ReentrantMonitor* mReentrantMonitor;
 };
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(TimerCallback, nsITimerCallback)
+NS_IMPL_ISUPPORTS1(TimerCallback, nsITimerCallback)
 
 nsresult
 TestTargetedTimers()

@@ -180,7 +180,7 @@ public:
   : nsDOMFileBase(aContentType, aStart, aLength)
   { }
 
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
 };
 
 class nsDOMFileCC : public nsDOMFileBase

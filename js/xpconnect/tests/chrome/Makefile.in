@@ -50,6 +50,7 @@ MOCHITEST_CHROME_FILES = \
 		test_bug812415.xul \
 		test_bug853283.xul \
 		test_bug853571.xul \
+		test_bug895340.xul \
 		test_APIExposer.xul \
 		test_chrometoSource.xul \
 		outoflinexulscript.js \

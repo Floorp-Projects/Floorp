@@ -108,7 +108,7 @@ public:
   static already_AddRefed<nsGeolocationService> GetGeolocationService();
   static mozilla::StaticRefPtr<nsGeolocationService> sService;
 
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIGEOLOCATIONUPDATE
   NS_DECL_NSIOBSERVER
 

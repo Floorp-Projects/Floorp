@@ -108,7 +108,7 @@ class nsXPCComponents_Interfaces :
 {
 public:
     // all the interface method declarations...
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSIXPCCOMPONENTS_INTERFACES
     NS_DECL_NSIXPCSCRIPTABLE
     NS_DECL_NSICLASSINFO
@@ -232,8 +232,8 @@ NS_INTERFACE_MAP_BEGIN(nsXPCComponents_Interfaces)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXPCComponents_Interfaces)
 NS_INTERFACE_MAP_END_THREADSAFE
 
-NS_IMPL_THREADSAFE_ADDREF(nsXPCComponents_Interfaces)
-NS_IMPL_THREADSAFE_RELEASE(nsXPCComponents_Interfaces)
+NS_IMPL_ADDREF(nsXPCComponents_Interfaces)
+NS_IMPL_RELEASE(nsXPCComponents_Interfaces)
 
 // The nsIXPCScriptable map declaration that will generate stubs for us...
 #define XPC_MAP_CLASSNAME           nsXPCComponents_Interfaces
@@ -394,7 +394,7 @@ class nsXPCComponents_InterfacesByID :
 {
 public:
     // all the interface method declarations...
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSIXPCCOMPONENTS_INTERFACESBYID
     NS_DECL_NSIXPCSCRIPTABLE
     NS_DECL_NSICLASSINFO
@@ -518,8 +518,8 @@ NS_INTERFACE_MAP_BEGIN(nsXPCComponents_InterfacesByID)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXPCComponents_InterfacesByID)
 NS_INTERFACE_MAP_END_THREADSAFE
 
-NS_IMPL_THREADSAFE_ADDREF(nsXPCComponents_InterfacesByID)
-NS_IMPL_THREADSAFE_RELEASE(nsXPCComponents_InterfacesByID)
+NS_IMPL_ADDREF(nsXPCComponents_InterfacesByID)
+NS_IMPL_RELEASE(nsXPCComponents_InterfacesByID)
 
 // The nsIXPCScriptable map declaration that will generate stubs for us...
 #define XPC_MAP_CLASSNAME           nsXPCComponents_InterfacesByID
@@ -688,7 +688,7 @@ class nsXPCComponents_Classes :
 {
 public:
     // all the interface method declarations...
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSIXPCCOMPONENTS_CLASSES
     NS_DECL_NSIXPCSCRIPTABLE
     NS_DECL_NSICLASSINFO
@@ -806,8 +806,8 @@ NS_INTERFACE_MAP_BEGIN(nsXPCComponents_Classes)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXPCComponents_Classes)
 NS_INTERFACE_MAP_END_THREADSAFE
 
-NS_IMPL_THREADSAFE_ADDREF(nsXPCComponents_Classes)
-NS_IMPL_THREADSAFE_RELEASE(nsXPCComponents_Classes)
+NS_IMPL_ADDREF(nsXPCComponents_Classes)
+NS_IMPL_RELEASE(nsXPCComponents_Classes)
 
 // The nsIXPCScriptable map declaration that will generate stubs for us...
 #define XPC_MAP_CLASSNAME           nsXPCComponents_Classes
@@ -929,7 +929,7 @@ class nsXPCComponents_ClassesByID :
 {
 public:
     // all the interface method declarations...
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSIXPCCOMPONENTS_CLASSESBYID
     NS_DECL_NSIXPCSCRIPTABLE
     NS_DECL_NSICLASSINFO
@@ -1047,8 +1047,8 @@ NS_INTERFACE_MAP_BEGIN(nsXPCComponents_ClassesByID)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXPCComponents_ClassesByID)
 NS_INTERFACE_MAP_END_THREADSAFE
 
-NS_IMPL_THREADSAFE_ADDREF(nsXPCComponents_ClassesByID)
-NS_IMPL_THREADSAFE_RELEASE(nsXPCComponents_ClassesByID)
+NS_IMPL_ADDREF(nsXPCComponents_ClassesByID)
+NS_IMPL_RELEASE(nsXPCComponents_ClassesByID)
 
 // The nsIXPCScriptable map declaration that will generate stubs for us...
 #define XPC_MAP_CLASSNAME           nsXPCComponents_ClassesByID
@@ -1192,7 +1192,7 @@ class nsXPCComponents_Results :
 {
 public:
     // all the interface method declarations...
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSIXPCCOMPONENTS_RESULTS
     NS_DECL_NSIXPCSCRIPTABLE
     NS_DECL_NSICLASSINFO
@@ -1310,8 +1310,8 @@ NS_INTERFACE_MAP_BEGIN(nsXPCComponents_Results)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXPCComponents_Results)
 NS_INTERFACE_MAP_END_THREADSAFE
 
-NS_IMPL_THREADSAFE_ADDREF(nsXPCComponents_Results)
-NS_IMPL_THREADSAFE_RELEASE(nsXPCComponents_Results)
+NS_IMPL_ADDREF(nsXPCComponents_Results)
+NS_IMPL_RELEASE(nsXPCComponents_Results)
 
 // The nsIXPCScriptable map declaration that will generate stubs for us...
 #define XPC_MAP_CLASSNAME           nsXPCComponents_Results
@@ -1408,7 +1408,7 @@ class nsXPCComponents_ID :
 {
 public:
     // all the interface method declarations...
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSIXPCCOMPONENTS_ID
     NS_DECL_NSIXPCSCRIPTABLE
     NS_DECL_NSICLASSINFO
@@ -1532,8 +1532,8 @@ NS_INTERFACE_MAP_BEGIN(nsXPCComponents_ID)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXPCComponents_ID)
 NS_INTERFACE_MAP_END_THREADSAFE
 
-NS_IMPL_THREADSAFE_ADDREF(nsXPCComponents_ID)
-NS_IMPL_THREADSAFE_RELEASE(nsXPCComponents_ID)
+NS_IMPL_ADDREF(nsXPCComponents_ID)
+NS_IMPL_RELEASE(nsXPCComponents_ID)
 
 // The nsIXPCScriptable map declaration that will generate stubs for us...
 #define XPC_MAP_CLASSNAME           nsXPCComponents_ID
@@ -1627,7 +1627,7 @@ class nsXPCComponents_Exception :
 {
 public:
     // all the interface method declarations...
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSIXPCCOMPONENTS_EXCEPTION
     NS_DECL_NSIXPCSCRIPTABLE
     NS_DECL_NSICLASSINFO
@@ -1751,8 +1751,8 @@ NS_INTERFACE_MAP_BEGIN(nsXPCComponents_Exception)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXPCComponents_Exception)
 NS_INTERFACE_MAP_END_THREADSAFE
 
-NS_IMPL_THREADSAFE_ADDREF(nsXPCComponents_Exception)
-NS_IMPL_THREADSAFE_RELEASE(nsXPCComponents_Exception)
+NS_IMPL_ADDREF(nsXPCComponents_Exception)
+NS_IMPL_RELEASE(nsXPCComponents_Exception)
 
 // The nsIXPCScriptable map declaration that will generate stubs for us...
 #define XPC_MAP_CLASSNAME           nsXPCComponents_Exception
@@ -2007,7 +2007,7 @@ public:
     NS_DEFINE_STATIC_CID_ACCESSOR(NS_XPCCONSTRUCTOR_CID)
 public:
     // all the interface method declarations...
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSIXPCCONSTRUCTOR
     NS_DECL_NSIXPCSCRIPTABLE
     NS_DECL_NSICLASSINFO
@@ -2170,8 +2170,8 @@ NS_INTERFACE_MAP_BEGIN(nsXPCConstructor)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXPCConstructor)
 NS_INTERFACE_MAP_END_THREADSAFE
 
-NS_IMPL_THREADSAFE_ADDREF(nsXPCConstructor)
-NS_IMPL_THREADSAFE_RELEASE(nsXPCConstructor)
+NS_IMPL_ADDREF(nsXPCConstructor)
+NS_IMPL_RELEASE(nsXPCConstructor)
 
 // The nsIXPCScriptable map declaration that will generate stubs for us...
 #define XPC_MAP_CLASSNAME           nsXPCConstructor
@@ -2269,7 +2269,7 @@ class nsXPCComponents_Constructor :
 {
 public:
     // all the interface method declarations...
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSIXPCCOMPONENTS_CONSTRUCTOR
     NS_DECL_NSIXPCSCRIPTABLE
     NS_DECL_NSICLASSINFO
@@ -2392,8 +2392,8 @@ NS_INTERFACE_MAP_BEGIN(nsXPCComponents_Constructor)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXPCComponents_Constructor)
 NS_INTERFACE_MAP_END_THREADSAFE
 
-NS_IMPL_THREADSAFE_ADDREF(nsXPCComponents_Constructor)
-NS_IMPL_THREADSAFE_RELEASE(nsXPCComponents_Constructor)
+NS_IMPL_ADDREF(nsXPCComponents_Constructor)
+NS_IMPL_RELEASE(nsXPCComponents_Constructor)
 
 // The nsIXPCScriptable map declaration that will generate stubs for us...
 #define XPC_MAP_CLASSNAME           nsXPCComponents_Constructor
@@ -2592,7 +2592,7 @@ class nsXPCComponents_utils_Sandbox : public nsIXPCComponents_utils_Sandbox,
 {
 public:
     // Aren't macros nice?
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSIXPCCOMPONENTS_UTILS_SANDBOX
     NS_DECL_NSIXPCSCRIPTABLE
 
@@ -2613,7 +2613,7 @@ class nsXPCComponents_Utils :
 {
 public:
     // all the interface method declarations...
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSIXPCSCRIPTABLE
     NS_DECL_NSISECURITYCHECKEDCOMPONENT
     NS_DECL_NSIXPCCOMPONENTS_UTILS
@@ -2633,8 +2633,8 @@ NS_INTERFACE_MAP_BEGIN(nsXPCComponents_Utils)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXPCComponents_Utils)
 NS_INTERFACE_MAP_END_THREADSAFE
 
-NS_IMPL_THREADSAFE_ADDREF(nsXPCComponents_Utils)
-NS_IMPL_THREADSAFE_RELEASE(nsXPCComponents_Utils)
+NS_IMPL_ADDREF(nsXPCComponents_Utils)
+NS_IMPL_RELEASE(nsXPCComponents_Utils)
 
 // The nsIXPCScriptable map declaration that will generate stubs for us...
 #define XPC_MAP_CLASSNAME           nsXPCComponents_Utils
@@ -2795,10 +2795,10 @@ nsXPCComponents_Utils::ReportError(const JS::Value &errorArg, JSContext *cx)
 #include "nsNetUtil.h"
 const char kScriptSecurityManagerContractID[] = NS_SCRIPTSECURITYMANAGER_CONTRACTID;
 
-NS_IMPL_THREADSAFE_ISUPPORTS3(SandboxPrivate,
-                              nsIScriptObjectPrincipal,
-                              nsIGlobalObject,
-                              nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS3(SandboxPrivate,
+                   nsIScriptObjectPrincipal,
+                   nsIGlobalObject,
+                   nsISupportsWeakReference)
 
 static JSBool
 SandboxDump(JSContext *cx, unsigned argc, jsval *vp)
@@ -3000,8 +3000,8 @@ NS_INTERFACE_MAP_BEGIN(nsXPCComponents_utils_Sandbox)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXPCComponents_utils_Sandbox)
 NS_INTERFACE_MAP_END_THREADSAFE
 
-NS_IMPL_THREADSAFE_ADDREF(nsXPCComponents_utils_Sandbox)
-NS_IMPL_THREADSAFE_RELEASE(nsXPCComponents_utils_Sandbox)
+NS_IMPL_ADDREF(nsXPCComponents_utils_Sandbox)
+NS_IMPL_RELEASE(nsXPCComponents_utils_Sandbox)
 
 // We use the nsIXPScriptable macros to generate lots of stuff for us.
 #define XPC_MAP_CLASSNAME           nsXPCComponents_utils_Sandbox
@@ -4556,8 +4556,8 @@ NS_INTERFACE_MAP_BEGIN(nsXPCComponents)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXPCComponents)
 NS_INTERFACE_MAP_END_THREADSAFE
 
-NS_IMPL_THREADSAFE_ADDREF(nsXPCComponents)
-NS_IMPL_THREADSAFE_RELEASE(nsXPCComponents)
+NS_IMPL_ADDREF(nsXPCComponents)
+NS_IMPL_RELEASE(nsXPCComponents)
 
 /* void getInterfaces (out uint32_t count, [array, size_is (count), retval]
                        out nsIIDPtr array); */

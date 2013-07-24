@@ -81,7 +81,7 @@ private:
   typedef mozilla::PluginLibrary PluginLibrary;
 
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
 
   nsresult Initialize(nsNPAPIPlugin *aPlugin, nsPluginInstanceOwner* aOwner, const char* aMIMEType);
   nsresult Start();

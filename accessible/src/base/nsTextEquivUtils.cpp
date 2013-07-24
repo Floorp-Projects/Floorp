@@ -55,19 +55,6 @@ nsTextEquivUtils::GetNameFromSubtree(Accessible* aAccessible,
   return NS_OK;
 }
 
-void
-nsTextEquivUtils::GetTextEquivFromSubtree(Accessible* aAccessible,
-                                          nsString& aTextEquiv)
-{
-  aTextEquiv.Truncate();
-
-  uint32_t nameRule = GetRoleRule(aAccessible->Role());
-  if (nameRule & eNameFromSubtreeIfReqRule) {
-    AppendFromAccessibleChildren(aAccessible, &aTextEquiv);
-    aTextEquiv.CompressWhitespace();
-  }
-}
-
 nsresult
 nsTextEquivUtils::GetTextEquivFromIDRefs(Accessible* aAccessible,
                                          nsIAtom *aIDRefsAttr,

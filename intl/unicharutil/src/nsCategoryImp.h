@@ -8,7 +8,7 @@
 #include "nsIUGenCategory.h"
 
 class nsCategoryImp : public nsIUGenCategory {
-   NS_DECL_ISUPPORTS
+   NS_DECL_THREADSAFE_ISUPPORTS
    
 public:
    static nsCategoryImp* GetInstance();

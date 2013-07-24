@@ -6,7 +6,7 @@
 
 #include "ion/MIR.h"
 
-#include "mozilla/Casting.h"
+#include "mozilla/FloatingPoint.h"
 
 #include "ion/BaselineInspector.h"
 #include "ion/IonBuilder.h"
@@ -26,7 +26,7 @@
 using namespace js;
 using namespace js::ion;
 
-using mozilla::BitwiseCast;
+using mozilla::DoublesAreIdentical;
 
 void
 MDefinition::PrintOpcodeName(FILE *fp, MDefinition::Opcode op)
@@ -888,10 +888,7 @@ IsConstant(MDefinition *def, double v)
     if (!def->isConstant())
         return false;
 
-    // Compare the underlying bits to not equate -0 and +0.
-    uint64_t lhs = BitwiseCast<uint64_t>(def->toConstant()->value().toNumber());
-    uint64_t rhs = BitwiseCast<uint64_t>(v);
-    return lhs == rhs;
+    return DoublesAreIdentical(def->toConstant()->value().toNumber(), v);
 }
 
 MDefinition *

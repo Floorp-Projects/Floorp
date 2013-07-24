@@ -37,8 +37,8 @@ GetThreadPoolLog()
 #define DEFAULT_IDLE_THREAD_LIMIT 1
 #define DEFAULT_IDLE_THREAD_TIMEOUT PR_SecondsToInterval(60)
 
-NS_IMPL_THREADSAFE_ADDREF(nsThreadPool)
-NS_IMPL_THREADSAFE_RELEASE(nsThreadPool)
+NS_IMPL_ADDREF(nsThreadPool)
+NS_IMPL_RELEASE(nsThreadPool)
 NS_IMPL_CLASSINFO(nsThreadPool, NULL, nsIClassInfo::THREADSAFE,
                   NS_THREADPOOL_CID)
 NS_IMPL_QUERY_INTERFACE3_CI(nsThreadPool, nsIThreadPool, nsIEventTarget,

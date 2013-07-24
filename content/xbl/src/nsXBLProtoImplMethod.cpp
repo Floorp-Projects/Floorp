@@ -237,6 +237,8 @@ nsresult
 nsXBLProtoImplMethod::Read(nsIScriptContext* aContext,
                            nsIObjectInputStream* aStream)
 {
+  MOZ_ASSERT(!IsCompiled() && !GetUncompiledMethod());
+
   JS::Rooted<JSObject*> methodObject(aContext->GetNativeContext());
   nsresult rv = XBL_DeserializeFunction(aContext, aStream, &methodObject);
   if (NS_FAILED(rv)) {
@@ -261,7 +263,12 @@ nsXBLProtoImplMethod::Write(nsIScriptContext* aContext,
     rv = aStream->WriteWStringZ(mName);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    return XBL_SerializeFunction(aContext, aStream, mMethod.AsHeapObject());
+    // Calling fromMarkedLocation() is safe because mMethod is traced by the
+    // Trace() method above, and because its value is never changed after it has
+    // been set to a compiled method.
+    JS::Handle<JSObject*> method =
+      JS::Handle<JSObject*>::fromMarkedLocation(mMethod.AsHeapObject().address());
+    return XBL_SerializeFunction(aContext, aStream, method);
   }
 
   return NS_OK;
@@ -271,7 +278,7 @@ nsresult
 nsXBLProtoImplAnonymousMethod::Execute(nsIContent* aBoundElement)
 {
   NS_PRECONDITION(IsCompiled(), "Can't execute uncompiled method");
-  
+
   if (!GetCompiledMethod()) {
     // Nothing to do here
     return NS_OK;
@@ -364,7 +371,12 @@ nsXBLProtoImplAnonymousMethod::Write(nsIScriptContext* aContext,
     nsresult rv = aStream->Write8(aType);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = XBL_SerializeFunction(aContext, aStream, mMethod.AsHeapObject());
+    // Calling fromMarkedLocation() is safe because mMethod is traced by the
+    // Trace() method above, and because its value is never changed after it has
+    // been set to a compiled method.
+    JS::Handle<JSObject*> method =
+      JS::Handle<JSObject*>::fromMarkedLocation(mMethod.AsHeapObject().address());
+    rv = XBL_SerializeFunction(aContext, aStream, method);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 

@@ -27,7 +27,7 @@ class nsIDNService : public nsIIDNService,
                      public nsSupportsWeakReference
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIIDNSERVICE
   NS_DECL_NSIOBSERVER
 

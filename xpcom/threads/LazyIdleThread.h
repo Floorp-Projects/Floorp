@@ -38,7 +38,7 @@ class LazyIdleThread MOZ_FINAL : public nsIThread,
                                  public nsIObserver
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIEVENTTARGET
   NS_DECL_NSITHREAD
   NS_DECL_NSITIMERCALLBACK

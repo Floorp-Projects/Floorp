@@ -77,7 +77,7 @@ public:
 	//
 	// nsISupports
 	//
-	NS_DECL_ISUPPORTS
+	NS_DECL_THREADSAFE_ISUPPORTS
 
 	//
 	// nsILocaleService
@@ -251,7 +251,7 @@ nsLocaleService::~nsLocaleService(void)
 {
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsLocaleService, nsILocaleService)
+NS_IMPL_ISUPPORTS1(nsLocaleService, nsILocaleService)
 
 NS_IMETHODIMP
 nsLocaleService::NewLocale(const nsAString &aLocale, nsILocale **_retval)

@@ -22,6 +22,7 @@
 #include "nsError.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsScriptSecurityManager.h"
+#include "pratom.h"
 
 using namespace mozilla;
 

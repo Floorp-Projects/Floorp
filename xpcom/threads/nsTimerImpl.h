@@ -57,7 +57,7 @@ public:
   nsresult PostTimerEvent();
   void SetDelayInternal(uint32_t aDelay);
 
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSITIMER
 
   int32_t GetGeneration() { return mGeneration; }

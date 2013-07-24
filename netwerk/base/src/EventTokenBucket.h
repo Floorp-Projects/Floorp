@@ -69,7 +69,7 @@ class TokenBucketCancelable;
 class EventTokenBucket : public nsITimerCallback
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSITIMERCALLBACK
 
   // This should be constructed on the main thread

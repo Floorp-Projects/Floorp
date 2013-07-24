@@ -11,17 +11,16 @@
 #include "nsISupportsPrimitives.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
-#include "nsAtomicRefcnt.h"
 
 #if 0
-NS_IMPL_THREADSAFE_ADDREF(nsPrintProgress)
-NS_IMPL_THREADSAFE_RELEASE(nsPrintProgress)
+NS_IMPL_ADDREF(nsPrintProgress)
+NS_IMPL_RELEASE(nsPrintProgress)
 #else
 NS_IMETHODIMP_(nsrefcnt) nsPrintProgress::AddRef(void)
 {
   NS_PRECONDITION(int32_t(mRefCnt) >= 0, "illegal refcnt");
   nsrefcnt count;
-  count = NS_AtomicIncrementRefcnt(mRefCnt);
+  count = ++mRefCnt;
   //NS_LOG_ADDREF(this, count, "nsPrintProgress", sizeof(*this));
   return count;
 }
@@ -30,7 +29,7 @@ NS_IMETHODIMP_(nsrefcnt) nsPrintProgress::Release(void)
 {
   nsrefcnt count;
   NS_PRECONDITION(0 != mRefCnt, "dup release");
-  count = NS_AtomicDecrementRefcnt(mRefCnt);
+  count = --mRefCnt;
   //NS_LOG_RELEASE(this, count, "nsPrintProgress");
   if (0 == count) {
     mRefCnt = 1; /* stabilize */

@@ -3327,7 +3327,7 @@ FrameLayerBuilder::DrawThebesLayer(ThebesLayer* aLayer,
     aContext->Restore();
   }
 
-  if (presContext->RefreshDriver()->GetPaintFlashing()) {
+  if (presContext->GetPaintFlashing()) {
     FlashPaint(aContext);
   }
 

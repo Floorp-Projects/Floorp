@@ -30,7 +30,7 @@ namespace net {
 class nsPreloadedStream MOZ_FINAL : public nsIAsyncInputStream
 {
  public:
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSIINPUTSTREAM
     NS_DECL_NSIASYNCINPUTSTREAM
 

@@ -29,7 +29,7 @@ public:
   DoWorkRunnable(MessagePump* aPump)
   : mPump(aPump) { }
 
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIRUNNABLE
   NS_DECL_NSITIMERCALLBACK
 

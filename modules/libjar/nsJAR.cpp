@@ -98,15 +98,15 @@ nsJAR::~nsJAR()
   Close();
 }
 
-NS_IMPL_THREADSAFE_QUERY_INTERFACE1(nsJAR, nsIZipReader)
-NS_IMPL_THREADSAFE_ADDREF(nsJAR)
+NS_IMPL_QUERY_INTERFACE1(nsJAR, nsIZipReader)
+NS_IMPL_ADDREF(nsJAR)
 
 // Custom Release method works with nsZipReaderCache...
 nsrefcnt nsJAR::Release(void) 
 {
   nsrefcnt count; 
   NS_PRECONDITION(0 != mRefCnt, "dup release"); 
-  count = NS_AtomicDecrementRefcnt(mRefCnt); 
+  count = --mRefCnt;
   NS_LOG_RELEASE(this, count, "nsJAR"); 
   if (0 == count) {
     mRefCnt = 1; /* stabilize */ 
@@ -866,7 +866,7 @@ nsresult nsJAR::CalculateDigest(const char* aInBuf, uint32_t aLen,
   return hasher->Finish(true, digest);
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsJAREnumerator, nsIUTF8StringEnumerator)
+NS_IMPL_ISUPPORTS1(nsJAREnumerator, nsIUTF8StringEnumerator)
   
 //----------------------------------------------
 // nsJAREnumerator::HasMore
@@ -908,7 +908,7 @@ nsJAREnumerator::GetNext(nsACString& aResult)
 }
 
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsJARItem, nsIZipEntry)
+NS_IMPL_ISUPPORTS1(nsJARItem, nsIZipEntry)
 
 nsJARItem::nsJARItem(nsZipItem* aZipItem)
     : mSize(aZipItem->Size()),
@@ -1008,7 +1008,7 @@ nsJARItem::GetLastModifiedTime(PRTime* aLastModTime)
 ////////////////////////////////////////////////////////////////////////////////
 // nsIZipReaderCache
 
-NS_IMPL_THREADSAFE_ISUPPORTS3(nsZipReaderCache, nsIZipReaderCache, nsIObserver, nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS3(nsZipReaderCache, nsIZipReaderCache, nsIObserver, nsISupportsWeakReference)
 
 nsZipReaderCache::nsZipReaderCache()
   : mLock("nsZipReaderCache.mLock")
