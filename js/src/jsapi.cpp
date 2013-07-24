@@ -825,7 +825,7 @@ JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
     heapState(Idle),
 #ifdef JSGC_GENERATIONAL
     gcNursery(thisFromCtor()),
-    gcStoreBuffer(thisFromCtor()),
+    gcStoreBuffer(thisFromCtor(), gcNursery),
 #endif
 #ifdef JS_GC_ZEAL
     gcZeal_(0),
