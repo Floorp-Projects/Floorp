@@ -13,7 +13,7 @@ function debug(msg) {
 let EventListener = {
 
   DOM_EVENTS: [
-    "pageshow", "change", "input", "MozStorageChanged"
+    "pageshow", "change", "input"
   ],
 
   init: function () {
@@ -30,24 +30,6 @@ let EventListener = {
       case "change":
         sendAsyncMessage("SessionStore:input");
         break;
-      case "MozStorageChanged":
-        {
-          let isSessionStorage = true;
-          // We are only interested in sessionStorage events
-          try {
-            if (event.storageArea != content.sessionStorage) {
-              isSessionStorage = false;
-            }
-          } catch (ex) {
-            // This page does not even have sessionStorage
-            // (this is typically the case of about: pages)
-            isSessionStorage = false;
-          }
-          if (isSessionStorage) {
-            sendAsyncMessage("SessionStore:MozStorageChanged");
-          }
-          break;
-        }
       default:
         debug("received unknown event '" + event.type + "'");
         break;
