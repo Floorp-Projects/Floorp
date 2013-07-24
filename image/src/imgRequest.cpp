@@ -706,17 +706,6 @@ imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctxt,
       LOG_MSG(GetImgLog(), "imgRequest::OnDataAvailable", "Got content type from the channel");
     }
 
-#ifdef MOZ_WBMP
-#ifdef MOZ_WIDGET_GONK
-    // Only support WBMP in privileged app and certified app, do not support in browser app.
-    if (newType.EqualsLiteral(IMAGE_WBMP) &&
-        (!mLoadingPrincipal || mLoadingPrincipal->GetAppStatus() < nsIPrincipal::APP_STATUS_PRIVILEGED)) {
-      this->Cancel(NS_ERROR_FAILURE);
-      return NS_BINDING_ABORTED;
-    }
-#endif
-#endif
-
     // If we're a regular image and this is the first call to OnDataAvailable,
     // this will always be true. If we've resniffed our MIME type (i.e. we're a
     // multipart/x-mixed-replace image), we have to be able to switch our image

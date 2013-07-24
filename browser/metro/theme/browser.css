@@ -722,8 +722,6 @@ setting[type="radio"] > vbox {
 
 #start-scrollbox[input="precise"] {
   overflow-x: scroll;
-  /* Move scrollbar above toolbar, discount padding added by .meta in #start-container */
-  margin-bottom: calc(@toolbar_height@ - @metro_spacing_normal@);
 }
 
 /* if autocomplete is set, hide both start pages,
@@ -744,11 +742,14 @@ setting[type="radio"] > vbox {
   min-width: calc(3 * @grid_double_column_width@);
 }
 
-/* if snapped, hide the fullscreen awesome screen, if viewstate is anything
- *  other than snapped, hide the snapped awesome screen */
-#start[viewstate="snapped"],
-#snapped-start:not([viewstate="snapped"]) {
-  visibility: collapse;
+#start-scrollbox {
+  -moz-box-orient: horizontal;
+  /* Move scrollbar above toolbar, discount padding added by .meta in #start-container */
+  margin-bottom: calc(@toolbar_height@ - @metro_spacing_normal@);
+}
+
+#start-container[viewstate="snapped"] #start-scrollbox {
+  -moz-box-orient: vertical;
 }
 
 /*Formatting for the limited horizontal space of snapped*/
@@ -765,6 +766,16 @@ setting[type="radio"] > vbox {
 #start-container[viewstate="snapped"] .meta-section {
   margin: 0px;
   min-width: @grid_double_column_width@;
+  -moz-box-flex: 1;
+  -moz-box-align: center;
+}
+
+#start-container[viewstate="snapped"] richgrid {
+  visibility: collapse;
+}
+
+#start-container[viewstate="snapped"] richgrid[expanded] {
+  visibility: visible;
 }
 
 /* Browser Content Areas ----------------------------------------------------- */

@@ -239,16 +239,16 @@ nsLocalFile::nsLocalFile(const nsLocalFile& other)
 }
 
 #ifdef MOZ_WIDGET_COCOA
-NS_IMPL_THREADSAFE_ISUPPORTS4(nsLocalFile,
-                              nsILocalFileMac,
-                              nsILocalFile,
-                              nsIFile,
-                              nsIHashable)
+NS_IMPL_ISUPPORTS4(nsLocalFile,
+                   nsILocalFileMac,
+                   nsILocalFile,
+                   nsIFile,
+                   nsIHashable)
 #else
-NS_IMPL_THREADSAFE_ISUPPORTS3(nsLocalFile,
-                              nsILocalFile,
-                              nsIFile,
-                              nsIHashable)
+NS_IMPL_ISUPPORTS3(nsLocalFile,
+                   nsILocalFile,
+                   nsIFile,
+                   nsIHashable)
 #endif
 
 nsresult

@@ -76,7 +76,7 @@ class nsAsyncResolveRequest MOZ_FINAL : public nsIRunnable
                                       , public nsICancelable
 {
 public:
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
 
     nsAsyncResolveRequest(nsProtocolProxyService *pps, nsIURI *uri,
                           uint32_t aResolveFlags,
@@ -273,7 +273,7 @@ private:
     nsCOMPtr<nsIProxyInfo>             mProxyInfo;
 };
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(nsAsyncResolveRequest, nsICancelable, nsIRunnable)
+NS_IMPL_ISUPPORTS2(nsAsyncResolveRequest, nsICancelable, nsIRunnable)
 
 //----------------------------------------------------------------------------
 
@@ -972,7 +972,7 @@ nsProtocolProxyService::ReloadPAC()
 // a false mainThreadResponse parameter.
 class nsAsyncBridgeRequest MOZ_FINAL  : public nsPACManCallback
 {
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
 
      nsAsyncBridgeRequest()
         : mMutex("nsDeprecatedCallback")
@@ -1012,7 +1012,7 @@ private:
     nsCString mPACURL;
     bool      mCompleted;
 };
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsAsyncBridgeRequest, nsPACManCallback)
+NS_IMPL_ISUPPORTS1(nsAsyncBridgeRequest, nsPACManCallback)
 
 // nsIProtocolProxyService2
 NS_IMETHODIMP

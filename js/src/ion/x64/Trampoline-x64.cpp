@@ -310,7 +310,9 @@ IonRuntime::generateInvalidator(JSContext *cx)
     // Pop the machine state and the dead frame.
     masm.lea(Operand(rsp, rbx, TimesOne, sizeof(InvalidationBailoutStack)), rsp);
 
-    masm.generateBailoutTail(rdx, r9);
+    // Jump to shared bailout tail. The BailoutInfo pointer has to be in r9.
+    IonCode *bailoutTail = cx->compartment()->ionCompartment()->getBailoutTail();
+    masm.jmp(bailoutTail);
 
     Linker linker(masm);
     return linker.newCode(cx, JSC::OTHER_CODE);
@@ -442,7 +444,9 @@ GenerateBailoutThunk(JSContext *cx, MacroAssembler &masm, uint32_t frameClass)
     masm.pop(rcx);
     masm.lea(Operand(rsp, rcx, TimesOne, sizeof(void *)), rsp);
 
-    masm.generateBailoutTail(rdx, r9);
+    // Jump to shared bailout tail. The BailoutInfo pointer has to be in r9.
+    IonCode *bailoutTail = cx->compartment()->ionCompartment()->getBailoutTail();
+    masm.jmp(bailoutTail);
 }
 
 IonCode *
@@ -722,6 +726,17 @@ IonRuntime::generateExceptionTailStub(JSContext *cx)
     MacroAssembler masm;
 
     masm.handleFailureWithHandlerTail();
+
+    Linker linker(masm);
+    return linker.newCode(cx, JSC::OTHER_CODE);
+}
+
+IonCode *
+IonRuntime::generateBailoutTailStub(JSContext *cx)
+{
+    MacroAssembler masm;
+
+    masm.generateBailoutTail(rdx, r9);
 
     Linker linker(masm);
     return linker.newCode(cx, JSC::OTHER_CODE);

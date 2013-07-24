@@ -31,7 +31,7 @@ class AsyncStatement MOZ_FINAL : public mozIStorageAsyncStatement
                                , public StorageBaseStatementInternal
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_MOZISTORAGEASYNCSTATEMENT
   NS_DECL_MOZISTORAGEBASESTATEMENT
   NS_DECL_MOZISTORAGEBINDINGPARAMS

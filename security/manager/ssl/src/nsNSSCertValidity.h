@@ -12,7 +12,7 @@
 class nsX509CertValidity : public nsIX509CertValidity
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIX509CERTVALIDITY
 
   nsX509CertValidity();

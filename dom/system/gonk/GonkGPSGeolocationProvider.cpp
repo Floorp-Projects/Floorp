@@ -44,10 +44,10 @@ static const int kDefaultPeriod = 1000; // ms
 // While most methods of GonkGPSGeolocationProvider should only be
 // called from main thread, we deliberately put the Init and ShutdownGPS
 // methods off main thread to avoid blocking.
-NS_IMPL_THREADSAFE_ISUPPORTS3(GonkGPSGeolocationProvider,
-                              nsIGeolocationProvider,
-                              nsIRILDataCallback,
-                              nsISettingsServiceCallback)
+NS_IMPL_ISUPPORTS3(GonkGPSGeolocationProvider,
+                   nsIGeolocationProvider,
+                   nsIRILDataCallback,
+                   nsISettingsServiceCallback)
 
 /* static */ GonkGPSGeolocationProvider* GonkGPSGeolocationProvider::sSingleton = nullptr;
 GpsCallbacks GonkGPSGeolocationProvider::mCallbacks = {

@@ -68,6 +68,19 @@ struct ScopedClosePRFDTraits
 };
 typedef Scoped<ScopedClosePRFDTraits> AutoFDClose;
 
+/* RAII wrapper for FILE descriptors */
+struct ScopedCloseFileTraits
+{
+  typedef FILE *type;
+  static type empty() { return nullptr; }
+  static void release(type f) {
+    if (f) {
+      fclose(f);
+    }
+  }
+};
+typedef Scoped<ScopedCloseFileTraits> ScopedCloseFile;
+
 /**
  * Fallocate efficiently and continuously allocates files via fallocate-type APIs.
  * This is useful for avoiding fragmentation.

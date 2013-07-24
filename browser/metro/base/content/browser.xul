@@ -193,42 +193,40 @@
         <!-- Start UI -->
         <hbox id="start-container" flex="1" observes="bcast_windowState" class="meta content-height content-width">
           <!-- portrait/landscape/filled view -->
-          <hbox id="start" class="start-page" flex="1" observes="bcast_windowState">
-            <scrollbox id="start-scrollbox" orient="horizontal" observes="bcast_preciseInput" flex="1">
-              <vbox id="start-topsites" class="meta-section">
-                <label class="meta-section-title" value="&startTopSitesHeader.label;"/>
-                <richgrid id="start-topsites-grid" noun="topsite" rows="3" columns="3" tiletype="thumbnail" seltype="multiple" flex="1"/>
-              </vbox>
-              <vbox id="start-bookmarks" class="meta-section">
-                <label class="meta-section-title" value="&startBookmarksHeader.label;"/>
-                <richgrid id="start-bookmarks-grid" noun="bookmark" seltype="multiple" flex="1"/>
-              </vbox>
-              <vbox id="start-history" class="meta-section">
-                <label class="meta-section-title" value="&startHistoryHeader.label;"/>
-                <richgrid id="start-history-grid" noun="history" seltype="multiple" flex="1"/>
-              </vbox>
-              <vbox id="start-remotetabs" class="meta-section">
-                <label class="meta-section-title" value="&startRemoteTabsHeader.label;"/>
-                <richgrid id="start-remotetabs-grid" noun="tab" seltype="multiple" flex="1"/>
-              </vbox>
-            </scrollbox>
-          </hbox>
 
-          <!-- snapped view -->
-          <hbox id="snapped-start" class="start-page" flex="1" observes="bcast_windowState">
-            <scrollbox id="snapped-scrollbox" orient="vertical" flex="1">
-              <vbox id="snapped-topsites">
-                <label class="meta-section-title" value="&startTopSitesHeader.label;"/>
-                <richgrid id="snapped-topsites-grid" noun="topsite" class="canSnapTiles" rows="8" columns="1" flex="1"/>
-              </vbox>
-              <label class="meta-section-title" value="&snappedBookmarksHeader.label;"
-                onclick="PanelUI.show('bookmarks-container');"/>
-              <label class="meta-section-title" value="&snappedHistoryHeader.label;"
-                onclick="PanelUI.show('history-container');" inputProcessing="true"/>
-              <label id="snappedRemoteTabsLabel" class="meta-section-title" value="&snappedRemoteTabsHeader.label;"
-                onclick="PanelUI.show('remotetabs-container');" inputProcessing="true"/>
-            </scrollbox>
-          </hbox>
+          <scrollbox id="start-scrollbox" observes="bcast_preciseInput" flex="1">
+            <vbox id="start-topsites" class="meta-section">
+              <label class="meta-section-title wide-title" value="&startTopSitesHeader.label;"/>
+              <label class="meta-section-title narrow-title" value="&snappedTopSitesHeader.label;"
+                onclick="StartUI.onNarrowTitleClick('start-topsites-grid')"/>
+              <richgrid id="start-topsites-grid" noun="topsite" rows="3" columns="3" tiletype="thumbnail" seltype="multiple" flex="1" expanded="true"/>
+            </vbox>
+
+            <vbox id="start-bookmarks" class="meta-section">
+              <label class="meta-section-title wide-title" value="&startBookmarksHeader.label;"/>
+              <label class="meta-section-title narrow-title" value="&snappedBookmarksHeader.label;"
+                onclick="StartUI.onNarrowTitleClick('start-bookmarks-grid')"/>
+              <richgrid id="start-bookmarks-grid" noun="bookmark" seltype="multiple" flex="1"/>
+            </vbox>
+
+            <vbox id="start-history" class="meta-section">
+              <label class="meta-section-title wide-title" value="&startHistoryHeader.label;"/>
+              <label class="meta-section-title narrow-title" value="&snappedHistoryHeader.label;"
+                onclick="StartUI.onNarrowTitleClick('start-history-grid')"/>
+              <richgrid id="start-history-grid" noun="history" seltype="multiple" flex="1"/>
+            </vbox>
+
+            <vbox id="start-remotetabs" class="meta-section">
+              <label class="meta-section-title wide-title" value="&startRemoteTabsHeader.label;"/>
+              <label id="snappedRemoteTabsLabel" class="meta-section-title narrow-title" value="&snappedRemoteTabsHeader.label;"
+                onclick="StartUI.onNarrowTitleClick('start-remotetabs-grid')"/>
+              <richgrid id="start-remotetabs-grid" noun="tab" seltype="multiple" flex="1"/>
+            </vbox>
+
+            <!-- Spacer to take extra space in snapped mode. -->
+            <spacer flex="999"/>
+          </scrollbox>
+
         </hbox>
       </vbox> <!-- end tray -->
 

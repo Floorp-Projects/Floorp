@@ -12,7 +12,7 @@
 
 USING_FILE_NAMESPACE
 
-NS_IMPL_THREADSAFE_ISUPPORTS0(ArchiveItem)
+NS_IMPL_ISUPPORTS0(ArchiveItem)
 
 ArchiveItem::ArchiveItem()
 {

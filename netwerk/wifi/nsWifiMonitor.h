@@ -47,7 +47,7 @@ class nsWifiListener
 class nsWifiMonitor MOZ_FINAL : nsIRunnable, nsIWifiMonitor, nsIObserver
 {
  public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIWIFIMONITOR
   NS_DECL_NSIRUNNABLE
   NS_DECL_NSIOBSERVER

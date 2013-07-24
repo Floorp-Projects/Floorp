@@ -35,7 +35,7 @@ GetTeeLog()
 class nsInputStreamTee MOZ_FINAL : public nsIInputStreamTee
 {
 public:
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSIINPUTSTREAM
     NS_DECL_NSIINPUTSTREAMTEE
 
@@ -205,9 +205,9 @@ nsInputStreamTee::WriteSegmentFun(nsIInputStream *in, void *closure, const char 
     return tee->TeeSegment(fromSegment, *writeCount);
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(nsInputStreamTee,
-                              nsIInputStreamTee,
-                              nsIInputStream)
+NS_IMPL_ISUPPORTS2(nsInputStreamTee,
+                   nsIInputStreamTee,
+                   nsIInputStream)
 NS_IMETHODIMP
 nsInputStreamTee::Close()
 {

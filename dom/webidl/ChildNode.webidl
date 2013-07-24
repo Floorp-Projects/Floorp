@@ -9,9 +9,10 @@
 
 [NoInterfaceObject]
 interface ChildNode {
-// On Element:
-//  readonly attribute Element? previousElementSibling;
-//  readonly attribute Element? nextElementSibling;
+  [Pure]
+  readonly attribute Element? previousElementSibling;
+  [Pure]
+  readonly attribute Element? nextElementSibling;
 
 // Not implemented yet:
 //  void before((Node or DOMString)... nodes);

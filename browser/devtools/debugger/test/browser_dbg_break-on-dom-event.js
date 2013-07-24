@@ -43,32 +43,45 @@ function testBreakOnAll()
         is(packet.why.type, "pauseOnDOMEvents", "A hidden breakpoint was hit.");
         is(packet.frame.callee.name, "keyupHandler", "The keyupHandler is entered.");
 
-        gThreadClient.resume(function() {
+        gClient.addOneTimeListener("paused", function(event, packet) {
+          is(packet.why.type, "pauseOnDOMEvents", "A hidden breakpoint was hit.");
+          is(packet.frame.callee.name, "clickHandler", "The clickHandler is entered.");
+
           gClient.addOneTimeListener("paused", function(event, packet) {
             is(packet.why.type, "pauseOnDOMEvents", "A hidden breakpoint was hit.");
-            is(packet.frame.callee.name, "clickHandler", "The clickHandler is entered.");
+            is(packet.frame.callee.name, "onchange", "The onchange handler is entered.");
 
-            gThreadClient.resume(function() {
-              gClient.addOneTimeListener("paused", function(event, packet) {
-                is(packet.why.type, "pauseOnDOMEvents", "A hidden breakpoint was hit.");
-                is(packet.frame.callee.name, "onchange", "The onchange handler is entered.");
-
-                gThreadClient.resume(testBreakOnDisabled);
-              });
-
-              gInput.focus();
-              gInput.value = "foo";
-              gInput.blur();
-            });
+            gThreadClient.resume(testBreakOnDisabled);
           });
 
+          gThreadClient.resume(function() {
+            gInput.focus();
+            gInput.value = "foo";
+            gInput.blur();
+          });
+        });
+
+        gThreadClient.resume(function() {
           EventUtils.sendMouseEvent({ type: "click" }, gButton);
         });
       });
 
       gThreadClient.resume(function() {
+        // Make sure that the focus is not on the input box so that a focus event
+        // will be triggered.
+        window.focus();
+        gBrowser.selectedBrowser.focus();
+        gButton.focus();
+
+        // Focus the element and wait for focus event.
+        gInput.addEventListener("focus", function onfocus() {
+          gInput.removeEventListener("focus", onfocus, false);
+          executeSoon(function() {
+            EventUtils.synthesizeKey("e", { shiftKey: 1 }, content);
+          });
+        }, false);
+
         gInput.focus();
-        EventUtils.synthesizeKey("e", {}, content);
       });
     });
   });
@@ -94,8 +107,21 @@ function testBreakOnDisabled()
       testBreakOnNone();
     }, false);
 
+    // Make sure that the focus is not on the input box so that a focus event
+    // will be triggered.
+    window.focus();
+    gBrowser.selectedBrowser.focus();
+    gButton.focus();
+
+    // Focus the element and wait for focus event.
+    gInput.addEventListener("focus", function onfocus() {
+      gInput.removeEventListener("focus", onfocus, false);
+      executeSoon(function() {
+        EventUtils.synthesizeKey("e", { shiftKey: 1 }, content);
+      });
+    }, false);
+
     gInput.focus();
-    EventUtils.synthesizeKey("e", {}, content);
   });
 }
 
@@ -117,8 +143,21 @@ function testBreakOnNone()
       testBreakOnClick();
     }, false);
 
+    // Make sure that the focus is not on the input box so that a focus event
+    // will be triggered.
+    window.focus();
+    gBrowser.selectedBrowser.focus();
+    gButton.focus();
+
+    // Focus the element and wait for focus event.
+    gInput.addEventListener("focus", function onfocus() {
+      gInput.removeEventListener("focus", onfocus, false);
+      executeSoon(function() {
+        EventUtils.synthesizeKey("g", { shiftKey: 1 }, content);
+      });
+    }, false);
+
     gInput.focus();
-    EventUtils.synthesizeKey("g", {}, content);
   });
 }
 

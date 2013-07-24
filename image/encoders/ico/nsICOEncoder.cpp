@@ -15,7 +15,7 @@
 using namespace mozilla;
 using namespace mozilla::image;
 
-NS_IMPL_THREADSAFE_ISUPPORTS3(nsICOEncoder, imgIEncoder, nsIInputStream, nsIAsyncInputStream)
+NS_IMPL_ISUPPORTS3(nsICOEncoder, imgIEncoder, nsIInputStream, nsIAsyncInputStream)
 
 nsICOEncoder::nsICOEncoder() : mImageBufferStart(nullptr),
                                mImageBufferCurr(0),

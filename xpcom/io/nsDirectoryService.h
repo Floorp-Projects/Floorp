@@ -24,7 +24,7 @@ class nsDirectoryService MOZ_FINAL : public nsIDirectoryService,
   public:
 
   // nsISupports interface
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
 
   NS_DECL_NSIPROPERTIES  
 

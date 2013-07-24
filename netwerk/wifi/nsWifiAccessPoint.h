@@ -15,7 +15,7 @@
 class nsWifiAccessPoint MOZ_FINAL : public nsIWifiAccessPoint
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIWIFIACCESSPOINT
 
   nsWifiAccessPoint();

@@ -855,8 +855,9 @@ XPCConvert::NativeInterface2JSObject(jsval* d,
     // with objects that don't provide necessary QIs (such as objects under
     // the new DOM bindings). We expect the other side of the CPOW to have
     // the appropriate wrappers in place.
-    if (JSObject *cpow = UnwrapNativeCPOW(aHelper.Object())) {
-        if (!JS_WrapObject(cx, &cpow))
+    RootedObject cpow(cx, UnwrapNativeCPOW(aHelper.Object()));
+    if (cpow) {
+        if (!JS_WrapObject(cx, cpow.address()))
             return false;
         *d = OBJECT_TO_JSVAL(cpow);
         return true;
@@ -1113,13 +1114,12 @@ private:
 
 // static
 nsresult
-XPCConvert::JSValToXPCException(jsval sArg,
+XPCConvert::JSValToXPCException(MutableHandleValue s,
                                 const char* ifaceName,
                                 const char* methodName,
                                 nsIException** exceptn)
 {
     AutoJSContext cx;
-    RootedValue s(cx, sArg);
     AutoExceptionRestorer aer(cx, s);
 
     if (!JSVAL_IS_PRIMITIVE(s)) {
@@ -1575,7 +1575,7 @@ XPCConvert::JSTypedArray2Native(void** d,
 
 // static
 JSBool
-XPCConvert::JSArray2Native(void** d, JS::Value s,
+XPCConvert::JSArray2Native(void** d, HandleValue s,
                            uint32_t count, const nsXPTType& type,
                            const nsID* iid, nsresult* pErr)
 {
@@ -1759,7 +1759,7 @@ XPCConvert::NativeStringWithSize2JS(jsval* d, const void* s,
 
 // static
 JSBool
-XPCConvert::JSStringWithSize2Native(void* d, jsval s,
+XPCConvert::JSStringWithSize2Native(void* d, HandleValue s,
                                     uint32_t count, const nsXPTType& type,
                                     nsresult* pErr)
 {

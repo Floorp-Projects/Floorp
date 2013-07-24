@@ -70,10 +70,40 @@ add_test(function test_parseMMI_undefined() {
   run_next_test();
 });
 
-add_test(function test_parseMMI_invalid() {
-  let mmi = parseMMI("**");
+add_test(function test_parseMMI_one_digit_short_code() {
+  let mmi = parseMMI("1");
+
+  do_check_eq(mmi.fullMMI, "1");
+  do_check_eq(mmi.procedure, undefined);
+  do_check_eq(mmi.serviceCode, undefined);
+  do_check_eq(mmi.sia, undefined);
+  do_check_eq(mmi.sib, undefined);
+  do_check_eq(mmi.sic, undefined);
+  do_check_eq(mmi.pwd, undefined);
+  do_check_eq(mmi.dialNumber, undefined);
+
+  run_next_test();
+});
+
+add_test(function test_parseMMI_invalid_short_code() {
+  let mmi = parseMMI("11");
 
   do_check_null(mmi);
+
+  run_next_test();
+});
+
+add_test(function test_parseMMI_short_code() {
+  let mmi = parseMMI("21");
+
+  do_check_eq(mmi.fullMMI, "21");
+  do_check_eq(mmi.procedure, undefined);
+  do_check_eq(mmi.serviceCode, undefined);
+  do_check_eq(mmi.sia, undefined);
+  do_check_eq(mmi.sib, undefined);
+  do_check_eq(mmi.sic, undefined);
+  do_check_eq(mmi.pwd, undefined);
+  do_check_eq(mmi.dialNumber, undefined);
 
   run_next_test();
 });
@@ -82,6 +112,21 @@ add_test(function test_parseMMI_dial_string() {
   let mmi = parseMMI("12345");
 
   do_check_null(mmi);
+
+  run_next_test();
+});
+
+add_test(function test_parseMMI_USSD_without_asterisk_prefix() {
+  let mmi = parseMMI("123#");
+
+  do_check_eq(mmi.fullMMI, "123#");
+  do_check_eq(mmi.procedure, undefined);
+  do_check_eq(mmi.serviceCode, undefined);
+  do_check_eq(mmi.sia, undefined);
+  do_check_eq(mmi.sib, undefined);
+  do_check_eq(mmi.sic, undefined);
+  do_check_eq(mmi.pwd, undefined);
+  do_check_eq(mmi.dialNumber, undefined);
 
   run_next_test();
 });
@@ -318,7 +363,33 @@ add_test(function test_sendMMI_undefined() {
 });
 
 add_test(function test_sendMMI_invalid() {
-  testSendMMI("**", MMI_ERROR_KS_ERROR);
+  testSendMMI("11", MMI_ERROR_KS_ERROR);
+
+  run_next_test();
+});
+
+add_test(function test_sendMMI_short_code() {
+  let workerhelper = getWorker();
+  let worker = workerhelper.worker;
+
+  let ussdOptions;
+
+  worker.RIL.sendUSSD = function fakeSendUSSD(options){
+    ussdOptions = options;
+    worker.RIL[REQUEST_SEND_USSD](0, {
+      rilRequestError: ERROR_SUCCESS
+    });
+
+  }
+
+  worker.RIL.radioState = GECKO_RADIOSTATE_READY;
+  worker.RIL.sendMMI({mmi: "**"});
+
+  let postedMessage = workerhelper.postedMessage;
+  do_check_eq(ussdOptions.ussd, "**");
+  do_check_eq (postedMessage.errorMsg, GECKO_ERROR_SUCCESS);
+  do_check_true(postedMessage.success);
+  do_check_true(worker.RIL._ussdSession);
 
   run_next_test();
 });
