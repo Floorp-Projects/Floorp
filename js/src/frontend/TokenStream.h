@@ -14,14 +14,15 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/PodOperations.h"
 
+#include <stdarg.h>
 #include <stddef.h>
 #include <stdio.h>
-#include <stdarg.h>
+
 #include "jscntxt.h"
-#include "jsversion.h"
 #include "jsopcode.h"
 #include "jsprvtd.h"
 #include "jspubtd.h"
+#include "jsversion.h"
 
 #include "js/Vector.h"
 
