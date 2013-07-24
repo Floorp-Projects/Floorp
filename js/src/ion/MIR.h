@@ -349,6 +349,11 @@ class MDefinition : public MNode
         return trackedPc_;
     }
 
+    // Warning: Range analysis is removing the bit-operations such as '| 0' at
+    // the end of the transformations. Using this function to analyse any
+    // operands after the truncate phase of the range analysis will lead to
+    // errors. Instead, one should define the collectRangeInfo() to set the
+    // right set of flags which are dependent on the range of the inputs.
     Range *range() const {
         return range_;
     }
@@ -371,8 +376,11 @@ class MDefinition : public MNode
     bool earlyAbortCheck();
 
     // Compute an absolute or symbolic range for the value of this node.
-    // Ranges are only computed for definitions whose type is int32.
     virtual void computeRange() {
+    }
+
+    // Collect information from the truncated ranges.
+    virtual void collectRangeInfo() {
     }
 
     MNode::Kind kind() const {
@@ -3473,10 +3481,12 @@ class MDiv : public MBinaryArithInstruction
 class MMod : public MBinaryArithInstruction
 {
     bool unsigned_;
+    bool canBeNegativeDividend_;
 
     MMod(MDefinition *left, MDefinition *right, MIRType type)
       : MBinaryArithInstruction(left, right),
-        unsigned_(false)
+        unsigned_(false),
+        canBeNegativeDividend_(true)
     {
         if (type != MIRType_Value)
             specialization_ = type;
@@ -3501,7 +3511,10 @@ class MMod : public MBinaryArithInstruction
         MOZ_ASSUME_UNREACHABLE("not used");
     }
 
-    bool canBeNegativeDividend() const;
+    bool canBeNegativeDividend() const {
+        JS_ASSERT(specialization_ == MIRType_Int32);
+        return canBeNegativeDividend_;
+    }
     bool canBeDivideByZero() const;
     bool canBePowerOfTwoDivisor() const;
 
@@ -3513,6 +3526,7 @@ class MMod : public MBinaryArithInstruction
 
     void computeRange();
     bool truncate();
+    void collectRangeInfo();
 };
 
 class MConcat
@@ -7102,12 +7116,14 @@ class MInArray
     public ObjectPolicy<3>
 {
     bool needsHoleCheck_;
+    bool needsNegativeIntCheck_;
 
     MInArray(MDefinition *elements, MDefinition *index,
              MDefinition *initLength, MDefinition *object,
              bool needsHoleCheck)
       : MQuaternaryInstruction(elements, index, initLength, object),
-        needsHoleCheck_(needsHoleCheck)
+        needsHoleCheck_(needsHoleCheck),
+        needsNegativeIntCheck_(true)
     {
         setResultType(MIRType_Boolean);
         setMovable();
@@ -7141,13 +7157,17 @@ class MInArray
     bool needsHoleCheck() const {
         return needsHoleCheck_;
     }
-    bool needsNegativeIntCheck() const;
+    bool needsNegativeIntCheck() const {
+        return needsNegativeIntCheck_;
+    }
+    void collectRangeInfo();
     AliasSet getAliasSet() const {
         return AliasSet::Load(AliasSet::Element);
     }
     TypePolicy *typePolicy() {
         return this;
     }
+
 };
 
 // Implementation for instanceof operator with specific rhs.
