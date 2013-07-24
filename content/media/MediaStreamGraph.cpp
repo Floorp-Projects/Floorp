@@ -22,6 +22,7 @@
 #include "AudioChannelCommon.h"
 #include "AudioNodeEngine.h"
 #include "AudioNodeStream.h"
+#include "AudioNodeExternalInputStream.h"
 #include <algorithm>
 #include "DOMMediaStream.h"
 #include "GeckoProfiler.h"
@@ -2309,6 +2310,21 @@ ProcessedMediaStream*
 MediaStreamGraph::CreateTrackUnionStream(DOMMediaStream* aWrapper)
 {
   TrackUnionStream* stream = new TrackUnionStream(aWrapper);
+  NS_ADDREF(stream);
+  MediaStreamGraphImpl* graph = static_cast<MediaStreamGraphImpl*>(this);
+  stream->SetGraphImpl(graph);
+  graph->AppendMessage(new CreateMessage(stream));
+  return stream;
+}
+
+AudioNodeExternalInputStream*
+MediaStreamGraph::CreateAudioNodeExternalInputStream(AudioNodeEngine* aEngine, TrackRate aSampleRate)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  if (!aSampleRate) {
+    aSampleRate = aEngine->NodeMainThread()->Context()->SampleRate();
+  }
+  AudioNodeExternalInputStream* stream = new AudioNodeExternalInputStream(aEngine, aSampleRate);
   NS_ADDREF(stream);
   MediaStreamGraphImpl* graph = static_cast<MediaStreamGraphImpl*>(this);
   stream->SetGraphImpl(graph);
