@@ -977,14 +977,19 @@ let RemoteDebugger = {
       // Ask for remote connections.
       DebuggerServer.init(this.prompt.bind(this));
       DebuggerServer.addActors("resource://gre/modules/devtools/server/actors/webbrowser.js");
-      DebuggerServer.addActors("resource://gre/modules/devtools/server/actors/script.js");
-      DebuggerServer.addGlobalActor(DebuggerServer.ChromeDebuggerActor, "chromeDebugger");
-      DebuggerServer.addActors("resource://gre/modules/devtools/server/actors/webconsole.js");
-      DebuggerServer.addActors("resource://gre/modules/devtools/server/actors/gcli.js");
-      if ("nsIProfiler" in Ci) {
-        DebuggerServer.addActors("resource://gre/modules/devtools/server/actors/profiler.js");
+      // Until we implement unix domain socket, we enable content actors
+      // only on development devices
+      if (Services.prefs.getBoolPref("devtools.debugger.enable-content-actors")) {
+        DebuggerServer.addActors("resource://gre/modules/devtools/server/actors/script.js");
+        DebuggerServer.addGlobalActor(DebuggerServer.ChromeDebuggerActor, "chromeDebugger");
+        DebuggerServer.addActors("resource://gre/modules/devtools/server/actors/webconsole.js");
+        DebuggerServer.addActors("resource://gre/modules/devtools/server/actors/gcli.js");
+        if ("nsIProfiler" in Ci) {
+          DebuggerServer.addActors("resource://gre/modules/devtools/server/actors/profiler.js");
+        }
+        DebuggerServer.addActors("resource://gre/modules/devtools/server/actors/styleeditor.js");
+        DebuggerServer.enableWebappsContentActor = true;
       }
-      DebuggerServer.addActors("resource://gre/modules/devtools/server/actors/styleeditor.js");
       DebuggerServer.addActors('chrome://browser/content/dbg-browser-actors.js');
       DebuggerServer.addActors("resource://gre/modules/devtools/server/actors/webapps.js");
     }
