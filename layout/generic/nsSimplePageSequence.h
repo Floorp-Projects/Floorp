@@ -122,7 +122,8 @@ protected:
                       const nsHTMLReflowState& aReflowState,
                       nscoord aWidth, nscoord aHeight);
 
-  void         DetermineWhetherToPrintPage();
+  void DetermineWhetherToPrintPage();
+  nsIFrame* GetCurrentPageFrame();
 
   nsMargin mMargin;
 
@@ -133,7 +134,6 @@ protected:
   nsSharedPageData* mPageData; // data shared by all the nsPageFrames
 
   // Asynch Printing
-  nsIFrame *   mCurrentPageFrame;
   int32_t      mPageNum;
   int32_t      mTotalPages;
   int32_t      mPrintRangeType;
