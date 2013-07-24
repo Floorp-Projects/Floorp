@@ -37,10 +37,10 @@ protected:
 };
 
 // ImageHost with a single DeprecatedTextureHost
-class DeprecatedImageHostSingle : public ImageHost
+class ImageHostSingle : public ImageHost
 {
 public:
-  DeprecatedImageHostSingle(const TextureInfo& aTextureInfo)
+  ImageHostSingle(const TextureInfo& aTextureInfo)
     : ImageHost(aTextureInfo)
     , mDeprecatedTextureHost(nullptr)
     , mHasPictureRect(false)
@@ -115,11 +115,11 @@ protected:
 // Double buffered ImageHost. We have a single TextureHost and double buffering
 // is done at the TextureHost/Client level. This is in contrast with buffered
 // ContentHosts which do their own double buffering 
-class DeprecatedImageHostBuffered : public DeprecatedImageHostSingle
+class ImageHostBuffered : public ImageHostSingle
 {
 public:
-  DeprecatedImageHostBuffered(const TextureInfo& aTextureInfo)
-    : DeprecatedImageHostSingle(aTextureInfo)
+  ImageHostBuffered(const TextureInfo& aTextureInfo)
+    : ImageHostSingle(aTextureInfo)
   {}
 
   virtual bool Update(const SurfaceDescriptor& aImage,
