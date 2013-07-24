@@ -371,24 +371,20 @@ menuitem:not([type]):not(.menuitem-tooltip):not(.menuitem-iconic-tooltip) {
   list-style-image: url("moz-icon://stock/gtk-preferences?size=menu");
 }
 
-#menu_stop,
 #context-stop {
   list-style-image: url("moz-icon://stock/gtk-stop?size=menu");
 }
 
-#menu_stop[disabled],
 #context-stop[disabled] {
   list-style-image: url("moz-icon://stock/gtk-stop?size=menu&state=disabled");
 }
 
-#menu_reload,
 #placesContext_reload,
 #context-reload,
 #context-reloadframe {
   list-style-image: url("moz-icon://stock/gtk-refresh?size=menu");
 }
 
-#menu_reload[disabled],
 #context-reload[disabled] {
   list-style-image: url("moz-icon://stock/gtk-refresh?size=menu&state=disabled");
 }
