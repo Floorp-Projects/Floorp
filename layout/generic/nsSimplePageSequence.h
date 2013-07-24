@@ -24,8 +24,8 @@ public:
 
   PRUnichar * mDateTimeStr;
   nsFont *    mHeadFootFont;
-  PRUnichar * mPageNumFormat;
-  PRUnichar * mPageNumAndTotalsFormat;
+  nsString    mPageNumFormat;
+  nsString    mPageNumAndTotalsFormat;
   nsString    mDocTitle;
   nsString    mDocURL;
 
@@ -109,7 +109,7 @@ protected:
 
   // SharedPageData Helper methods
   void SetDateTimeStr(PRUnichar * aDateTimeStr);
-  void SetPageNumberFormat(PRUnichar * aFormatStr, bool aForPageNumOnly);
+  void SetPageNumberFormat(const nsAString& aFormatStr, bool aForPageNumOnly);
 
   // Sets the frame desired size to the size of the viewport, or the given
   // nscoords, whichever is larger. Print scaling is applied in this function.
