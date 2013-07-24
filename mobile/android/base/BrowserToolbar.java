@@ -581,11 +581,6 @@ public class BrowserToolbar extends GeckoRelativeLayout
             keyCode == KeyEvent.KEYCODE_VOLUME_UP ||
             keyCode == KeyEvent.KEYCODE_VOLUME_DOWN) {
             return false;
-        } else if (keyCode == KeyEvent.KEYCODE_SEARCH) {
-             mUrlEditText.setText("");
-             mUrlEditText.requestFocus();
-             showSoftInput();
-             return true;
         } else if (isEditing()) {
             final int prevSelStart = mUrlEditText.getSelectionStart();
             final int prevSelEnd = mUrlEditText.getSelectionEnd();
