@@ -18,6 +18,7 @@
 #include "mozilla/dom/XMLHttpRequestBinding.h"
 #include "mozilla/dom/XMLHttpRequestUploadBinding.h"
 #include "mozilla/dom/URLBinding.h"
+#include "mozilla/dom/WorkerLocationBinding.h"
 #include "mozilla/dom/WorkerNavigatorBinding.h"
 #include "mozilla/OSFileConstants.h"
 #include "nsTraceRefcnt.h"
@@ -233,41 +234,15 @@ private:
     }
 
     if (JSVAL_IS_VOID(scope->mSlots[SLOT_location])) {
-      JS::Rooted<JSString*> href(aCx), protocol(aCx), host(aCx), hostname(aCx);
-      JS::Rooted<JSString*> port(aCx), pathname(aCx), search(aCx), hash(aCx);
-
       WorkerPrivate::LocationInfo& info = scope->mWorker->GetLocationInfo();
 
-#define COPY_STRING(_jsstr, _cstr)                                             \
-  if (info. _cstr .IsEmpty()) {                                                \
-    _jsstr = NULL;                                                             \
-  }                                                                            \
-  else {                                                                       \
-    if (!(_jsstr = JS_NewStringCopyN(aCx, info. _cstr .get(),                  \
-                                     info. _cstr .Length()))) {                \
-      return false;                                                            \
-    }                                                                          \
-    info. _cstr .Truncate();                                                   \
-  }
-
-      COPY_STRING(href, mHref);
-      COPY_STRING(protocol, mProtocol);
-      COPY_STRING(host, mHost);
-      COPY_STRING(hostname, mHostname);
-      COPY_STRING(port, mPort);
-      COPY_STRING(pathname, mPathname);
-      COPY_STRING(search, mSearch);
-      COPY_STRING(hash, mHash);
-
-#undef COPY_STRING
-
-      JSObject* location = location::Create(aCx, href, protocol, host, hostname,
-                                            port, pathname, search, hash);
+      nsRefPtr<WorkerLocation> location =
+        WorkerLocation::Create(aCx, aObj, info);
       if (!location) {
         return false;
       }
 
-      scope->mSlots[SLOT_location] = OBJECT_TO_JSVAL(location);
+      scope->mSlots[SLOT_location] = OBJECT_TO_JSVAL(location->GetJSObject());
     }
 
     aVp.set(scope->mSlots[SLOT_location]);
@@ -1037,7 +1012,6 @@ CreateDedicatedWorkerGlobalScope(JSContext* aCx)
   if (!events::InitClasses(aCx, global, false) ||
       !file::InitClasses(aCx, global) ||
       !exceptions::InitClasses(aCx, global) ||
-      !location::InitClass(aCx, global) ||
       !imagedata::InitClass(aCx, global)) {
     return NULL;
   }
@@ -1049,6 +1023,7 @@ CreateDedicatedWorkerGlobalScope(JSContext* aCx)
       !XMLHttpRequestBinding_workers::GetConstructorObject(aCx, global) ||
       !XMLHttpRequestUploadBinding_workers::GetConstructorObject(aCx, global) ||
       !URLBinding_workers::GetConstructorObject(aCx, global) ||
+      !WorkerLocationBinding_workers::GetConstructorObject(aCx, global) ||
       !WorkerNavigatorBinding_workers::GetConstructorObject(aCx, global)) {
     return NULL;
   }
