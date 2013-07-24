@@ -976,11 +976,14 @@ MUrsh::computeRange()
     if (!rhs->isConstant()) {
         right.wrapAroundToShiftCount();
         setRange(Range::ursh(&left, &right));
-        return;
+    } else {
+        int32_t c = rhs->toConstant()->value().toInt32();
+        setRange(Range::ursh(&left, c));
     }
 
-    int32_t c = rhs->toConstant()->value().toInt32();
-    setRange(Range::ursh(&left, c));
+    JS_ASSERT(range()->lower() >= 0);
+    if (type() == MIRType_Int32 && range()->isUpperInfinite())
+        range()->extendUInt32ToInt32Min();
 }
 
 void
@@ -1116,8 +1119,11 @@ static Range *GetTypedArrayRange(int type)
 void
 MLoadTypedArrayElement::computeRange()
 {
-    if (Range *range = GetTypedArrayRange(arrayType()))
+    if (Range *range = GetTypedArrayRange(arrayType())) {
+        if (type() == MIRType_Int32 && range->isUpperInfinite())
+            range->extendUInt32ToInt32Min();
         setRange(range);
+    }
 }
 
 void

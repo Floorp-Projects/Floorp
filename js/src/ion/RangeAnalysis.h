@@ -354,6 +354,14 @@ class Range : public TempObject {
     // it to the [0, 1] range.  Otherwise do nothing.
     void wrapAroundToBoolean();
 
+    // As we lack support of MIRType_UInt32, we need to work around the int32
+    // representation by doing an overflow while keeping the upper infinity to
+    // repesent the fact that the value might reach bigger numbers.
+    void extendUInt32ToInt32Min() {
+        JS_ASSERT(isUpperInfinite());
+        lower_ = JSVAL_INT_MIN;
+    }
+
     // Set the exponent by using the precise range analysis on the full
     // range of Int32 values. This might shrink the exponent after some
     // operations.
