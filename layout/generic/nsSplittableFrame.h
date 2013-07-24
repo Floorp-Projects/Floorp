@@ -118,6 +118,12 @@ protected:
                           nsHTMLReflowMetrics&     aMetrics,
                           nscoord                  aConsumed);
 
+  /**
+   * @see nsIFrame::GetSkipSides()
+   * @see nsIFrame::ApplySkipSides()
+   */
+  virtual int GetSkipSides(const nsHTMLReflowState* aReflowState = nullptr) const;
+
 #ifdef DEBUG
   virtual void DumpBaseRegressionData(nsPresContext* aPresContext, FILE* out, int32_t aIndent) MOZ_OVERRIDE;
 #endif
