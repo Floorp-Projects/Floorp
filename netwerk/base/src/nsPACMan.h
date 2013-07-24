@@ -83,7 +83,7 @@ class nsPACMan MOZ_FINAL : public nsIStreamLoaderObserver
                          , public nsIChannelEventSink
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
 
   nsPACMan();
 

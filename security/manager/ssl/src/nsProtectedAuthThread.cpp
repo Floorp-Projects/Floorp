@@ -15,7 +15,7 @@
 using namespace mozilla;
 using namespace mozilla::psm;
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsProtectedAuthThread, nsIProtectedAuthThread)
+NS_IMPL_ISUPPORTS1(nsProtectedAuthThread, nsIProtectedAuthThread)
 
 static void nsProtectedAuthThreadRunner(void *arg)
 {

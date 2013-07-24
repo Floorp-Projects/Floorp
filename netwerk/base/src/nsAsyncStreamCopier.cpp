@@ -88,7 +88,7 @@ nsAsyncStreamCopier::OnAsyncCopyComplete(void *closure, nsresult status)
 //-----------------------------------------------------------------------------
 // nsISupports
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(nsAsyncStreamCopier,
+NS_IMPL_ISUPPORTS2(nsAsyncStreamCopier,
                               nsIRequest,
                               nsIAsyncStreamCopier)
 

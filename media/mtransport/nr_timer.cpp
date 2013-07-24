@@ -70,7 +70,8 @@ namespace mozilla {
 class nrappkitTimerCallback : public nsITimerCallback
 {
 public:
-  NS_DECL_ISUPPORTS
+  // We're going to release ourself in the callback, so we need to be threadsafe
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSITIMERCALLBACK
 
   nrappkitTimerCallback(NR_async_cb cb, void *cb_arg,
@@ -89,8 +90,7 @@ protected:
   int line_;
 };
 
-// We're going to release ourself in the callback, so we need to be threadsafe
-NS_IMPL_THREADSAFE_ISUPPORTS1(nrappkitTimerCallback, nsITimerCallback)
+NS_IMPL_ISUPPORTS1(nrappkitTimerCallback, nsITimerCallback)
 
 NS_IMETHODIMP nrappkitTimerCallback::Notify(nsITimer *timer) {
   r_log(LOG_GENERIC, LOG_DEBUG, "Timer callback fired (set in %s:%d)",

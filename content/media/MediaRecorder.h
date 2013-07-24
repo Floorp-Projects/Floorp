@@ -109,7 +109,7 @@ protected:
   // MediaStream passed from js context
   nsRefPtr<DOMMediaStream> mStream;
   // This media stream is used for notifying raw data to encoder and can be blocked.
-  nsAutoPtr<ProcessedMediaStream> mTrackUnionStream;
+  nsRefPtr<ProcessedMediaStream> mTrackUnionStream;
   // This object creates on start() and destroys in ~MediaRecorder.
   nsAutoPtr<EncodedBufferCache> mEncodedBufferCache;
   // It specifies the container format as well as the audio and video capture formats.

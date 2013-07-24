@@ -61,9 +61,9 @@ private:
     ObserverArray mObservers;
 };
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(nsHttpActivityDistributor,
-                              nsIHttpActivityDistributor,
-                              nsIHttpActivityObserver)
+NS_IMPL_ISUPPORTS2(nsHttpActivityDistributor,
+                   nsIHttpActivityDistributor,
+                   nsIHttpActivityObserver)
 
 nsHttpActivityDistributor::nsHttpActivityDistributor()
     : mLock("nsHttpActivityDistributor.mLock")

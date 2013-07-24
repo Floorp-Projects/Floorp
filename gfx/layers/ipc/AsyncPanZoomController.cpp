@@ -1157,6 +1157,10 @@ void AsyncPanZoomController::NotifyLayersUpdated(const FrameMetrics& aViewportFr
   mLastContentPaintMetrics = aViewportFrame;
 
   mFrameMetrics.mMayHaveTouchListeners = aViewportFrame.mMayHaveTouchListeners;
+
+  // TODO: Once a mechanism for calling UpdateScrollOffset() when content does
+  //       a scrollTo() is implemented for B2G (bug 895905), this block can be removed.
+#ifndef MOZ_WIDGET_ANDROID
   if (!mPaintThrottler.IsOutstanding()) {
     // No paint was requested, but we got one anyways. One possible cause of this
     // is that content could have fired a scrollTo(). In this case, we should take
@@ -1176,6 +1180,7 @@ void AsyncPanZoomController::NotifyLayersUpdated(const FrameMetrics& aViewportFr
       break;
     }
   }
+#endif
 
   mPaintThrottler.TaskComplete(GetFrameTime());
   bool needContentRepaint = false;
@@ -1471,6 +1476,12 @@ void AsyncPanZoomController::GetAPZCAtPoint(const ContainerLayer& aLayerTree,
   gfxPoint point(aPoint.x, aPoint.y);
 
   GetAPZCAtPointOnSubtree(aLayerTree, point, aApzcOut, aRelativePointOut);
+}
+
+void AsyncPanZoomController::UpdateScrollOffset(CSSPoint aScrollOffset)
+{
+  MonitorAutoLock monitor(mMonitor);
+  mFrameMetrics.mScrollOffset = aScrollOffset;
 }
 
 }

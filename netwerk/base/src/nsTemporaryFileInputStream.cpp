@@ -6,7 +6,7 @@
 #include "nsTemporaryFileInputStream.h"
 #include "nsStreamUtils.h"
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsTemporaryFileInputStream, nsIInputStream)
+NS_IMPL_ISUPPORTS1(nsTemporaryFileInputStream, nsIInputStream)
 
 nsTemporaryFileInputStream::nsTemporaryFileInputStream(FileDescOwner* aFileDescOwner, uint64_t aStartPos, uint64_t aEndPos)
   : mFileDescOwner(aFileDescOwner),

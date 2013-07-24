@@ -32,7 +32,7 @@ class Statement MOZ_FINAL : public mozIStorageStatement
                           , public StorageBaseStatementInternal
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_MOZISTORAGESTATEMENT
   NS_DECL_MOZISTORAGEBASESTATEMENT
   NS_DECL_MOZISTORAGEBINDINGPARAMS

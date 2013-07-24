@@ -173,6 +173,9 @@ js_strtod(js::ExclusiveContext *cx, const jschar *s, const jschar *send,
           const jschar **ep, double *dp);
 
 extern JSBool
+js_num_toString(JSContext *cx, unsigned argc, js::Value *vp);
+
+extern JSBool
 js_num_valueOf(JSContext *cx, unsigned argc, js::Value *vp);
 
 namespace js {

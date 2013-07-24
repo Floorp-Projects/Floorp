@@ -43,7 +43,7 @@ PostEvent(nsUDPServerSocket *s, nsUDPServerSocketFunc func)
 //-----------------------------------------------------------------------------
 // nsUPDOutputStream impl
 //-----------------------------------------------------------------------------
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsUDPOutputStream, nsIOutputStream)
+NS_IMPL_ISUPPORTS1(nsUDPOutputStream, nsIOutputStream)
 
 nsUDPOutputStream::nsUDPOutputStream(nsUDPServerSocket* aServer,
                                      PRFileDesc* aFD,
@@ -117,7 +117,7 @@ NS_IMETHODIMP nsUDPOutputStream::IsNonBlocking(bool *_retval)
 //-----------------------------------------------------------------------------
 // nsUPDMessage impl
 //-----------------------------------------------------------------------------
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsUDPMessage, nsIUDPMessage)
+NS_IMPL_ISUPPORTS1(nsUDPMessage, nsIUDPMessage)
 
 nsUDPMessage::nsUDPMessage(PRNetAddr* aAddr,
              nsIOutputStream* aOutputStream,
@@ -383,7 +383,7 @@ nsUDPServerSocket::IsLocal(bool *aIsLocal)
 // nsServerSocket::nsISupports
 //-----------------------------------------------------------------------------
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsUDPServerSocket, nsIUDPServerSocket)
+NS_IMPL_ISUPPORTS1(nsUDPServerSocket, nsIUDPServerSocket)
 
 
 //-----------------------------------------------------------------------------
@@ -517,7 +517,7 @@ public:
     , mTargetThread(do_GetCurrentThread())
   { }
 
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIUDPSERVERSOCKETLISTENER
 
   class OnPacketReceivedRunnable : public nsRunnable
@@ -563,8 +563,8 @@ private:
   nsCOMPtr<nsIEventTarget> mTargetThread;
 };
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(ServerSocketListenerProxy,
-                              nsIUDPServerSocketListener)
+NS_IMPL_ISUPPORTS1(ServerSocketListenerProxy,
+                   nsIUDPServerSocketListener)
 
 NS_IMETHODIMP
 ServerSocketListenerProxy::OnPacketReceived(nsIUDPServerSocket* aServ,

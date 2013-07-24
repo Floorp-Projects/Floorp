@@ -46,10 +46,10 @@ inline bool isOnlySafeChars(const nsAFlatString& in,
 //-----------------------------------------------------------------------------
 
 /* Implementation file */
-NS_IMPL_THREADSAFE_ISUPPORTS3(nsIDNService,
-                              nsIIDNService,
-                              nsIObserver,
-                              nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS3(nsIDNService,
+                   nsIIDNService,
+                   nsIObserver,
+                   nsISupportsWeakReference)
 
 nsresult nsIDNService::Init()
 {

@@ -73,7 +73,7 @@ static void DisplayError(void)
 
 // nsISupports Implementation
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(nsReadConfig, nsIReadConfig, nsIObserver)
+NS_IMPL_ISUPPORTS2(nsReadConfig, nsIReadConfig, nsIObserver)
 
 nsReadConfig::nsReadConfig() :
     mRead(false)

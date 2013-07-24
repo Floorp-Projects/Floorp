@@ -61,7 +61,7 @@ public:
 
   static already_AddRefed<IDBVersionChangeEvent>
   Constructor(const GlobalObject& aGlobal,
-              const NonNull<nsAString>& aType,
+              const nsAString& aType,
               const IDBVersionChangeEventInit& aOptions,
               ErrorResult& aRv)
   {

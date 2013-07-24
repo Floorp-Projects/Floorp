@@ -13,7 +13,7 @@
 
 class nsRunner : public nsIRunnable {
 public:
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
 
     NS_IMETHOD Run() {
         nsCOMPtr<nsIThread> thread;
@@ -38,7 +38,7 @@ protected:
     int mNum;
 };
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsRunner, nsIRunnable)
+NS_IMPL_ISUPPORTS1(nsRunner, nsIRunnable)
 
 nsresult
 TestThreads()
@@ -75,7 +75,7 @@ TestThreads()
 
 class nsStressRunner : public nsIRunnable {
 public:
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
 
     NS_IMETHOD Run() {
         NS_ASSERTION(!mWasRun, "run twice!");
@@ -106,7 +106,7 @@ protected:
 
 int32_t nsStressRunner::gNum = 0;
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsStressRunner, nsIRunnable)
+NS_IMPL_ISUPPORTS1(nsStressRunner, nsIRunnable)
 
 static int Stress(int loops, int threads)
 {

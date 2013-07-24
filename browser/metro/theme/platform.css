@@ -661,6 +661,12 @@ arrowbox {
 .meta-section-title {
   font-size: @metro_font_large@;
   font-weight: 100;
+  visibility: collapse;
+}
+
+#start-container[viewstate="snapped"] .meta-section-title.narrow-title,
+#start-container:not([viewstate="snapped"]) .meta-section-title.wide-title {
+  visibility: visible;
 }
 
 /* App bars ----------------------------------------------------------------- */

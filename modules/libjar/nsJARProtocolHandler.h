@@ -27,7 +27,7 @@ class nsJARProtocolHandler : public nsIJARProtocolHandler
             RemoteFileListenerArray;
 
 public:
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSIPROTOCOLHANDLER
     NS_DECL_NSIJARPROTOCOLHANDLER
 

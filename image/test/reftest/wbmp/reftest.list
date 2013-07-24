@@ -1,4 +1,0 @@
-# WBMP tests
-
-include wbmp-normal/reftest.list
-include wbmp-corrupted/reftest.list

@@ -31,7 +31,7 @@ function testEventListeners()
   gClient.addOneTimeListener("paused", function(aEvent, aPacket) {
     is(aPacket.why.type, "debuggerStatement", "debugger statement was hit.");
     gThreadClient.eventListeners(function(aPacket) {
-      is(aPacket.listeners.length, 4, "Found all event listeners.");
+      is(aPacket.listeners.length, 3, "Found all event listeners.");
       let types = [];
       for (let l of aPacket.listeners) {
         let node = l.node;

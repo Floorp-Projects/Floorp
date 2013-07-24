@@ -18,6 +18,7 @@
 #include <android/log.h>
 
 #include "AutoMounter.h"
+#include "nsVolumeService.h"
 #include "AutoMounterSetting.h"
 #include "base/message_loop.h"
 #include "mozilla/FileUtils.h"
@@ -567,9 +568,68 @@ public:
 static StaticRefPtr<UsbCableObserver> sUsbCableObserver;
 static StaticRefPtr<AutoMounterSetting> sAutoMounterSetting;
 
+static void
+InitVolumeConfig()
+{
+  // This function uses /system/etc/volume.cfg to add additional volumes
+  // to the Volume Manager.
+  //
+  // This is useful on devices like the Nexus 4, which have no physical sd card
+  // or dedicated partition.
+  //
+  // The format of the volume.cfg file is as follows:
+  // create volume-name mount-point
+  // Blank lines and lines starting with the hash character "#" will be ignored.
+
+  nsCOMPtr<nsIVolumeService> vs = do_GetService(NS_VOLUMESERVICE_CONTRACTID);
+  NS_ENSURE_TRUE_VOID(vs);
+
+  ScopedCloseFile fp;
+  int n = 0;
+  char line[255];
+  char *command, *vol_name_cstr, *mount_point_cstr, *save_ptr;
+  const char *filename = "/system/etc/volume.cfg";
+  if (!(fp = fopen(filename, "r"))) {
+    LOG("Unable to open volume configuration file '%s' - ignoring", filename);
+    return;
+  }
+  while(fgets(line, sizeof(line), fp)) {
+    char *delim = " \t\n";
+    n++;
+
+    if (line[0] == '#')
+      continue;
+    if (!(command = strtok_r(line, delim, &save_ptr))) {
+      // Blank line - ignore
+      continue;
+    }
+    if (!strcmp(command, "create")) {
+      if (!(vol_name_cstr = strtok_r(NULL, delim, &save_ptr))) {
+        ERR("No vol_name in %s line %d",  filename, n);
+        continue;
+      }
+      if (!(mount_point_cstr = strtok_r(NULL, delim, &save_ptr))) {
+        ERR("No mount point for volume '%s'. %s line %d", vol_name_cstr, filename, n);
+        continue;
+      }
+      nsString  mount_point = NS_ConvertUTF8toUTF16(mount_point_cstr);
+      nsString vol_name = NS_ConvertUTF8toUTF16(vol_name_cstr);
+      nsresult rv;
+      rv = vs->CreateFakeVolume(vol_name, mount_point);
+      NS_ENSURE_SUCCESS_VOID(rv);
+      rv = vs->SetFakeVolumeState(vol_name, nsIVolume::STATE_MOUNTED);
+      NS_ENSURE_SUCCESS_VOID(rv);
+    }
+    else {
+      ERR("Unrecognized command: '%s'", command);
+    }
+  }
+}
+
 void
 InitAutoMounter()
 {
+  InitVolumeConfig();
   InitVolumeManager();
   sAutoMounterSetting = new AutoMounterSetting();
 

@@ -39,9 +39,9 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(nsChromeProtocolHandler,
-                              nsIProtocolHandler,
-                              nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS2(nsChromeProtocolHandler,
+                   nsIProtocolHandler,
+                   nsISupportsWeakReference)
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsIProtocolHandler methods:

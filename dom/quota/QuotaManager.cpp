@@ -36,6 +36,7 @@
 #include "nsScriptSecurityManager.h"
 #include "nsThreadUtils.h"
 #include "nsXULAppAPI.h"
+#include "pratom.h"
 #include "xpcpublic.h"
 
 #include "AcquireListener.h"
@@ -124,7 +125,7 @@ class OriginClearRunnable MOZ_FINAL : public nsIRunnable,
   };
 
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIRUNNABLE
 
   // AcquireListener override
@@ -196,7 +197,7 @@ class AsyncUsageRunnable MOZ_FINAL : public UsageRunnable,
   };
 
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIRUNNABLE
   NS_DECL_NSIQUOTAREQUEST
 
@@ -278,7 +279,7 @@ public:
     NS_ASSERTION(mCountdown, "Wrong countdown!");
   }
 
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIRUNNABLE
 
   void
@@ -300,7 +301,7 @@ public:
   : mBusy(true)
   { }
 
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIRUNNABLE
 
   bool
@@ -1899,7 +1900,7 @@ OriginClearRunnable::DeleteFiles(QuotaManager* aQuotaManager)
   aQuotaManager->OriginClearCompleted(mOriginOrPattern);
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(OriginClearRunnable, nsIRunnable)
+NS_IMPL_ISUPPORTS1(OriginClearRunnable, nsIRunnable)
 
 NS_IMETHODIMP
 OriginClearRunnable::Run()
@@ -2143,9 +2144,9 @@ AsyncUsageRunnable::RunInternal()
   return NS_ERROR_UNEXPECTED;
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(AsyncUsageRunnable,
-                              nsIRunnable,
-                              nsIQuotaRequest)
+NS_IMPL_ISUPPORTS2(AsyncUsageRunnable,
+                   nsIRunnable,
+                   nsIQuotaRequest)
 
 NS_IMETHODIMP
 AsyncUsageRunnable::Run()
@@ -2178,7 +2179,7 @@ AsyncUsageRunnable::Cancel()
   return NS_OK;
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(WaitForTransactionsToFinishRunnable, nsIRunnable)
+NS_IMPL_ISUPPORTS1(WaitForTransactionsToFinishRunnable, nsIRunnable)
 
 NS_IMETHODIMP
 WaitForTransactionsToFinishRunnable::Run()
@@ -2206,7 +2207,7 @@ WaitForTransactionsToFinishRunnable::Run()
   return NS_OK;
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(WaitForLockedFilesToFinishRunnable, nsIRunnable)
+NS_IMPL_ISUPPORTS1(WaitForLockedFilesToFinishRunnable, nsIRunnable)
 
 NS_IMETHODIMP
 WaitForLockedFilesToFinishRunnable::Run()

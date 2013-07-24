@@ -33,10 +33,6 @@
 #include "nsICODecoder.h"
 #include "nsIconDecoder.h"
 
-#ifdef MOZ_WBMP
-#include "nsWBMPDecoder.h"
-#endif
-
 #include "gfxContext.h"
 
 #include "mozilla/MemoryReporting.h"
@@ -377,9 +373,9 @@ namespace image {
 static nsCOMPtr<nsIThread> sScaleWorkerThread = nullptr;
 
 #ifndef DEBUG
-NS_IMPL_THREADSAFE_ISUPPORTS2(RasterImage, imgIContainer, nsIProperties)
+NS_IMPL_ISUPPORTS2(RasterImage, imgIContainer, nsIProperties)
 #else
-NS_IMPL_THREADSAFE_ISUPPORTS3(RasterImage, imgIContainer, nsIProperties,
+NS_IMPL_ISUPPORTS3(RasterImage, imgIContainer, nsIProperties,
                               imgIContainerDebug)
 #endif
 
@@ -1997,11 +1993,6 @@ RasterImage::InitDecoder(bool aDoSizeDecode, bool aIsSynchronous /* = false */)
     case eDecoderType_icon:
       mDecoder = new nsIconDecoder(*this);
       break;
-#ifdef MOZ_WBMP
-    case eDecoderType_wbmp:
-      mDecoder = new nsWBMPDecoder(*this);
-      break;
-#endif
     default:
       NS_ABORT_IF_FALSE(0, "Shouldn't get here!");
   }
@@ -2996,7 +2987,7 @@ RasterImage::FinishedSomeDecoding(eShutdownIntent aIntent /* = eShutdownIntent_D
   return rv;
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(RasterImage::DecodePool,
+NS_IMPL_ISUPPORTS1(RasterImage::DecodePool,
                               nsIObserver)
 
 /* static */ RasterImage::DecodePool*

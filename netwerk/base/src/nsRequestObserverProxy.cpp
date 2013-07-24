@@ -115,9 +115,9 @@ public:
 // nsRequestObserverProxy::nsISupports implementation...
 //-----------------------------------------------------------------------------
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(nsRequestObserverProxy,
-                              nsIRequestObserver,
-                              nsIRequestObserverProxy)
+NS_IMPL_ISUPPORTS2(nsRequestObserverProxy,
+                   nsIRequestObserver,
+                   nsIRequestObserverProxy)
 
 //-----------------------------------------------------------------------------
 // nsRequestObserverProxy::nsIRequestObserver implementation...

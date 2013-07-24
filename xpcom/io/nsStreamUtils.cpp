@@ -22,7 +22,7 @@ class nsInputStreamReadyEvent MOZ_FINAL : public nsIRunnable
                                         , public nsIInputStreamCallback
 {
 public:
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
 
     nsInputStreamReadyEvent(nsIInputStreamCallback *callback,
                             nsIEventTarget *target)
@@ -91,8 +91,8 @@ private:
     nsCOMPtr<nsIEventTarget>         mTarget;
 };
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(nsInputStreamReadyEvent, nsIRunnable,
-                              nsIInputStreamCallback)
+NS_IMPL_ISUPPORTS2(nsInputStreamReadyEvent, nsIRunnable,
+                   nsIInputStreamCallback)
 
 //-----------------------------------------------------------------------------
 
@@ -100,7 +100,7 @@ class nsOutputStreamReadyEvent MOZ_FINAL : public nsIRunnable
                                          , public nsIOutputStreamCallback
 {
 public:
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
 
     nsOutputStreamReadyEvent(nsIOutputStreamCallback *callback,
                              nsIEventTarget *target)
@@ -169,8 +169,8 @@ private:
     nsCOMPtr<nsIEventTarget>          mTarget;
 };
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(nsOutputStreamReadyEvent, nsIRunnable,
-                              nsIOutputStreamCallback)
+NS_IMPL_ISUPPORTS2(nsOutputStreamReadyEvent, nsIRunnable,
+                   nsIOutputStreamCallback)
 
 //-----------------------------------------------------------------------------
 
@@ -205,7 +205,7 @@ class nsAStreamCopier : public nsIInputStreamCallback
                       , public nsIRunnable
 {
 public:
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
 
     nsAStreamCopier()
         : mLock("nsAStreamCopier.mLock")
@@ -459,10 +459,10 @@ protected:
     nsresult                       mCancelStatus;
 };
 
-NS_IMPL_THREADSAFE_ISUPPORTS3(nsAStreamCopier,
-                              nsIInputStreamCallback,
-                              nsIOutputStreamCallback,
-                              nsIRunnable)
+NS_IMPL_ISUPPORTS3(nsAStreamCopier,
+                   nsIInputStreamCallback,
+                   nsIOutputStreamCallback,
+                   nsIRunnable)
 
 class nsStreamCopierIB MOZ_FINAL : public nsAStreamCopier
 {

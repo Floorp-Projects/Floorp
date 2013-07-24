@@ -921,6 +921,15 @@ Java_org_mozilla_gecko_gfx_NativePanZoomController_getOverScrollMode(JNIEnv* env
     return 0;
 }
 
+NS_EXPORT void JNICALL
+Java_org_mozilla_gecko_gfx_NativePanZoomController_updateScrollOffset(JNIEnv* env, jobject instance, jfloat cssX, jfloat cssY)
+{
+    AsyncPanZoomController* controller = nsWindow::GetPanZoomController();
+    if (controller) {
+        controller->UpdateScrollOffset(CSSPoint(cssX, cssY));
+    }
+}
+
 NS_EXPORT jboolean JNICALL
 Java_org_mozilla_gecko_ANRReporter_requestNativeStack(JNIEnv*, jclass)
 {

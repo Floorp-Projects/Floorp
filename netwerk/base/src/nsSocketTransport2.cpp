@@ -10,7 +10,6 @@
 #include "nsSocketTransport2.h"
 
 #include "mozilla/Attributes.h"
-#include "nsAtomicRefcnt.h"
 #include "nsIOService.h"
 #include "nsStreamUtils.h"
 #include "nsNetSegmentUtils.h"
@@ -235,14 +234,14 @@ NS_IMPL_QUERY_INTERFACE2(nsSocketInputStream,
 NS_IMETHODIMP_(nsrefcnt)
 nsSocketInputStream::AddRef()
 {
-    NS_AtomicIncrementRefcnt(mReaderRefCnt);
+    ++mReaderRefCnt;
     return mTransport->AddRef();
 }
 
 NS_IMETHODIMP_(nsrefcnt)
 nsSocketInputStream::Release()
 {
-    if (NS_AtomicDecrementRefcnt(mReaderRefCnt) == 0)
+    if (--mReaderRefCnt == 0)
         Close();
     return mTransport->Release();
 }
@@ -498,14 +497,14 @@ NS_IMPL_QUERY_INTERFACE2(nsSocketOutputStream,
 NS_IMETHODIMP_(nsrefcnt)
 nsSocketOutputStream::AddRef()
 {
-    NS_AtomicIncrementRefcnt(mWriterRefCnt);
+    ++mWriterRefCnt;
     return mTransport->AddRef();
 }
 
 NS_IMETHODIMP_(nsrefcnt)
 nsSocketOutputStream::Release()
 {
-    if (NS_AtomicDecrementRefcnt(mWriterRefCnt) == 0)
+    if (--mWriterRefCnt == 0)
         Close();
     return mTransport->Release();
 }
@@ -1732,11 +1731,11 @@ nsSocketTransport::IsLocal(bool *aIsLocal)
 //-----------------------------------------------------------------------------
 // xpcom api
 
-NS_IMPL_THREADSAFE_ISUPPORTS4(nsSocketTransport,
-                              nsISocketTransport,
-                              nsITransport,
-                              nsIDNSListener,
-                              nsIClassInfo)
+NS_IMPL_ISUPPORTS4(nsSocketTransport,
+                   nsISocketTransport,
+                   nsITransport,
+                   nsIDNSListener,
+                   nsIClassInfo)
 NS_IMPL_CI_INTERFACE_GETTER3(nsSocketTransport,
                              nsISocketTransport,
                              nsITransport,

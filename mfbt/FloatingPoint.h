@@ -191,6 +191,19 @@ UnspecifiedNaN()
   return SpecificNaN(0, 0xfffffffffffffULL);
 }
 
+/**
+ * Compare two doubles for equality, *without* equating -0 to +0, and equating
+ * any NaN value to any other NaN value.  (The normal equality operators equate
+ * -0 with +0, and they equate NaN to no other value.)
+ */
+static inline bool
+DoublesAreIdentical(double d1, double d2)
+{
+  if (IsNaN(d1))
+    return IsNaN(d2);
+  return BitwiseCast<uint64_t>(d1) == BitwiseCast<uint64_t>(d2);
+}
+
 } /* namespace mozilla */
 
 #endif  /* mozilla_FloatingPoint_h_ */
