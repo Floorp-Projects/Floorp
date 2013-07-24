@@ -10,8 +10,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-CPP_UNIT_TESTS	= TestLineBreak.cpp
-
 include $(topsrcdir)/config/rules.mk
 
 LOCAL_INCLUDES	= -I$(srcdir)/../public
