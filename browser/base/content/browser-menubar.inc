@@ -314,34 +314,6 @@
                                            new HistoryMenu(event);"
                          tooltip="bhTooltip"
                          popupsinherittooltip="true">
-                <menuitem id="historyMenuBack"
-                          class="show-only-for-keyboard"
-                          label="&backCmd.label;"
-#ifdef XP_MACOSX
-                          key="goBackKb2"
-#else
-                          key="goBackKb"
-#endif
-                          command="Browser:BackOrBackDuplicate"
-                          onclick="checkForMiddleClick(this, event);"/>
-                <menuitem id="historyMenuForward"
-                          class="show-only-for-keyboard"
-                          label="&forwardCmd.label;"
-#ifdef XP_MACOSX
-                          key="goForwardKb2"
-#else
-                          key="goForwardKb"
-#endif
-                          command="Browser:ForwardOrForwardDuplicate"
-                          onclick="checkForMiddleClick(this, event);"/>
-                <menuitem id="historyMenuHome"
-                          class="show-only-for-keyboard"
-                          label="&historyHomeCmd.label;"
-                          oncommand="BrowserGoHome(event);"
-                          onclick="checkForMiddleClick(this, event);"
-                          key="goHome"/>
-                <menuseparator id="historyMenuHomeSeparator"
-                               class="show-only-for-keyboard"/>
                 <menuitem id="menu_showAllHistory"
                           label="&showAllHistoryCmd2.label;"
 #ifndef XP_MACOSX
