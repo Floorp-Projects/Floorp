@@ -1508,7 +1508,7 @@ nsDisplayItem::MaxActiveLayers()
     sMaxLayersCached = true;
   }
 
-  return sMaxLayers;
+  return sMaxLayersCached;
 }
 
 bool
