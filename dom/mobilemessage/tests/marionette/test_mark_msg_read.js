@@ -6,12 +6,12 @@ MARIONETTE_TIMEOUT = 60000;
 SpecialPowers.addPermission("sms", true, document);
 SpecialPowers.setBoolPref("dom.sms.enabled", true);
 
-let sms = window.navigator.mozSms;
+let manager = window.navigator.mozMobileMessage;
 let smsList = new Array();
 
 function verifyInitialState() {
   log("Verifying initial state.");
-  ok(sms, "mozSms");
+  ok(manager, "mozMobileMessage");
   simulateIncomingSms();
 }
 
@@ -30,7 +30,7 @@ function simulateIncomingSms() {
 }
 
 // Callback for incoming SMS
-sms.onreceived = function onreceived(event) {
+manager.onreceived = function onreceived(event) {
   log("Received 'onreceived' sms event.");
   let incomingSms = event.message;
   log("Received SMS (id: " + incomingSms.id + ").");
@@ -54,8 +54,8 @@ function sendSms() {
 
   log("Sending an SMS.");
 
-  sms.onsent = function(event) {
-    log("Received 'onsent' smsmanager event.");
+  manager.onsent = function(event) {
+    log("Received 'onsent' event.");
     gotSmsSent = true;
     let sentSms = event.message;
     log("Sent SMS (id: " + sentSms.id + ").");
@@ -70,7 +70,7 @@ function sendSms() {
     }
   };
 
-  let request = sms.send(remoteNumber, text);
+  let request = manager.send(remoteNumber, text);
 
   request.onsuccess = function(event) {
     log("Received 'onsuccess' smsrequest event.");
@@ -80,7 +80,7 @@ function sendSms() {
         test1();
       }
     } else {
-      log("smsrequest returned false for sms.send");
+      log("smsrequest returned false for manager.send");
       ok(false, "SMS send failed");
       deleteMsgs();
     }
@@ -89,14 +89,14 @@ function sendSms() {
   request.onerror = function(event) {
     log("Received 'onerror' smsrequest event.");
     ok(event.target.error, "domerror obj");
-    ok(false, "sms.send request returned unexpected error: "
+    ok(false, "manager.send request returned unexpected error: "
         + event.target.error.name );
     deleteMsgs();
   };
 }
 
 function markMessageAndVerify(smsId, readBool, nextFunction) {
-  let request = sms.markMessageRead(smsId, readBool);
+  let request = manager.markMessageRead(smsId, readBool);
   ok(request instanceof DOMRequest,
       "request is instanceof " + request.constructor);
 
@@ -108,7 +108,7 @@ function markMessageAndVerify(smsId, readBool, nextFunction) {
 
     // Message marked read/unread, now verify
     log("Getting SMS message (id: " + smsId + ").");
-    let requestRet = sms.getMessage(smsId);
+    let requestRet = manager.getMessage(smsId);
     ok(requestRet, "smsrequest obj returned");
 
     requestRet.onsuccess = function(event) {
@@ -141,7 +141,7 @@ function markMessageAndVerify(smsId, readBool, nextFunction) {
   request.onerror = function(event) {
     log("Received 'onerror' smsrequest event.");
     ok(event.target.error, "domerror obj");
-    ok(false, "sms.markMessageRead request returned unexpected error: "
+    ok(false, "manager.markMessageRead request returned unexpected error: "
         + event.target.error.name );
     nextFunction();
   };
@@ -187,7 +187,7 @@ function deleteMsgs() {
   let smsId = smsList.shift();
 
   log("Deleting SMS (id: " + smsId + ").");
-  let request = sms.delete(smsId);
+  let request = manager.delete(smsId);
   ok(request instanceof DOMRequest,
       "request is instanceof " + request.constructor);
 
@@ -202,7 +202,7 @@ function deleteMsgs() {
       }
     } else {
       log("SMS delete failed.");
-      ok(false, "sms.delete request returned false");
+      ok(false, "manager.delete request returned false");
       cleanUp();
     }
   };
@@ -210,14 +210,14 @@ function deleteMsgs() {
   request.onerror = function(event) {
     log("Received 'onerror' smsrequest event.");
     ok(event.target.error, "domerror obj");
-    ok(false, "sms.delete request returned unexpected error: "
+    ok(false, "manager.delete request returned unexpected error: "
         + event.target.error.name );
     cleanUp();
   };
 }
 
 function cleanUp() {
-  sms.onreceived = null;
+  manager.onreceived = null;
   SpecialPowers.removePermission("sms", document);
   SpecialPowers.clearUserPref("dom.sms.enabled");
   finish();

@@ -56,7 +56,7 @@ function getAllMessages(callback, filter, reverse) {
     filter = new MozSmsFilter;
   }
   let messages = [];
-  let request = mozSms.getMessages(filter, reverse || false);
+  let request = manager.getMessages(filter, reverse || false);
   request.onsuccess = function(event) {
     if (request.result) {
       messages.push(request.result);
@@ -77,7 +77,7 @@ function deleteAllMessages() {
       return;
     }
 
-    let request = mozSms.delete(message.id);
+    let request = manager.delete(message.id);
     request.onsuccess = deleteAll.bind(null, messages);
     request.onerror = function (event) {
       ok(false, "failed to delete all messages");
@@ -89,11 +89,11 @@ function deleteAllMessages() {
 function validate(number, normalizedNumber) {
   log("Checking ('" + number + "', '" + normalizedNumber + "')");
 
-  let sendRequest = mozSms.send(number, "ping");
+  let sendRequest = manager.send(number, "ping");
   sendRequest.onsuccess = function onSendSuccess(event) {
     let sentMessage = event.target.result;
 
-    mozSms.onreceived = function onreceived(event) {
+    manager.onreceived = function onreceived(event) {
       let receivedMessage = event.message;
       is(sentMessage.threadId, receivedMessage.threadId,
          "message threadIds are supposed to be matched");
@@ -108,10 +108,10 @@ function validate(number, normalizedNumber) {
   };
 }
 
-let mozSms = window.navigator.mozSms;
+let manager = window.navigator.mozMobileMessage;
 tasks.push(function () {
-  log("Checking mozSms.");
-  ok(mozSms instanceof MozSmsManager);
+  log("Checking mozMobileMessage.");
+  ok(manager instanceof MozMobileMessageManager);
   tasks.next();
 });
 

@@ -42,7 +42,6 @@ EXPORTS.mozilla.dom += [
     'MmsMessage.h',
     'MobileMessageManager.h',
     'SmsFilter.h',
-    'SmsManager.h',
     'SmsMessage.h',
     'SmsSegmentInfo.h',
 ]
@@ -58,7 +57,6 @@ CPP_SOURCES += [
     'SmsChild.cpp',
     'SmsFilter.cpp',
     'SmsIPCService.cpp',
-    'SmsManager.cpp',
     'SmsMessage.cpp',
     'SmsParent.cpp',
     'SmsSegmentInfo.cpp',

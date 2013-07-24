@@ -225,13 +225,6 @@ partial interface Navigator {
   boolean mozIsLocallyAvailable(DOMString uri, boolean whenOffline);
 };
 
-// nsIDOMMozNavigatorSms
-interface MozSmsManager;
-partial interface Navigator {
-  [Func="Navigator::HasSmsSupport"]
-  readonly attribute MozSmsManager? mozSms;
-};
-
 // nsIDOMMozNavigatorMobileMessage
 interface MozMobileMessageManager;
 partial interface Navigator {
