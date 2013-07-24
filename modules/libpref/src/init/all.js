@@ -454,6 +454,9 @@ pref("devtools.debugger.remote-port", 6000);
 // Force debugger server binding on the loopback interface
 pref("devtools.debugger.force-local", true);
 
+// Temporary setting to enable webapps actors
+pref("devtools.debugger.enable-content-actors", false);
+
 // view source
 pref("view_source.syntax_highlight", true);
 pref("view_source.wrap_long_lines", false);
