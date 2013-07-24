@@ -1602,24 +1602,15 @@ HTMLSelectElement::Reset()
   //
   // Cycle through the options array and reset the options
   //
-  uint32_t numOptions;
-  nsresult rv = GetLength(&numOptions);
-  NS_ENSURE_SUCCESS(rv, rv);
+  uint32_t numOptions = Length();
 
   for (uint32_t i = 0; i < numOptions; i++) {
-    nsCOMPtr<nsIDOMNode> node;
-    rv = Item(i, getter_AddRefs(node));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCOMPtr<nsIDOMHTMLOptionElement> option(do_QueryInterface(node));
-
-    NS_ASSERTION(option, "option not an OptionElement");
+    nsRefPtr<HTMLOptionElement> option = Item(i);
     if (option) {
       //
       // Reset the option to its default value
       //
-      bool selected = false;
-      option->GetDefaultSelected(&selected);
+      bool selected = option->DefaultSelected();
       SetOptionsSelectedByIndex(i, i, selected, false, true, true);
       if (selected) {
         numSelected++;
