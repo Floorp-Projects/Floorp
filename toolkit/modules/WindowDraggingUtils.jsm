@@ -2,23 +2,36 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#ifdef MOZ_WIDGET_COCOA
+let useHitTest = true;
+#else
+let useHitTest = false;
+#endif
+
 #ifdef XP_WIN
-#define USE_HITTEST
-#elifdef MOZ_WIDGET_COCOA
-#define USE_HITTEST
+let hitTestUsageUpdated = false;
+function updateHitTestUsage() {
+  if (!hitTestUsageUpdated) {
+    let sysInfo = Components.classes["@mozilla.org/system-info;1"]
+                  .getService(Components.interfaces.nsIPropertyBag2);
+    useHitTest = parseFloat(sysInfo.getProperty("version")) >= 6;
+    hitTestUsageUpdated = true;
+  }
+}
 #endif
 
 this.EXPORTED_SYMBOLS = [ "WindowDraggingElement" ];
 
 this.WindowDraggingElement = function WindowDraggingElement(elem) {
+#ifdef XP_WIN
+  updateHitTestUsage();
+#endif
   this._elem = elem;
   this._window = elem.ownerDocument.defaultView;
-#ifdef USE_HITTEST
-  if (!this.isPanel())
+  if (useHitTest && !this.isPanel())
     this._elem.addEventListener("MozMouseHittest", this, false);
   else
-#endif
-  this._elem.addEventListener("mousedown", this, false);
+    this._elem.addEventListener("mousedown", this, false);
 };
 
 WindowDraggingElement.prototype = {
@@ -60,13 +73,11 @@ WindowDraggingElement.prototype = {
   },
   handleEvent: function(aEvent) {
     let isPanel = this.isPanel();
-#ifdef USE_HITTEST
-    if (!isPanel) {
+    if (useHitTest && !isPanel) {
       if (this.shouldDrag(aEvent))
         aEvent.preventDefault();
       return;
     }
-#endif
 
     switch (aEvent.type) {
       case "mousedown":
