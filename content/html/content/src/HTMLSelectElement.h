@@ -301,6 +301,7 @@ public:
    */
   NS_IMETHOD IsOptionDisabled(int32_t aIndex,
                               bool* aIsDisabled);
+  bool IsOptionDisabled(HTMLOptionElement* aOption);
 
   /**
    * Sets multiple options (or just sets startIndex if select is single)
