@@ -8,27 +8,27 @@
 #include "mozilla/ipc/SharedMemory.h"
 #include "mozilla/layers/ISurfaceAllocator.h"
 
-#ifndef MOZILLA_LAYERS_SHAREDPLANARYCBCRIMAGE_H
-#define MOZILLA_LAYERS_SHAREDPLANARYCBCRIMAGE_H
+#ifndef MOZILLA_LAYERS_DeprecatedSharedPlanarYCbCrImage_H
+#define MOZILLA_LAYERS_DeprecatedSharedPlanarYCbCrImage_H
 
 namespace mozilla {
 namespace layers {
 
 class ImageClient;
 
-class SharedPlanarYCbCrImage : public PlanarYCbCrImage
+class DeprecatedSharedPlanarYCbCrImage : public PlanarYCbCrImage
 {
 public:
-  SharedPlanarYCbCrImage(ISurfaceAllocator* aAllocator)
+  DeprecatedSharedPlanarYCbCrImage(ISurfaceAllocator* aAllocator)
   : PlanarYCbCrImage(nullptr)
   , mSurfaceAllocator(aAllocator), mAllocated(false)
   {
-    MOZ_COUNT_CTOR(SharedPlanarYCbCrImage);
+    MOZ_COUNT_CTOR(DeprecatedSharedPlanarYCbCrImage);
   }
 
-  ~SharedPlanarYCbCrImage();
+  ~DeprecatedSharedPlanarYCbCrImage();
 
-  virtual SharedPlanarYCbCrImage* AsSharedPlanarYCbCrImage() MOZ_OVERRIDE
+  virtual DeprecatedSharedPlanarYCbCrImage* AsDeprecatedSharedPlanarYCbCrImage() MOZ_OVERRIDE
   {
     return this;
   }
@@ -58,7 +58,7 @@ public:
   /**
    * Setup the Surface descriptor to contain this image's shmem, while keeping
    * ownership of the shmem.
-   * if the operation succeeds, return true and AddRef this SharedPlanarYCbCrImage.
+   * if the operation succeeds, return true and AddRef this DeprecatedSharedPlanarYCbCrImage.
    */
   bool ToSurfaceDescriptor(SurfaceDescriptor& aResult);
 
@@ -66,15 +66,15 @@ public:
    * Setup the Surface descriptor to contain this image's shmem, and loose
    * ownership of the shmem.
    * if the operation succeeds, return true (and does _not_ AddRef this
-   * SharedPlanarYCbCrImage).
+   * DeprecatedSharedPlanarYCbCrImage).
    */
   bool DropToSurfaceDescriptor(SurfaceDescriptor& aResult);
 
   /**
-   * Returns a SharedPlanarYCbCrImage* iff the descriptor was initialized with
+   * Returns a DeprecatedSharedPlanarYCbCrImage* iff the descriptor was initialized with
    * ToSurfaceDescriptor.
    */
-  static SharedPlanarYCbCrImage* FromSurfaceDescriptor(const SurfaceDescriptor& aDesc);
+  static DeprecatedSharedPlanarYCbCrImage* FromSurfaceDescriptor(const SurfaceDescriptor& aDesc);
 
 private:
   ipc::Shmem mShmem;
