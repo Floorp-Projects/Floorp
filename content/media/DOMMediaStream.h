@@ -68,10 +68,12 @@ public:
 
   // WebIDL
   double CurrentTime();
+
   void GetAudioTracks(nsTArray<nsRefPtr<AudioStreamTrack> >& aTracks);
   void GetVideoTracks(nsTArray<nsRefPtr<VideoStreamTrack> >& aTracks);
 
-  MediaStream* GetStream() { return mStream; }
+  MediaStream* GetStream() const { return mStream; }
+
   bool IsFinished();
   /**
    * Returns a principal indicating who may access this stream. The stream contents
