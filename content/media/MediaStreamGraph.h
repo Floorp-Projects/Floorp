@@ -400,6 +400,16 @@ public:
   void RemoveListenerImpl(MediaStreamListener* aListener);
   void RemoveAllListenersImpl();
   void SetTrackEnabledImpl(TrackID aTrackID, bool aEnabled);
+  /**
+   * Returns true when this stream requires the contents of its inputs even if
+   * its own outputs are not being consumed. This is used to signal inputs to
+   * this stream that they are being consumed; when they're not being consumed,
+   * we make some optimizations.
+   */
+  virtual bool IsIntrinsicallyConsumed() const
+  {
+    return !mAudioOutputs.IsEmpty() || !mVideoOutputs.IsEmpty();
+  }
 
   void AddConsumer(MediaInputPort* aPort)
   {
