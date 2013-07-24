@@ -5,10 +5,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "jscntxt.h"
+#include "jsdbgapi.h"
 
 #include "jsapi-tests/tests.h"
-#include "jsdbgapi.h"
-#include "jscntxt.h"
 
 static int callCount[2] = {0, 0};
 
