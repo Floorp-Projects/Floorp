@@ -1052,6 +1052,39 @@ GenerateArrayLength(JSContext *cx, MacroAssembler &masm, IonCache::StubAttacher 
     return true;
 }
 
+static void
+GenerateTypedArrayLength(JSContext *cx, MacroAssembler &masm, IonCache::StubAttacher &attacher,
+                         JSObject *obj, Register object, TypedOrValueRegister output)
+{
+    JS_ASSERT(obj->is<TypedArrayObject>());
+
+    Label failures;
+
+    Register tmpReg;
+    if (output.hasValue()) {
+        tmpReg = output.valueReg().scratchReg();
+    } else {
+        JS_ASSERT(output.type() == MIRType_Int32);
+        tmpReg = output.typedReg().gpr();
+    }
+    JS_ASSERT(object != tmpReg);
+
+    // Implement the negated version of JSObject::isTypedArray predicate.
+    masm.loadObjClass(object, tmpReg);
+    masm.branchPtr(Assembler::Below, tmpReg, ImmWord(&TypedArrayObject::classes[0]), &failures);
+    masm.branchPtr(Assembler::AboveOrEqual, tmpReg, ImmWord(&TypedArrayObject::classes[TypedArrayObject::TYPE_MAX]), &failures);
+
+    // Load length.
+    masm.loadTypedOrValue(Address(object, TypedArrayObject::lengthOffset()), output);
+
+    /* Success. */
+    attacher.jumpRejoin(masm);
+
+    /* Failure. */
+    masm.bind(&failures);
+    attacher.jumpNextStub(masm);
+}
+
 bool
 GetPropertyIC::attachReadSlot(JSContext *cx, IonScript *ion, JSObject *obj, JSObject *holder,
                               HandleShape shape)
@@ -1222,36 +1255,11 @@ GetPropertyIC::attachArrayLength(JSContext *cx, IonScript *ion, JSObject *obj)
 bool
 GetPropertyIC::attachTypedArrayLength(JSContext *cx, IonScript *ion, JSObject *obj)
 {
-    JS_ASSERT(obj->is<TypedArrayObject>());
     JS_ASSERT(!idempotent());
 
-    Label failures;
     MacroAssembler masm(cx);
     RepatchStubAppender attacher(*this);
-
-    Register tmpReg;
-    if (output().hasValue()) {
-        tmpReg = output().valueReg().scratchReg();
-    } else {
-        JS_ASSERT(output().type() == MIRType_Int32);
-        tmpReg = output().typedReg().gpr();
-    }
-    JS_ASSERT(object() != tmpReg);
-
-    // Implement the negated version of JSObject::isTypedArray predicate.
-    masm.loadObjClass(object(), tmpReg);
-    masm.branchPtr(Assembler::Below, tmpReg, ImmWord(&TypedArrayObject::classes[0]), &failures);
-    masm.branchPtr(Assembler::AboveOrEqual, tmpReg, ImmWord(&TypedArrayObject::classes[TypedArrayObject::TYPE_MAX]), &failures);
-
-    // Load length.
-    masm.loadTypedOrValue(Address(object(), TypedArrayObject::lengthOffset()), output());
-
-    /* Success. */
-    attacher.jumpRejoin(masm);
-
-    /* Failure. */
-    masm.bind(&failures);
-    attacher.jumpNextStub(masm);
+    GenerateTypedArrayLength(cx, masm, attacher, obj, object(), output());
 
     JS_ASSERT(!hasTypedArrayLengthStub_);
     hasTypedArrayLengthStub_ = true;
@@ -1599,6 +1607,13 @@ ParallelIonCache::destroy()
         js_delete(stubbedShapes_);
 }
 
+void
+GetPropertyParIC::reset()
+{
+    ParallelIonCache::reset();
+    hasTypedArrayLengthStub_ = false;
+}
+
 /* static */ bool
 GetPropertyParIC::canAttachReadSlot(LockedJSContext &cx, IonCache &cache,
                                     TypedOrValueRegister output, JSObject *obj,
@@ -1646,6 +1661,18 @@ GetPropertyParIC::attachArrayLength(LockedJSContext &cx, IonScript *ion, JSObjec
         return false;
 
     return linkAndAttachStub(cx, masm, attacher, ion, "parallel array length");
+}
+
+bool
+GetPropertyParIC::attachTypedArrayLength(LockedJSContext &cx, IonScript *ion, JSObject *obj)
+{
+    MacroAssembler masm(cx);
+    DispatchStubPrepender attacher(*this);
+    GenerateTypedArrayLength(cx, masm, attacher, obj, object(), output());
+
+    JS_ASSERT(!hasTypedArrayLengthStub_);
+    hasTypedArrayLengthStub_ = true;
+    return linkAndAttachStub(cx, masm, attacher, ion, "parallel typed array length");
 }
 
 ParallelResult
@@ -1701,6 +1728,15 @@ GetPropertyParIC::update(ForkJoinSlice *slice, size_t cacheIndex,
 
             if (!attachedStub && obj->is<ArrayObject>() && slice->names().length == cache.name()) {
                 if (!cache.attachArrayLength(cx, ion, obj))
+                    return TP_FATAL;
+                attachedStub = true;
+            }
+
+            if (!attachedStub && !cache.hasTypedArrayLengthStub() &&
+                obj->is<TypedArrayObject>() && slice->names().length == cache.name() &&
+                (cache.output().type() == MIRType_Value || cache.output().type() == MIRType_Int32))
+            {
+                if (!cache.attachTypedArrayLength(cx, ion, obj))
                     return TP_FATAL;
                 attachedStub = true;
             }
