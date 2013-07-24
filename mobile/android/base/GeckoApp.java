@@ -176,6 +176,7 @@ abstract public class GeckoApp
     private static GeckoApp sAppContext;
     protected MenuPanel mMenuPanel;
     protected Menu mMenu;
+    private static GeckoThread sGeckoThread;
     protected GeckoProfile mProfile;
     public static int mOrientation;
     protected boolean mIsRestoringActivity;
@@ -1278,7 +1279,7 @@ abstract public class GeckoApp
             return;
         }
 
-        if (GeckoThread.isCreated()) {
+        if (sGeckoThread != null) {
             // This happens when the GeckoApp activity is destroyed by Android
             // without killing the entire application (see Bug 769269).
             mIsRestoringActivity = true;
@@ -1428,11 +1429,8 @@ abstract public class GeckoApp
         String passedUri = null;
         String uri = getURIFromIntent(intent);
         if (uri != null && uri.length() > 0) {
-            GeckoThread.setUri(uri);
+            passedUri = uri;
         }
-
-        GeckoThread.setArgs(intent.getStringExtra("args"));
-        GeckoThread.setAction(action);
 
         final boolean isExternalURL = passedUri != null && !passedUri.equals("about:home");
         StartupAction startupAction;
@@ -1495,16 +1493,19 @@ abstract public class GeckoApp
 
         Telemetry.HistogramAdd("FENNEC_STARTUP_GECKOAPP_ACTION", startupAction.ordinal());
 
+        if (!mIsRestoringActivity) {
+            sGeckoThread = new GeckoThread(intent, passedUri);
+        }
         if (!ACTION_DEBUG.equals(action) &&
             GeckoThread.checkAndSetLaunchState(GeckoThread.LaunchState.Launching, GeckoThread.LaunchState.Launched)) {
-            GeckoThread.getInstance().start();
+            sGeckoThread.start();
         } else if (ACTION_DEBUG.equals(action) &&
             GeckoThread.checkAndSetLaunchState(GeckoThread.LaunchState.Launching, GeckoThread.LaunchState.WaitForDebugger)) {
             ThreadUtils.getUiHandler().postDelayed(new Runnable() {
                 @Override
                 public void run() {
                     GeckoThread.setLaunchState(GeckoThread.LaunchState.Launching);
-                    GeckoThread.getInstance().start();
+                    sGeckoThread.start();
                 }
             }, 1000 * 5 /* 5 seconds */);
         }

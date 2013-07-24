@@ -38,35 +38,12 @@ public class GeckoThread extends Thread implements GeckoEventListener {
 
     private static LaunchState sLaunchState = LaunchState.Launching;
 
-    private static GeckoThread sGeckoThread;
-    private static String sUri;
-    private static String sArgs;
-    private static String sAction;
+    private Intent mIntent;
+    private final String mUri;
 
-    static void setUri(String uri) {
-        sUri = uri;
-    }
-
-    static void setArgs(String args) {
-        sArgs = args;
-    }
-
-    static void setAction(String action) {
-        sAction = action;
-    }
-
-    static boolean isCreated() {
-        return null != sGeckoThread;
-    }
-
-    static GeckoThread getInstance() {
-        if (sGeckoThread == null) {
-            sGeckoThread = new GeckoThread();
-        }
-        return sGeckoThread;
-    }
-
-    private GeckoThread() {
+    GeckoThread(Intent intent, String uri) {
+        mIntent = intent;
+        mUri = uri;
         setName("Gecko");
         GeckoAppShell.getEventDispatcher().registerEventListener("Gecko:Ready", this);
     }
@@ -144,13 +121,13 @@ public class GeckoThread extends Thread implements GeckoEventListener {
 
         Log.w(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - runGecko");
 
-        String args = addCustomProfileArg(sArgs);
-        String type = getTypeFromAction(sAction != null ? sAction :
-                                        sUri != null ? Intent.ACTION_VIEW : Intent.ACTION_MAIN);
+        String args = addCustomProfileArg(mIntent.getStringExtra("args"));
+        String type = getTypeFromAction(mIntent.getAction());
+        mIntent = null;
 
         // and then fire us up
         Log.i(LOGTAG, "RunGecko - args = " + args);
-        GeckoAppShell.runGecko(path, args, sUri, type);
+        GeckoAppShell.runGecko(path, args, mUri, type);
     }
 
     private static Object sLock = new Object();
