@@ -717,57 +717,55 @@ HTMLSelectElement::GetLength(uint32_t* aLength)
 NS_IMETHODIMP
 HTMLSelectElement::SetLength(uint32_t aLength)
 {
-  uint32_t curlen;
-  nsresult rv = GetLength(&curlen);
-  if (NS_FAILED(rv)) {
-    curlen = 0;
-  }
+  ErrorResult rv;
+  SetLength(aLength, rv);
+  return rv.ErrorCode();
+}
+
+void
+HTMLSelectElement::SetLength(uint32_t aLength, ErrorResult& aRv)
+{
+  uint32_t curlen = Length();
 
   if (curlen > aLength) { // Remove extra options
-    for (uint32_t i = curlen; i > aLength && NS_SUCCEEDED(rv); --i) {
-      rv = Remove(i - 1);
+    for (uint32_t i = curlen; i > aLength; --i) {
+      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(Remove(i - 1)));
     }
   } else if (aLength > curlen) {
     if (aLength > MAX_DYNAMIC_SELECT_LENGTH) {
-      return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+      aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+      return;
     }
-    
-    // This violates the W3C DOM but we do this for backwards compatibility
+
     nsCOMPtr<nsINodeInfo> nodeInfo;
 
     nsContentUtils::NameChanged(mNodeInfo, nsGkAtoms::option,
                                 getter_AddRefs(nodeInfo));
 
-    nsCOMPtr<nsIContent> element = NS_NewHTMLOptionElement(nodeInfo.forget());
-    if (!element) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
+    nsCOMPtr<nsINode> node = NS_NewHTMLOptionElement(nodeInfo.forget());
 
     nsRefPtr<nsTextNode> text = new nsTextNode(mNodeInfo->NodeInfoManager());
 
-    rv = element->AppendChildTo(text, false);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCOMPtr<nsIDOMNode> node(do_QueryInterface(element));
+    aRv = node->AppendChildTo(text, false);
+    if (aRv.Failed()) {
+      return;
+    }
 
     for (uint32_t i = curlen; i < aLength; i++) {
-      nsCOMPtr<nsIDOMNode> tmpNode;
-
-      rv = AppendChild(node, getter_AddRefs(tmpNode));
-      NS_ENSURE_SUCCESS(rv, rv);
+      nsINode::AppendChild(*node, aRv);
+      if (aRv.Failed()) {
+        return;
+      }
 
       if (i + 1 < aLength) {
-        nsCOMPtr<nsIDOMNode> newNode;
-
-        rv = node->CloneNode(true, 1, getter_AddRefs(newNode));
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        node = newNode;
+        node = node->CloneNode(true, aRv);
+        if (aRv.Failed()) {
+          return;
+        }
+        MOZ_ASSERT(node);
       }
     }
   }
-
-  return NS_OK;
 }
 
 //NS_IMPL_INT_ATTR(HTMLSelectElement, SelectedIndex, selectedindex)
@@ -1121,7 +1119,7 @@ HTMLSelectElement::IsOptionDisabled(HTMLOptionElement* aOption)
   // Check for disabled optgroups
   // If there are no artifacts, there are no optgroups
   if (mNonOptionChildren) {
-    for (nsCOMPtr<Element> node = aOption->GetParentElement();
+    for (nsCOMPtr<Element> node = static_cast<nsINode*>(aOption)->GetParentElement();
          node;
          node = node->GetParentElement()) {
       // If we reached the select element, we're done
