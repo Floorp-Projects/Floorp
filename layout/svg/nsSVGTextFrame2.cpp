@@ -4820,7 +4820,9 @@ nsSVGTextFrame2::DoGlyphPositioning()
     switch (lengthAdjust) {
       case SVG_LENGTHADJUST_SPACINGANDGLYPHS:
         // Scale the glyphs and their positions.
-        mLengthAdjustScaleFactor = expectedTextLength / actualTextLength;
+        if (actualTextLength > 0) {
+          mLengthAdjustScaleFactor = expectedTextLength / actualTextLength;
+        }
         break;
 
       default:
@@ -4832,7 +4834,9 @@ nsSVGTextFrame2::DoGlyphPositioning()
             adjustableSpaces++;
           }
         }
-        adjustment = (expectedTextLength - actualTextLength) / adjustableSpaces;
+        if (adjustableSpaces) {
+          adjustment = (expectedTextLength - actualTextLength) / adjustableSpaces;
+        }
         break;
     }
   }
