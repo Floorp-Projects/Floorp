@@ -1124,61 +1124,48 @@ NS_IMETHODIMP
 HTMLSelectElement::IsOptionDisabled(int32_t aIndex, bool* aIsDisabled)
 {
   *aIsDisabled = false;
-  nsCOMPtr<nsIDOMNode> optionNode;
-  Item(aIndex, getter_AddRefs(optionNode));
-  NS_ENSURE_TRUE(optionNode, NS_ERROR_FAILURE);
+  nsRefPtr<HTMLOptionElement> option = Item(aIndex);
+  NS_ENSURE_TRUE(option, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsIDOMHTMLOptionElement> option = do_QueryInterface(optionNode);
-  if (option) {
-    bool isDisabled;
-    option->GetDisabled(&isDisabled);
-    if (isDisabled) {
-      *aIsDisabled = true;
-      return NS_OK;
-    }
+  *aIsDisabled = IsOptionDisabled(option);
+  return NS_OK;
+}
+
+bool
+HTMLSelectElement::IsOptionDisabled(HTMLOptionElement* aOption)
+{
+  MOZ_ASSERT(aOption);
+  if (aOption->Disabled()) {
+    return true;
   }
 
   // Check for disabled optgroups
   // If there are no artifacts, there are no optgroups
   if (mNonOptionChildren) {
-    nsCOMPtr<nsIDOMNode> parent;
-    while (1) {
-      optionNode->GetParentNode(getter_AddRefs(parent));
-
-      // If we reached the top of the doc (scary), we're done
-      if (!parent) {
-        break;
-      }
-
+    for (nsCOMPtr<Element> node = aOption->GetParentElement();
+         node;
+         node = node->GetParentElement()) {
       // If we reached the select element, we're done
-      nsCOMPtr<nsIDOMHTMLSelectElement> selectElement =
-        do_QueryInterface(parent);
-      if (selectElement) {
-        break;
+      if (node->IsHTML(nsGkAtoms::select)) {
+        return false;
       }
 
-      nsCOMPtr<nsIDOMHTMLOptGroupElement> optGroupElement =
-        do_QueryInterface(parent);
+      nsRefPtr<HTMLOptGroupElement> optGroupElement =
+        HTMLOptGroupElement::FromContent(node);
 
-      if (optGroupElement) {
-        bool isDisabled;
-        optGroupElement->GetDisabled(&isDisabled);
-
-        if (isDisabled) {
-          *aIsDisabled = true;
-          return NS_OK;
-        }
-      } else {
+      if (!optGroupElement) {
         // If you put something else between you and the optgroup, you're a
         // moron and you deserve not to have optgroup disabling work.
-        break;
+        return false;
       }
 
-      optionNode = parent;
+      if (optGroupElement->Disabled()) {
+        return true;
+      }
     }
   }
 
-  return NS_OK;
+  return false;
 }
 
 NS_IMETHODIMP
