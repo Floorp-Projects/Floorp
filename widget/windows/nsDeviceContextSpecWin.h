@@ -24,10 +24,10 @@ public:
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD GetSurfaceForPrinter(gfxASurface **surface);
-  NS_IMETHOD BeginDocument(PRUnichar*  aTitle, 
-                           PRUnichar*  aPrintToFileName,
-                           int32_t     aStartPage, 
-                           int32_t     aEndPage) { return NS_OK; }
+  NS_IMETHOD BeginDocument(const nsAString& aTitle,
+                           PRUnichar*       aPrintToFileName,
+                           int32_t          aStartPage,
+                           int32_t          aEndPage) { return NS_OK; }
   NS_IMETHOD EndDocument() { return NS_OK; }
   NS_IMETHOD BeginPage() { return NS_OK; }
   NS_IMETHOD EndPage() { return NS_OK; }
