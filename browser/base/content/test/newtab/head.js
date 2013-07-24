@@ -6,19 +6,16 @@ const PREF_NEWTAB_ENABLED = "browser.newtabpage.enabled";
 Services.prefs.setBoolPref(PREF_NEWTAB_ENABLED, true);
 
 let tmp = {};
-Cu.import("resource://gre/modules/Promise.jsm", tmp);
 Cu.import("resource://gre/modules/NewTabUtils.jsm", tmp);
 Cc["@mozilla.org/moz/jssubscript-loader;1"]
   .getService(Ci.mozIJSSubScriptLoader)
   .loadSubScript("chrome://browser/content/sanitize.js", tmp);
-let {Promise, NewTabUtils, Sanitizer} = tmp;
+
+let {NewTabUtils, Sanitizer} = tmp;
 
 let uri = Services.io.newURI("about:newtab", null, null);
 let principal = Services.scriptSecurityManager.getNoAppCodebasePrincipal(uri);
 
-let isMac = ("nsILocalFileMac" in Ci);
-let isLinux = ("@mozilla.org/gnome-gconf-service;1" in Cc);
-let isWindows = ("@mozilla.org/windows-registry-key;1" in Cc);
 let gWindow = window;
 
 registerCleanupFunction(function () {
@@ -308,166 +305,26 @@ function unpinCell(aIndex) {
 }
 
 /**
- * Simulates a drag and drop operation.
- * @param aSourceIndex The cell index containing the dragged site.
- * @param aDestIndex The cell index of the drop target.
+ * Simulates a drop and drop operation.
+ * @param aDropIndex The cell index of the drop target.
+ * @param aDragIndex The cell index containing the dragged site (optional).
  */
-function simulateDrop(aSourceIndex, aDestIndex) {
-  let src = getCell(aSourceIndex).site.node;
-  let dest = getCell(aDestIndex).node;
+function simulateDrop(aDropIndex, aDragIndex) {
+  let draggedSite;
+  let {gDrag: drag, gDrop: drop} = getContentWindow();
+  let event = createDragEvent("drop", "http://example.com/#99\nblank");
 
-  // Drop 'src' onto 'dest' and continue testing when all newtab
-  // pages have been updated (i.e. the drop operation is completed).
-  startAndCompleteDragOperation(src, dest, whenPagesUpdated);
-}
+  if (typeof aDragIndex != "undefined")
+    draggedSite = getCell(aDragIndex).site;
 
-/**
- * Simulates a drag and drop operation. Instead of rearranging a site that is
- * is already contained in the newtab grid, this is used to simulate dragging
- * an external link onto the grid e.g. the text from the URL bar.
- * @param aDestIndex The cell index of the drop target.
- */
-function simulateExternalDrop(aDestIndex) {
-  let dest = getCell(aDestIndex).node;
+  if (draggedSite)
+    drag.start(draggedSite, event);
 
-  // Create an iframe that contains the external link we'll drag.
-  createExternalDropIframe().then(iframe => {
-    let link = iframe.contentDocument.getElementById("link");
+  whenPagesUpdated();
+  drop.drop(getCell(aDropIndex), event);
 
-    // Drop 'link' onto 'dest'.
-    startAndCompleteDragOperation(link, dest, () => {
-      // Wait until the drop operation is complete
-      // and all newtab pages have been updated.
-      whenPagesUpdated(() => {
-        // Clean up and remove the iframe.
-        iframe.remove();
-        // Continue testing.
-        TestRunner.next();
-      });
-    });
-  });
-}
-
-/**
- * Starts and complete a drag-and-drop operation.
- * @param aSource The node that is being dragged.
- * @param aDest The node we're dragging aSource onto.
- * @param aCallback The function that is called when we're done.
- */
-function startAndCompleteDragOperation(aSource, aDest, aCallback) {
-  // Start by pressing the left mouse button.
-  synthesizeNativeMouseLDown(aSource);
-
-  // Move the mouse in 5px steps until the drag operation starts.
-  let offset = 0;
-  let interval = setInterval(() => {
-    synthesizeNativeMouseDrag(aSource, offset += 5);
-  }, 10);
-
-  // When the drag operation has started we'll move
-  // the dragged element to its target position.
-  aSource.addEventListener("dragstart", function onDragStart() {
-    aSource.removeEventListener("dragstart", onDragStart);
-    clearInterval(interval);
-
-    // Place the cursor above the drag target.
-    synthesizeNativeMouseMove(aDest);
-  });
-
-  // As soon as the dragged element hovers the target, we'll drop it.
-  aDest.addEventListener("dragenter", function onDragEnter() {
-    aDest.removeEventListener("dragenter", onDragEnter);
-
-    // Finish the drop operation.
-    synthesizeNativeMouseLUp(aDest);
-    aCallback();
-  });
-}
-
-/**
- * Helper function that creates a temporary iframe in the about:newtab
- * document. This will contain a link we can drag to the test the dropping
- * of links from external documents.
- */
-function createExternalDropIframe() {
-  const url = "data:text/html;charset=utf-8," +
-              "<a id='link' href='http://example.com/%2399'>link</a>";
-
-  let deferred = Promise.defer();
-  let doc = getContentDocument();
-  let iframe = doc.createElement("iframe");
-  iframe.setAttribute("src", url);
-  iframe.style.width = "50px";
-  iframe.style.height = "50px";
-
-  let margin = doc.getElementById("newtab-margin-top");
-  margin.appendChild(iframe);
-
-  iframe.addEventListener("load", function onLoad() {
-    iframe.removeEventListener("load", onLoad);
-    executeSoon(() => deferred.resolve(iframe));
-  });
-
-  return deferred.promise;
-}
-
-/**
- * Fires a synthetic 'mousedown' event on the current about:newtab page.
- * @param aElement The element used to determine the cursor position.
- */
-function synthesizeNativeMouseLDown(aElement) {
-  if (isLinux) {
-    let win = aElement.ownerDocument.defaultView;
-    EventUtils.synthesizeMouseAtCenter(aElement, {type: "mousedown"}, win);
-  } else {
-    let msg = isWindows ? 2 : 1;
-    synthesizeNativeMouseEvent(aElement, msg);
-  }
-}
-
-/**
- * Fires a synthetic 'mouseup' event on the current about:newtab page.
- * @param aElement The element used to determine the cursor position.
- */
-function synthesizeNativeMouseLUp(aElement) {
-  let msg = isWindows ? 4 : (isMac ? 2 : 7);
-  synthesizeNativeMouseEvent(aElement, msg);
-}
-
-/**
- * Fires a synthetic mouse drag event on the current about:newtab page.
- * @param aElement The element used to determine the cursor position.
- * @param aOffsetX The left offset that is added to the position.
- */
-function synthesizeNativeMouseDrag(aElement, aOffsetX) {
-  let msg = isMac ? 6 : 1;
-  synthesizeNativeMouseEvent(aElement, msg, aOffsetX);
-}
-
-/**
- * Fires a synthetic 'mousemove' event on the current about:newtab page.
- * @param aElement The element used to determine the cursor position.
- */
-function synthesizeNativeMouseMove(aElement) {
-  let msg = isMac ? 5 : 1;
-  synthesizeNativeMouseEvent(aElement, msg);
-}
-
-/**
- * Fires a synthetic mouse event on the current about:newtab page.
- * @param aElement The element used to determine the cursor position.
- * @param aOffsetX The left offset that is added to the position (optional).
- * @param aOffsetY The top offset that is added to the position (optional).
- */
-function synthesizeNativeMouseEvent(aElement, aMsg, aOffsetX = 0, aOffsetY = 0) {
-  let rect = aElement.getBoundingClientRect();
-  let win = aElement.ownerDocument.defaultView;
-  let x = aOffsetX + win.mozInnerScreenX + rect.left + rect.width / 2;
-  let y = aOffsetY + win.mozInnerScreenY + rect.top + rect.height / 2;
-
-  win.QueryInterface(Ci.nsIInterfaceRequestor)
-     .getInterface(Ci.nsIDOMWindowUtils)
-     .sendNativeMouseEvent(x, y, aMsg, 0, null);
+  if (draggedSite)
+    drag.end(draggedSite);
 }
 
 /**
