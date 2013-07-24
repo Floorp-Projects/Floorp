@@ -24,9 +24,11 @@
 **      %f - float
 **      %g - float
 */
-#include "jstypes.h"
-#include <stdio.h>
+
 #include <stdarg.h>
+#include <stdio.h>
+
+#include "jstypes.h"
 
 /*
 ** sprintf into a fixed size buffer. Guarantees that a NUL is at the end
