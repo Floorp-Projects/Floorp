@@ -14,19 +14,19 @@
 namespace mozilla {
 namespace layers {
 
-DeprecatedSharedRGBImage::DeprecatedSharedRGBImage(ISurfaceAllocator *aAllocator) :
+SharedRGBImage::SharedRGBImage(ISurfaceAllocator *aAllocator) :
   Image(nullptr, SHARED_RGB),
   mSize(0, 0),
   mSurfaceAllocator(aAllocator),
   mAllocated(false),
   mShmem(new ipc::Shmem())
 {
-  MOZ_COUNT_CTOR(DeprecatedSharedRGBImage);
+  MOZ_COUNT_CTOR(SharedRGBImage);
 }
 
-DeprecatedSharedRGBImage::~DeprecatedSharedRGBImage()
+SharedRGBImage::~SharedRGBImage()
 {
-  MOZ_COUNT_DTOR(DeprecatedSharedRGBImage);
+  MOZ_COUNT_DTOR(SharedRGBImage);
 
   if (mAllocated) {
     SurfaceDescriptor desc;
@@ -36,8 +36,8 @@ DeprecatedSharedRGBImage::~DeprecatedSharedRGBImage()
   delete mShmem;
 }
 
-already_AddRefed<DeprecatedSharedRGBImage>
-DeprecatedSharedRGBImage::Create(ImageContainer *aImageContainer,
+already_AddRefed<SharedRGBImage>
+SharedRGBImage::Create(ImageContainer *aImageContainer,
                        nsIntSize aSize,
                        gfxImageFormat aImageFormat)
 {
@@ -47,7 +47,7 @@ DeprecatedSharedRGBImage::Create(ImageContainer *aImageContainer,
                "RGB formats supported only");
 
   if (!aImageContainer) {
-    NS_WARNING("No ImageContainer to allocate DeprecatedSharedRGBImage");
+    NS_WARNING("No ImageContainer to allocate SharedRGBImage");
     return nullptr;
   }
 
@@ -55,16 +55,16 @@ DeprecatedSharedRGBImage::Create(ImageContainer *aImageContainer,
   nsRefPtr<Image> image = aImageContainer->CreateImage(&format, 1);
 
   if (!image) {
-    NS_WARNING("Failed to create DeprecatedSharedRGBImage");
+    NS_WARNING("Failed to create SharedRGBImage");
     return nullptr;
   }
 
-  nsRefPtr<DeprecatedSharedRGBImage> rgbImage = static_cast<DeprecatedSharedRGBImage*>(image.get());
+  nsRefPtr<SharedRGBImage> rgbImage = static_cast<SharedRGBImage*>(image.get());
   rgbImage->mSize = gfxIntSize(aSize.width, aSize.height);
   rgbImage->mImageFormat = aImageFormat;
 
   if (!rgbImage->AllocateBuffer(aSize, aImageFormat)) {
-    NS_WARNING("Failed to allocate shared memory for DeprecatedSharedRGBImage");
+    NS_WARNING("Failed to allocate shared memory for SharedRGBImage");
     return nullptr;
   }
 
@@ -72,25 +72,25 @@ DeprecatedSharedRGBImage::Create(ImageContainer *aImageContainer,
 }
 
 uint8_t *
-DeprecatedSharedRGBImage::GetBuffer()
+SharedRGBImage::GetBuffer()
 {
   return mShmem->get<uint8_t>();
 }
 
 size_t
-DeprecatedSharedRGBImage::GetBufferSize()
+SharedRGBImage::GetBufferSize()
 {
   return mSize.width * mSize.height * gfxASurface::BytesPerPixel(mImageFormat);
 }
 
 gfxIntSize
-DeprecatedSharedRGBImage::GetSize()
+SharedRGBImage::GetSize()
 {
   return mSize;
 }
 
 bool
-DeprecatedSharedRGBImage::AllocateBuffer(nsIntSize aSize, gfxImageFormat aImageFormat)
+SharedRGBImage::AllocateBuffer(nsIntSize aSize, gfxImageFormat aImageFormat)
 {
   if (mAllocated) {
     NS_WARNING("Already allocated shmem");
@@ -110,13 +110,13 @@ DeprecatedSharedRGBImage::AllocateBuffer(nsIntSize aSize, gfxImageFormat aImageF
 }
 
 already_AddRefed<gfxASurface>
-DeprecatedSharedRGBImage::GetAsSurface()
+SharedRGBImage::GetAsSurface()
 {
   return nullptr;
 }
 
 bool
-DeprecatedSharedRGBImage::ToSurfaceDescriptor(SurfaceDescriptor& aResult)
+SharedRGBImage::ToSurfaceDescriptor(SurfaceDescriptor& aResult)
 {
   if (!mAllocated) {
     return false;
@@ -130,7 +130,7 @@ DeprecatedSharedRGBImage::ToSurfaceDescriptor(SurfaceDescriptor& aResult)
 }
 
 bool
-DeprecatedSharedRGBImage::DropToSurfaceDescriptor(SurfaceDescriptor& aResult)
+SharedRGBImage::DropToSurfaceDescriptor(SurfaceDescriptor& aResult)
 {
   if (!mAllocated) {
     return false;
@@ -144,8 +144,8 @@ DeprecatedSharedRGBImage::DropToSurfaceDescriptor(SurfaceDescriptor& aResult)
   return true;
 }
 
-DeprecatedSharedRGBImage*
-DeprecatedSharedRGBImage::FromSurfaceDescriptor(const SurfaceDescriptor& aDescriptor)
+SharedRGBImage*
+SharedRGBImage::FromSurfaceDescriptor(const SurfaceDescriptor& aDescriptor)
 {
   if (aDescriptor.type() != SurfaceDescriptor::TRGBImage) {
     return nullptr;
@@ -154,7 +154,7 @@ DeprecatedSharedRGBImage::FromSurfaceDescriptor(const SurfaceDescriptor& aDescri
   if (rgb.owner() == 0) {
     return nullptr;
   }
-  return reinterpret_cast<DeprecatedSharedRGBImage*>(rgb.owner());
+  return reinterpret_cast<SharedRGBImage*>(rgb.owner());
 }
 
 

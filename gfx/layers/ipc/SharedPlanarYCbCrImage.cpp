@@ -13,8 +13,8 @@ namespace layers {
 
 using namespace mozilla::ipc;
 
-DeprecatedSharedPlanarYCbCrImage::~DeprecatedSharedPlanarYCbCrImage() {
-  MOZ_COUNT_DTOR(DeprecatedSharedPlanarYCbCrImage);
+SharedPlanarYCbCrImage::~SharedPlanarYCbCrImage() {
+  MOZ_COUNT_DTOR(SharedPlanarYCbCrImage);
 
   if (mAllocated) {
     SurfaceDescriptor desc;
@@ -25,7 +25,7 @@ DeprecatedSharedPlanarYCbCrImage::~DeprecatedSharedPlanarYCbCrImage() {
 
 
 void
-DeprecatedSharedPlanarYCbCrImage::SetData(const PlanarYCbCrImage::Data& aData)
+SharedPlanarYCbCrImage::SetData(const PlanarYCbCrImage::Data& aData)
 {
   // If mShmem has not been allocated (through Allocate(aData)), allocate it.
   // This code path is slower than the one used when Allocate has been called
@@ -60,7 +60,7 @@ DeprecatedSharedPlanarYCbCrImage::SetData(const PlanarYCbCrImage::Data& aData)
 // needs to be overriden because the parent class sets mBuffer which we
 // do not want to happen.
 uint8_t*
-DeprecatedSharedPlanarYCbCrImage::AllocateAndGetNewBuffer(uint32_t aSize)
+SharedPlanarYCbCrImage::AllocateAndGetNewBuffer(uint32_t aSize)
 {
   NS_ABORT_IF_FALSE(!mAllocated, "This image already has allocated data");
   size_t size = YCbCrImageDataSerializer::ComputeMinBufferSize(aSize);
@@ -76,7 +76,7 @@ DeprecatedSharedPlanarYCbCrImage::AllocateAndGetNewBuffer(uint32_t aSize)
 
 
 void
-DeprecatedSharedPlanarYCbCrImage::SetDataNoCopy(const Data &aData)
+SharedPlanarYCbCrImage::SetDataNoCopy(const Data &aData)
 {
   mData = aData;
   mSize = aData.mPicSize;
@@ -86,7 +86,7 @@ DeprecatedSharedPlanarYCbCrImage::SetDataNoCopy(const Data &aData)
 }
 
 uint8_t* 
-DeprecatedSharedPlanarYCbCrImage::AllocateBuffer(uint32_t aSize)
+SharedPlanarYCbCrImage::AllocateBuffer(uint32_t aSize)
 {
   NS_ABORT_IF_FALSE(!mAllocated, "This image already has allocated data");
   SharedMemory::SharedMemoryType shmType = OptimalShmemType();
@@ -99,7 +99,7 @@ DeprecatedSharedPlanarYCbCrImage::AllocateBuffer(uint32_t aSize)
 
 
 bool
-DeprecatedSharedPlanarYCbCrImage::Allocate(PlanarYCbCrImage::Data& aData)
+SharedPlanarYCbCrImage::Allocate(PlanarYCbCrImage::Data& aData)
 {
   NS_ABORT_IF_FALSE(!mAllocated, "This image already has allocated data");
 
@@ -145,7 +145,7 @@ DeprecatedSharedPlanarYCbCrImage::Allocate(PlanarYCbCrImage::Data& aData)
 }
 
 bool
-DeprecatedSharedPlanarYCbCrImage::ToSurfaceDescriptor(SurfaceDescriptor& aDesc) {
+SharedPlanarYCbCrImage::ToSurfaceDescriptor(SurfaceDescriptor& aDesc) {
   if (!mAllocated) {
     return false;
   }
@@ -155,7 +155,7 @@ DeprecatedSharedPlanarYCbCrImage::ToSurfaceDescriptor(SurfaceDescriptor& aDesc) 
 }
 
 bool
-DeprecatedSharedPlanarYCbCrImage::DropToSurfaceDescriptor(SurfaceDescriptor& aDesc) {
+SharedPlanarYCbCrImage::DropToSurfaceDescriptor(SurfaceDescriptor& aDesc) {
   if (!mAllocated) {
     return false;
   }
@@ -165,8 +165,8 @@ DeprecatedSharedPlanarYCbCrImage::DropToSurfaceDescriptor(SurfaceDescriptor& aDe
   return true;
 }
 
-DeprecatedSharedPlanarYCbCrImage*
-DeprecatedSharedPlanarYCbCrImage::FromSurfaceDescriptor(const SurfaceDescriptor& aDescriptor)
+SharedPlanarYCbCrImage*
+SharedPlanarYCbCrImage::FromSurfaceDescriptor(const SurfaceDescriptor& aDescriptor)
 {
   if (aDescriptor.type() != SurfaceDescriptor::TYCbCrImage) {
     return nullptr;
@@ -175,7 +175,7 @@ DeprecatedSharedPlanarYCbCrImage::FromSurfaceDescriptor(const SurfaceDescriptor&
   if (ycbcr.owner() == 0) {
     return nullptr;
   }
-  return reinterpret_cast<DeprecatedSharedPlanarYCbCrImage*>(ycbcr.owner());
+  return reinterpret_cast<SharedPlanarYCbCrImage*>(ycbcr.owner());
 }
 
 
