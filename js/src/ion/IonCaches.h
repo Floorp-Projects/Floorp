@@ -911,12 +911,14 @@ class GetPropertyParIC : public ParallelIonCache
     Register object_;
     PropertyName *name_;
     TypedOrValueRegister output_;
+    bool hasTypedArrayLengthStub_ : 1;
 
    public:
     GetPropertyParIC(Register object, PropertyName *name, TypedOrValueRegister output)
       : object_(object),
         name_(name),
-        output_(output)
+        output_(output),
+        hasTypedArrayLengthStub_(false)
     {
     }
 
@@ -928,6 +930,8 @@ class GetPropertyParIC : public ParallelIonCache
     void initializeAddCacheState(LInstruction *ins, AddCacheState *addState);
 #endif
 
+    void reset();
+
     Register object() const {
         return object_;
     }
@@ -936,6 +940,9 @@ class GetPropertyParIC : public ParallelIonCache
     }
     TypedOrValueRegister output() const {
         return output_;
+    }
+    bool hasTypedArrayLengthStub() const {
+        return hasTypedArrayLengthStub_;
     }
 
     static bool canAttachReadSlot(LockedJSContext &cx, IonCache &cache,
@@ -946,6 +953,7 @@ class GetPropertyParIC : public ParallelIonCache
     bool attachReadSlot(LockedJSContext &cx, IonScript *ion, JSObject *obj, JSObject *holder,
                         Shape *shape);
     bool attachArrayLength(LockedJSContext &cx, IonScript *ion, JSObject *obj);
+    bool attachTypedArrayLength(LockedJSContext &cx, IonScript *ion, JSObject *obj);
 
     static ParallelResult update(ForkJoinSlice *slice, size_t cacheIndex, HandleObject obj,
                                  MutableHandleValue vp);
