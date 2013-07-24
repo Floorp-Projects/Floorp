@@ -6,12 +6,12 @@ MARIONETTE_TIMEOUT = 60000;
 SpecialPowers.addPermission("sms", true, document);
 SpecialPowers.setBoolPref("dom.sms.enabled", true);
 
-let sms = window.navigator.mozSms;
+let manager = window.navigator.mozMobileMessage;
 let smsId;
 
 function verifyInitialState() {
   log("Verifying initial state.");
-  ok(sms, "mozSms");
+  ok(manager, "mozMobileMessage");
   simulateIncomingSms();
 }
 
@@ -30,7 +30,7 @@ function simulateIncomingSms() {
 }
 
 // Callback for incoming SMS
-sms.onreceived = function onreceived(event) {
+manager.onreceived = function onreceived(event) {
   log("Received 'onreceived' sms event.");
   let incomingSms = event.message;
   log("Received SMS (id: " + incomingSms.id + ").");
@@ -44,7 +44,7 @@ sms.onreceived = function onreceived(event) {
 };
 
 function markMsgError(invalidId, readBool, nextFunction) {
-  let requestRet = sms.markMessageRead(invalidId, readBool);
+  let requestRet = manager.markMessageRead(invalidId, readBool);
   ok(requestRet, "smsrequest obj returned");
 
   requestRet.onsuccess = function(event) {
@@ -79,7 +79,7 @@ function test2() {
 
 function deleteMsg() {
   log("Deleting SMS (id: " + smsId + ").");
-  let request = sms.delete(smsId);
+  let request = manager.delete(smsId);
   ok(request instanceof DOMRequest,
       "request is instanceof " + request.constructor);
 
@@ -90,7 +90,7 @@ function deleteMsg() {
       cleanUp();
     } else {
       log("SMS delete failed.");
-      ok(false,"sms.delete request returned false");
+      ok(false,"manager.delete request returned false");
       cleanUp();
     }
   };
@@ -98,14 +98,14 @@ function deleteMsg() {
   request.onerror = function(event) {
     log("Received 'onerror' smsrequest event.");
     ok(event.target.error, "domerror obj");
-    ok(false, "sms.delete request returned unexpected error: "
+    ok(false, "manager.delete request returned unexpected error: "
         + event.target.error.name );
     cleanUp();
   };
 }
 
 function cleanUp() {
-  sms.onreceived = null;
+  manager.onreceived = null;
   SpecialPowers.removePermission("sms", document);
   SpecialPowers.clearUserPref("dom.sms.enabled");
   finish();
