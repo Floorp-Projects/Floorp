@@ -15,8 +15,8 @@
 #endif
 
 #ifdef __APPLE__
-#include "devtools/sharkctl.h"
 #include "devtools/Instruments.h"
+#include "devtools/sharkctl.h"
 #endif
 
 #include "jscntxtinlines.h"
@@ -445,9 +445,9 @@ js_DumpCallgrind(const char *outfile)
  * MOZ_PROFILE_PERF_FLAGS="-e 'foo bar'").
  */
 
+#include <signal.h>
 #include <sys/wait.h>
 #include <unistd.h>
-#include <signal.h>
 
 static bool perfInitialized = false;
 static pid_t perfPid = 0;

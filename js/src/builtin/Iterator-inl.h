@@ -8,6 +8,7 @@
 #define builtin_Iterator_inl_h
 
 #include "jsiter.h"
+
 #include "vm/ObjectImpl-inl.h"
 
 inline void
