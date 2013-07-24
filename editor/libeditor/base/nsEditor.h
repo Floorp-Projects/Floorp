@@ -450,13 +450,10 @@ public:
    * @param aNodeToJoin   The node that will be joined with aNodeToKeep.
    *                      There is no requirement that the two nodes be of the same type.
    * @param aParent       The parent of aNodeToKeep
-   * @param aNodeToKeepIsFirst  if true, the contents|children of aNodeToKeep come before the
-   *                            contents|children of aNodeToJoin, otherwise their positions are switched.
    */
   nsresult JoinNodesImpl(nsIDOMNode *aNodeToKeep,
                          nsIDOMNode *aNodeToJoin,
-                         nsIDOMNode *aParent,
-                         bool        aNodeToKeepIsFirst);
+                         nsIDOMNode *aParent);
 
   /**
    * Return the offset of aChild in aParent.  Asserts fatally if parent or

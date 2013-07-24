@@ -131,8 +131,7 @@ NS_IMETHODIMP SplitElementTxn::UndoTransaction(void)
   // this assumes Do inserted the new node in front of the prior existing node
   nsresult result = mEditor->JoinNodesImpl(mExistingRightNode->AsDOMNode(),
                                            mNewLeftNode->AsDOMNode(),
-                                           mParent->AsDOMNode(),
-                                           false);
+                                           mParent->AsDOMNode());
 #ifdef DEBUG
   if (gNoisy) 
   { 
