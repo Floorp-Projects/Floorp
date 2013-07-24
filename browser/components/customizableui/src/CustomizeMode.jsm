@@ -875,8 +875,7 @@ CustomizeMode.prototype = {
     if (!placement) {
       LOG("Could not get a position for " + aTargetNode + "#" + aTargetNode.id + "." + aTargetNode.className);
     }
-    let position = placement ? placement.position :
-                               aTargetArea.childElementCount;
+    let position = placement ? placement.position : null;
 
 
     // Is the target area the same as the origin? Since we've already handled
