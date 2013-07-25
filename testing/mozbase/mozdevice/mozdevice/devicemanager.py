@@ -6,6 +6,7 @@ import hashlib
 import mozlog
 import socket
 import os
+import posixpath
 import re
 import struct
 import StringIO
@@ -238,15 +239,14 @@ class DeviceManager(object):
         WARNING: does not create last part of the path. For example, if asked to
         create `/mnt/sdcard/foo/bar/baz`, it will only create `/mnt/sdcard/foo/bar`
         """
-        dirParts = filename.rsplit('/', 1)
-        if not self.dirExists(dirParts[0]):
+        filename = posixpath.normpath(filename)
+        containing = posixpath.dirname(filename)
+        if not self.dirExists(containing):
             parts = filename.split('/')
-            name = ""
-            for part in parts:
-                if part is parts[-1]:
-                    break
+            name = "/"
+            for part in parts[:-1]:
                 if part != "":
-                    name += '/' + part
+                    name = posixpath.join(name, part)
                     self.mkDir(name) # mkDir will check previous existence
 
     @abstractmethod
@@ -258,7 +258,8 @@ class DeviceManager(object):
     @abstractmethod
     def fileExists(self, filepath):
         """
-        Return whether filepath exists and is a file on the device file system.
+        Return whether filepath exists on the device file system,
+        regardless of file type.
         """
 
     @abstractmethod

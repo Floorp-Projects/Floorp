@@ -10,6 +10,7 @@ import tempfile
 import unittest
 from mozfile import load
 
+
 class TestLoad(unittest.TestCase):
     """test the load function"""
 
@@ -25,17 +26,15 @@ class TestLoad(unittest.TestCase):
 
         host = '127.0.0.1'
         httpd = mozhttpd.MozHttpd(host=host,
-                                  port=8888,
                                   urlhandlers=[{'method': 'GET',
                                                 'path': '.*',
                                                 'function': example}])
         try:
             httpd.start(block=False)
-            content = load('http://127.0.0.1:8888/foo').read()
+            content = load(httpd.get_url()).read()
             self.assertEqual(content, 'example')
         finally:
             httpd.stop()
-
 
     def test_file_path(self):
         """test loading from file path"""

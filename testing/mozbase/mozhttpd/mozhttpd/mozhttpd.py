@@ -16,7 +16,7 @@ import os
 import urllib
 import urlparse
 import re
-import iface
+import moznetwork
 import time
 from SocketServer import ThreadingMixIn
 
@@ -163,14 +163,23 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
 class MozHttpd(object):
     """
+    :param host: Host from which to serve (default 127.0.0.1)
+    :param port: Port from which to serve (default 8888)
+    :param docroot: Server root (default os.getcwd())
+    :param urlhandlers: Handlers to specify behavior against method and path match (default None)
+    :param proxy_host_dirs: Toggle proxy behavior (default False)
+    :param log_requests: Toggle logging behavior (default False)
+
     Very basic HTTP server class. Takes a docroot (path on the filesystem)
     and a set of urlhandler dictionaries of the form:
 
-    {
-      'method': HTTP method (string): GET, POST, or DEL,
-      'path': PATH_INFO (regular expression string),
-      'function': function of form fn(arg1, arg2, arg3, ..., request)
-    }
+    ::
+
+      {
+        'method': HTTP method (string): GET, POST, or DEL,
+        'path': PATH_INFO (regular expression string),
+        'function': function of form fn(arg1, arg2, arg3, ..., request)
+      }
 
     and serves HTTP. For each request, MozHttpd will either return a file
     off the docroot, or dispatch to a handler function (if both path and
@@ -192,7 +201,7 @@ class MozHttpd(object):
     True.
     """
 
-    def __init__(self, host="127.0.0.1", port=8888, docroot=None,
+    def __init__(self, host="127.0.0.1", port=0, docroot=None,
                  urlhandlers=None, proxy_host_dirs=False, log_requests=False):
         self.host = host
         self.port = int(port)
@@ -216,9 +225,11 @@ class MozHttpd(object):
 
     def start(self, block=False):
         """
-        Start the server.  If block is True, the call will not return.
-        If block is False, the server will be started on a separate thread that
-        can be terminated by a call to .stop()
+        Starts the server.
+
+        If `block` is True, the call will not return. If `block` is False, the
+        server will be started on a separate thread that can be terminated by
+        a call to stop().
         """
         self.httpd = EasyServer((self.host, self.port), self.handler_class)
         if block:
@@ -229,6 +240,11 @@ class MozHttpd(object):
             self.server.start()
 
     def stop(self):
+        """
+        Stops the server.
+
+        If the server is not running, this method has no effect.
+        """
         if self.httpd:
             ### FIXME: There is no shutdown() method in Python 2.4...
             try:
@@ -236,6 +252,18 @@ class MozHttpd(object):
             except AttributeError:
                 pass
         self.httpd = None
+
+    def get_url(self, path="/"):
+        """
+        Returns a URL that can be used for accessing the server (e.g. http://192.168.1.3:4321/)
+
+        :param path: Path to append to URL (e.g. if path were /foobar.html you would get a URL like
+                     http://192.168.1.3:4321/foobar.html). Default is `/`.
+        """
+        if not self.httpd:
+            return None
+
+        return "http://%s:%s%s" % (self.host, self.httpd.server_port, path)
 
     __del__ = stop
 
@@ -262,7 +290,7 @@ def main(args=sys.argv[1:]):
         parser.error("mozhttpd does not take any arguments")
 
     if options.external_ip:
-        host = iface.get_lan_ip()
+        host = moznetwork.get_lan_ip()
     else:
         host = options.host
 

@@ -156,8 +156,16 @@ class Preferences(object):
         return prefs
 
     @classmethod
-    def read_prefs(cls, path, pref_setter='user_pref'):
-        """read preferences from (e.g.) prefs.js"""
+    def read_prefs(cls, path, pref_setter='user_pref', interpolation=None):
+        """
+        Read preferences from (e.g.) prefs.js
+
+        :param path: The path to the preference file to read.
+        :param pref_setter: The name of the function used to set preferences
+                            in the preference file.
+        :param interpolation: If provided, a dict that will be passed
+                              to str.format to interpolate preference values.
+        """
 
         comment = re.compile('/\*([^*]|[\r\n]|(\*+([^*/]|[\r\n])))*\*+/', re.MULTILINE)
 
@@ -184,6 +192,8 @@ class Preferences(object):
 
         retval = []
         def pref(a, b):
+            if interpolation and isinstance(b, basestring):
+                b = b.format(**interpolation)
             retval.append((a, b))
         lines = [i.strip().rstrip(';') for i in string.split('\n') if i.strip()]
 
