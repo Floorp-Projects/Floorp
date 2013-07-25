@@ -14,7 +14,7 @@
 #include "nsWindowDefs.h"
 #include <windows.h>
 
-#define NS_NUM_OF_KEYS          68
+#define NS_NUM_OF_KEYS          70
 
 #define VK_OEM_1                0xBA   // ';:' for US
 #define VK_OEM_PLUS             0xBB   // '+' any country
