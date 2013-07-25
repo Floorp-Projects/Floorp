@@ -347,7 +347,10 @@ nsXBLProtoImplAnonymousMethod::Execute(nsIContent* aBoundElement)
     // anything else.  We just report it.  Note that we need to set aside the
     // frame chain here, since the constructor invocation is not related to
     // whatever is on the stack right now, really.
-    nsJSUtils::ReportPendingException(cx);
+    JSBool saved = JS_SaveFrameChain(cx);
+    JS_ReportPendingException(cx);
+    if (saved)
+        JS_RestoreFrameChain(cx);
     return NS_ERROR_FAILURE;
   }
 
