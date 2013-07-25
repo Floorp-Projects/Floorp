@@ -2384,7 +2384,13 @@ GetPDA(JSContext *cx, unsigned argc, jsval *vp)
     if (!ok)
         return false;
     pd = pda.array;
+
     RootedObject pdobj(cx);
+    RootedValue id(cx);
+    RootedValue value(cx);
+    RootedValue flags(cx);
+    RootedValue alias(cx);
+
     for (uint32_t i = 0; i < pda.length; i++, pd++) {
         pdobj = JS_NewObject(cx, NULL, NULL, NULL);
         if (!pdobj) {
@@ -2398,11 +2404,14 @@ GetPDA(JSContext *cx, unsigned argc, jsval *vp)
         if (!ok)
             break;
 
-        ok = JS_SetProperty(cx, pdobj, "id", &pd->id) &&
-             JS_SetProperty(cx, pdobj, "value", &pd->value) &&
-             (v = INT_TO_JSVAL(pd->flags),
-              JS_SetProperty(cx, pdobj, "flags", &v)) &&
-             JS_SetProperty(cx, pdobj, "alias", &pd->alias);
+        id = pd->id;
+        value = pd->value;
+        flags.setInt32(pd->flags);
+        alias = pd->alias;
+        ok = JS_SetProperty(cx, pdobj, "id", &id) &&
+             JS_SetProperty(cx, pdobj, "value", &value) &&
+             JS_SetProperty(cx, pdobj, "flags", &flags) &&
+             JS_SetProperty(cx, pdobj, "alias", &alias);
         if (!ok)
             break;
     }
@@ -2508,7 +2517,7 @@ NewSandbox(JSContext *cx, bool lazy)
             return NULL;
 
         RootedValue value(cx, BooleanValue(lazy));
-        if (!JS_SetProperty(cx, obj, "lazy", value.address()))
+        if (!JS_SetProperty(cx, obj, "lazy", &value))
             return NULL;
     }
 
