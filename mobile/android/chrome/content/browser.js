@@ -3565,6 +3565,7 @@ Tab.prototype = {
             if (!tabURL.startsWith("about:reader")) {
               this.savedArticle = null;
               this.readerEnabled = false;
+              this.readerActive = false;
             } else {
               this.readerActive = true;
             }
