@@ -731,8 +731,9 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
         byte[] b = c.getBlob(faviconIndex);
         c.close();
 
-        if (b == null || b.length == 0)
+        if (b == null) {
             return null;
+        }
 
         return BitmapUtils.decodeByteArray(b);
     }
@@ -781,13 +782,18 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
     @Override
     public void updateFaviconForUrl(ContentResolver cr, String pageUri,
             Bitmap favicon, String faviconUri) {
-        ByteArrayOutputStream stream = new ByteArrayOutputStream();
-        favicon.compress(Bitmap.CompressFormat.PNG, 100, stream);
-
         ContentValues values = new ContentValues();
         values.put(Favicons.URL, faviconUri);
-        values.put(Favicons.DATA, stream.toByteArray());
         values.put(Favicons.PAGE_URL, pageUri);
+
+        byte[] data = null;
+        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+        if (favicon.compress(Bitmap.CompressFormat.PNG, 100, stream)) {
+            data = stream.toByteArray();
+        } else {
+            Log.w(LOGTAG, "Favicon compression failed.");
+        }
+        values.put(Favicons.DATA, data);
 
         // Update or insert
         Uri faviconsUri = getAllFaviconsUri().buildUpon().
@@ -807,11 +813,16 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
             BitmapDrawable thumbnail) {
         Bitmap bitmap = thumbnail.getBitmap();
 
+        byte[] data = null;
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
-        bitmap.compress(Bitmap.CompressFormat.PNG, 0, stream);
+        if (bitmap.compress(Bitmap.CompressFormat.PNG, 0, stream)) {
+            data = stream.toByteArray();
+        } else {
+            Log.w(LOGTAG, "Favicon compression failed.");
+        }
 
         ContentValues values = new ContentValues();
-        values.put(Thumbnails.DATA, stream.toByteArray());
+        values.put(Thumbnails.DATA, data);
         values.put(Thumbnails.URL, uri);
 
         int updated = cr.update(mThumbnailsUriWithProfile,
