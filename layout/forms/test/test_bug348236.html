@@ -47,9 +47,9 @@ addLoadEvent(function test() {
 
     function keypressOnSelect(key, modifiers) {
         WinUtils.focus(eSelect)
-        WinUtils.sendKeyEvent("keyup", key, 0, modifiers, WinUtils.KEY_FLAG_PREVENT_DEFAULT)
-        WinUtils.sendKeyEvent("keypress", key, 0, modifiers, WinUtils.KEY_FLAG_PREVENT_DEFAULT)
-        WinUtils.sendKeyEvent("keydown", key, 0, modifiers, WinUtils.KEY_FLAG_PREVENT_DEFAULT)
+        WinUtils.sendKeyEvent("keyup", key, 0, modifiers)
+        WinUtils.sendKeyEvent("keypress", key, 0, modifiers)
+        WinUtils.sendKeyEvent("keydown", key, 0, modifiers)
     }
 
     function testKey(key, modifiers, keyString, functionToContinue) {
