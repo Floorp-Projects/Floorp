@@ -4,27 +4,29 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "ion/CodeGenerator.h"
+
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Util.h"
 
-#include "ion/PerfSpewer.h"
-#include "ion/CodeGenerator.h"
+#include "jsmath.h"
+#include "jsnum.h"
+
+#include "builtin/Eval.h"
+#include "gc/Nursery.h"
+#include "ion/ExecutionModeInlines.h"
 #include "ion/IonLinker.h"
 #include "ion/IonSpewer.h"
 #include "ion/MIRGenerator.h"
-#include "ion/shared/CodeGenerator-shared-inl.h"
 #include "ion/MoveEmitter.h"
-#include "jsnum.h"
-#include "jsmath.h"
 #include "ion/ParallelFunctions.h"
-#include "ion/ExecutionModeInlines.h"
-#include "builtin/Eval.h"
-#include "gc/Nursery.h"
-#include "vm/ForkJoin.h"
 #include "ion/ParallelSafetyAnalysis.h"
+#include "ion/PerfSpewer.h"
+#include "vm/ForkJoin.h"
 
+#include "ion/shared/CodeGenerator-shared-inl.h"
 #include "vm/Interpreter-inl.h"
 
 using namespace js;

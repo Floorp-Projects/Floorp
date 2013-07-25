@@ -9,12 +9,12 @@
 
 #include "mozilla/Attributes.h"
 
-#include "ion/Ion.h"
-#include "ion/MIR.h"
-#include "ion/MIRGraph.h"
 #include "ion/InlineList.h"
+#include "ion/Ion.h"
 #include "ion/LIR.h"
 #include "ion/Lowering.h"
+#include "ion/MIR.h"
+#include "ion/MIRGraph.h"
 
 // Generic structures and functions for use by register allocators.
 

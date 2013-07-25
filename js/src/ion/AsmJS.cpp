@@ -8,30 +8,26 @@
 
 #include "mozilla/Move.h"
 
+#ifdef MOZ_VTUNE
+# include "jitprofiling.h"
+#endif
+
 #include "jsmath.h"
 #include "jsworkers.h"
 #include "jswrapper.h"
 #include "prmjtime.h"
 
-#ifdef MOZ_VTUNE
-# include "jitprofiling.h"
-#endif
-
 #include "frontend/Parser.h"
 #include "ion/AsmJSModule.h"
-#include "ion/PerfSpewer.h"
 #include "ion/CodeGenerator.h"
 #include "ion/MIR.h"
 #include "ion/MIRGraph.h"
+#include "ion/PerfSpewer.h"
 
 #include "jsfuninlines.h"
 
 #include "frontend/ParseMaps-inl.h"
 #include "frontend/ParseNode-inl.h"
-
-#ifdef MOZ_VTUNE
-# include "jitprofiling.h"
-#endif
 
 using namespace js;
 using namespace js::frontend;

@@ -7,8 +7,8 @@
 #ifndef ion_x64_CodeGenerator_x64_h
 #define ion_x64_CodeGenerator_x64_h
 
-#include "ion/x64/Assembler-x64.h"
 #include "ion/shared/CodeGenerator-x86-shared.h"
+#include "ion/x64/Assembler-x64.h"
 
 namespace js {
 namespace ion {

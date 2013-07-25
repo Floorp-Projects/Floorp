@@ -4,19 +4,23 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "ion/LIR.h"
 #include "ion/Lowering.h"
-#include "ion/MIR.h"
-#include "ion/MIRGraph.h"
-#include "ion/IonSpewer.h"
-#include "ion/RangeAnalysis.h"
+
+#include "mozilla/DebugOnly.h"
+
 #include "jsanalyze.h"
 #include "jsbool.h"
 #include "jsnum.h"
-#include "ion/shared/Lowering-shared-inl.h"
-#include "mozilla/DebugOnly.h"
+
+#include "ion/IonSpewer.h"
+#include "ion/LIR.h"
+#include "ion/MIR.h"
+#include "ion/MIRGraph.h"
+#include "ion/RangeAnalysis.h"
 
 #include "jsinferinlines.h"
+
+#include "ion/shared/Lowering-shared-inl.h"
 
 using namespace js;
 using namespace ion;

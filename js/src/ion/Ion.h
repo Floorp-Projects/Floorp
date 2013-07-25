@@ -13,10 +13,10 @@
 
 #include "jscntxt.h"
 #include "jscompartment.h"
-#include "ion/IonCode.h"
-#include "ion/CompileInfo.h"
 #include "jsinfer.h"
 
+#include "ion/CompileInfo.h"
+#include "ion/IonCode.h"
 #include "vm/Interpreter.h"
 
 namespace js {
@@ -344,6 +344,14 @@ IsEnabled(JSContext *cx)
     return cx->hasOption(JSOPTION_ION) &&
         cx->hasOption(JSOPTION_BASELINE) &&
         cx->typeInferenceEnabled();
+}
+
+inline bool
+IsIonInlinablePC(jsbytecode *pc) {
+    // CALL, FUNCALL, FUNAPPLY, EVAL, NEW (Normal Callsites)
+    // GETPROP, CALLPROP, and LENGTH. (Inlined Getters)
+    // SETPROP, SETNAME, SETGNAME (Inlined Setters)
+    return IsCallPC(pc) || IsGetterPC(pc) || IsSetterPC(pc);
 }
 
 void ForbidCompilation(JSContext *cx, JSScript *script);

@@ -4,18 +4,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "ion/x86/CodeGenerator-x86.h"
+
 #include "mozilla/DebugOnly.h"
 
 #include "jsnum.h"
 
-#include "ion/x86/CodeGenerator-x86.h"
+#include "ion/ExecutionModeInlines.h"
 #include "ion/MIR.h"
 #include "ion/MIRGraph.h"
-#include "ion/shared/CodeGenerator-shared-inl.h"
 #include "vm/Shape.h"
 
 #include "jsscriptinlines.h"
-#include "ion/ExecutionModeInlines.h"
+
+#include "ion/shared/CodeGenerator-shared-inl.h"
 
 using namespace js;
 using namespace js::ion;
