@@ -7,8 +7,6 @@
 const { Loader } = require('sdk/test/loader');
 const Pages = require("sdk/page-worker");
 const Page = Pages.Page;
-const { URL } = require("sdk/url");
-const testURI = require("sdk/self").data.url("test.html");
 
 const ERR_DESTROYED =
   "Couldn't find the worker to receive this message. " +
@@ -158,23 +156,14 @@ exports.testValidateOptions = function(assert) {
 
 exports.testContentAndAllowGettersAndSetters = function(assert, done) {
   let content = "data:text/html;charset=utf-8,<script>window.localStorage.allowScript=3;</script>";
-
-  // Load up the page with testURI initially for the resource:// principal,
-  // then load the actual data:* content, as data:* URIs no longer
-  // have localStorage
   let page = Page({
-    contentURL: testURI,
-    contentScript: "if (window.location.href==='"+testURI+"')" +
-      "  self.postMessage('reload');" +
-      "else " +
-      "  self.postMessage(window.localStorage.allowScript)",
+    contentURL: content,
+    contentScript: "self.postMessage(window.localStorage.allowScript)",
     contentScriptWhen: "end",
     onMessage: step0
   });
 
   function step0(message) {
-    if (message === 'reload')
-      return page.contentURL = content;
     assert.equal(message, "3",
                      "Correct value expected for allowScript - 3");
     assert.equal(page.contentURL, content,

@@ -8150,7 +8150,11 @@ if test "${OS_TARGET}" = "WINNT"; then
   fi
 fi
 
-if test "${OS_TARGET}" = "WINNT" -o "${OS_ARCH}" = "Darwin" -o "${MOZ_WIDGET_TOOLKIT}" = "android" -o "${MOZ_WIDGET_TOOLKIT}" = "gtk2"; then
+if test "${OS_TARGET}" = "WINNT" -o \
+        "${OS_ARCH}" = "Darwin" -o \
+        "${MOZ_WIDGET_TOOLKIT}" = "android" -o \
+        "${MOZ_WIDGET_TOOLKIT}" = "gonk" -o \
+        "${MOZ_WIDGET_TOOLKIT}" = "gtk2"; then
     case "${target_cpu}" in
     i*86*|x86_64|arm)
         MOZ_ENABLE_SKIA=1

@@ -4541,6 +4541,24 @@ nsXPCComponents_Utils::GetDOMClassInfo(const nsAString& aClassName,
     return NS_ERROR_NOT_AVAILABLE;
 }
 
+NS_IMETHODIMP
+nsXPCComponents_Utils::GetWatchdogTimestamp(const nsAString& aCategory, PRTime *aOut)
+{
+    WatchdogTimestampCategory category;
+    if (aCategory.EqualsLiteral("RuntimeStateChange"))
+        category = TimestampRuntimeStateChange;
+    else if (aCategory.EqualsLiteral("WatchdogWakeup"))
+        category = TimestampWatchdogWakeup;
+    else if (aCategory.EqualsLiteral("WatchdogHibernateStart"))
+        category = TimestampWatchdogHibernateStart;
+    else if (aCategory.EqualsLiteral("WatchdogHibernateStop"))
+        category = TimestampWatchdogHibernateStop;
+    else
+        return NS_ERROR_INVALID_ARG;
+    *aOut = XPCJSRuntime::Get()->GetWatchdogTimestamp(category);
+    return NS_OK;
+}
+
 /***************************************************************************/
 /***************************************************************************/
 /***************************************************************************/

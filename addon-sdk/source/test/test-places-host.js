@@ -14,15 +14,13 @@ const { defer, all } = require('sdk/core/promise');
 const { setTimeout } = require('sdk/timers');
 const { newURI } = require('sdk/url/utils');
 const { send } = require('sdk/addon/events');
-const { set } = require('sdk/preferences/service');
-const { before, after } = require('sdk/test/utils');
 
 require('sdk/places/host/host-bookmarks');
 require('sdk/places/host/host-tags');
 require('sdk/places/host/host-query');
 const {
-  invalidResolve, invalidReject, createTree,
-  compareWithHost, createBookmark, createBookmarkTree, resetPlaces
+  invalidResolve, invalidReject, clearBookmarks, createTree,
+  compareWithHost, clearAllBookmarks, createBookmark, createBookmarkTree
 } = require('./places-helper');
 
 const bmsrv = Cc['@mozilla.org/browser/nav-bookmarks-service;1'].
@@ -31,6 +29,7 @@ const hsrv = Cc['@mozilla.org/browser/nav-history-service;1'].
               getService(Ci.nsINavHistoryService);
 const tagsrv = Cc['@mozilla.org/browser/tagging-service;1'].
               getService(Ci.nsITaggingService);
+clearAllBookmarks();
 
 exports.testBookmarksCreate = function (assert, done) {
   let items = [{
@@ -52,6 +51,7 @@ exports.testBookmarksCreate = function (assert, done) {
       compareWithHost(assert, data);
     }, invalidReject(assert));
   })).then(function () {
+    clearAllBookmarks();
     done();
   }, invalidReject(assert));
 };
@@ -72,6 +72,7 @@ exports.testBookmarksCreateFail = function (assert, done) {
       assert.ok(reason, 'bookmark create should fail');
     });
   })).then(function () {
+    clearAllBookmarks();
     done();
   });
 };
@@ -93,6 +94,7 @@ exports.testBookmarkLastUpdated = function (assert, done) {
     });
   }).then(function (data) {
     assert.ok(data.updated > timestamp, 'time has elapsed and updated the updated property');
+    clearAllBookmarks();
     done();
   });
 };
@@ -108,6 +110,7 @@ exports.testBookmarkRemove = function (assert, done) {
     assert.throws(function () {
       bmsrv.getItemTitle(id);
     }, 'item should no longer exist');
+    clearAllBookmarks();
     done();
   }, console.error);
 };
@@ -130,6 +133,7 @@ exports.testBookmarkGet = function (assert, done) {
       else
         assert.equal(bookmark[prop], data[prop], 'correctly fetched ' + prop);
     });
+    clearAllBookmarks();
     done();
   });
 };
@@ -147,6 +151,7 @@ exports.testTagsTag = function (assert, done) {
     assert.ok(~tags.indexOf('foxfire'), 'second tag found');
     assert.ok(~tags.indexOf('firefox'), 'default tag found');
     assert.equal(tags.length, 3, 'no extra tags');
+    clearAllBookmarks();
     done();
   });
 };
@@ -166,6 +171,7 @@ exports.testTagsUntag = function (assert, done) {
     assert.ok(!~tags.indexOf('firefox'), 'first tag removed');
     assert.ok(!~tags.indexOf('tag2'), 'second tag removed');
     assert.equal(tags.length, 2, 'no extra tags');
+    clearAllBookmarks();
     done();
   });
 };
@@ -180,6 +186,7 @@ exports.testTagsGetURLsByTag = function (assert, done) {
   }).then(function(urls) {
     assert.equal(item.url, urls[0], 'returned correct url');
     assert.equal(urls.length, 1, 'returned only one url');
+    clearAllBookmarks();
     done();
   });
 };
@@ -196,6 +203,7 @@ exports.testTagsGetTagsByURL = function (assert, done) {
     assert.ok(~tags.indexOf('mozilla'), 'returned second tag');
     assert.ok(~tags.indexOf('metal'), 'returned third tag');
     assert.equal(tags.length, 3, 'returned all tags');
+    clearAllBookmarks();
     done();
   });
 };
@@ -220,6 +228,7 @@ exports.testHostQuery = function (assert, done) {
   }).then(results => {
     assert.equal(results.length, 2, 'should only return two');
     assert.equal(results[0].url, 'http://firefox.com/', 'is sorted by URI desc');
+    clearAllBookmarks();
     done();
   });
 };
@@ -244,6 +253,7 @@ exports.testHostMultiQuery = function (assert, done) {
     });
   }).then(results => {
     assert.equal(results.length, 0, 'query props should be AND\'d');
+    clearAllBookmarks();
     done();
   });
 };
@@ -253,6 +263,7 @@ exports.testGetAllBookmarks = function (assert, done) {
     return send('sdk-places-bookmarks-get-all', {});
   }).then(res => {
     assert.equal(res.length, 8, 'all bookmarks returned');
+    clearAllBookmarks();
     done();
   }, console.error);
 };
@@ -265,12 +276,9 @@ exports.testGetAllChildren = function (assert, done) {
   }).then(results => {
     assert.equal(results.length, 5,
       'should return all children and folders at a single depth');
+    clearAllBookmarks();
     done();
   });
 };
-
-
-before(exports, (name, assert, done) => resetPlaces(done));
-after(exports, (name, assert, done) => resetPlaces(done));
 
 require('test').run(exports);

@@ -7,6 +7,8 @@
 #ifndef ion_shared_Lowering_shared_inl_h
 #define ion_shared_Lowering_shared_inl_h
 
+#include "ion/shared/Lowering-shared.h"
+
 #include "ion/MIR.h"
 #include "ion/MIRGraph.h"
 

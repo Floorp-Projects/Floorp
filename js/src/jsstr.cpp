@@ -98,12 +98,6 @@ str_encodeURI(JSContext *cx, unsigned argc, Value *vp);
 static JSBool
 str_encodeURI_Component(JSContext *cx, unsigned argc, Value *vp);
 
-static const uint32_t INVALID_UTF8 = UINT32_MAX;
-static const uint32_t REPLACE_UTF8 = 0xFFFD;
-
-static uint32_t
-Utf8ToOneUcs4Char(const uint8_t *utf8Buffer, int utf8Length);
-
 /*
  * Global string methods
  */
@@ -3988,39 +3982,8 @@ js::InflateString(ThreadSafeContext *cx, const char *bytes, size_t *lengthp)
     return chars;
 
   bad:
-    /*
-     * For compatibility with callers of JS_DecodeBytes we must zero lengthp
-     * on errors.
-     */
-    *lengthp = 0;
-    return NULL;
-}
-
-jschar *
-js::InflateUTF8String(JSContext *cx, const char *bytes, size_t *lengthp)
-{
-    size_t nchars;
-    jschar *chars;
-    size_t nbytes = *lengthp;
-
-    // Malformed UTF8 chars could trigger errors and hence GC
-    MaybeCheckStackRoots(cx);
-
-    if (!InflateUTF8StringToBuffer(cx, bytes, nbytes, NULL, &nchars))
-        goto bad;
-    chars = cx->pod_malloc<jschar>(nchars + 1);
-    if (!chars)
-        goto bad;
-    JS_ALWAYS_TRUE(InflateUTF8StringToBuffer(cx, bytes, nbytes, chars, &nchars));
-    *lengthp = nchars;
-    chars[nchars] = 0;
-    return chars;
-
-  bad:
-    /*
-     * For compatibility with callers of JS_DecodeBytes we must zero lengthp
-     * on errors.
-     */
+    // For compatibility with callers of JS_DecodeBytes we must zero lengthp
+    // on errors.
     *lengthp = 0;
     return NULL;
 }
@@ -4067,182 +4030,6 @@ js::InflateStringToBuffer(JSContext *maybecx, const char *src, size_t srclen,
     }
     *dstlenp = srclen;
     return JS_TRUE;
-}
-
-bool
-js::InflateUTF8StringToBufferReplaceInvalid(JSContext *cx, const char *src,
-                                            size_t srclen, jschar *dst,
-                                            size_t *dstlenp)
-{
-    mozilla::Maybe<AutoSuppressGC> suppress;
-    if (cx)
-        suppress.construct(cx);
-
-    size_t dstlen, origDstlen, offset, j, n;
-    uint32_t v;
-
-    dstlen = dst ? *dstlenp : (size_t) -1;
-    origDstlen = dstlen;
-    offset = 0;
-
-    while (srclen) {
-        v = (uint8_t) *src;
-        n = 1;
-        if (v & 0x80) {
-            while (v & (0x80 >> n))
-                n++;
-            if (n > srclen || n == 1 || n > 4) {
-                /* Incorrect length for decoding. */
-                v = REPLACE_UTF8;
-                n = 1;
-                goto appendCharacter;
-            }
-
-            /*
-             * Check for invalid second byte.
-             *
-             * @From Unicode Standard v6.2, Table 3-7 Well-Formed UTF-8 Byte Sequences.
-             */
-            if ((v == 0xE0 && ((uint8_t)src[1] & 0xE0) != 0xA0) ||  // E0 A0~BF
-                (v == 0xED && ((uint8_t)src[1] & 0xE0) != 0x80) ||  // ED 80~9F
-                (v == 0xF0 && ((uint8_t)src[1] & 0xF0) == 0x80) ||  // F0 90~BF
-                (v == 0xF4 && ((uint8_t)src[1] & 0xF0) != 0x80))    // F4 80~8F
-            {
-                v = REPLACE_UTF8;
-                n = 1;
-                goto appendCharacter;
-            }
-
-            for (j = 1; j < n; j++) {
-                if ((src[j] & 0xC0) != 0x80) {
-                    /* Invalid sub-sequence. */
-                    v = REPLACE_UTF8;
-                    n = j;
-                    goto appendCharacter;
-                }
-            }
-
-            v = Utf8ToOneUcs4Char((uint8_t *)src, n);
-            if (v >= 0x10000) {
-                v -= 0x10000;
-                if (v > 0xFFFFF || dstlen < 2) {
-                    /* Incorrect code point. */
-                    v = REPLACE_UTF8;
-                    n = 1;
-                    goto appendCharacter;
-                }
-                if (dst) {
-                    *dst++ = (jschar)((v >> 10) + 0xD800);
-                    v = (jschar)((v & 0x3FF) + 0xDC00);
-                }
-                dstlen--;
-            }
-        }
-appendCharacter:
-        if (!dstlen)
-            goto bufferTooSmall;
-        if (dst)
-            *dst++ = (jschar) v;
-        dstlen--;
-        offset += n;
-        src += n;
-        srclen -= n;
-    }
-    *dstlenp = (origDstlen - dstlen);
-    return true;
-
-bufferTooSmall:
-    *dstlenp = (origDstlen - dstlen);
-    if (cx) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                             JSMSG_BUFFER_TOO_SMALL);
-    }
-    return false;
-}
-
-bool
-js::InflateUTF8StringToBuffer(JSContext *cx, const char *src, size_t srclen,
-                              jschar *dst, size_t *dstlenp)
-{
-    mozilla::Maybe<AutoSuppressGC> suppress;
-    if (cx)
-        suppress.construct(cx);
-
-    size_t dstlen, origDstlen, offset, j, n;
-    uint32_t v;
-
-    dstlen = dst ? *dstlenp : (size_t) -1;
-    origDstlen = dstlen;
-    offset = 0;
-
-    while (srclen) {
-        v = (uint8_t) *src;
-        n = 1;
-        if (v & 0x80) {
-            while (v & (0x80 >> n))
-                n++;
-            if (n > srclen)
-                goto bufferTooSmall;
-            if (n == 1 || n > 4)
-                goto badCharacter;
-            for (j = 1; j < n; j++) {
-                if ((src[j] & 0xC0) != 0x80)
-                    goto badCharacter;
-            }
-            v = Utf8ToOneUcs4Char((uint8_t *)src, n);
-            if (v >= 0x10000) {
-                v -= 0x10000;
-                if (v > 0xFFFFF || dstlen < 2) {
-                    *dstlenp = (origDstlen - dstlen);
-                    if (cx) {
-                        char buffer[10];
-                        JS_snprintf(buffer, 10, "0x%x", v + 0x10000);
-                        JS_ReportErrorFlagsAndNumber(cx,
-                                                     JSREPORT_ERROR,
-                                                     js_GetErrorMessage, NULL,
-                                                     JSMSG_UTF8_CHAR_TOO_LARGE,
-                                                     buffer);
-                    }
-                    return JS_FALSE;
-                }
-                if (dst) {
-                    *dst++ = (jschar)((v >> 10) + 0xD800);
-                    v = (jschar)((v & 0x3FF) + 0xDC00);
-                }
-                dstlen--;
-            }
-        }
-        if (!dstlen)
-            goto bufferTooSmall;
-        if (dst)
-            *dst++ = (jschar) v;
-        dstlen--;
-        offset += n;
-        src += n;
-        srclen -= n;
-    }
-    *dstlenp = (origDstlen - dstlen);
-    return JS_TRUE;
-
-badCharacter:
-    *dstlenp = (origDstlen - dstlen);
-    if (cx) {
-        char buffer[10];
-        JS_snprintf(buffer, 10, "%d", offset);
-        JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR,
-                                     js_GetErrorMessage, NULL,
-                                     JSMSG_MALFORMED_UTF8_CHAR,
-                                     buffer);
-    }
-    return JS_FALSE;
-
-bufferTooSmall:
-    *dstlenp = (origDstlen - dstlen);
-    if (cx) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                             JSMSG_BUFFER_TOO_SMALL);
-    }
-    return JS_FALSE;
 }
 
 #define ____ false
@@ -4504,7 +4291,7 @@ Decode(JSContext *cx, Handle<JSLinearString*> str, const bool *reservedSet, Muta
                     k += 2;
                     octets[j] = (char)B;
                 }
-                uint32_t v = Utf8ToOneUcs4Char(octets, n);
+                uint32_t v = JS::Utf8ToOneUcs4Char(octets, n);
                 if (v >= 0x10000) {
                     v -= 0x10000;
                     if (v > 0xFFFFF)
@@ -4611,39 +4398,6 @@ js_OneUcs4ToUtf8Char(uint8_t *utf8Buffer, uint32_t ucs4Char)
         *utf8Buffer = (uint8_t)(0x100 - (1 << (8-utf8Length)) + ucs4Char);
     }
     return utf8Length;
-}
-
-/*
- * Convert a utf8 character sequence into a UCS-4 character and return that
- * character.  It is assumed that the caller already checked that the sequence
- * is valid.
- */
-static uint32_t
-Utf8ToOneUcs4Char(const uint8_t *utf8Buffer, int utf8Length)
-{
-    JS_ASSERT(1 <= utf8Length && utf8Length <= 4);
-
-    if (utf8Length == 1) {
-        JS_ASSERT(!(*utf8Buffer & 0x80));
-        return *utf8Buffer;
-    }
-
-    /* from Unicode 3.1, non-shortest form is illegal */
-    static const uint32_t minucs4Table[] = { 0x80, 0x800, 0x10000 };
-
-    JS_ASSERT((*utf8Buffer & (0x100 - (1 << (7 - utf8Length)))) ==
-              (0x100 - (1 << (8 - utf8Length))));
-    uint32_t ucs4Char = *utf8Buffer++ & ((1 << (7 - utf8Length)) - 1);
-    uint32_t minucs4Char = minucs4Table[utf8Length - 2];
-    while (--utf8Length) {
-        JS_ASSERT((*utf8Buffer & 0xC0) == 0x80);
-        ucs4Char = (ucs4Char << 6) | (*utf8Buffer++ & 0x3F);
-    }
-
-    if (JS_UNLIKELY(ucs4Char < minucs4Char || (ucs4Char >= 0xD800 && ucs4Char <= 0xDFFF)))
-        return INVALID_UTF8;
-
-    return ucs4Char;
 }
 
 size_t

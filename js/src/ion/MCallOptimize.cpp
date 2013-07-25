@@ -6,12 +6,12 @@
 
 #include "jslibmath.h"
 #include "jsmath.h"
+
 #include "builtin/ParallelArray.h"
 #include "builtin/TestingFunctions.h"
-
+#include "ion/IonBuilder.h"
 #include "ion/MIR.h"
 #include "ion/MIRGraph.h"
-#include "ion/IonBuilder.h"
 
 #include "jsscriptinlines.h"
 
