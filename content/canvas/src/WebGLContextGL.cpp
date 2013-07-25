@@ -1374,12 +1374,12 @@ WebGLContext::DrawArrays(GLenum mode, WebGLint first, WebGLsizei count)
     if (!ValidateBuffers(&maxAllowedCount, "drawArrays"))
         return;
 
-    CheckedUint32 checked_firstPlusCount = CheckedUint32(first) + count;
+    CheckedInt<GLsizei> checked_firstPlusCount = CheckedInt<GLsizei>(first) + count;
 
     if (!checked_firstPlusCount.isValid())
         return ErrorInvalidOperation("drawArrays: overflow in first+count");
 
-    if (checked_firstPlusCount.value() > maxAllowedCount)
+    if (uint32_t(checked_firstPlusCount.value()) > maxAllowedCount)
         return ErrorInvalidOperation("drawArrays: bound vertex attribute buffers do not have sufficient size for given first and count");
 
     MakeContextCurrent();
@@ -1472,12 +1472,12 @@ WebGLContext::DrawElements(WebGLenum mode, WebGLsizei count, WebGLenum type,
     if (!mBoundVertexArray->mBoundElementArrayBuffer->ByteLength())
         return ErrorInvalidOperation("drawElements: bound element array buffer doesn't have any data");
 
-    CheckedUint32 checked_neededByteCount = checked_byteCount + byteOffset;
+    CheckedInt<GLsizei> checked_neededByteCount = checked_byteCount.toChecked<GLsizei>() + byteOffset;
 
     if (!checked_neededByteCount.isValid())
         return ErrorInvalidOperation("drawElements: overflow in byteOffset+byteCount");
 
-    if (checked_neededByteCount.value() > mBoundVertexArray->mBoundElementArrayBuffer->ByteLength())
+    if (uint32_t(checked_neededByteCount.value()) > mBoundVertexArray->mBoundElementArrayBuffer->ByteLength())
         return ErrorInvalidOperation("drawElements: bound element array buffer is too small for given count and offset");
 
     uint32_t maxAllowedCount = 0;
