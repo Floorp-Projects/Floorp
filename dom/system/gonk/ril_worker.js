@@ -4896,12 +4896,6 @@ RIL[REQUEST_SIGNAL_STRENGTH] = function REQUEST_SIGNAL_STRENGTH(length, options)
   if (DEBUG) debug("Signal strength " + JSON.stringify(obj));
   obj.rilMessageType = "signalstrengthchange";
   this.sendChromeMessage(obj);
-
-  if (this.cachedDialRequest && obj.gsmDBM && obj.gsmRelative) {
-    // Radio is ready for making the cached emergency call.
-    this.cachedDialRequest.callback();
-    this.cachedDialRequest = null;
-  }
 };
 RIL[REQUEST_VOICE_REGISTRATION_STATE] = function REQUEST_VOICE_REGISTRATION_STATE(length, options) {
   this._receivedNetworkInfo(NETWORK_INFO_VOICE_REGISTRATION_STATE);
@@ -4914,6 +4908,15 @@ RIL[REQUEST_VOICE_REGISTRATION_STATE] = function REQUEST_VOICE_REGISTRATION_STAT
   if (DEBUG) debug("voice registration state: " + state);
 
   this._processVoiceRegistrationState(state);
+
+  if (this.cachedDialRequest &&
+       (this.voiceRegistrationState.emergencyCallsOnly ||
+        this.voiceRegistrationState.connected) &&
+      this.voiceRegistrationState.radioTech != NETWORK_CREG_TECH_UNKNOWN) {
+    // Radio is ready for making the cached emergency call.
+    this.cachedDialRequest.callback();
+    this.cachedDialRequest = null;
+  }
 };
 RIL[REQUEST_DATA_REGISTRATION_STATE] = function REQUEST_DATA_REGISTRATION_STATE(length, options) {
   this._receivedNetworkInfo(NETWORK_INFO_DATA_REGISTRATION_STATE);
