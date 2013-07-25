@@ -163,7 +163,7 @@ public:
   }
 
   already_AddRefed<MediaStreamAudioSourceNode>
-  CreateMediaStreamSource(const DOMMediaStream& aMediaStream, ErrorResult& aRv);
+  CreateMediaStreamSource(DOMMediaStream& aMediaStream, ErrorResult& aRv);
 
   already_AddRefed<DelayNode>
   CreateDelay(double aMaxDelayTime, ErrorResult& aRv);
