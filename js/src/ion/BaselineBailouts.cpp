@@ -9,9 +9,10 @@
 #include "ion/BaselineJIT.h"
 #include "ion/CompileInfo.h"
 #include "ion/IonSpewer.h"
-#include "ion/IonFrames-inl.h"
 
 #include "jsfuninlines.h"
+
+#include "ion/IonFrames-inl.h"
 
 using namespace js;
 using namespace js::ion;

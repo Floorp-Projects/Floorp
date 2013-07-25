@@ -12,8 +12,8 @@
 #include "frontend/SourceNotes.h"
 #include "ion/BaselineFrame.h"
 #include "ion/BaselineInspector.h"
+#include "ion/ExecutionModeInlines.h"
 #include "ion/Ion.h"
-#include "ion/IonAnalysis.h"
 #include "ion/IonAnalysis.h"
 #include "ion/IonSpewer.h"
 #include "ion/Lowering.h"
@@ -24,7 +24,6 @@
 #include "jsscriptinlines.h"
 
 #include "ion/CompileInfo-inl.h"
-#include "ion/ExecutionModeInlines.h"
 
 using namespace js;
 using namespace js::ion;
