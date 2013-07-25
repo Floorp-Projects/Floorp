@@ -349,6 +349,11 @@ class MDefinition : public MNode
         return trackedPc_;
     }
 
+    // Warning: Range analysis is removing the bit-operations such as '| 0' at
+    // the end of the transformations. Using this function to analyse any
+    // operands after the truncate phase of the range analysis will lead to
+    // errors. Instead, one should define the collectRangeInfo() to set the
+    // right set of flags which are dependent on the range of the inputs.
     Range *range() const {
         return range_;
     }
@@ -371,8 +376,11 @@ class MDefinition : public MNode
     bool earlyAbortCheck();
 
     // Compute an absolute or symbolic range for the value of this node.
-    // Ranges are only computed for definitions whose type is int32.
     virtual void computeRange() {
+    }
+
+    // Collect information from the truncated ranges.
+    virtual void collectRangeInfo() {
     }
 
     MNode::Kind kind() const {
@@ -1231,22 +1239,21 @@ class MNewObject : public MNullaryInstruction
 };
 
 // Could be allocating either a new array or a new object.
-class MParNew : public MUnaryInstruction
+class MNewPar : public MUnaryInstruction
 {
     CompilerRootObject templateObject_;
 
   public:
-    INSTRUCTION_HEADER(ParNew);
+    INSTRUCTION_HEADER(NewPar);
 
-    MParNew(MDefinition *parSlice,
-            JSObject *templateObject)
-      : MUnaryInstruction(parSlice),
+    MNewPar(MDefinition *slice, JSObject *templateObject)
+      : MUnaryInstruction(slice),
         templateObject_(templateObject)
     {
         setResultType(MIRType_Object);
     }
 
-    MDefinition *parSlice() const {
+    MDefinition *forkJoinSlice() const {
         return getOperand(0);
     }
 
@@ -1255,13 +1262,13 @@ class MParNew : public MUnaryInstruction
     }
 };
 
-// Could be allocating either a new array or a new object.
-class MParBailout : public MAryControlInstruction<0, 0>
+// Abort parallel execution.
+class MAbortPar : public MAryControlInstruction<0, 0>
 {
   public:
-    INSTRUCTION_HEADER(ParBailout);
+    INSTRUCTION_HEADER(AbortPar);
 
-    MParBailout()
+    MAbortPar()
       : MAryControlInstruction<0, 0>()
     {
         setResultType(MIRType_Undefined);
@@ -3474,10 +3481,12 @@ class MDiv : public MBinaryArithInstruction
 class MMod : public MBinaryArithInstruction
 {
     bool unsigned_;
+    bool canBeNegativeDividend_;
 
     MMod(MDefinition *left, MDefinition *right, MIRType type)
       : MBinaryArithInstruction(left, right),
-        unsigned_(false)
+        unsigned_(false),
+        canBeNegativeDividend_(true)
     {
         if (type != MIRType_Value)
             specialization_ = type;
@@ -3502,7 +3511,10 @@ class MMod : public MBinaryArithInstruction
         MOZ_ASSUME_UNREACHABLE("not used");
     }
 
-    bool canBeNegativeDividend() const;
+    bool canBeNegativeDividend() const {
+        JS_ASSERT(specialization_ == MIRType_Int32);
+        return canBeNegativeDividend_;
+    }
     bool canBeDivideByZero() const;
     bool canBePowerOfTwoDivisor() const;
 
@@ -3514,6 +3526,7 @@ class MMod : public MBinaryArithInstruction
 
     void computeRange();
     bool truncate();
+    void collectRangeInfo();
 };
 
 class MConcat
@@ -3544,29 +3557,29 @@ class MConcat
     }
 };
 
-class MParConcat
+class MConcatPar
   : public MTernaryInstruction,
     public MixPolicy<StringPolicy<1>, StringPolicy<2> >
 {
-    MParConcat(MDefinition *parSlice, MDefinition *left, MDefinition *right)
-      : MTernaryInstruction(parSlice, left, right)
+    MConcatPar(MDefinition *slice, MDefinition *left, MDefinition *right)
+      : MTernaryInstruction(slice, left, right)
     {
         setMovable();
         setResultType(MIRType_String);
     }
 
   public:
-    INSTRUCTION_HEADER(ParConcat)
+    INSTRUCTION_HEADER(ConcatPar)
 
-    static MParConcat *New(MDefinition *parSlice, MDefinition *left, MDefinition *right) {
-        return new MParConcat(parSlice, left, right);
+    static MConcatPar *New(MDefinition *slice, MDefinition *left, MDefinition *right) {
+        return new MConcatPar(slice, left, right);
     }
 
-    static MParConcat *New(MDefinition *parSlice, MConcat *concat) {
-        return New(parSlice, concat->lhs(), concat->rhs());
+    static MConcatPar *New(MDefinition *slice, MConcat *concat) {
+        return New(slice, concat->lhs(), concat->rhs());
     }
 
-    MDefinition *parSlice() const {
+    MDefinition *forkJoinSlice() const {
         return getOperand(0);
     }
     MDefinition *lhs() const {
@@ -3851,39 +3864,39 @@ class MCheckOverRecursed : public MNullaryInstruction
 
 // Check the current frame for over-recursion past the global stack limit.
 // Uses the per-thread recursion limit.
-class MParCheckOverRecursed : public MUnaryInstruction
+class MCheckOverRecursedPar : public MUnaryInstruction
 {
   public:
-    INSTRUCTION_HEADER(ParCheckOverRecursed);
+    INSTRUCTION_HEADER(CheckOverRecursedPar);
 
-    MParCheckOverRecursed(MDefinition *parForkJoinSlice)
-      : MUnaryInstruction(parForkJoinSlice)
+    MCheckOverRecursedPar(MDefinition *slice)
+      : MUnaryInstruction(slice)
     {
         setResultType(MIRType_None);
         setGuard();
         setMovable();
     }
 
-    MDefinition *parSlice() const {
+    MDefinition *forkJoinSlice() const {
         return getOperand(0);
     }
 };
 
 // Check for an interrupt (or rendezvous) in parallel mode.
-class MParCheckInterrupt : public MUnaryInstruction
+class MCheckInterruptPar : public MUnaryInstruction
 {
   public:
-    INSTRUCTION_HEADER(ParCheckInterrupt);
+    INSTRUCTION_HEADER(CheckInterruptPar);
 
-    MParCheckInterrupt(MDefinition *parForkJoinSlice)
-      : MUnaryInstruction(parForkJoinSlice)
+    MCheckInterruptPar(MDefinition *slice)
+      : MUnaryInstruction(slice)
     {
         setResultType(MIRType_None);
         setGuard();
         setMovable();
     }
 
-    MDefinition *parSlice() const {
+    MDefinition *forkJoinSlice() const {
         return getOperand(0);
     }
 };
@@ -4059,15 +4072,14 @@ class MLambda
     }
 };
 
-class MParLambda
+class MLambdaPar
   : public MBinaryInstruction,
     public SingleObjectPolicy
 {
     CompilerRootFunction fun_;
 
-    MParLambda(MDefinition *parSlice,
-               MDefinition *scopeChain, JSFunction *fun)
-      : MBinaryInstruction(parSlice, scopeChain), fun_(fun)
+    MLambdaPar(MDefinition *slice, MDefinition *scopeChain, JSFunction *fun)
+      : MBinaryInstruction(slice, scopeChain), fun_(fun)
     {
         JS_ASSERT(!fun->hasSingletonType());
         JS_ASSERT(!types::UseNewTypeForClone(fun));
@@ -4076,21 +4088,17 @@ class MParLambda
     }
 
   public:
-    INSTRUCTION_HEADER(ParLambda);
+    INSTRUCTION_HEADER(LambdaPar);
 
-    static MParLambda *New(MDefinition *parSlice,
-                           MDefinition *scopeChain, JSFunction *fun) {
-        return new MParLambda(parSlice, scopeChain, fun);
+    static MLambdaPar *New(MDefinition *slice, MDefinition *scopeChain, JSFunction *fun) {
+        return new MLambdaPar(slice, scopeChain, fun);
     }
 
-    static MParLambda *New(MDefinition *parSlice,
-                           MLambda *originalInstruction) {
-        return New(parSlice,
-                   originalInstruction->scopeChain(),
-                   originalInstruction->fun());
+    static MLambdaPar *New(MDefinition *slice, MLambda *lambda) {
+        return New(slice, lambda->scopeChain(), lambda->fun());
     }
 
-    MDefinition *parSlice() const {
+    MDefinition *forkJoinSlice() const {
         return getOperand(0);
     }
 
@@ -6305,17 +6313,17 @@ class MFunctionEnvironment
 
 // Loads the current js::ForkJoinSlice*.
 // Only applicable in ParallelExecution.
-class MParSlice
+class MForkJoinSlice
   : public MNullaryInstruction
 {
   public:
-    MParSlice()
+    MForkJoinSlice()
         : MNullaryInstruction()
     {
         setResultType(MIRType_ForkJoinSlice);
     }
 
-    INSTRUCTION_HEADER(ParSlice);
+    INSTRUCTION_HEADER(ForkJoinSlice);
 
     AliasSet getAliasSet() const {
         // Indicate that this instruction reads nothing, stores nothing.
@@ -7108,12 +7116,14 @@ class MInArray
     public ObjectPolicy<3>
 {
     bool needsHoleCheck_;
+    bool needsNegativeIntCheck_;
 
     MInArray(MDefinition *elements, MDefinition *index,
              MDefinition *initLength, MDefinition *object,
              bool needsHoleCheck)
       : MQuaternaryInstruction(elements, index, initLength, object),
-        needsHoleCheck_(needsHoleCheck)
+        needsHoleCheck_(needsHoleCheck),
+        needsNegativeIntCheck_(true)
     {
         setResultType(MIRType_Boolean);
         setMovable();
@@ -7147,13 +7157,17 @@ class MInArray
     bool needsHoleCheck() const {
         return needsHoleCheck_;
     }
-    bool needsNegativeIntCheck() const;
+    bool needsNegativeIntCheck() const {
+        return needsNegativeIntCheck_;
+    }
+    void collectRangeInfo();
     AliasSet getAliasSet() const {
         return AliasSet::Load(AliasSet::Element);
     }
     TypePolicy *typePolicy() {
         return this;
     }
+
 };
 
 // Implementation for instanceof operator with specific rhs.
@@ -7311,14 +7325,14 @@ class MRest
     }
 };
 
-class MParRest
+class MRestPar
   : public MBinaryInstruction,
     public MRestCommon,
     public IntPolicy<1>
 {
-    MParRest(MDefinition *parSlice, MDefinition *numActuals, unsigned numFormals,
+    MRestPar(MDefinition *slice, MDefinition *numActuals, unsigned numFormals,
              JSObject *templateObject)
-      : MBinaryInstruction(parSlice, numActuals),
+      : MBinaryInstruction(slice, numActuals),
         MRestCommon(numFormals, templateObject)
     {
         setResultType(MIRType_Object);
@@ -7326,17 +7340,18 @@ class MParRest
     }
 
   public:
-    INSTRUCTION_HEADER(ParRest);
+    INSTRUCTION_HEADER(RestPar);
 
-    static MParRest *New(MDefinition *parSlice, MDefinition *numActuals, unsigned numFormals,
+    static MRestPar *New(MDefinition *slice, MDefinition *numActuals, unsigned numFormals,
                          JSObject *templateObject) {
-        return new MParRest(parSlice, numActuals, numFormals, templateObject);
+        return new MRestPar(slice, numActuals, numFormals, templateObject);
     }
-    static MParRest *New(MDefinition *parSlice, MRest *rest) {
-        return new MParRest(parSlice, rest->numActuals(), rest->numFormals(), rest->templateObject());
+    static MRestPar *New(MDefinition *slice, MRest *rest) {
+        return new MRestPar(slice, rest->numActuals(), rest->numFormals(),
+                            rest->templateObject());
     }
 
-    MDefinition *parSlice() const {
+    MDefinition *forkJoinSlice() const {
         return getOperand(0);
     }
     MDefinition *numActuals() const {
@@ -7351,13 +7366,13 @@ class MParRest
     }
 };
 
-class MParWriteGuard
+// Guard on an object being allocated in the current slice.
+class MGuardThreadLocalObject
   : public MBinaryInstruction,
     public ObjectPolicy<1>
 {
-    MParWriteGuard(MDefinition *parThreadContext,
-                   MDefinition *obj)
-      : MBinaryInstruction(parThreadContext, obj)
+    MGuardThreadLocalObject(MDefinition *slice, MDefinition *obj)
+      : MBinaryInstruction(slice, obj)
     {
         setResultType(MIRType_None);
         setGuard();
@@ -7365,12 +7380,12 @@ class MParWriteGuard
     }
 
   public:
-    INSTRUCTION_HEADER(ParWriteGuard);
+    INSTRUCTION_HEADER(GuardThreadLocalObject);
 
-    static MParWriteGuard *New(MDefinition *parThreadContext, MDefinition *obj) {
-        return new MParWriteGuard(parThreadContext, obj);
+    static MGuardThreadLocalObject *New(MDefinition *slice, MDefinition *obj) {
+        return new MGuardThreadLocalObject(slice, obj);
     }
-    MDefinition *parSlice() const {
+    MDefinition *forkJoinSlice() const {
         return getOperand(0);
     }
     MDefinition *object() const {
@@ -7381,28 +7396,6 @@ class MParWriteGuard
     }
     AliasSet getAliasSet() const {
         return AliasSet::None();
-    }
-};
-
-class MParDump
-  : public MUnaryInstruction,
-    public BoxPolicy<0>
-{
-  public:
-    INSTRUCTION_HEADER(ParDump);
-
-    MParDump(MDefinition *v)
-      : MUnaryInstruction(v)
-    {
-        setResultType(MIRType_None);
-    }
-
-    MDefinition *value() const {
-        return getOperand(0);
-    }
-
-    TypePolicy *typePolicy() {
-        return this;
     }
 };
 
@@ -7606,35 +7599,31 @@ class MNewCallObject : public MUnaryInstruction
     }
 };
 
-class MParNewCallObject : public MBinaryInstruction
+class MNewCallObjectPar : public MBinaryInstruction
 {
     CompilerRootObject templateObj_;
 
-    MParNewCallObject(MDefinition *parSlice,
-                      JSObject *templateObj, MDefinition *slots)
-        : MBinaryInstruction(parSlice, slots),
+    MNewCallObjectPar(MDefinition *slice, JSObject *templateObj, MDefinition *slots)
+        : MBinaryInstruction(slice, slots),
           templateObj_(templateObj)
     {
         setResultType(MIRType_Object);
     }
 
   public:
-    INSTRUCTION_HEADER(ParNewCallObject);
+    INSTRUCTION_HEADER(NewCallObjectPar);
 
-    static MParNewCallObject *New(MDefinition *parSlice,
-                                  JSObject *templateObj,
-                                  MDefinition *slots) {
-        return new MParNewCallObject(parSlice, templateObj, slots);
+    static MNewCallObjectPar *New(MDefinition *slice, JSObject *templateObj,
+                                  MDefinition *slots)
+    {
+        return new MNewCallObjectPar(slice, templateObj, slots);
     }
 
-    static MParNewCallObject *New(MDefinition *parSlice,
-                                  MNewCallObject *originalInstruction) {
-        return New(parSlice,
-                   originalInstruction->templateObject(),
-                   originalInstruction->slots());
+    static MNewCallObjectPar *New(MDefinition *slice, MNewCallObject *callObj) {
+        return New(slice, callObj->templateObject(), callObj->slots());
     }
 
-    MDefinition *parSlice() const {
+    MDefinition *forkJoinSlice() const {
         return getOperand(0);
     }
 
@@ -7755,23 +7744,21 @@ class MEnclosingScope : public MLoadFixedSlot
 // Creates a dense array of the given length.
 //
 // Note: the template object should be an *empty* dense array!
-class MParNewDenseArray : public MBinaryInstruction
+class MNewDenseArrayPar : public MBinaryInstruction
 {
     CompilerRootObject templateObject_;
 
   public:
-    INSTRUCTION_HEADER(ParNewDenseArray);
+    INSTRUCTION_HEADER(NewDenseArrayPar);
 
-    MParNewDenseArray(MDefinition *parSlice,
-                      MDefinition *length,
-                      JSObject *templateObject)
-      : MBinaryInstruction(parSlice, length),
+    MNewDenseArrayPar(MDefinition *slice, MDefinition *length, JSObject *templateObject)
+      : MBinaryInstruction(slice, length),
         templateObject_(templateObject)
     {
         setResultType(MIRType_Object);
     }
 
-    MDefinition *parSlice() const {
+    MDefinition *forkJoinSlice() const {
         return getOperand(0);
     }
 

@@ -567,7 +567,8 @@
           </vbox>
           <cssthrobber id="sync-connected-throbber"
                        class="syncThrobber"
-                       collapsed="true" />
+                       collapsed="true"
+                       disabled="true" />
         </hbox>
         <label id="sync-disconnect-label"
                class="text-link"

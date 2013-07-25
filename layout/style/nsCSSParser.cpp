@@ -604,6 +604,10 @@ protected:
   /* Functions for transform-origin/perspective-origin Parsing */
   bool ParseTransformOrigin(bool aPerspective);
 
+  /* Functions for filter parsing */
+  bool ParseFilter();
+  bool ParseSingleFilter(nsCSSValue* aValue);
+
   /* Find and return the namespace ID associated with aPrefix.
      If aPrefix has not been declared in an @namespace rule, returns
      kNameSpaceID_Unknown. */
@@ -6470,6 +6474,8 @@ CSSParserImpl::ParsePropertyByFunction(nsCSSProperty aPropID)
     return ParseCounterData(aPropID);
   case eCSSProperty_cursor:
     return ParseCursor();
+  case eCSSProperty_filter:
+    return ParseFilter();
   case eCSSProperty_flex:
     return ParseFlex();
   case eCSSProperty_font:
@@ -10029,6 +10035,144 @@ bool CSSParserImpl::ParseTransformOrigin(bool aPerspective)
 
     AppendValue(prop, value);
   }
+  return true;
+}
+
+/**
+ * Reads a single url or filter function from the tokenizer stream, reporting an
+ * error if something goes wrong.
+ */
+bool
+CSSParserImpl::ParseSingleFilter(nsCSSValue* aValue)
+{
+  if (ParseVariant(*aValue, VARIANT_URL, nullptr)) {
+    return true;
+  }
+
+  if (!nsLayoutUtils::CSSFiltersEnabled()) {
+    // With CSS Filters disabled, we should only accept an SVG reference filter.
+    REPORT_UNEXPECTED_TOKEN(PEExpectedNoneOrURL);
+    return false;
+  }
+
+  if (!GetToken(true)) {
+    REPORT_UNEXPECTED_EOF(PEFilterEOF);
+    return false;
+  }
+
+  if (mToken.mType != eCSSToken_Function) {
+    REPORT_UNEXPECTED_TOKEN(PEExpectedNoneOrURLOrFilterFunction);
+    return false;
+  }
+
+  // Set up the parsing rules based on the filter function.
+  int32_t variantMask = VARIANT_PN;
+  bool rejectNegativeArgument = true;
+  bool clampArgumentToOne = false;
+  nsCSSKeyword functionName = nsCSSKeywords::LookupKeyword(mToken.mIdent);
+  switch (functionName) {
+    case eCSSKeyword_blur:
+      variantMask = VARIANT_LCALC | VARIANT_NONNEGATIVE_DIMENSION;
+      // VARIANT_NONNEGATIVE_DIMENSION will already reject negative lengths.
+      rejectNegativeArgument = false;
+      break;
+    case eCSSKeyword_grayscale:
+    case eCSSKeyword_invert:
+    case eCSSKeyword_sepia:
+    case eCSSKeyword_opacity:
+      clampArgumentToOne = true;
+      break;
+    case eCSSKeyword_brightness:
+    case eCSSKeyword_contrast:
+    case eCSSKeyword_saturate:
+      break;
+    default:
+      // Unrecognized filter function.
+      REPORT_UNEXPECTED_TOKEN(PEExpectedNoneOrURLOrFilterFunction);
+      SkipUntil(')');
+      return false;
+  }
+
+  // Parse the function.
+  uint16_t minElems = 1U;
+  uint16_t maxElems = 1U;
+  uint32_t allVariants = 0;
+  if (!ParseFunction(functionName, &variantMask, allVariants,
+                     minElems, maxElems, *aValue)) {
+    REPORT_UNEXPECTED(PEFilterFunctionArgumentsParsingError);
+    return false;
+  }
+
+  // Get the first and only argument to the filter function.
+  NS_ABORT_IF_FALSE(aValue->GetUnit() == eCSSUnit_Function,
+                    "expected a filter function");
+  NS_ABORT_IF_FALSE(aValue->UnitHasArrayValue(),
+                    "filter function should be an array");
+  NS_ABORT_IF_FALSE(aValue->GetArrayValue()->Count() == 2,
+                    "filter function should have exactly one argument");
+  nsCSSValue& arg = aValue->GetArrayValue()->Item(1);
+
+  if (rejectNegativeArgument &&
+      ((arg.GetUnit() == eCSSUnit_Percent && arg.GetPercentValue() < 0.0f) ||
+       (arg.GetUnit() == eCSSUnit_Number && arg.GetFloatValue() < 0.0f))) {
+    REPORT_UNEXPECTED(PEExpectedNonnegativeNP);
+    return false;
+  }
+
+  if (clampArgumentToOne) {
+    if (arg.GetUnit() == eCSSUnit_Number &&
+        arg.GetFloatValue() > 1.0f) {
+      arg.SetFloatValue(1.0f, arg.GetUnit());
+    } else if (arg.GetUnit() == eCSSUnit_Percent &&
+               arg.GetPercentValue() > 1.0f) {
+      arg.SetPercentValue(1.0f);
+    }
+  }
+
+  return true;
+}
+
+/**
+ * Parses a filter property value by continuously reading in urls and/or filter
+ * functions and constructing a list.
+ *
+ * When CSS Filters are enabled, the filter property accepts one or more SVG
+ * reference filters and/or CSS filter functions.
+ * e.g. filter: url(#my-filter-1) blur(3px) url(#my-filter-2) grayscale(50%);
+ *
+ * When CSS Filters are disabled, the filter property only accepts one SVG
+ * reference filter.
+ * e.g. filter: url(#my-filter);
+ */
+bool
+CSSParserImpl::ParseFilter()
+{
+  nsCSSValue value;
+  if (ParseVariant(value, VARIANT_INHERIT | VARIANT_NONE, nullptr)) {
+    // 'inherit', 'initial', and 'none' must be alone
+    if (!ExpectEndProperty()) {
+      return false;
+    }
+  } else {
+    nsCSSValueList* cur = value.SetListValue();
+    while (cur) {
+      if (!ParseSingleFilter(&cur->mValue)) {
+        return false;
+      }
+      if (CheckEndProperty()) {
+        break;
+      }
+      if (!nsLayoutUtils::CSSFiltersEnabled()) {
+        // With CSS Filters disabled, we should only accept one SVG reference
+        // filter.
+        REPORT_UNEXPECTED_TOKEN(PEExpectEndValue);
+        return false;
+      }
+      cur->mNext = new nsCSSValueList;
+      cur = cur->mNext;
+    }
+  }
+  AppendValue(eCSSProperty_filter, value);
   return true;
 }
 
