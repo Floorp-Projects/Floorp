@@ -237,7 +237,11 @@ let Activities = {
             "target": result.description
           },
           Services.io.newURI(result.description.href, null, null),
-          Services.io.newURI(result.manifest, null, null));
+          Services.io.newURI(result.manifest, null, null),
+          {
+            "manifestURL": Activities.callers[aMsg.id].manifestURL,
+            "pageURL": Activities.callers[aMsg.id].pageURL
+          });
 
         if (!result.description.returnValue) {
           Activities.callers[aMsg.id].mm.sendAsyncMessage("Activity:FireSuccess", {
