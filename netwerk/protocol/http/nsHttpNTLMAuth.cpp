@@ -364,7 +364,11 @@ nsHttpNTLMAuth::GenerateCredentials(nsIHttpAuthenticableChannel *authChannel,
         serviceName.AppendLiteral("HTTP@");
         serviceName.Append(host);
         // initialize auth module
-        rv = module->Init(serviceName.get(), nsIAuthModule::REQ_DEFAULT, domain, user, pass);
+        uint32_t reqFlags = nsIAuthModule::REQ_DEFAULT;
+        if (isProxyAuth)
+            reqFlags |= nsIAuthModule::REQ_PROXY_AUTH;
+
+        rv = module->Init(serviceName.get(), reqFlags, domain, user, pass);
         if (NS_FAILED(rv))
             return rv;
 
