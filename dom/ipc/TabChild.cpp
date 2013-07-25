@@ -744,8 +744,10 @@ NS_IMPL_RELEASE(TabChild)
 NS_IMETHODIMP
 TabChild::SetStatus(uint32_t aStatusType, const PRUnichar* aStatus)
 {
-  // FIXME/bug 617804: should the platform support this?
-  return NS_OK;
+  return SetStatusWithContext(aStatusType,
+      aStatus ? static_cast<const nsString &>(nsDependentString(aStatus))
+              : EmptyString(),
+      nullptr);
 }
 
 NS_IMETHODIMP
@@ -820,10 +822,13 @@ TabChild::ExitModalEventLoop(nsresult aStatus)
 
 NS_IMETHODIMP
 TabChild::SetStatusWithContext(uint32_t aStatusType,
-                                    const nsAString& aStatusText,
-                                    nsISupports* aStatusContext)
+                               const nsAString& aStatusText,
+                               nsISupports* aStatusContext)
 {
-  // FIXME/bug 617804: should the platform support this?
+  // We can only send the status after the ipc machinery is set up,
+  // mRemoteFrame is a good indicator.
+  if (mRemoteFrame)
+    SendSetStatus(aStatusType, nsString(aStatusText));
   return NS_OK;
 }
 
