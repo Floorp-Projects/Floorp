@@ -146,10 +146,6 @@ IonBuilder::inlineNativeCall(CallInfo &callInfo, JSNative native)
         return inlineHaveSameClass(callInfo);
     if (native == intrinsic_ToObject)
         return inlineToObject(callInfo);
-#ifdef DEBUG
-    if (native == intrinsic_Dump)
-        return inlineDump(callInfo);
-#endif
 
     return InliningStatus_NotInlined;
 }
@@ -1318,7 +1314,7 @@ IonBuilder::inlineNewDenseArrayForParallelExecution(CallInfo &callInfo)
 
     callInfo.unwrapArgs();
 
-    MParNewDenseArray *newObject = new MParNewDenseArray(graph().parSlice(),
+    MNewDenseArrayPar *newObject = new MNewDenseArrayPar(graph().forkJoinSlice(),
                                                          callInfo.getArg(0),
                                                          templateObject);
     current->add(newObject);
@@ -1499,35 +1495,6 @@ IonBuilder::inlineToObject(CallInfo &callInfo)
     MDefinition *object = callInfo.getArg(0);
 
     current->push(object);
-    return InliningStatus_Inlined;
-}
-
-IonBuilder::InliningStatus
-IonBuilder::inlineDump(CallInfo &callInfo)
-{
-    // In Parallel Execution, call ParDump.  We just need a debugging
-    // aid!
-
-    if (callInfo.constructing())
-        return InliningStatus_NotInlined;
-
-    ExecutionMode executionMode = info().executionMode();
-    switch (executionMode) {
-      case SequentialExecution:
-        return InliningStatus_NotInlined;
-      case ParallelExecution:
-        break;
-    }
-
-    callInfo.unwrapArgs();
-    JS_ASSERT(1 == callInfo.argc());
-    MParDump *dump = new MParDump(callInfo.getArg(0));
-    current->add(dump);
-
-    MConstant *udef = MConstant::New(UndefinedValue());
-    current->add(udef);
-    current->push(udef);
-
     return InliningStatus_Inlined;
 }
 

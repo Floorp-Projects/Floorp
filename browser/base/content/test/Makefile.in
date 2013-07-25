@@ -123,6 +123,7 @@ MOCHITEST_BROWSER_FILES = \
                  browser_bug556061.js \
                  browser_bug559991.js \
                  browser_bug561623.js \
+                 browser_bug561636.js \
                  browser_bug562649.js \
                  browser_bug563588.js \
                  browser_bug565575.js \
@@ -350,13 +351,6 @@ else
 MOCHITEST_BROWSER_FILES += \
 		browser_bug565667.js \
 		$(NULL)
-endif
-
-ifneq (cocoa,$(MOZ_WIDGET_TOOLKIT))
-# Bug 766546.
-MOCHITEST_BROWSER_FILES += \
-  browser_bug561636.js \
-  $(NULL)
 endif
 
 ifdef MOZ_DATA_REPORTING

@@ -69,16 +69,12 @@ class ParallelSafetyVisitor : public MInstructionVisitor
 {
     MIRGraph &graph_;
     bool unsafe_;
-    MDefinition *parSlice_;
+    MDefinition *slice_;
 
-    bool insertWriteGuard(MInstruction *writeInstruction,
-                          MDefinition *valueBeingWritten);
+    bool insertWriteGuard(MInstruction *writeInstruction, MDefinition *valueBeingWritten);
 
-    bool replaceWithParNew(MInstruction *newInstruction,
-                           JSObject *templateObject);
-
-    bool replace(MInstruction *oldInstruction,
-                 MInstruction *replacementInstruction);
+    bool replaceWithNewPar(MInstruction *newInstruction, JSObject *templateObject);
+    bool replace(MInstruction *oldInstruction, MInstruction *replacementInstruction);
 
     bool visitSpecializedInstruction(MInstruction *ins, MIRType spec, uint32_t flags);
 
@@ -95,15 +91,15 @@ class ParallelSafetyVisitor : public MInstructionVisitor
     ParallelSafetyVisitor(MIRGraph &graph)
       : graph_(graph),
         unsafe_(false),
-        parSlice_(NULL)
+        slice_(NULL)
     { }
 
     void clearUnsafe() { unsafe_ = false; }
     bool unsafe() { return unsafe_; }
-    MDefinition *parSlice() {
-        if (!parSlice_)
-            parSlice_ = graph_.parSlice();
-        return parSlice_;
+    MDefinition *forkJoinSlice() {
+        if (!slice_)
+            slice_ = graph_.forkJoinSlice();
+        return slice_;
     }
 
     bool convertToBailout(MBasicBlock *block, MInstruction *ins);
@@ -159,7 +155,7 @@ class ParallelSafetyVisitor : public MInstructionVisitor
     SPECIALIZED_OP(Div, PERMIT_NUMERIC)
     SPECIALIZED_OP(Mod, PERMIT_NUMERIC)
     CUSTOM_OP(Concat)
-    SAFE_OP(ParConcat)
+    SAFE_OP(ConcatPar)
     UNSAFE_OP(CharCodeAt)
     UNSAFE_OP(FromCharCode)
     SAFE_OP(Return)
@@ -245,18 +241,17 @@ class ParallelSafetyVisitor : public MInstructionVisitor
     UNSAFE_OP(GetArgument)
     UNSAFE_OP(RunOncePrologue)
     CUSTOM_OP(Rest)
-    SAFE_OP(ParRest)
+    SAFE_OP(RestPar)
     SAFE_OP(Floor)
     SAFE_OP(Round)
     UNSAFE_OP(InstanceOf)
     CUSTOM_OP(InterruptCheck)
-    SAFE_OP(ParSlice)
-    SAFE_OP(ParNew)
-    SAFE_OP(ParNewDenseArray)
-    SAFE_OP(ParNewCallObject)
-    SAFE_OP(ParLambda)
-    SAFE_OP(ParDump)
-    SAFE_OP(ParBailout)
+    SAFE_OP(ForkJoinSlice)
+    SAFE_OP(NewPar)
+    SAFE_OP(NewDenseArrayPar)
+    SAFE_OP(NewCallObjectPar)
+    SAFE_OP(LambdaPar)
+    SAFE_OP(AbortPar)
     UNSAFE_OP(ArrayConcat)
     UNSAFE_OP(GetDOMProperty)
     UNSAFE_OP(SetDOMProperty)
@@ -271,9 +266,9 @@ class ParallelSafetyVisitor : public MInstructionVisitor
     UNSAFE_OP(NewDeclEnvObject)
     UNSAFE_OP(In)
     UNSAFE_OP(InArray)
-    SAFE_OP(ParWriteGuard)
-    SAFE_OP(ParCheckInterrupt)
-    SAFE_OP(ParCheckOverRecursed)
+    SAFE_OP(GuardThreadLocalObject)
+    SAFE_OP(CheckInterruptPar)
+    SAFE_OP(CheckOverRecursedPar)
     SAFE_OP(PolyInlineDispatch)
     SAFE_OP(FunctionDispatch)
     SAFE_OP(TypeObjectDispatch)
@@ -462,8 +457,9 @@ ParallelSafetyVisitor::convertToBailout(MBasicBlock *block, MInstruction *ins)
             continue;
 
         // create bailout block to insert on this edge
-        MBasicBlock *bailBlock = MBasicBlock::NewParBailout(graph_, block->info(), pred,
-                                                            block->pc(), block->entryResumePoint());
+        MBasicBlock *bailBlock = MBasicBlock::NewAbortPar(graph_, block->info(), pred,
+                                                               block->pc(),
+                                                               block->entryResumePoint());
         if (!bailBlock)
             return false;
 
@@ -492,24 +488,20 @@ ParallelSafetyVisitor::convertToBailout(MBasicBlock *block, MInstruction *ins)
 //
 // Simple memory allocation opcodes---those which ultimately compile
 // down to a (possibly inlined) invocation of NewGCThing()---are
-// replaced with MParNew, which is supplied with the thread context.
+// replaced with MNewPar, which is supplied with the thread context.
 // These allocations will take place using per-helper-thread arenas.
 
 bool
 ParallelSafetyVisitor::visitNewParallelArray(MNewParallelArray *ins)
 {
-    MParNew *parNew = new MParNew(parSlice(), ins->templateObject());
-    replace(ins, parNew);
+    replace(ins, new MNewPar(forkJoinSlice(), ins->templateObject()));
     return true;
 }
 
 bool
 ParallelSafetyVisitor::visitNewCallObject(MNewCallObject *ins)
 {
-    // fast path: replace with ParNewCallObject op
-    MParNewCallObject *parNewCallObjectInstruction =
-        MParNewCallObject::New(parSlice(), ins);
-    replace(ins, parNewCallObjectInstruction);
+    replace(ins, MNewCallObjectPar::New(forkJoinSlice(), ins));
     return true;
 }
 
@@ -523,9 +515,8 @@ ParallelSafetyVisitor::visitLambda(MLambda *ins)
         return markUnsafe();
     }
 
-    // fast path: replace with ParLambda op
-    MParLambda *parLambdaInstruction = MParLambda::New(parSlice(), ins);
-    replace(ins, parLambdaInstruction);
+    // fast path: replace with LambdaPar op
+    replace(ins, MLambdaPar::New(forkJoinSlice(), ins));
     return true;
 }
 
@@ -537,8 +528,7 @@ ParallelSafetyVisitor::visitNewObject(MNewObject *newInstruction)
         return markUnsafe();
     }
 
-    return replaceWithParNew(newInstruction,
-                             newInstruction->templateObject());
+    return replaceWithNewPar(newInstruction, newInstruction->templateObject());
 }
 
 bool
@@ -549,20 +539,19 @@ ParallelSafetyVisitor::visitNewArray(MNewArray *newInstruction)
         return markUnsafe();
     }
 
-    return replaceWithParNew(newInstruction,
-                             newInstruction->templateObject());
+    return replaceWithNewPar(newInstruction, newInstruction->templateObject());
 }
 
 bool
 ParallelSafetyVisitor::visitRest(MRest *ins)
 {
-    return replace(ins, MParRest::New(parSlice(), ins));
+    return replace(ins, MRestPar::New(forkJoinSlice(), ins));
 }
 
 bool
 ParallelSafetyVisitor::visitConcat(MConcat *ins)
 {
-    return replace(ins, MParConcat::New(parSlice(), ins));
+    return replace(ins, MConcatPar::New(forkJoinSlice(), ins));
 }
 
 bool
@@ -575,11 +564,10 @@ ParallelSafetyVisitor::visitToString(MToString *ins)
 }
 
 bool
-ParallelSafetyVisitor::replaceWithParNew(MInstruction *newInstruction,
+ParallelSafetyVisitor::replaceWithNewPar(MInstruction *newInstruction,
                                          JSObject *templateObject)
 {
-    MParNew *parNewInstruction = new MParNew(parSlice(), templateObject);
-    replace(newInstruction, parNewInstruction);
+    replace(newInstruction, new MNewPar(forkJoinSlice(), templateObject));
     return true;
 }
 
@@ -606,7 +594,7 @@ ParallelSafetyVisitor::replace(MInstruction *oldInstruction,
 
 bool
 ParallelSafetyVisitor::insertWriteGuard(MInstruction *writeInstruction,
-                                                 MDefinition *valueBeingWritten)
+                                        MDefinition *valueBeingWritten)
 {
     // Many of the write operations do not take the JS object
     // but rather something derived from it, such as the elements.
@@ -662,16 +650,16 @@ ParallelSafetyVisitor::insertWriteGuard(MInstruction *writeInstruction,
         object = object->toUnbox()->input();
 
     switch (object->op()) {
-      case MDefinition::Op_ParNew:
-        // MParNew will always be creating something thread-local, omit the guard
-        SpewMIR(writeInstruction, "write to ParNew prop does not require guard");
+      case MDefinition::Op_NewPar:
+        // MNewPar will always be creating something thread-local, omit the guard
+        SpewMIR(writeInstruction, "write to NewPar prop does not require guard");
         return true;
       default:
         break;
     }
 
     MBasicBlock *block = writeInstruction->block();
-    MParWriteGuard *writeGuard = MParWriteGuard::New(parSlice(), object);
+    MGuardThreadLocalObject *writeGuard = MGuardThreadLocalObject::New(forkJoinSlice(), object);
     block->insertBefore(writeInstruction, writeGuard);
     writeGuard->adjustInputs(writeGuard);
     return true;
@@ -721,15 +709,13 @@ ParallelSafetyVisitor::visitCall(MCall *ins)
 bool
 ParallelSafetyVisitor::visitCheckOverRecursed(MCheckOverRecursed *ins)
 {
-    MParCheckOverRecursed *replacement = new MParCheckOverRecursed(parSlice());
-    return replace(ins, replacement);
+    return replace(ins, new MCheckOverRecursedPar(forkJoinSlice()));
 }
 
 bool
 ParallelSafetyVisitor::visitInterruptCheck(MInterruptCheck *ins)
 {
-    MParCheckInterrupt *replacement = new MParCheckInterrupt(parSlice());
-    return replace(ins, replacement);
+    return replace(ins, new MCheckInterruptPar(forkJoinSlice()));
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -762,7 +748,7 @@ ParallelSafetyVisitor::visitThrow(MThrow *thr)
     MBasicBlock *block = thr->block();
     JS_ASSERT(block->lastIns() == thr);
     block->discardLastIns();
-    MParBailout *bailout = new MParBailout();
+    MAbortPar *bailout = new MAbortPar();
     if (!bailout)
         return false;
     block->end(bailout);
@@ -775,11 +761,8 @@ ParallelSafetyVisitor::visitThrow(MThrow *thr)
 // See comments in header file.
 
 static bool
-GetPossibleCallees(JSContext *cx,
-                   HandleScript script,
-                   jsbytecode *pc,
-                   types::StackTypeSet *calleeTypes,
-                   CallTargetVector &targets);
+GetPossibleCallees(JSContext *cx, HandleScript script, jsbytecode *pc,
+                   types::StackTypeSet *calleeTypes, CallTargetVector &targets);
 
 static bool
 AddCallTarget(HandleScript script, CallTargetVector &targets);

@@ -9,7 +9,8 @@ module.metadata = {
   "stability": "deprecated"
 };
 
-const memory = require('./memory');
+const { Cu } = require("chrome");
+const memory = require("./memory");
 var timer = require("../timers");
 var cfxArgs = require("@test/options");
 
@@ -443,7 +444,7 @@ TestRunner.prototype = {
   },
 
   startMany: function startMany(options) {
-    function runNextTest(self) {
+    let runNextTest = (self) => Cu.schedulePreciseGC(_ => {
       var test = options.tests.shift();
       if (options.stopOnError && self.test && self.test.failed) {
         self.console.error("aborted: test failed and --stop-on-error was specified");
@@ -453,7 +454,8 @@ TestRunner.prototype = {
       } else {
         options.onDone(self);
       }
-    }
+    });
+
     runNextTest(this);
   },
 
