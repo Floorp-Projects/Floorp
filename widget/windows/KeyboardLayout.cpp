@@ -670,6 +670,8 @@ NativeKey::GetKeyLocation() const
     case VK_MULTIPLY:
     case VK_SUBTRACT:
     case VK_ADD:
+    // Separator key of Brazilian keyboard or JIS keyboard for Mac
+    case VK_ABNT_C2:
       return nsIDOMKeyEvent::DOM_KEY_LOCATION_NUMPAD;
 
     case VK_SHIFT:
@@ -1665,6 +1667,8 @@ KeyboardLayout::GetKeyIndex(uint8_t aVirtualKey)
 // 0xBE - VK_OEM_PERIOD     '.' any country
 // 0xBF - VK_OEM_2          '/?' for US
 // 0xC0 - VK_OEM_3          '`~' for US
+// 0xC1 - VK_ABNT_C1        '/?' for Brazilian
+// 0xC2 - VK_ABNT_C2        separator key on numpad (Brazilian or JIS for Mac)
 // 0xDB - VK_OEM_4          '[{' for US
 // 0xDC - VK_OEM_5          '\|' for US
 // 0xDD - VK_OEM_6          ']}' for US
@@ -1691,9 +1695,9 @@ KeyboardLayout::GetKeyIndex(uint8_t aVirtualKey)
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,   // 90
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,   // A0
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 52, 53, 54, 55, 56, 57,   // B0
-    58, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,   // C0
-    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 59, 60, 61, 62, 63,   // D0
-    -1, 64, 65, 66, 67, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,   // E0
+    58, 59, 60, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,   // C0
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 61, 62, 63, 64, 65,   // D0
+    -1, 66, 67, 68, 69, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,   // E0
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1    // F0
   };
 
@@ -2027,6 +2031,7 @@ KeyboardLayout::ConvertNativeKeyCodeToDOMKeyCode(UINT aNativeKeyCode) const
     case VK_OEM_7:
     case VK_OEM_8:
     case VK_OEM_102:
+    case VK_ABNT_C1:
     {
       NS_ASSERTION(IsPrintableCharKey(aNativeKeyCode),
                    "The key must be printable");
@@ -2044,6 +2049,14 @@ KeyboardLayout::ConvertNativeKeyCodeToDOMKeyCode(UINT aNativeKeyCode) const
       }
       return WidgetUtils::ComputeKeyCodeFromChar(uniChars.mChars[0]);
     }
+
+    // IE sets 0xC2 to the DOM keyCode for VK_ABNT_C2.  However, we're already
+    // using NS_VK_SEPARATOR for the separator key on Mac and Linux.  Therefore,
+    // We should keep consistency between Gecko on all platforms rather than
+    // with other browsers since a lot of keyCode values are already different
+    // between browsers.
+    case VK_ABNT_C2:
+      return NS_VK_SEPARATOR;
 
     // VK_PROCESSKEY means IME already consumed the key event.
     case VK_PROCESSKEY:
