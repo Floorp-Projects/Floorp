@@ -689,17 +689,16 @@
                                      if (!this.parentNode._placesView)
                                        new PlacesMenu(event, 'place:folder=BOOKMARKS_MENU');"
                      tooltip="bhTooltip" popupsinherittooltip="true">
-            <menuitem id="BMB_viewBookmarksToolbar"
-                      placesanonid="view-toolbar"
-                      toolbarId="PersonalToolbar"
-                      type="checkbox"
-                      oncommand="onViewToolbarCommand(event)"
-                      label="&viewBookmarksToolbar.label;"/>
-            <menuseparator/>
             <menuitem id="BMB_bookmarksShowAll"
                       label="&showAllBookmarks2.label;"
                       command="Browser:ShowAllBookmarks"
                       key="manBookmarkKb"/>
+            <menuitem id="BMB_viewBookmarksSidebar"
+                      label="&viewBookmarksSidebar2.label;"
+                      type="checkbox"
+                      oncommand="toggleSidebar('viewBookmarksSidebar');">
+              <observes element="viewBookmarksSidebar" attribute="checked"/>
+            </menuitem>
             <menuseparator/>
             <menuitem id="BMB_subscribeToPageMenuitem"
 #ifndef XP_MACOSX
@@ -722,7 +721,6 @@
             </menu>
             <menuseparator/>
             <menu id="BMB_bookmarksToolbar"
-                  placesanonid="toolbar-autohide"
                   class="menu-iconic bookmark-item"
                   label="&personalbarCmd.label;"
                   container="true">
@@ -730,16 +728,29 @@
                          placespopup="true"
                          context="placesContext"
                          onpopupshowing="if (!this.parentNode._placesView)
-                                           new PlacesMenu(event, 'place:folder=TOOLBAR');"/>
+                                           new PlacesMenu(event, 'place:folder=TOOLBAR');">
+                <menuitem id="BMB_viewBookmarksToolbar"
+                          placesanonid="view-toolbar"
+                          toolbarId="PersonalToolbar"
+                          type="checkbox"
+                          oncommand="onViewToolbarCommand(event)"
+                          label="&viewBookmarksToolbar.label;"/>
+                <menuseparator/>
+                <!-- Bookmarks toolbar items -->
+              </menupopup>
+            </menu>
+            <menu id="BMB_unsortedBookmarks"
+                  class="menu-iconic bookmark-item"
+                  label="&bookmarksMenuButton.unsorted.label;"
+                  container="true">
+              <menupopup id="BMB_unsortedBookmarksPopup"
+                         placespopup="true"
+                         context="placesContext"
+                         onpopupshowing="if (!this.parentNode._placesView)
+                                           new PlacesMenu(event, 'place:folder=UNFILED_BOOKMARKS');"/>
             </menu>
             <menuseparator/>
             <!-- Bookmarks menu items -->
-            <menuseparator builder="end"
-                           class="hide-if-empty-places-result"/>
-            <menuitem id="BMB_unsortedBookmarks"
-                      label="&bookmarksMenuButton.unsorted.label;"
-                      oncommand="PlacesCommandHook.showPlacesOrganizer('UnfiledBookmarks');"
-                      class="menuitem-iconic"/>
           </menupopup>
         </toolbarbutton>
 

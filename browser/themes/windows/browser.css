@@ -1970,12 +1970,14 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 }
 
 #bookmarksToolbarFolderMenu,
-#BMB_bookmarksToolbar {
+#BMB_bookmarksToolbar,
+#panelMenu_bookmarksToolbar {
   list-style-image: url("chrome://browser/skin/places/bookmarksToolbar.png");
   -moz-image-region: auto;
 }
 
-#BMB_unsortedBookmarks {
+#BMB_unsortedBookmarks,
+#panelMenu_unsortedBookmarks {
   list-style-image: url("chrome://browser/skin/places/unsortedBookmarks.png");
   -moz-image-region: auto;
 }
