@@ -8,6 +8,8 @@ const PREFILTER_ARIA_HIDDEN = nsIAccessibleTraversalRule.PREFILTER_ARIA_HIDDEN;
 const FILTER_MATCH = nsIAccessibleTraversalRule.FILTER_MATCH;
 const FILTER_IGNORE = nsIAccessibleTraversalRule.FILTER_IGNORE;
 const FILTER_IGNORE_SUBTREE = nsIAccessibleTraversalRule.FILTER_IGNORE_SUBTREE;
+const CHAR_BOUNDARY = nsIAccessiblePivot.CHAR_BOUNDARY;
+const WORD_BOUNDARY = nsIAccessiblePivot.WORD_BOUNDARY;
 
 const NS_ERROR_NOT_IN_TREE = 0x80780026;
 const NS_ERROR_INVALID_ARG = 0x80070057;
@@ -155,6 +157,8 @@ VCChangedChecker.methodReasonMap = {
   'moveFirst': nsIAccessiblePivot.REASON_FIRST,
   'moveLast': nsIAccessiblePivot.REASON_LAST,
   'setTextRange': nsIAccessiblePivot.REASON_TEXT,
+  'moveNextByText': nsIAccessiblePivot.REASON_TEXT,
+  'movePreviousByText': nsIAccessiblePivot.REASON_TEXT,
   'moveToPoint': nsIAccessiblePivot.REASON_POINT
 };
 
@@ -232,6 +236,49 @@ function setVCPosInvoker(aDocAcc, aPivotMoveMethod, aRule, aIdOrNameOrAcc)
     ];
   }
 }
+
+/**
+ * Move the pivot by text and wait for virtual cursor change event.
+ *
+ * @param aDocAcc          [in] document that manages the virtual cursor
+ * @param aPivotMoveMethod [in] method to test (ie. "moveNext", "moveFirst", etc.)
+ * @param aBoundary        [in] boundary constant
+ * @param aTextOffsets     [in] start and end offsets of text range to set in
+ *                         virtual cursor.
+ * @param aIdOrNameOrAcc   [in] id, accessible or accessible name to expect
+ *                         virtual cursor to land on after performing move method.
+ *                         false if no move is expected.
+ */
+function setVCTextInvoker(aDocAcc, aPivotMoveMethod, aBoundary, aTextOffsets, aIdOrNameOrAcc)
+{
+  var expectMove = (aIdOrNameOrAcc != false);
+  this.invoke = function virtualCursorChangedInvoker_invoke()
+  {
+    VCChangedChecker.storePreviousPosAndOffset(aDocAcc.virtualCursor);
+    SimpleTest.info(aDocAcc.virtualCursor.position);
+    var moved = aDocAcc.virtualCursor[aPivotMoveMethod](aBoundary);
+    SimpleTest.is(!!moved, !!expectMove,
+                  "moved pivot by text with " + aPivotMoveMethod +
+                  " to " + aIdOrNameOrAcc);
+  };
+
+  this.getID = function setVCPosInvoker_getID()
+  {
+    return "Do " + (expectMove ? "" : "no-op ") + aPivotMoveMethod;
+  };
+
+  if (expectMove) {
+    this.eventSeq = [
+      new VCChangedChecker(aDocAcc, aIdOrNameOrAcc, aTextOffsets, aPivotMoveMethod)
+    ];
+  } else {
+    this.eventSeq = [];
+    this.unexpectedEventSeq = [
+      new invokerChecker(EVENT_VIRTUALCURSOR_CHANGED, aDocAcc)
+    ];
+  }
+}
+
 
 /**
  * Move the pivot to the position under the point.
