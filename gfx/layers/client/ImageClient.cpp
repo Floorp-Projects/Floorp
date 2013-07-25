@@ -13,7 +13,6 @@
 #include "mozilla/layers/SharedPlanarYCbCrImage.h"
 
 #ifdef MOZ_WIDGET_GONK
-#include "GonkIOSurfaceImage.h"
 #include "GrallocImages.h"
 #endif
 
@@ -152,20 +151,6 @@ DeprecatedImageClientSingle::UpdateImage(ImageContainer* aContainer,
     }
     mDeprecatedTextureClient->SetDescriptor(desc);
 #ifdef MOZ_WIDGET_GONK
-  } else if (image->GetFormat() == GONK_IO_SURFACE &&
-             EnsureDeprecatedTextureClient(TEXTURE_SHARED_GL_EXTERNAL)) {
-    nsIntRect rect(0, 0,
-                   image->GetSize().width,
-                   image->GetSize().height);
-    UpdatePictureRect(rect);
-
-    AutoLockDeprecatedTextureClient lock(mDeprecatedTextureClient);
-
-    SurfaceDescriptor desc = static_cast<GonkIOSurfaceImage*>(image)->GetSurfaceDescriptor();
-    if (!IsSurfaceDescriptorValid(desc)) {
-      return false;
-    }
-    mDeprecatedTextureClient->SetDescriptor(desc);
   } else if (image->GetFormat() == GRALLOC_PLANAR_YCBCR) {
     EnsureDeprecatedTextureClient(TEXTURE_SHARED_GL_EXTERNAL);
 
@@ -176,7 +161,7 @@ DeprecatedImageClientSingle::UpdateImage(ImageContainer* aContainer,
 
     AutoLockDeprecatedTextureClient lock(mDeprecatedTextureClient);
 
-    SurfaceDescriptor desc = static_cast<GrallocPlanarYCbCrImage*>(image)->GetSurfaceDescriptor();
+    SurfaceDescriptor desc = static_cast<GrallocImage*>(image)->GetSurfaceDescriptor();
     if (!IsSurfaceDescriptorValid(desc)) {
       return false;
     }
@@ -253,11 +238,8 @@ ImageClient::CreateImage(const uint32_t *aFormats,
         img = new DeprecatedSharedRGBImage(GetForwarder());
         return img.forget();
 #ifdef MOZ_WIDGET_GONK
-      case GONK_IO_SURFACE:
-        img = new GonkIOSurfaceImage();
-        return img.forget();
       case GRALLOC_PLANAR_YCBCR:
-        img = new GrallocPlanarYCbCrImage();
+        img = new GrallocImage();
         return img.forget();
 #endif
     }

@@ -216,6 +216,9 @@ const ContentPanning = {
     }
 
     this._finishPanning();
+
+    // Now that we're done, avoid entraining the thing we just panned.
+    this.pointerDownTarget = null;
   },
 
   // True when there's an async pan-zoom controll watching the

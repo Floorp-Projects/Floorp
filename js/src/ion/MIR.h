@@ -18,14 +18,14 @@
 #include "jsinfer.h"
 #include "jslibmath.h"
 
-#include "ion/TypePolicy.h"
-#include "ion/IonAllocPolicy.h"
-#include "ion/InlineList.h"
-#include "ion/MOpcodes.h"
-#include "ion/IonMacroAssembler.h"
 #include "ion/Bailouts.h"
-#include "ion/FixedList.h"
 #include "ion/CompilerRoot.h"
+#include "ion/FixedList.h"
+#include "ion/InlineList.h"
+#include "ion/IonAllocPolicy.h"
+#include "ion/IonMacroAssembler.h"
+#include "ion/MOpcodes.h"
+#include "ion/TypePolicy.h"
 #include "vm/ScopeObject.h"
 
 namespace js {
