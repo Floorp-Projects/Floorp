@@ -8,6 +8,7 @@ package org.mozilla.gecko.home;
 import org.mozilla.gecko.AutocompleteHandler;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
+import org.mozilla.gecko.PrefsHelper;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
@@ -37,9 +38,17 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.ViewGroup;
+import android.view.ViewStub;
+import android.view.WindowManager.LayoutParams;
+import android.view.animation.AccelerateInterpolator;
+import android.view.animation.Animation;
+import android.view.animation.TranslateAnimation;
 import android.widget.AdapterView;
+import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -71,17 +80,23 @@ public class BrowserSearch extends HomeFragment
     // for an autocomplete result
     private static final int MAX_AUTOCOMPLETE_SEARCH = 20;
 
+    // Duration for fade-in animation
+    private static final int ANIMATION_DURATION = 250;
+
     // Holds the current search term to use in the query
     private String mSearchTerm;
 
     // Adapter for the list of search results
     private SearchAdapter mAdapter;
 
-    // The view shown by the fragment.
+    // The view shown by the fragment
+    private LinearLayout mView;
+
+    // The list showing search results
     private ListView mList;
 
     // Client that performs search suggestion queries
-    private SuggestClient mSuggestClient;
+    private volatile SuggestClient mSuggestClient;
 
     // List of search engines from gecko
     private ArrayList<SearchEngine> mSearchEngines;
@@ -110,6 +125,12 @@ public class BrowserSearch extends HomeFragment
     // On edit suggestion listener
     private OnEditSuggestionListener mEditSuggestionListener;
 
+    // Whether the suggestions will fade in when shown
+    private boolean mAnimateSuggestions;
+
+    // Opt-in prompt view for search suggestions
+    private View mSuggestionsOptInPrompt;
+
     public interface OnSearchListener {
         public void onSearch(String engineId, String text);
     }
@@ -124,26 +145,6 @@ public class BrowserSearch extends HomeFragment
 
     public BrowserSearch() {
         mSearchTerm = "";
-    }
-
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-
-        registerEventListener("SearchEngines:Data");
-
-        // The search engines list is reused beyond the life-cycle of
-        // this fragment.
-        if (mSearchEngines == null) {
-            mSearchEngines = new ArrayList<SearchEngine>();
-            GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("SearchEngines:Get", null));
-        }
-    }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        unregisterEventListener("SearchEngines:Data");
     }
 
     @Override
@@ -189,8 +190,23 @@ public class BrowserSearch extends HomeFragment
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         // All list views are styled to look the same with a global activity theme.
         // If the style of the list changes, inflate it from an XML.
-        mList = new HomeListView(container.getContext());
-        return mList;
+        mView = (LinearLayout) inflater.inflate(R.layout.browser_search, container, false);
+        mList = (ListView) mView.findViewById(R.id.home_list_view);
+
+        return mView;
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+
+        unregisterEventListener("SearchEngines:Data");
+
+        mView = null;
+        mList = null;
+        mSearchEngines = null;
+        mSuggestionsOptInPrompt = null;
+        mSuggestClient = null;
     }
 
     @Override
@@ -211,6 +227,10 @@ public class BrowserSearch extends HomeFragment
         });
 
         registerForContextMenu(mList);
+        registerEventListener("SearchEngines:Data");
+
+        mSearchEngines = new ArrayList<SearchEngine>();
+        GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("SearchEngines:Get", null));
     }
 
     @Override
@@ -312,11 +332,20 @@ public class BrowserSearch extends HomeFragment
     }
 
     private void setSuggestions(ArrayList<String> suggestions) {
-        mSearchEngines.get(0).suggestions = suggestions;
-        mAdapter.notifyDataSetChanged();
+        if (mSearchEngines != null) {
+            mSearchEngines.get(0).suggestions = suggestions;
+            mAdapter.notifyDataSetChanged();
+        }
     }
 
     private void setSearchEngines(JSONObject data) {
+        // This method is called via a Runnable posted from the Gecko thread, so
+        // it's possible the fragment and/or its view has been destroyed by the
+        // time we get here. If so, just abort.
+        if (mView == null) {
+            return;
+        }
+
         try {
             final JSONObject suggest = data.getJSONObject("suggest");
             final String suggestEngine = suggest.optString("engine", null);
@@ -358,12 +387,117 @@ public class BrowserSearch extends HomeFragment
                 mAdapter.notifyDataSetChanged();
             }
 
-            // FIXME: restore suggestion opt-in UI
+            // Show suggestions opt-in prompt only if user hasn't been prompted
+            // and we're not on a private browsing tab.
+            if (!suggestionsPrompted && mSuggestClient != null) {
+                showSuggestionsOptIn();
+            }
         } catch (JSONException e) {
             Log.e(LOGTAG, "Error getting search engine JSON", e);
         }
 
         filterSuggestions();
+    }
+
+    private void showSuggestionsOptIn() {
+        mSuggestionsOptInPrompt = ((ViewStub) mView.findViewById(R.id.suggestions_opt_in_prompt)).inflate();
+
+        TextView promptText = (TextView) mSuggestionsOptInPrompt.findViewById(R.id.suggestions_prompt_title);
+        promptText.setText(getResources().getString(R.string.suggestions_prompt, mSearchEngines.get(0).name));
+
+        final View yesButton = mSuggestionsOptInPrompt.findViewById(R.id.suggestions_prompt_yes);
+        final View noButton = mSuggestionsOptInPrompt.findViewById(R.id.suggestions_prompt_no);
+
+        final OnClickListener listener = new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Prevent the buttons from being clicked multiple times (bug 816902)
+                yesButton.setOnClickListener(null);
+                noButton.setOnClickListener(null);
+
+                setSuggestionsEnabled(v == yesButton);
+            }
+        };
+
+        yesButton.setOnClickListener(listener);
+        noButton.setOnClickListener(listener);
+    }
+
+    private void setSuggestionsEnabled(final boolean enabled) {
+        // Clicking the yes/no buttons quickly can cause the click events be
+        // queued before the listeners are removed above, so it's possible
+        // setSuggestionsEnabled() can be called twice. mSuggestionsOptInPrompt
+        // can be null if this happens (bug 828480).
+        if (mSuggestionsOptInPrompt == null) {
+            return;
+        }
+
+        // Make suggestions appear immediately after the user opts in
+        ThreadUtils.postToBackgroundThread(new Runnable() {
+            @Override
+            public void run() {
+                SuggestClient client = mSuggestClient;
+                if (client != null) {
+                    client.query(mSearchTerm);
+                }
+            }
+        });
+
+        // Pref observer in gecko will also set prompted = true
+        PrefsHelper.setPref("browser.search.suggest.enabled", enabled);
+
+        TranslateAnimation slideAnimation = new TranslateAnimation(0, mSuggestionsOptInPrompt.getWidth(), 0, 0);
+        slideAnimation.setDuration(ANIMATION_DURATION);
+        slideAnimation.setInterpolator(new AccelerateInterpolator());
+        slideAnimation.setFillAfter(true);
+        final View prompt = mSuggestionsOptInPrompt.findViewById(R.id.prompt);
+
+        TranslateAnimation shrinkAnimation = new TranslateAnimation(0, 0, 0, -1 * mSuggestionsOptInPrompt.getHeight());
+        shrinkAnimation.setDuration(ANIMATION_DURATION);
+        shrinkAnimation.setFillAfter(true);
+        shrinkAnimation.setStartOffset(slideAnimation.getDuration());
+        shrinkAnimation.setAnimationListener(new Animation.AnimationListener() {
+            @Override
+            public void onAnimationStart(Animation a) {
+                // Increase the height of the view so a gap isn't shown during animation
+                mView.getLayoutParams().height = mView.getHeight() +
+                        mSuggestionsOptInPrompt.getHeight();
+                mView.requestLayout();
+            }
+
+            @Override
+            public void onAnimationRepeat(Animation a) {}
+
+            @Override
+            public void onAnimationEnd(Animation a) {
+                // Removing the view immediately results in a NPE in
+                // dispatchDraw(), possibly because this callback executes
+                // before drawing is finished. Posting this as a Runnable fixes
+                // the issue.
+                mView.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        mView.removeView(mSuggestionsOptInPrompt);
+                        mList.clearAnimation();
+                        mSuggestionsOptInPrompt = null;
+
+                        if (enabled) {
+                            // Reset the view height
+                            mView.getLayoutParams().height = LayoutParams.MATCH_PARENT;
+
+                            mSuggestionsEnabled = enabled;
+                            mAnimateSuggestions = true;
+                            mAdapter.notifyDataSetChanged();
+                            filterSuggestions();
+                        }
+                    }
+                });
+            }
+        });
+
+        prompt.startAnimation(slideAnimation);
+        mSuggestionsOptInPrompt.startAnimation(shrinkAnimation);
+        mList.startAnimation(shrinkAnimation);
     }
 
     private void registerEventListener(String eventName) {
@@ -528,7 +662,12 @@ public class BrowserSearch extends HomeFragment
                 row.setSearchTerm(mSearchTerm);
 
                 final SearchEngine engine = mSearchEngines.get(getEngineIndex(position));
-                row.updateFromSearchEngine(engine);
+                final boolean animate = (mAnimateSuggestions && engine.suggestions.size() > 0);
+                row.updateFromSearchEngine(engine, animate);
+                if (animate) {
+                    // Only animate suggestions the first time they are shown
+                    mAnimateSuggestions = false;
+                }
 
                 return row;
             } else {
@@ -633,6 +772,9 @@ public class BrowserSearch extends HomeFragment
     private class SuggestionLoaderCallbacks implements LoaderCallbacks<ArrayList<String>> {
         @Override
         public Loader<ArrayList<String>> onCreateLoader(int id, Bundle args) {
+            // mSuggestClient is set to null in onDestroyView(), so using it
+            // safely here relies on the fact that onCreateLoader() is called
+            // synchronously in restartLoader().
             return new SuggestionAsyncLoader(getActivity(), mSuggestClient, mSearchTerm);
         }
 

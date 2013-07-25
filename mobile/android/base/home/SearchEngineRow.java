@@ -8,8 +8,6 @@ package org.mozilla.gecko.home;
 import org.mozilla.gecko.AnimatedHeightLayout;
 import org.mozilla.gecko.FlowLayout;
 import org.mozilla.gecko.R;
-import org.mozilla.gecko.Tab;
-import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.home.BrowserSearch.OnEditSuggestionListener;
 import org.mozilla.gecko.home.BrowserSearch.OnSearchListener;
 import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
@@ -17,17 +15,17 @@ import org.mozilla.gecko.util.StringUtils;
 import org.mozilla.gecko.widget.FaviconView;
 
 import android.content.Context;
-import android.content.res.TypedArray;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.View.OnClickListener;
-import android.view.View.OnLongClickListener;
+import android.view.animation.AlphaAnimation;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
 class SearchEngineRow extends AnimatedHeightLayout {
+    // Duration for fade-in animation
+    private static final int ANIMATION_DURATION = 250;
 
     // Inner views
     private final FlowLayout mSuggestionView;
@@ -135,7 +133,7 @@ class SearchEngineRow extends AnimatedHeightLayout {
         mEditSuggestionListener = listener;
     }
 
-    public void updateFromSearchEngine(SearchEngine searchEngine) {
+    public void updateFromSearchEngine(SearchEngine searchEngine, boolean animate) {
         // Update search engine reference
         mSearchEngine = searchEngine;
 
@@ -168,6 +166,13 @@ class SearchEngineRow extends AnimatedHeightLayout {
 
             final String suggestion = mSearchEngine.suggestions.get(i);
             setSuggestionOnView(suggestionItem, suggestion);
+
+            if (animate) {
+                AlphaAnimation anim = new AlphaAnimation(0, 1);
+                anim.setDuration(ANIMATION_DURATION);
+                anim.setStartOffset(i * ANIMATION_DURATION);
+                suggestionItem.startAnimation(anim);
+            }
         }
 
         // Hide extra suggestions that have been recycled
