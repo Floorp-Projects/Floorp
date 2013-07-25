@@ -50,11 +50,13 @@ is(elt.style.getPropertyValue("transform"),
    "translateX(5px) translateY(10px) translateZ(2px) rotateX(30deg) rotateY(30deg) rotateZ(5deg) skewX(10deg) skewY(10deg) scaleX(2) scaleY(0.5) scaleZ(2)",
    "expected case canonicalization of transform functions");
 
-elt.setAttribute("style",
-                 "font-variant-alternates: SWASH(fOo) stYLIStiC(Bar)");
-is(elt.style.getPropertyValue("font-variant-alternates"),
-   "swash(fOo) stylistic(Bar)",
-   "expected case canonicalization of transform functions");
+if (SpecialPowers.getBoolPref("layout.css.font-features.enabled")) {
+  elt.setAttribute("style",
+                   "font-variant-alternates: SWASH(fOo) stYLIStiC(Bar)");
+  is(elt.style.getPropertyValue("font-variant-alternates"),
+     "swash(fOo) stylistic(Bar)",
+     "expected case canonicalization of transform functions");
+}
 
 elt.setAttribute("style", ""); // leave the page in a useful state
 
