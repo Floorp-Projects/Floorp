@@ -1,0 +1,69 @@
+<!DOCTYPE HTML>
+<html>
+<meta charset="utf-8">
+<head>
+  <title>Test MediaElementAudioSourceNode</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+SimpleTest.waitForExplicitFinish();
+
+var audio = new Audio("small-shot.ogg");
+var context = new AudioContext();
+var node = context.createMediaElementSource(audio);
+var sp = context.createScriptProcessor(2048, 1);
+node.connect(sp);
+var expectedMinNonzeroSampleCount;
+var expectedMaxNonzeroSampleCount;
+var nonzeroSampleCount = 0;
+var complete = false;
+var iterationCount = 0;
+
+// This test ensures we receive at least expectedSampleCount nonzero samples
+function processSamples(e) {
+  if (complete) {
+    return;
+  }
+
+  if (iterationCount == 0) {
+    // Don't start playing the audio until the AudioContext stuff is connected
+    // and running.
+    audio.play();
+  }
+  ++iterationCount;
+
+  var buf = e.inputBuffer.getChannelData(0);
+  var nonzeroSamplesThisBuffer = 0;
+  for (var i = 0; i < buf.length; ++i) {
+    if (buf[i] != 0) {
+      ++nonzeroSamplesThisBuffer;
+    }
+  }
+  nonzeroSampleCount += nonzeroSamplesThisBuffer;
+  is(e.inputBuffer.numberOfChannels, 1,
+     "Checking data channel count (nonzeroSamplesThisBuffer=" +
+     nonzeroSamplesThisBuffer + ")");
+  ok(nonzeroSampleCount <= expectedMaxNonzeroSampleCount,
+     "Too many nonzero samples (got " + nonzeroSampleCount + ", expected max " + expectedMaxNonzeroSampleCount + ")");
+  if (nonzeroSampleCount >= expectedMinNonzeroSampleCount &&
+      nonzeroSamplesThisBuffer == 0) {
+    ok(true,
+     "Check received enough nonzero samples (got " + nonzeroSampleCount + ", expected min " + expectedMinNonzeroSampleCount + ")");
+    SimpleTest.finish();
+    complete = true;
+  }
+}
+
+audio.oncanplaythrough = function() {
+  // Use a fuzz factor of 100 to account for samples that just happen to be zero
+  expectedMinNonzeroSampleCount = Math.floor(audio.duration*context.sampleRate) - 100;
+  expectedMaxNonzeroSampleCount = Math.floor(audio.duration*context.sampleRate) + 500;
+  sp.onaudioprocess = processSamples;
+};
+</script>
+</pre>
+</body>
+</html>
