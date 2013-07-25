@@ -151,8 +151,11 @@ AsyncRunner.prototype = {
   },
 
   observe: function observe(msg) {
-    if (msg instanceof Ci.nsIScriptError)
+    if (msg instanceof Ci.nsIScriptError &&
+        !(msg.flags & Ci.nsIScriptError.warningFlag))
+    {
       this._callbacks.consoleError(msg);
+    }
   },
 };
 
