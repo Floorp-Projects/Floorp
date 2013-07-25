@@ -21,6 +21,17 @@
  -moz-appearance: none;
   padding: 0;
   margin: 0 -4px 0 4px;
+  opacity: 0;
+  transition: opacity .25s ease 0s;
+}
+
+/* Only show the checkbox when the source is hovered over, is selected, or if it
+ * is not checked. */
+.side-menu-widget-item:hover > .side-menu-widget-item-checkbox,
+.side-menu-widget-item.selected > .side-menu-widget-item-checkbox,
+.side-menu-widget-item-checkbox:not([checked]) {
+  opacity: 1;
+  transition: opacity .25s ease-out 0s;
 }
 
 .side-menu-widget-item-checkbox > .checkbox-check {
