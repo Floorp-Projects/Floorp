@@ -288,6 +288,13 @@ panelview toolbarbutton:not([disabled]):-moz-any([open],[checked],:hover:active)
   transition: none;
 }
 
+panelview toolbarseparator {
+  -moz-appearance: none;
+  min-height: 0;
+  border-top: 1px solid ThreeDShadow;
+  margin: 5px 0;
+}
+
 #PanelUI-historyItems > toolbarbutton {
   list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.png");
 }

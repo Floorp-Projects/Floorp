@@ -140,6 +140,7 @@ let CustomizableUIInternal = {
     });
     this.registerArea(CustomizableUI.AREA_NAVBAR, {
       legacy: true,
+      anchor: "nav-bar-overflow-button",
       type: CustomizableUI.TYPE_TOOLBAR,
       overflowable: true,
       defaultPlacements: [

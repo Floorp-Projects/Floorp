@@ -40,6 +40,47 @@
              onclick="PlacesCommandHook.showPlacesOrganizer('History'); CustomizableUI.hidePanelForNode(this);"/>
     </panelview>
 
+    <panelview id="PanelUI-bookmarks" flex="1">
+      <toolbarbutton id="panelMenuBookmarkThisPage"
+                     label="&bookmarkThisPageCmd.label;"
+                     command="Browser:AddBookmarkAs"
+                     onclick="PanelUI.hide();"/>
+      <toolbarseparator/>
+      <toolbarbutton id="panelMenu_showAllBookmarks"
+                     label="&showAllBookmarks2.label;"
+                     command="Browser:ShowAllBookmarks"
+                     onclick="PanelUI.hide();"/>
+      <toolbarbutton id="panelMenu_viewBookmarksSidebar"
+                     label="&viewBookmarksSidebar2.label;"
+                     oncommand="toggleSidebar('viewBookmarksSidebar'); PanelUI.hide();">
+        <observes element="viewBookmarksSidebar" attribute="checked"/>
+      </toolbarbutton>
+      <toolbarbutton id="panelMenu_viewBookmarksToolbar"
+                     label="&viewBookmarksToolbar.label;"
+                     type="checkbox"
+                     toolbarId="PersonalToolbar"
+                     oncommand="onViewToolbarCommand(event); PanelUI.hide();"/>
+      <toolbarseparator/>
+      <toolbarbutton id="panelMenu_bookmarksToolbar"
+                     label="&personalbarCmd.label;"
+                     oncommand="PlacesCommandHook.showPlacesOrganizer('BookmarksToolbar'); PanelUI.hide();"/>
+      <toolbarbutton id="panelMenu_unsortedBookmarks"
+                     label="&unsortedBookmarksCmd.label;"
+                     oncommand="PlacesCommandHook.showPlacesOrganizer('UnfiledBookmarks'); PanelUI.hide();"/>
+      <toolbarseparator/>
+      <toolbaritem id="panelMenu_bookmarksMenu"
+                   flex="1"
+                   orient="vertical"
+                   smoothscroll="false"
+                   onclick="if (event.button == 1) BookmarkingUI.onPanelMenuViewCommand(event, this._placesView);"
+                   oncommand="BookmarkingUI.onPanelMenuViewCommand(event, this._placesView);"
+                   flatList="true"
+                   tooltip="bhTooltip">
+        <!-- bookmarks menu items -->
+      </toolbaritem>
+
+    </panelview>
+
     <panelview id="PanelUI-feeds" flex="1" oncommand="FeedHandler.subscribeToFeed(null, event);"></panelview>
 
     <panelview id="PanelUI-help" flex="1">

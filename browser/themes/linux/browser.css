@@ -465,11 +465,13 @@ menuitem:not([type]):not(.menuitem-tooltip):not(.menuitem-iconic-tooltip) {
 }
 
 #bookmarksToolbarFolderMenu,
-#BMB_bookmarksToolbar {
+#BMB_bookmarksToolbar,
+#panelMenu_bookmarksToolbar {
   list-style-image: url("chrome://browser/skin/places/bookmarksToolbar.png");
 }
 
-#BMB_unsortedBookmarks {
+#BMB_unsortedBookmarks,
+#panelMenu_unsortedBookmarks {
   list-style-image: url("chrome://browser/skin/places/unsortedBookmarks.png");
 }
 
