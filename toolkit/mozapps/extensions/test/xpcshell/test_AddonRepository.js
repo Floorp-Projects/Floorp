@@ -7,7 +7,8 @@
 Components.utils.import("resource://gre/modules/AddonRepository.jsm");
 
 Components.utils.import("resource://testing-common/httpd.js");
-var gServer;
+var gServer = new HttpServer();
+gServer.start(-1);
 
 const PREF_GETADDONS_BROWSEADDONS        = "extensions.getAddons.browseAddons";
 const PREF_GETADDONS_BYIDS               = "extensions.getAddons.get.url";
@@ -16,9 +17,11 @@ const PREF_GETADDONS_GETRECOMMENDED      = "extensions.getAddons.recommended.url
 const PREF_GETADDONS_BROWSESEARCHRESULTS = "extensions.getAddons.search.browseURL";
 const PREF_GETADDONS_GETSEARCHRESULTS    = "extensions.getAddons.search.url";
 
-const PORT          = 4444;
+const PORT          = gServer.identity.primaryPort;
 const BASE_URL      = "http://localhost:" + PORT;
 const DEFAULT_URL   = "about:blank";
+
+gPort = PORT;
 
 // Path to source URI of installed add-on
 const INSTALL_URL1  = "/addons/test_AddonRepository_1.xpi";
@@ -216,7 +219,7 @@ var SEARCH_RESULTS = [{
                           },
   averageRating:          5,
   repositoryStatus:       4,
-  purchaseURL:            "http://localhost:4444/purchaseURL1",
+  purchaseURL:            "http://localhost:" + PORT + "/purchaseURL1",
   purchaseAmount:         5,
   purchaseDisplayAmount:  "$5",
   icons:                  {}
@@ -230,7 +233,7 @@ var SEARCH_RESULTS = [{
                           },
   averageRating:          5,
   repositoryStatus:       4,
-  purchaseURL:            "http://localhost:4444/purchaseURL2",
+  purchaseURL:            "http://localhost:" + PORT + "/purchaseURL2",
   purchaseAmount:         10,
   purchaseDisplayAmount:  "$10",
   icons:                  {}
@@ -367,8 +370,6 @@ function run_test() {
   installAllFiles([do_get_addon("test_AddonRepository_1")], function addon_1_install_callback() {
     restartManager();
 
-    gServer = new HttpServer();
-
     // Register other add-on XPI files
     gServer.registerFile(INSTALL_URL2,
                         do_get_addon("test_AddonRepository_2"));
@@ -376,22 +377,26 @@ function run_test() {
                         do_get_addon("test_AddonRepository_3"));
 
     // Register files used to test search failure
-    gServer.registerFile(GET_TEST.failedURL,
-                        do_get_file("data/test_AddonRepository_failed.xml"));
-    gServer.registerFile(RECOMMENDED_TEST.failedURL,
-                        do_get_file("data/test_AddonRepository_failed.xml"));
-    gServer.registerFile(SEARCH_TEST.failedURL,
-                        do_get_file("data/test_AddonRepository_failed.xml"));
+    mapUrlToFile(GET_TEST.failedURL,
+                 do_get_file("data/test_AddonRepository_failed.xml"),
+                 gServer);
+    mapUrlToFile(RECOMMENDED_TEST.failedURL,
+                 do_get_file("data/test_AddonRepository_failed.xml"),
+                 gServer);
+    mapUrlToFile(SEARCH_TEST.failedURL,
+                 do_get_file("data/test_AddonRepository_failed.xml"),
+                 gServer);
 
     // Register files used to test search success
-    gServer.registerFile(GET_TEST.successfulURL,
-                        do_get_file("data/test_AddonRepository_getAddonsByIDs.xml"));
-    gServer.registerFile(RECOMMENDED_TEST.successfulURL,
-                        do_get_file("data/test_AddonRepository.xml"));
-    gServer.registerFile(SEARCH_TEST.successfulURL,
-                        do_get_file("data/test_AddonRepository.xml"));
-
-    gServer.start(PORT);
+    mapUrlToFile(GET_TEST.successfulURL,
+                 do_get_file("data/test_AddonRepository_getAddonsByIDs.xml"),
+                 gServer);
+    mapUrlToFile(RECOMMENDED_TEST.successfulURL,
+                 do_get_file("data/test_AddonRepository.xml"),
+                 gServer);
+    mapUrlToFile(SEARCH_TEST.successfulURL,
+                 do_get_file("data/test_AddonRepository.xml"),
+                 gServer);
 
     // Create an active AddonInstall so can check that it isn't returned in the results
     AddonManager.getInstallForURL(BASE_URL + INSTALL_URL2, function addon_2_get(aInstall) {

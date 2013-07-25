@@ -1,16 +1,18 @@
 const CLASS_ID = Components.ID("{12345678-1234-1234-1234-123456789abc}");
 const CONTRACT_ID = "@mozilla.org/test-parameter-source;1";
 
-var gTestURL = "http://127.0.0.1:4444/update.rdf?itemID=%ITEM_ID%&custom1=%CUSTOM1%&custom2=%CUSTOM2%";
+// Get and create the HTTP server.
+Components.utils.import("resource://testing-common/httpd.js");
+var testserver = new HttpServer();
+testserver.start(-1);
+gPort = testserver.identity.primaryPort;
+
+var gTestURL = "http://127.0.0.1:" + gPort + "/update.rdf?itemID=%ITEM_ID%&custom1=%CUSTOM1%&custom2=%CUSTOM2%";
 var gExpectedQuery = "itemID=test@mozilla.org&custom1=custom_parameter_1&custom2=custom_parameter_2";
 var gSeenExpectedURL = false;
 
 var gComponentRegistrar = Components.manager.QueryInterface(AM_Ci.nsIComponentRegistrar);
 var gCategoryManager = AM_Cc["@mozilla.org/categorymanager;1"].getService(AM_Ci.nsICategoryManager);
-
-// Get the HTTP server.
-Components.utils.import("resource://testing-common/httpd.js");
-var testserver;
 
 // Factory for our parameter handler
 var paramHandlerFactory = {
@@ -36,13 +38,11 @@ function initTest()
   // Setup extension manager
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9");
 
-  // Create and configure the HTTP server.
-  testserver = new HttpServer();
+  // Configure the HTTP server.
   testserver.registerPathHandler("/update.rdf", function(aRequest, aResponse) {
     gSeenExpectedURL = aRequest.queryString == gExpectedQuery;
     aResponse.setStatusLine(null, 404, "Not Found");
   });
-  testserver.start(4444);
 
   // Register our parameter handlers
   gComponentRegistrar.registerFactory(CLASS_ID, "Test component", CONTRACT_ID, paramHandlerFactory);
