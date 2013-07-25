@@ -4,10 +4,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "ion/BaselineJIT.h"
-#include "ion/BaselineIC.h"
-#include "ion/BaselineHelpers.h"
 #include "ion/BaselineCompiler.h"
+
+#include "ion/BaselineHelpers.h"
+#include "ion/BaselineIC.h"
+#include "ion/BaselineJIT.h"
 #include "ion/FixedList.h"
 #include "ion/IonLinker.h"
 #include "ion/IonSpewer.h"

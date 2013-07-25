@@ -13,10 +13,10 @@
 
 #include "jscntxt.h"
 #include "jscompartment.h"
-#include "ion/IonCode.h"
-#include "ion/CompileInfo.h"
 #include "jsinfer.h"
 
+#include "ion/CompileInfo.h"
+#include "ion/IonCode.h"
 #include "vm/Interpreter.h"
 
 namespace js {

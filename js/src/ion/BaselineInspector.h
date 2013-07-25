@@ -12,8 +12,8 @@
 #include "jscntxt.h"
 #include "jscompartment.h"
 
-#include "ion/BaselineJIT.h"
 #include "ion/BaselineIC.h"
+#include "ion/BaselineJIT.h"
 #include "ion/MIR.h"
 
 namespace js {

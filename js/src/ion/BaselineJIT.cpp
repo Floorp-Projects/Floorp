@@ -4,18 +4,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "ion/BaselineJIT.h"
+
 #include "mozilla/MemoryReporting.h"
 
 #include "ion/BaselineCompiler.h"
 #include "ion/BaselineIC.h"
-#include "ion/BaselineJIT.h"
 #include "ion/CompileInfo.h"
 #include "ion/IonSpewer.h"
-#include "ion/IonFrames-inl.h"
-
-#include "vm/Stack-inl.h"
 
 #include "jsopcodeinlines.h"
+
+#include "ion/IonFrames-inl.h"
+#include "vm/Stack-inl.h"
 
 using namespace js;
 using namespace js::ion;

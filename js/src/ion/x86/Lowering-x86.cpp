@@ -7,8 +7,8 @@
 #include "ion/x86/Lowering-x86.h"
 
 #include "ion/MIR.h"
-#include "ion/x86/Assembler-x86.h"
 #include "ion/shared/Lowering-shared-inl.h"
+#include "ion/x86/Assembler-x86.h"
 
 using namespace js;
 using namespace js::ion;
