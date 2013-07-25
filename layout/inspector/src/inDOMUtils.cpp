@@ -36,6 +36,7 @@
 #include "mozilla/dom/InspectorUtilsBinding.h"
 #include "nsCSSProps.h"
 #include "nsColor.h"
+#include "nsStyleSet.h"
 
 using namespace mozilla;
 using namespace mozilla::css;
@@ -55,6 +56,49 @@ NS_IMPL_ISUPPORTS1(inDOMUtils, inIDOMUtils)
 
 ///////////////////////////////////////////////////////////////////////////////
 // inIDOMUtils
+
+NS_IMETHODIMP
+inDOMUtils::GetAllStyleSheets(nsIDOMDocument *aDocument, uint32_t *aLength,
+                              nsISupports ***aSheets)
+{
+  NS_ENSURE_ARG_POINTER(aDocument);
+
+  nsCOMArray<nsISupports> sheets;
+
+  nsCOMPtr<nsIDocument> document = do_QueryInterface(aDocument);
+  MOZ_ASSERT(document);
+
+  // Get the agent, then user sheets in the style set.
+  nsIPresShell* presShell = document->GetShell();
+  if (presShell) {
+    nsStyleSet* styleSet = presShell->StyleSet();
+    nsStyleSet::sheetType sheetType = nsStyleSet::eAgentSheet;
+    for (int32_t i = 0; i < styleSet->SheetCount(sheetType); i++) {
+      sheets.AppendElement(styleSet->StyleSheetAt(sheetType, i));
+    }
+    sheetType = nsStyleSet::eUserSheet;
+    for (int32_t i = 0; i < styleSet->SheetCount(sheetType); i++) {
+      sheets.AppendElement(styleSet->StyleSheetAt(sheetType, i));
+    }
+  }
+
+  // Get the document sheets.
+  for (int32_t i = 0; i < document->GetNumberOfStyleSheets(); i++) {
+    sheets.AppendElement(document->GetStyleSheetAt(i));
+  }
+
+  nsISupports** ret = static_cast<nsISupports**>(NS_Alloc(sheets.Count() *
+                                                 sizeof(nsISupports*)));
+
+  for (int32_t i = 0; i < sheets.Count(); i++) {
+    NS_ADDREF(ret[i] = sheets[i]);
+  }
+
+  *aLength = sheets.Count();
+  *aSheets = ret;
+
+  return NS_OK;
+}
 
 NS_IMETHODIMP
 inDOMUtils::IsIgnorableWhitespace(nsIDOMCharacterData *aDataNode,
