@@ -43,13 +43,6 @@ public:
         return mCx;
     }
 
-    void SetExitCode(int aExitCode) {
-        mExitCode = aExitCode;
-    }
-    int ExitCode() {
-        return mExitCode;
-    }
-
     void SetIsQuitting() {
         mQuitting = JS_TRUE;
     }
@@ -66,7 +59,6 @@ private:
     nsAutoJSValHolder mGlobalHolder;
     JSPrincipals* mJSPrincipals;
 
-    int mExitCode;
     JSBool mQuitting;
 };
 
