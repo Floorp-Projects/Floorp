@@ -76,6 +76,15 @@ public:
 protected:
   nsSplittableFrame(nsStyleContext* aContext) : nsFrame(aContext) {}
 
+  /**
+   * Determine the height consumed by our previous-in-flows.
+   *
+   * @note (bz) This makes laying out a splittable frame with N in-flows
+   *       O(N^2)! So, use this function with caution and minimize the number
+   *       of calls to this method.
+   */
+  nscoord GetConsumedHeight() const;
+
 #ifdef DEBUG
   virtual void DumpBaseRegressionData(nsPresContext* aPresContext, FILE* out, int32_t aIndent) MOZ_OVERRIDE;
 #endif
