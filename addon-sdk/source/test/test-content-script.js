@@ -3,8 +3,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const hiddenFrames = require("sdk/frame/hidden-frame");
-
+const { create: makeFrame } = require("sdk/frame/utils");
+const { window } = require("sdk/addon/window");
 const { Loader } = require('sdk/test/loader');
+const { URL } = require("sdk/url");
+const testURI = require("sdk/self").data.url("test.html");
+const testHost = URL(testURI).scheme + '://' + URL(testURI).host;
 
 /*
  * Utility function that allow to easily run a proxy test with a clean
@@ -12,41 +16,51 @@ const { Loader } = require('sdk/test/loader');
  */
 function createProxyTest(html, callback) {
   return function (assert, done) {
-    let url = 'data:text/html;charset=utf-8,' + encodeURI(html);
+    let url = 'data:text/html;charset=utf-8,' + encodeURIComponent(html);
+    let principalLoaded = false;
 
-    let hiddenFrame = hiddenFrames.add(hiddenFrames.HiddenFrame({
-      onReady: function () {
+    let element = makeFrame(window.document, {
+      nodeName: "iframe",
+      type: "content",
+      allowJavascript: true,
+      allowPlugins: true,
+      allowAuth: true,
+      uri: testURI
+    });
 
-        function onDOMReady() {
-          hiddenFrame.element.removeEventListener("DOMContentLoaded", onDOMReady,
-                                                  false);
+    element.addEventListener("DOMContentLoaded", onDOMReady, false);
 
-          let xrayWindow = hiddenFrame.element.contentWindow;
-          let rawWindow = xrayWindow.wrappedJSObject;
-
-          let isDone = false;
-          let helper = {
-            xrayWindow: xrayWindow,
-            rawWindow: rawWindow,
-            createWorker: function (contentScript) {
-              return createWorker(assert, xrayWindow, contentScript, helper.done);
-            },
-            done: function () {
-              if (isDone)
-                return;
-              isDone = true;
-              hiddenFrames.remove(hiddenFrame);
-              done();
-            }
-          }
-          callback(helper, assert);
-        }
-
-        hiddenFrame.element.addEventListener("DOMContentLoaded", onDOMReady, false);
-        hiddenFrame.element.setAttribute("src", url);
-
+    function onDOMReady() {
+      // Reload frame after getting principal from `testURI`
+      if (!principalLoaded) {
+        element.setAttribute("src", url);
+        principalLoaded = true;
+        return;
       }
-    }));
+
+      assert.equal(element.getAttribute("src"), url, "correct URL loaded");
+      element.removeEventListener("DOMContentLoaded", onDOMReady,
+                                                  false);
+      let xrayWindow = element.contentWindow;
+      let rawWindow = xrayWindow.wrappedJSObject;
+
+      let isDone = false;
+      let helper = {
+        xrayWindow: xrayWindow,
+        rawWindow: rawWindow,
+        createWorker: function (contentScript) {
+          return createWorker(assert, xrayWindow, contentScript, helper.done);
+        },
+        done: function () {
+          if (isDone)
+            return;
+          isDone = true;
+          element.parentNode.removeChild(element);
+          done();
+        }
+      };
+      callback(helper, assert);
+    }
   };
 }
 
@@ -165,9 +179,9 @@ exports["test postMessage"] = createProxyTest(html, function (helper, assert) {
     // xrays use current compartments when calling postMessage method.
     // Whereas js proxies was using postMessage method compartment,
     // not the caller one.
-    assert.equal(event.source, helper.xrayWindow,
-                 "event.source is the top window");
-    assert.equal(event.origin, "null", "origin is null");
+    assert.strictEqual(event.source, helper.xrayWindow,
+                      "event.source is the top window");
+    assert.equal(event.origin, testHost, "origin matches testHost");
 
     assert.equal(event.data, "{\"foo\":\"bar\\n \\\"escaped\\\".\"}",
                      "message data is correct");
@@ -216,7 +230,9 @@ exports["test Object Listener"] = createProxyTest(html, function (helper) {
 exports["test Object Listener 2"] = createProxyTest("", function (helper) {
 
   helper.createWorker(
-    'new ' + function ContentScriptScope() {
+    ('new ' + function ContentScriptScope() {
+      // variable replaced with `testHost`
+      let testHost = "TOKEN";
       // Verify object as DOM event listener
       let myMessageListener = {
         called: false,
@@ -228,7 +244,7 @@ exports["test Object Listener 2"] = createProxyTest("", function (helper) {
           this.called = true;
           assert(event.target == document.defaultView, "event.target is the wrapped window");
           assert(event.source == document.defaultView, "event.source is the wrapped window");
-          assert(event.origin == "null", "origin is null");
+          assert(event.origin == testHost, "origin matches testHost");
           assert(event.data == "ok", "message data is correct");
           done();
         }
@@ -237,7 +253,7 @@ exports["test Object Listener 2"] = createProxyTest("", function (helper) {
       window.addEventListener("message", myMessageListener, true);
       document.defaultView.postMessage("ok", '*');
     }
-  );
+  ).replace("TOKEN", testHost));
 
 });
 

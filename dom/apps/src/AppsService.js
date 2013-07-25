@@ -59,11 +59,6 @@ AppsService.prototype = {
     return DOMApplicationRegistry.getManifestURLByLocalId(aLocalId);
   },
 
-  getAppFromObserverMessage: function getAppFromObserverMessage(aMessage) {
-    debug("getAppFromObserverMessage( " + aMessage + " )");
-    return DOMApplicationRegistry.getAppFromObserverMessage(aMessage);
-  },
-
   getCoreAppsBasePath: function getCoreAppsBasePath() {
     debug("getCoreAppsBasePath()");
     return DOMApplicationRegistry.getCoreAppsBasePath();

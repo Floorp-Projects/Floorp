@@ -72,12 +72,12 @@ protected:
  * ContentClientDoubleBuffered, or using multiple clients for YCbCr or tiled
  * images).
  */
-class ImageClientSingle : public ImageClient
+class DeprecatedImageClientSingle : public ImageClient
 {
 public:
-  ImageClientSingle(CompositableForwarder* aFwd,
-                     TextureFlags aFlags,
-                     CompositableType aType);
+  DeprecatedImageClientSingle(CompositableForwarder* aFwd,
+                              TextureFlags aFlags,
+                              CompositableType aType);
 
   virtual bool UpdateImage(ImageContainer* aContainer, uint32_t aContentFlags);
 
