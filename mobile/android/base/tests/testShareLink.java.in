@@ -67,6 +67,7 @@ public class testShareLink extends BaseTest {
         verifySharePopup(shareOptions,"Link");
 
         /* FIXME: disabled on fig - bug 880060
+        //  Removed by Bug 896576 - [fig] Remove [getAllPagesList] from BaseTest
         // Test share popup in Top Sites
         ListView tslist = getAllPagesList(url);
 
