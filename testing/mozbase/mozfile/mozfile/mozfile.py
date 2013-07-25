@@ -2,9 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from contextlib import contextmanager
 import os
-import shutil
 import tarfile
 import tempfile
 import urlparse
@@ -17,8 +15,7 @@ __all__ = ['extract_tarball',
            'is_url',
            'load',
            'rmtree',
-           'NamedTemporaryFile',
-           'TemporaryDirectory']
+           'NamedTemporaryFile']
 
 
 ### utilities for extracting archives
@@ -52,8 +49,7 @@ def extract_zip(src, dest):
     for name in namelist:
         filename = os.path.realpath(os.path.join(dest, name))
         if name.endswith('/'):
-            if not os.path.isdir(filename):
-                os.makedirs(filename)
+            os.makedirs(filename)
         else:
             path = os.path.dirname(filename)
             if not os.path.isdir(path):
@@ -93,16 +89,14 @@ def extract(src, dest=None):
                         src)
 
     # namelist returns paths with forward slashes even in windows
-    top_level_files = [os.path.join(dest, name.rstrip('/')) for name in namelist
+    top_level_files = [os.path.join(dest, name) for name in namelist
                        if len(name.rstrip('/').split('/')) == 1]
 
     # namelist doesn't include folders, append these to the list
     for name in namelist:
-        index = name.find('/')
-        if index != -1:
-            root = os.path.join(dest, name[:index])
-            if root not in top_level_files:
-                top_level_files.append(root)
+        root = os.path.join(dest, name[:name.find('/')])
+        if root not in top_level_files:
+            top_level_files.append(root)
 
     return top_level_files
 
@@ -238,19 +232,3 @@ def load(resource):
         return file(resource)
 
     return urllib2.urlopen(resource)
-
-@contextmanager
-def TemporaryDirectory():
-    """
-    create a temporary directory using tempfile.mkdtemp, and then clean it up.
-
-    Example usage:
-    with TemporaryDirectory() as tmp:
-       open(os.path.join(tmp, "a_temp_file"), "w").write("data")
-
-    """
-    tempdir = tempfile.mkdtemp()
-    try:
-        yield tempdir
-    finally:
-        shutil.rmtree(tempdir)
