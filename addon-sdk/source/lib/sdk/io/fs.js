@@ -12,11 +12,9 @@ const { Cc, Ci, CC } = require("chrome");
 
 const { setTimeout } = require("../timers");
 const { Stream, InputStream, OutputStream } = require("./stream");
-const { emit, on } = require("../event/core");
 const { Buffer } = require("./buffer");
 const { ns } = require("../core/namespace");
 const { Class } = require("../core/heritage");
-
 
 const nsILocalFile = CC("@mozilla.org/file/local;1", "nsILocalFile",
                         "initWithPath");
@@ -34,8 +32,6 @@ const StreamPump = CC("@mozilla.org/network/input-stream-pump;1",
 const { createOutputTransport, createInputTransport } =
   Cc["@mozilla.org/network/stream-transport-service;1"].
   getService(Ci.nsIStreamTransportService);
-
-const { OPEN_UNBUFFERED } = Ci.nsITransport;
 
 
 const { REOPEN_ON_REWIND, DEFER_OPEN } = Ci.nsIFileInputStream;
@@ -161,16 +157,14 @@ const ReadStream = Class({
     // Open an input stream on a transport. We don"t pass flags to guarantee
     // non-blocking stream semantics. Also we use defaults for segment size &
     // count.
+    let asyncInputStream = transport.openInputStream(null, 0, 0);
+    let binaryInputStream = BinaryInputStream(asyncInputStream);
+    nsIBinaryInputStream(fd, binaryInputStream);
+    let pump = StreamPump(asyncInputStream, position, length, 0, 0, false);
+
     InputStream.prototype.initialize.call(this, {
-      asyncInputStream: transport.openInputStream(null, 0, 0)
+      input: binaryInputStream, pump: pump
     });
-
-    // Close file descriptor on end and destroy the stream.
-    on(this, "end", _ => {
-      this.destroy();
-      emit(this, "close");
-    });
-
     this.read();
   },
   destroy: function() {
@@ -217,20 +211,21 @@ const WriteStream = Class({
     // Open an output stream on a transport. We don"t pass flags to guarantee
     // non-blocking stream semantics. Also we use defaults for segment size &
     // count.
-    OutputStream.prototype.initialize.call(this, {
-      asyncOutputStream: transport.openOutputStream(OPEN_UNBUFFERED, 0, 0),
-      output: output
-    });
+    let asyncOutputStream = transport.openOutputStream(null, 0, 0);
+    // Finally we create a non-blocking binary output stream. This will allows
+    // us to write buffers as byte arrays without any further transcoding.
+    let binaryOutputStream = BinaryOutputStream(asyncOutputStream);
+    nsIBinaryOutputStream(fd, binaryOutputStream);
 
-    // For write streams "finish" basically means close.
-    on(this, "finish", _ => {
-       this.destroy();
-       emit(this, "close");
+    // Storing output stream so that it can beaccessed later.
+    OutputStream.prototype.initialize.call(this, {
+      output: binaryOutputStream,
+      asyncOutputStream: asyncOutputStream
     });
   },
   destroy: function() {
-    OutputStream.prototype.destroy.call(this);
     closeSync(this.fd);
+    OutputStream.prototype.destroy.call(this);
   }
 });
 exports.WriteStream = WriteStream;
@@ -370,7 +365,7 @@ function ftruncate(fd, length, callback) {
 }
 exports.ftruncate = ftruncate;
 
-function ftruncateSync(fd, length = 0) {
+function ftruncateSync(fd, length) {
   writeSync(fd, new Buffer(length), 0, length, 0);
 }
 exports.ftruncateSync = ftruncateSync;
@@ -639,8 +634,6 @@ function openSync(path, flags, mode) {
   let [ fd, flags, mode, file ] =
       [ { path: path }, Flags(flags), Mode(mode), nsILocalFile(path) ];
 
-  nsIFile(fd, file);
-
   // If trying to open file for just read that does not exists
   // need to throw exception as node does.
   if (!file.exists() && !isWritable(flags))
@@ -682,9 +675,7 @@ function writeSync(fd, buffer, offset, length, position) {
   }
   let writeStream = new WriteStream(fd, { position: position,
                                           length: length });
-
-  let output = BinaryOutputStream(nsIFileOutputStream(fd));
-  nsIBinaryOutputStream(fd, output);
+  let output = nsIBinaryOutputStream(fd);
   // We write content as a byte array as this will avoid any transcoding
   // if content was a buffer.
   output.writeByteArray(buffer.valueOf(), buffer.length);
@@ -745,14 +736,10 @@ function readSync(fd, buffer, offset, length, position) {
   // without blocking the main thread.
   let binaryInputStream = BinaryInputStream(input);
   let count = length === ALL ? binaryInputStream.available() : length;
-  if (offset === 0) binaryInputStream.readArrayBuffer(count, buffer.buffer);
-  else {
-    let chunk = new Buffer(count);
-    binaryInputStream.readArrayBuffer(count, chunk.buffer);
-    chunk.copy(buffer, offset);
-  }
+  var bytes = binaryInputStream.readByteArray(count);
+  buffer.copy.call(bytes, buffer, offset);
 
-  return buffer.slice(offset, offset + count);
+  return bytes;
 };
 exports.readSync = readSync;
 
@@ -772,9 +759,9 @@ exports.readSync = readSync;
 function read(fd, buffer, offset, length, position, callback) {
   let bytesRead = 0;
   let readStream = new ReadStream(fd, { position: position, length: length });
-  readStream.on("data", function onData(data) {
-      data.copy(buffer, offset + bytesRead);
-      bytesRead += data.length;
+  readStream.on("data", function onData(chunck) {
+      chunck.copy(buffer, offset + bytesRead);
+      bytesRead += chunck.length;
   });
   readStream.on("end", function onEnd() {
     callback(null, bytesRead, buffer);
@@ -794,26 +781,19 @@ function readFile(path, encoding, callback) {
     encoding = null
   }
 
-  let buffer = null;
+  let buffer = new Buffer();
   try {
     let readStream = new ReadStream(path);
-    readStream.on("data", function(data) {
-      if (!buffer) buffer = data;
-      else {
-        let bufferred = buffer
-        buffer = new Buffer(buffer.length + data.length);
-        bufferred.copy(buffer, 0);
-        data.copy(buffer, bufferred.length);
-      }
+    readStream.on("data", function(chunck) {
+      chunck.copy(buffer, buffer.length);
     });
     readStream.on("error", function onError(error) {
       callback(error);
+      readStream.destroy();
     });
     readStream.on("end", function onEnd() {
-      // Note: Need to destroy before invoking a callback
-      // so that file descriptor is released.
-      readStream.destroy();
       callback(null, buffer);
+      readStream.destroy();
     });
   } catch (error) {
     setTimeout(callback, 0, error);
@@ -827,9 +807,8 @@ exports.readFile = readFile;
  * Otherwise it returns a buffer.
  */
 function readFileSync(path, encoding) {
+  let buffer = new Buffer();
   let fd = openSync(path, "r");
-  let size = fstatSync(fd).size;
-  let buffer = new Buffer(size);
   try {
     readSync(fd, buffer, 0, ALL, 0);
   }
@@ -854,16 +833,13 @@ function writeFile(path, content, encoding, callback) {
       content = new Buffer(content, encoding);
 
     let writeStream = new WriteStream(path);
-    let error = null;
-
-    writeStream.end(content, function() {
-      writeStream.destroy();
+    writeStream.on("error", function onError(error) {
       callback(error);
-    });
-
-    writeStream.on("error", function onError(reason) {
-      error = reason;
       writeStream.destroy();
+    });
+    writeStream.write(content, function onDrain() {
+      writeStream.destroy();
+      callback(null);
     });
   } catch (error) {
     callback(error);

@@ -10,15 +10,15 @@
 #include "mozilla/Casting.h"
 #include "mozilla/DebugOnly.h"
 
+#include "jsopcode.h"
+
+#include "ion/IonCaches.h"
+#include "ion/IonFrames.h"
 #ifdef JS_CPU_X86
 # include "ion/x86/Assembler-x86.h"
 #elif JS_CPU_X64
 # include "ion/x64/Assembler-x64.h"
 #endif
-#include "ion/IonFrames.h"
-#include "jsopcode.h"
-
-#include "ion/IonCaches.h"
 
 namespace js {
 namespace ion {
