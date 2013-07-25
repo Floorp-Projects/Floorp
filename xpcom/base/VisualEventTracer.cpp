@@ -383,9 +383,6 @@ EventFilter::EventPasses(const char * eventName)
   return false;
 }
 
-// State var to stop the flushing thread
-bool gStopFlushingThread = false;
-
 // State and control variables, initialized in Init() method, after it 
 // immutable and read concurently.
 EventFilter * gEventFilter = nullptr;
