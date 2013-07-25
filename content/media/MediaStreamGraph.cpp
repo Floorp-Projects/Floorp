@@ -1220,6 +1220,9 @@ MediaStreamGraphImpl::ApplyStreamUpdate(StreamUpdate* aUpdate)
   stream->mMainThreadCurrentTime = aUpdate->mNextMainThreadCurrentTime;
   stream->mMainThreadFinished = aUpdate->mNextMainThreadFinished;
 
+  if (stream->mWrapper) {
+    stream->mWrapper->NotifyStreamStateChanged();
+  }
   for (int32_t i = stream->mMainThreadListeners.Length() - 1; i >= 0; --i) {
     stream->mMainThreadListeners[i]->NotifyMainThreadStateChanged();
   }
