@@ -12,6 +12,7 @@
 #include "nsIContent.h"
 #include "nsPresContext.h"
 #include "nsStyleContext.h"
+#include "nsContainerFrame.h"
 
 NS_IMPL_FRAMEARENA_HELPERS(nsSplittableFrame)
 
@@ -212,6 +213,33 @@ nsSplittableFrame::GetConsumedHeight() const
   for (nsIFrame* prev = GetPrevInFlow(); prev; prev = prev->GetPrevInFlow()) {
     height += prev->GetRect().height;
   }
+
+  return height;
+}
+
+nscoord
+nsSplittableFrame::GetEffectiveComputedHeight(const nsHTMLReflowState& aReflowState,
+                                              nscoord aConsumedHeight) const
+{
+  nscoord height = aReflowState.ComputedHeight();
+  if (height == NS_INTRINSICSIZE) {
+    return NS_INTRINSICSIZE;
+  }
+
+  if (aConsumedHeight == NS_INTRINSICSIZE) {
+    aConsumedHeight = GetConsumedHeight();
+  }
+
+  height -= aConsumedHeight;
+
+  if (aConsumedHeight != NS_INTRINSICSIZE) {
+    // We just subtracted our top-border padding, since it was included in the
+    // first frame's height. Add it back to get the content height.
+    height += aReflowState.mComputedBorderPadding.top;
+  }
+
+  // We may have stretched the frame beyond its computed height. Oh well.
+  height = std::max(0, height);
 
   return height;
 }

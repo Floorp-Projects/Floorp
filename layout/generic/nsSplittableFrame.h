@@ -85,6 +85,13 @@ protected:
    */
   nscoord GetConsumedHeight() const;
 
+  /**
+   * Retrieve the effective computed height of this frame, which is the computed
+   * height, minus the height consumed by any previous in-flows.
+   */
+  nscoord GetEffectiveComputedHeight(const nsHTMLReflowState& aReflowState,
+                                     nscoord aConsumed = NS_INTRINSICSIZE) const;
+
 #ifdef DEBUG
   virtual void DumpBaseRegressionData(nsPresContext* aPresContext, FILE* out, int32_t aIndent) MOZ_OVERRIDE;
 #endif
