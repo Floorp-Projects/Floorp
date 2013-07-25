@@ -5,162 +5,116 @@
 var timer = require("sdk/timers");
 const { Loader } = require("sdk/test/loader");
 
-exports.testSetTimeout = function(assert, end) {
+exports.testSetTimeout = function(test) {
   timer.setTimeout(function() {
-    assert.pass("testSetTimeout passed");
-    end();
+    test.pass("testSetTimeout passed");
+    test.done();
   }, 1);
+  test.waitUntilDone();
 };
 
-exports.testParamedSetTimeout = function(assert, end) {
+exports.testParamedSetTimeout = function(test) {
   let params = [1, 'foo', { bar: 'test' }, null, undefined];
   timer.setTimeout.apply(null, [function() {
-    assert.equal(arguments.length, params.length);
+    test.assertEqual(arguments.length, params.length);
     for (let i = 0, ii = params.length; i < ii; i++)
-      assert.equal(params[i], arguments[i]);
-    end();
+      test.assertEqual(params[i], arguments[i]);
+    test.done();
   }, 1].concat(params));
+  test.waitUntilDone();
 };
 
-exports.testClearTimeout = function(assert, end) {
+exports.testClearTimeout = function(test) {
   var myFunc = function myFunc() {
-    assert.fail("myFunc() should not be called in testClearTimeout");
+    test.fail("myFunc() should not be called in testClearTimeout");
   };
   var id = timer.setTimeout(myFunc, 1);
   timer.setTimeout(function() {
-    assert.pass("testClearTimeout passed");
-    end();
+    test.pass("testClearTimeout passed");
+    test.done();
   }, 2);
   timer.clearTimeout(id);
+  test.waitUntilDone();
 };
 
-exports.testParamedClearTimeout = function(assert, end) {
+exports.testParamedClearTimeout = function(test) {
   let params = [1, 'foo', { bar: 'test' }, null, undefined];
   var myFunc = function myFunc() {
-    assert.fail("myFunc() should not be called in testClearTimeout");
+    test.fail("myFunc() should not be called in testClearTimeout");
   };
   var id = timer.setTimeout(myFunc, 1);
   timer.setTimeout.apply(null, [function() {
-    assert.equal(arguments.length, params.length);
+    test.assertEqual(arguments.length, params.length);
     for (let i = 0, ii = params.length; i < ii; i++)
-      assert.equal(params[i], arguments[i]);
-    end();
+      test.assertEqual(params[i], arguments[i]);
+    test.done();
   }, 1].concat(params));
   timer.clearTimeout(id);
+  test.waitUntilDone();
 };
 
-exports.testSetInterval = function (assert, end) {
+exports.testSetInterval = function (test) {
   var count = 0;
   var id = timer.setInterval(function () {
     count++;
     if (count >= 5) {
       timer.clearInterval(id);
-      assert.pass("testSetInterval passed");
-      end();
+      test.pass("testSetInterval passed");
+      test.done();
     }
   }, 1);
+  test.waitUntilDone();
 };
 
-exports.testParamedSetInerval = function(assert, end) {
+exports.testParamedSetInerval = function(test) {
   let params = [1, 'foo', { bar: 'test' }, null, undefined];
   let count = 0;
   let id = timer.setInterval.apply(null, [function() {
     count ++;
     if (count < 5) {
-      assert.equal(arguments.length, params.length);
+      test.assertEqual(arguments.length, params.length);
       for (let i = 0, ii = params.length; i < ii; i++)
-        assert.equal(params[i], arguments[i]);
+        test.assertEqual(params[i], arguments[i]);
     } else {
       timer.clearInterval(id);
-      end();
+      test.done();
     }
   }, 1].concat(params));
+  test.waitUntilDone();
 };
 
-exports.testClearInterval = function (assert, end) {
+exports.testClearInterval = function (test) {
   timer.clearInterval(timer.setInterval(function () {
-    assert.fail("setInterval callback should not be called");
+    test.fail("setInterval callback should not be called");
   }, 1));
   var id = timer.setInterval(function () {
     timer.clearInterval(id);
-    assert.pass("testClearInterval passed");
-    end();
+    test.pass("testClearInterval passed");
+    test.done();
   }, 2);
+  test.waitUntilDone();
 };
 
-exports.testParamedClearInterval = function(assert, end) {
+exports.testParamedClearInterval = function(test) {
   timer.clearInterval(timer.setInterval(function () {
-    assert.fail("setInterval callback should not be called");
+    test.fail("setInterval callback should not be called");
   }, 1, timer, {}, null));
 
   let id = timer.setInterval(function() {
     timer.clearInterval(id);
-    assert.equal(3, arguments.length);
-    end();
+    test.assertEqual(3, arguments.length);
+    test.done();
   }, 2, undefined, 'test', {});
+  test.waitUntilDone();
 };
 
 
-exports.testImmediate = function(assert, end) {
-  let actual = [];
-  let ticks = 0;
-  timer.setImmediate(function(...params) {
-    actual.push(params);
-    assert.equal(ticks, 1, "is a next tick");
-    assert.deepEqual(actual, [["start", "immediates"]]);
-  }, "start", "immediates");
-
-  timer.setImmediate(function(...params) {
-    actual.push(params);
-    assert.deepEqual(actual, [["start", "immediates"],
-                                  ["added"]]);
-    assert.equal(ticks, 1, "is a next tick");
-    timer.setImmediate(function(...params) {
-      actual.push(params);
-      assert.equal(ticks, 2, "is second tick");
-      assert.deepEqual(actual, [["start", "immediates"],
-                                    ["added"],
-                                    [],
-                                    ["last", "immediate", "handler"],
-                                    ["side-effect"]]);
-      end();
-    }, "side-effect");
-  }, "added");
-
-  timer.setImmediate(function(...params) {
-    actual.push(params);
-    assert.equal(ticks, 1, "is a next tick");
-    assert.deepEqual(actual, [["start", "immediates"],
-                              ["added"],
-                              []]);
-    timer.clearImmediate(removeID);
-  });
-
-  function removed() {
-    assert.fail("should be removed");
-  }
-  let removeID = timer.setImmediate(removed);
-
-  timer.setImmediate(function(...params) {
-    actual.push(params);
-    assert.equal(ticks, 1, "is a next tick");
-    assert.deepEqual(actual, [["start", "immediates"],
-                              ["added"],
-                              [],
-                              ["last", "immediate", "handler"]]);
-    ticks = ticks + 1;
-  }, "last", "immediate", "handler");
-
-
-  ticks = ticks + 1;
-};
-
-exports.testUnload = function(assert, end) {
+exports.testUnload = function(test) {
   var loader = Loader(module);
   var sbtimer = loader.require("sdk/timers");
 
   var myFunc = function myFunc() {
-    assert.fail("myFunc() should not be called in testUnload");
+    test.fail("myFunc() should not be called in testUnload");
   };
 
   sbtimer.setTimeout(myFunc, 1);
@@ -169,9 +123,9 @@ exports.testUnload = function(assert, end) {
   sbtimer.setInterval(myFunc, 1, {}, null, 'bar', undefined, 87);
   loader.unload();
   timer.setTimeout(function() {
-    assert.pass("timer testUnload passed");
-    end();
+    test.pass("timer testUnload passed");
+    test.done();
   }, 2);
+  test.waitUntilDone();
 };
 
-require("test").run(exports);
