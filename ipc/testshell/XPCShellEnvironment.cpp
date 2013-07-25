@@ -46,9 +46,6 @@
 #include "TestShellChild.h"
 #include "TestShellParent.h"
 
-#define EXITCODE_RUNTIME_ERROR 3
-#define EXITCODE_FILE_NOT_FOUND 4
-
 using mozilla::ipc::XPCShellEnvironment;
 using mozilla::ipc::TestShellChild;
 using mozilla::ipc::TestShellParent;
@@ -166,9 +163,6 @@ ScriptErrorReporter(JSContext *cx,
     }
     fputs("^\n", stderr);
  out:
-    if (!JSREPORT_IS_WARNING(report->flags)) {
-        Environment(cx)->SetExitCode(EXITCODE_RUNTIME_ERROR);
-    }
     JS_free(cx, prefix);
 }
 
@@ -318,11 +312,7 @@ Quit(JSContext *cx,
      unsigned argc,
      JS::Value *vp)
 {
-    int exitCode = 0;
-    JS_ConvertArguments(cx, argc, JS_ARGV(cx, vp), "/ i", &exitCode);
-
     XPCShellEnvironment* env = Environment(cx);
-    env->SetExitCode(exitCode);
     env->SetIsQuitting();
 
     return JS_FALSE;
@@ -661,7 +651,6 @@ XPCShellEnvironment::CreateEnvironment()
 XPCShellEnvironment::XPCShellEnvironment()
 :   mCx(NULL),
     mJSPrincipals(NULL),
-    mExitCode(0),
     mQuitting(JS_FALSE)
 {
 }
