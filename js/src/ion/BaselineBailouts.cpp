@@ -382,7 +382,7 @@ GetStubReturnAddress(JSContext *cx, jsbytecode *pc)
     if (IsSetterPC(pc))
         return cx->compartment()->ionCompartment()->baselineSetPropReturnAddr();
     // This should be a call op of some kind, now.
-    JS_ASSERT(js_CodeSpec[JSOp(*pc)].format & JOF_INVOKE);
+    JS_ASSERT(IsCallPC(pc));
     return cx->compartment()->ionCompartment()->baselineCallReturnAddr();
 }
 
@@ -769,7 +769,7 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
     }
 
     uint32_t pcOff = pc - script->code;
-    bool isCall = js_CodeSpec[op].format & JOF_INVOKE;
+    bool isCall = IsCallPC(pc);
     BaselineScript *baselineScript = script->baselineScript();
 
 #ifdef DEBUG

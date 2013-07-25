@@ -2188,7 +2188,7 @@ BaselineCompiler::emit_JSOP_SETARG()
 bool
 BaselineCompiler::emitCall()
 {
-    JS_ASSERT(js_CodeSpec[*pc].format & JOF_INVOKE);
+    JS_ASSERT(IsCallPC(pc));
 
     uint32_t argc = GET_ARGC(pc);
 

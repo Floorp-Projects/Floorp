@@ -1394,7 +1394,7 @@ InlineFrameIteratorMaybeGC<allowGC>::isConstructing() const
             return false;
 
         // In the case of a JS frame, look up the pc from the snapshot.
-        JS_ASSERT(js_CodeSpec[*parent.pc()].format & JOF_INVOKE);
+        JS_ASSERT(IsCallPC(parent.pc()));
 
         return (JSOp)*parent.pc() == JSOP_NEW;
     }
@@ -1422,7 +1422,7 @@ IonFrameIterator::isConstructing() const
         if (IsGetterPC(inlinedParent.pc()) || IsSetterPC(inlinedParent.pc()))
             return false;
 
-        JS_ASSERT(js_CodeSpec[*inlinedParent.pc()].format & JOF_INVOKE);
+        JS_ASSERT(IsCallPC(inlinedParent.pc()));
 
         return (JSOp)*inlinedParent.pc() == JSOP_NEW;
     }
@@ -1435,7 +1435,7 @@ IonFrameIterator::isConstructing() const
         if (IsGetterPC(pc) || IsSetterPC(pc))
             return false;
 
-        JS_ASSERT(js_CodeSpec[*pc].format & JOF_INVOKE);
+        JS_ASSERT(IsCallPC(pc));
 
         return JSOp(*pc) == JSOP_NEW;
     }
