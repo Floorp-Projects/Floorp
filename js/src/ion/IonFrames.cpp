@@ -1313,7 +1313,8 @@ InlineFrameIteratorMaybeGC<allowGC>::findNextFrame()
     // before reading inner ones.
     unsigned remaining = start_.frameCount() - framesRead_ - 1;
     for (unsigned i = 0; i < remaining; i++) {
-        JS_ASSERT(js_CodeSpec[*pc_].format & JOF_INVOKE);
+        JS_ASSERT(js_CodeSpec[*pc_].format & JOF_INVOKE ||
+                  IsGetterPC(pc_) || IsSetterPC(pc_));
 
         // Recover the number of actual arguments from the script.
         if (JSOp(*pc_) != JSOP_FUNAPPLY)
