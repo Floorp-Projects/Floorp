@@ -200,11 +200,6 @@ var TouchModule = {
 
   /** Begin possible pan and send tap down event. */
   _onTouchStart: function _onTouchStart(aEvent) {
-    if (Services.prefs.getBoolPref(kAsyncPanZoomEnabled) &&
-        !StartUI.isStartPageVisible) {
-      return;
-    }
-
     if (aEvent.touches.length > 1)
       return;
 
@@ -241,6 +236,14 @@ var TouchModule = {
       return;
     }
 
+    // Don't allow kinetic panning if APZC is enabled and the pan element is the deck
+    let deck = document.getElementById("browsers");
+    if (Services.prefs.getBoolPref(kAsyncPanZoomEnabled) &&
+        !StartUI.isStartPageVisible &&
+        this._targetScrollbox == deck) {
+      return;
+    }
+
     // XXX shouldn't dragger always be valid here?
     if (dragger) {
       let draggable = dragger.isDraggable(targetScrollbox, targetScrollInterface);
@@ -256,11 +259,6 @@ var TouchModule = {
 
   /** Send tap up event and any necessary full taps. */
   _onTouchEnd: function _onTouchEnd(aEvent) {
-    if (Services.prefs.getBoolPref(kAsyncPanZoomEnabled) &&
-        !StartUI.isStartPageVisible) {
-      return;
-    }
-
     if (aEvent.touches.length > 0 || this._isCancelled || !this._targetScrollbox)
       return;
 
@@ -277,11 +275,6 @@ var TouchModule = {
    * If we're in a drag, do what we have to do to drag on.
    */
   _onTouchMove: function _onTouchMove(aEvent) {
-    if (Services.prefs.getBoolPref(kAsyncPanZoomEnabled) &&
-        !StartUI.isStartPageVisible) {
-      return;
-    }
-
     if (aEvent.touches.length > 1)
       return;
 
@@ -370,8 +363,15 @@ var TouchModule = {
     if (dragData.isPan()) {
       if (Date.now() - this._dragStartTime > kStopKineticPanOnDragTimeout)
         this._kinetic._velocity.set(0, 0);
-      // Start kinetic pan.
-      this._kinetic.start();
+
+      // Start kinetic pan if we i) aren't using async pan zoom or ii) if we
+      // are on the start page, iii) If the scroll element is not browsers
+      let deck = document.getElementById("browsers");
+      if (!Services.prefs.getBoolPref(kAsyncPanZoomEnabled) ||
+          StartUI.isStartPageVisible ||
+          this._targetScrollbox != deck) {
+        this._kinetic.start();
+      }
     } else {
       this._kinetic.end();
       if (this._dragger)
