@@ -298,7 +298,6 @@ nsAccessiblePivot::MoveLast(nsIAccessibleTraversalRule* aRule,
   return NS_OK;
 }
 
-// TODO: Implement
 NS_IMETHODIMP
 nsAccessiblePivot::MoveNextByText(TextBoundaryType aBoundary, bool* aResult)
 {
@@ -306,10 +305,49 @@ nsAccessiblePivot::MoveNextByText(TextBoundaryType aBoundary, bool* aResult)
 
   *aResult = false;
 
-  return NS_ERROR_NOT_IMPLEMENTED;
+  int32_t oldStart = mStartOffset, oldEnd = mEndOffset;
+  HyperTextAccessible* text = mPosition->AsHyperText();
+  Accessible* oldPosition = mPosition;
+  while (!text) {
+    oldPosition = mPosition;
+    mPosition = mPosition->Parent();
+    text = mPosition->AsHyperText();
+  }
+
+  if (mEndOffset == -1)
+    mEndOffset = text != oldPosition ? text->GetChildOffset(oldPosition) : 0;
+
+  if (mEndOffset == text->CharacterCount())
+    return NS_OK;
+
+  AccessibleTextBoundary startBoundary, endBoundary;
+  switch (aBoundary) {
+    case CHAR_BOUNDARY:
+      startBoundary = nsIAccessibleText::BOUNDARY_CHAR;
+      endBoundary = nsIAccessibleText::BOUNDARY_CHAR;
+      break;
+    case WORD_BOUNDARY:
+      startBoundary = nsIAccessibleText::BOUNDARY_WORD_START;
+      endBoundary = nsIAccessibleText::BOUNDARY_WORD_END;
+      break;
+    default:
+      return NS_ERROR_INVALID_ARG;
+  }
+
+  nsAutoString unusedText;
+  int32_t newStart = 0, newEnd = 0;
+  text->GetTextAtOffset(mEndOffset, endBoundary, &newStart, &mEndOffset, unusedText);
+  text->GetTextBeforeOffset(mEndOffset, startBoundary, &newStart, &newEnd,
+                            unusedText);
+  mStartOffset = newEnd == mEndOffset ? newStart : newEnd;
+
+  *aResult = true;
+
+  NotifyOfPivotChange(mPosition, oldStart, oldEnd,
+                      nsIAccessiblePivot::REASON_TEXT);
+  return NS_OK;
 }
 
-// TODO: Implement
 NS_IMETHODIMP
 nsAccessiblePivot::MovePreviousByText(TextBoundaryType aBoundary, bool* aResult)
 {
@@ -317,7 +355,52 @@ nsAccessiblePivot::MovePreviousByText(TextBoundaryType aBoundary, bool* aResult)
 
   *aResult = false;
 
-  return NS_ERROR_NOT_IMPLEMENTED;
+  int32_t oldStart = mStartOffset, oldEnd = mEndOffset;
+  HyperTextAccessible* text = mPosition->AsHyperText();
+  Accessible* oldPosition = mPosition;
+  while (!text) {
+    oldPosition = mPosition;
+    mPosition = mPosition->Parent();
+    text = mPosition->AsHyperText();
+  }
+
+  if (mStartOffset == -1)
+    mStartOffset = text != oldPosition ? text->GetChildOffset(oldPosition) : 0;
+
+  if (mStartOffset == 0)
+    return NS_OK;
+
+  AccessibleTextBoundary startBoundary, endBoundary;
+  switch (aBoundary) {
+    case CHAR_BOUNDARY:
+      startBoundary = nsIAccessibleText::BOUNDARY_CHAR;
+      endBoundary = nsIAccessibleText::BOUNDARY_CHAR;
+      break;
+    case WORD_BOUNDARY:
+      startBoundary = nsIAccessibleText::BOUNDARY_WORD_START;
+      endBoundary = nsIAccessibleText::BOUNDARY_WORD_END;
+      break;
+    default:
+      return NS_ERROR_INVALID_ARG;
+  }
+
+  nsAutoString unusedText;
+  int32_t newStart = 0, newEnd = 0;
+  text->GetTextBeforeOffset(mStartOffset, startBoundary, &newStart, &newEnd,
+                            unusedText);
+  if (newStart < mStartOffset)
+    mStartOffset = newEnd == mStartOffset ? newStart : newEnd;
+  else // XXX: In certain odd cases newStart is equal to mStartOffset
+    text->GetTextBeforeOffset(mStartOffset - 1, startBoundary, &newStart,
+                              &mStartOffset, unusedText);
+  text->GetTextAtOffset(mStartOffset, endBoundary, &newStart, &mEndOffset,
+                        unusedText);
+
+  *aResult = true;
+
+  NotifyOfPivotChange(mPosition, oldStart, oldEnd,
+                      nsIAccessiblePivot::REASON_TEXT);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
