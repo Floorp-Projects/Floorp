@@ -215,8 +215,7 @@ if test -n "$gonkdir" ; then
         AC_SUBST(MOZ_OMX_DECODER)
         ;;
     17)
-        GONK_INCLUDES="-I$gonkdir/frameworks/native/include -I$gonkdir/external/dbus -I$gonkdir/external/bluetooth/bluez/lib"
-        MOZ_B2G_BT=1
+        GONK_INCLUDES="-I$gonkdir/frameworks/native/include"
         ;;
     *)
         AC_MSG_ERROR([Unsupported platform version: $ANDROID_VERSION])
