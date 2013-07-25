@@ -177,7 +177,7 @@ struct IonOptions
     // How many uses of a parallel kernel before we attempt compilation.
     //
     // Default: 1
-    uint32_t usesBeforeCompileParallel;
+    uint32_t usesBeforeCompilePar;
 
     void setEagerCompilation() {
         eagerCompilation = true;
@@ -213,7 +213,7 @@ struct IonOptions
         inlineMaxTotalBytecodeLength(1000),
         inlineUseCountRatio(128),
         eagerCompilation(false),
-        usesBeforeCompileParallel(1)
+        usesBeforeCompilePar(1)
     {
     }
 

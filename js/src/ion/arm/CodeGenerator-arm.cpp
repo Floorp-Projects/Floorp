@@ -208,9 +208,9 @@ CodeGeneratorARM::bailoutFrom(Label *label, LSnapshot *snapshot)
     switch (info.executionMode()) {
       case ParallelExecution: {
         // in parallel mode, make no attempt to recover, just signal an error.
-        OutOfLineParallelAbort *ool = oolParallelAbort(ParallelBailoutUnsupported,
-                                                       snapshot->mir()->block(),
-                                                       snapshot->mir()->pc());
+        OutOfLineAbortPar *ool = oolAbortPar(ParallelBailoutUnsupported,
+                                             snapshot->mir()->block(),
+                                             snapshot->mir()->pc());
         masm.retarget(label, ool->entry());
         return true;
       }
@@ -1446,6 +1446,17 @@ CodeGeneratorARM::visitCompareVAndBranch(LCompareVAndBranch *lir)
     masm.cmp32(lhs.payloadReg(), rhs.payloadReg());
     emitBranch(cond, lir->ifTrue(), lir->ifFalse());
 
+    return true;
+}
+
+bool
+CodeGeneratorARM::visitBitAndAndBranch(LBitAndAndBranch *baab)
+{
+    if (baab->right()->isConstant())
+        masm.ma_tst(ToRegister(baab->left()), Imm32(ToInt32(baab->right())));
+    else
+        masm.ma_tst(ToRegister(baab->left()), ToRegister(baab->right()));
+    emitBranch(Assembler::NonZero, baab->ifTrue(), baab->ifFalse());
     return true;
 }
 

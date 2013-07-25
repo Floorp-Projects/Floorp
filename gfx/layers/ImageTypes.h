@@ -24,7 +24,7 @@ enum ImageFormat {
   GRALLOC_PLANAR_YCBCR,
 
   /**
-   * The SHARED_RGB format creates a SharedRGBImage, which stores RGB data in
+   * The SHARED_RGB format creates a DeprecatedSharedRGBImage, which stores RGB data in
    * shared memory. Some Android hardware video decoders require this format.
    * Currently only used on Android.
    */

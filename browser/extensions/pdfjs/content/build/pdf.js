@@ -20,8 +20,8 @@ if (typeof PDFJS === 'undefined') {
   (typeof window !== 'undefined' ? window : this).PDFJS = {};
 }
 
-PDFJS.version = '0.8.291';
-PDFJS.build = '4e83123';
+PDFJS.version = '0.8.377';
+PDFJS.build = 'c682c25';
 
 (function pdfjsWrapper() {
   // Use strict in our context only - users might not want it
@@ -73,6 +73,10 @@ var ChunkedStream = (function ChunkedStreamClosure() {
         }
       }
       return chunks;
+    },
+
+    getBaseStreams: function ChunkedStream_getBaseStreams() {
+      return [this];
     },
 
     allChunksLoaded: function ChunkedStream_allChunksLoaded() {
@@ -143,7 +147,7 @@ var ChunkedStream = (function ChunkedStreamClosure() {
     getByte: function ChunkedStream_getByte() {
       var pos = this.pos;
       if (pos >= this.end) {
-        return null;
+        return -1;
       }
       this.ensureRange(pos, pos + 1);
       return this.bytes[this.pos++];
@@ -179,22 +183,6 @@ var ChunkedStream = (function ChunkedStreamClosure() {
     getByteRange: function ChunkedStream_getBytes(begin, end) {
       this.ensureRange(begin, end);
       return this.bytes.subarray(begin, end);
-    },
-
-    lookChar: function ChunkedStream_lookChar() {
-      var pos = this.pos;
-      if (pos >= this.end)
-        return null;
-      this.ensureRange(pos, pos + 1);
-      return String.fromCharCode(this.bytes[pos]);
-    },
-
-    getChar: function ChunkedStream_getChar() {
-      var pos = this.pos;
-      if (pos >= this.end)
-        return null;
-      this.ensureRange(pos, pos + 1);
-      return String.fromCharCode(this.bytes[this.pos++]);
     },
 
     skip: function ChunkedStream_skip(n) {
@@ -982,7 +970,7 @@ var PDFDocument = (function PDFDocumentClosure() {
     if (pos + limit > end)
       limit = end - pos;
     for (var n = 0; n < limit; ++n)
-      str += stream.getChar();
+      str += String.fromCharCode(stream.getByte());
     stream.pos = pos;
     var index = backwards ? str.lastIndexOf(needle) : str.indexOf(needle);
     if (index == -1)
@@ -1061,12 +1049,12 @@ var PDFDocument = (function PDFDocumentClosure() {
           stream.skip(9);
           var ch;
           do {
-            ch = stream.getChar();
+            ch = stream.getByte();
           } while (Lexer.isSpace(ch));
           var str = '';
-          while ((ch - '0') <= 9) {
-            str += ch;
-            ch = stream.getChar();
+          while (ch >= 0x20 && ch <= 0x39) { // < '9'
+            str += String.fromCharCode(ch);
+            ch = stream.getByte();
           }
           startXRef = parseInt(str, 10);
           if (isNaN(startXRef))
@@ -1095,11 +1083,11 @@ var PDFDocument = (function PDFDocumentClosure() {
         // Reading file format version
         var MAX_VERSION_LENGTH = 12;
         var version = '', ch;
-        while ((ch = stream.getChar()) > ' ') {
+        while ((ch = stream.getByte()) > 0x20) { // SPACE
           if (version.length >= MAX_VERSION_LENGTH) {
             break;
           }
-          version += ch;
+          version += String.fromCharCode(ch);
         }
         // removing "%PDF-"-prefix
         this.pdfFormatVersion = version.substring(5);
@@ -1270,6 +1258,28 @@ function combineUrl(baseUrl, url) {
     return baseUrl.substring(0, prefixLength + 1) + url;
   }
 }
+
+// Validates if URL is safe and allowed, e.g. to avoid XSS.
+function isValidUrl(url, allowRelative) {
+  if (!url) {
+    return false;
+  }
+  var colon = url.indexOf(':');
+  if (colon < 0) {
+    return allowRelative;
+  }
+  var protocol = url.substr(0, colon);
+  switch (protocol) {
+    case 'http':
+    case 'https':
+    case 'ftp':
+    case 'mailto':
+      return true;
+    default:
+      return false;
+  }
+}
+PDFJS.isValidUrl = isValidUrl;
 
 // In a well-formed PDF, |cond| holds.  If it doesn't, subsequent
 // behavior is undefined.
@@ -1786,7 +1796,7 @@ function isArray(v) {
 
 function isStream(v) {
   return typeof v == 'object' && v !== null && v !== undefined &&
-         ('getChar' in v);
+         ('getBytes' in v);
 }
 
 function isArrayBuffer(v) {
@@ -2090,6 +2100,13 @@ PDFJS.createBlob = function createBlob(data, contentType) {
   return bb.getBlob(contentType);
 };
 
+
+/**
+ * The maximum allowed image size in total pixels e.g. width * height. Images
+ * above this value will not be drawn. Use -1 for no limit.
+ * @var {Number}
+ */
+PDFJS.maxImageSize = PDFJS.maxImageSize === undefined ? -1 : PDFJS.maxImageSize;
 
 /**
  * This is the main entry point for loading a PDF and interacting with it.
@@ -2830,7 +2847,8 @@ var WorkerTransport = (function WorkerTransportClosure() {
       source.chunkedViewerLoading = !!this.pdfDataRangeTransport;
       this.messageHandler.send('GetDocRequest', {
         source: source,
-        disableRange: PDFJS.disableRange
+        disableRange: PDFJS.disableRange,
+        maxImageSize: PDFJS.maxImageSize
       });
     },
 
@@ -3054,7 +3072,7 @@ function compileType3Glyph(imgData) {
   var width = imgData.width, height = imgData.height;
   var i, j, j0, width1 = width + 1;
   var points = new Uint8Array(width1 * (height + 1));
-  var POINT_TYPES = 
+  var POINT_TYPES =
       new Uint8Array([0, 2, 4, 0, 1, 0, 5, 4, 8, 10, 0, 8, 0, 2, 1, 0]);
   // finding iteresting points: every point is located between mask pixels,
   // so there will be points of the (width + 1)x(height + 1) grid. Every point
@@ -3095,7 +3113,7 @@ function compileType3Glyph(imgData) {
     for (j = 1; j < width; j++) {
       sum = (sum >> 2) + (data[pos + 4] ? 4 : 0) +
             (data[pos - lineSize + 4] ? 8 : 0);
-      if (POINT_TYPES[sum]) { 
+      if (POINT_TYPES[sum]) {
         points[j0 + j] = POINT_TYPES[sum];
         ++count;
       }
@@ -3151,16 +3169,16 @@ function compileType3Glyph(imgData) {
     do {
       var step = steps[type];
       do { p += step; } while (!points[p]);
-      
+
       pp = points[p];
       if (pp !== 5 && pp !== 10) {
         // set new direction
-        type = pp; 
+        type = pp;
         // delete mark
-        points[p] = 0; 
+        points[p] = 0;
       } else { // type is 5 or 10, ie, a crossing
         // set new direction
-        type = pp & ((0x33 * type) >> 4); 
+        type = pp & ((0x33 * type) >> 4);
         // set new type for "future hit"
         points[p] &= (type >> 2 | type << 2);
       }
@@ -3190,7 +3208,7 @@ function compileType3Glyph(imgData) {
     c.beginPath();
     c.restore();
   };
-  
+
   return drawOutline;
 }
 
@@ -3826,14 +3844,20 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       var ctx = this.ctx;
       var font = this.current.font;
       var ctxMatrix = ctx.mozCurrentTransform;
-      if (ctxMatrix) {
-        var bl = Util.applyTransform([0, 0], ctxMatrix);
-        var tr = Util.applyTransform([1, 1], ctxMatrix);
-        geometry.x = bl[0];
-        geometry.y = bl[1];
-        geometry.hScale = tr[0] - bl[0];
-        geometry.vScale = tr[1] - bl[1];
-      }
+      var a = ctxMatrix[0], b = ctxMatrix[1], c = ctxMatrix[2];
+      var d = ctxMatrix[3], e = ctxMatrix[4], f = ctxMatrix[5];
+      var sx = (a >= 0) ?
+          Math.sqrt((a * a) + (b * b)) : -Math.sqrt((a * a) + (b * b));
+      var sy = (d >= 0) ?
+          Math.sqrt((c * c) + (d * d)) : -Math.sqrt((c * c) + (d * d));
+      var angle = Math.atan2(b, a);
+      var x = e;
+      var y = f;
+      geometry.x = x;
+      geometry.y = y;
+      geometry.hScale = sx;
+      geometry.vScale = sy;
+      geometry.angle = angle;
       geometry.spaceWidth = font.spaceWidth;
       geometry.fontName = font.loadedName;
       geometry.fontFamily = font.fallbackName;
@@ -4051,11 +4075,8 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       if (textSelection) {
         geom.canvasWidth = canvasWidth;
         if (vertical) {
-          var vmetric = font.defaultVMetrics;
-          geom.x += vmetric[1] * fontSize * current.fontMatrix[0] /
-                    fontSizeScale * geom.hScale;
-          geom.y += vmetric[2] * fontSize * current.fontMatrix[0] /
-                    fontSizeScale * geom.vScale;
+          var VERTICAL_TEXT_ROTATION = Math.PI / 2;
+          geom.angle += VERTICAL_TEXT_ROTATION;
         }
         this.textLayer.appendText(geom);
       }
@@ -4111,12 +4132,8 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       if (textSelection) {
         geom.canvasWidth = canvasWidth;
         if (vertical) {
-          var fontSizeScale = current.fontSizeScale;
-          var vmetric = font.defaultVMetrics;
-          geom.x += vmetric[1] * fontSize * current.fontMatrix[0] /
-                    fontSizeScale * geom.hScale;
-          geom.y += vmetric[2] * fontSize * current.fontMatrix[0] /
-                    fontSizeScale * geom.vScale;
+          var VERTICAL_TEXT_ROTATION = Math.PI / 2;
+          geom.angle += VERTICAL_TEXT_ROTATION;
         }
         this.textLayer.appendText(geom);
       }
@@ -5666,14 +5683,7 @@ var XRef = (function XRefClosure() {
         } else {
           e = parser.getObj();
         }
-        if (!isStream(e) || e instanceof JpegStream) {
-          this.cache[num] = e;
-        } else if (e instanceof Stream) {
-          e = e.makeSubStream(e.start, e.length, e.dict);
-          this.cache[num] = e;
-        } else if ('readBlock' in e) {
-          e.getBytes();
-          e = e.makeSubStream(0, e.bufferLength, e.dict);
+        if (!isStream(e)) {
           this.cache[num] = e;
         }
         return e;
@@ -6002,13 +6012,22 @@ var ObjectLoader = (function() {
             pendingRequests.push({ begin: e.begin, end: e.end });
           }
         }
-        if (currentNode instanceof ChunkedStream &&
-            currentNode.getMissingChunks().length) {
-          nodesToRevisit.push(currentNode);
-          pendingRequests.push({
-            begin: currentNode.start,
-            end: currentNode.end
-          });
+        if (currentNode && currentNode.getBaseStreams) {
+          var baseStreams = currentNode.getBaseStreams();
+          var foundMissingData = false;
+          for (var i = 0; i < baseStreams.length; i++) {
+            var stream = baseStreams[i];
+            if (stream.getMissingChunks && stream.getMissingChunks().length) {
+              foundMissingData = true;
+              pendingRequests.push({
+                begin: stream.start,
+                end: stream.end
+              });
+            }
+          }
+          if (foundMissingData) {
+            nodesToRevisit.push(currentNode);
+          }
         }
 
         addChildren(currentNode, nodesToVisit);
@@ -6575,7 +6594,6 @@ var TextAnnotation = (function TextAnnotationClosure() {
   }
 
   var ANNOT_MIN_SIZE = 10;
-  var IMAGE_DIR = './images/';
 
   Util.inherit(TextAnnotation, Annotation, {
 
@@ -6616,7 +6634,7 @@ var TextAnnotation = (function TextAnnotationClosure() {
       image.style.width = container.style.width;
       image.style.height = container.style.height;
       var iconName = item.name;
-      image.src = IMAGE_DIR + 'annotation-' +
+      image.src = PDFJS.imageResourcesPath + 'annotation-' +
         iconName.toLowerCase() + '.svg';
       image.alt = '[{{type}} Annotation]';
       image.dataset.l10nId = 'text_annotation_type';
@@ -6665,24 +6683,6 @@ var TextAnnotation = (function TextAnnotationClosure() {
 })();
 
 var LinkAnnotation = (function LinkAnnotationClosure() {
-  function isValidUrl(url) {
-    if (!url)
-      return false;
-    var colon = url.indexOf(':');
-    if (colon < 0)
-      return false;
-    var protocol = url.substr(0, colon);
-    switch (protocol) {
-      case 'http':
-      case 'https':
-      case 'ftp':
-      case 'mailto':
-        return true;
-      default:
-        return false;
-    }
-  }
-
   function LinkAnnotation(params) {
     Annotation.call(this, params);
 
@@ -6700,7 +6700,7 @@ var LinkAnnotation = (function LinkAnnotationClosure() {
         var url = action.get('URI');
         // TODO: pdf spec mentions urls can be relative to a Base
         // entry in the dictionary.
-        if (!isValidUrl(url)) {
+        if (!isValidUrl(url, false)) {
           url = '';
         }
         data.url = url;
@@ -6716,7 +6716,7 @@ var LinkAnnotation = (function LinkAnnotationClosure() {
 
         // TODO: pdf reference says that GoToR
         // can also have 'NewWindow' attribute
-        if (!isValidUrl(url)) {
+        if (!isValidUrl(url, false)) {
           url = '';
         }
         data.url = url;
@@ -7566,53 +7566,54 @@ var PostScriptToken = (function PostScriptTokenClosure() {
 var PostScriptLexer = (function PostScriptLexerClosure() {
   function PostScriptLexer(stream) {
     this.stream = stream;
+    this.nextChar();
   }
   PostScriptLexer.prototype = {
+    nextChar: function PostScriptLexer_nextChar() {
+      return (this.currentChar = this.stream.getByte());
+    },
     getToken: function PostScriptLexer_getToken() {
       var s = '';
-      var ch;
       var comment = false;
-      var stream = this.stream;
+      var ch = this.currentChar;
 
       // skip comments
       while (true) {
-        if (!(ch = stream.getChar()))
+        if (ch < 0) {
           return EOF;
+        }
 
         if (comment) {
-          if (ch == '\x0a' || ch == '\x0d')
+          if (ch === 0x0A || ch === 0x0D) {
             comment = false;
-        } else if (ch == '%') {
+          }
+        } else if (ch == 0x25) { // '%'
           comment = true;
         } else if (!Lexer.isSpace(ch)) {
           break;
         }
+        ch = this.nextChar();
       }
-      switch (ch) {
-        case '0': case '1': case '2': case '3': case '4':
-        case '5': case '6': case '7': case '8': case '9':
-        case '+': case '-': case '.':
+      switch (ch | 0) {
+        case 0x30: case 0x31: case 0x32: case 0x33: case 0x34: // '0'-'4'
+        case 0x35: case 0x36: case 0x37: case 0x38: case 0x39: // '5'-'9'
+        case 0x2B: case 0x2D: case 0x2E: // '+', '-', '.'
           return new PostScriptToken(PostScriptTokenTypes.NUMBER,
-                                      this.getNumber(ch));
-        case '{':
+                                      this.getNumber());
+        case 0x7B: // '{'
+          this.nextChar();
           return PostScriptToken.LBRACE;
-        case '}':
+        case 0x7D: // '}'
+          this.nextChar();
           return PostScriptToken.RBRACE;
       }
       // operator
-      var str = ch.toLowerCase();
-      while (true) {
-        ch = stream.lookChar();
-        if (ch === null)
-          break;
-        ch = ch.toLowerCase();
-        if (ch >= 'a' && ch <= 'z')
-          str += ch;
-        else
-          break;
-        stream.skip();
+      var str = String.fromCharCode(ch);
+      while ((ch = this.nextChar()) >= 0 && // and 'A'-'Z', 'a'-'z'
+             ((ch >= 0x41 && ch <= 0x5A) || (ch >= 0x61 && ch <= 0x7A))) {
+        str += String.fromCharCode(ch);
       }
-      switch (str) {
+      switch (str.toLowerCase()) {
         case 'if':
           return PostScriptToken.IF;
         case 'ifelse':
@@ -7621,16 +7622,16 @@ var PostScriptLexer = (function PostScriptLexerClosure() {
           return PostScriptToken.getOperator(str);
       }
     },
-    getNumber: function PostScriptLexer_getNumber(ch) {
-      var str = ch;
-      var stream = this.stream;
-      while (true) {
-        ch = stream.lookChar();
-        if ((ch >= '0' && ch <= '9') || ch == '-' || ch == '.')
-          str += ch;
-        else
+    getNumber: function PostScriptLexer_getNumber() {
+      var ch = this.currentChar;
+      var str = String.fromCharCode(ch);
+      while ((ch = this.nextChar()) >= 0) {
+        if ((ch >= 0x30 && ch <= 0x39) || // '0'-'9'
+             ch === 0x2D || ch === 0x2E) { // '-', '.'
+          str += String.fromCharCode(ch);
+        } else {
           break;
-        stream.skip();
+        }
       }
       var value = parseFloat(str);
       if (isNaN(value))
@@ -15219,7 +15220,7 @@ var DeviceCmykCS = (function DeviceCmykCSClosure() {
            131.35250912493976 * k - 190.9453302588951) +
       y * (4.444339102852739 * y + 9.8632861493405 * k - 24.86741582555878) +
       k * (-20.737325471181034 * k - 187.80453709719578) + 255;
-    var b = 
+    var b =
       c * (0.8842522430003296 * c + 8.078677503112928 * m +
            30.89978309703729 * y - 0.23883238689178934 * k +
            -14.183576799673286) +
@@ -16279,6 +16280,11 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
       var w = dict.get('Width', 'W');
       var h = dict.get('Height', 'H');
 
+      if (PDFJS.maxImageSize !== -1 && w * h > PDFJS.maxImageSize) {
+        warn('Image exceeded maximum allowed size and was removed.');
+        return null;
+      }
+
       var dependencies = {};
       var retData = {
         dependencies: dependencies
@@ -16751,6 +16757,10 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
               } else if ('Image' == type.name) {
                 var data = self.buildPaintImageXObject(
                     resources, xobj, false);
+                if (!data) {
+                  args = [];
+                  continue;
+                }
                 Util.extendObj(dependencies, data.dependencies);
                 self.insertDependencies(queue, data.dependencies);
                 fn = data.fn;
@@ -16765,6 +16775,10 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
           } else if (cmd == 'EI') {
             var data = self.buildPaintImageXObject(
                 resources, args[0], true);
+            if (!data) {
+              args = [];
+              continue;
+            }
             Util.extendObj(dependencies, data.dependencies);
             self.insertDependencies(queue, data.dependencies);
             fn = data.fn;
@@ -18212,6 +18226,18 @@ function mapPrivateUseChars(code) {
 }
 
 var FontLoader = {
+  insertRule: function fontLoaderInsertRule(rule) {
+    var styleElement = document.getElementById('PDFJS_FONT_STYLE_TAG');
+    if (!styleElement) {
+        styleElement = document.createElement('style');
+        styleElement.id = 'PDFJS_FONT_STYLE_TAG';
+        document.documentElement.getElementsByTagName('head')[0].appendChild(
+          styleElement);
+    }
+
+    var styleSheet = styleElement.sheet;
+    styleSheet.insertRule(rule, styleSheet.cssRules.length);
+  },
   bind: function fontLoaderBind(fonts, callback) {
     assert(!isWorker, 'bind() shall be called from main thread');
   
@@ -19958,6 +19984,7 @@ var Font = (function FontClosure() {
         data = this.convert(name, cff, properties);
         break;
 
+      case 'OpenType':
       case 'TrueType':
       case 'CIDFontType2':
         this.mimetype = 'font/opentype';
@@ -19965,14 +19992,10 @@ var Font = (function FontClosure() {
         // Repair the TrueType file. It is can be damaged in the point of
         // view of the sanitizer
         data = this.checkAndRepair(name, file, properties);
-        if (!data) {
-          // TrueType data is not found, e.g. when the font is an OpenType font
-          warn('Font is not a TrueType font');
-        }
         break;
 
       default:
-        warn('Font ' + type + ' is not supported');
+        error('Font ' + type + ' is not supported');
         break;
     }
 
@@ -20151,7 +20174,7 @@ var Font = (function FontClosure() {
     if (ranges[i][0] < 0xFFFF && ranges[i][1] === 0xFFFF) {
       ranges[i][1] = 0xFFFE;
     }
-    var trailingRangesCount = ranges[i][1] < 0xFFFF ? 1 : 0; 
+    var trailingRangesCount = ranges[i][1] < 0xFFFF ? 1 : 0;
     var segCount = bmpLength + trailingRangesCount;
     var segCount2 = segCount * 2;
     var searchRange = getMaxPower2(segCount) * 2;
@@ -21003,30 +21026,6 @@ var Font = (function FontClosure() {
         glyf.data = newGlyfData.subarray(0, writeOffset);
       }
 
-      function findEmptyGlyphs(locaTable, isGlyphLocationsLong, emptyGlyphIds) {
-        var itemSize, itemDecode;
-        if (isGlyphLocationsLong) {
-          itemSize = 4;
-          itemDecode = function fontItemDecodeLong(data, offset) {
-            return (data[offset] << 24) | (data[offset + 1] << 16) |
-                   (data[offset + 2] << 8) | data[offset + 3];
-          };
-        } else {
-          itemSize = 2;
-          itemDecode = function fontItemDecode(data, offset) {
-            return (data[offset] << 9) | (data[offset + 1] << 1);
-          };
-        }
-        var data = locaTable.data, length = data.length;
-        var lastOffset = itemDecode(data, 0);
-        for (var i = itemSize, j = 0; i < length; i += itemSize, j++) {
-          var offset = itemDecode(data, i);
-          if (offset == lastOffset)
-            emptyGlyphIds[j] = true;
-          lastOffset = offset;
-        }
-      }
-
       function readPostScriptTable(post, properties, maxpNumGlyphs) {
         var start = (font.start ? font.start : 0) + post.offset;
         font.pos = start;
@@ -21064,8 +21063,9 @@ var Font = (function FontClosure() {
             while (font.pos < end) {
               var stringLength = font.getByte();
               var string = '';
-              for (var i = 0; i < stringLength; ++i)
-                string += font.getChar();
+              for (var i = 0; i < stringLength; ++i) {
+                string += String.fromCharCode(font.getByte());
+              }
               customNames.push(string);
             }
             glyphNames = [];
@@ -21361,75 +21361,69 @@ var Font = (function FontClosure() {
       // The following steps modify the original font data, making copy
       font = new Stream(new Uint8Array(font.getBytes()));
 
-      // Check that required tables are present
-      var requiredTables = ['OS/2', 'cmap', 'head', 'hhea',
-                             'hmtx', 'maxp', 'name', 'post'];
+      var VALID_TABLES = ['OS/2', 'cmap', 'head', 'hhea', 'hmtx', 'maxp',
+        'name', 'post', 'loca', 'glyf', 'fpgm', 'prep', 'cvt ', 'CFF '];
 
       var header = readOpenTypeHeader(font);
       var numTables = header.numTables;
 
-      var cmap, post, maxp, hhea, hmtx, head, os2;
-      var glyf, fpgm, loca, prep, cvt;
-      var tables = [];
+      var tables = { 'OS/2': null, cmap: null, head: null, hhea: null,
+                     hmtx: null, maxp: null, name: null, post: null};
       for (var i = 0; i < numTables; i++) {
         var table = readTableEntry(font);
-        var index = requiredTables.indexOf(table.tag);
-        if (index != -1) {
-          if (table.tag == 'cmap')
-            cmap = table;
-          else if (table.tag == 'post')
-            post = table;
-          else if (table.tag == 'maxp')
-            maxp = table;
-          else if (table.tag == 'hhea')
-            hhea = table;
-          else if (table.tag == 'hmtx')
-            hmtx = table;
-          else if (table.tag == 'head')
-            head = table;
-          else if (table.tag == 'OS/2')
-            os2 = table;
-
-          requiredTables.splice(index, 1);
-        } else {
-          if (table.tag == 'loca')
-            loca = table;
-          else if (table.tag == 'glyf')
-            glyf = table;
-          else if (table.tag == 'fpgm')
-            fpgm = table;
-          else if (table.tag == 'prep')
-            prep = table;
-          else if (table.tag == 'cvt ')
-            cvt = table;
-          else if (table.tag == 'CFF ')
-            return null; // XXX: OpenType font is found, stopping
-          else // skipping table if it's not a required or optional table
-            continue;
+        if (VALID_TABLES.indexOf(table.tag) < 0) {
+          continue; // skipping table if it's not a required or optional table
         }
-        tables.push(table);
+        tables[table.tag] = table;
       }
 
-      // Ensure the hmtx table contains the advance width and
-      // sidebearings information for numGlyphs in the maxp table
-      font.pos = (font.start || 0) + maxp.offset;
+      var isTrueType = !tables['CFF '];
+      if (!isTrueType) {
+        // OpenType font
+        if (!tables.head || !tables.hhea || !tables.maxp || !tables.post) {
+          // no major tables: throwing everything at CFFFont
+          var cffFile = new Stream(tables['CFF '].data);
+          var cff = new CFFFont(cffFile, properties);
+
+          return this.convert(name, cff, properties);
+        }
+
+        delete tables.glyf;
+        delete tables.loca;
+        delete tables.fpgm;
+        delete tables.prep;
+        delete tables['cvt '];
+      } else {
+        if (!tables.glyf || !tables.loca) {
+          error('Required "glyf" or "loca" tables are not found');
+        }
+      }
+
+      if (!tables.maxp) {
+        error('Required "maxp" table is not found');
+      }
+
+      font.pos = (font.start || 0) + tables.maxp.offset;
       var version = int32(font.getBytes(4));
       var numGlyphs = int16(font.getBytes(2));
       var maxFunctionDefs = 0;
-      if (version >= 0x00010000 && maxp.length >= 22) {
+      if (version >= 0x00010000 && tables.maxp.length >= 22) {
         font.pos += 14;
-        var maxFunctionDefs = int16(font.getBytes(2));
+        maxFunctionDefs = int16(font.getBytes(2));
       }
 
-      var hintsValid = sanitizeTTPrograms(fpgm, prep, maxFunctionDefs);
+      var hintsValid = sanitizeTTPrograms(tables.fpgm, tables.prep,
+                                          maxFunctionDefs);
       if (!hintsValid) {
-        tables.splice(tables.indexOf(fpgm), 1);
-        fpgm = null;
-        tables.splice(tables.indexOf(prep), 1);
-        prep = null;
+        delete tables.fpgm;
+        delete tables.prep;
       }
 
-      var numTables = tables.length + requiredTables.length;
+      // Tables needs to be written by ascendant alphabetic order
+      var tablesNames = Object.keys(tables);
+      tablesNames.sort();
+
+      numTables = tablesNames.length;
 
       // header and new offsets. Table entry information is appended to the
       // end of file. The virtualOffset represents where to put the actual
@@ -21443,35 +21437,40 @@ var Font = (function FontClosure() {
       // of missing tables
       createOpenTypeHeader(header.version, ttf, numTables);
 
-      sanitizeMetrics(font, hhea, hmtx, numGlyphs);
+      // Ensure the hmtx table contains the advance width and
+      // sidebearings information for numGlyphs in the maxp table
+      sanitizeMetrics(font, tables.hhea, tables.hmtx, numGlyphs);
 
-      if (head) {
-        sanitizeHead(head, numGlyphs, loca.length);
+      if (!tables.head) {
+        error('Required "head" table is not found');
       }
 
-      var isGlyphLocationsLong = int16([head.data[50], head.data[51]]);
-      if (head && loca && glyf) {
-        sanitizeGlyphLocations(loca, glyf, numGlyphs, isGlyphLocationsLong,
-                               hintsValid);
+      sanitizeHead(tables.head, numGlyphs, isTrueType ? tables.loca.length : 0);
+
+      if (isTrueType) {
+        var isGlyphLocationsLong = int16([tables.head.data[50],
+                                          tables.head.data[51]]);
+
+        sanitizeGlyphLocations(tables.loca, tables.glyf, numGlyphs,
+                               isGlyphLocationsLong, hintsValid);
       }
 
-      var emptyGlyphIds = [];
-      if (glyf)
-        findEmptyGlyphs(loca, isGlyphLocationsLong, emptyGlyphIds);
+      if (!tables.hhea) {
+        error('Required "hhea" table is not found');
+      }
 
       // Sanitizer reduces the glyph advanceWidth to the maxAdvanceWidth
       // Sometimes it's 0. That needs to be fixed
-      if (hhea.data[10] === 0 && hhea.data[11] === 0) {
-        hhea.data[10] = 0xFF;
-        hhea.data[11] = 0xFF;
+      if (tables.hhea.data[10] === 0 && tables.hhea.data[11] === 0) {
+        tables.hhea.data[10] = 0xFF;
+        tables.hhea.data[11] = 0xFF;
       }
 
       // The 'post' table has glyphs names.
-      if (post) {
-        var valid = readPostScriptTable(post, properties, numGlyphs);
+      if (tables.post) {
+        var valid = readPostScriptTable(tables.post, properties, numGlyphs);
         if (!valid) {
-          tables.splice(tables.indexOf(post), 1);
-          post = null;
+          tables.post = null;
         }
       }
 
@@ -21485,12 +21484,11 @@ var Font = (function FontClosure() {
         // U+00AD (soft hyphen) is not drawn.
         // So, offset all the glyphs by 0xFF to avoid these cases and use
         // the encoding to map incoming characters to the new glyph positions
-        if (!cmap) {
-          cmap = {
+        if (!tables.cmap) {
+          tables.cmap = {
             tag: 'cmap',
             data: null
           };
-          tables.push(cmap);
         }
 
         var cidToGidMap = properties.cidToGidMap || [];
@@ -21558,7 +21556,7 @@ var Font = (function FontClosure() {
         // but this.hasEncoding is currently true for any encodings on the
         // Encodings object (e.g. MacExpertEncoding). So should consider using
         // better check for this.
-        var cmapTable = readCmapTable(cmap, font, this.hasEncoding,
+        var cmapTable = readCmapTable(tables.cmap, font, this.hasEncoding,
             this.isSymbolicFont);
 
         // TODO(mack): If the (3, 0) cmap table used, then the font is
@@ -21685,69 +21683,66 @@ var Font = (function FontClosure() {
       }
 
       // Converting glyphs and ids into font's cmap table
-      cmap.data = createCmapTable(glyphs, ids);
+      tables.cmap.data = createCmapTable(glyphs, ids);
       var unicodeIsEnabled = [];
       for (var i = 0, ii = glyphs.length; i < ii; i++) {
         unicodeIsEnabled[glyphs[i].unicode] = true;
       }
       this.unicodeIsEnabled = unicodeIsEnabled;
 
-      if (os2 && !validateOS2Table(os2)) {
-        tables.splice(tables.indexOf(os2), 1);
-        os2 = null;
-      }
-
-      if (!os2) {
+      if (!tables['OS/2'] || !validateOS2Table(tables['OS/2'])) {
         // extract some more font properties from the OpenType head and
         // hhea tables; yMin and descent value are always negative
         var override = {
-          unitsPerEm: int16([head.data[18], head.data[19]]),
-          yMax: int16([head.data[42], head.data[43]]),
-          yMin: int16([head.data[38], head.data[39]]) - 0x10000,
-          ascent: int16([hhea.data[4], hhea.data[5]]),
-          descent: int16([hhea.data[6], hhea.data[7]]) - 0x10000
+          unitsPerEm: int16([tables.head.data[18], tables.head.data[19]]),
+          yMax: int16([tables.head.data[42], tables.head.data[43]]),
+          yMin: int16([tables.head.data[38], tables.head.data[39]]) - 0x10000,
+          ascent: int16([tables.hhea.data[4], tables.hhea.data[5]]),
+          descent: int16([tables.hhea.data[6], tables.hhea.data[7]]) - 0x10000
         };
 
-        tables.push({
+        tables['OS/2'] = {
           tag: 'OS/2',
           data: stringToArray(createOS2Table(properties, glyphs, override))
-        });
+        };
       }
 
       // Rewrite the 'post' table if needed
-      if (!post) {
-        tables.push({
+      if (!tables.post) {
+        tables.post = {
           tag: 'post',
           data: stringToArray(createPostTable(properties))
-        });
+        };
       }
 
-      // Re-creating 'name' table
-      if (requiredTables.indexOf('name') != -1) {
-        tables.push({
-          tag: 'name',
-          data: stringToArray(createNameTable(this.name))
-        });
-      } else {
-        // ... using existing 'name' table as prototype
-        for (var i = 0, ii = tables.length; i < ii; i++) {
-          var table = tables[i];
-          if (table.tag === 'name') {
-            var namePrototype = readNameTable(table);
-            table.data = stringToArray(createNameTable(name, namePrototype));
-            break;
-          }
+      if (!isTrueType) {
+        try {
+          // Trying to repair CFF file
+          var cffFile = new Stream(tables['CFF '].data);
+          var parser = new CFFParser(cffFile, properties);
+          var cff = parser.parse();
+          var compiler = new CFFCompiler(cff);
+          tables['CFF '].data = compiler.compile();
+        } catch (e) {
+          warn('Failed to compile font ' + properties.loadedName);
         }
       }
 
-      // Tables needs to be written by ascendant alphabetic order
-      tables.sort(function tables_sort(a, b) {
-        return (a.tag > b.tag) - (a.tag < b.tag);
-      });
+      // Re-creating 'name' table
+      if (!tables.name) {
+        tables.name = {
+          tag: 'name',
+          data: stringToArray(createNameTable(this.name))
+        };
+      } else {
+        // ... using existing 'name' table as prototype
+        var namePrototype = readNameTable(tables.name);
+        tables.name.data = stringToArray(createNameTable(name, namePrototype));
+      }
 
       // rewrite the tables but tweak offsets
-      for (var i = 0, ii = tables.length; i < ii; i++) {
-        var table = tables[i];
+      for (var i = 0; i < numTables; i++) {
+        var table = tables[tablesNames[i]];
         var data = [];
 
         var tableData = table.data;
@@ -21757,8 +21752,8 @@ var Font = (function FontClosure() {
       }
 
       // Add the table datas
-      for (var i = 0, ii = tables.length; i < ii; i++) {
-        var table = tables[i];
+      for (var i = 0; i < numTables; i++) {
+        var table = tables[tablesNames[i]];
         var tableData = table.data;
         ttf.file += arrayToString(tableData);
 
@@ -22076,16 +22071,7 @@ var Font = (function FontClosure() {
                  window.btoa(data) + ');');
       var rule = '@font-face { font-family:"' + fontName + '";src:' + url + '}';
 
-      var styleElement = document.getElementById('PDFJS_FONT_STYLE_TAG');
-      if (!styleElement) {
-          styleElement = document.createElement('style');
-          styleElement.id = 'PDFJS_FONT_STYLE_TAG';
-          document.documentElement.getElementsByTagName('head')[0].appendChild(
-            styleElement);
-      }
-
-      var styleSheet = styleElement.sheet;
-      styleSheet.insertRule(rule, styleSheet.cssRules.length);
+      FontLoader.insertRule(rule);
 
       if (PDFJS.pdfBug && 'FontInspector' in globalScope &&
           globalScope['FontInspector'].enabled)
@@ -22677,10 +22663,10 @@ var Type1Parser = (function Type1ParserClosure() {
   }
 
   function isSpecial(c) {
-    return c === '/' ||
-           c === '[' || c === ']' ||
-           c === '{' || c === '}' ||
-           c === '(' || c === ')';
+    return c === 0x2F || // '/'
+           c === 0x5B || c === 0x5D || // '[', ']'
+           c === 0x7B || c === 0x7D || // '{', '}'
+           c === 0x28 || c === 0x29; // '(', ')'
   }
 
   function Type1Parser(stream, encrypted) {
@@ -22688,6 +22674,7 @@ var Type1Parser = (function Type1ParserClosure() {
       stream = new Stream(decrypt(stream.getBytes(), EEXEC_ENCRYPT_KEY, 4));
     }
     this.stream = stream;
+    this.nextChar();
   }
 
   Type1Parser.prototype = {
@@ -22723,36 +22710,39 @@ var Type1Parser = (function Type1ParserClosure() {
       return token === 'true' ? 1 : 0;
     },
 
+    nextChar : function Type1_nextChar() {
+      return (this.currentChar = this.stream.getByte());
+    },
+
     getToken: function Type1Parser_getToken() {
       // Eat whitespace and comments.
       var comment = false;
-      var ch;
-      var stream = this.stream;
+      var ch = this.currentChar;
       while (true) {
-        if ((ch = stream.lookChar()) === null)
+        if (ch === -1) {
           return null;
+        }
 
         if (comment) {
-          if (ch === '\x0a' || ch === '\x0d') {
+          if (ch === 0x0A || ch === 0x0D) {
             comment = false;
           }
-        } else if (ch === '%') {
+        } else if (ch === 0x25) { // '%'
           comment = true;
         } else if (!Lexer.isSpace(ch)) {
           break;
         }
-        stream.skip();
+        ch = this.nextChar();
       }
       if (isSpecial(ch)) {
-        stream.skip();
-        return ch;
+        this.nextChar();
+        return String.fromCharCode(ch);
       }
       var token = '';
       do {
-        token += ch;
-        stream.skip();
-        ch = stream.lookChar();
-      } while (ch !== null && !Lexer.isSpace(ch) && !isSpecial(ch));
+        token += String.fromCharCode(ch);
+        ch = this.nextChar();
+      } while (ch >= 0 && !Lexer.isSpace(ch) && !isSpecial(ch));
       return token;
     },
 
@@ -22799,12 +22789,13 @@ var Type1Parser = (function Type1ParserClosure() {
               var glyph = this.getToken();
               var length = this.readInt();
               this.getToken(); // read in 'RD' or '-|'
-              var data = stream.makeSubStream(stream.pos + 1, length);
+              var data = stream.makeSubStream(stream.pos, length);
               var lenIV = program.properties.privateData['lenIV'];
               var encoded = decrypt(data.getBytes(), CHAR_STRS_ENCRYPT_KEY,
                                     lenIV);
               // Skip past the required space and binary data.
-              stream.skip(1 + length);
+              stream.skip(length);
+              this.nextChar();
               token = this.getToken(); // read in 'ND' or '|-'
               if (token === 'noaccess') {
                 this.getToken(); // read in 'def'
@@ -22822,12 +22813,13 @@ var Type1Parser = (function Type1ParserClosure() {
               var index = this.readInt();
               var length = this.readInt();
               this.getToken(); // read in 'RD' or '-|'
-              var data = stream.makeSubStream(stream.pos + 1, length);
+              var data = stream.makeSubStream(stream.pos, length);
               var lenIV = program.properties.privateData['lenIV'];
               var encoded = decrypt(data.getBytes(), CHAR_STRS_ENCRYPT_KEY,
                                     lenIV);
               // Skip past the required space and binary data.
-              stream.skip(1 + length);
+              stream.skip(length);
+              this.nextChar();
               token = this.getToken(); // read in 'NP' or '|'
               if (token === 'noaccess') {
                 this.getToken(); // read in 'put'
@@ -29655,6 +29647,7 @@ var PDFImage = (function PDFImageClosure() {
 
     this.interpolate = dict.get('Interpolate', 'I') || false;
     this.imageMask = dict.get('ImageMask', 'IM') || false;
+    this.matte = dict.get('Matte') || false;
 
     var bitsPerComponent = image.bitsPerComponent;
     if (!bitsPerComponent) {
@@ -29971,6 +29964,34 @@ var PDFImage = (function PDFImageClosure() {
       }
       return buf;
     },
+    undoPreblend: function PDFImage_undoPreblend(buffer, width, height) {
+      var matte = this.smask && this.smask.matte;
+      if (!matte) {
+        return;
+      }
+
+      function clamp(value) {
+        return (value < 0 ? 0 : value > 255 ? 255 : value) | 0;
+      }
+
+      var matteRgb = this.colorSpace.getRgb(matte, 0);
+      var length = width * height * 4;
+      for (var i = 0; i < length; i += 4) {
+        var alpha = buffer[i + 3];
+        if (alpha === 0) {
+          // according formula we have to get Infinity in all components
+          // making it as white (tipical paper color) should be okay
+          buffer[i] = 255;
+          buffer[i + 1] = 255;
+          buffer[i + 2] = 255;
+          continue;
+        }
+        var k = 255 / alpha;
+        buffer[i] = clamp((buffer[i] - matteRgb[0]) * k + matteRgb[0]);
+        buffer[i + 1] = clamp((buffer[i + 1] - matteRgb[1]) * k + matteRgb[1]);
+        buffer[i + 2] = clamp((buffer[i + 2] - matteRgb[2]) * k + matteRgb[2]);
+      }
+    },
     fillRgbaBuffer: function PDFImage_fillRgbaBuffer(buffer, width, height) {
       var numComps = this.numComps;
       var originalWidth = this.width;
@@ -30007,6 +30028,8 @@ var PDFImage = (function PDFImageClosure() {
         buffer[i + 2] = rgbBuf[compsPos++];
         buffer[i + 3] = opacity[opacityPos++];
       }
+
+      this.undoPreblend(buffer, width, actualHeight);
     },
     fillGrayBuffer: function PDFImage_fillGrayBuffer(buffer) {
       var numComps = this.numComps;
@@ -33043,8 +33066,6 @@ var Parser = (function ParserClosure() {
       if (isCmd(this.buf2, 'ID')) {
         this.buf1 = this.buf2;
         this.buf2 = null;
-        // skip byte after ID
-        this.lexer.skip();
       } else {
         this.buf1 = this.buf2;
         this.buf2 = this.lexer.getObj();
@@ -33139,9 +33160,8 @@ var Parser = (function ParserClosure() {
 
       // searching for the /EI\s/
       var state = 0, ch, i, ii;
-      while (state != 4 &&
-             (ch = stream.getByte()) !== null && ch !== undefined) {
-        switch (ch) {
+      while (state != 4 && (ch = stream.getByte()) !== -1) {
+        switch (ch | 0) {
           case 0x20:
           case 0x0D:
           case 0x0A:
@@ -33149,7 +33169,8 @@ var Parser = (function ParserClosure() {
             var followingBytes = stream.peekBytes(5);
             for (i = 0, ii = followingBytes.length; i < ii; i++) {
               ch = followingBytes[i];
-              if (ch !== 0x0A && ch != 0x0D && (ch < 0x20 || ch > 0x7F)) {
+              if (ch !== 0x0A && ch !== 0x0D && (ch < 0x20 || ch > 0x7F)) {
+                // not a LF, CR, SPACE or any visible ASCII character
                 state = 0;
                 break; // some binary stuff found, resetting the state
               }
@@ -33190,7 +33211,7 @@ var Parser = (function ParserClosure() {
 
       // get stream start position
       lexer.skipToNextLine();
-      var pos = stream.pos;
+      var pos = stream.pos - 1;
 
       // get length
       var length = this.fetchIfRef(dict.get('Length'));
@@ -33199,6 +33220,8 @@ var Parser = (function ParserClosure() {
 
       // skip over the stream data
       stream.pos = pos + length;
+      lexer.nextChar();
+
       this.shift(); // '>>'
       this.shift(); // 'stream'
       if (!isCmd(this.buf1, 'endstream')) {
@@ -33238,6 +33261,8 @@ var Parser = (function ParserClosure() {
           error('Missing endstream');
         }
         length = skipped;
+
+        lexer.nextChar();
         this.shift();
         this.shift();
       }
@@ -33328,6 +33353,8 @@ var Parser = (function ParserClosure() {
 var Lexer = (function LexerClosure() {
   function Lexer(stream, knownCommands) {
     this.stream = stream;
+    this.nextChar();
+
     // The PDFs might have "glued" commands with other commands, operands or
     // literals, e.g. "q1". The knownCommands is a dictionary of the valid
     // commands and their prefixes. The prefixes are built the following way:
@@ -33339,7 +33366,8 @@ var Lexer = (function LexerClosure() {
   }
 
   Lexer.isSpace = function Lexer_isSpace(ch) {
-    return ch == ' ' || ch == '\t' || ch == '\x0d' || ch == '\x0a';
+    // space is one of the following characters: SPACE, TAB, CR, or LF
+    return ch === 0x20 || ch === 0x09 || ch === 0x0D || ch === 0x0A;
   };
 
   // A '1' in this array means the character is white space.  A '1' or
@@ -33364,36 +33392,40 @@ var Lexer = (function LexerClosure() {
   ];
 
   function toHexDigit(ch) {
-    if (ch >= '0' && ch <= '9')
-      return ch.charCodeAt(0) - 48;
-    ch = ch.toUpperCase();
-    if (ch >= 'A' && ch <= 'F')
-      return ch.charCodeAt(0) - 55;
+    if (ch >= 0x30 && ch <= 0x39) { // '0'-'9'
+      return ch & 0x0F;
+    }
+    if ((ch >= 0x41 && ch <= 0x46) || (ch >= 0x61 && ch <= 0x66)) {
+      // 'A'-'F', 'a'-'f'
+      return (ch & 0x0F) + 9;
+    }
     return -1;
   }
 
   Lexer.prototype = {
-    getNumber: function Lexer_getNumber(ch) {
+    nextChar: function Lexer_nextChar() {
+      return (this.currentChar = this.stream.getByte());
+    },
+    getNumber: function Lexer_getNumber() {
       var floating = false;
-      var str = ch;
-      var stream = this.stream;
-      while ((ch = stream.lookChar())) {
-        if (ch == '.' && !floating) {
-          str += ch;
+      var ch = this.currentChar;
+      var str = String.fromCharCode(ch);
+      while ((ch = this.nextChar()) >= 0) {
+        if (ch === 0x2E && !floating) { // '.'
+          str += '.';
           floating = true;
-        } else if (ch == '-') {
+        } else if (ch === 0x2D) { // '-'
           // ignore minus signs in the middle of numbers to match
           // Adobe's behavior
           warn('Badly formated number');
-        } else if (ch >= '0' && ch <= '9') {
-          str += ch;
-        } else if (ch == 'e' || ch == 'E') {
+        } else if (ch >= 0x30 && ch <= 0x39) { // '0'-'9'
+          str += String.fromCharCode(ch);
+        } else if (ch === 0x45 || ch === 0x65) { // 'E', 'e'
           floating = true;
         } else {
           // the last character doesn't belong to us
           break;
         }
-        stream.skip();
       }
       var value = parseFloat(str);
       if (isNaN(value))
@@ -33404,148 +33436,150 @@ var Lexer = (function LexerClosure() {
       var numParen = 1;
       var done = false;
       var str = '';
-      var stream = this.stream;
-      var ch;
-      do {
-        ch = stream.getChar();
-        switch (ch) {
-          case null:
-          case undefined:
+
+      var ch = this.nextChar();
+      while (true) {
+        var charBuffered = false;
+        switch (ch | 0) {
+          case -1:
             warn('Unterminated string');
             done = true;
             break;
-          case '(':
+          case 0x28: // '('
             ++numParen;
-            str += ch;
+            str += '(';
             break;
-          case ')':
+          case 0x29: // ')'
             if (--numParen === 0) {
+              this.nextChar(); // consume strings ')'
               done = true;
             } else {
-              str += ch;
+              str += ')';
             }
             break;
-          case '\\':
-            ch = stream.getChar();
+          case 0x5C: // '\\'
+            ch = this.nextChar();
             switch (ch) {
-              case null:
-              case undefined:
+              case -1:
                 warn('Unterminated string');
                 done = true;
                 break;
-              case 'n':
+              case 0x6E: // 'n'
                 str += '\n';
                 break;
-              case 'r':
+              case 0x72: // 'r'
                 str += '\r';
                 break;
-              case 't':
+              case 0x74: // 't'
                 str += '\t';
                 break;
-              case 'b':
+              case 0x62: // 'b'
                 str += '\b';
                 break;
-              case 'f':
+              case 0x66: // 'f'
                 str += '\f';
                 break;
-              case '\\':
-              case '(':
-              case ')':
-                str += ch;
+              case 0x5C: // '\'
+              case 0x28: // '('
+              case 0x29: // ')'
+                str += String.fromCharCode(ch);
                 break;
-              case '0': case '1': case '2': case '3':
-              case '4': case '5': case '6': case '7':
-                var x = ch - '0';
-                ch = stream.lookChar();
-                if (ch >= '0' && ch <= '7') {
-                  stream.skip();
-                  x = (x << 3) + (ch - '0');
-                  ch = stream.lookChar();
-                  if (ch >= '0' && ch <= '7') {
-                    stream.skip();
-                    x = (x << 3) + (ch - '0');
+              case 0x30: case 0x31: case 0x32: case 0x33: // '0'-'3'
+              case 0x34: case 0x35: case 0x36: case 0x37: // '4'-'7'
+                var x = ch & 0x0F;
+                ch = this.nextChar();
+                charBuffered = true;
+                if (ch >= 0x30 && ch <= 0x37) { // '0'-'7'
+                  x = (x << 3) + (ch & 0x0F);
+                  ch = this.nextChar();
+                  if (ch >= 0x30 && ch <= 0x37) {  // '0'-'7'
+                    charBuffered = false;
+                    x = (x << 3) + (ch & 0x0F);
                   }
                 }
 
                 str += String.fromCharCode(x);
                 break;
-              case '\r':
-                ch = stream.lookChar();
-                if (ch == '\n')
-                  stream.skip();
-                break;
-              case '\n':
+              case 0x0A: case 0x0D: // LF, CR
                 break;
               default:
-                str += ch;
+                str += String.fromCharCode(ch);
                 break;
             }
             break;
           default:
-            str += ch;
+            str += String.fromCharCode(ch);
             break;
         }
-      } while (!done);
+        if (done) {
+          break;
+        }
+        if (!charBuffered) {
+          ch = this.nextChar();
+        }
+      }
       return str;
     },
-    getName: function Lexer_getName(ch) {
-      var str = '';
-      var stream = this.stream;
-      while (!!(ch = stream.lookChar()) && !specialChars[ch.charCodeAt(0)]) {
-        stream.skip();
-        if (ch == '#') {
-          ch = stream.lookChar();
+    getName: function Lexer_getName() {
+      var str = '', ch;
+      while ((ch = this.nextChar()) >= 0 && !specialChars[ch]) {
+        if (ch === 0x23) { // '#'
+          ch = this.nextChar();
           var x = toHexDigit(ch);
           if (x != -1) {
-            stream.skip();
-            var x2 = toHexDigit(stream.getChar());
+            var x2 = toHexDigit(this.nextChar());
             if (x2 == -1)
               error('Illegal digit in hex char in name: ' + x2);
             str += String.fromCharCode((x << 4) | x2);
           } else {
             str += '#';
-            str += ch;
+            str += String.fromCharCode(ch);
           }
         } else {
-          str += ch;
+          str += String.fromCharCode(ch);
         }
       }
-      if (str.length > 128)
+      if (str.length > 128) {
         error('Warning: name token is longer than allowed by the spec: ' +
               str.length);
+      }
       return new Name(str);
     },
-    getHexString: function Lexer_getHexString(ch) {
+    getHexString: function Lexer_getHexString() {
       var str = '';
-      var stream = this.stream;
+      var ch = this.currentChar;
       var isFirstHex = true;
       var firstDigit;
       var secondDigit;
       while (true) {
-        ch = stream.getChar();
-        if (!ch) {
+        if (ch < 0) {
           warn('Unterminated hex string');
           break;
-        } else if (ch === '>') {
+        } else if (ch === 0x3E) { // '>'
+          this.nextChar();
           break;
-        } else if (specialChars[ch.charCodeAt(0)] === 1) {
+        } else if (specialChars[ch] === 1) {
+          ch = this.nextChar();
           continue;
         } else {
           if (isFirstHex) {
             firstDigit = toHexDigit(ch);
             if (firstDigit === -1) {
               warn('Ignoring invalid character "' + ch + '" in hex string');
+              ch = this.nextChar();
               continue;
             }
           } else {
             secondDigit = toHexDigit(ch);
             if (secondDigit === -1) {
               warn('Ignoring invalid character "' + ch + '" in hex string');
+              ch = this.nextChar();
               continue;
             }
             str += String.fromCharCode((firstDigit << 4) | secondDigit);
           }
           isFirstHex = !isFirstHex;
+          ch = this.nextChar();
         }
       }
       return str;
@@ -33553,73 +33587,81 @@ var Lexer = (function LexerClosure() {
     getObj: function Lexer_getObj() {
       // skip whitespace and comments
       var comment = false;
-      var stream = this.stream;
-      var ch;
+      var ch = this.currentChar;
       while (true) {
-        if (!(ch = stream.getChar()))
+        if (ch < 0) {
           return EOF;
+        }
         if (comment) {
-          if (ch == '\r' || ch == '\n')
+          if (ch === 0x0A || ch == 0x0D) // LF, CR
             comment = false;
-        } else if (ch == '%') {
+        } else if (ch === 0x25) { // '%'
           comment = true;
-        } else if (specialChars[ch.charCodeAt(0)] != 1) {
+        } else if (specialChars[ch] !== 1) {
           break;
         }
+        ch = this.nextChar();
       }
 
       // start reading token
-      switch (ch) {
-        case '0': case '1': case '2': case '3': case '4':
-        case '5': case '6': case '7': case '8': case '9':
-        case '+': case '-': case '.':
-          return this.getNumber(ch);
-        case '(':
+      switch (ch | 0) {
+        case 0x30: case 0x31: case 0x32: case 0x33: case 0x34: // '0'-'4'
+        case 0x35: case 0x36: case 0x37: case 0x38: case 0x39: // '5'-'9'
+        case 0x2B: case 0x2D: case 0x2E: // '+', '-', '.'
+          return this.getNumber();
+        case 0x28: // '('
           return this.getString();
-        case '/':
-          return this.getName(ch);
+        case 0x2F: // '/'
+          return this.getName();
         // array punctuation
-        case '[':
-        case ']':
-          return Cmd.get(ch);
+        case 0x5B: // '['
+          this.nextChar();
+          return Cmd.get('[');
+        case 0x5D: // ']'
+          this.nextChar();
+          return Cmd.get(']');
         // hex string or dict punctuation
-        case '<':
-          ch = stream.lookChar();
-          if (ch == '<') {
+        case 0x3C: // '<'
+          ch = this.nextChar();
+          if (ch === 0x3C) {
             // dict punctuation
-            stream.skip();
+            this.nextChar();
             return Cmd.get('<<');
           }
-          return this.getHexString(ch);
+          return this.getHexString();
         // dict punctuation
-        case '>':
-          ch = stream.lookChar();
-          if (ch == '>') {
-            stream.skip();
+        case 0x3E: // '>'
+          ch = this.nextChar();
+          if (ch === 0x3E) {
+            this.nextChar();
             return Cmd.get('>>');
           }
-          return Cmd.get(ch);
-        case '{':
-        case '}':
-          return Cmd.get(ch);
-        // fall through
-        case ')':
+          return Cmd.get('>');
+        case 0x7B: // '{'
+          this.nextChar();
+          return Cmd.get('{');
+        case 0x7D: // '}'
+          this.nextChar();
+          return Cmd.get('}');
+        case 0x29: // ')'
           error('Illegal character: ' + ch);
+          break;
       }
 
       // command
-      var str = ch;
+      var str = String.fromCharCode(ch);
       var knownCommands = this.knownCommands;
       var knownCommandFound = knownCommands && (str in knownCommands);
-      while (!!(ch = stream.lookChar()) && !specialChars[ch.charCodeAt(0)]) {
+      while ((ch = this.nextChar()) >= 0 && !specialChars[ch]) {
         // stop if known command is found and next character does not make
         // the str a command
-        if (knownCommandFound && !((str + ch) in knownCommands))
+        var possibleCommand = str + String.fromCharCode(ch);
+        if (knownCommandFound && !(possibleCommand in knownCommands)) {
           break;
-        stream.skip();
+        }
         if (str.length == 128)
           error('Command token too long: ' + str.length);
-        str += ch;
+        str = possibleCommand;
         knownCommandFound = knownCommands && (str in knownCommands);
       }
       if (str == 'true')
@@ -33632,19 +33674,20 @@ var Lexer = (function LexerClosure() {
     },
     skipToNextLine: function Lexer_skipToNextLine() {
       var stream = this.stream;
-      while (true) {
-        var ch = stream.getChar();
-        if (!ch || ch == '\n')
-          return;
-        if (ch == '\r') {
-          if ((ch = stream.lookChar()) == '\n')
-            stream.skip();
-          return;
+      var ch = this.currentChar;
+      while (ch >= 0) {
+        if (ch === 0x0D) { // CR
+          ch = this.nextChar();
+          if (ch === 0x0A) { // LF
+            this.nextChar();
+          }
+          break;
+        } else if (ch === 0x0A) { // LF
+          this.nextChar();
+          break;
         }
+        ch = this.nextChar();
       }
-    },
-    skip: function Lexer_skip() {
-      this.stream.skip();
     }
   };
 
@@ -34151,7 +34194,7 @@ var Stream = (function StreamClosure() {
     },
     getByte: function Stream_getByte() {
       if (this.pos >= this.end)
-        return null;
+        return -1;
       return this.bytes[this.pos++];
     },
     // returns subarray of original buffer
@@ -34175,16 +34218,6 @@ var Stream = (function StreamClosure() {
       var bytes = this.getBytes(length);
       this.pos -= bytes.length;
       return bytes;
-    },
-    lookChar: function Stream_lookChar() {
-      if (this.pos >= this.end)
-        return null;
-      return String.fromCharCode(this.bytes[this.pos]);
-    },
-    getChar: function Stream_getChar() {
-      if (this.pos >= this.end)
-        return null;
-      return String.fromCharCode(this.bytes[this.pos++]);
     },
     skip: function Stream_skip(n) {
       if (!n)
@@ -34247,7 +34280,7 @@ var DecodeStream = (function DecodeStreamClosure() {
       var pos = this.pos;
       while (this.bufferLength <= pos) {
         if (this.eof)
-          return null;
+          return -1;
         this.readBlock();
       }
       return this.buffer[this.pos++];
@@ -34285,37 +34318,25 @@ var DecodeStream = (function DecodeStreamClosure() {
       this.pos -= bytes.length;
       return bytes;
     },
-    lookChar: function DecodeStream_lookChar() {
-      var pos = this.pos;
-      while (this.bufferLength <= pos) {
-        if (this.eof)
-          return null;
-        this.readBlock();
-      }
-      return String.fromCharCode(this.buffer[this.pos]);
-    },
-    getChar: function DecodeStream_getChar() {
-      var pos = this.pos;
-      while (this.bufferLength <= pos) {
-        if (this.eof)
-          return null;
-        this.readBlock();
-      }
-      return String.fromCharCode(this.buffer[this.pos++]);
-    },
     makeSubStream: function DecodeStream_makeSubStream(start, length, dict) {
       var end = start + length;
       while (this.bufferLength <= end && !this.eof)
         this.readBlock();
       return new Stream(this.buffer, start, length, dict);
     },
-    skip: function DecodeStream_skip(n) {
+    skip: function Stream_skip(n) {
       if (!n)
         n = 1;
       this.pos += n;
     },
     reset: function DecodeStream_reset() {
       this.pos = 0;
+    },
+    getBaseStreams: function DecodeStream_getBaseStreams() {
+      if (this.str && this.str.getBaseStreams) {
+        return this.str.getBaseStreams();
+      }
+      return [];
     }
   };
 
@@ -34384,6 +34405,19 @@ var StreamsSequenceStream = (function StreamsSequenceStreamClosure() {
     var buffer = this.ensureBuffer(newLength);
     buffer.set(chunk, bufferLength);
     this.bufferLength = newLength;
+  };
+
+  StreamsSequenceStream.prototype.getBaseStreams =
+    function StreamsSequenceStream_getBaseStreams() {
+
+    var baseStreams = [];
+    for (var i = 0, ii = this.streams.length; i < ii; i++) {
+      var stream = this.streams[i];
+      if (stream.getBaseStreams) {
+        Util.concatenateToArray(baseStreams, stream.getBaseStreams());
+      }
+    }
+    return baseStreams;
   };
 
   return StreamsSequenceStream;
@@ -34732,11 +34766,11 @@ var FlateStream = (function FlateStreamClosure() {
 })();
 
 var PredictorStream = (function PredictorStreamClosure() {
-  function PredictorStream(stream, params) {
+  function PredictorStream(str, params) {
     var predictor = this.predictor = params.get('Predictor') || 1;
 
     if (predictor <= 1)
-      return stream; // no prediction
+      return str; // no prediction
     if (predictor !== 2 && (predictor < 10 || predictor > 15))
       error('Unsupported predictor: ' + predictor);
 
@@ -34745,8 +34779,8 @@ var PredictorStream = (function PredictorStreamClosure() {
     else
       this.readBlock = this.readBlockPng;
 
-    this.stream = stream;
-    this.dict = stream.dict;
+    this.str = str;
+    this.dict = str.dict;
 
     var colors = this.colors = params.get('Colors') || 1;
     var bits = this.bits = params.get('BitsPerComponent') || 8;
@@ -34771,7 +34805,7 @@ var PredictorStream = (function PredictorStreamClosure() {
     var bits = this.bits;
     var colors = this.colors;
 
-    var rawBytes = this.stream.getBytes(rowBytes);
+    var rawBytes = this.str.getBytes(rowBytes);
     this.eof = !rawBytes.length;
     if (this.eof) {
       return;
@@ -34834,8 +34868,8 @@ var PredictorStream = (function PredictorStreamClosure() {
     var rowBytes = this.rowBytes;
     var pixBytes = this.pixBytes;
 
-    var predictor = this.stream.getByte();
-    var rawBytes = this.stream.getBytes(rowBytes);
+    var predictor = this.str.getByte();
+    var rawBytes = this.str.getBytes(rowBytes);
     this.eof = !rawBytes.length;
     if (this.eof) {
       return;
@@ -34925,49 +34959,10 @@ var PredictorStream = (function PredictorStreamClosure() {
  * DecodeStreams.
  */
 var JpegStream = (function JpegStreamClosure() {
-  function isAdobeImage(bytes) {
-    var maxBytesScanned = Math.max(bytes.length - 16, 1024);
-    // Looking for APP14, 'Adobe'
-    for (var i = 0; i < maxBytesScanned; ++i) {
-      if (bytes[i] == 0xFF && bytes[i + 1] == 0xEE &&
-          bytes[i + 2] === 0x00 && bytes[i + 3] == 0x0E &&
-          bytes[i + 4] == 0x41 && bytes[i + 5] == 0x64 &&
-          bytes[i + 6] == 0x6F && bytes[i + 7] == 0x62 &&
-          bytes[i + 8] == 0x65 && bytes[i + 9] === 0x00)
-          return true;
-      // scanning until frame tag
-      if (bytes[i] == 0xFF && bytes[i + 1] == 0xC0)
-        break;
-    }
-    return false;
-  }
-
-  function fixAdobeImage(bytes) {
-    // Inserting 'EMBED' marker after JPEG signature
-    var embedMarker = new Uint8Array([0xFF, 0xEC, 0, 8, 0x45, 0x4D, 0x42, 0x45,
-                                      0x44, 0]);
-    var newBytes = new Uint8Array(bytes.length + embedMarker.length);
-    newBytes.set(bytes, embedMarker.length);
-    // copy JPEG header
-    newBytes[0] = bytes[0];
-    newBytes[1] = bytes[1];
-    newBytes.set(embedMarker, 2);
-    return newBytes;
-  }
-
   function JpegStream(bytes, dict, xref) {
     // TODO: per poppler, some images may have 'junk' before that
     // need to be removed
     this.dict = dict;
-
-    this.isAdobeImage = false;
-    this.colorTransform = dict.get('ColorTransform') || -1;
-
-    if (isAdobeImage(bytes)) {
-      this.isAdobeImage = true;
-      bytes = fixAdobeImage(bytes);
-    }
-
     this.bytes = bytes;
 
     DecodeStream.call(this);
@@ -34996,9 +34991,6 @@ var JpegStream = (function JpegStreamClosure() {
   JpegStream.prototype.getIR = function JpegStream_getIR() {
     return bytesToString(this.bytes);
   };
-  JpegStream.prototype.getChar = function JpegStream_getChar() {
-    error('internal error: getChar is not valid on JpegStream');
-  };
   /**
    * Checks if the image can be decoded and displayed by the browser without any
    * further processing such as color space conversions.
@@ -35006,14 +34998,7 @@ var JpegStream = (function JpegStreamClosure() {
   JpegStream.prototype.isNativelySupported =
     function JpegStream_isNativelySupported(xref, res) {
     var cs = ColorSpace.parse(this.dict.get('ColorSpace', 'CS'), xref, res);
-    // when bug 674619 lands, let's check if browser can do
-    // normal cmyk and then we won't need to decode in JS
-    if (cs.name === 'DeviceGray' || cs.name === 'DeviceRGB')
-      return true;
-    if (cs.name === 'DeviceCMYK' && !this.isAdobeImage &&
-        this.colorTransform < 1)
-      return true;
-    return false;
+    return cs.name === 'DeviceGray' || cs.name === 'DeviceRGB';
   };
   /**
    * Checks if the image can be decoded by the browser.
@@ -35022,10 +35007,7 @@ var JpegStream = (function JpegStreamClosure() {
     function JpegStream_isNativelyDecodable(xref, res) {
     var cs = ColorSpace.parse(this.dict.get('ColorSpace', 'CS'), xref, res);
     var numComps = cs.numComps;
-    if (numComps == 1 || numComps == 3)
-      return true;
-
-    return false;
+    return numComps == 1 || numComps == 3;
   };
 
   return JpegStream;
@@ -35126,9 +35108,6 @@ var JpxStream = (function JpxStreamClosure() {
     this.bufferLength = data.length;
     this.eof = true;
   };
-  JpxStream.prototype.getChar = function JpxStream_getChar() {
-    error('internal error: getChar is not valid on JpxStream');
-  };
 
   return JpxStream;
 })();
@@ -35170,9 +35149,6 @@ var Jbig2Stream = (function Jbig2StreamClosure() {
     this.buffer = data;
     this.bufferLength = dataLength;
     this.eof = true;
-  };
-  Jbig2Stream.prototype.getChar = function Jbig2Stream_getChar() {
-    error('internal error: getChar is not valid on Jbig2Stream');
   };
 
   return Jbig2Stream;
@@ -35234,15 +35210,18 @@ var Ascii85Stream = (function Ascii85StreamClosure() {
   Ascii85Stream.prototype = Object.create(DecodeStream.prototype);
 
   Ascii85Stream.prototype.readBlock = function Ascii85Stream_readBlock() {
-    var tildaCode = '~'.charCodeAt(0);
-    var zCode = 'z'.charCodeAt(0);
+    var TILDA_CHAR = 0x7E; // '~'
+    var Z_LOWER_CHAR = 0x7A; // 'z'
+    var EOF = -1;
+
     var str = this.str;
 
     var c = str.getByte();
-    while (Lexer.isSpace(String.fromCharCode(c)))
+    while (Lexer.isSpace(c)) {
       c = str.getByte();
+    }
 
-    if (!c || c === tildaCode) {
+    if (c === EOF || c === TILDA_CHAR) {
       this.eof = true;
       return;
     }
@@ -35250,7 +35229,7 @@ var Ascii85Stream = (function Ascii85StreamClosure() {
     var bufferLength = this.bufferLength, buffer;
 
     // special code for z
-    if (c == zCode) {
+    if (c == Z_LOWER_CHAR) {
       buffer = this.ensureBuffer(bufferLength + 4);
       for (var i = 0; i < 4; ++i)
         buffer[bufferLength + i] = 0;
@@ -35260,12 +35239,13 @@ var Ascii85Stream = (function Ascii85StreamClosure() {
       input[0] = c;
       for (var i = 1; i < 5; ++i) {
         c = str.getByte();
-        while (Lexer.isSpace(String.fromCharCode(c)))
+        while (Lexer.isSpace(c)) {
           c = str.getByte();
+        }
 
         input[i] = c;
 
-        if (!c || c == tildaCode)
+        if (c === EOF || c == TILDA_CHAR)
           break;
       }
       buffer = this.ensureBuffer(bufferLength + i - 1);
@@ -35296,66 +35276,53 @@ var AsciiHexStream = (function AsciiHexStreamClosure() {
     this.str = str;
     this.dict = str.dict;
 
+    this.firstDigit = -1;
+
     DecodeStream.call(this);
   }
-
-  var hexvalueMap = {
-      9: -1, // \t
-      32: -1, // space
-      48: 0,
-      49: 1,
-      50: 2,
-      51: 3,
-      52: 4,
-      53: 5,
-      54: 6,
-      55: 7,
-      56: 8,
-      57: 9,
-      65: 10,
-      66: 11,
-      67: 12,
-      68: 13,
-      69: 14,
-      70: 15,
-      97: 10,
-      98: 11,
-      99: 12,
-      100: 13,
-      101: 14,
-      102: 15
-  };
 
   AsciiHexStream.prototype = Object.create(DecodeStream.prototype);
 
   AsciiHexStream.prototype.readBlock = function AsciiHexStream_readBlock() {
-    var gtCode = '>'.charCodeAt(0), bytes = this.str.getBytes(), c, n,
-        decodeLength, buffer, bufferLength, i, length;
-
-    decodeLength = (bytes.length + 1) >> 1;
-    buffer = this.ensureBuffer(this.bufferLength + decodeLength);
-    bufferLength = this.bufferLength;
-
-    for (i = 0, length = bytes.length; i < length; i++) {
-      c = hexvalueMap[bytes[i]];
-      while (c == -1 && (i + 1) < length) {
-        c = hexvalueMap[bytes[++i]];
-      }
-
-      if ((i + 1) < length && (bytes[i + 1] !== gtCode)) {
-        n = hexvalueMap[bytes[++i]];
-        buffer[bufferLength++] = c * 16 + n;
-      } else {
-        // EOD marker at an odd number, behave as if a 0 followed the last
-        // digit.
-        if (bytes[i] !== gtCode) {
-          buffer[bufferLength++] = c * 16;
-        }
-      }
+    var UPSTREAM_BLOCK_SIZE = 8000;
+    var bytes = this.str.getBytes(UPSTREAM_BLOCK_SIZE);
+    if (!bytes.length) {
+      this.eof = true;
+      return;
     }
 
+    var maxDecodeLength = (bytes.length + 1) >> 1;
+    var buffer = this.ensureBuffer(this.bufferLength + maxDecodeLength);
+    var bufferLength = this.bufferLength;
+
+    var firstDigit = this.firstDigit;
+    for (var i = 0, ii = bytes.length; i < ii; i++) {
+      var ch = bytes[i], digit;
+      if (ch >= 0x30 && ch <= 0x39) { // '0'-'9'
+        digit = ch & 0x0F;
+      } else if ((ch >= 0x41 && ch <= 0x46) || (ch >= 0x61 && ch <= 0x66)) {
+        // 'A'-'Z', 'a'-'z'
+        digit = (ch & 0x0F) + 9;
+      } else if (ch === 0x3E) { // '>'
+        this.eof = true;
+        break;
+      } else { // probably whitespace
+        continue; // ignoring
+      }
+      if (firstDigit < 0) {
+        firstDigit = digit;
+      } else {
+        buffer[bufferLength++] = (firstDigit << 4) | digit;
+        firstDigit = -1;
+      }
+    }
+    if (firstDigit >= 0 && this.eof) {
+      // incomplete byte
+      buffer[bufferLength++] = (firstDigit << 4);
+      firstDigit = -1;
+    }
+    this.firstDigit = firstDigit;
     this.bufferLength = bufferLength;
-    this.eof = true;
   };
 
   return AsciiHexStream;
@@ -36353,7 +36320,7 @@ var CCITTFaxStream = (function CCITTFaxStreamClosure() {
   CCITTFaxStream.prototype.lookBits = function CCITTFaxStream_lookBits(n) {
     var c;
     while (this.inputBits < n) {
-      if ((c = this.str.getByte()) === null || c === undefined) {
+      if ((c = this.str.getByte()) === -1) {
         if (this.inputBits === 0)
           return EOF;
         return ((this.inputBuf << (n - this.inputBits)) &
@@ -36407,7 +36374,7 @@ var LZWStream = (function LZWStreamClosure() {
     var cachedData = this.cachedData;
     while (bitsCached < n) {
       var c = this.str.getByte();
-      if (c === null || c === undefined) {
+      if (c === -1) {
         this.eof = true;
         return null;
       }
@@ -36797,6 +36764,9 @@ var WorkerMessageHandler = {
           });
         }
       };
+
+      PDFJS.maxImageSize = data.maxImageSize === undefined ?
+                           -1 : data.maxImageSize;
 
       getPdfManager(data).then(function pdfManagerReady() {
         loadDocument(false).then(onSuccess, function loadFailure(ex) {
@@ -41345,8 +41315,6 @@ var JpegImage = (function jpegImage() {
           }
           break;
         case 4:
-          if (!this.adobe)
-            throw 'Unsupported color mode (4 components)';
           // The default transform for four components is false
           colorTransform = false;
           // The adobe transform marker overrides any previous setting

@@ -1182,13 +1182,6 @@ MMod::canBeDivideByZero() const
 }
 
 bool
-MMod::canBeNegativeDividend() const
-{
-    JS_ASSERT(specialization_ == MIRType_Int32);
-    return !lhs()->range() || lhs()->range()->lower() < 0;
-}
-
-bool
 MMod::canBePowerOfTwoDivisor() const
 {
     JS_ASSERT(specialization_ == MIRType_Int32);
@@ -2220,20 +2213,6 @@ MBeta::printOpcode(FILE *fp) const
     fprintf(fp, "%s", sp.string());
 }
 
-void
-MBeta::computeRange()
-{
-    bool emptyRange = false;
-
-    Range *range = Range::intersect(val_->range(), comparison_, &emptyRange);
-    if (emptyRange) {
-        IonSpew(IonSpew_Range, "Marking block for inst %d unexitable", id());
-        block()->setEarlyAbort();
-    } else {
-        setRange(range);
-    }
-}
-
 bool
 MNewObject::shouldUseVM() const
 {
@@ -2343,12 +2322,6 @@ InlinePropertyTable::buildTypeSetForFunction(JSFunction *func) const
         }
     }
     return types;
-}
-
-bool
-MInArray::needsNegativeIntCheck() const
-{
-    return !index()->range() || index()->range()->lower() < 0;
 }
 
 void *

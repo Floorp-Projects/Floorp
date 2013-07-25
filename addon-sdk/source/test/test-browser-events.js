@@ -92,14 +92,4 @@ exports["test browser events ignore other wins"] = function(assert, done) {
   let window = open("data:text/html,not a browser");
 };
 
-if (require("sdk/system/xul-app").is("Fennec")) {
-  module.exports = {
-    "test Unsupported Test": function UnsupportedTest (assert) {
-        assert.pass(
-          "Skipping this test until Fennec support is implemented." +
-          "See bug 793071");
-    }
-  }
-}
-
 require("test").run(exports);

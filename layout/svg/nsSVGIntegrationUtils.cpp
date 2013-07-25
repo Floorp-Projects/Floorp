@@ -150,7 +150,7 @@ nsSVGIntegrationUtils::UsingEffectsForFrame(const nsIFrame* aFrame)
   // checking the SDL prefs here, since we don't know if we're being called for
   // painting or hit-testing anyway.
   const nsStyleSVGReset *style = aFrame->StyleSVGReset();
-  return (style->mFilter || style->mClipPath || style->mMask);
+  return (style->SingleFilter() || style->mClipPath || style->mMask);
 }
 
 /* static */ nsPoint
@@ -464,7 +464,16 @@ nsSVGIntegrationUtils::PaintFramesWithEffects(nsRenderingContext* aCtx,
 
   nsPoint firstFrameOffset = GetOffsetToUserSpace(firstFrame);
   nsPoint offset = aBuilder->ToReferenceFrame(firstFrame) - firstFrameOffset;
-  nsPoint offsetWithoutSVGGeomFramePos = offset;
+  nsPoint offsetWithoutSVGGeomFramePos;
+  if (firstFrame->IsFrameOfType(nsIFrame::eSVG)) {
+    offsetWithoutSVGGeomFramePos = offset;
+  } else {
+    /* Snap the offset if the reference frame is not a SVG frame,
+     * since other frames will be snapped to pixel when rendering. */
+    offsetWithoutSVGGeomFramePos = nsPoint(
+      aFrame->PresContext()->RoundAppUnitsToNearestDevPixels(offset.x),
+      aFrame->PresContext()->RoundAppUnitsToNearestDevPixels(offset.y));
+  }
   nsPoint svgGeomFramePos;
   if (aFrame->IsFrameOfType(nsIFrame::eSVGGeometry) ||
       aFrame->IsSVGText()) {
