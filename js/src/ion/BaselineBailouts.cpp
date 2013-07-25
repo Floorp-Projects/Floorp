@@ -1007,7 +1007,7 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
 
     // Write out actual arguments (and thisv), copied from unpacked stack of BaselineJS frame.
     // Arguments are reversed on the BaselineJS frame's stack values.
-    JS_ASSERT(isCall || IsGetterPC(pc) || IsSetterPC(pc));
+    JS_ASSERT(IsIonInlinablePC(pc));
     unsigned actualArgc;
     if (needToSaveArgs) {
         // For FUNAPPLY or an accessor, the arguments are not on the stack anymore,
