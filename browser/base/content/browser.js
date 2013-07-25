@@ -1040,7 +1040,6 @@ var gBrowserInit = {
     OfflineApps.init();
     IndexedDBPromptHelper.init();
     gFormSubmitObserver.init();
-    SocialUI.init();
     AddonManager.addAddonListener(AddonsMgrListener);
     WebrtcIndicator.init();
 
@@ -1101,12 +1100,7 @@ var gBrowserInit = {
 
     // initialize the session-restore service (in case it's not already running)
     let ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
-    ss.init(window);
-
-    // Enable the Restore Last Session command if needed
-    if (ss.canRestoreLastSession &&
-        !PrivateBrowsingUtils.isWindowPrivate(window))
-      goSetCommandEnabled("Browser:RestoreLastSession", true);
+    let ssPromise = ss.init(window);
 
     PlacesToolbarHelper.init();
 
@@ -1169,7 +1163,6 @@ var gBrowserInit = {
 #endif
 
     gBrowserThumbnails.init();
-    TabView.init();
 
     setUrlAndSearchBarWidthForConditionalForwardButton();
     window.addEventListener("resize", function resizeHandler(event) {
@@ -1284,8 +1277,19 @@ var gBrowserInit = {
 #endif
 #endif
 
+    ssPromise.then(() =>{
+      // Enable the Restore Last Session command if needed
+      if (ss.canRestoreLastSession &&
+          !PrivateBrowsingUtils.isWindowPrivate(window))
+        goSetCommandEnabled("Browser:RestoreLastSession", true);
+
+      TabView.init();
+      SocialUI.init();
+
+      setTimeout(function () { BrowserChromeTest.markAsReady(); }, 0);
+    });
+
     Services.obs.notifyObservers(window, "browser-delayed-startup-finished", "");
-    setTimeout(function () { BrowserChromeTest.markAsReady(); }, 0);
     TelemetryTimestamps.add("delayedStartupFinished");
   },
 
