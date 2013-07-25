@@ -536,12 +536,6 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
     /**
      * FIXME: Write new versions of these methods and update their consumers to use the new about:home pages.
      */
-    protected ListView getAllPagesList(String waitText, int expectedChildCount) {
-        return null;
-    }
-    protected ListView getAllPagesList(String waitText) {
-        return null;
-    }
     protected ListView getBookmarksList(String waitText, int expectedChildCount) {
         return null;
     }
