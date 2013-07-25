@@ -139,6 +139,7 @@ struct JSCompartment
   public:
     void enter() { enterCompartmentDepth++; }
     void leave() { enterCompartmentDepth--; }
+    bool hasBeenEntered() { return !!enterCompartmentDepth; }
 
     JS::Zone *zone() { return zone_; }
     const JS::Zone *zone() const { return zone_; }
