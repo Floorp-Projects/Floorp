@@ -566,6 +566,7 @@ function SideMenuItem(aGroup, aContents, aTooltip, aArrowFlag, aCheckboxFlag, aA
     let container = this._container = this.document.createElement("hbox");
     container.className = "side-menu-widget-item";
     container.setAttribute("tooltiptext", aTooltip);
+    container.setAttribute("align", "start");
 
     let target = this._target = this.document.createElement("vbox");
     target.className = "side-menu-widget-item-contents";
