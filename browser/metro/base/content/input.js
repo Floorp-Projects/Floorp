@@ -42,6 +42,7 @@ const kDebugSelectionDisplayPref = "metro.debug.selection.displayRanges";
 const kDebugSelectionDumpPref = "metro.debug.selection.dumpRanges";
 // Dump message manager event traffic for selection.
 const kDebugSelectionDumpEvents = "metro.debug.selection.dumpEvents";
+const kAsyncPanZoomEnabled = "layers.async-pan-zoom.enabled"
 
 /**
  * TouchModule
@@ -199,6 +200,11 @@ var TouchModule = {
 
   /** Begin possible pan and send tap down event. */
   _onTouchStart: function _onTouchStart(aEvent) {
+    if (Services.prefs.getBoolPref(kAsyncPanZoomEnabled) &&
+        !StartUI.isStartPageVisible) {
+      return;
+    }
+
     if (aEvent.touches.length > 1)
       return;
 
@@ -250,6 +256,11 @@ var TouchModule = {
 
   /** Send tap up event and any necessary full taps. */
   _onTouchEnd: function _onTouchEnd(aEvent) {
+    if (Services.prefs.getBoolPref(kAsyncPanZoomEnabled) &&
+        !StartUI.isStartPageVisible) {
+      return;
+    }
+
     if (aEvent.touches.length > 0 || this._isCancelled || !this._targetScrollbox)
       return;
 
@@ -266,6 +277,11 @@ var TouchModule = {
    * If we're in a drag, do what we have to do to drag on.
    */
   _onTouchMove: function _onTouchMove(aEvent) {
+    if (Services.prefs.getBoolPref(kAsyncPanZoomEnabled) &&
+        !StartUI.isStartPageVisible) {
+      return;
+    }
+
     if (aEvent.touches.length > 1)
       return;
 
