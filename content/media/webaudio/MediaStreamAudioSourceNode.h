@@ -10,12 +10,20 @@
 #include "AudioNode.h"
 
 namespace mozilla {
+
+class DOMMediaStream;
+
 namespace dom {
 
 class MediaStreamAudioSourceNode : public AudioNode
 {
 public:
-  MediaStreamAudioSourceNode(AudioContext* aContext, const DOMMediaStream* aMediaStream);
+  MediaStreamAudioSourceNode(AudioContext* aContext, DOMMediaStream* aMediaStream);
+  // Define consturctor out-of-line so we can forward-declare DOMMediaStream
+  virtual ~MediaStreamAudioSourceNode();
+
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(MediaStreamAudioSourceNode, AudioNode)
 
   virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
 
@@ -25,10 +33,10 @@ public:
 
 private:
   nsRefPtr<MediaInputPort> mInputPort;
+  nsRefPtr<DOMMediaStream> mInputStream;
 };
 
 }
 }
 
 #endif
-
