@@ -8,7 +8,7 @@
     <authors>
       <author>
         <name>Test Creator</name>
-        <link>http://localhost:4444/creator.html</link>
+        <link>http://localhost:%PORT%/creator.html</link>
       </author>
     </authors>
     <status id='4'>Public</status>
@@ -19,7 +19,7 @@
         <max_version>1</max_version>
       </application>
     </compatible_applications>
-    <install>http://localhost:4444/test.xpi</install>
+    <install>http://localhost:%PORT%/test.xpi</install>
   </addon>
 
   <addon>
@@ -30,7 +30,7 @@
     <authors>
       <author>
         <name>Test Creator</name>
-        <link>http://localhost:4444/creator.html</link>
+        <link>http://localhost:%PORT%/creator.html</link>
       </author>
     </authors>
     <status id='4'>Public</status>
@@ -42,7 +42,7 @@
         <max_version>2</max_version>
       </application>
     </compatible_applications>
-    <install>http://localhost:4444/test.xpi</install>
+    <install>http://localhost:%PORT%/test.xpi</install>
   </addon>
 
   <addon>
@@ -53,7 +53,7 @@
     <authors>
       <author>
         <name>Test Creator</name>
-        <link>http://localhost:4444/creator.html</link>
+        <link>http://localhost:%PORT%/creator.html</link>
       </author>
     </authors>
     <status id='4'>Public</status>
@@ -64,7 +64,7 @@
         <max_version>1</max_version>
       </application>
     </compatible_applications>
-    <install>http://localhost:4444/test.xpi</install>
+    <install>http://localhost:%PORT%/test.xpi</install>
   </addon>
 
   <addon>
@@ -75,7 +75,7 @@
     <authors>
       <author>
         <name>Test Creator</name>
-        <link>http://localhost:4444/creator.html</link>
+        <link>http://localhost:%PORT%/creator.html</link>
       </author>
     </authors>
     <status id='4'>Public</status>
@@ -87,7 +87,7 @@
         <max_version>1</max_version>
       </application>
     </compatible_applications>
-    <install os="UNKNOWN">http://localhost:4444/test.xpi</install>
+    <install os="UNKNOWN">http://localhost:%PORT%/test.xpi</install>
   </addon>
 
   <addon>
@@ -98,7 +98,7 @@
     <authors>
       <author>
         <name>Test Creator</name>
-        <link>http://localhost:4444/creator.html</link>
+        <link>http://localhost:%PORT%/creator.html</link>
       </author>
     </authors>
     <status id='4'>Public</status>
@@ -109,7 +109,7 @@
         <max_version>1</max_version>
       </application>
     </compatible_applications>
-    <install>http://localhost:4444/test.xpi</install>
+    <install>http://localhost:%PORT%/test.xpi</install>
   </addon>
 
   <addon>
@@ -120,7 +120,7 @@
     <authors>
       <author>
         <name>Test Creator</name>
-        <link>http://localhost:4444/creator.html</link>
+        <link>http://localhost:%PORT%/creator.html</link>
       </author>
     </authors>
     <status id='4'>Public</status>
@@ -132,7 +132,7 @@
         <max_version>1</max_version>
       </application>
     </compatible_applications>
-    <install>http://localhost:4444/test.xpi</install>
+    <install>http://localhost:%PORT%/test.xpi</install>
   </addon>
 
   <addon>
@@ -143,7 +143,7 @@
     <authors>
       <author>
         <name>Test Creator</name>
-        <link>http://localhost:4444/creator.html</link>
+        <link>http://localhost:%PORT%/creator.html</link>
       </author>
     </authors>
     <status id='4'>Public</status>
@@ -154,7 +154,7 @@
         <max_version>1</max_version>
       </application>
     </compatible_applications>
-    <install>http://localhost:4444/test.xpi</install>
+    <install>http://localhost:%PORT%/test.xpi</install>
   </addon>
 
   <addon>
@@ -165,7 +165,7 @@
     <authors>
       <author>
         <name>Test Creator</name>
-        <link>http://localhost:4444/creator.html</link>
+        <link>http://localhost:%PORT%/creator.html</link>
       </author>
     </authors>
     <status id='4'>Public</status>
@@ -176,7 +176,7 @@
         <max_version>1</max_version>
       </application>
     </compatible_applications>
-    <install>http://localhost:4444/test.xpi</install>
+    <install>http://localhost:%PORT%/test.xpi</install>
   </addon>
 
   <addon>
@@ -187,7 +187,7 @@
     <authors>
       <author>
         <name>Test Creator</name>
-        <link>http://localhost:4444/creator.html</link>
+        <link>http://localhost:%PORT%/creator.html</link>
       </author>
     </authors>
     <status id='4'>Public</status>
@@ -198,7 +198,7 @@
         <max_version>1</max_version>
       </application>
     </compatible_applications>
-    <install>http://localhost:4444/test.xpi</install>
+    <install>http://localhost:%PORT%/test.xpi</install>
   </addon>
 
   <addon>
@@ -209,7 +209,7 @@
     <authors>
       <author>
         <name>Test Creator</name>
-        <link>http://localhost:4444/creator.html</link>
+        <link>http://localhost:%PORT%/creator.html</link>
       </author>
     </authors>
     <status id='4'>Public</status>
@@ -220,7 +220,7 @@
         <max_version>1</max_version>
       </application>
     </compatible_applications>
-    <install>http://localhost:4444/test.xpi</install>
+    <install>http://localhost:%PORT%/test.xpi</install>
   </addon>
 
   <addon>
@@ -231,7 +231,7 @@
     <authors>
       <author>
         <name>Test Creator</name>
-        <link>http://localhost:4444/creator.html</link>
+        <link>http://localhost:%PORT%/creator.html</link>
       </author>
     </authors>
     <status id='4'>Public</status>
@@ -242,7 +242,7 @@
         <max_version>1</max_version>
       </application>
     </compatible_applications>
-    <install>http://localhost:4444/test.xpi</install>
+    <install>http://localhost:%PORT%/test.xpi</install>
   </addon>
 
   <addon>
@@ -253,7 +253,7 @@
     <authors>
       <author>
         <name>Test Creator</name>
-        <link>http://localhost:4444/creator.html</link>
+        <link>http://localhost:%PORT%/creator.html</link>
       </author>
     </authors>
     <status id='4'>Public</status>
@@ -264,7 +264,7 @@
         <max_version>1</max_version>
       </application>
     </compatible_applications>
-    <install>http://localhost:4444/test.xpi</install>
+    <install>http://localhost:%PORT%/test.xpi</install>
   </addon>
 
   <addon>
@@ -275,7 +275,7 @@
     <authors>
       <author>
         <name>Test Creator</name>
-        <link>http://localhost:4444/creator.html</link>
+        <link>http://localhost:%PORT%/creator.html</link>
       </author>
     </authors>
     <status id='4'>Public</status>
@@ -286,7 +286,7 @@
         <max_version>1</max_version>
       </application>
     </compatible_applications>
-    <install>http://localhost:4444/test.xpi</install>
+    <install>http://localhost:%PORT%/test.xpi</install>
   </addon>
 </searchresults>
 
