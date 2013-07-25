@@ -7,6 +7,8 @@
 #ifndef ion_shared_CodeGenerator_shared_inl_h
 #define ion_shared_CodeGenerator_shared_inl_h
 
+#include "ion/shared/CodeGenerator-shared.h"
+
 namespace js {
 namespace ion {
 

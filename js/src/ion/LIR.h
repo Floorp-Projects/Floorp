@@ -14,15 +14,15 @@
 
 #include "jscntxt.h"
 
-#include "ion/IonAllocPolicy.h"
-#include "ion/InlineList.h"
-#include "ion/LOpcodes.h"
-#include "ion/Registers.h"
-#include "ion/MIR.h"
-#include "ion/MIRGraph.h"
-#include "ion/shared/Assembler-shared.h"
-#include "ion/Safepoints.h"
 #include "ion/Bailouts.h"
+#include "ion/InlineList.h"
+#include "ion/IonAllocPolicy.h"
+#include "ion/LOpcodes.h"
+#include "ion/MIRGraph.h"
+#include "ion/MIR.h"
+#include "ion/Registers.h"
+#include "ion/Safepoints.h"
+#include "ion/shared/Assembler-shared.h"
 #include "ion/VMFunctions.h"
 
 namespace js {

@@ -1120,16 +1120,16 @@
                 this.stopScroll();
                 break;
               }
-              case "keypress": {
+              case "keydown": {
                 if (aEvent.keyCode == aEvent.DOM_VK_ESCAPE) {
                   // the escape key will be processed by
-                  // nsXULPopupManager::KeyPress and the panel will be closed.
-                  // So, nothing to do here.
+                  // nsXULPopupManager::KeyDown and the panel will be closed.
+                  // So, don't consume the key event here.
                   break;
                 }
-                // don't break here. we need to eat keypress events.
+                // don't break here. we need to eat keydown events.
               }
-              case "keydown":
+              case "keypress":
               case "keyup": {
                 // All keyevents should be eaten here during autoscrolling.
                 aEvent.stopPropagation();

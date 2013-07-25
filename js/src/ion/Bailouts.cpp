@@ -4,18 +4,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "ion/Bailouts.h"
+
 #include "jsanalyze.h"
 #include "jscntxt.h"
 #include "jscompartment.h"
 #include "jsinfer.h"
 
-#include "ion/Bailouts.h"
-#include "ion/SnapshotReader.h"
+#include "ion/BaselineJIT.h"
 #include "ion/Ion.h"
 #include "ion/IonCompartment.h"
 #include "ion/IonSpewer.h"
+#include "ion/SnapshotReader.h"
 #include "vm/Interpreter.h"
-#include "ion/BaselineJIT.h"
 
 #include "vm/Stack-inl.h"
 

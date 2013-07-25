@@ -6,9 +6,9 @@
 
 #include "jscntxt.h"
 
+#include "assembler/assembler/MacroAssembler.h"
 #include "ion/AsmJS.h"
 #include "ion/AsmJSModule.h"
-#include "assembler/assembler/MacroAssembler.h"
 
 #include "vm/ObjectImpl-inl.h"
 
