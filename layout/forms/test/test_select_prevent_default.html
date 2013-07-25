@@ -33,11 +33,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=291082
         element.focus();
         var previousValue = element.value;
         sendChar('2');
-        is(element.value, previousValue, "value should not have changed");
+        is(element.value, previousValue, "value should not have changed (id: " + id + ")");
         previousValue = element.value;
         otherKeys.forEach(function(key) {
           sendKey(key);
-          isnot(element.value, previousValue, "value should have changed while testing key " + key);
+          isnot(element.value, previousValue, "value should have changed while testing key " + key + " (id: " + id + ")");
           previousValue = element.value;
           });
         });
