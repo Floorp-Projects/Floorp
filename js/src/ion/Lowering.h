@@ -13,7 +13,6 @@
 #include "ion/IonAllocPolicy.h"
 #include "ion/LIR.h"
 #include "ion/MOpcodes.h"
-
 #if defined(JS_CPU_X86)
 # include "ion/x86/Lowering-x86.h"
 #elif defined(JS_CPU_X64)

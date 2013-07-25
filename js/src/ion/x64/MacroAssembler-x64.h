@@ -7,10 +7,11 @@
 #ifndef ion_x64_MacroAssembler_x64_h
 #define ion_x64_MacroAssembler_x64_h
 
-#include "ion/shared/MacroAssembler-x86-shared.h"
-#include "ion/MoveResolver.h"
-#include "ion/IonFrames.h"
 #include "jsnum.h"
+
+#include "ion/IonFrames.h"
+#include "ion/MoveResolver.h"
+#include "ion/shared/MacroAssembler-x86-shared.h"
 
 namespace js {
 namespace ion {
