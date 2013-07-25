@@ -61,7 +61,8 @@ def get_binary(path, app_name):
     # On OS X we can get the real binary from the app bundle
     if mozinfo.isMac:
         plist = '%s/Contents/Info.plist' % path
-        assert os.path.isfile(plist), '"%s" has not been found.' % plist
+        if not os.path.isfile(plist):
+            raise InvalidBinary('%s/Contents/Info.plist not found' % path)
 
         binary = os.path.join(path, 'Contents/MacOS/',
                               readPlist(plist)['CFBundleExecutable'])
@@ -205,7 +206,7 @@ def uninstall(install_folder):
 
     # Ensure that we remove any trace of the installation. Even the uninstaller
     # on Windows leaves files behind we have to explicitely remove.
-    shutil.rmtree(install_folder)
+    mozfile.rmtree(install_folder)
 
 
 def _install_dmg(src, dest):

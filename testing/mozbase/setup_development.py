@@ -10,10 +10,9 @@ Setup mozbase packages for development.
 Packages may be specified as command line arguments.
 If no arguments are given, install all packages.
 
-See https://wiki.mozilla.org/Auto-tools/Projects/MozBase
+See https://wiki.mozilla.org/Auto-tools/Projects/Mozbase
 """
 
-import pkg_resources
 import os
 import subprocess
 import sys
@@ -31,7 +30,9 @@ here = os.path.dirname(os.path.abspath(__file__))
 # all python packages
 mozbase_packages = [i for i in os.listdir(here)
                     if os.path.exists(os.path.join(here, i, 'setup.py'))]
-extra_packages = ["sphinx"]
+extra_packages = ["sphinx", # documentation: https://wiki.mozilla.org/Auto-tools/Projects/Mozbase#Documentation
+                  "mock",   # testing: https://wiki.mozilla.org/Auto-tools/Projects/Mozbase#Tests
+                  ]
 
 def cycle_check(order, dependencies):
     """ensure no cyclic dependencies"""
@@ -227,6 +228,13 @@ def main(args=sys.argv[1:]):
     for package in unrolled:
         call([sys.executable, 'setup.py', 'develop', '--no-deps'],
              cwd=os.path.join(here, reverse_mapping[package]))
+
+    # add the directory of sys.executable to path to aid the correct
+    # `easy_install` getting called
+    # https://bugzilla.mozilla.org/show_bug.cgi?id=893878
+    os.environ['PATH'] = '%s%s%s' % (os.path.dirname(os.path.abspath(sys.executable)),
+                                     os.path.pathsep,
+                                     os.environ.get('PATH', '').strip(os.path.pathsep))
 
     # install non-mozbase dependencies
     # these need to be installed separately and the --no-deps flag
