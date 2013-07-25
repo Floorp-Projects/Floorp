@@ -48,8 +48,8 @@ Class RegExpStaticsObject::class_ = {
     resc_finalize,
     NULL,                    /* checkAccess */
     NULL,                    /* call        */
-    NULL,                    /* construct   */
     NULL,                    /* hasInstance */
+    NULL,                    /* construct   */
     resc_trace
 };
 

@@ -767,8 +767,8 @@ Class ArrayObject::class_ = {
     NULL,
     NULL,           /* checkAccess */
     NULL,           /* call        */
-    NULL,           /* construct   */
     NULL,           /* hasInstance */
+    NULL,           /* construct   */
     NULL,           /* trace       */
     {
         NULL,       /* outerObject */
