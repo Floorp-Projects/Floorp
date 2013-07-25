@@ -985,8 +985,21 @@ public:
   /**
    * Apply the result of GetSkipSides() on this frame to an nsMargin by
    * setting to zero any sides that are skipped.
+   *
+   * @param aMargin The margin to apply the result of GetSkipSides() to.
+   * @param aReflowState An optional reflow state parameter, which is used if
+   *        ApplySkipSides() is being called in the middle of reflow.
+   *
+   * @note (See also bug 743402, comment 11) GetSkipSides() and it's sister
+   *       method, ApplySkipSides() checks to see if this frame has a previous
+   *       or next continuation to determine if a side should be skipped.
+   *       Unfortunately, this only works after reflow has been completed. In
+   *       lieu of this, during reflow, an nsHTMLReflowState parameter can be
+   *       passed in, indicating that it should be used to determine if sides
+   *       should be skipped during reflow.
    */
-  void ApplySkipSides(nsMargin& aMargin) const;
+  void ApplySkipSides(nsMargin& aMargin,
+                      const nsHTMLReflowState* aReflowState = nullptr) const;
 
   /**
    * Like the frame's rect (see |GetRect|), which is the border rect,
@@ -2406,8 +2419,16 @@ public:
   /**
    * Determine whether borders should not be painted on certain sides of the
    * frame.
+   *
+   * @note (See also bug 743402, comment 11) GetSkipSides() and it's sister
+   *       method, ApplySkipSides() checks to see if this frame has a previous
+   *       or next continuation to determine if a side should be skipped.
+   *       Unfortunately, this only works after reflow has been completed. In
+   *       lieu of this, during reflow, an nsHTMLReflowState parameter can be
+   *       passed in, indicating that it should be used to determine if sides
+   *       should be skipped during reflow.
    */
-  virtual int GetSkipSides() const { return 0; }
+  virtual int GetSkipSides(const nsHTMLReflowState* aReflowState = nullptr) const { return 0; }
 
   /**
    * @returns true if this frame is selected.

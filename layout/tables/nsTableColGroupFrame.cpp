@@ -337,7 +337,7 @@ nsTableColGroupFrame::RemoveFrame(ChildListID     aListID,
 }
 
 int
-nsTableColGroupFrame::GetSkipSides() const
+nsTableColGroupFrame::GetSkipSides(const nsHTMLReflowState* aReflowState) const
 {
   int skip = 0;
   if (nullptr != GetPrevInFlow()) {

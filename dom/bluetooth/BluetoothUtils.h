@@ -21,7 +21,7 @@ class BluetoothReplyRunnable;
 bool
 SetJsObject(JSContext* aContext,
             const BluetoothValue& aValue,
-            JSObject* aObj);
+            JS::Handle<JSObject*> aObj);
 
 nsString
 GetObjectPathFromAddress(const nsAString& aAdapterPath,

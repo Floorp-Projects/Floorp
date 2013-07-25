@@ -36,31 +36,31 @@ RecorderVideoProfile::GetJsObject(JSContext* aCx, JSObject** aObject)
 
   JS::Rooted<JSString*> s(aCx, JS_NewStringCopyZ(aCx, codec));
   JS::Rooted<JS::Value> v(aCx, STRING_TO_JSVAL(s));
-  if (!JS_SetProperty(aCx, o, "codec", v.address())) {
+  if (!JS_SetProperty(aCx, o, "codec", &v)) {
     return NS_ERROR_FAILURE;
   }
 
   if (mBitrate != -1) {
     v = INT_TO_JSVAL(mBitrate);
-    if (!JS_SetProperty(aCx, o, "bitrate", v.address())) {
+    if (!JS_SetProperty(aCx, o, "bitrate", &v)) {
       return NS_ERROR_FAILURE;
     }
   }
   if (mFramerate != -1) {
     v = INT_TO_JSVAL(mFramerate);
-    if (!JS_SetProperty(aCx, o, "framerate", v.address())) {
+    if (!JS_SetProperty(aCx, o, "framerate", &v)) {
       return NS_ERROR_FAILURE;
     }
   }
   if (mWidth != -1) {
     v = INT_TO_JSVAL(mWidth);
-    if (!JS_SetProperty(aCx, o, "width", v.address())) {
+    if (!JS_SetProperty(aCx, o, "width", &v)) {
       return NS_ERROR_FAILURE;
     }
   }
   if (mHeight != -1) {
     v = INT_TO_JSVAL(mHeight);
-    if (!JS_SetProperty(aCx, o, "height", v.address())) {
+    if (!JS_SetProperty(aCx, o, "height", &v)) {
       return NS_ERROR_FAILURE;
     }
   }
@@ -97,25 +97,25 @@ RecorderAudioProfile::GetJsObject(JSContext* aCx, JSObject** aObject)
 
   JS::Rooted<JSString*> s(aCx, JS_NewStringCopyZ(aCx, codec));
   JS::Rooted<JS::Value> v(aCx, STRING_TO_JSVAL(s));
-  if (!JS_SetProperty(aCx, o, "codec", v.address())) {
+  if (!JS_SetProperty(aCx, o, "codec", &v)) {
     return NS_ERROR_FAILURE;
   }
 
   if (mBitrate != -1) {
     v = INT_TO_JSVAL(mBitrate);
-    if (!JS_SetProperty(aCx, o, "bitrate", v.address())) {
+    if (!JS_SetProperty(aCx, o, "bitrate", &v)) {
       return NS_ERROR_FAILURE;
     }
   }
   if (mSamplerate != -1) {
     v = INT_TO_JSVAL(mSamplerate);
-    if (!JS_SetProperty(aCx, o, "samplerate", v.address())) {
+    if (!JS_SetProperty(aCx, o, "samplerate", &v)) {
       return NS_ERROR_FAILURE;
     }
   }
   if (mChannels != -1) {
     v = INT_TO_JSVAL(mChannels);
-    if (!JS_SetProperty(aCx, o, "channels", v.address())) {
+    if (!JS_SetProperty(aCx, o, "channels", &v)) {
       return NS_ERROR_FAILURE;
     }
   }
@@ -185,7 +185,7 @@ RecorderProfileManager::GetJsObject(JSContext* aCx, JSObject** aObject) const
     NS_ENSURE_SUCCESS(rv, rv);
     JS::Rooted<JS::Value> v(aCx, OBJECT_TO_JSVAL(p));
 
-    if (!JS_SetProperty(aCx, o, profileName, v.address())) {
+    if (!JS_SetProperty(aCx, o, profileName, &v)) {
       return NS_ERROR_FAILURE;
     }
   }

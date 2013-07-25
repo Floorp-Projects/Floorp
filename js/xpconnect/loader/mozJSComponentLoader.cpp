@@ -1328,7 +1328,7 @@ mozJSComponentLoader::ImportInto(const nsACString &aLocation,
             JSAutoCompartment target_ac(mContext, targetObj);
 
             if (!JS_WrapValue(mContext, value.address()) ||
-                !JS_SetPropertyById(mContext, targetObj, symbolId, value.address())) {
+                !JS_SetPropertyById(mContext, targetObj, symbolId, &value)) {
                 JSAutoByteString bytes(mContext, JSID_TO_STRING(symbolId));
                 if (!bytes)
                     return NS_ERROR_FAILURE;
