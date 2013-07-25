@@ -60,10 +60,10 @@ TestShellChild::RecvPTestShellCommandConstructor(PTestShellCommandChild* aActor,
 PContextWrapperChild*
 TestShellChild::AllocPContextWrapper()
 {
-  JSContext* cx;
-  if (mXPCShell && (cx = mXPCShell->GetContext())) {
-    return new ContextWrapperChild(cx);
-  }
+  // This function was removed shortly after the merge, and was never called to
+  // begin with. Let's just MOZ_CRASH on 24 rather than fixing the merge
+  // conflict.
+  MOZ_CRASH();
   return NULL;
 }
 
