@@ -63,7 +63,7 @@ public:
   NS_IMETHOD GetPRTQUEUE(PRTQUEUE *&p);
 
   NS_IMETHOD GetSurfaceForPrinter(gfxASurface **nativeSurface);
-  NS_IMETHOD BeginDocument(PRUnichar* aTitle, PRUnichar* aPrintToFileName,
+  NS_IMETHOD BeginDocument(const nsAString& aTitle, PRUnichar* aPrintToFileName,
                            int32_t aStartPage, int32_t aEndPage);
   NS_IMETHOD EndDocument();
   NS_IMETHOD BeginPage();

@@ -248,7 +248,13 @@ CanEnterBaselineJIT(JSContext *cx, HandleScript script, bool osr)
     // Check script use count. However, always eagerly compile scripts if JSD
     // is enabled, so that we don't have to OSR and don't have to update the
     // frame pointer stored in JSD's frames list.
-    if (IsJSDEnabled(cx)) {
+    //
+    // Also eagerly compile if we are in parallel warmup, the point of which
+    // is to gather type information so that the script may be compiled for
+    // parallel execution. We want to avoid the situation of OSRing during
+    // warmup and only gathering type information for the loop, and not the
+    // rest of the function.
+    if (IsJSDEnabled(cx) || cx->runtime()->parallelWarmup > 0) {
         if (osr)
             return Method_Skipped;
     } else if (script->incUseCount() <= js_IonOptions.baselineUsesBeforeCompile) {

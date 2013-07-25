@@ -93,7 +93,7 @@ nsXULPDGlobalObject_finalize(JSFreeOp *fop, JSObject *obj)
     nativeThis->OnFinalize(obj);
 
     // The addref was part of JSObject construction
-    NS_RELEASE(nativeThis);
+    nsContentUtils::DeferredFinalize(nativeThis);
 }
 
 

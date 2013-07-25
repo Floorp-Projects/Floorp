@@ -111,7 +111,16 @@ public:
   bool RemoveTile(int x, int y, Tile& aRemovedTile);
 
   uint16_t GetTileLength() const { return TILEDLAYERBUFFER_TILE_SIZE; }
-  uint32_t GetScaledTileLength() const { return TILEDLAYERBUFFER_TILE_SIZE / mResolution; }
+  uint32_t GetScaledTileLength() const {
+    // volatile variables to help investigate bug 881018
+    volatile float resolution = mResolution;
+    volatile float fScaledLength = TILEDLAYERBUFFER_TILE_SIZE / mResolution;
+    volatile uint32_t uiScaledLength = TILEDLAYERBUFFER_TILE_SIZE / mResolution;
+    if (!uiScaledLength) {
+        MOZ_CRASH();
+    }
+    return uiScaledLength;
+  }
 
   unsigned int GetTileCount() const { return mRetainedTiles.Length(); }
 
@@ -225,7 +234,6 @@ TiledLayerBuffer<Derived, Tile>::GetTile(const nsIntPoint& aTileOrigin) const
   // TODO Cache firstTileOriginX/firstTileOriginY
   // Find the tile x/y of the first tile and the target tile relative to the (0, 0)
   // origin, the difference is the tile x/y relative to the start of the tile buffer.
-  volatile float resolution = mResolution; // bug 881018 investigation
   int firstTileX = floor_div(mValidRegion.GetBounds().x, GetScaledTileLength());
   int firstTileY = floor_div(mValidRegion.GetBounds().y, GetScaledTileLength());
   return GetTile(floor_div(aTileOrigin.x, GetScaledTileLength()) - firstTileX,
