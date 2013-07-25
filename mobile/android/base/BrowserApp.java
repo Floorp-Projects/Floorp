@@ -487,8 +487,7 @@ abstract public class BrowserApp extends GeckoApp
 
         if (savedInstanceState != null) {
             mDynamicToolbarEnabled = savedInstanceState.getBoolean(STATE_DYNAMIC_TOOLBAR_ENABLED);
-            // FIXME: address this in bug 876750
-            //mHomePager.setTopPadding(savedInstanceState.getInt(STATE_ABOUT_HOME_TOP_PADDING));
+            mHomePagerContainer.setPadding(0, savedInstanceState.getInt(STATE_ABOUT_HOME_TOP_PADDING), 0, 0);
         }
 
         // Listen to the dynamic toolbar pref
@@ -582,16 +581,14 @@ abstract public class BrowserApp extends GeckoApp
                 mLayerView.getLayerClient().setOnMetricsChangedListener(this);
             }
             setToolbarMargin(0);
-            // FIXME: address this in bug 876750
-            //mHomePagerContainer.setTopPadding(mBrowserToolbar.getLayout().getHeight());
+            mHomePagerContainer.setPadding(0, mBrowserToolbar.getHeight(), 0, 0);
         } else {
             // Immediately show the toolbar when disabling the dynamic
             // toolbar.
             if (mLayerView != null) {
                 mLayerView.getLayerClient().setOnMetricsChangedListener(null);
             }
-            // FIXME: address this in bug 876750
-            //mHomePagerContainer.setTopPadding(0);
+            mHomePagerContainer.setPadding(0, 0, 0, 0);
             if (mBrowserToolbar != null) {
                 mBrowserToolbar.scrollTo(0, 0);
             }
@@ -1218,8 +1215,7 @@ abstract public class BrowserApp extends GeckoApp
         super.onSaveInstanceState(outState);
         mToast.onSaveInstanceState(outState);
         outState.putBoolean(STATE_DYNAMIC_TOOLBAR_ENABLED, mDynamicToolbarEnabled);
-        // FIXME: address this in bug 876750
-        //outState.putInt(STATE_ABOUT_HOME_TOP_PADDING, mHomePager.getTopPadding());
+        outState.putInt(STATE_ABOUT_HOME_TOP_PADDING, mHomePagerContainer.getPaddingTop());
     }
 
     private void openUrl(String url) {
