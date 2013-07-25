@@ -8,8 +8,8 @@
 #define ion_AsmJS_h
 
 #ifdef XP_MACOSX
-# include <pthread.h>
 # include <mach/mach.h>
+# include <pthread.h>
 #endif
 
 #include "jstypes.h"

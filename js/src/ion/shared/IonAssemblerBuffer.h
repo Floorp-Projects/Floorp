@@ -6,6 +6,7 @@
 
 #ifndef ion_shared_IonAssemblerBuffer_h
 #define ion_shared_IonAssemblerBuffer_h
+
 // needed for the definition of Label :(
 #include "ion/shared/Assembler-shared.h"
 

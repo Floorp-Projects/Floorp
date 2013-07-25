@@ -6,8 +6,9 @@
 
 #ifdef DEBUG
 
-#include "ion/Ion.h"
 #include "ion/IonSpewer.h"
+
+#include "ion/Ion.h"
 
 #ifndef ION_SPEW_DIR
 # if defined(_WIN32)

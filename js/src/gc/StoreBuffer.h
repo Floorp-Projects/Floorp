@@ -379,6 +379,7 @@ class StoreBuffer
     GenericBuffer bufferGeneric;
 
     JSRuntime *runtime;
+    const Nursery &nursery_;
 
     void *buffer;
 
@@ -400,10 +401,10 @@ class StoreBuffer
                                     GenericBufferSize;
 
   public:
-    explicit StoreBuffer(JSRuntime *rt)
+    explicit StoreBuffer(JSRuntime *rt, const Nursery &nursery)
       : bufferVal(this), bufferCell(this), bufferSlot(this), bufferWholeCell(this),
         bufferRelocVal(this), bufferRelocCell(this), bufferGeneric(this),
-        runtime(rt), buffer(NULL), aboutToOverflow(false), overflowed(false),
+        runtime(rt), nursery_(nursery), buffer(NULL), aboutToOverflow(false), overflowed(false),
         enabled(false)
     {}
 
@@ -453,7 +454,7 @@ class StoreBuffer
 
     /* Insert or update a callback entry. */
     void putCallback(CallbackRef::MarkCallback callback, Cell *key, void *data) {
-        if (!key->isTenured())
+        if (nursery_.isInside(key))
             bufferGeneric.put(CallbackRef(callback, key, data));
     }
 

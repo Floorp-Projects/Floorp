@@ -4,11 +4,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "ion/shared/Lowering-x86-shared.h"
+
 #include "mozilla/MathAlgorithms.h"
 
-#include "ion/MIR.h"
 #include "ion/Lowering.h"
-#include "ion/shared/Lowering-x86-shared.h"
+#include "ion/MIR.h"
+
 #include "ion/shared/Lowering-shared-inl.h"
 
 using namespace js;

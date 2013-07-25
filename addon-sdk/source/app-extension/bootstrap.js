@@ -220,6 +220,8 @@ function startup(data, reasonCode) {
       // options used by system module.
       // File to write 'OK' or 'FAIL' (exit code emulation).
       resultFile: options.resultFile,
+      // File to write stdout.
+      logFile: options.logFile,
       // Arguments passed as --static-args
       staticArgs: options.staticArgs,
 

@@ -121,8 +121,8 @@
         </body>
       </method>
 
-      <property name="contextNoun" readonly="true"
-                onget="return this.getAttribute('noun');"/>
+      <property name="contextSetName" readonly="true"
+                onget="return this.getAttribute('set-name');"/>
 
       <property name="contextActions">
         <getter>
