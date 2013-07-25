@@ -52,6 +52,8 @@ class DelayNode;
 class DynamicsCompressorNode;
 class GainNode;
 class GlobalObject;
+class HTMLMediaElement;
+class MediaElementAudioSourceNode;
 class MediaStreamAudioDestinationNode;
 class OfflineRenderSuccessCallback;
 class MediaStreamAudioSourceNode;
@@ -163,6 +165,8 @@ public:
     return CreateGain();
   }
 
+  already_AddRefed<MediaElementAudioSourceNode>
+  CreateMediaElementSource(HTMLMediaElement& aMediaElement, ErrorResult& aRv);
   already_AddRefed<MediaStreamAudioSourceNode>
   CreateMediaStreamSource(DOMMediaStream& aMediaStream, ErrorResult& aRv);
 
