@@ -560,11 +560,6 @@ class ThreadLocalJSRuntime
     return mContext;
   }
 
-  JSObject *Global() const
-  {
-    return mGlobal;
-  }
-
   ~ThreadLocalJSRuntime()
   {
     MOZ_COUNT_DTOR(ThreadLocalJSRuntime);
@@ -4038,7 +4033,6 @@ CreateIndexHelper::InsertDataFromObjectStore(mozIStorageConnection* aConnection)
 
   JSContext* cx = tlsEntry->Context();
   JSAutoRequest ar(cx);
-  JSAutoCompartment ac(cx, tlsEntry->Global());
 
   do {
     StructuredCloneReadInfo cloneReadInfo;

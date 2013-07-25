@@ -1517,7 +1517,7 @@ class ScriptFrameIter
     ArgumentsObject &argsObj() const;
 
     // Ensure that thisv is correct, see ComputeThis.
-    bool        computeThis(JSContext *cx) const;
+    bool        computeThis() const;
     Value       thisv() const;
 
     Value       returnValue() const;

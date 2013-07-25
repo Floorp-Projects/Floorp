@@ -2072,9 +2072,8 @@ nsGlobalWindow::CreateOuterObject(nsGlobalWindow* aNewInner)
 nsresult
 nsGlobalWindow::SetOuterObject(JSContext* aCx, JS::Handle<JSObject*> aOuterObject)
 {
-  JSAutoCompartment ac(aCx, aOuterObject);
-
-  // Indicate the default compartment object associated with this cx.
+  // Force our context's global object to be the outer.
+  // NB: JS_SetGlobalObject sets aCx->compartment.
   JS_SetGlobalObject(aCx, aOuterObject);
 
   // Set up the prototype for the outer object.
@@ -10855,14 +10854,12 @@ nsGlobalWindow::BuildURIfromBase(const char *aURL, nsIURI **aBuiltURI,
 nsresult
 nsGlobalWindow::SecurityCheckURL(const char *aURL)
 {
-  JSContext       *cxUsed;
+  JSContext       *cx;
   bool             freePass;
   nsCOMPtr<nsIURI> uri;
 
-  if (NS_FAILED(BuildURIfromBase(aURL, getter_AddRefs(uri), &freePass, &cxUsed)))
+  if (NS_FAILED(BuildURIfromBase(aURL, getter_AddRefs(uri), &freePass, &cx)))
     return NS_ERROR_FAILURE;
-
-  AutoPushJSContext cx(cxUsed);
 
   if (!freePass && NS_FAILED(nsContentUtils::GetSecurityManager()->
         CheckLoadURIFromScript(cx, uri)))
