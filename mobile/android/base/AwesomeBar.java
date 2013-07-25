@@ -646,7 +646,7 @@ public class AwesomeBar extends GeckoActivity
                 }
 
                 Bitmap bitmap = null;
-                if (b != null && b.length > 0) {
+                if (b != null) {
                     bitmap = BitmapUtils.decodeByteArray(b);
                 }
 

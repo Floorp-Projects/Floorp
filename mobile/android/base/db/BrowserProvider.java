@@ -68,7 +68,7 @@ public class BrowserProvider extends ContentProvider {
 
     static final String DATABASE_NAME = "browser.db";
 
-    static final int DATABASE_VERSION = 16;
+    static final int DATABASE_VERSION = 17;
 
     // Maximum age of deleted records to be cleaned up (20 days in ms)
     static final long MAX_AGE_OF_DELETED_RECORDS = 86400000 * 20;
@@ -1207,11 +1207,18 @@ public class BrowserProvider extends ContentProvider {
 
         private void createFavicon(SQLiteDatabase db, String url, Bitmap icon) {
             ByteArrayOutputStream stream = new ByteArrayOutputStream();
-            icon.compress(Bitmap.CompressFormat.PNG, 100, stream);
 
             ContentValues iconValues = new ContentValues();
-            iconValues.put(Favicons.DATA, stream.toByteArray());
             iconValues.put(Favicons.PAGE_URL, url);
+
+            byte[] data = null;
+            if (icon.compress(Bitmap.CompressFormat.PNG, 100, stream)) {
+                data = stream.toByteArray();
+            } else {
+                Log.w(LOGTAG, "Favicon compression failed.");
+            }
+            iconValues.put(Favicons.DATA, data);
+
             insertFavicon(db, iconValues);
         }
 
@@ -1787,6 +1794,18 @@ public class BrowserProvider extends ContentProvider {
             createCombinedViewOn16(db);
         }
 
+        private void upgradeDatabaseFrom16to17(SQLiteDatabase db) {
+            // Purge any 0-byte favicons/thumbnails
+            try {
+                db.execSQL("DELETE FROM " + TABLE_FAVICONS +
+                        " WHERE length(" + Favicons.DATA + ") = 0");
+                db.execSQL("DELETE FROM " + TABLE_THUMBNAILS +
+                        " WHERE length(" + Thumbnails.DATA + ") = 0");
+            } catch (SQLException e) {
+                Log.e(LOGTAG, "Error purging invalid favicons or thumbnails", e);
+            }
+        }
+
         @Override
         public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
             debug("Upgrading browser.db: " + db.getPath() + " from " +
@@ -1854,6 +1873,10 @@ public class BrowserProvider extends ContentProvider {
 
                     case 16:
                         upgradeDatabaseFrom15to16(db);
+                        break;
+
+                    case 17:
+                        upgradeDatabaseFrom16to17(db);
                         break;
                 }
             }
@@ -2980,10 +3003,11 @@ public class BrowserProvider extends ContentProvider {
     long insertFavicon(SQLiteDatabase db, ContentValues values) {
         String faviconUrl = values.getAsString(Favicons.URL);
         String pageUrl = null;
-        Cursor cursor = null;
         long faviconId;
 
         trace("Inserting favicon for URL: " + faviconUrl);
+
+        stripEmptyByteArray(values, Favicons.DATA);
 
         // Extract the page URL from the ContentValues
         if (values.containsKey(Favicons.PAGE_URL)) {
@@ -3026,6 +3050,8 @@ public class BrowserProvider extends ContentProvider {
         long now = System.currentTimeMillis();
 
         trace("Updating favicon for URL: " + faviconUrl);
+
+        stripEmptyByteArray(values, Favicons.DATA);
 
         // Extract the page URL from the ContentValues
         if (values.containsKey(Favicons.PAGE_URL)) {
@@ -3079,6 +3105,8 @@ public class BrowserProvider extends ContentProvider {
 
         trace("Inserting thumbnail for URL: " + url);
 
+        stripEmptyByteArray(values, Thumbnails.DATA);
+
         return db.insertOrThrow(TABLE_THUMBNAILS, null, values);
     }
 
@@ -3100,6 +3128,8 @@ public class BrowserProvider extends ContentProvider {
         int updated = 0;
         final SQLiteDatabase db = getWritableDatabase(uri);
 
+        stripEmptyByteArray(values, Thumbnails.DATA);
+
         trace("Updating thumbnail for URL: " + url);
 
         updated = db.update(TABLE_THUMBNAILS, values, selection, selectionArgs);
@@ -3111,6 +3141,21 @@ public class BrowserProvider extends ContentProvider {
         }
 
         return updated;
+    }
+
+    /**
+     * Verifies that 0-byte arrays aren't added as favicon or thumbnail data.
+     * @param values        ContentValues of query
+     * @param columnName    Name of data column to verify
+     */
+    private void stripEmptyByteArray(ContentValues values, String columnName) {
+        if (values.containsKey(columnName)) {
+            byte[] data = values.getAsByteArray(columnName);
+            if (data == null || data.length == 0) {
+                Log.w(LOGTAG, "Tried to insert an empty or non-byte-array image. Ignoring.");
+                values.putNull(columnName);
+            }
+        }
     }
 
     int deleteHistory(Uri uri, String selection, String[] selectionArgs) {
