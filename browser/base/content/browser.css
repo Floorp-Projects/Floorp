@@ -208,6 +208,14 @@ toolbar[overflowable]:not([overflowing]) > .overflow-button {
   direction: rtl;
 }
 
+#panelMenu_bookmarksMenu {
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+#panelMenu_bookmarksMenu > .bookmark-item {
+  max-width: none;
+}
+
 #urlbar-container {
   min-width: 50ch;
 }
