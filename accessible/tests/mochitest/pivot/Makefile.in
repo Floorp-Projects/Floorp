@@ -13,7 +13,9 @@ include $(DEPTH)/config/autoconf.mk
 
 MOCHITEST_A11Y_FILES = \
 		doc_virtualcursor.html \
+		doc_virtualcursor_text.html \
 		test_virtualcursor.html \
+		test_virtualcursor_text.html \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
