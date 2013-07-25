@@ -13,6 +13,7 @@ import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.home.HomeListView.HomeContextMenuInfo;
+import org.mozilla.gecko.ReaderModeUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.util.UiAsyncTask;
 
@@ -129,7 +130,8 @@ class HomeFragment extends Fragment {
                 if (item.getItemId() == R.id.home_open_private_tab)
                     flags |= Tabs.LOADURL_PRIVATE;
 
-                Tabs.getInstance().loadUrl(info.url, flags);
+                final String url = (info.inReadingList ? ReaderModeUtils.getAboutReaderForUrl(info.url, true) : info.url);
+                Tabs.getInstance().loadUrl(url, flags);
                 Toast.makeText(activity, R.string.new_tab_opened, Toast.LENGTH_SHORT).show();
                 return true;
             }
