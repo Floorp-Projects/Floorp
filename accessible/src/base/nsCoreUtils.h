@@ -49,17 +49,6 @@ public:
   /**
    * Send mouse event to the given element.
    *
-   * @param  aEventType  [in] an event type (see nsGUIEvent.h for constants)
-   * @param  aPresShell  [in] the presshell for the given element
-   * @param  aContent    [in] the element
-   */
-  static bool DispatchMouseEvent(uint32_t aEventType,
-                                   nsIPresShell *aPresShell,
-                                   nsIContent *aContent);
-
-  /**
-   * Send mouse event to the given element.
-   *
    * @param aEventType   [in] an event type (see nsGUIEvent.h for constants)
    * @param aX           [in] x coordinate in dev pixels
    * @param aY           [in] y coordinate in dev pixels
@@ -70,8 +59,22 @@ public:
    */
   static void DispatchMouseEvent(uint32_t aEventType, int32_t aX, int32_t aY,
                                  nsIContent *aContent, nsIFrame *aFrame,
-                                 nsIPresShell *aPresShell,
-                                 nsIWidget *aRootWidget);
+                                 nsIPresShell *aPresShell, nsIWidget *aRootWidget);
+
+  /**
+   * Send a touch event with a single touch point to the given element.
+   *
+   * @param aEventType   [in] an event type (see nsGUIEvent.h for constants)
+   * @param aX           [in] x coordinate in dev pixels
+   * @param aY           [in] y coordinate in dev pixels
+   * @param aContent     [in] the element
+   * @param aFrame       [in] frame of the element
+   * @param aPresShell   [in] the presshell for the element
+   * @param aRootWidget  [in] the root widget of the element
+   */
+  static void DispatchTouchEvent(uint32_t aEventType, int32_t aX, int32_t aY,
+                                 nsIContent* aContent, nsIFrame* aFrame,
+                                 nsIPresShell* aPresShell, nsIWidget* aRootWidget);
 
   /**
    * Return an accesskey registered on the given element by

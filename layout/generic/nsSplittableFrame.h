@@ -76,6 +76,28 @@ public:
 protected:
   nsSplittableFrame(nsStyleContext* aContext) : nsFrame(aContext) {}
 
+  /**
+   * Determine the height consumed by our previous-in-flows.
+   *
+   * @note (bz) This makes laying out a splittable frame with N in-flows
+   *       O(N^2)! So, use this function with caution and minimize the number
+   *       of calls to this method.
+   */
+  nscoord GetConsumedHeight() const;
+
+  /**
+   * Retrieve the effective computed height of this frame, which is the computed
+   * height, minus the height consumed by any previous in-flows.
+   */
+  nscoord GetEffectiveComputedHeight(const nsHTMLReflowState& aReflowState,
+                                     nscoord aConsumed = NS_INTRINSICSIZE) const;
+
+  /**
+   * @see nsIFrame::GetSkipSides()
+   * @see nsIFrame::ApplySkipSides()
+   */
+  virtual int GetSkipSides(const nsHTMLReflowState* aReflowState = nullptr) const;
+
 #ifdef DEBUG
   virtual void DumpBaseRegressionData(nsPresContext* aPresContext, FILE* out, int32_t aIndent) MOZ_OVERRIDE;
 #endif
