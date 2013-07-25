@@ -236,7 +236,9 @@ function runKeyEventTests()
     // Ignore the state changing key events which is fired by the testing event.
     if (!isStateChangingModifierKeyEvent(e))
       eventList.push(e);
-    e.preventDefault();
+    if (e.type == "keypress") {
+      e.preventDefault();
+    }
   }
 
   const SHOULD_DELIVER_NONE             = 0x0;
