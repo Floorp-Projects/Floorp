@@ -1395,15 +1395,6 @@ struct SharedScriptData
     }
 };
 
-/*
- * Takes ownership of its *ssd parameter and either adds it into the runtime's
- * ScriptBytecodeTable or frees it if a matching entry already exists.
- *
- * Sets the |code| and |atoms| fields on the given JSScript.
- */
-extern bool
-SaveSharedScriptData(ExclusiveContext *cx, Handle<JSScript *> script, SharedScriptData *ssd);
-
 struct ScriptBytecodeHasher
 {
     struct Lookup
@@ -1424,9 +1415,6 @@ struct ScriptBytecodeHasher
 typedef HashSet<SharedScriptData*,
                 ScriptBytecodeHasher,
                 SystemAllocPolicy> ScriptDataTable;
-
-inline void
-MarkScriptBytecode(JSRuntime *rt, const jsbytecode *bytecode);
 
 extern void
 SweepScriptData(JSRuntime *rt);
