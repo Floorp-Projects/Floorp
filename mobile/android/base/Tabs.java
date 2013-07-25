@@ -7,6 +7,7 @@ package org.mozilla.gecko;
 
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.home.HomePager;
+import org.mozilla.gecko.ReaderModeUtils;
 import org.mozilla.gecko.sync.setup.SyncAccounts;
 import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.ThreadUtils;
@@ -589,7 +590,8 @@ public class Tabs implements GeckoEventListener {
      */
     public boolean hasUrl(String url) {
         for (Tab tab : mOrder) {
-            if (TextUtils.equals(tab.getURL(), url)) {
+            if (TextUtils.equals(tab.getURL(), url) ||
+                TextUtils.equals(ReaderModeUtils.getUrlFromAboutReader(tab.getURL()), url)) {
                 return true;
             }
         }
