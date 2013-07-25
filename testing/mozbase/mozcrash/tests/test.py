@@ -8,7 +8,7 @@ import os, unittest, subprocess, tempfile, shutil, urlparse, zipfile, StringIO
 import mozcrash, mozlog, mozhttpd
 
 # Make logs go away
-log = mozlog.getLogger("mozcrash", os.devnull)
+log = mozlog.getLogger("mozcrash", handler=mozlog.FileHandler(os.devnull))
 
 def popen_factory(stdouts):
     """

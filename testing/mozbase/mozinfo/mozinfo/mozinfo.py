@@ -108,9 +108,12 @@ def sanitize(info):
 
 # method for updating information
 def update(new_info):
-    """Update the info.
-    new_info can either be a dict or a path/url
-    to a json file containing a dict."""
+    """
+    Update the info.
+
+    :param new_info: Either a dict containing the new info or a path/url
+                     to a json file containing the new info.
+    """
 
     if isinstance(new_info, basestring):
         f = mozfile.load(new_info)
@@ -128,13 +131,50 @@ def update(new_info):
     if isLinux or isBsd:
         globals()['isUnix'] = True
 
+def find_and_update_from_json(*dirs):
+    """
+    Find a mozinfo.json file, load it, and update the info with the
+    contents.
+
+    :param dirs: Directories in which to look for the file. They will be
+                 searched after first looking in the root of the objdir
+                 if the current script is being run from a Mozilla objdir.
+
+    Returns the full path to mozinfo.json if it was found, or None otherwise.
+    """
+    # First, see if we're in an objdir
+    try:
+        from mozbuild.base import MozbuildObject
+        build = MozbuildObject.from_environment()
+        json_path = _os.path.join(build.topobjdir, "mozinfo.json")
+        if _os.path.isfile(json_path):
+            update(json_path)
+            return json_path
+    except ImportError:
+        pass
+
+    for d in dirs:
+        d = _os.path.abspath(d)
+        json_path = _os.path.join(d, "mozinfo.json")
+        if _os.path.isfile(json_path):
+            update(json_path)
+            return json_path
+
+    return None
+
 update({})
 
 # exports
 __all__ = info.keys()
 __all__ += ['is' + os_name.title() for os_name in choices['os']]
-__all__ += ['info', 'unknown', 'main', 'choices', 'update']
-
+__all__ += [
+    'info',
+    'unknown',
+    'main',
+    'choices',
+    'update',
+    'find_and_update_from_json',
+    ]
 
 def main(args=None):
 
