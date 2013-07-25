@@ -176,6 +176,7 @@ webidl_files = \
   LinkStyle.webidl \
   LocalMediaStream.webidl \
   Location.webidl \
+  MediaElementAudioSourceNode.webidl \
   MediaError.webidl \
   MediaRecorder.webidl \
   MediaSource.webidl \
