@@ -586,7 +586,7 @@ int32_t DeviceInfoDS::CreateCapabilityMap(
 
             if (hrVC == S_OK)
             {
-                LONGLONG *frameDurationList;
+                LONGLONG *frameDurationList = NULL;
                 LONGLONG maxFPS; 
                 long listSize;
                 SIZE size;
@@ -605,7 +605,9 @@ int32_t DeviceInfoDS::CreateCapabilityMap(
 
                 // On some odd cameras, you may get a 0 for duration.
                 // GetMaxOfFrameArray returns the lowest duration (highest FPS)
-                if (hrVC == S_OK && listSize > 0 &&
+                // Initialize and check the returned list for null since
+                // some broken drivers don't modify it.
+                if (hrVC == S_OK && listSize > 0 && frameDurationList &&
                     0 != (maxFPS = GetMaxOfFrameArray(frameDurationList, 
                                                       listSize)))
                 {
