@@ -351,7 +351,7 @@ EventFilter::Build(const char * filterVar)
 
   // Copied from nspr logging code (read of NSPR_LOG_MODULES)
   char eventName[64];
-  int evlen = strlen(filterVar), pos = 0, count, delta = 0;
+  int pos = 0, count, delta = 0;
 
   // Read up to a comma or EOF -> get name of an event first in the list
   count = sscanf(filterVar, "%63[^,]%n", eventName, &delta);
