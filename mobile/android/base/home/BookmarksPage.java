@@ -17,8 +17,8 @@ import org.mozilla.gecko.home.BookmarksListAdapter.OnRefreshFolderListener;
 import org.mozilla.gecko.home.HomeListView.HomeContextMenuInfo;
 import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
 import org.mozilla.gecko.home.PinBookmarkDialog.OnBookmarkSelectedListener;
+import org.mozilla.gecko.home.TopBookmarksAdapter.Thumbnail;
 import org.mozilla.gecko.home.TopBookmarksView.OnPinBookmarkListener;
-import org.mozilla.gecko.home.TopBookmarksView.Thumbnail;
 import org.mozilla.gecko.home.TopBookmarksView.TopBookmarksContextMenuInfo;
 import org.mozilla.gecko.util.ThreadUtils;
 
@@ -572,15 +572,15 @@ public class BookmarksPage extends HomeFragment {
 
         @Override
         public void onLoadFinished(Loader<Map<String, Thumbnail>> loader, Map<String, Thumbnail> thumbnails) {
-            if (mTopBookmarks != null) {
-                mTopBookmarks.updateThumbnails(thumbnails);
+            if (mTopBookmarksAdapter != null) {
+                mTopBookmarksAdapter.updateThumbnails(thumbnails);
             }
         }
 
         @Override
         public void onLoaderReset(Loader<Map<String, Thumbnail>> loader) {
-            if (mTopBookmarks != null) {
-                mTopBookmarks.updateThumbnails(null);
+            if (mTopBookmarksAdapter != null) {
+                mTopBookmarksAdapter.updateThumbnails(null);
             }
         }
     }
