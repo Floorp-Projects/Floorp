@@ -2898,7 +2898,7 @@ SandboxImport(JSContext *cx, unsigned argc, Value *vp)
         XPCThrower::Throw(NS_ERROR_UNEXPECTED, cx);
         return false;
     }
-    if (!JS_SetPropertyById(cx, thisObject, id, &args[0]))
+    if (!JS_SetPropertyById(cx, thisObject, id, args.handleAt(0)))
         return false;
 
     args.rval().setUndefined();
@@ -4287,7 +4287,7 @@ nsXPCComponents_Utils::MakeObjectPropsNormal(const Value &vobj, JSContext *cx)
             continue;
 
         if (!WrapCallable(cx, obj, id, propobj, &v) ||
-            !JS_SetPropertyById(cx, obj, id, v.address()))
+            !JS_SetPropertyById(cx, obj, id, &v))
             return NS_ERROR_FAILURE;
     }
 

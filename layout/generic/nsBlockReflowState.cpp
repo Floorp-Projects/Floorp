@@ -35,7 +35,8 @@ nsBlockReflowState::nsBlockReflowState(const nsHTMLReflowState& aReflowState,
                                        nsBlockFrame* aFrame,
                                        bool aTopMarginRoot,
                                        bool aBottomMarginRoot,
-                                       bool aBlockNeedsFloatManager)
+                                       bool aBlockNeedsFloatManager,
+                                       nscoord aConsumedHeight)
   : mBlock(aFrame),
     mPresContext(aPresContext),
     mReflowState(aReflowState),
@@ -44,7 +45,8 @@ nsBlockReflowState::nsBlockReflowState(const nsHTMLReflowState& aReflowState,
     mPrevBottomMargin(),
     mLineNumber(0),
     mFlags(0),
-    mFloatBreakType(NS_STYLE_CLEAR_NONE)
+    mFloatBreakType(NS_STYLE_CLEAR_NONE),
+    mConsumedHeight(aConsumedHeight)
 {
   SetFlag(BRS_ISFIRSTINFLOW, aFrame->GetPrevInFlow() == nullptr);
   SetFlag(BRS_ISOVERFLOWCONTAINER,
@@ -111,6 +113,16 @@ nsBlockReflowState::nsBlockReflowState(const nsHTMLReflowState& aReflowState,
   mCurrentLine = aFrame->end_lines();
 
   mMinLineHeight = aReflowState.CalcLineHeight();
+}
+
+nscoord
+nsBlockReflowState::GetConsumedHeight()
+{
+  if (mConsumedHeight == NS_INTRINSICSIZE) {
+    mConsumedHeight = mBlock->GetConsumedHeight();
+  }
+
+  return mConsumedHeight;
 }
 
 void

@@ -1,0 +1,75 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=887741
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 887741: at-rules in declaration lists</title>
+      <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <style>
+    #foo {
+        color: red;
+        @invalid-rule {
+            ignored: ignored;
+        }
+        /* No semicolon */
+        color: green;
+    }
+    @page {
+        margin-top: 0;
+        @bottom-center {
+            content: counter(page);
+        }
+        /* No semicolon */
+        margin-top: 5cm;
+    }
+    @keyframes dummy-animation {
+      12% {
+        color: red;
+        @invalid-rule {}
+        /* No semicolon */
+        color: green;
+      }
+    }
+    /* TODO: other at-rules that use declaration syntax? */
+  </style>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=887741">Mozilla Bug 887741</a>
+<p id="display"></p>
+<div id="content" style="display: none; color: red;
+                         @invalid-rule{} /* No semicolon */ color: green;">
+
+</div>
+<pre id="test">
+  <script type="application/javascript">
+
+  /** Test for Bug 887741 **/
+
+  var style = document.getElementById('content').style;
+  is(style.display, 'none', 'Sanity check: we have the right element');
+  is(style.color, 'green', 'Support at-rules in style attributes');
+
+  style.cssText = 'display: none; color: red; @invalid-rule{} /* No semicolon */ color: lime;';
+  is(style.color, 'lime', 'Support at-rules in CSSStyleDeclaration.cssText');
+
+  var rules = document.styleSheets[0].cssRules;
+  var style_rule = rules[0];
+  is(style_rule.selectorText, '#foo', 'Sanity check: we have the right style rule');
+  is(style_rule.style.color, 'green', 'Support at-rules in style rules');
+
+  var page_rule = rules[1];
+  is(page_rule.type, page_rule.PAGE_RULE, 'Sanity check: we have the right style rule');
+  is(page_rule.style.marginTop, '5cm', 'Support at-rules in @page rules');
+
+  var keyframe_rule = rules[2].cssRules[0];
+  is(keyframe_rule.keyText, '12%', 'Sanity check: we have the right keyframe rule');
+  is(keyframe_rule.style.color, 'green', 'Support at-rules in keyframe rules')
+
+  </script>
+</pre>
+</body>
+</html>
