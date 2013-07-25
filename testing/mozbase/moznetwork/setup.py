@@ -4,9 +4,9 @@
 
 from setuptools import setup
 
-PACKAGE_VERSION = '0.22'
+PACKAGE_VERSION = '0.21'
 
-deps=[ 'mozinfo' ]
+deps=[]
 
 setup(name='moznetwork',
       version=PACKAGE_VERSION,
@@ -16,7 +16,7 @@ setup(name='moznetwork',
       keywords='mozilla',
       author='Mozilla Automation and Tools team',
       author_email='tools@lists.mozilla.org',
-      url='https://wiki.mozilla.org/Auto-tools/Projects/Mozbase',
+      url='https://wiki.mozilla.org/Auto-tools/Projects/MozBase',
       license='MPL',
       packages=['moznetwork'],
       include_package_data=True,

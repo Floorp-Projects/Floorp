@@ -2,16 +2,16 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import os
 import socket
 import array
 import struct
-import mozinfo
-
-if mozinfo.isLinux:
+if os.name != 'nt':
     import fcntl
 
+
 class NetworkError(Exception):
-    """Exception thrown when unable to obtain interface or IP."""
+    """Unable to obtain interface or IP"""
 
 
 def _get_interface_list():
@@ -40,10 +40,8 @@ def _get_interface_list():
 
 
 def get_ip():
-    """Provides an available network interface address, for example
-       "192.168.1.3".
-
-       A `NetworkError` exception is raised in case of failure."""
+    """Provides an available network interface address. A
+       NetworkError exception is raised in case of failure."""
     try:
         try:
             ip = socket.gethostbyname(socket.gethostname())
@@ -54,7 +52,7 @@ def get_ip():
         # case this will always fail
         ip = None
 
-    if (ip is None or ip.startswith("127.")) and mozinfo.isLinux:
+    if (ip is None or ip.startswith("127.")) and os.name != "nt":
         interfaces = _get_interface_list()
         for ifconfig in interfaces:
             if ifconfig[0] == 'lo':

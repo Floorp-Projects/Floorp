@@ -7,7 +7,6 @@ tests for is_url
 import unittest
 from mozfile import is_url
 
-
 class TestIsUrl(unittest.TestCase):
     """test the is_url function"""
 

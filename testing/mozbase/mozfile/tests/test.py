@@ -1,13 +1,45 @@
 #!/usr/bin/env python
 
+"""
+tests for mozfile
+"""
+
 import mozfile
 import os
 import shutil
 import tarfile
 import tempfile
-import stubs
 import unittest
 import zipfile
+
+# stub file paths
+files = [('foo.txt',),
+         ('foo', 'bar.txt'),
+         ('foo', 'bar', 'fleem.txt'),
+         ('foobar', 'fleem.txt'),
+         ('bar.txt')]
+
+def create_stub():
+    """create a stub directory"""
+
+    tempdir = tempfile.mkdtemp()
+    try:
+        for path in files:
+            fullpath = os.path.join(tempdir, *path)
+            dirname = os.path.dirname(fullpath)
+            if not os.path.exists(dirname):
+                os.makedirs(dirname)
+            contents = path[-1]
+            f = file(fullpath, 'w')
+            f.write(contents)
+            f.close()
+        return tempdir
+    except Exception, e:
+        try:
+            shutil.rmtree(tempdir)
+        except:
+            pass
+        raise e
 
 
 class TestExtract(unittest.TestCase):
@@ -15,7 +47,7 @@ class TestExtract(unittest.TestCase):
 
     def ensure_directory_contents(self, directory):
         """ensure the directory contents match"""
-        for f in stubs.files:
+        for f in files:
             path = os.path.join(directory, *f)
             exists = os.path.exists(path)
             if not exists:
@@ -101,11 +133,11 @@ class TestExtract(unittest.TestCase):
 
     def create_tarball(self):
         """create a stub tarball for testing"""
-        tempdir = stubs.create_stub()
+        tempdir = create_stub()
         filename = tempfile.mktemp(suffix='.tar')
         archive = tarfile.TarFile(filename, mode='w')
         try:
-            for path in stubs.files:
+            for path in files:
                 archive.add(os.path.join(tempdir, *path), arcname=os.path.join(*path))
         except:
             os.remove(archive)
@@ -118,11 +150,11 @@ class TestExtract(unittest.TestCase):
     def create_zip(self):
         """create a stub zipfile for testing"""
 
-        tempdir = stubs.create_stub()
+        tempdir = create_stub()
         filename = tempfile.mktemp(suffix='.zip')
         archive = zipfile.ZipFile(filename, mode='w')
         try:
-            for path in stubs.files:
+            for path in files:
                 archive.write(os.path.join(tempdir, *path), arcname=os.path.join(*path))
         except:
             os.remove(filename)
@@ -131,3 +163,28 @@ class TestExtract(unittest.TestCase):
             shutil.rmtree(tempdir)
         archive.close()
         return filename
+
+class TestRemoveTree(unittest.TestCase):
+    """test our ability to remove a directory tree"""
+
+    def test_remove_directory(self):
+        tempdir = create_stub()
+        self.assertTrue(os.path.exists(tempdir))
+        self.assertTrue(os.path.isdir(tempdir))
+        try:
+            mozfile.rmtree(tempdir)
+        except:
+            shutil.rmtree(tempdir)
+            raise
+        self.assertFalse(os.path.exists(tempdir))
+
+class TestNamedTemporaryFile(unittest.TestCase):
+    """test our fix for NamedTemporaryFile"""
+
+    def test_named_temporary_file(self):
+        temp = mozfile.NamedTemporaryFile()
+        temp.write("A simple test")
+        del temp
+
+if __name__ == '__main__':
+    unittest.main()
