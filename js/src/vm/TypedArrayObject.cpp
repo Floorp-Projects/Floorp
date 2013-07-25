@@ -3455,8 +3455,8 @@ Class ArrayBufferObject::class_ = {
     NULL,           /* finalize    */
     NULL,           /* checkAccess */
     NULL,           /* call        */
-    NULL,           /* construct   */
     NULL,           /* hasInstance */
+    NULL,           /* construct   */
     ArrayBufferObject::obj_trace,
     JS_NULL_CLASS_EXT,
     {
@@ -3618,8 +3618,8 @@ IMPL_TYPED_ARRAY_COMBINED_UNWRAPPERS(Float64, double, double)
     NULL,                    /* finalize */                                    \
     NULL,                    /* checkAccess */                                 \
     NULL,                    /* call        */                                 \
-    NULL,                    /* construct   */                                 \
     NULL,                    /* hasInstance */                                 \
+    NULL,                    /* construct   */                                 \
     ArrayBufferViewObject::trace, /* trace  */                                 \
     {                                                                          \
         NULL,       /* outerObject */                                          \
@@ -3834,8 +3834,8 @@ Class DataViewObject::class_ = {
     NULL,                    /* finalize */
     NULL,                    /* checkAccess */
     NULL,                    /* call        */
-    NULL,                    /* construct   */
     NULL,                    /* hasInstance */
+    NULL,                    /* construct   */
     ArrayBufferViewObject::trace, /* trace  */
     JS_NULL_CLASS_EXT,
     JS_NULL_OBJECT_OPS

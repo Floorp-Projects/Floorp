@@ -1664,8 +1664,8 @@ Class Debugger::jsclass = {
     JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, Debugger::finalize,
     NULL,                 /* checkAccess */
     NULL,                 /* call        */
-    NULL,                 /* construct   */
     NULL,                 /* hasInstance */
+    NULL,                 /* construct   */
     Debugger::traceObject
 };
 
@@ -2702,8 +2702,8 @@ Class DebuggerScript_class = {
     JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, NULL,
     NULL,                 /* checkAccess */
     NULL,                 /* call        */
-    NULL,                 /* construct   */
     NULL,                 /* hasInstance */
+    NULL,                 /* construct   */
     DebuggerScript_trace
 };
 
@@ -3554,8 +3554,8 @@ Class DebuggerSource_class = {
     JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, NULL,
     NULL,                 /* checkAccess */
     NULL,                 /* call        */
-    NULL,                 /* construct   */
     NULL,                 /* hasInstance */
+    NULL,                 /* construct   */
     DebuggerSource_trace
 };
 
@@ -4339,8 +4339,8 @@ Class DebuggerObject_class = {
     JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, NULL,
     NULL,                 /* checkAccess */
     NULL,                 /* call        */
-    NULL,                 /* construct   */
     NULL,                 /* hasInstance */
+    NULL,                 /* construct   */
     DebuggerObject_trace
 };
 
@@ -5141,8 +5141,8 @@ Class DebuggerEnv_class = {
     JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, NULL,
     NULL,                 /* checkAccess */
     NULL,                 /* call        */
-    NULL,                 /* construct   */
     NULL,                 /* hasInstance */
+    NULL,                 /* construct   */
     DebuggerEnv_trace
 };
 

@@ -851,8 +851,8 @@ Class PropertyIteratorObject::class_ = {
     finalize,
     NULL,                    /* checkAccess */
     NULL,                    /* call        */
-    NULL,                    /* construct   */
     NULL,                    /* hasInstance */
+    NULL,                    /* construct   */
     trace,
     {
         NULL,                /* outerObject    */
@@ -1452,8 +1452,8 @@ Class GeneratorObject::class_ = {
     generator_finalize,
     NULL,                    /* checkAccess */
     NULL,                    /* call        */
-    NULL,                    /* construct   */
     NULL,                    /* hasInstance */
+    NULL,                    /* construct   */
     generator_trace,
     {
         NULL,                /* outerObject    */

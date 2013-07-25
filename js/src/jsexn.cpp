@@ -69,8 +69,8 @@ Class ErrorObject::class_ = {
     exn_finalize,
     NULL,                 /* checkAccess */
     NULL,                 /* call        */
-    NULL,                 /* construct   */
     NULL,                 /* hasInstance */
+    NULL,                 /* construct   */
     exn_trace
 };
 
