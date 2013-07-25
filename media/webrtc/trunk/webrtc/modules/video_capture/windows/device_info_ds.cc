@@ -605,7 +605,9 @@ WebRtc_Word32 DeviceInfoDS::CreateCapabilityMap(
 
                 // On some odd cameras, you may get a 0 for duration.
                 // GetMaxOfFrameArray returns the lowest duration (highest FPS)
-                if (hrVC == S_OK && listSize > 0 &&
+                // Initialize and check the returned list for null since
+                // some broken drivers don't modify it.
+                if (hrVC == S_OK && listSize > 0 && frameDurationList &&
                     0 != (maxFPS = GetMaxOfFrameArray(frameDurationList, listSize)))
                 {
                     capability->maxFPS = static_cast<int> (10000000
