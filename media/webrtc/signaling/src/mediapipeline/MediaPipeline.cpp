@@ -23,7 +23,7 @@
 #include "ImageContainer.h"
 #include "VideoUtils.h"
 #ifdef MOZ_WIDGET_GONK
-#include "GonkIOSurfaceImage.h"
+#include "GrallocImages.h"
 #endif
 #endif
 
@@ -823,8 +823,8 @@ void MediaPipelineTransmit::PipelineListener::ProcessVideoChunk(
 
   ImageFormat format = img->GetFormat();
 #ifdef MOZ_WIDGET_GONK
-  if (format == GONK_IO_SURFACE) {
-    layers::GonkIOSurfaceImage *nativeImage = static_cast<layers::GonkIOSurfaceImage*>(img);
+  if (format == GRALLOC_PLANAR_YCBCR) {
+    layers::GrallocImage *nativeImage = static_cast<layers::GrallocImage*>(img);
     layers::SurfaceDescriptor handle = nativeImage->GetSurfaceDescriptor();
     layers::SurfaceDescriptorGralloc grallocHandle = handle.get_SurfaceDescriptorGralloc();
 
@@ -864,7 +864,7 @@ void MediaPipelineTransmit::PipelineListener::ProcessVideoChunk(
     // XXX Consider making this a non-debug-only check if we ever implement
     // any subclasses of PlanarYCbCrImage that allow disjoint buffers such
     // that y+3(width*height)/2 might go outside the allocation.
-    // GrallocPlanarYCbCrImage can have wider strides, and so in some cases
+    // GrallocImage can have wider strides, and so in some cases
     // would encode as garbage.  If we need to encode it we'll either want to
     // modify SendVideoFrame or copy/move the data in the buffer.
 
