@@ -43,10 +43,6 @@ public:
         return mGlobalHolder.ToJSObject();
     }
 
-    JSContext* GetContext() {
-        return mCx;
-    }
-
     void SetIsQuitting() {
         mQuitting = JS_TRUE;
     }
@@ -59,7 +55,6 @@ protected:
     bool Init();
 
 private:
-    JSContext* mCx;
     nsAutoJSValHolder mGlobalHolder;
 
     JSBool mQuitting;
