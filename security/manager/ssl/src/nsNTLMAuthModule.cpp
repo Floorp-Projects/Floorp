@@ -12,6 +12,7 @@
 #include "pk11pub.h"
 #include "md4.h"
 #include "mozilla/Likely.h"
+#include "mozilla/Telemetry.h"
 
 #ifdef PR_LOGGING
 static PRLogModuleInfo *
@@ -767,11 +768,23 @@ nsNTLMAuthModule::Init(const char      *serviceName,
                        const PRUnichar *username,
                        const PRUnichar *password)
 {
-  NS_ASSERTION(serviceFlags == nsIAuthModule::REQ_DEFAULT, "unexpected service flags");
+  NS_ASSERTION((serviceFlags & ~nsIAuthModule::REQ_PROXY_AUTH) == nsIAuthModule::REQ_DEFAULT,
+      "unexpected service flags");
 
   mDomain = domain;
   mUsername = username;
   mPassword = password;
+
+  static bool sTelemetrySent = false;
+  if (!sTelemetrySent) {
+      mozilla::Telemetry::Accumulate(
+          mozilla::Telemetry::NTLM_MODULE_USED,
+          serviceFlags | nsIAuthModule::REQ_PROXY_AUTH
+              ? NTLM_MODULE_GENERIC_PROXY
+              : NTLM_MODULE_GENERIC_DIRECT);
+      sTelemetrySent = true;
+  }
+
   return NS_OK;
 }
 
