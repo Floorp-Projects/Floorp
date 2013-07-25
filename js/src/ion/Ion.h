@@ -348,10 +348,10 @@ IsEnabled(JSContext *cx)
 
 inline bool
 IsIonInlinablePC(jsbytecode *pc) {
-    // CALL, FUNCALL, FUNAPPLY, EVAL, NEW (JOF_INVOKE callsites)
+    // CALL, FUNCALL, FUNAPPLY, EVAL, NEW (Normal Callsites)
     // GETPROP, CALLPROP, and LENGTH. (Inlined Getters)
     // SETPROP, SETNAME, SETGNAME (Inlined Setters)
-    return js_CodeSpec[*pc].format & JOF_INVOKE || IsGetterPC(pc) || IsSetterPC(pc);
+    return IsCallPC(pc) || IsGetterPC(pc) || IsSetterPC(pc);
 }
 
 void ForbidCompilation(JSContext *cx, JSScript *script);
