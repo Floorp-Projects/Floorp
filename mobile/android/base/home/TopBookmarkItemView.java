@@ -161,6 +161,7 @@ public class TopBookmarkItemView extends RelativeLayout {
             return;
         }
 
+        mThumbnailView.setScaleType(ScaleType.CENTER_CROP);
         mThumbnailView.setImageBitmap(thumbnail);
         mThumbnailView.setBackgroundDrawable(null);
     }

@@ -28,9 +28,6 @@ public class BookmarkThumbnailView extends ImageView {
     // Default filter color for "Add a bookmark" views.
     private static final int DEFAULT_COLOR = 0x46ECF0F3;
 
-    // Border for thumbnails.
-    private boolean mShowBorder = true;
-
     // Stroke width for the border.
     private final float mStrokeWidth = getResources().getDisplayMetrics().density * 2;
 
@@ -84,7 +81,7 @@ public class BookmarkThumbnailView extends ImageView {
     public void onDraw(Canvas canvas) {
         super.onDraw(canvas);
 
-        if (mShowBorder) {
+        if (getBackground() == null) {
             sBorderPaint.setStrokeWidth(mStrokeWidth);
             canvas.drawRect(0, 0, getWidth(), getHeight(), sBorderPaint);
         }
@@ -101,6 +98,5 @@ public class BookmarkThumbnailView extends ImageView {
         Drawable drawable = getResources().getDrawable(R.drawable.bookmark_thumbnail_bg);
         drawable.setColorFilter(colorFilter, Mode.SRC_ATOP);
         setBackgroundDrawable(drawable);
-        mShowBorder = false;
     }
 }
