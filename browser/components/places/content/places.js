@@ -119,13 +119,6 @@ var PlacesOrganizer = {
     for (var i=0; i < elements.length; i++) {
       document.getElementById(elements[i]).setAttribute("disabled", "true");
     }
-    
-    // 3. Disable the keyboard shortcut for the History menu back/forward
-    // in order to support those in the Library
-    var historyMenuBack = document.getElementById("historyMenuBack");
-    historyMenuBack.removeAttribute("key");
-    var historyMenuForward = document.getElementById("historyMenuForward");
-    historyMenuForward.removeAttribute("key");
 #endif
 
     // remove the "Properties" context-menu item, we've our own details pane

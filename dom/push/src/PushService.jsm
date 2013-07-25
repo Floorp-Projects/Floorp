@@ -345,19 +345,29 @@ this.PushService = {
         break;
       case "webapps-uninstall":
         debug("webapps-uninstall");
-        let appsService = Cc["@mozilla.org/AppsService;1"]
-                            .getService(Ci.nsIAppsService);
-        var app = appsService.getAppFromObserverMessage(aData);
-        if (!app) {
-          debug("webapps-uninstall: No app found " + aData.origin);
+
+        let data;
+        try {
+          data = JSON.parse(aData);
+        } catch (ex) {
+          debug("webapps-uninstall: JSON parsing error: " + aData);
           return;
         }
 
-        this._db.getAllByManifestURL(app.manifestURL, function(records) {
+        let manifestURL = data.manifestURL;
+        let appsService = Cc["@mozilla.org/AppsService;1"]
+                            .getService(Ci.nsIAppsService);
+        if (appsService.getAppLocalIdByManifestURL(manifestURL) ==
+            Ci.nsIScriptSecurityManager.NO_APP_ID) {
+          debug("webapps-uninstall: No app found " + manifestURL);
+          return;
+        }
+
+        this._db.getAllByManifestURL(manifestURL, function(records) {
           debug("Got " + records.length);
           for (var i = 0; i < records.length; i++) {
             this._db.delete(records[i].channelID, null, function() {
-              debug("app uninstall: " + app.manifestURL +
+              debug("app uninstall: " + manifestURL +
                     " Could not delete entry " + records[i].channelID);
             });
             // courtesy, but don't establish a connection
@@ -368,7 +378,7 @@ this.PushService = {
             }
           }
         }.bind(this), function() {
-          debug("Error in getAllByManifestURL: url " + app.manifestURL);
+          debug("Error in getAllByManifestURL: url " + manifestURL);
         });
 
         break;

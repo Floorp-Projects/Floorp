@@ -25,13 +25,13 @@ class OutOfLineTestObject;
 class OutOfLineNewArray;
 class OutOfLineNewObject;
 class CheckOverRecursedFailure;
-class ParCheckOverRecursedFailure;
-class OutOfLineParCheckInterrupt;
+class CheckOverRecursedFailurePar;
+class OutOfLineCheckInterruptPar;
 class OutOfLineUnboxDouble;
 class OutOfLineStoreElementHole;
 class OutOfLineTypeOfV;
 class OutOfLineLoadTypedArray;
-class OutOfLineParNewGCThing;
+class OutOfLineNewGCThingPar;
 class OutOfLineUpdateCache;
 class OutOfLineCallPostWriteBarrier;
 
@@ -82,7 +82,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitRegExpTest(LRegExpTest *lir);
     bool visitLambda(LLambda *lir);
     bool visitLambdaForSingleton(LLambdaForSingleton *lir);
-    bool visitParLambda(LParLambda *lir);
+    bool visitLambdaPar(LLambdaPar *lir);
     bool visitPointer(LPointer *lir);
     bool visitSlots(LSlots *lir);
     bool visitStoreSlotV(LStoreSlotV *store);
@@ -119,11 +119,11 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitOutOfLineNewObject(OutOfLineNewObject *ool);
     bool visitNewDeclEnvObject(LNewDeclEnvObject *lir);
     bool visitNewCallObject(LNewCallObject *lir);
-    bool visitParNewCallObject(LParNewCallObject *lir);
+    bool visitNewCallObjectPar(LNewCallObjectPar *lir);
     bool visitNewStringObject(LNewStringObject *lir);
-    bool visitParNew(LParNew *lir);
-    bool visitParNewDenseArray(LParNewDenseArray *lir);
-    bool visitParBailout(LParBailout *lir);
+    bool visitNewPar(LNewPar *lir);
+    bool visitNewDenseArrayPar(LNewDenseArrayPar *lir);
+    bool visitAbortPar(LAbortPar *lir);
     bool visitInitElem(LInitElem *lir);
     bool visitInitProp(LInitProp *lir);
     bool visitCreateThis(LCreateThis *lir);
@@ -174,14 +174,14 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitIsNullOrLikeUndefinedAndBranch(LIsNullOrLikeUndefinedAndBranch *lir);
     bool visitEmulatesUndefined(LEmulatesUndefined *lir);
     bool visitEmulatesUndefinedAndBranch(LEmulatesUndefinedAndBranch *lir);
+    bool emitConcat(LInstruction *lir, Register lhs, Register rhs, Register output);
     bool visitConcat(LConcat *lir);
-    bool visitParConcat(LParConcat *lir);
+    bool visitConcatPar(LConcatPar *lir);
     bool visitCharCodeAt(LCharCodeAt *lir);
     bool visitFromCharCode(LFromCharCode *lir);
     bool visitFunctionEnvironment(LFunctionEnvironment *lir);
-    bool visitParSlice(LParSlice *lir);
-    bool visitParWriteGuard(LParWriteGuard *lir);
-    bool visitParDump(LParDump *lir);
+    bool visitForkJoinSlice(LForkJoinSlice *lir);
+    bool visitGuardThreadLocalObject(LGuardThreadLocalObject *lir);
     bool visitCallGetProperty(LCallGetProperty *lir);
     bool visitCallGetElement(LCallGetElement *lir);
     bool visitCallSetElement(LCallSetElement *lir);
@@ -222,9 +222,9 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitRunOncePrologue(LRunOncePrologue *lir);
     bool emitRest(LInstruction *lir, Register array, Register numActuals,
                   Register temp0, Register temp1, unsigned numFormals,
-                  JSObject *templateObject, const VMFunction &f);
+                  JSObject *templateObject);
     bool visitRest(LRest *lir);
-    bool visitParRest(LParRest *lir);
+    bool visitRestPar(LRestPar *lir);
     bool visitCallSetProperty(LCallSetProperty *ins);
     bool visitCallDeleteProperty(LCallDeleteProperty *lir);
     bool visitBitNotV(LBitNotV *lir);
@@ -251,19 +251,19 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitCheckOverRecursedFailure(CheckOverRecursedFailure *ool);
     bool visitAsmJSCheckOverRecursed(LAsmJSCheckOverRecursed *lir);
 
-    bool visitParCheckOverRecursed(LParCheckOverRecursed *lir);
-    bool visitParCheckOverRecursedFailure(ParCheckOverRecursedFailure *ool);
+    bool visitCheckOverRecursedPar(LCheckOverRecursedPar *lir);
+    bool visitCheckOverRecursedFailurePar(CheckOverRecursedFailurePar *ool);
 
-    bool visitParCheckInterrupt(LParCheckInterrupt *lir);
-    bool visitOutOfLineParCheckInterrupt(OutOfLineParCheckInterrupt *ool);
+    bool visitCheckInterruptPar(LCheckInterruptPar *lir);
+    bool visitOutOfLineCheckInterruptPar(OutOfLineCheckInterruptPar *ool);
 
     bool visitUnboxDouble(LUnboxDouble *lir);
     bool visitOutOfLineUnboxDouble(OutOfLineUnboxDouble *ool);
     bool visitOutOfLineStoreElementHole(OutOfLineStoreElementHole *ool);
 
-    bool visitOutOfLineParNewGCThing(OutOfLineParNewGCThing *ool);
-    bool visitOutOfLineParallelAbort(OutOfLineParallelAbort *ool);
-    bool visitOutOfLinePropagateParallelAbort(OutOfLinePropagateParallelAbort *ool);
+    bool visitOutOfLineNewGCThingPar(OutOfLineNewGCThingPar *ool);
+    bool visitOutOfLineAbortPar(OutOfLineAbortPar *ool);
+    bool visitOutOfLinePropagateAbortPar(OutOfLinePropagateAbortPar *ool);
     void loadJSScriptForBlock(MBasicBlock *block, Register reg);
     void loadOutermostJSScript(Register reg);
 
@@ -284,10 +284,10 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitCallsiteCloneCache(LCallsiteCloneCache *ins);
 
     bool visitGetPropertyIC(OutOfLineUpdateCache *ool, GetPropertyIC *ic);
-    bool visitParallelGetPropertyIC(OutOfLineUpdateCache *ool, ParallelGetPropertyIC *ic);
+    bool visitGetPropertyParIC(OutOfLineUpdateCache *ool, GetPropertyParIC *ic);
     bool visitSetPropertyIC(OutOfLineUpdateCache *ool, SetPropertyIC *ic);
     bool visitGetElementIC(OutOfLineUpdateCache *ool, GetElementIC *ic);
-    bool visitParallelGetElementIC(OutOfLineUpdateCache *ool, ParallelGetElementIC *ic);
+    bool visitGetElementParIC(OutOfLineUpdateCache *ool, GetElementParIC *ic);
     bool visitSetElementIC(OutOfLineUpdateCache *ool, SetElementIC *ic);
     bool visitBindNameIC(OutOfLineUpdateCache *ool, BindNameIC *ic);
     bool visitNameIC(OutOfLineUpdateCache *ool, NameIC *ic);
@@ -305,23 +305,17 @@ class CodeGenerator : public CodeGeneratorSpecific
                              bool allowGetters);
     bool addGetElementCache(LInstruction *ins, Register obj, ConstantOrRegister index,
                             TypedOrValueRegister output, bool monitoredResult);
-    bool checkForParallelBailout(LInstruction *lir);
+    bool checkForAbortPar(LInstruction *lir);
 
     bool generateBranchV(const ValueOperand &value, Label *ifTrue, Label *ifFalse, FloatRegister fr);
 
-    bool emitParAllocateGCThing(LInstruction *lir,
-                                const Register &objReg,
-                                const Register &threadContextReg,
-                                const Register &tempReg1,
-                                const Register &tempReg2,
+    bool emitAllocateGCThingPar(LInstruction *lir, const Register &objReg, const Register &sliceReg,
+                                const Register &tempReg1, const Register &tempReg2,
                                 JSObject *templateObj);
 
-    bool emitParCallToUncompiledScript(LInstruction *lir,
-                                       Register calleeReg);
+    bool emitCallToUncompiledScriptPar(LInstruction *lir, Register calleeReg);
 
-    void emitLambdaInit(const Register &resultReg,
-                        const Register &scopeChainReg,
-                        JSFunction *fun);
+    void emitLambdaInit(const Register &resultReg, const Register &scopeChainReg, JSFunction *fun);
 
     IonScriptCounts *maybeCreateScriptCounts();
 

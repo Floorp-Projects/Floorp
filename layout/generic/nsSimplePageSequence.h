@@ -19,15 +19,20 @@
 // It lives while the nsSimplePageSequenceFrame lives
 class nsSharedPageData {
 public:
-  nsSharedPageData();
-  ~nsSharedPageData();
+  // This object a shared by all the nsPageFrames
+  // parented to a SimplePageSequenceFrame
+  nsSharedPageData() :
+    mPageContentXMost(0),
+    mPageContentSize(0)
+  {
+  }
 
-  PRUnichar * mDateTimeStr;
-  nsFont *    mHeadFootFont;
-  PRUnichar * mPageNumFormat;
-  PRUnichar * mPageNumAndTotalsFormat;
-  PRUnichar * mDocTitle;
-  PRUnichar * mDocURL;
+  nsString    mDateTimeStr;
+  nsString    mPageNumFormat;
+  nsString    mPageNumAndTotalsFormat;
+  nsString    mDocTitle;
+  nsString    mDocURL;
+  nsFont      mHeadFootFont;
 
   nsSize      mReflowSize;
   nsMargin    mReflowMargin;
@@ -71,10 +76,10 @@ public:
   NS_IMETHOD GetSTFPercent(float& aSTFPercent) MOZ_OVERRIDE;
 
   // Async Printing
-  NS_IMETHOD StartPrint(nsPresContext*  aPresContext,
+  NS_IMETHOD StartPrint(nsPresContext*    aPresContext,
                         nsIPrintSettings* aPrintSettings,
-                        PRUnichar*        aDocTitle,
-                        PRUnichar*        aDocURL) MOZ_OVERRIDE;
+                        const nsAString&  aDocTitle,
+                        const nsAString&  aDocURL) MOZ_OVERRIDE;
   NS_IMETHOD PrePrintNextPage(nsITimerCallback* aCallback, bool* aDone) MOZ_OVERRIDE;
   NS_IMETHOD PrintNextPage() MOZ_OVERRIDE;
   NS_IMETHOD ResetPrintCanvasList() MOZ_OVERRIDE;
@@ -108,8 +113,8 @@ protected:
   void SetPageNumberFormat(const char* aPropName, const char* aDefPropVal, bool aPageNumOnly);
 
   // SharedPageData Helper methods
-  void SetDateTimeStr(PRUnichar * aDateTimeStr);
-  void SetPageNumberFormat(PRUnichar * aFormatStr, bool aForPageNumOnly);
+  void SetDateTimeStr(const nsAString& aDateTimeStr);
+  void SetPageNumberFormat(const nsAString& aFormatStr, bool aForPageNumOnly);
 
   // Sets the frame desired size to the size of the viewport, or the given
   // nscoords, whichever is larger. Print scaling is applied in this function.
@@ -117,7 +122,8 @@ protected:
                       const nsHTMLReflowState& aReflowState,
                       nscoord aWidth, nscoord aHeight);
 
-  void         DetermineWhetherToPrintPage();
+  void DetermineWhetherToPrintPage();
+  nsIFrame* GetCurrentPageFrame();
 
   nsMargin mMargin;
 
@@ -128,7 +134,6 @@ protected:
   nsSharedPageData* mPageData; // data shared by all the nsPageFrames
 
   // Asynch Printing
-  nsIFrame *   mCurrentPageFrame;
   int32_t      mPageNum;
   int32_t      mTotalPages;
   int32_t      mPrintRangeType;

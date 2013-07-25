@@ -599,7 +599,7 @@ HandleParallelFailure(ResumeFromException *rfe)
 
     while (!iter.isEntry()) {
         if (iter.isScripted())
-            PropagateParallelAbort(iter.script(), iter.script());
+            PropagateAbortPar(iter.script(), iter.script());
         ++iter;
     }
 

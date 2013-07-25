@@ -123,35 +123,34 @@ MIRGraph::unmarkBlocks()
 }
 
 MDefinition *
-MIRGraph::parSlice()
+MIRGraph::forkJoinSlice()
 {
     // Search the entry block to find a par slice instruction.  If we do not
     // find one, add one after the Start instruction.
     //
     // Note: the original design used a field in MIRGraph to cache the
-    // parSlice rather than searching for it again.  However, this
-    // could become out of date due to DCE.  Given that we do not
-    // generally have to search very far to find the par slice
-    // instruction if it exists, and that we don't look for it that
-    // often, I opted to simply eliminate the cache and search anew
-    // each time, so that it is that much easier to keep the IR
-    // coherent. - nmatsakis
+    // forkJoinSlice rather than searching for it again.  However, this could
+    // become out of date due to DCE.  Given that we do not generally have to
+    // search very far to find the par slice instruction if it exists, and
+    // that we don't look for it that often, I opted to simply eliminate the
+    // cache and search anew each time, so that it is that much easier to keep
+    // the IR coherent. - nmatsakis
 
     MBasicBlock *entry = entryBlock();
     JS_ASSERT(entry->info().executionMode() == ParallelExecution);
 
     MInstruction *start = NULL;
     for (MInstructionIterator ins(entry->begin()); ins != entry->end(); ins++) {
-        if (ins->isParSlice())
+        if (ins->isForkJoinSlice())
             return *ins;
         else if (ins->isStart())
             start = *ins;
     }
     JS_ASSERT(start);
 
-    MParSlice *parSlice = new MParSlice();
-    entry->insertAfter(start, parSlice);
-    return parSlice;
+    MForkJoinSlice *slice = new MForkJoinSlice();
+    entry->insertAfter(start, slice);
+    return slice;
 }
 
 MBasicBlock *
@@ -215,9 +214,9 @@ MBasicBlock::NewSplitEdge(MIRGraph &graph, CompileInfo &info, MBasicBlock *pred)
 }
 
 MBasicBlock *
-MBasicBlock::NewParBailout(MIRGraph &graph, CompileInfo &info,
-                           MBasicBlock *pred, jsbytecode *entryPc,
-                           MResumePoint *resumePoint)
+MBasicBlock::NewAbortPar(MIRGraph &graph, CompileInfo &info,
+                         MBasicBlock *pred, jsbytecode *entryPc,
+                         MResumePoint *resumePoint)
 {
     MBasicBlock *block = new MBasicBlock(graph, info, entryPc, NORMAL);
 
@@ -230,7 +229,7 @@ MBasicBlock::NewParBailout(MIRGraph &graph, CompileInfo &info,
     if (!block->addPredecessorWithoutPhis(pred))
         return NULL;
 
-    block->end(new MParBailout());
+    block->end(new MAbortPar());
     return block;
 }
 

@@ -186,6 +186,15 @@ LIRGeneratorARM::lowerForFPU(LInstructionHelper<1, 2, 0> *ins, MDefinition *mir,
 }
 
 bool
+LIRGeneratorARM::lowerForBitAndAndBranch(LBitAndAndBranch *baab, MInstruction *mir,
+                                         MDefinition *lhs, MDefinition *rhs)
+{
+    baab->setOperand(0, useRegister(lhs));
+    baab->setOperand(1, useRegisterOrConstant(rhs));
+    return add(baab, mir);
+}
+
+bool
 LIRGeneratorARM::defineUntypedPhi(MPhi *phi, size_t lirIndex)
 {
     LPhi *type = current->getPhi(lirIndex + VREG_TYPE_OFFSET);
