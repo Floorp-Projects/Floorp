@@ -6105,7 +6105,8 @@ nsContentUtils::SetUpChannelOwner(nsIPrincipal* aLoadingPrincipal,
     if (aForceOwner) {
       nsAutoCString uriStr;
       aURI->GetSpec(uriStr);
-      if(!uriStr.EqualsLiteral("about:srcdoc")) {
+      if(!uriStr.EqualsLiteral("about:srcdoc") &&
+         !uriStr.EqualsLiteral("view-source:about:srcdoc")) {
         nsCOMPtr<nsIURI> ownerURI;
         nsresult rv = aLoadingPrincipal->GetURI(getter_AddRefs(ownerURI));
         MOZ_ASSERT(NS_SUCCEEDED(rv) && SchemeIs(ownerURI, NS_NULLPRINCIPAL_SCHEME));
