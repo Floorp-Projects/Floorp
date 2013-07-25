@@ -45,7 +45,7 @@ interface nsIScriptError : nsIConsoleMessage
      * Categories I know about -
      * XUL javascript
      * content javascript (both of these from nsDocShell, currently)
-     * system javascript (errors in JS components and other system JS)
+     * component javascript (errors in JS components)
      */
     readonly attribute string category;
 

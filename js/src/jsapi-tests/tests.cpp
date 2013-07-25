@@ -23,8 +23,8 @@ bool JSAPITest::init()
     JS::RootedObject global(cx, createGlobal());
     if (!global)
         return false;
-    JS_EnterCompartment(cx, global);
-    return true;
+    oldCompartment = JS_EnterCompartment(cx, global);
+    return oldCompartment != NULL;
 }
 
 bool JSAPITest::exec(const char *bytes, const char *filename, int lineno)
