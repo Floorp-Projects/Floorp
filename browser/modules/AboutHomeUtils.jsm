@@ -25,11 +25,13 @@ this.AboutHomeUtils = {
   get defaultSearchEngine() {
     let defaultEngine = Services.search.defaultEngine;
     let submission = defaultEngine.getSubmission("_searchTerms_", null, "homepage");
+    if (submission.postData) {
+      throw new Error("Home page does not support POST search engines.");
+    }
   
     return Object.freeze({
       name: defaultEngine.name,
-      searchURL: submission.uri.spec,
-      postDataString: submission.postDataString
+      searchURL: submission.uri.spec
     });
   },
 
