@@ -84,6 +84,10 @@ richgriditem {
   padding: 8px;
 }
 
+richgriditem:not([tiletype="thumbnail"]) .tile-start-container {
+  background-image: none!important;
+}
+
 .tile-icon-box {
   display: inline-block;
   padding: 4px;
