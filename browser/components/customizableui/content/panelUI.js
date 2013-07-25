@@ -56,6 +56,10 @@ const PanelUI = {
   },
 
   uninit: function() {
+    if (!this._eventListenersAdded) {
+      return;
+    }
+
     for (let event of this.kEvents) {
       this.panel.removeEventListener(event, this);
     }
