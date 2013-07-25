@@ -2304,6 +2304,7 @@ function BrowserOnAboutPageLoad(doc) {
     function updateSearchEngine() {
       let engine = AboutHomeUtils.defaultSearchEngine;
       docElt.setAttribute("searchEngineName", engine.name);
+      docElt.setAttribute("searchEnginePostData", engine.postDataString || "");
       docElt.setAttribute("searchEngineURL", engine.searchURL);
     }
     updateSearchEngine();
