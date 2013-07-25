@@ -20,6 +20,12 @@ interface nsISearchSubmission : nsISupports
    * The URI to submit a search to.
    */
   readonly attribute nsIURI uri;
+
+  /**
+   * The POST data associated with a search submission as an
+   * application/x-www-form-urlencoded string. May be null.
+   */
+  readonly attribute AString postDataString;
 };
 
 [scriptable, uuid(ccf6aa20-10a9-4a0c-a81d-31b10ea846de)]
