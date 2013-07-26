@@ -82,19 +82,12 @@ int main(int argc, char *argv[])
         if (filter && strstr(name, filter) == NULL)
             continue;
 
-        if (!JS_Init()) {
-            printf("TEST-UNEXPECTED-FAIL | %s | JS_Init() failed.\n", name);
-            failures++;
-            continue;
-        }
-
         total += 1;
 
         printf("%s\n", name);
         if (!test->init()) {
             printf("TEST-UNEXPECTED-FAIL | %s | Failed to initialize.\n", name);
             failures++;
-            JS_ShutDown();
             continue;
         }
 
@@ -110,7 +103,6 @@ int main(int argc, char *argv[])
                 failures++;
         }
         test->uninit();
-        JS_ShutDown();
     }
 
     if (failures) {

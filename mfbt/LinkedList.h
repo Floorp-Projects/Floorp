@@ -46,8 +46,8 @@
  *       }
  *
  *       void notifyObservers(char* topic) {
- *         for (Observer* o = list.getFirst(); o != nullptr; o = o->getNext())
- *           o->observe(topic);
+ *         for (Observer* o = list.getFirst(); o != NULL; o = o->getNext())
+ *           o->Observe(topic);
  *       }
  *   };
  *
@@ -58,7 +58,6 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/NullPtr.h"
 
 #ifdef __cplusplus
 
@@ -71,10 +70,10 @@ template<typename T>
 class LinkedListElement
 {
     /*
-     * It's convenient that we return nullptr when getNext() or getPrevious()
-     * hits the end of the list, but doing so costs an extra word of storage in
-     * each linked list node (to keep track of whether |this| is the sentinel
-     * node) and a branch on this value in getNext/getPrevious.
+     * It's convenient that we return NULL when getNext() or getPrevious() hits
+     * the end of the list, but doing so costs an extra word of storage in each
+     * linked list node (to keep track of whether |this| is the sentinel node)
+     * and a branch on this value in getNext/getPrevious.
      *
      * We could get rid of the extra word of storage by shoving the "is
      * sentinel" bit into one of the pointers, although this would, of course,
@@ -122,8 +121,8 @@ class LinkedListElement
     }
 
     /*
-     * Get the next element in the list, or nullptr if this is the last element
-     * in the list.
+     * Get the next element in the list, or NULL if this is the last element in
+     * the list.
      */
     T* getNext() {
       return next->asT();
@@ -133,8 +132,8 @@ class LinkedListElement
     }
 
     /*
-     * Get the previous element in the list, or nullptr if this is the first
-     * element in the list.
+     * Get the previous element in the list, or NULL if this is the first element
+     * in the list.
      */
     T* getPrevious() {
       return prev->asT();
@@ -207,18 +206,18 @@ class LinkedListElement
     { }
 
     /*
-     * Return |this| cast to T* if we're a normal node, or return nullptr if
-     * we're a sentinel node.
+     * Return |this| cast to T* if we're a normal node, or return NULL if we're
+     * a sentinel node.
      */
     T* asT() {
       if (isSentinel)
-        return nullptr;
+        return NULL;
 
       return static_cast<T*>(this);
     }
     const T* asT() const {
       if (isSentinel)
-        return nullptr;
+        return NULL;
 
       return static_cast<const T*>(this);
     }
@@ -285,7 +284,7 @@ class LinkedList
     }
 
     /*
-     * Get the first element of the list, or nullptr if the list is empty.
+     * Get the first element of the list, or NULL if the list is empty.
      */
     T* getFirst() {
       return sentinel.getNext();
@@ -295,7 +294,7 @@ class LinkedList
     }
 
     /*
-     * Get the last element of the list, or nullptr if the list is empty.
+     * Get the last element of the list, or NULL if the list is empty.
      */
     T* getLast() {
       return sentinel.getPrevious();
@@ -306,7 +305,7 @@ class LinkedList
 
     /*
      * Get and remove the first element of the list.  If the list is empty,
-     * return nullptr.
+     * return NULL.
      */
     T* popFirst() {
       T* ret = sentinel.getNext();
@@ -317,7 +316,7 @@ class LinkedList
 
     /*
      * Get and remove the last element of the list.  If the list is empty,
-     * return nullptr.
+     * return NULL.
      */
     T* popLast() {
       T* ret = sentinel.getPrevious();

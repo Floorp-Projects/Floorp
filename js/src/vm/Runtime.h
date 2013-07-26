@@ -7,12 +7,10 @@
 #ifndef vm_Runtime_h
 #define vm_Runtime_h
 
-#include "mozilla/Atomics.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/TemplateLib.h"
-#include "mozilla/ThreadLocal.h"
 
 #include <setjmp.h>
 #include <string.h>
@@ -43,13 +41,6 @@
 #pragma warning(push)
 #pragma warning(disable:4355) /* Silence warning about "this" used in base member initializer list */
 #endif
-
-namespace js {
-
-/* Thread Local Storage slot for storing the runtime for a thread. */
-extern mozilla::ThreadLocal<PerThreadData*> TlsPerThreadData;
-
-} // namespace js
 
 struct DtoaState;
 
@@ -1430,13 +1421,7 @@ struct JSRuntime : public JS::shadow::Runtime,
     // their callee.
     js::Value            ionReturnOverride_;
 
-    static mozilla::Atomic<size_t> liveRuntimesCount;
-
   public:
-    static bool hasLiveRuntimes() {
-        return liveRuntimesCount > 0;
-    }
-
     bool hasIonReturnOverride() const {
         return !ionReturnOverride_.isMagic();
     }

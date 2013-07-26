@@ -10,9 +10,9 @@
 
 #include "jsapi.h"
 
-#include "mozilla/DebugOnly.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/PodOperations.h"
+#include "mozilla/ThreadLocal.h"
 
 #include <ctype.h>
 #include <stdarg.h>
@@ -79,7 +79,6 @@
 #include "vm/ErrorObject.h"
 #include "vm/Interpreter.h"
 #include "vm/NumericConversions.h"
-#include "vm/Runtime.h"
 #include "vm/Shape.h"
 #include "vm/StopIterationObject.h"
 #include "vm/StringBuffer.h"
@@ -103,7 +102,6 @@ using namespace js;
 using namespace js::gc;
 using namespace js::types;
 
-using mozilla::DebugOnly;
 using mozilla::Maybe;
 using mozilla::PodCopy;
 using mozilla::PodZero;
@@ -634,74 +632,15 @@ JS_IsBuiltinFunctionConstructor(JSFunction *fun)
 /************************************************************************/
 
 /*
- * Has SpiderMonkey been initialized?  This flag is used to control things that
- * should happen only once across all runtimes.  It's an API requirement that
- * JS_Init (and JS_ShutDown, if called) be called in a thread-aware manner, so
- * this variable doesn't need to be atomic.
+ * Has a new runtime ever been created?  This flag is used to control things
+ * that should happen only once across all runtimes.
  */
-static bool jsInitialized;
+static JSBool js_NewRuntimeWasCalled = JS_FALSE;
 
-JS_PUBLIC_API(JSBool)
-JS_Init(void)
-{
-    MOZ_ASSERT(!jsInitialized,
-               "must call JS_Init before any other JSAPI operation");
-    MOZ_ASSERT(!JSRuntime::hasLiveRuntimes(),
-               "how do we have live runtimes before JS_Init?");
-
-#ifdef DEBUG
-    // Assert that the numbers associated with the error names in js.msg are
-    // monotonically increasing.  It's not a compile-time check, but it's
-    // better than nothing.
-    int errorNumber = 0;
-#define MSG_DEF(name, number, count, exception, format)                       \
-    JS_ASSERT(name == errorNumber++);
-#include "js.msg"
-#undef MSG_DEF
-
-    // Assert that each message format has the correct number of braced
-    // parameters.
-#define MSG_DEF(name, number, count, exception, format)                       \
-    JS_BEGIN_MACRO                                                            \
-        unsigned numfmtspecs = 0;                                             \
-        for (const char *fmt = format; *fmt != '\0'; fmt++) {                 \
-            if (*fmt == '{' && isdigit(fmt[1]))                               \
-                ++numfmtspecs;                                                \
-        }                                                                     \
-        JS_ASSERT(count == numfmtspecs);                                      \
-    JS_END_MACRO;
-#include "js.msg"
-#undef MSG_DEF
-#endif /* DEBUG */
-
-    using js::TlsPerThreadData;
-    if (!TlsPerThreadData.initialized() && !TlsPerThreadData.init())
-        return false;
-
-#if defined(JS_ION)
-    if (!ion::InitializeIon())
-        return false;
-#endif
-
-    if (!ForkJoinSlice::InitializeTLS())
-        return false;
-
-    jsInitialized = true;
-    return true;
-}
-
-JS_PUBLIC_API(void)
-JS_ShutDown(void)
-{
-    MOZ_ASSERT(jsInitialized,
-               "JS_ShutDown must only be called after JS_Init and can't race with it");
-    MOZ_ASSERT(!JSRuntime::hasLiveRuntimes(),
-               "forgot to destroy a runtime before shutting down");
-
-    PRMJ_NowShutdown();
-
-    jsInitialized = false;
-}
+/*
+ * Thread Local Storage slot for storing the runtime for a thread.
+ */
+mozilla::ThreadLocal<PerThreadData *> js::TlsPerThreadData;
 
 #ifdef DEBUG
 JS_FRIEND_API(bool)
@@ -959,9 +898,6 @@ JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
     , enteredPolicy(NULL)
 #endif
 {
-    MOZ_ASSERT(jsInitialized, "must call JS_Init prior to creating any JSRuntimes");
-    liveRuntimesCount++;
-
     /* Initialize infallibly first, so we can goto bad and JS_DestroyRuntime. */
     JS_INIT_CLIST(&onNewGlobalObjectWatchers);
 
@@ -1120,9 +1056,6 @@ JSRuntime::~JSRuntime()
     gcStoreBuffer.disable();
     gcNursery.disable();
 #endif
-
-    DebugOnly<size_t> oldCount = liveRuntimesCount--;
-    JS_ASSERT(oldCount > 0);
 }
 
 #ifdef JS_THREADSAFE
@@ -1131,7 +1064,7 @@ JSRuntime::setOwnerThread()
 {
     JS_ASSERT(ownerThread_ == (void *)0xc1ea12);  /* "clear" */
     JS_ASSERT(requestDepth == 0);
-    JS_ASSERT(jsInitialized);
+    JS_ASSERT(js_NewRuntimeWasCalled);
     JS_ASSERT(js::TlsPerThreadData.get() == NULL);
     ownerThread_ = PR_GetCurrentThread();
     js::TlsPerThreadData.set(&mainThread);
@@ -1148,7 +1081,7 @@ JSRuntime::clearOwnerThread()
 {
     assertValidThread();
     JS_ASSERT(requestDepth == 0);
-    JS_ASSERT(jsInitialized);
+    JS_ASSERT(js_NewRuntimeWasCalled);
     ownerThread_ = (void *)0xc1ea12;  /* "clear" */
     js::TlsPerThreadData.set(NULL);
     nativeStackBase = 0;
@@ -1184,8 +1117,50 @@ JSRuntime::assertValidThread() const
 JS_PUBLIC_API(JSRuntime *)
 JS_NewRuntime(uint32_t maxbytes, JSUseHelperThreads useHelperThreads)
 {
+    if (!js_NewRuntimeWasCalled) {
+#ifdef DEBUG
+        /*
+         * This code asserts that the numbers associated with the error names
+         * in jsmsg.def are monotonically increasing.  It uses values for the
+         * error names enumerated in jscntxt.c.  It's not a compile-time check
+         * but it's better than nothing.
+         */
+        int errorNumber = 0;
+#define MSG_DEF(name, number, count, exception, format)                       \
+    JS_ASSERT(name == errorNumber++);
+#include "js.msg"
+#undef MSG_DEF
+
+#define MSG_DEF(name, number, count, exception, format)                       \
+    JS_BEGIN_MACRO                                                            \
+        unsigned numfmtspecs = 0;                                                \
+        const char *fmt;                                                      \
+        for (fmt = format; *fmt != '\0'; fmt++) {                             \
+            if (*fmt == '{' && isdigit(fmt[1]))                               \
+                ++numfmtspecs;                                                \
+        }                                                                     \
+        JS_ASSERT(count == numfmtspecs);                                      \
+    JS_END_MACRO;
+#include "js.msg"
+#undef MSG_DEF
+#endif /* DEBUG */
+
+        if (!js::TlsPerThreadData.init())
+            return NULL;
+
+        js_NewRuntimeWasCalled = JS_TRUE;
+    }
+
     JSRuntime *rt = js_new<JSRuntime>(useHelperThreads);
     if (!rt)
+        return NULL;
+
+#if defined(JS_ION)
+    if (!ion::InitializeIon())
+        return NULL;
+#endif
+
+    if (!ForkJoinSlice::InitializeTLS())
         return NULL;
 
     if (!rt->init(maxbytes)) {
@@ -1213,6 +1188,12 @@ JS_SetICUMemoryFunctions(JS_ICUAllocFn allocFn, JS_ICUReallocFn reallocFn, JS_IC
 #else
     return true;
 #endif
+}
+
+JS_PUBLIC_API(void)
+JS_ShutDown(void)
+{
+    PRMJ_NowShutdown();
 }
 
 JS_PUBLIC_API(void *)
