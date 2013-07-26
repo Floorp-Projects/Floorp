@@ -34,7 +34,7 @@ function httpRequest(aUrl, aOptions) {
   let xhr = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
               .createInstance(Ci.nsIXMLHttpRequest);
   xhr.mozBackgroundRequest = true; // no error dialogs
-  let hasPostData = "postData" in aOptions;
+  let hasPostData = "postData" in aOptions && aOptions.postData;
   xhr.open("method" in aOptions ? aOptions.method :
            (hasPostData ? "POST" : "GET"), aUrl);
   xhr.channel.loadFlags = Ci.nsIChannel.LOAD_ANONYMOUS | // don't send cookies

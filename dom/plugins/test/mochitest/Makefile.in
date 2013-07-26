@@ -114,7 +114,6 @@ MOCHITEST_CHROME_FILES = \
 
 ifneq ($(MOZ_WIDGET_TOOLKIT),cocoa)
 MOCHITEST_FILES += \
-  test_instance_re-parent-windowed.html \
   test_visibility.html \
   $(NULL)
 

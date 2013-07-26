@@ -1380,9 +1380,24 @@ void AsyncPanZoomController::ContentReceivedTouch(bool aPreventDefault) {
   }
 }
 
-void AsyncPanZoomController::SetState(PanZoomState aState) {
-  MonitorAutoLock monitor(mMonitor);
-  mState = aState;
+void AsyncPanZoomController::SetState(PanZoomState aNewState) {
+
+  PanZoomState oldState;
+
+  // Intentional scoping for mutex
+  {
+    MonitorAutoLock monitor(mMonitor);
+    oldState = mState;
+    mState = aNewState;
+  }
+
+  if (mGeckoContentController) {
+    if (oldState == PANNING && aNewState != PANNING) {
+      mGeckoContentController->HandlePanEnd();
+    } else if (oldState != PANNING && aNewState == PANNING) {
+      mGeckoContentController->HandlePanBegin();
+    }
+  }
 }
 
 void AsyncPanZoomController::TimeoutTouchListeners() {

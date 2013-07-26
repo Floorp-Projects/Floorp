@@ -1366,7 +1366,7 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16_t methodIndex,
             if (param.IsIn()) {
                 if (!JS_SetPropertyById(cx, out_obj,
                                         mRuntime->GetStringID(XPCJSRuntime::IDX_VALUE),
-                                        val.address())) {
+                                        &val)) {
                     goto pre_call_clean_up;
                 }
             }
@@ -1433,8 +1433,8 @@ pre_call_clean_up:
     if (XPT_MD_IS_GETTER(info->flags)) {
         success = JS_GetProperty(cx, obj, name, rval.address());
     } else if (XPT_MD_IS_SETTER(info->flags)) {
-        success = JS_SetProperty(cx, obj, name, argv);
         rval = *argv;
+        success = JS_SetProperty(cx, obj, name, &rval);
     } else {
         if (!JSVAL_IS_PRIMITIVE(fval)) {
             uint32_t oldOpts = JS_GetOptions(cx);

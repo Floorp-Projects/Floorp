@@ -1081,6 +1081,10 @@ public:
         EXT_draw_buffers,
         EXT_gpu_shader4,
         EXT_blend_minmax,
+        ARB_draw_instanced,
+        EXT_draw_instanced,
+        NV_draw_instanced,
+        ANGLE_instanced_array,
         Extensions_Max
     };
 
@@ -1092,6 +1096,7 @@ public:
      */
     enum GLExtensionPackages {
         XXX_draw_buffers,
+        XXX_draw_instanced,
         XXX_framebuffer_blit,
         XXX_framebuffer_multisample,
         XXX_framebuffer_object,
@@ -1113,6 +1118,12 @@ public:
         case XXX_draw_buffers:
             return IsExtensionSupported(ARB_draw_buffers) ||
                    IsExtensionSupported(EXT_draw_buffers);
+
+        case XXX_draw_instanced:
+            return IsExtensionSupported(ARB_draw_instanced) ||
+                   IsExtensionSupported(EXT_draw_instanced) ||
+                   IsExtensionSupported(NV_draw_instanced) ||
+                   IsExtensionSupported(ANGLE_instanced_array);
 
         case XXX_framebuffer_blit:
             return IsExtensionSupported(EXT_framebuffer_blit) ||
@@ -3023,6 +3034,23 @@ public:
         realGLboolean ret = mSymbols.fIsVertexArray(array);
         AFTER_GL_CALL;
         return ret;
+    }
+
+    // ARB_draw_instanced
+    void fDrawArraysInstanced(GLenum mode, GLint first, GLsizei count, GLsizei primcount)
+    {
+        BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fDrawArraysInstanced);
+        mSymbols.fDrawArraysInstanced(mode, first, count, primcount);
+        AFTER_GL_CALL;
+    }
+
+    void fDrawElementsInstanced(GLenum mode, GLsizei count, GLenum type, const GLvoid* indices, GLsizei primcount)
+    {
+        BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fDrawElementsInstanced);
+        mSymbols.fDrawElementsInstanced(mode, count, type, indices, primcount);
+        AFTER_GL_CALL;
     }
 
 #undef ASSERT_SYMBOL_PRESENT

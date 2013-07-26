@@ -116,7 +116,7 @@ this.AccessFu = {
     Services.obs.addObserver(this, 'Accessibility:PreviousObject', false);
     Services.obs.addObserver(this, 'Accessibility:Focus', false);
     Services.obs.addObserver(this, 'Accessibility:ActivateObject', false);
-    Services.obs.addObserver(this, 'Accessibility:MoveCaret', false);
+    Services.obs.addObserver(this, 'Accessibility:MoveByGranularity', false);
     Utils.win.addEventListener('TabOpen', this);
     Utils.win.addEventListener('TabClose', this);
     Utils.win.addEventListener('TabSelect', this);
@@ -159,7 +159,7 @@ this.AccessFu = {
     Services.obs.removeObserver(this, 'Accessibility:PreviousObject');
     Services.obs.removeObserver(this, 'Accessibility:Focus');
     Services.obs.removeObserver(this, 'Accessibility:ActivateObject');
-    Services.obs.removeObserver(this, 'Accessibility:MoveCaret');
+    Services.obs.removeObserver(this, 'Accessibility:MoveByGranularity');
 
     if (this.doneCallback) {
       this.doneCallback();
@@ -277,8 +277,8 @@ this.AccessFu = {
           this.showCurrent(true);
         }
         break;
-      case 'Accessibility:MoveCaret':
-        this.Input.moveCaret(JSON.parse(aData));
+      case 'Accessibility:MoveByGranularity':
+        this.Input.moveByGranularity(JSON.parse(aData));
         break;
       case 'remote-browser-frame-shown':
       case 'in-process-browser-or-app-frame-shown':
@@ -788,16 +788,23 @@ var Input = {
                          origin: 'top', inputType: aInputType});
   },
 
-  moveCaret: function moveCaret(aDetails) {
+  moveByGranularity: function moveByGranularity(aDetails) {
+    const MOVEMENT_GRANULARITY_PARAGRAPH = 8;
+
     if (!this.editState.editing) {
-      return;
+      if (aDetails.granularity === MOVEMENT_GRANULARITY_PARAGRAPH) {
+        this.moveCursor('move' + aDetails.direction, 'Paragraph', 'gesture');
+        return;
+      }
+    } else {
+      aDetails.atStart = this.editState.atStart;
+      aDetails.atEnd = this.editState.atEnd;
     }
 
-    aDetails.atStart = this.editState.atStart;
-    aDetails.atEnd = this.editState.atEnd;
-
     let mm = Utils.getMessageManager(Utils.CurrentBrowser);
-    mm.sendAsyncMessage('AccessFu:MoveCaret', aDetails);
+    let type = this.editState.editing ? 'AccessFu:MoveCaret' :
+                                        'AccessFu:MoveByGranularity';
+    mm.sendAsyncMessage(type, aDetails);
   },
 
   activateCurrent: function activateCurrent(aData) {

@@ -767,8 +767,8 @@ Class ArrayObject::class_ = {
     NULL,
     NULL,           /* checkAccess */
     NULL,           /* call        */
-    NULL,           /* construct   */
     NULL,           /* hasInstance */
+    NULL,           /* construct   */
     NULL,           /* trace       */
     {
         NULL,       /* outerObject */
@@ -910,7 +910,7 @@ array_join_sub(JSContext *cx, CallArgs &args, bool locale)
     // Steps 4 and 5
     RootedString sepstr(cx, NULL);
     if (!locale && args.hasDefined(0)) {
-        sepstr = ToString<CanGC>(cx, args.handleAt(0));
+        sepstr = ToString<CanGC>(cx, args[0]);
         if (!sepstr)
             return false;
     }
@@ -1445,8 +1445,8 @@ SortComparatorFunction::operator()(const Value &a, const Value &b, bool *lessOrE
 
     args.setCallee(fval);
     args.setThis(UndefinedValue());
-    args[0] = a;
-    args[1] = b;
+    args[0].set(a);
+    args[1].set(b);
 
     if (!fig.invoke(cx))
         return false;
@@ -2232,7 +2232,7 @@ array_splice(JSContext *cx, unsigned argc, Value *vp)
 
     /* Step 5. */
     double relativeStart;
-    if (!ToInteger(cx, args.handleOrUndefinedAt(0), &relativeStart))
+    if (!ToInteger(cx, args.get(0), &relativeStart))
         return false;
 
     /* Step 6. */
@@ -2552,7 +2552,7 @@ array_slice(JSContext *cx, unsigned argc, Value *vp)
 
     if (args.length() > 0) {
         double d;
-        if (!ToInteger(cx, args.handleAt(0), &d))
+        if (!ToInteger(cx, args[0], &d))
             return false;
         if (d < 0) {
             d += length;
@@ -2564,7 +2564,7 @@ array_slice(JSContext *cx, unsigned argc, Value *vp)
         begin = (uint32_t)d;
 
         if (args.hasDefined(1)) {
-            if (!ToInteger(cx, args.handleAt(1), &d))
+            if (!ToInteger(cx, args[1], &d))
                 return false;
             if (d < 0) {
                 d += length;
@@ -2675,9 +2675,9 @@ array_filter(JSContext *cx, unsigned argc, Value *vp)
                 return false;
             args2.setCallee(ObjectValue(*callable));
             args2.setThis(thisv);
-            args2[0] = kValue;
-            args2[1] = NumberValue(k);
-            args2[2] = ObjectValue(*obj);
+            args2[0].set(kValue);
+            args2[1].setNumber(k);
+            args2[2].setObject(*obj);
             if (!fig.invoke(cx))
                 return false;
 
@@ -2761,7 +2761,7 @@ array_of(JSContext *cx, unsigned argc, Value *vp)
 
     // Step 8.
     for (unsigned k = 0; k < argc; k++) {
-        if (!JSObject::defineElement(cx, obj, k, args.handleAt(k)))
+        if (!JSObject::defineElement(cx, obj, k, args[k]))
             return false;
     }
 

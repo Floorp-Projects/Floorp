@@ -8,7 +8,7 @@ add permissions to the profile
 """
 
 __all__ = ['MissingPrimaryLocationError', 'MultiplePrimaryLocationsError',
-           'DuplicateLocationError', 'BadPortLocationError',
+           'DEFAULT_PORTS', 'DuplicateLocationError', 'BadPortLocationError',
            'LocationsSyntaxError', 'Location', 'ServerLocations',
            'Permissions']
 
@@ -22,10 +22,10 @@ except ImportError:
 import urlparse
 
 # http://hg.mozilla.org/mozilla-central/file/b871dfb2186f/build/automation.py.in#l28
-_DEFAULT_PORTS = { 'http': '8888',
-                   'https': '4443',
-                   'ws': '4443',
-                   'wss': '4443' }
+DEFAULT_PORTS = { 'http': '8888',
+                  'https': '4443',
+                  'ws': '4443',
+                  'wss': '4443' }
 
 class LocationError(Exception):
     """Signifies an improperly formed location."""
@@ -187,7 +187,7 @@ class ServerLocations(object):
                 host, port = netloc.rsplit(':', 1)
             except ValueError:
                 host = netloc
-                port = _DEFAULT_PORTS.get(scheme, '80')
+                port = DEFAULT_PORTS.get(scheme, '80')
 
             try:
                 location = Location(scheme, host, port, options)
@@ -297,7 +297,7 @@ class Permissions(object):
         return preferences for Proxy Auto Config. originally taken from
         http://mxr.mozilla.org/mozilla-central/source/build/automation.py.in
         """
-        proxy = _DEFAULT_PORTS
+        proxy = DEFAULT_PORTS.copy()
 
         # We need to proxy every server but the primary one.
         origins = ["'%s'" % l.url()

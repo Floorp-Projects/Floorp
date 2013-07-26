@@ -141,15 +141,20 @@ const WebProgress = {
   _networkStart: function _networkStart(aJson, aTab) {
     aTab.startLoading();
 
-    if (aTab == Browser.selectedTab)
-      BrowserUI.update(TOOLBARSTATE_LOADING);
+    if (aTab == Browser.selectedTab) {
+      // NO_STARTUI_VISIBILITY since the current uri for the tab has not
+      // been updated yet. If we're coming off of the start page, this
+      // would briefly show StartUI until _locationChange is called.
+      BrowserUI.update(BrowserUI.NO_STARTUI_VISIBILITY);
+    }
   },
 
   _networkStop: function _networkStop(aJson, aTab) {
     aTab.endLoading();
 
-    if (aTab == Browser.selectedTab)
-      BrowserUI.update(TOOLBARSTATE_LOADED);
+    if (aTab == Browser.selectedTab) {
+      BrowserUI.update();
+    }
   },
 
   _windowStart: function _windowStart(aJson, aTab) {
