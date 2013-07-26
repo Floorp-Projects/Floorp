@@ -803,13 +803,26 @@ NS_EXPORT jobject JNICALL
 Java_org_mozilla_gecko_GeckoAppShell_getNextMessageFromQueue(JNIEnv* jenv, jclass, jobject queue)
 {
     static jclass jMessageQueueCls = nullptr;
+    static jfieldID jMessagesField;
     static jmethodID jNextMethod;
     if (!jMessageQueueCls) {
         jMessageQueueCls = (jclass) jenv->NewGlobalRef(jenv->FindClass("android/os/MessageQueue"));
         jNextMethod = jenv->GetMethodID(jMessageQueueCls, "next", "()Landroid/os/Message;");
+        jMessagesField = jenv->GetFieldID(jMessageQueueCls, "mMessages", "Landroid/os/Message;");
     }
+
     if (!jMessageQueueCls || !jNextMethod)
         return NULL;
+
+    if (jMessagesField) {
+        jobject msg = jenv->GetObjectField(queue, jMessagesField);
+        // if queue.mMessages is null, queue.next() will block, which we don't want
+        // It turns out to be an order of magnitude more performant to do this extra check here and
+        // block less vs. one fewer checks here and more blocking.
+        if (!msg) {
+            return NULL;
+        }
+    }
     return jenv->CallObjectMethod(queue, jNextMethod);
 }
 
