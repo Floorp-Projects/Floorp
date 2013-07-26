@@ -1050,7 +1050,7 @@ VectorBase<T, N, AP, TV>::extractRawBuffer()
   if (usingInlineStorage()) {
     ret = reinterpret_cast<T*>(this->malloc_(mLength * sizeof(T)));
     if (!ret)
-      return nullptr;
+        return NULL;
     Impl::copyConstruct(ret, beginNoCheck(), endNoCheck());
     Impl::destroy(beginNoCheck(), endNoCheck());
     /* mBegin, mCapacity are unchanged. */
@@ -1105,14 +1105,14 @@ template<typename T, size_t N, class AP, class TV>
 inline size_t
 VectorBase<T, N, AP, TV>::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
 {
-  return usingInlineStorage() ? 0 : mallocSizeOf(beginNoCheck());
+    return usingInlineStorage() ? 0 : mallocSizeOf(beginNoCheck());
 }
 
 template<typename T, size_t N, class AP, class TV>
 inline size_t
 VectorBase<T, N, AP, TV>::sizeOfIncludingThis(MallocSizeOf mallocSizeOf) const
 {
-  return mallocSizeOf(this) + sizeOfExcludingThis(mallocSizeOf);
+    return mallocSizeOf(this) + sizeOfExcludingThis(mallocSizeOf);
 }
 
 template<typename T, size_t N, class AP, class TV>

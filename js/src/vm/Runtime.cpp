@@ -7,7 +7,6 @@
 #include "vm/Runtime-inl.h"
 
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/ThreadLocal.h"
 #include "mozilla/Util.h"
 
 #include <locale.h>
@@ -28,13 +27,7 @@
 using namespace js;
 using namespace js::gc;
 
-using mozilla::Atomic;
 using mozilla::PodZero;
-using mozilla::ThreadLocal;
-
-/* static */ ThreadLocal<PerThreadData*> js::TlsPerThreadData;
-
-/* static */ Atomic<size_t> JSRuntime::liveRuntimesCount;
 
 void
 NewObjectCache::clearNurseryObjects(JSRuntime *rt)

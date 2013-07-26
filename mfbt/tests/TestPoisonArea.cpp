@@ -79,8 +79,6 @@
  *    at all.  Thus, it is not used here.
  */
 
-#include "mozilla/NullPtr.h"
-
 // MAP_ANON(YMOUS) is not in any standard, and the C99 PRI* macros are
 // not in C++98.  Add defines as necessary.
 #define __STDC_FORMAT_MACROS
@@ -197,8 +195,8 @@ StrW32Error(DWORD errcode)
   FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER |
                  FORMAT_MESSAGE_FROM_SYSTEM |
                  FORMAT_MESSAGE_IGNORE_INSERTS,
-                 nullptr, errcode, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-                 (LPSTR)&errmsg, 0, nullptr);
+                 NULL, errcode, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+                 (LPSTR) &errmsg, 0, NULL);
 
   // FormatMessage puts an unwanted newline at the end of the string
   size_t n = strlen(errmsg)-1;
