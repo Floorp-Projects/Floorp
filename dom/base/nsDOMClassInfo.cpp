@@ -2713,7 +2713,7 @@ BaseStubConstructor(nsIWeakReference* aWeakOwner,
       JSAutoCompartment ac(cx, thisObject);
 
       JS::Rooted<JS::Value> funval(cx);
-      if (!JS_GetProperty(cx, thisObject, "constructor", funval.address()) ||
+      if (!JS_GetProperty(cx, thisObject, "constructor", &funval) ||
           !funval.isObject()) {
         return NS_ERROR_UNEXPECTED;
       }
@@ -3218,7 +3218,7 @@ nsDOMConstructor::HasInstance(nsIXPConnectWrappedNative *wrapper,
     // This isn't a normal DOM object, see if this constructor lives on its
     // prototype chain.
     JS::Rooted<JS::Value> val(cx);
-    if (!JS_GetProperty(cx, obj, "prototype", val.address())) {
+    if (!JS_GetProperty(cx, obj, "prototype", &val)) {
       return NS_ERROR_UNEXPECTED;
     }
 
@@ -3959,7 +3959,10 @@ ContentWindowGetter(JSContext *cx, unsigned argc, jsval *vp)
   if (!obj)
     return JS_FALSE;
 
-  return ::JS_GetProperty(cx, obj, "content", vp);
+  JS::Rooted<JS::Value> value(cx);
+  bool result = ::JS_GetProperty(cx, obj, "content", &value);
+  *vp = value;
+  return result;
 }
 
 template<class Interface>
@@ -4106,7 +4109,7 @@ DefineComponentsShim(JSContext *cx, JS::HandleObject global)
 
     // Look up the appopriate interface object on the global.
     JS::Rooted<JS::Value> v(cx, JS::UndefinedValue());
-    ok = JS_GetProperty(cx, global, domName, v.address());
+    ok = JS_GetProperty(cx, global, domName, &v);
     NS_ENSURE_TRUE(ok, NS_ERROR_OUT_OF_MEMORY);
     if (!v.isObject()) {
       NS_WARNING("Unable to find interface object on global");
@@ -4637,7 +4640,7 @@ nsGenericArraySH::GetLength(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   *length = 0;
 
   JS::Rooted<JS::Value> lenval(cx);
-  if (!JS_GetProperty(cx, obj, "length", lenval.address())) {
+  if (!JS_GetProperty(cx, obj, "length", &lenval)) {
     return NS_ERROR_UNEXPECTED;
   }
 
@@ -4676,7 +4679,7 @@ nsGenericArraySH::Enumerate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   sCurrentlyEnumerating = true;
 
   JS::Rooted<JS::Value> len_val(cx);
-  JSBool ok = ::JS_GetProperty(cx, obj, "length", len_val.address());
+  JSBool ok = ::JS_GetProperty(cx, obj, "length", &len_val);
 
   if (ok && JSVAL_IS_INT(len_val)) {
     int32_t length = JSVAL_TO_INT(len_val);
@@ -5024,7 +5027,13 @@ nsHTMLDocumentSH::CallToGetPropMapper(JSContext *cx, unsigned argc, jsval *vp)
     return JS_FALSE;
   }
 
-  return ::JS_GetUCProperty(cx, self, chars, length, vp);
+  JS::Rooted<JS::Value> value(cx);
+  if (!::JS_GetUCProperty(cx, self, chars, length, &value)) {
+    return false;
+  }
+
+  *vp = value;
+  return true;
 }
 
 // StringArray helper

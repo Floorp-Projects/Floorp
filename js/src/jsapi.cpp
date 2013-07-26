@@ -3770,13 +3770,14 @@ JS_SetUCPropertyAttributes(JSContext *cx, JSObject *objArg, const jschar *name, 
 }
 
 JS_PUBLIC_API(JSBool)
-JS_GetPropertyById(JSContext *cx, JSObject *objArg, jsid idArg, jsval *vp)
+JS_GetPropertyById(JSContext *cx, JSObject *objArg, jsid idArg, MutableHandleValue vp)
 {
     return JS_ForwardGetPropertyTo(cx, objArg, idArg, objArg, vp);
 }
 
 JS_PUBLIC_API(JSBool)
-JS_ForwardGetPropertyTo(JSContext *cx, JSObject *objArg, jsid idArg, JSObject *onBehalfOfArg, jsval *vp)
+JS_ForwardGetPropertyTo(JSContext *cx, JSObject *objArg, jsid idArg, JSObject *onBehalfOfArg,
+                        MutableHandleValue vp)
 {
     RootedObject obj(cx, objArg);
     RootedObject onBehalfOf(cx, onBehalfOfArg);
@@ -3788,27 +3789,18 @@ JS_ForwardGetPropertyTo(JSContext *cx, JSObject *objArg, jsid idArg, JSObject *o
     assertSameCompartment(cx, onBehalfOf);
     JSAutoResolveFlags rf(cx, 0);
 
-    RootedValue value(cx);
-    if (!JSObject::getGeneric(cx, obj, onBehalfOf, id, &value))
-        return false;
-
-    *vp = value;
-    return true;
+    return JSObject::getGeneric(cx, obj, onBehalfOf, id, vp);
 }
 
 JS_PUBLIC_API(JSBool)
-JS_GetPropertyByIdDefault(JSContext *cx, JSObject *objArg, jsid idArg, jsval defArg, jsval *vp)
+JS_GetPropertyByIdDefault(JSContext *cx, JSObject *objArg, jsid idArg, jsval defArg,
+                          MutableHandleValue vp)
 {
     RootedObject obj(cx, objArg);
     RootedId id(cx, idArg);
     RootedValue def(cx, defArg);
 
-    RootedValue value(cx);
-    if (!baseops::GetPropertyDefault(cx, obj, id, def, &value))
-        return false;
-
-    *vp = value;
-    return true;
+    return baseops::GetPropertyDefault(cx, obj, id, def, vp);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -3856,7 +3848,7 @@ JS_GetElementIfPresent(JSContext *cx, JSObject *objArg, uint32_t index, JSObject
 }
 
 JS_PUBLIC_API(JSBool)
-JS_GetProperty(JSContext *cx, JSObject *objArg, const char *name, jsval *vp)
+JS_GetProperty(JSContext *cx, JSObject *objArg, const char *name, MutableHandleValue vp)
 {
     RootedObject obj(cx, objArg);
     JSAtom *atom = Atomize(cx, name, strlen(name));
@@ -3864,7 +3856,8 @@ JS_GetProperty(JSContext *cx, JSObject *objArg, const char *name, jsval *vp)
 }
 
 JS_PUBLIC_API(JSBool)
-JS_GetPropertyDefault(JSContext *cx, JSObject *objArg, const char *name, jsval defArg, jsval *vp)
+JS_GetPropertyDefault(JSContext *cx, JSObject *objArg, const char *name, jsval defArg,
+                      MutableHandleValue vp)
 {
     RootedObject obj(cx, objArg);
     RootedValue def(cx, defArg);
@@ -3873,7 +3866,8 @@ JS_GetPropertyDefault(JSContext *cx, JSObject *objArg, const char *name, jsval d
 }
 
 JS_PUBLIC_API(JSBool)
-JS_GetUCProperty(JSContext *cx, JSObject *objArg, const jschar *name, size_t namelen, jsval *vp)
+JS_GetUCProperty(JSContext *cx, JSObject *objArg, const jschar *name, size_t namelen,
+                 MutableHandleValue vp)
 {
     RootedObject obj(cx, objArg);
     JSAtom *atom = AtomizeChars<CanGC>(cx, name, AUTO_NAMELEN(name, namelen));
