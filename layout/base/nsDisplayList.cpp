@@ -1500,7 +1500,7 @@ nsDisplayItem::ForceActiveLayers()
 /* static */ int32_t
 nsDisplayItem::MaxActiveLayers()
 {
-  static int32_t sMaxLayers = false;
+  static int32_t sMaxLayers = -1;
   static bool sMaxLayersCached = false;
 
   if (!sMaxLayersCached) {
@@ -1508,7 +1508,7 @@ nsDisplayItem::MaxActiveLayers()
     sMaxLayersCached = true;
   }
 
-  return sMaxLayersCached;
+  return sMaxLayers;
 }
 
 bool
