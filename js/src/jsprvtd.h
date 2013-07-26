@@ -15,10 +15,6 @@
 
 namespace js {
 
-typedef JSNative             Native;
-typedef JSParallelNative     ParallelNative;
-typedef JSThreadSafeNative   ThreadSafeNative;
-
 } /* namespace js */
 
 #endif /* jsprvtd_h */
