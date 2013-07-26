@@ -37,7 +37,7 @@ public class LastTabsPage extends HomeFragment {
     private static final String LOGTAG = "GeckoLastTabsPage";
 
     // Cursor loader ID for the session parser
-    private static final int LAST_TABS_LOADER_ID = 0;
+    private static final int LOADER_ID_LAST_TABS = 0;
 
     // Adapter for the list of search results
     private LastTabsAdapter mAdapter;
@@ -135,7 +135,7 @@ public class LastTabsPage extends HomeFragment {
 
     @Override
     protected void load() {
-        getLoaderManager().initLoader(LAST_TABS_LOADER_ID, null, mCursorLoaderCallbacks);
+        getLoaderManager().initLoader(LOADER_ID_LAST_TABS, null, mCursorLoaderCallbacks);
     }
 
     private void openAllTabs() {
