@@ -551,7 +551,7 @@ pref("layers.low-precision-resolution", 250);
 // 2) Pages that have too many layers consume too much memory and crash.
 // By limiting the number of layers on mobile we're making the main thread
 // work harder keep scrolling smooth and memory low.
-pref("layers.max-active", 20);
+pref("layers.max-active", 1);
 
 pref("notification.feature.enabled", true);
 pref("dom.webnotifications.enabled", true);
