@@ -186,8 +186,6 @@ MOCHITEST_BROWSER_FILES += \
 	test-bug-595934-svg.xhtml \
 	test-bug-595934-workers.html \
 	test-bug-595934-workers.js \
-	test-bug-595934-canvas.html \
-	test-bug-595934-canvas.js \
 	test-bug-595934-css-parser.html \
 	test-bug-595934-css-parser.css \
 	test-bug-595934-canvas-css.html \
