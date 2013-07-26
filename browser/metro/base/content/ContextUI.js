@@ -98,6 +98,7 @@ var ContextUI = {
     let shown = false;
 
     if (!this.navbarVisible) {
+      BrowserUI.updateURI();
       this.displayNavbar();
       shown = true;
     }
