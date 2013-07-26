@@ -142,8 +142,11 @@ public class VisitedPage extends HomeFragment {
 
         // Create callbacks before the initial loader is started
         mCursorLoaderCallbacks = new CursorLoaderCallbacks();
+        loadIfVisible();
+    }
 
-        // Reconnect to the loader only if present
+    @Override
+    protected void load() {
         getLoaderManager().initLoader(FRECENCY_LOADER_ID, null, mCursorLoaderCallbacks);
     }
 

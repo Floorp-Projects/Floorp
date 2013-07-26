@@ -152,11 +152,7 @@ public class BookmarksPage extends HomeFragment {
         // Create callbacks before the initial loader is started.
         mLoaderCallbacks = new CursorLoaderCallbacks();
         mThumbnailsLoaderCallbacks = new ThumbnailsLoaderCallbacks();
-
-        // Reconnect to the loader only if present.
-        final LoaderManager manager = getLoaderManager();
-        manager.initLoader(BOOKMARKS_LIST_LOADER_ID, null, mLoaderCallbacks);
-        manager.initLoader(TOP_BOOKMARKS_LOADER_ID, null, mLoaderCallbacks);
+        loadIfVisible();
     }
 
     @Override
@@ -289,6 +285,13 @@ public class BookmarksPage extends HomeFragment {
         }
 
         return false;
+    }
+
+    @Override
+    protected void load() {
+        final LoaderManager manager = getLoaderManager();
+        manager.initLoader(BOOKMARKS_LIST_LOADER_ID, null, mLoaderCallbacks);
+        manager.initLoader(TOP_BOOKMARKS_LOADER_ID, null, mLoaderCallbacks);
     }
 
     /**
