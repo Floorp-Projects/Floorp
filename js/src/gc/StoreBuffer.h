@@ -13,6 +13,7 @@
 # error "Generational GC requires exact rooting."
 #endif
 
+#include "mozilla/DebugOnly.h"
 #include "mozilla/ReentrancyGuard.h"
 
 #include "jsalloc.h"
@@ -100,7 +101,7 @@ class StoreBuffer
          */
         EdgeSet duplicates;
 
-        bool entered;
+        mozilla::DebugOnly<bool> entered;
 
         MonoTypeBuffer(StoreBuffer *owner)
           : owner(owner), base(NULL), pos(NULL), top(NULL), entered(false)
@@ -194,7 +195,7 @@ class StoreBuffer
         uint8_t *pos;  /* Pointer to current buffer position. */
         uint8_t *top;  /* Pointer to one past the last entry. */
 
-        bool entered;
+        mozilla::DebugOnly<bool> entered;
 
         GenericBuffer(StoreBuffer *owner)
           : owner(owner), base(NULL), pos(NULL), top(NULL), entered(false)

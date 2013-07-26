@@ -1322,12 +1322,7 @@ CodeGenerator::visitPostWriteBarrierO(LPostWriteBarrierO *lir)
     Nursery &nursery = GetIonContext()->compartment->rt->gcNursery;
 
     if (lir->object()->isConstant()) {
-        JSObject *obj = &lir->object()->toConstant()->toObject();
-        JS_ASSERT(!nursery.isInside(obj));
-        /*
-        if (nursery.isInside(obj))
-            return true;
-        */
+        JS_ASSERT(!nursery.isInside(&lir->object()->toConstant()->toObject()));
     } else {
         Label tenured;
         Register objreg = ToRegister(lir->object());
@@ -1359,12 +1354,7 @@ CodeGenerator::visitPostWriteBarrierV(LPostWriteBarrierV *lir)
     Nursery &nursery = GetIonContext()->compartment->rt->gcNursery;
 
     if (lir->object()->isConstant()) {
-        JSObject *obj = &lir->object()->toConstant()->toObject();
-        JS_ASSERT(!nursery.isInside(obj));
-        /*
-        if (nursery.isInside(obj))
-            return true;
-        */
+        JS_ASSERT(!nursery.isInside(&lir->object()->toConstant()->toObject()));
     } else {
         Label tenured;
         Register objreg = ToRegister(lir->object());
@@ -4039,14 +4029,14 @@ CodeGenerator::visitConcat(LConcat *lir)
 bool
 CodeGenerator::visitConcatPar(LConcatPar *lir)
 {
-    Register slice = ToRegister(lir->forkJoinSlice());
+    DebugOnly<Register> slice = ToRegister(lir->forkJoinSlice());
     Register lhs = ToRegister(lir->lhs());
     Register rhs = ToRegister(lir->rhs());
     Register output = ToRegister(lir->output());
 
     JS_ASSERT(lhs == CallTempReg0);
     JS_ASSERT(rhs == CallTempReg1);
-    JS_ASSERT(slice == CallTempReg5);
+    JS_ASSERT((Register)slice == CallTempReg5);
     JS_ASSERT(ToRegister(lir->temp1()) == CallTempReg2);
     JS_ASSERT(ToRegister(lir->temp2()) == CallTempReg3);
     JS_ASSERT(ToRegister(lir->temp3()) == CallTempReg4);

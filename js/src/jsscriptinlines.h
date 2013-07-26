@@ -47,18 +47,6 @@ ScriptCounts::destroy(FreeOp *fop)
     fop->delete_(ionCounts);
 }
 
-inline void
-MarkScriptBytecode(JSRuntime *rt, const jsbytecode *bytecode)
-{
-    /*
-     * As an invariant, a ScriptBytecodeEntry should not be 'marked' outside of
-     * a GC. Since SweepScriptBytecodes is only called during a full gc,
-     * to preserve this invariant, only mark during a full gc.
-     */
-    if (rt->gcIsFull)
-        SharedScriptData::fromBytecode(bytecode)->marked = true;
-}
-
 void
 SetFrameArgumentsObject(JSContext *cx, AbstractFramePtr frame,
                         HandleScript script, JSObject *argsobj);

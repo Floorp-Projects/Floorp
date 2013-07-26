@@ -96,6 +96,7 @@ chrome.jar:
 #endif
   content/NavButtonSlider.js                   (content/NavButtonSlider.js)
   content/ContextUI.js                         (content/ContextUI.js)
+  content/apzc.js                              (content/apzc.js)
 
 % override chrome://global/content/config.xul chrome://browser/content/config.xul
 % override chrome://global/content/netError.xhtml chrome://browser/content/netError.xhtml

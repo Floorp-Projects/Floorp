@@ -756,7 +756,7 @@ js::IteratorConstructor(JSContext *cx, unsigned argc, Value *vp)
         keyonly = ToBoolean(args[1]);
     unsigned flags = JSITER_OWNONLY | (keyonly ? 0 : (JSITER_FOREACH | JSITER_KEYVALUE));
 
-    if (!ValueToIterator(cx, flags, MutableHandleValue::fromMarkedLocation(&args[0])))
+    if (!ValueToIterator(cx, flags, args[0]))
         return false;
     args.rval().set(args[0]);
     return true;
@@ -851,8 +851,8 @@ Class PropertyIteratorObject::class_ = {
     finalize,
     NULL,                    /* checkAccess */
     NULL,                    /* call        */
-    NULL,                    /* construct   */
     NULL,                    /* hasInstance */
+    NULL,                    /* construct   */
     trace,
     {
         NULL,                /* outerObject    */
@@ -1452,8 +1452,8 @@ Class GeneratorObject::class_ = {
     generator_finalize,
     NULL,                    /* checkAccess */
     NULL,                    /* call        */
-    NULL,                    /* construct   */
     NULL,                    /* hasInstance */
+    NULL,                    /* construct   */
     generator_trace,
     {
         NULL,                /* outerObject    */

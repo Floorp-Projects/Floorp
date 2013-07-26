@@ -327,7 +327,7 @@ js::GetFirstArgumentAsObject(JSContext *cx, const CallArgs &args, const char *me
         return false;
     }
 
-    HandleValue v = args.handleAt(0);
+    HandleValue v = args[0];
     if (!v.isObject()) {
         char *bytes = DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, v, NullPtr());
         if (!bytes)

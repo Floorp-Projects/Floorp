@@ -6,7 +6,6 @@
 #pragma once
 
 #include "nsGUIEvent.h"
-#include "MetroInput.h"
 #include "mozilla/TimeStamp.h"
 #include "MetroWidget.h"
 #include "gfxWindowsPlatform.h"

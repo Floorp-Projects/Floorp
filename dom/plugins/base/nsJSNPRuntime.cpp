@@ -788,7 +788,7 @@ nsJSObjWrapper::NP_SetProperty(NPObject *npobj, NPIdentifier id,
   NS_ASSERTION(NPIdentifierIsInt(id) || NPIdentifierIsString(id),
                "id must be either string or int!\n");
   ok = ::JS_SetPropertyById(cx, npjsobj->mJSObj, NPIdentifierToJSId(id),
-                            v.address());
+                            &v);
 
   // return ok == JS_TRUE to quiet down compiler warning, even if
   // return ok is what we really want.
