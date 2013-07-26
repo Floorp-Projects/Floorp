@@ -5478,7 +5478,7 @@ class CGSpecializedForwardingSetter(CGSpecializedSetter):
         assert all(ord(c) < 128 for c in attrName)
         assert all(ord(c) < 128 for c in forwardToAttrName)
         return CGIndenter(CGGeneric("""JS::RootedValue v(cx);
-if (!JS_GetProperty(cx, obj, "%s", v.address())) {
+if (!JS_GetProperty(cx, obj, "%s", &v)) {
   return false;
 }
 
@@ -7338,7 +7338,7 @@ class CGDOMJSProxyHandler_get(ClassMethod):
                  "  return false;\n"
                  "}\n"
                  "if (hasUnforgeable) {\n"
-                 "  return JS_ForwardGetPropertyTo(cx, ${holder}, id, proxy, vp.address());\n"
+                 "  return JS_ForwardGetPropertyTo(cx, ${holder}, id, proxy, vp);\n"
                  "}")
             getUnforgeableOrExpando = CallOnUnforgeableHolder(self.descriptor,
                                                               hasUnforgeable)
@@ -7352,7 +7352,7 @@ if (expando) {
   }
 
   if (hasProp) {
-    return JS_GetPropertyById(cx, expando, id, vp.address());
+    return JS_GetPropertyById(cx, expando, id, vp);
   }
 }"""
 
@@ -8006,11 +8006,11 @@ class CGDictionary(CGThing):
         # NOTE: jsids are per-runtime, so don't use them in workers
         if self.workers:
             propName = member.identifier.name
-            propGet = ('JS_GetProperty(cx, &val.toObject(), "%s", temp.ref().address())' %
+            propGet = ('JS_GetProperty(cx, &val.toObject(), "%s", &temp.ref())' %
                        propName)
         else:
             propId = self.makeIdName(member.identifier.name);
-            propGet = ("JS_GetPropertyById(cx, &val.toObject(), %s, temp.ref().address())" %
+            propGet = ("JS_GetPropertyById(cx, &val.toObject(), %s, &temp.ref())" %
                        propId)
 
         conversionReplacements = {
@@ -9907,7 +9907,7 @@ class CallbackGetter(CallbackMember):
             "attrName": self.attrName
             }
         return string.Template(
-            'if (!JS_GetProperty(cx, mCallback, "${attrName}", rval.address())) {\n'
+            'if (!JS_GetProperty(cx, mCallback, "${attrName}", &rval)) {\n'
             '  aRv.Throw(NS_ERROR_UNEXPECTED);\n'
             '  return${errorReturn};\n'
             '}\n').substitute(replacements);

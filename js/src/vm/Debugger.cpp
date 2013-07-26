@@ -4194,7 +4194,7 @@ DebuggerGenericEval(JSContext *cx, const char *fullMethodName, const Value &code
         RootedObject opts(cx, &options.toObject());
         RootedValue v(cx);
 
-        if (!JS_GetProperty(cx, opts, "url", v.address()))
+        if (!JS_GetProperty(cx, opts, "url", &v))
             return false;
         if (!v.isUndefined()) {
             RootedString url_str(cx, JS_ValueToString(cx, v));
@@ -4203,7 +4203,7 @@ DebuggerGenericEval(JSContext *cx, const char *fullMethodName, const Value &code
             url = JS_EncodeString(cx, url_str);
         }
 
-        if (!JS_GetProperty(cx, opts, "lineNumber", v.address()))
+        if (!JS_GetProperty(cx, opts, "lineNumber", &v))
             return false;
         if (!v.isUndefined()) {
             uint32_t lineno;

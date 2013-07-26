@@ -416,11 +416,11 @@ GetHistogramCounts(const char *testmsg, const nsACString &histogram_id,
   JSFunction *snapshot_fn = NULL;
   Rooted<Value> ss(cx);
   return (JS_GetProperty(cx, JSVAL_TO_OBJECT(h), "snapshot",
-                         snapshot_val.address())
+                         &snapshot_val)
           && (snapshot_fn = JS_ValueToFunction(cx, snapshot_val))
           && JS::Call(cx, JSVAL_TO_OBJECT(h),
                       snapshot_fn, 0, NULL, &ss)
-          && JS_GetProperty(cx, JSVAL_TO_OBJECT(ss), "counts", counts.address()));
+          && JS_GetProperty(cx, JSVAL_TO_OBJECT(ss), "counts", counts));
 }
 
 nsresult
