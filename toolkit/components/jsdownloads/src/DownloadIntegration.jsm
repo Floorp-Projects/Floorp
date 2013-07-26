@@ -29,6 +29,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "DownloadStore",
                                   "resource://gre/modules/DownloadStore.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
                                   "resource://gre/modules/FileUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
+                                  "resource://gre/modules/NetUtil.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "OS",
                                   "resource://gre/modules/osfile.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Promise",
@@ -254,7 +256,8 @@ this.DownloadIntegration = {
     // Log the event if required by parental controls settings.
     if (isEnabled && gParentalControlsService.loggingEnabled) {
       gParentalControlsService.log(gParentalControlsService.ePCLog_FileDownload,
-                                   shouldBlock, aDownload.source.uri, null);
+                                   shouldBlock,
+                                   NetUtil.newURI(aDownload.source.url), null);
     }
 
     return Promise.resolve(shouldBlock);
