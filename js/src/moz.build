@@ -40,7 +40,6 @@ EXPORTS += [
     'jscpucfg.h',
     'jsdbgapi.h',
     'jsfriendapi.h',
-    'jslock.h',
     'jsprf.h',
     'jsprototypes.h',
     'jsproxy.h',
