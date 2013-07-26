@@ -4366,8 +4366,6 @@ var TabsInTitlebar = {
       break;
     }
 
-    function $(id) document.getElementById(id);
-
     let titlebar = $("titlebar");
     let titlebarContent = $("titlebar-content");
     let menubar = $("toolbar-menubar");
