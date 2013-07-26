@@ -905,7 +905,7 @@ PeerConnectionImpl::ConvertConstraints(
   JS::Rooted<JSObject*> constraints(aCx, &aConstraints.toObject());
 
   // Mandatory constraints.  Note that we only care if the constraint array exists
-  if (!JS_GetProperty(aCx, constraints, "mandatory", mandatory.address())) {
+  if (!JS_GetProperty(aCx, constraints, "mandatory", &mandatory)) {
     return NS_ERROR_FAILURE;
   }
   if (!mandatory.isNullOrUndefined()) {
@@ -919,7 +919,7 @@ PeerConnectionImpl::ConvertConstraints(
     // Iterate over each property.
     for (size_t i = 0; i < mandatoryOpts.length(); i++) {
       JS::Rooted<JS::Value> option(aCx), optionName(aCx);
-      if (!JS_GetPropertyById(aCx, opts, mandatoryOpts[i], option.address()) ||
+      if (!JS_GetPropertyById(aCx, opts, mandatoryOpts[i], &option) ||
           !JS_IdToValue(aCx, mandatoryOpts[i], optionName.address()) ||
           // We only support boolean constraints for now.
           !option.isBoolean()) {
@@ -935,7 +935,7 @@ PeerConnectionImpl::ConvertConstraints(
   }
 
   // Optional constraints.
-  if (!JS_GetProperty(aCx, constraints, "optional", optional.address())) {
+  if (!JS_GetProperty(aCx, constraints, "optional", &optional)) {
     return NS_ERROR_FAILURE;
   }
   if (!optional.isNullOrUndefined()) {
@@ -961,7 +961,7 @@ PeerConnectionImpl::ConvertConstraints(
         return NS_ERROR_FAILURE;
       }
       JS::Rooted<JS::Value> option(aCx), optionName(aCx);
-      if (!JS_GetPropertyById(aCx, opts, optionalOpts[0], option.address()) ||
+      if (!JS_GetPropertyById(aCx, opts, optionalOpts[0], &option) ||
           !JS_IdToValue(aCx, optionalOpts[0], optionName.address())) {
         return NS_ERROR_FAILURE;
       }
