@@ -30,6 +30,7 @@
 
 #define JS_CHECK_STACK_SIZE(limit, lval) JS_CHECK_STACK_SIZE_WITH_TOLERANCE(limit, lval, 0)
 
+class JSAtom;
 class JSLinearString;
 
 namespace JS {
@@ -172,7 +173,7 @@ extern JS_FRIEND_API(bool)
 JS_CopyPropertiesFrom(JSContext *cx, JSObject *target, JSObject *obj);
 
 extern JS_FRIEND_API(bool)
-JS_WrapPropertyDescriptor(JSContext *cx, js::PropertyDescriptor *desc);
+JS_WrapPropertyDescriptor(JSContext *cx, JSPropertyDescriptor *desc);
 
 extern JS_FRIEND_API(bool)
 JS_WrapAutoIdVector(JSContext *cx, JS::AutoIdVector &props);
@@ -367,7 +368,7 @@ struct Function {
     uint16_t nargs;
     uint16_t flags;
     /* Used only for natives */
-    Native native;
+    JSNative native;
     const JSJitInfo *jitinfo;
     void *_1;
 };
@@ -572,16 +573,16 @@ AtomToLinearString(JSAtom *atom)
     return reinterpret_cast<JSLinearString *>(atom);
 }
 
-static inline js::PropertyOp
+static inline JSPropertyOp
 CastAsJSPropertyOp(JSObject *object)
 {
-    return JS_DATA_TO_FUNC_PTR(js::PropertyOp, object);
+    return JS_DATA_TO_FUNC_PTR(JSPropertyOp, object);
 }
 
-static inline js::StrictPropertyOp
+static inline JSStrictPropertyOp
 CastAsJSStrictPropertyOp(JSObject *object)
 {
-    return JS_DATA_TO_FUNC_PTR(js::StrictPropertyOp, object);
+    return JS_DATA_TO_FUNC_PTR(JSStrictPropertyOp, object);
 }
 
 JS_FRIEND_API(bool)
@@ -1782,7 +1783,7 @@ DefaultValue(JSContext *cx, JS::HandleObject obj, JSType hint, MutableHandleValu
  */
 extern JS_FRIEND_API(bool)
 CheckDefineProperty(JSContext *cx, HandleObject obj, HandleId id, HandleValue value,
-                    PropertyOp getter, StrictPropertyOp setter, unsigned attrs);
+                    JSPropertyOp getter, JSStrictPropertyOp setter, unsigned attrs);
 
 class ScriptSource;
 
@@ -1813,7 +1814,7 @@ class AsmJSModuleSourceDesc
 
 extern JS_FRIEND_API(bool)
 js_DefineOwnProperty(JSContext *cx, JSObject *objArg, jsid idArg,
-                     const js::PropertyDescriptor& descriptor, bool *bp);
+                     const JSPropertyDescriptor& descriptor, bool *bp);
 
 extern JS_FRIEND_API(bool)
 js_ReportIsNotFunction(JSContext *cx, const JS::Value& v);

@@ -11,8 +11,10 @@
  * JS debugger API.
  */
 
+#include "jsapi.h"
 #include "jsbytecode.h"
-#include "jsprvtd.h"
+
+class JSAtom;
 
 namespace js { class StackFrame; }
 
