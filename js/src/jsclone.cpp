@@ -28,12 +28,12 @@
  */
 
 #include "jsclone.h"
-#include "jswrapper.h"
 
 #include "mozilla/Endian.h"
 #include "mozilla/FloatingPoint.h"
 
 #include "jsdate.h"
+#include "jswrapper.h"
 
 #include "vm/TypedArrayObject.h"
 #include "vm/WrapperObject.h"
