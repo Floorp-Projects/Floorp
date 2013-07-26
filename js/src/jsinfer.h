@@ -105,7 +105,15 @@ namespace ion {
     struct IonScript;
 }
 
+namespace analyze {
+    class ScriptAnalysis;
+}
+
 namespace types {
+
+class TypeCallsite;
+class TypeCompartment;
+class TypeSet;
 
 /* Type set entry for either a JSObject with singleton type or a non-singleton TypeObject. */
 struct TypeObjectKey {

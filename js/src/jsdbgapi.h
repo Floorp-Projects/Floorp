@@ -12,6 +12,8 @@
 
 #include "jsprvtd.h"
 
+namespace js { class StackFrame; }
+
 namespace JS {
 
 struct FrameDescription

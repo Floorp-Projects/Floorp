@@ -13,6 +13,9 @@
 namespace js {
 namespace frontend {
 
+template <typename ParseHandler>
+class Parser;
+
 // Parse handler used when processing the syntax in a block of code, to generate
 // the minimal information which is required to detect syntax errors and allow
 // bytecode to be emitted for outer functions.
