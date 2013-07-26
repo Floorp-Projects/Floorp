@@ -1122,12 +1122,6 @@ public:
     return NS_OK;
   }
 
-  /**
-   * Control if GetUserData and SetUserData methods will be exposed to
-   * unprivileged content.
-   */
-  static bool IsChromeOrXBL(JSContext* aCx, JSObject* /* unused */);
-
   void LookupPrefix(const nsAString& aNamespace, nsAString& aResult);
   bool IsDefaultNamespace(const nsAString& aNamespaceURI)
   {

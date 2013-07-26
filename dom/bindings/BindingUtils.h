@@ -7,6 +7,8 @@
 #ifndef mozilla_dom_BindingUtils_h__
 #define mozilla_dom_BindingUtils_h__
 
+#include <algorithm>
+
 #include "jsfriendapi.h"
 #include "jswrapper.h"
 #include "mozilla/dom/BindingDeclarations.h"
@@ -18,6 +20,7 @@
 #include "mozilla/dom/workers/Workers.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/Likely.h"
+#include "nsCycleCollector.h"
 #include "nsIXPConnect.h"
 #include "nsTraceRefcnt.h"
 #include "qsObjectHelper.h"
@@ -411,24 +414,6 @@ public:                                                                   \
   static bool const Value = sizeof(Check<T>(nullptr)) == sizeof(yes);     \
 };
 
-HAS_MEMBER(AddRef)
-HAS_MEMBER(Release)
-HAS_MEMBER(QueryInterface)
-
-template<typename T>
-struct IsRefCounted
-{
-  static bool const Value = HasAddRefMember<T>::Value &&
-                            HasReleaseMember<T>::Value;
-};
-
-template<typename T>
-struct IsISupports
-{
-  static bool const Value = IsRefCounted<T>::Value &&
-                            HasQueryInterfaceMember<T>::Value;
-};
-
 HAS_MEMBER(WrapObject)
 
 // HasWrapObject<T>::Value will be true if T has a WrapObject member but it's
@@ -451,7 +436,7 @@ public:
 };
 
 #ifdef DEBUG
-template <class T, bool isISupports=IsISupports<T>::Value>
+template <class T, bool isISupports=IsBaseOf<nsISupports, T>::value>
 struct
 CheckWrapperCacheCast
 {
@@ -687,7 +672,7 @@ WrapNewBindingObject(JSContext* cx, JS::Handle<JSObject*> scope, T* value,
     // 2)  If our class doesn't claim we're nsISupports we better be
     //     reinterpret_castable to nsWrapperCache.
     MOZ_ASSERT(clasp, "What happened here?");
-    MOZ_ASSERT_IF(clasp->mDOMObjectIsISupports, IsISupports<T>::Value);
+    MOZ_ASSERT_IF(clasp->mDOMObjectIsISupports, (IsBaseOf<nsISupports, T>::value));
     MOZ_ASSERT(CheckWrapperCacheCast<T>::Check());
   }
 
@@ -1132,7 +1117,7 @@ WrapNativeISupportsParent(JSContext* cx, JS::Handle<JSObject*> scope, T* p,
 
 
 // Fallback for when our parent is not a WebIDL binding object.
-template<typename T, bool isISupports=IsISupports<T>::Value >
+template<typename T, bool isISupports=IsBaseOf<nsISupports, T>::value>
 struct WrapNativeParentFallback
 {
   static inline JSObject* Wrap(JSContext* cx, JS::Handle<JSObject*> scope,
@@ -1403,6 +1388,26 @@ InitIds(JSContext* cx, const Prefable<Spec>* prefableSpecs, jsid* ids)
 
 JSBool
 QueryInterface(JSContext* cx, unsigned argc, JS::Value* vp);
+
+template <class T, bool isISupports=IsBaseOf<nsISupports, T>::value>
+struct
+WantsQueryInterface
+{
+  static bool Enabled(JSContext* aCx, JSObject* aGlobal)
+  {
+    return false;
+  }
+};
+template <class T>
+struct
+WantsQueryInterface<T, true>
+{
+  static bool Enabled(JSContext* aCx, JSObject* aGlobal)
+  {
+    return IsChromeOrXBL(aCx, aGlobal);
+  }
+};
+
 JSBool
 ThrowingConstructor(JSContext* cx, unsigned argc, JS::Value* vp);
 
@@ -2114,6 +2119,179 @@ inline bool ByteStringToJsval(JSContext *cx, const nsACString &str,
     }
     return NonVoidByteStringToJsval(cx, str, rval);
 }
+
+template<class T, bool isISupports=IsBaseOf<nsISupports, T>::value>
+struct PreserveWrapperHelper
+{
+  static void PreserveWrapper(T* aObject)
+  {
+    aObject->PreserveWrapper(aObject, NS_CYCLE_COLLECTION_PARTICIPANT(T));
+  }
+};
+
+template<class T>
+struct PreserveWrapperHelper<T, true>
+{
+  static void PreserveWrapper(T* aObject)
+  {
+    aObject->PreserveWrapper(reinterpret_cast<nsISupports*>(aObject));
+  }
+};
+
+template<class T>
+void PreserveWrapper(T* aObject)
+{
+  PreserveWrapperHelper<T>::PreserveWrapper(aObject);
+}
+
+template<class T, bool isISupports=IsBaseOf<nsISupports, T>::value>
+struct CastingAssertions
+{
+  static bool ToSupportsIsCorrect(T*)
+  {
+    return true;
+  }
+  static bool ToSupportsIsOnPrimaryInheritanceChain(T*, nsWrapperCache*)
+  {
+    return true;
+  }
+};
+
+template<class T>
+struct CastingAssertions<T, true>
+{
+  static bool ToSupportsIsCorrect(T* aObject)
+  {
+    return ToSupports(aObject) ==  reinterpret_cast<nsISupports*>(aObject);
+  }
+  static bool ToSupportsIsOnPrimaryInheritanceChain(T* aObject,
+                                                    nsWrapperCache* aCache)
+  {
+    return reinterpret_cast<void*>(aObject) != aCache;
+  }
+};
+
+template<class T>
+bool
+ToSupportsIsCorrect(T* aObject)
+{
+  return CastingAssertions<T>::ToSupportsIsCorrect(aObject);
+}
+
+template<class T>
+bool
+ToSupportsIsOnPrimaryInheritanceChain(T* aObject, nsWrapperCache* aCache)
+{
+  return CastingAssertions<T>::ToSupportsIsOnPrimaryInheritanceChain(aObject,
+                                                                     aCache);
+}
+
+template<class T, template <typename> class SmartPtr,
+         bool isISupports=IsBaseOf<nsISupports, T>::value>
+class DeferredFinalizer
+{
+  typedef nsTArray<SmartPtr<T> > SmartPtrArray;
+
+  static void*
+  AppendDeferredFinalizePointer(void* aData, void* aObject)
+  {
+    SmartPtrArray* pointers = static_cast<SmartPtrArray*>(aData);
+    if (!pointers) {
+      pointers = new SmartPtrArray();
+    }
+
+    T* self = static_cast<T*>(aObject);
+
+    SmartPtr<T>* defer = pointers->AppendElement();
+    Take(*defer, self);
+    return pointers;
+  }
+  static bool
+  DeferredFinalize(uint32_t aSlice, void* aData)
+  {
+    MOZ_ASSERT(aSlice > 0, "nonsensical/useless call with aSlice == 0");
+    SmartPtrArray* pointers = static_cast<SmartPtrArray*>(aData);
+    uint32_t oldLen = pointers->Length();
+    aSlice = std::min(oldLen, aSlice);
+    uint32_t newLen = oldLen - aSlice;
+    pointers->RemoveElementsAt(newLen, aSlice);
+    if (newLen == 0) {
+      delete pointers;
+      return true;
+    }
+    return false;
+  }
+
+public:
+  static void
+  AddForDeferredFinalization(T* aObject)
+  {
+    cyclecollector::DeferredFinalize(AppendDeferredFinalizePointer,
+                                     DeferredFinalize, aObject);
+  }
+};
+
+template<class T, template <typename> class SmartPtr>
+class DeferredFinalizer<T, SmartPtr, true>
+{
+public:
+  static void
+  AddForDeferredFinalization(T* aObject)
+  {
+    cyclecollector::DeferredFinalize(reinterpret_cast<nsISupports*>(aObject));
+  }
+};
+
+template<class T, template <typename> class SmartPtr>
+static void
+AddForDeferredFinalization(T* aObject)
+{
+  DeferredFinalizer<T, SmartPtr>::AddForDeferredFinalization(aObject);
+}
+
+// This returns T's CC participant if it participates in CC or null if it
+// doesn't. This also returns null for classes that don't inherit from
+// nsISupports (QI should be used to get the participant for those).
+template<class T, bool isISupports=IsBaseOf<nsISupports, T>::value>
+class GetCCParticipant
+{
+  // Helper for GetCCParticipant for classes that participate in CC.
+  template<class U>
+  static nsCycleCollectionParticipant*
+  GetHelper(int, typename U::NS_CYCLE_COLLECTION_INNERCLASS* dummy=nullptr)
+  {
+    return T::NS_CYCLE_COLLECTION_INNERCLASS::GetParticipant();
+  }
+  // Helper for GetCCParticipant for classes that don't participate in CC.
+  template<class U>
+  static nsCycleCollectionParticipant*
+  GetHelper(double)
+  {
+    return nullptr;
+  }
+
+public:
+  static nsCycleCollectionParticipant*
+  Get()
+  {
+    // Passing int() here will try to call the GetHelper that takes an int as
+    // its firt argument. If T doesn't participate in CC then substitution for
+    // the second argument (with a default value) will fail and because of
+    // SFINAE the next best match (the variant taking a double) will be called.
+    return GetHelper<T>(int());
+  }
+};
+
+template<class T>
+class GetCCParticipant<T, true>
+{
+public:
+  static nsCycleCollectionParticipant*
+  Get()
+  {
+    return nullptr;
+  }
+};
 
 } // namespace dom
 } // namespace mozilla

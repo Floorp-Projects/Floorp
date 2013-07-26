@@ -2583,9 +2583,6 @@ JS_CallHeapStringTracer(JSTracer *trc, JS::Heap<JSString *> *strp, const char *n
 extern JS_PUBLIC_API(void)
 JS_CallHeapScriptTracer(JSTracer *trc, JS::Heap<JSScript *> *scriptp, const char *name);
 
-extern JS_PUBLIC_API(void)
-JS_CallGenericTracer(JSTracer *trc, void *gcthing, const char *name);
-
 template <typename HashSetEnum>
 inline void
 JS_CallHashSetObjectTracer(JSTracer *trc, HashSetEnum &e, JSObject *const &key, const char *name)
@@ -3492,10 +3489,10 @@ extern JS_PUBLIC_API(JSBool)
 JS_ForwardGetPropertyTo(JSContext *cx, JSObject *obj, jsid id, JSObject *onBehalfOf, jsval *vp);
 
 extern JS_PUBLIC_API(JSBool)
-JS_SetProperty(JSContext *cx, JSObject *obj, const char *name, jsval *vp);
+JS_SetProperty(JSContext *cx, JSObject *obj, const char *name, JS::MutableHandle<JS::Value> vp);
 
 extern JS_PUBLIC_API(JSBool)
-JS_SetPropertyById(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
+JS_SetPropertyById(JSContext *cx, JSObject *obj, jsid id, JS::MutableHandle<JS::Value> vp);
 
 extern JS_PUBLIC_API(JSBool)
 JS_DeleteProperty(JSContext *cx, JSObject *obj, const char *name);
@@ -3580,7 +3577,7 @@ JS_GetUCProperty(JSContext *cx, JSObject *obj,
 extern JS_PUBLIC_API(JSBool)
 JS_SetUCProperty(JSContext *cx, JSObject *obj,
                  const jschar *name, size_t namelen,
-                 jsval *vp);
+                 JS::MutableHandle<JS::Value> vp);
 
 extern JS_PUBLIC_API(JSBool)
 JS_DeleteUCProperty2(JSContext *cx, JSObject *obj,

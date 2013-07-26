@@ -1467,6 +1467,7 @@ class ValueOperations
     void *toGCThing() const { return value()->toGCThing(); }
 
     JSValueType extractNonDoubleType() const { return value()->extractNonDoubleType(); }
+    uint32_t toPrivateUint32() const { return value()->toPrivateUint32(); }
 
     JSWhyMagic whyMagic() const { return value()->whyMagic(); }
 };

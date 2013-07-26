@@ -27,7 +27,7 @@ public:
     typedef PRFuncPtr (GLAPIENTRY * PlatformLookupFunction) (const char *);
 
     enum {
-        MAX_SYMBOL_NAMES = 5,
+        MAX_SYMBOL_NAMES = 6,
         MAX_SYMBOL_LENGTH = 128
     };
 

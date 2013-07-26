@@ -1542,7 +1542,9 @@ TabChild::ProcessUpdateFrame(const FrameMetrics& aFrameMetrics)
       * ScreenToLayerScale(1);
     utils->SetResolution(resolution.scale, resolution.scale);
 
-    SetDisplayPort(aFrameMetrics);
+    if (aFrameMetrics.mScrollId != FrameMetrics::NULL_SCROLL_ID) {
+      SetDisplayPort(aFrameMetrics);
+    }
 
     mLastMetrics = aFrameMetrics;
 

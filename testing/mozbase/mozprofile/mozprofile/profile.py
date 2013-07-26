@@ -2,7 +2,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
-__all__ = ['Profile', 'FirefoxProfile', 'ThunderbirdProfile']
+__all__ = ['Profile',
+           'FirefoxProfile',
+           'MetroFirefoxProfile',
+           'ThunderbirdProfile']
 
 import os
 import time
@@ -254,11 +257,12 @@ class Profile(object):
 
 class FirefoxProfile(Profile):
     """Specialized Profile subclass for Firefox"""
+
     preferences = {# Don't automatically update the application
                    'app.update.enabled' : False,
                    # Don't restore the last open set of tabs if the browser has crashed
                    'browser.sessionstore.resume_from_crash': False,
-                   # Don't check for the default web browser
+                   # Don't check for the default web browser during startup
                    'browser.shell.checkDefaultBrowser' : False,
                    # Don't warn on exit when multiple tabs are open
                    'browser.tabs.warnOnClose' : False,
@@ -290,8 +294,47 @@ class FirefoxProfile(Profile):
                    'toolkit.telemetry.enabledPreRelease' : False,
                    }
 
+class MetroFirefoxProfile(Profile):
+    """Specialized Profile subclass for Firefox Metro"""
+
+    preferences = {# Don't automatically update the application for desktop and metro build
+                   'app.update.enabled' : False,
+                   'app.update.metro.enabled' : False,
+                   # Don't restore the last open set of tabs if the browser has crashed
+                   'browser.sessionstore.resume_from_crash': False,
+                   # Don't check for the default web browser during startup
+                   'browser.shell.checkDefaultBrowser' : False,
+                   # Don't send Firefox health reports to the production server
+                   'datareporting.healthreport.documentServerURI' : 'http://%(server)s/healthreport/',
+                   # Only install add-ons from the profile and the application scope
+                   # Also ensure that those are not getting disabled.
+                   # see: https://developer.mozilla.org/en/Installing_extensions
+                   'extensions.enabledScopes' : 5,
+                   'extensions.autoDisableScopes' : 10,
+                   # Don't install distribution add-ons from the app folder
+                   'extensions.installDistroAddons' : False,
+                   # Dont' run the add-on compatibility check during start-up
+                   'extensions.showMismatchUI' : False,
+                   # Disable strict compatibility checks to allow add-ons enabled by default
+                   'extensions.strictCompatibility' : False,
+                   # Don't automatically update add-ons
+                   'extensions.update.enabled'    : False,
+                   # Don't open a dialog to show available add-on updates
+                   'extensions.update.notifyUser' : False,
+                   # Enable test mode to run multiple tests in parallel
+                   'focusmanager.testmode' : True,
+                   # Suppress delay for main action in popup notifications
+                   'security.notification_enable_delay' : 0,
+                   # Suppress automatic safe mode after crashes
+                   'toolkit.startup.max_resumed_crashes' : -1,
+                   # Don't report telemetry information
+                   'toolkit.telemetry.enabled' : False,
+                   'toolkit.telemetry.enabledPreRelease' : False,
+                   }
+
 class ThunderbirdProfile(Profile):
     """Specialized Profile subclass for Thunderbird"""
+
     preferences = {'extensions.update.enabled'    : False,
                    'extensions.update.notifyUser' : False,
                    'browser.shell.checkDefaultBrowser' : False,

@@ -8,6 +8,10 @@ let Cu = Components.utils;
 const ROLE_ENTRY = Ci.nsIAccessibleRole.ROLE_ENTRY;
 const ROLE_INTERNAL_FRAME = Ci.nsIAccessibleRole.ROLE_INTERNAL_FRAME;
 
+const MOVEMENT_GRANULARITY_CHARACTER = 1;
+const MOVEMENT_GRANULARITY_WORD = 2;
+const MOVEMENT_GRANULARITY_PARAGRAPH = 8;
+
 Cu.import('resource://gre/modules/XPCOMUtils.jsm');
 XPCOMUtils.defineLazyModuleGetter(this, 'Logger',
   'resource://gre/modules/accessibility/Utils.jsm');
@@ -117,7 +121,8 @@ function showCurrent(aMessage) {
       vc.moveFirst(TraversalRules.Simple);
     } else {
       sendAsyncMessage('AccessFu:Present', Presentation.pivotChanged(
-                         vc.position, null, Ci.nsIAccessiblePivot.REASON_NONE));
+                         vc.position, null, Ci.nsIAccessiblePivot.REASON_NONE,
+                         vc.startOffset, vc.endOffset));
     }
   }
 }
@@ -226,11 +231,30 @@ function activateContextMenu(aMessage) {
   }
 }
 
-function moveCaret(aMessage) {
-  const MOVEMENT_GRANULARITY_CHARACTER = 1;
-  const MOVEMENT_GRANULARITY_WORD = 2;
-  const MOVEMENT_GRANULARITY_PARAGRAPH = 8;
+function moveByGranularity(aMessage) {
+  let direction = aMessage.json.direction;
+  let vc = Utils.getVirtualCursor(content.document);
+  let granularity;
 
+  switch(aMessage.json.granularity) {
+    case MOVEMENT_GRANULARITY_CHARACTER:
+      granularity = Ci.nsIAccessiblePivot.CHAR_BOUNDARY;
+      break;
+    case MOVEMENT_GRANULARITY_WORD:
+      granularity = Ci.nsIAccessiblePivot.WORD_BOUNDARY;
+      break;
+    default:
+      return;
+  }
+
+  if (direction === 'Previous') {
+    vc.movePreviousByText(granularity);
+  } else if (direction === 'Next') {
+    vc.moveNextByText(granularity);
+  }
+}
+
+function moveCaret(aMessage) {
   let direction = aMessage.json.direction;
   let granularity = aMessage.json.granularity;
   let accessible = Utils.getVirtualCursor(content.document).position;
@@ -373,6 +397,7 @@ addMessageListener(
     addMessageListener('AccessFu:ContextMenu', activateContextMenu);
     addMessageListener('AccessFu:Scroll', scroll);
     addMessageListener('AccessFu:MoveCaret', moveCaret);
+    addMessageListener('AccessFu:MoveByGranularity', moveByGranularity);
 
     if (!eventManager) {
       eventManager = new EventManager(this);
@@ -392,6 +417,7 @@ addMessageListener(
     removeMessageListener('AccessFu:ContextMenu', activateContextMenu);
     removeMessageListener('AccessFu:Scroll', scroll);
     removeMessageListener('AccessFu:MoveCaret', moveCaret);
+    removeMessageListener('AccessFu:MoveByGranularity', moveByGranularity);
 
     eventManager.stop();
   });

@@ -27,197 +27,79 @@
   <script type="application/javascript">
     //gA11yEventDumpToConsole = true; // debugging
 
-    // __a__w__o__r__d__\n
-    //  0  1  2  3  4  5
-    // __t__w__o__ (soft line break)
-    //  6  7  8  9
-    // __w__o__r__d__s
-    // 10 11 12 13 14 15
-
-    function moveToLastLineEnd()
+    function traverseTextByLines(aQueue, aID, aLines)
     {
-      this.__proto__ = new synthFocus("textarea");
+      var baseInvoker = new synthFocus(aID);
+      var baseInvokerID = "move to last line end";
 
-      this.finalCheck = function moveToLastLineEnd_finalCheck()
-      {
-        testTextAfterOffset(kCaretOffset, BOUNDARY_LINE_START, "", 15, 15,
-                            ["textarea"]);
+      for (var i = aLines.length - 1; i >= 0 ; i--) {
+        var [ ppLineText, ppLineEndChar, ppLineStart, ppLineEnd ] =
+          (i - 2 >= 0) ? aLines[i - 2] : [ "", "", 0, 0 ];
+        var [ pLineText, pLineEndChar, pLineStart, pLineEnd ] =
+          (i - 1 >= 0) ? aLines[i - 1] : [ "", "", 0, 0 ];
+        var [ lineText, lineEndChar, lineStart, lineEnd ] = aLines[i];
 
-        testTextAfterOffset(kCaretOffset, BOUNDARY_LINE_END, "", 15, 15,
-                            [ "textarea" ]);
+        var [ nLineText, nLineEndChar, nLineStart, nLineEnd ] =
+          (i + 1 < aLines.length) ?
+            aLines[i + 1] :
+            [ "", "", lineEnd  + lineEndChar.length, lineEnd + lineEndChar.length ];
 
-        testTextAtOffset(kCaretOffset, BOUNDARY_LINE_START, "words", 10, 15,
-                         [ "textarea" ]);
+        var [ nnLineText, nnLineEndChar, nnLineStart, nnLineEnd ] =
+          (i + 2 < aLines.length) ?
+            aLines[i + 2] :
+            [ "", "", nLineEnd  + nLineEndChar.length, nLineEnd + nLineEndChar.length ];
 
-        testTextAtOffset(kCaretOffset, BOUNDARY_LINE_END, "words", 10, 15,
-                         [ "textarea" ]);
+        var tests = [
+          [ testTextBeforeOffset, BOUNDARY_LINE_START,
+            pLineText + pLineEndChar, pLineStart, lineStart],
 
-        testTextBeforeOffset(kCaretOffset, BOUNDARY_LINE_START, "two ", 6, 10,
-                             [ "textarea" ]);
+          [ testTextBeforeOffset, BOUNDARY_LINE_END,
+            ppLineEndChar + pLineText, ppLineEnd, pLineEnd],
 
-        testTextBeforeOffset(kCaretOffset, BOUNDARY_LINE_END, "\ntwo ", 5, 10,
-                             [ "textarea" ]);
-      }
+          [ testTextAtOffset, BOUNDARY_LINE_START,
+            lineText + lineEndChar, lineStart, nLineStart],
 
-      this.getID = function moveToLastLineEnd_getID()
-      {
-        return "move to last line end";
+          [ testTextAtOffset, BOUNDARY_LINE_END,
+            pLineEndChar + lineText, pLineEnd, lineEnd],
+
+          [ testTextAfterOffset, BOUNDARY_LINE_START,
+            nLineText + nnLineEndChar, nLineStart, nnLineStart],
+
+          [ testTextAfterOffset, BOUNDARY_LINE_END,
+            lineEndChar + nLineText, lineEnd, nLineEnd],
+        ];
+
+        aQueue.push(new tmpl_moveTo(aID, baseInvoker, baseInvokerID, tests));
+
+        baseInvoker = new moveToLineStart(aID, lineStart);
+        baseInvokerID = "move to " + i + "th line start";
+
+        aQueue.push(new tmpl_moveTo(aID, baseInvoker, baseInvokerID, tests));
+
+        baseInvoker = new moveToPrevLineEnd(aID, pLineEnd);
+        baseInvokerID = "move to " + (i - 1) + "th line end";
       }
     }
 
-    function moveToLastLineStart()
+    /**
+     * A template invoker to move through the text.
+     */
+    function tmpl_moveTo(aID, aInvoker, aInvokerID, aTests)
     {
-      this.__proto__ = new moveToLineStart("textarea", 10);
+      this.__proto__ = aInvoker;
 
-      this.finalCheck = function moveToLastLineStart_finalCheck()
+      this.finalCheck = function genericMoveTo_finalCheck()
       {
-        testTextAfterOffset(kCaretOffset, BOUNDARY_LINE_START, "", 15, 15,
-                            [ "textarea" ]);
-
-        testTextAfterOffset(kCaretOffset, BOUNDARY_LINE_END, "", 15, 15,
-                            [ "textarea" ]);
-
-        testTextAtOffset(kCaretOffset, BOUNDARY_LINE_START, "words", 10, 15,
-                         [ "textarea" ]);
-
-        testTextAtOffset(kCaretOffset, BOUNDARY_LINE_END, "words", 10, 15,
-                         [ "textarea" ]);
-
-        testTextBeforeOffset(kCaretOffset, BOUNDARY_LINE_START, "two ", 6, 10,
-                             [ "textarea" ]);
-
-        testTextBeforeOffset(kCaretOffset, BOUNDARY_LINE_END, "\ntwo ", 5, 10,
-                             [ "textarea" ]);
+        for (var i = 0; i < aTests.length; i++) {
+          aTests[i][0].call(null, kCaretOffset, aTests[i][1],
+                            aTests[i][2], aTests[i][3], aTests[i][4], aID,
+                            kOk, kOk, kOk);
+        }
       }
 
-      this.getID = function moveToLastLineStart_getID()
+      this.getID = function genericMoveTo_getID()
       {
-        return "move to last line start";
-      }
-    }
-
-    function moveToMiddleLineStart()
-    {
-      this.__proto__ = new synthUpKey("textarea",
-                                      new caretMoveChecker(6, "textarea"));
-
-      this.finalCheck = function moveToMiddleLineStart_finalCheck()
-      {
-        testTextAfterOffset(kCaretOffset, BOUNDARY_LINE_START, "words", 10, 15,
-                            [ "textarea" ]);
-
-        testTextAfterOffset(kCaretOffset, BOUNDARY_LINE_END, "words", 10, 15,
-                            [ "textarea" ]);
-
-        testTextAtOffset(kCaretOffset, BOUNDARY_LINE_START, "two ", 6, 10,
-                         [ "textarea" ]);
-
-        testTextAtOffset(kCaretOffset, BOUNDARY_LINE_END, "\ntwo ", 5, 10,
-                         [ "textarea" ]);
-
-        testTextBeforeOffset(kCaretOffset, BOUNDARY_LINE_START, "aword\n", 0, 6,
-                             [ "textarea" ]);
-
-        testTextBeforeOffset(kCaretOffset, BOUNDARY_LINE_END, "aword", 0, 5,
-                             [ "textarea" ]);
-      }
-
-      this.getID = function moveToMiddleLineStart_getID()
-      {
-        return "move to middle line start";
-      }
-    }
-
-    function moveToMiddleLineEnd()
-    {
-      this.__proto__ = new moveToLineEnd("textarea", 10);
-
-      this.finalCheck = function moveToMiddleLineEnd_finalCheck()
-      {
-        testTextAfterOffset(kCaretOffset, BOUNDARY_LINE_START, "words", 10, 15,
-                            [ "textarea" ]);
-
-        testTextAfterOffset(kCaretOffset, BOUNDARY_LINE_END, "words", 10, 15,
-                            [ "textarea" ]);
-
-        testTextAtOffset(kCaretOffset, BOUNDARY_LINE_START, "two ", 6, 10,
-                         [ "textarea" ]);
-
-        testTextAtOffset(kCaretOffset, BOUNDARY_LINE_END, "\ntwo ", 5, 10,
-                         [ "textarea" ]);
-
-        testTextBeforeOffset(kCaretOffset, BOUNDARY_LINE_START, "aword\n", 0, 6,
-                             [ "textarea" ]);
-
-        testTextBeforeOffset(kCaretOffset, BOUNDARY_LINE_END, "aword", 0, 5,
-                             [ "textarea" ]);
-      }
-
-      this.getID = function moveToMiddleLineEnd_getID()
-      {
-        return "move to middle line end";
-      }
-    }
-
-    function moveToFirstLineStart()
-    {
-      this.__proto__ = new moveToTextStart("textarea");
-
-      this.finalCheck = function moveToFirstLineStart_finalCheck()
-      {
-        testTextAfterOffset(kCaretOffset, BOUNDARY_LINE_START, "two ", 6, 10,
-                            [ "textarea" ]);
-
-        testTextAfterOffset(kCaretOffset, BOUNDARY_LINE_END, "\ntwo ", 5, 10,
-                            [ "textarea" ]);
-
-        testTextAtOffset(kCaretOffset, BOUNDARY_LINE_START, "aword\n", 0, 6,
-                         [ "textarea" ]);
-
-        testTextAtOffset(kCaretOffset, BOUNDARY_LINE_END, "aword", 0, 5,
-                         [ "textarea" ]);
-
-        testTextBeforeOffset(kCaretOffset, BOUNDARY_LINE_START, "", 0, 0,
-                             [ "textarea" ]);
-
-        testTextBeforeOffset(kCaretOffset, BOUNDARY_LINE_END, "", 0, 0,
-                             [ "textarea" ]);
-      }
-
-      this.getID = function moveToFirstLineStart_getID()
-      {
-        return "move to first line start";
-      }
-    }
-
-    function moveToFirstLineEnd()
-    {
-      this.__proto__ = new moveToLineEnd("textarea", 5);
-
-      this.finalCheck = function moveToFirstLineStart_finalCheck()
-      {
-        testTextAfterOffset(kCaretOffset, BOUNDARY_LINE_START, "two ", 6, 10,
-                            [ "textarea" ]);
-
-        testTextAfterOffset(kCaretOffset, BOUNDARY_LINE_END, "\ntwo ", 5, 10,
-                            [ "textarea" ]);
-
-        testTextAtOffset(kCaretOffset, BOUNDARY_LINE_START, "aword\n", 0, 6,
-                         [ "textarea" ]);
-
-        testTextAtOffset(kCaretOffset, BOUNDARY_LINE_END, "aword", 0, 5,
-                         [ "textarea" ]);
-
-        testTextBeforeOffset(kCaretOffset, BOUNDARY_LINE_START, "", 0, 0,
-                             [ "textarea" ]);
-
-        testTextBeforeOffset(kCaretOffset, BOUNDARY_LINE_END, "", 0, 0,
-                             [ "textarea" ]);
-      }
-
-      this.getID = function moveToFirstLineEnd_getID()
-      {
-        return "move to first line end";
+        return aInvokerID;
       }
     }
 
@@ -225,12 +107,28 @@
     function doTest()
     {
       gQueue = new eventQueue();
-      gQueue.push(new moveToLastLineEnd());
-      gQueue.push(new moveToLastLineStart());
-      gQueue.push(new moveToMiddleLineStart());
-      gQueue.push(new moveToMiddleLineEnd());
-      gQueue.push(new moveToFirstLineStart());
-      gQueue.push(new moveToFirstLineEnd());
+
+      // __a__w__o__r__d__\n
+      //  0  1  2  3  4  5
+      // __t__w__o__ (soft line break)
+      //  6  7  8  9
+      // __w__o__r__d__s
+      // 10 11 12 13 14 15
+
+      traverseTextByLines(gQueue, "textarea", 
+                          [ [ "aword", "\n", 0, 5 ],
+                            [ "two ", "", 6, 10 ],
+                            [ "words", "", 10, 15 ]] );
+
+      traverseTextByLines(gQueue, "ta_wrapped", 
+                          [ [ "hi ", "", 0, 3 ],
+                            [ "hello", "", 3, 8 ],
+                            [ " my ", "", 8, 12 ],
+                            [ "longf", "", 12, 17 ],
+                            [ "riend", "", 17, 22 ],
+                            [ " t ", "", 22, 25 ],
+                            [ "sq t", "", 25, 29 ]] );
+
       gQueue.invoke(); // will call SimpleTest.finish();
     }
 
@@ -251,6 +149,8 @@
 
   <textarea id="textarea" cols="5">aword
 two words</textarea>
+
+  <textarea id="ta_wrapped" cols="5">hi hello my longfriend t sq t</textarea>
   </pre>
 </body>
 </html>
