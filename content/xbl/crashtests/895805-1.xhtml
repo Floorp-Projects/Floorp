@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:xbl="http://www.mozilla.org/xbl">
+<head>
+<title>Bug 895805 - Adopting bound element to another document.</title>
+<xbl:bindings>
+  <xbl:binding id="crash">
+    <xbl:content>
+      <xbl:children />
+      Bug 895805 dummy binding
+    </xbl:content>
+  </xbl:binding>
+</xbl:bindings>
+<style type="text/css">
+#test {
+  -moz-binding:url(#crash);
+}
+</style>
+</head>
+<body onload="init()">
+<span id="test">Test</span>
+<script>
+function init() {
+  var boundElement = document.getElementById('test');
+  var otherDoc = document.implementation.createDocument('', '', null);
+  otherDoc.adoptNode(boundElement);
+}
+</script>
+</body>
+</html>
