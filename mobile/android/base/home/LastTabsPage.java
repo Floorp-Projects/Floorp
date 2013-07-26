@@ -26,7 +26,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.Loader;
-import android.support.v4.widget.SimpleCursorAdapter;
+import android.support.v4.widget.CursorAdapter;
 import android.util.SparseArray;
 import android.view.View;
 import android.view.ViewGroup;
@@ -57,9 +57,6 @@ public class LastTabsPage extends HomeFragment {
     // Callbacks used for the search and favicon cursor loaders
     private CursorLoaderCallbacks mCursorLoaderCallbacks;
 
-    // Inflater used by the adapter
-    private LayoutInflater mInflater;
-
     // On new tabs listener
     private OnNewTabsListener mNewTabsListener;
 
@@ -81,15 +78,12 @@ public class LastTabsPage extends HomeFragment {
             throw new ClassCastException(activity.toString()
                     + " must implement HomePager.OnNewTabsListener");
         }
-
-        mInflater = (LayoutInflater) activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
     }
 
     @Override
     public void onDetach() {
         super.onDetach();
 
-        mInflater = null;
         mNewTabsListener = null;
     }
 
@@ -215,28 +209,19 @@ public class LastTabsPage extends HomeFragment {
         }
     }
 
-    private class LastTabsAdapter extends SimpleCursorAdapter {
+    private static class LastTabsAdapter extends CursorAdapter {
         public LastTabsAdapter(Context context) {
-            super(context, -1, null, new String[] {}, new int[] {});
+            super(context, null);
         }
 
         @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
-            final TwoLinePageRow row;
-            if (convertView == null) {
-                row = (TwoLinePageRow) mInflater.inflate(R.layout.home_item_row, mList, false);
-            } else {
-                row = (TwoLinePageRow) convertView;
-            }
+        public void bindView(View view, Context context, Cursor cursor) {
+            ((TwoLinePageRow) view).updateFromCursor(cursor);
+        }
 
-            final Cursor c = getCursor();
-            if (!c.moveToPosition(position)) {
-                throw new IllegalStateException("Couldn't move cursor to position " + position);
-            }
-
-            row.updateFromCursor(c);
-
-            return row;
+        @Override
+        public View newView(Context context, Cursor cursor, ViewGroup parent) {
+            return LayoutInflater.from(context).inflate(R.layout.home_item_row, parent, false);
         }
     }
 
