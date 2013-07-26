@@ -5,6 +5,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ARIAMap.h"
+#include "nsAccUtils.h"
 #include "States.h"
 
 #include "mozilla/dom/Element.h"
@@ -323,6 +324,16 @@ aria::MapToState(EStateRule aRule, dom::Element* aElement, uint64_t* aState)
       if (!aElement->HasAttr(kNameSpaceID_None, nsGkAtoms::aria_valuenow) &&
           !aElement->HasAttr(kNameSpaceID_None, nsGkAtoms::aria_valuetext))
         *aState |= states::MIXED;
+
+      return true;
+    }
+
+    case eFocusableUntilDisabled:
+    {
+      if (!nsAccUtils::HasDefinedARIAToken(aElement, nsGkAtoms::aria_disabled) ||
+          aElement->AttrValueIs(kNameSpaceID_None, nsGkAtoms::aria_disabled,
+                                nsGkAtoms::_false, eCaseMatters))
+        *aState |= states::FOCUSABLE;
 
       return true;
     }
