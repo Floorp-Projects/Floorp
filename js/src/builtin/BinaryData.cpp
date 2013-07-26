@@ -1,8 +1,8 @@
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- */
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * vim: set ts=8 sts=4 et sw=4 tw=99:
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "builtin/BinaryData.h"
 
@@ -43,12 +43,15 @@ static bool Reify(JSContext *cx, HandleObject type, HandleObject owner,
  */
 static bool ConvertAndCopyTo(JSContext *cx, HandleObject type,
                              HandleValue from, uint8_t *mem);
-JSBool TypeThrowError(JSContext *cx, unsigned argc, Value *vp)
+
+static JSBool
+TypeThrowError(JSContext *cx, unsigned argc, Value *vp)
 {
     return ReportIsNotFunction(cx, *vp);
 }
 
-JSBool DataThrowError(JSContext *cx, unsigned argc, Value *vp)
+static JSBool
+DataThrowError(JSContext *cx, unsigned argc, Value *vp)
 {
     return ReportIsNotFunction(cx, *vp);
 }
@@ -181,6 +184,34 @@ struct FieldInfo
     jsid name;
     JSObject *type;
     size_t offset;
+};
+
+Class js::DataClass = {
+    "Data",
+    JSCLASS_HAS_CACHED_PROTO(JSProto_Data),
+    JS_PropertyStub,
+    JS_DeletePropertyStub,
+    JS_PropertyStub,
+    JS_StrictPropertyStub,
+    JS_EnumerateStub,
+    JS_ResolveStub,
+    JS_ConvertStub
+};
+
+Class js::TypeClass = {
+    "Type",
+    JSCLASS_HAS_CACHED_PROTO(JSProto_Type),
+    JS_PropertyStub,
+    JS_DeletePropertyStub,
+    JS_PropertyStub,
+    JS_StrictPropertyStub,
+    JS_EnumerateStub,
+    JS_ResolveStub,
+    JS_ConvertStub
+};
+
+Class js::NumericTypeClasses[NUMERICTYPES] = {
+    BINARYDATA_FOR_EACH_NUMERIC_TYPES(BINARYDATA_NUMERIC_CLASSES)
 };
 
 typedef std::vector<FieldInfo> FieldList;
@@ -787,7 +818,7 @@ ArrayType::repeat(JSContext *cx, unsigned int argc, Value *vp)
     RootedObject thisObj(cx, args.thisv().toObjectOrNull());
     if (!IsArrayType(thisObj)) {
         JSString *valueStr = JS_ValueToString(cx, args.thisv());
-        char *valueChars = "(unknown type)";
+        char *valueChars = const_cast<char*>("(unknown type)");
         if (valueStr)
             valueChars = JS_EncodeString(cx, valueStr);
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_INCOMPATIBLE_PROTO, "ArrayType", "repeat", valueChars);
