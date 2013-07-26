@@ -676,6 +676,11 @@ RasterImage::GetDrawableImgFrame(uint32_t framenum)
   // so we can catch crashes for reasons we haven't investigated.
   if (frame && frame->GetCompositingFailed())
     return nullptr;
+
+  if (frame) {
+    frame->ApplyDirtToSurfaces();
+  }
+
   return frame;
 }
 
@@ -2470,14 +2475,16 @@ RasterImage::ScalingDone(ScaleRequest* request, ScaleStatus status)
   if (status == SCALE_DONE) {
     MOZ_ASSERT(request->done);
 
+    imgFrame *scaledFrame = request->dstFrame.forget();
+    scaledFrame->ImageUpdated(scaledFrame->GetRect());
+    scaledFrame->ApplyDirtToSurfaces();
+
     if (mStatusTracker) {
-      imgFrame *scaledFrame = request->dstFrame.get();
-      scaledFrame->ImageUpdated(scaledFrame->GetRect());
       mStatusTracker->FrameChanged(&request->srcRect);
     }
 
     mScaleResult.status = SCALE_DONE;
-    mScaleResult.frame = request->dstFrame;
+    mScaleResult.frame = scaledFrame;
     mScaleResult.scale = request->scale;
   } else {
     mScaleResult.status = SCALE_INVALID;
@@ -2553,8 +2560,6 @@ RasterImage::DrawWithPreDownscaleIfNeeded(imgFrame *aFrame,
                       mSize.width - framerect.XMost(),
                       mSize.height - framerect.YMost(),
                       framerect.x);
-
-  frame->ApplyDirtToSurfaces();
 
   frame->Draw(aContext, aFilter, userSpaceToImageSpace, aFill, padding, subimage,
               aFlags);
