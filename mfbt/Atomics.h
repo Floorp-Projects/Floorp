@@ -179,6 +179,10 @@ enum MemoryOrdering {
 namespace mozilla {
 namespace detail {
 
+/*
+ * We provide CompareExchangeFailureOrder to work around a bug in some
+ * versions of GCC's <atomic> header.  See bug 898491.
+ */
 template<MemoryOrdering Order> struct AtomicOrderConstraints;
 
 template<>
@@ -187,6 +191,8 @@ struct AtomicOrderConstraints<Relaxed>
     static const std::memory_order AtomicRMWOrder = std::memory_order_relaxed;
     static const std::memory_order LoadOrder = std::memory_order_relaxed;
     static const std::memory_order StoreOrder = std::memory_order_relaxed;
+    static const std::memory_order CompareExchangeFailureOrder =
+      std::memory_order_relaxed;
 };
 
 template<>
@@ -195,6 +201,8 @@ struct AtomicOrderConstraints<ReleaseAcquire>
     static const std::memory_order AtomicRMWOrder = std::memory_order_acq_rel;
     static const std::memory_order LoadOrder = std::memory_order_acquire;
     static const std::memory_order StoreOrder = std::memory_order_release;
+    static const std::memory_order CompareExchangeFailureOrder =
+      std::memory_order_acquire;
 };
 
 template<>
@@ -203,6 +211,8 @@ struct AtomicOrderConstraints<SequentiallyConsistent>
     static const std::memory_order AtomicRMWOrder = std::memory_order_seq_cst;
     static const std::memory_order LoadOrder = std::memory_order_seq_cst;
     static const std::memory_order StoreOrder = std::memory_order_seq_cst;
+    static const std::memory_order CompareExchangeFailureOrder =
+      std::memory_order_seq_cst;
 };
 
 template<typename T, MemoryOrdering Order>
@@ -226,7 +236,9 @@ struct IntrinsicMemoryOps : public IntrinsicBase<T, Order>
       return ptr.exchange(val, Base::OrderedOp::AtomicRMWOrder);
     }
     static bool compareExchange(typename Base::ValueType& ptr, T oldVal, T newVal) {
-      return ptr.compare_exchange_strong(oldVal, newVal, Base::OrderedOp::AtomicRMWOrder);
+      return ptr.compare_exchange_strong(oldVal, newVal,
+                                         Base::OrderedOp::AtomicRMWOrder,
+                                         Base::OrderedOp::CompareExchangeFailureOrder);
     }
 };
 
