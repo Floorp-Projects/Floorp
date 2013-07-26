@@ -10081,15 +10081,19 @@ CSSParserImpl::ParseSingleFilter(nsCSSValue* aValue)
       // VARIANT_NONNEGATIVE_DIMENSION will already reject negative lengths.
       rejectNegativeArgument = false;
       break;
+    case eCSSKeyword_brightness:
+    case eCSSKeyword_contrast:
+    case eCSSKeyword_saturate:
+      break;
     case eCSSKeyword_grayscale:
     case eCSSKeyword_invert:
     case eCSSKeyword_sepia:
     case eCSSKeyword_opacity:
       clampArgumentToOne = true;
       break;
-    case eCSSKeyword_brightness:
-    case eCSSKeyword_contrast:
-    case eCSSKeyword_saturate:
+    case eCSSKeyword_hue_rotate:
+      variantMask = VARIANT_ANGLE;
+      rejectNegativeArgument = false;
       break;
     default:
       // Unrecognized filter function.
