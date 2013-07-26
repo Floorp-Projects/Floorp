@@ -21,14 +21,14 @@ var numBatches = (scriptArgs[4]|0) || 1;
 var tmpfile = scriptArgs[5] || "tmp.txt";
 
 var gcFunctions = {};
-var text = snarf("gcFunctions.lst").split('\n');
+var text = snarf("gcFunctions.lst").split("\n");
 assert(text.pop().length == 0);
 for (var line of text) {
     gcFunctions[line] = true;
 }
 
 var suppressedFunctions = {};
-var text = snarf("suppressedFunctions.lst").split('\n');
+var text = snarf(suppressedFunctionsFile).split("\n");
 assert(text.pop().length == 0);
 for (var line of text) {
     suppressedFunctions[line] = true;
@@ -39,14 +39,14 @@ var match;
 var gcThings = {};
 var gcPointers = {};
 
-var gcTypesText = snarf(gcTypesFile).split('\n');
-for (var line of gcTypesText) {
+text = snarf(gcTypesFile).split("\n");
+for (var line of text) {
     if (match = /GCThing: (.*)/.exec(line))
         gcThings[match[1]] = true;
     if (match = /GCPointer: (.*)/.exec(line))
         gcPointers[match[1]] = true;
 }
-gcTypesText = null;
+text = null;
 
 function isUnrootedType(type)
 {
@@ -246,6 +246,10 @@ function computePredecessors(body)
 
 function variableUseFollowsGC(suppressed, variable, worklist)
 {
+    // Scan through all edges following an unrooted variable use, using an
+    // explicit worklist. A worklist contains a following edge together with a
+    // description of where one of its predecessors GC'd (if any).
+
     while (worklist.length) {
         var entry = worklist.pop();
         var body = entry.body, ppoint = entry.ppoint;
@@ -263,7 +267,7 @@ function variableUseFollowsGC(suppressed, variable, worklist)
 
         if (ppoint == body.Index[0]) {
             if (body.BlockId.Kind == "Loop") {
-                // propagate to parents which enter the loop body.
+                // propagate to parents that enter the loop body.
                 if ("BlockPPoint" in body) {
                     for (var parent of body.BlockPPoint) {
                         var found = false;
@@ -301,8 +305,8 @@ function variableUseFollowsGC(suppressed, variable, worklist)
             }
 
             var gcInfo = entry.gcInfo;
-            if (!gcInfo && !(edge.Index[0] in body.suppressed) && !suppressed) {
-                var gcName = edgeCanGC(edge);
+            if (!gcInfo && !(source in body.suppressed) && !suppressed) {
+                var gcName = edgeCanGC(edge, body);
                 if (gcName)
                     gcInfo = {name:gcName, body:body, ppoint:source};
             }
@@ -338,10 +342,14 @@ function variableUseFollowsGC(suppressed, variable, worklist)
 
 function variableLiveAcrossGC(suppressed, variable)
 {
+    // A variable is live across a GC if (1) it is used by an edge, and (2) it
+    // is used after a GC in a successor edge.
+
     for (var body of functionBodies) {
         body.seen = null;
         body.minimumUse = 0;
     }
+
     for (var body of functionBodies) {
         if (!("PEdge" in body))
             continue;

@@ -53,6 +53,7 @@ function computeSuppressedPoints(body)
 
     if (!("PEdge" in body))
         return;
+
     for (var edge of body.PEdge) {
         var source = edge.Index[0];
         if (!(source in successors))
