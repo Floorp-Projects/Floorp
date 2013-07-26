@@ -134,7 +134,7 @@ function test3() {
   ok(pluginNode, "Test 3, Found plugin in page");
   var objLoadingContent = pluginNode.QueryInterface(Ci.nsIObjectLoadingContent);
   is(objLoadingContent.pluginFallbackType, Ci.nsIObjectLoadingContent.PLUGIN_DISABLED, "Test 3, plugin fallback type should be PLUGIN_DISABLED");
-  var manageLink = gTestBrowser.contentDocument.getAnonymousElementByAttribute(pluginNode, "class", "managePluginsLink");
+  var manageLink = gTestBrowser.contentDocument.getAnonymousElementByAttribute(pluginNode, "anonid", "managePluginsLink");
   ok(manageLink, "Test 3, found 'manage' link in plugin-problem binding");
 
   EventUtils.synthesizeMouseAtCenter(manageLink, {}, gTestBrowser.contentWindow);
@@ -344,7 +344,7 @@ function test18a() {
   ok(!objLoadingContent.activated, "Test 18a, Plugin should not be activated");
   var overlay = doc.getAnonymousElementByAttribute(plugin, "class", "mainBox");
   ok(overlay.style.visibility != "hidden", "Test 18a, Plugin overlay should exist, not be hidden");
-  var updateLink = doc.getAnonymousElementByAttribute(plugin, "class", "checkForUpdatesLink");
+  var updateLink = doc.getAnonymousElementByAttribute(plugin, "anonid", "checkForUpdatesLink");
   ok(updateLink.style.visibility != "hidden", "Test 18a, Plugin should have an update link");
 
   var tabOpenListener = new TabOpenListener(Services.urlFormatter.formatURLPref("plugins.update.url"), false, false);
@@ -387,7 +387,7 @@ function test18c() {
   ok(!objLoadingContent.activated, "Test 18c, Plugin should not be activated");
   var overlay = doc.getAnonymousElementByAttribute(plugin, "class", "mainBox");
   ok(overlay.style.visibility != "hidden", "Test 18c, Plugin overlay should exist, not be hidden");
-  var updateLink = doc.getAnonymousElementByAttribute(plugin, "class", "checkForUpdatesLink");
+  var updateLink = doc.getAnonymousElementByAttribute(plugin, "anonid", "checkForUpdatesLink");
   ok(updateLink.style.display != "block", "Test 18c, Plugin should not have an update link");
 
   // check that click "Always allow" works with blocklisted plugins

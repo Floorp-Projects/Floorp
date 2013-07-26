@@ -10,23 +10,34 @@
   font: message-box;
   font-size: 12px;
   text-align: center;
-  background-image: -moz-repeating-linear-gradient(-45deg,
-                                                   rgba(65, 65, 65, 0.8),
-                                                   rgba(65, 65, 65, 0.8) 20px,
-                                                   rgba(69, 69, 69, 0.8) 20px,
-                                                   rgba(69, 69, 69, 0.8) 40px);
+  display: table;
+  width: 100%;
+  height: 100%;
+  background-color: rgb(72,72,72);
   color: white;
-  text-shadow: rgba(0,0,0,0.8) 0 0 3.5px;
-  border-radius: 12px;
-  /* recessed effect with dark inner shadow and lightened bottom */
-  box-shadow: inset 0 1px 3.5px rgba(0,0,0,0.8),
-              0 1px 0 rgba(255,255,255,0.2);
   -moz-user-select: none;
   position: relative;
 }
 
 .hoverBox {
+  display: table-cell;
+  -moz-box-sizing: border-box;
   padding: 5px;
+  vertical-align: middle;
+  width: 100%;
+  height: 100%;
+}
+:-moz-handler-vulnerable-updatable .hoverBox:active,
+:-moz-handler-vulnerable-no-update .hoverBox:active,
+:-moz-handler-clicktoplay .hoverBox:active {
+  background-color: rgb(65, 65, 65);
+}
+
+:-moz-handler-vulnerable-updatable .hoverBox,
+:-moz-handler-vulnerable-no-update .hoverBox,
+:-moz-handler-blocked .hoverBox,
+:-moz-handler-crashed .hoverBox {
+  background-image: url(chrome://mozapps/skin/plugins/contentPluginStripe.png);
 }
 
 html|a {
@@ -34,14 +45,16 @@ html|a {
 }
 
 .icon {
-  display: inline-block;
   width: 48px;
   height: 48px;
   background-position: center;
   background-repeat: no-repeat;
   border: none;
   background-color: transparent;
+  -moz-user-focus: ignore;
+  margin-bottom: 6px;
 }
+
 :-moz-type-unsupported .icon,
 :-moz-type-unsupported-platform .icon {
   background-image: url(chrome://mozapps/skin/plugins/contentPluginMissing.png);
@@ -51,25 +64,18 @@ html|a {
 }
 :-moz-handler-vulnerable-updatable .icon,
 :-moz-handler-vulnerable-no-update .icon {
-  background-image: url(chrome://mozapps/skin/plugins/contentPluginClickToPlay.png);
-}
-
-:-moz-handler-clicktoplay .icon {
-  background-image: url(chrome://mozapps/skin/plugins/contentPluginClickToPlayPlain.png);
-  background-position: 0 0;
-}
-:-moz-handler-clicktoplay .hoverBox:hover .icon {
- background-position: -48px 0;
-}
-:-moz-handler-clicktoplay .hoverBox:hover:active .icon {
- background-position: -96px 0;
-}
-
-:-moz-handler-disabled .icon {
-  background-image: url(chrome://mozapps/skin/plugins/contentPluginDisabled.png);
+  background-image: url(chrome://mozapps/skin/plugins/contentPluginBlocked.png);
+  -moz-user-focus: normal;
 }
 :-moz-handler-blocked .icon {
   background-image: url(chrome://mozapps/skin/plugins/contentPluginBlocked.png);
+}
+:-moz-handler-clicktoplay .icon {
+  background-image: url(chrome://mozapps/skin/plugins/contentPluginActivate.png);
+  -moz-user-focus: normal;
+}
+:-moz-handler-disabled .icon {
+  background-image: url(chrome://mozapps/skin/plugins/contentPluginDisabled.png);
 }
 :-moz-handler-crashed .icon {
   background-image: url(chrome://mozapps/skin/plugins/contentPluginCrashed.png);
@@ -79,19 +85,6 @@ html|a {
   padding-left: 16px; /* width of the background image */
   background: url(chrome://global/skin/icons/loading_16.png) no-repeat;
   margin-left: 5px;
-}
-
-.msg {
-  cursor: default;
-  width: 100%;
-}
-
-:-moz-handler-clicktoplay .mainBox,
-:-moz-handler-clicktoplay .icon,
-:-moz-handler-clicktoplay .msgClickToPlay,
-:-moz-handler-vulnerable-updatable .msgClickToPlay,
-:-moz-handler-vulnerable-no-update .msgClickToPlay {
-  cursor: pointer;
 }
 
 @media not all and (-moz-touch-enabled) {
@@ -168,7 +161,7 @@ html|a {
   right: 4px;
   border: none;
   background-color: transparent;
-  background-image: url("chrome://global/skin/icons/close.png");
+  background-image: url("chrome://mozapps/skin/plugins/contentPluginClose.png");
   background-repeat: no-repeat;
 }
 
@@ -185,39 +178,21 @@ html|a {
   background-position: -32px 0;
 }
 
-:-moz-handler-clicktoplay .mainBox {
-  background-image: none;
-  background-color: hsla(0,0%,100%,.2);
-  border: 1px dashed hsla(0,0%,50%,0.5);
-  border-radius: 2.5px;
-  color: hsl(0,0%,50%);
-  text-shadow: none;
-  box-shadow: none;
-  transition: background-color 150ms ease;
+.action-link {
+  display: inline-block;
+  border-radius: 10px;
+  background-color: rgb(35, 35, 35);
+  padding: 2px 8px;
+  margin-top: 7px;
+  text-decoration: none;
+}
+.action-link:active {
+  background-color: rgb(20, 20, 20);
 }
 
-:-moz-handler-clicktoplay .mainBox:hover {
-  background-color: hsla(0,0%,90%,.7);
+:-moz-handler-vulnerable-updatable .action-link {
+  background-color: #a81b0c;
 }
-:-moz-handler-clicktoplay .mainBox:hover:active {
-  background-color: hsla(0,0%,90%,.8);
-}
-
-:-moz-handler-clicktoplay .mainBox,
-:-moz-handler-clicktoplay html|a {
-  color: hsl(0,0%,35%);
-}
-
-:-moz-handler-clicktoplay .hoverBox:hover,
-:-moz-handler-clicktoplay .hoverBox:hover html|a {
-  color: hsl(0,0%,20%);
-}
-
-:-moz-handler-clicktoplay .hoverBox:hover:active,
-:-moz-handler-clicktoplay .hoverBox:hover:active html|a {
-  color: hsl(0,0%,10%);
-}
-
-:-moz-handler-clicktoplay .closeIcon {
-  background-image: url("chrome://mozapps/skin/plugins/contentPluginClose.png");
+:-moz-handler-vulnerable-updatable .action-link:active {
+  background-color: #801409;
 }

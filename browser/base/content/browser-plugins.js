@@ -269,7 +269,7 @@ var gPluginHandler = {
           let iconStatus = doc.getAnonymousElementByAttribute(plugin, "class", "icon");
           iconStatus.setAttribute("installable", "true");
 
-          let installLink = doc.getAnonymousElementByAttribute(plugin, "class", "installPluginLink");
+          let installLink = doc.getAnonymousElementByAttribute(plugin, "anonid", "installPluginLink");
           this.addLinkClickCallback(installLink, "installSinglePlugin", plugin);
         }
         break;
@@ -280,7 +280,7 @@ var gPluginHandler = {
         break;
 
       case "PluginVulnerableUpdatable":
-        let updateLink = doc.getAnonymousElementByAttribute(plugin, "class", "checkForUpdatesLink");
+        let updateLink = doc.getAnonymousElementByAttribute(plugin, "anonid", "checkForUpdatesLink");
         this.addLinkClickCallback(updateLink, "openPluginUpdatePage");
         /* FALLTHRU */
 
@@ -306,7 +306,7 @@ var gPluginHandler = {
         break;
 
       case "PluginDisabled":
-        let manageLink = doc.getAnonymousElementByAttribute(plugin, "class", "managePluginsLink");
+        let manageLink = doc.getAnonymousElementByAttribute(plugin, "anonid", "managePluginsLink");
         this.addLinkClickCallback(manageLink, "managePlugins");
         shouldShowNotification = true;
         break;
