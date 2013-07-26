@@ -99,7 +99,13 @@ bool NS_IsMainThread();
 // This is defined in nsThreadManager.cpp and initialized to `Main` for the
 // main thread by nsThreadManager::Init.
 extern NS_TLS mozilla::threads::ID gTLSThreadID;
-inline bool NS_IsMainThread()
+#ifdef MOZ_ASAN
+// Temporary workaround, see bug 895845
+MOZ_ASAN_BLACKLIST static
+#else
+inline
+#endif
+bool NS_IsMainThread()
 {
   return gTLSThreadID == mozilla::threads::Main;
 }
