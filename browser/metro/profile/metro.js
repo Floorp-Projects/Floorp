@@ -358,6 +358,7 @@ pref("privacy.sanitize.migrateFx3Prefs",    false);
 
 // enable geo
 pref("geo.enabled", true);
+pref("geo.wifi.uri", "https://www.googleapis.com/geolocation/v1/geolocate?key=%GOOGLE_API_KEY%");
 
 // JS error console
 pref("devtools.errorconsole.enabled", false);
