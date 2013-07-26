@@ -180,7 +180,7 @@ public:
 
     JS::Rooted<JSString*> s(aCx, JS_NewStringCopyZ(aCx, format));
     JS::Rooted<JS::Value> v(aCx, STRING_TO_JSVAL(s));
-    if (!JS_SetProperty(aCx, o, "format", &v)) {
+    if (!JS_SetProperty(aCx, o, "format", v)) {
       return NS_ERROR_FAILURE;
     }
 
@@ -188,7 +188,7 @@ public:
     nsresult rv = mVideo.GetJsObject(aCx, video.address());
     NS_ENSURE_SUCCESS(rv, rv);
     v = OBJECT_TO_JSVAL(video);
-    if (!JS_SetProperty(aCx, o, "video", &v)) {
+    if (!JS_SetProperty(aCx, o, "video", v)) {
       return NS_ERROR_FAILURE;
     }
 
@@ -196,7 +196,7 @@ public:
     rv = mAudio.GetJsObject(aCx, audio.address());
     NS_ENSURE_SUCCESS(rv, rv);
     v = OBJECT_TO_JSVAL(audio);
-    if (!JS_SetProperty(aCx, o, "audio", &v)) {
+    if (!JS_SetProperty(aCx, o, "audio", v)) {
       return NS_ERROR_FAILURE;
     }
 

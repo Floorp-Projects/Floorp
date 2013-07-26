@@ -55,10 +55,10 @@ JS_NEVER_INLINE bool helper(JSObject *regexpProto)
          CHECK(!r.empty());
     }
 
-    jsval v = INT_TO_JSVAL(17);
-    CHECK(JS_SetProperty(cx, regexpProto, "foopy", &v));
+    JS::RootedValue v(cx, INT_TO_JSVAL(17));
+    CHECK(JS_SetProperty(cx, regexpProto, "foopy", v));
     v = INT_TO_JSVAL(42);
-    CHECK(JS_SetProperty(cx, regexpProto, "bunky", &v));
+    CHECK(JS_SetProperty(cx, regexpProto, "bunky", v));
     CHECK(JS_DeleteProperty(cx, regexpProto, "foopy"));
     CHECK(regexpProto->inDictionaryMode());
 
