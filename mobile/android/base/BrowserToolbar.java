@@ -1204,15 +1204,15 @@ public class BrowserToolbar extends GeckoRelativeLayout
         setUrlEditContainerVisibility(false, animator);
     }
 
-    private void setUrlEditContainerVisibility(final boolean visible, PropertyAnimator animator) {
-        final View viewToShow = (visible ? mUrlEditContainer : mUrlDisplayContainer);
-        final View viewToHide = (visible ? mUrlDisplayContainer : mUrlEditContainer);
+    private void setUrlEditContainerVisibility(final boolean showEditContainer, PropertyAnimator animator) {
+        final View viewToShow = (showEditContainer ? mUrlEditContainer : mUrlDisplayContainer);
+        final View viewToHide = (showEditContainer ? mUrlDisplayContainer : mUrlEditContainer);
 
         if (animator == null) {
             viewToHide.setVisibility(View.GONE);
             viewToShow.setVisibility(View.VISIBLE);
 
-            if (visible) {
+            if (showEditContainer) {
                 mUrlEditText.requestFocus();
                 showSoftInput();
             }
@@ -1234,7 +1234,7 @@ public class BrowserToolbar extends GeckoRelativeLayout
             public void onPropertyAnimationStart() {
                 viewToShow.setVisibility(View.VISIBLE);
 
-                if (visible) {
+                if (showEditContainer) {
                     ViewHelper.setAlpha(mGo, 0.0f);
                     mUrlEditText.requestFocus();
                 }
@@ -1245,7 +1245,7 @@ public class BrowserToolbar extends GeckoRelativeLayout
                 ViewHelper.setAlpha(viewToHide, 1.0f);
                 viewToHide.setVisibility(View.GONE);
 
-                if (visible) {
+                if (showEditContainer) {
                     ViewHelper.setAlpha(mGo, 1.0f);
                     showSoftInput();
                 }
