@@ -12,6 +12,7 @@
 
 namespace js {
 
+class RegExpGuard;
 class JS_FRIEND_API(Wrapper);
 
 /*

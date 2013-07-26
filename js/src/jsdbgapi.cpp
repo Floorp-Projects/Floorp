@@ -18,7 +18,6 @@
 #include "jsgc.h"
 #include "jsobj.h"
 #include "jsopcode.h"
-#include "jsprvtd.h"
 #include "jsscript.h"
 #include "jsstr.h"
 #include "jstypes.h"

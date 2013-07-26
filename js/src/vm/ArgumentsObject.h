@@ -14,6 +14,7 @@
 namespace js {
 
 class AbstractFramePtr;
+class ScriptFrameIter;
 
 namespace ion {
 class IonJSFrameLayout;

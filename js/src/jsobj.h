@@ -36,7 +36,6 @@ struct ObjectsExtraSizes;
 namespace js {
 
 class AutoPropDescArrayRooter;
-class BaseProxyHandler;
 struct GCMarker;
 struct NativeIterator;
 class Nursery;

@@ -11,6 +11,7 @@
 #define xpcinlines_h___
 
 #include "jsfriendapi.h"
+#include "jsutil.h"
 
 /***************************************************************************/
 
