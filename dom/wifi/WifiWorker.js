@@ -1891,6 +1891,7 @@ function WifiWorker() {
 
   this.currentNetwork = null;
   this.ipAddress = "";
+  this.macAddress = null;
 
   this._lastConnectionInfo = null;
   this._connectionInfoTimer = null;
