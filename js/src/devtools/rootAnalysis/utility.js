@@ -2,9 +2,14 @@
 
 "use strict";
 
-function assert(x)
+function assert(x, msg)
 {
-    if (!x)
+    if (x)
+        return;
+    debugger;
+    if (msg)
+        throw "assertion failed: " + msg + "\n" + (Error().stack);
+    else
         throw "assertion failed: " + (Error().stack);
 }
 
@@ -45,7 +50,7 @@ function sameVariable(var0, var1)
     assert("Name" in var0 || var0.Kind == "This" || var0.Kind == "Return");
     assert("Name" in var1 || var1.Kind == "This" || var1.Kind == "Return");
     if ("Name" in var0)
-	return "Name" in var1 && var0.Name[0] == var1.Name[0];
+        return "Name" in var1 && var0.Name[0] == var1.Name[0];
     return var0.Kind == var1.Kind;
 }
 
