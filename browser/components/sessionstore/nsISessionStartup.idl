@@ -10,7 +10,7 @@
  * - and allows to restore everything into one window.
  */
 
-[scriptable, uuid(35235b39-7098-4b3b-8e28-cd004a88b06f)]
+[scriptable, uuid(51f4b9f0-f3d2-11e2-bb62-2c24dd830245)]
 interface nsISessionStartup: nsISupports
 {
   /**
@@ -23,9 +23,23 @@ interface nsISessionStartup: nsISupports
   readonly attribute jsval state;
 
   /**
-   * Determine if session should be restored
+   * Determines whether there is a pending session restore and makes sure that
+   * we're initialized before returning. If we're not yet this will read the
+   * session file synchronously.
    */
   boolean doRestore();
+
+  /**
+   * Returns whether we will restore a session that ends up replacing the
+   * homepage. The browser uses this to not start loading the homepage if
+   * we're going to stop its load anyway shortly after.
+   *
+   * This is meant to be an optimization for the average case that loading the
+   * session file finishes before we may want to start loading the default
+   * homepage. Should this be called before the session file has been read it
+   * will just return false.
+   */
+  readonly attribute bool willOverrideHomepage;
 
   /**
    * What type of session we're restoring.
