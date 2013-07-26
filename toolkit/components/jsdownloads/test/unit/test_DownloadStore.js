@@ -49,7 +49,7 @@ add_task(function test_save_reload()
   let [listForLoad, storeForLoad] = yield promiseNewListAndStore(
                                                  storeForSave.path);
 
-  listForSave.add(yield promiseSimpleDownload(httpUrl("source.txt")));
+  listForSave.add(yield promiseNewDownload(httpUrl("source.txt")));
   listForSave.add(yield Downloads.createDownload({
     source: { url: httpUrl("empty.txt"),
               referrer: TEST_REFERRER_URL },
