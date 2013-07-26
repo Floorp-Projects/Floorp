@@ -339,10 +339,9 @@ frontend::CompileScript(JSContext *cx, HandleObject scopeChain,
 }
 
 bool
-frontend::CompileLazyFunction(JSContext *cx, HandleFunction fun, LazyScript *lazy,
-                              const jschar *chars, size_t length)
+frontend::CompileLazyFunction(JSContext *cx, LazyScript *lazy, const jschar *chars, size_t length)
 {
-    JS_ASSERT(cx->compartment() == fun->compartment());
+    JS_ASSERT(cx->compartment() == lazy->function()->compartment());
 
     CompileOptions options(cx, lazy->version());
     options.setPrincipals(cx->compartment()->principals)
@@ -358,6 +357,7 @@ frontend::CompileLazyFunction(JSContext *cx, HandleFunction fun, LazyScript *laz
 
     uint32_t staticLevel = lazy->staticLevel(cx);
 
+    Rooted<JSFunction*> fun(cx, lazy->function());
     ParseNode *pn = parser.standaloneLazyFunction(fun, staticLevel, lazy->strict());
     if (!pn)
         return false;
