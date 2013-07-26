@@ -14,6 +14,17 @@ function assertNotEq(a, b) {
         throw new TypeError("Assertion failed: assertNotEq(" + a + " " + b + ")");
 }
 
+function assertThrows(f) {
+    var ok = false;
+    try {
+        f();
+    } catch (exc) {
+        ok = true;
+    }
+    if (!ok)
+        throw new TypeError("Assertion failed: " + f + " did not throw as expected");
+}
+
 function runTests() {
     print(BUGNUMBER + ": " + summary);
   
@@ -31,6 +42,7 @@ function runTests() {
       int32, int64, float32, float64 ].forEach(function(numType, i) {
         assertEq(numType.__proto__, Function.prototype);
         assertEq(numType.bytes, sizes[i]);
+        assertThrows(function() new numType());
     });
   
     assertEq(ArrayType.__proto__, Type);
