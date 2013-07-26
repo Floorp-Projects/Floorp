@@ -9,11 +9,12 @@
 
 #include "mozilla/DebugOnly.h"
 
+#include "jsopcode.h"
+
 #include "ion/arm/Assembler-arm.h"
 #include "ion/IonCaches.h"
 #include "ion/IonFrames.h"
 #include "ion/MoveResolver.h"
-#include "jsopcode.h"
 
 using mozilla::DebugOnly;
 

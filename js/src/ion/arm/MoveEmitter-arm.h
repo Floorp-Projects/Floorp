@@ -7,8 +7,8 @@
 #ifndef ion_arm_MoveEmitter_arm_h
 #define ion_arm_MoveEmitter_arm_h
 
-#include "ion/MoveResolver.h"
 #include "ion/IonMacroAssembler.h"
+#include "ion/MoveResolver.h"
 
 namespace js {
 namespace ion {

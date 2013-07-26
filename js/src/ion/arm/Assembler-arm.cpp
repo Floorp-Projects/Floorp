@@ -4,16 +4,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "ion/arm/Assembler-arm.h"
+
 #include "mozilla/DebugOnly.h"
 #include "mozilla/MathAlgorithms.h"
 
-#include "ion/arm/Assembler-arm.h"
-#include "ion/arm/MacroAssembler-arm.h"
-#include "gc/Marking.h"
-#include "jsutil.h"
-#include "assembler/jit/ExecutableAllocator.h"
 #include "jscompartment.h"
+#include "jsutil.h"
+
+#include "assembler/jit/ExecutableAllocator.h"
+#include "gc/Marking.h"
 #include "ion/IonCompartment.h"
+#include "ion/arm/MacroAssembler-arm.h"
 
 using namespace js;
 using namespace js::ion;
