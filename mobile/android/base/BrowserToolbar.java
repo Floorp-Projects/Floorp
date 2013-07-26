@@ -1189,15 +1189,68 @@ public class BrowserToolbar extends GeckoRelativeLayout
     }
 
     private void showUrlEditContainer() {
-        mUrlDisplayContainer.setVisibility(View.GONE);
-        mUrlEditContainer.setVisibility(View.VISIBLE);
-        mUrlEditText.requestFocus();
-        showSoftInput();
+        setUrlEditContainerVisibility(true, null);
+    }
+
+    private void showUrlEditContainer(PropertyAnimator animator) {
+        setUrlEditContainerVisibility(true, animator);
     }
 
     private void hideUrlEditContainer() {
-        mUrlDisplayContainer.setVisibility(View.VISIBLE);
-        mUrlEditContainer.setVisibility(View.GONE);
+        setUrlEditContainerVisibility(false, null);
+    }
+
+    private void hideUrlEditContainer(PropertyAnimator animator) {
+        setUrlEditContainerVisibility(false, animator);
+    }
+
+    private void setUrlEditContainerVisibility(final boolean visible, PropertyAnimator animator) {
+        final View viewToShow = (visible ? mUrlEditContainer : mUrlDisplayContainer);
+        final View viewToHide = (visible ? mUrlDisplayContainer : mUrlEditContainer);
+
+        if (animator == null) {
+            viewToHide.setVisibility(View.GONE);
+            viewToShow.setVisibility(View.VISIBLE);
+
+            if (visible) {
+                mUrlEditText.requestFocus();
+                showSoftInput();
+            }
+
+            return;
+        }
+
+        ViewHelper.setAlpha(viewToShow, 0.0f);
+        animator.attach(viewToShow,
+                        PropertyAnimator.Property.ALPHA,
+                        1.0f);
+
+        animator.attach(viewToHide,
+                        PropertyAnimator.Property.ALPHA,
+                        0.0f);
+
+        animator.addPropertyAnimationListener(new PropertyAnimator.PropertyAnimationListener() {
+            @Override
+            public void onPropertyAnimationStart() {
+                viewToShow.setVisibility(View.VISIBLE);
+
+                if (visible) {
+                    ViewHelper.setAlpha(mGo, 0.0f);
+                    mUrlEditText.requestFocus();
+                }
+            }
+
+            @Override
+            public void onPropertyAnimationEnd() {
+                ViewHelper.setAlpha(viewToHide, 1.0f);
+                viewToHide.setVisibility(View.GONE);
+
+                if (visible) {
+                    ViewHelper.setAlpha(mGo, 1.0f);
+                    showSoftInput();
+                }
+            }
+        });
     }
 
     public boolean isEditing() {
@@ -1259,6 +1312,8 @@ public class BrowserToolbar extends GeckoRelativeLayout
                             curveTranslation);
         }
 
+        showUrlEditContainer(animator);
+
         animator.addPropertyAnimationListener(new PropertyAnimator.PropertyAnimationListener() {
             @Override
             public void onPropertyAnimationStart() {
@@ -1266,7 +1321,6 @@ public class BrowserToolbar extends GeckoRelativeLayout
 
             @Override
             public void onPropertyAnimationEnd() {
-                showUrlEditContainer();
                 mAnimatingEntry = false;
             }
         });
@@ -1302,10 +1356,9 @@ public class BrowserToolbar extends GeckoRelativeLayout
             return url;
         }
 
-        hideUrlEditContainer();
-
         if (HardwareUtils.isTablet()) {
             setSelected(false);
+            hideUrlEditContainer();
             updateTabCountAndAnimate(Tabs.getInstance().getDisplayCount());
             return url;
         }
@@ -1340,6 +1393,8 @@ public class BrowserToolbar extends GeckoRelativeLayout
                                    PropertyAnimator.Property.TRANSLATION_X,
                                    0);
         }
+
+        hideUrlEditContainer(contentAnimator);
 
         contentAnimator.addPropertyAnimationListener(new PropertyAnimator.PropertyAnimationListener() {
             @Override
