@@ -61,7 +61,7 @@ SetJsObject(JSContext* aContext,
 
     if (!JS_SetProperty(aContext, aObj,
                         NS_ConvertUTF16toUTF8(arr[i].name()).get(),
-                        &val)) {
+                        val)) {
       NS_WARNING("Failed to set property");
       return false;
     }

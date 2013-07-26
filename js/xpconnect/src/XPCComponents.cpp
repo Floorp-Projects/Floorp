@@ -4287,7 +4287,7 @@ nsXPCComponents_Utils::MakeObjectPropsNormal(const Value &vobj, JSContext *cx)
             continue;
 
         if (!WrapCallable(cx, obj, id, propobj, &v) ||
-            !JS_SetPropertyById(cx, obj, id, &v))
+            !JS_SetPropertyById(cx, obj, id, v))
             return NS_ERROR_FAILURE;
     }
 
