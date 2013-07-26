@@ -21,12 +21,11 @@ class SourceSurface;
 
 namespace dom {
 
-class CanvasPattern MOZ_FINAL : public nsISupports,
-                                public nsWrapperCache
+class CanvasPattern MOZ_FINAL : public nsWrapperCache
 {
 public:
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(CanvasPattern)
+  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(CanvasPattern)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(CanvasPattern)
 
   enum RepeatMode
   {
