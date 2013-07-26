@@ -13,8 +13,6 @@
 
 #include "jsapi.h"
 
-typedef uintptr_t   jsatomid;
-
 namespace js {
 
 typedef JSNative             Native;
