@@ -6,6 +6,8 @@
 package org.mozilla.gecko.home;
 
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.animation.PropertyAnimator;
+import org.mozilla.gecko.animation.ViewHelper;
 
 import android.content.Context;
 import android.os.Bundle;
@@ -59,7 +61,7 @@ public class HomePager extends ViewPager {
      *
      * @param fm FragmentManager for the adapter
      */
-    public void show(FragmentManager fm, Page page) {
+    public void show(FragmentManager fm, Page page, PropertyAnimator animator) {
         mLoaded = true;
         TabsAdapter adapter = new TabsAdapter(fm);
 
@@ -72,6 +74,14 @@ public class HomePager extends ViewPager {
 
         setCurrentItem(adapter.getItemPosition(page), false);
         setVisibility(VISIBLE);
+
+        if (animator != null) {
+            ViewHelper.setAlpha(this, 0.0f);
+
+            animator.attach(this,
+                            PropertyAnimator.Property.ALPHA,
+                            1.0f);
+        }
     }
 
     /**
