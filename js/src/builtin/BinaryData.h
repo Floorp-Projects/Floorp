@@ -295,6 +295,11 @@ class BinaryStruct : public JSObject
     static void finalize(js::FreeOp *op, JSObject *obj);
     static void obj_trace(JSTracer *tracer, JSObject *obj);
 
+    static JSBool obj_enumerate(JSContext *cx, HandleObject obj,
+                                JSIterateOp enum_op,
+                                MutableHandleValue statep,
+                                MutableHandleId idp);
+
     static JSBool obj_getGeneric(JSContext *cx, HandleObject obj,
                                  HandleObject receiver, HandleId id,
                                  MutableHandleValue vp);
