@@ -13,8 +13,8 @@
 
 #include <stddef.h>
 
+#include "jsapi.h"
 #include "jsbytecode.h"
-#include "jsprvtd.h"
 #include "jspubtd.h"
 #include "jsutil.h"
 
