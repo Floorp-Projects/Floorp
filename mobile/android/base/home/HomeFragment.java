@@ -36,7 +36,7 @@ import android.widget.Toast;
  * HomeFragment is an empty fragment that can be added to the HomePager.
  * Subclasses can add their own views. 
  */
-class HomeFragment extends Fragment {
+abstract class HomeFragment extends Fragment {
     // Log Tag.
     private static final String LOGTAG="GeckoHomeFragment";
 
@@ -183,5 +183,21 @@ class HomeFragment extends Fragment {
             }
         }
         return false;
+    }
+
+    @Override
+    public void setUserVisibleHint (boolean isVisibleToUser) {
+        super.setUserVisibleHint(isVisibleToUser);
+        loadIfVisible();
+    }
+
+    protected abstract void load();
+
+    protected void loadIfVisible() {
+        if (!isVisible() || !getUserVisibleHint()) {
+            return;
+        }
+
+        load();
     }
 }

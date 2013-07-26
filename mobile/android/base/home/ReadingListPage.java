@@ -108,8 +108,11 @@ public class ReadingListPage extends HomeFragment {
 
         // Create callbacks before the initial loader is started.
         mCursorLoaderCallbacks = new CursorLoaderCallbacks();
+        loadIfVisible();
+    }
 
-        // Reconnect to the loader only if it's present.
+    @Override
+    protected void load() {
         getLoaderManager().initLoader(READING_LIST_LOADER_ID, null, mCursorLoaderCallbacks);
     }
 
