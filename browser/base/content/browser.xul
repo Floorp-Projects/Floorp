@@ -441,14 +441,8 @@
       </toolbaritem>
 
 #ifdef CAN_DRAW_IN_TITLEBAR
-      <hbox class="titlebar-placeholder" type="caption-buttons"
 #ifndef XP_MACOSX
-            ordinal="1000"
-#endif
-      />
-
-#ifdef XP_MACOSX
-      <hbox class="titlebar-placeholder" type="fullscreen-button"/>
+      <hbox class="titlebar-placeholder" type="caption-buttons" ordinal="1000"/>
 #endif
 #endif
     </toolbar>
