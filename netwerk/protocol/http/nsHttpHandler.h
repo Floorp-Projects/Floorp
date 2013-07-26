@@ -97,6 +97,7 @@ public:
     bool           IsSpdyEnabled() { return mEnableSpdy; }
     bool           IsSpdyV2Enabled() { return mSpdyV2; }
     bool           IsSpdyV3Enabled() { return mSpdyV3; }
+    bool           IsSpdyV31Enabled() { return mSpdyV31; }
     bool           CoalesceSpdy() { return mCoalesceSpdy; }
     bool           UseSpdyPersistentSettings() { return mSpdyPersistentSettings; }
     uint32_t       SpdySendingChunkSize() { return mSpdySendingChunkSize; }
@@ -417,6 +418,7 @@ private:
     bool           mEnableSpdy;
     bool           mSpdyV2;
     bool           mSpdyV3;
+    bool           mSpdyV31;
     bool           mCoalesceSpdy;
     bool           mSpdyPersistentSettings;
     bool           mAllowSpdyPush;

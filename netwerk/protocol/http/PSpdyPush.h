@@ -3,8 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// SPDY Server Push as defined by
-// http://dev.chromium.org/spdy/spdy-protocol/spdy-protocol-draft3
+// SPDY Server Push
 
 /*
   A pushed stream is put into a memory buffer (The SpdyPushTransactionBuffer)
@@ -23,8 +22,8 @@
   client pull behavior.
 */
 
-#ifndef mozilla_net_SpdyPush3_Public_h
-#define mozilla_net_SpdyPush3_Public_h
+#ifndef mozilla_net_SpdyPush_Public_h
+#define mozilla_net_SpdyPush_Public_h
 
 #include "nsAutoPtr.h"
 #include "nsDataHashtable.h"
@@ -36,25 +35,35 @@ namespace mozilla {
 namespace net {
 
 class SpdyPushedStream3;
+class SpdyPushedStream31;
 
-// One Cache per load group
-class SpdyPushCache3
+// One cache per load group
+class SpdyPushCache
 {
 public:
-  SpdyPushCache3();
-  virtual ~SpdyPushCache3();
-
   // The cache holds only weak pointers - no references
-  bool               RegisterPushedStream(nsCString key,
-                                          SpdyPushedStream3 *stream);
-  SpdyPushedStream3 *RemovePushedStream(nsCString key);
-  SpdyPushedStream3 *GetPushedStream(nsCString key);
+  SpdyPushCache();
+  virtual ~SpdyPushCache();
+
+// for spdy/3
+public:
+  bool               RegisterPushedStreamSpdy3(nsCString key,
+                                               SpdyPushedStream3 *stream);
+  SpdyPushedStream3 *RemovePushedStreamSpdy3(nsCString key);
 
 private:
-  nsDataHashtable<nsCStringHashKey, SpdyPushedStream3 *> mHash;
+  nsDataHashtable<nsCStringHashKey, SpdyPushedStream3 *> mHashSpdy3;
+
+// for spdy/3.1
+public:
+  bool               RegisterPushedStreamSpdy31(nsCString key,
+                                                SpdyPushedStream31 *stream);
+  SpdyPushedStream31 *RemovePushedStreamSpdy31(nsCString key);
+private:
+  nsDataHashtable<nsCStringHashKey, SpdyPushedStream31 *> mHashSpdy31;
 };
 
 } // namespace mozilla::net
 } // namespace mozilla
 
-#endif // mozilla_net_SpdyPush3_Public_h
+#endif // mozilla_net_SpdyPush_Public_h
