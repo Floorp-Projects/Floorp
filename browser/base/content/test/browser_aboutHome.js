@@ -242,16 +242,70 @@ let gTests = [
     promiseBrowserAttributes(gBrowser.selectedTab).then(function() {
       // Test if the update propagated
       checkSearchUI(unusedEngines[0]);
+      searchbar.currentEngine = currEngine;
       deferred.resolve();
     });
 
-    // The following cleanup function will set currentEngine back to the previous engine
+    // The following cleanup function will set currentEngine back to the previous
+    // engine if we fail to do so above.
     registerCleanupFunction(function() {
       searchbar.currentEngine = currEngine;
     });
     // Set the current search engine to an unused one
     searchbar.currentEngine = unusedEngines[0];
     searchbar.select();
+    return deferred.promise;
+  }
+},
+
+{
+  desc: "Check POST search engine support",
+  setup: function() {},
+  run: function()
+  {
+    let deferred = Promise.defer();
+    let currEngine = Services.search.defaultEngine;
+    let searchObserver = function search_observer(aSubject, aTopic, aData) {
+      let engine = aSubject.QueryInterface(Ci.nsISearchEngine);
+      info("Observer: " + aData + " for " + engine.name);
+
+      if (aData != "engine-added")
+        return;
+
+      if (engine.name != "POST Search")
+        return;
+
+      Services.search.defaultEngine = engine;
+
+      registerCleanupFunction(function() {
+        Services.search.removeEngine(engine);
+        Services.search.defaultEngine = currEngine;
+      });
+
+
+      // Ready to execute the tests!
+      let needle = "Search for something awesome.";
+      let document = gBrowser.selectedTab.linkedBrowser.contentDocument;
+      let searchText = document.getElementById("searchText");
+
+      waitForLoad(function() {
+        let loadedText = gBrowser.contentDocument.body.textContent;
+        ok(loadedText, "search page loaded");
+        is(loadedText, "searchterms=" + escape(needle.replace(/\s/g, "+")),
+           "Search text should arrive correctly");
+        deferred.resolve();
+      });
+
+      searchText.value = needle;
+      searchText.focus();
+      EventUtils.synthesizeKey("VK_RETURN", {});
+    };
+    Services.obs.addObserver(searchObserver, "browser-search-engine-modified", false);
+    registerCleanupFunction(function () {
+      Services.obs.removeObserver(searchObserver, "browser-search-engine-modified");
+    });
+    Services.search.addEngine("http://test:80/browser/browser/base/content/test/POSTSearchEngine.xml",
+                              Ci.nsISearchEngine.DATA_XML, null, false);
     return deferred.promise;
   }
 }
@@ -441,4 +495,16 @@ function getNumberOfSearchesByDate(aEngineName, aData, aDate) {
   }
 
   return 0; // No records found.
+}
+
+function waitForLoad(cb) {
+  let browser = gBrowser.selectedBrowser;
+  browser.addEventListener("load", function listener() {
+    if (browser.currentURI.spec == "about:blank")
+      return;
+    info("Page loaded: " + browser.currentURI.spec);
+    browser.removeEventListener("load", listener, true);
+
+    cb();
+  }, true);
 }
