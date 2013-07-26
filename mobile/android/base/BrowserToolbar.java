@@ -1242,8 +1242,8 @@ public class BrowserToolbar extends GeckoRelativeLayout
 
             @Override
             public void onPropertyAnimationEnd() {
-                ViewHelper.setAlpha(viewToHide, 1.0f);
                 viewToHide.setVisibility(View.GONE);
+                ViewHelper.setAlpha(viewToHide, 1.0f);
 
                 if (showEditContainer) {
                     ViewHelper.setAlpha(mGo, 1.0f);
