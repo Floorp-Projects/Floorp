@@ -1362,7 +1362,7 @@ JS_InitStandardClasses(JSContext *cx, JSObject *objArg)
 #define EAGER_ATOM_AND_OCLASP(name) EAGER_CLASS_ATOM(name), OCLASP(name)
 
 typedef struct JSStdName {
-    JSClassInitializerOp init;
+    ClassInitializerOp init;
     size_t      atomOffset;     /* offset of atom pointer in JSAtomState */
     Class       *clasp;
 } JSStdName;
