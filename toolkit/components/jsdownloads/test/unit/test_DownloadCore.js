@@ -17,23 +17,23 @@
  */
 add_task(function test_download_construction()
 {
-  let targetFile = getTempFile(TEST_TARGET_FILE_NAME);
+  let targetPath = getTempFile(TEST_TARGET_FILE_NAME).path;
 
   let download = yield Downloads.createDownload({
-    source: { uri: TEST_SOURCE_URI },
-    target: { file: targetFile },
+    source: { url: httpUrl("source.txt") },
+    target: { path: targetPath },
     saver: { type: "copy" },
   });
 
   // Checks the generated DownloadSource and DownloadTarget properties.
-  do_check_true(download.source.uri.equals(TEST_SOURCE_URI));
-  do_check_eq(download.target.file, targetFile);
+  do_check_eq(download.source.url, httpUrl("source.txt"));
+  do_check_eq(download.target.path, targetPath);
   do_check_true(download.source.referrer === null);
 
   // Starts the download and waits for completion.
   yield download.start();
 
-  yield promiseVerifyContents(targetFile, TEST_DATA_SHORT);
+  yield promiseVerifyContents(targetPath, TEST_DATA_SHORT);
 });
 
 /**
@@ -41,46 +41,44 @@ add_task(function test_download_construction()
  */
 add_task(function test_download_referrer()
 {
-  let source_path = "/test_download_referrer.txt";
-  let source_uri = NetUtil.newURI(HTTP_BASE + source_path);
-  let target_uri = getTempFile(TEST_TARGET_FILE_NAME);
+  let sourcePath = "/test_download_referrer.txt";
+  let sourceUrl = httpUrl("test_download_referrer.txt");
+  let targetPath = getTempFile(TEST_TARGET_FILE_NAME).path;
 
   function cleanup() {
-    gHttpServer.registerPathHandler(source_path, null);
+    gHttpServer.registerPathHandler(sourcePath, null);
   }
 
   do_register_cleanup(cleanup);
 
-  gHttpServer.registerPathHandler(source_path, function (aRequest, aResponse) {
+  gHttpServer.registerPathHandler(sourcePath, function (aRequest, aResponse) {
     aResponse.setHeader("Content-Type", "text/plain", false);
 
     do_check_true(aRequest.hasHeader("Referer"));
-    do_check_eq(aRequest.getHeader("Referer"), TEST_REFERRER_URI.spec);
+    do_check_eq(aRequest.getHeader("Referer"), TEST_REFERRER_URL);
   });
   let download = yield Downloads.createDownload({
-    source: { uri: source_uri, referrer: TEST_REFERRER_URI },
-    target: { file: target_uri },
-    saver: { type: "copy" },
+    source: { url: sourceUrl, referrer: TEST_REFERRER_URL },
+    target: targetPath,
   });
-  do_check_true(download.source.referrer.equals(TEST_REFERRER_URI));
+  do_check_eq(download.source.referrer, TEST_REFERRER_URL);
   yield download.start();
 
   download = yield Downloads.createDownload({
-    source: { uri: source_uri, referrer: TEST_REFERRER_URI, isPrivate: true },
-    target: { file: target_uri },
-    saver: { type: "copy" },
+    source: { url: sourceUrl, referrer: TEST_REFERRER_URL,
+              isPrivate: true },
+    target: targetPath,
   });
-  do_check_true(download.source.referrer.equals(TEST_REFERRER_URI));
+  do_check_eq(download.source.referrer, TEST_REFERRER_URL);
   yield download.start();
 
   // Test the download still works for non-HTTP channel with referrer.
-  source_uri = NetUtil.newURI("data:text/html,<html><body></body></html>");
+  sourceUrl = "data:text/html,<html><body></body></html>";
   download = yield Downloads.createDownload({
-    source: { uri: source_uri, referrer: TEST_REFERRER_URI },
-    target: { file: target_uri },
-    saver: { type: "copy" },
+    source: { url: sourceUrl, referrer: TEST_REFERRER_URL },
+    target: targetPath,
   });
-  do_check_true(download.source.referrer.equals(TEST_REFERRER_URI));
+  do_check_eq(download.source.referrer, TEST_REFERRER_URL);
   yield download.start();
 
   cleanup();
@@ -143,7 +141,7 @@ add_task(function test_download_intermediate_progress()
 {
   let deferResponse = deferNextResponse();
 
-  let download = yield promiseSimpleDownload(TEST_INTERRUPTIBLE_URI);
+  let download = yield promiseSimpleDownload(httpUrl("interruptible.txt"));
 
   download.onchange = function () {
     if (download.progress == 50) {
@@ -162,7 +160,7 @@ add_task(function test_download_intermediate_progress()
   do_check_true(download.stopped);
   do_check_eq(download.progress, 100);
 
-  yield promiseVerifyContents(download.target.file,
+  yield promiseVerifyContents(download.target.path,
                               TEST_DATA_SHORT + TEST_DATA_SHORT);
 });
 
@@ -171,7 +169,7 @@ add_task(function test_download_intermediate_progress()
  */
 add_task(function test_download_empty_progress()
 {
-  let download = yield promiseSimpleDownload(TEST_EMPTY_URI);
+  let download = yield promiseSimpleDownload(httpUrl("empty.txt"));
 
   yield download.start();
 
@@ -181,7 +179,7 @@ add_task(function test_download_empty_progress()
   do_check_eq(download.currentBytes, 0);
   do_check_eq(download.totalBytes, 0);
 
-  do_check_eq(download.target.file.fileSize, 0);
+  do_check_eq((yield OS.File.stat(download.target.path)).size, 0);
 });
 
 /**
@@ -192,7 +190,7 @@ add_task(function test_download_empty_noprogress()
   let deferResponse = deferNextResponse();
   let promiseEmptyRequestReceived = promiseNextRequestReceived();
 
-  let download = yield promiseSimpleDownload(TEST_EMPTY_NOPROGRESS_URI);
+  let download = yield promiseSimpleDownload(httpUrl("empty-noprogress.txt"));
 
   download.onchange = function () {
     if (!download.stopped) {
@@ -228,7 +226,7 @@ add_task(function test_download_empty_noprogress()
   do_check_eq(download.currentBytes, 0);
   do_check_eq(download.totalBytes, 0);
 
-  do_check_eq(download.target.file.fileSize, 0);
+  do_check_eq((yield OS.File.stat(download.target.path)).size, 0);
 });
 
 /**
@@ -236,7 +234,7 @@ add_task(function test_download_empty_noprogress()
  */
 add_task(function test_download_start_twice()
 {
-  let download = yield promiseSimpleDownload(TEST_INTERRUPTIBLE_URI);
+  let download = yield promiseSimpleDownload(httpUrl("interruptible.txt"));
 
   // Ensure that the download cannot complete before start is called twice.
   let deferResponse = deferNextResponse();
@@ -257,7 +255,7 @@ add_task(function test_download_start_twice()
   do_check_false(download.canceled);
   do_check_true(download.error === null);
 
-  yield promiseVerifyContents(download.target.file,
+  yield promiseVerifyContents(download.target.path,
                               TEST_DATA_SHORT + TEST_DATA_SHORT);
 });
 
@@ -266,7 +264,7 @@ add_task(function test_download_start_twice()
  */
 add_task(function test_download_cancel_midway()
 {
-  let download = yield promiseSimpleDownload(TEST_INTERRUPTIBLE_URI);
+  let download = yield promiseSimpleDownload(httpUrl("interruptible.txt"));
 
   let deferResponse = deferNextResponse();
   try {
@@ -292,7 +290,7 @@ add_task(function test_download_cancel_midway()
     do_check_true(download.canceled);
     do_check_true(download.error === null);
 
-    do_check_false(download.target.file.exists());
+    do_check_false(yield OS.File.exists(download.target.path));
 
     // Progress properties are not reset by canceling.
     do_check_eq(download.progress, 50);
@@ -320,7 +318,7 @@ add_task(function test_download_cancel_immediately()
   // Ensure that the download cannot complete before cancel is called.
   let deferResponse = deferNextResponse();
   try {
-    let download = yield promiseSimpleDownload(TEST_INTERRUPTIBLE_URI);
+    let download = yield promiseSimpleDownload(httpUrl("interruptible.txt"));
 
     let promiseAttempt = download.start();
     do_check_false(download.stopped);
@@ -343,7 +341,7 @@ add_task(function test_download_cancel_immediately()
     do_check_true(download.canceled);
     do_check_true(download.error === null);
 
-    do_check_false(download.target.file.exists());
+    do_check_false(yield OS.File.exists(download.target.path));
 
     // Check that the promise returned by the "cancel" method has been resolved.
     yield promiseCancel;
@@ -365,7 +363,7 @@ add_task(function test_download_cancel_immediately()
  */
 add_task(function test_download_cancel_midway_restart()
 {
-  let download = yield promiseSimpleDownload(TEST_INTERRUPTIBLE_URI);
+  let download = yield promiseSimpleDownload(httpUrl("interruptible.txt"));
 
   // The first time, cancel the download midway.
   let deferResponse = deferNextResponse();
@@ -407,7 +405,7 @@ add_task(function test_download_cancel_midway_restart()
   do_check_false(download.canceled);
   do_check_true(download.error === null);
 
-  yield promiseVerifyContents(download.target.file,
+  yield promiseVerifyContents(download.target.path,
                               TEST_DATA_SHORT + TEST_DATA_SHORT);
 });
 
@@ -416,7 +414,7 @@ add_task(function test_download_cancel_midway_restart()
  */
 add_task(function test_download_cancel_immediately_restart_immediately()
 {
-  let download = yield promiseSimpleDownload(TEST_INTERRUPTIBLE_URI);
+  let download = yield promiseSimpleDownload(httpUrl("interruptible.txt"));
 
   // Ensure that the download cannot complete before cancel is called.
   let deferResponse = deferNextResponse();
@@ -467,7 +465,7 @@ add_task(function test_download_cancel_immediately_restart_immediately()
   do_check_false(download.canceled);
   do_check_true(download.error === null);
 
-  yield promiseVerifyContents(download.target.file,
+  yield promiseVerifyContents(download.target.path,
                               TEST_DATA_SHORT + TEST_DATA_SHORT);
 });
 
@@ -476,7 +474,7 @@ add_task(function test_download_cancel_immediately_restart_immediately()
  */
 add_task(function test_download_cancel_midway_restart_immediately()
 {
-  let download = yield promiseSimpleDownload(TEST_INTERRUPTIBLE_URI);
+  let download = yield promiseSimpleDownload(httpUrl("interruptible.txt"));
 
   // The first time, cancel the download midway.
   let deferResponse = deferNextResponse();
@@ -525,7 +523,7 @@ add_task(function test_download_cancel_midway_restart_immediately()
   do_check_false(download.canceled);
   do_check_true(download.error === null);
 
-  yield promiseVerifyContents(download.target.file,
+  yield promiseVerifyContents(download.target.path,
                               TEST_DATA_SHORT + TEST_DATA_SHORT);
 });
 
@@ -547,7 +545,7 @@ add_task(function test_download_cancel_successful()
   do_check_false(download.canceled);
   do_check_true(download.error === null);
 
-  yield promiseVerifyContents(download.target.file, TEST_DATA_SHORT);
+  yield promiseVerifyContents(download.target.path, TEST_DATA_SHORT);
 });
 
 /**
@@ -555,7 +553,7 @@ add_task(function test_download_cancel_successful()
  */
 add_task(function test_download_cancel_twice()
 {
-  let download = yield promiseSimpleDownload(TEST_INTERRUPTIBLE_URI);
+  let download = yield promiseSimpleDownload(httpUrl("interruptible.txt"));
 
   // Ensure that the download cannot complete before cancel is called.
   let deferResponse = deferNextResponse();
@@ -584,7 +582,7 @@ add_task(function test_download_cancel_twice()
     do_check_true(download.canceled);
     do_check_true(download.error === null);
 
-    do_check_false(download.target.file.exists());
+    do_check_false(yield OS.File.exists(download.target.path));
   } finally {
     deferResponse.resolve();
   }
@@ -595,7 +593,7 @@ add_task(function test_download_cancel_twice()
  */
 add_task(function test_download_whenSucceeded()
 {
-  let download = yield promiseSimpleDownload(TEST_INTERRUPTIBLE_URI);
+  let download = yield promiseSimpleDownload(httpUrl("interruptible.txt"));
 
   // Ensure that the download cannot complete before cancel is called.
   let deferResponse = deferNextResponse();
@@ -620,7 +618,7 @@ add_task(function test_download_whenSucceeded()
   do_check_false(download.canceled);
   do_check_true(download.error === null);
 
-  yield promiseVerifyContents(download.target.file,
+  yield promiseVerifyContents(download.target.path,
                               TEST_DATA_SHORT + TEST_DATA_SHORT);
 });
 
@@ -631,7 +629,9 @@ add_task(function test_download_error_source()
 {
   let serverSocket = startFakeServer();
   try {
-    let download = yield promiseSimpleDownload(TEST_FAKE_SOURCE_URI);
+    let sourceUrl = "http://localhost:" + serverSocket.port + "/source.txt";
+
+    let download = yield promiseSimpleDownload(sourceUrl);
 
     do_check_true(download.error === null);
 
@@ -662,7 +662,8 @@ add_task(function test_download_error_target()
   do_check_true(download.error === null);
 
   // Create a file without write access permissions before downloading.
-  download.target.file.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0);
+  let targetFile = new FileUtils.File(download.target.path);
+  targetFile.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0);
   try {
     try {
       yield download.start();
@@ -678,9 +679,9 @@ add_task(function test_download_error_target()
     do_check_false(download.error.becauseSourceFailed);
   } finally {
     // Restore the default permissions to allow deleting the file on Windows.
-    if (download.target.file.exists()) {
-      download.target.file.permissions = FileUtils.PERMS_FILE;
-      download.target.file.remove(false);
+    if (targetFile.exists()) {
+      targetFile.permissions = FileUtils.PERMS_FILE;
+      targetFile.remove(false);
     }
   }
 });
@@ -695,7 +696,8 @@ add_task(function test_download_error_restart()
   do_check_true(download.error === null);
 
   // Create a file without write access permissions before downloading.
-  download.target.file.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0);
+  let targetFile = new FileUtils.File(download.target.path);
+  targetFile.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0);
 
   try {
     yield download.start();
@@ -704,15 +706,14 @@ add_task(function test_download_error_restart()
     // A specific error object is thrown when writing to the target fails.
   } finally {
     // Restore the default permissions to allow deleting the file on Windows.
-    if (download.target.file.exists()) {
-      download.target.file.permissions = FileUtils.PERMS_FILE;
+    if (targetFile.exists()) {
+      targetFile.permissions = FileUtils.PERMS_FILE;
 
       // Also for Windows, rename the file before deleting.  This makes the
       // current file name available immediately for a new file, while deleting
       // in place prevents creation of a file with the same name for some time.
-      let fileToRemove = download.target.file.clone();
-      fileToRemove.moveTo(null, fileToRemove.leafName + ".delete.tmp");
-      fileToRemove.remove(false);
+      targetFile.moveTo(null, targetFile.leafName + ".delete.tmp");
+      targetFile.remove(false);
     }
   }
 
@@ -725,7 +726,7 @@ add_task(function test_download_error_restart()
   do_check_true(download.error === null);
   do_check_eq(download.progress, 100);
 
-  yield promiseVerifyContents(download.target.file, TEST_DATA_SHORT);
+  yield promiseVerifyContents(download.target.path, TEST_DATA_SHORT);
 });
 
 /**
@@ -733,8 +734,8 @@ add_task(function test_download_error_restart()
  */
 add_task(function test_download_public_and_private()
 {
-  let source_path = "/test_download_public_and_private.txt";
-  let source_uri = NetUtil.newURI(HTTP_BASE + source_path);
+  let sourcePath = "/test_download_public_and_private.txt";
+  let sourceUrl = httpUrl("test_download_public_and_private.txt");
   let testCount = 0;
 
   // Apply pref to allow all cookies.
@@ -743,11 +744,11 @@ add_task(function test_download_public_and_private()
   function cleanup() {
     Services.prefs.clearUserPref("network.cookie.cookieBehavior");
     Services.cookies.removeAll();
-    gHttpServer.registerPathHandler(source_path, null);
+    gHttpServer.registerPathHandler(sourcePath, null);
   }
   do_register_cleanup(cleanup);
 
-  gHttpServer.registerPathHandler(source_path, function (aRequest, aResponse) {
+  gHttpServer.registerPathHandler(sourcePath, function (aRequest, aResponse) {
     aResponse.setHeader("Content-Type", "text/plain", false);
 
     if (testCount == 0) {
@@ -767,12 +768,11 @@ add_task(function test_download_public_and_private()
   });
 
   let targetFile = getTempFile(TEST_TARGET_FILE_NAME);
-  yield Downloads.simpleDownload(source_uri, targetFile);
-  yield Downloads.simpleDownload(source_uri, targetFile);
+  yield Downloads.simpleDownload(sourceUrl, targetFile);
+  yield Downloads.simpleDownload(sourceUrl, targetFile);
   let download = yield Downloads.createDownload({
-    source: { uri: source_uri, isPrivate: true },
-    target: { file: targetFile },
-    saver: { type: "copy" },
+    source: { url: sourceUrl, isPrivate: true },
+    target: targetFile,
   });
   yield download.start();
 
@@ -805,15 +805,15 @@ add_task(function test_download_cancel_immediately_restart_and_check_startTime()
  */
 add_task(function test_download_with_content_encoding()
 {
-  let source_path = "/test_download_with_content_encoding.txt";
-  let source_uri = NetUtil.newURI(HTTP_BASE + source_path);
+  let sourcePath = "/test_download_with_content_encoding.txt";
+  let sourceUrl = httpUrl("test_download_with_content_encoding.txt");
 
   function cleanup() {
-    gHttpServer.registerPathHandler(source_path, null);
+    gHttpServer.registerPathHandler(sourcePath, null);
   }
   do_register_cleanup(cleanup);
 
-  gHttpServer.registerPathHandler(source_path, function (aRequest, aResponse) {
+  gHttpServer.registerPathHandler(sourcePath, function (aRequest, aResponse) {
     aResponse.setHeader("Content-Type", "text/plain", false);
     aResponse.setHeader("Content-Encoding", "gzip", false);
     aResponse.setHeader("Content-Length",
@@ -825,9 +825,8 @@ add_task(function test_download_with_content_encoding()
   });
 
   let download = yield Downloads.createDownload({
-    source: { uri: source_uri },
-    target: { file: getTempFile(TEST_TARGET_FILE_NAME) },
-    saver: { type: "copy" },
+    source: sourceUrl,
+    target: getTempFile(TEST_TARGET_FILE_NAME),
   });
   yield download.start();
 
@@ -835,7 +834,7 @@ add_task(function test_download_with_content_encoding()
   do_check_eq(download.totalBytes, TEST_DATA_SHORT_GZIP_ENCODED.length);
 
   // Ensure the content matches the decoded test data.
-  yield promiseVerifyContents(download.target.file, TEST_DATA_SHORT);
+  yield promiseVerifyContents(download.target.path, TEST_DATA_SHORT);
 });
 
 /**
@@ -843,7 +842,7 @@ add_task(function test_download_with_content_encoding()
  */
 add_task(function test_download_cancel_midway_restart_with_content_encoding()
 {
-  let download = yield promiseSimpleDownload(TEST_INTERRUPTIBLE_GZIP_URI);
+  let download = yield promiseSimpleDownload(httpUrl("interruptible_gzip.txt"));
 
   // The first time, cancel the download midway.
   let deferResponse = deferNextResponse();
@@ -870,7 +869,7 @@ add_task(function test_download_cancel_midway_restart_with_content_encoding()
   do_check_eq(download.progress, 100);
   do_check_eq(download.totalBytes, TEST_DATA_SHORT_GZIP_ENCODED.length);
 
-  yield promiseVerifyContents(download.target.file, TEST_DATA_SHORT);
+  yield promiseVerifyContents(download.target.path, TEST_DATA_SHORT);
 });
 
 /**
