@@ -31,3 +31,13 @@ CSRCS = \
     $(NULL)
 
 include $(topsrcdir)/config/rules.mk
+
+# Only use SSE code when using floating point samples, and on x86
+ifneq (,$(INTEL_ARCHITECTURE))
+ifneq ($(OS_TARGET),Android)
+DEFINES += -D_USE_SSE -D_USE_SSE2
+ifdef GNU_CC
+resample.$(OBJ_SUFFIX): CFLAGS+=-msse2
+endif
+endif
+endif
