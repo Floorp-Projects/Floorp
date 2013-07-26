@@ -79,6 +79,7 @@ private:
                                       DisplayItemClip& aClipOnStack);
 
   void ClipContentDescendants(const nsRect& aRect,
+                              const nscoord* aRadii,
                               DisplayItemClip& aClipOnStack);
 
   /**
@@ -150,7 +151,7 @@ public:
    * the result, stored in aClipOnStack.
    */
   void ClipContainingBlockDescendants(const nsRect& aRect,
-                                      const nscoord* aRadii)
+                                      const nscoord* aRadii = nullptr)
   {
     NS_ASSERTION(!mRestored, "Already restored!");
     NS_ASSERTION(!mClipUsed, "mClip already used");
@@ -158,12 +159,13 @@ public:
     mState.ClipContainingBlockDescendants(aRect, aRadii, mClip);
   }
 
-  void ClipContentDescendants(const nsRect& aRect)
+  void ClipContentDescendants(const nsRect& aRect,
+                              const nscoord* aRadii = nullptr)
   {
     NS_ASSERTION(!mRestored, "Already restored!");
     NS_ASSERTION(!mClipUsed, "mClip already used");
     mClipUsed = true;
-    mState.ClipContentDescendants(aRect, mClip);
+    mState.ClipContentDescendants(aRect, aRadii, mClip);
   }
 
   /**
