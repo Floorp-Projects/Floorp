@@ -13,7 +13,6 @@
 
 #include "jsalloc.h"
 #include "jsfriendapi.h"
-#include "jsprvtd.h"
 
 #include "ds/LifoAlloc.h"
 #include "ds/IdValuePair.h"
