@@ -32,7 +32,7 @@ public class HomePager extends ViewPager {
 
     // List of pages in order.
     public enum Page {
-        VISITED,
+        HISTORY,
         BOOKMARKS,
         READING_LIST
     }
@@ -70,7 +70,7 @@ public class HomePager extends ViewPager {
         TabsAdapter adapter = new TabsAdapter(fm);
 
         // Add the pages to the adapter in order.
-        adapter.addTab(Page.VISITED, VisitedPage.class, null, getContext().getString(R.string.visited_title));
+        adapter.addTab(Page.HISTORY, HistoryPage.class, null, getContext().getString(R.string.home_history_title));
         adapter.addTab(Page.BOOKMARKS, BookmarksPage.class, null, getContext().getString(R.string.bookmarks_title));
         adapter.addTab(Page.READING_LIST, ReadingListPage.class, null, getContext().getString(R.string.reading_list));
 

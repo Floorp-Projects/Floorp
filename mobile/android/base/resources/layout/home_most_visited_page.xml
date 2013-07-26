@@ -11,15 +11,4 @@
 
     <include layout="@layout/home_list_with_title"/>
 
-    <LinearLayout android:layout_width="fill_parent"
-                  android:layout_height="wrap_content"
-                  android:background="@color/home_last_tab_bar_bg">
-
-        <Button android:id="@+id/open_all_tabs_button"
-                style="@style/Widget.Home.ActionButton"
-                android:text="@string/home_last_tabs_open"
-                android:gravity="center"/>
-
-    </LinearLayout>
-
 </LinearLayout>
