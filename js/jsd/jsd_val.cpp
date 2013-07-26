@@ -509,7 +509,7 @@ jsd_GetValueProperty(JSDContext* jsdc, JSDValue* jsdval, JSString* nameStr)
 
         JS_ClearPendingException(cx);
 
-        if(!JS_GetUCProperty(cx, obj, nameChars, nameLen, val.address()))
+        if(!JS_GetUCProperty(cx, obj, nameChars, nameLen, &val))
         {
             if (JS_IsExceptionPending(cx))
             {
