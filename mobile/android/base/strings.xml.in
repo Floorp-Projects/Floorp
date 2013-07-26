@@ -23,9 +23,7 @@
 
   <string name="all_pages_title">&all_pages_title;</string>
   <string name="bookmarks_title">&bookmarks_title;</string>
-  <string name="history_title">&history_title;</string>
   <string name="switch_to_tab">&switch_to_tab;</string>
-  <string name="visited_title">&visited_title;</string>
 
   <string name="crash_reporter_title">&crash_reporter_title;</string>
   <string name="crash_message2">&crash_message2;</string>
@@ -237,8 +235,11 @@
   <string name="button_yes">&button_yes;</string>
   <string name="button_no">&button_no;</string>
 
+  <string name="home_history_title">&home_history_title;</string>
   <string name="home_last_tabs_title">&home_last_tabs_title;</string>
   <string name="home_last_tabs_open">&home_last_tabs_open;</string>
+  <string name="home_most_recent_title">&home_most_recent_title;</string>
+  <string name="home_most_visited_title">&home_most_visited_title;</string>
   <string name="home_visited_empty">&home_visited_empty;</string>
   <string name="pin_bookmark_dialog_hint">&pin_bookmark_dialog_hint;</string>
 

@@ -8,9 +8,7 @@
 
 <!ENTITY  all_pages_title "Top Sites">
 <!ENTITY  bookmarks_title "Bookmarks">
-<!ENTITY  history_title "History">
 <!ENTITY  switch_to_tab "Switch to tab">
-<!ENTITY  visited_title "Visited">
 
 <!ENTITY  crash_reporter_title "&brandShortName; Crash Reporter">
 <!ENTITY  crash_message2 "&brandShortName; had a problem and crashed. Your tabs should be listed on the &brandShortName; Start page when you restart.">
@@ -269,8 +267,11 @@ size. -->
 <!ENTITY button_set "Set">
 <!ENTITY button_clear "Clear">
 
-<!ENTITY home_last_tabs_title "Your tabs from last time">
+<!ENTITY home_history_title "History">
+<!ENTITY home_last_tabs_title "Tabs from last time">
 <!ENTITY home_last_tabs_open "Open all tabs from last time">
+<!ENTITY home_most_recent_title "Most recent">
+<!ENTITY home_most_visited_title "Most visited">
 <!ENTITY home_visited_empty "Websites you visited go here">
 <!ENTITY pin_bookmark_dialog_hint "Enter a search keyword">
 

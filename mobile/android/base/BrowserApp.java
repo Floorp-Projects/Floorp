@@ -1317,7 +1317,7 @@ abstract public class BrowserApp extends GeckoApp
         animator.setUseHardwareLayer(false);
 
         mBrowserToolbar.startEditing(url, animator);
-        showHomePagerWithAnimator(HomePager.Page.VISITED, animator);
+        showHomePagerWithAnimator(HomePager.Page.HISTORY, animator);
 
         animator.start();
     }
@@ -1394,14 +1394,6 @@ abstract public class BrowserApp extends GeckoApp
         final Tab tab = Tabs.getInstance().getSelectedTab();
         if (tab != null && isAboutHome(tab)) {
             return;
-        }
-
-        // Hide any visible homepager subpages
-        final FragmentManager fm = getSupportFragmentManager();
-        final Fragment subPage = fm.findFragmentByTag(HomePager.SUBPAGE_TAG);
-        if (subPage != null) {
-            fm.beginTransaction().remove(subPage).commitAllowingStateLoss();
-            fm.popBackStack();
         }
 
         // FIXME: do animation if animate is true

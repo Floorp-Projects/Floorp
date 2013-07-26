@@ -6,100 +6,24 @@
 package org.mozilla.gecko.home;
 
 import org.mozilla.gecko.R;
-import org.mozilla.gecko.db.BrowserDB;
-import org.mozilla.gecko.db.BrowserDB.URLColumns;
-import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
-import org.mozilla.gecko.home.TwoLinePageRow;
-
-import android.app.Activity;
-import android.content.ContentResolver;
+import org.mozilla.gecko.widget.IconTabWidget;
+import android.support.v4.app.Fragment;
 import android.content.Context;
 import android.content.res.Resources;
-import android.database.Cursor;
 import android.os.Bundle;
-import android.support.v4.app.LoaderManager.LoaderCallbacks;
-import android.support.v4.content.Loader;
-import android.support.v4.widget.SimpleCursorAdapter;
-import android.util.SparseArray;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.LayoutInflater;
-import android.widget.AdapterView;
-import android.widget.ListView;
-import android.widget.TextView;
 
-import java.util.Date;
+import android.widget.ImageButton;
 
-/**
- * Fragment that displays recent history in a ListView.
- */
-public class HistoryPage extends HomeFragment {
+public class HistoryPage extends HomeFragment
+                        implements IconTabWidget.OnTabChangedListener {
     // Logging tag name
     private static final String LOGTAG = "GeckoHistoryPage";
-
-    // Cursor loader ID for history query
-    private static final int HISTORY_LOADER_ID = 0;
-
-    // For the time sections in history
-    private static final long MS_PER_DAY = 86400000;
-    private static final long MS_PER_WEEK = MS_PER_DAY * 7;
-
-    // The time ranges for each section
-    private static enum HistorySection {
-        TODAY,
-        YESTERDAY,
-        WEEK,
-        OLDER
-    };
-
-    // Maps headers in the list with their respective sections
-    private SparseArray<HistorySection> mHistorySections;
-
-    // Adapter for the list of search results
-    private HistoryAdapter mAdapter;
-
-    // The view shown by the fragment.
-    private ListView mList;
-
-    // Callbacks used for the search and favicon cursor loaders
-    private CursorLoaderCallbacks mCursorLoaderCallbacks;
-
-    // Inflater used by the adapter
-    private LayoutInflater mInflater;
-
-    // On URL open listener
-    private OnUrlOpenListener mUrlOpenListener;
-
-    public static HistoryPage newInstance() {
-        return new HistoryPage();
-    }
-
-    public HistoryPage() {
-        mUrlOpenListener = null;
-    }
-
-    @Override
-    public void onAttach(Activity activity) {
-        super.onAttach(activity);
-
-        try {
-            mUrlOpenListener = (OnUrlOpenListener) activity;
-        } catch (ClassCastException e) {
-            throw new ClassCastException(activity.toString()
-                    + " must implement HomePager.OnUrlOpenListener");
-        }
-
-        mInflater = (LayoutInflater) activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-    }
-
-    @Override
-    public void onDetach() {
-        super.onDetach();
-
-        mHistorySections = null;
-        mInflater = null;
-        mUrlOpenListener = null;
-    }
+    private IconTabWidget mTabWidget;
+    private int mSelectedTab;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -108,258 +32,68 @@ public class HistoryPage extends HomeFragment {
 
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
-        final TextView title = (TextView) view.findViewById(R.id.title);
-        title.setText(R.string.history_title);
+        super.onViewCreated(view, savedInstanceState);
 
-        mList = (ListView) view.findViewById(R.id.list);
+        mTabWidget = (IconTabWidget) view.findViewById(R.id.tab_icon_widget);
 
-        mList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                position -= getHistorySectionsCountBefore(position);
+        ImageButton button;
+        final Resources resources = view.getContext().getResources();
 
-                final Cursor c = mAdapter.getCursor();
-                if (c == null || !c.moveToPosition(position)) {
-                    return;
-                }
+        button = mTabWidget.addTab(R.drawable.icon_most_visited);
+        button.setContentDescription(resources.getString(R.string.home_most_visited_title));
 
-                final String url = c.getString(c.getColumnIndexOrThrow(URLColumns.URL));
-                mUrlOpenListener.onUrlOpen(url);
-            }
-        });
+        button = mTabWidget.addTab(R.drawable.icon_most_recent);
+        button.setContentDescription(resources.getString(R.string.home_most_recent_title));
 
-        registerForContextMenu(mList);
+        button = mTabWidget.addTab(R.drawable.icon_last_tabs);
+        button.setContentDescription(resources.getString(R.string.home_last_tabs_title));
+
+        //Show most visited page as the initial page
+        showMostVisitedPage();
+
+        mTabWidget.setTabSelectionListener(this);
+        mTabWidget.setCurrentTab(mSelectedTab);
     }
 
     @Override
-    public void onDestroyView() {
-        super.onDestroyView();
-        mList = null;
-    }
+    public void load() {}
 
     @Override
-    public void onActivityCreated(Bundle savedInstanceState) {
-        super.onActivityCreated(savedInstanceState);
-
-        // Initialize map of history sections
-        mHistorySections = new SparseArray<HistorySection>();
-
-        // Intialize adapter
-        mAdapter = new HistoryAdapter(getActivity());
-        mList.setAdapter(mAdapter);
-
-        // Create callbacks before the initial loader is started
-        mCursorLoaderCallbacks = new CursorLoaderCallbacks();
-        loadIfVisible();
-    }
-
-    @Override
-    protected void load() {
-        getLoaderManager().initLoader(HISTORY_LOADER_ID, null, mCursorLoaderCallbacks);
-    }
-
-    private String getHistorySectionTitle(HistorySection section) {
-        final Resources resources = getActivity().getResources();
-
-        switch (section) {
-        case TODAY:
-            return resources.getString(R.string.history_today_section);
-        case YESTERDAY:
-            return resources.getString(R.string.history_yesterday_section);
-        case WEEK:
-            return resources.getString(R.string.history_week_section);
-        case OLDER:
-            return resources.getString(R.string.history_older_section);
-        }
-
-        throw new IllegalStateException("Unrecognized history section");
-    }
-
-    private int getHistorySectionsCountBefore(int position) {
-        // Account for the number headers before the given position
-        int sectionsBefore = 0;
-
-        final int historySectionsCount = mHistorySections.size();
-        for (int i = 0; i < historySectionsCount; i++) {
-            final int sectionPosition = mHistorySections.keyAt(i);
-            if (sectionPosition > position) {
-                break;
-            }
-
-            sectionsBefore++;
-        }
-
-        return sectionsBefore;
-    }
-
-    private HistorySection getHistorySectionForTime(long from, long time) {
-        long delta = from - time;
-
-        if (delta < 0) {
-            return HistorySection.TODAY;
-        }
-
-        if (delta < MS_PER_DAY) {
-            return HistorySection.YESTERDAY;
-        }
-
-        if (delta < MS_PER_WEEK) {
-            return HistorySection.WEEK;
-        }
-
-        return HistorySection.OLDER;
-    }
-
-    private void loadHistorySections(Cursor c) {
-        if (c == null || !c.moveToFirst()) {
+    public void onTabChanged(int index) {
+        if (index == mSelectedTab) {
             return;
         }
 
-        // Clear any history sections that may have been loaded before.
-        mHistorySections.clear();
+        if (index == 0) {
+            showMostVisitedPage();
+        } else if (index == 1) {
+            showMostRecentPage();
+        } else if (index == 2) {
+            showLastTabsPage();
+        }
 
-        final Date now = new Date();
-        now.setHours(0);
-        now.setMinutes(0);
-        now.setSeconds(0);
-
-        final long today = now.getTime();
-        HistorySection section = null;
-
-        do {
-            final int position = c.getPosition();
-            final long time = c.getLong(c.getColumnIndexOrThrow(URLColumns.DATE_LAST_VISITED));
-            final HistorySection itemSection = getHistorySectionForTime(today, time);
-
-            if (section != itemSection) {
-                section = itemSection;
-                mHistorySections.append(position + mHistorySections.size(), section);
-            }
-
-            // Reached the last section, no need to continue
-            if (section == HistorySection.OLDER) {
-                break;
-            }
-        } while (c.moveToNext());
+        mTabWidget.setCurrentTab(index);
+        mSelectedTab = index;
     }
 
-    private static class HistoryCursorLoader extends SimpleCursorLoader {
-        // Max number of history results
-        private static final int HISTORY_LIMIT = 100;
-
-        public HistoryCursorLoader(Context context) {
-            super(context);
-        }
-
-        @Override
-        public Cursor loadCursor() {
-            final ContentResolver cr = getContext().getContentResolver();
-            return BrowserDB.getRecentHistory(cr, HISTORY_LIMIT);
-        }
+    private void showSubPage(Fragment subPage) {
+        getChildFragmentManager().beginTransaction()
+                .addToBackStack(null).replace(R.id.visited_page_container, subPage)
+                .commitAllowingStateLoss();
     }
 
-    private class HistoryAdapter extends SimpleCursorAdapter {
-        private static final int ROW_HEADER = 0;
-        private static final int ROW_STANDARD = 1;
-
-        private static final int ROW_TYPE_COUNT = 2;
-
-        public HistoryAdapter(Context context) {
-            super(context, -1, null, new String[] {}, new int[] {});
-        }
-
-        @Override
-        public Object getItem(int position) {
-            final int type = getItemViewType(position);
-
-            // Header items are not in the cursor
-            if (type == ROW_HEADER) {
-                return null;
-            }
-
-            return super.getItem(position - getHistorySectionsCountBefore(position));
-        }
-
-        @Override
-        public int getItemViewType(int position) {
-            if (mHistorySections.get(position) != null) {
-                return ROW_HEADER;
-            }
-
-            return ROW_STANDARD;
-        }
-
-        @Override
-        public int getViewTypeCount() {
-            // view can be either a standard page row, or a header row
-            return ROW_TYPE_COUNT;
-        }
-
-        @Override
-        public boolean isEnabled(int position) {
-            return (getItemViewType(position) == ROW_STANDARD);
-        }
-
-        @Override
-        public int getCount() {
-            // Add the history section headers to the number of reported results.
-            return super.getCount() + mHistorySections.size();
-        }
-
-        @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
-            final int type = getItemViewType(position);
-
-            if (type == ROW_HEADER) {
-                final TextView row;
-                if (convertView == null) {
-                    row = (TextView) mInflater.inflate(R.layout.home_header_row, mList, false);
-                } else {
-                    row = (TextView) convertView;
-                }
-
-                final HistorySection section = mHistorySections.get(position);
-                row.setText(getHistorySectionTitle(section));
-
-                return row;
-            } else {
-                final TwoLinePageRow row;
-                if (convertView == null) {
-                    row = (TwoLinePageRow) mInflater.inflate(R.layout.home_item_row, mList, false);
-                } else {
-                    row = (TwoLinePageRow) convertView;
-                }
-
-                // Account for the search engines
-                position -= getHistorySectionsCountBefore(position);
-
-                final Cursor c = getCursor();
-                if (!c.moveToPosition(position)) {
-                    throw new IllegalStateException("Couldn't move cursor to position " + position);
-                }
-
-                row.updateFromCursor(c);
-
-                return row;
-            }
-        }
+    private void showMostVisitedPage() {
+        final MostVisitedPage mostVisitedPage = MostVisitedPage.newInstance();
+        showSubPage(mostVisitedPage);
     }
 
-    private class CursorLoaderCallbacks implements LoaderCallbacks<Cursor> {
-        @Override
-        public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-            return new HistoryCursorLoader(getActivity());
-        }
+    private void showMostRecentPage() {
+        final MostRecentPage mostRecentPage = MostRecentPage.newInstance();
+        showSubPage(mostRecentPage);
+    }
 
-        @Override
-        public void onLoadFinished(Loader<Cursor> loader, Cursor c) {
-            loadHistorySections(c);
-            mAdapter.swapCursor(c);
-        }
-
-        @Override
-        public void onLoaderReset(Loader<Cursor> loader) {
-            mAdapter.swapCursor(null);
-        }
+    private void showLastTabsPage() {
+        final LastTabsPage lastTabsPage = LastTabsPage.newInstance();
+        showSubPage(lastTabsPage);
     }
 }
