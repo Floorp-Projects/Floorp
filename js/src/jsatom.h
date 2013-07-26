@@ -17,6 +17,7 @@
 #include "jspubtd.h"
 
 #include "gc/Barrier.h"
+#include "gc/Rooting.h"
 #include "js/HashTable.h"
 #include "vm/CommonPropertyNames.h"
 
