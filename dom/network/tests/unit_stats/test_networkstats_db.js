@@ -1,4 +1,4 @@
-/* Any copyright is dedicated to the Public Domain.
+/* Any: copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
@@ -96,7 +96,8 @@ add_test(function test_clear() {
 });
 
 add_test(function test_internalSaveStats_singleSample() {
-  var stats = {connectionType: "wifi",
+  var stats = {appId:          0,
+               connectionType: "wifi",
                timestamp:      Date.now(),
                rxBytes:        0,
                txBytes:        0,
@@ -111,6 +112,7 @@ add_test(function test_internalSaveStats_singleSample() {
     netStatsDb.logAllRecords(function(error, result) {
       do_check_eq(error, null);
       do_check_eq(result.length, 1);
+      do_check_eq(result[0].appId, stats.appId);
       do_check_eq(result[0].connectionType, stats.connectionType);
       do_check_eq(result[0].timestamp, stats.timestamp);
       do_check_eq(result[0].rxBytes, stats.rxBytes);
@@ -129,7 +131,8 @@ add_test(function test_internalSaveStats_arraySamples() {
     var samples = 2;
     var stats = [];
     for (var i = 0; i < samples; i++) {
-      stats.push({connectionType: "wifi",
+      stats.push({appId:          0,
+                  connectionType: "wifi",
                   timestamp:      Date.now() + (10 * i),
                   rxBytes:        0,
                   txBytes:        0,
@@ -148,7 +151,8 @@ add_test(function test_internalSaveStats_arraySamples() {
 
         var success = true;
         for (var i = 0; i < samples; i++) {
-          if (result[i].connectionType != stats[i].connectionType ||
+          if (result[i].appId != stats[i].appId ||
+              result[i].connectionType != stats[i].connectionType ||
               result[i].timestamp != stats[i].timestamp ||
               result[i].rxBytes != stats[i].rxBytes ||
               result[i].txBytes != stats[i].txBytes ||
@@ -172,20 +176,22 @@ add_test(function test_internalRemoveOldStats() {
     var samples = 10;
     var stats = [];
     for (var i = 0; i < samples - 1; i++) {
-      stats.push({connectionType: "wifi", timestamp:    Date.now() + (10 * i),
+      stats.push({appId:               0,
+                  connectionType: "wifi", timestamp:    Date.now() + (10 * i),
                   rxBytes:             0, txBytes:      0,
                   rxTotalBytes:     1234, txTotalBytes: 1234});
     }
 
-    stats.push({connectionType: "wifi", timestamp:    Date.now() + (10 * samples),
-                  rxBytes:           0, txBytes:      0,
-                  rxTotalBytes:   1234, txTotalBytes: 1234});
+    stats.push({appId:               0,
+                connectionType: "wifi", timestamp:    Date.now() + (10 * samples),
+                rxBytes:             0, txBytes:      0,
+                rxTotalBytes:     1234, txTotalBytes: 1234});
 
     netStatsDb.dbNewTxn("readwrite", function(txn, store) {
       netStatsDb._saveStats(txn, store, stats);
       var date = stats[stats.length -1].timestamp
                  + (netStatsDb.sampleRate * netStatsDb.maxStorageSamples - 1) - 1;
-      netStatsDb._removeOldStats(txn, store, "wifi", date);
+      netStatsDb._removeOldStats(txn, store, 0, "wifi", date);
     }, function(error, result) {
       do_check_eq(error, null);
 
@@ -226,16 +232,19 @@ function processSamplesDiff(lastStat, newStat, callback) {
 add_test(function test_processSamplesDiffSameSample() {
   var sampleRate = netStatsDb.sampleRate;
   var date = filterTimestamp(new Date());
-  var lastStat = {connectionType: "wifi", timestamp:    date,
+  var lastStat = {appId:               0,
+                  connectionType: "wifi", timestamp:    date,
                   rxBytes:             0, txBytes:      0,
                   rxTotalBytes:     1234, txTotalBytes: 1234};
 
-  var newStat = {connectionType: "wifi", timestamp:    date,
+  var newStat = {appId:                 0,
+                 connectionType:   "wifi", timestamp:    date,
                  rxBytes:               0, txBytes:      0,
                  rxTotalBytes:       2234, txTotalBytes: 2234};
 
   processSamplesDiff(lastStat, newStat, function(result) {
     do_check_eq(result.length, 1);
+    do_check_eq(result[0].appId, newStat.appId);
     do_check_eq(result[0].connectionType, newStat.connectionType);
     do_check_eq(result[0].timestamp, newStat.timestamp);
     do_check_eq(result[0].rxBytes, newStat.rxTotalBytes - lastStat.rxTotalBytes);
@@ -249,16 +258,19 @@ add_test(function test_processSamplesDiffSameSample() {
 add_test(function test_processSamplesDiffNextSample() {
   var sampleRate = netStatsDb.sampleRate;
   var date = filterTimestamp(new Date());
-  var lastStat = {connectionType: "wifi", timestamp:    date,
+  var lastStat = {appId:               0,
+                  connectionType: "wifi", timestamp:    date,
                   rxBytes:             0, txBytes:      0,
                   rxTotalBytes:     1234, txTotalBytes: 1234};
 
-  var newStat = {connectionType: "wifi", timestamp:    date + sampleRate,
+  var newStat = {appId:                 0,
+                 connectionType:   "wifi", timestamp:    date + sampleRate,
                  rxBytes:               0, txBytes:      0,
                  rxTotalBytes:        500, txTotalBytes: 500};
 
   processSamplesDiff(lastStat, newStat, function(result) {
     do_check_eq(result.length, 2);
+    do_check_eq(result[1].appId, newStat.appId);
     do_check_eq(result[1].connectionType, newStat.connectionType);
     do_check_eq(result[1].timestamp, newStat.timestamp);
     do_check_eq(result[1].rxBytes, newStat.rxTotalBytes);
@@ -273,16 +285,19 @@ add_test(function test_processSamplesDiffSamplesLost() {
   var samples = 5;
   var sampleRate = netStatsDb.sampleRate;
   var date = filterTimestamp(new Date());
-  var lastStat = {connectionType: "wifi", timestamp:    date,
+  var lastStat = {appId:               0,
+                  connectionType: "wifi", timestamp:    date,
                   rxBytes:             0, txBytes:      0,
                   rxTotalBytes:     1234, txTotalBytes: 1234};
 
-  var newStat = {connectionType: "wifi", timestamp:    date + (sampleRate * samples),
-                 rxBytes:               0, txBytes:      0,
+  var newStat = {appId:                0,
+                 connectionType:  "wifi", timestamp:    date + (sampleRate * samples),
+                 rxBytes:              0, txBytes:      0,
                  rxTotalBytes:      2234, txTotalBytes: 2234};
 
   processSamplesDiff(lastStat, newStat, function(result) {
     do_check_eq(result.length, samples + 1);
+    do_check_eq(result[0].appId, newStat.appId);
     do_check_eq(result[samples].connectionType, newStat.connectionType);
     do_check_eq(result[samples].timestamp, newStat.timestamp);
     do_check_eq(result[samples].rxBytes, newStat.rxTotalBytes - lastStat.rxTotalBytes);
@@ -294,10 +309,11 @@ add_test(function test_processSamplesDiffSamplesLost() {
 });
 
 add_test(function test_saveStats() {
-  var stats = { connectionType: "wifi",
-                date:           new Date(),
-                rxBytes:        2234,
-                txBytes:        2234};
+  var stats = {appId:          0,
+               connectionType: "wifi",
+               date:           new Date(),
+               rxBytes:        2234,
+               txBytes:        2234};
 
   netStatsDb.clear(function (error, result) {
     do_check_eq(error, null);
@@ -306,6 +322,7 @@ add_test(function test_saveStats() {
       netStatsDb.logAllRecords(function(error, result) {
         do_check_eq(error, null);
         do_check_eq(result.length, 1);
+        do_check_eq(result[0].appId, stats.appId);
         do_check_eq(result[0].connectionType, stats.connectionType);
         let timestamp = filterTimestamp(stats.date);
         do_check_eq(result[0].timestamp, timestamp);
@@ -313,6 +330,34 @@ add_test(function test_saveStats() {
         do_check_eq(result[0].txBytes, 0);
         do_check_eq(result[0].rxTotalBytes, stats.rxBytes);
         do_check_eq(result[0].txTotalBytes, stats.txBytes);
+        run_next_test();
+      });
+    });
+  });
+});
+
+add_test(function test_saveAppStats() {
+  var stats = {appId:          1,
+               connectionType: "wifi",
+               date:           new Date(),
+               rxBytes:        2234,
+               txBytes:        2234};
+
+  netStatsDb.clear(function (error, result) {
+    do_check_eq(error, null);
+    netStatsDb.saveStats(stats, function(error, result) {
+      do_check_eq(error, null);
+      netStatsDb.logAllRecords(function(error, result) {
+        do_check_eq(error, null);
+        do_check_eq(result.length, 1);
+        do_check_eq(result[0].appId, stats.appId);
+        do_check_eq(result[0].connectionType, stats.connectionType);
+        let timestamp = filterTimestamp(stats.date);
+        do_check_eq(result[0].timestamp, timestamp);
+        do_check_eq(result[0].rxBytes, stats.rxBytes);
+        do_check_eq(result[0].txBytes, stats.txBytes);
+        do_check_eq(result[0].rxTotalBytes, 0);
+        do_check_eq(result[0].txTotalBytes, 0);
         run_next_test();
       });
     });
@@ -338,14 +383,16 @@ add_test(function test_find () {
   var end = new Date(start + (sampleRate * (samples - 1)));
   start = new Date(start - sampleRate);
   var stats = [];
-  for (var i = 0; i < samples; i++) {i
-    stats.push({connectionType: "wifi", timestamp:    saveDate + (sampleRate * i),
+  for (var i = 0; i < samples; i++) {
+    stats.push({appId:               0,
+                connectionType: "wifi", timestamp:    saveDate + (sampleRate * i),
                 rxBytes:             0, txBytes:      10,
                 rxTotalBytes:        0, txTotalBytes: 0});
 
-    stats.push({connectionType: "mobile", timestamp:  saveDate + (sampleRate * i),
-                rxBytes:             0, txBytes:      10,
-                rxTotalBytes:        0, txTotalBytes: 0});
+    stats.push({appId:                 0,
+                connectionType: "mobile", timestamp:    saveDate + (sampleRate * i),
+                rxBytes:               0, txBytes:      10,
+                rxTotalBytes:          0, txTotalBytes: 0});
   }
 
   prepareFind(stats, function(error, result) {
@@ -371,8 +418,103 @@ add_test(function test_find () {
         do_check_eq(result.data[1].txBytes, 20);
         do_check_eq(result.data[samples].rxBytes, 0);
         run_next_test();
-      }, {start: start, end: end});
-    }, {start: start, end: end, connectionType: "wifi"});
+      }, {appId: 0, start: start, end: end});
+    }, {start: start, end: end, connectionType: "wifi", appId: 0});
+  });
+});
+
+add_test(function test_findAppStats () {
+  var samples = 5;
+  var sampleRate = netStatsDb.sampleRate;
+  var start = Date.now();
+  var saveDate = filterTimestamp(new Date());
+  var end = new Date(start + (sampleRate * (samples - 1)));
+  start = new Date(start - sampleRate);
+  var stats = [];
+  for (var i = 0; i < samples; i++) {
+    stats.push({appId:               1,
+                connectionType: "wifi", timestamp:    saveDate + (sampleRate * i),
+                rxBytes:             0, txBytes:      10,
+                rxTotalBytes:        0, txTotalBytes: 0});
+
+    stats.push({appId:                 1,
+                connectionType: "mobile", timestamp:    saveDate + (sampleRate * i),
+                rxBytes:               0, txBytes:      10,
+                rxTotalBytes:          0, txTotalBytes: 0});
+  }
+
+  prepareFind(stats, function(error, result) {
+    do_check_eq(error, null);
+    netStatsDb.find(function (error, result) {
+      do_check_eq(error, null);
+      do_check_eq(result.connectionType, "wifi");
+      do_check_eq(result.start.getTime(), start.getTime());
+      do_check_eq(result.end.getTime(), end.getTime());
+      do_check_eq(result.data.length, samples + 1);
+      do_check_eq(result.data[0].rxBytes, null);
+      do_check_eq(result.data[1].rxBytes, 0);
+      do_check_eq(result.data[samples].rxBytes, 0);
+
+      netStatsDb.findAll(function (error, result) {
+        do_check_eq(error, null);
+        do_check_eq(result.connectionType, null);
+        do_check_eq(result.start.getTime(), start.getTime());
+        do_check_eq(result.end.getTime(), end.getTime());
+        do_check_eq(result.data.length, samples + 1);
+        do_check_eq(result.data[0].rxBytes, null);
+        do_check_eq(result.data[1].rxBytes, 0);
+        do_check_eq(result.data[1].txBytes, 20);
+        do_check_eq(result.data[samples].rxBytes, 0);
+        run_next_test();
+      }, {start: start, end: end, appId: 1});
+    }, {start: start, end: end, connectionType: "wifi", appId: 1});
+  });
+});
+
+add_test(function test_saveMultipleAppStats () {
+  var saveDate = filterTimestamp(new Date());
+  var cached = Object.create(null);
+
+  cached['1wifi'] = {appId:                 1,
+                     connectionType:   "wifi", date:    new Date(),
+                     rxBytes:               0, txBytes:      10};
+
+  cached['1mobile'] = {appId:                 1,
+                       connectionType: "mobile", date:    new Date(),
+                       rxBytes:               0, txBytes:      10};
+
+  cached['2wifi'] = {appId:                 2,
+                     connectionType:   "wifi", date:    new Date(),
+                     rxBytes:               0, txBytes:      10};
+
+  cached['2mobile'] = {appId:                 2,
+                       connectionType: "mobile", date:    new Date(),
+                       rxBytes:               0, txBytes:      10};
+
+  let keys = Object.keys(cached);
+  let index = 0;
+
+  netStatsDb.clear(function (error, result) {
+    do_check_eq(error, null);
+    netStatsDb.saveStats(cached[keys[index]],
+      function callback(error, result) {
+        do_check_eq(error, null);
+
+        if (index == keys.length - 1) {
+          netStatsDb.logAllRecords(function(error, result) {
+          do_check_eq(error, null);
+          do_check_eq(result.length, 4);
+          do_check_eq(result[0].appId, 1);
+          do_check_eq(result[0].connectionType, 'mobile');
+          do_check_eq(result[0].rxBytes, 0);
+          do_check_eq(result[0].txBytes, 10);
+          run_next_test();
+          });
+        }
+
+        index += 1;
+        netStatsDb.saveStats(cached[keys[index]], callback);
+    });
   });
 });
 
