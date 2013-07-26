@@ -23,6 +23,7 @@
 #include "jsversion.h"
 
 #include "js/Vector.h"
+#include "vm/RegExpObject.h"
 
 namespace js {
 namespace frontend {
