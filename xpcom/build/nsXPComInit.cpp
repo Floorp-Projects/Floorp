@@ -99,6 +99,7 @@ extern nsresult nsStringInputStreamConstructor(nsISupports *, REFNSIID, void **)
 #include "nsSystemInfo.h"
 #include "nsMemoryReporterManager.h"
 #include "nsMemoryInfoDumper.h"
+#include "nsSecurityConsoleMessage.h"
 #include "nsMessageLoop.h"
 
 #include <locale.h>
@@ -209,6 +210,8 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsMemoryInfoDumper)
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsIOUtil)
 
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsSecurityConsoleMessage)
+
 static nsresult
 nsThreadManagerGetSingleton(nsISupports* outer,
                             const nsIID& aIID,
@@ -249,6 +252,8 @@ static NS_DEFINE_CID(kSimpleUnicharStreamFactoryCID, NS_SIMPLE_UNICHAR_STREAM_FA
 NS_DEFINE_NAMED_CID(NS_CHROMEREGISTRY_CID);
 NS_DEFINE_NAMED_CID(NS_CHROMEPROTOCOLHANDLER_CID);
 
+NS_DEFINE_NAMED_CID(NS_SECURITY_CONSOLE_MESSAGE_CID);
+
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsChromeRegistry,
                                          nsChromeRegistry::GetSingleton)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsChromeProtocolHandler)
@@ -283,6 +288,7 @@ const mozilla::Module::CIDEntry kXPCOMCIDEntries[] = {
 #include "XPCOMModule.inc"
     { &kNS_CHROMEREGISTRY_CID, false, NULL, nsChromeRegistryConstructor },
     { &kNS_CHROMEPROTOCOLHANDLER_CID, false, NULL, nsChromeProtocolHandlerConstructor },
+    { &kNS_SECURITY_CONSOLE_MESSAGE_CID, false, NULL, nsSecurityConsoleMessageConstructor },
     { NULL }
 };
 #undef COMPONENT
@@ -293,6 +299,7 @@ const mozilla::Module::ContractIDEntry kXPCOMContracts[] = {
     { NS_CHROMEREGISTRY_CONTRACTID, &kNS_CHROMEREGISTRY_CID },
     { NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "chrome", &kNS_CHROMEPROTOCOLHANDLER_CID },
     { NS_INIPARSERFACTORY_CONTRACTID, &kINIParserFactoryCID },
+    { NS_SECURITY_CONSOLE_MESSAGE_CONTRACTID, &kNS_SECURITY_CONSOLE_MESSAGE_CID },
     { NULL }
 };
 #undef COMPONENT
