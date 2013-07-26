@@ -6,10 +6,9 @@
 
 #include "mozilla/MathAlgorithms.h"
 
-#include "ion/arm/Assembler-arm.h"
-#include "ion/Lowering.h"
 #include "ion/MIR.h"
-
+#include "ion/Lowering.h"
+#include "ion/arm/Assembler-arm.h"
 #include "ion/shared/Lowering-shared-inl.h"
 
 using namespace js;
