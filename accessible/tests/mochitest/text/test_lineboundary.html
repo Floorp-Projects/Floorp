@@ -17,7 +17,8 @@
       // __h__e__l__l__o__ __m__y__ __f__r__i__e__n__d__
       //  0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15
 
-      var IDs = [ "input", "div", "editable", "textarea" ];
+      var IDs = [ "input", "div", "editable", "textarea",
+                  getNode("ta", getNode("ta_cntr").contentDocument) ];
 
       testTextBeforeOffset(IDs, BOUNDARY_LINE_START,
                            [ [ 0, 15, "", 0, 0 ] ]);
@@ -76,6 +77,26 @@
                             [ 9, 18, "\n", 18, 19 ],
                             [ 19, 19, "", 19, 19 ]]);
 
+      //////////////////////////////////////////////////////////////////////////
+      // a * b (* is embedded char for link)
+      testTextBeforeOffset([ getAccessible("ht_1").firstChild ], BOUNDARY_LINE_START,
+                           [ [ 0, 5, "", 0, 0 ] ]);
+
+      testTextBeforeOffset([ getAccessible("ht_1").firstChild ], BOUNDARY_LINE_END,
+                           [ [ 0, 5, "", 0, 0 ] ]);
+
+      testTextAtOffset([ getAccessible("ht_1").firstChild ], BOUNDARY_LINE_START,
+                       [ [ 0, 5, "a " + kEmbedChar + " c", 0, 5 ] ]);
+
+      testTextAtOffset([ getAccessible("ht_1").firstChild ], BOUNDARY_LINE_END,
+                       [ [ 0, 5, "a " + kEmbedChar + " c", 0, 5 ] ]);
+
+      testTextAfterOffset([ getAccessible("ht_1").firstChild ], BOUNDARY_LINE_START,
+                          [ [ 0, 5, "", 5, 5 ] ]);
+
+      testTextAfterOffset([ getAccessible("ht_1").firstChild ], BOUNDARY_LINE_END,
+                          [ [ 0, 5, "", 5, 5 ] ]);
+                           
       SimpleTest.finish();
     }
 
@@ -110,6 +131,8 @@
   <div id="div">hello my friend</div>
   <div id="editable" contenteditable="true">hello my friend</div>
   <textarea id="textarea">hello my friend</textarea>
+  <iframe id="ta_cntr"
+          src="data:text/html,<html><body><textarea id='ta'>hello my friend</textarea></body></html>"></iframe>
 
   <pre>
     <div id="ml_div">oneword
@@ -127,5 +150,7 @@ two words
 two words
 </textarea>
   </pre>
+
+  <iframe id="ht_1" src="data:text/html,<html><body>a <a href=''>b</a> c</body></html>"></iframe>
 </body>
 </html>
