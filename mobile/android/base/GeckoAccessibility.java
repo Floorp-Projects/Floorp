@@ -364,7 +364,7 @@ public class GeckoAccessibility {
                                         return true;
                                     }
                                     GeckoAppShell.
-                                        sendEventToGecko(GeckoEvent.createBroadcastEvent("Accessibility:MoveCaret", movementData.toString()));
+                                        sendEventToGecko(GeckoEvent.createBroadcastEvent("Accessibility:MoveByGranularity", movementData.toString()));
                                 }
                                 return true;
                             } else if (action == AccessibilityNodeInfo.ACTION_PREVIOUS_AT_MOVEMENT_GRANULARITY &&
@@ -377,7 +377,7 @@ public class GeckoAccessibility {
                                     return true;
                                 }
                                 GeckoAppShell.
-                                    sendEventToGecko(GeckoEvent.createBroadcastEvent("Accessibility:MoveCaret", movementData.toString()));
+                                    sendEventToGecko(GeckoEvent.createBroadcastEvent("Accessibility:MoveByGranularity", movementData.toString()));
                                 return true;
                             }
                             return host.performAccessibilityAction(action, arguments);

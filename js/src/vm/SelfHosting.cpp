@@ -134,7 +134,7 @@ intrinsic_ToInteger(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     double result;
-    if (!ToInteger(cx, args.handleAt(0), &result))
+    if (!ToInteger(cx, args[0], &result))
         return false;
     args.rval().setDouble(result);
     return true;
@@ -192,7 +192,7 @@ intrinsic_AssertionFailed(JSContext *cx, unsigned argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
     if (args.length() > 0) {
         // try to dump the informative string
-        JSString *str = ToString<CanGC>(cx, args.handleAt(0));
+        JSString *str = ToString<CanGC>(cx, args[0]);
         if (str) {
             const jschar *chars = str->getChars(cx);
             if (chars) {
@@ -219,7 +219,7 @@ intrinsic_MakeConstructible(JSContext *cx, unsigned argc, Value *vp)
     // Normal .prototype properties aren't enumerable.  But for this to clone
     // correctly, it must be enumerable.
     RootedObject ctor(cx, &args[0].toObject());
-    if (!JSObject::defineProperty(cx, ctor, cx->names().classPrototype, args.handleAt(1),
+    if (!JSObject::defineProperty(cx, ctor, cx->names().classPrototype, args[1],
                                   JS_PropertyStub, JS_StrictPropertyStub,
                                   JSPROP_READONLY | JSPROP_ENUMERATE | JSPROP_PERMANENT))
     {
@@ -899,9 +899,7 @@ CloneValue(JSContext *cx, MutableHandleValue vp, CloneMemory &clonedObjects)
             return false;
         vp.setString(clone);
     } else {
-        if (JSString *valSrc = JS_ValueToSource(cx, vp))
-            printf("Error: Can't yet clone value: %s\n", JS_EncodeString(cx, valSrc));
-        return false;
+        MOZ_ASSUME_UNREACHABLE("Self-hosting CloneValue can't clone given value.");
     }
     return true;
 }

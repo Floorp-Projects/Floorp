@@ -60,6 +60,17 @@ public:
    */
   virtual void PostDelayedTask(Task* aTask, int aDelayMs) = 0;
 
+
+  /**
+   * Request any special actions be performed when panning starts
+   */
+  virtual void HandlePanBegin() {}
+
+  /**
+   * Request any special actions be performed when panning ends
+   */
+  virtual void HandlePanEnd() {}
+
   GeckoContentController() {}
   virtual ~GeckoContentController() {}
 };

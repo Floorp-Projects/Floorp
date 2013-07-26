@@ -385,6 +385,9 @@ FindBlockIndex(JSScript *script, StaticBlockObject &block)
     MOZ_ASSUME_UNREACHABLE("Block not found");
 }
 
+static bool
+SaveSharedScriptData(ExclusiveContext *, Handle<JSScript *>, SharedScriptData *, uint32_t);
+
 template<XDRMode mode>
 bool
 js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enclosingScript,
@@ -650,7 +653,7 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
     }
 
     if (mode == XDR_DECODE) {
-        if (!SaveSharedScriptData(cx, script, ssd))
+        if (!SaveSharedScriptData(cx, script, ssd, nsrcnotes))
             return false;
     }
 
@@ -1516,8 +1519,15 @@ js::SharedScriptData::new_(ExclusiveContext *cx, uint32_t codeLength,
     return entry;
 }
 
-bool
-js::SaveSharedScriptData(ExclusiveContext *cx, Handle<JSScript *> script, SharedScriptData *ssd)
+/*
+ * Takes ownership of its *ssd parameter and either adds it into the runtime's
+ * ScriptDataTable or frees it if a matching entry already exists.
+ *
+ * Sets the |code| and |atoms| fields on the given JSScript.
+ */
+static bool
+SaveSharedScriptData(ExclusiveContext *cx, Handle<JSScript *> script, SharedScriptData *ssd,
+                     uint32_t nsrcnotes)
 {
     ASSERT(script != NULL);
     ASSERT(ssd != NULL);
@@ -1553,8 +1563,20 @@ js::SaveSharedScriptData(ExclusiveContext *cx, Handle<JSScript *> script, Shared
 #endif
 
     script->code = ssd->data;
-    script->atoms = ssd->atoms(script->length, script->numNotes());
+    script->atoms = ssd->atoms(script->length, nsrcnotes);
     return true;
+}
+
+static inline void
+MarkScriptData(JSRuntime *rt, const jsbytecode *bytecode)
+{
+    /*
+     * As an invariant, a ScriptBytecodeEntry should not be 'marked' outside of
+     * a GC. Since SweepScriptBytecodes is only called during a full gc,
+     * to preserve this invariant, only mark during a full gc.
+     */
+    if (rt->gcIsFull)
+        SharedScriptData::fromBytecode(bytecode)->marked = true;
 }
 
 void
@@ -1858,7 +1880,7 @@ JSScript::fullyInitTrivial(ExclusiveContext *cx, Handle<JSScript*> script)
     ssd->data[0] = JSOP_STOP;
     ssd->data[1] = SRC_NULL;
     script->length = 1;
-    return SaveSharedScriptData(cx, script, ssd);
+    return SaveSharedScriptData(cx, script, ssd, 1);
 }
 
 /* static */ bool
@@ -1898,7 +1920,7 @@ JSScript::fullyInitFromEmitter(ExclusiveContext *cx, HandleScript script, Byteco
         return false;
     InitAtomMap(bce->atomIndices.getMap(), ssd->atoms(script->length, nsrcnotes));
 
-    if (!SaveSharedScriptData(cx, script, ssd))
+    if (!SaveSharedScriptData(cx, script, ssd, nsrcnotes))
         return false;
 
     uint32_t nfixed = bce->sc->isFunctionBox() ? script->bindings.numVars() : 0;
@@ -2779,7 +2801,7 @@ JSScript::markChildren(JSTracer *trc)
         compartment()->mark();
 
         if (code)
-            MarkScriptBytecode(trc->runtime, code);
+            MarkScriptData(trc->runtime, code);
     }
 
     bindings.trace(trc);
