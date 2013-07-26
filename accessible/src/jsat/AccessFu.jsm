@@ -658,7 +658,7 @@ var Input = {
     switch (gestureName) {
       case 'dwell1':
       case 'explore1':
-        this.moveToPoint('SimpleTouch', aGesture.x, aGesture.y);
+        this.moveToPoint('Simple', aGesture.x, aGesture.y);
         break;
       case 'doubletap1':
         this.activateCurrent();
