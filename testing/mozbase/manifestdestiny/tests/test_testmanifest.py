@@ -29,6 +29,17 @@ class TestTestManifest(unittest.TestCase):
         last_test = manifest.active_tests(exists=False, toolkit='cocoa')[-1]
         self.assertEqual(last_test['expected'], 'fail')
 
+    def test_comments(self):
+        """
+        ensure comments work, see
+        https://bugzilla.mozilla.org/show_bug.cgi?id=813674
+        """
+        comment_example = os.path.join(here, 'comment-example.ini')
+        manifest = TestManifest(manifests=(comment_example,))
+        self.assertEqual(len(manifest.tests), 8)
+        names = [i['name'] for i in manifest.tests]
+        self.assertFalse('test_0202_app_launch_apply_update_dirlocked.js' in names)
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -358,21 +358,17 @@
 
       <field name="_rowCount">0</field>
       <property name="rowCount" readonly="true" onget="return this._rowCount;"/>
-
       <field name="_columnCount">0</field>
       <property name="columnCount" readonly="true" onget="return this._columnCount;"/>
-
       <property name="_containerSize">
         <getter><![CDATA[
             // return the rect that represents our bounding box
-            let containerNode = this.parentNode;
-
+            let containerNode = this.hasAttribute("flex") ? this : this.parentNode;
             // Autocomplete is a binding within a binding, so we have to step
             // up an additional parentNode.
             if (containerNode.id == "results-vbox" ||
                 containerNode.id == "searches-vbox")
                 containerNode = containerNode.parentNode;
-
             let rect = containerNode.getBoundingClientRect();
             // return falsy if the container has no height
             return rect.height ? {

@@ -522,7 +522,7 @@ nsTableCellFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 }
 
 int
-nsTableCellFrame::GetSkipSides() const
+nsTableCellFrame::GetSkipSides(const nsHTMLReflowState* aReflowState) const
 {
   int skip = 0;
   if (nullptr != GetPrevInFlow()) {

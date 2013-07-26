@@ -37,6 +37,7 @@ if CONFIG['MOZ_WEBGL']:
         'WebGLContextValidate.cpp',
         'WebGLContextFramebufferOperations.cpp',
         'WebGLContextVertexArray.cpp',
+        'WebGLContextVertices.cpp',
         'WebGLElementArrayCache.cpp',
         'WebGLExtensionBase.cpp',
         'WebGLExtensionCompressedTextureATC.cpp',

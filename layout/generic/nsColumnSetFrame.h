@@ -46,6 +46,12 @@ public:
   virtual nscoord GetMinWidth(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
   virtual nscoord GetPrefWidth(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
 
+  /**
+   * Retrieve the available height for content of this frame. The available content
+   * height is the available height for the frame, minus borders and padding.
+   */
+  virtual nscoord GetAvailableContentHeight(const nsHTMLReflowState& aReflowState);
+
   virtual nsIFrame* GetContentInsertionFrame() MOZ_OVERRIDE {
     nsIFrame* frame = GetFirstPrincipalChild();
 
@@ -123,6 +129,14 @@ protected:
     // The last known height that was 'infeasible'. A column height is
     // infeasible if not all child content fits within the specified height.
     nscoord mKnownInfeasibleHeight;
+
+    // Height of the column set frame
+    nscoord mComputedHeight;
+
+    // The height "consumed" by previous-in-flows.
+    // The computed height should be equal to the height of the element (i.e.
+    // the computed height itself) plus the consumed height.
+    nscoord mConsumedHeight;
   };
 
   /**

@@ -1822,22 +1822,22 @@ struct MOZ_STACK_CLASS ExceptionArgParser
          *   stack:     Call stack (see argument 2).
          *   data:      User data (see argument 3).
          */
-        if (args.length() > 0 && !parseMessage(args.handleAt(0)))
+        if (args.length() > 0 && !parseMessage(args[0]))
             return false;
         if (args.length() > 1) {
             if (args[1].isObject()) {
                 RootedObject obj(cx, &args[1].toObject());
                 return parseOptionsObject(obj);
             }
-            if (!parseResult(args.handleAt(1)))
+            if (!parseResult(args[1]))
                 return false;
         }
         if (args.length() > 2) {
-            if (!parseStack(args.handleAt(2)))
+            if (!parseStack(args[2]))
                 return false;
         }
         if (args.length() > 3) {
-            if (!parseData(args.handleAt(3)))
+            if (!parseData(args[3]))
                 return false;
         }
         return true;
@@ -2898,7 +2898,7 @@ SandboxImport(JSContext *cx, unsigned argc, Value *vp)
         XPCThrower::Throw(NS_ERROR_UNEXPECTED, cx);
         return false;
     }
-    if (!JS_SetPropertyById(cx, thisObject, id, &args[0]))
+    if (!JS_SetPropertyById(cx, thisObject, id, args[0]))
         return false;
 
     args.rval().setUndefined();
@@ -3702,7 +3702,7 @@ nsXPCComponents_utils_Sandbox::CallOrConstruct(nsIXPConnectWrappedNative *wrappe
     SandboxOptions options(cx);
 
     if (args.length() > 1 && args[1].isObject()) {
-        if (NS_FAILED(ParseOptionsObject(cx, args.handleAt(1), options)))
+        if (NS_FAILED(ParseOptionsObject(cx, args[1], options)))
             return ThrowAndFail(NS_ERROR_INVALID_ARG, cx, _retval);
     }
 
@@ -4287,7 +4287,7 @@ nsXPCComponents_Utils::MakeObjectPropsNormal(const Value &vobj, JSContext *cx)
             continue;
 
         if (!WrapCallable(cx, obj, id, propobj, &v) ||
-            !JS_SetPropertyById(cx, obj, id, v.address()))
+            !JS_SetPropertyById(cx, obj, id, &v))
             return NS_ERROR_FAILURE;
     }
 
