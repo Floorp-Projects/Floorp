@@ -809,7 +809,7 @@ protected:
 
   // Object Management
   virtual ~nsGlobalWindow();
-  void CleanUp(bool aIgnoreModalDialog);
+  void CleanUp();
   void ClearControllers();
   nsresult FinalClose();
 
@@ -1244,7 +1244,7 @@ protected:
   nsCOMPtr<nsIURI> mLastOpenedURI;
 #endif
 
-  bool mCleanedUp, mCallCleanUpAfterModalDialogCloses;
+  bool mCleanedUp;
 
   nsCOMPtr<nsIDOMOfflineResourceList> mApplicationCache;
 
