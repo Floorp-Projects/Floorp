@@ -1470,8 +1470,7 @@ class MethodDefiner(PropertyDefiner):
                                  "length": 1,
                                  "flags": "0",
                                  "condition":
-                                     MemberCondition(None,
-                                                     "nsINode::IsChromeOrXBL") })
+                                     MemberCondition(None, "IsChromeOrXBL") })
 
         if not static:
             stringifier = descriptor.operations['Stringifier']
