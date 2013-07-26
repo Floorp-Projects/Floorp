@@ -5233,6 +5233,7 @@ class MStoreTypedArrayElement
     void setRacy() {
         racy_ = true;
     }
+    bool isOperandTruncated(size_t index) const;
 };
 
 class MStoreTypedArrayElementHole
@@ -5295,6 +5296,7 @@ class MStoreTypedArrayElementHole
     AliasSet getAliasSet() const {
         return AliasSet::Store(AliasSet::TypedArrayElement);
     }
+    bool isOperandTruncated(size_t index) const;
 };
 
 // Store a value infallibly to a statically known typed array.
@@ -5322,6 +5324,11 @@ class MStoreTypedArrayElementStatic :
     }
 
     ArrayBufferView::ViewType viewType() const { return JS_GetArrayBufferViewType(typedArray_); }
+    bool isFloatArray() const {
+        return (viewType() == TypedArrayObject::TYPE_FLOAT32 ||
+                viewType() == TypedArrayObject::TYPE_FLOAT64);
+    }
+
     void *base() const;
     size_t length() const;
 
@@ -5330,6 +5337,7 @@ class MStoreTypedArrayElementStatic :
     AliasSet getAliasSet() const {
         return AliasSet::Store(AliasSet::TypedArrayElement);
     }
+    bool isOperandTruncated(size_t index) const;
 };
 
 // Compute an "effective address", i.e., a compound computation of the form:
