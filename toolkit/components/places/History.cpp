@@ -297,7 +297,7 @@ GetURIFromJSObject(JSContext* aCtx,
                    const char* aProperty)
 {
   JS::Rooted<JS::Value> uriVal(aCtx);
-  JSBool rc = JS_GetProperty(aCtx, aObject, aProperty, &uriVal);
+  JSBool rc = JS_GetProperty(aCtx, aObject, aProperty, uriVal.address());
   NS_ENSURE_TRUE(rc, nullptr);
   return GetJSValueAsURI(aCtx, uriVal);
 }
@@ -355,7 +355,7 @@ GetStringFromJSObject(JSContext* aCtx,
                       nsString& _string)
 {
   JS::Rooted<JS::Value> val(aCtx);
-  JSBool rc = JS_GetProperty(aCtx, aObject, aProperty, &val);
+  JSBool rc = JS_GetProperty(aCtx, aObject, aProperty, val.address());
   if (!rc) {
     _string.SetIsVoid(true);
     return;
@@ -385,7 +385,7 @@ GetIntFromJSObject(JSContext* aCtx,
                    IntType* _int)
 {
   JS::Rooted<JS::Value> value(aCtx);
-  JSBool rc = JS_GetProperty(aCtx, aObject, aProperty, &value);
+  JSBool rc = JS_GetProperty(aCtx, aObject, aProperty, value.address());
   NS_ENSURE_TRUE(rc, NS_ERROR_UNEXPECTED);
   if (JSVAL_IS_VOID(value)) {
     return NS_ERROR_INVALID_ARG;
@@ -2808,7 +2808,7 @@ History::UpdatePlaces(const JS::Value& aPlaceInfos,
     JS::Rooted<JSObject*> visits(aCtx, nullptr);
     {
       JS::Rooted<JS::Value> visitsVal(aCtx);
-      JSBool rc = JS_GetProperty(aCtx, info, "visits", &visitsVal);
+      JSBool rc = JS_GetProperty(aCtx, info, "visits", visitsVal.address());
       NS_ENSURE_TRUE(rc, NS_ERROR_UNEXPECTED);
       if (!JSVAL_IS_PRIMITIVE(visitsVal)) {
         visits = JSVAL_TO_OBJECT(visitsVal);

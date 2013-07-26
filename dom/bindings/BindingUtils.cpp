@@ -1322,13 +1322,7 @@ GetPropertyOnPrototype(JSContext* cx, JS::Handle<JSObject*> proxy,
     return true;
   }
 
-  JS::Rooted<JS::Value> value(cx);
-  if (!JS_ForwardGetPropertyTo(cx, proto, id, proxy, &value)) {
-    return false;
-  }
-
-  *vp = value;
-  return true;
+  return JS_ForwardGetPropertyTo(cx, proto, id, proxy, vp);
 }
 
 bool
@@ -1747,7 +1741,7 @@ InterfaceHasInstance(JSContext* cx, JS::Handle<JSObject*> obj,
   }
 
   JS::Rooted<JS::Value> protov(cx);
-  DebugOnly<bool> ok = JS_GetProperty(cx, obj, "prototype", &protov);
+  DebugOnly<bool> ok = JS_GetProperty(cx, obj, "prototype", protov.address());
   MOZ_ASSERT(ok, "Someone messed with our prototype property?");
 
   JS::Rooted<JSObject*> interfacePrototype(cx, &protov.toObject());
@@ -1851,7 +1845,7 @@ GetWindowForJSImplementedObject(JSContext* cx, JS::Handle<JSObject*> obj,
 
   // Look up the content-side object.
   JS::Rooted<JS::Value> domImplVal(cx);
-  if (!JS_GetProperty(cx, obj, "__DOM_IMPL__", &domImplVal)) {
+  if (!JS_GetProperty(cx, obj, "__DOM_IMPL__", domImplVal.address())) {
     return false;
   }
 

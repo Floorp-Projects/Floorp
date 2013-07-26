@@ -121,7 +121,7 @@ GetDoubleWrappedJSObject(XPCCallContext& ccx, XPCWrappedNative* wrapper)
             JSAutoCompartment ac(ccx, mainObj);
 
             RootedValue val(ccx);
-            if (JS_GetPropertyById(ccx, mainObj, id, &val) &&
+            if (JS_GetPropertyById(ccx, mainObj, id, val.address()) &&
                 !JSVAL_IS_PRIMITIVE(val)) {
                 obj = JSVAL_TO_OBJECT(val);
             }

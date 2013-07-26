@@ -518,7 +518,7 @@ mozJSComponentLoader::LoadModule(FileLocation &aFile)
     JSCLAutoErrorReporterSetter aers(cx, xpc::SystemErrorReporter);
 
     RootedValue NSGetFactory_val(cx);
-    if (!JS_GetProperty(cx, entry->obj, "NSGetFactory", &NSGetFactory_val) ||
+    if (!JS_GetProperty(cx, entry->obj, "NSGetFactory", NSGetFactory_val.address()) ||
         JSVAL_IS_VOID(NSGetFactory_val)) {
         return NULL;
     }
@@ -1281,7 +1281,7 @@ mozJSComponentLoader::ImportInto(const nsACString &aLocation,
 
         RootedValue symbols(mContext);
         if (!JS_GetProperty(mContext, mod->obj,
-                            "EXPORTED_SYMBOLS", &symbols)) {
+                            "EXPORTED_SYMBOLS", symbols.address())) {
             return ReportOnCaller(cxhelper, ERROR_NOT_PRESENT,
                                   PromiseFlatCString(aLocation).get());
         }
@@ -1316,7 +1316,7 @@ mozJSComponentLoader::ImportInto(const nsACString &aLocation,
                                       PromiseFlatCString(aLocation).get(), i);
             }
 
-            if (!JS_GetPropertyById(mContext, mod->obj, symbolId, &value)) {
+            if (!JS_GetPropertyById(mContext, mod->obj, symbolId, value.address())) {
                 JSAutoByteString bytes(mContext, JSID_TO_STRING(symbolId));
                 if (!bytes)
                     return NS_ERROR_FAILURE;

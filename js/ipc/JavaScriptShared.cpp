@@ -457,7 +457,7 @@ JavaScriptShared::Wrap(JSContext *cx, HandleObject aObj, InfallibleTArray<CpowEn
         if (!convertIdToGeckoString(cx, id, &str))
             return false;
 
-        if (!JS_GetPropertyById(cx, aObj, id, &v))
+        if (!JS_GetPropertyById(cx, aObj, id, v.address()))
             return false;
 
         JSVariant var;
