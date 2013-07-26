@@ -29,17 +29,6 @@ enum XDRMode {
     XDR_DECODE
 };
 
-struct IdValuePair
-{
-    jsid id;
-    Value value;
-
-    IdValuePair() {}
-    IdValuePair(jsid idArg)
-      : id(idArg), value(UndefinedValue())
-    {}
-};
-
 } /* namespace js */
 
 #endif /* jsprvtd_h */
