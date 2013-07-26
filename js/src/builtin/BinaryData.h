@@ -13,10 +13,6 @@
 #include "gc/Heap.h"
 
 namespace js {
-class Block : public gc::Cell
-{
-};
-
 typedef float float32_t;
 typedef double float64_t;
 
@@ -42,6 +38,7 @@ enum TypeCommonSlots {
 
 enum BlockCommonSlots {
     SLOT_DATATYPE = 0,
+    SLOT_BLOCKREFOWNER,
     BLOCK_RESERVED_SLOTS
 };
 
@@ -140,16 +137,142 @@ static Class NumericTypeClasses[NUMERICTYPES] = {
     BINARYDATA_FOR_EACH_NUMERIC_TYPES(BINARYDATA_NUMERIC_CLASSES)
 };
 
-static Class ArrayTypeClass = {
-    "ArrayType",
-    JSCLASS_HAS_CACHED_PROTO(JSProto_ArrayType),
-    JS_PropertyStub,
-    JS_DeletePropertyStub,
-    JS_PropertyStub,
-    JS_StrictPropertyStub,
-    JS_EnumerateStub,
-    JS_ResolveStub,
-    JS_ConvertStub
+/* This represents the 'A' and it's [[Prototype]] chain
+ * in:
+ *   A = new ArrayType(Type, N);
+ *   a = new A();
+ */
+class ArrayType : public JSObject
+{
+    private:
+        static JSObject *create(JSContext *cx, HandleObject arrayTypeGlobal,
+                                HandleObject elementType, uint32_t length);
+    public:
+        static Class class_;
+
+        static JSBool construct(JSContext *cx, unsigned int argc, jsval *vp);
+        static JSBool repeat(JSContext *cx, unsigned int argc, jsval *vp);
+
+        static JSBool toString(JSContext *cx, unsigned int argc, jsval *vp);
+
+        static uint32_t length(JSContext *cx, HandleObject obj);
+        static JSObject *elementType(JSContext *cx, HandleObject obj);
+        static bool convertAndCopyTo(JSContext *cx, HandleObject exemplar,
+                            HandleValue from, uint8_t *mem);
+        static bool reify(JSContext *cx, HandleObject type, HandleObject owner,
+                          size_t offset, MutableHandleValue to);
+};
+
+/* This represents the 'a' and it's [[Prototype]] chain */
+class BinaryArray
+{
+    private:
+        static JSObject *createEmpty(JSContext *cx, HandleObject type);
+
+        // creates initialized memory of size of type
+        static JSObject *create(JSContext *cx, HandleObject type);
+        // attempts to [[Convert]]
+        static JSObject *create(JSContext *cx, HandleObject type,
+                                HandleValue initial);
+
+    public:
+        static Class class_;
+
+        // uses passed block as memory
+        static JSObject *create(JSContext *cx, HandleObject type,
+                                HandleObject owner, size_t offset);
+        static JSBool construct(JSContext *cx, unsigned int argc, jsval *vp);
+
+        static void finalize(FreeOp *op, JSObject *obj);
+        static void obj_trace(JSTracer *tracer, JSObject *obj);
+
+        static JSBool forEach(JSContext *cx, unsigned int argc, jsval *vp);
+        static JSBool subarray(JSContext *cx, unsigned int argc, jsval *vp);
+        static JSBool fill(JSContext *cx, unsigned int argc, jsval *vp);
+
+        static JSBool obj_lookupGeneric(JSContext *cx, HandleObject obj,
+                                        HandleId id, MutableHandleObject objp,
+                                        MutableHandleShape propp);
+
+        static JSBool obj_lookupProperty(JSContext *cx, HandleObject obj,
+                                         HandlePropertyName name,
+                                         MutableHandleObject objp,
+                                         MutableHandleShape propp);
+
+        static JSBool obj_lookupElement(JSContext *cx, HandleObject obj,
+                                        uint32_t index, MutableHandleObject objp,
+                                        MutableHandleShape propp);
+
+        static JSBool obj_lookupSpecial(JSContext *cx, HandleObject obj,
+                                        HandleSpecialId sid,
+                                        MutableHandleObject objp,
+                                        MutableHandleShape propp);
+
+        static JSBool obj_getGeneric(JSContext *cx, HandleObject obj,
+                                     HandleObject receiver,
+                                     HandleId id,
+                                     MutableHandleValue vp);
+
+        static JSBool obj_getProperty(JSContext *cx, HandleObject obj,
+                                      HandleObject receiver,
+                                      HandlePropertyName name,
+                                      MutableHandleValue vp);
+
+        static JSBool obj_getElement(JSContext *cx, HandleObject obj,
+                                     HandleObject receiver,
+                                     uint32_t index,
+                                     MutableHandleValue vp);
+
+        static JSBool obj_getElementIfPresent(JSContext *cx, HandleObject obj,
+                                              HandleObject receiver,
+                                              uint32_t index,
+                                              MutableHandleValue vp,
+                                              bool *present);
+
+        static JSBool obj_getSpecial(JSContext *cx, HandleObject obj,
+                                     HandleObject receiver,
+                                     HandleSpecialId sid,
+                                     MutableHandleValue vp);
+
+        static JSBool obj_setGeneric(JSContext *cx, HandleObject obj,
+                                     HandleId id, MutableHandleValue vp,
+                                     JSBool strict);
+
+        static JSBool obj_setProperty(JSContext *cx, HandleObject obj,
+                                      HandlePropertyName name,
+                                      MutableHandleValue vp,
+                                      JSBool strict);
+
+        static JSBool obj_setElement(JSContext *cx, HandleObject obj,
+                                     uint32_t index, MutableHandleValue vp,
+                                     JSBool strict);
+
+        static JSBool obj_setSpecial(JSContext *cx, HandleObject obj,
+                                     HandleSpecialId sid,
+                                     MutableHandleValue vp,
+                                     JSBool strict);
+
+        static JSBool obj_getGenericAttributes(JSContext *cx, HandleObject obj,
+                                               HandleId id, unsigned *attrsp);
+
+        static JSBool obj_getPropertyAttributes(JSContext *cx, HandleObject obj,
+                                                HandlePropertyName name,
+                                                unsigned *attrsp);
+
+        static JSBool obj_getElementAttributes(JSContext *cx, HandleObject obj,
+                                               uint32_t index, unsigned *attrsp);
+
+        static JSBool obj_getSpecialAttributes(JSContext *cx, HandleObject obj,
+                                               HandleSpecialId sid,
+                                               unsigned *attrsp);
+
+        static JSBool obj_enumerate(JSContext *cx, HandleObject obj,
+                                    JSIterateOp enum_op,
+                                    MutableHandleValue statep,
+                                    MutableHandleId idp);
+
+        static JSBool lengthGetter(JSContext *cx, unsigned int argc, jsval *vp);
+
 };
 
 static Class StructTypeClass = {
@@ -162,12 +285,6 @@ static Class StructTypeClass = {
     JS_EnumerateStub,
     JS_ResolveStub,
     JS_ConvertStub
-};
-
-class ArrayTypeObject : public JSObject
-{
-    public:
-        static JSBool repeat(JSContext *cx, unsigned int argc, jsval *vp);
 };
 }
 
