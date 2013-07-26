@@ -249,10 +249,10 @@ FindFrameTargetedByInputEvent(const nsGUIEvent *aEvent,
                               const nsPoint& aPointRelativeToRootFrame,
                               uint32_t aFlags)
 {
-  uint32_t flags = (aFlags & INPUT_IGNORE_ROOT_SCROLL_FRAME) ?
-     nsLayoutUtils::IGNORE_ROOT_SCROLL_FRAME : 0;
+  bool ignoreRootScrollFrame = (aFlags & INPUT_IGNORE_ROOT_SCROLL_FRAME) != 0;
   nsIFrame* target =
-    nsLayoutUtils::GetFrameForPoint(aRootFrame, aPointRelativeToRootFrame, flags);
+    nsLayoutUtils::GetFrameForPoint(aRootFrame, aPointRelativeToRootFrame,
+                                    false, ignoreRootScrollFrame);
 
   const EventRadiusPrefs* prefs = GetPrefsFor(aEvent->eventStructType);
   if (!prefs || !prefs->mEnabled || (target && IsElementClickable(target))) {
@@ -271,7 +271,7 @@ FindFrameTargetedByInputEvent(const nsGUIEvent *aEvent,
   nsRect targetRect = GetTargetRect(aRootFrame, aPointRelativeToRootFrame, prefs);
   nsAutoTArray<nsIFrame*,8> candidates;
   nsresult rv = nsLayoutUtils::GetFramesForArea(aRootFrame, targetRect, candidates,
-      flags | nsLayoutUtils::EXCLUDE_COVERED_FRAMES);
+                                                false, ignoreRootScrollFrame);
   if (NS_FAILED(rv)) {
     return target;
   }
