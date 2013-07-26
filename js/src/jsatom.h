@@ -219,6 +219,11 @@ template <AllowGC allowGC>
 extern JSAtom *
 ToAtom(ExclusiveContext *cx, typename MaybeRooted<Value, allowGC>::HandleType v);
 
+enum XDRMode {
+    XDR_ENCODE,
+    XDR_DECODE
+};
+
 template <XDRMode mode>
 class XDRState;
 
