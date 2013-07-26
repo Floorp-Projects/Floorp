@@ -10,7 +10,7 @@
 #include "mozilla/MemoryReporting.h"
 
 #include "jsclass.h"
-#include "jsprvtd.h"
+#include "jsbytecode.h"
 #include "jspubtd.h"
 
 #include "js/CallArgs.h"

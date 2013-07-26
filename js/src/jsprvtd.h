@@ -13,9 +13,6 @@
 
 #include "jsapi.h"
 
-/* Scalar typedefs. */
-typedef uint8_t     jsbytecode;
-typedef uint8_t     jssrcnote;
 typedef uintptr_t   jsatomid;
 
 /* String typedefs. */
