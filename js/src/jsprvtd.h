@@ -66,25 +66,4 @@ struct IdValuePair
 
 } /* namespace js */
 
-/* js::ObjectOps function pointer typedefs. */
-
-/*
- * A generic type for functions mapping an object to another object, or null
- * if an error or exception was thrown on cx.
- */
-typedef JSObject *
-(* JSObjectOp)(JSContext *cx, JS::Handle<JSObject*> obj);
-
-/* Signature for class initialization ops. */
-typedef JSObject *
-(* JSClassInitializerOp)(JSContext *cx, JS::HandleObject obj);
-
-/*
- * Hook that creates an iterator object for a given object. Returns the
- * iterator object or null if an error or exception was thrown on cx.
- */
-typedef JSObject *
-(* JSIteratorOp)(JSContext *cx, JS::HandleObject obj, bool keysonly);
-
-
 #endif /* jsprvtd_h */
