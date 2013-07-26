@@ -18,6 +18,11 @@ scrollbar {
   background: url("chrome://global/skin/scrollbar/slider.gif") scrollbar;
 }
 
+scrollbar[root="true"] {
+  position: relative;
+  z-index: 2147483647; /* largest positive value of a signed 32-bit integer */
+}
+
 scrollbar[orient="vertical"] 
 {
    -moz-appearance: scrollbartrack-vertical;
