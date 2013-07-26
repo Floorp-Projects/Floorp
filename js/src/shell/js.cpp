@@ -3372,6 +3372,52 @@ ReadRelativeToScript(JSContext *cx, unsigned argc, jsval *vp)
 }
 
 static bool
+redirect(JSContext *cx, FILE* fp, HandleString relFilename)
+{
+    RootedString filename(cx, ResolvePath(cx, relFilename, false));
+    if (!filename)
+        return false;
+    JSAutoByteString filenameABS(cx, filename);
+    if (!filenameABS)
+        return false;
+    if (freopen(filenameABS.ptr(), "wb", fp) == NULL) {
+        JS_ReportError(cx, "cannot redirect to %s: %s", filenameABS.ptr(), strerror(errno));
+        return false;
+    }
+    return true;
+}
+
+static bool
+RedirectOutput(JSContext *cx, unsigned argc, jsval *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    if (args.length() < 1 || args.length() > 2) {
+        JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL, JSSMSG_INVALID_ARGS, "redirect");
+        return false;
+    }
+
+    if (args[0].isString()) {
+        RootedString stdoutPath(cx, args[0].toString());
+        if (!stdoutPath)
+            return false;
+        if (!redirect(cx, stdout, stdoutPath))
+            return false;
+    }
+
+    if (args.length() > 1 && args[1].isString()) {
+        RootedString stderrPath(cx, args[1].toString());
+        if (!stderrPath)
+            return false;
+        if (!redirect(cx, stderr, stderrPath))
+            return false;
+    }
+
+    args.rval().setUndefined();
+    return true;
+}
+
+static bool
 System(JSContext *cx, unsigned argc, jsval *vp)
 {
     JSString *str;
@@ -3861,7 +3907,12 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
     JS_FN_HELP("readRelativeToScript", ReadRelativeToScript, 1, 0,
 "readRelativeToScript(filename, [\"binary\"])",
 "  Read filename into returned string. Filename is relative to the directory\n"
-               "  containing the current script."),
+"  containing the current script."),
+
+    JS_FN_HELP("redirect", RedirectOutput, 2, 0,
+"redirect(stdoutFilename[, stderrFilename])",
+"  Redirect stdout and/or stderr to the named file. Pass undefined to avoid\n"
+"   redirecting. Filenames are relative to the current working directory."),
 
     JS_FN_HELP("compile", Compile, 1, 0,
 "compile(code)",
