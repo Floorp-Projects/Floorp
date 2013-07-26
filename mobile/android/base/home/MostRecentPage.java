@@ -17,7 +17,6 @@ import android.content.Context;
 import android.content.res.Resources;
 import android.database.Cursor;
 import android.os.Bundle;
-import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.Loader;
 import android.support.v4.widget.SimpleCursorAdapter;
 import android.util.SparseArray;
@@ -38,7 +37,7 @@ public class MostRecentPage extends HomeFragment {
     private static final String LOGTAG = "GeckoMostRecentPage";
 
     // Cursor loader ID for history query
-    private static final int HISTORY_LOADER_ID = 0;
+    private static final int LOADER_ID_HISTORY = 0;
 
     // For the time sections in history
     private static final long MS_PER_DAY = 86400000;
@@ -155,7 +154,7 @@ public class MostRecentPage extends HomeFragment {
 
     @Override
     protected void load() {
-        getLoaderManager().initLoader(HISTORY_LOADER_ID, null, mCursorLoaderCallbacks);
+        getLoaderManager().initLoader(LOADER_ID_HISTORY, null, mCursorLoaderCallbacks);
     }
 
     private String getMostRecentSectionTitle(MostRecentSection section) {
@@ -345,21 +344,39 @@ public class MostRecentPage extends HomeFragment {
         }
     }
 
-    private class CursorLoaderCallbacks implements LoaderCallbacks<Cursor> {
+    private class CursorLoaderCallbacks extends HomeCursorLoaderCallbacks {
         @Override
         public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-            return new MostRecentCursorLoader(getActivity());
+            if (id == LOADER_ID_HISTORY) {
+                return new MostRecentCursorLoader(getActivity());
+            } else {
+                return super.onCreateLoader(id, args);
+            }
         }
 
         @Override
         public void onLoadFinished(Loader<Cursor> loader, Cursor c) {
-            loadMostRecentSections(c);
-            mAdapter.swapCursor(c);
+            if (loader.getId() == LOADER_ID_HISTORY) {
+                loadMostRecentSections(c);
+                mAdapter.swapCursor(c);
+                loadFavicons(c);
+            } else {
+                super.onLoadFinished(loader, c);
+            }
         }
 
         @Override
         public void onLoaderReset(Loader<Cursor> loader) {
-            mAdapter.swapCursor(null);
+            if (loader.getId() == LOADER_ID_HISTORY) {
+                mAdapter.swapCursor(null);
+            } else {
+                super.onLoaderReset(loader);
+            }
         }
-    }
+
+        @Override
+        public void onFaviconsLoaded() {
+            mAdapter.notifyDataSetChanged();
+        }
+   }
 }
