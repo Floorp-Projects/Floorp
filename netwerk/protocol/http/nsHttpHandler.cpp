@@ -186,6 +186,7 @@ nsHttpHandler::nsHttpHandler()
     , mEnableSpdy(false)
     , mSpdyV2(true)
     , mSpdyV3(true)
+    , mSpdyV31(true)
     , mCoalesceSpdy(true)
     , mSpdyPersistentSettings(false)
     , mAllowSpdyPush(true)
@@ -1134,6 +1135,12 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
         rv = prefs->GetBoolPref(HTTP_PREF("spdy.enabled.v3"), &cVar);
         if (NS_SUCCEEDED(rv))
             mSpdyV3 = cVar;
+    }
+
+    if (PREF_CHANGED(HTTP_PREF("spdy.enabled.v3-1"))) {
+        rv = prefs->GetBoolPref(HTTP_PREF("spdy.enabled.v3-1"), &cVar);
+        if (NS_SUCCEEDED(rv))
+            mSpdyV31 = cVar;
     }
 
     if (PREF_CHANGED(HTTP_PREF("spdy.coalesce-hostnames"))) {

@@ -7,12 +7,21 @@
 // HttpLog.h should generally be included first
 #include "HttpLog.h"
 
+/*
+  Currently supported are spdy/3.1 and spdy/3 and spdy/2
+
+*/
+
 #include "nsHttp.h"
 #include "nsHttpHandler.h"
 
 #include "ASpdySession.h"
+#include "PSpdyPush.h"
+#include "SpdyPush3.h"
+#include "SpdyPush31.h"
 #include "SpdySession2.h"
 #include "SpdySession3.h"
+#include "SpdySession31.h"
 
 #include "mozilla/Telemetry.h"
 
@@ -28,7 +37,8 @@ ASpdySession::NewSpdySession(uint32_t version,
   // This is a necko only interface, so we can enforce version
   // requests as a precondition
   MOZ_ASSERT(version == SPDY_VERSION_2 ||
-             version == SPDY_VERSION_3,
+             version == SPDY_VERSION_3 ||
+             version == SPDY_VERSION_31 ,
              "Unsupported spdy version");
 
   // Don't do a runtime check of IsSpdyV?Enabled() here because pref value
@@ -38,32 +48,40 @@ ASpdySession::NewSpdySession(uint32_t version,
 
   Telemetry::Accumulate(Telemetry::SPDY_VERSION2, version);
 
+  if (version == SPDY_VERSION_3)
+    return new SpdySession3(aTransaction, aTransport, aPriority);
+
   if (version == SPDY_VERSION_2)
     return new SpdySession2(aTransaction, aTransport, aPriority);
 
-  return new SpdySession3(aTransaction, aTransport, aPriority);
+  return new SpdySession31(aTransaction, aTransport, aPriority);
 }
 
 SpdyInformation::SpdyInformation()
 {
-  // list the preferred version first
-  Version[0] = SPDY_VERSION_3;
-  VersionString[0] = NS_LITERAL_CSTRING("spdy/3");
+  Version[0] = SPDY_VERSION_2;
+  VersionString[0] = NS_LITERAL_CSTRING("spdy/2");
 
-  Version[1] = SPDY_VERSION_2;
-  VersionString[1] = NS_LITERAL_CSTRING("spdy/2");
+  Version[1] = SPDY_VERSION_3;
+  VersionString[1] = NS_LITERAL_CSTRING("spdy/3");
+
+  Version[2] = SPDY_VERSION_31;
+  VersionString[2] = NS_LITERAL_CSTRING("spdy/3.1");
 }
 
 bool
 SpdyInformation::ProtocolEnabled(uint32_t index)
 {
-  if (index == 0)
-    return gHttpHandler->IsSpdyV3Enabled();
+  MOZ_ASSERT(index < kCount, "index out of range");
 
-  if (index == 1)
+  switch (index) {
+  case 0:
     return gHttpHandler->IsSpdyV2Enabled();
-
-  MOZ_ASSERT(false, "index out of range");
+  case 1:
+    return gHttpHandler->IsSpdyV3Enabled();
+  case 2:
+    return gHttpHandler->IsSpdyV31Enabled();
+  }
   return false;
 }
 
@@ -74,14 +92,74 @@ SpdyInformation::GetNPNVersionIndex(const nsACString &npnString,
   if (npnString.IsEmpty())
     return NS_ERROR_FAILURE;
 
-  if (npnString.Equals(VersionString[0]))
-    *result = Version[0];
-  else if (npnString.Equals(VersionString[1]))
-    *result = Version[1];
-  else
-    return NS_ERROR_FAILURE;
+  for (uint32_t index = 0; index < kCount; ++index) {
+    if (npnString.Equals(VersionString[index])) {
+      *result = Version[index];
+      return NS_OK;
+    }
+  }
 
-  return NS_OK;
+  return NS_ERROR_FAILURE;
+}
+
+//////////////////////////////////////////
+// SpdyPushCache
+//////////////////////////////////////////
+
+SpdyPushCache::SpdyPushCache()
+{
+}
+
+SpdyPushCache::~SpdyPushCache()
+{
+  mHashSpdy3.Clear();
+  mHashSpdy31.Clear();
+}
+
+bool
+SpdyPushCache::RegisterPushedStreamSpdy3(nsCString key,
+                                         SpdyPushedStream3 *stream)
+{
+  LOG3(("SpdyPushCache::RegisterPushedStreamSpdy3 %s 0x%X\n",
+        key.get(), stream->StreamID()));
+  if(mHashSpdy3.Get(key))
+    return false;
+  mHashSpdy3.Put(key, stream);
+  return true;
+}
+
+SpdyPushedStream3 *
+SpdyPushCache::RemovePushedStreamSpdy3(nsCString key)
+{
+  SpdyPushedStream3 *rv = mHashSpdy3.Get(key);
+  LOG3(("SpdyPushCache::RemovePushedStream %s 0x%X\n",
+        key.get(), rv ? rv->StreamID() : 0));
+  if (rv)
+    mHashSpdy3.Remove(key);
+  return rv;
+}
+
+bool
+SpdyPushCache::RegisterPushedStreamSpdy31(nsCString key,
+                                          SpdyPushedStream31 *stream)
+{
+  LOG3(("SpdyPushCache::RegisterPushedStreamSpdy31 %s 0x%X\n",
+        key.get(), stream->StreamID()));
+  if(mHashSpdy31.Get(key))
+    return false;
+  mHashSpdy31.Put(key, stream);
+  return true;
+}
+
+SpdyPushedStream31 *
+SpdyPushCache::RemovePushedStreamSpdy31(nsCString key)
+{
+  SpdyPushedStream31 *rv = mHashSpdy31.Get(key);
+  LOG3(("SpdyPushCache::RemovePushedStream %s 0x%X\n",
+        key.get(), rv ? rv->StreamID() : 0));
+  if (rv)
+    mHashSpdy31.Remove(key);
+  return rv;
 }
 
 } // namespace mozilla::net
