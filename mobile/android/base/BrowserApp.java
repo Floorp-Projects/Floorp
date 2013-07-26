@@ -1313,8 +1313,13 @@ abstract public class BrowserApp extends GeckoApp
             }
         }
 
-        mBrowserToolbar.startEditing(url);
-        animateShowHomePager(HomePager.Page.VISITED);
+        final PropertyAnimator animator = new PropertyAnimator(300);
+        animator.setUseHardwareLayer(false);
+
+        mBrowserToolbar.startEditing(url, animator);
+        showHomePagerWithAnimator(HomePager.Page.VISITED, animator);
+
+        animator.start();
     }
 
     void commitEditingMode() {
@@ -1352,15 +1357,11 @@ abstract public class BrowserApp extends GeckoApp
         }
     }
 
-    private void animateShowHomePager(HomePager.Page page) {
-        showHomePagerWithAnimation(true, page);
-    }
-
     private void showHomePager(HomePager.Page page) {
-        showHomePagerWithAnimation(false, page);
+        showHomePagerWithAnimator(page, null);
     }
 
-    private void showHomePagerWithAnimation(boolean animate, HomePager.Page page) {
+    private void showHomePagerWithAnimator(HomePager.Page page, PropertyAnimator animator) {
         if (mHomePager.isVisible()) {
             return;
         }
@@ -1374,8 +1375,7 @@ abstract public class BrowserApp extends GeckoApp
             mLayerView.getLayerMarginsAnimator().showMargins(true);
         }
 
-        // FIXME: do animation if animate is true
-        mHomePager.show(getSupportFragmentManager(), page);
+        mHomePager.show(getSupportFragmentManager(), page, animator);
     }
 
     private void animateHideHomePager() {
