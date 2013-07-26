@@ -197,9 +197,6 @@ documenttab[selected] .documenttab-selection {
 
 #start-scrollbox[input="precise"] {
   overflow-x: scroll;
-  /* Move scrollbar above toolbar,
-   *  discount padding added by .meta in #start-container */
-  margin-bottom: calc(@toolbar_height@ - @metro_spacing_normal@);
 }
 
 /* if autocomplete is set, hide both start pages,
@@ -208,39 +205,52 @@ documenttab[selected] .documenttab-selection {
 #start-container:not([filtering]) > #start-autocomplete {
   visibility: collapse;
 }
-
 /* startUI sections, grids */
-#start-container .meta-section {
+#start-scrollbox > .meta-section {
   /* allot space for at least a single column */
   min-width: @grid_double_column_width@;
+  /* leave margin for horizontal scollbar */
+  margin-bottom: 30px;
 }
-
+#start-scrollbox[input="precise"] > .meta-section {
+  margin-bottom: 5px;
+}
 #start-topsites {
   /* allot space for 3 tile columns for the topsites grid */
   min-width: calc(3 * @grid_double_column_width@);
 }
+#start-scrollbox {
+  -moz-box-orient: horizontal;
+  /* Move scrollbar above toolbar,
+   *  discount padding added by .meta in #start-container */
+  margin-bottom: calc(@toolbar_height@ - @metro_spacing_normal@);
+}
 
-/* if snapped, hide the fullscreen awesome screen, if viewstate is anything
- *  other than snapped, hide the snapped awesome screen */
-#start[viewstate="snapped"],
-#snapped-start:not([viewstate="snapped"]) {
-  visibility: collapse;
+#start-container[viewstate="snapped"] #start-scrollbox {
+  -moz-box-orient: vertical;
 }
 
 /*Formatting for the limited horizontal space of snapped*/
 #start-autocomplete[viewstate="snapped"] .richgrid-item-content {
   -moz-box-orient: horizontal;
 }
-
 #start-container,
 #start-autocomplete {
   padding-left: 0;
   padding-right: 0;
 }
-
-#start-container[viewstate="snapped"] .meta-section {
-  margin: 0px;
+#start-container[viewstate="snapped"] #start-scrollbox > .meta-section {
+  margin: 0;
   min-width: @grid_double_column_width@;
+  -moz-box-flex: 1;
+  -moz-box-align: center;
+}
+#start-container[viewstate="snapped"] richgrid {
+  visibility: collapse;
+}
+
+#start-container[viewstate="snapped"] richgrid[expanded] {
+  visibility: visible;
 }
 
 /* Browser Content Areas ==================================================== */

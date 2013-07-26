@@ -11,11 +11,6 @@ Cu.import("resource://gre/modules/devtools/dbg-server.jsm")
  * Constants
  */
 
-// BrowserUI.update(state) constants. Currently passed in
-// but update doesn't pay attention to them. Can we remove?
-const TOOLBARSTATE_LOADING  = 1;
-const TOOLBARSTATE_LOADED   = 2;
-
 // Page for which the start UI is shown
 const kStartOverlayURI = "about:start";
 
@@ -297,11 +292,19 @@ var BrowserUI = {
    * Navigation
    */
 
-  /* Updates the overall state of the toolbar, but not the URL bar. */
-  update: function(aState) {
-    let uri = this.getDisplayURI(Browser.selectedBrowser);
-    StartUI.update(uri);
+  // BrowserUI update bit flags
+  NO_STARTUI_VISIBILITY:  1, // don't change the start ui visibility
 
+  /*
+   * Updates the overall state of startui visibility and the toolbar, but not
+   * the URL bar.
+   */
+  update: function(aFlags) {
+    let flags = aFlags || 0;
+    if (!(flags & this.NO_STARTUI_VISIBILITY)) {
+      let uri = this.getDisplayURI(Browser.selectedBrowser);
+      StartUI.update(uri);
+    }
     this._updateButtons();
     this._updateToolbar();
   },

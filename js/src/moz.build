@@ -80,6 +80,7 @@ EXPORTS.js += [
 
 CPP_SOURCES += [
     'ArgumentsObject.cpp',
+    'BinaryData.cpp',
     'BytecodeCompiler.cpp',
     'BytecodeEmitter.cpp',
     'CharacterEncoding.cpp',

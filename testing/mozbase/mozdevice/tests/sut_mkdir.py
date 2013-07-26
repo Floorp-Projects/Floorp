@@ -59,6 +59,15 @@ class MkDirsTest(unittest.TestCase):
         d.mkDirs('/mnt/sdcard/foo/foo')
         a.wait()
 
+    def test_mkdirs_on_root(self):
+        cmds = [('isdir /', 'TRUE')]
+        a = MockAgent(self, commands=cmds)
+        d = mozdevice.DroidSUT('127.0.0.1', port=a.port,
+                               logLevel=mozlog.DEBUG)
+        d.mkDirs('/foo')
+
+        a.wait()
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -53,6 +53,7 @@
 #if ENABLE_YARR_JIT
 #include "assembler/jit/ExecutableAllocator.h"
 #endif
+#include "builtin/BinaryData.h"
 #include "builtin/Eval.h"
 #include "builtin/Intl.h"
 #include "builtin/MapObject.h"
@@ -1831,6 +1832,9 @@ static const JSStdName standard_class_atoms[] = {
 #if ENABLE_INTL_API
     {js_InitIntlClass,                  EAGER_ATOM_AND_CLASP(Intl)},
 #endif
+#ifdef ENABLE_BINARYDATA
+    {js_InitBinaryDataClasses,          EAGER_ATOM_AND_CLASP(Type)},
+#endif
     {NULL,                              0, NULL}
 };
 
@@ -1887,6 +1891,17 @@ static const JSStdName standard_class_names[] = {
                                 TYPED_ARRAY_CLASP(TYPE_UINT8_CLAMPED)},
     {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(DataView),     &DataViewObject::class_},
 
+    /* Binary Data */
+#ifdef ENABLE_BINARYDATA
+    {js_InitBinaryDataClasses,          EAGER_ATOM_AND_CLASP(Type)},
+    {js_InitBinaryDataClasses,          EAGER_ATOM_AND_CLASP(Data)},
+#define BINARYDATA_NUMERIC_NAMES(constant_, type_)\
+    {js_InitBinaryDataClasses,          EAGER_CLASS_ATOM(type_),      &NumericTypeClasses[constant_]},
+    BINARYDATA_FOR_EACH_NUMERIC_TYPES(BINARYDATA_NUMERIC_NAMES)
+#undef BINARYDATA_NUMERIC_NAMES
+    {js_InitBinaryDataClasses,          EAGER_CLASS_ATOM(ArrayType),  &js::ArrayType::class_},
+    {js_InitBinaryDataClasses,          EAGER_CLASS_ATOM(StructType), &js::StructType::class_},
+#endif
     {NULL,                      0, NULL}
 };
 
@@ -2398,16 +2413,6 @@ JS_PUBLIC_API(void)
 JS_CallScriptTracer(JSTracer *trc, JSScript **scriptp, const char *name)
 {
     MarkScriptUnbarriered(trc, scriptp, name);
-}
-
-JS_PUBLIC_API(void)
-JS_CallGenericTracer(JSTracer *trc, void *gcthingArg, const char *name)
-{
-    void *gcthing = gcthingArg;
-    JSGCTraceKind kind = gc::GetGCThingTraceKind(gcthing);
-    JS_SET_TRACING_NAME(trc, name);
-    MarkKind(trc, &gcthing, kind);
-    JS_ASSERT(gcthing == gcthingArg);
 }
 
 JS_PUBLIC_API(void)
@@ -4303,7 +4308,7 @@ JS_GetUCProperty(JSContext *cx, JSObject *objArg, const jschar *name, size_t nam
 }
 
 JS_PUBLIC_API(JSBool)
-JS_SetPropertyById(JSContext *cx, JSObject *objArg, jsid idArg, jsval *vp)
+JS_SetPropertyById(JSContext *cx, JSObject *objArg, jsid idArg, MutableHandleValue vp)
 {
     RootedObject obj(cx, objArg);
     RootedId id(cx, idArg);
@@ -4312,12 +4317,7 @@ JS_SetPropertyById(JSContext *cx, JSObject *objArg, jsid idArg, jsval *vp)
     assertSameCompartment(cx, obj, id);
     JSAutoResolveFlags rf(cx, JSRESOLVE_ASSIGNING);
 
-    RootedValue value(cx, *vp);
-    if (!JSObject::setGeneric(cx, obj, obj, id, &value, false))
-        return false;
-
-    *vp = value;
-    return true;
+    return JSObject::setGeneric(cx, obj, obj, id, vp, false);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -4338,7 +4338,7 @@ JS_SetElement(JSContext *cx, JSObject *objArg, uint32_t index, jsval *vp)
 }
 
 JS_PUBLIC_API(JSBool)
-JS_SetProperty(JSContext *cx, JSObject *objArg, const char *name, jsval *vp)
+JS_SetProperty(JSContext *cx, JSObject *objArg, const char *name, MutableHandleValue vp)
 {
     RootedObject obj(cx, objArg);
     JSAtom *atom = Atomize(cx, name, strlen(name));
@@ -4346,7 +4346,8 @@ JS_SetProperty(JSContext *cx, JSObject *objArg, const char *name, jsval *vp)
 }
 
 JS_PUBLIC_API(JSBool)
-JS_SetUCProperty(JSContext *cx, JSObject *objArg, const jschar *name, size_t namelen, jsval *vp)
+JS_SetUCProperty(JSContext *cx, JSObject *objArg, const jschar *name, size_t namelen,
+                 MutableHandleValue vp)
 {
     RootedObject obj(cx, objArg);
     JSAtom *atom = AtomizeChars<CanGC>(cx, name, AUTO_NAMELEN(name, namelen));
@@ -4592,8 +4593,8 @@ static Class prop_iter_class = {
     prop_iter_finalize,
     NULL,           /* checkAccess */
     NULL,           /* call        */
-    NULL,           /* construct   */
     NULL,           /* hasInstance */
+    NULL,           /* construct   */
     prop_iter_trace
 };
 

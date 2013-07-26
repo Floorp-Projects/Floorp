@@ -3132,7 +3132,7 @@ CType::ConstructBasic(JSContext* cx,
     return JS_FALSE;
 
   if (args.length() == 1) {
-    if (!ExplicitConvert(cx, args.handleAt(0), obj, CData::GetData(result)))
+    if (!ExplicitConvert(cx, args[0], obj, CData::GetData(result)))
       return JS_FALSE;
   }
 
@@ -3955,7 +3955,7 @@ PointerType::ConstructData(JSContext* cx,
       JS_ReportError(cx, "first argument must be a function");
       return JS_FALSE;
     }
-    return ExplicitConvert(cx, args.handleAt(0), obj, CData::GetData(result));
+    return ExplicitConvert(cx, args[0], obj, CData::GetData(result));
   }
 
   //
@@ -4344,7 +4344,7 @@ ArrayType::ConstructData(JSContext* cx,
   args.rval().setObject(*result);
 
   if (convertObject) {
-    if (!ExplicitConvert(cx, args.handleAt(0), obj, CData::GetData(result)))
+    if (!ExplicitConvert(cx, args[0], obj, CData::GetData(result)))
       return JS_FALSE;
   }
 
@@ -5023,7 +5023,7 @@ StructType::ConstructData(JSContext* cx,
     // are mutually exclusive, so we can pick the right one.
 
     // Try option 1) first.
-    if (ExplicitConvert(cx, args.handleAt(0), obj, buffer))
+    if (ExplicitConvert(cx, args[0], obj, buffer))
       return JS_TRUE;
 
     if (fields->count() != 1)
@@ -5047,7 +5047,7 @@ StructType::ConstructData(JSContext* cx,
     for (FieldInfoHash::Range r = fields->all(); !r.empty(); r.popFront()) {
       const FieldInfo& field = r.front().value;
       STATIC_ASSUME(field.mIndex < fields->count());  /* Quantified invariant */
-      if (!ImplicitConvert(cx, args.handleAt(field.mIndex), field.mType,
+      if (!ImplicitConvert(cx, args[field.mIndex], field.mType,
              buffer + field.mOffset,
              false, NULL))
         return JS_FALSE;
@@ -5764,7 +5764,7 @@ FunctionType::Call(JSContext* cx,
   }
 
   for (unsigned i = 0; i < argcFixed; ++i)
-    if (!ConvertArgument(cx, args.handleAt(i), fninfo->mArgTypes[i], &values[i], &strings))
+    if (!ConvertArgument(cx, args[i], fninfo->mArgTypes[i], &values[i], &strings))
       return false;
 
   if (fninfo->mIsVariadic) {
@@ -5789,7 +5789,7 @@ FunctionType::Call(JSContext* cx,
           !(type = PrepareType(cx, OBJECT_TO_JSVAL(type))) ||
           // Relying on ImplicitConvert only for the limited purpose of
           // converting one CType to another (e.g., T[] to T*).
-          !ConvertArgument(cx, args.handleAt(i), type, &values[i], &strings) ||
+          !ConvertArgument(cx, args[i], type, &values[i], &strings) ||
           !(fninfo->mFFITypes[i] = CType::GetFFIType(cx, type))) {
         // These functions report their own errors.
         return false;

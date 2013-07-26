@@ -137,19 +137,19 @@ def DOMClass(descriptor):
         # padding.
         protoList.extend(['prototypes::id::_ID_Count'] * (descriptor.config.maxProtoChainLength - len(protoList)))
         prototypeChainString = ', '.join(protoList)
-        if descriptor.workers or descriptor.nativeOwnership != 'refcounted':
+        if descriptor.workers:
             participant = "nullptr"
         else:
-            participant = "NS_CYCLE_COLLECTION_PARTICIPANT(%s)" % descriptor.nativeType
+            participant = "GetCCParticipant<%s>::Get()" % descriptor.nativeType
         getParentObject = "GetParentObject<%s>::Get" % descriptor.nativeType
         return """{
   { %s },
-  %s,
+  IsBaseOf<nsISupports, %s >::value,
   %s,
   %s,
   GetProtoObject,
   %s
-}""" % (prototypeChainString, toStringBool(descriptor.nativeOwnership == 'nsisupports'),
+}""" % (prototypeChainString, descriptor.nativeType,
         NativePropertyHooks(descriptor),
         getParentObject,
         participant)
@@ -921,14 +921,9 @@ class CGAbstractClassHook(CGAbstractStaticMethod):
                                         args)
 
     def definition_body_prologue(self):
-        if self.descriptor.nativeOwnership == 'nsisupports':
-            assertion = ('  MOZ_STATIC_ASSERT((IsBaseOf<nsISupports, %s>::value), '
-                         '"Must be an nsISupports class");') % self.descriptor.nativeType
-        else:
-            assertion = ''
-        return """%s
+        return """
   %s* self = UnwrapDOMObject<%s>(obj);
-""" % (assertion, self.descriptor.nativeType, self.descriptor.nativeType)
+""" % (self.descriptor.nativeType, self.descriptor.nativeType)
 
     def definition_body(self):
         return self.definition_body_prologue() + self.generate_code()
@@ -949,58 +944,18 @@ class CGAddPropertyHook(CGAbstractClassHook):
 
     def generate_code(self):
         assert not self.descriptor.workers and self.descriptor.wrapperCache
-        if self.descriptor.nativeOwnership == 'nsisupports':
-            preserveArgs = "reinterpret_cast<nsISupports*>(self)"
-        else:
-            preserveArgs = "self, NS_CYCLE_COLLECTION_PARTICIPANT(%s)" % self.descriptor.nativeType
         return ("  // We don't want to preserve if we don't have a wrapper.\n"
                 "  if (self->GetWrapperPreserveColor()) {\n"
-                "    self->PreserveWrapper(%s);\n"
+                "    PreserveWrapper(self);\n"
                 "  }\n"
-                "  return true;" % preserveArgs)
+                "  return true;")
 
 def DeferredFinalizeSmartPtr(descriptor):
     if descriptor.nativeOwnership == 'owned':
-        smartPtr = 'nsAutoPtr<%s>'
+        smartPtr = 'nsAutoPtr'
     else:
-        assert descriptor.nativeOwnership == 'refcounted'
-        smartPtr = 'nsRefPtr<%s>'
-    return smartPtr % descriptor.nativeType
-
-class CGAppendDeferredFinalizePointer(CGAbstractStaticMethod):
-    def __init__(self, descriptor):
-        CGAbstractStaticMethod.__init__(self, descriptor, "AppendDeferredFinalizePointer", "void*", [Argument('void*', 'data'), Argument('void*', 'thing')])
-
-    def definition_body(self):
-        smartPtr = DeferredFinalizeSmartPtr(self.descriptor)
-        return """  nsTArray<%(smartPtr)s >* pointers = static_cast<nsTArray<%(smartPtr)s >*>(data);
-  if (!pointers) {
-    pointers = new nsTArray<%(smartPtr)s >();
-  }
-
-  %(nativeType)s* self = static_cast<%(nativeType)s*>(thing);
-
-  %(smartPtr)s* defer = pointers->AppendElement();
-  Take(*defer, self);
-  return pointers;""" % { 'smartPtr': smartPtr, 'nativeType': self.descriptor.nativeType }
-
-class CGDeferredFinalize(CGAbstractStaticMethod):
-    def __init__(self, descriptor):
-        CGAbstractStaticMethod.__init__(self, descriptor, "DeferredFinalize", "bool", [Argument('uint32_t', 'slice'), Argument('void*', 'data')])
-
-    def definition_body(self):
-        smartPtr = DeferredFinalizeSmartPtr(self.descriptor)
-        return """  MOZ_ASSERT(slice > 0, "nonsensical/useless call with slice == 0");
-  nsTArray<%(smartPtr)s >* pointers = static_cast<nsTArray<%(smartPtr)s >*>(data);
-  uint32_t oldLen = pointers->Length();
-  slice = std::min(oldLen, slice);
-  uint32_t newLen = oldLen - slice;
-  pointers->RemoveElementsAt(newLen, slice);
-  if (newLen == 0) {
-    delete pointers;
-    return true;
-  }
-  return false;""" % { 'smartPtr': smartPtr }
+        smartPtr = 'nsRefPtr'
+    return smartPtr
 
 def finalizeHook(descriptor, hookName, context):
     if descriptor.customFinalize:
@@ -1013,13 +968,9 @@ def finalizeHook(descriptor, hookName, context):
             finalize += "self->mExpandoAndGeneration.expando = JS::UndefinedValue();\n"
         if descriptor.workers:
             finalize += "self->Release();"
-        elif descriptor.nativeOwnership == 'nsisupports':
-            finalize += "nsContentUtils::DeferredFinalize(reinterpret_cast<nsISupports*>(self));"
         else:
-            finalize += """nsContentUtils::DeferredFinalize(AppendDeferredFinalizePointer,
-                                 DeferredFinalize,
-                                 self);
-"""
+            finalize += ("AddForDeferredFinalization<%s, %s >(self);" %
+                (descriptor.nativeType, DeferredFinalizeSmartPtr(descriptor)))
     return CGIfWrapper(CGGeneric(finalize), "self")
 
 class CGClassFinalizeHook(CGAbstractClassHook):
@@ -1192,7 +1143,6 @@ class CGClassHasInstanceHook(CGAbstractStaticMethod):
         return self.generate_code()
 
     def generate_code(self):
-        assert self.descriptor.nativeOwnership == 'nsisupports'
         header = """
   if (!vp.isObject()) {
     *bp = false;
@@ -1203,6 +1153,9 @@ class CGClassHasInstanceHook(CGAbstractStaticMethod):
   """
         if self.descriptor.interface.hasInterfacePrototypeObject():
             return header + """
+  MOZ_STATIC_ASSERT((IsBaseOf<nsISupports, %s>::value),
+                    "HasInstance only works for nsISupports-based classes.");
+
   bool ok = InterfaceHasInstance(cx, obj, instance, bp);
   if (!ok || *bp) {
     return ok;
@@ -1215,7 +1168,8 @@ class CGClassHasInstanceHook(CGAbstractStaticMethod):
   nsCOMPtr<nsIDOM%s> qiResult = do_QueryInterface(native);
   *bp = !!qiResult;
   return true;
-         """ % self.descriptor.interface.identifier.name
+         """ % (self.descriptor.nativeType,
+                self.descriptor.interface.identifier.name)
 
         hasInstanceCode = """
   const DOMClass* domClass = GetDOMClass(js::UncheckedUnwrap(instance));
@@ -1419,7 +1373,7 @@ def requiresQueryInterfaceMethod(descriptor):
         if desc.concrete:
             return False
         return allAncestorsAbstract(iface.parent)
-    return (descriptor.nativeOwnership == 'nsisupports' and
+    return (not descriptor.workers and
             descriptor.interface.hasInterfacePrototypeObject() and
             descriptor.concrete and
             allAncestorsAbstract(descriptor.interface))
@@ -1465,13 +1419,12 @@ class MethodDefiner(PropertyDefiner):
                                  "condition": MemberCondition(None, None) })
 
         if not static and requiresQueryInterfaceMethod(descriptor):
+            condition = "WantsQueryInterface<%s>::Enabled" % descriptor.nativeType
             self.regular.append({"name": 'QueryInterface',
                                  "methodInfo": False,
                                  "length": 1,
                                  "flags": "0",
-                                 "condition":
-                                     MemberCondition(None,
-                                                     "nsINode::IsChromeOrXBL") })
+                                 "condition": MemberCondition(None, condition) })
 
         if not static:
             stringifier = descriptor.operations['Stringifier']
@@ -2072,11 +2025,10 @@ def CreateBindingJSObject(descriptor, properties, parent):
 """
     create = objDecl + create
 
-    if descriptor.nativeOwnership in ['refcounted', 'nsisupports']:
+    if descriptor.nativeOwnership == 'refcounted':
         create += """  NS_ADDREF(aObject);
 """
     else:
-        assert descriptor.nativeOwnership == 'owned'
         create += """  // Make sure the native objects inherit from NonRefcountedDOMObject so that we
   // log their ctor and dtor.
   MustInheritFromNonRefcountedDOMObject(aObject);
@@ -2155,10 +2107,8 @@ def AssertInheritanceChain(descriptor):
             "             reinterpret_cast<%s*>(aObject));\n" %
             (desc.nativeType, desc.nativeType))
         iface = iface.parent
-    if descriptor.nativeOwnership == 'nsisupports':
-        asserts += (
-            "  MOZ_ASSERT(ToSupports(aObject) == \n"
-            "             reinterpret_cast<nsISupports*>(aObject));\n")
+    asserts += (
+        "  MOZ_ASSERT(ToSupportsIsCorrect(aObject));\n")
     return asserts
 
 class CGWrapWithCacheMethod(CGAbstractMethod):
@@ -2180,12 +2130,9 @@ class CGWrapWithCacheMethod(CGAbstractMethod):
         if self.descriptor.workers:
             return """  return aObject->GetJSObject();"""
 
-        if self.descriptor.nativeOwnership == 'nsisupports':
-            assertISupportsInheritance = (
-                '  MOZ_ASSERT(reinterpret_cast<void*>(aObject) != aCache,\n'
-                '             "nsISupports must be on our primary inheritance chain");\n')
-        else:
-            assertISupportsInheritance = ""
+        assertISupportsInheritance = (
+            '  MOZ_ASSERT(ToSupportsIsOnPrimaryInheritanceChain(aObject, aCache),\n'
+            '             "nsISupports must be on our primary inheritance chain");\n')
         return """%s
 %s
   JS::Rooted<JSObject*> parent(aCx,
@@ -3782,7 +3729,7 @@ class CGArgumentConverter(CGThing):
             "obj" : "obj"
             }
         self.replacementVariables["val"] = string.Template(
-            "args.handleAt(${index})"
+            "args[${index}]"
             ).substitute(replacer)
         self.replacementVariables["mutableVal"] = self.replacementVariables["val"]
         if argument.treatUndefinedAs == "Missing":
@@ -3851,7 +3798,7 @@ class CGArgumentConverter(CGThing):
     ${elemType}& slot = *${declName}.AppendElement();
 """).substitute(replacer)
 
-        val = string.Template("args.handleAt(variadicArg)").substitute(replacer)
+        val = string.Template("args[variadicArg]").substitute(replacer)
         variadicConversion += CGIndenter(CGGeneric(
                 string.Template(typeConversion.template).substitute(
                     {
@@ -4920,7 +4867,7 @@ class CGMethodCall(CGThing):
                          range(0, distinguishingIndex) ]
 
             # Select the right overload from our set.
-            distinguishingArg = "args.handleAt(%d)" % distinguishingIndex
+            distinguishingArg = "args[%d]" % distinguishingIndex
 
             def pickFirstSignature(condition, filterLambda):
                 sigs = filter(filterLambda, possibleSignatures)
@@ -5539,7 +5486,7 @@ if (!v.isObject()) {
   return ThrowErrorMessage(cx, MSG_NOT_OBJECT, "%s.%s");
 }
 
-return JS_SetProperty(cx, &v.toObject(), "%s", args.handleAt(0).address());""" % (attrName, self.descriptor.interface.identifier.name, attrName, forwardToAttrName))).define()
+return JS_SetProperty(cx, &v.toObject(), "%s", args[0]);""" % (attrName, self.descriptor.interface.identifier.name, attrName, forwardToAttrName))).define()
 
 def memberIsCreator(member):
     return member.getExtendedAttribute("Creator") is not None
@@ -7651,22 +7598,17 @@ class CGDescriptor(CGThing):
             cgThings.append(CGConstructNavigatorObjectHelper(descriptor))
             cgThings.append(CGConstructNavigatorObject(descriptor))
 
-        if descriptor.concrete:
-            if descriptor.nativeOwnership == 'owned' or descriptor.nativeOwnership == 'refcounted':
-                cgThings.append(CGAppendDeferredFinalizePointer(descriptor))
-                cgThings.append(CGDeferredFinalize(descriptor))
+        if descriptor.concrete and not descriptor.proxy:
+            if not descriptor.workers and descriptor.wrapperCache:
+                cgThings.append(CGAddPropertyHook(descriptor))
 
-            if not descriptor.proxy:
-                if not descriptor.workers and descriptor.wrapperCache:
-                    cgThings.append(CGAddPropertyHook(descriptor))
+            # Always have a finalize hook, regardless of whether the class
+            # wants a custom hook.
+            cgThings.append(CGClassFinalizeHook(descriptor))
 
-                # Always have a finalize hook, regardless of whether the class
-                # wants a custom hook.
-                cgThings.append(CGClassFinalizeHook(descriptor))
-
-                # Only generate a trace hook if the class wants a custom hook.
-                if (descriptor.customTrace):
-                    cgThings.append(CGClassTraceHook(descriptor))
+            # Only generate a trace hook if the class wants a custom hook.
+            if (descriptor.customTrace):
+                cgThings.append(CGClassTraceHook(descriptor))
 
         properties = PropertyArrays(descriptor)
         cgThings.append(CGGeneric(define=str(properties)))
@@ -7729,9 +7671,11 @@ class CGDescriptor(CGThing):
 
         if descriptor.concrete:
             if descriptor.proxy:
-                if descriptor.nativeOwnership != 'nsisupports':
-                    raise TypeError("We don't support non-nsISupports native classes for "
-                                    "proxy-based bindings yet (" + descriptor.name + ")")
+                cgThings.append(CGGeneric("""MOZ_STATIC_ASSERT((IsBaseOf<nsISupports, %s >::value),
+                  "We don't support non-nsISupports native classes for "
+                  "proxy-based bindings yet");
+
+""" % descriptor.nativeType))
                 if not descriptor.wrapperCache:
                     raise TypeError("We need a wrappercache to support expandos for proxy-based "
                                     "bindings (" + descriptor.name + ")")
@@ -9987,7 +9931,7 @@ class CallbackSetter(CallbackMember):
         replacements = {
             "errorReturn" : self.getDefaultRetval(),
             "attrName": self.attrName,
-            "argv": "argv.begin()",
+            "argv": "argv.handleAt(0)",
             }
         return string.Template(
             'MOZ_ASSERT(argv.length() == 1);\n'

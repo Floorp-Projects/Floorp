@@ -402,3 +402,8 @@ MSG_DEF(JSMSG_PAR_ARRAY_SCATTER_BAD_TARGET, 348, 1, JSEXN_ERR, "target for index
 MSG_DEF(JSMSG_SELFHOSTED_UNBOUND_NAME,349, 0, JSEXN_TYPEERR, "self-hosted code may not contain unbound name lookups")
 MSG_DEF(JSMSG_DEPRECATED_SOURCE_MAP,  350, 0, JSEXN_SYNTAXERR, "Using //@ to indicate source map URL pragmas is deprecated. Use //# instead")
 MSG_DEF(JSMSG_BAD_DESTRUCT_ASSIGN,    351, 1, JSEXN_SYNTAXERR, "can't assign to {0} using destructuring assignment")
+MSG_DEF(JSMSG_BINARYDATA_ARRAYTYPE_BAD_ARGS, 352, 0, JSEXN_ERR, "Invalid arguments")
+MSG_DEF(JSMSG_BINARYDATA_BINARYARRAY_BAD_INDEX, 353, 0, JSEXN_RANGEERR, "invalid or out-of-range index")
+MSG_DEF(JSMSG_BINARYDATA_STRUCTTYPE_BAD_ARGS, 354, 0, JSEXN_RANGEERR, "invalid field descriptor")
+MSG_DEF(JSMSG_BINARYDATA_NOT_BINARYSTRUCT,   355, 1, JSEXN_TYPEERR, "{0} is not a BinaryStruct")
+MSG_DEF(JSMSG_BINARYDATA_SUBARRAY_INTEGER_ARG, 356, 1, JSEXN_ERR, "argument {0} must be an integer")
