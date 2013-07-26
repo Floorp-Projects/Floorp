@@ -168,7 +168,7 @@ SystemMessageInternal.prototype = {
     return page;
   },
 
-  sendMessage: function sendMessage(aType, aMessage, aPageURI, aManifestURI) {
+  sendMessage: function sendMessage(aType, aMessage, aPageURI, aManifestURI, aExtra) {
     // Buffer system messages until the webapps' registration is ready,
     // so that we can know the correct pages registered to be sent.
     if (!this._webappsRegistryReady) {
@@ -176,7 +176,8 @@ SystemMessageInternal.prototype = {
                                    type: aType,
                                    msg: aMessage,
                                    pageURI: aPageURI,
-                                   manifestURI: aManifestURI });
+                                   manifestURI: aManifestURI,
+                                   extra: aExtra });
       return;
     }
 
@@ -185,13 +186,15 @@ SystemMessageInternal.prototype = {
     let messageID = gUUIDGenerator.generateUUID().toString();
 
     debug("Sending " + aType + " " + JSON.stringify(aMessage) +
-      " for " + aPageURI.spec + " @ " + aManifestURI.spec);
+      " for " + aPageURI.spec + " @ " + aManifestURI.spec +
+      '; extra: ' + JSON.stringify(aExtra));
 
     let result = this._sendMessageCommon(aType,
                                          aMessage,
                                          messageID,
                                          aPageURI.spec,
-                                         aManifestURI.spec);
+                                         aManifestURI.spec,
+                                         aExtra);
     debug("Returned status of sending message: " + result);
 
     // Don't need to open the pages and queue the system message
@@ -205,20 +208,21 @@ SystemMessageInternal.prototype = {
       // Queue this message in the corresponding pages.
       this._queueMessage(page, aMessage, messageID);
 
-        if (result === MSG_SENT_FAILURE_APP_NOT_RUNNING) {
-          // Don't open the page again if we already sent the message to it.
-          this._openAppPage(page, aMessage);
-        }
+      if (result === MSG_SENT_FAILURE_APP_NOT_RUNNING) {
+        // Don't open the page again if we already sent the message to it.
+        this._openAppPage(page, aMessage, aExtra);
+      }
     }
   },
 
-  broadcastMessage: function broadcastMessage(aType, aMessage) {
+  broadcastMessage: function broadcastMessage(aType, aMessage, aExtra) {
     // Buffer system messages until the webapps' registration is ready,
     // so that we can know the correct pages registered to be broadcasted.
     if (!this._webappsRegistryReady) {
       this._bufferedSysMsgs.push({ how: "broadcast",
                                    type: aType,
-                                   msg: aMessage });
+                                   msg: aMessage,
+                                   extra: aExtra });
       return;
     }
 
@@ -226,7 +230,8 @@ SystemMessageInternal.prototype = {
     // clean it up from the pending message queue when apps receive it.
     let messageID = gUUIDGenerator.generateUUID().toString();
 
-    debug("Broadcasting " + aType + " " + JSON.stringify(aMessage));
+    debug("Broadcasting " + aType + " " + JSON.stringify(aMessage) +
+      '; extra = ' + JSON.stringify(aExtra));
     // Find pages that registered an handler for this type.
     this._pages.forEach(function(aPage) {
       if (aPage.type == aType) {
@@ -234,7 +239,8 @@ SystemMessageInternal.prototype = {
                                              aMessage,
                                              messageID,
                                              aPage.uri,
-                                             aPage.manifest);
+                                             aPage.manifest,
+                                             aExtra);
         debug("Returned status of sending message: " + result);
 
 
@@ -249,7 +255,7 @@ SystemMessageInternal.prototype = {
 
         if (result === MSG_SENT_FAILURE_APP_NOT_RUNNING) {
           // Open app pages to handle their pending messages.
-          this._openAppPage(aPage, aMessage);
+          this._openAppPage(aPage, aMessage, aExtra);
         }
       }
     }, this);
@@ -503,10 +509,10 @@ SystemMessageInternal.prototype = {
           switch (aSysMsg.how) {
             case "send":
               this.sendMessage(
-                aSysMsg.type, aSysMsg.msg, aSysMsg.pageURI, aSysMsg.manifestURI);
+                aSysMsg.type, aSysMsg.msg, aSysMsg.pageURI, aSysMsg.manifestURI, aSysMsg.extra);
               break;
             case "broadcast":
-              this.broadcastMessage(aSysMsg.type, aSysMsg.msg);
+              this.broadcastMessage(aSysMsg.type, aSysMsg.msg, aSysMsg.extra);
               break;
           }
         }, this);
@@ -524,11 +530,12 @@ SystemMessageInternal.prototype = {
     }
   },
 
-  _openAppPage: function _openAppPage(aPage, aMessage) {
+  _openAppPage: function _openAppPage(aPage, aMessage, aExtra) {
     // We don't need to send the full object to observers.
     let page = { uri: aPage.uri,
                  manifest: aPage.manifest,
                  type: aPage.type,
+                 extra: aExtra,
                  target: aMessage.target };
     debug("Asking to open " + JSON.stringify(page));
     Services.obs.notifyObservers(this, "system-messages-open-app", JSON.stringify(page));
@@ -559,7 +566,7 @@ SystemMessageInternal.prototype = {
   },
 
   _sendMessageCommon:
-    function _sendMessageCommon(aType, aMessage, aMessageID, aPageURI, aManifestURI) {
+    function _sendMessageCommon(aType, aMessage, aMessageID, aPageURI, aManifestURI, aExtra) {
     // Don't send the system message not granted by the app's permissions.
     if (!SystemMessagePermissionsChecker
           .isSystemMessagePermittedToSend(aType,
