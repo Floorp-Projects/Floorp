@@ -146,14 +146,6 @@ public class testBookmark extends PixelTest  {
         }
     }
 
-    // This method opens the menu and selects the "Bookmark" menu item
-    private void toggleBookmark() {
-        getInstrumentation().waitForIdleSync();
-        mActions.sendSpecialKey(Actions.SpecialKey.MENU);
-        waitForText("Bookmark");
-        mSolo.clickOnText("Bookmark");
-    }
-
     private void setUpBookmark() {
         // Bookmark a page for the test
         loadAndPaint(BOOKMARK_URL);

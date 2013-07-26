@@ -11,11 +11,6 @@ Cu.import("resource://gre/modules/devtools/dbg-server.jsm")
  * Constants
  */
 
-// BrowserUI.update(state) constants. Currently passed in
-// but update doesn't pay attention to them. Can we remove?
-const TOOLBARSTATE_LOADING  = 1;
-const TOOLBARSTATE_LOADED   = 2;
-
 // Page for which the start UI is shown
 const kStartOverlayURI = "about:start";
 
@@ -297,11 +292,19 @@ var BrowserUI = {
    * Navigation
    */
 
-  /* Updates the overall state of the toolbar, but not the URL bar. */
-  update: function(aState) {
-    let uri = this.getDisplayURI(Browser.selectedBrowser);
-    StartUI.update(uri);
+  // BrowserUI update bit flags
+  NO_STARTUI_VISIBILITY:  1, // don't change the start ui visibility
 
+  /*
+   * Updates the overall state of startui visibility and the toolbar, but not
+   * the URL bar.
+   */
+  update: function(aFlags) {
+    let flags = aFlags || 0;
+    if (!(flags & this.NO_STARTUI_VISIBILITY)) {
+      let uri = this.getDisplayURI(Browser.selectedBrowser);
+      StartUI.update(uri);
+    }
     this._updateButtons();
     this._updateToolbar();
   },
@@ -550,14 +553,12 @@ var BrowserUI = {
         let autocomplete = document.getElementById("urlbar-autocomplete");
         if (aData == "snapped") {
           FlyoutPanelsUI.hide();
-          // Order matters (need grids to get dimensions, etc), now
-          // let snapped grid know to refresh/redraw
-          Services.obs.notifyObservers(null, "metro_viewstate_dom_snapped", null);
           autocomplete.setAttribute("orient", "vertical");
         }
         else {
           autocomplete.setAttribute("orient", "horizontal");
         }
+
         break;
     }
   },
@@ -1100,7 +1101,6 @@ var StartUI = {
 
   sections: [
     "TopSitesStartView",
-    "TopSitesSnappedView",
     "BookmarksStartView",
     "HistoryStartView",
     "RemoteTabsStartView"
@@ -1185,6 +1185,18 @@ var StartUI = {
       ContextUI.dismissTabs();
   },
 
+  onNarrowTitleClick: function onNarrowTitleClick(gridId) {
+    let grid = document.getElementById(gridId);
+
+    if (grid.hasAttribute("expanded"))
+      return;
+
+    for (let expandedGrid of Elements.startUI.querySelectorAll("[expanded]"))
+      expandedGrid.removeAttribute("expanded")
+
+    grid.setAttribute("expanded", "true");
+  },
+
   handleEvent: function handleEvent(aEvent) {
     switch (aEvent.type) {
       case "contextmenu":
@@ -1200,7 +1212,11 @@ var StartUI = {
         let startBox = document.getElementById("start-scrollbox");
         let [, scrollInterface] = ScrollUtils.getScrollboxFromElement(startBox);
 
-        scrollInterface.scrollBy(aEvent.detail, 0);
+        if (Elements.windowState.getAttribute("viewstate") == "snapped") {
+          scrollInterface.scrollBy(0, aEvent.detail);
+        } else {
+          scrollInterface.scrollBy(aEvent.detail, 0);
+        }
 
         aEvent.preventDefault();
         aEvent.stopPropagation();
@@ -1211,17 +1227,13 @@ var StartUI = {
 
 var PanelUI = {
   get _panels() { return document.getElementById("panel-items"); },
-  get _switcher() { return document.getElementById("panel-view-switcher"); },
 
   get isVisible() {
     return !Elements.panelUI.hidden;
   },
 
   views: {
-    "bookmarks-container": "BookmarksPanelView",
     "console-container": "ConsolePanelView",
-    "remotetabs-container": "RemoteTabsPanelView",
-    "history-container" : "HistoryPanelView"
   },
 
   init: function() {
@@ -1259,7 +1271,6 @@ var PanelUI = {
 
     if (oldPanel != panel) {
       this._panels.selectedPanel = panel;
-      this._switcher.value = panel.id;
 
       this._fire("ToolPanelHidden", oldPanel);
     }

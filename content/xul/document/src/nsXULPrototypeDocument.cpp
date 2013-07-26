@@ -89,16 +89,11 @@ uint32_t nsXULPrototypeDocument::gRefCnt;
 void
 nsXULPDGlobalObject_finalize(JSFreeOp *fop, JSObject *obj)
 {
-    nsISupports *nativeThis = (nsISupports*)JS_GetPrivate(obj);
-
-    nsCOMPtr<nsIScriptGlobalObject> sgo(do_QueryInterface(nativeThis));
-
-    if (sgo) {
-        sgo->OnFinalize(obj);
-    }
+    nsXULPDGlobalObject* nativeThis = static_cast<nsXULPDGlobalObject*>(JS_GetPrivate(obj));
+    nativeThis->OnFinalize(obj);
 
     // The addref was part of JSObject construction
-    NS_RELEASE(nativeThis);
+    nsContentUtils::DeferredFinalize(nativeThis);
 }
 
 

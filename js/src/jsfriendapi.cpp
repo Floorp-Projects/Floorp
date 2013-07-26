@@ -13,12 +13,13 @@
 #include "jscompartment.h"
 #include "jsgc.h"
 #include "jsobj.h"
-#include "jswrapper.h"
-#include "jsweakmap.h"
 #include "jswatchpoint.h"
+#include "jsweakmap.h"
+#include "jswrapper.h"
 #include "prmjtime.h"
 
 #include "builtin/TestingFunctions.h"
+#include "vm/WrapperObject.h"
 
 #include "jsfuninlines.h"
 #include "jsobjinlines.h"
@@ -72,7 +73,7 @@ JS_FindCompilationScope(JSContext *cx, JSObject *objArg)
      * We unwrap wrappers here. This is a little weird, but it's what's being
      * asked of us.
      */
-    if (obj->isWrapper())
+    if (obj->is<WrapperObject>())
         obj = UncheckedUnwrap(obj);
 
     /*
@@ -878,8 +879,19 @@ JS::DisableGenerationalGC(JSRuntime *rt)
 {
     rt->gcGenerationalEnabled = false;
 #ifdef JSGC_GENERATIONAL
+    MinorGC(rt, JS::gcreason::API);
     rt->gcNursery.disable();
     rt->gcStoreBuffer.disable();
+#endif
+}
+
+extern JS_FRIEND_API(void)
+JS::EnableGenerationalGC(JSRuntime *rt)
+{
+    rt->gcGenerationalEnabled = true;
+#ifdef JSGC_GENERATIONAL
+    rt->gcNursery.enable();
+    rt->gcStoreBuffer.enable();
 #endif
 }
 
@@ -1120,8 +1132,18 @@ js::IsInRequest(JSContext *cx)
 
 #ifdef JSGC_GENERATIONAL
 JS_FRIEND_API(void)
-JS_StorePostBarrierCallback(JSContext* cx, void (*callback)(JSTracer *trc, void *key), void *key)
+JS_StoreObjectPostBarrierCallback(JSContext* cx,
+                                  void (*callback)(JSTracer *trc, void *key, void *data),
+                                  JSObject *key, void *data)
 {
-    cx->runtime()->gcStoreBuffer.putCallback(callback, key);
+    cx->runtime()->gcStoreBuffer.putCallback(callback, key, data);
+}
+
+extern JS_FRIEND_API(void)
+JS_StoreStringPostBarrierCallback(JSContext* cx,
+                                  void (*callback)(JSTracer *trc, void *key, void *data),
+                                  JSString *key, void *data)
+{
+    cx->runtime()->gcStoreBuffer.putCallback(callback, key, data);
 }
 #endif /* JSGC_GENERATIONAL */

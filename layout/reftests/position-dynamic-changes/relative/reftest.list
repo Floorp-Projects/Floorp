@@ -2,3 +2,4 @@ random-if(cocoaWidget) fuzzy-if(d2d,85,20) == move-right-bottom.html move-right-
 random-if(cocoaWidget) fuzzy-if(d2d,85,20) == move-top-left.html move-top-left-ref.html # Bug 688545, bug 742176
 random-if(cocoaWidget) fuzzy-if(d2d,85,80) == move-right-bottom-table.html move-right-bottom-table-ref.html # Bug 742176
 random-if(cocoaWidget) fuzzy-if(d2d,85,80) == move-top-left-table.html move-top-left-table-ref.html # Bug 688545, bug 742176
+== percent.html percent-ref.html

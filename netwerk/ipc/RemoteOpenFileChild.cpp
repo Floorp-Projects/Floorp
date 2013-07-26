@@ -62,10 +62,10 @@ private:
 // RemoteOpenFileChild
 //-----------------------------------------------------------------------------
 
-NS_IMPL_THREADSAFE_ISUPPORTS3(RemoteOpenFileChild,
-                              nsIFile,
-                              nsIHashable,
-                              nsICachedFileDescriptorListener)
+NS_IMPL_ISUPPORTS3(RemoteOpenFileChild,
+                   nsIFile,
+                   nsIHashable,
+                   nsICachedFileDescriptorListener)
 
 RemoteOpenFileChild::RemoteOpenFileChild(const RemoteOpenFileChild& other)
   : mTabChild(other.mTabChild)

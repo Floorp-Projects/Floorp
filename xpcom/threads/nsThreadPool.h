@@ -20,7 +20,7 @@ class nsThreadPool MOZ_FINAL : public nsIThreadPool,
                                public nsIRunnable
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIEVENTTARGET
   NS_DECL_NSITHREADPOOL
   NS_DECL_NSIRUNNABLE

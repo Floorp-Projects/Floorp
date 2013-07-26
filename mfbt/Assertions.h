@@ -1,12 +1,13 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Implementations of runtime and static assertion macros for C and C++. */
 
-#ifndef mozilla_Assertions_h_
-#define mozilla_Assertions_h_
+#ifndef mozilla_Assertions_h
+#define mozilla_Assertions_h
 
 #include "mozilla/Attributes.h"
 #include "mozilla/Compiler.h"
@@ -455,4 +456,4 @@ __declspec(noreturn) __inline void MOZ_NoReturn() {}
 #  define MOZ_ALWAYS_FALSE(expr)     ((void)(expr))
 #endif
 
-#endif /* mozilla_Assertions_h_ */
+#endif /* mozilla_Assertions_h */

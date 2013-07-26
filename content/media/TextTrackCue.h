@@ -12,6 +12,7 @@
 #include "mozilla/dom/TextTrackCueBinding.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsDOMEventTargetHelper.h"
+#include "nsIDocument.h"
 
 struct webvtt_node;
 
@@ -38,24 +39,24 @@ public:
               ErrorResult& aRv)
   {
     nsRefPtr<TextTrackCue> ttcue = new TextTrackCue(aGlobal.Get(), aStartTime,
-                                                    aEndTime, aText);
+                                                    aEndTime, aText, aRv);
     return ttcue.forget();
   }
   TextTrackCue(nsISupports* aGlobal, double aStartTime, double aEndTime,
-               const nsAString& aText);
+               const nsAString& aText, ErrorResult& aRv);
 
   TextTrackCue(nsISupports* aGlobal, double aStartTime, double aEndTime,
                const nsAString& aText, HTMLTrackElement* aTrackElement,
-               webvtt_node* head);
+               webvtt_node* head, ErrorResult& aRv);
 
   ~TextTrackCue();
 
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
 
-  nsISupports* GetParentObject()
+  nsINode* GetParentObject()
   {
-    return mGlobal;
+    return mDocument;
   }
 
   TextTrack* GetTrack() const
@@ -321,8 +322,9 @@ private:
   void CueChanged();
   void SetDefaultCueSettings();
   void CreateCueOverlay();
+  nsresult StashDocument(nsISupports* aGlobal);
 
-  nsCOMPtr<nsISupports> mGlobal;
+  nsRefPtr<nsIDocument> mDocument;
   nsString mText;
   double mStartTime;
   double mEndTime;

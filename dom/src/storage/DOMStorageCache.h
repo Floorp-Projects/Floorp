@@ -55,7 +55,8 @@ public:
   virtual void LoadWait() = 0;
 
 protected:
-  nsAutoRefCnt mRefCnt;
+  ThreadSafeAutoRefCnt mRefCnt;
+  NS_DECL_OWNINGTHREAD
 };
 
 // Implementation of scope cache that is responsible for preloading data

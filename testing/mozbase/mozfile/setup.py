@@ -4,7 +4,7 @@
 
 from setuptools import setup
 
-PACKAGE_VERSION = '0.7'
+PACKAGE_VERSION = '0.10'
 
 setup(name='mozfile',
       version=PACKAGE_VERSION,
@@ -14,7 +14,7 @@ setup(name='mozfile',
       keywords='mozilla',
       author='Mozilla Automation and Tools team',
       author_email='tools@lists.mozilla.org',
-      url='https://wiki.mozilla.org/Auto-tools/Projects/MozBase',
+      url='https://wiki.mozilla.org/Auto-tools/Projects/Mozbase',
       license='MPL',
       packages=['mozfile'],
       include_package_data=True,

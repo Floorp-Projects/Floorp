@@ -91,10 +91,10 @@ static int ComponentValue(const PRUnichar* aColorSpec, int aLen, int color, int 
   return component;
 }
 
-NS_GFX_(bool) NS_HexToRGB(const nsString& aColorSpec,
+NS_GFX_(bool) NS_HexToRGB(const nsAString& aColorSpec,
                                        nscolor* aResult)
 {
-  const PRUnichar* buffer = aColorSpec.get();
+  const PRUnichar* buffer = aColorSpec.BeginReading();
 
   int nameLen = aColorSpec.Length();
   if ((nameLen == 3) || (nameLen == 6)) {

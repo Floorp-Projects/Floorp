@@ -37,7 +37,7 @@ static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 //-----------------------------------------------------------------------------
 
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsHttpConnectionMgr, nsIObserver)
+NS_IMPL_ISUPPORTS1(nsHttpConnectionMgr, nsIObserver)
 
 static void
 InsertTransactionSorted(nsTArray<nsHttpTransaction*> &pendingQ, nsHttpTransaction *trans)
@@ -1960,19 +1960,23 @@ void
 nsHttpConnectionMgr::ProcessSpdyPendingQ(nsConnectionEntry *ent)
 {
     nsHttpConnection *conn = GetSpdyPreferredConn(ent);
-    if (!conn)
+    if (!conn || !conn->CanDirectlyActivate())
         return;
 
-    for (int32_t index = ent->mPendingQ.Length() - 1;
-         index >= 0 && conn->CanDirectlyActivate();
-         --index) {
+    nsTArray<nsHttpTransaction*> leftovers;
+    uint32_t index;
+
+    // Dispatch all the transactions we can
+    for (index = 0;
+         index < ent->mPendingQ.Length() && conn->CanDirectlyActivate();
+         ++index) {
         nsHttpTransaction *trans = ent->mPendingQ[index];
 
         if (!(trans->Caps() & NS_HTTP_ALLOW_KEEPALIVE) ||
-            trans->Caps() & NS_HTTP_DISALLOW_SPDY)
+            trans->Caps() & NS_HTTP_DISALLOW_SPDY) {
+            leftovers.AppendElement(trans);
             continue;
-
-        ent->mPendingQ.RemoveElementAt(index);
+        }
 
         nsresult rv = DispatchTransaction(ent, trans, conn);
         if (NS_FAILED(rv)) {
@@ -1985,6 +1989,18 @@ nsHttpConnectionMgr::ProcessSpdyPendingQ(nsConnectionEntry *ent)
         }
         NS_RELEASE(trans);
     }
+
+    // Slurp up the rest of the pending queue into our leftovers bucket (we
+    // might have some left if conn->CanDirectlyActivate returned false)
+    for (; index < ent->mPendingQ.Length(); ++index) {
+        nsHttpTransaction *trans = ent->mPendingQ[index];
+        leftovers.AppendElement(trans);
+    }
+
+    // Put the leftovers back in the pending queue and get rid of the
+    // transactions we dispatched
+    leftovers.SwapElements(ent->mPendingQ);
+    leftovers.Clear();
 }
 
 PLDHashOperator
@@ -2459,7 +2475,7 @@ nsHttpConnectionMgr::nsConnectionHandle::~nsConnectionHandle()
     }
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS0(nsHttpConnectionMgr::nsConnectionHandle)
+NS_IMPL_ISUPPORTS0(nsHttpConnectionMgr::nsConnectionHandle)
 
 nsHttpConnectionMgr::nsConnectionEntry *
 nsHttpConnectionMgr::GetOrCreateConnectionEntry(nsHttpConnectionInfo *ci)
@@ -2557,11 +2573,11 @@ nsHttpConnectionMgr::nsConnectionHandle::PushBack(const char *buf, uint32_t bufL
 //////////////////////// nsHalfOpenSocket
 
 
-NS_IMPL_THREADSAFE_ISUPPORTS4(nsHttpConnectionMgr::nsHalfOpenSocket,
-                              nsIOutputStreamCallback,
-                              nsITransportEventSink,
-                              nsIInterfaceRequestor,
-                              nsITimerCallback)
+NS_IMPL_ISUPPORTS4(nsHttpConnectionMgr::nsHalfOpenSocket,
+                   nsIOutputStreamCallback,
+                   nsITransportEventSink,
+                   nsIInterfaceRequestor,
+                   nsITimerCallback)
 
 nsHttpConnectionMgr::
 nsHalfOpenSocket::nsHalfOpenSocket(nsConnectionEntry *ent,
@@ -3348,6 +3364,11 @@ nsHttpConnectionMgr::ReadConnectionEntry(const nsACString &key,
         info.rtt = ent->mIdleConns[i]->Rtt();
         info.SetHTTP1ProtocolVersion(ent->mIdleConns[i]->GetLastHttpResponseVersion());
         data.idle.AppendElement(info);
+    }
+    for(uint32_t i = 0; i < ent->mHalfOpens.Length(); i++) {
+        HalfOpenSockets hSocket;
+        hSocket.speculative = ent->mHalfOpens[i]->IsSpeculative();
+        data.halfOpens.AppendElement(hSocket);
     }
     data.spdy = ent->mUsingSpdy;
     data.ssl = ent->mConnInfo->UsingSSL();

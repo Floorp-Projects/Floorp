@@ -43,6 +43,13 @@ function scriptErrorFlagsToKind(aFlags) {
   return kind;
 }
 
+// Redeclare dbg_assert with a fatal behavior.
+function dbg_assert(cond, e) {
+  if (!cond) {
+    throw e;
+  }
+}
+
 // Register a console listener, so console messages don't just disappear
 // into the ether.
 let errorCount = 0;
@@ -323,3 +330,8 @@ TracingTransport.prototype = {
     }
   }
 };
+
+function StubTransport() { }
+StubTransport.prototype.ready = function () {};
+StubTransport.prototype.send  = function () {};
+StubTransport.prototype.close = function () {};

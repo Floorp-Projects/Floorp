@@ -9,8 +9,8 @@
  * an address that leads to a safe crash when dereferenced.
  */
 
-#ifndef mozilla_Poison_h_
-#define mozilla_Poison_h_
+#ifndef mozilla_Poison_h
+#define mozilla_Poison_h
 
 #include "mozilla/Assertions.h"
 #include "mozilla/StandardInteger.h"
@@ -58,4 +58,4 @@ extern MFBT_DATA uintptr_t gMozillaPoisonSize;
 
 MOZ_END_EXTERN_C
 
-#endif /* mozilla_Poison_h_ */
+#endif /* mozilla_Poison_h */

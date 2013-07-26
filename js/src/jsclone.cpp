@@ -4,7 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/Endian.h"
 /*
  * This file implements the structured clone algorithm of
  * http://www.whatwg.org/specs/web-apps/current-work/multipage/common-dom-interfaces.html#safe-passing-of-structured-data
@@ -29,12 +28,15 @@
  */
 
 #include "jsclone.h"
+#include "jswrapper.h"
 
+#include "mozilla/Endian.h"
 #include "mozilla/FloatingPoint.h"
 
 #include "jsdate.h"
 
 #include "vm/TypedArrayObject.h"
+#include "vm/WrapperObject.h"
 
 #include "jscntxtinlines.h"
 #include "jsobjinlines.h"
@@ -134,6 +136,12 @@ js::ClearStructuredClone(const uint64_t *data, size_t nbytes)
                 if (tag == SCTAG_TRANSFER_MAP) {
                     u = LittleEndian::readUint64(point++);
                     js_free(reinterpret_cast<void*>(u));
+                } else {
+                    // The only things in the transfer map should be
+                    // SCTAG_TRANSFER_MAP tags paired with pointers. If we find
+                    // any other tag, we've walked off the end of the transfer
+                    // map.
+                    break;
                 }
             }
         }
@@ -562,7 +570,7 @@ JS_WriteTypedArray(JSStructuredCloneWriter *w, jsval v)
 
     // If the object is a security wrapper, see if we're allowed to unwrap it.
     // If we aren't, throw.
-    if (obj->isWrapper())
+    if (obj->is<WrapperObject>())
         obj = CheckedUnwrap(obj);
     if (!obj) {
         JS_ReportError(w->context(), "Permission denied to access object");

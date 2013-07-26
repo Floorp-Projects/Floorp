@@ -16,3 +16,39 @@ function clearUserPrefs()
 }
 
 registerCleanupFunction(clearUserPrefs);
+
+Services.prefs.setBoolPref("devtools.debugger.log", true);
+SimpleTest.registerCleanupFunction(() => {
+  Services.prefs.clearUserPref("devtools.debugger.log");
+});
+
+function getContainerForRawNode(markupView, rawNode) {
+  let front = markupView.walker.frontForRawNode(rawNode);
+  let container = markupView.getContainer(front);
+  return container;
+}
+
+
+Services.prefs.setBoolPref("devtools.debugger.log", true);
+SimpleTest.registerCleanupFunction(() => {
+  Services.prefs.clearUserPref("devtools.debugger.log");
+});
+
+function getContainerForRawNode(markupView, rawNode) {
+  let front = markupView.walker.frontForRawNode(rawNode);
+  let container = markupView.getContainer(front);
+  return container;
+}
+
+
+Services.prefs.setBoolPref("devtools.debugger.log", true);
+SimpleTest.registerCleanupFunction(() => {
+  Services.prefs.clearUserPref("devtools.debugger.log");
+});
+
+function getContainerForRawNode(markupView, rawNode) {
+  let front = markupView.walker.frontForRawNode(rawNode);
+  let container = markupView.getContainer(front);
+  return container;
+}
+

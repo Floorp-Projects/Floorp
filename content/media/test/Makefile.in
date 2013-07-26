@@ -106,7 +106,6 @@ MOCHITEST_FILES = \
 		test_reactivate.html \
 		test_readyState.html \
 		test_replay_metadata.html \
-		test_seek.html \
 		test_seek2.html \
 		test_seek_out_of_range.html \
 		test_source.html \
@@ -116,12 +115,14 @@ MOCHITEST_FILES = \
 		test_volume.html \
 		test_video_to_canvas.html \
 		test_audiowrite.html \
+		test_mediarecorder_creation.html \
 		test_mozHasAudio.html \
 		test_source_media.html \
 		test_autoplay_contentEditable.html \
 		test_bug448534.html \
 		test_bug463162.xhtml \
 		test_decoder_disable.html \
+		test_mediarecorder_reload_crash.html \
 		test_media_selection.html \
 		test_playback.html \
 		test_seekLies.html \
@@ -140,6 +141,7 @@ MOCHITEST_FILES = \
 		test_VideoPlaybackQuality.html \
 		test_VideoPlaybackQuality_disabled.html \
 		test_webvtt_disabled.html \
+		test_playback_rate_playpause.html \
 		$(NULL)
 
 # Disabled on Windows for frequent intermittent failures
@@ -152,14 +154,6 @@ MOCHITEST_FILES += \
 else
 $(filter disabled-on-windows-for-timeouts--bug-752796, test_streams_element_capture.html)
 $(filter disabled-on-windows-for-timeouts--bug-752796, test_streams_element_capture_reset.html)
-endif
-
-ifneq ($(MOZ_WIDGET_TOOLKIT),gtk2)
-MOCHITEST_FILES += \
-		test_playback_rate.html \
-		$(NULL)
-else
-$(filter disabled-temporarily--bug-814533, test_playback_rate.html)
 endif
 
 # Don't run in suite
@@ -187,6 +181,10 @@ endif
 #		test_bug465498.html
 # Bug 707777:
 #		test_bug493187.html
+# Bug 832678, bug 795271, and bug 857424
+#		test_seek.html
+# Bug 832768, bug 814533, bug 840742
+#		test_playback_rate.html
 
 # sample files
 MOCHITEST_FILES += \

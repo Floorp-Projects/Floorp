@@ -1175,17 +1175,14 @@ RadioInterface.prototype = {
 
     // Make sure we also reset the operator and signal strength information
     // if we drop off the network.
-    if (newInfo.regState == RIL.NETWORK_CREG_STATE_UNKNOWN) {
+    if (newInfo.regState !== RIL.NETWORK_CREG_STATE_REGISTERED_HOME &&
+        newInfo.regState !== RIL.NETWORK_CREG_STATE_REGISTERED_ROAMING) {
+      voiceInfo.cell = null;
       voiceInfo.network = null;
       voiceInfo.signalStrength = null;
       voiceInfo.relSignalStrength = null;
-    }
-
-    let newCell = newInfo.cell;
-    if ((newCell.gsmLocationAreaCode < 0) || (newCell.gsmCellId < 0)) {
-      voiceInfo.cell = null;
     } else {
-      voiceInfo.cell = newCell;
+      voiceInfo.cell = newInfo.cell;
     }
 
     if (!newInfo.batch) {
@@ -1211,17 +1208,14 @@ RadioInterface.prototype = {
 
     // Make sure we also reset the operator and signal strength information
     // if we drop off the network.
-    if (newInfo.regState == RIL.NETWORK_CREG_STATE_UNKNOWN) {
+    if (newInfo.regState !== RIL.NETWORK_CREG_STATE_REGISTERED_HOME &&
+        newInfo.regState !== RIL.NETWORK_CREG_STATE_REGISTERED_ROAMING) {
+      dataInfo.cell = null;
       dataInfo.network = null;
       dataInfo.signalStrength = null;
       dataInfo.relSignalStrength = null;
-    }
-
-    let newCell = newInfo.cell;
-    if ((newCell.gsmLocationAreaCode < 0) || (newCell.gsmCellId < 0)) {
-      dataInfo.cell = null;
     } else {
-      dataInfo.cell = newCell;
+      dataInfo.cell = newInfo.cell;
     }
 
     if (!newInfo.batch) {
@@ -3156,7 +3150,11 @@ RadioInterface.prototype = {
         // If the radio is disabled or the SIM card is not ready, just directly
         // return with the corresponding error code.
         let errorCode;
-        if (!this._radioEnabled) {
+        if (!PhoneNumberUtils.isPlainPhoneNumber(options.number)) {
+          if (DEBUG) this.debug("Error! Address is invalid when sending SMS: " +
+                                options.number);
+          errorCode = Ci.nsIMobileMessageCallback.INVALID_ADDRESS_ERROR;
+        } else if (!this._radioEnabled) {
           if (DEBUG) this.debug("Error! Radio is disabled when sending SMS.");
           errorCode = Ci.nsIMobileMessageCallback.RADIO_DISABLED_ERROR;
         } else if (this.rilContext.cardState != "ready") {
@@ -3184,12 +3182,8 @@ RadioInterface.prototype = {
           requestStatusReport: options.requestStatusReport
         });
 
-        if (PhoneNumberUtils.isPlainPhoneNumber(options.number)) {
-          this.worker.postMessage(options);
-        } else {
-          if (DEBUG) this.debug('Number ' + options.number + ' is not sendable.');
-          this.handleSmsSendFailed(options);
-        }
+        // This is the entry point starting to send SMS.
+        this.worker.postMessage(options);
 
       }.bind(this));
   },

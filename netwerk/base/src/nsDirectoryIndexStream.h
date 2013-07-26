@@ -40,7 +40,7 @@ public:
     Create(nsIFile* aDir, nsIInputStream** aStreamResult);
 
     // nsISupportsInterface
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
 
     // nsIInputStream interface
     NS_DECL_NSIINPUTSTREAM

@@ -4,13 +4,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "vm/Runtime.h"
-
-#include <locale.h>
-#include <string.h>
+#include "vm/Runtime-inl.h"
 
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Util.h"
+
+#include <locale.h>
+#include <string.h>
 
 #include "jsatom.h"
 #include "jsgc.h"
@@ -21,6 +21,7 @@
 #include "js/MemoryMetrics.h"
 #include "yarr/BumpPointerAllocator.h"
 
+#include "jscntxtinlines.h"
 #include "jsgcinlines.h"
 
 using namespace js;
@@ -46,6 +47,9 @@ NewObjectCache::clearNurseryObjects(JSRuntime *rt)
 void
 JSRuntime::sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf, JS::RuntimeSizes *rtSizes)
 {
+    // Several tables in the runtime enumerated below can be used off thread.
+    AutoLockForExclusiveAccess lock(this);
+
     rtSizes->object = mallocSizeOf(this);
 
     rtSizes->atomsTable = atoms.sizeOfExcludingThis(mallocSizeOf);
@@ -202,6 +206,7 @@ JSRuntime::setGCMaxMallocBytes(size_t value)
      * mean that value.
      */
     gcMaxMallocBytes = (ptrdiff_t(value) >= 0) ? value : size_t(-1) >> 1;
+    resetGCMallocBytes();
     for (ZonesIter zone(this); !zone.done(); zone.next())
         zone->setGCMaxMallocBytes(value);
 }

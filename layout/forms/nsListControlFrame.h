@@ -160,6 +160,7 @@ public:
   nsresult MouseUp(nsIDOMEvent* aMouseEvent);   // might destroy |this|
   nsresult MouseMove(nsIDOMEvent* aMouseEvent);
   nsresult DragMove(nsIDOMEvent* aMouseEvent);
+  nsresult KeyDown(nsIDOMEvent* aKeyEvent);     // might destroy |this|
   nsresult KeyPress(nsIDOMEvent* aKeyEvent);    // might destroy |this|
 
   /**
@@ -375,6 +376,8 @@ protected:
                             bool aIsControl);
   bool     HandleListSelection(nsIDOMEvent * aDOMEvent, int32_t selectedIndex);
   void     InitSelectionRange(int32_t aClickedIndex);
+  void     PostHandleKeyEvent(int32_t aNewIndex, uint32_t aCharCode,
+                              bool aIsShift, bool aIsControlOrMeta);
 
 public:
   nsSelectsAreaFrame* GetOptionsContainer() const {

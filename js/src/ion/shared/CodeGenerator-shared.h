@@ -7,16 +7,15 @@
 #ifndef ion_shared_CodeGenerator_shared_h
 #define ion_shared_CodeGenerator_shared_h
 
-#include "ion/MIR.h"
-#include "ion/MIRGraph.h"
-#include "ion/LIR.h"
 #include "ion/IonCaches.h"
-#include "ion/IonMacroAssembler.h"
 #include "ion/IonFrames.h"
 #include "ion/IonMacroAssembler.h"
+#include "ion/LIR.h"
+#include "ion/MIR.h"
+#include "ion/MIRGraph.h"
 #include "ion/Safepoints.h"
-#include "ion/VMFunctions.h"
 #include "ion/SnapshotWriter.h"
+#include "ion/VMFunctions.h"
 
 namespace js {
 namespace ion {
@@ -25,8 +24,8 @@ class OutOfLineCode;
 class CodeGenerator;
 class MacroAssembler;
 class IonCache;
-class OutOfLineParallelAbort;
-class OutOfLinePropagateParallelAbort;
+class OutOfLineAbortPar;
+class OutOfLinePropagateAbortPar;
 
 template <class ArgSeq, class StoreOutputTo>
 class OutOfLineCallVM;
@@ -324,6 +323,17 @@ class CodeGeneratorShared : public LInstructionVisitor
     inline OutOfLineCode *oolCallVM(const VMFunction &fun, LInstruction *ins, const ArgSeq &args,
                                     const StoreOutputTo &out);
 
+    bool callVM(const VMFunctionsModal &f, LInstruction *ins, const Register *dynStack = NULL) {
+        return callVM(f[gen->info().executionMode()], ins, dynStack);
+    }
+
+    template <class ArgSeq, class StoreOutputTo>
+    inline OutOfLineCode *oolCallVM(const VMFunctionsModal &f, LInstruction *ins,
+                                    const ArgSeq &args, const StoreOutputTo &out)
+    {
+        return oolCallVM(f[gen->info().executionMode()], ins, args, out);
+    }
+
     bool addCache(LInstruction *lir, size_t cacheIndex);
 
   protected:
@@ -350,22 +360,20 @@ class CodeGeneratorShared : public LInstructionVisitor
     //
     //    Parallel aborts work somewhat differently from sequential
     //    bailouts.  When an abort occurs, we first invoke
-    //    ParReportBailout() and then we return JS_ION_ERROR.  Each
+    //    ReportAbortPar() and then we return JS_ION_ERROR.  Each
     //    call on the stack will check for this error return and
     //    propagate it upwards until the C++ code that invoked the ion
     //    code is reached.
     //
-    //    The snapshot that is provided to `oolParallelAbort` is currently
+    //    The snapshot that is provided to `oolAbortPar` is currently
     //    only used for error reporting, so that we can provide feedback
     //    to the user about which instruction aborted and (perhaps) why.
-    OutOfLineParallelAbort *oolParallelAbort(ParallelBailoutCause cause,
-                                             MBasicBlock *basicBlock,
-                                             jsbytecode *bytecode);
-    OutOfLineParallelAbort *oolParallelAbort(ParallelBailoutCause cause,
-                                             LInstruction *lir);
-    OutOfLinePropagateParallelAbort *oolPropagateParallelAbort(LInstruction *lir);
-    virtual bool visitOutOfLineParallelAbort(OutOfLineParallelAbort *ool) = 0;
-    virtual bool visitOutOfLinePropagateParallelAbort(OutOfLinePropagateParallelAbort *ool) = 0;
+    OutOfLineAbortPar *oolAbortPar(ParallelBailoutCause cause, MBasicBlock *basicBlock,
+                                   jsbytecode *bytecode);
+    OutOfLineAbortPar *oolAbortPar(ParallelBailoutCause cause, LInstruction *lir);
+    OutOfLinePropagateAbortPar *oolPropagateAbortPar(LInstruction *lir);
+    virtual bool visitOutOfLineAbortPar(OutOfLineAbortPar *ool) = 0;
+    virtual bool visitOutOfLinePropagateAbortPar(OutOfLinePropagateAbortPar *ool) = 0;
 };
 
 // An out-of-line path is generated at the end of the function.
@@ -609,7 +617,7 @@ CodeGeneratorShared::visitOutOfLineCallVM(OutOfLineCallVM<ArgSeq, StoreOutputTo>
 
 // Initiate a parallel abort.  The snapshot is used to record the
 // cause.
-class OutOfLineParallelAbort : public OutOfLineCode
+class OutOfLineAbortPar : public OutOfLineCode
 {
   private:
     ParallelBailoutCause cause_;
@@ -617,9 +625,7 @@ class OutOfLineParallelAbort : public OutOfLineCode
     jsbytecode *bytecode_;
 
   public:
-    OutOfLineParallelAbort(ParallelBailoutCause cause,
-                           MBasicBlock *basicBlock,
-                           jsbytecode *bytecode)
+    OutOfLineAbortPar(ParallelBailoutCause cause, MBasicBlock *basicBlock, jsbytecode *bytecode)
       : cause_(cause),
         basicBlock_(basicBlock),
         bytecode_(bytecode)
@@ -641,13 +647,13 @@ class OutOfLineParallelAbort : public OutOfLineCode
 };
 
 // Used when some callee has aborted.
-class OutOfLinePropagateParallelAbort : public OutOfLineCode
+class OutOfLinePropagateAbortPar : public OutOfLineCode
 {
   private:
     LInstruction *lir_;
 
   public:
-    OutOfLinePropagateParallelAbort(LInstruction *lir)
+    OutOfLinePropagateAbortPar(LInstruction *lir)
       : lir_(lir)
     { }
 

@@ -53,12 +53,10 @@ protected:
                           nsIntPoint*) MOZ_OVERRIDE
   {
     AutoOpenSurface surf(OPEN_READ_ONLY, aImage);
-    mFormat =
-      (surf.ContentType() == gfxASurface::CONTENT_COLOR_ALPHA) ? FORMAT_B8G8R8A8 :
-                                                                 FORMAT_B8G8R8X8;
     mThebesSurface = ShadowLayerForwarder::OpenDescriptor(OPEN_READ_ONLY, aImage);
     mThebesImage = mThebesSurface->GetAsImageSurface();
     MOZ_ASSERT(mThebesImage);
+    mFormat = ImageFormatToSurfaceFormat(mThebesImage->Format());
     mSurface = nullptr;
     mSize = IntSize(mThebesImage->Width(), mThebesImage->Height());
   }
@@ -167,14 +165,18 @@ CreateBasicDeprecatedTextureHost(SurfaceDescriptorType aDescriptorType,
                              uint32_t aTextureHostFlags,
                              uint32_t aTextureFlags)
 {
+  RefPtr<DeprecatedTextureHost> result = nullptr;
   if (aDescriptorType == SurfaceDescriptor::TYCbCrImage) {
-    return new YCbCrDeprecatedTextureHostBasic();
+    result = new YCbCrDeprecatedTextureHostBasic();
+  } else {
+    MOZ_ASSERT(aDescriptorType == SurfaceDescriptor::TShmem ||
+               aDescriptorType == SurfaceDescriptor::TMemoryImage,
+               "We can only support Shmem currently");
+    result = new DeprecatedTextureHostBasic();
   }
 
-  MOZ_ASSERT(aDescriptorType == SurfaceDescriptor::TShmem ||
-             aDescriptorType == SurfaceDescriptor::TMemoryImage,
-             "We can only support Shmem currently");
-  return new DeprecatedTextureHostBasic();
+  result->SetFlags(aTextureFlags);
+  return result.forget();
 }
 
 BasicCompositor::BasicCompositor(nsIWidget *aWidget)
@@ -251,9 +253,13 @@ DrawSurfaceWithTextureCoords(DrawTarget *aDest,
                                   gfxPoint(aDestRect.XMost(), aDestRect.YMost()));
   Matrix matrix = ToMatrix(transform);
   if (aMask) {
-    aDest->Mask(SurfacePattern(aSource, EXTEND_REPEAT, matrix),
-                SurfacePattern(aMask, EXTEND_CLAMP, aMaskTransform),
-                DrawOptions(aOpacity));
+    NS_ASSERTION(matrix._11 == 1.0f && matrix._12 == 0.0f &&
+                 matrix._21 == 0.0f && matrix._22 == 1.0f,
+                 "Can only handle translations for mask transform");
+    aDest->MaskSurface(SurfacePattern(aSource, EXTEND_CLAMP, matrix),
+                       aMask,
+                       Point(matrix._31, matrix._32),
+                       DrawOptions(aOpacity));
   } else {
     aDest->FillRect(aDestRect,
                     SurfacePattern(aSource, EXTEND_REPEAT, matrix),

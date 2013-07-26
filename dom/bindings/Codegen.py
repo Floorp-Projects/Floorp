@@ -137,19 +137,19 @@ def DOMClass(descriptor):
         # padding.
         protoList.extend(['prototypes::id::_ID_Count'] * (descriptor.config.maxProtoChainLength - len(protoList)))
         prototypeChainString = ', '.join(protoList)
-        if descriptor.workers or descriptor.nativeOwnership != 'refcounted':
+        if descriptor.workers:
             participant = "nullptr"
         else:
-            participant = "NS_CYCLE_COLLECTION_PARTICIPANT(%s)" % descriptor.nativeType
+            participant = "GetCCParticipant<%s>::Get()" % descriptor.nativeType
         getParentObject = "GetParentObject<%s>::Get" % descriptor.nativeType
         return """{
   { %s },
-  %s,
+  IsBaseOf<nsISupports, %s >::value,
   %s,
   %s,
   GetProtoObject,
   %s
-}""" % (prototypeChainString, toStringBool(descriptor.nativeOwnership == 'nsisupports'),
+}""" % (prototypeChainString, descriptor.nativeType,
         NativePropertyHooks(descriptor),
         getParentObject,
         participant)
@@ -921,14 +921,9 @@ class CGAbstractClassHook(CGAbstractStaticMethod):
                                         args)
 
     def definition_body_prologue(self):
-        if self.descriptor.nativeOwnership == 'nsisupports':
-            assertion = ('  MOZ_STATIC_ASSERT((IsBaseOf<nsISupports, %s>::value), '
-                         '"Must be an nsISupports class");') % self.descriptor.nativeType
-        else:
-            assertion = ''
-        return """%s
+        return """
   %s* self = UnwrapDOMObject<%s>(obj);
-""" % (assertion, self.descriptor.nativeType, self.descriptor.nativeType)
+""" % (self.descriptor.nativeType, self.descriptor.nativeType)
 
     def definition_body(self):
         return self.definition_body_prologue() + self.generate_code()
@@ -949,58 +944,18 @@ class CGAddPropertyHook(CGAbstractClassHook):
 
     def generate_code(self):
         assert not self.descriptor.workers and self.descriptor.wrapperCache
-        if self.descriptor.nativeOwnership == 'nsisupports':
-            preserveArgs = "reinterpret_cast<nsISupports*>(self)"
-        else:
-            preserveArgs = "self, NS_CYCLE_COLLECTION_PARTICIPANT(%s)" % self.descriptor.nativeType
         return ("  // We don't want to preserve if we don't have a wrapper.\n"
                 "  if (self->GetWrapperPreserveColor()) {\n"
-                "    self->PreserveWrapper(%s);\n"
+                "    PreserveWrapper(self);\n"
                 "  }\n"
-                "  return true;" % preserveArgs)
+                "  return true;")
 
 def DeferredFinalizeSmartPtr(descriptor):
     if descriptor.nativeOwnership == 'owned':
-        smartPtr = 'nsAutoPtr<%s>'
+        smartPtr = 'nsAutoPtr'
     else:
-        assert descriptor.nativeOwnership == 'refcounted'
-        smartPtr = 'nsRefPtr<%s>'
-    return smartPtr % descriptor.nativeType
-
-class CGAppendDeferredFinalizePointer(CGAbstractStaticMethod):
-    def __init__(self, descriptor):
-        CGAbstractStaticMethod.__init__(self, descriptor, "AppendDeferredFinalizePointer", "void*", [Argument('void*', 'data'), Argument('void*', 'thing')])
-
-    def definition_body(self):
-        smartPtr = DeferredFinalizeSmartPtr(self.descriptor)
-        return """  nsTArray<%(smartPtr)s >* pointers = static_cast<nsTArray<%(smartPtr)s >*>(data);
-  if (!pointers) {
-    pointers = new nsTArray<%(smartPtr)s >();
-  }
-
-  %(nativeType)s* self = static_cast<%(nativeType)s*>(thing);
-
-  %(smartPtr)s* defer = pointers->AppendElement();
-  Take(*defer, self);
-  return pointers;""" % { 'smartPtr': smartPtr, 'nativeType': self.descriptor.nativeType }
-
-class CGDeferredFinalize(CGAbstractStaticMethod):
-    def __init__(self, descriptor):
-        CGAbstractStaticMethod.__init__(self, descriptor, "DeferredFinalize", "bool", [Argument('uint32_t', 'slice'), Argument('void*', 'data')])
-
-    def definition_body(self):
-        smartPtr = DeferredFinalizeSmartPtr(self.descriptor)
-        return """  MOZ_ASSERT(slice > 0, "nonsensical/useless call with slice == 0");
-  nsTArray<%(smartPtr)s >* pointers = static_cast<nsTArray<%(smartPtr)s >*>(data);
-  uint32_t oldLen = pointers->Length();
-  slice = std::min(oldLen, slice);
-  uint32_t newLen = oldLen - slice;
-  pointers->RemoveElementsAt(newLen, slice);
-  if (newLen == 0) {
-    delete pointers;
-    return true;
-  }
-  return false;""" % { 'smartPtr': smartPtr }
+        smartPtr = 'nsRefPtr'
+    return smartPtr
 
 def finalizeHook(descriptor, hookName, context):
     if descriptor.customFinalize:
@@ -1013,13 +968,9 @@ def finalizeHook(descriptor, hookName, context):
             finalize += "self->mExpandoAndGeneration.expando = JS::UndefinedValue();\n"
         if descriptor.workers:
             finalize += "self->Release();"
-        elif descriptor.nativeOwnership == 'nsisupports':
-            finalize += "nsContentUtils::DeferredFinalize(reinterpret_cast<nsISupports*>(self));"
         else:
-            finalize += """nsContentUtils::DeferredFinalize(AppendDeferredFinalizePointer,
-                                 DeferredFinalize,
-                                 self);
-"""
+            finalize += ("AddForDeferredFinalization<%s, %s >(self);" %
+                (descriptor.nativeType, DeferredFinalizeSmartPtr(descriptor)))
     return CGIfWrapper(CGGeneric(finalize), "self")
 
 class CGClassFinalizeHook(CGAbstractClassHook):
@@ -1068,7 +1019,7 @@ class CGClassConstructor(CGAbstractStaticMethod):
     def generate_code(self):
         preamble = """
   JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
-  JS::Rooted<JSObject*> obj(cx, JSVAL_TO_OBJECT(JS_CALLEE(cx, vp)));
+  JS::Rooted<JSObject*> obj(cx, &args.callee());
 """
         name = self._ctor.identifier.name
         nativeName = MakeNativeName(self.descriptor.binaryNames.get(name, name))
@@ -1090,7 +1041,7 @@ class CGConstructNavigatorObjectHelper(CGAbstractStaticMethod):
         CGAbstractStaticMethod.__init__(self, descriptor, name, rtype, args)
 
     def definition_body(self):
-        return genConstructorBody(self.descriptor)
+        return CGIndenter(CGGeneric(genConstructorBody(self.descriptor))).define()
 
 class CGConstructNavigatorObject(CGAbstractMethod):
     """
@@ -1192,7 +1143,6 @@ class CGClassHasInstanceHook(CGAbstractStaticMethod):
         return self.generate_code()
 
     def generate_code(self):
-        assert self.descriptor.nativeOwnership == 'nsisupports'
         header = """
   if (!vp.isObject()) {
     *bp = false;
@@ -1203,6 +1153,9 @@ class CGClassHasInstanceHook(CGAbstractStaticMethod):
   """
         if self.descriptor.interface.hasInterfacePrototypeObject():
             return header + """
+  MOZ_STATIC_ASSERT((IsBaseOf<nsISupports, %s>::value),
+                    "HasInstance only works for nsISupports-based classes.");
+
   bool ok = InterfaceHasInstance(cx, obj, instance, bp);
   if (!ok || *bp) {
     return ok;
@@ -1215,7 +1168,8 @@ class CGClassHasInstanceHook(CGAbstractStaticMethod):
   nsCOMPtr<nsIDOM%s> qiResult = do_QueryInterface(native);
   *bp = !!qiResult;
   return true;
-         """ % self.descriptor.interface.identifier.name
+         """ % (self.descriptor.nativeType,
+                self.descriptor.interface.identifier.name)
 
         hasInstanceCode = """
   const DOMClass* domClass = GetDOMClass(js::UncheckedUnwrap(instance));
@@ -1419,7 +1373,7 @@ def requiresQueryInterfaceMethod(descriptor):
         if desc.concrete:
             return False
         return allAncestorsAbstract(iface.parent)
-    return (descriptor.nativeOwnership == 'nsisupports' and
+    return (not descriptor.workers and
             descriptor.interface.hasInterfacePrototypeObject() and
             descriptor.concrete and
             allAncestorsAbstract(descriptor.interface))
@@ -1465,13 +1419,12 @@ class MethodDefiner(PropertyDefiner):
                                  "condition": MemberCondition(None, None) })
 
         if not static and requiresQueryInterfaceMethod(descriptor):
+            condition = "WantsQueryInterface<%s>::Enabled" % descriptor.nativeType
             self.regular.append({"name": 'QueryInterface',
                                  "methodInfo": False,
                                  "length": 1,
                                  "flags": "0",
-                                 "condition":
-                                     MemberCondition(None,
-                                                     "nsINode::IsChromeOrXBL") })
+                                 "condition": MemberCondition(None, condition) })
 
         if not static:
             stringifier = descriptor.operations['Stringifier']
@@ -1485,6 +1438,15 @@ class MethodDefiner(PropertyDefiner):
                     self.chrome.append(toStringDesc)
                 else:
                     self.regular.append(toStringDesc)
+        elif (descriptor.interface.isJSImplemented() and
+              descriptor.interface.hasInterfaceObject()):
+            self.chrome.append({"name": '_create',
+                                "nativeName": ("%s::_Create" %
+                                               descriptor.name),
+                                "methodInfo": False,
+                                "length": 2,
+                                "flags": "0",
+                                "condition": MemberCondition(None, None) })
 
         if static:
             if not descriptor.interface.hasInterfaceObject():
@@ -1684,7 +1646,7 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
     def __init__(self, descriptor, properties):
         args = [Argument('JSContext*', 'aCx'),
                 Argument('JS::Handle<JSObject*>', 'aGlobal'),
-                Argument('JSObject**', 'protoAndIfaceArray')]
+                Argument('JS::Heap<JSObject*>*', 'protoAndIfaceArray')]
         CGAbstractMethod.__init__(self, descriptor, 'CreateInterfaceObjects', 'void', args)
         self.properties = properties
     def definition_body(self):
@@ -1887,13 +1849,19 @@ class CGGetPerInterfaceObject(CGAbstractMethod):
     return JS::NullPtr();
   }
   /* Check to see whether the interface objects are already installed */
-  JSObject** protoAndIfaceArray = GetProtoAndIfaceArray(aGlobal);
+  JS::Heap<JSObject*>* protoAndIfaceArray = GetProtoAndIfaceArray(aGlobal);
   if (!protoAndIfaceArray[%s]) {
     CreateInterfaceObjects(aCx, aGlobal, protoAndIfaceArray);
   }
 
-  /* The object might _still_ be null, but that's OK */
-  return JS::Handle<JSObject*>::fromMarkedLocation(&protoAndIfaceArray[%s]);""" %
+  /* 
+   * The object might _still_ be null, but that's OK.
+   *
+   * Calling fromMarkedLocation() is safe because protoAndIfaceArray is
+   * traced by TraceProtoAndIfaceCache() and its contents are never
+   * changed after they have been set.
+   */
+  return JS::Handle<JSObject*>::fromMarkedLocation(protoAndIfaceArray[%s].address());""" %
                 (self.id, self.id))
 
 class CGGetProtoObjectMethod(CGGetPerInterfaceObject):
@@ -2057,11 +2025,10 @@ def CreateBindingJSObject(descriptor, properties, parent):
 """
     create = objDecl + create
 
-    if descriptor.nativeOwnership in ['refcounted', 'nsisupports']:
+    if descriptor.nativeOwnership == 'refcounted':
         create += """  NS_ADDREF(aObject);
 """
     else:
-        assert descriptor.nativeOwnership == 'owned'
         create += """  // Make sure the native objects inherit from NonRefcountedDOMObject so that we
   // log their ctor and dtor.
   MustInheritFromNonRefcountedDOMObject(aObject);
@@ -2140,10 +2107,8 @@ def AssertInheritanceChain(descriptor):
             "             reinterpret_cast<%s*>(aObject));\n" %
             (desc.nativeType, desc.nativeType))
         iface = iface.parent
-    if descriptor.nativeOwnership == 'nsisupports':
-        asserts += (
-            "  MOZ_ASSERT(ToSupports(aObject) == \n"
-            "             reinterpret_cast<nsISupports*>(aObject));\n")
+    asserts += (
+        "  MOZ_ASSERT(ToSupportsIsCorrect(aObject));\n")
     return asserts
 
 class CGWrapWithCacheMethod(CGAbstractMethod):
@@ -2165,12 +2130,9 @@ class CGWrapWithCacheMethod(CGAbstractMethod):
         if self.descriptor.workers:
             return """  return aObject->GetJSObject();"""
 
-        if self.descriptor.nativeOwnership == 'nsisupports':
-            assertISupportsInheritance = (
-                '  MOZ_ASSERT(reinterpret_cast<void*>(aObject) != aCache,\n'
-                '             "nsISupports must be on our primary inheritance chain");\n')
-        else:
-            assertISupportsInheritance = ""
+        assertISupportsInheritance = (
+            '  MOZ_ASSERT(ToSupportsIsOnPrimaryInheritanceChain(aObject, aCache),\n'
+            '             "nsISupports must be on our primary inheritance chain");\n')
         return """%s
 %s
   JS::Rooted<JSObject*> parent(aCx,
@@ -3767,7 +3729,7 @@ class CGArgumentConverter(CGThing):
             "obj" : "obj"
             }
         self.replacementVariables["val"] = string.Template(
-            "args.handleAt(${index})"
+            "args[${index}]"
             ).substitute(replacer)
         self.replacementVariables["mutableVal"] = self.replacementVariables["val"]
         if argument.treatUndefinedAs == "Missing":
@@ -3836,7 +3798,7 @@ class CGArgumentConverter(CGThing):
     ${elemType}& slot = *${declName}.AppendElement();
 """).substitute(replacer)
 
-        val = string.Template("args.handleAt(variadicArg)").substitute(replacer)
+        val = string.Template("args[variadicArg]").substitute(replacer)
         variadicConversion += CGIndenter(CGGeneric(
                 string.Template(typeConversion.template).substitute(
                     {
@@ -4420,6 +4382,11 @@ class CGCallGenerator(CGThing):
                 return False
             if needsConst(a):
                 arg = CGWrapper(arg, pre="Constify(", post=")")
+            # And convert NonNull<T> to T&
+            if (((a.type.isInterface() or a.type.isCallback()) and
+                 not a.type.nullable()) or
+                a.type.isDOMString()):
+                arg = CGWrapper(arg, pre="NonNullHelper(", post=")")
             args.append(arg)
 
         # Return values that go in outparams go here
@@ -4900,7 +4867,7 @@ class CGMethodCall(CGThing):
                          range(0, distinguishingIndex) ]
 
             # Select the right overload from our set.
-            distinguishingArg = "args.handleAt(%d)" % distinguishingIndex
+            distinguishingArg = "args[%d]" % distinguishingIndex
 
             def pickFirstSignature(condition, filterLambda):
                 sigs = filter(filterLambda, possibleSignatures)
@@ -5519,7 +5486,7 @@ if (!v.isObject()) {
   return ThrowErrorMessage(cx, MSG_NOT_OBJECT, "%s.%s");
 }
 
-return JS_SetProperty(cx, &v.toObject(), "%s", args.handleAt(0).address());""" % (attrName, self.descriptor.interface.identifier.name, attrName, forwardToAttrName))).define()
+return JS_SetProperty(cx, &v.toObject(), "%s", args[0]);""" % (attrName, self.descriptor.interface.identifier.name, attrName, forwardToAttrName))).define()
 
 def memberIsCreator(member):
     return member.getExtendedAttribute("Creator") is not None
@@ -7631,22 +7598,17 @@ class CGDescriptor(CGThing):
             cgThings.append(CGConstructNavigatorObjectHelper(descriptor))
             cgThings.append(CGConstructNavigatorObject(descriptor))
 
-        if descriptor.concrete:
-            if descriptor.nativeOwnership == 'owned' or descriptor.nativeOwnership == 'refcounted':
-                cgThings.append(CGAppendDeferredFinalizePointer(descriptor))
-                cgThings.append(CGDeferredFinalize(descriptor))
+        if descriptor.concrete and not descriptor.proxy:
+            if not descriptor.workers and descriptor.wrapperCache:
+                cgThings.append(CGAddPropertyHook(descriptor))
 
-            if not descriptor.proxy:
-                if not descriptor.workers and descriptor.wrapperCache:
-                    cgThings.append(CGAddPropertyHook(descriptor))
+            # Always have a finalize hook, regardless of whether the class
+            # wants a custom hook.
+            cgThings.append(CGClassFinalizeHook(descriptor))
 
-                # Always have a finalize hook, regardless of whether the class
-                # wants a custom hook.
-                cgThings.append(CGClassFinalizeHook(descriptor))
-
-                # Only generate a trace hook if the class wants a custom hook.
-                if (descriptor.customTrace):
-                    cgThings.append(CGClassTraceHook(descriptor))
+            # Only generate a trace hook if the class wants a custom hook.
+            if (descriptor.customTrace):
+                cgThings.append(CGClassTraceHook(descriptor))
 
         properties = PropertyArrays(descriptor)
         cgThings.append(CGGeneric(define=str(properties)))
@@ -7709,9 +7671,11 @@ class CGDescriptor(CGThing):
 
         if descriptor.concrete:
             if descriptor.proxy:
-                if descriptor.nativeOwnership != 'nsisupports':
-                    raise TypeError("We don't support non-nsISupports native classes for "
-                                    "proxy-based bindings yet (" + descriptor.name + ")")
+                cgThings.append(CGGeneric("""MOZ_STATIC_ASSERT((IsBaseOf<nsISupports, %s >::value),
+                  "We don't support non-nsISupports native classes for "
+                  "proxy-based bindings yet");
+
+""" % descriptor.nativeType))
                 if not descriptor.wrapperCache:
                     raise TypeError("We need a wrappercache to support expandos for proxy-based "
                                     "bindings (" + descriptor.name + ")")
@@ -8427,7 +8391,11 @@ class CGBindingRoot(CGThing):
         requiresContentUtils = any(d.interface.hasInterfaceObject() for d in descriptors)
         def descriptorHasChromeOnly(desc):
             return (any(isChromeOnly(a) for a in desc.interface.members) or
-                    desc.interface.getExtendedAttribute("ChromeOnly") is not None)
+                    desc.interface.getExtendedAttribute("ChromeOnly") is not None or
+                    # JS-implemented interfaces with an interface object get a
+                    # chromeonly _create method.
+                    (desc.interface.isJSImplemented() and
+                     desc.interface.hasInterfaceObject()))
         hasChromeOnly = any(descriptorHasChromeOnly(d) for d in descriptors)
         # XXXkhuey ugly hack but this is going away soon.
         isEventTarget = webIDLFile.endswith("EventTarget.webidl")
@@ -9229,20 +9197,20 @@ class CGJSImplMethod(CGNativeMember):
             args = args[2:]
             constructorArgs = [arg.name for arg in args]
             initCall = """
-  // Wrap the object before calling __Init so that __DOM_IMPL__ is available.
-  nsCOMPtr<nsIGlobalObject> globalHolder = do_QueryInterface(window);
-  JS::Rooted<JSObject*> scopeObj(cx, globalHolder->GetGlobalJSObject());
-  JS::Rooted<JS::Value> wrappedVal(cx);
-  if (!WrapNewBindingObject(cx, scopeObj, impl, &wrappedVal)) {
-    MOZ_ASSERT(JS_IsExceptionPending(cx));
-    aRv.Throw(NS_ERROR_UNEXPECTED);
-    return nullptr;
-  }
-  // Initialize the object with the constructor arguments.
-  impl->mImpl->__Init(%s);
-  if (aRv.Failed()) {
-    return nullptr;
-  }""" % (", ".join(constructorArgs))
+// Wrap the object before calling __Init so that __DOM_IMPL__ is available.
+nsCOMPtr<nsIGlobalObject> globalHolder = do_QueryInterface(window);
+JS::Rooted<JSObject*> scopeObj(cx, globalHolder->GetGlobalJSObject());
+JS::Rooted<JS::Value> wrappedVal(cx);
+if (!WrapNewBindingObject(cx, scopeObj, impl, &wrappedVal)) {
+  MOZ_ASSERT(JS_IsExceptionPending(cx));
+  aRv.Throw(NS_ERROR_UNEXPECTED);
+  return nullptr;
+}
+// Initialize the object with the constructor arguments.
+impl->mImpl->__Init(%s);
+if (aRv.Failed()) {
+  return nullptr;
+}""" % (", ".join(constructorArgs))
         else:
             initCall = ""
         return genConstructorBody(self.descriptor, initCall)
@@ -9385,6 +9353,15 @@ class CGJSImplClass(CGBindingImplClass):
             baseConstructors=baseConstructors,
             body=constructorBody)
 
+        self.methodDecls.append(
+            ClassMethod("_Create",
+                        "JSBool",
+                        [Argument("JSContext*", "cx"),
+                         Argument("unsigned", "argc"),
+                         Argument("JS::Value*", "vp")],
+                        static=True,
+                        body=self.getCreateFromExistingBody()))
+
         CGClass.__init__(self, descriptor.name,
                          bases=baseClasses,
                          constructors=[constructor],
@@ -9415,6 +9392,41 @@ class CGJSImplClass(CGBindingImplClass):
 
     def getGetParentObjectBody(self):
         return "return mParent;"
+
+    def getCreateFromExistingBody(self):
+        # XXXbz we could try to get parts of this (e.g. the argument
+        # conversions) auto-generated by somehow creating an IDLMethod and
+        # adding it to our interface, but we'd still need to special-case the
+        # implementation slightly to have it not try to forward to the JS
+        # object...
+        return string.Template(
+            "JS::CallArgs args = JS::CallArgsFromVp(argc, vp);\n"
+            "if (args.length() < 2) {\n"
+            '  return ThrowErrorMessage(cx, MSG_MISSING_ARGUMENTS, "${ifaceName}._create");\n'
+            "}\n"
+            "if (!args[0].isObject()) {\n"
+            '  return ThrowErrorMessage(cx, MSG_NOT_OBJECT, "Argument 1 of ${ifaceName}._create");\n'
+            "}\n"
+            "if (!args[1].isObject()) {\n"
+            '  return ThrowErrorMessage(cx, MSG_NOT_OBJECT, "Argument 2 of ${ifaceName}._create");\n'
+            "}\n"
+            "\n"
+            "// GlobalObject will go through wrappers as needed for us, and\n"
+            "// is simpler than the right UnwrapArg incantation.\n"
+            "GlobalObject global(cx, &args[0].toObject());\n"
+            "if (global.Failed()) {\n"
+            "  return false;\n"
+            "}\n"
+            "nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(global.Get());\n"
+            "if (!window) {\n"
+            '  return ThrowErrorMessage(cx, MSG_DOES_NOT_IMPLEMENT_INTERFACE, "Argument 1 of ${ifaceName}._create");\n'
+            "}\n"
+            "JS::Rooted<JSObject*> arg(cx, &args[1].toObject());\n"
+            "nsRefPtr<${implName}> impl = new ${implName}(arg, window);\n"
+            "return WrapNewBindingObject(cx, arg, impl, args.rval());").substitute({
+                "ifaceName": self.descriptor.interface.identifier.name,
+                "implName": self.descriptor.name
+                })
 
 def isJSImplementedDescriptor(descriptorProvider):
     return (isinstance(descriptorProvider, Descriptor) and
@@ -9842,7 +9854,7 @@ class CallbackOperationBase(CallbackMethod):
         # This relies on getCallableDecl declaring a boolean
         # isCallable in the case when we're a single-operation
         # interface.
-        return "isCallable ? aThisObj : mCallback"
+        return "isCallable ? aThisObj.get() : mCallback"
 
     def getCallableDecl(self):
         replacements = {
@@ -9919,7 +9931,7 @@ class CallbackSetter(CallbackMember):
         replacements = {
             "errorReturn" : self.getDefaultRetval(),
             "attrName": self.attrName,
-            "argv": "argv.begin()",
+            "argv": "argv.handleAt(0)",
             }
         return string.Template(
             'MOZ_ASSERT(argv.length() == 1);\n'

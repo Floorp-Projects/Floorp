@@ -22,7 +22,7 @@ class nsChromeProtocolHandler MOZ_FINAL : public nsIProtocolHandler,
                                           public nsSupportsWeakReference
 {
 public:
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
 
     // nsIProtocolHandler methods:
     NS_DECL_NSIPROTOCOLHANDLER

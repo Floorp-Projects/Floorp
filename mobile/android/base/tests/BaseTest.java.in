@@ -704,8 +704,64 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
         hitEnterAndWait();
     }
 
+    /**
+    * This method parses the string received as event data from blockForEventData()
+    * blockForEventData returns the data from a Gecko event as a string. 
+    * The data contains tuples structured like this: "property":"value" separated by "," in most cases but this may vary
+    * The method takes as input the event data string and a string of delimiters to parse after.
+    * @return an ArrayList<String> with the 2*k (even) index the property and the 2k+1 (odd) index the value, 0<=k<=ArrayList.size()/2
+    */
+    public ArrayList<String> parseEventData(String eventData, String dataDelimiters) {
+        ArrayList<String> parsedEventData = new ArrayList<String>();
+        String[] parseData = eventData.split(dataDelimiters);
+        for (String data:parseData) {
+            // Sometimes the property can contain : so only split the string when we have "String":"String"
+            String[] parseDataEntry = data.split("\":");
+            for (String dataContent:parseDataEntry) {
+                // Strip extra characters like event data beginning and ending brakets, remaining extra quote marks
+                dataContent = dataContent.replaceAll("[}{\"]",""); 
+                parsedEventData.add(dataContent);
+            }
+        }
+        return parsedEventData;
+    }
+
     public final void runOnUiThreadSync(Runnable runnable) {
         RobocopUtils.runOnUiThreadSync(mActivity, runnable);
+    }
+
+    /* Tap the "star" (bookmark) button to bookmark or un-bookmark the current page */
+    public void toggleBookmark() {
+        mActions.sendSpecialKey(Actions.SpecialKey.MENU);
+        waitForText("Settings");
+
+        // On ICS+ phones, there is no button labeled "Bookmarks"
+        // instead we have to just dig through every button on the screen
+        ArrayList<View> images = mSolo.getCurrentViews();
+        for (int i = 0; i < images.size(); i++) {
+            final View view = images.get(i);
+            boolean found = false;
+            found = "Bookmark".equals(view.getContentDescription());
+
+            // on older android versions, try looking at the button's text
+            if (!found) {
+                if (view instanceof TextView) {
+                    found = "Bookmark".equals(((TextView)view).getText());
+                }
+            }
+
+            if (found) {
+                int[] xy = new int[2];
+                view.getLocationOnScreen(xy);
+
+                final int viewWidth = view.getWidth();
+                final int viewHeight = view.getHeight();
+                final float x = xy[0] + (viewWidth / 2.0f);
+                float y = xy[1] + (viewHeight / 2.0f);
+
+                mSolo.clickOnScreen(x, y);
+            }
+        }
     }
 
     /**
@@ -860,6 +916,8 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
             }
         }
 
+        // DEPRECATED!
+        // Use BaseTest.toggleBookmark() in new code.
         public void bookmark() {
             if (devType.equals("tablet")) {
                 if (!osVersion.equals("4.x")){

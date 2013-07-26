@@ -200,11 +200,12 @@ function test_asyncFetch_with_nsIChannel()
     aResponse.setHeader("Content-Type", "text/plain", false);
     aResponse.write(TEST_DATA);
   });
-  server.start(4444);
+  server.start(-1);
 
   // Create our channel.
   let channel = NetUtil.ioService.
-                newChannel("http://localhost:4444/test", null, null);
+                newChannel("http://localhost:" +
+                           server.identity.primaryPort + "/test", null, null);
 
   // Open our channel asynchronously.
   NetUtil.asyncFetch(channel, function(aInputStream, aResult) {
@@ -234,10 +235,11 @@ function test_asyncFetch_with_nsIURI()
     aResponse.setHeader("Content-Type", "text/plain", false);
     aResponse.write(TEST_DATA);
   });
-  server.start(4444);
+  server.start(-1);
 
   // Create our URI.
-  let uri = NetUtil.newURI("http://localhost:4444/test");
+  let uri = NetUtil.newURI("http://localhost:" +
+                           server.identity.primaryPort + "/test");
 
   // Open our URI asynchronously.
   NetUtil.asyncFetch(uri, function(aInputStream, aResult) {
@@ -267,11 +269,12 @@ function test_asyncFetch_with_string()
     aResponse.setHeader("Content-Type", "text/plain", false);
     aResponse.write(TEST_DATA);
   });
-  server.start(4444);
+  server.start(-1);
 
   // Open our location asynchronously.
-  NetUtil.asyncFetch("http://localhost:4444/test", function(aInputStream,
-                                                            aResult) {
+  NetUtil.asyncFetch("http://localhost:" +
+                     server.identity.primaryPort + "/test",
+                     function(aInputStream, aResult) {
     // Check that we had success.
     do_check_true(Components.isSuccessCode(aResult));
 

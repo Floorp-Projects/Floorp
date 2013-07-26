@@ -1826,24 +1826,22 @@ AccessibleWrap::GetXPAccessibleFor(const VARIANT& aVarChild)
     // Convert child ID to unique ID.
     void* uniqueID = reinterpret_cast<void*>(-aVarChild.lVal);
 
-    // Document.
+    DocAccessible* document = Document();
+    Accessible* child =
+      document->GetAccessibleByUniqueIDInSubtree(uniqueID);
+
+    // If it is a document then just return an accessible.
     if (IsDoc())
-      return AsDoc()->GetAccessibleByUniqueIDInSubtree(uniqueID);
+      return child;
 
-    // ARIA document and menu popups.
-    if (ARIARole() == roles::DOCUMENT || IsMenuPopup()) {
-      DocAccessible* document = Document();
-      Accessible* child =
-        document->GetAccessibleByUniqueIDInSubtree(uniqueID);
+    // Otherwise check whether the accessible is a child (this path works for
+    // ARIA documents and popups).
+    Accessible* parent = child;
+    while (parent && parent != document) {
+      if (parent == this)
+        return child;
 
-      // Check whether the accessible for the given ID is a child.
-      Accessible* parent = child ? child->Parent() : nullptr;
-      while (parent && parent != document) {
-        if (parent == this)
-          return child;
-
-        parent = parent->Parent();
-      }
+      parent = parent->Parent();
     }
 
     return nullptr;

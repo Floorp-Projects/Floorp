@@ -11,7 +11,7 @@ namespace mozilla {
 namespace layers {
 
 ColorLayerD3D10::ColorLayerD3D10(LayerManagerD3D10 *aManager)
-  : ColorLayer(aManager, NULL)
+  : ColorLayer(aManager, nullptr)
   , LayerD3D10(aManager)
 {
   mImplData = static_cast<LayerD3D10*>(this);

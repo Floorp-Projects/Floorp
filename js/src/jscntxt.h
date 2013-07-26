@@ -123,14 +123,15 @@ class DtoaCache;
  * may run in parallel with other threads operating on the same or other
  * compartments.
  *
- * - ExclusiveContext is used by threads operating in one compartment, where
- * other threads may operate in other compartments, but *not* the one which
- * the ExclusiveContext is in. A thread with an ExclusiveContext may enter the
- * atoms compartment and atomize strings, in which case a lock is used.
+ * - ExclusiveContext is used by threads operating in one compartment/zone,
+ * where other threads may operate in other compartments, but *not* the same
+ * compartment or zone which the ExclusiveContext is in. A thread with an
+ * ExclusiveContext may enter the atoms compartment and atomize strings, in
+ * which case a lock is used.
  *
  * - JSContext is used only by the runtime's main thread. The context may
- * operate in any compartment which is not locked by an ExclusiveContext or
- * ThreadSafeContext, and will only run in parallel with threads using such
+ * operate in any compartment or zone which is not used by an ExclusiveContext
+ * or ThreadSafeContext, and will only run in parallel with threads using such
  * contexts.
  *
  * An ExclusiveContext coerces to a ThreadSafeContext, and a JSContext coerces
@@ -279,22 +280,64 @@ struct ThreadSafeContext : ContextFriendFields,
     }
 };
 
+struct WorkerThread;
+
 class ExclusiveContext : public ThreadSafeContext
 {
     friend class gc::ArenaLists;
     friend class CompartmentChecker;
-    friend class AutoEnterAtomsCompartment;
+    friend class AutoCompartment;
+    friend class AutoLockForExclusiveAccess;
     friend struct StackBaseShape;
     friend void JSScript::initCompartmentAndPrincipals(ExclusiveContext *cx,
                                                        const JS::CompileOptions &options);
 
-    inline void privateSetCompartment(JSCompartment *comp);
+    // The worker on which this context is running, if this is not a JSContext.
+    WorkerThread *workerThread;
 
   public:
 
     ExclusiveContext(JSRuntime *rt, PerThreadData *pt, ContextKind kind)
-      : ThreadSafeContext(rt, pt, kind)
+      : ThreadSafeContext(rt, pt, kind),
+        workerThread(NULL),
+        enterCompartmentDepth_(0)
     {}
+
+    /*
+     * "Entering" a compartment changes cx->compartment (which changes
+     * cx->global). Note that this does not push any StackFrame which means
+     * that it is possible for cx->fp()->compartment() != cx->compartment.
+     * This is not a problem since, in general, most places in the VM cannot
+     * know that they were called from script (e.g., they may have been called
+     * through the JSAPI via JS_CallFunction) and thus cannot expect fp.
+     *
+     * Compartments should be entered/left in a LIFO fasion. The depth of this
+     * enter/leave stack is maintained by enterCompartmentDepth_ and queried by
+     * hasEnteredCompartment.
+     *
+     * To enter a compartment, code should prefer using AutoCompartment over
+     * manually calling cx->enterCompartment/leaveCompartment.
+     */
+  protected:
+    unsigned            enterCompartmentDepth_;
+    inline void setCompartment(JSCompartment *comp);
+  public:
+    bool hasEnteredCompartment() const {
+        return enterCompartmentDepth_ > 0;
+    }
+#ifdef DEBUG
+    unsigned getEnterCompartmentDepth() const {
+        return enterCompartmentDepth_;
+    }
+#endif
+
+    inline void enterCompartment(JSCompartment *c);
+    inline void leaveCompartment(JSCompartment *oldCompartment);
+
+    void setWorkerThread(WorkerThread *workerThread);
+
+    // If required, pause this thread until notified to continue by the main thread.
+    inline void maybePause() const;
 
     inline bool typeInferenceEnabled() const;
 
@@ -314,17 +357,22 @@ class ExclusiveContext : public ThreadSafeContext
     // Methods to access runtime wide data that must be protected by locks.
 
     frontend::ParseMapPool &parseMapPool() {
-        runtime_->assertValidThread();
+        JS_ASSERT(runtime_->currentThreadHasExclusiveAccess());
         return runtime_->parseMapPool;
     }
 
     AtomSet &atoms() {
-        runtime_->assertValidThread();
+        JS_ASSERT(runtime_->currentThreadHasExclusiveAccess());
         return runtime_->atoms;
     }
 
+    JSCompartment *atomsCompartment() {
+        JS_ASSERT(runtime_->currentThreadHasExclusiveAccess());
+        return runtime_->atomsCompartment;
+    }
+
     ScriptDataTable &scriptDataTable() {
-        runtime_->assertValidThread();
+        JS_ASSERT(runtime_->currentThreadHasExclusiveAccess());
         return runtime_->scriptDataTable;
     }
 };
@@ -353,6 +401,8 @@ struct JSContext : public js::ExclusiveContext,
     }
     js::PerThreadData &mainThread() const { return runtime()->mainThread; }
 
+    friend class js::ExclusiveContext;
+
   private:
     /* Exception state -- the exception member is a GC root by definition. */
     bool                throwing;            /* is there a pending exception? */
@@ -368,38 +418,6 @@ struct JSContext : public js::ExclusiveContext,
 
     /* True if generating an error, to prevent runaway recursion. */
     bool                generatingError;
-
-    inline void setCompartment(JSCompartment *comp);
-
-    /*
-     * "Entering" a compartment changes cx->compartment (which changes
-     * cx->global). Note that this does not push any StackFrame which means
-     * that it is possible for cx->fp()->compartment() != cx->compartment.
-     * This is not a problem since, in general, most places in the VM cannot
-     * know that they were called from script (e.g., they may have been called
-     * through the JSAPI via JS_CallFunction) and thus cannot expect fp.
-     *
-     * Compartments should be entered/left in a LIFO fasion. The depth of this
-     * enter/leave stack is maintained by enterCompartmentDepth_ and queried by
-     * hasEnteredCompartment.
-     *
-     * To enter a compartment, code should prefer using AutoCompartment over
-     * manually calling cx->enterCompartment/leaveCompartment.
-     */
-  private:
-    unsigned            enterCompartmentDepth_;
-  public:
-    bool hasEnteredCompartment() const {
-        return enterCompartmentDepth_ > 0;
-    }
-#ifdef DEBUG
-    unsigned getEnterCompartmentDepth() const {
-        return enterCompartmentDepth_;
-    }
-#endif
-
-    inline void enterCompartment(JSCompartment *c);
-    inline void leaveCompartment(JSCompartment *oldCompartment);
 
     /* See JS_SaveFrameChain/JS_RestoreFrameChain. */
   private:
@@ -975,10 +993,6 @@ JSBool intrinsic_HaveSameClass(JSContext *cx, unsigned argc, Value *vp);
 
 JSBool intrinsic_ShouldForceSequential(JSContext *cx, unsigned argc, Value *vp);
 JSBool intrinsic_NewParallelArray(JSContext *cx, unsigned argc, Value *vp);
-
-#ifdef DEBUG
-JSBool intrinsic_Dump(JSContext *cx, unsigned argc, Value *vp);
-#endif
 
 } /* namespace js */
 

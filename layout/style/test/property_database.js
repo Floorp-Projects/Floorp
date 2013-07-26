@@ -1363,7 +1363,7 @@ var gCSSProperties = {
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "scroll" ],
-		other_values: [ "fixed", "scroll,scroll", "fixed, scroll", "scroll, fixed, scroll", "fixed, fixed" ],
+		other_values: [ "fixed", "local", "scroll,scroll", "fixed, scroll", "scroll, fixed, local, scroll", "fixed, fixed" ],
 		invalid_values: []
 	},
 	"background-clip": {
@@ -4410,4 +4410,181 @@ if (SpecialPowers.getBoolPref("svg.paint-order.enabled")) {
     other_values: [ "fill", "fill stroke", "fill stroke markers", "stroke markers fill" ],
     invalid_values: [ "fill stroke markers fill", "fill normal" ]
   };
+}
+
+if (SpecialPowers.getBoolPref("layout.css.filters.enabled")) {
+  	gCSSProperties["filter"] = {
+		domProp: "filter",
+		inherited: false,
+		type: CSS_TYPE_LONGHAND,
+		initial_values: [ "none" ],
+		other_values: [
+			// SVG reference filters
+			"url(#my-filter)",
+			"url(#my-filter-1) url(#my-filter-2)",
+
+			// Filter functions
+			"opacity(50%) saturate(1.0)",
+			"invert(50%) sepia(0.1) brightness(90%)",
+
+			// Mixed SVG reference filters and filter functions
+			"grayscale(1) url(#my-filter-1)",
+			"url(#my-filter-1) brightness(50%) contrast(0.9)",
+
+			"blur(0)",
+			"blur(0px)",
+			"blur(0.5px)",
+			"blur(3px)",
+			"blur(100px)",
+			"blur(0.1em)",
+			"blur(calc(-1px))", // Parses and becomes blur(0px).
+			"blur(calc(0px))",
+			"blur(calc(5px))",
+			"blur(calc(2 * 5px))",
+
+			"brightness(0)",
+			"brightness(50%)",
+			"brightness(1)",
+			"brightness(1.0)",
+			"brightness(2)",
+			"brightness(350%)",
+			"brightness(4.567)",
+
+			"contrast(0)",
+			"contrast(50%)",
+			"contrast(1)",
+			"contrast(1.0)",
+			"contrast(2)",
+			"contrast(350%)",
+			"contrast(4.567)",
+
+			"grayscale(0)",
+			"grayscale(50%)",
+			"grayscale(1)",
+			"grayscale(1.0)",
+			"grayscale(2)",
+			"grayscale(350%)",
+			"grayscale(4.567)",
+
+			"invert(0)",
+			"invert(50%)",
+			"invert(1)",
+			"invert(1.0)",
+			"invert(2)",
+			"invert(350%)",
+			"invert(4.567)",
+
+			"opacity(0)",
+			"opacity(50%)",
+			"opacity(1)",
+			"opacity(1.0)",
+			"opacity(2)",
+			"opacity(350%)",
+			"opacity(4.567)",
+
+			"saturate(0)",
+			"saturate(50%)",
+			"saturate(1)",
+			"saturate(1.0)",
+			"saturate(2)",
+			"saturate(350%)",
+			"saturate(4.567)",
+
+			"sepia(0)",
+			"sepia(50%)",
+			"sepia(1)",
+			"sepia(1.0)",
+			"sepia(2)",
+			"sepia(350%)",
+			"sepia(4.567)",
+		],
+		invalid_values: [
+			// none
+			"none none",
+			"url(#my-filter) none",
+			"none url(#my-filter)",
+			"blur(2px) none url(#my-filter)",
+
+			// Nested filters
+			"grayscale(invert(1.0))",
+
+			// Comma delimited filters
+			"url(#my-filter),",
+			"invert(50%), url(#my-filter), brightness(90%)",
+
+			// Test the following situations for each filter function:
+			// - Invalid number of arguments
+			// - Comma delimited arguments
+			// - Wrong argument type
+			// - Argument value out of range
+			"blur()",
+			"blur(3px 5px)",
+			"blur(3px,)",
+			"blur(3px, 5px)",
+			"blur(#my-filter)",
+			"blur(0.5)",
+			"blur(50%)",
+			"blur(calc(0))", // Unitless zero in calc is not a valid length.
+			"blur(calc(0.1))",
+			"blur(calc(10%))",
+			"blur(calc(20px - 5%))",
+			"blur(-3px)",
+
+			"brightness()",
+			"brightness(0.5 0.5)",
+			"brightness(0.5,)",
+			"brightness(0.5, 0.5)",
+			"brightness(#my-filter)",
+			"brightness(10px)",
+			"brightness(-1)",
+
+			"contrast()",
+			"contrast(0.5 0.5)",
+			"contrast(0.5,)",
+			"contrast(0.5, 0.5)",
+			"contrast(#my-filter)",
+			"contrast(10px)",
+			"contrast(-1)",
+
+			"grayscale()",
+			"grayscale(0.5 0.5)",
+			"grayscale(0.5,)",
+			"grayscale(0.5, 0.5)",
+			"grayscale(#my-filter)",
+			"grayscale(10px)",
+			"grayscale(-1)",
+
+			"invert()",
+			"invert(0.5 0.5)",
+			"invert(0.5,)",
+			"invert(0.5, 0.5)",
+			"invert(#my-filter)",
+			"invert(10px)",
+			"invert(-1)",
+
+			"opacity()",
+			"opacity(0.5 0.5)",
+			"opacity(0.5,)",
+			"opacity(0.5, 0.5)",
+			"opacity(#my-filter)",
+			"opacity(10px)",
+			"opacity(-1)",
+
+			"saturate()",
+			"saturate(0.5 0.5)",
+			"saturate(0.5,)",
+			"saturate(0.5, 0.5)",
+			"saturate(#my-filter)",
+			"saturate(10px)",
+			"saturate(-1)",
+
+			"sepia()",
+			"sepia(0.5 0.5)",
+			"sepia(0.5,)",
+			"sepia(0.5, 0.5)",
+			"sepia(#my-filter)",
+			"sepia(10px)",
+			"sepia(-1)",
+		]
+	};
 }

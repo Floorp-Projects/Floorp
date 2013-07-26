@@ -243,6 +243,12 @@ struct nsStyleImage {
    */
   bool IsComplete() const;
   /**
+   * @return true if this image is loaded without error;
+   * always returns true if |mType| is |eStyleImageType_Gradient| or
+   * |eStyleImageType_Element|.
+   */
+  bool IsLoaded() const;
+  /**
    * @return true if it is 100% confident that this image contains no pixel
    * to draw.
    */
@@ -2262,6 +2268,32 @@ struct nsStyleSVG {
   }
 };
 
+struct nsStyleFilter {
+  nsStyleFilter();
+  nsStyleFilter(const nsStyleFilter& aSource);
+  ~nsStyleFilter();
+
+  bool operator==(const nsStyleFilter& aOther) const;
+
+  enum Type {
+    eNull,
+    eURL,
+    eBlur,
+    eBrightness,
+    eContrast,
+    eInvert,
+    eOpacity,
+    eGrayscale,
+    eSaturate,
+    eSepia,
+  };
+
+  Type mType;
+  nsIURI* mURL;
+  nsStyleCoord mCoord;
+  // FIXME: Add a nsCSSShadowItem when we implement drop shadow.
+};
+
 struct nsStyleSVGReset {
   nsStyleSVGReset();
   nsStyleSVGReset(const nsStyleSVGReset& aSource);
@@ -2280,8 +2312,17 @@ struct nsStyleSVGReset {
     return NS_CombineHint(nsChangeHint_UpdateEffects, NS_STYLE_HINT_REFLOW);
   }
 
+  // The backend only supports one SVG reference right now.
+  // Eventually, it will support multiple chained SVG reference filters and CSS
+  // filter functions.
+  nsIURI* SingleFilter() const {
+    return (mFilters.Length() == 1 &&
+            mFilters[0].mType == nsStyleFilter::Type::eURL) ?
+            mFilters[0].mURL : nullptr;
+  }
+
   nsCOMPtr<nsIURI> mClipPath;         // [reset]
-  nsCOMPtr<nsIURI> mFilter;           // [reset]
+  nsTArray<nsStyleFilter> mFilters;   // [reset]
   nsCOMPtr<nsIURI> mMask;             // [reset]
   nscolor          mStopColor;        // [reset]
   nscolor          mFloodColor;       // [reset]

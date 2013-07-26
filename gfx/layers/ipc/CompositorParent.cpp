@@ -33,6 +33,9 @@ using namespace std;
 namespace mozilla {
 namespace layers {
 
+typedef map<uint64_t, CompositorParent::LayerTreeState> LayerTreeMap;
+static LayerTreeMap sIndirectLayerTrees;
+
 // FIXME/bug 774386: we're assuming that there's only one
 // CompositorParent, but that's not always true.  This assumption only
 // affects CrossProcessCompositorParent below.
@@ -132,7 +135,7 @@ CompositorParent::CompositorParent(nsIWidget* aWidget,
                                    bool aUseExternalSurfaceSize,
                                    int aSurfaceWidth, int aSurfaceHeight)
   : mWidget(aWidget)
-  , mCurrentCompositeTask(NULL)
+  , mCurrentCompositeTask(nullptr)
   , mIsTesting(false)
   , mPaused(false)
   , mUseExternalSurfaceSize(aUseExternalSurfaceSize)
@@ -193,6 +196,14 @@ CompositorParent::RecvWillStop()
 
   // Ensure that the layer manager is destroyed before CompositorChild.
   if (mLayerManager) {
+    for (LayerTreeMap::iterator it = sIndirectLayerTrees.begin();
+         it != sIndirectLayerTrees.end(); it++)
+    {
+      LayerTreeState* lts = &it->second;
+      if (lts->mParent == this) {
+        mLayerManager->ClearCachedResources(lts->mRoot);
+      }
+    }
     mLayerManager->Destroy();
     mLayerManager = nullptr;
     mCompositionManager = nullptr;
@@ -527,7 +538,7 @@ CompositorParent::ShadowLayersUpdated(LayerTransactionParent* aLayerTree,
   if (!isFirstPaint &&
       !mCompositionManager->IsFirstPaint() &&
       mCompositionManager->RequiresReorientation(aTargetConfig.orientation())) {
-    if (mForceCompositionTask != NULL) {
+    if (mForceCompositionTask != nullptr) {
       mForceCompositionTask->Cancel();
     }
     mForceCompositionTask = NewRunnableMethod(this, &CompositorParent::ForceComposition);
@@ -666,9 +677,6 @@ CompositorParent::SetTimeAndSampleAnimations(TimeStamp aTime, bool aIsTesting)
     it->second->mCompositionManager->TransformShadowTree(aTime);
   }
 }
-
-typedef map<uint64_t, CompositorParent::LayerTreeState> LayerTreeMap;
-static LayerTreeMap sIndirectLayerTrees;
 
 bool
 CompositorParent::RecvNotifyChildCreated(const uint64_t& child)

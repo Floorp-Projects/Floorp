@@ -387,9 +387,6 @@ public:
     void DetachShader(WebGLProgram *program, WebGLShader *shader);
     void Disable(WebGLenum cap);
     void DisableVertexAttribArray(WebGLuint index);
-    void DrawArrays(GLenum mode, WebGLint first, WebGLsizei count);
-    void DrawElements(WebGLenum mode, WebGLsizei count, WebGLenum type,
-                      WebGLintptr byteOffset);
     void DrawBuffers(const dom::Sequence<GLenum>& buffers);
     void Enable(WebGLenum cap);
     void EnableVertexAttribArray(WebGLuint index);
@@ -522,7 +519,8 @@ public:
     template<class ElementType>
     void TexImage2D(WebGLenum target, WebGLint level,
                     WebGLenum internalformat, WebGLenum format, WebGLenum type,
-                    const ElementType& elt, ErrorResult& rv) {
+                    ElementType& elt, ErrorResult& rv)
+    {
         if (!IsContextStable())
             return;
         nsRefPtr<gfxImageSurface> isurf;
@@ -559,7 +557,8 @@ public:
     template<class ElementType>
     void TexSubImage2D(WebGLenum target, WebGLint level,
                        WebGLint xoffset, WebGLint yoffset, WebGLenum format,
-                       WebGLenum type, const ElementType& elt, ErrorResult& rv) {
+                       WebGLenum type, ElementType& elt, ErrorResult& rv)
+    {
         if (!IsContextStable())
             return;
         nsRefPtr<gfxImageSurface> isurf;
@@ -780,6 +779,23 @@ public:
                              WebGLintptr byteOffset);
     void Viewport(WebGLint x, WebGLint y, WebGLsizei width, WebGLsizei height);
 
+// -----------------------------------------------------------------------------
+// Vertices Feature (WebGLContextVertices.cpp)
+public:
+    void DrawArrays(GLenum mode, WebGLint first, WebGLsizei count);
+    void DrawArraysInstanced(GLenum mode, WebGLint first, WebGLsizei count, WebGLsizei primcount);
+    void DrawElements(WebGLenum mode, WebGLsizei count, WebGLenum type, WebGLintptr byteOffset);
+    void DrawElementsInstanced(WebGLenum mode, WebGLsizei count, WebGLenum type,
+                               WebGLintptr byteOffset, WebGLsizei primcount);
+
+private:
+    bool DrawArrays_check(WebGLint first, WebGLsizei count, WebGLsizei primcount, const char* info);
+    bool DrawElements_check(WebGLsizei count, WebGLenum type, WebGLintptr byteOffset,
+                            WebGLsizei primcount, const char* info);
+    void Draw_cleanup();
+
+// -----------------------------------------------------------------------------
+// PROTECTED
 protected:
     void SetDontKnowIfNeedFakeBlack() {
         mFakeBlackStatus = DontKnowIfNeedFakeBlack;
@@ -976,8 +992,9 @@ protected:
         return nsLayoutUtils::SurfaceFromElement(aElement, flags);
     }
     template<class ElementType>
-    nsLayoutUtils::SurfaceFromElementResult SurfaceFromElement(const dom::NonNull<ElementType>& aElement) {
-      return SurfaceFromElement(aElement.get());
+    nsLayoutUtils::SurfaceFromElementResult SurfaceFromElement(ElementType& aElement)
+    {
+      return SurfaceFromElement(&aElement);
     }
 
     nsresult SurfaceFromElementResultToImageSurface(nsLayoutUtils::SurfaceFromElementResult& res,

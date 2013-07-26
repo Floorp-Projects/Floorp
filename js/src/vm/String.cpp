@@ -660,6 +660,7 @@ const StaticStrings::SmallChar StaticStrings::toSmallChar[] = { R7(0) };
 bool
 StaticStrings::init(JSContext *cx)
 {
+    AutoLockForExclusiveAccess lock(cx);
     AutoCompartment ac(cx, cx->runtime()->atomsCompartment);
 
     for (uint32_t i = 0; i < UNIT_STATIC_LIMIT; i++) {

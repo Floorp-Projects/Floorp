@@ -2,10 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// Fired when any context ui is displayed
-const kContextUIShowEvent = "MozContextUIShow";
-// Fired when any context ui is dismissed
-const kContextUIDismissEvent = "MozContextUIDismiss";
 // Fired when the tabtray is displayed
 const kContextUITabsShowEvent = "MozContextUITabsShow";
 // add more as needed...
@@ -102,6 +98,7 @@ var ContextUI = {
     let shown = false;
 
     if (!this.navbarVisible) {
+      BrowserUI.updateURI();
       this.displayNavbar();
       shown = true;
     }
@@ -113,7 +110,6 @@ var ContextUI = {
 
     if (shown) {
       ContentAreaObserver.update(window.innerWidth, window.innerHeight);
-      this._fire(kContextUIShowEvent);
     }
 
     return shown;
@@ -145,7 +141,6 @@ var ContextUI = {
 
     if (dismissed) {
       ContentAreaObserver.update(window.innerWidth, window.innerHeight);
-      this._fire(kContextUIDismissEvent);
     }
 
     return dismissed;

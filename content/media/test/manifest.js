@@ -38,7 +38,6 @@ var gProgressTests = [
 // Used by test_played.html
 var gPlayedTests = [
   { name:"big.wav", type:"audio/x-wav", duration:9.0 },
-  { name:"sound.ogg", type:"audio/ogg", duration:4.0 },
   { name:"seek.ogv", type:"video/ogg", duration:3.966 },
   { name:"seek.webm", type:"video/webm", duration:3.966 },
   { name:"gizmo.mp4", type:"video/mp4", duration:5.56 },
@@ -77,6 +76,12 @@ var gTrackTests = [
   { name:"short-video.ogv", type:"video/ogg", duration:1.081, hasAudio:true, hasVideo:true },
   { name:"seek.webm", type:"video/webm", duration:3.966, size:215529, hasAudio:false, hasVideo:true },
   { name:"bogus.duh", type:"bogus/duh" }
+];
+
+// Used by any media recorder test. Need one test file per decoder backend
+// currently supported by the media encoder.
+var gMediaRecorderTests = [
+  { name:"detodos.opus", type:"audio/ogg; codecs=opus", duration:2.9135 }
 ];
 
 // These are files that we want to make sure we can play through.  We can

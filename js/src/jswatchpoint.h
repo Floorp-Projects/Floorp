@@ -8,9 +8,9 @@
 #define jswatchpoint_h
 
 #include "jsalloc.h"
-#include "jsprvtd.h"
 #include "jsapi.h"
 #include "jsfriendapi.h"
+#include "jsprvtd.h"
 
 #include "gc/Barrier.h"
 #include "js/HashTable.h"

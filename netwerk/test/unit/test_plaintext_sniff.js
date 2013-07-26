@@ -81,8 +81,8 @@ function makeChan(headerIdx, bodyIdx) {
   var ios = Components.classes["@mozilla.org/network/io-service;1"]
                       .getService(Components.interfaces.nsIIOService);
   var chan =
-    ios.newChannel("http://localhost:4444/" + headerIdx + "/" + bodyIdx, null,
-                   null)
+    ios.newChannel("http://localhost:" + httpserv.identity.primaryPort +
+                   "/" + headerIdx + "/" + bodyIdx, null, null)
        .QueryInterface(Components.interfaces.nsIHttpChannel);
 
   chan.loadFlags |=
@@ -193,7 +193,7 @@ function run_test() {
     }
   }
 
-  httpserv.start(4444);
+  httpserv.start(-1);
 
   doTest(0, 0);
 }

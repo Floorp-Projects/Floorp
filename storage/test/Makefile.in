@@ -11,32 +11,6 @@ relativesrcdir = @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-CPP_UNIT_TESTS = \
-  test_transaction_helper.cpp \
-  test_statement_scoper.cpp \
-  test_mutex.cpp \
-  test_binding_params.cpp \
-  test_true_async.cpp \
-  test_unlock_notify.cpp \
-  test_service_init_background_thread.cpp \
-  test_AsXXX_helpers.cpp \
-  test_StatementCache.cpp \
-  test_async_callbacks_with_spun_event_loops.cpp \
-  test_file_perms.cpp \
-  test_asyncStatementExecution_transaction.cpp \
-  $(NULL)
-
-ifdef MOZ_DEBUG
-# FIXME bug 523392: test_deadlock_detector doesn't like Windows
-# FIXME bug 523378: also fails on OS X
-ifneq (,$(filter-out WINNT Darwin,$(OS_ARCH)))
-CPP_UNIT_TESTS += \
-  test_deadlock_detector.cpp \
-  $(NULL)
-endif
-endif
-
-
 LOCAL_INCLUDES = \
   -I$(srcdir)/../src \
   $(NULL)

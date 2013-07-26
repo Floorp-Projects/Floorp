@@ -484,11 +484,13 @@ HTMLBreadcrumbs.prototype = {
       if (originalLength > 0) {
         stopNode = this.nodeHierarchy[originalLength - 1].node;
       }
-      while (toAppend && toAppend.tagName && toAppend != stopNode) {
-        let button = this.buildButton(toAppend);
-        fragment.insertBefore(button, lastButtonInserted);
-        lastButtonInserted = button;
-        this.nodeHierarchy.splice(originalLength, 0, {node: toAppend, button: button});
+      while (toAppend && toAppend != stopNode) {
+        if (toAppend.tagName) {
+          let button = this.buildButton(toAppend);
+          fragment.insertBefore(button, lastButtonInserted);
+          lastButtonInserted = button;
+          this.nodeHierarchy.splice(originalLength, 0, {node: toAppend, button: button});
+        }
         toAppend = toAppend.parentNode();
       }
       this.container.appendChild(fragment, this.container.firstChild);

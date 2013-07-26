@@ -48,6 +48,7 @@ exports.shutdown = function(options) {
 };
 
 exports.testRemote = function(options) {
+  var connected = false;
   return helpers.audit(options, [
     {
       skipRemainingIf: !options.isHttp,
@@ -63,6 +64,72 @@ exports.testRemote = function(options) {
         message: 'Can\'t use \'remote\'.',
         predictions: [ ],
         unassigned: [ ],
+      }
+    },
+    {
+      setup:    'connect remote',
+      check: {
+        input:  'connect remote',
+        hints:                ' [options]',
+        markup: 'VVVVVVVVVVVVVV',
+        cursor: 14,
+        current: 'prefix',
+        status: 'VALID',
+        options: [ ],
+        message: '',
+        predictions: [ ],
+        unassigned: [ ],
+        args: {
+          command: { name: 'connect' },
+          prefix: { value: 'remote', arg: ' remote', status: 'VALID', message: '' },
+          host: { value: undefined, arg: '', status: 'VALID', message: '' },
+          port: { value: undefined, arg: '', status: 'VALID', message: '' },
+        }
+      },
+      exec: {
+        completed: false,
+        error: false
+      },
+      post: function(output, data) {
+        connected = !output.error;
+        if (!connected) {
+          console.log('Failure from "connect remote". Run server with "node gcli server start --websocket --allowexec" to allow remote command testing');
+        }
+      }
+    },
+    {
+      // We do a connect-disconnect dance for 2 reasons, partly re-establishing
+      // a connection is a good test, and secondly it lets us have minimal
+      // testing on the first connection so we don't need to turn websockets
+      // on all the time
+      setup:    'disconnect remote --force',
+      skipRemainingIf: !connected,
+      check: {
+        input:  'disconnect remote --force',
+        hints:                           '',
+        markup: 'VVVVVVVVVVVVVVVVVVVVVVVVV',
+        cursor: 25,
+        current: 'force',
+        status: 'VALID',
+        message: '',
+        unassigned: [ ],
+        args: {
+          command: { name: 'disconnect' },
+          prefix: {
+            value: function(connection) {
+              assert.is(connection.prefix, 'remote', 'disconnecting remote');
+            },
+            arg: ' remote',
+            status: 'VALID',
+            message: ''
+          }
+        }
+      },
+      exec: {
+        output: /^Removed [0-9]* commands.$/,
+        completed: true,
+        type: 'string',
+        error: false
       }
     },
     {

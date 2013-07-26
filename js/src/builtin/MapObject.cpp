@@ -1018,8 +1018,8 @@ Class MapObject::class_ = {
     finalize,
     NULL,                    // checkAccess
     NULL,                    // call
-    NULL,                    // construct
     NULL,                    // hasInstance
+    NULL,                    // construct
     mark
 };
 
@@ -1036,6 +1036,7 @@ const JSFunctionSpec MapObject::methods[] = {
     JS_FN("keys", keys, 0, 0),
     JS_FN("values", values, 0, 0),
     JS_FN("clear", clear, 0, 0),
+    {"forEach", {NULL, NULL}, 2, 0, "MapForEach"},
     JS_FS_END
 };
 
@@ -1576,8 +1577,8 @@ Class SetObject::class_ = {
     finalize,
     NULL,                    // checkAccess
     NULL,                    // call
-    NULL,                    // construct
     NULL,                    // hasInstance
+    NULL,                    // construct
     mark
 };
 
@@ -1592,6 +1593,7 @@ const JSFunctionSpec SetObject::methods[] = {
     JS_FN("delete", delete_, 1, 0),
     JS_FN("entries", entries, 0, 0),
     JS_FN("clear", clear, 0, 0),
+    {"forEach", {NULL, NULL}, 2, 0, "SetForEach"},
     JS_FS_END
 };
 

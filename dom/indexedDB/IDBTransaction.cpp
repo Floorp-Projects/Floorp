@@ -820,7 +820,7 @@ CommitHelper::~CommitHelper()
 {
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(CommitHelper, nsIRunnable)
+NS_IMPL_ISUPPORTS1(CommitHelper, nsIRunnable)
 
 NS_IMETHODIMP
 CommitHelper::Run()
@@ -1021,7 +1021,7 @@ UpdateRefcountFunction::Init()
   return NS_OK;
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(UpdateRefcountFunction, mozIStorageFunction)
+NS_IMPL_ISUPPORTS1(UpdateRefcountFunction, mozIStorageFunction)
 
 NS_IMETHODIMP
 UpdateRefcountFunction::OnFunctionCall(mozIStorageValueArray* aValues,

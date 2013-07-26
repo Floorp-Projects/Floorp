@@ -207,7 +207,7 @@ private:
   void SetupStateForRendering();
 
   // Set the scissor rect to a certain IntRects, resets the scissor rect to
-  // surface bounds when NULL is specified.
+  // surface bounds when nullptr is specified.
   void SetScissorToRect(IntRect *aRect);
 
   void PushD2DLayer(ID2D1RenderTarget *aRT, ID2D1Geometry *aGeometry, ID2D1Layer *aLayer, const D2D1_MATRIX_3X2_F &aTransform);
@@ -242,7 +242,7 @@ private:
     RefPtr<ID2D1Layer> mLayer;
     D2D1_RECT_F mBounds;
     union {
-      // If mPath is non-NULL, the mTransform member will be used, otherwise
+      // If mPath is non-nullptr, the mTransform member will be used, otherwise
       // the mIsPixelAligned member is valid.
       D2D1_MATRIX_3X2_F mTransform;
       bool mIsPixelAligned;

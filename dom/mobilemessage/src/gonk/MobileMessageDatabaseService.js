@@ -751,6 +751,7 @@ MobileMessageDatabaseService.prototype = {
         }
         threadRecord.lastMessageType = messageRecord.type;
         cursor.update(threadRecord);
+        cursor.continue();
       };
 
       request.onerror = function onerror(event) {
@@ -759,8 +760,8 @@ MobileMessageDatabaseService.prototype = {
             debug("Caught error on transaction", event.target.errorCode);
           }
         }
+        cursor.continue();
       };
-      cursor.continue();
     };
   },
 
@@ -1229,7 +1230,7 @@ MobileMessageDatabaseService.prototype = {
 
   saveSendingMessage: function saveSendingMessage(aMessage, aCallback) {
     if ((aMessage.type != "sms" && aMessage.type != "mms") ||
-        (aMessage.type == "sms" && !aMessage.receiver) ||
+        (aMessage.type == "sms" && aMessage.receiver == undefined) ||
         (aMessage.type == "mms" && !Array.isArray(aMessage.receivers)) ||
         aMessage.deliveryStatusRequested == undefined ||
         aMessage.timestamp == undefined) {

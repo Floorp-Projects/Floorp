@@ -43,7 +43,7 @@ protected:
 class nsNoAuthURLParser MOZ_FINAL : public nsBaseURLParser
 {
 public:
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
 
 #if defined(XP_WIN) || defined(XP_OS2)
     NS_IMETHOD ParseFilePath(const char *, int32_t,
@@ -75,7 +75,7 @@ public:
 class nsAuthURLParser : public nsBaseURLParser
 {
 public:
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
 
     virtual ~nsAuthURLParser() {}
 

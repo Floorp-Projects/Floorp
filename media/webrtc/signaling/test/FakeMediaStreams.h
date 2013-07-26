@@ -91,7 +91,7 @@ Fake_MediaPeriodic(Fake_MediaStream *aStream) : mStream(aStream),
 
   int GetTimesCalled() { return mCount; }
 
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSITIMERCALLBACK
 
 protected:
@@ -192,7 +192,7 @@ public:
     mMediaStream->Stop();
   }
 
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
 
   static already_AddRefed<Fake_DOMMediaStream>
   CreateSourceStream(nsIDOMWindow* aWindow, uint32_t aHintContents) {

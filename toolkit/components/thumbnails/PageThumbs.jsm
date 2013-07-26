@@ -17,6 +17,11 @@ const LATEST_STORAGE_VERSION = 3;
 const EXPIRATION_MIN_CHUNK_SIZE = 50;
 const EXPIRATION_INTERVAL_SECS = 3600;
 
+// If a request for a thumbnail comes in and we find one that is "stale"
+// (or don't find one at all) we automatically queue a request to generate a
+// new one.
+const MAX_THUMBNAIL_AGE_SECS = 172800; // 2 days == 60*60*24*2 == 172800 secs.
+
 /**
  * Name of the directory in the profile that contains the thumbnails.
  */
@@ -181,6 +186,26 @@ this.PageThumbs = {
   },
 
   /**
+   * Checks if an existing thumbnail for the specified URL is either missing
+   * or stale, and if so, queues a background request to capture it.  That
+   * capture process will send a notification via the observer service on
+   * capture, so consumers should watch for such observations if they want to
+   * be notified of an updated thumbnail.
+   */
+  captureIfStale: function PageThumbs_captureIfStale(aUrl) {
+    let filePath = PageThumbsStorage.getFilePathForURL(aUrl);
+    PageThumbsWorker.post("isFileRecent", [filePath, MAX_THUMBNAIL_AGE_SECS]
+    ).then(result => {
+      if (!result.ok) {
+        // Sadly there is currently a circular dependency between this module
+        // and BackgroundPageThumbs, so do the import locally.
+        let BPT = Cu.import("resource://gre/modules/BackgroundPageThumbs.jsm", {}).BackgroundPageThumbs;
+        BPT.capture(aUrl);
+      }
+    });
+  },
+
+  /**
    * Captures a thumbnail for the given window.
    * @param aWindow The DOM window to capture a thumbnail from.
    * @param aCallback The function to be called when the thumbnail has been
@@ -310,6 +335,7 @@ this.PageThumbs = {
       Services.telemetry.getHistogramById("FX_THUMBNAILS_STORE_TIME_MS")
         .add(new Date() - telemetryStoreTime);
 
+      Services.obs.notifyObservers(null, "page-thumbnail:create", aFinalURL);
       // We've been redirected. Create a copy of the current thumbnail for
       // the redirect source. We need to do this because:
       //
@@ -321,8 +347,10 @@ this.PageThumbs = {
       //    Because of bug 559175 this information can get lost when using
       //    Sync and therefore also redirect sources appear on the newtab
       //    page. We also want thumbnails for those.
-      if (aFinalURL != aOriginalURL)
+      if (aFinalURL != aOriginalURL) {
         yield PageThumbsStorage.copy(aFinalURL, aOriginalURL);
+        Services.obs.notifyObservers(null, "page-thumbnail:create", aOriginalURL);
+      }
     });
   },
 

@@ -1225,7 +1225,9 @@ protected:
 
   // These member variables are used on both inner and the outer windows.
   nsCOMPtr<nsIPrincipal> mDocumentPrincipal;
-  JSObject* mJSObject;
+
+  // The JS global object.  Global objects are always allocated tenured.
+  JS::TenuredHeap<JSObject*> mJSObject;
 
   typedef nsCOMArray<nsIDOMStorageEvent> nsDOMStorageEventArray;
   nsDOMStorageEventArray mPendingStorageEvents;

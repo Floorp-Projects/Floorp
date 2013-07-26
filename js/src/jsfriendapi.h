@@ -10,8 +10,8 @@
 #include "mozilla/MemoryReporting.h"
 
 #include "jsclass.h"
-#include "jspubtd.h"
 #include "jsprvtd.h"
+#include "jspubtd.h"
 
 #include "js/CallArgs.h"
 
@@ -638,12 +638,9 @@ GetNativeStackLimit(JSContext *cx)
         }                                                                       \
     JS_END_MACRO
 
-#define JS_CHECK_RECURSION_WITH_EXTRA_DONT_REPORT(cx, extra, onerror)           \
+#define JS_CHECK_RECURSION_WITH_SP_DONT_REPORT(cx, sp, onerror)                 \
     JS_BEGIN_MACRO                                                              \
-        uint8_t stackDummy_;                                                    \
-        if (!JS_CHECK_STACK_SIZE(js::GetNativeStackLimit(cx),                   \
-                                 &stackDummy_ - (extra)))                       \
-        {                                                                       \
+        if (!JS_CHECK_STACK_SIZE(js::GetNativeStackLimit(cx), sp)) {            \
             onerror;                                                            \
         }                                                                       \
     JS_END_MACRO
@@ -1491,10 +1488,10 @@ class JSJitSetterCallArgs : protected JS::MutableHandleValue
 {
   public:
     explicit JSJitSetterCallArgs(const JS::CallArgs& args)
-      : JS::MutableHandleValue(args.handleAt(0))
+      : JS::MutableHandleValue(args[0])
     {}
 
-    JS::MutableHandleValue handleAt(unsigned i) {
+    JS::MutableHandleValue operator[](unsigned i) {
         MOZ_ASSERT(i == 0);
         return *this;
     }
@@ -1528,8 +1525,8 @@ class JSJitMethodCallArgs : protected JS::detail::CallArgsBase<JS::detail::NoUse
 
     unsigned length() const { return Base::length(); }
 
-    JS::MutableHandleValue handleAt(unsigned i) const {
-        return Base::handleAt(i);
+    JS::MutableHandleValue operator[](unsigned i) const {
+        return Base::operator[](i);
     }
 
     bool hasDefined(unsigned i) const {
@@ -1797,10 +1794,24 @@ js_ReportIsNotFunction(JSContext *cx, const JS::Value& v);
 
 #ifdef JSGC_GENERATIONAL
 extern JS_FRIEND_API(void)
-JS_StorePostBarrierCallback(JSContext* cx, void (*callback)(JSTracer *trc, void *key), void *key);
+JS_StoreObjectPostBarrierCallback(JSContext* cx,
+                                  void (*callback)(JSTracer *trc, void *key, void *data),
+                                  JSObject *key, void *data);
+
+extern JS_FRIEND_API(void)
+JS_StoreStringPostBarrierCallback(JSContext* cx,
+                                  void (*callback)(JSTracer *trc, void *key, void *data),
+                                  JSString *key, void *data);
 #else
 inline void
-JS_StorePostBarrierCallback(JSContext* cx, void (*callback)(JSTracer *trc, void *key), void *key) {}
+JS_StoreObjectPostBarrierCallback(JSContext* cx,
+                                  void (*callback)(JSTracer *trc, void *key, void *data),
+                                  JSObject *key, void *data) {}
+
+inline void
+JS_StoreStringPostBarrierCallback(JSContext* cx,
+                                  void (*callback)(JSTracer *trc, void *key, void *data),
+                                  JSString *key, void *data) {}
 #endif /* JSGC_GENERATIONAL */
 
 #endif /* jsfriendapi_h */

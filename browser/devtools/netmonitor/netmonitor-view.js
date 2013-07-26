@@ -368,7 +368,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
   copyUrl: function() {
     let selected = this.selectedItem.attachment;
 
-    clipboardHelper.copyString(selected.url, this.document);
+    clipboardHelper.copyString(selected.url, document);
   },
 
   /**

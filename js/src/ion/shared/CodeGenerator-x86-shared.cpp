@@ -4,17 +4,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "ion/shared/CodeGenerator-x86-shared.h"
+
 #include "mozilla/DebugOnly.h"
 #include "mozilla/MathAlgorithms.h"
 
 #include "jscntxt.h"
 #include "jscompartment.h"
 #include "jsmath.h"
-#include "ion/shared/CodeGenerator-x86-shared.h"
-#include "ion/shared/CodeGenerator-shared-inl.h"
-#include "ion/IonFrames.h"
+
 #include "ion/IonCompartment.h"
+#include "ion/IonFrames.h"
 #include "ion/ParallelFunctions.h"
+
+#include "ion/shared/CodeGenerator-shared-inl.h"
 
 using namespace js;
 using namespace js::ion;
@@ -48,6 +51,10 @@ bool
 CodeGeneratorX86Shared::generateEpilogue()
 {
     masm.bind(&returnLabel_);
+
+#if JS_TRACE_LOGGING
+    masm.tracelogStop();
+#endif
 
     // Pop the stack we allocated at the start of the function.
     masm.freeStack(frameSize());
@@ -121,6 +128,17 @@ CodeGeneratorX86Shared::visitTestDAndBranch(LTestDAndBranch *test)
     masm.xorpd(ScratchFloatReg, ScratchFloatReg);
     masm.ucomisd(ToFloatRegister(opd), ScratchFloatReg);
     emitBranch(Assembler::NotEqual, test->ifTrue(), test->ifFalse());
+    return true;
+}
+
+bool
+CodeGeneratorX86Shared::visitBitAndAndBranch(LBitAndAndBranch *baab)
+{
+    if (baab->right()->isConstant())
+        masm.testl(ToRegister(baab->left()), Imm32(ToInt32(baab->right())));
+    else
+        masm.testl(ToRegister(baab->left()), ToRegister(baab->right()));
+    emitBranch(Assembler::NonZero, baab->ifTrue(), baab->ifFalse());
     return true;
 }
 
@@ -281,9 +299,9 @@ CodeGeneratorX86Shared::bailout(const T &binder, LSnapshot *snapshot)
     switch (info.executionMode()) {
       case ParallelExecution: {
         // in parallel mode, make no attempt to recover, just signal an error.
-        OutOfLineParallelAbort *ool = oolParallelAbort(ParallelBailoutUnsupported,
-                                                       snapshot->mir()->block(),
-                                                       snapshot->mir()->pc());
+        OutOfLineAbortPar *ool = oolAbortPar(ParallelBailoutUnsupported,
+                                             snapshot->mir()->block(),
+                                             snapshot->mir()->pc());
         binder(masm, ool->entry());
         return true;
       }

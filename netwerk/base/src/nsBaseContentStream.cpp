@@ -32,8 +32,8 @@ nsBaseContentStream::DispatchCallback(bool async)
 //-----------------------------------------------------------------------------
 // nsBaseContentStream::nsISupports
 
-NS_IMPL_THREADSAFE_ADDREF(nsBaseContentStream)
-NS_IMPL_THREADSAFE_RELEASE(nsBaseContentStream)
+NS_IMPL_ADDREF(nsBaseContentStream)
+NS_IMPL_RELEASE(nsBaseContentStream)
 
 // We only support nsIAsyncInputStream when we are in non-blocking mode.
 NS_INTERFACE_MAP_BEGIN(nsBaseContentStream)

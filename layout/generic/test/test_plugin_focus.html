@@ -6,8 +6,15 @@
 <body>
 
 <script class="testbody" type="application/javascript">
-window.open("plugin_focus_helper.html", "", "width=620,height=320");
+
+var child;
+function childDone() {
+  child.close();
+  SimpleTest.executeSoon(SimpleTest.finish);
+}
+
 SimpleTest.waitForExplicitFinish();
+child = window.open("plugin_focus_helper.html", "", "width=620,height=320");
 </script>
 
 </body>

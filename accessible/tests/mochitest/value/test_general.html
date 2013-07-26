@@ -51,6 +51,11 @@
       testValue("aria_navigation_link", href);
 
       //////////////////////////////////////////////////////////////////////////
+      // ARIA textboxes
+
+      testValue("aria_textbox1", "helo");
+
+      //////////////////////////////////////////////////////////////////////////
       // ARIA comboboxes
 
       // aria-activedescendant defines a current item the value is computed from
@@ -83,12 +88,17 @@
   <a target="_blank"
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=494807"
      title="Do not expose a11y info specific to hyperlinks when role is overridden using ARIA">
-    Mozilla Bug 494807
+    Bug 494807
   </a>
   <a target="_blank"
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=819273"
-     title=" ARIA combobox should have accessible value">
-    Mozilla Bug 819273
+     title="ARIA combobox should have accessible value">
+    Bug 819273
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=887250"
+     title="ARIA textbox role doesn't expose value">
+    Bug 887250
   </a>
   <p id="display"></p>
   <div id="content" style="display: none">
@@ -107,6 +117,8 @@
 
   <!-- strange edge case: please don't do this in the wild -->
   <a id="aria_link_link" role="link" href="foo">link</a>
+
+  <div id="aria_textbox1" role="textbox">helo</div>
 
   <div id="aria_combobox1" role="combobox"
        aria-owns="aria_combobox1_owned_listbox"
@@ -142,5 +154,6 @@
     <option id="cb2_item1">item1</option>
     <option id="cb2_item2" selected="true">item2</option>
   </select>
+
 </body>
 </html>

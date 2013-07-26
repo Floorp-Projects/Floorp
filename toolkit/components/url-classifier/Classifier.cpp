@@ -301,7 +301,9 @@ Classifier::ApplyUpdates(nsTArray<TableUpdate*>* aUpdates)
       nsCString updateTable(aUpdates->ElementAt(i)->TableName());
       rv = ApplyTableUpdates(aUpdates, updateTable);
       if (NS_FAILED(rv)) {
-        Reset();
+        if (rv != NS_ERROR_OUT_OF_MEMORY) {
+          Reset();
+        }
         return rv;
       }
     }
