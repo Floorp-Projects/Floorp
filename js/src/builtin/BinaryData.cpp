@@ -81,6 +81,17 @@ ReportTypeError(JSContext *cx, Value fromValue, HandleObject exemplar)
     return false;
 }
 
+static int32_t
+Clamp(int32_t value, int32_t min, int32_t max)
+{
+    JS_ASSERT(min < max);
+    if (value < min)
+        return min;
+    if (value > max)
+        return max;
+    return value;
+}
+
 static inline bool
 IsNumericType(HandleObject type)
 {
@@ -641,8 +652,14 @@ ArrayType::create(JSContext *cx, HandleObject arrayTypeGlobal,
     if (!LinkConstructorAndPrototype(cx, obj, prototypeObj))
         return NULL;
 
-    if (!JS_DefineFunction(cx, prototypeObj, "fill", BinaryArray::fill, 1, 0))
+    JSFunction *fillFun = DefineFunctionWithReserved(cx, prototypeObj, "fill", BinaryArray::fill, 1, 0);
+    if (!fillFun)
         return NULL;
+
+    // This is important
+    // so that A.prototype.fill.call(b, val)
+    // where b.type != A raises an error
+    SetFunctionNativeReserved(fillFun, 0, ObjectValue(*obj));
 
     RootedId id(cx, NON_INTEGER_ATOM_TO_JSID(cx->names().length));
     unsigned flags = JSPROP_SHARED | JSPROP_GETTER | JSPROP_PERMANENT;
@@ -702,13 +719,93 @@ ArrayType::construct(JSContext *cx, unsigned argc, Value *vp)
 JSBool
 DataInstanceUpdate(JSContext *cx, unsigned argc, Value *vp)
 {
-    return false;
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    if (args.length() < 1) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage,
+                             NULL, JSMSG_MORE_ARGS_NEEDED,
+                             "update()", "0", "s");
+        return false;
+    }
+
+    RootedObject thisObj(cx, args.thisv().toObjectOrNull());
+    if (!IsBlock(thisObj)) {
+        ReportTypeError(cx, ObjectValue(*thisObj), "BinaryData block");
+        return false;
+    }
+
+    RootedValue val(cx, args[0]);
+    uint8_t *memory = (uint8_t*) thisObj->getPrivate();
+    RootedObject type(cx, GetType(thisObj));
+    if (!ConvertAndCopyTo(cx, type, val, memory)) {
+        ReportTypeError(cx, val, type);
+        return false;
+    }
+
+    args.rval().setUndefined();
+    return true;
+}
+
+static bool
+FillBinaryArrayWithValue(JSContext *cx, HandleObject array, HandleValue val)
+{
+    JS_ASSERT(IsBinaryArray(array));
+
+    RootedObject type(cx, GetType(array));
+    RootedObject elementType(cx, ArrayType::elementType(cx, type));
+
+    uint8_t *base = (uint8_t *) array->getPrivate();
+
+    // set array[0] = [[Convert]](val)
+    if (!ConvertAndCopyTo(cx, elementType, val, base)) {
+        ReportTypeError(cx, val, elementType);
+        return false;
+    }
+
+    size_t elementSize = GetMemSize(cx, elementType);
+    // Copy a[0] into remaining indices.
+    for (uint32_t i = 1; i < ArrayType::length(cx, type); i++) {
+        uint8_t *dest = base + elementSize * i;
+        memcpy(dest, base, elementSize);
+    }
+
+    return true;
 }
 
 JSBool
 ArrayType::repeat(JSContext *cx, unsigned int argc, Value *vp)
 {
-    return false;
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    if (args.length() < 1) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage,
+                             NULL, JSMSG_MORE_ARGS_NEEDED,
+                             "repeat()", "0", "s");
+        return false;
+    }
+
+    RootedObject thisObj(cx, args.thisv().toObjectOrNull());
+    if (!IsArrayType(thisObj)) {
+        JSString *valueStr = JS_ValueToString(cx, args.thisv());
+        char *valueChars = "(unknown type)";
+        if (valueStr)
+            valueChars = JS_EncodeString(cx, valueStr);
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_INCOMPATIBLE_PROTO, "ArrayType", "repeat", valueChars);
+        if (valueStr)
+            JS_free(cx, valueChars);
+        return false;
+    }
+
+    RootedObject binaryArray(cx, BinaryArray::create(cx, thisObj));
+    if (!binaryArray)
+        return false;
+
+    RootedValue val(cx, args[0]);
+    if (!FillBinaryArrayWithValue(cx, binaryArray, val))
+        return false;
+
+    args.rval().setObject(*binaryArray);
+    return true;
 }
 
 JSBool
@@ -859,25 +956,132 @@ BinaryArray::lengthGetter(JSContext *cx, unsigned int argc, Value *vp)
     return true;
 }
 
-JSBool
-BinaryArray::forEach(JSContext *cx, unsigned int argc, Value *vp)
+/**
+ * The subarray function first creates an ArrayType instance
+ * which will act as the elementType for the subarray.
+ *
+ * var MA = new ArrayType(elementType, 10);
+ * var mb = MA.repeat(val);
+ *
+ * mb.subarray(begin, end=mb.length) => (Only for +ve)
+ *     var internalSA = new ArrayType(elementType, end-begin);
+ *     var ret = new internalSA()
+ *     for (var i = begin; i < end; i++)
+ *         ret[i-begin] = ret[i]
+ *     return ret
+ *
+ * The range specified by the begin and end values is clamped to the valid
+ * index range for the current array. If the computed length of the new
+ * TypedArray would be negative, it is clamped to zero.
+ * see: http://www.khronos.org/registry/typedarray/specs/latest/#7
+ *
+ */
+JSBool BinaryArray::subarray(JSContext *cx, unsigned int argc, Value *vp)
 {
-    JS_ASSERT(0);
-    return false;
-}
+    CallArgs args = CallArgsFromVp(argc, vp);
 
-JSBool
-BinaryArray::subarray(JSContext *cx, unsigned int argc, Value *vp)
-{
-    JS_ASSERT(0);
-    return false;
+    if (args.length() < 1) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage,
+                             NULL, JSMSG_MORE_ARGS_NEEDED,
+                             "subarray()", "0", "s");
+        return false;
+    }
+
+    if (!args[0].isInt32()) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                             JSMSG_BINARYDATA_SUBARRAY_INTEGER_ARG, "1");
+        return false;
+    }
+
+    RootedObject thisObj(cx, &args.thisv().toObject());
+    if (!IsBinaryArray(thisObj)) {
+        ReportTypeError(cx, ObjectValue(*thisObj), "binary array");
+        return false;
+    }
+
+    RootedObject type(cx, GetType(thisObj));
+    RootedObject elementType(cx, ArrayType::elementType(cx, type));
+    uint32_t length = ArrayType::length(cx, type);
+
+    int32_t begin = args[0].toInt32();
+    int32_t end = length;
+
+    if (args.length() >= 2) {
+        if (!args[1].isInt32()) {
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                    JSMSG_BINARYDATA_SUBARRAY_INTEGER_ARG, "2");
+            return false;
+        }
+
+        end = args[1].toInt32();
+    }
+
+    if (begin < 0)
+        begin = length + begin;
+    if (end < 0)
+        end = length + end;
+
+    begin = Clamp(begin, 0, length);
+    end = Clamp(end, 0, length);
+
+    int32_t sublength = end - begin; // end exclusive
+    sublength = Clamp(sublength, 0, length);
+
+    RootedObject globalObj(cx, cx->compartment()->maybeGlobal());
+    JS_ASSERT(globalObj);
+    Rooted<GlobalObject*> global(cx, &globalObj->as<GlobalObject>());
+    RootedObject arrayTypeGlobal(cx, global->getOrCreateArrayTypeObject(cx));
+
+    RootedObject subArrayType(cx, ArrayType::create(cx, arrayTypeGlobal,
+                                                    elementType, sublength));
+    if (!subArrayType)
+        return false;
+
+    int32_t elementSize = GetMemSize(cx, elementType);
+    size_t offset = elementSize * begin;
+
+    RootedObject subarray(cx, BinaryArray::create(cx, subArrayType, thisObj, offset));
+    if (!subarray)
+        return false;
+
+    args.rval().setObject(*subarray);
+    return true;
 }
 
 JSBool
 BinaryArray::fill(JSContext *cx, unsigned int argc, Value *vp)
 {
-    JS_ASSERT(0);
-    return false;
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    if (args.length() < 1) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage,
+                             NULL, JSMSG_MORE_ARGS_NEEDED,
+                             "fill()", "0", "s");
+        return false;
+    }
+
+    if (!args.thisv().isObject())
+        return false;
+
+    RootedObject thisObj(cx, args.thisv().toObjectOrNull());
+    if (!IsBinaryArray(thisObj)) {
+        ReportTypeError(cx, ObjectValue(*thisObj), "binary array");
+        return false;
+    }
+
+    Value funArrayTypeVal = GetFunctionNativeReserved(&args.callee(), 0);
+    JS_ASSERT(funArrayTypeVal.isObject());
+
+    RootedObject type(cx, GetType(thisObj));
+    RootedObject funArrayType(cx, funArrayTypeVal.toObjectOrNull());
+    if (!IsSameBinaryDataType(cx, funArrayType, type)) {
+        ReportTypeError(cx, ObjectValue(*thisObj), funArrayType);
+        return false;
+    }
+
+    args.rval().setUndefined();
+    RootedValue val(cx, args[0]);
+    return FillBinaryArrayWithValue(cx, thisObj, val);
 }
 
 JSBool
@@ -1660,7 +1864,7 @@ BinaryStruct::obj_setGeneric(JSContext *cx, HandleObject obj, HandleId id,
     }
 
     uint8_t *loc = ((uint8_t *) obj->getPrivate()) + fieldInfo.offset;
-    
+
     RootedObject fieldType(cx, fieldInfo.type);
     if (!ConvertAndCopyTo(cx, fieldType, vp, loc))
         return false;
@@ -1800,6 +2004,17 @@ GlobalObject::initTypeObject(JSContext *cx, Handle<GlobalObject *> global)
     return true;
 }
 
+bool
+GlobalObject::initArrayTypeObject(JSContext *cx, Handle<GlobalObject *> global)
+{
+    RootedFunction ctor(cx,
+        global->createConstructor(cx, ArrayType::construct,
+                                  cx->names().ArrayType, 2));
+
+    global->setReservedSlot(JSProto_ArrayTypeObject, ObjectValue(*ctor));
+    return true;
+}
+
 static JSObject *
 SetupComplexHeirarchy(JSContext *cx, HandleObject obj, JSProtoKey protoKey,
                       HandleObject complexObject, MutableHandleObject proto,
@@ -1865,10 +2080,7 @@ InitArrayType(JSContext *cx, HandleObject obj)
 {
     JS_ASSERT(obj->isNative());
     Rooted<GlobalObject*> global(cx, &obj->as<GlobalObject>());
-    RootedFunction ctor(cx,
-        global->createConstructor(cx, ArrayType::construct,
-                                  cx->names().ArrayType, 2));
-
+    RootedObject ctor(cx, global->getOrCreateArrayTypeObject(cx));
     if (!ctor)
         return NULL;
 
@@ -1884,7 +2096,17 @@ InitArrayType(JSContext *cx, HandleObject obj)
     if (!JS_DefineFunction(cx, proto, "toString", ArrayType::toString, 0, 0))
         return NULL;
 
-    if (!JS_DefineFunction(cx, protoProto, "forEach", BinaryArray::forEach, 1, 0))
+    RootedObject arrayProto(cx);
+    if (!FindProto(cx, &ArrayObject::class_, &arrayProto))
+        return NULL;
+
+    RootedValue forEachFunVal(cx);
+    RootedAtom forEachAtom(cx, Atomize(cx, "forEach", 7));
+    RootedId forEachId(cx, AtomToId(forEachAtom));
+    if (!JSObject::getProperty(cx, arrayProto, arrayProto, forEachAtom->asPropertyName(), &forEachFunVal))
+        return NULL;
+
+    if (!JSObject::defineGeneric(cx, protoProto, forEachId, forEachFunVal, NULL, NULL, 0))
         return NULL;
 
     if (!JS_DefineFunction(cx, protoProto, "subarray",

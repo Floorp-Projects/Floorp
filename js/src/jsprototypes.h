@@ -70,5 +70,6 @@
     macro(float64,               49,     js_InitBinaryDataClasses) \
     macro(ArrayType,             50,     js_InitBinaryDataClasses) \
     macro(StructType,            51,     js_InitBinaryDataClasses) \
+    macro(ArrayTypeObject,       52,     js_InitBinaryDataClasses) \
 
 #endif /* jsprototypes_h */

@@ -338,6 +338,10 @@ class GlobalObject : public JSObject
         return getOrCreateObject(cx, JSProto_Type, initTypeObject);
     }
 
+    JSObject *getOrCreateArrayTypeObject(JSContext *cx) {
+        return getOrCreateObject(cx, JSProto_ArrayTypeObject, initArrayTypeObject);
+    }
+
   private:
     typedef bool (*ObjectInitOp)(JSContext *cx, Handle<GlobalObject*> global);
 
@@ -443,6 +447,7 @@ class GlobalObject : public JSObject
     // Implemented in builtin/BinaryData.cpp
     static bool initTypeObject(JSContext *cx, Handle<GlobalObject*> global);
     static bool initDataObject(JSContext *cx, Handle<GlobalObject*> global);
+    static bool initArrayTypeObject(JSContext *cx, Handle<GlobalObject*> global);
 
     static bool initStandardClasses(JSContext *cx, Handle<GlobalObject*> global);
 

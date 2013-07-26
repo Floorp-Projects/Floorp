@@ -145,11 +145,11 @@ static Class NumericTypeClasses[NUMERICTYPES] = {
 class ArrayType : public JSObject
 {
     private:
-        static JSObject *create(JSContext *cx, HandleObject arrayTypeGlobal,
-                                HandleObject elementType, uint32_t length);
     public:
         static Class class_;
 
+        static JSObject *create(JSContext *cx, HandleObject arrayTypeGlobal,
+                                HandleObject elementType, uint32_t length);
         static JSBool construct(JSContext *cx, unsigned int argc, jsval *vp);
         static JSBool repeat(JSContext *cx, unsigned int argc, jsval *vp);
 
@@ -169,8 +169,6 @@ class BinaryArray
     private:
         static JSObject *createEmpty(JSContext *cx, HandleObject type);
 
-        // creates initialized memory of size of type
-        static JSObject *create(JSContext *cx, HandleObject type);
         // attempts to [[Convert]]
         static JSObject *create(JSContext *cx, HandleObject type,
                                 HandleValue initial);
@@ -178,6 +176,8 @@ class BinaryArray
     public:
         static Class class_;
 
+        // creates initialized memory of size of type
+        static JSObject *create(JSContext *cx, HandleObject type);
         // uses passed block as memory
         static JSObject *create(JSContext *cx, HandleObject type,
                                 HandleObject owner, size_t offset);
@@ -186,7 +186,6 @@ class BinaryArray
         static void finalize(FreeOp *op, JSObject *obj);
         static void obj_trace(JSTracer *tracer, JSObject *obj);
 
-        static JSBool forEach(JSContext *cx, unsigned int argc, jsval *vp);
         static JSBool subarray(JSContext *cx, unsigned int argc, jsval *vp);
         static JSBool fill(JSContext *cx, unsigned int argc, jsval *vp);
 
