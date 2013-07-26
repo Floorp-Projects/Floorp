@@ -56,16 +56,6 @@ public class HomeListView extends ListView
     }
 
     @Override
-    public boolean onInterceptTouchEvent(MotionEvent event) {
-        if (event.getActionMasked() == MotionEvent.ACTION_DOWN) {
-            // take focus away from awesome bar to hide the keyboard
-            requestFocus();
-        }
-
-        return false;
-    }
-
-    @Override
     public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
         Object item = parent.getItemAtPosition(position);
 
