@@ -21,6 +21,8 @@
 
 namespace js {
 
+class Breakpoint;
+
 /*
  * A weakmap that supports the keys being in different compartments to the
  * values, although all values must be in the same compartment.

@@ -107,10 +107,11 @@ extern void
 TraceCycleDetectionSet(JSTracer *trc, ObjectSet &set);
 
 struct AutoResolving;
-
+class DtoaCache;
 class ForkJoinSlice;
 class RegExpCompartment;
-class DtoaCache;
+class RegExpStatics;
+class ForkJoinSlice;
 
 /*
  * Execution Context Overview:

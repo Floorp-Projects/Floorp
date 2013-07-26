@@ -15,7 +15,6 @@
 // JavaScript includes
 #include "jsapi.h"
 #include "jsfriendapi.h"
-#include "jsprvtd.h"    // we are using private JS typedefs...
 #include "jsdbgapi.h"
 #include "WrapperFactory.h"
 #include "AccessCheck.h"

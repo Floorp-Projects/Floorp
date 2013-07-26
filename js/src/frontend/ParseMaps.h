@@ -18,6 +18,9 @@
 #include "js/Vector.h"
 
 namespace js {
+
+class LifoAlloc;
+
 namespace frontend {
 
 class DefinitionSingle;

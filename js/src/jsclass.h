@@ -18,9 +18,11 @@
 
 namespace js {
 
+class Class;
+class FreeOp;
+class PropertyId;
 class PropertyName;
 class SpecialId;
-class PropertyId;
 
 // This is equal to JSFunction::class_.  Use it in places where you don't want
 // to #include jsfun.h.

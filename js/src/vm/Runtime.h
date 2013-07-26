@@ -23,6 +23,7 @@
 #include "jsfriendapi.h"
 #include "jsgc.h"
 #include "jsprvtd.h"
+#include "jsproxy.h"
 
 #include "ds/FixedSizeHash.h"
 #include "ds/LifoAlloc.h"
@@ -63,20 +64,23 @@ js_ReportAllocationOverflow(js::ThreadSafeContext *cx);
 extern void
 js_ReportOverRecursed(js::ThreadSafeContext *cx);
 
+namespace JSC { class ExecutableAllocator; }
+
+namespace WTF { class BumpPointerAllocator; }
+
 namespace js {
 
 typedef Rooted<JSLinearString*> RootedLinearString;
 
+class AsmJSActivation;
+class InterpreterFrames;
 class MathCache;
+class WorkerThreadState;
 
 namespace ion {
 class IonRuntime;
 struct PcScriptCache;
 }
-
-class AsmJSActivation;
-class InterpreterFrames;
-class WorkerThreadState;
 
 /*
  * GetSrcNote cache to avoid O(n^2) growth in finding a source note for a

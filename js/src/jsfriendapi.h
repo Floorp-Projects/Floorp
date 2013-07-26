@@ -30,6 +30,8 @@
 
 #define JS_CHECK_STACK_SIZE(limit, lval) JS_CHECK_STACK_SIZE_WITH_TOLERANCE(limit, lval, 0)
 
+class JSLinearString;
+
 namespace JS {
 template <class T>
 class Heap;
