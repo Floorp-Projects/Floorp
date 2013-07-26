@@ -16,6 +16,7 @@
 #include "jsprvtd.h"
 
 #include "ds/LifoAlloc.h"
+#include "ds/IdValuePair.h"
 #include "gc/Barrier.h"
 #include "gc/Heap.h"
 #include "js/HashTable.h"
