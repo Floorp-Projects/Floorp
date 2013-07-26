@@ -45,7 +45,7 @@
 class UDPListener : public nsIUDPServerSocketListener
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIUDPSERVERSOCKETLISTENER
 
   virtual ~UDPListener();
@@ -53,8 +53,8 @@ public:
   nsresult mResult;
 };
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(UDPListener,
-                              nsIUDPServerSocketListener)
+NS_IMPL_ISUPPORTS1(UDPListener,
+                   nsIUDPServerSocketListener)
 
 UDPListener::~UDPListener()
 {

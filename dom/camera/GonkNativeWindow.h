@@ -32,7 +32,7 @@
 
 #include "mozilla/layers/LayersSurfaces.h"
 #include "mozilla/layers/ImageBridgeChild.h"
-#include "GonkIOSurfaceImage.h"
+#include "GrallocImages.h"
 #include "CameraCommon.h"
 
 namespace android {

@@ -4,7 +4,7 @@
 
 from setuptools import setup
 
-PACKAGE_VERSION = '0.6'
+PACKAGE_VERSION = '0.8'
 
 # dependencies
 deps = ['mozfile >= 0.3',
@@ -18,7 +18,7 @@ setup(name='mozcrash',
       keywords='mozilla',
       author='Mozilla Automation and Tools team',
       author_email='tools@lists.mozilla.org',
-      url='https://wiki.mozilla.org/Auto-tools/Projects/MozBase',
+      url='https://wiki.mozilla.org/Auto-tools/Projects/Mozbase',
       license='MPL',
       packages=['mozcrash'],
       include_package_data=True,

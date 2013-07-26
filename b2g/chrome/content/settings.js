@@ -198,7 +198,11 @@ SettingsListener.observe('devtools.debugger.remote-enabled', false, function(val
   Services.prefs.setBoolPref('devtools.debugger.remote-enabled', value);
   // This preference is consulted during startup
   Services.prefs.savePrefFile(null);
-  value ? RemoteDebugger.start() : RemoteDebugger.stop();
+  try {
+    value ? RemoteDebugger.start() : RemoteDebugger.stop();
+  } catch(e) {
+    dump("Error while initializing devtools: " + e + "\n" + e.stack + "\n");
+  }
 
 #ifdef MOZ_WIDGET_GONK
   let enableAdb = value;

@@ -7,6 +7,8 @@
 #ifndef ion_CompileInfo_h
 #define ion_CompileInfo_h
 
+#include "jsfun.h"
+
 #include "ion/Registers.h"
 
 namespace js {
@@ -34,6 +36,10 @@ enum ExecutionMode {
     // e.g. by ParallelArray
     ParallelExecution
 };
+
+// Not as part of the enum so we don't get warnings about unhandled enum
+// values.
+static const unsigned NumExecutionModes = ParallelExecution + 1;
 
 // Contains information about the compilation source for IR being generated.
 class CompileInfo

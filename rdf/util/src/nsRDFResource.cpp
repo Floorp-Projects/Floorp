@@ -42,7 +42,7 @@ nsRDFResource::~nsRDFResource(void)
         NS_RELEASE(gRDFService);
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(nsRDFResource, nsIRDFResource, nsIRDFNode)
+NS_IMPL_ISUPPORTS2(nsRDFResource, nsIRDFResource, nsIRDFNode)
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsIRDFNode methods:

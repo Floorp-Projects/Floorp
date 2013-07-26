@@ -209,6 +209,7 @@ webidl_files = \
   PaintRequest.webidl \
   PaintRequestList.webidl \
   PannerNode.webidl \
+  ParentNode.webidl \
   Performance.webidl \
   PerformanceNavigation.webidl \
   PerformanceTiming.webidl \
@@ -360,6 +361,7 @@ webidl_files = \
   UndoManager.webidl \
   URL.webidl \
   URLUtils.webidl \
+  URLUtilsReadOnly.webidl \
   ValidityState.webidl \
   VideoPlaybackQuality.webidl \
   VideoStreamTrack.webidl \
@@ -368,6 +370,8 @@ webidl_files = \
   WebSocket.webidl \
   WheelEvent.webidl \
   Window.webidl \
+  WorkerLocation.webidl \
+  WorkerNavigator.webidl \
   XMLDocument.webidl \
   XMLHttpRequest.webidl \
   XMLHttpRequestEventTarget.webidl \
@@ -389,8 +393,12 @@ endif
 ifdef MOZ_WEBGL
 webidl_files += \
   WebGLRenderingContext.webidl \
+  $(NULL)
+ifndef RELEASE_BUILD
+webidl_files += \
   WebGL2RenderingContext.webidl \
   $(NULL)
+endif
 endif
 
 ifdef MOZ_WEBRTC

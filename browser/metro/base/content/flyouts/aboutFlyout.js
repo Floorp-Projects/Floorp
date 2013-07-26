@@ -52,7 +52,8 @@ let AboutFlyout = {
       case 'MozFlyoutPanelShowing':
 #ifdef MOZ_UPDATER
         onUnload();
-        gAppUpdater = new appUpdater();
+        this.appUpdater = new appUpdater();
+        gAppUpdater = this.appUpdater;
 #endif
         break;
     }
@@ -74,6 +75,7 @@ function onUnload(aEvent) {
   // Safe to call even when there isn't a download in progress.
   gAppUpdater.removeDownloadListener();
   gAppUpdater = null;
+  AboutFlyout.appUpdater = null;
 }
 
 function appUpdater()
@@ -547,7 +549,7 @@ appUpdater.prototype =
         this.selectPanel("applying");
         let update = this.um.activeUpdate;
         let self = this;
-        Services.obs.addObserver(function (aSubject, aTopic, aData) {
+        Services.obs.addObserver(function updateStaged(aSubject, aTopic, aData) {
           // Update the UI when the background updater is finished
           let status = aData;
           if (status == "applied" || status == "applied-service" ||
@@ -569,7 +571,7 @@ appUpdater.prototype =
             self.setupDownloadingUI();
             return;
           }
-          Services.obs.removeObserver(arguments.callee, "update-staged");
+          Services.obs.removeObserver(updateStaged, "update-staged");
         }, "update-staged", false);
       } else {
         this.selectPanel("updateButtonBox");

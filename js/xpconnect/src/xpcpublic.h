@@ -434,6 +434,9 @@ NS_EXPORT_(void)
 SystemErrorReporterExternal(JSContext *cx, const char *message,
                             JSErrorReport *rep);
 
+NS_EXPORT_(void)
+SimulateActivityCallback(bool aActive);
+
 } // namespace xpc
 
 namespace mozilla {
@@ -474,6 +477,12 @@ extern bool
 DefineStaticJSVals(JSContext *cx);
 void
 Register(nsScriptNameSpaceManager* aNameSpaceManager);
+
+/**
+ * A test for whether WebIDL methods that should only be visible to
+ * chrome or XBL scopes should be exposed.
+ */
+bool IsChromeOrXBL(JSContext* cx, JSObject* /* unused */);
 
 } // namespace dom
 } // namespace mozilla

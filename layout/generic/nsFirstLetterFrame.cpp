@@ -15,6 +15,7 @@
 #include "nsAutoPtr.h"
 #include "nsStyleSet.h"
 #include "nsFrameManager.h"
+#include "RestyleManager.h"
 #include "nsPlaceholderFrame.h"
 #include "nsCSSFrameConstructor.h"
 
@@ -81,11 +82,11 @@ NS_IMETHODIMP
 nsFirstLetterFrame::SetInitialChildList(ChildListID  aListID,
                                         nsFrameList& aChildList)
 {
-  nsFrameManager *frameManager = PresContext()->FrameManager();
+  RestyleManager* restyleManager = PresContext()->RestyleManager();
 
   for (nsFrameList::Enumerator e(aChildList); !e.AtEnd(); e.Next()) {
     NS_ASSERTION(e.get()->GetParent() == this, "Unexpected parent");
-    frameManager->ReparentStyleContext(e.get());
+    restyleManager->ReparentStyleContext(e.get());
   }
 
   mFrames.SetFrames(aChildList);

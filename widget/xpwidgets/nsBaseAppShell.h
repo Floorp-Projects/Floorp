@@ -22,7 +22,7 @@ class nsBaseAppShell : public nsIAppShell, public nsIThreadObserver,
                        public nsIObserver
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIAPPSHELL
   NS_DECL_NSITHREADOBSERVER
   NS_DECL_NSIOBSERVER

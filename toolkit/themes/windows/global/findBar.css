@@ -17,7 +17,8 @@ findbar {
 }
 
 findbar[position="top"] {
-  box-shadow: 0 -1px 1px rgba(0,0,0,.1) inset;
+  background-image: none;
+  box-shadow: 0 -1px 0 rgba(0,0,0,.1) inset;
   transition-property: margin-top, opacity, visibility;
 }
 
@@ -72,12 +73,12 @@ findbar[position="top"][hidden] {
 }
 
 .findbar-textbox[status="notfound"] {
-  box-shadow: 0 0 0 1em #f66 inset;
+  background-color: #f66;
   color: white;
 }
 
 .findbar-textbox[flash="true"] {
-  box-shadow: 0 0 0 1em yellow inset;
+  background-color: yellow;
   color: black;
 }
 

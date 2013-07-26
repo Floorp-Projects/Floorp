@@ -8,7 +8,7 @@
  * JavaScript bytecode interpreter.
  */
 
-#include "vm/Interpreter.h"
+#include "vm/Interpreter-inl.h"
 
 #include "mozilla/DebugOnly.h"
 #include "mozilla/FloatingPoint.h"
@@ -19,6 +19,7 @@
 #include "jsapi.h"
 #include "jsarray.h"
 #include "jsatom.h"
+#include "jsautooplen.h"
 #include "jscntxt.h"
 #include "jsdbgapi.h"
 #include "jsfun.h"
@@ -30,6 +31,10 @@
 #include "jsprf.h"
 #include "jsscript.h"
 #include "jsstr.h"
+#if JS_TRACE_LOGGING
+#include "TraceLogging.h"
+#endif
+
 #include "builtin/Eval.h"
 #include "ion/BaselineJIT.h"
 #include "ion/Ion.h"
@@ -42,15 +47,8 @@
 #include "jsscriptinlines.h"
 
 #include "ion/IonFrames-inl.h"
-#include "vm/Interpreter-inl.h"
 #include "vm/Probes-inl.h"
 #include "vm/Stack-inl.h"
-
-#include "jsautooplen.h"
-
-#if JS_TRACE_LOGGING
-#include "TraceLogging.h"
-#endif
 
 using namespace js;
 using namespace js::gc;
@@ -234,9 +232,9 @@ NoSuchMethod(JSContext *cx, unsigned argc, Value *vp)
     JSObject *obj = &vp[0].toObject();
     JS_ASSERT(obj->getClass() == &js_NoSuchMethodClass);
 
-    args.setCallee(obj->getSlot(JSSLOT_FOUND_FUNCTION));
+    args.setCallee(obj->getReservedSlot(JSSLOT_FOUND_FUNCTION));
     args.setThis(vp[1]);
-    args[0] = obj->getSlot(JSSLOT_SAVED_ID);
+    args[0].set(obj->getReservedSlot(JSSLOT_SAVED_ID));
     JSObject *argsobj = NewDenseCopiedArray(cx, argc, vp + 2);
     if (!argsobj)
         return JS_FALSE;
@@ -264,20 +262,31 @@ GetPropertyOperation(JSContext *cx, StackFrame *fp, HandleScript script, jsbytec
             return true;
     }
 
-    JSObject *obj = ToObjectFromStack(cx, lval);
-    if (!obj)
-        return false;
+    RootedId id(cx, NameToId(script->getName(pc)));
+    RootedObject obj(cx);
+
+    /* Optimize (.1).toString(). */
+    if (lval.isNumber() && id == NameToId(cx->names().toString)) {
+        JSObject *proto = fp->global().getOrCreateNumberPrototype(cx);
+        if (!proto)
+            return false;
+        if (ClassMethodIsNative(cx, proto, &NumberObject::class_, id, js_num_toString))
+            obj = proto;
+    }
+
+    if (!obj) {
+        obj = ToObjectFromStack(cx, lval);
+        if (!obj)
+            return false;
+    }
 
     bool wasObject = lval.isObject();
 
-    RootedId id(cx, NameToId(script->getName(pc)));
-    RootedObject nobj(cx, obj);
-
     if (obj->getOps()->getProperty) {
-        if (!JSObject::getGeneric(cx, nobj, nobj, id, vp))
+        if (!JSObject::getGeneric(cx, obj, obj, id, vp))
             return false;
     } else {
-        if (!GetPropertyHelper(cx, nobj, id, 0, vp))
+        if (!GetPropertyHelper(cx, obj, id, 0, vp))
             return false;
     }
 
@@ -286,7 +295,7 @@ GetPropertyOperation(JSContext *cx, StackFrame *fp, HandleScript script, jsbytec
         JS_UNLIKELY(vp.isPrimitive()) &&
         wasObject)
     {
-        if (!OnUnknownMethod(cx, nobj, IdToValue(id), vp))
+        if (!OnUnknownMethod(cx, obj, IdToValue(id), vp))
             return false;
     }
 #endif
@@ -1373,10 +1382,8 @@ Interpret(JSContext *cx, RunState &state)
     SET_SCRIPT(regs.fp()->script());
 
 #if JS_TRACE_LOGGING
-    AutoTraceLog logger(TraceLogging::defaultLogger(),
-                        TraceLogging::INTERPRETER_START,
-                        TraceLogging::INTERPRETER_STOP,
-                        script);
+    TraceLogging::defaultLogger()->log(TraceLogging::SCRIPT_START, script);
+    TraceLogging::defaultLogger()->log(TraceLogging::INFO_ENGINE_INTERPRETER);
 #endif
 
     /*
@@ -1688,6 +1695,10 @@ BEGIN_CASE(JSOP_STOP)
      * false after the inline_return label.
      */
     CHECK_BRANCH();
+
+#if JS_TRACE_LOGGING
+    TraceLogging::defaultLogger()->log(TraceLogging::SCRIPT_STOP);
+#endif
 
     interpReturnOK = true;
     if (entryFrame != regs.fp())
@@ -2550,6 +2561,11 @@ BEGIN_CASE(JSOP_FUNCALL)
         regs.fp()->setUseNewType();
 
     SET_SCRIPT(regs.fp()->script());
+
+#if JS_TRACE_LOGGING
+    TraceLogging::defaultLogger()->log(TraceLogging::SCRIPT_START, script);
+    TraceLogging::defaultLogger()->log(TraceLogging::INFO_ENGINE_INTERPRETER);
+#endif
 
     if (!regs.fp()->prologue(cx))
         goto error;

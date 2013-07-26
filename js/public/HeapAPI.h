@@ -9,6 +9,8 @@
 
 #include "jspubtd.h"
 
+#include "js/Utility.h"
+
 /* These values are private to the JS engine. */
 namespace js {
 namespace gc {
@@ -50,7 +52,7 @@ namespace shadow {
 
 struct ArenaHeader
 {
-    js::Zone *zone;
+    JS::Zone *zone;
 };
 
 struct Zone
@@ -136,7 +138,7 @@ IsIncrementalBarrierNeededOnGCThing(shadow::Runtime *rt, void *thing, JSGCTraceK
 {
     if (!rt->needsBarrier_)
         return false;
-    js::Zone *zone = GetGCThingZone(thing);
+    JS::Zone *zone = GetGCThingZone(thing);
     return reinterpret_cast<shadow::Zone *>(zone)->needsBarrier_;
 }
 

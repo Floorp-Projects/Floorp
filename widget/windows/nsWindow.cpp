@@ -141,6 +141,11 @@
 #include <richedit.h>
 
 #if defined(ACCESSIBILITY)
+
+#ifdef DEBUG
+#include "mozilla/a11y/Logging.h"
+#endif
+
 #include "oleidl.h"
 #include <winuser.h>
 #include "nsAccessibilityService.h"
@@ -3869,10 +3874,6 @@ bool nsWindow::DispatchMouseEvent(uint32_t aEventType, WPARAM wParam,
   else if (aEventType == NS_MOUSE_EXIT) {
     event.exit = IsTopLevelMouseExit(mWnd) ? nsMouseEvent::eTopLevel : nsMouseEvent::eChild;
   }
-  else if (aEventType == NS_MOUSE_MOZHITTEST)
-  {
-    event.mFlags.mOnlyChromeDispatch = true;
-  }
   event.clickCount = sLastClickCount;
 
 #ifdef NS_DEBUG_XX
@@ -4878,13 +4879,17 @@ nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
                                   contextMenukey ?
                                     nsMouseEvent::eLeftButton :
                                     nsMouseEvent::eRightButton, MOUSE_INPUT_SOURCE());
-      if (lParam != -1 && !result && mCustomNonClient &&
-          DispatchMouseEvent(NS_MOUSE_MOZHITTEST, wParam, pos,
-                             false, nsMouseEvent::eLeftButton,
-                             MOUSE_INPUT_SOURCE())) {
-        // Blank area hit, throw up the system menu.
-        DisplaySystemMenu(mWnd, mSizeMode, mIsRTL, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
-        result = true;
+      if (lParam != -1 && !result && mCustomNonClient) {
+        nsMouseEvent event(true, NS_MOUSE_MOZHITTEST, this, nsMouseEvent::eReal,
+                           nsMouseEvent::eNormal);
+        event.refPoint = nsIntPoint(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+        event.inputSource = MOUSE_INPUT_SOURCE();
+        event.mFlags.mOnlyChromeDispatch = true;
+        if (DispatchWindowEvent(&event)) {
+          // Blank area hit, throw up the system menu.
+          DisplaySystemMenu(mWnd, mSizeMode, mIsRTL, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+          result = true;
+        }
       }
     }
     break;
@@ -5554,10 +5559,14 @@ nsWindow::ClientMarginHitTestPoint(int32_t mx, int32_t my)
   }
 
   if (!sIsInMouseCapture && allowContentOverride) {
-    LPARAM lParam = MAKELPARAM(mx, my);
-    LPARAM lParamClient = lParamToClient(lParam);
-    bool result = DispatchMouseEvent(NS_MOUSE_MOZHITTEST, 0, lParamClient,
-                                     false, nsMouseEvent::eLeftButton, MOUSE_INPUT_SOURCE());
+    nsMouseEvent event(true, NS_MOUSE_MOZHITTEST, this, nsMouseEvent::eReal,
+                       nsMouseEvent::eNormal);
+    POINT pt = { mx, my };
+    ::ScreenToClient(mWnd, &pt);
+    event.refPoint = nsIntPoint(pt.x, pt.y);
+    event.inputSource = MOUSE_INPUT_SOURCE();
+    event.mFlags.mOnlyChromeDispatch = true;
+    bool result = DispatchWindowEvent(&event);
     if (result) {
       // The mouse is over a blank area
       testResult = testResult == HTCLIENT ? HTCAPTION : testResult;
@@ -6639,20 +6648,19 @@ nsWindow::GetIMEUpdatePreference()
 }
 
 #ifdef ACCESSIBILITY
-
-#ifdef DEBUG_WMGETOBJECT
+#ifdef DEBUG
 #define NS_LOG_WMGETOBJECT(aWnd, aHwnd, aAcc)                                  \
-  PR_LOG(gWindowsLog, PR_LOG_ALWAYS,                                           \
-         ("Get the window:\n  {\n     HWND: %d, parent HWND: %d, wndobj: %p,\n",\
-           aHwnd, ::GetParent(aHwnd), aWnd));                                  \
-  PR_LOG(gWindowsLog, PR_LOG_ALWAYS, ("     acc: %p", aAcc));                  \
-  if (aAcc) {                                                                  \
-    nsAutoString name;                                                         \
-    aAcc->Name(name);                                                          \
-    PR_LOG(gWindowsLog, PR_LOG_ALWAYS,                                         \
-           (", accname: %s", NS_ConvertUTF16toUTF8(name).get()));              \
-  }                                                                            \
-  PR_LOG(gWindowsLog, PR_LOG_ALWAYS, ("\n }\n"));
+  if (a11y::logging::IsEnabled(a11y::logging::ePlatforms)) {                   \
+    printf("Get the window:\n  {\n     HWND: %d, parent HWND: %d, wndobj: %p,\n",\
+           aHwnd, ::GetParent(aHwnd), aWnd);                                   \
+    printf("     acc: %p", aAcc);                                              \
+    if (aAcc) {                                                                \
+      nsAutoString name;                                                       \
+      aAcc->Name(name);                                                        \
+      printf(", accname: %s", NS_ConvertUTF16toUTF8(name).get());              \
+    }                                                                          \
+    printf("\n }\n");                                                          \
+  }
 
 #else
 #define NS_LOG_WMGETOBJECT(aWnd, aHwnd, aAcc)
@@ -6681,8 +6689,8 @@ nsWindow::GetAccessible()
           GetAccService()->GetDocAccessible(frame->PresContext()->PresShell());
         if (docAcc) {
           NS_LOG_WMGETOBJECT(this, mWnd,
-                             docAcc->GetAccessible(frame->GetContent()));
-          return docAcc->GetAccessible(frame->GetContent());
+                             docAcc->GetAccessibleOrDescendant(frame->GetContent()));
+          return docAcc->GetAccessibleOrDescendant(frame->GetContent());
         }
       }
     }

@@ -113,9 +113,9 @@ function clickAgain()
   }
 
   let controller = gDebugger.DebuggerController;
-  controller.activeThread.addOneTimeListener("framesadded", function() {
-    is(gDebugger.DebuggerController.activeThread.state, "paused",
-      "The breakpoint was hit.");
+  controller.activeThread.addOneTimeListener("paused", function(aEvent, aPacket) {
+    is(aPacket.why.type, "breakpoint",
+       "The breakpoint was hit.");
 
     let thread = gDebugger.DebuggerController.activeThread;
     thread.addOneTimeListener("paused", function test(aEvent, aPacket) {

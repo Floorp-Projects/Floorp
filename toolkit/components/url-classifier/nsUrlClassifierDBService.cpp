@@ -34,6 +34,7 @@
 #include "mozilla/Mutex.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Telemetry.h"
+#include "pratom.h"
 #include "prlog.h"
 #include "prprf.h"
 #include "prnetdb.h"
@@ -111,7 +112,7 @@ class nsUrlClassifierDBServiceWorker MOZ_FINAL :
 public:
   nsUrlClassifierDBServiceWorker();
 
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIURLCLASSIFIERDBSERVICE
   NS_DECL_NSIURLCLASSIFIERDBSERVICEWORKER
 
@@ -196,7 +197,7 @@ private:
   nsTArray<PendingLookup> mPendingLookups;
 };
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(nsUrlClassifierDBServiceWorker,
+NS_IMPL_ISUPPORTS2(nsUrlClassifierDBServiceWorker,
                               nsIUrlClassifierDBServiceWorker,
                               nsIUrlClassifierDBService)
 
@@ -788,7 +789,7 @@ class nsUrlClassifierLookupCallback MOZ_FINAL : public nsIUrlClassifierLookupCal
                                               , public nsIUrlClassifierHashCompleterCallback
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIURLCLASSIFIERLOOKUPCALLBACK
   NS_DECL_NSIURLCLASSIFIERHASHCOMPLETERCALLBACK
 
@@ -815,7 +816,7 @@ private:
   nsCOMPtr<nsIUrlClassifierCallback> mCallback;
 };
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(nsUrlClassifierLookupCallback,
+NS_IMPL_ISUPPORTS2(nsUrlClassifierLookupCallback,
                               nsIUrlClassifierLookupCallback,
                               nsIUrlClassifierHashCompleterCallback)
 
@@ -1005,7 +1006,7 @@ nsUrlClassifierLookupCallback::HandleResults()
 class nsUrlClassifierClassifyCallback MOZ_FINAL : public nsIUrlClassifierCallback
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIURLCLASSIFIERCALLBACK
 
   nsUrlClassifierClassifyCallback(nsIURIClassifierCallback *c,
@@ -1022,7 +1023,7 @@ private:
   bool mCheckPhishing;
 };
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsUrlClassifierClassifyCallback,
+NS_IMPL_ISUPPORTS1(nsUrlClassifierClassifyCallback,
                               nsIUrlClassifierCallback)
 
 NS_IMETHODIMP
@@ -1059,7 +1060,7 @@ nsUrlClassifierClassifyCallback::HandleEvent(const nsACString& tables)
 // -------------------------------------------------------------------------
 // Proxy class implementation
 
-NS_IMPL_THREADSAFE_ISUPPORTS3(nsUrlClassifierDBService,
+NS_IMPL_ISUPPORTS3(nsUrlClassifierDBService,
                               nsIUrlClassifierDBService,
                               nsIURIClassifier,
                               nsIObserver)

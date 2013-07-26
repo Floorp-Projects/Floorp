@@ -24,10 +24,10 @@ using namespace mozilla;
 PRLogModuleInfo *gWifiMonitorLog;
 #endif
 
-NS_IMPL_THREADSAFE_ISUPPORTS3(nsWifiMonitor,
-                              nsIRunnable,
-                              nsIObserver,
-                              nsIWifiMonitor)
+NS_IMPL_ISUPPORTS3(nsWifiMonitor,
+                   nsIRunnable,
+                   nsIObserver,
+                   nsIWifiMonitor)
 
 nsWifiMonitor::nsWifiMonitor()
 : mKeepGoing(true)
@@ -117,7 +117,7 @@ typedef nsTArray<nsMainThreadPtrHandle<nsIWifiListener> > WifiListenerArray;
 class nsPassErrorToWifiListeners MOZ_FINAL : public nsIRunnable
 {
  public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIRUNNABLE
 
   nsPassErrorToWifiListeners(nsAutoPtr<WifiListenerArray> aListeners,
@@ -131,8 +131,8 @@ class nsPassErrorToWifiListeners MOZ_FINAL : public nsIRunnable
   nsresult mResult;
 };
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsPassErrorToWifiListeners,
-                              nsIRunnable)
+NS_IMPL_ISUPPORTS1(nsPassErrorToWifiListeners,
+                   nsIRunnable)
 
 NS_IMETHODIMP nsPassErrorToWifiListeners::Run()
 {
@@ -177,7 +177,7 @@ NS_IMETHODIMP nsWifiMonitor::Run()
 class nsCallWifiListeners MOZ_FINAL : public nsIRunnable
 {
  public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIRUNNABLE
 
   nsCallWifiListeners(nsAutoPtr<WifiListenerArray> aListeners,
@@ -191,8 +191,8 @@ class nsCallWifiListeners MOZ_FINAL : public nsIRunnable
   nsAutoPtr<nsTArray<nsIWifiAccessPoint*> > mAccessPoints;
 };
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsCallWifiListeners,
-                              nsIRunnable)
+NS_IMPL_ISUPPORTS1(nsCallWifiListeners,
+                   nsIRunnable)
 
 NS_IMETHODIMP nsCallWifiListeners::Run()
 {

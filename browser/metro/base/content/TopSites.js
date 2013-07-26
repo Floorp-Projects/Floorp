@@ -162,22 +162,21 @@ let TopSites = {
     };
   }
 };
-// The value of useThumbs should not be changed over the lifetime of
-//   the object.
-function TopSitesView(aGrid, aMaxSites, aUseThumbnails) {
+
+function TopSitesView(aGrid, aMaxSites) {
   this._set = aGrid;
   this._set.controller = this;
   this._topSitesMax = aMaxSites;
-  this._useThumbs = aUseThumbnails;
+
   // clean up state when the appbar closes
   window.addEventListener('MozAppbarDismissing', this, false);
   let history = Cc["@mozilla.org/browser/nav-history-service;1"].
                 getService(Ci.nsINavHistoryService);
   history.addObserver(this, false);
-  if (this._useThumbs) {
-    PageThumbs.addExpirationFilter(this);
-    Services.obs.addObserver(this, "Metro:RefreshTopsiteThumbnail", false);
-  }
+
+  PageThumbs.addExpirationFilter(this);
+  Services.obs.addObserver(this, "Metro:RefreshTopsiteThumbnail", false);
+  Services.obs.addObserver(this, "metro_viewstate_changed", false);
 
   NewTabUtils.allPages.register(this);
   TopSites.prepareCache().then(function(){
@@ -185,7 +184,7 @@ function TopSitesView(aGrid, aMaxSites, aUseThumbnails) {
   }.bind(this));
 }
 
-TopSitesView.prototype = {
+TopSitesView.prototype = Util.extend(Object.create(View.prototype), {
   _set:null,
   _topSitesMax: null,
   // _lastSelectedSites used to temporarily store blocked/removed sites for undo/restore-ing
@@ -268,8 +267,6 @@ TopSitesView.prototype = {
         // fire a MozContextActionsChange event to update the context appbar
         let event = document.createEvent("Events");
         event.actions = [...nextContextActions];
-        event.noun = tileGroup.contextNoun;
-        event.qty = selectedTiles.length;
         event.initEvent("MozContextActionsChange", true, false);
         tileGroup.dispatchEvent(event);
       },0);
@@ -307,37 +304,18 @@ TopSitesView.prototype = {
   },
 
   updateTile: function(aTileNode, aSite, aArrangeGrid) {
-    PlacesUtils.favicons.getFaviconURLForPage(Util.makeURI(aSite.url), function(iconURLfromSiteURL) {
-      if (!iconURLfromSiteURL) {
-        return;
-      }
-      aTileNode.iconSrc = iconURLfromSiteURL.spec;
-      let faviconURL = (PlacesUtils.favicons.getFaviconLinkForIcon(iconURLfromSiteURL)).spec;
-      let xpFaviconURI = Util.makeURI(faviconURL.replace("moz-anno:favicon:",""));
-      let successAction = function(foreground, background) {
-	      aTileNode.style.color = foreground; //color text
-        aTileNode.setAttribute("customColor", background);
-        if (aTileNode.refresh) {
-          aTileNode.refresh();
+    this._updateFavicon(aTileNode, Util.makeURI(aSite.url));
+
+    Task.spawn(function() {
+      let filepath = PageThumbsStorage.getFilePathForURL(aSite.url);
+      if (yield OS.File.exists(filepath)) {
+        aSite.backgroundImage = 'url("'+PageThumbs.getThumbnailURL(aSite.url)+'")';
+        if ("isBound" in aTileNode && aTileNode.isBound) {
+          aTileNode.backgroundImage = aSite.backgroundImage;
         }
-      };
-      let failureAction = function() {};
-      ColorUtils.getForegroundAndBackgroundIconColors(xpFaviconURI, successAction, failureAction);
+      }
     });
 
-    if (this._useThumbs) {
-      Task.spawn(function() {
-        let filepath = PageThumbsStorage.getFilePathForURL(aSite.url);
-        if (yield OS.File.exists(filepath)) {
-          aSite.backgroundImage = 'url("'+PageThumbs.getThumbnailURL(aSite.url)+'")';
-          if ("isBound" in aTileNode && aTileNode.isBound) {
-            aTileNode.backgroundImage = aSite.backgroundImage;
-          }
-        }
-      });
-    } else {
-      delete aSite.backgroundImage;
-    }
     aSite.applyToTileNode(aTileNode);
     if (aArrangeGrid) {
       this._set.arrangeItems();
@@ -377,6 +355,7 @@ TopSitesView.prototype = {
         item.refreshBackgroundImage();
       }
   },
+
   filterForThumbnailExpiration: function filterForThumbnailExpiration(aCallback) {
     aCallback([item.getAttribute("value") for (item of this._set.children)]);
   },
@@ -386,10 +365,9 @@ TopSitesView.prototype = {
   },
 
   destruct: function destruct() {
-    if (this._useThumbs) {
-      Services.obs.removeObserver(this, "Metro:RefreshTopsiteThumbnail");
-      PageThumbs.removeExpirationFilter(this);
-    }
+    Services.obs.removeObserver(this, "Metro:RefreshTopsiteThumbnail");
+    PageThumbs.removeExpirationFilter(this);
+    Services.obs.removeObserver(this, "metro_viewstate_changed");
     window.removeEventListener('MozAppbarDismissing', this, false);
   },
 
@@ -398,6 +376,15 @@ TopSitesView.prototype = {
     switch(aTopic) {
       case "Metro:RefreshTopsiteThumbnail":
         this.forceReloadOfThumbnail(aState);
+        break;
+      case "metro_viewstate_changed":
+        for (let item of this._set.children) {
+          if (aState == "snapped") {
+            item.removeAttribute("tiletype");
+          } else {
+            item.setAttribute("tiletype", "thumbnail");
+          }
+        }
         break;
     }
   },
@@ -437,54 +424,25 @@ TopSitesView.prototype = {
     throw Cr.NS_ERROR_NO_INTERFACE;
   }
 
-};
+});
 
 let TopSitesStartView = {
   _view: null,
   get _grid() { return document.getElementById("start-topsites-grid"); },
 
   init: function init() {
-    this._view = new TopSitesView(this._grid, 8, true);
+    this._view = new TopSitesView(this._grid, 8);
     if (this._view.isFirstRun()) {
       let topsitesVbox = document.getElementById("start-topsites");
       topsitesVbox.setAttribute("hidden", "true");
     }
   },
+
   uninit: function uninit() {
     this._view.destruct();
   },
 
   show: function show() {
     this._grid.arrangeItems();
-  },
-};
-
-let TopSitesSnappedView = {
-  get _grid() { return document.getElementById("snapped-topsites-grid"); },
-
-  show: function show() {
-    this._grid.arrangeItems();
-  },
-
-  init: function() {
-    this._view = new TopSitesView(this._grid, 8);
-    if (this._view.isFirstRun()) {
-      let topsitesVbox = document.getElementById("snapped-topsites");
-      topsitesVbox.setAttribute("hidden", "true");
-    }
-    Services.obs.addObserver(this, "metro_viewstate_dom_snapped", false);
-  },
-
-  uninit: function uninit() {
-    this._view.destruct();
-    Services.obs.removeObserver(this, "metro_viewstate_dom_snapped");
-  },
-
-  observe: function(aSubject, aTopic, aData) {
-    switch (aTopic) {
-      case "metro_viewstate_dom_snapped":
-          this._grid.arrangeItems();
-        break;
-    }
-  },
+  }
 };

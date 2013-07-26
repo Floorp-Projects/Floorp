@@ -11,8 +11,4 @@ FAIL_ON_WARNINGS = 1
 
 include $(DEPTH)/config/autoconf.mk
 
-CPP_UNIT_TESTS = \
-  test_IHistory.cpp \
-  $(NULL)
-
 include $(topsrcdir)/config/rules.mk

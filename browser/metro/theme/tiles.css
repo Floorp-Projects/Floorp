@@ -25,15 +25,13 @@ richgriditem[compact] {
   width: auto;
   height: @compactgrid_row_height@;
 }
-
 /*
  *****************************************************
  */
-
 richgrid {
   display: -moz-box;
+  overflow: hidden;
 }
-
 richgrid > .richgrid-grid {
   -moz-column-width: @grid_double_column_width@; /* tile width (2x unit + gutter) */
   min-width: @grid_double_column_width@; /* min 1 column */
@@ -82,6 +80,10 @@ richgriditem {
   left: 20px;
   background: hsla(0,2%,98%,.95);
   padding: 8px;
+}
+
+richgriditem:not([tiletype="thumbnail"]) .tile-start-container {
+  background-image: none!important;
 }
 
 .tile-icon-box {

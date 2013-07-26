@@ -6,39 +6,41 @@
 
 #include "vm/TypedArrayObject.h"
 
-#include <string.h>
-
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/PodOperations.h"
 
-#include "jstypes.h"
-#include "jsutil.h"
+#include <string.h>
+#ifndef XP_WIN
+# include <sys/mman.h>
+#endif
+
 #include "jsapi.h"
 #include "jsarray.h"
 #include "jscntxt.h"
 #include "jscpucfg.h"
-#include "jsversion.h"
 #include "jsgc.h"
 #include "jsnum.h"
 #include "jsobj.h"
+#include "jstypes.h"
+#include "jsutil.h"
+#include "jsversion.h"
+#ifdef XP_WIN
+# include "jswin.h"
+#endif
+#include "jswrapper.h"
 
 #include "gc/Barrier.h"
 #include "gc/Marking.h"
 #include "vm/GlobalObject.h"
 #include "vm/Interpreter.h"
 #include "vm/NumericConversions.h"
+#include "vm/WrapperObject.h"
 
 #include "jsatominlines.h"
 #include "jsinferinlines.h"
 #include "jsobjinlines.h"
 
 #include "vm/GlobalObject-inl.h"
-
-# ifdef XP_WIN
-#  include "jswin.h"
-# else
-#  include <sys/mman.h>
-# endif
 
 #if USE_NEW_OBJECT_REPRESENTATION
 // See the comment above OldObjectRepresentationHack.
@@ -1329,6 +1331,31 @@ js::ClampDoubleToUint8(const double x)
     return y;
 }
 
+bool
+js::ToDoubleForTypedArray(JSContext *cx, JS::HandleValue vp, double *d)
+{
+    if (vp.isDouble()) {
+        *d = vp.toDouble();
+    } else if (vp.isNull()) {
+        *d = 0.0;
+    } else if (vp.isPrimitive()) {
+        JS_ASSERT(vp.isString() || vp.isUndefined() || vp.isBoolean());
+        if (vp.isString()) {
+            if (!ToNumber(cx, vp, d))
+                return false;
+        } else if (vp.isUndefined()) {
+            *d = js_NaN;
+        } else {
+            *d = double(vp.toBoolean());
+        }
+    } else {
+        // non-primitive assignments become NaN or 0 (for float/int arrays)
+        *d = js_NaN;
+    }
+
+    return true;
+}
+
 /*
  * This method is used to trace TypedArrayObjects and DataViewObjects. We need
  * a custom tracer because some of an ArrayBufferViewObject's reserved slots
@@ -1500,31 +1527,6 @@ class TypedArrayObjectTemplate : public TypedArrayObject
     }
 
     static bool
-    toDoubleForTypedArray(JSContext *cx, HandleValue vp, double *d)
-    {
-        if (vp.isDouble()) {
-            *d = vp.toDouble();
-        } else if (vp.isNull()) {
-            *d = 0.0;
-        } else if (vp.isPrimitive()) {
-            JS_ASSERT(vp.isString() || vp.isUndefined() || vp.isBoolean());
-            if (vp.isString()) {
-                if (!ToNumber(cx, vp, d))
-                    return false;
-            } else if (vp.isUndefined()) {
-                *d = js_NaN;
-            } else {
-                *d = double(vp.toBoolean());
-            }
-        } else {
-            // non-primitive assignments become NaN or 0 (for float/int arrays)
-            *d = js_NaN;
-        }
-
-        return true;
-    }
-
-    static bool
     setElementTail(JSContext *cx, HandleObject tarray, uint32_t index,
                    MutableHandleValue vp, JSBool strict)
     {
@@ -1537,7 +1539,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject
         }
 
         double d;
-        if (!toDoubleForTypedArray(cx, vp, &d))
+        if (!ToDoubleForTypedArray(cx, vp, &d))
             return false;
 
         // If the array is an integer array, we only handle up to
@@ -2175,9 +2177,9 @@ class TypedArrayObjectTemplate : public TypedArrayObject
 
                 args.setCallee(cx->compartment()->maybeGlobal()->createArrayFromBuffer<NativeType>());
                 args.setThis(ObjectValue(*bufobj));
-                args[0] = NumberValue(byteOffset);
-                args[1] = Int32Value(lengthInt);
-                args[2] = ObjectValue(*proto);
+                args[0].setNumber(byteOffset);
+                args[1].setInt32(lengthInt);
+                args[2].setObject(*proto);
 
                 if (!Invoke(cx, args))
                     return NULL;
@@ -2855,7 +2857,7 @@ DataViewObject::class_constructor(JSContext *cx, unsigned argc, Value *vp)
     if (!GetFirstArgumentAsObject(cx, args, "DataView constructor", &bufobj))
         return false;
 
-    if (bufobj->isWrapper() && UncheckedUnwrap(bufobj)->is<ArrayBufferObject>()) {
+    if (bufobj->is<WrapperObject>() && UncheckedUnwrap(bufobj)->is<ArrayBufferObject>()) {
         Rooted<GlobalObject*> global(cx, cx->compartment()->maybeGlobal());
         Rooted<JSObject*> proto(cx, global->getOrCreateDataViewPrototype(cx));
         if (!proto)
@@ -2867,7 +2869,7 @@ DataViewObject::class_constructor(JSContext *cx, unsigned argc, Value *vp)
         args2.setCallee(global->createDataViewForThis());
         args2.setThis(ObjectValue(*bufobj));
         PodCopy(args2.array(), args.array(), args.length());
-        args2[argc] = ObjectValue(*proto);
+        args2[argc].setObject(*proto);
         if (!Invoke(cx, args2))
             return false;
         args.rval().set(args2.rval());
@@ -3037,7 +3039,7 @@ DataViewObject::write(JSContext *cx, Handle<DataViewObject*> obj,
         return false;
 
     NativeType value;
-    if (!WebIDLCast(cx, args.handleAt(1), &value))
+    if (!WebIDLCast(cx, args[1], &value))
         return false;
 
     bool toLittleEndian = args.length() >= 3 && ToBoolean(args[2]);
@@ -3453,8 +3455,8 @@ Class ArrayBufferObject::class_ = {
     NULL,           /* finalize    */
     NULL,           /* checkAccess */
     NULL,           /* call        */
-    NULL,           /* construct   */
     NULL,           /* hasInstance */
+    NULL,           /* construct   */
     ArrayBufferObject::obj_trace,
     JS_NULL_CLASS_EXT,
     {
@@ -3616,8 +3618,8 @@ IMPL_TYPED_ARRAY_COMBINED_UNWRAPPERS(Float64, double, double)
     NULL,                    /* finalize */                                    \
     NULL,                    /* checkAccess */                                 \
     NULL,                    /* call        */                                 \
-    NULL,                    /* construct   */                                 \
     NULL,                    /* hasInstance */                                 \
+    NULL,                    /* construct   */                                 \
     ArrayBufferViewObject::trace, /* trace  */                                 \
     {                                                                          \
         NULL,       /* outerObject */                                          \
@@ -3832,8 +3834,8 @@ Class DataViewObject::class_ = {
     NULL,                    /* finalize */
     NULL,                    /* checkAccess */
     NULL,                    /* call        */
-    NULL,                    /* construct   */
     NULL,                    /* hasInstance */
+    NULL,                    /* construct   */
     ArrayBufferViewObject::trace, /* trace  */
     JS_NULL_CLASS_EXT,
     JS_NULL_OBJECT_OPS

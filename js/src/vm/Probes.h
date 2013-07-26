@@ -7,13 +7,14 @@
 #ifndef vm_Probes_h
 #define vm_Probes_h
 
-#include "jspubtd.h"
-#include "jsobj.h"
-#include "vm/Stack.h"
-
 #ifdef INCLUDE_MOZILLA_DTRACE
 #include "javascript-trace.h"
 #endif
+
+#include "jsobj.h"
+#include "jspubtd.h"
+
+#include "vm/Stack.h"
 
 namespace js {
 

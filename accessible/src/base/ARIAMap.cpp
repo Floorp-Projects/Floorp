@@ -112,7 +112,7 @@ static nsRoleMapEntry sWAIRoleMaps[] =
     eNoLiveAttr,
     eTableCell,
     kNoReqStates,
-    eARIASelectable,
+    eARIASelectableIfDefined,
     eARIAReadonlyOrEditableIfDefined
   },
   { // combobox
@@ -463,7 +463,7 @@ static nsRoleMapEntry sWAIRoleMaps[] =
     eNoLiveAttr,
     eTableCell,
     kNoReqStates,
-    eARIASelectable,
+    eARIASelectableIfDefined,
     eARIAReadonlyOrEditableIfDefined
   },
   { // scrollbar
@@ -539,7 +539,7 @@ static nsRoleMapEntry sWAIRoleMaps[] =
     kUseMapRole,
     eNoValue,
     eNoAction,
-    ePoliteLiveAttr,
+    eNoLiveAttr,
     eSelect,
     kNoReqStates
   },

@@ -281,7 +281,7 @@ private:
 class CommitHelper MOZ_FINAL : public nsIRunnable
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIRUNNABLE
 
   CommitHelper(IDBTransaction* aTransaction,
@@ -327,7 +327,7 @@ private:
 class UpdateRefcountFunction MOZ_FINAL : public mozIStorageFunction
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_MOZISTORAGEFUNCTION
 
   UpdateRefcountFunction(FileManager* aFileManager)

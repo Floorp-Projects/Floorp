@@ -15,7 +15,7 @@
  * allocations in the same native method.
  */
 
-#include "jsstr.h"
+#include "jsstrinlines.h"
 
 #include "mozilla/Attributes.h"
 #include "mozilla/CheckedInt.h"
@@ -24,18 +24,20 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include "jstypes.h"
-#include "jsutil.h"
-#include "jsprf.h"
+
 #include "jsapi.h"
 #include "jsarray.h"
 #include "jsatom.h"
+#include "jsautooplen.h"
 #include "jsbool.h"
 #include "jscntxt.h"
 #include "jsgc.h"
 #include "jsnum.h"
 #include "jsobj.h"
 #include "jsopcode.h"
+#include "jsprf.h"
+#include "jstypes.h"
+#include "jsutil.h"
 #include "jsversion.h"
 
 #include "builtin/RegExp.h"
@@ -49,12 +51,10 @@
 #include "vm/StringBuffer.h"
 
 #include "jsinferinlines.h"
-#include "jsstrinlines.h"
-#include "jsautooplen.h"        // generated headers last
 
 #include "vm/Interpreter-inl.h"
-#include "vm/StringObject-inl.h"
 #include "vm/String-inl.h"
+#include "vm/StringObject-inl.h"
 
 using namespace js;
 using namespace js::gc;
@@ -75,11 +75,11 @@ ArgToRootedString(JSContext *cx, CallArgs &args, unsigned argno)
     if (argno >= args.length())
         return cx->names().undefined;
 
-    JSString *str = ToString<CanGC>(cx, args.handleAt(argno));
+    JSString *str = ToString<CanGC>(cx, args[argno]);
     if (!str)
         return NULL;
 
-    args[argno] = StringValue(str);
+    args[argno].setString(str);
     return str->ensureLinear(cx);
 }
 
@@ -97,12 +97,6 @@ str_encodeURI(JSContext *cx, unsigned argc, Value *vp);
 
 static JSBool
 str_encodeURI_Component(JSContext *cx, unsigned argc, Value *vp);
-
-static const uint32_t INVALID_UTF8 = UINT32_MAX;
-static const uint32_t REPLACE_UTF8 = 0xFFFD;
-
-static uint32_t
-Utf8ToOneUcs4Char(const uint8_t *utf8Buffer, int utf8Length);
 
 /*
  * Global string methods
@@ -342,7 +336,7 @@ static JSBool
 str_uneval(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    JSString *str = ValueToSource(cx, args.handleOrUndefinedAt(0));
+    JSString *str = ValueToSource(cx, args.get(0));
     if (!str)
         return false;
 
@@ -639,7 +633,7 @@ str_substring(JSContext *cx, unsigned argc, Value *vp)
             begin = args[0].toInt32();
         } else {
             RootedString strRoot(cx, str);
-            if (!ValueToIntegerRange(cx, args.handleAt(0), &begin))
+            if (!ValueToIntegerRange(cx, args[0], &begin))
                 return false;
             str = strRoot;
         }
@@ -654,7 +648,7 @@ str_substring(JSContext *cx, unsigned argc, Value *vp)
                 end = args[1].toInt32();
             } else {
                 RootedString strRoot(cx, str);
-                if (!ValueToIntegerRange(cx, args.handleAt(1), &end))
+                if (!ValueToIntegerRange(cx, args[1], &end))
                     return false;
                 str = strRoot;
             }
@@ -825,7 +819,7 @@ str_localeCompare(JSContext *cx, unsigned argc, Value *vp)
     if (!str)
         return false;
 
-    RootedString thatStr(cx, ToString<CanGC>(cx, args.handleOrUndefinedAt(0)));
+    RootedString thatStr(cx, ToString<CanGC>(cx, args.get(0)));
     if (!thatStr)
         return false;
 
@@ -865,7 +859,7 @@ js_str_charAt(JSContext *cx, unsigned argc, Value *vp)
             return false;
 
         double d = 0.0;
-        if (args.length() > 0 && !ToInteger(cx, args.handleAt(0), &d))
+        if (args.length() > 0 && !ToInteger(cx, args[0], &d))
             return false;
 
         if (d < 0 || str->length() <= d)
@@ -902,7 +896,7 @@ js_str_charCodeAt(JSContext *cx, unsigned argc, Value *vp)
             return false;
 
         double d = 0.0;
-        if (args.length() > 0 && !ToInteger(cx, args.handleAt(0), &d))
+        if (args.length() > 0 && !ToInteger(cx, args[0], &d))
             return false;
 
         if (d < 0 || str->length() <= d)
@@ -1226,7 +1220,7 @@ str_contains(JSContext *cx, unsigned argc, Value *vp)
             pos = (i < 0) ? 0U : uint32_t(i);
         } else {
             double d;
-            if (!ToInteger(cx, args.handleAt(1), &d))
+            if (!ToInteger(cx, args[1], &d))
                 return false;
             pos = uint32_t(Min(Max(d, 0.0), double(UINT32_MAX)));
         }
@@ -1277,7 +1271,7 @@ str_indexOf(JSContext *cx, unsigned argc, Value *vp)
             pos = (i < 0) ? 0U : uint32_t(i);
         } else {
             double d;
-            if (!ToInteger(cx, args.handleAt(1), &d))
+            if (!ToInteger(cx, args[1], &d))
                 return false;
             pos = uint32_t(Min(Max(d, 0.0), double(UINT32_MAX)));
         }
@@ -1335,7 +1329,7 @@ str_lastIndexOf(JSContext *cx, unsigned argc, Value *vp)
                 i = j;
         } else {
             double d;
-            if (!ToNumber(cx, args.handleAt(1), &d))
+            if (!ToNumber(cx, args[1], &d))
                 return false;
             if (!IsNaN(d)) {
                 d = ToInteger(d);
@@ -1405,7 +1399,7 @@ str_startsWith(JSContext *cx, unsigned argc, Value *vp)
             pos = (i < 0) ? 0U : uint32_t(i);
         } else {
             double d;
-            if (!ToInteger(cx, args.handleAt(1), &d))
+            if (!ToInteger(cx, args[1], &d))
                 return false;
             pos = uint32_t(Min(Max(d, 0.0), double(UINT32_MAX)));
         }
@@ -1462,7 +1456,7 @@ str_endsWith(JSContext *cx, unsigned argc, Value *vp)
             pos = (i < 0) ? 0U : uint32_t(i);
         } else {
             double d;
-            if (!ToInteger(cx, args.handleAt(1), &d))
+            if (!ToInteger(cx, args[1], &d))
                 return false;
             pos = uint32_t(Min(Max(d, 0.0), double(UINT32_MAX)));
         }
@@ -1718,7 +1712,7 @@ class StringRegExpGuard
         /* Build RegExp from pattern string. */
         RootedString opt(cx);
         if (optarg < args.length()) {
-            opt = ToString<CanGC>(cx, args.handleAt(optarg));
+            opt = ToString<CanGC>(cx, args[optarg]);
             if (!opt)
                 return false;
         } else {
@@ -2139,11 +2133,11 @@ FindReplaceLength(JSContext *cx, RegExpStatics *res, ReplaceData &rdata, size_t 
 
         /* Push $&, $1, $2, ... */
         unsigned argi = 0;
-        if (!res->createLastMatch(cx, args.handleAt(argi++)))
+        if (!res->createLastMatch(cx, args[argi++]))
             return false;
 
         for (size_t i = 0; i < res->getMatches().parenCount(); ++i) {
-            if (!res->createParen(cx, i + 1, args.handleAt(argi++)))
+            if (!res->createParen(cx, i + 1, args[argi++]))
                 return false;
         }
 
@@ -3058,7 +3052,7 @@ js::str_split(JSContext *cx, unsigned argc, Value *vp)
     uint32_t limit;
     if (args.hasDefined(1)) {
         double d;
-        if (!ToNumber(cx, args.handleAt(1), &d))
+        if (!ToNumber(cx, args[1], &d))
             return false;
         limit = ToUint32(d);
     } else {
@@ -3134,7 +3128,7 @@ str_substr(JSContext *cx, unsigned argc, Value *vp)
     int32_t length, len, begin;
     if (args.length() > 0) {
         length = int32_t(str->length());
-        if (!ValueToIntegerRange(cx, args.handleAt(0), &begin))
+        if (!ValueToIntegerRange(cx, args[0], &begin))
             return false;
 
         if (begin >= length) {
@@ -3148,7 +3142,7 @@ str_substr(JSContext *cx, unsigned argc, Value *vp)
         }
 
         if (args.hasDefined(1)) {
-            if (!ValueToIntegerRange(cx, args.handleAt(1), &len))
+            if (!ValueToIntegerRange(cx, args[1], &len))
                 return false;
 
             if (len <= 0) {
@@ -3183,10 +3177,10 @@ str_concat(JSContext *cx, unsigned argc, Value *vp)
         return false;
 
     for (unsigned i = 0; i < args.length(); i++) {
-        JSString *argStr = ToString<NoGC>(cx, args.handleAt(i));
+        JSString *argStr = ToString<NoGC>(cx, args[i]);
         if (!argStr) {
             RootedString strRoot(cx, str);
-            argStr = ToString<CanGC>(cx, args.handleAt(i));
+            argStr = ToString<CanGC>(cx, args[i]);
             if (!argStr)
                 return false;
             str = strRoot;
@@ -3239,7 +3233,7 @@ str_slice(JSContext *cx, unsigned argc, Value *vp)
     if (args.length() != 0) {
         double begin, end, length;
 
-        if (!ToInteger(cx, args.handleAt(0), &begin))
+        if (!ToInteger(cx, args[0], &begin))
             return false;
         length = str->length();
         if (begin < 0) {
@@ -3251,7 +3245,7 @@ str_slice(JSContext *cx, unsigned argc, Value *vp)
         }
 
         if (args.hasDefined(1)) {
-            if (!ToInteger(cx, args.handleAt(1), &end))
+            if (!ToInteger(cx, args[1], &end))
                 return false;
             if (end < 0) {
                 end += length;
@@ -3510,7 +3504,7 @@ js_String(JSContext *cx, unsigned argc, Value *vp)
 
     RootedString str(cx);
     if (args.length() > 0) {
-        str = ToString<CanGC>(cx, args.handleAt(0));
+        str = ToString<CanGC>(cx, args[0]);
         if (!str)
             return false;
     } else {
@@ -3988,39 +3982,8 @@ js::InflateString(ThreadSafeContext *cx, const char *bytes, size_t *lengthp)
     return chars;
 
   bad:
-    /*
-     * For compatibility with callers of JS_DecodeBytes we must zero lengthp
-     * on errors.
-     */
-    *lengthp = 0;
-    return NULL;
-}
-
-jschar *
-js::InflateUTF8String(JSContext *cx, const char *bytes, size_t *lengthp)
-{
-    size_t nchars;
-    jschar *chars;
-    size_t nbytes = *lengthp;
-
-    // Malformed UTF8 chars could trigger errors and hence GC
-    MaybeCheckStackRoots(cx);
-
-    if (!InflateUTF8StringToBuffer(cx, bytes, nbytes, NULL, &nchars))
-        goto bad;
-    chars = cx->pod_malloc<jschar>(nchars + 1);
-    if (!chars)
-        goto bad;
-    JS_ALWAYS_TRUE(InflateUTF8StringToBuffer(cx, bytes, nbytes, chars, &nchars));
-    *lengthp = nchars;
-    chars[nchars] = 0;
-    return chars;
-
-  bad:
-    /*
-     * For compatibility with callers of JS_DecodeBytes we must zero lengthp
-     * on errors.
-     */
+    // For compatibility with callers of JS_DecodeBytes we must zero lengthp
+    // on errors.
     *lengthp = 0;
     return NULL;
 }
@@ -4067,182 +4030,6 @@ js::InflateStringToBuffer(JSContext *maybecx, const char *src, size_t srclen,
     }
     *dstlenp = srclen;
     return JS_TRUE;
-}
-
-bool
-js::InflateUTF8StringToBufferReplaceInvalid(JSContext *cx, const char *src,
-                                            size_t srclen, jschar *dst,
-                                            size_t *dstlenp)
-{
-    mozilla::Maybe<AutoSuppressGC> suppress;
-    if (cx)
-        suppress.construct(cx);
-
-    size_t dstlen, origDstlen, offset, j, n;
-    uint32_t v;
-
-    dstlen = dst ? *dstlenp : (size_t) -1;
-    origDstlen = dstlen;
-    offset = 0;
-
-    while (srclen) {
-        v = (uint8_t) *src;
-        n = 1;
-        if (v & 0x80) {
-            while (v & (0x80 >> n))
-                n++;
-            if (n > srclen || n == 1 || n > 4) {
-                /* Incorrect length for decoding. */
-                v = REPLACE_UTF8;
-                n = 1;
-                goto appendCharacter;
-            }
-
-            /*
-             * Check for invalid second byte.
-             *
-             * @From Unicode Standard v6.2, Table 3-7 Well-Formed UTF-8 Byte Sequences.
-             */
-            if ((v == 0xE0 && ((uint8_t)src[1] & 0xE0) != 0xA0) ||  // E0 A0~BF
-                (v == 0xED && ((uint8_t)src[1] & 0xE0) != 0x80) ||  // ED 80~9F
-                (v == 0xF0 && ((uint8_t)src[1] & 0xF0) == 0x80) ||  // F0 90~BF
-                (v == 0xF4 && ((uint8_t)src[1] & 0xF0) != 0x80))    // F4 80~8F
-            {
-                v = REPLACE_UTF8;
-                n = 1;
-                goto appendCharacter;
-            }
-
-            for (j = 1; j < n; j++) {
-                if ((src[j] & 0xC0) != 0x80) {
-                    /* Invalid sub-sequence. */
-                    v = REPLACE_UTF8;
-                    n = j;
-                    goto appendCharacter;
-                }
-            }
-
-            v = Utf8ToOneUcs4Char((uint8_t *)src, n);
-            if (v >= 0x10000) {
-                v -= 0x10000;
-                if (v > 0xFFFFF || dstlen < 2) {
-                    /* Incorrect code point. */
-                    v = REPLACE_UTF8;
-                    n = 1;
-                    goto appendCharacter;
-                }
-                if (dst) {
-                    *dst++ = (jschar)((v >> 10) + 0xD800);
-                    v = (jschar)((v & 0x3FF) + 0xDC00);
-                }
-                dstlen--;
-            }
-        }
-appendCharacter:
-        if (!dstlen)
-            goto bufferTooSmall;
-        if (dst)
-            *dst++ = (jschar) v;
-        dstlen--;
-        offset += n;
-        src += n;
-        srclen -= n;
-    }
-    *dstlenp = (origDstlen - dstlen);
-    return true;
-
-bufferTooSmall:
-    *dstlenp = (origDstlen - dstlen);
-    if (cx) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                             JSMSG_BUFFER_TOO_SMALL);
-    }
-    return false;
-}
-
-bool
-js::InflateUTF8StringToBuffer(JSContext *cx, const char *src, size_t srclen,
-                              jschar *dst, size_t *dstlenp)
-{
-    mozilla::Maybe<AutoSuppressGC> suppress;
-    if (cx)
-        suppress.construct(cx);
-
-    size_t dstlen, origDstlen, offset, j, n;
-    uint32_t v;
-
-    dstlen = dst ? *dstlenp : (size_t) -1;
-    origDstlen = dstlen;
-    offset = 0;
-
-    while (srclen) {
-        v = (uint8_t) *src;
-        n = 1;
-        if (v & 0x80) {
-            while (v & (0x80 >> n))
-                n++;
-            if (n > srclen)
-                goto bufferTooSmall;
-            if (n == 1 || n > 4)
-                goto badCharacter;
-            for (j = 1; j < n; j++) {
-                if ((src[j] & 0xC0) != 0x80)
-                    goto badCharacter;
-            }
-            v = Utf8ToOneUcs4Char((uint8_t *)src, n);
-            if (v >= 0x10000) {
-                v -= 0x10000;
-                if (v > 0xFFFFF || dstlen < 2) {
-                    *dstlenp = (origDstlen - dstlen);
-                    if (cx) {
-                        char buffer[10];
-                        JS_snprintf(buffer, 10, "0x%x", v + 0x10000);
-                        JS_ReportErrorFlagsAndNumber(cx,
-                                                     JSREPORT_ERROR,
-                                                     js_GetErrorMessage, NULL,
-                                                     JSMSG_UTF8_CHAR_TOO_LARGE,
-                                                     buffer);
-                    }
-                    return JS_FALSE;
-                }
-                if (dst) {
-                    *dst++ = (jschar)((v >> 10) + 0xD800);
-                    v = (jschar)((v & 0x3FF) + 0xDC00);
-                }
-                dstlen--;
-            }
-        }
-        if (!dstlen)
-            goto bufferTooSmall;
-        if (dst)
-            *dst++ = (jschar) v;
-        dstlen--;
-        offset += n;
-        src += n;
-        srclen -= n;
-    }
-    *dstlenp = (origDstlen - dstlen);
-    return JS_TRUE;
-
-badCharacter:
-    *dstlenp = (origDstlen - dstlen);
-    if (cx) {
-        char buffer[10];
-        JS_snprintf(buffer, 10, "%d", offset);
-        JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR,
-                                     js_GetErrorMessage, NULL,
-                                     JSMSG_MALFORMED_UTF8_CHAR,
-                                     buffer);
-    }
-    return JS_FALSE;
-
-bufferTooSmall:
-    *dstlenp = (origDstlen - dstlen);
-    if (cx) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                             JSMSG_BUFFER_TOO_SMALL);
-    }
-    return JS_FALSE;
 }
 
 #define ____ false
@@ -4504,7 +4291,7 @@ Decode(JSContext *cx, Handle<JSLinearString*> str, const bool *reservedSet, Muta
                     k += 2;
                     octets[j] = (char)B;
                 }
-                uint32_t v = Utf8ToOneUcs4Char(octets, n);
+                uint32_t v = JS::Utf8ToOneUcs4Char(octets, n);
                 if (v >= 0x10000) {
                     v -= 0x10000;
                     if (v > 0xFFFFF)
@@ -4611,39 +4398,6 @@ js_OneUcs4ToUtf8Char(uint8_t *utf8Buffer, uint32_t ucs4Char)
         *utf8Buffer = (uint8_t)(0x100 - (1 << (8-utf8Length)) + ucs4Char);
     }
     return utf8Length;
-}
-
-/*
- * Convert a utf8 character sequence into a UCS-4 character and return that
- * character.  It is assumed that the caller already checked that the sequence
- * is valid.
- */
-static uint32_t
-Utf8ToOneUcs4Char(const uint8_t *utf8Buffer, int utf8Length)
-{
-    JS_ASSERT(1 <= utf8Length && utf8Length <= 4);
-
-    if (utf8Length == 1) {
-        JS_ASSERT(!(*utf8Buffer & 0x80));
-        return *utf8Buffer;
-    }
-
-    /* from Unicode 3.1, non-shortest form is illegal */
-    static const uint32_t minucs4Table[] = { 0x80, 0x800, 0x10000 };
-
-    JS_ASSERT((*utf8Buffer & (0x100 - (1 << (7 - utf8Length)))) ==
-              (0x100 - (1 << (8 - utf8Length))));
-    uint32_t ucs4Char = *utf8Buffer++ & ((1 << (7 - utf8Length)) - 1);
-    uint32_t minucs4Char = minucs4Table[utf8Length - 2];
-    while (--utf8Length) {
-        JS_ASSERT((*utf8Buffer & 0xC0) == 0x80);
-        ucs4Char = (ucs4Char << 6) | (*utf8Buffer++ & 0x3F);
-    }
-
-    if (JS_UNLIKELY(ucs4Char < minucs4Char || (ucs4Char >= 0xD800 && ucs4Char <= 0xDFFF)))
-        return INVALID_UTF8;
-
-    return ucs4Char;
 }
 
 size_t

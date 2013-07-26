@@ -31,6 +31,18 @@ public:
   NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+
+protected:
+  virtual EnumAttributesInfo GetEnumInfo() MOZ_OVERRIDE;
+  virtual LengthAttributesInfo GetLengthInfo() MOZ_OVERRIDE;
+
+  nsSVGEnum mEnumAttributes[1];
+  virtual nsSVGEnum* EnumAttributes() MOZ_OVERRIDE
+    { return mEnumAttributes; }
+
+  nsSVGLength2 mLengthAttributes[1];
+  virtual nsSVGLength2* LengthAttributes() MOZ_OVERRIDE
+    { return mLengthAttributes; }
 };
 
 } // namespace dom

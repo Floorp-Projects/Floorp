@@ -25,7 +25,6 @@
 
 #include "gc/Barrier.h"
 #include "gc/Heap.h"
-
 #include "vm/ObjectImpl.h"
 #include "vm/Shape.h"
 #include "vm/String.h"
@@ -1010,10 +1009,6 @@ class JSObject : public js::ObjectImpl
         JS_ASSERT(is<T>());
         return *static_cast<const T *>(this);
     }
-
-    /* Subtypes of Proxy. */
-    inline bool isWrapper()                 const;
-    inline bool isCrossCompartmentWrapper() const;
 
     static inline js::ThingRootKind rootKind() { return js::THING_ROOT_OBJECT; }
 

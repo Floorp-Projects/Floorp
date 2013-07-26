@@ -51,6 +51,8 @@ const NETD_COMMAND_UNSOLICITED  = 600;
 const NETD_COMMAND_INTERFACE_CHANGE     = 600;
 const NETD_COMMAND_BANDWIDTH_CONTROLLER = 601;
 
+const INTERFACE_DELIMIT = "\0";
+
 importScripts("systemlibs.js");
 
 function netdResponseType(code) {
@@ -198,6 +200,20 @@ self.onmessage = function onmessage(event) {
 };
 
 /**
+* Set DNS servers for given network interface.
+*/
+function setDNS(options) {
+  let ifprops = getIFProperties(options.ifname);
+  let dns1_str = options.dns1_str || ifprops.dns1_str;
+  let dns2_str = options.dns2_str || ifprops.dns2_str;
+  libcutils.property_set("net.dns1", dns1_str);
+  libcutils.property_set("net.dns2", dns2_str);
+  // Bump the DNS change property.
+  let dnschange = libcutils.property_get("net.dnschange", "0");
+  libcutils.property_set("net.dnschange", (parseInt(dnschange, 10) + 1).toString());
+}
+
+/**
  * Set default route and DNS servers for given network interface.
  */
 function setDefaultRouteAndDNS(options) {
@@ -328,7 +344,8 @@ function onNetdMessage(data) {
   }
 
   if (gCurrentCallback) {
-    gCurrentCallback(isError(code), {code: code, reason: gReason.join(" ")});
+    gCurrentCallback(isError(code),
+                     {code: code, reason: gReason.join(INTERFACE_DELIMIT)});
     gReason = [];
   }
 
@@ -377,7 +394,7 @@ function setIpForwardingEnabled(params, callback) {
   } else {
     // Don't disable ip forwarding because others interface still need it.
     // Send the dummy command to continue the function chain.
-    if (params.interfaceList.length > 1) {
+    if ("interfaceList" in params && params.interfaceList.length > 1) {
       command = DUMMY_COMMAND;
     } else {
       command = "ipfwd disable";
@@ -409,7 +426,7 @@ function stopTethering(params, callback) {
 
   // Don't stop tethering because others interface still need it.
   // Send the dummy to continue the function chain.
-  if (params.interfaceList.length > 1) {
+  if ("interfaceList" in params && params.interfaceList.length > 1) {
     command = DUMMY_COMMAND;
   } else {
     command = "tether stop";
@@ -428,7 +445,7 @@ function preTetherInterfaceList(params, callback) {
 }
 
 function postTetherInterfaceList(params, callback) {
-  params.interfaceList = params.resultReason.split(" ");
+  params.interfaceList = params.resultReason.split(INTERFACE_DELIMIT);
 
   // Send the dummy command to continue the function chain.
   let command = DUMMY_COMMAND;
@@ -456,7 +473,7 @@ function disableNat(params, callback) {
 
   // Don't disable nat because others interface still need it.
   // Send the dummy command to continue the function chain.
-  if (params.interfaceList.length > 1) {
+  if ("interfaceList" in params && params.interfaceList.length > 1) {
     command = DUMMY_COMMAND;
   } else {
     command = "nat disable " + params.internalIfname + " " +
@@ -612,8 +629,10 @@ function dumpParams(params, type) {
   debug("     ip: " + params.ip);
   debug("     link: " + params.link);
   debug("     prefix: " + params.prefix);
-  debug("     startIp: " + params.startIp);
-  debug("     endIp: " + params.endIp);
+  debug("     wifiStartIp: " + params.wifiStartIp);
+  debug("     wifiEndIp: " + params.wifiEndIp);
+  debug("     usbStartIp: " + params.usbStartIp);
+  debug("     usbEndIp: " + params.usbEndIp);
   debug("     dnsserver1: " + params.dns1);
   debug("     dnsserver2: " + params.dns2);
   debug("     internalIfname: " + params.internalIfname);

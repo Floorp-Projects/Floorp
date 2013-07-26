@@ -11,7 +11,7 @@
 #include "nsReadableUtils.h"
 #include "jsapi.h"
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsConsoleMessage, nsIConsoleMessage)
+NS_IMPL_ISUPPORTS1(nsConsoleMessage, nsIConsoleMessage)
 
 nsConsoleMessage::nsConsoleMessage()
     :  mTimeStamp(0),

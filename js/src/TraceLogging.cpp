@@ -5,12 +5,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "TraceLogging.h"
+
 #include <cstdarg>
 #include <cstdio>
 #include <cstdlib>
-#include <unistd.h>
-#include <string.h>
 #include <stdint.h>
+#include <string.h>
+#include <unistd.h>
 
 using namespace js;
 
@@ -24,7 +25,7 @@ using namespace js;
 
 #if defined(__i386__)
 static __inline__ uint64_t
-js::rdtsc(void)
+rdtsc(void)
 {
     uint64_t x;
     __asm__ volatile (".byte 0x0f, 0x31" : "=A" (x));
@@ -32,7 +33,7 @@ js::rdtsc(void)
 }
 #elif defined(__x86_64__)
 static __inline__ uint64_t
-js::rdtsc(void)
+rdtsc(void)
 {
     unsigned hi, lo;
     __asm__ __volatile__ ("rdtsc" : "=a"(lo), "=d"(hi));
@@ -40,7 +41,7 @@ js::rdtsc(void)
 }
 #elif defined(__powerpc__)
 static __inline__ uint64_t
-js::rdtsc(void)
+rdtsc(void)
 {
     uint64_t result=0;
     uint32_t upper, lower,tmp;
@@ -62,26 +63,19 @@ js::rdtsc(void)
 #endif
 
 const char* const TraceLogging::type_name[] = {
+    "start,script",
+    "stop,script",
     "start,ion_compile",
     "stop,ion_compile",
-    "start,ion_cannon",
-    "stop,ion_cannon",
-    "stop,ion_cannon_bailout",
-    "start,ion_side_cannon",
-    "stop,ion_side_cannon",
-    "stop,ion_side_cannon_bailout",
     "start,yarr_jit_execute",
     "stop,yarr_jit_execute",
-    "start,jm_safepoint",
-    "stop,jm_safepoint",
-    "start,jm_normal",
-    "stop,jm_normal",
-    "start,jm_compile",
-    "stop,jm_compile",
     "start,gc",
     "stop,gc",
-    "start,interpreter",
-    "stop,interpreter"
+    "start,minor_gc",
+    "stop,minor_gc",
+    "info,engine,interpreter",
+    "info,engine,baseline",
+    "info,engine,ionmonkey"
 };
 TraceLogging* TraceLogging::_defaultLogger = NULL;
 
@@ -157,7 +151,7 @@ TraceLogging::log(Type type, const char* file, unsigned int lineno)
 void
 TraceLogging::log(Type type, JSScript* script)
 {
-    this->log(type, script->filename, script->lineno);
+    this->log(type, script->filename(), script->lineno);
 }
 
 void

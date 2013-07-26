@@ -16,6 +16,9 @@
 #ifndef R_ARM_V4BX
 #define R_ARM_V4BX 0x28
 #endif
+#ifndef R_ARM_CALL
+#define R_ARM_CALL 0x1c
+#endif
 #ifndef R_ARM_JUMP24
 #define R_ARM_JUMP24 0x1d
 #endif
@@ -329,6 +332,7 @@ private:
             case REL(ARM, REL32):
                 apply_relocation<pc32_relocation>(the_code, buf, &*r, addr);
                 break;
+            case REL(ARM, CALL):
             case REL(ARM, JUMP24):
             case REL(ARM, PLT32):
                 apply_relocation<arm_plt32_relocation>(the_code, buf, &*r, addr);

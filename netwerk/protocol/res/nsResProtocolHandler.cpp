@@ -199,10 +199,10 @@ nsResProtocolHandler::CollectSubstitutions(InfallibleTArray<ResourceMapping>& aR
 // nsResProtocolHandler::nsISupports
 //----------------------------------------------------------------------------
 
-NS_IMPL_THREADSAFE_ISUPPORTS3(nsResProtocolHandler,
-                              nsIResProtocolHandler,
-                              nsIProtocolHandler,
-                              nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS3(nsResProtocolHandler,
+                   nsIResProtocolHandler,
+                   nsIProtocolHandler,
+                   nsISupportsWeakReference)
 
 //----------------------------------------------------------------------------
 // nsResProtocolHandler::nsIProtocolHandler

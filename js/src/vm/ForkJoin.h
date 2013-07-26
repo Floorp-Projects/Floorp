@@ -8,9 +8,10 @@
 #define vm_ForkJoin_h
 
 #include "jscntxt.h"
-#include "vm/ThreadPool.h"
 #include "jsgc.h"
+
 #include "ion/Ion.h"
+#include "vm/ThreadPool.h"
 
 ///////////////////////////////////////////////////////////////////////////
 // Read Me First

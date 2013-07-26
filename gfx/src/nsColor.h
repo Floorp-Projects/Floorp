@@ -48,7 +48,7 @@ typedef uint32_t nscolor;
 // Translate a hex string to a color. Return true if it parses ok,
 // otherwise return false.
 // This accepts only 3 or 6 digits
-NS_GFX_(bool) NS_HexToRGB(const nsString& aBuf, nscolor* aResult);
+NS_GFX_(bool) NS_HexToRGB(const nsAString& aBuf, nscolor* aResult);
 
 // Compose one NS_RGB color onto another. The result is what
 // you get if you draw aFG on top of aBG with operator OVER.

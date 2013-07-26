@@ -16,6 +16,8 @@ Cu.import("resource://gre/modules/AddonManager.jsm");
 Cu.import("resource://gre/modules/FileUtils.jsm");
 Cu.import("resource://gre/modules/JNI.jsm");
 Cu.import('resource://gre/modules/Payment.jsm');
+Cu.import("resource://gre/modules/PermissionPromptHelper.jsm");
+Cu.import("resource://gre/modules/ContactService.jsm");
 
 #ifdef ACCESSIBILITY
 Cu.import("resource://gre/modules/accessibility/AccessFu.jsm");
@@ -541,6 +543,18 @@ var BrowserApp = {
       NativeWindow.contextmenus.SelectorContext("video:not(:-moz-full-screen)"),
       function(aTarget) {
         aTarget.mozRequestFullScreen();
+      });
+
+    NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.mute"),
+      NativeWindow.contextmenus.mediaContext("media-unmuted"),
+      function(aTarget) {
+        aTarget.muted = true;
+      });
+  
+    NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.unmute"),
+      NativeWindow.contextmenus.mediaContext("media-muted"),
+      function(aTarget) {
+        aTarget.muted = false;
       });
 
     NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.copyImageLocation"),
@@ -1941,6 +1955,12 @@ var NativeWindow = {
               return true;
             let controls = aElt.controls;
             if (!controls && aMode == "media-hidingcontrols")
+              return true;
+
+            let muted = aElt.muted;
+            if (muted && aMode == "media-muted")
+              return true;
+            else if (!muted && aMode == "media-unmuted")
               return true;
           }
           return false;

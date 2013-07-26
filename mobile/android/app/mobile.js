@@ -757,8 +757,23 @@ pref("dom.payment.provider.0.type", "mozilla/payments/pay/v1");
 pref("dom.payment.provider.0.requestMethod", "GET");
 #endif
 
+// Contacts API
+pref("dom.mozContacts.enabled", true);
+pref("dom.navigator-property.disable.mozContacts", false);
+pref("dom.global-constructor.disable.mozContact", false);
+
+// Shortnumber matching needed for e.g. Brazil:
+// 01187654321 can be found with 87654321
+pref("dom.phonenumber.substringmatching.BR", 8);
+pref("dom.phonenumber.substringmatching.CO", 10);
+pref("dom.phonenumber.substringmatching.VE", 7);
+
 // Support for the mozAudioChannel attribute on media elements is disabled in non-webapps
 pref("media.useAudioChannelService", false);
 
 // Turn on the CSP 1.0 parser for Content Security Policy headers
 pref("security.csp.speccompliant", true);
+
+// Enable hardware-accelerated Skia canvas
+pref("gfx.canvas.azure.backends", "skia");
+pref("gfx.canvas.azure.accelerated", true);

@@ -66,7 +66,7 @@ class Database MOZ_FINAL : public nsIObserver
   typedef mozilla::storage::StatementCache<mozIStorageAsyncStatement> AsyncStatementCache;
 
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIOBSERVER
 
   Database();

@@ -59,7 +59,7 @@ ImplCycleCollectionUnlink(nsInterfaceHashtable<K, T>& aField)
 template <typename K, typename T>
 inline void
 ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
-                            nsInterfaceHashtable<K, T>& aField,
+                            const nsInterfaceHashtable<K, T>& aField,
                             const char* aName,
                             uint32_t aFlags = 0)
 {

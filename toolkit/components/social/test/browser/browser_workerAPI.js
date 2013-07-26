@@ -85,21 +85,41 @@ let tests = {
     provider.workerAPI._port.postMessage({topic: "test-profile", data: sent});
   },
 
+  testNoCookies: function(next) {
+    // use a big, blunt stick to remove cookies.
+    Services.cookies.removeAll();
+    let port = provider.getWorkerPort();
+    port.onmessage = function onMessage(event) {
+      let {topic, data} = event.data;
+      if (topic == "test.cookies-get-response") {
+        is(data.length, 0, "got no cookies");
+        port.close();
+        next();
+      }
+    }
+    port.postMessage({topic: "test-initialization"});
+    port.postMessage({topic: "test.cookies-get"});
+  },
+
   testCookies: function(next) {
     let port = provider.getWorkerPort();
     port.onmessage = function onMessage(event) {
       let {topic, data} = event.data;
       if (topic == "test.cookies-get-response") {
-        is(data.length, 1, "got one cookie");
+        is(data.length, 2, "got 2 cookies");
         is(data[0].name, "cheez", "cookie has the correct name");
         is(data[0].value, "burger", "cookie has the correct value");
+        is(data[1].name, "moar", "cookie has the correct name");
+        is(data[1].value, "bacon", "cookie has the correct value");
         Services.cookies.remove('.example.com', '/', 'cheez', false);
+        Services.cookies.remove('.example.com', '/', 'moar', false);
         port.close();
         next();
       }
     }
     var MAX_EXPIRY = Math.pow(2, 62);
     Services.cookies.add('.example.com', '/', 'cheez', 'burger', false, false, true, MAX_EXPIRY);
+    Services.cookies.add('.example.com', '/', 'moar', 'bacon', false, false, true, MAX_EXPIRY);
     port.postMessage({topic: "test-initialization"});
     port.postMessage({topic: "test.cookies-get"});
   },

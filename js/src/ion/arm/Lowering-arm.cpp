@@ -186,6 +186,15 @@ LIRGeneratorARM::lowerForFPU(LInstructionHelper<1, 2, 0> *ins, MDefinition *mir,
 }
 
 bool
+LIRGeneratorARM::lowerForBitAndAndBranch(LBitAndAndBranch *baab, MInstruction *mir,
+                                         MDefinition *lhs, MDefinition *rhs)
+{
+    baab->setOperand(0, useRegister(lhs));
+    baab->setOperand(1, useRegisterOrConstant(rhs));
+    return add(baab, mir);
+}
+
+bool
 LIRGeneratorARM::defineUntypedPhi(MPhi *phi, size_t lirIndex)
 {
     LPhi *type = current->getPhi(lirIndex + VREG_TYPE_OFFSET);
@@ -449,10 +458,16 @@ LIRGeneratorARM::visitAsmJSNeg(MAsmJSNeg *ins)
 bool
 LIRGeneratorARM::lowerUDiv(MInstruction *div)
 {
-    LUDivOrMod *lir = new LUDivOrMod(useFixed(div->getOperand(0), r0),
-                                     useFixed(div->getOperand(1), r1),
-                                     tempFixed(r2), tempFixed(r3));
-    return defineFixed(lir, div, LAllocation(AnyRegister(r0)));
+    MDefinition *lhs = div->getOperand(0);
+    MDefinition *rhs = div->getOperand(1);
+
+    if (hasIDIV()) {
+        return lowerForALU(new LUDiv, div, lhs, rhs);
+    } else {
+        LSoftUDivOrMod *lir = new LSoftUDivOrMod(useFixed(lhs, r0), useFixed(rhs, r1),
+                                                 tempFixed(r2), tempFixed(r3));
+        return defineFixed(lir, div, LAllocation(AnyRegister(r0)));
+    }
 }
 
 bool
@@ -464,10 +479,16 @@ LIRGeneratorARM::visitAsmJSUDiv(MAsmJSUDiv *div)
 bool
 LIRGeneratorARM::lowerUMod(MInstruction *mod)
 {
-    LUDivOrMod *lir = new LUDivOrMod(useFixed(mod->getOperand(0), r0),
-                                     useFixed(mod->getOperand(1), r1),
-                                     tempFixed(r2), tempFixed(r3));
-    return defineFixed(lir, mod, LAllocation(AnyRegister(r1)));
+    MDefinition *lhs = mod->getOperand(0);
+    MDefinition *rhs = mod->getOperand(1);
+
+    if (hasIDIV()) {
+        return lowerForALU(new LUMod, mod, lhs, rhs);
+    } else {
+        LSoftUDivOrMod *lir = new LSoftUDivOrMod(useFixed(lhs, r0), useFixed(rhs, r1),
+                                                 tempFixed(r2), tempFixed(r3));
+        return defineFixed(lir, mod, LAllocation(AnyRegister(r1)));
+    }
 }
 
 bool

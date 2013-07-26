@@ -59,7 +59,7 @@ public:
     return true;
   }
 
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSITIMERCALLBACK
 
 protected:
@@ -105,7 +105,7 @@ public:
     return true;
   }
 
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSITIMERCALLBACK
 
 protected:
@@ -114,6 +114,7 @@ protected:
 
   SourceMediaStream* mSource;
 };
+
 
 class MediaEngineDefault : public MediaEngine
 {

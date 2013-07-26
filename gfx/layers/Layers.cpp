@@ -1142,7 +1142,7 @@ Layer::PrintInfo(nsACString& aTo, const char* aPrefix)
     aTo += " [componentAlpha]";
   }
   if (GetIsFixedPosition()) {
-    aTo += " [isFixedPosition]";
+    aTo.AppendPrintf(" [isFixedPosition anchor=%f,%f]", mAnchor.x, mAnchor.y);
   }
 
   return aTo;

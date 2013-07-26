@@ -66,7 +66,7 @@ class nsJAR : public nsIZipReader
     
     NS_DEFINE_STATIC_CID_ACCESSOR( NS_ZIPREADER_CID )
   
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
 
     NS_DECL_NSIZIPREADER
 
@@ -130,7 +130,7 @@ class nsJAR : public nsIZipReader
 class nsJARItem : public nsIZipEntry
 {
 public:
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSIZIPENTRY
     
     nsJARItem(nsZipItem* aZipItem);
@@ -155,7 +155,7 @@ private:
 class nsJAREnumerator MOZ_FINAL : public nsIUTF8StringEnumerator
 {
 public:
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSIUTF8STRINGENUMERATOR
 
     nsJAREnumerator(nsZipFind *aFind) : mFind(aFind), mName(nullptr) { 
@@ -180,7 +180,7 @@ class nsZipReaderCache : public nsIZipReaderCache, public nsIObserver,
                          public nsSupportsWeakReference
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIZIPREADERCACHE
   NS_DECL_NSIOBSERVER
 

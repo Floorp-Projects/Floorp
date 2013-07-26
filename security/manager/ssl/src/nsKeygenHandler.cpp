@@ -258,7 +258,7 @@ decode_ec_params(const char *curve)
     return ecparams;
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsKeygenFormProcessor, nsIFormProcessor)
+NS_IMPL_ISUPPORTS1(nsKeygenFormProcessor, nsIFormProcessor)
 
 nsKeygenFormProcessor::nsKeygenFormProcessor()
 { 

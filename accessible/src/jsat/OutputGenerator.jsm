@@ -164,6 +164,19 @@ this.OutputGenerator = {
       name = aAccessible.name;
     }
 
+    let description = aAccessible.description;
+    if (description) {
+      // Compare against the calculated name unconditionally, regardless of name rule,
+      // so we can make sure we don't speak duplicated descriptions
+      let tmpName = name || aAccessible.name;
+      if (tmpName && (description !== tmpName)) {
+        name = name || '';
+        name = this.outputOrder === OUTPUT_DESC_FIRST ?
+          description + ' - ' + name :
+          name + ' - ' + description;
+      }
+    }
+
     if (name) {
       aOutput[this.outputOrder === OUTPUT_DESC_FIRST ?
         'push' : 'unshift'](name);

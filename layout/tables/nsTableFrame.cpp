@@ -1332,7 +1332,7 @@ nsTableFrame::PaintTableBorderBackground(nsRenderingContext& aRenderingContext,
 }
 
 int
-nsTableFrame::GetSkipSides() const
+nsTableFrame::GetSkipSides(const nsHTMLReflowState* aReflowState) const
 {
   int skip = 0;
   // frame attribute was accounted for in nsHTMLTableElement::MapTableBorderInto

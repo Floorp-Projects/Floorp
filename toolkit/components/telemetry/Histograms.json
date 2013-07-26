@@ -3166,6 +3166,18 @@
     "n_buckets": "1000",
     "description": "The time (in milliseconds) that it took a 'navigateTo' request to go round trip."
   },
+  "DEVTOOLS_DEBUGGER_RDP_LOCAL_EVENTLISTENERS_MS": {
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": "1000",
+    "description": "The time (in milliseconds) that it took an 'eventListeners' request to go round trip."
+  },
+  "DEVTOOLS_DEBUGGER_RDP_REMOTE_EVENTLISTENERS_MS": {
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": "1000",
+    "description": "The time (in milliseconds) that it took an 'eventListeners' request to go round trip."
+  },
   "DEVTOOLS_DEBUGGER_RDP_LOCAL_DETACH_MS": {
     "kind": "exponential",
     "high": "10000",
@@ -3321,6 +3333,18 @@
     "high": "10000",
     "n_buckets": "1000",
     "description": "The time (in milliseconds) that it took a 'prototype' request to go round trip."
+  },
+  "DEVTOOLS_DEBUGGER_RDP_REMOTE_DISPLAYSTRING_MS": {
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": "1000",
+    "description": "The time (in milliseconds) that it took a 'displayString' request to go round trip."
+  },
+  "DEVTOOLS_DEBUGGER_RDP_LOCAL_DISPLAYSTRING_MS": {
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": "1000",
+    "description": "The time (in milliseconds) that it took a 'displayString' request to go round trip."
   },
   "DEVTOOLS_DEBUGGER_RDP_LOCAL_SUBSTRING_MS": {
     "kind": "exponential",

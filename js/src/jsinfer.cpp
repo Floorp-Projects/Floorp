@@ -4,42 +4,41 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "jsinfer.h"
+#include "jsinferinlines.h"
 
 #include "mozilla/DebugOnly.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/PodOperations.h"
 
+#ifdef __SUNPRO_CC
+#include <alloca.h>
+#endif
+
 #include "jsapi.h"
+#include "jscntxt.h"
 #include "jsfriendapi.h"
 #include "jsgc.h"
 #include "jsobj.h"
 #include "jsscript.h"
-#include "jscntxt.h"
 #include "jsstr.h"
 #include "jsworkers.h"
 #include "prmjtime.h"
 
+#include "gc/Marking.h"
 #ifdef JS_ION
 #include "ion/BaselineJIT.h"
 #include "ion/Ion.h"
 #include "ion/IonCompartment.h"
 #endif
-#include "gc/Marking.h"
 #include "js/MemoryMetrics.h"
 #include "vm/Shape.h"
 
 #include "jsanalyzeinlines.h"
 #include "jsatominlines.h"
 #include "jsgcinlines.h"
-#include "jsinferinlines.h"
-#include "jsopcodeinlines.h"
 #include "jsobjinlines.h"
+#include "jsopcodeinlines.h"
 #include "jsscriptinlines.h"
-
-#ifdef __SUNPRO_CC
-#include <alloca.h>
-#endif
 
 using namespace js;
 using namespace js::gc;
@@ -706,7 +705,7 @@ StackTypeSet::addGetProperty(JSContext *cx, JSScript *script, jsbytecode *pc,
      * GetProperty constraints are normally used with property read input type
      * sets, except for array_pop/array_shift special casing.
      */
-    JS_ASSERT(js_CodeSpec[*pc].format & JOF_INVOKE);
+    JS_ASSERT(IsCallPC(pc));
 
     add(cx, cx->analysisLifoAlloc().new_<TypeConstraintGetProperty>(script, pc, target, id));
 }
@@ -2858,7 +2857,7 @@ TypeCompartment::monitorBytecode(JSContext *cx, JSScript *script, uint32_t offse
     ScriptAnalysis *analysis = script->analysis();
     jsbytecode *pc = script->code + offset;
 
-    JS_ASSERT_IF(returnOnly, js_CodeSpec[*pc].format & JOF_INVOKE);
+    JS_ASSERT_IF(returnOnly, IsCallPC(pc));
 
     Bytecode &code = analysis->getCode(pc);
 
@@ -2869,7 +2868,7 @@ TypeCompartment::monitorBytecode(JSContext *cx, JSScript *script, uint32_t offse
               returnOnly ? " returnOnly" : "", script->id(), offset);
 
     /* Dynamically monitor this call to keep track of its result types. */
-    if (js_CodeSpec[*pc].format & JOF_INVOKE)
+    if (IsCallPC(pc))
         code.monitoredTypesReturn = true;
 
     if (returnOnly)

@@ -156,6 +156,35 @@ class DeviceManagerADB(DeviceManager):
 
         return None
 
+    def forward(self, local, remote):
+        """
+        Forward socket connections.
+        
+        Forward specs are one of:
+          tcp:<port>
+          localabstract:<unix domain socket name>
+          localreserved:<unix domain socket name>
+          localfilesystem:<unix domain socket name>
+          dev:<character device name>
+          jdwp:<process pid> (remote only)
+        """
+        return self._checkCmd(['forward', local, remote])
+
+    def remount(self):
+        "Remounts the /system partition on the device read-write."
+        return self._checkCmd(['remount'])
+
+    def devices(self):
+        "Return a list of connected devices as (serial, status) tuples."
+        proc = self._runCmd(['devices'])
+        proc.stdout.readline() # ignore first line of output
+        devices = []
+        for line in iter(proc.stdout.readline, ''):
+            result = re.match('(.*?)\t(.*)', line)
+            if result:
+                devices.append((result.group(1), result.group(2)))
+        return devices
+
     def _connectRemoteADB(self):
         self._checkCmd(["connect", self.host + ":" + str(self.port)])
 
@@ -401,7 +430,7 @@ class DeviceManagerADB(DeviceManager):
         elif offset is not None:
             f.seek(offset)
             ret = f.read()
-        else: 
+        else:
             ret = f.read()
 
         f.close()
@@ -492,12 +521,10 @@ class DeviceManagerADB(DeviceManager):
         raise DMError("Failed to get application root for: %s" % packageName)
 
     def reboot(self, wait = False, **kwargs):
-        self._runCmd(["reboot"])
-        if (not wait):
+        self._checkCmd(["reboot"])
+        if not wait:
             return
-        countdown = 40
-        while (countdown > 0):
-            self._checkCmd(["wait-for-device", "shell", "ls", "/sbin"])
+        self._checkCmd(["wait-for-device", "shell", "ls", "/sbin"])
 
     def updateApp(self, appBundlePath, **kwargs):
         return self._runCmd(["install", "-r", appBundlePath]).stdout.read()
@@ -506,7 +533,7 @@ class DeviceManagerADB(DeviceManager):
         timestr = self._runCmd(["shell", "date", "+%s"]).stdout.read().strip()
         if (not timestr or not timestr.isdigit()):
             raise DMError("Unable to get current time using date (got: '%s')" % timestr)
-        return str(int(timestr)*1000)
+        return int(timestr)*1000
 
     def getInfo(self, directive=None):
         ret = {}

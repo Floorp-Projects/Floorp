@@ -354,8 +354,11 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
 
             if (bitmap != null) {
                 ByteArrayOutputStream stream = new ByteArrayOutputStream();
-                bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
-                favicon = stream.toByteArray();
+                if (bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)) {
+                    favicon = stream.toByteArray();
+                } else {
+                    Log.w(LOGTAG, "Favicon compression failed.");
+                }
             }
 
             return new ContextMenuSubject(id, url, favicon,
@@ -817,7 +820,7 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
             do {
                 final String url = c.getString(c.getColumnIndexOrThrow(Combined.URL));
                 final byte[] b = c.getBlob(c.getColumnIndexOrThrow(Combined.FAVICON));
-                if (b == null || b.length == 0)
+                if (b == null)
                     continue;
 
                 Bitmap favicon = BitmapUtils.decodeByteArray(b);

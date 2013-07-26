@@ -3043,17 +3043,18 @@ nsRuleNode::SetFont(nsPresContext* aPresContext, nsStyleContext* aContext,
   // -x-text-zoom: none, inherit, initial
   bool allowZoom;
   const nsCSSValue* textZoomValue = aRuleData->ValueForTextZoom();
-  if (eCSSUnit_Inherit == textZoomValue->GetUnit()) {
-    allowZoom = aParentFont->mAllowZoom;
-  } else if (eCSSUnit_None == textZoomValue->GetUnit()) {
-    allowZoom = false;
-  } else {
-    MOZ_ASSERT(eCSSUnit_Initial == textZoomValue->GetUnit() ||
-               eCSSUnit_Null == textZoomValue->GetUnit(),
-               "unexpected unit");
-    allowZoom = true;
+  if (eCSSUnit_Null != textZoomValue->GetUnit()) {
+    if (eCSSUnit_Inherit == textZoomValue->GetUnit()) {
+      allowZoom = aParentFont->mAllowZoom;
+    } else if (eCSSUnit_None == textZoomValue->GetUnit()) {
+      allowZoom = false;
+    } else {
+      MOZ_ASSERT(eCSSUnit_Initial == textZoomValue->GetUnit(),
+                 "unexpected unit");
+      allowZoom = true;
+    }
+    aFont->EnableZoom(aPresContext, allowZoom);
   }
-  aFont->EnableZoom(aPresContext, allowZoom);
 
   // mLanguage must be set before before any of the CalcLengthWith calls
   // (direct calls or calls via SetFontSize) for the cases where |aParentFont|
@@ -7707,6 +7708,68 @@ nsRuleNode::ComputeSVGData(void* aStartStruct,
   COMPUTE_END_INHERITED(SVG, svg)
 }
 
+static nsStyleFilter::Type
+StyleFilterTypeForFunctionName(nsCSSKeyword functionName)
+{
+  switch (functionName) {
+    case eCSSKeyword_blur:
+      return nsStyleFilter::Type::eBlur;
+    case eCSSKeyword_brightness:
+      return nsStyleFilter::Type::eBrightness;
+    case eCSSKeyword_contrast:
+      return nsStyleFilter::Type::eContrast;
+    case eCSSKeyword_grayscale:
+      return nsStyleFilter::Type::eGrayscale;
+    case eCSSKeyword_invert:
+      return nsStyleFilter::Type::eInvert;
+    case eCSSKeyword_opacity:
+      return nsStyleFilter::Type::eOpacity;
+    case eCSSKeyword_saturate:
+      return nsStyleFilter::Type::eSaturate;
+    case eCSSKeyword_sepia:
+      return nsStyleFilter::Type::eSepia;
+    default:
+      NS_NOTREACHED("Unknown filter type.");
+      return nsStyleFilter::Type::eNull;
+  }
+}
+
+static void
+SetStyleFilterToCSSValue(nsStyleFilter* aStyleFilter,
+                         const nsCSSValue& aValue,
+                         nsStyleContext* aStyleContext,
+                         nsPresContext* aPresContext,
+                         bool& aCanStoreInRuleTree)
+{
+  nsCSSUnit unit = aValue.GetUnit();
+  if (unit == eCSSUnit_URL) {
+    aStyleFilter->mType = nsStyleFilter::Type::eURL;
+    aStyleFilter->mURL = aValue.GetURLValue();
+    return;
+  }
+
+  NS_ABORT_IF_FALSE(unit == eCSSUnit_Function, "expected a filter function");
+
+  nsCSSValue::Array* filterFunction = aValue.GetArrayValue();
+  nsCSSKeyword functionName =
+    (nsCSSKeyword)filterFunction->Item(0).GetIntValue();
+  aStyleFilter->mType = StyleFilterTypeForFunctionName(functionName);
+
+  int32_t mask = SETCOORD_PERCENT | SETCOORD_FACTOR;
+  if (aStyleFilter->mType == nsStyleFilter::Type::eBlur)
+    mask = SETCOORD_LENGTH | SETCOORD_STORE_CALC;
+
+  NS_ABORT_IF_FALSE(filterFunction->Count() == 2,
+                    "all filter functions except drop-shadow should have "
+                    "exactly one argument");
+
+  nsCSSValue& arg = filterFunction->Item(1);
+  DebugOnly<bool> success = SetCoord(arg, aStyleFilter->mCoord, nsStyleCoord(),
+                                     mask, aStyleContext, aPresContext,
+                                     aCanStoreInRuleTree);
+  NS_ABORT_IF_FALSE(success, "unexpected unit");
+}
+
 const void*
 nsRuleNode::ComputeSVGResetData(void* aStartStruct,
                                 const nsRuleData* aRuleData,
@@ -7783,14 +7846,34 @@ nsRuleNode::ComputeSVGResetData(void* aStartStruct,
 
   // filter: url, none, inherit
   const nsCSSValue* filterValue = aRuleData->ValueForFilter();
-  if (eCSSUnit_URL == filterValue->GetUnit()) {
-    svgReset->mFilter = filterValue->GetURLValue();
-  } else if (eCSSUnit_None == filterValue->GetUnit() ||
-             eCSSUnit_Initial == filterValue->GetUnit()) {
-    svgReset->mFilter = nullptr;
-  } else if (eCSSUnit_Inherit == filterValue->GetUnit()) {
-    canStoreInRuleTree = false;
-    svgReset->mFilter = parentSVGReset->mFilter;
+  switch (filterValue->GetUnit()) {
+    case eCSSUnit_Null:
+      break;
+    case eCSSUnit_None:
+    case eCSSUnit_Initial:
+      svgReset->mFilters.Clear();
+      break;
+    case eCSSUnit_Inherit:
+      canStoreInRuleTree = false;
+      svgReset->mFilters = parentSVGReset->mFilters;
+      break;
+    case eCSSUnit_List:
+    case eCSSUnit_ListDep: {
+      svgReset->mFilters.Clear();
+      const nsCSSValueList* cur = filterValue->GetListValue();
+      while(cur) {
+        nsStyleFilter styleFilter;
+        SetStyleFilterToCSSValue(&styleFilter, cur->mValue, aContext,
+                                 mPresContext, canStoreInRuleTree);
+        NS_ABORT_IF_FALSE(styleFilter.mType != nsStyleFilter::Type::eNull,
+                          "filter should be set");
+        svgReset->mFilters.AppendElement(styleFilter);
+        cur = cur->mNext;
+      }
+      break;
+    }
+    default:
+      NS_NOTREACHED("unexpected unit");
   }
 
   // mask: url, none, inherit

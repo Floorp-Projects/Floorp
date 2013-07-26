@@ -72,6 +72,10 @@ ifdef NIGHTLY_BUILD
 DEFINES += -DENABLE_PARALLEL_JS
 endif
 
+ifdef NIGHTLY_BUILD
+DEFINES += -DENABLE_BINARYDATA
+endif
+
 # Ion
 ifdef ENABLE_ION
 VPATH +=	$(srcdir)/ion
@@ -642,6 +646,8 @@ selfhosting_srcs := \
   $(srcdir)/builtin/Number.js \
   $(srcdir)/builtin/ParallelArray.js \
   $(srcdir)/builtin/String.js \
+  $(srcdir)/builtin/Set.js \
+  $(srcdir)/builtin/Map.js \
   $(NULL)
 
 selfhosted_out_h_deps := \
