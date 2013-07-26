@@ -177,6 +177,14 @@ GetBuildConfiguration(JSContext *cx, unsigned argc, jsval *vp)
     if (!JS_SetProperty(cx, info, "parallelJS", &value))
         return false;
 
+#ifdef ENABLE_BINARYDATA
+    value = BooleanValue(true);
+#else
+    value = BooleanValue(false);
+#endif
+    if (!JS_SetProperty(cx, info, "binary-data", &value))
+        return false;
+
     *vp = ObjectValue(*info);
     return true;
 }
