@@ -14,7 +14,6 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/NullPtr.h"
 #include "mozilla/Util.h"
 
 namespace mozilla {
@@ -61,7 +60,7 @@ class RangedPtr
 #ifdef DEBUG
       return RangedPtr<T>(p, rangeStart, rangeEnd);
 #else
-      return RangedPtr<T>(p, nullptr, size_t(0));
+      return RangedPtr<T>(p, NULL, size_t(0));
 #endif
     }
 

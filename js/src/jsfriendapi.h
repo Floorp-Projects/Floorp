@@ -204,6 +204,8 @@ JS_SetSourceHook(JSRuntime *rt, JS_SourceHook hook);
 
 namespace js {
 
+extern mozilla::ThreadLocal<PerThreadData *> TlsPerThreadData;
+
 inline JSRuntime *
 GetRuntime(const JSContext *cx)
 {

@@ -10,7 +10,6 @@
 #define mozilla_GuardObjects_h
 
 #include "mozilla/Assertions.h"
-#include "mozilla/NullPtr.h"
 #include "mozilla/Types.h"
 
 #ifdef __cplusplus
@@ -74,7 +73,7 @@ class MOZ_EXPORT GuardObjectNotifier
     bool* statementDone;
 
   public:
-    GuardObjectNotifier() : statementDone(nullptr) { }
+    GuardObjectNotifier() : statementDone(NULL) { }
 
     ~GuardObjectNotifier() {
       *statementDone = true;
