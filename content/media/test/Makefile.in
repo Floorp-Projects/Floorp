@@ -116,7 +116,6 @@ MOCHITEST_FILES = \
 		test_video_to_canvas.html \
 		test_audiowrite.html \
 		test_mediarecorder_creation.html \
-		test_mediarecorder_record_audiocontext.html \
 		test_mozHasAudio.html \
 		test_source_media.html \
 		test_autoplay_contentEditable.html \
