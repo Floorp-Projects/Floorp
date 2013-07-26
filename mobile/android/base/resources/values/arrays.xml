@@ -59,7 +59,7 @@
     </string-array>
     <string-array name="pref_import_android_entries">
         <item>@string/bookmarks_title</item>
-        <item>@string/history_title</item>
+        <item>@string/home_most_recent_title</item>
     </string-array>
     <string-array name="pref_import_android_values">
         <item>true</item>
