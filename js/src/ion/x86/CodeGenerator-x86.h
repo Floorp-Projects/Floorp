@@ -7,8 +7,8 @@
 #ifndef ion_x86_CodeGenerator_x86_h
 #define ion_x86_CodeGenerator_x86_h
 
-#include "ion/x86/Assembler-x86.h"
 #include "ion/shared/CodeGenerator-x86-shared.h"
+#include "ion/x86/Assembler-x86.h"
 
 namespace js {
 namespace ion {

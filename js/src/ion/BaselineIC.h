@@ -14,10 +14,10 @@
 #include "jsgc.h"
 #include "jsopcode.h"
 #include "jsproxy.h"
-#include "ion/BaselineJIT.h"
-#include "ion/BaselineRegisters.h"
 
 #include "gc/Heap.h"
+#include "ion/BaselineJIT.h"
+#include "ion/BaselineRegisters.h"
 
 namespace js {
 namespace ion {

@@ -7,10 +7,9 @@
 #ifndef ion_Safepoints_h
 #define ion_Safepoints_h
 
-#include "ion/Registers.h"
-#include "ion/CompactBuffer.h"
 #include "ion/BitSet.h"
-
+#include "ion/CompactBuffer.h"
+#include "ion/Registers.h"
 #include "ion/shared/Assembler-shared.h"
 
 namespace js {

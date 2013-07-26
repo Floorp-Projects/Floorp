@@ -11,6 +11,7 @@
 #include "ion/IonAnalysis.h"
 #include "ion/MIR.h"
 #include "ion/MIRGraph.h"
+
 // This file represents the Loop Invariant Code Motion optimization pass
 
 namespace js {

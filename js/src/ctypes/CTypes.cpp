@@ -6538,12 +6538,10 @@ CData::GetRuntime(JSContext* cx, unsigned argc, jsval* vp)
   return JS_TRUE;
 }
 
-typedef bool (*InflateUTF8Method)(JSContext *, const char *, size_t,
-                                  jschar *, size_t *);
+typedef JS::TwoByteCharsZ (*InflateUTF8Method)(JSContext *, const JS::UTF8Chars, size_t *);
 
-template <InflateUTF8Method InflateUTF8>
 static JSBool
-ReadStringCommon(JSContext* cx, unsigned argc, jsval* vp)
+ReadStringCommon(JSContext* cx, InflateUTF8Method inflateUTF8, unsigned argc, jsval *vp)
 {
   CallArgs args = CallArgsFromVp(argc, vp);
   if (args.length() != 0) {
@@ -6596,19 +6594,11 @@ ReadStringCommon(JSContext* cx, unsigned argc, jsval* vp)
     size_t length = strnlen(bytes, maxLength);
 
     // Determine the length.
-    size_t dstlen;
-    if (!InflateUTF8(cx, bytes, length, NULL, &dstlen))
-      return JS_FALSE;
-
-    jschar* dst =
-      static_cast<jschar*>(JS_malloc(cx, (dstlen + 1) * sizeof(jschar)));
+    jschar *dst = inflateUTF8(cx, JS::UTF8Chars(bytes, length), &length).get();
     if (!dst)
       return JS_FALSE;
 
-    ASSERT_OK(InflateUTF8(cx, bytes, length, dst, &dstlen));
-    dst[dstlen] = 0;
-
-    result = JS_NewUCString(cx, dst, dstlen);
+    result = JS_NewUCString(cx, dst, length);
     break;
   }
   case TYPE_int16_t:
@@ -6637,13 +6627,13 @@ ReadStringCommon(JSContext* cx, unsigned argc, jsval* vp)
 JSBool
 CData::ReadString(JSContext* cx, unsigned argc, jsval* vp)
 {
-  return ReadStringCommon<InflateUTF8StringToBuffer>(cx, argc, vp);
+  return ReadStringCommon(cx, JS::UTF8CharsToNewTwoByteCharsZ, argc, vp);
 }
 
 JSBool
 CData::ReadStringReplaceMalformed(JSContext* cx, unsigned argc, jsval* vp)
 {
-  return ReadStringCommon<InflateUTF8StringToBufferReplaceInvalid>(cx, argc, vp);
+  return ReadStringCommon(cx, JS::LossyUTF8CharsToNewTwoByteCharsZ, argc, vp);
 }
 
 JSString *

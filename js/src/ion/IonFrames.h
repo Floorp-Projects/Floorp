@@ -15,9 +15,10 @@
 #include "jsfun.h"
 #include "jstypes.h"
 #include "jsutil.h"
-#include "ion/Registers.h"
+
 #include "ion/IonCode.h"
 #include "ion/IonFrameIterator.h"
+#include "ion/Registers.h"
 
 class JSFunction;
 class JSScript;

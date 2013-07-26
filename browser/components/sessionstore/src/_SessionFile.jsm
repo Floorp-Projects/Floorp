@@ -33,7 +33,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/osfile.jsm");
 Cu.import("resource://gre/modules/osfile/_PromiseWorker.jsm", this);
-Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js");
+Cu.import("resource://gre/modules/Promise.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "TelemetryStopwatch",
   "resource://gre/modules/TelemetryStopwatch.jsm");

@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "GonkIOSurfaceImage.h"
+#include "GrallocImages.h"
 #include "MediaDecoderReader.h"
 #include "AbstractMediaDecoder.h"
 #include "MediaDecoderStateMachine.h"
@@ -348,16 +348,16 @@ VideoData* VideoData::Create(VideoInfo& aInfo,
                                        aTimecode,
                                        aInfo.mDisplay));
 
-  ImageFormat format = GONK_IO_SURFACE;
+  ImageFormat format = GRALLOC_PLANAR_YCBCR;
   v->mImage = aContainer->CreateImage(&format, 1);
   if (!v->mImage) {
     return nullptr;
   }
-  NS_ASSERTION(v->mImage->GetFormat() == GONK_IO_SURFACE,
+  NS_ASSERTION(v->mImage->GetFormat() == GRALLOC_PLANAR_YCBCR,
                "Wrong format?");
-  typedef mozilla::layers::GonkIOSurfaceImage GonkIOSurfaceImage;
-  GonkIOSurfaceImage* videoImage = static_cast<GonkIOSurfaceImage*>(v->mImage.get());
-  GonkIOSurfaceImage::Data data;
+  typedef mozilla::layers::GrallocImage GrallocImage;
+  GrallocImage* videoImage = static_cast<GrallocImage*>(v->mImage.get());
+  GrallocImage::GrallocData data;
 
   data.mPicSize = gfxIntSize(aPicture.width, aPicture.height);
   data.mGraphicBuffer = aBuffer;

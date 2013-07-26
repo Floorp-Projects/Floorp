@@ -19,8 +19,6 @@ const { openWebpage } = require('./private-browsing/helper');
 const { isTabPBSupported, isWindowPBSupported, isGlobalPBSupported } = require('sdk/private-browsing/utils');
 const promise = require("sdk/core/promise");
 const { pb } = require('./private-browsing/helper');
-const { URL } = require("sdk/url");
-const testPageURI = require("sdk/self").data.url("test.html");
 
 /* XXX This can be used to delay closing the test Firefox instance for interactive
  * testing or visual inspection. This test is registered first so that it runs
@@ -121,16 +119,16 @@ exports.testPageModIncludes = function(test) {
     };
   }
 
-  testPageMod(test, testPageURI, [
+  testPageMod(test, "about:buildconfig", [
       createPageModTest("*", false),
       createPageModTest("*.google.com", false),
-      createPageModTest("resource:*", true),
-      createPageModTest("resource:", false),
-      createPageModTest(testPageURI, true)
+      createPageModTest("about:*", true),
+      createPageModTest("about:", false),
+      createPageModTest("about:buildconfig", true)
     ],
     function (win, done) {
-      test.waitUntil(function () win.localStorage[testPageURI],
-                     testPageURI + " page-mod to be executed")
+      test.waitUntil(function () win.localStorage["about:buildconfig"],
+                     "about:buildconfig page-mod to be executed")
           .then(function () {
             asserts.forEach(function(fn) {
               fn(test, win);

@@ -323,11 +323,7 @@ public class TopSitesView extends GridView {
                     continue;
 
                 Bitmap thumbnail = null;
-                try {
-                    thumbnail = BitmapUtils.decodeByteArray(b);
-                } catch (IllegalArgumentException e) {
-                    Log.e(LOGTAG, "Error decoding thumbnail", e);
-                }
+                thumbnail = BitmapUtils.decodeByteArray(b);
                 if (thumbnail == null)
                     continue;
 
@@ -694,7 +690,7 @@ public class TopSitesView extends GridView {
                             if (c != null && c.moveToFirst()) {
                                 final byte[] b = c.getBlob(c.getColumnIndexOrThrow(Thumbnails.DATA));
 
-                                if (b != null && b.length > 0) {
+                                if (b != null) {
                                     bitmap = BitmapUtils.decodeByteArray(b);
                                 }
                             }

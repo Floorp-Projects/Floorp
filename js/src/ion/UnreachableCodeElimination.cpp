@@ -5,8 +5,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ion/UnreachableCodeElimination.h"
-#include "ion/IonAnalysis.h"
+
 #include "ion/AliasAnalysis.h"
+#include "ion/IonAnalysis.h"
 #include "ion/ValueNumbering.h"
 
 using namespace js;

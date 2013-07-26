@@ -7,16 +7,15 @@
 #ifndef ion_shared_CodeGenerator_shared_h
 #define ion_shared_CodeGenerator_shared_h
 
-#include "ion/MIR.h"
-#include "ion/MIRGraph.h"
-#include "ion/LIR.h"
 #include "ion/IonCaches.h"
-#include "ion/IonMacroAssembler.h"
 #include "ion/IonFrames.h"
 #include "ion/IonMacroAssembler.h"
+#include "ion/LIR.h"
+#include "ion/MIR.h"
+#include "ion/MIRGraph.h"
 #include "ion/Safepoints.h"
-#include "ion/VMFunctions.h"
 #include "ion/SnapshotWriter.h"
+#include "ion/VMFunctions.h"
 
 namespace js {
 namespace ion {

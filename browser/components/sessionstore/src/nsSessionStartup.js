@@ -39,7 +39,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/TelemetryStopwatch.jsm");
 Cu.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
-Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js");
+Cu.import("resource://gre/modules/Promise.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "_SessionFile",
   "resource:///modules/sessionstore/_SessionFile.jsm");

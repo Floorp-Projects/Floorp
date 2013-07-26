@@ -134,7 +134,6 @@ FENNEC_JAVA_FILES = \
   PrefsHelper.java \
   PrivateDataPreference.java \
   PrivateTab.java \
-  ProfileMigrator.java \
   Prompt.java \
   PromptInput.java \
   PromptService.java \

@@ -4,13 +4,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "ion/JSONSpewer.h"
+
 #include <stdarg.h>
 
-#include "ion/JSONSpewer.h"
+#include "ion/LinearScan.h"
 #include "ion/LIR.h"
 #include "ion/MIR.h"
 #include "ion/MIRGraph.h"
-#include "ion/LinearScan.h"
 #include "ion/RangeAnalysis.h"
 
 using namespace js;

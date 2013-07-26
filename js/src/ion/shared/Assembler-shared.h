@@ -7,14 +7,15 @@
 #ifndef ion_shared_Assembler_shared_h
 #define ion_shared_Assembler_shared_h
 
-#include <limits.h>
-
 #include "mozilla/DebugOnly.h"
 #include "mozilla/PodOperations.h"
+
+#include <limits.h>
 
 #include "ion/IonAllocPolicy.h"
 #include "ion/Registers.h"
 #include "ion/RegisterSets.h"
+
 #if defined(JS_CPU_X64) || defined(JS_CPU_ARM)
 // JS_SMALL_BRANCH means the range on a branch instruction
 // is smaller than the whole address space
