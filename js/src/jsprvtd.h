@@ -24,11 +24,6 @@ typedef JSPropertyOp         PropertyOp;
 typedef JSStrictPropertyOp   StrictPropertyOp;
 typedef JSPropertyDescriptor PropertyDescriptor;
 
-enum XDRMode {
-    XDR_ENCODE,
-    XDR_DECODE
-};
-
 } /* namespace js */
 
 #endif /* jsprvtd_h */
