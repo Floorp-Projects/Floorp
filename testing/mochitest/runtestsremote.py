@@ -17,8 +17,8 @@ sys.path.insert(0, os.path.abspath(os.path.realpath(os.path.dirname(sys.argv[0])
 from automation import Automation
 from remoteautomation import RemoteAutomation, fennecLogcatFilters
 from runtests import Mochitest
-from runtests import MochitestOptions
 from runtests import MochitestServer
+from mochitest_options import MochitestOptions
 
 import devicemanager
 import droid
@@ -26,9 +26,9 @@ import manifestparser
 
 class RemoteOptions(MochitestOptions):
 
-    def __init__(self, automation, scriptdir, **kwargs):
+    def __init__(self, automation, **kwargs):
         defaults = {}
-        MochitestOptions.__init__(self, automation, scriptdir)
+        MochitestOptions.__init__(self, automation)
 
         self.add_option("--remote-app-path", action="store",
                     type = "string", dest = "remoteAppPath",
@@ -519,9 +519,8 @@ class MochiRemote(Mochitest):
 
         
 def main():
-    scriptdir = os.path.abspath(os.path.realpath(os.path.dirname(__file__)))
     auto = RemoteAutomation(None, "fennec")
-    parser = RemoteOptions(auto, scriptdir)
+    parser = RemoteOptions(auto)
     options, args = parser.parse_args()
 
     if (options.dm_trans == "adb"):
