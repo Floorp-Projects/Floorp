@@ -20,3 +20,4 @@ cp $1/COPYING .
 
 # apply outstanding local patches
 patch -p1 < truncation.patch
+patch -p1 < sse-detect-runtime.patch
