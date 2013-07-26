@@ -149,7 +149,12 @@ public class HomeListView extends ListView
                 inReadingList = false;
             }
 
-            display = Combined.DISPLAY_NORMAL;
+            final int displayCol = cursor.getColumnIndex(Combined.DISPLAY);
+            if (displayCol != -1) {
+                display = cursor.getInt(displayCol);
+            } else {
+                display = Combined.DISPLAY_NORMAL;
+            }
         }
     }
 }
