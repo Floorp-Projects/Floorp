@@ -653,24 +653,19 @@ arrowbox {
   max-width: 100%;
   width: 100%;
 }
-
 .meta-section {
   margin: 0 @metro_spacing_large@;
 }
-
 .meta-section-title {
   font-size: @metro_font_large@;
   font-weight: 100;
-  visibility: collapse;
+  display: none;
 }
-
 #start-container[viewstate="snapped"] .meta-section-title.narrow-title,
 #start-container:not([viewstate="snapped"]) .meta-section-title.wide-title {
-  visibility: visible;
+  display: block;
 }
-
 /* App bars ----------------------------------------------------------------- */
-
 appbar {
   display: block;
   position: fixed;
