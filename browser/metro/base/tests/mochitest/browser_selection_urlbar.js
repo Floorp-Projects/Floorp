@@ -63,9 +63,6 @@ gTests.push({
     yield waitForMs(100);
 
     ok(SelectionHelperUI.isSelectionUIVisible, "selection ui active");
-
-    // taps on the urlbar-edit leak a ClientRect property on the window
-    delete window.r;
   },
 });
 
@@ -89,7 +86,6 @@ gTests.push({
     ok(edit.popup.popupOpen, "bug: popup should be showing");
 
     clearSelection(edit);
-    delete window.r;
   }
 });
 
@@ -119,7 +115,6 @@ gTests.push({
     ok(SelectionHelperUI.isCaretUIVisible, "caret browsing enabled");
 
     clearSelection(edit);
-    delete window.r;
   }
 });
 
@@ -136,7 +131,6 @@ gTests.push({
     edit.blur();
     ok(!SelectionHelperUI.isSelectionUIVisible, "selection no longer enabled");
     clearSelection(edit);
-    delete window.r;
   }
 });
 

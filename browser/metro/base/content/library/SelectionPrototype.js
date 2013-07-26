@@ -1,6 +1,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+"use strict";
 
 /*
  * SelectionPrototype - common base class used by both chrome and content selection logic.
@@ -776,7 +777,7 @@ SelectionPrototype.prototype = {
     }
 
     // Store the client rect of target element
-    r = this._getTargetClientRect();
+    let r = this._getTargetClientRect();
     seldata.element.left = r.left + this._contentOffset.x;
     seldata.element.top = r.top + this._contentOffset.y;
     seldata.element.right = r.right + this._contentOffset.x;
