@@ -11,12 +11,13 @@
 
 #include "mozilla/MemoryReporting.h"
 
-#include "ion/IonCode.h"
 #include "jsweakcache.h"
+
+#include "ion/CompileInfo.h"
+#include "ion/IonCode.h"
+#include "ion/IonFrames.h"
 #include "js/Value.h"
 #include "vm/Stack.h"
-#include "ion/IonFrames.h"
-#include "ion/CompileInfo.h"
 
 namespace js {
 namespace ion {
@@ -129,6 +130,9 @@ class IonRuntime
     // Shared post-exception-handler tail
     IonCode *exceptionTail_;
 
+    // Shared post-bailout-handler tail.
+    IonCode *bailoutTail_;
+
     // Trampoline for entering JIT code. Contains OSR prologue.
     IonCode *enterJIT_;
 
@@ -173,6 +177,7 @@ class IonRuntime
 
   private:
     IonCode *generateExceptionTailStub(JSContext *cx);
+    IonCode *generateBailoutTailStub(JSContext *cx);
     IonCode *generateEnterJIT(JSContext *cx, EnterJitType type);
     IonCode *generateArgumentsRectifier(JSContext *cx, ExecutionMode mode, void **returnAddrOut);
     IonCode *generateBailoutTable(JSContext *cx, uint32_t frameClass);
@@ -220,9 +225,11 @@ class IonCompartment
     typedef WeakValueCache<uint32_t, ReadBarriered<IonCode> > ICStubCodeMap;
     ICStubCodeMap *stubCodes_;
 
-    // Keep track of offset into baseline ICCall_Scripted stub's code at return
+    // Keep track of offset into various baseline stubs' code at return
     // point from called script.
     void *baselineCallReturnAddr_;
+    void *baselineGetPropReturnAddr_;
+    void *baselineSetPropReturnAddr_;
 
     // Allocated space for optimized baseline stubs.
     OptimizedICStubSpace optimizedStubSpace_;
@@ -265,6 +272,22 @@ class IonCompartment
         JS_ASSERT(baselineCallReturnAddr_ != NULL);
         return baselineCallReturnAddr_;
     }
+    void initBaselineGetPropReturnAddr(void *addr) {
+        JS_ASSERT(baselineGetPropReturnAddr_ == NULL);
+        baselineGetPropReturnAddr_ = addr;
+    }
+    void *baselineGetPropReturnAddr() {
+        JS_ASSERT(baselineGetPropReturnAddr_ != NULL);
+        return baselineGetPropReturnAddr_;
+    }
+    void initBaselineSetPropReturnAddr(void *addr) {
+        JS_ASSERT(baselineSetPropReturnAddr_ == NULL);
+        baselineSetPropReturnAddr_ = addr;
+    }
+    void *baselineSetPropReturnAddr() {
+        JS_ASSERT(baselineSetPropReturnAddr_ != NULL);
+        return baselineSetPropReturnAddr_;
+    }
 
     void toggleBaselineStubBarriers(bool enabled);
 
@@ -290,6 +313,10 @@ class IonCompartment
 
     IonCode *getExceptionTail() {
         return rt->exceptionTail_;
+    }
+
+    IonCode *getBailoutTail() {
+        return rt->bailoutTail_;
     }
 
     IonCode *getBailoutTable(const FrameSizeClass &frameClass);

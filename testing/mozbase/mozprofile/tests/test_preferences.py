@@ -261,6 +261,24 @@ user_pref("webgl.force-enabled", true);
         path = os.path.join(here, 'files', 'prefs_with_comments.js')
         self.assertEqual(dict(Preferences.read_prefs(path)), self._prefs_with_comments)
 
+    def test_read_prefs_with_interpolation(self):
+        """test reading preferences from a prefs.js file whose values
+        require interpolation"""
+
+        expected_prefs = {
+            "browser.foo": "http://server-name",
+            "zoom.minPercent": 30,
+            "webgl.verbose": "false",
+            "browser.bar": "somethingxyz"
+            }
+        values = {
+            "server": "server-name",
+            "abc": "something"
+            }
+        path = os.path.join(here, 'files', 'prefs_with_interpolation.js')
+        read_prefs = Preferences.read_prefs(path, interpolation=values)
+        self.assertEqual(dict(read_prefs), expected_prefs)
+
     def test_read_prefs_ttw(self):
         """test reading preferences through the web via mozhttpd"""
 

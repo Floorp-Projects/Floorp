@@ -79,7 +79,7 @@ Cu.import("resource://gre/modules/TelemetryTimestamps.jsm", this);
 Cu.import("resource://gre/modules/TelemetryStopwatch.jsm", this);
 Cu.import("resource://gre/modules/osfile.jsm", this);
 Cu.import("resource://gre/modules/PrivateBrowsingUtils.jsm", this);
-Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js", this);
+Cu.import("resource://gre/modules/Promise.jsm", this);
 Cu.import("resource://gre/modules/Task.jsm", this);
 
 XPCOMUtils.defineLazyServiceGetter(this, "gSessionStartup",
@@ -139,7 +139,7 @@ this.SessionStore = {
   },
 
   init: function ss_init(aWindow) {
-    SessionStoreInternal.init(aWindow);
+    return SessionStoreInternal.init(aWindow);
   },
 
   getBrowserState: function ss_getBrowserState() {
@@ -566,19 +566,6 @@ let SessionStoreInternal = {
     });
   },
 
-  _initWindow: function ssi_initWindow(aWindow) {
-    if (aWindow) {
-      this.onLoad(aWindow);
-    } else if (this._loadState == STATE_STOPPED) {
-      // If init is being called with a null window, it's possible that we
-      // just want to tell sessionstore that a session is live (as is the case
-      // with starting Firefox with -private, for example; see bug 568816),
-      // so we should mark the load state as running to make sure that
-      // things like setBrowserState calls will succeed in restoring the session.
-      this._loadState = STATE_RUNNING;
-    }
-  },
-
   /**
    * Start tracking a window.
    *
@@ -586,11 +573,17 @@ let SessionStoreInternal = {
    * initialized yet.
    */
   init: function ssi_init(aWindow) {
+    if (!aWindow) {
+      throw new Error("init() must be called with a valid window.");
+    }
+
     let self = this;
     this.initService();
-    this._promiseInitialization.promise.then(
+    return this._promiseInitialization.promise.then(
       function onSuccess() {
-        self._initWindow(aWindow);
+        if (!aWindow.closed) {
+          self.onLoad(aWindow);
+        }
       }
     );
   },

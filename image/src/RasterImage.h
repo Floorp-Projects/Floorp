@@ -143,7 +143,7 @@ class RasterImage : public ImageResource
 #endif
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIPROPERTIES
   NS_DECL_IMGICONTAINER
 #ifdef DEBUG
@@ -384,7 +384,7 @@ private:
   class DecodePool : public nsIObserver
   {
   public:
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSIOBSERVER
 
     static DecodePool* Singleton();

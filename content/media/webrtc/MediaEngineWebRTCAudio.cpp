@@ -24,7 +24,7 @@ extern PRLogModuleInfo* GetMediaManagerLog();
 /**
  * Webrtc audio source.
  */
-NS_IMPL_THREADSAFE_ISUPPORTS0(MediaEngineWebRTCAudioSource)
+NS_IMPL_ISUPPORTS0(MediaEngineWebRTCAudioSource)
 
 void
 MediaEngineWebRTCAudioSource::GetName(nsAString& aName)

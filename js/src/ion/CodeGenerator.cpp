@@ -4,27 +4,29 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "ion/CodeGenerator.h"
+
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Util.h"
 
-#include "ion/PerfSpewer.h"
-#include "ion/CodeGenerator.h"
+#include "jsmath.h"
+#include "jsnum.h"
+
+#include "builtin/Eval.h"
+#include "gc/Nursery.h"
+#include "ion/ExecutionModeInlines.h"
 #include "ion/IonLinker.h"
 #include "ion/IonSpewer.h"
 #include "ion/MIRGenerator.h"
-#include "ion/shared/CodeGenerator-shared-inl.h"
 #include "ion/MoveEmitter.h"
-#include "jsnum.h"
-#include "jsmath.h"
 #include "ion/ParallelFunctions.h"
-#include "ion/ExecutionModeInlines.h"
-#include "builtin/Eval.h"
-#include "gc/Nursery.h"
-#include "vm/ForkJoin.h"
 #include "ion/ParallelSafetyAnalysis.h"
+#include "ion/PerfSpewer.h"
+#include "vm/ForkJoin.h"
 
+#include "ion/shared/CodeGenerator-shared-inl.h"
 #include "vm/Interpreter-inl.h"
 
 using namespace js;
@@ -571,12 +573,10 @@ CodeGenerator::visitPolyInlineDispatch(LPolyInlineDispatch *lir)
 }
 
 typedef JSFlatString *(*IntToStringFn)(ThreadSafeContext *, int);
-static const VMFunction IntToStringInfo =
-    FunctionInfo<IntToStringFn>(Int32ToString<CanGC>);
-
-typedef ParallelResult (*ParallelIntToStringFn)(ForkJoinSlice *, int, MutableHandleString);
-static const VMFunction ParallelIntToStringInfo =
-    FunctionInfo<ParallelIntToStringFn>(ParIntToString);
+typedef ParallelResult (*IntToStringParFn)(ForkJoinSlice *, int, MutableHandleString);
+static const VMFunctionsModal IntToStringInfo = VMFunctionsModal(
+    FunctionInfo<IntToStringFn>(Int32ToString<CanGC>),
+    FunctionInfo<IntToStringParFn>(IntToStringPar));
 
 bool
 CodeGenerator::visitIntToString(LIntToString *lir)
@@ -584,19 +584,8 @@ CodeGenerator::visitIntToString(LIntToString *lir)
     Register input = ToRegister(lir->input());
     Register output = ToRegister(lir->output());
 
-    OutOfLineCode *ool;
-    switch (gen->info().executionMode()) {
-      case SequentialExecution:
-        ool = oolCallVM(IntToStringInfo, lir, (ArgList(), input),
-                        StoreRegisterTo(output));
-        break;
-      case ParallelExecution:
-        ool = oolCallVM(ParallelIntToStringInfo, lir, (ArgList(), input),
-                        StoreRegisterTo(output));
-        break;
-      default:
-        MOZ_ASSUME_UNREACHABLE("No such execution mode");
-    }
+    OutOfLineCode *ool = oolCallVM(IntToStringInfo, lir, (ArgList(), input),
+                                   StoreRegisterTo(output));
     if (!ool)
         return false;
 
@@ -611,12 +600,10 @@ CodeGenerator::visitIntToString(LIntToString *lir)
 }
 
 typedef JSString *(*DoubleToStringFn)(ThreadSafeContext *, double);
-static const VMFunction DoubleToStringInfo =
-    FunctionInfo<DoubleToStringFn>(js_NumberToString<CanGC>);
-
-typedef ParallelResult (*ParallelDoubleToStringFn)(ForkJoinSlice *, double, MutableHandleString);
-static const VMFunction ParallelDoubleToStringInfo =
-    FunctionInfo<ParallelDoubleToStringFn>(ParDoubleToString);
+typedef ParallelResult (*DoubleToStringParFn)(ForkJoinSlice *, double, MutableHandleString);
+static const VMFunctionsModal DoubleToStringInfo = VMFunctionsModal(
+    FunctionInfo<DoubleToStringFn>(js_NumberToString<CanGC>),
+    FunctionInfo<DoubleToStringParFn>(DoubleToStringPar));
 
 bool
 CodeGenerator::visitDoubleToString(LDoubleToString *lir)
@@ -625,19 +612,8 @@ CodeGenerator::visitDoubleToString(LDoubleToString *lir)
     Register temp = ToRegister(lir->tempInt());
     Register output = ToRegister(lir->output());
 
-    OutOfLineCode *ool;
-    switch (gen->info().executionMode()) {
-      case SequentialExecution:
-        ool = oolCallVM(DoubleToStringInfo, lir, (ArgList(), input),
-                        StoreRegisterTo(output));
-        break;
-      case ParallelExecution:
-        ool = oolCallVM(ParallelDoubleToStringInfo, lir, (ArgList(), input),
-                        StoreRegisterTo(output));
-        break;
-      default:
-        MOZ_ASSUME_UNREACHABLE("No such execution mode");
-    }
+    OutOfLineCode *ool = oolCallVM(DoubleToStringInfo, lir, (ArgList(), input),
+                                   StoreRegisterTo(output));
     if (!ool)
         return false;
 
@@ -715,9 +691,7 @@ CodeGenerator::visitLambda(LLambda *lir)
 }
 
 void
-CodeGenerator::emitLambdaInit(const Register &output,
-                              const Register &scopeChain,
-                              JSFunction *fun)
+CodeGenerator::emitLambdaInit(const Register &output, const Register &scopeChain, JSFunction *fun)
 {
     // Initialize nargs and flags. We do this with a single uint32 to avoid
     // 16-bit writes.
@@ -740,18 +714,18 @@ CodeGenerator::emitLambdaInit(const Register &output,
 }
 
 bool
-CodeGenerator::visitParLambda(LParLambda *lir)
+CodeGenerator::visitLambdaPar(LLambdaPar *lir)
 {
     Register resultReg = ToRegister(lir->output());
-    Register parSliceReg = ToRegister(lir->parSlice());
-    Register scopeChainReg    = ToRegister(lir->scopeChain());
+    Register sliceReg = ToRegister(lir->forkJoinSlice());
+    Register scopeChainReg = ToRegister(lir->scopeChain());
     Register tempReg1 = ToRegister(lir->getTemp0());
     Register tempReg2 = ToRegister(lir->getTemp1());
     JSFunction *fun = lir->mir()->fun();
 
     JS_ASSERT(scopeChainReg != resultReg);
 
-    emitParAllocateGCThing(lir, resultReg, parSliceReg, tempReg1, tempReg2, fun);
+    emitAllocateGCThingPar(lir, resultReg, sliceReg, tempReg1, tempReg2, fun);
     emitLambdaInit(resultReg, scopeChainReg, fun);
     return true;
 }
@@ -896,6 +870,10 @@ CodeGenerator::visitOsrEntry(LOsrEntry *lir)
     // Remember the OSR entry offset into the code buffer.
     masm.flushBuffer();
     setOsrEntryOffset(masm.size());
+
+#if JS_TRACE_LOGGING
+    masm.tracelogLog(TraceLogging::INFO_ENGINE_IONMONKEY);
+#endif
 
     // Allocate the full frame for this function.
     uint32_t size = frameSize();
@@ -1213,46 +1191,33 @@ CodeGenerator::visitFunctionEnvironment(LFunctionEnvironment *lir)
 }
 
 bool
-CodeGenerator::visitParSlice(LParSlice *lir)
+CodeGenerator::visitForkJoinSlice(LForkJoinSlice *lir)
 {
     const Register tempReg = ToRegister(lir->getTempReg());
 
     masm.setupUnalignedABICall(0, tempReg);
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, ParForkJoinSlice));
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, ForkJoinSlicePar));
     JS_ASSERT(ToRegister(lir->output()) == ReturnReg);
     return true;
 }
 
 bool
-CodeGenerator::visitParWriteGuard(LParWriteGuard *lir)
+CodeGenerator::visitGuardThreadLocalObject(LGuardThreadLocalObject *lir)
 {
     JS_ASSERT(gen->info().executionMode() == ParallelExecution);
 
     const Register tempReg = ToRegister(lir->getTempReg());
     masm.setupUnalignedABICall(2, tempReg);
-    masm.passABIArg(ToRegister(lir->parSlice()));
+    masm.passABIArg(ToRegister(lir->forkJoinSlice()));
     masm.passABIArg(ToRegister(lir->object()));
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, ParWriteGuard));
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, IsThreadLocalObject));
 
-    OutOfLineParallelAbort *bail = oolParallelAbort(ParallelBailoutIllegalWrite, lir);
+    OutOfLineAbortPar *bail = oolAbortPar(ParallelBailoutIllegalWrite, lir);
     if (!bail)
         return false;
 
     // branch to the OOL failure code if false is returned
     masm.branchIfFalseBool(ReturnReg, bail->entry());
-    return true;
-}
-
-bool
-CodeGenerator::visitParDump(LParDump *lir)
-{
-    ValueOperand value = ToValue(lir, 0);
-    masm.Push(value);
-    masm.movePtr(StackPointer, CallTempReg0);
-    masm.setupUnalignedABICall(1, CallTempReg1);
-    masm.passABIArg(CallTempReg0);
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, ParDumpValue));
-    masm.freeStack(sizeof(Value));
     return true;
 }
 
@@ -1357,12 +1322,7 @@ CodeGenerator::visitPostWriteBarrierO(LPostWriteBarrierO *lir)
     Nursery &nursery = GetIonContext()->compartment->rt->gcNursery;
 
     if (lir->object()->isConstant()) {
-        JSObject *obj = &lir->object()->toConstant()->toObject();
-        JS_ASSERT(!nursery.isInside(obj));
-        /*
-        if (nursery.isInside(obj))
-            return true;
-        */
+        JS_ASSERT(!nursery.isInside(&lir->object()->toConstant()->toObject()));
     } else {
         Label tenured;
         Register objreg = ToRegister(lir->object());
@@ -1394,12 +1354,7 @@ CodeGenerator::visitPostWriteBarrierV(LPostWriteBarrierV *lir)
     Nursery &nursery = GetIonContext()->compartment->rt->gcNursery;
 
     if (lir->object()->isConstant()) {
-        JSObject *obj = &lir->object()->toConstant()->toObject();
-        JS_ASSERT(!nursery.isInside(obj));
-        /*
-        if (nursery.isInside(obj))
-            return true;
-        */
+        JS_ASSERT(!nursery.isInside(&lir->object()->toConstant()->toObject()));
     } else {
         Label tenured;
         Register objreg = ToRegister(lir->object());
@@ -1754,7 +1709,7 @@ CodeGenerator::visitCallGeneric(LCallGeneric *call)
         break;
 
       case ParallelExecution:
-        if (!emitParCallToUncompiledScript(call, calleereg))
+        if (!emitCallToUncompiledScriptPar(call, calleereg))
             return false;
         break;
     }
@@ -1770,27 +1725,26 @@ CodeGenerator::visitCallGeneric(LCallGeneric *call)
         masm.bind(&notPrimitive);
     }
 
-    if (!checkForParallelBailout(call))
+    if (!checkForAbortPar(call))
         return false;
 
     dropArguments(call->numStackArgs() + 1);
     return true;
 }
 
-// Generates a call to ParCallToUncompiledScript() and then bails out.
+// Generates a call to CallToUncompiledScriptPar() and then bails out.
 // |calleeReg| should contain the JSFunction*.
 bool
-CodeGenerator::emitParCallToUncompiledScript(LInstruction *lir,
-                                             Register calleeReg)
+CodeGenerator::emitCallToUncompiledScriptPar(LInstruction *lir, Register calleeReg)
 {
-    OutOfLineCode *bail = oolParallelAbort(ParallelBailoutCalledToUncompiledScript, lir);
+    OutOfLineCode *bail = oolAbortPar(ParallelBailoutCalledToUncompiledScript, lir);
     if (!bail)
         return false;
 
     masm.movePtr(calleeReg, CallTempReg0);
     masm.setupUnalignedABICall(1, CallTempReg1);
     masm.passABIArg(CallTempReg0);
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, ParCallToUncompiledScript));
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, CallToUncompiledScriptPar));
     masm.jump(bail->entry());
     return true;
 }
@@ -1878,14 +1832,14 @@ CodeGenerator::visitCallKnown(LCallKnown *call)
         break;
 
       case ParallelExecution:
-        if (!emitParCallToUncompiledScript(call, calleereg))
+        if (!emitCallToUncompiledScriptPar(call, calleereg))
             return false;
         break;
     }
 
     masm.bind(&end);
 
-    if (!checkForParallelBailout(call))
+    if (!checkForAbortPar(call))
         return false;
 
     // If the return value of the constructing function is Primitive,
@@ -1902,14 +1856,14 @@ CodeGenerator::visitCallKnown(LCallKnown *call)
 }
 
 bool
-CodeGenerator::checkForParallelBailout(LInstruction *lir)
+CodeGenerator::checkForAbortPar(LInstruction *lir)
 {
     // In parallel mode, if we call another ion-compiled function and
     // it returns JS_ION_ERROR, that indicates a bailout that we have
     // to propagate up the stack.
     ExecutionMode executionMode = gen->info().executionMode();
     if (executionMode == ParallelExecution) {
-        OutOfLinePropagateParallelAbort *bail = oolPropagateParallelAbort(lir);
+        OutOfLinePropagateAbortPar *bail = oolPropagateAbortPar(lir);
         if (!bail)
             return false;
         masm.branchTestMagic(Assembler::Equal, JSReturnOperand, bail->entry());
@@ -2347,26 +2301,26 @@ CodeGenerator::visitCheckOverRecursedFailure(CheckOverRecursedFailure *ool)
 }
 
 // Out-of-line path to report over-recursed error and fail.
-class ParCheckOverRecursedFailure : public OutOfLineCodeBase<CodeGenerator>
+class CheckOverRecursedFailurePar : public OutOfLineCodeBase<CodeGenerator>
 {
-    LParCheckOverRecursed *lir_;
+    LCheckOverRecursedPar *lir_;
 
   public:
-    ParCheckOverRecursedFailure(LParCheckOverRecursed *lir)
+    CheckOverRecursedFailurePar(LCheckOverRecursedPar *lir)
       : lir_(lir)
     { }
 
     bool accept(CodeGenerator *codegen) {
-        return codegen->visitParCheckOverRecursedFailure(this);
+        return codegen->visitCheckOverRecursedFailurePar(this);
     }
 
-    LParCheckOverRecursed *lir() const {
+    LCheckOverRecursedPar *lir() const {
         return lir_;
     }
 };
 
 bool
-CodeGenerator::visitParCheckOverRecursed(LParCheckOverRecursed *lir)
+CodeGenerator::visitCheckOverRecursedPar(LCheckOverRecursedPar *lir)
 {
     // See above: unlike visitCheckOverRecursed(), this code runs in
     // parallel mode and hence uses the ionStackLimit from the current
@@ -2375,43 +2329,43 @@ CodeGenerator::visitParCheckOverRecursed(LParCheckOverRecursed *lir)
     // is reset, not the worker threads.  See comment in vm/ForkJoin.h
     // for more details.
 
-    Register parSliceReg = ToRegister(lir->parSlice());
+    Register sliceReg = ToRegister(lir->forkJoinSlice());
     Register tempReg = ToRegister(lir->getTempReg());
 
-    masm.loadPtr(Address(parSliceReg, offsetof(ForkJoinSlice, perThreadData)), tempReg);
+    masm.loadPtr(Address(sliceReg, offsetof(ForkJoinSlice, perThreadData)), tempReg);
     masm.loadPtr(Address(tempReg, offsetof(PerThreadData, ionStackLimit)), tempReg);
 
     // Conditional forward (unlikely) branch to failure.
-    ParCheckOverRecursedFailure *ool = new ParCheckOverRecursedFailure(lir);
+    CheckOverRecursedFailurePar *ool = new CheckOverRecursedFailurePar(lir);
     if (!addOutOfLineCode(ool))
         return false;
     masm.branchPtr(Assembler::BelowOrEqual, StackPointer, tempReg, ool->entry());
-    masm.parCheckInterruptFlags(tempReg, ool->entry());
+    masm.checkInterruptFlagsPar(tempReg, ool->entry());
     masm.bind(ool->rejoin());
 
     return true;
 }
 
 bool
-CodeGenerator::visitParCheckOverRecursedFailure(ParCheckOverRecursedFailure *ool)
+CodeGenerator::visitCheckOverRecursedFailurePar(CheckOverRecursedFailurePar *ool)
 {
-    OutOfLinePropagateParallelAbort *bail = oolPropagateParallelAbort(ool->lir());
+    OutOfLinePropagateAbortPar *bail = oolPropagateAbortPar(ool->lir());
     if (!bail)
         return false;
 
     // Avoid saving/restoring the temp register since we will put the
     // ReturnReg into it below and we don't want to clobber that
     // during PopRegsInMask():
-    LParCheckOverRecursed *lir = ool->lir();
+    LCheckOverRecursedPar *lir = ool->lir();
     Register tempReg = ToRegister(lir->getTempReg());
     RegisterSet saveSet(lir->safepoint()->liveRegs());
     saveSet.maybeTake(tempReg);
 
     masm.PushRegsInMask(saveSet);
-    masm.movePtr(ToRegister(lir->parSlice()), CallTempReg0);
+    masm.movePtr(ToRegister(lir->forkJoinSlice()), CallTempReg0);
     masm.setupUnalignedABICall(1, CallTempReg1);
     masm.passABIArg(CallTempReg0);
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, ParCheckOverRecursed));
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, CheckOverRecursedPar));
     masm.movePtr(ReturnReg, tempReg);
     masm.PopRegsInMask(saveSet);
     masm.branchIfFalseBool(tempReg, bail->entry());
@@ -2421,25 +2375,25 @@ CodeGenerator::visitParCheckOverRecursedFailure(ParCheckOverRecursedFailure *ool
 }
 
 // Out-of-line path to report over-recursed error and fail.
-class OutOfLineParCheckInterrupt : public OutOfLineCodeBase<CodeGenerator>
+class OutOfLineCheckInterruptPar : public OutOfLineCodeBase<CodeGenerator>
 {
   public:
-    LParCheckInterrupt *const lir;
+    LCheckInterruptPar *const lir;
 
-    OutOfLineParCheckInterrupt(LParCheckInterrupt *lir)
+    OutOfLineCheckInterruptPar(LCheckInterruptPar *lir)
       : lir(lir)
     { }
 
     bool accept(CodeGenerator *codegen) {
-        return codegen->visitOutOfLineParCheckInterrupt(this);
+        return codegen->visitOutOfLineCheckInterruptPar(this);
     }
 };
 
 bool
-CodeGenerator::visitParCheckInterrupt(LParCheckInterrupt *lir)
+CodeGenerator::visitCheckInterruptPar(LCheckInterruptPar *lir)
 {
     // First check for slice->shared->interrupt_.
-    OutOfLineParCheckInterrupt *ool = new OutOfLineParCheckInterrupt(lir);
+    OutOfLineCheckInterruptPar *ool = new OutOfLineCheckInterruptPar(lir);
     if (!addOutOfLineCode(ool))
         return false;
 
@@ -2449,31 +2403,31 @@ CodeGenerator::visitParCheckInterrupt(LParCheckInterrupt *lir)
     // See vm/ForkJoin.h for discussion on why we use this design.
 
     Register tempReg = ToRegister(lir->getTempReg());
-    masm.parCheckInterruptFlags(tempReg, ool->entry());
+    masm.checkInterruptFlagsPar(tempReg, ool->entry());
     masm.bind(ool->rejoin());
     return true;
 }
 
 bool
-CodeGenerator::visitOutOfLineParCheckInterrupt(OutOfLineParCheckInterrupt *ool)
+CodeGenerator::visitOutOfLineCheckInterruptPar(OutOfLineCheckInterruptPar *ool)
 {
-    OutOfLinePropagateParallelAbort *bail = oolPropagateParallelAbort(ool->lir);
+    OutOfLinePropagateAbortPar *bail = oolPropagateAbortPar(ool->lir);
     if (!bail)
         return false;
 
     // Avoid saving/restoring the temp register since we will put the
     // ReturnReg into it below and we don't want to clobber that
     // during PopRegsInMask():
-    LParCheckInterrupt *lir = ool->lir;
+    LCheckInterruptPar *lir = ool->lir;
     Register tempReg = ToRegister(lir->getTempReg());
     RegisterSet saveSet(lir->safepoint()->liveRegs());
     saveSet.maybeTake(tempReg);
 
     masm.PushRegsInMask(saveSet);
-    masm.movePtr(ToRegister(ool->lir->parSlice()), CallTempReg0);
+    masm.movePtr(ToRegister(ool->lir->forkJoinSlice()), CallTempReg0);
     masm.setupUnalignedABICall(1, CallTempReg1);
     masm.passABIArg(CallTempReg0);
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, ParCheckInterrupt));
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, CheckInterruptPar));
     masm.movePtr(ReturnReg, tempReg);
     masm.PopRegsInMask(saveSet);
     masm.branchIfFalseBool(tempReg, bail->entry());
@@ -3017,15 +2971,15 @@ CodeGenerator::visitNewCallObject(LNewCallObject *lir)
 }
 
 bool
-CodeGenerator::visitParNewCallObject(LParNewCallObject *lir)
+CodeGenerator::visitNewCallObjectPar(LNewCallObjectPar *lir)
 {
     Register resultReg = ToRegister(lir->output());
-    Register parSliceReg = ToRegister(lir->parSlice());
+    Register sliceReg = ToRegister(lir->forkJoinSlice());
     Register tempReg1 = ToRegister(lir->getTemp0());
     Register tempReg2 = ToRegister(lir->getTemp1());
     JSObject *templateObj = lir->mir()->templateObj();
 
-    emitParAllocateGCThing(lir, resultReg, parSliceReg, tempReg1, tempReg2, templateObj);
+    emitAllocateGCThingPar(lir, resultReg, sliceReg, tempReg1, tempReg2, templateObj);
 
     // NB: !lir->slots()->isRegister() implies that there is no slots
     // array at all, and the memory is already zeroed when copying
@@ -3041,9 +2995,9 @@ CodeGenerator::visitParNewCallObject(LParNewCallObject *lir)
 }
 
 bool
-CodeGenerator::visitParNewDenseArray(LParNewDenseArray *lir)
+CodeGenerator::visitNewDenseArrayPar(LNewDenseArrayPar *lir)
 {
-    Register parSliceReg = ToRegister(lir->parSlice());
+    Register sliceReg = ToRegister(lir->forkJoinSlice());
     Register lengthReg = ToRegister(lir->length());
     Register tempReg0 = ToRegister(lir->getTemp0());
     Register tempReg1 = ToRegister(lir->getTemp1());
@@ -3051,8 +3005,8 @@ CodeGenerator::visitParNewDenseArray(LParNewDenseArray *lir)
     JSObject *templateObj = lir->mir()->templateObject();
 
     // Allocate the array into tempReg2.  Don't use resultReg because it
-    // may alias parSliceReg etc.
-    emitParAllocateGCThing(lir, tempReg2, parSliceReg, tempReg0, tempReg1, templateObj);
+    // may alias sliceReg etc.
+    emitAllocateGCThingPar(lir, tempReg2, sliceReg, tempReg0, tempReg1, templateObj);
 
     // Invoke a C helper to allocate the elements.  For convenience,
     // this helper also returns the array back to us, or NULL, which
@@ -3063,14 +3017,14 @@ CodeGenerator::visitParNewDenseArray(LParNewDenseArray *lir)
     // duplicate the code in initGCThing() that already does such an
     // admirable job.
     masm.setupUnalignedABICall(3, CallTempReg3);
-    masm.passABIArg(parSliceReg);
+    masm.passABIArg(sliceReg);
     masm.passABIArg(tempReg2);
     masm.passABIArg(lengthReg);
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, ParExtendArray));
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, ExtendArrayPar));
 
     Register resultReg = ToRegister(lir->output());
     JS_ASSERT(resultReg == ReturnReg);
-    OutOfLineParallelAbort *bail = oolParallelAbort(ParallelBailoutOutOfMemory, lir);
+    OutOfLineAbortPar *bail = oolAbortPar(ParallelBailoutOutOfMemory, lir);
     if (!bail)
         return false;
     masm.branchTestPtr(Assembler::Zero, resultReg, resultReg, bail->entry());
@@ -3108,65 +3062,62 @@ CodeGenerator::visitNewStringObject(LNewStringObject *lir)
 }
 
 bool
-CodeGenerator::visitParNew(LParNew *lir)
+CodeGenerator::visitNewPar(LNewPar *lir)
 {
     Register objReg = ToRegister(lir->output());
-    Register parSliceReg = ToRegister(lir->parSlice());
+    Register sliceReg = ToRegister(lir->forkJoinSlice());
     Register tempReg1 = ToRegister(lir->getTemp0());
     Register tempReg2 = ToRegister(lir->getTemp1());
     JSObject *templateObject = lir->mir()->templateObject();
-    emitParAllocateGCThing(lir, objReg, parSliceReg, tempReg1, tempReg2, templateObject);
+    emitAllocateGCThingPar(lir, objReg, sliceReg, tempReg1, tempReg2, templateObject);
     return true;
 }
 
-class OutOfLineParNewGCThing : public OutOfLineCodeBase<CodeGenerator>
+class OutOfLineNewGCThingPar : public OutOfLineCodeBase<CodeGenerator>
 {
 public:
     LInstruction *lir;
     gc::AllocKind allocKind;
     Register objReg;
 
-    OutOfLineParNewGCThing(LInstruction *lir, gc::AllocKind allocKind, Register objReg)
+    OutOfLineNewGCThingPar(LInstruction *lir, gc::AllocKind allocKind, Register objReg)
       : lir(lir), allocKind(allocKind), objReg(objReg)
     {}
 
     bool accept(CodeGenerator *codegen) {
-        return codegen->visitOutOfLineParNewGCThing(this);
+        return codegen->visitOutOfLineNewGCThingPar(this);
     }
 };
 
 bool
-CodeGenerator::emitParAllocateGCThing(LInstruction *lir,
-                                      const Register &objReg,
-                                      const Register &parSliceReg,
-                                      const Register &tempReg1,
-                                      const Register &tempReg2,
-                                      JSObject *templateObj)
+CodeGenerator::emitAllocateGCThingPar(LInstruction *lir, const Register &objReg,
+                                      const Register &sliceReg, const Register &tempReg1,
+                                      const Register &tempReg2, JSObject *templateObj)
 {
     gc::AllocKind allocKind = templateObj->tenuredGetAllocKind();
-    OutOfLineParNewGCThing *ool = new OutOfLineParNewGCThing(lir, allocKind, objReg);
+    OutOfLineNewGCThingPar *ool = new OutOfLineNewGCThingPar(lir, allocKind, objReg);
     if (!ool || !addOutOfLineCode(ool))
         return false;
 
-    masm.parNewGCThing(objReg, parSliceReg, tempReg1, tempReg2,
-                       templateObj, ool->entry());
+    masm.newGCThingPar(objReg, sliceReg, tempReg1, tempReg2,
+                            templateObj, ool->entry());
     masm.bind(ool->rejoin());
     masm.initGCThing(objReg, templateObj);
     return true;
 }
 
 bool
-CodeGenerator::visitOutOfLineParNewGCThing(OutOfLineParNewGCThing *ool)
+CodeGenerator::visitOutOfLineNewGCThingPar(OutOfLineNewGCThingPar *ool)
 {
     // As a fallback for allocation in par. exec. mode, we invoke the
-    // C helper ParNewGCThing(), which calls into the GC code.  If it
+    // C helper NewGCThingPar(), which calls into the GC code.  If it
     // returns NULL, we bail.  If returns non-NULL, we rejoin the
     // original instruction.
 
     // This saves all caller-save registers, regardless of whether
     // they are live.  This is wasteful but a simplification, given
     // that for some of the LIR that this is used with
-    // (e.g., LParLambda) there are values in those registers
+    // (e.g., LLambdaPar) there are values in those registers
     // that must not be clobbered but which are not technically
     // considered live.
     RegisterSet saveSet(RegisterSet::Volatile());
@@ -3181,10 +3132,10 @@ CodeGenerator::visitOutOfLineParNewGCThing(OutOfLineParNewGCThing *ool)
     masm.move32(Imm32(ool->allocKind), CallTempReg0);
     masm.setupUnalignedABICall(1, CallTempReg1);
     masm.passABIArg(CallTempReg0);
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, ParNewGCThing));
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, NewGCThingPar));
     masm.movePtr(ReturnReg, ool->objReg);
     masm.PopRegsInMask(saveSet);
-    OutOfLineParallelAbort *bail = oolParallelAbort(ParallelBailoutOutOfMemory, ool->lir);
+    OutOfLineAbortPar *bail = oolAbortPar(ParallelBailoutOutOfMemory, ool->lir);
     if (!bail)
         return false;
     masm.branchTestPtr(Assembler::Zero, ool->objReg, ool->objReg, bail->entry());
@@ -3193,9 +3144,9 @@ CodeGenerator::visitOutOfLineParNewGCThing(OutOfLineParNewGCThing *ool)
 }
 
 bool
-CodeGenerator::visitParBailout(LParBailout *lir)
+CodeGenerator::visitAbortPar(LAbortPar *lir)
 {
-    OutOfLineParallelAbort *bail = oolParallelAbort(ParallelBailoutUnsupported, lir);
+    OutOfLineAbortPar *bail = oolAbortPar(ParallelBailoutUnsupported, lir);
     if (!bail)
         return false;
     masm.jump(bail->entry());
@@ -3237,8 +3188,7 @@ CodeGenerator::visitInitProp(LInitProp *lir)
 }
 
 typedef bool (*CreateThisFn)(JSContext *cx, HandleObject callee, MutableHandleValue rval);
-static const VMFunction CreateThisInfo =
-FunctionInfo<CreateThisFn>(CreateThis);
+static const VMFunction CreateThisInfo = FunctionInfo<CreateThisFn>(CreateThis);
 
 bool
 CodeGenerator::visitCreateThis(LCreateThis *lir)
@@ -3678,16 +3628,14 @@ CodeGenerator::visitBinaryV(LBinaryV *lir)
 }
 
 typedef bool (*StringCompareFn)(JSContext *, HandleString, HandleString, JSBool *);
-static const VMFunction stringsEqualInfo =
-    FunctionInfo<StringCompareFn>(ion::StringsEqual<true>);
-static const VMFunction stringsNotEqualInfo =
-    FunctionInfo<StringCompareFn>(ion::StringsEqual<false>);
-
-typedef ParallelResult (*ParStringCompareFn)(ForkJoinSlice *, HandleString, HandleString, JSBool *);
-static const VMFunction parStringsEqualInfo =
-    FunctionInfo<ParStringCompareFn>(ion::ParStringsEqual);
-static const VMFunction parStringsNotEqualInfo =
-    FunctionInfo<ParStringCompareFn>(ion::ParStringsUnequal);
+typedef ParallelResult (*StringCompareParFn)(ForkJoinSlice *, HandleString, HandleString,
+                                             JSBool *);
+static const VMFunctionsModal StringsEqualInfo = VMFunctionsModal(
+    FunctionInfo<StringCompareFn>(ion::StringsEqual<true>),
+    FunctionInfo<StringCompareParFn>(ion::StringsEqualPar));
+static const VMFunctionsModal StringsNotEqualInfo = VMFunctionsModal(
+    FunctionInfo<StringCompareFn>(ion::StringsEqual<false>),
+    FunctionInfo<StringCompareParFn>(ion::StringsUnequalPar));
 
 bool
 CodeGenerator::emitCompareS(LInstruction *lir, JSOp op, Register left, Register right,
@@ -3697,26 +3645,12 @@ CodeGenerator::emitCompareS(LInstruction *lir, JSOp op, Register left, Register 
 
     OutOfLineCode *ool = NULL;
 
-    switch (gen->info().executionMode()) {
-      case SequentialExecution:
-        if (op == JSOP_EQ || op == JSOP_STRICTEQ) {
-            ool = oolCallVM(stringsEqualInfo, lir, (ArgList(), left, right),  StoreRegisterTo(output));
-        } else {
-            JS_ASSERT(op == JSOP_NE || op == JSOP_STRICTNE);
-            ool = oolCallVM(stringsNotEqualInfo, lir, (ArgList(), left, right), StoreRegisterTo(output));
-        }
-        break;
-
-      case ParallelExecution:
-        if (op == JSOP_EQ || op == JSOP_STRICTEQ) {
-            ool = oolCallVM(parStringsEqualInfo, lir, (ArgList(), left, right),  StoreRegisterTo(output));
-        } else {
-            JS_ASSERT(op == JSOP_NE || op == JSOP_STRICTNE);
-            ool = oolCallVM(parStringsNotEqualInfo, lir, (ArgList(), left, right), StoreRegisterTo(output));
-        }
-        break;
+    if (op == JSOP_EQ || op == JSOP_STRICTEQ) {
+        ool = oolCallVM(StringsEqualInfo, lir, (ArgList(), left, right),  StoreRegisterTo(output));
+    } else {
+        JS_ASSERT(op == JSOP_NE || op == JSOP_STRICTNE);
+        ool = oolCallVM(StringsNotEqualInfo, lir, (ArgList(), left, right), StoreRegisterTo(output));
     }
-
     if (!ool)
         return false;
 
@@ -3767,24 +3701,32 @@ CodeGenerator::visitCompareS(LCompareS *lir)
 }
 
 typedef bool (*CompareFn)(JSContext *, MutableHandleValue, MutableHandleValue, JSBool *);
-static const VMFunction EqInfo = FunctionInfo<CompareFn>(ion::LooselyEqual<true>);
-static const VMFunction NeInfo = FunctionInfo<CompareFn>(ion::LooselyEqual<false>);
-static const VMFunction StrictEqInfo = FunctionInfo<CompareFn>(ion::StrictlyEqual<true>);
-static const VMFunction StrictNeInfo = FunctionInfo<CompareFn>(ion::StrictlyEqual<false>);
-static const VMFunction LtInfo = FunctionInfo<CompareFn>(ion::LessThan);
-static const VMFunction LeInfo = FunctionInfo<CompareFn>(ion::LessThanOrEqual);
-static const VMFunction GtInfo = FunctionInfo<CompareFn>(ion::GreaterThan);
-static const VMFunction GeInfo = FunctionInfo<CompareFn>(ion::GreaterThanOrEqual);
-
-typedef ParallelResult (*ParCompareFn)(ForkJoinSlice *, MutableHandleValue, MutableHandleValue, JSBool *);
-static const VMFunction ParLooselyEqInfo = FunctionInfo<ParCompareFn>(ion::ParLooselyEqual);
-static const VMFunction ParStrictlyEqInfo = FunctionInfo<ParCompareFn>(ion::ParStrictlyEqual);
-static const VMFunction ParLooselyNeInfo = FunctionInfo<ParCompareFn>(ion::ParLooselyUnequal);
-static const VMFunction ParStrictlyNeInfo = FunctionInfo<ParCompareFn>(ion::ParStrictlyUnequal);
-static const VMFunction ParLtInfo = FunctionInfo<ParCompareFn>(ion::ParLessThan);
-static const VMFunction ParLeInfo = FunctionInfo<ParCompareFn>(ion::ParLessThanOrEqual);
-static const VMFunction ParGtInfo = FunctionInfo<ParCompareFn>(ion::ParGreaterThan);
-static const VMFunction ParGeInfo = FunctionInfo<ParCompareFn>(ion::ParGreaterThanOrEqual);
+typedef ParallelResult (*CompareParFn)(ForkJoinSlice *, MutableHandleValue, MutableHandleValue,
+                                       JSBool *);
+static const VMFunctionsModal EqInfo = VMFunctionsModal(
+    FunctionInfo<CompareFn>(ion::LooselyEqual<true>),
+    FunctionInfo<CompareParFn>(ion::LooselyEqualPar));
+static const VMFunctionsModal NeInfo = VMFunctionsModal(
+    FunctionInfo<CompareFn>(ion::LooselyEqual<false>),
+    FunctionInfo<CompareParFn>(ion::LooselyUnequalPar));
+static const VMFunctionsModal StrictEqInfo = VMFunctionsModal(
+    FunctionInfo<CompareFn>(ion::StrictlyEqual<true>),
+    FunctionInfo<CompareParFn>(ion::StrictlyEqualPar));
+static const VMFunctionsModal StrictNeInfo = VMFunctionsModal(
+    FunctionInfo<CompareFn>(ion::StrictlyEqual<false>),
+    FunctionInfo<CompareParFn>(ion::StrictlyUnequalPar));
+static const VMFunctionsModal LtInfo = VMFunctionsModal(
+    FunctionInfo<CompareFn>(ion::LessThan),
+    FunctionInfo<CompareParFn>(ion::LessThanPar));
+static const VMFunctionsModal LeInfo = VMFunctionsModal(
+    FunctionInfo<CompareFn>(ion::LessThanOrEqual),
+    FunctionInfo<CompareParFn>(ion::LessThanOrEqualPar));
+static const VMFunctionsModal GtInfo = VMFunctionsModal(
+    FunctionInfo<CompareFn>(ion::GreaterThan),
+    FunctionInfo<CompareParFn>(ion::GreaterThanPar));
+static const VMFunctionsModal GeInfo = VMFunctionsModal(
+    FunctionInfo<CompareFn>(ion::GreaterThanOrEqual),
+    FunctionInfo<CompareParFn>(ion::GreaterThanOrEqualPar));
 
 bool
 CodeGenerator::visitCompareVM(LCompareVM *lir)
@@ -3792,69 +3734,34 @@ CodeGenerator::visitCompareVM(LCompareVM *lir)
     pushArg(ToValue(lir, LBinaryV::RhsInput));
     pushArg(ToValue(lir, LBinaryV::LhsInput));
 
-    switch (gen->info().executionMode()) {
-      case SequentialExecution:
-        switch (lir->mir()->jsop()) {
-          case JSOP_EQ:
-            return callVM(EqInfo, lir);
+    switch (lir->mir()->jsop()) {
+      case JSOP_EQ:
+        return callVM(EqInfo, lir);
 
-          case JSOP_NE:
-            return callVM(NeInfo, lir);
+      case JSOP_NE:
+        return callVM(NeInfo, lir);
 
-          case JSOP_STRICTEQ:
-            return callVM(StrictEqInfo, lir);
+      case JSOP_STRICTEQ:
+        return callVM(StrictEqInfo, lir);
 
-          case JSOP_STRICTNE:
-            return callVM(StrictNeInfo, lir);
+      case JSOP_STRICTNE:
+        return callVM(StrictNeInfo, lir);
 
-          case JSOP_LT:
-            return callVM(LtInfo, lir);
+      case JSOP_LT:
+        return callVM(LtInfo, lir);
 
-          case JSOP_LE:
-            return callVM(LeInfo, lir);
+      case JSOP_LE:
+        return callVM(LeInfo, lir);
 
-          case JSOP_GT:
-            return callVM(GtInfo, lir);
+      case JSOP_GT:
+        return callVM(GtInfo, lir);
 
-          case JSOP_GE:
-            return callVM(GeInfo, lir);
+      case JSOP_GE:
+        return callVM(GeInfo, lir);
 
-          default:
-            MOZ_ASSUME_UNREACHABLE("Unexpected compare op");
-        }
-
-      case ParallelExecution:
-        switch (lir->mir()->jsop()) {
-          case JSOP_EQ:
-            return callVM(ParLooselyEqInfo, lir);
-
-          case JSOP_STRICTEQ:
-            return callVM(ParStrictlyEqInfo, lir);
-
-          case JSOP_NE:
-            return callVM(ParLooselyNeInfo, lir);
-
-          case JSOP_STRICTNE:
-            return callVM(ParStrictlyNeInfo, lir);
-
-          case JSOP_LT:
-            return callVM(ParLtInfo, lir);
-
-          case JSOP_LE:
-            return callVM(ParLeInfo, lir);
-
-          case JSOP_GT:
-            return callVM(ParGtInfo, lir);
-
-          case JSOP_GE:
-            return callVM(ParGeInfo, lir);
-
-          default:
-            MOZ_ASSUME_UNREACHABLE("Unexpected compare op");
-        }
+      default:
+        MOZ_ASSUME_UNREACHABLE("Unexpected compare op");
     }
-
-    MOZ_ASSUME_UNREACHABLE("Unexpected exec mode");
 }
 
 bool
@@ -3999,9 +3906,6 @@ CodeGenerator::visitIsNullOrLikeUndefinedAndBranch(LIsNullOrLikeUndefinedAndBran
     return true;
 }
 
-typedef JSString *(*ConcatStringsFn)(JSContext *, HandleString, HandleString);
-static const VMFunction ConcatStringsInfo = FunctionInfo<ConcatStringsFn>(ConcatStrings<CanGC>);
-
 bool
 CodeGenerator::visitEmulatesUndefined(LEmulatesUndefined *lir)
 {
@@ -4079,6 +3983,30 @@ CodeGenerator::visitEmulatesUndefinedAndBranch(LEmulatesUndefinedAndBranch *lir)
     return true;
 }
 
+typedef JSString *(*ConcatStringsFn)(JSContext *, HandleString, HandleString);
+typedef ParallelResult (*ConcatStringsParFn)(ForkJoinSlice *, HandleString, HandleString,
+                                             MutableHandleString);
+static const VMFunctionsModal ConcatStringsInfo = VMFunctionsModal(
+    FunctionInfo<ConcatStringsFn>(ConcatStrings<CanGC>),
+    FunctionInfo<ConcatStringsParFn>(ConcatStringsPar));
+
+bool
+CodeGenerator::emitConcat(LInstruction *lir, Register lhs, Register rhs, Register output)
+{
+    OutOfLineCode *ool = oolCallVM(ConcatStringsInfo, lir, (ArgList(), lhs, rhs),
+                                   StoreRegisterTo(output));
+    if (!ool)
+        return false;
+
+    ExecutionMode mode = gen->info().executionMode();
+    IonCode *stringConcatStub = gen->ionCompartment()->stringConcatStub(mode);
+    masm.call(stringConcatStub);
+    masm.branchTestPtr(Assembler::Zero, output, output, ool->entry());
+
+    masm.bind(ool->rejoin());
+    return true;
+}
+
 bool
 CodeGenerator::visitConcat(LConcat *lir)
 {
@@ -4095,51 +4023,26 @@ CodeGenerator::visitConcat(LConcat *lir)
     JS_ASSERT(ToRegister(lir->temp4()) == CallTempReg5);
     JS_ASSERT(output == CallTempReg6);
 
-    OutOfLineCode *ool = oolCallVM(ConcatStringsInfo, lir, (ArgList(), lhs, rhs),
-                                   StoreRegisterTo(output));
-    if (!ool)
-        return false;
-
-    IonCode *stringConcatStub = gen->ionCompartment()->stringConcatStub(SequentialExecution);
-    masm.call(stringConcatStub);
-    masm.branchTestPtr(Assembler::Zero, output, output, ool->entry());
-
-    masm.bind(ool->rejoin());
-    return true;
+    return emitConcat(lir, lhs, rhs, output);
 }
 
-typedef ParallelResult (*ParallelConcatStringsFn)(ForkJoinSlice *, HandleString, HandleString,
-                                                  MutableHandleString);
-static const VMFunction ParallelConcatStringsInfo =
-    FunctionInfo<ParallelConcatStringsFn>(ParConcatStrings);
-
 bool
-CodeGenerator::visitParConcat(LParConcat *lir)
+CodeGenerator::visitConcatPar(LConcatPar *lir)
 {
-    Register slice = ToRegister(lir->parSlice());
+    DebugOnly<Register> slice = ToRegister(lir->forkJoinSlice());
     Register lhs = ToRegister(lir->lhs());
     Register rhs = ToRegister(lir->rhs());
     Register output = ToRegister(lir->output());
 
     JS_ASSERT(lhs == CallTempReg0);
     JS_ASSERT(rhs == CallTempReg1);
-    JS_ASSERT(slice == CallTempReg5);
+    JS_ASSERT((Register)slice == CallTempReg5);
     JS_ASSERT(ToRegister(lir->temp1()) == CallTempReg2);
     JS_ASSERT(ToRegister(lir->temp2()) == CallTempReg3);
     JS_ASSERT(ToRegister(lir->temp3()) == CallTempReg4);
     JS_ASSERT(output == CallTempReg6);
 
-    OutOfLineCode *ool = oolCallVM(ParallelConcatStringsInfo, lir, (ArgList(), lhs, rhs),
-                                   StoreRegisterTo(output));
-    if (!ool)
-        return false;
-
-    IonCode *stringConcatStub = gen->ionCompartment()->stringConcatStub(ParallelExecution);
-    masm.call(stringConcatStub);
-    masm.branchTestPtr(Assembler::Zero, output, output, ool->entry());
-
-    masm.bind(ool->rejoin());
-    return true;
+    return emitConcat(lir, lhs, rhs, output);
 }
 
 static void
@@ -4215,7 +4118,7 @@ IonCompartment::generateStringConcatStub(JSContext *cx, ExecutionMode mode)
       case ParallelExecution:
         masm.push(temp1);
         masm.push(temp2);
-        masm.parNewGCString(output, forkJoinSlice, temp1, temp2, &failurePopTemps);
+        masm.newGCStringPar(output, forkJoinSlice, temp1, temp2, &failurePopTemps);
         masm.pop(temp2);
         masm.pop(temp1);
         break;
@@ -4260,7 +4163,7 @@ IonCompartment::generateStringConcatStub(JSContext *cx, ExecutionMode mode)
       case ParallelExecution:
         masm.push(temp1);
         masm.push(temp2);
-        masm.parNewGCShortString(output, forkJoinSlice, temp1, temp2, &failurePopTemps);
+        masm.newGCShortStringPar(output, forkJoinSlice, temp1, temp2, &failurePopTemps);
         masm.pop(temp2);
         masm.pop(temp1);
         break;
@@ -4766,8 +4669,7 @@ CodeGenerator::visitOutOfLineStoreElementHole(OutOfLineStoreElementHole *ool)
         // pass in a Value to a C function!).
         masm.bind(&indexWouldExceedCapacity);
 
-        OutOfLineParallelAbort *bail = oolParallelAbort(
-            ParallelBailoutOutOfMemory, ins);
+        OutOfLineAbortPar *bail = oolAbortPar(ParallelBailoutOutOfMemory, ins);
         if (!bail)
             return false;
 
@@ -4778,7 +4680,7 @@ CodeGenerator::visitOutOfLineStoreElementHole(OutOfLineStoreElementHole *ool)
         // instruction we don't want to do that.  So instead we push
         // the volatile registers but we don't save the register
         // `object`.  We will copy the ReturnReg into `object`.  The
-        // function we are calling (`ParPush`) agrees to either return
+        // function we are calling (`PushPar`) agrees to either return
         // `object` unchanged or NULL.  This way after we restore the
         // registers, we can examine `object` to know whether an error
         // occurred.
@@ -4786,15 +4688,15 @@ CodeGenerator::visitOutOfLineStoreElementHole(OutOfLineStoreElementHole *ool)
         saveSet.maybeTake(object);
 
         masm.PushRegsInMask(saveSet);
-        masm.reserveStack(sizeof(ParPushArgs));
-        masm.storePtr(object, Address(StackPointer, offsetof(ParPushArgs, object)));
+        masm.reserveStack(sizeof(PushParArgs));
+        masm.storePtr(object, Address(StackPointer, offsetof(PushParArgs, object)));
         masm.storeConstantOrRegister(value, Address(StackPointer,
-                                                    offsetof(ParPushArgs, value)));
+                                                    offsetof(PushParArgs, value)));
         masm.movePtr(StackPointer, CallTempReg0);
         masm.setupUnalignedABICall(1, CallTempReg1);
         masm.passABIArg(CallTempReg0);
-        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, ParPush));
-        masm.freeStack(sizeof(ParPushArgs));
+        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, PushPar));
+        masm.freeStack(sizeof(PushParArgs));
         masm.movePtr(ReturnReg, object);
         masm.PopRegsInMask(saveSet);
         masm.branchTestPtr(Assembler::Zero, object, object, bail->entry());
@@ -4806,8 +4708,7 @@ CodeGenerator::visitOutOfLineStoreElementHole(OutOfLineStoreElementHole *ool)
         // sparse array, and since we don't want to think about that
         // case right now, we just bail out.
         masm.bind(&indexNotInitLen);
-        OutOfLineParallelAbort *bail1 =
-            oolParallelAbort(ParallelBailoutUnsupportedSparseArray, ins);
+        OutOfLineAbortPar *bail1 = oolAbortPar(ParallelBailoutUnsupportedSparseArray, ins);
         if (!bail1)
             return false;
         masm.jump(bail1->entry());
@@ -5295,10 +5196,20 @@ CodeGenerator::visitRunOncePrologue(LRunOncePrologue *lir)
     return callVM(RunOnceScriptPrologueInfo, lir);
 }
 
+
+typedef JSObject *(*InitRestParameterFn)(JSContext *, uint32_t, Value *, HandleObject,
+                                         HandleObject);
+typedef ParallelResult (*InitRestParameterParFn)(ForkJoinSlice *, uint32_t, Value *,
+                                                 HandleObject, HandleObject,
+                                                 MutableHandleObject);
+static const VMFunctionsModal InitRestParameterInfo = VMFunctionsModal(
+    FunctionInfo<InitRestParameterFn>(InitRestParameter),
+    FunctionInfo<InitRestParameterParFn>(InitRestParameterPar));
+
 bool
 CodeGenerator::emitRest(LInstruction *lir, Register array, Register numActuals,
                         Register temp0, Register temp1, unsigned numFormals,
-                        JSObject *templateObject, const VMFunction &f)
+                        JSObject *templateObject)
 {
     // Compute actuals() + numFormals.
     size_t actualsOffset = frameSize() + IonJSFrameLayout::offsetOfActualArgs();
@@ -5322,13 +5233,8 @@ CodeGenerator::emitRest(LInstruction *lir, Register array, Register numActuals,
     pushArg(temp1);
     pushArg(temp0);
 
-    return callVM(f, lir);
+    return callVM(InitRestParameterInfo, lir);
 }
-
-typedef JSObject *(*InitRestParameterFn)(JSContext *, uint32_t, Value *, HandleObject,
-                                         HandleObject);
-static const VMFunction InitRestParameterInfo =
-    FunctionInfo<InitRestParameterFn>(InitRestParameter);
 
 bool
 CodeGenerator::visitRest(LRest *lir)
@@ -5350,32 +5256,24 @@ CodeGenerator::visitRest(LRest *lir)
     }
     masm.bind(&joinAlloc);
 
-    return emitRest(lir, temp2, numActuals, temp0, temp1, numFormals, templateObject,
-                    InitRestParameterInfo);
+    return emitRest(lir, temp2, numActuals, temp0, temp1, numFormals, templateObject);
 }
 
-typedef ParallelResult (*ParallelInitRestParameterFn)(ForkJoinSlice *, uint32_t, Value *,
-                                                      HandleObject, HandleObject,
-                                                      MutableHandleObject);
-static const VMFunction ParallelInitRestParameterInfo =
-    FunctionInfo<ParallelInitRestParameterFn>(InitRestParameter);
-
 bool
-CodeGenerator::visitParRest(LParRest *lir)
+CodeGenerator::visitRestPar(LRestPar *lir)
 {
     Register numActuals = ToRegister(lir->numActuals());
-    Register slice = ToRegister(lir->parSlice());
+    Register slice = ToRegister(lir->forkJoinSlice());
     Register temp0 = ToRegister(lir->getTemp(0));
     Register temp1 = ToRegister(lir->getTemp(1));
     Register temp2 = ToRegister(lir->getTemp(2));
     unsigned numFormals = lir->mir()->numFormals();
     JSObject *templateObject = lir->mir()->templateObject();
 
-    if (!emitParAllocateGCThing(lir, temp2, slice, temp0, temp1, templateObject))
+    if (!emitAllocateGCThingPar(lir, temp2, slice, temp0, temp1, templateObject))
         return false;
 
-    return emitRest(lir, temp2, numActuals, temp0, temp1, numFormals, templateObject,
-                    ParallelInitRestParameterInfo);
+    return emitRest(lir, temp2, numActuals, temp0, temp1, numFormals, templateObject);
 }
 
 bool
@@ -5421,6 +5319,11 @@ CodeGenerator::generate()
     if (!safepoints_.init(graph.totalSlotCount()))
         return false;
 
+#if JS_TRACE_LOGGING
+    masm.tracelogStart(gen->info().script());
+    masm.tracelogLog(TraceLogging::INFO_ENGINE_IONMONKEY);
+#endif
+
     // Before generating any code, we generate type checks for all parameters.
     // This comes before deoptTable_, because we can't use deopt tables without
     // creating the actual frame.
@@ -5433,9 +5336,20 @@ CodeGenerator::generate()
             return false;
     }
 
+#if JS_TRACE_LOGGING
+    Label skip;
+    masm.jump(&skip);
+#endif
+
     // Remember the entry offset to skip the argument check.
     masm.flushBuffer();
     setSkipArgCheckEntryOffset(masm.size());
+
+#if JS_TRACE_LOGGING
+    masm.tracelogStart(gen->info().script());
+    masm.tracelogLog(TraceLogging::INFO_ENGINE_IONMONKEY);
+    masm.bind(&skip);
+#endif
 
     if (!generatePrologue())
         return false;
@@ -5817,7 +5731,7 @@ CodeGenerator::addGetPropertyCache(LInstruction *ins, RegisterSet liveRegs, Regi
         return addCache(ins, allocateCache(cache));
       }
       case ParallelExecution: {
-        ParallelGetPropertyIC cache(objReg, name, output);
+        GetPropertyParIC cache(objReg, name, output);
         return addCache(ins, allocateCache(cache));
       }
       default:
@@ -5870,20 +5784,20 @@ CodeGenerator::visitGetPropertyIC(OutOfLineUpdateCache *ool, GetPropertyIC *ic)
     return true;
 }
 
-typedef ParallelResult (*ParallelGetPropertyICFn)(ForkJoinSlice *, size_t, HandleObject,
-                                                  MutableHandleValue);
-const VMFunction ParallelGetPropertyIC::UpdateInfo =
-    FunctionInfo<ParallelGetPropertyICFn>(ParallelGetPropertyIC::update);
+typedef ParallelResult (*GetPropertyParICFn)(ForkJoinSlice *, size_t, HandleObject,
+                                             MutableHandleValue);
+const VMFunction GetPropertyParIC::UpdateInfo =
+    FunctionInfo<GetPropertyParICFn>(GetPropertyParIC::update);
 
 bool
-CodeGenerator::visitParallelGetPropertyIC(OutOfLineUpdateCache *ool, ParallelGetPropertyIC *ic)
+CodeGenerator::visitGetPropertyParIC(OutOfLineUpdateCache *ool, GetPropertyParIC *ic)
 {
     LInstruction *lir = ool->lir();
     saveLive(lir);
 
     pushArg(ic->object());
     pushArg(Imm32(ool->getCacheIndex()));
-    if (!callVM(ParallelGetPropertyIC::UpdateInfo, lir))
+    if (!callVM(GetPropertyParIC::UpdateInfo, lir))
         return false;
     StoreValueTo(ic->output()).generate(this);
     restoreLiveIgnore(lir, StoreValueTo(ic->output()).clobbered());
@@ -5902,11 +5816,11 @@ CodeGenerator::addGetElementCache(LInstruction *ins, Register obj, ConstantOrReg
         return addCache(ins, allocateCache(cache));
       }
       case ParallelExecution: {
-        ParallelGetElementIC cache(obj, index, output, monitoredResult);
+        GetElementParIC cache(obj, index, output, monitoredResult);
         return addCache(ins, allocateCache(cache));
       }
       default:
-        MOZ_ASSUME_UNREACHABLE("Bad execution mode");
+        MOZ_ASSUME_UNREACHABLE("No such execution mode");
     }
 }
 
@@ -6007,13 +5921,13 @@ CodeGenerator::visitSetElementIC(OutOfLineUpdateCache *ool, SetElementIC *ic)
     return true;
 }
 
-typedef ParallelResult (*ParallelGetElementICFn)(ForkJoinSlice *, size_t, HandleObject,
-                                                 HandleValue, MutableHandleValue);
-const VMFunction ParallelGetElementIC::UpdateInfo =
-    FunctionInfo<ParallelGetElementICFn>(ParallelGetElementIC::update);
+typedef ParallelResult (*GetElementParICFn)(ForkJoinSlice *, size_t, HandleObject,
+                                            HandleValue, MutableHandleValue);
+const VMFunction GetElementParIC::UpdateInfo =
+    FunctionInfo<GetElementParICFn>(GetElementParIC::update);
 
 bool
-CodeGenerator::visitParallelGetElementIC(OutOfLineUpdateCache *ool, ParallelGetElementIC *ic)
+CodeGenerator::visitGetElementParIC(OutOfLineUpdateCache *ool, GetElementParIC *ic)
 {
     LInstruction *lir = ool->lir();
     saveLive(lir);
@@ -6021,7 +5935,7 @@ CodeGenerator::visitParallelGetElementIC(OutOfLineUpdateCache *ool, ParallelGetE
     pushArg(ic->index());
     pushArg(ic->object());
     pushArg(Imm32(ool->getCacheIndex()));
-    if (!callVM(ParallelGetElementIC::UpdateInfo, lir))
+    if (!callVM(GetElementParIC::UpdateInfo, lir))
         return false;
     StoreValueTo(ic->output()).generate(this);
     restoreLiveIgnore(lir, StoreValueTo(ic->output()).clobbered());
@@ -7006,7 +6920,7 @@ CodeGenerator::visitFunctionBoundary(LFunctionBoundary *lir)
 }
 
 bool
-CodeGenerator::visitOutOfLineParallelAbort(OutOfLineParallelAbort *ool)
+CodeGenerator::visitOutOfLineAbortPar(OutOfLineAbortPar *ool)
 {
     ParallelBailoutCause cause = ool->cause();
     jsbytecode *bytecode = ool->bytecode();
@@ -7021,7 +6935,7 @@ CodeGenerator::visitOutOfLineParallelAbort(OutOfLineParallelAbort *ool)
     masm.passABIArg(CallTempReg1);
     masm.passABIArg(CallTempReg2);
     masm.passABIArg(CallTempReg3);
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, ParallelAbort));
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, AbortPar));
 
     masm.moveValue(MagicValue(JS_ION_ERROR), JSReturnOperand);
     masm.jump(&returnLabel_);
@@ -7073,7 +6987,7 @@ CodeGenerator::loadJSScriptForBlock(MBasicBlock *block, Register reg)
 }
 
 bool
-CodeGenerator::visitOutOfLinePropagateParallelAbort(OutOfLinePropagateParallelAbort *ool)
+CodeGenerator::visitOutOfLinePropagateAbortPar(OutOfLinePropagateAbortPar *ool)
 {
     loadOutermostJSScript(CallTempReg0);
     loadJSScriptForBlock(ool->lir()->mirRaw()->block(), CallTempReg1);
@@ -7081,7 +6995,7 @@ CodeGenerator::visitOutOfLinePropagateParallelAbort(OutOfLinePropagateParallelAb
     masm.setupUnalignedABICall(2, CallTempReg2);
     masm.passABIArg(CallTempReg0);
     masm.passABIArg(CallTempReg1);
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, PropagateParallelAbort));
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, PropagateAbortPar));
 
     masm.moveValue(MagicValue(JS_ION_ERROR), JSReturnOperand);
     masm.jump(&returnLabel_);

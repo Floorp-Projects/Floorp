@@ -13,6 +13,7 @@
 #include "mozilla/TimeStamp.h"
 #include "ImageTypes.h"
 #include "nsTArray.h"
+#include "pratom.h"
 
 #ifdef XP_WIN
 struct ID3D10Texture2D;
@@ -33,6 +34,7 @@ namespace layers {
 
 class ImageClient;
 class SharedPlanarYCbCrImage;
+class DeprecatedSharedPlanarYCbCrImage;
 
 struct ImageBackendData
 {
@@ -538,7 +540,7 @@ protected:
 
   nsRefPtr<BufferRecycleBin> mRecycleBin;
 
-  // This contains the remote image data for this container, if this is NULL
+  // This contains the remote image data for this container, if this is nullptr
   // that means the container has no other process that may control its active
   // image.
   RemoteImageData *mRemoteData;
@@ -719,6 +721,7 @@ public:
   PlanarYCbCrImage(BufferRecycleBin *aRecycleBin);
 
   virtual SharedPlanarYCbCrImage *AsSharedPlanarYCbCrImage() { return nullptr; }
+  virtual DeprecatedSharedPlanarYCbCrImage *AsDeprecatedSharedPlanarYCbCrImage() { return nullptr; }
 
 protected:
   /**
@@ -782,7 +785,7 @@ public:
 
   gfxIntSize GetSize() { return mSize; }
 
-  CairoImage() : Image(NULL, CAIRO_SURFACE) {}
+  CairoImage() : Image(nullptr, CAIRO_SURFACE) {}
 
   nsCountedRef<nsMainThreadSurfaceRef> mSurface;
   gfxIntSize mSize;
@@ -790,7 +793,7 @@ public:
 
 class RemoteBitmapImage : public Image {
 public:
-  RemoteBitmapImage() : Image(NULL, REMOTE_IMAGE_BITMAP) {}
+  RemoteBitmapImage() : Image(nullptr, REMOTE_IMAGE_BITMAP) {}
 
   already_AddRefed<gfxASurface> GetAsSurface();
 

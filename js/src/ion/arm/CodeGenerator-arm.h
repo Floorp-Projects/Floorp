@@ -95,6 +95,7 @@ class CodeGeneratorARM : public CodeGeneratorShared
     virtual bool visitCompareBAndBranch(LCompareBAndBranch *lir);
     virtual bool visitCompareV(LCompareV *lir);
     virtual bool visitCompareVAndBranch(LCompareVAndBranch *lir);
+    virtual bool visitBitAndAndBranch(LBitAndAndBranch *baab);
     virtual bool visitUInt32ToDouble(LUInt32ToDouble *lir);
     virtual bool visitNotI(LNotI *ins);
     virtual bool visitNotD(LNotD *ins);
@@ -170,9 +171,11 @@ class CodeGeneratorARM : public CodeGeneratorShared
         }
 #endif
 }
- 
+
     bool visitEffectiveAddress(LEffectiveAddress *ins);
-    bool visitUDivOrMod(LUDivOrMod *ins);
+    bool visitUDiv(LUDiv *ins);
+    bool visitUMod(LUMod *ins);
+    bool visitSoftUDivOrMod(LSoftUDivOrMod *ins);
 };
 
 typedef CodeGeneratorARM CodeGeneratorSpecific;

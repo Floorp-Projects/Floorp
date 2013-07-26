@@ -43,7 +43,7 @@
 #include "nsFrameManager.h"
 #include "nsLayoutUtils.h"
 #include "nsViewManager.h"
-#include "nsCSSFrameConstructor.h"
+#include "RestyleManager.h"
 #include "nsCSSRuleProcessor.h"
 #include "nsStyleChangeList.h"
 #include "nsRuleNode.h"
@@ -68,6 +68,7 @@
 #include "mozilla/css/ImageLoader.h"
 #include "mozilla/dom/PBrowserChild.h"
 #include "mozilla/dom/TabChild.h"
+#include "RestyleManager.h"
 
 #ifdef IBMBIDI
 #include "nsBidiPresUtils.h"
@@ -198,7 +199,8 @@ nsPresContext::nsPresContext(nsIDocument* aDocument, nsPresContextType aType)
     mPageSize(-1, -1), mPPScale(1.0f),
     mViewportStyleOverflow(NS_STYLE_OVERFLOW_AUTO, NS_STYLE_OVERFLOW_AUTO),
     mImageAnimationModePref(imgIContainer::kNormalAnimMode),
-    mAllInvalidated(false)
+    mAllInvalidated(false),
+    mPaintFlashing(false), mPaintFlashingInitialized(false)
 {
   // NOTE! nsPresContext::operator new() zeroes out all members, so don't
   // bother initializing members to 0.
@@ -313,6 +315,12 @@ nsPresContext::~nsPresContext()
                                   this);
   Preferences::UnregisterCallback(nsPresContext::PrefChangedCallback,
                                   "layout.css.devPixelsPerPx",
+                                  this);
+  Preferences::UnregisterCallback(nsPresContext::PrefChangedCallback,
+                                  "nglayout.debug.paint_flashing",
+                                  this);
+  Preferences::UnregisterCallback(nsPresContext::PrefChangedCallback,
+                                  "nglayout.debug.paint_flashing_chrome",
                                   this);
 }
 
@@ -878,6 +886,11 @@ nsPresContext::PreferenceChanged(const char* aPrefName)
       return;
     mPrefChangedTimer->InitWithFuncCallback(nsPresContext::PrefChangedUpdateTimerCallback, (void*)this, 0, nsITimer::TYPE_ONE_SHOT);
   }
+  if (prefName.EqualsLiteral("nglayout.debug.paint_flashing") ||
+      prefName.EqualsLiteral("nglayout.debug.paint_flashing_chrome")) {
+    mPaintFlashingInitialized = false;
+    return;
+  }
 }
 
 void
@@ -930,6 +943,9 @@ nsPresContext::Init(nsDeviceContext* aDeviceContext)
   mTransitionManager = new nsTransitionManager(this);
 
   mAnimationManager = new nsAnimationManager(this);
+
+  // FIXME: Why is mozilla:: needed?
+  mRestyleManager = new mozilla::RestyleManager(this);
 
   if (mDocument->GetDisplayDocument()) {
     NS_ASSERTION(mDocument->GetDisplayDocument()->GetShell() &&
@@ -1020,6 +1036,12 @@ nsPresContext::Init(nsDeviceContext* aDeviceContext)
   Preferences::RegisterCallback(nsPresContext::PrefChangedCallback,
                                 "layout.css.devPixelsPerPx",
                                 this);
+  Preferences::RegisterCallback(nsPresContext::PrefChangedCallback,
+                                "nglayout.debug.paint_flashing",
+                                this);
+  Preferences::RegisterCallback(nsPresContext::PrefChangedCallback,
+                                "nglayout.debug.paint_flashing_chrome",
+                                this);
 
   nsresult rv = mEventManager->Init();
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1098,6 +1120,10 @@ nsPresContext::SetShell(nsIPresShell* aShell)
     if (mAnimationManager) {
       mAnimationManager->Disconnect();
       mAnimationManager = nullptr;
+    }
+    if (mRestyleManager) {
+      mRestyleManager->Disconnect();
+      mRestyleManager = nullptr;
     }
 
     if (IsRoot()) {
@@ -1729,7 +1755,7 @@ nsPresContext::RebuildAllStyleData(nsChangeHint aExtraHint)
   RebuildUserFontSet();
   AnimationManager()->KeyframesListIsDirty();
 
-  mShell->FrameConstructor()->RebuildAllStyleData(aExtraHint);
+  RestyleManager()->RebuildAllStyleData(aExtraHint);
 }
 
 void
@@ -1739,7 +1765,7 @@ nsPresContext::PostRebuildAllStyleDataEvent(nsChangeHint aExtraHint)
     // We must have been torn down. Nothing to do here.
     return;
   }
-  mShell->FrameConstructor()->PostRebuildAllStyleDataEvent(aExtraHint);
+  RestyleManager()->PostRebuildAllStyleDataEvent(aExtraHint);
 }
 
 void
@@ -2609,6 +2635,19 @@ nsPresContext::IsCrossProcessRootContentDocument()
 
   TabChild* tabChild = GetTabChildFrom(mShell);
   return (tabChild && tabChild->IsRootContentDocument());
+}
+
+bool nsPresContext::GetPaintFlashing() const
+{
+  if (!mPaintFlashingInitialized) {
+    bool pref = Preferences::GetBool("nglayout.debug.paint_flashing");
+    if (!pref && IsChrome()) {
+      pref = Preferences::GetBool("nglayout.debug.paint_flashing_chrome");
+    }
+    mPaintFlashing = pref;
+    mPaintFlashingInitialized = true;
+  }
+  return mPaintFlashing;
 }
 
 nsRootPresContext::nsRootPresContext(nsIDocument* aDocument,

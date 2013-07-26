@@ -214,24 +214,6 @@
                   </menupopup>
                 </menu>
                 <menuseparator/>
-                <menuitem id="menu_stop"
-                          class="show-only-for-keyboard"
-                          label="&stopCmd.label;"
-                          accesskey="&stopCmd.accesskey;"
-                          command="Browser:Stop"
-#ifdef XP_MACOSX
-                          key="key_stop_mac"/>
-#else
-                          key="key_stop"/>
-#endif
-                <menuitem id="menu_reload"
-                          class="show-only-for-keyboard"
-                          label="&reloadCmd.label;"
-                          accesskey="&reloadCmd.accesskey;"
-                          key="key_reload"
-                          command="Browser:ReloadOrDuplicate"
-                          onclick="checkForMiddleClick(this, event);"/>
-                <menuseparator class="show-only-for-keyboard"/>
                 <menu id="viewFullZoomMenu" label="&fullZoom.label;"
                       accesskey="&fullZoom.accesskey;"
                       onpopupshowing="FullZoom.updateMenu();">
@@ -332,34 +314,6 @@
                                            new HistoryMenu(event);"
                          tooltip="bhTooltip"
                          popupsinherittooltip="true">
-                <menuitem id="historyMenuBack"
-                          class="show-only-for-keyboard"
-                          label="&backCmd.label;"
-#ifdef XP_MACOSX
-                          key="goBackKb2"
-#else
-                          key="goBackKb"
-#endif
-                          command="Browser:BackOrBackDuplicate"
-                          onclick="checkForMiddleClick(this, event);"/>
-                <menuitem id="historyMenuForward"
-                          class="show-only-for-keyboard"
-                          label="&forwardCmd.label;"
-#ifdef XP_MACOSX
-                          key="goForwardKb2"
-#else
-                          key="goForwardKb"
-#endif
-                          command="Browser:ForwardOrForwardDuplicate"
-                          onclick="checkForMiddleClick(this, event);"/>
-                <menuitem id="historyMenuHome"
-                          class="show-only-for-keyboard"
-                          label="&historyHomeCmd.label;"
-                          oncommand="BrowserGoHome(event);"
-                          onclick="checkForMiddleClick(this, event);"
-                          key="goHome"/>
-                <menuseparator id="historyMenuHomeSeparator"
-                               class="show-only-for-keyboard"/>
                 <menuitem id="menu_showAllHistory"
                           label="&showAllHistoryCmd2.label;"
 #ifndef XP_MACOSX
@@ -488,14 +442,6 @@
                          onpopupshowing="gSyncUI.updateUI();"
 #endif
                          >
-              <menuitem id="menu_search"
-                        class="show-only-for-keyboard"
-                        label="&search.label;"
-                        accesskey="&search.accesskey;"
-                        key="key_search"
-                        command="Tools:Search"/>
-              <menuseparator id="browserToolsSeparator"
-                             class="show-only-for-keyboard"/>
               <menuitem id="menu_openDownloads"
                         label="&downloads.label;"
                         accesskey="&downloads.accesskey;"

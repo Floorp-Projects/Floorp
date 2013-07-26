@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "jscompartment.h"
+#include "jscompartmentinlines.h"
 
 #include "mozilla/DebugOnly.h"
 #include "mozilla/MemoryReporting.h"
@@ -22,6 +22,7 @@
 #endif
 #include "js/RootingAPI.h"
 #include "vm/StopIterationObject.h"
+#include "vm/WrapperObject.h"
 
 #include "jsfuninlines.h"
 #include "jsgcinlines.h"
@@ -193,6 +194,7 @@ bool
 JSCompartment::wrap(JSContext *cx, MutableHandleValue vp, HandleObject existingArg)
 {
     JS_ASSERT(cx->compartment() == this);
+    JS_ASSERT(this != rt->atomsCompartment);
     JS_ASSERT_IF(existingArg, existingArg->compartment() == cx->compartment());
     JS_ASSERT_IF(existingArg, vp.isObject());
     JS_ASSERT_IF(existingArg, IsDeadProxyObject(existingArg));
@@ -272,7 +274,7 @@ JSCompartment::wrap(JSContext *cx, MutableHandleValue vp, HandleObject existingA
         vp.set(p->value);
         if (vp.isObject()) {
             DebugOnly<JSObject *> obj = &vp.toObject();
-            JS_ASSERT(obj->isCrossCompartmentWrapper());
+            JS_ASSERT(obj->is<CrossCompartmentWrapperObject>());
             JS_ASSERT(obj->getParent() == global);
         }
         return true;

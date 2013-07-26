@@ -6,8 +6,11 @@
 
 #ifndef ion_shared_Assembler_x86_shared_h
 #define ion_shared_Assembler_x86_shared_h
+
 #include <cstddef>
+
 #include "assembler/assembler/X86Assembler.h"
+#include "ion/shared/Assembler-shared.h"
 
 namespace js {
 namespace ion {

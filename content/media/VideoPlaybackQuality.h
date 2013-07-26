@@ -23,7 +23,7 @@ public:
 
   VideoPlaybackQuality(HTMLMediaElement* aElement, DOMHighResTimeStamp aCreationTime,
                        uint64_t aTotalFrames, uint64_t aDroppedFrames,
-                       uint64_t aCorruptedFrames, double aPlaybackJitter);
+                       uint64_t aCorruptedFrames, double aTotalFrameDelay);
 
   HTMLMediaElement* GetParentObject() const;
 
@@ -49,9 +49,9 @@ public:
     return mCorruptedFrames;
   }
 
-  double PlaybackJitter()
+  double TotalFrameDelay()
   {
-    return mPlaybackJitter;
+    return mTotalFrameDelay;
   }
 
 private:
@@ -60,7 +60,7 @@ private:
   uint64_t mTotalFrames;
   uint64_t mDroppedFrames;
   uint64_t mCorruptedFrames;
-  double mPlaybackJitter;
+  double mTotalFrameDelay;
 };
 
 } // namespace dom

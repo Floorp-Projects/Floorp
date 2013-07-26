@@ -49,7 +49,7 @@ static const char kPrefDnsLocalDomains[]    = "network.dns.localDomains";
 class nsDNSRecord : public nsIDNSRecord
 {
 public:
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSIDNSRECORD
 
     nsDNSRecord(nsHostRecord *hostRecord)
@@ -69,7 +69,7 @@ private:
     bool                    mDone;
 };
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsDNSRecord, nsIDNSRecord)
+NS_IMPL_ISUPPORTS1(nsDNSRecord, nsIDNSRecord)
 
 NS_IMETHODIMP
 nsDNSRecord::GetCanonicalName(nsACString &result)
@@ -246,7 +246,7 @@ class nsDNSAsyncRequest MOZ_FINAL : public nsResolveHostCallback
                                   , public nsICancelable
 {
 public:
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSICANCELABLE
 
     nsDNSAsyncRequest(nsHostResolver   *res,
@@ -306,7 +306,7 @@ nsDNSAsyncRequest::EqualsAsyncListener(nsIDNSListener *aListener)
     return (aListener == mListener);
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsDNSAsyncRequest, nsICancelable)
+NS_IMPL_ISUPPORTS1(nsDNSAsyncRequest, nsICancelable)
 
 NS_IMETHODIMP
 nsDNSAsyncRequest::Cancel(nsresult reason)
@@ -372,7 +372,7 @@ nsDNSService::~nsDNSService()
 {
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS3(nsDNSService, nsIDNSService, nsPIDNSService,
+NS_IMPL_ISUPPORTS3(nsDNSService, nsIDNSService, nsPIDNSService,
                               nsIObserver)
 
 NS_IMETHODIMP
@@ -532,13 +532,13 @@ public:
     , mTargetThread(aTargetThread)
   { }
 
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIDNSLISTENER
 
   class OnLookupCompleteRunnable : public nsRunnable
   {
   public:
-    OnLookupCompleteRunnable(nsMainThreadPtrHolder<nsIDNSListener>* aListener,
+    OnLookupCompleteRunnable(const nsMainThreadPtrHandle<nsIDNSListener>& aListener,
                              nsICancelable* aRequest,
                              nsIDNSRecord* aRecord,
                              nsresult aStatus)
@@ -562,7 +562,7 @@ private:
   nsCOMPtr<nsIEventTarget> mTargetThread;
 };
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(DNSListenerProxy, nsIDNSListener)
+NS_IMPL_ISUPPORTS1(DNSListenerProxy, nsIDNSListener)
 
 NS_IMETHODIMP
 DNSListenerProxy::OnLookupComplete(nsICancelable* aRequest,

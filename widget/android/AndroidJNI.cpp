@@ -832,6 +832,15 @@ Java_org_mozilla_gecko_GeckoJavaSampler_getProfilerTime(JNIEnv *jenv, jclass jc)
 }
 
 NS_EXPORT void JNICALL
+Java_org_mozilla_gecko_gfx_NativePanZoomController_abortAnimation(JNIEnv* env, jobject instance)
+{
+  AsyncPanZoomController* controller = nsWindow::GetPanZoomController();
+  if (controller) {
+      controller->CancelAnimation();
+  }
+}
+
+NS_EXPORT void JNICALL
 Java_org_mozilla_gecko_gfx_NativePanZoomController_init(JNIEnv* env, jobject instance)
 {
     if (!AndroidBridge::Bridge()) {
@@ -919,6 +928,15 @@ Java_org_mozilla_gecko_gfx_NativePanZoomController_getOverScrollMode(JNIEnv* env
 {
     // FIXME implement this
     return 0;
+}
+
+NS_EXPORT void JNICALL
+Java_org_mozilla_gecko_gfx_NativePanZoomController_updateScrollOffset(JNIEnv* env, jobject instance, jfloat cssX, jfloat cssY)
+{
+    AsyncPanZoomController* controller = nsWindow::GetPanZoomController();
+    if (controller) {
+        controller->UpdateScrollOffset(CSSPoint(cssX, cssY));
+    }
 }
 
 NS_EXPORT jboolean JNICALL

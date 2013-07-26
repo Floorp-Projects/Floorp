@@ -4,18 +4,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "ion/BaselineJIT.h"
+
 #include "mozilla/MemoryReporting.h"
 
 #include "ion/BaselineCompiler.h"
 #include "ion/BaselineIC.h"
-#include "ion/BaselineJIT.h"
 #include "ion/CompileInfo.h"
 #include "ion/IonSpewer.h"
-#include "ion/IonFrames-inl.h"
-
-#include "vm/Stack-inl.h"
 
 #include "jsopcodeinlines.h"
+
+#include "ion/IonFrames-inl.h"
+#include "vm/Stack-inl.h"
 
 using namespace js;
 using namespace js::ion;
@@ -185,6 +186,10 @@ ion::EnterBaselineAtBranch(JSContext *cx, StackFrame *fp, jsbytecode *pc)
             data.calleeToken = CalleeToToken(fp->script());
     }
 
+#if JS_TRACE_LOGGING
+    TraceLogging::defaultLogger()->log(TraceLogging::INFO_ENGINE_BASELINE);
+#endif
+
     IonExecStatus status = EnterBaseline(cx, data);
     if (status != IonExec_Ok)
         return status;
@@ -244,7 +249,13 @@ CanEnterBaselineJIT(JSContext *cx, HandleScript script, bool osr)
     // Check script use count. However, always eagerly compile scripts if JSD
     // is enabled, so that we don't have to OSR and don't have to update the
     // frame pointer stored in JSD's frames list.
-    if (IsJSDEnabled(cx)) {
+    //
+    // Also eagerly compile if we are in parallel warmup, the point of which
+    // is to gather type information so that the script may be compiled for
+    // parallel execution. We want to avoid the situation of OSRing during
+    // warmup and only gathering type information for the loop, and not the
+    // rest of the function.
+    if (IsJSDEnabled(cx) || cx->runtime()->parallelWarmup > 0) {
         if (osr)
             return Method_Skipped;
     } else if (script->incUseCount() <= js_IonOptions.baselineUsesBeforeCompile) {

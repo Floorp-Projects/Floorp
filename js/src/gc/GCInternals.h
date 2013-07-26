@@ -8,6 +8,7 @@
 #define gc_GCInternals_h
 
 #include "jsapi.h"
+#include "jsworkers.h"
 
 #include "vm/Runtime.h"
 
@@ -50,6 +51,7 @@ class AutoTraceSession {
     void operator=(const AutoTraceSession&) MOZ_DELETE;
 
     js::HeapState prevState;
+    AutoPauseWorkersForGC pause;
 };
 
 struct AutoPrepareForTracing

@@ -48,7 +48,7 @@ class nsIOService MOZ_FINAL : public nsIIOService2
                             , public nsSupportsWeakReference
 {
 public:
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSIIOSERVICE
     NS_DECL_NSIIOSERVICE2
     NS_DECL_NSIOBSERVER

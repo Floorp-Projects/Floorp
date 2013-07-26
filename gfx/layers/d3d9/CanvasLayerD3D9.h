@@ -20,7 +20,7 @@ class CanvasLayerD3D9 :
 {
 public:
   CanvasLayerD3D9(LayerManagerD3D9 *aManager)
-    : CanvasLayer(aManager, NULL)
+    : CanvasLayer(aManager, nullptr)
     , LayerD3D9(aManager)
     , mDataIsPremultiplied(false)
     , mNeedsYFlip(false)

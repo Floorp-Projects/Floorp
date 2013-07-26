@@ -146,7 +146,7 @@ function ResponsiveUI(aWindow, aTab)
     this.customPreset.width = bbox.width - 40; // horizontal padding of the container
     this.customPreset.height = bbox.height - 80; // vertical padding + toolbar height
 
-    this.currentPresetKey = this.customPreset.key;
+    this.currentPresetKey = this.presets[1].key; // most common preset
   }
 
   this.container.setAttribute("responsivemode", "true");

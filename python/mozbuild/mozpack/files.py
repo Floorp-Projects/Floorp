@@ -17,7 +17,10 @@ from mozpack.executables import (
 )
 from mozpack.chrome.manifest import ManifestEntry
 from io import BytesIO
-from mozpack.errors import ErrorMessage
+from mozpack.errors import (
+    ErrorMessage,
+    errors,
+)
 from mozpack.mozjar import JarReader
 import mozpack.path
 from collections import OrderedDict
@@ -254,6 +257,28 @@ class AbsoluteSymlinkFile(File):
 
         os.rename(temp_dest, dest)
         return True
+
+
+class RequiredExistingFile(BaseFile):
+    '''
+    File class that represents a file that must exist in the destination.
+
+    The purpose of this class is to account for files that are installed
+    via external means.
+
+    When asked to copy, this class does nothing because nothing is known about
+    the source file/data. However, since this file is required, we do validate
+    that the destination path exists.
+    '''
+    def copy(self, dest, skip_if_older=True):
+        if isinstance(dest, basestring):
+            dest = Dest(dest)
+        else:
+            assert isinstance(dest, Dest)
+
+        if not dest.exists():
+            errors.fatal("Required existing file doesn't exist: %s" %
+                dest.path)
 
 
 class GeneratedFile(BaseFile):

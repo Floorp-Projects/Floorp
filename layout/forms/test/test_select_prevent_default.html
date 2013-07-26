@@ -1,0 +1,107 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=291082
+-->
+<head>
+<meta charset="utf-8">
+<title>Test for Bug 291082</title>
+<script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+<script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+<script type="application/javascript">
+  /** Test for Bug 291082 **/
+  SimpleTest.waitForExplicitFinish();
+
+  function preventDefault(event) {
+    event.preventDefault();
+  }
+
+  function test() {
+    document.getElementById("keydown").addEventListener("keydown", preventDefault);
+    document.getElementById("keypress").addEventListener("keypress", preventDefault);
+
+    SimpleTest.waitForFocus(function() {
+      var testData = [ "one", "two", "three", "four", "keydown", "keypress" ];
+
+      // The order of the keys in otherKeys is important for the test to function properly.
+      var otherKeys = [ "DOWN", "UP", "RIGHT", "LEFT", "PAGE_DOWN", "PAGE_UP",
+                        "END", "HOME" ];
+
+      testData.forEach(function(id) {
+        var element = document.getElementById(id);
+        element.focus();
+        var previousValue = element.value;
+        sendChar('2');
+        is(element.value, previousValue, "value should not have changed (id: " + id + ")");
+        previousValue = element.value;
+        otherKeys.forEach(function(key) {
+          sendKey(key);
+          isnot(element.value, previousValue, "value should have changed while testing key " + key + " (id: " + id + ")");
+          previousValue = element.value;
+          });
+        });
+      SimpleTest.finish();
+    });
+  }
+</script>
+</head>
+<body onload="test();">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=291082">Mozilla Bug 291082</a>
+<div>
+  <ul>
+    <li>
+    <select id="one" onkeydown="event.preventDefault();">
+      <option>0</option>
+      <option>1</option>
+      <option>2</option>
+    </select>
+    select onkeydown="event.preventDefault();"
+    </li>
+    <li>
+    <select id="two" onkeypress="event.preventDefault();">
+      <option>0</option>
+      <option>1</option>
+      <option>2</option>
+    </select>
+    select onkeypress="event.preventDefault();"
+    </li>
+    <li onkeydown="event.preventDefault();">
+    <select id="three">
+      <option>0</option>
+      <option>1</option>
+      <option>2</option>
+    </select>
+    li onkeydown="event.preventDefault();"
+    </li>
+    <li onkeypress="event.preventDefault();">
+    <select id="four">
+      <option>0</option>
+      <option>1</option>
+      <option>2</option>
+    </select>
+    li onkeypress="event.preventDefault();"
+    </li>
+    <li>
+    <select id="keydown">
+      <option>0</option>
+      <option>1</option>
+      <option>2</option>
+    </select>
+    select.addEventListener("keydown", function(event) { event.preventDefault(); });
+    </li>
+    <li>
+    <select id="keypress">
+      <option>0</option>
+      <option>1</option>
+      <option>2</option>
+      <option>9</option>
+    </select>
+    select.addEventListener("keypress", function(event) { event.preventDefault(); });
+    </li>
+  </ul>
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

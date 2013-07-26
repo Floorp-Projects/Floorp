@@ -67,7 +67,7 @@ class nsUpdateProcessor MOZ_FINAL : public nsIUpdateProcessor
 public:
   nsUpdateProcessor();
 
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIUPDATEPROCESSOR
 
 private:

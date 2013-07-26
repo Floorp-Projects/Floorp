@@ -25,12 +25,14 @@ const char kTypeChars[eventtracer::eLast] = {' ','N','S','W','E','D'};
 // Flushing thread and records queue monitor
 mozilla::Monitor * gMonitor = nullptr;
 
-// Accessed concurently but since this flag is not functionally critical
-// for optimization purposes is not accessed under a lock
-bool volatile gInitialized = false;
+// gInitialized and gCapture can be accessed from multiple threads
+// simultaneously without any locking.  However, since they are only ever
+// *set* from the main thread, the chance of races manifesting is small
+// and unlikely to be a problem in practice.
+bool gInitialized;
 
 // Flag to allow capturing
-bool volatile gCapture = false;
+bool gCapture;
 
 // Time stamp of the epoch we have started to capture
 mozilla::TimeStamp * gProfilerStart;
@@ -129,7 +131,7 @@ public:
 
   Record * mRecordsHead;
   Record * mRecordsTail;
-  Record * volatile mNextRecord;
+  Record * mNextRecord;
 
   RecordBatch * mNextBatch;
   char * mThreadNameCopy;
@@ -138,8 +140,8 @@ public:
 
 // Protected by gMonitor, accessed concurently
 // Linked list of batches threads want to flush on disk
-RecordBatch * volatile gLogHead = nullptr;
-RecordBatch * volatile gLogTail = nullptr;
+RecordBatch * gLogHead = nullptr;
+RecordBatch * gLogTail = nullptr;
 
 // Registers the batch in the linked list
 // static
@@ -349,7 +351,7 @@ EventFilter::Build(const char * filterVar)
 
   // Copied from nspr logging code (read of NSPR_LOG_MODULES)
   char eventName[64];
-  int evlen = strlen(filterVar), pos = 0, count, delta = 0;
+  int pos = 0, count, delta = 0;
 
   // Read up to a comma or EOF -> get name of an event first in the list
   count = sscanf(filterVar, "%63[^,]%n", eventName, &delta);
@@ -380,9 +382,6 @@ EventFilter::EventPasses(const char * eventName)
 
   return false;
 }
-
-// State var to stop the flushing thread
-bool gStopFlushingThread = false;
 
 // State and control variables, initialized in Init() method, after it 
 // immutable and read concurently.

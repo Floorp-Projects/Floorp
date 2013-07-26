@@ -3,28 +3,19 @@
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from setuptools import setup
-import sys
-import os
-
-here = os.path.dirname(os.path.abspath(__file__))
-try:
-    filename = os.path.join(here, 'README.md')
-    description = file(filename).read()
-except:
-    description = ''
 
 PACKAGE_NAME = "ManifestDestiny"
-PACKAGE_VERSION = '0.5.6'
+PACKAGE_VERSION = '0.5.7'
 
 setup(name=PACKAGE_NAME,
       version=PACKAGE_VERSION,
-      description="Universal manifests for Mozilla test harnesses",
-      long_description=description,
+      description="Library to create and manage test manifests",
+      long_description="see http://mozbase.readthedocs.org/",
       classifiers=[], # Get strings from http://pypi.python.org/pypi?%3Aaction=list_classifiers
       keywords='mozilla manifests',
       author='Mozilla Automation and Testing Team',
       author_email='tools@lists.mozilla.org',
-      url='https://wiki.mozilla.org/Auto-tools/Projects/MozBase',
+      url='https://wiki.mozilla.org/Auto-tools/Projects/Mozbase',
       license='MPL',
       zip_safe=False,
       packages=['manifestparser'],

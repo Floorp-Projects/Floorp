@@ -86,6 +86,7 @@ MOCHITEST_FILES =	test_acid3_test46.html \
 		test_bug798567.html \
 		test_bug829816.html \
 		file_bug829816.css \
+		test_bug887741_at-rules_in_declaration_lists.html \
 		test_cascade.html \
 		test_ch_ex_no_infloops.html \
 		test_compute_data_with_start_struct.html \
@@ -145,8 +146,6 @@ MOCHITEST_FILES =	test_acid3_test46.html \
 		test_property_database.html \
 		test_priority_preservation.html \
 		test_property_syntax_errors.html \
-		test_redundant_font_download.html \
-		redundant_font_download.sjs \
 		test_rem_unit.html \
 		test_rule_insertion.html \
 		test_rule_serialization.html \

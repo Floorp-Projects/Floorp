@@ -1633,16 +1633,11 @@ static nsStyleContext* GetBackgroundStyleContext(nsIFrame* aFrame)
   return sc;
 }
 
-/*static*/ nsresult
+/*static*/ bool
 nsDisplayBackgroundImage::AppendBackgroundItemsToTop(nsDisplayListBuilder* aBuilder,
                                                      nsIFrame* aFrame,
-                                                     nsDisplayList* aList,
-                                                     bool* aAppendedThemedBackground)
+                                                     nsDisplayList* aList)
 {
-  if (aAppendedThemedBackground) {
-    *aAppendedThemedBackground = false;
-  }
-
   nsStyleContext* bgSC = nullptr;
   const nsStyleBackground* bg = nullptr;
   nsPresContext* presContext = aFrame->PresContext();
@@ -1676,14 +1671,11 @@ nsDisplayBackgroundImage::AppendBackgroundItemsToTop(nsDisplayListBuilder* aBuil
     nsDisplayThemedBackground* bgItem =
       new (aBuilder) nsDisplayThemedBackground(aBuilder, aFrame);
     aList->AppendNewToTop(bgItem);
-    if (aAppendedThemedBackground) {
-      *aAppendedThemedBackground = true;
-    }
-    return NS_OK;
+    return true;
   }
 
   if (!bg) {
-    return NS_OK;
+    return false;
   }
  
   // Passing bg == nullptr in this macro will result in one iteration with
@@ -1697,7 +1689,7 @@ nsDisplayBackgroundImage::AppendBackgroundItemsToTop(nsDisplayListBuilder* aBuil
     aList->AppendNewToTop(bgItem);
   }
 
-  return NS_OK;
+  return false;
 }
 
 // Check that the rounded border of aFrame, added to aToReferenceFrame,
@@ -3094,16 +3086,16 @@ nsDisplayFixedPosition::BuildLayer(nsDisplayListBuilder* aBuilder,
   // coordinate-space of the built layer.
   float factor = presContext->AppUnitsPerDevPixel();
   nsPoint origin = viewportFrame->GetOffsetToCrossDoc(ReferenceFrame());
-  gfxRect anchorRect(NSAppUnitsToFloatPixels(origin.x, factor) *
-                       aContainerParameters.mXScale,
-                     NSAppUnitsToFloatPixels(origin.y, factor) *
-                       aContainerParameters.mYScale,
-                     NSAppUnitsToFloatPixels(containingBlockSize.width, factor) *
-                       aContainerParameters.mXScale,
-                     NSAppUnitsToFloatPixels(containingBlockSize.height, factor) *
-                       aContainerParameters.mYScale);
+  LayerRect anchorRect(NSAppUnitsToFloatPixels(origin.x, factor) *
+                         aContainerParameters.mXScale,
+                       NSAppUnitsToFloatPixels(origin.y, factor) *
+                         aContainerParameters.mYScale,
+                       NSAppUnitsToFloatPixels(containingBlockSize.width, factor) *
+                         aContainerParameters.mXScale,
+                       NSAppUnitsToFloatPixels(containingBlockSize.height, factor) *
+                         aContainerParameters.mYScale);
 
-  gfxPoint anchor(anchorRect.x, anchorRect.y);
+  LayerPoint anchor = anchorRect.TopLeft();
 
   const nsStylePosition* position = mFixedPosFrame->StylePosition();
   if (position->mOffset.GetRightUnit() != eStyleUnit_Auto)
@@ -3116,14 +3108,14 @@ nsDisplayFixedPosition::BuildLayer(nsDisplayListBuilder* aBuilder,
   // Also make sure the layer is aware of any fixed position margins that have
   // been set.
   nsMargin fixedMargins = presContext->PresShell()->GetContentDocumentFixedPositionMargins();
-  mozilla::gfx::Margin fixedLayerMargins(NSAppUnitsToFloatPixels(fixedMargins.top, factor) *
-                                           aContainerParameters.mYScale,
-                                         NSAppUnitsToFloatPixels(fixedMargins.right, factor) *
-                                           aContainerParameters.mXScale,
-                                         NSAppUnitsToFloatPixels(fixedMargins.bottom, factor) *
-                                           aContainerParameters.mYScale,
-                                         NSAppUnitsToFloatPixels(fixedMargins.left, factor) *
-                                           aContainerParameters.mXScale);
+  LayerMargin fixedLayerMargins(NSAppUnitsToFloatPixels(fixedMargins.top, factor) *
+                                  aContainerParameters.mYScale,
+                                NSAppUnitsToFloatPixels(fixedMargins.right, factor) *
+                                  aContainerParameters.mXScale,
+                                NSAppUnitsToFloatPixels(fixedMargins.bottom, factor) *
+                                  aContainerParameters.mYScale,
+                                NSAppUnitsToFloatPixels(fixedMargins.left, factor) *
+                                  aContainerParameters.mXScale);
 
   // If the frame is auto-positioned on either axis, set the top/left layer
   // margins to -1, to indicate to the compositor that this layer is

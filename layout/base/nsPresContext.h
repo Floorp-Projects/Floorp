@@ -76,6 +76,10 @@ class nsIDOMMediaQueryList;
 class nsRenderingContext;
 #endif
 
+namespace mozilla {
+  class RestyleManager;
+}
+
 // supported values for cached bool types
 enum nsPresContext_CachedBoolPrefType {
   kPresContext_UseDocumentColors = 1,
@@ -238,15 +242,20 @@ public:
   }
 
 #ifdef _IMPL_NS_LAYOUT
-  nsStyleSet* StyleSet() { return GetPresShell()->StyleSet(); }
+  nsStyleSet* StyleSet() { return PresShell()->StyleSet(); }
 
   nsFrameManager* FrameManager()
-    { return GetPresShell()->FrameManager(); }
+    { return PresShell()->FrameManager(); }
+
+  nsCSSFrameConstructor* FrameConstructor()
+    { return PresShell()->FrameConstructor(); }
 
   nsTransitionManager* TransitionManager() { return mTransitionManager; }
   nsAnimationManager* AnimationManager() { return mAnimationManager; }
 
   nsRefreshDriver* RefreshDriver() { return mRefreshDriver; }
+
+  mozilla::RestyleManager* RestyleManager() { return mRestyleManager; }
 #endif
 
   /**
@@ -850,6 +859,16 @@ public:
     return GetCachedBoolPref(kPresContext_UseDocumentColors) || IsChrome();
   }
 
+  // Explicitly enable and disable paint flashing.
+  void SetPaintFlashing(bool aPaintFlashing) {
+    mPaintFlashing = aPaintFlashing;
+    mPaintFlashingInitialized = true;
+  }
+
+  // This method should be used instead of directly accessing mPaintFlashing,
+  // as that value may be out of date when mPaintFlashingInitialized is false.
+  bool GetPaintFlashing() const;
+
   bool             SupressingResizeReflow() const { return mSupressResizeReflow; }
   
   virtual NS_HIDDEN_(gfxUserFontSet*) GetUserFontSetExternal();
@@ -1164,6 +1183,7 @@ protected:
   nsRefPtr<nsRefreshDriver> mRefreshDriver;
   nsRefPtr<nsTransitionManager> mTransitionManager;
   nsRefPtr<nsAnimationManager> mAnimationManager;
+  nsRefPtr<mozilla::RestyleManager> mRestyleManager;
   nsIAtom*              mMedium;        // initialized by subclass ctors;
                                         // weak pointer to static atom
   nsCOMPtr<nsIAtom> mMediaEmulated;
@@ -1315,6 +1335,11 @@ protected:
   // value the slow way.
   mutable unsigned      mIsChromeIsCached : 1;
   mutable unsigned      mIsChrome : 1;
+
+  // Should we paint flash in this context? Do not use this variable directly.
+  // Use GetPaintFlashing() method instead.
+  mutable unsigned mPaintFlashing : 1;
+  mutable unsigned mPaintFlashingInitialized : 1;
 
 #ifdef DEBUG
   bool                  mInitialized;

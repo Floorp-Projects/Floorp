@@ -89,17 +89,33 @@ var commandsPeerConnection = [
     }
   ],
   [
-    'PC_LOCAL_CHECK_MEDIA',
+    'PC_LOCAL_CHECK_MEDIA_STREAMS',
     function (test) {
-      test.pcLocal.checkMedia(test.pcRemote.constraints);
+      test.pcLocal.checkMediaStreams(test.pcRemote.constraints);
       test.next();
     }
   ],
   [
-    'PC_REMOTE_CHECK_MEDIA',
+    'PC_REMOTE_CHECK_MEDIA_STREAMS',
     function (test) {
-      test.pcRemote.checkMedia(test.pcLocal.constraints);
+      test.pcRemote.checkMediaStreams(test.pcLocal.constraints);
       test.next();
+    }
+  ],
+  [
+    'PC_LOCAL_CHECK_MEDIA_FLOW_PRESENT',
+    function (test) {
+      test.pcLocal.checkMediaFlowPresent(function () {
+        test.next();
+      });
+    }
+  ],
+  [
+    'PC_REMOTE_CHECK_MEDIA_FLOW_PRESENT',
+    function (test) {
+      test.pcRemote.checkMediaFlowPresent(function () {
+        test.next();
+      });
     }
   ]
 ];
@@ -217,17 +233,33 @@ var commandsDataChannel = [
     }
   ],
   [
-    'PC_LOCAL_CHECK_MEDIA',
+    'PC_LOCAL_CHECK_MEDIA_STREAMS',
     function (test) {
-      test.pcLocal.checkMedia(test.pcRemote.constraints);
+      test.pcLocal.checkMediaStreams(test.pcRemote.constraints);
       test.next();
     }
   ],
   [
-    'PC_REMOTE_CHECK_MEDIA',
+    'PC_REMOTE_CHECK_MEDIA_STREAMS',
     function (test) {
-      test.pcRemote.checkMedia(test.pcLocal.constraints);
+      test.pcRemote.checkMediaStreams(test.pcLocal.constraints);
       test.next();
+    }
+  ],
+  [
+    'PC_LOCAL_CHECK_MEDIA_FLOW_PRESENT',
+    function (test) {
+      test.pcLocal.checkMediaFlowPresent(function () {
+        test.next();
+      });
+    }
+  ],
+  [
+    'PC_REMOTE_CHECK_MEDIA_FLOW_PRESENT',
+    function (test) {
+      test.pcRemote.checkMediaFlowPresent(function () {
+        test.next();
+      });
     }
   ],
   [
@@ -303,6 +335,77 @@ var commandsDataChannel = [
 
         test.next();
       }, options);
+    }
+  ],
+  [
+    'CREATE_NEGOTIATED_DATA_CHANNEL',
+    function (test) {
+      var options = {negotiated:true, id: 5, protocol:"foo/bar", ordered:false,
+		     maxRetransmits:500};
+      test.createDataChannel(options, function (sourceChannel2, targetChannel2) {
+        is(sourceChannel2.readyState, "open", sourceChannel2 + " is in state: 'open'");
+        is(targetChannel2.readyState, "open", targetChannel2 + " is in state: 'open'");
+
+        is(targetChannel2.binaryType, "blob", targetChannel2 + " is of binary type 'blob'");
+        is(targetChannel2.readyState, "open", targetChannel2 + " is in state: 'open'");
+
+        if (options.id != undefined) {
+          is(sourceChannel2.id, options.id, sourceChannel2 + " id is:" + sourceChannel2.id);
+	} else {
+	  options.id = sourceChannel2.id;
+	}
+	var reliable = !options.ordered ? false : (options.maxRetransmits || options.maxRetransmitTime);
+        is(sourceChannel2.protocol, options.protocol, sourceChannel2 + " protocol is:" + sourceChannel2.protocol);
+        is(sourceChannel2.reliable, reliable, sourceChannel2 + " reliable is:" + sourceChannel2.reliable);
+/*
+  These aren't exposed by IDL yet
+        is(sourceChannel2.ordered, options.ordered, sourceChannel2 + " ordered is:" + sourceChannel2.ordered);
+        is(sourceChannel2.maxRetransmits, options.maxRetransmits, sourceChannel2 + " maxRetransmits is:" +
+	   sourceChannel2.maxRetransmits);
+        is(sourceChannel2.maxRetransmitTime, options.maxRetransmitTime, sourceChannel2 + " maxRetransmitTime is:" +
+	   sourceChannel2.maxRetransmitTime);
+*/
+
+        is(targetChannel2.id, options.id, targetChannel2 + " id is:" + targetChannel2.id);
+        is(targetChannel2.protocol, options.protocol, targetChannel2 + " protocol is:" + targetChannel2.protocol);
+        is(targetChannel2.reliable, reliable, targetChannel2 + " reliable is:" + targetChannel2.reliable);
+/*
+  These aren't exposed by IDL yet
+       is(targetChannel2.ordered, options.ordered, targetChannel2 + " ordered is:" + targetChannel2.ordered);
+        is(targetChannel2.maxRetransmits, options.maxRetransmits, targetChannel2 + " maxRetransmits is:" +
+	   targetChannel2.maxRetransmits);
+        is(targetChannel2.maxRetransmitTime, options.maxRetransmitTime, targetChannel2 + " maxRetransmitTime is:" +
+	   targetChannel2.maxRetransmitTime);
+*/
+
+        test.next();
+      });
+    }
+  ],
+  [
+    'SEND_MESSAGE_THROUGH_LAST_OPENED_CHANNEL2',
+    function (test) {
+      var channels = test.pcRemote.dataChannels;
+      var message = "Lorem ipsum dolor sit amet";
+
+      test.send(message, function (channel, data) {
+        is(channels.indexOf(channel), channels.length - 1, "Last channel used");
+        is(data, message, "Received message has the correct content.");
+
+        test.next();
+      });
+    }
+  ],
+  [
+    'CLOSE_LAST_OPENED_DATA_CHANNEL2',
+    function (test) {
+      var channels = test.pcRemote.dataChannels;
+
+      test.closeDataChannel(channels.length - 1, function (channel) {
+        is(channel.readyState, "closed", "Channel is in state: 'closed'");
+
+        test.next();
+      });
     }
   ],
   [

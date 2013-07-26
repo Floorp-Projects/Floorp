@@ -12,10 +12,9 @@
 #include "frontend/BytecodeCompiler.h"
 #include "frontend/ParseNode.h"
 #include "frontend/SharedContext.h"
+#include "vm/StringBuffer.h"
 
 #include "jsfuninlines.h"
-
-#include "vm/StringBuffer.h"
 
 using namespace js;
 using namespace js::frontend;

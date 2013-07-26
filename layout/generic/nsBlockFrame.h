@@ -263,6 +263,32 @@ public:
 
   virtual nsRect ComputeTightBounds(gfxContext* aContext) const;
   
+  /**
+   * Compute the final height of this frame.
+   *
+   * @param aReflowState Data structure passed from parent during reflow.
+   * @param aReflowStatus A pointed to the reflow status for when we're finished
+   *        doing reflow. this will get set appropriately if the height causes
+   *        us to exceed the current available (page) height.
+   * @param aContentHeight The height of content, precomputed outside of this
+   *        function. The final height that is used in aMetrics will be set to
+   *        either this or the available height, whichever is larger, in the
+   *        case where our available height is constrained, and we overflow that
+   *        available height.
+   * @param aBorderPadding The margins representing the border padding for block
+   *        frames. Can be 0.
+   * @param aMetrics Out parameter for final height. Taken as an
+   *        nsHTMLReflowMetrics object so that aMetrics can be passed in
+   *        directly during reflow.
+   * @param aConsumed The height already consumed by our previous-in-flows.
+   */
+  void ComputeFinalHeight(const nsHTMLReflowState& aReflowState,
+                          nsReflowStatus*          aStatus,
+                          nscoord                  aContentHeight,
+                          const nsMargin&          aBorderPadding,
+                          nsHTMLReflowMetrics&     aMetrics,
+                          nscoord                  aConsumed);
+
   NS_IMETHOD Reflow(nsPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
@@ -411,8 +437,6 @@ protected:
     */
   void SlideLine(nsBlockReflowState& aState,
                  nsLineBox* aLine, nscoord aDY);
-
-  virtual int GetSkipSides() const MOZ_OVERRIDE;
 
   void ComputeFinalSize(const nsHTMLReflowState& aReflowState,
                         nsBlockReflowState&      aState,
@@ -795,13 +819,6 @@ protected:
   FrameLines* RemoveOverflowLines();
   void SetOverflowLines(FrameLines* aOverflowLines);
   void DestroyOverflowLines();
-
-  // Determine the computed height that's in effect for this block
-  // frame (that is, our computed height minus the heights of our
-  // previous in-flows).
-  // XXXbz this clearly makes laying out a block with N in-flows
-  // O(N^2)!  Good thing the constant is tiny.
-  nscoord GetEffectiveComputedHeight(const nsHTMLReflowState& aReflowState) const;
 
   /**
    * This class is useful for efficiently modifying the out of flow

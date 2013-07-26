@@ -133,7 +133,7 @@ class ScriptLoaderRunnable : public WorkerFeature,
   bool mCanceledMainThread;
 
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
 
   ScriptLoaderRunnable(WorkerPrivate* aWorkerPrivate,
                        uint32_t aSyncQueueKey,
@@ -520,8 +520,7 @@ public:
   }
 };
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(ScriptLoaderRunnable, nsIRunnable,
-                                                    nsIStreamLoaderObserver)
+NS_IMPL_ISUPPORTS2(ScriptLoaderRunnable, nsIRunnable, nsIStreamLoaderObserver)
 
 class StopSyncLoopRunnable MOZ_FINAL : public MainThreadSyncRunnable
 {

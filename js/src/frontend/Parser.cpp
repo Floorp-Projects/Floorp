@@ -19,20 +19,21 @@
 
 #include "frontend/Parser.h"
 
-#include "jstypes.h"
 #include "jsapi.h"
 #include "jsatom.h"
 #include "jscntxt.h"
-#include "jsversion.h"
 #include "jsfun.h"
 #include "jsobj.h"
 #include "jsopcode.h"
 #include "jsscript.h"
+#include "jstypes.h"
+#include "jsversion.h"
 
 #include "frontend/BytecodeCompiler.h"
 #include "frontend/FoldConstants.h"
 #include "frontend/ParseMaps.h"
 #include "frontend/TokenStream.h"
+#include "vm/NumericConversions.h"
 #include "vm/RegExpStatics.h"
 #include "vm/Shape.h"
 
@@ -43,8 +44,6 @@
 
 #include "frontend/ParseMaps-inl.h"
 #include "frontend/ParseNode-inl.h"
-
-#include "vm/NumericConversions.h"
 
 using namespace js;
 using namespace js::gc;
@@ -2222,6 +2221,8 @@ Parser<ParseHandler>::functionArgsAndBodyGeneric(Node pn, HandleFunction fun, Fu
     // Given a properly initialized parse context, try to parse an actual
     // function without concern for conversion to strict mode, use of lazy
     // parsing and such.
+
+    context->maybePause();
 
     Node prelude = null();
     bool hasRest;

@@ -19,18 +19,30 @@ class B2GMixin(object):
     userJS = "/data/local/user.js"
     marionette = None
 
-    def __init__(self, host=None, marionette_port=2828, **kwargs):
-        self.marionetteHost = host
-        self.marionettePort = marionette_port
+    def __init__(self, host=None, marionetteHost=None, marionettePort=2828,
+                 **kwargs):
+ 
+        # (allowing marionneteHost to be specified seems a bit
+        # counter-intuitive since we normally get it below from the ip
+        # address, however we currently need it to be able to connect
+        # via adb port forwarding and localhost)
+        if marionetteHost:
+            self.marionetteHost = marionetteHost
+        elif host:
+            self.marionetteHost = host
+        self.marionettePort = marionettePort
 
     def cleanup(self):
+        """
+        If a user profile was setup on the device, restore it to the original.
+        """
         if self.profileDir:
             self.restoreProfile()
 
     def waitForPort(self, timeout):
-        """
-        Wait for the marionette server to respond.
-        Timeout parameter is in seconds
+        """Waits for the marionette server to respond, until the timeout specified.
+
+	:param timeout: Timeout parameter in seconds.
         """
         print "waiting for port"
         starttime = datetime.datetime.now()
@@ -50,11 +62,11 @@ class B2GMixin(object):
             time.sleep(1)
         raise DMError("Could not communicate with Marionette port")
 
-    def setupMarionette(self):
+    def setupMarionette(self, scriptTimeout=60000):
         """
-        Start a marionette session.
-        If no host is given, then this will get the ip
-        of the device, and set up networking if needed.
+        Starts a marionette session.
+        If no host was given at init, the ip of the device will be retrieved
+        and networking will be established.
         """
         if not self.marionetteHost:
             self.setupDHCP()
@@ -65,9 +77,11 @@ class B2GMixin(object):
             self.waitForPort(30)
             self.marionette.start_session()
 
+        self.marionette.set_script_timeout(scriptTimeout)
+
     def restartB2G(self):
         """
-        Restarts the b2g process on the device
+        Restarts the b2g process on the device.
         """
         #restart b2g so we start with a clean slate
         if self.marionette and self.marionette.session:
@@ -83,16 +97,16 @@ class B2GMixin(object):
         self.shellCheckOutput(['start', 'b2g'])
 
     def setupProfile(self, prefs=None):
+        """Sets up the user profile on the device.
+
+        :param prefs: String of user_prefs to add to the profile. Defaults to a standard b2g testing profile.
         """
-        Sets up the user profile on the device,
-        The 'prefs' is a string of user_prefs to add to the profile.
-        If it is not set, it will default to a standard b2g testing profile.
-        """
+        # currently we have no custom prefs to set (when bug 800138 is fixed,
+        # we will probably want to enable marionette on an external ip by
+        # default)
         if not prefs:
-            prefs = """
-user_pref("power.screen.timeout", 999999);
-user_pref("devtools.debugger.force-local", false);
-            """
+            prefs = ""
+
         #remove previous user.js if there is one
         if not self.profileDir:
             self.profileDir = tempfile.mkdtemp()
@@ -101,7 +115,7 @@ user_pref("devtools.debugger.force-local", false);
             os.remove(our_userJS)
         #copy profile
         try:
-            output = self.getFile(self.userJS, our_userJS)
+            self.getFile(self.userJS, our_userJS)
         except subprocess.CalledProcessError:
             pass
         #if we successfully copied the profile, make a backup of the file
@@ -109,31 +123,39 @@ user_pref("devtools.debugger.force-local", false);
             self.shellCheckOutput(['dd', 'if=%s' % self.userJS, 'of=%s.orig' % self.userJS])
         with open(our_userJS, 'a') as user_file:
             user_file.write("%s" % prefs)
+
         self.pushFile(our_userJS, self.userJS)
         self.restartB2G()
         self.setupMarionette()
 
-    def setupDHCP(self, conn_type='eth0'):
-        """
-        Sets up networking.
+    def setupDHCP(self, interfaces=['eth0', 'wlan0']):
+        """Sets up networking.
 
-        If conn_type is not set, it will assume eth0.
+        :param interfaces: Network connection types to try. Defaults to eth0 and wlan0.
         """
+        all_interfaces = [line.split()[0] for line in \
+                          self.shellCheckOutput(['netcfg']).splitlines()[1:]]
+        interfaces_to_try = filter(lambda i: i in interfaces, all_interfaces)
+
         tries = 5
+        print "Setting up DHCP..."
         while tries > 0:
             print "attempts left: %d" % tries
             try:
-                self.shellCheckOutput(['netcfg', conn_type, 'dhcp'], timeout=10)
-                if self.getIP():
-                    return
+                for interface in interfaces_to_try:
+                    self.shellCheckOutput(['netcfg', interface, 'dhcp'],
+                                          timeout=10)
+                    if self.getIP(interfaces=[interface]):
+                        return
             except DMError:
                 pass
-            tries = tries - 1
+            time.sleep(1)
+            tries -= 1
         raise DMError("Could not set up network connection")
 
     def restoreProfile(self):
         """
-        Restores the original profile
+        Restores the original user profile on the device.
         """
         if not self.profileDir:
             raise DMError("There is no profile to restore")
@@ -147,6 +169,8 @@ user_pref("devtools.debugger.force-local", false);
     def getAppInfo(self):
         """
         Returns the appinfo, with an additional "date" key.
+
+        :rtype: dictionary
         """
         if not self.marionette or not self.marionette.session:
             self.setupMarionette()

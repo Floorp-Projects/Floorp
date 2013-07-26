@@ -103,12 +103,12 @@ public:
      */
     static TabParent*
     CreateBrowserOrApp(const TabContext& aContext,
-                       nsIDOMElement* aFrameElement);
+                       Element* aFrameElement);
 
     static void GetAll(nsTArray<ContentParent*>& aArray);
     static void GetAllEvenIfDead(nsTArray<ContentParent*>& aArray);
 
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSIOBSERVER
     NS_DECL_NSITHREADOBSERVER
     NS_DECL_NSIDOMGEOPOSITIONCALLBACK
@@ -195,7 +195,7 @@ private:
                                     ChildPrivileges aPrivs,
                                     hal::ProcessPriority aInitialPriority);
 
-    static hal::ProcessPriority GetInitialProcessPriority(nsIDOMElement* aFrameElement);
+    static hal::ProcessPriority GetInitialProcessPriority(Element* aFrameElement);
 
     // Hide the raw constructor methods since we don't want client code
     // using them.
@@ -218,7 +218,7 @@ private:
     // has a pending system message, this function acquires the CPU wake lock on
     // behalf of the child.  We'll release the lock when the system message is
     // handled or after a timeout, whichever comes first.
-    void MaybeTakeCPUWakeLock(nsIDOMElement* aFrameElement);
+    void MaybeTakeCPUWakeLock(Element* aFrameElement);
 
     // Set the child process's priority and then check whether the child is
     // still alive.  Returns true if the process is still alive, and false

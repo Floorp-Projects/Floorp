@@ -10,9 +10,9 @@
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/MathAlgorithms.h"
 
-#include "ion/MIR.h"
 #include "ion/CompileInfo.h"
 #include "ion/IonAnalysis.h"
+#include "ion/MIR.h"
 
 namespace js {
 namespace ion {
@@ -197,8 +197,6 @@ class Range : public TempObject {
 
     Range(const MDefinition *def);
 
-    static Range *Truncate(int64_t l, int64_t h);
-
     void print(Sprinter &sp) const;
     bool update(const Range *other);
     bool update(const Range &other) {
@@ -330,7 +328,7 @@ class Range : public TempObject {
         max_exponent_ = MaxInt32Exponent;
     }
 
-    inline void set(int64_t l, int64_t h, bool d, uint16_t e) {
+    inline void set(int64_t l, int64_t h, bool d = false, uint16_t e = MaxInt32Exponent) {
         setLowerInit(l);
         setUpperInit(h);
         decimal_ = d;
@@ -340,11 +338,29 @@ class Range : public TempObject {
         JS_ASSERT_IF(upper_infinite_, upper_ == JSVAL_INT_MAX);
     }
 
-    // Truncate the range to an Int32 range.
-    void truncate();
+    // Make the lower end of this range at least INT32_MIN, and make
+    // the upper end of this range at most INT32_MAX.
+    void clampToInt32();
 
-    // Truncate the range to a Boolean range.
-    void truncateToBoolean();
+    // If this range exceeds int32_t range, at either or both ends, change
+    // it to int32_t range.  Otherwise do nothing.
+    void wrapAroundToInt32();
+
+    // If this range exceeds [0, 32) range, at either or both ends, change
+    // it to the [0, 32) range.  Otherwise do nothing.
+    void wrapAroundToShiftCount();
+
+    // If this range exceeds [0, 1] range, at either or both ends, change
+    // it to the [0, 1] range.  Otherwise do nothing.
+    void wrapAroundToBoolean();
+
+    // As we lack support of MIRType_UInt32, we need to work around the int32
+    // representation by doing an overflow while keeping the upper infinity to
+    // repesent the fact that the value might reach bigger numbers.
+    void extendUInt32ToInt32Min() {
+        JS_ASSERT(isUpperInfinite());
+        lower_ = JSVAL_INT_MIN;
+    }
 
     // Set the exponent by using the precise range analysis on the full
     // range of Int32 values. This might shrink the exponent after some

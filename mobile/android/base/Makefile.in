@@ -75,6 +75,7 @@ FENNEC_JAVA_FILES = \
   CanvasDelegate.java \
   CheckableLinearLayout.java \
   ClickableWhenDisabledEditText.java \
+  ContactService.java \
   ContextGetter.java \
   CustomEditText.java \
   db/BrowserDB.java \
@@ -133,7 +134,6 @@ FENNEC_JAVA_FILES = \
   PrefsHelper.java \
   PrivateDataPreference.java \
   PrivateTab.java \
-  ProfileMigrator.java \
   Prompt.java \
   PromptInput.java \
   PromptService.java \
@@ -150,7 +150,6 @@ FENNEC_JAVA_FILES = \
   ServiceNotificationClient.java \
   ScrollAnimator.java \
   SessionParser.java \
-  SetupScreen.java \
   ShapedButton.java \
   SharedPreferencesHelper.java \
   SiteIdentityPopup.java \
@@ -477,7 +476,6 @@ RES_LAYOUT = \
   res/layout/search_engine_row.xml \
   res/layout/site_setting_item.xml \
   res/layout/site_setting_title.xml \
-  res/layout/setup_screen.xml \
   res/layout/shared_ui_components.xml \
   res/layout/site_identity.xml \
   res/layout/suggestion_item.xml \
@@ -683,8 +681,9 @@ RES_DRAWABLE_MDPI = \
   res/drawable-mdpi/find_close.png \
   res/drawable-mdpi/find_next.png \
   res/drawable-mdpi/find_prev.png \
-  res/drawable-mdpi/larry_blue.png \
-  res/drawable-mdpi/larry_green.png \
+  res/drawable-mdpi/larry.png \
+  res/drawable-mdpi/lock_identified.png \
+  res/drawable-mdpi/lock_verified.png \
   res/drawable-mdpi/menu.png \
   res/drawable-mdpi/menu_pb.png \
   res/drawable-mdpi/menu_panel_bg.9.png \
@@ -694,10 +693,8 @@ RES_DRAWABLE_MDPI = \
   res/drawable-mdpi/menu_item_check.png \
   res/drawable-mdpi/menu_item_more.png \
   res/drawable-mdpi/menu_item_uncheck.png \
-  res/drawable-mdpi/site_security_blocked_mixed_content.png \
-  res/drawable-mdpi/site_security_loaded_mixed_content.png \
-  res/drawable-mdpi/site_security_identified.png \
-  res/drawable-mdpi/site_security_verified.png \
+  res/drawable-mdpi/shield.png \
+  res/drawable-mdpi/shield_doorhanger.png \
   res/drawable-mdpi/tabs_normal.png \
   res/drawable-mdpi/tabs_private.png \
   res/drawable-mdpi/tabs_synced.png \
@@ -717,6 +714,8 @@ RES_DRAWABLE_MDPI = \
   res/drawable-mdpi/shadow.png \
   res/drawable-mdpi/start.png \
   res/drawable-mdpi/marketplace.png \
+  res/drawable-mdpi/warning.png \
+  res/drawable-mdpi/warning_doorhanger.png \
   $(NULL)
 
 RES_DRAWABLE_LDPI = \
@@ -790,8 +789,9 @@ RES_DRAWABLE_HDPI = \
   res/drawable-hdpi/find_close.png \
   res/drawable-hdpi/find_next.png \
   res/drawable-hdpi/find_prev.png \
-  res/drawable-hdpi/larry_blue.png \
-  res/drawable-hdpi/larry_green.png \
+  res/drawable-hdpi/larry.png \
+  res/drawable-hdpi/lock_identified.png \
+  res/drawable-hdpi/lock_verified.png \
   res/drawable-hdpi/menu.png \
   res/drawable-hdpi/menu_pb.png \
   res/drawable-hdpi/menu_panel_bg.9.png \
@@ -801,10 +801,8 @@ RES_DRAWABLE_HDPI = \
   res/drawable-hdpi/menu_item_check.png \
   res/drawable-hdpi/menu_item_more.png \
   res/drawable-hdpi/menu_item_uncheck.png \
-  res/drawable-hdpi/site_security_blocked_mixed_content.png \
-  res/drawable-hdpi/site_security_loaded_mixed_content.png \
-  res/drawable-hdpi/site_security_identified.png \
-  res/drawable-hdpi/site_security_verified.png \
+  res/drawable-hdpi/shield.png \
+  res/drawable-hdpi/shield_doorhanger.png \
   res/drawable-hdpi/tabs_normal.png \
   res/drawable-hdpi/tabs_private.png \
   res/drawable-hdpi/tabs_synced.png \
@@ -818,6 +816,8 @@ RES_DRAWABLE_HDPI = \
   res/drawable-hdpi/handle_end.png \
   res/drawable-hdpi/handle_middle.png \
   res/drawable-hdpi/handle_start.png \
+  res/drawable-hdpi/warning.png \
+  res/drawable-hdpi/warning_doorhanger.png \
   $(NULL)
 
 RES_DRAWABLE_XHDPI = \
@@ -885,8 +885,9 @@ RES_DRAWABLE_XHDPI = \
   res/drawable-xhdpi/reader.png \
   res/drawable-xhdpi/reader_active.png \
   res/drawable-xhdpi/reading_list.png \
-  res/drawable-xhdpi/larry_blue.png \
-  res/drawable-xhdpi/larry_green.png \
+  res/drawable-xhdpi/larry.png \
+  res/drawable-xhdpi/lock_identified.png \
+  res/drawable-xhdpi/lock_verified.png \
   res/drawable-xhdpi/menu.png \
   res/drawable-xhdpi/menu_pb.png \
   res/drawable-xhdpi/menu_panel_bg.9.png \
@@ -896,13 +897,11 @@ RES_DRAWABLE_XHDPI = \
   res/drawable-xhdpi/menu_item_check.png \
   res/drawable-xhdpi/menu_item_more.png \
   res/drawable-xhdpi/menu_item_uncheck.png \
+  res/drawable-xhdpi/shield.png \
+  res/drawable-xhdpi/shield_doorhanger.png \
   res/drawable-xhdpi/tab_indicator_divider.9.png \
   res/drawable-xhdpi/tab_indicator_selected.9.png \
   res/drawable-xhdpi/tab_indicator_selected_focused.9.png \
-  res/drawable-xhdpi/site_security_blocked_mixed_content.png \
-  res/drawable-xhdpi/site_security_loaded_mixed_content.png \
-  res/drawable-xhdpi/site_security_identified.png \
-  res/drawable-xhdpi/site_security_verified.png \
   res/drawable-xhdpi/tabs_normal.png \
   res/drawable-xhdpi/tabs_private.png \
   res/drawable-xhdpi/tabs_synced.png \
@@ -912,6 +911,8 @@ RES_DRAWABLE_XHDPI = \
   res/drawable-xhdpi/handle_end.png \
   res/drawable-xhdpi/handle_middle.png \
   res/drawable-xhdpi/handle_start.png \
+  res/drawable-xhdpi/warning.png \
+  res/drawable-xhdpi/warning_doorhanger.png \
   $(NULL)
 
 RES_DRAWABLE_MDPI_V11 = \
@@ -1127,10 +1128,40 @@ RES_DRAWABLE += \
   res/drawable/webapp_titlebar_bg.xml                 \
   $(NULL)
 
-MOZ_BRANDING_DRAWABLE_MDPI = $(shell if test -e $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/android-resources.mn; then cat $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/android-resources.mn | tr '\n' ' ';  fi)
-
-RESOURCES=$(RES_LAYOUT) $(RES_LAYOUT_LARGE_LAND_V11) $(RES_LAYOUT_LARGE_V11) $(RES_LAYOUT_XLARGE_V11) $(RES_LAYOUT_XLARGE_LAND_V11) $(RES_VALUES) $(RES_VALUES_LAND) $(RES_VALUES_V11) $(RES_VALUES_LARGE_V11) $(RES_VALUES_LARGE_LAND_V11) $(RES_VALUES_XLARGE_V11) $(RES_VALUES_LAND_V14) $(RES_VALUES_V14) $(RES_XML) $(RES_XML_V11) $(RES_ANIM) $(RES_DRAWABLE_MDPI) $(RES_DRAWABLE_LDPI) $(RES_DRAWABLE_HDPI) $(RES_DRAWABLE_XHDPI) $(RES_DRAWABLE_MDPI_V11) $(RES_DRAWABLE_HDPI_V11) $(RES_DRAWABLE_XHDPI_V11) $(RES_DRAWABLE_LARGE_MDPI_V11) $(RES_DRAWABLE_LARGE_HDPI_V11) $(RES_DRAWABLE_LARGE_XHDPI_V11) $(RES_DRAWABLE_XLARGE_MDPI_V11) $(RES_DRAWABLE_XLARGE_HDPI_V11) $(RES_DRAWABLE_XLARGE_XHDPI_V11) $(RES_COLOR) $(RES_MENU)
-RESOURCES += $(RES_DRAWABLE)
+RESOURCES = \
+  $(RES_ANIM) \
+  $(RES_COLOR) \
+  $(RES_DRAWABLE) \
+  $(RES_DRAWABLE_HDPI) \
+  $(RES_DRAWABLE_HDPI_V11) \
+  $(RES_DRAWABLE_LARGE_HDPI_V11) \
+  $(RES_DRAWABLE_LARGE_MDPI_V11) \
+  $(RES_DRAWABLE_LARGE_XHDPI_V11) \
+  $(RES_DRAWABLE_LDPI) \
+  $(RES_DRAWABLE_MDPI) \
+  $(RES_DRAWABLE_MDPI_V11) \
+  $(RES_DRAWABLE_XHDPI) \
+  $(RES_DRAWABLE_XHDPI_V11) \
+  $(RES_DRAWABLE_XLARGE_HDPI_V11) \
+  $(RES_DRAWABLE_XLARGE_MDPI_V11) \
+  $(RES_DRAWABLE_XLARGE_XHDPI_V11) \
+  $(RES_LAYOUT) \
+  $(RES_LAYOUT_LARGE_LAND_V11) \
+  $(RES_LAYOUT_LARGE_V11) \
+  $(RES_LAYOUT_XLARGE_LAND_V11) \
+  $(RES_LAYOUT_XLARGE_V11) \
+  $(RES_MENU) \
+  $(RES_VALUES) \
+  $(RES_VALUES_LAND) \
+  $(RES_VALUES_LAND_V14) \
+  $(RES_VALUES_LARGE_LAND_V11) \
+  $(RES_VALUES_LARGE_V11) \
+  $(RES_VALUES_V11) \
+  $(RES_VALUES_V14) \
+  $(RES_VALUES_XLARGE_V11) \
+  $(RES_XML) \
+  $(RES_XML_V11) \
+  $(NULL)
 
 RES_DIRS= \
   res/layout                    \
@@ -1311,26 +1342,21 @@ $(FENNEC_PP_JAVA_VIEW_FILES): GeckoView.java.frag
 	@rm -f $@
 	cat $< | sed s,@VIEWTYPE@,$(patsubst Gecko%.java,%,$@),g >> $@ ; \
 
-res/drawable-mdpi/icon.png: $(MOZ_APP_ICON)
+res/drawable-mdpi/icon.png: $(ICON_PATH)
 	$(NSINSTALL) -D res/drawable-mdpi
 	cp $(ICON_PATH) $@
 
-res/drawable-hdpi/icon.png: $(MOZ_APP_ICON)
+res/drawable-hdpi/icon.png: $(ICON_PATH_HDPI)
 	$(NSINSTALL) -D res/drawable-hdpi
 	cp $(ICON_PATH_HDPI) $@
 
-res/drawable-xhdpi/icon.png: $(MOZ_APP_ICON)
+res/drawable-xhdpi/icon.png: $(ICON_PATH_XHDPI)
 	$(NSINSTALL) -D res/drawable-xhdpi
 	cp $(ICON_PATH_XHDPI) $@
 
-res/drawable-xxhdpi/icon.png: $(MOZ_APP_ICON)
+res/drawable-xxhdpi/icon.png: $(ICON_PATH_XXHDPI)
 	$(NSINSTALL) -D res/drawable-xxhdpi
 	cp $(ICON_PATH_XXHDPI) $@
-
-RES_BRANDING_DRAWABLE_MDPI = $(addprefix res/drawable-mdpi/,$(notdir $(MOZ_BRANDING_DRAWABLE_MDPI)))
-$(RES_BRANDING_DRAWABLE_MDPI): $(addprefix $(topsrcdir)/,$(MOZ_BRANDING_DRAWABLE_MDPI))
-	$(NSINSTALL) -D res/drawable-mdpi
-	$(NSINSTALL) $^ res/drawable-mdpi/
 
 $(RES_DIRS): $(subst res/,$(srcdir)/resources/,$(RESOURCES))
 	$(RM) -r $@
@@ -1344,7 +1370,6 @@ res/values/strings.xml:
 	$(MAKE) -C locales
 
 all_resources = \
-  res/drawable-mdpi/logo.png \
   res/drawable-mdpi/icon.png \
   res/drawable-hdpi/icon.png \
   res/drawable-xhdpi/icon.png \
@@ -1353,7 +1378,6 @@ all_resources = \
   AndroidManifest.xml \
   $(RESOURCES) \
   $(PP_RES_XML) \
-  $(RES_BRANDING_DRAWABLE_MDPI) \
   $(NULL)
 
 R.java: $(all_resources)

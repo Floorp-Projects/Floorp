@@ -29,7 +29,7 @@ DrawEventRecorderPrivate::RecordEvent(const RecordedEvent &aEvent)
 }
 
 DrawEventRecorderFile::DrawEventRecorderFile(const char *aFilename)
-  : DrawEventRecorderPrivate(NULL) 
+  : DrawEventRecorderPrivate(nullptr) 
   , mOutputFile(aFilename, ofstream::binary)
 {
   mOutputStream = &mOutputFile;

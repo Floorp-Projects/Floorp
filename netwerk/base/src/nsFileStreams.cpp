@@ -51,9 +51,9 @@ nsFileStreamBase::~nsFileStreamBase()
     Close();
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(nsFileStreamBase,
-                              nsISeekableStream,
-                              nsIFileMetadata)
+NS_IMPL_ISUPPORTS2(nsFileStreamBase,
+                   nsISeekableStream,
+                   nsIFileMetadata)
 
 NS_IMETHODIMP
 nsFileStreamBase::Seek(int32_t whence, int64_t offset)

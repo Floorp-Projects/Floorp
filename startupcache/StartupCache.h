@@ -92,7 +92,7 @@ struct CacheEntry
 // refcount its listeners, so we'll let it refcount this instead.
 class StartupCacheListener MOZ_FINAL : public nsIObserver
 {
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIOBSERVER
 };
 
@@ -214,7 +214,7 @@ class StartupCacheDebugOutputStream MOZ_FINAL
 class StartupCacheWrapper MOZ_FINAL
   : public nsIStartupCache
 {
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSISTARTUPCACHE
 
   static StartupCacheWrapper* GetSingleton();

@@ -371,24 +371,20 @@ menuitem:not([type]):not(.menuitem-tooltip):not(.menuitem-iconic-tooltip) {
   list-style-image: url("moz-icon://stock/gtk-preferences?size=menu");
 }
 
-#menu_stop,
 #context-stop {
   list-style-image: url("moz-icon://stock/gtk-stop?size=menu");
 }
 
-#menu_stop[disabled],
 #context-stop[disabled] {
   list-style-image: url("moz-icon://stock/gtk-stop?size=menu&state=disabled");
 }
 
-#menu_reload,
 #placesContext_reload,
 #context-reload,
 #context-reloadframe {
   list-style-image: url("moz-icon://stock/gtk-refresh?size=menu");
 }
 
-#menu_reload[disabled],
 #context-reload[disabled] {
   list-style-image: url("moz-icon://stock/gtk-refresh?size=menu&state=disabled");
 }
@@ -405,48 +401,36 @@ menuitem:not([type]):not(.menuitem-tooltip):not(.menuitem-iconic-tooltip) {
   list-style-image: url("moz-icon://stock/gtk-zoom-100?size=menu");
 }
 
-#historyMenuBack,
 #context-back {
   list-style-image: url("moz-icon://stock/gtk-go-back-ltr?size=menu");
 }
 
-#historyMenuBack[disabled],
 #context-back[disabled] {
   list-style-image: url("moz-icon://stock/gtk-go-back-ltr?size=menu&state=disabled");
 }
 
-#historyMenuBack:-moz-locale-dir(rtl),
 #context-back:-moz-locale-dir(rtl) {
   list-style-image: url("moz-icon://stock/gtk-go-back-rtl?size=menu");
 }
 
-#historyMenuBack[disabled]:-moz-locale-dir(rtl),
 #context-back[disabled]:-moz-locale-dir(rtl) {
   list-style-image: url("moz-icon://stock/gtk-go-back-rtl?size=menu&state=disabled");
 }
 
-#historyMenuForward,
 #context-forward {
   list-style-image: url("moz-icon://stock/gtk-go-forward-ltr?size=menu");
 }
 
-#historyMenuForward[disabled],
 #context-forward[disabled] {
   list-style-image: url("moz-icon://stock/gtk-go-forward-ltr?size=menu&state=disabled");
 }
 
-#historyMenuForward:-moz-locale-dir(rtl),
 #context-forward:-moz-locale-dir(rtl) {
   list-style-image: url("moz-icon://stock/gtk-go-forward-rtl?size=menu");
 }
 
-#historyMenuForward[disabled]:-moz-locale-dir(rtl),
 #context-forward[disabled]:-moz-locale-dir(rtl) {
   list-style-image: url("moz-icon://stock/gtk-go-forward-rtl?size=menu&state=disabled");
-}
-
-#historyMenuHome {
-  list-style-image: url("moz-icon://stock/gtk-home?size=menu");
 }
 
 #appmenu_history,
@@ -1285,11 +1269,33 @@ toolbar[iconsize="small"] #webrtc-status-button {
 }
 
 #plugins-notification-icon {
-  list-style-image: url(chrome://mozapps/skin/plugins/pluginGeneric-16.png);
+  list-style-image: url(chrome://browser/skin/notification-pluginNormal.png);
+}
+
+#alert-plugins-notification-icon {
+  list-style-image: url(chrome://browser/skin/notification-pluginAlert.png);
 }
 
 #blocked-plugins-notification-icon {
-  list-style-image: url(chrome://mozapps/skin/plugins/notifyPluginBlocked.png);
+  list-style-image: url(chrome://browser/skin/notification-pluginBlocked.png);
+}
+
+#plugins-notification-icon,
+#alert-plugins-notification-icon,
+#blocked-plugins-notification-icon {
+  -moz-image-region: rect(0, 16px, 16px, 0);
+}
+
+#plugins-notification-icon:hover,
+#alert-plugins-notification-icon:hover,
+#blocked-plugins-notification-icon:hover {
+  -moz-image-region: rect(0, 32px, 16px, 16px);
+}
+
+#plugins-notification-icon:active,
+#alert-plugins-notification-icon:active,
+#blocked-plugins-notification-icon:active {
+  -moz-image-region: rect(0, 48px, 16px, 32px);
 }
 
 #plugin-install-notification-icon {

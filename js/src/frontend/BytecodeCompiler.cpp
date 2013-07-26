@@ -7,6 +7,7 @@
 #include "frontend/BytecodeCompiler.h"
 
 #include "jsscript.h"
+
 #include "frontend/BytecodeEmitter.h"
 #include "frontend/FoldConstants.h"
 #include "frontend/NameFunctions.h"
@@ -24,20 +25,21 @@ using namespace js::frontend;
 using mozilla::Maybe;
 
 static bool
-CheckLength(JSContext *cx, size_t length)
+CheckLength(ExclusiveContext *cx, size_t length)
 {
     // Note this limit is simply so we can store sourceStart and sourceEnd in
     // JSScript as 32-bits. It could be lifted fairly easily, since the compiler
     // is using size_t internally already.
     if (length > UINT32_MAX) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_SOURCE_TOO_LONG);
+        if (cx->isJSContext())
+            JS_ReportErrorNumber(cx->asJSContext(), js_GetErrorMessage, NULL, JSMSG_SOURCE_TOO_LONG);
         return false;
     }
     return true;
 }
 
 static bool
-SetSourceMap(JSContext *cx, TokenStream &tokenStream, ScriptSource *ss)
+SetSourceMap(ExclusiveContext *cx, TokenStream &tokenStream, ScriptSource *ss)
 {
     if (tokenStream.hasSourceMap()) {
         if (!ss->setSourceMap(cx, tokenStream.releaseSourceMap()))
@@ -74,12 +76,15 @@ CheckArgumentsWithinEval(JSContext *cx, Parser<FullParseHandler> &parser, Handle
 }
 
 static bool
-MaybeCheckEvalFreeVariables(JSContext *cx, HandleScript evalCaller, HandleObject scopeChain,
+MaybeCheckEvalFreeVariables(ExclusiveContext *cxArg, HandleScript evalCaller, HandleObject scopeChain,
                             Parser<FullParseHandler> &parser,
                             ParseContext<FullParseHandler> &pc)
 {
     if (!evalCaller || !evalCaller->functionOrCallerFunction())
         return true;
+
+    // Eval scripts are only compiled on the main thread.
+    JSContext *cx = cxArg->asJSContext();
 
     // Watch for uses of 'arguments' within the evaluated script, both as
     // free variables and as variables redeclared with 'var'.
@@ -120,17 +125,18 @@ MaybeCheckEvalFreeVariables(JSContext *cx, HandleScript evalCaller, HandleObject
 }
 
 inline bool
-CanLazilyParse(JSContext *cx, const CompileOptions &options)
+CanLazilyParse(ExclusiveContext *cx, const CompileOptions &options)
 {
     return options.canLazilyParse &&
         options.compileAndGo &&
         options.sourcePolicy == CompileOptions::SAVE_SOURCE &&
-        !cx->compartment()->debugMode();
+        cx->isJSContext() &&
+        !cx->asJSContext()->compartment()->debugMode();
 }
 
-inline void
-MaybeCallSourceHandler(JSContext *cx, const CompileOptions &options,
-                       const jschar *chars, size_t length)
+void
+frontend::MaybeCallSourceHandler(JSContext *cx, const CompileOptions &options,
+                                 const jschar *chars, size_t length)
 {
     JSSourceHandler listener = cx->runtime()->debugHooks.sourceHandler;
     void *listenerData = cx->runtime()->debugHooks.sourceHandlerData;
@@ -143,7 +149,7 @@ MaybeCallSourceHandler(JSContext *cx, const CompileOptions &options,
 }
 
 JSScript *
-frontend::CompileScript(JSContext *cx, HandleObject scopeChain,
+frontend::CompileScript(ExclusiveContext *cx, LifoAlloc *alloc, HandleObject scopeChain,
                         HandleScript evalCaller,
                         const CompileOptions &options,
                         const jschar *chars, size_t length,
@@ -154,7 +160,8 @@ frontend::CompileScript(JSContext *cx, HandleObject scopeChain,
     RootedString source(cx, source_);
     SkipRoot skip(cx, &chars);
 
-    MaybeCallSourceHandler(cx, options, chars, length);
+    if (cx->isJSContext())
+        MaybeCallSourceHandler(cx->asJSContext(), options, chars, length);
 
     /*
      * The scripted callerFrame can only be given for compile-and-go scripts
@@ -176,11 +183,20 @@ frontend::CompileScript(JSContext *cx, HandleObject scopeChain,
     JS::RootedScriptSource sourceObject(cx, ScriptSourceObject::create(cx, ss));
     if (!sourceObject)
         return NULL;
-    SourceCompressionToken mysct(cx);
-    SourceCompressionToken *sct = (extraSct) ? extraSct : &mysct;
+
+    // Saving source is not yet supported when parsing off thread.
+    JS_ASSERT_IF(!cx->isJSContext(), !extraSct && options.sourcePolicy == CompileOptions::NO_SOURCE);
+
+    SourceCompressionToken *sct = extraSct;
+    Maybe<SourceCompressionToken> mysct;
+    if (cx->isJSContext() && !sct) {
+        mysct.construct(cx->asJSContext());
+        sct = mysct.addr();
+    }
+
     switch (options.sourcePolicy) {
       case CompileOptions::SAVE_SOURCE:
-        if (!ss->setSourceCopy(cx, chars, length, false, sct))
+        if (!ss->setSourceCopy(cx->asJSContext(), chars, length, false, sct))
             return NULL;
         break;
       case CompileOptions::LAZY_SOURCE:
@@ -194,14 +210,12 @@ frontend::CompileScript(JSContext *cx, HandleObject scopeChain,
 
     Maybe<Parser<SyntaxParseHandler> > syntaxParser;
     if (canLazilyParse) {
-        syntaxParser.construct(cx, &cx->tempLifoAlloc(),
-                               options, chars, length, /* foldConstants = */ false,
+        syntaxParser.construct(cx, alloc, options, chars, length, /* foldConstants = */ false,
                                (Parser<SyntaxParseHandler> *) NULL,
                                (LazyScript *) NULL);
     }
 
-    Parser<FullParseHandler> parser(cx, &cx->tempLifoAlloc(),
-                                    options, chars, length, /* foldConstants = */ true,
+    Parser<FullParseHandler> parser(cx, alloc, options, chars, length, /* foldConstants = */ true,
                                     canLazilyParse ? &syntaxParser.ref() : NULL, NULL);
     parser.sct = sct;
     parser.ss = ss;
@@ -327,7 +341,10 @@ frontend::CompileScript(JSContext *cx, HandleObject scopeChain,
 
         if (!FoldConstants(cx, &pn, &parser))
             return NULL;
-        if (!NameFunctions(cx, pn))
+
+        // Inferring names for functions in compiled scripts is currently only
+        // supported while on the main thread. See bug 895395.
+        if (cx->isJSContext() && !NameFunctions(cx->asJSContext(), pn))
             return NULL;
 
         if (!EmitTree(cx, &bce, pn))
@@ -354,7 +371,7 @@ frontend::CompileScript(JSContext *cx, HandleObject scopeChain,
 
     bce.tellDebuggerAboutCompiledScript(cx);
 
-    if (sct == &mysct && !sct->complete())
+    if (sct && !extraSct && !sct->complete())
         return NULL;
 
     return script;

@@ -17,6 +17,7 @@
 #include "nsString.h"
 #include "nsIClassInfoImpl.h"
 #include "nsIScriptSecurityManager.h"
+#include "pratom.h"
 
 NS_IMPL_CLASSINFO(nsSystemPrincipal, nullptr,
                   nsIClassInfo::SINGLETON | nsIClassInfo::MAIN_THREAD_ONLY,

@@ -249,7 +249,7 @@ class PACResolver MOZ_FINAL : public nsIDNSListener
                             , public nsITimerCallback
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
 
   PACResolver()
     : mStatus(NS_ERROR_FAILURE)
@@ -286,7 +286,7 @@ public:
   nsCOMPtr<nsIDNSRecord>  mResponse;
   nsCOMPtr<nsITimer>      mTimer;
 };
-NS_IMPL_THREADSAFE_ISUPPORTS2(PACResolver, nsIDNSListener, nsITimerCallback)
+NS_IMPL_ISUPPORTS2(PACResolver, nsIDNSListener, nsITimerCallback)
 
 static
 void PACLogToConsole(nsString &aMessage)

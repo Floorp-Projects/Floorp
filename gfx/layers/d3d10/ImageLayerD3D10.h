@@ -19,7 +19,7 @@ class ImageLayerD3D10 : public ImageLayer,
 {
 public:
   ImageLayerD3D10(LayerManagerD3D10 *aManager)
-    : ImageLayer(aManager, NULL)
+    : ImageLayer(aManager, nullptr)
     , LayerD3D10(aManager)
   {
     mImplData = static_cast<LayerD3D10*>(this);
@@ -56,7 +56,7 @@ struct TextureD3D10BackendData : public ImageBackendData
 
 class RemoteDXGITextureImage : public Image {
 public:
-  RemoteDXGITextureImage() : Image(NULL, REMOTE_IMAGE_DXGI_TEXTURE) {}
+  RemoteDXGITextureImage() : Image(nullptr, REMOTE_IMAGE_DXGI_TEXTURE) {}
 
   already_AddRefed<gfxASurface> GetAsSurface();
 

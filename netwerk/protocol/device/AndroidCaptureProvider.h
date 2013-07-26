@@ -21,7 +21,7 @@ class AndroidCaptureProvider MOZ_FINAL : public nsDeviceCaptureProvider {
     AndroidCaptureProvider();
     ~AndroidCaptureProvider();
 
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
 
     nsresult Init(nsACString& aContentType, nsCaptureParams* aParams, nsIInputStream** aStream);
     static AndroidCaptureProvider* sInstance;
@@ -34,7 +34,7 @@ class AndroidCameraInputStream MOZ_FINAL : public nsIAsyncInputStream, mozilla::
 
     NS_IMETHODIMP Init(nsACString& aContentType, nsCaptureParams* aParams);
 
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSIINPUTSTREAM
     NS_DECL_NSIASYNCINPUTSTREAM
 

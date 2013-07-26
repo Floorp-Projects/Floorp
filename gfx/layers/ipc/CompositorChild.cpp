@@ -31,7 +31,7 @@ void
 CompositorChild::Destroy()
 {
   mLayerManager->Destroy();
-  mLayerManager = NULL;
+  mLayerManager = nullptr;
   while (size_t len = ManagedPLayerTransactionChild().Length()) {
     LayerTransactionChild* layers =
       static_cast<LayerTransactionChild*>(ManagedPLayerTransactionChild()[len - 1]);
@@ -94,7 +94,7 @@ CompositorChild::ActorDestroy(ActorDestroyReason aWhy)
     NS_RUNTIMEABORT("ActorDestroy by IPC channel failure at CompositorChild");
   }
 
-  sCompositor = NULL;
+  sCompositor = nullptr;
   // We don't want to release the ref to sCompositor here, during
   // cleanup, because that will cause it to be deleted while it's
   // still being used.  So defer the deletion to after it's not in

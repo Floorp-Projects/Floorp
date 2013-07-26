@@ -7,8 +7,6 @@ Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://testing-common/services/sync/utils.js");
 
-const TEST_GET_URL = "http://localhost:8080/1.1/johndoe/storage/meta/global";
-
 // Tracking info/collections.
 let collectionsHelper = track_collections_helper();
 let collections = collectionsHelper.collections;
@@ -26,6 +24,7 @@ function uaHandler(f) {
 }
 
 function run_test() {
+  Log4Moz.repository.rootLogger.addAppender(new Log4Moz.DumpAppender());
   meta_global = new ServerWBO('global');
   server = httpd_setup({
     "/1.1/johndoe/info/collections": uaHandler(collectionsHelper.handler),
@@ -33,8 +32,9 @@ function run_test() {
   });
 
   setBasicCredentials("johndoe", "ilovejane");
-  Service.serverURL  = TEST_SERVER_URL;
-  Service.clusterURL = TEST_CLUSTER_URL;
+  Service.serverURL = server.baseURI + "/";
+  Service.clusterURL = server.baseURI + "/";
+  _("Server URL: " + server.baseURI);
 
   expectedUA = Services.appinfo.name + "/" + Services.appinfo.version +
                " FxSync/" + WEAVE_VERSION + "." +
@@ -54,7 +54,7 @@ add_test(function test_fetchInfo() {
 
 add_test(function test_desktop_post() {
   _("Testing direct Resource POST.");
-  let r = new AsyncResource(TEST_GET_URL);
+  let r = new AsyncResource(server.baseURI + "/1.1/johndoe/storage/meta/global");
   r.post("foo=bar", function (error, content) {
     _("User-Agent: " + ua);
     do_check_eq(ua, expectedUA + ".desktop");
@@ -66,7 +66,7 @@ add_test(function test_desktop_post() {
 add_test(function test_desktop_get() {
   _("Testing async.");
   Svc.Prefs.set("client.type", "desktop");
-  let r = new AsyncResource(TEST_GET_URL);
+  let r = new AsyncResource(server.baseURI + "/1.1/johndoe/storage/meta/global");
   r.get(function(error, content) {
     _("User-Agent: " + ua);
     do_check_eq(ua, expectedUA + ".desktop");
@@ -78,7 +78,7 @@ add_test(function test_desktop_get() {
 add_test(function test_mobile_get() {
   _("Testing mobile.");
   Svc.Prefs.set("client.type", "mobile");
-  let r = new AsyncResource(TEST_GET_URL);
+  let r = new AsyncResource(server.baseURI + "/1.1/johndoe/storage/meta/global");
   r.get(function (error, content) {
     _("User-Agent: " + ua);
     do_check_eq(ua, expectedUA + ".mobile");

@@ -20,6 +20,7 @@ this.EXPORTED_SYMBOLS = ["DebuggerTransport",
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/Timer.jsm");
 let promise = Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js").Promise;
 const { defer, resolve, reject } = promise;
 
@@ -199,6 +200,7 @@ const UnsolicitedPauses = {
   "resumeLimit": "resumeLimit",
   "debuggerStatement": "debuggerStatement",
   "breakpoint": "breakpoint",
+  "DOMEvent": "DOMEvent",
   "watchpoint": "watchpoint",
   "exception": "exception"
 };
@@ -300,7 +302,14 @@ DebuggerClient.requester = function DC_requester(aPacketSkeleton, { telemetry,
       // The callback is always the last parameter.
       let thisCallback = args[maxPosition + 1];
       if (thisCallback) {
-        thisCallback(aResponse);
+        try {
+          thisCallback(aResponse);
+        } catch (e) {
+          let msg = "Error executing callback passed to debugger client: "
+            + e + "\n" + e.stack;
+          dumpn(msg);
+          Cu.reportError(msg);
+        }
       }
 
       if (histogram) {
@@ -1023,6 +1032,7 @@ ThreadClient.prototype = {
   get paused() { return this._state === "paused"; },
 
   _pauseOnExceptions: false,
+  _pauseOnDOMEvents: null,
 
   _actor: null,
   get actor() { return this._actor; },
@@ -1058,7 +1068,15 @@ ThreadClient.prototype = {
       // further requests that should only be sent in the paused state.
       this._state = "resuming";
 
-      aPacket.pauseOnExceptions = this._pauseOnExceptions;
+      if (!aPacket.resumeLimit) {
+        delete aPacket.resumeLimit;
+      }
+      if (this._pauseOnExceptions) {
+        aPacket.pauseOnExceptions = this._pauseOnExceptions;
+      }
+      if (this._pauseOnDOMEvents) {
+        aPacket.pauseOnDOMEvents = this._pauseOnDOMEvents;
+      }
       return aPacket;
     },
     after: function (aResponse) {
@@ -1144,6 +1162,33 @@ ThreadClient.prototype = {
         return;
       }
       this.resume(aOnResponse);
+    });
+  },
+
+  /**
+   * Enable pausing when the specified DOM events are triggered. Disabling
+   * pausing on an event can be realized by calling this method with the updated
+   * array of events that doesn't contain it.
+   *
+   * @param array|string events
+   *        An array of strings, representing the DOM event types to pause on,
+   *        or "*" to pause on all DOM events. Pass an empty array to
+   *        completely disable pausing on DOM events.
+   * @param function onResponse
+   *        Called with the response packet in a future turn of the event loop.
+   */
+  pauseOnDOMEvents: function (events, onResponse) {
+    this._pauseOnDOMEvents = events;
+    // If the debuggee is paused, the value of the array will be communicated in
+    // the next resumption. Otherwise we have to force a pause in order to send
+    // the array.
+    if (this.paused)
+      return void setTimeout(onResponse, 0);
+    this.interrupt(response => {
+      // Can't continue if pausing failed.
+      if (response.error)
+        return void onResponse(response);
+      this.resume(onResponse);
     });
   },
 
@@ -1270,6 +1315,18 @@ ThreadClient.prototype = {
     actors: args(0)
   }, {
     telemetry: "THREADGRIPS"
+  }),
+
+  /**
+   * Return the event listeners defined on the page.
+   *
+   * @param aOnResponse Function
+   *        Called with the thread's response.
+   */
+  eventListeners: DebuggerClient.requester({
+    type: "eventListeners"
+  }, {
+    telemetry: "EVENTLISTENERS"
   }),
 
   /**
@@ -1628,6 +1685,17 @@ GripClient.prototype = {
     type: "prototype"
   }, {
     telemetry: "PROTOTYPE"
+  }),
+
+  /**
+   * Request the display string of the object.
+   *
+   * @param aOnResponse function Called with the request's response.
+   */
+  getDisplayString: DebuggerClient.requester({
+    type: "displayString"
+  }, {
+    telemetry: "DISPLAYSTRING"
   }),
 };
 

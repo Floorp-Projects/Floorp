@@ -160,8 +160,8 @@ void MediaResourceManagerService::cancelClientLocked(const sp<IBinder>& binder)
   Fifo::iterator it(mVideoCodecRequestQueue.begin());
   while (it != mVideoCodecRequestQueue.end()) {
     if ((*it).get() == binder.get()) {
-      it = mVideoCodecRequestQueue.erase(it);
-      continue;
+      mVideoCodecRequestQueue.erase(it);
+      break;
     }
     it++;
   }

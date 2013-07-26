@@ -26,16 +26,16 @@ JSCompartment::maybeGlobal() const
     return global_;
 }
 
-js::AutoCompartment::AutoCompartment(JSContext *cx, JSObject *target)
+js::AutoCompartment::AutoCompartment(ExclusiveContext *cx, JSObject *target)
   : cx_(cx),
-    origin_(cx->compartment())
+    origin_(cx->compartment_)
 {
     cx_->enterCompartment(target->compartment());
 }
 
 js::AutoCompartment::AutoCompartment(ExclusiveContext *cx, JSCompartment *target)
-  : cx_(cx->asJSContext()),
-    origin_(cx_->compartment())
+  : cx_(cx),
+    origin_(cx_->compartment_)
 {
     cx_->enterCompartment(target);
 }

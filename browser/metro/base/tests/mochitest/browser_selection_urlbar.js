@@ -71,7 +71,7 @@ gTests.push({
 
 gTests.push({
   desc: "bug 887120 - tap & hold to paste into urlbar",
-  run: function bug887120_test() {
+  run: function() {
     gWindow = window;
 
     yield showNavBar();
@@ -95,7 +95,7 @@ gTests.push({
 
 gTests.push({
   desc: "bug 895284 - tap selection",
-  run: function bug887120_test() {
+  run: function() {
     gWindow = window;
 
     yield showNavBar();
@@ -118,6 +118,23 @@ gTests.push({
 
     ok(SelectionHelperUI.isCaretUIVisible, "caret browsing enabled");
 
+    clearSelection(edit);
+    delete window.r;
+  }
+});
+
+gTests.push({
+  desc: "bug 894713 - blur shuts down selection handling",
+  run: function() {
+    gWindow = window;
+    yield showNavBar();
+    let edit = document.getElementById("urlbar-edit");
+    edit.value = "wikipedia.org";
+    edit.select();
+    let editCoords = logicalCoordsForElement(edit);
+    SelectionHelperUI.attachEditSession(ChromeSelectionHandler, editCoords.x, editCoords.y);
+    edit.blur();
+    ok(!SelectionHelperUI.isSelectionUIVisible, "selection no longer enabled");
     clearSelection(edit);
     delete window.r;
   }

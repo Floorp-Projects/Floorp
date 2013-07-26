@@ -1,0 +1,76 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test that the playbackRate property is not reset when resuming the playback</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type='application/javascript;version=1.8'>
+
+if (navigator.platform.startsWith("Win")) {
+  SimpleTest.expectAssertions(0, 1);
+} else if (navigator.platform.startsWith("Mac")) {
+  SimpleTest.expectAssertions(0, 2);
+} else if (navigator.platform.startsWith("Linux")) {
+  // Bug 897024
+  SimpleTest.expectAssertions(0, 2);
+}
+
+let manager = new MediaTestManager;
+
+function ontimeupdate(e) {
+  var t = e.target;
+  if (t.currentTime != 0.0) {
+    dump(t.token + " t.currentTime != 0.0.\n");
+    t.removeEventListener("timeupdate", ontimeupdate);
+    t.pause();
+    is(t.playbackRate, 0.5, "PlaybackRate should not have changed after pause.");
+  } else {
+    dump(t.token + " t.currentTime == 0.0.\n");
+  }
+}
+
+function onpaused(e) {
+  var t = e.target;
+  dump(t.token + " onpaused.\n");
+  t.play();
+  is(t.playbackRate, 0.5, "PlaybackRate should not have changed after resuming playback.");
+  finish_test(t);
+}
+
+function finish_test(element) {
+  dump(element.token + " finish_test.\n");
+  if (element.parentNode)
+    element.parentNode.removeChild(element);
+  element.src="";
+  manager.finished(element.token);
+}
+
+function startTest(test, token) {
+  let elemType = /^audio/.test(test.type) ? "audio" : "video";
+  let element = document.createElement(elemType);
+  element.src = test.name;
+  element.token = token;
+  element.controls = true;
+  element.playbackRate = 0.5;
+  element.addEventListener("timeupdate", ontimeupdate);
+  element.addEventListener("pause", onpaused);
+  element.addEventListener("loadedmetadata", function() {
+    dump(element.token + " loadedmetadata\n");
+    element.play();
+  });
+  document.body.appendChild(element);
+  manager.started(token);
+}
+
+manager.runTests(gPlayedTests, startTest);
+
+</script>
+</pre>
+<div id="elements">
+</div>
+</body>
+</html>

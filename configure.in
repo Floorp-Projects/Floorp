@@ -194,7 +194,7 @@ if test -n "$gonkdir" ; then
         AC_MSG_ERROR([Couldn't find path to stlport sources in the gonk tree])
     fi
     STLPORT_CPPFLAGS="-I$_topsrcdir/build/stlport/stlport -I$gonkdir/ndk/sources/cxx-stl/system/include"
-    STLPORT_LIBS="$_objdir/build/stlport/libstlport_static.a -static-libstdc++"
+    STLPORT_LIBS="$_objdir/build/stlport/libstlport_static.a"
 
     case "$target_cpu" in
     arm)
@@ -1371,7 +1371,6 @@ if test "$GNU_CC"; then
                      [HAVE_TOOLCHAIN_SUPPORT_MSSSE3=1],
                      AC_MSG_RESULT([no]))
     CFLAGS=$_SAVE_CFLAGS
-    AC_SUBST(HAVE_TOOLCHAIN_SUPPORT_MSSSE3)
 
     # Check for -msse4.1 on $CC
     AC_MSG_CHECKING([if toolchain supports -msse4.1 option])
@@ -1382,7 +1381,6 @@ if test "$GNU_CC"; then
                      [HAVE_TOOLCHAIN_SUPPORT_MSSE4_1=1],
                      AC_MSG_RESULT([no]))
     CFLAGS=$_SAVE_CFLAGS
-    AC_SUBST(HAVE_TOOLCHAIN_SUPPORT_MSSE4_1)
 
     # Turn on GNU-specific warnings:
     # -Wall - turn on a lot of warnings
@@ -2173,11 +2171,10 @@ ia64*-hpux*)
         dnl Probably also a compiler bug, but what can you do?
         PROFILE_USE_LDFLAGS="-LTCG:PGUPDATE"
         LDFLAGS="$LDFLAGS -DYNAMICBASE"
-        if test "$_MSC_VER" -ge 1500; then
-            dnl VS2008 or later supports SSSE3
-            HAVE_TOOLCHAIN_SUPPORT_MSSSE3=1
-            AC_SUBST(HAVE_TOOLCHAIN_SUPPORT_MSSSE3)
-        fi
+        dnl Minimum reqiurement of Gecko is VS2010 or later which supports
+        dnl both SSSE3 and SSE4.1.
+        HAVE_TOOLCHAIN_SUPPORT_MSSSE3=1
+        HAVE_TOOLCHAIN_SUPPORT_MSSE4_1=1
     fi
     AC_DEFINE(HAVE_SNPRINTF)
     AC_DEFINE(_WINDOWS)
@@ -5826,9 +5823,14 @@ MOZ_PULSEAUDIO=)
 
 if test -n "$MOZ_PULSEAUDIO"; then
     AC_DEFINE(MOZ_CUBEB)
-    PKG_CHECK_MODULES(MOZ_PULSEAUDIO, libpulse, ,
-         [echo "$MOZ_PULSEAUDIO_PKG_ERRORS"
-          AC_MSG_ERROR([pulseaudio audio backend requires libpulse package])])
+    if test -z "$gonkdir"; then
+        PKG_CHECK_MODULES(MOZ_PULSEAUDIO, libpulse, ,
+             [echo "$MOZ_PULSEAUDIO_PKG_ERRORS"
+              AC_MSG_ERROR([pulseaudio audio backend requires libpulse development package])])
+    else
+        MOZ_PULSEAUDIO_CFLAGS="-I$gonkdir/external/pulseaudio/pulseaudio/src"
+        MOZ_PULSEAUDIO_LIBS="-lpulse"
+    fi
 fi
 
 AC_SUBST(MOZ_PULSEAUDIO)
@@ -6131,8 +6133,15 @@ esac
 
 MOZ_ARG_DISABLE_BOOL(crashreporter,
 [  --disable-crashreporter Disable breakpad crash reporting],
-    MOZ_CRASHREPORTER=,
-    MOZ_CRASHREPORTER=1)
+    [MOZ_CRASHREPORTER=],
+    [MOZ_CRASHREPORTER=F # Force enable breakpad])
+
+if test "$OS_ARCH" != "$HOST_OS_ARCH" -a "$OS_ARCH" != "WINNT"; then
+  if "$MOZ_CRASHREPORTER" = F; then
+    AC_MSG_ERROR([Cannot --enable-crashreporter, as breakpad tools do not support compiling on $HOST_OS_ARCH while targeting $OS_ARCH.])
+  fi
+  MOZ_CRASHREPORTER=
+fi
 
 if test -n "$MOZ_CRASHREPORTER"; then
    AC_DEFINE(MOZ_CRASHREPORTER)
@@ -6142,10 +6151,6 @@ if test -n "$MOZ_CRASHREPORTER"; then
     PKG_CHECK_MODULES(MOZ_GTHREAD, gthread-2.0)
     AC_SUBST(MOZ_GTHREAD_CFLAGS)
     AC_SUBST(MOZ_GTHREAD_LIBS)
-  fi
-
-  if test "$OS_ARCH" != "$HOST_OS_ARCH" -a "$OS_ARCH" != "WINNT"; then
-    AC_MSG_ERROR([Breakpad tools do not support compiling on $HOST_OS_ARCH while targeting $OS_ARCH.  Use --disable-crashreporter.])
   fi
 
   if test "$OS_ARCH" = "WINNT"; then
@@ -8145,7 +8150,11 @@ if test "${OS_TARGET}" = "WINNT"; then
   fi
 fi
 
-if test "${OS_TARGET}" = "WINNT" -o "${OS_ARCH}" = "Darwin" -o "${MOZ_WIDGET_TOOLKIT}" = "android" -o "${MOZ_WIDGET_TOOLKIT}" = "gtk2"; then
+if test "${OS_TARGET}" = "WINNT" -o \
+        "${OS_ARCH}" = "Darwin" -o \
+        "${MOZ_WIDGET_TOOLKIT}" = "android" -o \
+        "${MOZ_WIDGET_TOOLKIT}" = "gonk" -o \
+        "${MOZ_WIDGET_TOOLKIT}" = "gtk2"; then
     case "${target_cpu}" in
     i*86*|x86_64|arm)
         MOZ_ENABLE_SKIA=1
@@ -8600,12 +8609,6 @@ if test -n "$MOZ_CAPTIVEDETECT"; then
   AC_DEFINE(MOZ_CAPTIVEDETECT)
 fi
 
-dnl Build WBMP decoder if required
-AC_SUBST(MOZ_WBMP)
-if test -n "$MOZ_WBMP"; then
-  AC_DEFINE(MOZ_WBMP)
-fi
-
 dnl ========================================================
 if test "$MOZ_DEBUG" -o "$NS_TRACE_MALLOC" -o "$MOZ_DMD"; then
     MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS=
@@ -8971,6 +8974,8 @@ AC_SUBST(OS_RELEASE)
 AC_SUBST(OS_TEST)
 AC_SUBST(CPU_ARCH)
 AC_SUBST(INTEL_ARCHITECTURE)
+AC_SUBST(HAVE_TOOLCHAIN_SUPPORT_MSSSE3)
+AC_SUBST(HAVE_TOOLCHAIN_SUPPORT_MSSE4_1)
 
 AC_SUBST(MOZ_CHROME_FILE_FORMAT)
 

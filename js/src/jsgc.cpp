@@ -6,14 +6,12 @@
 
 /* JS Mark-and-Sweep Garbage Collector. */
 
-#include "jsgc.h"
+#include "jsgcinlines.h"
 
 #include "mozilla/DebugOnly.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Move.h"
 #include "mozilla/Util.h"
-
-#include "prmjtime.h"
 
 using mozilla::Swap;
 
@@ -47,48 +45,49 @@ using mozilla::Swap;
  */
 
 #include <string.h>     /* for memset used when DEBUG */
+#ifndef XP_WIN
+# include <unistd.h>
+#endif
 
-#include "jstypes.h"
-#include "jsutil.h"
 #include "jsapi.h"
 #include "jsatom.h"
-#include "jscompartment.h"
 #include "jscntxt.h"
+#include "jscompartment.h"
 #include "jsobj.h"
 #include "jsproxy.h"
 #include "jsscript.h"
+#include "jstypes.h"
+#include "jsutil.h"
 #include "jswatchpoint.h"
 #include "jsweakmap.h"
+#ifdef XP_WIN
+# include "jswin.h"
+#endif
+#include "prmjtime.h"
+#if JS_TRACE_LOGGING
+#include "TraceLogging.h"
+#endif
 
 #include "gc/FindSCCs.h"
 #include "gc/GCInternals.h"
 #include "gc/Marking.h"
 #include "gc/Memory.h"
-#include "vm/Debugger.h"
-#include "vm/ProxyObject.h"
-#include "vm/Shape.h"
-#include "vm/String.h"
-#include "vm/ForkJoin.h"
-#include "ion/IonCode.h"
 #ifdef JS_ION
 # include "ion/BaselineJIT.h"
 #endif
+#include "ion/IonCode.h"
+#include "vm/Debugger.h"
+#include "vm/ForkJoin.h"
+#include "vm/ProxyObject.h"
+#include "vm/Shape.h"
+#include "vm/String.h"
+#include "vm/WrapperObject.h"
 
-#include "jsgcinlines.h"
 #include "jsobjinlines.h"
 
-#include "vm/String-inl.h"
+#include "vm/Runtime-inl.h"
 #include "vm/Stack-inl.h"
-
-#ifdef XP_WIN
-# include "jswin.h"
-#else
-# include <unistd.h>
-#endif
-
-#if JS_TRACE_LOGGING
-#include "TraceLogging.h"
-#endif
+#include "vm/String-inl.h"
 
 using namespace js;
 using namespace js::gc;
@@ -2594,8 +2593,10 @@ PurgeRuntime(JSRuntime *rt)
     rt->sourceDataCache.purge();
     rt->evalCache.clear();
 
-    // FIXME bug 875125 this should check all instances of PerThreadData.
-    if (!rt->mainThread.activeCompilations)
+    bool activeCompilations = false;
+    for (ThreadDataIter iter(rt); !iter.done(); iter.next())
+        activeCompilations |= iter->activeCompilations;
+    if (!activeCompilations)
         rt->parseMapPool.purgeAll();
 }
 
@@ -2768,8 +2769,11 @@ BeginMarkPhase(JSRuntime *rt)
      */
     Zone *atomsZone = rt->atomsCompartment->zone();
 
-    // FIXME bug 875125 this should check all instances of PerThreadData.
-    if (atomsZone->isGCScheduled() && rt->gcIsFull && !rt->mainThread.gcKeepAtoms) {
+    bool keepAtoms = false;
+    for (ThreadDataIter iter(rt); !iter.done(); iter.next())
+        keepAtoms |= iter->gcKeepAtoms;
+
+    if (atomsZone->isGCScheduled() && rt->gcIsFull && !keepAtoms) {
         JS_ASSERT(!atomsZone->isCollecting());
         atomsZone->setGCState(Zone::Mark);
     }
@@ -3378,7 +3382,7 @@ static bool
 IsGrayListObject(JSObject *obj)
 {
     JS_ASSERT(obj);
-    return IsCrossCompartmentWrapper(obj) && !IsDeadProxyObject(obj);
+    return obj->is<CrossCompartmentWrapperObject>() && !IsDeadProxyObject(obj);
 }
 
 /* static */ unsigned
@@ -4012,7 +4016,8 @@ class AutoGCSession : AutoTraceSession {
 /* Start a new heap session. */
 AutoTraceSession::AutoTraceSession(JSRuntime *rt, js::HeapState heapState)
   : runtime(rt),
-    prevState(rt->heapState)
+    prevState(rt->heapState),
+    pause(rt)
 {
     JS_ASSERT(!rt->noGCOrAllocationCheck);
     JS_ASSERT(!rt->isHeapBusy());
@@ -4343,8 +4348,11 @@ gc::IsIncrementalGCSafe(JSRuntime *rt)
 {
     JS_ASSERT(!rt->mainThread.suppressGC);
 
-    // FIXME bug 875125 this should check all instances of PerThreadData.
-    if (rt->mainThread.gcKeepAtoms)
+    bool keepAtoms = false;
+    for (ThreadDataIter iter(rt); !iter.done(); iter.next())
+        keepAtoms |= iter->gcKeepAtoms;
+
+    if (keepAtoms)
         return IncrementalSafety::Unsafe("gcKeepAtoms set");
 
     if (!rt->gcIncrementalEnabled)
@@ -4667,6 +4675,11 @@ void
 js::MinorGC(JSRuntime *rt, JS::gcreason::Reason reason)
 {
 #ifdef JSGC_GENERATIONAL
+#if JS_TRACE_LOGGING
+    AutoTraceLog logger(TraceLogging::defaultLogger(),
+                        TraceLogging::MINOR_GC_START,
+                        TraceLogging::MINOR_GC_STOP);
+#endif
     rt->gcNursery.collect(rt, reason);
 #endif
 }
@@ -5090,5 +5103,12 @@ AutoDisableProxyCheck::AutoDisableProxyCheck(JSRuntime *rt
 {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     count++;
+}
+
+JS_FRIEND_API(void)
+JS::AssertGCThingMustBeTenured(JSObject *obj)
+{
+    JS_ASSERT((!IsNurseryAllocable(obj->tenuredGetAllocKind()) || obj->getClass()->finalize) &&
+              obj->isTenured());
 }
 #endif

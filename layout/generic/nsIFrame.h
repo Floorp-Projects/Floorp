@@ -30,6 +30,7 @@
 #include "nsIContent.h"
 #include "nsAlgorithm.h"
 #include "mozilla/layout/FrameChildList.h"
+#include "mozilla/css/ImageLoader.h"
 #include "FramePropertyTable.h"
 #include "mozilla/TypedEnum.h"
 #include <algorithm>
@@ -984,8 +985,21 @@ public:
   /**
    * Apply the result of GetSkipSides() on this frame to an nsMargin by
    * setting to zero any sides that are skipped.
+   *
+   * @param aMargin The margin to apply the result of GetSkipSides() to.
+   * @param aReflowState An optional reflow state parameter, which is used if
+   *        ApplySkipSides() is being called in the middle of reflow.
+   *
+   * @note (See also bug 743402, comment 11) GetSkipSides() and it's sister
+   *       method, ApplySkipSides() checks to see if this frame has a previous
+   *       or next continuation to determine if a side should be skipped.
+   *       Unfortunately, this only works after reflow has been completed. In
+   *       lieu of this, during reflow, an nsHTMLReflowState parameter can be
+   *       passed in, indicating that it should be used to determine if sides
+   *       should be skipped during reflow.
    */
-  void ApplySkipSides(nsMargin& aMargin) const;
+  void ApplySkipSides(nsMargin& aMargin,
+                      const nsHTMLReflowState* aReflowState = nullptr) const;
 
   /**
    * Like the frame's rect (see |GetRect|), which is the border rect,
@@ -1350,6 +1364,24 @@ public:
   virtual ContentOffsets GetContentOffsetsFromPointExternal(nsPoint aPoint,
                                                             uint32_t aFlags = 0)
   { return GetContentOffsetsFromPoint(aPoint, aFlags); }
+
+  /**
+   * Ensure that aImage gets notifed when the underlying image request loads
+   * or animates.
+   */
+  void AssociateImage(const nsStyleImage& aImage, nsPresContext* aPresContext)
+  {
+    if (aImage.GetType() != eStyleImageType_Image) {
+      return;
+    }
+
+    imgIRequest *req = aImage.GetImageData();
+    mozilla::css::ImageLoader* loader =
+      aPresContext->Document()->StyleImageLoader();
+
+    // If this fails there's not much we can do ...
+    loader->AssociateRequestToFrame(req, this);
+  }
 
   /**
    * This structure holds information about a cursor. mContainer represents a
@@ -2387,8 +2419,16 @@ public:
   /**
    * Determine whether borders should not be painted on certain sides of the
    * frame.
+   *
+   * @note (See also bug 743402, comment 11) GetSkipSides() and it's sister
+   *       method, ApplySkipSides() checks to see if this frame has a previous
+   *       or next continuation to determine if a side should be skipped.
+   *       Unfortunately, this only works after reflow has been completed. In
+   *       lieu of this, during reflow, an nsHTMLReflowState parameter can be
+   *       passed in, indicating that it should be used to determine if sides
+   *       should be skipped during reflow.
    */
-  virtual int GetSkipSides() const { return 0; }
+  virtual int GetSkipSides(const nsHTMLReflowState* aReflowState = nullptr) const { return 0; }
 
   /**
    * @returns true if this frame is selected.

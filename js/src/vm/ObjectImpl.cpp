@@ -6,14 +6,13 @@
 
 #include "vm/ObjectImpl-inl.h"
 
+#include "gc/Marking.h"
 #include "js/Value.h"
 #include "vm/Debugger.h"
-#include "vm/ObjectImpl.h"
 
 #include "jsobjinlines.h"
 
 #include "gc/Barrier-inl.h"
-#include "gc/Marking.h"
 
 using namespace js;
 
@@ -986,7 +985,7 @@ js::SetElement(JSContext *cx, Handle<ObjectImpl*> obj, Handle<ObjectImpl*> recei
                 /* Push set, receiver, and v as the sole argument. */
                 args.setCallee(setter);
                 args.setThis(ObjectValue(*current));
-                args[0] = v;
+                args[0].set(v);
 
                 *succeeded = true;
                 return Invoke(cx, args);

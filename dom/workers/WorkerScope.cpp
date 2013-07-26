@@ -18,6 +18,8 @@
 #include "mozilla/dom/XMLHttpRequestBinding.h"
 #include "mozilla/dom/XMLHttpRequestUploadBinding.h"
 #include "mozilla/dom/URLBinding.h"
+#include "mozilla/dom/WorkerLocationBinding.h"
+#include "mozilla/dom/WorkerNavigatorBinding.h"
 #include "mozilla/OSFileConstants.h"
 #include "nsTraceRefcnt.h"
 #include "xpcpublic.h"
@@ -77,7 +79,7 @@ class WorkerGlobalScope : public workers::EventTarget
   };
 
   // Must be traced!
-  jsval mSlots[SLOT_COUNT];
+  JS::Heap<JS::Value> mSlots[SLOT_COUNT];
 
   enum
   {
@@ -128,7 +130,7 @@ protected:
   _trace(JSTracer* aTrc) MOZ_OVERRIDE
   {
     for (int32_t i = 0; i < SLOT_COUNT; i++) {
-      JS_CallValueTracer(aTrc, &mSlots[i], "WorkerGlobalScope instance slot");
+      JS_CallHeapValueTracer(aTrc, &mSlots[i], "WorkerGlobalScope instance slot");
     }
     mWorker->TraceInternal(aTrc);
     EventTarget::_trace(aTrc);
@@ -232,41 +234,15 @@ private:
     }
 
     if (JSVAL_IS_VOID(scope->mSlots[SLOT_location])) {
-      JS::Rooted<JSString*> href(aCx), protocol(aCx), host(aCx), hostname(aCx);
-      JS::Rooted<JSString*> port(aCx), pathname(aCx), search(aCx), hash(aCx);
-
       WorkerPrivate::LocationInfo& info = scope->mWorker->GetLocationInfo();
 
-#define COPY_STRING(_jsstr, _cstr)                                             \
-  if (info. _cstr .IsEmpty()) {                                                \
-    _jsstr = NULL;                                                             \
-  }                                                                            \
-  else {                                                                       \
-    if (!(_jsstr = JS_NewStringCopyN(aCx, info. _cstr .get(),                  \
-                                     info. _cstr .Length()))) {                \
-      return false;                                                            \
-    }                                                                          \
-    info. _cstr .Truncate();                                                   \
-  }
-
-      COPY_STRING(href, mHref);
-      COPY_STRING(protocol, mProtocol);
-      COPY_STRING(host, mHost);
-      COPY_STRING(hostname, mHostname);
-      COPY_STRING(port, mPort);
-      COPY_STRING(pathname, mPathname);
-      COPY_STRING(search, mSearch);
-      COPY_STRING(hash, mHash);
-
-#undef COPY_STRING
-
-      JSObject* location = location::Create(aCx, href, protocol, host, hostname,
-                                            port, pathname, search, hash);
+      nsRefPtr<WorkerLocation> location =
+        WorkerLocation::Create(aCx, aObj, info);
       if (!location) {
         return false;
       }
 
-      scope->mSlots[SLOT_location] = OBJECT_TO_JSVAL(location);
+      scope->mSlots[SLOT_location] = OBJECT_TO_JSVAL(location->GetJSObject());
     }
 
     aVp.set(scope->mSlots[SLOT_location]);
@@ -397,12 +373,12 @@ private:
     }
 
     if (JSVAL_IS_VOID(scope->mSlots[SLOT_navigator])) {
-      JSObject* navigator = navigator::Create(aCx);
+      nsRefPtr<WorkerNavigator> navigator = WorkerNavigator::Create(aCx, aObj);
       if (!navigator) {
         return false;
       }
 
-      scope->mSlots[SLOT_navigator] = OBJECT_TO_JSVAL(navigator);
+      scope->mSlots[SLOT_navigator] = OBJECT_TO_JSVAL(navigator->GetJSObject());
     }
 
     aVp.set(scope->mSlots[SLOT_navigator]);
@@ -1036,9 +1012,7 @@ CreateDedicatedWorkerGlobalScope(JSContext* aCx)
   if (!events::InitClasses(aCx, global, false) ||
       !file::InitClasses(aCx, global) ||
       !exceptions::InitClasses(aCx, global) ||
-      !location::InitClass(aCx, global) ||
-      !imagedata::InitClass(aCx, global) ||
-      !navigator::InitClass(aCx, global)) {
+      !imagedata::InitClass(aCx, global)) {
     return NULL;
   }
 
@@ -1048,7 +1022,9 @@ CreateDedicatedWorkerGlobalScope(JSContext* aCx)
       !TextEncoderBinding_workers::GetConstructorObject(aCx, global) ||
       !XMLHttpRequestBinding_workers::GetConstructorObject(aCx, global) ||
       !XMLHttpRequestUploadBinding_workers::GetConstructorObject(aCx, global) ||
-      !URLBinding_workers::GetConstructorObject(aCx, global)) {
+      !URLBinding_workers::GetConstructorObject(aCx, global) ||
+      !WorkerLocationBinding_workers::GetConstructorObject(aCx, global) ||
+      !WorkerNavigatorBinding_workers::GetConstructorObject(aCx, global)) {
     return NULL;
   }
 

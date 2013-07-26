@@ -7,3 +7,25 @@
 MODULE = 'test_storage'
 
 XPCSHELL_TESTS_MANIFESTS += ['unit/xpcshell.ini']
+
+CPP_UNIT_TESTS += [
+    'test_AsXXX_helpers.cpp',
+    'test_StatementCache.cpp',
+    'test_asyncStatementExecution_transaction.cpp',
+    'test_async_callbacks_with_spun_event_loops.cpp',
+    'test_binding_params.cpp',
+    'test_file_perms.cpp',
+    'test_mutex.cpp',
+    'test_service_init_background_thread.cpp',
+    'test_statement_scoper.cpp',
+    'test_transaction_helper.cpp',
+    'test_true_async.cpp',
+    'test_unlock_notify.cpp',
+]
+
+if CONFIG['MOZ_DEBUG'] and CONFIG['OS_ARCH'] not in ('WINNT', 'Darwin'):
+    # FIXME bug 523392: test_deadlock_detector doesn't like Windows
+    # FIXME bug 523378: also fails on OS X
+    CPP_UNIT_TESTS += [
+        'test_deadlock_detector.cpp',
+    ]
