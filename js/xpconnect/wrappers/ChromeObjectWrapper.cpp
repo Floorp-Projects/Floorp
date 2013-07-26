@@ -30,7 +30,7 @@ AllowedByBase(JSContext *cx, HandleObject wrapper, HandleId id,
 }
 
 static bool
-PropIsFromStandardPrototype(JSContext *cx, JS::MutableHandle<js::PropertyDescriptor> desc)
+PropIsFromStandardPrototype(JSContext *cx, JS::MutableHandle<JSPropertyDescriptor> desc)
 {
     MOZ_ASSERT(desc.object());
     RootedObject unwrapped(cx, js::UncheckedUnwrap(desc.object()));
@@ -63,7 +63,7 @@ bool
 ChromeObjectWrapper::getPropertyDescriptor(JSContext *cx,
                                            HandleObject wrapper,
                                            HandleId id,
-                                           JS::MutableHandle<js::PropertyDescriptor> desc,
+                                           JS::MutableHandle<JSPropertyDescriptor> desc,
                                            unsigned flags)
 {
     assertEnteredPolicy(cx, wrapper, id);
