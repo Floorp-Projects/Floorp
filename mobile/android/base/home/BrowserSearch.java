@@ -187,6 +187,20 @@ public class BrowserSearch extends HomeFragment
     }
 
     @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        mSearchEngines = new ArrayList<SearchEngine>();
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+
+        mSearchEngines = null;
+    }
+
+    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         // All list views are styled to look the same with a global activity theme.
         // If the style of the list changes, inflate it from an XML.
@@ -204,7 +218,6 @@ public class BrowserSearch extends HomeFragment
 
         mView = null;
         mList = null;
-        mSearchEngines = null;
         mSuggestionsOptInPrompt = null;
         mSuggestClient = null;
     }
@@ -229,7 +242,6 @@ public class BrowserSearch extends HomeFragment
         registerForContextMenu(mList);
         registerEventListener("SearchEngines:Data");
 
-        mSearchEngines = new ArrayList<SearchEngine>();
         GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("SearchEngines:Get", null));
     }
 
@@ -335,10 +347,8 @@ public class BrowserSearch extends HomeFragment
     }
 
     private void setSuggestions(ArrayList<String> suggestions) {
-        if (mSearchEngines != null) {
-            mSearchEngines.get(0).suggestions = suggestions;
-            mAdapter.notifyDataSetChanged();
-        }
+        mSearchEngines.get(0).suggestions = suggestions;
+        mAdapter.notifyDataSetChanged();
     }
 
     private void setSearchEngines(JSONObject data) {
