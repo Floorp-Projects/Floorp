@@ -41,6 +41,18 @@ function runTests() {
     var Color = new StructType({'r': uint8, 'g': uint8, 'b': uint8});
     var Rainbow = new ArrayType(Color, 7);
 
+    var theOneISawWasJustBlack = Rainbow.repeat({'r': 0, 'g': 0, 'b': 0});
+
+    var middleBand = theOneISawWasJustBlack[3];
+
+    theOneISawWasJustBlack = null;
+    gc();
+    spin();
+    assertEq(middleBand['r'] == 0 && middleBand['g'] == 0 && middleBand['b'] == 0, true);
+    middleBand.update({'r': 255, 'g': 207, 'b': 142});
+    assertEq(middleBand['r'] == 255 && middleBand['g'] == 207 && middleBand['b'] == 142, true);
+
+
     var scopedType = function() {
         var Point = new StructType({'x': int32, 'y': int32});
         var aPoint = new Point();
