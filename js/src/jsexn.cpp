@@ -1048,14 +1048,14 @@ js_ReportUncaughtException(JSContext *cx)
         (exnObject->is<ErrorObject>() || IsDuckTypedErrorObject(cx, exnObject, &filename_str)))
     {
         RootedString name(cx);
-        if (JS_GetProperty(cx, exnObject, js_name_str, &roots[2]) &&
+        if (JS_GetProperty(cx, exnObject, js_name_str, tvr.handleAt(2)) &&
             JSVAL_IS_STRING(roots[2]))
         {
             name = JSVAL_TO_STRING(roots[2]);
         }
 
         RootedString msg(cx);
-        if (JS_GetProperty(cx, exnObject, js_message_str, &roots[3]) &&
+        if (JS_GetProperty(cx, exnObject, js_message_str, tvr.handleAt(3)) &&
             JSVAL_IS_STRING(roots[3]))
         {
             msg = JSVAL_TO_STRING(roots[3]);
@@ -1077,21 +1077,21 @@ js_ReportUncaughtException(JSContext *cx)
             str = msg;
         }
 
-        if (JS_GetProperty(cx, exnObject, filename_str, &roots[4])) {
+        if (JS_GetProperty(cx, exnObject, filename_str, tvr.handleAt(4))) {
             JSString *tmp = ToString<CanGC>(cx, HandleValue::fromMarkedLocation(&roots[4]));
             if (tmp)
                 filename.encodeLatin1(cx, tmp);
         }
 
         uint32_t lineno;
-        if (!JS_GetProperty(cx, exnObject, js_lineNumber_str, &roots[5]) ||
+        if (!JS_GetProperty(cx, exnObject, js_lineNumber_str, tvr.handleAt(5)) ||
             !ToUint32(cx, roots[5], &lineno))
         {
             lineno = 0;
         }
 
         uint32_t column;
-        if (!JS_GetProperty(cx, exnObject, js_columnNumber_str, &roots[5]) ||
+        if (!JS_GetProperty(cx, exnObject, js_columnNumber_str, tvr.handleAt(5)) ||
             !ToUint32(cx, roots[5], &column))
         {
             column = 0;
