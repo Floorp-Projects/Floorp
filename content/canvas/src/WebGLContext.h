@@ -387,9 +387,6 @@ public:
     void DetachShader(WebGLProgram *program, WebGLShader *shader);
     void Disable(WebGLenum cap);
     void DisableVertexAttribArray(WebGLuint index);
-    void DrawArrays(GLenum mode, WebGLint first, WebGLsizei count);
-    void DrawElements(WebGLenum mode, WebGLsizei count, WebGLenum type,
-                      WebGLintptr byteOffset);
     void DrawBuffers(const dom::Sequence<GLenum>& buffers);
     void Enable(WebGLenum cap);
     void EnableVertexAttribArray(WebGLuint index);
@@ -782,6 +779,23 @@ public:
                              WebGLintptr byteOffset);
     void Viewport(WebGLint x, WebGLint y, WebGLsizei width, WebGLsizei height);
 
+// -----------------------------------------------------------------------------
+// Vertices Feature (WebGLContextVertices.cpp)
+public:
+    void DrawArrays(GLenum mode, WebGLint first, WebGLsizei count);
+    void DrawArraysInstanced(GLenum mode, WebGLint first, WebGLsizei count, WebGLsizei primcount);
+    void DrawElements(WebGLenum mode, WebGLsizei count, WebGLenum type, WebGLintptr byteOffset);
+    void DrawElementsInstanced(WebGLenum mode, WebGLsizei count, WebGLenum type,
+                               WebGLintptr byteOffset, WebGLsizei primcount);
+
+private:
+    bool DrawArrays_check(WebGLint first, WebGLsizei count, WebGLsizei primcount, const char* info);
+    bool DrawElements_check(WebGLsizei count, WebGLenum type, WebGLintptr byteOffset,
+                            WebGLsizei primcount, const char* info);
+    void Draw_cleanup();
+
+// -----------------------------------------------------------------------------
+// PROTECTED
 protected:
     void SetDontKnowIfNeedFakeBlack() {
         mFakeBlackStatus = DontKnowIfNeedFakeBlack;

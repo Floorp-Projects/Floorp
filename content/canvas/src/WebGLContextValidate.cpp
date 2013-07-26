@@ -1062,7 +1062,8 @@ WebGLContext::InitAndValidateGL()
         (!IsExtensionSupported(OES_vertex_array_object) ||
          !IsExtensionSupported(WEBGL_draw_buffers) ||
          !gl->IsExtensionSupported(gl::GLContext::EXT_gpu_shader4) ||
-         !gl->IsExtensionSupported(gl::GLContext::EXT_blend_minmax)
+         !gl->IsExtensionSupported(gl::GLContext::EXT_blend_minmax) ||
+         !gl->IsExtensionSupported(gl::GLContext::XXX_draw_instanced)
         ))
     {
         return false;
