@@ -16,6 +16,7 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.util.AttributeSet;
+import android.view.MotionEvent;
 import android.view.ViewGroup;
 
 import java.util.ArrayList;
@@ -178,5 +179,19 @@ public class HomePager extends ViewPager {
 
             mPages.remove(mTabs.get(position).page);
         }
+    }
+
+    @Override
+    public boolean onInterceptTouchEvent(MotionEvent event) {
+        if (event.getActionMasked() == MotionEvent.ACTION_DOWN) {
+            // XXX: When an adapter is empty (e.g. Reading List), there are no elements focusable
+            // in touch mode so instead of requestFocus() we use requestFocusFromTouch(). However,
+            // now we may be focusing an object whose focused state is potentially visible to the
+            // user but should not be (e.g. the background), so we clear the focus.
+            requestFocusFromTouch();
+            clearFocus();
+        }
+
+        return super.onInterceptTouchEvent(event);
     }
 }
