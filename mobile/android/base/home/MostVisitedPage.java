@@ -15,7 +15,6 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.database.Cursor;
 import android.os.Bundle;
-import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.Loader;
 import android.support.v4.widget.CursorAdapter;
 import android.view.LayoutInflater;
@@ -33,10 +32,7 @@ public class MostVisitedPage extends HomeFragment {
     private static final String LOGTAG = "GeckoMostVisitedPage";
 
     // Cursor loader ID for search query
-    private static final int FRECENCY_LOADER_ID = 0;
-
-    // Cursor loader ID for favicons query
-    private static final int FAVICONS_LOADER_ID = 1;
+    private static final int LOADER_ID_FRECENCY = 0;
 
     // Adapter for the list of search results
     private VisitedAdapter mAdapter;
@@ -131,7 +127,7 @@ public class MostVisitedPage extends HomeFragment {
 
     @Override
     protected void load() {
-        getLoaderManager().initLoader(FRECENCY_LOADER_ID, null, mCursorLoaderCallbacks);
+        getLoaderManager().initLoader(LOADER_ID_FRECENCY, null, mCursorLoaderCallbacks);
     }
 
     private static class FrecencyCursorLoader extends SimpleCursorLoader {
@@ -166,55 +162,42 @@ public class MostVisitedPage extends HomeFragment {
         }
     }
 
-    private class CursorLoaderCallbacks implements LoaderCallbacks<Cursor> {
+    private class CursorLoaderCallbacks extends HomeCursorLoaderCallbacks {
         @Override
         public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-            switch(id) {
-            case FRECENCY_LOADER_ID:
+            if (id == LOADER_ID_FRECENCY) {
                 return new FrecencyCursorLoader(getActivity());
-
-            case FAVICONS_LOADER_ID:
-                return FaviconsLoader.createInstance(getActivity(), args);
+            } else {
+                return super.onCreateLoader(id, args);
             }
-
-            return null;
         }
 
         @Override
         public void onLoadFinished(Loader<Cursor> loader, Cursor c) {
-            final int loaderId = loader.getId();
-            switch(loaderId) {
-            case FRECENCY_LOADER_ID:
+            if (loader.getId() == LOADER_ID_FRECENCY) {
                 // Only set empty view once cursor is loaded to avoid
                 // flashing the empty message before loading.
                 mList.setEmptyView(mEmptyMessage);
 
                 mAdapter.swapCursor(c);
-
-                FaviconsLoader.restartFromCursor(getLoaderManager(), FAVICONS_LOADER_ID,
-                        mCursorLoaderCallbacks, c);
-                break;
-
-            case FAVICONS_LOADER_ID:
-                // Causes the listview to recreate its children and use the
-                // now in-memory favicons.
-                mAdapter.notifyDataSetChanged();
-                break;
+                loadFavicons(c);
+            } else {
+                super.onLoadFinished(loader, c);
             }
         }
 
         @Override
         public void onLoaderReset(Loader<Cursor> loader) {
-            final int loaderId = loader.getId();
-            switch(loaderId) {
-            case FRECENCY_LOADER_ID:
+            if (loader.getId() == LOADER_ID_FRECENCY) {
                 mAdapter.swapCursor(null);
-                break;
-
-            case FAVICONS_LOADER_ID:
-                // Do nothing
-                break;
+            } else {
+                super.onLoaderReset(loader);
             }
+        }
+
+        @Override
+        public void onFaviconsLoaded() {
+            mAdapter.notifyDataSetChanged();
         }
     }
 }
