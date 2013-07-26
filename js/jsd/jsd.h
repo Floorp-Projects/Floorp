@@ -31,7 +31,6 @@
 
 #include "jstypes.h"
 #include "jsprf.h"
-#include "jsutil.h" /* Added by JSIFY */
 #include "jshash.h" /* Added by JSIFY */
 #include "jsclist.h"
 #include "jsdebug.h"
