@@ -275,16 +275,70 @@ class BinaryArray
 
 };
 
-static Class StructTypeClass = {
-    "StructType",
-    JSCLASS_HAS_CACHED_PROTO(JSProto_StructType),
-    JS_PropertyStub,
-    JS_DeletePropertyStub,
-    JS_PropertyStub,
-    JS_StrictPropertyStub,
-    JS_EnumerateStub,
-    JS_ResolveStub,
-    JS_ConvertStub
+class StructType : public JSObject
+{
+    private:
+        static JSObject *create(JSContext *cx, HandleObject structTypeGlobal,
+                                HandleObject fields);
+        /**
+         * Sets up structType slots based on calculated memory size
+         * and alignment and stores fieldmap as well.
+         */
+        static bool layout(JSContext *cx, HandleObject structType,
+                           HandleObject fields);
+
+    public:
+        static Class class_;
+
+        static JSBool construct(JSContext *cx, unsigned int argc, jsval *vp);
+        static JSBool toString(JSContext *cx, unsigned int argc, jsval *vp);
+
+        static bool convertAndCopyTo(JSContext *cx, HandleObject exemplar,
+                                     HandleValue from, uint8_t *mem);
+
+        static bool reify(JSContext *cx, HandleObject type, HandleObject owner,
+                          size_t offset, MutableHandleValue to);
+
+        static void finalize(js::FreeOp *op, JSObject *obj);
+};
+
+class BinaryStruct : public JSObject
+{
+    private:
+        static JSObject *createEmpty(JSContext *cx, HandleObject type);
+        static JSObject *create(JSContext *cx, HandleObject type);
+
+    public:
+        static Class class_;
+
+        static JSObject *create(JSContext *cx, HandleObject type,
+                                HandleObject owner, size_t offset);
+        static JSBool construct(JSContext *cx, unsigned int argc, jsval *vp);
+
+        static void finalize(js::FreeOp *op, JSObject *obj);
+        static void obj_trace(JSTracer *tracer, JSObject *obj);
+
+        static JSBool obj_getGeneric(JSContext *cx, HandleObject obj,
+                                     HandleObject receiver, HandleId id,
+                                     MutableHandleValue vp);
+
+        static JSBool obj_getProperty(JSContext *cx, HandleObject obj,
+                                      HandleObject receiver,
+                                      HandlePropertyName name,
+                                      MutableHandleValue vp);
+
+        static JSBool obj_getSpecial(JSContext *cx, HandleObject obj,
+                                     HandleObject receiver, HandleSpecialId sid,
+                                     MutableHandleValue vp);
+
+        static JSBool obj_setGeneric(JSContext *cx, HandleObject obj, HandleId id,
+                                     MutableHandleValue vp, JSBool strict);
+
+        static JSBool obj_setProperty(JSContext *cx, HandleObject obj,
+                                      HandlePropertyName name,
+                                      MutableHandleValue vp,
+                                      JSBool strict);
+
 };
 }
 

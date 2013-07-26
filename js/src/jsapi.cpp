@@ -1919,7 +1919,7 @@ static const JSStdName standard_class_names[] = {
     BINARYDATA_FOR_EACH_NUMERIC_TYPES(BINARYDATA_NUMERIC_NAMES)
 #undef BINARYDATA_NUMERIC_NAMES
     {js_InitBinaryDataClasses,          EAGER_CLASS_ATOM(ArrayType),  &js::ArrayType::class_},
-    {js_InitBinaryDataClasses,          EAGER_ATOM_AND_CLASP(StructType)},
+    {js_InitBinaryDataClasses,          EAGER_CLASS_ATOM(StructType), &js::StructType::class_},
 #endif
     {NULL,                      0, NULL}
 };

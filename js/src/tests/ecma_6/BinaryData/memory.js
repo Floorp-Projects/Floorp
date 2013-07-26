@@ -38,6 +38,24 @@ function runTests() {
     for (var i = 0; i < a0.length; i++)
         assertEq(a0[i], i);
 
+    var Color = new StructType({'r': uint8, 'g': uint8, 'b': uint8});
+    var Rainbow = new ArrayType(Color, 7);
+
+    var scopedType = function() {
+        var Point = new StructType({'x': int32, 'y': int32});
+        var aPoint = new Point();
+        aPoint.x = 4;
+        aPoint.y = 5;
+        return aPoint;
+    }
+
+    var point = scopedType();
+    gc();
+    spin();
+    gc();
+    assertEq(point.constructor.fields.x, int32);
+    assertEq(point.constructor.fields.y, int32);
+
     if (typeof reportCompare === "function")
         reportCompare(true, true);
     print("Tests complete");
