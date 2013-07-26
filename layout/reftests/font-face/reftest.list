@@ -153,3 +153,8 @@ HTTP(..) != font-error-404-1.html font-error-404-2.html # sanity-check that the 
 
 # Font load redirection
 HTTP(..) == font-redirect.html order-1-ref.html
+
+# Tests for potential regressions from bug 879963
+== dynamic-duplicate-rule-1a.html dynamic-duplicate-rule-1-ref.html
+== dynamic-duplicate-rule-1b.html dynamic-duplicate-rule-1-ref.html
+== dynamic-duplicate-rule-1c.html dynamic-duplicate-rule-1-ref.html
