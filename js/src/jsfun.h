@@ -260,7 +260,7 @@ class JSFunction : public JSObject
 
     JSScript *nonLazyScript() const {
         JS_ASSERT(hasScript());
-        return JS::HandleScript::fromMarkedLocation(&u.i.s.script_);
+        return u.i.s.script_;
     }
 
     js::HeapPtrScript &mutableScript() {
