@@ -11,11 +11,11 @@
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Util.h"
 
-#include "ion/shared/Assembler-shared.h"
 #include "assembler/assembler/AssemblerBufferWithConstantPool.h"
+#include "ion/arm/Architecture-arm.h"
 #include "ion/CompactBuffer.h"
 #include "ion/IonCode.h"
-#include "ion/arm/Architecture-arm.h"
+#include "ion/shared/Assembler-shared.h"
 #include "ion/shared/IonAssemblerBufferWithConstantPools.h"
 
 namespace js {
