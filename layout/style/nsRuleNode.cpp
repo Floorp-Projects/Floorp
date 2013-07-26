@@ -653,6 +653,7 @@ GetFloatFromBoxPosition(int32_t aEnumValue)
 #define SETCOORD_CALC_CLAMP_NONNEGATIVE 0x00040000 // modifier for CALC_LENGTH_ONLY
 #define SETCOORD_STORE_CALC             0x00080000
 #define SETCOORD_BOX_POSITION           0x00100000 // exclusive with _ENUMERATED
+#define SETCOORD_ANGLE                  0x00200000
 
 #define SETCOORD_LP     (SETCOORD_LENGTH | SETCOORD_PERCENT)
 #define SETCOORD_LH     (SETCOORD_LENGTH | SETCOORD_INHERIT)
@@ -764,6 +765,19 @@ static bool SetCoord(const nsCSSValue& aValue, nsStyleCoord& aCoord,
     else {
       result = false;  // didn't set anything
     }
+  }
+  else if ((aMask & SETCOORD_ANGLE) != 0 &&
+           (aValue.IsAngularUnit())) {
+    nsStyleUnit unit;
+    switch (aValue.GetUnit()) {
+      case eCSSUnit_Degree: unit = eStyleUnit_Degree; break;
+      case eCSSUnit_Grad:   unit = eStyleUnit_Grad; break;
+      case eCSSUnit_Radian: unit = eStyleUnit_Radian; break;
+      case eCSSUnit_Turn:   unit = eStyleUnit_Turn; break;
+      default: NS_NOTREACHED("unrecognized angular unit");
+        unit = eStyleUnit_Degree;
+    }
+    aCoord.SetAngleValue(aValue.GetAngleValue(), unit);
   }
   else {
     result = false;  // didn't set anything
@@ -987,18 +1001,9 @@ static void SetGradient(const nsCSSValue& aValue, nsPresContext* aPresContext,
   aResult.mRepeating = gradient->mIsRepeating;
 
   // angle
-  if (gradient->mAngle.IsAngularUnit()) {
-    nsStyleUnit unit;
-    switch (gradient->mAngle.GetUnit()) {
-    case eCSSUnit_Degree: unit = eStyleUnit_Degree; break;
-    case eCSSUnit_Grad:   unit = eStyleUnit_Grad; break;
-    case eCSSUnit_Radian: unit = eStyleUnit_Radian; break;
-    case eCSSUnit_Turn:   unit = eStyleUnit_Turn; break;
-    default: NS_NOTREACHED("unrecognized angular unit");
-      unit = eStyleUnit_Degree;
-    }
-    aResult.mAngle.SetAngleValue(gradient->mAngle.GetAngleValue(), unit);
-  } else {
+  const nsStyleCoord dummyParentCoord;
+  if (!SetCoord(gradient->mAngle, aResult.mAngle, dummyParentCoord, SETCOORD_ANGLE,
+                aContext, aPresContext, aCanStoreInRuleTree)) {
     NS_ASSERTION(gradient->mAngle.GetUnit() == eCSSUnit_None,
                  "bad unit for gradient angle");
     aResult.mAngle.SetNoneValue();
@@ -7720,6 +7725,8 @@ StyleFilterTypeForFunctionName(nsCSSKeyword functionName)
       return nsStyleFilter::Type::eContrast;
     case eCSSKeyword_grayscale:
       return nsStyleFilter::Type::eGrayscale;
+    case eCSSKeyword_hue_rotate:
+      return nsStyleFilter::Type::eHueRotate;
     case eCSSKeyword_invert:
       return nsStyleFilter::Type::eInvert;
     case eCSSKeyword_opacity:
@@ -7756,16 +7763,20 @@ SetStyleFilterToCSSValue(nsStyleFilter* aStyleFilter,
   aStyleFilter->mType = StyleFilterTypeForFunctionName(functionName);
 
   int32_t mask = SETCOORD_PERCENT | SETCOORD_FACTOR;
-  if (aStyleFilter->mType == nsStyleFilter::Type::eBlur)
+  if (aStyleFilter->mType == nsStyleFilter::Type::eBlur) {
     mask = SETCOORD_LENGTH | SETCOORD_STORE_CALC;
+  } else if (aStyleFilter->mType == nsStyleFilter::Type::eHueRotate) {
+    mask = SETCOORD_ANGLE;
+  }
 
   NS_ABORT_IF_FALSE(filterFunction->Count() == 2,
                     "all filter functions except drop-shadow should have "
                     "exactly one argument");
 
   nsCSSValue& arg = filterFunction->Item(1);
-  DebugOnly<bool> success = SetCoord(arg, aStyleFilter->mCoord, nsStyleCoord(),
-                                     mask, aStyleContext, aPresContext,
+  DebugOnly<bool> success = SetCoord(arg, aStyleFilter->mFilterParameter,
+                                     nsStyleCoord(), mask,
+                                     aStyleContext, aPresContext,
                                      aCanStoreInRuleTree);
   NS_ABORT_IF_FALSE(success, "unexpected unit");
 }
