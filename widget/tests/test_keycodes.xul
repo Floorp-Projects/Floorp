@@ -108,6 +108,7 @@ if (IS_MAC) {
     "Hebrew":0x40d,
     "Japanese":0x411,
     "Norwegian":0x414,
+    "BrazilianABNT":0x416,
     "Lithuanian":0x10427,
     "Thai": 0x2041e
   };
@@ -235,7 +236,9 @@ function runKeyEventTests()
     // Ignore the state changing key events which is fired by the testing event.
     if (!isStateChangingModifierKeyEvent(e))
       eventList.push(e);
-    e.preventDefault();
+    if (e.type == "keypress") {
+      e.preventDefault();
+    }
   }
 
   const SHOULD_DELIVER_NONE             = 0x0;
@@ -1947,6 +1950,23 @@ function runKeyEventTests()
             nsIDOMKeyEvent.DOM_VK_PIPE, "|", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     testKey({layout:"Norwegian", keyCode:WIN_VK_OEM_5, shift:1, chars:"\u00A7"},
             nsIDOMKeyEvent.DOM_VK_PIPE, "\u00A7", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+
+    // Brazilian ABNT
+    testKey({layout:"BrazilianABNT", keyCode:WIN_VK_ABNT_C1, chars:"/"},
+            nsIDOMKeyEvent.DOM_VK_SLASH, "/", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    testKey({layout:"BrazilianABNT", keyCode:WIN_VK_ABNT_C1, shift:1, chars:"?"},
+            nsIDOMKeyEvent.DOM_VK_SLASH, "?", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    testKey({layout:"BrazilianABNT", keyCode:WIN_VK_ABNT_C2, numLock:1, chars:"."},
+            nsIDOMKeyEvent.DOM_VK_SEPARATOR, ".", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_NUMPAD);
+    testKey({layout:"BrazilianABNT", keyCode:WIN_VK_DECIMAL, numLock:1, chars:","},
+            nsIDOMKeyEvent.DOM_VK_DECIMAL, ",", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_NUMPAD);
+
+    // Mac JIS keyboard
+    // The separator key on JIS keyboard for Mac doesn't cause any character even with Japanese keyboard layout.
+    testKey({layout:"Japanese", keyCode:WIN_VK_ABNT_C2, numLock:1, chars:""},
+            nsIDOMKeyEvent.DOM_VK_SEPARATOR, "", SHOULD_DELIVER_KEYDOWN_KEYUP, KeyboardEvent.DOM_KEY_LOCATION_NUMPAD);
+    testKey({layout:"Japanese", keyCode:WIN_VK_DECIMAL, numLock:1, chars:"."},
+            nsIDOMKeyEvent.DOM_VK_DECIMAL, ".", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_NUMPAD);
 
     // Dead keys on any layouts
     testKey({layout:"French", keyCode:WIN_VK_OEM_6, chars:""},

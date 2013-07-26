@@ -22,35 +22,35 @@ function test()
 
   gPrevPref = Services.prefs.getBoolPref(
     "devtools.debugger.source-maps-enabled");
-  Services.prefs.setBoolPref("devtools.debugger.source-maps-enabled", true);
+  SpecialPowers.pushPrefEnv({"set": [["devtools.debugger.source-maps-enabled", true]]}, () => {
+    debug_tab_pane(TAB_URL, function(aTab, aDebuggee, aPane) {
+      resumed = true;
+      gTab = aTab;
+      gDebuggee = aDebuggee;
+      gPane = aPane;
+      gDebugger = gPane.panelWin;
 
-  debug_tab_pane(TAB_URL, function(aTab, aDebuggee, aPane) {
-    resumed = true;
-    gTab = aTab;
-    gDebuggee = aDebuggee;
-    gPane = aPane;
-    gDebugger = gPane.panelWin;
+      gDebugger.addEventListener("Debugger:SourceShown", function _onSourceShown(aEvent) {
+        gDebugger.removeEventListener("Debugger:SourceShown", _onSourceShown);
+        // Show original sources should be already enabled.
+        is(gPrevPref, true,
+          "The source maps functionality should be enabled by default.");
+        is(gDebugger.Prefs.sourceMapsEnabled, true,
+          "The source maps pref should be true from startup.");
+        is(gDebugger.DebuggerView.Options._showOriginalSourceItem.getAttribute("checked"),
+           "true", "Source maps should be enabled from startup. ")
 
-    gDebugger.addEventListener("Debugger:SourceShown", function _onSourceShown(aEvent) {
-      gDebugger.removeEventListener("Debugger:SourceShown", _onSourceShown);
-      // Show original sources should be already enabled.
-      is(gPrevPref, false,
-        "The source maps functionality should be disabled by default.");
-      is(gDebugger.Prefs.sourceMapsEnabled, true,
-        "The source maps pref should be true from startup.");
-      is(gDebugger.DebuggerView.Options._showOriginalSourceItem.getAttribute("checked"),
-         "true", "Source maps should be enabled from startup. ")
+        ok(aEvent.detail.url.indexOf(".coffee") != -1,
+           "The debugger should show the source mapped coffee script file.");
+        ok(aEvent.detail.url.indexOf(".js") == -1,
+           "The debugger should not show the generated js script file.");
+        ok(gDebugger.editor.getText().search(/isnt/) != -1,
+           "The debugger's editor should have the coffee script source displayed.");
+        ok(gDebugger.editor.getText().search(/function/) == -1,
+           "The debugger's editor should not have the JS source displayed.");
 
-      ok(aEvent.detail.url.indexOf(".coffee") != -1,
-         "The debugger should show the source mapped coffee script file.");
-      ok(aEvent.detail.url.indexOf(".js") == -1,
-         "The debugger should not show the generated js script file.");
-      ok(gDebugger.editor.getText().search(/isnt/) != -1,
-         "The debugger's editor should have the coffee script source displayed.");
-      ok(gDebugger.editor.getText().search(/function/) == -1,
-         "The debugger's editor should not have the JS source displayed.");
-
-      testToggleGeneratedSource();
+        testToggleGeneratedSource();
+      });
     });
   });
 }
@@ -195,7 +195,6 @@ function waitForCaretPos(number, callback)
 }
 
 registerCleanupFunction(function() {
-  Services.prefs.setBoolPref("devtools.debugger.source-maps-enabled", false);
   removeTab(gTab);
   gPane = null;
   gTab = null;

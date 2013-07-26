@@ -23,7 +23,7 @@ function Sidebar(el) {
   EventEmitter.decorate(this);
 
   this.document = el.ownerDocument;
-  this.widget = new SideMenuWidget(el);
+  this.widget = new SideMenuWidget(el, { showArrows: true });
   this.widget.notice = L10N.getStr("profiler.sidebarNotice");
 
   this.widget.addEventListener("select", (ev) => {

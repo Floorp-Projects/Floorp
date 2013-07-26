@@ -273,7 +273,10 @@ function testSynthesizedKeyLocation()
     is(aEvent.location, currentTest.event.location,
        description + "location of " + aEvent.type + " was invalid");
     events[aEvent.type] = true;
-    aEvent.preventDefault();
+    if (aEvent.type != "keydown" ||
+        (currentTest.event.isModifier && aEvent.type == "keydown")) {
+      aEvent.preventDefault();
+    }
   }
 
   window.addEventListener("keydown", handler, true);

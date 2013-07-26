@@ -812,6 +812,68 @@ File(JSContext *cx, unsigned argc, jsval *vp)
   return true;
 }
 
+Value sScriptedOperationCallback = UndefinedValue();
+
+static JSBool
+XPCShellOperationCallback(JSContext *cx)
+{
+    // If no operation callback was set by script, no-op.
+    if (sScriptedOperationCallback.isUndefined())
+        return true;
+
+    JSAutoCompartment ac(cx, &sScriptedOperationCallback.toObject());
+    RootedValue rv(cx);
+    if (!JS_CallFunctionValue(cx, nullptr, sScriptedOperationCallback,
+                              0, nullptr, rv.address()) || !rv.isBoolean())
+    {
+        NS_WARNING("Scripted operation callback failed! Terminating script.");
+        JS_ClearPendingException(cx);
+        return false;
+    }
+
+    return rv.toBoolean();
+}
+
+static JSBool
+SetOperationCallback(JSContext *cx, unsigned argc, jsval *vp)
+{
+    // Sanity-check args.
+    JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+    if (args.length() != 1) {
+        JS_ReportError(cx, "Wrong number of arguments");
+        return false;
+    }
+
+    // Allow callers to remove the operation callback by passing undefined.
+    if (args[0].isUndefined()) {
+        sScriptedOperationCallback = UndefinedValue();
+        return true;
+    }
+
+    // Otherwise, we should have a callable object.
+    if (!args[0].isObject() || !JS_ObjectIsCallable(cx, &args[0].toObject())) {
+        JS_ReportError(cx, "Argument must be callable");
+        return false;
+    }
+
+    sScriptedOperationCallback = args[0];
+
+    return true;
+}
+
+static JSBool
+SimulateActivityCallback(JSContext *cx, unsigned argc, jsval *vp)
+{
+    // Sanity-check args.
+    JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+    if (args.length() != 1 || !args[0].isBoolean()) {
+        JS_ReportError(cx, "Wrong number of arguments");
+        return false;
+    }
+    xpc::SimulateActivityCallback(args[0].toBoolean());
+    return true;
+}
+
 static const JSFunctionSpec glob_functions[] = {
     JS_FS("print",           Print,          0,0),
     JS_FS("readline",        ReadLine,       1,0),
@@ -836,6 +898,8 @@ static const JSFunctionSpec glob_functions[] = {
     JS_FS("btoa",            Btoa,           1,0),
     JS_FS("Blob",            Blob,           2,JSFUN_CONSTRUCTOR),
     JS_FS("File",            File,           2,JSFUN_CONSTRUCTOR),
+    JS_FS("setOperationCallback", SetOperationCallback, 1,0),
+    JS_FS("simulateActivityCallback", SimulateActivityCallback, 1,0),
     JS_FS_END
 };
 
@@ -1410,6 +1474,7 @@ ContextCallback(JSContext *cx, unsigned contextOp)
 
     if (contextOp == JSCONTEXT_NEW) {
         JS_SetErrorReporter(cx, XPCShellErrorReporter);
+        JS_SetOperationCallback(cx, XPCShellOperationCallback);
     }
     return true;
 }
@@ -1693,7 +1758,9 @@ main(int argc, char **argv, char **envp)
             JS_DefineProperty(cx, glob, "__LOCATION__", JSVAL_VOID,
                               GetLocationProperty, NULL, 0);
 
+            JS_AddValueRoot(cx, &sScriptedOperationCallback);
             result = ProcessArgs(cx, glob, argv, argc, &dirprovider);
+            JS_RemoveValueRoot(cx, &sScriptedOperationCallback);
 
             JS_DropPrincipals(rt, gJSPrincipals);
             JS_SetAllNonReservedSlotsToUndefined(cx, glob);

@@ -3043,17 +3043,18 @@ nsRuleNode::SetFont(nsPresContext* aPresContext, nsStyleContext* aContext,
   // -x-text-zoom: none, inherit, initial
   bool allowZoom;
   const nsCSSValue* textZoomValue = aRuleData->ValueForTextZoom();
-  if (eCSSUnit_Inherit == textZoomValue->GetUnit()) {
-    allowZoom = aParentFont->mAllowZoom;
-  } else if (eCSSUnit_None == textZoomValue->GetUnit()) {
-    allowZoom = false;
-  } else {
-    MOZ_ASSERT(eCSSUnit_Initial == textZoomValue->GetUnit() ||
-               eCSSUnit_Null == textZoomValue->GetUnit(),
-               "unexpected unit");
-    allowZoom = true;
+  if (eCSSUnit_Null != textZoomValue->GetUnit()) {
+    if (eCSSUnit_Inherit == textZoomValue->GetUnit()) {
+      allowZoom = aParentFont->mAllowZoom;
+    } else if (eCSSUnit_None == textZoomValue->GetUnit()) {
+      allowZoom = false;
+    } else {
+      MOZ_ASSERT(eCSSUnit_Initial == textZoomValue->GetUnit(),
+                 "unexpected unit");
+      allowZoom = true;
+    }
+    aFont->EnableZoom(aPresContext, allowZoom);
   }
-  aFont->EnableZoom(aPresContext, allowZoom);
 
   // mLanguage must be set before before any of the CalcLengthWith calls
   // (direct calls or calls via SetFontSize) for the cases where |aParentFont|

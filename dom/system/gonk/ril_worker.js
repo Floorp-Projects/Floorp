@@ -823,11 +823,6 @@ let RIL = {
     this.cdmaHome = null;
 
     /**
-     * CDMA Subscription information.
-     */
-    this.cdmaSubscription = {};
-
-    /**
      * Application identification for apps in ICC.
      */
     this.aid = null;
@@ -3403,23 +3398,33 @@ let RIL = {
       RIL.getSMSCAddress();
     }
 
+    let cell = rs.cell;
     if (this._isCdma) {
       // Some variables below are not used. Comment them instead of removing to
       // keep the information about state[x].
-
-      // let baseStationId = RIL.parseInt(state[4]);
-      let baseStationLatitude = RIL.parseInt(state[5]);
-      let baseStationLongitude = RIL.parseInt(state[6]);
-      if (!baseStationLatitude && !baseStationLongitude) {
-        baseStationLatitude = baseStationLongitude = null;
-      }
+      let cdmaBaseStationId = RIL.parseInt(state[4], -1);
+      let cdmaBaseStationLatitude = RIL.parseInt(state[5], -2147483648);
+      let cdmaBaseStationLongitude = RIL.parseInt(state[6], -2147483648);
       // let cssIndicator = RIL.parseInt(state[7]);
-      RIL.cdmaSubscription.systemId = RIL.parseInt(state[8]);
-      RIL.cdmaSubscription.networkId = RIL.parseInt(state[9]);
+      let cdmaSystemId = RIL.parseInt(state[8], -1);
+      let cdmaNetworkId = RIL.parseInt(state[9], -1);
       // let roamingIndicator = RIL.parseInt(state[10]);
       // let systemIsInPRL = RIL.parseInt(state[11]);
       // let defaultRoamingIndicator = RIL.parseInt(state[12]);
       // let reasonForDenial = RIL.parseInt(state[13]);
+
+      if (cell.cdmaBaseStationId !== cdmaBaseStationId ||
+          cell.cdmaBaseStationLatitude !== cdmaBaseStationLatitude ||
+          cell.cdmaBaseStationLongitude !== cdmaBaseStationLongitude ||
+          cell.cdmaSystemId !== cdmaSystemId ||
+          cell.cdmaNetworkId !== cdmaNetworkId) {
+        stateChanged = true;
+        cell.cdmaBaseStationId = cdmaBaseStationId;
+        cell.cdmaBaseStationLatitude = cdmaBaseStationLatitude;
+        cell.cdmaBaseStationLongitude = cdmaBaseStationLongitude;
+        cell.cdmaSystemId = cdmaSystemId;
+        cell.cdmaNetworkId = cdmaNetworkId;
+      }
     }
 
     if (stateChanged) {
@@ -4891,12 +4896,6 @@ RIL[REQUEST_SIGNAL_STRENGTH] = function REQUEST_SIGNAL_STRENGTH(length, options)
   if (DEBUG) debug("Signal strength " + JSON.stringify(obj));
   obj.rilMessageType = "signalstrengthchange";
   this.sendChromeMessage(obj);
-
-  if (this.cachedDialRequest && obj.gsmDBM && obj.gsmRelative) {
-    // Radio is ready for making the cached emergency call.
-    this.cachedDialRequest.callback();
-    this.cachedDialRequest = null;
-  }
 };
 RIL[REQUEST_VOICE_REGISTRATION_STATE] = function REQUEST_VOICE_REGISTRATION_STATE(length, options) {
   this._receivedNetworkInfo(NETWORK_INFO_VOICE_REGISTRATION_STATE);
@@ -4909,6 +4908,15 @@ RIL[REQUEST_VOICE_REGISTRATION_STATE] = function REQUEST_VOICE_REGISTRATION_STAT
   if (DEBUG) debug("voice registration state: " + state);
 
   this._processVoiceRegistrationState(state);
+
+  if (this.cachedDialRequest &&
+       (this.voiceRegistrationState.emergencyCallsOnly ||
+        this.voiceRegistrationState.connected) &&
+      this.voiceRegistrationState.radioTech != NETWORK_CREG_TECH_UNKNOWN) {
+    // Radio is ready for making the cached emergency call.
+    this.cachedDialRequest.callback();
+    this.cachedDialRequest = null;
+  }
 };
 RIL[REQUEST_DATA_REGISTRATION_STATE] = function REQUEST_DATA_REGISTRATION_STATE(length, options) {
   this._receivedNetworkInfo(NETWORK_INFO_DATA_REGISTRATION_STATE);
@@ -11650,8 +11658,9 @@ let ICCUtilsHelper = {
     } else if (RIL._isCdma) {
       // CDMA family display rule.
       let cdmaHome = RIL.cdmaHome;
-      let sid = RIL.cdmaSubscription.systemId;
-      let nid = RIL.cdmaSubscription.networkId;
+      let cell = RIL.voiceRegistrationState.cell;
+      let sid = cell && cell.cdmaSystemId;
+      let nid = cell && cell.cdmaNetworkId;
 
       iccInfo.isDisplayNetworkNameRequired = false;
 

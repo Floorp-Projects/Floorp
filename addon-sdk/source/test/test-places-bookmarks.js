@@ -25,9 +25,9 @@ const {
   MENU, TOOLBAR, UNSORTED
 } = require('sdk/places/bookmarks');
 const {
-  invalidResolve, invalidReject, createTree,
-  compareWithHost, createBookmark, createBookmarkItem,
-  createBookmarkTree, addVisits, resetPlaces
+  invalidResolve, invalidReject, clearBookmarks, createTree,
+  compareWithHost, clearAllBookmarks, createBookmark, createBookmarkItem,
+  createBookmarkTree, addVisits
 } = require('./places-helper');
 const { promisedEmitter } = require('sdk/places/utils');
 const bmsrv = Cc['@mozilla.org/browser/nav-bookmarks-service;1'].
@@ -941,8 +941,13 @@ exports.testCheckSaveOrder = function (assert, done) {
   });
 };
 
-before(exports, (name, assert, done) => resetPlaces(done));
-after(exports, (name, assert, done) => resetPlaces(done));
+before(exports, name => {
+  clearAllBookmarks();
+});
+
+after(exports, name => {
+  clearAllBookmarks();
+});
 
 function saveP () {
   return promisedEmitter(save.apply(null, Array.slice(arguments)));

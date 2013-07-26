@@ -17,7 +17,12 @@ function run_test()
   gClient.connect(function () {
     attachTestTabAndResume(gClient, "test-stack", function (aResponse, aTabClient, aThreadClient) {
       gThreadClient = aThreadClient;
-      test_simple_stepping();
+      // XXX: We have to do an executeSoon so that the error isn't caught and
+      // reported by DebuggerClient.requester (because we are using the local
+      // transport and share a stack) which causes the test to fail.
+      Services.tm.mainThread.dispatch({
+        run: test_simple_stepping
+      }, Ci.nsIThread.DISPATCH_NORMAL);
     });
   });
   do_test_pending();

@@ -85,11 +85,3 @@ exports.testUnique = function(test) {
     }
   }
 };
-
-exports.testFind = function(test) {
-  let isOdd = (x) => x % 2;
-  test.assertEqual(array.find([2, 4, 5, 7, 8, 9], isOdd), 5);
-  test.assertEqual(array.find([2, 4, 6, 8], isOdd), undefined);
-  test.assertEqual(array.find([2, 4, 6, 8], isOdd, null), null);
-};
-

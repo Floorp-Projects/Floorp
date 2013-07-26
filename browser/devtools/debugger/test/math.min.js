@@ -1,0 +1,2 @@
+function add(a,b,k){var result=a+b;return k(result)}function sub(a,b,k){var result=a-b;return k(result)}function mul(a,b,k){var result=a*b;return k(result)}function div(a,b,k){var result=a/b;return k(result)}function arithmetic(){add(4,4,function(a){sub(a,2,function(b){mul(b,3,function(c){div(c,2,function(d){console.log(d)})})})})};
+//@ sourceMappingURL=math.map

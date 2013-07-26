@@ -825,7 +825,7 @@ JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
     heapState(Idle),
 #ifdef JSGC_GENERATIONAL
     gcNursery(thisFromCtor()),
-    gcStoreBuffer(thisFromCtor()),
+    gcStoreBuffer(thisFromCtor(), gcNursery),
 #endif
 #ifdef JS_GC_ZEAL
     gcZeal_(0),
@@ -5259,7 +5259,7 @@ JS::Compile(JSContext *cx, HandleObject obj, CompileOptions options,
 {
     jschar *chars;
     if (options.utf8)
-        chars = InflateUTF8String(cx, bytes, &length);
+        chars = UTF8CharsToNewTwoByteCharsZ(cx, UTF8Chars(bytes, length), &length).get();
     else
         chars = InflateString(cx, bytes, &length);
     if (!chars)
@@ -5352,7 +5352,7 @@ JS_BufferIsCompilableUnit(JSContext *cx, JSObject *objArg, const char *utf8, siz
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj);
-    jschar *chars = InflateUTF8String(cx, utf8, &length);
+    jschar *chars = JS::UTF8CharsToNewTwoByteCharsZ(cx, JS::UTF8Chars(utf8, length), &length).get();
     if (!chars)
         return JS_TRUE;
 
@@ -5442,7 +5442,7 @@ JS::CompileFunction(JSContext *cx, HandleObject obj, CompileOptions options,
 {
     jschar *chars;
     if (options.utf8)
-        chars = InflateUTF8String(cx, bytes, &length);
+        chars = UTF8CharsToNewTwoByteCharsZ(cx, UTF8Chars(bytes, length), &length).get();
     else
         chars = InflateString(cx, bytes, &length);
     if (!chars)
@@ -5623,7 +5623,7 @@ JS::Evaluate(JSContext *cx, HandleObject obj, CompileOptions options,
 {
     jschar *chars;
     if (options.utf8)
-        chars = InflateUTF8String(cx, bytes, &length);
+        chars = UTF8CharsToNewTwoByteCharsZ(cx, UTF8Chars(bytes, length), &length).get();
     else
         chars = InflateString(cx, bytes, &length);
     if (!chars)

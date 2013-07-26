@@ -3,14 +3,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
+const xulApp = require("sdk/system/xul-app");
 const { PageMod } = require("sdk/page-mod");
 const tabs = require("sdk/tabs");
-const { startServerAsync } = require("sdk/test/httpd");
-
-const serverPort = 8099;
 
 exports.testCrossDomainIframe = function(assert, done) {
-  let server = startServerAsync(serverPort);
+  let serverPort = 8099;
+  let server = require("sdk/test/httpd").startServerAsync(serverPort);
   server.registerPathHandler("/iframe", function handle(request, response) {
     response.write("<html><body>foo</body></html>");
   });
@@ -32,23 +31,19 @@ exports.testCrossDomainIframe = function(assert, done) {
       w.on("message", function (body) {
         assert.equal(body, "foo", "received iframe html content");
         pageMod.destroy();
-        w.tab.close(function() {
-          server.stop(done);
-        });
+        w.tab.close();
+        server.stop(done);
       });
-
       w.postMessage("http://localhost:8099/iframe");
     }
   });
 
-  tabs.open({
-    url: "about:home",
-    inBackground: true
-  });
+  tabs.open("about:credits");
 };
 
 exports.testCrossDomainXHR = function(assert, done) {
-  let server = startServerAsync(serverPort);
+  let serverPort = 8099;
+  let server = require("sdk/test/httpd").startServerAsync(serverPort);
   server.registerPathHandler("/xhr", function handle(request, response) {
     response.write("foo");
   });
@@ -70,19 +65,22 @@ exports.testCrossDomainXHR = function(assert, done) {
       w.on("message", function (body) {
         assert.equal(body, "foo", "received XHR content");
         pageMod.destroy();
-        w.tab.close(function() {
-          server.stop(done);
-        });
+        w.tab.close();
+        server.stop(done);
       });
-
       w.postMessage("http://localhost:8099/xhr");
     }
   });
 
-  tabs.open({
-    url: "about:home",
-    inBackground: true
-  });
+  tabs.open("about:credits");
 };
+
+if (!xulApp.versionInRange(xulApp.platformVersion, "17.0a2", "*")) {
+  module.exports = {
+    "test Unsupported Application": function Unsupported (assert) {
+      assert.pass("This firefox version doesn't support cross-domain-content permission.");
+    }
+  };
+}
 
 require("sdk/test/runner").runTestsFromModule(module);

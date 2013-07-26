@@ -40,7 +40,7 @@ var press2 = false;
 $("testKeyEvent2").focus();
 synthesizeKey("x", {});
 is($("testKeyEvent2").value, "", "synthesizeKey should respect keydown preventDefault");
-is(press2, true, "synthesizeKey should dispatch keyPress with default prevented");
+is(press2, false, "synthesizeKey should not dispatch keyPress with default prevented");
 
 var press3 = false;
 $("testKeyEvent3").focus();
@@ -52,7 +52,7 @@ var press4 = false;
 $("testKeyEvent4").focus();
 sendChar("x")
 is($("testKeyEvent4").value, "", "sendChar should respect keydown preventDefault");
-is(press4, true, "sendChar should dispatch keyPress with default prevented");
+is(press4, false, "sendChar should not dispatch keyPress with default prevented");
 
 
 </script>

@@ -9,9 +9,10 @@
 
 #ifdef JS_ION
 
-#include "ion/BaselineFrame.h"
 #include "ion/IonFrameIterator.h"
+
 #include "ion/Bailouts.h"
+#include "ion/BaselineFrame.h"
 
 namespace js {
 namespace ion {

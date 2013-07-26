@@ -22,7 +22,20 @@ let consoleService = Cc['@mozilla.org/consoleservice;1'].getService().
 // For more details see: bug-673383
 exports.dump = stdout.write;
 
-exports.console = new PlainTextConsole();
+// Bug 718230: We need to send console messages to stdout and JS Console
+function forsakenConsoleDump(msg, level) {
+  stdout.write(msg);
+
+  if (level === 'error') {
+    let error = ScriptError();
+    msg = msg.replace(/^error: /, '');
+    error.init(msg, null, null, 0, 0, 0, 'Add-on SDK');
+    consoleService.logMessage(error);
+  }
+  else
+    consoleService.logStringMessage(msg);
+};
+exports.console = new PlainTextConsole(forsakenConsoleDump);
 
 // Provide CommonJS `define` to allow authoring modules in a format that can be
 // loaded both into jetpack and into browser via AMD loaders.

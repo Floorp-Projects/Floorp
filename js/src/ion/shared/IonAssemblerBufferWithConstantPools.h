@@ -6,9 +6,11 @@
 
 #ifndef ion_shared_IonAssemblerBufferWithConstantPools_h
 #define ion_shared_IonAssemblerBufferWithConstantPools_h
-#include "ion/shared/IonAssemblerBuffer.h"
+
 #include "assembler/wtf/SegmentedVector.h"
 #include "ion/IonSpewer.h"
+#include "ion/shared/IonAssemblerBuffer.h"
+
 namespace js {
 namespace ion {
 typedef Vector<BufferOffset, 512, IonAllocPolicy> LoadOffsets;
