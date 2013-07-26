@@ -9,7 +9,9 @@ import org.mozilla.gecko.EditBookmarkDialog;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.ReaderModeUtils;
 import org.mozilla.gecko.Tabs;
+import org.mozilla.gecko.db.BrowserContract.Combined;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.home.HomeListView.HomeContextMenuInfo;
@@ -73,7 +75,9 @@ class HomeFragment extends Fragment {
         menu.setHeaderTitle(info.title);
 
         menu.findItem(R.id.home_remove_history).setVisible(false);
-        menu.findItem(R.id.home_open_in_reader).setVisible(false);
+
+        final boolean canOpenInReader = (info.display == Combined.DISPLAY_READER);
+        menu.findItem(R.id.home_open_in_reader).setVisible(canOpenInReader);
     }
 
     @Override
@@ -138,6 +142,12 @@ class HomeFragment extends Fragment {
 
             case R.id.home_edit_bookmark: {
                 new EditBookmarkDialog(activity).show(info.url);
+                return true;
+            }
+
+            case R.id.home_open_in_reader: {
+                final String url = ReaderModeUtils.getAboutReaderForUrl(info.url, true);
+                Tabs.getInstance().loadUrl(url, Tabs.LOADURL_NONE);
                 return true;
             }
 
