@@ -277,6 +277,7 @@ class StructType : public JSObject
                       size_t offset, MutableHandleValue to);
 
     static void finalize(js::FreeOp *op, JSObject *obj);
+    static void trace(JSTracer *tracer, JSObject *obj);
 };
 
 class BinaryStruct : public JSObject
