@@ -17,7 +17,7 @@
                              xbl:inherits="command"/>
           <xul:label class="flyout-header-label" xbl:inherits="value=headertext"/>
         </xul:hbox>
-        <xul:scrollbox class="flyoutpanel-contents" flex="1" orient="vertical">
+        <xul:scrollbox class="flyoutpanel-contents" observes="bcast_preciseInput" flex="1" orient="vertical">
           <children/>
         </xul:scrollbox>
       </xul:vbox>
