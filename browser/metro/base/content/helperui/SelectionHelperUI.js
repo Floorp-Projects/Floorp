@@ -516,6 +516,7 @@ var SelectionHelperUI = {
     window.addEventListener("MozPrecisePointer", this, true);
     window.addEventListener("MozDeckOffsetChanging", this, true);
     window.addEventListener("MozDeckOffsetChanged", this, true);
+    window.addEventListener("KeyboardChanged", this, true);
 
     // bubble phase
     window.addEventListener("click", this, false);
@@ -549,6 +550,7 @@ var SelectionHelperUI = {
     window.removeEventListener("MozPrecisePointer", this, true);
     window.removeEventListener("MozDeckOffsetChanging", this, true);
     window.removeEventListener("MozDeckOffsetChanged", this, true);
+    window.removeEventListener("KeyboardChanged", this, true);
 
     Elements.browsers.removeEventListener("URLChanged", this, true);
     Elements.browsers.removeEventListener("SizeChanged", this, true);
@@ -921,6 +923,13 @@ var SelectionHelperUI = {
     this._hideMonocles();
   },
 
+  _onKeyboardChangedEvent: function _onKeyboardChangedEvent() {
+    if (!this.isActive || this.layerMode == kContentLayer) {
+      return;
+    }
+    this._sendAsyncMessage("Browser:SelectionUpdate", {});
+  },
+
   /*
    * Event handlers for message manager
    */
@@ -1078,6 +1087,10 @@ var SelectionHelperUI = {
 
       case "MozAppbarDismissing":
         this._onNavBarDismissEvent();
+        break;
+
+      case "KeyboardChanged":
+        this._onKeyboardChangedEvent();
         break;
     }
   },
