@@ -1916,7 +1916,7 @@ struct MOZ_STACK_CLASS ExceptionArgParser
         }
 
         // Get the property.
-        return JS_GetProperty(cx, obj, name, rv);
+        return JS_GetProperty(cx, obj, name, rv.address());
     }
 
     /*
@@ -2243,7 +2243,7 @@ nsXPCConstructor::CallOrConstruct(nsIXPConnectWrappedNative *wrapper,JSContext *
         RootedObject newObj(cx, &rval.toObject());
         // first check existence of function property for better error reporting
         RootedValue fun(cx);
-        if (!JS_GetProperty(cx, newObj, mInitializer, &fun) ||
+        if (!JS_GetProperty(cx, newObj, mInitializer, fun.address()) ||
             fun.isPrimitive()) {
             return ThrowAndFail(NS_ERROR_XPC_BAD_INITIALIZER_NAME, cx, _retval);
         }
@@ -2492,7 +2492,7 @@ nsXPCComponents_Constructor::CallOrConstruct(nsIXPConnectWrappedNative *wrapper,
             return ThrowAndFail(NS_ERROR_XPC_BAD_CONVERT_JS, cx, _retval);
 
         RootedValue val(cx);
-        if (!JS_GetPropertyById(cx, ifacesObj, id, &val) || val.isPrimitive())
+        if (!JS_GetPropertyById(cx, ifacesObj, id, val.address()) || val.isPrimitive())
             return ThrowAndFail(NS_ERROR_XPC_BAD_IID, cx, _retval);
 
         nsCOMPtr<nsIXPConnectWrappedNative> wn;
@@ -2541,7 +2541,7 @@ nsXPCComponents_Constructor::CallOrConstruct(nsIXPConnectWrappedNative *wrapper,
             return ThrowAndFail(NS_ERROR_XPC_BAD_CONVERT_JS, cx, _retval);
 
         RootedValue val(cx);
-        if (!JS_GetPropertyById(cx, classesObj, id, &val) || val.isPrimitive())
+        if (!JS_GetPropertyById(cx, classesObj, id, val.address()) || val.isPrimitive())
             return ThrowAndFail(NS_ERROR_XPC_BAD_CID, cx, _retval);
 
         nsCOMPtr<nsIXPConnectWrappedNative> wn;
@@ -3526,7 +3526,7 @@ GetPropFromOptions(JSContext *cx, HandleObject from, const char *name, MutableHa
     if (!JS_HasProperty(cx, from, name, found))
         return NS_ERROR_INVALID_ARG;
 
-    if (found && !JS_GetProperty(cx, from, name, prop))
+    if (found && !JS_GetProperty(cx, from, name, prop.address()))
         return NS_ERROR_INVALID_ARG;
 
     return NS_OK;
@@ -4275,7 +4275,7 @@ nsXPCComponents_Utils::MakeObjectPropsNormal(const Value &vobj, JSContext *cx)
     for (size_t i = 0; i < ida.length(); ++i) {
         id = ida[i];
 
-        if (!JS_GetPropertyById(cx, obj, id, &v))
+        if (!JS_GetPropertyById(cx, obj, id, v.address()))
             return NS_ERROR_FAILURE;
 
         if (v.isPrimitive())

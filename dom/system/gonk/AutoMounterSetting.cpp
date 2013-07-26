@@ -186,7 +186,7 @@ AutoMounterSetting::Observe(nsISupports* aSubject,
     return NS_OK;
   }
   JSObject& obj(val.toObject());
-  JS::Rooted<JS::Value> key(cx);
+  JS::Value key;
   if (!JS_GetProperty(cx, &obj, "key", &key) ||
       !key.isString()) {
     return NS_OK;
@@ -198,7 +198,7 @@ AutoMounterSetting::Observe(nsISupports* aSubject,
     return NS_OK;
   }
 
-  JS::Rooted<JS::Value> value(cx);
+  JS::Value value;
   if (!JS_GetProperty(cx, &obj, "value", &value)) {
     return NS_OK;
   }
