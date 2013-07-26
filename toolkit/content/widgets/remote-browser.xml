@@ -82,7 +82,6 @@
 
       <destructor>
         <![CDATA[
-          this.messageManager.removeMessageListener("DOMTitleChanged", this);
           this.webProgress._destroy();
         ]]>
       </destructor>

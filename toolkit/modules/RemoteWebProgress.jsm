@@ -53,10 +53,6 @@ RemoteWebProgress.prototype = {
   },
 
   _destroy: function WP_Destroy() {
-    this._browser.messageManager.removeMessageListener("Content:StateChange", this);
-    this._browser.messageManager.removeMessageListener("Content:LocationChange", this);
-    this._browser.messageManager.removeMessageListener("Content:SecurityChange", this);
-    this._browser.messageManager.removeMessageListener("Content:StatusChange", this);
     this._browser = null;
   },
 
