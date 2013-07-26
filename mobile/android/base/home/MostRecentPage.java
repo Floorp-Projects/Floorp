@@ -14,7 +14,6 @@ import org.mozilla.gecko.home.TwoLinePageRow;
 import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.Context;
-import android.content.res.Resources;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.support.v4.app.LoaderManager;
@@ -40,21 +39,6 @@ public class MostRecentPage extends HomeFragment {
     // Cursor loader ID for history query
     private static final int LOADER_ID_HISTORY = 0;
 
-    // For the time sections in history
-    private static final long MS_PER_DAY = 86400000;
-    private static final long MS_PER_WEEK = MS_PER_DAY * 7;
-
-    // The time ranges for each section
-    private static enum MostRecentSection {
-        TODAY,
-        YESTERDAY,
-        WEEK,
-        OLDER
-    };
-
-    // Maps headers in the list with their respective sections
-    private SparseArray<MostRecentSection> mMostRecentSections;
-
     // Adapter for the list of search results
     private MostRecentAdapter mAdapter;
 
@@ -63,9 +47,6 @@ public class MostRecentPage extends HomeFragment {
 
     // Callbacks used for the search and favicon cursor loaders
     private CursorLoaderCallbacks mCursorLoaderCallbacks;
-
-    // Inflater used by the adapter
-    private LayoutInflater mInflater;
 
     // On URL open listener
     private OnUrlOpenListener mUrlOpenListener;
@@ -88,16 +69,11 @@ public class MostRecentPage extends HomeFragment {
             throw new ClassCastException(activity.toString()
                     + " must implement HomePager.OnUrlOpenListener");
         }
-
-        mInflater = (LayoutInflater) activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
     }
 
     @Override
     public void onDetach() {
         super.onDetach();
-
-        mMostRecentSections = null;
-        mInflater = null;
         mUrlOpenListener = null;
     }
 
@@ -112,11 +88,10 @@ public class MostRecentPage extends HomeFragment {
         title.setText(R.string.home_most_recent_title);
 
         mList = (ListView) view.findViewById(R.id.list);
-
         mList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                position -= getMostRecentSectionsCountBefore(position);
+                position -= mAdapter.getMostRecentSectionsCountBefore(position);
 
                 final Cursor c = mAdapter.getCursor();
                 if (c == null || !c.moveToPosition(position)) {
@@ -143,9 +118,6 @@ public class MostRecentPage extends HomeFragment {
 
         final Activity activity = getActivity();
 
-        // Initialize map of history sections
-        mMostRecentSections = new SparseArray<MostRecentSection>();
-
         // Intialize adapter
         mAdapter = new MostRecentAdapter(activity);
         mList.setAdapter(mAdapter);
@@ -158,91 +130,6 @@ public class MostRecentPage extends HomeFragment {
     @Override
     protected void load() {
         getLoaderManager().initLoader(LOADER_ID_HISTORY, null, mCursorLoaderCallbacks);
-    }
-
-    private String getMostRecentSectionTitle(MostRecentSection section) {
-        final Resources resources = getActivity().getResources();
-
-        switch (section) {
-        case TODAY:
-            return resources.getString(R.string.history_today_section);
-        case YESTERDAY:
-            return resources.getString(R.string.history_yesterday_section);
-        case WEEK:
-            return resources.getString(R.string.history_week_section);
-        case OLDER:
-            return resources.getString(R.string.history_older_section);
-        }
-
-        throw new IllegalStateException("Unrecognized history section");
-    }
-
-    private int getMostRecentSectionsCountBefore(int position) {
-        // Account for the number headers before the given position
-        int sectionsBefore = 0;
-
-        final int historySectionsCount = mMostRecentSections.size();
-        for (int i = 0; i < historySectionsCount; i++) {
-            final int sectionPosition = mMostRecentSections.keyAt(i);
-            if (sectionPosition > position) {
-                break;
-            }
-
-            sectionsBefore++;
-        }
-
-        return sectionsBefore;
-    }
-
-    private MostRecentSection getMostRecentSectionForTime(long from, long time) {
-        long delta = from - time;
-
-        if (delta < 0) {
-            return MostRecentSection.TODAY;
-        }
-
-        if (delta < MS_PER_DAY) {
-            return MostRecentSection.YESTERDAY;
-        }
-
-        if (delta < MS_PER_WEEK) {
-            return MostRecentSection.WEEK;
-        }
-
-        return MostRecentSection.OLDER;
-    }
-
-    private void loadMostRecentSections(Cursor c) {
-        if (c == null || !c.moveToFirst()) {
-            return;
-        }
-
-        // Clear any history sections that may have been loaded before.
-        mMostRecentSections.clear();
-
-        final Date now = new Date();
-        now.setHours(0);
-        now.setMinutes(0);
-        now.setSeconds(0);
-
-        final long today = now.getTime();
-        MostRecentSection section = null;
-
-        do {
-            final int position = c.getPosition();
-            final long time = c.getLong(c.getColumnIndexOrThrow(URLColumns.DATE_LAST_VISITED));
-            final MostRecentSection itemSection = getMostRecentSectionForTime(today, time);
-
-            if (section != itemSection) {
-                section = itemSection;
-                mMostRecentSections.append(position + mMostRecentSections.size(), section);
-            }
-
-            // Reached the last section, no need to continue
-            if (section == MostRecentSection.OLDER) {
-                break;
-            }
-        } while (c.moveToNext());
     }
 
     private static class MostRecentCursorLoader extends SimpleCursorLoader {
@@ -260,14 +147,35 @@ public class MostRecentPage extends HomeFragment {
         }
     }
 
-    private class MostRecentAdapter extends SimpleCursorAdapter {
+    private static class MostRecentAdapter extends SimpleCursorAdapter {
         private static final int ROW_HEADER = 0;
         private static final int ROW_STANDARD = 1;
 
         private static final int ROW_TYPE_COUNT = 2;
 
+        // For the time sections in history
+        private static final long MS_PER_DAY = 86400000;
+        private static final long MS_PER_WEEK = MS_PER_DAY * 7;
+
+        // The time ranges for each section
+        private static enum MostRecentSection {
+            TODAY,
+            YESTERDAY,
+            WEEK,
+            OLDER
+        };
+
+        private final Context mContext;
+
+        // Maps headers in the list with their respective sections
+        private final SparseArray<MostRecentSection> mMostRecentSections;
+
         public MostRecentAdapter(Context context) {
             super(context, -1, null, new String[] {}, new int[] {});
+            mContext = context;
+
+            // Initialize map of history sections
+            mMostRecentSections = new SparseArray<MostRecentSection>();
         }
 
         @Override
@@ -309,13 +217,20 @@ public class MostRecentPage extends HomeFragment {
         }
 
         @Override
+        public Cursor swapCursor(Cursor cursor) {
+            Cursor oldCursor = super.swapCursor(cursor);
+            loadMostRecentSections(cursor);
+            return oldCursor;
+        }
+
+        @Override
         public View getView(int position, View convertView, ViewGroup parent) {
             final int type = getItemViewType(position);
 
             if (type == ROW_HEADER) {
                 final TextView row;
                 if (convertView == null) {
-                    row = (TextView) mInflater.inflate(R.layout.home_header_row, mList, false);
+                    row = (TextView) LayoutInflater.from(mContext).inflate(R.layout.home_header_row, parent, false);
                 } else {
                     row = (TextView) convertView;
                 }
@@ -327,7 +242,7 @@ public class MostRecentPage extends HomeFragment {
             } else {
                 final TwoLinePageRow row;
                 if (convertView == null) {
-                    row = (TwoLinePageRow) mInflater.inflate(R.layout.home_item_row, mList, false);
+                    row = (TwoLinePageRow) LayoutInflater.from(mContext).inflate(R.layout.home_item_row, parent, false);
                 } else {
                     row = (TwoLinePageRow) convertView;
                 }
@@ -344,6 +259,89 @@ public class MostRecentPage extends HomeFragment {
 
                 return row;
             }
+        }
+
+        private String getMostRecentSectionTitle(MostRecentSection section) {
+            switch (section) {
+            case TODAY:
+                return mContext.getString(R.string.history_today_section);
+            case YESTERDAY:
+                return mContext.getString(R.string.history_yesterday_section);
+            case WEEK:
+                return mContext.getString(R.string.history_week_section);
+            case OLDER:
+                return mContext.getString(R.string.history_older_section);
+            }
+
+            throw new IllegalStateException("Unrecognized history section");
+        }
+
+        private int getMostRecentSectionsCountBefore(int position) {
+            // Account for the number headers before the given position
+            int sectionsBefore = 0;
+
+            final int historySectionsCount = mMostRecentSections.size();
+            for (int i = 0; i < historySectionsCount; i++) {
+                final int sectionPosition = mMostRecentSections.keyAt(i);
+                if (sectionPosition > position) {
+                    break;
+                }
+
+                sectionsBefore++;
+            }
+
+            return sectionsBefore;
+        }
+
+        private static MostRecentSection getMostRecentSectionForTime(long from, long time) {
+            long delta = from - time;
+
+            if (delta < 0) {
+                return MostRecentSection.TODAY;
+            }
+
+            if (delta < MS_PER_DAY) {
+                return MostRecentSection.YESTERDAY;
+            }
+
+            if (delta < MS_PER_WEEK) {
+                return MostRecentSection.WEEK;
+            }
+
+            return MostRecentSection.OLDER;
+        }
+
+        private void loadMostRecentSections(Cursor c) {
+            if (c == null || !c.moveToFirst()) {
+                return;
+            }
+
+            // Clear any history sections that may have been loaded before.
+            mMostRecentSections.clear();
+
+            final Date now = new Date();
+            now.setHours(0);
+            now.setMinutes(0);
+            now.setSeconds(0);
+
+            final long today = now.getTime();
+            MostRecentSection section = null;
+
+            do {
+                final int position = c.getPosition();
+                final long time = c.getLong(c.getColumnIndexOrThrow(URLColumns.DATE_LAST_VISITED));
+                final MostRecentSection itemSection = MostRecentAdapter.getMostRecentSectionForTime(today, time);
+
+                if (section != itemSection) {
+                    section = itemSection;
+                    mMostRecentSections.append(position + mMostRecentSections.size(), section);
+                }
+
+                // Reached the last section, no need to continue
+                if (section == MostRecentSection.OLDER) {
+                    break;
+                }
+            } while (c.moveToNext());
         }
     }
 
@@ -364,7 +362,6 @@ public class MostRecentPage extends HomeFragment {
         @Override
         public void onLoadFinished(Loader<Cursor> loader, Cursor c) {
             if (loader.getId() == LOADER_ID_HISTORY) {
-                loadMostRecentSections(c);
                 mAdapter.swapCursor(c);
                 loadFavicons(c);
             } else {
