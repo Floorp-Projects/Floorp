@@ -383,6 +383,7 @@ documenttab[selected] .documenttab-selection {
 }
 
 #stack[keyboardVisible] > .overlay-button,
+#stack[autocomplete] > .overlay-button,
 #stack[fullscreen] > .overlay-button,
 #appbar[visible] ~ .overlay-button,
 .overlay-button[disabled] {
@@ -392,6 +393,8 @@ documenttab[selected] .documenttab-selection {
 
 #stack[keyboardVisible] > #overlay-back:-moz-locale-dir(ltr),
 #stack[keyboardVisible] > #overlay-plus:-moz-locale-dir(rtl),
+#stack[autocomplete] > #overlay-back:-moz-locale-dir(ltr),
+#stack[autocomplete] > #overlay-plus:-moz-locale-dir(rtl),
 #stack[fullscreen] > #overlay-back:-moz-locale-dir(ltr),
 #stack[fullscreen] > #overlay-plus:-moz-locale-dir(rtl),
 #appbar[visible] ~ #overlay-back:-moz-locale-dir(ltr),
@@ -403,6 +406,8 @@ documenttab[selected] .documenttab-selection {
 
 #stack[keyboardVisible] > #overlay-plus:-moz-locale-dir(ltr),
 #stack[keyboardVisible] > #overlay-back:-moz-locale-dir(rtl),
+#stack[autocomplete] > #overlay-plus:-moz-locale-dir(ltr),
+#stack[autocomplete] > #overlay-back:-moz-locale-dir(rtl),
 #stack[fullscreen] > #overlay-plus:-moz-locale-dir(ltr),
 #stack[fullscreen] > #overlay-back:-moz-locale-dir(rtl),
 #appbar[visible] ~ #overlay-plus:-moz-locale-dir(ltr),
