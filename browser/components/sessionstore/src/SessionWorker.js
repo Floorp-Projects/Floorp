@@ -57,6 +57,12 @@ let Agent = {
   // the loadState to disk once after startup.
   hasWrittenLoadStateOnce: false,
 
+  // Boolean that tells whether we already made a
+  // call to write(). We will only attempt to move
+  // sessionstore.js to sessionstore.bak on the
+  // first write.
+  hasWrittenState: false,
+
   // The path to sessionstore.js
   path: OS.Path.join(OS.Constants.Path.profileDir, "sessionstore.js"),
 
@@ -107,7 +113,19 @@ let Agent = {
   /**
    * Write the session to disk.
    */
-  write: function (stateString) {
+  write: function (stateString, options) {
+    if (!this.hasWrittenState) {
+      if (options && options.backupOnFirstWrite) {
+        try {
+          File.move(this.path, this.backupPath);
+        } catch (ex if isNoSuchFileEx(ex)) {
+          // Ignore exceptions about non-existent files.
+        }
+      }
+
+      this.hasWrittenState = true;
+    }
+
     let bytes = Encoder.encode(stateString);
     return File.writeAtomic(this.path, bytes, {tmpPath: this.path + ".tmp"});
   },
@@ -140,19 +158,8 @@ let Agent = {
 
     state.session = state.session || {};
     state.session.state = loadState;
-    return this.write(JSON.stringify(state));
-  },
-
-  /**
-   * Moves sessionstore.js to sessionstore.bak.
-   */
-  moveToBackupPath: function () {
-    try {
-      return File.move(this.path, this.backupPath);
-    } catch (ex if isNoSuchFileEx(ex)) {
-      // Ignore exceptions about non-existent files.
-      return true;
-    }
+    let bytes = Encoder.encode(JSON.stringify(state));
+    return File.writeAtomic(this.path, bytes, {tmpPath: this.path + ".tmp"});
   },
 
   /**
