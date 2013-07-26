@@ -26,14 +26,6 @@ namespace js {
 class PropertyName;
 class Shape;
 
-/*
- * Env is the type of what ES5 calls "lexical environments" (runtime
- * activations of lexical scopes). This is currently just JSObject, and is
- * implemented by Call, Block, With, and DeclEnv objects, among others--but
- * environments and objects are really two different concepts.
- */
-typedef JSObject Env;
-
 typedef JSNative             Native;
 typedef JSParallelNative     ParallelNative;
 typedef JSThreadSafeNative   ThreadSafeNative;
