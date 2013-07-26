@@ -109,7 +109,6 @@ function setUp() {
 function tearDown() {
   yield removeMockSearchDefault();
   Browser.closeTab(Browser.selectedTab, { forceClose: true });
-  delete window.r;
 }
 
 gTests.push({
