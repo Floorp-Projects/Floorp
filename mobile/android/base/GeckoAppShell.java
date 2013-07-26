@@ -297,7 +297,7 @@ public class GeckoAppShell
         // Preparation for pumpMessageLoop()
         MessageQueue.IdleHandler idleHandler = new MessageQueue.IdleHandler() {
             @Override public boolean queueIdle() {
-                Handler geckoHandler = ThreadUtils.getGeckoHandler();
+                final Handler geckoHandler = ThreadUtils.sGeckoHandler;
                 Message idleMsg = Message.obtain(geckoHandler);
                 // Use |Message.obj == GeckoHandler| to identify our "queue is empty" message
                 idleMsg.obj = geckoHandler;
@@ -2465,12 +2465,12 @@ public class GeckoAppShell
     }
 
     public static boolean pumpMessageLoop() {
-        Handler geckoHandler = ThreadUtils.getGeckoHandler();
-        MessageQueue mq = Looper.myQueue();
-        Message msg = getNextMessageFromQueue(mq); 
+        Handler geckoHandler = ThreadUtils.sGeckoHandler;
+        Message msg = getNextMessageFromQueue(ThreadUtils.sGeckoQueue);
+
         if (msg == null)
             return false;
-        if (msg.getTarget() == geckoHandler && msg.obj == geckoHandler) {
+        if (msg.obj == geckoHandler && msg.getTarget() == geckoHandler) {
             // Our "queue is empty" message; see runGecko()
             msg.recycle();
             return false;

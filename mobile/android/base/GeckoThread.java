@@ -115,7 +115,9 @@ public class GeckoThread extends Thread implements GeckoEventListener {
     @Override
     public void run() {
         Looper.prepare();
-        ThreadUtils.setGeckoThread(this, new Handler());
+        ThreadUtils.sGeckoThread = this;
+        ThreadUtils.sGeckoHandler = new Handler();
+        ThreadUtils.sGeckoQueue = Looper.myQueue();
 
         String path = initGeckoEnvironment();
 
