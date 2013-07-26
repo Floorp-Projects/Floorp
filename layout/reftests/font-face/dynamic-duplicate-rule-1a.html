@@ -1,0 +1,65 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<head>
+<meta charset="utf-8">
+
+<!-- Testcase for bug 879963 regression.
+     We have two <style> elements with identical @font-face rules, which will
+     share a common proxy font entry. When the entry is loaded, the references
+     in both rules must be updated, otherwise text may disappear if the "wrong"
+     (non-updated) rule is subsequently used.
+     By disabling the first style element after the document has loaded (and the
+     user font has been resolved to a real font entry), we can check that the
+     second rule also works as expected.
+     Note that if a platform doesn't have any of the local() fonts listed,
+     the testcase will "pass" harmlessly as a no-op. -->
+
+<style type="text/css" id="style1">
+@font-face {
+  font-family: foo;
+  src: local("Arial"),
+       local("DejaVu Sans"),
+       local("Free Sans"),
+       local("Open Sans"),
+       local("Droid Sans"),
+       local("Roboto");
+}
+</style>
+
+<style type="text/css" id="style2">
+@font-face {
+  font-family: foo;
+  src: local("Arial"),
+       local("DejaVu Sans"),
+       local("Free Sans"),
+       local("Open Sans"),
+       local("Droid Sans"),
+       local("Roboto");
+}
+</style>
+
+<style type="text/css">
+body {
+  font-family: serif;
+}
+.test {
+  font-family: foo;
+}
+</style>
+
+<script type="application/javascript">
+function run() {
+  document.getElementById("style1").disabled = true;
+  document.documentElement.removeAttribute("class");
+}
+</script>
+
+</head>
+
+<body onload="run()">
+<div>
+foo <span class="test">bar</span> baz
+</div>
+</body>
+
+</html>
