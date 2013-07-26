@@ -30,6 +30,11 @@ class ObjectImpl;
 class Nursery;
 class Shape;
 
+typedef JSPropertyOp         PropertyOp;
+typedef JSStrictPropertyOp   StrictPropertyOp;
+
+typedef JSPropertyDescriptor PropertyDescriptor;
+
 /*
  * To really poison a set of values, using 'magic' or 'undefined' isn't good
  * enough since often these will just be ignored by buggy code (see bug 629974)

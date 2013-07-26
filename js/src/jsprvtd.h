@@ -18,9 +18,6 @@ namespace js {
 typedef JSNative             Native;
 typedef JSParallelNative     ParallelNative;
 typedef JSThreadSafeNative   ThreadSafeNative;
-typedef JSPropertyOp         PropertyOp;
-typedef JSStrictPropertyOp   StrictPropertyOp;
-typedef JSPropertyDescriptor PropertyDescriptor;
 
 } /* namespace js */
 
