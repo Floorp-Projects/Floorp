@@ -179,6 +179,7 @@ browser.jar:
   skin/classic/browser/social/share-button-active.png       (social/share-button-active.png)
   skin/classic/browser/social/share-button-active@2x.png    (social/share-button-active@2x.png)
   skin/classic/browser/social/chat-icons.png                             (social/chat-icons.png)
+  skin/classic/browser/social/chat-icons@2x.png                          (social/chat-icons@2x.png)
   skin/classic/browser/tabbrowser/alltabs-box-bkgnd-icon.png             (tabbrowser/alltabs-box-bkgnd-icon.png)
   skin/classic/browser/tabbrowser/newtab.png                             (tabbrowser/newtab.png)
   skin/classic/browser/tabbrowser/newtab@2x.png                          (tabbrowser/newtab@2x.png)
