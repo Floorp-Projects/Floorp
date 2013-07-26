@@ -1438,6 +1438,17 @@ class MethodDefiner(PropertyDefiner):
                     self.chrome.append(toStringDesc)
                 else:
                     self.regular.append(toStringDesc)
+            jsonifier = descriptor.operations['Jsonifier']
+            if jsonifier:
+                toJSONDesc = { "name": "toJSON",
+                               "nativeName": jsonifier.identifier.name,
+                               "length": 0,
+                               "flags": "JSPROP_ENUMERATE",
+                               "condition": PropertyDefiner.getControllingCondition(jsonifier) }
+                if isChromeOnly(jsonifier):
+                    self.chrome.append(toJSONDesc)
+                else:
+                    self.regular.append(toJSONDesc)
         elif (descriptor.interface.isJSImplemented() and
               descriptor.interface.hasInterfaceObject()):
             self.chrome.append({"name": '_create',
@@ -5207,6 +5218,32 @@ class CGSpecializedMethod(CGAbstractStaticMethod):
         name = method.identifier.name
         return MakeNativeName(descriptor.binaryNames.get(name, name))
 
+class CGJsonifierMethod(CGSpecializedMethod):
+    def __init__(self, descriptor, method):
+        assert method.isJsonifier()
+        CGSpecializedMethod.__init__(self, descriptor, method)
+
+    def definition_body(self):
+        ret = ('JS::Rooted<JSObject*> result(cx, JS_NewObject(cx, nullptr, nullptr, nullptr));\n'
+               'if (!result) {\n'
+               '  return false;\n'
+               '}\n')
+        for m in self.descriptor.interface.members:
+          if m.isAttr() and not m.isStatic():
+              ret += ('{ // scope for "temp"\n'
+                      '  JS::Rooted<JS::Value> temp(cx);\n'
+                      '  if (!get_%s(cx, obj, self, JSJitGetterCallArgs(&temp))) {\n'
+                      '    return false;\n'
+                      '  }\n'
+                      '  if (!JS_DefineProperty(cx, result, "%s", temp, nullptr, nullptr, JSPROP_ENUMERATE)) {\n'
+                      '    return false;\n'
+                      '  }\n'
+                      '}\n' % (m.identifier.name, m.identifier.name))
+
+        ret += ('args.rval().setObject(*result);\n'
+                'return true;')
+        return CGIndenter(CGGeneric(ret)).define()
+
 class CGLegacyCallHook(CGAbstractBindingMethod):
     """
     Call hook for our object
@@ -7544,15 +7581,19 @@ class CGDescriptor(CGThing):
 
         cgThings = []
         # These are set to true if at least one non-static
-        # method/getter/setter exist on the interface.
-        (hasMethod, hasGetter, hasLenientGetter,
-         hasSetter, hasLenientSetter) = False, False, False, False, False
+        # method/getter/setter or jsonifier exist on the interface.
+        (hasMethod, hasGetter, hasLenientGetter, hasSetter, hasJsonifier,
+            hasLenientSetter) = False, False, False, False, False, False
         for n in descriptor.interface.namedConstructors:
             cgThings.append(CGClassConstructor(descriptor, n,
                                                NamedConstructorName(n)))
         for m in descriptor.interface.members:
-            if (m.isMethod() and
-                (not m.isIdentifierLess() or m == descriptor.operations['Stringifier'])):
+            if (m.isMethod() and m == descriptor.operations['Jsonifier']):
+                hasJsonifier = True
+                hasMethod = True
+                jsonifierMethod = m
+            elif (m.isMethod() and
+                  (not m.isIdentifierLess() or m == descriptor.operations['Stringifier'])):
                 if m.isStatic():
                     assert descriptor.interface.hasInterfaceObject
                     cgThings.append(CGStaticMethod(descriptor, m))
@@ -7586,6 +7627,9 @@ class CGDescriptor(CGThing):
                 if (not m.isStatic() and
                     descriptor.interface.hasInterfacePrototypeObject()):
                     cgThings.append(CGMemberJITInfo(descriptor, m))
+        if hasJsonifier:
+            cgThings.append(CGJsonifierMethod(descriptor, jsonifierMethod))
+            cgThings.append(CGMemberJITInfo(descriptor, jsonifierMethod))
         if hasMethod: cgThings.append(CGGenericMethod(descriptor))
         if hasGetter: cgThings.append(CGGenericGetter(descriptor))
         if hasLenientGetter: cgThings.append(CGGenericGetter(descriptor,
@@ -8989,6 +9033,9 @@ class CGBindingImplClass(CGClass):
                 else:
                     # We already added this method
                     return
+            if name == "Jsonifier":
+                # We already added this method
+                return
             self.methodDecls.append(
                 CGNativeMember(descriptor, op,
                                name,
@@ -9554,7 +9601,7 @@ class CGCallbackInterface(CGCallback):
         setters = [CallbackSetter(a, descriptor) for a in attrs
                    if not a.readonly]
         methods = [m for m in iface.members
-                   if m.isMethod() and not m.isStatic()]
+                   if m.isMethod() and not m.isStatic() and not m.isIdentifierLess()]
         methods = [CallbackOperation(m, sig, descriptor) for m in methods
                    for sig in m.signatures()]
         if iface.isJSImplemented() and iface.ctor():

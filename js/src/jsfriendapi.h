@@ -1475,6 +1475,10 @@ class JSJitGetterCallArgs : protected JS::MutableHandleValue
       : JS::MutableHandleValue(args.rval())
     {}
 
+    explicit JSJitGetterCallArgs(JS::Rooted<JS::Value>* rooted)
+      : JS::MutableHandleValue(rooted)
+    {}
+
     JS::MutableHandleValue rval() {
         return *this;
     }
