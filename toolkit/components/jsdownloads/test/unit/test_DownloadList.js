@@ -174,11 +174,11 @@ add_task(function test_history_expiration()
 
   // Add expirable visit for downloads.
   yield promiseAddDownloadToHistory();
-  yield promiseAddDownloadToHistory(TEST_INTERRUPTIBLE_URI);
+  yield promiseAddDownloadToHistory(httpUrl("interruptible.txt"));
 
   let list = yield promiseNewDownloadList();
   let downloadOne = yield promiseSimpleDownload();
-  let downloadTwo = yield promiseSimpleDownload(TEST_INTERRUPTIBLE_URI);
+  let downloadTwo = yield promiseSimpleDownload(httpUrl("interruptible.txt"));
   list.add(downloadOne);
   list.add(downloadTwo);
 
