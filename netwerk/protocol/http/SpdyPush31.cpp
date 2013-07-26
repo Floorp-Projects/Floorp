@@ -9,31 +9,29 @@
 
 #include <algorithm>
 
-#include "SpdyPush3.h"
-#include "PSpdyPush.h"
-#include "SpdySession3.h"
-#include "nsHttpRequestHead.h"
+#include "nsDependentString.h"
+#include "SpdyPush31.h"
 
 namespace mozilla {
 namespace net {
 
 //////////////////////////////////////////
-// SpdyPushedStream3
+// SpdyPushedStream31
 //////////////////////////////////////////
 
-SpdyPushedStream3::SpdyPushedStream3(SpdyPush3TransactionBuffer *aTransaction,
-                                     SpdySession3 *aSession,
-                                     SpdyStream3 *aAssociatedStream,
-                                     uint32_t aID)
-  :SpdyStream3(aTransaction, aSession,
-               0 /* priority is only for sending, so ignore it on push */)
-    , mConsumerStream(nullptr)
-    , mBufferedPush(aTransaction)
-    , mStatus(NS_OK)
-    , mPushCompleted(false)
-    , mDeferCleanupOnSuccess(true)
+SpdyPushedStream31::SpdyPushedStream31(SpdyPush31TransactionBuffer *aTransaction,
+                                       SpdySession31 *aSession,
+                                       SpdyStream31 *aAssociatedStream,
+                                       uint32_t aID)
+  :SpdyStream31(aTransaction, aSession,
+                0 /* priority is only for sending, so ignore it on push */)
+  , mConsumerStream(nullptr)
+  , mBufferedPush(aTransaction)
+  , mStatus(NS_OK)
+  , mPushCompleted(false)
+  , mDeferCleanupOnSuccess(true)
 {
-  LOG3(("SpdyPushedStream3 ctor this=%p 0x%X\n", this, aID));
+  LOG3(("SpdyPushedStream31 ctor this=%p id=0x%X\n", this, aID));
   mStreamID = aID;
   mBufferedPush->SetPushStream(this);
   mLoadGroupCI = aAssociatedStream->LoadGroupConnectionInfo();
@@ -41,17 +39,17 @@ SpdyPushedStream3::SpdyPushedStream3(SpdyPush3TransactionBuffer *aTransaction,
 }
 
 bool
-SpdyPushedStream3::GetPushComplete()
+SpdyPushedStream31::GetPushComplete()
 {
   return mPushCompleted;
 }
 
 nsresult
-SpdyPushedStream3::WriteSegments(nsAHttpSegmentWriter *writer,
-                                 uint32_t count,
-                                 uint32_t *countWritten)
+SpdyPushedStream31::WriteSegments(nsAHttpSegmentWriter *writer,
+                                  uint32_t count,
+                                  uint32_t *countWritten)
 {
-  nsresult rv = SpdyStream3::WriteSegments(writer, count, countWritten);
+  nsresult rv = SpdyStream31::WriteSegments(writer, count, countWritten);
   if (NS_SUCCEEDED(rv) && *countWritten) {
     mLastRead = TimeStamp::Now();
   }
@@ -66,30 +64,30 @@ SpdyPushedStream3::WriteSegments(nsAHttpSegmentWriter *writer,
 }
 
 nsresult
-SpdyPushedStream3::ReadSegments(nsAHttpSegmentReader *,  uint32_t, uint32_t *count)
+SpdyPushedStream31::ReadSegments(nsAHttpSegmentReader *,  uint32_t, uint32_t *count)
 {
   // The SYN_STREAM for this has been processed, so we need to verify
   // that :host, :scheme, and :path MUST be present
   nsDependentCSubstring host, scheme, path;
   nsresult rv;
 
-  rv = SpdyStream3::FindHeader(NS_LITERAL_CSTRING(":host"), host);
+  rv = SpdyStream31::FindHeader(NS_LITERAL_CSTRING(":host"), host);
   if (NS_FAILED(rv)) {
-    LOG3(("SpdyPushedStream3::ReadSegments session=%p ID 0x%X "
+    LOG3(("SpdyPushedStream31::ReadSegments session=%p ID 0x%X "
           "push without required :host\n", mSession, mStreamID));
     return rv;
   }
 
-  rv = SpdyStream3::FindHeader(NS_LITERAL_CSTRING(":scheme"), scheme);
+  rv = SpdyStream31::FindHeader(NS_LITERAL_CSTRING(":scheme"), scheme);
   if (NS_FAILED(rv)) {
-    LOG3(("SpdyPushedStream3::ReadSegments session=%p ID 0x%X "
+    LOG3(("SpdyPushedStream31::ReadSegments session=%p ID 0x%X "
           "push without required :scheme\n", mSession, mStreamID));
     return rv;
   }
 
-  rv = SpdyStream3::FindHeader(NS_LITERAL_CSTRING(":path"), path);
+  rv = SpdyStream31::FindHeader(NS_LITERAL_CSTRING(":path"), path);
   if (NS_FAILED(rv)) {
-    LOG3(("SpdyPushedStream3::ReadSegments session=%p ID 0x%X "
+    LOG3(("SpdyPushedStream31::ReadSegments session=%p ID 0x%X "
           "push without required :host\n", mSession, mStreamID));
     return rv;
   }
@@ -98,18 +96,18 @@ SpdyPushedStream3::ReadSegments(nsAHttpSegmentReader *,  uint32_t, uint32_t *cou
                     mSession->Serial(), path,
                     mOrigin, mHashKey);
 
-  LOG3(("SpdyPushStream3 0x%X hash key %s\n", mStreamID, mHashKey.get()));
+  LOG3(("SpdyPushStream31 0x%X hash key %s\n", mStreamID, mHashKey.get()));
 
   // the write side of a pushed transaction just involves manipulating a little state
-  SpdyStream3::mSentFinOnData = 1;
-  SpdyStream3::mSynFrameComplete = 1;
-  SpdyStream3::ChangeState(UPSTREAM_COMPLETE);
+  SpdyStream31::mSentFinOnData = 1;
+  SpdyStream31::mSynFrameComplete = 1;
+  SpdyStream31::ChangeState(UPSTREAM_COMPLETE);
   *count = 0;
   return NS_OK;
 }
 
 bool
-SpdyPushedStream3::GetHashKey(nsCString &key)
+SpdyPushedStream31::GetHashKey(nsCString &key)
 {
   if (mHashKey.IsEmpty())
     return false;
@@ -119,13 +117,13 @@ SpdyPushedStream3::GetHashKey(nsCString &key)
 }
 
 void
-SpdyPushedStream3::ConnectPushedStream(SpdyStream3 *stream)
+SpdyPushedStream31::ConnectPushedStream(SpdyStream31 *stream)
 {
   mSession->ConnectPushedStream(stream);
 }
 
 bool
-SpdyPushedStream3::IsOrphaned(TimeStamp now)
+SpdyPushedStream31::IsOrphaned(TimeStamp now)
 {
   MOZ_ASSERT(!now.IsNull());
 
@@ -137,16 +135,16 @@ SpdyPushedStream3::IsOrphaned(TimeStamp now)
 
   bool rv = ((now - mLastRead).ToSeconds() > 30.0);
   if (rv) {
-    LOG3(("SpdyPushCache::IsOrphaned 0x%X IsOrphaned %3.2f\n",
+    LOG3(("SpdyPushedStream31::IsOrphaned 0x%X IsOrphaned %3.2f\n",
           mStreamID, (now - mLastRead).ToSeconds()));
   }
   return rv;
 }
 
 nsresult
-SpdyPushedStream3::GetBufferedData(char *buf,
-                                   uint32_t count,
-                                   uint32_t *countWritten)
+SpdyPushedStream31::GetBufferedData(char *buf,
+                                    uint32_t count,
+                                    uint32_t *countWritten)
 {
   if (NS_FAILED(mStatus))
     return mStatus;
@@ -162,14 +160,14 @@ SpdyPushedStream3::GetBufferedData(char *buf,
 }
 
 //////////////////////////////////////////
-// SpdyPush3TransactionBuffer
+// SpdyPush31TransactionBuffer
 // This is the nsAHttpTransction owned by the stream when the pushed
 // stream has not yet been matched with a pull request
 //////////////////////////////////////////
 
-NS_IMPL_ISUPPORTS0(SpdyPush3TransactionBuffer)
+NS_IMPL_ISUPPORTS0(SpdyPush31TransactionBuffer)
 
-SpdyPush3TransactionBuffer::SpdyPush3TransactionBuffer()
+SpdyPush31TransactionBuffer::SpdyPush31TransactionBuffer()
   : mStatus(NS_OK)
   , mRequestHead(nullptr)
   , mPushStream(nullptr)
@@ -181,75 +179,75 @@ SpdyPush3TransactionBuffer::SpdyPush3TransactionBuffer()
   mBufferedHTTP1 = new char[mBufferedHTTP1Size];
 }
 
-SpdyPush3TransactionBuffer::~SpdyPush3TransactionBuffer()
+SpdyPush31TransactionBuffer::~SpdyPush31TransactionBuffer()
 {
   delete mRequestHead;
 }
 
 void
-SpdyPush3TransactionBuffer::SetConnection(nsAHttpConnection *conn)
+SpdyPush31TransactionBuffer::SetConnection(nsAHttpConnection *conn)
 {
 }
 
 nsAHttpConnection *
-SpdyPush3TransactionBuffer::Connection()
+SpdyPush31TransactionBuffer::Connection()
 {
   return nullptr;
 }
 
 void
-SpdyPush3TransactionBuffer::GetSecurityCallbacks(nsIInterfaceRequestor **outCB)
+SpdyPush31TransactionBuffer::GetSecurityCallbacks(nsIInterfaceRequestor **outCB)
 {
   *outCB = nullptr;
 }
 
 void
-SpdyPush3TransactionBuffer::OnTransportStatus(nsITransport* transport,
-                                       nsresult status, uint64_t progress)
+SpdyPush31TransactionBuffer::OnTransportStatus(nsITransport* transport,
+                                               nsresult status, uint64_t progress)
 {
 }
 
 bool
-SpdyPush3TransactionBuffer::IsDone()
+SpdyPush31TransactionBuffer::IsDone()
 {
   return mIsDone;
 }
 
 nsresult
-SpdyPush3TransactionBuffer::Status()
+SpdyPush31TransactionBuffer::Status()
 {
   return mStatus;
 }
 
 uint32_t
-SpdyPush3TransactionBuffer::Caps()
+SpdyPush31TransactionBuffer::Caps()
 {
   return 0;
 }
 
 uint64_t
-SpdyPush3TransactionBuffer::Available()
+SpdyPush31TransactionBuffer::Available()
 {
   return mBufferedHTTP1Used - mBufferedHTTP1Consumed;
 }
 
 nsresult
-SpdyPush3TransactionBuffer::ReadSegments(nsAHttpSegmentReader *reader,
-                                  uint32_t count, uint32_t *countRead)
+SpdyPush31TransactionBuffer::ReadSegments(nsAHttpSegmentReader *reader,
+                                            uint32_t count, uint32_t *countRead)
 {
   *countRead = 0;
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 nsresult
-SpdyPush3TransactionBuffer::WriteSegments(nsAHttpSegmentWriter *writer,
-                                         uint32_t count, uint32_t *countWritten)
+SpdyPush31TransactionBuffer::WriteSegments(nsAHttpSegmentWriter *writer,
+                                           uint32_t count, uint32_t *countWritten)
 {
   if ((mBufferedHTTP1Size - mBufferedHTTP1Used) < 20480) {
-    SpdySession3::EnsureBuffer(mBufferedHTTP1,
-                               mBufferedHTTP1Size + kDefaultBufferSize,
-                               mBufferedHTTP1Used,
-                               mBufferedHTTP1Size);
+    SpdySession31::EnsureBuffer(mBufferedHTTP1,
+                                mBufferedHTTP1Size + kDefaultBufferSize,
+                                mBufferedHTTP1Used,
+                                mBufferedHTTP1Size);
   }
 
   count = std::min(count, mBufferedHTTP1Size - mBufferedHTTP1Used);
@@ -263,10 +261,10 @@ SpdyPush3TransactionBuffer::WriteSegments(nsAHttpSegmentWriter *writer,
   }
 
   if (Available()) {
-    SpdyStream3 *consumer = mPushStream->GetConsumerStream();
+    SpdyStream31 *consumer = mPushStream->GetConsumerStream();
 
     if (consumer) {
-      LOG3(("SpdyPush3TransactionBuffer::WriteSegments notifying connection "
+      LOG3(("SpdyPush31TransactionBuffer::WriteSegments notifying connection "
             "consumer data available 0x%X [%u]\n",
             mPushStream->StreamID(), Available()));
       mPushStream->ConnectPushedStream(consumer);
@@ -277,13 +275,13 @@ SpdyPush3TransactionBuffer::WriteSegments(nsAHttpSegmentWriter *writer,
 }
 
 uint32_t
-SpdyPush3TransactionBuffer::Http1xTransactionCount()
+SpdyPush31TransactionBuffer::Http1xTransactionCount()
 {
   return 0;
 }
 
 nsHttpRequestHead *
-SpdyPush3TransactionBuffer::RequestHead()
+SpdyPush31TransactionBuffer::RequestHead()
 {
   if (!mRequestHead)
     mRequestHead = new nsHttpRequestHead();
@@ -291,52 +289,52 @@ SpdyPush3TransactionBuffer::RequestHead()
 }
 
 nsresult
-SpdyPush3TransactionBuffer::TakeSubTransactions(
+SpdyPush31TransactionBuffer::TakeSubTransactions(
   nsTArray<nsRefPtr<nsAHttpTransaction> > &outTransactions)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 void
-SpdyPush3TransactionBuffer::SetProxyConnectFailed()
+SpdyPush31TransactionBuffer::SetProxyConnectFailed()
 {
 }
 
 void
-SpdyPush3TransactionBuffer::Close(nsresult reason)
+SpdyPush31TransactionBuffer::Close(nsresult reason)
 {
   mStatus = reason;
   mIsDone = true;
 }
 
 nsresult
-SpdyPush3TransactionBuffer::AddTransaction(nsAHttpTransaction *trans)
+SpdyPush31TransactionBuffer::AddTransaction(nsAHttpTransaction *trans)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 uint32_t
-SpdyPush3TransactionBuffer::PipelineDepth()
+SpdyPush31TransactionBuffer::PipelineDepth()
 {
   return 0;
 }
 
 nsresult
-SpdyPush3TransactionBuffer::SetPipelinePosition(int32_t position)
+SpdyPush31TransactionBuffer::SetPipelinePosition(int32_t position)
 {
-    return NS_OK;
+  return NS_OK;
 }
 
 int32_t
-SpdyPush3TransactionBuffer::PipelinePosition()
+SpdyPush31TransactionBuffer::PipelinePosition()
 {
   return 1;
 }
 
 nsresult
-SpdyPush3TransactionBuffer::GetBufferedData(char *buf,
-                                           uint32_t count,
-                                           uint32_t *countWritten)
+SpdyPush31TransactionBuffer::GetBufferedData(char *buf,
+                                               uint32_t count,
+                                               uint32_t *countWritten)
 {
   *countWritten = std::min(count, static_cast<uint32_t>(Available()));
   if (*countWritten) {
