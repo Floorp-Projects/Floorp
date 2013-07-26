@@ -1684,6 +1684,22 @@ window[tabsontop="false"] richlistitem[type~="action"][actiontype="switchtab"][s
   list-style-image: url("chrome://browser/skin/social/share-button-active.png");
 }
 
+#social-share-button > .toolbarbutton-icon {
+  width: 13px;
+  height: 14px;
+}
+
+@media (min-resolution: 2dppx) {
+  #social-share-button {
+    list-style-image: url("chrome://browser/skin/social/share-button@2x.png");
+  }
+
+  #social-share-button[open],
+  #social-share-button:hover:active {
+    list-style-image: url("chrome://browser/skin/social/share-button-active@2x.png");
+  }
+}
+
 .social-share-toolbar {
   border-right: 1px solid #dedede;
   background: linear-gradient(to bottom, rgba(247,247,247,.99), rgba(247,247,247,.95));
