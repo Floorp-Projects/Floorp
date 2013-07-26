@@ -86,12 +86,6 @@
     "kind": "flag",
     "description": "Set if the cycle collector ran out of memory at some point"
   },
-  "CYCLE_COLLECTOR_ASYNC_SNOW_WHITE_FREEING": {
-    "kind": "exponential",
-    "high": "10000",
-    "n_buckets": 50,
-    "description": "Time spent on one asynchronous SnowWhite freeing (ms)"
-  },
   "FORGET_SKIPPABLE_MAX": {
     "kind": "exponential",
     "high": "10000",
