@@ -1165,7 +1165,7 @@ abstract public class BrowserApp extends GeckoApp
         }
 
         mMainLayoutAnimator = new PropertyAnimator(animationLength, sTabsInterpolator);
-        mMainLayoutAnimator.setPropertyAnimationListener(this);
+        mMainLayoutAnimator.addPropertyAnimationListener(this);
 
         if (hasTabsSideBar()) {
             mMainLayoutAnimator.attach(mMainLayout,

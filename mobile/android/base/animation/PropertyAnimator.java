@@ -49,7 +49,7 @@ public class PropertyAnimator implements Runnable {
     private long mDuration;
     private float mDurationReciprocal;
     private List<ElementHolder> mElementsList;
-    private PropertyAnimationListener mListener;
+    private List<PropertyAnimationListener> mListeners;
     private FramePoster mFramePoster;
     private boolean mUseHardwareLayer;
 
@@ -64,6 +64,7 @@ public class PropertyAnimator implements Runnable {
         mElementsList = new ArrayList<ElementHolder>();
         mFramePoster = FramePoster.create(this);
         mUseHardwareLayer = true;
+        mListeners = null;
     }
 
     public void setUseHardwareLayer(boolean useHardwareLayer) {
@@ -81,8 +82,12 @@ public class PropertyAnimator implements Runnable {
         mElementsList.add(element);
     }
 
-    public void setPropertyAnimationListener(PropertyAnimationListener listener) {
-        mListener = listener;
+    public void addPropertyAnimationListener(PropertyAnimationListener listener) {
+        if (mListeners == null) {
+            mListeners = new ArrayList<PropertyAnimationListener>();
+        }
+
+        mListeners.add(listener);
     }
 
     public long getDuration() {
@@ -146,8 +151,11 @@ public class PropertyAnimator implements Runnable {
 
         mFramePoster.postFirstAnimationFrame();
 
-        if (mListener != null)
-            mListener.onPropertyAnimationStart();
+        if (mListeners != null) {
+            for (PropertyAnimationListener listener : mListeners) {
+                listener.onPropertyAnimationStart();
+            }
+        }
     }
 
 
@@ -173,10 +181,15 @@ public class PropertyAnimator implements Runnable {
 
         mElementsList.clear();
 
-        if (mListener != null) {
-            if (snapToEndPosition)
-                mListener.onPropertyAnimationEnd();
-            mListener = null;
+        if (mListeners != null) {
+            if (snapToEndPosition) {
+                for (PropertyAnimationListener listener : mListeners) {
+                    listener.onPropertyAnimationEnd();
+                }
+            }
+
+            mListeners.clear();
+            mListeners = null;
         }
     }
 

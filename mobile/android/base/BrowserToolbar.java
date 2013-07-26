@@ -1262,7 +1262,7 @@ public class BrowserToolbar extends GeckoRelativeLayout
                                    curveTranslation);
         }
 
-        contentAnimator.setPropertyAnimationListener(new PropertyAnimator.PropertyAnimationListener() {
+        contentAnimator.addPropertyAnimationListener(new PropertyAnimator.PropertyAnimationListener() {
             @Override
             public void onPropertyAnimationStart() {
             }
@@ -1345,7 +1345,7 @@ public class BrowserToolbar extends GeckoRelativeLayout
                                    0);
         }
 
-        contentAnimator.setPropertyAnimationListener(new PropertyAnimator.PropertyAnimationListener() {
+        contentAnimator.addPropertyAnimationListener(new PropertyAnimator.PropertyAnimationListener() {
             @Override
             public void onPropertyAnimationStart() {
             }
@@ -1469,7 +1469,7 @@ public class BrowserToolbar extends GeckoRelativeLayout
         mForwardAnim = new PropertyAnimator(mSwitchingTabs ? 10 : FORWARD_ANIMATION_DURATION);
         final int width = mForward.getWidth() / 2;
 
-        mForwardAnim.setPropertyAnimationListener(new PropertyAnimator.PropertyAnimationListener() {
+        mForwardAnim.addPropertyAnimationListener(new PropertyAnimator.PropertyAnimationListener() {
             @Override
             public void onPropertyAnimationStart() {
                 if (!enabled) {
