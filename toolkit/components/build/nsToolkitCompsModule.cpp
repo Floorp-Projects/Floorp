@@ -32,6 +32,7 @@
 #endif
 
 #include "nsBrowserStatusFilter.h"
+#include "ApplicationReputation.h"
 
 /////////////////////////////////////////////////////////////////////////////
 
@@ -46,7 +47,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsParentalControlsServiceWin)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAlertsService)
 
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsDownloadManager,
-                                         nsDownloadManager::GetSingleton) 
+                                         nsDownloadManager::GetSingleton)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDownloadProxy)
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTypeAheadFind)
@@ -76,11 +77,16 @@ nsUrlClassifierDBServiceConstructor(nsISupports *aOuter, REFNSIID aIID,
 }
 #endif
 
+NS_GENERIC_FACTORY_CONSTRUCTOR(ApplicationReputationQuery)
+NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(ApplicationReputationService,
+                                         ApplicationReputationService::GetSingleton)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBrowserStatusFilter)
 #if defined(USE_MOZ_UPDATER)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUpdateProcessor)
 #endif
 
+NS_DEFINE_NAMED_CID(NS_APPLICATION_REPUTATION_QUERY_CID);
+NS_DEFINE_NAMED_CID(NS_APPLICATION_REPUTATION_SERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_TOOLKIT_APPSTARTUP_CID);
 NS_DEFINE_NAMED_CID(NS_USERINFO_CID);
 NS_DEFINE_NAMED_CID(NS_ALERTSSERVICE_CID);
@@ -104,6 +110,8 @@ NS_DEFINE_NAMED_CID(NS_UPDATEPROCESSOR_CID);
 #endif
 
 static const mozilla::Module::CIDEntry kToolkitCIDs[] = {
+  { &kNS_APPLICATION_REPUTATION_QUERY_CID, false, NULL, ApplicationReputationQueryConstructor },
+  { &kNS_APPLICATION_REPUTATION_SERVICE_CID, false, NULL, ApplicationReputationServiceConstructor },
   { &kNS_TOOLKIT_APPSTARTUP_CID, false, NULL, nsAppStartupConstructor },
   { &kNS_USERINFO_CID, false, NULL, nsUserInfoConstructor },
   { &kNS_ALERTSSERVICE_CID, false, NULL, nsAlertsServiceConstructor },
@@ -129,6 +137,8 @@ static const mozilla::Module::CIDEntry kToolkitCIDs[] = {
 };
 
 static const mozilla::Module::ContractIDEntry kToolkitContracts[] = {
+  { NS_APPLICATION_REPUTATION_QUERY_CONTRACTID, &kNS_APPLICATION_REPUTATION_QUERY_CID },
+  { NS_APPLICATION_REPUTATION_SERVICE_CONTRACTID, &kNS_APPLICATION_REPUTATION_SERVICE_CID },
   { NS_APPSTARTUP_CONTRACTID, &kNS_TOOLKIT_APPSTARTUP_CID },
   { NS_USERINFO_CONTRACTID, &kNS_USERINFO_CID },
   { NS_ALERTSERVICE_CONTRACTID, &kNS_ALERTSSERVICE_CID },
