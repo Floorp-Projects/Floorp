@@ -9,6 +9,7 @@ include LayersSurfaces;
 include protocol PGrallocBuffer;
 include protocol PLayerTransaction;
 include "mozilla/layers/CompositorTypes.h";
+include "mozilla/GfxMessageUtils.h";
 
 using mozilla::null_t;
 using mozilla::layers::TextureFactoryIdentifier;
