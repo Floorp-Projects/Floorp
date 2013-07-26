@@ -16,8 +16,9 @@
  * Starts a new download using the nsIWebBrowserPersist interface, and controls
  * it using the legacy nsITransfer interface.
  *
- * @param aSourceURI
- *        The nsIURI for the download source, or null to use TEST_SOURCE_URI.
+ * @param aSourceUrl
+ *        String containing the URI for the download source, or null to use
+ *        httpUrl("source.txt").
  * @param isPrivate
  *        Optional boolean indicates whether the download originated from a
  *        private window.
@@ -30,8 +31,8 @@
  *           download through the legacy nsITransfer interface.
  * @rejects Never.  The current test fails in case of exceptions.
  */
-function promiseStartLegacyDownload(aSourceURI, aIsPrivate, aOutPersist) {
-  let sourceURI = aSourceURI || TEST_SOURCE_URI;
+function promiseStartLegacyDownload(aSourceUrl, aIsPrivate, aOutPersist) {
+  let sourceURI = NetUtil.newURI(aSourceUrl || httpUrl("source.txt"));
   let targetFile = getTempFile(TEST_TARGET_FILE_NAME);
 
   let persist = Cc["@mozilla.org/embedding/browser/nsWebBrowserPersist;1"]
@@ -94,15 +95,16 @@ add_task(function test_basic()
   let download = yield promiseStartLegacyDownload();
 
   // Checks the generated DownloadSource and DownloadTarget properties.
-  do_check_true(download.source.uri.equals(TEST_SOURCE_URI));
-  do_check_true(download.target.file.parent.equals(tempDirectory));
+  do_check_eq(download.source.url, httpUrl("source.txt"));
+  do_check_true(new FileUtils.File(download.target.path).parent
+                                                        .equals(tempDirectory));
 
   // The download is already started, wait for completion and report any errors.
   if (!download.stopped) {
     yield download.start();
   }
 
-  yield promiseVerifyContents(download.target.file, TEST_DATA_SHORT);
+  yield promiseVerifyContents(download.target.path, TEST_DATA_SHORT);
 });
 
 /**
@@ -131,7 +133,7 @@ add_task(function test_intermediate_progress()
 {
   let deferResponse = deferNextResponse();
 
-  let download = yield promiseStartLegacyDownload(TEST_INTERRUPTIBLE_URI);
+  let download = yield promiseStartLegacyDownload(httpUrl("interruptible.txt"));
 
   let onchange = function () {
     if (download.progress == 50) {
@@ -157,7 +159,7 @@ add_task(function test_intermediate_progress()
   do_check_true(download.stopped);
   do_check_eq(download.progress, 100);
 
-  yield promiseVerifyContents(download.target.file,
+  yield promiseVerifyContents(download.target.path,
                               TEST_DATA_SHORT + TEST_DATA_SHORT);
 });
 
@@ -166,7 +168,7 @@ add_task(function test_intermediate_progress()
  */
 add_task(function test_empty_progress()
 {
-  let download = yield promiseStartLegacyDownload(TEST_EMPTY_URI);
+  let download = yield promiseStartLegacyDownload(httpUrl("empty.txt"));
 
   // The download is already started, wait for completion and report any errors.
   if (!download.stopped) {
@@ -179,7 +181,7 @@ add_task(function test_empty_progress()
   do_check_eq(download.currentBytes, 0);
   do_check_eq(download.totalBytes, 0);
 
-  do_check_eq(download.target.file.fileSize, 0);
+  do_check_eq((yield OS.File.stat(download.target.path)).size, 0);
 });
 
 /**
@@ -190,7 +192,8 @@ add_task(function test_empty_noprogress()
   let deferResponse = deferNextResponse();
   let promiseEmptyRequestReceived = promiseNextRequestReceived();
 
-  let download = yield promiseStartLegacyDownload(TEST_EMPTY_NOPROGRESS_URI);
+  let download = yield promiseStartLegacyDownload(
+                                         httpUrl("empty-noprogress.txt"));
 
   // Wait for the request to be received by the HTTP server, but don't allow the
   // request to finish yet.  Before checking the download state, wait for the
@@ -218,7 +221,7 @@ add_task(function test_empty_noprogress()
   do_check_eq(download.currentBytes, 0);
   do_check_eq(download.totalBytes, 0);
 
-  do_check_eq(download.target.file.fileSize, 0);
+  do_check_eq((yield OS.File.stat(download.target.path)).size, 0);
 });
 
 /**
@@ -228,8 +231,8 @@ add_task(function test_cancel_midway()
 {
   let deferResponse = deferNextResponse();
   let outPersist = {};
-  let download = yield promiseStartLegacyDownload(TEST_INTERRUPTIBLE_URI, false,
-                                                  outPersist);
+  let download = yield promiseStartLegacyDownload(httpUrl("interruptible.txt"),
+                                                  false, outPersist);
 
   try {
     // Cancel the download after receiving the first part of the response.
@@ -260,7 +263,7 @@ add_task(function test_cancel_midway()
     do_check_true(download.canceled);
     do_check_true(download.error === null);
 
-    do_check_false(download.target.file.exists());
+    do_check_false(yield OS.File.exists(download.target.path));
 
     // Progress properties are not reset by canceling.
     do_check_eq(download.progress, 50);
@@ -278,7 +281,9 @@ add_task(function test_error()
 {
   let serverSocket = startFakeServer();
   try {
-    let download = yield promiseStartLegacyDownload(TEST_FAKE_SOURCE_URI);
+    let sourceUrl = "http://localhost:" + serverSocket.port + "/source.txt";
+
+    let download = yield promiseStartLegacyDownload(sourceUrl);
 
     // We must check the download properties instead of calling the "start"
     // method because the download has been started and may already be stopped.
@@ -307,8 +312,8 @@ add_task(function test_error()
  */
 add_task(function test_download_public_and_private()
 {
-  let source_path = "/test_download_public_and_private.txt";
-  let source_uri = NetUtil.newURI(HTTP_BASE + source_path);
+  let sourcePath = "/test_download_public_and_private.txt";
+  let sourceUrl = httpUrl("test_download_public_and_private.txt");
   let testCount = 0;
 
   // Apply pref to allow all cookies.
@@ -317,12 +322,12 @@ add_task(function test_download_public_and_private()
   function cleanup() {
     Services.prefs.clearUserPref("network.cookie.cookieBehavior");
     Services.cookies.removeAll();
-    gHttpServer.registerPathHandler(source_path, null);
+    gHttpServer.registerPathHandler(sourcePath, null);
   }
 
   do_register_cleanup(cleanup);
 
-  gHttpServer.registerPathHandler(source_path, function (aRequest, aResponse) {
+  gHttpServer.registerPathHandler(sourcePath, function (aRequest, aResponse) {
     aResponse.setHeader("Content-Type", "text/plain", false);
 
     if (testCount == 0) {
@@ -342,9 +347,9 @@ add_task(function test_download_public_and_private()
   });
 
   let targetFile = getTempFile(TEST_TARGET_FILE_NAME);
-  yield Downloads.simpleDownload(source_uri, targetFile);
-  yield Downloads.simpleDownload(source_uri, targetFile);
-  let download = yield promiseStartLegacyDownload(source_uri, true);
+  yield Downloads.simpleDownload(sourceUrl, targetFile);
+  yield Downloads.simpleDownload(sourceUrl, targetFile);
+  let download = yield promiseStartLegacyDownload(sourceUrl, true);
   // The download is already started, wait for completion and report any errors.
   if (!download.stopped) {
     yield download.start();
@@ -373,7 +378,7 @@ add_task(function test_download_blocked_parental_controls()
     do_check_true(ex.becauseBlockedByParentalControls);
   }
 
-  do_check_false(download.target.file.exists());
+  do_check_false(yield OS.File.exists(download.target.path));
 
   cleanup();
 });
