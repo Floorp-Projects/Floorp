@@ -52,7 +52,6 @@ CPP_SOURCES += [
 
 CPP_UNIT_TESTS += [
     'ShowAlignments.cpp',
-    'ShowSSEConfig.cpp',
     'TestAutoPtr.cpp',
     'TestAutoRef.cpp',
     'TestCOMArray.cpp',
