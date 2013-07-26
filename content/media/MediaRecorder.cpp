@@ -115,9 +115,6 @@ private:
 
 MediaRecorder::~MediaRecorder()
 {
-  if (mStreamPort) {
-    mStreamPort->Destroy();
-  }
   if (mTrackUnionStream) {
     mTrackUnionStream->Destroy();
   }
@@ -195,7 +192,8 @@ MediaRecorder::Start(const Optional<int32_t>& aTimeSlice, ErrorResult& aResult)
   MOZ_ASSERT(mEncoder, "CreateEncoder failed");
 
   mTrackUnionStream->SetAutofinish(true);
-  mStreamPort = mTrackUnionStream->AllocateInputPort(mStream->GetStream(), MediaInputPort::FLAG_BLOCK_OUTPUT);
+  nsRefPtr<MediaInputPort> port =
+    mTrackUnionStream->AllocateInputPort(mStream->GetStream(), MediaInputPort::FLAG_BLOCK_OUTPUT);
 
   if (mEncoder) {
     mTrackUnionStream->AddListener(mEncoder);
