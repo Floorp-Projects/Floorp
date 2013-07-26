@@ -210,8 +210,8 @@ if CONFIG['NS_TRACE_MALLOC']:
 if CONFIG['MOZ_ENABLE_GNOME_COMPONENT']:
     add_tier_dir('platform', 'toolkit/system/gnome')
 
-# if libconic is present, it will do its own network monitoring
-if not CONFIG['MOZ_ENABLE_LIBCONIC'] and CONFIG['MOZ_ENABLE_DBUS']:
+# if libconic or QtNetwork is present, it will do its own network monitoring
+if not CONFIG['MOZ_ENABLE_LIBCONIC'] and not CONFIG['MOZ_ENABLE_QTNETWORK'] and CONFIG['MOZ_ENABLE_DBUS']:
     add_tier_dir('platform', 'toolkit/system/dbus')
 
 add_tier_dir('platform', 'addon-sdk')
