@@ -11,7 +11,6 @@
 #include "jsapi.h"
 #include "jsdbgapi.h"
 #include "jsfriendapi.h"
-#include "jsprvtd.h"
 
 #include "gc/Barrier.h"
 #include "js/HashTable.h"

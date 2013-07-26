@@ -22,7 +22,6 @@
 #include "jsclist.h"
 #include "jsfriendapi.h"
 #include "jsgc.h"
-#include "jsprvtd.h"
 #include "jsproxy.h"
 
 #include "ds/FixedSizeHash.h"

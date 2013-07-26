@@ -16,7 +16,6 @@
 
 #include "jsapi.h"
 #include "jsfriendapi.h"
-#include "jsprvtd.h"
 
 #include "js/HashTable.h"
 #include "js/Vector.h"

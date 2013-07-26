@@ -13,7 +13,6 @@
 
 #include "jsalloc.h"
 #include "jsapi.h"
-#include "jsprvtd.h"
 #include "jspubtd.h"
 
 #include "gc/Barrier.h"
