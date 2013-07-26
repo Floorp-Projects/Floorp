@@ -10,6 +10,7 @@
 #include "mozilla/layers/TextureClient.h"
 #include "mozilla/layers/TextureHost.h"
 #include "gfxWindowsPlatform.h"
+#include "mozilla/GfxMessageUtils.h"
 #include <d3d11.h>
 #include <vector>
 
