@@ -46,7 +46,6 @@ EXPORTS += [
     'jsproxy.h',
     'jspubtd.h',
     'jstypes.h',
-    'jsutil.h',
     'jsversion.h',
     'jswrapper.h',
     'perf/jsperf.h',
