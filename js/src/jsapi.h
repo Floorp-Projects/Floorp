@@ -948,6 +948,20 @@ typedef void
 typedef void
 (* JSTraceNamePrinter)(JSTracer *trc, char *buf, size_t bufsize);
 
+/*
+ * A generic type for functions mapping an object to another object, or null
+ * if an error or exception was thrown on cx.
+ */
+typedef JSObject *
+(* JSObjectOp)(JSContext *cx, JS::Handle<JSObject*> obj);
+
+/*
+ * Hook that creates an iterator object for a given object. Returns the
+ * iterator object or null if an error or exception was thrown on cx.
+ */
+typedef JSObject *
+(* JSIteratorOp)(JSContext *cx, JS::HandleObject obj, bool keysonly);
+
 typedef JSObject *
 (* JSWeakmapKeyDelegateOp)(JSObject *obj);
 

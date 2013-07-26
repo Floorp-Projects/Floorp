@@ -2980,7 +2980,7 @@ js_InitNullClass(JSContext *cx, HandleObject obj)
 JS_FOR_EACH_PROTOTYPE(DECLARE_PROTOTYPE_CLASS_INIT)
 #undef DECLARE_PROTOTYPE_CLASS_INIT
 
-static JSClassInitializerOp lazy_prototype_init[JSProto_LIMIT] = {
+static ClassInitializerOp lazy_prototype_init[JSProto_LIMIT] = {
 #define LAZY_PROTOTYPE_INIT(name,code,init) init,
     JS_FOR_EACH_PROTOTYPE(LAZY_PROTOTYPE_INIT)
 #undef LAZY_PROTOTYPE_INIT
@@ -3104,7 +3104,7 @@ js_GetClassObject(ExclusiveContext *cxArg, JSObject *obj, JSProtoKey key, Mutabl
     }
 
     RootedObject cobj(cx, NULL);
-    if (JSClassInitializerOp init = lazy_prototype_init[key]) {
+    if (ClassInitializerOp init = lazy_prototype_init[key]) {
         if (!init(cx, global))
             return false;
         v = global->getReservedSlot(key);
