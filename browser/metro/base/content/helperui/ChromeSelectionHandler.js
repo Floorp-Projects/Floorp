@@ -277,8 +277,10 @@ var ChromeSelectionHandler = {
     this._clearTimers();
     this._cache = null;
     this._contentWindow = null;
-    this._targetElement.removeEventListener("blur", this, true);
-    this._targetElement = null;
+    if (this._targetElement) {
+      this._targetElement.removeEventListener("blur", this, true);
+      this._targetElement = null;
+    }
     this._selectionMoveActive = false;
     this._domWinUtils = null;
     this._targetIsEditable = false;
