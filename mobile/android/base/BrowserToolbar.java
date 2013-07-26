@@ -1204,7 +1204,7 @@ public class BrowserToolbar extends GeckoRelativeLayout
         return isSelected();
     }
 
-    public void startEditing(String url) {
+    public void startEditing(String url, PropertyAnimator animator) {
         if (isEditing()) {
             return;
         }
@@ -1221,9 +1221,6 @@ public class BrowserToolbar extends GeckoRelativeLayout
         if (mAnimatingEntry)
             return;
 
-        final PropertyAnimator contentAnimator = new PropertyAnimator(250);
-        contentAnimator.setUseHardwareLayer(false);
-
         final int entryTranslation = getUrlBarEntryTranslation();
         final int curveTranslation = getUrlBarCurveTranslation();
 
@@ -1237,32 +1234,32 @@ public class BrowserToolbar extends GeckoRelativeLayout
         // Slide the right side elements of the toolbar
 
         if (mUrlBarRightEdge != null) {
-            contentAnimator.attach(mUrlBarRightEdge,
-                                   PropertyAnimator.Property.TRANSLATION_X,
-                                   entryTranslation);
+            animator.attach(mUrlBarRightEdge,
+                            PropertyAnimator.Property.TRANSLATION_X,
+                            entryTranslation);
         }
 
-        contentAnimator.attach(mTabs,
-                               PropertyAnimator.Property.TRANSLATION_X,
-                               curveTranslation);
-        contentAnimator.attach(mTabsCounter,
-                               PropertyAnimator.Property.TRANSLATION_X,
-                               curveTranslation);
-        contentAnimator.attach(mActionItemBar,
-                               PropertyAnimator.Property.TRANSLATION_X,
-                               curveTranslation);
+        animator.attach(mTabs,
+                        PropertyAnimator.Property.TRANSLATION_X,
+                        curveTranslation);
+        animator.attach(mTabsCounter,
+                        PropertyAnimator.Property.TRANSLATION_X,
+                        curveTranslation);
+        animator.attach(mActionItemBar,
+                        PropertyAnimator.Property.TRANSLATION_X,
+                        curveTranslation);
 
         if (mHasSoftMenuButton) {
-            contentAnimator.attach(mMenu,
-                                   PropertyAnimator.Property.TRANSLATION_X,
-                                   curveTranslation);
+            animator.attach(mMenu,
+                            PropertyAnimator.Property.TRANSLATION_X,
+                            curveTranslation);
 
-            contentAnimator.attach(mMenuIcon,
-                                   PropertyAnimator.Property.TRANSLATION_X,
-                                   curveTranslation);
+            animator.attach(mMenuIcon,
+                            PropertyAnimator.Property.TRANSLATION_X,
+                            curveTranslation);
         }
 
-        contentAnimator.addPropertyAnimationListener(new PropertyAnimator.PropertyAnimationListener() {
+        animator.addPropertyAnimationListener(new PropertyAnimator.PropertyAnimationListener() {
             @Override
             public void onPropertyAnimationStart() {
             }
@@ -1275,7 +1272,6 @@ public class BrowserToolbar extends GeckoRelativeLayout
         });
 
         mAnimatingEntry = true;
-        contentAnimator.start();
     }
 
     /**
