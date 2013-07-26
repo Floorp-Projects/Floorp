@@ -41,7 +41,7 @@ BEGIN_TEST(testContexts_bug563735)
         JSAutoRequest req(cx2);
         JSAutoCompartment ac(cx2, global);
         JS::RootedValue v(cx2);
-        ok = JS_SetProperty(cx2, global, "x", &v);
+        ok = JS_SetProperty(cx2, global, "x", v);
     }
     CHECK(ok);
 
