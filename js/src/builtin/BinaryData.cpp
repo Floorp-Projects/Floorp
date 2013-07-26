@@ -9,16 +9,37 @@
 #include "mozilla/FloatingPoint.h"
 
 #include "jscompartment.h"
+#include "jsfun.h"
 #include "jsobj.h"
+
+#include "vm/TypedArrayObject.h"
+#include "vm/String.h"
+#include "vm/StringBuffer.h"
+#include "vm/GlobalObject.h"
 
 #include "jsatominlines.h"
 #include "jsobjinlines.h"
 
-#include "vm/GlobalObject.h"
-#include "vm/TypedArrayObject.h"
-
 using namespace js;
 
+/*
+ * Reify() takes a complex binary data object `owner` and an offset and tries to
+ * convert the value of type `type` at that offset to a JS Value stored in
+ * `vp`.
+ *
+ * NOTE: `type` is NOT the type of `owner`, but the type of `owner.elementType` in
+ * case of BinaryArray or `owner[field].type` in case of BinaryStruct.
+ */
+static bool Reify(JSContext *cx, HandleObject type, HandleObject owner,
+                  size_t offset, MutableHandleValue vp);
+
+/*
+ * ConvertAndCopyTo() converts `from` to type `type` and stores the result in
+ * `mem`, which MUST be pre-allocated to the appropriate size for instances of
+ * `type`.
+ */
+static bool ConvertAndCopyTo(JSContext *cx, HandleObject type,
+                             HandleValue from, uint8_t *mem);
 JSBool TypeThrowError(JSContext *cx, unsigned argc, Value *vp)
 {
     return ReportIsNotFunction(cx, *vp);
@@ -46,11 +67,118 @@ ReportTypeError(JSContext *cx, Value fromValue, JSString *toType)
     JS_free(cx, (void *) fnName);
 }
 
+// The false return value allows callers to just return as soon as this is
+// called.
+// So yes this call is with side effects.
+static bool
+ReportTypeError(JSContext *cx, Value fromValue, HandleObject exemplar)
+{
+    RootedValue v(cx, ObjectValue(*exemplar));
+    ReportTypeError(cx, fromValue, ToString<CanGC>(cx, v));
+    return false;
+}
+
 static inline bool
-IsNumericType(JSObject *type)
+IsNumericType(HandleObject type)
 {
     return type && &NumericTypeClasses[NUMERICTYPE_UINT8] <= type->getClass() &&
                    type->getClass() <= &NumericTypeClasses[NUMERICTYPE_FLOAT64];
+}
+
+static inline bool
+IsArrayType(HandleObject type)
+{
+    return type && type->hasClass(&ArrayType::class_);
+}
+
+static inline bool
+IsStructType(HandleObject type)
+{
+    return type && type->hasClass(&StructTypeClass);
+}
+
+static inline bool
+IsComplexType(HandleObject type)
+{
+    return IsArrayType(type) || IsStructType(type);
+}
+
+static inline bool
+IsBinaryType(HandleObject type)
+{
+    return IsNumericType(type) || IsComplexType(type);
+}
+
+static inline bool
+IsBinaryArray(HandleObject type)
+{
+    return type && type->hasClass(&BinaryArray::class_);
+}
+
+static inline bool
+IsBlock(HandleObject type)
+{
+    return type->hasClass(&BinaryArray::class_);
+    /* TODO || type->hasClass(&BinaryStruct::class_); */
+}
+
+static inline JSObject *
+GetType(HandleObject block)
+{
+    JS_ASSERT(IsBlock(block));
+    return block->getFixedSlot(SLOT_DATATYPE).toObjectOrNull();
+}
+
+static size_t
+GetMemSize(JSContext *cx, HandleObject type)
+{
+    if (IsComplexType(type))
+        return type->getFixedSlot(SLOT_MEMSIZE).toInt32();
+
+    RootedObject typeObj(cx, type);
+    RootedValue val(cx);
+    JS_ASSERT(IsNumericType(type));
+    JSObject::getProperty(cx, typeObj, typeObj, cx->names().bytes, &val);
+    return val.toInt32();
+}
+
+static size_t
+GetAlign(JSContext *cx, HandleObject type)
+{
+    if (IsComplexType(type))
+        return type->getFixedSlot(SLOT_ALIGN).toInt32();
+
+    RootedObject typeObj(cx, type);
+    RootedValue val(cx);
+    JS_ASSERT(&NumericTypeClasses[NUMERICTYPE_UINT8] <= type->getClass() &&
+              type->getClass() <= &NumericTypeClasses[NUMERICTYPE_FLOAT64]);
+    JSObject::getProperty(cx, typeObj, typeObj, cx->names().bytes, &val);
+    return val.toInt32();
+}
+
+static bool
+IsSameBinaryDataType(JSContext *cx, HandleObject type1, HandleObject type2)
+{
+    JS_ASSERT(IsBinaryType(type1));
+    JS_ASSERT(IsBinaryType(type2));
+
+    if (IsNumericType(type1)) {
+        return type1->hasClass(type2->getClass());
+    } else if (IsArrayType(type1) && IsArrayType(type2)) {
+        if (ArrayType::length(cx, type1) != ArrayType::length(cx, type2))
+            return false;
+
+        RootedObject elementType1(cx, ArrayType::elementType(cx, type1));
+        RootedObject elementType2(cx, ArrayType::elementType(cx, type2));
+        return IsSameBinaryDataType(cx, elementType1, elementType2);
+    } else if (IsStructType(type1) && IsStructType(type2)) {
+        // Struct types compare on structural equality.
+        // FIXME(nsm): Implement.
+        JS_ASSERT(0);
+        return false;
+    }
+
+    return false;
 }
 
 template <typename Domain, typename Input>
@@ -165,9 +293,12 @@ NumericType<T>::call(JSContext *cx, unsigned argc, Value *vp)
     if (!convert(cx, arg, &answer))
         return false; // convert() raises TypeError.
 
-    // TODO Once reify is implemented (in a later patch) this will be replaced
-    // by a call to reify.
-    args.rval().set(NumberValue(answer));
+    RootedValue reified(cx);
+    if (!NumericType<T>::reify(cx, &answer, &reified)) {
+        return false;
+    }
+
+    args.rval().set(reified);
     return true;
 }
 
@@ -182,10 +313,319 @@ NumericTypeToString(JSContext *cx, unsigned int argc, Value *vp)
     return true;
 }
 
-JSBool
-createArrayType(JSContext *cx, unsigned argc, Value *vp)
+/*
+ * When creating:
+ *   var A = new ArrayType(uint8, 10)
+ * or
+ *   var S = new StructType({...})
+ *
+ * A.prototype.__proto__ === ArrayType.prototype.prototype (and similar for
+ * StructType).
+ *
+ * This function takes a reference to either ArrayType or StructType and
+ * returns a JSObject which can be set as A.prototype.
+ */
+JSObject *
+SetupAndGetPrototypeObjectForComplexTypeInstance(JSContext *cx,
+                                                 HandleObject complexTypeGlobal)
 {
-    return false;
+    RootedObject global(cx, cx->compartment()->maybeGlobal());
+    RootedValue complexTypePrototypeVal(cx);
+    RootedValue complexTypePrototypePrototypeVal(cx);
+
+    if (!JSObject::getProperty(cx, complexTypeGlobal, complexTypeGlobal,
+                               cx->names().classPrototype, &complexTypePrototypeVal))
+        return NULL;
+
+    RootedObject complexTypePrototypeObj(cx,
+        complexTypePrototypeVal.toObjectOrNull());
+
+    if (!JSObject::getProperty(cx, complexTypePrototypeObj,
+                               complexTypePrototypeObj,
+                               cx->names().classPrototype,
+                               &complexTypePrototypePrototypeVal))
+        return NULL;
+
+    RootedObject prototypeObj(cx,
+        NewObjectWithGivenProto(cx, &JSObject::class_, NULL, global));
+
+    if (!JS_SetPrototype(cx, prototypeObj,
+                         complexTypePrototypePrototypeVal.toObjectOrNull()))
+        return NULL;
+
+    return prototypeObj;
+}
+
+Class ArrayType::class_ = {
+    "ArrayType",
+    JSCLASS_HAS_RESERVED_SLOTS(TYPE_RESERVED_SLOTS) |
+    JSCLASS_HAS_CACHED_PROTO(JSProto_ArrayType),
+    JS_PropertyStub,
+    JS_DeletePropertyStub,
+    JS_PropertyStub,
+    JS_StrictPropertyStub,
+    JS_EnumerateStub,
+    JS_ResolveStub,
+    JS_ConvertStub,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    BinaryArray::construct,
+    NULL
+};
+
+Class BinaryArray::class_ = {
+    "BinaryArray",
+    Class::NON_NATIVE |
+    JSCLASS_HAS_RESERVED_SLOTS(BLOCK_RESERVED_SLOTS) |
+    JSCLASS_HAS_PRIVATE |
+    JSCLASS_HAS_CACHED_PROTO(JSProto_ArrayType),
+    JS_PropertyStub,
+    JS_DeletePropertyStub,
+    JS_PropertyStub,
+    JS_StrictPropertyStub,
+    JS_EnumerateStub,
+    JS_ResolveStub,
+    JS_ConvertStub,
+    BinaryArray::finalize,
+    NULL,           /* checkAccess */
+    NULL,           /* call        */
+    NULL,           /* construct   */
+    NULL,           /* hasInstance */
+    BinaryArray::obj_trace,
+    JS_NULL_CLASS_EXT,
+    {
+        BinaryArray::obj_lookupGeneric,
+        BinaryArray::obj_lookupProperty,
+        BinaryArray::obj_lookupElement,
+        BinaryArray::obj_lookupSpecial,
+        NULL,
+        NULL,
+        NULL,
+        NULL,
+        BinaryArray::obj_getGeneric,
+        BinaryArray::obj_getProperty,
+        BinaryArray::obj_getElement,
+        BinaryArray::obj_getElementIfPresent,
+        BinaryArray::obj_getSpecial,
+        BinaryArray::obj_setGeneric,
+        BinaryArray::obj_setProperty,
+        BinaryArray::obj_setElement,
+        BinaryArray::obj_setSpecial,
+        BinaryArray::obj_getGenericAttributes,
+        BinaryArray::obj_getPropertyAttributes,
+        BinaryArray::obj_getElementAttributes,
+        BinaryArray::obj_getSpecialAttributes,
+        NULL,
+        NULL,
+        NULL,
+        NULL,
+        NULL,
+        NULL,
+        NULL,
+        BinaryArray::obj_enumerate,
+        NULL,
+    }
+};
+
+inline uint32_t
+ArrayType::length(JSContext *cx, HandleObject obj)
+{
+    JS_ASSERT(obj && IsArrayType(obj));
+    RootedValue vp(cx, UndefinedValue());
+    if (!JSObject::getProperty(cx, obj, obj, cx->names().length, &vp))
+        return -1;
+    JS_ASSERT(vp.isInt32());
+    JS_ASSERT(vp.toInt32() >= 0);
+    return (uint32_t) vp.toInt32();
+}
+
+inline JSObject *
+ArrayType::elementType(JSContext *cx, HandleObject array)
+{
+    JS_ASSERT(IsArrayType(array));
+    RootedObject arr(cx, array);
+    RootedValue elementTypeVal(cx);
+    if (!JSObject::getProperty(cx, arr, arr,
+                               cx->names().elementType, &elementTypeVal))
+
+    JS_ASSERT(elementTypeVal.isObject());
+    return elementTypeVal.toObjectOrNull();
+}
+
+bool
+ArrayType::convertAndCopyTo(JSContext *cx, HandleObject exemplar,
+                            HandleValue from, uint8_t *mem)
+{
+    if (!from.isObject()) {
+        return ReportTypeError(cx, from, exemplar);
+    }
+
+    RootedObject val(cx, from.toObjectOrNull());
+    if (IsBlock(val)) {
+        RootedObject type(cx, GetType(val));
+        if (IsSameBinaryDataType(cx, exemplar, type)) {
+            uint8_t *priv = (uint8_t*) val->getPrivate();
+            memcpy(mem, priv, GetMemSize(cx, exemplar));
+            return true;
+        }
+        return ReportTypeError(cx, from, exemplar);
+    }
+
+    RootedObject valRooted(cx, val);
+    RootedValue fromLenVal(cx);
+    if (!JSObject::getProperty(cx, valRooted, valRooted,
+                               cx->names().length, &fromLenVal) ||
+        !fromLenVal.isInt32())
+    {
+        return ReportTypeError(cx, from, exemplar);
+    }
+
+    uint32_t fromLen = fromLenVal.toInt32();
+
+    if (ArrayType::length(cx, exemplar) != fromLen) {
+        return ReportTypeError(cx, from, exemplar);
+    }
+
+    RootedObject elementType(cx, ArrayType::elementType(cx, exemplar));
+
+    uint32_t offsetMult = GetMemSize(cx, elementType);
+
+    for (uint32_t i = 0; i < fromLen; i++) {
+        RootedValue fromElem(cx);
+        if (!JSObject::getElement(cx, valRooted, valRooted, i, &fromElem)) {
+            return ReportTypeError(cx, from, exemplar);
+        }
+
+        if (!ConvertAndCopyTo(cx, elementType, fromElem,
+                              (uint8_t *) mem + (offsetMult * i))) {
+            return false; // TypeError raised by ConvertAndCopyTo.
+        }
+    }
+
+    return true;
+}
+
+inline bool
+ArrayType::reify(JSContext *cx, HandleObject type,
+                 HandleObject owner, size_t offset, MutableHandleValue to)
+{
+    JSObject *obj = BinaryArray::create(cx, type, owner, offset);
+    if (!obj)
+        return false;
+    to.setObject(*obj);
+    return true;
+}
+
+JSObject *
+ArrayType::create(JSContext *cx, HandleObject arrayTypeGlobal,
+                  HandleObject elementType, uint32_t length)
+{
+    JS_ASSERT(elementType);
+    JS_ASSERT(IsBinaryType(elementType));
+
+    RootedObject obj(cx, NewBuiltinClassInstance(cx, &ArrayType::class_));
+    if (!obj)
+        return NULL;
+
+    RootedValue elementTypeVal(cx, ObjectValue(*elementType));
+    if (!JSObject::defineProperty(cx, obj, cx->names().elementType,
+                                  elementTypeVal, NULL, NULL,
+                                  JSPROP_READONLY | JSPROP_PERMANENT))
+        return NULL;
+
+    RootedValue lengthVal(cx, Int32Value(length));
+    if (!JSObject::defineProperty(cx, obj, cx->names().length,
+                                  lengthVal, NULL, NULL,
+                                  JSPROP_READONLY | JSPROP_PERMANENT))
+        return NULL;
+
+    RootedValue elementTypeBytes(cx);
+    if (!JSObject::getProperty(cx, elementType, elementType, cx->names().bytes, &elementTypeBytes))
+        return NULL;
+
+    JS_ASSERT(elementTypeBytes.isInt32());
+
+    /* since this is the JS visible size and maybe not
+     * the actual size in terms of memory layout, it is
+     * always elementType.bytes * length */
+    RootedValue typeBytes(cx, NumberValue(elementTypeBytes.toInt32() * length));
+    if (!JSObject::defineProperty(cx, obj, cx->names().bytes,
+                                  typeBytes,
+                                  NULL, NULL, JSPROP_READONLY | JSPROP_PERMANENT))
+        return NULL;
+
+    obj->setFixedSlot(SLOT_MEMSIZE,
+                      Int32Value(::GetMemSize(cx, elementType) * length));
+
+    obj->setFixedSlot(SLOT_ALIGN, Int32Value(::GetAlign(cx, elementType)));
+
+    RootedObject prototypeObj(cx,
+        SetupAndGetPrototypeObjectForComplexTypeInstance(cx, arrayTypeGlobal));
+
+    if (!prototypeObj)
+        return NULL;
+
+    if (!LinkConstructorAndPrototype(cx, obj, prototypeObj))
+        return NULL;
+
+    if (!JS_DefineFunction(cx, prototypeObj, "fill", BinaryArray::fill, 1, 0))
+        return NULL;
+
+    RootedId id(cx, NON_INTEGER_ATOM_TO_JSID(cx->names().length));
+    unsigned flags = JSPROP_SHARED | JSPROP_GETTER | JSPROP_PERMANENT;
+
+    RootedObject global(cx, cx->compartment()->maybeGlobal());
+    JSObject *getter =
+        NewFunction(cx, NullPtr(), BinaryArray::lengthGetter,
+                    0, JSFunction::NATIVE_FUN, global, NullPtr());
+    if (!getter)
+        return NULL;
+
+    RootedValue value(cx);
+    if (!DefineNativeProperty(cx, prototypeObj, id, value,
+                                JS_DATA_TO_FUNC_PTR(PropertyOp, getter), NULL,
+                                flags, 0, 0))
+        return NULL;
+    return obj;
+}
+
+JSBool
+ArrayType::construct(JSContext *cx, unsigned argc, Value *vp)
+{
+    if (!JS_IsConstructing(cx, vp)) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                             JSMSG_NOT_FUNCTION, "ArrayType");
+        return false;
+    }
+
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    if (argc != 2 ||
+        !args[0].isObject() ||
+        !args[1].isNumber() ||
+        args[1].toNumber() < 0)
+    {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                             JSMSG_BINARYDATA_ARRAYTYPE_BAD_ARGS);
+        return false;
+    }
+
+    RootedObject arrayTypeGlobal(cx, &args.callee());
+    RootedObject elementType(cx, args[0].toObjectOrNull());
+
+    if (!IsBinaryType(elementType)) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                             JSMSG_BINARYDATA_ARRAYTYPE_BAD_ARGS);
+        return false;
+    }
+
+    JSObject *obj = create(cx, arrayTypeGlobal, elementType, args[1].toInt32());
+    if (!obj)
+        return false;
+    args.rval().setObject(*obj);
+    return true;
 }
 
 JSBool
@@ -201,8 +641,535 @@ DataInstanceUpdate(JSContext *cx, unsigned argc, Value *vp)
 }
 
 JSBool
-ArrayTypeObject::repeat(JSContext *cx, unsigned int argc, Value *vp)
+ArrayType::repeat(JSContext *cx, unsigned int argc, Value *vp)
 {
+    return false;
+}
+
+JSBool
+ArrayType::toString(JSContext *cx, unsigned int argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    RootedObject thisObj(cx, args.thisv().toObjectOrNull());
+    JS_ASSERT(thisObj);
+    if (!IsArrayType(thisObj)) {
+        RootedObject obj(cx, args.thisv().toObjectOrNull());
+        JS_ReportErrorNumber(cx, js_GetErrorMessage,
+                             NULL, JSMSG_INCOMPATIBLE_PROTO, "ArrayType", "toString", JS_GetClass(obj)->name);
+        return false;
+    }
+
+    StringBuffer contents(cx);
+    contents.append("ArrayType(");
+
+    RootedValue elementTypeVal(cx, ObjectValue(*elementType(cx, thisObj)));
+    JSString *str = ToString<CanGC>(cx, elementTypeVal);
+
+    contents.append(str);
+    contents.append(", ");
+
+    Value len = NumberValue(length(cx, thisObj));
+    contents.append(JS_ValueToString(cx, len));
+    contents.append(")");
+    args.rval().setString(contents.finishString());
+    return true;
+}
+
+JSObject *
+BinaryArray::createEmpty(JSContext *cx, HandleObject type)
+{
+    JS_ASSERT(IsArrayType(type));
+    RootedObject typeRooted(cx, type);
+
+    RootedValue protoVal(cx);
+    if (!JSObject::getProperty(cx, typeRooted, typeRooted,
+                               cx->names().classPrototype, &protoVal))
+        return NULL;
+
+    RootedObject obj(cx,
+        NewObjectWithClassProto(cx, &BinaryArray::class_,
+                                protoVal.toObjectOrNull(), NULL));
+    obj->setFixedSlot(SLOT_DATATYPE, ObjectValue(*type));
+    obj->setFixedSlot(SLOT_BLOCKREFOWNER, NullValue());
+    return obj;
+}
+
+JSObject *
+BinaryArray::create(JSContext *cx, HandleObject type)
+{
+    JSObject *obj = createEmpty(cx, type);
+    if (!obj)
+        return NULL;
+
+    int32_t memsize = GetMemSize(cx, type);
+    void *memory = JS_malloc(cx, memsize);
+    if (!memory)
+        return NULL;
+    memset(memory, 0, memsize);
+    obj->setPrivate(memory);
+    return obj;
+}
+
+JSObject *
+BinaryArray::create(JSContext *cx, HandleObject type, HandleValue initial)
+{
+    JSObject *obj = create(cx, type);
+    if (!obj)
+        return NULL;
+
+    uint8_t *memory = (uint8_t*) obj->getPrivate();
+    if (!ConvertAndCopyTo(cx, type, initial, memory))
+        return NULL;
+
+    return obj;
+}
+
+JSObject *
+BinaryArray::create(JSContext *cx, HandleObject type,
+                    HandleObject owner, size_t offset)
+{
+    JS_ASSERT(IsBlock(owner));
+    JSObject *obj = createEmpty(cx, type);
+    if (!obj)
+        return NULL;
+
+    obj->setPrivate(((uint8_t *) owner->getPrivate()) + offset);
+    obj->setFixedSlot(SLOT_BLOCKREFOWNER, ObjectValue(*owner));
+    return obj;
+}
+
+JSBool
+BinaryArray::construct(JSContext *cx, unsigned int argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    RootedObject callee(cx, &args.callee());
+
+    if (!IsArrayType(callee)) {
+        ReportTypeError(cx, args.calleev(), "is not an ArrayType");
+        return false;
+    }
+
+    JSObject *obj = NULL;
+    if (argc == 1) {
+        RootedValue v(cx, args[0]);
+        obj = create(cx, callee, v);
+    } else {
+        obj = create(cx, callee);
+    }
+
+    if (obj)
+        args.rval().setObject(*obj);
+
+    return obj != NULL;
+}
+
+void
+BinaryArray::finalize(js::FreeOp *op, JSObject *obj)
+{
+    if (obj->getFixedSlot(SLOT_BLOCKREFOWNER).isNull())
+        op->free_(obj->getPrivate());
+}
+
+void
+BinaryArray::obj_trace(JSTracer *tracer, JSObject *obj)
+{
+    Value val = obj->getFixedSlot(SLOT_BLOCKREFOWNER);
+    if (val.isObject()) {
+        HeapPtrObject owner(val.toObjectOrNull());
+        MarkObject(tracer, &owner, "binaryarray.blockRefOwner");
+    }
+}
+
+JSBool
+BinaryArray::lengthGetter(JSContext *cx, unsigned int argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    RootedObject thisObj(cx, args.thisv().toObjectOrNull());
+    JS_ASSERT(IsBinaryArray(thisObj));
+
+    RootedObject type(cx, GetType(thisObj));
+    vp->setInt32(ArrayType::length(cx, type));
+    return true;
+}
+
+JSBool
+BinaryArray::forEach(JSContext *cx, unsigned int argc, Value *vp)
+{
+    JS_ASSERT(0);
+    return false;
+}
+
+JSBool
+BinaryArray::subarray(JSContext *cx, unsigned int argc, Value *vp)
+{
+    JS_ASSERT(0);
+    return false;
+}
+
+JSBool
+BinaryArray::fill(JSContext *cx, unsigned int argc, Value *vp)
+{
+    JS_ASSERT(0);
+    return false;
+}
+
+JSBool
+BinaryArray::obj_lookupGeneric(JSContext *cx, HandleObject obj, HandleId id,
+                                MutableHandleObject objp, MutableHandleShape propp)
+{
+    JS_ASSERT(IsBinaryArray(obj));
+    RootedObject type(cx, GetType(obj));
+
+    uint32_t index;
+    if (js_IdIsIndex(id, &index) &&
+        index < ArrayType::length(cx, type)) {
+        MarkNonNativePropertyFound(propp);
+        objp.set(obj);
+        return true;
+    }
+
+    if (JSID_IS_ATOM(id, cx->names().length)) {
+        MarkNonNativePropertyFound(propp);
+        objp.set(obj);
+        return true;
+    }
+
+    RootedObject proto(cx, obj->getProto());
+    if (!proto) {
+        objp.set(NULL);
+        propp.set(NULL);
+        return true;
+    }
+
+    return JSObject::lookupGeneric(cx, proto, id, objp, propp);
+}
+
+JSBool
+BinaryArray::obj_lookupProperty(JSContext *cx,
+                                HandleObject obj,
+                                HandlePropertyName name,
+                                MutableHandleObject objp,
+                                MutableHandleShape propp)
+{
+    RootedId id(cx, NameToId(name));
+    return obj_lookupGeneric(cx, obj, id, objp, propp);
+}
+
+JSBool
+BinaryArray::obj_lookupElement(JSContext *cx, HandleObject obj, uint32_t index,
+                                MutableHandleObject objp, MutableHandleShape propp)
+{
+    JS_ASSERT(IsBinaryArray(obj));
+    RootedObject type(cx, GetType(obj));
+
+    if (index < ArrayType::length(cx, type)) {
+        MarkNonNativePropertyFound(propp);
+        objp.set(obj);
+        return true;
+    }
+
+    RootedObject proto(cx, obj->getProto());
+    if (proto)
+        return JSObject::lookupElement(cx, proto, index, objp, propp);
+
+    objp.set(NULL);
+    propp.set(NULL);
+    return true;
+}
+
+JSBool
+BinaryArray::obj_lookupSpecial(JSContext *cx, HandleObject obj, HandleSpecialId sid,
+                                MutableHandleObject objp, MutableHandleShape propp)
+{
+    RootedId id(cx, SPECIALID_TO_JSID(sid));
+    return obj_lookupGeneric(cx, obj, id, objp, propp);
+}
+
+JSBool
+BinaryArray::obj_getGeneric(JSContext *cx, HandleObject obj, HandleObject receiver,
+                             HandleId id, MutableHandleValue vp)
+{
+    uint32_t index;
+    if (js_IdIsIndex(id, &index)) {
+        return obj_getElement(cx, obj, receiver, index, vp);
+    }
+
+    RootedValue idValue(cx, IdToValue(id));
+    Rooted<PropertyName*> name(cx, ToAtom<CanGC>(cx, idValue)->asPropertyName());
+    return obj_getProperty(cx, obj, receiver, name, vp);
+}
+
+JSBool
+BinaryArray::obj_getProperty(JSContext *cx, HandleObject obj, HandleObject receiver,
+                              HandlePropertyName name, MutableHandleValue vp)
+{
+    RootedObject proto(cx, obj->getProto());
+    if (!proto) {
+        vp.setUndefined();
+        return true;
+    }
+
+    return JSObject::getProperty(cx, proto, receiver, name, vp);
+}
+
+JSBool
+BinaryArray::obj_getElement(JSContext *cx, HandleObject obj, HandleObject receiver,
+                             uint32_t index, MutableHandleValue vp)
+{
+    RootedObject type(cx, GetType(obj));
+
+    if (index < ArrayType::length(cx, type)) {
+        RootedObject elementType(cx, ArrayType::elementType(cx, type));
+        size_t offset = GetMemSize(cx, elementType) * index;
+        return Reify(cx, elementType, obj, offset, vp);
+    }
+
+    RootedObject proto(cx, obj->getProto());
+    if (!proto) {
+        vp.setUndefined();
+        return true;
+    }
+
+    return JSObject::getElement(cx, proto, receiver, index, vp);
+}
+
+JSBool
+BinaryArray::obj_getElementIfPresent(JSContext *cx, HandleObject obj,
+                                     HandleObject receiver, uint32_t index,
+                                     MutableHandleValue vp, bool *present)
+{
+    RootedObject type(cx, GetType(obj));
+
+    if (index < ArrayType::length(cx, type)) {
+        *present = true;
+        return obj_getElement(cx, obj, receiver, index, vp);
+    }
+
+    *present = false;
+    vp.setUndefined();
+    return true;
+}
+
+JSBool
+BinaryArray::obj_getSpecial(JSContext *cx, HandleObject obj, HandleObject receiver,
+                             HandleSpecialId sid, MutableHandleValue vp)
+{
+    RootedId id(cx, SPECIALID_TO_JSID(sid));
+    return obj_getGeneric(cx, obj, receiver, id, vp);
+}
+
+JSBool
+BinaryArray::obj_setGeneric(JSContext *cx, HandleObject obj, HandleId id,
+                             MutableHandleValue vp, JSBool strict)
+{
+	uint32_t index;
+	if (js_IdIsIndex(id, &index)) {
+	    return obj_setElement(cx, obj, index, vp, strict);
+    }
+
+    if (JSID_IS_ATOM(id, cx->names().length)) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage,
+                             NULL, JSMSG_CANT_REDEFINE_ARRAY_LENGTH);
+        return false;
+    }
+
+	return true;
+}
+
+JSBool
+BinaryArray::obj_setProperty(JSContext *cx, HandleObject obj,
+                             HandlePropertyName name, MutableHandleValue vp,
+                             JSBool strict)
+{
+    RootedId id(cx, NameToId(name));
+    return obj_setGeneric(cx, obj, id, vp, strict);
+}
+
+JSBool
+BinaryArray::obj_setElement(JSContext *cx, HandleObject obj, uint32_t index,
+                             MutableHandleValue vp, JSBool strict)
+{
+    RootedObject type(cx, GetType(obj));
+    if (index >= ArrayType::length(cx, type)) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage,
+                             NULL, JSMSG_BINARYDATA_BINARYARRAY_BAD_INDEX);
+        return false;
+    }
+
+    RootedValue elementTypeVal(cx);
+    if (!JSObject::getProperty(cx, type, type, cx->names().elementType,
+                               &elementTypeVal))
+        return false;
+
+    RootedObject elementType(cx, elementTypeVal.toObjectOrNull());
+    uint32_t offset = GetMemSize(cx, elementType) * index;
+
+    bool result =
+        ConvertAndCopyTo(cx, elementType, vp,
+                         ((uint8_t*) obj->getPrivate()) + offset );
+
+    if (!result) {
+        return false;
+    }
+
+    return true;
+}
+
+JSBool
+BinaryArray::obj_setSpecial(JSContext *cx, HandleObject obj,
+                             HandleSpecialId sid, MutableHandleValue vp,
+                             JSBool strict)
+{
+    RootedId id(cx, SPECIALID_TO_JSID(sid));
+    return obj_setGeneric(cx, obj, id, vp, strict);
+}
+
+JSBool
+BinaryArray::obj_getGenericAttributes(JSContext *cx, HandleObject obj,
+                                       HandleId id, unsigned *attrsp)
+{
+    uint32_t index;
+    RootedObject type(cx, GetType(obj));
+
+    if (js_IdIsIndex(id, &index) &&
+        index < ArrayType::length(cx, type)) {
+        *attrsp = JSPROP_ENUMERATE | JSPROP_PERMANENT; // should we report JSPROP_INDEX?
+        return true;
+    }
+
+    if (JSID_IS_ATOM(id, cx->names().length)) {
+        *attrsp = JSPROP_READONLY | JSPROP_PERMANENT;
+        return true;
+    }
+
+	return false;
+}
+
+JSBool
+BinaryArray::obj_getPropertyAttributes(JSContext *cx, HandleObject obj,
+                                        HandlePropertyName name, unsigned *attrsp)
+{
+    RootedId id(cx, NameToId(name));
+    return obj_getGenericAttributes(cx, obj, id, attrsp);
+}
+
+JSBool
+BinaryArray::obj_getElementAttributes(JSContext *cx, HandleObject obj,
+                                       uint32_t index, unsigned *attrsp)
+{
+    RootedId id(cx, INT_TO_JSID(index));
+    return obj_getGenericAttributes(cx, obj, id, attrsp);
+}
+
+JSBool
+BinaryArray::obj_getSpecialAttributes(JSContext *cx, HandleObject obj,
+                                       HandleSpecialId sid, unsigned *attrsp)
+{
+    RootedId id(cx, SPECIALID_TO_JSID(sid));
+    return obj_getGenericAttributes(cx, obj, id, attrsp);
+}
+
+JSBool
+BinaryArray::obj_enumerate(JSContext *cx, HandleObject obj, JSIterateOp enum_op,
+                            MutableHandleValue statep, MutableHandleId idp)
+{
+    JS_ASSERT(IsBinaryArray(obj));
+
+    RootedObject type(cx, GetType(obj));
+
+    uint32_t index;
+    switch (enum_op) {
+        case JSENUMERATE_INIT_ALL:
+        case JSENUMERATE_INIT:
+            statep.setInt32(0);
+            idp.set(INT_TO_JSID(ArrayType::length(cx, type)));
+            break;
+
+        case JSENUMERATE_NEXT:
+            index = static_cast<uint32_t>(statep.toInt32());
+
+            if (index < ArrayType::length(cx, type)) {
+                idp.set(INT_TO_JSID(index));
+                statep.setInt32(index + 1);
+            } else {
+                JS_ASSERT(index == ArrayType::length(cx, type));
+                statep.setNull();
+            }
+
+            break;
+
+        case JSENUMERATE_DESTROY:
+            statep.setNull();
+            break;
+    }
+
+	return true;
+}
+
+static bool
+Reify(JSContext *cx, HandleObject type,
+      HandleObject owner, size_t offset, MutableHandleValue to)
+{
+    if (IsArrayType(type)) {
+        return ArrayType::reify(cx, type, owner, offset, to);
+    }
+    if (type->hasClass(&StructTypeClass))
+        JS_ASSERT(0);
+    JS_ASSERT(&NumericTypeClasses[NUMERICTYPE_UINT8] <= type->getClass() &&
+              type->getClass() <= &NumericTypeClasses[NUMERICTYPE_FLOAT64]);
+
+#define REIFY_CASES(constant_, type_)\
+        case constant_:\
+            return NumericType<type_##_t>::reify(cx,\
+                    ((uint8_t *) owner->getPrivate()) + offset, to);
+
+    switch(type->getFixedSlot(SLOT_DATATYPE).toInt32()) {
+        BINARYDATA_FOR_EACH_NUMERIC_TYPES(REIFY_CASES);
+        default:
+            abort();
+    }
+#undef REIFY_CASES
+    return false;
+}
+
+static bool
+ConvertAndCopyTo(JSContext *cx, HandleObject type, HandleValue from, uint8_t *mem)
+{
+    if (IsComplexType(type)) {
+        uint8_t *block = NULL;
+        if (IsArrayType(type)) {
+            if (!ArrayType::convertAndCopyTo(cx, type, from, mem))
+                return false;
+        } else if (type->hasClass(&StructTypeClass)) {
+            JS_ASSERT(0);
+        } else {
+            JS_ASSERT(0);
+        }
+
+        return true;
+    }
+
+    JS_ASSERT(&NumericTypeClasses[NUMERICTYPE_UINT8] <= type->getClass() &&
+              type->getClass() <= &NumericTypeClasses[NUMERICTYPE_FLOAT64]);
+
+#define CONVERT_CASES(constant_, type_)\
+        case constant_:\
+                       {\
+            type_##_t temp;\
+            bool ok = NumericType<type_##_t>::convert(cx, from, &temp);\
+            if (!ok)\
+                return false;\
+            memcpy(mem, &temp, sizeof(type_##_t));\
+            return true; }
+
+    switch(type->getFixedSlot(0).toInt32()) {
+        BINARYDATA_FOR_EACH_NUMERIC_TYPES(CONVERT_CASES);
+        default:
+            abort();
+    }
+#undef CONVERT_CASES
     return false;
 }
 
@@ -264,9 +1231,11 @@ GlobalObject::initTypeObject(JSContext *cx, Handle<GlobalObject *> global)
 }
 
 static JSObject *
-SetupComplexHeirarchy(JSContext *cx, Handle<GlobalObject *> global,
-                      HandleObject complexObject)
+SetupComplexHeirarchy(JSContext *cx, HandleObject obj, JSProtoKey protoKey,
+                      HandleObject complexObject, MutableHandleObject proto,
+                      MutableHandleObject protoProto)
 {
+    Rooted<GlobalObject*> global(cx, &obj->as<GlobalObject>());
     // get the 'Type' constructor
     RootedObject TypeObject(cx, global->getOrCreateTypeObject(cx));
     if (!TypeObject)
@@ -289,13 +1258,21 @@ SetupComplexHeirarchy(JSContext *cx, Handle<GlobalObject *> global,
     if (!DataProto)
         return NULL;
 
-    // Set complexObject.prototype.__proto__ = Data
-    RootedObject prototypeObj(cx, JS_NewObject(cx, NULL, NULL, global));
+    RootedObject prototypeObj(cx,
+        NewObjectWithGivenProto(cx, &JSObject::class_, NULL, global));
+    if (!prototypeObj)
+        return NULL;
     if (!LinkConstructorAndPrototype(cx, complexObject, prototypeObj))
         return NULL;
+    if (!DefineConstructorAndPrototype(cx, global, protoKey,
+                                       complexObject, prototypeObj))
+        return NULL;
 
+    // Set complexObject.prototype.__proto__ = Data
     if (!JS_SetPrototype(cx, prototypeObj, DataObject))
         return NULL;
+
+    proto.set(prototypeObj);
 
     // Set complexObject.prototype.prototype.__proto__ = Data.prototype
     RootedObject prototypePrototypeObj(cx, JS_NewObject(cx, NULL, NULL,
@@ -308,41 +1285,64 @@ SetupComplexHeirarchy(JSContext *cx, Handle<GlobalObject *> global,
     if (!JS_SetPrototype(cx, prototypePrototypeObj, DataProto))
         return NULL;
 
+    protoProto.set(prototypePrototypeObj);
+
     return complexObject;
 }
 
 static JSObject *
-InitComplexClasses(JSContext *cx, Handle<GlobalObject *> global)
+InitArrayType(JSContext *cx, HandleObject obj)
 {
-    RootedFunction ArrayTypeFun(cx,
-            JS_DefineFunction(cx, global, "ArrayType", createArrayType, 1, 0));
+    JS_ASSERT(obj->isNative());
+    Rooted<GlobalObject*> global(cx, &obj->as<GlobalObject>());
+    RootedFunction ctor(cx,
+        global->createConstructor(cx, ArrayType::construct,
+                                  cx->names().ArrayType, 2));
 
-    if (!ArrayTypeFun)
+    if (!ctor)
         return NULL;
 
-    if (!SetupComplexHeirarchy(cx, global, ArrayTypeFun))
+    RootedObject proto(cx);
+    RootedObject protoProto(cx);
+    if (!SetupComplexHeirarchy(cx, obj, JSProto_ArrayType,
+                               ctor, &proto, &protoProto))
         return NULL;
 
-    // ArrayType.prototype.repeat
-    RootedValue ArrayTypePrototypeVal(cx);
-    if (!JSObject::getProperty(cx, ArrayTypeFun, ArrayTypeFun,
-                               cx->names().classPrototype, &ArrayTypePrototypeVal))
+    if (!JS_DefineFunction(cx, proto, "repeat", ArrayType::repeat, 1, 0))
         return NULL;
 
-    if (!JS_DefineFunction(cx, ArrayTypePrototypeVal.toObjectOrNull(), "repeat",
-                           ArrayTypeObject::repeat, 1, 0))
+    if (!JS_DefineFunction(cx, proto, "toString", ArrayType::toString, 0, 0))
         return NULL;
 
+    if (!JS_DefineFunction(cx, protoProto, "forEach", BinaryArray::forEach, 1, 0))
+        return NULL;
+
+    if (!JS_DefineFunction(cx, protoProto, "subarray",
+                           BinaryArray::subarray, 1, 0))
+        return NULL;
+
+    return proto;
+}
+
+static JSObject *
+InitStructType(JSContext *cx, HandleObject obj)
+{
+    JS_ASSERT(obj->isNative());
+    Rooted<GlobalObject*> global(cx, &obj->as<GlobalObject>());
     RootedFunction StructTypeFun(cx,
-        JS_DefineFunction(cx, global, "StructType", createStructType, 1, 0));
+        global->createConstructor(cx, createStructType,
+                                  cx->names().StructType, 1));
 
     if (!StructTypeFun)
         return NULL;
 
-    if (!SetupComplexHeirarchy(cx, global, StructTypeFun))
+    RootedObject proto(cx);
+    RootedObject protoProto(cx);
+    if (!SetupComplexHeirarchy(cx, obj, JSProto_StructType,
+                               StructTypeFun, &proto, &protoProto))
         return NULL;
 
-    return global;
+    return proto;
 }
 
 JSObject *
@@ -376,7 +1376,11 @@ js_InitBinaryDataClasses(JSContext *cx, HandleObject obj)
     BINARYDATA_FOR_EACH_NUMERIC_TYPES(BINARYDATA_NUMERIC_DEFINE)
 #undef BINARYDATA_NUMERIC_DEFINE
 
-    if (!InitComplexClasses(cx, global))
+    if (!InitArrayType(cx, obj))
         return NULL;
+
+    if (!InitStructType(cx, obj))
+        return NULL;
+
     return global;
 }

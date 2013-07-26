@@ -47,6 +47,7 @@
     macro(delete, delete_, "delete") \
     macro(deleteProperty, deleteProperty, "deleteProperty") \
     macro(each, each, "each") \
+    macro(elementType, elementType, "elementType") \
     macro(empty, empty, "") \
     macro(encodeURI, encodeURI, "encodeURI") \
     macro(encodeURIComponent, encodeURIComponent, "encodeURIComponent") \
