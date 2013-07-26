@@ -244,18 +244,18 @@ gTests.push({
     EventUtils.sendString("about:blank", window);
     let opened = yield waitForCondition(() => gEdit.popup.popupOpen);
     ok(opened, "type in urlbar: popup opens");
-    
+
     sendElementTap(window, tab.browser);
 
     let closed = yield waitForCondition(() => !gEdit.popup.popupOpen);
     ok(closed, "autocomplete closed after tap on content");
-    ok(!ContextUI.navbarVisible, "navbar closed"); 
+    ok(!ContextUI.navbarVisible, "navbar closed");
 
     let event = document.createEvent("Events");
     event.initEvent("MozEdgeUICompleted", true, false);
     window.dispatchEvent(event);
 
-    ok(ContextUI.navbarVisible, "navbar visible"); 
+    ok(ContextUI.navbarVisible, "navbar visible");
     is(gEdit.value, "about:mozilla", "url bar text refreshed");
   }
 });
