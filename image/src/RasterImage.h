@@ -642,9 +642,9 @@ private: // data
   nsRefPtr<Decoder>          mDecoder;
   nsRefPtr<DecodeRequest>    mDecodeRequest;
   uint32_t                   mBytesDecoded;
-  // END LOCKED MEMBER VARIABLES
 
   bool                       mInDecoder;
+  // END LOCKED MEMBER VARIABLES
 
   // Boolean flags (clustered together to conserve space):
   bool                       mHasSize:1;       // Has SetSize() been called?
