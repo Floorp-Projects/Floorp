@@ -47,13 +47,16 @@ public class HomePager extends ViewPager {
     }
 
     public HomePager(Context context) {
-        super(context);
-        mContext = context;
+        this(context, null);
     }
 
     public HomePager(Context context, AttributeSet attrs) {
         super(context, attrs);
         mContext = context;
+
+        // This is to keep all 3 pages in memory after they are
+        // selected in the pager.
+        setOffscreenPageLimit(2);
     }
 
     /**
