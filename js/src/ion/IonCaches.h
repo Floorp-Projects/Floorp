@@ -7,12 +7,12 @@
 #ifndef ion_IonCaches_h
 #define ion_IonCaches_h
 
-#include "ion/IonCode.h"
-#include "ion/Registers.h"
-#include "ion/shared/Assembler-shared.h"
 #ifdef JS_CPU_ARM
 # include "ion/arm/Assembler-arm.h"
 #endif
+#include "ion/IonCode.h"
+#include "ion/Registers.h"
+#include "ion/shared/Assembler-shared.h"
 #include "vm/ForkJoin.h"
 
 class JSFunction;
