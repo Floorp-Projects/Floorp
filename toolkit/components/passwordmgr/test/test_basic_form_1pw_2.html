@@ -63,6 +63,18 @@ Login Manager test: forms with 1 password field, part 2
     <button type='submit'>Submit</button>
 </form>
 
+<form id='form10' action='formtest.js'> 10
+    <input type='text'     name='uname' value='TESTUSER' readonly>
+    <input type='password' name='pname' value=''>
+    <button type='submit'>Submit</button>
+</form>
+
+<form id='form11' action='formtest.js'> 11
+    <input type='text'     name='uname' value='TESTUSER' disabled>
+    <input type='password' name='pname' value=''>
+    <button type='submit'>Submit</button>
+</form>
+
 </div>
 
 <pre id="test">
@@ -83,6 +95,8 @@ function startTest() {
     for (f = 5;  f <= 8;  f++) { checkUnmodifiedForm(f); }
     // Test case-insensitive comparison of username field
     checkForm(9, "testuser", "testpass");
+    checkForm(10, "TESTUSER", "testpass");
+    checkForm(11, "TESTUSER", "testpass");
 
     SimpleTest.finish();
 }

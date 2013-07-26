@@ -7,6 +7,8 @@
 #ifndef ion_CodeGenerator_h
 #define ion_CodeGenerator_h
 
+#include "ion/PerfSpewer.h"
+
 #if defined(JS_CPU_X86)
 # include "ion/x86/CodeGenerator-x86.h"
 #elif defined(JS_CPU_X64)

@@ -4,24 +4,23 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "ion/VMFunctions.h"
+
+#include "builtin/ParallelArray.h"
+#include "frontend/BytecodeCompiler.h"
+#include "ion/BaselineIC.h"
 #include "ion/Ion.h"
 #include "ion/IonCompartment.h"
-#include "ion/BaselineFrame-inl.h"
-#include "ion/BaselineIC.h"
 #include "ion/IonFrames.h"
-
 #include "vm/ArrayObject.h"
 #include "vm/Debugger.h"
 #include "vm/Interpreter.h"
-#include "vm/StringObject-inl.h"
-
-#include "builtin/ParallelArray.h"
-
-#include "frontend/BytecodeCompiler.h"
 
 #include "jsboolinlines.h"
 
+#include "ion/BaselineFrame-inl.h"
 #include "vm/Interpreter-inl.h"
+#include "vm/StringObject-inl.h"
 
 using namespace js;
 using namespace js::ion;

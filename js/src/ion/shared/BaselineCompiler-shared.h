@@ -8,11 +8,12 @@
 #define ion_shared_BaselineCompiler_shared_h
 
 #include "jscntxt.h"
+
 #include "ion/BaselineFrameInfo.h"
-#include "ion/IonSpewer.h"
 #include "ion/BaselineIC.h"
 #include "ion/IonInstrumentation.h"
 #include "ion/IonMacroAssembler.h"
+#include "ion/IonSpewer.h"
 
 namespace js {
 namespace ion {

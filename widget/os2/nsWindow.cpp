@@ -2157,6 +2157,8 @@ bool nsWindow::OnMouseChord(MPARAM mp1, MPARAM mp2)
     isCopy = true;
   }
 
+  // XXX Using keypress event here is wrong approach, this should be replaced
+  //     with content command event.
   nsKeyEvent event(true, NS_KEY_PRESS, this);
   nsIntPoint point(0,0);
   InitEvent(event, &point);
@@ -2793,6 +2795,11 @@ bool nsWindow::DispatchKeyEvent(MPARAM mp1, MPARAM mp2)
     return rc;
   }
 
+  // Don't dispatch keypress event if keydown event is consumed.
+  if (rc) {
+    return rc;
+  }
+
   // Break off if we've got an "invalid composition" -- that is,
   // the user typed a deadkey last time, but has now typed something
   // that doesn't make sense in that context.
@@ -2805,9 +2812,6 @@ bool nsWindow::DispatchKeyEvent(MPARAM mp1, MPARAM mp2)
   // Now we need to dispatch a keypress event which has the unicode char.
   // If keydown default was prevented, do same for keypress
   pressEvent.message = NS_KEY_PRESS;
-  if (rc) {
-    pressEvent.mFlags.mDefaultPrevented = true;
-  }
 
   if (usChar) {
     USHORT inbuf[2];

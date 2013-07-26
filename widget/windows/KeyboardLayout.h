@@ -14,7 +14,7 @@
 #include "nsWindowDefs.h"
 #include <windows.h>
 
-#define NS_NUM_OF_KEYS          68
+#define NS_NUM_OF_KEYS          70
 
 #define VK_OEM_1                0xBA   // ';:' for US
 #define VK_OEM_PLUS             0xBB   // '+' any country
@@ -322,7 +322,8 @@ public:
    * Returns true if dispatched keydown event or keypress event is consumed.
    * Otherwise, false.
    */
-  bool HandleKeyDownMessage(bool* aEventDispatched = nullptr) const;
+  bool HandleKeyDownMessage(bool* aEventDispatched = nullptr,
+                            bool* aWasKeyDownDefaultPrevented = nullptr) const;
 
   /**
    * Handles WM_CHAR message or WM_SYSCHAR message.  The instance must be
@@ -330,8 +331,7 @@ public:
    * Returns true if dispatched keypress event is consumed.  Otherwise, false.
    */
   bool HandleCharMessage(const MSG& aCharMsg,
-                         bool* aEventDispatched = nullptr,
-                         const EventFlags* aExtraFlags = nullptr) const;
+                         bool* aEventDispatched = nullptr) const;
 
   /**
    * Handles keyup message.  Returns true if the event is consumed.
@@ -445,25 +445,22 @@ private:
    * DispatchKeyPressEventsWithKeyboardLayout() dispatches keypress event(s)
    * with the information provided by KeyboardLayout class.
    */
-  bool DispatchKeyPressEventsWithKeyboardLayout(
-                        const EventFlags& aExtraFlags) const;
+  bool DispatchKeyPressEventsWithKeyboardLayout() const;
 
   /**
-   * Dispatches keypress events after removing WM_*CHAR messages for the
-   * WM_*KEYDOWN message.
-   * Returns true if the dispatched keypress event is consumed.  Otherwise,
-   * false.
+   * Remove all following WM_CHAR, WM_SYSCHAR and WM_DEADCHAR messages for the
+   * WM_KEYDOWN or WM_SYSKEYDOWN message.  Additionally, dispatches plugin
+   * events if it's necessary.
+   * Returns true if the widget is destroyed.  Otherwise, false.
    */
-  bool DispatchKeyPressEventsAndDiscardsCharMessages(
-                        const EventFlags& aExtraFlags) const;
+  bool DispatchPluginEventsAndDiscardsCharMessages() const;
 
   /**
    * DispatchKeyPressEventForFollowingCharMessage() dispatches keypress event
    * for following WM_*CHAR message.
    * Returns true if the event is consumed.  Otherwise, false.
    */
-  bool DispatchKeyPressEventForFollowingCharMessage(
-                        const EventFlags& aExtraFlags) const;
+  bool DispatchKeyPressEventForFollowingCharMessage() const;
 
   /**
    * Checkes whether the key event down message is handled without following

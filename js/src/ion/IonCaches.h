@@ -9,7 +9,10 @@
 
 #include "ion/IonCode.h"
 #include "ion/Registers.h"
-
+#include "ion/shared/Assembler-shared.h"
+#ifdef JS_CPU_ARM
+# include "ion/arm/Assembler-arm.h"
+#endif
 #include "vm/ForkJoin.h"
 
 class JSFunction;

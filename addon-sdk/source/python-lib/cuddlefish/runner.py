@@ -30,7 +30,7 @@ PARSEABLE_TEST_NAME = re.compile(r'TEST-START \| ([^\n]+)\n')
 # The purpose of this timeout is to recover from infinite loops.  It should be
 # longer than the amount of time any test run takes, including those on slow
 # machines running slow (debug) versions of Firefox.
-RUN_TIMEOUT = 1.5 * 60 * 60 # 1.5 Hour
+RUN_TIMEOUT = 45 * 60 # 45 minutes
 
 # Maximum time we'll wait for tests to emit output, in seconds.
 # The purpose of this timeout is to recover from hangs.  It should be longer
@@ -495,6 +495,9 @@ def run_app(harness_root_dir, manifest_rdf, harness_options,
 
     logfile = os.path.abspath(os.path.expanduser(logfile))
     maybe_remove_logfile()
+
+    if app_type != "fennec-on-device":
+        harness_options['logFile'] = logfile
 
     env = {}
     env.update(os.environ)

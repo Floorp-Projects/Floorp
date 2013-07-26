@@ -640,14 +640,15 @@ and this usually involves using HTTPS for the links.
 So if we run the following command:
 
 <pre>
-  cfx xpi --update-link https://example.com/addon/latest/pluginName.xpi --update-url https://example.com/addon/update_rdf/pluginName.update.rdf
+  cfx xpi --update-link https://example.com/addon/latest
+          --update-url https://example.com/addon/update_rdf
 </pre>
 
 `cfx` will create two files:
 
 * an XPI file which embeds
-`https://example.com/addon/update_rdf/pluginName.update.rdf` as the value of `updateURL`
-* an RDF file which embeds `https://example.com/addon/latest/pluginName.xpi` as the value of
+`https://example.com/addon/update_rdf` as the value of `updateURL`
+* an RDF file which embeds `https://example.com/addon/latest` as the value of
 `updateLink`.
 
 ### Supported Options ###

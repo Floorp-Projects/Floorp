@@ -7,9 +7,9 @@
 #ifndef ion_ValueNumbering_h
 #define ion_ValueNumbering_h
 
+#include "ion/CompileInfo.h"
 #include "ion/MIR.h"
 #include "ion/MIRGraph.h"
-#include "ion/CompileInfo.h"
 
 namespace js {
 namespace ion {

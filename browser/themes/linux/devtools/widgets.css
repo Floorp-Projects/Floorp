@@ -340,17 +340,20 @@
 }
 
 .side-menu-widget-item-contents {
-  padding: 4px;
+  padding: 4px 0px;
 }
 
 .side-menu-widget-item label {
   cursor: inherit;
 }
 
+.side-menu-widget-item-other:first-of-type {
+  border-top-left-radius: 4px;
+}
+
 .side-menu-widget-item-other {
   background: url(background-noise-toolbar.png), hsla(208,11%,27%, 0.65);
-  margin: 0 -4px;
-  -moz-padding-start: 5px;
+  -moz-margin-start: -22px;
 }
 
 .side-menu-widget-item-other.selected {

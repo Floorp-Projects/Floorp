@@ -28,6 +28,12 @@ XPCOMUtils.defineLazyGetter(this, "SL", function () {
   return SL;
 });
 
+XPCOMUtils.defineLazyGetter(this, "CP", function () {
+  let CP = {};
+  Cu.import("resource://gre/modules/CpPduHelper.jsm", CP);
+  return CP;
+});
+
 XPCOMUtils.defineLazyServiceGetter(this, "gSystemMessenger",
                                    "@mozilla.org/system-message-internal;1",
                                    "nsISystemMessagesInternal");
@@ -92,9 +98,10 @@ this.WapPushManager = {
     } else if (contentType === "text/vnd.wap.sl" ||
                contentType === "application/vnd.wap.slc") {
       msg = SL.PduHelper.parse(data, contentType);
+    } else if (contentType === "text/vnd.wap.connectivity-xml" ||
+               contentType === "application/vnd.wap.connectivity-wbxml") {
+      msg = CP.PduHelper.parse(data, contentType);
     } else {
-      // TODO: Bug 869291 - Support Receiving WAP-Push-CP
-
       // Unsupported type, provide raw data.
       msg = {
         contentType: contentType,

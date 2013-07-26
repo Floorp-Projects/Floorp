@@ -5,10 +5,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ion/x86/MacroAssembler-x86.h"
-#include "ion/BaselineFrame.h"
-#include "ion/MoveEmitter.h"
-#include "ion/IonFrames.h"
+
 #include "mozilla/Casting.h"
+
+#include "ion/BaselineFrame.h"
+#include "ion/IonFrames.h"
+#include "ion/MoveEmitter.h"
 
 #include "jsscriptinlines.h"
 

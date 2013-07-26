@@ -12,12 +12,12 @@
 #include "jscntxt.h"
 #include "jscompartment.h"
 
-#include "ion/BaselineJIT.h"
 #include "ion/BaselineFrame.h"
+#include "ion/BaselineJIT.h"
 #include "ion/BaselineRegisters.h"
 #include "ion/BytecodeAnalysis.h"
-#include "ion/IonMacroAssembler.h"
 #include "ion/FixedList.h"
+#include "ion/IonMacroAssembler.h"
 
 namespace js {
 namespace ion {

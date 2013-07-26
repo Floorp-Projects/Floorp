@@ -4,15 +4,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "ion/BaselineFrame.h"
+#include "ion/BaselineFrame-inl.h"
+
 #include "ion/BaselineIC.h"
 #include "ion/BaselineJIT.h"
 #include "ion/Ion.h"
-
 #include "vm/Debugger.h"
 #include "vm/ScopeObject.h"
 
-#include "ion/BaselineFrame-inl.h"
 #include "ion/IonFrames-inl.h"
 #include "vm/Stack-inl.h"
 

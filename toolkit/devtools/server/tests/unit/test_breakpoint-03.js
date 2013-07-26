@@ -32,6 +32,7 @@ function test_skip_breakpoint()
     let location = { url: path, line: gDebuggee.line0 + 3};
     gThreadClient.setBreakpoint(location, function (aResponse, bpClient) {
       // Check that the breakpoint has properly skipped forward one line.
+      do_check_true(!!aResponse.actualLocation);
       do_check_eq(aResponse.actualLocation.url, location.url);
       do_check_eq(aResponse.actualLocation.line, location.line + 1);
       gThreadClient.addOneTimeListener("paused", function (aEvent, aPacket) {

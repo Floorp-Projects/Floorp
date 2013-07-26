@@ -949,8 +949,7 @@ int32_t AudioDeviceLinuxALSA::PlayoutDeviceName(
         memset(guid, 0, kAdmMaxGuidSize);
     }
 
-    return GetDevicesInfo(1, false, index, name, kAdmMaxDeviceNameSize,
-                          guid, kAdmMaxGuidSize);
+    return GetDevicesInfo(1, true, index, name, kAdmMaxDeviceNameSize);
 }
 
 int32_t AudioDeviceLinuxALSA::RecordingDeviceName(
@@ -973,7 +972,8 @@ int32_t AudioDeviceLinuxALSA::RecordingDeviceName(
         memset(guid, 0, kAdmMaxGuidSize);
     }
     
-    return GetDevicesInfo(1, false, index, name, kAdmMaxDeviceNameSize);
+    return GetDevicesInfo(1, false, index, name, kAdmMaxDeviceNameSize,
+                          guid, kAdmMaxGuidSize);
 }
 
 int16_t AudioDeviceLinuxALSA::RecordingDevices()

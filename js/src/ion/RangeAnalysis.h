@@ -10,9 +10,9 @@
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/MathAlgorithms.h"
 
-#include "ion/MIR.h"
 #include "ion/CompileInfo.h"
 #include "ion/IonAnalysis.h"
+#include "ion/MIR.h"
 
 namespace js {
 namespace ion {

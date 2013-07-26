@@ -8,16 +8,22 @@ function runTests() {
   yield addNewTabPageTab();
   checkGrid("0,1,2,3,4,5,6,7,8");
 
-  yield simulateDrop(1);
+  yield simulateExternalDrop(1);
   checkGrid("0,99p,1,2,3,4,5,6,7");
 
   yield blockCell(1);
   checkGrid("0,1,2,3,4,5,6,7,8");
 
-  yield simulateDrop(1);
+  yield simulateExternalDrop(1);
   checkGrid("0,99p,1,2,3,4,5,6,7");
 
+  // Simulate a restart and force the next about:newtab
+  // instance to read its data from the storage again.
   NewTabUtils.blockedLinks.resetCache();
+
+  // Update all open pages, e.g. preloaded ones.
+  NewTabUtils.allPages.update();
+
   yield addNewTabPageTab();
   checkGrid("0,99p,1,2,3,4,5,6,7");
 
