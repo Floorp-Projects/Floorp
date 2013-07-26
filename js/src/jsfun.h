@@ -16,7 +16,13 @@
 
 #include "gc/Barrier.h"
 
-namespace js { class FunctionExtended; }
+namespace js {
+class FunctionExtended;
+
+typedef JSNative           Native;
+typedef JSParallelNative   ParallelNative;
+typedef JSThreadSafeNative ThreadSafeNative;
+}
 
 class JSFunction : public JSObject
 {
