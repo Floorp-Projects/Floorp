@@ -297,7 +297,7 @@ public class TabsTray extends TwoWayView
         mCloseAnimationCount++;
         mPendingClosedTabs.add(view);
 
-        animator.setPropertyAnimationListener(new PropertyAnimator.PropertyAnimationListener() {
+        animator.addPropertyAnimationListener(new PropertyAnimator.PropertyAnimationListener() {
             @Override
             public void onPropertyAnimationStart() { }
             @Override
@@ -333,7 +333,7 @@ public class TabsTray extends TwoWayView
         final int tabId = tab.id;
         final int originalSize = (isVertical ? view.getHeight() : view.getWidth());
 
-        animator.setPropertyAnimationListener(new PropertyAnimator.PropertyAnimationListener() {
+        animator.addPropertyAnimationListener(new PropertyAnimator.PropertyAnimationListener() {
             @Override
             public void onPropertyAnimationStart() { }
             @Override
@@ -367,7 +367,7 @@ public class TabsTray extends TwoWayView
             animator.attach(view, Property.TRANSLATION_Y, 0);
 
 
-        animator.setPropertyAnimationListener(new PropertyAnimator.PropertyAnimationListener() {
+        animator.addPropertyAnimationListener(new PropertyAnimator.PropertyAnimationListener() {
             @Override
             public void onPropertyAnimationStart() { }
             @Override
