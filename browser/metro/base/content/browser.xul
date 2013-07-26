@@ -176,6 +176,7 @@
   </keyset>
 
   <stack id="stack" flex="1">
+    <observes element="bcast_urlbarState" attribute="*"/>
     <!-- Page Area -->
     <vbox id="page">
       <vbox id="tray" class="tray-toolbar" observes="bcast_windowState" >
