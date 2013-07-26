@@ -50,7 +50,7 @@
       	</getter>
       </property>
 
-      <field name="_contentTitle">null</field>
+      <field name="_contentTitle">""</field>
 
       <property name="contentTitle"
                 onget="return this._contentTitle"
