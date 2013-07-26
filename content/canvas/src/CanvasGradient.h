@@ -16,12 +16,11 @@
 namespace mozilla {
 namespace dom {
 
-class CanvasGradient : public nsISupports,
-                       public nsWrapperCache
+class CanvasGradient : public nsWrapperCache
 {
 public:
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(CanvasGradient)
+  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(CanvasGradient)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(CanvasGradient)
 
   enum Type
   {
