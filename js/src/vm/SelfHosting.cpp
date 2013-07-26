@@ -899,9 +899,7 @@ CloneValue(JSContext *cx, MutableHandleValue vp, CloneMemory &clonedObjects)
             return false;
         vp.setString(clone);
     } else {
-        if (JSString *valSrc = JS_ValueToSource(cx, vp))
-            printf("Error: Can't yet clone value: %s\n", JS_EncodeString(cx, valSrc));
-        return false;
+        MOZ_ASSUME_UNREACHABLE("Self-hosting CloneValue can't clone given value.");
     }
     return true;
 }
