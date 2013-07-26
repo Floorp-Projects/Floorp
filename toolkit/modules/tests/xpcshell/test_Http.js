@@ -24,6 +24,9 @@ const kPutUrl = kBaseUrl + kPutPath;
 const kPutDataSent = [["P", "NP"]];
 const kPutDataReceived = "P=NP";
 
+const kGetPath = "/get";
+const kGetUrl = kBaseUrl + kGetPath;
+
 function successResult(aRequest, aResponse) {
   aResponse.setStatusLine(null, 200, "OK");
   aResponse.setHeader("Content-Type", "application/json");
@@ -121,6 +124,24 @@ add_test(function test_PutData() {
   httpRequest(kPutUrl, options);
 });
 
+add_test(function test_GetData() {
+  do_test_pending();
+  let options = {
+    onLoad: function(aResponse) {
+      do_check_eq(aResponse, "Success!");
+      do_test_finished();
+      run_next_test();
+    },
+    onError: function(e) {
+      do_check_true(false);
+      do_test_finished();
+      run_next_test();
+    },
+    postData: null
+  }
+  httpRequest(kGetUrl, options);
+});
+
 function run_test() {
   // Set up a mock HTTP server to serve a success page.
   server = new HttpServer();
@@ -129,6 +150,7 @@ function run_test() {
                              getDataChecker("POST", kPostDataReceived));
   server.registerPathHandler(kPutPath,
                              getDataChecker("PUT", kPutDataReceived));
+  server.registerPathHandler(kGetPath, getDataChecker("GET", ""));
   server.start(kDefaultServerPort);
 
   run_next_test();
