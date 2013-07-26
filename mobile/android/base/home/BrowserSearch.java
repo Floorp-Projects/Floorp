@@ -239,6 +239,22 @@ public class BrowserSearch extends HomeFragment
             }
         });
 
+        final ListSelectionListener listener = new ListSelectionListener();
+        mList.setOnItemSelectedListener(listener);
+        mList.setOnFocusChangeListener(listener);
+
+        mList.setOnKeyListener(new View.OnKeyListener() {
+            @Override
+            public boolean onKey(View v, int keyCode, android.view.KeyEvent event) {
+                final View selected = mList.getSelectedView();
+
+                if (selected instanceof SearchEngineRow) {
+                    return selected.onKeyDown(keyCode, event);
+                }
+                return false;
+            }
+        });
+
         registerForContextMenu(mList);
         registerEventListener("SearchEngines:Data");
 
@@ -434,6 +450,18 @@ public class BrowserSearch extends HomeFragment
 
         yesButton.setOnClickListener(listener);
         noButton.setOnClickListener(listener);
+
+        // If the prompt gains focus, automatically pass focus to the
+        // yes button in the prompt.
+        final View prompt = mSuggestionsOptInPrompt.findViewById(R.id.prompt);
+        prompt.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View v, boolean hasFocus) {
+                if (hasFocus) {
+                    yesButton.requestFocus();
+                }
+            }
+        });
     }
 
     private void setSuggestionsEnabled(final boolean enabled) {
@@ -632,6 +660,12 @@ public class BrowserSearch extends HomeFragment
 
         @Override
         public boolean isEnabled(int position) {
+            // If we're using a gamepad or keyboard, allow the row to be
+            // focused so it can pass the focus to its child suggestion views.
+            if (!mList.isInTouchMode()) {
+                return true;
+            }
+
             // If the suggestion row only contains one item (the user-entered
             // query), allow the entire row to be clickable; clicking the row
             // has the same effect as clicking the single suggestion. If the
@@ -799,6 +833,48 @@ public class BrowserSearch extends HomeFragment
         @Override
         public void onLoaderReset(Loader<ArrayList<String>> loader) {
             setSuggestions(new ArrayList<String>());
+        }
+    }
+
+    private static class ListSelectionListener implements View.OnFocusChangeListener,
+                                                          AdapterView.OnItemSelectedListener {
+        private SearchEngineRow mSelectedEngineRow;
+
+        @Override
+        public void onFocusChange(View v, boolean hasFocus) {
+            if (hasFocus) {
+                View selectedRow = ((ListView) v).getSelectedView();
+                if (selectedRow != null) {
+                    selectRow(selectedRow);
+                }
+            } else {
+                deselectRow();
+            }
+        }
+
+        @Override
+        public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+            deselectRow();
+            selectRow(view);
+        }
+
+        @Override
+        public void onNothingSelected(AdapterView<?> parent) {
+            deselectRow();
+        }
+
+        private void selectRow(View row) {
+            if (row instanceof SearchEngineRow) {
+                mSelectedEngineRow = (SearchEngineRow) row;
+                mSelectedEngineRow.onSelected();
+            }
+        }
+
+        private void deselectRow() {
+            if (mSelectedEngineRow != null) {
+                mSelectedEngineRow.onDeselected();
+                mSelectedEngineRow = null;
+            }
         }
     }
 }

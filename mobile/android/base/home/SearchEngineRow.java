@@ -16,6 +16,7 @@ import org.mozilla.gecko.widget.FaviconView;
 
 import android.content.Context;
 import android.util.AttributeSet;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.animation.AlphaAnimation;
@@ -51,6 +52,9 @@ class SearchEngineRow extends AnimatedHeightLayout {
 
     // On edit suggestion listener
     private OnEditSuggestionListener mEditSuggestionListener;
+
+    // Selected suggestion view
+    private int mSelectedView = 0;
 
     public SearchEngineRow(Context context) {
         this(context, null);
@@ -179,5 +183,64 @@ class SearchEngineRow extends AnimatedHeightLayout {
         for (int i = suggestionCount + 1; i < recycledSuggestionCount; i++) {
             mSuggestionView.getChildAt(i).setVisibility(View.GONE);
         }
+
+        // Make sure mSelectedView is still valid
+        if (mSelectedView >= mSuggestionView.getChildCount()) {
+            mSelectedView = mSuggestionView.getChildCount() - 1;
+        }
+    }
+
+    @Override
+    public boolean onKeyDown(int keyCode, android.view.KeyEvent event) {
+        final View suggestion = mSuggestionView.getChildAt(mSelectedView);
+
+        if (event.getAction() != android.view.KeyEvent.ACTION_DOWN) {
+            return false;
+        }
+
+        switch (event.getKeyCode()) {
+        case KeyEvent.KEYCODE_DPAD_RIGHT:
+            final View nextSuggestion = mSuggestionView.getChildAt(mSelectedView + 1);
+            if (nextSuggestion != null) {
+                changeSelectedSuggestion(suggestion, nextSuggestion);
+                mSelectedView++;
+                return true;
+            }
+            break;
+
+        case KeyEvent.KEYCODE_DPAD_LEFT:
+            final View prevSuggestion = mSuggestionView.getChildAt(mSelectedView - 1);
+            if (prevSuggestion != null) {
+                changeSelectedSuggestion(suggestion, prevSuggestion);
+                mSelectedView--;
+                return true;
+            }
+            break;
+
+        case KeyEvent.KEYCODE_BUTTON_A:
+            // TODO: handle long pressing for editing suggestions
+            return suggestion.performClick();
+        }
+
+        return false;
+    }
+
+    private void changeSelectedSuggestion(View oldSuggestion, View newSuggestion) {
+        oldSuggestion.setDuplicateParentStateEnabled(false);
+        newSuggestion.setDuplicateParentStateEnabled(true);
+        oldSuggestion.refreshDrawableState();
+        newSuggestion.refreshDrawableState();
+    }
+
+    public void onSelected() {
+        mSelectedView = 0;
+        mUserEnteredView.setDuplicateParentStateEnabled(true);
+        mUserEnteredView.refreshDrawableState();
+    }
+
+    public void onDeselected() {
+        final View suggestion = mSuggestionView.getChildAt(mSelectedView);
+        suggestion.setDuplicateParentStateEnabled(false);
+        suggestion.refreshDrawableState();
     }
 }
