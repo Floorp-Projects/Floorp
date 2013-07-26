@@ -24,18 +24,6 @@ class JSAtom;
 namespace js {
 
 class PropertyName;
-
-enum RegExpFlag
-{
-    IgnoreCaseFlag  = 0x01,
-    GlobalFlag      = 0x02,
-    MultilineFlag   = 0x04,
-    StickyFlag      = 0x08,
-
-    NoFlags         = 0x00,
-    AllFlags        = 0x0f
-};
-
 class Shape;
 
 /*
