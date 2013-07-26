@@ -1004,12 +1004,6 @@ public:
   static bool ForceActiveLayers();
 
   /**
-   * Returns the maximum number of layers that should be created
-   * or -1 for no limit. Requires setting the pref layers.max-acitve.
-   */
-  static int32_t MaxActiveLayers();
-
-  /**
    * @return LAYER_NONE if BuildLayer will return null. In this case
    * there is no layer for the item, and Paint should be called instead
    * to paint the content using Thebes.
