@@ -17,6 +17,8 @@
 #include "js/HashTable.h"
 #include "js/Vector.h"
 
+class JSAtom;
+
 namespace js {
 
 class LifoAlloc;
