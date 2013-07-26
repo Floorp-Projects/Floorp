@@ -7,6 +7,7 @@ package org.mozilla.gecko.widget;
 import org.mozilla.gecko.R;
 
 import android.content.Context;
+import android.content.res.TypedArray;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -15,6 +16,7 @@ import android.widget.TabWidget;
 
 public class IconTabWidget extends TabWidget {
     private OnTabChangedListener mListener;
+    private final int mButtonLayoutId;
 
     public static interface OnTabChangedListener {
         public void onTabChanged(int tabIndex);
@@ -22,10 +24,18 @@ public class IconTabWidget extends TabWidget {
 
     public IconTabWidget(Context context, AttributeSet attrs) {
         super(context, attrs);
+
+        TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.IconTabWidget);
+        mButtonLayoutId = a.getResourceId(R.styleable.IconTabWidget_android_layout, 0);
+        a.recycle();
+
+        if (mButtonLayoutId == 0) {
+            throw new RuntimeException("You must supply layout attribute");
+        }
     }
 
     public ImageButton addTab(int resId) {
-        ImageButton button = (ImageButton) LayoutInflater.from(getContext()).inflate(R.layout.tabs_panel_indicator, null);
+        ImageButton button = (ImageButton) LayoutInflater.from(getContext()).inflate(mButtonLayoutId, null);
         button.setImageResource(resId);
 
         addView(button);

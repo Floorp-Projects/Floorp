@@ -229,6 +229,8 @@ FENNEC_JAVA_FILES = \
   home/FadedTextView.java \
   home/FaviconsLoader.java \
   home/LastTabsPage.java \
+  home/MostRecentPage.java \
+  home/MostVisitedPage.java \
   home/PinBookmarkDialog.java \
   home/ReadingListPage.java \
   home/SearchEngine.java \
@@ -240,7 +242,6 @@ FENNEC_JAVA_FILES = \
   home/TopBookmarksAdapter.java \
   home/TopBookmarksView.java \
   home/TwoLinePageRow.java \
-  home/VisitedPage.java \
   menu/GeckoMenu.java \
   menu/GeckoMenuInflater.java \
   menu/GeckoMenuItem.java \
@@ -465,11 +466,13 @@ RES_LAYOUT = \
   res/layout/home_item_row.xml \
   res/layout/home_header_row.xml \
   res/layout/home_history_page.xml \
+  res/layout/home_history_tabs_indicator.xml \
   res/layout/home_last_tabs_page.xml \
   res/layout/home_list_with_title.xml \
+  res/layout/home_most_recent_page.xml \
+  res/layout/home_most_visited_page.xml \
   res/layout/home_search_item_row.xml \
   res/layout/home_suggestion_prompt.xml \
-  res/layout/home_visited_page.xml \
   res/layout/web_app.xml \
   res/layout/launch_app_list.xml \
   res/layout/launch_app_listitem.xml \
@@ -632,6 +635,9 @@ RES_DRAWABLE_MDPI = \
   res/drawable-mdpi/ic_url_bar_search.png \
   res/drawable-mdpi/ic_url_bar_star.png \
   res/drawable-mdpi/ic_url_bar_tab.png \
+  res/drawable-mdpi/icon_last_tabs.png \
+  res/drawable-mdpi/icon_most_recent.png \
+  res/drawable-mdpi/icon_most_visited.png \
   res/drawable-mdpi/icon_pageaction.png \
   res/drawable-mdpi/progress_spinner_1.png \
   res/drawable-mdpi/progress_spinner_2.png \
@@ -704,6 +710,7 @@ RES_DRAWABLE_MDPI = \
   res/drawable-mdpi/shadow.png \
   res/drawable-mdpi/start.png \
   res/drawable-mdpi/marketplace.png \
+  res/drawable-mdpi/history_tabs_indicator_selected.9.png \
   res/drawable-mdpi/warning.png \
   res/drawable-mdpi/warning_doorhanger.png \
   $(NULL)
@@ -744,6 +751,9 @@ RES_DRAWABLE_HDPI = \
   res/drawable-hdpi/ic_url_bar_search.png \
   res/drawable-hdpi/ic_url_bar_star.png \
   res/drawable-hdpi/ic_url_bar_tab.png \
+  res/drawable-hdpi/icon_last_tabs.png \
+  res/drawable-hdpi/icon_most_recent.png \
+  res/drawable-hdpi/icon_most_visited.png \
   res/drawable-hdpi/icon_pageaction.png \
   res/drawable-hdpi/tab_indicator_divider.9.png \
   res/drawable-hdpi/tab_indicator_selected.9.png \
@@ -794,6 +804,7 @@ RES_DRAWABLE_HDPI = \
   res/drawable-hdpi/handle_end.png \
   res/drawable-hdpi/handle_middle.png \
   res/drawable-hdpi/handle_start.png \
+  res/drawable-hdpi/history_tabs_indicator_selected.9.png \
   res/drawable-hdpi/warning.png \
   res/drawable-hdpi/warning_doorhanger.png \
   $(NULL)
@@ -832,6 +843,9 @@ RES_DRAWABLE_XHDPI = \
   res/drawable-xhdpi/ic_url_bar_search.png \
   res/drawable-xhdpi/ic_url_bar_star.png \
   res/drawable-xhdpi/ic_url_bar_tab.png \
+  res/drawable-xhdpi/icon_last_tabs.png \
+  res/drawable-xhdpi/icon_most_recent.png \
+  res/drawable-xhdpi/icon_most_visited.png \
   res/drawable-xhdpi/icon_pageaction.png \
   res/drawable-xhdpi/spinner_default.9.png \
   res/drawable-xhdpi/spinner_focused.9.png \
@@ -877,6 +891,7 @@ RES_DRAWABLE_XHDPI = \
   res/drawable-xhdpi/handle_end.png \
   res/drawable-xhdpi/handle_middle.png \
   res/drawable-xhdpi/handle_start.png \
+  res/drawable-xhdpi/history_tabs_indicator_selected.9.png \
   res/drawable-xhdpi/warning.png \
   res/drawable-xhdpi/warning_doorhanger.png \
   $(NULL)
@@ -1051,6 +1066,8 @@ RES_DRAWABLE += \
   res/drawable/favicon_bg.xml                         \
   res/drawable/handle_end_level.xml                   \
   res/drawable/handle_start_level.xml                 \
+  res/drawable/home_history_tabs_indicator.xml        \
+  res/drawable/home_page_title_background.xml         \
   res/drawable/ic_menu_back.xml                       \
   res/drawable/ic_menu_desktop_mode_off.xml           \
   res/drawable/ic_menu_desktop_mode_on.xml            \
