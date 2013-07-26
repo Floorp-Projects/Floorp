@@ -93,6 +93,10 @@ static const char *sExtensionNames[] = {
     "GL_EXT_draw_buffers",
     "GL_EXT_gpu_shader4",
     "GL_EXT_blend_minmax",
+    "GL_ARB_draw_instanced",
+    "GL_EXT_draw_instanced",
+    "GL_NV_draw_instanced",
+    "GL_ANGLE_instanced_array",
     nullptr
 };
 
@@ -598,6 +602,41 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
                 mSymbols.fGenVertexArrays = nullptr;
                 mSymbols.fBindVertexArray = nullptr;
                 mSymbols.fDeleteVertexArrays = nullptr;
+            }
+        }
+
+        if (IsExtensionSupported(XXX_draw_instanced)) {
+            SymLoadStruct drawInstancedSymbols[] = {
+                { (PRFuncPtr*) &mSymbols.fDrawArraysInstanced,
+                  { "DrawArraysInstanced",
+                    "DrawArraysInstancedARB",
+                    "DrawArraysInstancedEXT",
+                    "DrawArraysInstancedNV",
+                    "DrawArraysInstancedANGLE",
+                    nullptr
+                  }
+                },
+                { (PRFuncPtr*) &mSymbols.fDrawElementsInstanced,
+                  { "DrawElementsInstanced",
+                    "DrawElementsInstancedARB",
+                    "DrawElementsInstancedEXT",
+                    "DrawElementsInstancedNV",
+                    "DrawElementsInstancedANGLE",
+                    nullptr
+                  }
+                },
+                { nullptr, { nullptr } },
+            };
+
+            if (!LoadSymbols(drawInstancedSymbols, trygl, prefix)) {
+                NS_ERROR("GL supports instanced draws without supplying its functions.");
+
+                MarkExtensionUnsupported(ARB_draw_instanced);
+                MarkExtensionUnsupported(EXT_draw_instanced);
+                MarkExtensionUnsupported(NV_draw_instanced);
+                MarkExtensionUnsupported(ANGLE_instanced_array);
+                mSymbols.fDrawArraysInstanced = nullptr;
+                mSymbols.fDrawElementsInstanced = nullptr;
             }
         }
 
