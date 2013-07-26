@@ -219,7 +219,7 @@ AudioManager::Observe(nsISupports* aSubject,
         AudioSystem::setParameters(0, cmd);
       }
     }
-  } 
+  }
   // To process the volume control on each audio channel according to
   // change of settings
   else if (!strcmp(aTopic, "mozsettings-changed")) {
@@ -233,7 +233,7 @@ AudioManager::Observe(nsISupports* aSubject,
 
     JS::Rooted<JSObject*> obj(cx, &val.toObject());
     JS::Rooted<JS::Value> key(cx);
-    if (!JS_GetProperty(cx, obj, "key", key.address()) ||
+    if (!JS_GetProperty(cx, obj, "key", &key) ||
         !key.isString()) {
       return NS_OK;
     }
@@ -248,7 +248,7 @@ AudioManager::Observe(nsISupports* aSubject,
     }
 
     JS::Rooted<JS::Value> value(cx);
-    if (!JS_GetProperty(cx, obj, "value", value.address()) || !value.isInt32()) {
+    if (!JS_GetProperty(cx, obj, "value", &value) || !value.isInt32()) {
       return NS_OK;
     }
 

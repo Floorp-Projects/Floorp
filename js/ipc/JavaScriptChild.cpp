@@ -372,7 +372,7 @@ JavaScriptChild::AnswerGet(const ObjectId &objId, const ObjectId &receiverId, co
     if (!convertGeckoStringToId(cx, id, &internedId))
         return fail(cx, rs);
 
-    JS::Value val;
+    JS::Rooted<JS::Value> val(cx);
     if (!JS_ForwardGetPropertyTo(cx, obj, internedId, receiver, &val))
         return fail(cx, rs);
 
@@ -516,7 +516,7 @@ JavaScriptChild::AnswerCall(const ObjectId &objId, const nsTArray<JSParam> &argv
     for (size_t i = 0; i < outobjects.length(); i++) {
         RootedObject obj(cx, &outobjects[i].toObject());
 
-        jsval v;
+        RootedValue v(cx);
         JSBool found;
         if (JS_HasProperty(cx, obj, "value", &found)) {
             if (!JS_GetProperty(cx, obj, "value", &v))

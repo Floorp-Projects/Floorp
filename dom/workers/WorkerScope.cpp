@@ -266,9 +266,10 @@ private:
     JS::Rooted<JSObject*> event(aCx, &JS_ARGV(aCx, aVp)[0].toObject());
 
     jsval argv[3] = { JSVAL_VOID, JSVAL_VOID, JSVAL_VOID };
-    if (!JS_GetProperty(aCx, event, "message", &argv[0]) ||
-        !JS_GetProperty(aCx, event, "filename", &argv[1]) ||
-        !JS_GetProperty(aCx, event, "lineno", &argv[2])) {
+    JS::AutoArrayRooter rootedArgv(aCx, ArrayLength(argv), argv);
+    if (!JS_GetProperty(aCx, event, "message", rootedArgv.handleAt(0)) ||
+        !JS_GetProperty(aCx, event, "filename", rootedArgv.handleAt(1)) ||
+        !JS_GetProperty(aCx, event, "lineno", rootedArgv.handleAt(2))) {
       return false;
     }
 
