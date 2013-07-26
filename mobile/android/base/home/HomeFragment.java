@@ -54,12 +54,6 @@ abstract class HomeFragment extends Fragment {
     // Cursor loader ID for favicons query
     private static final int LOADER_ID_FAVICONS = 100;
 
-    protected void showSubPage(Fragment subPage) {
-        getActivity().getSupportFragmentManager().beginTransaction()
-                .addToBackStack(null).replace(R.id.home_pager_container, subPage, HomePager.SUBPAGE_TAG)
-                .commitAllowingStateLoss();
-    }
-
     @Override
     public void onCreateContextMenu(ContextMenu menu, View view, ContextMenuInfo menuInfo) {
         if (menuInfo == null || !(menuInfo instanceof HomeContextMenuInfo)) {
