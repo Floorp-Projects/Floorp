@@ -257,7 +257,7 @@ AtomizeAndTakeOwnership(JSContext *cx, jschar *tbchars, size_t length, InternBeh
         return atom;
     }
 
-    AutoCompartment ac(cx, cx->runtime()->atomsCompartment);
+    AutoEnterAtomsCompartment ac(cx);
 
     JSFlatString *flat = js_NewString<CanGC>(cx, tbchars, length);
     if (!flat) {
@@ -301,7 +301,7 @@ AtomizeAndCopyChars(JSContext *cx, const jschar *tbchars, size_t length, InternB
         return atom;
     }
 
-    AutoCompartment ac(cx, cx->runtime()->atomsCompartment);
+    AutoEnterAtomsCompartment ac(cx);
 
     JSFlatString *flat = js_NewStringCopyN<allowGC>(cx, tbchars, length);
     if (!flat)
