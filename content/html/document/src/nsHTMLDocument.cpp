@@ -169,20 +169,19 @@ RemoveFromAgentSheets(nsCOMArray<nsIStyleSheet> &aAgentSheets, const nsAString& 
 nsresult
 NS_NewHTMLDocument(nsIDocument** aInstancePtrResult, bool aLoadedAsData)
 {
-  nsHTMLDocument* doc = new nsHTMLDocument();
-  NS_ENSURE_TRUE(doc, NS_ERROR_OUT_OF_MEMORY);
+  nsRefPtr<nsHTMLDocument> doc = new nsHTMLDocument();
 
-  NS_ADDREF(doc);
   nsresult rv = doc->Init();
 
   if (NS_FAILED(rv)) {
-    NS_RELEASE(doc);
+    *aInstancePtrResult = nullptr;
+    return rv;
   }
 
-  *aInstancePtrResult = doc;
   doc->SetLoadedAsData(aLoadedAsData);
+  doc.forget(aInstancePtrResult);
 
-  return rv;
+  return NS_OK;
 }
 
   // NOTE! nsDocument::operator new() zeroes out all members, so don't
