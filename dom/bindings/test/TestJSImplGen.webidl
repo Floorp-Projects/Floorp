@@ -372,6 +372,14 @@ interface TestJSImplInterface {
   void passUnionWithObject((object or long) arg);
   //void passUnionWithDict((Dict or long) arg);
 
+  //(CanvasPattern or CanvasGradient) receiveUnion();
+  //(CanvasPattern? or CanvasGradient) receiveUnionContainingNull();
+  //(CanvasPattern or CanvasGradient)? receiveNullableUnion();
+
+  //attribute (CanvasPattern or CanvasGradient) writableUnion;
+  //attribute (CanvasPattern? or CanvasGradient) writableUnionContainingNull;
+  //attribute (CanvasPattern or CanvasGradient)? writableNullableUnion;
+
   // Date types
   void passDate(Date arg);
   void passNullableDate(Date? arg);
@@ -464,6 +472,7 @@ interface TestJSImplInterface {
                             optional TestInterface? arg2 = null,
                             optional Dict arg3, optional double arg4 = 5.0,
                             optional float arg5);
+  jsonifier;
 
   // If you add things here, add them to TestCodeGen as well
 };

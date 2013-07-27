@@ -1,0 +1,20 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+/*
+ * Holds localization message tag and message category
+ * for security related console messages.
+ */
+[uuid(FE9FC9B6-DDE2-11E2-A8F1-0A326188709B)]
+interface nsISecurityConsoleMessage : nsISupports
+{
+  attribute AString tag;
+  attribute AString category;
+};
+
+%{ C++
+#define NS_SECURITY_CONSOLE_MESSAGE_CONTRACTID "@mozilla.org/securityconsole/message;1"
+%}

@@ -27,4 +27,4 @@ random-if(!haveTestPlugin) == plugin-transform-1.html plugin-transform-1-ref.htm
 fails-if(!haveTestPlugin) == plugin-transform-2.html plugin-transform-2-ref.html
 skip-if(!haveTestPlugin) == shrink-1.html shrink-1-ref.html
 skip-if(!haveTestPlugin) == update-1.html update-1-ref.html
-fails-if(!haveTestPlugin) == windowless-layers.html windowless-layers-ref.html
+skip-if(!haveTestPlugin) == windowless-layers.html windowless-layers-ref.html

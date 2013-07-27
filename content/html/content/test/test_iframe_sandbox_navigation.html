@@ -43,7 +43,7 @@ windowsToClose.push(window.open("about:blank", "window_to_navigate2"));
 
 var attemptedTests = 0;
 var passedTests = 0;
-var totalTestsToPass = 8;
+var totalTestsToPass = 7;
 var totalTestsToAttempt = 13;
 
 function ok_wrapper(result, desc, addToAttempted = true) {
@@ -120,7 +120,7 @@ function doTest() {
   // (done by file_iframe_sandbox_d_if6.html which simulates a link click and navigates
   // to file_iframe_sandbox_d_if7.html which attempts to call back into its parent).
 
-  // passes if good, fails if bad
+  // fails if bad
   // 6) An iframe (if_8) has sandbox="allow-same-origin allow-scripts", the sandboxed document
   // (file_iframe_sandbox_d_if_8.html) that it contains accesses its parent (this file) and removes
   // 'allow-same-origin' and then triggers a reload.
@@ -180,7 +180,7 @@ window.modified_if_8 = false;
 
 function reload_if_8() {
   var if_8 = document.getElementById('if_8');
-  if_8.src = 'file_iframe_sandbox_d_if8.html?onreload';
+  if_8.src = 'file_iframe_sandbox_d_if8.html';
 }
 
 function modify_if_8() {
@@ -188,7 +188,7 @@ function modify_if_8() {
   // that's a failed test (allow-same-origin was removed
   // the first time).
   if (window.modified_if_8) {
-    ok_wrapper(false, "an sandboxed iframe from which 'allow-same-origin' was removed should not be able to access its parent");
+    ok_wrapper(false, "a sandboxed iframe from which 'allow-same-origin' was removed should not be able to access its parent");
 
     // need to return here since we end up in an infinite loop otherwise
     return;
@@ -199,6 +199,7 @@ function modify_if_8() {
 
   if_8.sandbox = 'allow-scripts';
   sendMouseEvent({type:'click'}, 'a_button');
+  testAttempted();
 }
 
 window.modified_if_9 = false;

@@ -26,4 +26,4 @@ LOCAL_INCLUDES = \
 
 include $(topsrcdir)/config/rules.mk
 
-CXXFLAGS += $(TK_CFLAGS)
+CXXFLAGS += $(TK_CFLAGS) -DGOOGLE_PROTOBUF_NO_RTTI

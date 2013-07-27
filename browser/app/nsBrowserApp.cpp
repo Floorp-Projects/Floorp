@@ -241,6 +241,9 @@ static int do_main(int argc, char* argv[], nsIFile *xreDirectory)
       for (int idx = 1; idx < argc; idx++) {
         if (IsArg(argv[idx], "metrodesktop")) {
           metroOnDesktop = true;
+          // Disable crash reporting when running in metrodesktop mode.
+          char crashSwitch[] = "MOZ_CRASHREPORTER_DISABLE=1";
+          putenv(crashSwitch);
           break;
         } 
       }

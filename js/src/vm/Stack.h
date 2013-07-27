@@ -1022,6 +1022,14 @@ class FrameRegs
         pc = script->code + script->length - JSOP_STOP_LENGTH;
         JS_ASSERT(*pc == JSOP_STOP);
     }
+
+    MutableHandleValue stackHandleAt(int i) {
+        return MutableHandleValue::fromMarkedLocation(&sp[i]);
+    }
+
+    HandleValue stackHandleAt(int i) const {
+        return HandleValue::fromMarkedLocation(&sp[i]);
+    }
 };
 
 /*****************************************************************************/

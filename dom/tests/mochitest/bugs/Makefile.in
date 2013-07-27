@@ -146,6 +146,7 @@ MOCHITEST_FILES	= \
 		test_bug862540.html \
 		test_bug857555.html \
 		test_bug876098.html \
+		test_toJSON.html \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

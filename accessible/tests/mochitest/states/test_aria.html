@@ -198,6 +198,14 @@
       testStates("aria_progressbar_valuenow", 0, 0, STATE_MIXED);
       testStates("aria_progressbar_valuetext", 0, 0, STATE_MIXED);
 
+      testStates("aria_listbox", STATE_FOCUSABLE);
+      testStates("aria_grid", STATE_FOCUSABLE);
+      testStates("aria_tree", STATE_FOCUSABLE);
+      testStates("aria_treegrid", STATE_FOCUSABLE);
+      testStates("aria_listbox_disabled", 0, 0, STATE_FOCUSABLE);
+      testStates("aria_grid_disabled", 0, 0, STATE_FOCUSABLE);
+      testStates("aria_tree_disabled", 0, 0, STATE_FOCUSABLE);
+      testStates("aria_treegrid_disabled", 0, 0, STATE_FOCUSABLE);
       SimpleTest.finish();
     }
 
@@ -220,6 +228,11 @@
     Mozilla Bug 429285
   </a>
   <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=457226"
+     title="Mochitests for ARIA states">
+    Mozilla Bug 457226
+  </a>
+  <a target="_blank"
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=499653"
      title="Unify ARIA state attributes mapping rules">
     Mozilla Bug 499653
@@ -235,19 +248,19 @@
     Mozilla Bug 681674
   </a>
   <a target="_blank"
-     href="https://bugzilla.mozilla.org/show_bug.cgi?id=699017"
-     title="File input control should be propogate states to descendants">
-    Mozilla Bug 699017
-  </a>
-  <a target="_blank"
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=689847"
      title="Expose active state on current item of selectable widgets">
     Mozilla Bug 689847
   </a>
   <a target="_blank"
-     href="https://bugzilla.mozilla.org/show_bug.cgi?id=457226"
-     title="Mochitests for ARIA states">
-    Mozilla Bug 457226
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=699017"
+     title="File input control should be propogate states to descendants">
+    Mozilla Bug 699017
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=690199"
+     title="ARIA select widget should expose focusable state regardless the way they manage its children">
+    Mozilla Bug 690199
   </a>
   <a target="_blank"
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=740851"
@@ -255,15 +268,16 @@
     Mozilla Bug 740851
   </a>
   <a target="_blank"
-     href="https://bugzilla.mozilla.org/show_bug.cgi?id=762876
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=762876"
      title="fix default horizontal / vertical state of role=scrollbar and ensure only one of horizontal / vertical states is exposed">
     Mozilla Bug 762876
   </a>
   <a target="_blank"
-     href="https://bugzilla.mozilla.org/show_bug.cgi?id=835121
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=835121"
      title="ARIA grid should be editable by default">
     Mozilla Bug 835121
   </a>
+
   <p id="display"></p>
   <div id="content" style="display: none"></div>
   <pre id="test">
@@ -413,5 +427,39 @@
   <div id="aria_progressbar" role="progressbar"></div>
   <div id="aria_progressbar_valuenow" role="progressbar" aria-valuenow="1"></div>
   <div id="aria_progressbar_valuetext" role="progressbar" aria-valuetext="value"></div>
+
+  <!-- ARIA select widget should expose focusable state regardless the way they manage its children -->
+  <div id="aria_listbox" role="listbox">
+    <div role="option" tabindex="0">A</div>
+    <div role="option" tabindex="0">a</div>
+  </div>
+  <div id="aria_grid" role="grid">
+    <div role="row"><div role="gridcell" tabindex="0">B</div></div></div>
+    <div role="row"><div role="gridcell" tabindex="0">b</div></div></div>
+  <div id="aria_tree" role="tree">
+    <div role="treeitem" tabindex="0">C</div>
+    <div role="treeitem" tabindex="0">c</div>
+  </div>
+  <div id="aria_treegrid" role="treegrid">
+    <div role="row"><div role="gridcell" tabindex="0">D</div></div>
+    <div role="row"><div role="gridcell" tabindex="0">d</div></div>
+  </div>
+  <div id="aria_listbox_disabled" role="listbox" aria-disabled="true">
+    <div role="option">E</div>
+    <div role="option">e</div>
+  </div>
+  <div id="aria_grid_disabled" role="grid" aria-disabled="true">
+    <div role="row"><div role="gridcell">F</div></div>
+    <div role="row"><div role="gridcell">f</div></div>
+  </div>
+  <div id="aria_tree_disabled" role="tree" aria-disabled="true">
+    <div role="treeitem">G</div>
+    <div role="treeitem">g</div>
+  </div>
+  <div id="aria_treegrid_disabled" role="treegrid" aria-disabled="true">
+    <div role="row"><div role="gridcell">H</div></div>
+    <div role="row"><div role="gridcell">h</div></div>
+  </div>
+
 </body>
 </html>

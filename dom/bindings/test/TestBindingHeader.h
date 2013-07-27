@@ -507,6 +507,16 @@ public:
   //void PassUnionWithCallback(JSContext*, const TestCallbackOrLong&);
   void PassUnionWithObject(JSContext*, const ObjectOrLong&);
 
+  void ReceiveUnion(const CanvasPatternOrCanvasGradientReturnValue&);
+  void ReceiveUnionContainingNull(const CanvasPatternOrNullOrCanvasGradientReturnValue&);
+  void ReceiveNullableUnion(const Nullable<CanvasPatternOrCanvasGradientReturnValue>&);
+  void GetWritableUnion(const CanvasPatternOrCanvasGradientReturnValue&);
+  void SetWritableUnion(const CanvasPatternOrCanvasGradient&);
+  void GetWritableUnionContainingNull(const CanvasPatternOrNullOrCanvasGradientReturnValue&);
+  void SetWritableUnionContainingNull(const CanvasPatternOrNullOrCanvasGradient&);
+  void GetWritableNullableUnion(const Nullable<CanvasPatternOrCanvasGradientReturnValue>&);
+  void SetWritableNullableUnion(const Nullable<CanvasPatternOrCanvasGradient>&);
+
   // Date types
   void PassDate(Date);
   void PassNullableDate(const Nullable<Date>&);

@@ -1519,6 +1519,16 @@ public:
         }
         return NS_OK;
     }
+    NS_IMETHOD NoteWeakMapEntry(uint64_t aMap, uint64_t aKey,
+                                uint64_t aKeyDelegate, uint64_t aValue)
+    {
+        if (!mDisableLog) {
+            fprintf(mStream, "WeakMapEntry map=%p key=%p keyDelegate=%p value=%p\n",
+                    (void*)aMap, (void*)aKey, (void*)aKeyDelegate, (void*)aValue);
+        }
+        // We don't support after-processing for weak map entries.
+        return NS_OK;
+    }
     NS_IMETHOD BeginResults()
     {
         if (!mDisableLog) {
@@ -2070,6 +2080,11 @@ GCGraphBuilder::NoteWeakMapping(void *map, void *key, void *kdelegate, void *val
     mapping->mKey = key ? AddWeakMapNode(key) : nullptr;
     mapping->mKeyDelegate = kdelegate ? AddWeakMapNode(kdelegate) : mapping->mKey;
     mapping->mVal = val ? AddWeakMapNode(val) : nullptr;
+
+    if (mListener) {
+        mListener->NoteWeakMapEntry((uint64_t)map, (uint64_t)key,
+                                    (uint64_t)kdelegate, (uint64_t)val);
+    }
 }
 
 static bool

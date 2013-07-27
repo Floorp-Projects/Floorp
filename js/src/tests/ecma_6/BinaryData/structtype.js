@@ -51,6 +51,11 @@ function runTests() {
     assertEq(civic.color.g, 255);
     assertEq(civic.color.b, 255);
 
+    var keys = Object.keys(civic).sort();
+    assertEq(keys.length, 2);
+    assertEq(keys.indexOf("color"), 0);
+    assertEq(keys.indexOf("weight"), 1);
+
     civic.color = {r: 255, g: 0, b: 0};
     assertEq(civic.color.r, 255);
     assertEq(civic.color.g, 0);
