@@ -125,24 +125,29 @@ AutoCxPusher::AutoCxPusher(JSContext* cx, bool allowNull) : mScriptIsRunning(fal
     MOZ_CRASH();
   }
 
-  // Enter a request for the duration that the cx is on the stack if non-null.
-  // NB: We call UnmarkGrayContext so that this can obsolete the need for the
-  // old XPCAutoRequest as well.
-  if (cx) {
-    mAutoRequest.construct(cx);
-    xpc_UnmarkGrayContext(cx);
-  }
-
 #ifdef DEBUG
   mPushedContext = cx;
   mCompartmentDepthOnEntry = cx ? js::GetEnterCompartmentDepth(cx) : 0;
 #endif
+
+  // Enter a request and a compartment for the duration that the cx is on the
+  // stack if non-null.
+  //
+  // NB: We call UnmarkGrayContext so that this can obsolete the need for the
+  // old XPCAutoRequest as well.
+  if (cx) {
+    mAutoRequest.construct(cx);
+    if (js::GetDefaultGlobalForContext(cx))
+      mAutoCompartment.construct(cx, js::GetDefaultGlobalForContext(cx));
+    xpc_UnmarkGrayContext(cx);
+  }
 }
 
 NS_EXPORT
 AutoCxPusher::~AutoCxPusher()
 {
-  // Leave the request before popping.
+  // Leave the compartment and request before popping.
+  mAutoCompartment.destroyIfConstructed();
   mAutoRequest.destroyIfConstructed();
 
   // When we push a context, we may save the frame chain and pretend like we
