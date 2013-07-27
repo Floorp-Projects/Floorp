@@ -890,6 +890,7 @@ function SourceScripts() {
   this._onNewGlobal = this._onNewGlobal.bind(this);
   this._onNewSource = this._onNewSource.bind(this);
   this._onSourcesAdded = this._onSourcesAdded.bind(this);
+  this._onBlackBoxChange = this._onBlackBoxChange.bind(this);
 }
 
 SourceScripts.prototype = {
@@ -904,6 +905,7 @@ SourceScripts.prototype = {
     dumpn("SourceScripts is connecting...");
     this.debuggerClient.addListener("newGlobal", this._onNewGlobal);
     this.debuggerClient.addListener("newSource", this._onNewSource);
+    this.activeThread.addListener("blackboxchange", this._onBlackBoxChange);
     this._handleTabNavigation();
   },
 
@@ -918,6 +920,7 @@ SourceScripts.prototype = {
     window.clearTimeout(this._newSourceTimeout);
     this.debuggerClient.removeListener("newGlobal", this._onNewGlobal);
     this.debuggerClient.removeListener("newSource", this._onNewSource);
+    this.activeThread.removeListener("blackboxchange", this._onBlackBoxChange);
   },
 
   /**
@@ -1023,6 +1026,16 @@ SourceScripts.prototype = {
 
     // Signal that scripts have been added.
     window.dispatchEvent(document, "Debugger:AfterSourcesAdded");
+  },
+
+  /**
+   * Handler for the debugger client's 'blackboxchange' notification.
+   */
+  _onBlackBoxChange: function (aEvent, { url, isBlackBoxed }) {
+    const item = DebuggerView.Sources.getItemByValue(url);
+    if (item) {
+      DebuggerView.Sources.callMethod("checkItem", item.target, !isBlackBoxed);
+    }
   },
 
   /**
