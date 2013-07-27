@@ -7,6 +7,7 @@
 TEST_DIRS += ['test']
 
 XPIDL_SOURCES += [
+    'nsIApplicationReputation.idl',
     'nsIDownload.idl',
     'nsIDownloadManager.idl',
     'nsIDownloadManagerUI.idl',
@@ -18,6 +19,8 @@ MODULE = 'downloads'
 CPP_SOURCES += [
     'SQLFunctions.cpp',
     'nsDownloadManager.cpp',
+    'ApplicationReputation.cpp',
+    'csd.pb.cc'
 ]
 
 if CONFIG['OS_ARCH'] == 'WINNT':

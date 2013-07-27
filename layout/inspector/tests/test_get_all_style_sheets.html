@@ -12,6 +12,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=734861
 
   /** Test for Bug 734861 **/
 
+  SimpleTest.waitForExplicitFinish();
+
   function runTest() {
     var utils = SpecialPowers.Cc["@mozilla.org/inspector/dom-utils;1"]
                              .getService(SpecialPowers.Ci.inIDOMUtils);

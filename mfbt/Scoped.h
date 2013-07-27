@@ -54,6 +54,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/GuardObjects.h"
+#include "mozilla/NullPtr.h"
 
 namespace mozilla {
 
@@ -195,7 +196,7 @@ template<typename T>
 struct ScopedFreePtrTraits
 {
     typedef T* type;
-    static T* empty() { return NULL; }
+    static T* empty() { return nullptr; }
     static void release(T* ptr) { free(ptr); }
 };
 SCOPED_TEMPLATE(ScopedFreePtr, ScopedFreePtrTraits)
@@ -258,7 +259,7 @@ template <typename T>
 struct TypeSpecificScopedPointerTraits
 {
     typedef T* type;
-    const static type empty() { return NULL; }
+    const static type empty() { return nullptr; }
     const static void release(type value)
     {
       if (value)

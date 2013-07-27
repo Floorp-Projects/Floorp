@@ -30,5 +30,22 @@ if CONFIG['OS_TARGET'] == 'Android':
         'BionicGlue.cpp',
     ]
 
+EXPORTS.mozilla += [
+    'SSE.h',
+    'arm.h',
+]
+
+if CONFIG['CPU_ARCH'].startswith('x86'):
+    CPP_SOURCES += [
+        'SSE.cpp',
+    ]
+
+if CONFIG['CPU_ARCH'] == 'arm':
+    CPP_SOURCES += [
+        'arm.cpp',
+    ]
+
+
+
 LIBRARY_NAME = 'mozglue'
 

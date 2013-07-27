@@ -29,7 +29,7 @@ BEGIN_TEST(testGetPropertyDefault_bug594060)
         CHECK(obj);
 
         JS::RootedValue v0(cx, JSVAL_TRUE);
-        CHECK(JS_SetProperty(cx, obj, "here", &v0));
+        CHECK(JS_SetProperty(cx, obj, "here", v0));
 
         JS::RootedValue v1(cx);
         CHECK(JS_GetPropertyDefault(cx, obj, "here", JSVAL_FALSE, v1.address()));
@@ -53,7 +53,7 @@ BEGIN_TEST(testGetPropertyDefault_bug594060)
         CHECK(stringToId(cx, "nothere", nothereid.address()));
 
         JS::RootedValue v0(cx, JSVAL_TRUE);
-        CHECK(JS_SetPropertyById(cx, obj, hereid, &v0));
+        CHECK(JS_SetPropertyById(cx, obj, hereid, v0));
 
         JS::RootedValue v1(cx);
         CHECK(JS_GetPropertyByIdDefault(cx, obj, hereid, JSVAL_FALSE, v1.address()));

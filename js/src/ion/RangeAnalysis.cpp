@@ -1824,6 +1824,24 @@ MToDouble::isOperandTruncated(size_t index) const
     return type() == MIRType_Int32;
 }
 
+bool
+MStoreTypedArrayElement::isOperandTruncated(size_t index) const
+{
+    return index == 2 && !isFloatArray();
+}
+
+bool
+MStoreTypedArrayElementHole::isOperandTruncated(size_t index) const
+{
+    return index == 3 && !isFloatArray();
+}
+
+bool
+MStoreTypedArrayElementStatic::isOperandTruncated(size_t index) const
+{
+    return index == 1 && !isFloatArray();
+}
+
 // Ensure that all observables uses can work with a truncated
 // version of the |candidate|'s result.
 static bool
