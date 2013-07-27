@@ -455,6 +455,7 @@ class AutoCompartment
 
   public:
     inline AutoCompartment(JSContext *cx, JSObject *target);
+    inline AutoCompartment(JSContext *cx, JSCompartment *target);
     inline ~AutoCompartment();
 
     JSContext *context() const { return cx_; }
