@@ -34,7 +34,7 @@ function test_minified()
     do_check_eq(aPacket.type, "newSource");
     do_check_true(!!aPacket.source);
 
-    do_check_eq(aPacket.source.url, "foo.js",
+    do_check_eq(aPacket.source.url, "http://example.com/foo.js",
                 "The new source should be foo.js");
     do_check_eq(aPacket.source.url.indexOf("foo.min.js"), -1,
                 "The new source should not be the minified file");
@@ -47,7 +47,7 @@ function test_minified()
     do_check_eq(aPacket.why.type, "debuggerStatement");
 
     const location = {
-      url: "foo.js",
+      url: "http://example.com/foo.js",
       line: 5
     };
 
