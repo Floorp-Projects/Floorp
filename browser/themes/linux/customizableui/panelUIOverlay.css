@@ -3,6 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 %filter substitution
-%define menuPanelWidth 23em
+%define menuPanelWidth 21em
 
 %include ../../shared/customizableui/panelUIOverlay.inc.css

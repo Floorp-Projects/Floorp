@@ -11,13 +11,15 @@
        noautofocus="true">
   <panelmultiview id="PanelUI-multiView" mainViewId="PanelUI-mainView">
     <panelview id="PanelUI-mainView" contextmenu="customizationPanelContextMenu">
-      <vbox id="PanelUI-contents" type="grid"/>
+      <vbox id="PanelUI-contents-scroller">
+        <vbox id="PanelUI-contents"/>
+      </vbox>
 
-      <vbox id="PanelUI-mainView-spring" flex="1"/>
+      <vbox id="PanelUI-mainView-spring"/>
 
-      <footer class="PanelUI-footer">
+      <footer id="PanelUI-footer">
         <toolbarbutton id="PanelUI-customize-btn" label="&appMenuCustomize.label;" tabindex="0"
-                       oncommand="gCustomizeMode.toggle()" flex="1"/>
+                       oncommand="gCustomizeMode.toggle()"/>
         <!-- The parentNode is used so that the footer is presented as the anchor
              instead of just the button being the anchor. -->
         <toolbarbutton id="PanelUI-help-btn" aria-label="&helpMenu.label;" tabindex="0"

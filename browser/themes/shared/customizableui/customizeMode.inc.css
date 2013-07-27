@@ -15,12 +15,12 @@
 }
 
 #main-window[customizing] .customization-target,
-#main-window[customizing] #customization-panelHolder > #PanelUI-mainView > #PanelUI-contents > .panel-customization-placeholder {
+#PanelUI-contents > .panel-customization-placeholder {
   outline: 1px dashed transparent;
 }
 
 #main-window[customizing-movingItem] .customization-target,
-#main-window[customizing-movingItem] #customization-panelHolder > #PanelUI-mainView > #PanelUI-contents > .panel-customization-placeholder {
+#main-window[customizing-movingItem] .panel-customization-placeholder {
   outline-color: #bbb;
 }
 
@@ -31,6 +31,35 @@
 
 #PanelUI-contents > .panel-customization-placeholder > .panel-customization-placeholder-child {
   list-style-image: none;
+}
+
+#customization-panelHolder {
+  overflow-y: hidden;
+}
+
+#customization-panelWrapper,
+#customization-panelWrapper > .panel-arrowcontent {
+  -moz-box-flex: 1;
+}
+
+#customization-panelHolder > #PanelUI-mainView {
+  display: flex;
+  flex-direction: column;
+  /* Hack alert - by manually setting the preferred height to 0, we convince
+     #PanelUI-mainView to shrink when the window gets smaller in customization
+     mode. Not sure why that is - might have to do with our intermingling of
+     XUL flex, and CSS3 Flexbox. */
+  height: 0;
+}
+
+#customization-panelHolder > #PanelUI-mainView > #PanelUI-contents-scroller {
+  display: flex;
+  flex: auto;
+  flex-direction: column;
+}
+
+#customization-panelHolder > #PanelUI-mainView > #PanelUI-mainView-spring {
+  display: none;
 }
 
 #main-window[customizing] .customization-target {
@@ -66,7 +95,7 @@
   background-repeat: no-repeat, no-repeat, repeat, repeat, no-repeat;
   background-size: auto 12px, 12px 100%, auto, auto, auto;
   background-attachment: scroll, scroll, fixed, fixed, scroll;
-
+  overflow-y: auto;
 }
 
 #customization-panelWrapper > .panel-arrowcontent {
