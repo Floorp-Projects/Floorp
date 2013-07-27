@@ -4,6 +4,8 @@
 
 XPCOMUtils.defineLazyModuleGetter(this, "CustomizableUI",
                                   "resource:///modules/CustomizableUI.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Promise",
+                                  "resource://gre/modules/Promise.jsm");
 /**
  * Maintains the state and dispatches events for the main menu panel.
  */
@@ -22,7 +24,8 @@ const PanelUI = {
       multiView: "PanelUI-multiView",
       helpView: "PanelUI-help",
       menuButton: "PanelUI-menu-button",
-      panel: "PanelUI-popup"
+      panel: "PanelUI-popup",
+      scroller: "PanelUI-contents-scroller"
     };
   },
 
@@ -93,29 +96,30 @@ const PanelUI = {
     if (this.panel.state == "open") {
       this.hide();
     } else if (this.panel.state == "closed") {
-      this.ensureRegistered();
-      this.panel.hidden = false;
-      let editControlPlacement = CustomizableUI.getPlacementOfWidget("edit-controls");
-      if (editControlPlacement && editControlPlacement.area == CustomizableUI.AREA_PANEL) {
-        updateEditUIVisibility();
-      }
+      this.ensureReady().then(function() {
+        this.panel.hidden = false;
+        let editControlPlacement = CustomizableUI.getPlacementOfWidget("edit-controls");
+        if (editControlPlacement && editControlPlacement.area == CustomizableUI.AREA_PANEL) {
+          updateEditUIVisibility();
+        }
 
-      let anchor;
-      if (aEvent.type == "command") {
-        anchor = this.menuButton;
-      } else {
-        anchor = aEvent.target;
-      }
-      let iconAnchor =
-        document.getAnonymousElementByAttribute(anchor, "class",
-                                                "toolbarbutton-icon");
+        let anchor;
+        if (aEvent.type == "command") {
+          anchor = this.menuButton;
+        } else {
+          anchor = aEvent.target;
+        }
+        let iconAnchor =
+          document.getAnonymousElementByAttribute(anchor, "class",
+                                                  "toolbarbutton-icon");
 
-      // Only focus the panel if it's opened using the keyboard, so that
-      // cut/copy/paste buttons will work for mouse users.
-      let keyboardOpened = aEvent.sourceEvent &&
-                           aEvent.sourceEvent.target.localName == "key";
-      this.panel.setAttribute("noautofocus", !keyboardOpened);
-      this.panel.openPopup(iconAnchor || anchor, "bottomcenter topright");
+        // Only focus the panel if it's opened using the keyboard, so that
+        // cut/copy/paste buttons will work for mouse users.
+        let keyboardOpened = aEvent.sourceEvent &&
+                             aEvent.sourceEvent.target.localName == "key";
+        this.panel.setAttribute("noautofocus", !keyboardOpened);
+        this.panel.openPopup(iconAnchor || anchor, "bottomcenter topright");
+      }.bind(this));
     }
   },
 
@@ -143,22 +147,45 @@ const PanelUI = {
 
   /**
    * Registering the menu panel is done lazily for performance reasons. This
-   * method is exposed so that CustomizationMode can force registration in the
-   * event that customization mode is started before the panel has had a chance
-   * to register itself.
+   * method is exposed so that CustomizationMode can force panel-readyness in the
+   * event that customization mode is started before the panel has been opened
+   * by the user.
    *
    * @param aCustomizing (optional) set to true if this was called while entering
    *        customization mode. If that's the case, we trust that customization
    *        mode will handle calling beginBatchUpdate and endBatchUpdate.
+   *
+   * @return a Promise that resolves once the panel is ready to roll.
    */
-  ensureRegistered: function(aCustomizing=false) {
-    if (aCustomizing) {
-      CustomizableUI.registerMenuPanel(this.contents);
-    } else {
-      this.beginBatchUpdate();
-      CustomizableUI.registerMenuPanel(this.contents);
-      this.endBatchUpdate();
-    }
+  ensureReady: function(aCustomizing=false) {
+    return Task.spawn(function() {
+      if (!this._scrollWidth) {
+        // In order to properly center the contents of the panel, while ensuring
+        // that we have enough space on either side to show a scrollbar, we have to
+        // do a bit of hackery. In particular, we sample the system scrollbar width,
+        // and then use that to calculate a new width for the scroller.
+        this._scrollWidth = (yield this._sampleScrollbarWidth()) + "px";
+        let cstyle = window.getComputedStyle(this.scroller);
+        let widthStr = cstyle.width;
+        // Get the calculated padding on the left and right sides of
+        // the scroller too. We'll use that in our final calculation so
+        // that if a scrollbar appears, we don't have the contents right
+        // up against the edge of the scroller.
+        let paddingLeft = cstyle.paddingLeft;
+        let paddingRight = cstyle.paddingRight;
+        let calcStr = [widthStr, this._scrollWidth,
+                       paddingLeft, paddingRight].join(" + ");
+        this.scroller.style.width = "calc(" + calcStr + ")";
+      }
+
+      if (aCustomizing) {
+        CustomizableUI.registerMenuPanel(this.contents);
+      } else {
+        this.beginBatchUpdate();
+        CustomizableUI.registerMenuPanel(this.contents);
+        this.endBatchUpdate();
+      }
+    }.bind(this));
   },
 
   /**
@@ -317,5 +344,35 @@ const PanelUI = {
 
   _onHelpViewHide: function(aEvent) {
     this.removeEventListener("command", PanelUI.onCommandHandler);
+  },
+
+  _sampleScrollbarWidth: function() {
+    let deferred = Promise.defer();
+    let hwin = Services.appShell.hiddenDOMWindow;
+    let hdoc = hwin.document.documentElement;
+    let iframe = hwin.document.createElementNS("http://www.w3.org/1999/xhtml",
+                                               "html:iframe");
+    iframe.setAttribute("srcdoc", '<body style="overflow-y: scroll"></body>');
+    hdoc.appendChild(iframe);
+
+    let cwindow = iframe.contentWindow;
+    let utils = cwindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                       .getInterface(Ci.nsIDOMWindowUtils);
+
+    cwindow.addEventListener("load", function onLoad(aEvent) {
+      cwindow.removeEventListener("load", onLoad);
+      let sbWidth = {};
+      try {
+        utils.getScrollbarSize(true, sbWidth, {});
+      } catch(e) {
+        Components.utils.reportError("Could not sample scrollbar size: " + e +
+                                     " -- " + e.stack);
+        sbWidth.value = 0;
+      }
+      deferred.resolve(sbWidth.value);
+      iframe.remove();
+    });
+
+    return deferred.promise;
   }
 };

@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 %filter substitution
-%define menuPanelWidth 26em
+%define menuPanelWidth 21em
 
 %include ../../shared/customizableui/panelUIOverlay.inc.css
 
@@ -34,4 +34,9 @@ toolbarpaletteitem[place="palette"] > #zoom-controls > #zoom-in-button,
 toolbarpaletteitem[place="palette"] > #zoom-controls > #zoom-out-button {
   padding-left: 12px;
   padding-right: 12px;
+}
+
+.panel-combined-item[customizableui-areatype="menu-panel"] > toolbarbutton,
+toolbarbutton[customizableui-areatype="menu-panel"] {
+  margin: 0;
 }
