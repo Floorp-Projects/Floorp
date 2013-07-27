@@ -116,7 +116,9 @@ function buildOverrides() {
       builtUAs.set(override, userAgent);
     }
 
-    gOverrides.set(domain, userAgent);
+    if (userAgent != DEFAULT_UA) {
+      gOverrides.set(domain, userAgent);
+    }
   }
 }
 
