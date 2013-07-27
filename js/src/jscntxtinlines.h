@@ -467,19 +467,6 @@ inline void
 JSContext::setDefaultCompartmentObject(JSObject *obj)
 {
     defaultCompartmentObject_ = obj;
-
-    if (!hasEnteredCompartment()) {
-        /*
-         * If JSAPI callers want to JS_SetGlobalObject while code is running,
-         * they must have entered a compartment (otherwise there will be no
-         * final leaveCompartment call to set the context's compartment back to
-         * defaultCompartmentObject->compartment()).
-         */
-        JS_ASSERT(!currentlyRunning());
-        setCompartment(obj ? obj->compartment() : NULL);
-        if (throwing)
-            wrapPendingException();
-    }
 }
 
 inline void
@@ -506,21 +493,9 @@ JSContext::leaveCompartment(JSCompartment *oldCompartment)
     enterCompartmentDepth_--;
 
     compartment()->leave();
+    setCompartment(oldCompartment);
 
-    /*
-     * Before we entered the current compartment, 'compartment' was
-     * 'oldCompartment', so we might want to simply set it back. However, we
-     * currently have this terrible scheme whereby defaultCompartmentObject_ can
-     * be updated while enterCompartmentDepth_ > 0. In this case, oldCompartment
-     * != defaultCompartmentObject_->compartment and we must ignore
-     * oldCompartment.
-     */
-    if (hasEnteredCompartment() || !defaultCompartmentObject_)
-        setCompartment(oldCompartment);
-    else
-        setCompartment(defaultCompartmentObject_->compartment());
-
-    if (throwing)
+    if (throwing && oldCompartment)
         wrapPendingException();
 }
 
