@@ -132,7 +132,7 @@ CustomizeMode.prototype = {
       // is really not going to work. We pass "true" to ensureRegistered to
       // indicate that we're handling calling startBatchUpdate and
       // endBatchUpdate.
-      window.PanelUI.ensureRegistered(true);
+      yield window.PanelUI.ensureReady(true);
 
       this._showPanelCustomizationPlaceholders();
 

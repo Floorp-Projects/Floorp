@@ -24,6 +24,5 @@
         <box class="panel-inner-arrowcontentfooter" hidden="true"/>
       </box>
     </vbox>
-    <spacer flex="1"/>
   </vbox>
 </hbox>

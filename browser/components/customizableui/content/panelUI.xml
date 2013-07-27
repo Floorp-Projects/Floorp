@@ -8,36 +8,6 @@
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
           xmlns:xbl="http://www.mozilla.org/xbl">
 
-  <binding id="toolbarbutton" display="xul:button"
-           extends="chrome://global/content/bindings/button.xml#button-base">
-    <resources>
-      <stylesheet src="chrome://global/skin/toolbarbutton.css"/>
-    </resources>
-    
-    <content>
-      <children includes="observes|template|menupopup|panel|tooltip"/>
-      <xul:hbox align="center" flex="1">
-	      <xul:image class="toolbarbutton-icon" xbl:inherits="validate,src=image,label"/>
-	      <xul:vbox flex="1">
-	  	    <xul:label class="toolbarbutton-text" crop="right" flex="1"
-  	  	             xbl:inherits="value=label,accesskey,crop"/>
-  	  	  <xul:hbox pack="end">
-	  	  	  <xul:label class="toolbarbutton-acceltext" crop="middle"
-  		  	  	         xbl:inherits="value=acceltext"/>
-  		  	</xul:hbox>
-  		  </xul:vbox>
-  		</xul:hbox>
-    </content>
-    
-    <implementation implements="nsIAccessibleProvider">
-      <property name="accessibleType" readonly="true">
-        <getter>
-          return Components.interfaces.nsIAccessibleProvider.XULToolbarButton;
-        </getter>
-      </property>
-    </implementation>
-  </binding>
-
   <binding id="panelmultiview">
     <resources>
       <stylesheet src="chrome://browser/content/customizableui/panelUI.css"/>
@@ -129,6 +99,7 @@
       <constructor><![CDATA[
         this._clickCapturer.addEventListener("click", this);
         this._panel.addEventListener("popupshowing", this);
+        this._panel.addEventListener("popupshown", this);
         this._panel.addEventListener("popuphidden", this);
         this._subViews.addEventListener("overflow", this);
         this._mainViewContainer.addEventListener("overflow", this);
@@ -156,6 +127,7 @@
         this._mainViewObserver.disconnect();
         this._subViewObserver.disconnect();
         this._panel.removeEventListener("popupshowing", this);
+        this._panel.removeEventListener("popupshown", this);
         this._panel.removeEventListener("popuphidden", this);
         this._subViews.removeEventListener("overflow", this);
         this._mainViewContainer.removeEventListener("overflow", this);
@@ -305,14 +277,28 @@
               this.setAttribute("panelopen", "true");
               this._syncContainerWithMainView();
               break;
+            case "popupshown":
+              this._setMaxHeight();
+              break;
             case "popuphidden":
               this.removeAttribute("panelopen");
+              this._mainView.style.height = "";
               this.showMainView();
               break;
           }
         ]]></body>
       </method>
 
+      <method name="_setMaxHeight">
+        <body><![CDATA[
+          // Ignore the mutation that'll fire when we set the height of
+          // the main view.
+          this.ignoreMutations = true;
+          this._mainView.style.height =
+            this.getBoundingClientRect().height + "px";
+          this.ignoreMutations = false;
+        ]]></body>
+      </method>
       <method name="_syncContainerWithSubView">
         <body><![CDATA[
           if (!this.ignoreMutations && this.showingSubView) {

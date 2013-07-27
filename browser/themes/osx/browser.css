@@ -1327,10 +1327,6 @@ toolbarbutton.bookmark-item > menupopup {
 
 /* zoom controls */
 
-#zoom-controls {
-  -moz-box-align: center;
-}
-
 #zoom-out-button {
   -moz-margin-end: 0;
 }

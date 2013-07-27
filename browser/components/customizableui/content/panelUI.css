@@ -19,7 +19,7 @@
 .panel-subviews {
   -moz-stack-sizing: ignore;
   transform: translateX(0);
-  overflow-y: hidden;
+  overflow-y: auto;
 }
 
 .panel-subviews[panelopen] {
