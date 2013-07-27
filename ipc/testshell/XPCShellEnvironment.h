@@ -57,20 +57,6 @@ public:
         return mQuitting;
     }
 
-    void SetShouldReportWarnings(JSBool aReportWarnings) {
-        mReportWarnings = aReportWarnings;
-    }
-    JSBool ShouldReportWarnings() {
-        return mReportWarnings;
-    }
-
-    void SetShouldCompoleOnly(JSBool aCompileOnly) {
-        mCompileOnly = aCompileOnly;
-    }
-    JSBool ShouldCompileOnly() {
-        return mCompileOnly;
-    }
-
 protected:
     XPCShellEnvironment();
     bool Init();
@@ -82,8 +68,6 @@ private:
 
     int mExitCode;
     JSBool mQuitting;
-    JSBool mReportWarnings;
-    JSBool mCompileOnly;
 };
 
 } /* namespace ipc */
