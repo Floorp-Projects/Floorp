@@ -657,7 +657,6 @@ XPCShellEnvironment::CreateEnvironment()
 
 XPCShellEnvironment::XPCShellEnvironment()
 :   mCx(NULL),
-    mJSPrincipals(NULL),
     mQuitting(JS_FALSE)
 {
 }
@@ -675,10 +674,6 @@ XPCShellEnvironment::~XPCShellEnvironment()
 
         JSRuntime *rt = JS_GetRuntime(mCx);
         JS_GC(rt);
-
-        if (mJSPrincipals) {
-            JS_DropPrincipals(rt, mJSPrincipals);
-        }
 
         JS_EndRequest(mCx);
         JS_DestroyContext(mCx);
@@ -749,10 +744,6 @@ XPCShellEnvironment::Init()
         rv = securityManager->GetSystemPrincipal(getter_AddRefs(principal));
         if (NS_FAILED(rv)) {
             fprintf(stderr, "+++ Failed to obtain SystemPrincipal from ScriptSecurityManager service.\n");
-        } else {
-            // fetch the JS principals and stick in a global
-            mJSPrincipals = nsJSPrincipals::get(principal);
-            JS_HoldPrincipals(mJSPrincipals);
         }
     } else {
         fprintf(stderr, "+++ Failed to get ScriptSecurityManager service, running without principals");
