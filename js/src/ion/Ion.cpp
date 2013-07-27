@@ -192,7 +192,7 @@ IonRuntime::~IonRuntime()
 bool
 IonRuntime::initialize(JSContext *cx)
 {
-    AutoCompartment ac(cx, cx->runtime()->atomsCompartment);
+    AutoEnterAtomsCompartment ac(cx);
 
     IonContext ictx(cx, NULL);
     AutoFlushCache afc("IonRuntime::initialize");
@@ -272,7 +272,7 @@ IonRuntime::debugTrapHandler(JSContext *cx)
     if (!debugTrapHandler_) {
         // IonRuntime code stubs are shared across compartments and have to
         // be allocated in the atoms compartment.
-        AutoCompartment ac(cx, cx->runtime()->atomsCompartment);
+        AutoEnterAtomsCompartment ac(cx);
         debugTrapHandler_ = generateDebugTrapHandler(cx);
     }
     return debugTrapHandler_;
