@@ -2072,6 +2072,8 @@ nsGlobalWindow::CreateOuterObject(nsGlobalWindow* aNewInner)
 nsresult
 nsGlobalWindow::SetOuterObject(JSContext* aCx, JS::Handle<JSObject*> aOuterObject)
 {
+  JSAutoCompartment ac(aCx, aOuterObject);
+
   // Force our context's global object to be the outer.
   // NB: JS_SetGlobalObject sets aCx->compartment.
   JS_SetGlobalObject(aCx, aOuterObject);
