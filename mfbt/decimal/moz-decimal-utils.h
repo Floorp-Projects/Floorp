@@ -32,7 +32,7 @@
 #endif
 #define ASSERT MOZ_ASSERT
 
-#define ASSERT_NOT_REACHED() MOZ_ASSUME_UNREACHABLE()
+#define ASSERT_NOT_REACHED() MOZ_ASSUME_UNREACHABLE("moz-decimal-utils.h")
 
 #define WTF_MAKE_NONCOPYABLE(ClassName) \
   private: \
