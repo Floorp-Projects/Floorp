@@ -1128,7 +1128,7 @@ skip-if(B2G) == 430412-1.html 430412-1-ref.html
 == 431520-1.html 431520-1-ref.html
 == 431948-1.html 431948-1-ref.html
 == 433640-1.html 433640-1-ref.html
-== 433700.html 433700-ref.html
+fails-if(Android) == 433700.html 433700-ref.html
 == 436356-1.html 436356-1-ref.html
 == 436356-2.html 436356-2-ref.html
 == 438537-1.html 438537-1-ref.html
