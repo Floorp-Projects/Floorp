@@ -5325,8 +5325,8 @@ class MStoreTypedArrayElementStatic :
 
     ArrayBufferView::ViewType viewType() const { return JS_GetArrayBufferViewType(typedArray_); }
     bool isFloatArray() const {
-        return (viewType() == TypedArrayObject::TYPE_FLOAT32 ||
-                viewType() == TypedArrayObject::TYPE_FLOAT64);
+        return (viewType() == ArrayBufferView::TYPE_FLOAT32 ||
+                viewType() == ArrayBufferView::TYPE_FLOAT64);
     }
 
     void *base() const;
