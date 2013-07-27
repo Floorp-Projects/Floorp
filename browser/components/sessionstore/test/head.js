@@ -382,13 +382,11 @@ let TestRunner = {
   run: function () {
     waitForExplicitFinish();
 
-    SessionStore.promiseInitialized.then(function () {
-      executeSoon(function () {
-        this.backupState = JSON.parse(ss.getBrowserState());
-        this._iter = runTests();
-        this.next();
-      }.bind(this));
-    }.bind(this));
+    SessionStore.promiseInitialized.then(() => {
+      this.backupState = JSON.parse(ss.getBrowserState());
+      this._iter = runTests();
+      this.next();
+    });
   },
 
   /**
