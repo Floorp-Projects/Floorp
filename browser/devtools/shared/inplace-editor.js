@@ -40,6 +40,7 @@ const FOCUS_BACKWARD = Ci.nsIFocusManager.MOVEFOCUS_BACKWARD;
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource:///modules/devtools/shared/event-emitter.js");
 
 /**
  * Mark a span editable.  |editableField| will listen for the span to
@@ -168,6 +169,7 @@ function InplaceEditor(aOptions, aEvent)
   this.multiline = aOptions.multiline || false;
   this.stopOnReturn = !!aOptions.stopOnReturn;
   this.contentType = aOptions.contentType || CONTENT_TYPES.PLAIN_TEXT;
+  this.property = aOptions.property;
   this.popup = aOptions.popup;
 
   this._onBlur = this._onBlur.bind(this);
@@ -213,6 +215,8 @@ function InplaceEditor(aOptions, aEvent)
   if (aOptions.start) {
     aOptions.start(this, aEvent);
   }
+
+  EventEmitter.decorate(this);
 }
 
 exports.InplaceEditor = InplaceEditor;
@@ -690,10 +694,6 @@ InplaceEditor.prototype = {
       return;
     }
 
-    if (this.popup) {
-      this.popup.hidePopup();
-    }
-
     this._applied = true;
 
     if (this.done) {
@@ -761,6 +761,8 @@ InplaceEditor.prototype = {
       }
       this.input.value = this.popup.selectedItem.label;
       this._updateSize();
+      // This emit is mainly for the purpose of making the test flow simpler.
+      this.emit("after-suggest");
     }
 
     if (aEvent.keyCode === Ci.nsIDOMKeyEvent.DOM_VK_BACK_SPACE ||
@@ -800,6 +802,11 @@ InplaceEditor.prototype = {
 
       this._apply();
 
+      // Close the popup if open
+      if (this.popup && this.popup.isOpen) {
+        this.popup.hidePopup();
+      }
+
       if (direction !== null && focusManager.focusedElement === input) {
         // If the focused element wasn't changed by the done callback,
         // move the focus as requested.
@@ -817,6 +824,10 @@ InplaceEditor.prototype = {
       // Cancel and blur ourselves.
       // Now we don't want to suggest anything as we are moving out.
       this._preventSuggestions = true;
+      // Close the popup if open
+      if (this.popup && this.popup.isOpen) {
+        this.popup.hidePopup();
+      }
       prevent = true;
       this.cancelled = true;
       this._apply();
@@ -894,6 +905,8 @@ InplaceEditor.prototype = {
       let list = [];
       if (this.contentType == CONTENT_TYPES.CSS_PROPERTY) {
         list = CSSPropertyList;
+      } else if (this.contentType == CONTENT_TYPES.CSS_VALUE) {
+        list = domUtils.getCSSValuesForProperty(this.property.name).sort();
       }
 
       list.some(item => {
@@ -935,6 +948,8 @@ InplaceEditor.prototype = {
       } else {
         this.popup.hidePopup();
       }
+      // This emit is mainly for the purpose of making the test flow simpler.
+      this.emit("after-suggest");
     }, 0);
   }
 };
@@ -966,6 +981,9 @@ XPCOMUtils.defineLazyGetter(this, "focusManager", function() {
 });
 
 XPCOMUtils.defineLazyGetter(this, "CSSPropertyList", function() {
-  let domUtils = Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils);
   return domUtils.getCSSPropertyNames(domUtils.INCLUDE_ALIASES).sort();
+});
+
+XPCOMUtils.defineLazyGetter(this, "domUtils", function() {
+  return Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils);
 });
