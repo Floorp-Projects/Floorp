@@ -60,9 +60,8 @@ TestShellChild::RecvPTestShellCommandConstructor(PTestShellCommandChild* aActor,
 PContextWrapperChild*
 TestShellChild::AllocPContextWrapper()
 {
-  JSContext* cx;
-  if (mXPCShell && (cx = mXPCShell->GetContext())) {
-    return new ContextWrapperChild(cx);
+  if (mXPCShell) {
+    return new ContextWrapperChild(nsContentUtils::GetSafeJSContext());
   }
   return NULL;
 }
