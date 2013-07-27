@@ -78,7 +78,6 @@ function testCompletion()
 
   waitForEditorFocus(brace.parentNode, function onNewElement(aEditor) {
     editor = aEditor;
-    editor.input.addEventListener("keypress", checkState, false);
     checkStateAndMoveOn(0);
   });
 
@@ -96,13 +95,24 @@ function checkStateAndMoveOn(index) {
 
   info("pressing key " + key + " to get result: [" + testData[index].slice(1) +
        "] for state " + state);
+  if (/(right|back_space|escape)/ig.test(key)) {
+    info("added event listener for right|back_space|escape keys");
+    editor.input.addEventListener("keypress", function onKeypress() {
+      if (editor.input) {
+        editor.input.removeEventListener("keypress", onKeypress);
+      }
+      info("inside event listener");
+      checkState();
+    });
+  }
+  else {
+    editor.once("after-suggest", checkState);
+  }
   EventUtils.synthesizeKey(key, {}, ruleViewWindow);
 }
 
-function checkState(event) {
-  // The keypress handler is async and can take some time to compute, filter and
-  // display the popup and autocompletion so we need to use setTimeout here.
-  window.setTimeout(function() {
+function checkState() {
+  executeSoon(() => {
     info("After keypress for state " + state);
     let [key, completion, index, total] = testData[state];
     if (completion != null) {
@@ -123,7 +133,7 @@ function checkState(event) {
          "Correct item is selected for state " + state);
     }
     checkStateAndMoveOn(state + 1);
-  }, 200);
+  });
 }
 
 function finishUp()

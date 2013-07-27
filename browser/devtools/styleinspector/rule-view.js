@@ -1457,7 +1457,10 @@ TextPropertyEditor.prototype = {
       done: this._onValueDone,
       validate: this._validate.bind(this),
       warning: this.warning,
-      advanceChars: ';'
+      advanceChars: ';',
+      contentType: InplaceEditor.CONTENT_TYPES.CSS_VALUE,
+      property: this.prop,
+      popup: this.popup
     });
   },
 
