@@ -3656,6 +3656,16 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 %include ../shared/devtools/commandline.inc.css
 %include ../shared/plugin-doorhanger.inc.css
 
+/* On mac, the popup notification contents are indented by default and so
+  the default closebutton margins from notification.css require adjustment */
+
+.click-to-play-plugins-notification-description-box > .popup-notification-closebutton {
+  -moz-margin-end: -6px;
+  margin-top: -7px;
+}
+
+
+
 .gclitoolbar-input-node > .textbox-input-box > html|*.textbox-input::-moz-selection {
   color: hsl(210,11%,16%);
 }
