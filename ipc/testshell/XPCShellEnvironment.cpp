@@ -417,8 +417,6 @@ XPCShellEnvironment::ProcessFile(JSContext *cx,
                                  JSBool forceTTY)
 {
     XPCShellEnvironment* env = this;
-    nsCxPusher pusher;
-    pusher.Push(env->GetContext());
 
     JSScript *script;
     JS::Rooted<JS::Value> result(cx);
@@ -569,27 +567,24 @@ XPCShellEnvironment::CreateEnvironment()
 }
 
 XPCShellEnvironment::XPCShellEnvironment()
-:   mCx(NULL),
-    mQuitting(JS_FALSE)
+:   mQuitting(JS_FALSE)
 {
 }
 
 XPCShellEnvironment::~XPCShellEnvironment()
 {
-    if (mCx) {
-        JS_BeginRequest(mCx);
 
-        JSObject* global = GetGlobalObject();
-        if (global) {
-            JS_SetAllNonReservedSlotsToUndefined(mCx, global);
+    AutoSafeJSContext cx;
+    JSObject* global = GetGlobalObject();
+    if (global) {
+        {
+            JSAutoCompartment ac(cx, global);
+            JS_SetAllNonReservedSlotsToUndefined(cx, global);
         }
         mGlobalHolder.Release();
 
-        JSRuntime *rt = JS_GetRuntime(mCx);
+        JSRuntime *rt = JS_GetRuntime(cx);
         JS_GC(rt);
-
-        JS_EndRequest(mCx);
-        JS_DestroyContext(mCx);
 
         if (gOldContextCallback) {
             NS_ASSERTION(rt, "Should never be null!");
@@ -629,17 +624,7 @@ XPCShellEnvironment::Init()
     }
 
     gOldContextCallback = JS_SetContextCallback(rt, ContextCallback);
-
-    JSContext *cx = JS_NewContext(rt, 8192);
-    if (!cx) {
-        NS_ERROR("JS_NewContext failed!");
-
-        JS_SetContextCallback(rt, gOldContextCallback);
-        gOldContextCallback = NULL;
-
-        return false;
-    }
-    mCx = cx;
+    AutoSafeJSContext cx;
 
     JS_SetContextPrivate(cx, this);
 
@@ -661,9 +646,6 @@ XPCShellEnvironment::Init()
     } else {
         fprintf(stderr, "+++ Failed to get ScriptSecurityManager service, running without principals");
     }
-
-    nsCxPusher pusher;
-    pusher.Push(mCx);
 
     nsRefPtr<BackstagePass> backstagePass;
     rv = NS_NewBackstagePass(getter_AddRefs(backstagePass));
@@ -691,22 +673,19 @@ XPCShellEnvironment::Init()
         NS_ERROR("Failed to get global JSObject!");
         return false;
     }
+    JSAutoCompartment ac(cx, globalObj);
 
     backstagePass->SetGlobalObject(globalObj);
 
+    if (!JS_DefineProperty(cx, globalObj, "__XPCShellEnvironment",
+                           PRIVATE_TO_JSVAL(this), JS_PropertyStub,
+                           JS_StrictPropertyStub,
+                           JSPROP_READONLY | JSPROP_PERMANENT) ||
+        !JS_DefineFunctions(cx, globalObj, gGlobalFunctions) ||
+        !JS_DefineProfilingFunctions(cx, globalObj))
     {
-        JSAutoRequest ar(cx);
-        JSAutoCompartment ac(cx, globalObj);
-
-        if (!JS_DefineProperty(cx, globalObj, "__XPCShellEnvironment",
-                               PRIVATE_TO_JSVAL(this), JS_PropertyStub,
-                               JS_StrictPropertyStub,
-                               JSPROP_READONLY | JSPROP_PERMANENT) ||
-            !JS_DefineFunctions(cx, globalObj, gGlobalFunctions) ||
-            !JS_DefineProfilingFunctions(cx, globalObj)) {
-            NS_ERROR("JS_DefineFunctions failed!");
-            return false;
-        }
+        NS_ERROR("JS_DefineFunctions failed!");
+        return false;
     }
 
     mGlobalHolder = globalObj;
@@ -726,19 +705,12 @@ bool
 XPCShellEnvironment::EvaluateString(const nsString& aString,
                                     nsString* aResult)
 {
-  XPCShellEnvironment* env = this;
-  nsCxPusher pusher;
-  pusher.Push(env->GetContext());
-
-  JSAutoRequest ar(mCx);
-
-  JS_ClearPendingException(mCx);
-
-  JS::Rooted<JSObject*> global(mCx, GetGlobalObject());
-  JSAutoCompartment ac(mCx, global);
+  AutoSafeJSContext cx;
+  JS::Rooted<JSObject*> global(cx, GetGlobalObject());
+  JSAutoCompartment ac(cx, global);
 
   JSScript* script =
-      JS_CompileUCScriptForPrincipals(mCx, global, GetPrincipal(),
+      JS_CompileUCScriptForPrincipals(cx, global, GetPrincipal(),
                                       aString.get(), aString.Length(),
                                       "typein", 0);
   if (!script) {
@@ -749,15 +721,15 @@ XPCShellEnvironment::EvaluateString(const nsString& aString,
       aResult->Truncate();
   }
 
-  JS::Rooted<JS::Value> result(mCx);
-  JSBool ok = JS_ExecuteScript(mCx, global, script, result.address());
+  JS::Rooted<JS::Value> result(cx);
+  JSBool ok = JS_ExecuteScript(cx, global, script, result.address());
   if (ok && result != JSVAL_VOID) {
-      JSErrorReporter old = JS_SetErrorReporter(mCx, NULL);
-      JSString* str = JS_ValueToString(mCx, result);
+      JSErrorReporter old = JS_SetErrorReporter(cx, NULL);
+      JSString* str = JS_ValueToString(cx, result);
       nsDependentJSString depStr;
       if (str)
-          depStr.init(mCx, str);
-      JS_SetErrorReporter(mCx, old);
+          depStr.init(cx, str);
+      JS_SetErrorReporter(cx, old);
 
       if (!depStr.IsEmpty() && aResult) {
           aResult->Assign(depStr);
