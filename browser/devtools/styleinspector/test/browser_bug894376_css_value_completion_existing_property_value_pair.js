@@ -11,40 +11,33 @@ let inspector;
 let ruleViewWindow;
 let editor;
 let state;
+let brace;
 // format :
 //  [
 //    what key to press,
+//    modifers,
 //    expected input box value after keypress,
 //    selectedIndex of the popup,
 //    total items in the popup
 //  ]
 let testData = [
-  ["d", "direction", 0, 3],
-  ["VK_DOWN", "display", 1, 3],
-  ["VK_DOWN", "dominant-baseline", 2, 3],
-  ["VK_DOWN", "direction", 0, 3],
-  ["VK_DOWN", "display", 1, 3],
-  ["VK_UP", "direction", 0, 3],
-  ["VK_UP", "dominant-baseline", 2, 3],
-  ["VK_UP", "display", 1, 3],
-  ["VK_BACK_SPACE", "displa", -1, 0],
-  ["VK_BACK_SPACE", "displ", -1, 0],
-  ["VK_BACK_SPACE", "disp", -1, 0],
-  ["VK_BACK_SPACE", "dis", -1, 0],
-  ["VK_BACK_SPACE", "di", -1, 0],
-  ["VK_BACK_SPACE", "d", -1, 0],
-  ["i", "direction", 0, 2],
-  ["s", "display", -1, 0],
-  ["VK_BACK_SPACE", "dis", -1, 0],
-  ["VK_BACK_SPACE", "di", -1, 0],
-  ["VK_BACK_SPACE", "d", -1, 0],
-  ["VK_BACK_SPACE", "", -1, 0],
-  ["f", "fill", 0, MAX_ENTRIES],
-  ["i", "fill", 0, 4],
-  ["VK_ESCAPE", null, -1, 0],
+  ["b", {}, "beige", 0, 8],
+  ["l", {}, "black", 0, 4],
+  ["VK_DOWN", {}, "blanchedalmond", 1, 4],
+  ["VK_DOWN", {}, "blue", 2, 4],
+  ["VK_RIGHT", {}, "blue", -1, 0],
+  ["VK_TAB", {shiftKey: true}, "color", -1, 0],
+  ["VK_BACK_SPACE", {}, "", -1, 0],
+  ["d", {}, "direction", 0, 3],
+  ["i", {}, "direction", 0, 2],
+  ["s", {}, "display", -1, 0],
+  ["VK_TAB", {}, "blue", -1, 0],
+  ["n", {}, "none", -1, 0],
+  ["VK_RETURN", {}, null, -1, 0]
 ];
 
-function openRuleView() {
+function openRuleView()
+{
   var target = TargetFactory.forTab(gBrowser.selectedTab);
   gDevTools.showToolbox(target, "inspector").then(function(toolbox) {
     inspector = toolbox.getCurrentPanel();
@@ -58,16 +51,17 @@ function openRuleView() {
   });
 }
 
-function testCompletion() {
+function testCompletion()
+{
   ruleViewWindow = inspector.sidebar.getWindowForTab("ruleview");
-  let brace = ruleViewWindow.document.querySelector(".ruleview-ruleclose");
+  brace = ruleViewWindow.document.querySelector(".ruleview-ruleclose");
 
   waitForEditorFocus(brace.parentNode, function onNewElement(aEditor) {
     editor = aEditor;
     checkStateAndMoveOn(0);
   });
 
-  brace.click();
+  ruleViewWindow.document.querySelector(".ruleview-propertyvalue").click();
 }
 
 function checkStateAndMoveOn(index) {
@@ -76,13 +70,21 @@ function checkStateAndMoveOn(index) {
     return;
   }
 
-  let [key] = testData[index];
+  let [key, modifiers] = testData[index];
   state = index;
 
-  info("pressing key " + key + " to get result: [" + testData[index].slice(1) +
+  info("pressing key " + key + " to get result: [" + testData[index].slice(2) +
        "] for state " + state);
-  if (/(return|back_space|escape)/ig.test(key)) {
-    info("added event listener for return|back_space|escape keys");
+  if (/tab/ig.test(key)) {
+    info("waiting for the editor to get focused");
+    waitForEditorFocus(brace.parentNode, function onNewElement(aEditor) {
+      info("editor focused : " + aEditor.input);
+      editor = aEditor;
+      checkState();
+    });
+  }
+  else if (/(right|return|back_space)/ig.test(key)) {
+    info("added event listener for right|return|back_space keys");
     editor.input.addEventListener("keypress", function onKeypress() {
       if (editor.input) {
         editor.input.removeEventListener("keypress", onKeypress);
@@ -94,13 +96,13 @@ function checkStateAndMoveOn(index) {
   else {
     editor.once("after-suggest", checkState);
   }
-  EventUtils.synthesizeKey(key, {}, ruleViewWindow);
+  EventUtils.synthesizeKey(key, modifiers, ruleViewWindow);
 }
 
 function checkState(event) {
   executeSoon(() => {
     info("After keypress for state " + state);
-    let [key, completion, index, total] = testData[state];
+    let [key, modifier, completion, index, total] = testData[state];
     if (completion != null) {
       is(editor.input.value, completion,
          "Correct value is autocompleted for state " + state);
@@ -122,13 +124,15 @@ function checkState(event) {
   });
 }
 
-function finishUp() {
-  doc = inspector = editor = ruleViewWindow = state = null;
+function finishUp()
+{
+  brace = doc = inspector = editor = ruleViewWindow = state = null;
   gBrowser.removeCurrentTab();
   finish();
 }
 
-function test() {
+function test()
+{
   waitForExplicitFinish();
   gBrowser.selectedTab = gBrowser.addTab();
   gBrowser.selectedBrowser.addEventListener("load", function(evt) {
@@ -138,6 +142,6 @@ function test() {
     waitForFocus(openRuleView, content);
   }, true);
 
-  content.location = "data:text/html,<h1 style='border: 1px solid red'>Filename:" +
-                     "browser_bug893965_css_property_completion_new_property.js</h1>";
+  content.location = "data:text/html,<h1 style='color: red'>Filename: " +
+                     "browser_bug894376_css_value_completion_existing_property_value_pair.js</h1>";
 }
