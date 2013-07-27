@@ -50,6 +50,10 @@
   background-position: 0 0;
 }
 
+.side-menu-widget-item-checkbox:not([checked]) ~ .side-menu-widget-item-contents > .dbg-breakpoint {
+  display: none;
+}
+
 /* ListWidget items */
 
 .list-widget-item {
