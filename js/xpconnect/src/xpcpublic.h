@@ -422,6 +422,20 @@ GetJunkScope();
  */
 nsIGlobalObject *
 GetJunkScopeGlobal();
+
+// Error reporter used when there is no associated DOM window on to which to
+// report errors and warnings.
+void
+SystemErrorReporter(JSContext *cx, const char *message, JSErrorReport *rep);
+
+// We have a separate version that's exported with external linkage for use by
+// xpcshell, since external linkage on windows changes the signature to make it
+// incompatible with the JSErrorReporter type, causing JS_SetErrorReporter calls
+// to fail to compile.
+NS_EXPORT_(void)
+SystemErrorReporterExternal(JSContext *cx, const char *message,
+                            JSErrorReport *rep);
+
 } // namespace xpc
 
 namespace mozilla {
