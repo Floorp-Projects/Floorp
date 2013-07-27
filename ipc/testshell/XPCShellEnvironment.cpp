@@ -86,93 +86,6 @@ Environment(JSObject* global)
     return static_cast<XPCShellEnvironment*>(v.get().toPrivate());
 }
 
-static void
-ScriptErrorReporter(JSContext *cx,
-                    const char *message,
-                    JSErrorReport *report)
-{
-    int i, j, k, n;
-    char *prefix = NULL, *tmp;
-    const char *ctmp;
-    nsCOMPtr<nsIXPConnect> xpc;
-
-    // Don't report an exception from inner JS frames as the callers may intend
-    // to handle it.
-    if (JS_DescribeScriptedCaller(cx, nullptr, nullptr)) {
-        return;
-    }
-
-    // In some cases cx->fp is null here so use XPConnect to tell us about inner
-    // frames.
-    if ((xpc = do_GetService(nsIXPConnect::GetCID()))) {
-        nsAXPCNativeCallContext *cc = nullptr;
-        xpc->GetCurrentNativeCallContext(&cc);
-        if (cc) {
-            nsAXPCNativeCallContext *prev = cc;
-            while (NS_SUCCEEDED(prev->GetPreviousCallContext(&prev)) && prev) {
-                uint16_t lang;
-                if (NS_SUCCEEDED(prev->GetLanguage(&lang)) &&
-                    lang == nsAXPCNativeCallContext::LANG_JS) {
-                    return;
-                }
-            }
-        }
-    }
-
-    if (!report) {
-        fprintf(stderr, "%s\n", message);
-        return;
-    }
-
-    if (report->filename)
-        prefix = JS_smprintf("%s:", report->filename);
-    if (report->lineno) {
-        tmp = prefix;
-        prefix = JS_smprintf("%s%u: ", tmp ? tmp : "", report->lineno);
-        JS_free(cx, tmp);
-    }
-    if (JSREPORT_IS_WARNING(report->flags)) {
-        tmp = prefix;
-        prefix = JS_smprintf("%s%swarning: ",
-                             tmp ? tmp : "",
-                             JSREPORT_IS_STRICT(report->flags) ? "strict " : "");
-        JS_free(cx, tmp);
-    }
-
-    /* embedded newlines -- argh! */
-    while ((ctmp = strchr(message, '\n')) != 0) {
-        ctmp++;
-        if (prefix) fputs(prefix, stderr);
-        fwrite(message, 1, ctmp - message, stderr);
-        message = ctmp;
-    }
-    /* If there were no filename or lineno, the prefix might be empty */
-    if (prefix)
-        fputs(prefix, stderr);
-    fputs(message, stderr);
-
-    if (!report->linebuf) {
-        fputc('\n', stderr);
-        goto out;
-    }
-
-    fprintf(stderr, ":\n%s%s\n%s", prefix, report->linebuf, prefix);
-    n = report->tokenptr - report->linebuf;
-    for (i = j = 0; i < n; i++) {
-        if (report->linebuf[i] == '\t') {
-            for (k = (j + 8) & ~7; j < k; j++) {
-                fputc('.', stderr);
-            }
-            continue;
-        }
-        fputc('.', stderr);
-        j++;
-    }
-    fputs("^\n", stderr);
- out:
-    JS_free(cx, prefix);
-}
-
 JSContextCallback gOldContextCallback = NULL;
 
 static JSBool
@@ -183,7 +96,7 @@ ContextCallback(JSContext *cx,
         return JS_FALSE;
 
     if (contextOp == JSCONTEXT_NEW) {
-        JS_SetErrorReporter(cx, ScriptErrorReporter);
+        JS_SetErrorReporter(cx, xpc::SystemErrorReporter);
     }
     return JS_TRUE;
 }
