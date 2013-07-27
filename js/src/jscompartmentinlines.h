@@ -33,6 +33,13 @@ js::AutoCompartment::AutoCompartment(JSContext *cx, JSObject *target)
     cx_->enterCompartment(target->compartment());
 }
 
+js::AutoCompartment::AutoCompartment(JSContext *cx, JSCompartment *target)
+  : cx_(cx),
+    origin_(cx->compartment())
+{
+    cx_->enterCompartment(target);
+}
+
 js::AutoCompartment::~AutoCompartment()
 {
     cx_->leaveCompartment(origin_);
