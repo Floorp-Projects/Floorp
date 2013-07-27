@@ -19,4 +19,6 @@ interface Performance {
   readonly attribute PerformanceTiming timing;
   [Constant]
   readonly attribute PerformanceNavigation navigation;
+
+  jsonifier;
 };

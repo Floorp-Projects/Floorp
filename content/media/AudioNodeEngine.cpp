@@ -39,6 +39,20 @@ WriteZeroesToAudioBlock(AudioChunk* aChunk, uint32_t aStart, uint32_t aLength)
   }
 }
 
+void AudioBufferCopyWithScale(const float* aInput,
+                              float aScale,
+                              float* aOutput,
+                              uint32_t aSize)
+{
+  if (aScale == 1.0f) {
+    PodCopy(aOutput, aInput, aSize);
+  } else {
+    for (uint32_t i = 0; i < aSize; ++i) {
+      aOutput[i] = aInput[i]*aScale;
+    }
+  }
+}
+
 void AudioBufferAddWithScale(const float* aInput,
                              float aScale,
                              float* aOutput,

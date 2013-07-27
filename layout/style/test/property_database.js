@@ -4466,6 +4466,16 @@ if (SpecialPowers.getBoolPref("layout.css.filters.enabled")) {
 			"grayscale(350%)",
 			"grayscale(4.567)",
 
+			"hue-rotate(0deg)",
+			"hue-rotate(90deg)",
+			"hue-rotate(540deg)",
+			"hue-rotate(-90deg)",
+			"hue-rotate(10grad)",
+			"hue-rotate(1.6rad)",
+			"hue-rotate(-1.6rad)",
+			"hue-rotate(0.5turn)",
+			"hue-rotate(-2turn)",
+
 			"invert(0)",
 			"invert(50%)",
 			"invert(1)",
@@ -4553,6 +4563,16 @@ if (SpecialPowers.getBoolPref("layout.css.filters.enabled")) {
 			"grayscale(#my-filter)",
 			"grayscale(10px)",
 			"grayscale(-1)",
+
+			"hue-rotate()",
+			"hue-rotate(0)",
+			"hue-rotate(0.5 0.5)",
+			"hue-rotate(0.5,)",
+			"hue-rotate(0.5, 0.5)",
+			"hue-rotate(#my-filter)",
+			"hue-rotate(10px)",
+			"hue-rotate(-1)",
+			"hue-rotate(45deg,)",
 
 			"invert()",
 			"invert(0.5 0.5)",

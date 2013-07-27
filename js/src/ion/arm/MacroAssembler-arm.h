@@ -515,13 +515,25 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void call(IonCode *c) {
         BufferOffset bo = m_buffer.nextOffset();
         addPendingJump(bo, c->raw(), Relocation::IONCODE);
-        ma_mov(Imm32((uint32_t)c->raw()), ScratchRegister);
+        RelocStyle rs;
+        if (hasMOVWT())
+            rs = L_MOVWT;
+        else
+            rs = L_LDR;
+
+        ma_movPatchable(Imm32((int) c->raw()), ScratchRegister, Always, rs);
         ma_callIonHalfPush(ScratchRegister);
     }
     void branch(IonCode *c) {
         BufferOffset bo = m_buffer.nextOffset();
         addPendingJump(bo, c->raw(), Relocation::IONCODE);
-        ma_mov(Imm32((uint32_t)c->raw()), ScratchRegister);
+        RelocStyle rs;
+        if (hasMOVWT())
+            rs = L_MOVWT;
+        else
+            rs = L_LDR;
+
+        ma_movPatchable(Imm32((int) c->raw()), ScratchRegister, Always, rs);
         ma_bx(ScratchRegister);
     }
     void branch(const Register reg) {

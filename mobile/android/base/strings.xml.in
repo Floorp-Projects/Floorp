@@ -323,4 +323,11 @@
   <!-- Guest mode -->
   <string name="enter_guest_mode">&enter_guest_mode;</string>
   <string name="exit_guest_mode">&exit_guest_mode;</string>
+  <string name="guest_mode_dialog_continue">&guest_mode_dialog_continue;</string>
+  <string name="guest_mode_dialog_cancel">&guest_mode_dialog_cancel;</string>
+  <string name="guest_mode_enter_title">&guest_mode_enter_title;</string>
+  <string name="guest_mode_enter_text">&guest_mode_enter_text;</string>
+
+  <string name="guest_mode_leave_title">&guest_mode_leave_title;</string>
+  <string name="guest_mode_leave_text">&guest_mode_leave_text;</string>
 </resources>

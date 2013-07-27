@@ -676,6 +676,11 @@ RasterImage::GetDrawableImgFrame(uint32_t framenum)
   // so we can catch crashes for reasons we haven't investigated.
   if (frame && frame->GetCompositingFailed())
     return nullptr;
+
+  if (frame) {
+    frame->ApplyDirtToSurfaces();
+  }
+
   return frame;
 }
 
@@ -2320,25 +2325,7 @@ RasterImage::RequestDecodeCore(RequestDecodeType aDecodeType)
 nsresult
 RasterImage::SyncDecode()
 {
-  MutexAutoLock imgLock(mDecodingMutex);
-
-  if (mDecodeRequest) {
-    // If the image is waiting for decode work to be notified, go ahead and do that.
-    if (mDecodeRequest->mRequestStatus == DecodeRequest::REQUEST_WORK_DONE) {
-      nsresult rv = FinishedSomeDecoding();
-      CONTAINER_ENSURE_SUCCESS(rv);
-    }
-  }
-
-  nsresult rv;
-
   PROFILER_LABEL_PRINTF("RasterImage", "SyncDecode", "%s", GetURIString().get());;
-
-  // We really have no good way of forcing a synchronous decode if we're being
-  // called in a re-entrant manner (ie, from an event listener fired by a
-  // decoder), because the decoding machinery is already tied up. We thus explicitly
-  // disallow this type of call in the API, and check for it in API methods.
-  NS_ABORT_IF_FALSE(!mInDecoder, "Yikes, forcing sync in reentrant call!");
 
   // If we have a size decoder open, make sure we get the size
   if (mDecoder && mDecoder->IsSizeDecode()) {
@@ -2352,6 +2339,24 @@ RasterImage::SyncDecode()
       return NS_ERROR_NOT_AVAILABLE;
     }
   }
+
+  MutexAutoLock imgLock(mDecodingMutex);
+
+  // We really have no good way of forcing a synchronous decode if we're being
+  // called in a re-entrant manner (ie, from an event listener fired by a
+  // decoder), because the decoding machinery is already tied up. We thus explicitly
+  // disallow this type of call in the API, and check for it in API methods.
+  NS_ABORT_IF_FALSE(!mInDecoder, "Yikes, forcing sync in reentrant call!");
+
+  if (mDecodeRequest) {
+    // If the image is waiting for decode work to be notified, go ahead and do that.
+    if (mDecodeRequest->mRequestStatus == DecodeRequest::REQUEST_WORK_DONE) {
+      nsresult rv = FinishedSomeDecoding();
+      CONTAINER_ENSURE_SUCCESS(rv);
+    }
+  }
+
+  nsresult rv;
 
   // If we're decoded already, or decoding until the size was available
   // finished us as a side-effect, no worries
@@ -2470,14 +2475,16 @@ RasterImage::ScalingDone(ScaleRequest* request, ScaleStatus status)
   if (status == SCALE_DONE) {
     MOZ_ASSERT(request->done);
 
+    imgFrame *scaledFrame = request->dstFrame.forget();
+    scaledFrame->ImageUpdated(scaledFrame->GetRect());
+    scaledFrame->ApplyDirtToSurfaces();
+
     if (mStatusTracker) {
-      imgFrame *scaledFrame = request->dstFrame.get();
-      scaledFrame->ImageUpdated(scaledFrame->GetRect());
       mStatusTracker->FrameChanged(&request->srcRect);
     }
 
     mScaleResult.status = SCALE_DONE;
-    mScaleResult.frame = request->dstFrame;
+    mScaleResult.frame = scaledFrame;
     mScaleResult.scale = request->scale;
   } else {
     mScaleResult.status = SCALE_INVALID;
@@ -2553,8 +2560,6 @@ RasterImage::DrawWithPreDownscaleIfNeeded(imgFrame *aFrame,
                       mSize.width - framerect.XMost(),
                       mSize.height - framerect.YMost(),
                       framerect.x);
-
-  frame->ApplyDirtToSurfaces();
 
   frame->Draw(aContext, aFilter, userSpaceToImageSpace, aFill, padding, subimage,
               aFlags);

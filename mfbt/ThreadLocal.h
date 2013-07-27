@@ -29,6 +29,7 @@ __declspec(dllimport) unsigned long __stdcall TlsAlloc();
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/NullPtr.h"
 
 namespace mozilla {
 
@@ -107,7 +108,7 @@ ThreadLocal<T>::init()
   key = TlsAlloc();
   inited = key != 0xFFFFFFFFUL; // TLS_OUT_OF_INDEXES
 #else
-  inited = !pthread_key_create(&key, NULL);
+  inited = !pthread_key_create(&key, nullptr);
 #endif
   return inited;
 }

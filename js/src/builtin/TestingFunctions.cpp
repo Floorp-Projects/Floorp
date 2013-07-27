@@ -38,7 +38,7 @@ GetBuildConfiguration(JSContext *cx, unsigned argc, jsval *vp)
 #else
     value = BooleanValue(false);
 #endif
-    if (!JS_SetProperty(cx, info, "rooting-analysis", &value))
+    if (!JS_SetProperty(cx, info, "rooting-analysis", value))
         return false;
 
 #ifdef JSGC_USE_EXACT_ROOTING
@@ -46,7 +46,7 @@ GetBuildConfiguration(JSContext *cx, unsigned argc, jsval *vp)
 #else
     value = BooleanValue(false);
 #endif
-    if (!JS_SetProperty(cx, info, "exact-rooting", &value))
+    if (!JS_SetProperty(cx, info, "exact-rooting", value))
         return false;
 
 #ifdef DEBUG
@@ -54,7 +54,7 @@ GetBuildConfiguration(JSContext *cx, unsigned argc, jsval *vp)
 #else
     value = BooleanValue(false);
 #endif
-    if (!JS_SetProperty(cx, info, "debug", &value))
+    if (!JS_SetProperty(cx, info, "debug", value))
         return false;
 
 #ifdef JS_HAS_CTYPES
@@ -62,7 +62,7 @@ GetBuildConfiguration(JSContext *cx, unsigned argc, jsval *vp)
 #else
     value = BooleanValue(false);
 #endif
-    if (!JS_SetProperty(cx, info, "has-ctypes", &value))
+    if (!JS_SetProperty(cx, info, "has-ctypes", value))
         return false;
 
 #ifdef JS_CPU_X86
@@ -70,7 +70,7 @@ GetBuildConfiguration(JSContext *cx, unsigned argc, jsval *vp)
 #else
     value = BooleanValue(false);
 #endif
-    if (!JS_SetProperty(cx, info, "x86", &value))
+    if (!JS_SetProperty(cx, info, "x86", value))
         return false;
 
 #ifdef JS_CPU_X64
@@ -78,7 +78,7 @@ GetBuildConfiguration(JSContext *cx, unsigned argc, jsval *vp)
 #else
     value = BooleanValue(false);
 #endif
-    if (!JS_SetProperty(cx, info, "x64", &value))
+    if (!JS_SetProperty(cx, info, "x64", value))
         return false;
 
 #ifdef MOZ_ASAN
@@ -86,7 +86,7 @@ GetBuildConfiguration(JSContext *cx, unsigned argc, jsval *vp)
 #else
     value = BooleanValue(false);
 #endif
-    if (!JS_SetProperty(cx, info, "asan", &value))
+    if (!JS_SetProperty(cx, info, "asan", value))
         return false;
 
 #ifdef JS_GC_ZEAL
@@ -94,7 +94,7 @@ GetBuildConfiguration(JSContext *cx, unsigned argc, jsval *vp)
 #else
     value = BooleanValue(false);
 #endif
-    if (!JS_SetProperty(cx, info, "has-gczeal", &value))
+    if (!JS_SetProperty(cx, info, "has-gczeal", value))
         return false;
 
 #ifdef JS_THREADSAFE
@@ -102,7 +102,7 @@ GetBuildConfiguration(JSContext *cx, unsigned argc, jsval *vp)
 #else
     value = BooleanValue(false);
 #endif
-    if (!JS_SetProperty(cx, info, "threadsafe", &value))
+    if (!JS_SetProperty(cx, info, "threadsafe", value))
         return false;
 
 #ifdef JS_MORE_DETERMINISTIC
@@ -110,7 +110,7 @@ GetBuildConfiguration(JSContext *cx, unsigned argc, jsval *vp)
 #else
     value = BooleanValue(false);
 #endif
-    if (!JS_SetProperty(cx, info, "more-deterministic", &value))
+    if (!JS_SetProperty(cx, info, "more-deterministic", value))
         return false;
 
 #ifdef MOZ_PROFILING
@@ -118,7 +118,7 @@ GetBuildConfiguration(JSContext *cx, unsigned argc, jsval *vp)
 #else
     value = BooleanValue(false);
 #endif
-    if (!JS_SetProperty(cx, info, "profiling", &value))
+    if (!JS_SetProperty(cx, info, "profiling", value))
         return false;
 
 #ifdef INCLUDE_MOZILLA_DTRACE
@@ -126,7 +126,7 @@ GetBuildConfiguration(JSContext *cx, unsigned argc, jsval *vp)
 #else
     value = BooleanValue(false);
 #endif
-    if (!JS_SetProperty(cx, info, "dtrace", &value))
+    if (!JS_SetProperty(cx, info, "dtrace", value))
         return false;
 
 #ifdef MOZ_TRACE_JSCALLS
@@ -134,7 +134,7 @@ GetBuildConfiguration(JSContext *cx, unsigned argc, jsval *vp)
 #else
     value = BooleanValue(false);
 #endif
-    if (!JS_SetProperty(cx, info, "trace-jscalls-api", &value))
+    if (!JS_SetProperty(cx, info, "trace-jscalls-api", value))
         return false;
 
 #ifdef JSGC_INCREMENTAL
@@ -142,7 +142,7 @@ GetBuildConfiguration(JSContext *cx, unsigned argc, jsval *vp)
 #else
     value = BooleanValue(false);
 #endif
-    if (!JS_SetProperty(cx, info, "incremental-gc", &value))
+    if (!JS_SetProperty(cx, info, "incremental-gc", value))
         return false;
 
 #ifdef JSGC_GENERATIONAL
@@ -150,7 +150,7 @@ GetBuildConfiguration(JSContext *cx, unsigned argc, jsval *vp)
 #else
     value = BooleanValue(false);
 #endif
-    if (!JS_SetProperty(cx, info, "generational-gc", &value))
+    if (!JS_SetProperty(cx, info, "generational-gc", value))
         return false;
 
 #ifdef MOZ_VALGRIND
@@ -158,7 +158,7 @@ GetBuildConfiguration(JSContext *cx, unsigned argc, jsval *vp)
 #else
     value = BooleanValue(false);
 #endif
-    if (!JS_SetProperty(cx, info, "valgrind", &value))
+    if (!JS_SetProperty(cx, info, "valgrind", value))
         return false;
 
 #ifdef JS_OOM_DO_BACKTRACES
@@ -166,7 +166,7 @@ GetBuildConfiguration(JSContext *cx, unsigned argc, jsval *vp)
 #else
     value = BooleanValue(false);
 #endif
-    if (!JS_SetProperty(cx, info, "oom-backtraces", &value))
+    if (!JS_SetProperty(cx, info, "oom-backtraces", value))
         return false;
 
 #ifdef ENABLE_PARALLEL_JS
@@ -174,7 +174,7 @@ GetBuildConfiguration(JSContext *cx, unsigned argc, jsval *vp)
 #else
     value = BooleanValue(false);
 #endif
-    if (!JS_SetProperty(cx, info, "parallelJS", &value))
+    if (!JS_SetProperty(cx, info, "parallelJS", value))
         return false;
 
 #ifdef ENABLE_BINARYDATA
@@ -182,7 +182,7 @@ GetBuildConfiguration(JSContext *cx, unsigned argc, jsval *vp)
 #else
     value = BooleanValue(false);
 #endif
-    if (!JS_SetProperty(cx, info, "binary-data", &value))
+    if (!JS_SetProperty(cx, info, "binary-data", value))
         return false;
 
     *vp = ObjectValue(*info);

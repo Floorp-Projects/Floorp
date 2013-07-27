@@ -158,7 +158,7 @@ function isObject(aObj, aExpectedObj, aMsg)
 /**
  * Return the DOM node by identifier (may be accessible, DOM node or ID).
  */
-function getNode(aAccOrNodeOrID)
+function getNode(aAccOrNodeOrID, aDocument)
 {
   if (!aAccOrNodeOrID)
     return null;
@@ -169,7 +169,7 @@ function getNode(aAccOrNodeOrID)
   if (aAccOrNodeOrID instanceof nsIAccessible)
     return aAccOrNodeOrID.DOMNode;
 
-  node = document.getElementById(aAccOrNodeOrID);
+  node = (aDocument || document).getElementById(aAccOrNodeOrID);
   if (!node) {
     ok(false, "Can't get DOM element for " + aAccOrNodeOrID);
     return null;

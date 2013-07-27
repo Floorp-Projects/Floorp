@@ -414,7 +414,7 @@ JavaScriptChild::AnswerSet(const ObjectId &objId, const ObjectId &receiverId, co
     if (!toValue(cx, value, &val))
         return fail(cx, rs);
 
-    if (!JS_SetPropertyById(cx, obj, internedId, &val))
+    if (!JS_SetPropertyById(cx, obj, internedId, val))
         return fail(cx, rs);
 
     if (!toVariant(cx, val, result))

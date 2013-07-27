@@ -1017,7 +1017,7 @@ nsStyleFilter::nsStyleFilter(const nsStyleFilter& aSource)
   if (mType == eURL) {
     mURL = aSource.mURL;
   } else if (mType != eNull) {
-    mCoord = aSource.mCoord;
+    mFilterParameter = aSource.mFilterParameter;
   }
 }
 
@@ -1036,7 +1036,7 @@ nsStyleFilter::operator==(const nsStyleFilter& aOther) const
   if (mType == eURL) {
     return EqualURIs(mURL, aOther.mURL);
   } else if (mType != eNull) {
-    return mCoord == aOther.mCoord;
+    return mFilterParameter == aOther.mFilterParameter;
   }
 
   return true;

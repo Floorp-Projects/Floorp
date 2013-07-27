@@ -208,6 +208,8 @@
 #include "nsIEditor.h"
 #include "nsIDOMCSSStyleRule.h"
 #include "mozilla/css/Rule.h"
+#include "nsIHttpChannelInternal.h"
+#include "nsISecurityConsoleMessage.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -2468,6 +2470,23 @@ CSPErrorQueue::Flush(nsIDocument* aDocument)
   mErrors.Clear();
 }
 
+void
+nsDocument::SendToConsole(nsCOMArray<nsISecurityConsoleMessage>& aMessages)
+{
+  for (uint32_t i = 0; i < aMessages.Length(); ++i) {
+    nsAutoString messageTag;
+    aMessages[i]->GetTag(messageTag);
+
+    nsAutoString category;
+    aMessages[i]->GetCategory(category);
+
+    nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
+                                    NS_ConvertUTF16toUTF8(category).get(),
+                                    this, nsContentUtils::eSECURITY_PROPERTIES,
+                                    NS_ConvertUTF16toUTF8(messageTag).get());
+  }
+}
+
 nsresult
 nsDocument::InitCSP(nsIChannel* aChannel)
 {
@@ -4286,8 +4305,16 @@ nsDocument::SetScriptGlobalObject(nsIScriptGlobalObject *aScriptGlobalObject)
   mWindow = window;
 
   // Now that we know what our window is, we can flush the CSP errors to the
-  // Web Console.
+  // Web Console. We are flushing all messages that occured and were stored
+  // in the queue prior to this point.
   FlushCSPWebConsoleErrorQueue();
+  nsCOMPtr<nsIHttpChannelInternal> internalChannel =
+    do_QueryInterface(GetChannel());
+  if (internalChannel) {
+    nsCOMArray<nsISecurityConsoleMessage> messages;
+    internalChannel->TakeAllSecurityMessages(messages);
+    SendToConsole(messages);
+  }
 
   // Set our visibility state, but do not fire the event.  This is correct
   // because either we're coming out of bfcache (in which case IsVisible() will

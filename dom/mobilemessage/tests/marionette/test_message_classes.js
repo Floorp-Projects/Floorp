@@ -15,8 +15,9 @@ const PDU_UD = "41";
 
 SpecialPowers.addPermission("sms", true, document);
 
-let sms = window.navigator.mozSms;
-ok(sms instanceof MozSmsManager);
+let manager = window.navigator.mozMobileMessage;
+ok(manager instanceof MozMobileMessageManager,
+   "manager is instance of " + manager.constructor);
 
 let pendingEmulatorCmdCount = 0;
 function sendSmsPduToEmulator(pdu) {
@@ -61,8 +62,8 @@ function test_message_class_0() {
   ];
 
   function do_test(dcsIndex) {
-    sms.addEventListener("received", function onReceived(event) {
-      sms.removeEventListener("received", onReceived);
+    manager.addEventListener("received", function onReceived(event) {
+      manager.removeEventListener("received", onReceived);
 
       let message = event.message;
       checkMessage(message, -1, 0, "class-0");
@@ -72,7 +73,7 @@ function test_message_class_0() {
          "Message's timestamp should be lesser than the timestamp of now");
 
       // Make sure the message is not stored.
-      let cursor = sms.getMessages(null, false);
+      let cursor = manager.getMessages(null, false);
       cursor.onsuccess = function onsuccess() {
         if (cursor.result) {
           // Here we check whether there is any message of the same sender.
@@ -109,8 +110,8 @@ function test_message_class_0() {
 
 function doTestMessageClassGeneric(allDCSs, messageClass, next) {
   function do_test(dcsIndex) {
-    sms.addEventListener("received", function onReceived(event) {
-      sms.removeEventListener("received", onReceived);
+    manager.addEventListener("received", function onReceived(event) {
+      manager.removeEventListener("received", onReceived);
 
       // Make sure we can correctly receive the message
       checkMessage(event.message, null, null, messageClass);
@@ -187,7 +188,7 @@ function test_message_class_2() {
       }
 
       function next() {
-        sms.removeEventListener("received", onReceived);
+        manager.removeEventListener("received", onReceived);
 
         ++pidIndex;
         if (pidIndex >= allPIDs.length) {
@@ -202,7 +203,7 @@ function test_message_class_2() {
         }
       }
 
-      sms.addEventListener("received", onReceived);
+      manager.addEventListener("received", onReceived);
 
       if (pidIndex != 0) {
         // Wait for three seconds to ensure we don't receive the message.
