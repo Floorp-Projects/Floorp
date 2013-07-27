@@ -1266,7 +1266,7 @@ JSContext::wrapPendingException()
 {
     RootedValue value(this, getPendingException());
     clearPendingException();
-    if (!IsAtomsCompartment(compartment()) && compartment()->wrap(this, &value))
+    if (compartment()->wrap(this, &value))
         setPendingException(value);
 }
 
@@ -1303,9 +1303,14 @@ JSContext::saveFrameChain()
     if (Activation *act = mainThread().activation())
         act->saveFrameChain();
 
-    setCompartment(NULL);
+    if (defaultCompartmentObject_)
+        setCompartment(defaultCompartmentObject_->compartment());
+    else
+        setCompartment(NULL);
     enterCompartmentDepth_ = 0;
 
+    if (isExceptionPending())
+        wrapPendingException();
     return true;
 }
 

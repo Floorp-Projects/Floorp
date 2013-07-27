@@ -81,7 +81,6 @@ class JSAPITest
         }
         if (cx) {
             JS_RemoveObjectRoot(cx, &global);
-            JS_LeaveCompartment(cx, NULL);
             JS_EndRequest(cx);
             JS_DestroyContext(cx);
             cx = NULL;
