@@ -35,15 +35,14 @@ function test()
 
 function blackBoxSources() {
   let timesFired = 0;
-  gDebugger.addEventListener("Debugger:BlackBoxChange", function _onBlackboxChange() {
+  const { activeThread } = gDebugger.DebuggerController;
+  activeThread.addListener("blackboxchange", function _onBlackBoxChange() {
     if (++timesFired !== 3) {
       return;
     }
-    gDebugger.removeEventListener("Debugger:BlackBoxChange", _onBlackboxChange, false);
+    activeThread.removeListener("blackboxchange", _onBlackBoxChange);
 
-    const { activeThread } = gDebugger.DebuggerController;
     activeThread.addOneTimeListener("framesadded", testStackFrames);
-
     gDebuggee.one();
   }, false);
 

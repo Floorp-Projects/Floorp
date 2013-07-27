@@ -55,10 +55,9 @@ function testBlackBoxSource() {
   const checkbox = getBlackBoxCheckbox(BLACKBOXME_URL);
   ok(checkbox, "Should get the checkbox for black boxing the source");
 
-  once(gDebugger, "Debugger:BlackBoxChange", function (event) {
-    const { activeThread } = gDebugger.DebuggerController;
+  const { activeThread } = gDebugger.DebuggerController;
+  activeThread.addOneTimeListener("blackboxchange", function (event, sourceClient) {
     activeThread.addOneTimeListener("framesadded", function () {
-      const sourceClient = event.detail;
       ok(sourceClient.isBlackBoxed, "The source should be black boxed now");
 
       const frames = gDebugger.DebuggerView.StackFrames.widget._list;
