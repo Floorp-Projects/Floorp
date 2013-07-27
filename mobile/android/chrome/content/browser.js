@@ -334,7 +334,8 @@ var BrowserApp = {
     WebappsUI.init();
     RemoteDebugger.init();
     Reader.init();
-    UserAgent.init();
+    UserAgentOverrides.init();
+    DesktopUserAgent.init();
     ExternalApps.init();
     Distribution.init();
     Tabs.init();
@@ -656,7 +657,8 @@ var BrowserApp = {
     WebappsUI.uninit();
     RemoteDebugger.uninit();
     Reader.uninit();
-    UserAgent.uninit();
+    UserAgentOverrides.uninit();
+    DesktopUserAgent.uninit();
     ExternalApps.uninit();
     Distribution.uninit();
     Tabs.uninit();
@@ -2354,13 +2356,11 @@ var LightWeightThemeWebInstaller = {
   }
 };
 
-var UserAgent = {
+var DesktopUserAgent = {
   DESKTOP_UA: null,
-  YOUTUBE_DOMAIN: /(^|\.)youtube\.com$/,
 
   init: function ua_init() {
     Services.obs.addObserver(this, "DesktopMode:Change", false);
-    UserAgentOverrides.init();
     UserAgentOverrides.addComplexOverride(this.onRequest.bind(this));
 
     // See https://developer.mozilla.org/en/Gecko_user_agent_string_reference
@@ -2372,42 +2372,31 @@ var UserAgent = {
 
   uninit: function ua_uninit() {
     Services.obs.removeObserver(this, "DesktopMode:Change");
-    UserAgentOverrides.uninit();
   },
 
   onRequest: function(channel, defaultUA) {
     let channelWindow = this._getWindowForRequest(channel);
     let tab = BrowserApp.getTabForWindow(channelWindow);
     if (tab == null)
-      return;
+      return null;
 
-    let ua = this.getUserAgentForUriAndTab(channel.URI, tab, defaultUA);
-    if (ua)
-      channel.setRequestHeader("User-Agent", ua, false);
+    return this.getUserAgentForTab(tab);
   },
 
-  getUserAgentForWindow: function ua_getUserAgentForWindow(aWindow, defaultUA) {
+  getUserAgentForWindow: function ua_getUserAgentForWindow(aWindow) {
     let tab = BrowserApp.getTabForWindow(aWindow.top);
     if (tab)
-      return this.getUserAgentForUriAndTab(tab.browser.currentURI, tab, defaultUA);
-    return defaultUA;
+      return this.getUserAgentForTab(tab);
+
+    return null;
   },
 
-  getUserAgentForUriAndTab: function ua_getUserAgentForUriAndTab(aUri, aTab, defaultUA) {
+  getUserAgentForTab: function ua_getUserAgentForTab(aTab) {
     // Send desktop UA if "Request Desktop Site" is enabled.
     if (aTab.desktopMode)
       return this.DESKTOP_UA;
 
-    // Not all schemes have a host member.
-    if (aUri.schemeIs("http") || aUri.schemeIs("https")) {
-      if (this.YOUTUBE_DOMAIN.test(aUri.host)) {
-        // Send the phone UA to Youtube if this is a tablet.
-        if (!defaultUA.contains("Android; Mobile;"))
-          return defaultUA.replace("Android;", "Android; Mobile;");
-      }
-    }
-
-    return defaultUA;
+    return null;
   },
 
   _getRequestLoadContext: function ua_getRequestLoadContext(aRequest) {

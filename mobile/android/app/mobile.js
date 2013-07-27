@@ -771,3 +771,5 @@ pref("security.csp.speccompliant", true);
 // Enable hardware-accelerated Skia canvas
 pref("gfx.canvas.azure.backends", "skia");
 pref("gfx.canvas.azure.accelerated", true);
+
+pref("general.useragent.override.youtube.com", "Android; Tablet;#Android; Mobile;");
