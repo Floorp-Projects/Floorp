@@ -3189,7 +3189,7 @@ ThreadSources.prototype = {
     }
     dbg_assert(aScript.sourceMapURL, "Script should have a sourceMapURL");
     let sourceMapURL = this._normalize(aScript.sourceMapURL, aScript.url);
-    let map = this._fetchSourceMap(sourceMapURL)
+    let map = this._fetchSourceMap(sourceMapURL, aScript.url)
       .then((aSourceMap) => {
         for (let s of aSourceMap.sources) {
           this._generatedUrlsByOriginalUrl[s] = aScript.url;
@@ -3205,24 +3205,45 @@ ThreadSources.prototype = {
    * Return a promise of a SourceMapConsumer for the source map located at
    * |aAbsSourceMapURL|, which must be absolute. If there is already such a
    * promise extant, return it.
+   *
+   * @param string aAbsSourceMapURL
+   *        The source map URL, in absolute form, not relative.
+   * @param string aScriptURL
+   *        When the source map URL is a data URI, there is no sourceRoot on the
+   *        source map, and the source map's sources are relative, we resolve
+   *        them from aScriptURL.
    */
-  _fetchSourceMap: function TS__fetchSourceMap(aAbsSourceMapURL) {
+  _fetchSourceMap: function TS__fetchSourceMap(aAbsSourceMapURL, aScriptURL) {
     if (aAbsSourceMapURL in this._sourceMaps) {
       return this._sourceMaps[aAbsSourceMapURL];
-    } else {
-      let promise = fetch(aAbsSourceMapURL).then(rawSourceMap => {
-        let map = new SourceMapConsumer(rawSourceMap);
-        let base = aAbsSourceMapURL.replace(/\/[^\/]+$/, '/');
-        if (base.indexOf("data:") !== 0) {
-          map.sourceRoot = map.sourceRoot
-            ? this._normalize(map.sourceRoot, base)
-            : base;
-        }
-        return map;
-      });
-      this._sourceMaps[aAbsSourceMapURL] = promise;
-      return promise;
     }
+
+    let promise = fetch(aAbsSourceMapURL).then(rawSourceMap => {
+      let map = new SourceMapConsumer(rawSourceMap);
+      this._setSourceMapRoot(map, aAbsSourceMapURL, aScriptURL);
+      return map;
+    });
+    this._sourceMaps[aAbsSourceMapURL] = promise;
+    return promise;
+  },
+
+  /**
+   * Sets the source map's sourceRoot to be relative to the source map url.
+   */
+  _setSourceMapRoot: function TS__setSourceMapRoot(aSourceMap, aAbsSourceMapURL,
+                                                   aScriptURL) {
+    const base = this._dirname(
+      aAbsSourceMapURL.indexOf("data:") === 0
+        ? aScriptURL
+        : aAbsSourceMapURL);
+    aSourceMap.sourceRoot = aSourceMap.sourceRoot
+      ? this._normalize(aSourceMap.sourceRoot, base)
+      : base;
+  },
+
+  _dirname: function TS__dirname(aPath) {
+    return Services.io.newURI(
+      ".", null, Services.io.newURI(aPath, null, null)).spec;
   },
 
   /**
