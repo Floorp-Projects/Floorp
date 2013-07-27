@@ -480,8 +480,8 @@ inline void
 JSContext::enterCompartment(JSCompartment *c)
 {
     enterCompartmentDepth_++;
-    setCompartment(c);
     c->enter();
+    setCompartment(c);
     if (throwing)
         wrapPendingException();
 }
@@ -492,8 +492,11 @@ JSContext::leaveCompartment(JSCompartment *oldCompartment)
     JS_ASSERT(hasEnteredCompartment());
     enterCompartmentDepth_--;
 
-    compartment()->leave();
+    // Only call leave() after we've setCompartment()-ed away from the current
+    // compartment.
+    JSCompartment *startingCompartment = compartment();
     setCompartment(oldCompartment);
+    startingCompartment->leave();
 
     if (throwing && oldCompartment)
         wrapPendingException();
@@ -502,6 +505,10 @@ JSContext::leaveCompartment(JSCompartment *oldCompartment)
 inline void
 JSContext::setCompartment(JSCompartment *comp)
 {
+    // Both the current and the new compartment should be properly marked as
+    // entered at this point.
+    JS_ASSERT_IF(compartment_, compartment_->hasBeenEntered());
+    JS_ASSERT_IF(comp, comp->hasBeenEntered());
     compartment_ = comp;
     zone_ = comp ? comp->zone() : NULL;
     allocator_ = zone_ ? &zone_->allocator : NULL;
