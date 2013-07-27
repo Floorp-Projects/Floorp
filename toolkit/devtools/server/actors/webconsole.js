@@ -625,11 +625,29 @@ WebConsoleActor.prototype =
   {
     // TODO: Bug 842682 - use the debugger API for autocomplete in the Web
     // Console, and provide suggestions from the selected debugger stack frame.
+    // Also, properly reuse _getJSTermHelpers instead of re-implementing it
+    // here.
     let result = JSPropertyProvider(this.window, aRequest.text,
                                     aRequest.cursor) || {};
+    let matches = result.matches || [];
+    let reqText = aRequest.text.substr(0, aRequest.cursor);
+
+    // We consider '$' as alphanumerc because it is used in the names of some
+    // helper functions.
+    let lastNonAlphaIsDot = /[.][a-zA-Z0-9$]*$/.test(reqText);
+    if (!lastNonAlphaIsDot) {
+      let helpers = {
+        sandbox: Object.create(null)
+      };
+      JSTermHelpers(helpers);
+
+      let helperNames = Object.getOwnPropertyNames(helpers.sandbox);
+      matches = matches.concat(helperNames.filter(n => n.startsWith(result.matchProp)));
+    }
+
     return {
       from: this.actorID,
-      matches: result.matches || [],
+      matches: matches.sort(),
       matchProp: result.matchProp,
     };
   },

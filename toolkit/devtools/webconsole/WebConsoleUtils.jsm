@@ -843,7 +843,7 @@ function JSPropertyProvider(aScope, aInputValue, aCursor)
 
   return {
     matchProp: matchProp,
-    matches: matches.sort(),
+    matches: matches,
   };
 }
 
