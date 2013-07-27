@@ -2074,8 +2074,7 @@ nsGlobalWindow::SetOuterObject(JSContext* aCx, JS::Handle<JSObject*> aOuterObjec
 {
   JSAutoCompartment ac(aCx, aOuterObject);
 
-  // Force our context's global object to be the outer.
-  // NB: JS_SetGlobalObject sets aCx->compartment.
+  // Indicate the default compartment object associated with this cx.
   JS_SetGlobalObject(aCx, aOuterObject);
 
   // Set up the prototype for the outer object.
