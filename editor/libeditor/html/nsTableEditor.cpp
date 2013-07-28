@@ -2752,6 +2752,16 @@ nsHTMLEditor::GetCellAt(nsIDOMElement* aTable, int32_t aRowIndex, int32_t aColIn
   NS_ENSURE_ARG_POINTER(aCell);
   *aCell = nullptr;
 
+  if (!aTable)
+  {
+    // Get the selected table or the table enclosing the selection anchor
+    nsCOMPtr<nsIDOMElement> table;
+    nsresult res = GetElementOrParentByTagName(NS_LITERAL_STRING("table"), nullptr, getter_AddRefs(table));
+    NS_ENSURE_SUCCESS(res, res);
+    NS_ENSURE_TRUE(table, NS_ERROR_FAILURE);
+    aTable = table;
+  }
+
   nsTableOuterFrame* tableFrame = GetTableFrame(aTable);
   if (!tableFrame)
     return NS_ERROR_FAILURE;
