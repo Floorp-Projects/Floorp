@@ -3049,12 +3049,6 @@ typedef uint64_t EGLTime;
 #define LOCAL_GL_CONDITION_SATISFIED              0x911C
 #define LOCAL_GL_WAIT_FAILED                      0x911D
 
-// ARB_occlusion_query2
-#define LOCAL_GL_ANY_SAMPLES_PASSED               0x8C2F
-
-// EXT_occlusion_query_boolean
-#define LOCAL_GL_ANY_SAMPLES_PASSED_CONSERVATIVE  0x8D6A
-
 // OES_EGL_image_external
 #define LOCAL_GL_TEXTURE_EXTERNAL                 0x8D65
 
