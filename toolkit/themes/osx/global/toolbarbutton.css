@@ -34,16 +34,6 @@ toolbarbutton[disabled="true"][open="true"] {
   color: -moz-mac-disabledtoolbartext !important;
 }
 
-/* ..... checked state ..... */
-
-toolbarbutton[checked="true"] {
-    background-color: #DDDDDD;
-    background-image: none;
-    border-right: 1px solid #b9b9b9;
-    border-left: 1px solid #b9b9b9;
-    color: ButtonText !important;
-}
-
 /* ::::: toolbarbutton menu ::::: */
 
 .toolbarbutton-menu-dropmarker {
