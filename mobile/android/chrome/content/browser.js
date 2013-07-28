@@ -295,6 +295,7 @@ var BrowserApp = {
     Services.obs.addObserver(this, "FormHistory:Init", false);
     Services.obs.addObserver(this, "gather-telemetry", false);
     Services.obs.addObserver(this, "keyword-search", false);
+    Services.obs.addObserver(this, "SelectedText:Get", false);
 
     Services.obs.addObserver(this, "sessionstore-state-purge-complete", false);
 
@@ -1439,6 +1440,14 @@ var BrowserApp = {
           type: "Search:Keyword",
           identifier: engine.identifier,
           name: engine.name,
+        });
+        break;
+
+      case "SelectedText:Get":
+        sendMessageToJava({
+          type: "SelectedText:Data",
+          requestId: aData,
+          text: SelectionHandler.getSelectedText()
         });
         break;
 
