@@ -1,0 +1,26 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 886262</title>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+
+<script>
+  function doTest() {
+    try {
+      window.parent.parent.ok_wrapper(false, "an iframe in an iframe SHOULD copy its parent's sandbox flags when its sandbox flags are changed");
+    }
+    catch (e) {
+      window.parent.parent.postMessage({ok: true, desc: "an iframe in an iframe copies its parent's sandbox flags when its sandbox flags are changed"}, "*");
+    }
+  }
+</script>
+
+<body onload="doTest()">
+  I'm an iframe whose sandbox flags have been changed to include allow-same-origin.
+  I should not be able to call a function in my parent's parent because my parent's
+  iframe does not have allow-same-origin set.
+</body>
+</html>
+

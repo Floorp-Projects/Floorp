@@ -14,6 +14,9 @@ Implement HTML5 sandbox attribute for IFRAMEs - inheritance tests
 /** Test for Bug 341604 - Implement HTML5 sandbox attribute for IFRAMEs **/
 /** Inheritance Tests **/
 
+// Assertion failure in docshell/shistory/src/nsSHEntry.cpp (currently line 625).
+// Bug 901876 raised.
+SimpleTest.expectAssertions(1);
 SimpleTest.waitForExplicitFinish();
   
 // A postMessage handler that is used by sandboxed iframes without
@@ -39,8 +42,8 @@ function ok_wrapper(result, desc) {
 	  passedTests++;
   } 
 
-  if (completedTests == 6) {
-    is(passedTests, 6, "there should be 6 passed inheritance tests");
+  if (completedTests == 13) {
+    is(passedTests, completedTests, "there should be " + completedTests + " passed inheritance tests");
     SimpleTest.finish();
   }
 }
@@ -102,6 +105,48 @@ function doTest() {
   // 11) a <frame> inside a <frame> inside an <iframe> sandboxed with 'allow-scripts' should not be same
   // origin with its parent frame or this document
   // done by file_iframe_sandbox_a_if12.html which is contained with file_iframe_sandbox_a_if11.html
+
+  // passes if good, fails if bad
+  // 12) An <object> inside an <iframe> sandboxed with 'allow-scripts' should not be same
+  // origin with this document
+  // Done by file_iframe_sandbox_a_if14.html which is contained within file_iframe_sandbox_a_if13.html
+
+  // passes if good, fails if bad
+  // 13) An <object> inside an <object> inside an <iframe> sandboxed with 'allow-scripts' should not be same
+  // origin with its parent frame or this document
+  // Done by file_iframe_sandbox_a_if15.html which is contained within file_iframe_sandbox_a_if14.html
+
+  // passes if good, fails if bad
+  // 14) An <object> inside a <frame> inside an <iframe> sandboxed with 'allow-scripts' should not be same
+  // origin with its parent frame or this document
+  // Done by file_iframe_sandbox_a_if15.html which is contained within file_iframe_sandbox_a_if16.html
+  // which is contained within file_iframe_sandbox_a_if10.html
+
+  // passes if good
+  // 15) An <object> inside an <object> inside an <iframe> sandboxed with 'allow-scripts allow-forms'
+  // should be able to submit forms.
+  // Done by file_iframe_sandbox_a_if15.html which is contained within file_iframe_sandbox_a_if14.html
+
+  // passes if good
+  // 16) An <object> inside a <frame> inside an <iframe> sandboxed with 'allow-scripts allow-forms'
+  // should be able to submit forms.
+  // Done by file_iframe_sandbox_a_if15.html which is contained within file_iframe_sandbox_a_if16.html
+  // which is contained within file_iframe_sandbox_a_if10.html
+
+  // fails if bad
+  // 17) An <object> inside an <iframe> sandboxed with 'allow-same-origin'
+  // should not be able to run scripts.
+  // Done by iframe "if_no_scripts" using a data: load.
+
+  // passes if good
+  // 18) An <object> inside an <iframe> sandboxed with 'allow-scripts allow-same-origin'
+  // should be able to run scripts and be same origin with this document.
+  // Done by iframe "if_scripts" using a data: load.
+
+  // passes if good, fails if bad
+  // 19) Make sure that the parent's document's sandboxing flags are copied when
+  // changing the sandbox flags on an iframe inside an iframe.
+  // Done in file_iframe_sandbox_a_if17.html and file_iframe_sandbox_a_if18.html
 }
 
 addLoadEvent(doTest);
@@ -114,5 +159,10 @@ addLoadEvent(doTest);
 <iframe sandbox="allow-scripts" id="if_3" src="file_iframe_sandbox_a_if3.html" height="10" width="10"></iframe>
 <iframe sandbox="allow-scripts allow-same-origin" id="if_5" src="file_iframe_sandbox_a_if5.html" height="10" width="10"></iframe>
 <iframe sandbox="allow-scripts allow-same-origin" id="if_8" src="file_iframe_sandbox_a_if8.html" height="10" width="10"></iframe>
-<iframe sandbox="allow-scripts" id="if_10" src="file_iframe_sandbox_a_if10.html" height="10" width="10"></iframe>
+<iframe sandbox="allow-scripts allow-forms" id="if_10" src="file_iframe_sandbox_a_if10.html" height="10" width="10"></iframe>
+<iframe sandbox="allow-scripts allow-forms" id="if_13" src="file_iframe_sandbox_a_if13.html" height="10" width="10"></iframe>
+<iframe sandbox="allow-same-origin" id="if_no_scripts" src="data:text/html,<object%20data='data:text/html,<script>parent.parent.ok_wrapper(false, &quot;an object inside an iframe sandboxed with only allow-same-origin should not be able to run scripts&quot;)</script>'></object>" height="10" width="10"></iframe>
+<iframe sandbox="allow-scripts allow-same-origin" id="if_scripts" src="data:text/html,<object%20data='data:text/html,<script>parent.parent.ok_wrapper(true, &quot;an object inside an iframe sandboxed with allow-scripts allow-same-origin should be able to run scripts and call functions in the parent of the iframe&quot;)</script>'></object>" height="10" width="10"></iframe>
+<iframe sandbox="allow-same-origin" id="if_19" src="data:text/html,<iframe%20data='data:text/html,<script>parent.parent.ok_wrapper(true, &quot;an object inside an iframe sandboxed with allow-scripts allow-same-origin should be able to run scripts and call functions in the parent of the iframe&quot;)</script>'></object>" height="10" width="10"></iframe>
+<iframe sandbox="allow-scripts" id="if_17" src="file_iframe_sandbox_a_if17.html" height="10" width="10"></iframe>
 </div>
