@@ -396,6 +396,7 @@ webidl_files += \
   $(NULL)
 ifndef RELEASE_BUILD
 webidl_files += \
+  WebGL2Objects.webidl \
   WebGL2RenderingContext.webidl \
   $(NULL)
 endif
