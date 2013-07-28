@@ -11,6 +11,7 @@
  * This file is a wrapper around <windows.h> to prevent the mangling of
  * various function names throughout the codebase.
  */
+
 #ifdef XP_WIN
 # include <windows.h>
 # undef GetProp

@@ -1813,10 +1813,10 @@ DrawTargetD2D::GetClippedGeometry(IntRect *aClipBounds)
     pathGeom = newGeom.forget();
   }
 
-  // For now we need mCurrentClippedGeometry to always be non-NULL. This method
-  // might seem a little strange but it is just fine, if pathGeom is NULL
-  // pathRect will always still contain 1 clip unaccounted for regardless of
-  // mCurrentClipBounds.
+  // For now we need mCurrentClippedGeometry to always be non-nullptr. This
+  // method might seem a little strange but it is just fine, if pathGeom is
+  // nullptr pathRect will always still contain 1 clip unaccounted for
+  // regardless of mCurrentClipBounds.
   if (!pathGeom) {
     pathGeom = ConvertRectToGeometry(pathRect);
   }

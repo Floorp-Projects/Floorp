@@ -7,6 +7,7 @@
 #include "ProcessPriorityManager.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/dom/ContentParent.h"
+#include "mozilla/dom/Element.h"
 #include "mozilla/dom/TabParent.h"
 #include "mozilla/Hal.h"
 #include "mozilla/Preferences.h"
@@ -829,8 +830,7 @@ ParticularProcessPriorityManager::IsExpectingSystemMessage()
     mContentParent->ManagedPBrowserParent();
   for (uint32_t i = 0; i < browsers.Length(); i++) {
     TabParent* tp = static_cast<TabParent*>(browsers[i]);
-    nsCOMPtr<nsIDOMElement> ownerElement = tp->GetOwnerElement();
-    nsCOMPtr<nsIMozBrowserFrame> bf = do_QueryInterface(ownerElement);
+    nsCOMPtr<nsIMozBrowserFrame> bf = do_QueryInterface(tp->GetOwnerElement());
     if (!bf) {
       continue;
     }

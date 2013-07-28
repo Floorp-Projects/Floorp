@@ -1042,6 +1042,20 @@ public:
   //
   // Mutation methods
   //
+  // This method call the destructor on each element of the array, empties it,
+  // but does not shrink the array's capacity.
+  //
+  // Make sure to call Compact() if needed to avoid keeping a huge array
+  // around.
+  void ClearAndRetainStorage() {
+    if (base_type::mHdr == EmptyHdr()) {
+      return;
+    }
+
+    DestructRange(0, Length());
+    base_type::mHdr->mLength = 0;
+  }
+
 
   // This method replaces a range of elements in this array.
   // @param start     The starting index of the elements to replace.

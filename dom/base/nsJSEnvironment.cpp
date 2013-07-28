@@ -135,6 +135,8 @@ static PRLogModuleInfo* gJSDiagnostics;
 // Large value used to specify that a script should run essentially forever
 #define NS_UNLIMITED_SCRIPT_RUNTIME (0x40000000LL << 32)
 
+#define NS_MAJOR_FORGET_SKIPPABLE_CALLS 2
+
 // if you add statics here, add them to the list in nsJSRuntime::Startup
 
 static nsITimer *sGCTimer;
@@ -469,11 +471,12 @@ NS_ScriptErrorReporter(JSContext *cx,
   // We don't want to report exceptions too eagerly, but warnings in the
   // absence of werror are swallowed whole, so report those now.
   if (!JSREPORT_IS_WARNING(report->flags)) {
+    nsIXPConnect* xpc = nsContentUtils::XPConnect();
     if (JS_DescribeScriptedCaller(cx, nullptr, nullptr)) {
+      xpc->MarkErrorUnreported(cx);
       return;
     }
 
-    nsIXPConnect* xpc = nsContentUtils::XPConnect();
     if (xpc) {
       nsAXPCNativeCallContext *cc = nullptr;
       xpc->GetCurrentNativeCallContext(&cc);
@@ -483,6 +486,7 @@ NS_ScriptErrorReporter(JSContext *cx,
           uint16_t lang;
           if (NS_SUCCEEDED(prev->GetLanguage(&lang)) &&
             lang == nsAXPCNativeCallContext::LANG_JS) {
+            xpc->MarkErrorUnreported(cx);
             return;
           }
         }
@@ -2500,7 +2504,9 @@ FireForgetSkippable(uint32_t aSuspected, bool aRemoveChildless)
 {
   PRTime startTime = PR_Now();
   FinishAnyIncrementalGC();
-  nsCycleCollector_forgetSkippable(aRemoveChildless);
+  bool earlyForgetSkippable =
+    sCleanupsSinceLastGC < NS_MAJOR_FORGET_SKIPPABLE_CALLS;
+  nsCycleCollector_forgetSkippable(aRemoveChildless, earlyForgetSkippable);
   sPreviousSuspectedCount = nsCycleCollector_suspectedCount();
   ++sCleanupsSinceLastGC;
   PRTime delta = PR_Now() - startTime;
@@ -2550,8 +2556,9 @@ nsJSContext::CycleCollectNow(nsICycleCollectorListener *aListener,
 
   // Run forgetSkippable synchronously to reduce the size of the CC graph. This
   // is particularly useful if we recently finished a GC.
-  if (sCleanupsSinceLastGC < 2 && aExtraForgetSkippableCalls >= 0) {
-    while (sCleanupsSinceLastGC < 2) {
+  if (sCleanupsSinceLastGC < NS_MAJOR_FORGET_SKIPPABLE_CALLS &&
+      aExtraForgetSkippableCalls >= 0) {
+    while (sCleanupsSinceLastGC < NS_MAJOR_FORGET_SKIPPABLE_CALLS) {
       FireForgetSkippable(nsCycleCollector_suspectedCount(), false);
       ranSyncForgetSkippable = true;
     }
@@ -3027,9 +3034,6 @@ DOMGCSliceCallback(JSRuntime *aRt, JS::GCProgress aProgress, const JS::GCDescrip
 
   // The GC has more work to do, so schedule another GC slice.
   if (aProgress == JS::GC_SLICE_END) {
-    if (ShouldTriggerCC(nsCycleCollector_suspectedCount())) {
-      nsCycleCollector_dispatchDeferredDeletion();
-    }
     nsJSContext::KillInterSliceGCTimer();
     if (!sShuttingDown) {
       CallCreateInstance("@mozilla.org/timer;1", &sInterSliceGCTimer);
@@ -3069,6 +3073,11 @@ DOMGCSliceCallback(JSRuntime *aRt, JS::GCProgress aProgress, const JS::GCDescrip
       // compartment GC.
       nsJSContext::PokeShrinkGCBuffers();
     }
+  }
+
+  if ((aProgress == JS::GC_SLICE_END || aProgress == JS::GC_CYCLE_END) &&
+      ShouldTriggerCC(nsCycleCollector_suspectedCount())) {
+    nsCycleCollector_dispatchDeferredDeletion();
   }
 
   if (sPrevGCSliceCallback)

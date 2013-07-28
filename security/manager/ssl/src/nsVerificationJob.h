@@ -37,7 +37,7 @@ public:
   nsCertVerificationResult();
   virtual ~nsCertVerificationResult();
 
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSICERTVERIFICATIONRESULT
 
 private:

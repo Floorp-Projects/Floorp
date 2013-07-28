@@ -1684,6 +1684,22 @@ window[tabsontop="false"] richlistitem[type~="action"][actiontype="switchtab"][s
   list-style-image: url("chrome://browser/skin/social/share-button-active.png");
 }
 
+#social-share-button > .toolbarbutton-icon {
+  width: 13px;
+  height: 14px;
+}
+
+@media (min-resolution: 2dppx) {
+  #social-share-button {
+    list-style-image: url("chrome://browser/skin/social/share-button@2x.png");
+  }
+
+  #social-share-button[open],
+  #social-share-button:hover:active {
+    list-style-image: url("chrome://browser/skin/social/share-button-active@2x.png");
+  }
+}
+
 .social-share-toolbar {
   border-right: 1px solid #dedede;
   background: linear-gradient(to bottom, rgba(247,247,247,.99), rgba(247,247,247,.95));
@@ -3639,6 +3655,16 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 %include ../shared/devtools/highlighter.inc.css
 %include ../shared/devtools/commandline.inc.css
 %include ../shared/plugin-doorhanger.inc.css
+
+/* On mac, the popup notification contents are indented by default and so
+  the default closebutton margins from notification.css require adjustment */
+
+.click-to-play-plugins-notification-description-box > .popup-notification-closebutton {
+  -moz-margin-end: -6px;
+  margin-top: -7px;
+}
+
+
 
 .gclitoolbar-input-node > .textbox-input-box > html|*.textbox-input::-moz-selection {
   color: hsl(210,11%,16%);

@@ -59,7 +59,7 @@ nsMozIconURI::~nsMozIconURI()
 {
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(nsMozIconURI, nsIMozIconURI, nsIURI)
+NS_IMPL_ISUPPORTS2(nsMozIconURI, nsIMozIconURI, nsIURI)
 
 #define MOZICON_SCHEME "moz-icon:"
 #define MOZICON_SCHEME_LEN (sizeof(MOZICON_SCHEME) - 1)

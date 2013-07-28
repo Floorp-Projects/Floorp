@@ -241,7 +241,7 @@ class MediaDecoder : public nsIObserver,
 public:
   typedef mozilla::layers::Image Image;
 
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIOBSERVER
 
   // Enumeration for the valid play states (see mPlayState)
@@ -818,7 +818,7 @@ public:
 
     FrameStatistics() :
         mReentrantMonitor("MediaDecoder::FrameStats"),
-        mPlaybackJitter(0.0),
+        mTotalFrameDelay(0.0),
         mParsedFrames(0),
         mDecodedFrames(0),
         mPresentedFrames(0) {}
@@ -845,9 +845,9 @@ public:
       return mPresentedFrames;
     }
 
-    double GetPlaybackJitter() {
+    double GetTotalFrameDelay() {
       ReentrantMonitorAutoEnter mon(mReentrantMonitor);
-      return mPlaybackJitter;
+      return mTotalFrameDelay;
     }
 
     // Increments the parsed and decoded frame counters by the passed in counts.
@@ -867,11 +867,11 @@ public:
       ++mPresentedFrames;
     }
 
-    // Tracks the sum of display errors.
+    // Tracks the sum of display delay.
     // Can be called on any thread.
-    void NotifyPlaybackJitter(double aDisplayError) {
+    void NotifyFrameDelay(double aFrameDelay) {
       ReentrantMonitorAutoEnter mon(mReentrantMonitor);
-      mPlaybackJitter += aDisplayError;
+      mTotalFrameDelay += aFrameDelay;
     }
 
   private:
@@ -879,20 +879,20 @@ public:
     // ReentrantMonitor to protect access of playback statistics.
     ReentrantMonitor mReentrantMonitor;
 
-    // Sum of display duration error.
-    // Access protected by mStatsReentrantMonitor.
-    double mPlaybackJitter;
+    // Sum of displayed frame delays.
+    // Access protected by mReentrantMonitor.
+    double mTotalFrameDelay;
 
     // Number of frames parsed and demuxed from media.
-    // Access protected by mStatsReentrantMonitor.
+    // Access protected by mReentrantMonitor.
     uint32_t mParsedFrames;
 
     // Number of parsed frames which were actually decoded.
-    // Access protected by mStatsReentrantMonitor.
+    // Access protected by mReentrantMonitor.
     uint32_t mDecodedFrames;
 
     // Number of decoded frames which were actually sent down the rendering
-    // pipeline to be painted ("presented"). Access protected by mStatsReentrantMonitor.
+    // pipeline to be painted ("presented"). Access protected by mReentrantMonitor.
     uint32_t mPresentedFrames;
   };
 

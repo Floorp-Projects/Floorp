@@ -229,8 +229,8 @@ nsHTMLDNSPrefetch::CancelPrefetchLow(const nsAString &hostname, nsresult aReason
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsHTMLDNSPrefetch::nsListener,
-                              nsIDNSListener)
+NS_IMPL_ISUPPORTS1(nsHTMLDNSPrefetch::nsListener,
+                   nsIDNSListener)
 
 NS_IMETHODIMP
 nsHTMLDNSPrefetch::nsListener::OnLookupComplete(nsICancelable *request,

@@ -8,25 +8,21 @@
  * JS execution context.
  */
 
-#include "jscntxt.h"
+#include "jscntxtinlines.h"
+
+#include "mozilla/DebugOnly.h"
+#include "mozilla/MemoryReporting.h"
+#include "mozilla/Util.h"
 
 #include <locale.h>
 #include <stdarg.h>
 #include <string.h>
-
-#include "mozilla/DebugOnly.h"
-
 #ifdef ANDROID
 # include <android/log.h>
 # include <fstream>
 # include <string>
 #endif  // ANDROID
 
-#include "mozilla/MemoryReporting.h"
-#include "mozilla/Util.h"
-
-#include "jstypes.h"
-#include "jsprf.h"
 #include "jsatom.h"
 #include "jscompartment.h"
 #include "jsdbgapi.h"
@@ -37,21 +33,22 @@
 #include "jsmath.h"
 #include "jsobj.h"
 #include "jsopcode.h"
+#include "jsprf.h"
 #include "jspubtd.h"
 #include "jsscript.h"
 #include "jsstr.h"
+#include "jstypes.h"
 #include "jsworkers.h"
+
+#include "gc/Marking.h"
 #ifdef JS_ION
 #include "ion/Ion.h"
 #endif
-
-#include "gc/Marking.h"
 #include "js/CharacterEncoding.h"
 #include "js/MemoryMetrics.h"
 #include "vm/Shape.h"
 #include "yarr/BumpPointerAllocator.h"
 
-#include "jscntxtinlines.h"
 #include "jsobjinlines.h"
 
 #include "vm/Stack-inl.h"
@@ -406,6 +403,18 @@ js_ReportOutOfMemory(ThreadSafeContext *cxArg)
         AutoSuppressGC suppressGC(cx);
         onError(cx, msg, &report);
     }
+
+    /*
+     * We would like to enforce the invariant that any exception reported
+     * during an OOM situation does not require wrapping. Besides avoiding
+     * allocation when memory is low, this reduces the number of places where
+     * we might need to GC.
+     *
+     * When JS code is running, we set the pending exception to an atom, which
+     * does not need wrapping. If no JS code is running, no exception should be
+     * set at all.
+     */
+    JS_ASSERT(!cx->isExceptionPending());
 }
 
 JS_FRIEND_API(void)
@@ -1102,7 +1111,7 @@ JSContext::wrapPendingException()
 {
     RootedValue value(this, getPendingException());
     clearPendingException();
-    if (compartment()->wrap(this, &value))
+    if (!IsAtomsCompartment(compartment()) && compartment()->wrap(this, &value))
         setPendingException(value);
 }
 

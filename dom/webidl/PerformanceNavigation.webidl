@@ -18,4 +18,6 @@ interface PerformanceNavigation {
 
   readonly attribute unsigned short type;
   readonly attribute unsigned short redirectCount;
+
+  jsonifier;
 };

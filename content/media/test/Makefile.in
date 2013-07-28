@@ -115,12 +115,14 @@ MOCHITEST_FILES = \
 		test_volume.html \
 		test_video_to_canvas.html \
 		test_audiowrite.html \
+		test_mediarecorder_creation.html \
 		test_mozHasAudio.html \
 		test_source_media.html \
 		test_autoplay_contentEditable.html \
 		test_bug448534.html \
 		test_bug463162.xhtml \
 		test_decoder_disable.html \
+		test_mediarecorder_reload_crash.html \
 		test_media_selection.html \
 		test_playback.html \
 		test_seekLies.html \

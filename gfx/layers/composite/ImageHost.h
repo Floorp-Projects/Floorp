@@ -37,10 +37,10 @@ protected:
 };
 
 // ImageHost with a single DeprecatedTextureHost
-class ImageHostSingle : public ImageHost
+class DeprecatedImageHostSingle : public ImageHost
 {
 public:
-  ImageHostSingle(const TextureInfo& aTextureInfo)
+  DeprecatedImageHostSingle(const TextureInfo& aTextureInfo)
     : ImageHost(aTextureInfo)
     , mDeprecatedTextureHost(nullptr)
     , mHasPictureRect(false)
@@ -86,7 +86,7 @@ public:
 
   virtual void SetCompositor(Compositor* aCompositor) MOZ_OVERRIDE;
 
-  virtual void Dump(FILE* aFile=NULL,
+  virtual void Dump(FILE* aFile=nullptr,
                     const char* aPrefix="",
                     bool aDumpHtml=false) MOZ_OVERRIDE;
 
@@ -115,11 +115,11 @@ protected:
 // Double buffered ImageHost. We have a single TextureHost and double buffering
 // is done at the TextureHost/Client level. This is in contrast with buffered
 // ContentHosts which do their own double buffering 
-class ImageHostBuffered : public ImageHostSingle
+class DeprecatedImageHostBuffered : public DeprecatedImageHostSingle
 {
 public:
-  ImageHostBuffered(const TextureInfo& aTextureInfo)
-    : ImageHostSingle(aTextureInfo)
+  DeprecatedImageHostBuffered(const TextureInfo& aTextureInfo)
+    : DeprecatedImageHostSingle(aTextureInfo)
   {}
 
   virtual bool Update(const SurfaceDescriptor& aImage,

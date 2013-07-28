@@ -682,7 +682,7 @@ NS_IMPL_ISUPPORTS1(DMDMultiReporter, nsIMemoryMultiReporter)
  ** nsMemoryReporterManager implementation
  **/
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsMemoryReporterManager, nsIMemoryReporterManager)
+NS_IMPL_ISUPPORTS1(nsMemoryReporterManager, nsIMemoryReporterManager)
 
 NS_IMETHODIMP
 nsMemoryReporterManager::Init()
@@ -1199,7 +1199,7 @@ nsMemoryReporterManager::MinimizeMemoryUsage(nsIRunnable* aCallback,
 // Most memory reporters don't need thread safety, but some do.  Make them all
 // thread-safe just to be safe.  Memory reporters are created and destroyed
 // infrequently enough that the performance cost should be negligible.
-NS_IMPL_THREADSAFE_ISUPPORTS1(MemoryReporterBase, nsIMemoryReporter)
+NS_IMPL_ISUPPORTS1(MemoryReporterBase, nsIMemoryReporter)
 
 nsresult
 NS_RegisterMemoryReporter (nsIMemoryReporter *reporter)

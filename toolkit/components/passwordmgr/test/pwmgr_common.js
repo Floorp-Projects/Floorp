@@ -123,8 +123,9 @@ function doKey(aKey, modifier) {
     var wutils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
                           getInterface(Components.interfaces.nsIDOMWindowUtils);
 
-    wutils.sendKeyEvent("keydown",  key, 0, modifier);
-    wutils.sendKeyEvent("keypress", key, 0, modifier);
+    if (wutils.sendKeyEvent("keydown",  key, 0, modifier)) {
+      wutils.sendKeyEvent("keypress", key, 0, modifier);
+    }
     wutils.sendKeyEvent("keyup",    key, 0, modifier);
 }
 

@@ -52,7 +52,7 @@ const MOBILECONNECTIONINFO_CID =
 const MOBILENETWORKINFO_CID =
   Components.ID("{a6c8416c-09b4-46d1-bf29-6520d677d085}");
 const MOBILECELLINFO_CID =
-  Components.ID("{5e809018-68c0-4c54-af0b-2a9b8f748c45}");
+  Components.ID("{ae724dd4-ccaf-4006-98f1-6ce66a092464}");
 const VOICEMAILSTATUS_CID=
   Components.ID("{5467f2eb-e214-43ea-9b89-67711241ec8e}");
 const MOBILECFINFO_CID=
@@ -102,7 +102,9 @@ const RIL_IPC_MSG_NAMES = [
   "RIL:IccCloseChannel",
   "RIL:IccExchangeAPDU",
   "RIL:ReadIccContacts",
-  "RIL:UpdateIccContact"
+  "RIL:UpdateIccContact",
+  "RIL:SetRoamingPreference",
+  "RIL:GetRoamingPreference"
 ];
 
 XPCOMUtils.defineLazyServiceGetter(this, "cpmm",
@@ -226,8 +228,13 @@ MobileCellInfo.prototype = {
 
   // nsIDOMMozMobileCellInfo
 
-  gsmLocationAreaCode: null,
-  gsmCellId: null
+  gsmLocationAreaCode: -1,
+  gsmCellId: -1,
+  cdmaBaseStationId: -1,
+  cdmaBaseStationLatitude: -2147483648,
+  cdmaBaseStationLongitude: -2147483648,
+  cdmaSystemId: -1,
+  cdmaNetworkId: -1
 };
 
 function VoicemailStatus() {}
@@ -443,8 +450,7 @@ RILContentHelper.prototype = {
         cell = destInfo.cell = new MobileCellInfo();
       }
 
-      cell.gsmLocationAreaCode = srcCell.gsmLocationAreaCode;
-      cell.gsmCellId = srcCell.gsmCellId;
+      this.updateInfo(srcCell, cell);
     }
 
     let srcNetwork = srcInfo.network;
@@ -612,6 +618,48 @@ RILContentHelper.prototype = {
 
     this._selectingNetwork = "automatic";
     cpmm.sendAsyncMessage("RIL:SelectNetworkAuto", {
+      clientId: 0,
+      data: {
+        requestId: requestId
+      }
+    });
+    return request;
+  },
+
+  setRoamingPreference: function setRoamingPreference(window, mode) {
+    if (window == null) {
+      throw Components.Exception("Can't get window object",
+                                  Cr.NS_ERROR_UNEXPECTED);
+    }
+
+    let request = Services.DOMRequest.createRequest(window);
+    let requestId = this.getRequestId(request);
+
+    if (!mode) {
+      this.dispatchFireRequestError(requestId, "InvalidParameter");
+      return request;
+    }
+
+    cpmm.sendAsyncMessage("RIL:SetRoamingPreference", {
+      clientId: 0,
+      data: {
+        requestId: requestId,
+        mode: mode
+      }
+    });
+    return request;
+  },
+
+  getRoamingPreference: function getRoamingPreference(window) {
+    if (window == null) {
+      throw Components.Exception("Can't get window object",
+                                  Cr.NS_ERROR_UNEXPECTED);
+    }
+
+    let request = Services.DOMRequest.createRequest(window);
+    let requestId = this.getRequestId(request);
+
+    cpmm.sendAsyncMessage("RIL:GetRoamingPreference", {
       clientId: 0,
       data: {
         requestId: requestId
@@ -1537,6 +1585,12 @@ RILContentHelper.prototype = {
                            [message]);
         break;
       }
+      case "RIL:SetRoamingPreference":
+        this.handleSetRoamingPreference(msg.json);
+        break;
+      case "RIL:GetRoamingPreference":
+        this.handleGetRoamingPreference(msg.json);
+        break;
     }
   },
 
@@ -1870,6 +1924,22 @@ RILContentHelper.prototype = {
 
   _getRandomId: function _getRandomId() {
     return gUUIDGenerator.generateUUID().toString();
+  },
+
+  handleSetRoamingPreference: function handleSetRoamingPreference(message) {
+    if (message.errorMsg) {
+      this.fireRequestError(message.requestId, message.errorMsg);
+    } else {
+      this.fireRequestSuccess(message.requestId, null);
+    }
+  },
+
+  handleGetRoamingPreference: function handleGetRoamingPreference(message) {
+    if (message.errorMsg) {
+      this.fireRequestError(message.requestId, message.errorMsg);
+    } else {
+      this.fireRequestSuccess(message.requestId, message.mode);
+    }
   },
 
   _deliverEvent: function _deliverEvent(listenerType, name, args) {

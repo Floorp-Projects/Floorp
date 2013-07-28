@@ -10,6 +10,7 @@
 /*
  * JS parser definitions.
  */
+
 #include "jsprvtd.h"
 #include "jspubtd.h"
 
@@ -99,8 +100,8 @@ struct ParseContext : public GenericParseContext
     StmtInfoPC      *topStmt;       /* top of statement info stack */
     StmtInfoPC      *topScopeStmt;  /* top lexical scope statement */
     Rooted<StaticBlockObject *> blockChain;
-    Node            maybeFunction;  /* sc->isFunctionBox, the pn where pn->pn_funbox == sc */
                                     /* compile time block scope chain */
+    Node            maybeFunction;  /* sc->isFunctionBox, the pn where pn->pn_funbox == sc */
 
     const unsigned  staticLevel;    /* static compilation unit nesting level */
 

@@ -84,7 +84,7 @@ public:
 
   /**
    * General handler for incoming input events. Manipulates the frame metrics
-   * basde on what type of input it is. For example, a PinchGestureEvent will
+   * based on what type of input it is. For example, a PinchGestureEvent will
    * cause scaling. This should only be called externally to this class.
    * HandleInputEvent() should be used internally.
    */
@@ -252,6 +252,20 @@ public:
                              AsyncPanZoomController** aApzcOut,
                              LayerIntPoint* aRelativePointOut);
 
+  /**
+   * Update mFrameMetrics.mScrollOffset to the given offset.
+   * This is necessary in cases where a scroll is not caused by user
+   * input (for example, a content scrollTo()).
+   */
+  void UpdateScrollOffset(CSSPoint aScrollOffset);
+
+  /**
+   * Cancels any currently running animation. Note that all this does is set the
+   * state of the AsyncPanZoomController back to NOTHING, but it is the
+   * animation's responsibility to check this before advancing.
+   */
+  void CancelAnimation();
+
 protected:
   /**
    * Helper method for touches beginning. Sets everything up for panning and any
@@ -350,15 +364,6 @@ protected:
    * CompositorParent::ScheduleRenderOnCompositorThread().
    */
   void ScheduleComposite();
-
-  /**
-   * Cancels any currently running animation. Note that all this does is set the
-   * state of the AsyncPanZoomController back to NOTHING, but it is the
-   * animation's responsibility to check this before advancing.
-   *
-   * *** The monitor must be held while calling this.
-   */
-  void CancelAnimation();
 
   /**
    * Gets the displacement of the current touch since it began. That is, it is

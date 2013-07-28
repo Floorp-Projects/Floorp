@@ -4,15 +4,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "vm/SPSProfiler.h"
+
 #include "mozilla/DebugOnly.h"
 
 #include "jsnum.h"
 #include "jsscript.h"
 
-#include "vm/SPSProfiler.h"
-#include "vm/StringBuffer.h"
-
 #include "ion/BaselineJIT.h"
+#include "vm/StringBuffer.h"
 
 using namespace js;
 

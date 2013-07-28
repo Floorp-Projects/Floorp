@@ -9,11 +9,12 @@ SpecialPowers.addPermission("sms", true, document);
 const SENDER = "5555552368"; // the remote number
 const RECEIVER = "15555215554"; // the emulator's number
 
-let sms = window.navigator.mozSms;
+let manager = window.navigator.mozMobileMessage;
 
 function verifyInitialState() {
   log("Verifying initial state.");
-  ok(sms, "mozSms");
+  ok(manager instanceof MozMobileMessageManager,
+     "manager is instance of " + manager.constructor);
   simulateIncomingSms();  
 }
 
@@ -27,8 +28,8 @@ function simulateIncomingSms() {
     msgText += 'FirefoxOS ';
   }
 
-  sms.onreceived = function onreceived(event) {
-    log("Received 'onreceived' smsmanager event.");
+  manager.onreceived = function onreceived(event) {
+    log("Received 'onreceived' event.");
     let incomingSms = event.message;
     ok(incomingSms, "incoming sms");
     ok(incomingSms.id, "sms id");
@@ -50,7 +51,7 @@ function simulateIncomingSms() {
 
 function verifySmsExists(incomingSms) {
   log("Getting SMS (id: " + incomingSms.id + ").");
-  let requestRet = sms.getMessage(incomingSms.id);
+  let requestRet = manager.getMessage(incomingSms.id);
   ok(requestRet, "smsrequest obj returned");
 
   requestRet.onsuccess = function(event) {
@@ -80,7 +81,7 @@ function verifySmsExists(incomingSms) {
 
 function deleteSms(smsMsgObj){
   log("Deleting SMS (id: " + smsMsgObj.id + ") using smsmsg obj parameter.");
-  let requestRet = sms.delete(smsMsgObj);
+  let requestRet = manager.delete(smsMsgObj);
   ok(requestRet,"smsrequest obj returned");
 
   requestRet.onsuccess = function(event) {
@@ -88,7 +89,7 @@ function deleteSms(smsMsgObj){
     if(event.target.result){
       cleanUp();
     } else {
-      log("smsrequest returned false for sms.delete");
+      log("smsrequest returned false for manager.delete");
       ok(false,"SMS delete failed");
       cleanUp();
     }
@@ -97,14 +98,14 @@ function deleteSms(smsMsgObj){
   requestRet.onerror = function(event) {
     log("Received 'onerror' smsrequest event.");
     ok(event.target.error, "domerror obj");
-    ok(false, "sms.delete request returned unexpected error: "
+    ok(false, "manager.delete request returned unexpected error: "
         + event.target.error.name );
     cleanUp();
   };
 }
 
 function cleanUp() {
-  sms.onreceived = null;
+  manager.onreceived = null;
   SpecialPowers.removePermission("sms", document);
   SpecialPowers.clearUserPref("dom.sms.enabled");
   finish();

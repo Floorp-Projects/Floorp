@@ -5,21 +5,29 @@
 
 /* JS shell. */
 
+#include "mozilla/DebugOnly.h"
+#include "mozilla/GuardObjects.h"
+#include "mozilla/Util.h"
+
+#ifdef XP_WIN
+# include <direct.h>
+#endif
 #include <errno.h>
+#if defined(XP_OS2) || defined(XP_WIN)
+# include <io.h>     /* for isatty() */
+#endif
 #include <locale.h>
 #include <math.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#ifdef XP_UNIX
+# include <sys/wait.h>
+# include <sys/types.h>
+# include <unistd.h>
+#endif
 
-#include "mozilla/DebugOnly.h"
-#include "mozilla/GuardObjects.h"
-#include "mozilla/Util.h"
-
-#include "jstypes.h"
-#include "jsutil.h"
-#include "jsprf.h"
 #include "jsapi.h"
 #include "jsarray.h"
 #include "jsatom.h"
@@ -33,51 +41,41 @@
 #include "jsnum.h"
 #include "jsobj.h"
 #include "json.h"
+#include "jsprf.h"
 #include "jsreflect.h"
 #include "jsscript.h"
+#include "jstypes.h"
+#include "jsutil.h"
+#ifdef XP_WIN
+# include "jswin.h"
+#endif
 #include "jsworkers.h"
 #include "jswrapper.h"
-#include "perf/jsperf.h"
+#include "prmjtime.h"
+#if JS_TRACE_LOGGING
+#include "TraceLogging.h"
+#endif
 
 #include "builtin/TestingFunctions.h"
 #include "frontend/BytecodeEmitter.h"
 #include "frontend/Parser.h"
+#include "ion/Ion.h"
+#include "perf/jsperf.h"
+#include "shell/jsheaptools.h"
+#include "shell/jsoptparse.h"
 #include "vm/Shape.h"
 #include "vm/TypedArrayObject.h"
 #include "vm/WrapperObject.h"
 
-#include "prmjtime.h"
-
-#include "shell/jsoptparse.h"
-#include "shell/jsheaptools.h"
-
 #include "jsinferinlines.h"
 #include "jsscriptinlines.h"
-#include "ion/Ion.h"
 
 #include "vm/Interpreter-inl.h"
 
-#ifdef XP_UNIX
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-#endif
-
-#if defined(XP_WIN) || defined(XP_OS2)
-#include <io.h>     /* for isatty() */
-#endif
-
 #ifdef XP_WIN
-# include <io.h>
-# include <direct.h>
-# include "jswin.h"
 # define PATH_MAX (MAX_PATH > _MAX_DIR ? MAX_PATH : _MAX_DIR)
 #else
 # include <libgen.h>
-#endif
-
-#if JS_TRACE_LOGGING
-#include "TraceLogging.h"
 #endif
 
 using namespace js;
@@ -746,7 +744,7 @@ Options(JSContext *cx, unsigned argc, jsval *vp)
         str = JS_ValueToString(cx, args[i]);
         if (!str)
             return false;
-        args[i] = STRING_TO_JSVAL(str);
+        args[i].setString(str);
         JSAutoByteString opt(cx, str);
         if (!opt)
             return false;
@@ -1121,20 +1119,14 @@ FileAsString(JSContext *cx, const char *pathname)
                     JS_ReportError(cx, "can't read %s: %s", pathname,
                                    (ptrdiff_t(cc) < 0) ? strerror(errno) : "short read");
                 } else {
-                    jschar *ucbuf;
-                    size_t uclen;
-
-                    len = (size_t)cc;
-
-                    if (!InflateUTF8StringToBuffer(cx, buf, len, NULL, &uclen)) {
+                    jschar *ucbuf =
+                        JS::UTF8CharsToNewTwoByteCharsZ(cx, JS::UTF8Chars(buf, len), &len).get();
+                    if (!ucbuf) {
                         JS_ReportError(cx, "Invalid UTF-8 in file '%s'", pathname);
                         gExitCode = EXITCODE_RUNTIME_ERROR;
                         return NULL;
                     }
-
-                    ucbuf = (jschar*)malloc(uclen * sizeof(jschar));
-                    InflateUTF8StringToBuffer(cx, buf, len, ucbuf, &uclen);
-                    str = JS_NewUCStringCopyN(cx, ucbuf, uclen);
+                    str = JS_NewUCStringCopyN(cx, ucbuf, len);
                     free(ucbuf);
                 }
                 JS_free(cx, buf);
@@ -1200,7 +1192,7 @@ Run(JSContext *cx, unsigned argc, jsval *vp)
     JSString *str = JS_ValueToString(cx, args[0]);
     if (!str)
         return false;
-    args[0] = STRING_TO_JSVAL(str);
+    args[0].setString(str);
     JSAutoByteString filename(cx, str);
     if (!filename)
         return false;
@@ -1388,11 +1380,11 @@ Quit(JSContext *cx, unsigned argc, jsval *vp)
 }
 
 static const char *
-ToSource(JSContext *cx, jsval *vp, JSAutoByteString *bytes)
+ToSource(JSContext *cx, MutableHandleValue vp, JSAutoByteString *bytes)
 {
-    JSString *str = JS_ValueToSource(cx, *vp);
+    JSString *str = JS_ValueToSource(cx, vp);
     if (str) {
-        *vp = STRING_TO_JSVAL(str);
+        vp.setString(str);
         if (bytes->encodeLatin1(cx, str))
             return bytes->ptr();
     }
@@ -1420,8 +1412,8 @@ AssertEq(JSContext *cx, unsigned argc, jsval *vp)
         return false;
     if (!same) {
         JSAutoByteString bytes0, bytes1;
-        const char *actual = ToSource(cx, &args[0], &bytes0);
-        const char *expected = ToSource(cx, &args[1], &bytes1);
+        const char *actual = ToSource(cx, args[0], &bytes0);
+        const char *expected = ToSource(cx, args[1], &bytes1);
         if (args.length() == 2) {
             JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL, JSSMSG_ASSERT_EQ_FAILED,
                                  actual, expected);
@@ -1571,7 +1563,7 @@ Trap(JSContext *cx, unsigned argc, jsval *vp)
     RootedString str(cx, JS_ValueToString(cx, args[argc]));
     if (!str)
         return false;
-    args[argc] = STRING_TO_JSVAL(str);
+    args[argc].setString(str);
     if (!GetScriptAndPCArgs(cx, argc, args.array(), &script, &i))
         return false;
     if (uint32_t(i) >= script->length) {
@@ -1812,6 +1804,11 @@ SrcNotes(JSContext *cx, HandleScript script, Sprinter *sp)
                                     &switchTableStart, &switchTableEnd);
             break;
           }
+
+          case SRC_TRY:
+            JS_ASSERT(JSOp(script->code[offset]) == JSOP_TRY);
+            Sprint(sp, " offset to jump %u", unsigned(js_GetSrcNoteOffset(sn, 0)));
+            break;
 
           default:
             JS_ASSERT(0);
@@ -2181,7 +2178,7 @@ DumpHeap(JSContext *cx, unsigned argc, jsval *vp)
             str = JS_ValueToString(cx, v);
             if (!str)
                 return false;
-            args[0] = STRING_TO_JSVAL(str);
+            args[0].setString(str);
             if (!fileNameBytes.encodeLatin1(cx, str))
                 return false;
             fileName = fileNameBytes.ptr();
@@ -2328,7 +2325,7 @@ Clone(JSContext *cx, unsigned argc, jsval *vp)
         if (obj && obj->is<CrossCompartmentWrapperObject>()) {
             obj = UncheckedUnwrap(obj);
             ac.construct(cx, obj);
-            args[0] = ObjectValue(*obj);
+            args[0].setObject(*obj);
         }
         if (obj && obj->is<JSFunction>()) {
             funobj = obj;
@@ -2387,7 +2384,13 @@ GetPDA(JSContext *cx, unsigned argc, jsval *vp)
     if (!ok)
         return false;
     pd = pda.array;
+
     RootedObject pdobj(cx);
+    RootedValue id(cx);
+    RootedValue value(cx);
+    RootedValue flags(cx);
+    RootedValue alias(cx);
+
     for (uint32_t i = 0; i < pda.length; i++, pd++) {
         pdobj = JS_NewObject(cx, NULL, NULL, NULL);
         if (!pdobj) {
@@ -2401,11 +2404,14 @@ GetPDA(JSContext *cx, unsigned argc, jsval *vp)
         if (!ok)
             break;
 
-        ok = JS_SetProperty(cx, pdobj, "id", &pd->id) &&
-             JS_SetProperty(cx, pdobj, "value", &pd->value) &&
-             (v = INT_TO_JSVAL(pd->flags),
-              JS_SetProperty(cx, pdobj, "flags", &v)) &&
-             JS_SetProperty(cx, pdobj, "alias", &pd->alias);
+        id = pd->id;
+        value = pd->value;
+        flags.setInt32(pd->flags);
+        alias = pd->alias;
+        ok = JS_SetProperty(cx, pdobj, "id", id) &&
+             JS_SetProperty(cx, pdobj, "value", value) &&
+             JS_SetProperty(cx, pdobj, "flags", flags) &&
+             JS_SetProperty(cx, pdobj, "alias", alias);
         if (!ok)
             break;
     }
@@ -2511,7 +2517,7 @@ NewSandbox(JSContext *cx, bool lazy)
             return NULL;
 
         RootedValue value(cx, BooleanValue(lazy));
-        if (!JS_SetProperty(cx, obj, "lazy", value.address()))
+        if (!JS_SetProperty(cx, obj, "lazy", value))
             return NULL;
     }
 
@@ -3614,7 +3620,7 @@ GetSelfHostedValue(JSContext *cx, unsigned argc, jsval *vp)
                              "getSelfHostedValue");
         return false;
     }
-    RootedAtom srcAtom(cx, ToAtom<CanGC>(cx, args.handleAt(0)));
+    RootedAtom srcAtom(cx, ToAtom<CanGC>(cx, args[0]));
     if (!srcAtom)
         return false;
     RootedPropertyName srcName(cx, srcAtom->asPropertyName());

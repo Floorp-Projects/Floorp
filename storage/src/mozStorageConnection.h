@@ -40,7 +40,7 @@ class Connection MOZ_FINAL : public mozIStorageConnection
                            , public nsIInterfaceRequestor
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_MOZISTORAGEASYNCCONNECTION
   NS_DECL_MOZISTORAGECONNECTION
   NS_DECL_NSIINTERFACEREQUESTOR

@@ -176,9 +176,10 @@ static nsRoleMapEntry sWAIRoleMaps[] =
     eNoAction,
     eNoLiveAttr,
     eSelect | eTable,
-    states::FOCUSABLE,
+    kNoReqStates,
     eARIAMultiSelectable,
-    eARIAReadonlyOrEditable
+    eARIAReadonlyOrEditable,
+    eFocusableUntilDisabled
   },
   { // gridcell
     &nsGkAtoms::gridcell,
@@ -263,7 +264,8 @@ static nsRoleMapEntry sWAIRoleMaps[] =
     eListControl | eSelect,
     kNoReqStates,
     eARIAMultiSelectable,
-    eARIAReadonly
+    eARIAReadonly,
+    eFocusableUntilDisabled
   },
   { // listitem
     &nsGkAtoms::listitem,
@@ -539,7 +541,7 @@ static nsRoleMapEntry sWAIRoleMaps[] =
     kUseMapRole,
     eNoValue,
     eNoAction,
-    ePoliteLiveAttr,
+    eNoLiveAttr,
     eSelect,
     kNoReqStates
   },
@@ -605,7 +607,8 @@ static nsRoleMapEntry sWAIRoleMaps[] =
     eSelect,
     kNoReqStates,
     eARIAReadonly,
-    eARIAMultiSelectable
+    eARIAMultiSelectable,
+    eFocusableUntilDisabled
   },
   { // treegrid
     &nsGkAtoms::treegrid,
@@ -617,7 +620,8 @@ static nsRoleMapEntry sWAIRoleMaps[] =
     eSelect | eTable,
     kNoReqStates,
     eARIAReadonly,
-    eARIAMultiSelectable
+    eARIAMultiSelectable,
+    eFocusableUntilDisabled
   },
   { // treeitem
     &nsGkAtoms::treeitem,

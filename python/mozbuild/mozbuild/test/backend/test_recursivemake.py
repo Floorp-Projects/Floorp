@@ -147,6 +147,9 @@ class TestRecursiveMakeBackend(BackendTester):
                 'CMMSRCS += bar.mm',
                 'CMMSRCS += foo.mm',
             ],
+            'CPP_UNIT_TESTS': [
+                'CPP_UNIT_TESTS += foo.cpp',
+            ],
             'CSRCS': [
                 'CSRCS += bar.c',
                 'CSRCS += foo.c',
@@ -248,7 +251,7 @@ class TestRecursiveMakeBackend(BackendTester):
         ])
 
         # EXPORTS files should appear in the dist_include purge manifest.
-        m = PurgeManifest.from_path(os.path.join(env.topobjdir,
+        m = PurgeManifest(path=os.path.join(env.topobjdir,
             '_build_manifests', 'purge', 'dist_include'))
         self.assertIn('foo.h', m.entries)
         self.assertIn('mozilla/mozilla1.h', m.entries)
@@ -300,7 +303,7 @@ class TestRecursiveMakeBackend(BackendTester):
             full = os.path.join(purge_dir, e)
             self.assertTrue(os.path.exists(full))
 
-        m = PurgeManifest.from_path(os.path.join(purge_dir, 'dist_bin'))
+        m = PurgeManifest(path=os.path.join(purge_dir, 'dist_bin'))
         self.assertEqual(m.relpath, 'dist/bin')
 
     def test_old_purge_manifest_deleted(self):
@@ -311,7 +314,7 @@ class TestRecursiveMakeBackend(BackendTester):
         manifest_path = os.path.join(purge_dir, 'old_manifest')
         os.makedirs(purge_dir)
         m = PurgeManifest()
-        m.write_file(manifest_path)
+        m.write(path=manifest_path)
 
         self.assertTrue(os.path.exists(manifest_path))
         self._consume('stub0', RecursiveMakeBackend, env)

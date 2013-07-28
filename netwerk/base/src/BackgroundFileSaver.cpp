@@ -494,7 +494,7 @@ BackgroundFileSaver::ProcessStateChange()
 
   // When we are requested to append to an existing file, we should read the
   // existing data and ensure we include it as part of the final hash.
-  if (append && !isContinuation) {
+  if (mDigestContext && append && !isContinuation) {
     nsCOMPtr<nsIInputStream> inputStream;
     rv = NS_NewLocalFileInputStream(getter_AddRefs(inputStream),
                                     mActualTarget,
@@ -708,11 +708,11 @@ BackgroundFileSaver::NotifySaveComplete()
 ////////////////////////////////////////////////////////////////////////////////
 //// BackgroundFileSaverOutputStream
 
-NS_IMPL_THREADSAFE_ISUPPORTS4(BackgroundFileSaverOutputStream,
-                              nsIBackgroundFileSaver,
-                              nsIOutputStream,
-                              nsIAsyncOutputStream,
-                              nsIOutputStreamCallback)
+NS_IMPL_ISUPPORTS4(BackgroundFileSaverOutputStream,
+                   nsIBackgroundFileSaver,
+                   nsIOutputStream,
+                   nsIAsyncOutputStream,
+                   nsIOutputStreamCallback)
 
 BackgroundFileSaverOutputStream::BackgroundFileSaverOutputStream()
 : BackgroundFileSaver()
@@ -811,10 +811,10 @@ BackgroundFileSaverOutputStream::OnOutputStreamReady(
 ////////////////////////////////////////////////////////////////////////////////
 //// BackgroundFileSaverStreamListener
 
-NS_IMPL_THREADSAFE_ISUPPORTS3(BackgroundFileSaverStreamListener,
-                              nsIBackgroundFileSaver,
-                              nsIRequestObserver,
-                              nsIStreamListener)
+NS_IMPL_ISUPPORTS3(BackgroundFileSaverStreamListener,
+                   nsIBackgroundFileSaver,
+                   nsIRequestObserver,
+                   nsIStreamListener)
 
 BackgroundFileSaverStreamListener::BackgroundFileSaverStreamListener()
 : BackgroundFileSaver()
@@ -975,8 +975,8 @@ BackgroundFileSaverStreamListener::NotifySuspendOrResume()
 
 ////////////////////////////////////////////////////////////////////////////////
 //// DigestOutputStream
-NS_IMPL_THREADSAFE_ISUPPORTS1(DigestOutputStream,
-                              nsIOutputStream)
+NS_IMPL_ISUPPORTS1(DigestOutputStream,
+                   nsIOutputStream)
 
 DigestOutputStream::DigestOutputStream(nsIOutputStream* aStream,
                                        PK11Context* aContext) :

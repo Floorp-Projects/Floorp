@@ -590,8 +590,10 @@ ThebesLayerBuffer::BeginPaint(ThebesLayer* aLayer, ContentType aContentType,
           // So allocate a new buffer for the destination.
           destBufferRect = ComputeBufferRect(neededRegion.GetBounds());
           if (SupportsAzureContent()) {
+            MOZ_ASSERT(!mBuffer);
             destDTBuffer = CreateDTBuffer(contentType, destBufferRect, bufferFlags);
           } else {
+            MOZ_ASSERT(!mDTBuffer);
             destBuffer = CreateBuffer(contentType, destBufferRect, bufferFlags, getter_AddRefs(destBufferOnWhite));
           }
           if (!destBuffer && !destDTBuffer)
@@ -611,8 +613,10 @@ ThebesLayerBuffer::BeginPaint(ThebesLayer* aLayer, ContentType aContentType,
   } else {
     // The buffer's not big enough, so allocate a new one
     if (SupportsAzureContent()) {
+      MOZ_ASSERT(!mBuffer);
       destDTBuffer = CreateDTBuffer(contentType, destBufferRect, bufferFlags);
     } else {
+      MOZ_ASSERT(!mDTBuffer);
       destBuffer = CreateBuffer(contentType, destBufferRect, bufferFlags, getter_AddRefs(destBufferOnWhite));
     }
     if (!destBuffer && !destDTBuffer)
@@ -647,6 +651,7 @@ ThebesLayerBuffer::BeginPaint(ThebesLayer* aLayer, ContentType aContentType,
       }
     }
 
+    MOZ_ASSERT(!SupportsAzureContent());
     mBuffer = destBuffer.forget();
     mBufferRect = destBufferRect;
     mBufferOnWhite = destBufferOnWhite.forget();
@@ -660,6 +665,7 @@ ThebesLayerBuffer::BeginPaint(ThebesLayer* aLayer, ContentType aContentType,
       mat.Translate(offset.x, offset.y);
       destDTBuffer->SetTransform(mat);
       EnsureBuffer();
+      MOZ_ASSERT(mDTBuffer, "Have we got a Thebes buffer for some reason?");
       DrawBufferWithRotation(destDTBuffer, BUFFER_BLACK);
       destDTBuffer->SetTransform(Matrix());
     }

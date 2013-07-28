@@ -9,10 +9,8 @@
 #include "nsArrayUtils.h"
 #include "nsXPCOMCID.h"
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(nsNSSASN1Sequence, nsIASN1Sequence, 
-                                                 nsIASN1Object)
-NS_IMPL_THREADSAFE_ISUPPORTS2(nsNSSASN1PrintableItem, nsIASN1PrintableItem,
-                                                      nsIASN1Object)
+NS_IMPL_ISUPPORTS2(nsNSSASN1Sequence, nsIASN1Sequence, nsIASN1Object)
+NS_IMPL_ISUPPORTS2(nsNSSASN1PrintableItem, nsIASN1PrintableItem, nsIASN1Object)
 
 // This function is used to interpret an integer that
 // was encoded in a DER buffer. This function is used

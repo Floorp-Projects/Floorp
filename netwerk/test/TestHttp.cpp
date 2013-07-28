@@ -88,7 +88,7 @@ class MyNotifications : public nsIInterfaceRequestor
                       , public nsIProgressEventSink
 {
 public:
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSIINTERFACEREQUESTOR
     NS_DECL_NSIPROGRESSEVENTSINK
 
@@ -96,9 +96,9 @@ public:
     virtual ~MyNotifications() {}
 };
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(MyNotifications,
-                              nsIInterfaceRequestor,
-                              nsIProgressEventSink)
+NS_IMPL_ISUPPORTS2(MyNotifications,
+                   nsIInterfaceRequestor,
+                   nsIProgressEventSink)
 
 NS_IMETHODIMP
 MyNotifications::GetInterface(const nsIID &iid, void **result)

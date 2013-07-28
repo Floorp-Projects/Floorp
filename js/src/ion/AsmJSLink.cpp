@@ -4,22 +4,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "jsmath.h"
-#include "jscntxt.h"
-
-#include "ion/AsmJS.h"
-#include "ion/AsmJSModule.h"
-#include "frontend/BytecodeCompiler.h"
-
 #ifdef MOZ_VTUNE
 # include "jitprofiling.h"
 #endif
 
+#include "jscntxt.h"
+#include "jsmath.h"
+
+#include "frontend/BytecodeCompiler.h"
+#include "ion/AsmJS.h"
+#include "ion/AsmJSModule.h"
+#include "ion/Ion.h"
 #ifdef JS_ION_PERF
 # include "ion/PerfSpewer.h"
 #endif
-
-#include "ion/Ion.h"
 
 #include "jsfuninlines.h"
 
@@ -450,7 +448,7 @@ HandleDynamicLinkFailure(JSContext *cx, CallArgs args, AsmJSModule &module, Hand
     args2.setCallee(ObjectValue(*fun));
     args2.setThis(args.thisv());
     for (unsigned i = 0; i < argc; i++)
-        args2[i] = args[i];
+        args2[i].set(args[i]);
 
     if (!Invoke(cx, args2))
         return false;

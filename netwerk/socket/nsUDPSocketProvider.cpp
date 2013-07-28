@@ -6,7 +6,7 @@
 
 #include "nspr.h"
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsUDPSocketProvider, nsISocketProvider)
+NS_IMPL_ISUPPORTS1(nsUDPSocketProvider, nsISocketProvider)
 
 nsUDPSocketProvider::~nsUDPSocketProvider()
 {

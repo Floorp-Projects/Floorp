@@ -12,7 +12,26 @@ import mozfile
 import os
 import unittest
 
+
 class TestNamedTemporaryFile(unittest.TestCase):
+    """test our fix for NamedTemporaryFile"""
+
+    def test_named_temporary_file(self):
+        """ Ensure the fix for re-opening a NamedTemporaryFile works
+
+            Refer to https://bugzilla.mozilla.org/show_bug.cgi?id=818777
+            and https://bugzilla.mozilla.org/show_bug.cgi?id=821362
+        """
+
+        test_string = "A simple test"
+        with mozfile.NamedTemporaryFile() as temp:
+            # Test we can write to file
+            temp.write(test_string)
+            # Forced flush, so that we can read later
+            temp.flush()
+
+            # Test we can open the file again on all platforms
+            self.assertEqual(open(temp.name).read(), test_string)
 
     def test_iteration(self):
         """ensure the line iterator works"""
@@ -33,7 +52,7 @@ class TestNamedTemporaryFile(unittest.TestCase):
         lines = []
         for line in tf:
             lines.append(line.strip())
-        self.assertEqual(lines, []) # because we did not seek(0)
+        self.assertEqual(lines, [])  # because we did not seek(0)
         tf.seek(0)
         lines = []
         for line in tf:

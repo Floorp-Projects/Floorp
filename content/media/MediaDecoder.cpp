@@ -110,7 +110,7 @@ public:
   }
 };
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(MediaDecoder, nsIObserver)
+NS_IMPL_ISUPPORTS1(MediaDecoder, nsIObserver)
 
 void MediaDecoder::SetDormantIfNecessary(bool aDormant)
 {

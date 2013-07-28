@@ -16,7 +16,7 @@
 #include <windows.h>
 #endif
 
-#define BUFFER_OFFSET(i) ((char *)NULL + (i))
+#define BUFFER_OFFSET(i) ((char *)nullptr + (i))
 
 #include "gfxContext.h"
 #include "gfx3DMatrix.h"
@@ -321,7 +321,7 @@ private:
   nsIntSize mSurfaceSize;
 
   /** 
-   * Context target, NULL when drawing directly to our swap chain.
+   * Context target, nullptr when drawing directly to our swap chain.
    */
   nsRefPtr<gfxContext> mTarget;
 

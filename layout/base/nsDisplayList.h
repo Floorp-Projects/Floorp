@@ -1004,12 +1004,6 @@ public:
   static bool ForceActiveLayers();
 
   /**
-   * Returns the maximum number of layers that should be created
-   * or -1 for no limit. Requires setting the pref layers.max-acitve.
-   */
-  static int32_t MaxActiveLayers();
-
-  /**
    * @return LAYER_NONE if BuildLayer will return null. In this case
    * there is no layer for the item, and Paint should be called instead
    * to paint the content using Thebes.
@@ -1959,12 +1953,10 @@ public:
   virtual ~nsDisplayBackgroundImage();
 
   // This will create and append new items for all the layers of the
-  // background. If given, aBackground will be set with the address of the
-  // bottom-most background item.
-  static nsresult AppendBackgroundItemsToTop(nsDisplayListBuilder* aBuilder,
-                                             nsIFrame* aFrame,
-                                             nsDisplayList* aList,
-                                             bool* aAppendedThemedBackground = nullptr);
+  // background. Returns whether we appended a themed background.
+  static bool AppendBackgroundItemsToTop(nsDisplayListBuilder* aBuilder,
+                                         nsIFrame* aFrame,
+                                         nsDisplayList* aList);
 
   virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
                                    LayerManager* aManager,

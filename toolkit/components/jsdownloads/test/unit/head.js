@@ -51,50 +51,10 @@ const BinaryOutputStream = Components.Constructor(
                                       "nsIBinaryOutputStream",
                                       "setOutputStream")
 
-Object.defineProperty(this, "HTTP_BASE", {get: function() {
-  return "http://localhost:" + gHttpServer.identity.primaryPort;
-}});
-
-Object.defineProperty(this, "FAKE_BASE", {get: function() {
-  return "http://localhost:" + gFakeServerPort;
-}});
-
-Object.defineProperty(this, "TEST_REFERRER_URI", {get: function() {
-  return NetUtil.newURI(HTTP_BASE + "/referrer.html");
-}});
-
-Object.defineProperty(this, "TEST_SOURCE_URI", {get: function() {
-  return NetUtil.newURI(HTTP_BASE + "/source.txt");
-}});
-
-Object.defineProperty(this, "TEST_EMPTY_URI", {get: function() {
-  return NetUtil.newURI(HTTP_BASE + "/empty.txt");
-}});
-
-Object.defineProperty(this, "TEST_FAKE_SOURCE_URI", {get: function() {
-  return NetUtil.newURI(FAKE_BASE + "/source.txt");
-}});
-
-const TEST_EMPTY_NOPROGRESS_PATH = "/empty-noprogress.txt";
-
-Object.defineProperty(this, "TEST_EMPTY_NOPROGRESS_URI", {get: function() {
-  return NetUtil.newURI(HTTP_BASE + TEST_EMPTY_NOPROGRESS_PATH);
-}});
-
-const TEST_INTERRUPTIBLE_PATH = "/interruptible.txt";
-
-Object.defineProperty(this, "TEST_INTERRUPTIBLE_URI", {get: function() {
-  return NetUtil.newURI(HTTP_BASE + TEST_INTERRUPTIBLE_PATH);
-}});
-
-const TEST_INTERRUPTIBLE_GZIP_PATH = "/interruptible_gzip.txt";
-
-Object.defineProperty(this, "TEST_INTERRUPTIBLE_GZIP_URI", {get: function() {
-  return NetUtil.newURI(HTTP_BASE + TEST_INTERRUPTIBLE_GZIP_PATH);
-}});
-
 const TEST_TARGET_FILE_NAME = "test-download.txt";
 const TEST_STORE_FILE_NAME = "test-downloads.json";
+
+const TEST_REFERRER_URL = "http://www.example.com/referrer.html";
 
 const TEST_DATA_SHORT = "This test string is downloaded.";
 // Generate using gzipCompressString in TelemetryPing.js.
@@ -118,6 +78,20 @@ function run_test()
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Support functions
+
+/**
+ * HttpServer object initialized before tests start.
+ */
+let gHttpServer;
+
+/**
+ * Given a file name, returns a string containing an URI that points to the file
+ * on the currently running instance of the test HTTP server.
+ */
+function httpUrl(aFileName) {
+  return "http://localhost:" + gHttpServer.identity.primaryPort + "/" +
+         aFileName;
+}
 
 // While the previous test file should have deleted all the temporary files it
 // used, on Windows these might still be pending deletion on the physical file
@@ -190,19 +164,99 @@ function promiseTimeout(aTime)
 /**
  * Creates a new Download object, setting a temporary file as the target.
  *
- * @param aSourceURI
- *        The nsIURI for the download source, or null to use TEST_SOURCE_URI.
+ * @param aSourceUrl
+ *        String containing the URI for the download source, or null to use
+ *        httpUrl("source.txt").
  *
  * @return {Promise}
  * @resolves The newly created Download object.
  * @rejects JavaScript exception.
  */
-function promiseSimpleDownload(aSourceURI) {
+function promiseNewDownload(aSourceUrl) {
   return Downloads.createDownload({
-    source: { uri: aSourceURI || TEST_SOURCE_URI },
-    target: { file: getTempFile(TEST_TARGET_FILE_NAME) },
-    saver: { type: "copy" },
+    source: aSourceUrl || httpUrl("source.txt"),
+    target: getTempFile(TEST_TARGET_FILE_NAME),
   });
+}
+
+/**
+ * Starts a new download using the nsIWebBrowserPersist interface, and controls
+ * it using the legacy nsITransfer interface.
+ *
+ * @param aSourceUrl
+ *        String containing the URI for the download source, or null to use
+ *        httpUrl("source.txt").
+ * @param aOptions
+ *        An optional object used to control the behavior of this function.
+ *        You may pass an object with a subset of the following fields:
+ *        {
+ *          isPrivate: Boolean indicating whether the download originated from a
+ *                     private window.
+ *          targetFile: nsIFile for the target, or null to use a temporary file.
+ *          outPersist: Receives a reference to the created nsIWebBrowserPersist
+ *                      instance.
+ *        }
+ *
+ * @return {Promise}
+ * @resolves The Download object created as a consequence of controlling the
+ *           download through the legacy nsITransfer interface.
+ * @rejects Never.  The current test fails in case of exceptions.
+ */
+function promiseStartLegacyDownload(aSourceUrl, aOptions) {
+  let sourceURI = NetUtil.newURI(aSourceUrl || httpUrl("source.txt"));
+  let targetFile = (aOptions && aOptions.targetFile)
+                   || getTempFile(TEST_TARGET_FILE_NAME);
+
+  let persist = Cc["@mozilla.org/embedding/browser/nsWebBrowserPersist;1"]
+                  .createInstance(Ci.nsIWebBrowserPersist);
+  if (aOptions) {
+    aOptions.outPersist = persist;
+  }
+
+  // Apply decoding if required by the "Content-Encoding" header.
+  persist.persistFlags &= ~Ci.nsIWebBrowserPersist.PERSIST_FLAGS_NO_CONVERSION;
+
+  // We must create the nsITransfer implementation using its class ID because
+  // the "@mozilla.org/transfer;1" contract is currently implemented in
+  // "toolkit/components/downloads".  When the other folder is not included in
+  // builds anymore (bug 851471), we'll be able to use the contract ID.
+  let transfer =
+      Components.classesByID["{1b4c85df-cbdd-4bb6-b04e-613caece083c}"]
+                .createInstance(Ci.nsITransfer);
+
+  let deferred = Promise.defer();
+
+  let isPrivate = aOptions && aOptions.isPrivate;
+  let promise = isPrivate ? Downloads.getPrivateDownloadList()
+                          : Downloads.getPublicDownloadList();
+  promise.then(function (aList) {
+    // Temporarily register a view that will get notified when the download we
+    // are controlling becomes visible in the list of downloads.
+    aList.addView({
+      onDownloadAdded: function (aDownload) {
+        aList.removeView(this);
+
+        // Remove the download to keep the list empty for the next test.  This
+        // also allows the caller to register the "onchange" event directly.
+        aList.remove(aDownload);
+
+        // When the download object is ready, make it available to the caller.
+        deferred.resolve(aDownload);
+      },
+    });
+
+    // Initialize the components so they reference each other.  This will cause
+    // the Download object to be created and added to the public downloads.
+    transfer.init(sourceURI, NetUtil.newURI(targetFile), null, null, null, null,
+                  persist, isPrivate);
+    persist.progressListener = transfer;
+
+    // Start the actual download process.
+    persist.savePrivacyAwareURI(sourceURI, null, null, null, null, targetFile,
+                                isPrivate);
+  }.bind(this)).then(null, do_report_unexpected_exception);
+
+  return deferred.promise;
 }
 
 /**
@@ -234,8 +288,9 @@ function promiseNewPrivateDownloadList() {
 /**
  * Ensures that the given file contents are equal to the given string.
  *
- * @param aFile
- *        nsIFile whose contents should be verified.
+ * @param aPath
+ *        String containing the path of the file whose contents should be
+ *        verified.
  * @param aExpectedContents
  *        String containing the octets that are expected in the file.
  *
@@ -243,10 +298,11 @@ function promiseNewPrivateDownloadList() {
  * @resolves When the operation completes.
  * @rejects Never.
  */
-function promiseVerifyContents(aFile, aExpectedContents)
+function promiseVerifyContents(aPath, aExpectedContents)
 {
   let deferred = Promise.defer();
-  NetUtil.asyncFetch(aFile, function(aInputStream, aStatus) {
+  let file = new FileUtils.File(aPath);
+  NetUtil.asyncFetch(file, function(aInputStream, aStatus) {
     do_check_true(Components.isSuccessCode(aStatus));
     let contents = NetUtil.readInputStreamToString(aInputStream,
                                                    aInputStream.available());
@@ -265,17 +321,18 @@ function promiseVerifyContents(aFile, aExpectedContents)
 /**
  * Adds entry for download.
  *
- * @param aSourceURI
- *        The nsIURI for the download source, or null to use TEST_SOURCE_URI.
+ * @param aSourceUrl
+ *        String containing the URI for the download source, or null to use
+ *        httpUrl("source.txt").
  *
  * @return {Promise}
  * @rejects JavaScript exception.
  */
-function promiseAddDownloadToHistory(aSourceURI) {
+function promiseAddDownloadToHistory(aSourceUrl) {
   let deferred = Promise.defer();
   PlacesUtils.asyncHistory.updatePlaces(
     {
-      uri: aSourceURI || TEST_SOURCE_URI,
+      uri: NetUtil.newURI(aSourceUrl || httpUrl("source.txt")),
       visits: [{
         transitionType: Ci.nsINavHistoryService.TRANSITION_DOWNLOAD,
         visitDate:  Date.now()
@@ -304,7 +361,6 @@ function promiseAddDownloadToHistory(aSourceURI) {
 function startFakeServer()
 {
   let serverSocket = new ServerSocket(-1, true, -1);
-  gFakeServerPort = serverSocket.port;
   serverSocket.asyncListen({
     onSocketAccepted: function (aServ, aTransport) {
       aTransport.close(Cr.NS_BINDING_ABORTED);
@@ -326,10 +382,10 @@ function startFakeServer()
  * handlers, you may call "deferNextResponse" to get a reference to an object
  * that allows you to control the next request.
  *
- * For example, the handler accessible at the TEST_INTERRUPTIBLE_URI address
- * returns the TEST_DATA_SHORT text, then waits until the "resolve" method is
- * called on the object returned by the function.  At this point, the handler
- * sends the TEST_DATA_SHORT text again to complete the response.
+ * For example, the handler accessible at the httpUri("interruptible.txt")
+ * address returns the TEST_DATA_SHORT text, then waits until the "resolve"
+ * method is called on the object returned by the function.  At this point, the
+ * handler sends the TEST_DATA_SHORT text again to complete the response.
  *
  * You can also call the "reject" method on the returned object to interrupt the
  * response midway.  Because of how the network layer is implemented, this does
@@ -429,9 +485,6 @@ function isValidDate(aDate) {
 ////////////////////////////////////////////////////////////////////////////////
 //// Initialization functions common to all tests
 
-let gHttpServer;
-let gFakeServerPort;
-
 add_task(function test_common_initialize()
 {
   // Start the HTTP server.
@@ -439,7 +492,7 @@ add_task(function test_common_initialize()
   gHttpServer.registerDirectory("/", do_get_file("../data"));
   gHttpServer.start(-1);
 
-  registerInterruptibleHandler(TEST_INTERRUPTIBLE_PATH,
+  registerInterruptibleHandler("/interruptible.txt",
     function firstPart(aRequest, aResponse) {
       aResponse.setHeader("Content-Type", "text/plain", false);
       aResponse.setHeader("Content-Length", "" + (TEST_DATA_SHORT.length * 2),
@@ -449,13 +502,13 @@ add_task(function test_common_initialize()
       aResponse.write(TEST_DATA_SHORT);
     });
 
-  registerInterruptibleHandler(TEST_EMPTY_NOPROGRESS_PATH,
+  registerInterruptibleHandler("/empty-noprogress.txt",
     function firstPart(aRequest, aResponse) {
       aResponse.setHeader("Content-Type", "text/plain", false);
     }, function secondPart(aRequest, aResponse) { });
 
 
-  registerInterruptibleHandler(TEST_INTERRUPTIBLE_GZIP_PATH,
+  registerInterruptibleHandler("/interruptible_gzip.txt",
     function firstPart(aRequest, aResponse) {
       aResponse.setHeader("Content-Type", "text/plain", false);
       aResponse.setHeader("Content-Encoding", "gzip", false);

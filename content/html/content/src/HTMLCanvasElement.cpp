@@ -13,6 +13,7 @@
 #include "mozilla/CheckedInt.h"
 #include "mozilla/dom/CanvasRenderingContext2D.h"
 #include "mozilla/dom/HTMLCanvasElementBinding.h"
+#include "mozilla/dom/UnionTypes.h"
 #include "mozilla/gfx/Rect.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Telemetry.h"
@@ -476,6 +477,48 @@ HTMLCanvasElement::ExtractData(const nsAString& aType,
 }
 
 nsresult
+HTMLCanvasElement::ParseParams(JSContext* aCx,
+                               const nsAString& aType,
+                               const JS::Value& aEncoderOptions,
+                               nsAString& aParams,
+                               bool* usingCustomParseOptions)
+{
+  // Quality parameter is only valid for the image/jpeg MIME type
+  if (aType.EqualsLiteral("image/jpeg")) {
+    if (aEncoderOptions.isNumber()) {
+      double quality = aEncoderOptions.toNumber();
+      // Quality must be between 0.0 and 1.0, inclusive
+      if (quality >= 0.0 && quality <= 1.0) {
+        aParams.AppendLiteral("quality=");
+        aParams.AppendInt(NS_lround(quality * 100.0));
+      }
+    }
+  }
+
+  // If we haven't parsed the aParams check for proprietary options.
+  // The proprietary option -moz-parse-options will take a image lib encoder
+  // parse options string as is and pass it to the encoder.
+  *usingCustomParseOptions = false;
+  if (aParams.Length() == 0 && aEncoderOptions.isString()) {
+    NS_NAMED_LITERAL_STRING(mozParseOptions, "-moz-parse-options:");
+    nsDependentJSString paramString;
+    if (!paramString.init(aCx, aEncoderOptions.toString())) {
+      return NS_ERROR_FAILURE;
+    }
+    if (StringBeginsWith(paramString, mozParseOptions)) {
+      nsDependentSubstring parseOptions = Substring(paramString,
+                                                    mozParseOptions.Length(),
+                                                    paramString.Length() -
+                                                    mozParseOptions.Length());
+      aParams.Append(parseOptions);
+      *usingCustomParseOptions = true;
+    }
+  }
+
+  return NS_OK;
+}
+
+nsresult
 HTMLCanvasElement::ToDataURLImpl(JSContext* aCx,
                                  const nsAString& aMimeType,
                                  const JS::Value& aEncoderOptions,
@@ -496,37 +539,10 @@ HTMLCanvasElement::ToDataURLImpl(JSContext* aCx,
   }
 
   nsAutoString params;
-
-  // Quality parameter is only valid for the image/jpeg MIME type
-  if (type.EqualsLiteral("image/jpeg")) {
-    if (aEncoderOptions.isNumber()) {
-      double quality = aEncoderOptions.toNumber();
-      // Quality must be between 0.0 and 1.0, inclusive
-      if (quality >= 0.0 && quality <= 1.0) {
-        params.AppendLiteral("quality=");
-        params.AppendInt(NS_lround(quality * 100.0));
-      }
-    }
-  }
-
-  // If we haven't parsed the params check for proprietary options.
-  // The proprietary option -moz-parse-options will take a image lib encoder
-  // parse options string as is and pass it to the encoder.
-  bool usingCustomParseOptions = false;
-  if (params.Length() == 0 && aEncoderOptions.isString()) {
-    NS_NAMED_LITERAL_STRING(mozParseOptions, "-moz-parse-options:");
-    nsDependentJSString paramString;
-    if (!paramString.init(aCx, aEncoderOptions.toString())) {
-      return NS_ERROR_FAILURE;
-    }
-    if (StringBeginsWith(paramString, mozParseOptions)) {
-      nsDependentSubstring parseOptions = Substring(paramString,
-                                                    mozParseOptions.Length(),
-                                                    paramString.Length() -
-                                                    mozParseOptions.Length());
-      params.Append(parseOptions);
-      usingCustomParseOptions = true;
-    }
+  bool usingCustomParseOptions;
+  rv = ParseParams(aCx, type, aEncoderOptions, params, &usingCustomParseOptions);
+  if (NS_FAILED(rv)) {
+    return rv;
   }
 
   nsCOMPtr<nsIInputStream> stream;
@@ -559,7 +575,9 @@ HTMLCanvasElement::ToDataURLImpl(JSContext* aCx,
 // XXXkhuey the encoding should be off the main thread, but we're lazy.
 NS_IMETHODIMP
 HTMLCanvasElement::ToBlob(nsIFileCallback* aCallback,
-                          const nsAString& aType)
+                          const nsAString& aType,
+                          const JS::Value& aEncoderOptions,
+                          JSContext* aCx)
 {
   // do a trust check if this is a write-only canvas
   if (mWriteOnly && !nsContentUtils::IsCallerChrome()) {
@@ -576,10 +594,24 @@ HTMLCanvasElement::ToBlob(nsIFileCallback* aCallback,
     return rv;
   }
 
+  nsAutoString params;
+  bool usingCustomParseOptions;
+  rv = ParseParams(aCx, type, aEncoderOptions, params, &usingCustomParseOptions);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
   bool fallbackToPNG = false;
 
   nsCOMPtr<nsIInputStream> stream;
-  rv = ExtractData(type, EmptyString(), getter_AddRefs(stream), fallbackToPNG);
+  rv = ExtractData(type, params, getter_AddRefs(stream), fallbackToPNG);
+  // If there are unrecognized custom parse options, we should fall back to
+  // the default values for the encoder without any options at all.
+  if (rv == NS_ERROR_INVALID_ARG && usingCustomParseOptions) {
+    fallbackToPNG = false;
+    rv = ExtractData(type, EmptyString(), getter_AddRefs(stream), fallbackToPNG);
+  }
+
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (fallbackToPNG) {

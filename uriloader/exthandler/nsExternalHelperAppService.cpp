@@ -480,9 +480,6 @@ static nsExtraMimeTypeEntry extraMimeEntries [] =
   { IMAGE_PNG, "png", "PNG Image" },
   { IMAGE_TIFF, "tiff,tif", "TIFF Image" },
   { IMAGE_XBM, "xbm", "XBM Image" },
-#ifdef MOZ_WBMP
-  { IMAGE_WBMP, "wbmp", "WBMP Image" },
-#endif
   { "image/svg+xml", "svg", "Scalable Vector Graphics" },
   { MESSAGE_RFC822, "eml", "RFC-822 data" },
   { TEXT_PLAIN, "txt,text", "Text File" },
@@ -1087,8 +1084,8 @@ nsExternalHelperAppService::Observe(nsISupports *aSubject, const char *aTopic, c
 // begin external app handler implementation 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 
-NS_IMPL_THREADSAFE_ADDREF(nsExternalAppHandler)
-NS_IMPL_THREADSAFE_RELEASE(nsExternalAppHandler)
+NS_IMPL_ADDREF(nsExternalAppHandler)
+NS_IMPL_RELEASE(nsExternalAppHandler)
 
 NS_INTERFACE_MAP_BEGIN(nsExternalAppHandler)
    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIStreamListener)

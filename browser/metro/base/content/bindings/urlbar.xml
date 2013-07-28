@@ -569,6 +569,7 @@
             this._searches.arrangeItemsNow();
 
             this.hidden = false;
+            Elements.urlbarState.setAttribute("autocomplete", "true");
           ]]>
         </body>
       </method>
@@ -581,6 +582,7 @@
 
             this.input.controller.stopSearch();
             this.hidden = true;
+            Elements.urlbarState.removeAttribute("autocomplete");
           ]]>
         </body>
       </method>

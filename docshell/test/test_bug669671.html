@@ -66,6 +66,12 @@ function checkPopupLoadCount()
 
 function test()
 {
+  // Step 0 - Make sure the count is reset to 0 in case of reload
+  popup.location = 'file_bug669671.sjs?countreset';
+  yield;
+  is(popup.document.body.innerHTML, '0',
+     'Load count should be reset to 0');
+
   // Step 1 - The popup's body counts how many times we've requested the
   // resource.  This is the first time we've requested it, so it should be '0'.
   checkPopupLoadCount();

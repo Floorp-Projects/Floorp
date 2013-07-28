@@ -8,23 +8,24 @@
 
 #include "jsreflect.h"
 
-#include <stdlib.h>
-
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Util.h"
 
-#include "jspubtd.h"
+#include <stdlib.h>
+
 #include "jsarray.h"
 #include "jsatom.h"
 #include "jsobj.h"
+#include "jspubtd.h"
 
 #include "frontend/Parser.h"
-#include "frontend/ParseNode-inl.h"
 #include "frontend/TokenStream.h"
 #include "js/CharacterEncoding.h"
 #include "vm/RegExpObject.h"
 
 #include "jsobjinlines.h"
+
+#include "frontend/ParseNode-inl.h"
 
 using namespace js;
 using namespace js::frontend;
@@ -2959,7 +2960,7 @@ reflect_parse(JSContext *cx, uint32_t argc, jsval *vp)
         return JS_FALSE;
     }
 
-    RootedString src(cx, ToString<CanGC>(cx, args.handleAt(0)));
+    RootedString src(cx, ToString<CanGC>(cx, args[0]));
     if (!src)
         return JS_FALSE;
 

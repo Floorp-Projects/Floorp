@@ -215,5 +215,16 @@ class TestManifestparser(unittest.TestCase):
                          os.path.join(here, 'fleem'))
 
 
+    def test_comments(self):
+        """
+        ensure comments work, see
+        https://bugzilla.mozilla.org/show_bug.cgi?id=813674
+        """
+        comment_example = os.path.join(here, 'comment-example.ini')
+        manifest = ManifestParser(manifests=(comment_example,))
+        self.assertEqual(len(manifest.tests), 8)
+        names = [i['name'] for i in manifest.tests]
+        self.assertFalse('test_0202_app_launch_apply_update_dirlocked.js' in names)
+
 if __name__ == '__main__':
     unittest.main()

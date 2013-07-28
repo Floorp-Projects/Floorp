@@ -7,7 +7,10 @@
 #ifndef jsopcodeinlines_h
 #define jsopcodeinlines_h
 
+#include "jsopcode.h"
+
 #include "jsautooplen.h"
+#include "jsscript.h"
 
 namespace js {
 

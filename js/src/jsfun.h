@@ -9,8 +9,9 @@
 /*
  * JS function definitions.
  */
-#include "jsprvtd.h"
+
 #include "jsobj.h"
+#include "jsprvtd.h"
 #include "jsscript.h"
 
 #include "gc/Barrier.h"
@@ -259,7 +260,7 @@ class JSFunction : public JSObject
 
     JSScript *nonLazyScript() const {
         JS_ASSERT(hasScript());
-        return JS::HandleScript::fromMarkedLocation(&u.i.s.script_);
+        return u.i.s.script_;
     }
 
     js::HeapPtrScript &mutableScript() {
@@ -408,6 +409,10 @@ DefineFunction(JSContext *cx, HandleObject obj, HandleId id, JSNative native,
                unsigned nargs, unsigned flags,
                gc::AllocKind allocKind = JSFunction::FinalizeKind,
                NewObjectKind newKind = GenericObject);
+
+extern JSBool
+fun_resolve(JSContext *cx, js::HandleObject obj, js::HandleId id,
+            unsigned flags, js::MutableHandleObject objp);
 
 // ES6 9.2.5 IsConstructor
 bool IsConstructor(const Value &v);

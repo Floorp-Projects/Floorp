@@ -809,7 +809,7 @@ protected:
 
   // Object Management
   virtual ~nsGlobalWindow();
-  void CleanUp(bool aIgnoreModalDialog);
+  void CleanUp();
   void ClearControllers();
   nsresult FinalClose();
 
@@ -1225,7 +1225,9 @@ protected:
 
   // These member variables are used on both inner and the outer windows.
   nsCOMPtr<nsIPrincipal> mDocumentPrincipal;
-  JSObject* mJSObject;
+
+  // The JS global object.  Global objects are always allocated tenured.
+  JS::TenuredHeap<JSObject*> mJSObject;
 
   typedef nsCOMArray<nsIDOMStorageEvent> nsDOMStorageEventArray;
   nsDOMStorageEventArray mPendingStorageEvents;
@@ -1242,7 +1244,7 @@ protected:
   nsCOMPtr<nsIURI> mLastOpenedURI;
 #endif
 
-  bool mCleanedUp, mCallCleanUpAfterModalDialogCloses;
+  bool mCleanedUp;
 
   nsCOMPtr<nsIDOMOfflineResourceList> mApplicationCache;
 

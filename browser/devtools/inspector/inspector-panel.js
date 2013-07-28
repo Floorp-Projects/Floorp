@@ -156,14 +156,17 @@ InspectorPanel.prototype = {
   /**
    * Return a promise that will resolve to the default node for selection.
    */
-  _getDefaultNodeForSelection : function() {
+  _getDefaultNodeForSelection: function() {
     if (this._defaultNode) {
       return this._defaultNode;
     }
     let walker = this.walker;
+
     // if available set body node as default selected node
     // else set documentElement
-    return walker.querySelector(this.walker.rootNode, "body").then(front => {
+    return walker.getRootNode().then(rootNode => {
+      return walker.querySelector(rootNode, "body");
+    }).then(front => {
       if (front) {
         return front;
       }
@@ -285,33 +288,21 @@ InspectorPanel.prototype = {
    */
   onNavigatedAway: function InspectorPanel_onNavigatedAway(event, payload) {
     let newWindow = payload._navPayload || payload;
-    this.walker.release().then(null, console.error);
-    this.walker = null;
     this._defaultNode = null;
     this.selection.setNodeFront(null);
-    this.selection.setWalker(null);
     this._destroyMarkup();
     this.isDirty = false;
 
-    this.target.inspector.getWalker().then(walker => {
+    this._getDefaultNodeForSelection().then(defaultNode => {
       if (this._destroyPromise) {
-        walker.release().then(null, console.error);
         return;
       }
+      this.selection.setNodeFront(defaultNode, "navigateaway");
 
-      this.walker = walker;
-      this.selection.setWalker(walker);
-      this._getDefaultNodeForSelection().then(defaultNode => {
-        if (this._destroyPromise) {
-          return;
-        }
-        this.selection.setNodeFront(defaultNode, "navigateaway");
-
-        this._initMarkup();
-        this.once("markuploaded", () => {
-          this.markup.expandNode(this.selection.nodeFront);
-          this.setupSearchBox();
-        });
+      this._initMarkup();
+      this.once("markuploaded", () => {
+        this.markup.expandNode(this.selection.nodeFront);
+        this.setupSearchBox();
       });
     });
   },

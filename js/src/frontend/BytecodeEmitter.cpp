@@ -16,8 +16,6 @@
 
 #include <string.h>
 
-#include "jstypes.h"
-#include "jsutil.h"
 #include "jsapi.h"
 #include "jsatom.h"
 #include "jscntxt.h"
@@ -25,6 +23,8 @@
 #include "jsnum.h"
 #include "jsopcode.h"
 #include "jsscript.h"
+#include "jstypes.h"
+#include "jsutil.h"
 
 #include "frontend/Parser.h"
 #include "frontend/TokenStream.h"
@@ -3714,7 +3714,6 @@ MOZ_NEVER_INLINE static bool
 EmitTry(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 {
     StmtInfoBCE stmtInfo(cx);
-    ptrdiff_t catchJump = -1;
 
     /*
      * Push stmtInfo to track jumps-over-catches and gosubs-to-finally
@@ -3739,7 +3738,8 @@ EmitTry(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     int depth = bce->stackDepth;
 
     /* Mark try location for decompilation, then emit try block. */
-    if (Emit1(cx, bce, JSOP_TRY) < 0)
+    ptrdiff_t noteIndex = NewSrcNote(cx, bce, SRC_TRY);
+    if (noteIndex < 0 || Emit1(cx, bce, JSOP_TRY) < 0)
         return false;
     ptrdiff_t tryStart = bce->offset();
     if (!EmitTree(cx, bce, pn->pn_kid1))
@@ -3754,9 +3754,14 @@ EmitTry(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             return false;
     }
 
+    /* Source note points to the jump at the end of the try block. */
+    if (!SetSrcNoteOffset(cx, bce, noteIndex, 0, bce->offset() - tryStart + JSOP_TRY_LENGTH))
+        return false;
+
     /* Emit (hidden) jump over catch and/or finally. */
     if (NewSrcNote(cx, bce, SRC_HIDDEN) < 0)
         return false;
+    ptrdiff_t catchJump = -1;
     if (EmitBackPatchOp(cx, bce, &catchJump) < 0)
         return false;
 
@@ -6406,11 +6411,12 @@ const JSSrcNoteSpec js_SrcNoteSpec[] = {
 
 /* 16 */ {"catch",          0},
 
-/* 17 */ {"colspan",        1},
-/* 18 */ {"newline",        0},
-/* 19 */ {"setline",        1},
+/* 17 */ {"try",            1},
 
-/* 20 */ {"unused20",       0},
+/* 18 */ {"colspan",        1},
+/* 19 */ {"newline",        0},
+/* 20 */ {"setline",        1},
+
 /* 21 */ {"unused21",       0},
 /* 22 */ {"unused22",       0},
 /* 23 */ {"unused23",       0},

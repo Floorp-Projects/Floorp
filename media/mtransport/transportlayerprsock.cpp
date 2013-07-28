@@ -112,5 +112,5 @@ void TransportLayerPrsock::OnSocketReady(PRFileDesc *fd, int16_t outflags) {
   }
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS0(TransportLayerPrsock::SocketHandler)
+NS_IMPL_ISUPPORTS0(TransportLayerPrsock::SocketHandler)
 }  // close namespace
