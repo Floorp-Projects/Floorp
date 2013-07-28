@@ -448,7 +448,7 @@ StackFrames.prototype = {
     this.activeThread.addListener("resumed", this._onResumed);
     this.activeThread.addListener("framesadded", this._onFrames);
     this.activeThread.addListener("framescleared", this._onFramesCleared);
-    window.addEventListener("Debugger:BlackBoxChange", this._onBlackBoxChange, false);
+    this.activeThread.addListener("blackboxchange", this._onBlackBoxChange);
     this._handleTabNavigation();
   },
 
@@ -464,7 +464,7 @@ StackFrames.prototype = {
     this.activeThread.removeListener("resumed", this._onResumed);
     this.activeThread.removeListener("framesadded", this._onFrames);
     this.activeThread.removeListener("framescleared", this._onFramesCleared);
-    window.removeEventListener("Debugger:BlackBoxChange", this._onBlackBoxChange, false);
+    this.activeThread.removeListener("blackboxchange", this._onBlackBoxChange);
   },
 
   /**
@@ -640,7 +640,7 @@ StackFrames.prototype = {
   },
 
   /**
-   * Handler for the debugger's BlackBoxChange notification.
+   * Handler for the debugger's blackboxchange notification.
    */
   _onBlackBoxChange: function() {
     if (this.activeThread.state == "paused") {
@@ -890,6 +890,7 @@ function SourceScripts() {
   this._onNewGlobal = this._onNewGlobal.bind(this);
   this._onNewSource = this._onNewSource.bind(this);
   this._onSourcesAdded = this._onSourcesAdded.bind(this);
+  this._onBlackBoxChange = this._onBlackBoxChange.bind(this);
 }
 
 SourceScripts.prototype = {
@@ -904,6 +905,7 @@ SourceScripts.prototype = {
     dumpn("SourceScripts is connecting...");
     this.debuggerClient.addListener("newGlobal", this._onNewGlobal);
     this.debuggerClient.addListener("newSource", this._onNewSource);
+    this.activeThread.addListener("blackboxchange", this._onBlackBoxChange);
     this._handleTabNavigation();
   },
 
@@ -918,6 +920,7 @@ SourceScripts.prototype = {
     window.clearTimeout(this._newSourceTimeout);
     this.debuggerClient.removeListener("newGlobal", this._onNewGlobal);
     this.debuggerClient.removeListener("newSource", this._onNewSource);
+    this.activeThread.removeListener("blackboxchange", this._onBlackBoxChange);
   },
 
   /**
@@ -1026,6 +1029,16 @@ SourceScripts.prototype = {
   },
 
   /**
+   * Handler for the debugger client's 'blackboxchange' notification.
+   */
+  _onBlackBoxChange: function (aEvent, { url, isBlackBoxed }) {
+    const item = DebuggerView.Sources.getItemByValue(url);
+    if (item) {
+      DebuggerView.Sources.callMethod("checkItem", item.target, !isBlackBoxed);
+    }
+  },
+
+  /**
    * Set the black boxed status of the given source.
    *
    * @param Object aSource
@@ -1042,7 +1055,6 @@ SourceScripts.prototype = {
         dumpn(msg);
         return void Cu.reportError(msg);
       }
-      window.dispatchEvent(document, "Debugger:BlackBoxChange", sourceClient);
     });
   },
 
