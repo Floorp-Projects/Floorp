@@ -12,6 +12,7 @@
  * js::Class is an engine-private extension that allows more control over
  * object behavior and, e.g., allows custom slow layout.
  */
+
 #include "jsapi.h"
 #include "jsprvtd.h"
 
@@ -218,7 +219,7 @@ typedef void
 
 /*
  * The helper struct to measure the size of JS_CLASS_MEMBERS to know how much
- * we have to padd js::Class to match the size of JSClass;
+ * we have to pad js::Class to match the size of JSClass.
  */
 struct ClassSizeMeasurement
 {

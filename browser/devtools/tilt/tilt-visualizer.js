@@ -1227,7 +1227,6 @@ TiltVisualizer.Controller.prototype = {
     canvas.addEventListener("MozMousePixelScroll", this._onMozScroll, false);
     canvas.addEventListener("keydown", this._onKeyDown, false);
     canvas.addEventListener("keyup", this._onKeyUp, false);
-    canvas.addEventListener("keypress", this._onKeyPress, true);
     canvas.addEventListener("blur", this._onBlur, false);
 
     // handle resize events to change the arcball dimensions
@@ -1250,7 +1249,6 @@ TiltVisualizer.Controller.prototype = {
     canvas.removeEventListener("MozMousePixelScroll", this._onMozScroll, false);
     canvas.removeEventListener("keydown", this._onKeyDown, false);
     canvas.removeEventListener("keyup", this._onKeyUp, false);
-    canvas.removeEventListener("keypress", this._onKeyPress, true);
     canvas.removeEventListener("blur", this._onBlur, false);
 
     // Closing the tab would result in contentWindow being a dead object,
@@ -1392,6 +1390,15 @@ TiltVisualizer.Controller.prototype = {
     } else {
       this.arcball.cancelKeyEvents();
     }
+
+    if (e.keyCode === e.DOM_VK_ESCAPE) {
+      let {TiltManager} = require("devtools/tilt/tilt");
+      let tilt =
+        TiltManager.getTiltForBrowser(this.presenter.chromeWindow);
+      e.preventDefault();
+      e.stopPropagation();
+      tilt.destroy(tilt.currentWindowId, true);
+    }
   },
 
   /**
@@ -1416,21 +1423,6 @@ TiltVisualizer.Controller.prototype = {
       e.preventDefault();
       e.stopPropagation();
       this.arcball.keyUp(code);
-    }
-  },
-
-  /**
-   * Called when a key is pressed.
-   */
-  _onKeyPress: function TVC__onKeyPress(e)
-  {
-    if (e.keyCode === e.DOM_VK_ESCAPE) {
-      let {TiltManager} = require("devtools/tilt/tilt");
-      let tilt =
-        TiltManager.getTiltForBrowser(this.presenter.chromeWindow);
-      e.preventDefault();
-      e.stopPropagation();
-      tilt.destroy(tilt.currentWindowId, true);
     }
   },
 

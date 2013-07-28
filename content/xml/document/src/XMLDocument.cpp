@@ -173,24 +173,22 @@ NS_NewDOMDocument(nsIDOMDocument** aInstancePtrResult,
   return NS_OK;
 }
 
-
 nsresult
 NS_NewXMLDocument(nsIDocument** aInstancePtrResult, bool aLoadedAsData)
 {
-  XMLDocument* doc = new XMLDocument();
-  NS_ENSURE_TRUE(doc, NS_ERROR_OUT_OF_MEMORY);
+  nsRefPtr<XMLDocument> doc = new XMLDocument();
 
-  NS_ADDREF(doc);
   nsresult rv = doc->Init();
 
   if (NS_FAILED(rv)) {
-    NS_RELEASE(doc);
+    *aInstancePtrResult = nullptr;
+    return rv;
   }
 
-  *aInstancePtrResult = doc;
   doc->SetLoadedAsData(aLoadedAsData);
+  doc.forget(aInstancePtrResult);
 
-  return rv;
+  return NS_OK;
 }
 
 nsresult

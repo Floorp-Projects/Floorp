@@ -79,8 +79,6 @@ EXPORTS.mozilla += [
     'Mutex.h',
     'Observer.h',
     'ReentrantMonitor.h',
-    'SSE.h',
-    'arm.h',
     'unused.h',
 ]
 

@@ -62,7 +62,7 @@ class WebSocketChannel : public BaseWebSocketChannel,
                          public nsIChannelEventSink
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIHTTPUPGRADELISTENER
   NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSISTREAMLISTENER

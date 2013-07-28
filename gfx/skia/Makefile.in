@@ -59,7 +59,7 @@ VPATH += \
 	$(srcdir)/src/sfnt \
 	$(NULL)
 
-ifeq (android,$(MOZ_WIDGET_TOOLKIT))
+ifeq ($(MOZ_WIDGET_TOOLKIT),$(findstring $(MOZ_WIDGET_TOOLKIT),android gonk))
 OS_CXXFLAGS += $(MOZ_CAIRO_CFLAGS) $(CAIRO_FT_CFLAGS)
 DEFINES += -DSK_FONTHOST_CAIRO_STANDALONE=0
 endif

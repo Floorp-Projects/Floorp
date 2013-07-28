@@ -20,7 +20,6 @@
  * Create a description or a SIP SDP (sip_info) with
  * appropriate values initialized
  */
-PMH_EXTERN boolean sip_sdp_init(void);
 PMH_EXTERN sdp_t *sipsdp_create(const char *peerconnection);
 PMH_EXTERN cc_sdp_t *sipsdp_info_create(void);
 PMH_EXTERN void sipsdp_src_dest_free(uint16_t flags, cc_sdp_t **sdp_info);

@@ -35,7 +35,7 @@ class nsAppStartup MOZ_FINAL : public nsIAppStartup,
                                public nsSupportsWeakReference
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIAPPSTARTUP
   NS_DECL_NSIWINDOWCREATOR
   NS_DECL_NSIWINDOWCREATOR2

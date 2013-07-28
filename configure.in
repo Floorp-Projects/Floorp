@@ -6137,7 +6137,7 @@ MOZ_ARG_DISABLE_BOOL(crashreporter,
     [MOZ_CRASHREPORTER=F # Force enable breakpad])
 
 if test "$OS_ARCH" != "$HOST_OS_ARCH" -a "$OS_ARCH" != "WINNT"; then
-  if "$MOZ_CRASHREPORTER" = F; then
+  if test "$MOZ_CRASHREPORTER" = F; then
     AC_MSG_ERROR([Cannot --enable-crashreporter, as breakpad tools do not support compiling on $HOST_OS_ARCH while targeting $OS_ARCH.])
   fi
   MOZ_CRASHREPORTER=
@@ -8150,7 +8150,11 @@ if test "${OS_TARGET}" = "WINNT"; then
   fi
 fi
 
-if test "${OS_TARGET}" = "WINNT" -o "${OS_ARCH}" = "Darwin" -o "${MOZ_WIDGET_TOOLKIT}" = "android" -o "${MOZ_WIDGET_TOOLKIT}" = "gtk2"; then
+if test "${OS_TARGET}" = "WINNT" -o \
+        "${OS_ARCH}" = "Darwin" -o \
+        "${MOZ_WIDGET_TOOLKIT}" = "android" -o \
+        "${MOZ_WIDGET_TOOLKIT}" = "gonk" -o \
+        "${MOZ_WIDGET_TOOLKIT}" = "gtk2"; then
     case "${target_cpu}" in
     i*86*|x86_64|arm)
         MOZ_ENABLE_SKIA=1
@@ -8603,12 +8607,6 @@ dnl Build Captive Portal Detector if required
 AC_SUBST(MOZ_CAPTIVEDETECT)
 if test -n "$MOZ_CAPTIVEDETECT"; then
   AC_DEFINE(MOZ_CAPTIVEDETECT)
-fi
-
-dnl Build WBMP decoder if required
-AC_SUBST(MOZ_WBMP)
-if test -n "$MOZ_WBMP"; then
-  AC_DEFINE(MOZ_WBMP)
 fi
 
 dnl ========================================================

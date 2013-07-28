@@ -15,7 +15,7 @@ class nsReadConfig : public nsIReadConfig,
 
     public:
 
-        NS_DECL_ISUPPORTS
+        NS_DECL_THREADSAFE_ISUPPORTS
         NS_DECL_NSIREADCONFIG
         NS_DECL_NSIOBSERVER
 

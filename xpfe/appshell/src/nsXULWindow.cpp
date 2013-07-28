@@ -116,8 +116,8 @@ nsXULWindow::~nsXULWindow()
 // nsXULWindow::nsISupports
 //*****************************************************************************
 
-NS_IMPL_THREADSAFE_ADDREF(nsXULWindow)
-NS_IMPL_THREADSAFE_RELEASE(nsXULWindow)
+NS_IMPL_ADDREF(nsXULWindow)
+NS_IMPL_RELEASE(nsXULWindow)
 
 NS_INTERFACE_MAP_BEGIN(nsXULWindow)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXULWindow)

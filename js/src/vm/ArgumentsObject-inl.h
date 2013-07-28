@@ -12,6 +12,7 @@
 #include "mozilla/MemoryReporting.h"
 
 #include "vm/ScopeObject.h"
+
 #include "vm/ScopeObject-inl.h"
 
 namespace js {

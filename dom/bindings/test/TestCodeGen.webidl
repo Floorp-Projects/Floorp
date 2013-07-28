@@ -223,10 +223,7 @@ interface TestInterface {
   TestInterface? receiveNullableSelf();
   TestInterface receiveWeakSelf();
   TestInterface? receiveWeakNullableSelf();
-  // A verstion to test for casting to TestInterface&
   void passSelf(TestInterface arg);
-  // A version we can use to test for the exact type passed in
-  void passSelf2(TestInterface arg);
   void passNullableSelf(TestInterface? arg);
   attribute TestInterface nonNullSelf;
   attribute TestInterface? nullableSelf;
@@ -254,10 +251,7 @@ interface TestInterface {
   IndirectlyImplementedInterface? receiveNullableOther();
   IndirectlyImplementedInterface receiveWeakOther();
   IndirectlyImplementedInterface? receiveWeakNullableOther();
-  // A verstion to test for casting to IndirectlyImplementedInterface&
   void passOther(IndirectlyImplementedInterface arg);
-  // A version we can use to test for the exact type passed in
-  void passOther2(IndirectlyImplementedInterface arg);
   void passNullableOther(IndirectlyImplementedInterface? arg);
   attribute IndirectlyImplementedInterface nonNullOther;
   attribute IndirectlyImplementedInterface? nullableOther;
@@ -271,10 +265,7 @@ interface TestInterface {
   TestExternalInterface? receiveNullableExternal();
   TestExternalInterface receiveWeakExternal();
   TestExternalInterface? receiveWeakNullableExternal();
-  // A verstion to test for casting to TestExternalInterface&
   void passExternal(TestExternalInterface arg);
-  // A version we can use to test for the exact type passed in
-  void passExternal2(TestExternalInterface arg);
   void passNullableExternal(TestExternalInterface? arg);
   attribute TestExternalInterface nonNullExternal;
   attribute TestExternalInterface? nullableExternal;
@@ -288,10 +279,7 @@ interface TestInterface {
   TestCallbackInterface? receiveNullableCallbackInterface();
   TestCallbackInterface receiveWeakCallbackInterface();
   TestCallbackInterface? receiveWeakNullableCallbackInterface();
-  // A verstion to test for casting to TestCallbackInterface&
   void passCallbackInterface(TestCallbackInterface arg);
-  // A version we can use to test for the exact type passed in
-  void passCallbackInterface2(TestCallbackInterface arg);
   void passNullableCallbackInterface(TestCallbackInterface? arg);
   attribute TestCallbackInterface nonNullCallbackInterface;
   attribute TestCallbackInterface? nullableCallbackInterface;
@@ -464,6 +452,14 @@ interface TestInterface {
   void passUnionWithObject((object or long) arg);
   //void passUnionWithDict((Dict or long) arg);
 
+  (CanvasPattern or CanvasGradient) receiveUnion();
+  (CanvasPattern? or CanvasGradient) receiveUnionContainingNull();
+  (CanvasPattern or CanvasGradient)? receiveNullableUnion();
+
+  attribute (CanvasPattern or CanvasGradient) writableUnion;
+  attribute (CanvasPattern? or CanvasGradient) writableUnionContainingNull;
+  attribute (CanvasPattern or CanvasGradient)? writableNullableUnion;
+
   // Date types
   void passDate(Date arg);
   void passNullableDate(Date? arg);
@@ -587,6 +583,7 @@ interface TestInterface {
                             optional TestInterface? arg2 = null,
                             optional Dict arg3, optional double arg4 = 5.0,
                             optional float arg5);
+  jsonifier;
 
   // If you add things here, add them to TestExampleGen and TestJSImplGen as well
 };

@@ -195,7 +195,7 @@ public:
     SetCompositor(nullptr);
   }
 
-  virtual void Dump(FILE* aFile=NULL,
+  virtual void Dump(FILE* aFile=nullptr,
                     const char* aPrefix="",
                     bool aDumpHtml=false) { }
   static void DumpDeprecatedTextureHost(FILE* aFile, DeprecatedTextureHost* aTexture);

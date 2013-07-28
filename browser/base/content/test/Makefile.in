@@ -123,6 +123,7 @@ MOCHITEST_BROWSER_FILES = \
                  browser_bug556061.js \
                  browser_bug559991.js \
                  browser_bug561623.js \
+                 browser_bug561636.js \
                  browser_bug562649.js \
                  browser_bug563588.js \
                  browser_bug565575.js \
@@ -192,6 +193,7 @@ MOCHITEST_BROWSER_FILES = \
                  browser_contentAreaClick.js \
                  browser_contextSearchTabPosition.js \
                  browser_CTP_drag_drop.js \
+                 browser_CTP_data_urls.js \
                  browser_ctrlTab.js \
                  browser_customize_popupNotification.js \
                  browser_customize.js \
@@ -317,6 +319,7 @@ MOCHITEST_BROWSER_FILES = \
                  plugin_test2.html \
                  plugin_test3.html \
                  plugin_two_types.html \
+                 plugin_data_url.html \
                  plugin_unknown.html \
                  pluginCrashCommentAndURL.html \
                  POSTSearchEngine.xml \
@@ -348,13 +351,6 @@ else
 MOCHITEST_BROWSER_FILES += \
 		browser_bug565667.js \
 		$(NULL)
-endif
-
-ifneq (cocoa,$(MOZ_WIDGET_TOOLKIT))
-# Bug 766546.
-MOCHITEST_BROWSER_FILES += \
-  browser_bug561636.js \
-  $(NULL)
 endif
 
 ifdef MOZ_DATA_REPORTING

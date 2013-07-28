@@ -26,15 +26,15 @@
 #include <math.h>
 #include <string.h>
 
-#include "jstypes.h"
-#include "jsprf.h"
-#include "prmjtime.h"
-#include "jsutil.h"
 #include "jsapi.h"
 #include "jscntxt.h"
 #include "jsnum.h"
 #include "jsobj.h"
+#include "jsprf.h"
 #include "jsstr.h"
+#include "jstypes.h"
+#include "jsutil.h"
+#include "prmjtime.h"
 
 #include "vm/DateTime.h"
 #include "vm/GlobalObject.h"
@@ -614,7 +614,7 @@ date_msecFromArgs(JSContext *cx, CallArgs args, double *rval)
     for (loop = 0; loop < MAXARGS; loop++) {
         if (loop < args.length()) {
             double d;
-            if (!ToNumber(cx, args.handleAt(loop), &d))
+            if (!ToNumber(cx, args[loop], &d))
                 return JS_FALSE;
             /* return NaN if any arg is not finite */
             if (!IsFinite(d)) {
@@ -1206,7 +1206,7 @@ date_parse(JSContext *cx, unsigned argc, Value *vp)
         return true;
     }
 
-    JSString *str = ToString<CanGC>(cx, args.handleAt(0));
+    JSString *str = ToString<CanGC>(cx, args[0]);
     if (!str)
         return false;
 
@@ -1714,7 +1714,7 @@ date_setTime_impl(JSContext *cx, CallArgs args)
     }
 
     double result;
-    if (!ToNumber(cx, args.handleAt(0), &result))
+    if (!ToNumber(cx, args[0], &result))
         return false;
 
     dateObj->setUTCTime(TimeClip(result), args.rval().address());
@@ -1735,7 +1735,7 @@ GetMsecsOrDefault(JSContext *cx, const CallArgs &args, unsigned i, double t, dou
         *millis = msFromTime(t);
         return true;
     }
-    return ToNumber(cx, args.handleAt(i), millis);
+    return ToNumber(cx, args[i], millis);
 }
 
 static bool
@@ -1745,7 +1745,7 @@ GetSecsOrDefault(JSContext *cx, const CallArgs &args, unsigned i, double t, doub
         *sec = SecFromTime(t);
         return true;
     }
-    return ToNumber(cx, args.handleAt(i), sec);
+    return ToNumber(cx, args[i], sec);
 }
 
 static bool
@@ -1755,7 +1755,7 @@ GetMinsOrDefault(JSContext *cx, const CallArgs &args, unsigned i, double t, doub
         *mins = MinFromTime(t);
         return true;
     }
-    return ToNumber(cx, args.handleAt(i), mins);
+    return ToNumber(cx, args[i], mins);
 }
 
 /* ES5 15.9.5.28. */
@@ -1769,7 +1769,7 @@ date_setMilliseconds_impl(JSContext *cx, CallArgs args)
 
     /* Step 2. */
     double milli;
-    if (!ToNumber(cx, args.handleOrUndefinedAt(0), &milli))
+    if (!ToNumber(cx, args.get(0), &milli))
         return false;
     double time = MakeTime(HourFromTime(t), MinFromTime(t), SecFromTime(t), milli);
 
@@ -1799,7 +1799,7 @@ date_setUTCMilliseconds_impl(JSContext *cx, CallArgs args)
 
     /* Step 2. */
     double milli;
-    if (!ToNumber(cx, args.handleOrUndefinedAt(0), &milli))
+    if (!ToNumber(cx, args.get(0), &milli))
         return false;
     double time = MakeTime(HourFromTime(t), MinFromTime(t), SecFromTime(t), milli);
 
@@ -1829,7 +1829,7 @@ date_setSeconds_impl(JSContext *cx, CallArgs args)
 
     /* Step 2. */
     double s;
-    if (!ToNumber(cx, args.handleOrUndefinedAt(0), &s))
+    if (!ToNumber(cx, args.get(0), &s))
         return false;
 
     /* Step 3. */
@@ -1866,7 +1866,7 @@ date_setUTCSeconds_impl(JSContext *cx, CallArgs args)
 
     /* Step 2. */
     double s;
-    if (!ToNumber(cx, args.handleOrUndefinedAt(0), &s))
+    if (!ToNumber(cx, args.get(0), &s))
         return false;
 
     /* Step 3. */
@@ -1903,7 +1903,7 @@ date_setMinutes_impl(JSContext *cx, CallArgs args)
 
     /* Step 2. */
     double m;
-    if (!ToNumber(cx, args.handleOrUndefinedAt(0), &m))
+    if (!ToNumber(cx, args.get(0), &m))
         return false;
 
     /* Step 3. */
@@ -1945,7 +1945,7 @@ date_setUTCMinutes_impl(JSContext *cx, CallArgs args)
 
     /* Step 2. */
     double m;
-    if (!ToNumber(cx, args.handleOrUndefinedAt(0), &m))
+    if (!ToNumber(cx, args.get(0), &m))
         return false;
 
     /* Step 3. */
@@ -1987,7 +1987,7 @@ date_setHours_impl(JSContext *cx, CallArgs args)
 
     /* Step 2. */
     double h;
-    if (!ToNumber(cx, args.handleOrUndefinedAt(0), &h))
+    if (!ToNumber(cx, args.get(0), &h))
         return false;
 
     /* Step 3. */
@@ -2034,7 +2034,7 @@ date_setUTCHours_impl(JSContext *cx, CallArgs args)
 
     /* Step 2. */
     double h;
-    if (!ToNumber(cx, args.handleOrUndefinedAt(0), &h))
+    if (!ToNumber(cx, args.get(0), &h))
         return false;
 
     /* Step 3. */
@@ -2081,7 +2081,7 @@ date_setDate_impl(JSContext *cx, CallArgs args)
 
     /* Step 2. */
     double date;
-    if (!ToNumber(cx, args.handleOrUndefinedAt(0), &date))
+    if (!ToNumber(cx, args.get(0), &date))
         return false;
 
     /* Step 3. */
@@ -2113,7 +2113,7 @@ date_setUTCDate_impl(JSContext *cx, CallArgs args)
 
     /* Step 2. */
     double date;
-    if (!ToNumber(cx, args.handleOrUndefinedAt(0), &date))
+    if (!ToNumber(cx, args.get(0), &date))
         return false;
 
     /* Step 3. */
@@ -2141,7 +2141,7 @@ GetDateOrDefault(JSContext *cx, const CallArgs &args, unsigned i, double t, doub
         *date = DateFromTime(t);
         return true;
     }
-    return ToNumber(cx, args.handleAt(i), date);
+    return ToNumber(cx, args[i], date);
 }
 
 static bool
@@ -2151,7 +2151,7 @@ GetMonthOrDefault(JSContext *cx, const CallArgs &args, unsigned i, double t, dou
         *month = MonthFromTime(t);
         return true;
     }
-    return ToNumber(cx, args.handleAt(i), month);
+    return ToNumber(cx, args[i], month);
 }
 
 /* ES5 15.9.5.38. */
@@ -2165,7 +2165,7 @@ date_setMonth_impl(JSContext *cx, CallArgs args)
 
     /* Step 2. */
     double m;
-    if (!ToNumber(cx, args.handleOrUndefinedAt(0), &m))
+    if (!ToNumber(cx, args.get(0), &m))
         return false;
 
     /* Step 3. */
@@ -2202,7 +2202,7 @@ date_setUTCMonth_impl(JSContext *cx, CallArgs args)
 
     /* Step 2. */
     double m;
-    if (!ToNumber(cx, args.handleOrUndefinedAt(0), &m))
+    if (!ToNumber(cx, args.get(0), &m))
         return false;
 
     /* Step 3. */
@@ -2255,7 +2255,7 @@ date_setFullYear_impl(JSContext *cx, CallArgs args)
 
     /* Step 2. */
     double y;
-    if (!ToNumber(cx, args.handleOrUndefinedAt(0), &y))
+    if (!ToNumber(cx, args.get(0), &y))
         return false;
 
     /* Step 3. */
@@ -2297,7 +2297,7 @@ date_setUTCFullYear_impl(JSContext *cx, CallArgs args)
 
     /* Step 2. */
     double y;
-    if (!ToNumber(cx, args.handleOrUndefinedAt(0), &y))
+    if (!ToNumber(cx, args.get(0), &y))
         return false;
 
     /* Step 3. */
@@ -2339,7 +2339,7 @@ date_setYear_impl(JSContext *cx, CallArgs args)
 
     /* Step 2. */
     double y;
-    if (!ToNumber(cx, args.handleOrUndefinedAt(0), &y))
+    if (!ToNumber(cx, args.get(0), &y))
         return false;
 
     /* Step 3. */
@@ -2796,7 +2796,7 @@ date_toLocaleFormat_impl(JSContext *cx, CallArgs args)
                              , args.rval());
     }
 
-    RootedString fmt(cx, ToString<CanGC>(cx, args.handleAt(0)));
+    RootedString fmt(cx, ToString<CanGC>(cx, args[0]));
     if (!fmt)
         return false;
 
@@ -2984,7 +2984,7 @@ js_Date(JSContext *cx, unsigned argc, Value *vp)
         /* ES5 15.9.3.2. */
 
         /* Step 1. */
-        if (!ToPrimitive(cx, args.handleAt(0)))
+        if (!ToPrimitive(cx, args[0]))
             return false;
 
         if (args[0].isString()) {
@@ -3003,7 +3003,7 @@ js_Date(JSContext *cx, unsigned argc, Value *vp)
                 d = TimeClip(d);
         } else {
             /* Step 3. */
-            if (!ToNumber(cx, args.handleAt(0), &d))
+            if (!ToNumber(cx, args[0], &d))
                 return false;
             d = TimeClip(d);
         }

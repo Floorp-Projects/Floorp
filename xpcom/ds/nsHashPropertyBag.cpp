@@ -36,8 +36,8 @@ NS_NewHashPropertyBag(nsIWritablePropertyBag* *_retval)
  * nsHashPropertyBag impl
  */
 
-NS_IMPL_THREADSAFE_ADDREF(nsHashPropertyBag)
-NS_IMPL_THREADSAFE_RELEASE(nsHashPropertyBag)
+NS_IMPL_ADDREF(nsHashPropertyBag)
+NS_IMPL_RELEASE(nsHashPropertyBag)
 NS_INTERFACE_MAP_BEGIN(nsHashPropertyBag)
   NS_INTERFACE_MAP_ENTRY(nsIWritablePropertyBag)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIPropertyBag, nsIWritablePropertyBag)

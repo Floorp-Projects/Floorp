@@ -33,7 +33,7 @@ ResultSet::add(mozIStorageRow *aRow)
  * Note:  This object is only ever accessed on one thread at a time.  It it not
  *        threadsafe, but it does need threadsafe AddRef and Release.
  */
-NS_IMPL_THREADSAFE_ISUPPORTS1(
+NS_IMPL_ISUPPORTS1(
   ResultSet,
   mozIStorageResultSet
 )

@@ -27,6 +27,9 @@ js_InitFunctionClass(JSContext *cx, js::HandleObject obj);
 extern JSObject *
 js_InitTypedArrayClasses(JSContext *cx, js::HandleObject obj);
 
+extern JSObject *
+js_InitBinaryDataClasses(JSContext *cx, js::HandleObject obj);
+
 namespace js {
 
 class Debugger;
@@ -327,6 +330,18 @@ class GlobalObject : public JSObject
         return &getPrototype(JSProto_Iterator).toObject();
     }
 
+    JSObject *getOrCreateDataObject(JSContext *cx) {
+        return getOrCreateObject(cx, JSProto_Data, initDataObject);
+    }
+
+    JSObject *getOrCreateTypeObject(JSContext *cx) {
+        return getOrCreateObject(cx, JSProto_Type, initTypeObject);
+    }
+
+    JSObject *getOrCreateArrayTypeObject(JSContext *cx) {
+        return getOrCreateObject(cx, JSProto_ArrayTypeObject, initArrayTypeObject);
+    }
+
   private:
     typedef bool (*ObjectInitOp)(JSContext *cx, Handle<GlobalObject*> global);
 
@@ -428,6 +443,11 @@ class GlobalObject : public JSObject
     static bool initCollatorProto(JSContext *cx, Handle<GlobalObject*> global);
     static bool initNumberFormatProto(JSContext *cx, Handle<GlobalObject*> global);
     static bool initDateTimeFormatProto(JSContext *cx, Handle<GlobalObject*> global);
+
+    // Implemented in builtin/BinaryData.cpp
+    static bool initTypeObject(JSContext *cx, Handle<GlobalObject*> global);
+    static bool initDataObject(JSContext *cx, Handle<GlobalObject*> global);
+    static bool initArrayTypeObject(JSContext *cx, Handle<GlobalObject*> global);
 
     static bool initStandardClasses(JSContext *cx, Handle<GlobalObject*> global);
 

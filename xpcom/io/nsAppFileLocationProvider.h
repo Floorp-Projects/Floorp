@@ -18,7 +18,7 @@ class nsAppFileLocationProvider MOZ_FINAL : public nsIDirectoryServiceProvider2
 public:
                         nsAppFileLocationProvider();
 
-   NS_DECL_ISUPPORTS
+   NS_DECL_THREADSAFE_ISUPPORTS
    NS_DECL_NSIDIRECTORYSERVICEPROVIDER
    NS_DECL_NSIDIRECTORYSERVICEPROVIDER2
 

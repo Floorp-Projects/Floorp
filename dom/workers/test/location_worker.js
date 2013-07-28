@@ -3,7 +3,9 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 for (var string in self.location) {
-  postMessage({ "string": string, "value": self.location[string] });
+  var value = typeof self.location[string] === "function"
+              ? self.location[string]()
+              : self.location[string];
+  postMessage({ "string": string, "value": value });
 }
-dump(self.location + " \n");
-postMessage({ "string": "testfinished", "value": self.location.toString() });
+postMessage({ "string": "testfinished" });

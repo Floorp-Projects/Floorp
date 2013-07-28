@@ -133,7 +133,7 @@ nsAsyncInstantiateEvent::Run()
     static_cast<nsObjectLoadingContent *>(mContent.get());
 
   // If objLC is no longer tracking this event, we've been canceled or
-  // superceded
+  // superseded
   if (objLC->mPendingInstantiateEvent != this) {
     return NS_OK;
   }
@@ -166,11 +166,11 @@ CheckPluginStopEvent::Run()
     static_cast<nsObjectLoadingContent *>(mContent.get());
 
   // If objLC is no longer tracking this event, we've been canceled or
-  // superceded
+  // superseded. We clear this before we finish - either by calling
+  // UnloadObject/StopPluginInstance, or directly if we took no action.
   if (objLC->mPendingCheckPluginStopEvent != this) {
     return NS_OK;
   }
-  objLC->mPendingCheckPluginStopEvent = nullptr;
 
   nsCOMPtr<nsIContent> content =
     do_QueryInterface(static_cast<nsIImageLoadingContent *>(objLC));
@@ -182,12 +182,26 @@ CheckPluginStopEvent::Run()
   }
 
   if (!content->GetPrimaryFrame()) {
+    LOG(("OBJLC [%p]: CheckPluginStopEvent - No frame, flushing layout", this));
+    nsIDocument* currentDoc = content->GetCurrentDoc();
+    if (currentDoc) {
+      currentDoc->FlushPendingNotifications(Flush_Layout);
+      if (objLC->mPendingCheckPluginStopEvent != this ||
+          content->GetPrimaryFrame()) {
+        LOG(("OBJLC [%p]: Event superseded or frame gained during layout flush",
+             this));
+        objLC->mPendingCheckPluginStopEvent = nullptr;
+        return NS_OK;
+      }
+    }
     // Still no frame, suspend plugin. HasNewFrame will restart us when we
     // become rendered again
     LOG(("OBJLC [%p]: Stopping plugin that lost frame", this));
     // Okay to leave loaded as a plugin, but stop the unrendered instance
     objLC->StopPluginInstance();
   }
+
+  objLC->mPendingCheckPluginStopEvent = nullptr;
   return NS_OK;
 }
 
@@ -890,7 +904,6 @@ nsObjectLoadingContent::OnStartRequest(nsIRequest *aRequest,
     return NS_BINDING_ABORTED;
   }
 
-  NS_ASSERTION(!mChannelLoaded, "mChannelLoaded set already?");
   // If we already switched to type plugin, this channel can just be passed to
   // the final listener.
   if (mType == eType_Plugin) {
@@ -912,6 +925,7 @@ nsObjectLoadingContent::OnStartRequest(nsIRequest *aRequest,
     NS_NOTREACHED("Should be type loading at this point");
     return NS_BINDING_ABORTED;
   }
+  NS_ASSERTION(!mChannelLoaded, "mChannelLoaded set already?");
   NS_ASSERTION(!mFinalListener, "mFinalListener exists already?");
 
   mChannelLoaded = true;
@@ -3152,8 +3166,8 @@ nsObjectLoadingContent::LegacyCall(JSContext* aCx,
   }
 
   JS::Rooted<JS::Value> retval(aCx);
-  bool ok = ::JS::Call(aCx, thisVal, pi_obj, args.Length(),
-                       args.Elements(), retval.address());
+  bool ok = JS::Call(aCx, thisVal, pi_obj, args.Length(), args.Elements(),
+                     &retval);
   if (!ok) {
     aRv.Throw(NS_ERROR_FAILURE);
     return JS::UndefinedValue();

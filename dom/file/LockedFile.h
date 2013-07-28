@@ -126,7 +126,7 @@ class FinishHelper MOZ_FINAL : public nsIRunnable
   friend class LockedFile;
 
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIRUNNABLE
 
 private:

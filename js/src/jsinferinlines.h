@@ -9,13 +9,14 @@
 #ifndef jsinferinlines_h
 #define jsinferinlines_h
 
+#include "jsinfer.h"
+
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/PodOperations.h"
 
-#include "jsarray.h"
 #include "jsanalyze.h"
+#include "jsarray.h"
 #include "jscompartment.h"
-#include "jsinfer.h"
 #include "jsprf.h"
 #include "jsproxy.h"
 
@@ -298,24 +299,6 @@ TypeIdString(jsid id)
 #else
     return "(missing)";
 #endif
-}
-
-/* Assert code to know which PCs are reasonable to be considering inlining on. */
-inline bool
-IsInlinableCall(jsbytecode *pc)
-{
-    JSOp op = JSOp(*pc);
-
-    // CALL, FUNCALL, FUNAPPLY, EVAL (Standard callsites)
-    // NEW (IonMonkey-only callsite)
-    // GETPROP, CALLPROP, and LENGTH. (Inlined Getters)
-    // SETPROP, SETNAME, SETGNAME (Inlined Setters)
-    return op == JSOP_CALL || op == JSOP_FUNCALL || op == JSOP_FUNAPPLY || op == JSOP_EVAL ||
-#ifdef JS_ION
-           op == JSOP_NEW ||
-#endif
-           op == JSOP_GETPROP || op == JSOP_CALLPROP || op == JSOP_LENGTH ||
-           op == JSOP_SETPROP || op == JSOP_SETGNAME || op == JSOP_SETNAME;
 }
 
 /*

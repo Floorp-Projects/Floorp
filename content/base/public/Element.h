@@ -38,7 +38,6 @@
 #include "nsEvent.h"
 #include "nsAttrValue.h"
 #include "mozilla/dom/BindingDeclarations.h"
-#include "nsIHTMLCollection.h"
 #include "Units.h"
 
 class nsIDOMEventListener;
@@ -407,7 +406,20 @@ public:
                               bool aCompileEventHandlers) MOZ_OVERRIDE;
   virtual void UnbindFromTree(bool aDeep = true,
                               bool aNullParent = true) MOZ_OVERRIDE;
-  virtual already_AddRefed<nsINodeInfo> GetExistingAttrNameFromQName(const nsAString& aStr) const MOZ_OVERRIDE;
+
+  /**
+   * Normalizes an attribute name and returns it as a nodeinfo if an attribute
+   * with that name exists. This method is intended for character case
+   * conversion if the content object is case insensitive (e.g. HTML). Returns
+   * the nodeinfo of the attribute with the specified name if one exists or
+   * null otherwise.
+   *
+   * @param aStr the unparsed attribute string
+   * @return the node info. May be nullptr.
+   */
+  already_AddRefed<nsINodeInfo>
+  GetExistingAttrNameFromQName(const nsAString& aStr) const;
+
   nsresult SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                    const nsAString& aValue, bool aNotify)
   {
@@ -600,36 +612,6 @@ public:
                            ErrorResult& aError);
   already_AddRefed<nsIHTMLCollection>
     GetElementsByClassName(const nsAString& aClassNames);
-  Element* GetFirstElementChild() const;
-  Element* GetLastElementChild() const;
-  Element* GetPreviousElementSibling() const
-  {
-    nsIContent* previousSibling = GetPreviousSibling();
-    while (previousSibling) {
-      if (previousSibling->IsElement()) {
-        return previousSibling->AsElement();
-      }
-      previousSibling = previousSibling->GetPreviousSibling();
-    }
-
-    return nullptr;
-  }
-  Element* GetNextElementSibling() const
-  {
-    nsIContent* nextSibling = GetNextSibling();
-    while (nextSibling) {
-      if (nextSibling->IsElement()) {
-        return nextSibling->AsElement();
-      }
-      nextSibling = nextSibling->GetNextSibling();
-    }
-
-    return nullptr;
-  }
-  uint32_t ChildElementCount()
-  {
-    return Children()->Length();
-  }
   bool MozMatchesSelector(const nsAString& aSelector,
                           ErrorResult& aError);
   void SetCapture(bool aRetargetToElement)

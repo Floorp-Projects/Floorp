@@ -78,6 +78,12 @@ var gTrackTests = [
   { name:"bogus.duh", type:"bogus/duh" }
 ];
 
+// Used by any media recorder test. Need one test file per decoder backend
+// currently supported by the media encoder.
+var gMediaRecorderTests = [
+  { name:"detodos.opus", type:"audio/ogg; codecs=opus", duration:2.9135 }
+];
+
 // These are files that we want to make sure we can play through.  We can
 // also check metadata.  Put files of the same type together in this list so if
 // something crashes we have some idea of which backend is responsible.
@@ -210,7 +216,7 @@ var gInvalidTests = [
 // we've specified.
 function fileUriToSrc(path, mustExist) {
   // android mochitest doesn't support file://
-  if (navigator.appVersion.indexOf("Android") != -1)
+  if (navigator.appVersion.indexOf("Android") != -1 || SpecialPowers.Services.appinfo.name == "B2G")
     return path;
 
   const Ci = SpecialPowers.Ci;
@@ -685,25 +691,25 @@ function mediaTestCleanup() {
   var oldGStreamer = undefined;
   var oldOpus = undefined;
 
-  try { oldGStreamer = branch.getBoolPref("gstreamer.enabled"); } catch(ex) { }
-  try { oldDefault   = branch.getIntPref("preload.default"); } catch(ex) { }
-  try { oldAuto      = branch.getIntPref("preload.auto"); } catch(ex) { }
-  try { oldOpus      = branch.getBoolPref("opus.enabled"); } catch(ex) { }
+  try { oldGStreamer = SpecialPowers.getBoolPref("media.gstreamer.enabled"); } catch(ex) { }
+  try { oldDefault   = SpecialPowers.getIntPref("media.preload.default"); } catch(ex) { }
+  try { oldAuto      = SpecialPowers.getIntPref("media.preload.auto"); } catch(ex) { }
+  try { oldOpus      = SpecialPowers.getBoolPref("media.opus.enabled"); } catch(ex) { }
 
-  branch.setIntPref("preload.default", 2); // preload_metadata
-  branch.setIntPref("preload.auto", 3); // preload_enough
+  SpecialPowers.setIntPref("media.preload.default", 2); // preload_metadata
+  SpecialPowers.setIntPref("media.preload.auto", 3); // preload_enough
   // test opus playback iff the pref exists
   if (oldOpus !== undefined)
-    branch.setBoolPref("opus.enabled", true);
+    SpecialPowers.setBoolPref("media.opus.enabled", true);
   if (oldGStreamer !== undefined)
-    branch.setBoolPref("gstreamer.enabled", true);
+    SpecialPowers.setBoolPref("media.gstreamer.enabled", true);
 
   window.addEventListener("unload", function() {
     if (oldGStreamer !== undefined)
-      branch.setBoolPref("gstreamer.enabled", oldGStreamer);
-    branch.setIntPref("preload.default", oldDefault);
-    branch.setIntPref("preload.auto", oldAuto);
+      SpecialPowers.setBoolPref("media.gstreamer.enabled", oldGStreamer);
+    SpecialPowers.setIntPref("media.preload.default", oldDefault);
+    SpecialPowers.setIntPref("media.preload.auto", oldAuto);
     if (oldOpus !== undefined)
-      branch.setBoolPref("opus.enabled", oldOpus);
+      SpecialPowers.setBoolPref("media.opus.enabled", oldOpus);
   }, false);
  })();

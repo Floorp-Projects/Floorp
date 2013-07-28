@@ -131,7 +131,7 @@ class nsCertOverrideService MOZ_FINAL : public nsICertOverrideService
                                       , public nsSupportsWeakReference
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSICERTOVERRIDESERVICE
   NS_DECL_NSIOBSERVER
 

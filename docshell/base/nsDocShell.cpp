@@ -8624,7 +8624,7 @@ nsDocShell::InternalLoad(nsIURI * aURI,
     // First, notify any nsIContentPolicy listeners about the document load.
     // Only abort the load if a content policy listener explicitly vetos it!
     //
-    nsCOMPtr<nsIDOMElement> requestingElement;
+    nsCOMPtr<Element> requestingElement;
     // Use nsPIDOMWindow since we _want_ to cross the chrome boundary if needed
     if (mScriptGlobal)
         requestingElement = mScriptGlobal->GetFrameElementInternal();
@@ -11730,8 +11730,8 @@ nsRefreshTimer::~nsRefreshTimer()
 // nsRefreshTimer::nsISupports
 //*****************************************************************************   
 
-NS_IMPL_THREADSAFE_ADDREF(nsRefreshTimer)
-NS_IMPL_THREADSAFE_RELEASE(nsRefreshTimer)
+NS_IMPL_ADDREF(nsRefreshTimer)
+NS_IMPL_RELEASE(nsRefreshTimer)
 
 NS_INTERFACE_MAP_BEGIN(nsRefreshTimer)
     NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsITimerCallback)
@@ -11770,7 +11770,7 @@ nsDocShell::InterfaceRequestorProxy::~InterfaceRequestorProxy()
     mWeakPtr = nullptr;
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsDocShell::InterfaceRequestorProxy, nsIInterfaceRequestor) 
+NS_IMPL_ISUPPORTS1(nsDocShell::InterfaceRequestorProxy, nsIInterfaceRequestor) 
   
 NS_IMETHODIMP 
 nsDocShell::InterfaceRequestorProxy::GetInterface(const nsIID & aIID, void **aSink)

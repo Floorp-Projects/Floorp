@@ -233,6 +233,7 @@ static inline mozilla::css::Side operator++(mozilla::css::Side& side, int) {
 // See nsStyleBackground
 #define NS_STYLE_BG_ATTACHMENT_SCROLL     0
 #define NS_STYLE_BG_ATTACHMENT_FIXED      1
+#define NS_STYLE_BG_ATTACHMENT_LOCAL      2
 
 // See nsStyleBackground
 // Code depends on these constants having the same values as BG_ORIGIN_*

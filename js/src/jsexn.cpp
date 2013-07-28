@@ -7,21 +7,22 @@
 /*
  * JS standard exception implementation.
  */
-#include "jsexn.h"
 
-#include <string.h>
+#include "jsexn.h"
 
 #include "mozilla/PodOperations.h"
 #include "mozilla/Util.h"
 
-#include "jstypes.h"
-#include "jsutil.h"
+#include <string.h>
+
 #include "jsapi.h"
 #include "jscntxt.h"
 #include "jsfun.h"
 #include "jsnum.h"
 #include "jsobj.h"
 #include "jsscript.h"
+#include "jstypes.h"
+#include "jsutil.h"
 #include "jswrapper.h"
 
 #include "gc/Marking.h"
@@ -68,8 +69,8 @@ Class ErrorObject::class_ = {
     exn_finalize,
     NULL,                 /* checkAccess */
     NULL,                 /* call        */
-    NULL,                 /* construct   */
     NULL,                 /* hasInstance */
+    NULL,                 /* construct   */
     exn_trace
 };
 
@@ -553,7 +554,7 @@ Exception(JSContext *cx, unsigned argc, Value *vp)
     /* Set the 'message' property. */
     RootedString message(cx);
     if (args.hasDefined(0)) {
-        message = ToString<CanGC>(cx, args.handleAt(0));
+        message = ToString<CanGC>(cx, args[0]);
         if (!message)
             return false;
         args[0].setString(message);
@@ -568,7 +569,7 @@ Exception(JSContext *cx, unsigned argc, Value *vp)
     RootedScript script(cx, iter.done() ? NULL : iter.script());
     RootedString filename(cx);
     if (args.length() > 1) {
-        filename = ToString<CanGC>(cx, args.handleAt(1));
+        filename = ToString<CanGC>(cx, args[1]);
         if (!filename)
             return false;
         args[1].setString(filename);

@@ -12,27 +12,26 @@
 
 #include <string.h>
 
-#include "jsprvtd.h"
-#include "jstypes.h"
 #include "jsapi.h"
 #include "jscntxt.h"
 #include "jsfun.h"
 #include "jsgc.h"
 #include "jsobj.h"
 #include "jsopcode.h"
+#include "jsprvtd.h"
 #include "jsscript.h"
 #include "jsstr.h"
+#include "jstypes.h"
 #include "jswatchpoint.h"
 
 #include "frontend/SourceNotes.h"
 #include "ion/AsmJS.h"
-#include "vm/Debugger.h"
-#include "vm/Interpreter.h"
-#include "vm/Shape.h"
-
 #ifdef JS_ION
 #include "ion/AsmJSModule.h"
 #endif
+#include "vm/Debugger.h"
+#include "vm/Interpreter.h"
+#include "vm/Shape.h"
 
 #include "jsatominlines.h"
 #include "jsinferinlines.h"
@@ -1061,7 +1060,7 @@ FormatFrame(JSContext *cx, const NonBuiltinScriptFrameIter &iter, char *buf, int
 
     RootedValue thisVal(cx);
     AutoPropertyDescArray thisProps(cx);
-    if (iter.computeThis()) {
+    if (iter.computeThis(cx)) {
         thisVal = iter.thisv();
         if (showThisProps && !thisVal.isPrimitive())
             thisProps.fetch(&thisVal.toObject());

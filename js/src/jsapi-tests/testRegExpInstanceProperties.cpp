@@ -5,12 +5,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-
-#include "jsapi-tests/tests.h"
-
 #include "jscompartment.h"
 #include "jsgc.h"
 
+#include "jsapi-tests/tests.h"
 #include "vm/Shape.h"
 
 #include "vm/Shape-inl.h"
@@ -57,10 +55,10 @@ JS_NEVER_INLINE bool helper(JSObject *regexpProto)
          CHECK(!r.empty());
     }
 
-    jsval v = INT_TO_JSVAL(17);
-    CHECK(JS_SetProperty(cx, regexpProto, "foopy", &v));
+    JS::RootedValue v(cx, INT_TO_JSVAL(17));
+    CHECK(JS_SetProperty(cx, regexpProto, "foopy", v));
     v = INT_TO_JSVAL(42);
-    CHECK(JS_SetProperty(cx, regexpProto, "bunky", &v));
+    CHECK(JS_SetProperty(cx, regexpProto, "bunky", v));
     CHECK(JS_DeleteProperty(cx, regexpProto, "foopy"));
     CHECK(regexpProto->inDictionaryMode());
 

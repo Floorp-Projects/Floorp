@@ -28,7 +28,7 @@ function RemoteWebProgress(browser)
   this._browser = browser;
   this._isDocumentLoading = false;
   this._DOMWindow = null;
-  this._isTopLevel = true;
+  this._isTopLevel = null;
   this._progressListeners = [];
 }
 
@@ -53,17 +53,21 @@ RemoteWebProgress.prototype = {
   },
 
   _destroy: function WP_Destroy() {
-    this._browser.messageManager.removeMessageListener("Content:StateChange", this);
-    this._browser.messageManager.removeMessageListener("Content:LocationChange", this);
-    this._browser.messageManager.removeMessageListener("Content:SecurityChange", this);
-    this._browser.messageManager.removeMessageListener("Content:StatusChange", this);
     this._browser = null;
   },
 
   get isLoadingDocument() { return this._isDocumentLoading },
   get DOMWindow() { return this._DOMWindow; },
   get DOMWindowID() { return 0; },
-  get isTopLevel() { return this._isTopLevel; },
+  get isTopLevel() {
+    // When this object is accessed directly, it's usually obtained
+    // through browser.webProgress and thus represents the top-level
+    // document.
+    // However, during message handling it temporarily represents
+    // the webProgress that generated the notification, which may or
+    // may not be a toplevel frame.
+    return this._isTopLevel === null ? true : this._isTopLevel;
+  },
 
   addProgressListener: function WP_AddProgressListener (aListener) {
     let listener = aListener.QueryInterface(Ci.nsIWebProgressListener);
@@ -128,5 +132,7 @@ RemoteWebProgress.prototype = {
       }
       break;
     }
+
+    this._isTopLevel = null;
   }
 };

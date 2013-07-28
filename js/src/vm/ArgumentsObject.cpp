@@ -8,6 +8,9 @@
 
 #include "jsinfer.h"
 
+#ifdef JS_ION
+#include "ion/IonFrames.h"
+#endif
 #include "vm/GlobalObject.h"
 #include "vm/Stack.h"
 
@@ -15,10 +18,6 @@
 
 #include "gc/Barrier-inl.h"
 #include "vm/Stack-inl.h"
-
-#if defined(JS_ION)
-#include "ion/IonFrames.h"
-#endif
 
 using namespace js;
 using namespace js::gc;
@@ -595,8 +594,8 @@ Class NormalArgumentsObject::class_ = {
     ArgumentsObject::finalize,
     NULL,                    /* checkAccess */
     NULL,                    /* call        */
-    NULL,                    /* construct   */
     NULL,                    /* hasInstance */
+    NULL,                    /* construct   */
     ArgumentsObject::trace,
     {
         NULL,       /* outerObject */
@@ -626,8 +625,8 @@ Class StrictArgumentsObject::class_ = {
     ArgumentsObject::finalize,
     NULL,                    /* checkAccess */
     NULL,                    /* call        */
-    NULL,                    /* construct   */
     NULL,                    /* hasInstance */
+    NULL,                    /* construct   */
     ArgumentsObject::trace,
     {
         NULL,       /* outerObject */

@@ -24,7 +24,7 @@ class nsInputStreamPump MOZ_FINAL : public nsIInputStreamPump
                                   , public nsIThreadRetargetableRequest
 {
 public:
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSIREQUEST
     NS_DECL_NSIINPUTSTREAMPUMP
     NS_DECL_NSIINPUTSTREAMCALLBACK

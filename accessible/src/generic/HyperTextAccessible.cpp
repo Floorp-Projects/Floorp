@@ -718,33 +718,19 @@ HyperTextAccessible::GetRelativeOffset(nsIPresShell* aPresShell,
                          0, kIsJumpLinesOk, kIsScrollViewAStop, kIsKeyboardSelect, kIsVisualBidi,
                          aWordMovementType);
   rv = aFromFrame->PeekOffset(&pos);
-  if (NS_FAILED(rv)) {
-    pos.mResultContent = aFromFrame->GetContent();
-    if (aDirection == eDirPrevious) {
-      // Use passed-in frame as starting point in failure case for now,
-      // this is a hack to deal with starting on a list bullet frame,
-      // which fails in PeekOffset() because the line iterator doesn't see it.
-      // XXX Need to look at our overall handling of list bullets, which are an odd case
-      int32_t endOffsetUnused;
-      aFromFrame->GetOffsets(pos.mContentOffset, endOffsetUnused);
-    }
-    else {
-      // XXX: PeekOffset fails on a last frame in the document for
-      // eSelectLine/eDirNext. DOM selection (up/down arrowing processing) has
-      // similar code to handle this case. One day it should be incorporated
-      // into PeekOffset.
-      int32_t startOffsetUnused;
-      aFromFrame->GetOffsets(startOffsetUnused, pos.mContentOffset);
-    }
-  }
 
-  // Turn the resulting node and offset into a hyperTextOffset
-  int32_t hyperTextOffset;
+  // PeekOffset fails on last/first lines of the text in certain cases.
+  if (NS_FAILED(rv) && aAmount == eSelectLine) {
+    pos.mAmount = (aDirection == eDirNext) ? eSelectEndLine : eSelectBeginLine;
+    aFromFrame->PeekOffset(&pos);
+  }
   if (!pos.mResultContent)
     return -1;
 
+  // Turn the resulting node and offset into a hyperTextOffset
   // If finalAccessible is nullptr, then DOMPointToHypertextOffset() searched
   // through the hypertext children without finding the node/offset position.
+  int32_t hyperTextOffset;
   Accessible* finalAccessible =
     DOMPointToHypertextOffset(pos.mResultContent, pos.mContentOffset,
                               &hyperTextOffset, aDirection == eDirNext);
@@ -932,13 +918,19 @@ HyperTextAccessible::GetTextBeforeOffset(int32_t aOffset,
       *aEndOffset = FindLineBoundary(offset, eThisLineBegin);
       return GetText(*aStartOffset, *aEndOffset, aText);
 
-    case BOUNDARY_LINE_END:
+    case BOUNDARY_LINE_END: {
       if (aOffset == nsIAccessibleText::TEXT_OFFSET_CARET)
         offset = AdjustCaretOffset(offset);
 
       *aEndOffset = FindLineBoundary(offset, ePrevLineEnd);
-      *aStartOffset = FindLineBoundary(*aEndOffset, ePrevLineEnd);
+      int32_t tmpOffset = *aEndOffset;
+      // Adjust offset if line is wrapped.
+      if (*aEndOffset != 0 && !IsLineEndCharAt(*aEndOffset))
+        tmpOffset--;
+
+      *aStartOffset = FindLineBoundary(tmpOffset, ePrevLineEnd);
       return GetText(*aStartOffset, *aEndOffset, aText);
+    }
 
     default:
       return NS_ERROR_INVALID_ARG;
@@ -2151,12 +2143,8 @@ HyperTextAccessible::GetCharAt(int32_t aOffset, EGetTextType aShift,
   aChar.Truncate();
 
   int32_t offset = ConvertMagicOffset(aOffset) + static_cast<int32_t>(aShift);
-  int32_t childIdx = GetChildIndexAtOffset(offset);
-  if (childIdx == -1)
+  if (!CharAt(offset, aChar))
     return false;
-
-  Accessible* child = GetChildAt(childIdx);
-  child->AppendTextTo(aChar, offset - GetChildOffset(childIdx), 1);
 
   if (aStartOffset)
     *aStartOffset = offset;

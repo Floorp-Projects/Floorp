@@ -154,6 +154,28 @@ mono_to_stereo(T * in, long insamples, T * out)
   }
 }
 
+template<typename T>
+void
+upmix(T * in, long inframes, T * out, int32_t in_channels, int32_t out_channels)
+{
+  /* If we are playing a mono stream over stereo speakers, copy the data over. */
+  if (in_channels == 1 && out_channels == 2) {
+    mono_to_stereo(in, inframes, out);
+    return;
+  }
+  /* Otherwise, put silence in other channels. */
+  long out_index = 0;
+  for (long i = 0; i < inframes * in_channels; i+=in_channels) {
+    for (int j = 0; j < in_channels; j++) {
+      out[out_index + j] = in[i + j];
+    }
+    for (int j = in_channels; j < out_channels; j++) {
+      out[out_index + j] = 0.0;
+    }
+    out_index += out_channels;
+  }
+}
+
 /* This returns the size of a frame in the stream,
  * before the eventual upmix occurs. */
 static size_t
@@ -224,7 +246,8 @@ refill_with_resampling(cubeb_stream * stm, float * data, long frames_needed)
   assert(out_frames == frames_needed || stm->draining);
 
   if (should_upmix(stm)) {
-    mono_to_stereo(resample_dest, out_frames, data);
+    upmix(resample_dest, out_frames, data,
+          stm->stream_params.channels, stm->mix_params.channels);
   }
 }
 
@@ -248,7 +271,8 @@ refill(cubeb_stream * stm, float * data, long frames_needed)
   }
 
   if (should_upmix(stm)) {
-    mono_to_stereo(dest, got, data);
+    upmix(dest, got, data,
+          stm->stream_params.channels, stm->mix_params.channels);
   }
 }
 
@@ -481,6 +505,63 @@ wasapi_get_max_channel_count(cubeb * ctx, uint32_t * max_channels)
 
 void wasapi_stream_destroy(cubeb_stream * stm);
 
+/* Based on the mix format and the stream format, try to find a way to play what
+ * the user requested. */
+static void
+handle_channel_layout(cubeb_stream * stm,  WAVEFORMATEX ** mix_format, const cubeb_stream_params * stream_params)
+{
+  assert((*mix_format)->wFormatTag == WAVE_FORMAT_EXTENSIBLE);
+
+  /* Common case: the hardware supports stereo, and the stream is mono or
+   * stereo. Easy. */
+  if ((*mix_format)->nChannels == 2 &&
+      stream_params->channels <= 2) {
+    return;
+  }
+
+  /* The hardware is in surround mode, we want to only use front left and front
+   * right. Try that, and check if it works. */
+  WAVEFORMATEXTENSIBLE * format_pcm = reinterpret_cast<WAVEFORMATEXTENSIBLE *>((*mix_format));
+  switch (stream_params->channels) {
+    case 1: /* Mono */
+      format_pcm->dwChannelMask = KSAUDIO_SPEAKER_MONO;
+      break;
+    case 2: /* Stereo */
+      format_pcm->dwChannelMask = KSAUDIO_SPEAKER_STEREO;
+      break;
+    default:
+      assert(false && "Channel layout not supported.");
+      break;
+  }
+  (*mix_format)->nChannels = stream_params->channels;
+  (*mix_format)->nBlockAlign = ((*mix_format)->wBitsPerSample * (*mix_format)->nChannels) / 8;
+  (*mix_format)->nAvgBytesPerSec = (*mix_format)->nSamplesPerSec * (*mix_format)->nBlockAlign;
+  format_pcm->SubFormat = KSDATAFORMAT_SUBTYPE_IEEE_FLOAT;
+  (*mix_format)->wBitsPerSample = 32;
+  format_pcm->Samples.wValidBitsPerSample = (*mix_format)->wBitsPerSample;
+
+  /* Check if wasapi will accept our channel layout request. */
+  WAVEFORMATEX * closest;
+  HRESULT hr = stm->client->IsFormatSupported(AUDCLNT_SHAREMODE_SHARED,
+                                              *mix_format,
+                                              &closest);
+
+  if (hr == S_FALSE) {
+    /* Not supported, but WASAPI gives us a suggestion. Use it, and handle the
+     * eventual upmix ourselve */
+    LOG("Using WASAPI suggested format: channels: %d", closest->nChannels);
+    CoTaskMemFree(*mix_format);
+    *mix_format = closest;
+  } else if (hr == AUDCLNT_E_UNSUPPORTED_FORMAT) {
+    /* Not supported, no suggestion, there is a bug somewhere. */
+    assert(false && "Format not supported, and no suggestion from WASAPI.");
+  } else if (hr == S_OK) {
+    LOG("Requested format accepted by WASAPI.");
+  } else {
+    assert(false && "Not reached.");
+  }
+}
+
 int
 wasapi_stream_init(cubeb * context, cubeb_stream ** stream,
                    char const * stream_name, cubeb_stream_params stream_params,
@@ -555,6 +636,8 @@ wasapi_stream_init(cubeb * context, cubeb_stream ** stream,
   /* this is the number of bytes per frame after the eventual upmix. */
   stm->bytes_per_frame = static_cast<uint8_t>(mix_format->nBlockAlign);
 
+  handle_channel_layout(stm, &mix_format, &stream_params);
+
   /* Shared mode WASAPI always supports float32 sample format, so this
    * is safe. */
   stm->mix_params.format = CUBEB_SAMPLE_FLOAT32NE;
@@ -594,12 +677,12 @@ wasapi_stream_init(cubeb * context, cubeb_stream ** stream,
   }
 
   hr = stm->client->Initialize(AUDCLNT_SHAREMODE_SHARED,
-                                     AUDCLNT_STREAMFLAGS_EVENTCALLBACK |
-                                     AUDCLNT_STREAMFLAGS_NOPERSIST,
-                                     ms_to_hns(latency),
-                                     0,
-                                     mix_format,
-                                     NULL);
+                               AUDCLNT_STREAMFLAGS_EVENTCALLBACK |
+                               AUDCLNT_STREAMFLAGS_NOPERSIST,
+                               ms_to_hns(latency),
+                               0,
+                               mix_format,
+                               NULL);
 
   CoTaskMemFree(mix_format);
 
@@ -616,10 +699,7 @@ wasapi_stream_init(cubeb * context, cubeb_stream ** stream,
     return CUBEB_ERROR;
   }
 
-  /* If we are playing a mono stream, we need to upmix to stereo.
-   * For now, we assume that the output support stereo sound.
-   * The alternative would be sad */
-  assert(stm->mix_params.channels == 2);
+  assert(stm->mix_params.channels >= 2);
 
   if (stm->mix_params.channels != stm->stream_params.channels) {
     stm->upmix_buffer = (float *) malloc(frame_to_bytes_before_upmix(stm, stm->buffer_frame_count));

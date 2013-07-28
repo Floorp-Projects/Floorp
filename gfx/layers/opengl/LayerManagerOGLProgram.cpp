@@ -329,7 +329,7 @@ ShaderProgramOGL::CreateShader(GLenum aShaderType, const char *aShaderSource)
   GLint success, len = 0;
 
   GLint sh = mGL->fCreateShader(aShaderType);
-  mGL->fShaderSource(sh, 1, (const GLchar**)&aShaderSource, NULL);
+  mGL->fShaderSource(sh, 1, (const GLchar**)&aShaderSource, nullptr);
   mGL->fCompileShader(sh);
   mGL->fGetShaderiv(sh, LOCAL_GL_COMPILE_STATUS, &success);
   mGL->fGetShaderiv(sh, LOCAL_GL_INFO_LOG_LENGTH, (GLint*) &len);

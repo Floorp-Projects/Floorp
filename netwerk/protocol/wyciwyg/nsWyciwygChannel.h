@@ -38,7 +38,7 @@ class nsWyciwygChannel: public nsIWyciwygChannel,
                         public mozilla::net::PrivateBrowsingChannel<nsWyciwygChannel>
 {
 public:
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSIREQUEST
     NS_DECL_NSICHANNEL
     NS_DECL_NSIWYCIWYGCHANNEL

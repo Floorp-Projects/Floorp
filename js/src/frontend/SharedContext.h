@@ -7,12 +7,12 @@
 #ifndef frontend_SharedContext_h
 #define frontend_SharedContext_h
 
-#include "jstypes.h"
 #include "jsatom.h"
 #include "jsopcode.h"
-#include "jsscript.h"
 #include "jsprvtd.h"
 #include "jspubtd.h"
+#include "jsscript.h"
+#include "jstypes.h"
 
 #include "builtin/Module.h"
 #include "frontend/ParseMaps.h"

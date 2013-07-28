@@ -161,9 +161,9 @@ DownloadLegacyTransfer.prototype = {
     // wait for it to be available.  This operation may cause the entire
     // download system to initialize before the object is created.
     Downloads.createDownload({
-      source: { uri: aSource, isPrivate: aIsPrivate },
-      target: { file: aTarget.QueryInterface(Ci.nsIFileURL).file },
-      saver: { type: "legacy" },
+      source: { url: aSource.spec, isPrivate: aIsPrivate },
+      target: aTarget.QueryInterface(Ci.nsIFileURL).file,
+      saver: "legacy",
     }).then(function DLT_I_onDownload(aDownload) {
       // Now that the saver is available, hook up the cancellation handler.
       aDownload.saver.deferCanceled.promise.then(() => {

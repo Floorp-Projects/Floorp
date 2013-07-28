@@ -207,14 +207,9 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'qt':
             'SkThreadUtils_pthread_linux.cpp',
             'SkTime_Unix.cpp',
         ]
-elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
-    CPP_SOURCES += [
-        'SkThread_pthread.cpp',
-    ]
-
 # Separate 'if' from above, since the else below applies to all != 'android'
 # toolkits.
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
+if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('android', 'gonk'):
     EXPORTS.skia += [
         'include/ports/SkTypeface_cairo.h',
     ]

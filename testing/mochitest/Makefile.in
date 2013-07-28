@@ -36,6 +36,7 @@ _SERV_FILES = 	\
 		runtestsb2g.py \
 		runtestsremote.py \
 		runtestsvmware.py \
+		mochitest_options.py \
 		manifest.webapp \
 		$(topsrcdir)/testing/mozbase/mozdevice/mozdevice/devicemanager.py \
 		$(topsrcdir)/testing/mozbase/mozdevice/mozdevice/devicemanagerADB.py \
@@ -62,6 +63,7 @@ _SERV_FILES = 	\
 		android.json \
 		androidx86.json \
 		b2g.json \
+		b2g_start_script.js \
 		root-ev-tester.crl \
 		intermediate-ev-tester.crl \
 		$(NULL)	
@@ -202,6 +204,7 @@ $(_DEST_DIR):
 stage-package:
 	$(NSINSTALL) -D $(PKG_STAGE)/mochitest && $(NSINSTALL) -D $(PKG_STAGE)/bin/plugins && $(NSINSTALL) -D $(DIST)/plugins
 	(cd $(DEPTH)/_tests/testing/mochitest/ && tar $(TAR_CREATE_FLAGS) - *) | (cd $(PKG_STAGE)/mochitest && tar -xf -)
+	@cp $(DEPTH)/mozinfo.json $(PKG_STAGE)/mochitest
 	@(cd $(DIST_BIN) && tar $(TAR_CREATE_FLAGS) - $(TEST_HARNESS_BINS)) | (cd $(PKG_STAGE)/bin && tar -xf -)
 	@(cd $(DIST_BIN)/components && tar $(TAR_CREATE_FLAGS) - $(TEST_HARNESS_COMPONENTS)) | (cd $(PKG_STAGE)/bin/components && tar -xf -)
 	(cd $(topsrcdir)/build/pgo/certs && tar $(TAR_CREATE_FLAGS) - *) | (cd $(PKG_STAGE)/certs && tar -xf -)

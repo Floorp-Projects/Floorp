@@ -25,6 +25,8 @@ lowered form of |tu|'''
         # annotate the AST with IPDL/C++ IR-type stuff used later
         tu.accept(_DecorateWithCxxStuff())
 
+        # Any modifications to the filename scheme here need corresponding
+        # modifications in the ipdl.py driver script.
         name = tu.name
         pheader, pcpp = File(name +'.h'), File(name +'.cpp')
 

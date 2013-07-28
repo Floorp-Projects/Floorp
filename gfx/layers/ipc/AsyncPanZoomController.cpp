@@ -272,20 +272,22 @@ AsyncPanZoomController::ReceiveInputEvent(const nsInputEvent& aEvent,
     for (uint32_t i = 0; i < touches.Length(); ++i) {
       nsIDOMTouch* touch = touches[i];
       if (touch) {
-        CSSPoint refPoint = WidgetSpaceToCompensatedViewportSpace(
+        CSSPoint refCSSPoint = WidgetSpaceToCompensatedViewportSpace(
           ScreenPoint::FromUnknownPoint(gfx::Point(
             touch->mRefPoint.x, touch->mRefPoint.y)),
           currentResolution);
+        LayoutDevicePoint refPoint = refCSSPoint * mFrameMetrics.mDevPixelsPerCSSPixel;
         touch->mRefPoint = nsIntPoint(refPoint.x, refPoint.y);
       }
     }
     break;
   }
   default: {
-    CSSPoint refPoint = WidgetSpaceToCompensatedViewportSpace(
+    CSSPoint refCSSPoint = WidgetSpaceToCompensatedViewportSpace(
       ScreenPoint::FromUnknownPoint(gfx::Point(
         aOutEvent->refPoint.x, aOutEvent->refPoint.y)),
       currentResolution);
+    LayoutDevicePoint refPoint = refCSSPoint * mFrameMetrics.mDevPixelsPerCSSPixel;
     aOutEvent->refPoint = nsIntPoint(refPoint.x, refPoint.y);
     break;
   }
@@ -815,6 +817,7 @@ bool AsyncPanZoomController::DoFling(const TimeDuration& aDelta) {
 }
 
 void AsyncPanZoomController::CancelAnimation() {
+  MonitorAutoLock monitor(mMonitor);
   mState = NOTHING;
 }
 
@@ -1157,6 +1160,10 @@ void AsyncPanZoomController::NotifyLayersUpdated(const FrameMetrics& aViewportFr
   mLastContentPaintMetrics = aViewportFrame;
 
   mFrameMetrics.mMayHaveTouchListeners = aViewportFrame.mMayHaveTouchListeners;
+
+  // TODO: Once a mechanism for calling UpdateScrollOffset() when content does
+  //       a scrollTo() is implemented for B2G (bug 895905), this block can be removed.
+#ifndef MOZ_WIDGET_ANDROID
   if (!mPaintThrottler.IsOutstanding()) {
     // No paint was requested, but we got one anyways. One possible cause of this
     // is that content could have fired a scrollTo(). In this case, we should take
@@ -1176,6 +1183,7 @@ void AsyncPanZoomController::NotifyLayersUpdated(const FrameMetrics& aViewportFr
       break;
     }
   }
+#endif
 
   mPaintThrottler.TaskComplete(GetFrameTime());
   bool needContentRepaint = false;
@@ -1372,9 +1380,24 @@ void AsyncPanZoomController::ContentReceivedTouch(bool aPreventDefault) {
   }
 }
 
-void AsyncPanZoomController::SetState(PanZoomState aState) {
-  MonitorAutoLock monitor(mMonitor);
-  mState = aState;
+void AsyncPanZoomController::SetState(PanZoomState aNewState) {
+
+  PanZoomState oldState;
+
+  // Intentional scoping for mutex
+  {
+    MonitorAutoLock monitor(mMonitor);
+    oldState = mState;
+    mState = aNewState;
+  }
+
+  if (mGeckoContentController) {
+    if (oldState == PANNING && aNewState != PANNING) {
+      mGeckoContentController->HandlePanEnd();
+    } else if (oldState != PANNING && aNewState == PANNING) {
+      mGeckoContentController->HandlePanBegin();
+    }
+  }
 }
 
 void AsyncPanZoomController::TimeoutTouchListeners() {
@@ -1471,6 +1494,12 @@ void AsyncPanZoomController::GetAPZCAtPoint(const ContainerLayer& aLayerTree,
   gfxPoint point(aPoint.x, aPoint.y);
 
   GetAPZCAtPointOnSubtree(aLayerTree, point, aApzcOut, aRelativePointOut);
+}
+
+void AsyncPanZoomController::UpdateScrollOffset(CSSPoint aScrollOffset)
+{
+  MonitorAutoLock monitor(mMonitor);
+  mFrameMetrics.mScrollOffset = aScrollOffset;
 }
 
 }

@@ -1357,4 +1357,9 @@ class JavaPanZoomController
     public int getOverScrollMode() {
         return mX.getOverScrollMode();
     }
+
+    @Override
+    public void updateScrollOffset(float cssX, float cssY) {
+        // Nothing to update, this class doesn't store the scroll offset locally.
+    }
 }

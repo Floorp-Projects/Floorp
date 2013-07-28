@@ -212,5 +212,5 @@ int NrIceResolver::PendingResolution::cancel() {
   return 0;
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(NrIceResolver::PendingResolution, nsIDNSListener);
+NS_IMPL_ISUPPORTS1(NrIceResolver::PendingResolution, nsIDNSListener);
 }  // End of namespace mozilla

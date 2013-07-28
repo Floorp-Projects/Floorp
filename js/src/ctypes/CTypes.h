@@ -6,10 +6,10 @@
 #ifndef ctypes_CTypes_h
 #define ctypes_CTypes_h
 
-#include "jscntxt.h"
-#include "jsapi.h"
-#include "prlink.h"
 #include "ffi.h"
+#include "jsapi.h"
+#include "jscntxt.h"
+#include "prlink.h"
 
 #include "js/HashTable.h"
 
@@ -211,9 +211,9 @@ enum TypeCode {
 // as the key to the hash entry.
 struct FieldInfo
 {
-  JSObject* mType;    // CType of the field
-  size_t    mIndex;   // index of the field in the struct (first is 0)
-  size_t    mOffset;  // offset of the field in the struct, in bytes
+  JS::Heap<JSObject*> mType;    // CType of the field
+  size_t              mIndex;   // index of the field in the struct (first is 0)
+  size_t              mOffset;  // offset of the field in the struct, in bytes
 };
 
 // Hash policy for FieldInfos.
@@ -255,14 +255,14 @@ struct FunctionInfo
 
   // Calling convention of the function. Convert to ffi_abi using GetABI
   // and OBJECT_TO_JSVAL. Stored as a JSObject* for ease of tracing.
-  JSObject* mABI;
+  JS::Heap<JSObject*> mABI;
 
   // The CType of the value returned by the function.
-  JSObject* mReturnType;
+  JS::Heap<JSObject*> mReturnType;
 
   // A fixed array of known parameter types, excluding any variadic
   // parameters (if mIsVariadic).
-  Array<JSObject*> mArgTypes; 
+  Array<JS::Heap<JSObject*> > mArgTypes;
 
   // A variable array of ffi_type*s corresponding to both known parameter
   // types and dynamic (variadic) parameter types. Longer than mArgTypes
@@ -277,15 +277,15 @@ struct FunctionInfo
 // Parameters necessary for invoking a JS function from a C closure.
 struct ClosureInfo
 {
-  JSContext* cx;         // JSContext to use
-  JSRuntime* rt;         // Used in the destructor, where cx might have already
-                         // been GCed.
-  JSObject* closureObj;  // CClosure object
-  JSObject* typeObj;     // FunctionType describing the C function
-  JSObject* thisObj;     // 'this' object to use for the JS function call
-  JSObject* jsfnObj;     // JS function
-  void* errResult;       // Result that will be returned if the closure throws
-  ffi_closure* closure;  // The C closure itself
+  JSContext* cx;                   // JSContext to use
+  JSRuntime* rt;                   // Used in the destructor, where cx might have already
+                                   // been GCed.
+  JS::Heap<JSObject*> closureObj;  // CClosure object
+  JS::Heap<JSObject*> typeObj;     // FunctionType describing the C function
+  JS::Heap<JSObject*> thisObj;     // 'this' object to use for the JS function call
+  JS::Heap<JSObject*> jsfnObj;     // JS function
+  void* errResult;                 // Result that will be returned if the closure throws
+  ffi_closure* closure;            // The C closure itself
 
   // Anything conditionally freed in the destructor should be initialized to
   // NULL here.

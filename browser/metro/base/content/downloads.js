@@ -212,8 +212,7 @@ var Downloads = {
 
   _showDownloadCompleteNotification: function (aDownload) {
     let message = "";
-    let showInFilesButtonText = PluralForm.get(this._downloadCount,
-      Strings.browser.GetStringFromName("downloadsShowInFiles"));
+    let showInFilesButtonText = Strings.browser.GetStringFromName("downloadShowInFiles");
 
     let buttons = [
       {

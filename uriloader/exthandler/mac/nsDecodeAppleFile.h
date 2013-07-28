@@ -77,7 +77,7 @@ enum {
 class nsDecodeAppleFile : public nsIOutputStream
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIOUTPUTSTREAM
   
   nsDecodeAppleFile();

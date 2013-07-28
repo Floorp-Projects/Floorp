@@ -7,11 +7,11 @@
 #ifndef ion_SnapshotWriter_h
 #define ion_SnapshotWriter_h
 
+#include "ion/Bailouts.h"
+#include "ion/CompactBuffer.h"
 #include "ion/Ion.h"
 #include "ion/IonCode.h"
 #include "ion/Registers.h"
-#include "ion/CompactBuffer.h"
-#include "ion/Bailouts.h"
 
 namespace js {
 namespace ion {

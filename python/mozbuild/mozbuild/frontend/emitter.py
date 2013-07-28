@@ -83,6 +83,7 @@ class TreeMetadataEmitter(object):
             ASFILES='ASFILES',
             CMMSRCS='CMMSRCS',
             CPPSRCS='CPP_SOURCES',
+            CPP_UNIT_TESTS='CPP_UNIT_TESTS',
             CSRCS='CSRCS',
             DEFINES='DEFINES',
             EXTRA_COMPONENTS='EXTRA_COMPONENTS',

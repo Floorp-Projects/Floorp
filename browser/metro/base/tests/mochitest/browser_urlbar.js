@@ -109,7 +109,6 @@ function setUp() {
 function tearDown() {
   yield removeMockSearchDefault();
   Browser.closeTab(Browser.selectedTab, { forceClose: true });
-  delete window.r;
 }
 
 gTests.push({
@@ -227,6 +226,36 @@ gTests.push({
     let searchSubmission = gEngine.getSubmission(search, null);
     let trimmedSubmission = gEdit.trimValue(searchSubmission.uri.spec);
     is(gEdit.value, trimmedSubmission, "tap search option: search conducted");
+  }
+});
+
+gTests.push({
+  desc: "bug 897131 - url bar update after content tap + edge swipe",
+  setUp: setUp,
+  tearDown: tearDown,
+  run: function testUrlbarTyping() {
+    let tab = yield addTab("about:mozilla");
+
+    sendElementTap(window, gEdit);
+    ok(gEdit.isEditing, "focus urlbar: in editing mode");
+    ok(!gEdit.popup.popupOpen, "focus urlbar: popup not open yet");
+
+    EventUtils.sendString("about:blank", window);
+    let opened = yield waitForCondition(() => gEdit.popup.popupOpen);
+    ok(opened, "type in urlbar: popup opens");
+
+    sendElementTap(window, tab.browser);
+
+    let closed = yield waitForCondition(() => !gEdit.popup.popupOpen);
+    ok(closed, "autocomplete closed after tap on content");
+    ok(!ContextUI.navbarVisible, "navbar closed");
+
+    let event = document.createEvent("Events");
+    event.initEvent("MozEdgeUICompleted", true, false);
+    window.dispatchEvent(event);
+
+    ok(ContextUI.navbarVisible, "navbar visible");
+    is(gEdit.value, "about:mozilla", "url bar text refreshed");
   }
 });
 

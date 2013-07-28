@@ -68,6 +68,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "PlacesBackups",
 XPCOMUtils.defineLazyModuleGetter(this, "OS",
                                   "resource://gre/modules/osfile.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "SessionStore",
+                                  "resource:///modules/sessionstore/SessionStore.jsm");
+
 const PREF_PLUGINS_NOTIFYUSER = "plugins.update.notifyUser";
 const PREF_PLUGINS_UPDATEURL  = "plugins.update.url";
 
@@ -173,7 +176,7 @@ BrowserGlue.prototype = {
         this._finalUIStartup();
         break;
       case "browser-delayed-startup-finished":
-        this._onFirstWindowLoaded();
+        this._onFirstWindowLoaded(subject);
         Services.obs.removeObserver(this, "browser-delayed-startup-finished");
         break;
       case "sessionstore-windows-restored":
@@ -579,7 +582,7 @@ BrowserGlue.prototype = {
   },
 
   // the first browser window has finished initializing
-  _onFirstWindowLoaded: function BG__onFirstWindowLoaded() {
+  _onFirstWindowLoaded: function BG__onFirstWindowLoaded(aWindow) {
 #ifdef XP_WIN
     // For windows seven, initialize the jump list module.
     const WINTASKBAR_CONTRACTID = "@mozilla.org/windows-taskbar;1";
@@ -591,14 +594,14 @@ BrowserGlue.prototype = {
     }
 #endif
 
+    SessionStore.init(aWindow);
     this._trackSlowStartup();
 
     // Offer to reset a user's profile if it hasn't been used for 60 days.
     const OFFER_PROFILE_RESET_INTERVAL_MS = 60 * 24 * 60 * 60 * 1000;
-    let processStartupTime = Services.startup.getStartupInfo().process;
     let lastUse = Services.appinfo.replacedLockTime;
-    if (processStartupTime && lastUse &&
-        processStartupTime.getTime() - lastUse >= OFFER_PROFILE_RESET_INTERVAL_MS) {
+    if (lastUse &&
+        Date.now() - lastUse >= OFFER_PROFILE_RESET_INTERVAL_MS) {
       this._resetUnusedProfileNotification();
     }
   },

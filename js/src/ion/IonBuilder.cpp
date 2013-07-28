@@ -12,8 +12,8 @@
 #include "frontend/SourceNotes.h"
 #include "ion/BaselineFrame.h"
 #include "ion/BaselineInspector.h"
+#include "ion/ExecutionModeInlines.h"
 #include "ion/Ion.h"
-#include "ion/IonAnalysis.h"
 #include "ion/IonAnalysis.h"
 #include "ion/IonSpewer.h"
 #include "ion/Lowering.h"
@@ -24,7 +24,6 @@
 #include "jsscriptinlines.h"
 
 #include "ion/CompileInfo-inl.h"
-#include "ion/ExecutionModeInlines.h"
 
 using namespace js;
 using namespace js::ion;
@@ -3429,7 +3428,7 @@ bool
 IonBuilder::inlineScriptedCall(CallInfo &callInfo, JSFunction *target)
 {
     JS_ASSERT(target->isInterpreted());
-    JS_ASSERT(types::IsInlinableCall(pc));
+    JS_ASSERT(IsIonInlinablePC(pc));
 
     // Remove any MPassArgs.
     if (callInfo.isWrapped())
@@ -3557,6 +3556,9 @@ IonBuilder::patchInlinedReturn(CallInfo &callInfo, MBasicBlock *exit, MBasicBloc
             // Known non-object return: force |this|.
             rdef = callInfo.thisArg();
         }
+    } else if (callInfo.isSetter()) {
+        // Setters return their argument, not whatever value is returned.
+        rdef = callInfo.getArg(0);
     }
 
     MGoto *replacement = MGoto::New(bottom);
@@ -4092,7 +4094,7 @@ IonBuilder::inlineCalls(CallInfo &callInfo, AutoObjectVector &targets,
                         MGetPropertyCache *maybeCache)
 {
     // Only handle polymorphic inlining.
-    JS_ASSERT(types::IsInlinableCall(pc));
+    JS_ASSERT(IsIonInlinablePC(pc));
     JS_ASSERT(choiceSet.length() == targets.length());
     JS_ASSERT_IF(!maybeCache, targets.length() >= 2);
     JS_ASSERT_IF(maybeCache, targets.length() >= 1);
@@ -4235,7 +4237,7 @@ IonBuilder::inlineCalls(CallInfo &callInfo, AutoObjectVector &targets,
         //
         // Note that guarding is on the original function pointer even
         // if there is a clone, since cloning occurs at the callsite.
-        dispatch->addCase(&originals[i]->as<JSFunction>(), inlineBlock);
+        dispatch->addCase(original, inlineBlock);
 
         MDefinition *retVal = inlineReturnBlock->peek(-1);
         retPhi->addInput(retVal);
@@ -4245,11 +4247,13 @@ IonBuilder::inlineCalls(CallInfo &callInfo, AutoObjectVector &targets,
     }
 
     // Patch the InlinePropertyTable to not dispatch to vetoed paths.
+    //
+    // Note that like above, we trim using originals instead of targets.
     if (maybeCache) {
         maybeCache->object()->setResultTypeSet(cacheObjectTypeSet);
 
         InlinePropertyTable *propTable = maybeCache->propTable();
-        propTable->trimTo(targets, choiceSet);
+        propTable->trimTo(originals, choiceSet);
 
         // If all paths were vetoed, output only a generic fallback path.
         if (propTable->numEntries() == 0) {
@@ -4786,9 +4790,6 @@ IonBuilder::jsop_call(uint32_t argc, bool constructing)
     CallInfo callInfo(cx, constructing);
     if (!callInfo.init(current, argc))
         return false;
-
-    if (gotLambda && targets.length() > 0)
-        callInfo.setLambda(true);
 
     // Try inlining
     InliningStatus status = inlineCallsite(targets, originals, gotLambda, callInfo);
@@ -5363,7 +5364,8 @@ CanEffectlesslyCallLookupGenericOnObject(JSContext *cx, JSObject *obj, jsid id)
             return false;
         if (obj->nativeLookup(cx, id))
             return true;
-        if (obj->getClass()->resolve != JS_ResolveStub)
+        if (obj->getClass()->resolve != JS_ResolveStub &&
+            obj->getClass()->resolve != (JSResolveOp)fun_resolve)
             return false;
         obj = obj->getProto();
     }
@@ -7823,8 +7825,15 @@ IonBuilder::getPropTryCommonGetter(bool *emitted, HandleId id,
     CallInfo callInfo(cx, false);
     if (!callInfo.init(current, 0))
         return false;
-    if (!makeCall(getter, callInfo, false))
-        return false;
+
+    // Inline if we can, otherwise, forget it and just generate a call.
+    if (makeInliningDecision(getter, callInfo) && getter->isInterpreted()) {
+        if (!inlineScriptedCall(callInfo, getter))
+            return false;
+    } else {
+        if (!makeCall(getter, callInfo, false))
+            return false;
+    }
 
     *emitted = true;
     return true;
@@ -7961,8 +7970,8 @@ IonBuilder::getPropTryCache(bool *emitted, HandlePropertyName name, HandleId id,
     if (accessGetter)
         barrier = true;
 
-    // ParallelGetPropertyIC cannot safely call TypeScript::Monitor to ensure
-    // that the observed type set contains undefined. To account for possible
+    // GetPropertyParIC cannot safely call TypeScript::Monitor to ensure that
+    // the observed type set contains undefined. To account for possible
     // missing properties, which property types do not track, we must always
     // insert a type barrier.
     if (info().executionMode() == ParallelExecution &&
@@ -8047,6 +8056,13 @@ IonBuilder::jsop_setprop(HandlePropertyName name)
         CallInfo callInfo(cx, false);
         if (!callInfo.init(current, 1))
             return false;
+        // Ensure that we know we are calling a setter in case we inline it.
+        callInfo.markAsSetter();
+
+        // Inline the setter if we can.
+        if (makeInliningDecision(setter, callInfo) && setter->isInterpreted())
+            return inlineScriptedCall(callInfo, setter);
+
         MCall *call = makeCallHelper(setter, callInfo, false);
         if (!call)
             return false;

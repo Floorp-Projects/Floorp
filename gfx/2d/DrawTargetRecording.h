@@ -157,7 +157,7 @@ public:
                           const GlyphBuffer &aBuffer,
                           const Pattern &aPattern,
                           const DrawOptions &aOptions = DrawOptions(),
-                          const GlyphRenderingOptions *aRenderingOptions = NULL);
+                          const GlyphRenderingOptions *aRenderingOptions = nullptr);
 
   /*
    * This takes a source pattern and a mask, and composites the source pattern

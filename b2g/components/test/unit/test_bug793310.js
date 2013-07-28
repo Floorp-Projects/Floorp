@@ -5,7 +5,10 @@ function run_test() {
   Components.utils.import("resource:///modules/TelURIParser.jsm")
 
   // global-phone-number
-   do_check_eq(TelURIParser.parseURI('tel', 'tel:+1234'), '+1234');
+  do_check_eq(TelURIParser.parseURI('tel', 'tel:+1234'), '+1234');
+
+  // global-phone-number => white space separator
+  do_check_eq(TelURIParser.parseURI('tel', 'tel:+123 456 789'), '+123 456 789');
 
   // global-phone-number => ignored chars
   do_check_eq(TelURIParser.parseURI('tel', 'tel:+1234_123'), '+1234');

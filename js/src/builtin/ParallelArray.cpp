@@ -4,10 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "builtin/ParallelArray.h"
+
 #include "jsapi.h"
 #include "jsobj.h"
-
-#include "builtin/ParallelArray.h"
 
 #include "vm/GlobalObject.h"
 #include "vm/String.h"
@@ -170,7 +170,7 @@ ParallelArrayObject::constructHelper(JSContext *cx, MutableHandleFunction ctor, 
     args.setThis(ObjectValue(*result));
 
     for (uint32_t i = 0; i < args0.length(); i++)
-        args[i] = args0[i];
+        args[i].set(args0[i]);
 
     if (!Invoke(cx, args))
         return false;

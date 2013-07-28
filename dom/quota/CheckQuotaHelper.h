@@ -26,7 +26,7 @@ class CheckQuotaHelper MOZ_FINAL : public nsIRunnable,
                                    public nsIObserver
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIRUNNABLE
   NS_DECL_NSIINTERFACEREQUESTOR
   NS_DECL_NSIOBSERVER

@@ -60,7 +60,7 @@ private:
 
 struct ListenerData : LinkedListElement<ListenerData>
 {
-  JSObject* mListener;
+  JS::Heap<JSObject*> mListener;
   EventListenerManager::Phase mPhase;
   bool mWantsUntrusted;
 
@@ -184,9 +184,9 @@ EventListenerManager::TraceInternal(JSTracer* aTrc) const
     for (const ListenerData* listenerElem = collection->mListeners.getFirst();
          listenerElem;
          listenerElem = listenerElem->getNext()) {
-      JS_CallObjectTracer(aTrc,
-                          &const_cast<ListenerData*>(listenerElem)->mListener,
-                          "EventListenerManager listener object");
+      JS_CallHeapObjectTracer(aTrc,
+                              &const_cast<ListenerData*>(listenerElem)->mListener,
+                              "EventListenerManager listener object");
     }
   }
 }

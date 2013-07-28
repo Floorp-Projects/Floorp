@@ -86,6 +86,12 @@
     "kind": "flag",
     "description": "Set if the cycle collector ran out of memory at some point"
   },
+  "CYCLE_COLLECTOR_ASYNC_SNOW_WHITE_FREEING": {
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": 50,
+    "description": "Time spent on one asynchronous SnowWhite freeing (ms)"
+  },
   "FORGET_SKIPPABLE_MAX": {
     "kind": "exponential",
     "high": "10000",
@@ -3333,6 +3339,18 @@
     "high": "10000",
     "n_buckets": "1000",
     "description": "The time (in milliseconds) that it took a 'prototype' request to go round trip."
+  },
+  "DEVTOOLS_DEBUGGER_RDP_REMOTE_DISPLAYSTRING_MS": {
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": "1000",
+    "description": "The time (in milliseconds) that it took a 'displayString' request to go round trip."
+  },
+  "DEVTOOLS_DEBUGGER_RDP_LOCAL_DISPLAYSTRING_MS": {
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": "1000",
+    "description": "The time (in milliseconds) that it took a 'displayString' request to go round trip."
   },
   "DEVTOOLS_DEBUGGER_RDP_LOCAL_SUBSTRING_MS": {
     "kind": "exponential",

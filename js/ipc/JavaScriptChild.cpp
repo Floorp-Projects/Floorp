@@ -414,7 +414,7 @@ JavaScriptChild::AnswerSet(const ObjectId &objId, const ObjectId &receiverId, co
     if (!toValue(cx, value, &val))
         return fail(cx, rs);
 
-    if (!JS_SetPropertyById(cx, obj, internedId, val.address()))
+    if (!JS_SetPropertyById(cx, obj, internedId, val))
         return fail(cx, rs);
 
     if (!toVariant(cx, val, result))
@@ -494,7 +494,7 @@ JavaScriptChild::AnswerCall(const ObjectId &objId, const nsTArray<JSParam> &argv
     uint32_t oldOpts =
         JS_SetOptions(cx, JS_GetOptions(cx) | JSOPTION_DONT_REPORT_UNCAUGHT);
 
-    jsval rval;
+    RootedValue rval(cx);
     bool success = JS::Call(cx, vals[1], vals[0], vals.length() - 2, vals.begin() + 2, &rval);
 
     JS_SetOptions(cx, oldOpts);

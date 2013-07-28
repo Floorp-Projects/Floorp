@@ -2,6 +2,8 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
+<!-- NAVBAR AND AUTOCOMPLETE -->
+
 <!ENTITY urlbar.emptytext      "Enter Search or Address">
 <!ENTITY urlbar.accesskey      "d">
 
@@ -10,28 +12,30 @@
 <!ENTITY newtab.label          "New Tab">
 <!ENTITY closetab.label        "Close Tab">
 
+<!ENTITY autocompleteResultsHeader.label  "Your Results">
+<!ENTITY autocompleteSearchesHeader.label "Internet Searches">
+
 <!ENTITY appbarErrorConsole.label   "Open error console">
 <!ENTITY appbarJSShell.label        "Open JavaScript shell">
 <!ENTITY appbarFindInPage2.label    "Find in page">
 <!ENTITY appbarViewOnDesktop2.label "View on desktop">
 
-<!ENTITY startTopSitesHeader.label        "Top Sites">
-<!ENTITY startBookmarksHeader.label       "Bookmarks">
-<!ENTITY startHistoryHeader.label         "Recent History">
-<!ENTITY startRemoteTabsHeader.label      "Tabs from Other Devices">
+<!ENTITY topSitesHeader.label        "Top Sites">
+<!ENTITY bookmarksHeader.label       "Bookmarks">
+<!ENTITY recentHistoryHeader.label   "Recent History">
+<!ENTITY remoteTabsHeader.label      "Tabs from Other Devices">
 
 <!-- LOCALIZATION NOTE (snappedRemoteTabsHeader.label): shortened version of startRemoteTabsHeader.label.
      Needs to be two words or shorter to fit in narrow vertical space.-->
 <!-- LOCALIZATION NOTE (snappedRemoteTabsHeader.label,
                         snappedBookmarksHeader.label,
-                        snappedHistoryHeader.lavel )
+                        snappedHistoryHeader.label,
+                        snappedTopSitesHeader.label )
       The '>' character is not part of the name, but is an indicator of more content. Please do not localize the '>' -->
 <!ENTITY snappedRemoteTabsHeader.label    "Remote Tabs >">
-<!ENTITY snappedBookmarksHeader.label       "Bookmarks >">
-<!ENTITY snappedHistoryHeader.label         "Recent History >">
-
-<!ENTITY autocompleteResultsHeader.label  "Your Results">
-<!ENTITY autocompleteSearchesHeader.label "Internet Searches"> 
+<!ENTITY snappedBookmarksHeader.label     "Bookmarks >">
+<!ENTITY snappedRecentHistoryHeader.label "Recent History >">
+<!ENTITY snappedTopSitesHeader.label      "Top Sites >">
 
 <!ENTITY downloadsHeader.label     "Downloads">
 <!ENTITY downloadShowPage.label    "Go to Page">
@@ -45,7 +49,6 @@
 <!ENTITY downloadDelete.label      "Delete">
 <!ENTITY downloadFailed.label      "Failed">
 
-<!ENTITY bookmarksHeader.label     "Bookmarks">
 <!ENTITY allBookmarks.label        "See all bookmarks">
 
 <!ENTITY consoleHeader.label       "Error Console">

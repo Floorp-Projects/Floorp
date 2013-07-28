@@ -280,9 +280,7 @@ FieldSetterImpl(JSContext *cx, JS::CallArgs args)
   }
 
   if (installed) {
-    JS::Rooted<JS::Value> v(cx,
-                            args.length() > 0 ? args[0] : JS::UndefinedValue());
-    if (!::JS_SetPropertyById(cx, thisObj, id, v.address())) {
+    if (!::JS_SetPropertyById(cx, thisObj, id, args.get(0))) {
       return false;
     }
   }

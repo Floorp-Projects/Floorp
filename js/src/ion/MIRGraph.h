@@ -10,9 +10,10 @@
 // This file declares the data structures used to build a control-flow graph
 // containing MIR.
 
-#include "ion/IonAllocPolicy.h"
-#include "ion/MIRGenerator.h"
 #include "ion/FixedList.h"
+#include "ion/IonAllocPolicy.h"
+#include "ion/MIR.h"
+#include "ion/MIRGenerator.h"
 
 namespace js {
 namespace ion {
@@ -76,9 +77,9 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     static MBasicBlock *NewPendingLoopHeader(MIRGraph &graph, CompileInfo &info,
                                              MBasicBlock *pred, jsbytecode *entryPc);
     static MBasicBlock *NewSplitEdge(MIRGraph &graph, CompileInfo &info, MBasicBlock *pred);
-    static MBasicBlock *NewParBailout(MIRGraph &graph, CompileInfo &info,
-                                      MBasicBlock *pred, jsbytecode *entryPc,
-                                      MResumePoint *resumePoint);
+    static MBasicBlock *NewAbortPar(MIRGraph &graph, CompileInfo &info,
+                                    MBasicBlock *pred, jsbytecode *entryPc,
+                                    MResumePoint *resumePoint);
 
     bool dominates(MBasicBlock *other);
 
@@ -676,13 +677,11 @@ class MIRGraph
         return scripts_.begin();
     }
 
-    // The ParSlice is an instance of ForkJoinSlice*, it carries
-    // "per-helper-thread" information.  So as not to modify the
-    // calling convention for parallel code, we obtain the current
-    // slice from thread-local storage.  This helper method will
-    // lazilly insert an MParSlice instruction in the entry block and
-    // return the definition.
-    MDefinition *parSlice();
+    // The per-thread context. So as not to modify the calling convention for
+    // parallel code, we obtain the current slice from thread-local storage.
+    // This helper method will lazilly insert an MForkJoinSlice instruction in
+    // the entry block and return the definition.
+    MDefinition *forkJoinSlice();
 
     void dump(FILE *fp);
 };
