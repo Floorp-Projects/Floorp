@@ -44,48 +44,51 @@ function test_open_window()
   gSecondWindow = window.open(TAB2_URL, "secondWindow");
   ok(!!gSecondWindow, "Second window created.");
   gSecondWindow.focus();
-  let top = windowMediator.getMostRecentWindow("navigator:browser");
-  var main2 = gSecondWindow.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                   .getInterface(Components.interfaces.nsIWebNavigation)
-                   .QueryInterface(Components.interfaces.nsIDocShellTreeItem)
-                   .rootTreeItem
-                   .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                   .getInterface(Components.interfaces.nsIDOMWindow);
-  is(top, main2, "The second window is on top.");
+
+  let topWin = windowMediator.getMostRecentWindow("navigator:browser");
+  var chromeWin = gSecondWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                               .getInterface(Ci.nsIWebNavigation)
+                               .QueryInterface(Ci.nsIDocShellTreeItem)
+                               .rootTreeItem
+                               .QueryInterface(Ci.nsIInterfaceRequestor)
+                               .getInterface(Ci.nsIDOMWindow);
+  is(topWin, chromeWin, "The second window is on top.");
+
   let gotLoad = false;
-  let gotActivate = (Cc["@mozilla.org/focus-manager;1"].getService(Ci.nsIFocusManager).activeWindow == main2);
+  let gotActivate = Services.focus.activeWindow == chromeWin;
+
   function maybeWindowLoadedAndActive() {
     if (gotLoad && gotActivate) {
-      top.BrowserChromeTest.runWhenReady(function() {
-        executeSoon(function() {
-          gClient.listTabs(function(aResponse) {
-            is(aResponse.selected, 2, "Tab2 is selected.");
-            test_focus_first();
-          });
+      executeSoon(function() {
+        gClient.listTabs(function(aResponse) {
+          is(aResponse.selected, 2, "Tab2 is selected.");
+          test_focus_first();
         });
-      })
+      });
     }
   }
 
+  // Wait for chrome window activation, if necessary
   if (!gotActivate) {
-    main2.addEventListener("activate", function() {
-        main2.removeEventListener("activate", arguments.callee, true);
-        gotActivate = true;
-        maybeWindowLoadedAndActive();
-      },
-      true
-    );
-  }
-  main2.document.addEventListener("load", function(e) {
-      if (e.target.documentURI != TAB2_URL) {
-        return;
-      }
-      main2.document.removeEventListener("load", arguments.callee, true);
-      gotLoad = true;
+    chromeWin.addEventListener("activate", function onactivate() {
+      info("activate event");
+
+      chromeWin.removeEventListener("activate", onactivate, true);
+      gotActivate = true;
       maybeWindowLoadedAndActive();
-    },
-    true
-  );
+    }, true);
+  }
+
+  // Wait for the requested content document to load
+  chromeWin.document.addEventListener("load", function onload(e) {
+    if (e.target.documentURI != TAB2_URL) {
+      return;
+    }
+    info("content loaded");
+    chromeWin.document.removeEventListener("load", onload, true);
+    gotLoad = true;
+    maybeWindowLoadedAndActive();
+  }, true);
 }
 
 function test_focus_first()
