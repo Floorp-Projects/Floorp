@@ -62,11 +62,11 @@ function dbg_assert(cond, e) {
 
 function addWindow(aUrl) {
   info("Adding window: " + aUrl);
-  return promise.resolve(getDOMWindow(window.open(aUrl)));
+  return promise.resolve(getChromeWindow(window.open(aUrl)));
 }
 
-function getDOMWindow(aReference) {
-  return aReference
+function getChromeWindow(aWindow) {
+  return aWindow
     .QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIWebNavigation)
     .QueryInterface(Ci.nsIDocShellTreeItem).rootTreeItem
     .QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindow);

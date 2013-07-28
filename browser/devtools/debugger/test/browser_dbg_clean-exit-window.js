@@ -39,21 +39,18 @@ function testCleanExit() {
   let isLoaded = promise.defer();
 
   promise.all([isActive.promise, isLoaded.promise]).then(() => {
-    gWindow.BrowserChromeTest.runWhenReady(() => {
-      waitForSourceAndCaretAndScopes(gPanel, ".html", 16).then(() => {
-        is(gDebugger.gThreadClient.paused, true,
-          "Should be paused after the debugger statement.");
-        gWindow.close();
-        deferred.resolve();
-        finish();
-      });
-
-      gDebuggee.runDebuggerStatement();
+    waitForSourceAndCaretAndScopes(gPanel, ".html", 16).then(() => {
+      is(gDebugger.gThreadClient.paused, true,
+        "Should be paused after the debugger statement.");
+      gWindow.close();
+      deferred.resolve();
+      finish();
     });
+
+    gDebuggee.runDebuggerStatement();
   });
 
-  let focusManager = Cc["@mozilla.org/focus-manager;1"].getService(Ci.nsIFocusManager);
-  if (focusManager.activeWindow != gWindow) {
+  if (Services.focus.activeWindow != gWindow) {
     gWindow.addEventListener("activate", function onActivate(aEvent) {
       if (aEvent.target != gWindow) {
         return;
