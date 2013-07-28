@@ -407,6 +407,12 @@ struct GLContextSymbols
     PFNGLEGLIMAGETARGETTEXTURE2D fEGLImageTargetTexture2D;
     typedef void (GLAPIENTRY * PFNGLEGLIMAGETARGETRENDERBUFFERSTORAGE)(GLenum target, GLeglImage image);
     PFNGLEGLIMAGETARGETRENDERBUFFERSTORAGE fEGLImageTargetRenderbufferStorage;
+
+    // ARB_draw_instanced
+    typedef void (GLAPIENTRY * PFNGLDRAWARRAYSINSTANCED) (GLenum mode, GLint first, GLsizei count, GLsizei primcount);
+    PFNGLDRAWARRAYSINSTANCED fDrawArraysInstanced;
+    typedef void (GLAPIENTRY * PFNGLDRAWELEMENTSINSTANCED) (GLenum mode, GLsizei count, GLenum type, const GLvoid* indices, GLsizei primcount);
+    PFNGLDRAWELEMENTSINSTANCED fDrawElementsInstanced;
 };
 
 }

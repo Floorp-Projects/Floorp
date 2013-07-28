@@ -337,5 +337,12 @@ just addresses the organization to follow, e.g. "This site is run by " -->
 <!ENTITY updater_apply_select2 "Touch to update">
 
 <!-- Guest mode -->
-<!ENTITY enter_guest_mode "Enter Guest Mode">
-<!ENTITY exit_guest_mode "Exit Guest Mode">
+<!ENTITY enter_guest_mode "Enter guest mode">
+<!ENTITY exit_guest_mode "Leave guest mode">
+<!ENTITY guest_mode_dialog_continue "Continue">
+<!ENTITY guest_mode_dialog_cancel "Cancel">
+<!ENTITY guest_mode_enter_title "Guest mode">
+<!ENTITY guest_mode_enter_text "While in guest mode, the person using &brandShortName; will not be able to see any of your personal browsing data (like your saved passwords, history or bookmarks).\n\nWhen your guest is done, their browsing data will be deleted.">
+
+<!ENTITY guest_mode_leave_title "Leaving guest mode">
+<!ENTITY guest_mode_leave_text "&brandShortName; will delete browsing data from this session.">

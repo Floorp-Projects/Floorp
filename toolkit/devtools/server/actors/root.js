@@ -164,7 +164,7 @@ RootActor.prototype = {
    */
   sayHello: function() {
     return {
-      from: "root",
+      from: this.actorID,
       applicationType: this.applicationType,
       /* This is not in the spec, but it's used by tests. */
       testConnectionPrefix: this.conn.prefix,
@@ -197,7 +197,7 @@ RootActor.prototype = {
   onListTabs: function() {
     let tabList = this._parameters.tabList;
     if (!tabList) {
-      return { from: "root", error: "noTabs",
+      return { from: this.actorID, error: "noTabs",
                message: "This root actor has no browser tabs." };
     }
 
@@ -234,7 +234,7 @@ RootActor.prototype = {
     this.conn.addActorPool(this._tabActorPool);
 
     let reply = {
-      "from": "root",
+      "from": this.actorID,
       "selected": selected || 0,
       "tabs": [actor.grip() for (actor of tabActorList)],
     };
@@ -253,13 +253,19 @@ RootActor.prototype = {
   },
 
   onTabListChanged: function () {
-    this.conn.send({ from:"root", type:"tabListChanged" });
+    this.conn.send({ from: this.actorID, type:"tabListChanged" });
     /* It's a one-shot notification; no need to watch any more. */
     this._parameters.tabList.onListChanged = null;
   },
 
   /* This is not in the spec, but it's used by tests. */
-  onEcho: (aRequest) => aRequest,
+  onEcho: function (aRequest) {
+    /*
+     * Request packets are frozen. Copy aRequest, so that
+     * DebuggerServerConnection.onPacket can attach a 'from' property.
+     */
+    return JSON.parse(JSON.stringify(aRequest));
+  },
 
   /* Support for DebuggerServer.addGlobalActor. */
   _createExtraActors: CommonCreateExtraActors,

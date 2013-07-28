@@ -55,6 +55,7 @@ var ChromeSelectionHandler = {
       this._updateSelectionUI("caret", false, false, true);
     }
 
+    this._targetElement.addEventListener("blur", this, false);
   },
 
   /*
@@ -140,6 +141,17 @@ var ChromeSelectionHandler = {
 
     // Update the position of our selection monocles
     this._updateSelectionUI("end", true, true);
+  },
+
+  _onSelectionUpdate: function _onSelectionUpdate() {
+    if (!this._targetHasFocus()) {
+      this._closeSelection();
+      return;
+    }
+    this._updateSelectionUI("update",
+                            this._mode == kSelectionMode,
+                            this._mode == kSelectionMode,
+                            this._mode == kCaretMode);
   },
 
   /*
@@ -265,7 +277,10 @@ var ChromeSelectionHandler = {
     this._clearTimers();
     this._cache = null;
     this._contentWindow = null;
-    this._targetElement = null;
+    if (this._targetElement) {
+      this._targetElement.removeEventListener("blur", this, true);
+      this._targetElement = null;
+    }
     this._selectionMoveActive = false;
     this._domWinUtils = null;
     this._targetIsEditable = false;
@@ -278,6 +293,14 @@ var ChromeSelectionHandler = {
     }
     let selection = this._getSelection();
     return (selection && !selection.isCollapsed);
+  },
+
+  _targetHasFocus: function() {
+    if (!this._targetElement || !document.commandDispatcher.focusedElement) {
+      return false;
+    }
+    let bindingParent = this._contentWindow.document.getBindingParent(document.commandDispatcher.focusedElement);
+    return (bindingParent && this._targetElement == bindingParent);
   },
 
   /*************************************************
@@ -293,6 +316,12 @@ var ChromeSelectionHandler = {
     // Update monocle position and speed if we've dragged off to one side
     if (result.trigger) {
       ChromeSelectionHandler._updateSelectionUI("update", result.start, result.end);
+    }
+  },
+
+  handleEvent: function handleEvent(aEvent) {
+    if (aEvent.type == "blur" && !this._targetHasFocus()) {
+      this._closeSelection();
     }
   },
 
@@ -318,10 +347,7 @@ var ChromeSelectionHandler = {
       break;
 
       case "Browser:SelectionUpdate":
-        this._updateSelectionUI("update",
-                                this._mode == kSelectionMode,
-                                this._mode == kSelectionMode,
-                                this._mode == kCaretMode);
+        this._onSelectionUpdate();
       break;
 
       case "Browser:SelectionMoveStart":

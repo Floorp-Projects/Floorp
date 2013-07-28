@@ -117,6 +117,7 @@ MOCHITEST_BROWSER_FILES = \
 	browser_netpanel_longstring_expand.js \
 	browser_repeated_messages_accuracy.js \
 	browser_webconsole_bug_821877_csp_errors.js \
+	browser_webconsole_bug_846918_hsts_invalid-headers.js \
 	browser_eval_in_debugger_stackframe.js \
 	browser_console_variables_view.js \
 	browser_console_variables_view_while_debugging.js \
@@ -185,8 +186,6 @@ MOCHITEST_BROWSER_FILES += \
 	test-bug-595934-svg.xhtml \
 	test-bug-595934-workers.html \
 	test-bug-595934-workers.js \
-	test-bug-595934-canvas.html \
-	test-bug-595934-canvas.js \
 	test-bug-595934-css-parser.html \
 	test-bug-595934-css-parser.css \
 	test-bug-595934-canvas-css.html \
@@ -236,6 +235,8 @@ MOCHITEST_BROWSER_FILES += \
 	test-bug-766001-js-errors.js \
 	test-bug-821877-csperrors.html \
 	test-bug-821877-csperrors.html^headers^ \
+	test-bug-846918-hsts-invalid-headers.html \
+	test-bug-846918-hsts-invalid-headers.html^headers^ \
 	test-eval-in-stackframe.html \
 	test-bug-859170-longstring-hang.html \
 	test-bug-837351-security-errors.html \

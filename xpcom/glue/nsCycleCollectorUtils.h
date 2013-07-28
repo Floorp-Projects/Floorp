@@ -14,7 +14,13 @@ bool NS_IsCycleCollectorThread();
 #elif defined(NS_TLS)
 // Defined in nsThreadManager.cpp.
 extern NS_TLS mozilla::threads::ID gTLSThreadID;
-inline bool NS_IsCycleCollectorThread()
+#ifdef MOZ_ASAN
+// Temporary workaround, see bug 895845
+MOZ_ASAN_BLACKLIST static
+#else
+inline
+#endif
+bool NS_IsCycleCollectorThread()
 {
   return gTLSThreadID == mozilla::threads::CycleCollector;
 }

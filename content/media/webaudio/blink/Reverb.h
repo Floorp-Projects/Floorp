@@ -55,7 +55,7 @@ public:
     size_t latencyFrames() const;
 
 private:
-    void initialize(mozilla::ThreadSharedFloatArrayBufferList* impulseResponseBuffer, size_t impulseResponseBufferLength, size_t renderSliceSize, size_t maxFFTSize, size_t numberOfChannels, bool useBackgroundThreads);
+    void initialize(const nsTArray<const float*>& impulseResponseBuffer, size_t impulseResponseBufferLength, size_t renderSliceSize, size_t maxFFTSize, size_t numberOfChannels, bool useBackgroundThreads);
 
     size_t m_impulseResponseLength;
 

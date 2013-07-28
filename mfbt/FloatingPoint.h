@@ -1,12 +1,13 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Various predicates and operations on IEEE-754 floating point types. */
 
-#ifndef mozilla_FloatingPoint_h_
-#define mozilla_FloatingPoint_h_
+#ifndef mozilla_FloatingPoint_h
+#define mozilla_FloatingPoint_h
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
@@ -191,6 +192,19 @@ UnspecifiedNaN()
   return SpecificNaN(0, 0xfffffffffffffULL);
 }
 
+/**
+ * Compare two doubles for equality, *without* equating -0 to +0, and equating
+ * any NaN value to any other NaN value.  (The normal equality operators equate
+ * -0 with +0, and they equate NaN to no other value.)
+ */
+static inline bool
+DoublesAreIdentical(double d1, double d2)
+{
+  if (IsNaN(d1))
+    return IsNaN(d2);
+  return BitwiseCast<uint64_t>(d1) == BitwiseCast<uint64_t>(d2);
+}
+
 } /* namespace mozilla */
 
-#endif  /* mozilla_FloatingPoint_h_ */
+#endif /* mozilla_FloatingPoint_h */

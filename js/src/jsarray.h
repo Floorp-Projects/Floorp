@@ -9,8 +9,8 @@
 #ifndef jsarray_h
 #define jsarray_h
 
-#include "jspubtd.h"
 #include "jsobj.h"
+#include "jspubtd.h"
 
 namespace js {
 /* 2^32-2, inclusive */

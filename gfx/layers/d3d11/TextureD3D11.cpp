@@ -21,8 +21,8 @@ namespace layers {
 
 TemporaryRef<DeprecatedTextureHost>
 CreateDeprecatedTextureHostD3D11(SurfaceDescriptorType aDescriptorType,
-                             uint32_t aDeprecatedTextureHostFlags,
-                             uint32_t aTextureFlags)
+                                 uint32_t aDeprecatedTextureHostFlags,
+                                 uint32_t aTextureFlags)
 {
   RefPtr<DeprecatedTextureHost> result;
   if (aDescriptorType == SurfaceDescriptor::TYCbCrImage) {
@@ -39,18 +39,16 @@ CreateDeprecatedTextureHostD3D11(SurfaceDescriptorType aDescriptorType,
 }
 
 
-CompositingRenderTargetD3D11::CompositingRenderTargetD3D11(ID3D11Texture2D *aTexture)
+CompositingRenderTargetD3D11::CompositingRenderTargetD3D11(ID3D11Texture2D* aTexture)
 {
-  if (!aTexture) {
-    return;
-  }
+  MOZ_ASSERT(aTexture);
   
   mTextures[0] = aTexture;
 
   RefPtr<ID3D11Device> device;
   mTextures[0]->GetDevice(byRef(device));
 
-  HRESULT hr = device->CreateRenderTargetView(mTextures[0], NULL, byRef(mRTView));
+  HRESULT hr = device->CreateRenderTargetView(mTextures[0], nullptr, byRef(mRTView));
 
   if (FAILED(hr)) {
     LOGD3D11("Failed to create RenderTargetView.");
@@ -63,7 +61,9 @@ CompositingRenderTargetD3D11::GetSize() const
   return TextureSourceD3D11::GetSize();
 }
 
-DeprecatedTextureClientD3D11::DeprecatedTextureClientD3D11(CompositableForwarder* aCompositableForwarder, const TextureInfo& aTextureInfo)
+DeprecatedTextureClientD3D11::DeprecatedTextureClientD3D11(
+  CompositableForwarder* aCompositableForwarder,
+  const TextureInfo& aTextureInfo)
   : DeprecatedTextureClient(aCompositableForwarder, aTextureInfo)
   , mIsLocked(false)
 {
@@ -78,14 +78,15 @@ DeprecatedTextureClientD3D11::~DeprecatedTextureClientD3D11()
 }
 
 void
-DeprecatedTextureClientD3D11::EnsureAllocated(gfx::IntSize aSize, gfxASurface::gfxContentType aType)
+DeprecatedTextureClientD3D11::EnsureAllocated(gfx::IntSize aSize,
+                                              gfxASurface::gfxContentType aType)
 {
   D3D10_TEXTURE2D_DESC desc;
 
   if (mTexture) {
     mTexture->GetDesc(&desc);
 
-    if (desc.Width == aSize.width || desc.Height == aSize.height) {
+    if (desc.Width == aSize.width && desc.Height == aSize.height) {
       return;
     }
 
@@ -96,7 +97,7 @@ DeprecatedTextureClientD3D11::EnsureAllocated(gfx::IntSize aSize, gfxASurface::g
 
   mSize = aSize;
 
-  ID3D10Device *device = gfxWindowsPlatform::GetPlatform()->GetD3D10Device();
+  ID3D10Device* device = gfxWindowsPlatform::GetPlatform()->GetD3D10Device();
 
   CD3D10_TEXTURE2D_DESC newDesc(DXGI_FORMAT_B8G8R8A8_UNORM,
                                 aSize.width, aSize.height, 1, 1,
@@ -121,7 +122,8 @@ DeprecatedTextureClientD3D11::EnsureAllocated(gfx::IntSize aSize, gfxASurface::g
     LOGD3D11("Error getting shared handle for texture.");
   }
 
-  mDescriptor = SurfaceDescriptorD3D10((WindowsHandle)sharedHandle, aType == gfxASurface::CONTENT_COLOR_ALPHA);
+  mDescriptor = SurfaceDescriptorD3D10((WindowsHandle)sharedHandle,
+                                       aType == gfxASurface::CONTENT_COLOR_ALPHA);
 
   mContentType = aType;
 }
@@ -169,7 +171,7 @@ DeprecatedTextureClientD3D11::SetDescriptor(const SurfaceDescriptor& aDescriptor
   }
 
   MOZ_ASSERT(aDescriptor.type() == SurfaceDescriptor::TSurfaceDescriptorD3D10);
-  ID3D10Device *device = gfxWindowsPlatform::GetPlatform()->GetD3D10Device();
+  ID3D10Device* device = gfxWindowsPlatform::GetPlatform()->GetD3D10Device();
 
   device->OpenSharedResource((HANDLE)aDescriptor.get_SurfaceDescriptorD3D10().handle(),
                              __uuidof(ID3D10Texture2D),
@@ -249,7 +251,7 @@ DeprecatedTextureClientD3D11::ReleaseTexture()
 void
 DeprecatedTextureClientD3D11::ClearDT()
 {
-  // An Azure DrawTarget needs to be locked when it gets NULL'ed as this is
+  // An Azure DrawTarget needs to be locked when it gets nullptr'ed as this is
   // when it calls EndDraw. This EndDraw should not execute anything so it
   // shouldn't -really- need the lock but the debug layer chokes on this.
   //
@@ -290,14 +292,14 @@ static uint32_t GetRequiredTiles(uint32_t aSize, uint32_t aMaxSize)
 void
 DeprecatedTextureHostShmemD3D11::SetCompositor(Compositor* aCompositor)
 {
-  CompositorD3D11 *d3dCompositor = static_cast<CompositorD3D11*>(aCompositor);
+  CompositorD3D11* d3dCompositor = static_cast<CompositorD3D11*>(aCompositor);
   mDevice = d3dCompositor ? d3dCompositor->GetDevice() : nullptr;
 }
 
 void
 DeprecatedTextureHostShmemD3D11::UpdateImpl(const SurfaceDescriptor& aImage,
-                                  nsIntRegion *aRegion,
-                                  nsIntPoint *aOffset)
+                                            nsIntRegion* aRegion,
+                                            nsIntPoint* aOffset)
 {
   MOZ_ASSERT(aImage.type() == SurfaceDescriptor::TShmem ||
              aImage.type() == SurfaceDescriptor::TMemoryImage);
@@ -332,7 +334,8 @@ DeprecatedTextureHostShmemD3D11::UpdateImpl(const SurfaceDescriptor& aImage,
   mSize = IntSize(size.width, size.height);
 
   CD3D11_TEXTURE2D_DESC desc(dxgiFormat, size.width, size.height,
-                            1, 1, D3D11_BIND_SHADER_RESOURCE, D3D11_USAGE_IMMUTABLE);
+                             1, 1, D3D11_BIND_SHADER_RESOURCE,
+                             D3D11_USAGE_IMMUTABLE);
 
   int32_t maxSize = GetMaxTextureSizeForFeatureLevel(mDevice->GetFeatureLevel());
   if (size.width <= maxSize && size.height <= maxSize) {
@@ -345,7 +348,7 @@ DeprecatedTextureHostShmemD3D11::UpdateImpl(const SurfaceDescriptor& aImage,
   } else {
     mIsTiled = true;
     uint32_t tileCount = GetRequiredTiles(size.width, maxSize) *
-                          GetRequiredTiles(size.height, maxSize);
+                         GetRequiredTiles(size.height, maxSize);
 
     mTileTextures.resize(tileCount);
 
@@ -356,7 +359,9 @@ DeprecatedTextureHostShmemD3D11::UpdateImpl(const SurfaceDescriptor& aImage,
       desc.Height = tileRect.height;
 
       D3D11_SUBRESOURCE_DATA initData;
-      initData.pSysMem = surf->Data() + tileRect.y * surf->Stride() + tileRect.x * bpp;
+      initData.pSysMem = surf->Data() +
+                         tileRect.y * surf->Stride() +
+                         tileRect.x * bpp;
       initData.SysMemPitch = surf->Stride();
 
       mDevice->CreateTexture2D(&desc, &initData, byRef(mTileTextures[i]));
@@ -383,7 +388,7 @@ DeprecatedTextureHostShmemD3D11::GetTileRect(uint32_t aID) const
 void
 DeprecatedTextureHostDXGID3D11::SetCompositor(Compositor* aCompositor)
 {
-  CompositorD3D11 *d3dCompositor = static_cast<CompositorD3D11*>(aCompositor);
+  CompositorD3D11* d3dCompositor = static_cast<CompositorD3D11*>(aCompositor);
   mDevice = d3dCompositor ? d3dCompositor->GetDevice() : nullptr;
 }
 
@@ -408,13 +413,14 @@ DeprecatedTextureHostDXGID3D11::Unlock()
 
 void
 DeprecatedTextureHostDXGID3D11::UpdateImpl(const SurfaceDescriptor& aImage,
-                                 nsIntRegion *aRegion,
-                                 nsIntPoint *aOffset)
+                                           nsIntRegion* aRegion,
+                                           nsIntPoint* aOffset)
 {
   MOZ_ASSERT(aImage.type() == SurfaceDescriptor::TSurfaceDescriptorD3D10);
 
   mDevice->OpenSharedResource((HANDLE)aImage.get_SurfaceDescriptorD3D10().handle(),
-                              __uuidof(ID3D11Texture2D), (void**)(ID3D11Texture2D**)byRef(mTextures[0]));
+                              __uuidof(ID3D11Texture2D),
+                              (void**)(ID3D11Texture2D**)byRef(mTextures[0]));
   mFormat = aImage.get_SurfaceDescriptorD3D10().hasAlpha() ? FORMAT_B8G8R8A8 : FORMAT_B8G8R8X8;
 
   D3D11_TEXTURE2D_DESC desc;
@@ -444,7 +450,7 @@ DeprecatedTextureHostDXGID3D11::ReleaseTexture()
 void
 DeprecatedTextureHostYCbCrD3D11::SetCompositor(Compositor* aCompositor)
 {
-  CompositorD3D11 *d3dCompositor = static_cast<CompositorD3D11*>(aCompositor);
+  CompositorD3D11* d3dCompositor = static_cast<CompositorD3D11*>(aCompositor);
   mDevice = d3dCompositor ? d3dCompositor->GetDevice() : nullptr;
 }
 
@@ -456,8 +462,8 @@ DeprecatedTextureHostYCbCrD3D11::GetSize() const
 
 void
 DeprecatedTextureHostYCbCrD3D11::UpdateImpl(const SurfaceDescriptor& aImage,
-                                  nsIntRegion *aRegion,
-                                  nsIntPoint *aOffset)
+                                  nsIntRegion* aRegion,
+                                  nsIntPoint* aOffset)
 {
   MOZ_ASSERT(aImage.type() == SurfaceDescriptor::TYCbCrImage);
 
@@ -472,7 +478,8 @@ DeprecatedTextureHostYCbCrD3D11::UpdateImpl(const SurfaceDescriptor& aImage,
   initData.SysMemPitch = yuvDeserializer.GetYStride();
 
   CD3D11_TEXTURE2D_DESC desc(DXGI_FORMAT_R8_UNORM, size.width, size.height,
-                              1, 1, D3D11_BIND_SHADER_RESOURCE, D3D11_USAGE_IMMUTABLE);
+                             1, 1, D3D11_BIND_SHADER_RESOURCE,
+                             D3D11_USAGE_IMMUTABLE);
 
   mDevice->CreateTexture2D(&desc, &initData, byRef(mTextures[0]));
 

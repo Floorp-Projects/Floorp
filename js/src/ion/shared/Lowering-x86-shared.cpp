@@ -4,11 +4,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "ion/shared/Lowering-x86-shared.h"
+
 #include "mozilla/MathAlgorithms.h"
 
-#include "ion/MIR.h"
 #include "ion/Lowering.h"
-#include "ion/shared/Lowering-x86-shared.h"
+#include "ion/MIR.h"
+
 #include "ion/shared/Lowering-shared-inl.h"
 
 using namespace js;
@@ -114,6 +116,15 @@ LIRGeneratorX86Shared::lowerForFPU(LInstructionHelper<1, 2, 0> *ins, MDefinition
     ins->setOperand(0, useRegisterAtStart(lhs));
     ins->setOperand(1, use(rhs));
     return defineReuseInput(ins, mir, 0);
+}
+
+bool
+LIRGeneratorX86Shared::lowerForBitAndAndBranch(LBitAndAndBranch *baab, MInstruction *mir,
+                                               MDefinition *lhs, MDefinition *rhs)
+{
+    baab->setOperand(0, useRegister(lhs));
+    baab->setOperand(1, useRegisterOrConstant(rhs));
+    return add(baab, mir);
 }
 
 bool

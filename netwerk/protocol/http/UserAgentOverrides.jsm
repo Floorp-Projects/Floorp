@@ -15,9 +15,11 @@ const PREF_OVERRIDES_ENABLED = "general.useragent.site_specific_overrides";
 const DEFAULT_UA = Cc["@mozilla.org/network/protocol;1?name=http"]
                      .getService(Ci.nsIHttpProtocolHandler)
                      .userAgent;
+const MAX_OVERRIDE_FOR_HOST_CACHE_SIZE = 250;
 
 var gPrefBranch;
-var gOverrides;
+var gOverrides = new Map;
+var gOverrideForHostCache = new Map;
 var gInitialized = false;
 var gOverrideFunctions = [
   function (aHttpChannel) UserAgentOverrides.getOverrideForURI(aHttpChannel.URI)
@@ -54,14 +56,27 @@ this.UserAgentOverrides = {
       return null;
 
     let host = aURI.asciiHost;
-    for (let domain in gOverrides) {
+
+    let override = gOverrideForHostCache.get(host);
+    if (override !== undefined)
+      return override;
+
+    override = null;
+
+    for (let [domain, userAgent] of gOverrides) {
       if (host == domain ||
           host.endsWith("." + domain)) {
-        return gOverrides[domain];
+        override = userAgent;
+        break;
       }
     }
 
-    return null;
+    if (gOverrideForHostCache.size >= MAX_OVERRIDE_FOR_HOST_CACHE_SIZE) {
+      gOverrideForHostCache.clear();
+    }
+    gOverrideForHostCache.set(host, override);
+
+    return override;
   },
 
   uninit: function uao_uninit() {
@@ -78,21 +93,31 @@ this.UserAgentOverrides = {
 };
 
 function buildOverrides() {
-  gOverrides = {};
+  gOverrides.clear();
+  gOverrideForHostCache.clear();
 
   if (!Services.prefs.getBoolPref(PREF_OVERRIDES_ENABLED))
     return;
 
+  let builtUAs = new Map;
   let domains = gPrefBranch.getChildList("");
 
   for (let domain of domains) {
     let override = gPrefBranch.getCharPref(domain);
+    let userAgent = builtUAs.get(override);
 
-    let [search, replace] = override.split("#", 2);
-    if (search && replace) {
-      gOverrides[domain] = DEFAULT_UA.replace(new RegExp(search, "g"), replace);
-    } else {
-      gOverrides[domain] = override;
+    if (userAgent === undefined) {
+      let [search, replace] = override.split("#", 2);
+      if (search && replace) {
+        userAgent = DEFAULT_UA.replace(new RegExp(search, "g"), replace);
+      } else {
+        userAgent = override;
+      }
+      builtUAs.set(override, userAgent);
+    }
+
+    if (userAgent != DEFAULT_UA) {
+      gOverrides.set(domain, userAgent);
     }
   }
 }

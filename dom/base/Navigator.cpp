@@ -30,7 +30,6 @@
 #include "PowerManager.h"
 #include "nsIDOMWakeLock.h"
 #include "nsIPowerManagerService.h"
-#include "mozilla/dom/SmsManager.h"
 #include "mozilla/dom/MobileMessageManager.h"
 #include "nsISmsService.h"
 #include "mozilla/Hal.h"
@@ -141,7 +140,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Navigator)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mNotification)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mBatteryManager)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPowerManager)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSmsManager)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMobileMessageManager)
 #ifdef MOZ_B2G_RIL
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTelephony)
@@ -202,11 +200,6 @@ Navigator::Invalidate()
   if (mPowerManager) {
     mPowerManager->Shutdown();
     mPowerManager = nullptr;
-  }
-
-  if (mSmsManager) {
-    mSmsManager->Shutdown();
-    mSmsManager = nullptr;
   }
 
   if (mMobileMessageManager) {
@@ -968,10 +961,6 @@ Navigator::GetDeviceStorages(const nsAString& aType,
 Geolocation*
 Navigator::GetGeolocation(ErrorResult& aRv)
 {
-  if (!Preferences::GetBool("geo.enabled", true)) {
-    return nullptr;
-  }
-
   if (mGeolocation) {
     return mGeolocation;
   }
@@ -1112,19 +1101,6 @@ Navigator::RequestWakeLock(const nsAString &aTopic, ErrorResult& aRv)
   nsCOMPtr<nsIDOMMozWakeLock> wakelock;
   aRv = pmService->NewWakeLock(aTopic, mWindow, getter_AddRefs(wakelock));
   return wakelock.forget();
-}
-
-nsIDOMMozSmsManager*
-Navigator::GetMozSms()
-{
-  if (!mSmsManager) {
-    NS_ENSURE_TRUE(mWindow, nullptr);
-    NS_ENSURE_TRUE(mWindow->GetDocShell(), nullptr);
-
-    mSmsManager = SmsManager::CreateInstance(mWindow);
-  }
-
-  return mSmsManager;
 }
 
 nsIDOMMozMobileMessageManager*
@@ -1613,14 +1589,6 @@ Navigator::HasWakeLockSupport(JSContext* /* unused*/, JSObject* /*unused */)
     do_GetService(POWERMANAGERSERVICE_CONTRACTID);
   // No service means no wake lock support
   return !!pmService;
-}
-
-/* static */
-bool
-Navigator::HasSmsSupport(JSContext* /* unused */, JSObject* aGlobal)
-{
-  nsCOMPtr<nsPIDOMWindow> win = GetWindowFromGlobal(aGlobal);
-  return win && SmsManager::CreationIsAllowed(win);
 }
 
 /* static */

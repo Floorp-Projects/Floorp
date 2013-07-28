@@ -106,7 +106,9 @@ const RIL_IPC_MOBILECONNECTION_MSG_NAMES = [
   "RIL:SetCallWaitingOption",
   "RIL:GetCallWaitingOption",
   "RIL:SetCallingLineIdRestriction",
-  "RIL:GetCallingLineIdRestriction"
+  "RIL:GetCallingLineIdRestriction",
+  "RIL:SetRoamingPreference",
+  "RIL:GetRoamingPreference"
 ];
 
 const RIL_IPC_ICCMANAGER_MSG_NAMES = [
@@ -876,6 +878,14 @@ RadioInterface.prototype = {
       case "RIL:GetVoicemailInfo":
         // This message is sync.
         return this.voicemailInfo;
+      case "RIL:SetRoamingPreference":
+        gMessageManager.saveRequestTarget(msg);
+        this.setRoamingPreference(msg.json.data);
+        break;
+      case "RIL:GetRoamingPreference":
+        gMessageManager.saveRequestTarget(msg);
+        this.getRoamingPreference(msg.json.data);
+        break;
     }
   },
 
@@ -1072,6 +1082,12 @@ RadioInterface.prototype = {
         let lock = gSettingsService.createLock();
         lock.set("ril.radio.disabled", !message.on, null, null);
         break;
+      case "setRoamingPreference":
+        this.handleSetRoamingPreference(message);
+        break;
+      case "queryRoamingPreference":
+        this.handleQueryRoamingPreference(message);
+        break;
       default:
         throw new Error("Don't know about this message type: " +
                         message.rilMessageType);
@@ -1175,17 +1191,14 @@ RadioInterface.prototype = {
 
     // Make sure we also reset the operator and signal strength information
     // if we drop off the network.
-    if (newInfo.regState == RIL.NETWORK_CREG_STATE_UNKNOWN) {
+    if (newInfo.regState !== RIL.NETWORK_CREG_STATE_REGISTERED_HOME &&
+        newInfo.regState !== RIL.NETWORK_CREG_STATE_REGISTERED_ROAMING) {
+      voiceInfo.cell = null;
       voiceInfo.network = null;
       voiceInfo.signalStrength = null;
       voiceInfo.relSignalStrength = null;
-    }
-
-    let newCell = newInfo.cell;
-    if ((newCell.gsmLocationAreaCode < 0) || (newCell.gsmCellId < 0)) {
-      voiceInfo.cell = null;
     } else {
-      voiceInfo.cell = newCell;
+      voiceInfo.cell = newInfo.cell;
     }
 
     if (!newInfo.batch) {
@@ -1211,17 +1224,14 @@ RadioInterface.prototype = {
 
     // Make sure we also reset the operator and signal strength information
     // if we drop off the network.
-    if (newInfo.regState == RIL.NETWORK_CREG_STATE_UNKNOWN) {
+    if (newInfo.regState !== RIL.NETWORK_CREG_STATE_REGISTERED_HOME &&
+        newInfo.regState !== RIL.NETWORK_CREG_STATE_REGISTERED_ROAMING) {
+      dataInfo.cell = null;
       dataInfo.network = null;
       dataInfo.signalStrength = null;
       dataInfo.relSignalStrength = null;
-    }
-
-    let newCell = newInfo.cell;
-    if ((newCell.gsmLocationAreaCode < 0) || (newCell.gsmCellId < 0)) {
-      dataInfo.cell = null;
     } else {
-      dataInfo.cell = newCell;
+      dataInfo.cell = newInfo.cell;
     }
 
     if (!newInfo.batch) {
@@ -2274,6 +2284,16 @@ RadioInterface.prototype = {
                                        message);
   },
 
+  handleSetRoamingPreference: function handleSetRoamingPreference(message) {
+    if (DEBUG) this.debug("handleSetRoamingPreference: " + JSON.stringify(message));
+    gMessageManager.sendRequestResults("RIL:SetRoamingPreference", message);
+  },
+
+  handleQueryRoamingPreference: function handleQueryRoamingPreference(message) {
+    if (DEBUG) this.debug("handleQueryRoamingPreference: " + JSON.stringify(message));
+    gMessageManager.sendRequestResults("RIL:GetRoamingPreference", message);
+  },
+
   // nsIObserver
 
   observe: function observe(subject, topic, data) {
@@ -2660,6 +2680,18 @@ RadioInterface.prototype = {
       this.debug("getCallingLineIdRestriction: " + JSON.stringify(message));
     }
     message.rilMessageType = "getCLIR";
+    this.worker.postMessage(message);
+  },
+
+  getRoamingPreference: function getRoamingPreference(message) {
+    if (DEBUG) this.debug("getRoamingPreference: " + JSON.stringify(message));
+    message.rilMessageType = "queryRoamingPreference";
+    this.worker.postMessage(message);
+  },
+
+  setRoamingPreference: function setRoamingPreference(message) {
+    if (DEBUG) this.debug("setRoamingPreference: " + JSON.stringify(message));
+    message.rilMessageType = "setRoamingPreference";
     this.worker.postMessage(message);
   },
 
@@ -3156,7 +3188,11 @@ RadioInterface.prototype = {
         // If the radio is disabled or the SIM card is not ready, just directly
         // return with the corresponding error code.
         let errorCode;
-        if (!this._radioEnabled) {
+        if (!PhoneNumberUtils.isPlainPhoneNumber(options.number)) {
+          if (DEBUG) this.debug("Error! Address is invalid when sending SMS: " +
+                                options.number);
+          errorCode = Ci.nsIMobileMessageCallback.INVALID_ADDRESS_ERROR;
+        } else if (!this._radioEnabled) {
           if (DEBUG) this.debug("Error! Radio is disabled when sending SMS.");
           errorCode = Ci.nsIMobileMessageCallback.RADIO_DISABLED_ERROR;
         } else if (this.rilContext.cardState != "ready") {
@@ -3184,12 +3220,8 @@ RadioInterface.prototype = {
           requestStatusReport: options.requestStatusReport
         });
 
-        if (PhoneNumberUtils.isPlainPhoneNumber(options.number)) {
-          this.worker.postMessage(options);
-        } else {
-          if (DEBUG) this.debug('Number ' + options.number + ' is not sendable.');
-          this.handleSmsSendFailed(options);
-        }
+        // This is the entry point starting to send SMS.
+        this.worker.postMessage(options);
 
       }.bind(this));
   },

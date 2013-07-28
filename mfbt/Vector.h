@@ -1,6 +1,6 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- * vim: set ts=8 sts=2 et sw=2 tw=80:
- * This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -1050,7 +1050,7 @@ VectorBase<T, N, AP, TV>::extractRawBuffer()
   if (usingInlineStorage()) {
     ret = reinterpret_cast<T*>(this->malloc_(mLength * sizeof(T)));
     if (!ret)
-        return NULL;
+      return nullptr;
     Impl::copyConstruct(ret, beginNoCheck(), endNoCheck());
     Impl::destroy(beginNoCheck(), endNoCheck());
     /* mBegin, mCapacity are unchanged. */
@@ -1105,14 +1105,14 @@ template<typename T, size_t N, class AP, class TV>
 inline size_t
 VectorBase<T, N, AP, TV>::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
 {
-    return usingInlineStorage() ? 0 : mallocSizeOf(beginNoCheck());
+  return usingInlineStorage() ? 0 : mallocSizeOf(beginNoCheck());
 }
 
 template<typename T, size_t N, class AP, class TV>
 inline size_t
 VectorBase<T, N, AP, TV>::sizeOfIncludingThis(MallocSizeOf mallocSizeOf) const
 {
-    return mallocSizeOf(this) + sizeOfExcludingThis(mallocSizeOf);
+  return mallocSizeOf(this) + sizeOfExcludingThis(mallocSizeOf);
 }
 
 template<typename T, size_t N, class AP, class TV>

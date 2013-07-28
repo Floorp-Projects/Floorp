@@ -131,6 +131,26 @@ private:
 
 //----------------------------------------------------------------------------
 
+static inline bool
+IsHighPriority(uint16_t flags)
+{
+    return !(flags & (nsHostResolver::RES_PRIORITY_LOW | nsHostResolver::RES_PRIORITY_MEDIUM));
+}
+
+static inline bool
+IsMediumPriority(uint16_t flags)
+{
+    return flags & nsHostResolver::RES_PRIORITY_MEDIUM;
+}
+
+static inline bool
+IsLowPriority(uint16_t flags)
+{
+    return flags & nsHostResolver::RES_PRIORITY_LOW;
+}
+
+//----------------------------------------------------------------------------
+
 // this macro filters out any flags that are not used when constructing the
 // host key.  the significant flags are those that would affect the resulting
 // host record (i.e., the flags that are passed down to PR_GetAddrInfoByName).
@@ -145,6 +165,7 @@ nsHostRecord::nsHostRecord(const nsHostKey *key)
     , resolving(false)
     , onQueue(false)
     , usingAnyThread(false)
+    , mDoomed(false)
 {
     host = ((char *) this) + sizeof(nsHostRecord);
     memcpy((char *) host, key->host, strlen(key->host) + 1);
@@ -213,6 +234,9 @@ nsHostRecord::ReportUnusable(NetAddr *aAddress)
     // must call locked
     LOG(("Adding address to blacklist for host [%s], host record [%p].\n", host, this));
 
+    if (negative)
+        mDoomed = true;
+
     char buf[kIPv6CStrBufSize];
     if (NetAddrToString(aAddress, buf, sizeof(buf))) {
         LOG(("Successfully adding address [%s] to blacklist for host [%s].\n", buf, host));
@@ -226,6 +250,19 @@ nsHostRecord::ResetBlacklist()
     // must call locked
     LOG(("Resetting blacklist for host [%s], host record [%p].\n", host, this));
     mBlacklistedItems.Clear();
+}
+
+bool
+nsHostRecord::HasUsableResult(uint16_t queryFlags) const
+{
+    if (mDoomed)
+        return false;
+
+    // don't use cached negative results for high priority queries.
+    if (negative && IsHighPriority(queryFlags))
+        return false;
+
+    return addr_info || addr || negative;
 }
 
 //----------------------------------------------------------------------------
@@ -463,24 +500,6 @@ nsHostResolver::Shutdown()
 #endif
 }
 
-static inline bool
-IsHighPriority(uint16_t flags)
-{
-    return !(flags & (nsHostResolver::RES_PRIORITY_LOW | nsHostResolver::RES_PRIORITY_MEDIUM));
-}
-
-static inline bool
-IsMediumPriority(uint16_t flags)
-{
-    return flags & nsHostResolver::RES_PRIORITY_MEDIUM;
-}
-
-static inline bool
-IsLowPriority(uint16_t flags)
-{
-    return flags & nsHostResolver::RES_PRIORITY_LOW;
-}
-
 void 
 nsHostResolver::MoveQueue(nsHostRecord *aRec, PRCList &aDestQ)
 {
@@ -537,7 +556,7 @@ nsHostResolver::ResolveHost(const char            *host,
                 rv = NS_ERROR_OUT_OF_MEMORY;
             // do we have a cached result that we can reuse?
             else if (!(flags & RES_BYPASS_CACHE) &&
-                     he->rec->HasResult() &&
+                     he->rec->HasUsableResult(flags) &&
                      TimeStamp::NowLoRes() <= (he->rec->expiration + TimeDuration::FromSeconds(mGracePeriod * 60))) {
                 LOG(("Using cached record for host [%s].\n", host));
                 // put reference to host record on stack...

@@ -20,9 +20,6 @@
 #include <string.h>
 #include <sys/stat.h>
 
-#include "jstypes.h"
-#include "jsutil.h"
-#include "jsprf.h"
 #include "jsarray.h"
 #include "jsatom.h"
 #include "jsbool.h"
@@ -38,31 +35,45 @@
 #include "jsmath.h"
 #include "jsnativestack.h"
 #include "jsnum.h"
-#include "json.h"
 #include "jsobj.h"
+#include "json.h"
+#include "jsprf.h"
 #include "jsproxy.h"
 #include "jsscript.h"
 #include "jsstr.h"
-#include "prmjtime.h"
+#include "jstypes.h"
+#include "jsutil.h"
 #include "jsweakmap.h"
-#include "jswrapper.h"
 #ifdef JS_THREADSAFE
 #include "jsworkers.h"
 #endif
+#include "jswrapper.h"
+#include "prmjtime.h"
 
+#if ENABLE_YARR_JIT
+#include "assembler/jit/ExecutableAllocator.h"
+#endif
+#include "builtin/BinaryData.h"
 #include "builtin/Eval.h"
 #include "builtin/Intl.h"
 #include "builtin/MapObject.h"
-#include "builtin/RegExp.h"
 #include "builtin/ParallelArray.h"
+#include "builtin/RegExp.h"
 #include "frontend/BytecodeCompiler.h"
 #include "frontend/FullParseHandler.h"  // for JS_BufferIsCompileableUnit
 #include "frontend/Parser.h" // for JS_BufferIsCompileableUnit
 #include "gc/Marking.h"
 #include "gc/Memory.h"
 #include "ion/AsmJS.h"
+#ifdef JS_ION
+#include "ion/Ion.h"
+#endif
 #include "ion/PcScriptCache.h"
 #include "js/CharacterEncoding.h"
+#if ENABLE_INTL_API
+#include "unicode/uclean.h"
+#include "unicode/utypes.h"
+#endif
 #include "vm/DateObject.h"
 #include "vm/Debugger.h"
 #include "vm/ErrorObject.h"
@@ -86,14 +97,6 @@
 #include "vm/RegExpStatics-inl.h"
 #include "vm/Shape-inl.h"
 #include "vm/String-inl.h"
-
-#if ENABLE_YARR_JIT
-#include "assembler/jit/ExecutableAllocator.h"
-#endif
-
-#ifdef JS_ION
-#include "ion/Ion.h"
-#endif
 
 using namespace js;
 using namespace js::gc;
@@ -823,7 +826,7 @@ JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
     heapState(Idle),
 #ifdef JSGC_GENERATIONAL
     gcNursery(thisFromCtor()),
-    gcStoreBuffer(thisFromCtor()),
+    gcStoreBuffer(thisFromCtor(), gcNursery),
 #endif
 #ifdef JS_GC_ZEAL
     gcZeal_(0),
@@ -1173,6 +1176,18 @@ JS_DestroyRuntime(JSRuntime *rt)
 {
     js_free(rt->defaultLocale);
     js_delete(rt);
+}
+
+JS_PUBLIC_API(bool)
+JS_SetICUMemoryFunctions(JS_ICUAllocFn allocFn, JS_ICUReallocFn reallocFn, JS_ICUFreeFn freeFn)
+{
+#if ENABLE_INTL_API
+    UErrorCode status = U_ZERO_ERROR;
+    u_setMemoryFunctions(/* context = */ NULL, allocFn, reallocFn, freeFn, &status);
+    return U_SUCCESS(status);
+#else
+    return true;
+#endif
 }
 
 JS_PUBLIC_API(void)
@@ -1817,6 +1832,9 @@ static const JSStdName standard_class_atoms[] = {
 #if ENABLE_INTL_API
     {js_InitIntlClass,                  EAGER_ATOM_AND_CLASP(Intl)},
 #endif
+#ifdef ENABLE_BINARYDATA
+    {js_InitBinaryDataClasses,          EAGER_ATOM_AND_CLASP(Type)},
+#endif
     {NULL,                              0, NULL}
 };
 
@@ -1873,6 +1891,17 @@ static const JSStdName standard_class_names[] = {
                                 TYPED_ARRAY_CLASP(TYPE_UINT8_CLAMPED)},
     {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(DataView),     &DataViewObject::class_},
 
+    /* Binary Data */
+#ifdef ENABLE_BINARYDATA
+    {js_InitBinaryDataClasses,          EAGER_ATOM_AND_CLASP(Type)},
+    {js_InitBinaryDataClasses,          EAGER_ATOM_AND_CLASP(Data)},
+#define BINARYDATA_NUMERIC_NAMES(constant_, type_)\
+    {js_InitBinaryDataClasses,          EAGER_CLASS_ATOM(type_),      &NumericTypeClasses[constant_]},
+    BINARYDATA_FOR_EACH_NUMERIC_TYPES(BINARYDATA_NUMERIC_NAMES)
+#undef BINARYDATA_NUMERIC_NAMES
+    {js_InitBinaryDataClasses,          EAGER_CLASS_ATOM(ArrayType),  &js::ArrayType::class_},
+    {js_InitBinaryDataClasses,          EAGER_CLASS_ATOM(StructType), &js::StructType::class_},
+#endif
     {NULL,                      0, NULL}
 };
 
@@ -2362,17 +2391,16 @@ JS_CallObjectTracer(JSTracer *trc, JSObject **objp, const char *name)
 }
 
 JS_PUBLIC_API(void)
-JS_CallMaskedObjectTracer(JSTracer *trc, uintptr_t *objp, uintptr_t flagMask, const char *name)
+JS_CallTenuredObjectTracer(JSTracer *trc, JS::TenuredHeap<JSObject *> *objp, const char *name)
 {
-    uintptr_t flags = *objp & flagMask;
-    JSObject *obj = reinterpret_cast<JSObject *>(*objp & ~flagMask);
+    JSObject *obj = objp->getPtr();
     if (!obj)
         return;
 
     JS_SET_TRACING_LOCATION(trc, (void*)objp);
     MarkObjectUnbarriered(trc, &obj, name);
 
-    *objp = uintptr_t(obj) | flags;
+    objp->setPtr(obj);
 }
 
 JS_PUBLIC_API(void)
@@ -2385,16 +2413,6 @@ JS_PUBLIC_API(void)
 JS_CallScriptTracer(JSTracer *trc, JSScript **scriptp, const char *name)
 {
     MarkScriptUnbarriered(trc, scriptp, name);
-}
-
-JS_PUBLIC_API(void)
-JS_CallGenericTracer(JSTracer *trc, void *gcthingArg, const char *name)
-{
-    void *gcthing = gcthingArg;
-    JSGCTraceKind kind = gc::GetGCThingTraceKind(gcthing);
-    JS_SET_TRACING_NAME(trc, name);
-    MarkKind(trc, &gcthing, kind);
-    JS_ASSERT(gcthing == gcthingArg);
 }
 
 JS_PUBLIC_API(void)
@@ -4290,21 +4308,17 @@ JS_GetUCProperty(JSContext *cx, JSObject *objArg, const jschar *name, size_t nam
 }
 
 JS_PUBLIC_API(JSBool)
-JS_SetPropertyById(JSContext *cx, JSObject *objArg, jsid idArg, jsval *vp)
+JS_SetPropertyById(JSContext *cx, JSObject *objArg, jsid idArg, HandleValue v)
 {
     RootedObject obj(cx, objArg);
     RootedId id(cx, idArg);
+    RootedValue value(cx, v);
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj, id);
     JSAutoResolveFlags rf(cx, JSRESOLVE_ASSIGNING);
 
-    RootedValue value(cx, *vp);
-    if (!JSObject::setGeneric(cx, obj, obj, id, &value, false))
-        return false;
-
-    *vp = value;
-    return true;
+    return JSObject::setGeneric(cx, obj, obj, id, &value, false);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -4325,19 +4339,20 @@ JS_SetElement(JSContext *cx, JSObject *objArg, uint32_t index, jsval *vp)
 }
 
 JS_PUBLIC_API(JSBool)
-JS_SetProperty(JSContext *cx, JSObject *objArg, const char *name, jsval *vp)
+JS_SetProperty(JSContext *cx, JSObject *objArg, const char *name, HandleValue v)
 {
     RootedObject obj(cx, objArg);
     JSAtom *atom = Atomize(cx, name, strlen(name));
-    return atom && JS_SetPropertyById(cx, obj, AtomToId(atom), vp);
+    return atom && JS_SetPropertyById(cx, obj, AtomToId(atom), v);
 }
 
 JS_PUBLIC_API(JSBool)
-JS_SetUCProperty(JSContext *cx, JSObject *objArg, const jschar *name, size_t namelen, jsval *vp)
+JS_SetUCProperty(JSContext *cx, JSObject *objArg, const jschar *name, size_t namelen,
+                 HandleValue v)
 {
     RootedObject obj(cx, objArg);
     JSAtom *atom = AtomizeChars<CanGC>(cx, name, AUTO_NAMELEN(name, namelen));
-    return atom && JS_SetPropertyById(cx, obj, AtomToId(atom), vp);
+    return atom && JS_SetPropertyById(cx, obj, AtomToId(atom), v);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -4579,8 +4594,8 @@ static Class prop_iter_class = {
     prop_iter_finalize,
     NULL,           /* checkAccess */
     NULL,           /* call        */
-    NULL,           /* construct   */
     NULL,           /* hasInstance */
+    NULL,           /* construct   */
     prop_iter_trace
 };
 
@@ -5246,7 +5261,7 @@ JS::Compile(JSContext *cx, HandleObject obj, CompileOptions options,
 {
     jschar *chars;
     if (options.utf8)
-        chars = InflateUTF8String(cx, bytes, &length);
+        chars = UTF8CharsToNewTwoByteCharsZ(cx, UTF8Chars(bytes, length), &length).get();
     else
         chars = InflateString(cx, bytes, &length);
     if (!chars)
@@ -5339,7 +5354,7 @@ JS_BufferIsCompilableUnit(JSContext *cx, JSObject *objArg, const char *utf8, siz
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj);
-    jschar *chars = InflateUTF8String(cx, utf8, &length);
+    jschar *chars = JS::UTF8CharsToNewTwoByteCharsZ(cx, JS::UTF8Chars(utf8, length), &length).get();
     if (!chars)
         return JS_TRUE;
 
@@ -5429,7 +5444,7 @@ JS::CompileFunction(JSContext *cx, HandleObject obj, CompileOptions options,
 {
     jschar *chars;
     if (options.utf8)
-        chars = InflateUTF8String(cx, bytes, &length);
+        chars = UTF8CharsToNewTwoByteCharsZ(cx, UTF8Chars(bytes, length), &length).get();
     else
         chars = InflateString(cx, bytes, &length);
     if (!chars)
@@ -5610,7 +5625,7 @@ JS::Evaluate(JSContext *cx, HandleObject obj, CompileOptions options,
 {
     jschar *chars;
     if (options.utf8)
-        chars = InflateUTF8String(cx, bytes, &length);
+        chars = UTF8CharsToNewTwoByteCharsZ(cx, UTF8Chars(bytes, length), &length).get();
     else
         chars = InflateString(cx, bytes, &length);
     if (!chars)
@@ -5800,18 +5815,15 @@ JS_CallFunctionValue(JSContext *cx, JSObject *objArg, jsval fval, unsigned argc,
 }
 
 JS_PUBLIC_API(bool)
-JS::Call(JSContext *cx, jsval thisv, jsval fval, unsigned argc, jsval *argv, jsval *rval)
+JS::Call(JSContext *cx, jsval thisv, jsval fval, unsigned argc, jsval *argv,
+         MutableHandleValue rval)
 {
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, thisv, fval, JSValueArray(argv, argc));
     AutoLastFrameCheck lfc(cx);
 
-    RootedValue rv(cx);
-    if (!Invoke(cx, thisv, fval, argc, argv, &rv))
-        return false;
-    *rval = rv;
-    return true;
+    return Invoke(cx, thisv, fval, argc, argv, rval);
 }
 
 JS_PUBLIC_API(JSObject *)

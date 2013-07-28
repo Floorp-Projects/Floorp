@@ -59,11 +59,6 @@ AppsService.prototype = {
     return DOMApplicationRegistry.getManifestURLByLocalId(aLocalId);
   },
 
-  getAppFromObserverMessage: function getAppFromObserverMessage(aMessage) {
-    debug("getAppFromObserverMessage( " + aMessage + " )");
-    return DOMApplicationRegistry.getAppFromObserverMessage(aMessage);
-  },
-
   getCoreAppsBasePath: function getCoreAppsBasePath() {
     debug("getCoreAppsBasePath()");
     return DOMApplicationRegistry.getCoreAppsBasePath();
@@ -110,9 +105,9 @@ AppsService.prototype = {
           return Services.io.newURI(to, null, null);
         }
       }
-    } else {
-      return null;
     }
+    // No matching redirect.
+    return null;
   },
 
   classID : APPS_SERVICE_CID,

@@ -4,36 +4,43 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "ion/Ion.h"
+
 #include "mozilla/MemoryReporting.h"
 
-#include "ion/BaselineJIT.h"
+#include "jscompartment.h"
+#include "jsworkers.h"
+#if JS_TRACE_LOGGING
+#include "TraceLogging.h"
+#endif
+
+#include "gc/Marking.h"
+#include "ion/AliasAnalysis.h"
+#include "ion/AsmJS.h"
+#include "ion/AsmJSModule.h"
+#include "ion/BacktrackingAllocator.h"
 #include "ion/BaselineCompiler.h"
 #include "ion/BaselineInspector.h"
-#include "ion/Ion.h"
+#include "ion/BaselineJIT.h"
+#include "ion/CodeGenerator.h"
+#include "ion/CompilerRoot.h"
+#include "ion/EdgeCaseAnalysis.h"
+#include "ion/EffectiveAddressAnalysis.h"
+#include "ion/ExecutionModeInlines.h"
 #include "ion/IonAnalysis.h"
 #include "ion/IonBuilder.h"
+#include "ion/IonCompartment.h"
 #include "ion/IonLinker.h"
 #include "ion/IonSpewer.h"
-#include "ion/LIR.h"
-#include "ion/AliasAnalysis.h"
 #include "ion/LICM.h"
-#include "ion/ValueNumbering.h"
-#include "ion/EdgeCaseAnalysis.h"
-#include "ion/RangeAnalysis.h"
 #include "ion/LinearScan.h"
+#include "ion/LIR.h"
 #include "ion/ParallelSafetyAnalysis.h"
-#include "jscompartment.h"
-#include "vm/ThreadPool.h"
-#include "vm/ForkJoin.h"
-#include "ion/IonCompartment.h"
 #include "ion/PerfSpewer.h"
-#include "ion/CodeGenerator.h"
-#include "jsworkers.h"
-#include "ion/BacktrackingAllocator.h"
+#include "ion/RangeAnalysis.h"
 #include "ion/StupidAllocator.h"
 #include "ion/UnreachableCodeElimination.h"
-#include "ion/EffectiveAddressAnalysis.h"
-
+#include "ion/ValueNumbering.h"
 #if defined(JS_CPU_X86)
 # include "ion/x86/Lowering-x86.h"
 #elif defined(JS_CPU_X64)
@@ -41,21 +48,14 @@
 #elif defined(JS_CPU_ARM)
 # include "ion/arm/Lowering-arm.h"
 #endif
-#include "gc/Marking.h"
+#include "vm/ForkJoin.h"
+#include "vm/ThreadPool.h"
 
 #include "jscompartmentinlines.h"
 #include "jsgcinlines.h"
 #include "jsinferinlines.h"
 
 #include "vm/Stack-inl.h"
-#include "ion/CompilerRoot.h"
-#include "ion/ExecutionModeInlines.h"
-#include "ion/AsmJS.h"
-#include "ion/AsmJSModule.h"
-
-#if JS_TRACE_LOGGING
-#include "TraceLogging.h"
-#endif
 
 using namespace js;
 using namespace js::ion;
@@ -171,6 +171,7 @@ ion::InitializeIon()
 IonRuntime::IonRuntime()
   : execAlloc_(NULL),
     exceptionTail_(NULL),
+    bailoutTail_(NULL),
     enterJIT_(NULL),
     bailoutHandler_(NULL),
     argumentsRectifier_(NULL),
@@ -212,6 +213,10 @@ IonRuntime::initialize(JSContext *cx)
 
     exceptionTail_ = generateExceptionTailStub(cx);
     if (!exceptionTail_)
+        return false;
+
+    bailoutTail_ = generateBailoutTailStub(cx);
+    if (!bailoutTail_)
         return false;
 
     if (cx->runtime()->jitSupportsFloatingPoint) {
@@ -303,6 +308,8 @@ IonCompartment::IonCompartment(IonRuntime *rt)
   : rt(rt),
     stubCodes_(NULL),
     baselineCallReturnAddr_(NULL),
+    baselineGetPropReturnAddr_(NULL),
+    baselineSetPropReturnAddr_(NULL),
     stringConcatStub_(NULL),
     parallelStringConcatStub_(NULL)
 {
@@ -409,6 +416,11 @@ IonCompartment::sweep(FreeOp *fop)
     // If the sweep removed the ICCall_Fallback stub, NULL the baselineCallReturnAddr_ field.
     if (!stubCodes_->lookup(static_cast<uint32_t>(ICStub::Call_Fallback)))
         baselineCallReturnAddr_ = NULL;
+    // Similarly for the ICGetProp_Fallback stub.
+    if (!stubCodes_->lookup(static_cast<uint32_t>(ICStub::GetProp_Fallback)))
+        baselineGetPropReturnAddr_ = NULL;
+    if (!stubCodes_->lookup(static_cast<uint32_t>(ICStub::SetProp_Fallback)))
+        baselineSetPropReturnAddr_ = NULL;
 
     if (stringConcatStub_ && !IsIonCodeMarked(stringConcatStub_.unsafeGet()))
         stringConcatStub_ = NULL;

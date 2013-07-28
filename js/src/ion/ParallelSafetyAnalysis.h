@@ -7,8 +7,8 @@
 #ifndef ion_ParallelSafetyAnalysis_h
 #define ion_ParallelSafetyAnalysis_h
 
-#include "ion/MIR.h"
 #include "ion/CompileInfo.h"
+#include "ion/MIR.h"
 
 namespace js {
 
@@ -21,7 +21,7 @@ class AutoDestroyAllocator;
 
 // Determines whether a function is compatible for parallel execution.
 // Removes basic blocks containing unsafe MIR operations from the
-// graph and replaces them with MParBailout blocks.
+// graph and replaces them with MAbortPar blocks.
 class ParallelSafetyAnalysis
 {
     MIRGenerator *mir_;

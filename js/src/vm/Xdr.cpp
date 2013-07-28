@@ -8,8 +8,8 @@
 
 #include <string.h>
 
-#include "jsprf.h"
 #include "jsapi.h"
+#include "jsprf.h"
 #include "jsscript.h"
 
 #include "vm/Debugger.h"

@@ -490,7 +490,7 @@ public class BookmarksPage extends HomeFragment {
                         // Try to get the thumbnail, if cursor is valid.
                         String url = cursor.getString(cursor.getColumnIndexOrThrow(Thumbnails.URL));
                         final byte[] b = cursor.getBlob(cursor.getColumnIndexOrThrow(Thumbnails.DATA));
-                        final Bitmap bitmap = (b == null || b.length == 0 ? null : BitmapUtils.decodeByteArray(b));
+                        final Bitmap bitmap = (b == null ? null : BitmapUtils.decodeByteArray(b));
 
                         if (bitmap != null) {
                             thumbnails.put(url, new Thumbnail(bitmap, true));

@@ -35,18 +35,8 @@ MappableFile::mmap(const void *addr, size_t length, int prot, int flags,
   MOZ_ASSERT(!(flags & MAP_SHARED));
   flags |= MAP_PRIVATE;
 
-  MemoryRange mapped = MemoryRange::mmap(const_cast<void *>(addr), length,
-                                         prot, flags, fd, offset);
-  if (mapped == MAP_FAILED)
-    return mapped;
-
-  /* Fill the remainder of the last page with zeroes when the requested
-   * protection has write bits. */
-  if ((mapped != MAP_FAILED) && (prot & PROT_WRITE) &&
-      (PageAlignedSize(length) > length)) {
-    memset(mapped + length, 0, PageAlignedSize(length) - length);
-  }
-  return mapped;
+  return MemoryRange::mmap(const_cast<void *>(addr), length, prot, flags,
+                           fd, offset);
 }
 
 void
@@ -354,7 +344,11 @@ MappableSeekableZStream::Create(const char *name, Zip *zip,
   mozilla::ScopedDeletePtr<MappableSeekableZStream> mappable;
   mappable = new MappableSeekableZStream(zip);
 
-  if (pthread_mutex_init(&mappable->mutex, NULL))
+  pthread_mutexattr_t recursiveAttr;
+  pthread_mutexattr_init(&recursiveAttr);
+  pthread_mutexattr_settype(&recursiveAttr, PTHREAD_MUTEX_RECURSIVE);
+
+  if (pthread_mutex_init(&mappable->mutex, &recursiveAttr))
     return NULL;
 
   if (!mappable->zStream.Init(stream->GetBuffer(), stream->GetSize()))
@@ -453,9 +447,10 @@ MappableSeekableZStream::ensure(const void *addr)
 
   /* In the typical case, we just need to decompress the chunk entirely. But
    * when the current mapping ends in the middle of the chunk, we want to
-   * stop there. However, if another mapping needs the last part of the
-   * chunk, we still need to continue. As mappings are ordered by offset
-   * and length, we don't need to scan the entire list of mappings.
+   * stop at the end of the corresponding page.
+   * However, if another mapping needs the last part of the chunk, we still
+   * need to continue. As mappings are ordered by offset and length, we don't
+   * need to scan the entire list of mappings.
    * It is safe to run through lazyMaps here because the linker is never
    * going to call mmap (which adds lazyMaps) while this function is
    * called. */
@@ -473,6 +468,21 @@ MappableSeekableZStream::ensure(const void *addr)
     length = it->endOffset() - chunkStart;
   }
 
+  length = PageAlignedSize(length);
+
+  /* The following lock can be re-acquired by the thread holding it.
+   * If this happens, it means the following code is interrupted somehow by
+   * some signal, and ends up retriggering a chunk decompression for the
+   * same MappableSeekableZStream.
+   * If the chunk to decompress is different the second time, then everything
+   * is safe as the only common data touched below is chunkAvailNum, and it is
+   * atomically updated (leaving out any chance of an interruption while it is
+   * updated affecting the result). If the chunk to decompress is the same, the
+   * worst thing that can happen is chunkAvailNum being incremented one too
+   * many times, which doesn't affect functionality. The chances of it
+   * happening being pretty slim, and the effect being harmless, we can just
+   * ignore the issue. Other than that, we'd just be wasting time decompressing
+   * the same chunk twice. */
   AutoLock lock(&mutex);
 
   /* The very first page is mapped and accessed separately of the rest, and
@@ -529,7 +539,7 @@ MappableSeekableZStream::stats(const char *when, const char *name) const
 {
   size_t nEntries = zStream.GetChunksNum();
   DEBUG_LOG("%s: %s; %" PRIdSize "/%" PRIdSize " chunks decompressed",
-            name, when, chunkAvailNum, nEntries);
+            name, when, static_cast<size_t>(chunkAvailNum), nEntries);
 
   size_t len = 64;
   mozilla::ScopedDeleteArray<char> map;

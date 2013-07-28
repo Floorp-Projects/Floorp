@@ -83,7 +83,7 @@ nsXULPrototypeCache::~nsXULPrototypeCache()
 }
 
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsXULPrototypeCache, nsIObserver)
+NS_IMPL_ISUPPORTS1(nsXULPrototypeCache, nsIObserver)
 
 /* static */ nsXULPrototypeCache*
 nsXULPrototypeCache::GetInstance()
@@ -197,11 +197,7 @@ nsXULPrototypeCache::PutStyleSheet(nsCSSStyleSheet* aStyleSheet)
 JSScript*
 nsXULPrototypeCache::GetScript(nsIURI* aURI)
 {
-    JSScript* script;
-    if (!mScriptTable.Get(aURI, &script)) {
-        return nullptr;
-    }
-    return script;
+    return mScriptTable.Get(aURI);
 }
 
 nsresult
@@ -209,8 +205,7 @@ nsXULPrototypeCache::PutScript(nsIURI* aURI,
                                JS::Handle<JSScript*> aScriptObject)
 {
 #ifdef DEBUG
-    JSScript* existingScript;
-    if (mScriptTable.Get(aURI, &existingScript)) {
+    if (JSScript* existingScript = mScriptTable.Get(aURI)) {
         nsAutoCString scriptName;
         aURI->GetSpec(scriptName);
         nsAutoCString message("Loaded script ");
@@ -656,10 +651,10 @@ nsXULPrototypeCache::MarkInCCGeneration(uint32_t aGeneration)
 }
 
 static PLDHashOperator
-MarkScriptsInGC(nsIURI* aKey, JSScript*& aScript, void* aClosure)
+MarkScriptsInGC(nsIURI* aKey, JS::Heap<JSScript*>& aScript, void* aClosure)
 {
     JSTracer* trc = static_cast<JSTracer*>(aClosure);
-    JS_CallScriptTracer(trc, &aScript, "nsXULPrototypeCache script");
+    JS_CallHeapScriptTracer(trc, &aScript, "nsXULPrototypeCache script");
     return PL_DHASH_NEXT;
 }
 

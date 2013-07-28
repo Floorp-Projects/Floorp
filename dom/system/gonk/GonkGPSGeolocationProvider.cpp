@@ -44,10 +44,10 @@ static const int kDefaultPeriod = 1000; // ms
 // While most methods of GonkGPSGeolocationProvider should only be
 // called from main thread, we deliberately put the Init and ShutdownGPS
 // methods off main thread to avoid blocking.
-NS_IMPL_THREADSAFE_ISUPPORTS3(GonkGPSGeolocationProvider,
-                              nsIGeolocationProvider,
-                              nsIRILDataCallback,
-                              nsISettingsServiceCallback)
+NS_IMPL_ISUPPORTS3(GonkGPSGeolocationProvider,
+                   nsIGeolocationProvider,
+                   nsIRILDataCallback,
+                   nsISettingsServiceCallback)
 
 /* static */ GonkGPSGeolocationProvider* GonkGPSGeolocationProvider::sSingleton = nullptr;
 GpsCallbacks GonkGPSGeolocationProvider::mCallbacks = {
@@ -481,8 +481,22 @@ GonkGPSGeolocationProvider::SetReferenceLocation()
       nsCOMPtr<nsIDOMMozMobileCellInfo> cell;
       voice->GetCell(getter_AddRefs(cell));
       if (cell) {
-        cell->GetGsmLocationAreaCode(&location.u.cellID.lac);
-        cell->GetGsmCellId(&location.u.cellID.cid);
+        int32_t lac;
+        int64_t cid;
+
+        cell->GetGsmLocationAreaCode(&lac);
+        // The valid range of LAC is 0x0 to 0xffff which is defined in
+        // hardware/ril/include/telephony/ril.h
+        if (lac >= 0x0 && lac <= 0xffff) {
+          location.u.cellID.lac = lac;
+        }
+
+        cell->GetGsmCellId(&cid);
+        // The valid range of cell id is 0x0 to 0xffffffff which is defined in
+        // hardware/ril/include/telephony/ril.h
+        if (cid >= 0x0 && cid <= 0xffffffff) {
+          location.u.cellID.cid = cid;
+        }
       }
     }
     if (mAGpsRilInterface) {

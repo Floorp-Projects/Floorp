@@ -1,0 +1,64 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=760851
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 760851</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 760851 **/
+  SimpleTest.waitForExplicitFinish();
+
+  // We need to skip all the interface constants.
+  var keysToSkip = ["TYPE_NAVIGATE", "TYPE_RELOAD", "TYPE_RESERVED",
+                    "TYPE_BACK_FORWARD"];
+
+  // Testing window.performance is sufficient, because checkAttributesMatch is
+  // recursive, so window.performance.navigation and window.performance.timing
+  // get tested as well.
+  var toTest = [window.performance];
+
+  function checkAttributesMatch(obj, jsonObj) {
+    if (typeof(obj) !== "object") {
+      throw "Expected obj to be of type \"object\". Test failed.";
+    }
+    if (typeof(jsonObj) !== "object") {
+      is(false, "Expected object " + jsonObj + " to be of type object, but gotten otherwise");
+    }
+    for (key in obj) {
+      if (typeof(obj[key]) === "function" || keysToSkip.indexOf(key) > -1)
+        continue;
+      if (typeof(obj[key]) === "object") {
+        checkAttributesMatch(obj[key], jsonObj[key]);
+        continue;
+      }
+      is(jsonObj[key], obj[key], "values for " + obj + " key " + key + " should match");
+    }
+  }
+
+  function runTest() {
+    toTest.forEach(function(testObj) {
+      var jsonCopy = JSON.parse(JSON.stringify(testObj));
+      checkAttributesMatch(testObj, jsonCopy);
+    });
+    SimpleTest.finish();
+  }
+
+  </script>
+</head>
+<body onload="runTest();">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=760851">Mozilla Bug 760851</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <p></p>
+  <p></p>
+  <p></p>
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

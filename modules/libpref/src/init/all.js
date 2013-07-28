@@ -319,7 +319,9 @@ pref("gfx.content.azure.enabled", true);
 #else
 pref("gfx.content.azure.enabled", false);
 #ifdef XP_MACOSX
+pref("gfx.content.azure.backends", "cg");
 pref("gfx.canvas.azure.backends", "cg");
+pref("gfx.content.azure.enabled", true);
 // Accelerated cg canvas where available (10.7+)
 pref("gfx.canvas.azure.accelerated", false);
 #else
@@ -451,6 +453,9 @@ pref("devtools.debugger.remote-enabled", false);
 pref("devtools.debugger.remote-port", 6000);
 // Force debugger server binding on the loopback interface
 pref("devtools.debugger.force-local", true);
+
+// Temporary setting to enable webapps actors
+pref("devtools.debugger.enable-content-actors", false);
 
 // view source
 pref("view_source.syntax_highlight", true);
@@ -1772,6 +1777,9 @@ pref("layout.css.masking.enabled", true);
 // Is support for the the @supports rule enabled?
 pref("layout.css.supports-rule.enabled", true);
 
+// Is support for CSS Filters enabled?
+pref("layout.css.filters.enabled", false);
+
 // Is support for CSS Flexbox enabled?
 pref("layout.css.flexbox.enabled", true);
 
@@ -1848,6 +1856,7 @@ pref("gestures.enable_single_finger_input", true);
 pref("editor.resizing.preserve_ratio",       true);
 pref("editor.positioning.offset",            0);
 
+pref("dom.use_watchdog", true);
 pref("dom.max_chrome_script_run_time", 20);
 pref("dom.max_script_run_time", 10);
 
@@ -4052,10 +4061,6 @@ pref("layers.acceleration.draw-fps", false);
 
 pref("layers.draw-borders", false);
 pref("layers.frame-counter", false);
-
-// Max number of layers per container. See Overwrite in mobile prefs.
-pref("layers.max-active", -1);
-
 
 #ifdef XP_MACOSX
 pref("layers.offmainthreadcomposition.enabled", true);

@@ -7,9 +7,9 @@
 #ifndef frontend_ParseMaps_inl_h
 #define frontend_ParseMaps_inl_h
 
-#include "jscntxt.h"
-
 #include "frontend/ParseMaps.h"
+
+#include "jscntxtinlines.h"
 
 namespace js {
 namespace frontend {

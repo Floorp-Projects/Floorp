@@ -1019,7 +1019,7 @@ ProcessUpdates(nsIFile *greDir, nsIFile *appDir, nsIFile *updRootDir,
 
 
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsUpdateProcessor, nsIUpdateProcessor)
+NS_IMPL_ISUPPORTS1(nsUpdateProcessor, nsIUpdateProcessor)
 
 nsUpdateProcessor::nsUpdateProcessor()
   : mUpdaterPID(0)

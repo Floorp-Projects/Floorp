@@ -294,8 +294,6 @@ BookmarksView.prototype = Util.extend(Object.create(View.prototype), {
           let event = document.createEvent("Events");
           // we need the restore button to show (the tile node will go away though)
           event.actions = ["restore"];
-          event.noun = tileGroup.contextNoun;
-          event.qty = selectedTiles.length;
           event.initEvent("MozContextActionsChange", true, false);
           tileGroup.dispatchEvent(event);
         }, 0);
@@ -367,26 +365,6 @@ var BookmarksStartView = {
 
   show: function show() {
     this._grid.arrangeItems();
-  }
-};
-
-var BookmarksPanelView = {
-  _view: null,
-
-  get _grid() { return document.getElementById("bookmarks-list"); },
-  get visible() { return PanelUI.isPaneVisible("bookmarks-container"); },
-
-  init: function init() {
-    this._view = new BookmarksView(this._grid, null, Bookmarks.metroRoot);
-  },
-
-  show: function show() {
-    this._view.getBookmarks(true);
-    this._grid.arrangeItems();
-  },
-
-  uninit: function uninit() {
-    this._view.destruct();
   }
 };
 

@@ -7,11 +7,12 @@
 #ifndef jsscriptinlines_h
 #define jsscriptinlines_h
 
+#include "jsscript.h"
+
 #include "jsautooplen.h"
 #include "jscntxt.h"
 #include "jsfun.h"
 #include "jsopcode.h"
-#include "jsscript.h"
 
 #include "ion/AsmJS.h"
 #include "vm/GlobalObject.h"
@@ -44,18 +45,6 @@ ScriptCounts::destroy(FreeOp *fop)
 {
     fop->free_(pcCountsVector);
     fop->delete_(ionCounts);
-}
-
-inline void
-MarkScriptBytecode(JSRuntime *rt, const jsbytecode *bytecode)
-{
-    /*
-     * As an invariant, a ScriptBytecodeEntry should not be 'marked' outside of
-     * a GC. Since SweepScriptBytecodes is only called during a full gc,
-     * to preserve this invariant, only mark during a full gc.
-     */
-    if (rt->gcIsFull)
-        SharedScriptData::fromBytecode(bytecode)->marked = true;
 }
 
 void

@@ -39,8 +39,8 @@ fuzzy(1,9674) random-if(!cocoaWidget) == gradient-html-06a.html gradient-html-06
 fuzzy(1,9674) random-if(!cocoaWidget) == gradient-html-06b.html gradient-html-06c.html
 == gradient-html-06c.html gradient-html-06d.html
 == gradient-html-06d.html gradient-html-06e.html
-random-if(!cocoaWidget) == gradient-html-07a.html gradient-html-07b.html
-fuzzy-if(Android,9,23112) == gradient-html-07b.html gradient-html-07c.html
+random-if(!cocoaWidget) fuzzy-if(azureQuartz,1,11367) == gradient-html-07a.html gradient-html-07b.html
+fuzzy-if(Android,9,23112) fuzzy-if(azureQuartz,1,11367) == gradient-html-07b.html gradient-html-07c.html
 == pattern-html-01.html pattern-html-01-ref.svg
 == pattern-html-02.html pattern-html-02-ref.svg
 == referenced-from-binding-01.html referenced-from-binding-01-ref.html

@@ -439,7 +439,7 @@ class nsXPConnect : public nsIXPConnect,
 {
 public:
     // all the interface method declarations...
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSIXPCONNECT
     NS_DECL_NSITHREADOBSERVER
     NS_DECL_NSIJSRUNTIMESERVICE
@@ -595,6 +595,17 @@ public:
 // So, xpconnect can only be used on one JSRuntime within the process.
 
 class XPCJSContextStack;
+class WatchdogManager;
+
+enum WatchdogTimestampCategory
+{
+    TimestampRuntimeStateChange = 0,
+    TimestampWatchdogWakeup,
+    TimestampWatchdogHibernateStart,
+    TimestampWatchdogHibernateStop,
+    TimestampCount
+};
+
 class XPCJSRuntime : public mozilla::CycleCollectedJSRuntime
 {
 public:
@@ -816,18 +827,14 @@ public:
 
     JSObject* GetJunkScope();
     void DeleteJunkScope();
+
+    PRTime GetWatchdogTimestamp(WatchdogTimestampCategory aCategory);
+
 private:
     XPCJSRuntime(); // no implementation
     XPCJSRuntime(nsXPConnect* aXPConnect);
 
-    // The caller must be holding the GC lock
-    void RescheduleWatchdog(XPCContext* ccx);
-
-    static void WatchdogMain(void *arg);
-
     void ReleaseIncrementally(nsTArray<nsISupports *> &array);
-    bool IsRuntimeActive();
-    PRTime TimeSinceLastRuntimeStateChange();
 
     static const char* mStrings[IDX_TOTAL_COUNT];
     jsid mStrIDs[IDX_TOTAL_COUNT];
@@ -855,13 +862,8 @@ private:
     XPCRootSetElem *mVariantRoots;
     XPCRootSetElem *mWrappedJSRoots;
     XPCRootSetElem *mObjectHolderRoots;
-    PRLock *mWatchdogLock;
-    PRCondVar *mWatchdogWakeup;
-    PRThread *mWatchdogThread;
     nsTArray<xpcGCCallback> extraGCCallbacks;
-    bool mWatchdogHibernating;
-    enum { RUNTIME_ACTIVE, RUNTIME_INACTIVE } mRuntimeState;
-    PRTime mTimeAtLastRuntimeStateChange;
+    nsRefPtr<WatchdogManager> mWatchdogManager;
     JS::GCSliceCallback mPrevGCSliceCallback;
     JSObject* mJunkScope;
 
@@ -886,6 +888,7 @@ private:
 
     StringWrapperEntry mScratchStrings[XPCCCX_STRING_CACHE_SIZE];
 
+    friend class Watchdog;
     friend class AutoLockWatchdog;
     friend class XPCIncrementalReleaseRunnable;
 };
@@ -957,6 +960,10 @@ public:
     void AddScope(PRCList *scope) { PR_INSERT_AFTER(scope, &mScopes); }
     void RemoveScope(PRCList *scope) { PR_REMOVE_LINK(scope); }
 
+    void MarkErrorUnreported() { mErrorUnreported = true; }
+    void ClearUnreportedError() { mErrorUnreported = false; }
+    bool WasErrorReported() { return !mErrorUnreported; }
+
     ~XPCContext();
 
 private:
@@ -972,6 +979,7 @@ private:
     nsresult mPendingResult;
     nsIException* mException;
     LangType mCallingLangType;
+    bool mErrorUnreported;
 
     // A linked list of scopes to notify when we are destroyed.
     PRCList mScopes;
@@ -1385,6 +1393,8 @@ public:
                         js::SystemAllocPolicy> DOMExpandoSet;
 
     bool RegisterDOMExpandoObject(JSObject *expando) {
+        // Expandos are proxy objects, and proxies are always tenured.
+        JS::AssertGCThingMustBeTenured(expando);
         if (!mDOMExpandoSet) {
             mDOMExpandoSet = new DOMExpandoSet();
             mDOMExpandoSet->init(8);
@@ -2226,7 +2236,7 @@ void *xpc_GetJSPrivate(JSObject *obj);
 class XPCWrappedNative : public nsIXPConnectWrappedNative
 {
 public:
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSIXPCONNECTJSOBJECTHOLDER
     NS_DECL_NSIXPCONNECTWRAPPEDNATIVE
     // No need to unlink the JS objects, if the XPCWrappedNative will be cycle
@@ -2259,7 +2269,7 @@ public:
     nsIPrincipal* GetObjectPrincipal() const;
 
     JSBool
-    IsValid() const {return nullptr != mFlatJSObject;}
+    IsValid() const { return mFlatJSObject.hasFlag(FLAT_JS_OBJECT_VALID); }
 
 #define XPC_SCOPE_WORD(s)   (intptr_t(s))
 #define XPC_SCOPE_MASK      (intptr_t(0x3))
@@ -2309,8 +2319,7 @@ public:
      */
     JSObject*
     GetFlatJSObject() const
-        {if (mFlatJSObject != INVALID_OBJECT)
-             xpc_UnmarkGrayObject(mFlatJSObject);
+        {xpc_UnmarkGrayObject(mFlatJSObject);
          return mFlatJSObject;}
 
     /**
@@ -2443,8 +2452,7 @@ public:
         else
             GetScope()->TraceSelf(trc);
         TraceWrapper(trc);
-        if (mFlatJSObject && mFlatJSObject != INVALID_OBJECT &&
-            JS_IsGlobalObject(mFlatJSObject))
+        if (mFlatJSObject && JS_IsGlobalObject(mFlatJSObject))
         {
             TraceXPCGlobal(trc, mFlatJSObject);
         }
@@ -2460,9 +2468,9 @@ public:
         // This is the only time we should be tracing our mFlatJSObject,
         // normally somebody else is doing that. Be careful not to trace the
         // bogus INVALID_OBJECT value we can have during init, though.
-        if (mFlatJSObject && mFlatJSObject != INVALID_OBJECT) {
-            JS_CallObjectTracer(trc, &mFlatJSObject,
-                                "XPCWrappedNative::mFlatJSObject");
+        if (mFlatJSObject) {
+            JS_CallTenuredObjectTracer(trc, &mFlatJSObject,
+                                       "XPCWrappedNative::mFlatJSObject");
         }
     }
 
@@ -2490,13 +2498,12 @@ public:
 
     JSBool HasExternalReference() const {return mRefCnt > 1;}
 
-    JSBool NeedsSOW() { return !!(mWrapperWord & NEEDS_SOW); }
-    void SetNeedsSOW() { mWrapperWord |= NEEDS_SOW; }
-    JSBool NeedsCOW() { return !!(mWrapperWord & NEEDS_COW); }
-    void SetNeedsCOW() { mWrapperWord |= NEEDS_COW; }
+    JSBool NeedsSOW() { return mWrapper.hasFlag(WRAPPER_NEEDS_SOW); }
+    void SetNeedsSOW() { mWrapper.setFlags(WRAPPER_NEEDS_SOW); }
+    JSBool NeedsCOW() { return mWrapper.hasFlag(WRAPPER_NEEDS_COW); }
+    void SetNeedsCOW() { mWrapper.setFlags(WRAPPER_NEEDS_COW); }
 
-    JSObject* GetWrapperPreserveColor() const
-        {return (JSObject*)(mWrapperWord & (size_t)~(size_t)FLAG_MASK);}
+    JSObject* GetWrapperPreserveColor() const { return mWrapper.getPtr(); }
 
     JSObject* GetWrapper()
     {
@@ -2511,20 +2518,18 @@ public:
     void SetWrapper(JSObject *obj)
     {
         JS::IncrementalObjectBarrier(GetWrapperPreserveColor());
-        intptr_t newval = intptr_t(obj) | (mWrapperWord & FLAG_MASK);
-        mWrapperWord = newval;
+        mWrapper.setPtr(obj);
     }
 
     void TraceWrapper(JSTracer *trc)
     {
-        JS_CallMaskedObjectTracer(trc, reinterpret_cast<uintptr_t *>(&mWrapperWord),
-                                  (uintptr_t)FLAG_MASK, "XPCWrappedNative::mWrapper");
+        JS_CallTenuredObjectTracer(trc, &mWrapper, "XPCWrappedNative::mWrapper");
     }
 
     // Returns the relevant same-compartment security if applicable, or
     // mFlatJSObject otherwise.
     //
-    // This takes care of checking mWrapperWord to see if we already have such
+    // This takes care of checking mWrapper to see if we already have such
     // a wrapper.
     JSObject *GetSameCompartmentSecurityWrapper(JSContext *cx);
 
@@ -2550,9 +2555,12 @@ protected:
 
 private:
     enum {
-        NEEDS_SOW = JS_BIT(0),
-        NEEDS_COW = JS_BIT(1),
-        FLAG_MASK = JS_BITMASK(3)
+        // Flags bits for mWrapper:
+        WRAPPER_NEEDS_SOW = JS_BIT(0),
+        WRAPPER_NEEDS_COW = JS_BIT(1),
+
+        // Flags bits for mFlatJSObject:
+        FLAT_JS_OBJECT_VALID = JS_BIT(0)
     };
 
 private:
@@ -2581,10 +2589,10 @@ private:
         XPCWrappedNativeProto*   mMaybeProto;
     };
     XPCNativeSet*                mSet;
-    JSObject*                    mFlatJSObject;
+    JS::TenuredHeap<JSObject*>   mFlatJSObject;
     XPCNativeScriptableInfo*     mScriptableInfo;
     XPCWrappedNativeTearOffChunk mFirstChunk;
-    intptr_t                     mWrapperWord;
+    JS::TenuredHeap<JSObject*>   mWrapper;
 };
 
 /***************************************************************************
@@ -2618,7 +2626,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIXPCWrappedJSClass,
 class nsXPCWrappedJSClass : public nsIXPCWrappedJSClass
 {
     // all the interface method declarations...
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
     NS_IMETHOD DebugDump(int16_t depth);
 public:
 
@@ -2715,7 +2723,7 @@ class nsXPCWrappedJS : protected nsAutoXPTCStub,
                        public XPCRootSetElem
 {
 public:
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSIXPCONNECTJSOBJECTHOLDER
     NS_DECL_NSIXPCONNECTWRAPPEDJS
     NS_DECL_NSISUPPORTSWEAKREFERENCE
@@ -2735,7 +2743,7 @@ public:
     */
 
     static nsresult
-    GetNewOrUsed(JSObject* aJSObj,
+    GetNewOrUsed(JS::HandleObject aJSObj,
                  REFNSIID aIID,
                  nsISupports* aOuter,
                  nsXPCWrappedJS** wrapper);
@@ -2812,7 +2820,7 @@ class XPCJSObjectHolder : public nsIXPConnectJSObjectHolder,
 {
 public:
     // all the interface method declarations...
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSIXPCONNECTJSOBJECTHOLDER
 
     // non-interface implementation
@@ -2829,7 +2837,7 @@ private:
     XPCJSObjectHolder(JSObject* obj);
     XPCJSObjectHolder(); // not implemented
 
-    JSObject* mJSObj;
+    JS::Heap<JSObject*> mJSObj;
 };
 
 /***************************************************************************
@@ -2864,7 +2872,6 @@ public:
     /**
      * Convert a native object into a jsval.
      *
-     * @param ccx the context for the whole procedure
      * @param d [out] the resulting jsval
      * @param s the native object we're working with
      * @param type the type of object that s is
@@ -2886,7 +2893,6 @@ public:
     /**
      * Convert a native nsISupports into a JSObject.
      *
-     * @param ccx the context for the whole procedure
      * @param dest [out] the resulting JSObject
      * @param src the native object we're working with
      * @param iid the interface of src that we want (may be null)
@@ -2931,7 +2937,7 @@ public:
                                  const nsXPTType& type, const nsID* iid,
                                  uint32_t count, nsresult* pErr);
 
-    static JSBool JSArray2Native(void** d, jsval s,
+    static JSBool JSArray2Native(void** d, JS::HandleValue s,
                                  uint32_t count, const nsXPTType& type,
                                  const nsID* iid, nsresult* pErr);
 
@@ -2946,11 +2952,11 @@ public:
                                           uint32_t count,
                                           nsresult* pErr);
 
-    static JSBool JSStringWithSize2Native(void* d, jsval s,
+    static JSBool JSStringWithSize2Native(void* d, JS::HandleValue s,
                                           uint32_t count, const nsXPTType& type,
                                           nsresult* pErr);
 
-    static nsresult JSValToXPCException(jsval s,
+    static nsresult JSValToXPCException(JS::MutableHandleValue s,
                                         const char* ifaceName,
                                         const char* methodName,
                                         nsIException** exception);
@@ -3028,7 +3034,7 @@ class nsXPCException :
 public:
     NS_DEFINE_STATIC_CID_ACCESSOR(NS_XPCEXCEPTION_CID)
 
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSIEXCEPTION
     NS_DECL_NSIXPCEXCEPTION
 
@@ -3087,7 +3093,7 @@ class nsJSID : public nsIJSID
 public:
     NS_DEFINE_STATIC_CID_ACCESSOR(NS_JS_ID_CID)
 
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSIJSID
 
     bool InitWithName(const nsID& id, const char *nameString);
@@ -3122,7 +3128,7 @@ class nsJSIID : public nsIJSIID,
                 public nsISecurityCheckedComponent
 {
 public:
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
 
     // we manually delagate these to nsJSID
     NS_DECL_NSIJSID
@@ -3147,7 +3153,7 @@ private:
 class nsJSCID : public nsIJSCID, public nsIXPCScriptable
 {
 public:
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
 
     // we manually delagate these to nsJSID
     NS_DECL_NSIJSID
@@ -3245,7 +3251,7 @@ class nsXPCComponents : public nsIXPCComponents,
                         public nsISecurityCheckedComponent
 {
 public:
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSIXPCCOMPONENTS
     NS_DECL_NSIXPCSCRIPTABLE
     NS_DECL_NSICLASSINFO
@@ -3321,7 +3327,7 @@ public:
 
   // TODO - do something reasonable on getting null from these babies.
 
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSICONSOLEMESSAGE
     NS_DECL_NSISCRIPTERROR
 
@@ -3640,7 +3646,7 @@ protected:
 
 protected:
     nsDiscriminatedUnion mData;
-    jsval                mJSVal;
+    JS::Heap<JS::Value>  mJSVal;
     bool                 mReturnRawObject : 1;
     uint32_t             mCCGeneration : 31;
 };

@@ -66,7 +66,7 @@ class FaviconsLoader {
             final String url = c.getString(c.getColumnIndexOrThrow(URLColumns.URL));
             final byte[] b = c.getBlob(c.getColumnIndexOrThrow(URLColumns.FAVICON));
 
-            if (b == null || b.length == 0) {
+            if (b == null) {
                 continue;
             }
 

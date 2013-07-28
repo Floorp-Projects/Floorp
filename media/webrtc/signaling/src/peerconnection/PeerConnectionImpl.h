@@ -179,7 +179,7 @@ public:
     kInternalError                    = 9
   };
 
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_IPEERCONNECTION
 
   static PeerConnectionImpl* CreatePeerConnection();

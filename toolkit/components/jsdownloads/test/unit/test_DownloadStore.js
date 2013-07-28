@@ -49,12 +49,11 @@ add_task(function test_save_reload()
   let [listForLoad, storeForLoad] = yield promiseNewListAndStore(
                                                  storeForSave.path);
 
-  listForSave.add(yield promiseSimpleDownload(TEST_SOURCE_URI));
+  listForSave.add(yield promiseNewDownload(httpUrl("source.txt")));
   listForSave.add(yield Downloads.createDownload({
-    source: { uri: TEST_EMPTY_URI,
-              referrer: TEST_REFERRER_URI },
-    target: { file: getTempFile(TEST_TARGET_FILE_NAME) },
-    saver: { type: "copy" },
+    source: { url: httpUrl("empty.txt"),
+              referrer: TEST_REFERRER_URL },
+    target: getTempFile(TEST_TARGET_FILE_NAME),
   }));
 
   yield storeForSave.save();
@@ -71,16 +70,12 @@ add_task(function test_save_reload()
     do_check_neq(itemsForSave[i], itemsForLoad[i]);
 
     // The reloaded downloads have the same properties.
-    do_check_true(itemsForSave[i].source.uri.equals(
-                  itemsForLoad[i].source.uri));
-    if (itemsForSave[i].source.referrer) {
-      do_check_true(itemsForSave[i].source.referrer.equals(
-                    itemsForLoad[i].source.referrer));
-    } else {
-      do_check_true(itemsForLoad[i].source.referrer === null);
-    }
-    do_check_true(itemsForSave[i].target.file.equals(
-                  itemsForLoad[i].target.file));
+    do_check_eq(itemsForSave[i].source.url,
+                itemsForLoad[i].source.url);
+    do_check_eq(itemsForSave[i].source.referrer,
+                itemsForLoad[i].source.referrer);
+    do_check_eq(itemsForSave[i].target.path,
+                itemsForLoad[i].target.path);
     do_check_eq(itemsForSave[i].saver.type,
                 itemsForLoad[i].saver.type);
   }
@@ -129,19 +124,17 @@ add_task(function test_load_string_predefined()
   let [list, store] = yield promiseNewListAndStore();
 
   // The platform-dependent file name should be generated dynamically.
-  let targetFile = getTempFile(TEST_TARGET_FILE_NAME);
-  let filePathLiteral = JSON.stringify(targetFile.path);
-  let sourceUriLiteral = JSON.stringify(TEST_SOURCE_URI.spec);
-  let emptyUriLiteral = JSON.stringify(TEST_EMPTY_URI.spec);
-  let referrerUriLiteral = JSON.stringify(TEST_REFERRER_URI.spec);
+  let targetPath = getTempFile(TEST_TARGET_FILE_NAME).path;
+  let filePathLiteral = JSON.stringify(targetPath);
+  let sourceUriLiteral = JSON.stringify(httpUrl("source.txt"));
+  let emptyUriLiteral = JSON.stringify(httpUrl("empty.txt"));
+  let referrerUriLiteral = JSON.stringify(TEST_REFERRER_URL);
 
-  let string = "[{\"source\":{\"uri\":" + sourceUriLiteral + "}," +
-                "\"target\":{\"file\":" + filePathLiteral + "}," +
-                "\"saver\":{\"type\":\"copy\"}}," +
-                "{\"source\":{\"uri\":" + emptyUriLiteral + "," +
+  let string = "{\"list\":[{\"source\":" + sourceUriLiteral + "," +
+                "\"target\":" + filePathLiteral + "}," +
+                "{\"source\":{\"url\":" + emptyUriLiteral + "," +
                 "\"referrer\":" + referrerUriLiteral + "}," +
-                "\"target\":{\"file\":" + filePathLiteral + "}," +
-                "\"saver\":{\"type\":\"copy\"}}]";
+                "\"target\":" + filePathLiteral + "}]}";
 
   yield OS.File.writeAtomic(store.path,
                             new TextEncoder().encode(string),
@@ -153,12 +146,12 @@ add_task(function test_load_string_predefined()
 
   do_check_eq(items.length, 2);
 
-  do_check_true(items[0].source.uri.equals(TEST_SOURCE_URI));
-  do_check_true(items[0].target.file.equals(targetFile));
+  do_check_eq(items[0].source.url, httpUrl("source.txt"));
+  do_check_eq(items[0].target.path, targetPath);
 
-  do_check_true(items[1].source.uri.equals(TEST_EMPTY_URI));
-  do_check_true(items[1].source.referrer.equals(TEST_REFERRER_URI));
-  do_check_true(items[1].target.file.equals(targetFile));
+  do_check_eq(items[1].source.url, httpUrl("empty.txt"));
+  do_check_eq(items[1].source.referrer, TEST_REFERRER_URL);
+  do_check_eq(items[1].target.path, targetPath);
 });
 
 /**
@@ -169,15 +162,15 @@ add_task(function test_load_string_unrecognized()
   let [list, store] = yield promiseNewListAndStore();
 
   // The platform-dependent file name should be generated dynamically.
-  let targetFile = getTempFile(TEST_TARGET_FILE_NAME);
-  let filePathLiteral = JSON.stringify(targetFile.path);
-  let sourceUriLiteral = JSON.stringify(TEST_SOURCE_URI.spec);
+  let targetPath = getTempFile(TEST_TARGET_FILE_NAME).path;
+  let filePathLiteral = JSON.stringify(targetPath);
+  let sourceUriLiteral = JSON.stringify(httpUrl("source.txt"));
 
-  let string = "[{\"source\":null," +
+  let string = "{\"list\":[{\"source\":null," +
                 "\"target\":null}," +
-                "{\"source\":{\"uri\":" + sourceUriLiteral + "}," +
-                "\"target\":{\"file\":" + filePathLiteral + "}," +
-                "\"saver\":{\"type\":\"copy\"}}]";
+                "{\"source\":{\"url\":" + sourceUriLiteral + "}," +
+                "\"target\":{\"path\":" + filePathLiteral + "}," +
+                "\"saver\":{\"type\":\"copy\"}}]}";
 
   yield OS.File.writeAtomic(store.path,
                             new TextEncoder().encode(string),
@@ -189,8 +182,8 @@ add_task(function test_load_string_unrecognized()
 
   do_check_eq(items.length, 1);
 
-  do_check_true(items[0].source.uri.equals(TEST_SOURCE_URI));
-  do_check_true(items[0].target.file.equals(targetFile));
+  do_check_eq(items[0].source.url, httpUrl("source.txt"));
+  do_check_eq(items[0].target.path, targetPath);
 });
 
 /**
@@ -200,8 +193,8 @@ add_task(function test_load_string_malformed()
 {
   let [list, store] = yield promiseNewListAndStore();
 
-  let string = "[{\"source\":null,\"target\":null}," +
-                "{\"source\":{\"uri\":\"about:blank\"}}";
+  let string = "{\"list\":[{\"source\":null,\"target\":null}," +
+                "{\"source\":{\"url\":\"about:blank\"}}}";
 
   yield OS.File.writeAtomic(store.path, new TextEncoder().encode(string),
                             { tmpPath: store.path + ".tmp" });

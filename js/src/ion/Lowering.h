@@ -13,7 +13,6 @@
 #include "ion/IonAllocPolicy.h"
 #include "ion/LIR.h"
 #include "ion/MOpcodes.h"
-
 #if defined(JS_CPU_X86)
 # include "ion/x86/Lowering-x86.h"
 #elif defined(JS_CPU_X64)
@@ -90,14 +89,14 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitNewDeclEnvObject(MNewDeclEnvObject *ins);
     bool visitNewCallObject(MNewCallObject *ins);
     bool visitNewStringObject(MNewStringObject *ins);
-    bool visitParNew(MParNew *ins);
-    bool visitParNewCallObject(MParNewCallObject *ins);
-    bool visitParNewDenseArray(MParNewDenseArray *ins);
-    bool visitParBailout(MParBailout *ins);
+    bool visitNewPar(MNewPar *ins);
+    bool visitNewCallObjectPar(MNewCallObjectPar *ins);
+    bool visitNewDenseArrayPar(MNewDenseArrayPar *ins);
+    bool visitAbortPar(MAbortPar *ins);
     bool visitInitElem(MInitElem *ins);
     bool visitInitProp(MInitProp *ins);
     bool visitCheckOverRecursed(MCheckOverRecursed *ins);
-    bool visitParCheckOverRecursed(MParCheckOverRecursed *ins);
+    bool visitCheckOverRecursedPar(MCheckOverRecursedPar *ins);
     bool visitDefVar(MDefVar *ins);
     bool visitDefFun(MDefFun *ins);
     bool visitPrepareCall(MPrepareCall *ins);
@@ -143,7 +142,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitDiv(MDiv *ins);
     bool visitMod(MMod *ins);
     bool visitConcat(MConcat *ins);
-    bool visitParConcat(MParConcat *ins);
+    bool visitConcatPar(MConcatPar *ins);
     bool visitCharCodeAt(MCharCodeAt *ins);
     bool visitFromCharCode(MFromCharCode *ins);
     bool visitStart(MStart *start);
@@ -158,7 +157,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitRegExp(MRegExp *ins);
     bool visitRegExpTest(MRegExpTest *ins);
     bool visitLambda(MLambda *ins);
-    bool visitParLambda(MParLambda *ins);
+    bool visitLambdaPar(MLambdaPar *ins);
     bool visitImplicitThis(MImplicitThis *ins);
     bool visitSlots(MSlots *ins);
     bool visitElements(MElements *ins);
@@ -167,10 +166,9 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitMaybeToDoubleElement(MMaybeToDoubleElement *ins);
     bool visitLoadSlot(MLoadSlot *ins);
     bool visitFunctionEnvironment(MFunctionEnvironment *ins);
-    bool visitParSlice(MParSlice *ins);
-    bool visitParWriteGuard(MParWriteGuard *ins);
-    bool visitParCheckInterrupt(MParCheckInterrupt *ins);
-    bool visitParDump(MParDump *ins);
+    bool visitForkJoinSlice(MForkJoinSlice *ins);
+    bool visitGuardThreadLocalObject(MGuardThreadLocalObject *ins);
+    bool visitCheckInterruptPar(MCheckInterruptPar *ins);
     bool visitStoreSlot(MStoreSlot *ins);
     bool visitTypeBarrier(MTypeBarrier *ins);
     bool visitMonitorTypes(MMonitorTypes *ins);
@@ -225,7 +223,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitGetArgument(MGetArgument *ins);
     bool visitRunOncePrologue(MRunOncePrologue *ins);
     bool visitRest(MRest *ins);
-    bool visitParRest(MParRest *ins);
+    bool visitRestPar(MRestPar *ins);
     bool visitThrow(MThrow *ins);
     bool visitIn(MIn *ins);
     bool visitInArray(MInArray *ins);

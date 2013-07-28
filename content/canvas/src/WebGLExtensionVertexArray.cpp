@@ -44,12 +44,6 @@ void WebGLExtensionVertexArray::BindVertexArrayOES(WebGLVertexArray* array)
 
 bool WebGLExtensionVertexArray::IsSupported(const WebGLContext* context)
 {
-    /*
-     * Security leak with using Vertex Array Objects found while implementing
-     * WebGL 2.0 => Temporally disabled for fixing.
-     */
-    return false;
-/*
     gl::GLContext* gl = context->GL();
 
     if (gl->IsGLES2()) {
@@ -58,7 +52,6 @@ bool WebGLExtensionVertexArray::IsSupported(const WebGLContext* context)
 
     return gl->IsExtensionSupported(gl::GLContext::ARB_vertex_array_object) ||
            gl->IsExtensionSupported(gl::GLContext::APPLE_vertex_array_object);
- */
 }
 
 IMPL_WEBGL_EXTENSION_GOOP(WebGLExtensionVertexArray)

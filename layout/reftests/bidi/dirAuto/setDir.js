@@ -13,24 +13,24 @@ function setAllDir(value)
 function setAllDirAttribute(value)
 {
     for (var i = 0; ; ++i) {
-	try {
-	    theElement = document.getElementById("set" + i);
-	    theElement.setAttribute("dir", value);
-	} catch(e) {
-	    break;
-	}
+        try {
+            theElement = document.getElementById("set" + i);
+            theElement.setAttribute("dir", value);
+        } catch(e) {
+            break;
+        }
     }
 }
 
 function removeAllDirAttribute()
 {
     for (var i = 0; ; ++i) {
-	try {
-	    theElement = document.getElementById("set" + i);
-	    theElement.removeAttribute("dir");
-	} catch(e) {
-	    break;
-	}
+        try {
+            theElement = document.getElementById("set" + i);
+            theElement.removeAttribute("dir");
+        } catch(e) {
+            break;
+        }
     }
 }
 
@@ -68,11 +68,11 @@ function setAllTextValuesTo(newText)
             break;
         }
         if (theElement.tagName == "INPUT" ||
-	    theElement.tagName == "TEXTAREA") {
+            theElement.tagName == "TEXTAREA") {
             theElement.value = newText;
-	} else {
+        } else {
             theElement.firstChild.textContent = newText;
-	}
+        }
     }
 }
 
@@ -84,11 +84,11 @@ function setAllTextDefaultValuesTo(newText)
             break;
         }
         if (theElement.tagName == "INPUT" ||
-	    theElement.tagName == "TEXTAREA") {
+            theElement.tagName == "TEXTAREA") {
             theElement.defaultValue = newText;
-	} else {
+        } else {
             theElement.firstChild.textContent = newText;
-	}
+        }
     }
 }
 
@@ -101,9 +101,9 @@ function setAllTextChildrenTo(newText)
         }
         if (theElement.tagName == "INPUT") {
             theElement.value = newText;
-	} else {
+        } else {
             theElement.firstChild.textContent = newText;
-	}
+        }
     }
 }
 
@@ -133,14 +133,14 @@ function appendSpansFromArray(textArray)
             break;
         }
         for (var j = 0; j < textArray.length; ++j) {
-	    // fake the result for elements that can't have markup content
+            // fake the result for elements that can't have markup content
             if (theElement.tagName == "INPUT") {
                 theElement.value += textArray[j];
-	    } else if (theElement.tagName == "TEXTAREA") {
-		theElement.innerHTML += textArray[j];
+            } else if (theElement.tagName == "TEXTAREA") {
+                theElement.innerHTML += textArray[j];
             } else {
                 var span = document.createElement("span");
-		span.innerHTML = textArray[j];
+                span.innerHTML = textArray[j];
                 theElement.appendChild(span);
             }
         }
@@ -173,14 +173,14 @@ function prependSpansFromArray(textArray)
             break;
         }
         for (var j = 0; j < textArray.length; ++j) {
-	    // fake the result for elements that can't have markup content
+            // fake the result for elements that can't have markup content
             if (theElement.tagName == "INPUT") {
                 theElement.value = textArray[j] + theElement.value;
-	    } else if (theElement.tagName == "TEXTAREA") {
-		theElement.innerHTML = textArray[j] + theElement.innerHTML;
+            } else if (theElement.tagName == "TEXTAREA") {
+                theElement.innerHTML = textArray[j] + theElement.innerHTML;
             } else {
                 var span = document.createElement("span");
-		span.innerHTML = textArray[j];
+                span.innerHTML = textArray[j];
                 theElement.insertBefore(span, theElement.firstChild);
             }
         }

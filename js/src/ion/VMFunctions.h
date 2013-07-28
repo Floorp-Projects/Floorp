@@ -9,6 +9,10 @@
 
 #include "jspubtd.h"
 
+#include "ion/CompileInfo.h"
+#include "ion/Ion.h"
+#include "ion/IonFrames.h"
+
 namespace js {
 
 class DeclEnvObject;
@@ -221,8 +225,12 @@ struct VMFunction
                   returnType == Type_ParallelResult);
     }
 
-    VMFunction(const VMFunction &o)
-    {
+    VMFunction(const VMFunction &o) {
+        init(o);
+    }
+
+    void init(const VMFunction &o) {
+        JS_ASSERT(!wrapped);
         *this = o;
         addToFunctions();
     }
@@ -230,6 +238,31 @@ struct VMFunction
   private:
     // Add this to the global list of VMFunctions.
     void addToFunctions();
+};
+
+// A collection of VM functions for each execution mode.
+struct VMFunctionsModal
+{
+    VMFunctionsModal(const VMFunction &info) {
+        add(info);
+    }
+    VMFunctionsModal(const VMFunction &info1, const VMFunction &info2) {
+        add(info1);
+        add(info2);
+    }
+
+    inline const VMFunction &operator[](ExecutionMode mode) const {
+        JS_ASSERT((unsigned)mode < NumExecutionModes);
+        return funs_[mode];
+    }
+
+  private:
+    void add(const VMFunction &info) {
+        JS_ASSERT((unsigned)info.executionMode < NumExecutionModes);
+        funs_[info.executionMode].init(info);
+    }
+
+    VMFunction funs_[NumExecutionModes];
 };
 
 template <class> struct TypeToDataType { /* Unexpected return type for a VMFunction. */ };

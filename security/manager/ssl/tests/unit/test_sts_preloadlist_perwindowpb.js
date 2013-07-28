@@ -163,13 +163,12 @@ function test_private_browsing1() {
   // (sanity check first - this should be in the preload list)
   do_check_true(gSTSService.isStsHost("login.persona.org", IS_PRIVATE));
   var uri = Services.io.newURI("http://login.persona.org", null, null);
-  // according to the rfc, max-age can't be negative, but this is a great
-  // way to test an expired entry
-  gSTSService.processStsHeader(uri, "max-age=-1000", IS_PRIVATE);
-  do_check_false(gSTSService.isStsHost("login.persona.org", IS_PRIVATE));
-
-  // Simulate leaving private browsing mode
-  Services.obs.notifyObservers(null, "last-pb-context-exited", null);
+  gSTSService.processStsHeader(uri, "max-age=1", IS_PRIVATE);
+  do_timeout(1250, function() {
+    do_check_false(gSTSService.isStsHost("login.persona.org", IS_PRIVATE));
+    // Simulate leaving private browsing mode
+    Services.obs.notifyObservers(null, "last-pb-context-exited", null);
+  });
 }
 
 function test_private_browsing2() {

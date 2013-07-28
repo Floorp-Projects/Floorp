@@ -208,6 +208,8 @@
 #include "nsIEditor.h"
 #include "nsIDOMCSSStyleRule.h"
 #include "mozilla/css/Rule.h"
+#include "nsIHttpChannelInternal.h"
+#include "nsISecurityConsoleMessage.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -1576,8 +1578,6 @@ NS_INTERFACE_TABLE_HEAD(nsDocument)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIRadioGroupContainer)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIMutationObserver)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIApplicationCacheContainer)
-    NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOMDocumentTouch)
-    NS_INTERFACE_TABLE_ENTRY(nsDocument, nsITouchEventReceiver)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIInlineEventHandlers)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIObserver)
   NS_INTERFACE_TABLE_END
@@ -1793,6 +1793,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsDocument)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mStateObjectCached)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mUndoManager)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTemplateContentsOwner)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mChildrenCollection)
 
   // Traverse all our nsCOMArrays.
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mStyleSheets)
@@ -1877,6 +1878,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDocument)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mCachedEncoder)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mUndoManager)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mTemplateContentsOwner)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mChildrenCollection)
 
   tmp->mParentDocument = nullptr;
 
@@ -2466,6 +2468,23 @@ CSPErrorQueue::Flush(nsIDocument* aDocument)
         mErrors[i]);
   }
   mErrors.Clear();
+}
+
+void
+nsDocument::SendToConsole(nsCOMArray<nsISecurityConsoleMessage>& aMessages)
+{
+  for (uint32_t i = 0; i < aMessages.Length(); ++i) {
+    nsAutoString messageTag;
+    aMessages[i]->GetTag(messageTag);
+
+    nsAutoString category;
+    aMessages[i]->GetCategory(category);
+
+    nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
+                                    NS_ConvertUTF16toUTF8(category).get(),
+                                    this, nsContentUtils::eSECURITY_PROPERTIES,
+                                    NS_ConvertUTF16toUTF8(messageTag).get());
+  }
 }
 
 nsresult
@@ -4286,8 +4305,16 @@ nsDocument::SetScriptGlobalObject(nsIScriptGlobalObject *aScriptGlobalObject)
   mWindow = window;
 
   // Now that we know what our window is, we can flush the CSP errors to the
-  // Web Console.
+  // Web Console. We are flushing all messages that occured and were stored
+  // in the queue prior to this point.
   FlushCSPWebConsoleErrorQueue();
+  nsCOMPtr<nsIHttpChannelInternal> internalChannel =
+    do_QueryInterface(GetChannel());
+  if (internalChannel) {
+    nsCOMArray<nsISecurityConsoleMessage> messages;
+    internalChannel->TakeAllSecurityMessages(messages);
+    SendToConsole(messages);
+  }
 
   // Set our visibility state, but do not fire the event.  This is correct
   // because either we're coming out of bfcache (in which case IsVisible() will
@@ -5252,7 +5279,7 @@ nsDocument::Register(JSContext* aCx, const nsAString& aName,
 
     nsINode* parentNode = oldNode->GetParentNode();
     MOZ_ASSERT(parentNode, "Node obtained by GetElementsByTagName.");
-    nsCOMPtr<nsIDOMElement> newElement = do_QueryInterface(newNode);
+    nsCOMPtr<Element> newElement = do_QueryInterface(newNode);
     MOZ_ASSERT(newElement, "Cloned of node obtained by GetElementsByTagName.");
 
     parentNode->ReplaceChild(*newNode, *oldNode, rv);
@@ -5277,8 +5304,9 @@ nsDocument::Register(JSContext* aCx, const nsAString& aName,
     nsCOMPtr<nsIDOMElementReplaceEvent> ptEvent = do_QueryInterface(event);
     MOZ_ASSERT(ptEvent);
 
+    nsCOMPtr<nsIDOMElement> element = do_QueryInterface(newElement);
     rv = ptEvent->InitElementReplaceEvent(NS_LITERAL_STRING("elementreplace"),
-                                          false, false, newElement);
+                                          false, false, element);
     if (rv.Failed()) {
       return nullptr;
     }
@@ -6617,19 +6645,16 @@ nsIDocument::AdoptNode(nsINode& aAdoptedNode, ErrorResult& rv)
     case nsIDOMNode::ATTRIBUTE_NODE:
     {
       // Remove from ownerElement.
-      nsCOMPtr<nsIDOMAttr> adoptedAttr = do_QueryInterface(adoptedNode);
-      NS_ASSERTION(adoptedAttr, "Attribute not implementing nsIDOMAttr");
+      nsRefPtr<Attr> adoptedAttr = static_cast<Attr*>(adoptedNode);
 
-      nsCOMPtr<nsIDOMElement> ownerElement;
-      rv = adoptedAttr->GetOwnerElement(getter_AddRefs(ownerElement));
+      nsCOMPtr<Element> ownerElement = adoptedAttr->GetOwnerElement(rv);
       if (rv.Failed()) {
         return nullptr;
       }
 
       if (ownerElement) {
-        nsCOMPtr<nsIDOMAttr> newAttr;
-        rv = ownerElement->RemoveAttributeNode(adoptedAttr,
-                                               getter_AddRefs(newAttr));
+        nsRefPtr<Attr> newAttr =
+          ownerElement->RemoveAttributeNode(*adoptedAttr, rv);
         if (rv.Failed()) {
           return nullptr;
         }
@@ -9253,30 +9278,6 @@ nsDocument::SetImagesNeedAnimating(bool aAnimating)
   mAnimatingImages = aAnimating;
 }
 
-NS_IMETHODIMP
-nsDocument::CreateTouch(nsIDOMWindow* aView,
-                        nsIDOMEventTarget* aTarget,
-                        int32_t aIdentifier,
-                        int32_t aPageX,
-                        int32_t aPageY,
-                        int32_t aScreenX,
-                        int32_t aScreenY,
-                        int32_t aClientX,
-                        int32_t aClientY,
-                        int32_t aRadiusX,
-                        int32_t aRadiusY,
-                        float aRotationAngle,
-                        float aForce,
-                        nsIDOMTouch** aRetVal)
-{
-  nsCOMPtr<EventTarget> target = do_QueryInterface(aTarget);
-  *aRetVal = nsIDocument::CreateTouch(aView, target, aIdentifier, aPageX,
-                                      aPageY, aScreenX, aScreenY, aClientX,
-                                      aClientY, aRadiusX, aRadiusY,
-                                      aRotationAngle, aForce).get();
-  return NS_OK;
-}
-
 already_AddRefed<Touch>
 nsIDocument::CreateTouch(nsIDOMWindow* aView,
                          EventTarget* aTarget,
@@ -9297,47 +9298,6 @@ nsIDocument::CreateTouch(nsIDOMWindow* aView,
                                     aRotationAngle,
                                     aForce);
   return touch.forget();
-}
-
-NS_IMETHODIMP
-nsDocument::CreateTouchList(nsIVariant* aPoints,
-                            nsIDOMTouchList** aRetVal)
-{
-  nsRefPtr<nsDOMTouchList> retval = new nsDOMTouchList(ToSupports(this));
-  if (aPoints) {
-    uint16_t type;
-    aPoints->GetDataType(&type);
-    if (type == nsIDataType::VTYPE_INTERFACE ||
-        type == nsIDataType::VTYPE_INTERFACE_IS) {
-      nsCOMPtr<nsISupports> data;
-      aPoints->GetAsISupports(getter_AddRefs(data));
-      nsCOMPtr<nsIDOMTouch> point = do_QueryInterface(data);
-      if (point) {
-        retval->Append(static_cast<Touch*>(point.get()));
-      }
-    } else if (type == nsIDataType::VTYPE_ARRAY) {
-      uint16_t valueType;
-      nsIID iid;
-      uint32_t valueCount;
-      void* rawArray;
-      aPoints->GetAsArray(&valueType, &iid, &valueCount, &rawArray);
-      if (valueType == nsIDataType::VTYPE_INTERFACE ||
-          valueType == nsIDataType::VTYPE_INTERFACE_IS) {
-        nsISupports** values = static_cast<nsISupports**>(rawArray);
-        for (uint32_t i = 0; i < valueCount; ++i) {
-          nsCOMPtr<nsISupports> supports = dont_AddRef(values[i]);
-          nsCOMPtr<nsIDOMTouch> point = do_QueryInterface(supports);
-          if (point) {
-            retval->Append(static_cast<Touch*>(point.get()));
-          }
-        }
-      }
-      nsMemory::Free(rawArray);
-    }
-  }
-
-  *aRetVal = retval.forget().get();
-  return NS_OK;
 }
 
 already_AddRefed<nsDOMTouchList>
@@ -9473,6 +9433,25 @@ nsIDocument::ObsoleteSheet(const nsAString& aSheetURI, ErrorResult& rv)
   if (NS_FAILED(res)) {
     rv.Throw(res);
   }
+}
+
+nsIHTMLCollection*
+nsIDocument::Children()
+{
+  if (!mChildrenCollection) {
+    mChildrenCollection = new nsContentList(this, kNameSpaceID_Wildcard,
+                                            nsGkAtoms::_asterix,
+                                            nsGkAtoms::_asterix,
+                                            false);
+  }
+
+  return mChildrenCollection;
+}
+
+uint32_t
+nsIDocument::ChildElementCount()
+{
+  return Children()->Length();
 }
 
 namespace mozilla {
@@ -11052,11 +11031,9 @@ nsDocument::XPCOMShutdown()
   NS_IMETHODIMP nsDocument::SetOn##name_(JSContext *cx, const JS::Value &v) { \
     return nsINode::SetOn##name_(cx, v);                                      \
   }
-#define TOUCH_EVENT EVENT
 #define DOCUMENT_ONLY_EVENT EVENT
 #include "nsEventNameList.h"
 #undef DOCUMENT_ONLY_EVENT
-#undef TOUCH_EVENT
 #undef EVENT
 
 void

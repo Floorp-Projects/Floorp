@@ -21,7 +21,7 @@ nsFormSigningDialog::~nsFormSigningDialog()
 {
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsFormSigningDialog, nsIFormSigningDialog)
+NS_IMPL_ISUPPORTS1(nsFormSigningDialog, nsIFormSigningDialog)
 
 NS_IMETHODIMP
 nsFormSigningDialog::ConfirmSignText(nsIInterfaceRequestor *aContext, 

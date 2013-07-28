@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "jscompartment.h"
+#include "jscompartmentinlines.h"
 
 #include "mozilla/DebugOnly.h"
 #include "mozilla/MemoryReporting.h"
@@ -194,6 +194,7 @@ bool
 JSCompartment::wrap(JSContext *cx, MutableHandleValue vp, HandleObject existingArg)
 {
     JS_ASSERT(cx->compartment() == this);
+    JS_ASSERT(this != rt->atomsCompartment);
     JS_ASSERT_IF(existingArg, existingArg->compartment() == cx->compartment());
     JS_ASSERT_IF(existingArg, vp.isObject());
     JS_ASSERT_IF(existingArg, IsDeadProxyObject(existingArg));

@@ -17,7 +17,6 @@
 #include "gfxFont.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/ImageData.h"
-#include "mozilla/dom/UnionTypes.h"
 #include "mozilla/dom/CanvasGradient.h"
 #include "mozilla/dom/CanvasRenderingContext2DBinding.h"
 #include "mozilla/dom/CanvasPattern.h"
@@ -31,6 +30,9 @@ class SourceSurface;
 }
 
 namespace dom {
+class HTMLImageElementOrHTMLCanvasElementOrHTMLVideoElement;
+class StringOrCanvasGradientOrCanvasPattern;
+class StringOrCanvasGradientOrCanvasPatternReturnValue;
 class TextMetrics;
 
 extern const mozilla::gfx::Float SIGMA_MAX;
@@ -47,7 +49,7 @@ class CanvasRenderingContext2D :
   public nsICanvasRenderingContextInternal,
   public nsWrapperCache
 {
-typedef mozilla::dom::HTMLImageElementOrHTMLCanvasElementOrHTMLVideoElement
+typedef HTMLImageElementOrHTMLCanvasElementOrHTMLVideoElement
   HTMLImageOrCanvasOrVideoElement;
 
 public:
@@ -91,18 +93,25 @@ public:
   void GetGlobalCompositeOperation(nsAString& op, mozilla::ErrorResult& error);
   void SetGlobalCompositeOperation(const nsAString& op,
                                    mozilla::ErrorResult& error);
-  JS::Value GetStrokeStyle(JSContext* cx, mozilla::ErrorResult& error);
 
-  void SetStrokeStyle(JSContext* cx, JS::Handle<JS::Value> value)
+  void GetStrokeStyle(StringOrCanvasGradientOrCanvasPatternReturnValue& value)
   {
-    SetStyleFromJSValue(cx, value, STYLE_STROKE);
+    GetStyleAsUnion(value, STYLE_STROKE);
   }
 
-  JS::Value GetFillStyle(JSContext* cx, mozilla::ErrorResult& error);
-
-  void SetFillStyle(JSContext* cx, JS::Handle<JS::Value> value)
+  void SetStrokeStyle(const StringOrCanvasGradientOrCanvasPattern& value)
   {
-    SetStyleFromJSValue(cx, value, STYLE_FILL);
+    SetStyleFromUnion(value, STYLE_STROKE);
+  }
+
+  void GetFillStyle(StringOrCanvasGradientOrCanvasPatternReturnValue& value)
+  {
+    GetStyleAsUnion(value, STYLE_FILL);
+  }
+
+  void SetFillStyle(const StringOrCanvasGradientOrCanvasPattern& value)
+  {
+    SetStyleFromUnion(value, STYLE_FILL);
   }
 
   already_AddRefed<CanvasGradient>
@@ -162,10 +171,10 @@ public:
   bool IsPointInPath(double x, double y, const CanvasWindingRule& winding);
   bool IsPointInStroke(double x, double y);
   void FillText(const nsAString& text, double x, double y,
-                const mozilla::dom::Optional<double>& maxWidth,
+                const Optional<double>& maxWidth,
                 mozilla::ErrorResult& error);
   void StrokeText(const nsAString& text, double x, double y,
-                  const mozilla::dom::Optional<double>& maxWidth,
+                  const Optional<double>& maxWidth,
                   mozilla::ErrorResult& error);
   TextMetrics*
     MeasureText(const nsAString& rawText, mozilla::ErrorResult& error);
@@ -190,18 +199,18 @@ public:
     DrawImage(image, sx, sy, sw, sh, dx, dy, dw, dh, 6, error);
   }
 
-  already_AddRefed<mozilla::dom::ImageData>
+  already_AddRefed<ImageData>
     CreateImageData(JSContext* cx, double sw, double sh,
                     mozilla::ErrorResult& error);
-  already_AddRefed<mozilla::dom::ImageData>
-    CreateImageData(JSContext* cx, mozilla::dom::ImageData& imagedata,
+  already_AddRefed<ImageData>
+    CreateImageData(JSContext* cx, ImageData& imagedata,
                     mozilla::ErrorResult& error);
-  already_AddRefed<mozilla::dom::ImageData>
+  already_AddRefed<ImageData>
     GetImageData(JSContext* cx, double sx, double sy, double sw, double sh,
                  mozilla::ErrorResult& error);
-  void PutImageData(mozilla::dom::ImageData& imageData,
+  void PutImageData(ImageData& imageData,
                     double dx, double dy, mozilla::ErrorResult& error);
-  void PutImageData(mozilla::dom::ImageData& imageData,
+  void PutImageData(ImageData& imageData,
                     double dx, double dy, double dirtyX, double dirtyY,
                     double dirtyWidth, double dirtyHeight,
                     mozilla::ErrorResult& error);
@@ -271,7 +280,7 @@ public:
   void LineTo(double x, double y)
   {
     EnsureWritablePath();
-    
+
     LineTo(mozilla::gfx::Point(ToFloat(x), ToFloat(y)));
   }
 
@@ -474,21 +483,22 @@ protected:
   static mozilla::gfx::DrawTarget* sErrorTarget;
 
   // Some helpers.  Doesn't modify a color on failure.
-  void SetStyleFromJSValue(JSContext* cx, JS::Handle<JS::Value> value,
-                           Style whichStyle);
+  void SetStyleFromUnion(const StringOrCanvasGradientOrCanvasPattern& value,
+                         Style whichStyle);
   void SetStyleFromString(const nsAString& str, Style whichStyle);
 
-  void SetStyleFromGradient(CanvasGradient *gradient, Style whichStyle)
+  void SetStyleFromGradient(CanvasGradient& gradient, Style whichStyle)
   {
-    CurrentState().SetGradientStyle(whichStyle, gradient);
+    CurrentState().SetGradientStyle(whichStyle, &gradient);
   }
 
-  void SetStyleFromPattern(CanvasPattern *pattern, Style whichStyle)
+  void SetStyleFromPattern(CanvasPattern& pattern, Style whichStyle)
   {
-    CurrentState().SetPatternStyle(whichStyle, pattern);
+    CurrentState().SetPatternStyle(whichStyle, &pattern);
   }
 
-  nsISupports* GetStyleAsStringOrInterface(nsAString& aStr, CanvasMultiGetterType& aType, Style aWhichStyle);
+  void GetStyleAsUnion(StringOrCanvasGradientOrCanvasPatternReturnValue& aValue,
+                       Style aWhichStyle);
 
   // Returns whether a color was successfully parsed.
   bool ParseColor(const nsAString& aString, nscolor* aColor);
@@ -716,7 +726,7 @@ protected:
   nsresult DrawOrMeasureText(const nsAString& text,
                              float x,
                              float y,
-                             const mozilla::dom::Optional<double>& maxWidth,
+                             const Optional<double>& maxWidth,
                              TextDrawOperation op,
                              float* aWidth);
 

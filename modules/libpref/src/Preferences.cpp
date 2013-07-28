@@ -327,8 +327,8 @@ Preferences::~Preferences()
  * nsISupports Implementation
  */
 
-NS_IMPL_THREADSAFE_ADDREF(Preferences)
-NS_IMPL_THREADSAFE_RELEASE(Preferences)
+NS_IMPL_ADDREF(Preferences)
+NS_IMPL_RELEASE(Preferences)
 
 NS_INTERFACE_MAP_BEGIN(Preferences)
     NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIPrefService)

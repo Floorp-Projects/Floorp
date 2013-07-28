@@ -35,7 +35,7 @@ MOCHITEST_FILES =	\
 		videocontrols_direction-2e.html \
 		videocontrols_direction_test.js \
 		$(topsrcdir)/content/media/test/audio.wav \
-                $(topsrcdir)/browser/base/content/test/audio.ogg \
+		$(topsrcdir)/browser/base/content/test/audio.ogg \
 		$(topsrcdir)/content/media/test/seek_with_sound.ogg \
 		videomask.css \
 		$(NULL)

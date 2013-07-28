@@ -9,8 +9,8 @@
 
 #include "mozilla/MathAlgorithms.h"
 
-#include "ion/Registers.h"
 #include "ion/IonAllocPolicy.h"
+#include "ion/Registers.h"
 
 namespace js {
 namespace ion {

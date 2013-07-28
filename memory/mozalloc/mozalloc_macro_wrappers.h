@@ -24,6 +24,11 @@
 
 #define realloc(_, __) moz_realloc(_, __)
 
+/*
+ * Note: on some platforms, strdup may be a macro instead of a function.
+ * So we have to #undef it to avoid build warnings about redefining it.
+ */
+#undef strdup
 #define strdup(_) moz_strdup(_)
 
 #if defined(HAVE_STRNDUP)

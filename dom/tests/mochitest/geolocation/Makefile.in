@@ -18,6 +18,7 @@ MOCHITEST_FILES	= \
 		test_cancelWatch.html \
 		test_clearWatch.html \
 		test_clearWatch_invalid.html \
+		test_geolocation_is_undefined_when_pref_is_off.html \
 		test_manyCurrentConcurrent.html \
 		test_manyCurrentSerial.html \
 		test_manyWatchConcurrent.html \

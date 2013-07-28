@@ -3,9 +3,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "BrowserStreamChild.h"
-#include "PluginInstanceChild.h"
-#include "StreamNotifyChild.h"
+#include "mozilla/plugins/BrowserStreamChild.h"
+
+#include "mozilla/Attributes.h"
+#include "mozilla/plugins/PluginInstanceChild.h"
+#include "mozilla/plugins/StreamNotifyChild.h"
 
 namespace mozilla {
 namespace plugins {
@@ -30,7 +32,7 @@ BrowserStreamChild::BrowserStreamChild(PluginInstanceChild* instance,
   , mURL(url)
   , mHeaders(headers)
   , mStreamNotify(notifyData)
-  , ALLOW_THIS_IN_INITIALIZER_LIST(mDeliveryTracker(this))
+  , mDeliveryTracker(MOZ_THIS_IN_INITIALIZER_LIST())
 {
   PLUGIN_LOG_DEBUG(("%s (%s, %i, %i, %p, %s, %s)", FULLFUNCTION,
                     url.get(), length, lastmodified, (void*) notifyData,

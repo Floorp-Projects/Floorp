@@ -17,14 +17,14 @@ enum ImageFormat {
   PLANAR_YCBCR,
 
   /**
-   * The GRALLOC_PLANAR_YCBCR format creates a GrallocPlanarYCbCrImage, a
-   * subtype of PlanarYCbCrImage. It takes a PlanarYCbCrImage data and can be
-   * used as a texture by Gonk backend directly.
+   * The GRALLOC_PLANAR_YCBCR format creates a GrallocImage, a subtype of
+   * PlanarYCbCrImage. It takes a PlanarYCbCrImage data or the raw gralloc
+   * data and can be used as a texture by Gonk backend directly.
    */
   GRALLOC_PLANAR_YCBCR,
 
   /**
-   * The SHARED_RGB format creates a SharedRGBImage, which stores RGB data in
+   * The SHARED_RGB format creates a DeprecatedSharedRGBImage, which stores RGB data in
    * shared memory. Some Android hardware video decoders require this format.
    * Currently only used on Android.
    */
@@ -44,13 +44,6 @@ enum ImageFormat {
    * is main-thread-only.
    */
   CAIRO_SURFACE,
-
-  /**
-   * The GONK_IO_SURFACE format creates a GonkIOSurfaceImage.
-   *
-   * It wraps an GraphicBuffer object and binds it directly to a GL texture.
-   */
-  GONK_IO_SURFACE,
 
   /**
    * An bitmap image that can be shared with a remote process.

@@ -955,6 +955,33 @@ function runTest(testNum) {
                           "context-viewimagedesc",        true
                          ].concat(inspectItems));
         closeContextMenu();
+        openContextMenuFor(srcdoc);
+        return;
+
+    case 31:
+        // Context menu for an iframe with srcdoc attribute set
+        checkContextMenu(["context-back",         false,
+                          "context-forward",      false,
+                          "context-reload",       true,
+                          "---",                  null,
+                          "context-bookmarkpage", true,
+                          "context-savepage",     true,
+                          "---",                  null,
+                          "context-viewbgimage",  false,
+                          "context-selectall",    true,
+                          "frame",                null,
+                              ["context-reloadframe",       true,
+                               "---",                       null,
+                               "context-saveframe",         true,
+                               "---",                       null,
+                               "context-printframe",        true,
+                               "---",                       null,
+                               "context-viewframesource",   true,
+                               "context-viewframeinfo",     true], null,
+                          "---",                  null,
+                          "context-viewsource",   true,
+                          "context-viewinfo",     true
+        ].concat(inspectItems));
 
         // finish test
         subwindow.close();
@@ -984,7 +1011,7 @@ var text, link, mailto, input, img, canvas, video_ok, video_bad, video_bad2,
     iframe, video_in_iframe, image_in_iframe, textarea, contenteditable,
     inputspell, pagemenu, dom_full_screen, plainTextItems, audio_in_video,
     selecttext, selecttextlink, imagelink, select_inputtext, select_inputtext_password,
-    plugin, longdesc;
+    plugin, longdesc, iframe;
 
 function startTest() {
     chromeWin = SpecialPowers.wrap(subwindow)
@@ -1034,6 +1061,7 @@ function startTest() {
     select_inputtext_password = subwindow.document.getElementById("test-select-input-text-type-password");
     plugin = subwindow.document.getElementById("test-plugin");
     longdesc = subwindow.document.getElementById("test-longdesc");
+    srcdoc = subwindow.document.getElementById("test-srcdoc");
 
     contextMenu.addEventListener("popupshown", function() { runTest(++testNum); }, false);
     runTest(1);

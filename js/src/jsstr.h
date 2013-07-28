@@ -10,6 +10,7 @@
 #include "mozilla/PodOperations.h"
 
 #include <ctype.h>
+
 #include "jsapi.h"
 #include "jsatom.h"
 #include "jslock.h"
@@ -262,18 +263,11 @@ namespace js {
 /*
  * Inflate bytes in ASCII encoding to jschars. Return null on error, otherwise
  * return the jschar that was malloc'ed. length is updated to the length of the
- * new string (in jschars).
+ * new string (in jschars). A null char is appended, but it is not included in
+ * the length.
  */
 extern jschar *
 InflateString(ThreadSafeContext *cx, const char *bytes, size_t *length);
-
-/*
- * Inflate bytes in UTF-8 encoding to jschars. Return null on error, otherwise
- * return the jschar vector that was malloc'ed. length is updated to the length
- * of the new string (in jschars).
- */
-extern jschar *
-InflateUTF8String(JSContext *cx, const char *bytes, size_t *length);
 
 /*
  * Inflate bytes to JS chars in an existing buffer. 'chars' must be large
@@ -285,20 +279,6 @@ InflateUTF8String(JSContext *cx, const char *bytes, size_t *length);
 extern bool
 InflateStringToBuffer(JSContext *maybecx, const char *bytes, size_t length,
                       jschar *chars, size_t *charsLength);
-
-extern bool
-InflateUTF8StringToBuffer(JSContext *cx, const char *bytes, size_t length,
-                          jschar *chars, size_t *charsLength);
-
-/*
- * The same as InflateUTF8StringToBuffer(), except that any malformed UTF-8
- * characters will be replaced by \uFFFD. No exception will be thrown for
- * malformed UTF-8 input.
- */
-extern bool
-InflateUTF8StringToBufferReplaceInvalid(JSContext *cx, const char *bytes,
-                                        size_t length, jschar *chars,
-                                        size_t *charsLength);
 
 /*
  * Deflate JS chars to bytes into a buffer. 'bytes' must be large enough for

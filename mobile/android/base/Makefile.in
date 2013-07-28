@@ -69,6 +69,7 @@ FENNEC_JAVA_FILES = \
   CanvasDelegate.java \
   CheckableLinearLayout.java \
   ClickableWhenDisabledEditText.java \
+  ContactService.java \
   ContextGetter.java \
   CustomEditText.java \
   db/BrowserDB.java \
@@ -127,7 +128,6 @@ FENNEC_JAVA_FILES = \
   PrefsHelper.java \
   PrivateDataPreference.java \
   PrivateTab.java \
-  ProfileMigrator.java \
   Prompt.java \
   PromptInput.java \
   PromptService.java \

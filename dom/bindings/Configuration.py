@@ -277,7 +277,8 @@ class Descriptor(DescriptorProvider):
             'NamedCreator': None,
             'NamedDeleter': None,
             'Stringifier': None,
-            'LegacyCaller': None
+            'LegacyCaller': None,
+            'Jsonifier': None
             }
         if self.concrete:
             self.proxy = False
@@ -290,6 +291,8 @@ class Descriptor(DescriptorProvider):
             for m in iface.members:
                 if m.isMethod() and m.isStringifier():
                     addOperation('Stringifier', m)
+                if m.isMethod() and m.isJsonifier():
+                    addOperation('Jsonifier', m)
                 # Don't worry about inheriting legacycallers either: in
                 # practice these are on most-derived prototypes.
                 if m.isMethod() and m.isLegacycaller():
@@ -362,8 +365,8 @@ class Descriptor(DescriptorProvider):
                                 self.interface.identifier.name)
             self.nativeOwnership = "worker"
         else:
-            self.nativeOwnership = desc.get('nativeOwnership', 'nsisupports')
-            if not self.nativeOwnership in ['owned', 'refcounted', 'nsisupports']:
+            self.nativeOwnership = desc.get('nativeOwnership', 'refcounted')
+            if not self.nativeOwnership in ['owned', 'refcounted']:
                 raise TypeError("Descriptor for %s has unrecognized value (%s) "
                                 "for nativeOwnership" %
                                 (self.interface.identifier.name, self.nativeOwnership))

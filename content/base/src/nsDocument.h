@@ -94,6 +94,7 @@ class nsWindowSizes;
 class nsHtml5TreeOpExecutor;
 class nsDocumentOnStack;
 class nsPointerLockPermissionRequest;
+class nsISecurityConsoleMessage;
 
 namespace mozilla {
 namespace dom {
@@ -503,7 +504,6 @@ class nsDocument : public nsIDocument,
                    public nsIRadioGroupContainer,
                    public nsIApplicationCacheContainer,
                    public nsStubMutationObserver,
-                   public nsIDOMDocumentTouch,
                    public nsIInlineEventHandlers,
                    public nsIObserver
 {
@@ -755,6 +755,7 @@ public:
 
 private:
   nsRadioGroupStruct* GetRadioGroupInternal(const nsAString& aName) const;
+  void SendToConsole(nsCOMArray<nsISecurityConsoleMessage>& aMessages);
 
 public:
   // nsIDOMNode
@@ -779,12 +780,6 @@ public:
 
   // nsIApplicationCacheContainer
   NS_DECL_NSIAPPLICATIONCACHECONTAINER
-
-  // nsITouchEventReceiver
-  NS_DECL_NSITOUCHEVENTRECEIVER
-
-  // nsIDOMDocumentTouch
-  NS_DECL_NSIDOMDOCUMENTTOUCH
 
   // nsIInlineEventHandlers
   NS_DECL_NSIINLINEEVENTHANDLERS

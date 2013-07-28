@@ -1,12 +1,13 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Helpers for defining and using refcounted objects. */
 
-#ifndef mozilla_RefPtr_h_
-#define mozilla_RefPtr_h_
+#ifndef mozilla_RefPtr_h
+#define mozilla_RefPtr_h
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Atomics.h"
@@ -290,9 +291,6 @@ byRef(RefPtr<T>& ptr)
 
 } // namespace mozilla
 
-#endif // mozilla_RefPtr_h_
-
-
 #if 0
 
 // Command line that builds these tests
@@ -447,3 +445,5 @@ main(int argc, char** argv)
 }
 
 #endif
+
+#endif /* mozilla_RefPtr_h */

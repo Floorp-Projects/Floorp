@@ -167,6 +167,10 @@ abstract public class GeckoApp
 
     static private final String LOCATION_URL = "https://location.services.mozilla.com/v1/submit";
 
+    // Delay before running one-time "cleanup" tasks that may be needed
+    // after a version upgrade.
+    private static final int CLEANUP_DEFERRAL_SECONDS = 15;
+
     protected RelativeLayout mMainLayout;
     protected RelativeLayout mGeckoLayout;
     public View getView() { return mGeckoLayout; }
@@ -183,6 +187,7 @@ abstract public class GeckoApp
     private String mCurrentResponse = "";
     public static boolean sIsUsingCustomProfile = false;
 
+    private ContactService mContactService;
     private PromptService mPromptService;
     private TextSelection mTextSelection;
 
@@ -1562,6 +1567,8 @@ abstract public class GeckoApp
           SmsManager.getInstance().start();
         }
 
+        mContactService = new ContactService(GeckoAppShell.getEventDispatcher(), this);
+
         mPromptService = new PromptService(this);
 
         mTextSelection = new TextSelection((TextSelectionHandle) findViewById(R.id.start_handle),
@@ -2103,6 +2110,8 @@ abstract public class GeckoApp
             mDoorHangerPopup.destroy();
         if (mFormAssistPopup != null)
             mFormAssistPopup.destroy();
+        if (mContactService != null)
+            mContactService.destroy();
         if (mPromptService != null)
             mPromptService.destroy();
         if (mTextSelection != null)
@@ -2236,23 +2245,54 @@ abstract public class GeckoApp
             ThreadUtils.postToBackgroundThread(new Runnable() {
                 @Override
                 public void run() {
-                    ProfileMigrator profileMigrator = new ProfileMigrator(app);
-
-                    profileMigrator.launchDeferredCleanup();
-
-                    // Do a migration run on the first start after an upgrade.
-                    if (!GeckoApp.sIsUsingCustomProfile &&
-                        !profileMigrator.hasMigrationRun()) {
-
-                        profileMigrator.launchPlaces(profileDir);
-                        finishProfileMigration();
-                    }
-                }}
-            );
+                    Handler handler = new Handler();
+                    handler.postDelayed(new DeferredCleanupTask(), CLEANUP_DEFERRAL_SECONDS * 1000);
+                }
+            });
         }
     }
 
-    protected void finishProfileMigration() {
+    private class DeferredCleanupTask implements Runnable {
+        // The cleanup-version setting is recorded to avoid repeating the same
+        // tasks on subsequent startups; CURRENT_CLEANUP_VERSION may be updated
+        // if we need to do additional cleanup for future Gecko versions.
+
+        private static final String CLEANUP_VERSION = "cleanup-version";
+        private static final int CURRENT_CLEANUP_VERSION = 1;
+
+        @Override
+        public void run() {
+            long cleanupVersion = getAppSharedPreferences().getInt(CLEANUP_VERSION, 0);
+
+            if (cleanupVersion < 1) {
+                // Reduce device storage footprint by removing .ttf files from
+                // the res/fonts directory: we no longer need to copy our
+                // bundled fonts out of the APK in order to use them.
+                // See https://bugzilla.mozilla.org/show_bug.cgi?id=878674.
+                File dir = new File("res/fonts");
+                if (dir.exists() && dir.isDirectory()) {
+                    for (File file : dir.listFiles()) {
+                        if (file.isFile() && file.getName().endsWith(".ttf")) {
+                            Log.i(LOGTAG, "deleting " + file.toString());
+                            file.delete();
+                        }
+                    }
+                    if (!dir.delete()) {
+                        Log.w(LOGTAG, "unable to delete res/fonts directory (not empty?)");
+                    } else {
+                        Log.i(LOGTAG, "res/fonts directory deleted");
+                    }
+                }
+            }
+
+            // Additional cleanup needed for future versions would go here
+
+            if (cleanupVersion != CURRENT_CLEANUP_VERSION) {
+                SharedPreferences.Editor editor = getAppSharedPreferences().edit();
+                editor.putInt(CLEANUP_VERSION, CURRENT_CLEANUP_VERSION);
+                editor.commit();
+            }
+        }
     }
 
     public PromptService getPromptService() {

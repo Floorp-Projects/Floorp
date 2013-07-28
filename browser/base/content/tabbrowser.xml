@@ -1467,7 +1467,8 @@
             // Do nothing if we're a private window.
             let docShellsSwapped = false;
             if (aURI == BROWSER_NEW_TAB_URL &&
-                !PrivateBrowsingUtils.isWindowPrivate(window)) {
+                !PrivateBrowsingUtils.isWindowPrivate(window) &&
+                !gMultiProcessBrowser) {
               docShellsSwapped = gBrowserNewTabPreloader.newTab(t);
             }
 

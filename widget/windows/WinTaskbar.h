@@ -22,7 +22,7 @@ public:
   WinTaskbar();
   ~WinTaskbar();
 
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIWINTASKBAR
 
   // Registers the global app user model id for the instance.

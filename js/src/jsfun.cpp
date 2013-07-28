@@ -7,14 +7,14 @@
 /*
  * JS function support.
  */
-#include "jsfun.h"
 
-#include <string.h>
+#include "jsfuninlines.h"
 
 #include "mozilla/PodOperations.h"
 #include "mozilla/Util.h"
 
-#include "jstypes.h"
+#include <string.h>
+
 #include "jsapi.h"
 #include "jsarray.h"
 #include "jsatom.h"
@@ -23,28 +23,27 @@
 #include "jsproxy.h"
 #include "jsscript.h"
 #include "jsstr.h"
+#include "jstypes.h"
 #include "jswrapper.h"
 
 #include "builtin/Eval.h"
 #include "frontend/BytecodeCompiler.h"
 #include "frontend/TokenStream.h"
 #include "gc/Marking.h"
+#ifdef JS_ION
+#include "ion/Ion.h"
+#include "ion/IonFrameIterator.h"
+#endif
 #include "vm/Interpreter.h"
 #include "vm/Shape.h"
 #include "vm/StringBuffer.h"
 #include "vm/WrapperObject.h"
 #include "vm/Xdr.h"
 
-#include "jsfuninlines.h"
 #include "jsscriptinlines.h"
 
 #include "vm/Interpreter-inl.h"
 #include "vm/Stack-inl.h"
-
-#ifdef JS_ION
-#include "ion/Ion.h"
-#include "ion/IonFrameIterator.h"
-#endif
 
 using namespace js;
 using namespace js::gc;
@@ -235,9 +234,9 @@ ResolveInterpretedFunctionPrototype(JSContext *cx, HandleObject obj)
     return proto;
 }
 
-static JSBool
-fun_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
-            MutableHandleObject objp)
+JSBool
+js::fun_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
+                MutableHandleObject objp)
 {
     if (!JSID_IS_ATOM(id))
         return true;
@@ -498,7 +497,7 @@ Class JSFunction::class_ = {
     JS_PropertyStub,         /* getProperty */
     JS_StrictPropertyStub,   /* setProperty */
     fun_enumerate,
-    (JSResolveOp)fun_resolve,
+    (JSResolveOp)js::fun_resolve,
     JS_ConvertStub,
     NULL,                    /* finalize    */
     NULL,                    /* checkAccess */
@@ -1207,7 +1206,7 @@ js::CallOrConstructBoundFunction(JSContext *cx, unsigned argc, Value *vp)
 
     /* 15.3.4.5.1, 15.3.4.5.2 step 4. */
     for (unsigned i = 0; i < argslen; i++)
-        invokeArgs[i] = fun->getBoundFunctionArgument(i);
+        invokeArgs[i].set(fun->getBoundFunctionArgument(i));
     PodCopy(invokeArgs.array() + argslen, vp + 2, argc);
 
     /* 15.3.4.5.1, 15.3.4.5.2 step 5. */
@@ -1382,7 +1381,7 @@ js::Function(JSContext *cx, unsigned argc, Value *vp)
         size_t args_length = 0;
         for (unsigned i = 0; i < n; i++) {
             /* Collect the lengths for all the function-argument arguments. */
-            arg = ToString<CanGC>(cx, args.handleAt(i));
+            arg = ToString<CanGC>(cx, args[i]);
             if (!arg)
                 return false;
             args[i].setString(arg);
@@ -1502,7 +1501,7 @@ js::Function(JSContext *cx, unsigned argc, Value *vp)
     if (!args.length())
         str = cx->runtime()->emptyString;
     else
-        str = ToString<CanGC>(cx, args.handleAt(args.length() - 1));
+        str = ToString<CanGC>(cx, args[args.length() - 1]);
     if (!str)
         return false;
     JSLinearString *linear = str->ensureLinear(cx);
@@ -1774,7 +1773,7 @@ JSObject::hasIdempotentProtoChain() const
             return false;
 
         JSResolveOp resolve = obj->getClass()->resolve;
-        if (resolve != JS_ResolveStub && resolve != (JSResolveOp) fun_resolve)
+        if (resolve != JS_ResolveStub && resolve != (JSResolveOp) js::fun_resolve)
             return false;
 
         if (obj->getOps()->lookupProperty || obj->getOps()->lookupGeneric || obj->getOps()->lookupElement)

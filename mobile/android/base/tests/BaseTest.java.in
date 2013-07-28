@@ -659,6 +659,40 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
         RobocopUtils.runOnUiThreadSync(mActivity, runnable);
     }
 
+    /* Tap the "star" (bookmark) button to bookmark or un-bookmark the current page */
+    public void toggleBookmark() {
+        mActions.sendSpecialKey(Actions.SpecialKey.MENU);
+        waitForText("Settings");
+
+        // On ICS+ phones, there is no button labeled "Bookmarks"
+        // instead we have to just dig through every button on the screen
+        ArrayList<View> images = mSolo.getCurrentViews();
+        for (int i = 0; i < images.size(); i++) {
+            final View view = images.get(i);
+            boolean found = false;
+            found = "Bookmark".equals(view.getContentDescription());
+
+            // on older android versions, try looking at the button's text
+            if (!found) {
+                if (view instanceof TextView) {
+                    found = "Bookmark".equals(((TextView)view).getText());
+                }
+            }
+
+            if (found) {
+                int[] xy = new int[2];
+                view.getLocationOnScreen(xy);
+
+                final int viewWidth = view.getWidth();
+                final int viewHeight = view.getHeight();
+                final float x = xy[0] + (viewWidth / 2.0f);
+                float y = xy[1] + (viewHeight / 2.0f);
+
+                mSolo.clickOnScreen(x, y);
+            }
+        }
+    }
+
     /**
     * This method will edit the bookmark with index = bookmarkIndex from the list of bookmarks
     * For the field index:
@@ -811,6 +845,8 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
             }
         }
 
+        // DEPRECATED!
+        // Use BaseTest.toggleBookmark() in new code.
         public void bookmark() {
             if (devType.equals("tablet")) {
                 if (!osVersion.equals("4.x")){

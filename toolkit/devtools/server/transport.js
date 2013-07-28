@@ -220,10 +220,11 @@ LocalDebuggerTransport.prototype = {
   send: function LDT_send(aPacket) {
     let serial = this._serial.count++;
     if (wantLogging) {
-      if (aPacket.to) {
-        dumpn("Packet " + serial + " sent to " + uneval(aPacket.to));
-      } else if (aPacket.from) {
+      /* Check 'from' first, as 'echo' packets have both. */
+      if (aPacket.from) {
         dumpn("Packet " + serial + " sent from " + uneval(aPacket.from));
+      } else if (aPacket.to) {
+        dumpn("Packet " + serial + " sent to " + uneval(aPacket.to));
       }
     }
     this._deepFreeze(aPacket);

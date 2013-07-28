@@ -436,7 +436,7 @@ JavaScriptParent::call(JSContext *cx, HandleObject proxy, const CallArgs &args)
             return false;
 
         JSObject *obj = &outobjects[i].toObject();
-        if (!JS_SetProperty(cx, obj, "value", v.address()))
+        if (!JS_SetProperty(cx, obj, "value", v))
             return false;
     }
 

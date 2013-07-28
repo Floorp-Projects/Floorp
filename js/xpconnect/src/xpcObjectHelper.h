@@ -17,7 +17,6 @@
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsIClassInfo.h"
-#include "nsINode.h"
 #include "nsISupports.h"
 #include "nsIXPCScriptable.h"
 #include "nsWrapperCache.h"
@@ -29,7 +28,6 @@ public:
       : mCanonical(NULL)
       , mObject(aObject)
       , mCache(aCache)
-      , mIsNode(false)
     {
         if (!mCache) {
             if (aObject)
@@ -74,15 +72,7 @@ public:
     nsXPCClassInfo *GetXPCClassInfo()
     {
         if (!mXPCClassInfo) {
-            if (mIsNode) {
-                mXPCClassInfo =
-                    static_cast<nsINode*>(GetCanonical())->GetClassInfo();
-#ifdef DEBUG
-                AssertGetClassInfoResult();
-#endif
-            } else {
-                CallQueryInterface(mObject, getter_AddRefs(mXPCClassInfo));
-            }
+            CallQueryInterface(mObject, getter_AddRefs(mXPCClassInfo));
         }
         return mXPCClassInfo;
     }
@@ -118,11 +108,10 @@ public:
 
 protected:
     xpcObjectHelper(nsISupports *aObject, nsISupports *aCanonical,
-                    nsWrapperCache *aCache, bool aIsNode)
+                    nsWrapperCache *aCache)
       : mCanonical(aCanonical)
       , mObject(aObject)
       , mCache(aCache)
-      , mIsNode(aIsNode)
     {
         if (!mCache && aObject)
             CallQueryInterface(aObject, &mCache);
@@ -134,15 +123,10 @@ protected:
 private:
     xpcObjectHelper(xpcObjectHelper& aOther) MOZ_DELETE;
 
-#ifdef DEBUG
-    void AssertGetClassInfoResult();
-#endif
-
     nsISupports*             mObject;
     nsWrapperCache*          mCache;
     nsCOMPtr<nsIClassInfo>   mClassInfo;
     nsRefPtr<nsXPCClassInfo> mXPCClassInfo;
-    bool                     mIsNode;
 };
 
 #endif

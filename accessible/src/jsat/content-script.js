@@ -8,6 +8,10 @@ let Cu = Components.utils;
 const ROLE_ENTRY = Ci.nsIAccessibleRole.ROLE_ENTRY;
 const ROLE_INTERNAL_FRAME = Ci.nsIAccessibleRole.ROLE_INTERNAL_FRAME;
 
+const MOVEMENT_GRANULARITY_CHARACTER = 1;
+const MOVEMENT_GRANULARITY_WORD = 2;
+const MOVEMENT_GRANULARITY_PARAGRAPH = 8;
+
 Cu.import('resource://gre/modules/XPCOMUtils.jsm');
 XPCOMUtils.defineLazyModuleGetter(this, 'Logger',
   'resource://gre/modules/accessibility/Utils.jsm');
@@ -117,7 +121,8 @@ function showCurrent(aMessage) {
       vc.moveFirst(TraversalRules.Simple);
     } else {
       sendAsyncMessage('AccessFu:Present', Presentation.pivotChanged(
-                         vc.position, null, Ci.nsIAccessiblePivot.REASON_NONE));
+                         vc.position, null, Ci.nsIAccessiblePivot.REASON_NONE,
+                         vc.startOffset, vc.endOffset));
     }
   }
 }
@@ -226,11 +231,30 @@ function activateContextMenu(aMessage) {
   }
 }
 
-function moveCaret(aMessage) {
-  const MOVEMENT_GRANULARITY_CHARACTER = 1;
-  const MOVEMENT_GRANULARITY_WORD = 2;
-  const MOVEMENT_GRANULARITY_PARAGRAPH = 8;
+function moveByGranularity(aMessage) {
+  let direction = aMessage.json.direction;
+  let vc = Utils.getVirtualCursor(content.document);
+  let granularity;
 
+  switch(aMessage.json.granularity) {
+    case MOVEMENT_GRANULARITY_CHARACTER:
+      granularity = Ci.nsIAccessiblePivot.CHAR_BOUNDARY;
+      break;
+    case MOVEMENT_GRANULARITY_WORD:
+      granularity = Ci.nsIAccessiblePivot.WORD_BOUNDARY;
+      break;
+    default:
+      return;
+  }
+
+  if (direction === 'Previous') {
+    vc.movePreviousByText(granularity);
+  } else if (direction === 'Next') {
+    vc.moveNextByText(granularity);
+  }
+}
+
+function moveCaret(aMessage) {
   let direction = aMessage.json.direction;
   let granularity = aMessage.json.granularity;
   let accessible = Utils.getVirtualCursor(content.document).position;
@@ -282,80 +306,17 @@ function presentCaretChange(aText, aOldOffset, aNewOffset) {
 }
 
 function scroll(aMessage) {
-  let vc = Utils.getVirtualCursor(content.document);
-
-  function tryToScroll() {
-    let horiz = aMessage.json.horizontal;
-    let page = aMessage.json.page;
-
-    // Search up heirarchy for scrollable element.
-    let acc = vc.position;
-    while (acc) {
-      let elem = acc.DOMNode;
-
-      // This is inspired by IndieUI events. Once they are
-      // implemented, it should be easy to transition to them.
-      // https://dvcs.w3.org/hg/IndieUI/raw-file/tip/src/indie-ui-events.html#scrollrequest
-      let uiactions = elem.getAttribute ? elem.getAttribute('uiactions') : '';
-      if (uiactions && uiactions.split(' ').indexOf('scroll') >= 0) {
-        let evt = elem.ownerDocument.createEvent('CustomEvent');
-        let details = horiz ? { deltaX: page * elem.clientWidth } :
-          { deltaY: page * elem.clientHeight };
-        evt.initCustomEvent(
-          'scrollrequest', true, true,
-          ObjectWrapper.wrap(details, elem.ownerDocument.defaultView));
-        if (!elem.dispatchEvent(evt))
-          return;
-      }
-
-      // We will do window scrolling next.
-      if (elem == content.document)
-        break;
-
-      if (!horiz && elem.clientHeight < elem.scrollHeight) {
-        let s = content.getComputedStyle(elem);
-        if (s.overflowY == 'scroll' || s.overflowY == 'auto') {
-          elem.scrollTop += page * elem.clientHeight;
-          return true;
-        }
-      }
-
-      if (horiz) {
-        if (elem.clientWidth < elem.scrollWidth) {
-          let s = content.getComputedStyle(elem);
-          if (s.overflowX == 'scroll' || s.overflowX == 'auto') {
-            elem.scrollLeft += page * elem.clientWidth;
-            return true;
-          }
-        }
-      }
-      acc = acc.parent;
-    }
-
-    // Scroll window.
-    if (!horiz && content.scrollMaxY &&
-        ((page > 0 && content.scrollY < content.scrollMaxY) ||
-         (page < 0 && content.scrollY > 0))) {
-      content.scroll(0, content.innerHeight * page + content.scrollY);
-      return true;
-    } else if (horiz && content.scrollMaxX &&
-               ((page > 0 && content.scrollX < content.scrollMaxX) ||
-                (page < 0 && content.scrollX > 0))) {
-      content.scroll(content.innerWidth * page + content.scrollX);
-      return true;
-    }
-
-    return false;
+  function sendScrollCoordinates(aAccessible) {
+    let bounds = Utils.getBounds(aAccessible);
+    sendAsyncMessage('AccessFu:DoScroll',
+                     { bounds: bounds,
+                       page: aMessage.json.page,
+                       horizontal: aMessage.json.horizontal });
   }
 
-  if (aMessage.json.origin != 'child' &&
-      forwardToChild(aMessage, scroll, vc.position)) {
-    return;
-  }
-
-  if (!tryToScroll()) {
-    // Failed to scroll anything in this document. Try in parent document.
-    forwardToParent(aMessage);
+  let position = Utils.getVirtualCursor(content.document).position;
+  if (!forwardToChild(aMessage, scroll, position)) {
+    sendScrollCoordinates(position);
   }
 }
 
@@ -373,6 +334,7 @@ addMessageListener(
     addMessageListener('AccessFu:ContextMenu', activateContextMenu);
     addMessageListener('AccessFu:Scroll', scroll);
     addMessageListener('AccessFu:MoveCaret', moveCaret);
+    addMessageListener('AccessFu:MoveByGranularity', moveByGranularity);
 
     if (!eventManager) {
       eventManager = new EventManager(this);
@@ -392,6 +354,7 @@ addMessageListener(
     removeMessageListener('AccessFu:ContextMenu', activateContextMenu);
     removeMessageListener('AccessFu:Scroll', scroll);
     removeMessageListener('AccessFu:MoveCaret', moveCaret);
+    removeMessageListener('AccessFu:MoveByGranularity', moveByGranularity);
 
     eventManager.stop();
   });

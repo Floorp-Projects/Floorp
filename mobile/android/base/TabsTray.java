@@ -49,6 +49,7 @@ public class TabsTray extends TwoWayView
     private static final int ANIMATION_DURATION = 250;
 
     private static final String ABOUT_HOME = "about:home";
+    private int mOriginalSize = 0;
 
     public TabsTray(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -261,6 +262,20 @@ public class TabsTray extends TwoWayView
             row.close.setTag(row);
         }
 
+        private void resetTransforms(View view) {
+            ViewHelper.setAlpha(view, 1);
+            if (mOriginalSize == 0)
+                return;
+
+            if (isVertical()) {
+                ViewHelper.setHeight(view, mOriginalSize);
+                ViewHelper.setTranslationX(view, 0);
+            } else {
+                ViewHelper.setWidth(view, mOriginalSize);
+                ViewHelper.setTranslationY(view, 0);
+            }
+        }
+
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
             TabRow row;
@@ -272,6 +287,9 @@ public class TabsTray extends TwoWayView
                 convertView.setTag(row);
             } else {
                 row = (TabRow) convertView.getTag();
+                // If we're recycling this view, there's a chance it was transformed during
+                // the close animation. Remove any of those properties.
+                resetTransforms(convertView);
             }
 
             Tab tab = mTabs.get(position);
@@ -331,23 +349,15 @@ public class TabsTray extends TwoWayView
 
         TabRow tab = (TabRow)view.getTag();
         final int tabId = tab.id;
-        final int originalSize = (isVertical ? view.getHeight() : view.getWidth());
+        // Caching this assumes that all rows are the same height
+	if (mOriginalSize == 0)
+            mOriginalSize = (isVertical ? view.getHeight() : view.getWidth());
 
         animator.addPropertyAnimationListener(new PropertyAnimator.PropertyAnimationListener() {
             @Override
             public void onPropertyAnimationStart() { }
             @Override
             public void onPropertyAnimationEnd() {
-                ViewHelper.setAlpha(view, 1);
-
-                if (isVertical) {
-                    ViewHelper.setHeight(view, originalSize);
-                    ViewHelper.setTranslationX(view, 0);
-                } else {
-                    ViewHelper.setWidth(view, originalSize);
-                    ViewHelper.setTranslationY(view, 0);
-                }
-
                 Tabs tabs = Tabs.getInstance();
                 Tab tab = tabs.getTab(tabId);
                 tabs.closeTab(tab);

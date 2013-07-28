@@ -26,6 +26,7 @@
 #include "mozilla/dom/mobilemessage/PSms.h"
 #include "gfxImageSurface.h"
 #include "gfxContext.h"
+#include "gfxUtils.h"
 #include "nsPresContext.h"
 #include "nsIDocShell.h"
 #include "nsPIDOMWindow.h"
@@ -44,7 +45,7 @@
 
 using namespace mozilla;
 
-NS_IMPL_THREADSAFE_ISUPPORTS0(nsFilePickerCallback)
+NS_IMPL_ISUPPORTS0(nsFilePickerCallback)
 
 nsRefPtr<AndroidBridge> AndroidBridge::sBridge = nullptr;
 static unsigned sJavaEnvThreadIndex = 0;
@@ -2161,7 +2162,7 @@ AndroidBridge::SetPageRect(const CSSRect& aCssPageRect)
 void
 AndroidBridge::SyncViewportInfo(const LayerIntRect& aDisplayPort, const CSSToLayerScale& aDisplayResolution,
                                 bool aLayersUpdated, ScreenPoint& aScrollOffset, CSSToScreenScale& aScale,
-                                gfx::Margin& aFixedLayerMargins, ScreenPoint& aOffset)
+                                LayerMargin& aFixedLayerMargins, ScreenPoint& aOffset)
 {
     AndroidGeckoLayerClient *client = mLayerClient;
     if (!client)
@@ -2174,7 +2175,7 @@ AndroidBridge::SyncViewportInfo(const LayerIntRect& aDisplayPort, const CSSToLay
 
 void AndroidBridge::SyncFrameMetrics(const ScreenPoint& aScrollOffset, float aZoom, const CSSRect& aCssPageRect,
                                      bool aLayersUpdated, const CSSRect& aDisplayPort, const CSSToLayerScale& aDisplayResolution,
-                                     bool aIsFirstPaint, gfx::Margin& aFixedLayerMargins, ScreenPoint& aOffset)
+                                     bool aIsFirstPaint, LayerMargin& aFixedLayerMargins, ScreenPoint& aOffset)
 {
     AndroidGeckoLayerClient *client = mLayerClient;
     if (!client)
@@ -2728,6 +2729,9 @@ nsresult AndroidBridge::CaptureThumbnail(nsIDOMWindow *window, int32_t bufW, int
     context->Translate(pt);
     context->Scale(scale * bufW / srcW, scale * bufH / srcH);
     rv = presShell->RenderDocument(r, renderDocFlags, bgColor, context);
+    if (is24bit) {
+        gfxUtils::ConvertBGRAtoRGBA(surf);
+    }
     NS_ENSURE_SUCCESS(rv, rv);
     return NS_OK;
 }

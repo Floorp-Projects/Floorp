@@ -6,6 +6,7 @@
 #ifndef __inLayoutUtils_h__
 #define __inLayoutUtils_h__
 
+class nsIDocument;
 class nsIDOMDocument;
 class nsIDOMElement;
 class nsIDOMNode;
@@ -24,7 +25,7 @@ public:
   static nsIFrame* GetFrameFor(nsIDOMElement* aElement);
   static nsEventStateManager* GetEventStateManagerFor(nsIDOMElement *aElement);
   static nsIDOMDocument* GetSubDocumentFor(nsIDOMNode* aNode);
-  static nsIDOMNode* GetContainerFor(nsIDOMDocument* aDoc);
+  static nsIDOMNode* GetContainerFor(const nsIDocument& aDoc);
 };
 
 #endif // __inLayoutUtils_h__

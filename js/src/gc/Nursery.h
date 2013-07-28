@@ -10,11 +10,11 @@
 
 #ifdef JSGC_GENERATIONAL
 
-#include "ds/BitArray.h"
-#include "js/HashTable.h"
-
 #include "jsgc.h"
 #include "jspubtd.h"
+
+#include "ds/BitArray.h"
+#include "js/HashTable.h"
 
 namespace js {
 
