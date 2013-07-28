@@ -1660,7 +1660,7 @@ nsresult OggReader::SeekBisection(int64_t aTarget,
             granulepos > 0 &&
             serial == mTheoraState->mSerial &&
             videoTime == -1) {
-          videoTime = mTheoraState->StartTime(granulepos);
+          videoTime = mTheoraState->Time(granulepos);
         }
 
         if (pageOffset + pageLength >= endOffset) {
