@@ -173,8 +173,6 @@ struct GLContextSymbols
     PFNGLISENABLEDPROC fIsEnabled;
     typedef realGLboolean (GLAPIENTRY * PFNGLISPROGRAMPROC) (GLuint program);
     PFNGLISPROGRAMPROC fIsProgram;
-    typedef realGLboolean (GLAPIENTRY * PFNGLISQUERYPROC) (GLuint id);
-    PFNGLISQUERYPROC fIsQuery;
     typedef realGLboolean (GLAPIENTRY * PFNGLISSHADERPROC) (GLuint shader);
     PFNGLISSHADERPROC fIsShader;
     typedef realGLboolean (GLAPIENTRY * PFNGLISTEXTUREPROC) (GLuint texture);
