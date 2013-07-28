@@ -97,6 +97,7 @@ static const char *sExtensionNames[] = {
     "GL_EXT_draw_instanced",
     "GL_NV_draw_instanced",
     "GL_ANGLE_instanced_array",
+    "GL_EXT_occlusion_query_boolean",
     nullptr
 };
 
@@ -320,6 +321,7 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
                 { (PRFuncPtr*) &mSymbols.fGetQueryiv, { "GetQueryiv", nullptr } },
                 { (PRFuncPtr*) &mSymbols.fGetQueryObjectiv, { "GetQueryObjectiv", nullptr } },
                 { (PRFuncPtr*) &mSymbols.fEndQuery, { "EndQuery", nullptr } },
+                { (PRFuncPtr*) &mSymbols.fIsQuery, { "IsQuery", nullptr } },
                 { (PRFuncPtr*) &mSymbols.fDrawBuffer, { "DrawBuffer", nullptr } },
                 { (PRFuncPtr*) &mSymbols.fDrawBuffers, { "DrawBuffers", nullptr } },
                 { nullptr, { nullptr } },
@@ -637,6 +639,35 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
                 MarkExtensionUnsupported(ANGLE_instanced_array);
                 mSymbols.fDrawArraysInstanced = nullptr;
                 mSymbols.fDrawElementsInstanced = nullptr;
+            }
+        }
+
+        if (IsGLES2() &&
+            IsExtensionSupported(EXT_occlusion_query_boolean)) {
+            SymLoadStruct queryObjectsSymbols[] = {
+                { (PRFuncPtr*) &mSymbols.fBeginQuery, { "BeginQuery", "BeginQueryEXT", nullptr } },
+                { (PRFuncPtr*) &mSymbols.fGenQueries, { "GenQueries", "GenQueriesEXT", nullptr } },
+                { (PRFuncPtr*) &mSymbols.fDeleteQueries, { "DeleteQueries", "DeleteQueriesEXT", nullptr } },
+                { (PRFuncPtr*) &mSymbols.fEndQuery, { "EndQuery", "EndQueryEXT", nullptr } },
+                { (PRFuncPtr*) &mSymbols.fGetQueryiv, { "GetQueryiv", "GetQueryivEXT", nullptr } },
+                { (PRFuncPtr*) &mSymbols.fGetQueryObjectiv, { "GetQueryObjectiv", "GetQueryObjectivEXT", nullptr } },
+                { (PRFuncPtr*) &mSymbols.fGetQueryObjectuiv, { "GetQueryObjectuiv", "GetQueryObjectuivEXT", nullptr } },
+                { (PRFuncPtr*) &mSymbols.fIsQuery, { "IsQuery", "IsQueryEXT", nullptr } },
+                { nullptr, { nullptr } },
+            };
+
+            if (!LoadSymbols(queryObjectsSymbols, trygl, prefix)) {
+                NS_ERROR("GL ES supports query objects without supplying its functions.");
+
+                MarkExtensionUnsupported(EXT_occlusion_query_boolean);
+                mSymbols.fBeginQuery = nullptr;
+                mSymbols.fGenQueries = nullptr;
+                mSymbols.fDeleteQueries = nullptr;
+                mSymbols.fEndQuery = nullptr;
+                mSymbols.fGetQueryiv = nullptr;
+                mSymbols.fGetQueryObjectiv = nullptr;
+                mSymbols.fGetQueryObjectuiv = nullptr;
+                mSymbols.fIsQuery = nullptr;
             }
         }
 
