@@ -1,0 +1,21 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 886262</title>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+</head>
+
+<script>
+  window.addEventListener("message", function(e){
+     window.open("file_iframe_sandbox_a_if18.html", "_self");
+  }, false);
+</script>
+
+<body>
+  I'm just here to navigate to file_iframe_sandbox_a_if18.html after my owning
+  iframe has had allow-same-origin added.
+</body>
+</html>
+
