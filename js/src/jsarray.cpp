@@ -2835,10 +2835,10 @@ static const JSFunctionSpec array_static_methods[] = {
          {"some",               {NULL, NULL},       2,0, "ArrayStaticSome"},
          {"reduce",             {NULL, NULL},       2,0, "ArrayStaticReduce"},
          {"reduceRight",        {NULL, NULL},       2,0, "ArrayStaticReduceRight"},
-         {"build",              {NULL, NULL},       2,0, "ArrayStaticBuild"},
     JS_FN("of",                 array_of,           0,0),
 
 #ifdef ENABLE_PARALLEL_JS
+         {"build",              {NULL, NULL},       2,0, "ArrayStaticBuild"},
     /* Parallelizable and pure static methods. */
          {"buildPar",           {NULL, NULL},       3,0, "ArrayStaticBuildPar"},
 #endif
