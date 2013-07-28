@@ -1609,6 +1609,31 @@ let RIL = {
   },
 
   /**
+   * Set the roaming preference mode
+   */
+  setRoamingPreference: function setRoamingPreference(options) {
+    let roamingMode = CDMA_ROAMING_PREFERENCE_TO_GECKO.indexOf(options.mode);
+
+    if (roamingMode === -1) {
+      options.errorMsg = GECKO_ERROR_INVALID_PARAMETER;
+      this.sendDOMMessage(options);
+      return;
+    }
+
+    Buf.newParcel(REQUEST_CDMA_SET_ROAMING_PREFERENCE, options);
+    Buf.writeUint32(1);
+    Buf.writeUint32(roamingMode);
+    Buf.sendParcel();
+  },
+
+  /**
+   * Get the roaming preference mode
+   */
+  queryRoamingPreference: function getRoamingPreference(options) {
+    Buf.simpleRequest(REQUEST_CDMA_QUERY_ROAMING_PREFERENCE, options);
+  },
+
+  /**
    * Open Logical UICC channel (aid) for Secure Element access
    */
   iccOpenChannel: function iccOpenChannel(options) {
@@ -5558,8 +5583,26 @@ RIL[REQUEST_GET_PREFERRED_NETWORK_TYPE] = function REQUEST_GET_PREFERRED_NETWORK
 RIL[REQUEST_GET_NEIGHBORING_CELL_IDS] = null;
 RIL[REQUEST_SET_LOCATION_UPDATES] = null;
 RIL[REQUEST_CDMA_SET_SUBSCRIPTION_SOURCE] = null;
-RIL[REQUEST_CDMA_SET_ROAMING_PREFERENCE] = null;
-RIL[REQUEST_CDMA_QUERY_ROAMING_PREFERENCE] = null;
+RIL[REQUEST_CDMA_SET_ROAMING_PREFERENCE] = function REQUEST_CDMA_SET_ROAMING_PREFERENCE(length, options) {
+  if (options.rilRequestError) {
+    options.errorMsg = RIL_ERROR_TO_GECKO_ERROR[options.rilRequestError];
+    this.sendDOMMessage(options);
+    return;
+  }
+
+  this.sendDOMMessage(options);
+};
+RIL[REQUEST_CDMA_QUERY_ROAMING_PREFERENCE] = function REQUEST_CDMA_QUERY_ROAMING_PREFERENCE(length, options) {
+  if (options.rilRequestError) {
+    options.errorMsg = RIL_ERROR_TO_GECKO_ERROR[options.rilRequestError];
+    this.sendDOMMessage(options);
+    return;
+  }
+
+  let mode = Buf.readUint32List();
+  options.mode = CDMA_ROAMING_PREFERENCE_TO_GECKO[mode[0]];
+  this.sendDOMMessage(options);
+};
 RIL[REQUEST_SET_TTY_MODE] = null;
 RIL[REQUEST_QUERY_TTY_MODE] = null;
 RIL[REQUEST_CDMA_SET_PREFERRED_VOICE_PRIVACY_MODE] = null;
