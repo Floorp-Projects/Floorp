@@ -9,6 +9,7 @@ const fs = require("sdk/io/fs");
 const url = require("sdk/url");
 const path = require("sdk/fs/path");
 const { Buffer } = require("sdk/io/buffer");
+const { is } = require("sdk/system/xul-app");
 
 // Use profile directory to list / read / write files.
 const profilePath = pathFor("ProfD");
@@ -26,19 +27,18 @@ const renameToPath = path.join(profilePath, "sdk-fixture-rename-to");
 const profileEntries = [
   "compatibility.ini",
   "extensions",
-  "extensions.ini",
   "prefs.js"
   // There are likely to be a lot more files but we can't really
   // on consistent list so we limit to this.
 ];
 
-exports["test readir"] = function(assert, end) {
+exports["test readdir"] = function(assert, end) {
   var async = false;
   fs.readdir(profilePath, function(error, entries) {
     assert.ok(async, "readdir is async");
     assert.ok(!error, "there is no error when reading directory");
     assert.ok(profileEntries.length <= entries.length,
-              "got et least number of entries we expect");
+              "got at least number of entries we expect");
     assert.ok(profileEntries.every(function(entry) {
                 return entries.indexOf(entry) >= 0;
               }), "all profiles are present");
@@ -67,13 +67,13 @@ exports["test readdirSync"] = function(assert) {
   var async = false;
   var entries = fs.readdirSync(profilePath);
   assert.ok(profileEntries.length <= entries.length,
-            "got et least number of entries we expect");
+            "got at least number of entries we expect");
   assert.ok(profileEntries.every(function(entry) {
     return entries.indexOf(entry) >= 0;
   }), "all profiles are present");
 };
 
-exports["test readirSync error"] = function(assert) {
+exports["test readdirSync error"] = function(assert) {
   var async = false;
   var path = profilePath + "-does-not-exists";
   try {
@@ -92,6 +92,7 @@ exports["test readFile"] = function(assert, end) {
   fs.readFile(filePathInProfile, function(error, content) {
     assert.ok(async, "readFile is async");
     assert.ok(!error, "error is falsy");
+
     assert.ok(Buffer.isBuffer(content), "readFile returns buffer");
     assert.ok(typeof(content.length) === "number", "buffer has length");
     assert.ok(content.toString().indexOf("[Compatibility]") >= 0,
@@ -338,7 +339,6 @@ exports["test fs.truncate"] = function(assert, end) {
     let async = false;
     fs.truncate(path, 0, function(error) {
       assert.ok(async, "truncate is async");
-      console.log(error);
       assert.ok(!error, "no error");
       assert.equal(fs.existsSync(path), true, "file was created");
       fs.unlinkSync(path);
@@ -442,6 +442,30 @@ exports["test fs.writeFile"] = function(assert, end) {
   let path = writePath;
   let content = ["hello world",
                  "this is some text"].join("\n");
+
+  var async = false;
+  fs.writeFile(path, content, function(error) {
+    assert.ok(async, "fs write is async");
+    assert.ok(!error, "error is falsy");
+    assert.ok(fs.existsSync(path), "file was created");
+    assert.equal(fs.readFileSync(path).toString(),
+                 content,
+                 "contet was written");
+    fs.unlinkSync(path);
+    assert.ok(!fs.exists(path), "file was removed");
+
+    end();
+  });
+  async = true;
+};
+
+exports["test fs.writeFile (with large files)"] = function(assert, end) {
+  let path = writePath;
+  let content = "";
+
+  for (var i = 0; i < 100000; i++) {
+    content += "buffer\n";
+  }
 
   var async = false;
   fs.writeFile(path, content, function(error) {

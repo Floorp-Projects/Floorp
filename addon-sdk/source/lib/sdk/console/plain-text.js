@@ -8,34 +8,32 @@ module.metadata = {
   "stability": "unstable"
 };
 
-const { Cc, Ci } = require("chrome");
+const { Cc, Ci, Cu, Cr } = require("chrome");
 const self = require("../self");
-const traceback = require("./traceback")
 const prefs = require("../preferences/service");
 const { merge } = require("../util/object");
-const { partial } = require("../lang/functional");
+const { ConsoleAPI } = Cu.import("resource://gre/modules/devtools/Console.jsm");
 
-const LEVELS = {
-  "all": Number.MIN_VALUE,
-  "debug": 20000,
-  "info": 30000,
-  "warn": 40000,
-  "error": 50000,
-  "off": Number.MAX_VALUE,
-};
 const DEFAULT_LOG_LEVEL = "error";
 const ADDON_LOG_LEVEL_PREF = "extensions." + self.id + ".sdk.console.logLevel";
 const SDK_LOG_LEVEL_PREF = "extensions.sdk.console.logLevel";
 
-let logLevel;
-
+let logLevel = DEFAULT_LOG_LEVEL;
 function setLogLevel() {
-  logLevel = prefs.get(ADDON_LOG_LEVEL_PREF, prefs.get(SDK_LOG_LEVEL_PREF,
-                                                       DEFAULT_LOG_LEVEL));
+  logLevel = prefs.get(ADDON_LOG_LEVEL_PREF, 
+                           prefs.get(SDK_LOG_LEVEL_PREF,
+                                     DEFAULT_LOG_LEVEL));
 }
 setLogLevel();
 
 let logLevelObserver = {
+  QueryInterface: function(iid) {
+    if (!iid.equals(Ci.nsIObserver) &&
+        !iid.equals(Ci.nsISupportsWeakReference) &&
+        !iid.equals(Ci.nsISupports))
+      throw Cr.NS_ERROR_NO_INTERFACE;
+    return this;
+  },
   observe: function(subject, topic, data) {
     setLogLevel();
   }
@@ -43,79 +41,23 @@ let logLevelObserver = {
 let branch = Cc["@mozilla.org/preferences-service;1"].
              getService(Ci.nsIPrefService).
              getBranch(null);
-branch.addObserver(ADDON_LOG_LEVEL_PREF, logLevelObserver, false);
-branch.addObserver(SDK_LOG_LEVEL_PREF, logLevelObserver, false);
-
-function stringify(arg) {
-  try {
-    return String(arg);
-  }
-  catch(ex) {
-    return "<toString() error>";
-  }
-}
-
-function stringifyArgs(args) {
-  return Array.map(args, stringify).join(" ");
-}
-
-function message(print, level) {
-  if (LEVELS[level] < LEVELS[logLevel])
-    return;
-
-  let args = Array.slice(arguments, 2);
-
-  print(level + ": " + self.name + ": " + stringifyArgs(args) + "\n", level);
-}
-
-function errorMessage(print, e) {
-  // Some platform exception doesn't have name nor message but
-  // can be stringified to a meaningfull message
-  var fullString = ("An exception occurred.\n" +
-                   (e.name ? e.name + ": " : "") +
-                   (e.message ? e.message : e.toString()) + "\n" +
-                   (e.fileName ? traceback.sourceURI(e.fileName) + " " +
-                                 e.lineNumber + "\n"
-                               : "") +
-                   traceback.format(e));
-
-  message(print, "error", fullString);
-}
-
-function traceMessage(print) {
-  var stack = traceback.get();
-  stack.splice(-1, 1);
-
-  message(print, "info", traceback.format(stack));
-}
+branch.addObserver(ADDON_LOG_LEVEL_PREF, logLevelObserver, true);
+branch.addObserver(SDK_LOG_LEVEL_PREF, logLevelObserver, true);
 
 function PlainTextConsole(print) {
-  if (!print)
-    print = dump;
 
-  if (print === dump) {
-    // If we're just using dump(), auto-enable preferences so
-    // that the developer actually sees the console output.
-    var prefs = Cc["@mozilla.org/preferences-service;1"]
-                .getService(Ci.nsIPrefBranch);
-    prefs.setBoolPref("browser.dom.window.dump.enabled", true);
-  }
+  let consoleOptions = {
+    prefix: self.name + ": ",
+    maxLogLevel: logLevel,
+    dump: print
+  };
+  let console = new ConsoleAPI(consoleOptions);
 
-  merge(this, {
-    log: partial(message, print, "info"),
-    info: partial(message, print, "info"),
-    warn: partial(message, print, "warn"),
-    error: partial(message, print, "error"),
-    debug: partial(message, print, "debug"),
-    exception: partial(errorMessage, print),
-    trace: partial(traceMessage, print),
-
-    dir: function dir() {},
-    group: function group() {},
-    groupCollapsed: function groupCollapsed() {},
-    groupEnd: function groupEnd() {},
-    time: function time() {},
-    timeEnd: function timeEnd() {}
+  // As we freeze the console object, we can't modify this property afterward
+  Object.defineProperty(console, "maxLogLevel", {
+    get: function() {
+      return logLevel;
+    }
   });
 
   // We defined the `__exposedProps__` in our console chrome object.
@@ -126,11 +68,12 @@ function PlainTextConsole(print) {
   // Meanwhile we're investigating with the platform team if `__exposedProps__`
   // are needed, or are just a left-over.
 
-  this.__exposedProps__ = Object.keys(this).reduce(function(exposed, prop) {
+  console.__exposedProps__ = Object.keys(ConsoleAPI.prototype).reduce(function(exposed, prop) {
     exposed[prop] = "r";
     return exposed;
   }, {});
 
-  Object.freeze(this);
+  Object.freeze(console);
+  return console;
 };
 exports.PlainTextConsole = PlainTextConsole;
