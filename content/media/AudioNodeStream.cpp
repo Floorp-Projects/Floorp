@@ -248,24 +248,6 @@ AudioNodeStream::AllInputsFinished() const
   return !!inputCount;
 }
 
-uint32_t
-AudioNodeStream::ComputeFinalOuputChannelCount(uint32_t aInputChannelCount)
-{
-  switch (mChannelCountMode) {
-  case ChannelCountMode::Explicit:
-    // Disregard the channel count we've calculated from inputs, and just use
-    // mNumberOfInputChannels.
-    return mNumberOfInputChannels;
-  case ChannelCountMode::Clamped_max:
-    // Clamp the computed output channel count to mNumberOfInputChannels.
-    return std::min(aInputChannelCount, mNumberOfInputChannels);
-  default:
-  case ChannelCountMode::Max:
-    // Nothing to do here, just shut up the compiler warning.
-    return aInputChannelCount;
-  }
-}
-
 void
 AudioNodeStream::ObtainInputBlock(AudioChunk& aTmpChunk, uint32_t aPortIndex)
 {
@@ -295,7 +277,20 @@ AudioNodeStream::ObtainInputBlock(AudioChunk& aTmpChunk, uint32_t aPortIndex)
       GetAudioChannelsSuperset(outputChannelCount, chunk->mChannelData.Length());
   }
 
-  outputChannelCount = ComputeFinalOuputChannelCount(outputChannelCount);
+  switch (mChannelCountMode) {
+  case ChannelCountMode::Explicit:
+    // Disregard the output channel count that we've calculated, and just use
+    // mNumberOfInputChannels.
+    outputChannelCount = mNumberOfInputChannels;
+    break;
+  case ChannelCountMode::Clamped_max:
+    // Clamp the computed output channel count to mNumberOfInputChannels.
+    outputChannelCount = std::min(outputChannelCount, mNumberOfInputChannels);
+    break;
+  case ChannelCountMode::Max:
+    // Nothing to do here, just shut up the compiler warning.
+    break;
+  }
 
   uint32_t inputChunkCount = inputChunks.Length();
   if (inputChunkCount == 0 ||
@@ -316,79 +311,62 @@ AudioNodeStream::ObtainInputBlock(AudioChunk& aTmpChunk, uint32_t aPortIndex)
   }
 
   AllocateAudioBlock(outputChannelCount, &aTmpChunk);
+  float silenceChannel[WEBAUDIO_BLOCK_SIZE] = {0.f};
   // The static storage here should be 1KB, so it's fine
   nsAutoTArray<float, GUESS_AUDIO_CHANNELS*WEBAUDIO_BLOCK_SIZE> downmixBuffer;
 
   for (uint32_t i = 0; i < inputChunkCount; ++i) {
-    AccumulateInputChunk(i, *inputChunks[i], &aTmpChunk, &downmixBuffer);
-  }
-}
-
-void
-AudioNodeStream::AccumulateInputChunk(uint32_t aInputIndex, const AudioChunk& aChunk,
-                                      AudioChunk* aBlock,
-                                      nsTArray<float>* aDownmixBuffer)
-{
-  nsAutoTArray<const void*,GUESS_AUDIO_CHANNELS> channels;
-  UpMixDownMixChunk(&aChunk, aBlock->mChannelData.Length(), channels, *aDownmixBuffer);
-
-  for (uint32_t c = 0; c < channels.Length(); ++c) {
-    const float* inputData = static_cast<const float*>(channels[c]);
-    float* outputData = static_cast<float*>(const_cast<void*>(aBlock->mChannelData[c]));
-    if (inputData) {
-      if (aInputIndex == 0) {
-        AudioBlockCopyChannelWithScale(inputData, aChunk.mVolume, outputData);
+    AudioChunk* chunk = inputChunks[i];
+    nsAutoTArray<const void*,GUESS_AUDIO_CHANNELS> channels;
+    channels.AppendElements(chunk->mChannelData);
+    if (channels.Length() < outputChannelCount) {
+      if (mChannelInterpretation == ChannelInterpretation::Speakers) {
+        AudioChannelsUpMix(&channels, outputChannelCount, nullptr);
+        NS_ASSERTION(outputChannelCount == channels.Length(),
+                     "We called GetAudioChannelsSuperset to avoid this");
       } else {
-        AudioBlockAddChannelWithScale(inputData, aChunk.mVolume, outputData);
+        // Fill up the remaining channels by zeros
+        for (uint32_t j = channels.Length(); j < outputChannelCount; ++j) {
+          channels.AppendElement(silenceChannel);
+        }
       }
-    } else {
-      if (aInputIndex == 0) {
-        PodZero(outputData, WEBAUDIO_BLOCK_SIZE);
+    } else if (channels.Length() > outputChannelCount) {
+      if (mChannelInterpretation == ChannelInterpretation::Speakers) {
+        nsAutoTArray<float*,GUESS_AUDIO_CHANNELS> outputChannels;
+        outputChannels.SetLength(outputChannelCount);
+        downmixBuffer.SetLength(outputChannelCount * WEBAUDIO_BLOCK_SIZE);
+        for (uint32_t j = 0; j < outputChannelCount; ++j) {
+          outputChannels[j] = &downmixBuffer[j * WEBAUDIO_BLOCK_SIZE];
+        }
+
+        AudioChannelsDownMix(channels, outputChannels.Elements(),
+                             outputChannelCount, WEBAUDIO_BLOCK_SIZE);
+
+        channels.SetLength(outputChannelCount);
+        for (uint32_t j = 0; j < channels.Length(); ++j) {
+          channels[j] = outputChannels[j];
+        }
+      } else {
+        // Drop the remaining channels
+        channels.RemoveElementsAt(outputChannelCount,
+                                  channels.Length() - outputChannelCount);
       }
     }
-  }
-}
 
-void
-AudioNodeStream::UpMixDownMixChunk(const AudioChunk* aChunk,
-                                   uint32_t aOutputChannelCount,
-                                   nsTArray<const void*>& aOutputChannels,
-                                   nsTArray<float>& aDownmixBuffer)
-{
-  static const float silenceChannel[WEBAUDIO_BLOCK_SIZE] = {0.f};
-
-  aOutputChannels.AppendElements(aChunk->mChannelData);
-  if (aOutputChannels.Length() < aOutputChannelCount) {
-    if (mChannelInterpretation == ChannelInterpretation::Speakers) {
-      AudioChannelsUpMix(&aOutputChannels, aOutputChannelCount, nullptr);
-      NS_ASSERTION(aOutputChannelCount == aOutputChannels.Length(),
-                   "We called GetAudioChannelsSuperset to avoid this");
-    } else {
-      // Fill up the remaining aOutputChannels by zeros
-      for (uint32_t j = aOutputChannels.Length(); j < aOutputChannelCount; ++j) {
-        aOutputChannels.AppendElement(silenceChannel);
+    for (uint32_t c = 0; c < channels.Length(); ++c) {
+      const float* inputData = static_cast<const float*>(channels[c]);
+      float* outputData = static_cast<float*>(const_cast<void*>(aTmpChunk.mChannelData[c]));
+      if (inputData) {
+        if (i == 0) {
+          AudioBlockCopyChannelWithScale(inputData, chunk->mVolume, outputData);
+        } else {
+          AudioBlockAddChannelWithScale(inputData, chunk->mVolume, outputData);
+        }
+      } else {
+        if (i == 0) {
+          memset(outputData, 0, WEBAUDIO_BLOCK_SIZE*sizeof(float));
+        }
       }
-    }
-  } else if (aOutputChannels.Length() > aOutputChannelCount) {
-    if (mChannelInterpretation == ChannelInterpretation::Speakers) {
-      nsAutoTArray<float*,GUESS_AUDIO_CHANNELS> outputChannels;
-      outputChannels.SetLength(aOutputChannelCount);
-      aDownmixBuffer.SetLength(aOutputChannelCount * WEBAUDIO_BLOCK_SIZE);
-      for (uint32_t j = 0; j < aOutputChannelCount; ++j) {
-        outputChannels[j] = &aDownmixBuffer[j * WEBAUDIO_BLOCK_SIZE];
-      }
-
-      AudioChannelsDownMix(aOutputChannels, outputChannels.Elements(),
-                           aOutputChannelCount, WEBAUDIO_BLOCK_SIZE);
-
-      aOutputChannels.SetLength(aOutputChannelCount);
-      for (uint32_t j = 0; j < aOutputChannels.Length(); ++j) {
-        aOutputChannels[j] = outputChannels[j];
-      }
-    } else {
-      // Drop the remaining aOutputChannels
-      aOutputChannels.RemoveElementsAt(aOutputChannelCount,
-        aOutputChannels.Length() - aOutputChannelCount);
     }
   }
 }
@@ -405,7 +383,9 @@ AudioNodeStream::ProduceOutput(GraphTime aFrom, GraphTime aTo)
     FinishOutput();
   }
 
-  EnsureTrack(AUDIO_NODE_STREAM_TRACK_ID, mSampleRate);
+  StreamBuffer::Track* track = EnsureTrack(AUDIO_NODE_STREAM_TRACK_ID, mSampleRate);
+
+  AudioSegment* segment = track->Get<AudioSegment>();
 
   uint16_t outputCount = std::max(uint16_t(1), mEngine->OutputCount());
   mLastChunks.SetLength(outputCount);
@@ -443,15 +423,6 @@ AudioNodeStream::ProduceOutput(GraphTime aFrom, GraphTime aTo)
       mLastChunks[i].SetNull(WEBAUDIO_BLOCK_SIZE);
     }
   }
-
-  AdvanceOutputSegment();
-}
-
-void
-AudioNodeStream::AdvanceOutputSegment()
-{
-  StreamBuffer::Track* track = EnsureTrack(AUDIO_NODE_STREAM_TRACK_ID, mSampleRate);
-  AudioSegment* segment = track->Get<AudioSegment>();
 
   if (mKind == MediaStreamGraph::EXTERNAL_STREAM) {
     segment->AppendAndConsumeChunk(&mLastChunks[0]);
