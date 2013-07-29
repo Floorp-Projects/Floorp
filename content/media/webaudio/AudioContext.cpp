@@ -255,7 +255,7 @@ AudioContext::CreateAnalyser()
 }
 
 already_AddRefed<MediaStreamAudioSourceNode>
-AudioContext::CreateMediaStreamSource(DOMMediaStream& aMediaStream,
+AudioContext::CreateMediaStreamSource(const DOMMediaStream& aMediaStream,
                                       ErrorResult& aRv)
 {
   if (mIsOffline) {
