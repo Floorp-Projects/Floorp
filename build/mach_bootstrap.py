@@ -50,6 +50,7 @@ SEARCH_PATHS = [
     'testing/mozbase/mozprofile',
     'testing/mozbase/mozrunner',
     'testing/mozbase/mozinfo',
+    'xpcom/idl-parser',
 ]
 
 # Individual files providing mach commands.
