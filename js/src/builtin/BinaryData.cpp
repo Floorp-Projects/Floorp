@@ -410,10 +410,8 @@ NumericType<T>::call(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     if (args.length() < 1) {
-        char *fnName = JS_EncodeString(cx, args.callee().as<JSFunction>().atom());
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_MORE_ARGS_NEEDED,
-                             fnName, "0", "s");
-        JS_free(cx, (void *) fnName);
+                             args.callee().getClass()->name, "0", "s");
         return false;
     }
 
