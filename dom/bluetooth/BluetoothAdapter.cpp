@@ -17,6 +17,7 @@
 #include "nsDOMClassInfo.h"
 #include "nsIDOMBluetoothDeviceEvent.h"
 #include "nsTArrayHelpers.h"
+#include "DictionaryHelpers.h"
 #include "DOMRequest.h"
 #include "nsThreadUtils.h"
 
@@ -828,6 +829,73 @@ BluetoothAdapter::IsScoConnected(nsIDOMDOMRequest** aRequest)
   BluetoothService* bs = BluetoothService::Get();
   NS_ENSURE_TRUE(bs, NS_ERROR_FAILURE);
   bs->IsScoConnected(results);
+
+  req.forget(aRequest);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+BluetoothAdapter::SendMediaMetaData(const JS::Value& aOptions,
+                                    nsIDOMDOMRequest** aRequest)
+{
+  idl::MediaMetaData metadata;
+
+  nsresult rv;
+  nsIScriptContext* sc = GetContextForEventHandlers(&rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  AutoPushJSContext cx(sc->GetNativeContext());
+  rv = metadata.Init(cx, &aOptions);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIDOMDOMRequest> req;
+  rv = PrepareDOMRequest(GetOwner(), getter_AddRefs(req));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsRefPtr<BluetoothReplyRunnable> results =
+    new BluetoothVoidReplyRunnable(req);
+
+  BluetoothService* bs = BluetoothService::Get();
+  NS_ENSURE_TRUE(bs, NS_ERROR_FAILURE);
+  bs->SendMetaData(metadata.title,
+                   metadata.artist,
+                   metadata.album,
+                   metadata.mediaNumber,
+                   metadata.totalMediaCount,
+                   metadata.duration,
+                   results);
+
+  req.forget(aRequest);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+BluetoothAdapter::SendMediaPlayStatus(const JS::Value& aOptions,
+                                      nsIDOMDOMRequest** aRequest)
+{
+  idl::MediaPlayStatus status;
+
+  nsresult rv;
+  nsIScriptContext* sc = GetContextForEventHandlers(&rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  AutoPushJSContext cx(sc->GetNativeContext());
+  rv = status.Init(cx, &aOptions);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIDOMDOMRequest> req;
+  rv = PrepareDOMRequest(GetOwner(), getter_AddRefs(req));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsRefPtr<BluetoothReplyRunnable> results =
+    new BluetoothVoidReplyRunnable(req);
+
+  BluetoothService* bs = BluetoothService::Get();
+  NS_ENSURE_TRUE(bs, NS_ERROR_FAILURE);
+  bs->SendPlayStatus(status.duration,
+                     status.position,
+                     status.playStatus,
+                     results);
 
   req.forget(aRequest);
   return NS_OK;
