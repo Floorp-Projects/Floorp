@@ -360,5 +360,35 @@ BluetoothA2dpManager::UpdatePlayStatus(uint32_t aDuration,
   mPlayStatus = aPlayStatus;
 }
 
+uint32_t
+BluetoothA2dpManager::GetDuration()
+{
+  return mDuration;
+}
+
+ControlPlayStatus
+BluetoothA2dpManager::GetPlayStatus()
+{
+  return mPlayStatus;
+}
+
+uint32_t
+BluetoothA2dpManager::GetPosition()
+{
+  return mPosition;
+}
+
+uint32_t
+BluetoothA2dpManager::GetMediaNumber()
+{
+  return mMediaNumber;
+}
+
+void
+BluetoothA2dpManager::GetTitle(nsAString& aTitle)
+{
+  aTitle.Assign(mTitle);
+}
+
 NS_IMPL_ISUPPORTS1(BluetoothA2dpManager, nsIObserver)
 

@@ -285,6 +285,11 @@ public:
                  const nsAString& aPlayStatus,
                  BluetoothReplyRunnable* aRunnable) = 0;
 
+  virtual void
+  UpdatePlayStatus(uint32_t aDuration,
+                   uint32_t aPosition,
+                   ControlPlayStatus aPlayStatus) = 0;
+
   virtual nsresult
   SendSinkMessage(const nsAString& aDeviceAddresses,
                   const nsAString& aMessage) = 0;
