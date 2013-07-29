@@ -366,8 +366,8 @@ TopSitesView.prototype = Util.extend(Object.create(View.prototype), {
 
   destruct: function destruct() {
     Services.obs.removeObserver(this, "Metro:RefreshTopsiteThumbnail");
-    PageThumbs.removeExpirationFilter(this);
     Services.obs.removeObserver(this, "metro_viewstate_changed");
+    PageThumbs.removeExpirationFilter(this);
     window.removeEventListener('MozAppbarDismissing', this, false);
   },
 
@@ -378,6 +378,7 @@ TopSitesView.prototype = Util.extend(Object.create(View.prototype), {
         this.forceReloadOfThumbnail(aState);
         break;
       case "metro_viewstate_changed":
+        this.onViewStateChange(aState);
         for (let item of this._set.children) {
           if (aState == "snapped") {
             item.removeAttribute("tiletype");
@@ -388,8 +389,8 @@ TopSitesView.prototype = Util.extend(Object.create(View.prototype), {
         break;
     }
   },
-  // nsINavHistoryObserver
 
+  // nsINavHistoryObserver
   onBeginUpdateBatch: function() {
   },
 
