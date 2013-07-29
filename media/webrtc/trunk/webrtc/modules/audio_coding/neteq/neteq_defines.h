@@ -345,7 +345,7 @@
     #define NETEQ_32KHZ_WIDEBAND
     #define NETEQ_G722_1C_CODEC
     #define NETEQ_CELT_CODEC
-    /*#define NETEQ_OPUS_CODEC/
+    /*#define NETEQ_OPUS_CODEC*/
 
     /* hack in 48 kHz support */
     #define NETEQ_48KHZ_WIDEBAND
