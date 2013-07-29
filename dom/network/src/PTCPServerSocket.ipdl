@@ -6,52 +6,28 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 include protocol PNecko;
-include protocol PBrowser;
+include protocol PTCPSocket;
 
 include "mozilla/net/NeckoMessageUtils.h";
-
-using mozilla::void_t;
-
-struct TCPError {
-  nsString name;
-};
-
-union SendableData {
-  uint8_t[];
-  nsString;
-};
-
-union CallbackData {
-  void_t;
-  SendableData;
-  TCPError;
-};
 
 namespace mozilla {
 namespace net {
 
 //-------------------------------------------------------------------
-protocol PTCPSocket
+protocol PTCPServerSocket
 {
   manager PNecko;
 
 parent:
-  Open(nsString host, uint16_t port, bool useSSL, nsString binaryType,
-       nullable PBrowser browser);
-  Data(SendableData data);
-  Suspend();
-  Resume();
   Close();
+  RequestDelete();
 
 child:
-  Callback(nsString type, CallbackData data,
-           nsString readyState, uint32_t bufferedAmount);
-
-both:
-  RequestDelete();
+  CallbackAccept(PTCPSocket socket);
+  CallbackError(nsString message, nsString filename,
+                uint32_t lineNumber, uint32_t columnNumber);
   __delete__();
 };
-
 
 } // namespace net
 } // namespace mozilla
