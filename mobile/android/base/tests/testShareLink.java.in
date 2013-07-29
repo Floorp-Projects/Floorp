@@ -86,6 +86,7 @@ public class testShareLink extends BaseTest {
             mAsserter.todo_isnot(allpages, null, "View should not be null but sometimes it is");
         }
 
+        //  Removed by Bug 896576 - [fig] Remove [getBookmarksList] from BaseTest
         // Test the share popup in the Bookmarks tab
         ListView blist = getBookmarksList("about:firefox");
         View bookmark = blist.getChildAt(1); // Getting child at 1 because 0 might be the Desktop folder

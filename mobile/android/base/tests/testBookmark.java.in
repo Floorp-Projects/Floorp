@@ -63,6 +63,7 @@ public class testBookmark extends PixelTest  {
 
         blockForGeckoReady();
 
+        /* Removed by Bug 896576 - [fig] Remove [getBookmarksList] from BaseTest
         // Open the bookmark list and check the root folder view
         ListView bookmarksList = getBookmarksList(ABOUT_HOME_URL, DEFAULT_BOOKMARKS_COUNT);
 
@@ -95,6 +96,7 @@ public class testBookmark extends PixelTest  {
 
         // Clean up the bookmark we created
         deleteBookmark();
+        */
     }
 
     private boolean waitForBookmarked(final boolean isBookmarked) {
