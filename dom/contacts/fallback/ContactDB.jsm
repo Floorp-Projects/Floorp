@@ -18,7 +18,7 @@ Cu.import("resource://gre/modules/IndexedDBHelper.jsm");
 Cu.import("resource://gre/modules/PhoneNumberUtils.jsm");
 
 const DB_NAME = "contacts";
-const DB_VERSION = 13;
+const DB_VERSION = 14;
 const STORE_NAME = "contacts";
 const SAVED_GETALL_STORE_NAME = "getallcache";
 const CHUNK_SIZE = 20;
@@ -492,7 +492,37 @@ ContactDB.prototype = {
         } else {
           next();
         }
-      }
+      },
+      function upgrade13to14() {
+        if (DEBUG) debug("Cleaning up empty substring entries in telMatch index");
+        if (!objectStore) {
+          objectStore = aTransaction.objectStore(STORE_NAME);
+        }
+        objectStore.openCursor().onsuccess = function(event) {
+          function removeEmptyStrings(value) {
+            if (value) {
+              const oldLength = value.length;
+              for (let i = 0; i < value.length; ++i) {
+                if (!value[i] || value[i] == "null") {
+                  value.splice(i, 1);
+                }
+              }
+              return oldLength !== value.length;
+            }
+          }
+
+          let cursor = event.target.result;
+          if (cursor) {
+            let modified = removeEmptyStrings(cursor.value.search.parsedTel);
+            let modified2 = removeEmptyStrings(cursor.value.search.tel);
+            if (modified || modified2) {
+              cursor.update(cursor.value);
+            }
+          } else {
+            next();
+          }
+        };
+      },
     ];
 
     let index = aOldVersion;
@@ -610,10 +640,14 @@ ContactDB.prototype = {
                 }
               }
               for (let num in containsSearch) {
-                contact.search.tel.push(num);
+                if (num != "null") {
+                  contact.search.tel.push(num);
+                }
               }
               for (let num in matchSearch) {
-                contact.search.parsedTel.push(num);
+                if (num != "null") {
+                  contact.search.parsedTel.push(num);
+                }
               }
             } else if ((field == "impp" || field == "email") && aContact.properties[field][i].value) {
               let value = aContact.properties[field][i].value;
@@ -981,6 +1015,12 @@ ContactDB.prototype = {
         if (this.substringMatching && normalized.length > this.substringMatching) {
           normalized = normalized.slice(-this.substringMatching);
         }
+
+        if (!normalized.length) {
+          dump("ContactDB: normalized filterValue is empty, can't perform match search.\n");
+          return txn.abort();
+        }
+
         request = index.mozGetAll(normalized, limit);
       } else {
         // XXX: "contains" should be handled separately, this is "startsWith"
