@@ -342,6 +342,14 @@ MacroAssemblerARM::ma_movPatchable(Imm32 imm_, Register dest,
                                    Assembler::Condition c, RelocStyle rs, Instruction *i)
 {
     int32_t imm = imm_.value;
+    if (i) {
+        // Make sure the current instruction is not an artificial guard
+        // inserted by the assembler buffer.
+        // The InstructionIterator already does this and handles edge cases,
+        // so, just asking an iterator for its current instruction should be
+        // enough to make sure we don't accidentally inspect an artificial guard.
+        i = InstructionIterator(i).cur();
+    }
     switch(rs) {
       case L_MOVWT:
         as_movw(dest, Imm16(imm & 0xffff), c, i);

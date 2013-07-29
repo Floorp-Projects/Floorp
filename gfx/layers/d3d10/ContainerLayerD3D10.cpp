@@ -241,6 +241,8 @@ ContainerLayerD3D10::RenderLayer()
     effect()->GetVariableByName("vRenderTargetOffset")->
       GetRawValue(previousRenderTargetOffset, 0, 8);
 
+    previousViewportSize = mD3DManager->GetViewport();
+
     if (mVisibleRegion.GetNumRects() != 1 || !(GetContentFlags() & CONTENT_OPAQUE)) {
       const gfx3DMatrix& transform3D = GetEffectiveTransform();
       gfxMatrix transform;
@@ -256,10 +258,10 @@ ContainerLayerD3D10::RenderLayer()
         // applied to use relative to our parent, and compensates for the offset
         // that was applied on our parent's rendering.
         D3D10_BOX srcBox;
-        srcBox.left = visibleRect.x + int32_t(transform.x0) - int32_t(previousRenderTargetOffset[0]);
-        srcBox.top = visibleRect.y + int32_t(transform.y0) - int32_t(previousRenderTargetOffset[1]);
-        srcBox.right = srcBox.left + visibleRect.width;
-        srcBox.bottom = srcBox.top + visibleRect.height;
+        srcBox.left = std::max<int32_t>(visibleRect.x + int32_t(transform.x0) - int32_t(previousRenderTargetOffset[0]), 0);
+        srcBox.top = std::max<int32_t>(visibleRect.y + int32_t(transform.y0) - int32_t(previousRenderTargetOffset[1]), 0);
+        srcBox.right = std::min<int32_t>(srcBox.left + visibleRect.width, previousViewportSize.width);
+        srcBox.bottom = std::min<int32_t>(srcBox.top + visibleRect.height, previousViewportSize.height);
         srcBox.back = 1;
         srcBox.front = 0;
 
@@ -284,7 +286,6 @@ ContainerLayerD3D10::RenderLayer()
     effect()->GetVariableByName("vRenderTargetOffset")->
       SetRawValue(renderTargetOffset, 0, 8);
 
-    previousViewportSize = mD3DManager->GetViewport();
     mD3DManager->SetViewport(nsIntSize(visibleRect.Size()));
   }
     

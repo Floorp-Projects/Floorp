@@ -748,8 +748,7 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
                                      thisValue.address(), nullptr, true);
         } else {
           // If the listener is a JS object which has receiveMessage function:
-          if (!JS_GetProperty(ctx, object, "receiveMessage",
-                              funval.address()) ||
+          if (!JS_GetProperty(ctx, object, "receiveMessage", &funval) ||
               !funval.isObject())
             return NS_ERROR_UNEXPECTED;
 

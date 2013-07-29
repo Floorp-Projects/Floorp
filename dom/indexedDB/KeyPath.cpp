@@ -117,8 +117,7 @@ GetJSValFromKeyPathString(JSContext* aCx,
       if (hasProp) {
         // Get if the property exists...
         JS::Rooted<JS::Value> intermediate(aCx);
-        JSBool ok = JS_GetUCProperty(aCx, obj, keyPathChars, keyPathLen,
-                                     intermediate.address());
+        JSBool ok = JS_GetUCProperty(aCx, obj, keyPathChars, keyPathLen, &intermediate);
         NS_ENSURE_TRUE(ok, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
         // Treat explicitly undefined as an error.

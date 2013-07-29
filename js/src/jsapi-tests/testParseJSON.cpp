@@ -114,16 +114,16 @@ BEGIN_TEST(testParseJSON_success)
     CHECK(!JSVAL_IS_PRIMITIVE(v));
     obj = JSVAL_TO_OBJECT(v);
     CHECK(JS_IsArrayObject(cx, obj));
-    CHECK(JS_GetProperty(cx, obj, "length", v2.address()));
+    CHECK(JS_GetProperty(cx, obj, "length", &v2));
     CHECK_SAME(v2, JSVAL_ZERO);
 
     CHECK(Parse(cx, "[1]", &v));
     CHECK(!JSVAL_IS_PRIMITIVE(v));
     obj = JSVAL_TO_OBJECT(v);
     CHECK(JS_IsArrayObject(cx, obj));
-    CHECK(JS_GetProperty(cx, obj, "0", v2.address()));
+    CHECK(JS_GetProperty(cx, obj, "0", &v2));
     CHECK_SAME(v2, JSVAL_ONE);
-    CHECK(JS_GetProperty(cx, obj, "length", v2.address()));
+    CHECK(JS_GetProperty(cx, obj, "length", &v2));
     CHECK_SAME(v2, JSVAL_ONE);
 
 
@@ -137,7 +137,7 @@ BEGIN_TEST(testParseJSON_success)
     CHECK(!JSVAL_IS_PRIMITIVE(v));
     obj = JSVAL_TO_OBJECT(v);
     CHECK(!JS_IsArrayObject(cx, obj));
-    CHECK(JS_GetProperty(cx, obj, "f", v2.address()));
+    CHECK(JS_GetProperty(cx, obj, "f", &v2));
     CHECK_SAME(v2, INT_TO_JSVAL(17));
 
     return true;

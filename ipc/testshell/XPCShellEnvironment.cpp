@@ -78,7 +78,7 @@ Environment(JSObject* global)
     AutoSafeJSContext cx;
     JSAutoCompartment ac(cx, global);
     Rooted<Value> v(cx);
-    if (!JS_GetProperty(cx, global, "__XPCShellEnvironment", v.address()) ||
+    if (!JS_GetProperty(cx, global, "__XPCShellEnvironment", &v) ||
         !v.get().isDouble())
     {
         return nullptr;
