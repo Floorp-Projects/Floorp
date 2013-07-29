@@ -17,7 +17,7 @@ NS_IMPL_CYCLE_COLLECTION_INHERITED_1(MediaStreamAudioSourceNode, AudioNode,
                                      mInputStream)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(MediaStreamAudioSourceNode)
-NS_INTERFACE_MAP_END_INHERITING(MediaStreamAudioSourceNode)
+NS_INTERFACE_MAP_END_INHERITING(AudioNode)
 
 NS_IMPL_ADDREF_INHERITED(MediaStreamAudioSourceNode, AudioNode)
 NS_IMPL_RELEASE_INHERITED(MediaStreamAudioSourceNode, AudioNode)
