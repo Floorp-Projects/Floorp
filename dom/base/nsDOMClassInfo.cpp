@@ -2395,7 +2395,7 @@ ChildWindowGetter(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handle<jsid> id,
 
   // Wrap the child for JS.
   JS::Rooted<JS::Value> v(cx);
-  nsresult rv = WrapNative(cx, JS_GetGlobalForScopeChain(cx), child,
+  nsresult rv = WrapNative(cx, JS::CurrentGlobalOrNull(cx), child,
                            /* aAllowWrapping = */ true, v.address());
   NS_ENSURE_SUCCESS(rv, false);
   vp.set(v);
@@ -3977,7 +3977,7 @@ LocationSetterGuts(JSContext *cx, JSObject *obj, jsval *vp)
   // We have to wrap location into vp before null-checking location, to
   // avoid assigning the wrong thing into the slot.
   nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
-  rv = WrapNative(cx, JS_GetGlobalForScopeChain(cx), location,
+  rv = WrapNative(cx, JS::CurrentGlobalOrNull(cx), location,
                   &NS_GET_IID(nsIDOMLocation), true, vp,
                   getter_AddRefs(holder));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -4322,7 +4322,7 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
       nsCOMPtr<nsIDocument> document = win->GetDoc();
       JS::Rooted<JS::Value> v(cx);
       nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
-      rv = WrapNative(cx, JS_GetGlobalForScopeChain(cx), document, document,
+      rv = WrapNative(cx, JS::CurrentGlobalOrNull(cx), document, document,
                       &NS_GET_IID(nsIDOMDocument), v.address(), getter_AddRefs(holder),
                       false);
       NS_ENSURE_SUCCESS(rv, rv);
@@ -4704,7 +4704,7 @@ nsArraySH::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (array_item) {
-      rv = WrapNative(cx, JS_GetGlobalForScopeChain(cx), array_item, cache,
+      rv = WrapNative(cx, JS::CurrentGlobalOrNull(cx), array_item, cache,
                       true, vp);
       NS_ENSURE_SUCCESS(rv, rv);
 
@@ -4801,7 +4801,7 @@ nsHTMLDocumentSH::GetDocumentAllNodeList(JSContext *cx,
     }
 
     nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
-    nsresult tmp = WrapNative(cx, JS_GetGlobalForScopeChain(cx),
+    nsresult tmp = WrapNative(cx, JS::CurrentGlobalOrNull(cx),
                               static_cast<nsINodeList*>(list), list, false,
                               collection.address(), getter_AddRefs(holder));
     if (NS_FAILED(tmp)) {
@@ -4907,7 +4907,7 @@ nsHTMLDocumentSH::DocumentAllGetProperty(JSContext *cx, JS::Handle<JSObject*> ob
   }
 
   if (result) {
-    rv = WrapNative(cx, JS_GetGlobalForScopeChain(cx), result, cache, true, vp.address());
+    rv = WrapNative(cx, JS::CurrentGlobalOrNull(cx), result, cache, true, vp.address());
     if (NS_FAILED(rv)) {
       xpc::Throw(cx, rv);
 

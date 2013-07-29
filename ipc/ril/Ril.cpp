@@ -48,7 +48,7 @@ private:
 bool
 DispatchRILEvent::RunTask(JSContext *aCx)
 {
-    JSObject *obj = JS_GetGlobalForScopeChain(aCx);
+    JSObject *obj = JS::CurrentGlobalOrNull(aCx);
 
     JSObject *array = JS_NewUint8Array(aCx, mMessage->mSize);
     if (!array) {

@@ -677,7 +677,7 @@ public:
       aData.name, aData.type, fileInfo.forget());
 
     JS::Rooted<JS::Value> wrappedFileHandle(aCx);
-    JS::Rooted<JSObject*> global(aCx, JS_GetGlobalForScopeChain(aCx));
+    JS::Rooted<JSObject*> global(aCx, JS::CurrentGlobalOrNull(aCx));
     nsresult rv =
       nsContentUtils::WrapNative(aCx, global,
                                  static_cast<nsIDOMFileHandle*>(fileHandle),
@@ -738,7 +738,7 @@ public:
       }
 
       JS::Rooted<JS::Value> wrappedBlob(aCx);
-      JS::Rooted<JSObject*> global(aCx, JS_GetGlobalForScopeChain(aCx));
+      JS::Rooted<JSObject*> global(aCx, JS::CurrentGlobalOrNull(aCx));
       rv = nsContentUtils::WrapNative(aCx, global, domBlob,
                                       &NS_GET_IID(nsIDOMBlob),
                                       wrappedBlob.address());
@@ -765,7 +765,7 @@ public:
     }
 
     JS::Rooted<JS::Value> wrappedFile(aCx);
-    JS::Rooted<JSObject*> global(aCx, JS_GetGlobalForScopeChain(aCx));
+    JS::Rooted<JSObject*> global(aCx, JS::CurrentGlobalOrNull(aCx));
     rv = nsContentUtils::WrapNative(aCx, global, domFile,
                                     &NS_GET_IID(nsIDOMFile),
                                     wrappedFile.address());

@@ -1711,7 +1711,7 @@ JS_GetGlobalForCompartmentOrNull(JSContext *cx, JSCompartment *c)
 }
 
 JS_PUBLIC_API(JSObject *)
-JS_GetGlobalForScopeChain(JSContext *cx)
+JS::CurrentGlobalOrNull(JSContext *cx)
 {
     AssertHeapIsIdleOrIterating(cx);
     CHECK_REQUEST(cx);

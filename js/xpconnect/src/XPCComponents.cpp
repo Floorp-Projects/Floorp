@@ -2916,7 +2916,7 @@ CreateXMLHttpRequest(JSContext *cx, unsigned argc, jsval *vp)
     if (!subjectPrincipal)
         return false;
 
-    RootedObject global(cx, JS_GetGlobalForScopeChain(cx));
+    RootedObject global(cx, JS::CurrentGlobalOrNull(cx));
     MOZ_ASSERT(global);
 
     nsIScriptObjectPrincipal *sop =
