@@ -6,9 +6,9 @@
 
 #include "builtin/BinaryData.h"
 
-#include <vector>
-
 #include "mozilla/FloatingPoint.h"
+
+#include <vector>
 
 #include "jscompartment.h"
 #include "jsfun.h"
@@ -16,10 +16,10 @@
 #include "jsutil.h"
 
 #include "gc/Marking.h"
-#include "vm/TypedArrayObject.h"
+#include "vm/GlobalObject.h"
 #include "vm/String.h"
 #include "vm/StringBuffer.h"
-#include "vm/GlobalObject.h"
+#include "vm/TypedArrayObject.h"
 
 #include "jsatominlines.h"
 #include "jsobjinlines.h"

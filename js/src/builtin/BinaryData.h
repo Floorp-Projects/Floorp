@@ -8,8 +8,9 @@
 #define builtin_BinaryData_h
 
 #include "jsapi.h"
-#include "jsobj.h"
 #include "jsfriendapi.h"
+#include "jsobj.h"
+
 #include "gc/Heap.h"
 
 namespace js {
