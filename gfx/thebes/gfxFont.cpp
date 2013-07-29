@@ -5012,7 +5012,7 @@ gfxFontStyle::gfxFontStyle() :
     size(DEFAULT_PIXEL_FONT_SIZE), sizeAdjust(0.0f),
     languageOverride(NO_FONT_LANGUAGE_OVERRIDE),
     weight(NS_FONT_WEIGHT_NORMAL), stretch(NS_FONT_STRETCH_NORMAL),
-    systemFont(true), printerFont(false), useGrayscaleAntialiasing(false),
+    systemFont(true), printerFont(false), 
     style(NS_FONT_STYLE_NORMAL)
 {
 }
@@ -5027,7 +5027,7 @@ gfxFontStyle::gfxFontStyle(uint8_t aStyle, uint16_t aWeight, int16_t aStretch,
     languageOverride(ParseFontLanguageOverride(aLanguageOverride)),
     weight(aWeight), stretch(aStretch),
     systemFont(aSystemFont), printerFont(aPrinterFont),
-    useGrayscaleAntialiasing(false), style(aStyle)
+    style(aStyle)
 {
     MOZ_ASSERT(!mozilla::IsNaN(size));
     MOZ_ASSERT(!mozilla::IsNaN(sizeAdjust));
@@ -5058,7 +5058,6 @@ gfxFontStyle::gfxFontStyle(const gfxFontStyle& aStyle) :
     languageOverride(aStyle.languageOverride),
     weight(aStyle.weight), stretch(aStyle.stretch),
     systemFont(aStyle.systemFont), printerFont(aStyle.printerFont),
-    useGrayscaleAntialiasing(aStyle.useGrayscaleAntialiasing),
     style(aStyle.style)
 {
     featureSettings.AppendElements(aStyle.featureSettings);
