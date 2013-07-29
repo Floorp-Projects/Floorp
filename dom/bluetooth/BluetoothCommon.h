@@ -85,6 +85,16 @@ enum BluetoothObjectType {
   TYPE_INVALID
 };
 
+enum ControlPlayStatus {
+  PLAYSTATUS_STOPPED  = 0x00,
+  PLAYSTATUS_PLAYING  = 0x01,
+  PLAYSTATUS_PAUSED   = 0x02,
+  PLAYSTATUS_FWD_SEEK = 0x03,
+  PLAYSTATUS_REV_SEEK = 0x04,
+  PLAYSTATUS_UNKNOWN,
+  PLAYSTATUS_ERROR    = 0xFF,
+};
+
 END_BLUETOOTH_NAMESPACE
 
 #endif // mozilla_dom_bluetooth_bluetoothcommon_h__
