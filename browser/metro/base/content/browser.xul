@@ -396,7 +396,7 @@
 
     <autoscroller class="autoscroller" id="autoscrollerid"/>
 
-    <flyoutpanel id="about-flyoutpanel" headertext="&aboutHeader.title;">
+    <flyoutpanel id="about-flyoutpanel" class="flyout-narrow" headertext="&aboutHeader.title;">
       <label id="about-product-label" value="&aboutHeader.product.label;"/>
       <label value="&aboutHeader.company.label;"/>
 #expand <label id="about-version-label">__MOZ_APP_VERSION__</label>
@@ -451,7 +451,7 @@
     </flyoutpanel>
 
 #ifdef MOZ_SERVICES_SYNC
-    <flyoutpanel id="sync-flyoutpanel" headertext="&sync.flyout.title;">
+    <flyoutpanel id="sync-flyoutpanel" class="flyout-narrow" headertext="&sync.flyout.title;">
 
       <vbox id="sync-presetup-container" collapsed="true">
         <description>&sync.flyout.presetup.description1;</description>
@@ -653,7 +653,7 @@
     </flyoutpanel>
 #endif
 
-    <flyoutpanel id="prefs-flyoutpanel" headertext="&optionsHeader.title;">
+    <flyoutpanel id="prefs-flyoutpanel" class="flyout-narrow" headertext="&optionsHeader.title;">
       <settings id="prefs-startup" label="&optionsHeader.startup.title;"> <!-- note, this element has a custom margin-top -->
         <setting id="prefs-homepage" title="&optionsHeader.homepage.title;" type="menulist" pref="browser.startup.sessionRestore" class="setting-expanded">
           <menulist id="prefs-homepage-options">
