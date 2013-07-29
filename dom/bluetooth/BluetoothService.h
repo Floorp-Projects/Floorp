@@ -270,6 +270,26 @@ public:
   virtual void
   IsScoConnected(BluetoothReplyRunnable* aRunnable) = 0;
 
+  virtual void
+  SendMetaData(const nsAString& aTitle,
+               const nsAString& aArtist,
+               const nsAString& aAlbum,
+               int64_t aMediaNumber,
+               int64_t aTotalMediaCount,
+               int64_t aDuration,
+               BluetoothReplyRunnable* aRunnable) = 0;
+
+  virtual void
+  SendPlayStatus(int64_t aDuration,
+                 int64_t aPosition,
+                 const nsAString& aPlayStatus,
+                 BluetoothReplyRunnable* aRunnable) = 0;
+
+  virtual void
+  UpdatePlayStatus(uint32_t aDuration,
+                   uint32_t aPosition,
+                   ControlPlayStatus aPlayStatus) = 0;
+
   virtual nsresult
   SendSinkMessage(const nsAString& aDeviceAddresses,
                   const nsAString& aMessage) = 0;

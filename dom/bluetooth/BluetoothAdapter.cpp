@@ -5,13 +5,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "base/basictypes.h"
-#include "BluetoothAdapter.h"
-#include "BluetoothDevice.h"
-#include "BluetoothReplyRunnable.h"
-#include "BluetoothService.h"
-#include "BluetoothUtils.h"
 #include "GeneratedEvents.h"
-
 #include "nsContentUtils.h"
 #include "nsCxPusher.h"
 #include "nsDOMClassInfo.h"
@@ -24,6 +18,14 @@
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/LazyIdleThread.h"
 #include "mozilla/Util.h"
+
+#include "BluetoothAdapter.h"
+#include "BluetoothDevice.h"
+#include "BluetoothReplyRunnable.h"
+#include "BluetoothService.h"
+#include "BluetoothUtils.h"
+#include "MediaMetaData.h"
+#include "MediaPlayStatus.h"
 
 using namespace mozilla;
 
@@ -828,6 +830,73 @@ BluetoothAdapter::IsScoConnected(nsIDOMDOMRequest** aRequest)
   BluetoothService* bs = BluetoothService::Get();
   NS_ENSURE_TRUE(bs, NS_ERROR_FAILURE);
   bs->IsScoConnected(results);
+
+  req.forget(aRequest);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+BluetoothAdapter::SendMediaMetaData(const JS::Value& aOptions,
+                                    nsIDOMDOMRequest** aRequest)
+{
+  MediaMetaData metadata;
+
+  nsresult rv;
+  nsIScriptContext* sc = GetContextForEventHandlers(&rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  AutoPushJSContext cx(sc->GetNativeContext());
+  rv = metadata.Init(cx, &aOptions);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIDOMDOMRequest> req;
+  rv = PrepareDOMRequest(GetOwner(), getter_AddRefs(req));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsRefPtr<BluetoothReplyRunnable> results =
+    new BluetoothVoidReplyRunnable(req);
+
+  BluetoothService* bs = BluetoothService::Get();
+  NS_ENSURE_TRUE(bs, NS_ERROR_FAILURE);
+  bs->SendMetaData(metadata.mTitle,
+                   metadata.mArtist,
+                   metadata.mAlbum,
+                   metadata.mMediaNumber,
+                   metadata.mTotalMediaCount,
+                   metadata.mDuration,
+                   results);
+
+  req.forget(aRequest);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+BluetoothAdapter::SendMediaPlayStatus(const JS::Value& aOptions,
+                                      nsIDOMDOMRequest** aRequest)
+{
+  MediaPlayStatus status;
+
+  nsresult rv;
+  nsIScriptContext* sc = GetContextForEventHandlers(&rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  AutoPushJSContext cx(sc->GetNativeContext());
+  rv = status.Init(cx, &aOptions);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIDOMDOMRequest> req;
+  rv = PrepareDOMRequest(GetOwner(), getter_AddRefs(req));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsRefPtr<BluetoothReplyRunnable> results =
+    new BluetoothVoidReplyRunnable(req);
+
+  BluetoothService* bs = BluetoothService::Get();
+  NS_ENSURE_TRUE(bs, NS_ERROR_FAILURE);
+  bs->SendPlayStatus(status.mDuration,
+                     status.mPosition,
+                     status.mPlayStatus,
+                     results);
 
   req.forget(aRequest);
   return NS_OK;

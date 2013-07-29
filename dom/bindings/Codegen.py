@@ -9632,7 +9632,7 @@ class CGJSImplClass(CGBindingImplClass):
             "}\n"
             "nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(global.Get());\n"
             "if (!window) {\n"
-            '  return ThrowErrorMessage(cx, MSG_DOES_NOT_IMPLEMENT_INTERFACE, "Argument 1 of ${ifaceName}._create");\n'
+            '  return ThrowErrorMessage(cx, MSG_DOES_NOT_IMPLEMENT_INTERFACE, "Argument 1 of ${ifaceName}._create", "Window");\n'
             "}\n"
             "JS::Rooted<JSObject*> arg(cx, &args[1].toObject());\n"
             "nsRefPtr<${implName}> impl = new ${implName}(arg, window);\n"

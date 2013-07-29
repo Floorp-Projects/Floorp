@@ -21,6 +21,8 @@
 #include "mozilla/TypeTraits.h"
 #include "mozilla/Util.h"
 
+#include <new> // for placement new
+
 /* Silence dire "bugs in previous versions of MSVC have been fixed" warnings */
 #ifdef _MSC_VER
 #pragma warning(push)

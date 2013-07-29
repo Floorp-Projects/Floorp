@@ -138,22 +138,64 @@ public:
   virtual void
   IsScoConnected(BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
 
+  virtual void
+  SendMetaData(const nsAString& aTitle,
+               const nsAString& aArtist,
+               const nsAString& aAlbum,
+               int64_t aMediaNumber,
+               int64_t aTotalMediaCount,
+               int64_t aDuration,
+               BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
+
+  virtual void
+  SendPlayStatus(int64_t aDuration,
+                 int64_t aPosition,
+                 const nsAString& aPlayStatus,
+                 BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
+
+  virtual void
+  UpdatePlayStatus(uint32_t aDuration,
+                   uint32_t aPosition,
+                   ControlPlayStatus aPlayStatus) MOZ_OVERRIDE;
+
   virtual nsresult
   SendSinkMessage(const nsAString& aDeviceAddresses,
                   const nsAString& aMessage) MOZ_OVERRIDE;
 
 private:
+  /**
+   * For DBus Control method of "UpdateNotification", event id should be
+   * specified as following:
+   * (Please see specification of AVRCP 1.3, Table 5.28 for more details.)
+   */
+  enum ControlEventId {
+    EVENT_PLAYBACK_STATUS_CHANGED            = 0x01,
+    EVENT_TRACK_CHANGED                      = 0x02,
+    EVENT_TRACK_REACHED_END                  = 0x03,
+    EVENT_TRACK_REACHED_START                = 0x04,
+    EVENT_PLAYBACK_POS_CHANGED               = 0x05,
+    EVENT_BATT_STATUS_CHANGED                = 0x06,
+    EVENT_SYSTEM_STATUS_CHANGED              = 0x07,
+    EVENT_PLAYER_APPLICATION_SETTING_CHANGED = 0x08,
+    EVENT_UNKNOWN
+  };
+
   nsresult SendGetPropertyMessage(const nsAString& aPath,
                                   const char* aInterface,
                                   void (*aCB)(DBusMessage *, void *),
                                   BluetoothReplyRunnable* aRunnable);
+
   nsresult SendDiscoveryMessage(const char* aMessageName,
                                 BluetoothReplyRunnable* aRunnable);
+
   nsresult SendSetPropertyMessage(const char* aInterface,
                                   const BluetoothNamedValue& aValue,
                                   BluetoothReplyRunnable* aRunnable);
 
+  void UpdateNotification(ControlEventId aEventId, uint64_t aData);
+
   void DisconnectAllAcls(const nsAString& aAdapterPath);
+
 };
 
 END_BLUETOOTH_NAMESPACE
