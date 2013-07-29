@@ -73,6 +73,7 @@ USING_BLUETOOTH_NAMESPACE
 
 #define ERR_A2DP_IS_DISCONNECTED      "A2dpIsDisconnected"
 #define ERR_AVRCP_IS_DISCONNECTED     "AvrcpIsDisconnected"
+#define ERR_UNKNOWN_PROFILE           "UnknownProfileError"
 
 typedef struct {
   const char* name;
@@ -216,6 +217,38 @@ private:
   BluetoothSignal mSignal;
 };
 
+class ControlPropertyChangedHandler : public nsRunnable
+{
+public:
+  ControlPropertyChangedHandler(const BluetoothSignal& aSignal)
+    : mSignal(aSignal)
+  {
+  }
+
+  nsresult Run()
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+    if (mSignal.value().type() != BluetoothValue::TArrayOfBluetoothNamedValue) {
+       BT_WARNING("Wrong value type for ControlPropertyChangedHandler");
+       return NS_ERROR_FAILURE;
+    }
+
+    InfallibleTArray<BluetoothNamedValue>& arr =
+      mSignal.value().get_ArrayOfBluetoothNamedValue();
+    MOZ_ASSERT(arr[0].name().EqualsLiteral("Connected"));
+    MOZ_ASSERT(arr[0].value().type() == BluetoothValue::Tbool);
+    bool connected = arr[0].value().get_bool();
+
+    BluetoothA2dpManager* a2dp = BluetoothA2dpManager::Get();
+    NS_ENSURE_TRUE(a2dp, NS_ERROR_FAILURE);
+    a2dp->SetAvrcpConnected(connected);
+    return NS_OK;
+  }
+
+private:
+  BluetoothSignal mSignal;
+};
+
 class SinkPropertyChangedHandler : public nsRunnable
 {
 public:
@@ -229,7 +262,8 @@ public:
   {
     MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(mSignal.name().EqualsLiteral("PropertyChanged"));
-    MOZ_ASSERT(mSignal.value().type() == BluetoothValue::TArrayOfBluetoothNamedValue);
+    MOZ_ASSERT(mSignal.value().type() ==
+               BluetoothValue::TArrayOfBluetoothNamedValue);
 
     // Replace object path with device address
     nsString address = GetAddressFromObjectPath(mSignal.path());
@@ -408,6 +442,11 @@ public:
       NS_WARNING("Failed to start listening for BluetoothOppManager!");
       return NS_ERROR_FAILURE;
     }
+
+    BluetoothA2dpManager* a2dp = BluetoothA2dpManager::Get();
+    NS_ENSURE_TRUE(a2dp, NS_ERROR_FAILURE);
+    a2dp->ResetA2dp();
+    a2dp->ResetAvrcp();
 
     return NS_OK;
   }
@@ -1450,6 +1489,12 @@ EventFilter(DBusConnection* aConn, DBusMessage* aMsg, void* aData)
                         errorStr,
                         sSinkProperties,
                         ArrayLength(sSinkProperties));
+  } else if (dbus_message_is_signal(aMsg, DBUS_CTL_IFACE, "PropertyChanged")) {
+    ParsePropertyChange(aMsg,
+                        v,
+                        errorStr,
+                        sControlProperties,
+                        ArrayLength(sControlProperties));
   } else {
     errorStr = NS_ConvertUTF8toUTF16(dbus_message_get_member(aMsg));
     errorStr.AppendLiteral(" Signal not handled!");
@@ -1464,6 +1509,8 @@ EventFilter(DBusConnection* aConn, DBusMessage* aMsg, void* aData)
   nsRefPtr<nsRunnable> task;
   if (signalInterface.EqualsLiteral(DBUS_SINK_IFACE)) {
     task = new SinkPropertyChangedHandler(signal);
+  } else if (signalInterface.EqualsLiteral(DBUS_CTL_IFACE)) {
+    task = new ControlPropertyChangedHandler(signal);
   } else {
     task = new DistributeBluetoothSignalTask(signal);
   }
@@ -1908,25 +1955,22 @@ BluetoothDBusService::GetConnectedDevicePropertiesInternal(uint16_t aProfileId,
   }
 
   nsTArray<nsString> deviceAddresses;
+  BluetoothProfileManagerBase* profile;
   if (aProfileId == BluetoothServiceClass::HANDSFREE ||
       aProfileId == BluetoothServiceClass::HEADSET) {
-    BluetoothHfpManager* hfp = BluetoothHfpManager::Get();
-    if (hfp->IsConnected()) {
-      nsString address;
-      hfp->GetAddress(address);
-      deviceAddresses.AppendElement(address);
-    }
+    profile = BluetoothHfpManager::Get();
   } else if (aProfileId == BluetoothServiceClass::OBJECT_PUSH) {
-    BluetoothOppManager* opp = BluetoothOppManager::Get();
-    if (opp->IsTransferring()) {
-      nsString address;
-      opp->GetAddress(address);
-      deviceAddresses.AppendElement(address);
-    }
+    profile = BluetoothOppManager::Get();
   } else {
-    errorStr.AssignLiteral("Unknown profile");
-    DispatchBluetoothReply(aRunnable, values, errorStr);
+    DispatchBluetoothReply(aRunnable, values,
+                           NS_LITERAL_STRING(ERR_UNKNOWN_PROFILE));
     return NS_OK;
+  }
+
+  if (profile->IsConnected()) {
+    nsString address;
+    profile->GetAddress(address);
+    deviceAddresses.AppendElement(address);
   }
 
   nsRefPtr<BluetoothReplyRunnable> runnable = aRunnable;
@@ -1934,11 +1978,7 @@ BluetoothDBusService::GetConnectedDevicePropertiesInternal(uint16_t aProfileId,
     new BluetoothArrayOfDevicePropertiesRunnable(deviceAddresses,
                                                  runnable,
                                                  GetConnectedDevicesFilter));
-
-  if (NS_FAILED(mBluetoothCommandThread->Dispatch(func, NS_DISPATCH_NORMAL))) {
-    NS_WARNING("Cannot dispatch task!");
-    return NS_ERROR_FAILURE;
-  }
+  mBluetoothCommandThread->Dispatch(func, NS_DISPATCH_NORMAL);
 
   runnable.forget();
   return NS_OK;
@@ -2391,7 +2431,7 @@ BluetoothDBusService::Connect(const nsAString& aDeviceAddress,
     opp->Connect(aDeviceAddress, aRunnable);
   } else {
     DispatchBluetoothReply(aRunnable, BluetoothValue(),
-                           NS_LITERAL_STRING("UnknownProfileError"));
+                           NS_LITERAL_STRING(ERR_UNKNOWN_PROFILE));
   }
 }
 
@@ -2409,7 +2449,7 @@ BluetoothDBusService::Disconnect(const uint16_t aProfileId,
     BluetoothOppManager* opp = BluetoothOppManager::Get();
     opp->Disconnect();
   } else {
-    NS_WARNING("Unknown profile");
+    BT_WARNING(ERR_UNKNOWN_PROFILE);
     return;
   }
 
@@ -2424,16 +2464,19 @@ BluetoothDBusService::IsConnected(const uint16_t aProfileId)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
+  BluetoothProfileManagerBase* profile;
   if (aProfileId == BluetoothServiceClass::HANDSFREE ||
       aProfileId == BluetoothServiceClass::HEADSET) {
-    BluetoothHfpManager* hfp = BluetoothHfpManager::Get();
-    return (hfp->IsConnected());
+    profile = BluetoothHfpManager::Get();
   } else if (aProfileId == BluetoothServiceClass::OBJECT_PUSH) {
-    BluetoothOppManager* opp = BluetoothOppManager::Get();
-    return opp->IsTransferring();
+    profile = BluetoothOppManager::Get();
+  } else {
+    NS_WARNING(ERR_UNKNOWN_PROFILE);
+    return false;
   }
 
-  return false;
+  NS_ENSURE_TRUE(profile, false);
+  return profile->IsConnected();
 }
 
 class ConnectBluetoothSocketRunnable : public nsRunnable
@@ -2829,6 +2872,16 @@ BluetoothDBusService::SendMetaData(const nsAString& aTitle,
   BluetoothA2dpManager* a2dp = BluetoothA2dpManager::Get();
   NS_ENSURE_TRUE_VOID(a2dp);
 
+  if (!a2dp->IsConnected()) {
+    DispatchBluetoothReply(aRunnable, BluetoothValue(),
+                           NS_LITERAL_STRING(ERR_A2DP_IS_DISCONNECTED));
+    return;
+  } else if (!a2dp->IsAvrcpConnected()) {
+    DispatchBluetoothReply(aRunnable, BluetoothValue(),
+                           NS_LITERAL_STRING(ERR_AVRCP_IS_DISCONNECTED));
+    return;
+  }
+
   nsAutoString address;
   a2dp->GetAddress(address);
   nsString objectPath =
@@ -2915,6 +2968,16 @@ BluetoothDBusService::SendPlayStatus(uint32_t aDuration,
 
   BluetoothA2dpManager* a2dp = BluetoothA2dpManager::Get();
   NS_ENSURE_TRUE_VOID(a2dp);
+
+  if (!a2dp->IsConnected()) {
+    DispatchBluetoothReply(aRunnable, BluetoothValue(),
+                           NS_LITERAL_STRING(ERR_A2DP_IS_DISCONNECTED));
+    return;
+  } else if (!a2dp->IsAvrcpConnected()) {
+    DispatchBluetoothReply(aRunnable, BluetoothValue(),
+                           NS_LITERAL_STRING(ERR_AVRCP_IS_DISCONNECTED));
+    return;
+  }
 
   nsAutoString address;
   a2dp->GetAddress(address);
