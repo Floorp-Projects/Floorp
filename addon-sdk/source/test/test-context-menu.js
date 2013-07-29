@@ -7,6 +7,8 @@
 
 let { Cc, Ci } = require("chrome");
 
+require("sdk/context-menu");
+
 const { Loader } = require('sdk/test/loader');
 const timer = require("sdk/timers");
 const { merge } = require("sdk/util/object");
@@ -3135,16 +3137,6 @@ exports.testSelectionInOuterFrameNoMatch = function (test) {
 };
 
 // NO TESTS BELOW THIS LINE! ///////////////////////////////////////////////////
-
-// Run only a dummy test if context-menu doesn't support the host app.
-if (!require("sdk/system/xul-app").is("Firefox")) {
-  module.exports = {
-    testAppNotSupported: function (test) {
-      test.pass("context-menu does not support this application.");
-    }
-  };
-}
-
 
 // This makes it easier to run tests by handling things like opening the menu,
 // opening new windows, making assertions, etc.  Methods on |test| can be called

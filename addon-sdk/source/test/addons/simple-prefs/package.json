@@ -1,0 +1,23 @@
+{
+  "id": "test-simple-prefs",
+    "preferences": [{
+        "name": "somePreference",
+        "title": "some-title",
+        "description": "Some short description for the preference",
+        "type": "string",
+        "value": "TEST"
+    },
+    {
+        "description": "How many of them we have.",
+        "name": "myInteger",
+        "type": "integer",
+        "value": 8,
+        "title": "my-int"
+    }, {
+        "name": "myHiddenInt",
+        "type": "integer",
+        "hidden": true,
+        "value": 5,
+        "title": "hidden-int"
+    }]
+}
