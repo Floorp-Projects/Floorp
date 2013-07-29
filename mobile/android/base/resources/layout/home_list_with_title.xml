@@ -5,13 +5,6 @@
 
 <merge xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <TextView android:id="@+id/empty_message"
-              style="@style/Widget.Home.EmptyMessage"
-              android:layout_width="fill_parent"
-              android:layout_height="fill_parent"
-              android:text="@string/home_visited_empty"
-              android:visibility="gone"/>
-
     <TextView android:id="@+id/title"
               style="@style/Widget.Home.PageTitle"/>
 

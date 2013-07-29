@@ -9,8 +9,7 @@
                                             android:layout_width="wrap_content"
                                             android:layout_height="fill_parent"
                                             android:tabStripEnabled="false"
-                                            android:divider="@drawable/tab_indicator_divider"
-                                            android:layout="@layout/tabs_panel_indicator"/>
+                                            android:divider="@drawable/tab_indicator_divider"/>
 
     <View android:layout_width="0dip"
           android:layout_height="fill_parent"

@@ -87,7 +87,5 @@
   <color name="url_bar_domaintext">#000</color>
   <color name="url_bar_domaintext_private">#FFF</color>
 
-  <color name="home_last_tab_bar_bg">#FFF5F7F9</color>
-
 </resources>
 
