@@ -1695,7 +1695,7 @@ NS_IMETHODIMP
 jsdContext::GetGlobalObject (jsdIValue **_rval)
 {
     ASSERT_VALID_EPHEMERAL;
-    JSObject *glob = js::GetDefaultGlobalForContext(mJSCx);
+    JSObject *glob = js::DefaultObjectForContextOrNull(mJSCx);
     JSDValue *jsdv = JSD_NewValue (mJSDCx, OBJECT_TO_JSVAL(glob));
     if (!jsdv)
         return NS_ERROR_FAILURE;

@@ -1604,7 +1604,7 @@ nsJSContext::GetGlobalObject()
 JSObject*
 nsJSContext::GetNativeGlobal()
 {
-    return js::GetDefaultGlobalForContext(mContext);
+    return js::DefaultObjectForContextOrNull(mContext);
 }
 
 JSContext*

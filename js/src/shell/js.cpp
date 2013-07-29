@@ -2635,7 +2635,7 @@ EvalInFrame(JSContext *cx, unsigned argc, jsval *vp)
     if (saveCurrent) {
         if (!sfc.save())
             return false;
-        ac.construct(cx, GetDefaultGlobalForContext(cx));
+        ac.construct(cx, DefaultObjectForContextOrNull(cx));
     }
 
     size_t length;
