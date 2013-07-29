@@ -9,7 +9,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=553917
     <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
     <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
     <script type="application/javascript">
-      SimpleTest.expectAssertions(22);
+      if (navigator.platform.indexOf("Win") == 0) {
+        SimpleTest.expectAssertions(20, 22);
+      } else {
+        SimpleTest.expectAssertions(22);
+      }
 
       var stringBundleService = 
         SpecialPowers.Cc["@mozilla.org/intl/stringbundle;1"]
