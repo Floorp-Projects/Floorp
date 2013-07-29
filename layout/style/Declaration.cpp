@@ -12,6 +12,7 @@
 
 #include "mozilla/css/Declaration.h"
 #include "nsPrintfCString.h"
+#include "mozilla/Preferences.h"
 
 namespace mozilla {
 namespace css {
@@ -144,6 +145,9 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
     if (*p == eCSSProperty__x_system_font ||
          nsCSSProps::PropHasFlags(*p, CSS_PROPERTY_DIRECTIONAL_SOURCE)) {
       // The system-font subproperty and the *-source properties don't count.
+      continue;
+    }
+    if (!nsCSSProps::IsEnabled(*p)) {
       continue;
     }
     ++totalCount;
@@ -554,6 +558,9 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
       const nsCSSValue &fontVariantPosition =
         *data->ValueFor(eCSSProperty_font_variant_position);
 
+      bool fontFeaturesEnabled =
+        mozilla::Preferences::GetBool("layout.css.font-features.enabled");
+
       if (systemFont &&
           systemFont->GetUnit() != eCSSUnit_None &&
           systemFont->GetUnit() != eCSSUnit_Null) {
@@ -567,39 +574,38 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
             sizeAdjust.GetUnit() != eCSSUnit_System_Font ||
             featureSettings.GetUnit() != eCSSUnit_System_Font ||
             languageOverride.GetUnit() != eCSSUnit_System_Font ||
-            fontKerning.GetUnit() != eCSSUnit_System_Font ||
-            fontSynthesis.GetUnit() != eCSSUnit_System_Font ||
-            fontVariantAlternates.GetUnit() != eCSSUnit_System_Font ||
-            fontVariantCaps.GetUnit() != eCSSUnit_System_Font ||
-            fontVariantEastAsian.GetUnit() != eCSSUnit_System_Font ||
-            fontVariantLigatures.GetUnit() != eCSSUnit_System_Font ||
-            fontVariantNumeric.GetUnit() != eCSSUnit_System_Font ||
-            fontVariantPosition.GetUnit() != eCSSUnit_System_Font) {
+            (fontFeaturesEnabled &&
+             (fontKerning.GetUnit() != eCSSUnit_System_Font ||
+              fontSynthesis.GetUnit() != eCSSUnit_System_Font ||
+              fontVariantAlternates.GetUnit() != eCSSUnit_System_Font ||
+              fontVariantCaps.GetUnit() != eCSSUnit_System_Font ||
+              fontVariantEastAsian.GetUnit() != eCSSUnit_System_Font ||
+              fontVariantLigatures.GetUnit() != eCSSUnit_System_Font ||
+              fontVariantNumeric.GetUnit() != eCSSUnit_System_Font ||
+              fontVariantPosition.GetUnit() != eCSSUnit_System_Font))) {
           // This can't be represented as a shorthand.
           return;
         }
         systemFont->AppendToString(eCSSProperty__x_system_font, aValue);
       } else {
-        // The font-stretch, font-size-adjust,
-        // -moz-font-feature-settings, -moz-font-language-override
-        // along with kerning, synthesis and other font-variant
-        // subproperties are reset by this shorthand property to their
-        // initial values, but can't be represented in its syntax.
+        // properties reset by this shorthand property to their
+        // initial values but not represented in its syntax
         if (stretch.GetUnit() != eCSSUnit_Enumerated ||
             stretch.GetIntValue() != NS_STYLE_FONT_STRETCH_NORMAL ||
             sizeAdjust.GetUnit() != eCSSUnit_None ||
             featureSettings.GetUnit() != eCSSUnit_Normal ||
             languageOverride.GetUnit() != eCSSUnit_Normal ||
-            fontKerning.GetIntValue() != NS_FONT_KERNING_AUTO ||
-            fontSynthesis.GetUnit() != eCSSUnit_Enumerated ||
-            fontSynthesis.GetIntValue() !=
-              (NS_FONT_SYNTHESIS_WEIGHT | NS_FONT_SYNTHESIS_STYLE) ||
-            fontVariantAlternates.GetUnit() != eCSSUnit_Normal ||
-            fontVariantCaps.GetUnit() != eCSSUnit_Normal ||
-            fontVariantEastAsian.GetUnit() != eCSSUnit_Normal ||
-            fontVariantLigatures.GetUnit() != eCSSUnit_Normal ||
-            fontVariantNumeric.GetUnit() != eCSSUnit_Normal ||
-            fontVariantPosition.GetUnit() != eCSSUnit_Normal) {
+            (fontFeaturesEnabled &&
+             (fontKerning.GetIntValue() != NS_FONT_KERNING_AUTO ||
+              fontSynthesis.GetUnit() != eCSSUnit_Enumerated ||
+              fontSynthesis.GetIntValue() !=
+                (NS_FONT_SYNTHESIS_WEIGHT | NS_FONT_SYNTHESIS_STYLE) ||
+              fontVariantAlternates.GetUnit() != eCSSUnit_Normal ||
+              fontVariantCaps.GetUnit() != eCSSUnit_Normal ||
+              fontVariantEastAsian.GetUnit() != eCSSUnit_Normal ||
+              fontVariantLigatures.GetUnit() != eCSSUnit_Normal ||
+              fontVariantNumeric.GetUnit() != eCSSUnit_Normal ||
+              fontVariantPosition.GetUnit() != eCSSUnit_Normal))) {
           return;
         }
 
@@ -946,6 +952,9 @@ Declaration::ToString(nsAString& aString) const
   nsAutoTArray<nsCSSProperty, 16> shorthandsUsed;
   for (index = 0; index < count; index++) {
     nsCSSProperty property = OrderValueAt(index);
+    if (!nsCSSProps::IsEnabled(property)) {
+      continue;
+    }
     bool doneProperty = false;
 
     // If we already used this property in a shorthand, skip it.
