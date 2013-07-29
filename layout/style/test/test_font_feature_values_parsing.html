@@ -335,6 +335,10 @@ function testOneRule(testrule) {
 }
 
 function testFontFeatureValuesRuleParsing() {
+  // Gecko-specific check - if pref not set, skip these tests
+  if (window.SpecialPowers && !window.SpecialPowers.getBoolPref("layout.css.font-features.enabled")) {
+    return;
+  }
   var i;
   for (i = 0; i < testrules.length; i++) {
     var testrule = testrules[i];
