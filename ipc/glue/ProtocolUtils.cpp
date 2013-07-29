@@ -124,5 +124,14 @@ UnpackChannelOpened(const PrivateIPDLInterface&,
   return ChannelOpened::Read(aMsg, aTransport, aOtherProcess, aProtocol);
 }
 
+void
+ProtocolErrorBreakpoint(const char* aMsg)
+{
+    // Bugs that generate these error messages can be tough to
+    // reproduce.  Log always in the hope that someone finds the error
+    // message.
+    printf_stderr("IPDL protocol error: %s\n", aMsg);
+}
+
 } // namespace ipc
 } // namespace mozilla
