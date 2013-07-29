@@ -302,10 +302,6 @@ let HistoryStartView = {
   _view: null,
   get _grid() { return document.getElementById("start-history-grid"); },
 
-  show: function show() {
-    this._grid.arrangeItems();
-  },
-
   init: function init() {
     this._view = new HistoryView(this._grid, StartUI.maxResultsPerSection, true);
     this._view.populateGrid();
