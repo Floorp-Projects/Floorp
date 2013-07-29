@@ -108,7 +108,7 @@ class MochitestRunner(MozbuildObject):
 
         runner = mochitest.Mochitest(automation)
 
-        opts = mochitest.MochitestOptions(automation, tests_dir)
+        opts = mochitest.MochitestOptions(automation)
         options, args = opts.parse_args([])
 
         # Need to set the suite options before verifyOptions below.
