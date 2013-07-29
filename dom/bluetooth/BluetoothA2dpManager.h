@@ -49,6 +49,15 @@ public:
   // AVRCP member functions
   void SetAvrcpConnected(bool aConnected);
   bool IsAvrcpConnected();
+  void UpdateMetaData(const nsAString& aTitle,
+                      const nsAString& aArtist,
+                      const nsAString& aAlbum,
+                      uint32_t aMediaNumber,
+                      uint32_t aTotalMediaCount,
+                      uint32_t aDuration);
+  void UpdatePlayStatus(uint32_t aDuration,
+                        uint32_t aPosition,
+                        ControlPlayStatus aPlayStatus);
 
 private:
   BluetoothA2dpManager();
@@ -69,6 +78,14 @@ private:
 
   // AVRCP data member
   bool mAvrcpConnected;
+  nsString mAlbum;
+  nsString mArtist;
+  nsString mTitle;
+  uint32_t mDuration;
+  uint32_t mMediaNumber;
+  uint32_t mTotalMediaCount;
+  uint32_t mPosition;
+  ControlPlayStatus mPlayStatus;
 };
 
 END_BLUETOOTH_NAMESPACE
