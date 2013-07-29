@@ -167,6 +167,11 @@ public:
                  const nsAString& aPlayStatus,
                  BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
 
+  virtual void
+  UpdatePlayStatus(uint32_t aDuration,
+                   uint32_t aPosition,
+                   ControlPlayStatus aPlayStatus) MOZ_OVERRIDE;
+
   virtual nsresult
   SendSinkMessage(const nsAString& aDeviceAddresses,
                   const nsAString& aMessage) MOZ_OVERRIDE;

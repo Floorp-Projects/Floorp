@@ -415,3 +415,11 @@ BluetoothServiceChildProcess::SendSinkMessage(const nsAString& aDeviceAddresses,
   MOZ_CRASH("This should never be called!");
 }
 
+void
+BluetoothServiceChildProcess::UpdatePlayStatus(uint32_t aDuration,
+                                               uint32_t aPosition,
+                                               ControlPlayStatus aPlayStatus)
+{
+  MOZ_CRASH("This should never be called!");
+}
+

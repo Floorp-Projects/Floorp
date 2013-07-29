@@ -58,6 +58,11 @@ public:
   void UpdatePlayStatus(uint32_t aDuration,
                         uint32_t aPosition,
                         ControlPlayStatus aPlayStatus);
+  uint32_t GetDuration();
+  ControlPlayStatus GetPlayStatus();
+  uint32_t GetPosition();
+  uint32_t GetMediaNumber();
+  void GetTitle(nsAString& aTitle);
 
 private:
   BluetoothA2dpManager();
