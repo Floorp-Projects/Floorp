@@ -975,6 +975,14 @@ nsDocLoader::GetIsLoadingDocument(bool *aIsLoadingDocument)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsDocLoader::GetLoadType(uint32_t *aLoadType)
+{
+  *aLoadType = 0;
+
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 int64_t nsDocLoader::GetMaxTotalProgress()
 {
   int64_t newMaxTotal = 0;
