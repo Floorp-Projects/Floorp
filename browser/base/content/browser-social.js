@@ -610,11 +610,13 @@ SocialShare = {
     let iframe = document.createElement("iframe");
     iframe.setAttribute("type", "content");
     iframe.setAttribute("class", "social-share-frame");
+    iframe.setAttribute("context", "contentAreaContextMenu");
+    iframe.setAttribute("tooltip", "aHTMLTooltip");
     iframe.setAttribute("flex", "1");
     panel.appendChild(iframe);
     this.populateProviderMenu();
   },
-  
+
   getSelectedProvider: function() {
     let provider;
     let lastProviderOrigin = this.iframe && this.iframe.getAttribute("origin");
