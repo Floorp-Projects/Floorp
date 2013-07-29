@@ -276,6 +276,3 @@ pref(gfx.font_rendering.graphite.enabled,true) HTTP(..) == glyph-decomposition-g
 != auto-hyphenation-sv-1.html auto-hyphenation-sv-1-notref.html # verify swedish != english
 == auto-hyphenation-tr-1.html auto-hyphenation-tr-1-ref.html
 == auto-hyphenation-uk-1.html auto-hyphenation-uk-1-ref.html
-
-# osx-font-smoothing - with and without subpixel AA, only under OSX
-skip-if(!cocoaWidget||OSX==10.6||OSX==10.7)) != osx-font-smoothing.html osx-font-smoothing-ref.html
