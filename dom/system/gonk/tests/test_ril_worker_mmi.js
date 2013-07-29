@@ -767,8 +767,92 @@ add_test(function test_sendMMI_get_IMEI_error() {
   run_next_test();
 });
 
-add_test(function test_sendMMI_call_barring() {
-  testSendMMI("*33#", MMI_ERROR_KS_NOT_SUPPORTED);
+add_test(function test_sendMMI_call_barring_BAIC_interrogation_voice() {
+  let workerhelper = getWorker();
+  let worker = workerhelper.worker;
+
+  worker.Buf.readUint32List = function fakeReadUint32List() {
+    return [1];
+  };
+
+  worker.RIL.queryICCFacilityLock =
+    function fakeQueryICCFacilityLock(options){
+      worker.RIL[REQUEST_QUERY_FACILITY_LOCK](1, {
+        rilMessageType: "sendMMI",
+        rilRequestError: ERROR_SUCCESS
+      });
+  }
+
+  worker.RIL.radioState = GECKO_RADIOSTATE_READY;
+  worker.RIL.sendMMI({mmi: "*#33#"});
+
+  let postedMessage = workerhelper.postedMessage;
+
+  do_check_true(postedMessage.success);
+  do_check_true(postedMessage.enabled);
+  do_check_eq(postedMessage.statusMessage,  MMI_SM_KS_SERVICE_ENABLED_FOR);
+  do_check_true(Array.isArray(postedMessage.additionalInformation));
+  do_check_eq(postedMessage.additionalInformation[0], "serviceClassVoice");
+
+  run_next_test();
+});
+
+add_test(function test_sendMMI_call_barring_BAIC_activation() {
+  let workerhelper = getWorker();
+  let worker = workerhelper.worker;
+  let mmiOptions;
+
+  worker.RIL.setICCFacilityLock =
+    function fakeSetICCFacilityLock(options){
+      mmiOptions = options;
+      worker.RIL[REQUEST_SET_FACILITY_LOCK](0, {
+        rilMessageType: "sendMMI",
+        procedure: MMI_PROCEDURE_ACTIVATION,
+        rilRequestError: ERROR_SUCCESS
+      });
+  }
+
+  worker.RIL.radioState = GECKO_RADIOSTATE_READY;
+  worker.RIL.sendMMI({mmi: "*33#"});
+
+  let postedMessage = workerhelper.postedMessage;
+
+  do_check_eq(mmiOptions.procedure, MMI_PROCEDURE_ACTIVATION);
+  do_check_true(postedMessage.success);
+  do_check_eq(postedMessage.statusMessage,  MMI_SM_KS_SERVICE_ENABLED);
+
+  run_next_test();
+});
+
+add_test(function test_sendMMI_call_barring_BAIC_deactivation() {
+  let workerhelper = getWorker();
+  let worker = workerhelper.worker;
+  let mmiOptions;
+
+  worker.RIL.setICCFacilityLock =
+    function fakeSetICCFacilityLock(options){
+      mmiOptions = options;
+      worker.RIL[REQUEST_SET_FACILITY_LOCK](0, {
+        rilMessageType: "sendMMI",
+        procedure: MMI_PROCEDURE_DEACTIVATION,
+        rilRequestError: ERROR_SUCCESS
+      });
+  }
+
+  worker.RIL.radioState = GECKO_RADIOSTATE_READY;
+  worker.RIL.sendMMI({mmi: "#33#"});
+
+  let postedMessage = workerhelper.postedMessage;
+
+  do_check_eq(mmiOptions.procedure, MMI_PROCEDURE_DEACTIVATION);
+  do_check_true(postedMessage.success);
+  do_check_eq(postedMessage.statusMessage,  MMI_SM_KS_SERVICE_DISABLED);
+
+  run_next_test();
+});
+
+add_test(function test_sendMMI_call_barring_BAIC_procedure_not_supported() {
+  testSendMMI("**33*0000#", MMI_ERROR_KS_NOT_SUPPORTED);
 
   run_next_test();
 });

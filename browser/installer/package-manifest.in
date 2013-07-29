@@ -527,6 +527,7 @@
 @BINPATH@/components/Push.manifest
 @BINPATH@/components/PushServiceLauncher.js
 @BINPATH@/components/TCPSocket.js
+@BINPATH@/components/TCPServerSocket.js
 @BINPATH@/components/TCPSocketParentIntermediary.js
 @BINPATH@/components/TCPSocket.manifest
 
