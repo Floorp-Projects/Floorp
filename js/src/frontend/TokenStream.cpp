@@ -306,14 +306,15 @@ TokenStream::TokenStream(ExclusiveContext *cx, const CompileOptions &options,
      * The few token kinds satisfying these properties cover roughly 35--45%
      * of the tokens seen in practice.
      *
-     * Nb: oneCharTokens, maybeEOL and maybeStrSpecial could be static, but
-     * initializing them this way is a bit easier.  Don't worry, the time to
-     * initialize them for each TokenStream is trivial.  See bug 639420.
+     * Nb: the following tables could be static, but initializing them this way
+     * is much easier.  Don't worry, the time to initialize them for each
+     * TokenStream is trivial.  See bug 639420.
      */
     memset(oneCharTokens, 0, sizeof(oneCharTokens));
     oneCharTokens[unsigned(';')] = TOK_SEMI;
     oneCharTokens[unsigned(',')] = TOK_COMMA;
     oneCharTokens[unsigned('?')] = TOK_HOOK;
+    oneCharTokens[unsigned(':')] = TOK_COLON;
     oneCharTokens[unsigned('[')] = TOK_LB;
     oneCharTokens[unsigned(']')] = TOK_RB;
     oneCharTokens[unsigned('{')] = TOK_LC;
@@ -1000,7 +1001,6 @@ enum FirstCharKind {
     Equals,
     String,
     Dec,
-    Colon,
     Plus,
     BasePrefix,
 
@@ -1012,17 +1012,16 @@ enum FirstCharKind {
 #define _______ Other
 
 /*
- * OneChar:  40,  41,  44,  59,  63,  91,  93, 123, 125, 126:
- *          '(', ')', ',', ';', '?', '[', ']', '{', '}', '~'
+ * OneChar: 40,  41,  44,  58,  59,  63,  91,  93,  123, 125, 126:
+ *          '(', ')', ',', ':', ';', '?', '[', ']', '{', '}', '~'
  * Ident:   36, 65..90, 95, 97..122: '$', 'A'..'Z', '_', 'a'..'z'
  * Dot:     46: '.'
  * Equals:  61: '='
  * String:  34, 39: '"', '\''
  * Dec:     49..57: '1'..'9'
- * Colon:   58: ':'
  * Plus:    43: '+'
  * BasePrefix:  48: '0'
- * Space:   9, 11, 12: '\t', '\v', '\f'
+ * Space:   9, 11, 12, 32: '\t', '\v', '\f', ' '
  * EOL:     10, 13: '\n', '\r'
  */
 static const uint8_t firstCharKinds[] = {
@@ -1032,7 +1031,7 @@ static const uint8_t firstCharKinds[] = {
 /*  20+ */ _______, _______, _______, _______, _______, _______, _______, _______, _______, _______,
 /*  30+ */ _______, _______,   Space, _______,  String, _______,   Ident, _______, _______,  String,
 /*  40+ */ OneChar, OneChar, _______,    Plus, OneChar, _______,     Dot, _______, BasePrefix,  Dec,
-/*  50+ */     Dec,     Dec,     Dec,     Dec,     Dec,     Dec,     Dec,     Dec,   Colon, OneChar,
+/*  50+ */     Dec,     Dec,     Dec,     Dec,     Dec,     Dec,     Dec,     Dec, OneChar, OneChar,
 /*  60+ */ _______,  Equals, _______, OneChar, _______,   Ident,   Ident,   Ident,   Ident,   Ident,
 /*  70+ */   Ident,   Ident,   Ident,   Ident,   Ident,   Ident,   Ident,   Ident,   Ident,   Ident,
 /*  80+ */   Ident,   Ident,   Ident,   Ident,   Ident,   Ident,   Ident,   Ident,   Ident,   Ident,
@@ -1379,11 +1378,6 @@ TokenStream::getTokenInternal()
         }
         tp->setNumber(dval, decimalPoint);
         tt = TOK_NUMBER;
-        goto out;
-    }
-
-    if (c1kind == Colon) {
-        tt = TOK_COLON;
         goto out;
     }
 
