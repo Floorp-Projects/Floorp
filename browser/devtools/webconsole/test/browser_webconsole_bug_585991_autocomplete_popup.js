@@ -64,10 +64,10 @@ function consoleOpened(HUD) {
     is(popup.selectedIndex, 2, "index 2 is selected");
     is(popup.selectedItem, items[2], "item2 is selected");
 
-    ok(!popup.selectNextItem(), "selectPreviousItem() works");
+    ok(popup.selectNextItem(), "selectPreviousItem() works");
 
-    is(popup.selectedIndex, -1, "no index is selected");
-    ok(!popup.selectedItem, "no item is selected");
+    is(popup.selectedIndex, 0, "index 0 is selected");
+    is(popup.selectedItem, items[0], "item0 is selected");
 
     items.push({label: "label3", value: "value3"});
     popup.appendItem(items[3]);

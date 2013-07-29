@@ -396,6 +396,7 @@
 
 @BINPATH@/components/TCPSocket.js
 @BINPATH@/components/TCPSocketParentIntermediary.js
+@BINPATH@/components/TCPServerSocket.js
 @BINPATH@/components/TCPSocket.manifest
 
 #ifdef MOZ_WEBRTC
