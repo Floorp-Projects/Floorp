@@ -62,13 +62,10 @@ public class BrowserSearch extends HomeFragment
     private static final String LOGTAG = "GeckoBrowserSearch";
 
     // Cursor loader ID for search query
-    private static final int SEARCH_LOADER_ID = 0;
-
-    // Cursor loader ID for favicons query
-    private static final int FAVICONS_LOADER_ID = 1;
+    private static final int LOADER_ID_SEARCH = 0;
 
     // AsyncTask loader ID for suggestion query
-    private static final int SUGGESTION_LOADER_ID = 2;
+    private static final int LOADER_ID_SUGGESTION = 1;
 
     // Timeout for the suggestion client to respond
     private static final int SUGGESTION_TIMEOUT = 3000;
@@ -291,7 +288,7 @@ public class BrowserSearch extends HomeFragment
 
     @Override
     protected void load() {
-        getLoaderManager().initLoader(SEARCH_LOADER_ID, null, mCursorLoaderCallbacks);
+        getLoaderManager().initLoader(LOADER_ID_SEARCH, null, mCursorLoaderCallbacks);
     }
 
     private void handleAutocomplete(String searchTerm, Cursor c) {
@@ -359,7 +356,7 @@ public class BrowserSearch extends HomeFragment
             mSuggestionLoaderCallbacks = new SuggestionLoaderCallbacks();
         }
 
-        getLoaderManager().restartLoader(SUGGESTION_LOADER_ID, null, mSuggestionLoaderCallbacks);
+        getLoaderManager().restartLoader(LOADER_ID_SUGGESTION, null, mSuggestionLoaderCallbacks);
     }
 
     private void setSuggestions(ArrayList<String> suggestions) {
@@ -567,7 +564,7 @@ public class BrowserSearch extends HomeFragment
             mAdapter.notifyDataSetChanged();
 
             // Restart loaders with the new search term
-            SearchLoader.restart(getLoaderManager(), SEARCH_LOADER_ID, mCursorLoaderCallbacks, mSearchTerm, false);
+            SearchLoader.restart(getLoaderManager(), LOADER_ID_SEARCH, mCursorLoaderCallbacks, mSearchTerm, false);
             filterSuggestions();
         }
     }
@@ -762,25 +759,19 @@ public class BrowserSearch extends HomeFragment
         }
     }
 
-    private class CursorLoaderCallbacks implements LoaderCallbacks<Cursor> {
+    private class CursorLoaderCallbacks extends HomeCursorLoaderCallbacks {
         @Override
         public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-            switch(id) {
-            case SEARCH_LOADER_ID:
+            if (id == LOADER_ID_SEARCH) {
                 return SearchLoader.createInstance(getActivity(), args);
-
-            case FAVICONS_LOADER_ID:
-                return FaviconsLoader.createInstance(getActivity(), args);
+            } else {
+                return super.onCreateLoader(id, args);
             }
-
-            return null;
         }
 
         @Override
         public void onLoadFinished(Loader<Cursor> loader, Cursor c) {
-            final int loaderId = loader.getId();
-            switch(loaderId) {
-            case SEARCH_LOADER_ID:
+            if (loader.getId() == LOADER_ID_SEARCH) {
                 mAdapter.swapCursor(c);
 
                 // We should handle autocompletion based on the search term
@@ -789,30 +780,24 @@ public class BrowserSearch extends HomeFragment
                 SearchCursorLoader searchLoader = (SearchCursorLoader) loader;
                 handleAutocomplete(searchLoader.getSearchTerm(), c);
 
-                FaviconsLoader.restartFromCursor(getLoaderManager(), FAVICONS_LOADER_ID,
-                        mCursorLoaderCallbacks, c);
-                break;
-
-            case FAVICONS_LOADER_ID:
-                // Causes the listview to recreate its children and use the
-                // now in-memory favicons.
-                mAdapter.notifyDataSetChanged();
-                break;
+                loadFavicons(c);
+            } else {
+                super.onLoadFinished(loader, c);
             }
         }
 
         @Override
         public void onLoaderReset(Loader<Cursor> loader) {
-            final int loaderId = loader.getId();
-            switch(loaderId) {
-            case SEARCH_LOADER_ID:
+            if (loader.getId() == LOADER_ID_SEARCH) {
                 mAdapter.swapCursor(null);
-                break;
-
-            case FAVICONS_LOADER_ID:
-                // Do nothing
-                break;
+            } else {
+                super.onLoaderReset(loader);
             }
+        }
+
+        @Override
+        public void onFaviconsLoaded() {
+            mAdapter.notifyDataSetChanged();
         }
     }
 
