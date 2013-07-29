@@ -1042,6 +1042,12 @@ const int32_t nsCSSProps::kFontSizeKTable[] = {
   eCSSKeyword_UNKNOWN,-1
 };
 
+const int32_t nsCSSProps::kFontSmoothingKTable[] = {
+  eCSSKeyword_auto, NS_FONT_SMOOTHING_AUTO,
+  eCSSKeyword_antialiased, NS_FONT_SMOOTHING_ANTIALIASED,
+  eCSSKeyword_UNKNOWN,-1
+};
+
 const int32_t nsCSSProps::kFontStretchKTable[] = {
   eCSSKeyword_ultra_condensed, NS_STYLE_FONT_STRETCH_ULTRA_CONDENSED,
   eCSSKeyword_extra_condensed, NS_STYLE_FONT_STRETCH_EXTRA_CONDENSED,
