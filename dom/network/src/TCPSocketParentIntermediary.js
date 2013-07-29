@@ -14,15 +14,9 @@ function TCPSocketParentIntermediary() {
 }
 
 TCPSocketParentIntermediary.prototype = {
-  open: function(aParentSide, aHost, aPort, aUseSSL, aBinaryType) {
+  _setCallbacks: function(aParentSide, socket) {
     aParentSide.initJS(this);
-
-    let baseSocket = Cc["@mozilla.org/tcp-socket;1"].createInstance(Ci.nsIDOMTCPSocket);
-    let socket = this._socket = baseSocket.open(aHost, aPort,
-                                                {useSSL: aUseSSL,
-                                                binaryType: aBinaryType});
-    if (!socket)
-      return null;
+    this._socket = socket;
 
     // Create handlers for every possible callback that attempt to trigger
     // corresponding callbacks on the child object.
@@ -34,8 +28,50 @@ TCPSocketParentIntermediary.prototype = {
         };
       }
     );
+ },
 
+  open: function(aParentSide, aHost, aPort, aUseSSL, aBinaryType) {
+    let baseSocket = Cc["@mozilla.org/tcp-socket;1"].createInstance(Ci.nsIDOMTCPSocket);
+    let socket = baseSocket.open(aHost, aPort, {useSSL: aUseSSL, binaryType: aBinaryType});
+    if (!socket)
+      return null;
+
+    // Handlers are set to the JS-implemented socket object on the parent side.
+    this._setCallbacks(aParentSide, socket);
     return socket;
+  },
+
+  listen: function(aTCPServerSocketParent, aLocalPort, aBacklog, aBinaryType) {
+    let baseSocket = Cc["@mozilla.org/tcp-socket;1"].createInstance(Ci.nsIDOMTCPSocket);
+    let serverSocket = baseSocket.listen(aLocalPort, { binaryType: aBinaryType }, aBacklog);
+    if (!serverSocket)
+      return null;
+
+    let localPort = serverSocket.localPort;
+
+    serverSocket["onconnect"] = function(socket) {
+      var socketParent = Cc["@mozilla.org/tcp-socket-parent;1"]
+                            .createInstance(Ci.nsITCPSocketParent);
+      var intermediary = new TCPSocketParentIntermediary();
+      // Handlers are set to the JS-implemented socket object on the parent side,
+      // so that the socket parent object can communicate data
+      // with the corresponding socket child object through IPC.
+      intermediary._setCallbacks(socketParent, socket);
+      // The members in the socket parent object are set with arguments,
+      // so that the socket parent object can communicate data 
+      // with the JS socket object on the parent side via the intermediary object.
+      socketParent.setSocketAndIntermediary(socket, intermediary);
+      aTCPServerSocketParent.sendCallbackAccept(socketParent);
+    };
+
+    serverSocket["onerror"] = function(data) {
+        var error = data.data;
+
+        aTCPServerSocketParent.sendCallbackError(error.message, error.filename,
+                                                 error.lineNumber, error.columnNumber);
+    };
+
+    return serverSocket;
   },
 
   sendString: function(aData) {
