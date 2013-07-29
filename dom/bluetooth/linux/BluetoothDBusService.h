@@ -142,14 +142,14 @@ public:
   SendMetaData(const nsAString& aTitle,
                const nsAString& aArtist,
                const nsAString& aAlbum,
-               uint32_t aMediaNumber,
-               uint32_t aTotalMediaCount,
-               uint32_t aDuration,
+               int64_t aMediaNumber,
+               int64_t aTotalMediaCount,
+               int64_t aDuration,
                BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
 
   virtual void
-  SendPlayStatus(uint32_t aDuration,
-                 uint32_t aPosition,
+  SendPlayStatus(int64_t aDuration,
+                 int64_t aPosition,
                  const nsAString& aPlayStatus,
                  BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
 
