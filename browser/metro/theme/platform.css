@@ -624,6 +624,7 @@ arrowbox {
 }
 
 .meta-section-title {
+  margin: @metro_spacing_normal@ @tile_side_margin@;
   font-size: @metro_font_large@;
   font-weight: 100;
   cursor: default;
