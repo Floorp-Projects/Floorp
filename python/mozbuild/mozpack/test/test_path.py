@@ -110,6 +110,9 @@ class TestPath(unittest.TestCase):
         self.assertTrue(match('foo/bar/baz.qux', '**/*.qux'))
         self.assertFalse(match('foo/bar/baz.qux', '**.qux'))
         self.assertFalse(match('foo/bar', 'foo/*/bar'))
+        self.assertTrue(match('foo/bar/baz.qux', 'foo/**/bar/**'))
+        self.assertFalse(match('foo/nobar/baz.qux', 'foo/**/bar/**'))
+        self.assertTrue(match('foo/bar', 'foo/**/bar/**'))
 
     def test_rebase(self):
         self.assertEqual(rebase('foo', 'foo/bar', 'bar/baz'), 'baz')
