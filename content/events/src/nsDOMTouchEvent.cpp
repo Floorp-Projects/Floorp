@@ -108,15 +108,7 @@ NS_IMPL_CYCLE_COLLECTION_INHERITED_3(nsDOMTouchEvent, nsDOMUIEvent,
                                      mTargetTouches,
                                      mChangedTouches)
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsDOMTouchEvent)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMTouchEvent)
-NS_INTERFACE_MAP_END_INHERITING(nsDOMUIEvent)
-
-NS_IMPL_ADDREF_INHERITED(nsDOMTouchEvent, nsDOMUIEvent)
-NS_IMPL_RELEASE_INHERITED(nsDOMTouchEvent, nsDOMUIEvent)
-
-
-NS_IMETHODIMP
+void
 nsDOMTouchEvent::InitTouchEvent(const nsAString& aType,
                                 bool aCanBubble,
                                 bool aCancelable,
@@ -126,31 +118,25 @@ nsDOMTouchEvent::InitTouchEvent(const nsAString& aType,
                                 bool aAltKey,
                                 bool aShiftKey,
                                 bool aMetaKey,
-                                nsIDOMTouchList* aTouches,
-                                nsIDOMTouchList* aTargetTouches,
-                                nsIDOMTouchList* aChangedTouches)
+                                nsDOMTouchList* aTouches,
+                                nsDOMTouchList* aTargetTouches,
+                                nsDOMTouchList* aChangedTouches,
+                                mozilla::ErrorResult& aRv)
 {
-  nsresult rv = nsDOMUIEvent::InitUIEvent(aType,
-                                          aCanBubble,
-                                          aCancelable,
-                                          aView,
-                                          aDetail);
-  NS_ENSURE_SUCCESS(rv, rv);
+  aRv = nsDOMUIEvent::InitUIEvent(aType,
+                                  aCanBubble,
+                                  aCancelable,
+                                  aView,
+                                  aDetail);
+  if (aRv.Failed()) {
+    return;
+  }
 
   static_cast<nsInputEvent*>(mEvent)->InitBasicModifiers(aCtrlKey, aAltKey,
                                                          aShiftKey, aMetaKey);
-  mTouches = static_cast<nsDOMTouchList*>(aTouches);
-  mTargetTouches = static_cast<nsDOMTouchList*>(aTargetTouches);
-  mChangedTouches = static_cast<nsDOMTouchList*>(aChangedTouches);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMTouchEvent::GetTouches(nsIDOMTouchList** aTouches)
-{
-  NS_ENSURE_ARG_POINTER(aTouches);
-  NS_ADDREF(*aTouches = Touches());
-  return NS_OK;
+  mTouches = aTouches;
+  mTargetTouches = aTargetTouches;
+  mChangedTouches = aChangedTouches;
 }
 
 nsDOMTouchList*
@@ -175,14 +161,6 @@ nsDOMTouchEvent::Touches()
   return mTouches;
 }
 
-NS_IMETHODIMP
-nsDOMTouchEvent::GetTargetTouches(nsIDOMTouchList** aTargetTouches)
-{
-  NS_ENSURE_ARG_POINTER(aTargetTouches);
-  NS_ADDREF(*aTargetTouches = TargetTouches());
-  return NS_OK;
-}
-
 nsDOMTouchList*
 nsDOMTouchEvent::TargetTouches()
 {
@@ -205,14 +183,6 @@ nsDOMTouchEvent::TargetTouches()
   return mTargetTouches;
 }
 
-NS_IMETHODIMP
-nsDOMTouchEvent::GetChangedTouches(nsIDOMTouchList** aChangedTouches)
-{
-  NS_ENSURE_ARG_POINTER(aChangedTouches);
-  NS_ADDREF(*aChangedTouches = ChangedTouches());
-  return NS_OK;
-}
-
 nsDOMTouchList*
 nsDOMTouchEvent::ChangedTouches()
 {
@@ -228,34 +198,6 @@ nsDOMTouchEvent::ChangedTouches()
     mChangedTouches = new nsDOMTouchList(ToSupports(this), changedTouches);
   }
   return mChangedTouches;
-}
-
-NS_IMETHODIMP
-nsDOMTouchEvent::GetAltKey(bool* aAltKey)
-{
-  *aAltKey = AltKey();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMTouchEvent::GetMetaKey(bool* aMetaKey)
-{
-  *aMetaKey = MetaKey();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMTouchEvent::GetCtrlKey(bool* aCtrlKey)
-{
-  *aCtrlKey = CtrlKey();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMTouchEvent::GetShiftKey(bool* aShiftKey)
-{
-  *aShiftKey = ShiftKey();
-  return NS_OK;
 }
 
 #ifdef XP_WIN
