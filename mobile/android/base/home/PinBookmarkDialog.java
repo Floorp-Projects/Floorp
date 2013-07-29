@@ -35,10 +35,10 @@ class PinBookmarkDialog extends DialogFragment {
     }
 
     // Cursor loader ID for search query
-    private static final int SEARCH_LOADER_ID = 0;
+    private static final int LOADER_ID_SEARCH = 0;
 
     // Cursor loader ID for favicons query
-    private static final int FAVICONS_LOADER_ID = 1;
+    private static final int LOADER_ID_FAVICONS = 1;
 
     // Holds the current search term to use in the query
     private String mSearchTerm;
@@ -132,7 +132,7 @@ class PinBookmarkDialog extends DialogFragment {
         mLoaderCallbacks = new CursorLoaderCallbacks();
 
         // Reconnect to the loader only if present
-        getLoaderManager().initLoader(SEARCH_LOADER_ID, null, mLoaderCallbacks);
+        getLoaderManager().initLoader(LOADER_ID_SEARCH, null, mLoaderCallbacks);
 
         // Default filter.
         filter("");
@@ -147,7 +147,7 @@ class PinBookmarkDialog extends DialogFragment {
         mSearchTerm = searchTerm;
 
         // Restart loaders with the new search term
-        SearchLoader.restart(getLoaderManager(), SEARCH_LOADER_ID, mLoaderCallbacks, mSearchTerm);
+        SearchLoader.restart(getLoaderManager(), LOADER_ID_SEARCH, mLoaderCallbacks, mSearchTerm);
     }
 
     public void setOnBookmarkSelectedListener(OnBookmarkSelectedListener listener) {
@@ -179,10 +179,10 @@ class PinBookmarkDialog extends DialogFragment {
         @Override
         public Loader<Cursor> onCreateLoader(int id, Bundle args) {
             switch(id) {
-            case SEARCH_LOADER_ID:
+            case LOADER_ID_SEARCH:
                 return SearchLoader.createInstance(getActivity(), args);
 
-            case FAVICONS_LOADER_ID:
+            case LOADER_ID_FAVICONS:
                 return FaviconsLoader.createInstance(getActivity(), args);
             }
 
@@ -193,14 +193,14 @@ class PinBookmarkDialog extends DialogFragment {
         public void onLoadFinished(Loader<Cursor> loader, Cursor c) {
             final int loaderId = loader.getId();
             switch(loaderId) {
-            case SEARCH_LOADER_ID:
+            case LOADER_ID_SEARCH:
                 mAdapter.swapCursor(c);
 
-                FaviconsLoader.restartFromCursor(getLoaderManager(), FAVICONS_LOADER_ID,
+                FaviconsLoader.restartFromCursor(getLoaderManager(), LOADER_ID_FAVICONS,
                         mLoaderCallbacks, c);
                 break;
 
-            case FAVICONS_LOADER_ID:
+            case LOADER_ID_FAVICONS:
                 // Force the list to use the in-memory favicons.
                 mAdapter.notifyDataSetChanged();
                 break;
@@ -211,11 +211,11 @@ class PinBookmarkDialog extends DialogFragment {
         public void onLoaderReset(Loader<Cursor> loader) {
             final int loaderId = loader.getId();
             switch(loaderId) {
-            case SEARCH_LOADER_ID:
+            case LOADER_ID_SEARCH:
                 mAdapter.swapCursor(null);
                 break;
 
-            case FAVICONS_LOADER_ID:
+            case LOADER_ID_FAVICONS:
                 // Do nothing
                 break;
             }
