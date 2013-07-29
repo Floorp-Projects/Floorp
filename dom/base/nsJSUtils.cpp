@@ -144,7 +144,7 @@ nsJSUtils::ReportPendingException(JSContext *aContext)
   if (JS_IsExceptionPending(aContext)) {
     bool saved = JS_SaveFrameChain(aContext);
     {
-      JSAutoCompartment ac(aContext, js::GetDefaultGlobalForContext(aContext));
+      JSAutoCompartment ac(aContext, js::DefaultObjectForContextOrNull(aContext));
       JS_ReportPendingException(aContext);
     }
     if (saved) {

@@ -687,7 +687,7 @@ bool
 JSRuntime::initSelfHosting(JSContext *cx)
 {
     JS_ASSERT(!selfHostingGlobal_);
-    RootedObject savedGlobal(cx, js::GetDefaultGlobalForContext(cx));
+    RootedObject savedGlobal(cx, js::DefaultObjectForContextOrNull(cx));
     if (!(selfHostingGlobal_ = JS_NewGlobalObject(cx, &self_hosting_global_class, NULL)))
         return false;
     JSAutoCompartment ac(cx, selfHostingGlobal_);
