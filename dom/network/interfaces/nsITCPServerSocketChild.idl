@@ -1,0 +1,39 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "domstubs.idl"
+#include "nsIDOMTCPServerSocket.idl"
+
+interface nsITCPServerSocketInternal;
+
+/**
+ * Interface to allow the content process server socket to reach the IPC bridge.
+ * It is used in the server socket implementation on the child side.
+ */
+
+[scriptable, uuid(41a77ec8-fd86-409e-aea9-af2ca407ef8e)]
+interface nsITCPServerSocketChild : nsISupports
+{
+  /**
+   * Tell the chrome process to listen on the port with the given parameters.
+   *
+   * @param serverSocket
+   *        The server socket generated in the listen of nsIDOMTCPSocket
+   *        on the child side.
+   * @param port
+   *        The port of the server socket.
+   * @param backlog 
+   *        The maximum length the queue of pending connections may grow to.
+   * @param binaryType
+   *        "arraybuffer" to use UInt8 array instances or "string" to use String.
+   */
+  [implicit_jscontext]
+  void listen(in nsITCPServerSocketInternal serverSocket, in unsigned short port,
+              in unsigned short backlog, in DOMString binaryType);
+
+  /**
+   * Tell the chrome process to close the server socket.
+   */
+  void close();
+};

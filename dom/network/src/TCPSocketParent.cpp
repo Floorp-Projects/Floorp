@@ -34,19 +34,61 @@ FireInteralError(mozilla::net::PTCPSocketParent* aActor, uint32_t aLineNo)
                            NS_LITERAL_STRING("connecting"), 0);
 }
 
-NS_IMPL_CYCLE_COLLECTION_2(TCPSocketParent, mSocket, mIntermediary)
-NS_IMPL_CYCLE_COLLECTING_ADDREF(TCPSocketParent)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(TCPSocketParent)
+NS_IMPL_CYCLE_COLLECTION_2(TCPSocketParentBase, mSocket, mIntermediary)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(TCPSocketParentBase)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(TCPSocketParentBase)
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(TCPSocketParent)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(TCPSocketParentBase)
   NS_INTERFACE_MAP_ENTRY(nsITCPSocketParent)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-bool
-TCPSocketParent::Init(const nsString& aHost, const uint16_t& aPort, const bool& aUseSSL,
-                      const nsString& aBinaryType)
+TCPSocketParentBase::TCPSocketParentBase()
+: mIPCOpen(false)
 {
+}
+
+TCPSocketParentBase::~TCPSocketParentBase()
+{
+}
+
+void
+TCPSocketParentBase::ReleaseIPDLReference()
+{
+  MOZ_ASSERT(mIPCOpen);
+  mIPCOpen = false;
+  this->Release();
+}
+
+void
+TCPSocketParentBase::AddIPDLReference()
+{
+  MOZ_ASSERT(!mIPCOpen);
+  mIPCOpen = true;
+  this->AddRef();
+}
+
+NS_IMETHODIMP_(nsrefcnt) TCPSocketParent::Release(void)
+{
+  nsrefcnt refcnt = TCPSocketParentBase::Release();
+  if (refcnt == 1 && mIPCOpen) {
+    mozilla::unused << PTCPSocketParent::SendRequestDelete();
+    return 1;
+  }
+  return refcnt;
+}
+
+bool
+TCPSocketParent::RecvOpen(const nsString& aHost, const uint16_t& aPort, const bool& aUseSSL,
+                          const nsString& aBinaryType, PBrowserParent* aBrowser)
+{
+  // We don't have browser actors in xpcshell, and hence can't run automated
+  // tests without this loophole.
+  if (aBrowser && !AssertAppProcessPermission(aBrowser, "tcp-socket")) {
+    FireInteralError(this, __LINE__);
+    return true;
+  }
+
   nsresult rv;
   mIntermediary = do_CreateInstance("@mozilla.org/tcp-socket-intermediary;1", &rv);
   if (NS_FAILED(rv)) {
@@ -192,11 +234,19 @@ TCPSocketParent::SendCallback(const nsAString& aType, const JS::Value& aDataVal,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+TCPSocketParent::SetSocketAndIntermediary(nsIDOMTCPSocket *socket,
+                                          nsITCPSocketIntermediary *intermediary,
+                                          JSContext* cx)
+{
+  mSocket = socket;
+  mIntermediary = intermediary;
+  return NS_OK;
+}
+
 void
 TCPSocketParent::ActorDestroy(ActorDestroyReason why)
 {
-  MOZ_ASSERT(mIPCOpen);
-  mIPCOpen = false;
   if (mSocket) {
     mSocket->Close();
   }
