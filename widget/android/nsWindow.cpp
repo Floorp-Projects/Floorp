@@ -2479,7 +2479,7 @@ class AndroidCompositorParent : public CompositorParent {
 public:
     AndroidCompositorParent(nsIWidget* aWidget, bool aRenderToEGLSurface,
                             int aSurfaceWidth, int aSurfaceHeight)
-        : CompositorParent(aWidget, aRenderToEGLSurface, aSurfaceHeight, aSurfaceHeight)
+        : CompositorParent(aWidget, aRenderToEGLSurface, aSurfaceWidth, aSurfaceHeight)
     {
         if (nsWindow::GetPanZoomController()) {
             nsWindow::GetPanZoomController()->SetCompositorParent(this);
