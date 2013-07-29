@@ -38,31 +38,31 @@
       gQueue.push(new synthClick("combobox",
                                  new invokerChecker(EVENT_FOCUS, "cb1_item1")));
       gQueue.push(new synthDownKey("cb1_item1",
-                                   new invokerChecker(EVENT_SELECTION, "cb1_item2")));
+                                   selChangeSeq("cb1_item1", "cb1_item2")));
 
       // closed combobox
       gQueue.push(new synthEscapeKey("combobox",
                                      new invokerChecker(EVENT_FOCUS, "combobox")));
       gQueue.push(new synthDownKey("cb1_item2",
-                                   new invokerChecker(EVENT_SELECTION, "cb1_item3")));
+                                   selChangeSeq("cb1_item2", "cb1_item3")));
 
       // listbox
       gQueue.push(new synthClick("lb1_item1",
                                  new invokerChecker(EVENT_SELECTION, "lb1_item1")));
       gQueue.push(new synthDownKey("lb1_item1",
-                                   new invokerChecker(EVENT_SELECTION, "lb1_item2")));
+                                   selChangeSeq("lb1_item1", "lb1_item2")));
 
       // multiselectable listbox
       gQueue.push(new synthClick("lb2_item1",
-                                 new invokerChecker(EVENT_SELECTION, "lb2_item1")));
+                                 selChangeSeq(null, "lb2_item1")));
       gQueue.push(new synthDownKey("lb2_item1",
-                                   new invokerChecker(EVENT_SELECTION_ADD, "lb2_item2"),
+                                   selAddSeq("lb2_item2"),
                                    { shiftKey: true }));
       gQueue.push(new synthUpKey("lb2_item2",
-                                 new invokerChecker(EVENT_SELECTION_REMOVE, "lb2_item2"),
+                                 selRemoveSeq("lb2_item2"),
                                  { shiftKey: true }));
       gQueue.push(new synthKey("lb2_item1", " ", { ctrlKey: true },
-                               new invokerChecker(EVENT_SELECTION_REMOVE, "lb2_item1")));
+                               selRemoveSeq("lb2_item1")));
 
       gQueue.invoke(); // Will call SimpleTest.finish();
     }
@@ -77,7 +77,12 @@
   <a target="_blank"
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=414302"
      title="Incorrect selection events in HTML, XUL and ARIA">
-    Mozilla Bug 414302
+    Bug 414302
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=810268"
+     title="There's no way to know unselected item when selection in single selection was changed">
+    Bug 810268
   </a>
 
   <p id="display"></p>
