@@ -775,7 +775,7 @@ nsPluginThreadRunnable::Run()
     PluginDestructionGuard guard(mInstance);
 
     NS_TRY_SAFE_CALL_VOID(mFunc(mUserData), nullptr,
-                          NS_PLUGIN_CALL_UNSAFE_TO_REENTER_GECKO);
+                          NS_PLUGIN_CALL_SAFE_TO_REENTER_GECKO);
   }
 
   return NS_OK;
