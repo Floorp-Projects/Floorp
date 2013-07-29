@@ -32,7 +32,7 @@ function runAltLeftClickTest() {
 }
 
 function runShiftLeftClickTest() {
-  let listener = new WindowListener(getBrowserURL(), function(aWindow) {
+  let listener = new BrowserWindowListener(getBrowserURL(), function(aWindow) {
     Services.wm.removeListener(listener);
     addPageShowListener(aWindow.gBrowser.selectedBrowser, function() {
       executeSoon(function () {
@@ -43,7 +43,9 @@ function runShiftLeftClickTest() {
         is(aWindow.gURLBar.value, TEST_VALUE, "New URL is loaded in new window");
 
         aWindow.close();
-        runNextTest();
+
+        // Continue testing when the original window has focus again.
+        whenWindowActivated(window, runNextTest);
       });
     }, "http://example.com/");
   });
@@ -175,26 +177,36 @@ function addPageShowListener(browser, cb, expectedURL) {
   });
 }
 
-function WindowListener(aURL, aCallback) {
+function whenWindowActivated(win, cb) {
+  if (Services.focus.activeWindow == win) {
+    executeSoon(cb);
+    return;
+  }
+
+  win.addEventListener("activate", function onActivate() {
+    win.removeEventListener("activate", onActivate);
+    executeSoon(cb);
+  });
+}
+
+function BrowserWindowListener(aURL, aCallback) {
   this.callback = aCallback;
   this.url = aURL;
 }
-WindowListener.prototype = {
+BrowserWindowListener.prototype = {
   onOpenWindow: function(aXULWindow) {
-    var domwindow = aXULWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+    let cb = () => this.callback(domwindow);
+    let domwindow = aXULWindow.QueryInterface(Ci.nsIInterfaceRequestor)
                               .getInterface(Ci.nsIDOMWindow);
-    var self = this;
-    domwindow.addEventListener("load", function() {
-      domwindow.removeEventListener("load", arguments.callee, false);
 
-      if (domwindow.document.location.href != self.url)
-        return;
+    let numWait = 2;
+    function maybeRunCallback() {
+      if (--numWait == 0)
+        cb();
+    }
 
-      // Allow other window load listeners to execute before passing to callback
-      executeSoon(function() {
-        self.callback(domwindow);
-      });
-    }, false);
+    whenWindowActivated(domwindow, maybeRunCallback);
+    whenDelayedStartupFinished(domwindow, maybeRunCallback);
   },
   onCloseWindow: function(aXULWindow) {},
   onWindowTitleChange: function(aXULWindow, aNewTitle) {}
