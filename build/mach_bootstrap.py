@@ -28,6 +28,7 @@ SEARCH_PATHS = [
     'python/mach',
     'python/mozboot',
     'python/mozbuild',
+    'python/mozversioncontrol',
     'python/blessings',
     'python/configobj',
     'python/psutil',
@@ -67,6 +68,8 @@ MACH_MODULES = [
     'testing/mochitest/mach_commands.py',
     'testing/xpcshell/mach_commands.py',
     'testing/talos/mach_commands.py',
+    'testing/xpcshell/mach_commands.py',
+    'tools/mercurial/mach_commands.py',
     'tools/mach_commands.py',
 ]
 
