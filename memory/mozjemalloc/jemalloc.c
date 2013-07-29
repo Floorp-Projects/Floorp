@@ -6725,14 +6725,14 @@ jemalloc_stats_impl(jemalloc_stats_t *stats)
 	 * Gather current memory usage statistics.
 	 */
 	stats->mapped = 0;
-	stats->committed = 0;
 	stats->allocated = 0;
-	stats->dirty = 0;
+        stats->waste = 0;
+	stats->page_cache = 0;
+        stats->bookkeeping = 0;
 
 	/* Get huge mapped/allocated. */
 	malloc_mutex_lock(&huge_mtx);
 	stats->mapped += stats_chunks.curchunks * chunksize;
-	stats->committed += huge_allocated;
 	stats->allocated += huge_allocated;
 	malloc_mutex_unlock(&huge_mtx);
 
@@ -6740,25 +6740,31 @@ jemalloc_stats_impl(jemalloc_stats_t *stats)
 	malloc_mutex_lock(&base_mtx);
 	stats->mapped += base_mapped;
 	assert(base_committed <= base_mapped);
-	stats->committed += base_committed;
+	stats->bookkeeping += base_committed;
 	malloc_mutex_unlock(&base_mtx);
 
 	/* Iterate over arenas and their chunks. */
 	for (i = 0; i < narenas; i++) {
 		arena_t *arena = arenas[i];
 		if (arena != NULL) {
+                        size_t arena_allocated, arena_committed;
 			malloc_spin_lock(&arena->lock);
-			stats->allocated += arena->stats.allocated_small;
-			stats->allocated += arena->stats.allocated_large;
-			stats->committed += (arena->stats.committed <<
-			    pagesize_2pow);
-			stats->dirty += (arena->ndirty << pagesize_2pow);
+
+                        arena_allocated = arena->stats.allocated_small +
+                                          arena->stats.allocated_large;
+                        arena_committed = arena->stats.committed << pagesize_2pow;
+
+                        assert(arena_allocated <= arena_committed);
+
+			stats->allocated += arena_allocated;
+                        stats->waste += arena_committed - arena_allocated;
+			stats->page_cache += (arena->ndirty << pagesize_2pow);
 			malloc_spin_unlock(&arena->lock);
 		}
 	}
 
-	assert(stats->mapped >= stats->committed);
-	assert(stats->committed >= stats->allocated);
+	assert(stats->mapped >= stats->allocated + stats->waste +
+                                stats->page_cache + stats->bookkeeping);
 }
 
 #ifdef MALLOC_DOUBLE_PURGE
