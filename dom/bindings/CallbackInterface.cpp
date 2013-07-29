@@ -16,7 +16,7 @@ bool
 CallbackInterface::GetCallableProperty(JSContext* cx, const char* aPropName,
                                        JS::MutableHandle<JS::Value> aCallable)
 {
-  if (!JS_GetProperty(cx, mCallback, aPropName, aCallable.address())) {
+  if (!JS_GetProperty(cx, mCallback, aPropName, aCallable)) {
     return false;
   }
   if (!aCallable.isObject() ||

@@ -1257,7 +1257,7 @@ static bool GetObjectProperty(JSContext *cx, HandleObject obj,
                               const char *property, MutableHandleObject result)
 {
   RootedValue val(cx);
-  if (!JS_GetProperty(cx, obj, property, val.address())) {
+  if (!JS_GetProperty(cx, obj, property, &val)) {
     return false;
   }
 
@@ -2544,7 +2544,7 @@ ImplicitConvert(JSContext* cx,
           return false;
 
         RootedValue prop(cx);
-        if (!JS_GetPropertyById(cx, valObj, id, prop.address()))
+        if (!JS_GetPropertyById(cx, valObj, id, &prop))
           return false;
 
         // Convert the field via ImplicitConvert().
@@ -4292,7 +4292,7 @@ ArrayType::ConstructData(JSContext* cx,
       // This could be a JS array, or a CData array.
       RootedObject arg(cx, &args[0].toObject());
       RootedValue lengthVal(cx);
-      if (!JS_GetProperty(cx, arg, "length", lengthVal.address()) ||
+      if (!JS_GetProperty(cx, arg, "length", &lengthVal) ||
           !jsvalToSize(cx, lengthVal, false, &length)) {
         JS_ReportError(cx, "argument must be an array object or length");
         return JS_FALSE;
@@ -4644,7 +4644,7 @@ ExtractStructField(JSContext* cx, jsval val, JSObject** typeObj)
   }
 
   RootedValue propVal(cx);
-  if (!JS_GetPropertyById(cx, obj, nameid, propVal.address()))
+  if (!JS_GetPropertyById(cx, obj, nameid, &propVal))
     return NULL;
 
   if (propVal.isPrimitive() || !CType::IsCType(&propVal.toObject())) {
@@ -7411,7 +7411,7 @@ Int64::Construct(JSContext* cx,
   // Get ctypes.Int64.prototype from the 'prototype' property of the ctor.
   RootedValue slot(cx);
   RootedObject callee(cx, &args.callee());
-  ASSERT_OK(JS_GetProperty(cx, callee, "prototype", slot.address()));
+  ASSERT_OK(JS_GetProperty(cx, callee, "prototype", &slot));
   RootedObject proto(cx, JSVAL_TO_OBJECT(slot));
   JS_ASSERT(JS_GetClass(proto) == &sInt64ProtoClass);
 
@@ -7581,7 +7581,7 @@ UInt64::Construct(JSContext* cx,
   // Get ctypes.UInt64.prototype from the 'prototype' property of the ctor.
   RootedValue slot(cx);
   RootedObject callee(cx, &args.callee());
-  ASSERT_OK(JS_GetProperty(cx, callee, "prototype", slot.address()));
+  ASSERT_OK(JS_GetProperty(cx, callee, "prototype", &slot));
   RootedObject proto(cx, &slot.toObject());
   JS_ASSERT(JS_GetClass(proto) == &sUInt64ProtoClass);
 
