@@ -15,19 +15,14 @@ import org.mozilla.gecko.db.BrowserContract.Combined;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.home.HomeListView.HomeContextMenuInfo;
-import org.mozilla.gecko.ReaderModeUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.util.UiAsyncTask;
 
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
-import android.database.Cursor;
 import android.graphics.Bitmap;
-import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.LoaderManager.LoaderCallbacks;
-import android.support.v4.content.Loader;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.ContextMenu;
@@ -50,9 +45,6 @@ abstract class HomeFragment extends Fragment {
 
     // URL to Title replacement regex.
     private static final String REGEX_URL_TO_TITLE = "^([a-z]+://)?(www\\.)?";
-
-    // Cursor loader ID for favicons query
-    private static final int LOADER_ID_FAVICONS = 100;
 
     @Override
     public void onCreateContextMenu(ContextMenu menu, View view, ContextMenuInfo menuInfo) {
@@ -251,39 +243,5 @@ abstract class HomeFragment extends Fragment {
         }
 
         load();
-    }
-
-    /**
-     * Cursor loader callbacks that takes care loading favicons into memory.
-     */
-    abstract class HomeCursorLoaderCallbacks implements LoaderCallbacks<Cursor> {
-
-        // Callback for favicons loaded in memory.
-        public abstract void onFaviconsLoaded();
-
-        public void loadFavicons(Cursor cursor) {
-            FaviconsLoader.restartFromCursor(getLoaderManager(), LOADER_ID_FAVICONS, this, cursor);
-        }
-
-        @Override
-        public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-            if (id == LOADER_ID_FAVICONS) {
-                return FaviconsLoader.createInstance(getActivity(), args);
-            }
-
-            return null;
-        }
-
-        @Override
-        public void onLoadFinished(Loader<Cursor> loader, Cursor c) {
-            if (loader.getId() == LOADER_ID_FAVICONS) {
-                onFaviconsLoaded();
-            }
-        }
-
-        @Override
-        public void onLoaderReset(Loader<Cursor> loader) {
-            // Do nothing by default.
-        }
     }
 }
