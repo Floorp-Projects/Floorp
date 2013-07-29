@@ -39,9 +39,9 @@ BEGIN_TEST(testArrayBuffer_bug720949_steal)
         // Byte lengths should all agree
         CHECK(JS_IsArrayBufferObject(obj));
         CHECK_EQUAL(JS_GetArrayBufferByteLength(obj), size);
-        JS_GetProperty(cx, obj, "byteLength", v.address());
+        JS_GetProperty(cx, obj, "byteLength", &v);
         CHECK_SAME(v, INT_TO_JSVAL(size));
-        JS_GetProperty(cx, view, "byteLength", v.address());
+        JS_GetProperty(cx, view, "byteLength", &v);
         CHECK_SAME(v, INT_TO_JSVAL(size));
 
         // Modifying the underlying data should update the value returned through the view
@@ -59,13 +59,13 @@ BEGIN_TEST(testArrayBuffer_bug720949_steal)
 
         // Check that the original ArrayBuffer is neutered
         CHECK_EQUAL(JS_GetArrayBufferByteLength(obj), 0);
-        CHECK(JS_GetProperty(cx, obj, "byteLength", v.address()));
+        CHECK(JS_GetProperty(cx, obj, "byteLength", &v));
         CHECK_SAME(v, INT_TO_JSVAL(0));
-        CHECK(JS_GetProperty(cx, view, "byteLength", v.address()));
+        CHECK(JS_GetProperty(cx, view, "byteLength", &v));
         CHECK_SAME(v, INT_TO_JSVAL(0));
-        CHECK(JS_GetProperty(cx, view, "byteOffset", v.address()));
+        CHECK(JS_GetProperty(cx, view, "byteOffset", &v));
         CHECK_SAME(v, INT_TO_JSVAL(0));
-        CHECK(JS_GetProperty(cx, view, "length", v.address()));
+        CHECK(JS_GetProperty(cx, view, "length", &v));
         CHECK_SAME(v, INT_TO_JSVAL(0));
         CHECK_EQUAL(JS_GetArrayBufferByteLength(obj), 0);
         v = JSVAL_VOID;
@@ -164,7 +164,7 @@ BEGIN_TEST(testArrayBuffer_bug720949_viewList)
 
 bool isNeutered(JS::HandleObject obj) {
     JS::RootedValue v(cx);
-    return JS_GetProperty(cx, obj, "byteLength", v.address()) && v.toInt32() == 0;
+    return JS_GetProperty(cx, obj, "byteLength", &v) && v.toInt32() == 0;
 }
 
 END_TEST(testArrayBuffer_bug720949_viewList)
