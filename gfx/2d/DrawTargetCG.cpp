@@ -1007,9 +1007,6 @@ DrawTargetCG::FillGlyphs(ScaledFont *aFont, const GlyphBuffer &aBuffer, const Pa
   CGContextRef cg = fixer.Check(mCg, aDrawOptions.mCompositionOp);
   CGContextSetAlpha(cg, aDrawOptions.mAlpha);
   CGContextSetShouldAntialias(cg, aDrawOptions.mAntialiasMode != AA_NONE);
-  if (aDrawOptions.mAntialiasMode != AA_DEFAULT) {
-    CGContextSetShouldSmoothFonts(cg, aDrawOptions.mAntialiasMode == AA_SUBPIXEL);
-  }
 
   CGContextConcatCTM(cg, GfxMatrixToCGAffineTransform(mTransform));
 
