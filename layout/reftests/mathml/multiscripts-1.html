@@ -1,0 +1,77 @@
+<html><head>
+<meta http-equiv="content-type" content="text/html; charset=ISO-8859-1"><title>Comparison of script elements</title></head>
+  <body>
+    msubsup:
+    <math>
+      <msubsup style="background: red;">
+        <mtext style="background-color: rgba(0, 0, 255, 0.4);">AAA</mtext>
+        <mtext style="background-color: rgba(0, 255, 0, 0.4);">bbb</mtext>
+        <mtext style="background-color: rgba(0, 255, 0, 0.4);">ccc</mtext>
+      </msubsup>
+    </math>
+
+    <br><br>
+
+    <!-- Different rules apply to msub, so it won't provide equivalent output -->
+    msubsup:
+    <math>
+      <msubsup style="background: red;">
+        <mtext style="background-color: rgba(0, 0, 255, 0.4);">AAA</mtext>
+        <mtext style="background-color: rgba(0, 255, 0, 0.4);">bbb</mtext>
+        <mrow></mrow>
+      </msubsup>
+    </math>
+
+    <br><br>
+
+    msup / msubsup:
+    <math>
+      <msup style="background: red;">
+        <mtext style="background-color: rgba(0, 0, 255, 0.4);">AAA</mtext>
+        <mtext style="background-color: rgba(0, 255, 0, 0.4);">bbb</mtext>
+      </msup>
+    </math>
+
+    <math>
+      <msubsup style="background: red;">
+        <mtext style="background-color: rgba(0, 0, 255, 0.4);">AAA</mtext>
+        <mrow></mrow>
+        <mtext style="background-color: rgba(0, 255, 0, 0.4);">bbb</mtext>
+      </msubsup>
+    </math>
+
+    <br><br>
+
+    mrow / msub:
+    <math>
+      <mrow style="background: red;">
+        <mtext style="background-color: rgba(0, 0, 255, 0.4);">AAA</mtext>
+      </mrow>
+    </math>
+
+    <math>
+      <msub style="background: red;">
+        <mtext style="background-color: rgba(0, 0, 255, 0.4);">AAA</mtext>
+        <mrow></mrow>
+      </msub>
+    </math>
+
+    <br><br>
+
+    msup / msupsub:
+    <math>
+      <msup style="background: red;">
+        <mtext style="background-color: rgba(0, 0, 255, 0.4);">AAA</mtext>
+        <mrow></mrow>
+      </msup>
+    </math>
+
+    <math>
+      <msubsup style="background: red;">
+        <mtext style="background-color: rgba(0, 0, 255, 0.4);">AAA</mtext>
+        <mrow></mrow>
+        <mrow></mrow>
+      </msubsup>
+    </math>
+
+</body></html>
