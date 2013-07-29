@@ -2466,6 +2466,14 @@ var gCSSProperties = {
 		other_values: [ "0.3", "0.5", "0.7" ],
 		invalid_values: []
 	},
+	"-moz-font-smoothing": {
+		domProp: "MozFontSmoothing",
+		inherited: true,
+		type: CSS_TYPE_LONGHAND,
+		initial_values: [ "auto" ],
+		other_values: [ "antialiased" ],
+		invalid_values: [ "none", "subpixel-antialiased" ]
+	},
 	"font-stretch": {
 		domProp: "fontStretch",
 		inherited: true,
@@ -4606,16 +4614,5 @@ if (SpecialPowers.getBoolPref("layout.css.filters.enabled")) {
 			"sepia(10px)",
 			"sepia(-1)",
 		]
-	};
-}
-
-if (SpecialPowers.getBoolPref("layout.css.osx-font-smoothing.enabled")) {
-	gCSSProperties["-moz-osx-font-smoothing"] = {
-		domProp: "MozOSXFontSmoothing",
-		inherited: true,
-		type: CSS_TYPE_LONGHAND,
-		initial_values: [ "auto" ],
-		other_values: [ "grayscale" ],
-		invalid_values: [ "none", "subpixel-antialiased", "antialiased" ]
 	};
 }
