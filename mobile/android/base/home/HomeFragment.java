@@ -46,6 +46,12 @@ abstract class HomeFragment extends Fragment {
     // URL to Title replacement regex.
     private static final String REGEX_URL_TO_TITLE = "^([a-z]+://)?(www\\.)?";
 
+    protected void showSubPage(Fragment subPage) {
+        getActivity().getSupportFragmentManager().beginTransaction()
+                .addToBackStack(null).replace(R.id.home_pager_container, subPage, HomePager.SUBPAGE_TAG)
+                .commitAllowingStateLoss();
+    }
+
     @Override
     public void onCreateContextMenu(ContextMenu menu, View view, ContextMenuInfo menuInfo) {
         if (menuInfo == null || !(menuInfo instanceof HomeContextMenuInfo)) {

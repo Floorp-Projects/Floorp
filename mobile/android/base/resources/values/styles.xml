@@ -192,7 +192,7 @@
         <item name="android:layout_width">fill_parent</item>
         <item name="android:layout_height">32dp</item>
         <item name="android:textAppearance">@style/TextAppearance.Widget.Home.PageTitle</item>
-        <item name="android:background">@drawable/home_page_title_background</item>
+        <item name="android:background">@color/background_light</item>
         <item name="android:focusable">false</item>
         <item name="android:gravity">center|left</item>
         <item name="android:paddingLeft">10dip</item>
