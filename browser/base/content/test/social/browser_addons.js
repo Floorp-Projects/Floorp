@@ -284,38 +284,36 @@ var tests = {
       Services.prefs.setCharPref("social.whitelist", installFrom);
       Social.installProvider(doc, manifest2, function(addonManifest) {
         SocialService.addBuiltinProvider(addonManifest.origin, function(provider) {
+          is(provider.manifest.version, 1, "manifest version is 1");
           Social.enabled = true;
-          checkSocialUI();
-          is(Social.provider.manifest.version, 1, "manifest version is 1")
-          // watch for the provider-update and tell the worker to update
+
+          // watch for the provider-update and test the new version
           SocialService.registerProviderListener(function providerListener(topic, data) {
             if (topic != "provider-update")
               return;
             SocialService.unregisterProviderListener(providerListener);
-            observeProviderSet(function() {
-              Services.prefs.clearUserPref("social.whitelist");
-              executeSoon(function() {
-                is(Social.provider.manifest.version, 2, "manifest version is 2");
-                Social.uninstallProvider(addonManifest.origin);
-                gBrowser.removeTab(tab);
-                next();
-              })
-            });
+            Services.prefs.clearUserPref("social.whitelist");
+            let provider = Social._getProviderFromOrigin(addonManifest.origin);
+            is(provider.manifest.version, 2, "manifest version is 2");
+            Social.uninstallProvider(addonManifest.origin);
+            gBrowser.removeTab(tab);
+            next();
           });
-          let port = Social.provider.getWorkerPort();
-          port.postMessage({topic: "worker.update", data: true});
+
+          let port = provider.getWorkerPort();
+          port.onmessage = function (e) {
+            let topic = e.data.topic;
+            switch (topic) {
+              case "got-sidebar-message":
+                ok(true, "got the sidebar message from provider 1");
+                port.postMessage({topic: "worker.update", data: true});
+                break;
+            }
+          };
+          port.postMessage({topic: "test-init"});
+
         });
       });
     });
   }
-}
-
-
-function observeProviderSet(cb) {
-  Services.obs.addObserver(function providerSet(subject, topic, data) {
-    Services.obs.removeObserver(providerSet, "social:provider-set");
-    info("social:provider-set observer was notified");
-    // executeSoon to let the browser UI observers run first
-    executeSoon(cb);
-  }, "social:provider-set", false);
 }
