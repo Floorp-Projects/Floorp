@@ -1105,10 +1105,10 @@ FormatFrame(JSContext *cx, const NonBuiltinScriptFrameIter &iter, char *buf, int
 
         // print any unnamed trailing args (found in 'arguments' object)
         RootedValue val(cx);
-        if (JS_GetProperty(cx, callObj, "arguments", val.address()) && val.isObject()) {
+        if (JS_GetProperty(cx, callObj, "arguments", &val) && val.isObject()) {
             uint32_t argCount;
             RootedObject argsObj(cx, &val.toObject());
-            if (JS_GetProperty(cx, argsObj, "length", val.address()) &&
+            if (JS_GetProperty(cx, argsObj, "length", &val) &&
                 ToUint32(cx, val, &argCount) &&
                 argCount > namedArgCount)
             {
@@ -1116,7 +1116,7 @@ FormatFrame(JSContext *cx, const NonBuiltinScriptFrameIter &iter, char *buf, int
                     char number[8];
                     JS_snprintf(number, 8, "%d", (int) k);
 
-                    if (JS_GetProperty(cx, argsObj, number, val.address())) {
+                    if (JS_GetProperty(cx, argsObj, number, &val)) {
                         JSAutoByteString valueBytes;
                         const char *value = FormatValue(cx, val, valueBytes);
                         buf = JS_sprintf_append(buf, "%s%s%s%s",
