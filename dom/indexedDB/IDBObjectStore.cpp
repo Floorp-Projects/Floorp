@@ -2405,11 +2405,11 @@ IDBObjectStore::GetKeyPath(JSContext* aCx,
 }
 
 NS_IMETHODIMP
-IDBObjectStore::GetTransaction(nsIIDBTransaction** aTransaction)
+IDBObjectStore::GetTransaction(nsISupports** aTransaction)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  nsCOMPtr<nsIIDBTransaction> transaction(mTransaction);
+  nsRefPtr<IDBWrapperCache> transaction(mTransaction);
   transaction.forget(aTransaction);
   return NS_OK;
 }

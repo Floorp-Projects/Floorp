@@ -16,7 +16,6 @@ XPIDL_SOURCES += [
     'nsIIDBObjectStore.idl',
     'nsIIDBOpenDBRequest.idl',
     'nsIIDBRequest.idl',
-    'nsIIDBTransaction.idl',
     'nsIIndexedDatabaseManager.idl',
 ]
 

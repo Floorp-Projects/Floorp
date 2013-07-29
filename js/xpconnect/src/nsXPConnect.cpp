@@ -35,6 +35,7 @@
 #include "XPCQuickStubs.h"
 
 #include "mozilla/dom/BindingUtils.h"
+#include "mozilla/dom/IDBTransactionBinding.h"
 #include "mozilla/dom/IDBVersionChangeEventBinding.h"
 #include "mozilla/dom/TextDecoderBinding.h"
 #include "mozilla/dom/TextEncoderBinding.h"
@@ -543,7 +544,8 @@ nsXPConnect::InitClassesWithNewWrappedGlobal(JSContext * aJSContext,
     MOZ_ASSERT(js::GetObjectClass(global)->flags & JSCLASS_DOM_GLOBAL);
 
     // Init WebIDL binding constructors wanted on all XPConnect globals.
-    if (!IDBVersionChangeEventBinding::GetConstructorObject(aJSContext, global) ||
+    if (!IDBTransactionBinding::GetConstructorObject(aJSContext, global) ||
+        !IDBVersionChangeEventBinding::GetConstructorObject(aJSContext, global) ||
         !TextDecoderBinding::GetConstructorObject(aJSContext, global) ||
         !TextEncoderBinding::GetConstructorObject(aJSContext, global) ||
         !DOMErrorBinding::GetConstructorObject(aJSContext, global)) {

@@ -198,7 +198,6 @@
 #include "mozilla/dom/indexedDB/IDBRequest.h"
 #include "mozilla/dom/indexedDB/IDBDatabase.h"
 #include "mozilla/dom/indexedDB/IDBObjectStore.h"
-#include "mozilla/dom/indexedDB/IDBTransaction.h"
 #include "mozilla/dom/indexedDB/IDBCursor.h"
 #include "mozilla/dom/indexedDB/IDBKeyRange.h"
 #include "mozilla/dom/indexedDB/IDBIndex.h"
@@ -628,8 +627,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            IDBEVENTTARGET_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(IDBObjectStore, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(IDBTransaction, IDBEventTargetSH,
-                           IDBEVENTTARGET_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(IDBCursor, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(IDBCursorWithValue, nsDOMGenericSH,
@@ -1523,11 +1520,6 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(IDBObjectStore, nsIIDBObjectStore)
     DOM_CLASSINFO_MAP_ENTRY(nsIIDBObjectStore)
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(IDBTransaction, nsIIDBTransaction)
-    DOM_CLASSINFO_MAP_ENTRY(nsIIDBTransaction)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(IDBCursor, nsIIDBCursor)
@@ -2837,7 +2829,7 @@ DefineInterfaceConstants(JSContext *cx, JS::Handle<JSObject*> obj, const nsIID *
 }
 
 // This code is temporary until we remove support for the constants defined
-// on IDBCursor/IDBRequest/IDBTransaction
+// on IDBCursor/IDBRequest
 
 struct IDBConstant
 {
@@ -2847,23 +2839,18 @@ struct IDBConstant
 
   static const char* IDBCursor;
   static const char* IDBRequest;
-  static const char* IDBTransaction;
 };
 
 const char* IDBConstant::IDBCursor = "IDBCursor";
 const char* IDBConstant::IDBRequest = "IDBRequest";
-const char* IDBConstant::IDBTransaction = "IDBTransaction";
 
 static const IDBConstant sIDBConstants[] = {
-  { IDBConstant::IDBCursor,      "NEXT",              "next" },
-  { IDBConstant::IDBCursor,      "NEXT_NO_DUPLICATE", "nextunique" },
-  { IDBConstant::IDBCursor,      "PREV",              "prev" },
-  { IDBConstant::IDBCursor,      "PREV_NO_DUPLICATE", "prevunique" },
-  { IDBConstant::IDBRequest,     "LOADING",           "pending" },
-  { IDBConstant::IDBRequest,     "DONE",              "done" },
-  { IDBConstant::IDBTransaction, "READ_ONLY",         "readonly" },
-  { IDBConstant::IDBTransaction, "READ_WRITE",        "readwrite" },
-  { IDBConstant::IDBTransaction, "VERSION_CHANGE",    "versionchange" },
+  { IDBConstant::IDBCursor,  "NEXT",              "next" },
+  { IDBConstant::IDBCursor,  "NEXT_NO_DUPLICATE", "nextunique" },
+  { IDBConstant::IDBCursor,  "PREV",              "prev" },
+  { IDBConstant::IDBCursor,  "PREV_NO_DUPLICATE", "prevunique" },
+  { IDBConstant::IDBRequest, "LOADING",           "pending" },
+  { IDBConstant::IDBRequest, "DONE",              "done" },
 };
 
 static JSBool
@@ -2956,9 +2943,6 @@ DefineIDBInterfaceConstants(JSContext *cx, JS::Handle<JSObject*> obj, const nsII
   }
   else if (aIID->Equals(NS_GET_IID(nsIIDBRequest))) {
     interface = IDBConstant::IDBRequest;
-  }
-  else if (aIID->Equals(NS_GET_IID(nsIIDBTransaction))) {
-    interface = IDBConstant::IDBTransaction;
   }
   else {
     MOZ_CRASH("unexpected IID");
@@ -3382,8 +3366,7 @@ nsDOMConstructor::ResolveInterfaceConstants(JSContext *cx, JS::Handle<JSObject*>
   // Special case a few IDB interfaces which for now are getting transitional
   // constants.
   if (class_iid->Equals(NS_GET_IID(nsIIDBCursor)) ||
-      class_iid->Equals(NS_GET_IID(nsIIDBRequest)) ||
-      class_iid->Equals(NS_GET_IID(nsIIDBTransaction))) {
+      class_iid->Equals(NS_GET_IID(nsIIDBRequest))) {
     rv = DefineIDBInterfaceConstants(cx, obj, class_iid);
     NS_ENSURE_SUCCESS(rv, rv);
   }
@@ -3521,8 +3504,7 @@ ResolvePrototype(nsIXPConnect *aXPConnect, nsGlobalWindow *aWin, JSContext *cx,
     // Special case a few IDB interfaces which for now are getting transitional
     // constants.
     if (primary_iid->Equals(NS_GET_IID(nsIIDBCursor)) ||
-        primary_iid->Equals(NS_GET_IID(nsIIDBRequest)) ||
-        primary_iid->Equals(NS_GET_IID(nsIIDBTransaction))) {
+        primary_iid->Equals(NS_GET_IID(nsIIDBRequest))) {
       rv = DefineIDBInterfaceConstants(cx, class_obj, primary_iid);
       NS_ENSURE_SUCCESS(rv, rv);
     }
