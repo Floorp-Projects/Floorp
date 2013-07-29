@@ -225,6 +225,14 @@ Class js::NumericTypeClasses[NUMERICTYPES] = {
 typedef std::vector<FieldInfo> FieldList;
 
 static
+FieldList *
+GetStructTypeFieldList(HandleObject obj)
+{
+    JS_ASSERT(IsStructType(obj));
+    return static_cast<FieldList *>(obj->getPrivate());
+}
+
+static
 bool
 LookupFieldList(FieldList *list, jsid fieldName, FieldInfo *out)
 {
@@ -259,8 +267,8 @@ IsSameStructType(JSContext *cx, HandleObject type1, HandleObject type2)
 {
     JS_ASSERT(IsStructType(type1) && IsStructType(type2));
 
-    FieldList *fieldList1 = static_cast<FieldList *>(type1->getPrivate());
-    FieldList *fieldList2 = static_cast<FieldList *>(type2->getPrivate());
+    FieldList *fieldList1 = GetStructTypeFieldList(type1);
+    FieldList *fieldList2 = GetStructTypeFieldList(type2);
 
     if (fieldList1->size() != fieldList2->size())
         return false;
@@ -1596,7 +1604,7 @@ StructType::convertAndCopyTo(JSContext *cx, HandleObject exemplar,
     if (!GetPropertyNames(cx, valRooted, JSITER_OWNONLY, &ownProps))
         return ReportTypeError(cx, from, exemplar);
 
-    FieldList *fieldList = static_cast<FieldList *>(exemplar->getPrivate());
+    FieldList *fieldList = GetStructTypeFieldList(exemplar);
 
     if (ownProps.length() != fieldList->size()) {
         return ReportTypeError(cx, from, exemplar);
@@ -1705,8 +1713,8 @@ StructType::construct(JSContext *cx, unsigned int argc, Value *vp)
 void
 StructType::finalize(FreeOp *op, JSObject *obj)
 {
-    FieldList *list = static_cast<FieldList *>(obj->getPrivate());
-    delete list;
+    FieldList *fieldList = static_cast<FieldList *>(obj->getPrivate());
+    delete fieldList;
 }
 
 void
@@ -1733,7 +1741,7 @@ StructType::toString(JSContext *cx, unsigned int argc, Value *vp)
     StringBuffer contents(cx);
     contents.append("StructType({");
 
-    FieldList *fieldList = static_cast<FieldList *>(thisObj->getPrivate());
+    FieldList *fieldList = GetStructTypeFieldList(thisObj);
     JS_ASSERT(fieldList);
 
     for (FieldList::const_iterator it = fieldList->begin(); it != fieldList->end(); ++it) {
@@ -1855,7 +1863,7 @@ BinaryStruct::obj_enumerate(JSContext *cx, HandleObject obj, JSIterateOp enum_op
 
     RootedObject type(cx, GetType(obj));
 
-    FieldList *fieldList = static_cast<FieldList *>(type->getPrivate());
+    FieldList *fieldList = GetStructTypeFieldList(type);
     JS_ASSERT(fieldList);
 
     uint32_t index;
@@ -1902,7 +1910,7 @@ BinaryStruct::obj_getGeneric(JSContext *cx, HandleObject obj,
     RootedObject type(cx, GetType(obj));
     JS_ASSERT(IsStructType(type));
 
-    FieldList *fieldList = static_cast<FieldList *>(type->getPrivate());
+    FieldList *fieldList = GetStructTypeFieldList(type);
     JS_ASSERT(fieldList);
 
     FieldInfo fieldInfo;
@@ -1953,7 +1961,7 @@ BinaryStruct::obj_setGeneric(JSContext *cx, HandleObject obj, HandleId id,
     RootedObject type(cx, GetType(obj));
     JS_ASSERT(IsStructType(type));
 
-    FieldList *fieldList = static_cast<FieldList *>(type->getPrivate());
+    FieldList *fieldList = GetStructTypeFieldList(type);
     JS_ASSERT(fieldList);
 
     FieldInfo fieldInfo;
