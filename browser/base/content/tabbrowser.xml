@@ -586,10 +586,8 @@
                 if (this._shouldShowProgress(aRequest)) {
                   if (!(aStateFlags & nsIWebProgressListener.STATE_RESTORING)) {
                     this.mTab.setAttribute("busy", "true");
-                    if (!gMultiProcessBrowser) {
-                      if (!(this.mBrowser.docShell.loadType & Ci.nsIDocShell.LOAD_CMD_RELOAD))
-                        this.mTabBrowser.setTabTitleLoading(this.mTab);
-                    }
+                    if (!(aWebProgress.loadType & Ci.nsIDocShell.LOAD_CMD_RELOAD))
+                      this.mTabBrowser.setTabTitleLoading(this.mTab);
                   }
 
                   if (this.mTab.selected)
@@ -701,10 +699,9 @@
 
                 // Don't clear the favicon if this onLocationChange was
                 // triggered by a pushState or a replaceState.  See bug 550565.
-                if (!gMultiProcessBrowser) {
-                  if (aWebProgress.isLoadingDocument &&
-                      !(this.mBrowser.docShell.loadType & Ci.nsIDocShell.LOAD_CMD_PUSHSTATE))
-                    this.mBrowser.mIconURL = null;
+                if (aWebProgress.isLoadingDocument &&
+                    !(aWebProgress.loadType & Ci.nsIDocShell.LOAD_CMD_PUSHSTATE)) {
+                  this.mBrowser.mIconURL = null;
                 }
 
                 let autocomplete = this.mTabBrowser._placesAutocomplete;
@@ -830,30 +827,23 @@
         <parameter name="aTab"/>
         <body>
           <![CDATA[
-            // Bug 691610 - e10s support for useDefaultIcon
-            if (gMultiProcessBrowser)
-              return;
-
             var browser = this.getBrowserForTab(aTab);
-            var docURIObject = browser.contentDocument.documentURIObject;
+            var documentURI = browser.documentURI;
             var icon = null;
-            if (browser.contentDocument instanceof ImageDocument) {
+
+            if (browser.imageDocument) {
               if (Services.prefs.getBoolPref("browser.chrome.site_icons")) {
                 let sz = Services.prefs.getIntPref("browser.chrome.image_icons.max_size");
-                try {
-                  let req = browser.contentDocument.imageRequest;
-                  if (req &&
-                      req.image &&
-                      req.image.width <= sz &&
-                      req.image.height <= sz)
-                    icon = browser.currentURI;
-                } catch (e) { }
+                if (browser.imageDocument.width <= sz &&
+                    browser.imageDocument.height <= sz) {
+                  icon = browser.currentURI;
+                }
               }
             }
             // Use documentURIObject in the check for shouldLoadFavIcon so that we
             // do the right thing with about:-style error pages.  Bug 453442
-            else if (this.shouldLoadFavIcon(docURIObject)) {
-              let url = docURIObject.prePath + "/favicon.ico";
+            else if (this.shouldLoadFavIcon(documentURI)) {
+              let url = documentURI.prePath + "/favicon.ico";
               if (!this.isFailedIcon(url))
                 icon = url;
             }
