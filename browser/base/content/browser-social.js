@@ -1367,6 +1367,7 @@ SocialSidebar = {
       if (sbrowser.getAttribute("src") != Social.provider.sidebarURL) {
         sbrowser.setAttribute("src", Social.provider.sidebarURL);
         sbrowser.addEventListener("load", SocialSidebar._loadListener, true);
+        PopupNotifications.locationChange(sbrowser);
       } else {
         this.setSidebarVisibilityState(true);
       }
