@@ -376,6 +376,12 @@ js::DefaultObjectForContextOrNull(JSContext *cx)
 }
 
 JS_FRIEND_API(void)
+js::SetDefaultObjectForContext(JSContext *cx, JSObject *obj)
+{
+    cx->setDefaultCompartmentObject(obj);
+}
+
+JS_FRIEND_API(void)
 js::NotifyAnimationActivity(JSObject *obj)
 {
     obj->compartment()->lastAnimationTime = PRMJ_Now();

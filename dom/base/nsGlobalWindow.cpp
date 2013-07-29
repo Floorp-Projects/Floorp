@@ -2070,7 +2070,7 @@ nsGlobalWindow::SetOuterObject(JSContext* aCx, JS::Handle<JSObject*> aOuterObjec
   JSAutoCompartment ac(aCx, aOuterObject);
 
   // Indicate the default compartment object associated with this cx.
-  JS_SetGlobalObject(aCx, aOuterObject);
+  js::SetDefaultObjectForContext(aCx, aOuterObject);
 
   // Set up the prototype for the outer object.
   JSObject* inner = JS_GetParent(aOuterObject);
@@ -2474,7 +2474,7 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
     // we must have transplanted it. The JS engine tries to maintain
     // the global object's compartment as its default compartment,
     // so update that now since it might have changed.
-    JS_SetGlobalObject(cx, mJSObject);
+    js::SetDefaultObjectForContext(cx, mJSObject);
 #ifdef DEBUG
     JSObject *proto1, *proto2;
     JS_GetPrototype(cx, mJSObject, &proto1);
