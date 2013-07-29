@@ -310,8 +310,9 @@ TopSitesView.prototype = Util.extend(Object.create(View.prototype), {
       let filepath = PageThumbsStorage.getFilePathForURL(aSite.url);
       if (yield OS.File.exists(filepath)) {
         aSite.backgroundImage = 'url("'+PageThumbs.getThumbnailURL(aSite.url)+'")';
-        if ("isBound" in aTileNode && aTileNode.isBound) {
-          aTileNode.backgroundImage = aSite.backgroundImage;
+        aTileNode.setAttribute("customImage", aSite.backgroundImage);
+        if (aTileNode.refresh) {
+          aTileNode.refresh()
         }
       }
     });
@@ -352,7 +353,9 @@ TopSitesView.prototype = Util.extend(Object.create(View.prototype), {
   forceReloadOfThumbnail: function forceReloadOfThumbnail(url) {
       let nodes = this._set.querySelectorAll('richgriditem[value="'+url+'"]');
       for (let item of nodes) {
-        item.refreshBackgroundImage();
+        if ("isBound" in item && item.isBound) {
+          item.refreshBackgroundImage();
+        }
       }
   },
 
