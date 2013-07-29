@@ -17,6 +17,7 @@ import android.content.Context;
 import android.content.res.Resources;
 import android.database.Cursor;
 import android.os.Bundle;
+import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
 import android.support.v4.widget.SimpleCursorAdapter;
 import android.util.SparseArray;
@@ -140,15 +141,17 @@ public class MostRecentPage extends HomeFragment {
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
+        final Activity activity = getActivity();
+
         // Initialize map of history sections
         mMostRecentSections = new SparseArray<MostRecentSection>();
 
         // Intialize adapter
-        mAdapter = new MostRecentAdapter(getActivity());
+        mAdapter = new MostRecentAdapter(activity);
         mList.setAdapter(mAdapter);
 
         // Create callbacks before the initial loader is started
-        mCursorLoaderCallbacks = new CursorLoaderCallbacks();
+        mCursorLoaderCallbacks = new CursorLoaderCallbacks(activity, getLoaderManager());
         loadIfVisible();
     }
 
@@ -345,6 +348,10 @@ public class MostRecentPage extends HomeFragment {
     }
 
     private class CursorLoaderCallbacks extends HomeCursorLoaderCallbacks {
+        public CursorLoaderCallbacks(Context context, LoaderManager loaderManager) {
+            super(context, loaderManager);
+        }
+
         @Override
         public Loader<Cursor> onCreateLoader(int id, Bundle args) {
             if (id == LOADER_ID_HISTORY) {

@@ -30,6 +30,7 @@ import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.v4.app.LoaderManager;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.AsyncTaskLoader;
 import android.support.v4.content.Loader;
@@ -262,15 +263,17 @@ public class BrowserSearch extends HomeFragment
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
+        final Activity activity = getActivity();
+
         // Intialize the search adapter
-        mAdapter = new SearchAdapter(getActivity());
+        mAdapter = new SearchAdapter(activity);
         mList.setAdapter(mAdapter);
 
         // Only create an instance when we need it
         mSuggestionLoaderCallbacks = null;
 
         // Create callbacks before the initial loader is started
-        mCursorLoaderCallbacks = new CursorLoaderCallbacks();
+        mCursorLoaderCallbacks = new CursorLoaderCallbacks(activity, getLoaderManager());
         loadIfVisible();
     }
 
@@ -760,6 +763,10 @@ public class BrowserSearch extends HomeFragment
     }
 
     private class CursorLoaderCallbacks extends HomeCursorLoaderCallbacks {
+        public CursorLoaderCallbacks(Context context, LoaderManager loaderManager) {
+            super(context, loaderManager);
+        }
+
         @Override
         public Loader<Cursor> onCreateLoader(int id, Bundle args) {
             if (id == LOADER_ID_SEARCH) {
