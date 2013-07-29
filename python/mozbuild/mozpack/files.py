@@ -588,7 +588,7 @@ class FileFinder(BaseFinder):
             for p in os.listdir(os.path.join(self.base, base)):
                 if p.startswith('.') and not pattern[0].startswith('.'):
                     continue
-                if re.match(mozpack.path.translate(pattern[0]), p):
+                if mozpack.path.match(p, pattern[0]):
                     for p_, f in self._find_glob(mozpack.path.join(base, p),
                                                  pattern[1:]):
                         yield p_, f
