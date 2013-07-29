@@ -1761,13 +1761,13 @@ CSS_PROP_FONT(
     offsetof(nsStyleFont, mFont.sizeAdjust),
     eStyleAnimType_float)
 CSS_PROP_FONT(
-    -moz-osx-font-smoothing,
-    osx_font_smoothing,
-    CSS_PROP_DOMPROP_PREFIXED(OSXFontSmoothing),
+    -moz-font-smoothing,
+    font_smoothing,
+    CSS_PROP_DOMPROP_PREFIXED(FontSmoothing),
     CSS_PROPERTY_PARSE_VALUE |
         CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE |
         CSS_PROPERTY_APPLIES_TO_PLACEHOLDER,
-    "layout.css.osx-font-smoothing.enabled",
+    "",
     VARIANT_HK,
     kFontSmoothingKTable,
     CSS_PROP_NO_OFFSET,
