@@ -691,7 +691,7 @@ JSRuntime::initSelfHosting(JSContext *cx)
     if (!(selfHostingGlobal_ = JS_NewGlobalObject(cx, &self_hosting_global_class, NULL)))
         return false;
     JSAutoCompartment ac(cx, selfHostingGlobal_);
-    JS_SetGlobalObject(cx, selfHostingGlobal_);
+    js::SetDefaultObjectForContext(cx, selfHostingGlobal_);
     Rooted<GlobalObject*> shg(cx, &selfHostingGlobal_->as<GlobalObject>());
     /*
      * During initialization of standard classes for the self-hosting global,
@@ -758,7 +758,7 @@ JSRuntime::initSelfHosting(JSContext *cx)
         ok = Evaluate(cx, shg, options, src, srcLen, &rv);
     }
     JS_SetErrorReporter(cx, oldReporter);
-    JS_SetGlobalObject(cx, savedGlobal);
+    js::SetDefaultObjectForContext(cx, savedGlobal);
     return ok;
 }
 

@@ -443,6 +443,9 @@ JS_FRIEND_API(JSObject *)
 DefaultObjectForContextOrNull(JSContext *cx);
 
 JS_FRIEND_API(void)
+SetDefaultObjectForContext(JSContext *cx, JSObject *obj);
+
+JS_FRIEND_API(void)
 NotifyAnimationActivity(JSObject *obj);
 
 JS_FRIEND_API(bool)

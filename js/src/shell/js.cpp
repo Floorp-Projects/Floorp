@@ -849,7 +849,7 @@ class AutoNewContext
         if (!newcx)
             return false;
         JS_SetOptions(newcx, JS_GetOptions(newcx) | JSOPTION_DONT_REPORT_UNCAUGHT);
-        JS_SetGlobalObject(newcx, JS_GetGlobalForScopeChain(cx));
+        js::SetDefaultObjectForContext(newcx, JS_GetGlobalForScopeChain(cx));
 
         newRequest.construct(newcx);
         newCompartment.construct(newcx, JS_GetGlobalForScopeChain(cx));
@@ -5210,7 +5210,7 @@ Shell(JSContext *cx, OptionParser *op, char **envp)
         return 1;
 
     JSAutoCompartment ac(cx, glob);
-    JS_SetGlobalObject(cx, glob);
+    js::SetDefaultObjectForContext(cx, glob);
 
     JSObject *envobj = JS_DefineObject(cx, glob, "environment", &env_class, NULL, 0);
     if (!envobj)

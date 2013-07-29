@@ -1195,7 +1195,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsJSContext)
   tmp->mGCOnDestruction = false;
   if (tmp->mContext) {
     JSAutoRequest ar(tmp->mContext);
-    JS_SetGlobalObject(tmp->mContext, nullptr);
+    js::SetDefaultObjectForContext(tmp->mContext, nullptr);
   }
   tmp->DestroyJSContext();
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mGlobalObjectRef)

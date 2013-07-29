@@ -163,7 +163,7 @@ XPCJSContextStack::GetSafeJSContext()
 
     // Make sure the context is associated with a proper compartment
     // and not the default compartment.
-    JS_SetGlobalObject(mSafeJSContext, glob);
+    js::SetDefaultObjectForContext(mSafeJSContext, glob);
 
     // Note: make sure to set the private before calling
     // InitClasses
