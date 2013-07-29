@@ -396,6 +396,15 @@ var SelectionHandler = {
     this._closeSelection();
   },
 
+  searchSelection: function sh_searchSelection() {
+    let selectedText = this._getSelectedText();
+    if (selectedText.length) {
+      let req = Services.search.defaultEngine.getSubmission(selectedText);
+      BrowserApp.selectOrOpenTab(req.uri.spec);
+    }
+    this._closeSelection();
+  },
+
   /*
    * Called if for any reason we fail during the selection
    * process. Cancels the selection.

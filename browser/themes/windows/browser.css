@@ -2455,7 +2455,7 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 }
 
 .popup-notification-icon[popupid="webapps-install"] {
-  list-style-image: url(chrome://browser/skin/webapps-64.png);
+  list-style-image: url(chrome://global/skin/icons/webapps-64.png);
 }
 
 .popup-notification-icon[popupid="mixed-content-blocked"] {
@@ -2533,7 +2533,7 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 }
 
 #webapps-notification-icon {
-  list-style-image: url(chrome://browser/skin/webapps-16.png);
+  list-style-image: url(chrome://global/skin/icons/webapps-16.png);
 }
 
 #plugins-notification-icon {

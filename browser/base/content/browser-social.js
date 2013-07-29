@@ -610,11 +610,13 @@ SocialShare = {
     let iframe = document.createElement("iframe");
     iframe.setAttribute("type", "content");
     iframe.setAttribute("class", "social-share-frame");
+    iframe.setAttribute("context", "contentAreaContextMenu");
+    iframe.setAttribute("tooltip", "aHTMLTooltip");
     iframe.setAttribute("flex", "1");
     panel.appendChild(iframe);
     this.populateProviderMenu();
   },
-  
+
   getSelectedProvider: function() {
     let provider;
     let lastProviderOrigin = this.iframe && this.iframe.getAttribute("origin");
@@ -1366,6 +1368,11 @@ SocialSidebar = {
       // Make sure the right sidebar URL is loaded
       if (sbrowser.getAttribute("src") != Social.provider.sidebarURL) {
         sbrowser.setAttribute("src", Social.provider.sidebarURL);
+        PopupNotifications.locationChange(sbrowser);
+      }
+
+      // if the document has not loaded, delay until it is
+      if (sbrowser.contentDocument.readyState != "complete") {
         sbrowser.addEventListener("load", SocialSidebar._loadListener, true);
       } else {
         this.setSidebarVisibilityState(true);
