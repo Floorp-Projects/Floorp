@@ -8,11 +8,12 @@ package org.mozilla.gecko.home;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.db.BrowserDB.URLColumns;
 
+import android.app.Activity;
 import android.content.Context;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
-import android.support.v4.app.LoaderManager.LoaderCallbacks;
+import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
 import android.support.v4.widget.CursorAdapter;
 import android.text.Editable;
@@ -124,15 +125,18 @@ class PinBookmarkDialog extends DialogFragment {
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
+        final Activity activity = getActivity();
+        final LoaderManager manager = getLoaderManager();
+
         // Initialize the search adapter
-        mAdapter = new SearchAdapter(getActivity());
+        mAdapter = new SearchAdapter(activity);
         mList.setAdapter(mAdapter);
 
         // Create callbacks before the initial loader is started
-        mLoaderCallbacks = new CursorLoaderCallbacks();
+        mLoaderCallbacks = new CursorLoaderCallbacks(activity, manager);
 
         // Reconnect to the loader only if present
-        getLoaderManager().initLoader(LOADER_ID_SEARCH, null, mLoaderCallbacks);
+        manager.initLoader(LOADER_ID_SEARCH, null, mLoaderCallbacks);
 
         // Default filter.
         filter("");
@@ -175,50 +179,42 @@ class PinBookmarkDialog extends DialogFragment {
         }
     }
 
-    private class CursorLoaderCallbacks implements LoaderCallbacks<Cursor> {
+    private class CursorLoaderCallbacks extends HomeCursorLoaderCallbacks {
+        public CursorLoaderCallbacks(Context context, LoaderManager loaderManager) {
+            super(context, loaderManager);
+        }
+
         @Override
         public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-            switch(id) {
-            case LOADER_ID_SEARCH:
+            if (id == LOADER_ID_SEARCH) {
                 return SearchLoader.createInstance(getActivity(), args);
-
-            case LOADER_ID_FAVICONS:
-                return FaviconsLoader.createInstance(getActivity(), args);
+            } else {
+                return super.onCreateLoader(id, args);
             }
-
-            return null;
         }
 
         @Override
         public void onLoadFinished(Loader<Cursor> loader, Cursor c) {
-            final int loaderId = loader.getId();
-            switch(loaderId) {
-            case LOADER_ID_SEARCH:
+            if (loader.getId() == LOADER_ID_SEARCH) {
                 mAdapter.swapCursor(c);
-
-                FaviconsLoader.restartFromCursor(getLoaderManager(), LOADER_ID_FAVICONS,
-                        mLoaderCallbacks, c);
-                break;
-
-            case LOADER_ID_FAVICONS:
-                // Force the list to use the in-memory favicons.
-                mAdapter.notifyDataSetChanged();
-                break;
+                loadFavicons(c);
+            } else {
+                super.onLoadFinished(loader, c);
             }
         }
 
         @Override
         public void onLoaderReset(Loader<Cursor> loader) {
-            final int loaderId = loader.getId();
-            switch(loaderId) {
-            case LOADER_ID_SEARCH:
+            if (loader.getId() == LOADER_ID_SEARCH) {
                 mAdapter.swapCursor(null);
-                break;
-
-            case LOADER_ID_FAVICONS:
-                // Do nothing
-                break;
+            } else {
+                super.onLoaderReset(loader);
             }
+        }
+
+        @Override
+        public void onFaviconsLoaded() {
+            mAdapter.notifyDataSetChanged();
         }
     }
 }
