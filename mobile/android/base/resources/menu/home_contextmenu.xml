@@ -20,11 +20,8 @@
     <item android:id="@+id/home_edit_bookmark"
           android:title="@string/contextmenu_edit_bookmark"/>
 
-    <item android:id="@+id/home_remove_history"
-          android:title="@string/contextmenu_remove_history"/>
-
-    <item android:id="@+id/home_remove_bookmark"
-          android:title="@string/contextmenu_remove_bookmark"/>
+    <item android:id="@+id/home_remove"
+          android:title="@string/contextmenu_remove"/>
 
     <item android:id="@+id/home_add_to_launcher"
           android:title="@string/contextmenu_add_to_launcher"/>
