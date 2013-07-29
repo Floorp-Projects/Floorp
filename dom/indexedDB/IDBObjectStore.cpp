@@ -537,7 +537,7 @@ class ThreadLocalJSRuntime
     mGlobal = JS_NewGlobalObject(mContext, &sGlobalClass, NULL);
     NS_ENSURE_TRUE(mGlobal, NS_ERROR_OUT_OF_MEMORY);
 
-    JS_SetGlobalObject(mContext, mGlobal);
+    js::SetDefaultObjectForContext(mContext, mGlobal);
     return NS_OK;
   }
 

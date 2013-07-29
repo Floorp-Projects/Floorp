@@ -2154,9 +2154,6 @@ extern JS_PUBLIC_API(void)
 JS_IterateCompartments(JSRuntime *rt, void *data,
                        JSIterateCompartmentCallback compartmentCallback);
 
-extern JS_PUBLIC_API(void)
-JS_SetGlobalObject(JSContext *cx, JSObject *obj);
-
 /*
  * Initialize standard JS class constructors, prototypes, and any top-level
  * functions and constants associated with the standard classes (e.g. isNaN
