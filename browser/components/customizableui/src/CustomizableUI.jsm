@@ -2172,11 +2172,15 @@ function OverflowableToolbar(aToolbarNode) {
   this._collapsed = [];
   this._enabled = true;
 
+  this._toolbar.customizationTarget.addEventListener("overflow", this);
   this._toolbar.setAttribute("overflowable", "true");
   Services.obs.addObserver(this, "browser-delayed-startup-finished", false);
 }
 
 OverflowableToolbar.prototype = {
+  _initialized: false,
+  _forceOnOverflow: false,
+
   observe: function(aSubject, aTopic, aData) {
     if (aTopic == "browser-delayed-startup-finished" &&
         aSubject == this._toolbar.ownerDocument.defaultView) {
@@ -2189,7 +2193,6 @@ OverflowableToolbar.prototype = {
     this._target = this._toolbar.customizationTarget;
     let doc = this._toolbar.ownerDocument;
     this._list = doc.getElementById(this._toolbar.getAttribute("overflowtarget"));
-    this._toolbar.customizationTarget.addEventListener("overflow", this);
 
     let window = doc.defaultView;
     window.addEventListener("resize", this);
@@ -2204,21 +2207,25 @@ OverflowableToolbar.prototype = {
     this._panel.addEventListener("popuphiding", this);
     CustomizableUIInternal.addPanelCloseListeners(this._panel);
 
-    this.initialized = true;
+    this._initialized = true;
 
-    // The toolbar could initialize in an overflowed state, in which case
-    // the 'overflow' event may have been fired before the handler was registered.
-    this._onOverflow();
+    // The 'overflow' event may have been fired before init was called.
+    if (this._forceOnOverflow) {
+      this._onOverflow();
+    }
   },
 
   uninit: function() {
-    if (!this.initialized) {
+    this._toolbar.customizationTarget.removeEventListener("overflow", this);
+    this._toolbar.removeAttribute("overflowable");
+
+    if (!this._initialized) {
+      Services.obs.removeObserver(this, "browser-delayed-startup-finished");
       return;
     }
+
     this._disable();
 
-    this._toolbar.removeAttribute("overflowable");
-    this._toolbar.customizationTarget.removeEventListener("overflow", this);
     let window = this._toolbar.ownerDocument.defaultView;
     window.removeEventListener("resize", this);
     window.gNavToolbox.removeEventListener("customizationstarting", this);
@@ -2231,7 +2238,11 @@ OverflowableToolbar.prototype = {
   handleEvent: function(aEvent) {
     switch(aEvent.type) {
       case "overflow":
-        this._onOverflow();
+        if (this._initialized) {
+          this._onOverflow();
+        } else {
+          this._forceOnOverflow = true;
+        }
         break;
       case "resize":
         this._onResize(aEvent);
