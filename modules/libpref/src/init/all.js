@@ -1812,6 +1812,14 @@ pref("layout.css.scope-pseudo.enabled", true);
 // Is support for CSS vertical text enabled?
 pref("layout.css.vertical-text.enabled", false);
 
+// Is -moz-osx-font-smoothing enabled?
+// Only supported in OSX builds
+#ifdef XP_MACOSX
+pref("layout.css.osx-font-smoothing.enabled", true);
+#else
+pref("layout.css.osx-font-smoothing.enabled", false);
+#endif
+
 // pref for which side vertical scrollbars should be on
 // 0 = end-side in UI direction
 // 1 = end-side in document/content direction
