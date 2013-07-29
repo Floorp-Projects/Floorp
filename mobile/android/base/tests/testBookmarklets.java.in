@@ -40,6 +40,7 @@ public class testBookmarklets extends PixelTest {
         addOrUpdateBookmark(title, js, true);
 
         // verify that bookmarklets clicked in awesomescreen work
+        /*  Removed by Bug 896576 - [fig] Remove [getBookmarksList] from BaseTest
         ListView bookmarks = getBookmarksList(title);
 
         Boolean found = false;
@@ -59,6 +60,7 @@ public class testBookmarklets extends PixelTest {
         if (!found) {
             mAsserter.is(found, true, "Found the bookmark: " + js + " and clicked on it");
         }
+        */
 
         alerted = waitForTest(new BooleanTest() {
             @Override
