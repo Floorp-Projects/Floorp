@@ -517,17 +517,13 @@ GetIntCallback(DBusMessage* aMsg, void* aBluetoothReplyRunnable)
 
 #ifdef DEBUG
 static void
-CheckForSinkError(bool aConnect, DBusMessage* aMsg, void *aParam)
+CheckForError(DBusMessage* aMsg, void *aParam, const nsAString& aError)
 {
   BluetoothValue v;
   nsAutoString replyError;
   UnpackVoidMessage(aMsg, nullptr, v, replyError);
   if (!v.get_bool()) {
-    if (aConnect) {
-      BT_WARNING("Failed to connect sink.");
-      return;
-    }
-    BT_WARNING("Failed to disconnect sink.");
+    BT_WARNING(NS_ConvertUTF16toUTF8(aError).get());
   }
 }
 #endif
@@ -536,7 +532,8 @@ static void
 SinkConnectCallback(DBusMessage* aMsg, void* aParam)
 {
 #ifdef DEBUG
-  CheckForSinkError(true, aMsg, aParam);
+  NS_NAMED_LITERAL_STRING(errorStr, "Failed to connect sink");
+  CheckForError(aMsg, aParam, errorStr);
 #endif
 }
 
@@ -544,7 +541,8 @@ static void
 SinkDisconnectCallback(DBusMessage* aMsg, void* aParam)
 {
 #ifdef DEBUG
-  CheckForSinkError(false, aMsg, aParam);
+  NS_NAMED_LITERAL_STRING(errorStr, "Failed to disconnect sink");
+  CheckForError(false, aMsg, errorStr);
 #endif
 }
 
@@ -1304,6 +1302,31 @@ private:
   nsString mPath;
 };
 
+class SendPlayStatusTask : public nsRunnable
+{
+public:
+  SendPlayStatusTask()
+  {
+    MOZ_ASSERT(!NS_IsMainThread());
+  }
+
+  nsresult Run()
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    BluetoothA2dpManager* a2dp = BluetoothA2dpManager::Get();
+    NS_ENSURE_TRUE(a2dp, NS_ERROR_FAILURE);
+
+    BluetoothService* bs = BluetoothService::Get();
+    NS_ENSURE_TRUE(bs, NS_ERROR_FAILURE);
+
+    bs->UpdatePlayStatus(a2dp->GetDuration(),
+                         a2dp->GetPosition(),
+                         a2dp->GetPlayStatus());
+    return NS_OK;
+  }
+};
+
 // Called by dbus during WaitForAndDispatchEventNative()
 // This function is called on the IOThread
 static DBusHandlerResult
@@ -1489,6 +1512,9 @@ EventFilter(DBusConnection* aConn, DBusMessage* aMsg, void* aData)
                         errorStr,
                         sSinkProperties,
                         ArrayLength(sSinkProperties));
+  } else if (dbus_message_is_signal(aMsg, DBUS_CTL_IFACE, "GetPlayStatus")) {
+    NS_DispatchToMainThread(new SendPlayStatusTask());
+    return DBUS_HANDLER_RESULT_HANDLED;
   } else if (dbus_message_is_signal(aMsg, DBUS_CTL_IFACE, "PropertyChanged")) {
     ParsePropertyChange(aMsg,
                         v,
@@ -3006,5 +3032,47 @@ BluetoothDBusService::SendPlayStatus(uint32_t aDuration,
   runnable.forget();
 
   a2dp->UpdatePlayStatus(aDuration, aPosition, playStatus);
+}
+
+static void
+ControlCallback(DBusMessage* aMsg, void* aParam)
+{
+#ifdef DEBUG
+  NS_NAMED_LITERAL_STRING(errorStr, "Failed to update playstatus");
+  CheckForError(aMsg, aParam, errorStr);
+#endif
+}
+
+void
+BluetoothDBusService::UpdatePlayStatus(uint32_t aDuration,
+                                       uint32_t aPosition,
+                                       ControlPlayStatus aPlayStatus)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  NS_ENSURE_TRUE_VOID(this->IsReady());
+
+  BluetoothA2dpManager* a2dp = BluetoothA2dpManager::Get();
+  NS_ENSURE_TRUE_VOID(a2dp);
+  MOZ_ASSERT(a2dp->IsConnected());
+  MOZ_ASSERT(a2dp->IsAvrcpConnected());
+
+  nsAutoString address;
+  a2dp->GetAddress(address);
+  nsString objectPath =
+    GetObjectPathFromAddress(sAdapterPath, address);
+
+  uint32_t tempPlayStatus = aPlayStatus;
+  bool ret = dbus_func_args_async(mConnection,
+                                  -1,
+                                  ControlCallback,
+                                  nullptr,
+                                  NS_ConvertUTF16toUTF8(objectPath).get(),
+                                  DBUS_CTL_IFACE,
+                                  "UpdatePlayStatus",
+                                  DBUS_TYPE_UINT32, &aDuration,
+                                  DBUS_TYPE_UINT32, &aPosition,
+                                  DBUS_TYPE_UINT32, &tempPlayStatus,
+                                  DBUS_TYPE_INVALID);
+  NS_ENSURE_TRUE_VOID(ret);
 }
 
