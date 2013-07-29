@@ -213,7 +213,7 @@ TCPSocketParent::SendCallback(const nsAString& aType, const JS::Value& aDataVal,
       nsDependentJSString name;
 
       JS::Rooted<JS::Value> val(aCx);
-      if (!JS_GetProperty(aCx, obj, "name", val.address())) {
+      if (!JS_GetProperty(aCx, obj, "name", &val)) {
         NS_ERROR("No name property on supposed error object");
       } else if (JSVAL_IS_STRING(val)) {
         if (!name.init(aCx, JSVAL_TO_STRING(val))) {

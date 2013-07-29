@@ -39,7 +39,7 @@ MediaMetaData::Init(JSContext* aCx, const jsval* aVal)
   pusher.Push(aCx);
   JSAutoCompartment ac(aCx, obj);
 
-  JS::Value value;
+  JS::Rooted<JS::Value> value(aCx);
   NS_ENSURE_STATE(JS_GetProperty(aCx, obj, "mAlbum", &value));
   if (JSVAL_IS_STRING(value)) {
     nsDependentJSString jsString;
