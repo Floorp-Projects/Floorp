@@ -1366,6 +1366,7 @@ SocialSidebar = {
       // Make sure the right sidebar URL is loaded
       if (sbrowser.getAttribute("src") != Social.provider.sidebarURL) {
         sbrowser.setAttribute("src", Social.provider.sidebarURL);
+        PopupNotifications.locationChange(sbrowser);
       }
 
       // if the document has not loaded, delay until it is
