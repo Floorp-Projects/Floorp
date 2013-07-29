@@ -47,22 +47,14 @@ MultiTouchInput::MultiTouchInput(const nsTouchEvent& aTouchEvent)
   for (size_t i = 0; i < aTouchEvent.touches.Length(); i++) {
     Touch* domTouch = static_cast<Touch*>(aTouchEvent.touches[i].get());
 
-    // Extract data from weird interfaces.
-    int32_t identifier, radiusX, radiusY;
-    float rotationAngle, force;
-    domTouch->GetIdentifier(&identifier);
-    domTouch->GetRadiusX(&radiusX);
-    domTouch->GetRadiusY(&radiusY);
-    domTouch->GetRotationAngle(&rotationAngle);
-    domTouch->GetForce(&force);
-
-    SingleTouchData data(identifier,
+    SingleTouchData data(domTouch->Identifier(),
                          ScreenIntPoint::FromUnknownPoint(
                            gfx::IntPoint(domTouch->mRefPoint.x,
                                          domTouch->mRefPoint.y)),
-                         ScreenSize(radiusX, radiusY),
-                         rotationAngle,
-                         force);
+                         ScreenSize(domTouch->RadiusX(),
+                                    domTouch->RadiusY()),
+                         domTouch->RotationAngle(),
+                         domTouch->Force());
 
     mTouches.AppendElement(data);
   }
