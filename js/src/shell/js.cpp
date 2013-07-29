@@ -934,7 +934,7 @@ Evaluate(JSContext *cx, unsigned argc, jsval *vp)
         RootedObject opts(cx, &args[1].toObject());
         RootedValue v(cx);
 
-        if (!JS_GetProperty(cx, opts, "newContext", v.address()))
+        if (!JS_GetProperty(cx, opts, "newContext", &v))
             return false;
         if (!JSVAL_IS_VOID(v)) {
             JSBool b;
@@ -943,7 +943,7 @@ Evaluate(JSContext *cx, unsigned argc, jsval *vp)
             newContext = b;
         }
 
-        if (!JS_GetProperty(cx, opts, "compileAndGo", v.address()))
+        if (!JS_GetProperty(cx, opts, "compileAndGo", &v))
             return false;
         if (!JSVAL_IS_VOID(v)) {
             JSBool b;
@@ -952,7 +952,7 @@ Evaluate(JSContext *cx, unsigned argc, jsval *vp)
             compileAndGo = b;
         }
 
-        if (!JS_GetProperty(cx, opts, "noScriptRval", v.address()))
+        if (!JS_GetProperty(cx, opts, "noScriptRval", &v))
             return false;
         if (!JSVAL_IS_VOID(v)) {
             JSBool b;
@@ -961,7 +961,7 @@ Evaluate(JSContext *cx, unsigned argc, jsval *vp)
             noScriptRval = b;
         }
 
-        if (!JS_GetProperty(cx, opts, "fileName", v.address()))
+        if (!JS_GetProperty(cx, opts, "fileName", &v))
             return false;
         if (JSVAL_IS_NULL(v)) {
             fileName = NULL;
@@ -974,12 +974,12 @@ Evaluate(JSContext *cx, unsigned argc, jsval *vp)
                 return false;
         }
 
-        if (!JS_GetProperty(cx, opts, "element", v.address()))
+        if (!JS_GetProperty(cx, opts, "element", &v))
             return false;
         if (!JSVAL_IS_PRIMITIVE(v))
             element = JSVAL_TO_OBJECT(v);
 
-        if (!JS_GetProperty(cx, opts, "sourceMapURL", v.address()))
+        if (!JS_GetProperty(cx, opts, "sourceMapURL", &v))
             return false;
         if (!JSVAL_IS_VOID(v)) {
             sourceMapURL = JS_ValueToString(cx, v);
@@ -987,7 +987,7 @@ Evaluate(JSContext *cx, unsigned argc, jsval *vp)
                 return false;
         }
 
-        if (!JS_GetProperty(cx, opts, "lineNumber", v.address()))
+        if (!JS_GetProperty(cx, opts, "lineNumber", &v))
             return false;
         if (!JSVAL_IS_VOID(v)) {
             uint32_t u;
@@ -996,7 +996,7 @@ Evaluate(JSContext *cx, unsigned argc, jsval *vp)
             lineNumber = u;
         }
 
-        if (!JS_GetProperty(cx, opts, "global", v.address()))
+        if (!JS_GetProperty(cx, opts, "global", &v))
             return false;
         if (!JSVAL_IS_VOID(v)) {
             global = JSVAL_IS_PRIMITIVE(v) ? NULL : JSVAL_TO_OBJECT(v);
@@ -1012,7 +1012,7 @@ Evaluate(JSContext *cx, unsigned argc, jsval *vp)
             }
         }
 
-        if (!JS_GetProperty(cx, opts, "catchTermination", v.address()))
+        if (!JS_GetProperty(cx, opts, "catchTermination", &v))
             return false;
         if (!JSVAL_IS_VOID(v)) {
             JSBool b;
@@ -1021,7 +1021,7 @@ Evaluate(JSContext *cx, unsigned argc, jsval *vp)
             catchTermination = b;
         }
 
-        if (!JS_GetProperty(cx, opts, "saveFrameChain", v.address()))
+        if (!JS_GetProperty(cx, opts, "saveFrameChain", &v))
             return false;
         if (!JSVAL_IS_VOID(v)) {
             JSBool b;
@@ -2465,7 +2465,7 @@ sandbox_enumerate(JSContext *cx, HandleObject obj)
     RootedValue v(cx);
     JSBool b;
 
-    if (!JS_GetProperty(cx, obj, "lazy", v.address()))
+    if (!JS_GetProperty(cx, obj, "lazy", &v))
         return false;
 
     JS_ValueToBoolean(cx, v, &b);
@@ -2479,7 +2479,7 @@ sandbox_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
     RootedValue v(cx);
     JSBool b, resolved;
 
-    if (!JS_GetProperty(cx, obj, "lazy", v.address()))
+    if (!JS_GetProperty(cx, obj, "lazy", &v))
         return false;
 
     JS_ValueToBoolean(cx, v, &b);

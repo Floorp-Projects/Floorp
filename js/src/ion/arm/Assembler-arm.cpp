@@ -2808,7 +2808,7 @@ InstructionIterator::InstructionIterator(Instruction *i_) : i(i_) {
     const PoolHeader *ph;
     // If this is a guard, and the next instruction is a header, always work around the pool
     // If it isn't a guard, then start looking ahead.
-    if (InstIsGuard(i, &ph)) {
+    if (InstIsArtificialGuard(i, &ph)) {
         i = i->next();
     }
 }

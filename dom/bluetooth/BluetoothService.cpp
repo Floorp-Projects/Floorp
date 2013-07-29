@@ -566,7 +566,7 @@ BluetoothService::HandleSettingsChanged(const nsAString& aData)
 
   JSObject& obj(val.toObject());
 
-  JS::Value key;
+  JS::Rooted<JS::Value> key(cx);
   if (!JS_GetProperty(cx, &obj, "key", &key)) {
     MOZ_ASSERT(!JS_IsExceptionPending(cx));
     return NS_ERROR_OUT_OF_MEMORY;
@@ -584,7 +584,7 @@ BluetoothService::HandleSettingsChanged(const nsAString& aData)
   }
 
   if (match) {
-    JS::Value value;
+    JS::Rooted<JS::Value> value(cx);
     if (!JS_GetProperty(cx, &obj, "value", &value)) {
       MOZ_ASSERT(!JS_IsExceptionPending(cx));
       return NS_ERROR_OUT_OF_MEMORY;
@@ -607,7 +607,7 @@ BluetoothService::HandleSettingsChanged(const nsAString& aData)
   }
 
   if (match) {
-    JS::Value value;
+    JS::Rooted<JS::Value> value(cx);
     if (!JS_GetProperty(cx, &obj, "value", &value)) {
       MOZ_ASSERT(!JS_IsExceptionPending(cx));
       return NS_ERROR_OUT_OF_MEMORY;

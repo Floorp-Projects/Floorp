@@ -42,7 +42,7 @@ static JSBool
 SealObjectAndPrototype(JSContext* cx, JSObject* parent, const char* name)
 {
   JS::Rooted<JS::Value> prop(cx);
-  if (!JS_GetProperty(cx, parent, name, prop.address()))
+  if (!JS_GetProperty(cx, parent, name, &prop))
     return false;
 
   if (prop.isUndefined()) {
@@ -51,7 +51,7 @@ SealObjectAndPrototype(JSContext* cx, JSObject* parent, const char* name)
   }
 
   JS::Rooted<JSObject*> obj(cx, prop.toObjectOrNull());
-  if (!JS_GetProperty(cx, obj, "prototype", prop.address()))
+  if (!JS_GetProperty(cx, obj, "prototype", &prop))
     return false;
 
   JS::Rooted<JSObject*> prototype(cx, prop.toObjectOrNull());
