@@ -7,9 +7,12 @@
 XPIDL_SOURCES += [
     'nsIDOMConnection.idl',
     'nsIDOMDataErrorEvent.idl',
+    'nsIDOMTCPServerSocket.idl',
     'nsIDOMTCPSocket.idl',
     'nsIDOMUSSDReceivedEvent.idl',
     'nsIMozNavigatorNetwork.idl',
+    'nsITCPServerSocketChild.idl',
+    'nsITCPServerSocketParent.idl',
     'nsITCPSocketChild.idl',
     'nsITCPSocketParent.idl',
 ]

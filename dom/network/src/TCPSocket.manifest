@@ -6,3 +6,7 @@ category JavaScript-navigator-property mozTCPSocket @mozilla.org/tcp-socket;1
 # TCPSocketParentIntermediary.js
 component {afa42841-a6cb-4a91-912f-93099f6a3d18} TCPSocketParentIntermediary.js
 contract @mozilla.org/tcp-socket-intermediary;1 {afa42841-a6cb-4a91-912f-93099f6a3d18}
+
+# TCPServerSocket.js
+component {73065eae-27dc-11e2-895a-000c29987aa2} TCPServerSocket.js
+contract @mozilla.org/tcp-server-socket;1 {73065eae-27dc-11e2-895a-000c29987aa2}
