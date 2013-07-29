@@ -67,9 +67,8 @@
 
     <LinearLayout android:id="@+id/url_edit_container"
                   style="@style/UrlBar.Button"
-                  android:layout_marginLeft="4dp"
-                  android:layout_marginRight="4dp"
-                  android:paddingLeft="8dp"
+                  android:paddingLeft="12dp"
+                  android:paddingRight="4dp"
                   android:visibility="gone"
                   android:orientation="horizontal"
                   android:layout_toRightOf="@id/back"
