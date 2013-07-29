@@ -84,8 +84,10 @@ gfxMacFont::gfxMacFont(MacOSFontEntry *aFontEntry, const gfxFontStyle *aFontStyl
     if (mAdjustedSize <=
         (gfxFloat)gfxPlatformMac::GetPlatform()->GetAntiAliasingThreshold()) {
         cairo_font_options_set_antialias(fontOptions, CAIRO_ANTIALIAS_NONE);
+        mAntialiasOption = kAntialiasNone;
     } else if (mStyle.useGrayscaleAntialiasing) {
         cairo_font_options_set_antialias(fontOptions, CAIRO_ANTIALIAS_GRAY);
+        mAntialiasOption = kAntialiasGrayscale;
     }
 
     mScaledFont = cairo_scaled_font_create(mFontFace, &sizeMatrix, &ctm,
