@@ -110,8 +110,33 @@ RefTestCmdLineHandler.prototype =
 
     var wwatch = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
                            .getService(nsIWindowWatcher);
-    wwatch.openWindow(null, "chrome://reftest/content/reftest.xul", "_blank",
-                      "chrome,dialog=no,all", args);
+
+    function loadReftests() {
+      wwatch.openWindow(null, "chrome://reftest/content/reftest.xul", "_blank",
+                        "chrome,dialog=no,all", args);
+    }
+
+    var remote = false;
+    try {
+      remote = prefs.getBoolPref("reftest.remote");
+    } catch (ex) {
+    }
+
+    // If we are running on a remote machine, assume that we can't open another
+    // window for transferring focus to when tests don't require focus.
+    if (remote) {
+      loadReftests();
+    }
+    else {
+      // This dummy window exists solely for enforcing proper focus discipline.
+      var dummy = wwatch.openWindow(null, "about:blank", "dummy",
+                                    "chrome,dialog=no,left=800,height=200,width=200,all", null);
+      dummy.onload = function dummyOnload() {
+        dummy.focus();
+        loadReftests();
+      }
+    }
+
     cmdLine.preventDefault = true;
   },
 

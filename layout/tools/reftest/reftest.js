@@ -406,8 +406,10 @@ function InitAndStartRefTests()
         DoneTests();
     }
 
-    // Focus the content browser
-    gBrowser.focus();
+    // Focus the content browser.
+    if (gFocusFilterMode != FOCUS_FILTER_NON_NEEDS_FOCUS_TESTS) {
+        gBrowser.focus();
+    }
 
     StartTests();
 }
@@ -1154,6 +1156,15 @@ function Focus()
     return true;
 }
 
+function Blur()
+{
+    // On non-remote reftests, this will transfer focus to the dummy window
+    // we created to hold focus for non-needs-focus tests.  Buggy tests
+    // (ones which require focus but don't request needs-focus) will then
+    // fail.
+    gContainingWindow.blur();
+}
+
 function StartCurrentTest()
 {
     gTestLog = [];
@@ -1186,6 +1197,9 @@ function StartCurrentTest()
     }
     else {
         gDumpLog("REFTEST TEST-START | " + gURLs[0].prettyPath + "\n");
+        if (!gURLs[0].needsFocus) {
+            Blur();
+        }
         var currentTest = gTotalTests - gURLs.length;
         gContainingWindow.document.title = "reftest: " + currentTest + " / " + gTotalTests +
             " (" + Math.floor(100 * (currentTest / gTotalTests)) + "%)";
