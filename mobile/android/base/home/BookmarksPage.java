@@ -56,16 +56,13 @@ public class BookmarksPage extends HomeFragment {
     public static final String LOGTAG = "GeckoBookmarksPage";
 
     // Cursor loader ID for list of bookmarks.
-    private static final int BOOKMARKS_LIST_LOADER_ID = 0;
+    private static final int LOADER_ID_BOOKMARKS_LIST = 0;
 
     // Cursor loader ID for grid of bookmarks.
-    private static final int TOP_BOOKMARKS_LOADER_ID = 1;
-
-    // Loader ID for favicons.
-    private static final int FAVICONS_LOADER_ID = 2;
+    private static final int LOADER_ID_TOP_BOOKMARKS = 1;
 
     // Loader ID for thumbnails.
-    private static final int THUMBNAILS_LOADER_ID = 3;
+    private static final int LOADER_ID_THUMBNAILS = 2;
 
     // Key for bookmarks folder id.
     private static final String BOOKMARKS_FOLDER_KEY = "folder_id";
@@ -144,7 +141,7 @@ public class BookmarksPage extends HomeFragment {
                 // Restart the loader with folder as the argument.
                 Bundle bundle = new Bundle();
                 bundle.putInt(BOOKMARKS_FOLDER_KEY, folderId);
-                getLoaderManager().restartLoader(BOOKMARKS_LIST_LOADER_ID, bundle, mLoaderCallbacks);
+                getLoaderManager().restartLoader(LOADER_ID_BOOKMARKS_LIST, bundle, mLoaderCallbacks);
             }
         });
         mList.setAdapter(mListAdapter);
@@ -290,8 +287,8 @@ public class BookmarksPage extends HomeFragment {
     @Override
     protected void load() {
         final LoaderManager manager = getLoaderManager();
-        manager.initLoader(BOOKMARKS_LIST_LOADER_ID, null, mLoaderCallbacks);
-        manager.initLoader(TOP_BOOKMARKS_LOADER_ID, null, mLoaderCallbacks);
+        manager.initLoader(LOADER_ID_BOOKMARKS_LIST, null, mLoaderCallbacks);
+        manager.initLoader(LOADER_ID_TOP_BOOKMARKS, null, mLoaderCallbacks);
     }
 
     /**
@@ -371,11 +368,11 @@ public class BookmarksPage extends HomeFragment {
     /**
      * Loader callbacks for the LoaderManager of this fragment.
      */
-    private class CursorLoaderCallbacks implements LoaderCallbacks<Cursor> {
+    private class CursorLoaderCallbacks extends HomeCursorLoaderCallbacks {
         @Override
         public Loader<Cursor> onCreateLoader(int id, Bundle args) {
             switch(id) {
-                case BOOKMARKS_LIST_LOADER_ID: {
+                case LOADER_ID_BOOKMARKS_LIST: {
                     if (args == null) {
                         return new BookmarksLoader(getActivity());
                     } else {
@@ -383,30 +380,27 @@ public class BookmarksPage extends HomeFragment {
                     }
                 }
 
-                case TOP_BOOKMARKS_LOADER_ID: {
+                case LOADER_ID_TOP_BOOKMARKS: {
                     return new TopBookmarksLoader(getActivity());
                 }
 
-                case FAVICONS_LOADER_ID: {
-                    return FaviconsLoader.createInstance(getActivity(), args);
+                default: {
+                    return super.onCreateLoader(id, args);
                 }
             }
-
-            return null;
         }
 
         @Override
         public void onLoadFinished(Loader<Cursor> loader, Cursor c) {
             final int loaderId = loader.getId();
             switch(loaderId) {
-                case BOOKMARKS_LIST_LOADER_ID: {
+                case LOADER_ID_BOOKMARKS_LIST: {
                     mListAdapter.swapCursor(c);
-                    FaviconsLoader.restartFromCursor(getLoaderManager(), FAVICONS_LOADER_ID,
-                            mLoaderCallbacks, c);
+                    loadFavicons(c);
                     break;
                 }
 
-                case TOP_BOOKMARKS_LOADER_ID: {
+                case LOADER_ID_TOP_BOOKMARKS: {
                     mTopBookmarksAdapter.swapCursor(c);
 
                     // Load the thumbnails.
@@ -420,15 +414,14 @@ public class BookmarksPage extends HomeFragment {
                         if (urls.size() > 0) {
                             Bundle bundle = new Bundle();
                             bundle.putStringArrayList(THUMBNAILS_URLS_KEY, urls);
-                            getLoaderManager().restartLoader(THUMBNAILS_LOADER_ID, bundle, mThumbnailsLoaderCallbacks);
+                            getLoaderManager().restartLoader(LOADER_ID_THUMBNAILS, bundle, mThumbnailsLoaderCallbacks);
                         }
                     }
                     break;
                 }
 
-                case FAVICONS_LOADER_ID: {
-                    // Force the list to use in-memory favicons.
-                    mListAdapter.notifyDataSetChanged();
+                default: {
+                    super.onLoadFinished(loader, c);
                     break;
                 }
             }
@@ -438,25 +431,30 @@ public class BookmarksPage extends HomeFragment {
         public void onLoaderReset(Loader<Cursor> loader) {
             final int loaderId = loader.getId();
             switch(loaderId) {
-                case BOOKMARKS_LIST_LOADER_ID: {
+                case LOADER_ID_BOOKMARKS_LIST: {
                     if (mList != null) {
                         mListAdapter.swapCursor(null);
                     }
                     break;
                 }
 
-                case TOP_BOOKMARKS_LOADER_ID: {
+                case LOADER_ID_TOP_BOOKMARKS: {
                     if (mTopBookmarks != null) {
                         mTopBookmarksAdapter.swapCursor(null);
                         break;
                     }
                 }
 
-                case FAVICONS_LOADER_ID: {
-                    // Do nothing.
+                default: {
+                    super.onLoaderReset(loader);
                     break;
                 }
             }
+        }
+
+        @Override
+        public void onFaviconsLoaded() {
+            mListAdapter.notifyDataSetChanged();
         }
     }
 
