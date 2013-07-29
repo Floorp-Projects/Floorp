@@ -2882,9 +2882,9 @@ void
 BluetoothDBusService::SendMetaData(const nsAString& aTitle,
                                    const nsAString& aArtist,
                                    const nsAString& aAlbum,
-                                   uint32_t aMediaNumber,
-                                   uint32_t aTotalMediaCount,
-                                   uint32_t aDuration,
+                                   int64_t aMediaNumber,
+                                   int64_t aTotalMediaCount,
+                                   int64_t aDuration,
                                    BluetoothReplyRunnable* aRunnable)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -2916,10 +2916,19 @@ BluetoothDBusService::SendMetaData(const nsAString& aTitle,
   nsCString tempTitle = NS_ConvertUTF16toUTF8(aTitle);
   nsCString tempArtist = NS_ConvertUTF16toUTF8(aArtist);
   nsCString tempAlbum = NS_ConvertUTF16toUTF8(aAlbum);
-  nsCString tempMediaNumber, tempTotalMediaCount, tempDuration;
-  tempMediaNumber.AppendInt(aMediaNumber);
-  tempTotalMediaCount.AppendInt(aTotalMediaCount);
-  tempDuration.AppendInt(aDuration);
+
+  nsCString tempMediaNumber = EmptyCString();
+  nsCString tempTotalMediaCount = EmptyCString();
+  nsCString tempDuration = EmptyCString();
+  if (aMediaNumber >= 0) {
+    tempMediaNumber.AppendInt(aMediaNumber);
+  }
+  if (aTotalMediaCount >= 0) {
+    tempTotalMediaCount.AppendInt(aTotalMediaCount);
+  }
+  if (aDuration >= 0) {
+    tempDuration.AppendInt(aDuration);
+  }
 
   const char* title = tempTitle.get();
   const char* album = tempAlbum.get();
@@ -2984,8 +2993,8 @@ PlayStatusStringToControlPlayStatus(const nsAString& aPlayStatus)
 }
 
 void
-BluetoothDBusService::SendPlayStatus(uint32_t aDuration,
-                                     uint32_t aPosition,
+BluetoothDBusService::SendPlayStatus(int64_t aDuration,
+                                     int64_t aPosition,
                                      const nsAString& aPlayStatus,
                                      BluetoothReplyRunnable* aRunnable)
 {
@@ -3002,6 +3011,14 @@ BluetoothDBusService::SendPlayStatus(uint32_t aDuration,
   if (playStatus == ControlPlayStatus::PLAYSTATUS_UNKNOWN) {
     DispatchBluetoothReply(aRunnable, BluetoothValue(),
                            NS_LITERAL_STRING("Invalid play status"));
+    return;
+  } else if (aDuration < 0) {
+    DispatchBluetoothReply(aRunnable, BluetoothValue(),
+                           NS_LITERAL_STRING("Invalid duration"));
+    return;
+  } else if (aPosition < 0) {
+    DispatchBluetoothReply(aRunnable, BluetoothValue(),
+                           NS_LITERAL_STRING("Invalid position"));
     return;
   }
 

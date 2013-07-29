@@ -5,19 +5,12 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "base/basictypes.h"
-#include "BluetoothAdapter.h"
-#include "BluetoothDevice.h"
-#include "BluetoothReplyRunnable.h"
-#include "BluetoothService.h"
-#include "BluetoothUtils.h"
 #include "GeneratedEvents.h"
-
 #include "nsContentUtils.h"
 #include "nsCxPusher.h"
 #include "nsDOMClassInfo.h"
 #include "nsIDOMBluetoothDeviceEvent.h"
 #include "nsTArrayHelpers.h"
-#include "DictionaryHelpers.h"
 #include "DOMRequest.h"
 #include "nsThreadUtils.h"
 
@@ -25,6 +18,14 @@
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/LazyIdleThread.h"
 #include "mozilla/Util.h"
+
+#include "BluetoothAdapter.h"
+#include "BluetoothDevice.h"
+#include "BluetoothReplyRunnable.h"
+#include "BluetoothService.h"
+#include "BluetoothUtils.h"
+#include "MediaMetaData.h"
+#include "MediaPlayStatus.h"
 
 using namespace mozilla;
 
@@ -838,7 +839,7 @@ NS_IMETHODIMP
 BluetoothAdapter::SendMediaMetaData(const JS::Value& aOptions,
                                     nsIDOMDOMRequest** aRequest)
 {
-  idl::MediaMetaData metadata;
+  MediaMetaData metadata;
 
   nsresult rv;
   nsIScriptContext* sc = GetContextForEventHandlers(&rv);
@@ -857,12 +858,12 @@ BluetoothAdapter::SendMediaMetaData(const JS::Value& aOptions,
 
   BluetoothService* bs = BluetoothService::Get();
   NS_ENSURE_TRUE(bs, NS_ERROR_FAILURE);
-  bs->SendMetaData(metadata.title,
-                   metadata.artist,
-                   metadata.album,
-                   metadata.mediaNumber,
-                   metadata.totalMediaCount,
-                   metadata.duration,
+  bs->SendMetaData(metadata.mTitle,
+                   metadata.mArtist,
+                   metadata.mAlbum,
+                   metadata.mMediaNumber,
+                   metadata.mTotalMediaCount,
+                   metadata.mDuration,
                    results);
 
   req.forget(aRequest);
@@ -873,7 +874,7 @@ NS_IMETHODIMP
 BluetoothAdapter::SendMediaPlayStatus(const JS::Value& aOptions,
                                       nsIDOMDOMRequest** aRequest)
 {
-  idl::MediaPlayStatus status;
+  MediaPlayStatus status;
 
   nsresult rv;
   nsIScriptContext* sc = GetContextForEventHandlers(&rv);
@@ -892,9 +893,9 @@ BluetoothAdapter::SendMediaPlayStatus(const JS::Value& aOptions,
 
   BluetoothService* bs = BluetoothService::Get();
   NS_ENSURE_TRUE(bs, NS_ERROR_FAILURE);
-  bs->SendPlayStatus(status.duration,
-                     status.position,
-                     status.playStatus,
+  bs->SendPlayStatus(status.mDuration,
+                     status.mPosition,
+                     status.mPlayStatus,
                      results);
 
   req.forget(aRequest);
