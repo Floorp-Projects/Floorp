@@ -1898,6 +1898,12 @@ let RIL = {
       return;
     }
 
+    if (this._isCdma) {
+      // AT+CHLD=0 means "release held or UDUB."
+      Buf.simpleRequest(REQUEST_HANGUP_WAITING_OR_BACKGROUND);
+      return;
+    }
+
     switch (call.state) {
       case CALL_STATE_INCOMING:
         Buf.simpleRequest(REQUEST_UDUB);
