@@ -2948,6 +2948,16 @@ BluetoothDBusService::SendMetaData(const nsAString& aTitle,
 
   runnable.forget();
 
+  nsAutoString prevTitle, prevAlbum;
+  a2dp->GetTitle(prevTitle);
+  a2dp->GetAlbum(prevAlbum);
+
+  if (aMediaNumber != a2dp->GetMediaNumber() ||
+      !aTitle.Equals(prevTitle) ||
+      !aAlbum.Equals(prevAlbum)) {
+    UpdateNotification(ControlEventId::EVENT_TRACK_CHANGED, aMediaNumber);
+  }
+
   a2dp->UpdateMetaData(aTitle, aArtist, aAlbum,
                        aMediaNumber, aTotalMediaCount, aDuration);
 }
@@ -3031,6 +3041,20 @@ BluetoothDBusService::SendPlayStatus(uint32_t aDuration,
 
   runnable.forget();
 
+  ControlEventId eventId = ControlEventId::EVENT_UNKNOWN;
+  uint64_t data;
+  if (aPosition != a2dp->GetPosition()) {
+    eventId = ControlEventId::EVENT_PLAYBACK_POS_CHANGED;
+    data = aPosition;
+  } else if (playStatus != a2dp->GetPlayStatus()) {
+    eventId = ControlEventId::EVENT_PLAYBACK_STATUS_CHANGED;
+    data = tempPlayStatus;
+  }
+
+  if (eventId != ControlEventId::EVENT_UNKNOWN) {
+    UpdateNotification(eventId, data);
+  }
+
   a2dp->UpdatePlayStatus(aDuration, aPosition, playStatus);
 }
 
@@ -3076,3 +3100,33 @@ BluetoothDBusService::UpdatePlayStatus(uint32_t aDuration,
   NS_ENSURE_TRUE_VOID(ret);
 }
 
+void
+BluetoothDBusService::UpdateNotification(ControlEventId aEventId,
+                                         uint64_t aData)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  NS_ENSURE_TRUE_VOID(this->IsReady());
+
+  BluetoothA2dpManager* a2dp = BluetoothA2dpManager::Get();
+  NS_ENSURE_TRUE_VOID(a2dp);
+  MOZ_ASSERT(a2dp->IsConnected());
+  MOZ_ASSERT(a2dp->IsAvrcpConnected());
+
+  nsAutoString address;
+  a2dp->GetAddress(address);
+  nsString objectPath =
+    GetObjectPathFromAddress(sAdapterPath, address);
+  uint16_t eventId = aEventId;
+
+  bool ret = dbus_func_args_async(mConnection,
+                                  -1,
+                                  ControlCallback,
+                                  nullptr,
+                                  NS_ConvertUTF16toUTF8(objectPath).get(),
+                                  DBUS_CTL_IFACE,
+                                  "UpdateNotification",
+                                  DBUS_TYPE_UINT16, &eventId,
+                                  DBUS_TYPE_UINT64, &aData,
+                                  DBUS_TYPE_INVALID);
+  NS_ENSURE_TRUE_VOID(ret);
+}

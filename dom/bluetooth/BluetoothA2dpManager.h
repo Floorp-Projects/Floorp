@@ -58,6 +58,7 @@ public:
   void UpdatePlayStatus(uint32_t aDuration,
                         uint32_t aPosition,
                         ControlPlayStatus aPlayStatus);
+  void GetAlbum(nsAString& aAlbum);
   uint32_t GetDuration();
   ControlPlayStatus GetPlayStatus();
   uint32_t GetPosition();

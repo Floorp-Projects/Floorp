@@ -360,6 +360,12 @@ BluetoothA2dpManager::UpdatePlayStatus(uint32_t aDuration,
   mPlayStatus = aPlayStatus;
 }
 
+void
+BluetoothA2dpManager::GetAlbum(nsAString& aAlbum)
+{
+    aAlbum.Assign(mAlbum);
+}
+
 uint32_t
 BluetoothA2dpManager::GetDuration()
 {
