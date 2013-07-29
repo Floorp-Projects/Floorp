@@ -31,7 +31,7 @@ import android.widget.ListView;
  */
 public class ReadingListPage extends HomeFragment {
     // Cursor loader ID for reading list
-    private static final int READING_LIST_LOADER_ID = 0;
+    private static final int LOADER_ID_READING_LIST = 0;
 
     // Adapter for the list of reading list items
     private ReadingListAdapter mAdapter;
@@ -113,7 +113,7 @@ public class ReadingListPage extends HomeFragment {
 
     @Override
     protected void load() {
-        getLoaderManager().initLoader(READING_LIST_LOADER_ID, null, mCursorLoaderCallbacks);
+        getLoaderManager().initLoader(LOADER_ID_READING_LIST, null, mCursorLoaderCallbacks);
     }
 
     /**
@@ -157,7 +157,7 @@ public class ReadingListPage extends HomeFragment {
         @Override
         public Loader<Cursor> onCreateLoader(int id, Bundle args) {
             switch(id) {
-                case READING_LIST_LOADER_ID:
+                case LOADER_ID_READING_LIST:
                     return new ReadingListLoader(getActivity());
             }
             return null;
@@ -167,7 +167,7 @@ public class ReadingListPage extends HomeFragment {
         public void onLoadFinished(Loader<Cursor> loader, Cursor c) {
             final int loaderId = loader.getId();
             switch(loaderId) {
-                case READING_LIST_LOADER_ID:
+                case LOADER_ID_READING_LIST:
                     mAdapter.swapCursor(c);
                     break;
            }
@@ -177,7 +177,7 @@ public class ReadingListPage extends HomeFragment {
         public void onLoaderReset(Loader<Cursor> loader) {
             final int loaderId = loader.getId();
             switch(loaderId) {
-                case READING_LIST_LOADER_ID:
+                case LOADER_ID_READING_LIST:
                     mAdapter.swapCursor(null);
                     break;
             }
