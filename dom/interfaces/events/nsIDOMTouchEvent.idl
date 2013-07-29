@@ -45,29 +45,6 @@ interface nsIDOMTouchList : nsISupports {
   nsIDOMTouch identifiedTouch(in long identifier);
 };
 
-[scriptable, builtinclass, uuid(9a043d55-f59e-4790-8fc7-1fab1c727732)]
-interface nsIDOMTouchEvent : nsIDOMUIEvent {
-  readonly attribute nsIDOMTouchList touches;
-  readonly attribute nsIDOMTouchList targetTouches;
-  readonly attribute nsIDOMTouchList changedTouches;
-  readonly attribute boolean         altKey;
-  readonly attribute boolean         metaKey;
-  readonly attribute boolean         ctrlKey;
-  readonly attribute boolean         shiftKey;
-  void initTouchEvent(in DOMString type,
-                      in boolean canBubble,
-                      in boolean cancelable,
-                      in nsIDOMWindow view,
-                      in long detail,
-                      in boolean ctrlKey,
-                      in boolean altKey,
-                      in boolean shiftKey,
-                      in boolean metaKey,
-                      in nsIDOMTouchList touches,
-                      in nsIDOMTouchList targetTouches,
-                      in nsIDOMTouchList changedTouches);
-};
-
 [scriptable, uuid(6d5484f7-92ac-45f8-9388-39b5bad055ce)]
 interface nsITouchEventReceiver : nsISupports {
   [implicit_jscontext] attribute jsval           ontouchstart;
