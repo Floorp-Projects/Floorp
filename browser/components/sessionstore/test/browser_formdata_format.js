@@ -105,7 +105,7 @@ function testTabRestoreData(aFormData, aExpectedValue, aCallback) {
       // force a change event to recollect the formdata
       let changeEvent = document.createEvent("Events");
       changeEvent.initEvent("change", true, true);
-      input.dispatchEvent(changeEvent);
+      input1.dispatchEvent(changeEvent);
     };
 
     waitForTabState(tab, tabState, tabStateCallback);
