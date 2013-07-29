@@ -16,7 +16,6 @@
 #include "AudioBufferSourceNode.h"
 #include "AudioBuffer.h"
 #include "GainNode.h"
-#include "MediaStreamAudioSourceNode.h"
 #include "DelayNode.h"
 #include "PannerNode.h"
 #include "AudioListener.h"
@@ -252,18 +251,6 @@ AudioContext::CreateAnalyser()
 {
   nsRefPtr<AnalyserNode> analyserNode = new AnalyserNode(this);
   return analyserNode.forget();
-}
-
-already_AddRefed<MediaStreamAudioSourceNode>
-AudioContext::CreateMediaStreamSource(const DOMMediaStream& aMediaStream,
-                                      ErrorResult& aRv)
-{
-  if (mIsOffline) {
-    aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
-    return nullptr;
-  }
-  nsRefPtr<MediaStreamAudioSourceNode> mediaStreamAudioSourceNode = new MediaStreamAudioSourceNode(this, &aMediaStream);
-  return mediaStreamAudioSourceNode.forget();
 }
 
 already_AddRefed<GainNode>
