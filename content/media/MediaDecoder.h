@@ -640,10 +640,6 @@ public:
   // The actual playback rate computation. The monitor must be held.
   virtual double ComputePlaybackRate(bool* aReliable);
 
-  // Return true when the media is same-origin with the element. The monitor
-  // must be held.
-  bool IsSameOriginMedia();
-
   // Returns true if we can play the entire media through without stopping
   // to buffer, given the current download and playback rates.
   bool CanPlayThrough();
@@ -739,9 +735,6 @@ public:
 
   // Notifies the element that decoding has failed.
   virtual void DecodeError();
-
-  // Indicate whether the media is same-origin with the element.
-  void UpdateSameOriginStatus(bool aSameOrigin);
 
   MediaDecoderOwner* GetOwner() MOZ_OVERRIDE;
 
@@ -964,10 +957,6 @@ public:
 
   // True if the media is seekable (i.e. supports random access).
   bool mMediaSeekable;
-
-  // True if the media is same-origin with the element. Data can only be
-  // passed to MediaStreams when this is true.
-  bool mSameOriginMedia;
 
   /******
    * The following member variables can be accessed from any thread.

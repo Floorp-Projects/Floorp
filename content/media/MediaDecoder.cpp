@@ -368,7 +368,6 @@ MediaDecoder::MediaDecoder() :
   mDuration(-1),
   mTransportSeekable(true),
   mMediaSeekable(true),
-  mSameOriginMedia(false),
   mReentrantMonitor("media.decoder"),
   mIsDormant(false),
   mPlayState(PLAY_STATE_PAUSED),
@@ -841,18 +840,6 @@ void MediaDecoder::DecodeError()
     mOwner->DecodeError();
 
   Shutdown();
-}
-
-void MediaDecoder::UpdateSameOriginStatus(bool aSameOrigin)
-{
-  ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
-  mSameOriginMedia = aSameOrigin;
-}
-
-bool MediaDecoder::IsSameOriginMedia()
-{
-  GetReentrantMonitor().AssertCurrentThreadIn();
-  return mSameOriginMedia;
 }
 
 bool MediaDecoder::IsSeeking() const

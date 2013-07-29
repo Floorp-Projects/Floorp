@@ -3251,16 +3251,9 @@ already_AddRefed<nsIPrincipal> HTMLMediaElement::GetCurrentPrincipal()
 
 void HTMLMediaElement::NotifyDecoderPrincipalChanged()
 {
-  nsRefPtr<nsIPrincipal> principal = GetCurrentPrincipal();
-
-  if (mDecoder) {
-    bool subsumes;
-    mDecoder->UpdateSameOriginStatus(
-      NS_SUCCEEDED(NodePrincipal()->Subsumes(principal, &subsumes)) && subsumes);
-  }
-
   for (uint32_t i = 0; i < mOutputStreams.Length(); ++i) {
     OutputMediaStream* ms = &mOutputStreams[i];
+    nsRefPtr<nsIPrincipal> principal = GetCurrentPrincipal();
     ms->mStream->CombineWithPrincipal(principal);
   }
 }
