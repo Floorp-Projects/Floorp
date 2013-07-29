@@ -1588,7 +1588,7 @@ class ConstDefiner(PropertyDefiner):
         return self.generatePrefableArray(
             array, name,
             '  { "%s", %s }',
-            '  { 0, JSVAL_VOID }',
+            '  { 0, JS::UndefinedValue() }',
             'ConstantSpec',
             PropertyDefiner.getControllingCondition, specData, doIdArrays)
 
