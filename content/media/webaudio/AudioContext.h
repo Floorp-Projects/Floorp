@@ -53,7 +53,6 @@ class DynamicsCompressorNode;
 class GainNode;
 class GlobalObject;
 class MediaStreamAudioDestinationNode;
-class MediaStreamAudioSourceNode;
 class OfflineRenderSuccessCallback;
 class PannerNode;
 class ScriptProcessorNode;
@@ -161,9 +160,6 @@ public:
   {
     return CreateGain();
   }
-
-  already_AddRefed<MediaStreamAudioSourceNode>
-  CreateMediaStreamSource(const DOMMediaStream& aMediaStream, ErrorResult& aRv);
 
   already_AddRefed<DelayNode>
   CreateDelay(double aMaxDelayTime, ErrorResult& aRv);
