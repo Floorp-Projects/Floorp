@@ -33,7 +33,7 @@ import android.os.Bundle;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.AsyncTaskLoader;
 import android.support.v4.content.Loader;
-import android.support.v4.widget.SimpleCursorAdapter;
+import android.support.v4.widget.CursorAdapter;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -110,9 +110,6 @@ public class BrowserSearch extends HomeFragment
     // Callbacks used for the search suggestion loader
     private SuggestionLoaderCallbacks mSuggestionLoaderCallbacks;
 
-    // Inflater used by the adapter
-    private LayoutInflater mInflater;
-
     // Autocomplete handler used when filtering results
     private AutocompleteHandler mAutocompleteHandler;
 
@@ -171,15 +168,12 @@ public class BrowserSearch extends HomeFragment
             throw new ClassCastException(activity.toString()
                     + " must implement BrowserSearch.OnEditSuggestionListener");
         }
-
-        mInflater = (LayoutInflater) activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
     }
 
     @Override
     public void onDetach() {
         super.onDetach();
 
-        mInflater = null;
         mAutocompleteHandler = null;
         mUrlOpenListener = null;
         mSearchListener = null;
@@ -623,7 +617,7 @@ public class BrowserSearch extends HomeFragment
         }
     }
 
-    private class SearchAdapter extends SimpleCursorAdapter {
+    private class SearchAdapter extends CursorAdapter {
         private static final int ROW_SEARCH = 0;
         private static final int ROW_STANDARD = 1;
         private static final int ROW_SUGGEST = 2;
@@ -631,7 +625,7 @@ public class BrowserSearch extends HomeFragment
         private static final int ROW_TYPE_COUNT = 3;
 
         public SearchAdapter(Context context) {
-            super(context, -1, null, new String[] {}, new int[] {});
+            super(context, null);
         }
 
         @Override
@@ -696,9 +690,11 @@ public class BrowserSearch extends HomeFragment
             final int type = getItemViewType(position);
 
             if (type == ROW_SEARCH || type == ROW_SUGGEST) {
+                // Cursor doesn't know about search suggestions.
+                // Hence overriding getView() to handle this special case.
                 final SearchEngineRow row;
                 if (convertView == null) {
-                    row = (SearchEngineRow) mInflater.inflate(R.layout.home_search_item_row, mList, false);
+                    row = (SearchEngineRow) LayoutInflater.from(parent.getContext()).inflate(R.layout.home_search_item_row, parent, false);
                     row.setOnUrlOpenListener(mUrlOpenListener);
                     row.setOnSearchListener(mSearchListener);
                     row.setOnEditSuggestionListener(mEditSuggestionListener);
@@ -718,25 +714,20 @@ public class BrowserSearch extends HomeFragment
 
                 return row;
             } else {
-                final TwoLinePageRow row;
-                if (convertView == null) {
-                    row = (TwoLinePageRow) mInflater.inflate(R.layout.home_item_row, mList, false);
-                } else {
-                    row = (TwoLinePageRow) convertView;
-                }
-
                 // Account for the search engines
                 position -= getSuggestEngineCount();
-
-                final Cursor c = getCursor();
-                if (!c.moveToPosition(position)) {
-                    throw new IllegalStateException("Couldn't move cursor to position " + position);
-                }
-
-                row.updateFromCursor(c);
-
-                return row;
+                return super.getView(position, convertView, parent);
             }
+        }
+
+        @Override
+        public void bindView(View view, Context context, Cursor cursor) {
+            ((TwoLinePageRow) view).updateFromCursor(cursor);
+        }
+
+        @Override
+        public View newView(Context context, Cursor cursor, ViewGroup parent) {
+            return LayoutInflater.from(context).inflate(R.layout.home_item_row, parent, false);
         }
 
         private int getSuggestEngineCount() {
