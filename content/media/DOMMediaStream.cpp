@@ -28,13 +28,11 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(DOMMediaStream)
   tmp->Destroy();
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mWindow)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mTracks)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mConsumersToKeepAlive)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(DOMMediaStream)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mWindow)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTracks)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mConsumersToKeepAlive)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(DOMMediaStream)
@@ -287,16 +285,6 @@ DOMMediaStream::NotifyMediaStreamGraphShutdown()
   // to prevent leaks.
   mNotifiedOfMediaStreamGraphShutdown = true;
   mRunOnTracksAvailable.Clear();
-
-  mConsumersToKeepAlive.Clear();
-}
-
-void
-DOMMediaStream::NotifyStreamStateChanged()
-{
-  if (IsFinished()) {
-    mConsumersToKeepAlive.Clear();
-  }
 }
 
 void
