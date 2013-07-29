@@ -146,15 +146,15 @@ struct SendMetaDataRequest
   nsString title;
   nsString artist;
   nsString album;
-  uint32_t mediaNumber;
-  uint32_t totalMediaCount;
-  uint32_t duration;
+  int64_t mediaNumber;
+  int64_t totalMediaCount;
+  int64_t duration;
 };
 
 struct SendPlayStatusRequest
 {
-  uint32_t duration;
-  uint32_t position;
+  int64_t duration;
+  int64_t position;
   nsString playStatus;
 };
 
