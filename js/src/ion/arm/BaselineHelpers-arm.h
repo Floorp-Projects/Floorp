@@ -8,11 +8,10 @@
 #define ion_arm_BaselineHelpers_arm_h
 
 #ifdef JS_ION
-
-#include "ion/IonMacroAssembler.h"
 #include "ion/BaselineFrame.h"
-#include "ion/BaselineRegisters.h"
 #include "ion/BaselineIC.h"
+#include "ion/BaselineRegisters.h"
+#include "ion/IonMacroAssembler.h"
 
 namespace js {
 namespace ion {

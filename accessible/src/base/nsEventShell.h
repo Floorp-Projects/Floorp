@@ -36,6 +36,20 @@ public:
                         mozilla::a11y::EIsFromUserInput aIsFromUserInput = mozilla::a11y::eAutoDetect);
 
   /**
+   * Fire state change event.
+   */
+  static void FireEvent(mozilla::a11y::Accessible* aTarget, uint64_t aState,
+                        bool aIsEnabled, bool aIsFromUserInput)
+  {
+    nsRefPtr<mozilla::a11y::AccStateChangeEvent> stateChangeEvent =
+      new mozilla::a11y::AccStateChangeEvent(aTarget, aState, aIsEnabled,
+                                             (aIsFromUserInput ?
+                                               mozilla::a11y::eFromUserInput :
+                                               mozilla::a11y::eNoUserInput));
+    FireEvent(stateChangeEvent);
+  }
+
+  /**
    * Append 'event-from-input' object attribute if the accessible event has
    * been fired just now for the given node.
    *

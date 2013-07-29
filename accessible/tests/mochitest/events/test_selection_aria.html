@@ -36,7 +36,7 @@
       this.invoke = function selectItem_invoke() {
         var itemNode = this.selectNode.querySelector("*[aria-selected='true']");
         if (itemNode)
-          itemNode.removeAttribute("aria-selected", "true");
+          itemNode.removeAttribute("aria-selected");
 
         this.itemNode.setAttribute("aria-selected", "true");
       }
