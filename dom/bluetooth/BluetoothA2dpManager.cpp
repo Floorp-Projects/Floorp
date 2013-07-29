@@ -86,6 +86,11 @@ void
 BluetoothA2dpManager::ResetAvrcp()
 {
   mAvrcpConnected = false;
+  mDuration = 0;
+  mMediaNumber = 0;
+  mTotalMediaCount = 0;
+  mPosition = 0;
+  mPlayStatus = ControlPlayStatus::PLAYSTATUS_UNKNOWN;
 }
 
 static BluetoothA2dpManager::SinkState
@@ -327,6 +332,32 @@ bool
 BluetoothA2dpManager::IsAvrcpConnected()
 {
   return mAvrcpConnected;
+}
+
+void
+BluetoothA2dpManager::UpdateMetaData(const nsAString& aTitle,
+                                     const nsAString& aArtist,
+                                     const nsAString& aAlbum,
+                                     uint32_t aMediaNumber,
+                                     uint32_t aTotalMediaCount,
+                                     uint32_t aDuration)
+{
+  mTitle.Assign(aTitle);
+  mArtist.Assign(aArtist);
+  mAlbum.Assign(aAlbum);
+  mMediaNumber = aMediaNumber;
+  mTotalMediaCount = aTotalMediaCount;
+  mDuration = aDuration;
+}
+
+void
+BluetoothA2dpManager::UpdatePlayStatus(uint32_t aDuration,
+                                       uint32_t aPosition,
+                                       ControlPlayStatus aPlayStatus)
+{
+  mDuration = aDuration;
+  mPosition = aPosition;
+  mPlayStatus = aPlayStatus;
 }
 
 NS_IMPL_ISUPPORTS1(BluetoothA2dpManager, nsIObserver)
