@@ -22,7 +22,7 @@ extern __attribute__((visibility("hidden"))) void original_init(int argc, char *
 extern __attribute__((visibility("hidden"))) Elf32_Rel relhack[];
 extern __attribute__((visibility("hidden"))) Elf_Ehdr elf_header;
 
-void init(int argc, char **argv, char **env)
+int init(int argc, char **argv, char **env)
 {
     Elf32_Rel *rel;
     Elf_Addr *ptr, *start;
@@ -35,4 +35,7 @@ void init(int argc, char **argv, char **env)
 #ifndef NOINIT
     original_init(argc, argv, env);
 #endif
+    // Ensure there is no tail-call optimization, avoiding the use of the
+    // B.W instruction in Thumb for the call above.
+    return 0;
 }
