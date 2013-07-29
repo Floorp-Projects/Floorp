@@ -13,7 +13,7 @@
 
     <LinearLayout android:layout_width="fill_parent"
                   android:layout_height="wrap_content"
-                  android:background="@color/home_last_tab_bar_bg">
+                  android:background="@color/background_light">
 
         <Button android:id="@+id/open_all_tabs_button"
                 style="@style/Widget.Home.ActionButton"
