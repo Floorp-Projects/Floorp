@@ -1518,16 +1518,17 @@ StructType::layout(JSContext *cx, HandleObject structType, HandleObject fields)
     uint32_t structAlign = 0;
     uint32_t structMemSize = 0;
     uint32_t structByteSize = 0;
+    size_t structTail = 0;
 
     for (unsigned int i = 0; i < fieldProps.length(); i++) {
         RootedValue fieldTypeVal(cx);
         RootedId id(cx, fieldProps[i]);
         if (!JSObject::getGeneric(cx, fields, fields, id, &fieldTypeVal))
-            return false;
+            goto error;
 
         RootedObject fieldType(cx, fieldTypeVal.toObjectOrNull());
         if (!IsBinaryType(fieldType))
-            return false;
+            goto error;
 
         size_t fieldMemSize = GetMemSize(cx, fieldType);
         size_t fieldAlign = GetAlign(cx, fieldType);
@@ -1540,7 +1541,7 @@ StructType::layout(JSContext *cx, HandleObject structType, HandleObject fields)
 
         RootedValue fieldTypeBytes(cx);
         if (!JSObject::getProperty(cx, fieldType, fieldType, cx->names().bytes, &fieldTypeBytes))
-            return false;
+            goto error;
 
         JS_ASSERT(fieldTypeBytes.isInt32());
         structByteSize += fieldTypeBytes.toInt32();
@@ -1550,7 +1551,7 @@ StructType::layout(JSContext *cx, HandleObject structType, HandleObject fields)
         (*fieldList)[i].offset = fieldOffset;
     }
 
-    size_t structTail = AlignBytes(structMemSize, structAlign);
+    structTail = AlignBytes(structMemSize, structAlign);
     JS_ASSERT(structTail >= structMemSize);
     structMemSize = structTail;
 
@@ -1561,9 +1562,13 @@ StructType::layout(JSContext *cx, HandleObject structType, HandleObject fields)
     if (!JS_DefineProperty(cx, structType, "bytes",
                            Int32Value(structByteSize), NULL, NULL,
                            JSPROP_READONLY | JSPROP_PERMANENT))
-        return false;
+        goto error;
 
     return true;
+
+error:
+    delete fieldList;
+    return false;
 }
 
 bool
