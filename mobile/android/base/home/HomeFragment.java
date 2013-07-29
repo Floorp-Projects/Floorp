@@ -19,7 +19,8 @@ import org.mozilla.gecko.ReaderModeUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.util.UiAsyncTask;
 
-import android.app.Activity;
+import android.content.ContentResolver;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.support.v4.app.Fragment;
@@ -68,13 +69,17 @@ abstract class HomeFragment extends Fragment {
         MenuInflater inflater = new MenuInflater(view.getContext());
         inflater.inflate(R.menu.home_contextmenu, menu);
 
-        // Hide "Remove" item if there isn't a valid history ID
-        if (info.rowId < 0) {
-            menu.findItem(R.id.home_remove_history).setVisible(false);
-        }
         menu.setHeaderTitle(info.title);
 
-        menu.findItem(R.id.home_remove_history).setVisible(false);
+        // Hide the "Edit" menuitem if this item isn't a bookmark.
+        if (info.bookmarkId < 0) {
+            menu.findItem(R.id.home_edit_bookmark).setVisible(false);
+        }
+
+        // Hide the "Remove" menuitem if this item doesn't have a bookmark or history ID.
+        if (info.bookmarkId < 0 && info.historyId < 0) {
+            menu.findItem(R.id.home_remove).setVisible(false);
+        }
 
         final boolean canOpenInReader = (info.display == Combined.DISPLAY_READER);
         menu.findItem(R.id.home_open_in_reader).setVisible(canOpenInReader);
@@ -93,7 +98,7 @@ abstract class HomeFragment extends Fragment {
         }
 
         HomeContextMenuInfo info = (HomeContextMenuInfo) menuInfo;
-        final Activity activity = getActivity();
+        final Context context = getActivity().getApplicationContext();
 
         switch(item.getItemId()) {
             case R.id.home_share: {
@@ -113,6 +118,7 @@ abstract class HomeFragment extends Fragment {
                     break;
                 }
 
+                // FIXME: bug 897772
                 Bitmap bitmap = null;
                 if (info.favicon != null && info.favicon.length > 0) {
                     bitmap = BitmapUtils.decodeByteArray(info.favicon);
@@ -136,12 +142,12 @@ abstract class HomeFragment extends Fragment {
 
                 final String url = (info.inReadingList ? ReaderModeUtils.getAboutReaderForUrl(info.url, true) : info.url);
                 Tabs.getInstance().loadUrl(url, flags);
-                Toast.makeText(activity, R.string.new_tab_opened, Toast.LENGTH_SHORT).show();
+                Toast.makeText(context, R.string.new_tab_opened, Toast.LENGTH_SHORT).show();
                 return true;
             }
 
             case R.id.home_edit_bookmark: {
-                new EditBookmarkDialog(activity).show(info.url);
+                new EditBookmarkDialog(context).show(info.url);
                 return true;
             }
 
@@ -151,38 +157,82 @@ abstract class HomeFragment extends Fragment {
                 return true;
             }
 
-            case R.id.home_remove_bookmark: {
-                final int rowId = info.rowId;
-                final String url = info.url;
-                final boolean inReadingList = info.inReadingList;
+            case R.id.home_remove: {
+                // Prioritize removing a history entry over a bookmark in the case of a combined item.
+                final int historyId = info.historyId;
+                if (historyId > -1) {
+                    new RemoveHistoryTask(context, historyId).execute();
+                    return true;
+                }
 
-                (new UiAsyncTask<Void, Void, Integer>(ThreadUtils.getBackgroundHandler()) {
-                    @Override
-                    public Integer doInBackground(Void... params) {
-                        BrowserDB.removeBookmark(activity.getContentResolver(), rowId);
-                        return BrowserDB.getReadingListCount(activity.getContentResolver());
-                    }
-
-                    @Override
-                    public void onPostExecute(Integer aCount) {
-                        int messageId = R.string.bookmark_removed;
-                        if (inReadingList) {
-                            messageId = R.string.reading_list_removed;
-
-                            GeckoEvent e = GeckoEvent.createBroadcastEvent("Reader:Remove", url);
-                            GeckoAppShell.sendEventToGecko(e);
-
-                            e = GeckoEvent.createBroadcastEvent("Reader:ListCountUpdated", Integer.toString(aCount));
-                            GeckoAppShell.sendEventToGecko(e);
-                        }
-
-                        Toast.makeText(activity, messageId, Toast.LENGTH_SHORT).show();
-                    }
-                }).execute();
-                return true;
+                final int bookmarkId = info.bookmarkId;
+                if (bookmarkId > -1) {
+                    new RemoveBookmarkTask(context, bookmarkId, info.url, info.inReadingList).execute();
+                    return true;
+                }
             }
         }
         return false;
+    }
+
+    private static class RemoveBookmarkTask extends UiAsyncTask<Void, Void, Void> {
+        private final Context mContext;
+        private final int mId;
+        private final String mUrl;
+        private final boolean mInReadingList;
+
+        public RemoveBookmarkTask(Context context, int id, String url, boolean inReadingList) {
+            super(ThreadUtils.getBackgroundHandler());
+
+            mContext = context;
+            mId = id;
+            mUrl = url;
+            mInReadingList = inReadingList;
+        }
+
+        @Override
+        public Void doInBackground(Void... params) {
+            ContentResolver cr = mContext.getContentResolver();
+            BrowserDB.removeBookmark(cr, mId);
+            if (mInReadingList) {
+                GeckoEvent e = GeckoEvent.createBroadcastEvent("Reader:Remove", mUrl);
+                GeckoAppShell.sendEventToGecko(e);
+
+                int count = BrowserDB.getReadingListCount(cr);
+                e = GeckoEvent.createBroadcastEvent("Reader:ListCountUpdated", Integer.toString(count));
+                GeckoAppShell.sendEventToGecko(e);
+            }
+            return null;
+        }
+
+        @Override
+        public void onPostExecute(Void result) {
+            int messageId = mInReadingList ? R.string.reading_list_removed : R.string.bookmark_removed;
+            Toast.makeText(mContext, messageId, Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private static class RemoveHistoryTask extends UiAsyncTask<Void, Void, Void> {
+        private final Context mContext;
+        private final int mId;
+
+        public RemoveHistoryTask(Context context, int id) {
+            super(ThreadUtils.getBackgroundHandler());
+
+            mContext = context;
+            mId = id;
+        }
+
+        @Override
+        public Void doInBackground(Void... params) {
+            BrowserDB.removeHistoryEntry(mContext.getContentResolver(), mId);
+            return null;
+        }
+
+        @Override
+        public void onPostExecute(Void result) {
+            Toast.makeText(mContext, R.string.history_removed, Toast.LENGTH_SHORT).show();
+        }
     }
 
     @Override

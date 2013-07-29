@@ -8,7 +8,7 @@ package org.mozilla.gecko.home;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.db.BrowserContract.Bookmarks;
 import org.mozilla.gecko.db.BrowserContract.Combined;
-import org.mozilla.gecko.db.BrowserDB.URLColumns;
+import org.mozilla.gecko.db.BrowserContract.URLColumns;
 import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
 
 import android.content.Context;
@@ -87,15 +87,19 @@ public class HomeListView extends ListView
      * A ContextMenuInfo for HomeListView that adds details from the cursor.
      */
     public static class HomeContextMenuInfo extends AdapterContextMenuInfo {
-        public int rowId;
+        public int bookmarkId;
+        public int historyId;
         public String url;
         public byte[] favicon;
         public String title;
-        public String keyword;
         public int display;
         public boolean isFolder;
         public boolean inReadingList;
 
+        /**
+         * This constructor assumes that the cursor was generated from a query
+         * to either the combined view or the bookmarks table.
+         */
         public HomeContextMenuInfo(View targetView, int position, long id, Cursor cursor) {
             super(targetView, position, id);
 
@@ -110,28 +114,42 @@ public class HomeListView extends ListView
                 isFolder = false;
             }
 
+            // We don't show a context menu for folders, so return early.
             if (isFolder) {
                 return;
             }
 
-            int keywordCol = cursor.getColumnIndex(URLColumns.KEYWORD);
-            if (keywordCol != -1) {
-                keyword = cursor.getString(keywordCol);
+            url = cursor.getString(cursor.getColumnIndexOrThrow(URLColumns.URL));
+            title = cursor.getString(cursor.getColumnIndexOrThrow(URLColumns.TITLE));
+
+            final int bookmarkIdCol = cursor.getColumnIndex(Combined.BOOKMARK_ID);
+            if (bookmarkIdCol == -1) {
+                // If there isn't a bookmark ID column, this must be a bookmarks cursor,
+                // so the regular ID column will correspond to a bookmark ID.
+                bookmarkId = cursor.getInt(cursor.getColumnIndexOrThrow(Bookmarks._ID));
+            } else if (cursor.isNull(bookmarkIdCol)) {
+                // If this is a combined cursor, we may get a history item without a
+                // bookmark, in which case the bookmarks ID column value will be null.
+                bookmarkId = -1;
             } else {
-                keyword = null;
+                bookmarkId = cursor.getInt(bookmarkIdCol);
             }
 
-            final int faviconCol = cursor.getColumnIndex(URLColumns.FAVICON);
+            final int historyIdCol = cursor.getColumnIndex(Combined.HISTORY_ID);
+            if (historyIdCol != -1) {
+                historyId = cursor.getInt(historyIdCol);
+            } else {
+                historyId = -1;
+            }
+
+            final int faviconCol = cursor.getColumnIndex(Combined.FAVICON);
             if (faviconCol != -1) {
                 favicon = cursor.getBlob(faviconCol);
             } else {
                 favicon = null;
             }
 
-            rowId = cursor.getInt(cursor.getColumnIndexOrThrow(Bookmarks._ID));
-            url = cursor.getString(cursor.getColumnIndexOrThrow(URLColumns.URL));
-            title = cursor.getString(cursor.getColumnIndexOrThrow(URLColumns.TITLE));
-
+            // We only have the parent column in cursors from getBookmarksInFolder.
             final int parentCol = cursor.getColumnIndex(Bookmarks.PARENT);
             if (parentCol != -1) {
                 inReadingList = (cursor.getInt(parentCol) == Bookmarks.FIXED_READING_LIST_ID);
