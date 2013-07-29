@@ -30,9 +30,6 @@
 #define NS_FONT_STRETCH_EXTRA_EXPANDED  3
 #define NS_FONT_STRETCH_ULTRA_EXPANDED  4
 
-#define NS_FONT_SMOOTHING_AUTO          0
-#define NS_FONT_SMOOTHING_ANTIALIASED   1
-
 #define NS_FONT_KERNING_AUTO                        0
 #define NS_FONT_KERNING_NONE                        1
 #define NS_FONT_KERNING_NORMAL                      2
