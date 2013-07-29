@@ -605,7 +605,7 @@ JSObject *GetOrCreateObjectProperty(JSContext *cx, JS::Handle<JSObject*> aObject
                                     const char *aProperty)
 {
   JS::Rooted<JS::Value> val(cx);
-  if (!JS_GetProperty(cx, aObject, aProperty, val.address())) {
+  if (!JS_GetProperty(cx, aObject, aProperty, &val)) {
     return NULL;
   }
   if (!val.isUndefined()) {

@@ -498,6 +498,9 @@ static void GetColorsForProperty(const uint32_t aParserVariant,
                                  nsTArray<nsString>& aArray)
 {
   if (aParserVariant & VARIANT_COLOR) {
+    // GetKeywordsForProperty and GetOtherValuesForProperty assume aArray is sorted,
+    // and if aArray is not empty here, then it's not going to be sorted coming out.
+    MOZ_ASSERT(aArray.Length() == 0);
     size_t size;
     const char * const *allColorNames = NS_AllColorNames(&size);
     for (size_t i = 0; i < size; i++) {
@@ -544,6 +547,9 @@ static void GetOtherValuesForProperty(const uint32_t aParserVariant,
     InsertNoDuplicates(aArray, NS_LITERAL_STRING("calc"));
     InsertNoDuplicates(aArray, NS_LITERAL_STRING("-moz-calc"));
   }
+  if (aParserVariant & VARIANT_URL) {
+    InsertNoDuplicates(aArray, NS_LITERAL_STRING("url"));
+  }
 }
 
 NS_IMETHODIMP
@@ -570,9 +576,15 @@ inDOMUtils::GetCSSValuesForProperty(const nsAString& aProperty,
   } else {
     // Property is shorthand.
     CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(subproperty, propertyID) {
+      // Get colors (once) first.
       uint32_t propertyParserVariant = nsCSSProps::ParserVariant(*subproperty);
-      // Get colors first.
-      GetColorsForProperty(propertyParserVariant, array);
+      if (propertyParserVariant & VARIANT_COLOR) {
+        GetColorsForProperty(propertyParserVariant, array);
+        break;
+      }
+    }
+    CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(subproperty, propertyID) {
+      uint32_t propertyParserVariant = nsCSSProps::ParserVariant(*subproperty);
       GetKeywordsForProperty(*subproperty, array);
       GetOtherValuesForProperty(propertyParserVariant, array);
     }

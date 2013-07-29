@@ -541,7 +541,7 @@ AudioChannelService::Observe(nsISupports* aSubject, const char* aTopic, const PR
 
     JS::Rooted<JSObject*> obj(cx, &val.toObject());
     JS::Rooted<JS::Value> key(cx);
-    if (!JS_GetProperty(cx, obj, "key", key.address()) ||
+    if (!JS_GetProperty(cx, obj, "key", &key) ||
         !key.isString()) {
       return NS_OK;
     }
@@ -556,7 +556,7 @@ AudioChannelService::Observe(nsISupports* aSubject, const char* aTopic, const PR
     }
 
     JS::Rooted<JS::Value> value(cx);
-    if (!JS_GetProperty(cx, obj, "value", value.address()) || !value.isInt32()) {
+    if (!JS_GetProperty(cx, obj, "value", &value) || !value.isInt32()) {
       return NS_OK;
     }
 
