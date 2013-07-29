@@ -11,6 +11,8 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 EXPORT_LIBRARY  = 1
+IS_COMPONENT	= 1
+MODULE_NAME	= nsRDFModule
 LIBXUL_LIBRARY = 1
 
 # XXX Note dependencies on implementation headers for factory functions

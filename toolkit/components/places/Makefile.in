@@ -14,6 +14,8 @@ LIBRARY_NAME  = places
 MSVC_ENABLE_PGO := 1
 LIBXUL_LIBRARY = 1
 EXPORT_LIBRARY = 1
+MODULE_NAME = nsPlacesModule
+IS_COMPONENT = 1
 
 LOCAL_INCLUDES += -I$(srcdir)/../build
 

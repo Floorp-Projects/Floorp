@@ -11,6 +11,8 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 EXPORT_LIBRARY	= 1
+IS_COMPONENT	= 1
+MODULE_NAME	= nsUniversalCharDetModule
 LIBXUL_LIBRARY = 1
 
 LOCAL_INCLUDES = -I$(srcdir)/../base
