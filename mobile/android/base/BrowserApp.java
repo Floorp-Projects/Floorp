@@ -713,6 +713,11 @@ abstract public class BrowserApp extends GeckoApp
         if (mBrowserToolbar != null)
             mBrowserToolbar.onDestroy();
 
+        if (mFindInPageBar != null) {
+            mFindInPageBar.onDestroy();
+            mFindInPageBar = null;
+        }
+
         if (mSharedPreferencesHelper != null) {
             mSharedPreferencesHelper.uninit();
             mSharedPreferencesHelper = null;

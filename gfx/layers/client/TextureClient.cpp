@@ -120,11 +120,26 @@ DeprecatedTextureClientShmem::GetSurface()
   return mSurface.get();
 }
 
+
+gfx::DrawTarget*
+DeprecatedTextureClientShmem::LockDrawTarget()
+{
+  if (mDrawTarget) {
+    return mDrawTarget;
+  }
+
+  gfxASurface* surface = GetSurface();
+  mDrawTarget = gfxPlatform::GetPlatform()->CreateDrawTargetForSurface(surface, mSize);
+
+  return mDrawTarget;
+}
+
 void
 DeprecatedTextureClientShmem::Unlock()
 {
   mSurface = nullptr;
   mSurfaceAsImage = nullptr;
+  mDrawTarget = nullptr;
 
   ShadowLayerForwarder::CloseDescriptor(mDescriptor);
 }
