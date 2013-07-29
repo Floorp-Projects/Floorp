@@ -26,9 +26,9 @@ XPCOMUtils.defineLazyServiceGetter(this, "uuidgen",
                                    "nsIUUIDGenerator");
 
 #ifdef MOZ_B2G_RIL
-XPCOMUtils.defineLazyServiceGetter(this, "mobileConnection",
+XPCOMUtils.defineLazyServiceGetter(this, "iccProvider",
                                    "@mozilla.org/ril/content-helper;1",
-                                   "nsIMobileConnectionProvider");
+                                   "nsIIccProvider");
 
 XPCOMUtils.defineLazyServiceGetter(this, "smsService",
                                    "@mozilla.org/sms/smsservice;1",
@@ -90,6 +90,8 @@ let PaymentProvider = {
     paymentSuccess: 'r',
     paymentFailed: 'r',
     iccIds: 'r',
+    mcc: 'r',
+    mnc: 'r',
     sendSilentSms: 'r',
     observeSilentSms: 'r',
     removeSilentSmsObserver: 'r'
@@ -172,12 +174,21 @@ let PaymentProvider = {
   },
 
 #ifdef MOZ_B2G_RIL
+  // Until bug 814629 is done, we only have support for a single SIM, so we
+  // can only provide information for a single ICC. However, we return an array
+  // so the payment provider facing API won't need to change once we support
+  // multiple SIMs.
+
   get iccIds() {
-    // Until bug 814629 is done, we only have support for a single SIM, so we
-    // can only provide a single ICC ID. However, we return an array so the
-    // payment provider facing API won't need to change once we support
-    // multiple SIMs.
-    return [mobileConnection.iccInfo.iccid];
+    return [iccProvider.iccInfo.iccid];
+  },
+
+  get mcc() {
+    return [iccProvider.iccInfo.mcc];
+  },
+
+  get mnc() {
+    return [iccProvider.iccInfo.mnc];
   },
 
   _silentNumbers: null,
