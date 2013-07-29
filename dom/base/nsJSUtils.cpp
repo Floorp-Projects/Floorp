@@ -125,7 +125,7 @@ nsJSUtils::GetCurrentlyRunningCodeInnerWindowID(JSContext *aContext)
 
   uint64_t innerWindowID = 0;
 
-  JSObject *jsGlobal = JS_GetGlobalForScopeChain(aContext);
+  JSObject *jsGlobal = JS::CurrentGlobalOrNull(aContext);
   if (jsGlobal) {
     nsIScriptGlobalObject *scriptGlobal = GetStaticScriptGlobal(jsGlobal);
     if (scriptGlobal) {

@@ -120,7 +120,7 @@ ThrowHook(JSContext *cx, JSScript *, jsbytecode *, jsval *rval, void *closure)
     JS_ASSERT(!closure);
     called = true;
 
-    JS::RootedObject global(cx, JS_GetGlobalForScopeChain(cx));
+    JS::RootedObject global(cx, JS::CurrentGlobalOrNull(cx));
 
     char text[] = "new Error()";
     jsval _;

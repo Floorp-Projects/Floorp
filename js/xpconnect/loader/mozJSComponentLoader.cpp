@@ -208,7 +208,7 @@ File(JSContext *cx, unsigned argc, Value *vp)
     }
 
     nsXPConnect* xpc = nsXPConnect::XPConnect();
-    JSObject* glob = JS_GetGlobalForScopeChain(cx);
+    JSObject* glob = JS::CurrentGlobalOrNull(cx);
 
     nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
     rv = xpc->WrapNativeToJSVal(cx, glob, native, nullptr,
@@ -243,7 +243,7 @@ Blob(JSContext *cx, unsigned argc, Value *vp)
     }
 
     nsXPConnect* xpc = nsXPConnect::XPConnect();
-    JSObject* glob = JS_GetGlobalForScopeChain(cx);
+    JSObject* glob = JS::CurrentGlobalOrNull(cx);
 
     nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
     rv = xpc->WrapNativeToJSVal(cx, glob, native, nullptr,

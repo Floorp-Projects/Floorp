@@ -736,7 +736,7 @@ nsJSContext::DOMOperationCallback(JSContext *cx)
 
   // Check the amount of time this script has been running, or if the
   // dialog is disabled.
-  JSObject* global = ::JS_GetGlobalForScopeChain(cx);
+  JSObject* global = ::JS::CurrentGlobalOrNull(cx);
   bool isTrackingChromeCodeTime =
     global && xpc::AccessCheck::isChrome(js::GetObjectCompartment(global));
   if (duration < (isTrackingChromeCodeTime ?
@@ -3300,7 +3300,7 @@ NS_DOMReadStructuredClone(JSContext* cx,
     nsRefPtr<ImageData> imageData = new ImageData(width, height,
                                                   dataArray.toObject());
     // Wrap it in a JS::Value.
-    JS::Rooted<JSObject*> global(cx, JS_GetGlobalForScopeChain(cx));
+    JS::Rooted<JSObject*> global(cx, JS::CurrentGlobalOrNull(cx));
     if (!global) {
       return nullptr;
     }
