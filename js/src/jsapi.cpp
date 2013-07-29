@@ -2922,6 +2922,7 @@ JS_NewGlobalObject(JSContext *cx, JSClass *clasp, JSPrincipals *principals,
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     JS_THREADSAFE_ASSERT(cx->compartment() != cx->runtime()->atomsCompartment);
+    JS_ASSERT(!cx->isExceptionPending());
 
     JSRuntime *rt = cx->runtime();
 
