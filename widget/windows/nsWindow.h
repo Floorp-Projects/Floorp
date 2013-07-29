@@ -539,6 +539,11 @@ protected:
   //  painting too rapidly in response to frequent input events.
   TimeStamp mLastPaintEndTime;
 
+  // Caching for hit test results
+  POINT mCachedHitTestPoint;
+  TimeStamp mCachedHitTestTime;
+  int32_t mCachedHitTestResult;
+
   static bool sNeedsToInitMouseWheelSettings;
   static void InitMouseWheelScrollData();
 };
