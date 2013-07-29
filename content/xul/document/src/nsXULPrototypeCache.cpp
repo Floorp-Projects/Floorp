@@ -205,7 +205,7 @@ nsXULPrototypeCache::PutScript(nsIURI* aURI,
                                JS::Handle<JSScript*> aScriptObject)
 {
 #ifdef DEBUG
-    if (JSScript* existingScript = mScriptTable.Get(aURI)) {
+    if (mScriptTable.Get(aURI)) {
         nsAutoCString scriptName;
         aURI->GetSpec(scriptName);
         nsAutoCString message("Loaded script ");
