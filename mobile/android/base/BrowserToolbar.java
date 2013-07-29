@@ -1538,7 +1538,12 @@ public class BrowserToolbar extends GeckoRelativeLayout
                     ViewGroup.MarginLayoutParams layoutParams =
                         (ViewGroup.MarginLayoutParams)mUrlDisplayContainer.getLayoutParams();
                     layoutParams.leftMargin = 0;
-                    mUrlDisplayContainer.requestLayout();
+
+                    // Do the same on the URL edit container
+                    layoutParams = (ViewGroup.MarginLayoutParams)mUrlEditContainer.getLayoutParams();
+                    layoutParams.leftMargin = 0;
+
+                    requestLayout();
                     // Note, we already translated the favicon, site security, and text field
                     // in prepareForwardAnimation, so they should appear to have not moved at
                     // all at this point.
@@ -1552,6 +1557,9 @@ public class BrowserToolbar extends GeckoRelativeLayout
                         (ViewGroup.MarginLayoutParams)mUrlDisplayContainer.getLayoutParams();
                     layoutParams.leftMargin = mUrlBarViewOffset;
 
+                    layoutParams = (ViewGroup.MarginLayoutParams)mUrlEditContainer.getLayoutParams();
+                    layoutParams.leftMargin = mUrlBarViewOffset;
+
                     ViewHelper.setTranslationX(mTitle, 0);
                     ViewHelper.setTranslationX(mFavicon, 0);
                     ViewHelper.setTranslationX(mSiteSecurity, 0);
@@ -1562,7 +1570,7 @@ public class BrowserToolbar extends GeckoRelativeLayout
                 layoutParams.leftMargin = mDefaultForwardMargin + (mForward.isEnabled() ? width : 0);
                 ViewHelper.setTranslationX(mForward, 0);
 
-                mUrlDisplayContainer.requestLayout();
+                requestLayout();
                 mForwardAnim = null;
             }
         });
