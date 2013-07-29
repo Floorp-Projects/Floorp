@@ -1035,6 +1035,7 @@ static char *
 FormatFrame(JSContext *cx, const NonBuiltinScriptFrameIter &iter, char *buf, int num,
             JSBool showArgs, JSBool showLocals, JSBool showThisProps)
 {
+    JS_ASSERT(!cx->isExceptionPending());
     RootedScript script(cx, iter.script());
     jsbytecode* pc = iter.pc();
 
@@ -1085,21 +1086,27 @@ FormatFrame(JSContext *cx, const NonBuiltinScriptFrameIter &iter, char *buf, int
             JSPropertyDesc* desc = &callProps->array[i];
             JSAutoByteString nameBytes;
             const char *name = NULL;
-            if (JSVAL_IS_STRING(desc->id))
+            bool hasName = JSVAL_IS_STRING(desc->id);
+            if (hasName)
                 name = FormatValue(cx, desc->id, nameBytes);
-
             JSAutoByteString valueBytes;
             const char *value = FormatValue(cx, desc->value, valueBytes);
 
-            buf = JS_sprintf_append(buf, "%s%s%s%s%s%s",
-                                    namedArgCount ? ", " : "",
-                                    name ? name :"",
-                                    name ? " = " : "",
-                                    desc->value.isString() ? "\"" : "",
-                                    value ? value : "?unknown?",
-                                    desc->value.isString() ? "\"" : "");
-            if (!buf)
-                return buf;
+            if (value && (name || !hasName)) {
+                buf = JS_sprintf_append(buf, "%s%s%s%s%s%s",
+                                        namedArgCount ? ", " : "",
+                                        name ? name :"",
+                                        name ? " = " : "",
+                                        desc->value.isString() ? "\"" : "",
+                                        value ? value : "?unknown?",
+                                        desc->value.isString() ? "\"" : "");
+                if (!buf)
+                    return buf;
+            } else {
+                buf = JS_sprintf_append(buf, "    <Failed to get named argument while inspecting stack frame>\n");
+                cx->clearPendingException();
+
+            }
             namedArgCount++;
         }
 
@@ -1116,9 +1123,11 @@ FormatFrame(JSContext *cx, const NonBuiltinScriptFrameIter &iter, char *buf, int
                     char number[8];
                     JS_snprintf(number, 8, "%d", (int) k);
 
-                    if (JS_GetProperty(cx, argsObj, number, &val)) {
-                        JSAutoByteString valueBytes;
-                        const char *value = FormatValue(cx, val, valueBytes);
+                    JSAutoByteString valueBytes;
+                    const char *value = NULL;
+                    if (JS_GetProperty(cx, argsObj, number, &val) &&
+                        (value = FormatValue(cx, val, valueBytes)))
+                    {
                         buf = JS_sprintf_append(buf, "%s%s%s%s",
                                                 k ? ", " : "",
                                                 val.isString() ? "\"" : "",
@@ -1126,9 +1135,18 @@ FormatFrame(JSContext *cx, const NonBuiltinScriptFrameIter &iter, char *buf, int
                                                 val.isString() ? "\"" : "");
                         if (!buf)
                             return buf;
+                    } else {
+                        buf = JS_sprintf_append(buf, "    <Failed to get argument while inspecting stack frame>\n");
+                        cx->clearPendingException();
                     }
                 }
+            } else {
+                buf = JS_sprintf_append(buf, "    <Failed to get 'length' while inspecting stack frame>\n");
+                cx->clearPendingException();
             }
+        } else {
+            buf = JS_sprintf_append(buf, "    <Failed to get 'arguments' while inspecting stack frame>\n");
+            cx->clearPendingException();
         }
     }
 
@@ -1157,6 +1175,9 @@ FormatFrame(JSContext *cx, const NonBuiltinScriptFrameIter &iter, char *buf, int
                                         desc->value.isString() ? "\"" : "");
                 if (!buf)
                     return buf;
+            } else {
+                buf = JS_sprintf_append(buf, "    <Failed to get local while inspecting stack frame>\n");
+                cx->clearPendingException();
             }
         }
     }
@@ -1166,15 +1187,17 @@ FormatFrame(JSContext *cx, const NonBuiltinScriptFrameIter &iter, char *buf, int
         if (!thisVal.isUndefined()) {
             JSAutoByteString thisValBytes;
             RootedString thisValStr(cx, ToString<CanGC>(cx, thisVal));
-            if (thisValStr) {
-                if (const char *str = thisValBytes.encodeLatin1(cx, thisValStr)) {
-                    buf = JS_sprintf_append(buf, "    this = %s\n", str);
-                    if (!buf)
-                        return buf;
-                }
+            const char *str = NULL;
+            if (thisValStr &&
+                (str = thisValBytes.encodeLatin1(cx, thisValStr)))
+            {
+                buf = JS_sprintf_append(buf, "    this = %s\n", str);
+                if (!buf)
+                    return buf;
+            } else {
+                buf = JS_sprintf_append(buf, "    <failed to get 'this' value>\n");
+                cx->clearPendingException();
             }
-        } else {
-            buf = JS_sprintf_append(buf, "    <failed to get 'this' value>\n");
         }
     }
 
@@ -1195,11 +1218,15 @@ FormatFrame(JSContext *cx, const NonBuiltinScriptFrameIter &iter, char *buf, int
                                             desc->value.isString() ? "\"" : "");
                     if (!buf)
                         return buf;
+                } else {
+                    buf = JS_sprintf_append(buf, "    <Failed to format values while inspecting stack frame>\n");
+                    cx->clearPendingException();
                 }
             }
         }
     }
 
+    JS_ASSERT(!cx->isExceptionPending());
     return buf;
 }
 
