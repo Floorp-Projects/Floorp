@@ -12,9 +12,6 @@
 
 //
 // <mmultiscripts> -- attach prescripts and tensor indices to a base 
-// <msub> -- attach a subscript to a base
-// <msubsup> -- attach a subscript-superscript pair to a base
-// <msup> -- attach a superscript to a base
 //
 
 class nsMathMLmmultiscriptsFrame : public nsMathMLContainerFrame {
@@ -31,21 +28,16 @@ public:
         bool                 aPlaceOrigin,
         nsHTMLReflowMetrics& aDesiredSize) MOZ_OVERRIDE;
 
-  static nsresult
-  PlaceMultiScript(nsPresContext*      aPresContext,
-                    nsRenderingContext& aRenderingContext,
-                    bool                 aPlaceOrigin,
-                    nsHTMLReflowMetrics& aDesiredSize,
-                    nsMathMLContainerFrame* aForFrame,
-                    nscoord              aUserSubScriptShift,
-                    nscoord              aUserSupScriptShift,
-                    nscoord              aScriptSpace);
-
 protected:
   nsMathMLmmultiscriptsFrame(nsStyleContext* aContext) : nsMathMLContainerFrame(aContext) {}
   virtual ~nsMathMLmmultiscriptsFrame();
   
+private:
+  nscoord mSubScriptShift;
+  nscoord mSupScriptShift;
 
+  void
+  ProcessAttributes();
 };
 
 #endif /* nsMathMLmmultiscriptsFrame_h___ */
