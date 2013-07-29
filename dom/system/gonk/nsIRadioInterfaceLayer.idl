@@ -79,7 +79,7 @@ interface nsIRilContext : nsISupports
   readonly attribute nsIDOMMozMobileConnectionInfo data;
 };
 
-[scriptable, uuid(6dde3eaf-243d-4afa-abdb-95c94c2b1c7a)]
+[scriptable, uuid(715c972b-97c5-48fd-a8b1-d50e6852153a)]
 interface nsIRadioInterface : nsISupports
 {
   /**
@@ -119,6 +119,7 @@ interface nsIRadioInterface : nsISupports
 
   void sendSMS(in DOMString number,
                in DOMString message,
+               in boolean silent,
                in nsIMobileMessageCallback request);
 };
 
