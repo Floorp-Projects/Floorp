@@ -15,7 +15,7 @@ FRAGMENT(jsval, simple) {
   friendly_string.setString(JS_NewStringCopyZ(cx, "Hello!"));
 
   JS::Rooted<jsval> global(cx);
-  global.setObject(*JS_GetGlobalForScopeChain(cx));
+  global.setObject(*JS::CurrentGlobalOrNull(cx));
 
   // Some interesting value that floating-point won't munge.
   JS::Rooted<jsval> onehundredthirtysevenonehundredtwentyeighths(cx, DOUBLE_TO_JSVAL(137.0 / 128.0));
