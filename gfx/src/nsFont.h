@@ -71,9 +71,6 @@ struct NS_GFX nsFont {
   // line-through). The decorations can be binary or'd together.
   uint8_t decorations;
 
-  // Smoothing - controls subpixel-antialiasing (currently OSX only)
-  uint8_t smoothing;
-
   // The weight of the font; see gfxFontConstants.h.
   uint16_t weight;
 
