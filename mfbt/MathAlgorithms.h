@@ -414,13 +414,14 @@ FloorLog2Size(size_t n)
 }
 
 /*
- * Round x up to the nearest power of 2.  This function assumes that the most
- * significant bit of x is not set, which would lead to overflow.
+ * Compute the smallest power of 2 greater than or equal to |x|.  |x| must not
+ * be so great that the computed value would overflow |size_t|.
  */
 inline size_t
 RoundUpPow2(size_t x)
 {
-  MOZ_ASSERT(~x > x, "can't round up -- will overflow!");
+  MOZ_ASSERT(x <= (size_t(1) << (sizeof(size_t) * CHAR_BIT - 1)),
+             "can't round up -- will overflow!");
   return size_t(1) << CeilingLog2(x);
 }
 

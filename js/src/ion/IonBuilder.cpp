@@ -4666,6 +4666,7 @@ IonBuilder::jsop_funapplyarguments(uint32_t argc)
 
         // Vp
         MPassArg *passVp = current->pop()->toPassArg();
+        passVp->getArgument()->setFoldedUnchecked();
         passVp->replaceAllUsesWith(passVp->getArgument());
         passVp->block()->discard(passVp);
 
@@ -4705,6 +4706,7 @@ IonBuilder::jsop_funapplyarguments(uint32_t argc)
 
     // Vp
     MPassArg *passVp = current->pop()->toPassArg();
+    passVp->getArgument()->setFoldedUnchecked();
     passVp->replaceAllUsesWith(passVp->getArgument());
     passVp->block()->discard(passVp);
 

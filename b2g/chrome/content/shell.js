@@ -555,6 +555,8 @@ var shell = {
       url: msg.uri,
       manifestURL: msg.manifest,
       isActivity: (msg.type == 'activity'),
+      onlyShowApp: msg.onlyShowApp,
+      showApp: msg.showApp,
       target: msg.target,
       expectingSystemMessage: true,
       extra: msg.extra
