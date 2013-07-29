@@ -22,6 +22,7 @@ nsFont::nsFont(const char* aName, uint8_t aStyle, uint8_t aVariant,
   weight = aWeight;
   stretch = aStretch;
   decorations = aDecoration;
+  smoothing = NS_FONT_SMOOTHING_AUTO;
   size = aSize;
   sizeAdjust = 0.0;
   kerning = NS_FONT_KERNING_AUTO;
@@ -46,6 +47,7 @@ nsFont::nsFont(const nsSubstring& aName, uint8_t aStyle, uint8_t aVariant,
   weight = aWeight;
   stretch = aStretch;
   decorations = aDecoration;
+  smoothing = NS_FONT_SMOOTHING_AUTO;
   size = aSize;
   sizeAdjust = 0.0;
   kerning = NS_FONT_KERNING_AUTO;
@@ -68,6 +70,7 @@ nsFont::nsFont(const nsFont& aOther)
   weight = aOther.weight;
   stretch = aOther.stretch;
   decorations = aOther.decorations;
+  smoothing = aOther.smoothing;
   size = aOther.size;
   sizeAdjust = aOther.sizeAdjust;
   kerning = aOther.kerning;
@@ -122,7 +125,8 @@ bool nsFont::Equals(const nsFont& aOther) const
 {
   if (BaseEquals(aOther) &&
       (variant == aOther.variant) &&
-      (decorations == aOther.decorations)) {
+      (decorations == aOther.decorations) &&
+      (smoothing == aOther.smoothing)) {
     return true;
   }
   return false;
@@ -137,6 +141,7 @@ nsFont& nsFont::operator=(const nsFont& aOther)
   weight = aOther.weight;
   stretch = aOther.stretch;
   decorations = aOther.decorations;
+  smoothing = aOther.smoothing;
   size = aOther.size;
   sizeAdjust = aOther.sizeAdjust;
   kerning = aOther.kerning;
@@ -416,6 +421,11 @@ void nsFont::AddFontFeaturesToStyle(gfxFontStyle *aStyle) const
 
   // add in features from font-feature-settings
   aStyle->featureSettings.AppendElements(fontFeatureSettings);
+
+  // enable grayscale antialiasing for text
+  if (smoothing == NS_FONT_SMOOTHING_ANTIALIASED) {
+    aStyle->useGrayscaleAntialiasing = true;
+  }
 }
 
 static bool FontEnumCallback(const nsString& aFamily, bool aGeneric, void *aData)
