@@ -10,7 +10,6 @@
 #include "mozilla/dom/indexedDB/IndexedDatabase.h"
 
 #include "nsIIDBObjectStore.h"
-#include "nsIIDBTransaction.h"
 
 #include "nsCycleCollectionParticipant.h"
 
