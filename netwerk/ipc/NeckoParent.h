@@ -79,11 +79,7 @@ protected:
   virtual PWebSocketParent* AllocPWebSocketParent(PBrowserParent* browser,
                                                   const SerializedLoadContext& aSerialized);
   virtual bool DeallocPWebSocketParent(PWebSocketParent*);
-  virtual PTCPSocketParent* AllocPTCPSocketParent(const nsString& aHost,
-                                                  const uint16_t& aPort,
-                                                  const bool& useSSL,
-                                                  const nsString& aBinaryType,
-                                                  PBrowserParent* aBrowser);
+virtual PTCPSocketParent* AllocPTCPSocketParent();
 
   virtual PRemoteOpenFileParent* AllocPRemoteOpenFileParent(const URIParams& aFileURI,
                                                             PBrowserParent* aBrowser)
@@ -95,13 +91,15 @@ protected:
   virtual bool DeallocPRemoteOpenFileParent(PRemoteOpenFileParent* aActor)
                                             MOZ_OVERRIDE;
 
-  virtual bool RecvPTCPSocketConstructor(PTCPSocketParent*,
-                                         const nsString& aHost,
-                                         const uint16_t& aPort,
-                                         const bool& useSSL,
-                                         const nsString& aBinaryType,
-                                         PBrowserParent* aBrowser);
   virtual bool DeallocPTCPSocketParent(PTCPSocketParent*);
+  virtual PTCPServerSocketParent* AllocPTCPServerSocketParent(const uint16_t& aLocalPort,
+                                                        const uint16_t& aBacklog,
+                                                        const nsString& aBinaryType);
+  virtual bool RecvPTCPServerSocketConstructor(PTCPServerSocketParent*,
+                                               const uint16_t& aLocalPort,
+                                               const uint16_t& aBacklog,
+                                               const nsString& aBinaryType);
+  virtual bool DeallocPTCPServerSocketParent(PTCPServerSocketParent*);
   virtual bool RecvHTMLDNSPrefetch(const nsString& hostname,
                                    const uint16_t& flags);
   virtual bool RecvCancelHTMLDNSPrefetch(const nsString& hostname,

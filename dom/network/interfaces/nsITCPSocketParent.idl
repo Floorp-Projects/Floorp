@@ -5,10 +5,13 @@
 #include "domstubs.idl"
 
 interface nsIDOMTCPSocket;
+interface nsIDOMTCPServerSocket;
+interface nsITCPServerSocketParent;
+interface nsITCPSocketIntermediary;
 
 // Interface required to allow the TCP socket object in the parent process
 // to talk to the parent IPC actor
-[scriptable, uuid(4e7246c6-a8b3-426d-9c17-76dab1e1e14a)]
+[scriptable, uuid(123f654b-4435-43c8-8447-db1b5420a1c2)]
 interface nsITCPSocketParent : nsISupports
 {
   [implicit_jscontext] void initJS(in jsval intermediary);
@@ -20,16 +23,32 @@ interface nsITCPSocketParent : nsISupports
                                          in jsval data,
                                          in DOMString readyState,
                                          in uint32_t bufferedAmount);
+
+  // Initialize a parent socket object. It is called from the parent side socket,
+  // which is generated in accepting any open request on the parent side.
+  // The socket after being initialized will be established.
+  //
+  // @param socket
+  //        The socket on the parent side.
+  // @param intermediary
+  //        Intermediate class object. See nsITCPSocketIntermediary.
+  [implicit_jscontext] void setSocketAndIntermediary(in nsIDOMTCPSocket socket,
+                                                     in nsITCPSocketIntermediary intermediary);
 };
 
 // Intermediate class to handle sending multiple possible data types
 // and kicking off the chrome process socket object's connection.
-[scriptable, uuid(afa42841-a6cb-4a91-912f-93099f6a3d18)]
+[scriptable, uuid(38bec1ed-b863-40dd-ba69-7bd92e568ee3)]
 interface nsITCPSocketIntermediary : nsISupports {
   // Open the connection to the server with the given parameters
   nsIDOMTCPSocket open(in nsITCPSocketParent parent,
                        in DOMString host, in unsigned short port,
                        in boolean useSSL, in DOMString binaryType);
+
+  // Listen on a port
+  nsIDOMTCPServerSocket listen(in nsITCPServerSocketParent parent,
+                               in unsigned short port, in unsigned short backlog,
+                               in DOMString binaryType);
 
   // Send a basic string along the connection
   void sendString(in DOMString data);
