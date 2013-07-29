@@ -478,15 +478,15 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(XULCommandDispatcher, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 #endif
-  NS_DEFINE_CLASSINFO_DATA(XULControllers, nsNonDOMObjectSH,
-                           DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(BoxObject, nsDOMGenericSH,
-                           DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CHROME_ONLY_CLASSINFO_DATA(XULControllers, nsNonDOMObjectSH,
+                                       DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CHROME_ONLY_CLASSINFO_DATA(BoxObject, nsDOMGenericSH,
+                                       DEFAULT_SCRIPTABLE_FLAGS)
 #ifdef MOZ_XUL
-  NS_DEFINE_CLASSINFO_DATA(TreeSelection, nsDOMGenericSH,
-                           DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(TreeContentView, nsDOMGenericSH,
-                           DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CHROME_ONLY_CLASSINFO_DATA(TreeSelection, nsDOMGenericSH,
+                                       DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CHROME_ONLY_CLASSINFO_DATA(TreeContentView, nsDOMGenericSH,
+                                       DEFAULT_SCRIPTABLE_FLAGS)
 #endif
 
   // Crypto classes
@@ -503,19 +503,19 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            WINDOW_SCRIPTABLE_FLAGS)
 
 #ifdef MOZ_XUL
-  NS_DEFINE_CLASSINFO_DATA(XULTemplateBuilder, nsDOMGenericSH,
-                           DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CHROME_ONLY_CLASSINFO_DATA(XULTemplateBuilder, nsDOMGenericSH,
+                                       DEFAULT_SCRIPTABLE_FLAGS)
 
-  NS_DEFINE_CLASSINFO_DATA(XULTreeBuilder, nsDOMGenericSH,
-                           DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CHROME_ONLY_CLASSINFO_DATA(XULTreeBuilder, nsDOMGenericSH,
+                                       DEFAULT_SCRIPTABLE_FLAGS)
 #endif
 
   NS_DEFINE_CLASSINFO_DATA(DOMStringList, nsStringListSH,
                            ARRAY_SCRIPTABLE_FLAGS)
 
 #ifdef MOZ_XUL
-  NS_DEFINE_CLASSINFO_DATA(TreeColumn, nsDOMGenericSH,
-                           DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CHROME_ONLY_CLASSINFO_DATA(TreeColumn, nsDOMGenericSH,
+                                       DEFAULT_SCRIPTABLE_FLAGS)
 #endif
 
   NS_DEFINE_CLASSINFO_DATA(CSSMozDocumentRule, nsDOMGenericSH,
