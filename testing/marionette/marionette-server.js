@@ -1202,8 +1202,8 @@ MarionetteServerConnection.prototype = {
 
     if (this.context == "chrome") {
       if (this.curFrame) {
-        let wrappedValue = this.curBrowser.elementManager.addToKnownElements(this.curFrame.frameElement);
-        this.sendResponse(wrappedValue, this.command_id);
+        let frameUid = this.curBrowser.elementManager.addToKnownElements(this.curFrame.frameElement);
+        this.sendResponse(frameUid, this.command_id);
       } else {
         // no current frame, we're at toplevel
         this.sendResponse(null, this.command_id);
