@@ -52,6 +52,9 @@ def parse_options(options, jetpack_id):
     doc.appendChild(root)
 
     for pref in options:
+        if ("hidden" in pref and pref["hidden"] == True):
+            continue;
+
         setting = doc.createElement("setting")
         setting.setAttribute("pref-name", pref["name"])
         setting.setAttribute("data-jetpack-id", jetpack_id)

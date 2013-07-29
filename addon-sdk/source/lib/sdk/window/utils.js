@@ -18,6 +18,8 @@ const appShellService = Cc['@mozilla.org/appshell/appShellService;1'].
                         getService(Ci.nsIAppShellService);
 const WM = Cc['@mozilla.org/appshell/window-mediator;1'].
            getService(Ci.nsIWindowMediator);
+const io = Cc['@mozilla.org/network/io-service;1'].
+           getService(Ci.nsIIOService);
 
 const BROWSER = 'navigator:browser',
       URI_BROWSER = 'chrome://browser/content/browser.xul',
@@ -184,18 +186,21 @@ function serializeFeatures(options) {
  *    Map of key, values like: `{ width: 10, height: 15, chrome: true, private: true }`.
  */
 function open(uri, options) {
-  options = options || {};
+  uri = uri || URI_BROWSER;
+  options = options || {}
+
+  if (['chrome', 'resource', 'data'].indexOf(io.newURI(uri, null, null).scheme) < 0)
+    throw new Error('only chrome, resource and data uris are allowed');
+
   let newWindow = windowWatcher.
     openWindow(options.parent || null,
-               uri || URI_BROWSER,
+               uri,
                options.name || null,
                serializeFeatures(options.features || {}),
                options.args || null);
 
   return newWindow;
 }
-
-
 exports.open = open;
 
 function onFocus(window) {

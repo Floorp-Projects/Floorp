@@ -19,6 +19,7 @@ const { setTimeout } = require('sdk/timers');
 const { newURI } = require('sdk/url/utils');
 const { defer, all } = require('sdk/core/promise');
 const { once } = require('sdk/system/events');
+const { set } = require('sdk/preferences/service');
 const {
   Bookmark, Group, Separator,
   save, search,
@@ -45,12 +46,25 @@ function clearBookmarks (group) {
    ? bmsrv.removeFolderChildren(group.id)
    : clearAllBookmarks();
 }
-exports.clearBookmarks = clearBookmarks;
 
 function clearAllBookmarks () {
   [MENU, TOOLBAR, UNSORTED].forEach(clearBookmarks);
 }
-exports.clearAllBookmarks = clearAllBookmarks;
+
+function clearHistory (done) {
+  hsrv.removeAllPages();
+  once('places-expiration-finished', done);
+}
+
+// Cleans bookmarks and history and disables maintanance
+function resetPlaces (done) {
+  // Set last maintenance to current time to prevent
+  // Places DB maintenance occuring and locking DB
+  set('places.database.lastMaintenance', Math.floor(Date.now() / 1000));
+  clearAllBookmarks();
+  clearHistory(done);
+}
+exports.resetPlaces = resetPlaces;
 
 function compareWithHost (assert, item) {
   let id = item.id;
@@ -104,12 +118,6 @@ function createVisit (url) {
   }];
   return place;
 }
-
-function clearHistory (done) {
-  hsrv.removeAllPages();
-  once('places-expiration-finished', done);
-}
-exports.clearHistory = clearHistory;
 
 function createBookmark (data) {
   data = data || {};
