@@ -3172,6 +3172,25 @@ CodeGenerator::visitInitElem(LInitElem *lir)
     return callVM(InitElemInfo, lir);
 }
 
+typedef bool (*InitElemGetterSetterFn)(JSContext *, jsbytecode *, HandleObject, HandleValue,
+                                       HandleObject);
+static const VMFunction InitElemGetterSetterInfo =
+    FunctionInfo<InitElemGetterSetterFn>(InitGetterSetterOperation);
+
+bool
+CodeGenerator::visitInitElemGetterSetter(LInitElemGetterSetter *lir)
+{
+    Register obj = ToRegister(lir->object());
+    Register value = ToRegister(lir->value());
+
+    pushArg(value);
+    pushArg(ToValue(lir, LInitElemGetterSetter::IdIndex));
+    pushArg(obj);
+    pushArg(ImmWord(lir->mir()->resumePoint()->pc()));
+
+    return callVM(InitElemGetterSetterInfo, lir);
+}
+
 typedef bool(*InitPropFn)(JSContext *cx, HandleObject obj,
                           HandlePropertyName name, HandleValue value);
 static const VMFunction InitPropInfo =
@@ -3187,6 +3206,25 @@ CodeGenerator::visitInitProp(LInitProp *lir)
     pushArg(objReg);
 
     return callVM(InitPropInfo, lir);
+}
+
+typedef bool(*InitPropGetterSetterFn)(JSContext *, jsbytecode *, HandleObject, HandlePropertyName,
+                                      HandleObject);
+static const VMFunction InitPropGetterSetterInfo =
+    FunctionInfo<InitPropGetterSetterFn>(InitGetterSetterOperation);
+
+bool
+CodeGenerator::visitInitPropGetterSetter(LInitPropGetterSetter *lir)
+{
+    Register obj = ToRegister(lir->object());
+    Register value = ToRegister(lir->value());
+
+    pushArg(value);
+    pushArg(ImmGCPtr(lir->mir()->name()));
+    pushArg(obj);
+    pushArg(ImmWord(lir->mir()->resumePoint()->pc()));
+
+    return callVM(InitPropGetterSetterInfo, lir);
 }
 
 typedef bool (*CreateThisFn)(JSContext *cx, HandleObject callee, MutableHandleValue rval);

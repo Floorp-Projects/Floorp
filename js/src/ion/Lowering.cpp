@@ -253,12 +253,31 @@ LIRGenerator::visitInitElem(MInitElem *ins)
 }
 
 bool
+LIRGenerator::visitInitElemGetterSetter(MInitElemGetterSetter *ins)
+{
+    LInitElemGetterSetter *lir = new LInitElemGetterSetter(useRegisterAtStart(ins->object()),
+                                                           useRegisterAtStart(ins->value()));
+    if (!useBoxAtStart(lir, LInitElemGetterSetter::IdIndex, ins->idValue()))
+        return false;
+
+    return add(lir, ins) && assignSafepoint(lir, ins);
+}
+
+bool
 LIRGenerator::visitInitProp(MInitProp *ins)
 {
     LInitProp *lir = new LInitProp(useRegisterAtStart(ins->getObject()));
     if (!useBoxAtStart(lir, LInitProp::ValueIndex, ins->getValue()))
         return false;
 
+    return add(lir, ins) && assignSafepoint(lir, ins);
+}
+
+bool
+LIRGenerator::visitInitPropGetterSetter(MInitPropGetterSetter *ins)
+{
+    LInitPropGetterSetter *lir = new LInitPropGetterSetter(useRegisterAtStart(ins->object()),
+                                                           useRegisterAtStart(ins->value()));
     return add(lir, ins) && assignSafepoint(lir, ins);
 }
 
