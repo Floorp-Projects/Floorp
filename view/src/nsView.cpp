@@ -735,12 +735,11 @@ nsresult nsView::DetachFromTopLevelWidget()
   return NS_OK;
 }
 
-void nsView::SetZIndex(bool aAuto, int32_t aZIndex, bool aTopMost)
+void nsView::SetZIndex(bool aAuto, int32_t aZIndex)
 {
   bool oldIsAuto = GetZIndexIsAuto();
   mVFlags = (mVFlags & ~NS_VIEW_FLAG_AUTO_ZINDEX) | (aAuto ? NS_VIEW_FLAG_AUTO_ZINDEX : 0);
   mZIndex = aZIndex;
-  SetTopMost(aTopMost);
   
   if (HasWidget() || !oldIsAuto || !aAuto) {
     UpdateNativeWidgetZIndexes(this, FindNonAutoZIndex(this));
