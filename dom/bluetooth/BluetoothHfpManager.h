@@ -118,8 +118,7 @@ private:
   uint32_t GetNumberOfCalls(uint16_t aState);
 
   void NotifyDialer(const nsAString& aCommand);
-  void NotifyStatusChanged(const nsAString& aType);
-  void NotifyAudioManager(bool aStatus);
+  void NotifyStatusChanged(const char* aType);
 
   bool SendCommand(const char* aCommand, uint32_t aValue = 0);
   bool SendLine(const char* aMessage);
