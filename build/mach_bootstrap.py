@@ -51,6 +51,7 @@ SEARCH_PATHS = [
     'testing/mozbase/mozprofile',
     'testing/mozbase/mozrunner',
     'testing/mozbase/mozinfo',
+    'testing/mozbase/manifestdestiny',
     'xpcom/idl-parser',
 ]
 
