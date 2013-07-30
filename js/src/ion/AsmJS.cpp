@@ -9,7 +9,7 @@
 #include "mozilla/Move.h"
 
 #ifdef MOZ_VTUNE
-# include "jitprofiling.h"
+# include "vtune/VTuneWrapper.h"
 #endif
 
 #include "jsmath.h"
@@ -4710,10 +4710,8 @@ GenerateCode(ModuleCompiler &m, ModuleCompiler::Func &func, MIRGenerator &mir, L
     }
 
 #ifdef MOZ_VTUNE
-    if (iJIT_IsProfilingActive() == iJIT_SAMPLING_ON) {
-        if (!m.trackProfiledFunction(func, m.masm().size()))
-            return false;
-    }
+    if (IsVTuneProfilingActive() && !m.trackProfiledFunction(func, m.masm().size()))
+        return false;
 #endif
 
 #ifdef JS_ION_PERF
