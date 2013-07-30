@@ -1427,10 +1427,10 @@ gfxContext::Mask(gfxPattern *pattern)
       if (pattern->IsAzure() || pattern->GetType() == gfxPattern::PATTERN_SURFACE) {
         RefPtr<SourceSurface> mask = pattern->GetAzureSurface();
         Matrix mat = ToMatrix(pattern->GetInverseMatrix());
-        Matrix old = GetDTTransform();
+        Matrix old = mTransform;
         // add in the inverse of the pattern transform so that when we
         // MaskSurface we are transformed to the place matching the pattern transform
-        mat = mat * GetDTTransform();
+        mat = mat * mTransform;
 
         ChangeTransform(mat);
         mDT->MaskSurface(GeneralPattern(this), mask, offset, DrawOptions(1.0f, CurrentState().op, CurrentState().aaMode));
