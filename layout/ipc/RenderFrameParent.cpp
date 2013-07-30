@@ -552,7 +552,8 @@ public:
 
   void ClearRenderFrame() { mRenderFrame = nullptr; }
 
-  virtual void SendAsyncScrollDOMEvent(const CSSRect& aContentRect,
+  virtual void SendAsyncScrollDOMEvent(FrameMetrics::ViewID aScrollId,
+                                       const CSSRect& aContentRect,
                                        const CSSSize& aContentSize) MOZ_OVERRIDE
   {
     if (MessageLoop::current() != mUILoop) {
@@ -560,10 +561,10 @@ public:
         FROM_HERE,
         NewRunnableMethod(this,
                           &RemoteContentController::SendAsyncScrollDOMEvent,
-                          aContentRect, aContentSize));
+                          aScrollId, aContentRect, aContentSize));
       return;
     }
-    if (mRenderFrame) {
+    if (mRenderFrame && aScrollId == FrameMetrics::ROOT_SCROLL_ID) {
       TabParent* browser = static_cast<TabParent*>(mRenderFrame->Manager());
       BrowserElementParent::DispatchAsyncScrollEvent(browser, aContentRect,
                                                      aContentSize);
