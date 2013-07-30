@@ -50,14 +50,15 @@ public class Tabs implements GeckoEventListener {
     private AccountManager mAccountManager;
     private OnAccountsUpdateListener mAccountListener = null;
 
-    public static final int LOADURL_NONE = 0;
-    public static final int LOADURL_NEW_TAB = 1;
-    public static final int LOADURL_USER_ENTERED = 2;
-    public static final int LOADURL_PRIVATE = 4;
-    public static final int LOADURL_PINNED = 8;
-    public static final int LOADURL_DELAY_LOAD = 16;
-    public static final int LOADURL_DESKTOP = 32;
-    public static final int LOADURL_BACKGROUND = 64;
+    public static final int LOADURL_NONE         = 0;
+    public static final int LOADURL_NEW_TAB      = 1 << 0;
+    public static final int LOADURL_USER_ENTERED = 1 << 1;
+    public static final int LOADURL_PRIVATE      = 1 << 2;
+    public static final int LOADURL_PINNED       = 1 << 3;
+    public static final int LOADURL_DELAY_LOAD   = 1 << 4;
+    public static final int LOADURL_DESKTOP      = 1 << 5;
+    public static final int LOADURL_BACKGROUND   = 1 << 6;
+    public static final int LOADURL_EXTERNAL     = 1 << 7;
 
     private static final long PERSIST_TABS_AFTER_MILLISECONDS = 1000 * 5;
 
@@ -641,6 +642,7 @@ public class Tabs implements GeckoEventListener {
             boolean isPrivate = (flags & LOADURL_PRIVATE) != 0;
             boolean userEntered = (flags & LOADURL_USER_ENTERED) != 0;
             boolean desktopMode = (flags & LOADURL_DESKTOP) != 0;
+            boolean external = (flags & LOADURL_EXTERNAL) != 0;
 
             args.put("url", url);
             args.put("engine", searchEngine);
@@ -662,7 +664,7 @@ public class Tabs implements GeckoEventListener {
                 // long as it's a valid URI.
                 String tabUrl = (url != null && Uri.parse(url).getScheme() != null) ? url : null;
 
-                added = addTab(tabId, tabUrl, false, parentId, url, isPrivate);
+                added = addTab(tabId, tabUrl, external, parentId, url, isPrivate);
                 added.setDesktopMode(desktopMode);
             }
         } catch (Exception e) {
