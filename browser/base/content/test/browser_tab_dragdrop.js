@@ -61,9 +61,7 @@ function test()
 
       executeSoon(function () {
         var win = gBrowser.replaceTabWithWindow(t);
-        win.addEventListener("load", function () {
-          win.removeEventListener("load", arguments.callee, true);
-
+        whenDelayedStartupFinished(win, function () {
           // Verify that the original window now only has the initial tab left in it.
           is(gBrowser.tabs[0], tabs[0], "tab0");
           is(gBrowser.getBrowserForTab(gBrowser.tabs[0]).contentWindow.location, "about:blank", "tab0 uri");
@@ -82,7 +80,7 @@ function test()
             }, false);
             win.gBrowser.goBack();
           });
-        }, true);
+        });
       });
     }, true);
     b.loadURI("about:blank");
@@ -111,10 +109,10 @@ function test()
     gBrowser.getBrowserForTab(tabs[i]).addEventListener("load", fn(waitForLoad,i), true);
   }
 
-  setLocation(1, "data:text/html,<title>tab1</title><body>tab1<iframe>");
-  setLocation(2, "data:text/plain,tab2");
-  setLocation(3, "data:text/html,<title>tab3</title><body>tab3<iframe>");
-  setLocation(4, "data:text/html,<body onload='clicks=0' onclick='++clicks'>"+embed);
+  setLocation(1, "data:text/html;charset=utf-8,<title>tab1</title><body>tab1<iframe>");
+  setLocation(2, "data:text/plain;charset=utf-8,tab2");
+  setLocation(3, "data:text/html;charset=utf-8,<title>tab3</title><body>tab3<iframe>");
+  setLocation(4, "data:text/html;charset=utf-8,<body onload='clicks=0' onclick='++clicks'>"+embed);
   gBrowser.selectedTab = tabs[3];
 
 }
