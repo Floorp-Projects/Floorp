@@ -50,8 +50,8 @@ using mozilla::RangedPtr;
 
 /*
  * If we're accumulating a decimal number and the number is >= 2^53, then the
- * fast result from the loop in GetPrefixInteger may be inaccurate. Call
- * js_strtod_harder to get the correct answer.
+ * fast result from the loop in Get{Prefix,Decimal}Integer may be inaccurate.
+ * Call js_strtod_harder to get the correct answer.
  */
 static bool
 ComputeAccurateDecimalInteger(ExclusiveContext *cx,
@@ -140,7 +140,7 @@ ComputeAccurateBinaryBaseInteger(const jschar *start, const jschar *end, int bas
         bit = bdr.nextDigit();
     } while (bit == 0);
 
-    JS_ASSERT(bit == 1); // guaranteed by GetPrefixInteger
+    JS_ASSERT(bit == 1); // guaranteed by Get{Prefix,Decimal}Integer
 
     /* Gather the 53 significant bits (including the leading 1). */
     double value = 1.0;
@@ -230,6 +230,30 @@ js::GetPrefixInteger(ExclusiveContext *cx, const jschar *start, const jschar *en
         *dp = ComputeAccurateBinaryBaseInteger(start, s, base);
 
     return true;
+}
+
+bool
+js::GetDecimalInteger(ExclusiveContext *cx, const jschar *start, const jschar *end, double *dp)
+{
+    JS_ASSERT(start <= end);
+
+    const jschar *s = start;
+    double d = 0.0;
+    for (; s < end; s++) {
+        jschar c = *s;
+        JS_ASSERT('0' <= c && c <= '9');
+        int digit = c - '0';
+        d = d * 10 + digit;
+    }
+
+    *dp = d;
+
+    // If we haven't reached the limit of integer precision, we're done.
+    if (d < DOUBLE_INTEGRAL_PRECISION_LIMIT)
+        return true;
+
+    // Otherwise compute the correct integer from the prefix of valid digits.
+    return ComputeAccurateDecimalInteger(cx, start, s, dp);
 }
 
 static JSBool
