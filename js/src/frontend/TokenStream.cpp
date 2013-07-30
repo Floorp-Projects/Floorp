@@ -297,31 +297,9 @@ TokenStream::TokenStream(ExclusiveContext *cx, const CompileOptions &options,
     // this line then adjust the next character.
     userbuf.setAddressOfNextRawChar(base);
 
-    /*
-     * This table holds all the token kinds that satisfy these properties:
-     * - A single char long.
-     * - Cannot be a prefix of any longer token (e.g. '+' is excluded because
-     *   '+=' is a valid token).
-     *
-     * The few token kinds satisfying these properties cover roughly 35--45%
-     * of the tokens seen in practice.
-     *
-     * Nb: the following tables could be static, but initializing them this way
-     * is much easier.  Don't worry, the time to initialize them for each
-     * TokenStream is trivial.  See bug 639420.
-     */
-    memset(oneCharTokens, 0, sizeof(oneCharTokens));
-    oneCharTokens[unsigned(';')] = TOK_SEMI;
-    oneCharTokens[unsigned(',')] = TOK_COMMA;
-    oneCharTokens[unsigned('?')] = TOK_HOOK;
-    oneCharTokens[unsigned(':')] = TOK_COLON;
-    oneCharTokens[unsigned('[')] = TOK_LB;
-    oneCharTokens[unsigned(']')] = TOK_RB;
-    oneCharTokens[unsigned('{')] = TOK_LC;
-    oneCharTokens[unsigned('}')] = TOK_RC;
-    oneCharTokens[unsigned('(')] = TOK_LP;
-    oneCharTokens[unsigned(')')] = TOK_RP;
-    oneCharTokens[unsigned('~')] = TOK_BITNOT;
+    // Nb: the following tables could be static, but initializing them here is
+    // much easier.  Don't worry, the time to initialize them for each
+    // TokenStream is trivial.  See bug 639420.
 
     /* See getChar() for an explanation of maybeEOL[]. */
     memset(maybeEOL, 0, sizeof(maybeEOL));
@@ -994,8 +972,22 @@ TokenStream::checkForKeyword(const jschar *s, size_t length, TokenKind *ttp)
 }
 
 enum FirstCharKind {
-    Other,
-    OneChar,
+    // A jschar has the 'OneChar' kind if it, by itself, constitutes a valid
+    // token that cannot also be a prefix of a longer token.  E.g. ';' has the
+    // OneChar kind, but '+' does not, because '++' and '+=' are valid longer tokens
+    // that begin with '+'.
+    //
+    // The few token kinds satisfying these properties cover roughly 35--45%
+    // of the tokens seen in practice.
+    //
+    // We represent the 'OneChar' kind with any positive value less than
+    // TOK_LIMIT.  This representation lets us associate each one-char token
+    // jschar with a TokenKind and thus avoid a subsequent jschar-to-TokenKind
+    // conversion.
+    OneChar_Min = 0,
+    OneChar_Max = TOK_LIMIT - 1,
+
+    Other = TOK_LIMIT,
     Ident,
     Dot,
     Equals,
@@ -1006,10 +998,10 @@ enum FirstCharKind {
 
     /* These two must be last, so that |c >= Space| matches both. */
     Space,
-    EOL
-};
+    EOL,
 
-#define _______ Other
+    LastCharKind = EOL
+};
 
 /*
  * OneChar: 40,  41,  44,  58,  59,  63,  91,  93,  123, 125, 126:
@@ -1024,24 +1016,34 @@ enum FirstCharKind {
  * Space:   9, 11, 12, 32: '\t', '\v', '\f', ' '
  * EOL:     10, 13: '\n', '\r'
  */
+
+#define T_COMMA     TOK_COMMA
+#define T_COLON     TOK_COLON
+#define T_BITNOT    TOK_BITNOT
+#define _______ Other
 static const uint8_t firstCharKinds[] = {
 /*         0        1        2        3        4        5        6        7        8        9    */
 /*   0+ */ _______, _______, _______, _______, _______, _______, _______, _______, _______,   Space,
 /*  10+ */     EOL,   Space,   Space,     EOL, _______, _______, _______, _______, _______, _______,
 /*  20+ */ _______, _______, _______, _______, _______, _______, _______, _______, _______, _______,
 /*  30+ */ _______, _______,   Space, _______,  String, _______,   Ident, _______, _______,  String,
-/*  40+ */ OneChar, OneChar, _______,    Plus, OneChar, _______,     Dot, _______, BasePrefix,  Dec,
-/*  50+ */     Dec,     Dec,     Dec,     Dec,     Dec,     Dec,     Dec,     Dec, OneChar, OneChar,
-/*  60+ */ _______,  Equals, _______, OneChar, _______,   Ident,   Ident,   Ident,   Ident,   Ident,
+/*  40+ */  TOK_LP,  TOK_RP, _______,    Plus, T_COMMA,_______,     Dot, _______, BasePrefix,  Dec,
+/*  50+ */     Dec,     Dec,     Dec,     Dec,     Dec,     Dec,     Dec,    Dec,  T_COLON,TOK_SEMI,
+/*  60+ */ _______,  Equals, _______,TOK_HOOK, _______,   Ident,   Ident,   Ident,   Ident,   Ident,
 /*  70+ */   Ident,   Ident,   Ident,   Ident,   Ident,   Ident,   Ident,   Ident,   Ident,   Ident,
 /*  80+ */   Ident,   Ident,   Ident,   Ident,   Ident,   Ident,   Ident,   Ident,   Ident,   Ident,
-/*  90+ */   Ident, OneChar, _______, OneChar, _______,   Ident, _______,   Ident,   Ident,   Ident,
+/*  90+ */   Ident,  TOK_LB, _______,  TOK_RB, _______,   Ident, _______,   Ident,   Ident,   Ident,
 /* 100+ */   Ident,   Ident,   Ident,   Ident,   Ident,   Ident,   Ident,   Ident,   Ident,   Ident,
 /* 110+ */   Ident,   Ident,   Ident,   Ident,   Ident,   Ident,   Ident,   Ident,   Ident,   Ident,
-/* 120+ */   Ident,   Ident,   Ident, OneChar, _______, OneChar, OneChar, _______
+/* 120+ */   Ident,   Ident,   Ident,  TOK_LC, _______,  TOK_RC,T_BITNOT, _______
 };
-
+#undef T_COMMA
+#undef T_COLON
+#undef T_BITNOT
 #undef _______
+
+static_assert(LastCharKind < (1 << (sizeof(firstCharKinds[0]) * 8)),
+              "Elements of firstCharKinds[] are too small");
 
 TokenKind
 TokenStream::getTokenInternal()
@@ -1125,8 +1127,8 @@ TokenStream::getTokenInternal()
     /*
      * Look for an unambiguous single-char token.
      */
-    if (c1kind == OneChar) {
-        tt = (TokenKind)oneCharTokens[c];
+    if (c1kind < OneChar_Max) {
+        tt = (TokenKind)c1kind;
         goto out;
     }
 

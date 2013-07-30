@@ -917,7 +917,6 @@ class MOZ_STACK_CLASS TokenStream
     const char          *filename;      /* input filename or null */
     jschar              *sourceMap;     /* source map's filename or null */
     CharBuffer          tokenbuf;       /* current token string buffer */
-    int8_t              oneCharTokens[128];  /* table of one-char tokens, indexed by 7-bit char */
     bool                maybeEOL[256];       /* probabilistic EOL lookup table */
     bool                maybeStrSpecial[256];/* speeds up string scanning */
     uint8_t             isExprEnding[TOK_LIMIT]; /* which tokens definitely terminate exprs? */
