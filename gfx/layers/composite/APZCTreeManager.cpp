@@ -8,7 +8,7 @@
 #include "LayerManagerComposite.h"      // for AsyncCompositionManager.h
 #include "Compositor.h"
 
-#define APZC_LOG(args...)
+#define APZC_LOG(...)
 // #define APZC_LOG(args...) printf_stderr(args)
 
 namespace mozilla {
