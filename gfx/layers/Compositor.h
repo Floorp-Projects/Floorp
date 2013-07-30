@@ -399,6 +399,12 @@ public:
   virtual const nsIntSize& GetWidgetSize() = 0;
 
   /**
+   * Debug-build assertion that can be called to ensure code is running on the
+   * compositor thread.
+   */
+  static void AssertOnCompositorThread();
+
+  /**
    * We enforce that there can only be one Compositor backend type off the main
    * thread at the same time. The backend type in use can be checked with this
    * static method. We need this for creating texture clients/hosts etc. when we
