@@ -481,7 +481,7 @@ static void GetKeywordsForProperty(const nsCSSProperty aProperty,
     return;
   }
   const int32_t *keywordTable = nsCSSProps::kKeywordTableTable[aProperty];
-  if (keywordTable) {
+  if (keywordTable && keywordTable != nsCSSProps::kBoxPropSourceKTable) {
     size_t i = 0;
     while (nsCSSKeyword(keywordTable[i]) != eCSSKeyword_UNKNOWN) {
       nsCSSKeyword word = nsCSSKeyword(keywordTable[i]);
