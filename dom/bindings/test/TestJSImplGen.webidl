@@ -472,6 +472,9 @@ interface TestJSImplInterface {
                             optional TestInterface? arg2 = null,
                             optional Dict arg3, optional double arg4 = 5.0,
                             optional float arg5);
+  attribute any jsonifierShouldSkipThis;
+  attribute TestParentInterface jsonifierShouldSkipThis2;
+  attribute TestCallbackInterface jsonifierShouldSkipThis3;
   jsonifier;
 
   // If you add things here, add them to TestCodeGen as well

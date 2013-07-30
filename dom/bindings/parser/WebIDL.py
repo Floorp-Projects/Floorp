@@ -1333,6 +1333,9 @@ class IDLType(IDLObject):
         # Should only call this on float types
         assert self.isFloat()
 
+    def isSerializable(self):
+        return False
+
     def tag(self):
         assert False # Override me!
 
@@ -1468,6 +1471,9 @@ class IDLNullableType(IDLType):
     def isUnion(self):
         return self.inner.isUnion()
 
+    def isSerializable(self):
+        return self.inner.isSerializable()
+
     def tag(self):
         return self.inner.tag()
 
@@ -1553,6 +1559,9 @@ class IDLSequenceType(IDLType):
     def isEnum(self):
         return False
 
+    def isSerializable(self):
+        return self.inner.isSerializable()
+
     def includesRestrictedFloat(self):
         return self.inner.includesRestrictedFloat()
 
@@ -1601,6 +1610,9 @@ class IDLUnionType(IDLType):
 
     def isUnion(self):
         return True
+
+    def isSerializable(self):
+        return all(m.isSerializable() for m in self.memberTypes)
 
     def includesRestrictedFloat(self):
         return any(t.includesRestrictedFloat() for t in self.memberTypes)
@@ -1932,6 +1944,19 @@ class IDLWrapperType(IDLType):
     def isEnum(self):
         return isinstance(self.inner, IDLEnum)
 
+    def isSerializable(self):
+        if self.isInterface():
+            if self.inner.isExternal():
+                return False
+            return any(m.isMethod() and m.isJsonifier() for m in self.inner.members)
+        elif self.isEnum():
+            return True
+        elif self.isDictionary():
+            return all(m.isSerializable() for m in self.inner.members)
+        else:
+            raise WebIDLError("IDLWrapperType wraps type %s that we don't know if "
+                              "is serializable" % type(self.inner), [self.location])
+
     def resolveType(self, parentScope):
         assert isinstance(parentScope, IDLScope)
         self.inner.resolve(parentScope)
@@ -2129,6 +2154,9 @@ class IDLBuiltinType(IDLType):
         assert self.isFloat()
         return self._typeTag == IDLBuiltinType.Types.unrestricted_float or \
                self._typeTag == IDLBuiltinType.Types.unrestricted_double
+
+    def isSerializable(self):
+        return self.isPrimitive() or self.isDOMString() or self.isDate()
 
     def includesRestrictedFloat(self):
         return self.isFloat() and not self.isUnrestricted()
