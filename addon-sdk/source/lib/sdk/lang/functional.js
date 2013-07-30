@@ -12,7 +12,7 @@ module.metadata = {
   "stability": "unstable"
 };
 
-const { setTimeout } = require("../timers");
+const { setImmediate, setTimeout } = require("../timers");
 const { deprecateFunction } = require("../util/deprecate");
 
 /**
@@ -30,13 +30,12 @@ exports.method = method;
 /**
  * Takes a function and returns a wrapped one instead, calling which will call
  * original function in the next turn of event loop. This is basically utility
- * to do `setTimeout(function() { ... }, 0)`, with a difference that returned
+ * to do `setImmediate(function() { ... })`, with a difference that returned
  * function is reused, instead of creating a new one each time. This also allows
  * to use this functions as event listeners.
  */
 function defer(f) {
-  return function deferred()
-    setTimeout(invoke, 0, f, arguments, this);
+  return function deferred() setImmediate(invoke, f, arguments, this);
 }
 exports.defer = defer;
 // Exporting `remit` alias as `defer` may conflict with promises.

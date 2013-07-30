@@ -479,103 +479,6 @@ public:
 
 #ifdef HAVE_JEMALLOC_STATS
 
-class HeapCommittedReporter MOZ_FINAL : public MemoryReporterBase
-{
-public:
-    HeapCommittedReporter()
-      : MemoryReporterBase("heap-committed", KIND_OTHER, UNITS_BYTES,
-"Memory mapped by the heap allocator that is committed, i.e. in physical "
-"memory or paged to disk.  When 'heap-committed' is larger than "
-"'heap-allocated', the difference between the two values is likely due to "
-"external fragmentation; that is, the allocator allocated a large block of "
-"memory and is unable to decommit it because a small part of that block is "
-"currently in use.")
-    {}
-private:
-    int64_t Amount()
-    {
-        jemalloc_stats_t stats;
-        jemalloc_stats(&stats);
-        return (int64_t) stats.committed;
-    }
-};
-
-class HeapCommittedUnusedReporter MOZ_FINAL : public MemoryReporterBase
-{
-public:
-    HeapCommittedUnusedReporter()
-      : MemoryReporterBase("heap-committed-unused", KIND_OTHER, UNITS_BYTES,
-"Committed bytes which do not correspond to an active allocation; i.e., "
-"'heap-committed' - 'heap-allocated'.  Although the allocator will waste some "
-"space under any circumstances, a large value here may indicate that the "
-"heap is highly fragmented.")
-    {}
-private:
-    int64_t Amount()
-    {
-        jemalloc_stats_t stats;
-        jemalloc_stats(&stats);
-        return stats.committed - stats.allocated;
-    }
-};
-
-class HeapCommittedUnusedRatioReporter MOZ_FINAL : public MemoryReporterBase
-{
-public:
-    HeapCommittedUnusedRatioReporter()
-      : MemoryReporterBase("heap-committed-unused-ratio", KIND_OTHER,
-                           UNITS_PERCENTAGE,
-"Ratio of committed, unused bytes to allocated bytes; i.e., "
-"'heap-committed-unused' / 'heap-allocated'.  This measures the overhead of "
-"the heap allocator relative to amount of memory allocated.")
-    {}
-private:
-    int64_t Amount()
-    {
-        jemalloc_stats_t stats;
-        jemalloc_stats(&stats);
-        return (int64_t) 10000 * (stats.committed - stats.allocated) /
-                                  ((double)stats.allocated);
-    }
-};
-
-class HeapDirtyReporter MOZ_FINAL : public MemoryReporterBase
-{
-public:
-    HeapDirtyReporter()
-      : MemoryReporterBase("heap-dirty", KIND_OTHER, UNITS_BYTES,
-"Memory which the allocator could return to the operating system, but hasn't. "
-"The allocator keeps this memory around as an optimization, so it doesn't "
-"have to ask the OS the next time it needs to fulfill a request. This value "
-"is typically not larger than a few megabytes.")
-    {}
-private:
-    int64_t Amount()
-    {
-        jemalloc_stats_t stats;
-        jemalloc_stats(&stats);
-        return (int64_t) stats.dirty;
-    }
-};
-
-class HeapUnusedReporter MOZ_FINAL : public MemoryReporterBase
-{
-public:
-    HeapUnusedReporter()
-      : MemoryReporterBase("heap-unused", KIND_OTHER, UNITS_BYTES,
-"Memory mapped by the heap allocator that is not part of an active "
-"allocation. Much of this memory may be uncommitted -- that is, it does not "
-"take up space in physical memory or in the swap file.")
-    {}
-private:
-    int64_t Amount()
-    {
-        jemalloc_stats_t stats;
-        jemalloc_stats(&stats);
-        return (int64_t) (stats.mapped - stats.allocated);
-    }
-};
-
 class HeapAllocatedReporter MOZ_FINAL : public MemoryReporterBase
 {
 public:
@@ -592,6 +495,109 @@ private:
         jemalloc_stats_t stats;
         jemalloc_stats(&stats);
         return (int64_t) stats.allocated;
+    }
+};
+
+class HeapOverheadWasteReporter MOZ_FINAL : public MemoryReporterBase
+{
+public:
+    // We mark this and the other heap-overhead reporters as KIND_NONHEAP
+    // because KIND_HEAP memory means "counted in heap-allocated", which this
+    // is not.
+    HeapOverheadWasteReporter()
+      : MemoryReporterBase("explicit/heap-overhead/waste",
+                           KIND_NONHEAP, UNITS_BYTES,
+"Committed bytes which do not correspond to an active allocation and which the "
+"allocator is not intentionally keeping alive (i.e., not 'heap-bookkeeping' or "
+"'heap-page-cache').  Although the allocator will waste some space under any "
+"circumstances, a large value here may indicate that the heap is highly "
+"fragmented, or that allocator is performing poorly for some other reason.")
+    {}
+private:
+    int64_t Amount()
+    {
+        jemalloc_stats_t stats;
+        jemalloc_stats(&stats);
+        return stats.waste;
+    }
+};
+
+class HeapOverheadBookkeepingReporter MOZ_FINAL : public MemoryReporterBase
+{
+public:
+    HeapOverheadBookkeepingReporter()
+      : MemoryReporterBase("explicit/heap-overhead/bookkeeping",
+                           KIND_NONHEAP, UNITS_BYTES,
+"Committed bytes which the heap allocator uses for internal data structures.")
+    {}
+private:
+    int64_t Amount()
+    {
+        jemalloc_stats_t stats;
+        jemalloc_stats(&stats);
+        return stats.bookkeeping;
+    }
+};
+
+class HeapOverheadPageCacheReporter MOZ_FINAL : public MemoryReporterBase
+{
+public:
+    HeapOverheadPageCacheReporter()
+      : MemoryReporterBase("explicit/heap-overhead/page-cache",
+                           KIND_NONHEAP, UNITS_BYTES,
+"Memory which the allocator could return to the operating system, but hasn't. "
+"The allocator keeps this memory around as an optimization, so it doesn't "
+"have to ask the OS the next time it needs to fulfill a request. This value "
+"is typically not larger than a few megabytes.")
+    {}
+private:
+    int64_t Amount()
+    {
+        jemalloc_stats_t stats;
+        jemalloc_stats(&stats);
+        return (int64_t) stats.page_cache;
+    }
+};
+
+class HeapCommittedReporter MOZ_FINAL : public MemoryReporterBase
+{
+public:
+    HeapCommittedReporter()
+      : MemoryReporterBase("heap-committed", KIND_OTHER, UNITS_BYTES,
+"Memory mapped by the heap allocator that is committed, i.e. in physical "
+"memory or paged to disk.  This value corresponds to 'heap-allocated' + "
+"'heap-waste' + 'heap-bookkeeping' + 'heap-page-cache', but because "
+"these values are read at different times, the result probably won't match "
+"exactly.")
+    {}
+private:
+    int64_t Amount()
+    {
+        jemalloc_stats_t stats;
+        jemalloc_stats(&stats);
+        return (int64_t) (stats.allocated + stats.waste +
+                          stats.bookkeeping + stats.page_cache);
+    }
+};
+
+class HeapOverheadRatioReporter MOZ_FINAL : public MemoryReporterBase
+{
+public:
+    HeapOverheadRatioReporter()
+      : MemoryReporterBase("heap-overhead-ratio", KIND_OTHER,
+                           UNITS_PERCENTAGE,
+"Ratio of committed, unused bytes to allocated bytes; i.e., "
+"'heap-overhead' / 'heap-allocated'.  This measures the overhead of "
+"the heap allocator relative to amount of memory allocated.")
+    {}
+private:
+    int64_t Amount()
+    {
+        jemalloc_stats_t stats;
+        jemalloc_stats(&stats);
+        return (int64_t) 10000 *
+          (stats.waste + stats.bookkeeping + stats.page_cache) /
+          ((double)stats.allocated);
     }
 };
 #endif  // HAVE_JEMALLOC_STATS
@@ -694,11 +700,11 @@ nsMemoryReporterManager::Init()
 
 #ifdef HAVE_JEMALLOC_STATS
     RegisterReporter(new HeapAllocatedReporter);
-    RegisterReporter(new HeapUnusedReporter);
+    RegisterReporter(new HeapOverheadWasteReporter);
+    RegisterReporter(new HeapOverheadBookkeepingReporter);
+    RegisterReporter(new HeapOverheadPageCacheReporter);
     RegisterReporter(new HeapCommittedReporter);
-    RegisterReporter(new HeapCommittedUnusedReporter);
-    RegisterReporter(new HeapCommittedUnusedRatioReporter);
-    RegisterReporter(new HeapDirtyReporter);
+    RegisterReporter(new HeapOverheadRatioReporter);
 #endif
 
 #ifdef HAVE_VSIZE_AND_RESIDENT_REPORTERS

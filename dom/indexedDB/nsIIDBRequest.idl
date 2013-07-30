@@ -7,7 +7,6 @@
 #include "nsISupports.idl"
 
 interface nsIDOMEventListener;
-interface nsIIDBTransaction;
 
 /**
  * IDBRequest interface.  See
@@ -24,7 +23,8 @@ interface nsIIDBRequest : nsISupports
 
   readonly attribute nsISupports source;
 
-  readonly attribute nsIIDBTransaction transaction;
+  // This is a nsIIDBTransaction
+  readonly attribute nsISupports transaction;
 
   // "pending" or "done"
   readonly attribute DOMString readyState;

@@ -12,36 +12,65 @@
 namespace mozilla {
 namespace layers {
 
+class TextureHost;
+
 /**
- * Used for compositing Image and Canvas layers, matched on the content-side
- * by an ImageClient or CanvasClient.
- *
- * ImageHosts support Update., not UpdateThebes().
+ * ImageHost. Works with ImageClientSingle and ImageClientBuffered
  */
 class ImageHost : public CompositableHost
 {
 public:
-  DeprecatedTextureHost* GetDeprecatedTextureHost() MOZ_OVERRIDE { return nullptr; }
+  ImageHost(const TextureInfo& aTextureInfo);
+  ~ImageHost();
+
+  virtual CompositableType GetType() { return mTextureInfo.mCompositableType; }
+
+  virtual void Composite(EffectChain& aEffectChain,
+                         float aOpacity,
+                         const gfx::Matrix4x4& aTransform,
+                         const gfx::Point& aOffset,
+                         const gfx::Filter& aFilter,
+                         const gfx::Rect& aClipRect,
+                         const nsIntRegion* aVisibleRegion = nullptr,
+                         TiledLayerProperties* aLayerProperties = nullptr);
+
+  virtual void UseTextureHost(TextureHost* aTexture) MOZ_OVERRIDE;
+
+  virtual TextureHost* GetTextureHost() MOZ_OVERRIDE;
+
+  virtual void SetPictureRect(const nsIntRect& aPictureRect) MOZ_OVERRIDE
+  {
+    mPictureRect = aPictureRect;
+    mHasPictureRect = true;
+  }
+
+  virtual LayerRenderState GetRenderState() MOZ_OVERRIDE;
+
+  virtual void Dump(FILE* aFile=NULL,
+                    const char* aPrefix="",
+                    bool aDumpHtml=false) MOZ_OVERRIDE;
+
+#ifdef MOZ_LAYERS_HAVE_LOG
+  virtual void PrintInfo(nsACString& aTo, const char* aPrefix);
+#endif
+
+#ifdef MOZ_DUMP_PAINTING
+  virtual already_AddRefed<gfxImageSurface> GetAsSurface() MOZ_OVERRIDE;
+#endif
 
 protected:
-  ImageHost(const TextureInfo& aTextureInfo)
-  : CompositableHost(aTextureInfo)
-  {
-    MOZ_COUNT_CTOR(ImageHost);
-  }
 
-  ~ImageHost()
-  {
-    MOZ_COUNT_DTOR(ImageHost);
-  }
+  RefPtr<TextureHost> mFrontBuffer;
+  nsIntRect mPictureRect;
+  bool mHasPictureRect;
 };
 
 // ImageHost with a single DeprecatedTextureHost
-class DeprecatedImageHostSingle : public ImageHost
+class DeprecatedImageHostSingle : public CompositableHost
 {
 public:
   DeprecatedImageHostSingle(const TextureInfo& aTextureInfo)
-    : ImageHost(aTextureInfo)
+    : CompositableHost(aTextureInfo)
     , mDeprecatedTextureHost(nullptr)
     , mHasPictureRect(false)
   {}
@@ -67,7 +96,7 @@ public:
   virtual bool Update(const SurfaceDescriptor& aImage,
                       SurfaceDescriptor* aResult = nullptr) MOZ_OVERRIDE
   {
-    return ImageHost::Update(aImage, aResult);
+    return CompositableHost::Update(aImage, aResult);
   }
 
   virtual void SetPictureRect(const nsIntRect& aPictureRect) MOZ_OVERRIDE
@@ -76,13 +105,7 @@ public:
     mHasPictureRect = true;
   }
 
-  virtual LayerRenderState GetRenderState() MOZ_OVERRIDE
-  {
-    if (mDeprecatedTextureHost) {
-      return mDeprecatedTextureHost->GetRenderState();
-    }
-    return LayerRenderState();
-  }
+  virtual LayerRenderState GetRenderState() MOZ_OVERRIDE;
 
   virtual void SetCompositor(Compositor* aCompositor) MOZ_OVERRIDE;
 
@@ -95,10 +118,7 @@ public:
 #endif
 
 #ifdef MOZ_DUMP_PAINTING
-  virtual already_AddRefed<gfxImageSurface> GetAsSurface() MOZ_OVERRIDE
-  {
-    return mDeprecatedTextureHost->GetAsSurface();
-  }
+  virtual already_AddRefed<gfxImageSurface> GetAsSurface() MOZ_OVERRIDE;
 #endif
 
 protected:

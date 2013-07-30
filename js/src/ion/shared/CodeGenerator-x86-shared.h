@@ -15,6 +15,8 @@ namespace ion {
 class OutOfLineBailout;
 class OutOfLineUndoALUOperation;
 class MulNegativeZeroCheck;
+class ModOverflowCheck;
+class ReturnZero;
 class OutOfLineTableSwitch;
 
 class CodeGeneratorX86Shared : public CodeGeneratorShared
@@ -118,6 +120,8 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
     bool visitOutOfLineBailout(OutOfLineBailout *ool);
     bool visitOutOfLineUndoALUOperation(OutOfLineUndoALUOperation *ool);
     bool visitMulNegativeZeroCheck(MulNegativeZeroCheck *ool);
+    bool visitModOverflowCheck(ModOverflowCheck *ool);
+    bool visitReturnZero(ReturnZero *ool);
     bool visitOutOfLineTableSwitch(OutOfLineTableSwitch *ool);
     bool generateInvalidateEpilogue();
 };

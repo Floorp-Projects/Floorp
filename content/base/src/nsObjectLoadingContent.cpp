@@ -186,9 +186,12 @@ CheckPluginStopEvent::Run()
     nsIDocument* currentDoc = content->GetCurrentDoc();
     if (currentDoc) {
       currentDoc->FlushPendingNotifications(Flush_Layout);
-      if (objLC->mPendingCheckPluginStopEvent != this ||
-          content->GetPrimaryFrame()) {
-        LOG(("OBJLC [%p]: Event superseded or frame gained during layout flush",
+      if (objLC->mPendingCheckPluginStopEvent != this) {
+        LOG(("OBJLC [%p]: CheckPluginStopEvent - superseded in layout flush",
+             this));
+        return NS_OK;
+      } else if (content->GetPrimaryFrame()) {
+        LOG(("OBJLC [%p]: CheckPluginStopEvent - frame gained in layout flush",
              this));
         objLC->mPendingCheckPluginStopEvent = nullptr;
         return NS_OK;

@@ -38,7 +38,7 @@ ReturnKeyRange(JSContext* aCx,
   nsIXPConnect* xpc = nsContentUtils::XPConnect();
   NS_ASSERTION(xpc, "This should never be null!");
 
-  JSObject* global = JS_GetGlobalForScopeChain(aCx);
+  JSObject* global = JS::CurrentGlobalOrNull(aCx);
   if (!global) {
     NS_WARNING("Couldn't get global object!");
     return false;

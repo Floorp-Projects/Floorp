@@ -39,6 +39,8 @@ private:
 
     void Reset();
 
+    typedef TimeStamp MS_TimeStamp;
+
 private:
     CredHandle   mCred;
     CtxtHandle   mCtxt;

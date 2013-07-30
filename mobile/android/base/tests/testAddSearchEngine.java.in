@@ -14,9 +14,7 @@ import java.util.ArrayList;
  * 3. Get the number of search engines after adding the new one
  */
 public class testAddSearchEngine extends PixelTest {
-
-    final int MAX_TRIES = 5;
-
+    private final int MAX_WAIT_TEST_MS = 5000;
     @Override
     protected int getTestType() {
         return TEST_MOCHITEST;
@@ -108,26 +106,33 @@ public class testAddSearchEngine extends PixelTest {
                 for (ListView view : views) {
                     ListAdapter adapter = view.getAdapter();
                     if (adapter != null) {
-                        searchEngineCount = adapter.getCount();
-                        if (searchEngineCount == expectedCount) {
-                            return true;
-                        } else {
-                            mAsserter.dumpLog("Found "+searchEngineCount+" search engines");
+                        // Get only the SearchEngineRow views since getCurrentViews can also add to the ArrayList also the Top Sites entries
+                        try {
+                                ClassLoader classLoader = getActivity().getClassLoader();
+                                Class searchEngineRow = classLoader.loadClass("org.mozilla.gecko.SearchEngineRow");
+                                for (int i = 0; i < adapter.getCount(); i++ ) {
+                                    View item = view.getChildAt(i);
+                                    if (searchEngineRow.isInstance(item)) {
+                                        searchEngineCount++;
+                                    }
+                                }
+                        } catch (Exception e) {
+                             mAsserter.dumpLog("Exception in verifyDisplayedSearchEnginesCount", e);
                         }
                     } 
                 }
-                return false;
+                if (searchEngineCount == expectedCount) {
+                    return true;
+                } else {
+                    mAsserter.dumpLog("The wrong number of search engines was found. Found " + searchEngineCount + " search engines");
+                    return false;
+                }
             }
-        }, MAX_WAIT_MS);
+        }, MAX_WAIT_TEST_MS);
         
         // Close the Awesomescreen
         mActions.sendSpecialKey(Actions.SpecialKey.BACK);
         waitForText(waitText);
-        if (correctNumSearchEnginesDisplayed) {
-            mAsserter.ok(correctNumSearchEnginesDisplayed, expectedCount + " Search Engines should be displayed", "The correct number of Search Engines has been displayed");
-        } else {
-            // TODO: Investigate more why the number of displayed searchengines is not correctly determined here
-            mAsserter.todo_is(correctNumSearchEnginesDisplayed, true, "The number of Search Engines displayed is wrong");
-        }
+        mAsserter.ok(correctNumSearchEnginesDisplayed, expectedCount + " Search Engines should be displayed" , "The correct number of Search Engines has been displayed");
    }
 }

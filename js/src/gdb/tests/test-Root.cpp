@@ -17,7 +17,7 @@ void callee(JS::Handle<JSObject *> obj, JS::MutableHandle<JSObject *> mutableObj
 }
 
 FRAGMENT(Root, handle) {
-  JS::Rooted<JSObject *> global(cx, JS_GetGlobalForScopeChain(cx));
+  JS::Rooted<JSObject *> global(cx, JS::CurrentGlobalOrNull(cx));
   callee(global, &global);
   (void) global;
 }

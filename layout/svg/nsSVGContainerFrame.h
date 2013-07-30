@@ -91,6 +91,13 @@ public:
                                 const nsDisplayListSet& aLists) MOZ_OVERRIDE {}
 
   virtual bool UpdateOverflow() MOZ_OVERRIDE;
+
+protected:
+  /**
+   * Traverses a frame tree, marking any nsSVGTextFrame2 frames as dirty
+   * and calling InvalidateRenderingObservers() on it.
+   */
+  static void ReflowSVGNonDisplayText(nsIFrame* aContainer);
 };
 
 /**

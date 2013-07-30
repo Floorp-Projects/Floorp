@@ -58,7 +58,7 @@ DataThrowError(JSContext *cx, unsigned argc, Value *vp)
 }
 
 static void
-ReportTypeError(JSContext *cx, Value fromValue, const char *toType)
+ReportTypeError(JSContext *cx, HandleValue fromValue, const char *toType)
 {
     char *valueStr = JS_EncodeString(cx, JS_ValueToString(cx, fromValue));
     JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_CONVERT_TO,
@@ -67,7 +67,7 @@ ReportTypeError(JSContext *cx, Value fromValue, const char *toType)
 }
 
 static void
-ReportTypeError(JSContext *cx, Value fromValue, JSString *toType)
+ReportTypeError(JSContext *cx, HandleValue fromValue, JSString *toType)
 {
     const char *fnName = JS_EncodeString(cx, toType);
     ReportTypeError(cx, fromValue, fnName);
@@ -78,7 +78,7 @@ ReportTypeError(JSContext *cx, Value fromValue, JSString *toType)
 // called.
 // So yes this call is with side effects.
 static bool
-ReportTypeError(JSContext *cx, Value fromValue, HandleObject exemplar)
+ReportTypeError(JSContext *cx, HandleValue fromValue, HandleObject exemplar)
 {
     RootedValue v(cx, ObjectValue(*exemplar));
     ReportTypeError(cx, fromValue, ToString<CanGC>(cx, v));
@@ -225,6 +225,14 @@ Class js::NumericTypeClasses[NUMERICTYPES] = {
 typedef std::vector<FieldInfo> FieldList;
 
 static
+FieldList *
+GetStructTypeFieldList(HandleObject obj)
+{
+    JS_ASSERT(IsStructType(obj));
+    return static_cast<FieldList *>(obj->getPrivate());
+}
+
+static
 bool
 LookupFieldList(FieldList *list, jsid fieldName, FieldInfo *out)
 {
@@ -259,8 +267,8 @@ IsSameStructType(JSContext *cx, HandleObject type1, HandleObject type2)
 {
     JS_ASSERT(IsStructType(type1) && IsStructType(type2));
 
-    FieldList *fieldList1 = static_cast<FieldList *>(type1->getPrivate());
-    FieldList *fieldList2 = static_cast<FieldList *>(type2->getPrivate());
+    FieldList *fieldList1 = GetStructTypeFieldList(type1);
+    FieldList *fieldList2 = GetStructTypeFieldList(type2);
 
     if (fieldList1->size() != fieldList2->size())
         return false;
@@ -402,10 +410,8 @@ NumericType<T>::call(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     if (args.length() < 1) {
-        char *fnName = JS_EncodeString(cx, args.callee().as<JSFunction>().atom());
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_MORE_ARGS_NEEDED,
-                             fnName, "0", "s");
-        JS_free(cx, (void *) fnName);
+                             args.callee().getClass()->name, "0", "s");
         return false;
     }
 
@@ -677,10 +683,11 @@ ArrayType::create(JSContext *cx, HandleObject arrayTypeGlobal,
                                   NULL, NULL, JSPROP_READONLY | JSPROP_PERMANENT))
         return NULL;
 
-    obj->setFixedSlot(SLOT_MEMSIZE,
-                      Int32Value(::GetMemSize(cx, elementType) * length));
+    RootedValue slotMemsizeVal(cx, Int32Value(::GetMemSize(cx, elementType) * length));
+    obj->setFixedSlot(SLOT_MEMSIZE, slotMemsizeVal);
 
-    obj->setFixedSlot(SLOT_ALIGN, Int32Value(::GetAlign(cx, elementType)));
+    RootedValue slotAlignVal(cx, Int32Value(::GetAlign(cx, elementType)));
+    obj->setFixedSlot(SLOT_ALIGN, slotAlignVal);
 
     RootedObject prototypeObj(cx,
         SetupAndGetPrototypeObjectForComplexTypeInstance(cx, arrayTypeGlobal));
@@ -769,7 +776,8 @@ DataInstanceUpdate(JSContext *cx, unsigned argc, Value *vp)
 
     RootedObject thisObj(cx, args.thisv().toObjectOrNull());
     if (!IsBlock(thisObj)) {
-        ReportTypeError(cx, ObjectValue(*thisObj), "BinaryData block");
+        RootedValue thisObjVal(cx, ObjectValue(*thisObj));
+        ReportTypeError(cx, thisObjVal, "BinaryData block");
         return false;
     }
 
@@ -825,8 +833,8 @@ ArrayType::repeat(JSContext *cx, unsigned int argc, Value *vp)
 
     RootedObject thisObj(cx, args.thisv().toObjectOrNull());
     if (!IsArrayType(thisObj)) {
-        JSString *valueStr = JS_ValueToString(cx, args.thisv());
         char *valueChars = const_cast<char*>("(unknown type)");
+        RootedString valueStr(cx, JS_ValueToString(cx, args.thisv()));
         if (valueStr)
             valueChars = JS_EncodeString(cx, valueStr);
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_INCOMPATIBLE_PROTO, "ArrayType", "repeat", valueChars);
@@ -899,7 +907,7 @@ BinaryArray::createEmpty(JSContext *cx, HandleObject type)
 JSObject *
 BinaryArray::create(JSContext *cx, HandleObject type)
 {
-    JSObject *obj = createEmpty(cx, type);
+    RootedObject obj(cx, createEmpty(cx, type));
     if (!obj)
         return NULL;
 
@@ -915,7 +923,7 @@ BinaryArray::create(JSContext *cx, HandleObject type)
 JSObject *
 BinaryArray::create(JSContext *cx, HandleObject type, HandleValue initial)
 {
-    JSObject *obj = create(cx, type);
+    RootedObject obj(cx, create(cx, type));
     if (!obj)
         return NULL;
 
@@ -931,7 +939,7 @@ BinaryArray::create(JSContext *cx, HandleObject type,
                     HandleObject owner, size_t offset)
 {
     JS_ASSERT(IsBlock(owner));
-    JSObject *obj = createEmpty(cx, type);
+    RootedObject obj(cx, createEmpty(cx, type));
     if (!obj)
         return NULL;
 
@@ -1034,7 +1042,8 @@ JSBool BinaryArray::subarray(JSContext *cx, unsigned int argc, Value *vp)
 
     RootedObject thisObj(cx, &args.thisv().toObject());
     if (!IsBinaryArray(thisObj)) {
-        ReportTypeError(cx, ObjectValue(*thisObj), "binary array");
+        RootedValue thisObjVal(cx, ObjectValue(*thisObj));
+        ReportTypeError(cx, thisObjVal, "binary array");
         return false;
     }
 
@@ -1104,7 +1113,8 @@ BinaryArray::fill(JSContext *cx, unsigned int argc, Value *vp)
 
     RootedObject thisObj(cx, args.thisv().toObjectOrNull());
     if (!IsBinaryArray(thisObj)) {
-        ReportTypeError(cx, ObjectValue(*thisObj), "binary array");
+        RootedValue thisObjVal(cx, ObjectValue(*thisObj));
+        ReportTypeError(cx, thisObjVal, "binary array");
         return false;
     }
 
@@ -1114,7 +1124,8 @@ BinaryArray::fill(JSContext *cx, unsigned int argc, Value *vp)
     RootedObject type(cx, GetType(thisObj));
     RootedObject funArrayType(cx, funArrayTypeVal.toObjectOrNull());
     if (!IsSameBinaryDataType(cx, funArrayType, type)) {
-        ReportTypeError(cx, ObjectValue(*thisObj), funArrayType);
+        RootedValue thisObjVal(cx, ObjectValue(*thisObj));
+        ReportTypeError(cx, thisObjVal, funArrayType);
         return false;
     }
 
@@ -1513,16 +1524,17 @@ StructType::layout(JSContext *cx, HandleObject structType, HandleObject fields)
     uint32_t structAlign = 0;
     uint32_t structMemSize = 0;
     uint32_t structByteSize = 0;
+    size_t structTail = 0;
 
     for (unsigned int i = 0; i < fieldProps.length(); i++) {
         RootedValue fieldTypeVal(cx);
         RootedId id(cx, fieldProps[i]);
         if (!JSObject::getGeneric(cx, fields, fields, id, &fieldTypeVal))
-            return false;
+            goto error;
 
         RootedObject fieldType(cx, fieldTypeVal.toObjectOrNull());
         if (!IsBinaryType(fieldType))
-            return false;
+            goto error;
 
         size_t fieldMemSize = GetMemSize(cx, fieldType);
         size_t fieldAlign = GetAlign(cx, fieldType);
@@ -1535,7 +1547,7 @@ StructType::layout(JSContext *cx, HandleObject structType, HandleObject fields)
 
         RootedValue fieldTypeBytes(cx);
         if (!JSObject::getProperty(cx, fieldType, fieldType, cx->names().bytes, &fieldTypeBytes))
-            return false;
+            goto error;
 
         JS_ASSERT(fieldTypeBytes.isInt32());
         structByteSize += fieldTypeBytes.toInt32();
@@ -1545,7 +1557,7 @@ StructType::layout(JSContext *cx, HandleObject structType, HandleObject fields)
         (*fieldList)[i].offset = fieldOffset;
     }
 
-    size_t structTail = AlignBytes(structMemSize, structAlign);
+    structTail = AlignBytes(structMemSize, structAlign);
     JS_ASSERT(structTail >= structMemSize);
     structMemSize = structTail;
 
@@ -1556,9 +1568,13 @@ StructType::layout(JSContext *cx, HandleObject structType, HandleObject fields)
     if (!JS_DefineProperty(cx, structType, "bytes",
                            Int32Value(structByteSize), NULL, NULL,
                            JSPROP_READONLY | JSPROP_PERMANENT))
-        return false;
+        goto error;
 
     return true;
+
+error:
+    delete fieldList;
+    return false;
 }
 
 bool
@@ -1586,7 +1602,7 @@ StructType::convertAndCopyTo(JSContext *cx, HandleObject exemplar,
     if (!GetPropertyNames(cx, valRooted, JSITER_OWNONLY, &ownProps))
         return ReportTypeError(cx, from, exemplar);
 
-    FieldList *fieldList = static_cast<FieldList *>(exemplar->getPrivate());
+    FieldList *fieldList = GetStructTypeFieldList(exemplar);
 
     if (ownProps.length() != fieldList->size()) {
         return ReportTypeError(cx, from, exemplar);
@@ -1636,7 +1652,8 @@ StructType::create(JSContext *cx, HandleObject structTypeGlobal,
         return NULL;
 
     if (!StructType::layout(cx, obj, fields)) {
-        ReportTypeError(cx, ObjectValue(*fields), "StructType field specifier");
+        RootedValue fieldsVal(cx, ObjectValue(*fields));
+        ReportTypeError(cx, fieldsVal, "StructType field specifier");
         return NULL;
     }
 
@@ -1694,8 +1711,8 @@ StructType::construct(JSContext *cx, unsigned int argc, Value *vp)
 void
 StructType::finalize(FreeOp *op, JSObject *obj)
 {
-    FieldList *list = static_cast<FieldList *>(obj->getPrivate());
-    delete list;
+    FieldList *fieldList = static_cast<FieldList *>(obj->getPrivate());
+    delete fieldList;
 }
 
 void
@@ -1722,7 +1739,7 @@ StructType::toString(JSContext *cx, unsigned int argc, Value *vp)
     StringBuffer contents(cx);
     contents.append("StructType({");
 
-    FieldList *fieldList = static_cast<FieldList *>(thisObj->getPrivate());
+    FieldList *fieldList = GetStructTypeFieldList(thisObj);
     JS_ASSERT(fieldList);
 
     for (FieldList::const_iterator it = fieldList->begin(); it != fieldList->end(); ++it) {
@@ -1732,9 +1749,9 @@ StructType::toString(JSContext *cx, unsigned int argc, Value *vp)
         contents.append(IdToString(cx, it->name));
         contents.append(": ");
 
-        Value fieldStringVal;
+        RootedValue fieldStringVal(cx);
         if (!JS_CallFunctionName(cx, it->type,
-                                 "toString", 0, NULL, &fieldStringVal))
+                                 "toString", 0, NULL, fieldStringVal.address()))
             return false;
 
         contents.append(fieldStringVal.toString());
@@ -1769,7 +1786,7 @@ BinaryStruct::createEmpty(JSContext *cx, HandleObject type)
 JSObject *
 BinaryStruct::create(JSContext *cx, HandleObject type)
 {
-    JSObject *obj = createEmpty(cx, type);
+    RootedObject obj(cx, createEmpty(cx, type));
     if (!obj)
         return NULL;
 
@@ -1787,7 +1804,7 @@ BinaryStruct::create(JSContext *cx, HandleObject type,
                      HandleObject owner, size_t offset)
 {
     JS_ASSERT(IsBlock(owner));
-    JSObject *obj = createEmpty(cx, type);
+    RootedObject obj(cx, createEmpty(cx, type));
     if (!obj)
         return NULL;
 
@@ -1808,7 +1825,7 @@ BinaryStruct::construct(JSContext *cx, unsigned int argc, Value *vp)
         return false;
     }
 
-    JSObject *obj = create(cx, callee);
+    RootedObject obj(cx, create(cx, callee));
 
     if (obj)
         args.rval().setObject(*obj);
@@ -1844,7 +1861,7 @@ BinaryStruct::obj_enumerate(JSContext *cx, HandleObject obj, JSIterateOp enum_op
 
     RootedObject type(cx, GetType(obj));
 
-    FieldList *fieldList = static_cast<FieldList *>(type->getPrivate());
+    FieldList *fieldList = GetStructTypeFieldList(type);
     JS_ASSERT(fieldList);
 
     uint32_t index;
@@ -1891,7 +1908,7 @@ BinaryStruct::obj_getGeneric(JSContext *cx, HandleObject obj,
     RootedObject type(cx, GetType(obj));
     JS_ASSERT(IsStructType(type));
 
-    FieldList *fieldList = static_cast<FieldList *>(type->getPrivate());
+    FieldList *fieldList = GetStructTypeFieldList(type);
     JS_ASSERT(fieldList);
 
     FieldInfo fieldInfo;
@@ -1942,7 +1959,7 @@ BinaryStruct::obj_setGeneric(JSContext *cx, HandleObject obj, HandleId id,
     RootedObject type(cx, GetType(obj));
     JS_ASSERT(IsStructType(type));
 
-    FieldList *fieldList = static_cast<FieldList *>(type->getPrivate());
+    FieldList *fieldList = GetStructTypeFieldList(type);
     JS_ASSERT(fieldList);
 
     FieldInfo fieldInfo;
@@ -2235,7 +2252,7 @@ js_InitBinaryDataClasses(JSContext *cx, HandleObject obj)
     JS_ASSERT(obj->is<GlobalObject>());
     Rooted<GlobalObject *> global(cx, &obj->as<GlobalObject>());
 
-    JSObject *funProto = JS_GetFunctionPrototype(cx, global);
+    RootedObject funProto(cx, JS_GetFunctionPrototype(cx, global));
 #define BINARYDATA_NUMERIC_DEFINE(constant_, type_)\
     do {\
         RootedObject numFun(cx, JS_DefineObject(cx, global, #type_,\

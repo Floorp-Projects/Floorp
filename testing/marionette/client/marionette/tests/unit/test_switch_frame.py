@@ -12,9 +12,17 @@ def switch_to_window_verify(test, start_url, frame, verify_title, verify_url):
     test.assertEqual("about:blank", test.marionette.execute_script("return window.location.href;"))
     test_html = test.marionette.absolute_url(start_url)
     test.marionette.navigate(test_html)
+    test.assertEqual(test.marionette.get_active_frame(), None)
     test.assertNotEqual("about:blank", test.marionette.execute_script("return window.location.href;"))
     test.assertEqual(verify_title, test.marionette.title)
     test.marionette.switch_to_frame(frame)
+    test.assertTrue(verify_url in test.marionette.get_url())
+    inner_frame_element = test.marionette.get_active_frame()
+    # test that we can switch back to main frame, then switch back to the
+    # inner frame with the value we got from get_active_frame
+    test.marionette.switch_to_frame()
+    test.assertEqual(verify_title, test.marionette.title)
+    test.marionette.switch_to_frame(inner_frame_element)
     test.assertTrue(verify_url in test.marionette.get_url())
 
 class TestSwitchFrame(MarionetteTestCase):
@@ -58,41 +66,3 @@ class TestSwitchFrame(MarionetteTestCase):
 
         self.marionette.find_element("id", "checkbox")
 
-class TestSwitchFrameChrome(MarionetteTestCase):
-    def setUp(self):
-        MarionetteTestCase.setUp(self)
-        self.marionette.set_context("chrome")
-        self.win = self.marionette.current_window_handle
-        self.marionette.execute_script("window.open('chrome://marionette/content/test.xul', 'foo', 'chrome,centerscreen');")
-        self.marionette.switch_to_window('foo')
-        self.assertNotEqual(self.win, self.marionette.current_window_handle)
-
-    def tearDown(self):
-        self.assertNotEqual(self.win, self.marionette.current_window_handle)
-        self.marionette.execute_script("window.close();")
-        self.marionette.switch_to_window(self.win)
-        MarionetteTestCase.tearDown(self)
-
-    def test_switch_simple(self):
-        self.assertTrue("test.xul" in self.marionette.get_url())
-        self.marionette.switch_to_frame(0)
-        self.assertTrue("test2.xul" in self.marionette.get_url())
-        self.marionette.switch_to_frame()
-        self.assertTrue("test.xul" in self.marionette.get_url())
-        self.marionette.switch_to_frame("iframe")
-        self.assertTrue("test2.xul" in self.marionette.get_url())
-        self.marionette.switch_to_frame()
-        self.assertTrue("test.xul" in self.marionette.get_url())
-        self.marionette.switch_to_frame("iframename")
-        self.assertTrue("test2.xul" in self.marionette.get_url())
-        self.marionette.switch_to_frame()
-        self.assertTrue("test.xul" in self.marionette.get_url())
-        
-    def test_stack_trace(self):
-        self.assertTrue("test.xul" in self.marionette.get_url())
-        self.marionette.switch_to_frame(0)
-        self.assertRaises(JavascriptException, self.marionette.execute_async_script, "foo();")
-        try:
-            self.marionette.execute_async_script("foo();")
-        except JavascriptException as e:
-            self.assertTrue("foo" in e.msg)

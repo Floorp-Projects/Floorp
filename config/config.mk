@@ -235,10 +235,9 @@ _ENABLE_PIC=1
 
 ifdef LIBXUL_LIBRARY
 ifdef IS_COMPONENT
-$(error IS_COMPONENT is set, but is not compatible with LIBXUL_LIBRARY)
+ifndef MODULE_NAME
+$(error Component makefile does not specify MODULE_NAME.)
 endif
-ifdef MODULE_NAME
-$(error MODULE_NAME is $(MODULE_NAME) but MODULE_NAME and LIBXUL_LIBRARY are not compatible)
 endif
 ifdef FORCE_STATIC_LIB
 $(error Makefile sets FORCE_STATIC_LIB which was already implied by LIBXUL_LIBRARY)

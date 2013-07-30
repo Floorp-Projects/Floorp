@@ -327,7 +327,7 @@ BaselineCompiler::emitIC(ICStub *stub, bool isForOp)
     return true;
 }
 
-typedef bool (*DebugPrologueFn)(JSContext *, BaselineFrame *, JSBool *);
+typedef bool (*DebugPrologueFn)(JSContext *, BaselineFrame *, bool *);
 static const VMFunction DebugPrologueInfo = FunctionInfo<DebugPrologueFn>(ion::DebugPrologue);
 
 bool
@@ -781,9 +781,9 @@ BaselineCompiler::emitTest(bool branchIfTrue)
     frame.popRegsAndSync(1);
 
     if (!knownBoolean && !emitToBoolean())
-            return false;
+        return false;
 
-    // IC will leave a JSBool value (guaranteed) in R0, just need to branch on it.
+    // IC will leave a BooleanValue in R0, just need to branch on it.
     masm.branchTestBooleanTruthy(branchIfTrue, R0, labelOf(pc + GET_JUMP_OFFSET(pc)));
     return true;
 }
@@ -1554,7 +1554,7 @@ BaselineCompiler::emit_JSOP_ENUMELEM()
     return true;
 }
 
-typedef bool (*DeleteElementFn)(JSContext *, HandleValue, HandleValue, JSBool *);
+typedef bool (*DeleteElementFn)(JSContext *, HandleValue, HandleValue, bool *);
 static const VMFunction DeleteElementStrictInfo = FunctionInfo<DeleteElementFn>(DeleteElement<true>);
 static const VMFunction DeleteElementNonStrictInfo = FunctionInfo<DeleteElementFn>(DeleteElement<false>);
 
@@ -1700,7 +1700,7 @@ BaselineCompiler::emit_JSOP_GETXPROP()
     return emit_JSOP_GETPROP();
 }
 
-typedef bool (*DeletePropertyFn)(JSContext *, HandleValue, HandlePropertyName, JSBool *);
+typedef bool (*DeletePropertyFn)(JSContext *, HandleValue, HandlePropertyName, bool *);
 static const VMFunction DeletePropertyStrictInfo = FunctionInfo<DeletePropertyFn>(DeleteProperty<true>);
 static const VMFunction DeletePropertyNonStrictInfo = FunctionInfo<DeletePropertyFn>(DeleteProperty<false>);
 
@@ -1991,7 +1991,7 @@ BaselineCompiler::emit_JSOP_DEFFUN()
 }
 
 typedef bool (*InitPropGetterSetterFn)(JSContext *, jsbytecode *, HandleObject, HandlePropertyName,
-                                       HandleValue);
+                                       HandleObject);
 static const VMFunction InitPropGetterSetterInfo =
     FunctionInfo<InitPropGetterSetterFn>(InitGetterSetterOperation);
 
@@ -2001,16 +2001,17 @@ BaselineCompiler::emitInitPropGetterSetter()
     JS_ASSERT(JSOp(*pc) == JSOP_INITPROP_GETTER ||
               JSOp(*pc) == JSOP_INITPROP_SETTER);
 
-    // Load value in R0 but keep it on the stack for the decompiler.
+    // Keep values on the stack for the decompiler.
     frame.syncStack(0);
-    masm.loadValue(frame.addressOfStackValue(frame.peek(-1)), R0);
 
     prepareVMCall();
 
-    pushArg(R0);
-    pushArg(ImmGCPtr(script->getName(pc)));
-    masm.extractObject(frame.addressOfStackValue(frame.peek(-2)), R0.scratchReg());
+    masm.extractObject(frame.addressOfStackValue(frame.peek(-1)), R0.scratchReg());
+    masm.extractObject(frame.addressOfStackValue(frame.peek(-2)), R1.scratchReg());
+
     pushArg(R0.scratchReg());
+    pushArg(ImmGCPtr(script->getName(pc)));
+    pushArg(R1.scratchReg());
     pushArg(ImmWord(pc));
 
     if (!callVM(InitPropGetterSetterInfo))
@@ -2033,7 +2034,7 @@ BaselineCompiler::emit_JSOP_INITPROP_SETTER()
 }
 
 typedef bool (*InitElemGetterSetterFn)(JSContext *, jsbytecode *, HandleObject, HandleValue,
-                                       HandleValue);
+                                       HandleObject);
 static const VMFunction InitElemGetterSetterInfo =
     FunctionInfo<InitElemGetterSetterFn>(InitGetterSetterOperation);
 
@@ -2047,11 +2048,11 @@ BaselineCompiler::emitInitElemGetterSetter()
     // decompiler.
     frame.syncStack(0);
     masm.loadValue(frame.addressOfStackValue(frame.peek(-2)), R0);
-    masm.loadValue(frame.addressOfStackValue(frame.peek(-1)), R1);
+    masm.extractObject(frame.addressOfStackValue(frame.peek(-1)), R1.scratchReg());
 
     prepareVMCall();
 
-    pushArg(R1);
+    pushArg(R1.scratchReg());
     pushArg(R0);
     masm.extractObject(frame.addressOfStackValue(frame.peek(-3)), R0.scratchReg());
     pushArg(R0.scratchReg());
@@ -2472,7 +2473,7 @@ BaselineCompiler::emit_JSOP_EXCEPTION()
     return true;
 }
 
-typedef bool (*OnDebuggerStatementFn)(JSContext *, BaselineFrame *, jsbytecode *pc, JSBool *);
+typedef bool (*OnDebuggerStatementFn)(JSContext *, BaselineFrame *, jsbytecode *pc, bool *);
 static const VMFunction OnDebuggerStatementInfo =
     FunctionInfo<OnDebuggerStatementFn>(ion::OnDebuggerStatement);
 
@@ -2499,7 +2500,7 @@ BaselineCompiler::emit_JSOP_DEBUGGER()
     return true;
 }
 
-typedef bool (*DebugEpilogueFn)(JSContext *, BaselineFrame *, JSBool);
+typedef bool (*DebugEpilogueFn)(JSContext *, BaselineFrame *, bool);
 static const VMFunction DebugEpilogueInfo = FunctionInfo<DebugEpilogueFn>(ion::DebugEpilogue);
 
 bool

@@ -1277,6 +1277,15 @@ nsComputedDOMStyle::DoGetFontSizeAdjust()
 }
 
 CSSValue*
+nsComputedDOMStyle::DoGetOSXFontSmoothing()
+{
+  nsROCSSPrimitiveValue* val = new nsROCSSPrimitiveValue;
+  val->SetIdent(nsCSSProps::ValueToKeywordEnum(StyleFont()->mFont.smoothing,
+                                               nsCSSProps::kFontSmoothingKTable));
+  return val;
+}
+
+CSSValue*
 nsComputedDOMStyle::DoGetFontStretch()
 {
   nsROCSSPrimitiveValue* val = new nsROCSSPrimitiveValue;
@@ -5137,6 +5146,7 @@ nsComputedDOMStyle::GetQueryablePropertyMap(uint32_t* aLength)
     COMPUTED_STYLE_MAP_ENTRY(hyphens,                       Hyphens),
     COMPUTED_STYLE_MAP_ENTRY(image_region,                  ImageRegion),
     COMPUTED_STYLE_MAP_ENTRY(orient,                        Orient),
+    COMPUTED_STYLE_MAP_ENTRY(osx_font_smoothing,            OSXFontSmoothing),
     COMPUTED_STYLE_MAP_ENTRY_LAYOUT(_moz_outline_radius_bottomLeft, OutlineRadiusBottomLeft),
     COMPUTED_STYLE_MAP_ENTRY_LAYOUT(_moz_outline_radius_bottomRight,OutlineRadiusBottomRight),
     COMPUTED_STYLE_MAP_ENTRY_LAYOUT(_moz_outline_radius_topLeft,    OutlineRadiusTopLeft),

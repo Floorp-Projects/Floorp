@@ -6153,9 +6153,9 @@ GenerateOperationCallbackExit(ModuleCompiler &m, Label *throwLabel)
     LoadJSContextFromActivation(masm, activation, IntArgReg0);
 #endif
 
-    JSBool (*pf)(JSContext*) = js_HandleExecutionInterrupt;
+    bool (*pf)(JSContext*) = js_HandleExecutionInterrupt;
     masm.call(ImmWord(JS_FUNC_TO_DATA_PTR(void*, pf)));
-    masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, throwLabel);
+    masm.branchIfFalseBool(ReturnReg, throwLabel);
 
     // Restore the StackPointer to it's position before the call.
     masm.mov(ABIArgGenerator::NonVolatileReg, StackPointer);
@@ -6185,9 +6185,9 @@ GenerateOperationCallbackExit(ModuleCompiler &m, Label *throwLabel)
     masm.loadPtr(Address(IntArgReg0, AsmJSActivation::offsetOfContext()), IntArgReg0);
 
     masm.PushRegsInMask(RegisterSet(GeneralRegisterSet(0), FloatRegisterSet(FloatRegisters::AllMask)));   // save all FP registers
-    JSBool (*pf)(JSContext*) = js_HandleExecutionInterrupt;
+    bool (*pf)(JSContext*) = js_HandleExecutionInterrupt;
     masm.call(ImmWord(JS_FUNC_TO_DATA_PTR(void*, pf)));
-    masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, throwLabel);
+    masm.branchIfFalseBool(ReturnReg, throwLabel);
 
     // Restore the machine state to before the interrupt. this will set the pc!
     masm.PopRegsInMask(RegisterSet(GeneralRegisterSet(0), FloatRegisterSet(FloatRegisters::AllMask)));   // restore all FP registers

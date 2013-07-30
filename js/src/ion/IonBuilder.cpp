@@ -1339,6 +1339,16 @@ IonBuilder::inspectOpcode(JSOp op)
         return jsop_initprop(name);
       }
 
+      case JSOP_INITPROP_GETTER:
+      case JSOP_INITPROP_SETTER: {
+        PropertyName *name = info().getAtom(pc)->asPropertyName();
+        return jsop_initprop_getter_setter(name);
+      }
+
+      case JSOP_INITELEM_GETTER:
+      case JSOP_INITELEM_SETTER:
+        return jsop_initelem_getter_setter();
+
       case JSOP_ENDINIT:
         return true;
 
@@ -5442,6 +5452,29 @@ IonBuilder::jsop_initprop(HandlePropertyName name)
 
     current->add(store);
     return resumeAfter(store);
+}
+
+bool
+IonBuilder::jsop_initprop_getter_setter(PropertyName *name)
+{
+    MDefinition *value = current->pop();
+    MDefinition *obj = current->peek(-1);
+
+    MInitPropGetterSetter *init = MInitPropGetterSetter::New(obj, name, value);
+    current->add(init);
+    return resumeAfter(init);
+}
+
+bool
+IonBuilder::jsop_initelem_getter_setter()
+{
+    MDefinition *value = current->pop();
+    MDefinition *id = current->pop();
+    MDefinition *obj = current->peek(-1);
+
+    MInitElemGetterSetter *init = MInitElemGetterSetter::New(obj, id, value);
+    current->add(init);
+    return resumeAfter(init);
 }
 
 MBasicBlock *

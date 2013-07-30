@@ -51,20 +51,20 @@ static MOZ_CONSTEXPR_VAR FloatRegister xmm14 = { JSC::X86Registers::xmm14 };
 static MOZ_CONSTEXPR_VAR FloatRegister xmm15 = { JSC::X86Registers::xmm15 };
 
 // X86-common synonyms.
-static const Register eax = rax;
-static const Register ebx = rbx;
-static const Register ecx = rcx;
-static const Register edx = rdx;
-static const Register esi = rsi;
-static const Register edi = rdi;
-static const Register ebp = rbp;
-static const Register esp = rsp;
+static MOZ_CONSTEXPR_VAR Register eax = rax;
+static MOZ_CONSTEXPR_VAR Register ebx = rbx;
+static MOZ_CONSTEXPR_VAR Register ecx = rcx;
+static MOZ_CONSTEXPR_VAR Register edx = rdx;
+static MOZ_CONSTEXPR_VAR Register esi = rsi;
+static MOZ_CONSTEXPR_VAR Register edi = rdi;
+static MOZ_CONSTEXPR_VAR Register ebp = rbp;
+static MOZ_CONSTEXPR_VAR Register esp = rsp;
 
 static MOZ_CONSTEXPR_VAR Register InvalidReg = { JSC::X86Registers::invalid_reg };
 static MOZ_CONSTEXPR_VAR FloatRegister InvalidFloatReg = { JSC::X86Registers::invalid_xmm };
 
-static const Register StackPointer = rsp;
-static const Register FramePointer = rbp;
+static MOZ_CONSTEXPR_VAR Register StackPointer = rsp;
+static MOZ_CONSTEXPR_VAR Register FramePointer = rbp;
 static MOZ_CONSTEXPR_VAR Register JSReturnReg = rcx;
 // Avoid, except for assertions.
 static MOZ_CONSTEXPR_VAR Register JSReturnReg_Type = JSReturnReg;
@@ -103,7 +103,7 @@ static MOZ_CONSTEXPR_VAR FloatRegister FloatArgReg1 = xmm1;
 static MOZ_CONSTEXPR_VAR FloatRegister FloatArgReg2 = xmm2;
 static MOZ_CONSTEXPR_VAR FloatRegister FloatArgReg3 = xmm3;
 static const uint32_t NumFloatArgRegs = 4;
-static const FloatRegister FloatArgRegs[NumFloatArgRegs] = { xmm0, xmm1, xmm2, xmm3 };
+static MOZ_CONSTEXPR_VAR FloatRegister FloatArgRegs[NumFloatArgRegs] = { xmm0, xmm1, xmm2, xmm3 };
 #else
 static MOZ_CONSTEXPR_VAR Register IntArgReg0 = rdi;
 static MOZ_CONSTEXPR_VAR Register IntArgReg1 = rsi;

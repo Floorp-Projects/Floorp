@@ -1036,7 +1036,7 @@ var BrowserUI = {
       case "cmd_remoteTabs":
 #ifdef MOZ_SERVICES_SYNC
         if (Weave.Status.checkSetup() == Weave.CLIENT_NOT_CONFIGURED) {
-          FlyoutPanelsUI.show('SyncFlyout');
+          FlyoutPanelsUI.show('SyncFlyoutPanel');
         } else {
           PanelUI.show("remotetabs-container");
         }
@@ -1506,17 +1506,17 @@ var SettingsCharm = {
     // Options
     this.addEntry({
         label: Strings.browser.GetStringFromName("optionsCharm"),
-        onselected: function() FlyoutPanelsUI.show('PrefsFlyout')
+        onselected: function() FlyoutPanelsUI.show('PrefsFlyoutPanel')
     });
     // Sync
     this.addEntry({
         label: Strings.browser.GetStringFromName("syncCharm"),
-        onselected: function() FlyoutPanelsUI.show('SyncFlyout')
+        onselected: function() FlyoutPanelsUI.show('SyncFlyoutPanel')
     });
     // About
     this.addEntry({
         label: Strings.browser.GetStringFromName("aboutCharm1"),
-        onselected: function() FlyoutPanelsUI.show('AboutFlyout')
+        onselected: function() FlyoutPanelsUI.show('AboutFlyoutPanel')
     });
     // Help
     this.addEntry({
