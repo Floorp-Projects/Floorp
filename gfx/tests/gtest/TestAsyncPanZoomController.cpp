@@ -26,7 +26,7 @@ public:
   MOCK_METHOD1(HandleDoubleTap, void(const CSSIntPoint&));
   MOCK_METHOD1(HandleSingleTap, void(const CSSIntPoint&));
   MOCK_METHOD1(HandleLongTap, void(const CSSIntPoint&));
-  MOCK_METHOD2(SendAsyncScrollDOMEvent, void(const CSSRect &aContentRect, const CSSSize &aScrollableSize));
+  MOCK_METHOD3(SendAsyncScrollDOMEvent, void(FrameMetrics::ViewID aScrollId, const CSSRect &aContentRect, const CSSSize &aScrollableSize));
   MOCK_METHOD2(PostDelayedTask, void(Task* aTask, int aDelayMs));
 };
 
@@ -242,7 +242,7 @@ TEST(AsyncPanZoomController, Pan) {
   apzc->SetFrameMetrics(TestFrameMetrics());
   apzc->NotifyLayersUpdated(TestFrameMetrics(), true);
 
-  EXPECT_CALL(*mcc, SendAsyncScrollDOMEvent(_,_)).Times(4);
+  EXPECT_CALL(*mcc, SendAsyncScrollDOMEvent(_,_,_)).Times(4);
   EXPECT_CALL(*mcc, RequestContentRepaint(_)).Times(1);
 
   int time = 0;
@@ -274,7 +274,7 @@ TEST(AsyncPanZoomController, Fling) {
   apzc->SetFrameMetrics(TestFrameMetrics());
   apzc->NotifyLayersUpdated(TestFrameMetrics(), true);
 
-  EXPECT_CALL(*mcc, SendAsyncScrollDOMEvent(_,_)).Times(2);
+  EXPECT_CALL(*mcc, SendAsyncScrollDOMEvent(_,_,_)).Times(2);
   EXPECT_CALL(*mcc, RequestContentRepaint(_)).Times(1);
 
   int time = 0;
@@ -303,7 +303,7 @@ TEST(AsyncPanZoomController, OverScrollPanning) {
   apzc->SetFrameMetrics(TestFrameMetrics());
   apzc->NotifyLayersUpdated(TestFrameMetrics(), true);
 
-  EXPECT_CALL(*mcc, SendAsyncScrollDOMEvent(_,_)).Times(3);
+  EXPECT_CALL(*mcc, SendAsyncScrollDOMEvent(_,_,_)).Times(3);
   EXPECT_CALL(*mcc, RequestContentRepaint(_)).Times(1);
 
   // Pan sufficiently to hit overscroll behavior
@@ -361,7 +361,7 @@ SetScrollableFrameMetrics(Layer* aLayer, FrameMetrics::ViewID aScrollId, MockCon
 
   // when we do the next tree update, a new APZC will be created for this layer,
   // and that will invoke these functions once.
-  EXPECT_CALL(*mcc, SendAsyncScrollDOMEvent(_,_)).Times(1);
+  EXPECT_CALL(*mcc, SendAsyncScrollDOMEvent(_,_,_)).Times(1);
   EXPECT_CALL(*mcc, RequestContentRepaint(_)).Times(1);
 }
 
