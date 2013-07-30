@@ -148,7 +148,8 @@ abstract class HomeFragment extends Fragment {
             }
 
             case R.id.home_edit_bookmark: {
-                new EditBookmarkDialog(context).show(info.url);
+                // UI Dialog associates to the activity context, not the applications'.
+                new EditBookmarkDialog(getActivity()).show(info.url);
                 return true;
             }
 
