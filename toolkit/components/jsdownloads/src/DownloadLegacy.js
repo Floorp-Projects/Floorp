@@ -157,6 +157,19 @@ DownloadLegacyTransfer.prototype = {
   init: function DLT_init(aSource, aTarget, aDisplayName, aMIMEInfo, aStartTime,
                           aTempFile, aCancelable, aIsPrivate)
   {
+
+    let launchWhenSuccedded = false, contentType = null, launcherPath = null;
+
+    if (aMIMEInfo instanceof Ci.nsIMIMEInfo) {
+      launchWhenSuccedded = aMIMEInfo.preferredAction != Ci.nsIMIMEInfo.saveToDisk;
+      contentType = aMIMEInfo.type;
+      let appHandler = aMIMEInfo.preferredApplicationHandler;
+
+      if (appHandler instanceof Ci.nsILocalHandlerApp) {
+        launcherPath = localHandler.executable.path;
+      }
+    }
+
     // Create a new Download object associated to a DownloadLegacySaver, and
     // wait for it to be available.  This operation may cause the entire
     // download system to initialize before the object is created.
@@ -164,6 +177,9 @@ DownloadLegacyTransfer.prototype = {
       source: { url: aSource.spec, isPrivate: aIsPrivate },
       target: aTarget.QueryInterface(Ci.nsIFileURL).file,
       saver: "legacy",
+      launchWhenSuccedded: launchWhenSuccedded,
+      contentType: contentType,
+      launcherPath: launcherPath
     }).then(function DLT_I_onDownload(aDownload) {
       // Now that the saver is available, hook up the cancellation handler.
       aDownload.saver.deferCanceled.promise.then(() => {
