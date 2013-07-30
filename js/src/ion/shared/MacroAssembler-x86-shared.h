@@ -407,6 +407,12 @@ class MacroAssemblerX86Shared : public Assembler
         return false;
     }
 
+    void convertBoolToInt32(Register source, Register dest) {
+        // Note that C++ bool is only 1 byte, so zero extend it to clear the
+        // higher-order bits.
+        movzxbl(source, dest);
+    }
+
     void emitSet(Assembler::Condition cond, const Register &dest,
                  Assembler::NaNCond ifNaN = Assembler::NaN_HandledByCond) {
         if (GeneralRegisterSet(Registers::SingleByteRegs).has(dest)) {

@@ -327,7 +327,7 @@ BaselineCompiler::emitIC(ICStub *stub, bool isForOp)
     return true;
 }
 
-typedef bool (*DebugPrologueFn)(JSContext *, BaselineFrame *, JSBool *);
+typedef bool (*DebugPrologueFn)(JSContext *, BaselineFrame *, bool *);
 static const VMFunction DebugPrologueInfo = FunctionInfo<DebugPrologueFn>(ion::DebugPrologue);
 
 bool
@@ -781,9 +781,9 @@ BaselineCompiler::emitTest(bool branchIfTrue)
     frame.popRegsAndSync(1);
 
     if (!knownBoolean && !emitToBoolean())
-            return false;
+        return false;
 
-    // IC will leave a JSBool value (guaranteed) in R0, just need to branch on it.
+    // IC will leave a BooleanValue in R0, just need to branch on it.
     masm.branchTestBooleanTruthy(branchIfTrue, R0, labelOf(pc + GET_JUMP_OFFSET(pc)));
     return true;
 }
@@ -1554,7 +1554,7 @@ BaselineCompiler::emit_JSOP_ENUMELEM()
     return true;
 }
 
-typedef bool (*DeleteElementFn)(JSContext *, HandleValue, HandleValue, JSBool *);
+typedef bool (*DeleteElementFn)(JSContext *, HandleValue, HandleValue, bool *);
 static const VMFunction DeleteElementStrictInfo = FunctionInfo<DeleteElementFn>(DeleteElement<true>);
 static const VMFunction DeleteElementNonStrictInfo = FunctionInfo<DeleteElementFn>(DeleteElement<false>);
 
@@ -1700,7 +1700,7 @@ BaselineCompiler::emit_JSOP_GETXPROP()
     return emit_JSOP_GETPROP();
 }
 
-typedef bool (*DeletePropertyFn)(JSContext *, HandleValue, HandlePropertyName, JSBool *);
+typedef bool (*DeletePropertyFn)(JSContext *, HandleValue, HandlePropertyName, bool *);
 static const VMFunction DeletePropertyStrictInfo = FunctionInfo<DeletePropertyFn>(DeleteProperty<true>);
 static const VMFunction DeletePropertyNonStrictInfo = FunctionInfo<DeletePropertyFn>(DeleteProperty<false>);
 
@@ -2472,7 +2472,7 @@ BaselineCompiler::emit_JSOP_EXCEPTION()
     return true;
 }
 
-typedef bool (*OnDebuggerStatementFn)(JSContext *, BaselineFrame *, jsbytecode *pc, JSBool *);
+typedef bool (*OnDebuggerStatementFn)(JSContext *, BaselineFrame *, jsbytecode *pc, bool *);
 static const VMFunction OnDebuggerStatementInfo =
     FunctionInfo<OnDebuggerStatementFn>(ion::OnDebuggerStatement);
 
@@ -2499,7 +2499,7 @@ BaselineCompiler::emit_JSOP_DEBUGGER()
     return true;
 }
 
-typedef bool (*DebugEpilogueFn)(JSContext *, BaselineFrame *, JSBool);
+typedef bool (*DebugEpilogueFn)(JSContext *, BaselineFrame *, bool);
 static const VMFunction DebugEpilogueInfo = FunctionInfo<DebugEpilogueFn>(ion::DebugEpilogue);
 
 bool
