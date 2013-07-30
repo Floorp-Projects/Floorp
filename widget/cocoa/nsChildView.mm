@@ -964,6 +964,15 @@ nsChildView::BackingScaleFactorChanged()
   }
 }
 
+int32_t
+nsChildView::RoundsWidgetCoordinatesTo()
+{
+  if (BackingScaleFactor() == 2.0) {
+    return 2;
+  }
+  return 1;
+}
+
 NS_IMETHODIMP nsChildView::ConstrainPosition(bool aAllowSlop,
                                              int32_t *aX, int32_t *aY)
 {
