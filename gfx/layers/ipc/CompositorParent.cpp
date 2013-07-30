@@ -680,7 +680,9 @@ CompositorParent::SetTimeAndSampleAnimations(TimeStamp aTime, bool aIsTesting)
   for (CompositorMap::iterator it = sCompositorMap->begin(); it != sCompositorMap->end(); ++it) {
     it->second->mIsTesting = aIsTesting;
     it->second->mTestTime = aTime;
-    it->second->mCompositionManager->TransformShadowTree(aTime);
+    if (it->second->mCompositionManager) {
+      it->second->mCompositionManager->TransformShadowTree(aTime);
+    }
   }
 }
 

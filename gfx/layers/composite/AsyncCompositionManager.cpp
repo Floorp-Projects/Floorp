@@ -630,6 +630,9 @@ bool
 AsyncCompositionManager::TransformShadowTree(TimeStamp aCurrentFrame)
 {
   Layer* root = mLayerManager->GetRoot();
+  if (!root) {
+    return false;
+  }
 
   // NB: we must sample animations *before* sampling pan/zoom
   // transforms.
