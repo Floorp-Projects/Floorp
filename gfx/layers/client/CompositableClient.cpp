@@ -8,6 +8,7 @@
 #include "mozilla/layers/TextureClientOGL.h"
 #include "mozilla/layers/LayerTransactionChild.h"
 #include "mozilla/layers/CompositableForwarder.h"
+#include "gfxPlatform.h"
 #ifdef XP_WIN
 #include "mozilla/layers/TextureD3D11.h"
 #include "gfxWindowsPlatform.h"
@@ -16,10 +17,20 @@
 namespace mozilla {
 namespace layers {
 
+CompositableClient::CompositableClient(CompositableForwarder* aForwarder)
+: mNextTextureID(1)
+, mCompositableChild(nullptr)
+, mForwarder(aForwarder)
+{
+  MOZ_COUNT_CTOR(CompositableClient);
+}
+
+
 CompositableClient::~CompositableClient()
 {
   MOZ_COUNT_DTOR(CompositableClient);
   Destroy();
+  MOZ_ASSERT(mTexturesToRemove.size() == 0, "would leak textures pending fore deletion");
 }
 
 LayersBackend
@@ -133,6 +144,47 @@ CompositableClient::CreateDeprecatedTextureClient(DeprecatedTextureClientType aD
   result->SetFlags(GetTextureInfo().mTextureFlags);
 
   return result.forget();
+}
+
+TemporaryRef<BufferTextureClient>
+CompositableClient::CreateBufferTextureClient(gfx::SurfaceFormat aFormat)
+{
+  if (gfxPlatform::GetPlatform()->PreferMemoryOverShmem()) {
+    RefPtr<BufferTextureClient> result = new MemoryTextureClient(this, aFormat);
+    return result.forget();
+  }
+  RefPtr<BufferTextureClient> result = new ShmemTextureClient(this, aFormat);
+  return result.forget();
+}
+
+
+void
+CompositableClient::AddTextureClient(TextureClient* aClient)
+{
+  ++mNextTextureID;
+  // 0 is always an invalid ID
+  if (mNextTextureID == 0) {
+    ++mNextTextureID;
+  }
+  aClient->SetID(mNextTextureID);
+  mForwarder->AddTexture(this, aClient);
+}
+
+void
+CompositableClient::RemoveTextureClient(TextureClient* aClient)
+{
+  MOZ_ASSERT(aClient);
+  mTexturesToRemove.push_back(aClient->GetID());
+  aClient->SetID(0);
+}
+
+void
+CompositableClient::OnTransaction()
+{
+  for (unsigned i = 0; i < mTexturesToRemove.size(); ++i) {
+    mForwarder->RemoveTexture(this, mTexturesToRemove[i]);
+  }
+  mTexturesToRemove.clear();
 }
 
 } // namespace layers

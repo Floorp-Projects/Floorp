@@ -556,6 +556,14 @@ public:
 
     static bool DrawLayerBorders();
     static bool DrawFrameCounter();
+    /**
+     * Returns true if we should use raw memory to send data to the compositor
+     * rather than using shmems.
+     *
+     * This method should not be called from the compositor thread.
+     */
+    bool PreferMemoryOverShmem() const;
+    bool UseDeprecatedTextures() const { return mLayersUseDeprecated; }
 
 protected:
     gfxPlatform();
@@ -659,6 +667,8 @@ private:
     mozilla::RefPtr<mozilla::gfx::DrawEventRecorder> mRecorder;
     bool mWidgetUpdateFlashing;
     uint32_t mOrientationSyncMillis;
+    bool mLayersPreferMemoryOverShmem;
+    bool mLayersUseDeprecated;
 };
 
 #endif /* GFX_PLATFORM_H */

@@ -7,11 +7,25 @@
 #include "mozilla/layers/YCbCrImageDataSerializer.h"
 #include "ISurfaceAllocator.h"
 #include "mozilla/layers/LayersSurfaces.h"
+#include "mozilla/layers/TextureClient.h"
+#include "mozilla/layers/ImageClient.h"
 
 namespace mozilla {
 namespace layers {
 
 using namespace mozilla::ipc;
+
+SharedPlanarYCbCrImage::SharedPlanarYCbCrImage(ImageClient* aCompositable)
+: PlanarYCbCrImage(nullptr)
+{
+  mTextureClient = aCompositable->CreateBufferTextureClient(gfx::FORMAT_YUV);
+  MOZ_COUNT_CTOR(SharedPlanarYCbCrImage);
+}
+
+SharedPlanarYCbCrImage::~SharedPlanarYCbCrImage() {
+  MOZ_COUNT_DTOR(SharedPlanarYCbCrImage);
+}
+
 
 DeprecatedSharedPlanarYCbCrImage::~DeprecatedSharedPlanarYCbCrImage() {
   MOZ_COUNT_DTOR(DeprecatedSharedPlanarYCbCrImage);
@@ -23,6 +37,149 @@ DeprecatedSharedPlanarYCbCrImage::~DeprecatedSharedPlanarYCbCrImage() {
   }
 }
 
+TextureClient*
+SharedPlanarYCbCrImage::GetTextureClient()
+{
+  return mTextureClient.get();
+}
+
+uint8_t*
+SharedPlanarYCbCrImage::GetBuffer()
+{
+  return mTextureClient->GetBuffer();
+}
+
+already_AddRefed<gfxASurface>
+SharedPlanarYCbCrImage::GetAsSurface()
+{
+  if (!mTextureClient->IsAllocated()) {
+    NS_WARNING("Can't get as surface");
+    return nullptr;
+  }
+  return PlanarYCbCrImage::GetAsSurface();
+}
+
+void
+SharedPlanarYCbCrImage::SetData(const PlanarYCbCrImage::Data& aData)
+{
+  // If mShmem has not been allocated (through Allocate(aData)), allocate it.
+  // This code path is slower than the one used when Allocate has been called
+  // since it will trigger a full copy.
+  if (!mTextureClient->IsAllocated()) {
+    Data data = aData;
+    if (!Allocate(data)) {
+      printf("SharedPlanarYCbCrImage::SetData failed to allocate :(\n");
+      return;
+    }
+  }
+
+  MOZ_ASSERT(mTextureClient->AsTextureClientYCbCr());
+
+  if (!mTextureClient->AsTextureClientYCbCr()->UpdateYCbCr(aData)) {
+    MOZ_ASSERT(false, "Failed to copy YCbCr data into the TextureClient");
+    return;
+  }
+
+  // do not set mBuffer like in PlanarYCbCrImage because the later
+  // will try to manage this memory without knowing it belongs to a
+  // shmem.
+  mBufferSize = YCbCrImageDataSerializer::ComputeMinBufferSize(mData.mYSize,
+                                                               mData.mCbCrSize);
+  mSize = mData.mPicSize;
+
+  YCbCrImageDataSerializer serializer(mTextureClient->GetBuffer());
+  mData.mYChannel = serializer.GetYData();
+  mData.mCbChannel = serializer.GetCbData();
+  mData.mCrChannel = serializer.GetCrData();
+  mTextureClient->MarkImmutable();
+}
+
+// needs to be overriden because the parent class sets mBuffer which we
+// do not want to happen.
+uint8_t*
+SharedPlanarYCbCrImage::AllocateAndGetNewBuffer(uint32_t aSize)
+{
+  NS_ABORT_IF_FALSE(!mTextureClient->IsAllocated(), "This image already has allocated data");
+  size_t size = YCbCrImageDataSerializer::ComputeMinBufferSize(aSize);
+  // update buffer size
+  mBufferSize = size;
+
+  // get new buffer _without_ setting mBuffer.
+  bool status = mTextureClient->Allocate(mBufferSize);
+  MOZ_ASSERT(status);
+  YCbCrImageDataSerializer serializer(mTextureClient->GetBuffer());
+
+  return serializer.GetData();
+}
+
+void
+SharedPlanarYCbCrImage::SetDataNoCopy(const Data &aData)
+{
+  mData = aData;
+  mSize = aData.mPicSize;
+  YCbCrImageDataSerializer serializer(mTextureClient->GetBuffer());
+  serializer.InitializeBufferInfo(aData.mYSize,
+                                  aData.mCbCrSize);
+}
+
+uint8_t*
+SharedPlanarYCbCrImage::AllocateBuffer(uint32_t aSize)
+{
+  NS_ABORT_IF_FALSE(!mTextureClient->IsAllocated(),
+                    "This image already has allocated data");
+  if (!mTextureClient->Allocate(aSize)) {
+    return nullptr;
+  }
+  return mTextureClient->GetBuffer();
+}
+
+bool
+SharedPlanarYCbCrImage::IsValid() {
+  return mTextureClient->IsAllocated();
+}
+
+bool
+SharedPlanarYCbCrImage::Allocate(PlanarYCbCrImage::Data& aData)
+{
+  NS_ABORT_IF_FALSE(!mTextureClient->IsAllocated(),
+                    "This image already has allocated data");
+
+  size_t size = YCbCrImageDataSerializer::ComputeMinBufferSize(aData.mYSize,
+                                                               aData.mCbCrSize);
+
+  if (AllocateBuffer(static_cast<uint32_t>(size)) == nullptr) {
+    return false;
+  }
+
+  YCbCrImageDataSerializer serializer(mTextureClient->GetBuffer());
+  serializer.InitializeBufferInfo(aData.mYSize,
+                                  aData.mCbCrSize);
+  MOZ_ASSERT(serializer.IsValid());
+
+  aData.mYChannel = serializer.GetYData();
+  aData.mCbChannel = serializer.GetCbData();
+  aData.mCrChannel = serializer.GetCrData();
+
+  // copy some of aData's values in mData (most of them)
+  mData.mYChannel = aData.mYChannel;
+  mData.mCbChannel = aData.mCbChannel;
+  mData.mCrChannel = aData.mCrChannel;
+  mData.mYSize = aData.mYSize;
+  mData.mCbCrSize = aData.mCbCrSize;
+  mData.mPicX = aData.mPicX;
+  mData.mPicY = aData.mPicY;
+  mData.mPicSize = aData.mPicSize;
+  mData.mStereoMode = aData.mStereoMode;
+  // those members are not always equal to aData's, due to potentially different
+  // packing.
+  mData.mYSkip = 0;
+  mData.mCbSkip = 0;
+  mData.mCrSkip = 0;
+  mData.mYStride = mData.mYSize.width;
+  mData.mCbCrStride = mData.mCbCrSize.width;
+
+  return true;
+}
 
 void
 DeprecatedSharedPlanarYCbCrImage::SetData(const PlanarYCbCrImage::Data& aData)

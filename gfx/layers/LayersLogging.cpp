@@ -215,7 +215,7 @@ AppendToString(nsACString& s, TextureFlags flags,
     AppendFlag(ForceSingleTile);
     AppendFlag(AllowRepeat);
     AppendFlag(NewTile);
-    AppendFlag(HostRelease);
+    AppendFlag(TEXTURE_DEALLOCATE_HOST);
 
 #undef AppendFlag
   }

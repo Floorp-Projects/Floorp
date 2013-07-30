@@ -758,5 +758,26 @@ ContentHostDoubleBuffered::Dump(FILE* aFile,
 
 }
 
+LayerRenderState
+ContentHostBase::GetRenderState()
+{
+  LayerRenderState result = mDeprecatedTextureHost->GetRenderState();
+
+  if (mBufferRotation != nsIntPoint()) {
+    result.mFlags |= LAYER_RENDER_STATE_BUFFER_ROTATION;
+  }
+  result.SetOffset(GetOriginOffset());
+  return result;
+}
+
+#ifdef MOZ_DUMP_PAINTING
+already_AddRefed<gfxImageSurface>
+ContentHostBase::GetAsSurface()
+{
+  return mDeprecatedTextureHost->GetAsSurface();
+}
+#endif
+
+
 } // namespace
 } // namespace
