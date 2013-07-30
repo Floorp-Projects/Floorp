@@ -23,6 +23,7 @@ const TAG_TOKEN_VALUE_MASK    = 0x3F;
  *
  * @see WAP-192-WBXML-20010725-A, clause 7.1
  */
+const CODE_PAGE_SWITCH_TOKEN  = 0x00;
 const TAG_END_TOKEN           = 0x01;
 const INLINE_STRING_TOKEN     = 0x03;
 const STRING_TABLE_TOKEN      = 0x83;
@@ -35,10 +36,52 @@ this.DEBUG_ALL = false;
 this.DEBUG = DEBUG_ALL | false;
 
 /**
+ * Handle WBXML code page switch.
+ *
+ * @param data
+ *        A wrapped object containing raw PDU data.
+ * @param decodeInfo
+ *        Internal information for decode process.
+ *
+ * @see WAP-192-WBXML-20010725-A, clause 5.8.4.7.2 and 5.8.1
+ */
+this.WbxmlCodePageSwitch = {
+  decode: function decode_wbxml_code_page_switch(data, decodeInfo) {
+    let codePage = WSP.Octet.decode(data);
+
+    if (decodeInfo.currentState === "tag") {
+      decodeInfo.currentTokenList.tag = decodeInfo.tokenList.tag[codePage];
+
+      if (!decodeInfo.currentTokenList.tag) {
+        throw new Error("Invalid tag code page: " + codePage + ".");
+      }
+
+      return "";
+    }
+
+    if (decodeInfo.currentState === "attr") {
+      decodeInfo.currentTokenList.attr = decodeInfo.tokenList.attr[codePage];
+      decodeInfo.currentTokenList.value = decodeInfo.tokenList.value[codePage];
+
+      if (!decodeInfo.currentTokenList.attr ||
+          !decodeInfo.currentTokenList.value) {
+        throw new Error("Invalid attr code page: " + codePage + ".");
+      }
+
+      return "";
+    }
+
+    throw new Error("Invalid decoder state: " + decodeInfo.currentState + ".");
+  },
+};
+
+/**
  * Parse end WBXML encoded message.
  *
  * @param data
  *        A wrapped object containing raw PDU data.
+ * @param decodeInfo
+ *        Internal information for decode process.
  *
  * @see WAP-192-WBXML-20010725-A, clause 5.8.4.7.1
  *
@@ -84,6 +127,8 @@ this.WbxmlStringTable = {
  *
  * @param data
  *        A wrapped object containing raw PDU data.
+ * @param decodeInfo
+ *        Internal information for decode process.
  *
  * @see WAP-192-WBXML-20010725-A, clause 5.8.4.1
  *
@@ -106,6 +151,8 @@ this.WbxmlInlineString = {
  *
  * @param data
  *        A wrapped object containing raw PDU data.
+ * @param decodeInfo
+ *        Internal information for decode process.
  *
  * @see WAP-192-WBXML-20010725-A, clause 5.8.4.6
  *
@@ -135,11 +182,20 @@ this.PduHelper = {
   parseWbxml: function parseWbxml_wbxml(data, decodeInfo, appToken) {
 
     // Parse token definition to my structure.
-    let tagTokenList = appToken.tagTokenList;
-    let attrTokenList = appToken.attrTokenList;
-    let valueTokenList = appToken.valueTokenList;
-
-    decodeInfo.tagStack = [];    // tag decode stack
+    decodeInfo.tokenList = {
+      tag: appToken.tagTokenList,
+      attr: appToken.attrTokenList,
+      value: appToken.valueTokenList
+    };
+    decodeInfo.tagStack = [];   // tag decode stack
+    decodeInfo.currentTokenList = {
+      tag: decodeInfo.tokenList.tag[0],
+      attr: decodeInfo.tokenList.attr[0],
+      value: decodeInfo.tokenList.value[0]
+    };
+    decodeInfo.currentState = "tag";  // Current decoding state, "tag" or "attr"
+                                      // Used to read corresponding code page
+                                      // initial state : "tag"
 
     // Merge global tag tokens into single list, so we don't have
     // to search two lists every time.
@@ -156,6 +212,9 @@ this.PduHelper = {
       // Decode content, might be a new tag token, an end of tag token, or an
       // inline string.
 
+      // Switch to tag domain
+      decodeInfo.currentState = "tag";
+
       let tagToken = WSP.Octet.decode(data);
       let tagTokenValue = tagToken & TAG_TOKEN_VALUE_MASK;
 
@@ -170,7 +229,7 @@ this.PduHelper = {
       }
 
       // Check if application tag token is valid
-      tagInfo = tagTokenList[tagTokenValue];
+      tagInfo = decodeInfo.currentTokenList.tag[tagTokenValue];
       if (!tagInfo) {
         throw new Error("Unsupported WBXML token: " + tagTokenValue + ".");
       }
@@ -180,6 +239,9 @@ this.PduHelper = {
       if (tagToken & TAG_TOKEN_ATTR_MASK) {
         // Decode attributes, might be a new attribute token, a value token,
         // or an inline string
+
+        // Switch to attr/value domain
+        decodeInfo.currentState = "attr";
 
         let attrSeperator = "";
         while (data.offset < data.array.length) {
@@ -195,14 +257,14 @@ this.PduHelper = {
           }
 
           // Check if attribute token is valid
-          attrInfo = attrTokenList[attrToken];
+          attrInfo = decodeInfo.currentTokenList.attr[attrToken];
           if (attrInfo) {
             content += attrSeperator + " " + attrInfo.name + "=\"" + attrInfo.value;
             attrSeperator = "\"";
             continue;
           }
 
-          attrInfo = valueTokenList[attrToken];
+          attrInfo = decodeInfo.currentTokenList.value[attrToken];
           if (attrInfo) {
             content += attrInfo.value;
             continue;
@@ -325,10 +387,11 @@ const WBXML_GLOBAL_TOKENS = (function () {
     names[number] = entry;
   }
 
-  add(TAG_END_TOKEN,        WbxmlEnd);
-  add(INLINE_STRING_TOKEN,  WbxmlInlineString);
-  add(STRING_TABLE_TOKEN,   WbxmlStringTable);
-  add(OPAQUE_TOKEN,         WbxmlOpaque);
+  add(CODE_PAGE_SWITCH_TOKEN, WbxmlCodePageSwitch);
+  add(TAG_END_TOKEN,          WbxmlEnd);
+  add(INLINE_STRING_TOKEN,    WbxmlInlineString);
+  add(STRING_TABLE_TOKEN,     WbxmlStringTable);
+  add(OPAQUE_TOKEN,           WbxmlOpaque);
 
   return names;
 })();
