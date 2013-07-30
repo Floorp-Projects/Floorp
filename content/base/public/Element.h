@@ -27,6 +27,7 @@
 #include "nsIDOMXPathNSResolver.h"
 #include "nsPresContext.h"
 #include "nsDOMClassInfoID.h" // DOMCI_DATA
+#include "nsIInlineEventHandlers.h"
 #include "mozilla/CORSMode.h"
 #include "mozilla/Attributes.h"
 #include "nsContentUtils.h"
