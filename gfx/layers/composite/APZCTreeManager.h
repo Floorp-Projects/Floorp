@@ -9,10 +9,12 @@
 #include "mozilla/layers/AsyncPanZoomController.h"
 #include "Layers.h"
 #include "CompositorParent.h"
-#include <map>
 
 namespace mozilla {
 namespace layers {
+
+class AsyncPanZoomController;
+class CompositorParent;
 
 /**
  * This class allows us to uniquely identify a scrollable layer. The
@@ -106,9 +108,19 @@ public:
    * in the layer tree.
    *
    * This must be called on the compositor thread as it walks the layer tree.
+   *
+   * @param aCompositor A pointer to the compositor parent instance that owns
+   *                    this APZCTreeManager
+   * @param aRoot The root of the (full) layer tree
+   * @param aFirstPaintLayersId The layers id of the subtree to which aIsFirstPaint
+   *                            applies.
+   * @param aIsFirstPaint True if the layers update that this is called in response
+   *                      to included a first-paint. If this is true, the part of
+   *                      the tree that is affected by the first-paint flag is
+   *                      indicated by the aFirstPaintLayersId parameter.
    */
   void UpdatePanZoomControllerTree(CompositorParent* aCompositor, Layer* aRoot,
-                                   uint64_t aLayersId, bool aIsFirstPaint);
+                                   bool aIsFirstPaint, uint64_t aFirstPaintLayersId);
 
   /**
    * General handler for incoming input events. Manipulates the frame metrics
@@ -216,13 +228,34 @@ private:
   */
   already_AddRefed<AsyncPanZoomController> GetTargetAPZC(const ScrollableLayerGuid& aGuid);
   already_AddRefed<AsyncPanZoomController> GetTargetAPZC(const ScreenPoint& aPoint);
+  /* Recursive helper */
+  AsyncPanZoomController* FindTargetAPZC(AsyncPanZoomController* aApzc, const ScrollableLayerGuid& aGuid);
+
+  /**
+   * Recursive helper function to build the APZC tree. The tree of APZC instances has
+   * the same shape as the layer tree, but excludes all the layers that are not scrollable.
+   * Note that this means APZCs corresponding to layers at different depths in the tree
+   * may end up becoming siblings. It also means that the "root" APZC may have siblings.
+   * This function walks the layer tree backwards through siblings and constructs the APZC
+   * tree also as a last-child-prev-sibling tree because that simplifies the hit detection
+   * code.
+   */
+  AsyncPanZoomController* UpdatePanZoomControllerTree(CompositorParent* aCompositor,
+                                                      Layer* aLayer, uint64_t aLayersId,
+                                                      AsyncPanZoomController* aParent,
+                                                      AsyncPanZoomController* aNextSibling,
+                                                      bool aIsFirstPaint,
+                                                      uint64_t aFirstPaintLayersId,
+                                                      nsTArray< nsRefPtr<AsyncPanZoomController> >* aApzcsToDestroy);
 
 private:
-  /* Whenever walking or mutating the map of APZC instances, mTreeLock must be held.
+  /* Whenever walking or mutating the tree rooted at mRootApzc, mTreeLock must be held.
    * This lock does not need to be held while manipulating a single APZC instance in
-   * isolation (that is, if its tree pointers are not being accessed or mutated). */
+   * isolation (that is, if its tree pointers are not being accessed or mutated). The
+   * lock also needs to be held when accessing the mRootApzc instance variable, as that
+   * is considered part of the APZC tree management state. */
   mozilla::Monitor mTreeLock;
-  std::map< uint64_t, nsRefPtr<AsyncPanZoomController> > mApzcs;
+  nsRefPtr<AsyncPanZoomController> mRootApzc;
 };
 
 }
