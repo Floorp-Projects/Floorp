@@ -5241,7 +5241,7 @@ class CGJsonifierMethod(CGSpecializedMethod):
                '  return false;\n'
                '}\n')
         for m in self.descriptor.interface.members:
-          if m.isAttr() and not m.isStatic():
+          if m.isAttr() and not m.isStatic() and m.type.isSerializable():
               ret += ('{ // scope for "temp"\n'
                       '  JS::Rooted<JS::Value> temp(cx);\n'
                       '  if (!get_%s(cx, obj, self, JSJitGetterCallArgs(&temp))) {\n'
