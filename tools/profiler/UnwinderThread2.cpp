@@ -22,7 +22,7 @@
 #endif
 
 #include "mozilla/arm.h"
-#include "mozilla/StandardInteger.h"
+#include <stdint.h>
 #include "PlatformMacros.h"
 
 #include "platform.h"

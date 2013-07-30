@@ -19,7 +19,7 @@
 // template parameters.
 //
 
-#include "mozilla/StandardInteger.h"
+#include <stdint.h>
 
 template<class E>
 class nsTArray;

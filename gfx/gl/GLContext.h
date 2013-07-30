@@ -52,7 +52,7 @@ typedef char realGLboolean;
 
 #include "mozilla/mozalloc.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/StandardInteger.h"
+#include <stdint.h>
 #include "mozilla/Mutex.h"
 #include "mozilla/GenericRefCounted.h"
 

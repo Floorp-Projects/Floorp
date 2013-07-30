@@ -138,7 +138,7 @@ diff --git a/mfbt/decimal/Decimal.h b/mfbt/decimal/Decimal.h
  #define Decimal_h
  
 +#include "mozilla/Assertions.h"
-+#include "mozilla/StandardInteger.h"
++#include <stdint.h>
  #include "mozilla/Types.h"
  
 -#include <stdint.h>

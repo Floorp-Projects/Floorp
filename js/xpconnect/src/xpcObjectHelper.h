@@ -13,7 +13,7 @@
 #endif
 
 #include "mozilla/Attributes.h"
-#include "mozilla/StandardInteger.h"
+#include <stdint.h>
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsIClassInfo.h"

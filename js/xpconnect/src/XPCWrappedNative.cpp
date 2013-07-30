@@ -22,7 +22,7 @@
 #include "nsContentUtils.h"
 #include "nsCxPusher.h"
 
-#include "mozilla/StandardInteger.h"
+#include <stdint.h>
 #include "mozilla/Util.h"
 #include "mozilla/Likely.h"
 #include <algorithm>

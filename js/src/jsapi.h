@@ -12,11 +12,11 @@
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/RangedPtr.h"
-#include "mozilla/StandardInteger.h"
 #include "mozilla/ThreadLocal.h"
 
 #include <stdarg.h>
 #include <stddef.h>
+#include <stdint.h>
 #include <stdio.h>
 
 #include "js-config.h"

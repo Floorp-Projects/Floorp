@@ -48,8 +48,9 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/StandardInteger.h"
 #include "mozilla/Types.h"
+
+#include <stdint.h>
 
 #ifdef __cplusplus
 namespace mozilla {
