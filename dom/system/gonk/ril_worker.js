@@ -12028,7 +12028,7 @@ let ICCUtilsHelper = {
    */
   parseMccMncFromImsi: function parseMccMncFromImsi(imsi, mncLength) {
     if (!imsi) {
-      return;
+      return null;
     }
 
     // MCC is the first 3 digits of IMSI.
