@@ -9666,8 +9666,9 @@ CSSParserImpl::ParseTextOverflow(nsCSSValue& aValue)
 ///////////////////////////////////////////////////////
 // transform Parsing Implementation
 
-/* Reads a function list of arguments.  Do not call this function
- * directly; it's mean to be caled from ParseFunction.
+/* Reads a function list of arguments and consumes the closing parenthesis.
+ * Do not call this function directly; it's meant to be called from
+ * ParseFunction.
  */
 bool
 CSSParserImpl::ParseFunctionInternals(const int32_t aVariantMask[],
@@ -9684,21 +9685,28 @@ CSSParserImpl::ParseFunctionInternals(const int32_t aVariantMask[],
     nsCSSValue newValue;
     int32_t m = aVariantMaskAll ? aVariantMaskAll : aVariantMask[index];
     if (!ParseVariant(newValue, m, nullptr)) {
-      return false;
+      break;
     }
 
     aOutput.AppendElement(newValue);
 
-    // See whether to continue or whether to look for end of function.
-    if (!ExpectSymbol(',', true)) {
-      // We need to read the closing parenthesis, and also must take care
-      // that we haven't read too few symbols.
-      return ExpectSymbol(')', true) && (index + 1) >= aMinElems;
+    if (ExpectSymbol(',', true)) {
+      // Move on to the next argument if we see a comma.
+      continue;
     }
+
+    if (ExpectSymbol(')', true)) {
+      // Make sure we've read enough symbols if we see a closing parenthesis.
+      return (index + 1) >= aMinElems;
+    }
+
+    // Only a comma or a closing parenthesis is valid after an argument.
+    break;
   }
 
-  // If we're here, we finished looping without hitting the end, so we read too
-  // many elements.
+  // If we're here, we've hit an error without seeing a closing parenthesis or
+  // we've read too many elements without seeing a closing parenthesis.
+  SkipUntil(')');
   return false;
 }
 
