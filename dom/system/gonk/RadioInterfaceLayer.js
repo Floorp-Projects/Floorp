@@ -943,6 +943,10 @@ RadioInterface.prototype = {
         // This one will handle its own notifications.
         this.handleCallDisconnected(message.call);
         break;
+      case "cdmaCallWaiting":
+        gMessageManager.sendTelephonyMessage("RIL:CdmaCallWaiting",
+                                             this.clientId, message.number);
+        break;
       case "enumerateCalls":
         // This one will handle its own notifications.
         this.handleEnumerateCalls(message);
