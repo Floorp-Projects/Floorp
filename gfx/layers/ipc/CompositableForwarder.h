@@ -20,6 +20,7 @@ class TextureFactoryIdentifier;
 class SurfaceDescriptor;
 class ThebesBufferData;
 class DeprecatedTextureClient;
+class TextureClient;
 class BasicTiledLayerBuffer;
 
 /**
@@ -140,6 +141,42 @@ public:
    * resize, e.g.
    */
   virtual void DestroyedThebesBuffer(const SurfaceDescriptor& aBackBufferToDestroy) = 0;
+
+  /**
+   * Tell the compositor side to create a TextureHost that corresponds to
+   * aClient.
+   */
+  virtual void AddTexture(CompositableClient* aCompositable,
+                          TextureClient* aClient) = 0;
+
+  /**
+   * Tell the compositor side to delete the TextureHost corresponding to
+   * aTextureID.
+   * By default the shared Data is deallocated along with the TextureHost, but
+   * this behaviour can be overriden by the TextureFlags passed here.
+   * XXX - This is kind of bad, but for now we have to do this, because of some
+   * edge cases caused by the lifetime of the TextureHost being limited by the
+   * lifetime of the CompositableHost. We should be able to remove this flags
+   * parameter when we remove the lifetime constraint.
+   */
+  virtual void RemoveTexture(CompositableClient* aCompositable,
+                             uint64_t aTextureID,
+                             TextureFlags aFlags = TEXTURE_FLAGS_DEFAULT) = 0;
+
+  /**
+   * Tell the CompositableHost on the compositor side what texture to use for
+   * the next composition.
+   */
+  virtual void UseTexture(CompositableClient* aCompositable,
+                          TextureClient* aClient) = 0;
+
+  /**
+   * Tell the compositor side that the shared data has been modified so that
+   * it can react accordingly (upload textures, etc.).
+   */
+  virtual void UpdatedTexture(CompositableClient* aCompositable,
+                              TextureClient* aTexture,
+                              nsIntRegion* aRegion) = 0;
 
   void IdentifyTextureHost(const TextureFactoryIdentifier& aIdentifier);
 

@@ -34,6 +34,10 @@ public:
   virtual ~ClientCanvasLayer()
   {
     MOZ_COUNT_DTOR(ClientCanvasLayer);
+    if (mCanvasClient) {
+      mCanvasClient->Detach();
+      mCanvasClient = nullptr;
+    }
   }
 
   virtual void SetVisibleRegion(const nsIntRegion& aRegion)

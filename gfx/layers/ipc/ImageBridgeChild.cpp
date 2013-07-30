@@ -79,6 +79,51 @@ struct AutoEndTransaction {
 };
 
 void
+ImageBridgeChild::AddTexture(CompositableClient* aCompositable,
+                             TextureClient* aTexture)
+{
+  SurfaceDescriptor descriptor;
+  if (!aTexture->ToSurfaceDescriptor(descriptor)) {
+    NS_WARNING("ImageBridge: Failed to serialize a TextureClient");
+    return;
+  }
+  mTxn->AddEdit(OpAddTexture(nullptr, aCompositable->GetIPDLActor(),
+                             aTexture->GetID(),
+                             descriptor,
+                             aTexture->GetFlags()));
+}
+
+void
+ImageBridgeChild::RemoveTexture(CompositableClient* aCompositable,
+                                uint64_t aTexture,
+                                TextureFlags aFlags)
+{
+  mTxn->AddNoSwapEdit(OpRemoveTexture(nullptr, aCompositable->GetIPDLActor(),
+                      aTexture,
+                      aFlags));
+}
+
+void
+ImageBridgeChild::UseTexture(CompositableClient* aCompositable,
+                             TextureClient* aTexture)
+{
+  mTxn->AddNoSwapEdit(OpUseTexture(nullptr, aCompositable->GetIPDLActor(),
+                      aTexture->GetID()));
+}
+
+void
+ImageBridgeChild::UpdatedTexture(CompositableClient* aCompositable,
+                                 TextureClient* aTexture,
+                                 nsIntRegion* aRegion)
+{
+  MaybeRegion region = aRegion ? MaybeRegion(*aRegion)
+                               : MaybeRegion(null_t());
+  mTxn->AddNoSwapEdit(OpUpdateTexture(nullptr, aCompositable->GetIPDLActor(),
+                                      aTexture->GetID(),
+                                      region));
+}
+
+void
 ImageBridgeChild::UpdateTexture(CompositableClient* aCompositable,
                                 TextureIdentifier aTextureId,
                                 SurfaceDescriptor* aDescriptor)
@@ -304,6 +349,7 @@ static void UpdateImageClientNow(ImageClient* aClient, ImageContainer* aContaine
   MOZ_ASSERT(aContainer);
   sImageBridgeChildSingleton->BeginTransaction();
   aClient->UpdateImage(aContainer, Layer::CONTENT_OPAQUE);
+  aClient->OnTransaction();
   sImageBridgeChildSingleton->EndTransaction();
 }
 
@@ -336,10 +382,6 @@ ImageBridgeChild::EndTransaction()
   MOZ_ASSERT(!mTxn->Finished(), "forgot BeginTransaction?");
 
   AutoEndTransaction _(mTxn);
-
-  if (mTxn->IsEmpty()) {
-    return;
-  }
 
   AutoInfallibleTArray<CompositableOperation, 10> cset;
   cset.SetCapacity(mTxn->mOperations.size());

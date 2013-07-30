@@ -945,7 +945,7 @@ CompositorOGL::GetProgramTypeForEffect(Effect *aEffect) const
     TextureSourceOGL* source = texturedEffect->mTexture->AsSourceOGL();
 
     return ShaderProgramFromTargetAndFormat(source->GetTextureTarget(),
-                                            source->GetTextureFormat());
+                                            source->GetFormat());
   }
   case EFFECT_YCBCR:
     return YCbCrLayerProgramType;
@@ -1411,6 +1411,13 @@ CompositorOGL::Resume()
   return true;
 }
 
+TemporaryRef<DataTextureSource>
+CompositorOGL::CreateDataTextureSource(TextureFlags aFlags)
+{
+  RefPtr<DataTextureSource> result =
+    new TextureImageTextureSourceOGL(mGLContext, !(aFlags & ForceSingleTile));
+  return result;
+}
 
 } /* layers */
 } /* mozilla */
