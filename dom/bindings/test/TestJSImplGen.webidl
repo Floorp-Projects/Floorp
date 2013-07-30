@@ -353,6 +353,15 @@ interface TestJSImplInterface {
 
   // Union types
   void passUnion((object or long) arg);
+  // Commented out tests 2-9 to avoid creating all those unused union types
+  /* void passUnion2((long or boolean) arg);
+  void passUnion3((object or long or boolean) arg);
+  void passUnion4((Node or long or boolean) arg);
+  void passUnion5((object or boolean) arg);
+  void passUnion6((object or DOMString) arg);
+  void passUnion7((object or DOMString or long) arg);
+  void passUnion8((object or DOMString or boolean) arg);
+  void passUnion9((object or DOMString or long or boolean) arg); */
   void passUnionWithNullable((object? or long) arg);
   // FIXME: Bug 863948 Nullable unions not supported yet
   //   void passNullableUnion((object or long)? arg);
