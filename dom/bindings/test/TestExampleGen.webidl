@@ -410,14 +410,24 @@ interface TestExampleInterface {
   TestInterface overload1(DOMString strs, TestInterface arg);
   void overload2(TestInterface arg);
   void overload2(optional Dict arg);
+  void overload2(boolean arg);
   void overload2(DOMString arg);
   void overload2(Date arg);
   void overload3(TestInterface arg);
   void overload3(TestCallback arg);
-  void overload3(DOMString arg);
+  void overload3(boolean arg);
   void overload4(TestInterface arg);
   void overload4(TestCallbackInterface arg);
   void overload4(DOMString arg);
+  void overload5(long arg);
+  void overload5(TestEnum arg);
+  void overload6(long arg);
+  void overload6(boolean arg);
+  void overload7(long arg);
+  void overload7(boolean arg);
+  void overload7(ByteString arg);
+  void overload8(long arg);
+  void overload8(TestInterface arg);
 
   // Variadic handling
   void passVariadicThirdArg(DOMString arg1, long arg2, TestInterface... arg3);

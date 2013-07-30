@@ -438,14 +438,24 @@ interface TestJSImplInterface {
   TestJSImplInterface overload1(DOMString strs, TestJSImplInterface arg);
   void overload2(TestJSImplInterface arg);
   void overload2(optional Dict arg);
+  void overload2(boolean arg);
   void overload2(DOMString arg);
   void overload2(Date arg);
   void overload3(TestJSImplInterface arg);
   void overload3(MyTestCallback arg);
-  void overload3(DOMString arg);
+  void overload3(boolean arg);
   void overload4(TestJSImplInterface arg);
   void overload4(TestCallbackInterface arg);
   void overload4(DOMString arg);
+  void overload5(long arg);
+  void overload5(MyTestEnum arg);
+  void overload6(long arg);
+  void overload6(boolean arg);
+  void overload7(long arg);
+  void overload7(boolean arg);
+  void overload7(ByteString arg);
+  void overload8(long arg);
+  void overload8(TestJSImplInterface arg);
 
   // Variadic handling
   void passVariadicThirdArg(DOMString arg1, long arg2, TestJSImplInterface... arg3);

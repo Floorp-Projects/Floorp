@@ -4892,21 +4892,6 @@ class CGMethodCall(CGThing):
             # Select the right overload from our set.
             distinguishingArg = "args[%d]" % distinguishingIndex
 
-            def pickFirstSignature(condition, filterLambda):
-                sigs = filter(filterLambda, possibleSignatures)
-                assert len(sigs) < 2
-                if len(sigs) > 0:
-                    if condition is None:
-                        caseBody.append(
-                            getPerSignatureCall(sigs[0], distinguishingIndex))
-                    else:
-                        caseBody.append(CGGeneric("if (" + condition + ") {"))
-                        caseBody.append(CGIndenter(
-                                getPerSignatureCall(sigs[0], distinguishingIndex)))
-                        caseBody.append(CGGeneric("}"))
-                    return True
-                return False
-
             def tryCall(signature, indent, isDefinitelyObject=False,
                         isNullOrUndefined=False):
                 assert not isDefinitelyObject or not isNullOrUndefined
@@ -5033,18 +5018,52 @@ class CGMethodCall(CGThing):
 
                 caseBody.append(CGGeneric("}"))
 
-            # The remaining cases are mutually exclusive.  The
-            # pickFirstSignature calls are what change caseBody
-            # Check for strings or enums
-            if pickFirstSignature(None,
-                                  lambda s: (distinguishingType(s).isString() or
-                                             distinguishingType(s).isEnum())):
-                pass
-            # Check for primitives
-            elif pickFirstSignature(None,
-                                    lambda s: distinguishingType(s).isPrimitive()):
-                pass
+            # Now we only have to consider booleans, numerics, and strings.  If
+            # we only have one of them, then we can just output it.  But if not,
+            # then we need to output some of the cases conditionally: if we have
+            # a string overload, then boolean and numeric are conditional, and
+            # if not then boolean is conditional if we have a numeric overload.
+            def findUniqueSignature(filterLambda):
+                sigs = filter(filterLambda, possibleSignatures)
+                assert len(sigs) < 2
+                if len(sigs) > 0:
+                    return sigs[0]
+                return None
+
+            stringSignature = findUniqueSignature(
+                lambda s: (distinguishingType(s).isString() or
+                           distinguishingType(s).isEnum()))
+            numericSignature = findUniqueSignature(
+                lambda s: distinguishingType(s).isNumeric())
+            booleanSignature = findUniqueSignature(
+                lambda s: distinguishingType(s).isBoolean())
+
+            if stringSignature or numericSignature:
+                booleanCondition = "%s.isBoolean()"
             else:
+                booleanCondition = None
+
+            if stringSignature:
+                numericCondition = "%s.isNumber()"
+            else:
+                numericCondition = None
+
+            def addCase(sig, condition):
+                sigCode = getPerSignatureCall(sig, distinguishingIndex)
+                if condition:
+                    sigCode = CGIfWrapper(sigCode,
+                                          condition % distinguishingArg)
+                caseBody.append(sigCode)
+
+            if booleanSignature:
+                addCase(booleanSignature, booleanCondition)
+            if numericSignature:
+                addCase(numericSignature, numericCondition)
+            if stringSignature:
+                addCase(stringSignature, None)
+
+            if (not booleanSignature and not numericSignature and
+                not stringSignature):
                 # Just throw; we have no idea what we're supposed to
                 # do with this.
                 caseBody.append(CGGeneric(
