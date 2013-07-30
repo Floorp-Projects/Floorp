@@ -31,6 +31,14 @@ isValueDTRDCandidate(ValueOperand &val)
 }
 
 void
+MacroAssemblerARM::convertBoolToInt32(Register source, Register dest)
+{
+    // Note that C++ bool is only 1 byte, so zero extend it to clear the
+    // higher-order bits.
+    ma_and(Imm32(0xff), source, dest);
+}
+
+void
 MacroAssemblerARM::convertInt32ToDouble(const Register &src, const FloatRegister &dest_)
 {
     // direct conversions aren't possible.

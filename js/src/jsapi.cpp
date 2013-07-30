@@ -2785,7 +2785,12 @@ JS_HasInstance(JSContext *cx, JSObject *objArg, jsval valueArg, JSBool *bp)
     RootedValue value(cx, valueArg);
     AssertHeapIsIdle(cx);
     assertSameCompartment(cx, obj, value);
-    return HasInstance(cx, obj, value, bp);
+
+    bool b;
+    if (!HasInstance(cx, obj, value, &b))
+        return false;
+    *bp = b;
+    return true;
 }
 
 JS_PUBLIC_API(void *)
