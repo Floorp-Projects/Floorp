@@ -105,6 +105,7 @@ EXPORTS.mozilla.layers += [
     'client/ImageClient.h',
     'client/TextureClient.h',
     'client/TiledContentClient.h',
+    'composite/APZCTreeManager.h',
     'composite/AsyncCompositionManager.h',
     'composite/CanvasLayerComposite.h',
     'composite/ColorLayerComposite.h',
@@ -170,6 +171,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
     ]
 
 CPP_SOURCES += [
+    'APZCTreeManager.cpp',
     'AsyncCompositionManager.cpp',
     'AsyncPanZoomController.cpp',
     'Axis.cpp',
