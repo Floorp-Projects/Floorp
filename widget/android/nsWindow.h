@@ -23,7 +23,7 @@ namespace mozilla {
         class CompositorParent;
         class CompositorChild;
         class LayerManager;
-        class AsyncPanZoomController;
+        class APZCTreeManager;
     }
 }
 
@@ -155,8 +155,9 @@ public:
     static void ScheduleResumeComposition(int width, int height);
     static void ForceIsFirstPaint();
     static float ComputeRenderIntegrity();
-    static void SetPanZoomController(mozilla::layers::AsyncPanZoomController* apzc);
-    static mozilla::layers::AsyncPanZoomController* GetPanZoomController();
+    static mozilla::layers::APZCTreeManager* GetAPZCTreeManager();
+    /* RootLayerTreeId() can only be called when GetAPZCTreeManager() returns non-null */
+    static uint64_t RootLayerTreeId();
 
     virtual bool WidgetPaintsBackground();
 
@@ -231,11 +232,11 @@ private:
 
     mozilla::AndroidLayerRendererFrame mLayerRendererFrame;
 
+    static nsRefPtr<mozilla::layers::APZCTreeManager> sApzcTreeManager;
     static nsRefPtr<mozilla::layers::LayerManager> sLayerManager;
     static nsRefPtr<mozilla::layers::CompositorParent> sCompositorParent;
     static nsRefPtr<mozilla::layers::CompositorChild> sCompositorChild;
     static bool sCompositorPaused;
-    static nsRefPtr<mozilla::layers::AsyncPanZoomController> sApzc;
 };
 
 #endif /* NSWINDOW_H_ */

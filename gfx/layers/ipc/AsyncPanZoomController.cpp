@@ -106,6 +106,18 @@ static float gYSkateSizeMultiplier = 3.5f;
 static float gXStationarySizeMultiplier = 1.5f;
 static float gYStationarySizeMultiplier = 2.5f;
 
+/**
+ * The time period in ms that throttles mozbrowserasyncscroll event.
+ * Default is 100ms if there is no "apzc.asyncscroll.throttle" in preference.
+ */
+
+static int gAsyncScrollThrottleTime = 100;
+/**
+ * The timeout in ms for mAsyncScrollTimeoutTask delay task.
+ * Default is 300ms if there is no "apzc.asyncscroll.timeout" in preference.
+ */
+static int gAsyncScrollTimeout = 300;
+
 static TimeStamp sFrameTime;
 
 static TimeStamp
@@ -121,8 +133,16 @@ AsyncPanZoomController::SetFrameTime(const TimeStamp& aTime) {
   sFrameTime = aTime;
 }
 
-static void ReadAZPCPrefs()
+/*static*/ void
+AsyncPanZoomController::InitializeGlobalState()
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  static bool sInitialized = false;
+  if (sInitialized)
+    return;
+  sInitialized = true;
+
   Preferences::AddIntVarCache(&gPanRepaintInterval, "gfx.azpc.pan_repaint_interval", gPanRepaintInterval);
   Preferences::AddIntVarCache(&gFlingRepaintInterval, "gfx.azpc.fling_repaint_interval", gFlingRepaintInterval);
   Preferences::AddFloatVarCache(&gMinSkateSpeed, "gfx.azpc.min_skate_speed", gMinSkateSpeed);
@@ -133,36 +153,22 @@ static void ReadAZPCPrefs()
   Preferences::AddFloatVarCache(&gYSkateSizeMultiplier, "gfx.azpc.y_skate_size_multiplier", gYSkateSizeMultiplier);
   Preferences::AddFloatVarCache(&gXStationarySizeMultiplier, "gfx.azpc.x_stationary_size_multiplier", gXStationarySizeMultiplier);
   Preferences::AddFloatVarCache(&gYStationarySizeMultiplier, "gfx.azpc.y_stationary_size_multiplier", gYStationarySizeMultiplier);
+  Preferences::AddIntVarCache(&gAsyncScrollThrottleTime, "apzc.asyncscroll.throttle", gAsyncScrollThrottleTime);
+  Preferences::AddIntVarCache(&gAsyncScrollTimeout, "apzc.asyncscroll.timeout", gAsyncScrollTimeout);
+
+  gComputedTimingFunction = new ComputedTimingFunction();
+  gComputedTimingFunction->Init(
+    nsTimingFunction(NS_STYLE_TRANSITION_TIMING_FUNCTION_EASE));
+  ClearOnShutdown(&gComputedTimingFunction);
 }
 
-class ReadAZPCPref MOZ_FINAL : public nsRunnable {
-public:
-  NS_IMETHOD Run()
-  {
-    ReadAZPCPrefs();
-    return NS_OK;
-  }
-};
-
-static void InitAZPCPrefs()
-{
-  static bool sInitialized = false;
-  if (sInitialized)
-    return;
-
-  sInitialized = true;
-  if (NS_IsMainThread()) {
-    ReadAZPCPrefs();
-  } else {
-    // We have to dispatch an event to the main thread to read the pref.
-    NS_DispatchToMainThread(new ReadAZPCPref());
-  }
-}
-
-AsyncPanZoomController::AsyncPanZoomController(GeckoContentController* aGeckoContentController,
+AsyncPanZoomController::AsyncPanZoomController(uint64_t aLayersId,
+                                               GeckoContentController* aGeckoContentController,
                                                GestureBehavior aGestures)
-  :  mPaintThrottler(GetFrameTime()),
+  :  mLayersId(aLayersId),
+     mPaintThrottler(GetFrameTime()),
      mGeckoContentController(aGeckoContentController),
+     mRefPtrMonitor("RefPtrMonitor"),
      mTouchListenerTimeoutTask(nullptr),
      mX(this),
      mY(this),
@@ -176,45 +182,48 @@ AsyncPanZoomController::AsyncPanZoomController(GeckoContentController* aGeckoCon
      mLastAsyncScrollOffset(0, 0),
      mCurrentAsyncScrollOffset(0, 0),
      mAsyncScrollTimeoutTask(nullptr),
-     mAsyncScrollThrottleTime(100),
-     mAsyncScrollTimeout(300),
      mDPI(72),
      mDisableNextTouchBatch(false),
      mHandlingTouchQueue(false),
      mDelayPanning(false)
 {
-  MOZ_ASSERT(NS_IsMainThread());
   MOZ_COUNT_CTOR(AsyncPanZoomController);
-
-  InitAZPCPrefs();
 
   if (aGestures == USE_GESTURE_DETECTOR) {
     mGestureEventListener = new GestureEventListener(this);
   }
 
   SetDPI(mDPI);
-
-  if (!gComputedTimingFunction) {
-    gComputedTimingFunction = new ComputedTimingFunction();
-    gComputedTimingFunction->Init(
-      nsTimingFunction(NS_STYLE_TRANSITION_TIMING_FUNCTION_EASE));
-    ClearOnShutdown(&gComputedTimingFunction);
-  }
-
-  Preferences::GetUint("apzc.asyncscroll.throttle", &mAsyncScrollThrottleTime);
-  Preferences::GetUint("apzc.asyncscroll.timeout", &mAsyncScrollTimeout);
 }
 
 AsyncPanZoomController::~AsyncPanZoomController() {
   MOZ_COUNT_DTOR(AsyncPanZoomController);
 }
 
+already_AddRefed<GeckoContentController>
+AsyncPanZoomController::GetGeckoContentController() {
+  MonitorAutoLock lock(mRefPtrMonitor);
+  nsRefPtr<GeckoContentController> controller = mGeckoContentController;
+  return controller.forget();
+}
+
+already_AddRefed<GestureEventListener>
+AsyncPanZoomController::GetGestureEventListener() {
+  MonitorAutoLock lock(mRefPtrMonitor);
+  nsRefPtr<GestureEventListener> listener = mGestureEventListener;
+  return listener.forget();
+}
+
 void
 AsyncPanZoomController::Destroy()
 {
-  // These memebrs can only be used on the controller/UI thread.
-  mGeckoContentController = nullptr;
-  mGestureEventListener = nullptr;
+  { // scope the lock
+    MonitorAutoLock lock(mRefPtrMonitor);
+    mGeckoContentController = nullptr;
+    mGestureEventListener = nullptr;
+  }
+  mPrevSibling = nullptr;
+  mLastChild = nullptr;
 }
 
 /* static */float
@@ -332,8 +341,9 @@ nsEventStatus AsyncPanZoomController::ReceiveInputEvent(const InputData& aEvent)
 nsEventStatus AsyncPanZoomController::HandleInputEvent(const InputData& aEvent) {
   nsEventStatus rv = nsEventStatus_eIgnore;
 
-  if (mGestureEventListener && !mDisableNextTouchBatch) {
-    rv = mGestureEventListener->HandleInputEvent(aEvent);
+  nsRefPtr<GestureEventListener> listener = GetGestureEventListener();
+  if (listener && !mDisableNextTouchBatch) {
+    rv = listener->HandleInputEvent(aEvent);
     if (rv == nsEventStatus_eConsumeNoDefault)
       return rv;
   }
@@ -659,12 +669,13 @@ nsEventStatus AsyncPanZoomController::OnScaleEnd(const PinchGestureInput& aEvent
 }
 
 nsEventStatus AsyncPanZoomController::OnLongPress(const TapGestureInput& aEvent) {
-  if (mGeckoContentController) {
+  nsRefPtr<GeckoContentController> controller = GetGeckoContentController();
+  if (controller) {
     MonitorAutoLock monitor(mMonitor);
 
     CSSToScreenScale resolution = mFrameMetrics.CalculateResolution();
     CSSPoint point = WidgetSpaceToCompensatedViewportSpace(aEvent.mPoint, resolution);
-    mGeckoContentController->HandleLongTap(gfx::RoundedToInt(point));
+    controller->HandleLongTap(gfx::RoundedToInt(point));
     return nsEventStatus_eConsumeNoDefault;
   }
   return nsEventStatus_eIgnore;
@@ -675,25 +686,27 @@ nsEventStatus AsyncPanZoomController::OnSingleTapUp(const TapGestureInput& aEven
 }
 
 nsEventStatus AsyncPanZoomController::OnSingleTapConfirmed(const TapGestureInput& aEvent) {
-  if (mGeckoContentController) {
+  nsRefPtr<GeckoContentController> controller = GetGeckoContentController();
+  if (controller) {
     MonitorAutoLock monitor(mMonitor);
 
     CSSToScreenScale resolution = mFrameMetrics.CalculateResolution();
     CSSPoint point = WidgetSpaceToCompensatedViewportSpace(aEvent.mPoint, resolution);
-    mGeckoContentController->HandleSingleTap(gfx::RoundedToInt(point));
+    controller->HandleSingleTap(gfx::RoundedToInt(point));
     return nsEventStatus_eConsumeNoDefault;
   }
   return nsEventStatus_eIgnore;
 }
 
 nsEventStatus AsyncPanZoomController::OnDoubleTap(const TapGestureInput& aEvent) {
-  if (mGeckoContentController) {
+  nsRefPtr<GeckoContentController> controller = GetGeckoContentController();
+  if (controller) {
     MonitorAutoLock monitor(mMonitor);
 
     if (mAllowZoom) {
       CSSToScreenScale resolution = mFrameMetrics.CalculateResolution();
       CSSPoint point = WidgetSpaceToCompensatedViewportSpace(aEvent.mPoint, resolution);
-      mGeckoContentController->HandleDoubleTap(gfx::RoundedToInt(point));
+      controller->HandleDoubleTap(gfx::RoundedToInt(point));
     }
 
     return nsEventStatus_eConsumeNoDefault;
@@ -1019,12 +1032,15 @@ void AsyncPanZoomController::RequestContentRepaint() {
   // This message is compressed, so fire whether or not we already have a paint
   // queued up. We need to know whether or not a paint was requested anyways,
   // for the purposes of content calling window.scrollTo().
-  mPaintThrottler.PostTask(
-    FROM_HERE,
-    NewRunnableMethod(mGeckoContentController.get(),
-                      &GeckoContentController::RequestContentRepaint,
-                      mFrameMetrics),
-    GetFrameTime());
+  nsRefPtr<GeckoContentController> controller = GetGeckoContentController();
+  if (controller) {
+    mPaintThrottler.PostTask(
+      FROM_HERE,
+      NewRunnableMethod(controller.get(),
+                        &GeckoContentController::RequestContentRepaint,
+                        mFrameMetrics),
+      GetFrameTime());
+  }
   mFrameMetrics.mPresShellId = mLastContentPaintMetrics.mPresShellId;
   mLastPaintRequestMetrics = mFrameMetrics;
 
@@ -1043,7 +1059,6 @@ AsyncPanZoomController::FireAsyncScrollOnTimeout()
 }
 
 bool AsyncPanZoomController::SampleContentTransformForFrame(const TimeStamp& aSampleTime,
-                                                            ContainerLayer* aLayer,
                                                             ViewTransform* aNewTransform,
                                                             ScreenPoint& aScrollOffset) {
   // The eventual return value of this function. The compositor needs to know
@@ -1053,10 +1068,6 @@ bool AsyncPanZoomController::SampleContentTransformForFrame(const TimeStamp& aSa
   // responsibility to schedule a composite.
   bool requestAnimationFrame = false;
 
-  LayerPoint metricsScrollOffset;
-  CSSPoint scrollOffset;
-  CSSToScreenScale localScale;
-  const FrameMetrics& frame = aLayer->GetFrameMetrics();
   {
     MonitorAutoLock mon(mMonitor);
 
@@ -1103,17 +1114,9 @@ bool AsyncPanZoomController::SampleContentTransformForFrame(const TimeStamp& aSa
       break;
     }
 
-    // Current local transform; this is not what's painted but rather
-    // what PZC has transformed due to touches like panning or
-    // pinching. Eventually, the root layer transform will become this
-    // during runtime, but we must wait for Gecko to repaint.
-    localScale = mFrameMetrics.CalculateResolution();
+    aScrollOffset = mFrameMetrics.mScrollOffset * mFrameMetrics.CalculateResolution();
+    *aNewTransform = GetCurrentAsyncTransformInternal();
 
-    if (frame.IsScrollable()) {
-      metricsScrollOffset = frame.GetScrollOffsetInLayerPixels();
-    }
-
-    scrollOffset = mFrameMetrics.mScrollOffset;
     mCurrentAsyncScrollOffset = mFrameMetrics.mScrollOffset;
   }
 
@@ -1129,7 +1132,7 @@ bool AsyncPanZoomController::SampleContentTransformForFrame(const TimeStamp& aSa
   // with the last event.
   // Otherwise, start a timer to fire the event sAsyncScrollTimeout ms from now.
   TimeDuration delta = aSampleTime - mLastAsyncScrollTime;
-  if (delta.ToMilliseconds() > mAsyncScrollThrottleTime &&
+  if (delta.ToMilliseconds() > gAsyncScrollThrottleTime &&
       mCurrentAsyncScrollOffset != mLastAsyncScrollOffset) {
     MonitorAutoLock monitor(mMonitor);
     mLastAsyncScrollTime = aSampleTime;
@@ -1141,25 +1144,35 @@ bool AsyncPanZoomController::SampleContentTransformForFrame(const TimeStamp& aSa
       NewRunnableMethod(this, &AsyncPanZoomController::FireAsyncScrollOnTimeout);
     MessageLoop::current()->PostDelayedTask(FROM_HERE,
                                             mAsyncScrollTimeoutTask,
-                                            mAsyncScrollTimeout);
+                                            gAsyncScrollTimeout);
   }
-
-  CSSToLayerScale paintedScale = frame.mDevPixelsPerCSSPixel * frame.mResolution;
-  LayerPoint translation = (scrollOffset * paintedScale) - metricsScrollOffset;
-  *aNewTransform = ViewTransform(-translation, localScale / frame.mDevPixelsPerCSSPixel);
-  aScrollOffset = scrollOffset * localScale;
 
   mLastSampleTime = aSampleTime;
 
   return requestAnimationFrame;
 }
 
-void AsyncPanZoomController::NotifyLayersUpdated(const FrameMetrics& aViewportFrame, bool aIsFirstPaint) {
+ViewTransform AsyncPanZoomController::GetCurrentAsyncTransform() {
+  MonitorAutoLock mon(mMonitor);
+  return GetCurrentAsyncTransformInternal();
+}
+
+ViewTransform AsyncPanZoomController::GetCurrentAsyncTransformInternal() {
+  LayerPoint metricsScrollOffset;
+  if (mLastContentPaintMetrics.IsScrollable()) {
+    metricsScrollOffset = mLastContentPaintMetrics.GetScrollOffsetInLayerPixels();
+  }
+  CSSToScreenScale localScale = mFrameMetrics.CalculateResolution();
+  LayerPoint translation = mFrameMetrics.GetScrollOffsetInLayerPixels() - metricsScrollOffset;
+  return ViewTransform(-translation, localScale / mLastContentPaintMetrics.mDevPixelsPerCSSPixel);
+}
+
+void AsyncPanZoomController::NotifyLayersUpdated(const FrameMetrics& aLayerMetrics, bool aIsFirstPaint) {
   MonitorAutoLock monitor(mMonitor);
 
-  mLastContentPaintMetrics = aViewportFrame;
+  mLastContentPaintMetrics = aLayerMetrics;
 
-  mFrameMetrics.mMayHaveTouchListeners = aViewportFrame.mMayHaveTouchListeners;
+  mFrameMetrics.mMayHaveTouchListeners = aLayerMetrics.mMayHaveTouchListeners;
 
   // TODO: Once a mechanism for calling UpdateScrollOffset() when content does
   //       a scrollTo() is implemented for B2G (bug 895905), this block can be removed.
@@ -1176,7 +1189,7 @@ void AsyncPanZoomController::NotifyLayersUpdated(const FrameMetrics& aViewportFr
     case FLING:
     case TOUCHING:
     case WAITING_LISTENERS:
-      mFrameMetrics.mScrollOffset = aViewportFrame.mScrollOffset;
+      mFrameMetrics.mScrollOffset = aLayerMetrics.mScrollOffset;
       break;
     // Don't clobber if we're in other states.
     default:
@@ -1187,12 +1200,12 @@ void AsyncPanZoomController::NotifyLayersUpdated(const FrameMetrics& aViewportFr
 
   mPaintThrottler.TaskComplete(GetFrameTime());
   bool needContentRepaint = false;
-  if (aViewportFrame.mCompositionBounds.width == mFrameMetrics.mCompositionBounds.width &&
-      aViewportFrame.mCompositionBounds.height == mFrameMetrics.mCompositionBounds.height) {
+  if (aLayerMetrics.mCompositionBounds.width == mFrameMetrics.mCompositionBounds.width &&
+      aLayerMetrics.mCompositionBounds.height == mFrameMetrics.mCompositionBounds.height) {
     // Remote content has sync'd up to the composition geometry
     // change, so we can accept the viewport it's calculated.
     CSSToScreenScale previousResolution = mFrameMetrics.CalculateResolution();
-    mFrameMetrics.mViewport = aViewportFrame.mViewport;
+    mFrameMetrics.mViewport = aLayerMetrics.mViewport;
     CSSToScreenScale newResolution = mFrameMetrics.CalculateResolution();
     needContentRepaint |= (previousResolution != newResolution);
   }
@@ -1204,11 +1217,15 @@ void AsyncPanZoomController::NotifyLayersUpdated(const FrameMetrics& aViewportFr
     mX.CancelTouch();
     mY.CancelTouch();
 
-    mFrameMetrics = aViewportFrame;
+    // XXX If this is the very first time we're getting a layers update we need to
+    // trigger another repaint, or the B2G browser shows stale content. This needs
+    // to be investigated and fixed.
+    needContentRepaint |= (mFrameMetrics.IsDefault() && !aLayerMetrics.IsDefault());
 
+    mFrameMetrics = aLayerMetrics;
     mState = NOTHING;
-  } else if (!mFrameMetrics.mScrollableRect.IsEqualEdges(aViewportFrame.mScrollableRect)) {
-    mFrameMetrics.mScrollableRect = aViewportFrame.mScrollableRect;
+  } else if (!mFrameMetrics.mScrollableRect.IsEqualEdges(aLayerMetrics.mScrollableRect)) {
+    mFrameMetrics.mScrollableRect = aLayerMetrics.mScrollableRect;
   }
 
   if (needContentRepaint) {
@@ -1242,8 +1259,9 @@ void AsyncPanZoomController::UpdateCompositionBounds(const ScreenIntRect& aCompo
 
 void AsyncPanZoomController::CancelDefaultPanZoom() {
   mDisableNextTouchBatch = true;
-  if (mGestureEventListener) {
-    mGestureEventListener->CancelGesture();
+  nsRefPtr<GestureEventListener> listener = GetGestureEventListener();
+  if (listener) {
+    listener->CancelGesture();
   }
 }
 
@@ -1424,82 +1442,43 @@ void AsyncPanZoomController::UpdateZoomConstraints(bool aAllowZoom,
 }
 
 void AsyncPanZoomController::PostDelayedTask(Task* aTask, int aDelayMs) {
-  if (!mGeckoContentController) {
-    return;
+  nsRefPtr<GeckoContentController> controller = GetGeckoContentController();
+  if (controller) {
+    controller->PostDelayedTask(aTask, aDelayMs);
   }
-
-  mGeckoContentController->PostDelayedTask(aTask, aDelayMs);
 }
 
 void AsyncPanZoomController::SendAsyncScrollEvent() {
-  if (!mGeckoContentController) {
+  nsRefPtr<GeckoContentController> controller = GetGeckoContentController();
+  if (!controller) {
     return;
   }
 
+  FrameMetrics::ViewID scrollId;
   CSSRect contentRect;
   CSSSize scrollableSize;
   {
+    // XXX bug 890932 - there should be a lock here. but it causes a deadlock.
+    scrollId = mFrameMetrics.mScrollId;
     scrollableSize = mFrameMetrics.mScrollableRect.Size();
     contentRect = mFrameMetrics.CalculateCompositedRectInCssPixels();
     contentRect.MoveTo(mCurrentAsyncScrollOffset);
   }
 
-  mGeckoContentController->SendAsyncScrollDOMEvent(contentRect, scrollableSize);
+  controller->SendAsyncScrollDOMEvent(scrollId, contentRect, scrollableSize);
 }
 
-static void GetAPZCAtPointOnSubtree(const ContainerLayer& aLayerIn,
-                    const gfxPoint& aPoint,
-                    AsyncPanZoomController** aApzcOut,
-                    LayerIntPoint* aRelativePointOut)
-{
-  // Making layers const correct is very slow because it requires
-  // a near clobber of the tree. Once const correct is further along
-  // remove this cast.
-  ContainerLayer& aLayer = const_cast<ContainerLayer&>(aLayerIn);
-  gfx3DMatrix transform = aLayer.GetLocalTransform().Inverse();
-  gfxPoint layerPoint = transform.Transform(aPoint);
-
-  // iterate over the children first. They are better match then the parent
-  Layer* currLayer = aLayer.GetLastChild();
-  while (currLayer) {
-    if (currLayer->AsContainerLayer()) {
-      GetAPZCAtPointOnSubtree(*currLayer->AsContainerLayer(), layerPoint, aApzcOut, aRelativePointOut);
-    }
-    if (*aApzcOut) {
-        return;
-    }
-    currLayer = currLayer->GetPrevSibling();
-  }
-
-  if (aLayer.GetFrameMetrics().IsScrollable()) {
-    const FrameMetrics& frame = aLayer.GetFrameMetrics();
-    LayerRect layerViewport = frame.mViewport * frame.LayersPixelsPerCSSPixel();
-    bool intersect = layerViewport.Contains(layerPoint.x, layerPoint.y);
-
-    if (intersect) {
-      *aApzcOut = aLayer.GetAsyncPanZoomController();
-      *aRelativePointOut = LayerIntPoint(NS_lround(layerPoint.x), NS_lround(layerPoint.y));
-    }
-  }
-
-}
-
-void AsyncPanZoomController::GetAPZCAtPoint(const ContainerLayer& aLayerTree,
-                    const ScreenIntPoint& aPoint,
-                    AsyncPanZoomController** aApzcOut,
-                    LayerIntPoint* aRelativePointOut)
-{
-  *aApzcOut = nullptr;
-
-  gfxPoint point(aPoint.x, aPoint.y);
-
-  GetAPZCAtPointOnSubtree(aLayerTree, point, aApzcOut, aRelativePointOut);
-}
-
-void AsyncPanZoomController::UpdateScrollOffset(CSSPoint aScrollOffset)
+void AsyncPanZoomController::UpdateScrollOffset(const CSSPoint& aScrollOffset)
 {
   MonitorAutoLock monitor(mMonitor);
   mFrameMetrics.mScrollOffset = aScrollOffset;
+}
+
+bool AsyncPanZoomController::Matches(const ScrollableLayerGuid& aGuid)
+{
+  // TODO: also check the presShellId and mScrollId, once those are
+  // fully propagated everywhere in RenderFrameParent and AndroidJNI.
+  return aGuid.mLayersId == mLayersId;
 }
 
 }

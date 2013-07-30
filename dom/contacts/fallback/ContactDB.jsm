@@ -905,15 +905,24 @@ ContactDB.prototype = {
             }
             xIndex++;
           }
-          if (!x) {
-            return sortOrder == "descending" ? 1 : -1;
-          }
           while (yIndex < sortBy.length && !y) {
             y = b.properties[sortBy[yIndex]];
             if (y) {
               y = y.join("").toLowerCase();
             }
             yIndex++;
+          }
+          if (!x) {
+            if (!y) {
+              let px, py;
+              px = JSON.stringify(a.published);
+              py = JSON.stringify(b.published);
+              if (px && py) {
+                return px.localeCompare(py);
+              }
+            } else {
+              return sortOrder == 'descending' ? 1 : -1;
+            }
           }
           if (!y) {
             return sortOrder == "ascending" ? 1 : -1;

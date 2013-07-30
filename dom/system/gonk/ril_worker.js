@@ -1616,7 +1616,7 @@ let RIL = {
 
     if (roamingMode === -1) {
       options.errorMsg = GECKO_ERROR_INVALID_PARAMETER;
-      this.sendDOMMessage(options);
+      this.sendChromeMessage(options);
       return;
     }
 
@@ -5649,22 +5649,22 @@ RIL[REQUEST_CDMA_SET_SUBSCRIPTION_SOURCE] = null;
 RIL[REQUEST_CDMA_SET_ROAMING_PREFERENCE] = function REQUEST_CDMA_SET_ROAMING_PREFERENCE(length, options) {
   if (options.rilRequestError) {
     options.errorMsg = RIL_ERROR_TO_GECKO_ERROR[options.rilRequestError];
-    this.sendDOMMessage(options);
+    this.sendChromeMessage(options);
     return;
   }
 
-  this.sendDOMMessage(options);
+  this.sendChromeMessage(options);
 };
 RIL[REQUEST_CDMA_QUERY_ROAMING_PREFERENCE] = function REQUEST_CDMA_QUERY_ROAMING_PREFERENCE(length, options) {
   if (options.rilRequestError) {
     options.errorMsg = RIL_ERROR_TO_GECKO_ERROR[options.rilRequestError];
-    this.sendDOMMessage(options);
+    this.sendChromeMessage(options);
     return;
   }
 
   let mode = Buf.readUint32List();
   options.mode = CDMA_ROAMING_PREFERENCE_TO_GECKO[mode[0]];
-  this.sendDOMMessage(options);
+  this.sendChromeMessage(options);
 };
 RIL[REQUEST_SET_TTY_MODE] = null;
 RIL[REQUEST_QUERY_TTY_MODE] = null;
