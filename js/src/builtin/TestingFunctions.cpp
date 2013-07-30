@@ -15,6 +15,7 @@
 #include "jswrapper.h"
 
 #include "ion/AsmJS.h"
+#include "ion/AsmJSLink.h"
 #include "vm/ForkJoin.h"
 #include "vm/Interpreter.h"
 
@@ -983,32 +984,6 @@ GetObjectMetadata(JSContext *cx, unsigned argc, jsval *vp)
     args.rval().setObjectOrNull(GetObjectMetadata(&args[0].toObject()));
     return true;
 }
-
-#ifndef JS_ION
-JSBool
-js::IsAsmJSCompilationAvailable(JSContext *cx, unsigned argc, Value *vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    args.rval().set(BooleanValue(false));
-    return true;
-}
-
-JSBool
-js::IsAsmJSModule(JSContext *cx, unsigned argc, Value *vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    args.rval().set(BooleanValue(false));
-    return true;
-}
-
-JSBool
-js::IsAsmJSFunction(JSContext *cx, unsigned argc, Value *vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    args.rval().set(BooleanValue(false));
-    return true;
-}
-#endif
 
 static JSFunctionSpecWithHelp TestingFunctions[] = {
     JS_FN_HELP("gc", ::GC, 0, 0,
