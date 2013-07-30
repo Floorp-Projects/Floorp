@@ -4,7 +4,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "APZCTreeManager.h"
+#include "AsyncCompositionManager.h"    // for ViewTransform
+#include "LayerManagerComposite.h"      // for AsyncCompositionManager.h
 #include "Compositor.h"
+
+#define APZC_LOG(args...)
+// #define APZC_LOG(args...) printf_stderr(args)
 
 namespace mozilla {
 namespace layers {
@@ -60,6 +65,7 @@ APZCTreeManager::UpdatePanZoomControllerTree(CompositorParent* aCompositor, Laye
   }
 
   for (int i = apzcsToDestroy.Length() - 1; i >= 0; i--) {
+    APZC_LOG("Destroying APZC at %p\n", apzcsToDestroy[i].get());
     apzcsToDestroy[i]->Destroy();
   }
 }
@@ -97,9 +103,18 @@ APZCTreeManager::UpdatePanZoomControllerTree(CompositorParent* aCompositor,
           controller->SetPrevSibling(nullptr);
           controller->SetLastChild(nullptr);
         }
+        APZC_LOG("Using APZC %p for layer %p with identifiers %lld %lld\n", controller, aLayer, aLayersId, container->GetFrameMetrics().mScrollId);
 
         controller->NotifyLayersUpdated(container->GetFrameMetrics(),
                                         aIsFirstPaint && (aLayersId == aFirstPaintLayersId));
+
+        gfx3DMatrix transform = container->GetEffectiveTransform();
+        LayerRect visible = container->GetFrameMetrics().mViewport * container->GetFrameMetrics().LayersPixelsPerCSSPixel();
+        gfxRect transformed = transform.TransformBounds(gfxRect(visible.x, visible.y, visible.width, visible.height));
+        controller->SetVisibleRegion(transformed);
+        APZC_LOG("Setting rect(%f %f %f %f) as visible region for %p\n", transformed.x, transformed.y,
+                                                                         transformed.width, transformed.height,
+                                                                         controller);
 
         // Bind the APZC instance into the tree of APZCs
         if (aNextSibling) {
@@ -311,9 +326,16 @@ already_AddRefed<AsyncPanZoomController>
 APZCTreeManager::GetTargetAPZC(const ScreenPoint& aPoint)
 {
   MonitorAutoLock lock(mTreeLock);
-  // TODO: Do a hit test on the tree of
-  // APZC instances and return the right one.
-  return nullptr;
+  nsRefPtr<AsyncPanZoomController> target;
+  // The root may have siblings, so check those too
+  gfxPoint point(aPoint.x, aPoint.y);
+  for (AsyncPanZoomController* apzc = mRootApzc; apzc; apzc = apzc->GetPrevSibling()) {
+    target = GetAPZCAtPoint(apzc, point);
+    if (target) {
+      break;
+    }
+  }
+  return target.forget();
 }
 
 AsyncPanZoomController*
@@ -328,6 +350,25 @@ APZCTreeManager::FindTargetAPZC(AsyncPanZoomController* aApzc, const ScrollableL
   }
 
   if (aApzc->Matches(aGuid)) {
+    return aApzc;
+  }
+  return nullptr;
+}
+
+AsyncPanZoomController*
+APZCTreeManager::GetAPZCAtPoint(AsyncPanZoomController* aApzc, gfxPoint aHitTestPoint)
+{
+  // This walks the tree in depth-first, reverse order, so that it encounters
+  // APZCs front-to-back on the screen.
+  ViewTransform apzcTransform = aApzc->GetCurrentAsyncTransform();
+  gfxPoint untransformed = gfx3DMatrix(apzcTransform).Inverse().ProjectPoint(aHitTestPoint);
+  for (AsyncPanZoomController* child = aApzc->GetLastChild(); child; child = child->GetPrevSibling()) {
+    AsyncPanZoomController* match = GetAPZCAtPoint(child, untransformed);
+    if (match) {
+      return match;
+    }
+  }
+  if (aApzc->VisibleRegionContains(untransformed)) {
     return aApzc;
   }
   return nullptr;
