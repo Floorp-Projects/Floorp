@@ -360,7 +360,7 @@ function DOMMMIResult(result) {
   this.serviceCode = result.serviceCode;
   this.statusMessage = result.statusMessage;
   this.additionalInformation = result.additionalInformation;
-}
+};
 DOMMMIResult.prototype = {
   __exposedProps__: {serviceCode: 'r',
                      statusMessage: 'r',
@@ -370,14 +370,14 @@ DOMMMIResult.prototype = {
 function DOMCLIRStatus(option) {
   this.n = option.n;
   this.m = option.m;
-}
+};
 DOMCLIRStatus.prototype = {
   __exposedProps__ : {n: 'r',
                       m: 'r'}
 };
 
 function DOMMMIError() {
-}
+};
 DOMMMIError.prototype = {
   classDescription: "DOMMMIError",
   classID:          DOMMMIERROR_CID,
