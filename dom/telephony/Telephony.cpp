@@ -552,6 +552,18 @@ Telephony::NotifyError(int32_t aCallIndex,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+Telephony::NotifyCdmaCallWaiting(const nsAString& aNumber)
+{
+  MOZ_ASSERT(mActiveCall &&
+             mActiveCall->CallState() == nsITelephonyProvider::CALL_STATE_CONNECTED);
+
+  nsRefPtr<TelephonyCall> callToNotify = mActiveCall;
+  callToNotify->UpdateSecondNumber(aNumber);
+  DispatchCallEvent(NS_LITERAL_STRING("callschanged"), callToNotify);
+  return NS_OK;
+}
+
 nsresult
 Telephony::DispatchCallEvent(const nsAString& aType,
                              TelephonyCall* aCall)
