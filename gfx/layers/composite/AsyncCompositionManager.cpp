@@ -428,7 +428,6 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(TimeStamp aCurrentFram
     ScreenPoint scrollOffset;
     *aWantNextFrame |=
       controller->SampleContentTransformForFrame(aCurrentFrame,
-                                                 container,
                                                  &treeTransform,
                                                  scrollOffset);
 

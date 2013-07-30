@@ -113,10 +113,9 @@ TEST(AsyncPanZoomController, SimpleTransform) {
   nsRefPtr<TestAsyncPanZoomController> apzc = new TestAsyncPanZoomController(0, mcc);
   apzc->SetFrameMetrics(TestFrameMetrics());
 
-  TestAPZCContainerLayer layer;
   ScreenPoint pointOut;
   ViewTransform viewTransformOut;
-  apzc->SampleContentTransformForFrame(testStartTime, &layer, &viewTransformOut, pointOut);
+  apzc->SampleContentTransformForFrame(testStartTime, &viewTransformOut, pointOut);
 
   EXPECT_EQ(pointOut, ScreenPoint());
   EXPECT_EQ(viewTransformOut, ViewTransform());
@@ -189,39 +188,39 @@ TEST(AsyncPanZoomController, ComplexTransform) {
   // initial transform
   apzc->SetFrameMetrics(metrics);
   apzc->NotifyLayersUpdated(metrics, true);
-  apzc->SampleContentTransformForFrame(testStartTime, layers[0]->AsContainerLayer(), &viewTransformOut, pointOut);
+  apzc->SampleContentTransformForFrame(testStartTime, &viewTransformOut, pointOut);
   EXPECT_EQ(ViewTransform(LayerPoint(), LayoutDeviceToScreenScale(2)), viewTransformOut);
   EXPECT_EQ(ScreenPoint(60, 60), pointOut);
 
   childApzc->SetFrameMetrics(childMetrics);
   childApzc->NotifyLayersUpdated(childMetrics, true);
-  childApzc->SampleContentTransformForFrame(testStartTime, layers[1]->AsContainerLayer(), &viewTransformOut, pointOut);
+  childApzc->SampleContentTransformForFrame(testStartTime, &viewTransformOut, pointOut);
   EXPECT_EQ(ViewTransform(LayerPoint(), LayoutDeviceToScreenScale(2)), viewTransformOut);
   EXPECT_EQ(ScreenPoint(60, 60), pointOut);
 
   // do an async scroll by 5 pixels and check the transform
   metrics.mScrollOffset += CSSPoint(5, 0);
   apzc->SetFrameMetrics(metrics);
-  apzc->SampleContentTransformForFrame(testStartTime, layers[0]->AsContainerLayer(), &viewTransformOut, pointOut);
+  apzc->SampleContentTransformForFrame(testStartTime, &viewTransformOut, pointOut);
   EXPECT_EQ(ViewTransform(LayerPoint(-30, 0), LayoutDeviceToScreenScale(2)), viewTransformOut);
   EXPECT_EQ(ScreenPoint(90, 60), pointOut);
 
   childMetrics.mScrollOffset += CSSPoint(5, 0);
   childApzc->SetFrameMetrics(childMetrics);
-  childApzc->SampleContentTransformForFrame(testStartTime, layers[1]->AsContainerLayer(), &viewTransformOut, pointOut);
+  childApzc->SampleContentTransformForFrame(testStartTime, &viewTransformOut, pointOut);
   EXPECT_EQ(ViewTransform(LayerPoint(-30, 0), LayoutDeviceToScreenScale(2)), viewTransformOut);
   EXPECT_EQ(ScreenPoint(90, 60), pointOut);
 
   // do an async zoom of 1.5x and check the transform
   metrics.mZoom.scale *= 1.5f;
   apzc->SetFrameMetrics(metrics);
-  apzc->SampleContentTransformForFrame(testStartTime, layers[0]->AsContainerLayer(), &viewTransformOut, pointOut);
+  apzc->SampleContentTransformForFrame(testStartTime, &viewTransformOut, pointOut);
   EXPECT_EQ(ViewTransform(LayerPoint(-30, 0), LayoutDeviceToScreenScale(3)), viewTransformOut);
   EXPECT_EQ(ScreenPoint(135, 90), pointOut);
 
   childMetrics.mZoom.scale *= 1.5f;
   childApzc->SetFrameMetrics(childMetrics);
-  childApzc->SampleContentTransformForFrame(testStartTime, layers[0]->AsContainerLayer(), &viewTransformOut, pointOut);
+  childApzc->SampleContentTransformForFrame(testStartTime, &viewTransformOut, pointOut);
   EXPECT_EQ(ViewTransform(LayerPoint(-30, 0), LayoutDeviceToScreenScale(3)), viewTransformOut);
   EXPECT_EQ(ScreenPoint(135, 90), pointOut);
 }
@@ -242,19 +241,18 @@ TEST(AsyncPanZoomController, Pan) {
   int time = 0;
   int touchStart = 50;
   int touchEnd = 10;
-  TestAPZCContainerLayer layer;
   ScreenPoint pointOut;
   ViewTransform viewTransformOut;
 
   // Pan down
   ApzcPan(apzc, time, touchStart, touchEnd);
-  apzc->SampleContentTransformForFrame(testStartTime, &layer, &viewTransformOut, pointOut);
+  apzc->SampleContentTransformForFrame(testStartTime, &viewTransformOut, pointOut);
   EXPECT_EQ(pointOut, ScreenPoint(0, -(touchEnd-touchStart)));
   EXPECT_NE(viewTransformOut, ViewTransform());
 
   // Pan back
   ApzcPan(apzc, time, touchEnd, touchStart);
-  apzc->SampleContentTransformForFrame(testStartTime, &layer, &viewTransformOut, pointOut);
+  apzc->SampleContentTransformForFrame(testStartTime, &viewTransformOut, pointOut);
   EXPECT_EQ(pointOut, ScreenPoint());
   EXPECT_EQ(viewTransformOut, ViewTransform());
 }
@@ -275,7 +273,6 @@ TEST(AsyncPanZoomController, Fling) {
   int time = 0;
   int touchStart = 50;
   int touchEnd = 10;
-  TestAPZCContainerLayer layer;
   ScreenPoint pointOut;
   ViewTransform viewTransformOut;
 
@@ -283,7 +280,7 @@ TEST(AsyncPanZoomController, Fling) {
   ApzcPan(apzc, time, touchStart, touchEnd);
   ScreenPoint lastPoint;
   for (int i = 1; i < 50; i+=1) {
-    apzc->SampleContentTransformForFrame(testStartTime+TimeDuration::FromMilliseconds(i), &layer, &viewTransformOut, pointOut);
+    apzc->SampleContentTransformForFrame(testStartTime+TimeDuration::FromMilliseconds(i), &viewTransformOut, pointOut);
     EXPECT_GT(pointOut.y, lastPoint.y);
     lastPoint = pointOut;
   }
@@ -306,13 +303,12 @@ TEST(AsyncPanZoomController, OverScrollPanning) {
   int time = 0;
   int touchStart = 500;
   int touchEnd = 10;
-  TestAPZCContainerLayer layer;
   ScreenPoint pointOut;
   ViewTransform viewTransformOut;
 
   // Pan down
   ApzcPan(apzc, time, touchStart, touchEnd);
-  apzc->SampleContentTransformForFrame(testStartTime+TimeDuration::FromMilliseconds(1000), &layer, &viewTransformOut, pointOut);
+  apzc->SampleContentTransformForFrame(testStartTime+TimeDuration::FromMilliseconds(1000), &viewTransformOut, pointOut);
   EXPECT_EQ(pointOut, ScreenPoint(0, 90));
 }
 

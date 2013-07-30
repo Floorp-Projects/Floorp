@@ -1059,7 +1059,6 @@ AsyncPanZoomController::FireAsyncScrollOnTimeout()
 }
 
 bool AsyncPanZoomController::SampleContentTransformForFrame(const TimeStamp& aSampleTime,
-                                                            ContainerLayer* aLayer,
                                                             ViewTransform* aNewTransform,
                                                             ScreenPoint& aScrollOffset) {
   // The eventual return value of this function. The compositor needs to know
@@ -1069,10 +1068,6 @@ bool AsyncPanZoomController::SampleContentTransformForFrame(const TimeStamp& aSa
   // responsibility to schedule a composite.
   bool requestAnimationFrame = false;
 
-  LayerPoint metricsScrollOffset;
-  CSSPoint scrollOffset;
-  CSSToScreenScale localScale;
-  const FrameMetrics& frame = aLayer->GetFrameMetrics();
   {
     MonitorAutoLock mon(mMonitor);
 
@@ -1119,17 +1114,9 @@ bool AsyncPanZoomController::SampleContentTransformForFrame(const TimeStamp& aSa
       break;
     }
 
-    // Current local transform; this is not what's painted but rather
-    // what PZC has transformed due to touches like panning or
-    // pinching. Eventually, the root layer transform will become this
-    // during runtime, but we must wait for Gecko to repaint.
-    localScale = mFrameMetrics.CalculateResolution();
+    aScrollOffset = mFrameMetrics.mScrollOffset * mFrameMetrics.CalculateResolution();
+    *aNewTransform = GetCurrentAsyncTransformInternal();
 
-    if (frame.IsScrollable()) {
-      metricsScrollOffset = frame.GetScrollOffsetInLayerPixels();
-    }
-
-    scrollOffset = mFrameMetrics.mScrollOffset;
     mCurrentAsyncScrollOffset = mFrameMetrics.mScrollOffset;
   }
 
@@ -1160,14 +1147,24 @@ bool AsyncPanZoomController::SampleContentTransformForFrame(const TimeStamp& aSa
                                             gAsyncScrollTimeout);
   }
 
-  CSSToLayerScale paintedScale = frame.mDevPixelsPerCSSPixel * frame.mResolution;
-  LayerPoint translation = (scrollOffset * paintedScale) - metricsScrollOffset;
-  *aNewTransform = ViewTransform(-translation, localScale / frame.mDevPixelsPerCSSPixel);
-  aScrollOffset = scrollOffset * localScale;
-
   mLastSampleTime = aSampleTime;
 
   return requestAnimationFrame;
+}
+
+ViewTransform AsyncPanZoomController::GetCurrentAsyncTransform() {
+  MonitorAutoLock mon(mMonitor);
+  return GetCurrentAsyncTransformInternal();
+}
+
+ViewTransform AsyncPanZoomController::GetCurrentAsyncTransformInternal() {
+  LayerPoint metricsScrollOffset;
+  if (mLastContentPaintMetrics.IsScrollable()) {
+    metricsScrollOffset = mLastContentPaintMetrics.GetScrollOffsetInLayerPixels();
+  }
+  CSSToScreenScale localScale = mFrameMetrics.CalculateResolution();
+  LayerPoint translation = mFrameMetrics.GetScrollOffsetInLayerPixels() - metricsScrollOffset;
+  return ViewTransform(-translation, localScale / mLastContentPaintMetrics.mDevPixelsPerCSSPixel);
 }
 
 void AsyncPanZoomController::NotifyLayersUpdated(const FrameMetrics& aLayerMetrics, bool aIsFirstPaint) {

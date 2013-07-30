@@ -182,7 +182,6 @@ public:
    * composite.
    */
   bool SampleContentTransformForFrame(const TimeStamp& aSampleTime,
-                                      ContainerLayer* aLayer,
                                       ViewTransform* aNewTransform,
                                       ScreenPoint& aScrollOffset);
 
@@ -210,6 +209,18 @@ public:
    * deleted (which may happen from any thread).
    */
   void Destroy();
+
+  /**
+   * Returns the incremental transformation corresponding to the async pan/zoom
+   * in progress. That is, when this transform is multiplied with the layer's
+   * existing transform, it will make the layer appear with the desired pan/zoom
+   * amount.
+   */
+  ViewTransform GetCurrentAsyncTransform();
+private:
+  /* Internal method of above. Callers to this MUST hold the monitor. */
+  ViewTransform GetCurrentAsyncTransformInternal();
+public:
 
   /**
    * Sets the DPI of the device for use within panning and zooming logic. It is
