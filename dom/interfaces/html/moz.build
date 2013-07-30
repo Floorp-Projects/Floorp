@@ -39,7 +39,6 @@ XPIDL_SOURCES += [
     'nsIDOMHTMLMenuElement.idl',
     'nsIDOMHTMLMenuItemElement.idl',
     'nsIDOMHTMLMetaElement.idl',
-    'nsIDOMHTMLMeterElement.idl',
     'nsIDOMHTMLOListElement.idl',
     'nsIDOMHTMLObjectElement.idl',
     'nsIDOMHTMLOptGroupElement.idl',
