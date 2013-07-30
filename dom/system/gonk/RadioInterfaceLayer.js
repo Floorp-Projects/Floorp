@@ -37,7 +37,7 @@ DEBUG = RIL.DEBUG_RIL || debugPref;
 
 function debug(s) {
   dump("-*- RadioInterfaceLayer: " + s + "\n");
-}
+};
 
 const RADIOINTERFACELAYER_CID =
   Components.ID("{2d831c8d-6017-435b-a80c-e5d422810cea}");
