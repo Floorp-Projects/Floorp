@@ -1164,6 +1164,7 @@ Scope.prototype = {
     this._variablesView._itemsByElement.set(child._target, child);
     this._variablesView._currHierarchy.set(child._absoluteName, child);
     child.header = !!aName;
+    child._wasToggled = !aName;
     return child;
   },
 
