@@ -101,7 +101,7 @@
       db.createObjectStore("foo", { autoIncrement: true });
       yield undefined;
 
-      let transaction = db.transaction("foo", IDBTransaction.READ_WRITE);
+      let transaction = db.transaction("foo", "readwrite");
       transaction.addEventListener("error", errorEventCounter, false);
       transaction.addEventListener("error", errorEventCounter, true);
 
@@ -119,7 +119,7 @@
       request.onerror = errorEventCounter;
       yield undefined;
 
-      transaction = db.transaction("foo", IDBTransaction.READ_WRITE);
+      transaction = db.transaction("foo", "readwrite");
       transaction.addEventListener("error", errorEventCounter, false);
       transaction.addEventListener("error", errorEventCounter, true);
 

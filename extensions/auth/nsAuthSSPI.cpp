@@ -20,6 +20,7 @@
 #include "nsNetCID.h"
 #include "nsCOMPtr.h"
 #include "nsICryptoHash.h"
+#include "mozilla/Telemetry.h"
 
 #include <windows.h>
 
@@ -239,7 +240,7 @@ nsAuthSSPI::Init(const char *serviceName,
     mMaxTokenLen = pinfo->cbMaxToken;
     (sspi->FreeContextBuffer)(pinfo);
 
-    TimeStamp useBefore;
+    MS_TimeStamp useBefore;
 
     SEC_WINNT_AUTH_IDENTITY_W ai;
     SEC_WINNT_AUTH_IDENTITY_W *pai = nullptr;
@@ -273,6 +274,17 @@ nsAuthSSPI::Init(const char *serviceName,
                                            &useBefore);
     if (rc != SEC_E_OK)
         return NS_ERROR_UNEXPECTED;
+
+    static bool sTelemetrySent = false;
+    if (!sTelemetrySent) {
+        mozilla::Telemetry::Accumulate(
+            mozilla::Telemetry::NTLM_MODULE_USED,
+            serviceFlags | nsIAuthModule::REQ_PROXY_AUTH
+                ? NTLM_MODULE_WIN_API_PROXY
+                : NTLM_MODULE_WIN_API_DIRECT);
+        sTelemetrySent = true;
+    }
+
     LOG(("AcquireCredentialsHandle() succeeded.\n"));
     return NS_OK;
 }
@@ -293,7 +305,7 @@ nsAuthSSPI::GetNextToken(const void *inToken,
     const int cbt_size = hash_size + end_point_length;
 	
     SECURITY_STATUS rc;
-    TimeStamp ignored;
+    MS_TimeStamp ignored;
 
     DWORD ctxAttr, ctxReq = 0;
     CtxtHandle *ctxIn;

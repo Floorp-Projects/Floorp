@@ -4,9 +4,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/layers/YCbCrImageDataSerializer.h"
+#include "yuv_convert.h"
+#include "mozilla/gfx/2D.h"
+#include "gfx2DGlue.h"
 
 #define MOZ_ALIGN_WORD(x) (((x) + 3) & ~3)
-
 using namespace mozilla::ipc;
 
 namespace mozilla {
@@ -216,6 +218,23 @@ YCbCrImageDataSerializer::CopyData(const uint8_t* aYData,
     }
   }
   return true;
+}
+
+TemporaryRef<gfx::DataSourceSurface>
+YCbCrImageDataDeserializer::ToDataSourceSurface()
+{
+  RefPtr<gfx::DataSourceSurface> result =
+    gfx::Factory::CreateDataSourceSurface(ToIntSize(GetYSize()), gfx::FORMAT_R8G8B8X8);
+
+  gfx::ConvertYCbCrToRGB32(GetYData(), GetCbData(), GetCrData(),
+                           result->GetData(),
+                           0, 0, //pic x and y
+                           GetYSize().width, GetYSize().height,
+                           GetYStride(), GetCbCrStride(),
+                           result->Stride(),
+                           gfx::YV12);
+  result->MarkDirty();
+  return result.forget();
 }
 
 

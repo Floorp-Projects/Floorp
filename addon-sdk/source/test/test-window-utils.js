@@ -3,6 +3,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
+module.metadata = {
+  engines: {
+    'Firefox': '*'
+  }
+};
+
 const windowUtils = require("sdk/deprecated/window-utils");
 const timer = require("sdk/timers");
 const { Cc, Ci } = require("chrome");
@@ -290,15 +296,5 @@ exports.testWindowIterator = function(assert, done) {
     close(window).then(done);
   }, false);
 };
-
-if (require("sdk/system/xul-app").is("Fennec")) {
-  module.exports = {
-    "test Unsupported Test": function UnsupportedTest (assert) {
-        assert.pass(
-          "Skipping this test until Fennec support is implemented." +
-          "See bug 809412");
-    }
-  }
-}
 
 require("test").run(exports);

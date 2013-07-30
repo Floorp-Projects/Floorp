@@ -242,7 +242,7 @@ XPCThrower::ThrowExceptionObject(JSContext* cx, nsIException* e)
             JS_SetPendingException(cx, thrown);
             success = true;
         } else if ((xpc = nsXPConnect::XPConnect())) {
-            JS::RootedObject glob(cx, JS_GetGlobalForScopeChain(cx));
+            JS::RootedObject glob(cx, JS::CurrentGlobalOrNull(cx));
             if (!glob)
                 return false;
 

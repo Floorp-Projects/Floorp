@@ -205,7 +205,6 @@ BluetoothA2dpManager::HandleSinkPropertyChanged(const BluetoothSignal& aSignal)
     MOZ_ASSERT(value.type() == BluetoothValue::Tbool);
     mA2dpConnected = value.get_bool();
     NotifyStatusChanged();
-    NotifyAudioManager();
   } else if (name.EqualsLiteral("Playing")) {
     // Indicates if a stream is active to a A2DP sink on the remote device.
     MOZ_ASSERT(value.type() == BluetoothValue::Tbool);
@@ -259,6 +258,7 @@ BluetoothA2dpManager::NotifyStatusChanged()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
+  // Broadcast system message to Gaia
   NS_NAMED_LITERAL_STRING(type, BLUETOOTH_A2DP_STATUS_CHANGED_ID);
   InfallibleTArray<BluetoothNamedValue> parameters;
 
@@ -272,25 +272,16 @@ BluetoothA2dpManager::NotifyStatusChanged()
 
   if (!BroadcastSystemMessage(type, parameters)) {
     NS_WARNING("Failed to broadcast system message to settings");
-    return;
   }
-}
 
-void
-BluetoothA2dpManager::NotifyAudioManager()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
+  // Notify Gecko observers
   nsCOMPtr<nsIObserverService> obs =
     do_GetService("@mozilla.org/observer-service;1");
   NS_ENSURE_TRUE_VOID(obs);
 
-  nsAutoString data;
-  data.AppendInt(mA2dpConnected);
-
   if (NS_FAILED(obs->NotifyObservers(this,
                                      BLUETOOTH_A2DP_STATUS_CHANGED_ID,
-                                     data.BeginReading()))) {
+                                     mDeviceAddress.get()))) {
     NS_WARNING("Failed to notify bluetooth-a2dp-status-changed observsers!");
   }
 }

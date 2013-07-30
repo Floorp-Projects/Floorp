@@ -255,6 +255,13 @@ gfxPlatform::gfxPlatform()
     mOpenTypeSVGEnabled = UNINITIALIZED_VALUE;
     mBidiNumeralOption = UNINITIALIZED_VALUE;
 
+    mLayersPreferMemoryOverShmem =
+        XRE_GetProcessType() == GeckoProcessType_Default &&
+        Preferences::GetBool("layers.prefer-memory-over-shmem", true);
+
+    mLayersUseDeprecated =
+        Preferences::GetBool("layers.use-deprecated-textures", true);
+
     uint32_t canvasMask = (1 << BACKEND_CAIRO) | (1 << BACKEND_SKIA);
     uint32_t contentMask = 0;
     InitBackendPrefs(canvasMask, contentMask);
@@ -501,6 +508,12 @@ gfxPlatform::~gfxPlatform()
     // leaked, and we hit them.
     FcFini();
 #endif
+}
+
+bool
+gfxPlatform::PreferMemoryOverShmem() const {
+  MOZ_ASSERT(!CompositorParent::IsInCompositorThread());
+  return mLayersPreferMemoryOverShmem;
 }
 
 already_AddRefed<gfxASurface>

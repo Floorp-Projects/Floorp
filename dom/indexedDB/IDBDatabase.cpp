@@ -624,7 +624,7 @@ IDBDatabase::Transaction(const jsval& aStoreNames,
                          const nsAString& aMode,
                          JSContext* aCx,
                          uint8_t aOptionalArgCount,
-                         nsIIDBTransaction** _retval)
+                         nsISupports** _retval)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
@@ -758,7 +758,8 @@ IDBDatabase::Transaction(const jsval& aStoreNames,
                     transaction->GetSerialNumber(), IDB_PROFILER_STRING(this),
                     IDB_PROFILER_STRING(transaction));
 
-  transaction.forget(_retval);
+  nsRefPtr<IDBWrapperCache> tmp = transaction.get();
+  tmp.forget(_retval);
   return NS_OK;
 }
 

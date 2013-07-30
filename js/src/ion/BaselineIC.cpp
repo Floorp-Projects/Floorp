@@ -14,6 +14,8 @@
 #include "ion/IonSpewer.h"
 #include "ion/VMFunctions.h"
 
+#include "jsboolinlines.h"
+
 #include "vm/Interpreter-inl.h"
 
 namespace js {
@@ -1662,7 +1664,7 @@ DoCompareFallback(JSContext *cx, BaselineFrame *frame, ICCompare_Fallback *stub,
     RootedValue rhsCopy(cx, rhs);
 
     // Perform the compare operation.
-    JSBool out;
+    bool out;
     switch(op) {
       case JSOP_LT:
         if (!LessThan(cx, &lhsCopy, &rhsCopy, &out))
@@ -2328,7 +2330,8 @@ ICToBool_Object::Compiler::generateStubCode(MacroAssembler &masm)
     masm.bind(&slowPath);
     masm.setupUnalignedABICall(1, scratch);
     masm.passABIArg(objReg);
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, ObjectEmulatesUndefined));
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, js::EmulatesUndefined));
+    masm.convertBoolToInt32(ReturnReg, ReturnReg);
     masm.xor32(Imm32(1), ReturnReg);
     masm.tagValue(JSVAL_TYPE_BOOLEAN, ReturnReg, R0);
     EmitReturnFromIC(masm);
@@ -4743,7 +4746,7 @@ DoInFallback(JSContext *cx, ICIn_Fallback *stub, HandleValue key, HandleValue ob
 
     RootedObject obj(cx, &objValue.toObject());
 
-    JSBool cond = false;
+    bool cond = false;
     if (!OperatorIn(cx, key, obj, &cond))
         return false;
 
@@ -7727,7 +7730,7 @@ ICCall_ScriptedApplyArguments::Compiler::generateStubCode(MacroAssembler &masm)
     return true;
 }
 
-static JSBool
+static bool
 DoubleValueToInt32ForSwitch(Value *v)
 {
     double d = v->toDouble();
@@ -7783,7 +7786,7 @@ ICTableSwitch::Compiler::generateStubCode(MacroAssembler &masm)
         // int32.
         masm.mov(ReturnReg, scratch);
         masm.popValue(R0);
-        masm.branchTest32(Assembler::Zero, scratch, scratch, &outOfRange);
+        masm.branchIfFalseBool(scratch, &outOfRange);
         masm.unboxInt32(R0, key);
     }
     masm.jump(&isInt32);
@@ -8085,7 +8088,7 @@ DoInstanceOfFallback(JSContext *cx, ICInstanceOf_Fallback *stub,
 
     RootedObject obj(cx, &rhs.toObject());
 
-    JSBool cond = false;
+    bool cond = false;
     if (!HasInstance(cx, obj, lhs, &cond))
         return false;
 

@@ -3750,6 +3750,11 @@
     "n_values": 4,
     "description": "Accumulates type of content (mixed, mixed passive, unmixed) per page load"
   },
+  "NTLM_MODULE_USED": {
+    "kind": "enumerated",
+    "n_values": 8,
+    "description": "The module used for the NTLM protocol (Windows_API, Kerberos, Samba_auth or Generic) and whether or not the authentication was used to connect to a proxy server. This data is collected only once per session (at first NTLM authentification)."
+  },
   "FX_THUMBNAILS_BG_QUEUE_SIZE_ON_CAPTURE": {
     "kind": "exponential",
     "high": 100,

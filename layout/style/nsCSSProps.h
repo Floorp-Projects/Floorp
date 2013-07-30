@@ -481,6 +481,7 @@ public:
   static const int32_t kFontKTable[];
   static const int32_t kFontKerningKTable[];
   static const int32_t kFontSizeKTable[];
+  static const int32_t kFontSmoothingKTable[];
   static const int32_t kFontStretchKTable[];
   static const int32_t kFontStyleKTable[];
   static const int32_t kFontSynthesisKTable[];

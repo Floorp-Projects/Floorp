@@ -13,6 +13,8 @@ include $(DEPTH)/config/autoconf.mk
 LIBRARY_NAME   = necko
 MSVC_ENABLE_PGO := 1
 EXPORT_LIBRARY = 1
+IS_COMPONENT   = 1
+MODULE_NAME    = necko
 LIBXUL_LIBRARY = 1
 FAIL_ON_WARNINGS := 1
 

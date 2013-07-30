@@ -1007,6 +1007,9 @@ DrawTargetCG::FillGlyphs(ScaledFont *aFont, const GlyphBuffer &aBuffer, const Pa
   CGContextRef cg = fixer.Check(mCg, aDrawOptions.mCompositionOp);
   CGContextSetAlpha(cg, aDrawOptions.mAlpha);
   CGContextSetShouldAntialias(cg, aDrawOptions.mAntialiasMode != AA_NONE);
+  if (aDrawOptions.mAntialiasMode != AA_DEFAULT) {
+    CGContextSetShouldSmoothFonts(cg, aDrawOptions.mAntialiasMode == AA_SUBPIXEL);
+  }
 
   CGContextConcatCTM(cg, GfxMatrixToCGAffineTransform(mTransform));
 
@@ -1196,12 +1199,27 @@ DrawTargetCG::Init(BackendType aType,
     mData = nullptr;
   }
 
+  mFormat = FORMAT_B8G8R8A8;
+
   if (!mCg || aType == BACKEND_COREGRAPHICS) {
     int bitsPerComponent = 8;
 
     CGBitmapInfo bitinfo;
-    bitinfo = kCGBitmapByteOrder32Host | kCGImageAlphaPremultipliedFirst;
-
+    if (aFormat == FORMAT_A8) {
+      if (mColorSpace)
+        CGColorSpaceRelease(mColorSpace);
+      mColorSpace = nullptr;
+      bitinfo = kCGImageAlphaOnly;
+      mFormat = FORMAT_A8;
+    } else {
+      bitinfo = kCGBitmapByteOrder32Host;
+      if (aFormat == FORMAT_B8G8R8X8) {
+        bitinfo |= kCGImageAlphaNoneSkipFirst;
+        mFormat = aFormat;
+      } else {
+        bitinfo |= kCGImageAlphaPremultipliedFirst;
+      }
+    }
     // XXX: what should we do if this fails?
     mCg = CGBitmapContextCreate (aData,
                                  mSize.width,
@@ -1226,8 +1244,6 @@ DrawTargetCG::Init(BackendType aType,
   //      use the default for content.
   CGContextSetInterpolationQuality(mCg, kCGInterpolationLow);
 
-  // XXX: set correct format
-  mFormat = FORMAT_B8G8R8A8;
 
   if (aType == BACKEND_COREGRAPHICS_ACCELERATED) {
     // The bitmap backend uses callac to clear, we can't do that without
@@ -1282,9 +1298,12 @@ DrawTargetCG::Init(CGContextRef cgContext, const IntSize &aSize)
   mFormat = FORMAT_B8G8R8A8;
   if (GetContextType(mCg) == CG_CONTEXT_TYPE_BITMAP) {
     CGColorSpaceRef colorspace;
+    CGBitmapInfo bitinfo = CGBitmapContextGetBitmapInfo(mCg);
     colorspace = CGBitmapContextGetColorSpace (mCg);
     if (CGColorSpaceGetNumberOfComponents(colorspace) == 1) {
-        mFormat = FORMAT_A8;
+      mFormat = FORMAT_A8;
+    } else if ((bitinfo & kCGBitmapAlphaInfoMask) == kCGImageAlphaNoneSkipFirst) {
+      mFormat = FORMAT_B8G8R8X8;
     }
   }
 

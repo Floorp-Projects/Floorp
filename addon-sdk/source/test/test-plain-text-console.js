@@ -36,50 +36,61 @@ exports.testPlainTextConsole = function(test) {
   test.pass("PlainTextConsole instantiates");
 
   con.log('testing', 1, [2, 3, 4]);
-  test.assertEqual(lastPrint(), "info: " + name + ": testing 1 2,3,4\n",
+  test.assertEqual(lastPrint(), "console.log: " + name + ": testing, 1, Array [2,3,4]\n",
                    "PlainTextConsole.log() must work.");
 
   con.info('testing', 1, [2, 3, 4]);
-  test.assertEqual(lastPrint(), "info: " + name + ": testing 1 2,3,4\n",
+  test.assertEqual(lastPrint(), "console.info: " + name + ": testing, 1, Array [2,3,4]\n",
                    "PlainTextConsole.info() must work.");
 
   con.warn('testing', 1, [2, 3, 4]);
-  test.assertEqual(lastPrint(), "warn: " + name + ": testing 1 2,3,4\n",
+  test.assertEqual(lastPrint(), "console.warn: " + name + ": testing, 1, Array [2,3,4]\n",
                    "PlainTextConsole.warn() must work.");
 
   con.error('testing', 1, [2, 3, 4]);
-  test.assertEqual(lastPrint(), "error: " + name + ": testing 1 2,3,4\n",
+  test.assertEqual(prints[0], "console.error: " + name + ": \n",
                    "PlainTextConsole.error() must work.");
+  test.assertEqual(prints[1], "  testing\n")
+  test.assertEqual(prints[2], "  1\n")
+  test.assertEqual(prints[3], "Array\n    - 0 = 2\n    - 1 = 3\n    - 2 = 4\n    - length = 3\n");
+  prints = [];
 
   con.debug('testing', 1, [2, 3, 4]);
-  test.assertEqual(lastPrint(), "debug: " + name + ": testing 1 2,3,4\n",
+  test.assertEqual(prints[0], "console.debug: " + name + ": \n",
                    "PlainTextConsole.debug() must work.");
+  test.assertEqual(prints[1], "  testing\n")
+  test.assertEqual(prints[2], "  1\n")
+  test.assertEqual(prints[3], "Array\n    - 0 = 2\n    - 1 = 3\n    - 2 = 4\n    - length = 3\n");
+  prints = [];
 
   con.log('testing', undefined);
-  test.assertEqual(lastPrint(), "info: " + name + ": testing undefined\n",
+  test.assertEqual(lastPrint(), "console.log: " + name + ": testing, undefined\n",
                    "PlainTextConsole.log() must stringify undefined.");
 
   con.log('testing', null);
-  test.assertEqual(lastPrint(), "info: " + name + ": testing null\n",
+  test.assertEqual(lastPrint(), "console.log: " + name + ": testing, null\n",
                    "PlainTextConsole.log() must stringify null.");
 
+  // TODO: Fix console.jsm to detect custom toString.
   con.log("testing", { toString: function() "obj.toString()" });
-  test.assertEqual(lastPrint(), "info: " + name + ": testing obj.toString()\n",
-                   "PlainTextConsole.log() must stringify custom toString.");
+  test.assertEqual(lastPrint(), "console.log: " + name + ": testing, {}\n",
+                   "PlainTextConsole.log() doesn't printify custom toString.");
 
   con.log("testing", { toString: function() { throw "fail!"; } });
-  test.assertEqual(lastPrint(), "info: " + name + ": testing <toString() error>\n",
+  test.assertEqual(lastPrint(), "console.log: " + name + ": testing, {}\n",
                    "PlainTextConsole.log() must stringify custom bad toString.");
 
+  
   con.exception(new Error("blah"));
 
-  var tbLines = prints[0].split("\n");
-  test.assertEqual(tbLines[0], "error: " + name + ": An exception occurred.");
-  test.assertEqual(tbLines[1], "Error: blah");
-  test.assertEqual(tbLines[2], module.uri + " 74");
-  test.assertEqual(tbLines[3], "Traceback (most recent call last):");
+  
+  test.assertEqual(prints[0], "console.error: " + name + ": \n");
+  let tbLines = prints[1].split("\n");
+  test.assertEqual(tbLines[0], "  Message: Error: blah");
+  test.assertEqual(tbLines[1], "  Stack:");
+  test.assert(prints[1].indexOf(module.uri + ":84") !== -1);
+  prints = []
 
-  prints = [];
   try {
     loadSubScript("invalid-url", {});
     test.fail("successed in calling loadSubScript with invalid-url");
@@ -87,16 +98,15 @@ exports.testPlainTextConsole = function(test) {
   catch(e) {
     con.exception(e);
   }
-  var tbLines = prints[0].split("\n");
-  test.assertEqual(tbLines[0], "error: " + name + ": An exception occurred.");
-  test.assertEqual(tbLines[1], "Error creating URI (invalid URL scheme?)");
-  test.assertEqual(tbLines[2], "Traceback (most recent call last):");
-
+  test.assertEqual(prints[0], "console.error: " + name + ": \n");
+  test.assertEqual(prints[1], "  Error creating URI (invalid URL scheme?)\n");
   prints = [];
+
   con.trace();
-  tbLines = prints[0].split("\n");
-  test.assertEqual(tbLines[0], "info: " + name + ": Traceback (most recent call last):");
-  test.assertEqual(tbLines[tbLines.length - 4].trim(), "con.trace();");
+  let tbLines = prints[0].split("\n");
+  test.assertEqual(tbLines[0], "console.trace: " + name + ": ");
+  test.assert(tbLines[1].indexOf("_ain-text-console.js 105") == 0);
+  prints = [];
 
   // Whether or not console methods should print at the various log levels,
   // structured as a hash of levels, each of which contains a hash of methods,
@@ -113,11 +123,11 @@ exports.testPlainTextConsole = function(test) {
 
   // The messages we use to test the various methods, as a hash of methods.
   let messages = {
-    debug: "debug: " + name + ": \n",
-    log: "info: " + name + ": \n",
-    info: "info: " + name + ": \n",
-    warn: "warn: " + name + ": \n",
-    error: "error: " + name + ": \n",
+    debug: "console.debug: " + name + ": \n  \n",
+    log: "console.log: " + name + ": \n",
+    info: "console.info: " + name + ": \n",
+    warn: "console.warn: " + name + ": \n",
+    error: "console.error: " + name + ": \n  \n",
   };
 
   for (let level in levels) {
@@ -130,17 +140,20 @@ exports.testPlainTextConsole = function(test) {
       prefs.set(SDK_LOG_LEVEL_PREF, level);
       con[method]("");
       prefs.set(SDK_LOG_LEVEL_PREF, "all");
-      test.assertEqual(lastPrint(), (methods[method] ? messages[method] : null),
+      test.assertEqual(prints.join(""), 
+                       (methods[method] ? messages[method] : ""),
                        "at log level '" + level + "', " + method + "() " +
                        (methods[method] ? "prints" : "doesn't print"));
+      prints = [];
     }
   }
 
   prefs.set(SDK_LOG_LEVEL_PREF, "off");
   prefs.set(ADDON_LOG_LEVEL_PREF, "all");
   con.debug("");
-  test.assertEqual(lastPrint(), messages["debug"],
+  test.assertEqual(prints.join(""), messages["debug"],
                    "addon log level 'all' overrides SDK log level 'off'");
+  prints = [];
 
   prefs.set(SDK_LOG_LEVEL_PREF, "all");
   prefs.set(ADDON_LOG_LEVEL_PREF, "off");

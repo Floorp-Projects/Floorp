@@ -7,7 +7,6 @@ const { 'classes': Cc, 'interfaces': Ci } = Components;
 
 const DOMException = Ci.nsIDOMDOMException;
 const IDBCursor = Ci.nsIIDBCursor;
-const IDBTransaction = Ci.nsIIDBTransaction;
 const IDBOpenDBRequest = Ci.nsIIDBOpenDBRequest;
 const IDBDatabase = Ci.nsIIDBDatabase
 const IDBIndex = Ci.nsIIDBIndex

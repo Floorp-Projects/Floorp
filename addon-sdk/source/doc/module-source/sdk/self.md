@@ -13,6 +13,13 @@ Note that the `self` module is completely different from the global `self`
 object accessible to content scripts, which is used by a content script to
 [communicate with the add-on code](dev-guide/guides/content-scripts/using-port.html).
 
+<api name="uri">
+@property {string}
+This property represents an add-on associated unique URI string.
+This URI can be used for APIs which require a valid URI string, such as the
+[passwords](modules/sdk/passwords.html) module.
+</api>
+
 <api name="id">
 @property {string}
 This property is a printable string that is unique for each add-on. It comes

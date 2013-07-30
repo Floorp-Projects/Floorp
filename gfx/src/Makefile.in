@@ -10,9 +10,11 @@ VPATH       = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+MODULE_NAME    = nsGfxModule
 MSVC_ENABLE_PGO := 1
 EXPORT_LIBRARY = 1
 LIBXUL_LIBRARY = 1
+IS_COMPONENT   = 1
 FAIL_ON_WARNINGS = 1
 
 include $(topsrcdir)/config/rules.mk

@@ -308,7 +308,7 @@ public:
     unsigned refCount = js::ContextHasOutstandingRequests(cx) ? 2 : 1;
 
     cb.DescribeRefCountedNode(refCount, "JSContext");
-    if (JSObject *global = js::GetDefaultGlobalForContext(cx)) {
+    if (JSObject *global = js::DefaultObjectForContextOrNull(cx)) {
       NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "[global object]");
       cb.NoteJSChild(global);
     }
@@ -562,7 +562,7 @@ CycleCollectedJSRuntime::MaybeTraceGlobals(JSTracer* aTracer) const
       continue;
     }
 
-    if (JSObject* global = js::GetDefaultGlobalForContext(acx)) {
+    if (JSObject* global = js::DefaultObjectForContextOrNull(acx)) {
       JS::AssertGCThingMustBeTenured(global);
       JS_CallObjectTracer(aTracer, &global, "Global Object");
     }
@@ -760,7 +760,7 @@ CycleCollectedJSRuntime::MaybeTraverseGlobals(nsCycleCollectionNoteRootCallback&
   while ((acx = JS_ContextIterator(Runtime(), &iter))) {
     // Add the context to the CC graph only if traversing it would
     // end up doing something.
-    JSObject* global = js::GetDefaultGlobalForContext(acx);
+    JSObject* global = js::DefaultObjectForContextOrNull(acx);
     if (global && xpc_IsGrayGCThing(global)) {
       aCb.NoteNativeRoot(acx, JSContextParticipant());
     }
