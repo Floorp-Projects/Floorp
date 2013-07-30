@@ -469,6 +469,23 @@ nsLayoutUtils::FindContentFor(ViewID aId)
   }
 }
 
+nsIScrollableFrame*
+nsLayoutUtils::FindScrollableFrameFor(ViewID aId)
+{
+  nsIContent* content = FindContentFor(aId);
+  if (!content) {
+    return nullptr;
+  }
+
+  nsIFrame* scrolledFrame = content->GetPrimaryFrame();
+  if (scrolledFrame && content->OwnerDoc()->GetRootElement() == content) {
+    // The content is the root element of a subdocument, so return the root scrollable
+    // for the subdocument.
+    scrolledFrame = scrolledFrame->PresContext()->PresShell()->GetRootScrollFrame();
+  }
+  return scrolledFrame ? scrolledFrame->GetScrollTargetFrame() : nullptr;
+}
+
 bool
 nsLayoutUtils::GetDisplayPort(nsIContent* aContent, nsRect *aResult)
 {
