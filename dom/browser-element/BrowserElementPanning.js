@@ -45,16 +45,21 @@ const ContentPanning = {
       this.watchedEventsType = 'mouse';
     }
 
-    let els = Cc["@mozilla.org/eventlistenerservice;1"]
-                .getService(Ci.nsIEventListenerService);
+    // If we are using an AsyncPanZoomController for the parent frame,
+    // it will handle subframe scrolling too. We don't need to listen for
+    // these events.
+    if (!this._asyncPanZoomForViewportFrame) {
+      let els = Cc["@mozilla.org/eventlistenerservice;1"]
+                  .getService(Ci.nsIEventListenerService);
 
-    events.forEach(function(type) {
-      // Using the system group for mouse/touch events to avoid
-      // missing events if .stopPropagation() has been called.
-      els.addSystemEventListener(global, type,
-                                 this.handleEvent.bind(this),
-                                 /* useCapture = */ false);
-    }.bind(this));
+      events.forEach(function(type) {
+        // Using the system group for mouse/touch events to avoid
+        // missing events if .stopPropagation() has been called.
+        els.addSystemEventListener(global, type,
+                                   this.handleEvent.bind(this),
+                                   /* useCapture = */ false);
+      }.bind(this));
+    }
 
     addMessageListener("Viewport:Change", this._recvViewportChange.bind(this));
     addMessageListener("Gesture:DoubleTap", this._recvDoubleTap.bind(this));

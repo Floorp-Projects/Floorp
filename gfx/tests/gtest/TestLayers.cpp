@@ -48,6 +48,7 @@ public:
   }
 
   virtual void ComputeEffectiveTransforms(const gfx3DMatrix& aTransformToSurface) {
+    DefaultComputeEffectiveTransforms(aTransformToSurface);
   }
 
   virtual void RepositionChild(Layer* aChild, Layer* aAfter) {
@@ -90,10 +91,6 @@ public:
 
   virtual LayerType GetType() const {
     return TYPE_THEBES;
-  }
-
-  virtual void ComputeEffectiveTransforms(const gfx3DMatrix& aTransformToSurface) {
-    MOZ_CRASH();
   }
 
   virtual void InvalidateRegion(const nsIntRegion& aRegion) {
@@ -235,6 +232,9 @@ already_AddRefed<Layer> CreateLayerTree(
       }
       lastLayer = layer;
     }
+  }
+  if (rootLayer) {
+    rootLayer->ComputeEffectiveTransforms(gfx3DMatrix());
   }
   return rootLayer.forget();
 }
