@@ -268,7 +268,7 @@ public:
    * This is necessary in cases where a scroll is not caused by user
    * input (for example, a content scrollTo()).
    */
-  void UpdateScrollOffset(CSSPoint aScrollOffset);
+  void UpdateScrollOffset(const CSSPoint& aScrollOffset);
 
   /**
    * Cancels any currently running animation. Note that all this does is set the

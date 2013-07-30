@@ -15,7 +15,7 @@
 #endif //MOZ_ENABLE_D3D9_LAYER
 #include "mozilla/BrowserElementParent.h"
 #include "mozilla/dom/TabParent.h"
-#include "mozilla/layers/AsyncPanZoomController.h"
+#include "mozilla/layers/APZCTreeManager.h"
 #include "mozilla/layers/CompositorParent.h"
 #include "mozilla/layers/LayerTransactionParent.h"
 #include "nsContentUtils.h"
@@ -620,12 +620,22 @@ RenderFrameParent::RenderFrameParent(nsFrameLoader* aFrameLoader,
     }
     if (aScrollingBehavior == ASYNC_PAN_ZOOM) {
       mContentController = new RemoteContentController(this);
-      mPanZoomController = new AsyncPanZoomController(
-        mContentController, AsyncPanZoomController::USE_GESTURE_DETECTOR);
-      CompositorParent::SetPanZoomControllerForLayerTree(mLayersId,
-                                                         mPanZoomController);
+      CompositorParent::SetControllerForLayerTree(mLayersId, mContentController);
     }
   }
+}
+
+APZCTreeManager*
+RenderFrameParent::GetApzcTreeManager()
+{
+  // We can't get a ref to the APZCTreeManager until after the child is
+  // created and the static getter knows which CompositorParent is
+  // instantiated with this layers ID. That's why try to fetch it when
+  // we first need it and cache the result.
+  if (!mApzcTreeManager) {
+    mApzcTreeManager = CompositorParent::GetAPZCTreeManager(mLayersId);
+  }
+  return mApzcTreeManager.get();
 }
 
 RenderFrameParent::~RenderFrameParent()
@@ -787,17 +797,17 @@ void
 RenderFrameParent::NotifyInputEvent(const nsInputEvent& aEvent,
                                     nsInputEvent* aOutEvent)
 {
-  if (mPanZoomController) {
-    mPanZoomController->ReceiveInputEvent(aEvent, aOutEvent);
+  if (GetApzcTreeManager()) {
+    GetApzcTreeManager()->ReceiveInputEvent(aEvent, aOutEvent);
   }
 }
 
 void
 RenderFrameParent::NotifyDimensionsChanged(ScreenIntSize size)
 {
-  if (mPanZoomController) {
-    mPanZoomController->UpdateCompositionBounds(
-      ScreenIntRect(ScreenIntPoint(), size));
+  if (GetApzcTreeManager()) {
+    GetApzcTreeManager()->UpdateCompositionBounds(ScrollableLayerGuid(mLayersId),
+                                                  ScreenIntRect(ScreenIntPoint(), size));
   }
 }
 
@@ -810,7 +820,7 @@ RenderFrameParent::ActorDestroy(ActorDestroyReason why)
       // Stop our content controller from requesting repaints of our
       // content.
       mContentController->ClearRenderFrame();
-      mPanZoomController->Destroy();
+      // TODO: notify the compositor?
     }
   }
 
@@ -836,8 +846,8 @@ RenderFrameParent::RecvNotifyCompositorTransaction()
 bool
 RenderFrameParent::RecvCancelDefaultPanZoom()
 {
-  if (mPanZoomController) {
-    mPanZoomController->CancelDefaultPanZoom();
+  if (GetApzcTreeManager()) {
+    GetApzcTreeManager()->CancelDefaultPanZoom(ScrollableLayerGuid(mLayersId));
   }
   return true;
 }
@@ -845,8 +855,8 @@ RenderFrameParent::RecvCancelDefaultPanZoom()
 bool
 RenderFrameParent::RecvDetectScrollableSubframe()
 {
-  if (mPanZoomController) {
-    mPanZoomController->DetectScrollableSubframe();
+  if (GetApzcTreeManager()) {
+    GetApzcTreeManager()->DetectScrollableSubframe(ScrollableLayerGuid(mLayersId));
   }
   return true;
 }
@@ -972,24 +982,27 @@ RenderFrameParent::BuildDisplayList(nsDisplayListBuilder* aBuilder,
 void
 RenderFrameParent::ZoomToRect(const CSSRect& aRect)
 {
-  if (mPanZoomController) {
-    mPanZoomController->ZoomToRect(aRect);
+  if (GetApzcTreeManager()) {
+    GetApzcTreeManager()->ZoomToRect(ScrollableLayerGuid(mLayersId),
+                                     aRect);
   }
 }
 
 void
 RenderFrameParent::ContentReceivedTouch(bool aPreventDefault)
 {
-  if (mPanZoomController) {
-    mPanZoomController->ContentReceivedTouch(aPreventDefault);
+  if (GetApzcTreeManager()) {
+    GetApzcTreeManager()->ContentReceivedTouch(ScrollableLayerGuid(mLayersId),
+                                               aPreventDefault);
   }
 }
 
 void
 RenderFrameParent::UpdateZoomConstraints(bool aAllowZoom, float aMinZoom, float aMaxZoom)
 {
-  if (mPanZoomController) {
-    mPanZoomController->UpdateZoomConstraints(aAllowZoom, aMinZoom, aMaxZoom);
+  if (GetApzcTreeManager()) {
+    GetApzcTreeManager()->UpdateZoomConstraints(ScrollableLayerGuid(mLayersId),
+                                                aAllowZoom, aMinZoom, aMaxZoom);
   }
 }
 

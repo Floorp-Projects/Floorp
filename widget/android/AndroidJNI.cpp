@@ -35,7 +35,7 @@
 #include "mozilla/dom/mobilemessage/Types.h"
 #include "mozilla/dom/mobilemessage/PSms.h"
 #include "mozilla/dom/mobilemessage/SmsParent.h"
-#include "mozilla/layers/AsyncPanZoomController.h"
+#include "mozilla/layers/APZCTreeManager.h"
 #include "nsIMobileMessageDatabaseService.h"
 #include "nsPluginInstanceOwner.h"
 #include "nsSurfaceTexture.h"
@@ -847,10 +847,10 @@ Java_org_mozilla_gecko_GeckoJavaSampler_getProfilerTime(JNIEnv *jenv, jclass jc)
 NS_EXPORT void JNICALL
 Java_org_mozilla_gecko_gfx_NativePanZoomController_abortAnimation(JNIEnv* env, jobject instance)
 {
-  AsyncPanZoomController* controller = nsWindow::GetPanZoomController();
-  if (controller) {
-      controller->CancelAnimation();
-  }
+    APZCTreeManager *controller = CompositorParent::GetAPZCTreeManager(CompositorParent::ROOT_LAYER_TREE_ID);
+    if (controller) {
+        controller->CancelAnimation(ScrollableLayerGuid(CompositorParent::ROOT_LAYER_TREE_ID));
+    }
 }
 
 NS_EXPORT void JNICALL
@@ -865,13 +865,13 @@ Java_org_mozilla_gecko_gfx_NativePanZoomController_init(JNIEnv* env, jobject ins
         MOZ_ASSERT(false, "Registering a new NPZC when we already have one");
         env->DeleteGlobalRef(oldRef);
     }
-    nsWindow::SetPanZoomController(new AsyncPanZoomController(AndroidBridge::Bridge(), AsyncPanZoomController::USE_GESTURE_DETECTOR));
+    CompositorParent::SetControllerForLayerTree(CompositorParent::ROOT_LAYER_TREE_ID, AndroidBridge::Bridge());
 }
 
 NS_EXPORT void JNICALL
 Java_org_mozilla_gecko_gfx_NativePanZoomController_handleTouchEvent(JNIEnv* env, jobject instance, jobject event)
 {
-    AsyncPanZoomController *controller = nsWindow::GetPanZoomController();
+    APZCTreeManager *controller = CompositorParent::GetAPZCTreeManager(CompositorParent::ROOT_LAYER_TREE_ID);
     if (controller) {
         AndroidGeckoEvent* wrapper = AndroidGeckoEvent::MakeFromJavaObject(env, event);
         const MultiTouchInput& input = wrapper->MakeMultiTouchInput(nsWindow::TopWindow());
@@ -905,7 +905,6 @@ Java_org_mozilla_gecko_gfx_NativePanZoomController_destroy(JNIEnv* env, jobject 
         return;
     }
 
-    nsWindow::SetPanZoomController(nullptr);
     jobject oldRef = AndroidBridge::Bridge()->SetNativePanZoomController(NULL);
     if (!oldRef) {
         MOZ_ASSERT(false, "Clearing a non-existent NPZC");
@@ -917,9 +916,9 @@ Java_org_mozilla_gecko_gfx_NativePanZoomController_destroy(JNIEnv* env, jobject 
 NS_EXPORT void JNICALL
 Java_org_mozilla_gecko_gfx_NativePanZoomController_notifyDefaultActionPrevented(JNIEnv* env, jobject instance, jboolean prevented)
 {
-    AsyncPanZoomController *controller = nsWindow::GetPanZoomController();
+    APZCTreeManager *controller = CompositorParent::GetAPZCTreeManager(CompositorParent::ROOT_LAYER_TREE_ID);
     if (controller) {
-        controller->ContentReceivedTouch(prevented);
+        controller->ContentReceivedTouch(ScrollableLayerGuid(CompositorParent::ROOT_LAYER_TREE_ID), prevented);
     }
 }
 
@@ -946,9 +945,9 @@ Java_org_mozilla_gecko_gfx_NativePanZoomController_getOverScrollMode(JNIEnv* env
 NS_EXPORT void JNICALL
 Java_org_mozilla_gecko_gfx_NativePanZoomController_updateScrollOffset(JNIEnv* env, jobject instance, jfloat cssX, jfloat cssY)
 {
-    AsyncPanZoomController* controller = nsWindow::GetPanZoomController();
+    APZCTreeManager *controller = CompositorParent::GetAPZCTreeManager(CompositorParent::ROOT_LAYER_TREE_ID);
     if (controller) {
-        controller->UpdateScrollOffset(CSSPoint(cssX, cssY));
+        controller->UpdateScrollOffset(ScrollableLayerGuid(CompositorParent::ROOT_LAYER_TREE_ID), CSSPoint(cssX, cssY));
     }
 }
 

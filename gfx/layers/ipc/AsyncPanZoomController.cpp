@@ -187,8 +187,6 @@ AsyncPanZoomController::AsyncPanZoomController(GeckoContentController* aGeckoCon
 {
   MOZ_COUNT_CTOR(AsyncPanZoomController);
 
-  InitializeGlobalState();
-
   if (aGestures == USE_GESTURE_DETECTOR) {
     mGestureEventListener = new GestureEventListener(this);
   }
@@ -1513,7 +1511,7 @@ void AsyncPanZoomController::GetAPZCAtPoint(const ContainerLayer& aLayerTree,
   GetAPZCAtPointOnSubtree(aLayerTree, point, aApzcOut, aRelativePointOut);
 }
 
-void AsyncPanZoomController::UpdateScrollOffset(CSSPoint aScrollOffset)
+void AsyncPanZoomController::UpdateScrollOffset(const CSSPoint& aScrollOffset)
 {
   MonitorAutoLock monitor(mMonitor);
   mFrameMetrics.mScrollOffset = aScrollOffset;
