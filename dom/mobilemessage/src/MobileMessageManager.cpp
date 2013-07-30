@@ -124,7 +124,8 @@ MobileMessageManager::Send(JSContext* aCx, JS::Handle<JSObject*> aGlobal,
   nsCOMPtr<nsIMobileMessageCallback> msgCallback =
     new MobileMessageCallback(request);
 
-  nsresult rv = smsService->Send(number, aMessage, msgCallback);
+  // By default, we don't send silent messages via MobileMessageManager.
+  nsresult rv = smsService->Send(number, aMessage, false, msgCallback);
   NS_ENSURE_SUCCESS(rv, rv);
 
   JS::Rooted<JSObject*> global(aCx, aGlobal);
