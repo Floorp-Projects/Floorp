@@ -2545,6 +2545,13 @@
     "extended_statistics_ok": true,
     "description": "Session restore: Time to make a backup copy of the session file (ms)"
   },
+  "FX_SESSION_RESTORE_RESTORE_WINDOW_MS": {
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 10,
+    "extended_statistics_ok": true,
+    "description": "Session restore: Time spent blocking the main thread while restoring a window state (ms)"
+  },
   "INNERWINDOWS_WITH_MUTATION_LISTENERS": {
     "kind": "boolean",
     "description": "Deleted or to-be-reused innerwindow which has had mutation event listeners."
