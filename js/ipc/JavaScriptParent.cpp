@@ -562,7 +562,7 @@ JavaScriptParent::unwrap(JSContext *cx, ObjectId objId)
 
     bool callable = !!(objId & OBJECT_IS_CALLABLE);
 
-    RootedObject global(cx, JS::DefaultObjectForContextOrNull(cx));
+    RootedObject global(cx, js::DefaultObjectForContextOrNull(cx));
 
     RootedValue v(cx, UndefinedValue());
     JSObject *obj = NewProxyObject(cx,
