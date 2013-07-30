@@ -7,7 +7,7 @@
 
 interface nsIDOMDOMRequest;
 
-[scriptable, uuid(8bdeef38-e9cd-46f8-b8de-ed9e6b4d01ea)]
+[scriptable, uuid(4081390c-08cf-11e3-9200-b3c0a8744b20)]
 interface mozIDOMApplication  : nsISupports
 {
   readonly attribute jsval manifest;
@@ -90,6 +90,16 @@ interface mozIDOMApplication  : nsISupports
    * onsuccess will be called once data is actually cleared.
    */
   nsIDOMDOMRequest clearBrowserData();
+
+  /**
+   * Inter-App Communication APIs.
+   *
+   * https://wiki.mozilla.org/WebAPI/Inter_App_Communication_Alt_proposal
+   */
+  nsISupports connect(in DOMString keyword,
+                      [optional] in jsval rules); // nsISupports is a Promise.
+
+  nsISupports getConnections(); // nsISupports is a Promise.
 };
 
 [scriptable, uuid(cf742022-5ba3-11e2-868f-03310341b006)]
