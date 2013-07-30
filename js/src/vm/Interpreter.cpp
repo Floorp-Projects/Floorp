@@ -2915,12 +2915,12 @@ BEGIN_CASE(JSOP_INITPROP_SETTER)
 {
     RootedObject &obj = rootObject0;
     RootedPropertyName &name = rootName0;
-    RootedValue &val = rootValue0;
+    RootedObject &val = rootObject1;
 
     JS_ASSERT(regs.stackDepth() >= 2);
     obj = &regs.sp[-2].toObject();
     name = script->getName(regs.pc);
-    val = regs.sp[-1];
+    val = &regs.sp[-1].toObject();
 
     if (!InitGetterSetterOperation(cx, regs.pc, obj, name, val))
         goto error;
@@ -2934,12 +2934,12 @@ BEGIN_CASE(JSOP_INITELEM_SETTER)
 {
     RootedObject &obj = rootObject0;
     RootedValue &idval = rootValue0;
-    RootedValue &val = rootValue1;
+    RootedObject &val = rootObject1;
 
     JS_ASSERT(regs.stackDepth() >= 3);
     obj = &regs.sp[-3].toObject();
     idval = regs.sp[-2];
-    val = regs.sp[-1];
+    val = &regs.sp[-1].toObject();
 
     if (!InitGetterSetterOperation(cx, regs.pc, obj, idval, val))
         goto error;
@@ -3860,9 +3860,9 @@ js::RunOnceScriptPrologue(JSContext *cx, HandleScript script)
 
 bool
 js::InitGetterSetterOperation(JSContext *cx, jsbytecode *pc, HandleObject obj, HandleId id,
-                              HandleValue val)
+                              HandleObject val)
 {
-    JS_ASSERT(js_IsCallable(val));
+    JS_ASSERT(val->isCallable());
 
     /*
      * Getters and setters are just like watchpoints from an access control
@@ -3880,13 +3880,13 @@ js::InitGetterSetterOperation(JSContext *cx, jsbytecode *pc, HandleObject obj, H
     JSOp op = JSOp(*pc);
 
     if (op == JSOP_INITPROP_GETTER || op == JSOP_INITELEM_GETTER) {
-        getter = CastAsPropertyOp(&val.toObject());
+        getter = CastAsPropertyOp(val);
         setter = JS_StrictPropertyStub;
         attrs |= JSPROP_GETTER;
     } else {
         JS_ASSERT(op == JSOP_INITPROP_SETTER || op == JSOP_INITELEM_SETTER);
         getter = JS_PropertyStub;
-        setter = CastAsStrictPropertyOp(&val.toObject());
+        setter = CastAsStrictPropertyOp(val);
         attrs |= JSPROP_SETTER;
     }
 
@@ -3896,7 +3896,7 @@ js::InitGetterSetterOperation(JSContext *cx, jsbytecode *pc, HandleObject obj, H
 
 bool
 js::InitGetterSetterOperation(JSContext *cx, jsbytecode *pc, HandleObject obj,
-                              HandlePropertyName name, HandleValue val)
+                              HandlePropertyName name, HandleObject val)
 {
     RootedId id(cx, NameToId(name));
     return InitGetterSetterOperation(cx, pc, obj, id, val);
@@ -3904,7 +3904,7 @@ js::InitGetterSetterOperation(JSContext *cx, jsbytecode *pc, HandleObject obj,
 
 bool
 js::InitGetterSetterOperation(JSContext *cx, jsbytecode *pc, HandleObject obj, HandleValue idval,
-                              HandleValue val)
+                              HandleObject val)
 {
     RootedId id(cx);
     if (!ValueToId<CanGC>(cx, idval, &id))
