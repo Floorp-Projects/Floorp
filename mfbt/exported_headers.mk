@@ -32,7 +32,6 @@ EXPORTS_mozilla += \
   MathAlgorithms.h \
   MemoryChecking.h \
   MemoryReporting.h \
-  MSStdInt.h \
   Move.h \
   NullPtr.h \
   PodOperations.h \
