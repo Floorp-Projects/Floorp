@@ -410,6 +410,7 @@ public:
   }
   uint32_t GetNumRects () const { return mImpl.GetNumRects (); }
   nsIntRect GetBounds () const { return FromRect (mImpl.GetBounds ()); }
+  uint64_t Area () const { return mImpl.Area(); }
   nsRegion ToAppUnits (nscoord aAppUnitsPerPixel) const;
   nsIntRect GetLargestRectangle (const nsIntRect& aContainingRect = nsIntRect()) const
   {
