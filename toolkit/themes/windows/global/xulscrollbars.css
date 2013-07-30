@@ -16,6 +16,7 @@ scrollbar {
   -moz-binding: url("chrome://global/content/bindings/scrollbar.xml#scrollbar");
   cursor: default;
   background: url("chrome://global/skin/scrollbar/slider.gif") scrollbar;
+  pointer-events: auto;
 }
 
 scrollbar[root="true"] {
