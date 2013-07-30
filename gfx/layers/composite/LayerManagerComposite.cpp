@@ -460,17 +460,6 @@ LayerManagerComposite::ComputeRenderIntegrityInternal(Layer* aLayer,
   }
 }
 
-static int
-GetRegionArea(const nsIntRegion& aRegion)
-{
-  int area = 0;
-  nsIntRegionRectIterator it(aRegion);
-  while (const nsIntRect* rect = it.Next()) {
-    area += rect->width * rect->height;
-  }
-  return area;
-}
-
 #ifdef MOZ_ANDROID_OMTC
 static float
 GetDisplayportCoverage(const CSSRect& aDisplayPort,
@@ -490,7 +479,7 @@ GetDisplayportCoverage(const CSSRect& aDisplayPort,
   if (!displayport.Contains(aScreenRect)) {
     nsIntRegion coveredRegion;
     coveredRegion.And(aScreenRect, displayport);
-    return GetRegionArea(coveredRegion) / (float)(aScreenRect.width * aScreenRect.height);
+    return coveredRegion.Area() / (float)(aScreenRect.width * aScreenRect.height);
   }
 
   return 1.0f;
@@ -582,10 +571,10 @@ LayerManagerComposite::ComputeRenderIntegrity()
     // Calculate the area of the region. All rects in an nsRegion are
     // non-overlapping.
     float screenArea = screenRect.width * screenRect.height;
-    float highPrecisionIntegrity = GetRegionArea(screenRegion) / screenArea;
+    float highPrecisionIntegrity = screenRegion.Area() / screenArea;
     float lowPrecisionIntegrity = 1.f;
     if (!lowPrecisionScreenRegion.IsEqual(screenRect)) {
-      lowPrecisionIntegrity = GetRegionArea(lowPrecisionScreenRegion) / screenArea;
+      lowPrecisionIntegrity = lowPrecisionScreenRegion.Area() / screenArea;
     }
 
     return ((highPrecisionIntegrity * highPrecisionMultiplier) +
