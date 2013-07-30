@@ -441,10 +441,6 @@ class MOZ_STACK_CLASS TokenStream
     bool isCurrentTokenType(TokenKind type) const {
         return currentToken().type == type;
     }
-    bool isCurrentTokenType(TokenKind type1, TokenKind type2) const {
-        TokenKind type = currentToken().type;
-        return type == type1 || type == type2;
-    }
     const CharBuffer &getTokenbuf() const { return tokenbuf; }
     const char *getFilename() const { return filename; }
     unsigned getLineno() const { return lineno; }
@@ -453,18 +449,6 @@ class MOZ_STACK_CLASS TokenStream
     JSVersion versionNumber() const { return VersionNumber(options().version); }
     JSVersion versionWithFlags() const { return options().version; }
     bool hadError() const { return !!(flags & TSF_HAD_ERROR); }
-
-    bool isCurrentTokenEquality() const {
-        return TokenKindIsEquality(currentToken().type);
-    }
-
-    bool isCurrentTokenRelational() const {
-        return TokenKindIsRelational(currentToken().type);
-    }
-
-    bool isCurrentTokenShift() const {
-        return TokenKindIsShift(currentToken().type);
-    }
 
     bool isCurrentTokenAssignment() const {
         return TokenKindIsAssignment(currentToken().type);
