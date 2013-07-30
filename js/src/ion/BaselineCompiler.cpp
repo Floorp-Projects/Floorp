@@ -1991,7 +1991,7 @@ BaselineCompiler::emit_JSOP_DEFFUN()
 }
 
 typedef bool (*InitPropGetterSetterFn)(JSContext *, jsbytecode *, HandleObject, HandlePropertyName,
-                                       HandleValue);
+                                       HandleObject);
 static const VMFunction InitPropGetterSetterInfo =
     FunctionInfo<InitPropGetterSetterFn>(InitGetterSetterOperation);
 
@@ -2001,16 +2001,17 @@ BaselineCompiler::emitInitPropGetterSetter()
     JS_ASSERT(JSOp(*pc) == JSOP_INITPROP_GETTER ||
               JSOp(*pc) == JSOP_INITPROP_SETTER);
 
-    // Load value in R0 but keep it on the stack for the decompiler.
+    // Keep values on the stack for the decompiler.
     frame.syncStack(0);
-    masm.loadValue(frame.addressOfStackValue(frame.peek(-1)), R0);
 
     prepareVMCall();
 
-    pushArg(R0);
-    pushArg(ImmGCPtr(script->getName(pc)));
-    masm.extractObject(frame.addressOfStackValue(frame.peek(-2)), R0.scratchReg());
+    masm.extractObject(frame.addressOfStackValue(frame.peek(-1)), R0.scratchReg());
+    masm.extractObject(frame.addressOfStackValue(frame.peek(-2)), R1.scratchReg());
+
     pushArg(R0.scratchReg());
+    pushArg(ImmGCPtr(script->getName(pc)));
+    pushArg(R1.scratchReg());
     pushArg(ImmWord(pc));
 
     if (!callVM(InitPropGetterSetterInfo))
@@ -2033,7 +2034,7 @@ BaselineCompiler::emit_JSOP_INITPROP_SETTER()
 }
 
 typedef bool (*InitElemGetterSetterFn)(JSContext *, jsbytecode *, HandleObject, HandleValue,
-                                       HandleValue);
+                                       HandleObject);
 static const VMFunction InitElemGetterSetterInfo =
     FunctionInfo<InitElemGetterSetterFn>(InitGetterSetterOperation);
 
@@ -2047,11 +2048,11 @@ BaselineCompiler::emitInitElemGetterSetter()
     // decompiler.
     frame.syncStack(0);
     masm.loadValue(frame.addressOfStackValue(frame.peek(-2)), R0);
-    masm.loadValue(frame.addressOfStackValue(frame.peek(-1)), R1);
+    masm.extractObject(frame.addressOfStackValue(frame.peek(-1)), R1.scratchReg());
 
     prepareVMCall();
 
-    pushArg(R1);
+    pushArg(R1.scratchReg());
     pushArg(R0);
     masm.extractObject(frame.addressOfStackValue(frame.peek(-3)), R0.scratchReg());
     pushArg(R0.scratchReg());
