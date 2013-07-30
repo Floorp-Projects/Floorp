@@ -88,12 +88,6 @@ public:
   //
 
   /**
-   * Shut down the controller/UI thread state and prepare to be
-   * deleted (which may happen from any thread).
-   */
-  void Destroy();
-
-  /**
    * General handler for incoming input events. Manipulates the frame metrics
    * based on what type of input it is. For example, a PinchGestureEvent will
    * cause scaling. This should only be called externally to this class.
@@ -207,6 +201,12 @@ public:
   // --------------------------------------------------------------------------
   // These methods can be called from any thread.
   //
+
+  /**
+   * Shut down the controller/UI thread state and prepare to be
+   * deleted (which may happen from any thread).
+   */
+  void Destroy();
 
   /**
    * Sets the DPI of the device for use within panning and zooming logic. It is
@@ -505,8 +505,17 @@ private:
 
   nsRefPtr<CompositorParent> mCompositorParent;
   TaskThrottler mPaintThrottler;
+
+  /* Access to the following two fields is protected by the mRefPtrMonitor,
+     since they are accessed on the UI thread but can be cleared on the
+     compositor thread. */
   nsRefPtr<GeckoContentController> mGeckoContentController;
   nsRefPtr<GestureEventListener> mGestureEventListener;
+  Monitor mRefPtrMonitor;
+
+  /* Utility functions that return a addrefed pointer to the corresponding fields. */
+  already_AddRefed<GeckoContentController> GetGeckoContentController();
+  already_AddRefed<GestureEventListener> GetGestureEventListener();
 
   // Both |mFrameMetrics| and |mLastContentPaintMetrics| are protected by the
   // monitor. Do not read from or modify either of them without locking.
