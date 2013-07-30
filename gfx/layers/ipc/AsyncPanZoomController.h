@@ -45,7 +45,7 @@ class ViewTransform;
  * asynchronously scrolled subframes, we want to have one AsyncPanZoomController
  * per frame.
  */
-class AsyncPanZoomController MOZ_FINAL {
+class AsyncPanZoomController {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(AsyncPanZoomController)
 
   typedef mozilla::MonitorAutoLock MonitorAutoLock;
@@ -517,9 +517,20 @@ private:
   already_AddRefed<GeckoContentController> GetGeckoContentController();
   already_AddRefed<GestureEventListener> GetGestureEventListener();
 
+protected:
   // Both |mFrameMetrics| and |mLastContentPaintMetrics| are protected by the
   // monitor. Do not read from or modify either of them without locking.
   FrameMetrics mFrameMetrics;
+
+  // Protects |mFrameMetrics|, |mLastContentPaintMetrics|, |mState| and
+  // |mMetaViewportInfo|. Before manipulating |mFrameMetrics| or
+  // |mLastContentPaintMetrics|, the monitor should be held. When setting
+  // |mState|, either the SetState() function can be used, or the monitor can be
+  // held and then |mState| updated.  |mMetaViewportInfo| should be updated
+  // using UpdateMetaViewport().
+  Monitor mMonitor;
+
+private:
   // These are the metrics at last content paint, the most recent
   // values we were notified of in NotifyLayersUpdate().
   FrameMetrics mLastContentPaintMetrics;
@@ -551,14 +562,6 @@ private:
   bool mAllowZoom;
   float mMinZoom;
   float mMaxZoom;
-
-  // Protects |mFrameMetrics|, |mLastContentPaintMetrics|, |mState| and
-  // |mMetaViewportInfo|. Before manipulating |mFrameMetrics| or
-  // |mLastContentPaintMetrics|, the monitor should be held. When setting
-  // |mState|, either the SetState() function can be used, or the monitor can be
-  // held and then |mState| updated.  |mMetaViewportInfo| should be updated
-  // using UpdateMetaViewport().
-  Monitor mMonitor;
 
   // The last time the compositor has sampled the content transform for this
   // frame.

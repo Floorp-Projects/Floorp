@@ -1216,8 +1216,12 @@ void AsyncPanZoomController::NotifyLayersUpdated(const FrameMetrics& aViewportFr
     mX.CancelTouch();
     mY.CancelTouch();
 
-    mFrameMetrics = aViewportFrame;
+    // XXX If this is the very first time we're getting a layers update we need to
+    // trigger another repaint, or the B2G browser shows stale content. This needs
+    // to be investigated and fixed.
+    needContentRepaint |= (mFrameMetrics.IsDefault() && !aViewportFrame.IsDefault());
 
+    mFrameMetrics = aViewportFrame;
     mState = NOTHING;
   } else if (!mFrameMetrics.mScrollableRect.IsEqualEdges(aViewportFrame.mScrollableRect)) {
     mFrameMetrics.mScrollableRect = aViewportFrame.mScrollableRect;
