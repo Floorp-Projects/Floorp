@@ -147,6 +147,7 @@ public:
   bool IsEqual (const nsRegion& aRegion) const;
   uint32_t GetNumRects () const { return mRectCount; }
   const nsRect& GetBounds () const { return mBoundRect; }
+  uint64_t Area () const;
   // Converts this region from aFromAPP, an appunits per pixel ratio, to
   // aToAPP. This applies nsRect::ConvertAppUnitsRoundOut/In to each rect of
   // the region.
