@@ -4028,6 +4028,10 @@ pref("layers.offmainthreadcomposition.testing.enabled", false);
 // Whether to animate simple opacity and transforms on the compositor
 pref("layers.offmainthreadcomposition.async-animations", false);
 
+#ifdef ANDROID
+pref("gfx.apitrace.enabled",false);
+#endif
+
 #ifdef MOZ_X11
 #ifdef MOZ_WIDGET_GTK2
 pref("gfx.xrender.enabled",true);
