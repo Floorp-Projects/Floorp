@@ -19,10 +19,14 @@
 using namespace js;
 using namespace js::ion;
 
+static const FloatRegisterSet NonVolatileFloatRegs =
+    FloatRegisterSet(FloatRegisters::NonVolatileMask);  /* d8 - d15 */
+
 static void
 GenerateReturn(MacroAssembler &masm, int returnCode)
 {
     // Restore non-volatile registers
+    masm.transferMultipleByRuns(NonVolatileFloatRegs, IsLoad, StackPointer, IA);
     masm.ma_mov(Imm32(returnCode), r0);
     masm.startDataTransferM(IsLoad, sp, IA, WriteBack);
     masm.transferReg(r4);
@@ -41,6 +45,15 @@ GenerateReturn(MacroAssembler &masm, int returnCode)
 
 struct EnterJITStack
 {
+    double d8;
+    double d9;
+    double d10;
+    double d11;
+    double d12;
+    double d13;
+    double d14;
+    double d15;
+
     void *r0; // alignment.
 
     // non-volatile registers.
@@ -67,8 +80,8 @@ struct EnterJITStack
 };
 
 /*
- * This method generates a trampoline on x86 for a c++ function with
- * the following signature:
+ * This method generates a trampoline for a c++ function with the following
+ * signature:
  *   void enter(void *code, int argc, Value *argv, StackFrame *fp, CalleeToken
  *              calleeToken, JSObject *scopeChain, Value *vp)
  *   ...using standard EABI calling convention
@@ -108,6 +121,7 @@ IonRuntime::generateEnterJIT(JSContext *cx, EnterJitType type)
     masm.transferReg(lr);  // [sp,36]
     // The 5th argument is located at [sp, 40]
     masm.finishDataTransfer();
+    masm.transferMultipleByRuns(NonVolatileFloatRegs, IsStore, sp, DB);
 
     // Save stack pointer into r8
     masm.movePtr(sp, r8);
