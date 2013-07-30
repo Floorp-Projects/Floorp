@@ -31,6 +31,12 @@ ContentPermissionPrompt.prototype = {
       request.cancel();
       return true;
     }
+
+    if (request.principal.appId !== Ci.nsIScriptSecurityManager.NO_APP_ID && request.principal.appId !== Ci.nsIScriptSecurityManager.UNKNOWN_APP_ID && (result == Ci.nsIPermissionManager.UNKNOWN_ACTION && !!kEntities[request.type])) {
+      request.cancel();
+      return true;
+    }
+
     return false;
   },
 
