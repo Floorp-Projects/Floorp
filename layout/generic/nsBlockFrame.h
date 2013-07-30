@@ -706,6 +706,7 @@ protected:
                        const nsRect&       aAdjustedAvailableSpace,
                        nsIFrame*           aFloat,
                        nsMargin&           aFloatMargin,
+                       nsMargin&           aFloatOffsets,
                        // Whether the float's position
                        // (aAdjustedAvailableSpace) has been pushed down
                        // due to the presence of other floats.
