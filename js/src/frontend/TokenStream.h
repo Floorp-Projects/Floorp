@@ -324,28 +324,7 @@ enum TokenStreamFlags
     TSF_KEYWORD_IS_NAME = 0x20, /* Ignore keywords and return TOK_NAME instead to the parser. */
     TSF_DIRTYLINE = 0x40,       /* non-whitespace since start of line */
     TSF_OCTAL_CHAR = 0x80,      /* observed a octal character escape */
-    TSF_HAD_ERROR = 0x100,      /* returned TOK_ERROR from getToken */
-
-    /*
-     * To handle the hard case of contiguous HTML comments, we want to clear the
-     * TSF_DIRTYINPUT flag at the end of each such comment.  But we'd rather not
-     * scan for --> within every //-style comment unless we have to.  So we set
-     * TSF_IN_HTML_COMMENT when a <!-- is scanned as an HTML begin-comment, and
-     * clear it (and TSF_DIRTYINPUT) when we scan --> either on a clean line, or
-     * only if (ts->flags & TSF_IN_HTML_COMMENT), in a //-style comment.
-     *
-     * This still works as before given a malformed comment hiding hack such as:
-     *
-     *    <script>
-     *      <!-- comment hiding hack #1
-     *      code goes here
-     *      // --> oops, markup for script-unaware browsers goes here!
-     *    </script>
-     *
-     * It does not cope with malformed comment hiding hacks where --> is hidden
-     * by C-style comments, or on a dirty line.  Such cases are already broken.
-     */
-    TSF_IN_HTML_COMMENT = 0x200
+    TSF_HAD_ERROR = 0x100       /* returned TOK_ERROR from getToken */
 };
 
 struct CompileError {
