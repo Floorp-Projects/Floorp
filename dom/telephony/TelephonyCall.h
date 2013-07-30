@@ -20,6 +20,7 @@ class TelephonyCall MOZ_FINAL : public nsDOMEventTargetHelper
   nsRefPtr<Telephony> mTelephony;
 
   nsString mNumber;
+  nsString mSecondNumber;
   nsString mState;
   bool mEmergency;
   nsRefPtr<mozilla::dom::DOMError> mError;
@@ -50,6 +51,12 @@ public:
   GetNumber(nsString& aNumber) const
   {
     aNumber.Assign(mNumber);
+  }
+
+  void
+  GetSecondNumber(nsString& aSecondNumber) const
+  {
+    aSecondNumber.Assign(mSecondNumber);
   }
 
   void
@@ -126,6 +133,12 @@ public:
   UpdateEmergency(bool aEmergency)
   {
     mEmergency = aEmergency;
+  }
+
+  void
+  UpdateSecondNumber(const nsAString& aNumber)
+  {
+    mSecondNumber = aNumber;
   }
 
   bool
