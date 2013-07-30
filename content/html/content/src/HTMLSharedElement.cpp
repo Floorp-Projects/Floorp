@@ -53,9 +53,6 @@ NS_IMPL_STRING_ATTR(HTMLSharedElement, Type, type)
 NS_IMPL_STRING_ATTR(HTMLSharedElement, Value, value)
 NS_IMPL_STRING_ATTR(HTMLSharedElement, ValueType, valuetype)
 
-// nsIDOMHTMLDirectoryElement
-NS_IMPL_BOOL_ATTR(HTMLSharedElement, Compact, compact)
-
 // nsIDOMHTMLQuoteElement
 NS_IMPL_URI_ATTR(HTMLSharedElement, Cite, cite)
 
