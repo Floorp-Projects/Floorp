@@ -18,6 +18,7 @@
 #include "nsCycleCollectionParticipant.h" // NS_DECL_CYCLE_*
 #include "nsIContent.h"                   // base class
 #include "nsIDOMXPathNSResolver.h"        // base class
+#include "nsIInlineEventHandlers.h"       // base class
 #include "nsINodeList.h"                  // base class
 #include "nsIWeakReference.h"             // base class
 #include "nsNodeUtils.h"                  // class member nsNodeUtils::CloneNodeImpl
@@ -153,6 +154,10 @@ private:
   nsCOMPtr<nsINode> mNode;
 };
 
+// Forward declare to allow being a friend
+class nsTouchEventReceiverTearoff;
+class nsInlineEventHandlersTearoff;
+
 /**
  * A generic base class for DOM elements, implementing many nsIContent,
  * nsIDOMNode and nsIDOMElement methods.
@@ -167,6 +172,9 @@ class FragmentOrElement : public nsIContent
 public:
   FragmentOrElement(already_AddRefed<nsINodeInfo> aNodeInfo);
   virtual ~FragmentOrElement();
+
+  friend class ::nsTouchEventReceiverTearoff;
+  friend class ::nsInlineEventHandlersTearoff;
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
 
@@ -394,6 +402,26 @@ protected:
 
 } // namespace dom
 } // namespace mozilla
+
+/**
+ * Tearoff class to implement nsIInlineEventHandlers
+ */
+class nsInlineEventHandlersTearoff MOZ_FINAL : public nsIInlineEventHandlers
+{
+public:
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+
+  NS_FORWARD_NSIINLINEEVENTHANDLERS(mElement->)
+
+  NS_DECL_CYCLE_COLLECTION_CLASS(nsInlineEventHandlersTearoff)
+
+  nsInlineEventHandlersTearoff(mozilla::dom::FragmentOrElement *aElement) : mElement(aElement)
+  {
+  }
+
+private:
+  nsRefPtr<mozilla::dom::FragmentOrElement> mElement;
+};
 
 #define NS_ELEMENT_INTERFACE_TABLE_TO_MAP_SEGUE                               \
     if (NS_SUCCEEDED(rv))                                                     \
