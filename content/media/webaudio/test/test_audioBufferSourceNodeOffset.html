@@ -10,6 +10,13 @@
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
+var fuzz = 0.3;
+
+if (navigator.platform.startsWith("Mac")) {
+  // bug 895720
+  fuzz = 0.6;
+}
+
 SimpleTest.waitForExplicitFinish();
 addLoadEvent(function() {
   var samplesFromSource = 0;
