@@ -174,9 +174,8 @@ public:
    * idempotent. For example, a fling transform can be applied each time this is
    * called (though not necessarily). |aSampleTime| is the time that this is
    * sampled at; this is used for interpolating animations. Calling this sets a
-   * new transform in |aNewTransform| which should be applied directly to the
-   * shadow layer of the frame (do not multiply it in as the code already does
-   * this internally with |aLayer|'s transform).
+   * new transform in |aNewTransform| which should be multiplied to the transform
+   * in the shadow layer corresponding to this APZC.
    *
    * Return value indicates whether or not any currently running animation
    * should continue. That is, if true, the compositor should schedule another
@@ -188,12 +187,13 @@ public:
                                       ScreenPoint& aScrollOffset);
 
   /**
-   * A shadow layer update has arrived. |aViewportFrame| is the new FrameMetrics
-   * for the top-level frame. |aIsFirstPaint| is a flag passed from the shadow
+   * A shadow layer update has arrived. |aLayerMetrics| is the new FrameMetrics
+   * for the container layer corresponding to this APZC.
+   * |aIsFirstPaint| is a flag passed from the shadow
    * layers code indicating that the frame metrics being sent with this call are
    * the initial metrics and the initial paint of the frame has just happened.
    */
-  void NotifyLayersUpdated(const FrameMetrics& aViewportFrame, bool aIsFirstPaint);
+  void NotifyLayersUpdated(const FrameMetrics& aLayerMetrics, bool aIsFirstPaint);
 
   /**
    * The platform implementation must set the compositor parent so that we can
@@ -531,17 +531,19 @@ protected:
   // monitor. Do not read from or modify either of them without locking.
   FrameMetrics mFrameMetrics;
 
-  // Protects |mFrameMetrics|, |mLastContentPaintMetrics|, |mState| and
-  // |mMetaViewportInfo|. Before manipulating |mFrameMetrics| or
-  // |mLastContentPaintMetrics|, the monitor should be held. When setting
-  // |mState|, either the SetState() function can be used, or the monitor can be
-  // held and then |mState| updated.  |mMetaViewportInfo| should be updated
-  // using UpdateMetaViewport().
+  // Protects |mFrameMetrics|, |mLastContentPaintMetrics|, and |mState|.
+  // Before manipulating |mFrameMetrics| or |mLastContentPaintMetrics|, the
+  // monitor should be held. When setting |mState|, either the SetState()
+  // function can be used, or the monitor can be held and then |mState| updated.
   Monitor mMonitor;
 
 private:
+  // Metrics of the container layer corresponding to this APZC. This is
+  // stored here so that it is accessible from the UI/controller thread.
   // These are the metrics at last content paint, the most recent
-  // values we were notified of in NotifyLayersUpdate().
+  // values we were notified of in NotifyLayersUpdate(). Since it represents
+  // the Gecko state, it should be used as a basis for untransformation when
+  // sending messages back to Gecko.
   FrameMetrics mLastContentPaintMetrics;
   // The last metrics that we requested a paint for. These are used to make sure
   // that we're not requesting a paint of the same thing that's already drawn.
