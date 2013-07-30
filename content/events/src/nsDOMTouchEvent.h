@@ -6,6 +6,7 @@
 #define nsDOMTouchEvent_h_
 
 #include "nsDOMUIEvent.h"
+#include "nsIDOMTouchEvent.h"
 #include "nsString.h"
 #include "nsTArray.h"
 #include "mozilla/Attributes.h"
@@ -13,7 +14,7 @@
 #include "mozilla/dom/TouchEventBinding.h"
 #include "nsWrapperCache.h"
 
-class nsDOMTouchList MOZ_FINAL : public nsISupports
+class nsDOMTouchList MOZ_FINAL : public nsIDOMTouchList
                                , public nsWrapperCache
 {
   typedef mozilla::dom::Touch Touch;
@@ -21,6 +22,7 @@ class nsDOMTouchList MOZ_FINAL : public nsISupports
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsDOMTouchList)
+  NS_DECL_NSIDOMTOUCHLIST
 
   nsDOMTouchList(nsISupports* aParent)
     : mParent(aParent)

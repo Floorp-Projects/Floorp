@@ -38,6 +38,13 @@ interface nsIDOMTouch : nsISupports {
   %}
 };
 
+[scriptable, builtinclass, uuid(60706eb7-d50d-4379-b01c-e78e6af84213)]
+interface nsIDOMTouchList : nsISupports {
+  readonly attribute unsigned long length;
+  nsIDOMTouch item(in unsigned long index);
+  nsIDOMTouch identifiedTouch(in long identifier);
+};
+
 [scriptable, uuid(6d5484f7-92ac-45f8-9388-39b5bad055ce)]
 interface nsITouchEventReceiver : nsISupports {
   [implicit_jscontext] attribute jsval           ontouchstart;
