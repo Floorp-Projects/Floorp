@@ -29,7 +29,6 @@ XPIDL_SOURCES += [
     'nsIDOMHTMLFrameSetElement.idl',
     'nsIDOMHTMLHRElement.idl',
     'nsIDOMHTMLHeadElement.idl',
-    'nsIDOMHTMLHeadingElement.idl',
     'nsIDOMHTMLHtmlElement.idl',
     'nsIDOMHTMLIFrameElement.idl',
     'nsIDOMHTMLImageElement.idl',
