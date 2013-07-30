@@ -488,7 +488,7 @@ class Automation(object):
         ldLibraryPath = ldLibraryPath + ":" + env[envVar]
       env[envVar] = ldLibraryPath
     elif self.IS_WIN32:
-      env["PATH"] = env["PATH"] + ";" + ldLibraryPath
+      env["PATH"] = env["PATH"] + ";" + str(ldLibraryPath)
 
     if crashreporter:
       env['MOZ_CRASHREPORTER_NO_REPORT'] = '1'

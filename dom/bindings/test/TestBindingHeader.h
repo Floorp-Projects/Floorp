@@ -608,6 +608,12 @@ public:
   TestInterface* PutForwardsAttr();
   TestInterface* PutForwardsAttr2();
   TestInterface* PutForwardsAttr3();
+  JS::Value JsonifierShouldSkipThis(JSContext*);
+  void SetJsonifierShouldSkipThis(JSContext*, JS::Rooted<JS::Value>&);
+  TestParentInterface* JsonifierShouldSkipThis2();
+  void SetJsonifierShouldSkipThis2(TestParentInterface&);
+  TestCallbackInterface* JsonifierShouldSkipThis3();
+  void SetJsonifierShouldSkipThis3(TestCallbackInterface&);
   void ThrowingMethod(ErrorResult& aRv);
   bool GetThrowingAttr(ErrorResult& aRv) const;
   void SetThrowingAttr(bool arg, ErrorResult& aRv);
