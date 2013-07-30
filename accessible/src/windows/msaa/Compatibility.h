@@ -7,7 +7,7 @@
 #ifndef COMPATIBILITY_MANAGER_H
 #define COMPATIBILITY_MANAGER_H
 
-#include "mozilla/StandardInteger.h"
+#include <stdint.h>
 
 namespace mozilla {
 namespace a11y {

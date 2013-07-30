@@ -9,7 +9,8 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/GuardObjects.h"
-#include "mozilla/StandardInteger.h"
+
+#include <stdint.h>
 
 #include "jsfriendapi.h"
 #include "jsinfer.h"

@@ -51,7 +51,7 @@
 #include "ImageContainer.h"
 #include "nsCanvasFrame.h"
 
-#include "mozilla/StandardInteger.h"
+#include <stdint.h>
 #include <algorithm>
 
 using namespace mozilla;

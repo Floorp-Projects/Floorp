@@ -8,10 +8,10 @@
 
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/StandardInteger.h"
 
 #include <limits>
 #include <math.h>
+#include <stdint.h>
 
 #if defined(XP_WIN) || defined(XP_OS2)
 #include <float.h>

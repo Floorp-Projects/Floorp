@@ -12,12 +12,12 @@
 // Enable relying of Mozilla's MFBT for possibly-available C++11 features
 #define MOZ_CHECKEDINT_USE_MFBT
 
+#include <stdint.h>
+
 #ifdef MOZ_CHECKEDINT_USE_MFBT
 #  include "mozilla/Assertions.h"
-#  include "mozilla/StandardInteger.h"
 #else
 #  include <cassert>
-#  include <stdint.h>
 #  define MOZ_STATIC_ASSERT(cond, reason) assert((cond) && reason)
 #  define MOZ_ASSERT(cond, reason) assert((cond) && reason)
 #  define MOZ_DELETE
