@@ -64,6 +64,10 @@ protected:
 private:
   nsAutoPtr<mozilla::hal::SwitchObserver> mObserver;
   nsCOMPtr<AudioChannelAgent>             mPhoneAudioAgent;
+
+  void HandleBluetoothStatusChanged(nsISupports* aSubject,
+                                    const char* aTopic,
+                                    const nsCString aAddress);
 };
 
 } /* namespace gonk */

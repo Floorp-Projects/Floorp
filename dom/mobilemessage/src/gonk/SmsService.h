@@ -8,6 +8,8 @@
 #include "nsISmsService.h"
 #include "nsCOMPtr.h"
 #include "nsIRadioInterfaceLayer.h"
+#include "nsTArray.h"
+#include "nsString.h"
 
 namespace mozilla {
 namespace dom {
@@ -23,6 +25,7 @@ public:
 protected:
   // TODO: Bug 854326 - B2G Multi-SIM: support multiple SIM cards for SMS/MMS
   nsCOMPtr<nsIRadioInterface> mRadioInterface;
+  nsTArray<nsString> mSilentNumbers;
 };
 
 } // namespace mobilemessage
