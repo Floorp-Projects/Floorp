@@ -8,7 +8,6 @@ var testGenerator = testSteps();
 function testSteps()
 {
   const nsIIDBObjectStore = Components.interfaces.nsIIDBObjectStore;
-  const nsIIDBTransaction = Components.interfaces.nsIIDBTransaction;
 
   // Test object stores
 

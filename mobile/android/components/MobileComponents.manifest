@@ -43,12 +43,6 @@ category agent-style-sheets browser-content-stylesheet chrome://browser/skin/con
 component {C6E8C44D-9F39-4AF7-BCC0-76E38A8310F5} ContentPermissionPrompt.js
 contract @mozilla.org/content-permission/prompt;1 {C6E8C44D-9F39-4AF7-BCC0-76E38A8310F5}
 
-# AlertsService.js
-component {fe33c107-82a4-41d6-8c64-5353267e04c9} AlertsService.js
-
-# ToasterAlertsService : alias to AlertsService
-contract @mozilla.org/toaster-alerts-service;1 {fe33c107-82a4-41d6-8c64-5353267e04c9}
-
 # XPIDialogService.js
 component {c1242012-27d8-477e-a0f1-0b098ffc329b} XPIDialogService.js
 contract @mozilla.org/addons/web-install-prompt;1 {c1242012-27d8-477e-a0f1-0b098ffc329b}

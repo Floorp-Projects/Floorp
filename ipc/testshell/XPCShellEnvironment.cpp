@@ -177,7 +177,7 @@ Load(JSContext *cx,
         JS::CompileOptions options(cx);
         options.setUTF8(true)
                .setFileAndLine(filename.ptr(), 1)
-               .setPrincipals(Environment(JS_GetGlobalForScopeChain(cx))->GetPrincipal());
+               .setPrincipals(Environment(JS::CurrentGlobalOrNull(cx))->GetPrincipal());
         JS::RootedObject rootedObj(cx, obj);
         JSScript *script = JS::Compile(cx, rootedObj, options, file);
         fclose(file);
@@ -217,7 +217,7 @@ Quit(JSContext *cx,
      unsigned argc,
      JS::Value *vp)
 {
-    XPCShellEnvironment* env = Environment(JS_GetGlobalForScopeChain(cx));
+    XPCShellEnvironment* env = Environment(JS::CurrentGlobalOrNull(cx));
     env->SetIsQuitting();
 
     return JS_FALSE;

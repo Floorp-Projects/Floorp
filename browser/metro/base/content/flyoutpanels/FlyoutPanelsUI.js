@@ -20,10 +20,10 @@ let FlyoutPanelsUI = {
     let scriptContexts = {};
     let scripts =
           [
-            ['AboutFlyout', 'chrome://browser/content/flyouts/aboutFlyout.js'],
-            ['PrefsFlyout', 'chrome://browser/content/flyouts/prefsFlyout.js'],
+            ['AboutFlyoutPanel', 'chrome://browser/content/flyoutpanels/AboutFlyoutPanel.js'],
+            ['PrefsFlyoutPanel', 'chrome://browser/content/flyoutpanels/PrefsFlyoutPanel.js'],
 #ifdef MOZ_SERVICES_SYNC
-            ['SyncFlyout', 'chrome://browser/content/flyouts/syncFlyout.js'],
+            ['SyncFlyoutPanel', 'chrome://browser/content/flyoutpanels/SyncFlyoutPanel.js'],
 #endif
           ];
 

@@ -231,6 +231,7 @@ JSCompartment::wrap(JSContext *cx, MutableHandleValue vp, HandleObject existingA
      * This loses us some transparency, and is generally very cheesy.
      */
     HandleObject global = cx->global();
+    JS_ASSERT(global);
 
     /* Unwrap incoming objects. */
     if (vp.isObject()) {

@@ -13,15 +13,26 @@ namespace ipc {
 class Shmem;
 }
 namespace layers {
+class BufferTextureClient;
+class TextureClient;
+class ImageClient;
+
+already_AddRefed<Image> CreateSharedRGBImage(ImageContainer* aImageContainer,
+                                             nsIntSize aSize,
+                                             gfxASurface::gfxImageFormat aImageFormat);
 
 /**
  * Stores RGB data in shared memory
  * It is assumed that the image width and stride are equal
  */
-class DeprecatedSharedRGBImage : public Image
+class DeprecatedSharedRGBImage : public Image,
+                                 public ISharedImage
 {
-  typedef gfxASurface::gfxImageFormat gfxImageFormat;
+friend already_AddRefed<Image> CreateSharedRGBImage(ImageContainer* aImageContainer,
+                                                    nsIntSize aSize,
+                                                    gfxASurface::gfxImageFormat aImageFormat);
 public:
+  typedef gfxASurface::gfxImageFormat gfxImageFormat;
   struct Header {
     gfxImageFormat mImageFormat;
   };
@@ -29,9 +40,6 @@ public:
   DeprecatedSharedRGBImage(ISurfaceAllocator *aAllocator);
   ~DeprecatedSharedRGBImage();
 
-  static already_AddRefed<DeprecatedSharedRGBImage> Create(ImageContainer* aImageContainer,
-                                                 nsIntSize aSize,
-                                                 gfxImageFormat aImageFormat);
   uint8_t *GetBuffer();
 
   gfxIntSize GetSize();
@@ -61,15 +69,46 @@ public:
    */
   static DeprecatedSharedRGBImage* FromSurfaceDescriptor(const SurfaceDescriptor& aDescriptor);
 
-private:
   bool AllocateBuffer(nsIntSize aSize, gfxImageFormat aImageFormat);
 
+  TextureClient* GetTextureClient() MOZ_OVERRIDE { return nullptr; }
+
+protected:
   gfxIntSize mSize;
   gfxImageFormat mImageFormat;
   ISurfaceAllocator* mSurfaceAllocator;
 
   bool mAllocated;
   ipc::Shmem *mShmem;
+};
+
+/**
+ * Stores RGB data in shared memory
+ * It is assumed that the image width and stride are equal
+ */
+class SharedRGBImage : public Image
+                     , public ISharedImage
+{
+  typedef gfxASurface::gfxImageFormat gfxImageFormat;
+public:
+  SharedRGBImage(ImageClient* aCompositable);
+  ~SharedRGBImage();
+
+  virtual TextureClient* GetTextureClient() MOZ_OVERRIDE;
+
+  virtual uint8_t* GetBuffer() MOZ_OVERRIDE;
+
+  gfxIntSize GetSize();
+
+  size_t GetBufferSize();
+
+  already_AddRefed<gfxASurface> GetAsSurface();
+
+  bool Allocate(gfx::IntSize aSize, gfx::SurfaceFormat aFormat);
+private:
+  gfx::IntSize mSize;
+  RefPtr<ImageClient> mCompositable;
+  RefPtr<BufferTextureClient> mTextureClient;
 };
 
 } // namespace layers

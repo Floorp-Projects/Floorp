@@ -85,3 +85,7 @@ flyoutpanel[visible] {
 .flyout-close-button:active {
   -moz-image-region: rect(0 96px 32px 64px);
 }
+
+.flyout-narrow {
+  width: 346px;
+}

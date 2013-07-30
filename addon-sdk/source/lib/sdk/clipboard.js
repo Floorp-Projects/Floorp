@@ -7,7 +7,11 @@
 "use strict";
 
 module.metadata = {
-  "stability": "stable"
+  "stability": "stable",
+  "engines": {
+    // TODO Fennec Support 789757
+    "Firefox": "*"
+  }
 };
 
 const { Cc, Ci } = require("chrome");

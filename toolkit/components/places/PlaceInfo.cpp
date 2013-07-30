@@ -102,7 +102,7 @@ PlaceInfo::GetVisits(JSContext* aContext,
   JS::Rooted<JSObject*> visits(aContext, JS_NewArrayObject(aContext, 0, NULL));
   NS_ENSURE_TRUE(visits, NS_ERROR_OUT_OF_MEMORY);
 
-  JS::Rooted<JSObject*> global(aContext, JS_GetGlobalForScopeChain(aContext));
+  JS::Rooted<JSObject*> global(aContext, JS::CurrentGlobalOrNull(aContext));
   NS_ENSURE_TRUE(global, NS_ERROR_UNEXPECTED);
 
   nsCOMPtr<nsIXPConnect> xpc = mozilla::services::GetXPConnect();

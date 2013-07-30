@@ -32,8 +32,7 @@ function HTML_TAG(aTagName, aImplClass) {
   classInfos[aTagName] = aImplClass;
   interfaces[aTagName] =
     [ "nsIDOMEventTarget",
-      "nsIDOMElementCSSInlineStyle",
-      "nsIInlineEventHandlers" ];
+      "nsIDOMElementCSSInlineStyle" ];
 
   // Some interfaces don't appear in classinfo because other interfaces that
   // inherit from them do.

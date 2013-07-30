@@ -456,11 +456,14 @@ CodeGeneratorX86::visitLoadTypedArrayElementStatic(LLoadTypedArrayElementStatic 
         FloatRegister dest = ToFloatRegister(out);
         masm.movssWithPatch(srcAddr, dest);
         masm.cvtss2sd(dest, dest);
+        masm.canonicalizeDouble(dest);
         if (ool)
             masm.bind(ool->rejoin());
         return true;
     }
     loadViewTypeElement(vt, srcAddr, out);
+    if (vt == ArrayBufferView::TYPE_FLOAT64)
+        masm.canonicalizeDouble(ToFloatRegister(out));
     if (ool)
         masm.bind(ool->rejoin());
     return true;

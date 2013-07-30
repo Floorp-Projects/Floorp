@@ -603,6 +603,13 @@ def main():
             if not test['name'] in my_tests:
                 continue
 
+            # When running in a loop, we need to create a fresh profile for each cycle
+            if mochitest.localProfile:
+                options.profilePath = mochitest.localProfile
+                os.system("rm -Rf %s" % options.profilePath)
+                options.profilePath = tempfile.mkdtemp()
+                mochitest.localProfile = options.profilePath
+
             options.app = "am"
             options.browserArgs = ["instrument", "-w", "-e", "deviceroot", deviceRoot, "-e", "class"]
             options.browserArgs.append("%s.tests.%s" % (options.remoteappname, test['name']))

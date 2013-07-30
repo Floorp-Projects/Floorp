@@ -111,12 +111,11 @@ exports.testTabProperties = function(test) {
       test.assertEqual(tab.url, url, "URL of the new tab matches");
       test.assert(tab.favicon, "favicon of the new tab is not empty");
       // TODO: remove need for this test by implementing the favicon feature
-      // Poors man deepEqual with JSON.stringify...
-      test.assertEqual(JSON.stringify(messages),
-                       JSON.stringify(['tab.favicon is deprecated, and ' +
-                          'currently favicon helpers are not yet supported ' +
-                          'by Fennec']),
-                       "favicon logs an error for now");
+      test.assertEqual(messages[0].msg,
+        "tab.favicon is deprecated, and " +
+        "currently favicon helpers are not yet supported " +
+        "by Fennec",
+        "favicon logs an error for now");
       test.assertEqual(tab.style, null, "style of the new tab matches");
       test.assertEqual(tab.index, tabsLen, "index of the new tab matches");
       test.assertNotEqual(tab.getThumbnail(), null, "thumbnail of the new tab matches");

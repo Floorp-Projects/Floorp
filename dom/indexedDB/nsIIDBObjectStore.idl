@@ -9,7 +9,6 @@
 interface nsIIDBIndex;
 interface nsIIDBKeyRange;
 interface nsIIDBRequest;
-interface nsIIDBTransaction;
 interface nsIDOMDOMStringList;
 
 dictionary IDBIndexParameters
@@ -33,7 +32,8 @@ interface nsIIDBObjectStore : nsISupports
 
   readonly attribute nsIDOMDOMStringList indexNames;
 
-  readonly attribute nsIIDBTransaction transaction;
+  // IDBTransaction
+  readonly attribute nsISupports transaction;
 
   readonly attribute boolean autoIncrement;
 

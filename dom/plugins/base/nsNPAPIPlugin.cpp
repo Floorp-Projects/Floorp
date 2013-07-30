@@ -1247,7 +1247,7 @@ _getpluginelement(NPP npp)
   NS_ENSURE_TRUE(xpc, nullptr);
 
   nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
-  xpc->WrapNative(cx, ::JS_GetGlobalForScopeChain(cx), element,
+  xpc->WrapNative(cx, ::JS::CurrentGlobalOrNull(cx), element,
                   NS_GET_IID(nsIDOMElement),
                   getter_AddRefs(holder));
   NS_ENSURE_TRUE(holder, nullptr);
