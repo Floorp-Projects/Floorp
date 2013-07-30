@@ -166,6 +166,7 @@ AsyncPanZoomController::AsyncPanZoomController(GeckoContentController* aGeckoCon
                                                GestureBehavior aGestures)
   :  mPaintThrottler(GetFrameTime()),
      mGeckoContentController(aGeckoContentController),
+     mRefPtrMonitor("RefPtrMonitor"),
      mTouchListenerTimeoutTask(nullptr),
      mX(this),
      mY(this),
@@ -199,10 +200,24 @@ AsyncPanZoomController::~AsyncPanZoomController() {
   MOZ_COUNT_DTOR(AsyncPanZoomController);
 }
 
+already_AddRefed<GeckoContentController>
+AsyncPanZoomController::GetGeckoContentController() {
+  MonitorAutoLock lock(mRefPtrMonitor);
+  nsRefPtr<GeckoContentController> controller = mGeckoContentController;
+  return controller.forget();
+}
+
+already_AddRefed<GestureEventListener>
+AsyncPanZoomController::GetGestureEventListener() {
+  MonitorAutoLock lock(mRefPtrMonitor);
+  nsRefPtr<GestureEventListener> listener = mGestureEventListener;
+  return listener.forget();
+}
+
 void
 AsyncPanZoomController::Destroy()
 {
-  // These memebrs can only be used on the controller/UI thread.
+  MonitorAutoLock lock(mRefPtrMonitor);
   mGeckoContentController = nullptr;
   mGestureEventListener = nullptr;
 }
@@ -322,8 +337,9 @@ nsEventStatus AsyncPanZoomController::ReceiveInputEvent(const InputData& aEvent)
 nsEventStatus AsyncPanZoomController::HandleInputEvent(const InputData& aEvent) {
   nsEventStatus rv = nsEventStatus_eIgnore;
 
-  if (mGestureEventListener && !mDisableNextTouchBatch) {
-    rv = mGestureEventListener->HandleInputEvent(aEvent);
+  nsRefPtr<GestureEventListener> listener = GetGestureEventListener();
+  if (listener && !mDisableNextTouchBatch) {
+    rv = listener->HandleInputEvent(aEvent);
     if (rv == nsEventStatus_eConsumeNoDefault)
       return rv;
   }
@@ -649,12 +665,13 @@ nsEventStatus AsyncPanZoomController::OnScaleEnd(const PinchGestureInput& aEvent
 }
 
 nsEventStatus AsyncPanZoomController::OnLongPress(const TapGestureInput& aEvent) {
-  if (mGeckoContentController) {
+  nsRefPtr<GeckoContentController> controller = GetGeckoContentController();
+  if (controller) {
     MonitorAutoLock monitor(mMonitor);
 
     CSSToScreenScale resolution = mFrameMetrics.CalculateResolution();
     CSSPoint point = WidgetSpaceToCompensatedViewportSpace(aEvent.mPoint, resolution);
-    mGeckoContentController->HandleLongTap(gfx::RoundedToInt(point));
+    controller->HandleLongTap(gfx::RoundedToInt(point));
     return nsEventStatus_eConsumeNoDefault;
   }
   return nsEventStatus_eIgnore;
@@ -665,25 +682,27 @@ nsEventStatus AsyncPanZoomController::OnSingleTapUp(const TapGestureInput& aEven
 }
 
 nsEventStatus AsyncPanZoomController::OnSingleTapConfirmed(const TapGestureInput& aEvent) {
-  if (mGeckoContentController) {
+  nsRefPtr<GeckoContentController> controller = GetGeckoContentController();
+  if (controller) {
     MonitorAutoLock monitor(mMonitor);
 
     CSSToScreenScale resolution = mFrameMetrics.CalculateResolution();
     CSSPoint point = WidgetSpaceToCompensatedViewportSpace(aEvent.mPoint, resolution);
-    mGeckoContentController->HandleSingleTap(gfx::RoundedToInt(point));
+    controller->HandleSingleTap(gfx::RoundedToInt(point));
     return nsEventStatus_eConsumeNoDefault;
   }
   return nsEventStatus_eIgnore;
 }
 
 nsEventStatus AsyncPanZoomController::OnDoubleTap(const TapGestureInput& aEvent) {
-  if (mGeckoContentController) {
+  nsRefPtr<GeckoContentController> controller = GetGeckoContentController();
+  if (controller) {
     MonitorAutoLock monitor(mMonitor);
 
     if (mAllowZoom) {
       CSSToScreenScale resolution = mFrameMetrics.CalculateResolution();
       CSSPoint point = WidgetSpaceToCompensatedViewportSpace(aEvent.mPoint, resolution);
-      mGeckoContentController->HandleDoubleTap(gfx::RoundedToInt(point));
+      controller->HandleDoubleTap(gfx::RoundedToInt(point));
     }
 
     return nsEventStatus_eConsumeNoDefault;
@@ -1009,12 +1028,15 @@ void AsyncPanZoomController::RequestContentRepaint() {
   // This message is compressed, so fire whether or not we already have a paint
   // queued up. We need to know whether or not a paint was requested anyways,
   // for the purposes of content calling window.scrollTo().
-  mPaintThrottler.PostTask(
-    FROM_HERE,
-    NewRunnableMethod(mGeckoContentController.get(),
-                      &GeckoContentController::RequestContentRepaint,
-                      mFrameMetrics),
-    GetFrameTime());
+  nsRefPtr<GeckoContentController> controller = GetGeckoContentController();
+  if (controller) {
+    mPaintThrottler.PostTask(
+      FROM_HERE,
+      NewRunnableMethod(controller.get(),
+                        &GeckoContentController::RequestContentRepaint,
+                        mFrameMetrics),
+      GetFrameTime());
+  }
   mFrameMetrics.mPresShellId = mLastContentPaintMetrics.mPresShellId;
   mLastPaintRequestMetrics = mFrameMetrics;
 
@@ -1232,8 +1254,9 @@ void AsyncPanZoomController::UpdateCompositionBounds(const ScreenIntRect& aCompo
 
 void AsyncPanZoomController::CancelDefaultPanZoom() {
   mDisableNextTouchBatch = true;
-  if (mGestureEventListener) {
-    mGestureEventListener->CancelGesture();
+  nsRefPtr<GestureEventListener> listener = GetGestureEventListener();
+  if (listener) {
+    listener->CancelGesture();
   }
 }
 
@@ -1414,15 +1437,15 @@ void AsyncPanZoomController::UpdateZoomConstraints(bool aAllowZoom,
 }
 
 void AsyncPanZoomController::PostDelayedTask(Task* aTask, int aDelayMs) {
-  if (!mGeckoContentController) {
-    return;
+  nsRefPtr<GeckoContentController> controller = GetGeckoContentController();
+  if (controller) {
+    controller->PostDelayedTask(aTask, aDelayMs);
   }
-
-  mGeckoContentController->PostDelayedTask(aTask, aDelayMs);
 }
 
 void AsyncPanZoomController::SendAsyncScrollEvent() {
-  if (!mGeckoContentController) {
+  nsRefPtr<GeckoContentController> controller = GetGeckoContentController();
+  if (!controller) {
     return;
   }
 
@@ -1434,7 +1457,7 @@ void AsyncPanZoomController::SendAsyncScrollEvent() {
     contentRect.MoveTo(mCurrentAsyncScrollOffset);
   }
 
-  mGeckoContentController->SendAsyncScrollDOMEvent(contentRect, scrollableSize);
+  controller->SendAsyncScrollDOMEvent(contentRect, scrollableSize);
 }
 
 static void GetAPZCAtPointOnSubtree(const ContainerLayer& aLayerIn,
