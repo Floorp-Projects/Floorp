@@ -54,6 +54,7 @@
 #include "nsFrameMessageManager.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/TimeStamp.h"
+#include "nsIDOMTouchEvent.h"
 #include "nsIInlineEventHandlers.h"
 #include "nsWrapperCacheInlines.h"
 #include "nsIIdleObserver.h"

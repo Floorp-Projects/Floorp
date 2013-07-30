@@ -20,6 +20,7 @@
 #include "nsRefreshDriver.h"
 #include "nsDOMTouchEvent.h"
 #include "mozilla/dom/Touch.h"
+#include "nsIDOMTouchEvent.h"
 #include "nsObjectLoadingContent.h"
 #include "nsFrame.h"
 
