@@ -20,7 +20,7 @@ CPP_SOURCES += [
     'BootAnimation.cpp',
 ]
 
-if CONFIG['ANDROID_VERSION'] == '17':
+if CONFIG['ANDROID_VERSION'] == '18':
     CPP_SOURCES += [
         'FramebufferSurface.cpp',
         'GraphicBufferAlloc.cpp',
