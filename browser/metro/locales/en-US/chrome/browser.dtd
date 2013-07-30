@@ -25,17 +25,17 @@
 <!ENTITY recentHistoryHeader.label   "Recent History">
 <!ENTITY remoteTabsHeader.label      "Tabs from Other Devices">
 
-<!-- LOCALIZATION NOTE (snappedRemoteTabsHeader.label): shortened version of startRemoteTabsHeader.label.
-     Needs to be two words or shorter to fit in narrow vertical space.-->
-<!-- LOCALIZATION NOTE (snappedRemoteTabsHeader.label,
-                        snappedBookmarksHeader.label,
-                        snappedHistoryHeader.label,
-                        snappedTopSitesHeader.label )
-      The '>' character is not part of the name, but is an indicator of more content. Please do not localize the '>' -->
-<!ENTITY snappedRemoteTabsHeader.label    "Remote Tabs >">
-<!ENTITY snappedBookmarksHeader.label     "Bookmarks >">
-<!ENTITY snappedRecentHistoryHeader.label "Recent History >">
-<!ENTITY snappedTopSitesHeader.label      "Top Sites >">
+<!-- LOCALIZATION NOTE (narrowTopSitesHeader.label,
+                        narrowBookmarksHeader.label,
+                        narrowHistoryHeader.label,
+                        narrowRemoteTabsHeader.label )
+     are shortened versions of topSitesHeader.label, bookmarksHeader.label, recentHistoryHeader.label
+     and remoteTabsHeader.label. Need to be two words or shorter to fit in narrow vertical space.
+      -->
+<!ENTITY narrowTopSitesHeader.label      "Top Sites">
+<!ENTITY narrowBookmarksHeader.label     "Bookmarks">
+<!ENTITY narrowRecentHistoryHeader.label "Recent History">
+<!ENTITY narrowRemoteTabsHeader.label    "Remote Tabs">
 
 <!ENTITY downloadsHeader.label     "Downloads">
 <!ENTITY downloadShowPage.label    "Go to Page">
