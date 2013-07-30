@@ -77,6 +77,11 @@ public:
   static nsIContent* FindContentFor(ViewID aId);
 
   /**
+   * Find the scrollable frame for a given ID.
+   */
+  static nsIScrollableFrame* FindScrollableFrameFor(ViewID aId);
+
+  /**
    * Get display port for the given element.
    */
   static bool GetDisplayPort(nsIContent* aContent, nsRect *aResult);
