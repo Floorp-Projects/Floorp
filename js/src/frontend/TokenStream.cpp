@@ -1235,11 +1235,11 @@ TokenStream::getTokenInternal()
          * convert the jschars in userbuf directly to the numeric value.
          */
         double dval;
-        const jschar *dummy;
         if (!((decimalPoint == HasDecimal) || hasExp)) {
-            if (!GetPrefixInteger(cx, numStart, userbuf.addressOfNextRawChar(), 10, &dummy, &dval))
+            if (!GetDecimalInteger(cx, numStart, userbuf.addressOfNextRawChar(), &dval))
                 goto error;
         } else {
+            const jschar *dummy;
             if (!js_strtod(cx, numStart, userbuf.addressOfNextRawChar(), &dummy, &dval))
                 goto error;
         }
