@@ -681,6 +681,174 @@ class MUnaryInstruction : public MAryInstruction<1>
     }
 };
 
+class MBinaryInstruction : public MAryInstruction<2>
+{
+  protected:
+    MBinaryInstruction(MDefinition *left, MDefinition *right)
+    {
+        setOperand(0, left);
+        setOperand(1, right);
+    }
+
+  public:
+    MDefinition *lhs() const {
+        return getOperand(0);
+    }
+    MDefinition *rhs() const {
+        return getOperand(1);
+    }
+
+  protected:
+    HashNumber valueHash() const
+    {
+        MDefinition *lhs = getOperand(0);
+        MDefinition *rhs = getOperand(1);
+
+        return op() ^ lhs->valueNumber() ^ rhs->valueNumber();
+    }
+    void swapOperands() {
+        MDefinition *temp = getOperand(0);
+        replaceOperand(0, getOperand(1));
+        replaceOperand(1, temp);
+    }
+
+    bool congruentTo(MDefinition *const &ins) const
+    {
+        if (op() != ins->op())
+            return false;
+
+        if (type() != ins->type())
+            return false;
+
+        if (isEffectful() || ins->isEffectful())
+            return false;
+
+        MDefinition *left = getOperand(0);
+        MDefinition *right = getOperand(1);
+        MDefinition *tmp;
+
+        if (isCommutative() && left->valueNumber() > right->valueNumber()) {
+            tmp = right;
+            right = left;
+            left = tmp;
+        }
+
+        MBinaryInstruction *bi = static_cast<MBinaryInstruction *>(ins);
+        MDefinition *insLeft = bi->getOperand(0);
+        MDefinition *insRight = bi->getOperand(1);
+        if (isCommutative() && insLeft->valueNumber() > insRight->valueNumber()) {
+            tmp = insRight;
+            insRight = insLeft;
+            insLeft = tmp;
+        }
+
+        return (left->valueNumber() == insLeft->valueNumber()) &&
+               (right->valueNumber() == insRight->valueNumber());
+    }
+
+    // Return true if the operands to this instruction are both unsigned,
+    // in which case any wrapping operands were replaced with the underlying
+    // int32 operands.
+    bool tryUseUnsignedOperands();
+};
+
+class MTernaryInstruction : public MAryInstruction<3>
+{
+  protected:
+    MTernaryInstruction(MDefinition *first, MDefinition *second, MDefinition *third)
+    {
+        setOperand(0, first);
+        setOperand(1, second);
+        setOperand(2, third);
+    }
+
+  protected:
+    HashNumber valueHash() const
+    {
+        MDefinition *first = getOperand(0);
+        MDefinition *second = getOperand(1);
+        MDefinition *third = getOperand(2);
+
+        return op() ^ first->valueNumber() ^ second->valueNumber() ^ third->valueNumber();
+    }
+
+    bool congruentTo(MDefinition *const &ins) const
+    {
+        if (op() != ins->op())
+            return false;
+
+        if (type() != ins->type())
+            return false;
+
+        if (isEffectful() || ins->isEffectful())
+            return false;
+
+        MTernaryInstruction *ter = static_cast<MTernaryInstruction *>(ins);
+        MDefinition *first = getOperand(0);
+        MDefinition *second = getOperand(1);
+        MDefinition *third = getOperand(2);
+        MDefinition *insFirst = ter->getOperand(0);
+        MDefinition *insSecond = ter->getOperand(1);
+        MDefinition *insThird = ter->getOperand(2);
+
+        return first->valueNumber() == insFirst->valueNumber() &&
+               second->valueNumber() == insSecond->valueNumber() &&
+               third->valueNumber() == insThird->valueNumber();
+    }
+};
+
+class MQuaternaryInstruction : public MAryInstruction<4>
+{
+  protected:
+    MQuaternaryInstruction(MDefinition *first, MDefinition *second,
+                           MDefinition *third, MDefinition *fourth)
+    {
+        setOperand(0, first);
+        setOperand(1, second);
+        setOperand(2, third);
+        setOperand(3, fourth);
+    }
+
+  protected:
+    HashNumber valueHash() const
+    {
+        MDefinition *first = getOperand(0);
+        MDefinition *second = getOperand(1);
+        MDefinition *third = getOperand(2);
+        MDefinition *fourth = getOperand(3);
+
+        return op() ^ first->valueNumber() ^ second->valueNumber() ^
+                      third->valueNumber() ^ fourth->valueNumber();
+    }
+
+    bool congruentTo(MDefinition *const &ins) const
+    {
+        if (op() != ins->op())
+            return false;
+
+        if (type() != ins->type())
+            return false;
+
+        if (isEffectful() || ins->isEffectful())
+            return false;
+
+        MQuaternaryInstruction *qua = static_cast<MQuaternaryInstruction *>(ins);
+        MDefinition *first = getOperand(0);
+        MDefinition *second = getOperand(1);
+        MDefinition *third = getOperand(2);
+        MDefinition *fourth = getOperand(3);
+        MDefinition *insFirst = qua->getOperand(0);
+        MDefinition *insSecond = qua->getOperand(1);
+        MDefinition *insThird = qua->getOperand(2);
+        MDefinition *insFourth = qua->getOperand(3);
+
+        return first->valueNumber() == insFirst->valueNumber() &&
+               second->valueNumber() == insSecond->valueNumber() &&
+               third->valueNumber() == insThird->valueNumber() &&
+               fourth->valueNumber() == insFourth->valueNumber();
+    }
+};
+
 // Generates an LSnapshot without further effect.
 class MStart : public MNullaryInstruction
 {
@@ -1327,6 +1495,38 @@ class MInitProp
     }
 };
 
+class MInitPropGetterSetter
+  : public MBinaryInstruction,
+    public MixPolicy<ObjectPolicy<0>, ObjectPolicy<1> >
+{
+    CompilerRootPropertyName name_;
+
+    MInitPropGetterSetter(MDefinition *obj, PropertyName *name, MDefinition *value)
+      : MBinaryInstruction(obj, value),
+        name_(name)
+    { }
+
+  public:
+    INSTRUCTION_HEADER(InitPropGetterSetter)
+
+    static MInitPropGetterSetter *New(MDefinition *obj, PropertyName *name, MDefinition *value) {
+        return new MInitPropGetterSetter(obj, name, value);
+    }
+
+    MDefinition *object() const {
+        return getOperand(0);
+    }
+    MDefinition *value() const {
+        return getOperand(1);
+    }
+    PropertyName *name() const {
+        return name_;
+    }
+    TypePolicy *typePolicy() {
+        return this;
+    }
+};
+
 class MInitElem
   : public MAryInstruction<3>,
     public Mix3Policy<ObjectPolicy<0>, BoxPolicy<1>, BoxPolicy<2> >
@@ -1360,6 +1560,35 @@ class MInitElem
     }
     bool possiblyCalls() const {
         return true;
+    }
+};
+
+class MInitElemGetterSetter
+  : public MTernaryInstruction,
+    public Mix3Policy<ObjectPolicy<0>, BoxPolicy<1>, ObjectPolicy<2> >
+{
+    MInitElemGetterSetter(MDefinition *obj, MDefinition *id, MDefinition *value)
+      : MTernaryInstruction(obj, id, value)
+    { }
+
+  public:
+    INSTRUCTION_HEADER(InitElemGetterSetter)
+
+    static MInitElemGetterSetter *New(MDefinition *obj, MDefinition *id, MDefinition *value) {
+        return new MInitElemGetterSetter(obj, id, value);
+    }
+
+    MDefinition *object() const {
+        return getOperand(0);
+    }
+    MDefinition *idValue() const {
+        return getOperand(1);
+    }
+    MDefinition *value() const {
+        return getOperand(2);
+    }
+    TypePolicy *typePolicy() {
+        return this;
     }
 };
 
@@ -1683,174 +1912,6 @@ class MCallDirectEval
 
   private:
     jsbytecode *pc_;
-};
-
-class MBinaryInstruction : public MAryInstruction<2>
-{
-  protected:
-    MBinaryInstruction(MDefinition *left, MDefinition *right)
-    {
-        setOperand(0, left);
-        setOperand(1, right);
-    }
-
-  public:
-    MDefinition *lhs() const {
-        return getOperand(0);
-    }
-    MDefinition *rhs() const {
-        return getOperand(1);
-    }
-
-  protected:
-    HashNumber valueHash() const
-    {
-        MDefinition *lhs = getOperand(0);
-        MDefinition *rhs = getOperand(1);
-
-        return op() ^ lhs->valueNumber() ^ rhs->valueNumber();
-    }
-    void swapOperands() {
-        MDefinition *temp = getOperand(0);
-        replaceOperand(0, getOperand(1));
-        replaceOperand(1, temp);
-    }
-
-    bool congruentTo(MDefinition *const &ins) const
-    {
-        if (op() != ins->op())
-            return false;
-
-        if (type() != ins->type())
-            return false;
-
-        if (isEffectful() || ins->isEffectful())
-            return false;
-
-        MDefinition *left = getOperand(0);
-        MDefinition *right = getOperand(1);
-        MDefinition *tmp;
-
-        if (isCommutative() && left->valueNumber() > right->valueNumber()) {
-            tmp = right;
-            right = left;
-            left = tmp;
-        }
-
-        MBinaryInstruction *bi = static_cast<MBinaryInstruction *>(ins);
-        MDefinition *insLeft = bi->getOperand(0);
-        MDefinition *insRight = bi->getOperand(1);
-        if (isCommutative() && insLeft->valueNumber() > insRight->valueNumber()) {
-            tmp = insRight;
-            insRight = insLeft;
-            insLeft = tmp;
-        }
-
-        return (left->valueNumber() == insLeft->valueNumber()) &&
-               (right->valueNumber() == insRight->valueNumber());
-    }
-
-    // Return true if the operands to this instruction are both unsigned,
-    // in which case any wrapping operands were replaced with the underlying
-    // int32 operands.
-    bool tryUseUnsignedOperands();
-};
-
-class MTernaryInstruction : public MAryInstruction<3>
-{
-  protected:
-    MTernaryInstruction(MDefinition *first, MDefinition *second, MDefinition *third)
-    {
-        setOperand(0, first);
-        setOperand(1, second);
-        setOperand(2, third);
-    }
-
-  protected:
-    HashNumber valueHash() const
-    {
-        MDefinition *first = getOperand(0);
-        MDefinition *second = getOperand(1);
-        MDefinition *third = getOperand(2);
-
-        return op() ^ first->valueNumber() ^ second->valueNumber() ^ third->valueNumber();
-    }
-
-    bool congruentTo(MDefinition *const &ins) const
-    {
-        if (op() != ins->op())
-            return false;
-
-        if (type() != ins->type())
-            return false;
-
-        if (isEffectful() || ins->isEffectful())
-            return false;
-
-        MTernaryInstruction *ter = static_cast<MTernaryInstruction *>(ins);
-        MDefinition *first = getOperand(0);
-        MDefinition *second = getOperand(1);
-        MDefinition *third = getOperand(2);
-        MDefinition *insFirst = ter->getOperand(0);
-        MDefinition *insSecond = ter->getOperand(1);
-        MDefinition *insThird = ter->getOperand(2);
-
-        return first->valueNumber() == insFirst->valueNumber() &&
-               second->valueNumber() == insSecond->valueNumber() &&
-               third->valueNumber() == insThird->valueNumber();
-    }
-};
-
-class MQuaternaryInstruction : public MAryInstruction<4>
-{
-  protected:
-    MQuaternaryInstruction(MDefinition *first, MDefinition *second,
-                           MDefinition *third, MDefinition *fourth)
-    {
-        setOperand(0, first);
-        setOperand(1, second);
-        setOperand(2, third);
-        setOperand(3, fourth);
-    }
-
-  protected:
-    HashNumber valueHash() const
-    {
-        MDefinition *first = getOperand(0);
-        MDefinition *second = getOperand(1);
-        MDefinition *third = getOperand(2);
-        MDefinition *fourth = getOperand(3);
-
-        return op() ^ first->valueNumber() ^ second->valueNumber() ^
-                      third->valueNumber() ^ fourth->valueNumber();
-    }
-
-    bool congruentTo(MDefinition *const &ins) const
-    {
-        if (op() != ins->op())
-            return false;
-
-        if (type() != ins->type())
-            return false;
-
-        if (isEffectful() || ins->isEffectful())
-            return false;
-
-        MQuaternaryInstruction *qua = static_cast<MQuaternaryInstruction *>(ins);
-        MDefinition *first = getOperand(0);
-        MDefinition *second = getOperand(1);
-        MDefinition *third = getOperand(2);
-        MDefinition *fourth = getOperand(3);
-        MDefinition *insFirst = qua->getOperand(0);
-        MDefinition *insSecond = qua->getOperand(1);
-        MDefinition *insThird = qua->getOperand(2);
-        MDefinition *insFourth = qua->getOperand(3);
-
-        return first->valueNumber() == insFirst->valueNumber() &&
-               second->valueNumber() == insSecond->valueNumber() &&
-               third->valueNumber() == insThird->valueNumber() &&
-               fourth->valueNumber() == insFourth->valueNumber();
-    }
 };
 
 class MCompare

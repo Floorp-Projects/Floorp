@@ -33,7 +33,9 @@
     _(NewCallObjectPar)             \
     _(AbortPar)                     \
     _(InitElem)                     \
+    _(InitElemGetterSetter)         \
     _(InitProp)                     \
+    _(InitPropGetterSetter)         \
     _(CheckOverRecursed)            \
     _(CheckOverRecursedPar)         \
     _(DefVar)                       \

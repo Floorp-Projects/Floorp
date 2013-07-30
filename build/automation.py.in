@@ -5,8 +5,8 @@
 
 from __future__ import with_statement
 import codecs
-from datetime import datetime, timedelta
 import itertools
+import json
 import logging
 import os
 import re
@@ -18,6 +18,7 @@ import sys
 import threading
 import tempfile
 import sqlite3
+from datetime import datetime, timedelta
 from string import Template
 
 SCRIPT_DIR = os.path.abspath(os.path.realpath(os.path.dirname(sys.argv[0])))
@@ -26,19 +27,24 @@ import automationutils
 
 # --------------------------------------------------------------
 # TODO: this is a hack for mozbase without virtualenv, remove with bug 849900
-#
-here = os.path.dirname(__file__)
+# These paths refer to relative locations to test.zip, not the OBJDIR or SRCDIR
+here = os.path.dirname(os.path.realpath(__file__))
 mozbase = os.path.realpath(os.path.join(os.path.dirname(here), 'mozbase'))
 
 if os.path.isdir(mozbase):
     for package in os.listdir(mozbase):
-        sys.path.append(os.path.join(mozbase, package))
+        package_path = os.path.join(mozbase, package)
+        if package_path not in sys.path:
+            sys.path.append(package_path)
 
 import mozcrash
+from mozprofile import Profile, Preferences
+from mozprofile.permissions import ServerLocations
 
 # ---------------------------------------------------------------
 
 _DEFAULT_PREFERENCE_FILE = os.path.join(SCRIPT_DIR, 'prefs_general.js')
+_DEFAULT_APPS_FILE = os.path.join(SCRIPT_DIR, 'webapps_mochitest.json')
 
 _DEFAULT_WEB_SERVER = "127.0.0.1"
 _DEFAULT_HTTP_PORT = 8888
@@ -293,6 +299,9 @@ class Automation(object):
     return locations
 
   def setupPermissionsDatabase(self, profileDir, permissions):
+    # Included for reftest compatibility;
+    # see https://bugzilla.mozilla.org/show_bug.cgi?id=688667
+
     # Open database and create table
     permDB = sqlite3.connect(os.path.join(profileDir, "permissions.sqlite"))
     cursor = permDB.cursor();
@@ -320,319 +329,65 @@ class Automation(object):
     permDB.commit()
     cursor.close()
 
-  def setupTestApps(self, profileDir, apps):
-    webappJSONTemplate = Template(""""$id": {
-  "origin": "$origin",
-  "installOrigin": "$origin",
-  "receipt": null,
-  "installTime": 132333986000,
-  "manifestURL": "$manifestURL",
-  "localId": $localId,
-  "id": "$id",
-  "appStatus": $appStatus,
-  "csp": "$csp"
-}""")
-
-    manifestTemplate = Template("""{
-  "name": "$name",
-  "csp": "$csp",
-  "description": "$description",
-  "launch_path": "/",
-  "developer": {
-    "name": "Mozilla",
-    "url": "https://mozilla.org/"
-  },
-  "permissions": [
-  ],
-  "locales": {
-    "en-US": {
-      "name": "$name",
-      "description": "$description"
-    }
-  },
-  "default_locale": "en-US",
-  "icons": {
-  }
-}
-""")
-
-    # Create webapps/webapps.json
-    webappsDir = os.path.join(profileDir, "webapps")
-    if not os.access(webappsDir, os.F_OK):
-      os.mkdir(webappsDir)
-
-    lineRe = re.compile(r'(.*?)"(.*?)": (.*)')
-
-    webappsJSONFilename = os.path.join(webappsDir, "webapps.json")
-    webappsJSON = []
-    if os.access(webappsJSONFilename, os.F_OK):
-      # If there is an existing webapps.json file (which will be the case for
-      # b2g), we parse the data in the existing file before appending test
-      # test apps to it.
-      startId = 1
-      webappsJSONFile = open(webappsJSONFilename, "r")
-      contents = webappsJSONFile.read()
-
-      for app_content in contents.split('},'):
-        app = {}
-        # ghetto json parser needed due to lack of json/simplejson on test slaves
-        for line in app_content.split('\n'):
-          m = lineRe.match(line)
-          if m:
-            value = m.groups()[2]
-            # remove any trailing commas
-            if value[-1:] == ',':
-              value = value[:-1]
-            # set the app name from a line that looks like this:
-            # "name.gaiamobile.org": {
-            if value == '{':
-              app['id'] = m.groups()[1]
-            # parse string, None, bool and int types
-            elif value[0:1] == '"':
-              app[m.groups()[1]] = value[1:-1]
-            elif value == "null":
-              app[m.groups()[1]] = None
-            elif value == "true":
-              app[m.groups()[1]] = True
-            elif value == "false":
-              app[m.groups()[1]] = False
-            else:
-              app[m.groups()[1]] = int(value)
-        if app:
-          webappsJSON.append(app)
-
-      webappsJSONFile.close()
-
-    startId = 1
-    for app in webappsJSON:
-      if app['localId'] >= startId:
-        startId = app['localId'] + 1
-      if not app.get('csp'):
-        app['csp'] = ''
-      if not app.get('appStatus'):
-        app['appStatus'] = 3
-
-    for localId, app in enumerate(apps):
-      app['localId'] = localId + startId # localId must be from 1..N
-      if not app.get('id'):
-        app['id'] = app['name']
-      webappsJSON.append(app)
-
-    contents = []
-    for app in webappsJSON:
-      contents.append(webappJSONTemplate.substitute(app))
-    contents = '{\n' + ',\n'.join(contents) + '\n}\n'
-
-    webappsJSONFile = open(webappsJSONFilename, "w")
-    webappsJSONFile.write(contents)
-    webappsJSONFile.close()
-
-    # Create manifest file for each app.
-    for app in apps:
-      manifest = manifestTemplate.substitute(app)
-
-      manifestDir = os.path.join(webappsDir, app['name'])
-      os.mkdir(manifestDir)
-
-      manifestFile = open(os.path.join(manifestDir, "manifest.webapp"), "a")
-      manifestFile.write(manifest)
-      manifestFile.close()
-
   def initializeProfile(self, profileDir,
                               extraPrefs=None,
                               useServerLocations=False,
-                              initialProfile=None,
-                              prefsPath=_DEFAULT_PREFERENCE_FILE):
+                              prefsPath=_DEFAULT_PREFERENCE_FILE,
+                              appsPath=_DEFAULT_APPS_FILE,
+                              addons=None):
     " Sets up the standard testing profile."
 
     extraPrefs = extraPrefs or []
-    prefs = []
-    # Start with a clean slate.
-    shutil.rmtree(profileDir, True)
 
-    if initialProfile:
-      shutil.copytree(initialProfile, profileDir)
-    else:
-      os.mkdir(profileDir)
-
-    # Set up permissions database
-    locations = self.readLocations()
-    self.setupPermissionsDatabase(profileDir,
-      {'allowXULXBL':[(l.host, 'noxul' not in l.options) for l in locations]});
-
-    f = open(prefsPath, 'r')
-    part = f.read() % {"server" : "%s:%s" % (self.webServer, self.httpPort)}
-    f.close()
-    prefs.append(part)
-
+    # create the profile
+    prefs = {}
+    locations = None
     if useServerLocations:
-      # We need to proxy every server but the primary one.
-      origins = ["'%s://%s:%s'" % (l.scheme, l.host, l.port)
-                for l in filter(lambda l: "primary" not in l.options, locations)]
-      origins = ", ".join(origins)
-
-      pacURL = """data:text/plain,
-function FindProxyForURL(url, host)
-{
-  var origins = [%(origins)s];
-  var regex = new RegExp('^([a-z][-a-z0-9+.]*)' +
-                         '://' +
-                         '(?:[^/@]*@)?' +
-                         '(.*?)' +
-                         '(?::(\\\\\\\\d+))?/');
-  var matches = regex.exec(url);
-  if (!matches)
-    return 'DIRECT';
-  var isHttp = matches[1] == 'http';
-  var isHttps = matches[1] == 'https';
-  var isWebSocket = matches[1] == 'ws';
-  var isWebSocketSSL = matches[1] == 'wss';
-  if (!matches[3])
-  {
-    if (isHttp | isWebSocket) matches[3] = '80';
-    if (isHttps | isWebSocketSSL) matches[3] = '443';
-  }
-  if (isWebSocket)
-    matches[1] = 'http';
-  if (isWebSocketSSL)
-    matches[1] = 'https';
-
-  var origin = matches[1] + '://' + matches[2] + ':' + matches[3];
-  if (origins.indexOf(origin) < 0)
-    return 'DIRECT';
-  if (isHttp)
-    return 'PROXY %(remote)s:%(httpport)s';
-  if (isHttps || isWebSocket || isWebSocketSSL)
-    return 'PROXY %(remote)s:%(sslport)s';
-  return 'DIRECT';
-}""" % { "origins": origins,
-         "remote":  self.webServer,
-         "httpport":self.httpPort,
-         "sslport": self.sslPort }
-      pacURL = "".join(pacURL.splitlines())
-
-      part = """
-user_pref("network.proxy.type", 2);
-user_pref("network.proxy.autoconfig_url", "%(pacURL)s");
-
-user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless to others
-""" % {"pacURL": pacURL}
+        locations = ServerLocations()
+        locations.read(os.path.abspath('server-locations.txt'), True)
     else:
-      part = 'user_pref("network.proxy.type", 0);\n'
-    prefs.append(part)
+      prefs['network.proxy.type'] = 0
+
+    prefs.update(Preferences.read_prefs(prefsPath))
 
     for v in extraPrefs:
       thispref = v.split("=", 1)
       if len(thispref) < 2:
         print "Error: syntax error in --setpref=" + v
         sys.exit(1)
-      part = 'user_pref("%s", %s);\n' % (thispref[0], thispref[1])
-      prefs.append(part)
+      prefs[thispref[0]] = thispref[1]
 
-    # write the preferences
-    prefsFile = open(profileDir + "/" + "user.js", "a")
-    prefsFile.write("".join(prefs))
-    prefsFile.close()
 
-    apps = [
-      {
-        'name': 'http_example_org',
-        'csp': '',
-        'origin': 'http://example.org',
-        'manifestURL': 'http://example.org/manifest.webapp',
-        'description': 'http://example.org App',
-        'appStatus': _APP_STATUS_INSTALLED
-      },
-      {
-        'name': 'https_example_com',
-        'csp': '',
-        'origin': 'https://example.com',
-        'manifestURL': 'https://example.com/manifest.webapp',
-        'description': 'https://example.com App',
-        'appStatus': _APP_STATUS_INSTALLED
-      },
-      {
-        'name': 'http_test1_example_org',
-        'csp': '',
-        'origin': 'http://test1.example.org',
-        'manifestURL': 'http://test1.example.org/manifest.webapp',
-        'description': 'http://test1.example.org App',
-        'appStatus': _APP_STATUS_INSTALLED
-      },
-      {
-        'name': 'http_test1_example_org_8000',
-        'csp': '',
-        'origin': 'http://test1.example.org:8000',
-        'manifestURL': 'http://test1.example.org:8000/manifest.webapp',
-        'description': 'http://test1.example.org:8000 App',
-        'appStatus': _APP_STATUS_INSTALLED
-      },
-      {
-        'name': 'http_sub1_test1_example_org',
-        'csp': '',
-        'origin': 'http://sub1.test1.example.org',
-        'manifestURL': 'http://sub1.test1.example.org/manifest.webapp',
-        'description': 'http://sub1.test1.example.org App',
-        'appStatus': _APP_STATUS_INSTALLED
-      },
-      {
-        'name': 'https_example_com_privileged',
-        'csp': '',
-        'origin': 'https://example.com',
-        'manifestURL': 'https://example.com/manifest_priv.webapp',
-        'description': 'https://example.com Privileged App',
-        'appStatus': _APP_STATUS_PRIVILEGED
-      },
-      {
-        'name': 'https_example_com_certified',
-        'csp': '',
-        'origin': 'https://example.com',
-        'manifestURL': 'https://example.com/manifest_cert.webapp',
-        'description': 'https://example.com Certified App',
-        'appStatus': _APP_STATUS_CERTIFIED
-      },
-      {
-        'name': 'https_example_csp_certified',
-        'csp': "default-src *; script-src 'self'; object-src 'none'; style-src 'self' 'unsafe-inline'",
-        'origin': 'https://example.com',
-        'manifestURL': 'https://example.com/manifest_csp_cert.webapp',
-        'description': 'https://example.com Certified App with manifest policy',
-        'appStatus': _APP_STATUS_CERTIFIED
-      },
-      {
-        'name': 'https_example_csp_installed',
-        'csp': "default-src *; script-src 'self'; object-src 'none'; style-src 'self' 'unsafe-inline'",
-        'origin': 'https://example.com',
-        'manifestURL': 'https://example.com/manifest_csp_inst.webapp',
-        'description': 'https://example.com Installed App with manifest policy',
-        'appStatus': _APP_STATUS_INSTALLED
-      },
-      {
-        'name': 'https_example_csp_privileged',
-        'csp': "default-src *; script-src 'self'; object-src 'none'; style-src 'self' 'unsafe-inline'",
-        'origin': 'https://example.com',
-        'manifestURL': 'https://example.com/manifest_csp_priv.webapp',
-        'description': 'https://example.com Privileged App with manifest policy',
-        'appStatus': _APP_STATUS_PRIVILEGED
-      },
-      {
-        'name': 'https_a_domain_certified',
-        'csp': "",
-        'origin': 'https://acertified.com',
-        'manifestURL': 'https://acertified.com/manifest.webapp',
-        'description': 'https://acertified.com Certified App',
-        'appStatus': _APP_STATUS_CERTIFIED
-      },
-      {
-        'name': 'https_a_domain_privileged',
-        'csp': "",
-        'origin': 'https://aprivileged.com',
-        'manifestURL': 'https://aprivileged.com/manifest.webapp',
-        'description': 'https://aprivileged.com Privileged App ',
-        'appStatus': _APP_STATUS_PRIVILEGED
-      },
-    ];
-    self.setupTestApps(profileDir, apps)
+    interpolation = {"server": "%s:%s" % (self.webServer, self.httpPort)}
+    prefs = json.loads(json.dumps(prefs) % interpolation)
+    for pref in prefs:
+        prefs[pref] = Preferences.cast(prefs[pref])
+
+    # load apps
+    apps = None
+    if appsPath and os.path.exists(appsPath):
+        with open(appsPath, 'r') as apps_file:
+            apps = json.load(apps_file)
+
+    proxy = {'remote': str(self.webServer),
+             'http': str(self.httpPort),
+             'https': str(self.sslPort),
+    # use SSL port for legacy compatibility; see
+    # - https://bugzilla.mozilla.org/show_bug.cgi?id=688667#c66
+    # - https://bugzilla.mozilla.org/show_bug.cgi?id=899221
+    #             'ws': str(self.webSocketPort)
+             'ws': str(self.sslPort)
+             }
+
+    # return profile object
+    profile = Profile(profile=profileDir,
+                      addons=addons,
+                      locations=locations,
+                      preferences=prefs,
+                      restore=False,
+                      apps=apps,
+                      proxy=proxy)
+    return profile
 
   def addCommonOptions(self, parser):
     "Adds command-line options which are common to mochitest and reftest."
@@ -641,11 +396,10 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
                       action = "append", type = "string",
                       default = [],
                       dest = "extraPrefs", metavar = "PREF=VALUE",
-                      help = "defines an extra user preference")  
+                      help = "defines an extra user preference")
 
   def fillCertificateDB(self, profileDir, certPath, utilityPath, xrePath):
     pwfilePath = os.path.join(profileDir, ".crtdbpw")
-  
     pwfile = open(pwfilePath, "w")
     pwfile.write("\n")
     pwfile.close()

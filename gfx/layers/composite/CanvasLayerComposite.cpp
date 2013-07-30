@@ -34,7 +34,7 @@ CanvasLayerComposite::~CanvasLayerComposite()
 }
 
 void CanvasLayerComposite::SetCompositableHost(CompositableHost* aHost) {
-  mImageHost = static_cast<ImageHost*>(aHost);
+  mImageHost = aHost;
 }
 
 Layer*

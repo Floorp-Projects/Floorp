@@ -6,7 +6,7 @@
 
 Components.utils.import("resource://gre/modules/Services.jsm");
 
-let PrefsFlyout = {
+let PrefsFlyoutPanel = {
   _isInitialized: false,
   _hasShown: false,
   init: function pv_init() {
@@ -21,7 +21,7 @@ let PrefsFlyout = {
 
     this._elements = {};
     [
-      ['prefsFlyout',  'prefs-flyoutpanel'],
+      ['PrefsFlyoutPanel',  'prefs-flyoutpanel'],
       ['dntNoPref',    'prefs-dnt-nopref'],
       ['telemetryPref','prefs-telemetry'],
     ].forEach(function(aElement) {
@@ -31,7 +31,7 @@ let PrefsFlyout = {
       });
     });
 
-    this._topmostElement = this._elements.prefsFlyout;
+    this._topmostElement = this._elements.PrefsFlyoutPanel;
   },
 
   _show: function() {
@@ -40,7 +40,7 @@ let PrefsFlyout = {
       this._hasShown = true;
     }
 
-    this._elements.prefsFlyout.show();
+    this._elements.PrefsFlyoutPanel.show();
   },
 
   onDNTPreferenceChanged: function onDNTPreferenceChanged() {

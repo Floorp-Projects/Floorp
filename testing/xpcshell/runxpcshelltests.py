@@ -238,11 +238,15 @@ class XPCShellTests(object):
         if self.debuggerInfo:
             self.xpcsCmd = [self.debuggerInfo["path"]] + self.debuggerInfo["args"] + self.xpcsCmd
 
-        if self.pluginsPath:
-            self.pluginsDir = self.setupPluginsDir()
+        # Automation doesn't specify a pluginsPath and xpcshell defaults to
+        # $APPDIR/plugins. We do the same here so we can carry on with
+        # setting up every test with its own plugins directory.
+        if not self.pluginsPath:
+            self.pluginsPath = os.path.join(self.appPath, 'plugins')
+
+        self.pluginsDir = self.setupPluginsDir()
+        if self.pluginsDir:
             self.xpcsCmd.extend(['-p', self.pluginsDir])
-        else:
-            self.pluginsDir = None
 
     def buildTestPath(self):
         """
@@ -294,6 +298,9 @@ class XPCShellTests(object):
                 list(sanitize_list(test['tail'], 'tail')))
 
     def setupPluginsDir(self):
+        if not os.path.isdir(self.pluginsPath):
+            return None
+
         pluginsDir = mkdtemp()
         # shutil.copytree requires dst to not exist. Deleting the tempdir
         # would make a race condition possible in a concurrent environment,

@@ -155,7 +155,7 @@ ContentClientRemoteBuffer::BuildDeprecatedTextureClients(ContentType aType,
     }
     DestroyBuffers();
   }
-  mTextureInfo.mTextureFlags = aFlags | HostRelease;
+  mTextureInfo.mTextureFlags = aFlags | TEXTURE_DEALLOCATE_HOST;
   mDeprecatedTextureClient = CreateDeprecatedTextureClient(TEXTURE_CONTENT);
   MOZ_ASSERT(mDeprecatedTextureClient, "Failed to create texture client");
   if (aFlags & BUFFER_COMPONENT_ALPHA) {

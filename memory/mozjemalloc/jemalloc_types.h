@@ -72,9 +72,14 @@ typedef struct {
 	 * Current memory usage statistics.
 	 */
 	size_t	mapped;		/* Bytes mapped (not necessarily committed). */
-	size_t	committed;	/* Bytes committed (readable/writable). */
-	size_t	allocated;	/* Bytes allocated (in use by application). */
-	size_t	dirty;		/* Bytes dirty (committed unused pages). */
+	size_t	allocated;	/* Bytes allocated (committed, in use by application). */
+        size_t  waste;          /* Bytes committed, not in use by the
+                                   application, and not intentionally left
+                                   unused (i.e., not dirty). */
+        size_t	page_cache;	/* Committed, unused pages kept around as a
+                                   cache.  (jemalloc calls these "dirty".) */
+        size_t  bookkeeping;    /* Committed bytes used internally by the
+                                   allocator. */
 } jemalloc_stats_t;
 
 #ifdef __cplusplus

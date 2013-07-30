@@ -146,11 +146,11 @@
     <key id="key_quit" key="q" modifiers="accel" command="cmd_quit"/>
     <key id="key_addBoomkark" key="d" modifiers="accel" command="cmd_addBookmark"/>
     <key id="key_console" key="j" modifiers="accel,shift" oncommand="PanelUI.show('console-container')"/>
-    <key id="key_options" key="o" modifiers="accel,shift" oncommand="FlyoutPanelsUI.show('PrefsFlyout')" />
+    <key id="key_options" key="o" modifiers="accel,shift" oncommand="FlyoutPanelsUI.show('PrefsFlyoutPanel')" />
 #ifdef MOZ_SERVICES_SYNC
-    <key id="key_options" key="s" modifiers="accel,shift" oncommand="FlyoutPanelsUI.show('SyncFlyout')" />
+    <key id="key_options" key="s" modifiers="accel,shift" oncommand="FlyoutPanelsUI.show('SyncFlyoutPanel')" />
 #endif
-    <key id="key_options" key="a" modifiers="accel,shift" oncommand="FlyoutPanelsUI.show('AboutFlyout')" />
+    <key id="key_options" key="a" modifiers="accel,shift" oncommand="FlyoutPanelsUI.show('AboutFlyoutPanel')" />
 
     <!-- manage tabs -->
     <key id="key_newTab" key="t" modifiers="accel" command="cmd_newTab"/>
@@ -396,7 +396,7 @@
 
     <autoscroller class="autoscroller" id="autoscrollerid"/>
 
-    <flyoutpanel id="about-flyoutpanel" headertext="&aboutHeader.title;">
+    <flyoutpanel id="about-flyoutpanel" class="flyout-narrow" headertext="&aboutHeader.title;">
       <label id="about-product-label" value="&aboutHeader.product.label;"/>
       <label value="&aboutHeader.company.label;"/>
 #expand <label id="about-version-label">__MOZ_APP_VERSION__</label>
@@ -451,12 +451,12 @@
     </flyoutpanel>
 
 #ifdef MOZ_SERVICES_SYNC
-    <flyoutpanel id="sync-flyoutpanel" headertext="&sync.flyout.title;">
+    <flyoutpanel id="sync-flyoutpanel" class="flyout-narrow" headertext="&sync.flyout.title;">
 
       <vbox id="sync-presetup-container" collapsed="true">
         <description>&sync.flyout.presetup.description1;</description>
         <separator />
-        <hbox onclick="FlyoutPanelsUI.SyncFlyout.startEasySetup();"
+        <hbox onclick="FlyoutPanelsUI.SyncFlyoutPanel.startEasySetup();"
               align="center"
               class="text-link">
           <image src="chrome://browser/skin/images/plus-34.png" />
@@ -497,8 +497,8 @@
         <separator />
         <description class="text-link"
                      flex="1"
-                     onclick="FlyoutPanelsUI.SyncFlyout.abortEasySetup();
-                              FlyoutPanelsUI.SyncFlyout.showManualSetup()">
+                     onclick="FlyoutPanelsUI.SyncFlyoutPanel.abortEasySetup();
+                              FlyoutPanelsUI.SyncFlyoutPanel.showManualSetup()">
           &sync.flyout.setup.manual.label;
         </description>
         <separator />
@@ -517,14 +517,14 @@
         <separator/>
         <textbox id="sync-manualsetup-account"
                  placeholder="&sync.flyout.manualsetup.account.placeholder;"
-                 oninput="FlyoutPanelsUI.SyncFlyout.updateManualSetupConnectButtonState();"/>
+                 oninput="FlyoutPanelsUI.SyncFlyoutPanel.updateManualSetupConnectButtonState();"/>
         <textbox id="sync-manualsetup-password"
                  placeholder="&sync.flyout.manualsetup.password.placeholder;"
                  type="password"
-                 oninput="FlyoutPanelsUI.SyncFlyout.updateManualSetupConnectButtonState();"/>
+                 oninput="FlyoutPanelsUI.SyncFlyoutPanel.updateManualSetupConnectButtonState();"/>
         <textbox id="sync-manualsetup-syncKey"
                  placeholder="&sync.flyout.manualsetup.recoveryKey.placeholder;"
-                 oninput="FlyoutPanelsUI.SyncFlyout.updateManualSetupConnectButtonState();"/>
+                 oninput="FlyoutPanelsUI.SyncFlyoutPanel.updateManualSetupConnectButtonState();"/>
         <description id="sync-manualsetup-failure"
                      class="syncErrorText"
                      collapsed="true" />
@@ -532,7 +532,7 @@
         <hbox>
           <button id="sync-manualsetup-connect"
                   class="syncButton"
-                  oncommand="FlyoutPanelsUI.SyncFlyout.manualSetupConnect();"
+                  oncommand="FlyoutPanelsUI.SyncFlyoutPanel.manualSetupConnect();"
                   label="&sync.flyout.manualsetup.connect.label;"
                   disabled="true" />
           <spacer flex="1" />
@@ -548,10 +548,10 @@
         <description>&sync.flyout.setupfailure.description;</description>
         <hbox>
           <button class="syncButton"
-                  oncommand="FlyoutPanelsUI.SyncFlyout.onCancelButton();"
+                  oncommand="FlyoutPanelsUI.SyncFlyoutPanel.onCancelButton();"
                   label="&sync.flyout.setupfailure.cancelButton;" />
           <button class="syncButton"
-                  oncommand="FlyoutPanelsUI.SyncFlyout.onTryAgainButton();"
+                  oncommand="FlyoutPanelsUI.SyncFlyoutPanel.onTryAgainButton();"
                   label="&sync.flyout.setupfailure.tryAgainButton;" />
         </hbox>
       </vbox>
@@ -574,7 +574,7 @@
         </hbox>
         <label id="sync-disconnect-label"
                class="text-link"
-               onclick="FlyoutPanelsUI.SyncFlyout.onDisconnectLink();">
+               onclick="FlyoutPanelsUI.SyncFlyoutPanel.onDisconnectLink();">
           &sync.flyout.connected.disconnect;
         </label>
         <separator />
@@ -588,14 +588,14 @@
           <hbox>
             <separator />
             <button label="&sync.flyout.connected.cancel;"
-                    oncommand="FlyoutPanelsUI.SyncFlyout.onDisconnectCancel();" />
+                    oncommand="FlyoutPanelsUI.SyncFlyoutPanel.onDisconnectCancel();" />
             <button label="&sync.flyout.connected.disconnect;"
-                    oncommand="FlyoutPanelsUI.SyncFlyout.onDisconnectButton();" />
+                    oncommand="FlyoutPanelsUI.SyncFlyoutPanel.onDisconnectButton();" />
 
           </hbox>
           <separator />
         </vbox>
-        <hbox onclick="FlyoutPanelsUI.SyncFlyout.onPairDeviceLink();"
+        <hbox onclick="FlyoutPanelsUI.SyncFlyoutPanel.onPairDeviceLink();"
               class="text-link">
           <image src="chrome://browser/skin/images/plus-24.png" />
           <separator />
@@ -611,15 +611,15 @@
             <textbox id="sync-pair-entry1"
                      class="syncJPAKECode"
                      maxlength="4"
-                     oninput="FlyoutPanelsUI.SyncFlyout.updatePairButtonState();" />
+                     oninput="FlyoutPanelsUI.SyncFlyoutPanel.updatePairButtonState();" />
             <textbox id="sync-pair-entry2"
                      class="syncJPAKECode"
                      maxlength="4"
-                     oninput="FlyoutPanelsUI.SyncFlyout.updatePairButtonState();" />
+                     oninput="FlyoutPanelsUI.SyncFlyoutPanel.updatePairButtonState();" />
             <textbox id="sync-pair-entry3"
                      class="syncJPAKECode"
                      maxlength="4"
-                     oninput="FlyoutPanelsUI.SyncFlyout.updatePairButtonState();" />
+                     oninput="FlyoutPanelsUI.SyncFlyoutPanel.updatePairButtonState();" />
           </vbox>
           <spacer flex="1" />
         </hbox>
@@ -631,7 +631,7 @@
         <hbox>
           <button id="sync-pair-button"
                   label="&sync.flyout.pairNewDevice.pair;"
-                  oncommand="FlyoutPanelsUI.SyncFlyout.onPairButton();"
+                  oncommand="FlyoutPanelsUI.SyncFlyoutPanel.onPairButton();"
                   disabled="true" />
           <spacer flex="1" />
         </hbox>
@@ -653,7 +653,7 @@
     </flyoutpanel>
 #endif
 
-    <flyoutpanel id="prefs-flyoutpanel" headertext="&optionsHeader.title;">
+    <flyoutpanel id="prefs-flyoutpanel" class="flyout-narrow" headertext="&optionsHeader.title;">
       <settings id="prefs-startup" label="&optionsHeader.startup.title;"> <!-- note, this element has a custom margin-top -->
         <setting id="prefs-homepage" title="&optionsHeader.homepage.title;" type="menulist" pref="browser.startup.sessionRestore" class="setting-expanded">
           <menulist id="prefs-homepage-options">
@@ -700,11 +700,11 @@
         <setting pref="app.crashreporter.autosubmit" type="bool" title="&optionsHeader.reporting.crashes.label;" oncommand="BrowserUI.crashReportingPrefChanged(this.value);"/>
       </settings>
       <settings id="prefs-telemetry" label="&optionsHeader.telemetry.title;">
-        <setting pref="toolkit.telemetry.enabled" type="bool" title="&optionsHeader.telemetry.label;" oncommand="FlyoutPanelsUI.PrefsFlyout.onTelemetryPreferenceChanged(this.value);"/>
+        <setting pref="toolkit.telemetry.enabled" type="bool" title="&optionsHeader.telemetry.label;" oncommand="FlyoutPanelsUI.PrefsFlyoutPanel.onTelemetryPreferenceChanged(this.value);"/>
       </settings>
       <settings id="prefs-dnt" label="&doNotTrack.title;">
         <description>&doNotTrack.desc;</description>
-        <setting id="prefs-dnt-value" pref="privacy.donottrackheader.value" onpreferencechanged="FlyoutPanelsUI.PrefsFlyout.onDNTPreferenceChanged();" type="radio" >
+        <setting id="prefs-dnt-value" pref="privacy.donottrackheader.value" onpreferencechanged="FlyoutPanelsUI.PrefsFlyoutPanel.onDNTPreferenceChanged();" type="radio" >
           <radiogroup id="prefs-dnt-options">
             <radio id="prefs-dnt-notrack" label="&doNotTrack.options.trackingNotOkay;" value="1"/>
             <radio id="prefs-dnt-nopref" label="&doNotTrack.options.noPreference;" value="-1"/>
