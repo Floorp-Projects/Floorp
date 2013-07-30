@@ -1170,12 +1170,12 @@ bool AsyncPanZoomController::SampleContentTransformForFrame(const TimeStamp& aSa
   return requestAnimationFrame;
 }
 
-void AsyncPanZoomController::NotifyLayersUpdated(const FrameMetrics& aViewportFrame, bool aIsFirstPaint) {
+void AsyncPanZoomController::NotifyLayersUpdated(const FrameMetrics& aLayerMetrics, bool aIsFirstPaint) {
   MonitorAutoLock monitor(mMonitor);
 
-  mLastContentPaintMetrics = aViewportFrame;
+  mLastContentPaintMetrics = aLayerMetrics;
 
-  mFrameMetrics.mMayHaveTouchListeners = aViewportFrame.mMayHaveTouchListeners;
+  mFrameMetrics.mMayHaveTouchListeners = aLayerMetrics.mMayHaveTouchListeners;
 
   // TODO: Once a mechanism for calling UpdateScrollOffset() when content does
   //       a scrollTo() is implemented for B2G (bug 895905), this block can be removed.
@@ -1192,7 +1192,7 @@ void AsyncPanZoomController::NotifyLayersUpdated(const FrameMetrics& aViewportFr
     case FLING:
     case TOUCHING:
     case WAITING_LISTENERS:
-      mFrameMetrics.mScrollOffset = aViewportFrame.mScrollOffset;
+      mFrameMetrics.mScrollOffset = aLayerMetrics.mScrollOffset;
       break;
     // Don't clobber if we're in other states.
     default:
@@ -1203,12 +1203,12 @@ void AsyncPanZoomController::NotifyLayersUpdated(const FrameMetrics& aViewportFr
 
   mPaintThrottler.TaskComplete(GetFrameTime());
   bool needContentRepaint = false;
-  if (aViewportFrame.mCompositionBounds.width == mFrameMetrics.mCompositionBounds.width &&
-      aViewportFrame.mCompositionBounds.height == mFrameMetrics.mCompositionBounds.height) {
+  if (aLayerMetrics.mCompositionBounds.width == mFrameMetrics.mCompositionBounds.width &&
+      aLayerMetrics.mCompositionBounds.height == mFrameMetrics.mCompositionBounds.height) {
     // Remote content has sync'd up to the composition geometry
     // change, so we can accept the viewport it's calculated.
     CSSToScreenScale previousResolution = mFrameMetrics.CalculateResolution();
-    mFrameMetrics.mViewport = aViewportFrame.mViewport;
+    mFrameMetrics.mViewport = aLayerMetrics.mViewport;
     CSSToScreenScale newResolution = mFrameMetrics.CalculateResolution();
     needContentRepaint |= (previousResolution != newResolution);
   }
@@ -1223,12 +1223,12 @@ void AsyncPanZoomController::NotifyLayersUpdated(const FrameMetrics& aViewportFr
     // XXX If this is the very first time we're getting a layers update we need to
     // trigger another repaint, or the B2G browser shows stale content. This needs
     // to be investigated and fixed.
-    needContentRepaint |= (mFrameMetrics.IsDefault() && !aViewportFrame.IsDefault());
+    needContentRepaint |= (mFrameMetrics.IsDefault() && !aLayerMetrics.IsDefault());
 
-    mFrameMetrics = aViewportFrame;
+    mFrameMetrics = aLayerMetrics;
     mState = NOTHING;
-  } else if (!mFrameMetrics.mScrollableRect.IsEqualEdges(aViewportFrame.mScrollableRect)) {
-    mFrameMetrics.mScrollableRect = aViewportFrame.mScrollableRect;
+  } else if (!mFrameMetrics.mScrollableRect.IsEqualEdges(aLayerMetrics.mScrollableRect)) {
+    mFrameMetrics.mScrollableRect = aLayerMetrics.mScrollableRect;
   }
 
   if (needContentRepaint) {
