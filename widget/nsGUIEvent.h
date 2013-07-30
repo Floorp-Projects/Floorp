@@ -20,6 +20,7 @@
 #include "nsIDOMMouseEvent.h"
 #include "nsIDOMWheelEvent.h"
 #include "nsIDOMDataTransfer.h"
+#include "nsIDOMTouchEvent.h"
 #include "nsWeakPtr.h"
 #include "nsIWidget.h"
 #include "nsTArray.h"

@@ -77,17 +77,22 @@ protected:
   nsTArray< nsRefPtr<Touch> > mPoints;
 };
 
-class nsDOMTouchEvent : public nsDOMUIEvent
+class nsDOMTouchEvent : public nsDOMUIEvent,
+                        public nsIDOMTouchEvent
 {
 public:
   nsDOMTouchEvent(mozilla::dom::EventTarget* aOwner,
                   nsPresContext* aPresContext, nsTouchEvent* aEvent);
   virtual ~nsDOMTouchEvent();
 
+  NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsDOMTouchEvent, nsDOMUIEvent)
+  NS_DECL_NSIDOMTOUCHEVENT
+
+  NS_FORWARD_TO_NSDOMUIEVENT
 
   virtual JSObject* WrapObject(JSContext* aCx,
-                               JS::Handle<JSObject*> aScope) MOZ_OVERRIDE
+			       JS::Handle<JSObject*> aScope) MOZ_OVERRIDE
   {
     return mozilla::dom::TouchEventBinding::Wrap(aCx, aScope, this);
   }
@@ -125,10 +130,15 @@ public:
                       bool aAltKey,
                       bool aShiftKey,
                       bool aMetaKey,
-                      nsDOMTouchList* aTouches,
-                      nsDOMTouchList* aTargetTouches,
-                      nsDOMTouchList* aChangedTouches,
-                      mozilla::ErrorResult& aRv);
+                      nsIDOMTouchList* aTouches,
+                      nsIDOMTouchList* aTargetTouches,
+                      nsIDOMTouchList* aChangedTouches,
+                      mozilla::ErrorResult& aRv)
+  {
+    aRv = InitTouchEvent(aType, aCanBubble, aCancelable, aView, aDetail,
+                         aCtrlKey, aAltKey, aShiftKey, aMetaKey,
+                         aTouches, aTargetTouches, aChangedTouches);
+  }
 
   static bool PrefEnabled();
 protected:
