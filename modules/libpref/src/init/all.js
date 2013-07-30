@@ -4111,6 +4111,10 @@ pref("layers.bufferrotation.enabled", true);
 
 pref("layers.componentalpha.enabled", true);
 
+#ifdef ANDROID
+pref("gfx.apitrace.enabled",false);
+#endif
+
 #ifdef MOZ_X11
 #ifdef MOZ_WIDGET_GTK2
 pref("gfx.xrender.enabled",true);
