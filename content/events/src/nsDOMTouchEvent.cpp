@@ -20,6 +20,7 @@ using namespace mozilla::dom;
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsDOMTouchList)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsISupports)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMTouchList)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_2(nsDOMTouchList, mParent, mPoints)
@@ -37,6 +38,27 @@ nsDOMTouchList::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 nsDOMTouchList::PrefEnabled()
 {
   return nsDOMTouchEvent::PrefEnabled();
+}
+
+NS_IMETHODIMP
+nsDOMTouchList::GetLength(uint32_t* aLength)
+{
+  *aLength = Length();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMTouchList::Item(uint32_t aIndex, nsIDOMTouch** aRetVal)
+{
+  NS_IF_ADDREF(*aRetVal = Item(aIndex));
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMTouchList::IdentifiedTouch(int32_t aIdentifier, nsIDOMTouch** aRetVal)
+{
+  NS_IF_ADDREF(*aRetVal = IdentifiedTouch(aIdentifier));
+  return NS_OK;
 }
 
 Touch*
