@@ -2850,7 +2850,9 @@ AndroidBridge::HandleLongTap(const CSSIntPoint& aPoint)
 }
 
 void
-AndroidBridge::SendAsyncScrollDOMEvent(const CSSRect& aContentRect, const CSSSize& aScrollableSize)
+AndroidBridge::SendAsyncScrollDOMEvent(mozilla::layers::FrameMetrics::ViewID aScrollId,
+                                       const CSSRect& aContentRect,
+                                       const CSSSize& aScrollableSize)
 {
     // FIXME implement this
 }

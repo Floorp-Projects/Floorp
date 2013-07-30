@@ -1454,15 +1454,18 @@ void AsyncPanZoomController::SendAsyncScrollEvent() {
     return;
   }
 
+  FrameMetrics::ViewID scrollId;
   CSSRect contentRect;
   CSSSize scrollableSize;
   {
+    // XXX bug 890932 - there should be a lock here. but it causes a deadlock.
+    scrollId = mFrameMetrics.mScrollId;
     scrollableSize = mFrameMetrics.mScrollableRect.Size();
     contentRect = mFrameMetrics.CalculateCompositedRectInCssPixels();
     contentRect.MoveTo(mCurrentAsyncScrollOffset);
   }
 
-  controller->SendAsyncScrollDOMEvent(contentRect, scrollableSize);
+  controller->SendAsyncScrollDOMEvent(scrollId, contentRect, scrollableSize);
 }
 
 void AsyncPanZoomController::UpdateScrollOffset(const CSSPoint& aScrollOffset)
