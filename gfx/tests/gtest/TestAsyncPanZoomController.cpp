@@ -41,8 +41,8 @@ class TestAPZCContainerLayer : public ContainerLayer {
 
 class TestAsyncPanZoomController : public AsyncPanZoomController {
 public:
-  TestAsyncPanZoomController(MockContentController* mcc)
-    : AsyncPanZoomController(mcc)
+  TestAsyncPanZoomController(uint64_t aLayersId, MockContentController* mcc)
+    : AsyncPanZoomController(aLayersId, mcc)
   {}
 
   void SetFrameMetrics(const FrameMetrics& metrics) {
@@ -102,7 +102,7 @@ void ApzcPan(AsyncPanZoomController* apzc, int& aTime, int aTouchStartY, int aTo
 TEST(AsyncPanZoomController, Constructor) {
   // RefCounted class can't live in the stack
   nsRefPtr<MockContentController> mcc = new MockContentController();
-  nsRefPtr<TestAsyncPanZoomController> apzc = new TestAsyncPanZoomController(mcc);
+  nsRefPtr<TestAsyncPanZoomController> apzc = new TestAsyncPanZoomController(0, mcc);
   apzc->SetFrameMetrics(TestFrameMetrics());
 }
 
@@ -110,7 +110,7 @@ TEST(AsyncPanZoomController, SimpleTransform) {
   TimeStamp testStartTime = TimeStamp::Now();
   // RefCounted class can't live in the stack
   nsRefPtr<MockContentController> mcc = new MockContentController();
-  nsRefPtr<TestAsyncPanZoomController> apzc = new TestAsyncPanZoomController(mcc);
+  nsRefPtr<TestAsyncPanZoomController> apzc = new TestAsyncPanZoomController(0, mcc);
   apzc->SetFrameMetrics(TestFrameMetrics());
 
   TestAPZCContainerLayer layer;
@@ -143,8 +143,8 @@ TEST(AsyncPanZoomController, ComplexTransform) {
   // sides.
 
   nsRefPtr<MockContentController> mcc = new MockContentController();
-  nsRefPtr<TestAsyncPanZoomController> apzc = new TestAsyncPanZoomController(mcc);
-  nsRefPtr<TestAsyncPanZoomController> childApzc = new TestAsyncPanZoomController(mcc);
+  nsRefPtr<TestAsyncPanZoomController> apzc = new TestAsyncPanZoomController(0, mcc);
+  nsRefPtr<TestAsyncPanZoomController> childApzc = new TestAsyncPanZoomController(0, mcc);
 
   const char* layerTreeSyntax = "c(c)";
   // LayerID                     0 1
@@ -231,7 +231,7 @@ TEST(AsyncPanZoomController, Pan) {
   AsyncPanZoomController::SetFrameTime(testStartTime);
 
   nsRefPtr<MockContentController> mcc = new MockContentController();
-  nsRefPtr<TestAsyncPanZoomController> apzc = new TestAsyncPanZoomController(mcc);
+  nsRefPtr<TestAsyncPanZoomController> apzc = new TestAsyncPanZoomController(0, mcc);
 
   apzc->SetFrameMetrics(TestFrameMetrics());
   apzc->NotifyLayersUpdated(TestFrameMetrics(), true);
@@ -264,7 +264,7 @@ TEST(AsyncPanZoomController, Fling) {
   AsyncPanZoomController::SetFrameTime(testStartTime);
 
   nsRefPtr<MockContentController> mcc = new MockContentController();
-  nsRefPtr<TestAsyncPanZoomController> apzc = new TestAsyncPanZoomController(mcc);
+  nsRefPtr<TestAsyncPanZoomController> apzc = new TestAsyncPanZoomController(0, mcc);
 
   apzc->SetFrameMetrics(TestFrameMetrics());
   apzc->NotifyLayersUpdated(TestFrameMetrics(), true);
@@ -294,7 +294,7 @@ TEST(AsyncPanZoomController, OverScrollPanning) {
   AsyncPanZoomController::SetFrameTime(testStartTime);
 
   nsRefPtr<MockContentController> mcc = new MockContentController();
-  nsRefPtr<TestAsyncPanZoomController> apzc = new TestAsyncPanZoomController(mcc);
+  nsRefPtr<TestAsyncPanZoomController> apzc = new TestAsyncPanZoomController(0, mcc);
 
   apzc->SetFrameMetrics(TestFrameMetrics());
   apzc->NotifyLayersUpdated(TestFrameMetrics(), true);

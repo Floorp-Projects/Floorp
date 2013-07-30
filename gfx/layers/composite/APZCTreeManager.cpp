@@ -16,48 +16,126 @@ APZCTreeManager::APZCTreeManager()
   AsyncPanZoomController::InitializeGlobalState();
 }
 
+/* Flatten the tree of APZC instances into the given nsTArray */
+static void
+Collect(AsyncPanZoomController* aApzc, nsTArray< nsRefPtr<AsyncPanZoomController> >* aCollection)
+{
+  if (aApzc) {
+    aCollection->AppendElement(aApzc);
+    Collect(aApzc->GetLastChild(), aCollection);
+    Collect(aApzc->GetPrevSibling(), aCollection);
+  }
+}
+
 void
 APZCTreeManager::UpdatePanZoomControllerTree(CompositorParent* aCompositor, Layer* aRoot,
-                                             uint64_t aLayersId, bool aIsFirstPaint)
+                                             bool aIsFirstPaint, uint64_t aFirstPaintLayersId)
 {
   Compositor::AssertOnCompositorThread();
 
   MonitorAutoLock lock(mTreeLock);
-  AsyncPanZoomController* controller = nullptr;
-  if (aRoot && aRoot->AsContainerLayer()) {
-    ContainerLayer* container = aRoot->AsContainerLayer();
 
-    // If the layer is scrollable, it needs an APZC. If there is already an APZC on it, use that,
-    // otherwise create one if we can. We might not be able to create one if we don't have a
-    // GeckoContentController for it, in which case we just leave it as null.
-    controller = container->GetAsyncPanZoomController();
-    const FrameMetrics& metrics = container->GetFrameMetrics();
-    if (metrics.IsScrollable()) {
-      // Scrollable, create an APZC if it doesn't have one and we can create it
-      if (!controller) {
-        const CompositorParent::LayerTreeState* state = CompositorParent::GetIndirectShadowTree(aLayersId);
-        if (state && state->mController.get()) {
-          controller = new AsyncPanZoomController(state->mController,
+  // We do this business with collecting the entire tree into an array because otherwise
+  // it's very hard to determine which APZC instances need to be destroyed. In the worst
+  // case, there are two scenarios: (a) a layer with an APZC is removed from the layer
+  // tree and (b) a layer with an APZC is moved in the layer tree from one place to a
+  // completely different place. In scenario (a) we would want to destroy the APZC while
+  // walking the layer tree and noticing that the layer/APZC is no longer there. But if
+  // we do that then we run into a problem in scenario (b) because we might encounter that
+  // layer later during the walk. To handle both of these we have to 'remember' that the
+  // layer was not found, and then do the destroy only at the end of the tree walk after
+  // we are sure that the layer was removed and not just transplanted elsewhere. Doing that
+  // as part of a recursive tree walk is hard and so maintaining a list and removing
+  // APZCs that are still alive is much simpler.
+  nsTArray< nsRefPtr<AsyncPanZoomController> > apzcsToDestroy;
+  Collect(mRootApzc, &apzcsToDestroy);
+  mRootApzc = nullptr;
+
+  if (aRoot) {
+    UpdatePanZoomControllerTree(aCompositor,
+                                aRoot, CompositorParent::ROOT_LAYER_TREE_ID,
+                                nullptr, nullptr,
+                                aIsFirstPaint, aFirstPaintLayersId,
+                                &apzcsToDestroy);
+  }
+
+  for (int i = apzcsToDestroy.Length() - 1; i >= 0; i--) {
+    apzcsToDestroy[i]->Destroy();
+  }
+}
+
+AsyncPanZoomController*
+APZCTreeManager::UpdatePanZoomControllerTree(CompositorParent* aCompositor,
+                                             Layer* aLayer, uint64_t aLayersId,
+                                             AsyncPanZoomController* aParent,
+                                             AsyncPanZoomController* aNextSibling,
+                                             bool aIsFirstPaint, uint64_t aFirstPaintLayersId,
+                                             nsTArray< nsRefPtr<AsyncPanZoomController> >* aApzcsToDestroy)
+{
+  ContainerLayer* container = aLayer->AsContainerLayer();
+  AsyncPanZoomController* controller = nullptr;
+  if (container) {
+    if (container->GetFrameMetrics().IsScrollable()) {
+      const CompositorParent::LayerTreeState* state = CompositorParent::GetIndirectShadowTree(aLayersId);
+      if (state && state->mController.get()) {
+        // If we get here, aLayer is a scrollable container layer and somebody
+        // has registered a GeckoContentController for it, so we need to ensure
+        // it has an APZC instance to manage its scrolling.
+
+        controller = container->GetAsyncPanZoomController();
+        if (!controller) {
+          controller = new AsyncPanZoomController(aLayersId, state->mController,
                                                   AsyncPanZoomController::USE_GESTURE_DETECTOR);
           controller->SetCompositorParent(aCompositor);
+        } else {
+          // If there was already an APZC for the layer clear the tree pointers
+          // so that it doesn't continue pointing to APZCs that should no longer
+          // be in the tree. These pointers will get reset properly as we continue
+          // building the tree. Also remove it from the set of APZCs that are going
+          // to be destroyed, because it's going to remain active.
+          aApzcsToDestroy->RemoveElement(controller);
+          controller->SetPrevSibling(nullptr);
+          controller->SetLastChild(nullptr);
         }
+
+        controller->NotifyLayersUpdated(container->GetFrameMetrics(),
+                                        aIsFirstPaint && (aLayersId == aFirstPaintLayersId));
+
+        // Bind the APZC instance into the tree of APZCs
+        if (aNextSibling) {
+          aNextSibling->SetPrevSibling(controller);
+        } else if (aParent) {
+          aParent->SetLastChild(controller);
+        } else {
+          mRootApzc = controller;
+        }
+
+        // Let this controller be the parent of other controllers when we recurse downwards
+        aParent = controller;
       }
-    } else if (controller) {
-      // Not scrollable, so clear the APZC instance
-      controller = nullptr;
     }
+
     container->SetAsyncPanZoomController(controller);
-
-    if (controller) {
-      controller->NotifyLayersUpdated(container->GetFrameMetrics(), aIsFirstPaint);
-    }
   }
 
+  uint64_t childLayersId = (aLayer->AsRefLayer() ? aLayer->AsRefLayer()->GetReferentId() : aLayersId);
+  AsyncPanZoomController* next = nullptr;
+  for (Layer* child = aLayer->GetLastChild(); child; child = child->GetPrevSibling()) {
+    next = UpdatePanZoomControllerTree(aCompositor, child, childLayersId, aParent, next,
+                                       aIsFirstPaint, aFirstPaintLayersId, aApzcsToDestroy);
+  }
+
+  // Return the APZC that should be the sibling of other APZCs as we continue
+  // moving towards the first child at this depth in the layer tree.
+  // If this layer doesn't have a controller, we promote any APZCs in the subtree
+  // upwards. Otherwise we fall back to the aNextSibling that was passed in.
   if (controller) {
-    mApzcs[aLayersId] = controller;
-  } else {
-    mApzcs.erase(aLayersId);
+    return controller;
   }
+  if (next) {
+    return next;
+  }
+  return aNextSibling;
 }
 
 nsEventStatus
@@ -203,24 +281,29 @@ APZCTreeManager::ClearTree()
 {
   MonitorAutoLock lock(mTreeLock);
 
-  std::map< uint64_t, nsRefPtr<AsyncPanZoomController> >::iterator it = mApzcs.begin();
-  while (it != mApzcs.end()) {
-    nsRefPtr<AsyncPanZoomController> apzc = it->second;
-    apzc->Destroy();
-    it++;
+  // This can be done as part of a tree walk but it's easier to
+  // just re-use the Collect method that we need in other places.
+  // If this is too slow feel free to change it to a recursive walk.
+  nsTArray< nsRefPtr<AsyncPanZoomController> > apzcsToDestroy;
+  Collect(mRootApzc, &apzcsToDestroy);
+  for (int i = apzcsToDestroy.Length() - 1; i >= 0; i--) {
+    apzcsToDestroy[i]->Destroy();
   }
-  mApzcs.clear();
+  mRootApzc = nullptr;
 }
 
 already_AddRefed<AsyncPanZoomController>
 APZCTreeManager::GetTargetAPZC(const ScrollableLayerGuid& aGuid)
 {
   MonitorAutoLock lock(mTreeLock);
-  std::map< uint64_t, nsRefPtr<AsyncPanZoomController> >::iterator it = mApzcs.find(aGuid.mLayersId);
-  if (it == mApzcs.end()) {
-    return nullptr;
+  nsRefPtr<AsyncPanZoomController> target;
+  // The root may have siblings, check those too
+  for (AsyncPanZoomController* apzc = mRootApzc; apzc; apzc = apzc->GetPrevSibling()) {
+    target = FindTargetAPZC(apzc, aGuid);
+    if (target) {
+      break;
+    }
   }
-  nsRefPtr<AsyncPanZoomController> target = it->second;
   return target.forget();
 }
 
@@ -230,6 +313,23 @@ APZCTreeManager::GetTargetAPZC(const ScreenPoint& aPoint)
   MonitorAutoLock lock(mTreeLock);
   // TODO: Do a hit test on the tree of
   // APZC instances and return the right one.
+  return nullptr;
+}
+
+AsyncPanZoomController*
+APZCTreeManager::FindTargetAPZC(AsyncPanZoomController* aApzc, const ScrollableLayerGuid& aGuid) {
+  // This walks the tree in depth-first, reverse order, so that it encounters
+  // APZCs front-to-back on the screen.
+  for (AsyncPanZoomController* child = aApzc->GetLastChild(); child; child = child->GetPrevSibling()) {
+    AsyncPanZoomController* match = FindTargetAPZC(child, aGuid);
+    if (match) {
+      return match;
+    }
+  }
+
+  if (aApzc->Matches(aGuid)) {
+    return aApzc;
+  }
   return nullptr;
 }
 

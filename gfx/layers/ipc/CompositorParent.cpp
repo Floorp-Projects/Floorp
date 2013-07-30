@@ -409,7 +409,7 @@ CompositorParent::NotifyShadowTreeTransaction(uint64_t aId, bool aIsFirstPaint)
 {
   if (mApzcTreeManager) {
     AutoResolveRefLayers resolve(mCompositionManager);
-    mApzcTreeManager->UpdatePanZoomControllerTree(this, GetIndirectShadowTree(aId)->mRoot, aId, aIsFirstPaint);
+    mApzcTreeManager->UpdatePanZoomControllerTree(this, mLayerManager->GetRoot(), aIsFirstPaint, aId);
   }
 
   if (mLayerManager) {
@@ -566,15 +566,10 @@ CompositorParent::ShadowLayersUpdated(LayerTransactionParent* aLayerTree,
   Layer* root = aLayerTree->GetRoot();
   mLayerManager->SetRoot(root);
 
-#ifdef MOZ_WIDGET_ANDROID
-  // Temporary hack for Fennec. This will be removed once UpdatePanZoomControllerTree actually
-  // does a full tree walk.
   if (mApzcTreeManager) {
     AutoResolveRefLayers resolve(mCompositionManager);
-    Layer* pzcRoot = mLayerManager->GetPrimaryScrollableLayer();
-    mApzcTreeManager->UpdatePanZoomControllerTree(this, pzcRoot, ROOT_LAYER_TREE_ID, isFirstPaint);
+    mApzcTreeManager->UpdatePanZoomControllerTree(this, root, isFirstPaint, ROOT_LAYER_TREE_ID);
   }
-#endif
 
   if (root) {
     SetShadowProperties(root);
