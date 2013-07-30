@@ -24,19 +24,7 @@ HOST_CPPSRCS = \
 
 OS_CXXFLAGS := $(filter-out -fno-exceptions,$(OS_CXXFLAGS)) -fexceptions
 
-ifneq (,$(filter %86,$(TARGET_CPU)))
-CPU := x86
-else
-ifneq (,$(filter arm%,$(TARGET_CPU)))
-CPU := arm
-else
-CPU := $(TARGET_CPU)
-endif
-endif
-
 CSRCS := \
-  inject/$(CPU).c \
-  inject/$(CPU)-noinit.c \
   test-ctors.c \
   test-array.c \
   $(NULL)
@@ -86,16 +74,5 @@ libs:: dummy
 GARBAGE += dummy
 endif
 
-inject:
-	$(NSINSTALL) -D $@
-
-inject/%.c: inject.c $(call mkdir_deps,inject)
-	cp $< $@
-
-GARBAGE_DIRS += inject
-
-inject/%.$(OBJ_SUFFIX): DEFINES += -DBITS=$(if $(HAVE_64BIT_OS),64,32)
-inject/%.$(OBJ_SUFFIX): CFLAGS := -O2 -fno-stack-protector $(filter -m% -I%,$(CFLAGS))
-inject/$(CPU)-noinit.$(OBJ_SUFFIX): DEFINES += -DNOINIT
 test.$(OBJ_SUFFIX): CFLAGS := -O0
 host_elf.$(OBJ_SUFFIX) host_elfhack.$(OBJ_SUFFIX): elfxx.h

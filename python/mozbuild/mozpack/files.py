@@ -514,11 +514,15 @@ class FileFinder(BaseFinder):
     '''
     Helper to get appropriate BaseFile instances from the file system.
     '''
-    def __init__(self, base, **kargs):
+    def __init__(self, base, find_executables=True, **kargs):
         '''
         Create a FileFinder for files under the given base directory.
+        The find_executables argument determines whether the finder needs to
+        try to guess whether files are executables. Disabling this guessing
+        when not necessary can speed up the finder significantly.
         '''
         BaseFinder.__init__(self, base, **kargs)
+        self.find_executables = find_executables
 
     def _find(self, pattern):
         '''
@@ -556,7 +560,7 @@ class FileFinder(BaseFinder):
         if not os.path.exists(srcpath):
             return
 
-        if is_executable(srcpath):
+        if self.find_executables and is_executable(srcpath):
             yield path, ExecutableFile(srcpath)
         else:
             yield path, File(srcpath)
@@ -584,7 +588,7 @@ class FileFinder(BaseFinder):
             for p in os.listdir(os.path.join(self.base, base)):
                 if p.startswith('.') and not pattern[0].startswith('.'):
                     continue
-                if re.match(mozpack.path.translate(pattern[0]), p):
+                if mozpack.path.match(p, pattern[0]):
                     for p_, f in self._find_glob(mozpack.path.join(base, p),
                                                  pattern[1:]):
                         yield p_, f

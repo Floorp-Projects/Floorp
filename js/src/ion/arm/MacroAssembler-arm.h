@@ -45,6 +45,7 @@ class MacroAssemblerARM : public Assembler
         secondScratchReg_ = reg;
     }
 
+    void convertBoolToInt32(Register source, Register dest);
     void convertInt32ToDouble(const Register &src, const FloatRegister &dest);
     void convertInt32ToDouble(const Address &src, FloatRegister dest);
     void convertUInt32ToDouble(const Register &src, const FloatRegister &dest);

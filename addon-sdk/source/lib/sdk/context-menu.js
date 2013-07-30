@@ -4,7 +4,11 @@
 "use strict";
 
 module.metadata = {
-  "stability": "stable"
+  "stability": "stable",
+  "engines": {
+    // TODO Fennec support Bug 788334
+    "Firefox": "*"
+  }
 };
 
 const { Class, mix } = require("./core/heritage");

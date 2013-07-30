@@ -28,6 +28,12 @@ function View() {
 
 View.prototype = {
 
+  onViewStateChange: function (aState) {
+    if (this._set) {
+      this._set.setAttribute("suppressonselect", (aState == "snapped"));
+    }
+  },
+
   _updateFavicon: function pv__updateFavicon(aItem, aUri) {
     if ("string" == typeof aUri) {
       aUri = makeURI(aUri);

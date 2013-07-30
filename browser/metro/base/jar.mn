@@ -27,9 +27,9 @@ chrome.jar:
   content/bindings/cssthrobber.xml             (content/bindings/cssthrobber.xml)
   content/bindings/popup.xml                   (content/bindings/popup.xml)
 
-* content/flyouts/flyoutUI.js                  (content/flyouts/flyoutUI.js)
-* content/flyouts/aboutFlyout.js               (content/flyouts/aboutFlyout.js)
-  content/flyouts/prefsFlyout.js               (content/flyouts/prefsFlyout.js)
+* content/flyoutpanels/FlyoutPanelsUI.js       (content/flyoutpanels/FlyoutPanelsUI.js)
+* content/flyoutpanels/AboutFlyoutPanel.js     (content/flyoutpanels/AboutFlyoutPanel.js)
+  content/flyoutpanels/PrefsFlyoutPanel.js     (content/flyoutpanels/PrefsFlyoutPanel.js)
 
   content/prompt/alert.xul                     (content/prompt/alert.xul)
   content/prompt/confirm.xul                   (content/prompt/confirm.xul)
@@ -91,7 +91,7 @@ chrome.jar:
   content/AnimatedZoom.js                      (content/AnimatedZoom.js)
   content/dbg-metro-actors.js                  (content/dbg-metro-actors.js)
 #ifdef MOZ_SERVICES_SYNC
-  content/flyouts/syncFlyout.js                (content/flyouts/syncFlyout.js)
+  content/flyoutpanels/SyncFlyoutPanel.js      (content/flyoutpanels/SyncFlyoutPanel.js)
   content/RemoteTabs.js                        (content/RemoteTabs.js)
 #endif
   content/NavButtonSlider.js                   (content/NavButtonSlider.js)

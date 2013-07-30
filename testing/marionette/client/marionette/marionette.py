@@ -516,6 +516,12 @@ class Marionette(object):
         self.window = window_id
         return response
 
+    def get_active_frame(self):
+        response = self._send_message('getActiveFrame', 'value')
+        if response:
+            return HTMLElement(self, response)
+        return None
+
     def switch_to_frame(self, frame=None, focus=True):
         if isinstance(frame, HTMLElement):
             response = self._send_message('switchToFrame', 'ok', element=frame.id, focus=focus)

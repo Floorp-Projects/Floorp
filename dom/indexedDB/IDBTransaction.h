@@ -13,7 +13,6 @@
 #include "mozIStorageConnection.h"
 #include "mozIStorageStatement.h"
 #include "mozIStorageFunction.h"
-#include "nsIIDBTransaction.h"
 #include "mozilla/dom/DOMError.h"
 #include "nsIRunnable.h"
 
@@ -23,11 +22,13 @@
 #include "nsInterfaceHashtable.h"
 #include "nsRefPtrHashtable.h"
 
+#include "mozilla/dom/IDBTransactionBinding.h"
 #include "mozilla/dom/indexedDB/IDBDatabase.h"
 #include "mozilla/dom/indexedDB/IDBWrapperCache.h"
 #include "mozilla/dom/indexedDB/FileInfo.h"
 
 class nsIThread;
+class nsPIDOMWindow;
 
 BEGIN_INDEXEDDB_NAMESPACE
 
@@ -54,7 +55,6 @@ public:
 };
 
 class IDBTransaction : public IDBWrapperCache,
-                       public nsIIDBTransaction,
                        public nsIRunnable
 {
   friend class AsyncConnectionHelper;
@@ -65,7 +65,6 @@ class IDBTransaction : public IDBWrapperCache,
 
 public:
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIIDBTRANSACTION
   NS_DECL_NSIRUNNABLE
 
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(IDBTransaction, IDBWrapperCache)
@@ -198,10 +197,6 @@ public:
   }
 
   nsresult
-  ObjectStoreInternal(const nsAString& aName,
-                      IDBObjectStore** _retval);
-
-  nsresult
   Abort(IDBRequest* aRequest);
 
   nsresult
@@ -220,6 +215,47 @@ public:
     return mSerialNumber;
   }
 #endif
+
+  // nsWrapperCache
+  virtual JSObject*
+  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
+
+  // WebIDL
+  nsPIDOMWindow*
+  GetParentObject() const
+  {
+    return GetOwner();
+  }
+
+  IDBTransactionMode
+  GetMode(ErrorResult& aRv) const;
+
+  nsIIDBDatabase*
+  Db() const
+  {
+    NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+    return mDatabase;
+  }
+
+  DOMError*
+  GetError(ErrorResult& aRv);
+
+  already_AddRefed<nsIIDBObjectStore>
+  ObjectStore(const nsAString& aName, ErrorResult& aRv);
+
+  void
+  Abort(ErrorResult& aRv)
+  {
+    NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+    aRv = AbortInternal(NS_ERROR_DOM_INDEXEDDB_ABORT_ERR, nullptr);
+  }
+
+  IMPL_EVENT_HANDLER(abort)
+  IMPL_EVENT_HANDLER(complete)
+  IMPL_EVENT_HANDLER(error)
+
+  already_AddRefed<nsIDOMDOMStringList>
+  GetObjectStoreNames(ErrorResult& aRv);
 
 private:
   nsresult

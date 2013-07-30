@@ -314,7 +314,7 @@ extern JSType
 TypeOfValue(JSContext *cx, const Value &v);
 
 extern bool
-HasInstance(JSContext *cx, HandleObject obj, HandleValue v, JSBool *bp);
+HasInstance(JSContext *cx, HandleObject obj, HandleValue v, bool *bp);
 
 /*
  * A linked list of the |FrameRegs regs;| variables belonging to all
@@ -420,10 +420,10 @@ CallElement(JSContext *cx, MutableHandleValue lref, HandleValue rref, MutableHan
 
 bool
 SetObjectElement(JSContext *cx, HandleObject obj, HandleValue index, HandleValue value,
-                 JSBool strict);
+                 bool strict);
 bool
 SetObjectElement(JSContext *cx, HandleObject obj, HandleValue index, HandleValue value,
-                 JSBool strict, HandleScript script, jsbytecode *pc);
+                 bool strict, HandleScript script, jsbytecode *pc);
 
 bool
 InitElementArray(JSContext *cx, jsbytecode *pc,
@@ -465,11 +465,11 @@ SetProperty(JSContext *cx, HandleObject obj, HandleId id, const Value &value);
 
 template <bool strict>
 bool
-DeleteProperty(JSContext *ctx, HandleValue val, HandlePropertyName name, JSBool *bv);
+DeleteProperty(JSContext *ctx, HandleValue val, HandlePropertyName name, bool *bv);
 
 template <bool strict>
 bool
-DeleteElement(JSContext *cx, HandleValue val, HandleValue index, JSBool *bv);
+DeleteElement(JSContext *cx, HandleValue val, HandleValue index, bool *bv);
 
 bool
 DefFunOperation(JSContext *cx, HandleScript script, HandleObject scopeChain, HandleFunction funArg);
@@ -499,15 +499,15 @@ RunOnceScriptPrologue(JSContext *cx, HandleScript script);
 
 bool
 InitGetterSetterOperation(JSContext *cx, jsbytecode *pc, HandleObject obj, HandleId id,
-                          HandleValue val);
+                          HandleObject val);
 
 bool
 InitGetterSetterOperation(JSContext *cx, jsbytecode *pc, HandleObject obj, HandlePropertyName name,
-                          HandleValue val);
+                          HandleObject val);
 
 bool
 InitGetterSetterOperation(JSContext *cx, jsbytecode *pc, HandleObject obj, HandleValue idval,
-                          HandleValue val);
+                          HandleObject val);
 
 inline bool
 SetConstOperation(JSContext *cx, HandleObject varobj, HandlePropertyName name, HandleValue rval)

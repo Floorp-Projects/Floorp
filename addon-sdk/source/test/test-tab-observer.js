@@ -4,6 +4,13 @@
 
 "use strict";
 
+// TODO Fennec support in Bug #894525
+module.metadata = {
+  "engines": {
+    "Firefox": "*"
+  }
+}
+
 const { openTab, closeTab } = require("sdk/tabs/utils");
 const { Loader } = require("sdk/test/loader");
 const { setTimeout } = require("sdk/timers");
@@ -35,16 +42,6 @@ exports["test unload tab observer"] = function(assert, done) {
     done();
   }, 0);
 };
-
-if (require("sdk/system/xul-app").is("Fennec")) {
-  module.exports = {
-    "test Unsupported Test": function UnsupportedTest (assert) {
-        assert.pass(
-          "Skipping this test until Fennec support is implemented."
-        );
-    }
-  }
-}
 
 require("test").run(exports);
 

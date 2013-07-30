@@ -60,8 +60,7 @@ private:
   mozilla::ScopedCERTCertificate mCert;
   bool             mPermDelete;
   uint32_t         mCertType;
-  nsCOMPtr<nsIASN1Object> mASN1Structure;
-  nsresult CreateASN1Struct();
+  nsresult CreateASN1Struct(nsIASN1Object** aRetVal);
   nsresult CreateTBSCertificateASN1Struct(nsIASN1Sequence **retSequence,
                                           nsINSSComponent *nssComponent);
   nsresult GetSortableDate(PRTime aTime, nsAString &_aSortableDate);

@@ -320,19 +320,23 @@ function appendElementWithText(aP, aTagName, aClassName, aText)
 
 const kTreeDescriptions = {
   'explicit' :
-"This tree covers explicit memory allocations by the application, both at the \
-operating system level (via calls to functions such as VirtualAlloc, \
-vm_allocate, and mmap), and at the heap allocation level (via functions such \
-as malloc, calloc, realloc, memalign, operator new, and operator new[]) that \
-have not been explicitly decommitted (i.e. evicted from memory and swap). \
+"This tree covers explicit memory allocations by the application.  It includes \
+\n\n\
+* allocations made at the operating system level (via calls to functions such as \
+VirtualAlloc, vm_allocate, and mmap), \
+\n\n\
+* allocations made at the heap allocation level (via functions such as malloc, \
+calloc, realloc, memalign, operator new, and operator new[]) that have not been \
+explicitly decommitted (i.e. evicted from memory and swap), and \
+\n\n\
+* where possible, the overhead of the heap allocator itself.\
 \n\n\
 It excludes memory that is mapped implicitly such as code and data segments, \
-and thread stacks.  It also excludes heap memory that has been freed by the \
-application but is still being held onto by the heap allocator. \
+and thread stacks. \
 \n\n\
-It is not guaranteed to cover every explicit allocation, but it does cover \
-most (including the entire heap), and therefore it is the single best number \
-to focus on when trying to reduce memory usage.",
+'explicit' is not guaranteed to cover every explicit allocation, but it does cover \
+most (including the entire heap), and therefore it is the single best number to \
+focus on when trying to reduce memory usage.",
 
   'rss':
 "This tree shows how much space in physical memory each of the process's \

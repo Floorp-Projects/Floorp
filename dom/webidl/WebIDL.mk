@@ -167,6 +167,7 @@ webidl_files = \
   IDBDatabase.webidl \
   IDBFactory.webidl \
   IDBFileHandle.webidl \
+  IDBTransaction.webidl \
   IDBVersionChangeEvent.webidl \
   ImageData.webidl \
   ImageDocument.webidl \

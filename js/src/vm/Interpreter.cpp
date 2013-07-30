@@ -665,17 +665,22 @@ js::Execute(JSContext *cx, HandleScript script, JSObject &scopeChainArg, Value *
 }
 
 bool
-js::HasInstance(JSContext *cx, HandleObject obj, HandleValue v, JSBool *bp)
+js::HasInstance(JSContext *cx, HandleObject obj, HandleValue v, bool *bp)
 {
     Class *clasp = obj->getClass();
     RootedValue local(cx, v);
-    if (clasp->hasInstance)
-        return clasp->hasInstance(cx, obj, &local, bp);
+    if (clasp->hasInstance) {
+        JSBool b;
+        if (!clasp->hasInstance(cx, obj, &local, &b))
+            return false;
+        *bp = b;
+        return true;
+    }
 
     RootedValue val(cx, ObjectValue(*obj));
     js_ReportValueError(cx, JSMSG_BAD_INSTANCEOF_RHS,
                         JSDVG_SEARCH_STACK, val, NullPtr());
-    return JS_FALSE;
+    return false;
 }
 
 bool
@@ -2910,12 +2915,12 @@ BEGIN_CASE(JSOP_INITPROP_SETTER)
 {
     RootedObject &obj = rootObject0;
     RootedPropertyName &name = rootName0;
-    RootedValue &val = rootValue0;
+    RootedObject &val = rootObject1;
 
     JS_ASSERT(regs.stackDepth() >= 2);
     obj = &regs.sp[-2].toObject();
     name = script->getName(regs.pc);
-    val = regs.sp[-1];
+    val = &regs.sp[-1].toObject();
 
     if (!InitGetterSetterOperation(cx, regs.pc, obj, name, val))
         goto error;
@@ -2929,12 +2934,12 @@ BEGIN_CASE(JSOP_INITELEM_SETTER)
 {
     RootedObject &obj = rootObject0;
     RootedValue &idval = rootValue0;
-    RootedValue &val = rootValue1;
+    RootedObject &val = rootObject1;
 
     JS_ASSERT(regs.stackDepth() >= 3);
     obj = &regs.sp[-3].toObject();
     idval = regs.sp[-2];
-    val = regs.sp[-1];
+    val = &regs.sp[-1].toObject();
 
     if (!InitGetterSetterOperation(cx, regs.pc, obj, idval, val))
         goto error;
@@ -3187,7 +3192,7 @@ BEGIN_CASE(JSOP_INSTANCEOF)
     }
     RootedObject &obj = rootObject0;
     obj = &rref.toObject();
-    JSBool cond = JS_FALSE;
+    bool cond = false;
     if (!HasInstance(cx, obj, regs.stackHandleAt(-2), &cond))
         goto error;
     regs.sp--;
@@ -3665,15 +3670,17 @@ template bool js::SetProperty<false>(JSContext *cx, HandleObject obj, HandleId i
 
 template <bool strict>
 bool
-js::DeleteProperty(JSContext *cx, HandleValue v, HandlePropertyName name, JSBool *bp)
+js::DeleteProperty(JSContext *cx, HandleValue v, HandlePropertyName name, bool *bp)
 {
-    // convert value to JSObject pointer
     RootedObject obj(cx, ToObjectFromStack(cx, v));
     if (!obj)
         return false;
 
-    if (!JSObject::deleteProperty(cx, obj, name, bp))
+    JSBool b;
+    if (!JSObject::deleteProperty(cx, obj, name, &b))
         return false;
+    *bp = b;
+
     if (strict && !*bp) {
         obj->reportNotConfigurable(cx, NameToId(name));
         return false;
@@ -3681,19 +3688,21 @@ js::DeleteProperty(JSContext *cx, HandleValue v, HandlePropertyName name, JSBool
     return true;
 }
 
-template bool js::DeleteProperty<true> (JSContext *cx, HandleValue val, HandlePropertyName name, JSBool *bp);
-template bool js::DeleteProperty<false>(JSContext *cx, HandleValue val, HandlePropertyName name, JSBool *bp);
+template bool js::DeleteProperty<true> (JSContext *cx, HandleValue val, HandlePropertyName name, bool *bp);
+template bool js::DeleteProperty<false>(JSContext *cx, HandleValue val, HandlePropertyName name, bool *bp);
 
 template <bool strict>
 bool
-js::DeleteElement(JSContext *cx, HandleValue val, HandleValue index, JSBool *bp)
+js::DeleteElement(JSContext *cx, HandleValue val, HandleValue index, bool *bp)
 {
     RootedObject obj(cx, ToObjectFromStack(cx, val));
     if (!obj)
         return false;
 
-    if (!JSObject::deleteByValue(cx, obj, index, bp))
+    JSBool b;
+    if (!JSObject::deleteByValue(cx, obj, index, &b))
         return false;
+    *bp = b;
     if (strict && !*bp) {
         // XXX This observably calls ToString(propval).  We should convert to
         //     PropertyKey and use that to delete, and to report an error if
@@ -3707,8 +3716,8 @@ js::DeleteElement(JSContext *cx, HandleValue val, HandleValue index, JSBool *bp)
     return true;
 }
 
-template bool js::DeleteElement<true> (JSContext *, HandleValue, HandleValue, JSBool *succeeded);
-template bool js::DeleteElement<false>(JSContext *, HandleValue, HandleValue, JSBool *succeeded);
+template bool js::DeleteElement<true> (JSContext *, HandleValue, HandleValue, bool *succeeded);
+template bool js::DeleteElement<false>(JSContext *, HandleValue, HandleValue, bool *succeeded);
 
 bool
 js::GetElement(JSContext *cx, MutableHandleValue lref, HandleValue rref, MutableHandleValue vp)
@@ -3724,7 +3733,7 @@ js::CallElement(JSContext *cx, MutableHandleValue lref, HandleValue rref, Mutabl
 
 bool
 js::SetObjectElement(JSContext *cx, HandleObject obj, HandleValue index, HandleValue value,
-                     JSBool strict)
+                     bool strict)
 {
     RootedId id(cx);
     if (!ValueToId<CanGC>(cx, index, &id))
@@ -3734,7 +3743,7 @@ js::SetObjectElement(JSContext *cx, HandleObject obj, HandleValue index, HandleV
 
 bool
 js::SetObjectElement(JSContext *cx, HandleObject obj, HandleValue index, HandleValue value,
-                     JSBool strict, HandleScript script, jsbytecode *pc)
+                     bool strict, HandleScript script, jsbytecode *pc)
 {
     JS_ASSERT(pc);
     RootedId id(cx);
@@ -3851,9 +3860,9 @@ js::RunOnceScriptPrologue(JSContext *cx, HandleScript script)
 
 bool
 js::InitGetterSetterOperation(JSContext *cx, jsbytecode *pc, HandleObject obj, HandleId id,
-                              HandleValue val)
+                              HandleObject val)
 {
-    JS_ASSERT(js_IsCallable(val));
+    JS_ASSERT(val->isCallable());
 
     /*
      * Getters and setters are just like watchpoints from an access control
@@ -3871,13 +3880,13 @@ js::InitGetterSetterOperation(JSContext *cx, jsbytecode *pc, HandleObject obj, H
     JSOp op = JSOp(*pc);
 
     if (op == JSOP_INITPROP_GETTER || op == JSOP_INITELEM_GETTER) {
-        getter = CastAsPropertyOp(&val.toObject());
+        getter = CastAsPropertyOp(val);
         setter = JS_StrictPropertyStub;
         attrs |= JSPROP_GETTER;
     } else {
         JS_ASSERT(op == JSOP_INITPROP_SETTER || op == JSOP_INITELEM_SETTER);
         getter = JS_PropertyStub;
-        setter = CastAsStrictPropertyOp(&val.toObject());
+        setter = CastAsStrictPropertyOp(val);
         attrs |= JSPROP_SETTER;
     }
 
@@ -3887,7 +3896,7 @@ js::InitGetterSetterOperation(JSContext *cx, jsbytecode *pc, HandleObject obj, H
 
 bool
 js::InitGetterSetterOperation(JSContext *cx, jsbytecode *pc, HandleObject obj,
-                              HandlePropertyName name, HandleValue val)
+                              HandlePropertyName name, HandleObject val)
 {
     RootedId id(cx, NameToId(name));
     return InitGetterSetterOperation(cx, pc, obj, id, val);
@@ -3895,7 +3904,7 @@ js::InitGetterSetterOperation(JSContext *cx, jsbytecode *pc, HandleObject obj,
 
 bool
 js::InitGetterSetterOperation(JSContext *cx, jsbytecode *pc, HandleObject obj, HandleValue idval,
-                              HandleValue val)
+                              HandleObject val)
 {
     RootedId id(cx);
     if (!ValueToId<CanGC>(cx, idval, &id))

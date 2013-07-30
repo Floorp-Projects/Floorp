@@ -2,7 +2,7 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-The `util/array` module provides simple helper functions for working with 
+The `util/array` module provides simple helper functions for working with
 arrays.
 
 <api name="has">
@@ -29,7 +29,7 @@ A simplified version of `array.indexOf(element) >= 0`.
 
 <api name="hasAny">
 @function
-Returns `true` if the given [`Array`](https://developer.mozilla.org/en-US/docs/JavaScript/Reference/Global_Objects/Array) contains any of the elements in the 
+Returns `true` if the given [`Array`](https://developer.mozilla.org/en-US/docs/JavaScript/Reference/Global_Objects/Array) contains any of the elements in the
 `elements` array, or `false` otherwise.
 
     let { hasAny } = require('sdk/util/array');
@@ -84,7 +84,7 @@ does not alter the array and returns `false`.
     let a = ['alice', 'bob', 'carol'];
 
     remove(a, 'dave'); // false
-    remove(a, 'bob'); // true 
+    remove(a, 'bob'); // true
     remove(a, 'bob'); // false
 
     console.log(a); // ['alice', 'carol']
@@ -154,3 +154,24 @@ Iterates over an [iterator](https://developer.mozilla.org/en-US/docs/JavaScript/
   The iterator's results in an array.
 </api>
 
+<api name="find">
+@function
+Iterates over given `array` and applies given `predicate` function until
+`predicate(element)` is `true`. If such element is found it's retured back
+otherwise third optional `fallback` argument is returned back. If fallback
+is not provided returns `undefined`.
+
+    let { find } = require('sdk/util/array');
+    let isOdd = (x) => x % 2;
+    find([2, 4, 5, 7, 8, 9], isOdd);   // => 5
+    find([2, 4, 6, 8], isOdd);         // => undefiend
+    find([2, 4, 6, 8], isOdd, null);   // => null
+
+    fromIterator(i) // ['otoro', 'unagi', 'keon']
+
+@param iterator {iterator}
+  The [`Iterator`](https://developer.mozilla.org/en-US/docs/JavaScript/Guide/Iterators_and_Generators#Iterators) object over which to iterate and place results into an array.
+
+@returns {array}
+  The iterator's results in an array.
+</api>
