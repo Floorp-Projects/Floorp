@@ -57,7 +57,7 @@
 #include "nsIAsyncVerifyRedirectCallback.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/BindingUtils.h"
-#include "mozilla/StandardInteger.h"
+#include <stdint.h>
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/StaticPtr.h"
 #include "nsContentUtils.h"

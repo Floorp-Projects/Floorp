@@ -6,7 +6,7 @@
 #define mozilla_dom_gamepad_Gamepad_h
 
 #include "mozilla/ErrorResult.h"
-#include "mozilla/StandardInteger.h"
+#include <stdint.h>
 #include "nsCOMPtr.h"
 #include "nsIDOMGamepad.h"
 #include "nsIVariant.h"

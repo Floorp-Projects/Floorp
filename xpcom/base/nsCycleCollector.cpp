@@ -128,6 +128,7 @@
 #include "xpcpublic.h"
 #include "nsXPCOMPrivate.h"
 #include "GeckoProfiler.h"
+#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 #ifdef WIN32
@@ -143,7 +144,6 @@
 #include "mozilla/Likely.h"
 #include "mozilla/mozPoisonWrite.h"
 #include "mozilla/Mutex.h"
-#include "mozilla/StandardInteger.h"
 #include "mozilla/Telemetry.h"
 
 using namespace mozilla;

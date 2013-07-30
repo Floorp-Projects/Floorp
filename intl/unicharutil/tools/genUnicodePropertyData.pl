@@ -623,7 +623,7 @@ $versionInfo
  * * * * * This file contains MACHINE-GENERATED DATA, do not edit! * * * * *
  */
 
-#include "mozilla/StandardInteger.h"
+#include <stdint.h>
 #include "harfbuzz/hb.h"
 
 __END

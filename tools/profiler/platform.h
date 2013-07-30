@@ -39,7 +39,7 @@
 #include <pthread.h>
 #endif
 
-#include "mozilla/StandardInteger.h"
+#include <stdint.h>
 #include "mozilla/Util.h"
 #include "mozilla/unused.h"
 #include "mozilla/TimeStamp.h"
