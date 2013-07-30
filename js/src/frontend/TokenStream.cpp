@@ -1520,10 +1520,8 @@ TokenStream::getTokenInternal()
         /* NB: treat HTML begin-comment as comment-till-end-of-line */
         if (matchChar('!')) {
             if (matchChar('-')) {
-                if (matchChar('-')) {
-                    flags |= TSF_IN_HTML_COMMENT;
+                if (matchChar('-'))
                     goto skipline;
-                }
                 ungetChar('-');
             }
             ungetChar('!');
@@ -1561,17 +1559,9 @@ TokenStream::getTokenInternal()
                     goto error;
             }
 
-  skipline:
-            /* Optimize line skipping if we are not in an HTML comment. */
-            if (flags & TSF_IN_HTML_COMMENT) {
-                while ((c = getChar()) != EOF && c != '\n') {
-                    if (c == '-' && matchChar('-') && matchChar('>'))
-                        flags &= ~TSF_IN_HTML_COMMENT;
-                }
-            } else {
-                while ((c = getChar()) != EOF && c != '\n')
-                    continue;
-            }
+        skipline:
+            while ((c = getChar()) != EOF && c != '\n')
+                continue;
             ungetChar(c);
             cursor = (cursor - 1) & ntokensMask;
             goto retry;
@@ -1670,10 +1660,8 @@ TokenStream::getTokenInternal()
 
       case '-':
         if (matchChar('-')) {
-            if (peekChar() == '>' && !(flags & TSF_DIRTYLINE)) {
-                flags &= ~TSF_IN_HTML_COMMENT;
+            if (peekChar() == '>' && !(flags & TSF_DIRTYLINE))
                 goto skipline;
-            }
             tt = TOK_DEC;
         } else {
             tt = matchChar('=') ? TOK_SUBASSIGN : TOK_MINUS;
