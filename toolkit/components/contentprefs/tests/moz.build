@@ -7,7 +7,3 @@
 MODULE = 'test_toolkit_contentprefs'
 
 XPCSHELL_TESTS_MANIFESTS += ['unit/xpcshell.ini', 'unit_cps2/xpcshell.ini']
-
-# FIXME/bug 575918: out-of-process xpcshell is broken on OS X
-if CONFIG['OS_ARCH'] != 'Darwin':
-    XPCSHELL_TESTS_MANIFESTS += ['unit_ipc/xpcshell.ini']
