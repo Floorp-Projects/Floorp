@@ -77,6 +77,7 @@ let CustomizationHandler = {
     // and the location bar are combined, so we need this ordering
     CombinedStopReload.init();
     UpdateUrlbarSearchSplitterState();
+    setUrlAndSearchBarWidthForConditionalForwardButton();
 
     // Update the urlbar
     if (gURLBar) {
