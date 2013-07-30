@@ -14,12 +14,14 @@
 #include "InputData.h"
 #include "Axis.h"
 #include "TaskThrottler.h"
+#include "mozilla/layers/APZCTreeManager.h"
 
 #include "base/message_loop.h"
 
 namespace mozilla {
 namespace layers {
 
+struct ScrollableLayerGuid;
 class CompositorParent;
 class GestureEventListener;
 class ContainerLayer;
@@ -68,7 +70,8 @@ public:
    */
   static float GetTouchStartTolerance();
 
-  AsyncPanZoomController(GeckoContentController* aController,
+  AsyncPanZoomController(uint64_t aLayersId,
+                         GeckoContentController* aController,
                          GestureBehavior aGestures = DEFAULT_GESTURES);
   ~AsyncPanZoomController();
 
@@ -244,6 +247,11 @@ public:
    * Does the work for ReceiveInputEvent().
    */
   nsEventStatus HandleInputEvent(const InputData& aEvent);
+
+  /**
+   * Returns true if this APZC instance is for the layer identified by the guid.
+   */
+  bool Matches(const ScrollableLayerGuid& aGuid);
 
   /**
    * Sync panning and zooming animation using a fixed frame time.
@@ -503,6 +511,7 @@ private:
    */
   void SetState(PanZoomState aState);
 
+  uint64_t mLayersId;
   nsRefPtr<CompositorParent> mCompositorParent;
   TaskThrottler mPaintThrottler;
 
@@ -613,6 +622,20 @@ private:
   bool mDelayPanning;
 
   friend class Axis;
+
+  /* The functions and members in this section are used to build a tree
+   * structure out of APZC instances. This tree can only be walked or
+   * manipulated while holding the lock in the associated APZCTreeManager
+   * instance.
+   */
+public:
+  void SetLastChild(AsyncPanZoomController* child) { mLastChild = child; }
+  void SetPrevSibling(AsyncPanZoomController* sibling) { mPrevSibling = sibling; }
+  AsyncPanZoomController* GetLastChild() const { return mLastChild; }
+  AsyncPanZoomController* GetPrevSibling() const { return mPrevSibling; }
+private:
+  nsRefPtr<AsyncPanZoomController> mLastChild;
+  nsRefPtr<AsyncPanZoomController> mPrevSibling;
 };
 
 }
