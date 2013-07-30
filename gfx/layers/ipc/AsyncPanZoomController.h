@@ -272,17 +272,6 @@ public:
   static void SetFrameTime(const TimeStamp& aMilliseconds);
 
   /**
-   * Transform and intersect aPoint with the layer tree returning the appropriate
-   * AsyncPanZoomController for this point.
-   * aRelativePointOut Return the point transformed into the layer coordinates
-   * relative to the scroll origin for this layer.
-   */
-  static void GetAPZCAtPoint(const ContainerLayer& aLayerTree,
-                             const ScreenIntPoint& aPoint,
-                             AsyncPanZoomController** aApzcOut,
-                             LayerIntPoint* aRelativePointOut);
-
-  /**
    * Update mFrameMetrics.mScrollOffset to the given offset.
    * This is necessary in cases where a scroll is not caused by user
    * input (for example, a content scrollTo()).
@@ -649,6 +638,23 @@ public:
 private:
   nsRefPtr<AsyncPanZoomController> mLastChild;
   nsRefPtr<AsyncPanZoomController> mPrevSibling;
+
+  /* The functions and members in this section are used to maintain the
+   * area that this APZC instance is responsible for. This is used when
+   * hit-testing to see which APZC instance should handle touch events.
+   */
+public:
+  void SetVisibleRegion(gfxRect rect) { mVisibleRegion = rect; }
+
+  bool VisibleRegionContains(const gfxPoint& aPoint) const {
+    return mVisibleRegion.Contains(aPoint.x, aPoint.y);
+  }
+
+private:
+  /* This is the viewport of the layer that this APZC corresponds to, but
+   * post-transform. In other words, it is in the coordinate space of its
+   * parent layer. */
+  gfxRect mVisibleRegion;
 };
 
 }

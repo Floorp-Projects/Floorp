@@ -339,143 +339,143 @@ CreateTestLayerTree(nsRefPtr<LayerManager>& aLayerManager, nsTArray<nsRefPtr<Lay
   return CreateLayerTree(layerTreeSyntax, layerVisibleRegion, transforms, aLayerManager, aLayers);
 }
 
-TEST(AsyncPanZoomController, GetAPZCAtPoint) {
-  nsTArray<nsRefPtr<Layer> > layers;
-  nsRefPtr<LayerManager> lm;
-  nsRefPtr<Layer> root = CreateTestLayerTree(lm, layers);
-
-  TimeStamp testStartTime = TimeStamp::Now();
-  AsyncPanZoomController::SetFrameTime(testStartTime);
-
-  nsRefPtr<MockContentController> mcc = new MockContentController();
-  nsRefPtr<AsyncPanZoomController> apzcMain = new AsyncPanZoomController(mcc);
-  nsRefPtr<AsyncPanZoomController> apzcSub3 = new AsyncPanZoomController(mcc);
-  nsRefPtr<AsyncPanZoomController> apzcSub4 = new AsyncPanZoomController(mcc);
-  nsRefPtr<AsyncPanZoomController> apzcSub7 = new AsyncPanZoomController(mcc);
-  apzcMain->NotifyLayersUpdated(TestFrameMetrics(), true);
-
-  nsIntRect layerBound;
-  ScreenIntPoint touchPoint(20, 20);
-  AsyncPanZoomController* apzcOut;
-  LayerIntPoint relativePointOut;
-
-  FrameMetrics scrollable;
-
-  // No APZC attached so hit testing will return no APZC at (20,20)
-  AsyncPanZoomController::GetAPZCAtPoint(*root->AsContainerLayer(), touchPoint,
-                 &apzcOut, &relativePointOut);
-
-  AsyncPanZoomController* nullAPZC = nullptr;
-  EXPECT_EQ(apzcOut, nullAPZC);
-
-  // Now we have a root APZC that will match the page
-  scrollable.mScrollId = FrameMetrics::ROOT_SCROLL_ID;
-  layerBound = root->GetVisibleRegion().GetBounds();
-  scrollable.mViewport = CSSRect(layerBound.x, layerBound.y,
-                                 layerBound.width, layerBound.height);
-  root->AsContainerLayer()->SetFrameMetrics(scrollable);
-  root->AsContainerLayer()->SetAsyncPanZoomController(apzcMain);
-  AsyncPanZoomController::GetAPZCAtPoint(*root->AsContainerLayer(), touchPoint,
-                 &apzcOut, &relativePointOut);
-  EXPECT_EQ(apzcOut, apzcMain.get());
-  EXPECT_EQ(LayerIntPoint(20, 20), relativePointOut);
-
-  // Now we have a sub APZC with a better fit
-  scrollable.mScrollId = FrameMetrics::START_SCROLL_ID;
-  layerBound = layers[3]->GetVisibleRegion().GetBounds();
-  scrollable.mViewport = CSSRect(layerBound.x, layerBound.y,
-                                 layerBound.width, layerBound.height);
-  layers[3]->AsContainerLayer()->SetFrameMetrics(scrollable);
-  layers[3]->AsContainerLayer()->SetAsyncPanZoomController(apzcSub3);
-  AsyncPanZoomController::GetAPZCAtPoint(*root->AsContainerLayer(), touchPoint,
-                 &apzcOut, &relativePointOut);
-  EXPECT_EQ(apzcOut, apzcSub3.get());
-  EXPECT_EQ(LayerIntPoint(20, 20), relativePointOut);
-
-  // Now test hit testing when we have two scrollable layers
-  touchPoint = ScreenIntPoint(15,15);
-  AsyncPanZoomController::GetAPZCAtPoint(*root->AsContainerLayer(), touchPoint,
-                 &apzcOut, &relativePointOut);
-  EXPECT_EQ(apzcOut, apzcSub3.get()); // We haven't bound apzcSub4 yet
-  scrollable.mScrollId++;
-  layerBound = layers[4]->GetVisibleRegion().GetBounds();
-  scrollable.mViewport = CSSRect(layerBound.x, layerBound.y,
-                                 layerBound.width, layerBound.height);
-  layers[4]->AsContainerLayer()->SetFrameMetrics(scrollable);
-  layers[4]->AsContainerLayer()->SetAsyncPanZoomController(apzcSub4);
-  AsyncPanZoomController::GetAPZCAtPoint(*root->AsContainerLayer(), touchPoint,
-                 &apzcOut, &relativePointOut);
-  EXPECT_EQ(apzcOut, apzcSub4.get());
-  EXPECT_EQ(LayerIntPoint(15, 15), relativePointOut);
-
-  // Hit test ouside the reach of apzc3/4 but inside apzcMain
-  touchPoint = ScreenIntPoint(90,90);
-  AsyncPanZoomController::GetAPZCAtPoint(*root->AsContainerLayer(), touchPoint,
-                 &apzcOut, &relativePointOut);
-  EXPECT_EQ(apzcOut, apzcMain.get());
-  EXPECT_EQ(LayerIntPoint(90, 90), relativePointOut);
-
-  // Hit test ouside the reach of any layer
-  touchPoint = ScreenIntPoint(1000,10);
-  AsyncPanZoomController::GetAPZCAtPoint(*root->AsContainerLayer(), touchPoint,
-                 &apzcOut, &relativePointOut);
-  EXPECT_EQ(apzcOut, nullAPZC);
-  touchPoint = ScreenIntPoint(-1000,10);
-  AsyncPanZoomController::GetAPZCAtPoint(*root->AsContainerLayer(), touchPoint,
-                 &apzcOut, &relativePointOut);
-  EXPECT_EQ(apzcOut, nullAPZC);
-
-  // Test layer transform
-  gfx3DMatrix transform;
-  transform.ScalePost(0.1, 0.1, 1);
-  root->SetBaseTransform(transform);
-
-  touchPoint = ScreenIntPoint(50,50); // This point is now outside the root layer
-  AsyncPanZoomController::GetAPZCAtPoint(*root->AsContainerLayer(), touchPoint,
-                 &apzcOut, &relativePointOut);
-  EXPECT_EQ(apzcOut, nullAPZC);
-
-  touchPoint = ScreenIntPoint(2,2);
-  AsyncPanZoomController::GetAPZCAtPoint(*root->AsContainerLayer(), touchPoint,
-                 &apzcOut, &relativePointOut);
-  EXPECT_EQ(apzcOut, apzcSub4.get());
-  EXPECT_EQ(LayerIntPoint(20, 20), relativePointOut);
-
-  // Scale layer[4] outside the range
-  layers[4]->SetBaseTransform(transform);
-  // layer 4 effective visible screenrect: (0.05, 0.05, 0.2, 0.2)
-  // Does not contain (2, 2)
-  AsyncPanZoomController::GetAPZCAtPoint(*root->AsContainerLayer(), touchPoint,
-                 &apzcOut, &relativePointOut);
-  EXPECT_EQ(apzcOut, apzcSub3.get());
-  EXPECT_EQ(LayerIntPoint(20, 20), relativePointOut);
-
-  // Transformation chain to layer 7
-  scrollable.mScrollId++;
-  layerBound = layers[7]->GetVisibleRegion().GetBounds();
-  scrollable.mViewport = CSSRect(layerBound.x, layerBound.y,
-                                 layerBound.width, layerBound.height);
-  layers[7]->AsContainerLayer()->SetFrameMetrics(scrollable);
-  layers[7]->AsContainerLayer()->SetAsyncPanZoomController(apzcSub7);
-
-  gfx3DMatrix translateTransform;
-  translateTransform.Translate(gfxPoint3D(10, 10, 0));
-  layers[5]->SetBaseTransform(translateTransform);
-
-  gfx3DMatrix translateTransform2;
-  translateTransform2.Translate(gfxPoint3D(-20, 0, 0));
-  layers[6]->SetBaseTransform(translateTransform2);
-
-  gfx3DMatrix translateTransform3;
-  translateTransform3.ScalePost(1,15,1);
-  layers[7]->SetBaseTransform(translateTransform3);
-
-  touchPoint = ScreenIntPoint(1,45);
-  // layer 7 effective visible screenrect (0,16,4,60) but clipped by parent layers
-  AsyncPanZoomController::GetAPZCAtPoint(*root->AsContainerLayer(), touchPoint,
-                 &apzcOut, &relativePointOut);
-  EXPECT_EQ(apzcOut, apzcSub7.get());
-  EXPECT_EQ(LayerIntPoint(20, 29), relativePointOut);
-}
+//TEST(AsyncPanZoomController, GetAPZCAtPoint) {
+//  nsTArray<nsRefPtr<Layer> > layers;
+//  nsRefPtr<LayerManager> lm;
+//  nsRefPtr<Layer> root = CreateTestLayerTree(lm, layers);
+//
+//  TimeStamp testStartTime = TimeStamp::Now();
+//  AsyncPanZoomController::SetFrameTime(testStartTime);
+//
+//  nsRefPtr<MockContentController> mcc = new MockContentController();
+//  nsRefPtr<AsyncPanZoomController> apzcMain = new AsyncPanZoomController(mcc);
+//  nsRefPtr<AsyncPanZoomController> apzcSub3 = new AsyncPanZoomController(mcc);
+//  nsRefPtr<AsyncPanZoomController> apzcSub4 = new AsyncPanZoomController(mcc);
+//  nsRefPtr<AsyncPanZoomController> apzcSub7 = new AsyncPanZoomController(mcc);
+//  apzcMain->NotifyLayersUpdated(TestFrameMetrics(), true);
+//
+//  nsIntRect layerBound;
+//  ScreenIntPoint touchPoint(20, 20);
+//  AsyncPanZoomController* apzcOut;
+//  LayerIntPoint relativePointOut;
+//
+//  FrameMetrics scrollable;
+//
+//  // No APZC attached so hit testing will return no APZC at (20,20)
+//  AsyncPanZoomController::GetAPZCAtPoint(*root->AsContainerLayer(), touchPoint,
+//                 &apzcOut, &relativePointOut);
+//
+//  AsyncPanZoomController* nullAPZC = nullptr;
+//  EXPECT_EQ(apzcOut, nullAPZC);
+//
+//  // Now we have a root APZC that will match the page
+//  scrollable.mScrollId = FrameMetrics::ROOT_SCROLL_ID;
+//  layerBound = root->GetVisibleRegion().GetBounds();
+//  scrollable.mViewport = CSSRect(layerBound.x, layerBound.y,
+//                                 layerBound.width, layerBound.height);
+//  root->AsContainerLayer()->SetFrameMetrics(scrollable);
+//  root->AsContainerLayer()->SetAsyncPanZoomController(apzcMain);
+//  AsyncPanZoomController::GetAPZCAtPoint(*root->AsContainerLayer(), touchPoint,
+//                 &apzcOut, &relativePointOut);
+//  EXPECT_EQ(apzcOut, apzcMain.get());
+//  EXPECT_EQ(LayerIntPoint(20, 20), relativePointOut);
+//
+//  // Now we have a sub APZC with a better fit
+//  scrollable.mScrollId = FrameMetrics::START_SCROLL_ID;
+//  layerBound = layers[3]->GetVisibleRegion().GetBounds();
+//  scrollable.mViewport = CSSRect(layerBound.x, layerBound.y,
+//                                 layerBound.width, layerBound.height);
+//  layers[3]->AsContainerLayer()->SetFrameMetrics(scrollable);
+//  layers[3]->AsContainerLayer()->SetAsyncPanZoomController(apzcSub3);
+//  AsyncPanZoomController::GetAPZCAtPoint(*root->AsContainerLayer(), touchPoint,
+//                 &apzcOut, &relativePointOut);
+//  EXPECT_EQ(apzcOut, apzcSub3.get());
+//  EXPECT_EQ(LayerIntPoint(20, 20), relativePointOut);
+//
+//  // Now test hit testing when we have two scrollable layers
+//  touchPoint = ScreenIntPoint(15,15);
+//  AsyncPanZoomController::GetAPZCAtPoint(*root->AsContainerLayer(), touchPoint,
+//                 &apzcOut, &relativePointOut);
+//  EXPECT_EQ(apzcOut, apzcSub3.get()); // We haven't bound apzcSub4 yet
+//  scrollable.mScrollId++;
+//  layerBound = layers[4]->GetVisibleRegion().GetBounds();
+//  scrollable.mViewport = CSSRect(layerBound.x, layerBound.y,
+//                                 layerBound.width, layerBound.height);
+//  layers[4]->AsContainerLayer()->SetFrameMetrics(scrollable);
+//  layers[4]->AsContainerLayer()->SetAsyncPanZoomController(apzcSub4);
+//  AsyncPanZoomController::GetAPZCAtPoint(*root->AsContainerLayer(), touchPoint,
+//                 &apzcOut, &relativePointOut);
+//  EXPECT_EQ(apzcOut, apzcSub4.get());
+//  EXPECT_EQ(LayerIntPoint(15, 15), relativePointOut);
+//
+//  // Hit test ouside the reach of apzc3/4 but inside apzcMain
+//  touchPoint = ScreenIntPoint(90,90);
+//  AsyncPanZoomController::GetAPZCAtPoint(*root->AsContainerLayer(), touchPoint,
+//                 &apzcOut, &relativePointOut);
+//  EXPECT_EQ(apzcOut, apzcMain.get());
+//  EXPECT_EQ(LayerIntPoint(90, 90), relativePointOut);
+//
+//  // Hit test ouside the reach of any layer
+//  touchPoint = ScreenIntPoint(1000,10);
+//  AsyncPanZoomController::GetAPZCAtPoint(*root->AsContainerLayer(), touchPoint,
+//                 &apzcOut, &relativePointOut);
+//  EXPECT_EQ(apzcOut, nullAPZC);
+//  touchPoint = ScreenIntPoint(-1000,10);
+//  AsyncPanZoomController::GetAPZCAtPoint(*root->AsContainerLayer(), touchPoint,
+//                 &apzcOut, &relativePointOut);
+//  EXPECT_EQ(apzcOut, nullAPZC);
+//
+//  // Test layer transform
+//  gfx3DMatrix transform;
+//  transform.ScalePost(0.1, 0.1, 1);
+//  root->SetBaseTransform(transform);
+//
+//  touchPoint = ScreenIntPoint(50,50); // This point is now outside the root layer
+//  AsyncPanZoomController::GetAPZCAtPoint(*root->AsContainerLayer(), touchPoint,
+//                 &apzcOut, &relativePointOut);
+//  EXPECT_EQ(apzcOut, nullAPZC);
+//
+//  touchPoint = ScreenIntPoint(2,2);
+//  AsyncPanZoomController::GetAPZCAtPoint(*root->AsContainerLayer(), touchPoint,
+//                 &apzcOut, &relativePointOut);
+//  EXPECT_EQ(apzcOut, apzcSub4.get());
+//  EXPECT_EQ(LayerIntPoint(20, 20), relativePointOut);
+//
+//  // Scale layer[4] outside the range
+//  layers[4]->SetBaseTransform(transform);
+//  // layer 4 effective visible screenrect: (0.05, 0.05, 0.2, 0.2)
+//  // Does not contain (2, 2)
+//  AsyncPanZoomController::GetAPZCAtPoint(*root->AsContainerLayer(), touchPoint,
+//                 &apzcOut, &relativePointOut);
+//  EXPECT_EQ(apzcOut, apzcSub3.get());
+//  EXPECT_EQ(LayerIntPoint(20, 20), relativePointOut);
+//
+//  // Transformation chain to layer 7
+//  scrollable.mScrollId++;
+//  layerBound = layers[7]->GetVisibleRegion().GetBounds();
+//  scrollable.mViewport = CSSRect(layerBound.x, layerBound.y,
+//                                 layerBound.width, layerBound.height);
+//  layers[7]->AsContainerLayer()->SetFrameMetrics(scrollable);
+//  layers[7]->AsContainerLayer()->SetAsyncPanZoomController(apzcSub7);
+//
+//  gfx3DMatrix translateTransform;
+//  translateTransform.Translate(gfxPoint3D(10, 10, 0));
+//  layers[5]->SetBaseTransform(translateTransform);
+//
+//  gfx3DMatrix translateTransform2;
+//  translateTransform2.Translate(gfxPoint3D(-20, 0, 0));
+//  layers[6]->SetBaseTransform(translateTransform2);
+//
+//  gfx3DMatrix translateTransform3;
+//  translateTransform3.ScalePost(1,15,1);
+//  layers[7]->SetBaseTransform(translateTransform3);
+//
+//  touchPoint = ScreenIntPoint(1,45);
+//  // layer 7 effective visible screenrect (0,16,4,60) but clipped by parent layers
+//  AsyncPanZoomController::GetAPZCAtPoint(*root->AsContainerLayer(), touchPoint,
+//                 &apzcOut, &relativePointOut);
+//  EXPECT_EQ(apzcOut, apzcSub7.get());
+//  EXPECT_EQ(LayerIntPoint(20, 29), relativePointOut);
+//}
 
 
