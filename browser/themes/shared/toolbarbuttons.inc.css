@@ -1,8 +1,10 @@
-:-moz-any(@primaryToolbarButtons@) {
+:-moz-any(@primaryToolbarButtons@),
+#bookmarks-menu-button > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon {
   list-style-image: url("chrome://browser/skin/Toolbar.png");
 }
 
-:-moz-any(@primaryToolbarButtons@):-moz-lwtheme-brighttext {
+:-moz-any(@primaryToolbarButtons@):-moz-lwtheme-brighttext,
+#bookmarks-menu-button:-moz-lwtheme-brighttext > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon {
   list-style-image: url(chrome://browser/skin/Toolbar-inverted.png);
 }
 
@@ -31,7 +33,11 @@
   -moz-image-region: rect(0, 162px, 18px, 144px);
 }
 
-#history-panelmenu[customizableui-areatype="toolbar"]{
+#bookmarks-menu-button[customizableui-areatype="toolbar"] > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon {
+  -moz-image-region: rect(0, 630px, 18px, 612px);
+}
+
+#history-panelmenu[customizableui-areatype="toolbar"] {
   -moz-image-region: rect(0, 180px, 18px, 162px);
 }
 

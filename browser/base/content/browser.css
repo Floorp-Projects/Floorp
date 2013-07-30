@@ -721,3 +721,14 @@ chatbox:-moz-full-screen-ancestor > .chat-titlebar {
 *:-moz-full-screen-ancestor #social-sidebar-box:not(:-moz-full-screen-ancestor) {
   display: none;
 }
+
+/* Give this menupopup an arrow panel styling */
+#BMB_bookmarksPopup {
+  -moz-appearance: none;
+  -moz-binding: url("chrome://browser/content/places/menu.xml#places-popup-arrow");
+  background: transparent;
+  border: none;
+  transition: opacity 300ms;
+  /* The popup inherits -moz-image-region from the button, must reset it */
+  -moz-image-region: auto;
+}

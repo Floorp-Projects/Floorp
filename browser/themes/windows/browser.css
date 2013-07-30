@@ -330,7 +330,8 @@ menuitem.bookmark-item {
 
 %ifndef WINDOWS_AERO
 @media (-moz-windows-theme: luna-silver) {
-  :-moz-any(@primaryToolbarButtons@) {
+  :-moz-any(@primaryToolbarButtons@),
+  #bookmarks-menu-button.toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon {
     list-style-image: url("chrome://browser/skin/Toolbar-lunaSilver.png");
   }
 }
@@ -1297,8 +1298,25 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   -moz-image-region: rect(0px 48px 16px 32px);
 }
 
-#bookmarks-menu-button.bookmark-item > .toolbarbutton-menubutton-button> .toolbarbutton-icon {
+#bookmarks-menu-button.bookmark-item > .toolbarbutton-menubutton-button > .toolbarbutton-icon {
   -moz-margin-start: 5px;
+}
+
+#bookmarks-menu-button[customizableui-areatype="toolbar"] > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon {
+  padding-top: 2px;
+  padding-bottom: 2px;
+}
+
+#BMB_bookmarksPopup[side="top"],
+#BMB_bookmarksPopup[side="bottom"] {
+  margin-left: -20px;
+  margin-right: -20px;
+}
+
+#BMB_bookmarksPopup[side="left"],
+#BMB_bookmarksPopup[side="right"] {
+  margin-top: -20px;
+  margin-bottom: -20px;
 }
 
 /* bookmarking panel */
