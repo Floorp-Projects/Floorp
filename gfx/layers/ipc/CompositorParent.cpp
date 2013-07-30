@@ -154,6 +154,9 @@ CompositorParent::CompositorParent(nsIWidget* aWidget,
   CompositorLoop()->PostTask(FROM_HERE, NewRunnableFunction(&AddCompositor,
                                                           this, &mCompositorID));
 
+  mRootLayerTreeID = AllocateLayerTreeId();
+  sIndirectLayerTrees[mRootLayerTreeID].mParent = this;
+
   mApzcTreeManager = new APZCTreeManager();
   ++sCompositorThreadRefCount;
 }
@@ -170,11 +173,16 @@ CompositorParent::IsInCompositorThread()
   return CompositorThreadID() == PlatformThread::CurrentId();
 }
 
+uint64_t
+CompositorParent::RootLayerTreeId()
+{
+  return mRootLayerTreeID;
+}
+
 CompositorParent::~CompositorParent()
 {
   MOZ_COUNT_DTOR(CompositorParent);
 
-  mApzcTreeManager->ClearTree();
   ReleaseCompositorThread();
 }
 
@@ -187,6 +195,9 @@ CompositorParent::Destroy()
   // Ensure that the layer manager is destructed on the compositor thread.
   mLayerManager = nullptr;
   mCompositionManager = nullptr;
+  mApzcTreeManager->ClearTree();
+  mApzcTreeManager = nullptr;
+  sIndirectLayerTrees.erase(mRootLayerTreeID);
 }
 
 void
@@ -568,7 +579,7 @@ CompositorParent::ShadowLayersUpdated(LayerTransactionParent* aLayerTree,
 
   if (mApzcTreeManager) {
     AutoResolveRefLayers resolve(mCompositionManager);
-    mApzcTreeManager->UpdatePanZoomControllerTree(this, root, isFirstPaint, ROOT_LAYER_TREE_ID);
+    mApzcTreeManager->UpdatePanZoomControllerTree(this, root, isFirstPaint, mRootLayerTreeID);
   }
 
   if (root) {
@@ -709,17 +720,12 @@ CompositorParent::NotifyChildCreated(uint64_t aChild)
   sIndirectLayerTrees[aChild].mParent = this;
 }
 
-// Ensure all layer tree IDs are greater than zero, so if we
-// ever see a zero-valued layer tree id we know it's actually
-// uninitialized and/or garbage.
-uint64_t CompositorParent::ROOT_LAYER_TREE_ID = 1;
-
 /*static*/ uint64_t
 CompositorParent::AllocateLayerTreeId()
 {
   MOZ_ASSERT(CompositorLoop());
   MOZ_ASSERT(NS_IsMainThread());
-  static uint64_t ids = ROOT_LAYER_TREE_ID;
+  static uint64_t ids = 0;
   return ++ids;
 }
 
