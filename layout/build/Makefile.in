@@ -38,6 +38,7 @@ SHARED_LIBRARY_LIBS = \
 	$(DEPTH)/content/xul/document/src/$(LIB_PREFIX)gkconxuldoc_s.$(LIB_SUFFIX) \
 	$(DEPTH)/view/src/$(LIB_PREFIX)gkview_s.$(LIB_SUFFIX) \
 	$(DEPTH)/dom/activities/src/$(LIB_PREFIX)dom_activities_s.$(LIB_SUFFIX) \
+	$(DEPTH)/dom/apps/src/$(LIB_PREFIX)dom_apps_s.$(LIB_SUFFIX) \
 	$(DEPTH)/dom/base/$(LIB_PREFIX)jsdombase_s.$(LIB_SUFFIX) \
 	$(DEPTH)/dom/battery/$(LIB_PREFIX)dom_battery_s.$(LIB_SUFFIX) \
 	$(DEPTH)/dom/alarm/$(LIB_PREFIX)domalarm_s.$(LIB_SUFFIX) \

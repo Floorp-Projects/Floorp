@@ -1,0 +1,8 @@
+component {9dbfa904-0718-11e3-8e77-0721a45514b8} InterAppConnection.js
+contract @mozilla.org/dom/inter-app-connection;1 {9dbfa904-0718-11e3-8e77-0721a45514b8}
+
+component {6a77e9e0-0645-11e3-b90b-73bb7c78e06a} InterAppConnection.js
+contract @mozilla.org/dom/inter-app-connection-request;1 {6a77e9e0-0645-11e3-b90b-73bb7c78e06a}
+
+component {c66e0f8c-e3cb-11e2-9e85-43ef6244b884} InterAppMessagePort.js
+contract @mozilla.org/dom/inter-app-message-port;1 {c66e0f8c-e3cb-11e2-9e85-43ef6244b884}

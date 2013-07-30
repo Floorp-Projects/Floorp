@@ -750,6 +750,12 @@ pref("disk_space_watcher.enabled", true);
 // Enable promise
 pref("dom.promise.enabled", false);
 
+// DOM Inter-App Communication API.
+#ifdef MOZ_WIDGET_GONK
+// Enable this only for gonk-specific build but not for desktop build.
+pref("dom.inter-app-communication-api.enabled", true);
+#endif
+
 // Allow ADB to run for this many hours before disabling
 // (only applies when marionette is disabled)
 // 0 disables the timer.

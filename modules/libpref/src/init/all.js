@@ -4395,3 +4395,6 @@ pref("dom.forms.inputmode", false);
 #else
 pref("dom.forms.inputmode", true);
 #endif
+
+// DOM Inter-App Communication API.
+pref("dom.inter-app-communication-api.enabled", false);
