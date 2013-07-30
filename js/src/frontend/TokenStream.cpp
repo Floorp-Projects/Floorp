@@ -1150,37 +1150,33 @@ TokenStream::getTokenInternal()
         }
         ungetCharIgnoreEOL(c);
 
-        /* Convert the escapes by putting into tokenbuf. */
-        if (hadUnicodeEscape && !putIdentInTokenbuf(identStart))
-            goto error;
+        /*
+         * Identifiers containing no Unicode escapes can be processed directly
+         * from userbuf.  The rest must use the escapes converted via tokenbuf
+         * before atomizing.
+         */
+        const jschar *chars;
+        size_t length;
+        if (hadUnicodeEscape) {
+            if (!putIdentInTokenbuf(identStart))
+                goto error;
+
+            chars = tokenbuf.begin();
+            length = tokenbuf.length();
+        } else {
+            chars = identStart;
+            length = userbuf.addressOfNextRawChar() - identStart;
+        }
 
         /* Check for keywords unless parser asks us to ignore keywords. */
         if (!(flags & TSF_KEYWORD_IS_NAME)) {
-            const jschar *chars;
-            size_t length;
-            if (hadUnicodeEscape) {
-                chars = tokenbuf.begin();
-                length = tokenbuf.length();
-            } else {
-                chars = identStart;
-                length = userbuf.addressOfNextRawChar() - identStart;
-            }
             tt = TOK_NAME;
             if (!checkForKeyword(chars, length, &tt))
                 goto error;
             if (tt != TOK_NAME)                goto out;
         }
 
-        /*
-         * Identifiers containing no Unicode escapes can be atomized directly
-         * from userbuf.  The rest must use the escapes converted via
-         * tokenbuf before atomizing.
-         */
-        JSAtom *atom;
-        if (!hadUnicodeEscape)
-            atom = AtomizeChars<CanGC>(cx, identStart, userbuf.addressOfNextRawChar() - identStart);
-        else
-            atom = atomize(cx, tokenbuf);
+        JSAtom *atom = AtomizeChars<CanGC>(cx, chars, length);
         if (!atom)
             goto error;
         tp->setName(atom->asPropertyName());
