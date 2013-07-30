@@ -96,6 +96,9 @@ endif #}
 
 ifdef MOZ_B2G_BT #{
 STATIC_LIBS += mozdbus_s
+ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
+OS_LIBS += -ldbus
+endif
 endif #}
 
 ifneq ($(strip $(MOZ_B2G_RIL)$(MOZ_B2G_BT)),) #{
@@ -446,7 +449,6 @@ OS_LIBS += \
   -lsysutils \
   -lcamera_client \
   -lsensorservice \
-  -ldbus \
   -lstagefright \
   -lstagefright_foundation \
   -lstagefright_omx \
