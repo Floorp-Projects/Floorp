@@ -23,9 +23,9 @@ public class FennecInstrumentationTestRunner extends InstrumentationTestRunner {
 
     // unfortunately we have to make this static because test classes that don't extend
     // from ActivityInstrumentationTestCase2 can't get a reference to this class.
-    public static Bundle getArguments() {
+    public static Bundle getFennecArguments() {
         if (sArguments == null) {
-            Log.e("Robocop", "FennecInstrumentationTestCase.getArguments returns null bundle");
+            Log.e("Robocop", "FennecInstrumentationTestCase.getFennecArguments returns null bundle");
         }
         return sArguments;
     }
