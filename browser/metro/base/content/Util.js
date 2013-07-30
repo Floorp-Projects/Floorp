@@ -228,7 +228,7 @@ let Util = {
             aElement instanceof Ci.nsIDOMHTMLLIElement ||
             aElement instanceof Ci.nsIDOMHTMLPreElement ||
             aElement instanceof Ci.nsIDOMHTMLHeadingElement ||
-            aElement instanceof Ci.nsIDOMHTMLTableCellElement ||
+            aElement instanceof HTMLTableCellElement ||
             aElement instanceof Ci.nsIDOMHTMLBodyElement);
   },
 
