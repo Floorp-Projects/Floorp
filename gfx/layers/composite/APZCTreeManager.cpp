@@ -64,7 +64,9 @@ APZCTreeManager::UpdatePanZoomControllerTree(CompositorParent* aCompositor, Laye
 
   if (aRoot) {
     UpdatePanZoomControllerTree(aCompositor,
-                                aRoot, CompositorParent::ROOT_LAYER_TREE_ID,
+                                aRoot,
+                                // aCompositor is null in gtest scenarios
+                                aCompositor ? aCompositor->RootLayerTreeId() : 0,
                                 nullptr, nullptr,
                                 aIsFirstPaint, aFirstPaintLayersId,
                                 &apzcsToDestroy);

@@ -104,6 +104,12 @@ public:
   void NotifyShadowTreeTransaction(uint64_t aId, bool aIsFirstPaint);
 
   /**
+   * Returns the unique layer tree identifier that corresponds to the root
+   * tree of this compositor.
+   */
+  uint64_t RootLayerTreeId();
+
+  /**
    * Returns a pointer to the compositor corresponding to the given ID.
    */
   static CompositorParent* GetCompositor(uint64_t id);
@@ -124,11 +130,6 @@ public:
    * Destroys the compositor thread and the global compositor map.
    */
   static void ShutDown();
-
-  /**
-   * The reserved layer tree ID for the root of the layer tree.
-   */
-  static uint64_t ROOT_LAYER_TREE_ID;
 
   /**
    * Allocate an ID that can be used to refer to a layer tree and
@@ -287,6 +288,7 @@ private:
   mozilla::Monitor mResumeCompositionMonitor;
 
   uint64_t mCompositorID;
+  uint64_t mRootLayerTreeID;
 
   bool mOverrideComposeReadiness;
   CancelableTask* mForceCompositionTask;
