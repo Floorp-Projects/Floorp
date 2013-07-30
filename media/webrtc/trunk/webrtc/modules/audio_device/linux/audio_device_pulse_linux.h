@@ -310,7 +310,7 @@ private:
     bool _inputDeviceIsSpecified;
     bool _outputDeviceIsSpecified;
 
-    WebRtc_Word32 sampling_rate_hz;
+    WebRtc_Word32 sample_rate_hz_;
     WebRtc_UWord8 _recChannels;
     WebRtc_UWord8 _playChannels;
 
