@@ -1,8 +1,9 @@
 # DOM API
-component {cde1d019-fad8-4044-b141-65fb4fb7a245} Push.js
-contract @mozilla.org/push/PushManager;1 {cde1d019-fad8-4044-b141-65fb4fb7a245}
+component {c7ad4f42-faae-4e8b-9879-780a72349945} Push.js
+contract @mozilla.org/Push;1 {c7ad4f42-faae-4e8b-9879-780a72349945}
+category JavaScript-navigator-property push @mozilla.org/Push;1
 
 # Component to initialize PushService on startup.
 component {4b8caa3b-3c58-4f3c-a7f5-7bd9cb24c11d} PushServiceLauncher.js
-contract @mozilla.org/push/ServiceLauncher;1 {4b8caa3b-3c58-4f3c-a7f5-7bd9cb24c11d}
-category app-startup PushServiceLauncher @mozilla.org/push/ServiceLauncher;1
+contract @mozilla.org/dom/push/service;1 {4b8caa3b-3c58-4f3c-a7f5-7bd9cb24c11d}
+category app-startup PushServiceLauncher @mozilla.org/dom/push/service;1
