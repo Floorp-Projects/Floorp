@@ -1032,13 +1032,12 @@ js_InvokeOperationCallback(JSContext *cx)
     return !cb || cb(cx);
 }
 
-JSBool
+bool
 js_HandleExecutionInterrupt(JSContext *cx)
 {
-    JSBool result = JS_TRUE;
     if (cx->runtime()->interrupt)
-        result = js_InvokeOperationCallback(cx) && result;
-    return result;
+        return js_InvokeOperationCallback(cx);
+    return true;
 }
 
 js::ThreadSafeContext::ThreadSafeContext(JSRuntime *rt, PerThreadData *pt, ContextKind kind)

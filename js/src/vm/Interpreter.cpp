@@ -665,17 +665,22 @@ js::Execute(JSContext *cx, HandleScript script, JSObject &scopeChainArg, Value *
 }
 
 bool
-js::HasInstance(JSContext *cx, HandleObject obj, HandleValue v, JSBool *bp)
+js::HasInstance(JSContext *cx, HandleObject obj, HandleValue v, bool *bp)
 {
     Class *clasp = obj->getClass();
     RootedValue local(cx, v);
-    if (clasp->hasInstance)
-        return clasp->hasInstance(cx, obj, &local, bp);
+    if (clasp->hasInstance) {
+        JSBool b;
+        if (!clasp->hasInstance(cx, obj, &local, &b))
+            return false;
+        *bp = b;
+        return true;
+    }
 
     RootedValue val(cx, ObjectValue(*obj));
     js_ReportValueError(cx, JSMSG_BAD_INSTANCEOF_RHS,
                         JSDVG_SEARCH_STACK, val, NullPtr());
-    return JS_FALSE;
+    return false;
 }
 
 bool
@@ -3187,7 +3192,7 @@ BEGIN_CASE(JSOP_INSTANCEOF)
     }
     RootedObject &obj = rootObject0;
     obj = &rref.toObject();
-    JSBool cond = JS_FALSE;
+    bool cond = false;
     if (!HasInstance(cx, obj, regs.stackHandleAt(-2), &cond))
         goto error;
     regs.sp--;
@@ -3665,15 +3670,17 @@ template bool js::SetProperty<false>(JSContext *cx, HandleObject obj, HandleId i
 
 template <bool strict>
 bool
-js::DeleteProperty(JSContext *cx, HandleValue v, HandlePropertyName name, JSBool *bp)
+js::DeleteProperty(JSContext *cx, HandleValue v, HandlePropertyName name, bool *bp)
 {
-    // convert value to JSObject pointer
     RootedObject obj(cx, ToObjectFromStack(cx, v));
     if (!obj)
         return false;
 
-    if (!JSObject::deleteProperty(cx, obj, name, bp))
+    JSBool b;
+    if (!JSObject::deleteProperty(cx, obj, name, &b))
         return false;
+    *bp = b;
+
     if (strict && !*bp) {
         obj->reportNotConfigurable(cx, NameToId(name));
         return false;
@@ -3681,19 +3688,21 @@ js::DeleteProperty(JSContext *cx, HandleValue v, HandlePropertyName name, JSBool
     return true;
 }
 
-template bool js::DeleteProperty<true> (JSContext *cx, HandleValue val, HandlePropertyName name, JSBool *bp);
-template bool js::DeleteProperty<false>(JSContext *cx, HandleValue val, HandlePropertyName name, JSBool *bp);
+template bool js::DeleteProperty<true> (JSContext *cx, HandleValue val, HandlePropertyName name, bool *bp);
+template bool js::DeleteProperty<false>(JSContext *cx, HandleValue val, HandlePropertyName name, bool *bp);
 
 template <bool strict>
 bool
-js::DeleteElement(JSContext *cx, HandleValue val, HandleValue index, JSBool *bp)
+js::DeleteElement(JSContext *cx, HandleValue val, HandleValue index, bool *bp)
 {
     RootedObject obj(cx, ToObjectFromStack(cx, val));
     if (!obj)
         return false;
 
-    if (!JSObject::deleteByValue(cx, obj, index, bp))
+    JSBool b;
+    if (!JSObject::deleteByValue(cx, obj, index, &b))
         return false;
+    *bp = b;
     if (strict && !*bp) {
         // XXX This observably calls ToString(propval).  We should convert to
         //     PropertyKey and use that to delete, and to report an error if
@@ -3707,8 +3716,8 @@ js::DeleteElement(JSContext *cx, HandleValue val, HandleValue index, JSBool *bp)
     return true;
 }
 
-template bool js::DeleteElement<true> (JSContext *, HandleValue, HandleValue, JSBool *succeeded);
-template bool js::DeleteElement<false>(JSContext *, HandleValue, HandleValue, JSBool *succeeded);
+template bool js::DeleteElement<true> (JSContext *, HandleValue, HandleValue, bool *succeeded);
+template bool js::DeleteElement<false>(JSContext *, HandleValue, HandleValue, bool *succeeded);
 
 bool
 js::GetElement(JSContext *cx, MutableHandleValue lref, HandleValue rref, MutableHandleValue vp)
@@ -3724,7 +3733,7 @@ js::CallElement(JSContext *cx, MutableHandleValue lref, HandleValue rref, Mutabl
 
 bool
 js::SetObjectElement(JSContext *cx, HandleObject obj, HandleValue index, HandleValue value,
-                     JSBool strict)
+                     bool strict)
 {
     RootedId id(cx);
     if (!ValueToId<CanGC>(cx, index, &id))
@@ -3734,7 +3743,7 @@ js::SetObjectElement(JSContext *cx, HandleObject obj, HandleValue index, HandleV
 
 bool
 js::SetObjectElement(JSContext *cx, HandleObject obj, HandleValue index, HandleValue value,
-                     JSBool strict, HandleScript script, jsbytecode *pc)
+                     bool strict, HandleScript script, jsbytecode *pc)
 {
     JS_ASSERT(pc);
     RootedId id(cx);
