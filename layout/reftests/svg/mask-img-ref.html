@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+  <body style="margin:0">
+    <img src='data:image/svg+xml,
+<!-- vim: set expandtab ts=2 sw=2 tw=80: -->
+<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%"
+  xmlns:xlink="http://www.w3.org/1999/xlink"
+  viewBox="0 0 700 130">
+  <defs>
+    <style type="text/css">
+    .fillSpan  {
+      fill: lightgrey;
+      stroke: black;
+    }
+    </style>
+    <!-- Fade out effect -->
+    <mask id="fadeout" maskContentUnits="objectBoundingBox">
+      <rect x="-0.05" y="-0.05" width="1.1" height="1.1"
+        fill="url(%23fadeoutGrad)"/>
+    </mask>
+    <linearGradient id="fadeoutGrad">
+      <stop offset="0" stop-color="white" stop-opacity="1"/>
+      <stop offset="0.35" stop-color="white" stop-opacity="1"/>
+      <stop offset="0.9" stop-color="white" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <rect y="50" width="150" height="80" class="fillSpan" mask="url(%23fadeout)"/>
+</svg>
+    ' border=0 width="700">
+  </body>
+</html>
