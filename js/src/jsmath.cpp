@@ -1017,7 +1017,9 @@ js::math_acosh(JSContext *cx, unsigned argc, Value *vp)
 }
 
 #if !HAVE_ASINH
-double asinh(double x)
+// Bug 899712 - gcc incorrectly rewrites -asinh(-x) to asinh(x) when overriding
+// asinh.
+static double my_asinh(double x)
 {
     const double SQUARE_ROOT_EPSILON = sqrt(std::numeric_limits<double>::epsilon());
     const double FOURTH_ROOT_EPSILON = sqrt(SQUARE_ROOT_EPSILON);
@@ -1032,7 +1034,7 @@ double asinh(double x)
         else
             return log(x + sqrt(x * x + 1));
     } else if (x <= -FOURTH_ROOT_EPSILON) {
-        return -asinh(-x);
+        return -my_asinh(-x);
     } else {
         // http://functions.wolfram.com/ElementaryFunctions/ArcSinh/06/01/03/01/0001/
         // approximation by taylor series in x at 0 up to order 2
@@ -1052,7 +1054,11 @@ double asinh(double x)
 double
 js::math_asinh_impl(MathCache *cache, double x)
 {
+#ifdef HAVE_ASINH
     return cache->lookup(asinh, x);
+#else
+    return cache->lookup(my_asinh, x);
+#endif
 }
 
 bool
