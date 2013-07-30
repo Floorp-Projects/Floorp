@@ -189,6 +189,23 @@ Download.prototype = {
   onchange: null,
 
   /**
+   * This tells if the user has chosen to open/run the downloaded file after
+   * download has completed.
+   */
+  launchWhenSucceeded: false,
+
+  /**
+   * This represents the MIME type of the download.
+   */
+  contentType: null,
+
+  /**
+   * This indicates the path of the application to be used to launch the file,
+   * or null if the file should be launched with the default application.
+   */
+  launcherPath: null,
+
+  /**
    * Raises the onchange notification.
    */
   _notifyChange: function D_notifyChange() {
@@ -274,6 +291,27 @@ Download.prototype = {
       }
     }
 
+    // This function propragates download properties from the DownloadSaver
+    // object, unless it comes in late from a download attempt that was
+    // replaced by a new one.
+    function DS_setDownloadProperties(aOptions) {
+      if (this._currentAttempt && this._currentAttempt != currentAttempt) {
+        return;
+      }
+
+      let changeMade = false;
+
+      if ("contentType" in aOptions &&
+          this.contentType != aOptions.contentType) {
+        this.contentType = aOptions.contentType;
+        changeMade = true;
+      }
+
+      if (changeMade) {
+        this._notifyChange();
+      }
+    }
+
     // Now that we stored the promise in the download object, we can start the
     // task that will actually execute the download.
     deferAttempt.resolve(Task.spawn(function task_D_start() {
@@ -292,7 +330,8 @@ Download.prototype = {
 
       try {
         // Execute the actual download through the saver object.
-        yield this.saver.execute(DS_setProgressBytes.bind(this));
+        yield this.saver.execute(DS_setProgressBytes.bind(this),
+                                 DS_setDownloadProperties.bind(this));
 
         // Update the status properties for a successful download.
         this.progress = 100;
@@ -322,6 +361,10 @@ Download.prototype = {
           this._notifyChange();
           if (this.succeeded) {
             this._deferSucceeded.resolve();
+
+            if (this.launchWhenSucceeded) {
+              this.launch().then(null, Cu.reportError);
+            }
           }
         }
       }
@@ -330,6 +373,47 @@ Download.prototype = {
     // Notify the new download state before returning.
     this._notifyChange();
     return this._currentAttempt;
+  },
+
+  /*
+   * Launches the file after download has completed. This can open
+   * the file with the default application for the target MIME type
+   * or file extension, or with a custom application if launcherPath
+   * is set.
+   *
+   * @return {Promise}
+   * @resolves When the instruction to launch the file has been
+   *           successfully given to the operating system. Note that
+   *           the OS might still take a while until the file is actually
+   *           launched.
+   * @rejects  JavaScript exception if there was an error trying to launch
+   *           the file.
+   */
+  launch: function() {
+    if (!this.succeeded) {
+      return Promise.reject(
+        new Error("launch can only be called if the download succeeded")
+      );
+    }
+
+    return DownloadIntegration.launchDownload(this);
+  },
+
+  /*
+   * Shows the folder containing the target file, or where the target file
+   * will be saved. This may be called at any time, even if the download
+   * failed or is currently in progress.
+   *
+   * @return {Promise}
+   * @resolves When the instruction to open the containing folder has been
+   *           successfully given to the operating system. Note that
+   *           the OS might still take a while until the folder is actually
+   *           opened.
+   * @rejects  JavaScript exception if there was an error trying to open
+   *           the containing folder.
+   */
+  showContainingDirectory: function D_showContainingDirectory() {
+    return DownloadIntegration.showContainingDirectory(this.target.path);
   },
 
   /**
@@ -455,6 +539,18 @@ Download.prototype = {
       serializable.saver = saver;
     }
 
+    if (this.launcherPath) {
+      serializable.launcherPath = this.launcherPath;
+    }
+
+    if (this.launchWhenSucceeded) {
+      serializable.launchWhenSucceeded = true;
+    }
+
+    if (this.contentType) {
+      serializable.contentType = this.contentType;
+    }
+
     return serializable;
   },
 };
@@ -497,6 +593,19 @@ Download.fromSerializable = function (aSerializable) {
     download.saver = DownloadSaver.fromSerializable("copy");
   }
   download.saver.download = download;
+
+  if ("launchWhenSucceeded" in aSerializable) {
+    download.launchWhenSucceeded = !!aSerializable.launchWhenSucceeded;
+  }
+
+  if ("contentType" in aSerializable) {
+    download.contentType = aSerializable.contentType;
+  }
+
+  if ("launcherPath" in aSerializable) {
+    download.launcherPath = aSerializable.launcherPath;
+  }
+
   return download;
 };
 
@@ -733,12 +842,18 @@ DownloadSaver.prototype = {
    *        takes two arguments: the first is the number of bytes transferred
    *        until now, the second is the total number of bytes to be
    *        transferred, or -1 if unknown.
+   * @parem aSetPropertiesFn
+   *        This function may be called by the saver to report information
+   *        about new download properties discovered by the saver during the
+   *        download process. It takes an object where the keys represents
+   *        the names of the properties to set, and the value represents the
+   *        value to set.
    *
    * @return {Promise}
    * @resolves When the download has finished successfully.
    * @rejects JavaScript exception if the download failed.
    */
-  execute: function DS_execute(aSetProgressBytesFn)
+  execute: function DS_execute(aSetProgressBytesFn, aSetPropertiesFn)
   {
     throw new Error("Not implemented.");
   },
@@ -808,7 +923,7 @@ DownloadCopySaver.prototype = {
   /**
    * Implements "DownloadSaver.execute".
    */
-  execute: function DCS_execute(aSetProgressBytesFn)
+  execute: function DCS_execute(aSetProgressBytesFn, aSetPropertiesFn)
   {
     let deferred = Promise.defer();
     let download = this.download;
@@ -873,6 +988,7 @@ DownloadCopySaver.prototype = {
           if (aRequest instanceof Ci.nsIChannel &&
               aRequest.contentLength >= 0) {
             aSetProgressBytesFn(0, aRequest.contentLength);
+            aSetPropertiesFn({ contentType: aRequest.contentType });
           }
         },
         onStopRequest: function DCSE_onStopRequest(aRequest, aContext,
