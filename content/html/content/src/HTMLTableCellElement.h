@@ -7,9 +7,6 @@
 
 #include "mozilla/Attributes.h"
 #include "nsGenericHTMLElement.h"
-#include "nsIDOMHTMLTableCellElement.h"
-
-class nsIDOMHTMLTableRowElement;
 
 namespace mozilla {
 namespace dom {
@@ -17,7 +14,7 @@ namespace dom {
 class HTMLTableElement;
 
 class HTMLTableCellElement MOZ_FINAL : public nsGenericHTMLElement,
-                                       public nsIDOMHTMLTableCellElement
+                                       public nsIDOMHTMLElement
 {
 public:
   HTMLTableCellElement(already_AddRefed<nsINodeInfo> aNodeInfo)
@@ -37,9 +34,6 @@ public:
 
   // nsIDOMHTMLElement
   NS_FORWARD_NSIDOMHTMLELEMENT_TO_GENERIC
-
-  // nsIDOMHTMLTableCellElement
-  NS_DECL_NSIDOMHTMLTABLECELLELEMENT
 
   uint32_t ColSpan() const
   {
