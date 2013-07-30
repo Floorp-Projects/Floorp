@@ -33,7 +33,6 @@ XPIDL_SOURCES += [
     'nsIDOMHTMLImageElement.idl',
     'nsIDOMHTMLInputElement.idl',
     'nsIDOMHTMLLIElement.idl',
-    'nsIDOMHTMLLabelElement.idl',
     'nsIDOMHTMLLinkElement.idl',
     'nsIDOMHTMLMapElement.idl',
     'nsIDOMHTMLMediaElement.idl',
