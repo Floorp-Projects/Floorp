@@ -374,6 +374,53 @@ ShadowLayerForwarder::UpdatePictureRect(CompositableClient* aCompositable,
   mTxn->AddNoSwapPaint(OpUpdatePictureRect(nullptr, aCompositable->GetIPDLActor(), aRect));
 }
 
+void
+ShadowLayerForwarder::AddTexture(CompositableClient* aCompositable,
+                                 TextureClient* aTexture)
+{
+  SurfaceDescriptor descriptor;
+  if (!aTexture->ToSurfaceDescriptor(descriptor)) {
+    NS_WARNING("Failed to serialize a TextureClient");
+    return;
+  }
+  mTxn->AddEdit(OpAddTexture(nullptr, aCompositable->GetIPDLActor(),
+                             aTexture->GetID(),
+                             descriptor,
+                             aTexture->GetFlags()));
+}
+
+void
+ShadowLayerForwarder::RemoveTexture(CompositableClient* aCompositable,
+                                    uint64_t aTexture,
+                                    TextureFlags aFlags)
+{
+  mTxn->AddEdit(OpRemoveTexture(nullptr,
+                aCompositable->GetIPDLActor(),
+                aTexture,
+                aFlags));
+}
+
+void
+ShadowLayerForwarder::UpdatedTexture(CompositableClient* aCompositable,
+                                     TextureClient* aTexture,
+                                     nsIntRegion* aRegion)
+{
+  printf("ShadowLayerForwarder::UpdatedTexture %i\n", (int)aTexture->GetID());
+  MaybeRegion region = aRegion ? MaybeRegion(*aRegion)
+                               : MaybeRegion(null_t());
+  mTxn->AddEdit(OpUpdateTexture(nullptr, aCompositable->GetIPDLActor(),
+                                aTexture->GetID(),
+                                region));
+}
+
+void
+ShadowLayerForwarder::UseTexture(CompositableClient* aCompositable,
+                                 TextureClient* aTexture)
+{
+  mTxn->AddEdit(OpUseTexture(nullptr, aCompositable->GetIPDLActor(),
+                             aTexture->GetID()));
+}
+
 bool
 ShadowLayerForwarder::EndTransaction(InfallibleTArray<EditReply>* aReplies)
 {

@@ -4056,6 +4056,9 @@ pref("layers.async-video.enabled",false);
 // Whether to disable acceleration for all widgets.
 pref("layers.acceleration.disabled", false);
 
+// Whether to use the deprecated texture architecture rather than the new one.
+pref("layers.use-deprecated-textures", true);
+
 // Whether to force acceleration on, ignoring blacklists.
 #ifdef ANDROID
 // bug 838603 -- on Android, accidentally blacklisting OpenGL layers
@@ -4080,6 +4083,8 @@ pref("layers.offmainthreadcomposition.enabled", false);
 pref("layers.offmainthreadcomposition.testing.enabled", false);
 // Whether to animate simple opacity and transforms on the compositor
 pref("layers.offmainthreadcomposition.async-animations", false);
+// Whether to prefer normal memory over shared memory. Ignored with cross-process compositing
+pref("layers.prefer-memory-over-shmem", true);
 
 #ifdef MOZ_X11
 #ifdef MOZ_WIDGET_GTK2
