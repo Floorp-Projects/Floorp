@@ -1757,15 +1757,7 @@ ContentParent::AllocPBrowserParent(const IPCTabContext& aContext,
         return nullptr;
     }
 
-    MaybeInvalidTabContext tc(aContext);
-    if (!tc.IsValid()) {
-        NS_ERROR(nsPrintfCString("Child passed us an invalid TabContext.  (%s)  "
-                                 "Aborting AllocPBrowserParent.",
-                                 tc.InvalidReason()));
-        return nullptr;
-    }
-
-    TabParent* parent = new TabParent(this, tc.GetTabContext());
+    TabParent* parent = new TabParent(this, TabContext(aContext));
 
     // We release this ref in DeallocPBrowserParent()
     NS_ADDREF(parent);
