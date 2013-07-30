@@ -877,7 +877,7 @@ TokenStream::getSourceMappingURL(bool isMultiline, bool shouldWarnDeprecated)
     return true;
 }
 
-Token *
+JS_ALWAYS_INLINE Token *
 TokenStream::newToken(ptrdiff_t adjust)
 {
     cursor = (cursor + 1) & ntokensMask;
@@ -995,8 +995,6 @@ enum FirstCharKind {
     Dec,
     Plus,
     BasePrefix,
-
-    /* These two must be last, so that |c >= Space| matches both. */
     Space,
     EOL,
 
@@ -1107,27 +1105,16 @@ TokenStream::getTokenInternal()
     c1kind = FirstCharKind(firstCharKinds[c]);
 
     /*
-     * Skip over whitespace chars;  update line state on EOLs.  Even though
-     * whitespace isn't very common in minified code we have to handle it first
-     * (and jump back to 'retry') before calling newToken().
+     * Skip over non-EOL whitespace chars.
      */
-    if (c1kind >= Space) {
-        if (c1kind == EOL) {
-            /* If it's a \r\n sequence: treat as a single EOL, skip over the \n. */
-            if (c == '\r' && userbuf.hasRawChars())
-                userbuf.matchRawChar('\n');
-            updateLineInfoForEOL();
-            updateFlagsForEOL();
-        }
+    if (c1kind == Space)
         goto retry;
-    }
-
-    tp = newToken(-1);
 
     /*
      * Look for an unambiguous single-char token.
      */
     if (c1kind < OneChar_Max) {
+        tp = newToken(-1);
         tt = (TokenKind)c1kind;
         goto out;
     }
@@ -1136,6 +1123,7 @@ TokenStream::getTokenInternal()
      * Look for an identifier.
      */
     if (c1kind == Ident) {
+        tp = newToken(-1);
         identStart = userbuf.addressOfNextRawChar() - 1;
         hadUnicodeEscape = false;
 
@@ -1191,6 +1179,7 @@ TokenStream::getTokenInternal()
     }
 
     if (c1kind == Dot) {
+        tp = newToken(-1);
         c = getCharIgnoreEOL();
         if (JS7_ISDEC(c)) {
             numStart = userbuf.addressOfNextRawChar() - 2;
@@ -1212,6 +1201,7 @@ TokenStream::getTokenInternal()
     }
 
     if (c1kind == Equals) {
+        tp = newToken(-1);
         if (matchChar('='))
             tt = matchChar('=') ? TOK_STRICTEQ : TOK_EQ;
         else if (matchChar('>'))
@@ -1225,6 +1215,7 @@ TokenStream::getTokenInternal()
      * Look for a string.
      */
     if (c1kind == String) {
+        tp = newToken(-1);
         qc = c;
         tokenbuf.clear();
         while (true) {
@@ -1328,6 +1319,7 @@ TokenStream::getTokenInternal()
      * Look for a decimal number.
      */
     if (c1kind == Dec) {
+        tp = newToken(-1);
         numStart = userbuf.addressOfNextRawChar() - 1;
 
       decimal:
@@ -1384,6 +1376,7 @@ TokenStream::getTokenInternal()
     }
 
     if (c1kind == Plus) {
+        tp = newToken(-1);
         if (matchChar('+'))
             tt = TOK_INC;
         else
@@ -1393,6 +1386,7 @@ TokenStream::getTokenInternal()
 
     // Look for a hexadecimal, octal, or binary number.
     if (c1kind == BasePrefix) {
+        tp = newToken(-1);
         int radix;
         c = getCharIgnoreEOL();
         if (c == 'x' || c == 'X') {
@@ -1472,9 +1466,22 @@ TokenStream::getTokenInternal()
     }
 
     /*
+     * Skip over EOL chars, updating line state along the way.
+     */
+    if (c1kind == EOL) {
+        /* If it's a \r\n sequence: treat as a single EOL, skip over the \n. */
+        if (c == '\r' && userbuf.hasRawChars())
+            userbuf.matchRawChar('\n');
+        updateLineInfoForEOL();
+        updateFlagsForEOL();
+        goto retry;
+    }
+
+    /*
      * This handles everything else.
      */
     JS_ASSERT(c1kind == Other);
+    tp = newToken(-1);
     switch (c) {
       case '\\':
         hadUnicodeEscape = matchUnicodeEscapeIdStart(&qc);
