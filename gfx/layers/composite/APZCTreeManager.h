@@ -96,11 +96,12 @@ struct ScrollableLayerGuid {
  * Note that the ClearTree function MUST be called when this class is no longer needed;
  * see the method documentation for details.
  */
-class APZCTreeManager MOZ_FINAL {
+class APZCTreeManager {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(APZCTreeManager)
 
 public:
   APZCTreeManager();
+  virtual ~APZCTreeManager() {}
 
   /**
    * Rebuild the APZC tree based on the layer update that just came up. Preserve
@@ -220,14 +221,23 @@ public:
    */
   void ClearTree();
 
-private:
+protected:
+  /**
+   * Debug-build assertion that can be called to ensure code is running on the
+   * compositor thread.
+   */
+  virtual void AssertOnCompositorThread();
+
+public:
   /* Some helper functions to find an APZC given some identifying input. These functions
      lock the tree of APZCs while they find the right one, and then return an addref'd
      pointer to it. This allows caller code to just use the target APZC without worrying
-     about it going away.
+     about it going away. These are public for testing code and generally should not be
+     used by other production code.
   */
   already_AddRefed<AsyncPanZoomController> GetTargetAPZC(const ScrollableLayerGuid& aGuid);
   already_AddRefed<AsyncPanZoomController> GetTargetAPZC(const ScreenPoint& aPoint);
+private:
   /* Recursive helpers */
   AsyncPanZoomController* FindTargetAPZC(AsyncPanZoomController* aApzc, const ScrollableLayerGuid& aGuid);
   AsyncPanZoomController* GetAPZCAtPoint(AsyncPanZoomController* aApzc, gfxPoint aHitTestPoint);

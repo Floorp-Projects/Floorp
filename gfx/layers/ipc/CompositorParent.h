@@ -38,6 +38,17 @@ class LayerManagerComposite;
 class AsyncCompositionManager;
 struct TextureFactoryIdentifier;
 
+struct ScopedLayerTreeRegistration
+{
+  ScopedLayerTreeRegistration(uint64_t aLayersId,
+                              Layer* aRoot,
+                              GeckoContentController* aController);
+  ~ScopedLayerTreeRegistration();
+
+private:
+  uint64_t mLayersId;
+};
+
 class CompositorParent : public PCompositorParent,
                          public ShadowLayersManager
 {
