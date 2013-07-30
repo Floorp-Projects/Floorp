@@ -987,18 +987,15 @@ enum FirstCharKind {
     OneChar_Min = 0,
     OneChar_Max = TOK_LIMIT - 1,
 
-    Other = TOK_LIMIT,
+    Space = TOK_LIMIT,
     Ident,
-    Dot,
-    Equals,
-    String,
     Dec,
-    Plus,
-    BasePrefix,
-    Space,
+    String,
     EOL,
+    BasePrefix,
+    Other,
 
-    LastCharKind = EOL
+    LastCharKind = Other
 };
 
 /*
@@ -1025,9 +1022,9 @@ static const uint8_t firstCharKinds[] = {
 /*  10+ */     EOL,   Space,   Space,     EOL, _______, _______, _______, _______, _______, _______,
 /*  20+ */ _______, _______, _______, _______, _______, _______, _______, _______, _______, _______,
 /*  30+ */ _______, _______,   Space, _______,  String, _______,   Ident, _______, _______,  String,
-/*  40+ */  TOK_LP,  TOK_RP, _______,    Plus, T_COMMA,_______,     Dot, _______, BasePrefix,  Dec,
+/*  40+ */  TOK_LP,  TOK_RP, _______, _______, T_COMMA,_______,  _______, _______,BasePrefix,  Dec,
 /*  50+ */     Dec,     Dec,     Dec,     Dec,     Dec,     Dec,     Dec,    Dec,  T_COLON,TOK_SEMI,
-/*  60+ */ _______,  Equals, _______,TOK_HOOK, _______,   Ident,   Ident,   Ident,   Ident,   Ident,
+/*  60+ */ _______, _______, _______,TOK_HOOK, _______,   Ident,   Ident,   Ident,   Ident,   Ident,
 /*  70+ */   Ident,   Ident,   Ident,   Ident,   Ident,   Ident,   Ident,   Ident,   Ident,   Ident,
 /*  80+ */   Ident,   Ident,   Ident,   Ident,   Ident,   Ident,   Ident,   Ident,   Ident,   Ident,
 /*  90+ */   Ident,  TOK_LB, _______,  TOK_RB, _______,   Ident, _______,   Ident,   Ident,   Ident,
@@ -1096,19 +1093,26 @@ TokenStream::getTokenInternal()
 
     /*
      * Get the token kind, based on the first char.  The ordering of c1kind
-     * comparison is based on the frequency of tokens in real code.  Minified
-     * and non-minified code have different characteristics, mostly in that
-     * whitespace occurs much less in minified code.  Token kinds that fall in
-     * the 'Other' category typically account for less than 2% of all tokens,
-     * so their order doesn't matter much.
+     * comparison is based on the frequency of tokens in real code -- Parsemark
+     * (which represents typical JS code on the web) and the Unreal demo (which
+     * represents asm.js code).
+     *
+     *                  Parsemark   Unreal
+     *  OneChar         32.9%       39.7%
+     *  Space           25.0%        0.6%
+     *  Ident           19.2%       36.4%
+     *  Dec              7.2%        5.1%
+     *  String           7.9%        0.0%
+     *  EOL              1.7%        0.0%
+     *  BasePrefix       0.4%        4.9%
+     *  Other            5.7%       13.3%
+     *
+     * The ordering is based mostly only Parsemark frequencies, with Unreal
+     * frequencies used to break close categories (e.g. |Dec| and |String|).
+     * |Other| is biggish, but no other token kind is common enough for it to
+     * be worth adding extra values to FirstCharKind.
      */
     c1kind = FirstCharKind(firstCharKinds[c]);
-
-    /*
-     * Skip over non-EOL whitespace chars.
-     */
-    if (c1kind == Space)
-        goto retry;
 
     /*
      * Look for an unambiguous single-char token.
@@ -1118,6 +1122,12 @@ TokenStream::getTokenInternal()
         tt = (TokenKind)c1kind;
         goto out;
     }
+
+    /*
+     * Skip over non-EOL whitespace chars.
+     */
+    if (c1kind == Space)
+        goto retry;
 
     /*
      * Look for an identifier.
@@ -1178,36 +1188,63 @@ TokenStream::getTokenInternal()
         goto out;
     }
 
-    if (c1kind == Dot) {
+    /*
+     * Look for a decimal number.
+     */
+    if (c1kind == Dec) {
         tp = newToken(-1);
-        c = getCharIgnoreEOL();
-        if (JS7_ISDEC(c)) {
-            numStart = userbuf.addressOfNextRawChar() - 2;
-            decimalPoint = HasDecimal;
-            hasExp = false;
-            goto decimal_dot;
-        }
+        numStart = userbuf.addressOfNextRawChar() - 1;
+
+      decimal:
+        decimalPoint = NoDecimal;
+        hasExp = false;
+        while (JS7_ISDEC(c))
+            c = getCharIgnoreEOL();
+
         if (c == '.') {
-            qc = getCharIgnoreEOL();
-            if (qc == '.') {
-                tt = TOK_TRIPLEDOT;
-                goto out;
+            decimalPoint = HasDecimal;
+          decimal_dot:
+            do {
+                c = getCharIgnoreEOL();
+            } while (JS7_ISDEC(c));
+        }
+        if (c == 'e' || c == 'E') {
+            hasExp = true;
+            c = getCharIgnoreEOL();
+            if (c == '+' || c == '-')
+                c = getCharIgnoreEOL();
+            if (!JS7_ISDEC(c)) {
+                ungetCharIgnoreEOL(c);
+                reportError(JSMSG_MISSING_EXPONENT);
+                goto error;
             }
-            ungetCharIgnoreEOL(qc);
+            do {
+                c = getCharIgnoreEOL();
+            } while (JS7_ISDEC(c));
         }
         ungetCharIgnoreEOL(c);
-        tt = TOK_DOT;
-        goto out;
-    }
 
-    if (c1kind == Equals) {
-        tp = newToken(-1);
-        if (matchChar('='))
-            tt = matchChar('=') ? TOK_STRICTEQ : TOK_EQ;
-        else if (matchChar('>'))
-            tt = TOK_ARROW;
-        else
-            tt = TOK_ASSIGN;
+        if (c != EOF && IsIdentifierStart(c)) {
+            reportError(JSMSG_IDSTART_AFTER_NUMBER);
+            goto error;
+        }
+
+        /*
+         * Unlike identifiers and strings, numbers cannot contain escaped
+         * chars, so we don't need to use tokenbuf.  Instead we can just
+         * convert the jschars in userbuf directly to the numeric value.
+         */
+        double dval;
+        const jschar *dummy;
+        if (!((decimalPoint == HasDecimal) || hasExp)) {
+            if (!GetPrefixInteger(cx, numStart, userbuf.addressOfNextRawChar(), 10, &dummy, &dval))
+                goto error;
+        } else {
+            if (!js_strtod(cx, numStart, userbuf.addressOfNextRawChar(), &dummy, &dval))
+                goto error;
+        }
+        tp->setNumber(dval, decimalPoint);
+        tt = TOK_NUMBER;
         goto out;
     }
 
@@ -1316,72 +1353,15 @@ TokenStream::getTokenInternal()
     }
 
     /*
-     * Look for a decimal number.
+     * Skip over EOL chars, updating line state along the way.
      */
-    if (c1kind == Dec) {
-        tp = newToken(-1);
-        numStart = userbuf.addressOfNextRawChar() - 1;
-
-      decimal:
-        decimalPoint = NoDecimal;
-        hasExp = false;
-        while (JS7_ISDEC(c))
-            c = getCharIgnoreEOL();
-
-        if (c == '.') {
-            decimalPoint = HasDecimal;
-          decimal_dot:
-            do {
-                c = getCharIgnoreEOL();
-            } while (JS7_ISDEC(c));
-        }
-        if (c == 'e' || c == 'E') {
-            hasExp = true;
-            c = getCharIgnoreEOL();
-            if (c == '+' || c == '-')
-                c = getCharIgnoreEOL();
-            if (!JS7_ISDEC(c)) {
-                ungetCharIgnoreEOL(c);
-                reportError(JSMSG_MISSING_EXPONENT);
-                goto error;
-            }
-            do {
-                c = getCharIgnoreEOL();
-            } while (JS7_ISDEC(c));
-        }
-        ungetCharIgnoreEOL(c);
-
-        if (c != EOF && IsIdentifierStart(c)) {
-            reportError(JSMSG_IDSTART_AFTER_NUMBER);
-            goto error;
-        }
-
-        /*
-         * Unlike identifiers and strings, numbers cannot contain escaped
-         * chars, so we don't need to use tokenbuf.  Instead we can just
-         * convert the jschars in userbuf directly to the numeric value.
-         */
-        double dval;
-        const jschar *dummy;
-        if (!((decimalPoint == HasDecimal) || hasExp)) {
-            if (!GetPrefixInteger(cx, numStart, userbuf.addressOfNextRawChar(), 10, &dummy, &dval))
-                goto error;
-        } else {
-            if (!js_strtod(cx, numStart, userbuf.addressOfNextRawChar(), &dummy, &dval))
-                goto error;
-        }
-        tp->setNumber(dval, decimalPoint);
-        tt = TOK_NUMBER;
-        goto out;
-    }
-
-    if (c1kind == Plus) {
-        tp = newToken(-1);
-        if (matchChar('+'))
-            tt = TOK_INC;
-        else
-            tt = matchChar('=') ? TOK_ADDASSIGN : TOK_PLUS;
-        goto out;
+    if (c1kind == EOL) {
+        /* If it's a \r\n sequence: treat as a single EOL, skip over the \n. */
+        if (c == '\r' && userbuf.hasRawChars())
+            userbuf.matchRawChar('\n');
+        updateLineInfoForEOL();
+        updateFlagsForEOL();
+        goto retry;
     }
 
     // Look for a hexadecimal, octal, or binary number.
@@ -1466,23 +1446,47 @@ TokenStream::getTokenInternal()
     }
 
     /*
-     * Skip over EOL chars, updating line state along the way.
-     */
-    if (c1kind == EOL) {
-        /* If it's a \r\n sequence: treat as a single EOL, skip over the \n. */
-        if (c == '\r' && userbuf.hasRawChars())
-            userbuf.matchRawChar('\n');
-        updateLineInfoForEOL();
-        updateFlagsForEOL();
-        goto retry;
-    }
-
-    /*
      * This handles everything else.
      */
     JS_ASSERT(c1kind == Other);
     tp = newToken(-1);
     switch (c) {
+      case '.':
+        c = getCharIgnoreEOL();
+        if (JS7_ISDEC(c)) {
+            numStart = userbuf.addressOfNextRawChar() - 2;
+            decimalPoint = HasDecimal;
+            hasExp = false;
+            goto decimal_dot;
+        }
+        if (c == '.') {
+            qc = getCharIgnoreEOL();
+            if (qc == '.') {
+                tt = TOK_TRIPLEDOT;
+                goto out;
+            }
+            ungetCharIgnoreEOL(qc);
+        }
+        ungetCharIgnoreEOL(c);
+        tt = TOK_DOT;
+        break;
+
+      case '=':
+        if (matchChar('='))
+            tt = matchChar('=') ? TOK_STRICTEQ : TOK_EQ;
+        else if (matchChar('>'))
+            tt = TOK_ARROW;
+        else
+            tt = TOK_ASSIGN;
+        break;
+
+      case '+':
+        if (matchChar('+'))
+            tt = TOK_INC;
+        else
+            tt = matchChar('=') ? TOK_ADDASSIGN : TOK_PLUS;
+        break;
+
       case '\\':
         hadUnicodeEscape = matchUnicodeEscapeIdStart(&qc);
         if (hadUnicodeEscape) {
