@@ -1257,6 +1257,12 @@ class IDLType(IDLObject):
     def isPrimitive(self):
         return False
 
+    def isBoolean(self):
+        return False
+
+    def isNumeric(self):
+        return False
+
     def isString(self):
         return False
 
@@ -1410,6 +1416,12 @@ class IDLNullableType(IDLType):
 
     def isPrimitive(self):
         return self.inner.isPrimitive()
+
+    def isBoolean(self):
+        return self.inner.isBoolean()
+
+    def isNumeric(self):
+        return self.inner.isNumeric()
 
     def isString(self):
         return self.inner.isString()
@@ -1805,6 +1817,12 @@ class IDLTypedefType(IDLType, IDLObjectWithIdentifier):
     def isPrimitive(self):
         return self.inner.isPrimitive()
 
+    def isBoolean(self):
+        return self.inner.isBoolean()
+
+    def isNumeric(self):
+        return self.inner.isNumeric()
+
     def isString(self):
         return self.inner.isString()
 
@@ -2083,6 +2101,12 @@ class IDLBuiltinType(IDLType):
 
     def isPrimitive(self):
         return self._typeTag <= IDLBuiltinType.Types.double
+
+    def isBoolean(self):
+        return self._typeTag == IDLBuiltinType.Types.boolean
+
+    def isNumeric(self):
+        return self.isPrimitive() and not self.isBoolean()
 
     def isString(self):
         return self._typeTag == IDLBuiltinType.Types.domstring or \
