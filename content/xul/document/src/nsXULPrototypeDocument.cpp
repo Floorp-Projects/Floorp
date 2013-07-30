@@ -20,6 +20,7 @@
 #include "nsIArray.h"
 #include "nsIURI.h"
 #include "jsapi.h"
+#include "jsfriendapi.h"
 #include "nsString.h"
 #include "nsIConsoleService.h"
 #include "nsIScriptError.h"
@@ -765,7 +766,7 @@ nsXULPDGlobalObject::EnsureScriptEnvironment()
     if (!newGlob)
         return NS_OK;
 
-    ::JS_SetGlobalObject(cx, newGlob);
+    js::SetDefaultObjectForContext(cx, newGlob);
 
     // Add an owning reference from JS back to us. This'll be
     // released when the JSObject is finalized.

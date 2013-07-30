@@ -8,6 +8,7 @@
 
 #include "ContentHost.h"
 #include "ClientTiledThebesLayer.h" // for BasicTiledLayerBuffer
+#include "mozilla/layers/TextureHost.h"
 
 namespace mozilla {
 namespace layers {

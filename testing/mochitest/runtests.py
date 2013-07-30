@@ -10,7 +10,6 @@ Runs the Mochitest test harness.
 from __future__ import with_statement
 import optparse
 import os
-import os.path
 import sys
 import time
 import traceback
@@ -432,14 +431,28 @@ class Mochitest(MochitestUtilsMixin):
     """ create the profile and add optional chrome bits and files if requested """
     if options.browserChrome and options.timeout:
       options.extraPrefs.append("testing.browserTestHarness.timeout=%d" % options.timeout)
-    self.automation.initializeProfile(options.profilePath,
-                                      options.extraPrefs,
-                                      useServerLocations=True,
-                                      prefsPath=os.path.join(SCRIPT_DIR,
-                                                        'profile_data', 'prefs_general.js'))
+
+    # get extensions to install
+    extensions = self.getExtensionsToInstall(options)
+
+    # create a profile
+    appsPath = os.path.join(SCRIPT_DIR, 'profile_data', 'webapps_mochitest.json')
+    appsPath = appsPath if os.path.exists(appsPath) else None
+    prefsPath = os.path.join(SCRIPT_DIR, 'profile_data', 'prefs_general.js')
+    profile = self.automation.initializeProfile(options.profilePath,
+                                                options.extraPrefs,
+                                                useServerLocations=True,
+                                                appsPath=appsPath,
+                                                prefsPath=prefsPath,
+                                                addons=extensions)
+
+    #if we don't do this, the profile object is destroyed when we exit this method
+    self.profile = profile
+    options.profilePath = profile.profile
+
+    manifest = self.addChromeToProfile(options)
     self.copyExtraFilesToProfile(options)
-    self.installExtensionsToProfile(options)
-    return self.addChromeToProfile(options)
+    return manifest
 
   def buildBrowserEnv(self, options):
     """ build the environment variables for the specific test and operating system """

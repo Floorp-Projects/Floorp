@@ -11,6 +11,7 @@ FAIL_ON_WARNINGS = 1
 
 include $(DEPTH)/config/autoconf.mk
 
+MODULE_NAME	= nsTextServicesModule
 LIBXUL_LIBRARY	= 1
 
 

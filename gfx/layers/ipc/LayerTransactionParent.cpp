@@ -396,6 +396,8 @@ LayerTransactionParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
     case Edit::TOpAttachCompositable: {
       const OpAttachCompositable& op = edit.get_OpAttachCompositable();
       Attach(cast(op.layerParent()), cast(op.compositableParent()));
+      cast(op.compositableParent())->SetCompositorID(
+        mLayerManager->GetCompositor()->GetCompositorID());
       break;
     }
     case Edit::TOpAttachAsyncCompositable: {

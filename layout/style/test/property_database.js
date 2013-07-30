@@ -4608,3 +4608,14 @@ if (SpecialPowers.getBoolPref("layout.css.filters.enabled")) {
 		]
 	};
 }
+
+if (SpecialPowers.getBoolPref("layout.css.osx-font-smoothing.enabled")) {
+	gCSSProperties["-moz-osx-font-smoothing"] = {
+		domProp: "MozOSXFontSmoothing",
+		inherited: true,
+		type: CSS_TYPE_LONGHAND,
+		initial_values: [ "auto" ],
+		other_values: [ "grayscale" ],
+		invalid_values: [ "none", "subpixel-antialiased", "antialiased" ]
+	};
+}

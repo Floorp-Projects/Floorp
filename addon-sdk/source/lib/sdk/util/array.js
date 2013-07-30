@@ -101,7 +101,7 @@ function fromIterator(iterator) {
 }
 exports.fromIterator = fromIterator;
 
-function find(array, predicate) {
+function find(array, predicate, fallback) {
   var index = 0;
   var count = array.length;
   while (index < count) {
@@ -109,5 +109,6 @@ function find(array, predicate) {
     if (predicate(value)) return value;
     else index = index + 1;
   }
+  return fallback;
 }
 exports.find = find;

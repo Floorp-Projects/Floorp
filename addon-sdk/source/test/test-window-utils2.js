@@ -3,6 +3,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 'use strict';
 
+// Opening new windows in Fennec causes issues
+module.metadata = {
+  engines: {
+    'Firefox': '*'
+  }
+};
+
 const { Ci } = require('chrome');
 const { open, backgroundify, windows, isBrowser,
         getXULWindow, getBaseWindow, getToplevelWindow, getMostRecentWindow,
@@ -59,6 +66,34 @@ exports['test new top window with options'] = function(assert, done) {
 
   // Wait for the window unload before ending test
   close(window).then(done);
+};
+
+exports['test new top window with various URIs'] = function(assert, done) {
+  let msg = 'only chrome, resource and data uris are allowed';
+  assert.throws(function () {
+    open('foo');
+  }, msg);
+  assert.throws(function () {
+    open('http://foo');
+  }, msg);
+  assert.throws(function () {
+    open('https://foo');
+  }, msg); 
+  assert.throws(function () {
+    open('ftp://foo');
+  }, msg);
+  assert.throws(function () {
+    open('//foo');
+  }, msg);
+
+  let chromeWindow = open('chrome://foo/content/');
+  assert.ok(~windows().indexOf(chromeWindow), 'chrome URI works');
+  
+  let resourceWindow = open('resource://foo');
+  assert.ok(~windows().indexOf(resourceWindow), 'resource URI works');
+
+  // Wait for the window unload before ending test
+  close(chromeWindow).then(close.bind(null, resourceWindow)).then(done);
 };
 
 exports.testBackgroundify = function(assert, done) {
