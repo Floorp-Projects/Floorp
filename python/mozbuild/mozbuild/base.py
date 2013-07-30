@@ -163,7 +163,9 @@ class MozbuildObject(ProcessExecutionMixin):
 
             raise ObjdirMismatchException(topobjdir, config['topobjdir'])
 
-        topobjdir = os.path.normpath(config['topobjdir'] or topobjdir)
+        topobjdir = config['topobjdir'] or topobjdir
+        if topobjdir:
+            topobjdir = os.path.normpath(topobjdir)
 
         # If we can't resolve topobjdir, oh well. The constructor will figure
         # it out via config.guess.
