@@ -3296,7 +3296,7 @@ let RIL = {
                    mmiServiceCode === MMI_KS_SC_PUK2) {
           options.errorMsg = MMI_ERROR_KS_BAD_PUK;
         }
-        if (options.retryCount != undefined) {
+        if (options.retryCount !== undefined) {
           options.additionalInformation = options.retryCount;
         }
       }
@@ -5331,7 +5331,7 @@ RIL[REQUEST_QUERY_FACILITY_LOCK] = function REQUEST_QUERY_FACILITY_LOCK(length, 
       for (let serviceClassMask = 1;
            serviceClassMask <= ICC_SERVICE_CLASS_MAX;
            serviceClassMask <<= 1) {
-        if ((serviceClassMask & services) != 0) {
+        if ((serviceClassMask & services) !== 0) {
           serviceClass.push(MMI_KS_SERVICE_CLASS_MAPPING[serviceClassMask]);
         }
       }
