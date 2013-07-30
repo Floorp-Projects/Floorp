@@ -9,8 +9,6 @@
 #include "mozilla/dom/TabChild.h"
 #include "nsIAppsService.h"
 
-#define NO_APP_ID (nsIScriptSecurityManager::NO_APP_ID)
-
 using namespace mozilla::dom::ipc;
 using namespace mozilla::layout;
 
@@ -19,11 +17,90 @@ namespace dom {
 
 TabContext::TabContext()
   : mInitialized(false)
-  , mOwnAppId(NO_APP_ID)
-  , mContainingAppId(NO_APP_ID)
+  , mOwnAppId(nsIScriptSecurityManager::NO_APP_ID)
+  , mContainingAppId(nsIScriptSecurityManager::NO_APP_ID)
   , mScrollingBehavior(DEFAULT_SCROLLING)
   , mIsBrowser(false)
 {
+}
+
+TabContext::TabContext(const IPCTabContext& aParams)
+  : mInitialized(true)
+{
+  const IPCTabAppBrowserContext& appBrowser = aParams.appBrowserContext();
+  switch(appBrowser.type()) {
+    case IPCTabAppBrowserContext::TPopupIPCTabContext: {
+      const PopupIPCTabContext &ipcContext = appBrowser.get_PopupIPCTabContext();
+
+      TabContext *context;
+      if (ipcContext.openerParent()) {
+        context = static_cast<TabParent*>(ipcContext.openerParent());
+        if (context->IsBrowserElement() && !ipcContext.isBrowserElement()) {
+          // If the TabParent corresponds to a browser element, then it can only
+          // open other browser elements, for security reasons.  We should have
+          // checked this before calling the TabContext constructor, so this is
+          // a fatal error.
+          MOZ_CRASH();
+        }
+      }
+      else if (ipcContext.openerChild()) {
+        context = static_cast<TabChild*>(ipcContext.openerChild());
+      }
+      else {
+        // This should be unreachable because PopupIPCTabContext::opener is not a
+        // nullable field.
+        MOZ_CRASH();
+      }
+
+      // Browser elements can't nest other browser elements.  So if
+      // our opener is browser element, we must be a new DOM window
+      // opened by it.  In that case we inherit our containing app ID
+      // (if any).
+      //
+      // Otherwise, we're a new app window and we inherit from our
+      // opener app.
+      if (ipcContext.isBrowserElement()) {
+        mIsBrowser = true;
+        mOwnAppId = nsIScriptSecurityManager::NO_APP_ID;
+        mContainingAppId = context->OwnOrContainingAppId();
+      }
+      else {
+        mIsBrowser = false;
+        mOwnAppId = context->mOwnAppId;
+        mContainingAppId = context->mContainingAppId;
+      }
+      break;
+    }
+    case IPCTabAppBrowserContext::TAppFrameIPCTabContext: {
+      const AppFrameIPCTabContext &ipcContext =
+        appBrowser.get_AppFrameIPCTabContext();
+
+      mIsBrowser = false;
+      mOwnAppId = ipcContext.ownAppId();
+      mContainingAppId = ipcContext.appFrameOwnerAppId();
+      break;
+    }
+    case IPCTabAppBrowserContext::TBrowserFrameIPCTabContext: {
+      const BrowserFrameIPCTabContext &ipcContext =
+        appBrowser.get_BrowserFrameIPCTabContext();
+
+      mIsBrowser = true;
+      mOwnAppId = nsIScriptSecurityManager::NO_APP_ID;
+      mContainingAppId = ipcContext.browserFrameOwnerAppId();
+      break;
+    }
+    case IPCTabAppBrowserContext::TVanillaFrameIPCTabContext: {
+      mIsBrowser = false;
+      mOwnAppId = nsIScriptSecurityManager::NO_APP_ID;
+      mContainingAppId = nsIScriptSecurityManager::NO_APP_ID;
+      break;
+    }
+    default: {
+      MOZ_CRASH();
+    }
+  }
+
+  mScrollingBehavior = aParams.scrollingBehavior();
 }
 
 bool
@@ -47,73 +124,66 @@ TabContext::OwnAppId() const
 already_AddRefed<mozIApplication>
 TabContext::GetOwnApp() const
 {
-  nsCOMPtr<mozIApplication> ownApp = mOwnApp;
-  return ownApp.forget();
+  return GetAppForId(OwnAppId());
 }
 
 bool
 TabContext::HasOwnApp() const
 {
-  nsCOMPtr<mozIApplication> ownApp = GetOwnApp();
-  return !!ownApp;
+  return mOwnAppId != nsIScriptSecurityManager::NO_APP_ID;
 }
 
 uint32_t
 TabContext::BrowserOwnerAppId() const
 {
-  if (IsBrowserElement()) {
+  if (mIsBrowser) {
     return mContainingAppId;
   }
-  return NO_APP_ID;
+  return nsIScriptSecurityManager::NO_APP_ID;
 }
 
 already_AddRefed<mozIApplication>
 TabContext::GetBrowserOwnerApp() const
 {
-  nsCOMPtr<mozIApplication> ownerApp;
-  if (IsBrowserElement()) {
-    ownerApp = mContainingApp;
-  }
-  return ownerApp.forget();
+  return GetAppForId(BrowserOwnerAppId());
 }
 
 bool
 TabContext::HasBrowserOwnerApp() const
 {
-  nsCOMPtr<mozIApplication> ownerApp = GetBrowserOwnerApp();
-  return !!ownerApp;
+  return BrowserOwnerAppId() != nsIScriptSecurityManager::NO_APP_ID;
 }
 
 uint32_t
 TabContext::AppOwnerAppId() const
 {
-  if (HasOwnApp()) {
+  if (mOwnAppId != nsIScriptSecurityManager::NO_APP_ID) {
     return mContainingAppId;
   }
-  return NO_APP_ID;
+  return nsIScriptSecurityManager::NO_APP_ID;
 }
 
 already_AddRefed<mozIApplication>
 TabContext::GetAppOwnerApp() const
 {
-  nsCOMPtr<mozIApplication> ownerApp;
-  if (HasOwnApp()) {
-    ownerApp = mContainingApp;
-  }
-  return ownerApp.forget();
+  return GetAppForId(AppOwnerAppId());
 }
 
 bool
 TabContext::HasAppOwnerApp() const
 {
-  nsCOMPtr<mozIApplication> ownerApp = GetAppOwnerApp();
-  return !!ownerApp;
+  return AppOwnerAppId() != nsIScriptSecurityManager::NO_APP_ID;
 }
 
 uint32_t
 TabContext::OwnOrContainingAppId() const
 {
-  if (HasOwnApp()) {
+  if (mIsBrowser) {
+    MOZ_ASSERT(mOwnAppId == nsIScriptSecurityManager::NO_APP_ID);
+    return mContainingAppId;
+  }
+
+  if (mOwnAppId) {
     return mOwnAppId;
   }
 
@@ -123,21 +193,13 @@ TabContext::OwnOrContainingAppId() const
 already_AddRefed<mozIApplication>
 TabContext::GetOwnOrContainingApp() const
 {
-  nsCOMPtr<mozIApplication> ownOrContainingApp;
-  if (HasOwnApp()) {
-    ownOrContainingApp = mOwnApp;
-  } else {
-    ownOrContainingApp = mContainingApp;
-  }
-
-  return ownOrContainingApp.forget();
+  return GetAppForId(OwnOrContainingAppId());
 }
 
 bool
 TabContext::HasOwnOrContainingApp() const
 {
-  nsCOMPtr<mozIApplication> ownOrContainingApp = GetOwnOrContainingApp();
-  return !!ownOrContainingApp;
+  return OwnOrContainingAppId() != nsIScriptSecurityManager::NO_APP_ID;
 }
 
 bool
@@ -145,33 +207,44 @@ TabContext::SetTabContext(const TabContext& aContext)
 {
   NS_ENSURE_FALSE(mInitialized, false);
 
-  *this = aContext;
-  mInitialized = true;
+  // Verify that we can actually get apps for the given ids.  This step gives us
+  // confidence that HasX() returns true iff GetX() returns true.
+  if (aContext.mOwnAppId != nsIScriptSecurityManager::NO_APP_ID) {
+    nsCOMPtr<mozIApplication> app = GetAppForId(aContext.mOwnAppId);
+    NS_ENSURE_TRUE(app, false);
+  }
 
+  if (aContext.mContainingAppId != nsIScriptSecurityManager::NO_APP_ID) {
+    nsCOMPtr<mozIApplication> app = GetAppForId(aContext.mContainingAppId);
+    NS_ENSURE_TRUE(app, false);
+  }
+
+  mInitialized = true;
+  mIsBrowser = aContext.mIsBrowser;
+  mOwnAppId = aContext.mOwnAppId;
+  mContainingAppId = aContext.mContainingAppId;
+  mScrollingBehavior = aContext.mScrollingBehavior;
   return true;
 }
 
 bool
-TabContext::SetTabContextForAppFrame(mozIApplication* aOwnApp,
-                                     mozIApplication* aAppFrameOwnerApp,
+TabContext::SetTabContextForAppFrame(mozIApplication* aOwnApp, mozIApplication* aAppFrameOwnerApp,
                                      ScrollingBehavior aRequestedBehavior)
 {
   NS_ENSURE_FALSE(mInitialized, false);
 
   // Get ids for both apps and only write to our member variables after we've
   // verified that this worked.
-  uint32_t ownAppId = NO_APP_ID;
+  uint32_t ownAppId = nsIScriptSecurityManager::NO_APP_ID;
   if (aOwnApp) {
     nsresult rv = aOwnApp->GetLocalId(&ownAppId);
     NS_ENSURE_SUCCESS(rv, false);
-    NS_ENSURE_TRUE(ownAppId != NO_APP_ID, false);
   }
 
-  uint32_t containingAppId = NO_APP_ID;
+  uint32_t containingAppId = nsIScriptSecurityManager::NO_APP_ID;
   if (aAppFrameOwnerApp) {
     nsresult rv = aOwnApp->GetLocalId(&containingAppId);
     NS_ENSURE_SUCCESS(rv, false);
-    NS_ENSURE_TRUE(containingAppId != NO_APP_ID, false);
   }
 
   mInitialized = true;
@@ -179,8 +252,6 @@ TabContext::SetTabContextForAppFrame(mozIApplication* aOwnApp,
   mOwnAppId = ownAppId;
   mContainingAppId = containingAppId;
   mScrollingBehavior = aRequestedBehavior;
-  mOwnApp = aOwnApp;
-  mContainingApp = aAppFrameOwnerApp;
   return true;
 }
 
@@ -190,19 +261,17 @@ TabContext::SetTabContextForBrowserFrame(mozIApplication* aBrowserFrameOwnerApp,
 {
   NS_ENSURE_FALSE(mInitialized, false);
 
-  uint32_t containingAppId = NO_APP_ID;
+  uint32_t containingAppId = nsIScriptSecurityManager::NO_APP_ID;
   if (aBrowserFrameOwnerApp) {
     nsresult rv = aBrowserFrameOwnerApp->GetLocalId(&containingAppId);
     NS_ENSURE_SUCCESS(rv, false);
-    NS_ENSURE_TRUE(containingAppId != NO_APP_ID, false);
   }
 
   mInitialized = true;
   mIsBrowser = true;
-  mOwnAppId = NO_APP_ID;
+  mOwnAppId = nsIScriptSecurityManager::NO_APP_ID;
   mContainingAppId = containingAppId;
   mScrollingBehavior = aRequestedBehavior;
-  mContainingApp = aBrowserFrameOwnerApp;
   return true;
 }
 
@@ -218,8 +287,38 @@ TabContext::AsIPCTabContext() const
                        mScrollingBehavior);
 }
 
-static already_AddRefed<mozIApplication>
-GetAppForId(uint32_t aAppId)
+already_AddRefed<mozIApplication>
+TabContext::GetAppForId(uint32_t aAppId) const
+{
+  if (aAppId == nsIScriptSecurityManager::NO_APP_ID) {
+    return nullptr;
+  }
+
+  // This application caching is needed to avoid numerous unecessary application clones.
+  // See Bug 853632 for details.
+
+  if (aAppId == mOwnAppId) {
+    if (!mOwnApp) {
+      mOwnApp = GetAppForIdNoCache(aAppId);
+    }
+    nsCOMPtr<mozIApplication> ownApp = mOwnApp;
+    return ownApp.forget();
+  }
+
+  if (aAppId == mContainingAppId) {
+    if (!mContainingApp) {
+      mContainingApp = GetAppForIdNoCache(mContainingAppId);
+    }
+    nsCOMPtr<mozIApplication> containingApp = mContainingApp;
+    return containingApp.forget();
+  }
+  // We need the fallthrough here because mOwnAppId/mContainingAppId aren't always
+  // set before calling GetAppForId().
+  return GetAppForIdNoCache(aAppId);
+}
+
+already_AddRefed<mozIApplication>
+TabContext::GetAppForIdNoCache(uint32_t aAppId) const
 {
   nsCOMPtr<nsIAppsService> appsService = do_GetService(APPS_SERVICE_CONTRACTID);
   NS_ENSURE_TRUE(appsService, nullptr);
@@ -229,137 +328,6 @@ GetAppForId(uint32_t aAppId)
 
   nsCOMPtr<mozIApplication> app = do_QueryInterface(domApp);
   return app.forget();
-}
-
-MaybeInvalidTabContext::MaybeInvalidTabContext(const IPCTabContext& aParams)
-  : mInvalidReason(nullptr)
-{
-  bool isBrowser = false;
-  uint32_t ownAppId = NO_APP_ID;
-  uint32_t containingAppId = NO_APP_ID;
-
-  const IPCTabAppBrowserContext& appBrowser = aParams.appBrowserContext();
-  switch(appBrowser.type()) {
-    case IPCTabAppBrowserContext::TPopupIPCTabContext: {
-      const PopupIPCTabContext &ipcContext = appBrowser.get_PopupIPCTabContext();
-
-      TabContext *context;
-      if (ipcContext.openerParent()) {
-        context = static_cast<TabParent*>(ipcContext.openerParent());
-        if (context->IsBrowserElement() && !ipcContext.isBrowserElement()) {
-          // If the TabParent corresponds to a browser element, then it can only
-          // open other browser elements, for security reasons.  We should have
-          // checked this before calling the TabContext constructor, so this is
-          // a fatal error.
-          mInvalidReason = "Child is-browser process tried to "
-                           "open a non-browser tab.";
-          return;
-        }
-      } else if (ipcContext.openerChild()) {
-        context = static_cast<TabChild*>(ipcContext.openerChild());
-      } else {
-        // This should be unreachable because PopupIPCTabContext::opener is not a
-        // nullable field.
-        mInvalidReason = "PopupIPCTabContext::opener was null (?!).";
-        return;
-      }
-
-      // Browser elements can't nest other browser elements.  So if
-      // our opener is browser element, we must be a new DOM window
-      // opened by it.  In that case we inherit our containing app ID
-      // (if any).
-      //
-      // Otherwise, we're a new app window and we inherit from our
-      // opener app.
-      if (ipcContext.isBrowserElement()) {
-        isBrowser = true;
-        ownAppId = NO_APP_ID;
-        containingAppId = context->OwnOrContainingAppId();
-      } else {
-        isBrowser = false;
-        ownAppId = context->mOwnAppId;
-        containingAppId = context->mContainingAppId;
-      }
-      break;
-    }
-    case IPCTabAppBrowserContext::TAppFrameIPCTabContext: {
-      const AppFrameIPCTabContext &ipcContext =
-        appBrowser.get_AppFrameIPCTabContext();
-
-      isBrowser = false;
-      ownAppId = ipcContext.ownAppId();
-      containingAppId = ipcContext.appFrameOwnerAppId();
-      break;
-    }
-    case IPCTabAppBrowserContext::TBrowserFrameIPCTabContext: {
-      const BrowserFrameIPCTabContext &ipcContext =
-        appBrowser.get_BrowserFrameIPCTabContext();
-
-      isBrowser = true;
-      ownAppId = NO_APP_ID;
-      containingAppId = ipcContext.browserFrameOwnerAppId();
-      break;
-    }
-    case IPCTabAppBrowserContext::TVanillaFrameIPCTabContext: {
-      isBrowser = false;
-      ownAppId = NO_APP_ID;
-      containingAppId = NO_APP_ID;
-      break;
-    }
-    default: {
-      MOZ_CRASH();
-    }
-  }
-
-  nsCOMPtr<mozIApplication> ownApp = GetAppForId(ownAppId);
-  if (ownApp == nullptr !=
-      ownAppId == NO_APP_ID) {
-    mInvalidReason = "Got an ownAppId that didn't correspond to an app.";
-    return;
-  }
-
-  nsCOMPtr<mozIApplication> containingApp = GetAppForId(containingAppId);
-  if (containingApp == nullptr !=
-      containingAppId == NO_APP_ID) {
-    mInvalidReason = "Got a containingAppId that didn't correspond to an app.";
-    return;
-  }
-
-  bool rv;
-  if (isBrowser) {
-    rv = mTabContext.SetTabContextForBrowserFrame(containingApp,
-                                                  aParams.scrollingBehavior());
-  } else {
-    rv = mTabContext.SetTabContextForAppFrame(ownApp,
-                                              containingApp,
-                                              aParams.scrollingBehavior());
-  }
-
-  if (!rv) {
-    mInvalidReason = "Couldn't initialize TabContext.";
-  }
-}
-
-bool
-MaybeInvalidTabContext::IsValid()
-{
-  return mInvalidReason == nullptr;
-}
-
-const char*
-MaybeInvalidTabContext::GetInvalidReason()
-{
-  return mInvalidReason;
-}
-
-const TabContext&
-MaybeInvalidTabContext::GetTabContext()
-{
-  if (!IsValid()) {
-    MOZ_CRASH("Can't GetTabContext() if !IsValid().");
-  }
-
-  return mTabContext;
 }
 
 } // namespace dom
