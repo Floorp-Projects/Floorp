@@ -1570,6 +1570,8 @@ moz_gtk_tree_header_sort_arrow_paint(cairo_t *cr, GdkRectangle* rect,
     return MOZ_GTK_SUCCESS;
 }
 
+/* See gtk_expander_paint() for reference. 
+ */
 static gint
 moz_gtk_treeview_expander_paint(cairo_t *cr, GdkRectangle* rect,
                                 GtkWidgetState* state,
@@ -1577,6 +1579,7 @@ moz_gtk_treeview_expander_paint(cairo_t *cr, GdkRectangle* rect,
                                 GtkTextDirection direction)
 {
     GtkStyleContext *style;
+    GtkStateFlags    state_flags;
 
     ensure_tree_view_widget();
     gtk_widget_set_direction(gTreeViewWidget, direction);
@@ -1584,34 +1587,25 @@ moz_gtk_treeview_expander_paint(cairo_t *cr, GdkRectangle* rect,
     style = gtk_widget_get_style_context(gTreeViewWidget);
     gtk_style_context_save(style);
     gtk_style_context_add_class(style, GTK_STYLE_CLASS_EXPANDER);
-    /* Because the frame we get is of the entire treeview, we can't get the precise
-     * event state of one expander, thus rendering hover and active feedback useless. */
-    gtk_style_context_set_state(style, GetStateFlagsFromGtkWidgetState(state));
+
+    state_flags = GetStateFlagsFromGtkWidgetState(state);
+
+    /* GTK_STATE_FLAG_ACTIVE controls expanded/colapsed state rendering
+     * in gtk_render_expander()
+     */
+    if (expander_state == GTK_EXPANDER_EXPANDED) 
+        state_flags |= GTK_STATE_FLAG_ACTIVE;
+    else
+        state_flags &= ~(GTK_STATE_FLAG_ACTIVE);
+
+    gtk_style_context_set_state(style, state_flags);
+
     gtk_render_expander(style, cr,
-                        rect->x + rect->width / 2, rect->y + rect->height / 2,
-                        rect->width, rect->height);
-    gtk_style_context_restore(style);
-    return MOZ_GTK_SUCCESS;
-}
+                        rect->x,
+                        rect->y,
+                        rect->width,
+                        rect->height);
 
-static gint
-moz_gtk_expander_paint(cairo_t *cr, GdkRectangle* rect,
-                       GtkWidgetState* state,
-                       GtkExpanderStyle expander_state,
-                       GtkTextDirection direction)
-{
-    GtkStyleContext *style;
-
-    ensure_expander_widget();
-    gtk_widget_set_direction(gExpanderWidget, direction);
-
-    style = gtk_widget_get_style_context(gExpanderWidget);
-    gtk_style_context_save(style);
-    gtk_style_context_add_class(style, GTK_STYLE_CLASS_EXPANDER);
-    gtk_style_context_set_state(style, GetStateFlagsFromGtkWidgetState(state));
-    gtk_render_expander(style, cr, 
-                        rect->x + rect->width / 2, rect->y + rect->height / 2,
-						rect->width, rect->height);
     gtk_style_context_restore(style);
     return MOZ_GTK_SUCCESS;
 }
@@ -2828,7 +2822,6 @@ moz_gtk_get_widget_border(GtkThemeWidgetType widget, gint* left, gint* top,
     case MOZ_GTK_PROGRESS_CHUNK:
     case MOZ_GTK_PROGRESS_CHUNK_INDETERMINATE:
     case MOZ_GTK_PROGRESS_CHUNK_VERTICAL_INDETERMINATE:
-    case MOZ_GTK_EXPANDER:
     case MOZ_GTK_TREEVIEW_EXPANDER:
     case MOZ_GTK_TOOLBAR_SEPARATOR:
     case MOZ_GTK_MENUSEPARATOR:
@@ -3133,10 +3126,6 @@ moz_gtk_widget_paint(GtkThemeWidgetType widget, cairo_t *cr,
     case MOZ_GTK_TREEVIEW_EXPANDER:
         return moz_gtk_treeview_expander_paint(cr, rect, state,
                                                (GtkExpanderStyle) flags, direction);
-        break;
-    case MOZ_GTK_EXPANDER:
-        return moz_gtk_expander_paint(cr, rect, state,
-                                      (GtkExpanderStyle) flags, direction);
         break;
     case MOZ_GTK_ENTRY:
         ensure_entry_widget();

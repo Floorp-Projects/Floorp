@@ -1766,27 +1766,6 @@ moz_gtk_treeview_expander_paint(GdkDrawable* drawable, GdkRectangle* rect,
 }
 
 static gint
-moz_gtk_expander_paint(GdkDrawable* drawable, GdkRectangle* rect,
-                       GdkRectangle* cliprect, GtkWidgetState* state,
-                       GtkExpanderStyle expander_state,
-                       GtkTextDirection direction)
-{
-    GtkStyle *style;
-    GtkStateType state_type = ConvertGtkState(state);
-
-    ensure_expander_widget();
-    gtk_widget_set_direction(gExpanderWidget, direction);
-
-    style = gExpanderWidget->style;
-
-    TSOffsetStyleGCs(style, rect->x, rect->y);
-    gtk_paint_expander(style, drawable, state_type, cliprect, gExpanderWidget, "expander",
-                       rect->x + rect->width / 2, rect->y + rect->height / 2, expander_state);
-
-    return MOZ_GTK_SUCCESS;
-}
-
-static gint
 moz_gtk_combo_box_paint(GdkDrawable* drawable, GdkRectangle* rect,
                         GdkRectangle* cliprect, GtkWidgetState* state,
                         gboolean ishtml, GtkTextDirection direction)
@@ -2969,7 +2948,6 @@ moz_gtk_get_widget_border(GtkThemeWidgetType widget, gint* left, gint* top,
     case MOZ_GTK_PROGRESS_CHUNK:
     case MOZ_GTK_PROGRESS_CHUNK_INDETERMINATE:
     case MOZ_GTK_PROGRESS_CHUNK_VERTICAL_INDETERMINATE:
-    case MOZ_GTK_EXPANDER:
     case MOZ_GTK_TREEVIEW_EXPANDER:
     case MOZ_GTK_TOOLBAR_SEPARATOR:
     case MOZ_GTK_MENUSEPARATOR:
@@ -3255,10 +3233,6 @@ moz_gtk_widget_paint(GtkThemeWidgetType widget, GdkDrawable* drawable,
     case MOZ_GTK_TREEVIEW_EXPANDER:
         return moz_gtk_treeview_expander_paint(drawable, rect, cliprect, state,
                                                (GtkExpanderStyle) flags, direction);
-        break;
-    case MOZ_GTK_EXPANDER:
-        return moz_gtk_expander_paint(drawable, rect, cliprect, state,
-                                      (GtkExpanderStyle) flags, direction);
         break;
     case MOZ_GTK_ENTRY:
         ensure_entry_widget();
