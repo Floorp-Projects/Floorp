@@ -270,7 +270,7 @@ AsyncPanZoomController::ReceiveInputEvent(const nsInputEvent& aEvent,
     nsTouchEvent* touchEvent = static_cast<nsTouchEvent*>(aOutEvent);
     const nsTArray< nsRefPtr<dom::Touch> >& touches = touchEvent->touches;
     for (uint32_t i = 0; i < touches.Length(); ++i) {
-      dom::Touch* touch = touches[i];
+      nsIDOMTouch* touch = touches[i];
       if (touch) {
         CSSPoint refCSSPoint = WidgetSpaceToCompensatedViewportSpace(
           ScreenPoint::FromUnknownPoint(gfx::Point(
