@@ -400,6 +400,13 @@ abstract public class BrowserApp extends GeckoApp
         String args = getIntent().getStringExtra("args");
         if (args != null && args.contains("--guest-mode")) {
             mProfile = GeckoProfile.createGuestProfile(this);
+        } else {
+            ThreadUtils.postToBackgroundThread(new Runnable() {
+                @Override
+                public void run() {
+                    GeckoProfile.removeGuestProfile(BrowserApp.this);
+                }
+            });
         }
 
         super.onCreate(savedInstanceState);
