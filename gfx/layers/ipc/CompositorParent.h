@@ -114,6 +114,11 @@ public:
   static void ShutDown();
 
   /**
+   * The reserved layer tree ID for the root of the layer tree.
+   */
+  static uint64_t ROOT_LAYER_TREE_ID;
+
+  /**
    * Allocate an ID that can be used to refer to a layer tree and
    * associated resources that live only on the compositor thread.
    *

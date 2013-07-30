@@ -697,12 +697,17 @@ CompositorParent::NotifyChildCreated(uint64_t aChild)
   sIndirectLayerTrees[aChild].mParent = this;
 }
 
+// Ensure all layer tree IDs are greater than zero, so if we
+// ever see a zero-valued layer tree id we know it's actually
+// uninitialized and/or garbage.
+uint64_t CompositorParent::ROOT_LAYER_TREE_ID = 1;
+
 /*static*/ uint64_t
 CompositorParent::AllocateLayerTreeId()
 {
   MOZ_ASSERT(CompositorLoop());
   MOZ_ASSERT(NS_IsMainThread());
-  static uint64_t ids;
+  static uint64_t ids = ROOT_LAYER_TREE_ID;
   return ++ids;
 }
 
