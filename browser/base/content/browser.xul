@@ -677,6 +677,7 @@
                      placespopup="true"
                      context="placesContext"
                      openInTabs="children"
+                     anonanchorclass="toolbarbutton-menubutton-dropmarker"
                      oncommand="BookmarksEventHandler.onCommand(event, this.parentNode._placesView);"
                      onclick="BookmarksEventHandler.onClick(event, this.parentNode._placesView);"
                      onpopupshowing="BookmarkingUI.onPopupShowing(event);

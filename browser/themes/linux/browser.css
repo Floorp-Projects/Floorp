@@ -1348,8 +1348,12 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 
 /* bookmarks menu-button */
 
-#bookmarks-menu-button[customizableui-areatype="toolbar"] {
+#bookmarks-menu-button[customizableui-areatype="toolbar"],
+#bookmarks-menu-button[customizableui-areatype="toolbar"] > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon {
   list-style-image: url("chrome://browser/skin/Toolbar.png");
+}
+
+#bookmarks-menu-button[customizableui-areatype="toolbar"] {
   -moz-image-region: rect(0px 216px 24px 192px);
 }
 
@@ -1357,15 +1361,30 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   -moz-image-region: rect(24px 216px 48px 192px);
 }
 
-toolbar[iconsize="small"] #bookmarks-menu-button[customizableui-areatype="toolbar"],
+#bookmarks-menu-button[customizableui-areatype="toolbar"] > .toolbarbutton-menubutton-dropmarker {
+  -moz-appearance: none !important;
+}
+
+#bookmarks-menu-button[customizableui-areatype="toolbar"] > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon {
+  padding: 9px 3px;
+  -moz-image-region: rect(0px 240px 24px 216px);
+}
+
+#bookmarks-menu-button[customizableui-areatype="toolbar"].bookmark-item > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon,
 #bookmarks-menu-button.bookmark-item {
   list-style-image: url("chrome://browser/skin/Toolbar-small.png");
+}
+
+#bookmarks-menu-button.bookmark-item {
   -moz-image-region: rect(0px 144px 16px 128px);
 }
 
-toolbar[iconsize="small"] #bookmarks-menu-button[starred][customizableui-areatype="toolbar"],
 #bookmarks-menu-button.bookmark-item[starred] {
   -moz-image-region: rect(16px 144px 32px 128px);
+}
+
+#bookmarks-menu-button[customizableui-areatype="toolbar"].bookmark-item > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon {
+  -moz-image-region: rect(0px 160px 16px 144px);
 }
 
 #bookmarks-menu-button[disabled][customizableui-areatype="toolbar"] > .toolbarbutton-icon,
@@ -1374,6 +1393,18 @@ toolbar[iconsize="small"] #bookmarks-menu-button[starred][customizableui-areatyp
 #bookmarks-menu-button[disabled][customizableui-areatype="toolbar"] > .toolbarbutton-menubutton-button > .toolbarbutton-icon,
 #bookmarks-menu-button[customizableui-areatype="toolbar"] > .toolbarbutton-menubutton-button[disabled] > .toolbarbutton-icon {
   opacity: .4;
+}
+
+#BMB_bookmarksPopup[side="top"],
+#BMB_bookmarksPopup[side="bottom"] {
+  margin-left: -16px;
+  margin-right: -16px;
+}
+
+#BMB_bookmarksPopup[side="left"],
+#BMB_bookmarksPopup[side="right"] {
+  margin-top: -16px;
+  margin-bottom: -16px;
 }
 
 /* Bookmarking panel */
