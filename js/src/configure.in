@@ -3549,35 +3549,21 @@ MOZ_ARG_ENABLE_BOOL(vtune,
 [  --enable-vtune          Enable vtune profiling. Implies --enable-profiling.],
     MOZ_VTUNE=1,
     MOZ_VTUNE= )
-if test -n "$MOZ_VTUNE"; then
-    if test -z "$VTUNE_AMPLIFIER_XE_2013_DIR"; then
-        echo "Error: VTUNE_AMPLIFIER_XE_2013_DIR undefined."
-        exit 1
-    fi
-
-    VTUNE_DIR=`echo "$VTUNE_AMPLIFIER_XE_2013_DIR" | sed 's,\\\,/,g'`
-    VTUNE_DIR=`echo "$VTUNE_DIR" | sed 's,(,\\\(,g'`
-    VTUNE_DIR=`echo "$VTUNE_DIR" | sed 's,),\\\),g'`
-    VTUNE_DIR=`echo "$VTUNE_DIR" | sed 's, ,\\\ ,g'`
-
-    VTUNE_LIB=lib32
-    if test "x86_64" = "$TARGET_CPU"; then
-        VTUNE_LIB=lib64
-    fi
-
-    VTUNE_LIBRARIES="${VTUNE_DIR}/${VTUNE_LIB}/${LIB_PREFIX}jitprofiling.${LIB_SUFFIX}"
-    AC_SUBST(VTUNE_LIBRARIES)
-
-    CXXFLAGS="$CXXFLAGS -I${VTUNE_DIR}/include"
-    MOZ_PROFILING=1
-    AC_DEFINE(MOZ_VTUNE)
-fi
 
 dnl ========================================================
 dnl Profiling
 dnl ========================================================
 if test -n "$MOZ_PROFILING"; then
     AC_DEFINE(MOZ_PROFILING)
+
+    case "$OS_TARGET" in
+        Linux) MOZ_VTUNE=1 ;;
+        WINNT) MOZ_VTUNE=1 ;;
+    esac
+fi
+
+if test -n "$MOZ_VTUNE"; then
+    AC_DEFINE(MOZ_VTUNE)
 fi
 
 dnl ========================================================

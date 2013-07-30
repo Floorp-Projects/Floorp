@@ -105,7 +105,7 @@ VPATH += 	$(srcdir)/assembler/assembler \
 endif
 
 #
-# END enclude sources for the Nitro assembler
+# END include sources for the Nitro assembler
 #############################################
 
 ifdef JS_HAS_CTYPES
@@ -366,15 +366,6 @@ NSPR_STATIC_PATH = $(subst -L,,$(findstring -L,$(NSPR_LIBS)))
 else
 NSPR_STATIC_PATH = $(DIST)/lib
 endif
-
-ifdef MOZ_VTUNE
-ifeq ($(OS_ARCH), WINNT)
-EXTRA_DSO_LDOPTS += $(VTUNE_LIBRARIES)
-LIBS += $(VTUNE_LIBRARIES)
-else
-SHARED_LIBRARY_LIBS += $(VTUNE_LIBRARIES)
-endif # WINNT
-endif # MOZ_VTUNE
 
 ifdef MOZ_ETW
 # This will get the ETW provider resources into the library mozjs.dll

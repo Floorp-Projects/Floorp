@@ -328,6 +328,11 @@ if CONFIG['JS_HAS_CTYPES']:
         'Library.cpp',
     ]
 
+if CONFIG['MOZ_VTUNE']:
+    CSRCS += [
+        'vtune/jitprofiling.c'
+    ]
+
 if CONFIG['HAVE_LINUX_PERF_EVENT_H']:
     CPP_SOURCES += [
         'pm_linux.cpp'
