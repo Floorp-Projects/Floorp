@@ -145,6 +145,8 @@ cross_compiling=yes
 AC_DEFUN([MOZ_CXX11],
 [
 dnl Check whether gcc's c++0x mode works
+dnl Updates to the test below should be duplicated further below for the
+dnl cross-compiling case.
 AC_LANG_CPLUSPLUS
 if test "$GNU_CXX"; then
     CXXFLAGS="$CXXFLAGS -std=gnu++0x"
@@ -184,9 +186,9 @@ EOF
     if test -n "$host_compiler"; then
         HOST_CXXFLAGS="$HOST_CXXFLAGS -std=gnu++0x"
 
-	_SAVE_CXXFLAGS="$CXXFLAGS"
-	_SAVE_CPPFLAGS="$CPPFLAGS"
-	_SAVE_CXX="$CXX"
+        _SAVE_CXXFLAGS="$CXXFLAGS"
+        _SAVE_CPPFLAGS="$CPPFLAGS"
+        _SAVE_CXX="$CXX"
         CXXFLAGS="$HOST_CXXFLAGS"
         CPPFLAGS="$HOST_CPPFLAGS"
         CXX="$HOST_CXX"
@@ -205,15 +207,15 @@ EOF
                                 ac_cv_host_cxx0x_clang_workaround="no")])
 
             if test "ac_cv_host_cxx0x_clang_workaround" = "no"; then
-                AC_MSG_ERROR([Your toolchain does not support C++0x/C++11 mode properly. Please upgrade your toolchain])
+                AC_MSG_ERROR([Your host toolchain does not support C++0x/C++11 mode properly. Please upgrade your toolchain])
             fi
             HOST_CXXFLAGS="$CXXFLAGS"
         elif test "$ac_cv_host_cxx0x_headers_bug" = "yes"; then
-            AC_MSG_ERROR([Your toolchain does not support C++0x/C++11 mode properly. Please upgrade your toolchain])
+            AC_MSG_ERROR([Your host toolchain does not support C++0x/C++11 mode properly. Please upgrade your toolchain])
         fi
-	CXXFLAGS="$_SAVE_CXXFLAGS"
-	CPPFLAGS="$_SAVE_CPPFLAGS"
-	CXX="$_SAVE_CXX"
+        CXXFLAGS="$_SAVE_CXXFLAGS"
+        CPPFLAGS="$_SAVE_CPPFLAGS"
+        CXX="$_SAVE_CXX"
     fi
 fi
 AC_LANG_C
