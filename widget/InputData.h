@@ -70,11 +70,11 @@ protected:
 /**
  * Data container for a single touch input. Similar to dom::Touch, but used in
  * off-main-thread situations. This is more for just storing touch data, whereas
- * dom::Touch is more useful for dispatching through the DOM (which can only
- * happen on the main thread). dom::Touch also bears the problem of storing
- * pointers to nsIWidget instances which can only be used on the main thread,
- * so if instead we used dom::Touch and ever set these pointers
- * off-main-thread, Bad Things Can Happen(tm).
+ * dom::Touch derives from nsIDOMTouch so it is more useful for dispatching
+ * through the DOM (which can only happen on the main thread). dom::Touch also
+ * bears the problem of storing pointers to nsIWidget instances which can only
+ * be used on the main thread, so if instead we used dom::Touch and ever set
+ * these pointers off-main-thread, Bad Things Can Happen(tm).
  *
  * Note that this doesn't inherit from InputData because this itself is not an
  * event. It is only a container/struct that should have any number of instances

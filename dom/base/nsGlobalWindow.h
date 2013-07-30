@@ -62,7 +62,6 @@
 #include "mozilla/dom/Gamepad.h"
 #endif
 #include "nsIDocument.h"
-#include "nsIDOMTouchEvent.h"
 
 #include "mozilla/dom/EventTarget.h"
 #include "Units.h"

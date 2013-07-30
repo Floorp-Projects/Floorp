@@ -1557,7 +1557,7 @@ nsEventStateManager::MapEventCoordinatesForChildProcess(
     // in the space where top-left is 0,0.
     const nsTArray< nsRefPtr<Touch> >& touches = touchEvent->touches;
     for (uint32_t i = 0; i < touches.Length(); ++i) {
-      Touch* touch = touches[i];
+      nsIDOMTouch* touch = touches[i];
       if (touch) {
         touch->mRefPoint += aOffsetIntPoint;
       }
@@ -1641,7 +1641,7 @@ nsEventStateManager::HandleCrossProcessEvent(nsEvent *aEvent,
     nsTouchEvent* touchEvent = static_cast<nsTouchEvent*>(aEvent);
     const nsTArray< nsRefPtr<Touch> >& touches = touchEvent->touches;
     for (uint32_t i = 0; i < touches.Length(); ++i) {
-      Touch* touch = touches[i];
+      nsIDOMTouch* touch = touches[i];
       // NB: the |mChanged| check is an optimization, subprocesses can
       // compute this for themselves.  If the touch hasn't changed, we
       // may be able to avoid forwarding the event entirely (which is

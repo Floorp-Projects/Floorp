@@ -2077,7 +2077,7 @@ nsBoxFrame::GetEventPoint(nsGUIEvent* aEvent, nsIntPoint &aPoint) {
       return false;
     }
 
-    Touch *touch = touchEvent->touches.SafeElementAt(0);
+    nsIDOMTouch *touch = touchEvent->touches.SafeElementAt(0);
     if (!touch) {
       return false;
     }

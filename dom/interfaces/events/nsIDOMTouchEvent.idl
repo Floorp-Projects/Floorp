@@ -4,6 +4,39 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsIDOMUIEvent.idl"
+%{C++
+#include "nsWeakPtr.h"
+#include "nsPoint.h"
+%}
+interface nsIVariant;
+
+/**
+ * @see http://dvcs.w3.org/hg/webevents/raw-file/tip/touchevents.html
+ */
+
+[scriptable, builtinclass, uuid(98bc0f7d-5bff-4387-9c42-58af54b48dd5)]
+interface nsIDOMTouch : nsISupports {
+  readonly attribute long              identifier;
+  readonly attribute nsIDOMEventTarget target;
+  readonly attribute long              pageX;
+  readonly attribute long              pageY;
+  readonly attribute long              screenX;
+  readonly attribute long              screenY;
+  readonly attribute long              clientX;
+  readonly attribute long              clientY;
+  readonly attribute long              radiusX;
+  readonly attribute long              radiusY;
+  readonly attribute float             rotationAngle;
+  readonly attribute float             force;
+  %{C++
+    nsCOMPtr<mozilla::dom::EventTarget> mTarget;
+    mozilla::dom::EventTarget *GetTarget() { return mTarget; }
+    void SetTarget(mozilla::dom::EventTarget *target) { mTarget = target; }
+    nsIntPoint mRefPoint;
+    bool mChanged;
+    uint32_t mMessage;
+  %}
+};
 
 [scriptable, uuid(6d5484f7-92ac-45f8-9388-39b5bad055ce)]
 interface nsITouchEventReceiver : nsISupports {
