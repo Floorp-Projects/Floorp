@@ -106,6 +106,18 @@ static float gYSkateSizeMultiplier = 3.5f;
 static float gXStationarySizeMultiplier = 1.5f;
 static float gYStationarySizeMultiplier = 2.5f;
 
+/**
+ * The time period in ms that throttles mozbrowserasyncscroll event.
+ * Default is 100ms if there is no "apzc.asyncscroll.throttle" in preference.
+ */
+
+static int gAsyncScrollThrottleTime = 100;
+/**
+ * The timeout in ms for mAsyncScrollTimeoutTask delay task.
+ * Default is 300ms if there is no "apzc.asyncscroll.timeout" in preference.
+ */
+static int gAsyncScrollTimeout = 300;
+
 static TimeStamp sFrameTime;
 
 static TimeStamp
@@ -121,8 +133,16 @@ AsyncPanZoomController::SetFrameTime(const TimeStamp& aTime) {
   sFrameTime = aTime;
 }
 
-static void ReadAZPCPrefs()
+/*static*/ void
+AsyncPanZoomController::InitializeGlobalState()
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  static bool sInitialized = false;
+  if (sInitialized)
+    return;
+  sInitialized = true;
+
   Preferences::AddIntVarCache(&gPanRepaintInterval, "gfx.azpc.pan_repaint_interval", gPanRepaintInterval);
   Preferences::AddIntVarCache(&gFlingRepaintInterval, "gfx.azpc.fling_repaint_interval", gFlingRepaintInterval);
   Preferences::AddFloatVarCache(&gMinSkateSpeed, "gfx.azpc.min_skate_speed", gMinSkateSpeed);
@@ -133,30 +153,13 @@ static void ReadAZPCPrefs()
   Preferences::AddFloatVarCache(&gYSkateSizeMultiplier, "gfx.azpc.y_skate_size_multiplier", gYSkateSizeMultiplier);
   Preferences::AddFloatVarCache(&gXStationarySizeMultiplier, "gfx.azpc.x_stationary_size_multiplier", gXStationarySizeMultiplier);
   Preferences::AddFloatVarCache(&gYStationarySizeMultiplier, "gfx.azpc.y_stationary_size_multiplier", gYStationarySizeMultiplier);
-}
+  Preferences::AddIntVarCache(&gAsyncScrollThrottleTime, "apzc.asyncscroll.throttle", gAsyncScrollThrottleTime);
+  Preferences::AddIntVarCache(&gAsyncScrollTimeout, "apzc.asyncscroll.timeout", gAsyncScrollTimeout);
 
-class ReadAZPCPref MOZ_FINAL : public nsRunnable {
-public:
-  NS_IMETHOD Run()
-  {
-    ReadAZPCPrefs();
-    return NS_OK;
-  }
-};
-
-static void InitAZPCPrefs()
-{
-  static bool sInitialized = false;
-  if (sInitialized)
-    return;
-
-  sInitialized = true;
-  if (NS_IsMainThread()) {
-    ReadAZPCPrefs();
-  } else {
-    // We have to dispatch an event to the main thread to read the pref.
-    NS_DispatchToMainThread(new ReadAZPCPref());
-  }
+  gComputedTimingFunction = new ComputedTimingFunction();
+  gComputedTimingFunction->Init(
+    nsTimingFunction(NS_STYLE_TRANSITION_TIMING_FUNCTION_EASE));
+  ClearOnShutdown(&gComputedTimingFunction);
 }
 
 AsyncPanZoomController::AsyncPanZoomController(GeckoContentController* aGeckoContentController,
@@ -176,33 +179,20 @@ AsyncPanZoomController::AsyncPanZoomController(GeckoContentController* aGeckoCon
      mLastAsyncScrollOffset(0, 0),
      mCurrentAsyncScrollOffset(0, 0),
      mAsyncScrollTimeoutTask(nullptr),
-     mAsyncScrollThrottleTime(100),
-     mAsyncScrollTimeout(300),
      mDPI(72),
      mDisableNextTouchBatch(false),
      mHandlingTouchQueue(false),
      mDelayPanning(false)
 {
-  MOZ_ASSERT(NS_IsMainThread());
   MOZ_COUNT_CTOR(AsyncPanZoomController);
 
-  InitAZPCPrefs();
+  InitializeGlobalState();
 
   if (aGestures == USE_GESTURE_DETECTOR) {
     mGestureEventListener = new GestureEventListener(this);
   }
 
   SetDPI(mDPI);
-
-  if (!gComputedTimingFunction) {
-    gComputedTimingFunction = new ComputedTimingFunction();
-    gComputedTimingFunction->Init(
-      nsTimingFunction(NS_STYLE_TRANSITION_TIMING_FUNCTION_EASE));
-    ClearOnShutdown(&gComputedTimingFunction);
-  }
-
-  Preferences::GetUint("apzc.asyncscroll.throttle", &mAsyncScrollThrottleTime);
-  Preferences::GetUint("apzc.asyncscroll.timeout", &mAsyncScrollTimeout);
 }
 
 AsyncPanZoomController::~AsyncPanZoomController() {
@@ -1129,7 +1119,7 @@ bool AsyncPanZoomController::SampleContentTransformForFrame(const TimeStamp& aSa
   // with the last event.
   // Otherwise, start a timer to fire the event sAsyncScrollTimeout ms from now.
   TimeDuration delta = aSampleTime - mLastAsyncScrollTime;
-  if (delta.ToMilliseconds() > mAsyncScrollThrottleTime &&
+  if (delta.ToMilliseconds() > gAsyncScrollThrottleTime &&
       mCurrentAsyncScrollOffset != mLastAsyncScrollOffset) {
     MonitorAutoLock monitor(mMonitor);
     mLastAsyncScrollTime = aSampleTime;
@@ -1141,7 +1131,7 @@ bool AsyncPanZoomController::SampleContentTransformForFrame(const TimeStamp& aSa
       NewRunnableMethod(this, &AsyncPanZoomController::FireAsyncScrollOnTimeout);
     MessageLoop::current()->PostDelayedTask(FROM_HERE,
                                             mAsyncScrollTimeoutTask,
-                                            mAsyncScrollTimeout);
+                                            gAsyncScrollTimeout);
   }
 
   CSSToLayerScale paintedScale = frame.mDevPixelsPerCSSPixel * frame.mResolution;

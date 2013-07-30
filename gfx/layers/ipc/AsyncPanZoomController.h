@@ -73,6 +73,17 @@ public:
   ~AsyncPanZoomController();
 
   // --------------------------------------------------------------------------
+  // These methods must only be called on the gecko thread.
+  //
+
+  /**
+   * Read the various prefs and do any global initialization for all APZC instances.
+   * This must be run on the gecko thread before any APZC instances are actually
+   * used for anything meaningful.
+   */
+  static void InitializeGlobalState();
+
+  // --------------------------------------------------------------------------
   // These methods must only be called on the controller/UI thread.
   //
 
@@ -570,14 +581,6 @@ private:
   // The delay task triggered by the throttling mozbrowserasyncscroll event
   // ensures the last mozbrowserasyncscroll event is always been fired.
   CancelableTask* mAsyncScrollTimeoutTask;
-
-  // The time period in ms that throttles mozbrowserasyncscroll event.
-  // Default is 100ms if there is no "apzc.asyncscroll.throttle" in preference.
-  uint32_t mAsyncScrollThrottleTime;
-
-  // The timeout in ms for mAsyncScrollTimeoutTask delay task.
-  // Default is 300ms if there is no "apzc.asyncscroll.timeout" in preference.
-  uint32_t mAsyncScrollTimeout;
 
   int mDPI;
 
