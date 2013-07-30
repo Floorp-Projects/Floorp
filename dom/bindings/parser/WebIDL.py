@@ -1973,7 +1973,7 @@ class IDLWrapperType(IDLType):
             return other.isDistinguishableFrom(self)
         assert self.isInterface() or self.isEnum() or self.isDictionary()
         if self.isEnum():
-            return (other.isInterface() or other.isObject() or
+            return (other.isPrimitive() or other.isInterface() or other.isObject() or
                     other.isCallback() or other.isDictionary() or
                     other.isSequence() or other.isArray() or
                     other.isDate())
@@ -2164,8 +2164,21 @@ class IDLBuiltinType(IDLType):
         if other.isUnion():
             # Just forward to the union; it'll deal
             return other.isDistinguishableFrom(self)
-        if self.isPrimitive() or self.isString():
-            return (other.isInterface() or other.isObject() or
+        if self.isBoolean():
+            return (other.isNumeric() or other.isString() or other.isEnum() or
+                    other.isInterface() or other.isObject() or
+                    other.isCallback() or other.isDictionary() or
+                    other.isSequence() or other.isArray() or
+                    other.isDate())
+        if self.isNumeric():
+            return (other.isBoolean() or other.isString() or other.isEnum() or
+                    other.isInterface() or other.isObject() or
+                    other.isCallback() or other.isDictionary() or
+                    other.isSequence() or other.isArray() or
+                    other.isDate())
+        if self.isString():
+            return (other.isPrimitive() or other.isInterface() or
+                    other.isObject() or
                     other.isCallback() or other.isDictionary() or
                     other.isSequence() or other.isArray() or
                     other.isDate())
