@@ -830,9 +830,10 @@ var BookmarksEventHandler = {
 // Handles special drag and drop functionality for Places menus that are not
 // part of a Places view (e.g. the bookmarks menu in the menubar).
 var PlacesMenuDNDHandler = {
-  _springLoadDelay: 350, // milliseconds
+  _springLoadDelayMs: 350,
+  _closeDelayMs: 500,
   _loadTimer: null,
-  _closerTimer: null,
+  _closeTimer: null,
 
   /**
    * Called when the user enters the <menu> element during a drag.
@@ -853,7 +854,7 @@ var PlacesMenuDNDHandler = {
       this._loadTimer = null;
       popup.setAttribute("autoopened", "true");
       popup.showPopup(popup);
-    }, this._springLoadDelay, Ci.nsITimer.TYPE_ONE_SHOT);
+    }, this._springLoadDelayMs, Ci.nsITimer.TYPE_ONE_SHOT);
     event.preventDefault();
     event.stopPropagation();
   },
@@ -866,7 +867,8 @@ var PlacesMenuDNDHandler = {
   onDragLeave: function PMDH_onDragLeave(event) {
     // Handle menu-button separate targets.
     if (event.relatedTarget === event.currentTarget ||
-        event.relatedTarget.parentNode === event.currentTarget)
+        (event.relatedTarget &&
+         event.relatedTarget.parentNode === event.currentTarget))
       return;
 
     // Closing menus in a Places popup is handled by the view itself.
@@ -892,7 +894,7 @@ var PlacesMenuDNDHandler = {
         popup.removeAttribute("autoopened");
         popup.hidePopup();
       }
-    }, this._springLoadDelay, Ci.nsITimer.TYPE_ONE_SHOT);
+    }, this._closeDelayMs, Ci.nsITimer.TYPE_ONE_SHOT);
   },
 
   /**
