@@ -313,8 +313,7 @@ public:
    * nsRestyleHint(0) to mean recompute a new style context for our
    * current parent and existing rulenode, and the same for kids.
    */
-  void Restyle(nsIContent        *aParentContent,
-               nsStyleChangeList *aChangeList,
+  void Restyle(nsStyleChangeList *aChangeList,
                nsChangeHint       aParentFrameHintsNotHandledForDescendants,
                nsRestyleHint      aRestyleHint,
                RestyleTracker&    aRestyleTracker,
@@ -334,7 +333,6 @@ public:
 private:
   void CaptureChange(nsStyleContext* aOldContext,
                      nsStyleContext* aNewContext,
-                     nsIContent* aContent,
                      nsStyleChangeList* aChangeList,
                      /*in*/nsChangeHint aParentHintsNotHandledForDescendants,
                      /*out*/nsChangeHint &aHintsNotHandledForDescendants,
@@ -343,6 +341,11 @@ private:
 private:
   nsPresContext* const mPresContext;
   nsIFrame* const mFrame;
+  nsIContent* const mParentContent;
+  // |mContent| is the node that we used for rule matching of
+  // normal elements (not pseudo-elements) and for which we generate
+  // framechange hints if we need them.
+  nsIContent* const mContent;
   // We have already generated change list entries for hints listed in
   // mHintsHandled (initially it's those handled by ancestors, but by
   // the end of Restyle it is those handled for this frame as well).  We
