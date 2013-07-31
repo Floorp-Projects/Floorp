@@ -129,11 +129,6 @@ static JSClass global_class = {
     NULL, NULL, NULL, NULL, TraceXPCGlobal
 };
 
-// We just use the same reporter as the component loader
-// XXX #include angels cry.
-extern void
-mozJSLoaderErrorReporter(JSContext *cx, const char *message, JSErrorReport *rep);
-
 JSContext*
 XPCJSContextStack::GetSafeJSContext()
 {
@@ -158,7 +153,7 @@ XPCJSContextStack::GetSafeJSContext()
     JSAutoRequest req(mSafeJSContext);
 
     JS::RootedObject glob(mSafeJSContext);
-    JS_SetErrorReporter(mSafeJSContext, mozJSLoaderErrorReporter);
+    JS_SetErrorReporter(mSafeJSContext, xpc::SystemErrorReporter);
 
     JS::CompartmentOptions options;
     options.setZone(JS::SystemZone);
