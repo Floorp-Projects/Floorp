@@ -2413,8 +2413,6 @@ AutoFlushInhibitor::~AutoFlushInhibitor()
         IonSpewCont(IonSpew_CacheFlush, "{");
 }
 
-int js::ion::LabelBase::id_count = 0;
-
 void
 ion::PurgeCaches(JSScript *script, Zone *zone)
 {

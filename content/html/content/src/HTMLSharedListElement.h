@@ -9,6 +9,7 @@
 #include "mozilla/Util.h"
 
 #include "nsIDOMHTMLOListElement.h"
+#include "nsIDOMHTMLDListElement.h"
 #include "nsIDOMHTMLUListElement.h"
 #include "nsGenericHTMLElement.h"
 
@@ -17,6 +18,7 @@ namespace dom {
 
 class HTMLSharedListElement MOZ_FINAL : public nsGenericHTMLElement,
                                         public nsIDOMHTMLOListElement,
+                                        public nsIDOMHTMLDListElement,
                                         public nsIDOMHTMLUListElement
 {
 public:
@@ -40,6 +42,9 @@ public:
 
   // nsIDOMHTMLOListElement
   NS_DECL_NSIDOMHTMLOLISTELEMENT
+
+  // nsIDOMHTMLDListElement
+  // fully declared by NS_DECL_NSIDOMHTMLOLISTELEMENT
 
   // nsIDOMHTMLUListElement
   // fully declared by NS_DECL_NSIDOMHTMLOLISTELEMENT
