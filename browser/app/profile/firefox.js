@@ -67,6 +67,13 @@ pref("extensions.autoDisableScopes", 15);
 // Dictionary download preference
 pref("browser.dictionaries.download.url", "https://addons.mozilla.org/%LOCALE%/firefox/dictionaries/");
 
+// At startup, should we check to see if the installation
+// date is older than some threshold
+pref("app.update.checkInstallTime", true);
+
+// The number of days a binary is permitted to be old without checking is defined in
+// firefox-branding.js (app.update.checkInstallTime.days)
+
 // The minimum delay in seconds for the timer to fire.
 // default=2 minutes
 pref("app.update.timerMinimumDelay", 120);
