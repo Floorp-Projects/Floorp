@@ -51,6 +51,10 @@ const BinaryOutputStream = Components.Constructor(
                                       "nsIBinaryOutputStream",
                                       "setOutputStream")
 
+XPCOMUtils.defineLazyServiceGetter(this, "gMIMEService",
+                                   "@mozilla.org/mime;1",
+                                   "nsIMIMEService");
+
 const TEST_TARGET_FILE_NAME = "test-download.txt";
 const TEST_STORE_FILE_NAME = "test-downloads.json";
 
@@ -213,6 +217,19 @@ function promiseStartLegacyDownload(aSourceUrl, aOptions) {
     aOptions.outPersist = persist;
   }
 
+  let fileExtension = null, mimeInfo = null;
+  let match = sourceURI.path.match(/\.([^.\/]+)$/);
+  if (match) {
+    fileExtension = match[1];
+  }
+
+  if (fileExtension) {
+    try {
+      mimeInfo = gMIMEService.getFromTypeAndExtension(null,
+                                                      fileExtension);
+    } catch (ex) { }
+  }
+
   // Apply decoding if required by the "Content-Encoding" header.
   persist.persistFlags &= ~Ci.nsIWebBrowserPersist.PERSIST_FLAGS_NO_CONVERSION;
 
@@ -247,7 +264,7 @@ function promiseStartLegacyDownload(aSourceUrl, aOptions) {
 
     // Initialize the components so they reference each other.  This will cause
     // the Download object to be created and added to the public downloads.
-    transfer.init(sourceURI, NetUtil.newURI(targetFile), null, null, null, null,
+    transfer.init(sourceURI, NetUtil.newURI(targetFile), null, mimeInfo, null, null,
                   persist, isPrivate);
     persist.progressListener = transfer;
 
@@ -527,4 +544,9 @@ add_task(function test_common_initialize()
   DownloadIntegration.dontLoad = true;
   // Disable the parental controls checking.
   DownloadIntegration.dontCheckParentalControls = true;
+  // Disable the calls to the OS to launch files and open containing folders
+  DownloadIntegration.dontOpenFileAndFolder = true;
+  DownloadIntegration._deferTestOpenFile = Promise.defer();
+  DownloadIntegration._deferTestShowDir = Promise.defer();
+
 });

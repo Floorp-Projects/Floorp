@@ -790,16 +790,11 @@ nsStyleSet::GetContext(nsStyleContext* aParentContext,
   if (!result) {
     result = NS_NewStyleContext(aParentContext, aPseudoTag, aPseudoType,
                                 aRuleNode, aFlags & eSkipFlexItemStyleFixup);
-    if (!result)
-      return nullptr;
     if (aVisitedRuleNode) {
       nsRefPtr<nsStyleContext> resultIfVisited =
         NS_NewStyleContext(parentIfVisited, aPseudoTag, aPseudoType,
                            aVisitedRuleNode,
                            aFlags & eSkipFlexItemStyleFixup);
-      if (!resultIfVisited) {
-        return nullptr;
-      }
       if (!parentIfVisited) {
         mRoots.AppendElement(resultIfVisited);
       }
