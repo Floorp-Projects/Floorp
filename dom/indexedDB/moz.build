@@ -9,8 +9,6 @@ TEST_DIRS += ['test']
 
 XPIDL_SOURCES += [
     'nsIIDBKeyRange.idl',
-    'nsIIDBOpenDBRequest.idl',
-    'nsIIDBRequest.idl',
     'nsIIndexedDatabaseManager.idl',
 ]
 

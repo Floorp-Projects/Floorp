@@ -7,14 +7,16 @@
 #ifndef mozilla_dom_indexeddb_idbrequest_h__
 #define mozilla_dom_indexeddb_idbrequest_h__
 
-#include "mozilla/Attributes.h"
 #include "mozilla/dom/indexedDB/IndexedDatabase.h"
 
-#include "nsIIDBRequest.h"
-#include "nsIIDBOpenDBRequest.h"
-#include "nsDOMEventTargetHelper.h"
-#include "mozilla/dom/indexedDB/IDBWrapperCache.h"
+#include "mozilla/Attributes.h"
 #include "mozilla/dom/DOMError.h"
+#include "mozilla/dom/IDBRequestBinding.h"
+#include "mozilla/ErrorResult.h"
+#include "nsCycleCollectionParticipant.h"
+#include "nsWrapperCache.h"
+
+#include "mozilla/dom/indexedDB/IDBWrapperCache.h"
 
 class nsIScriptContext;
 class nsPIDOMWindow;
@@ -26,12 +28,10 @@ class IDBFactory;
 class IDBTransaction;
 class IndexedDBRequestParentBase;
 
-class IDBRequest : public IDBWrapperCache,
-                   public nsIIDBRequest
+class IDBRequest : public IDBWrapperCache
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIIDBREQUEST
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(IDBRequest,
                                                          IDBWrapperCache)
 
@@ -101,6 +101,40 @@ public:
   }
 #endif
 
+  // nsWrapperCache
+  virtual JSObject*
+  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
+
+  // WebIDL
+  nsPIDOMWindow*
+  GetParentObject() const
+  {
+    return GetOwner();
+  }
+
+  JS::Value
+  GetResult(JSContext* aCx, ErrorResult& aRv) const;
+
+  nsISupports*
+  GetSource() const
+  {
+    NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+    return mSource;
+  }
+
+  IDBTransaction*
+  GetTransaction() const
+  {
+    NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+    return mTransaction;
+  }
+
+  IDBRequestReadyState
+  ReadyState() const;
+
+  IMPL_EVENT_HANDLER(success);
+  IMPL_EVENT_HANDLER(error);
+
 protected:
   IDBRequest();
   ~IDBRequest();
@@ -120,13 +154,10 @@ protected:
   bool mHaveResultOrErrorCode;
 };
 
-class IDBOpenDBRequest : public IDBRequest,
-                         public nsIIDBOpenDBRequest
+class IDBOpenDBRequest : public IDBRequest
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
-  NS_FORWARD_NSIIDBREQUEST(IDBRequest::)
-  NS_DECL_NSIIDBOPENDBREQUEST
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(IDBOpenDBRequest, IDBRequest)
 
   static
@@ -151,7 +182,16 @@ public:
     return mFactory;
   }
 
+  // nsWrapperCache
+  virtual JSObject*
+  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
+
+  // WebIDL
+  IMPL_EVENT_HANDLER(blocked);
+  IMPL_EVENT_HANDLER(upgradeneeded);
+
 protected:
+  IDBOpenDBRequest();
   ~IDBOpenDBRequest();
 
   // Only touched on the main thread.
