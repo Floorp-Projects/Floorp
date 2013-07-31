@@ -1909,19 +1909,26 @@ RestyleManager::ReparentStyleContext(nsIFrame* aFrame)
   return NS_OK;
 }
 
-ElementRestyler::ElementRestyler(nsPresContext* aPresContext)
+ElementRestyler::ElementRestyler(nsPresContext* aPresContext,
+                                 nsChangeHint aHintsHandledByAncestors)
   : mPresContext(aPresContext)
+  , mHintsHandled(NS_SubtractHint(aHintsHandledByAncestors,
+                  NS_HintsNotHandledForDescendantsIn(aHintsHandledByAncestors)))
 {
 }
 
 ElementRestyler::ElementRestyler(const ElementRestyler& aParentRestyler)
   : mPresContext(aParentRestyler.mPresContext)
+  , mHintsHandled(NS_SubtractHint(aParentRestyler.mHintsHandled,
+                  NS_HintsNotHandledForDescendantsIn(aParentRestyler.mHintsHandled)))
 {
 }
 
 ElementRestyler::ElementRestyler(ParentContextFromChildFrame,
                                  const ElementRestyler& aParentRestyler)
   : mPresContext(aParentRestyler.mPresContext)
+  , mHintsHandled(NS_SubtractHint(aParentRestyler.mHintsHandled,
+                  NS_HintsNotHandledForDescendantsIn(aParentRestyler.mHintsHandled)))
 {
 }
 
@@ -1930,7 +1937,6 @@ ElementRestyler::CaptureChange(nsStyleContext* aOldContext,
                                nsStyleContext* aNewContext,
                                nsIFrame* aFrame, nsIContent* aContent,
                                nsStyleChangeList* aChangeList,
-                               /*inout*/nsChangeHint &aMinChange,
                                /*in*/nsChangeHint aParentHintsNotHandledForDescendants,
                                /*out*/nsChangeHint &aHintsNotHandledForDescendants,
                                nsChangeHint aChangeToAssume)
@@ -1950,7 +1956,7 @@ ElementRestyler::CaptureChange(nsStyleContext* aOldContext,
   }
 
   NS_UpdateHint(ourChange, aChangeToAssume);
-  if (NS_UpdateHint(aMinChange, ourChange)) {
+  if (NS_UpdateHint(mHintsHandled, ourChange)) {
     if (!(ourChange & nsChangeHint_ReconstructFrame) || aContent) {
       aChangeList->AppendChange(aFrame, aContent, ourChange);
     }
@@ -1960,7 +1966,7 @@ ElementRestyler::CaptureChange(nsStyleContext* aOldContext,
 
 /**
  * Recompute style for aFrame and accumulate changes into aChangeList
- * given that aMinChange is already accumulated for an ancestor.
+ * given that mHintsHandled is already accumulated for an ancestor.
  * aParentContent is the content node used to resolve the parent style
  * context.  This means that, for pseudo-elements, it is the content
  * that should be used for selector matching (rather than the fake
@@ -1969,12 +1975,11 @@ ElementRestyler::CaptureChange(nsStyleContext* aOldContext,
  * For aParentFrameHintsNotHandledForDescendants, see
  * nsStyleContext::CalcStyleDifference.
  */
-nsChangeHint
+void
 ElementRestyler::Restyle(nsPresContext     *aPresContext,
                          nsIFrame          *aFrame,
                          nsIContent        *aParentContent,
                          nsStyleChangeList *aChangeList,
-                         nsChangeHint       aMinChange,
                          nsChangeHint       aParentFrameHintsNotHandledForDescendants,
                          nsRestyleHint      aRestyleHint,
                          RestyleTracker&    aRestyleTracker,
@@ -1982,11 +1987,6 @@ ElementRestyler::Restyle(nsPresContext     *aPresContext,
                          nsTArray<nsIContent*>& aVisibleKidsOfHiddenElement,
                          TreeMatchContext &aTreeMatchContext)
 {
-  // We need to generate a new change list entry for every frame whose style
-  // comparision returns one of these hints. These hints don't automatically
-  // update all their descendant frames.
-  aMinChange = NS_SubtractHint(aMinChange, NS_HintsNotHandledForDescendantsIn(aMinChange));
-
   // It would be nice if we could make stronger assertions here; they
   // would let us simplify the ?: expressions below setting |content|
   // and |pseudoContent| in sensible ways as well as making what
@@ -2034,7 +2034,7 @@ ElementRestyler::Restyle(nsPresContext     *aPresContext,
       content->OwnerDoc()->FlushPendingLinkUpdates();
       RestyleTracker::RestyleData restyleData;
       if (aRestyleTracker.GetRestyleData(content->AsElement(), &restyleData)) {
-        if (NS_UpdateHint(aMinChange, restyleData.mChangeHint)) {
+        if (NS_UpdateHint(mHintsHandled, restyleData.mChangeHint)) {
           aChangeList->AppendChange(aFrame, content, restyleData.mChangeHint);
         }
         aRestyleHint = nsRestyleHint(aRestyleHint | restyleData.mRestyleHint);
@@ -2076,15 +2076,15 @@ ElementRestyler::Restyle(nsPresContext     *aPresContext,
 
       ElementRestyler providerRestyler(PARENT_CONTEXT_FROM_CHILD_FRAME,
                                        *this);
-      assumeDifferenceHint = providerRestyler.Restyle(aPresContext, providerFrame,
+      providerRestyler.Restyle(aPresContext, providerFrame,
                                                    aParentContent, aChangeList,
-                                                   aMinChange,
                                                    nsChangeHint_Hints_NotHandledForDescendants,
                                                    aRestyleHint,
                                                    aRestyleTracker,
                                                    aDesiredA11yNotifications,
                                                    aVisibleKidsOfHiddenElement,
                                                    aTreeMatchContext);
+      assumeDifferenceHint = providerRestyler.HintsHandledForFrame();
 
       // The provider's new context becomes the parent context of
       // aFrame's context.
@@ -2202,7 +2202,7 @@ ElementRestyler::Restyle(nsPresContext     *aPresContext,
                                                          aTreeMatchContext);
           if (!newContext) {
             // This pseudo should no longer exist; gotta reframe
-            NS_UpdateHint(aMinChange, nsChangeHint_ReconstructFrame);
+            NS_UpdateHint(mHintsHandled, nsChangeHint_ReconstructFrame);
             aChangeList->AppendChange(aFrame, element,
                                       nsChangeHint_ReconstructFrame);
             // We're reframing anyway; just keep the same context
@@ -2254,9 +2254,9 @@ ElementRestyler::Restyle(nsPresContext     *aPresContext,
         }
 
         CaptureChange(oldContext, newContext, aFrame, content, aChangeList,
-                      aMinChange, aParentFrameHintsNotHandledForDescendants,
+                      aParentFrameHintsNotHandledForDescendants,
                       nonInheritedHints, assumeDifferenceHint);
-        if (!(aMinChange & nsChangeHint_ReconstructFrame)) {
+        if (!(mHintsHandled & nsChangeHint_ReconstructFrame)) {
           // if frame gets regenerated, let it keep old context
           aFrame->SetStyleContext(newContext);
         }
@@ -2301,12 +2301,12 @@ ElementRestyler::Restyle(nsPresContext     *aPresContext,
           if (oldExtraContext != newExtraContext) {
             nsChangeHint extraHintsNotHandledForDescendants = nsChangeHint(0);
             CaptureChange(oldExtraContext, newExtraContext, aFrame, content,
-                          aChangeList, aMinChange,
+                          aChangeList,
                           aParentFrameHintsNotHandledForDescendants,
                           extraHintsNotHandledForDescendants,
                           assumeDifferenceHint);
             NS_UpdateHint(nonInheritedHints, extraHintsNotHandledForDescendants);
-            if (!(aMinChange & nsChangeHint_ReconstructFrame)) {
+            if (!(mHintsHandled & nsChangeHint_ReconstructFrame)) {
               aFrame->SetAdditionalStyleContext(contextIndex, newExtraContext);
             }
           }
@@ -2397,7 +2397,7 @@ ElementRestyler::Restyle(nsPresContext     *aPresContext,
     // Check whether we might need to create a new ::before frame.
     // There's no need to do this if we're planning to reframe already
     // or if we're not forcing restyles on kids.
-    if (!(aMinChange & nsChangeHint_ReconstructFrame) &&
+    if (!(mHintsHandled & nsChangeHint_ReconstructFrame) &&
         childRestyleHint) {
       // Make sure not to do this for pseudo-frames or frames that
       // can't have generated content.
@@ -2417,7 +2417,7 @@ ElementRestyler::Restyle(nsPresContext     *aPresContext,
                                             nsCSSPseudoElements::ePseudo_before,
                                             aPresContext)) {
             // Have to create the new :before frame
-            NS_UpdateHint(aMinChange, nsChangeHint_ReconstructFrame);
+            NS_UpdateHint(mHintsHandled, nsChangeHint_ReconstructFrame);
             aChangeList->AppendChange(aFrame, content,
                                       nsChangeHint_ReconstructFrame);
           }
@@ -2428,7 +2428,7 @@ ElementRestyler::Restyle(nsPresContext     *aPresContext,
     // Check whether we might need to create a new ::after frame.
     // There's no need to do this if we're planning to reframe already
     // or if we're not forcing restyles on kids.
-    if (!(aMinChange & nsChangeHint_ReconstructFrame) &&
+    if (!(mHintsHandled & nsChangeHint_ReconstructFrame) &&
         childRestyleHint) {
       // Make sure not to do this for pseudo-frames or frames that
       // can't have generated content.
@@ -2449,7 +2449,7 @@ ElementRestyler::Restyle(nsPresContext     *aPresContext,
                                             aPresContext) &&
               !nsLayoutUtils::GetAfterFrame(aFrame)) {
             // have to create the new :after frame
-            NS_UpdateHint(aMinChange, nsChangeHint_ReconstructFrame);
+            NS_UpdateHint(mHintsHandled, nsChangeHint_ReconstructFrame);
             aChangeList->AppendChange(aFrame, content,
                                       nsChangeHint_ReconstructFrame);
           }
@@ -2462,7 +2462,7 @@ ElementRestyler::Restyle(nsPresContext     *aPresContext,
     // new style contexts to be resolved on all of this frame's
     // descendants anyway, so we want to avoid wasting time processing
     // style contexts that we're just going to throw away anyway. - dwh
-    if (!(aMinChange & nsChangeHint_ReconstructFrame)) {
+    if (!(mHintsHandled & nsChangeHint_ReconstructFrame)) {
 
       DesiredA11yNotifications kidsDesiredA11yNotification =
         aDesiredA11yNotifications;
@@ -2538,7 +2538,7 @@ ElementRestyler::Restyle(nsPresContext     *aPresContext,
 
               // Note that the out-of-flow may not be a geometric descendant of
               // the frame where we started the reresolve.  Therefore, even if
-              // aMinChange already includes nsChangeHint_AllReflowHints we don't
+              // mHintsHandled already includes nsChangeHint_AllReflowHints we don't
               // want to pass that on to the out-of-flow reresolve, since that
               // can lead to the out-of-flow not getting reflowed when it should
               // be (eg a reresolve starting at <body> that involves reflowing
@@ -2551,10 +2551,11 @@ ElementRestyler::Restyle(nsPresContext     *aPresContext,
               // of flow so that this works correctly.
               do {
                 ElementRestyler oofRestyler(*this);
+                oofRestyler.mHintsHandled =
+                  NS_SubtractHint(oofRestyler.mHintsHandled,
+                                  nsChangeHint_AllReflowHints);
                 oofRestyler.Restyle(aPresContext, outOfFlowFrame,
                                       content, aChangeList,
-                                      NS_SubtractHint(aMinChange,
-                                                      nsChangeHint_AllReflowHints),
                                       nonInheritedHints,
                                       childRestyleHint,
                                       aRestyleTracker,
@@ -2567,7 +2568,7 @@ ElementRestyler::Restyle(nsPresContext     *aPresContext,
               // as the out-of-flow frame
               ElementRestyler phRestyler(*this);
               phRestyler.Restyle(aPresContext, child, content,
-                                    aChangeList, aMinChange,
+                                    aChangeList,
                                     nonInheritedHints,
                                     childRestyleHint,
                                     aRestyleTracker,
@@ -2579,7 +2580,7 @@ ElementRestyler::Restyle(nsPresContext     *aPresContext,
               if (child != resolvedChild) {
                 ElementRestyler childRestyler(*this);
                 childRestyler.Restyle(aPresContext, child, content,
-                                      aChangeList, aMinChange,
+                                      aChangeList,
                                       nonInheritedHints,
                                       childRestyleHint,
                                       aRestyleTracker,
@@ -2625,8 +2626,6 @@ ElementRestyler::Restyle(nsPresContext     *aPresContext,
 #endif
     }
   }
-
-  return aMinChange;
 }
 
 void
@@ -2666,11 +2665,11 @@ RestyleManager::ComputeStyleChangeFor(nsIFrame*          aFrame,
     // Outer loop over special siblings
     do {
       // Inner loop over next-in-flows of the current frame
-      ElementRestyler restyler(mPresContext);
+      ElementRestyler restyler(mPresContext,
+                               aMinChange);
 
-      nsChangeHint frameChange =
-        restyler.Restyle(mPresContext, frame, nullptr,
-                              aChangeList, aMinChange, nsChangeHint(0),
+      restyler.Restyle(mPresContext, frame, nullptr,
+                              aChangeList, nsChangeHint(0),
                               aRestyleDescendants ?
                                 eRestyle_Subtree : eRestyle_Self,
                               aRestyleTracker,
@@ -2678,7 +2677,7 @@ RestyleManager::ComputeStyleChangeFor(nsIFrame*          aFrame,
                               visibleKidsOfHiddenElement,
                               treeMatchContext);
 
-      if (frameChange & nsChangeHint_ReconstructFrame) {
+      if (restyler.HintsHandledForFrame() & nsChangeHint_ReconstructFrame) {
         // If it's going to cause a framechange, then don't bother
         // with the continuations or special siblings since they'll be
         // clobbered by the frame reconstruct anyway.

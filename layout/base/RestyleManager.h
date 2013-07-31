@@ -271,7 +271,8 @@ public:
   typedef mozilla::dom::Element Element;
 
   // Construct for the root of the subtree that we're restyling.
-  ElementRestyler(nsPresContext* aPresContext);
+  ElementRestyler(nsPresContext* aPresContext,
+                  nsChangeHint aHintsHandledByAncestors);
 
   // Construct for an element whose parent is being restyled.
   ElementRestyler(const ElementRestyler& aParentRestyler);
@@ -309,11 +310,10 @@ public:
    * nsRestyleHint(0) to mean recompute a new style context for our
    * current parent and existing rulenode, and the same for kids.
    */
-  nsChangeHint Restyle(nsPresContext     *aPresContext,
+  void Restyle(nsPresContext     *aPresContext,
                nsIFrame          *aFrame,
                nsIContent        *aParentContent,
                nsStyleChangeList *aChangeList,
-               nsChangeHint       aMinChange,
                nsChangeHint       aParentFrameHintsNotHandledForDescendants,
                nsRestyleHint      aRestyleHint,
                RestyleTracker&    aRestyleTracker,
@@ -321,18 +321,32 @@ public:
                nsTArray<nsIContent*>& aVisibleKidsOfHiddenElement,
                TreeMatchContext &aTreeMatchContext);
 
+  /**
+   * mHintsHandled changes over time; it starts off as the hints that
+   * have been handled by ancestors, and by the end of Restyle it
+   * represents the hints that have been handled for this frame.  This
+   * method is intended to be called after Restyle, to find out what
+   * hints have been handled for this frame.
+   */
+  nsChangeHint HintsHandledForFrame() { return mHintsHandled; }
+
 private:
   void CaptureChange(nsStyleContext* aOldContext,
                      nsStyleContext* aNewContext,
                      nsIFrame* aFrame, nsIContent* aContent,
                      nsStyleChangeList* aChangeList,
-                     /*inout*/nsChangeHint &aMinChange,
                      /*in*/nsChangeHint aParentHintsNotHandledForDescendants,
                      /*out*/nsChangeHint &aHintsNotHandledForDescendants,
                      nsChangeHint aChangeToAssume);
 
 private:
   nsPresContext* const mPresContext;
+  // We have already generated change list entries for hints listed in
+  // mHintsHandled (initially it's those handled by ancestors, but by
+  // the end of Restyle it is those handled for this frame as well).  We
+  // need to generate a new change list entry for the frame when its
+  // style comparision returns a hint other than one of these hints.
+  nsChangeHint mHintsHandled;
 };
 
 } // namespace mozilla
