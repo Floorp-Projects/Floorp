@@ -627,12 +627,7 @@ protected:
               GetShadowData(const nsCSSValueList* aList,
                             nsStyleContext* aContext,
                             bool aIsBoxShadow,
-                            bool& aCanStoreInRuleTree);
-  void SetStyleFilterToCSSValue(nsStyleFilter* aStyleFilter,
-                                const nsCSSValue& aValue,
-                                nsStyleContext* aStyleContext,
-                                nsPresContext* aPresContext,
-                                bool& aCanStoreInRuleTree);
+                            bool& inherited);
 
 private:
   nsRuleNode(nsPresContext* aPresContext, nsRuleNode* aParent,
