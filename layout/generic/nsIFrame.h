@@ -759,7 +759,13 @@ public:
         oldStyleContext->Release();
     }
   }
-  
+
+  /**
+   * SetStyleContextWithoutNotification is for changes to the style
+   * context that should suppress style change processing, in other
+   * words, those that aren't really changes.  This generally means only
+   * changes that happen during frame construction.
+   */
   void SetStyleContextWithoutNotification(nsStyleContext* aContext)
   {
     if (aContext != mStyleContext) {
