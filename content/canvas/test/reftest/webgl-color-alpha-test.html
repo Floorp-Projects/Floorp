@@ -47,6 +47,32 @@ function renderGL(gl, value, alpha) {
   gl.finish();
 }
 
+function renderBackup(canvas, value, alpha) {
+  if (!arg("alpha"))
+    alpha = 1.0;
+
+  if (arg("alpha") && arg("premult")) {
+    if (alpha == 0.0)
+      value = 1.0;
+    else
+      value /= alpha;
+  }
+
+  var intValue = (value * 255) | 0;
+  var context = canvas.getContext("2d");
+  context.fillStyle = "rgba(" + intValue + ", 0, 0, " + alpha + ")";
+  context.fillRect(0, 0, 128, 128);
+
+  context.fillStyle = "rgba(0, " + intValue + ", 0, " + alpha + ")";
+  context.fillRect(128, 0, 128, 128);
+
+  context.fillStyle = "rgba(0, 0, " + intValue + ", " + alpha + ")";
+  context.fillRect(0, 128, 128, 128);
+
+  context.fillStyle = "rgba(" + intValue + ", " + intValue + ", " + intValue + ", " + alpha + ")";
+  context.fillRect(128, 128, 128, 128);
+}
+
 function runTest() {
   var canvas = document.getElementById("canvas");
   var gl = initGL(canvas);
@@ -57,7 +83,7 @@ function runTest() {
   if (gl)
     renderGL(gl, value, alpha);
   else
-    document.write("Failed to get WebGL context.");
+    renderBackup(canvas, value, alpha);
 
   rAF(testComplete);
 }
