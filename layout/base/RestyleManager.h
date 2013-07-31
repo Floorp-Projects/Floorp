@@ -360,6 +360,7 @@ private:
   DesiredA11yNotifications mKidsDesiredA11yNotifications;
   A11yNotificationType mOurA11yNotification;
   nsTArray<nsIContent*>& mVisibleKidsOfHiddenElement;
+  bool mWasFrameVisible;
 };
 
 } // namespace mozilla
