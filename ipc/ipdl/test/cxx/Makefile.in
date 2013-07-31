@@ -44,6 +44,7 @@ IPDLTESTS = \
   TestSyncHang \
   TestSyncWakeup \
   TestBadActor \
+  TestUrgency \
   $(NULL)
 
 ifeq ($(OS_ARCH),Linux)
