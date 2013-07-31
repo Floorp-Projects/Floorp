@@ -1731,179 +1731,179 @@ RestyleManager::ReparentStyleContext(nsIFrame* aFrame)
   // tree has already been changed, so this check would just fail.
   nsStyleContext* oldContext = aFrame->StyleContext();
 
-    nsRefPtr<nsStyleContext> newContext;
-    nsIFrame* providerFrame = aFrame->GetParentStyleContextFrame();
-    bool isChild = providerFrame && providerFrame->GetParent() == aFrame;
-    nsStyleContext* newParentContext = nullptr;
-    nsIFrame* providerChild = nullptr;
-    if (isChild) {
-      ReparentStyleContext(providerFrame);
-      newParentContext = providerFrame->StyleContext();
-      providerChild = providerFrame;
-    } else if (providerFrame) {
-      newParentContext = providerFrame->StyleContext();
-    } else {
-      NS_NOTREACHED("Reparenting something that has no usable parent? "
-                    "Shouldn't happen!");
-    }
-    // XXX need to do something here to produce the correct style context for
-    // an IB split whose first inline part is inside a first-line frame.
-    // Currently the first IB anonymous block's style context takes the first
-    // part's style context as parent, which is wrong since first-line style
-    // should not apply to the anonymous block.
+  nsRefPtr<nsStyleContext> newContext;
+  nsIFrame* providerFrame = aFrame->GetParentStyleContextFrame();
+  bool isChild = providerFrame && providerFrame->GetParent() == aFrame;
+  nsStyleContext* newParentContext = nullptr;
+  nsIFrame* providerChild = nullptr;
+  if (isChild) {
+    ReparentStyleContext(providerFrame);
+    newParentContext = providerFrame->StyleContext();
+    providerChild = providerFrame;
+  } else if (providerFrame) {
+    newParentContext = providerFrame->StyleContext();
+  } else {
+    NS_NOTREACHED("Reparenting something that has no usable parent? "
+                  "Shouldn't happen!");
+  }
+  // XXX need to do something here to produce the correct style context for
+  // an IB split whose first inline part is inside a first-line frame.
+  // Currently the first IB anonymous block's style context takes the first
+  // part's style context as parent, which is wrong since first-line style
+  // should not apply to the anonymous block.
 
 #ifdef DEBUG
-    {
-      // Check that our assumption that continuations of the same
-      // pseudo-type and with the same style context parent have the
-      // same style context is valid before the reresolution.  (We need
-      // to check the pseudo-type and style context parent because of
-      // :first-letter and :first-line, where we create styled and
-      // unstyled letter/line frames distinguished by pseudo-type, and
-      // then need to distinguish their descendants based on having
-      // different parents.)
-      nsIFrame *nextContinuation = aFrame->GetNextContinuation();
-      if (nextContinuation) {
-        nsStyleContext *nextContinuationContext =
-          nextContinuation->StyleContext();
-        NS_ASSERTION(oldContext == nextContinuationContext ||
-                     oldContext->GetPseudo() !=
-                       nextContinuationContext->GetPseudo() ||
-                     oldContext->GetParent() !=
-                       nextContinuationContext->GetParent(),
-                     "continuations should have the same style context");
-      }
+  {
+    // Check that our assumption that continuations of the same
+    // pseudo-type and with the same style context parent have the
+    // same style context is valid before the reresolution.  (We need
+    // to check the pseudo-type and style context parent because of
+    // :first-letter and :first-line, where we create styled and
+    // unstyled letter/line frames distinguished by pseudo-type, and
+    // then need to distinguish their descendants based on having
+    // different parents.)
+    nsIFrame *nextContinuation = aFrame->GetNextContinuation();
+    if (nextContinuation) {
+      nsStyleContext *nextContinuationContext =
+        nextContinuation->StyleContext();
+      NS_ASSERTION(oldContext == nextContinuationContext ||
+                   oldContext->GetPseudo() !=
+                     nextContinuationContext->GetPseudo() ||
+                   oldContext->GetParent() !=
+                     nextContinuationContext->GetParent(),
+                   "continuations should have the same style context");
     }
+  }
 #endif
 
-    nsIFrame *prevContinuation =
-      GetPrevContinuationWithPossiblySameStyle(aFrame);
-    nsStyleContext *prevContinuationContext;
-    bool copyFromContinuation =
-      prevContinuation &&
-      (prevContinuationContext = prevContinuation->StyleContext())
-        ->GetPseudo() == oldContext->GetPseudo() &&
-       prevContinuationContext->GetParent() == newParentContext;
-    if (copyFromContinuation) {
-      // Just use the style context from the frame's previous
-      // continuation (see assertion about aFrame->GetNextContinuation()
-      // above, which we would have previously hit for aFrame's previous
-      // continuation).
-      newContext = prevContinuationContext;
-    } else {
-      nsIFrame* parentFrame = aFrame->GetParent();
-      Element* element =
-        ElementForStyleContext(parentFrame ? parentFrame->GetContent() : nullptr,
-                               aFrame,
-                               oldContext->GetPseudoType());
-      newContext = mPresContext->StyleSet()->
-                     ReparentStyleContext(oldContext, newParentContext, element);
-    }
+  nsIFrame *prevContinuation =
+    GetPrevContinuationWithPossiblySameStyle(aFrame);
+  nsStyleContext *prevContinuationContext;
+  bool copyFromContinuation =
+    prevContinuation &&
+    (prevContinuationContext = prevContinuation->StyleContext())
+      ->GetPseudo() == oldContext->GetPseudo() &&
+     prevContinuationContext->GetParent() == newParentContext;
+  if (copyFromContinuation) {
+    // Just use the style context from the frame's previous
+    // continuation (see assertion about aFrame->GetNextContinuation()
+    // above, which we would have previously hit for aFrame's previous
+    // continuation).
+    newContext = prevContinuationContext;
+  } else {
+    nsIFrame* parentFrame = aFrame->GetParent();
+    Element* element =
+      ElementForStyleContext(parentFrame ? parentFrame->GetContent() : nullptr,
+                             aFrame,
+                             oldContext->GetPseudoType());
+    newContext = mPresContext->StyleSet()->
+                   ReparentStyleContext(oldContext, newParentContext, element);
+  }
 
-    if (newContext) {
-      if (newContext != oldContext) {
-        // We probably don't want to initiate transitions from
-        // ReparentStyleContext, since we call it during frame
-        // construction rather than in response to dynamic changes.
-        // Also see the comment at the start of
-        // nsTransitionManager::ConsiderStartingTransition.
+  if (newContext) {
+    if (newContext != oldContext) {
+      // We probably don't want to initiate transitions from
+      // ReparentStyleContext, since we call it during frame
+      // construction rather than in response to dynamic changes.
+      // Also see the comment at the start of
+      // nsTransitionManager::ConsiderStartingTransition.
 #if 0
-        if (!copyFromContinuation) {
-          TryStartingTransition(mPresContext, aFrame->GetContent(),
-                                oldContext, &newContext);
-        }
-#endif
-
-        // Make sure to call CalcStyleDifference so that the new context ends
-        // up resolving all the structs the old context resolved.
-        DebugOnly<nsChangeHint> styleChange =
-          oldContext->CalcStyleDifference(newContext, nsChangeHint(0));
-        // The style change is always 0 because we have the same rulenode and
-        // CalcStyleDifference optimizes us away.  That's OK, though:
-        // reparenting should never trigger a frame reconstruct, and whenever
-        // it's happening we already plan to reflow and repaint the frames.
-        NS_ASSERTION(!(styleChange & nsChangeHint_ReconstructFrame),
-                     "Our frame tree is likely to be bogus!");
-
-        aFrame->SetStyleContext(newContext);
-
-        nsIFrame::ChildListIterator lists(aFrame);
-        for (; !lists.IsDone(); lists.Next()) {
-          nsFrameList::Enumerator childFrames(lists.CurrentList());
-          for (; !childFrames.AtEnd(); childFrames.Next()) {
-            nsIFrame* child = childFrames.get();
-            // only do frames that are in flow
-            if (!(child->GetStateBits() & NS_FRAME_OUT_OF_FLOW) &&
-                child != providerChild) {
-#ifdef DEBUG
-              if (nsGkAtoms::placeholderFrame == child->GetType()) {
-                nsIFrame* outOfFlowFrame =
-                  nsPlaceholderFrame::GetRealFrameForPlaceholder(child);
-                NS_ASSERTION(outOfFlowFrame, "no out-of-flow frame");
-
-                NS_ASSERTION(outOfFlowFrame != providerChild,
-                             "Out of flow provider?");
-              }
-#endif
-              ReparentStyleContext(child);
-            }
-          }
-        }
-
-        // If this frame is part of an IB split, then the style context of
-        // the next part of the split might be a child of our style context.
-        // Reparent its style context just in case one of our ancestors
-        // (split or not) hasn't done so already). It's not a problem to
-        // reparent the same frame twice because the "if (newContext !=
-        // oldContext)" check will prevent us from redoing work.
-        if ((aFrame->GetStateBits() & NS_FRAME_IS_SPECIAL) &&
-            !aFrame->GetPrevContinuation()) {
-          nsIFrame* sib = static_cast<nsIFrame*>
-            (aFrame->Properties().Get(nsIFrame::IBSplitSpecialSibling()));
-          if (sib) {
-            ReparentStyleContext(sib);
-          }
-        }
-
-        // do additional contexts
-        int32_t contextIndex = -1;
-        while (1) {
-          nsStyleContext* oldExtraContext =
-            aFrame->GetAdditionalStyleContext(++contextIndex);
-          if (oldExtraContext) {
-            nsRefPtr<nsStyleContext> newExtraContext;
-            newExtraContext = mPresContext->StyleSet()->
-                                ReparentStyleContext(oldExtraContext,
-                                                     newContext, nullptr);
-            if (newExtraContext) {
-              if (newExtraContext != oldExtraContext) {
-                // Make sure to call CalcStyleDifference so that the new
-                // context ends up resolving all the structs the old context
-                // resolved.
-                styleChange =
-                  oldExtraContext->CalcStyleDifference(newExtraContext,
-                                                       nsChangeHint(0));
-                // The style change is always 0 because we have the same
-                // rulenode and CalcStyleDifference optimizes us away.  That's
-                // OK, though: reparenting should never trigger a frame
-                // reconstruct, and whenever it's happening we already plan to
-                // reflow and repaint the frames.
-                NS_ASSERTION(!(styleChange & nsChangeHint_ReconstructFrame),
-                             "Our frame tree is likely to be bogus!");
-              }
-
-              aFrame->SetAdditionalStyleContext(contextIndex, newExtraContext);
-            }
-          }
-          else {
-            break;
-          }
-        }
-#ifdef DEBUG
-        VerifyStyleTree(mPresContext, aFrame, newParentContext);
-#endif
+      if (!copyFromContinuation) {
+        TryStartingTransition(mPresContext, aFrame->GetContent(),
+                              oldContext, &newContext);
       }
+#endif
+
+      // Make sure to call CalcStyleDifference so that the new context ends
+      // up resolving all the structs the old context resolved.
+      DebugOnly<nsChangeHint> styleChange =
+        oldContext->CalcStyleDifference(newContext, nsChangeHint(0));
+      // The style change is always 0 because we have the same rulenode and
+      // CalcStyleDifference optimizes us away.  That's OK, though:
+      // reparenting should never trigger a frame reconstruct, and whenever
+      // it's happening we already plan to reflow and repaint the frames.
+      NS_ASSERTION(!(styleChange & nsChangeHint_ReconstructFrame),
+                   "Our frame tree is likely to be bogus!");
+
+      aFrame->SetStyleContext(newContext);
+
+      nsIFrame::ChildListIterator lists(aFrame);
+      for (; !lists.IsDone(); lists.Next()) {
+        nsFrameList::Enumerator childFrames(lists.CurrentList());
+        for (; !childFrames.AtEnd(); childFrames.Next()) {
+          nsIFrame* child = childFrames.get();
+          // only do frames that are in flow
+          if (!(child->GetStateBits() & NS_FRAME_OUT_OF_FLOW) &&
+              child != providerChild) {
+#ifdef DEBUG
+            if (nsGkAtoms::placeholderFrame == child->GetType()) {
+              nsIFrame* outOfFlowFrame =
+                nsPlaceholderFrame::GetRealFrameForPlaceholder(child);
+              NS_ASSERTION(outOfFlowFrame, "no out-of-flow frame");
+
+              NS_ASSERTION(outOfFlowFrame != providerChild,
+                           "Out of flow provider?");
+            }
+#endif
+            ReparentStyleContext(child);
+          }
+        }
+      }
+
+      // If this frame is part of an IB split, then the style context of
+      // the next part of the split might be a child of our style context.
+      // Reparent its style context just in case one of our ancestors
+      // (split or not) hasn't done so already). It's not a problem to
+      // reparent the same frame twice because the "if (newContext !=
+      // oldContext)" check will prevent us from redoing work.
+      if ((aFrame->GetStateBits() & NS_FRAME_IS_SPECIAL) &&
+          !aFrame->GetPrevContinuation()) {
+        nsIFrame* sib = static_cast<nsIFrame*>
+          (aFrame->Properties().Get(nsIFrame::IBSplitSpecialSibling()));
+        if (sib) {
+          ReparentStyleContext(sib);
+        }
+      }
+
+      // do additional contexts
+      int32_t contextIndex = -1;
+      while (1) {
+        nsStyleContext* oldExtraContext =
+          aFrame->GetAdditionalStyleContext(++contextIndex);
+        if (oldExtraContext) {
+          nsRefPtr<nsStyleContext> newExtraContext;
+          newExtraContext = mPresContext->StyleSet()->
+                              ReparentStyleContext(oldExtraContext,
+                                                   newContext, nullptr);
+          if (newExtraContext) {
+            if (newExtraContext != oldExtraContext) {
+              // Make sure to call CalcStyleDifference so that the new
+              // context ends up resolving all the structs the old context
+              // resolved.
+              styleChange =
+                oldExtraContext->CalcStyleDifference(newExtraContext,
+                                                     nsChangeHint(0));
+              // The style change is always 0 because we have the same
+              // rulenode and CalcStyleDifference optimizes us away.  That's
+              // OK, though: reparenting should never trigger a frame
+              // reconstruct, and whenever it's happening we already plan to
+              // reflow and repaint the frames.
+              NS_ASSERTION(!(styleChange & nsChangeHint_ReconstructFrame),
+                           "Our frame tree is likely to be bogus!");
+            }
+
+            aFrame->SetAdditionalStyleContext(contextIndex, newExtraContext);
+          }
+        }
+        else {
+          break;
+        }
+      }
+#ifdef DEBUG
+      VerifyStyleTree(mPresContext, aFrame, newParentContext);
+#endif
     }
+  }
 
   return NS_OK;
 }
