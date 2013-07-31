@@ -253,7 +253,7 @@ struct Token {
         JSAtom       *atom;             /* potentially-numeric atom */
         struct {
             double       value;         /* floating point number */
-            DecimalPoint decimalPoint;  /* literal contains . or exponent */
+            DecimalPoint decimalPoint;  /* literal contains '.' */
         } number;
         RegExpFlag      reflags;        /* regexp flags, use tokenbuf to access
                                            regexp chars */
