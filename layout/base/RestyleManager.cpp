@@ -1926,6 +1926,9 @@ ElementRestyler::ElementRestyler(nsPresContext* aPresContext,
   , mParentFrameHintsNotHandledForDescendants(nsChangeHint(0))
   , mHintsNotHandledForDescendants(nsChangeHint(0))
   , mRestyleTracker(aRestyleTracker)
+  , mDesiredA11yNotifications(eSendAllNotifications)
+  , mKidsDesiredA11yNotifications(mDesiredA11yNotifications)
+  , mOurA11yNotification(eDontNotify)
 {
 }
 
@@ -1944,6 +1947,9 @@ ElementRestyler::ElementRestyler(const ElementRestyler& aParentRestyler,
       aParentRestyler.mHintsNotHandledForDescendants)
   , mHintsNotHandledForDescendants(nsChangeHint(0))
   , mRestyleTracker(aParentRestyler.mRestyleTracker)
+  , mDesiredA11yNotifications(aParentRestyler.mKidsDesiredA11yNotifications)
+  , mKidsDesiredA11yNotifications(mDesiredA11yNotifications)
+  , mOurA11yNotification(eDontNotify)
 {
 }
 
@@ -1964,6 +1970,9 @@ ElementRestyler::ElementRestyler(ParentContextFromChildFrame,
       nsChangeHint_Hints_NotHandledForDescendants)
   , mHintsNotHandledForDescendants(nsChangeHint(0))
   , mRestyleTracker(aParentRestyler.mRestyleTracker)
+  , mDesiredA11yNotifications(aParentRestyler.mDesiredA11yNotifications)
+  , mKidsDesiredA11yNotifications(mDesiredA11yNotifications)
+  , mOurA11yNotification(eDontNotify)
 {
 }
 
@@ -2006,7 +2015,6 @@ ElementRestyler::CaptureChange(nsStyleContext* aOldContext,
  */
 void
 ElementRestyler::Restyle(nsRestyleHint aRestyleHint,
-                         DesiredA11yNotifications aDesiredA11yNotifications,
                          nsTArray<nsIContent*>& aVisibleKidsOfHiddenElement,
                          TreeMatchContext &aTreeMatchContext)
 {
@@ -2094,7 +2102,6 @@ ElementRestyler::Restyle(nsRestyleHint aRestyleHint,
       ElementRestyler providerRestyler(PARENT_CONTEXT_FROM_CHILD_FRAME,
                                        *this, providerFrame);
       providerRestyler.Restyle(aRestyleHint,
-                                                   aDesiredA11yNotifications,
                                                    aVisibleKidsOfHiddenElement,
                                                    aTreeMatchContext);
       assumeDifferenceHint = providerRestyler.HintsHandledForFrame();
@@ -2468,41 +2475,38 @@ ElementRestyler::Restyle(nsRestyleHint aRestyleHint,
     // style contexts that we're just going to throw away anyway. - dwh
     if (!(mHintsHandled & nsChangeHint_ReconstructFrame)) {
 
-      DesiredA11yNotifications kidsDesiredA11yNotification =
-        aDesiredA11yNotifications;
 #ifdef ACCESSIBILITY
-      A11yNotificationType ourA11yNotification = eDontNotify;
       // Notify a11y for primary frame only if it's a root frame of visibility
       // changes or its parent frame was hidden while it stays visible and
       // it is not inside a {ib} split or is the first frame of {ib} split.
       if (nsIPresShell::IsAccessibilityActive() &&
           !mFrame->GetPrevContinuation() &&
           !nsLayoutUtils::FrameIsNonFirstInIBSplit(mFrame)) {
-        if (aDesiredA11yNotifications == eSendAllNotifications) {
+        if (mDesiredA11yNotifications == eSendAllNotifications) {
           bool isFrameVisible = newContext->StyleVisibility()->IsVisible();
           if (isFrameVisible != wasFrameVisible) {
             if (isFrameVisible) {
               // Notify a11y the element (perhaps with its children) was shown.
               // We don't fall into this case if this element gets or stays shown
               // while its parent becomes hidden.
-              kidsDesiredA11yNotification = eSkipNotifications;
-              ourA11yNotification = eNotifyShown;
+              mKidsDesiredA11yNotifications = eSkipNotifications;
+              mOurA11yNotification = eNotifyShown;
             } else {
               // The element is being hidden; its children may stay visible, or
               // become visible after being hidden previously. If we'll find
               // visible children then we should notify a11y about that as if
               // they were inserted into tree. Notify a11y this element was
               // hidden.
-              kidsDesiredA11yNotification = eNotifyIfShown;
-              ourA11yNotification = eNotifyHidden;
+              mKidsDesiredA11yNotifications = eNotifyIfShown;
+              mOurA11yNotification = eNotifyHidden;
             }
           }
-        } else if (aDesiredA11yNotifications == eNotifyIfShown &&
+        } else if (mDesiredA11yNotifications == eNotifyIfShown &&
                    newContext->StyleVisibility()->IsVisible()) {
           // Notify a11y that element stayed visible while its parent was
           // hidden.
           aVisibleKidsOfHiddenElement.AppendElement(mFrame->GetContent());
-          kidsDesiredA11yNotification = eSkipNotifications;
+          mKidsDesiredA11yNotifications = eSkipNotifications;
         }
       }
 #endif
@@ -2559,7 +2563,6 @@ ElementRestyler::Restyle(nsRestyleHint aRestyleHint,
                   NS_SubtractHint(oofRestyler.mHintsHandled,
                                   nsChangeHint_AllReflowHints);
                 oofRestyler.Restyle(childRestyleHint,
-                                      kidsDesiredA11yNotification,
                                       aVisibleKidsOfHiddenElement,
                                       aTreeMatchContext);
               } while ((outOfFlowFrame = outOfFlowFrame->GetNextContinuation()));
@@ -2568,7 +2571,6 @@ ElementRestyler::Restyle(nsRestyleHint aRestyleHint,
               // as the out-of-flow frame
               ElementRestyler phRestyler(*this, child);
               phRestyler.Restyle(childRestyleHint,
-                                    kidsDesiredA11yNotification,
                                     aVisibleKidsOfHiddenElement,
                                     aTreeMatchContext);
             }
@@ -2576,7 +2578,6 @@ ElementRestyler::Restyle(nsRestyleHint aRestyleHint,
               if (child != resolvedChild) {
                 ElementRestyler childRestyler(*this, child);
                 childRestyler.Restyle(childRestyleHint,
-                                      kidsDesiredA11yNotification,
                                       aVisibleKidsOfHiddenElement,
                                       aTreeMatchContext);
               }
@@ -2588,7 +2589,7 @@ ElementRestyler::Restyle(nsRestyleHint aRestyleHint,
 
 #ifdef ACCESSIBILITY
       // Send notifications about visibility changes.
-      if (ourA11yNotification == eNotifyShown) {
+      if (mOurA11yNotification == eNotifyShown) {
         nsAccessibilityService* accService = nsIPresShell::AccService();
         if (accService) {
           nsIPresShell* presShell = mFrame->PresContext()->GetPresShell();
@@ -2598,7 +2599,7 @@ ElementRestyler::Restyle(nsRestyleHint aRestyleHint,
                                            content,
                                            content->GetNextSibling());
         }
-      } else if (ourA11yNotification == eNotifyHidden) {
+      } else if (mOurA11yNotification == eNotifyHidden) {
         nsAccessibilityService* accService = nsIPresShell::AccService();
         if (accService) {
           nsIPresShell* presShell = mFrame->PresContext()->GetPresShell();
@@ -2662,7 +2663,6 @@ RestyleManager::ComputeStyleChangeFor(nsIFrame*          aFrame,
                                aMinChange, aRestyleTracker);
 
       restyler.Restyle(aRestyleDescendants ? eRestyle_Subtree : eRestyle_Self,
-                              ElementRestyler::eSendAllNotifications,
                               visibleKidsOfHiddenElement,
                               treeMatchContext);
 
