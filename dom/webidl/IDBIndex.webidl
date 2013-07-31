@@ -12,3 +12,38 @@ dictionary IDBIndexParameters {
     boolean multiEntry = false;
 };
 
+interface IDBIndex {
+    readonly    attribute DOMString      name;
+    readonly    attribute IDBObjectStore objectStore;
+
+    [Throws]
+    readonly    attribute any            keyPath;
+
+    readonly    attribute boolean        multiEntry;
+    readonly    attribute boolean        unique;
+
+    [Throws]
+    IDBRequest openCursor (optional any range, optional IDBCursorDirection direction = "next");
+
+    [Throws]
+    IDBRequest openKeyCursor (optional any range, optional IDBCursorDirection direction = "next");
+
+    [Throws]
+    IDBRequest get (any key);
+
+    [Throws]
+    IDBRequest getKey (any key);
+
+    [Throws]
+    IDBRequest count (optional any key);
+};
+
+partial interface IDBIndex {
+    readonly attribute DOMString storeName;
+
+    [Throws]
+    IDBRequest mozGetAll (optional any key, optional unsigned long limit);
+
+    [Throws]
+    IDBRequest mozGetAllKeys (optional any key, optional unsigned long limit);
+};

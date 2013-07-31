@@ -273,29 +273,6 @@ IDBCursor::Create(IDBRequest* aRequest,
 }
 
 // static
-nsresult
-IDBCursor::ParseDirection(const nsAString& aDirection, Direction* aResult)
-{
-  if (aDirection.EqualsLiteral("next")) {
-    *aResult = NEXT;
-  }
-  else if (aDirection.EqualsLiteral("nextunique")) {
-    *aResult = NEXT_UNIQUE;
-  }
-  else if (aDirection.EqualsLiteral("prev")) {
-    *aResult = PREV;
-  }
-  else if (aDirection.EqualsLiteral("prevunique")) {
-    *aResult = PREV_UNIQUE;
-  }
-  else {
-    return NS_ERROR_TYPE_ERR;
-  }
-  
-  return NS_OK;
-}
-
-// static
 IDBCursor::Direction
 IDBCursor::ConvertDirection(mozilla::dom::IDBCursorDirection aDirection)
 {
