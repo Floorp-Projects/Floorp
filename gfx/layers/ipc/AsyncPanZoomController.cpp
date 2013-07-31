@@ -1115,7 +1115,7 @@ bool AsyncPanZoomController::SampleContentTransformForFrame(const TimeStamp& aSa
     }
 
     aScrollOffset = mFrameMetrics.mScrollOffset * mFrameMetrics.CalculateResolution();
-    *aNewTransform = GetCurrentAsyncTransformInternal();
+    *aNewTransform = GetCurrentAsyncTransform();
 
     mCurrentAsyncScrollOffset = mFrameMetrics.mScrollOffset;
   }
@@ -1154,10 +1154,7 @@ bool AsyncPanZoomController::SampleContentTransformForFrame(const TimeStamp& aSa
 
 ViewTransform AsyncPanZoomController::GetCurrentAsyncTransform() {
   ReentrantMonitorAutoEnter lock(mMonitor);
-  return GetCurrentAsyncTransformInternal();
-}
 
-ViewTransform AsyncPanZoomController::GetCurrentAsyncTransformInternal() {
   LayerPoint metricsScrollOffset;
   if (mLastContentPaintMetrics.IsScrollable()) {
     metricsScrollOffset = mLastContentPaintMetrics.GetScrollOffsetInLayerPixels();
