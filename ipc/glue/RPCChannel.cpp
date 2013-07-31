@@ -70,6 +70,7 @@ RPCChannel::EventOccurred() const
 
     return (!Connected() ||
             !mPending.empty() ||
+            !mUrgent.empty() ||
             (!mOutOfTurnReplies.empty() &&
              mOutOfTurnReplies.find(mStack.top().seqno())
              != mOutOfTurnReplies.end()));
@@ -94,10 +95,12 @@ RPCChannel::Send(Message* msg, Message* reply)
 bool
 RPCChannel::Call(Message* _msg, Message* reply)
 {
+    RPC_ASSERT(!mPendingReply, "should not be waiting for a reply");
+
     nsAutoPtr<Message> msg(_msg);
     AssertWorkerThread();
     mMonitor->AssertNotCurrentThreadOwns();
-    RPC_ASSERT(!ProcessingSyncMessage(),
+    RPC_ASSERT(!ProcessingSyncMessage() || msg->priority() == IPC::Message::PRIORITY_HIGH,
                "violation of sync handler invariant");
     RPC_ASSERT(msg->is_rpc(), "can only Call() RPC messages here");
 
@@ -114,6 +117,8 @@ RPCChannel::Call(Message* _msg, Message* reply)
         ReportConnectionError("RPCChannel");
         return false;
     }
+
+    bool urgent = (copy.priority() == IPC::Message::PRIORITY_HIGH);
 
     msg->set_seqno(NextSeqno());
     msg->set_rpc_remote_stack_depth_guess(mRemoteStackDepthGuess);
@@ -166,6 +171,10 @@ RPCChannel::Call(Message* _msg, Message* reply)
             recvd = it->second;
             mOutOfTurnReplies.erase(it);
         }
+        else if (!mUrgent.empty()) {
+            recvd = mUrgent.front();
+            mUrgent.pop_front();
+        }
         else if (!mPending.empty()) {
             recvd = mPending.front();
             mPending.pop_front();
@@ -179,23 +188,22 @@ RPCChannel::Call(Message* _msg, Message* reply)
             continue;
         }
 
-        if (!recvd.is_sync() && !recvd.is_rpc()) {
-            MonitorAutoUnlock unlock(*mMonitor);
-
-            CxxStackFrame f(*this, IN_MESSAGE, &recvd);
-            AsyncChannel::OnDispatchMessage(recvd);
-
-            continue;
-        }
-
-        if (recvd.is_sync()) {
-            RPC_ASSERT(mPending.empty(),
-                       "other side should have been blocked");
-            MonitorAutoUnlock unlock(*mMonitor);
-
-            CxxStackFrame f(*this, IN_MESSAGE, &recvd);
-            SyncChannel::OnDispatchMessage(recvd);
-
+        if (!recvd.is_rpc()) {
+            if (urgent && recvd.priority() != IPC::Message::PRIORITY_HIGH) {
+                // If we're waiting for an urgent reply, don't process any
+                // messages yet.
+                mNonUrgentDeferred.push_back(recvd);
+            } else if (recvd.is_sync()) {
+                RPC_ASSERT(mPending.empty(),
+                           "other side should have been blocked");
+                MonitorAutoUnlock unlock(*mMonitor);
+                CxxStackFrame f(*this, IN_MESSAGE, &recvd);
+                SyncChannel::OnDispatchMessage(recvd);
+            } else {
+                MonitorAutoUnlock unlock(*mMonitor);
+                CxxStackFrame f(*this, IN_MESSAGE, &recvd);
+                AsyncChannel::OnDispatchMessage(recvd);
+            }
             continue;
         }
 
@@ -294,18 +302,17 @@ RPCChannel::EnqueuePendingMessages()
 
     MaybeUndeferIncall();
 
-    for (size_t i = 0; i < mDeferred.size(); ++i)
-        mWorkerLoop->PostTask(
-            FROM_HERE,
-            new DequeueTask(mDequeueOneTask));
+    for (size_t i = 0; i < mDeferred.size(); ++i) {
+        mWorkerLoop->PostTask(FROM_HERE, new DequeueTask(mDequeueOneTask));
+    }
 
     // XXX performance tuning knob: could process all or k pending
     // messages here, rather than enqueuing for later processing
 
-    for (size_t i = 0; i < mPending.size(); ++i)
-        mWorkerLoop->PostTask(
-            FROM_HERE,
-            new DequeueTask(mDequeueOneTask));
+    size_t total = mPending.size() + mUrgent.size() + mNonUrgentDeferred.size();
+    for (size_t i = 0; i < total; ++i) {
+        mWorkerLoop->PostTask(FROM_HERE, new DequeueTask(mDequeueOneTask));
+    }
 }
 
 void
@@ -351,11 +358,16 @@ RPCChannel::OnMaybeDequeueOne()
         if (!mDeferred.empty())
             MaybeUndeferIncall();
 
-        if (mPending.empty())
+        MessageQueue *queue = mUrgent.empty()
+                              ? mNonUrgentDeferred.empty()
+                                ? &mPending
+                                : &mNonUrgentDeferred
+                              : &mUrgent;
+        if (queue->empty())
             return false;
 
-        recvd = mPending.front();
-        mPending.pop_front();
+        recvd = queue->front();
+        queue->pop_front();
     }
 
     if (IsOnCxxStack() && recvd.is_rpc() && recvd.is_reply()) {
@@ -564,31 +576,56 @@ RPCChannel::OnMessageReceivedFromLink(const Message& msg)
         return;
     }
 
-    bool compressMessage = (msg.compress() && !mPending.empty() &&
-                            mPending.back().type() == msg.type() &&
-                            mPending.back().routing_id() == msg.routing_id());
+    MessageQueue *queue = (msg.priority() == IPC::Message::PRIORITY_HIGH)
+                          ? &mUrgent
+                          : &mPending;
+
+    bool compressMessage = (msg.compress() && !queue->empty() &&
+                            queue->back().type() == msg.type() &&
+                            queue->back().routing_id() == msg.routing_id());
     if (compressMessage) {
         // This message type has compression enabled, and the back of
         // the queue was the same message type and routed to the same
         // destination.  Replace it with the newer message.
-        MOZ_ASSERT(mPending.back().compress());
-        mPending.pop_back();
+        MOZ_ASSERT(queue->back().compress());
+        queue->pop_back();
     }
 
-    mPending.push_back(msg);
+    queue->push_back(msg);
 
-    if (0 == StackDepth()) {
-        // the worker thread might be idle, make sure it wakes up
+    // There are three cases we're concerned about, relating to the state of
+    // the main thread:
+    //
+    // (1) We are waiting on a sync reply - main thread is blocked on the IPC monitor.
+    //   - If the message is high priority, we wake up the main thread to
+    //     deliver the message. Otherwise, we leave it in the mPending queue,
+    //     posting a task to the main event loop, where it will be processed
+    //     once the synchronous reply has been received.
+    //
+    // (2) We are waiting on an RPC reply - main thread is blocked on the IPC monitor.
+    //   - Always wake up the main thread to deliver the message.
+    //
+    // (3) We are not waiting on a reply.
+    //   - We post a task to the main event loop.
+    //
+    bool waiting_rpc = (0 != StackDepth());
+    bool urgent = (msg.priority() == IPC::Message::PRIORITY_HIGH);
+
+    if (waiting_rpc || (AwaitingSyncReply() && urgent)) {
+        // Always wake up our RPC waiter, and wake up sync waiters for urgent
+        // messages.
+        NotifyWorkerThread();
+    } else {
+        // Worker thread is either not blocked on a reply, or this is an
+        // incoming RPC that raced with outgoing sync and needs to be deferred
+        // to a later event-loop iteration.
         if (!compressMessage) {
             // If we compressed away the previous message, we'll reuse
             // its pending task.
             mWorkerLoop->PostTask(FROM_HERE, new DequeueTask(mDequeueOneTask));
         }
     }
-    else if (!AwaitingSyncReply())
-        NotifyWorkerThread();
 }
-
 
 void
 RPCChannel::OnChannelErrorFromLink()

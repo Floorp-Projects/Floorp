@@ -1554,14 +1554,14 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
         typedefs = self.protocol.decl.cxxtypedefs
         for md in p.messageDecls:
             ns.addstmts([
-                _generateMessageClass(md.msgClass(), md.msgId(),
+                _generateMessageClass(md, md.msgClass(), md.msgId(),
                                       typedefs, md.prettyMsgName(p.name+'::'),
                                       md.decl.type.compress),
                 Whitespace.NL ])
             if md.hasReply():
                 ns.addstmts([
                     _generateMessageClass(
-                        md.replyClass(), md.replyId(),
+                        md, md.replyClass(), md.replyId(),
                         typedefs, md.prettyReplyName(p.name+'::'),
                         md.decl.type.compress),
                     Whitespace.NL ])
@@ -1751,7 +1751,7 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
 
 ##--------------------------------------------------
 
-def _generateMessageClass(clsname, msgid, typedefs, prettyName, compress):
+def _generateMessageClass(md, clsname, msgid, typedefs, prettyName, compress):
     cls = Class(name=clsname, inherits=[ Inherit(Type('IPC::Message')) ])
     cls.addstmt(Label.PRIVATE)
     cls.addstmts(typedefs)
@@ -1768,12 +1768,16 @@ def _generateMessageClass(clsname, msgid, typedefs, prettyName, compress):
         compression = ExprVar('COMPRESSION_ENABLED')
     else:
         compression = ExprVar('COMPRESSION_NONE')
+    if md.decl.type.isUrgent():
+        priority = 'PRIORITY_HIGH'
+    else:
+        priority = 'PRIORITY_NORMAL'
     ctor = ConstructorDefn(
         ConstructorDecl(clsname),
         memberinits=[ ExprMemberInit(ExprVar('IPC::Message'),
                                      [ ExprVar('MSG_ROUTING_NONE'),
                                        ExprVar('ID'),
-                                       ExprVar('PRIORITY_NORMAL'),
+                                       ExprVar(priority),
                                        compression,
                                        ExprLiteral.String(prettyName) ]) ])
     cls.addstmts([ ctor, Whitespace.NL ])
@@ -4512,7 +4516,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 self.asyncSwitch.addcase(lbl, case)
             elif sems is ipdl.ast.SYNC:
                 self.syncSwitch.addcase(lbl, case)
-            elif sems is ipdl.ast.RPC:
+            elif sems is ipdl.ast.RPC or sems is ipdl.ast.URGENT:
                 self.rpcSwitch.addcase(lbl, case)
             else: assert 0
 
