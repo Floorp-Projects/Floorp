@@ -355,6 +355,7 @@ private:
   nsChangeHint mHintsNotHandledForDescendants;
   RestyleTracker& mRestyleTracker;
   TreeMatchContext& mTreeMatchContext;
+  nsIFrame* mResolvedChild; // child that provides our parent style context
 
   const DesiredA11yNotifications mDesiredA11yNotifications;
   DesiredA11yNotifications mKidsDesiredA11yNotifications;
