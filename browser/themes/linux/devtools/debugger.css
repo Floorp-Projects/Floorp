@@ -54,6 +54,25 @@
   display: none;
 }
 
+/* Black box message */
+
+#black-boxed-message {
+  padding: 100px 50px;
+  background-color: rgb(61, 69, 76);
+  color: white;
+}
+
+#black-boxed-message-label,
+#black-boxed-message-button {
+  text-align: center;
+  font-size: 150%;
+}
+
+#black-boxed-message-button {
+  margin-top: 1em;
+  padding: .25em;
+}
+
 /* ListWidget items */
 
 .list-widget-item {

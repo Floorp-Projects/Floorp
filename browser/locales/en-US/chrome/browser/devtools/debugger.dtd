@@ -19,6 +19,16 @@
   -  the button that toggles the panes visible or hidden in the debugger UI. -->
 <!ENTITY debuggerUI.panesButton.tooltip "Toggle panes">
 
+<!-- LOCALIZATION NOTE (debuggerUI.blackBoxMessage.label): This is the message
+  - displayed to users when they select a black boxed source from the sources
+  - list in the debugger. -->
+<!ENTITY debuggerUI.blackBoxMessage.label "This source is black boxed: its breakpoints are disabled, and stepping skips through it.">
+
+<!-- LOCALIZATION NOTE (debuggerUI.blackBoxMessage.unBlackBoxButton): This is
+  - the text displayed in the button to stop black boxing the currently selected
+  - source. -->
+<!ENTITY debuggerUI.blackBoxMessage.unBlackBoxButton "Stop black boxing this source">
+
 <!-- LOCALIZATION NOTE (debuggerUI.optsButton.tooltip): This is the tooltip for
   -  the button that opens up an options context menu for the debugger UI. -->
 <!ENTITY debuggerUI.optsButton.tooltip  "Debugger Options">
