@@ -12,14 +12,52 @@ function run_test()
     .getService(Components.interfaces.mozIJSSubScriptLoader);
   loader.loadSubScript("resource://gre/modules/devtools/server/actors/script.js");
 
+  test_has_breakpoint();
   test_bug_754251();
   test_add_breakpoint();
   test_remove_breakpoint();
   test_find_breakpoints();
 }
 
+function test_has_breakpoint() {
+  let bpStore = new BreakpointStore();
+  let location = {
+    url: "http://example.com/foo.js",
+    line: 3
+  };
+  let columnLocation = {
+    url: "http://example.com/bar.js",
+    line: 5,
+    column: 15
+  };
+
+  // Shouldn't have breakpoint
+  do_check_eq(null, bpStore.hasBreakpoint(location),
+              "Breakpoint not added and shouldn't exist.");
+
+  bpStore.addBreakpoint(location);
+  do_check_true(!!bpStore.hasBreakpoint(location),
+                "Breakpoint added but not found in Breakpoint Store.");
+
+  bpStore.removeBreakpoint(location);
+  do_check_eq(null, bpStore.hasBreakpoint(location),
+              "Breakpoint removed but still exists.");
+
+  // Same checks for breakpoint with a column
+  do_check_eq(null, bpStore.hasBreakpoint(columnLocation),
+              "Breakpoint with column not added and shouldn't exist.");
+
+  bpStore.addBreakpoint(columnLocation);
+  do_check_true(!!bpStore.hasBreakpoint(columnLocation),
+                "Breakpoint with column added but not found in Breakpoint Store.");
+
+  bpStore.removeBreakpoint(columnLocation);
+  do_check_eq(null, bpStore.hasBreakpoint(columnLocation),
+              "Breakpoint with column removed but still exists in Breakpoint Store.");
+}
+
 // Note: Removing this test will regress bug 754251. See comment above
-// ThreadActor._breakpointStore.
+// ThreadActor.breakpointStore.
 function test_bug_754251() {
   let instance1 = new ThreadActor();
   let instance2 = new ThreadActor();
@@ -37,7 +75,7 @@ function test_add_breakpoint() {
     column: 9
   };
   bpStore.addBreakpoint(location);
-  do_check_true(!!bpStore.getBreakpoint(location, false),
+  do_check_true(!!bpStore.hasBreakpoint(location),
                 "We should have the column breakpoint we just added");
 
   // Breakpoint without column (whole line breakpoint)
@@ -46,7 +84,7 @@ function test_add_breakpoint() {
     line: 103
   };
   bpStore.addBreakpoint(location);
-  do_check_true(!!bpStore.getBreakpoint(location, false),
+  do_check_true(!!bpStore.hasBreakpoint(location),
                 "We should have the whole line breakpoint we just added");
 }
 
@@ -60,7 +98,7 @@ function test_remove_breakpoint() {
   };
   bpStore.addBreakpoint(location);
   bpStore.removeBreakpoint(location);
-  do_check_eq(bpStore.getBreakpoint(location, false), null,
+  do_check_eq(bpStore.hasBreakpoint(location), null,
               "We should not have the column breakpoint anymore");
 
   // Breakpoint without column (whole line breakpoint)
@@ -70,7 +108,7 @@ function test_remove_breakpoint() {
   };
   bpStore.addBreakpoint(location);
   bpStore.removeBreakpoint(location);
-  do_check_eq(bpStore.getBreakpoint(location, false), null,
+  do_check_eq(bpStore.hasBreakpoint(location), null,
               "We should not have the whole line breakpoint anymore");
 }
 
