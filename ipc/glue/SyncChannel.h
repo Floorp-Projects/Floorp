@@ -143,6 +143,12 @@ protected:
         return mPendingReply != 0;
     }
 
+    Message TakeReply() {
+        Message reply = mRecvd;
+        mRecvd = Message();
+        return reply;
+    }
+
     int32_t NextSeqno() {
         AssertWorkerThread();
         return mChild ? --mNextSeqno : ++mNextSeqno;
@@ -165,12 +171,15 @@ protected:
     bool mInTimeoutSecondHalf;
     int32_t mTimeoutMs;
 
+    std::deque<Message> mUrgent;
+
 #ifdef OS_WIN
     HANDLE mEvent;
 #endif
 
 private:
     bool EventOccurred();
+    bool ProcessUrgentMessages();
 };
 
 
