@@ -1565,7 +1565,7 @@ gsmsdp_set_sdp_direction (fsmdef_media_t *media,
  * attributes_ctp  - count of array of media line attributes
  */
 
-static boolean
+static cc_causes_t
 gsmsdp_get_ice_attributes (sdp_attr_e sdp_attr, uint16_t level, void *sdp_p, char ***ice_attribs, int *attributes_ctp)
 {
     uint16_t        num_a_lines = 0;
@@ -1576,18 +1576,18 @@ gsmsdp_get_ice_attributes (sdp_attr_e sdp_attr, uint16_t level, void *sdp_p, cha
     result = sdp_attr_num_instances(sdp_p, level, 0, sdp_attr, &num_a_lines);
     if (result != SDP_SUCCESS) {
         GSM_ERR_MSG("enumerating ICE attributes failed");
-        return FALSE;
+        return result;
     }
 
     if (num_a_lines < 1) {
-    	GSM_ERR_MSG("enumerating ICE attributes returned 0 attributes");
-    	return TRUE;
+        GSM_DEBUG("enumerating ICE attributes returned 0 attributes");
+        return CC_CAUSE_OK;
     }
 
     *ice_attribs = (char **)cpr_malloc(num_a_lines * sizeof(char *));
 
     if (!(*ice_attribs))
-      return FALSE;
+      return CC_CAUSE_OUT_OF_MEM;
 
     *attributes_ctp = 0;
 
@@ -1595,19 +1595,24 @@ gsmsdp_get_ice_attributes (sdp_attr_e sdp_attr, uint16_t level, void *sdp_p, cha
         result = sdp_attr_get_ice_attribute (sdp_p, level, 0, sdp_attr, (uint16_t) (i + 1),
           &ice_attrib);
         if (result != SDP_SUCCESS) {
-    		GSM_ERR_MSG("Failed to retrieve ICE attribute");
-    		cpr_free(*ice_attribs);
-    		return FALSE;
-    	}
+            GSM_ERR_MSG("Failed to retrieve ICE attribute");
+            cpr_free(*ice_attribs);
+            return result == SDP_INVALID_SDP_PTR ?
+                             CC_CAUSE_INVALID_SDP_POINTER :
+                   result == SDP_INVALID_PARAMETER ?
+                             CC_CAUSE_BAD_ICE_ATTRIBUTE :
+                   /* otherwise */
+                             CC_CAUSE_ERROR;
+        }
         (*ice_attribs)[i] = (char *) cpr_calloc(1, strlen(ice_attrib) + 1);
         if(!(*ice_attribs)[i])
-        	return FALSE;
+            return CC_CAUSE_OUT_OF_MEM;
 
         sstrncpy((*ice_attribs)[i], ice_attrib, strlen(ice_attrib) + 1);
         (*attributes_ctp)++;
     }
 
-    return TRUE;
+    return CC_CAUSE_OK;
 }
 
 /*
@@ -4997,7 +5002,7 @@ gsmsdp_get_offered_media_types (fsm_fcb_t *fcb_p, cc_sdp_t *sdp_p, boolean *has_
  *
  * returns    cc_causes_t
  *            CC_CAUSE_OK - indicates success
- *            CC_CAUSE_ERROR - indicates failure
+ *            Any other code - indicates failure
  */
 static cc_causes_t
 gsmsdp_init_local_sdp (const char *peerconnection, cc_sdp_t **sdp_pp)
@@ -5013,8 +5018,11 @@ gsmsdp_init_local_sdp (const char *peerconnection, cc_sdp_t **sdp_pp)
     cpr_ip_mode_e   ip_mode;
     char           *strtok_state;
 
-    if (!peerconnection || !sdp_pp) {
-        return CC_CAUSE_ERROR;
+    if (!peerconnection) {
+        return CC_CAUSE_NO_PEERCONNECTION;
+    }
+    if (!sdp_pp) {
+        return CC_CAUSE_NULL_POINTER;
     }
 
     ip_mode = platform_get_ip_address_mode();
@@ -5054,7 +5062,7 @@ gsmsdp_init_local_sdp (const char *peerconnection, cc_sdp_t **sdp_pp)
     sdp_p = *sdp_pp;
 
     if ( sdp_p == NULL )
-       return CC_CAUSE_ERROR;
+       return CC_CAUSE_NO_SDP;
 
     local_sdp_p = sdp_p->src_sdp;
 
@@ -5305,7 +5313,7 @@ gsmsdp_add_media_line (fsmdef_dcb_t *dcb_p, const cc_media_cap_t *media_cap,
  *
  * returns    cc_causes_t
  *            CC_CAUSE_OK - indicates success
- *            CC_CAUSE_ERROR - indicates failure
+ *            Any other code- indicates failure
  */
 cc_causes_t
 gsmsdp_create_local_sdp (fsmdef_dcb_t *dcb_p, boolean force_streams_enabled,
@@ -5321,10 +5329,12 @@ gsmsdp_create_local_sdp (fsmdef_dcb_t *dcb_p, boolean force_streams_enabled,
     boolean         has_audio;
     int             sdpmode = 0;
     boolean         media_enabled;
+    cc_causes_t     cause;
 
-    if ( CC_CAUSE_OK != gsmsdp_init_local_sdp(dcb_p->peerconnection,
-        &(dcb_p->sdp)) )
-      return CC_CAUSE_ERROR;
+    cause = gsmsdp_init_local_sdp(dcb_p->peerconnection, &(dcb_p->sdp));
+    if ( cause != CC_CAUSE_OK) {
+      return cause;
+    }
 
     config_get_value(CFGID_SDPMODE, &sdpmode, sizeof(sdpmode));
 
@@ -5336,7 +5346,7 @@ gsmsdp_create_local_sdp (fsmdef_dcb_t *dcb_p, boolean force_streams_enabled,
         /* should not happen */
         GSM_ERR_MSG(GSM_L_C_F_PREFIX"no media capbility available",
                     dcb_p->line, dcb_p->call_id, fname);
-        return (CC_CAUSE_ERROR);
+        return (CC_CAUSE_NO_MEDIA_CAPABILITY);
     }
 
     media_cap = &media_cap_tbl->cap[0];
@@ -5409,7 +5419,7 @@ gsmsdp_create_local_sdp (fsmdef_dcb_t *dcb_p, boolean force_streams_enabled,
          */
         GSM_ERR_MSG(GSM_L_C_F_PREFIX"no media line for SDP",
                     dcb_p->line, dcb_p->call_id, fname);
-        return (CC_CAUSE_ERROR);
+        return (CC_CAUSE_NO_M_LINE);
     }
 
     /*
@@ -5442,7 +5452,7 @@ gsmsdp_create_local_sdp (fsmdef_dcb_t *dcb_p, boolean force_streams_enabled,
             /* No audio, do not allow */
             GSM_ERR_MSG(GSM_L_C_F_PREFIX"no audio media line for SDP",
                     dcb_p->line, dcb_p->call_id, fname);
-            return (CC_CAUSE_ERROR);
+            return (CC_CAUSE_NO_AUDIO);
         }
     }
 
@@ -5464,7 +5474,7 @@ gsmsdp_create_options_sdp (cc_sdp_t ** sdp_pp)
     cc_sdp_t *sdp_p;
 
     /* This empty string represents to associated peerconnection object */
-    if (gsmsdp_init_local_sdp("", sdp_pp) == CC_CAUSE_ERROR) {
+    if (gsmsdp_init_local_sdp("", sdp_pp) != CC_CAUSE_OK) {
         return;
     }
 
@@ -6163,17 +6173,17 @@ gsmsdp_encode_sdp (cc_sdp_t *sdp_p, cc_msgbody_info_t *msg_body)
     uint32_t        body_length;
 
     if (!msg_body || !sdp_p) {
-        return CC_CAUSE_ERROR;
+        return CC_CAUSE_NULL_POINTER;
     }
 
     /* Support single SDP encoding for now */
     sdp_body = sipsdp_write_to_buf(sdp_p->src_sdp, &body_length);
 
     if (sdp_body == NULL) {
-        return CC_CAUSE_ERROR;
+        return CC_CAUSE_SDP_ENCODE_FAILED;
     } else if (body_length == 0) {
         cpr_free(sdp_body);
-        return CC_CAUSE_ERROR;
+        return CC_CAUSE_SDP_ENCODE_FAILED;
     }
 
     /* Clear off the bodies info */
@@ -6211,21 +6221,20 @@ cc_causes_t
 gsmsdp_encode_sdp_and_update_version (fsmdef_dcb_t *dcb_p, cc_msgbody_info_t *msg_body)
 {
     char version_str[GSMSDP_VERSION_STR_LEN];
+    cc_causes_t cause;
 
     snprintf(version_str, sizeof(version_str), "%d", dcb_p->src_sdp_version);
 
-    if ( dcb_p->sdp == NULL || dcb_p->sdp->src_sdp == NULL )
-    {
-    	if ( CC_CAUSE_OK != gsmsdp_init_local_sdp(dcb_p->peerconnection,
-            &(dcb_p->sdp)) )
-    	{
-    		return CC_CAUSE_ERROR;
-    	}
+    if ( dcb_p->sdp == NULL || dcb_p->sdp->src_sdp == NULL ) {
+        cause = gsmsdp_init_local_sdp(dcb_p->peerconnection, &(dcb_p->sdp));
+        if ( cause != CC_CAUSE_OK) {
+            return cause;
+        }
     }
     (void) sdp_set_owner_version(dcb_p->sdp->src_sdp, version_str);
 
     if (gsmsdp_encode_sdp(dcb_p->sdp, msg_body) != CC_CAUSE_OK) {
-        return CC_CAUSE_ERROR;
+        return CC_CAUSE_SDP_ENCODE_FAILED;
     }
 
     dcb_p->src_sdp_version++;
@@ -6327,7 +6336,7 @@ gsmsdp_realloc_dest_sdp (fsmdef_dcb_t *dcb_p)
     /* No SDP info block and parsed control block are available */
     if ((dcb_p->sdp == NULL) || (dcb_p->sdp->dest_sdp == NULL)) {
         /* Unable to create internal SDP structure to parse SDP. */
-        return CC_CAUSE_ERROR;
+        return CC_CAUSE_SDP_CREATE_FAILED;
     }
     return CC_CAUSE_OK;
 }
@@ -6363,20 +6372,21 @@ gsmsdp_negotiate_answer_sdp (fsm_fcb_t *fcb_p, cc_msgbody_info_t *msg_body)
         /*
          * Clear the call - we don't have any remote SDP info!
          */
-        return CC_CAUSE_ERROR;
+        return CC_CAUSE_NO_SDP;
     }
 
     /* There are SDPs to process, prepare for parsing the SDP */
-    if (gsmsdp_realloc_dest_sdp(dcb_p) != CC_CAUSE_OK) {
+    status = gsmsdp_realloc_dest_sdp(dcb_p);
+    if (status != CC_CAUSE_OK) {
         /* Unable to create internal SDP structure to parse SDP. */
-        return CC_CAUSE_ERROR;
+        return status;
     }
 
     /*
      * Parse the SDP into internal structure,
      * now just parse one
      */
-    status = CC_CAUSE_ERROR;
+    status = CC_CAUSE_SDP_PARSE_FAILED;
     for (i = 0; (i < num_sdp_bodies); i++) {
         if ((sdp_bodies[i]->body != NULL) && (sdp_bodies[i]->body_length > 0)) {
             /* Found a body */
@@ -6478,8 +6488,10 @@ gsmsdp_process_offer_sdp (fsm_fcb_t *fcb_p,
          * of a session. Otherwise, we will send what we have.
          */
         if (init) {
-            if ( CC_CAUSE_OK != gsmsdp_create_local_sdp(dcb_p, FALSE, TRUE, TRUE, TRUE, TRUE)) {
-                return CC_CAUSE_ERROR;
+            status = gsmsdp_create_local_sdp(dcb_p, FALSE, TRUE,
+                                             TRUE, TRUE, TRUE);
+            if ( status != CC_CAUSE_OK) {
+                return status;
             }
         } else {
             /*
@@ -6492,16 +6504,17 @@ gsmsdp_process_offer_sdp (fsm_fcb_t *fcb_p,
     }
 
     /* There are SDPs to process, prepare for parsing the SDP */
-    if (gsmsdp_realloc_dest_sdp(dcb_p) != CC_CAUSE_OK) {
+    status = gsmsdp_realloc_dest_sdp(dcb_p);
+    if (status != CC_CAUSE_OK) {
         /* Unable to create internal SDP structure to parse SDP. */
-        return CC_CAUSE_ERROR;
+        return status;
     }
 
     /*
      * Parse the SDP into internal structure,
      * now just parse one
      */
-    status = CC_CAUSE_ERROR;
+    status = CC_CAUSE_SDP_PARSE_FAILED;
     for (i = 0; (i < num_sdp_bodies); i++) {
         if ((sdp_bodies[i]->body != NULL) && (sdp_bodies[i]->body_length > 0)) {
             /* Found a body */
@@ -6580,7 +6593,7 @@ gsmsdp_check_ice_attributes_exist(fsm_fcb_t *fcb_p) {
             if (sdp_res != SDP_SUCCESS || !ufrag) {
                 GSM_ERR_MSG(GSM_L_C_F_PREFIX"missing ICE ufrag parameter.",
                             dcb_p->line, dcb_p->call_id, __FUNCTION__);
-                return CC_CAUSE_ERROR;
+                return CC_CAUSE_MISSING_ICE_ATTRIBUTES;
             }
         }
 
@@ -6591,7 +6604,7 @@ gsmsdp_check_ice_attributes_exist(fsm_fcb_t *fcb_p) {
             if (sdp_res != SDP_SUCCESS || !pwd) {
                 GSM_ERR_MSG(GSM_L_C_F_PREFIX"missing ICE pwd parameter.",
                             dcb_p->line, dcb_p->call_id, __FUNCTION__);
-                return CC_CAUSE_ERROR;
+                return CC_CAUSE_MISSING_ICE_ATTRIBUTES;
             }
         }
     }
@@ -6621,7 +6634,7 @@ gsmsdp_install_peer_ice_attributes(fsm_fcb_t *fcb_p)
     cc_sdp_t        *sdp_p = dcb_p->sdp;
     fsmdef_media_t  *media;
     int             level;
-    short           result;
+    cc_causes_t     result;
 
     /* Tolerate missing ufrag/pwd here at the session level
        because it might be at the media level */
@@ -6638,7 +6651,7 @@ gsmsdp_install_peer_ice_attributes(fsm_fcb_t *fcb_p)
     if (ufrag && pwd) {
         vcm_res = vcmSetIceSessionParams(dcb_p->peerconnection, ufrag, pwd);
         if (vcm_res)
-            return (CC_CAUSE_ERROR);
+            return (CC_CAUSE_SETTING_ICE_SESSION_PARAMETERS_FAILED);
     }
 
     /* Now process all the media lines */
@@ -6660,8 +6673,8 @@ gsmsdp_install_peer_ice_attributes(fsm_fcb_t *fcb_p)
       candidates = NULL;
       result = gsmsdp_get_ice_attributes (SDP_ATTR_ICE_CANDIDATE, media->level, sdp_p->dest_sdp,
                                           &candidates, &candidate_ct);
-      if(!result)
-        return (CC_CAUSE_ERROR);
+      if(result != CC_CAUSE_OK)
+        return (result);
 
       /* Set ICE parameters into ICE engine */
 
@@ -6680,7 +6693,7 @@ gsmsdp_install_peer_ice_attributes(fsm_fcb_t *fcb_p)
       }
 
       if (vcm_res)
-        return (CC_CAUSE_ERROR);
+        return (CC_CAUSE_SETTING_ICE_SESSION_PARAMETERS_FAILED);
 
     }
 
@@ -6733,47 +6746,47 @@ gsmsdp_configure_dtls_data_attributes(fsm_fcb_t *fcb_p)
 
         if (SDP_SUCCESS == sdp_res ) {
             if (strlen(fingerprint) >= sizeof(line_to_split))
-                return CC_CAUSE_ERROR;
+                return CC_CAUSE_DTLS_FINGERPRINT_TOO_LONG;
             sstrncpy(line_to_split, fingerprint, sizeof(line_to_split));
         } else if (SDP_SUCCESS == sdp_session_res) {
             if (strlen(session_fingerprint) >= sizeof(line_to_split))
-                return CC_CAUSE_ERROR;
+                return CC_CAUSE_DTLS_FINGERPRINT_TOO_LONG;
             sstrncpy(line_to_split, session_fingerprint, sizeof(line_to_split));
         } else {
-            cause = CC_CAUSE_ERROR;
+            cause = CC_CAUSE_NO_DTLS_FINGERPRINT;
             continue;
         }
 
         if (SDP_SUCCESS == sdp_res || SDP_SUCCESS == sdp_session_res) {
             if(!(token = PL_strtok_r(line_to_split, delim, &strtok_state)))
-                return CC_CAUSE_ERROR;
+                return CC_CAUSE_DTLS_FINGERPRINT_PARSE_ERROR;
 
             if (strlen(token) >= sizeof(digest_alg))
-                return CC_CAUSE_ERROR;
+                return CC_CAUSE_DTLS_DIGEST_ALGORITHM_TOO_LONG;
 
             sstrncpy(digest_alg, token, sizeof(digest_alg));
             if(!(token = PL_strtok_r(NULL, delim, &strtok_state)))
-                return CC_CAUSE_ERROR;
+                return CC_CAUSE_DTLS_FINGERPRINT_PARSE_ERROR;
 
             if (strlen(token) >= sizeof(digest))
-                return CC_CAUSE_ERROR;
+                return CC_CAUSE_DTLS_DIGEST_TOO_LONG;
 
             sstrncpy(digest, token, sizeof(digest));
 
             if (strlen(digest_alg) >= sizeof(media->negotiated_crypto.algorithm))
-                return CC_CAUSE_ERROR;
+                return CC_CAUSE_DTLS_DIGEST_ALGORITHM_TOO_LONG;
 
             sstrncpy(media->negotiated_crypto.algorithm, digest_alg, sizeof(media->negotiated_crypto.algorithm));
             if (strlen(media->negotiated_crypto.algorithm) == 0) {
-                return CC_CAUSE_ERROR;
+                return CC_CAUSE_DTLS_DIGEST_ALGORITHM_EMPTY;
             }
 
             if (strlen(digest) >= sizeof(media->negotiated_crypto.digest))
-                return CC_CAUSE_ERROR;
+                return CC_CAUSE_DTLS_DIGEST_TOO_LONG;
 
             sstrncpy(media->negotiated_crypto.digest, digest, sizeof(media->negotiated_crypto.digest));
             if (strlen(media->negotiated_crypto.digest) == 0) {
-                return CC_CAUSE_ERROR;
+                return CC_CAUSE_DTLS_DIGEST_EMPTY;
             }
 
             /* Here we have DTLS data */
@@ -6782,7 +6795,7 @@ gsmsdp_configure_dtls_data_attributes(fsm_fcb_t *fcb_p)
         } else {
             GSM_DEBUG(DEB_F_PREFIX"DTLS attribute error",
                                    DEB_F_PREFIX_ARGS(GSM, __FUNCTION__));
-            return CC_CAUSE_ERROR;
+            return CC_CAUSE_DTLS_ATTRIBUTE_ERROR;
         }
     }
 

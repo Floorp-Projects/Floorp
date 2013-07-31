@@ -1,5 +1,3 @@
-var bailout = Proxy.createFunction({}, Math.sin);
-
 var seen = -1;
 
 // Test to make sure the jits get the number of calls, and return value
