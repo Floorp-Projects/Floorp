@@ -765,7 +765,7 @@ nsXBLBinding::ChangeDocument(nsIDocument* aOldDocument, nsIDocument* aNewDocumen
           JS::Rooted<JSObject*> base(cx, scriptObject);
           JS::Rooted<JSObject*> proto(cx);
           for ( ; true; base = proto) { // Will break out on null proto
-            if (!JS_GetPrototype(cx, base, proto.address())) {
+            if (!JS_GetPrototype(cx, base, &proto)) {
               return;
             }
             if (!proto) {
@@ -799,7 +799,7 @@ nsXBLBinding::ChangeDocument(nsIDocument* aOldDocument, nsIDocument* aNewDocumen
             // Alright!  This is the right prototype.  Pull it out of the
             // proto chain.
             JS::Rooted<JSObject*> grandProto(cx);
-            if (!JS_GetPrototype(cx, proto, grandProto.address())) {
+            if (!JS_GetPrototype(cx, proto, &grandProto)) {
               return;
             }
             ::JS_SetPrototype(cx, base, grandProto);
@@ -899,7 +899,7 @@ nsXBLBinding::DoInitJSClass(JSContext *cx, JS::Handle<JSObject*> global,
   nsXBLJSClass* c = nullptr;
   if (obj) {
     // Retrieve the current prototype of obj.
-    if (!JS_GetPrototype(cx, obj, parent_proto.address())) {
+    if (!JS_GetPrototype(cx, obj, &parent_proto)) {
       return NS_ERROR_FAILURE;
     }
     if (parent_proto) {
