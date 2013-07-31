@@ -27,6 +27,9 @@ pref(webgl.force-layers-readback,true)                      fails-if(Android&&!A
 pref(webgl.force-layers-readback,true) fuzzy-if(B2G,256,83) fails-if(Android&&!ARMv7)  == webgl-clear-test.html?readback&__&alpha&preserve  wrapper.html?green.png
 pref(webgl.force-layers-readback,true) fuzzy-if(B2G,256,83) fails-if(Android&&!ARMv7)  == webgl-clear-test.html?readback&aa&alpha&preserve  wrapper.html?green.png
 
+# Check that resize works:
+== webgl-resize-test.html  wrapper.html?green.png
+
 # Check orientation:
                      fails-if(Android&&!ARMv7)  == webgl-orientation-test.html?__&_____&________  wrapper.html?white-top-left.png
                      fails-if(Android&&!ARMv7)  == webgl-orientation-test.html?aa&_____&________  wrapper.html?white-top-left.png
