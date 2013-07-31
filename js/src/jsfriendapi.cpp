@@ -313,28 +313,6 @@ js_ObjectClassName(JSContext *cx, HandleObject obj)
     return JSObject::className(cx, obj);
 }
 
-AutoSwitchCompartment::AutoSwitchCompartment(JSContext *cx, JSCompartment *newCompartment
-                                             MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
-  : cx(cx), oldCompartment(cx->compartment())
-{
-    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    cx->setCompartment(newCompartment);
-}
-
-AutoSwitchCompartment::AutoSwitchCompartment(JSContext *cx, HandleObject target
-                                             MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
-  : cx(cx), oldCompartment(cx->compartment())
-{
-    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    cx->setCompartment(target->compartment());
-}
-
-AutoSwitchCompartment::~AutoSwitchCompartment()
-{
-    /* The old compartment may have been destroyed, so we can't use cx->setCompartment. */
-    cx->setCompartment(oldCompartment);
-}
-
 JS_FRIEND_API(JS::Zone *)
 js::GetCompartmentZone(JSCompartment *comp)
 {
