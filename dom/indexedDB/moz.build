@@ -10,7 +10,6 @@ TEST_DIRS += ['test']
 XPIDL_SOURCES += [
     'nsIIDBCursor.idl',
     'nsIIDBCursorWithValue.idl',
-    'nsIIDBDatabase.idl',
     'nsIIDBKeyRange.idl',
     'nsIIDBOpenDBRequest.idl',
     'nsIIDBRequest.idl',

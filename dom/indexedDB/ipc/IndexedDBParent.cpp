@@ -2,30 +2,34 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+
 #include "IndexedDBParent.h"
 
-#include "AsyncConnectionHelper.h"
+#include "nsIDOMEvent.h"
+#include "nsIDOMFile.h"
+#include "nsIXPConnect.h"
+
 #include "mozilla/AppProcessChecker.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/ContentParent.h"
-#include "mozilla/dom/indexedDB/DatabaseInfo.h"
-#include "mozilla/dom/indexedDB/IDBDatabase.h"
-#include "mozilla/dom/indexedDB/IDBEvents.h"
-#include "mozilla/dom/indexedDB/IDBFactory.h"
-#include "mozilla/dom/indexedDB/IDBIndex.h"
-#include "mozilla/dom/indexedDB/IDBKeyRange.h"
-#include "mozilla/dom/indexedDB/IDBObjectStore.h"
-#include "mozilla/dom/indexedDB/IDBTransaction.h"
+#include "mozilla/dom/IDBDatabaseBinding.h"
 #include "mozilla/dom/ipc/Blob.h"
 #include "mozilla/dom/TabParent.h"
 #include "mozilla/unused.h"
 #include "mozilla/Util.h"
 #include "nsContentUtils.h"
 #include "nsCxPusher.h"
-#include "nsIDOMEvent.h"
-#include "nsIDOMFile.h"
-#include "nsIXPConnect.h"
+
+#include "AsyncConnectionHelper.h"
+#include "DatabaseInfo.h"
+#include "IDBDatabase.h"
+#include "IDBEvents.h"
+#include "IDBFactory.h"
+#include "IDBIndex.h"
+#include "IDBKeyRange.h"
+#include "IDBObjectStore.h"
+#include "IDBTransaction.h"
 
 #define CHROME_ORIGIN "chrome"
 #define PERMISSION_PREFIX "indexedDB-chrome-"
@@ -377,9 +381,6 @@ IndexedDBDatabaseParent::HandleRequestEvent(nsIDOMEvent* aEvent,
     return NS_OK;
   }
 
-  nsIXPConnect* xpc = nsContentUtils::XPConnect();
-  MOZ_ASSERT(xpc);
-
   AutoSafeJSContext cx;
 
   JS::Rooted<JS::Value> result(cx);
@@ -388,20 +389,14 @@ IndexedDBDatabaseParent::HandleRequestEvent(nsIDOMEvent* aEvent,
 
   MOZ_ASSERT(!JSVAL_IS_PRIMITIVE(result));
 
-  nsCOMPtr<nsIXPConnectWrappedNative> wrapper;
-  rv = xpc->GetWrappedNativeOfJSObject(cx, JSVAL_TO_OBJECT(result),
-                                       getter_AddRefs(wrapper));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIIDBDatabase> database;
-  if (!wrapper || !(database = do_QueryInterface(wrapper->Native()))) {
+  IDBDatabase *database;
+  rv = UnwrapObject<IDBDatabase>(cx, &result.toObject(), database);
+  if (NS_FAILED(rv)) {
     NS_WARNING("Didn't get the object we expected!");
-    return NS_ERROR_FAILURE;
+    return rv;
   }
 
-  IDBDatabase* databaseConcrete = static_cast<IDBDatabase*>(database.get());
-
-  DatabaseInfo* dbInfo = databaseConcrete->Info();
+  DatabaseInfo* dbInfo = database->Info();
   MOZ_ASSERT(dbInfo);
 
   nsAutoTArray<nsString, 20> objectStoreNames;
@@ -427,8 +422,7 @@ IndexedDBDatabaseParent::HandleRequestEvent(nsIDOMEvent* aEvent,
     nsRefPtr<IDBOpenDBRequest> request;
     mOpenRequest.swap(request);
 
-    EventTarget* target =
-      static_cast<EventTarget*>(databaseConcrete);
+    EventTarget* target = static_cast<EventTarget*>(database);
 
 #ifdef DEBUG
     {
@@ -447,11 +441,11 @@ IndexedDBDatabaseParent::HandleRequestEvent(nsIDOMEvent* aEvent,
       return NS_ERROR_FAILURE;
     }
 
-    MOZ_ASSERT(!mDatabase || mDatabase == databaseConcrete);
+    MOZ_ASSERT(!mDatabase || mDatabase == database);
 
     if (!mDatabase) {
-      databaseConcrete->SetActor(this);
-      mDatabase = databaseConcrete;
+      database->SetActor(this);
+      mDatabase = database;
     }
 
     return NS_OK;
@@ -464,7 +458,7 @@ IndexedDBDatabaseParent::HandleRequestEvent(nsIDOMEvent* aEvent,
       AsyncConnectionHelper::GetCurrentTransaction();
     MOZ_ASSERT(transaction);
 
-    if (!CheckWritePermission(databaseConcrete->Name())) {
+    if (!CheckWritePermission(database->Name())) {
       // If we get here then the child process is either dead or in the process
       // of being killed. Abort the transaction now to prevent any changes to
       // the database.
@@ -497,8 +491,8 @@ IndexedDBDatabaseParent::HandleRequestEvent(nsIDOMEvent* aEvent,
       return NS_ERROR_FAILURE;
     }
 
-    databaseConcrete->SetActor(this);
-    mDatabase = databaseConcrete;
+    database->SetActor(this);
+    mDatabase = database;
 
     return NS_OK;
   }
@@ -600,7 +594,7 @@ IndexedDBDatabaseParent::RecvPIndexedDBTransactionConstructor(
     return true;
   }
 
-  nsTArray<nsString> storesToOpen;
+  Sequence<nsString> storesToOpen;
   storesToOpen.AppendElements(params.names());
 
   nsRefPtr<IDBTransaction> transaction =
@@ -870,16 +864,14 @@ IndexedDBVersionChangeTransactionParent::RecvDeleteObjectStore(
   IDBDatabase* db = mTransaction->Database();
   MOZ_ASSERT(db);
 
-  nsresult rv;
+  ErrorResult rv;
 
   {
     AutoSetCurrentTransaction asct(mTransaction);
-
-    rv = db->DeleteObjectStore(aName);
+    db->DeleteObjectStore(aName, rv);
   }
 
-  NS_ENSURE_SUCCESS(rv, false);
-
+  ENSURE_SUCCESS(rv, false);
   return true;
 }
 
@@ -920,16 +912,15 @@ IndexedDBVersionChangeTransactionParent::RecvPIndexedDBObjectStoreConstructor(
 
     nsRefPtr<IDBObjectStore> objectStore;
 
-    nsresult rv;
+    ErrorResult rv;
 
     {
       AutoSetCurrentTransaction asct(mTransaction);
 
-      rv = db->CreateObjectStoreInternal(mTransaction, info,
-                                         getter_AddRefs(objectStore));
+      objectStore = db->CreateObjectStoreInternal(mTransaction, info, rv);
     }
 
-    NS_ENSURE_SUCCESS(rv, false);
+    ENSURE_SUCCESS(rv, false);
 
     actor->SetObjectStore(objectStore);
     objectStore->SetActor(actor);

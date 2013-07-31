@@ -9,6 +9,12 @@
 
 interface IDBRequest;
 
+dictionary IDBObjectStoreParameters {
+    // TODO (DOMString or sequence<DOMString>)? keyPath = null;
+    any                                         keyPath = null;
+    boolean                             autoIncrement = false;
+};
+
 interface IDBObjectStore {
     readonly    attribute DOMString      name;
 
