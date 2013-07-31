@@ -145,6 +145,12 @@ public:
   // itself.
   void ProcessPendingRestyles();
 
+  // ProcessPendingRestyles calls into one of our RestyleTracker
+  // objects.  It then calls back to these functions at the beginning
+  // and end of its work.
+  void BeginProcessingRestyles();
+  void EndProcessingRestyles();
+
   // Rebuilds all style data by throwing out the old rule tree and
   // building a new one, and additionally applying aExtraHint (which
   // must not contain nsChangeHint_ReconstructFrame) to the root frame.
@@ -177,11 +183,6 @@ public:
   void PostRestyleEventForLazyConstruction()
   {
     PostRestyleEventInternal(true);
-  }
-
-  void SetInStyleRefresh(bool aInStyleRefresh)
-  {
-    mInStyleRefresh = aInStyleRefresh;
   }
 
   void FlushOverflowChangedTracker()
