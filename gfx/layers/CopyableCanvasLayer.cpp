@@ -74,6 +74,11 @@ CopyableCanvasLayer::UpdateSurface(gfxASurface* aDestSurface, Layer* aMaskLayer)
   }
 
   if (mGLContext) {
+    if (aDestSurface && aDestSurface->GetType() != gfxASurface::SurfaceTypeImage) {
+      MOZ_ASSERT(false, "Destination surface must be ImageSurface type.");
+      return;
+    }
+
     nsRefPtr<gfxImageSurface> readSurf;
     nsRefPtr<gfxImageSurface> resultSurf;
 
@@ -88,9 +93,9 @@ CopyableCanvasLayer::UpdateSurface(gfxASurface* aDestSurface, Layer* aMaskLayer)
                             ? gfxASurface::ImageFormatRGB24
                             : gfxASurface::ImageFormatARGB32;
 
-    bool needsTempSurface = !aDestSurface ||
-                            !(resultSurf = aDestSurface->GetAsImageSurface());
-    if (needsTempSurface) {
+    if (aDestSurface) {
+      resultSurf = static_cast<gfxImageSurface*>(aDestSurface);
+    } else {
       resultSurf = GetTempSurface(readSize, format);
     }
     MOZ_ASSERT(resultSurf);
@@ -151,7 +156,7 @@ CopyableCanvasLayer::UpdateSurface(gfxASurface* aDestSurface, Layer* aMaskLayer)
     }
 
     // stick our surface into mSurface, so that the Paint() path is the same
-    if (needsTempSurface) {
+    if (!aDestSurface) {
       mSurface = resultSurf;
     }
   }
