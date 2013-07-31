@@ -111,6 +111,10 @@ public:
   bool RemoveTile(int x, int y, Tile& aRemovedTile);
 
   uint16_t GetTileLength() const { return TILEDLAYERBUFFER_TILE_SIZE; }
+
+#ifdef MOZ_WIDGET_ANDROID
+  MOZ_NEVER_INLINE // bug 881018 causes wrong results when GetScaledTileLength is inlined
+#endif
   uint32_t GetScaledTileLength() const { return TILEDLAYERBUFFER_TILE_SIZE / mResolution; }
 
   unsigned int GetTileCount() const { return mRetainedTiles.Length(); }
