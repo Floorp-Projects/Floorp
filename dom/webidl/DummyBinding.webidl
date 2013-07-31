@@ -16,6 +16,7 @@ interface DummyInterface {
   void funcHttpConnDict(optional HttpConnDict arg);
   void funcWebSocketDict(optional WebSocketDict arg);
   void funcDNSCacheDict(optional DNSCacheDict arg);
+  void funcConnStatusDict(optional ConnStatusDict arg);
   void frameRequestCallback(FrameRequestCallback arg);
   void CameraPictureOptions(optional CameraPictureOptions arg);
   void MmsParameters(optional MmsParameters arg);

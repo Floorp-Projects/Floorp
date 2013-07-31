@@ -18,6 +18,11 @@ pref("app.update.url.manual", "https://nightly.mozilla.org");
 // supplied in the "An update is available" page of the update wizard. 
 pref("app.update.url.details", "https://nightly.mozilla.org");
 
+// The number of days a binary is permitted to be old
+// without checking for an update.  This assumes that
+// app.update.checkInstallTime is true.
+pref("app.update.checkInstallTime.days", 2);
+
 // Search codes belong only in builds with official branding
 pref("browser.search.param.yahoo-fr", "");
 pref("browser.search.param.yahoo-fr-cjkt", ""); // now unused
