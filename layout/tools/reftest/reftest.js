@@ -582,6 +582,7 @@ function BuildConditionSandbox(aURL) {
         // This is currently used to distinguish Android 4.0.3 (SDK version 15)
         // and later from Android 2.x
         sandbox.AndroidVersion = sysInfo.getPropertyAsInt32("version");
+        sandbox.ARMv7 = sysInfo.getProperty("hasARMv7");
     }
 
 #if MOZ_ASAN
