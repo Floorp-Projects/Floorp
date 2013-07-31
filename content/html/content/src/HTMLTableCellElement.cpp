@@ -34,8 +34,11 @@ NS_IMPL_ADDREF_INHERITED(HTMLTableCellElement, Element)
 NS_IMPL_RELEASE_INHERITED(HTMLTableCellElement, Element)
 
 // QueryInterface implementation for HTMLTableCellElement
-NS_INTERFACE_MAP_BEGIN(HTMLTableCellElement)
+NS_INTERFACE_TABLE_HEAD(HTMLTableCellElement)
   NS_HTML_CONTENT_INTERFACES(nsGenericHTMLElement)
+  NS_INTERFACE_TABLE_INHERITED1(HTMLTableCellElement,
+                                nsIDOMHTMLTableCellElement)
+  NS_INTERFACE_TABLE_TO_MAP_SEGUE
 NS_ELEMENT_INTERFACE_MAP_END
 
 
@@ -102,6 +105,13 @@ HTMLTableCellElement::CellIndex() const
 }
 
 NS_IMETHODIMP
+HTMLTableCellElement::GetCellIndex(int32_t* aCellIndex)
+{
+  *aCellIndex = CellIndex();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 HTMLTableCellElement::WalkContentStyleRules(nsRuleWalker* aRuleWalker)
 {
   nsresult rv = nsGenericHTMLElement::WalkContentStyleRules(aRuleWalker);
@@ -114,6 +124,238 @@ HTMLTableCellElement::WalkContentStyleRules(nsRuleWalker* aRuleWalker)
       aRuleWalker->Forward(tableInheritedAttributes);
     }
   }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HTMLTableCellElement::SetAbbr(const nsAString& aAbbr)
+{
+  ErrorResult rv;
+  SetAbbr(aAbbr, rv);
+  return rv.ErrorCode();
+}
+
+NS_IMETHODIMP
+HTMLTableCellElement::GetAbbr(nsAString& aAbbr)
+{
+  nsString abbr;
+  GetAbbr(abbr);
+  aAbbr = abbr;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HTMLTableCellElement::SetAxis(const nsAString& aAxis)
+{
+  ErrorResult rv;
+  SetAxis(aAxis, rv);
+  return rv.ErrorCode();
+}
+
+NS_IMETHODIMP
+HTMLTableCellElement::GetAxis(nsAString& aAxis)
+{
+  nsString axis;
+  GetAxis(axis);
+  aAxis = axis;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HTMLTableCellElement::SetAlign(const nsAString& aAlign)
+{
+  ErrorResult rv;
+  SetAlign(aAlign, rv);
+  return rv.ErrorCode();
+}
+
+NS_IMETHODIMP
+HTMLTableCellElement::GetAlign(nsAString& aAlign)
+{
+  nsString align;
+  GetAlign(align);
+  aAlign = align;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HTMLTableCellElement::SetVAlign(const nsAString& aVAlign)
+{
+  ErrorResult rv;
+  SetVAlign(aVAlign, rv);
+  return rv.ErrorCode();
+}
+
+NS_IMETHODIMP
+HTMLTableCellElement::GetVAlign(nsAString& aVAlign)
+{
+  nsString vAlign;
+  GetVAlign(vAlign);
+  aVAlign = vAlign;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HTMLTableCellElement::SetCh(const nsAString& aCh)
+{
+  ErrorResult rv;
+  SetCh(aCh, rv);
+  return rv.ErrorCode();
+}
+
+NS_IMETHODIMP
+HTMLTableCellElement::GetCh(nsAString& aCh)
+{
+  nsString ch;
+  GetCh(ch);
+  aCh = ch;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HTMLTableCellElement::SetChOff(const nsAString& aChOff)
+{
+  ErrorResult rv;
+  SetChOff(aChOff, rv);
+  return rv.ErrorCode();
+}
+
+NS_IMETHODIMP
+HTMLTableCellElement::GetChOff(nsAString& aChOff)
+{
+  nsString chOff;
+  GetChOff(chOff);
+  aChOff = chOff;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HTMLTableCellElement::SetBgColor(const nsAString& aBgColor)
+{
+  ErrorResult rv;
+  SetBgColor(aBgColor, rv);
+  return rv.ErrorCode();
+}
+
+NS_IMETHODIMP
+HTMLTableCellElement::GetBgColor(nsAString& aBgColor)
+{
+  nsString bgColor;
+  GetBgColor(bgColor);
+  aBgColor = bgColor;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HTMLTableCellElement::SetHeight(const nsAString& aHeight)
+{
+  ErrorResult rv;
+  SetHeight(aHeight, rv);
+  return rv.ErrorCode();
+}
+
+NS_IMETHODIMP
+HTMLTableCellElement::GetHeight(nsAString& aHeight)
+{
+  nsString height;
+  GetHeight(height);
+  aHeight = height;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HTMLTableCellElement::SetWidth(const nsAString& aWidth)
+{
+  ErrorResult rv;
+  SetWidth(aWidth, rv);
+  return rv.ErrorCode();
+}
+
+NS_IMETHODIMP
+HTMLTableCellElement::GetWidth(nsAString& aWidth)
+{
+  nsString width;
+  GetWidth(width);
+  aWidth = width;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HTMLTableCellElement::SetNoWrap(bool aNoWrap)
+{
+  ErrorResult rv;
+  SetNoWrap(aNoWrap, rv);
+  return rv.ErrorCode();
+}
+
+NS_IMETHODIMP
+HTMLTableCellElement::GetNoWrap(bool* aNoWrap)
+{
+  *aNoWrap = NoWrap();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HTMLTableCellElement::SetScope(const nsAString& aScope)
+{
+  ErrorResult rv;
+  SetScope(aScope, rv);
+  return rv.ErrorCode();
+}
+
+NS_IMETHODIMP
+HTMLTableCellElement::GetScope(nsAString& aScope)
+{
+  nsString scope;
+  GetScope(scope);
+  aScope = scope;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HTMLTableCellElement::SetHeaders(const nsAString& aHeaders)
+{
+  ErrorResult rv;
+  SetHeaders(aHeaders, rv);
+  return rv.ErrorCode();
+}
+
+NS_IMETHODIMP
+HTMLTableCellElement::GetHeaders(nsAString& aHeaders)
+{
+  nsString headers;
+  GetHeaders(headers);
+  aHeaders = headers;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HTMLTableCellElement::SetColSpan(int32_t aColSpan)
+{
+  ErrorResult rv;
+  SetColSpan(aColSpan, rv);
+  return rv.ErrorCode();
+}
+
+NS_IMETHODIMP
+HTMLTableCellElement::GetColSpan(int32_t* aColSpan)
+{
+  *aColSpan = ColSpan();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HTMLTableCellElement::SetRowSpan(int32_t aRowSpan)
+{
+  ErrorResult rv;
+  SetRowSpan(aRowSpan, rv);
+  return rv.ErrorCode();
+}
+
+NS_IMETHODIMP
+HTMLTableCellElement::GetRowSpan(int32_t* aRowSpan)
+{
+  *aRowSpan = RowSpan();
   return NS_OK;
 }
 
@@ -202,7 +444,7 @@ HTMLTableCellElement::ParseAttribute(int32_t aNamespaceID,
                                               aResult);
 }
 
-static
+static 
 void MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
                            nsRuleData* aData)
 {

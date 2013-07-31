@@ -269,6 +269,7 @@ browser.jar:
   skin/classic/browser/devtools/magnifying-glass.png        (devtools/magnifying-glass.png)
   skin/classic/browser/devtools/option-icon.png             (devtools/option-icon.png)
   skin/classic/browser/devtools/itemToggle.png              (devtools/itemToggle.png)
+  skin/classic/browser/devtools/blackBoxMessageEye.png      (devtools/blackBoxMessageEye.png)
   skin/classic/browser/devtools/itemArrow-rtl.png           (devtools/itemArrow-rtl.png)
   skin/classic/browser/devtools/itemArrow-ltr.png           (devtools/itemArrow-ltr.png)
   skin/classic/browser/devtools/background-noise-toolbar.png (devtools/background-noise-toolbar.png)

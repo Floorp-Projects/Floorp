@@ -8,6 +8,7 @@
 
 #include "mozilla/Attributes.h"
 #include "nsGenericHTMLElement.h"
+#include "nsIDOMHTMLOutputElement.h"
 #include "nsStubMutationObserver.h"
 #include "nsIConstraintValidation.h"
 
@@ -15,7 +16,7 @@ namespace mozilla {
 namespace dom {
 
 class HTMLOutputElement MOZ_FINAL : public nsGenericHTMLFormElement,
-                                    public nsIDOMHTMLElement,
+                                    public nsIDOMHTMLOutputElement,
                                     public nsStubMutationObserver,
                                     public nsIConstraintValidation
 {
@@ -36,6 +37,9 @@ public:
 
   // nsIDOMHTMLElement
   NS_FORWARD_NSIDOMHTMLELEMENT_TO_GENERIC
+
+  // nsIDOMHTMLOutputElement
+  NS_DECL_NSIDOMHTMLOUTPUTELEMENT
 
   // nsIFormControl
   NS_IMETHOD_(uint32_t) GetType() const { return NS_FORM_OUTPUT; }
@@ -75,40 +79,31 @@ public:
   // WebIDL
   nsDOMSettableTokenList* HtmlFor();
   // nsGenericHTMLFormElement::GetForm is fine.
-  void GetName(nsAString& aName)
-  {
-    GetHTMLAttr(nsGkAtoms::name, aName);
-  }
-
+  using nsGenericHTMLFormElement::GetForm;
+  // XPCOM GetName is fine.
   void SetName(const nsAString& aName, ErrorResult& aRv)
   {
     SetHTMLAttr(nsGkAtoms::name, aName, aRv);
   }
 
-  void GetType(nsAString& aType)
+  // XPCOM GetType is fine.
+  // XPCOM GetDefaultValue is fine.
+  void SetDefaultValue(const nsAString& aDefaultValue, ErrorResult& aRv)
   {
-    aType.AssignLiteral("output");
+    aRv = SetDefaultValue(aDefaultValue);
   }
-
-  void GetDefaultValue(nsAString& aDefaultValue)
+  // XPCOM GetValue is fine.
+  void SetValue(const nsAString& aValue, ErrorResult& aRv)
   {
-    aDefaultValue = mDefaultValue;
+    aRv = SetValue(aValue);
   }
-
-  void SetDefaultValue(const nsAString& aDefaultValue, ErrorResult& aRv);
-
-  void GetValue(nsAString& aValue)
-  {
-    nsContentUtils::GetNodeTextContent(this, true, aValue);
-  }
-
-  void SetValue(const nsAString& aValue, ErrorResult& aRv);
 
   // nsIConstraintValidation::WillValidate is fine.
   // nsIConstraintValidation::Validity() is fine.
   // nsIConstraintValidation::GetValidationMessage() is fine.
   // nsIConstraintValidation::CheckValidity() is fine.
-  void SetCustomValidity(const nsAString& aError);
+  using nsIConstraintValidation::CheckValidity;
+  // nsIConstraintValidation::SetCustomValidity() is fine.
 
 protected:
   enum ValueModeFlag {
