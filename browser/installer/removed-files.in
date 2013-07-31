@@ -1115,6 +1115,7 @@ xpicleanup@BIN_SUFFIX@
   modules/tabview/groups.jsm
   modules/tabview/utils.jsm
   modules/Webapps.jsm
+  modules/OperatorApps.jsm
   modules/WindowDraggingUtils.jsm
   #ifdef XP_WIN
     modules/WindowsJumpLists.jsm

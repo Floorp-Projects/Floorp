@@ -601,6 +601,10 @@ var shell = {
 
     this.sendEvent(window, 'ContentStart');
 
+#ifdef MOZ_B2G_RIL
+    Cu.import('resource://gre/modules/OperatorApps.jsm');
+#endif
+
     content.addEventListener('load', function shell_homeLoaded() {
       content.removeEventListener('load', shell_homeLoaded);
       shell.isHomeLoaded = true;
