@@ -72,6 +72,26 @@ js::NewAsmJSModuleObject(JSContext *cx, ScopedJSDeletePtr<AsmJSModule> *module)
     return obj;
 }
 
+void
+AsmJSModule::patchHeapAccesses(ArrayBufferObject *heap, JSContext *cx)
+{
+    JS_ASSERT(IsPowerOfTwo(heap->byteLength()));
+#if defined(JS_CPU_X86)
+    void *heapOffset = (void*)heap->dataPointer();
+    void *heapLength = (void*)heap->byteLength();
+    for (unsigned i = 0; i < heapAccesses_.length(); i++) {
+        JSC::X86Assembler::setPointer(heapAccesses_[i].patchLengthAt(code_), heapLength);
+        JSC::X86Assembler::setPointer(heapAccesses_[i].patchOffsetAt(code_), heapOffset);
+    }
+#elif defined(JS_CPU_ARM)
+    ion::IonContext ic(cx, NULL);
+    ion::AutoFlushCache afc("patchBoundsCheck");
+    uint32_t bits = mozilla::CeilingLog2(heap->byteLength());
+    for (unsigned i = 0; i < heapAccesses_.length(); i++)
+        ion::Assembler::updateBoundsCheck(bits, (ion::Instruction*)(heapAccesses_[i].offset() + code_));
+#endif
+}
+
 AsmJSModule::~AsmJSModule()
 {
     if (code_) {
