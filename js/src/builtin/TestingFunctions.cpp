@@ -985,6 +985,14 @@ GetObjectMetadata(JSContext *cx, unsigned argc, jsval *vp)
     return true;
 }
 
+JSBool
+js::testingFunc_bailout(JSContext *cx, unsigned argc, jsval *vp)
+{
+    // NOP when not in IonMonkey
+    JS_SET_RVAL(cx, vp, JSVAL_VOID);
+    return true;
+}
+
 static JSFunctionSpecWithHelp TestingFunctions[] = {
     JS_FN_HELP("gc", ::GC, 0, 0,
 "gc([obj] | 'compartment')",
@@ -1162,6 +1170,10 @@ static JSFunctionSpecWithHelp TestingFunctions[] = {
     JS_FN_HELP("getObjectMetadata", GetObjectMetadata, 1, 0,
 "getObjectMetadata(obj)",
 "  Get the metadata for an object."),
+
+    JS_FN_HELP("bailout", testingFunc_bailout, 0, 0,
+"bailout()",
+"  Force a bailout out of ionmonkey (if running in ionmonkey)."),
 
     JS_FS_HELP_END
 };
