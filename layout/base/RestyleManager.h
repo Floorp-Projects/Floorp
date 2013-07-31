@@ -276,6 +276,7 @@ public:
                   nsStyleChangeList* aChangeList,
                   nsChangeHint aHintsHandledByAncestors,
                   RestyleTracker& aRestyleTracker,
+                  TreeMatchContext& aTreeMatchContext,
                   nsTArray<nsIContent*>& aVisibleKidsOfHiddenElement);
 
   // Construct for an element whose parent is being restyled.
@@ -302,8 +303,7 @@ public:
    * nsRestyleHint(0) to mean recompute a new style context for our
    * current parent and existing rulenode, and the same for kids.
    */
-  void Restyle(nsRestyleHint aRestyleHint,
-               TreeMatchContext &aTreeMatchContext);
+  void Restyle(nsRestyleHint aRestyleHint);
 
   /**
    * mHintsHandled changes over time; it starts off as the hints that
@@ -350,6 +350,7 @@ private:
   nsChangeHint mParentFrameHintsNotHandledForDescendants;
   nsChangeHint mHintsNotHandledForDescendants;
   RestyleTracker& mRestyleTracker;
+  TreeMatchContext& mTreeMatchContext;
 
   const DesiredA11yNotifications mDesiredA11yNotifications;
   DesiredA11yNotifications mKidsDesiredA11yNotifications;
