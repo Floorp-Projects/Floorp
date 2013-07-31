@@ -28,6 +28,7 @@ class RemoteOptions(ReftestOptions):
         defaults["app"] = ""
         defaults["xrePath"] = ""
         defaults["utilityPath"] = ""
+        defaults["runTestsInParallel"] = False
 
         self.add_option("--remote-app-path", action="store",
                     type = "string", dest = "remoteAppPath",
@@ -102,6 +103,9 @@ class RemoteOptions(ReftestOptions):
         self.set_defaults(**defaults)
 
     def verifyRemoteOptions(self, options):
+        if options.runTestsInParallel:
+            self.error("Cannot run parallel tests here")
+
         # Ensure our defaults are set properly for everything we can infer
         if not options.remoteTestRoot:
             options.remoteTestRoot = self._automation._devicemanager.getDeviceRoot() + '/reftest'
