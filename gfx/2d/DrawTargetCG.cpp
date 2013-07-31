@@ -123,6 +123,19 @@ CGBlendMode ToBlendMode(CompositionOp op)
   return mode;
 }
 
+static CGInterpolationQuality
+InterpolationQualityFromFilter(Filter aFilter)
+{
+  switch (aFilter) {
+    default:
+    case FILTER_LINEAR:
+      return kCGInterpolationLow;
+    case FILTER_POINT:
+      return kCGInterpolationNone;
+    case FILTER_GOOD:
+      return kCGInterpolationDefault;
+  }
+}
 
 
 DrawTargetCG::DrawTargetCG() : mCg(nullptr), mSnapshot(nullptr)
@@ -291,10 +304,7 @@ DrawTargetCG::DrawSurface(SourceSurface *aSurface,
   CGRect flippedRect = CGRectMake(aDest.x, -(aDest.y + aDest.height),
                                   aDest.width, aDest.height);
 
-  if (aSurfOptions.mFilter == FILTER_POINT)
-    CGContextSetInterpolationQuality(cg, kCGInterpolationNone);
-  else
-    CGContextSetInterpolationQuality(cg, kCGInterpolationLow);
+  CGContextSetInterpolationQuality(cg, InterpolationQualityFromFilter(aSurfOptions.mFilter));
 
   CGContextDrawImage(cg, flippedRect, image);
 
@@ -653,10 +663,7 @@ SetFillFromPattern(CGContextRef cg, CGColorSpaceRef aColorSpace, const Pattern &
 
     CGPatternRef pattern = CreateCGPattern(aPattern, CGContextGetCTM(cg));
     const SurfacePattern& pat = static_cast<const SurfacePattern&>(aPattern);
-    if (pat.mFilter == FILTER_POINT)
-      CGContextSetInterpolationQuality(cg, kCGInterpolationNone);
-    else
-      CGContextSetInterpolationQuality(cg, kCGInterpolationLow);
+    CGContextSetInterpolationQuality(cg, InterpolationQualityFromFilter(pat.mFilter));
     CGFloat alpha = 1.;
     CGContextSetFillPattern(cg, pattern, &alpha);
     CGPatternRelease(pattern);
@@ -681,10 +688,7 @@ SetStrokeFromPattern(CGContextRef cg, CGColorSpaceRef aColorSpace, const Pattern
 
     CGPatternRef pattern = CreateCGPattern(aPattern, CGContextGetCTM(cg));
     const SurfacePattern& pat = static_cast<const SurfacePattern&>(aPattern);
-    if (pat.mFilter == FILTER_POINT)
-      CGContextSetInterpolationQuality(cg, kCGInterpolationNone);
-    else
-      CGContextSetInterpolationQuality(cg, kCGInterpolationLow);
+    CGContextSetInterpolationQuality(cg, InterpolationQualityFromFilter(pat.mFilter));
     CGFloat alpha = 1.;
     CGContextSetStrokePattern(cg, pattern, &alpha);
     CGPatternRelease(pattern);
@@ -770,10 +774,7 @@ DrawTargetCG::FillRect(const Rect &aRect,
 
       CGRect imageRect = CGRectMake(0, 0, CGImageGetWidth(image), CGImageGetHeight(image));
 
-      if (pat.mFilter == FILTER_POINT)
-        CGContextSetInterpolationQuality(cg, kCGInterpolationNone);
-      else
-        CGContextSetInterpolationQuality(cg, kCGInterpolationLow);
+      CGContextSetInterpolationQuality(cg, InterpolationQualityFromFilter(pat.mFilter));
 
       CGContextDrawImage(cg, imageRect, image);
     } else {
