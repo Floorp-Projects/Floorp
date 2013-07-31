@@ -133,7 +133,7 @@ NS_IMETHODIMP nsSyncJPAKE::Round1(const nsACString & aSignerID,
                                   nsACString & aR2)
 {
   NS_ENSURE_STATE(round == JPAKENotStarted);
-  NS_ENSURE_STATE(key == NULL);
+  NS_ENSURE_STATE(key == nullptr);
 
   static CK_MECHANISM_TYPE mechanisms[] = {
     CKM_NSS_JPAKE_ROUND1_SHA256,
@@ -142,8 +142,9 @@ NS_IMETHODIMP nsSyncJPAKE::Round1(const nsACString & aSignerID,
   };
 
   PK11SlotInfo * slot = PK11_GetBestSlotMultiple(mechanisms,
-                                                 NUM_ELEM(mechanisms), NULL);
-  NS_ENSURE_STATE(slot != NULL);
+                                                 NUM_ELEM(mechanisms),
+                                                 nullptr);
+  NS_ENSURE_STATE(slot != nullptr);
     
   CK_BYTE pBuf[(NUM_ELEM(p) - 1) / 2];
   CK_BYTE qBuf[(NUM_ELEM(q) - 1) / 2];
@@ -178,8 +179,8 @@ NS_IMETHODIMP nsSyncJPAKE::Round1(const nsACString & aSignerID,
   key = PK11_KeyGenWithTemplate(slot, CKM_NSS_JPAKE_ROUND1_SHA256,
                                 CKM_NSS_JPAKE_ROUND1_SHA256,
                                 &paramsItem, keyTemplate,
-                                NUM_ELEM(keyTemplate), NULL);
-  nsresult rv = key != NULL
+                                NUM_ELEM(keyTemplate), nullptr);
+  nsresult rv = key != nullptr
               ? NS_OK
               : mapErrno();
   if (rv == NS_OK) {
@@ -208,7 +209,7 @@ NS_IMETHODIMP nsSyncJPAKE::Round2(const nsACString & aPeerID,
                                   nsACString & aRA)
 {
   NS_ENSURE_STATE(round == JPAKEBeforeRound2);
-  NS_ENSURE_STATE(key != NULL);
+  NS_ENSURE_STATE(key != nullptr);
   NS_ENSURE_ARG(!aPeerID.IsEmpty());
 
   /* PIN cannot be equal to zero when converted to a bignum. NSS 3.12.9 J-PAKE
@@ -274,7 +275,7 @@ NS_IMETHODIMP nsSyncJPAKE::Round2(const nsACString & aPeerID,
                                                 keyTemplate,
                                                 NUM_ELEM(keyTemplate),
                                                 false);
-  if (newKey != NULL) {
+  if (newKey != nullptr) {
     if (toHexString(rp.A.pGX, rp.A.ulGXLen, aA) &&
         toHexString(rp.A.pGV, rp.A.ulGVLen, aGVA) &&
         toHexString(rp.A.pR, rp.A.ulRLen, aRA)) {
@@ -298,7 +299,7 @@ setBase64(const unsigned char * data, unsigned len, nsACString & out)
   nsresult rv = NS_OK;
   const char * base64 = BTOA_DataToAscii(data, len);
   
-  if (base64 != NULL) {
+  if (base64 != nullptr) {
     size_t len = PORT_Strlen(base64);
     if (out.SetCapacity(len, fallible_t())) {
       out.SetLength(0);
@@ -319,7 +320,7 @@ base64KeyValue(PK11SymKey * key, nsACString & keyString)
   nsresult rv = NS_OK;
   if (PK11_ExtractKeyValue(key) == SECSuccess) {
     const SECItem * value = PK11_GetKeyData(key);
-    rv = value != NULL && value->data != NULL && value->len > 0
+    rv = value != nullptr && value->data != nullptr && value->len > 0
        ? setBase64(value->data, value->len, keyString)
        : NS_ERROR_UNEXPECTED;
   } else {
@@ -339,7 +340,7 @@ extractBase64KeyValue(PK11SymKey * keyBlock, CK_ULONG bitPosition,
   PK11SymKey * key = PK11_Derive(keyBlock, CKM_EXTRACT_KEY_FROM_KEY,
                                  &paramsItem, destMech,
                                  CKA_SIGN, keySize);
-  if (key == NULL)
+  if (key == nullptr)
     return mapErrno();
   nsresult rv = base64KeyValue(key, keyString);
   PK11_FreeSymKey(key);
@@ -360,7 +361,7 @@ NS_IMETHODIMP nsSyncJPAKE::Final(const nsACString & aB,
   CK_EXTRACT_PARAMS hmacBitPosition = aesBitPosition + (AES256_KEY_SIZE * 8);
 
   NS_ENSURE_STATE(round == JPAKEAfterRound2);
-  NS_ENSURE_STATE(key != NULL);
+  NS_ENSURE_STATE(key != nullptr);
 
   CK_BYTE gxBBuf[NUM_ELEM(p)/2], gvBBuf[NUM_ELEM(p)/2], rBBuf [NUM_ELEM(p)/2];
   nsresult         rv = fromHexString(aB,   gxBBuf, sizeof gxBBuf);
@@ -379,15 +380,15 @@ NS_IMETHODIMP nsSyncJPAKE::Final(const nsACString & aB,
   PK11SymKey * keyMaterial = PK11_Derive(key, CKM_NSS_JPAKE_FINAL_SHA256,
                                          &paramsItem, CKM_NSS_HKDF_SHA256,
                                          CKA_DERIVE, 0);
-  PK11SymKey * keyBlock = NULL;
+  PK11SymKey * keyBlock = nullptr;
 
-  if (keyMaterial == NULL)
+  if (keyMaterial == nullptr)
     rv = mapErrno();
 
   if (rv == NS_OK) {
     CK_NSS_HKDFParams hkdfParams;
     hkdfParams.bExtract = CK_TRUE;
-    hkdfParams.pSalt = NULL;
+    hkdfParams.pSalt = nullptr;
     hkdfParams.ulSaltLen = 0;
     hkdfParams.bExpand = CK_TRUE;
     hkdfParams.pInfo = (CK_BYTE *) aHKDFInfo.Data();
@@ -397,7 +398,7 @@ NS_IMETHODIMP nsSyncJPAKE::Final(const nsACString & aB,
     keyBlock = PK11_Derive(keyMaterial, CKM_NSS_HKDF_SHA256,
                            &paramsItem, CKM_EXTRACT_KEY_FROM_KEY,
                            CKA_DERIVE, AES256_KEY_SIZE + HMAC_SHA256_KEY_SIZE);
-    if (keyBlock == NULL)
+    if (keyBlock == nullptr)
       rv = mapErrno();
   }
 
@@ -414,12 +415,12 @@ NS_IMETHODIMP nsSyncJPAKE::Final(const nsACString & aB,
     SECStatus srv = PK11_ExtractKeyValue(keyMaterial);
     NS_ENSURE_TRUE(srv == SECSuccess, NS_ERROR_UNEXPECTED); // XXX leaks
     SECItem * keyMaterialBytes = PK11_GetKeyData(keyMaterial);
-    NS_ENSURE_TRUE(keyMaterialBytes != NULL, NS_ERROR_UNEXPECTED);
+    NS_ENSURE_TRUE(keyMaterialBytes != nullptr, NS_ERROR_UNEXPECTED);
   }
 
-  if (keyBlock != NULL)
+  if (keyBlock != nullptr)
     PK11_FreeSymKey(keyBlock);
-  if (keyMaterial != NULL)
+  if (keyMaterial != nullptr)
     PK11_FreeSymKey(keyMaterial);
 
   return rv;
@@ -428,22 +429,22 @@ NS_IMETHODIMP nsSyncJPAKE::Final(const nsACString & aB,
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSyncJPAKE)
 NS_DEFINE_NAMED_CID(NS_SYNCJPAKE_CID);
 
-nsSyncJPAKE::nsSyncJPAKE() : round(JPAKENotStarted), key(NULL) { }
+nsSyncJPAKE::nsSyncJPAKE() : round(JPAKENotStarted), key(nullptr) { }
 
 nsSyncJPAKE::~nsSyncJPAKE()
 {
-  if (key != NULL)
+  if (key != nullptr)
     PK11_FreeSymKey(key);
 }
 
 static const mozilla::Module::CIDEntry kServicesCryptoCIDs[] = {
-  { &kNS_SYNCJPAKE_CID, false, NULL, nsSyncJPAKEConstructor },
-  { NULL }
+  { &kNS_SYNCJPAKE_CID, false, nullptr, nsSyncJPAKEConstructor },
+  { nullptr }
 };
 
 static const mozilla::Module::ContractIDEntry kServicesCryptoContracts[] = {
   { NS_SYNCJPAKE_CONTRACTID, &kNS_SYNCJPAKE_CID },
-  { NULL }
+  { nullptr }
 };
 
 static const mozilla::Module kServicesCryptoModule = {
