@@ -155,6 +155,7 @@ function startTest(test, token) {
   let elemType = /^audio/.test(test.type) ? "audio" : "video";
   let element = document.createElement(elemType);
   element.src = test.name;
+  element.preload = "metadata";
   element.token = token;
   element.controls = true;
   element.bufferingTime = 0;
