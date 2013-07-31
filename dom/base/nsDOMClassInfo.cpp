@@ -251,6 +251,7 @@ using mozilla::dom::workers::ResolveWorkerClasses;
 #include "DOMCameraCapabilities.h"
 #include "nsIOpenWindowEventDetail.h"
 #include "nsIAsyncScrollEventDetail.h"
+#include "nsIDOMGlobalObjectConstructor.h"
 #include "nsIDOMCanvasRenderingContext2D.h"
 #include "LockedFile.h"
 #include "nsDebug.h"
@@ -2676,7 +2677,8 @@ BaseStubConstructor(nsIWeakReference* aWeakOwner,
   }
 
   nsCOMPtr<nsIJSNativeInitializer> initializer(do_QueryInterface(native));
-  if (initializer) {
+  nsCOMPtr<nsIDOMGlobalObjectConstructor> constructor(do_QueryInterface(native));
+  if (initializer || constructor) {
     // Initialize object using the current inner window, but only if
     // the caller can access it.
     nsCOMPtr<nsPIDOMWindow> owner = do_QueryReferent(aWeakOwner);
@@ -2689,9 +2691,62 @@ BaseStubConstructor(nsIWeakReference* aWeakOwner,
       return NS_ERROR_DOM_SECURITY_ERR;
     }
 
-    rv = initializer->Initialize(currentInner, cx, obj, args);
-    if (NS_FAILED(rv)) {
-      return rv;
+    if (initializer) {
+      rv = initializer->Initialize(currentInner, cx, obj, args);
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+    } else {
+      nsCOMPtr<nsIXPConnectWrappedJS> wrappedJS = do_QueryInterface(native);
+
+      JS::Rooted<JSObject*> thisObject(cx, wrappedJS->GetJSObject());
+      if (!thisObject) {
+        return NS_ERROR_UNEXPECTED;
+      }
+
+      nsCxPusher pusher;
+      pusher.Push(cx);
+
+      JSAutoCompartment ac(cx, thisObject);
+
+      JS::Rooted<JS::Value> funval(cx);
+      if (!JS_GetProperty(cx, thisObject, "constructor", &funval) ||
+          !funval.isObject()) {
+        return NS_ERROR_UNEXPECTED;
+      }
+
+      // Check if the object is even callable.
+      NS_ENSURE_STATE(JS_ObjectIsCallable(cx, &funval.toObject()));
+      {
+        // wrap parameters in the target compartment
+        // we also pass in the calling window as the first argument
+        unsigned argc = args.length() + 1;
+        nsAutoArrayPtr<JS::Value> argv(new JS::Value[argc]);
+        JS::AutoArrayRooter rooter(cx, 0, argv);
+
+        nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
+        nsCOMPtr<nsIDOMWindow> currentWin(do_GetInterface(currentInner));
+        rv = WrapNative(cx, obj, currentWin, &NS_GET_IID(nsIDOMWindow),
+                        true, &argv[0], getter_AddRefs(holder));
+        if (!JS_WrapValue(cx, &argv[0]))
+          return NS_ERROR_FAILURE;
+        rooter.changeLength(1);
+
+        for (size_t i = 1; i < argc; ++i) {
+          argv[i] = args[i - 1];
+          if (!JS_WrapValue(cx, &argv[i]))
+            return NS_ERROR_FAILURE;
+          rooter.changeLength(i + 1);
+        }
+
+        JS::Rooted<JS::Value> frval(cx);
+        bool ret = JS_CallFunctionValue(cx, thisObject, funval, argc, argv,
+                                        frval.address());
+
+        if (!ret) {
+          return NS_ERROR_FAILURE;
+        }
+      }
     }
   }
 
