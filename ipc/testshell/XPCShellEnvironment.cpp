@@ -487,14 +487,16 @@ typedef enum JSShellErrNum
 #undef MSGDEF
 } JSShellErrNum;
 
-static void
-ProcessFile(JSContext *cx,
-            JS::Handle<JSObject*> obj,
-            const char *filename,
-            FILE *file,
-            JSBool forceTTY)
+} /* anonymous namespace */
+
+void
+XPCShellEnvironment::ProcessFile(JSContext *cx,
+                                 JS::Handle<JSObject*> obj,
+                                 const char *filename,
+                                 FILE *file,
+                                 JSBool forceTTY)
 {
-    XPCShellEnvironment* env = Environment(cx);
+    XPCShellEnvironment* env = this;
     nsCxPusher pusher;
     pusher.Push(env->GetContext());
 
@@ -598,8 +600,6 @@ ProcessFile(JSContext *cx,
 
     fprintf(stdout, "\n");
 }
-
-} /* anonymous namespace */
 
 NS_IMETHODIMP_(nsrefcnt)
 XPCShellDirProvider::AddRef()
@@ -811,7 +811,7 @@ bool
 XPCShellEnvironment::EvaluateString(const nsString& aString,
                                     nsString* aResult)
 {
-  XPCShellEnvironment* env = Environment(mCx);
+  XPCShellEnvironment* env = this;
   nsCxPusher pusher;
   pusher.Push(env->GetContext());
 
