@@ -47,7 +47,7 @@ protected:
     static void CreateDefaultFeaturesDescriptor();
 
     static CTFontDescriptorRef GetDefaultFeaturesDescriptor() {
-        if (sDefaultFeaturesDescriptor == NULL) {
+        if (sDefaultFeaturesDescriptor == nullptr) {
             CreateDefaultFeaturesDescriptor();
         }
         return sDefaultFeaturesDescriptor;
