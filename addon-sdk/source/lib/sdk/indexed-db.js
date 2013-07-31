@@ -57,5 +57,4 @@ exports.IDBCursor = Ci.nsIIDBCursor;
 exports.IDBOpenDBRequest = Ci.nsIIDBOpenDBRequest;
 exports.IDBDatabase = Ci.nsIIDBDatabase;
 exports.IDBIndex = Ci.nsIIDBIndex;
-exports.IDBObjectStore = Ci.nsIIDBObjectStore;
 exports.IDBRequest = Ci.nsIIDBRequest;

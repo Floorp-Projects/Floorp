@@ -240,7 +240,7 @@ public:
   DOMError*
   GetError(ErrorResult& aRv);
 
-  already_AddRefed<nsIIDBObjectStore>
+  already_AddRefed<IDBObjectStore>
   ObjectStore(const nsAString& aName, ErrorResult& aRv);
 
   void

@@ -699,7 +699,7 @@ IDBTransaction::GetObjectStoreNames(ErrorResult& aRv)
   return list.forget();
 }
 
-already_AddRefed<nsIIDBObjectStore>
+already_AddRefed<IDBObjectStore>
 IDBTransaction::ObjectStore(const nsAString& aName, ErrorResult& aRv)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");

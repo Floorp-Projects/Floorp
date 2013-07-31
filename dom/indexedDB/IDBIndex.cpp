@@ -795,7 +795,8 @@ IDBIndex::GetStoreName(nsAString& aStoreName)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  return mObjectStore->GetName(aStoreName);
+  aStoreName.Assign(mObjectStore->Name());
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -840,11 +841,11 @@ IDBIndex::GetMultiEntry(bool* aMultiEntry)
 }
 
 NS_IMETHODIMP
-IDBIndex::GetObjectStore(nsIIDBObjectStore** aObjectStore)
+IDBIndex::GetObjectStore(nsISupports** aObjectStore)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  nsCOMPtr<nsIIDBObjectStore> objectStore(mObjectStore);
+  nsCOMPtr<nsISupports> objectStore(mObjectStore);
   objectStore.forget(aObjectStore);
   return NS_OK;
 }

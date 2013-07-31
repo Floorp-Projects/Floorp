@@ -6,7 +6,6 @@
 
 #include "nsISupports.idl"
 
-interface nsIIDBObjectStore;
 interface nsIIDBRequest;
 
 /**
@@ -28,7 +27,8 @@ interface nsIIDBIndex : nsISupports
 
   readonly attribute boolean multiEntry;
 
-  readonly attribute nsIIDBObjectStore objectStore;
+  // This is a IDBObjectStore
+  readonly attribute nsISupports objectStore;
 
   [implicit_jscontext]
   nsIIDBRequest

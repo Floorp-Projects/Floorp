@@ -525,7 +525,7 @@ NS_IMETHODIMP
 IDBDatabase::CreateObjectStore(const nsAString& aName,
                                const jsval& aOptions,
                                JSContext* aCx,
-                               nsIIDBObjectStore** _retval)
+                               nsISupports** _retval)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
