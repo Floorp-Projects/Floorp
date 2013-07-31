@@ -82,6 +82,8 @@ GfxFilterToCairoFilter(Filter filter)
 {
   switch (filter)
   {
+    case FILTER_GOOD:
+      return CAIRO_FILTER_GOOD;
     case FILTER_LINEAR:
       return CAIRO_FILTER_BILINEAR;
     case FILTER_POINT:
