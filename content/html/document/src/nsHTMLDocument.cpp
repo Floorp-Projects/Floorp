@@ -2240,6 +2240,24 @@ nsHTMLDocument::GetSelection(ErrorResult& rv)
   return sel.forget();
 }
 
+NS_IMETHODIMP
+nsHTMLDocument::CaptureEvents(int32_t aEventFlags)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLDocument::ReleaseEvents(int32_t aEventFlags)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLDocument::RouteEvent(nsIDOMEvent* aEvt)
+{
+  return NS_OK;
+}
+
 // Mapped to document.embeds for NS4 compatibility
 NS_IMETHODIMP
 nsHTMLDocument::GetPlugins(nsIDOMHTMLCollection** aPlugins)
