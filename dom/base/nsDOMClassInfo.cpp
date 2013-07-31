@@ -98,6 +98,13 @@
 #include "nsIDOMDOMException.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMDOMStringList.h"
+#include "nsIDOMUserDataHandler.h"
+#include "nsIDOMGeoPositionError.h"
+#include "nsIDOMLoadStatus.h"
+#include "nsIDOMXPathNamespace.h"
+#include "nsIDOMXULButtonElement.h"
+#include "nsIDOMXULCheckboxElement.h"
+#include "nsIDOMXULPopupElement.h"
 
 // Event related includes
 #include "nsEventListenerManager.h"
@@ -325,6 +332,13 @@ DOMCI_DATA_NO_CLASS(ChromeMessageSender)
 
 DOMCI_DATA_NO_CLASS(DOMPrototype)
 DOMCI_DATA_NO_CLASS(DOMConstructor)
+
+DOMCI_DATA_NO_CLASS(UserDataHandler)
+DOMCI_DATA_NO_CLASS(LoadStatus)
+DOMCI_DATA_NO_CLASS(XPathNamespace)
+DOMCI_DATA_NO_CLASS(XULButtonElement)
+DOMCI_DATA_NO_CLASS(XULCheckboxElement)
+DOMCI_DATA_NO_CLASS(XULPopupElement)
 
 #define NS_DEFINE_CLASSINFO_DATA_WITH_NAME(_class, _name, _helper,            \
                                            _flags)                            \
@@ -688,6 +702,21 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(LockedFile, nsEventTargetSH,
                            EVENTTARGET_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(CSSFontFeatureValuesRule, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+
+  NS_DEFINE_CLASSINFO_DATA(UserDataHandler, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(GeoPositionError, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(LoadStatus, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(XPathNamespace, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(XULButtonElement, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(XULCheckboxElement, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(XULPopupElement, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 };
 
@@ -1191,9 +1220,9 @@ nsDOMClassInfo::Init()
 {
   /* Errors that can trigger early returns are done first,
      otherwise nsDOMClassInfo is left in a half inited state. */
-  MOZ_STATIC_ASSERT(sizeof(uintptr_t) == sizeof(void*),
-                    "BAD! You'll need to adjust the size of uintptr_t to the "
-                    "size of a pointer on your platform.");
+  static_assert(sizeof(uintptr_t) == sizeof(void*),
+                "BAD! You'll need to adjust the size of uintptr_t to the "
+                "size of a pointer on your platform.");
 
   NS_ENSURE_TRUE(!sIsInitialized, NS_ERROR_ALREADY_INITIALIZED);
 
@@ -1629,9 +1658,37 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMCSSFontFeatureValuesRule)
   DOM_CLASSINFO_MAP_END
 
-  MOZ_STATIC_ASSERT(MOZ_ARRAY_LENGTH(sClassInfoData) == eDOMClassInfoIDCount,
-                    "The number of items in sClassInfoData doesn't match the "
-                    "number of nsIDOMClassInfo ID's, this is bad! Fix it!");
+  DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(UserDataHandler, nsIDOMUserDataHandler)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMUserDataHandler)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(GeoPositionError, nsIDOMGeoPositionError)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMGeoPositionError)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(LoadStatus, nsIDOMLoadStatus)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMLoadStatus)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(XPathNamespace, nsIDOMXPathNamespace)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMXPathNamespace)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(XULButtonElement, nsIDOMXULButtonElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMXULButtonElement)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(XULCheckboxElement, nsIDOMXULCheckboxElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMXULCheckboxElement)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(XULPopupElement, nsIDOMXULPopupElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMXULPopupElement)
+  DOM_CLASSINFO_MAP_END
+
+  static_assert(MOZ_ARRAY_LENGTH(sClassInfoData) == eDOMClassInfoIDCount,
+                "The number of items in sClassInfoData doesn't match the "
+                "number of nsIDOMClassInfo ID's, this is bad! Fix it!");
 
 #ifdef DEBUG
   for (size_t i = 0; i < eDOMClassInfoIDCount; i++) {

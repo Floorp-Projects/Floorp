@@ -222,7 +222,6 @@ MOCHITEST_BROWSER_FILES = \
                  browser_pageInfo.js \
                  browser_pinnedTabs.js \
                  browser_plainTextLinks.js \
-                 browser_pluginCrashCommentAndURL.js \
                  browser_pluginnotification.js \
                  browser_pluginplaypreview.js \
                  browser_pluginplaypreview2.js \
@@ -321,7 +320,6 @@ MOCHITEST_BROWSER_FILES = \
                  plugin_two_types.html \
                  plugin_data_url.html \
                  plugin_unknown.html \
-                 pluginCrashCommentAndURL.html \
                  POSTSearchEngine.xml \
                  print_postdata.sjs \
                  redirect_bug623155.sjs \
@@ -356,6 +354,13 @@ endif
 ifdef MOZ_DATA_REPORTING
 MOCHITEST_BROWSER_FILES += \
   browser_datareporting_notification.js \
+  $(NULL)
+endif
+
+ifdef MOZ_CRASHREPORTER
+MOCHITEST_BROWSER_FILES += \
+  browser_pluginCrashCommentAndURL.js \
+  pluginCrashCommentAndURL.html \
   $(NULL)
 endif
 

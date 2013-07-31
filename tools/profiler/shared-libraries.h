@@ -15,7 +15,7 @@
 #include <vector>
 #include <string>
 #include <stdlib.h>
-#include <mozilla/StandardInteger.h>
+#include <stdint.h>
 #include <nsID.h>
 
 class SharedLibrary {

@@ -12,13 +12,12 @@
 // Enable relying of Mozilla's MFBT for possibly-available C++11 features
 #define MOZ_CHECKEDINT_USE_MFBT
 
+#include <stdint.h>
+
 #ifdef MOZ_CHECKEDINT_USE_MFBT
 #  include "mozilla/Assertions.h"
-#  include "mozilla/StandardInteger.h"
 #else
 #  include <cassert>
-#  include <stdint.h>
-#  define MOZ_STATIC_ASSERT(cond, reason) assert((cond) && reason)
 #  define MOZ_ASSERT(cond, reason) assert((cond) && reason)
 #  define MOZ_DELETE
 #endif
@@ -600,9 +599,9 @@ class CheckedInt
     template<typename U>
     CheckedInt(U value, bool isValid) : mValue(value), mIsValid(isValid)
     {
-      MOZ_STATIC_ASSERT(detail::IsSupported<T>::value &&
-                        detail::IsSupported<U>::value,
-                        "This type is not supported by CheckedInt");
+      static_assert(detail::IsSupported<T>::value &&
+                    detail::IsSupported<U>::value,
+                    "This type is not supported by CheckedInt");
     }
 
     friend struct detail::NegateImpl<T>;
@@ -624,9 +623,9 @@ class CheckedInt
       : mValue(T(value)),
         mIsValid(detail::IsInRange<T>(value))
     {
-      MOZ_STATIC_ASSERT(detail::IsSupported<T>::value &&
-                        detail::IsSupported<U>::value,
-                        "This type is not supported by CheckedInt");
+      static_assert(detail::IsSupported<T>::value &&
+                    detail::IsSupported<U>::value,
+                    "This type is not supported by CheckedInt");
     }
 
     template<typename U>
@@ -643,8 +642,8 @@ class CheckedInt
     /** Constructs a valid checked integer with initial value 0 */
     CheckedInt() : mValue(0), mIsValid(true)
     {
-      MOZ_STATIC_ASSERT(detail::IsSupported<T>::value,
-                        "This type is not supported by CheckedInt");
+      static_assert(detail::IsSupported<T>::value,
+                    "This type is not supported by CheckedInt");
     }
 
     /** @returns the actual value */
@@ -817,9 +816,9 @@ template<typename T, typename U>
 inline typename detail::CastToCheckedIntImpl<T, U>::ReturnType
 castToCheckedInt(U u)
 {
-  MOZ_STATIC_ASSERT(detail::IsSupported<T>::value &&
-                    detail::IsSupported<U>::value,
-                    "This type is not supported by CheckedInt");
+  static_assert(detail::IsSupported<T>::value &&
+                detail::IsSupported<U>::value,
+                "This type is not supported by CheckedInt");
   return detail::CastToCheckedIntImpl<T, U>::run(u);
 }
 

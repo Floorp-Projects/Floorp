@@ -741,9 +741,6 @@ js::gc::EndVerifyPostBarriers(JSRuntime *rt)
 
     VerifyPostTracer *trc = (VerifyPostTracer *)rt->gcVerifyPostData;
 
-    if (rt->gcStoreBuffer.hasOverflowed())
-        goto oom;
-
     /* Visit every entry in the store buffer and put the edges in a hash set. */
     JS_TracerInit(trc, rt, PostVerifierCollectStoreBufferEdges);
     if (!edges.init())

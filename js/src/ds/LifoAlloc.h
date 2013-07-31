@@ -32,9 +32,9 @@ JS_ALWAYS_INLINE
 char *
 AlignPtr(void *orig)
 {
-    MOZ_STATIC_ASSERT(mozilla::tl::FloorLog2<LIFO_ALLOC_ALIGN>::value ==
-                      mozilla::tl::CeilingLog2<LIFO_ALLOC_ALIGN>::value,
-                      "LIFO_ALLOC_ALIGN must be a power of two");
+    static_assert(mozilla::tl::FloorLog2<LIFO_ALLOC_ALIGN>::value ==
+                  mozilla::tl::CeilingLog2<LIFO_ALLOC_ALIGN>::value,
+                  "LIFO_ALLOC_ALIGN must be a power of two");
 
     char *result = (char *) ((uintptr_t(orig) + (LIFO_ALLOC_ALIGN - 1)) & (~LIFO_ALLOC_ALIGN + 1));
     JS_ASSERT(uintptr_t(result) % LIFO_ALLOC_ALIGN == 0);
@@ -89,6 +89,9 @@ class BumpChunk
     void setNext(BumpChunk *succ) { next_ = succ; }
 
     size_t used() const { return bump - bumpBase(); }
+
+    void *start() const { return bumpBase(); }
+    void *end() const { return limit; }
 
     size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) {
         return mallocSizeOf(this);
@@ -347,6 +350,19 @@ class LifoAlloc
         return accum;
     }
 
+    // Return true if the LifoAlloc does not currently contain any allocations.
+    bool isEmpty() const {
+        return !latest || !latest->used();
+    }
+
+    // Return the number of bytes remaining to allocate in the current chunk.
+    // e.g. How many bytes we can allocate before needing a new block.
+    size_t availableInCurrentChunk() const {
+        if (!latest)
+            return 0;
+        return latest->unused();
+    }
+
     // Get the total size of the arena chunks (including unused space).
     size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
         size_t n = 0;
@@ -372,6 +388,76 @@ class LifoAlloc
     }
 
     JS_DECLARE_NEW_METHODS(new_, alloc, JS_ALWAYS_INLINE)
+
+    // A mutable enumeration of the allocated data.
+    class Enum
+    {
+        friend class LifoAlloc;
+        friend class detail::BumpChunk;
+
+        LifoAlloc *alloc_;  // The LifoAlloc being traversed.
+        BumpChunk *chunk_;  // The current chunk.
+        char *position_;    // The current position (must be within chunk_).
+
+        // If there is not enough room in the remaining block for |size|,
+        // advance to the next block and update the position.
+        void ensureSpaceAndAlignment(size_t size) {
+            JS_ASSERT(!empty());
+            char *aligned = detail::AlignPtr(position_);
+            if (aligned + size > chunk_->end()) {
+                chunk_ = chunk_->next();
+                position_ = static_cast<char *>(chunk_->start());
+            } else {
+                position_ = aligned;
+            }
+            JS_ASSERT(uintptr_t(position_) + size <= uintptr_t(chunk_->end()));
+        }
+
+      public:
+        Enum(LifoAlloc &alloc)
+          : alloc_(&alloc),
+            chunk_(alloc.first),
+            position_(static_cast<char *>(alloc.first ? alloc.first->start() : NULL))
+        {}
+
+        // Return true if there are no more bytes to enumerate.
+        bool empty() {
+            return !chunk_ || (chunk_ == alloc_->latest && position_ >= chunk_->mark());
+        }
+
+        // Move the read position forward by the size of one T.
+        template <typename T>
+        void popFront() {
+            popFront(sizeof(T));
+        }
+
+        // Move the read position forward by |size| bytes.
+        void popFront(size_t size) {
+            ensureSpaceAndAlignment(size);
+            position_ = detail::AlignPtr(position_ + size);
+        }
+
+        // Update the bytes at the current position with a new value.
+        template <typename T>
+        void updateFront(const T &t) {
+            ensureSpaceAndAlignment(sizeof(T));
+            memmove(position_, &t, sizeof(T));
+        }
+
+        // Return a pointer to the item at the current position. This
+        // returns a pointer to the inline storage, not a copy.
+        template <typename T>
+        T *get(size_t size = sizeof(T)) {
+            ensureSpaceAndAlignment(size);
+            return reinterpret_cast<T *>(position_);
+        }
+
+        // Return a Mark at the current position of the Enum.
+        Mark mark() {
+            alloc_->markCount++;
+            return Mark(chunk_, position_);
+        }
+    };
 };
 
 class LifoAllocScope

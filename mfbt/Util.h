@@ -324,7 +324,7 @@ ArrayEnd(T (&arr)[N])
 
 /*
  * MOZ_ARRAY_LENGTH() is an alternative to mozilla::ArrayLength() for C files
- * that can't use C++ template functions and for MOZ_STATIC_ASSERT() calls that
+ * that can't use C++ template functions and for static_assert() calls that
  * can't call ArrayLength() when it is not a C++11 constexpr function.
  */
 #ifdef MOZ_HAVE_CXX11_CONSTEXPR

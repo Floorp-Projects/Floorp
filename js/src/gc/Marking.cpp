@@ -118,12 +118,13 @@ static inline void
 CheckMarkedThing(JSTracer *trc, T *thing)
 {
 #ifdef DEBUG
+    JS_ASSERT(trc);
+    JS_ASSERT(thing);
+
     /* This function uses data that's not available in the nursery. */
     if (IsInsideNursery(trc->runtime, thing))
         return;
 
-    JS_ASSERT(trc);
-    JS_ASSERT(thing);
     JS_ASSERT(thing->zone());
     JS_ASSERT(thing->zone()->rt == trc->runtime);
     JS_ASSERT(trc->debugPrinter || trc->debugPrintArg);

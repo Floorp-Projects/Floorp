@@ -1645,12 +1645,12 @@ inline Anchor<Value>::~Anchor()
 namespace detail {
 
 struct ValueAlignmentTester { char c; JS::Value v; };
-MOZ_STATIC_ASSERT(sizeof(ValueAlignmentTester) == 16,
-                  "JS::Value must be 16-byte-aligned");
+static_assert(sizeof(ValueAlignmentTester) == 16,
+              "JS::Value must be 16-byte-aligned");
 
 struct LayoutAlignmentTester { char c; jsval_layout l; };
-MOZ_STATIC_ASSERT(sizeof(LayoutAlignmentTester) == 16,
-                  "jsval_layout must be 16-byte-aligned");
+static_assert(sizeof(LayoutAlignmentTester) == 16,
+              "jsval_layout must be 16-byte-aligned");
 
 } // namespace detail
 #endif /* DEBUG */
@@ -1664,8 +1664,8 @@ MOZ_STATIC_ASSERT(sizeof(LayoutAlignmentTester) == 16,
  */
 typedef JS::Value jsval;
 
-MOZ_STATIC_ASSERT(sizeof(jsval_layout) == sizeof(JS::Value),
-                  "jsval_layout and JS::Value must have identical layouts");
+static_assert(sizeof(jsval_layout) == sizeof(JS::Value),
+              "jsval_layout and JS::Value must have identical layouts");
 
 /************************************************************************/
 

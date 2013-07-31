@@ -32,21 +32,13 @@ WebGL2Context::~WebGL2Context()
 bool
 WebGL2Context::IsSupported()
 {
-#ifdef RELEASE_BUILD
-    return false;
-#else
     return Preferences::GetBool("webgl.enable-prototype-webgl2", false);
-#endif
 }
 
 WebGL2Context*
 WebGL2Context::Create()
 {
-#ifdef RELEASE_BUILD
-    return nullptr;
-#else
     return new WebGL2Context();
-#endif
 }
 
 

@@ -6,7 +6,7 @@
 #ifndef MacLaunchHelper_h_
 #define MacLaunchHelper_h_
 
-#include "mozilla/StandardInteger.h"
+#include <stdint.h>
 
 #include <unistd.h>
 

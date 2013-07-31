@@ -31,11 +31,8 @@ NS_IMPL_ADDREF_INHERITED(HTMLProgressElement, Element)
 NS_IMPL_RELEASE_INHERITED(HTMLProgressElement, Element)
 
 
-NS_INTERFACE_TABLE_HEAD(HTMLProgressElement)
+NS_INTERFACE_MAP_BEGIN(HTMLProgressElement)
   NS_HTML_CONTENT_INTERFACES(nsGenericHTMLElement)
-  NS_INTERFACE_TABLE_INHERITED1(HTMLProgressElement,
-                                nsIDOMHTMLProgressElement)
-  NS_INTERFACE_TABLE_TO_MAP_SEGUE
 NS_ELEMENT_INTERFACE_MAP_END
 
 NS_IMPL_ELEMENT_CLONE(HTMLProgressElement)
@@ -67,13 +64,6 @@ HTMLProgressElement::ParseAttribute(int32_t aNamespaceID, nsIAtom* aAttribute,
                                               aValue, aResult);
 }
 
-NS_IMETHODIMP
-HTMLProgressElement::GetValue(double* aValue)
-{
-  *aValue = Value();
-  return NS_OK;
-}
-
 double
 HTMLProgressElement::Value() const
 {
@@ -86,21 +76,6 @@ HTMLProgressElement::Value() const
   return std::min(attrValue->GetDoubleValue(), Max());
 }
 
-NS_IMETHODIMP
-HTMLProgressElement::SetValue(double aValue)
-{
-  ErrorResult rv;
-  SetValue(aValue, rv);
-  return rv.ErrorCode();
-}
-
-NS_IMETHODIMP
-HTMLProgressElement::GetMax(double* aValue)
-{
-  *aValue = Max();
-  return NS_OK;
-}
-
 double
 HTMLProgressElement::Max() const
 {
@@ -111,21 +86,6 @@ HTMLProgressElement::Max() const
   }
 
   return attrMax->GetDoubleValue();
-}
-
-NS_IMETHODIMP
-HTMLProgressElement::SetMax(double aValue)
-{
-  ErrorResult rv;
-  SetMax(aValue, rv);
-  return rv.ErrorCode();
-}
-
-NS_IMETHODIMP
-HTMLProgressElement::GetPosition(double* aPosition)
-{
-  *aPosition = Position();
-  return NS_OK;
 }
 
 double

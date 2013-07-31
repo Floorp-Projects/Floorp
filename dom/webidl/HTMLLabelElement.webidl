@@ -13,6 +13,7 @@
 
 interface HTMLLabelElement : HTMLElement {
   readonly attribute HTMLFormElement? form;
+           [SetterThrows]
            attribute DOMString htmlFor;
   readonly attribute HTMLElement? control;
 };

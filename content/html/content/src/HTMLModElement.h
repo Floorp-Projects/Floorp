@@ -8,14 +8,13 @@
 
 #include "mozilla/Attributes.h"
 #include "nsGenericHTMLElement.h"
-#include "nsIDOMHTMLModElement.h"
 #include "nsGkAtoms.h"
 
 namespace mozilla {
 namespace dom {
 
 class HTMLModElement MOZ_FINAL : public nsGenericHTMLElement,
-                                 public nsIDOMHTMLModElement
+                                 public nsIDOMHTMLElement
 {
 public:
   HTMLModElement(already_AddRefed<nsINodeInfo> aNodeInfo);
@@ -33,9 +32,6 @@ public:
   // nsIDOMHTMLElement
   NS_FORWARD_NSIDOMHTMLELEMENT_TO_GENERIC
 
-  // nsIDOMHTMLModElement
-  NS_DECL_NSIDOMHTMLMODELEMENT
-
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
 
   virtual nsIDOMNode* AsDOMNode() MOZ_OVERRIDE { return this; }
@@ -48,7 +44,10 @@ public:
   {
     SetHTMLAttr(nsGkAtoms::cite, aCite, aRv);
   }
-  // XPCOM GetDateTime is fine.
+  void GetDateTime(nsAString& aDateTime)
+  {
+    GetHTMLAttr(nsGkAtoms::datetime, aDateTime);
+  }
   void SetDateTime(const nsAString& aDateTime, ErrorResult& aRv)
   {
     SetHTMLAttr(nsGkAtoms::datetime, aDateTime, aRv);

@@ -22,7 +22,7 @@
 #endif
 
 #include "mozilla/arm.h"
-#include "mozilla/StandardInteger.h"
+#include <stdint.h>
 #include "PlatformMacros.h"
 
 #include "platform.h"
@@ -217,10 +217,10 @@ utb__addEntry(/*MODIFIED*/UnwinderThreadBuffer* utb, ProfileEntry ent)
 //////////////////////////////////////////////////////////
 //// BEGIN type UnwindThreadBuffer
 
-MOZ_STATIC_ASSERT(sizeof(uint32_t) == 4, "uint32_t size incorrect");
-MOZ_STATIC_ASSERT(sizeof(uint64_t) == 8, "uint64_t size incorrect");
-MOZ_STATIC_ASSERT(sizeof(uintptr_t) == sizeof(void*),
-                  "uintptr_t size incorrect");
+static_assert(sizeof(uint32_t) == 4, "uint32_t size incorrect");
+static_assert(sizeof(uint64_t) == 8, "uint64_t size incorrect");
+static_assert(sizeof(uintptr_t) == sizeof(void*),
+              "uintptr_t size incorrect");
 
 typedef
   struct { 

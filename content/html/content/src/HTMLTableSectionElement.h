@@ -7,14 +7,13 @@
 
 #include "mozilla/Attributes.h"
 #include "nsGenericHTMLElement.h"
-#include "nsIDOMHTMLTableSectionElement.h"
 #include "nsContentList.h" // For ctor.
 
 namespace mozilla {
 namespace dom {
 
 class HTMLTableSectionElement MOZ_FINAL : public nsGenericHTMLElement,
-                                          public nsIDOMHTMLTableSectionElement
+                                          public nsIDOMHTMLElement
 {
 public:
   HTMLTableSectionElement(already_AddRefed<nsINodeInfo> aNodeInfo)
@@ -33,9 +32,6 @@ public:
 
   // nsIDOMHTMLElement
   NS_FORWARD_NSIDOMHTMLELEMENT_TO_GENERIC
-
-  // nsIDOMHTMLTableSectionElement
-  NS_DECL_NSIDOMHTMLTABLESECTIONELEMENT
 
   nsIHTMLCollection* Rows();
   already_AddRefed<nsGenericHTMLElement>

@@ -16,9 +16,10 @@
 #include "mozilla/layers/YCbCrImageDataSerializer.h"
 #include "gfxReusableSurfaceWrapper.h"
 #include "gfxPlatform.h"
-#include "mozilla/StandardInteger.h"
 #include "mozilla/layers/ImageDataSerializer.h"
 #include "gfx2DGlue.h"
+
+#include <stdint.h>
 
 using namespace mozilla::gl;
 
