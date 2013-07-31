@@ -41,9 +41,14 @@ patched_rotatePayload(payload p)
 bool TestHook(const char *dll, const char *func)
 {
   void *orig_func;
-  WindowsDllInterceptor TestIntercept;
-  TestIntercept.Init(dll);
-  if (TestIntercept.AddHook(func, 0, &orig_func)) {
+  bool successful = false;
+  {
+    WindowsDllInterceptor TestIntercept;
+    TestIntercept.Init(dll);
+    successful = TestIntercept.AddHook(func, 0, &orig_func);
+  }
+
+  if (successful) {
     printf("TEST-PASS | WindowsDllInterceptor | Could hook %s from %s\n", func, dll);
     return true;
   } else {

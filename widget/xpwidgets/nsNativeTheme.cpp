@@ -14,6 +14,7 @@
 #include "nsString.h"
 #include "nsINameSpaceManager.h"
 #include "nsIDOMHTMLInputElement.h"
+#include "nsIDOMHTMLProgressElement.h"
 #include "nsIDOMXULMenuListElement.h"
 #include "nsThemeConstants.h"
 #include "nsIComponentManager.h"
@@ -25,11 +26,8 @@
 #include "nsCSSRendering.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLBodyElement.h"
-#include "mozilla/dom/HTMLProgressElement.h"
 #include "nsIDocumentInlines.h"
 #include <algorithm>
-
-using namespace mozilla::dom;
 
 nsNativeTheme::nsNativeTheme()
 : mAnimatedContentTimeout(UINT32_MAX)
@@ -152,8 +150,14 @@ nsNativeTheme::GetProgressValue(nsIFrame* aFrame)
 {
   // When we are using the HTML progress element,
   // we can get the value from the IDL property.
-  if (aFrame && aFrame->GetContent()->IsHTML(nsGkAtoms::progress)) {
-    return static_cast<HTMLProgressElement*>(aFrame->GetContent())->Value();
+  if (aFrame) {
+    nsCOMPtr<nsIDOMHTMLProgressElement> progress =
+      do_QueryInterface(aFrame->GetContent());
+    if (progress) {
+      double value;
+      progress->GetValue(&value);
+      return value;
+    }
   }
 
   return (double)nsNativeTheme::CheckIntAttr(aFrame, nsGkAtoms::value, 0);
@@ -165,8 +169,14 @@ nsNativeTheme::GetProgressMaxValue(nsIFrame* aFrame)
 {
   // When we are using the HTML progress element,
   // we can get the max from the IDL property.
-  if (aFrame && aFrame->GetContent()->IsHTML(nsGkAtoms::progress)) {
-    return static_cast<HTMLProgressElement*>(aFrame->GetContent())->Max();
+  if (aFrame) {
+    nsCOMPtr<nsIDOMHTMLProgressElement> progress =
+      do_QueryInterface(aFrame->GetContent());
+    if (progress) {
+      double max;
+      progress->GetMax(&max);
+      return max;
+    }
   }
 
   return (double)std::max(nsNativeTheme::CheckIntAttr(aFrame, nsGkAtoms::max, 100), 1);

@@ -7,13 +7,14 @@
 #define mozilla_dom_HTMLHeadingElement_h
 
 #include "mozilla/Attributes.h"
+#include "nsIDOMHTMLHeadingElement.h"
 #include "nsGenericHTMLElement.h"
 
 namespace mozilla {
 namespace dom {
 
 class HTMLHeadingElement MOZ_FINAL : public nsGenericHTMLElement,
-                                     public nsIDOMHTMLElement
+				     public nsIDOMHTMLHeadingElement
 {
 public:
   HTMLHeadingElement(already_AddRefed<nsINodeInfo> aNodeInfo)
@@ -34,6 +35,9 @@ public:
   // nsIDOMHTMLElement
   NS_FORWARD_NSIDOMHTMLELEMENT_TO_GENERIC
 
+  // nsIDOMHTMLHeadingElement
+  NS_DECL_NSIDOMHTMLHEADINGELEMENT
+
   virtual bool ParseAttribute(int32_t aNamespaceID,
                               nsIAtom* aAttribute,
                               const nsAString& aValue,
@@ -43,15 +47,8 @@ public:
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
   virtual nsIDOMNode* AsDOMNode() MOZ_OVERRIDE { return this; }
 
-  void GetAlign(nsAString& aAlign)
-  {
-    GetHTMLAttr(nsGkAtoms::align, aAlign);
-  }
-  void SetAlign(const nsAString& aAlign, ErrorResult& aRv)
-  {
-    SetHTMLAttr(nsGkAtoms::align, aAlign, aRv);
-  }
-
+  // The XPCOM versions of GetAlign and SetAlign are fine for us for
+  // use from WebIDL.
 
 protected:
   virtual JSObject* WrapNode(JSContext *aCx,

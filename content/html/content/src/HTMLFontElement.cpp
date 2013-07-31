@@ -31,12 +31,65 @@ NS_IMPL_ADDREF_INHERITED(HTMLFontElement, Element)
 NS_IMPL_RELEASE_INHERITED(HTMLFontElement, Element)
 
 // QueryInterface implementation for HTMLFontElement
-NS_INTERFACE_MAP_BEGIN(HTMLFontElement)
+NS_INTERFACE_TABLE_HEAD(HTMLFontElement)
   NS_HTML_CONTENT_INTERFACES(nsGenericHTMLElement)
+  NS_INTERFACE_TABLE_INHERITED1(HTMLFontElement, nsIDOMHTMLFontElement)
+  NS_INTERFACE_TABLE_TO_MAP_SEGUE
 NS_ELEMENT_INTERFACE_MAP_END
 
 
 NS_IMPL_ELEMENT_CLONE(HTMLFontElement)
+
+NS_IMETHODIMP
+HTMLFontElement::GetColor(nsAString& aColor)
+{
+  nsString color;
+  GetColor(color);
+  aColor = color;
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+HTMLFontElement::SetColor(const nsAString& aColor)
+{
+  ErrorResult rv;
+  SetColor(aColor, rv);
+  return rv.ErrorCode();
+}
+
+NS_IMETHODIMP
+HTMLFontElement::GetFace(nsAString& aFace)
+{
+  nsString face;
+  GetFace(face);
+  aFace = face;
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+HTMLFontElement::SetFace(const nsAString& aFace)
+{
+  ErrorResult rv;
+  SetFace(aFace, rv);
+  return rv.ErrorCode();
+}
+
+NS_IMETHODIMP
+HTMLFontElement::GetSize(nsAString& aSize)
+{
+  nsString size;
+  GetSize(size);
+  aSize = size;
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+HTMLFontElement::SetSize(const nsAString& aSize)
+{
+  ErrorResult rv;
+  SetSize(aSize, rv);
+  return rv.ErrorCode();
+}
 
 bool
 HTMLFontElement::ParseAttribute(int32_t aNamespaceID,
