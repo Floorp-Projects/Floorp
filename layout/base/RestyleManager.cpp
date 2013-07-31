@@ -2048,6 +2048,32 @@ ElementRestyler::Restyle(nsRestyleHint aRestyleHint)
   NS_ASSERTION(mFrame->GetContent() || !mParentContent ||
                !mParentContent->GetParent(),
                "frame must have content (unless at the top of the tree)");
+
+  if (mContent && mContent->IsElement()) {
+    mContent->OwnerDoc()->FlushPendingLinkUpdates();
+    RestyleTracker::RestyleData restyleData;
+    if (mRestyleTracker.GetRestyleData(mContent->AsElement(), &restyleData)) {
+      if (NS_UpdateHint(mHintsHandled, restyleData.mChangeHint)) {
+        mChangeList->AppendChange(mFrame, mContent, restyleData.mChangeHint);
+      }
+      aRestyleHint = nsRestyleHint(aRestyleHint | restyleData.mRestyleHint);
+    }
+  }
+
+  nsRestyleHint childRestyleHint = aRestyleHint;
+
+  if (childRestyleHint == eRestyle_Self) {
+    childRestyleHint = nsRestyleHint(0);
+  }
+
+  RestyleSelf(aRestyleHint);
+
+  RestyleChildren(childRestyleHint);
+}
+
+void
+ElementRestyler::RestyleSelf(nsRestyleHint aRestyleHint)
+{
   // XXXldb get new context from prev-in-flow if possible, to avoid
   // duplication.  (Or should we just let |GetContext| handle that?)
   // Getting the hint would be nice too, but that's harder.
@@ -2067,23 +2093,6 @@ ElementRestyler::Restyle(nsRestyleHint aRestyleHint)
 
     nsIAtom* const pseudoTag = oldContext->GetPseudo();
     const nsCSSPseudoElements::Type pseudoType = oldContext->GetPseudoType();
-
-    if (mContent && mContent->IsElement()) {
-      mContent->OwnerDoc()->FlushPendingLinkUpdates();
-      RestyleTracker::RestyleData restyleData;
-      if (mRestyleTracker.GetRestyleData(mContent->AsElement(), &restyleData)) {
-        if (NS_UpdateHint(mHintsHandled, restyleData.mChangeHint)) {
-          mChangeList->AppendChange(mFrame, mContent, restyleData.mChangeHint);
-        }
-        aRestyleHint = nsRestyleHint(aRestyleHint | restyleData.mRestyleHint);
-      }
-    }
-
-    nsRestyleHint childRestyleHint = aRestyleHint;
-
-    if (childRestyleHint == eRestyle_Self) {
-      childRestyleHint = nsRestyleHint(0);
-    }
 
     nsStyleContext* parentContext;
     // Get the frame providing the parent style context.  If it is a
@@ -2334,9 +2343,53 @@ ElementRestyler::Restyle(nsRestyleHint aRestyleHint)
         break;
       }
     }
+}
 
-    // now look for undisplayed child content and pseudos
+void
+ElementRestyler::RestyleChildren(nsRestyleHint aChildRestyleHint)
+{
+    RestyleUndisplayedChildren(aChildRestyleHint);
 
+    // Check whether we might need to create a new ::before frame.
+    // There's no need to do this if we're planning to reframe already
+    // or if we're not forcing restyles on kids.
+    // It's also important to check mHintsHandled since we use
+    // mFrame->StyleContext(), which is out of date if mHintsHandled has a
+    // ReconstructFrame hint.  Using an out of date style context could
+    // trigger assertions about mismatched rule trees.
+    if (!(mHintsHandled & nsChangeHint_ReconstructFrame) &&
+        aChildRestyleHint) {
+      RestyleBeforePseudo();
+    }
+
+    // Check whether we might need to create a new ::after frame.
+    // See comments above regarding :before.
+    if (!(mHintsHandled & nsChangeHint_ReconstructFrame) &&
+        aChildRestyleHint) {
+      RestyleAfterPseudo();
+    }
+
+    // There is no need to waste time crawling into a frame's children
+    // on a frame change.  The act of reconstructing frames will force
+    // new style contexts to be resolved on all of this frame's
+    // descendants anyway, so we want to avoid wasting time processing
+    // style contexts that we're just going to throw away anyway. - dwh
+    // It's also important to check mHintsHandled since reresolving the
+    // kids would use mFrame->StyleContext(), which is out of date if
+    // mHintsHandled has a ReconstructFrame hint; doing this could trigger
+    // assertions about mismatched rule trees.
+    if (!(mHintsHandled & nsChangeHint_ReconstructFrame)) {
+      InitializeAccessibilityNotifications();
+
+      RestyleContentChildren(aChildRestyleHint);
+
+      SendAccessibilityNotifications();
+    }
+}
+
+void
+ElementRestyler::RestyleUndisplayedChildren(nsRestyleHint aChildRestyleHint)
+{
     // When the root element is display:none, we still construct *some*
     // frames that have the root element as their mContent, down to the
     // DocElementContainingBlock.
@@ -2383,7 +2436,7 @@ ElementRestyler::Restyle(nsRestyleHint aRestyleHint)
                                mTreeMatchContext,
                                parent && parent->IsElement() ? parent->AsElement() : nullptr);
 
-        nsRestyleHint thisChildHint = childRestyleHint;
+        nsRestyleHint thisChildHint = aChildRestyleHint;
         RestyleTracker::RestyleData undisplayedRestyleData;
         if (mRestyleTracker.GetRestyleData(undisplayed->mContent->AsElement(),
                                            &undisplayedRestyleData)) {
@@ -2391,6 +2444,7 @@ ElementRestyler::Restyle(nsRestyleHint aRestyleHint)
             nsRestyleHint(thisChildHint | undisplayedRestyleData.mRestyleHint);
         }
         nsRefPtr<nsStyleContext> undisplayedContext;
+        nsStyleSet* styleSet = mPresContext->StyleSet();
         if (thisChildHint) {
           undisplayedContext =
             styleSet->ResolveStyleFor(undisplayed->mContent->AsElement(),
@@ -2418,16 +2472,11 @@ ElementRestyler::Restyle(nsRestyleHint aRestyleHint)
         }
       }
     }
+}
 
-    // Check whether we might need to create a new ::before frame.
-    // There's no need to do this if we're planning to reframe already
-    // or if we're not forcing restyles on kids.
-    // It's also important to check mHintsHandled since we use
-    // mFrame->StyleContext(), which is out of date if mHintsHandled has a
-    // ReconstructFrame hint.  Using an out of date style context could
-    // trigger assertions about mismatched rule trees.
-    if (!(mHintsHandled & nsChangeHint_ReconstructFrame) &&
-        childRestyleHint) {
+void
+ElementRestyler::RestyleBeforePseudo()
+{
       // Make sure not to do this for pseudo-frames or frames that
       // can't have generated content.
       if (!mFrame->StyleContext()->GetPseudo() &&
@@ -2453,12 +2502,11 @@ ElementRestyler::Restyle(nsRestyleHint aRestyleHint)
           }
         }
       }
-    }
+}
 
-    // Check whether we might need to create a new ::after frame.
-    // See comments above regarding :before.
-    if (!(mHintsHandled & nsChangeHint_ReconstructFrame) &&
-        childRestyleHint) {
+void
+ElementRestyler::RestyleAfterPseudo()
+{
       // Make sure not to do this for pseudo-frames or frames that
       // can't have generated content.
       if (!mFrame->StyleContext()->GetPseudo() &&
@@ -2485,19 +2533,11 @@ ElementRestyler::Restyle(nsRestyleHint aRestyleHint)
           }
         }
       }
-    }
+}
 
-    // There is no need to waste time crawling into a frame's children
-    // on a frame change.  The act of reconstructing frames will force
-    // new style contexts to be resolved on all of this frame's
-    // descendants anyway, so we want to avoid wasting time processing
-    // style contexts that we're just going to throw away anyway. - dwh
-    // It's also important to check mHintsHandled since reresolving the
-    // kids would use mFrame->StyleContext(), which is out of date if
-    // mHintsHandled has a ReconstructFrame hint; doing this could trigger
-    // assertions about mismatched rule trees.
-    if (!(mHintsHandled & nsChangeHint_ReconstructFrame)) {
-
+void
+ElementRestyler::InitializeAccessibilityNotifications()
+{
 #ifdef ACCESSIBILITY
       // Notify a11y for primary frame only if it's a root frame of visibility
       // changes or its parent frame was hidden while it stays visible and
@@ -2533,8 +2573,11 @@ ElementRestyler::Restyle(nsRestyleHint aRestyleHint)
         }
       }
 #endif
+}
 
-      // now do children
+void
+ElementRestyler::RestyleContentChildren(nsRestyleHint aChildRestyleHint)
+{
       nsIFrame::ChildListIterator lists(mFrame);
       for (TreeMatchContext::AutoAncestorPusher
              pushAncestor(!lists.IsDone(),
@@ -2583,25 +2626,29 @@ ElementRestyler::Restyle(nsRestyleHint aRestyleHint)
               do {
                 ElementRestyler oofRestyler(*this, outOfFlowFrame,
                                             FOR_OUT_OF_FLOW_CHILD);
-                oofRestyler.Restyle(childRestyleHint);
+                oofRestyler.Restyle(aChildRestyleHint);
               } while ((outOfFlowFrame = outOfFlowFrame->GetNextContinuation()));
 
               // reresolve placeholder's context under the same parent
               // as the out-of-flow frame
               ElementRestyler phRestyler(*this, child, 0);
-              phRestyler.Restyle(childRestyleHint);
+              phRestyler.Restyle(aChildRestyleHint);
             }
             else {  // regular child frame
               if (child != mResolvedChild) {
                 ElementRestyler childRestyler(*this, child, 0);
-                childRestyler.Restyle(childRestyleHint);
+                childRestyler.Restyle(aChildRestyleHint);
               }
             }
           }
         }
       }
       // XXX need to do overflow frames???
+}
 
+void
+ElementRestyler::SendAccessibilityNotifications()
+{
 #ifdef ACCESSIBILITY
       // Send notifications about visibility changes.
       if (mOurA11yNotification == eNotifyShown) {
@@ -2633,7 +2680,6 @@ ElementRestyler::Restyle(nsRestyleHint aRestyleHint)
         }
       }
 #endif
-    }
 }
 
 void
