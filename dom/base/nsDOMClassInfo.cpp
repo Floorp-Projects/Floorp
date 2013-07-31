@@ -203,7 +203,6 @@
 
 #include "mozilla/dom/indexedDB/IDBWrapperCache.h"
 #include "mozilla/dom/indexedDB/IDBRequest.h"
-#include "mozilla/dom/indexedDB/IDBCursor.h"
 #include "mozilla/dom/indexedDB/IDBKeyRange.h"
 
 using mozilla::dom::indexedDB::IDBWrapperCache;
@@ -633,10 +632,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
 
   NS_DEFINE_CLASSINFO_DATA(IDBRequest, IDBEventTargetSH,
                            IDBEVENTTARGET_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(IDBCursor, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(IDBCursorWithValue, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(IDBKeyRange, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(IDBOpenDBRequest, IDBEventTargetSH,
@@ -1530,15 +1525,6 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_BEGIN(IDBRequest, nsIIDBRequest)
     DOM_CLASSINFO_MAP_ENTRY(nsIIDBRequest)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(IDBCursor, nsIIDBCursor)
-    DOM_CLASSINFO_MAP_ENTRY(nsIIDBCursor)
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(IDBCursorWithValue, nsIIDBCursorWithValue)
-    DOM_CLASSINFO_MAP_ENTRY(nsIIDBCursor)
-    DOM_CLASSINFO_MAP_ENTRY(nsIIDBCursorWithValue)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(IDBKeyRange, nsIIDBKeyRange)
@@ -2809,7 +2795,7 @@ DefineInterfaceConstants(JSContext *cx, JS::Handle<JSObject*> obj, const nsIID *
 }
 
 // This code is temporary until we remove support for the constants defined
-// on IDBCursor/IDBRequest
+// on IDBRequest
 
 struct IDBConstant
 {
@@ -2817,18 +2803,12 @@ struct IDBConstant
   const char* name;
   const char* value;
 
-  static const char* IDBCursor;
   static const char* IDBRequest;
 };
 
-const char* IDBConstant::IDBCursor = "IDBCursor";
 const char* IDBConstant::IDBRequest = "IDBRequest";
 
 static const IDBConstant sIDBConstants[] = {
-  { IDBConstant::IDBCursor,  "NEXT",              "next" },
-  { IDBConstant::IDBCursor,  "NEXT_NO_DUPLICATE", "nextunique" },
-  { IDBConstant::IDBCursor,  "PREV",              "prev" },
-  { IDBConstant::IDBCursor,  "PREV_NO_DUPLICATE", "prevunique" },
   { IDBConstant::IDBRequest, "LOADING",           "pending" },
   { IDBConstant::IDBRequest, "DONE",              "done" },
 };
@@ -2918,10 +2898,7 @@ static nsresult
 DefineIDBInterfaceConstants(JSContext *cx, JS::Handle<JSObject*> obj, const nsIID *aIID)
 {
   const char* interface;
-  if (aIID->Equals(NS_GET_IID(nsIIDBCursor))) {
-    interface = IDBConstant::IDBCursor;
-  }
-  else if (aIID->Equals(NS_GET_IID(nsIIDBRequest))) {
+  if (aIID->Equals(NS_GET_IID(nsIIDBRequest))) {
     interface = IDBConstant::IDBRequest;
   }
   else {
@@ -3345,8 +3322,7 @@ nsDOMConstructor::ResolveInterfaceConstants(JSContext *cx, JS::Handle<JSObject*>
 
   // Special case a few IDB interfaces which for now are getting transitional
   // constants.
-  if (class_iid->Equals(NS_GET_IID(nsIIDBCursor)) ||
-      class_iid->Equals(NS_GET_IID(nsIIDBRequest))) {
+  if (class_iid->Equals(NS_GET_IID(nsIIDBRequest))) {
     rv = DefineIDBInterfaceConstants(cx, obj, class_iid);
     NS_ENSURE_SUCCESS(rv, rv);
   }
@@ -3483,8 +3459,7 @@ ResolvePrototype(nsIXPConnect *aXPConnect, nsGlobalWindow *aWin, JSContext *cx,
 
     // Special case a few IDB interfaces which for now are getting transitional
     // constants.
-    if (primary_iid->Equals(NS_GET_IID(nsIIDBCursor)) ||
-        primary_iid->Equals(NS_GET_IID(nsIIDBRequest))) {
+    if (primary_iid->Equals(NS_GET_IID(nsIIDBRequest))) {
       rv = DefineIDBInterfaceConstants(cx, class_obj, primary_iid);
       NS_ENSURE_SUCCESS(rv, rv);
     }
