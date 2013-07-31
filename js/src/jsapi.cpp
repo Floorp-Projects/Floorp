@@ -2076,6 +2076,8 @@ JS_GetGlobalForScopeChain(JSContext *cx)
 {
     AssertHeapIsIdleOrIterating(cx);
     CHECK_REQUEST(cx);
+    if (!cx->compartment())
+        return NULL;
     return cx->global();
 }
 
