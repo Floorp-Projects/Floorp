@@ -51,7 +51,7 @@ var gWindowUtils = SpecialPowers.wrap(window)
 var nativeMouseDown;
 var nativeMouseUp;
 
-function activatePlugin(id) {
+function nativeClickElement(id) {
   return function() {
 
     var element = document.getElementById(id);
@@ -61,24 +61,32 @@ function activatePlugin(id) {
 
     SimpleTest.executeSoon(function () {
       gWindowUtils.sendNativeMouseEvent(x, y, nativeMouseDown, 0, element);
-      SimpleTest.executeSoon(function () {
-        gWindowUtils.sendNativeMouseEvent(x, y, nativeMouseUp, 0, element);
-      });
+      gWindowUtils.sendNativeMouseEvent(x, y, nativeMouseUp, 0, element);
     });
   };
 }
 
 function done() {
-  window.opener.childDone();
+  // Something about this test is losing focus to the OS intermittently, remove
+  // the windowed plugins and wait for this window to be focused before
+  // continuing. (Bug 874843)
+  for (var p of [ "p1", "p2" ]) {
+    p = document.getElementById(p);
+    p.parentNode.removeChild(p);
+    p = null;
+  }
+  SimpleTest.waitForFocus(window.opener.childDone, window);
 }
 
 var step = 0;
 var steps = [
-  { event:"focus", id:"input", action:activatePlugin("p1") },
+  { event:"focus", id:"input", action:nativeClickElement("p1") },
   { event:"blur", id:"input" },
-  { event:"focus", id:"p1", action:activatePlugin("p2") },
+  { event:"focus", id:"p1", action:nativeClickElement("p2") },
   { event:"blur", id:"p1" },
-  { event:"focus", id:"p2", action:done }
+  { event:"focus", id:"p2", action:nativeClickElement("input") },
+  { event:"blur", id:"p2" },
+  { event:"focus", id:"input", action:done }
 ];
 
 function handleEvent(event) {
