@@ -85,8 +85,6 @@ members = [
 
     # dom/indexedDB
     'nsIIDBKeyRange.*',
-    'nsIIDBRequest.*',
-    'nsIIDBOpenDBRequest.*',
     'nsIIndexedDatabaseManager.*',
 
     # dom/file
