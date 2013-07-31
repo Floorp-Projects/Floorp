@@ -86,6 +86,7 @@
   <string name="pref_category_installed_search_engines">&pref_category_installed_search_engines;</string>
   <string name="pref_category_devtools">&pref_category_devtools;</string>
   <string name="pref_developer_remotedebugging">&pref_developer_remotedebugging;</string>
+  <string name="pref_developer_remotedebugging_docs">&pref_developer_remotedebugging_docs;</string>
 
   <string name="pref_header_customize">&pref_header_customize;</string>
   <string name="pref_header_display">&pref_header_display;</string>
