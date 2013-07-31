@@ -251,6 +251,8 @@ These should match what Safari and other Apple applications use on OS X Lion. --
 <!ENTITY devToolbar.keytext                "F2">
 <!ENTITY devToolboxMenuItem.label          "Toggle Tools">
 <!ENTITY devToolboxMenuItem.accesskey      "T">
+<!ENTITY devToolboxMenuItem.keycode        "I">
+<!ENTITY devToolboxMenuItem.keytext        "I">
 
 <!ENTITY devToolbarToolsButton.tooltip     "Toggle developer tools">
 <!ENTITY devToolbarOtherToolsButton.label  "More Tools">
