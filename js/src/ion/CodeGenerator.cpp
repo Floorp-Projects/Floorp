@@ -2081,6 +2081,12 @@ CodeGenerator::visitApplyArgsGeneric(LApplyArgsGeneric *apply)
 }
 
 bool
+CodeGenerator::visitBail(LBail *lir)
+{
+    return bailout(lir->snapshot());
+}
+
+bool
 CodeGenerator::visitGetDynamicName(LGetDynamicName *lir)
 {
     Register scopeChain = ToRegister(lir->getScopeChain());
