@@ -313,8 +313,7 @@ public:
    * nsRestyleHint(0) to mean recompute a new style context for our
    * current parent and existing rulenode, and the same for kids.
    */
-  void Restyle(nsPresContext     *aPresContext,
-               nsIContent        *aParentContent,
+  void Restyle(nsIContent        *aParentContent,
                nsStyleChangeList *aChangeList,
                nsChangeHint       aParentFrameHintsNotHandledForDescendants,
                nsRestyleHint      aRestyleHint,
