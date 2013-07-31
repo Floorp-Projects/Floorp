@@ -1666,7 +1666,7 @@ ElementForStyleContext(nsIContent* aParentContent,
                   aPseudoType < nsCSSPseudoElements::ePseudo_PseudoElementCount,
                   "Unexpected pseudo");
   // XXX see the comments about the various element confusion in
-  // ReResolveStyleContext.
+  // ElementRestyler::Restyle.
   if (aPseudoType == nsCSSPseudoElements::ePseudo_NotPseudoElement) {
     return aFrame->GetContent()->AsElement();
   }
@@ -1909,14 +1909,31 @@ RestyleManager::ReparentStyleContext(nsIFrame* aFrame)
   return NS_OK;
 }
 
-static void
-CaptureChange(nsStyleContext* aOldContext, nsStyleContext* aNewContext,
-              nsIFrame* aFrame, nsIContent* aContent,
-              nsStyleChangeList* aChangeList,
-              /*inout*/nsChangeHint &aMinChange,
-              /*in*/nsChangeHint aParentHintsNotHandledForDescendants,
-              /*out*/nsChangeHint &aHintsNotHandledForDescendants,
-              nsChangeHint aChangeToAssume)
+ElementRestyler::ElementRestyler(nsPresContext* aPresContext)
+  : mPresContext(aPresContext)
+{
+}
+
+ElementRestyler::ElementRestyler(const ElementRestyler& aParentRestyler)
+  : mPresContext(aParentRestyler.mPresContext)
+{
+}
+
+ElementRestyler::ElementRestyler(ParentContextFromChildFrame,
+                                 const ElementRestyler& aParentRestyler)
+  : mPresContext(aParentRestyler.mPresContext)
+{
+}
+
+void
+ElementRestyler::CaptureChange(nsStyleContext* aOldContext,
+                               nsStyleContext* aNewContext,
+                               nsIFrame* aFrame, nsIContent* aContent,
+                               nsStyleChangeList* aChangeList,
+                               /*inout*/nsChangeHint &aMinChange,
+                               /*in*/nsChangeHint aParentHintsNotHandledForDescendants,
+                               /*out*/nsChangeHint &aHintsNotHandledForDescendants,
+                               nsChangeHint aChangeToAssume)
 {
   nsChangeHint ourChange = aOldContext->CalcStyleDifference(aNewContext,
                              aParentHintsNotHandledForDescendants);
@@ -1953,17 +1970,17 @@ CaptureChange(nsStyleContext* aOldContext, nsStyleContext* aNewContext,
  * nsStyleContext::CalcStyleDifference.
  */
 nsChangeHint
-RestyleManager::ReResolveStyleContext(nsPresContext     *aPresContext,
-                                      nsIFrame          *aFrame,
-                                      nsIContent        *aParentContent,
-                                      nsStyleChangeList *aChangeList,
-                                      nsChangeHint       aMinChange,
-                                      nsChangeHint       aParentFrameHintsNotHandledForDescendants,
-                                      nsRestyleHint      aRestyleHint,
-                                      RestyleTracker&    aRestyleTracker,
-                                      DesiredA11yNotifications aDesiredA11yNotifications,
-                                      nsTArray<nsIContent*>& aVisibleKidsOfHiddenElement,
-                                      TreeMatchContext &aTreeMatchContext)
+ElementRestyler::Restyle(nsPresContext     *aPresContext,
+                         nsIFrame          *aFrame,
+                         nsIContent        *aParentContent,
+                         nsStyleChangeList *aChangeList,
+                         nsChangeHint       aMinChange,
+                         nsChangeHint       aParentFrameHintsNotHandledForDescendants,
+                         nsRestyleHint      aRestyleHint,
+                         RestyleTracker&    aRestyleTracker,
+                         DesiredA11yNotifications aDesiredA11yNotifications,
+                         nsTArray<nsIContent*>& aVisibleKidsOfHiddenElement,
+                         TreeMatchContext &aTreeMatchContext)
 {
   // We need to generate a new change list entry for every frame whose style
   // comparision returns one of these hints. These hints don't automatically
@@ -2057,7 +2074,9 @@ RestyleManager::ReResolveStyleContext(nsPresContext     *aPresContext,
       // style context provider will be automatically propagated to
       // the frame(s) with child style contexts.
 
-      assumeDifferenceHint = ReResolveStyleContext(aPresContext, providerFrame,
+      ElementRestyler providerRestyler(PARENT_CONTEXT_FROM_CHILD_FRAME,
+                                       *this);
+      assumeDifferenceHint = providerRestyler.Restyle(aPresContext, providerFrame,
                                                    aParentContent, aChangeList,
                                                    aMinChange,
                                                    nsChangeHint_Hints_NotHandledForDescendants,
@@ -2305,7 +2324,7 @@ RestyleManager::ReResolveStyleContext(nsPresContext     *aPresContext,
     // DocElementContainingBlock.
     bool checkUndisplayed;
     nsIContent* undisplayedParent;
-    nsCSSFrameConstructor* frameConstructor = FrameConstructor();
+    nsCSSFrameConstructor* frameConstructor = mPresContext->FrameConstructor();
     if (pseudoTag) {
       checkUndisplayed = aFrame == frameConstructor->
                                      GetDocElementContainingBlock();
@@ -2531,7 +2550,8 @@ RestyleManager::ReResolveStyleContext(nsPresContext     *aPresContext,
               // |nsFrame::GetParentStyleContextFrame| checks being out
               // of flow so that this works correctly.
               do {
-                ReResolveStyleContext(aPresContext, outOfFlowFrame,
+                ElementRestyler oofRestyler(*this);
+                oofRestyler.Restyle(aPresContext, outOfFlowFrame,
                                       content, aChangeList,
                                       NS_SubtractHint(aMinChange,
                                                       nsChangeHint_AllReflowHints),
@@ -2545,7 +2565,8 @@ RestyleManager::ReResolveStyleContext(nsPresContext     *aPresContext,
 
               // reresolve placeholder's context under the same parent
               // as the out-of-flow frame
-              ReResolveStyleContext(aPresContext, child, content,
+              ElementRestyler phRestyler(*this);
+              phRestyler.Restyle(aPresContext, child, content,
                                     aChangeList, aMinChange,
                                     nonInheritedHints,
                                     childRestyleHint,
@@ -2556,7 +2577,8 @@ RestyleManager::ReResolveStyleContext(nsPresContext     *aPresContext,
             }
             else {  // regular child frame
               if (child != resolvedChild) {
-                ReResolveStyleContext(aPresContext, child, content,
+                ElementRestyler childRestyler(*this);
+                childRestyler.Restyle(aPresContext, child, content,
                                       aChangeList, aMinChange,
                                       nonInheritedHints,
                                       childRestyleHint,
@@ -2644,13 +2666,15 @@ RestyleManager::ComputeStyleChangeFor(nsIFrame*          aFrame,
     // Outer loop over special siblings
     do {
       // Inner loop over next-in-flows of the current frame
+      ElementRestyler restyler(mPresContext);
+
       nsChangeHint frameChange =
-        ReResolveStyleContext(mPresContext, frame, nullptr,
+        restyler.Restyle(mPresContext, frame, nullptr,
                               aChangeList, aMinChange, nsChangeHint(0),
                               aRestyleDescendants ?
                                 eRestyle_Subtree : eRestyle_Self,
                               aRestyleTracker,
-                              eSendAllNotifications,
+                              ElementRestyler::eSendAllNotifications,
                               visibleKidsOfHiddenElement,
                               treeMatchContext);
 
