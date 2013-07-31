@@ -424,6 +424,7 @@ pref("services.push.udp.port", 2442);
 #ifdef MOZ_B2G_RIL
 pref("dom.mozNetworkStats.enabled", true);
 pref("ril.cellbroadcast.disabled", false);
+pref("dom.webapps.firstRunWithSIM", false);
 #endif
 
 // WebSettings
