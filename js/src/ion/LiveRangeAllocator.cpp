@@ -402,7 +402,7 @@ LiveRangeAllocator<VREG>::init()
     if (!RegisterAllocator::init())
         return false;
 
-    liveIn = lir->mir()->allocate<BitSet*>(graph.numBlockIds());
+    liveIn = mir->allocate<BitSet*>(graph.numBlockIds());
     if (!liveIn)
         return false;
 
@@ -416,7 +416,7 @@ LiveRangeAllocator<VREG>::init()
 
     fixedIntervalsUnion = new LiveInterval(0);
 
-    if (!vregs.init(lir->mir(), graph.numVirtualRegisters()))
+    if (!vregs.init(mir, graph.numVirtualRegisters()))
         return false;
 
     // Build virtual register objects
