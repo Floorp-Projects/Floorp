@@ -116,9 +116,6 @@ public:
     return mRequest;
   }
 
-  static nsresult
-  ParseDirection(const nsAString& aDirection, Direction* aResult);
-
   static Direction
   ConvertDirection(IDBCursorDirection aDirection);
 
