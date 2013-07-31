@@ -6796,6 +6796,11 @@ IonBuilder::jsop_setelem()
                 break;
             }
 
+            // Don't generate a fast path if there have been bounds check failures
+            // and this access might be on a sparse property.
+            if (ElementAccessHasExtraIndexedProperty(cx, object) && failedBoundsCheck_)
+                break;
+
             return jsop_setelem_dense(conversion, SetElem_Normal, object, index, value);
         } while(false);
     }
