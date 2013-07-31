@@ -184,12 +184,11 @@ public class HomePager extends ViewPager {
     @Override
     public boolean onInterceptTouchEvent(MotionEvent event) {
         if (event.getActionMasked() == MotionEvent.ACTION_DOWN) {
-            // XXX: When an adapter is empty (e.g. Reading List), there are no elements focusable
-            // in touch mode so instead of requestFocus() we use requestFocusFromTouch(). However,
-            // now we may be focusing an object whose focused state is potentially visible to the
-            // user but should not be (e.g. the background), so we clear the focus.
-            requestFocusFromTouch();
-            clearFocus();
+            // XXX: Drop the soft keyboard by stealing focus. Note that the HomePager (via XML
+            // attr) is focusable after its descendants allowing requestFocus to succeed and drop
+            // the soft keyboard even if there are no other focusable views on the screen (e.g.
+            // the Reading List is empty).
+            requestFocus();
         }
 
         return super.onInterceptTouchEvent(event);
