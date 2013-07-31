@@ -905,8 +905,6 @@ ContentParent::ActorDestroy(ActorDestroyReason why)
         threadInt(do_QueryInterface(NS_GetCurrentThread()));
     if (threadInt)
         threadInt->RemoveObserver(this);
-    if (mRunToCompletionDepth)
-        mRunToCompletionDepth = 0;
 
     MarkAsDead();
 
@@ -1039,8 +1037,6 @@ ContentParent::ContentParent(mozIApplication* aApp,
     , mOSPrivileges(aOSPrivileges)
     , mChildID(gContentChildID++)
     , mGeolocationWatchID(-1)
-    , mRunToCompletionDepth(0)
-    , mShouldCallUnblockChild(false)
     , mForceKillTask(nullptr)
     , mNumDestroyingTabs(0)
     , mIsAlive(true)
@@ -2054,32 +2050,6 @@ ContentParent::RecvPSpeechSynthesisConstructor(PSpeechSynthesisParent* aActor)
 #endif
 }
 
-void
-ContentParent::ReportChildAlreadyBlocked()
-{
-    if (!mRunToCompletionDepth) {
-#ifdef DEBUG
-        printf("Running to completion...\n");
-#endif
-        mRunToCompletionDepth = 1;
-        mShouldCallUnblockChild = false;
-    }
-}
-    
-bool
-ContentParent::RequestRunToCompletion()
-{
-    if (!mRunToCompletionDepth &&
-        BlockChild()) {
-#ifdef DEBUG
-        printf("Running to completion...\n");
-#endif
-        mRunToCompletionDepth = 1;
-        mShouldCallUnblockChild = true;
-    }
-    return !!mRunToCompletionDepth;
-}
-
 bool
 ContentParent::RecvStartVisitedQuery(const URIParams& aURI)
 {
@@ -2248,9 +2218,6 @@ ContentParent::OnProcessNextEvent(nsIThreadInternal *thread,
                                   bool mayWait,
                                   uint32_t recursionDepth)
 {
-    if (mRunToCompletionDepth)
-        ++mRunToCompletionDepth;
-
     return NS_OK;
 }
 
@@ -2259,17 +2226,6 @@ NS_IMETHODIMP
 ContentParent::AfterProcessNextEvent(nsIThreadInternal *thread,
                                      uint32_t recursionDepth)
 {
-    if (mRunToCompletionDepth &&
-        !--mRunToCompletionDepth) {
-#ifdef DEBUG
-            printf("... ran to completion.\n");
-#endif
-            if (mShouldCallUnblockChild) {
-                mShouldCallUnblockChild = false;
-                UnblockChild();
-            }
-    }
-
     return NS_OK;
 }
 
