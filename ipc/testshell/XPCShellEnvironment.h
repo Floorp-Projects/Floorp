@@ -14,6 +14,8 @@
 #include "nsCOMPtr.h"
 #include "nsDebug.h"
 #include "nsStringGlue.h"
+#include "nsJSPrincipals.h"
+#include "nsContentUtils.h"
 
 struct JSContext;
 class JSObject;
@@ -34,7 +36,7 @@ public:
                         nsString* aResult = nullptr);
 
     JSPrincipals* GetPrincipal() {
-        return mJSPrincipals;
+        return nsJSPrincipals::get(nsContentUtils::GetSystemPrincipal());
     }
 
     JSObject* GetGlobalObject() {
@@ -59,7 +61,6 @@ protected:
 private:
     JSContext* mCx;
     nsAutoJSValHolder mGlobalHolder;
-    JSPrincipals* mJSPrincipals;
 
     JSBool mQuitting;
 };
