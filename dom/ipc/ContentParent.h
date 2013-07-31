@@ -430,6 +430,10 @@ private:
 
     virtual void ProcessingError(Result what) MOZ_OVERRIDE;
 
+    // If you add strong pointers to cycle collected objects here, be sure to
+    // release these objects in ShutDownProcess.  See the comment there for more
+    // details.
+
     GeckoChildProcessHost* mSubprocess;
     base::ChildPrivileges mOSPrivileges;
 
