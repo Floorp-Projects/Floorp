@@ -1581,16 +1581,16 @@ ThreadClient.prototype = {
   },
 
   /**
-   * Invalidate pause-lifetime grip clients and clear the list of
-   * current grip clients.
+   * Invalidate pause-lifetime grip clients and clear the list of current grip
+   * clients.
    */
   _clearPauseGrips: function TC_clearPauseGrips() {
     this._clearGripClients("_pauseGrips");
   },
 
   /**
-   * Invalidate pause-lifetime grip clients and clear the list of
-   * current grip clients.
+   * Invalidate thread-lifetime grip clients and clear the list of current grip
+   * clients.
    */
   _clearThreadGrips: function TC_clearPauseGrips() {
     this._clearGripClients("_threadGrips");
@@ -1612,7 +1612,12 @@ ThreadClient.prototype = {
    * Return an instance of SourceClient for the given source actor form.
    */
   source: function TC_source(aForm) {
-    return new SourceClient(this._client, aForm);
+    if (aForm.actor in this._threadGrips) {
+      return this._threadGrips[aForm.actor];
+    }
+
+    return this._threadGrips[aForm.actor] = new SourceClient(this._client,
+                                                             aForm);
   }
 
 };
