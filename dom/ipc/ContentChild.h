@@ -28,6 +28,10 @@ class OptionalURIParams;
 class URIParams;
 }// namespace ipc
 
+namespace jsipc {
+class JavaScriptChild;
+}
+
 namespace layers {
 class PCompositorChild;
 } // namespace layers
@@ -126,6 +130,7 @@ public:
     virtual PTestShellChild* AllocPTestShell();
     virtual bool DeallocPTestShell(PTestShellChild*);
     virtual bool RecvPTestShellConstructor(PTestShellChild*);
+    jsipc::JavaScriptChild *GetCPOWManager();
 
     virtual PNeckoChild* AllocPNecko();
     virtual bool DeallocPNecko(PNeckoChild*);
@@ -155,6 +160,9 @@ public:
                                     const InfallibleTArray<ResourceMapping>& resources,
                                     const InfallibleTArray<OverrideMapping>& overrides,
                                     const nsCString& locale);
+
+    virtual mozilla::jsipc::PJavaScriptChild* AllocPJavaScript();
+    virtual bool DeallocPJavaScript(mozilla::jsipc::PJavaScriptChild*);
 
     virtual bool RecvSetOffline(const bool& offline);
 

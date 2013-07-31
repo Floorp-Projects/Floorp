@@ -8,7 +8,6 @@
 #include "mozilla/Util.h"
 
 #include "mozilla/dom/ContentParent.h"
-#include "mozilla/jsipc/ContextWrapperParent.h"
 
 #include "nsAutoPtr.h"
 
@@ -17,8 +16,6 @@ using mozilla::ipc::TestShellParent;
 using mozilla::ipc::TestShellCommandParent;
 using mozilla::ipc::PTestShellCommandParent;
 using mozilla::dom::ContentParent;
-using mozilla::jsipc::PContextWrapperParent;
-using mozilla::jsipc::ContextWrapperParent;
 
 PTestShellCommandParent*
 TestShellParent::AllocPTestShellCommand(const nsString& aCommand)
@@ -42,32 +39,6 @@ TestShellParent::CommandDone(TestShellCommandParent* command,
   command->ReleaseCallback();
 
   return true;
-}
-
-PContextWrapperParent*
-TestShellParent::AllocPContextWrapper()
-{
-    return new ContextWrapperParent();
-}
-
-bool
-TestShellParent::DeallocPContextWrapper(PContextWrapperParent* actor)
-{
-    delete actor;
-    return true;
-}
-
-JSBool
-TestShellParent::GetGlobalJSObject(JSContext* cx, JSObject** globalp)
-{
-    // TODO Unify this code with TabParent::GetGlobalJSObject.
-    InfallibleTArray<PContextWrapperParent*> cwps(1);
-    ManagedPContextWrapperParent(cwps);
-    if (cwps.Length() < 1)
-        return JS_FALSE;
-    NS_ASSERTION(cwps.Length() == 1, "More than one PContextWrapper?");
-    ContextWrapperParent* cwp = static_cast<ContextWrapperParent*>(cwps[0]);
-    return cwp->GetGlobalJSObject(cx, globalp);
 }
 
 JSBool

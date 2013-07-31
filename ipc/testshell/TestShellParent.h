@@ -20,10 +20,6 @@ class JSObject;
 
 namespace mozilla {
 
-namespace jsipc {
-class PContextWrapperParent;
-}
-
 namespace ipc {
 
 class TestShellCommandParent;
@@ -39,11 +35,6 @@ public:
 
   bool
   CommandDone(TestShellCommandParent* aActor, const nsString& aResponse);
-
-  PContextWrapperParent* AllocPContextWrapper();
-  bool DeallocPContextWrapper(PContextWrapperParent* actor);
-
-  JSBool GetGlobalJSObject(JSContext* cx, JSObject** globalp);
 };
 
 

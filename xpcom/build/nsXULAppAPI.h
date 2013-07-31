@@ -436,10 +436,6 @@ XRE_API(bool,
 class JSObject;
 
 XRE_API(bool,
-        XRE_GetChildGlobalObject, (JSContext* aCx,
-                                   JSObject** globalp))
-
-XRE_API(bool,
         XRE_ShutdownTestShell, ())
 
 XRE_API(void,

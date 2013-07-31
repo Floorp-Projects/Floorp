@@ -42,6 +42,7 @@ LOCAL_INCLUDES += \
 	-I$(topsrcdir)/dom/bluetooth \
 	-I$(topsrcdir)/dom/bluetooth/ipc \
 	-I$(topsrcdir)/content/media/webspeech/synth/ipc \
+	-I$(topsrcdir)/js/ipc \
 	$(NULL)
 
 DEFINES += -DBIN_SUFFIX='"$(BIN_SUFFIX)"'
