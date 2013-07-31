@@ -26,9 +26,8 @@ class ContextWrapperParent
 {
 public:
 
-    ContextWrapperParent(ContentParent* cpp)
-        : mContent(cpp)
-        , mGlobal(NULL)
+    ContextWrapperParent()
+        : mGlobal(NULL)
     {}
 
     JSBool GetGlobalJSObject(JSContext* cx, JSObject** globalp) {
@@ -44,12 +43,11 @@ public:
     }
 
     bool RequestRunToCompletion() {
-        return mContent->RequestRunToCompletion();
+        return false;
     }
 
 private:
 
-    ContentParent* mContent;
     ObjectWrapperParent* mGlobal;
     nsAutoJSValHolder mGlobalHolder;
 

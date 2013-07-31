@@ -3191,22 +3191,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             self.cls.addstmts([ otherpid, Whitespace.NL,
                                 getdump, Whitespace.NL ])
 
-        if (ptype.isToplevel() and self.side is 'parent'
-            and ptype.talksRpc()):
-            # offer BlockChild() and UnblockChild().
-            # See ipc/glue/RPCChannel.h
-            blockchild = MethodDefn(MethodDecl(
-                'BlockChild', ret=Type.BOOL))
-            blockchild.addstmt(StmtReturn(ExprCall(
-                ExprSelect(p.channelVar(), '.', 'BlockChild'))))
-
-            unblockchild = MethodDefn(MethodDecl(
-                'UnblockChild', ret=Type.BOOL))
-            unblockchild.addstmt(StmtReturn(ExprCall(
-                ExprSelect(p.channelVar(), '.', 'UnblockChild'))))
-
-            self.cls.addstmts([ blockchild, unblockchild, Whitespace.NL ])
-
         ## private methods
         self.cls.addstmt(Label.PRIVATE)
 

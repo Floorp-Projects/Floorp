@@ -823,7 +823,7 @@ RPCChannel::WaitForNotify()
 {
   mMonitor->AssertCurrentThreadOwns();
 
-  if (!StackDepth() && !mBlockedOnParent) {
+  if (!StackDepth()) {
     // There is currently no way to recover from this condition.
     NS_RUNTIMEABORT("StackDepth() is 0 in call to RPCChannel::WaitForNotify!");
   }
