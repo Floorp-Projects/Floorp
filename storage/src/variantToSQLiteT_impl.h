@@ -17,7 +17,7 @@ int
 variantToSQLiteT(T aObj,
                  nsIVariant *aValue)
 {
-  // Allow to return NULL not wrapped to nsIVariant for speed.
+  // Allow to return nullptr not wrapped to nsIVariant for speed.
   if (!aValue)
     return sqlite3_T_null(aObj);
 
