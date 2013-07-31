@@ -273,6 +273,16 @@
         modifiers="accel,shift"
 #endif
     />
+
+    <key id="key_devToolboxMenuItem" keycode="&devToolboxMenuItem.keycode;"
+         keytext="&devToolboxMenuItem.keytext;" command="Tools:DevToolbox" key="&devToolboxMenuItem.keytext;"
+#ifdef XP_MACOSX
+        modifiers="accel,alt"
+#else
+        modifiers="accel,shift"
+#endif
+    />
+
     <key id="key_scratchpad" keycode="&scratchpad.keycode;" modifiers="shift"
          keytext="&scratchpad.keytext;" command="Tools:Scratchpad"/>
     <key id="openFileKb" key="&openFileCmd.commandkey;" command="Browser:OpenFile"  modifiers="accel"/>
