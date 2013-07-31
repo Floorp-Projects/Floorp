@@ -343,6 +343,16 @@ private:
   static TimeStamp Now(bool aHighResolution);
 
   /**
+   * Computes the uptime of the current process in microseconds. The result
+   * is platform-dependent and needs to be checked against existing timestamps
+   * for consistency.
+   *
+   * @returns The number of microseconds since the calling process was started
+   *          or 0 if an error was encountered while computing the uptime
+   */
+  static uint64_t ComputeProcessUptime();
+
+  /**
    * When built with PRIntervalTime, a value of 0 means this instance
    * is "null". Otherwise, the low 32 bits represent a PRIntervalTime,
    * and the high 32 bits represent a counter of the number of
