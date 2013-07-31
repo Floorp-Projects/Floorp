@@ -6,10 +6,10 @@
 #ifndef MOZILLA_GFX_TYPES_H_
 #define MOZILLA_GFX_TYPES_H_
 
-#include "mozilla/StandardInteger.h"
 #include "mozilla/NullPtr.h"
 
 #include <stddef.h>
+#include <stdint.h>
 
 namespace mozilla {
 namespace gfx {

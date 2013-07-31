@@ -37,8 +37,8 @@ template <size_t LEN>
 inline NS_COM_GLUE void
 NS_SetThreadName(nsIThread *thread, const char (&name)[LEN])
 {
-  MOZ_STATIC_ASSERT(LEN <= 16,
-                    "Thread name must be no more than 16 characters");
+  static_assert(LEN <= 16,
+                "Thread name must be no more than 16 characters");
   NS_SetThreadName(thread, nsDependentCString(name));
 }
 

@@ -171,7 +171,7 @@ function do_test() {
   // Test property with "auto"
   var prop = "margin";
   var values = utils.getCSSValuesForProperty(prop);
-  var expected = [ "-moz-calc", "-moz-initial", "auto", "calc", "inherit", "logical", "physical" ];
+  var expected = [ "-moz-calc", "-moz-initial", "auto", "calc", "inherit" ];
   ok(testValues(values, expected), "property margin's values.");
 
   // Test property with "normal"

@@ -795,7 +795,7 @@ static DBusCallback sBluetoothDBusPropCallbacks[] =
   GetDevicePropertiesCallback
 };
 
-MOZ_STATIC_ASSERT(
+static_assert(
   sizeof(sBluetoothDBusPropCallbacks) == sizeof(sBluetoothDBusIfaces),
   "DBus Property callback array and DBus interface array must be same size");
 

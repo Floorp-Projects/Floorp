@@ -110,7 +110,7 @@ needs-focus == 824080-7.html 824080-7-ref.html
 needs-focus != 824080-6.html 824080-7.html
 # Bug 674927: copy spellcheck-textarea tests to contenteditable
 == spellcheck-contenteditable-attr.html spellcheck-contenteditable-nofocus-ref.html
-fails-if(Android) != spellcheck-contenteditable-attr.html spellcheck-contenteditable-ref.html
+fails-if(Android) needs-focus != spellcheck-contenteditable-attr.html spellcheck-contenteditable-ref.html
 needs-focus == spellcheck-contenteditable-focused.html spellcheck-contenteditable-ref.html
 needs-focus == spellcheck-contenteditable-focused-reframe.html spellcheck-contenteditable-ref.html
 == spellcheck-contenteditable-nofocus.html spellcheck-contenteditable-disabled-ref.html

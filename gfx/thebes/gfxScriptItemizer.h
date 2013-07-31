@@ -50,7 +50,7 @@
 #ifndef GFX_SCRIPTITEMIZER_H
 #define GFX_SCRIPTITEMIZER_H
 
-#include "mozilla/StandardInteger.h"
+#include <stdint.h>
 #include "prtypes.h"
 #include "harfbuzz/hb.h"
 #include "nsUnicodeScriptCodes.h"

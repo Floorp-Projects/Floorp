@@ -18,7 +18,6 @@
 #elif defined(JS_CPU_ARM)
 # include "ion/arm/MacroAssembler-arm.h"
 #endif
-#include "ion/AsmJS.h"
 #include "ion/IonCompartment.h"
 #include "ion/IonInstrumentation.h"
 #include "ion/ParallelFunctions.h"

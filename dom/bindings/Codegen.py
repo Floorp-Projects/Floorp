@@ -1160,8 +1160,8 @@ class CGClassHasInstanceHook(CGAbstractStaticMethod):
   """
         if self.descriptor.interface.hasInterfacePrototypeObject():
             return header + """
-  MOZ_STATIC_ASSERT((IsBaseOf<nsISupports, %s>::value),
-                    "HasInstance only works for nsISupports-based classes.");
+  static_assert(IsBaseOf<nsISupports, %s>::value,
+                "HasInstance only works for nsISupports-based classes.");
 
   bool ok = InterfaceHasInstance(cx, obj, instance, bp);
   if (!ok || *bp) {
@@ -2911,18 +2911,44 @@ for (uint32_t i = 0; i < length; ++i) {
         else:
             templateBody = CGGeneric()
 
-        otherMemberTypes = filter(lambda t: t.isString() or t.isEnum(),
-                                  memberTypes)
-        otherMemberTypes.extend(t for t in memberTypes if t.isPrimitive())
-        if len(otherMemberTypes) > 0:
-            assert len(otherMemberTypes) == 1
-            memberType = otherMemberTypes[0]
-            if memberType.isEnum():
-                name = memberType.inner.identifier.name
+        stringTypes = [t for t in memberTypes if t.isString() or t.isEnum()]
+        numericTypes = [t for t in memberTypes if t.isNumeric()]
+        booleanTypes = [t for t in memberTypes if t.isBoolean()]
+        if stringTypes or numericTypes or booleanTypes:
+            assert len(stringTypes) <= 1
+            assert len(numericTypes) <= 1
+            assert len(booleanTypes) <= 1
+            # We will wrap all this stuff in a do { } while (0); so we
+            # can use "break" for flow control.
+            def getStringOrPrimitiveConversion(memberType):
+                if memberType.isEnum():
+                    name = memberType.inner.identifier.name
+                else:
+                    name = memberType.name
+                return CGGeneric("done = (failed = !%s.TrySetTo%s(cx, ${val}, ${mutableVal}, tryNext)) || !tryNext;\n"
+                                 "break;" % (unionArgumentObj, name))
+            other = CGList([], "\n")
+            stringConversion = map(getStringOrPrimitiveConversion, stringTypes)
+            numericConversion = map(getStringOrPrimitiveConversion, numericTypes)
+            booleanConversion = map(getStringOrPrimitiveConversion, booleanTypes)
+            if stringConversion:
+                if booleanConversion:
+                    other.append(CGIfWrapper(booleanConversion[0],
+                                             "${val}.isBoolean()"))
+                if numericConversion:
+                    other.append(CGIfWrapper(numericConversion[0],
+                                             "${val}.isNumber()"))
+                other.append(stringConversion[0])
+            elif numericConversion:
+                if booleanConversion:
+                    other.append(CGIfWrapper(booleanConversion[0],
+                                             "${val}.isBoolean()"))
+                other.append(numericConversion[0])
             else:
-                name = memberType.name
-            other = CGGeneric("done = (failed = !%s.TrySetTo%s(cx, ${val}, ${mutableVal}, tryNext)) || !tryNext;" % (unionArgumentObj, name))
-            names.append(name)
+                assert booleanConversion
+                other.append(booleanConversion[0])
+
+            other = CGWrapper(CGIndenter(other), pre="do {\n", post="\n} while (0);")
             if hasObjectTypes:
                 other = CGWrapper(CGIndenter(other), "{\n", post="\n}")
                 if object:
@@ -2931,6 +2957,9 @@ for (uint32_t i = 0; i < length; ++i) {
                     other = CGWrapper(other, pre="if (!done) ")
                     join = "\n"
                 templateBody = CGList([templateBody, other], join)
+            else:
+                assert templateBody.define() == ""
+                templateBody = other
         else:
             other = None
 
@@ -4892,21 +4921,6 @@ class CGMethodCall(CGThing):
             # Select the right overload from our set.
             distinguishingArg = "args[%d]" % distinguishingIndex
 
-            def pickFirstSignature(condition, filterLambda):
-                sigs = filter(filterLambda, possibleSignatures)
-                assert len(sigs) < 2
-                if len(sigs) > 0:
-                    if condition is None:
-                        caseBody.append(
-                            getPerSignatureCall(sigs[0], distinguishingIndex))
-                    else:
-                        caseBody.append(CGGeneric("if (" + condition + ") {"))
-                        caseBody.append(CGIndenter(
-                                getPerSignatureCall(sigs[0], distinguishingIndex)))
-                        caseBody.append(CGGeneric("}"))
-                    return True
-                return False
-
             def tryCall(signature, indent, isDefinitelyObject=False,
                         isNullOrUndefined=False):
                 assert not isDefinitelyObject or not isNullOrUndefined
@@ -5033,18 +5047,52 @@ class CGMethodCall(CGThing):
 
                 caseBody.append(CGGeneric("}"))
 
-            # The remaining cases are mutually exclusive.  The
-            # pickFirstSignature calls are what change caseBody
-            # Check for strings or enums
-            if pickFirstSignature(None,
-                                  lambda s: (distinguishingType(s).isString() or
-                                             distinguishingType(s).isEnum())):
-                pass
-            # Check for primitives
-            elif pickFirstSignature(None,
-                                    lambda s: distinguishingType(s).isPrimitive()):
-                pass
+            # Now we only have to consider booleans, numerics, and strings.  If
+            # we only have one of them, then we can just output it.  But if not,
+            # then we need to output some of the cases conditionally: if we have
+            # a string overload, then boolean and numeric are conditional, and
+            # if not then boolean is conditional if we have a numeric overload.
+            def findUniqueSignature(filterLambda):
+                sigs = filter(filterLambda, possibleSignatures)
+                assert len(sigs) < 2
+                if len(sigs) > 0:
+                    return sigs[0]
+                return None
+
+            stringSignature = findUniqueSignature(
+                lambda s: (distinguishingType(s).isString() or
+                           distinguishingType(s).isEnum()))
+            numericSignature = findUniqueSignature(
+                lambda s: distinguishingType(s).isNumeric())
+            booleanSignature = findUniqueSignature(
+                lambda s: distinguishingType(s).isBoolean())
+
+            if stringSignature or numericSignature:
+                booleanCondition = "%s.isBoolean()"
             else:
+                booleanCondition = None
+
+            if stringSignature:
+                numericCondition = "%s.isNumber()"
+            else:
+                numericCondition = None
+
+            def addCase(sig, condition):
+                sigCode = getPerSignatureCall(sig, distinguishingIndex)
+                if condition:
+                    sigCode = CGIfWrapper(sigCode,
+                                          condition % distinguishingArg)
+                caseBody.append(sigCode)
+
+            if booleanSignature:
+                addCase(booleanSignature, booleanCondition)
+            if numericSignature:
+                addCase(numericSignature, numericCondition)
+            if stringSignature:
+                addCase(stringSignature, None)
+
+            if (not booleanSignature and not numericSignature and
+                not stringSignature):
                 # Just throw; we have no idea what we're supposed to
                 # do with this.
                 caseBody.append(CGGeneric(
@@ -5241,7 +5289,7 @@ class CGJsonifierMethod(CGSpecializedMethod):
                '  return false;\n'
                '}\n')
         for m in self.descriptor.interface.members:
-          if m.isAttr() and not m.isStatic():
+          if m.isAttr() and not m.isStatic() and m.type.isSerializable():
               ret += ('{ // scope for "temp"\n'
                       '  JS::Rooted<JS::Value> temp(cx);\n'
                       '  if (!get_%s(cx, obj, self, JSJitGetterCallArgs(&temp))) {\n'
@@ -7881,7 +7929,7 @@ class CGDescriptor(CGThing):
 
         if descriptor.concrete:
             if descriptor.proxy:
-                cgThings.append(CGGeneric("""MOZ_STATIC_ASSERT((IsBaseOf<nsISupports, %s >::value),
+                cgThings.append(CGGeneric("""static_assert(IsBaseOf<nsISupports, %s >::value,
                   "We don't support non-nsISupports native classes for "
                   "proxy-based bindings yet");
 

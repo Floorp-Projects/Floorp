@@ -502,12 +502,13 @@ class HeapSlot : public EncapsulatedValue
     inline void set(JSObject *owner, Kind kind, uint32_t slot, const Value &v);
     inline void set(Zone *zone, JSObject *owner, Kind kind, uint32_t slot, const Value &v);
 
-    static inline void writeBarrierPost(JSObject *obj, Kind kind, uint32_t slot);
-    static inline void writeBarrierPost(JSRuntime *rt, JSObject *obj, Kind kind, uint32_t slot);
+    static inline void writeBarrierPost(JSObject *obj, Kind kind, uint32_t slot, Value target);
+    static inline void writeBarrierPost(JSRuntime *rt, JSObject *obj, Kind kind, uint32_t slot,
+                                        Value target);
 
   private:
-    inline void post(JSObject *owner, Kind kind, uint32_t slot);
-    inline void post(JSRuntime *rt, JSObject *owner, Kind kind, uint32_t slot);
+    inline void post(JSObject *owner, Kind kind, uint32_t slot, Value target);
+    inline void post(JSRuntime *rt, JSObject *owner, Kind kind, uint32_t slot, Value target);
 };
 
 /*

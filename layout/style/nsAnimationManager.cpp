@@ -667,10 +667,10 @@ public:
 
   static KeyTypePointer KeyToPointer(KeyType aKey) { return &aKey; }
   static PLDHashNumber HashKey(KeyTypePointer aKey) {
-    MOZ_STATIC_ASSERT(sizeof(PLDHashNumber) == sizeof(uint32_t),
-                      "this hash function assumes PLDHashNumber is uint32_t");
-    MOZ_STATIC_ASSERT(PLDHashNumber(-1) > PLDHashNumber(0),
-                      "this hash function assumes PLDHashNumber is uint32_t");
+    static_assert(sizeof(PLDHashNumber) == sizeof(uint32_t),
+                  "this hash function assumes PLDHashNumber is uint32_t");
+    static_assert(PLDHashNumber(-1) > PLDHashNumber(0),
+                  "this hash function assumes PLDHashNumber is uint32_t");
     float key = *aKey;
     NS_ABORT_IF_FALSE(0.0f <= key && key <= 1.0f, "out of range");
     return PLDHashNumber(key * UINT32_MAX);

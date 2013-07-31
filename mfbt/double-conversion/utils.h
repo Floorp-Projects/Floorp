@@ -74,7 +74,7 @@
 #endif
 
 
-#include "mozilla/StandardInteger.h"
+#include <stdint.h>
 
 // The following macro works on both 32 and 64-bit platforms.
 // Usage: instead of writing 0x1234567890123456

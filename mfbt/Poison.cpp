@@ -142,8 +142,8 @@ GetDesiredRegionSize()
 
 #endif // system dependencies
 
-MOZ_STATIC_ASSERT(sizeof(uintptr_t) == 4 || sizeof(uintptr_t) == 8, "");
-MOZ_STATIC_ASSERT(sizeof(uintptr_t) == sizeof(void *), "");
+static_assert(sizeof(uintptr_t) == 4 || sizeof(uintptr_t) == 8, "");
+static_assert(sizeof(uintptr_t) == sizeof(void *), "");
 
 static uintptr_t
 ReservePoisonArea(uintptr_t rgnsize)

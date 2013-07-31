@@ -140,7 +140,7 @@ namespace {
 NS_IMPL_ISUPPORTS_INHERITED0(MetroWidget, nsBaseWidget)
 
 
-nsRefPtr<mozilla::layers::AsyncPanZoomController> MetroWidget::sAPZC;
+nsRefPtr<mozilla::layers::APZCTreeManager> MetroWidget::sAPZC;
 
 MetroWidget::MetroWidget() :
   mTransparencyMode(eTransparencyOpaque),
@@ -166,7 +166,6 @@ MetroWidget::~MetroWidget()
 
   // Global shutdown
   if (!gInstanceCount) {
-    MetroWidget::sAPZC->Destroy();
     MetroWidget::sAPZC = nullptr;
     nsTextStore::Terminate();
   } // !gInstanceCount
@@ -813,22 +812,8 @@ public:
       observerService->AddObserver(this, "viewport-needs-updating", false);
     }
 
-    if (MetroWidget::sAPZC) {
-        MetroWidget::sAPZC->SetCompositorParent(this);
-    }
-  }
-
-  virtual void ShadowLayersUpdated(LayerTransactionParent* aLayerTree, const TargetConfig& aTargetConfig,
-                                   bool isFirstPaint) MOZ_OVERRIDE
-  {
-    CompositorParent::ShadowLayersUpdated(aLayerTree, aTargetConfig, isFirstPaint);
-    Layer* targetLayer = GetLayerManager()->GetPrimaryScrollableLayer();
-    if (targetLayer && targetLayer->AsContainerLayer() && MetroWidget::sAPZC &&
-        targetLayer->AsContainerLayer()->GetFrameMetrics().IsScrollable()) {
-      targetLayer->AsContainerLayer()->SetAsyncPanZoomController(MetroWidget::sAPZC);
-      MetroWidget::sAPZC->NotifyLayersUpdated(targetLayer->AsContainerLayer()->GetFrameMetrics(),
-                                              isFirstPaint);
-    }
+    CompositorParent::SetControllerForLayerTree(RootLayerTreeId(), aMetroWidget);
+    MetroWidget::sAPZC = CompositorParent::GetAPZCTreeManager(RootLayerTreeId());
   }
 
   NS_IMETHODIMP Observe(nsISupports *subject, const char *topic, const PRUnichar *data)
@@ -846,7 +831,6 @@ public:
                                                               mozilla::gfx::Point(0.0f, 0.0f),
                                                               mozilla::gfx::Point(0.0f, 0.0f),
                                                               0.0);
-        MetroWidget::sAPZC->NotifyLayersUpdated(frameMetrics, true);
         mMetroWidget->RequestContentRepaint(frameMetrics);
       }
     }
@@ -910,10 +894,6 @@ MetroWidget::GetLayerManager(PLayerTransactionChild* aShadowManager,
     if (ShouldUseOffMainThreadCompositing()) {
       NS_ASSERTION(aShadowManager == nullptr, "Async Compositor not supported with e10s");
       CreateCompositor();
-      if (ShouldUseAPZC()) {
-        sAPZC = new AsyncPanZoomController(this, AsyncPanZoomController::USE_GESTURE_DETECTOR);
-        sAPZC->SetCompositorParent(mCompositorParent);
-      }
     } else if (ShouldUseMainThreadD3D10Manager()) {
       nsRefPtr<mozilla::layers::LayerManagerD3D10> layerManager =
         new mozilla::layers::LayerManagerD3D10(this);
@@ -1457,7 +1437,7 @@ MetroWidget::HandleLongTap(const CSSIntPoint& aPoint)
 }
 
 void
-MetroWidget::SendAsyncScrollDOMEvent(const CSSRect &aContentRect, const CSSSize &aScrollableSize)
+MetroWidget::SendAsyncScrollDOMEvent(FrameMetrics::ViewID aScrollId, const CSSRect &aContentRect, const CSSSize &aScrollableSize)
 {
   LogFunction();
 }

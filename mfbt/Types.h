@@ -14,16 +14,9 @@
  * SpiderMonkey or Gecko.
  */
 
-/*
- * Expose all the integer types defined in C99's <stdint.h> (and the integer
- * limit and constant macros, if compiling C code or if compiling C++ code and
- * the right __STDC_*_MACRO has been defined for each).  These are all usable
- * throughout mfbt code, and throughout Mozilla code more generally.
- */
-#include "mozilla/StandardInteger.h"
-
-/* Also expose size_t. */
+/* Expose all <stdint.h> types and size_t. */
 #include <stddef.h>
+#include <stdint.h>
 
 /* Implement compiler and linker macros needed for APIs. */
 

@@ -156,9 +156,9 @@ DoMorphology(nsSVGFilterInstance* instance,
              int32_t rx,
              int32_t ry)
 {
-  MOZ_STATIC_ASSERT(Operator == SVG_OPERATOR_ERODE ||
-                    Operator == SVG_OPERATOR_DILATE,
-                    "unexpected morphology operator");
+  static_assert(Operator == SVG_OPERATOR_ERODE ||
+                Operator == SVG_OPERATOR_DILATE,
+                "unexpected morphology operator");
 
   volatile uint8_t extrema[4];         // RGBA magnitude of extrema
 

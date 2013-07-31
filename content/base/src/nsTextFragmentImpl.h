@@ -6,7 +6,7 @@
 #ifndef nsTextFragmentImpl_h__
 #define nsTextFragmentImpl_h__
 
-#include "mozilla/StandardInteger.h"
+#include <stdint.h>
 
 template<size_t size> struct Non8BitParameters;
 template<> struct Non8BitParameters<4> {
