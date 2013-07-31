@@ -31,7 +31,7 @@ include $(topsrcdir)/ipc/chromium/chromium-config.mk
 
 # NB: the IPDL compiler manages .ipdl-->.h/.cpp dependencies itself,
 # which is why we don't have explicit .h/.cpp targets here
-export:: $(ALL_IPDLSRCS)
+ipdl: $(ALL_IPDLSRCS)
 	$(PYTHON) $(topsrcdir)/config/pythonpath.py \
 	  $(PLY_INCLUDE) \
 	  $(srcdir)/ipdl.py \
@@ -43,3 +43,9 @@ export:: $(ALL_IPDLSRCS)
 # We #include some things in the dom/plugins/ directory that rely on
 # toolkit libraries.
 CXXFLAGS    += $(TK_CFLAGS)
+
+# This is only needed to support |make| from this leaf directory/Makefile.
+NONRECURSIVE_TARGETS := export
+NONRECURSIVE_TARGETS_export := ipdl
+NONRECURSIVE_TARGETS_export_ipdl_DIRECTORY := .
+NONRECURSIVE_TARGETS_export_ipdl_TARGETS := ipdl
