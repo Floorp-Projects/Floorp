@@ -32,12 +32,6 @@ CodeGeneratorX86Shared::CodeGeneratorX86Shared(MIRGenerator *gen, LIRGraph *grap
 {
 }
 
-double
-test(double x, double y)
-{
-    return x + y;
-}
-
 bool
 CodeGeneratorX86Shared::generatePrologue()
 {
