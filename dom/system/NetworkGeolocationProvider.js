@@ -185,7 +185,7 @@ WifiGeoPositionProvider.prototype = {
             return;
         }
 
-        if (!xhr.response.location) {
+        if (!xhr.response || !xhr.response.location) {
             return;
         }
 
