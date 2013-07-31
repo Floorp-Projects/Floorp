@@ -67,9 +67,9 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/Compiler.h"
 #include "mozilla/DebugOnly.h"
-#include "mozilla/StandardInteger.h"
 #include "mozilla/TypeTraits.h"
 
+#include <stdint.h>
 #include <string.h>
 
 #if defined(_MSC_VER) && _MSC_VER >= 1300

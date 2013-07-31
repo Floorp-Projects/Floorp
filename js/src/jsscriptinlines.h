@@ -14,7 +14,7 @@
 #include "jsfun.h"
 #include "jsopcode.h"
 
-#include "ion/AsmJS.h"
+#include "ion/AsmJSLink.h"
 #include "vm/GlobalObject.h"
 #include "vm/RegExpObject.h"
 #include "vm/Shape.h"

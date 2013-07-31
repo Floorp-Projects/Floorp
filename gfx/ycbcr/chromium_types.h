@@ -5,7 +5,7 @@
 #ifndef GFX_CHROMIUMTYPES_H
 #define GFX_CHROMIUMTYPES_H
 
-#include "mozilla/StandardInteger.h"
+#include <stdint.h>
 
 // On Windows, protypes.h is #included, which defines these types.  This sucks!
 #ifndef PROTYPES_H

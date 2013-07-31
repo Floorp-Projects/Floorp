@@ -9,9 +9,9 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/PodOperations.h"
-#include "mozilla/StandardInteger.h"
 
 #include <stddef.h>
+#include <stdint.h>
 
 #include "jspubtd.h"
 #include "jstypes.h"

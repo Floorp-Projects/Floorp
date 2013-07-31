@@ -1018,12 +1018,12 @@ class JSObject : public js::ObjectImpl
 
   private:
     static void staticAsserts() {
-        MOZ_STATIC_ASSERT(sizeof(JSObject) == sizeof(js::shadow::Object),
-                          "shadow interface must match actual interface");
-        MOZ_STATIC_ASSERT(sizeof(JSObject) == sizeof(js::ObjectImpl),
-                          "JSObject itself must not have any fields");
-        MOZ_STATIC_ASSERT(sizeof(JSObject) % sizeof(js::Value) == 0,
-                          "fixed slots after an object must be aligned");
+        static_assert(sizeof(JSObject) == sizeof(js::shadow::Object),
+                      "shadow interface must match actual interface");
+        static_assert(sizeof(JSObject) == sizeof(js::ObjectImpl),
+                      "JSObject itself must not have any fields");
+        static_assert(sizeof(JSObject) % sizeof(js::Value) == 0,
+                      "fixed slots after an object must be aligned");
     }
 
     JSObject() MOZ_DELETE;

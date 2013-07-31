@@ -5,7 +5,7 @@
 #ifndef mozilla_dom_GamepadService_h_
 #define mozilla_dom_GamepadService_h_
 
-#include "mozilla/StandardInteger.h"
+#include <stdint.h>
 #include "Gamepad.h"
 #include "nsAutoPtr.h"
 #include "nsCOMArray.h"

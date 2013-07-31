@@ -78,13 +78,14 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/StandardInteger.h"
 #include "mozilla/Util.h"
 
-#include <string.h>
-#include <stdlib.h>
-#include <stdarg.h>
 #include <math.h>
+#include <stdarg.h>
+#include <stdint.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include "xpcpublic.h"
 #include "jsapi.h"
 #include "jsprf.h"

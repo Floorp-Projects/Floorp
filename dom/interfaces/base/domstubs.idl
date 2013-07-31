@@ -73,7 +73,6 @@ interface nsIDOMRect;
 interface nsIDOMCSSStyleRule;
 interface nsIDOMCSSStyleRuleCollection;
 interface nsIDOMHTMLTableCaptionElement;
-interface nsIDOMHTMLTableSectionElement;
 
 // Range
 interface nsIDOMRange;

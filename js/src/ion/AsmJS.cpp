@@ -14,7 +14,6 @@
 
 #include "jsmath.h"
 #include "jsworkers.h"
-#include "jswrapper.h"
 #include "prmjtime.h"
 
 #include "frontend/Parser.h"
@@ -2530,88 +2529,6 @@ class FunctionCompiler
         return true;
     }
 };
-
-/*****************************************************************************/
-// An AsmJSModule contains the persistent results of asm.js module compilation,
-// viz., the jit code and dynamic link information.
-//
-// An AsmJSModule object is created at the end of module compilation and
-// subsequently owned by an AsmJSModuleClass JSObject.
-
-static void AsmJSModuleObject_finalize(FreeOp *fop, JSObject *obj);
-static void AsmJSModuleObject_trace(JSTracer *trc, JSObject *obj);
-
-static const unsigned ASM_CODE_RESERVED_SLOT = 0;
-static const unsigned ASM_CODE_NUM_RESERVED_SLOTS = 1;
-
-static Class AsmJSModuleClass = {
-    "AsmJSModuleObject",
-    JSCLASS_IS_ANONYMOUS | JSCLASS_IMPLEMENTS_BARRIERS |
-    JSCLASS_HAS_RESERVED_SLOTS(ASM_CODE_NUM_RESERVED_SLOTS),
-    JS_PropertyStub,         /* addProperty */
-    JS_DeletePropertyStub,   /* delProperty */
-    JS_PropertyStub,         /* getProperty */
-    JS_StrictPropertyStub,   /* setProperty */
-    JS_EnumerateStub,
-    JS_ResolveStub,
-    NULL,                    /* convert     */
-    AsmJSModuleObject_finalize,
-    NULL,                    /* checkAccess */
-    NULL,                    /* call        */
-    NULL,                    /* hasInstance */
-    NULL,                    /* construct   */
-    AsmJSModuleObject_trace
-};
-
-AsmJSModule &
-js::AsmJSModuleObjectToModule(JSObject *obj)
-{
-    JS_ASSERT(obj->getClass() == &AsmJSModuleClass);
-    return *(AsmJSModule *)obj->getReservedSlot(ASM_CODE_RESERVED_SLOT).toPrivate();
-}
-
-bool
-js::IsAsmJSModuleObject(JSObject *obj)
-{
-    return obj->getClass() == &AsmJSModuleClass;
-}
-
-static const unsigned ASM_MODULE_FUNCTION_MODULE_OBJECT_SLOT = 0;
-
-JSObject &
-js::AsmJSModuleObject(JSFunction *moduleFun)
-{
-    return moduleFun->getExtendedSlot(ASM_MODULE_FUNCTION_MODULE_OBJECT_SLOT).toObject();
-}
-
-void
-js::SetAsmJSModuleObject(JSFunction *moduleFun, JSObject *moduleObj)
-{
-    moduleFun->setExtendedSlot(ASM_MODULE_FUNCTION_MODULE_OBJECT_SLOT, OBJECT_TO_JSVAL(moduleObj));
-}
-
-static void
-AsmJSModuleObject_finalize(FreeOp *fop, JSObject *obj)
-{
-    fop->delete_(&AsmJSModuleObjectToModule(obj));
-}
-
-static void
-AsmJSModuleObject_trace(JSTracer *trc, JSObject *obj)
-{
-    AsmJSModuleObjectToModule(obj).trace(trc);
-}
-
-static JSObject *
-NewAsmJSModuleObject(JSContext *cx, ScopedJSDeletePtr<AsmJSModule> *module)
-{
-    JSObject *obj = NewObjectWithGivenProto(cx, &AsmJSModuleClass, NULL, NULL);
-    if (!obj)
-        return NULL;
-
-    obj->setReservedSlot(ASM_CODE_RESERVED_SLOT, PrivateValue(module->forget()));
-    return obj;
-}
 
 /*****************************************************************************/
 // asm.js type-checking and code-generation algorithm
@@ -6391,24 +6308,13 @@ js::CompileAsmJS(JSContext *cx, AsmJSParser &parser, ParseNode *stmtList, bool *
     if (!moduleObj)
         return false;
 
-    ParseNode *fn = parser.pc->maybeFunction;
-    RootedFunction origFun(cx, fn->pn_funbox->function());
-    RootedPropertyName name(cx, origFun->name());
-    RootedFunction moduleFun(cx, NewFunction(cx, NullPtr(), LinkAsmJS, origFun->nargs,
-                                             JSFunction::NATIVE_FUN, NullPtr(), name,
-                                             JSFunction::ExtendedFinalizeKind, TenuredObject));
+    FunctionBox *funbox = parser.pc->maybeFunction->pn_funbox;
+    RootedFunction moduleFun(cx, NewAsmJSModuleFunction(cx, funbox->function(), moduleObj));
     if (!moduleFun)
         return false;
 
-    SetAsmJSModuleObject(moduleFun, moduleObj);
-
-    // Replace the old interpreted function (which will now become garbage)
-    // with the new LinkAsmJS native function. This allows us to avoid creating
-    // bytecode for the entire asm.js module (which can be quite large). If
-    // link-time validation fails, LinkAsmJS will re-parse the whole module.
-    JS_ASSERT(fn->pn_funbox->function()->isInterpreted());
-    fn->pn_funbox->object = moduleFun;
-    JS_ASSERT(IsAsmJSModuleNative(fn->pn_funbox->function()->native()));
+    JS_ASSERT(funbox->function()->isInterpreted());
+    funbox->object = moduleFun;
 
     *validated = true;
     return Warn(cx, JSMSG_USE_ASM_TYPE_OK, compilationTimeReport);
@@ -6425,59 +6331,4 @@ js::IsAsmJSCompilationAvailable(JSContext *cx, unsigned argc, Value *vp)
 
     args.rval().set(BooleanValue(available));
     return true;
-}
-
-static bool
-IsMaybeWrappedNativeFunction(const Value &v, Native native)
-{
-    if (!v.isObject())
-        return false;
-
-    JSObject *obj = CheckedUnwrap(&v.toObject());
-    if (!obj)
-        return false;
-
-    return obj->is<JSFunction>() && obj->as<JSFunction>().maybeNative() == native;
-}
-
-JSBool
-js::IsAsmJSModule(JSContext *cx, unsigned argc, Value *vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    bool rval = args.hasDefined(0) && IsMaybeWrappedNativeFunction(args[0], LinkAsmJS);
-    args.rval().set(BooleanValue(rval));
-    return true;
-}
-
-JSBool
-js::IsAsmJSFunction(JSContext *cx, unsigned argc, Value *vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    bool rval = args.hasDefined(0) && IsMaybeWrappedNativeFunction(args[0], CallAsmJS);
-    args.rval().set(BooleanValue(rval));
-    return true;
-}
-
-AsmJSModule::~AsmJSModule()
-{
-    if (code_) {
-        for (unsigned i = 0; i < numExits(); i++) {
-            AsmJSModule::ExitDatum &exitDatum = exitIndexToGlobalDatum(i);
-            if (!exitDatum.fun)
-                continue;
-
-            if (!exitDatum.fun->hasScript())
-                continue;
-
-            JSScript *script = exitDatum.fun->nonLazyScript();
-            if (!script->hasIonScript())
-                continue;
-
-            DependentAsmJSModuleExit exit(this, i);
-            script->ionScript()->removeDependentAsmJSModule(exit);
-        }
-    }
-
-    for (size_t i = 0; i < numFunctionCounts(); i++)
-        js_delete(functionCounts(i));
 }

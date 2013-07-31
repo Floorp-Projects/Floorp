@@ -208,9 +208,10 @@ nsIntRect nsView::CalcWidgetBounds(nsWindowType aType)
   nsRect viewBounds(mDimBounds);
 
   nsView* parent = GetParent();
+  nsIWidget* parentWidget = nullptr;
   if (parent) {
     nsPoint offset;
-    nsIWidget* parentWidget = parent->GetNearestWidget(&offset, p2a);
+    parentWidget = parent->GetNearestWidget(&offset, p2a);
     // make viewBounds be relative to the parent widget, in appunits
     viewBounds += offset;
 
@@ -225,6 +226,33 @@ nsIntRect nsView::CalcWidgetBounds(nsWindowType aType)
 
   // Compute widget bounds in device pixels
   nsIntRect newBounds = viewBounds.ToNearestPixels(p2a);
+
+#ifdef XP_MACOSX
+  // cocoa rounds widget coordinates to the nearest global "display pixel"
+  // integer value. So we avoid fractional display pixel values by rounding
+  // to the nearest value that won't yield a fractional display pixel.
+  nsIWidget* widget = parentWidget ? parentWidget : mWindow;
+  uint32_t round;
+  if (aType == eWindowType_popup && widget &&
+      ((round = widget->RoundsWidgetCoordinatesTo()) > 1)) {
+    nsIntSize pixelRoundedSize = newBounds.Size();
+    // round the top left and bottom right to the nearest round pixel
+    newBounds.x = NSToIntRoundUp(NSAppUnitsToDoublePixels(viewBounds.x, p2a) / round) * round;
+    newBounds.y = NSToIntRoundUp(NSAppUnitsToDoublePixels(viewBounds.y, p2a) / round) * round;
+    newBounds.width =
+      NSToIntRoundUp(NSAppUnitsToDoublePixels(viewBounds.XMost(), p2a) / round) * round - newBounds.x;
+    newBounds.height =
+      NSToIntRoundUp(NSAppUnitsToDoublePixels(viewBounds.YMost(), p2a) / round) * round - newBounds.y;
+    // but if that makes the widget larger then our frame may not paint the
+    // extra pixels, so reduce the size to the nearest round value
+    if (newBounds.width > pixelRoundedSize.width) {
+      newBounds.width -= round;
+    }
+    if (newBounds.height > pixelRoundedSize.height) {
+      newBounds.height -= round;
+    }
+  }
+#endif
 
   // Compute where the top-left of our widget ended up relative to the parent
   // widget, in appunits.
@@ -707,12 +735,11 @@ nsresult nsView::DetachFromTopLevelWidget()
   return NS_OK;
 }
 
-void nsView::SetZIndex(bool aAuto, int32_t aZIndex, bool aTopMost)
+void nsView::SetZIndex(bool aAuto, int32_t aZIndex)
 {
   bool oldIsAuto = GetZIndexIsAuto();
   mVFlags = (mVFlags & ~NS_VIEW_FLAG_AUTO_ZINDEX) | (aAuto ? NS_VIEW_FLAG_AUTO_ZINDEX : 0);
   mZIndex = aZIndex;
-  SetTopMost(aTopMost);
   
   if (HasWidget() || !oldIsAuto || !aAuto) {
     UpdateNativeWidgetZIndexes(this, FindNonAutoZIndex(this));
