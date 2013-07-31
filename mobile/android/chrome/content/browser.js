@@ -5986,7 +5986,7 @@ var ClipboardHelper = {
   },
 
   observe: function observe(aSubject, aTopic) {
-    if (aTopic == "ContextMenu:Open") {
+    if (aTopic == "before-build-contextmenu") {
       this._setSearchMenuItem();
     }
   },
