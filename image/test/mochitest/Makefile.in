@@ -70,6 +70,8 @@ MOCHITEST_FILES =   imgutils.js \
 		short_header.gif \
 		test_short_gif_header.html \
                 test_ImageContentLoaded.html \
+                INT32_MIN.bmp \
+                test_bug865919.html \
                 $(NULL)
 
 # Tests disabled due to intermittent orange

@@ -35,12 +35,48 @@ NS_IMPL_ADDREF_INHERITED(HTMLLabelElement, Element)
 NS_IMPL_RELEASE_INHERITED(HTMLLabelElement, Element)
 
 // QueryInterface implementation for HTMLLabelElement
-NS_INTERFACE_MAP_BEGIN(HTMLLabelElement)
+NS_INTERFACE_TABLE_HEAD(HTMLLabelElement)
   NS_HTML_CONTENT_INTERFACES(nsGenericHTMLFormElement)
+  NS_INTERFACE_TABLE_INHERITED1(HTMLLabelElement,
+                                nsIDOMHTMLLabelElement)
+  NS_INTERFACE_TABLE_TO_MAP_SEGUE
 NS_ELEMENT_INTERFACE_MAP_END
 
 
+// nsIDOMHTMLLabelElement
+
 NS_IMPL_ELEMENT_CLONE(HTMLLabelElement)
+
+NS_IMETHODIMP
+HTMLLabelElement::GetForm(nsIDOMHTMLFormElement** aForm)
+{
+  return nsGenericHTMLFormElement::GetForm(aForm);
+}
+
+NS_IMETHODIMP
+HTMLLabelElement::GetControl(nsIDOMHTMLElement** aElement)
+{
+  nsCOMPtr<nsIDOMHTMLElement> element = do_QueryInterface(GetLabeledElement());
+  element.forget(aElement);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HTMLLabelElement::SetHtmlFor(const nsAString& aHtmlFor)
+{
+  ErrorResult rv;
+  SetHtmlFor(aHtmlFor, rv);
+  return rv.ErrorCode();
+}
+
+NS_IMETHODIMP
+HTMLLabelElement::GetHtmlFor(nsAString& aHtmlFor)
+{
+  nsString htmlFor;
+  GetHtmlFor(htmlFor);
+  aHtmlFor = htmlFor;
+  return NS_OK;
+}
 
 void
 HTMLLabelElement::Focus(ErrorResult& aError)

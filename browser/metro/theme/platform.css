@@ -653,18 +653,31 @@ arrowbox {
   max-width: 100%;
   width: 100%;
 }
+
 .meta-section {
   margin: 0 @metro_spacing_large@;
 }
+
 .meta-section-title {
   font-size: @metro_font_large@;
   font-weight: 100;
   display: none;
+  cursor: default;
 }
+
 #start-container[viewstate="snapped"] .meta-section-title.narrow-title,
 #start-container:not([viewstate="snapped"]) .meta-section-title.wide-title {
   display: block;
 }
+
+.meta-section:not([expanded]) > .meta-section-title.narrow-title:-moz-locale-dir(ltr):after {
+  content: ">";
+}
+
+.meta-section:not([expanded]) > .meta-section-title.narrow-title:-moz-locale-dir(rtl):before {
+  content: "<";
+}
+
 /* App bars ----------------------------------------------------------------- */
 appbar {
   display: block;

@@ -1,0 +1,30 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIDOMHTMLElement.idl"
+
+/**
+ * The nsIDOMHTMLMeterElement interface is the interface to a HTML
+ * <meter> element.
+ *
+ * For more information on this interface, please see
+ * http://www.whatwg.org/specs/web-apps/current-work/multipage/the-button-element.html#the-meter-element
+ */
+
+[scriptable, uuid(6b1fc313-a7c1-4064-ba24-b72e099b05fa)]
+interface nsIDOMHTMLMeterElement : nsIDOMHTMLElement
+{
+           attribute double value;
+           attribute double min;
+           attribute double max;
+           attribute double low;
+           attribute double high;
+           attribute double optimum;
+
+  /**
+   * The labels attribute will be done with bug 556743.
+   */
+  //readonly attribute NodeList labels;
+};

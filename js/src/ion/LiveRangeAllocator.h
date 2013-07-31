@@ -539,7 +539,6 @@ class LiveRangeAllocator : public RegisterAllocator
     // Allocation state
     StackSlotAllocator stackSlotAllocator;
 
-  public:
     LiveRangeAllocator(MIRGenerator *mir, LIRGenerator *lir, LIRGraph &graph, bool forLSRA)
       : RegisterAllocator(mir, lir, graph),
         liveIn(NULL),
@@ -550,7 +549,6 @@ class LiveRangeAllocator : public RegisterAllocator
 
     bool buildLivenessInfo();
 
-  protected:
     bool init();
 
     bool addFixedRangeAtHead(AnyRegister reg, CodePosition from, CodePosition to) {
