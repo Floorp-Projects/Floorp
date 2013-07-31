@@ -273,6 +273,7 @@ public:
   // Construct for the root of the subtree that we're restyling.
   ElementRestyler(nsPresContext* aPresContext,
                   nsIFrame* aFrame,
+                  nsStyleChangeList* aChangeList,
                   nsChangeHint aHintsHandledByAncestors);
 
   // Construct for an element whose parent is being restyled.
@@ -313,8 +314,7 @@ public:
    * nsRestyleHint(0) to mean recompute a new style context for our
    * current parent and existing rulenode, and the same for kids.
    */
-  void Restyle(nsStyleChangeList *aChangeList,
-               nsChangeHint       aParentFrameHintsNotHandledForDescendants,
+  void Restyle(nsChangeHint       aParentFrameHintsNotHandledForDescendants,
                nsRestyleHint      aRestyleHint,
                RestyleTracker&    aRestyleTracker,
                DesiredA11yNotifications aDesiredA11yNotifications,
@@ -333,7 +333,6 @@ public:
 private:
   void CaptureChange(nsStyleContext* aOldContext,
                      nsStyleContext* aNewContext,
-                     nsStyleChangeList* aChangeList,
                      /*in*/nsChangeHint aParentHintsNotHandledForDescendants,
                      /*out*/nsChangeHint &aHintsNotHandledForDescendants,
                      nsChangeHint aChangeToAssume);
@@ -346,6 +345,7 @@ private:
   // normal elements (not pseudo-elements) and for which we generate
   // framechange hints if we need them.
   nsIContent* const mContent;
+  nsStyleChangeList* const mChangeList;
   // We have already generated change list entries for hints listed in
   // mHintsHandled (initially it's those handled by ancestors, but by
   // the end of Restyle it is those handled for this frame as well).  We
