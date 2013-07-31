@@ -1808,7 +1808,7 @@ CodeGeneratorARM::visitAsmJSLoadHeap(LAsmJSLoadHeap *ins)
                               ToRegister(ins->output()), Offset, Assembler::Zero);
         masm.ma_mov(Imm32(0), ToRegister(ins->output()), NoSetCond, Assembler::NonZero);
     }
-    return gen->noteBoundsCheck(bo.getOffset());
+    return gen->noteHeapAccess(AsmJSHeapAccess(bo.getOffset()));
 }
 
 bool
@@ -1846,7 +1846,7 @@ CodeGeneratorARM::visitAsmJSStoreHeap(LAsmJSStoreHeap *ins)
         masm.ma_dataTransferN(IsStore, size, isSigned, HeapReg, index,
                               ToRegister(ins->value()), Offset, Assembler::Zero);
     }
-    return gen->noteBoundsCheck(bo.getOffset());
+    return gen->noteHeapAccess(AsmJSHeapAccess(bo.getOffset()));
 }
 
 bool

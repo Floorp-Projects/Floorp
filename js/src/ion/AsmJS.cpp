@@ -1436,13 +1436,8 @@ class MOZ_STACK_CLASS ModuleCompiler
     }
 
     bool collectAccesses(MIRGenerator &gen) {
-#ifdef JS_CPU_ARM
-        if (!module_->addBoundsChecks(gen.asmBoundsChecks()))
-            return false;
-#else
         if (!module_->addHeapAccesses(gen.heapAccesses()))
             return false;
-#endif
         if (!globalAccesses_.appendAll(gen.globalAccesses()))
             return false;
         return true;
@@ -1589,26 +1584,21 @@ class MOZ_STACK_CLASS ModuleCompiler
                 data[j] = code + masm_.actualOffset(table.elem(j).code()->offset());
         }
 
-        // Global accesses in function bodies
+        // Fix up heap/global accesses now that compilation has finished
 #ifdef JS_CPU_ARM
-        JS_ASSERT(globalAccesses_.length() == 0);
         // The AsmJSHeapAccess offsets need to be updated to reflect the
         // "actualOffset" (an ARM distinction).
-        module_->convertBoundsChecksToActualOffset(masm_);
-
+        for (unsigned i = 0; i < module_->numHeapAccesses(); i++) {
+            AsmJSHeapAccess &access = module_->heapAccess(i);
+            access.setOffset(masm_.actualOffset(access.offset()));
+        }
+        JS_ASSERT(globalAccesses_.length() == 0);
 #else
-
         for (unsigned i = 0; i < globalAccesses_.length(); i++) {
             AsmJSGlobalAccess access = globalAccesses_[i];
             masm_.patchAsmJSGlobalAccess(access.offset, code, codeBytes, access.globalDataOffset);
         }
 #endif
-        // The AsmJSHeapAccess offsets need to be updated to reflect the
-        // "actualOffset" (an ARM distinction).
-        for (unsigned i = 0; i < module_->numHeapAccesses(); i++) {
-            AsmJSHeapAccess &access = module_->heapAccess(i);
-            access.updateOffset(masm_.actualOffset(access.offset()));
-        }
 
         *module = module_.forget();
 
