@@ -10,6 +10,7 @@
 #include "GeckoContentController.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Monitor.h"
+#include "mozilla/ReentrantMonitor.h"
 #include "mozilla/RefPtr.h"
 #include "InputData.h"
 #include "Axis.h"
@@ -535,7 +536,7 @@ protected:
   // Before manipulating |mFrameMetrics| or |mLastContentPaintMetrics|, the
   // monitor should be held. When setting |mState|, either the SetState()
   // function can be used, or the monitor can be held and then |mState| updated.
-  Monitor mMonitor;
+  ReentrantMonitor mMonitor;
 
 private:
   // Metrics of the container layer corresponding to this APZC. This is
