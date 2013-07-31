@@ -379,10 +379,11 @@ pref("dom.ipc.processCount", 100000);
 
 pref("dom.ipc.browser_frames.oop_by_default", false);
 
-// WebSMS
+// SMS/MMS
 pref("dom.sms.enabled", true);
 pref("dom.sms.strict7BitEncoding", false); // Disabled by default.
 pref("dom.sms.requestStatusReport", true); // Enabled by default.
+pref("dom.mms.requestStatusReport", true); // Enabled by default.
 
 // WebContacts
 pref("dom.mozContacts.enabled", true);
