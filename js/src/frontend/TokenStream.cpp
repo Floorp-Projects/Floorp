@@ -265,8 +265,7 @@ TokenStream::SourceCoords::lineNumAndColumnIndex(uint32_t offset, uint32_t *line
 
 /* Initialize members that aren't initialized in |init|. */
 TokenStream::TokenStream(ExclusiveContext *cx, const CompileOptions &options,
-                         const jschar *base, size_t length, StrictModeGetter *smg,
-                         AutoKeepAtoms& keepAtoms)
+                         const jschar *base, size_t length, StrictModeGetter *smg)
   : srcCoords(cx, options.lineno),
     options_(options),
     tokens(),
@@ -1170,8 +1169,7 @@ TokenStream::getTokenInternal()
             tt = TOK_NAME;
             if (!checkForKeyword(chars, length, &tt))
                 goto error;
-            if (tt != TOK_NAME)
-                goto out;
+            if (tt != TOK_NAME)                goto out;
         }
 
         /*

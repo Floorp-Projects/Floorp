@@ -431,8 +431,7 @@ class MOZ_STACK_CLASS TokenStream
     typedef Vector<jschar, 32> CharBuffer;
 
     TokenStream(ExclusiveContext *cx, const CompileOptions &options,
-                const jschar *base, size_t length, StrictModeGetter *smg,
-                AutoKeepAtoms& keepAtoms);
+                const jschar *base, size_t length, StrictModeGetter *smg);
 
     ~TokenStream();
 
