@@ -314,8 +314,7 @@ public:
    * nsRestyleHint(0) to mean recompute a new style context for our
    * current parent and existing rulenode, and the same for kids.
    */
-  void Restyle(nsChangeHint       aParentFrameHintsNotHandledForDescendants,
-               nsRestyleHint      aRestyleHint,
+  void Restyle(nsRestyleHint aRestyleHint,
                RestyleTracker&    aRestyleTracker,
                DesiredA11yNotifications aDesiredA11yNotifications,
                nsTArray<nsIContent*>& aVisibleKidsOfHiddenElement,
@@ -333,8 +332,6 @@ public:
 private:
   void CaptureChange(nsStyleContext* aOldContext,
                      nsStyleContext* aNewContext,
-                     /*in*/nsChangeHint aParentHintsNotHandledForDescendants,
-                     /*out*/nsChangeHint &aHintsNotHandledForDescendants,
                      nsChangeHint aChangeToAssume);
 
 private:
@@ -352,6 +349,9 @@ private:
   // need to generate a new change list entry for the frame when its
   // style comparision returns a hint other than one of these hints.
   nsChangeHint mHintsHandled;
+  // See nsStyleContext::CalcStyleDifference
+  nsChangeHint mParentFrameHintsNotHandledForDescendants;
+  nsChangeHint mHintsNotHandledForDescendants;
 };
 
 } // namespace mozilla
