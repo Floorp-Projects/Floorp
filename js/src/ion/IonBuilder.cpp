@@ -194,10 +194,6 @@ IonBuilder::getPolyCallTargets(types::StackTypeSet *calleeTypes,
             DebugOnly<bool> appendOk = targets.append(obj);
             JS_ASSERT(appendOk);
         } else {
-            /* Temporarily disable heavyweight-function inlining. */
-            targets.clear();
-            return true;
-#if 0
             types::TypeObject *typeObj = calleeTypes->getTypeObject(i);
             JS_ASSERT(typeObj);
             if (!typeObj->isFunction() || !typeObj->interpretedFunction) {
@@ -210,7 +206,6 @@ IonBuilder::getPolyCallTargets(types::StackTypeSet *calleeTypes,
             JS_ASSERT(appendOk);
 
             *gotLambda = true;
-#endif
         }
     }
 
@@ -3526,6 +3521,11 @@ IonBuilder::inlineScriptedCall(CallInfo &callInfo, JSFunction *target)
     // Inherit the slots from current and pop |fun|.
     returnBlock->inheritSlots(current);
     returnBlock->pop();
+
+    // If callee is not a constant, add an MForceUse with the callee to make sure that
+    // it gets kept alive across the inlined body.
+    if (!callInfo.fun()->isConstant())
+        returnBlock->add(MForceUse::New(callInfo.fun()));
 
     // Accumulate return values.
     MIRGraphExits &exits = *inlineBuilder.graph().exitAccumulator();
