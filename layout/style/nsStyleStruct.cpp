@@ -1011,20 +1011,19 @@ nsStyleFilter::nsStyleFilter()
 }
 
 nsStyleFilter::nsStyleFilter(const nsStyleFilter& aSource)
+  : mType(aSource.mType)
 {
   MOZ_COUNT_CTOR(nsStyleFilter);
-  if (aSource.mType == eURL) {
-    SetURL(aSource.mURL);
-  } else if (aSource.mType == eDropShadow) {
-    SetDropShadow(aSource.mDropShadow);
-  } else if (aSource.mType != eNull) {
-    SetFilterParameter(aSource.mFilterParameter, aSource.mType);
+
+  if (mType == eURL) {
+    mURL = aSource.mURL;
+  } else if (mType != eNull) {
+    mFilterParameter = aSource.mFilterParameter;
   }
 }
 
 nsStyleFilter::~nsStyleFilter()
 {
-  ReleaseRef();
   MOZ_COUNT_DTOR(nsStyleFilter);
 }
 
@@ -1037,54 +1036,11 @@ nsStyleFilter::operator==(const nsStyleFilter& aOther) const
 
   if (mType == eURL) {
     return EqualURIs(mURL, aOther.mURL);
-  } else if (mType == eDropShadow) {
-    return *mDropShadow == *aOther.mDropShadow;
   } else if (mType != eNull) {
     return mFilterParameter == aOther.mFilterParameter;
   }
 
   return true;
-}
-
-void
-nsStyleFilter::ReleaseRef()
-{
-  if (mType == eDropShadow) {
-    NS_ASSERTION(mDropShadow, "expected pointer");
-    mDropShadow->Release();
-  } else if (mType == eURL) {
-    NS_ASSERTION(mURL, "expected pointer");
-    mURL->Release();
-  }
-}
-
-void
-nsStyleFilter::SetFilterParameter(const nsStyleCoord& aFilterParameter,
-                                  Type aType)
-{
-  ReleaseRef();
-  mFilterParameter = aFilterParameter;
-  mType = aType;
-}
-
-void
-nsStyleFilter::SetURL(nsIURI* aURL)
-{
-  NS_ASSERTION(aURL, "expected pointer");
-  ReleaseRef();
-  mURL = aURL;
-  mURL->AddRef();
-  mType = eURL;
-}
-
-void
-nsStyleFilter::SetDropShadow(nsCSSShadowArray* aDropShadow)
-{
-  NS_ASSERTION(aDropShadow, "expected pointer");
-  ReleaseRef();
-  mDropShadow = aDropShadow;
-  mDropShadow->AddRef();
-  mType = eDropShadow;
 }
 
 // --------------------

@@ -4498,9 +4498,9 @@ nsComputedDOMStyle::SetCssTextToCoord(nsAString& aCssText,
 }
 
 static void
-GetFilterFunctionName(nsAString& aString, nsStyleFilter::Type aType)
+GetFilterFunctionName(nsAString& aString, nsStyleFilter::Type mType)
 {
-  switch (aType) {
+  switch (mType) {
     case nsStyleFilter::Type::eBlur:
       aString.AssignLiteral("blur(");
       break;
@@ -4509,9 +4509,6 @@ GetFilterFunctionName(nsAString& aString, nsStyleFilter::Type aType)
       break;
     case nsStyleFilter::Type::eContrast:
       aString.AssignLiteral("contrast(");
-      break;
-    case nsStyleFilter::Type::eDropShadow:
-      aString.AssignLiteral("drop-shadow(");
       break;
     case nsStyleFilter::Type::eGrayscale:
       aString.AssignLiteral("grayscale(");
@@ -4536,34 +4533,25 @@ GetFilterFunctionName(nsAString& aString, nsStyleFilter::Type aType)
   }
 }
 
-CSSValue*
+nsROCSSPrimitiveValue*
 nsComputedDOMStyle::CreatePrimitiveValueForStyleFilter(
   const nsStyleFilter& aStyleFilter)
 {
   nsROCSSPrimitiveValue* value = new nsROCSSPrimitiveValue;
+
   // Handle url().
-  if (nsStyleFilter::Type::eURL == aStyleFilter.GetType()) {
-    value->SetURI(aStyleFilter.GetURL());
+  if (nsStyleFilter::Type::eURL == aStyleFilter.mType) {
+    value->SetURI(aStyleFilter.mURL);
     return value;
   }
 
   // Filter function name and opening parenthesis.
   nsAutoString filterFunctionString;
-  GetFilterFunctionName(filterFunctionString, aStyleFilter.GetType());
+  GetFilterFunctionName(filterFunctionString, aStyleFilter.mType);
 
+  // Filter function argument.
   nsAutoString argumentString;
-  if (nsStyleFilter::Type::eDropShadow == aStyleFilter.GetType()) {
-    // Handle drop-shadow()
-    nsRefPtr<CSSValue> shadowValue =
-      GetCSSShadowArray(aStyleFilter.GetDropShadow(),
-                        StyleColor()->mColor,
-                        false);
-    ErrorResult dummy;
-    shadowValue->GetCssText(argumentString, dummy);
-  } else {
-    // Filter function argument.
-    SetCssTextToCoord(argumentString, aStyleFilter.GetFilterParameter());
-  }
+  SetCssTextToCoord(argumentString, aStyleFilter.mFilterParameter);
   filterFunctionString.Append(argumentString);
 
   // Filter function closing parenthesis.
@@ -4586,7 +4574,8 @@ nsComputedDOMStyle::DoGetFilter()
 
   nsDOMCSSValueList* valueList = GetROCSSValueList(false);
   for(uint32_t i = 0; i < filters.Length(); i++) {
-    CSSValue* value = CreatePrimitiveValueForStyleFilter(filters[i]);
+    nsROCSSPrimitiveValue* value =
+      CreatePrimitiveValueForStyleFilter(filters[i]);
     valueList->AppendCSSValue(value);
   }
   return valueList;
