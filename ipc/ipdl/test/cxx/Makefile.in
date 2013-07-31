@@ -16,7 +16,6 @@ EXPORT_LIBRARY = 1
 
 IPDLTESTS = \
   TestActorPunning \
-  TestBlockChild \
   TestBridgeMain \
   TestCrashCleanup \
   TestDataStructures \

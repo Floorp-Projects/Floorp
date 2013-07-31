@@ -28,32 +28,6 @@ struct RunnableMethodTraits<mozilla::ipc::RPCChannel>
 };
 
 
-namespace
-{
-
-// Async (from the sending side's perspective)
-class BlockChildMessage : public IPC::Message
-{
-public:
-    enum { ID = BLOCK_CHILD_MESSAGE_TYPE };
-    BlockChildMessage() :
-        Message(MSG_ROUTING_NONE, ID, IPC::Message::PRIORITY_NORMAL)
-    { }
-};
-
-// Async
-class UnblockChildMessage : public IPC::Message
-{
-public:
-    enum { ID = UNBLOCK_CHILD_MESSAGE_TYPE };
-    UnblockChildMessage() :
-        Message(MSG_ROUTING_NONE, ID, IPC::Message::PRIORITY_NORMAL)
-    { }
-};
-
-} // namespace <anon>
-
-
 namespace mozilla {
 namespace ipc {
 
@@ -64,7 +38,6 @@ RPCChannel::RPCChannel(RPCListener* aListener)
     mOutOfTurnReplies(),
     mDeferred(),
     mRemoteStackDepthGuess(0),
-    mBlockedOnParent(false),
     mSawRPCOutMsg(false)
 {
     MOZ_COUNT_CTOR(RPCChannel);
@@ -503,113 +476,6 @@ RPCChannel::DispatchIncall(const Message& call)
     }
 }
 
-bool
-RPCChannel::BlockChild()
-{
-    AssertWorkerThread();
-
-    if (mChild)
-        NS_RUNTIMEABORT("child tried to block parent");
-
-    MonitorAutoLock lock(*mMonitor);
-    SendSpecialMessage(new BlockChildMessage());
-    return true;
-}
-
-bool
-RPCChannel::UnblockChild()
-{
-    AssertWorkerThread();
-
-    if (mChild)
-        NS_RUNTIMEABORT("child tried to unblock parent");
-
-    MonitorAutoLock lock(*mMonitor);
-    SendSpecialMessage(new UnblockChildMessage());
-    return true;
-}
-
-bool
-RPCChannel::OnSpecialMessage(uint16_t id, const Message& msg)
-{
-    AssertWorkerThread();
-
-    switch (id) {
-    case BLOCK_CHILD_MESSAGE_TYPE:
-        BlockOnParent();
-        return true;
-
-    case UNBLOCK_CHILD_MESSAGE_TYPE:
-        UnblockFromParent();
-        return true;
-
-    default:
-        return SyncChannel::OnSpecialMessage(id, msg);
-    }
-}
-
-void
-RPCChannel::BlockOnParent()
-{
-    AssertWorkerThread();
-
-    if (!mChild)
-        NS_RUNTIMEABORT("child tried to block parent");
-
-    MonitorAutoLock lock(*mMonitor);
-
-    if (mBlockedOnParent || AwaitingSyncReply() || 0 < StackDepth())
-        NS_RUNTIMEABORT("attempt to block child when it's already blocked");
-
-    mBlockedOnParent = true;
-    do {
-        // XXX this dispatch loop shares some similarities with the
-        // one in Call(), but the logic is simpler and different
-        // enough IMHO to warrant its own dispatch loop
-        while (Connected() && mPending.empty() && mBlockedOnParent) {
-            WaitForNotify();
-        }
-
-        if (!Connected()) {
-            mBlockedOnParent = false;
-            ReportConnectionError("RPCChannel");
-            break;
-        }
-
-        if (!mPending.empty()) {
-            Message recvd = mPending.front();
-            mPending.pop_front();
-
-            MonitorAutoUnlock unlock(*mMonitor);
-
-            CxxStackFrame f(*this, IN_MESSAGE, &recvd);
-            if (recvd.is_rpc()) {
-                // stack depth must be 0 here
-                Incall(recvd, 0);
-            }
-            else if (recvd.is_sync()) {
-                SyncChannel::OnDispatchMessage(recvd);
-            }
-            else {
-                AsyncChannel::OnDispatchMessage(recvd);
-            }
-        }
-    } while (mBlockedOnParent);
-
-    EnqueuePendingMessages();
-}
-
-void
-RPCChannel::UnblockFromParent()
-{
-    AssertWorkerThread();
-
-    if (!mChild)
-        NS_RUNTIMEABORT("child tried to block parent");
-    MonitorAutoLock lock(*mMonitor);
-    mBlockedOnParent = false;
-}
-
 void
 RPCChannel::ExitedCxxStack()
 {
@@ -711,7 +577,7 @@ RPCChannel::OnMessageReceivedFromLink(const Message& msg)
 
     mPending.push_back(msg);
 
-    if (0 == StackDepth() && !mBlockedOnParent) {
+    if (0 == StackDepth()) {
         // the worker thread might be idle, make sure it wakes up
         if (!compressMessage) {
             // If we compressed away the previous message, we'll reuse
