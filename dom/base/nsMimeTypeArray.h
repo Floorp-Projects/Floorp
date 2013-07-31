@@ -12,9 +12,9 @@
 #include "nsTArray.h"
 #include "nsWeakReference.h"
 #include "nsWrapperCache.h"
+#include "nsPluginArray.h"
 
 class nsPIDOMWindow;
-class nsPluginElement;
 class nsMimeType;
 
 class nsMimeTypeArray MOZ_FINAL : public nsISupports,
@@ -73,11 +73,6 @@ public:
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
 
-  void Invalidate()
-  {
-    mPluginElement = nullptr;
-  }
-
   const nsString& Type() const
   {
     return mType;
@@ -92,8 +87,11 @@ public:
 protected:
   nsWeakPtr mWindow;
 
-  // Weak pointer to the active plugin, if any.
-  nsPluginElement *mPluginElement;
+  // Strong reference to the active plugin, if any. Note that this
+  // creates an explicit reference cycle through the plugin element's
+  // mimetype array. We rely on the cycle collector to break this
+  // cycle.
+  nsRefPtr<nsPluginElement> mPluginElement;
   uint32_t mPluginTagMimeIndex;
   nsString mType;
 };

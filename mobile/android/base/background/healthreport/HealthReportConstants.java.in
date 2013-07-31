@@ -49,6 +49,7 @@ public class HealthReportConstants {
   public static final String PREF_FIRST_RUN = "healthreport_first_run";
   public static final String PREF_NEXT_SUBMISSION = "healthreport_next_submission";
   public static final String PREF_CURRENT_DAY_FAILURE_COUNT = "healthreport_current_day_failure_count";
+  public static final String PREF_CURRENT_DAY_RESET_TIME = "healthreport_current_day_reset_time";
 
   // Forensic.
   public static final String PREF_LAST_UPLOAD_REQUESTED = "healthreport_last_upload_requested";

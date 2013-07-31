@@ -29,8 +29,11 @@ NS_IMPL_ADDREF_INHERITED(HTMLMeterElement, Element)
 NS_IMPL_RELEASE_INHERITED(HTMLMeterElement, Element)
 
 
-NS_INTERFACE_MAP_BEGIN(HTMLMeterElement)
+NS_INTERFACE_TABLE_HEAD(HTMLMeterElement)
   NS_HTML_CONTENT_INTERFACES(nsGenericHTMLElement)
+  NS_INTERFACE_TABLE_INHERITED1(HTMLMeterElement,
+                                nsIDOMHTMLMeterElement)
+  NS_INTERFACE_TABLE_TO_MAP_SEGUE
 NS_ELEMENT_INTERFACE_MAP_END
 
 NS_IMPL_ELEMENT_CLONE(HTMLMeterElement)
@@ -218,6 +221,88 @@ HTMLMeterElement::Optimum() const
   }
 
   return std::min(optimum, max);
+}
+
+/*
+ * XPCOM methods
+ */
+
+NS_IMETHODIMP
+HTMLMeterElement::GetMin(double* aValue)
+{
+  *aValue = Min();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HTMLMeterElement::SetMin(double aValue)
+{
+  return SetDoubleAttr(nsGkAtoms::min, aValue);
+}
+
+NS_IMETHODIMP
+HTMLMeterElement::GetMax(double* aValue)
+{
+  *aValue = Max();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HTMLMeterElement::SetMax(double aValue)
+{
+  return SetDoubleAttr(nsGkAtoms::max, aValue);
+}
+
+NS_IMETHODIMP
+HTMLMeterElement::GetValue(double* aValue)
+{
+  *aValue = Value();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HTMLMeterElement::SetValue(double aValue)
+{
+  return SetDoubleAttr(nsGkAtoms::value, aValue);
+}
+
+NS_IMETHODIMP
+HTMLMeterElement::GetLow(double* aValue)
+{
+  *aValue = Low();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HTMLMeterElement::SetLow(double aValue)
+{
+  return SetDoubleAttr(nsGkAtoms::low, aValue);
+}
+
+NS_IMETHODIMP
+HTMLMeterElement::GetHigh(double* aValue)
+{
+  *aValue = High();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HTMLMeterElement::SetHigh(double aValue)
+{
+  return SetDoubleAttr(nsGkAtoms::high, aValue);
+}
+
+NS_IMETHODIMP
+HTMLMeterElement::GetOptimum(double* aValue)
+{
+  *aValue = Optimum();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HTMLMeterElement::SetOptimum(double aValue)
+{
+  return SetDoubleAttr(nsGkAtoms::optimum, aValue);
 }
 
 nsEventStates
