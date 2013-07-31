@@ -343,6 +343,8 @@ just addresses the organization to follow, e.g. "This site is run by " -->
 
 <!ENTITY searchable_description "Bookmarks and history">
 
+<!ENTITY devtools_remote_debugging_forward "Don\'t forget to set up port forwarding!">
+
  <!-- Updater notifications -->
 <!ENTITY updater_start_title2 "Update available for &brandShortName;">
 <!ENTITY updater_start_select2 "Touch to download">
