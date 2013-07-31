@@ -412,13 +412,8 @@ IDBCursor::ContinueInternal(const Key& aKey, int32_t aCount, ErrorResult& aRv)
   mContinueToKey = aKey;
 
 #ifdef DEBUG
-  {
-    nsAutoString readyState;
-    if (NS_FAILED(mRequest->GetReadyState(readyState))) {
-      NS_ERROR("This should never fail!");
-    }
-    NS_ASSERTION(readyState.EqualsLiteral("done"), "Should be DONE!");
-  }
+  NS_ASSERTION(mRequest->ReadyState() == IDBRequestReadyState::Done,
+               "Should be DONE!");
 #endif
 
   mRequest->Reset();

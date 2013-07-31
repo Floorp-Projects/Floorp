@@ -7,8 +7,6 @@
  * https://dvcs.w3.org/hg/IndexedDB/raw-file/tip/Overview.html#idl-def-IDBObjectStore
  */
 
-interface IDBRequest;
-
 dictionary IDBObjectStoreParameters {
     // TODO (DOMString or sequence<DOMString>)? keyPath = null;
     any                                         keyPath = null;

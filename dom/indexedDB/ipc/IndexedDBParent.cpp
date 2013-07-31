@@ -383,9 +383,9 @@ IndexedDBDatabaseParent::HandleRequestEvent(nsIDOMEvent* aEvent,
 
   AutoSafeJSContext cx;
 
-  JS::Rooted<JS::Value> result(cx);
-  rv = mOpenRequest->GetResult(result.address());
-  NS_ENSURE_SUCCESS(rv, rv);
+  ErrorResult error;
+  JS::Rooted<JS::Value> result(cx, mOpenRequest->GetResult(cx, error));
+  ENSURE_SUCCESS(error, error.ErrorCode());
 
   MOZ_ASSERT(!JSVAL_IS_PRIMITIVE(result));
 

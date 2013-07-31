@@ -6,8 +6,6 @@
 const { 'classes': Cc, 'interfaces': Ci } = Components;
 
 const DOMException = Ci.nsIDOMDOMException;
-const IDBOpenDBRequest = Ci.nsIIDBOpenDBRequest;
-const IDBRequest = Ci.nsIIDBRequest
 
 function is(a, b, msg) {
   dump("is(" + a + ", " + b + ", \"" + msg + "\")");
