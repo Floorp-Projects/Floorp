@@ -30,7 +30,7 @@ this.EXPORTED_SYMBOLS = ["VariablesViewController"];
  *
  * @param VariablesView aView
  *        The view to attach to.
- * @param object aOptions [optional]
+ * @param object aOptions
  *        Options for configuring the controller. Supported options:
  *        - getGripClient: callback for creating an object grip client
  *        - getLongStringClient: callback for creating a long string grip client
@@ -39,7 +39,7 @@ this.EXPORTED_SYMBOLS = ["VariablesViewController"];
  *        - getterOrSetterEvalMacro: callback for creating a getter/setter eval macro
  *        - simpleValueEvalMacro: callback for creating a simple value eval macro
  */
-function VariablesViewController(aView, aOptions = {}) {
+function VariablesViewController(aView, aOptions) {
   this.addExpander = this.addExpander.bind(this);
 
   this._getGripClient = aOptions.getGripClient;
@@ -330,34 +330,6 @@ VariablesViewController.prototype = {
         this.releaseActor(actor);
       }
     }
-  },
-
-  /**
-   * Helper function for setting up a single Scope with a single Variable
-   * contained within it.
-   *
-   * @param object aOptions
-   *        Options for the contents of the view:
-   *        - objectActor: the grip of the new ObjectActor to show.
-   *        - rawObject: the new raw object to show.
-   *        - label: the new label for the inspected object.
-   * @return Variable
-   *         The single Variable in the Scope.
-   */
-  setSingleVariable: function(aOptions) {
-    let scope = this.view.addScope(aOptions.label);
-    scope.expanded = true;
-    scope.locked = true;
-
-    let container = scope.addItem();
-
-    if (aOptions.objectActor) {
-      this.expand(container, aOptions.objectActor);
-    } else if (aOptions.rawObject) {
-      container.populate(aOptions.rawObject, { expanded: true });
-    }
-
-    return container;
   },
 };
 
