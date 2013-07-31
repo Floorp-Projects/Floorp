@@ -189,7 +189,9 @@ const UnsolicitedNotifications = {
   "tabNavigated": "tabNavigated",
   "pageError": "pageError",
   "webappsEvent": "webappsEvent",
-  "documentLoad": "documentLoad"
+  "documentLoad": "documentLoad",
+  "enteredFrame": "enteredFrame",
+  "exitedFrame": "exitedFrame"
 };
 
 /**
@@ -495,6 +497,28 @@ DebuggerClient.prototype = {
         this.activeThread = threadClient;
       }
       aOnResponse(aResponse, threadClient);
+    });
+  },
+
+  /**
+   * Attach to a trace actor.
+   *
+   * @param string aTraceActor
+   *        The actor ID for the tracer to attach.
+   * @param function aOnResponse
+   *        Called with the response packet and a TraceClient
+   *        (which will be undefined on error).
+   */
+  attachTracer: function DC_attachTracer(aTraceActor, aOnResponse) {
+    let packet = {
+      to: aTraceActor,
+      type: "attach"
+    };
+    this.request(packet, (aResponse) => {
+      if (!aResponse.error) {
+        let traceClient = new TraceClient(this, aTraceActor);
+        aOnResponse(aResponse, traceClient);
+      }
     });
   },
 
@@ -1594,6 +1618,124 @@ ThreadClient.prototype = {
 };
 
 eventSource(ThreadClient.prototype);
+
+/**
+ * Creates a tracing profiler client for the remote debugging protocol
+ * server. This client is a front to the trace actor created on the
+ * server side, hiding the protocol details in a traditional
+ * JavaScript API.
+ *
+ * @param aClient DebuggerClient
+ *        The debugger client parent.
+ * @param aActor string
+ *        The actor ID for this thread.
+ */
+function TraceClient(aClient, aActor) {
+  this._client = aClient;
+  this._actor = aActor;
+  this._traces = Object.create(null);
+  this._activeTraces = 0;
+
+  this._client.addListener(UnsolicitedNotifications.enteredFrame,
+                           this.onEnteredFrame.bind(this));
+  this._client.addListener(UnsolicitedNotifications.exitedFrame,
+                           this.onExitedFrame.bind(this));
+
+  this.request = this._client.request;
+}
+
+TraceClient.prototype = {
+  get actor()   { return this._actor; },
+  get tracing() { return this._activeTraces > 0; },
+
+  get _transport() { return this._client._transport; },
+
+  /**
+   * Detach from the trace actor.
+   */
+  detach: DebuggerClient.requester({ type: "detach" },
+                                   { telemetry: "TRACERDETACH" }),
+
+  /**
+   * Start a new trace.
+   *
+   * @param aTrace [string]
+   *        An array of trace types to be recorded by the new trace.
+   *
+   * @param aName string
+   *        The name of the new trace.
+   *
+   * @param aOnResponse function
+   *        Called with the request's response.
+   */
+  startTrace: DebuggerClient.requester({
+    type: "startTrace",
+    name: args(1),
+    trace: args(0)
+  }, {
+    after: function(aResponse) {
+      if (aResponse.error) {
+        return aResponse;
+      }
+
+      let name = aResponse.name;
+
+      if (!this._traces[name] || !this._traces[name].active) {
+        this._activeTraces++;
+      }
+
+      this._traces[name] = {
+        active: true
+      };
+
+      return aResponse;
+    },
+    telemetry: "STARTTRACE"
+  }),
+
+  /**
+   * End a trace. If a name is provided, stop the named
+   * trace. Otherwise, stop the most recently started trace.
+   *
+   * @param aName string
+   *        The name of the trace to stop.
+   *
+   * @param aOnResponse function
+   *        Called with the request's response.
+   */
+  stopTrace: DebuggerClient.requester({
+    type: "stopTrace",
+    name: args(0)
+  }, {
+    after: function(aResponse) {
+      if (aResponse.error) {
+        return aResponse;
+      }
+
+      this._traces[aResponse.name].active = false;
+      this._activeTraces--;
+
+      return aResponse;
+    },
+    telemetry: "STOPTRACE"
+  }),
+
+  /**
+   * Called when the trace actor notifies that a frame has been entered.
+   */
+  onEnteredFrame: function JSTC_onEnteredFrame(aEvent, aResponse) {
+    this.notify("enteredFrame", aResponse);
+  },
+
+  /**
+   * Called when the trace actor notifies that a frame has been exited.
+   */
+  onExitedFrame: function JSTC_onExitedFrame(aEvent, aResponse) {
+    this.notify("exitedFrame", aResponse);
+  }
+};
+
+eventSource(TraceClient.prototype);
 
 /**
  * Grip clients are used to retrieve information about the relevant object.
