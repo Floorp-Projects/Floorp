@@ -36,6 +36,7 @@ using mozilla::AddToHash;
 using mozilla::ArrayLength;
 using mozilla::DebugOnly;
 using mozilla::HashGeneric;
+using mozilla::IsNaN;
 using mozilla::IsNegativeZero;
 using mozilla::Maybe;
 using mozilla::Move;
@@ -755,6 +756,10 @@ IsNumericLiteral(ParseNode *pn)
 static NumLit
 ExtractNumericLiteral(ParseNode *pn)
 {
+    // The JS grammar treats -42 as -(42) (i.e., with separate grammar
+    // productions) for the unary - and literal 42). However, the asm.js spec
+    // recognizes -42 (modulo parens, so -(42) and -((42))) as a single literal
+    // so fold the two potential parse nodes into a single double value.
     JS_ASSERT(IsNumericLiteral(pn));
     ParseNode *numberNode;
     double d;
@@ -766,21 +771,33 @@ ExtractNumericLiteral(ParseNode *pn)
         d = NumberNodeValue(numberNode);
     }
 
+    // The asm.js spec syntactically distinguishes any literal containing a
+    // decimal point or the literal -0 as having double type.
     if (NumberNodeHasFrac(numberNode) || IsNegativeZero(d))
         return NumLit(NumLit::Double, DoubleValue(d));
 
-    int64_t i64 = int64_t(d);
+    // The syntactic checks above rule out these double values.
+    JS_ASSERT(!IsNegativeZero(d));
+    JS_ASSERT(!IsNaN(d));
 
+    // Although doubles can only *precisely* represent 53-bit integers, they
+    // can *imprecisely* represent integers much bigger than an int64_t.
+    // Furthermore, d may be inf or -inf. In both cases, casting to an int64_t
+    // is undefined, so test against the integer bounds using doubles.
+    if (d < double(INT32_MIN) || d > double(UINT32_MAX))
+        return NumLit(NumLit::OutOfRangeInt, UndefinedValue());
+
+    // With the above syntactic and range limitations, d is definitely an
+    // integer in the range [INT32_MIN, UINT32_MAX] range.
+    int64_t i64 = int64_t(d);
     if (i64 >= 0) {
         if (i64 <= INT32_MAX)
             return NumLit(NumLit::Fixnum, Int32Value(i64));
-        if (i64 <= UINT32_MAX)
-            return NumLit(NumLit::BigUnsigned, Int32Value(uint32_t(i64)));
-        return NumLit(NumLit::OutOfRangeInt, UndefinedValue());
+        JS_ASSERT(i64 <= UINT32_MAX);
+        return NumLit(NumLit::BigUnsigned, Int32Value(uint32_t(i64)));
     }
-    if (i64 >= INT32_MIN)
-        return NumLit(NumLit::NegativeInt, Int32Value(i64));
-    return NumLit(NumLit::OutOfRangeInt, UndefinedValue());
+    JS_ASSERT(i64 >= INT32_MIN);
+    return NumLit(NumLit::NegativeInt, Int32Value(i64));
 }
 
 static inline bool
