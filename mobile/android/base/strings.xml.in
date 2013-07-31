@@ -300,6 +300,8 @@
 
   <string name="searchable_description">&searchable_description;</string>
 
+  <string name="devtools_remote_debugging_forward">&devtools_remote_debugging_forward;</string>
+
   <!-- Updater notifications -->
   <string name="updater_start_title">&updater_start_title2;</string>
   <string name="updater_start_select">&updater_start_select2;</string>
