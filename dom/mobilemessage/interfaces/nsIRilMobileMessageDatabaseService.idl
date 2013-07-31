@@ -25,7 +25,7 @@ interface nsIRilMobileMessageDatabaseRecordCallback : nsISupports
   void notify(in nsresult aRv, in jsval aMessageRecord, in nsISupports aDomMessage);
 };
 
-[scriptable, uuid(0ead3154-542d-4e2c-a624-9e3cec504758)]
+[scriptable, uuid(f6cd671e-f9af-11e2-b64b-1fb87e9c217c)]
 interface nsIRilMobileMessageDatabaseService : nsIMobileMessageDatabaseService
 {
   /**
@@ -43,7 +43,7 @@ interface nsIRilMobileMessageDatabaseService : nsIMobileMessageDatabaseService
    *     - |deliveryStatus| DOMString Array: the delivery status of received message
    *     - |receivers| DOMString Array: the phone numbers of receivers
    *     - |msisdn| DOMString: [optional] my own phone number.
-   *     - |transactionId| DOMString: the transaction ID from MMS pdu header.
+   *     - |transactionId| DOMString: the transaction ID from MMS PDU header.
    *
    * Note: |deliveryStatus| should only contain single string to specify
    *       the delivery status of MMS message for the phone owner self.
@@ -72,26 +72,41 @@ interface nsIRilMobileMessageDatabaseService : nsIMobileMessageDatabaseService
    * |aReceiver| DOMString: the phone number of receiver (for MMS; can be null).
    * |aDelivery| DOMString: the new delivery value to update (can be null).
    * |aDeliveryStatus| DOMString: the new delivery status to update (can be null).
+   * |aEnvelopeId| DOMString: the "message-id" specified in the MMS PDU headers.
    * |aCallback| nsIRilMobileMessageDatabaseCallback: an optional callback.
    */
-  void setMessageDelivery(in long aMessageId,
-                          in DOMString aReceiver,
-                          in DOMString aDelivery,
-                          in DOMString aDeliveryStatus,
-               [optional] in nsIRilMobileMessageDatabaseCallback aCallback);
+  void setMessageDeliveryByMessageId(in long aMessageId,
+                                     in DOMString aReceiver,
+                                     in DOMString aDelivery,
+                                     in DOMString aDeliveryStatus,
+                                     in DOMString aEnvelopeId,
+                          [optional] in nsIRilMobileMessageDatabaseCallback aCallback);
+
+  /**
+   * |aEnvelopeId| DOMString: the "message-id" specified in the MMS PDU headers.
+   * |aReceiver| DOMString: the phone number of receiver (for MMS; can be null).
+   * |aDelivery| DOMString: the new delivery value to update (can be null).
+   * |aDeliveryStatus| DOMString: the new delivery status to update (can be null).
+   * |aCallback| nsIRilMobileMessageDatabaseCallback: an optional callback.
+   */
+  void setMessageDeliveryByEnvelopeId(in DOMString aEnvelopeId,
+                                      in DOMString aReceiver,
+                                      in DOMString aDelivery,
+                                      in DOMString aDeliveryStatus,
+                           [optional] in nsIRilMobileMessageDatabaseCallback aCallback);
 
   /**
    * |aMessageId| Number: the message's DB record ID.
-   * |aCallback| nsIRilMobileMessageDatabaseCallback: a callback which takes
-   *   result flag, message record and domMessage as parameters.
+   * |aCallback| nsIRilMobileMessageDatabaseRecordCallback: a callback which
+   *   takes result flag, message record and domMessage as parameters.
    */
   void getMessageRecordById(in long aMessageId,
                             in nsIRilMobileMessageDatabaseRecordCallback aCallback);
 
   /**
-   * |aTransactionId| DOMString: the transaction ID of MMS pdu.
-   * |aCallback| nsIRilMobileMessageDatabaseCallback: a callback which takes
-   *   result flag and message record as parameters.
+   * |aTransactionId| DOMString: the transaction ID of MMS PDU.
+   * |aCallback| nsIRilMobileMessageDatabaseRecordCallback: a callback which
+   *   takes result flag and message record as parameters.
    */
   void getMessageRecordByTransactionId(in DOMString aTransactionId,
                                        in nsIRilMobileMessageDatabaseRecordCallback aCallback);

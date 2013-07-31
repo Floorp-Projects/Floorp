@@ -1396,11 +1396,13 @@ MmsService.prototype = {
       transaction.run();
       // Retrieved fail after retry, so we update the delivery status in DB and
       // notify this domMessage that error happen.
-      gMobileMessageDatabaseService.setMessageDelivery(id,
-                                                       null,
-                                                       null,
-                                                       DELIVERY_STATUS_ERROR,
-                                                       (function (rv, domMessage) {
+      gMobileMessageDatabaseService
+        .setMessageDeliveryByMessageId(id,
+                                       null,
+                                       null,
+                                       DELIVERY_STATUS_ERROR,
+                                       null,
+                                       (function (rv, domMessage) {
         this.broadcastReceivedMessageEvent(domMessage);
       }).bind(this));
       return;
@@ -1728,11 +1730,12 @@ MmsService.prototype = {
 
       let isSentSuccess = (aErrorCode == Ci.nsIMobileMessageCallback.SUCCESS_NO_ERROR);
       gMobileMessageDatabaseService
-        .setMessageDelivery(aDomMessage.id,
-                            null,
-                            isSentSuccess ? DELIVERY_SENT : DELIVERY_ERROR,
-                            isSentSuccess ? null : DELIVERY_STATUS_ERROR,
-                            function notifySetDeliveryResult(aRv, aDomMessage) {
+        .setMessageDeliveryByMessageId(aDomMessage.id,
+                                       null,
+                                       isSentSuccess ? DELIVERY_SENT : DELIVERY_ERROR,
+                                       isSentSuccess ? null : DELIVERY_STATUS_ERROR,
+                                       null,
+                                       function notifySetDeliveryResult(aRv, aDomMessage) {
         if (DEBUG) debug("Marking the delivery state/staus is done. Notify sent or failed.");
         // TODO bug 832140 handle !Components.isSuccessCode(aRv)
         if (!isSentSuccess) {
@@ -1874,11 +1877,13 @@ MmsService.prototype = {
         // status to 'error'.
         if (MMS.MMS_PDU_STATUS_RETRIEVED !== mmsStatus) {
           if (DEBUG) debug("RetrieveMessage fail after retry.");
-          gMobileMessageDatabaseService.setMessageDelivery(aMessageId,
-                                                           null,
-                                                           null,
-                                                           DELIVERY_STATUS_ERROR,
-                                                           function () {
+          gMobileMessageDatabaseService
+            .setMessageDeliveryByMessageId(aMessageId,
+                                           null,
+                                           null,
+                                           DELIVERY_STATUS_ERROR,
+                                           null,
+                                           function () {
             aRequest.notifyGetMessageFailed(Ci.nsIMobileMessageCallback.INTERNAL_ERROR);
           });
           return;
@@ -1932,13 +1937,14 @@ MmsService.prototype = {
       };
       // Update the delivery status to pending in DB.
       gMobileMessageDatabaseService
-        .setMessageDelivery(aMessageId,
-                            null,
-                            null,
-                            DELIVERY_STATUS_PENDING,
-                            this.retrieveMessage(url,
-                                                 responseNotify.bind(this),
-                                                 aDomMessage));
+        .setMessageDeliveryByMessageId(aMessageId,
+                                       null,
+                                       null,
+                                       DELIVERY_STATUS_PENDING,
+                                       null,
+                                       this.retrieveMessage(url,
+                                                            responseNotify.bind(this),
+                                                            aDomMessage));
     }).bind(this));
   },
 
