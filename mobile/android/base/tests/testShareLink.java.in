@@ -2,24 +2,26 @@
 package @ANDROID_PACKAGE_NAME@.tests;
 
 import @ANDROID_PACKAGE_NAME@.*;
+import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
-import android.widget.ListView;
-import android.view.View;
-import android.view.ViewGroup;
-import java.util.ArrayList;
-import java.util.List;
-import android.app.Activity;
 import android.os.Build;
 import android.util.DisplayMetrics;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.AbsListView;
+import android.widget.GridView;
+import android.widget.ListView;
+import android.widget.TextView;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * This test covers the opening and content of the Share Link pop-up list
  * The test opens the Share menu from the app menu, the URL bar, a link context menu and the Awesomescreen tabs
  */
 public class testShareLink extends BaseTest {
-    ListView list;
     String url;
     String urlTitle = "Big Link";
 
@@ -132,44 +134,54 @@ public class testShareLink extends BaseTest {
         return shareOptions;
     }
 
+    // Traverse the group of views, adding strings from TextViews to the list.
+    private void getGroupTextViews(ViewGroup group, ArrayList<String> list) {
+        for (int i = 0; i < group.getChildCount(); i++) {
+            View child = group.getChildAt(i);
+            if (child instanceof AbsListView) {
+                getGroupTextViews((AbsListView)child, list);
+            } else if (child instanceof ViewGroup) {
+                getGroupTextViews((ViewGroup)child, list);
+            } else if (child instanceof TextView) {
+                String viewText = ((TextView)child).getText().toString();
+                if (viewText != null && viewText.length() > 0) {
+                    list.add(viewText);
+                }
+            }
+        }
+    }
+
+    // Traverse the group of views, adding strings from TextViews to the list.
+    // This override is for AbsListView, which has adapters. If adapters are
+    // available, it is better to use them so that child views that are not
+    // yet displayed can be examined.
+    private void getGroupTextViews(AbsListView group, ArrayList<String> list) {
+        for (int i = 0; i < group.getAdapter().getCount(); i++) {
+            View child = group.getAdapter().getView(i, null, group);
+            if (child instanceof AbsListView) {
+                getGroupTextViews((AbsListView)child, list);
+            } else if (child instanceof ViewGroup) {
+                getGroupTextViews((ViewGroup)child, list);
+            } else if (child instanceof TextView) {
+                String viewText = ((TextView)child).getText().toString();
+                if (viewText != null && viewText.length() > 0) {
+                    list.add(viewText);
+                }
+            }
+        }
+    }
+
     public ArrayList<String> getSharePopupOption() {
         ArrayList<String> displayedOptions = new ArrayList();
-        ListView shareMenu = getDisplayedShareList();
-
-        /* Will have to go in the ListView, get each child, for the child separate the icon and the label
-           and from the label get the label text in a String Array */
-        for (int i = 0; i < shareMenu.getAdapter().getCount();i++) {
-             View shareItem = shareMenu.getAdapter().getView(i, null, null);
-             ViewGroup shareItemEntry = (ViewGroup)shareItem;
-             for (int j = 0; j < shareItemEntry.getChildCount(); j++) {
-                  View shareItemLabel = shareItemEntry.getChildAt(j);
-                  if (shareItemLabel instanceof android.widget.LinearLayout) {
-                      // The Item label is a LinearLayout of LinearLayouts
-                      ViewGroup itemLabel = (ViewGroup)shareItemLabel;
-                      for (int k = 0; k < itemLabel.getChildCount(); k++) {
-                           View shareItemName = itemLabel.getChildAt(k);
-                           if (shareItemName instanceof android.widget.TextView) {
-                               /* The displayedOptions list array will also contain other elements that make up the
-                                  share item label but we will check the option to be present here so there is no need
-                                  at the moment to try and clean this array up further */
-                               displayedOptions.add(((android.widget.TextView)shareItemName).getText().toString());
-                           }
-                      }
-                  }
-             }
-        }
+        AbsListView shareMenu = getDisplayedShareList();
+        getGroupTextViews(shareMenu, displayedOptions);
         return displayedOptions;
     }
 
     public ArrayList<String> getShareSubMenuOption() {
         ArrayList<String> displayedOptions = new ArrayList();
-        ListView shareMenu = getDisplayedShareList();
-        for (int i = 0; i < shareMenu.getAdapter().getCount();i++) {
-             View shareItem = shareMenu.getAdapter().getView(i, null, shareMenu);
-             if (shareItem instanceof android.widget.TextView) {
-                 displayedOptions.add(((android.widget.TextView)shareItem).getText().toString());
-             }
-        }
+        AbsListView shareMenu = getDisplayedShareList();
+        getGroupTextViews(shareMenu, displayedOptions);
         return displayedOptions;
     }
 
@@ -190,21 +202,27 @@ public class testShareLink extends BaseTest {
         return false;
     }
 
-    private ListView getDisplayedShareList() {
-        final ArrayList<ListView> views = mSolo.getCurrentListViews();
+    private AbsListView mViewGroup;
 
-        list = null;
+    private AbsListView getDisplayedShareList() {
+        mViewGroup = null;
         boolean success = waitForTest(new BooleanTest() {
             @Override
             public boolean test() {
-               for (ListView view : views) {
-                   list = view;
-                       return true;
-               }
-               return false;
+                ArrayList<View> views = mSolo.getCurrentViews();
+                for (View view : views) {
+                    // List may be displayed in different view formats. 
+                    // On JB, GridView is common; on ICS-, ListView is common.
+                    if (view instanceof ListView ||
+                        view instanceof GridView) {
+                        mViewGroup = (AbsListView)view;
+                        return true;
+                    }
+                }
+                return false;
             }
         }, MAX_WAIT_MS);
-        mAsserter.ok(success,"Got the displayed share options?", "Got the share options list");
-        return list;
+        mAsserter.ok(success,"Got the displayed share options?", "Got the share options view");
+        return mViewGroup;
     }
 }
