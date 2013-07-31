@@ -131,6 +131,12 @@ js_GetterOnlyPropertyStub(JSContext *cx, JS::HandleObject obj, JS::HandleId id, 
 JS_FRIEND_API(void)
 js_ReportOverRecursed(JSContext *maybecx);
 
+JS_FRIEND_API(bool)
+js_ObjectClassIs(JSContext *cx, JS::HandleObject obj, js::ESClassValue classValue);
+
+JS_FRIEND_API(const char *)
+js_ObjectClassName(JSContext *cx, JS::HandleObject obj);
+
 #ifdef DEBUG
 
 /*

@@ -119,6 +119,7 @@ using namespace mozilla::system;
 #include "BluetoothService.h"
 #endif
 
+#include "JavaScriptParent.h"
 #include "Crypto.h"
 
 #ifdef MOZ_WEBSPEECH
@@ -140,6 +141,7 @@ using namespace mozilla::idl;
 using namespace mozilla::ipc;
 using namespace mozilla::layers;
 using namespace mozilla::net;
+using namespace mozilla::jsipc;
 
 namespace mozilla {
 namespace dom {
@@ -1008,6 +1010,16 @@ ContentParent::NotifyTabDestroyed(PBrowserParent* aTab,
     }
 }
 
+jsipc::JavaScriptParent*
+ContentParent::GetCPOWManager()
+{
+    if (ManagedPJavaScriptParent().Length()) {
+        return static_cast<JavaScriptParent*>(ManagedPJavaScriptParent()[0]);
+    }
+    JavaScriptParent* actor = static_cast<JavaScriptParent*>(SendPJavaScriptConstructor());
+    return actor;
+}
+
 TestShellParent*
 ContentParent::CreateTestShell()
 {
@@ -1575,6 +1587,24 @@ ContentParent::RecvGetXPCOMProcessAttributes(bool* aIsOffline)
     DebugOnly<nsresult> rv = io->GetOffline(aIsOffline);
     NS_ASSERTION(NS_SUCCEEDED(rv), "Failed getting offline?");
 
+    return true;
+}
+
+mozilla::jsipc::PJavaScriptParent *
+ContentParent::AllocPJavaScript()
+{
+    mozilla::jsipc::JavaScriptParent *parent = new mozilla::jsipc::JavaScriptParent();
+    if (!parent->init()) {
+        delete parent;
+        return NULL;
+    }
+    return parent;
+}
+
+bool
+ContentParent::DeallocPJavaScript(PJavaScriptParent *parent)
+{
+    static_cast<mozilla::jsipc::JavaScriptParent *>(parent)->destroyFromContent();
     return true;
 }
 

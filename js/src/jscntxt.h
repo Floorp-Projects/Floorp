@@ -1159,16 +1159,27 @@ struct JSRuntime : public JS::shadow::Runtime,
         return needsBarrier_;
     }
 
+    struct ExtraTracer {
+        JSTraceDataOp op;
+        void *data;
+
+        ExtraTracer()
+          : op(NULL), data(NULL)
+        {}
+        ExtraTracer(JSTraceDataOp op, void *data)
+          : op(op), data(data)
+        {}
+    };
+
     /*
      * The trace operations to trace embedding-specific GC roots. One is for
      * tracing through black roots and the other is for tracing through gray
      * roots. The black/gray distinction is only relevant to the cycle
      * collector.
      */
-    JSTraceDataOp       gcBlackRootsTraceOp;
-    void                *gcBlackRootsData;
-    JSTraceDataOp       gcGrayRootsTraceOp;
-    void                *gcGrayRootsData;
+    typedef js::Vector<ExtraTracer, 4, js::SystemAllocPolicy> ExtraTracerVector;
+    ExtraTracerVector   gcBlackRootTracers;
+    ExtraTracer         gcGrayRootTracer;
 
     /* Stack of thread-stack-allocated GC roots. */
     js::AutoGCRooter   *autoGCRooters;

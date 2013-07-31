@@ -1,0 +1,78 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set ts=4 sw=4 et tw=80:
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include DOMTypes;
+
+using mozilla::void_t;
+
+namespace mozilla {
+namespace jsipc {
+
+struct JSIID
+{
+    uint32_t m0;
+    uint16_t m1;
+    uint16_t m2;
+    uint8_t m3_0;
+    uint8_t m3_1;
+    uint8_t m3_2;
+    uint8_t m3_3;
+    uint8_t m3_4;
+    uint8_t m3_5;
+    uint8_t m3_6;
+    uint8_t m3_7;
+};
+
+union JSVariant
+{
+    void_t;     /* |undefined| */
+    nsString;   /* StringValue(x) */
+    uint64_t;   /* ID that maps to a JSObject (cpow on parent, original on child). */
+    double;     /* NumberValue(x) */
+    bool;       /* BooleanValue(x) */
+    JSIID;      /* XPC nsIID */
+};
+
+struct ReturnStatus
+{
+    bool ok;        /* True for success, false for failure. */
+    JSVariant exn;  /* Exception, if |ok| is false. */
+};
+
+union JSParam
+{
+    void_t;     /* value is strictly an xpc out param */
+    JSVariant;  /* actual value to pass through */
+};
+
+struct PPropertyDescriptor
+{
+    uint64_t    objId;
+    uint32_t    attrs;
+    uint32_t    shortid;
+    JSVariant   value;
+
+    // How to interpret these values depends on whether JSPROP_GETTER/SETTER
+    // are set. If set, the corresponding value is a CPOW or 0 for NULL.
+    // Otherwise, the following table is used:
+    //
+    //  0 - NULL
+    //  1 - Default getter or setter.
+    //  2 - js_GetterOnlyPropertyStub (setter only)
+    //  3 - Unknown
+    uint64_t    getter;
+    uint64_t    setter;
+};
+
+struct CpowEntry
+{
+  nsString name;
+  JSVariant value;
+};
+
+}
+}

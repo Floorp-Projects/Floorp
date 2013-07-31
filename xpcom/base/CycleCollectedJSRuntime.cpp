@@ -463,7 +463,9 @@ CycleCollectedJSRuntime::CycleCollectedJSRuntime(uint32_t aMaxbytes,
     MOZ_CRASH();
   }
 
-  JS_SetExtraGCRootsTracer(mJSRuntime, TraceBlackJS, this);
+  if (!JS_AddExtraGCRootsTracer(mJSRuntime, TraceBlackJS, this)) {
+    MOZ_CRASH();
+  }
   JS_SetGrayGCRootsTracer(mJSRuntime, TraceGrayJS, this);
 
   mJSHolders.Init(512);

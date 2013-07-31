@@ -11,6 +11,7 @@
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/Attributes.h"
 #include "XPCWrapper.h"
+#include "JavaScriptParent.h"
 
 using namespace mozilla::dom;
 using namespace JS;
@@ -476,7 +477,10 @@ static JSObject *
 FindObjectForHasInstance(JSContext *cx, HandleObject objArg)
 {
     RootedObject obj(cx, objArg), proto(cx);
-    while (obj && !IS_WN_REFLECTOR(obj) && !IsDOMObject(obj)) {
+
+    while (obj && !IS_WN_REFLECTOR(obj) &&
+           !IsDOMObject(obj) && !mozilla::jsipc::JavaScriptParent::IsCPOW(obj))
+    {
         if (js::IsWrapper(obj)) {
             obj = js::CheckedUnwrap(obj, /* stopAtOuter = */ false);
             continue;
@@ -488,6 +492,57 @@ FindObjectForHasInstance(JSContext *cx, HandleObject objArg)
     return obj;
 }
 
+nsresult
+xpc::HasInstance(JSContext *cx, HandleObject objArg, const nsID *iid, bool *bp)
+{
+    *bp = false;
+
+    RootedObject obj(cx, FindObjectForHasInstance(cx, objArg));
+    if (!obj)
+        return NS_OK;
+
+    if (IsDOMObject(obj)) {
+        // Not all DOM objects implement nsISupports. But if they don't,
+        // there's nothing to do in this HasInstance hook.
+        nsISupports *identity = UnwrapDOMObjectToISupports(obj);
+        if (!identity)
+            return NS_OK;;
+        nsCOMPtr<nsISupports> supp;
+        identity->QueryInterface(*iid, getter_AddRefs(supp));
+        *bp = supp;
+        return NS_OK;
+    }
+
+    if (mozilla::jsipc::JavaScriptParent::IsCPOW(obj))
+        return mozilla::jsipc::JavaScriptParent::InstanceOf(obj, iid, bp);
+
+    MOZ_ASSERT(IS_WN_REFLECTOR(obj));
+    XPCWrappedNative* other_wrapper = XPCWrappedNative::Get(obj);
+    if (!other_wrapper)
+        return NS_OK;
+
+    // We'll trust the interface set of the wrapper if this is known
+    // to be an interface that the objects *expects* to be able to
+    // handle.
+    if (other_wrapper->HasInterfaceNoQI(*iid)) {
+        *bp = true;
+        return NS_OK;
+    }
+
+    // Otherwise, we'll end up Querying the native object to be sure.
+    XPCCallContext ccx(JS_CALLER, cx);
+
+    AutoMarkingNativeInterfacePtr iface(ccx);
+    iface = XPCNativeInterface::GetNewOrUsed(iid);
+
+    nsresult findResult = NS_OK;
+    if (iface && other_wrapper->FindTearOff(iface, false, &findResult))
+        *bp = true;
+    if (NS_FAILED(findResult) && findResult != NS_ERROR_NO_INTERFACE)
+        return findResult;
+
+    return NS_OK;
+}
 
 /* bool hasInstance (in nsIXPConnectWrappedNative wrapper, in JSContextPtr cx, in JSObjectPtr obj, in jsval val, out bool bp); */
 NS_IMETHODIMP
@@ -496,60 +551,16 @@ nsJSIID::HasInstance(nsIXPConnectWrappedNative *wrapper,
                      const jsval &val, bool *bp, bool *_retval)
 {
     *bp = false;
-    nsresult rv = NS_OK;
 
-    if (!JSVAL_IS_PRIMITIVE(val)) {
-        // we have a JSObject
-        RootedObject obj(cx, JSVAL_TO_OBJECT(val));
+    if (JSVAL_IS_PRIMITIVE(val))
+        return NS_OK;
 
-        NS_ASSERTION(obj, "when is an object not an object?");
+    // we have a JSObject
+    RootedObject obj(cx, JSVAL_TO_OBJECT(val));
 
-        // is this really a native xpcom object with a wrapper?
-        const nsIID* iid;
-        mInfo->GetIIDShared(&iid);
-
-        obj = FindObjectForHasInstance(cx, obj);
-        if (!obj)
-            return NS_OK;
-
-        if (IsDOMObject(obj)) {
-            // Not all DOM objects implement nsISupports. But if they don't,
-            // there's nothing to do in this HasInstance hook.
-            nsISupports *identity = UnwrapDOMObjectToISupports(obj);
-            if (!identity)
-                return NS_OK;
-            nsCOMPtr<nsISupports> supp;
-            identity->QueryInterface(*iid, getter_AddRefs(supp));
-            *bp = supp;
-            return NS_OK;
-        }
-
-        MOZ_ASSERT(IS_WN_REFLECTOR(obj));
-        XPCWrappedNative* other_wrapper = XPCWrappedNative::Get(obj);
-        if (!other_wrapper)
-            return NS_OK;
-
-        // We'll trust the interface set of the wrapper if this is known
-        // to be an interface that the objects *expects* to be able to
-        // handle.
-        if (other_wrapper->HasInterfaceNoQI(*iid)) {
-            *bp = true;
-            return NS_OK;
-        }
-
-        // Otherwise, we'll end up Querying the native object to be sure.
-        XPCCallContext ccx(JS_CALLER, cx);
-
-        AutoMarkingNativeInterfacePtr iface(ccx);
-        iface = XPCNativeInterface::GetNewOrUsed(iid);
-
-        nsresult findResult = NS_OK;
-        if (iface && other_wrapper->FindTearOff(iface, false, &findResult))
-            *bp = true;
-        if (NS_FAILED(findResult) && findResult != NS_ERROR_NO_INTERFACE)
-            rv = findResult;
-    }
-    return rv;
+    const nsIID* iid;
+    mInfo->GetIIDShared(&iid);
+    return xpc::HasInstance(cx, obj, iid, bp);
 }
 
 /* string canCreateWrapper (in nsIIDPtr iid); */

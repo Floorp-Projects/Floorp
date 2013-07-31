@@ -2695,8 +2695,6 @@ private:
     nsXPCWrappedJSClass(JSContext* cx, REFNSIID aIID,
                         nsIInterfaceInfo* aInfo);
 
-    JSObject*  NewOutObject(JSContext* cx, JSObject* scope);
-
     JSBool IsReflectable(uint16_t i) const
         {return (JSBool)(mDescriptors[i/32] & (1 << (i%32)));}
     void SetReflectable(uint16_t i, JSBool b)
@@ -3872,6 +3870,11 @@ GetObjectScope(JSObject *obj)
 
 extern JSBool gDebugMode;
 extern JSBool gDesiredDebugMode;
+
+JSObject* NewOutObject(JSContext* cx, JSObject* scope);
+bool IsOutObject(JSContext* cx, JSObject* obj);
+
+nsresult HasInstance(JSContext *cx, JS::HandleObject objArg, const nsID *iid, bool *bp);
 
 } // namespace xpc
 

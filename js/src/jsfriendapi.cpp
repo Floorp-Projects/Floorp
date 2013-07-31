@@ -51,8 +51,8 @@ JS_SetSourceHook(JSRuntime *rt, JS_SourceHook hook)
 JS_FRIEND_API(void)
 JS_SetGrayGCRootsTracer(JSRuntime *rt, JSTraceDataOp traceOp, void *data)
 {
-    rt->gcGrayRootsTraceOp = traceOp;
-    rt->gcGrayRootsData = data;
+    rt->gcGrayRootTracer.op = traceOp;
+    rt->gcGrayRootTracer.data = data;
 }
 
 JS_FRIEND_API(JSString *)
@@ -299,6 +299,18 @@ JS_DefineFunctionsWithHelp(JSContext *cx, JSObject *objArg, const JSFunctionSpec
     }
 
     return true;
+}
+
+JS_FRIEND_API(bool)
+js_ObjectClassIs(JSContext *cx, HandleObject obj, ESClassValue classValue)
+{
+    return ObjectClassIs(obj, classValue, cx);
+}
+
+JS_FRIEND_API(const char *)
+js_ObjectClassName(JSContext *cx, HandleObject obj)
+{
+    return JSObject::className(cx, obj);
 }
 
 AutoSwitchCompartment::AutoSwitchCompartment(JSContext *cx, JSCompartment *newCompartment

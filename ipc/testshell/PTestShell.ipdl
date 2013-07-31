@@ -5,7 +5,6 @@
 
 include protocol PContent;
 include protocol PTestShellCommand;
-include protocol PContextWrapper;
 
 namespace mozilla {
 namespace ipc {
@@ -15,7 +14,6 @@ rpc protocol PTestShell
   manager PContent;
 
   manages PTestShellCommand;
-  manages PContextWrapper;
 
 child:
   __delete__();
@@ -23,10 +21,6 @@ child:
   ExecuteCommand(nsString aCommand);
 
   PTestShellCommand(nsString aCommand);
-
-parent:
-  PContextWrapper();
-
 };
 
 } // namespace ipc

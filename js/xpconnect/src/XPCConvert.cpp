@@ -23,6 +23,7 @@
 
 #include "jsapi.h"
 #include "jsfriendapi.h"
+#include "JavaScriptParent.h"
 
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/PrimitiveConversions.h"
@@ -60,6 +61,18 @@ XPCConvert::IsMethodReflectable(const XPTMethodDescriptor& info)
             return false;
     }
     return true;
+}
+
+static JSObject*
+UnwrapNativeCPOW(nsISupports* wrapper)
+{
+    nsCOMPtr<nsIXPConnectWrappedJS> underware = do_QueryInterface(wrapper);
+    if (underware) {
+        JSObject* mainObj = underware->GetJSObject();
+        if (mainObj && mozilla::jsipc::JavaScriptParent::IsCPOW(mainObj))
+            return mainObj;
+    }
+    return nullptr;
 }
 
 /***************************************************************************/
@@ -793,8 +806,7 @@ XPCConvert::NativeInterface2JSObject(jsval* d,
     *d = JSVAL_NULL;
     if (dest)
         *dest = nullptr;
-    nsISupports *src = aHelper.Object();
-    if (!src)
+    if (!aHelper.Object())
         return true;
     if (pErr)
         *pErr = NS_ERROR_XPC_BAD_CONVERT_NATIVE;
@@ -837,6 +849,17 @@ XPCConvert::NativeInterface2JSObject(jsval* d,
         }
     } else {
         flat = nullptr;
+    }
+
+    // Don't double wrap CPOWs. This is a temporary measure for compatibility
+    // with objects that don't provide necessary QIs (such as objects under
+    // the new DOM bindings). We expect the other side of the CPOW to have
+    // the appropriate wrappers in place.
+    if (JSObject *cpow = UnwrapNativeCPOW(aHelper.Object())) {
+        if (!JS_WrapObject(cx, &cpow))
+            return false;
+        *d = OBJECT_TO_JSVAL(cpow);
+        return true;
     }
 
     // We can't simply construct a slim wrapper. Go ahead and create an
