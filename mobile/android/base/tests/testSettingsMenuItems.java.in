@@ -88,6 +88,7 @@ public class testSettingsMenuItems extends PixelTest {
         settingsMenuItems.put("Mozilla", OPTIONS_MOZILLA);
 
         selectMenuItem("Settings");
+        waitForText("Settings");
 
         // Dismiss the Settings screen and verify that the view is returned to about:home page
         mActions.sendSpecialKey(Actions.SpecialKey.BACK);
@@ -96,6 +97,8 @@ public class testSettingsMenuItems extends PixelTest {
         waitForText("Enter Search"); // Waiting for page title to appear to be sure that is fully loaded before opening the menu
 
         selectMenuItem("Settings");
+        waitForText("Settings");
+
         checkForSync(mDevice);
 
         checkMenuHierarchy(settingsMenuItems);
