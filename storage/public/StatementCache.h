@@ -80,7 +80,7 @@ public:
   void
   FinalizeStatements()
   {
-    (void)mCachedStatements.Enumerate(FinalizeCachedStatements, NULL);
+    (void)mCachedStatements.Enumerate(FinalizeCachedStatements, nullptr);
 
     // Clear the cache at this time too!
     (void)mCachedStatements.Clear();
