@@ -32,6 +32,11 @@ using namespace std;
 namespace mozilla {
 namespace layers {
 
+CompositorParent::LayerTreeState::LayerTreeState()
+  : mParent(nullptr)
+{
+}
+
 typedef map<uint64_t, CompositorParent::LayerTreeState> LayerTreeMap;
 static LayerTreeMap sIndirectLayerTrees;
 
@@ -912,9 +917,9 @@ CrossProcessCompositorParent::AllocPLayerTransactionParent(const LayersBackend& 
   MOZ_ASSERT(aId != 0);
 
   if (sIndirectLayerTrees[aId].mParent) {
-    nsRefPtr<LayerManager> lm = sIndirectLayerTrees[aId].mParent->GetLayerManager();
+    LayerManagerComposite* lm = sIndirectLayerTrees[aId].mParent->GetLayerManager();
     *aTextureFactoryIdentifier = lm->GetTextureFactoryIdentifier();
-    return new LayerTransactionParent(lm->AsLayerManagerComposite(), this, aId);
+    return new LayerTransactionParent(lm, this, aId);
   }
 
   NS_WARNING("Created child without a matching parent?");

@@ -177,9 +177,10 @@ public:
                                         PlatformThreadId aThreadID);
 
   struct LayerTreeState {
+    LayerTreeState();
     nsRefPtr<Layer> mRoot;
     nsRefPtr<GeckoContentController> mController;
-    CompositorParent *mParent;
+    CompositorParent* mParent;
     TargetConfig mTargetConfig;
   };
 
