@@ -1,0 +1,63 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=897094
+
+This test verifies that:
+(1) Mismatched parentheses in a CSS function prevent parsing of subsequent CSS
+properties.
+(2) Properly matched parentheses do not prevent parsing of subsequent CSS
+properties.
+-->
+<head>
+  <title>Test for Bug 897094</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=897094">Mozilla Bug 897094</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <div id="target"></div>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 897094 **/
+function check_parens(declaration, parens_are_balanced)
+{
+  var element = document.getElementById("target");
+  element.setAttribute("style",
+                       "background-color: " + (parens_are_balanced ? "red" : "green") + "; " +
+                       declaration + "; " +
+                       "background-color: " + (parens_are_balanced ? "green" : "red") + "; ");
+  var resultColor = element.style.getPropertyValue("background-color");
+  is(resultColor, "green", "parenthesis balancing within " + declaration);
+}
+
+check_parens("transform: scale()", true);
+check_parens("transform: scale(", false);
+check_parens("transform: scale(,)", true);
+check_parens("transform: scale(,", false);
+check_parens("transform: scale(1)", true);
+check_parens("transform: scale(1", false);
+check_parens("transform: scale(1,)", true);
+check_parens("transform: scale(1,", false);
+check_parens("transform: scale(1,1)", true);
+check_parens("transform: scale(1,1", false);
+check_parens("transform: scale(1,1,)", true);
+check_parens("transform: scale(1,1,", false);
+check_parens("transform: scale(1,1,1)", true);
+check_parens("transform: scale(1,1,1", false);
+check_parens("transform: scale(1,1,1,)", true);
+check_parens("transform: scale(1,1,1,", false);
+check_parens("transform: scale(1px)", true);
+check_parens("transform: scale(1px", false);
+check_parens("transform: scale(1px,)", true);
+check_parens("transform: scale(1px,", false);
+
+</script>
+</pre>
+</body>
+</html>

@@ -184,10 +184,10 @@ struct WebAudioUtils {
   {
     using namespace std;
 
-    MOZ_STATIC_ASSERT((mozilla::IsIntegral<IntType>::value == true),
-                      "IntType must be an integral type");
-    MOZ_STATIC_ASSERT((mozilla::IsFloatingPoint<FloatType>::value == true),
-                      "FloatType must be a floating point type");
+    static_assert(mozilla::IsIntegral<IntType>::value == true,
+                  "IntType must be an integral type");
+    static_assert(mozilla::IsFloatingPoint<FloatType>::value == true,
+                  "FloatType must be a floating point type");
 
     if (f != f) {
       // It is the responsibility of the caller to deal with NaN values.

@@ -9,7 +9,7 @@
 #include "nsISupports.h"
 #include "nsIDOMWindowCollection.h"
 #include "nsString.h"
-#include "mozilla/StandardInteger.h"
+#include <stdint.h>
 
 class nsIDocShellTreeNode;
 class nsIDocShell;

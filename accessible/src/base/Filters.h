@@ -5,7 +5,7 @@
 #ifndef mozilla_a11y_Filters_h__
 #define mozilla_a11y_Filters_h__
 
-#include "mozilla/StandardInteger.h"
+#include <stdint.h>
 
 /**
  * Predefined filters used for nsAccIterator and nsAccCollector.

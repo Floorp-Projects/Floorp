@@ -12,7 +12,7 @@
  * optimizations.  Most users will not need to touch this file.
  */
 
-#include "mozilla/StandardInteger.h"
+#include <stdint.h>
 
 /*
  * Define BITS_IN_JSAMPLE as either

@@ -35,24 +35,9 @@ protected:
   typedef mozilla::layout::ScrollingBehavior ScrollingBehavior;
 
 public:
-  /**
-   * This constructor sets is-browser to false, and sets all relevant apps to
-   * NO_APP_ID.  If you inherit from TabContext, you can mutate this object
-   * exactly once by calling one of the protected SetTabContext*() methods.
-   */
   TabContext();
 
-  /**
-   * This constructor copies the information in aContext.  The TabContext is
-   * immutable after calling this method; you won't be able call any of the
-   * protected SetTabContext*() methods on an object constructed using this
-   * constructor.
-   *
-   * If aContext is a PopupIPCTabContext with isBrowserElement false and whose
-   * openerParent is a browser element, this constructor will crash (even in
-   * release builds).  So please check that case before calling this method.
-   */
-  TabContext(const IPCTabContext& aContext);
+  /* (The implicit copy-constructor and operator= are fine.) */
 
   /**
    * Generates IPCTabContext of type BrowserFrameIPCTabContext or
@@ -128,6 +113,8 @@ public:
   ScrollingBehavior GetScrollingBehavior() const { return mScrollingBehavior; }
 
 protected:
+  friend class MaybeInvalidTabContext;
+
   /**
    * These protected mutator methods let you modify a TabContext once.  Further
    * attempts to modify a given TabContext will fail (the method will return
@@ -159,46 +146,33 @@ protected:
 
 private:
   /**
-   * Translate an appId into a mozIApplication, using lazy caching.
-   */
-  already_AddRefed<mozIApplication> GetAppForId(uint32_t aAppId) const;
-
-  /**
-   * Translate an appId into a mozIApplication.
-   */
-  already_AddRefed<mozIApplication> GetAppForIdNoCache(uint32_t aAppId) const;
-
-  /**
    * Has this TabContext been initialized?  If so, mutator methods will fail.
    */
   bool mInitialized;
 
   /**
-   * This TabContext's own app id.  If this is something other than NO_APP_ID,
-   * then this TabContext corresponds to an app, and mIsBrowser must be false.
+   * This TabContext's own app.  If this is non-null, then this
+   * TabContext corresponds to an app, and mIsBrowser must be false.
+   */
+  nsCOMPtr<mozIApplication> mOwnApp;
+
+  /**
+   * A cache of mOwnApp->GetLocalId().  Speed really does matter here, since we
+   * read this ID often during process startup.
    */
   uint32_t mOwnAppId;
 
   /**
-   * Cache of this TabContext's own app.  If mOwnAppId is NO_APP_ID, this is
-   * guaranteed to be nullptr.  Otherwise, it may or may not be null.
+   * This TabContext's containing app.  If mIsBrowser, this corresponds to the
+   * app which contains the browser frame; otherwise, this corresponds to the
+   * app which contains the app frame.
    */
-  mutable nsCOMPtr<mozIApplication> mOwnApp;
+  nsCOMPtr<mozIApplication> mContainingApp;
 
-  /**
-   * The id of the app which contains this TabContext's frame.  If mIsBrowser,
-   * this corresponds to the ID of the app which contains the browser frame;
-   * otherwise, this correspodns to the ID of the app which contains the app
-   * frame.
+  /*
+   * Cache of mContainingApp->GetLocalId().
    */
   uint32_t mContainingAppId;
-
-  /**
-   * Cache of the app that contains this TabContext's frame.  If mContainingAppId
-   * is NO_APP_ID, this is guaranteed to be nullptr.  Otherwise, it may or may not
-   * be null.
-   */
-  mutable nsCOMPtr<mozIApplication> mContainingApp;
 
   /**
    * The requested scrolling behavior for this frame.
@@ -208,15 +182,15 @@ private:
   /**
    * Does this TabContext correspond to a browser element?
    *
-   * If this is true, mOwnAppId must be NO_APP_ID.
+   * If this is true, mOwnApp must be null.
    */
   bool mIsBrowser;
 };
 
 /**
- * MutableTabContext is the same as TabContext, except the mutation methods are
- * public instead of protected.  You can still only call these mutation methods
- * once on a given object.
+ * MutableTabContext is the same as MaybeInvalidTabContext, except the mutation
+ * methods are public instead of protected.  You can still only call these
+ * mutation methods once on a given object.
  */
 class MutableTabContext : public TabContext
 {
@@ -239,6 +213,65 @@ public:
     return TabContext::SetTabContextForBrowserFrame(aBrowserFrameOwnerApp,
                                                     aRequestedBehavior);
   }
+};
+
+/**
+ * MaybeInvalidTabContext is a simple class that lets you transform an
+ * IPCTabContext into a TabContext.
+ *
+ * The issue is that an IPCTabContext is not necessarily valid; for example, it
+ * might specify an app-id which doesn't exist.  So to convert an IPCTabContext
+ * into a TabContext, you construct a MaybeInvalidTabContext, check whether it's
+ * valid, and, if so, read out your TabContext.
+ *
+ * Example usage:
+ *
+ *   void UseTabContext(const TabContext& aTabContext);
+ *
+ *   void CreateTab(const IPCTabContext& aContext) {
+ *     MaybeInvalidTabContext tc(aContext);
+ *     if (!tc.IsValid()) {
+ *       NS_ERROR(nsPrintfCString("Got an invalid IPCTabContext: %s",
+ *                                tc.GetInvalidReason()));
+ *       return;
+ *     }
+ *     UseTabContext(tc.GetTabContext());
+ *   }
+ */
+class MaybeInvalidTabContext
+{
+public:
+  /**
+   * This constructor copies the information in aContext and sets IsValid() as
+   * appropriate.
+   */
+  MaybeInvalidTabContext(const IPCTabContext& aContext);
+
+  /**
+   * Was the IPCTabContext we received in our constructor valid?
+   */
+  bool IsValid();
+
+  /**
+   * If IsValid(), this function returns null.  Otherwise, it returns a
+   * human-readable string indicating why the IPCTabContext passed to our
+   * constructor was not valid.
+   */
+  const char* GetInvalidReason();
+
+  /**
+   * If IsValid(), this function returns a reference to a TabContext
+   * corresponding to the IPCTabContext passed to our constructor.  If
+   * !IsValid(), this function crashes.
+   */
+  const TabContext& GetTabContext();
+
+private:
+  MaybeInvalidTabContext(const MaybeInvalidTabContext&) MOZ_DELETE;
+  MaybeInvalidTabContext& operator=(const MaybeInvalidTabContext&) MOZ_DELETE;
+
+  const char* mInvalidReason;
+  MutableTabContext mTabContext;
 };
 
 } // namespace dom

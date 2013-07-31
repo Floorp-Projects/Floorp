@@ -1356,16 +1356,6 @@ case "$host" in
     ;;
 esac
 
-dnl Check for using a custom <stdint.h> implementation
-dnl ========================================================
-AC_MSG_CHECKING(for custom <stdint.h> implementation)
-if test "$MOZ_CUSTOM_STDINT_H"; then
-  AC_DEFINE_UNQUOTED(MOZ_CUSTOM_STDINT_H, "$MOZ_CUSTOM_STDINT_H")
-  AC_MSG_RESULT(using $MOZ_CUSTOM_STDINT_H)
-else
-  AC_MSG_RESULT(none specified)
-fi
-
 MOZ_DOING_LTO(lto_is_enabled)
 
 dnl ========================================================

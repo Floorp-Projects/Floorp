@@ -58,8 +58,8 @@ struct ParamTraits<mozilla::gl::GLContext::SharedTextureShareType>
 
   static void Write(Message* msg, const paramType& param)
   {
-    MOZ_STATIC_ASSERT(sizeof(paramType) <= sizeof(int32_t),
-                      "TextureShareType assumes to be int32_t");
+    static_assert(sizeof(paramType) <= sizeof(int32_t),
+                  "TextureShareType assumes to be int32_t");
     WriteParam(msg, int32_t(param));
   }
 

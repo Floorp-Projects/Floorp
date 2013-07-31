@@ -1331,8 +1331,8 @@ bool
 IDBObjectStore::ReadFileHandle(JSStructuredCloneReader* aReader,
                                FileHandleData* aRetval)
 {
-  MOZ_STATIC_ASSERT(SCTAG_DOM_FILEHANDLE == 0xFFFF8004,
-                    "Update me!");
+  static_assert(SCTAG_DOM_FILEHANDLE == 0xFFFF8004,
+                "Update me!");
   MOZ_ASSERT(aReader && aRetval);
 
   nsCString type;
@@ -1356,10 +1356,10 @@ IDBObjectStore::ReadBlobOrFile(JSStructuredCloneReader* aReader,
                                uint32_t aTag,
                                BlobOrFileData* aRetval)
 {
-  MOZ_STATIC_ASSERT(SCTAG_DOM_BLOB == 0xFFFF8001 &&
-                    SCTAG_DOM_FILE_WITHOUT_LASTMODIFIEDDATE == 0xFFFF8002 &&
-                    SCTAG_DOM_FILE == 0xFFFF8005,
-                    "Update me!");
+  static_assert(SCTAG_DOM_BLOB == 0xFFFF8001 &&
+                SCTAG_DOM_FILE_WITHOUT_LASTMODIFIEDDATE == 0xFFFF8002 &&
+                SCTAG_DOM_FILE == 0xFFFF8005,
+                "Update me!");
   MOZ_ASSERT(aReader && aRetval);
   MOZ_ASSERT(aTag == SCTAG_DOM_FILE ||
              aTag == SCTAG_DOM_FILE_WITHOUT_LASTMODIFIEDDATE ||
@@ -1417,12 +1417,12 @@ IDBObjectStore::StructuredCloneReadCallback(JSContext* aCx,
 {
   // We need to statically assert that our tag values are what we expect
   // so that if people accidentally change them they notice.
-  MOZ_STATIC_ASSERT(SCTAG_DOM_BLOB == 0xFFFF8001 &&
-                    SCTAG_DOM_FILE_WITHOUT_LASTMODIFIEDDATE == 0xFFFF8002 &&
-                    SCTAG_DOM_FILEHANDLE == 0xFFFF8004 &&
-                    SCTAG_DOM_FILE == 0xFFFF8005,
-                    "You changed our structured clone tag values and just ate "
-                    "everyone's IndexedDB data.  I hope you are happy.");
+  static_assert(SCTAG_DOM_BLOB == 0xFFFF8001 &&
+                SCTAG_DOM_FILE_WITHOUT_LASTMODIFIEDDATE == 0xFFFF8002 &&
+                SCTAG_DOM_FILEHANDLE == 0xFFFF8004 &&
+                SCTAG_DOM_FILE == 0xFFFF8005,
+                "You changed our structured clone tag values and just ate "
+                "everyone's IndexedDB data.  I hope you are happy.");
 
   if (aTag == SCTAG_DOM_FILE_WITHOUT_LASTMODIFIEDDATE ||
       aTag == SCTAG_DOM_FILEHANDLE ||

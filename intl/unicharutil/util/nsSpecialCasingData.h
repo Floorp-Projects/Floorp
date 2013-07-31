@@ -3,7 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "prtypes.h"
-#include "mozilla/StandardInteger.h"
+#include <stdint.h>
 
 namespace mozilla {
 namespace unicode {

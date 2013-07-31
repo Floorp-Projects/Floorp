@@ -36,7 +36,7 @@ var Appbar = {
         break;
 
       case 'MozAppbarDismissing':
-        if (this.activeTileset) {
+        if (this.activeTileset && ('isBound' in this.activeTileset)) {
           this.activeTileset.clearSelection();
         }
         this.clearContextualActions();
@@ -146,7 +146,7 @@ var Appbar = {
 
   dispatchContextualAction: function(aActionName){
     let activeTileset = this.activeTileset;
-    if (activeTileset) {
+    if (activeTileset && ('isBound' in this.activeTileset)) {
       // fire event on the richgrid, others can listen
       // but we keep coupling loose so grid doesn't need to know about appbar
       let event = document.createEvent("Events");
@@ -234,8 +234,11 @@ var Appbar = {
   _onTileSelectionChanged: function _onTileSelectionChanged(aEvent){
     let activeTileset = aEvent.target;
 
-    // deselect tiles in other tile groups
-    if (this.activeTileset && this.activeTileset !== activeTileset) {
+    // deselect tiles in other tile groups,
+    // ensure previousyl-activeTileset is bound before calling methods on it
+    if (this.activeTileset &&
+          ('isBound' in this.activeTileset) &&
+          this.activeTileset !== activeTileset) {
       this.activeTileset.clearSelection();
     }
     // keep track of which view is the target/scope for the contextual actions

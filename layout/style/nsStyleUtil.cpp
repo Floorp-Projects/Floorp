@@ -160,7 +160,7 @@ nsStyleUtil::AppendBitmaskCSSValue(nsCSSProperty aProperty,
 nsStyleUtil::AppendPaintOrderValue(uint8_t aValue,
                                    nsAString& aResult)
 {
-  MOZ_STATIC_ASSERT
+  static_assert
     (NS_STYLE_PAINT_ORDER_BITWIDTH * NS_STYLE_PAINT_ORDER_LAST_VALUE <= 8,
      "SVGStyleStruct::mPaintOrder and local variables not big enough");
 
@@ -170,8 +170,8 @@ nsStyleUtil::AppendPaintOrderValue(uint8_t aValue,
   }
 
   // Append the minimal value necessary for the given paint order.
-  MOZ_STATIC_ASSERT(NS_STYLE_PAINT_ORDER_LAST_VALUE == 3,
-                    "paint-order values added; check serialization");
+  static_assert(NS_STYLE_PAINT_ORDER_LAST_VALUE == 3,
+                "paint-order values added; check serialization");
 
   // The following relies on the default order being the order of the
   // constant values.

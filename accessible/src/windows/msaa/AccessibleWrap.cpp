@@ -1617,8 +1617,8 @@ AccessibleWrap::HandleAccEvent(AccEvent* aEvent)
 
   uint32_t eventType = aEvent->GetEventType();
 
-  MOZ_STATIC_ASSERT(sizeof(gWinEventMap)/sizeof(gWinEventMap[0]) == nsIAccessibleEvent::EVENT_LAST_ENTRY,
-                    "MSAA event map skewed");
+  static_assert(sizeof(gWinEventMap)/sizeof(gWinEventMap[0]) == nsIAccessibleEvent::EVENT_LAST_ENTRY,
+                "MSAA event map skewed");
 
   NS_ENSURE_TRUE(eventType > 0 && eventType < ArrayLength(gWinEventMap), NS_ERROR_FAILURE);
 

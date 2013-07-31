@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/DebugOnly.h"
-#include "mozilla/StandardInteger.h" // for intptr_t
+#include <stdint.h> // for intptr_t
 
 #include "PluginInstanceParent.h"
 #include "BrowserStreamParent.h"

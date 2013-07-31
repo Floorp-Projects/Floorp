@@ -2056,12 +2056,15 @@ nsFrameLoader::TryRemoteBrowser()
                                  eCaseMatters)) {
     scrollingBehavior = ASYNC_PAN_ZOOM;
   }
+
+  bool rv = true;
   if (ownApp) {
-    context.SetTabContextForAppFrame(ownApp, containingApp, scrollingBehavior);
+    rv = context.SetTabContextForAppFrame(ownApp, containingApp, scrollingBehavior);
   } else if (OwnerIsBrowserFrame()) {
     // The |else| above is unnecessary; OwnerIsBrowserFrame() implies !ownApp.
-    context.SetTabContextForBrowserFrame(containingApp, scrollingBehavior);
+    rv = context.SetTabContextForBrowserFrame(containingApp, scrollingBehavior);
   }
+  NS_ENSURE_TRUE(rv, false);
 
   nsCOMPtr<Element> ownerElement = mOwnerContent;
   mRemoteBrowser = ContentParent::CreateBrowserOrApp(context, ownerElement);

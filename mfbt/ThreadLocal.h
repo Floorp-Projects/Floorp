@@ -100,9 +100,9 @@ template<typename T>
 inline bool
 ThreadLocal<T>::init()
 {
-  MOZ_STATIC_ASSERT(sizeof(T) <= sizeof(void*),
-                    "mozilla::ThreadLocal can't be used for types larger than "
-                    "a pointer");
+  static_assert(sizeof(T) <= sizeof(void*),
+                "mozilla::ThreadLocal can't be used for types larger than "
+                "a pointer");
   MOZ_ASSERT(!initialized());
 #ifdef XP_WIN
   key = TlsAlloc();
