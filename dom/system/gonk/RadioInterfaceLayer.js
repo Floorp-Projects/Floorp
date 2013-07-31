@@ -66,6 +66,7 @@ const kTimeNitzAvailable                 = "time.nitz.available";
 const kCellBroadcastSearchList           = "ril.cellbroadcast.searchlist";
 const kCellBroadcastDisabled             = "ril.cellbroadcast.disabled";
 const kPrefenceChangedObserverTopic      = "nsPref:changed";
+const kClirModePreference                = "ril.clirMode";
 
 const DOM_MOBILE_MESSAGE_DELIVERY_RECEIVED = "received";
 const DOM_MOBILE_MESSAGE_DELIVERY_SENDING  = "sending";
@@ -562,12 +563,17 @@ function RadioInterfaceLayer() {
 
   let options = {
     debug: debugPref,
-    cellBroadcastDisabled: false
+    cellBroadcastDisabled: false,
+    clirMode: RIL.CLIR_DEFAULT
   };
 
   try {
     options.cellBroadcastDisabled =
       Services.prefs.getBoolPref(kCellBroadcastDisabled);
+  } catch(e) {}
+
+  try {
+    options.clirMode = Services.prefs.getIntPref(kClirModePreference);
   } catch(e) {}
 
   let numIfaces = this.numRadioInterfaces;
@@ -2338,8 +2344,23 @@ RadioInterface.prototype = {
 
   handleSetCLIR: function handleSetCLIR(message) {
     if (DEBUG) this.debug("handleSetCLIR: " + JSON.stringify(message));
-    gMessageManager.sendRequestResults("RIL:SetCallingLineIdRestriction",
-                                       message);
+    let messageType;
+    if (message.isSendMMI) {
+      messageType = message.success ? "RIL:SendMMI:Return:OK" :
+                                      "RIL:SendMMI:Return:KO";
+    } else {
+      messageType = "RIL:SetCallingLineIdRestriction";
+    }
+    if (message.success) {
+      try {
+        Services.prefs.setIntPref(kClirModePreference, message.clirMode);
+        Services.prefs.savePrefFile(null);
+        if (DEBUG) {
+          this.debug(kClirModePreference + " pref is now " + message.clirMode);
+        }
+      } catch (e) {}
+    }
+    gMessageManager.sendRequestResults(messageType, message);
   },
 
   handleSetRoamingPreference: function handleSetRoamingPreference(message) {

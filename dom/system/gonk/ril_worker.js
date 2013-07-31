@@ -761,6 +761,11 @@ let RIL = {
   cellBroadcastDisabled: false,
 
   /**
+   * Global CLIR mode settings.
+   */
+  clirMode: CLIR_DEFAULT,
+
+  /**
    * Parsed Cell Broadcast search lists.
    * cellBroadcastConfigs.MMI should be preserved over rild reset.
    */
@@ -1501,9 +1506,12 @@ let RIL = {
    *        nsIDOMMozMobileConnection interface.
    */
   setCLIR: function setCLIR(options) {
+    if (options) {
+      this.clirMode = options.clirMode;
+    }
     Buf.newParcel(REQUEST_SET_CLIR, options);
     Buf.writeUint32(1);
-    Buf.writeUint32(options.clirMode);
+    Buf.writeUint32(this.clirMode);
     Buf.sendParcel();
   },
 
@@ -2548,6 +2556,8 @@ let RIL = {
             _sendMMIError(MMI_ERROR_KS_NOT_SUPPORTED, MMI_KS_SC_CLIR);
             return;
         }
+        options.rilMessageType = "setCLIR";
+        options.isSendMMI = true;
         this.setCLIR(options);
         return;
 
@@ -4663,6 +4673,7 @@ let RIL = {
     DEBUG = DEBUG_WORKER || options.debug;
     CLIENT_ID = options.clientId;
     this.cellBroadcastDisabled = options.cellBroadcastDisabled;
+    this.clirMode = options.clirMode;
   }
 };
 
@@ -5164,11 +5175,15 @@ RIL[REQUEST_GET_CLIR] = function REQUEST_GET_CLIR(length, options) {
   this.sendChromeMessage(options);
 };
 RIL[REQUEST_SET_CLIR] = function REQUEST_SET_CLIR(length, options) {
+  if (options.rilMessageType == null) {
+    // The request was made by ril_worker itself automatically. Don't report.
+    return;
+  }
   options.success = (options.rilRequestError === 0);
   if (!options.success) {
     options.errorMsg = RIL_ERROR_TO_GECKO_ERROR[options.rilRequestError];
   }
-  if (options.success && (options.rilMessageType === "sendMMI")) {
+  if (options.success && options.isSendMMI) {
     switch (options.procedure) {
       case MMI_PROCEDURE_ACTIVATION:
         options.statusMessage = MMI_SM_KS_SERVICE_ENABLED;
@@ -5825,6 +5840,7 @@ RIL[UNSOLICITED_RESPONSE_RADIO_STATE_CHANGED] = function UNSOLICITED_RESPONSE_RA
     this.getBasebandVersion();
     this.updateCellBroadcastConfig();
     this.setPreferredNetworkType();
+    this.setCLIR();
   }
 
   this.radioState = newState;
