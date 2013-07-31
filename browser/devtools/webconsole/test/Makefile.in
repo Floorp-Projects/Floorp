@@ -106,7 +106,6 @@ MOCHITEST_BROWSER_FILES = \
 	browser_webconsole_bug_770099_violation.js \
 	browser_webconsole_bug_766001_JS_Console_in_Debugger.js \
 	browser_webconsole_bug_782653_CSS_links_in_Style_Editor.js \
-	browser_webconsole_bug_843019_variables_view_filter.js \
 	browser_cached_messages.js \
 	browser_bug664688_sandbox_update_after_navigation.js \
 	browser_result_format_as_string.js \
