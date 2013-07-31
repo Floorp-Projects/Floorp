@@ -242,7 +242,7 @@ GARBAGE += \
 # headers they depend on.  This is really only needed for the test files, since
 # the non-test headers are all exported above anyway.  Note that this means that
 # we do all of our codegen during export.
-webidl: $(binding_header_files)
+export:: $(binding_header_files)
 
 distclean::
 	-$(RM) \
@@ -252,9 +252,3 @@ distclean::
         $(globalgen_targets) \
         ParserResults.pkl \
         $(NULL)
-
-# This is only needed to support |make| from this leaf directory/Makefile.
-NONRECURSIVE_TARGETS := export
-NONRECURSIVE_TARGETS_export := webidl
-NONRECURSIVE_TARGETS_export_webidl_DIRECTORY := .
-NONRECURSIVE_TARGETS_export_webidl_TARGETS := webidl

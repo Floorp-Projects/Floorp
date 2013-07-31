@@ -9,8 +9,6 @@ if CONFIG['LIBXUL_SDK']:
 if not CONFIG['MOZ_NATIVE_NSPR']:
     add_tier_dir('nspr', 'config/nspr')
 
-add_tier_dir('precompile', 'config/makefiles/precompile')
-
 if not CONFIG['MOZ_NATIVE_SQLITE']:
     add_tier_dir('nss', 'db/sqlite3/src')
 
