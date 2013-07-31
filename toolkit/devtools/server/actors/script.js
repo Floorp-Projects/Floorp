@@ -106,7 +106,7 @@ BreakpointStore.prototype = {
 
   /**
    * Get a breakpoint from the breakpoint store. Will throw an error if the
-   * breakpoint is not found.
+   * breakpoint is not found unless you explicitly silence it.
    *
    * @param Object aLocation
    *        The location of the breakpoint you are retrieving. It is an object
@@ -114,35 +114,11 @@ BreakpointStore.prototype = {
    *          - url
    *          - line
    *          - column (optional)
+   * @param bool aShouldThrow
+   *        Optional; defaults to true. Whether an error should be thrown when
+   *        there is no breakpoint at the specified locaiton.
    */
-  getBreakpoint: function BS_getBreakpoint(aLocation) {
-    let { url, line, column } = aLocation;
-    dbg_assert(url != null);
-    dbg_assert(line != null);
-
-    var foundBreakpoint = this.hasBreakpoint(aLocation);
-    if (foundBreakpoint == null) {
-      throw new Error("No breakpoint at url = " + url
-          + ", line = " + line
-          + ", column = " + column);
-    }
-
-    return foundBreakpoint;
-  },
-
-  /**
-   * Checks if the breakpoint store has a requested breakpoint
-   * Returns the stored breakpoint if it exists
-   * null otherwise
-   *
-   * @param Object aLocation
-   *        The location of the breakpoint you are retrieving. It is an object
-   *        with the following properties:
-   *          - url
-   *          - line
-   *          - column (optional)
-   */
-  hasBreakpoint: function BS_hasBreakpoint(aLocation) {
+  getBreakpoint: function BS_getBreakpoint(aLocation, aShouldThrow=true) {
     let { url, line, column } = aLocation;
     dbg_assert(url != null);
     dbg_assert(line != null);
@@ -153,7 +129,11 @@ BreakpointStore.prototype = {
       // one.
       return bp;
     }
-
+    if (aShouldThrow) {
+      throw new Error("No breakpoint at url = " + url
+                      + ", line = " + line
+                      + ", column = " + column);
+    }
     return null;
   },
 
@@ -1098,8 +1078,7 @@ ThreadActor.prototype = {
       }
     }
     if (found) {
-      let existingBp = this.breakpointStore.hasBreakpoint(actualLocation);
-
+      let existingBp = this.breakpointStore.getBreakpoint(actualLocation, false);
       if (existingBp && existingBp.actor) {
         /**
          * We already have a breakpoint actor for the actual location, so
