@@ -1827,6 +1827,8 @@ ScriptAnalysis::needsArgsObj(JSContext *cx)
     /*
      * Always construct arguments objects when in debug mode and for generator
      * scripts (generators can be suspended when speculation fails).
+     *
+     * FIXME: Don't build arguments for ES6 generator expressions.
      */
     if (cx->compartment()->debugMode() || script_->isGenerator)
         return true;

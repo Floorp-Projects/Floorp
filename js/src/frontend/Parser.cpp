@@ -1068,7 +1068,7 @@ Parser<ParseHandler>::functionBody(FunctionSyntaxKind kind, FunctionBodyType typ
         if (!pn)
             return null();
 
-        if (pc->sc->asFunctionBox()->isGenerator()) {
+        if (pc->sc->asFunctionBox()->isLegacyGenerator()) {
             reportBadReturn(pn, ParseError,
                             JSMSG_BAD_GENERATOR_RETURN,
                             JSMSG_BAD_ANON_GENERATOR_RETURN);
@@ -4407,6 +4407,8 @@ Parser<ParseHandler>::returnStatementOrYieldExpression()
         return null();
     }
 
+    // Legacy generators are identified by the presence of "yield" in their
+    // bodies.  We only see "yield" as TOK_YIELD in JS 1.7+.
     if (isYield) {
         if (!abortIfSyntaxParser())
             return null();
@@ -4415,7 +4417,7 @@ Parser<ParseHandler>::returnStatementOrYieldExpression()
         // expression until we see a |for| token, so we have to delay flagging
         // the current function.
         if (pc->parenDepth == 0) {
-            pc->sc->asFunctionBox()->setIsGenerator();
+            pc->sc->asFunctionBox()->setIsLegacyGenerator();
         } else {
             pc->yieldCount++;
             pc->yieldOffset = begin;
@@ -4464,7 +4466,7 @@ Parser<ParseHandler>::returnStatementOrYieldExpression()
     if (!pn)
         return null();
 
-    if (pc->funHasReturnExpr && pc->sc->asFunctionBox()->isGenerator()) {
+    if (pc->funHasReturnExpr && pc->sc->asFunctionBox()->isLegacyGenerator()) {
         /* As in Python (see PEP-255), disallow return v; in generators. */
         reportBadReturn(pn, ParseError, JSMSG_BAD_GENERATOR_RETURN,
                         JSMSG_BAD_ANON_GENERATOR_RETURN);
@@ -5414,21 +5416,24 @@ class CompExprTransplanter
 };
 
 /*
- * A helper for lazily checking for the presence of illegal |yield| or |arguments|
- * tokens inside of generator expressions. This must be done lazily since we don't
- * know whether we're in a generator expression until we see the "for" token after
- * we've already parsed the body expression.
+ * A helper for lazily checking for the presence of illegal |yield| or
+ * |arguments| tokens inside of legacy generator expressions. This must be done
+ * lazily since we don't know whether we're in a legacy generator expression
+ * until we see the "for" token after we've already parsed the body expression.
+ * (For ES6 generator comprehensions, we won't need this lazy check because the
+ * |for| is at the beginning.)
  *
- * Use in any context which may turn out to be inside a generator expression. This
- * includes parenthesized expressions and argument lists, and it includes the tail
- * of generator expressions.
+ * Use in any context which may turn out to be inside a legacy generator
+ * expression. This includes parenthesized expressions and argument lists, and
+ * it includes the tail of legacy generator expressions.
  *
  * The guard will keep track of any |yield| or |arguments| tokens that occur while
  * parsing the body. As soon as the parser reaches the end of the body expression,
  * call endBody() to reset the context's state, and then immediately call:
  *
- * - checkValidBody() if this *did* turn out to be a generator expression
- * - maybeNoteGenerator() if this *did not* turn out to be a generator expression
+ * - checkValidBody() if this *did* turn out to be a legacy generator expression
+ * - maybeNoteLegacyGenerator() if this *did not* turn out to be a legacy
+ *   generator expression
  */
 template <typename ParseHandler>
 class GenexpGuard
@@ -5453,7 +5458,7 @@ class GenexpGuard
 
     void endBody();
     bool checkValidBody(Node pn, unsigned err = JSMSG_BAD_GENEXP_BODY);
-    bool maybeNoteGenerator(Node pn);
+    bool maybeNoteLegacyGenerator(Node pn);
 };
 
 template <typename ParseHandler>
@@ -5497,18 +5502,22 @@ GenexpGuard<ParseHandler>::checkValidBody(Node pn, unsigned err)
  */
 template <typename ParseHandler>
 bool
-GenexpGuard<ParseHandler>::maybeNoteGenerator(Node pn)
+GenexpGuard<ParseHandler>::maybeNoteLegacyGenerator(Node pn)
 {
     ParseContext<ParseHandler> *pc = parser->pc;
+    // yieldCount is only incremented when we see yield in JS 1.7+ code.
     if (pc->yieldCount > 0) {
         if (!pc->sc->isFunctionBox()) {
+            // FIXME: This error should be detected eagerly, when the yield is
+            // seen.
             parser->report(ParseError, false, ParseHandler::null(),
                            JSMSG_BAD_RETURN_OR_YIELD, js_yield_str);
             return false;
         }
-        pc->sc->asFunctionBox()->setIsGenerator();
+        pc->sc->asFunctionBox()->setIsLegacyGenerator();
         if (pc->funHasReturnExpr) {
-            /* At the time we saw the yield, we might not have set isGenerator yet. */
+            // At the time we saw the yield, we might not have set
+            // isLegacyGenerator yet.
             parser->reportBadReturn(pn, ParseError,
                                     JSMSG_BAD_GENERATOR_RETURN, JSMSG_BAD_ANON_GENERATOR_RETURN);
             return false;
@@ -5871,7 +5880,7 @@ Parser<FullParseHandler>::comprehensionTail(ParseNode *kid, unsigned blockid, bo
             if (!guard.checkValidBody(pn2))
                 return null();
         } else {
-            if (!guard.maybeNoteGenerator(pn2))
+            if (!guard.maybeNoteLegacyGenerator(pn2))
                 return null();
         }
 
@@ -6057,7 +6066,7 @@ Parser<FullParseHandler>::generatorExpr(ParseNode *kid)
         if (outerpc->sc->isFunctionBox())
             genFunbox->funCxFlags = outerpc->sc->asFunctionBox()->funCxFlags;
 
-        genFunbox->setIsGenerator();
+        genFunbox->setIsLegacyGenerator();
         genFunbox->inGenexpLambda = true;
         genfn->pn_blockid = genpc.bodyid;
 
@@ -6147,7 +6156,7 @@ Parser<ParseHandler>::argumentList(Node listNode)
             }
         } else
 #endif
-        if (arg0 && !guard.maybeNoteGenerator(argNode))
+        if (arg0 && !guard.maybeNoteLegacyGenerator(argNode))
             return false;
 
         arg0 = false;
@@ -6816,7 +6825,7 @@ Parser<ParseHandler>::parenExpr(bool *genexp)
     } else
 #endif /* JS_HAS_GENERATOR_EXPRS */
 
-    if (!guard.maybeNoteGenerator(pn))
+    if (!guard.maybeNoteLegacyGenerator(pn))
         return null();
 
     return pn;
