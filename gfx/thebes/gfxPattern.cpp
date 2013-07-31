@@ -15,27 +15,27 @@
 using namespace mozilla::gfx;
 
 gfxPattern::gfxPattern(cairo_pattern_t *aPattern)
-  : mGfxPattern(NULL)
+  : mGfxPattern(nullptr)
 {
     mPattern = cairo_pattern_reference(aPattern);
 }
 
 gfxPattern::gfxPattern(const gfxRGBA& aColor)
-  : mGfxPattern(NULL)
+  : mGfxPattern(nullptr)
 {
     mPattern = cairo_pattern_create_rgba(aColor.r, aColor.g, aColor.b, aColor.a);
 }
 
 // from another surface
 gfxPattern::gfxPattern(gfxASurface *surface)
-  : mGfxPattern(NULL)
+  : mGfxPattern(nullptr)
 {
     mPattern = cairo_pattern_create_for_surface(surface->CairoSurface());
 }
 
 // linear
 gfxPattern::gfxPattern(gfxFloat x0, gfxFloat y0, gfxFloat x1, gfxFloat y1)
-  : mGfxPattern(NULL)
+  : mGfxPattern(nullptr)
 {
     mPattern = cairo_pattern_create_linear(x0, y0, x1, y1);
 }
@@ -43,7 +43,7 @@ gfxPattern::gfxPattern(gfxFloat x0, gfxFloat y0, gfxFloat x1, gfxFloat y1)
 // radial
 gfxPattern::gfxPattern(gfxFloat cx0, gfxFloat cy0, gfxFloat radius0,
                        gfxFloat cx1, gfxFloat cy1, gfxFloat radius1)
-  : mGfxPattern(NULL)
+  : mGfxPattern(nullptr)
 {
     mPattern = cairo_pattern_create_radial(cx0, cy0, radius0,
                                            cx1, cy1, radius1);
@@ -51,8 +51,8 @@ gfxPattern::gfxPattern(gfxFloat cx0, gfxFloat cy0, gfxFloat radius0,
 
 // Azure
 gfxPattern::gfxPattern(SourceSurface *aSurface, const Matrix &aTransform)
-  : mPattern(NULL)
-  , mGfxPattern(NULL)
+  : mPattern(nullptr)
+  , mGfxPattern(nullptr)
   , mSourceSurface(aSurface)
   , mTransform(aTransform)
   , mExtend(EXTEND_NONE)
@@ -78,7 +78,7 @@ void
 gfxPattern::AddColorStop(gfxFloat offset, const gfxRGBA& c)
 {
   if (mPattern) {
-    mStops = NULL;
+    mStops = nullptr;
     if (gfxPlatform::GetCMSMode() == eCMSMode_All) {
         gfxRGBA cms;
         qcms_transform *transform = gfxPlatform::GetCMSRGBTransform();
@@ -177,7 +177,7 @@ gfxPattern::GetPattern(DrawTarget *aTarget, Matrix *aPatternTransform)
       cairo_pattern_get_matrix(mPattern, &mat);
       gfxMatrix matrix(*reinterpret_cast<gfxMatrix*>(&mat));
 
-      cairo_surface_t *surf = NULL;
+      cairo_surface_t *surf = nullptr;
       cairo_pattern_get_surface(mPattern, &surf);
 
       if (!mSourceSurface) {
@@ -293,10 +293,10 @@ void
 gfxPattern::SetExtend(GraphicsExtend extend)
 {
   if (mPattern) {
-    mStops = NULL;
+    mStops = nullptr;
     if (extend == EXTEND_PAD_EDGE) {
         if (cairo_pattern_get_type(mPattern) == CAIRO_PATTERN_TYPE_SURFACE) {
-            cairo_surface_t *surf = NULL;
+            cairo_surface_t *surf = nullptr;
 
             cairo_pattern_get_surface (mPattern, &surf);
             if (surf) {
@@ -335,7 +335,7 @@ gfxPattern::IsOpaque()
     switch (cairo_pattern_get_type(mPattern)) {
     case CAIRO_PATTERN_TYPE_SURFACE:
       {
-        cairo_surface_t *surf = NULL;
+        cairo_surface_t *surf = nullptr;
         cairo_pattern_get_surface(mPattern, &surf);
 
         if (cairo_surface_get_content(surf) == CAIRO_CONTENT_COLOR) {
