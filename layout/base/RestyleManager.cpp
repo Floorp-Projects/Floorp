@@ -1603,15 +1603,11 @@ VerifyStyleTree(nsPresContext* aPresContext, nsIFrame* aFrame,
   }
 
   // do additional contexts
-  int32_t contextIndex = -1;
-  while (1) {
-    nsStyleContext* extraContext = aFrame->GetAdditionalStyleContext(++contextIndex);
-    if (extraContext) {
+  int32_t contextIndex = 0;
+  for (nsStyleContext* extraContext;
+       (extraContext = aFrame->GetAdditionalStyleContext(contextIndex));
+       ++contextIndex) {
       VerifyContextParent(aPresContext, aFrame, extraContext, context);
-    }
-    else {
-      break;
-    }
   }
 }
 
@@ -1866,11 +1862,10 @@ RestyleManager::ReparentStyleContext(nsIFrame* aFrame)
       }
 
       // do additional contexts
-      int32_t contextIndex = -1;
-      while (1) {
-        nsStyleContext* oldExtraContext =
-          aFrame->GetAdditionalStyleContext(++contextIndex);
-        if (oldExtraContext) {
+      int32_t contextIndex = 0;
+      for (nsStyleContext* oldExtraContext;
+           (oldExtraContext = aFrame->GetAdditionalStyleContext(contextIndex));
+           ++contextIndex) {
           nsRefPtr<nsStyleContext> newExtraContext;
           newExtraContext = mPresContext->StyleSet()->
                               ReparentStyleContext(oldExtraContext,
@@ -1894,10 +1889,6 @@ RestyleManager::ReparentStyleContext(nsIFrame* aFrame)
 
             aFrame->SetAdditionalStyleContext(contextIndex, newExtraContext);
           }
-        }
-        else {
-          break;
-        }
       }
 #ifdef DEBUG
       VerifyStyleTree(mPresContext, aFrame, newParentContext);
@@ -2304,11 +2295,10 @@ ElementRestyler::RestyleSelf(nsRestyleHint aRestyleHint)
     // do additional contexts
     // XXXbz might be able to avoid selector matching here in some
     // cases; won't worry about it for now.
-    int32_t contextIndex = -1;
-    while (1 == 1) {
-      nsStyleContext* oldExtraContext = nullptr;
-      oldExtraContext = mFrame->GetAdditionalStyleContext(++contextIndex);
-      if (oldExtraContext) {
+    int32_t contextIndex = 0;
+    for (nsStyleContext* oldExtraContext;
+         (oldExtraContext = mFrame->GetAdditionalStyleContext(contextIndex));
+         ++contextIndex) {
         nsRefPtr<nsStyleContext> newExtraContext;
         nsIAtom* const extraPseudoTag = oldExtraContext->GetPseudo();
         const nsCSSPseudoElements::Type extraPseudoType =
@@ -2338,10 +2328,6 @@ ElementRestyler::RestyleSelf(nsRestyleHint aRestyleHint)
             }
           }
         }
-      }
-      else {
-        break;
-      }
     }
 }
 
