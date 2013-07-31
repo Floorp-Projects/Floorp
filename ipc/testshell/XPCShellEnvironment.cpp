@@ -49,6 +49,8 @@
 using mozilla::ipc::XPCShellEnvironment;
 using mozilla::ipc::TestShellChild;
 using mozilla::ipc::TestShellParent;
+using mozilla::AutoSafeJSContext;
+using namespace JS;
 
 namespace {
 
@@ -71,12 +73,17 @@ private:
 };
 
 inline XPCShellEnvironment*
-Environment(JSContext* cx)
+Environment(JSObject* global)
 {
-    XPCShellEnvironment* env = 
-        static_cast<XPCShellEnvironment*>(JS_GetContextPrivate(cx));
-    NS_ASSERTION(env, "Should never be null!");
-    return env;
+    AutoSafeJSContext cx;
+    JSAutoCompartment ac(cx, global);
+    Rooted<Value> v(cx);
+    if (!JS_GetProperty(cx, global, "__XPCShellEnvironment", v.address()) ||
+        !v.get().isDouble())
+    {
+        return nullptr;
+    }
+    return static_cast<XPCShellEnvironment*>(v.get().toPrivate());
 }
 
 static void
@@ -272,7 +279,7 @@ Load(JSContext *cx,
         JS::CompileOptions options(cx);
         options.setUTF8(true)
                .setFileAndLine(filename.ptr(), 1)
-               .setPrincipals(Environment(cx)->GetPrincipal());
+               .setPrincipals(Environment(JS_GetGlobalForScopeChain(cx))->GetPrincipal());
         JS::RootedObject rootedObj(cx, obj);
         JSScript *script = JS::Compile(cx, rootedObj, options, file);
         fclose(file);
@@ -312,7 +319,7 @@ Quit(JSContext *cx,
      unsigned argc,
      JS::Value *vp)
 {
-    XPCShellEnvironment* env = Environment(cx);
+    XPCShellEnvironment* env = Environment(JS_GetGlobalForScopeChain(cx));
     env->SetIsQuitting();
 
     return JS_FALSE;
@@ -787,8 +794,12 @@ XPCShellEnvironment::Init()
         JSAutoRequest ar(cx);
         JSAutoCompartment ac(cx, globalObj);
 
-        if (!JS_DefineFunctions(cx, globalObj, gGlobalFunctions) ||
-	    !JS_DefineProfilingFunctions(cx, globalObj)) {
+        if (!JS_DefineProperty(cx, globalObj, "__XPCShellEnvironment",
+                               PRIVATE_TO_JSVAL(this), JS_PropertyStub,
+                               JS_StrictPropertyStub,
+                               JSPROP_READONLY | JSPROP_PERMANENT) ||
+            !JS_DefineFunctions(cx, globalObj, gGlobalFunctions) ||
+            !JS_DefineProfilingFunctions(cx, globalObj)) {
             NS_ERROR("JS_DefineFunctions failed!");
             return false;
         }
