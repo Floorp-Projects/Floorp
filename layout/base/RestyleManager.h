@@ -280,8 +280,12 @@ public:
                   nsTArray<nsIContent*>& aVisibleKidsOfHiddenElement);
 
   // Construct for an element whose parent is being restyled.
+  enum ConstructorFlags {
+    FOR_OUT_OF_FLOW_CHILD = 1<<0
+  };
   ElementRestyler(const ElementRestyler& aParentRestyler,
-                  nsIFrame* aFrame);
+                  nsIFrame* aFrame,
+                  uint32_t aConstructorFlags);
 
   // Construct for a frame whose parent is being restyled, but whose
   // style context is the parent style context for its parent frame.

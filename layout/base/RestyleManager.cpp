@@ -1938,7 +1938,8 @@ ElementRestyler::ElementRestyler(nsPresContext* aPresContext,
 }
 
 ElementRestyler::ElementRestyler(const ElementRestyler& aParentRestyler,
-                                 nsIFrame* aFrame)
+                                 nsIFrame* aFrame,
+                                 uint32_t aConstructorFlags)
   : mPresContext(aParentRestyler.mPresContext)
   , mFrame(aFrame)
   , mParentContent(aParentRestyler.mContent)
@@ -2563,7 +2564,8 @@ ElementRestyler::Restyle(nsRestyleHint aRestyleHint)
               // |nsFrame::GetParentStyleContextFrame| checks being out
               // of flow so that this works correctly.
               do {
-                ElementRestyler oofRestyler(*this, outOfFlowFrame);
+                ElementRestyler oofRestyler(*this, outOfFlowFrame,
+                                            FOR_OUT_OF_FLOW_CHILD);
                 oofRestyler.mHintsHandled =
                   NS_SubtractHint(oofRestyler.mHintsHandled,
                                   nsChangeHint_AllReflowHints);
@@ -2572,12 +2574,12 @@ ElementRestyler::Restyle(nsRestyleHint aRestyleHint)
 
               // reresolve placeholder's context under the same parent
               // as the out-of-flow frame
-              ElementRestyler phRestyler(*this, child);
+              ElementRestyler phRestyler(*this, child, 0);
               phRestyler.Restyle(childRestyleHint);
             }
             else {  // regular child frame
               if (child != resolvedChild) {
-                ElementRestyler childRestyler(*this, child);
+                ElementRestyler childRestyler(*this, child, 0);
                 childRestyler.Restyle(childRestyleHint);
               }
             }
