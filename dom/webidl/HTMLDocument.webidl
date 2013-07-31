@@ -71,4 +71,11 @@ interface HTMLDocument : Document {
   // https://dvcs.w3.org/hg/editing/raw-file/tip/editing.html#selections
   [Throws]
   Selection getSelection();
+
+  // @deprecated These are old Netscape 4 methods. Do not use,
+  //             the implementation is no-op.
+  // XXXbz do we actually need these anymore?
+  void                      captureEvents(long eventFlags);
+  void                      releaseEvents(long eventFlags);
+  void                      routeEvent(Event evt);
 };
