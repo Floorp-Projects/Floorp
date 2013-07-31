@@ -2059,7 +2059,7 @@ OpenDatabaseHelper::StartSetVersion()
   nsresult rv = EnsureSuccessResult();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsTArray<nsString> storesToOpen;
+  Sequence<nsString> storesToOpen;
   nsRefPtr<IDBTransaction> transaction =
     IDBTransaction::Create(mDatabase, storesToOpen,
                            IDBTransaction::VERSION_CHANGE, true);

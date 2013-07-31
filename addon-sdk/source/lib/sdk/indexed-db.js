@@ -55,5 +55,4 @@ exports.IDBKeyRange = IDBKeyRange;
 exports.DOMException = Ci.nsIDOMDOMException;
 exports.IDBCursor = Ci.nsIIDBCursor;
 exports.IDBOpenDBRequest = Ci.nsIIDBOpenDBRequest;
-exports.IDBDatabase = Ci.nsIIDBDatabase;
 exports.IDBRequest = Ci.nsIIDBRequest;
