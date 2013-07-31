@@ -26,7 +26,7 @@ namespace dom {
   class Element;
 } // namespace dom
 
-class RestyleManager {
+class RestyleManager MOZ_FINAL {
 public:
   friend class ::nsRefreshDriver;
   friend class RestyleTracker;
@@ -191,36 +191,6 @@ public:
   }
 
 private:
-  enum DesiredA11yNotifications {
-    eSkipNotifications,
-    eSendAllNotifications,
-    eNotifyIfShown
-  };
-
-  enum A11yNotificationType {
-    eDontNotify,
-    eNotifyShown,
-    eNotifyHidden
-  };
-
-  // Use eRestyle_Self for the aRestyleHint argument to mean
-  // "reresolve our style context but not kids", use eRestyle_Subtree
-  // to mean "reresolve our style context and kids", and use
-  // nsRestyleHint(0) to mean recompute a new style context for our
-  // current parent and existing rulenode, and the same for kids.
-  NS_HIDDEN_(nsChangeHint)
-    ReResolveStyleContext(nsPresContext* aPresContext,
-                          nsIFrame* aFrame,
-                          nsIContent* aParentContent,
-                          nsStyleChangeList* aChangeList,
-                          nsChangeHint aMinChange,
-                          nsChangeHint aParentFrameHintsNotHandledForDescendants,
-                          nsRestyleHint aRestyleHint,
-                          RestyleTracker& aRestyleTracker,
-                          DesiredA11yNotifications aDesiredA11yNotifications,
-                          nsTArray<nsIContent*>& aVisibleKidsOfHiddenElement,
-                          TreeMatchContext& aTreeMatchContext);
-
   /**
    * Notify the frame constructor that an element needs to have its
    * style recomputed.
@@ -290,6 +260,79 @@ private:
 
   RestyleTracker mPendingRestyles;
   RestyleTracker mPendingAnimationRestyles;
+};
+
+/**
+ * An ElementRestyler is created for *each* element in a subtree that we
+ * recompute styles for.
+ */
+class ElementRestyler MOZ_FINAL {
+public:
+  typedef mozilla::dom::Element Element;
+
+  // Construct for the root of the subtree that we're restyling.
+  ElementRestyler(nsPresContext* aPresContext);
+
+  // Construct for an element whose parent is being restyled.
+  ElementRestyler(const ElementRestyler& aParentRestyler);
+
+  // Construct for a frame whose parent is being restyled, but whose
+  // style context is the parent style context for its parent frame.
+  // (This is only used for table frames, whose style contexts are used
+  // as the parent style context for their outer table frame (table
+  // wrapper frame).  We should probably try to get rid of this
+  // exception and have the inheritance go the other way.)
+  enum ParentContextFromChildFrame { PARENT_CONTEXT_FROM_CHILD_FRAME };
+  ElementRestyler(ParentContextFromChildFrame,
+                  const ElementRestyler& aParentFrameRestyler);
+
+public: // FIXME: private
+  enum DesiredA11yNotifications {
+    eSkipNotifications,
+    eSendAllNotifications,
+    eNotifyIfShown
+  };
+
+  enum A11yNotificationType {
+    eDontNotify,
+    eNotifyShown,
+    eNotifyHidden
+  };
+
+public:
+  /**
+   * Restyle our frame's element and its subtree.
+   *
+   * Use eRestyle_Self for the aRestyleHint argument to mean
+   * "reresolve our style context but not kids", use eRestyle_Subtree
+   * to mean "reresolve our style context and kids", and use
+   * nsRestyleHint(0) to mean recompute a new style context for our
+   * current parent and existing rulenode, and the same for kids.
+   */
+  nsChangeHint Restyle(nsPresContext     *aPresContext,
+               nsIFrame          *aFrame,
+               nsIContent        *aParentContent,
+               nsStyleChangeList *aChangeList,
+               nsChangeHint       aMinChange,
+               nsChangeHint       aParentFrameHintsNotHandledForDescendants,
+               nsRestyleHint      aRestyleHint,
+               RestyleTracker&    aRestyleTracker,
+               DesiredA11yNotifications aDesiredA11yNotifications,
+               nsTArray<nsIContent*>& aVisibleKidsOfHiddenElement,
+               TreeMatchContext &aTreeMatchContext);
+
+private:
+  void CaptureChange(nsStyleContext* aOldContext,
+                     nsStyleContext* aNewContext,
+                     nsIFrame* aFrame, nsIContent* aContent,
+                     nsStyleChangeList* aChangeList,
+                     /*inout*/nsChangeHint &aMinChange,
+                     /*in*/nsChangeHint aParentHintsNotHandledForDescendants,
+                     /*out*/nsChangeHint &aHintsNotHandledForDescendants,
+                     nsChangeHint aChangeToAssume);
+
+private:
+  nsPresContext* const mPresContext;
 };
 
 } // namespace mozilla
