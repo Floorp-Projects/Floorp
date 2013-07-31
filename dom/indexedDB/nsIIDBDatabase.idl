@@ -6,7 +6,6 @@
 
 #include "nsISupports.idl"
 
-interface nsIIDBObjectStore;
 interface nsIIDBRequest;
 interface nsIDOMDOMStringList;
 interface nsIDOMEventListener;
@@ -26,7 +25,7 @@ interface nsIIDBDatabase : nsISupports
   readonly attribute nsIDOMDOMStringList objectStoreNames;
 
   [implicit_jscontext]
-  nsIIDBObjectStore
+  nsISupports // IDBObjectStore
   createObjectStore([Null(Stringify)] in DOMString name,
                     /* IDBObjectStoreParameters */
                     [optional /* none */] in jsval options);

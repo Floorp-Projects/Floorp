@@ -121,7 +121,6 @@ DOMCI_CLASS(ChromeMessageSender)
 
 DOMCI_CLASS(IDBRequest)
 DOMCI_CLASS(IDBDatabase)
-DOMCI_CLASS(IDBObjectStore)
 DOMCI_CLASS(IDBCursor)
 DOMCI_CLASS(IDBCursorWithValue)
 DOMCI_CLASS(IDBKeyRange)

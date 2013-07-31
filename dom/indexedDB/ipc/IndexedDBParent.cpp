@@ -796,13 +796,9 @@ IndexedDBTransactionParent::RecvPIndexedDBObjectStoreConstructor(
       AutoSetCurrentTransaction asct(mTransaction);
 
       ErrorResult rv;
-      nsCOMPtr<nsIIDBObjectStore> store = mTransaction->ObjectStore(name, rv);
-      if (rv.Failed()) {
-        NS_WARNING("Failed to get object store!");
-        return false;
-      }
+      objectStore = mTransaction->ObjectStore(name, rv);
+      ENSURE_SUCCESS(rv, false);
 
-      objectStore = static_cast<IDBObjectStore*>(store.get());
       actor->SetObjectStore(objectStore);
     }
 
@@ -1153,9 +1149,11 @@ IndexedDBObjectStoreParent::RecvPIndexedDBIndexConstructor(
     {
       AutoSetCurrentTransaction asct(mObjectStore->Transaction());
 
-      nsresult rv = mObjectStore->IndexInternal(name, getter_AddRefs(index));
-      NS_ENSURE_SUCCESS(rv, false);
+      ErrorResult rv;
+      nsCOMPtr<nsIIDBIndex> obj = mObjectStore->Index(name, rv);
+      ENSURE_SUCCESS(rv, false);
 
+      index = static_cast<IDBIndex*>(obj.get());
       actor->SetIndex(index);
     }
 
@@ -1253,16 +1251,15 @@ IndexedDBVersionChangeObjectStoreParent::RecvDeleteIndex(const nsString& aName)
     return true;
   }
 
-  nsresult rv;
+  ErrorResult rv;
 
   {
     AutoSetCurrentTransaction asct(mObjectStore->Transaction());
 
-    rv = mObjectStore->DeleteIndex(aName);
+    mObjectStore->DeleteIndex(aName, rv);
   }
 
-  NS_ENSURE_SUCCESS(rv, false);
-
+  ENSURE_SUCCESS(rv, false);
   return true;
 }
 
@@ -1297,15 +1294,15 @@ IndexedDBVersionChangeObjectStoreParent::RecvPIndexedDBIndexConstructor(
 
     nsRefPtr<IDBIndex> index;
 
-    nsresult rv;
-
     {
       AutoSetCurrentTransaction asct(mObjectStore->Transaction());
 
-      rv = mObjectStore->CreateIndexInternal(info, getter_AddRefs(index));
-    }
+      ErrorResult rv;
+      nsCOMPtr<nsIIDBIndex> obj = mObjectStore->CreateIndexInternal(info, rv);
+      ENSURE_SUCCESS(rv, false);
 
-    NS_ENSURE_SUCCESS(rv, false);
+      index = static_cast<IDBIndex*>(obj.get());
+    }
 
     actor->SetIndex(index);
     index->SetActor(actor);
@@ -1513,9 +1510,9 @@ IndexedDBObjectStoreRequestParent::Get(const GetParams& aParams)
   {
     AutoSetCurrentTransaction asct(mObjectStore->Transaction());
 
-    nsresult rv = mObjectStore->GetInternal(keyRange, nullptr,
-                                            getter_AddRefs(request));
-    NS_ENSURE_SUCCESS(rv, false);
+    ErrorResult rv;
+    request = mObjectStore->GetInternal(keyRange, rv);
+    ENSURE_SUCCESS(rv, false);
   }
 
   request->SetActor(this);
@@ -1553,10 +1550,9 @@ IndexedDBObjectStoreRequestParent::GetAll(const GetAllParams& aParams)
   {
     AutoSetCurrentTransaction asct(mObjectStore->Transaction());
 
-    nsresult rv = mObjectStore->GetAllInternal(keyRange, aParams.limit(),
-                                               nullptr,
-                                               getter_AddRefs(request));
-    NS_ENSURE_SUCCESS(rv, false);
+    ErrorResult rv;
+    request = mObjectStore->GetAllInternal(keyRange, aParams.limit(), rv);
+    ENSURE_SUCCESS(rv, false);
   }
 
   request->SetActor(this);
@@ -1635,9 +1631,9 @@ IndexedDBObjectStoreRequestParent::Delete(const DeleteParams& aParams)
   {
     AutoSetCurrentTransaction asct(mObjectStore->Transaction());
 
-    nsresult rv =
-      mObjectStore->DeleteInternal(keyRange, nullptr, getter_AddRefs(request));
-    NS_ENSURE_SUCCESS(rv, false);
+    ErrorResult rv;
+    request = mObjectStore->DeleteInternal(keyRange, rv);
+    ENSURE_SUCCESS(rv, false);
   }
 
   request->SetActor(this);
@@ -1656,8 +1652,9 @@ IndexedDBObjectStoreRequestParent::Clear(const ClearParams& aParams)
   {
     AutoSetCurrentTransaction asct(mObjectStore->Transaction());
 
-    nsresult rv = mObjectStore->ClearInternal(nullptr, getter_AddRefs(request));
-    NS_ENSURE_SUCCESS(rv, false);
+    ErrorResult rv;
+    request = mObjectStore->Clear(rv);
+    ENSURE_SUCCESS(rv, false);
   }
 
   request->SetActor(this);
@@ -1694,9 +1691,9 @@ IndexedDBObjectStoreRequestParent::Count(const CountParams& aParams)
   {
     AutoSetCurrentTransaction asct(mObjectStore->Transaction());
 
-    nsresult rv =
-      mObjectStore->CountInternal(keyRange, nullptr, getter_AddRefs(request));
-    NS_ENSURE_SUCCESS(rv, false);
+    ErrorResult rv;
+    request = mObjectStore->CountInternal(keyRange, rv);
+    ENSURE_SUCCESS(rv, false);
   }
 
   request->SetActor(this);
@@ -1735,10 +1732,9 @@ IndexedDBObjectStoreRequestParent::OpenCursor(const OpenCursorParams& aParams)
   {
     AutoSetCurrentTransaction asct(mObjectStore->Transaction());
 
-    nsresult rv =
-      mObjectStore->OpenCursorInternal(keyRange, direction, nullptr,
-                                       getter_AddRefs(request));
-    NS_ENSURE_SUCCESS(rv, false);
+    ErrorResult rv;
+    request = mObjectStore->OpenCursorInternal(keyRange, direction, rv);
+    ENSURE_SUCCESS(rv, false);
   }
 
   request->SetActor(this);
