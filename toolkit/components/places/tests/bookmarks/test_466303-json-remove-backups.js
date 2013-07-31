@@ -32,14 +32,23 @@ function run_test() {
 
   // Export bookmarks to JSON.
   var backupFilename = PlacesBackups.getFilenameForDate();
-  var lastBackupFile = bookmarksBackupDir.clone();
-  lastBackupFile.append(backupFilename);
-  if (lastBackupFile.exists())
-    lastBackupFile.remove(false);
-  do_check_false(lastBackupFile.exists());
+  var rx = new RegExp("^" + backupFilename.replace(/\.json/, "") + "(_[0-9]+){0,1}\.json$");
+  var files = bookmarksBackupDir.directoryEntries;
+  var entry;
+  while (files.hasMoreElements()) {
+    entry = files.getNext().QueryInterface(Ci.nsIFile);
+    if (entry.leafName.match(rx))
+      entry.remove(false);
+  }
 
   Task.spawn(function() {
     yield PlacesBackups.create(NUMBER_OF_BACKUPS);
+    files = bookmarksBackupDir.directoryEntries;
+    while (files.hasMoreElements()) {
+      entry = files.getNext().QueryInterface(Ci.nsIFile);
+      if (entry.leafName.match(rx))
+        lastBackupFile = entry;
+    }
     do_check_true(lastBackupFile.exists());
 
     // Check that last backup has been retained
