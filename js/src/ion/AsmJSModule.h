@@ -14,6 +14,7 @@
 #include "jsscript.h"
 
 #include "gc/Marking.h"
+#include "ion/AsmJS.h"
 #include "ion/IonMacroAssembler.h"
 #if defined(JS_ION_PERF)
 # include "ion/PerfSpewer.h"
@@ -765,20 +766,19 @@ class AsmJSModule
     }
 };
 
+// On success, return an AsmJSModuleClass JSObject that has taken ownership
+// (and release()ed) the given module.
+extern JSObject *
+NewAsmJSModuleObject(JSContext *cx, ScopedJSDeletePtr<AsmJSModule> *module);
+
+// Return whether the given object was created by NewAsmJSModuleObject.
+extern bool
+IsAsmJSModuleObject(JSObject *obj);
 
 // The AsmJSModule C++ object is held by a JSObject that takes care of calling
 // 'trace' and the destructor on finalization.
 extern AsmJSModule &
 AsmJSModuleObjectToModule(JSObject *obj);
-
-extern bool
-IsAsmJSModuleObject(JSObject *obj);
-
-extern JSObject &
-AsmJSModuleObject(JSFunction *moduleFun);
-
-extern void
-SetAsmJSModuleObject(JSFunction *moduleFun, JSObject *moduleObj);
 
 }  // namespace js
 

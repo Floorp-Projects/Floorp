@@ -13,7 +13,6 @@
 #include "frontend/BytecodeCompiler.h"
 
 #ifdef JS_WORKER_THREADS
-# include "ion/AsmJS.h"
 # include "ion/ExecutionModeInlines.h"
 # include "ion/IonBuilder.h"
 #endif

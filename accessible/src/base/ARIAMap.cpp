@@ -619,7 +619,7 @@ static nsRoleMapEntry sWAIRoleMaps[] =
     eNoLiveAttr,
     eSelect | eTable,
     kNoReqStates,
-    eARIAReadonly,
+    eARIAReadonlyOrEditable,
     eARIAMultiSelectable,
     eFocusableUntilDisabled
   },

@@ -50,8 +50,8 @@
  */
 #define MOZ_UTF16(s) MOZ_UTF16_HELPER(s)
 
-MOZ_STATIC_ASSERT(sizeof(char16_t) == 2, "Is char16_t type 16 bits?");
-MOZ_STATIC_ASSERT(sizeof(MOZ_UTF16('A')) == 2, "Is char literal 16 bits?");
-MOZ_STATIC_ASSERT(sizeof(MOZ_UTF16("")[0]) == 2, "Is string char 16 bits?");
+static_assert(sizeof(char16_t) == 2, "Is char16_t type 16 bits?");
+static_assert(sizeof(MOZ_UTF16('A')) == 2, "Is char literal 16 bits?");
+static_assert(sizeof(MOZ_UTF16("")[0]) == 2, "Is string char 16 bits?");
 
 #endif /* mozilla_Char16_h */

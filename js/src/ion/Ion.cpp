@@ -15,9 +15,8 @@
 #endif
 
 #include "gc/Marking.h"
-#include "ion/AliasAnalysis.h"
-#include "ion/AsmJS.h"
 #include "ion/AsmJSModule.h"
+#include "ion/AliasAnalysis.h"
 #include "ion/BacktrackingAllocator.h"
 #include "ion/BaselineCompiler.h"
 #include "ion/BaselineInspector.h"

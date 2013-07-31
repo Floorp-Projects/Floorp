@@ -12,7 +12,7 @@
 #include "ImageContainer.h"
 
 #include "mozilla/mozalloc.h"
-#include "mozilla/StandardInteger.h"
+#include <stdint.h>
 #include <algorithm>
 
 namespace mozilla {

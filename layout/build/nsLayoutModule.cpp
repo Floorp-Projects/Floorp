@@ -396,9 +396,9 @@ Initialize()
     return NS_ERROR_FAILURE;
   }
 
-  MOZ_STATIC_ASSERT(sizeof(uintptr_t) == sizeof(void*),
-                    "Eeek! You'll need to adjust the size of uintptr_t to the "
-                    "size of a pointer on your platform.");
+  static_assert(sizeof(uintptr_t) == sizeof(void*),
+                "Eeek! You'll need to adjust the size of uintptr_t to the "
+                "size of a pointer on your platform.");
 
   gInitialized = true;
 

@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsSMILKeySpline.h"
-#include "mozilla/StandardInteger.h"
+#include <stdint.h>
 #include <math.h>
 
 #define NEWTON_ITERATIONS          4

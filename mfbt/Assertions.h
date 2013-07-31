@@ -40,44 +40,24 @@
 #endif
 
 /*
- * MOZ_STATIC_ASSERT may be used to assert a condition *at compile time*.  This
- * can be useful when you make certain assumptions about what must hold for
+ * MOZ_STATIC_ASSERT may be used to assert a condition *at compile time* in C.
+ * In C++11, static_assert is provided by the compiler to the same effect.
+ * This can be useful when you make certain assumptions about what must hold for
  * optimal, or even correct, behavior.  For example, you might assert that the
  * size of a struct is a multiple of the target architecture's word size:
  *
  *   struct S { ... };
+ *   // C
  *   MOZ_STATIC_ASSERT(sizeof(S) % sizeof(size_t) == 0,
  *                     "S should be a multiple of word size for efficiency");
+ *   // C++11
+ *   static_assert(sizeof(S) % sizeof(size_t) == 0,
+ *                 "S should be a multiple of word size for efficiency");
  *
  * This macro can be used in any location where both an extern declaration and a
  * typedef could be used.
- *
- * Be aware of the gcc 4.2 concerns noted further down when writing patches that
- * use this macro, particularly if a patch only bounces on OS X.
  */
-#ifdef __cplusplus
-#  if defined(__clang__)
-#    ifndef __has_extension
-#      define __has_extension __has_feature /* compatibility, for older versions of clang */
-#    endif
-#    if __has_extension(cxx_static_assert)
-#      define MOZ_STATIC_ASSERT(cond, reason)    static_assert((cond), reason)
-#    endif
-#  elif defined(__GNUC__)
-#    if (defined(__GXX_EXPERIMENTAL_CXX0X__) || __cplusplus >= 201103L)
-#      define MOZ_STATIC_ASSERT(cond, reason)    static_assert((cond), reason)
-#    endif
-#  elif defined(_MSC_VER)
-#    if _MSC_VER >= 1600 /* MSVC 10 */
-#      define MOZ_STATIC_ASSERT(cond, reason)    static_assert((cond), reason)
-#    endif
-#  elif defined(__HP_aCC)
-#    if __HP_aCC >= 62500 && defined(_HP_CXX0x_SOURCE)
-#      define MOZ_STATIC_ASSERT(cond, reason)    static_assert((cond), reason)
-#    endif
-#  endif
-#endif
-#ifndef MOZ_STATIC_ASSERT
+#ifndef __cplusplus
    /*
     * Some of the definitions below create an otherwise-unused typedef.  This
     * triggers compiler warnings with some versions of gcc, so mark the typedefs
@@ -125,9 +105,11 @@
 #    define MOZ_STATIC_ASSERT(cond, reason) \
        extern void MOZ_STATIC_ASSERT_GLUE(moz_static_assert, __LINE__)(int arg[(cond) ? 1 : -1]) MOZ_STATIC_ASSERT_UNUSED_ATTRIBUTE
 #  endif
-#endif
 
 #define MOZ_STATIC_ASSERT_IF(cond, expr, reason)  MOZ_STATIC_ASSERT(!(cond) || (expr), reason)
+#else
+#define MOZ_STATIC_ASSERT_IF(cond, expr, reason)  static_assert(!(cond) || (expr), reason)
+#endif
 
 #ifdef __cplusplus
 extern "C" {

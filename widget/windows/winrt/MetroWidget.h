@@ -23,7 +23,7 @@
 #endif
 #include "mozilla/layers/CompositorParent.h"
 #include "mozilla/layers/GeckoContentController.h"
-#include "mozilla/layers/AsyncPanZoomController.h"
+#include "mozilla/layers/APZCTreeManager.h"
 #include "mozilla/layers/LayerManagerComposite.h"
 #include "Units.h"
 #include "MetroInput.h"
@@ -191,7 +191,7 @@ public:
   virtual void HandleDoubleTap(const mozilla::CSSIntPoint& aPoint);
   virtual void HandleSingleTap(const mozilla::CSSIntPoint& aPoint);
   virtual void HandleLongTap(const mozilla::CSSIntPoint& aPoint);
-  virtual void SendAsyncScrollDOMEvent(const mozilla::CSSRect &aContentRect, const mozilla::CSSSize &aScrollableSize);
+  virtual void SendAsyncScrollDOMEvent(mozilla::layers::FrameMetrics::ViewID aScrollId, const mozilla::CSSRect &aContentRect, const mozilla::CSSSize &aScrollableSize);
   virtual void PostDelayedTask(Task* aTask, int aDelayMs);
   virtual void HandlePanBegin();
   virtual void HandlePanEnd();
@@ -237,5 +237,5 @@ protected:
   mozilla::layers::FrameMetrics mFrameMetrics;
 
 public:
-  static nsRefPtr<mozilla::layers::AsyncPanZoomController> sAPZC;
+  static nsRefPtr<mozilla::layers::APZCTreeManager> sAPZC;
 };

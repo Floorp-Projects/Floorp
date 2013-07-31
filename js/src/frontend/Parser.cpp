@@ -33,6 +33,7 @@
 #include "frontend/FoldConstants.h"
 #include "frontend/ParseMaps.h"
 #include "frontend/TokenStream.h"
+#include "ion/AsmJS.h"
 #include "vm/NumericConversions.h"
 #include "vm/RegExpStatics.h"
 #include "vm/Shape.h"

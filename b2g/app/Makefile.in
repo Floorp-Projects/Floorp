@@ -30,7 +30,7 @@ LIBS += \
   $(DEPTH)/widget/gonk/libdisplay/$(LIB_PREFIX)display.$(LIB_SUFFIX) \
   $(MOZ_ZLIB_LIBS) \
   $(NULL)
-ifeq (17,$(ANDROID_VERSION))
+ifeq (18,$(ANDROID_VERSION))
 LIBS += \
   -lgui \
   -lsuspend \

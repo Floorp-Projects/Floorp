@@ -4,7 +4,8 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/Casting.h"
-#include "mozilla/StandardInteger.h"
+
+#include <stdint.h>
 
 using mozilla::BitwiseCast;
 using mozilla::detail::IsInBounds;

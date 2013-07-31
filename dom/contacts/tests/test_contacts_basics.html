@@ -61,6 +61,24 @@ var c5 = {
   nickname: "empty"
 };
 
+var c6 = {
+  name: "e",
+  familyName: ["e","e","e"],
+  givenName: ["e","e","e"],
+};
+
+var c7 = {
+  name: "e",
+  familyName: ["e","e","e"],
+  givenName: ["e","e","e"],
+};
+
+var c8 = {
+  name: "e",
+  familyName: ["e","e","e"],
+  givenName: ["e","e","e"],
+};
+
 var adr1 = {
   type: "work",
   streetAddress: "street 1",
@@ -1327,6 +1345,64 @@ var steps = [
       }
       req2.onerror = onFailure;
     }
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Deleting database");
+    req = mozContacts.clear()
+    req.onsuccess = function () {
+      ok(true, "Deleted the database");
+      next();
+    }
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Test sorting");
+    createResult1 = new mozContact();
+    createResult1.init(c7);
+    req = navigator.mozContacts.save(createResult1);
+    req.onsuccess = function () {
+      ok(createResult1.id, "The contact now has an ID.");
+      checkContacts(c7, createResult1);
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Test sorting");
+    createResult1 = new mozContact();
+    createResult1.init(c6);
+    req = navigator.mozContacts.save(createResult1);
+    req.onsuccess = function () {
+      ok(createResult1.id, "The contact now has an ID.");
+      checkContacts(c6, createResult1);
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Test sorting");
+    createResult1 = new mozContact();
+    createResult1.init(c8);
+    req = navigator.mozContacts.save(createResult1);
+    req.onsuccess = function () {
+      ok(createResult1.id, "The contact now has an ID.");
+      checkContacts(c8, createResult1);
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Test sorting with published");
+    var options = {sortBy: "familyName",
+                   sortOrder: "descending"};
+    req = navigator.mozContacts.find(options);
+    req.onsuccess = function () {
+      is(req.result.length, 3, "3 results");
+      ok(req.result[0].published < req.result[1].published, "Right sorting order");
+      ok(req.result[1].published < req.result[2].published, "Right sorting order");
+      next();
+    };
     req.onerror = onFailure;
   },
   function () {

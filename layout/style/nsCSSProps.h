@@ -159,9 +159,9 @@
 // See CSSParserImpl::ParseSingleValueProperty and comment above
 // CSS_PROPERTY_PARSE_FUNCTION (which is different).
 #define CSS_PROPERTY_VALUE_PARSER_FUNCTION        (1<<12)
-MOZ_STATIC_ASSERT((CSS_PROPERTY_PARSE_PROPERTY_MASK &
-                   CSS_PROPERTY_VALUE_PARSER_FUNCTION) == 0,
-                  "didn't leave enough room for the parse property constants");
+static_assert((CSS_PROPERTY_PARSE_PROPERTY_MASK &
+               CSS_PROPERTY_VALUE_PARSER_FUNCTION) == 0,
+              "didn't leave enough room for the parse property constants");
 
 #define CSS_PROPERTY_VALUE_RESTRICTION_MASK       (3<<13)
 // The parser (in particular, CSSParserImpl::ParseSingleValueProperty)

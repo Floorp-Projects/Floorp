@@ -564,14 +564,24 @@ public:
   TestInterface* Overload1(const nsAString&, TestInterface&);
   void Overload2(TestInterface&);
   void Overload2(JSContext*, const Dict&);
+  void Overload2(bool);
   void Overload2(const nsAString&);
   void Overload2(Date);
   void Overload3(TestInterface&);
   void Overload3(const TestCallback&);
-  void Overload3(const nsAString&);
+  void Overload3(bool);
   void Overload4(TestInterface&);
   void Overload4(TestCallbackInterface&);
   void Overload4(const nsAString&);
+  void Overload5(int32_t);
+  void Overload5(TestEnum);
+  void Overload6(int32_t);
+  void Overload6(bool);
+  void Overload7(int32_t);
+  void Overload7(bool);
+  void Overload7(const nsCString&);
+  void Overload8(int32_t);
+  void Overload8(TestInterface&);
 
   // Variadic handling
   void PassVariadicThirdArg(const nsAString&, int32_t,
@@ -608,6 +618,12 @@ public:
   TestInterface* PutForwardsAttr();
   TestInterface* PutForwardsAttr2();
   TestInterface* PutForwardsAttr3();
+  JS::Value JsonifierShouldSkipThis(JSContext*);
+  void SetJsonifierShouldSkipThis(JSContext*, JS::Rooted<JS::Value>&);
+  TestParentInterface* JsonifierShouldSkipThis2();
+  void SetJsonifierShouldSkipThis2(TestParentInterface&);
+  TestCallbackInterface* JsonifierShouldSkipThis3();
+  void SetJsonifierShouldSkipThis3(TestCallbackInterface&);
   void ThrowingMethod(ErrorResult& aRv);
   bool GetThrowingAttr(ErrorResult& aRv) const;
   void SetThrowingAttr(bool arg, ErrorResult& aRv);

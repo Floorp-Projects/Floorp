@@ -1985,13 +1985,13 @@ ConvertJSValueToByteString(JSContext* cx, JS::Handle<JS::Value> v,
       // The largest unsigned 64 bit number (18,446,744,073,709,551,615) has
       // 20 digits, plus one more for the null terminator.
       char index[21];
-      MOZ_STATIC_ASSERT(sizeof(size_t) <= 8, "index array too small");
+      static_assert(sizeof(size_t) <= 8, "index array too small");
       PR_snprintf(index, sizeof(index), "%d", i);
       // A jschar is 16 bits long.  The biggest unsigned 16 bit
       // number (65,535) has 5 digits, plus one more for the null
       // terminator.
       char badChar[6];
-      MOZ_STATIC_ASSERT(sizeof(jschar) <= 2, "badChar array too small");
+      static_assert(sizeof(jschar) <= 2, "badChar array too small");
       PR_snprintf(badChar, sizeof(badChar), "%d", chars[i]);
       ThrowErrorMessage(cx, MSG_INVALID_BYTESTRING, index, badChar);
       return false;

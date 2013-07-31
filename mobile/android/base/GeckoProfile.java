@@ -116,10 +116,11 @@ public final class GeckoProfile {
             throw new IllegalArgumentException("context must be non-null");
         }
         try {
+            removeGuestProfile(context);
+
             File guestDir = context.getDir("guest", Context.MODE_PRIVATE);
-            if (guestDir.exists())
-                guestDir.delete();
             guestDir.mkdir();
+
             GeckoProfile profile = get(context, "guest", guestDir);
             profile.mInGuestMode = true;
             return profile;
@@ -127,6 +128,38 @@ public final class GeckoProfile {
             Log.e(LOGTAG, "Error creating guest profile", ex);
         }
         return null;
+    }
+
+    public static void removeGuestProfile(Context context) {
+        if (context == null) {
+            throw new IllegalArgumentException("context must be non-null");
+        }
+        try {
+            File guestDir = context.getDir("guest", Context.MODE_PRIVATE);
+            if (guestDir.exists()) {
+                delete(guestDir);
+            }
+        } catch (Exception ex) {
+            Log.e(LOGTAG, "Error removing guest profile", ex);
+        }
+    }
+
+    public static boolean delete(File file) throws IOException {
+        // Try to do a quick initial delete
+        if (file.delete())
+            return true;
+
+        if (file.isDirectory()) {
+            // If the quick delete failed and this is a dir, recursively delete the contents of the dir
+            String files[] = file.list();
+            for (String temp : files) {
+                File fileDelete = new File(file, temp);
+                delete(fileDelete);
+            }
+        }
+
+        // Even if this is a dir, it should now be empty and delete should work
+        return file.delete();
     }
 
     private GeckoProfile(Context context, String profileName) {

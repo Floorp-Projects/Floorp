@@ -257,6 +257,7 @@ public:
     CGFloat                 BackingScaleFactor();
     void                    BackingScaleFactorChanged();
     virtual double          GetDefaultScaleInternal();
+    virtual int32_t         RoundsWidgetCoordinatesTo() MOZ_OVERRIDE;
 
     NS_IMETHOD              SetTitle(const nsAString& aTitle);
 

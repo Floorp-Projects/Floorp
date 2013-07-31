@@ -519,10 +519,10 @@ FrameHasPositionedPlaceholderDescendants(nsIFrame* aFrame, uint32_t aPositionMas
 static bool
 NeedToReframeForAddingOrRemovingTransform(nsIFrame* aFrame)
 {
-  MOZ_STATIC_ASSERT(0 <= NS_STYLE_POSITION_ABSOLUTE &&
-                    NS_STYLE_POSITION_ABSOLUTE < 32, "Style constant out of range");
-  MOZ_STATIC_ASSERT(0 <= NS_STYLE_POSITION_FIXED &&
-                    NS_STYLE_POSITION_FIXED < 32, "Style constant out of range");
+  static_assert(0 <= NS_STYLE_POSITION_ABSOLUTE &&
+                NS_STYLE_POSITION_ABSOLUTE < 32, "Style constant out of range");
+  static_assert(0 <= NS_STYLE_POSITION_FIXED &&
+                NS_STYLE_POSITION_FIXED < 32, "Style constant out of range");
 
   uint32_t positionMask;
   // Don't call aFrame->IsPositioned here, since that returns true if
