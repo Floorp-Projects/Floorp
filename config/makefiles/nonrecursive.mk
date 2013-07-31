@@ -19,13 +19,8 @@
 #
 # Targets are defined by the following variables:
 #
-#   FILE - The make file to evaluate. This is equivalent to
-#      |make -f <FILE>|
-#   DIRECTORY - The directory whose Makefile to evaluate. This is
-#      equivalent to |make -C <DIRECTORY>|.
+#   FILE - The make file to evaluate.
 #   TARGETS - Targets to evaluate in that make file.
-#
-# Only 1 of FILE or DIRECTORY may be defined.
 #
 # For example:
 #
@@ -34,31 +29,30 @@
 # NONRECURSIVE_TARGETS_export_headers_FILE = /path/to/exports.mk
 # NONRECURSIVE_TARGETS_export_headers_TARGETS = $(DIST)/include/foo.h $(DIST)/include/bar.h
 # NONRECURSIVE_TARGETS_libs = cppsrcs
-# NONRECURSIVE_TARGETS_libs_cppsrcs_DIRECTORY = $(DEPTH)/foo
+# NONRECURSIVE_TARGETS_libs_cppsrcs_FILE = /path/to/compilation.mk
 # NONRECURSIVE_TARGETS_libs_cppsrcs_TARGETS = /path/to/foo.o /path/to/bar.o
 #
 # Will get turned into the following:
 #
 # exports::
-#     $(MAKE) -C $(DEPTH) -f /path/to/exports.mk $(DIST)/include/foo.h $(DIST)/include/bar.h
+#     $(MAKE) -f /path/to/exports.mk $(DIST)/include/foo.h $(DIST)/include/bar.h
 #
 # libs::
-#     $(MAKE) -C $(DEPTH)/foo /path/to/foo.o /path/to/bar.o
+#     $(MAKE) -f /path/to/compilation.mk /path/to/foo.o /path/to/bar.o
 
 ifndef INCLUDED_NONRECURSIVE_MK
 
 define define_nonrecursive_target
 $(1)::
-	$$(MAKE) -C $(or $(4),$$(DEPTH)) $(addprefix -f ,$(3)) $(2)
+	cd $$(DEPTH) && $$(MAKE) -f $(2) $(3)
 endef
 
 $(foreach target,$(NONRECURSIVE_TARGETS), \
     $(foreach entry,$(NONRECURSIVE_TARGETS_$(target)), \
         $(eval $(call define_nonrecursive_target, \
             $(target), \
-            $(NONRECURSIVE_TARGETS_$(target)_$(entry)_TARGETS), \
             $(NONRECURSIVE_TARGETS_$(target)_$(entry)_FILE), \
-            $(NONRECURSIVE_TARGETS_$(target)_$(entry)_DIRECTORY), \
+            $(NONRECURSIVE_TARGETS_$(target)_$(entry)_TARGETS) \
         )) \
     ) \
 )
