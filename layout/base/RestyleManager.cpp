@@ -2052,7 +2052,7 @@ ElementRestyler::Restyle(nsRestyleHint aRestyleHint)
   nsStyleSet* styleSet = mPresContext->StyleSet();
 
 #ifdef ACCESSIBILITY
-    bool wasFrameVisible = nsIPresShell::IsAccessibilityActive() ?
+    mWasFrameVisible = nsIPresShell::IsAccessibilityActive() ?
       oldContext->StyleVisibility()->IsVisible() : false;
 #endif
 
@@ -2483,7 +2483,7 @@ ElementRestyler::Restyle(nsRestyleHint aRestyleHint)
           !nsLayoutUtils::FrameIsNonFirstInIBSplit(mFrame)) {
         if (mDesiredA11yNotifications == eSendAllNotifications) {
           bool isFrameVisible = newContext->StyleVisibility()->IsVisible();
-          if (isFrameVisible != wasFrameVisible) {
+          if (isFrameVisible != mWasFrameVisible) {
             if (isFrameVisible) {
               // Notify a11y the element (perhaps with its children) was shown.
               // We don't fall into this case if this element gets or stays shown
