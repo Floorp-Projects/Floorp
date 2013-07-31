@@ -9,161 +9,161 @@ pref(webgl.disabled,true)  == webgl-disable-test.html       wrapper.html?green.p
 # Do we get pixels to the screen at all?
 # Try to just hit the different rendering paths here.
 # Test: {aa, alpha, preserve, readback} = 16
-                      == webgl-clear-test.html?__&_____&________  wrapper.html?green.png
-                      == webgl-clear-test.html?aa&_____&________  wrapper.html?green.png
-fuzzy-if(B2G,256,83)  == webgl-clear-test.html?__&alpha&________  wrapper.html?green.png
-fuzzy-if(B2G,256,83)  == webgl-clear-test.html?aa&alpha&________  wrapper.html?green.png
-                      == webgl-clear-test.html?__&_____&preserve  wrapper.html?green.png
-                      == webgl-clear-test.html?aa&_____&preserve  wrapper.html?green.png
-fuzzy-if(B2G,256,83)  == webgl-clear-test.html?__&alpha&preserve  wrapper.html?green.png
-fuzzy-if(B2G,256,83)  == webgl-clear-test.html?aa&alpha&preserve  wrapper.html?green.png
+                     fails-if(Android&&!ARMv7)  == webgl-clear-test.html?__&_____&________  wrapper.html?green.png
+                     fails-if(Android&&!ARMv7)  == webgl-clear-test.html?aa&_____&________  wrapper.html?green.png
+fuzzy-if(B2G,256,83) fails-if(Android&&!ARMv7)  == webgl-clear-test.html?__&alpha&________  wrapper.html?green.png
+fuzzy-if(B2G,256,83) fails-if(Android&&!ARMv7)  == webgl-clear-test.html?aa&alpha&________  wrapper.html?green.png
+                     fails-if(Android&&!ARMv7)  == webgl-clear-test.html?__&_____&preserve  wrapper.html?green.png
+                     fails-if(Android&&!ARMv7)  == webgl-clear-test.html?aa&_____&preserve  wrapper.html?green.png
+fuzzy-if(B2G,256,83) fails-if(Android&&!ARMv7)  == webgl-clear-test.html?__&alpha&preserve  wrapper.html?green.png
+fuzzy-if(B2G,256,83) fails-if(Android&&!ARMv7)  == webgl-clear-test.html?aa&alpha&preserve  wrapper.html?green.png
 
-pref(webgl.force-layers-readback,true)                       == webgl-clear-test.html?readback&__&_____&________  wrapper.html?green.png
-pref(webgl.force-layers-readback,true)                       == webgl-clear-test.html?readback&aa&_____&________  wrapper.html?green.png
-pref(webgl.force-layers-readback,true) fuzzy-if(B2G,256,83)  == webgl-clear-test.html?readback&__&alpha&________  wrapper.html?green.png
-pref(webgl.force-layers-readback,true) fuzzy-if(B2G,256,83)  == webgl-clear-test.html?readback&aa&alpha&________  wrapper.html?green.png
-pref(webgl.force-layers-readback,true)                       == webgl-clear-test.html?readback&__&_____&preserve  wrapper.html?green.png
-pref(webgl.force-layers-readback,true)                       == webgl-clear-test.html?readback&aa&_____&preserve  wrapper.html?green.png
-pref(webgl.force-layers-readback,true) fuzzy-if(B2G,256,83)  == webgl-clear-test.html?readback&__&alpha&preserve  wrapper.html?green.png
-pref(webgl.force-layers-readback,true) fuzzy-if(B2G,256,83)  == webgl-clear-test.html?readback&aa&alpha&preserve  wrapper.html?green.png
+pref(webgl.force-layers-readback,true)                      fails-if(Android&&!ARMv7)  == webgl-clear-test.html?readback&__&_____&________  wrapper.html?green.png
+pref(webgl.force-layers-readback,true)                      fails-if(Android&&!ARMv7)  == webgl-clear-test.html?readback&aa&_____&________  wrapper.html?green.png
+pref(webgl.force-layers-readback,true) fuzzy-if(B2G,256,83) fails-if(Android&&!ARMv7)  == webgl-clear-test.html?readback&__&alpha&________  wrapper.html?green.png
+pref(webgl.force-layers-readback,true) fuzzy-if(B2G,256,83) fails-if(Android&&!ARMv7)  == webgl-clear-test.html?readback&aa&alpha&________  wrapper.html?green.png
+pref(webgl.force-layers-readback,true)                      fails-if(Android&&!ARMv7)  == webgl-clear-test.html?readback&__&_____&preserve  wrapper.html?green.png
+pref(webgl.force-layers-readback,true)                      fails-if(Android&&!ARMv7)  == webgl-clear-test.html?readback&aa&_____&preserve  wrapper.html?green.png
+pref(webgl.force-layers-readback,true) fuzzy-if(B2G,256,83) fails-if(Android&&!ARMv7)  == webgl-clear-test.html?readback&__&alpha&preserve  wrapper.html?green.png
+pref(webgl.force-layers-readback,true) fuzzy-if(B2G,256,83) fails-if(Android&&!ARMv7)  == webgl-clear-test.html?readback&aa&alpha&preserve  wrapper.html?green.png
 
 # Check orientation:
-                      == webgl-orientation-test.html?__&_____&________  wrapper.html?white-top-left.png
-                      == webgl-orientation-test.html?aa&_____&________  wrapper.html?white-top-left.png
-fuzzy-if(B2G,256,83)  == webgl-orientation-test.html?__&alpha&________  wrapper.html?white-top-left.png
-fuzzy-if(B2G,256,83)  == webgl-orientation-test.html?aa&alpha&________  wrapper.html?white-top-left.png
-                      == webgl-orientation-test.html?__&_____&preserve  wrapper.html?white-top-left.png
-                      == webgl-orientation-test.html?aa&_____&preserve  wrapper.html?white-top-left.png
-fuzzy-if(B2G,256,83)  == webgl-orientation-test.html?__&alpha&preserve  wrapper.html?white-top-left.png
-fuzzy-if(B2G,256,83)  == webgl-orientation-test.html?aa&alpha&preserve  wrapper.html?white-top-left.png
+                     fails-if(Android&&!ARMv7)  == webgl-orientation-test.html?__&_____&________  wrapper.html?white-top-left.png
+                     fails-if(Android&&!ARMv7)  == webgl-orientation-test.html?aa&_____&________  wrapper.html?white-top-left.png
+fuzzy-if(B2G,256,83) fails-if(Android&&!ARMv7)  == webgl-orientation-test.html?__&alpha&________  wrapper.html?white-top-left.png
+fuzzy-if(B2G,256,83) fails-if(Android&&!ARMv7)  == webgl-orientation-test.html?aa&alpha&________  wrapper.html?white-top-left.png
+                     fails-if(Android&&!ARMv7)  == webgl-orientation-test.html?__&_____&preserve  wrapper.html?white-top-left.png
+                     fails-if(Android&&!ARMv7)  == webgl-orientation-test.html?aa&_____&preserve  wrapper.html?white-top-left.png
+fuzzy-if(B2G,256,83) fails-if(Android&&!ARMv7)  == webgl-orientation-test.html?__&alpha&preserve  wrapper.html?white-top-left.png
+fuzzy-if(B2G,256,83) fails-if(Android&&!ARMv7)  == webgl-orientation-test.html?aa&alpha&preserve  wrapper.html?white-top-left.png
 
-pref(webgl.force-layers-readback,true)                       == webgl-orientation-test.html?readback&__&_____&________  wrapper.html?white-top-left.png
-pref(webgl.force-layers-readback,true)                       == webgl-orientation-test.html?readback&aa&_____&________  wrapper.html?white-top-left.png
-pref(webgl.force-layers-readback,true) fuzzy-if(B2G,256,83)  == webgl-orientation-test.html?readback&__&alpha&________  wrapper.html?white-top-left.png
-pref(webgl.force-layers-readback,true) fuzzy-if(B2G,256,83)  == webgl-orientation-test.html?readback&aa&alpha&________  wrapper.html?white-top-left.png
-pref(webgl.force-layers-readback,true)                       == webgl-orientation-test.html?readback&__&_____&preserve  wrapper.html?white-top-left.png
-pref(webgl.force-layers-readback,true)                       == webgl-orientation-test.html?readback&aa&_____&preserve  wrapper.html?white-top-left.png
-pref(webgl.force-layers-readback,true) fuzzy-if(B2G,256,83)  == webgl-orientation-test.html?readback&__&alpha&preserve  wrapper.html?white-top-left.png
-pref(webgl.force-layers-readback,true) fuzzy-if(B2G,256,83)  == webgl-orientation-test.html?readback&aa&alpha&preserve  wrapper.html?white-top-left.png
+pref(webgl.force-layers-readback,true)                      fails-if(Android&&!ARMv7)  == webgl-orientation-test.html?readback&__&_____&________  wrapper.html?white-top-left.png
+pref(webgl.force-layers-readback,true)                      fails-if(Android&&!ARMv7)  == webgl-orientation-test.html?readback&aa&_____&________  wrapper.html?white-top-left.png
+pref(webgl.force-layers-readback,true) fuzzy-if(B2G,256,83) fails-if(Android&&!ARMv7)  == webgl-orientation-test.html?readback&__&alpha&________  wrapper.html?white-top-left.png
+pref(webgl.force-layers-readback,true) fuzzy-if(B2G,256,83) fails-if(Android&&!ARMv7)  == webgl-orientation-test.html?readback&aa&alpha&________  wrapper.html?white-top-left.png
+pref(webgl.force-layers-readback,true)                      fails-if(Android&&!ARMv7)  == webgl-orientation-test.html?readback&__&_____&preserve  wrapper.html?white-top-left.png
+pref(webgl.force-layers-readback,true)                      fails-if(Android&&!ARMv7)  == webgl-orientation-test.html?readback&aa&_____&preserve  wrapper.html?white-top-left.png
+pref(webgl.force-layers-readback,true) fuzzy-if(B2G,256,83) fails-if(Android&&!ARMv7)  == webgl-orientation-test.html?readback&__&alpha&preserve  wrapper.html?white-top-left.png
+pref(webgl.force-layers-readback,true) fuzzy-if(B2G,256,83) fails-if(Android&&!ARMv7)  == webgl-orientation-test.html?readback&aa&alpha&preserve  wrapper.html?white-top-left.png
 
 # Does we draw the correct color in the correct places with all context creation options?
 # (Note that our context creation option matrix is 2^6 = 64)
-random-if(B2G) == webgl-color-test.html?__&_____&_____&_______&________&_______  wrapper.html?colors.png # Bug 844439
-random-if(B2G) == webgl-color-test.html?aa&_____&_____&_______&________&_______  wrapper.html?colors.png # Bug 844439
-random-if(B2G) == webgl-color-test.html?__&alpha&_____&_______&________&_______  wrapper.html?colors.png # Bug 844439
-random-if(B2G) == webgl-color-test.html?aa&alpha&_____&_______&________&_______  wrapper.html?colors.png # Bug 844439
-random-if(B2G) == webgl-color-test.html?__&_____&depth&_______&________&_______  wrapper.html?colors.png # Bug 844439
-random-if(B2G) == webgl-color-test.html?aa&_____&depth&_______&________&_______  wrapper.html?colors.png # Bug 844439
-random-if(B2G) == webgl-color-test.html?__&alpha&depth&_______&________&_______  wrapper.html?colors.png # Bug 844439
-random-if(B2G) == webgl-color-test.html?aa&alpha&depth&_______&________&_______  wrapper.html?colors.png # Bug 844439
-random-if(B2G) == webgl-color-test.html?__&_____&_____&premult&________&_______  wrapper.html?colors.png # Bug 844439
-random-if(B2G) == webgl-color-test.html?aa&_____&_____&premult&________&_______  wrapper.html?colors.png # Bug 844439
-random-if(B2G) == webgl-color-test.html?__&alpha&_____&premult&________&_______  wrapper.html?colors.png # Bug 844439
-random-if(B2G) == webgl-color-test.html?aa&alpha&_____&premult&________&_______  wrapper.html?colors.png # Bug 844439
-random-if(B2G) == webgl-color-test.html?__&_____&depth&premult&________&_______  wrapper.html?colors.png # Bug 844439
-random-if(B2G) == webgl-color-test.html?aa&_____&depth&premult&________&_______  wrapper.html?colors.png # Bug 844439
-random-if(B2G) == webgl-color-test.html?__&alpha&depth&premult&________&_______  wrapper.html?colors.png # Bug 844439
-random-if(B2G) == webgl-color-test.html?aa&alpha&depth&premult&________&_______  wrapper.html?colors.png # Bug 844439
+fails-if(B2G)  fails-if(Android&&!ARMv7)  == webgl-color-test.html?__&_____&_____&_______&________&_______  wrapper.html?colors.png # Bug 844439
+random-if(B2G) fails-if(Android&&!ARMv7)  == webgl-color-test.html?aa&_____&_____&_______&________&_______  wrapper.html?colors.png # Bug 844439
+random-if(B2G) fails-if(Android&&!ARMv7)  == webgl-color-test.html?__&alpha&_____&_______&________&_______  wrapper.html?colors.png # Bug 844439
+random-if(B2G) fails-if(Android&&!ARMv7)  == webgl-color-test.html?aa&alpha&_____&_______&________&_______  wrapper.html?colors.png # Bug 844439
+random-if(B2G) fails-if(Android&&!ARMv7)  == webgl-color-test.html?__&_____&depth&_______&________&_______  wrapper.html?colors.png # Bug 844439
+random-if(B2G) fails-if(Android&&!ARMv7)  == webgl-color-test.html?aa&_____&depth&_______&________&_______  wrapper.html?colors.png # Bug 844439
+random-if(B2G) fails-if(Android&&!ARMv7)  == webgl-color-test.html?__&alpha&depth&_______&________&_______  wrapper.html?colors.png # Bug 844439
+random-if(B2G) fails-if(Android&&!ARMv7)  == webgl-color-test.html?aa&alpha&depth&_______&________&_______  wrapper.html?colors.png # Bug 844439
+random-if(B2G) fails-if(Android&&!ARMv7)  == webgl-color-test.html?__&_____&_____&premult&________&_______  wrapper.html?colors.png # Bug 844439
+random-if(B2G) fails-if(Android&&!ARMv7)  == webgl-color-test.html?aa&_____&_____&premult&________&_______  wrapper.html?colors.png # Bug 844439
+random-if(B2G) fails-if(Android&&!ARMv7)  == webgl-color-test.html?__&alpha&_____&premult&________&_______  wrapper.html?colors.png # Bug 844439
+random-if(B2G) fails-if(Android&&!ARMv7)  == webgl-color-test.html?aa&alpha&_____&premult&________&_______  wrapper.html?colors.png # Bug 844439
+random-if(B2G) fails-if(Android&&!ARMv7)  == webgl-color-test.html?__&_____&depth&premult&________&_______  wrapper.html?colors.png # Bug 844439
+random-if(B2G) fails-if(Android&&!ARMv7)  == webgl-color-test.html?aa&_____&depth&premult&________&_______  wrapper.html?colors.png # Bug 844439
+random-if(B2G) fails-if(Android&&!ARMv7)  == webgl-color-test.html?__&alpha&depth&premult&________&_______  wrapper.html?colors.png # Bug 844439
+random-if(B2G) fails-if(Android&&!ARMv7)  == webgl-color-test.html?aa&alpha&depth&premult&________&_______  wrapper.html?colors.png # Bug 844439
 
-random-if(B2G) == webgl-color-test.html?__&_____&_____&_______&preserve&_______  wrapper.html?colors.png # Bug 844439
-random-if(B2G) == webgl-color-test.html?aa&_____&_____&_______&preserve&_______  wrapper.html?colors.png # Bug 844439
-random-if(B2G) == webgl-color-test.html?__&alpha&_____&_______&preserve&_______  wrapper.html?colors.png # Bug 844439
-random-if(B2G) == webgl-color-test.html?aa&alpha&_____&_______&preserve&_______  wrapper.html?colors.png # Bug 844439
-random-if(B2G) == webgl-color-test.html?__&_____&depth&_______&preserve&_______  wrapper.html?colors.png # Bug 844439
-random-if(B2G) == webgl-color-test.html?aa&_____&depth&_______&preserve&_______  wrapper.html?colors.png # Bug 844439
-random-if(B2G) == webgl-color-test.html?__&alpha&depth&_______&preserve&_______  wrapper.html?colors.png # Bug 844439
-random-if(B2G) == webgl-color-test.html?aa&alpha&depth&_______&preserve&_______  wrapper.html?colors.png # Bug 844439
-random-if(B2G) == webgl-color-test.html?__&_____&_____&premult&preserve&_______  wrapper.html?colors.png # Bug 844439
-random-if(B2G) == webgl-color-test.html?aa&_____&_____&premult&preserve&_______  wrapper.html?colors.png # Bug 844439
-random-if(B2G) == webgl-color-test.html?__&alpha&_____&premult&preserve&_______  wrapper.html?colors.png # Bug 844439
-random-if(B2G) == webgl-color-test.html?aa&alpha&_____&premult&preserve&_______  wrapper.html?colors.png # Bug 844439
-random-if(B2G) == webgl-color-test.html?__&_____&depth&premult&preserve&_______  wrapper.html?colors.png # Bug 844439
-random-if(B2G) == webgl-color-test.html?aa&_____&depth&premult&preserve&_______  wrapper.html?colors.png # Bug 844439
-random-if(B2G) == webgl-color-test.html?__&alpha&depth&premult&preserve&_______  wrapper.html?colors.png # Bug 844439
-random-if(B2G) == webgl-color-test.html?aa&alpha&depth&premult&preserve&_______  wrapper.html?colors.png # Bug 844439
+random-if(B2G) fails-if(Android&&!ARMv7)  == webgl-color-test.html?__&_____&_____&_______&preserve&_______  wrapper.html?colors.png # Bug 844439
+random-if(B2G) fails-if(Android&&!ARMv7)  == webgl-color-test.html?aa&_____&_____&_______&preserve&_______  wrapper.html?colors.png # Bug 844439
+random-if(B2G) fails-if(Android&&!ARMv7)  == webgl-color-test.html?__&alpha&_____&_______&preserve&_______  wrapper.html?colors.png # Bug 844439
+random-if(B2G) fails-if(Android&&!ARMv7)  == webgl-color-test.html?aa&alpha&_____&_______&preserve&_______  wrapper.html?colors.png # Bug 844439
+random-if(B2G) fails-if(Android&&!ARMv7)  == webgl-color-test.html?__&_____&depth&_______&preserve&_______  wrapper.html?colors.png # Bug 844439
+random-if(B2G) fails-if(Android&&!ARMv7)  == webgl-color-test.html?aa&_____&depth&_______&preserve&_______  wrapper.html?colors.png # Bug 844439
+random-if(B2G) fails-if(Android&&!ARMv7)  == webgl-color-test.html?__&alpha&depth&_______&preserve&_______  wrapper.html?colors.png # Bug 844439
+random-if(B2G) fails-if(Android&&!ARMv7)  == webgl-color-test.html?aa&alpha&depth&_______&preserve&_______  wrapper.html?colors.png # Bug 844439
+random-if(B2G) fails-if(Android&&!ARMv7)  == webgl-color-test.html?__&_____&_____&premult&preserve&_______  wrapper.html?colors.png # Bug 844439
+random-if(B2G) fails-if(Android&&!ARMv7)  == webgl-color-test.html?aa&_____&_____&premult&preserve&_______  wrapper.html?colors.png # Bug 844439
+random-if(B2G) fails-if(Android&&!ARMv7)  == webgl-color-test.html?__&alpha&_____&premult&preserve&_______  wrapper.html?colors.png # Bug 844439
+random-if(B2G) fails-if(Android&&!ARMv7)  == webgl-color-test.html?aa&alpha&_____&premult&preserve&_______  wrapper.html?colors.png # Bug 844439
+random-if(B2G) fails-if(Android&&!ARMv7)  == webgl-color-test.html?__&_____&depth&premult&preserve&_______  wrapper.html?colors.png # Bug 844439
+random-if(B2G) fails-if(Android&&!ARMv7)  == webgl-color-test.html?aa&_____&depth&premult&preserve&_______  wrapper.html?colors.png # Bug 844439
+random-if(B2G) fails-if(Android&&!ARMv7)  == webgl-color-test.html?__&alpha&depth&premult&preserve&_______  wrapper.html?colors.png # Bug 844439
+random-if(B2G) fails-if(Android&&!ARMv7)  == webgl-color-test.html?aa&alpha&depth&premult&preserve&_______  wrapper.html?colors.png # Bug 844439
 
-random-if(B2G) == webgl-color-test.html?__&_____&_____&_______&________&stencil  wrapper.html?colors.png # Bug 844439
-random-if(B2G) == webgl-color-test.html?aa&_____&_____&_______&________&stencil  wrapper.html?colors.png # Bug 844439
-random-if(B2G) == webgl-color-test.html?__&alpha&_____&_______&________&stencil  wrapper.html?colors.png # Bug 844439
-random-if(B2G) == webgl-color-test.html?aa&alpha&_____&_______&________&stencil  wrapper.html?colors.png # Bug 844439
-random-if(B2G) == webgl-color-test.html?__&_____&depth&_______&________&stencil  wrapper.html?colors.png # Bug 844439
-random-if(B2G) == webgl-color-test.html?aa&_____&depth&_______&________&stencil  wrapper.html?colors.png # Bug 844439
-random-if(B2G) == webgl-color-test.html?__&alpha&depth&_______&________&stencil  wrapper.html?colors.png # Bug 844439
-random-if(B2G) == webgl-color-test.html?aa&alpha&depth&_______&________&stencil  wrapper.html?colors.png # Bug 844439
-random-if(B2G) == webgl-color-test.html?__&_____&_____&premult&________&stencil  wrapper.html?colors.png # Bug 844439
-random-if(B2G) == webgl-color-test.html?aa&_____&_____&premult&________&stencil  wrapper.html?colors.png # Bug 844439
-random-if(B2G) == webgl-color-test.html?__&alpha&_____&premult&________&stencil  wrapper.html?colors.png # Bug 844439
-random-if(B2G) == webgl-color-test.html?aa&alpha&_____&premult&________&stencil  wrapper.html?colors.png # Bug 844439
-random-if(B2G) == webgl-color-test.html?__&_____&depth&premult&________&stencil  wrapper.html?colors.png # Bug 844439
-random-if(B2G) == webgl-color-test.html?aa&_____&depth&premult&________&stencil  wrapper.html?colors.png # Bug 844439
-random-if(B2G) == webgl-color-test.html?__&alpha&depth&premult&________&stencil  wrapper.html?colors.png # Bug 844439
-random-if(B2G) == webgl-color-test.html?aa&alpha&depth&premult&________&stencil  wrapper.html?colors.png # Bug 844439
-
-random-if(B2G) == webgl-color-test.html?__&_____&_____&_______&preserve&stencil  wrapper.html?colors.png # Bug 844439
-random-if(B2G) == webgl-color-test.html?aa&_____&_____&_______&preserve&stencil  wrapper.html?colors.png # Bug 844439
-random-if(B2G) == webgl-color-test.html?__&alpha&_____&_______&preserve&stencil  wrapper.html?colors.png # Bug 844439
-random-if(B2G) == webgl-color-test.html?aa&alpha&_____&_______&preserve&stencil  wrapper.html?colors.png # Bug 844439
-random-if(B2G) == webgl-color-test.html?__&_____&depth&_______&preserve&stencil  wrapper.html?colors.png # Bug 844439
-random-if(B2G) == webgl-color-test.html?aa&_____&depth&_______&preserve&stencil  wrapper.html?colors.png # Bug 844439
-random-if(B2G) == webgl-color-test.html?__&alpha&depth&_______&preserve&stencil  wrapper.html?colors.png # Bug 844439
-random-if(B2G) == webgl-color-test.html?aa&alpha&depth&_______&preserve&stencil  wrapper.html?colors.png # Bug 844439
-random-if(B2G) == webgl-color-test.html?__&_____&_____&premult&preserve&stencil  wrapper.html?colors.png # Bug 844439
-random-if(B2G) == webgl-color-test.html?aa&_____&_____&premult&preserve&stencil  wrapper.html?colors.png # Bug 844439
-random-if(B2G) == webgl-color-test.html?__&alpha&_____&premult&preserve&stencil  wrapper.html?colors.png # Bug 844439
-random-if(B2G) == webgl-color-test.html?aa&alpha&_____&premult&preserve&stencil  wrapper.html?colors.png # Bug 844439
-random-if(B2G) == webgl-color-test.html?__&_____&depth&premult&preserve&stencil  wrapper.html?colors.png # Bug 844439
-random-if(B2G) == webgl-color-test.html?aa&_____&depth&premult&preserve&stencil  wrapper.html?colors.png # Bug 844439
-random-if(B2G) == webgl-color-test.html?__&alpha&depth&premult&preserve&stencil  wrapper.html?colors.png # Bug 844439
-random-if(B2G) == webgl-color-test.html?aa&alpha&depth&premult&preserve&stencil  wrapper.html?colors.png # Bug 844439
+random-if(B2G) fails-if(Android&&!ARMv7)  == webgl-color-test.html?__&_____&_____&_______&________&stencil  wrapper.html?colors.png # Bug 844439
+random-if(B2G) fails-if(Android&&!ARMv7)  == webgl-color-test.html?aa&_____&_____&_______&________&stencil  wrapper.html?colors.png # Bug 844439
+random-if(B2G) fails-if(Android&&!ARMv7)  == webgl-color-test.html?__&alpha&_____&_______&________&stencil  wrapper.html?colors.png # Bug 844439
+random-if(B2G) fails-if(Android&&!ARMv7)  == webgl-color-test.html?aa&alpha&_____&_______&________&stencil  wrapper.html?colors.png # Bug 844439
+random-if(B2G) fails-if(Android&&!ARMv7)  == webgl-color-test.html?__&_____&depth&_______&________&stencil  wrapper.html?colors.png # Bug 844439
+random-if(B2G) fails-if(Android&&!ARMv7)  == webgl-color-test.html?aa&_____&depth&_______&________&stencil  wrapper.html?colors.png # Bug 844439
+random-if(B2G) fails-if(Android&&!ARMv7)  == webgl-color-test.html?__&alpha&depth&_______&________&stencil  wrapper.html?colors.png # Bug 844439
+random-if(B2G) fails-if(Android&&!ARMv7)  == webgl-color-test.html?aa&alpha&depth&_______&________&stencil  wrapper.html?colors.png # Bug 844439
+random-if(B2G) fails-if(Android&&!ARMv7)  == webgl-color-test.html?__&_____&_____&premult&________&stencil  wrapper.html?colors.png # Bug 844439
+random-if(B2G) fails-if(Android&&!ARMv7)  == webgl-color-test.html?aa&_____&_____&premult&________&stencil  wrapper.html?colors.png # Bug 844439
+random-if(B2G) fails-if(Android&&!ARMv7)  == webgl-color-test.html?__&alpha&_____&premult&________&stencil  wrapper.html?colors.png # Bug 844439
+random-if(B2G) fails-if(Android&&!ARMv7)  == webgl-color-test.html?aa&alpha&_____&premult&________&stencil  wrapper.html?colors.png # Bug 844439
+random-if(B2G) fails-if(Android&&!ARMv7)  == webgl-color-test.html?__&_____&depth&premult&________&stencil  wrapper.html?colors.png # Bug 844439
+random-if(B2G) fails-if(Android&&!ARMv7)  == webgl-color-test.html?aa&_____&depth&premult&________&stencil  wrapper.html?colors.png # Bug 844439
+random-if(B2G) fails-if(Android&&!ARMv7)  == webgl-color-test.html?__&alpha&depth&premult&________&stencil  wrapper.html?colors.png # Bug 844439
+random-if(B2G) fails-if(Android&&!ARMv7)  == webgl-color-test.html?aa&alpha&depth&premult&________&stencil  wrapper.html?colors.png # Bug 844439
+                                             
+random-if(B2G) fails-if(Android&&!ARMv7)  == webgl-color-test.html?__&_____&_____&_______&preserve&stencil  wrapper.html?colors.png # Bug 844439
+random-if(B2G) fails-if(Android&&!ARMv7)  == webgl-color-test.html?aa&_____&_____&_______&preserve&stencil  wrapper.html?colors.png # Bug 844439
+random-if(B2G) fails-if(Android&&!ARMv7)  == webgl-color-test.html?__&alpha&_____&_______&preserve&stencil  wrapper.html?colors.png # Bug 844439
+random-if(B2G) fails-if(Android&&!ARMv7)  == webgl-color-test.html?aa&alpha&_____&_______&preserve&stencil  wrapper.html?colors.png # Bug 844439
+random-if(B2G) fails-if(Android&&!ARMv7)  == webgl-color-test.html?__&_____&depth&_______&preserve&stencil  wrapper.html?colors.png # Bug 844439
+random-if(B2G) fails-if(Android&&!ARMv7)  == webgl-color-test.html?aa&_____&depth&_______&preserve&stencil  wrapper.html?colors.png # Bug 844439
+random-if(B2G) fails-if(Android&&!ARMv7)  == webgl-color-test.html?__&alpha&depth&_______&preserve&stencil  wrapper.html?colors.png # Bug 844439
+random-if(B2G) fails-if(Android&&!ARMv7)  == webgl-color-test.html?aa&alpha&depth&_______&preserve&stencil  wrapper.html?colors.png # Bug 844439
+random-if(B2G) fails-if(Android&&!ARMv7)  == webgl-color-test.html?__&_____&_____&premult&preserve&stencil  wrapper.html?colors.png # Bug 844439
+random-if(B2G) fails-if(Android&&!ARMv7)  == webgl-color-test.html?aa&_____&_____&premult&preserve&stencil  wrapper.html?colors.png # Bug 844439
+random-if(B2G) fails-if(Android&&!ARMv7)  == webgl-color-test.html?__&alpha&_____&premult&preserve&stencil  wrapper.html?colors.png # Bug 844439
+random-if(B2G) fails-if(Android&&!ARMv7)  == webgl-color-test.html?aa&alpha&_____&premult&preserve&stencil  wrapper.html?colors.png # Bug 844439
+random-if(B2G) fails-if(Android&&!ARMv7)  == webgl-color-test.html?__&_____&depth&premult&preserve&stencil  wrapper.html?colors.png # Bug 844439
+random-if(B2G) fails-if(Android&&!ARMv7)  == webgl-color-test.html?aa&_____&depth&premult&preserve&stencil  wrapper.html?colors.png # Bug 844439
+random-if(B2G) fails-if(Android&&!ARMv7)  == webgl-color-test.html?__&alpha&depth&premult&preserve&stencil  wrapper.html?colors.png # Bug 844439
+random-if(B2G) fails-if(Android&&!ARMv7)  == webgl-color-test.html?aa&alpha&depth&premult&preserve&stencil  wrapper.html?colors.png # Bug 844439
 
 
 # Check a smaller selection for readback:
-pref(webgl.force-layers-readback,true) random-if(B2G) == webgl-color-test.html?readback&__&_____&________  wrapper.html?colors.png # Bug 844439
-pref(webgl.force-layers-readback,true) random-if(B2G) == webgl-color-test.html?readback&aa&_____&________  wrapper.html?colors.png # Bug 844439
-pref(webgl.force-layers-readback,true) random-if(B2G) == webgl-color-test.html?readback&__&alpha&________  wrapper.html?colors.png # Bug 844439
-pref(webgl.force-layers-readback,true) random-if(B2G) == webgl-color-test.html?readback&aa&alpha&________  wrapper.html?colors.png # Bug 844439
-pref(webgl.force-layers-readback,true) random-if(B2G) == webgl-color-test.html?readback&__&_____&preserve  wrapper.html?colors.png # Bug 844439
-pref(webgl.force-layers-readback,true) random-if(B2G) == webgl-color-test.html?readback&aa&_____&preserve  wrapper.html?colors.png # Bug 844439
-pref(webgl.force-layers-readback,true) random-if(B2G) == webgl-color-test.html?readback&__&alpha&preserve  wrapper.html?colors.png # Bug 844439
-pref(webgl.force-layers-readback,true) random-if(B2G) == webgl-color-test.html?readback&aa&alpha&preserve  wrapper.html?colors.png # Bug 844439
+pref(webgl.force-layers-readback,true) random-if(B2G) fails-if(Android&&!ARMv7)  == webgl-color-test.html?readback&__&_____&________  wrapper.html?colors.png # Bug 844439
+pref(webgl.force-layers-readback,true) random-if(B2G) fails-if(Android&&!ARMv7)  == webgl-color-test.html?readback&aa&_____&________  wrapper.html?colors.png # Bug 844439
+pref(webgl.force-layers-readback,true) random-if(B2G) fails-if(Android&&!ARMv7)  == webgl-color-test.html?readback&__&alpha&________  wrapper.html?colors.png # Bug 844439
+pref(webgl.force-layers-readback,true) random-if(B2G) fails-if(Android&&!ARMv7)  == webgl-color-test.html?readback&aa&alpha&________  wrapper.html?colors.png # Bug 844439
+pref(webgl.force-layers-readback,true) random-if(B2G) fails-if(Android&&!ARMv7)  == webgl-color-test.html?readback&__&_____&preserve  wrapper.html?colors.png # Bug 844439
+pref(webgl.force-layers-readback,true) random-if(B2G) fails-if(Android&&!ARMv7)  == webgl-color-test.html?readback&aa&_____&preserve  wrapper.html?colors.png # Bug 844439
+pref(webgl.force-layers-readback,true) random-if(B2G) fails-if(Android&&!ARMv7)  == webgl-color-test.html?readback&__&alpha&preserve  wrapper.html?colors.png # Bug 844439
+pref(webgl.force-layers-readback,true) random-if(B2G) fails-if(Android&&!ARMv7)  == webgl-color-test.html?readback&aa&alpha&preserve  wrapper.html?colors.png # Bug 844439
 
 
 # Check alpha behavior:
-fuzzy-if(B2G,256,83)  == webgl-color-alpha-test.html?colorVal=1.0&alphaVal=1.0  wrapper.html?colors.png
+fuzzy-if(B2G,256,83) fails-if(Android&&!ARMv7)  == webgl-color-alpha-test.html?colorVal=1.0&alphaVal=1.0  wrapper.html?colors.png
 # These tests don't use wrapper.html, as there appear to be invalidation issues with black.png and async image decoding - Bug 803299
-== webgl-color-alpha-test.html?colorVal=0.0&alphaVal=1.0  black.html
+fails-if(Android&&!ARMv7)  == webgl-color-alpha-test.html?colorVal=0.0&alphaVal=1.0  black.html
 
-fuzzy-if(B2G,256,83)  == webgl-color-alpha-test.html?colorVal=1.0&alphaVal=0.0        wrapper.html?colors.png
-fails-if(B2G)         == webgl-color-alpha-test.html?colorVal=1.0&alphaVal=0.0&alpha  wrapper.html?white.png
+fuzzy-if(B2G,256,83) fails-if(Android&&!ARMv7)  == webgl-color-alpha-test.html?colorVal=1.0&alphaVal=0.0        wrapper.html?colors.png
+fails-if(B2G)        fails-if(Android&&!ARMv7)  == webgl-color-alpha-test.html?colorVal=1.0&alphaVal=0.0&alpha  wrapper.html?white.png
 
-fuzzy(1,65536) fuzzy-if(B2G,256,83) fuzzy-if(Android||B2G,9,65536)  == webgl-color-alpha-test.html?colorVal=0.5&alphaVal=1.0  wrapper.html?half-colors.png
+fuzzy(1,65536) fuzzy-if(B2G,256,83) fuzzy-if(Android||B2G,9,65536) fails-if(Android&&!ARMv7)  == webgl-color-alpha-test.html?colorVal=0.5&alphaVal=1.0  wrapper.html?half-colors.png
 
 # Test premult:
-fuzzy(1,65536) fails-if(B2G) fuzzy-if(Android,9,65536)                                 == webgl-color-alpha-test.html?colorVal=1.0&alphaVal=0.5&alpha          wrapper.html?colors-half-alpha.png
-fuzzy(1,65536) fails-if(B2G) fuzzy-if(Android,9,65536) fails-if(cocoaWidget||Android)  == webgl-color-alpha-test.html?colorVal=0.5&alphaVal=0.5&alpha          wrapper.html?half-colors-half-alpha.png
-fuzzy(1,65536) fails-if(B2G) fuzzy-if(Android,9,65536)                                 == webgl-color-alpha-test.html?colorVal=0.5&alphaVal=0.5&alpha&premult  wrapper.html?colors-half-alpha.png
+fuzzy(1,65536) fails-if(B2G) fuzzy-if(Android,9,65536)                                fails-if(Android&&!ARMv7)  == webgl-color-alpha-test.html?colorVal=1.0&alphaVal=0.5&alpha          wrapper.html?colors-half-alpha.png
+fuzzy(1,65536) fails-if(B2G) fuzzy-if(Android,9,65536) fails-if(cocoaWidget||Android) fails-if(Android&&!ARMv7)  == webgl-color-alpha-test.html?colorVal=0.5&alphaVal=0.5&alpha          wrapper.html?half-colors-half-alpha.png
+fuzzy(1,65536) fails-if(B2G) fuzzy-if(Android,9,65536)                                fails-if(Android&&!ARMv7)  == webgl-color-alpha-test.html?colorVal=0.5&alphaVal=0.5&alpha&premult  wrapper.html?colors-half-alpha.png
 
 # Test over-bright premult:
-fuzzy(1,65536) fails-if(B2G) fuzzy-if(Android,9,65536)  == webgl-color-alpha-test.html?colorVal=1.0&alphaVal=0.5&alpha&premult  wrapper.html?colors-half-alpha.png
+fuzzy(1,65536) fails-if(B2G) fuzzy-if(Android,9,65536) fails-if(Android&&!ARMv7)  == webgl-color-alpha-test.html?colorVal=1.0&alphaVal=0.5&alpha&premult  wrapper.html?colors-half-alpha.png
 
 
 # Check for hanging framebuffer bindings:
-                                        == webgl-hanging-fb-test.html?__&________  wrapper.html?green.png
-                                        == webgl-hanging-fb-test.html?aa&________  wrapper.html?green.png
-pref(webgl.force-layers-readback,true)  == webgl-hanging-fb-test.html?__&readback  wrapper.html?green.png
-pref(webgl.force-layers-readback,true)  == webgl-hanging-fb-test.html?aa&readback  wrapper.html?green.png
+                                       fails-if(Android&&!ARMv7)  == webgl-hanging-fb-test.html?__&________  wrapper.html?green.png
+                                       fails-if(Android&&!ARMv7)  == webgl-hanging-fb-test.html?aa&________  wrapper.html?green.png
+pref(webgl.force-layers-readback,true) fails-if(Android&&!ARMv7)  == webgl-hanging-fb-test.html?__&readback  wrapper.html?green.png
+pref(webgl.force-layers-readback,true) fails-if(Android&&!ARMv7)  == webgl-hanging-fb-test.html?aa&readback  wrapper.html?green.png
 
-                                        == webgl-hanging-scissor-test.html?__&________  wrapper.html?green.png
-                                        == webgl-hanging-scissor-test.html?aa&________  wrapper.html?green.png
-pref(webgl.force-layers-readback,true)  == webgl-hanging-scissor-test.html?__&readback  wrapper.html?green.png
-pref(webgl.force-layers-readback,true)  == webgl-hanging-scissor-test.html?aa&readback  wrapper.html?green.png
+                                       fails-if(Android&&!ARMv7)  == webgl-hanging-scissor-test.html?__&________  wrapper.html?green.png
+                                       fails-if(Android&&!ARMv7)  == webgl-hanging-scissor-test.html?aa&________  wrapper.html?green.png
+pref(webgl.force-layers-readback,true) fails-if(Android&&!ARMv7)  == webgl-hanging-scissor-test.html?__&readback  wrapper.html?green.png
+pref(webgl.force-layers-readback,true) fails-if(Android&&!ARMv7)  == webgl-hanging-scissor-test.html?aa&readback  wrapper.html?green.png
 
 
 # Check that our experimental prefs still work:
 
 # 16bpp:
-skip-if(winWidget) pref(webgl.prefer-16bpp,true)                                         == webgl-color-test.html?16bpp           wrapper.html?colors.png
-skip-if(winWidget) pref(webgl.prefer-16bpp,true) pref(webgl.force-layers-readback,true)  == webgl-color-test.html?16bpp&readback  wrapper.html?colors.png
+skip-if(winWidget) pref(webgl.prefer-16bpp,true)                                        fails-if(Android&&!ARMv7)  == webgl-color-test.html?16bpp           wrapper.html?colors.png
+skip-if(winWidget) pref(webgl.prefer-16bpp,true) pref(webgl.force-layers-readback,true) fails-if(Android&&!ARMv7)  == webgl-color-test.html?16bpp&readback  wrapper.html?colors.png
 
 # Force native GL (Windows):
 skip-if(!winWidget) pref(webgl.prefer-native-gl,true)                                == webgl-clear-test.html?native-gl        wrapper.html?green.png
