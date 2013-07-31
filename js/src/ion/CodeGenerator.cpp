@@ -1299,7 +1299,7 @@ CodeGenerator::visitOutOfLineCallPostWriteBarrier(OutOfLineCallPostWriteBarrier 
     }
 
     Register runtimereg = regs.takeAny();
-    masm.mov(ImmWord(GetIonContext()->compartment->rt), runtimereg);
+    masm.mov(ImmWord(gen->compartment->rt), runtimereg);
 
     masm.setupUnalignedABICall(2, regs.takeAny());
     masm.passABIArg(runtimereg);
@@ -1321,7 +1321,7 @@ CodeGenerator::visitPostWriteBarrierO(LPostWriteBarrierO *lir)
     if (!addOutOfLineCode(ool))
         return false;
 
-    Nursery &nursery = GetIonContext()->compartment->rt->gcNursery;
+    Nursery &nursery = gen->compartment->rt->gcNursery;
 
     if (lir->object()->isConstant()) {
         JS_ASSERT(!nursery.isInside(&lir->object()->toConstant()->toObject()));
@@ -1353,7 +1353,7 @@ CodeGenerator::visitPostWriteBarrierV(LPostWriteBarrierV *lir)
     ValueOperand value = ToValue(lir, LPostWriteBarrierV::Input);
     masm.branchTestObject(Assembler::NotEqual, value, ool->rejoin());
 
-    Nursery &nursery = GetIonContext()->compartment->rt->gcNursery;
+    Nursery &nursery = gen->compartment->rt->gcNursery;
 
     if (lir->object()->isConstant()) {
         JS_ASSERT(!nursery.isInside(&lir->object()->toConstant()->toObject()));
@@ -1645,8 +1645,7 @@ CodeGenerator::visitCallGeneric(LCallGeneric *call)
     JS_ASSERT(!call->hasSingleTarget());
 
     // Generate an ArgumentsRectifier.
-    IonCompartment *ion = gen->ionCompartment();
-    IonCode *argumentsRectifier = ion->getArgumentsRectifier(executionMode);
+    IonCode *argumentsRectifier = gen->ionRuntime()->getArgumentsRectifier(executionMode);
 
     masm.checkStackAlignment();
 
@@ -2040,8 +2039,7 @@ CodeGenerator::visitApplyArgsGeneric(LApplyArgsGeneric *apply)
             masm.bind(&underflow);
 
             // Hardcode the address of the argumentsRectifier code.
-            IonCompartment *ion = gen->ionCompartment();
-            IonCode *argumentsRectifier = ion->getArgumentsRectifier(executionMode);
+            IonCode *argumentsRectifier = gen->ionRuntime()->getArgumentsRectifier(executionMode);
 
             JS_ASSERT(ArgumentsRectifierReg != objreg);
             masm.movePtr(ImmGCPtr(argumentsRectifier), objreg); // Necessary for GC marking.
@@ -2080,6 +2078,12 @@ CodeGenerator::visitApplyArgsGeneric(LApplyArgsGeneric *apply)
     emitPopArguments(apply, copyreg);
 
     return true;
+}
+
+bool
+CodeGenerator::visitBail(LBail *lir)
+{
+    return bailout(lir->snapshot());
 }
 
 bool
@@ -5058,7 +5062,7 @@ CodeGenerator::visitIteratorStart(LIteratorStart *lir)
     masm.or32(Imm32(JSITER_ACTIVE), Address(niTemp, offsetof(NativeIterator, flags)));
 
     // Chain onto the active iterator stack.
-    masm.movePtr(ImmWord(GetIonContext()->compartment), temp1);
+    masm.movePtr(ImmWord(gen->compartment), temp1);
     masm.loadPtr(Address(temp1, offsetof(JSCompartment, enumerators)), temp1);
 
     // ni->next = list
@@ -5369,7 +5373,7 @@ CodeGenerator::generate()
         return false;
 
     if (frameClass_ != FrameSizeClass::None()) {
-        deoptTable_ = GetIonContext()->compartment->ionCompartment()->getBailoutTable(frameClass_);
+        deoptTable_ = gen->ionRuntime()->getBailoutTable(frameClass_);
         if (!deoptTable_)
             return false;
     }
