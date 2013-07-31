@@ -5,7 +5,8 @@
 __all__ = [
     'check_for_crashes',
     'check_for_java_exception',
-    'log_crashes'
+    'kill_and_get_minidump',
+    'log_crashes',
 ]
 
 import glob
@@ -20,6 +21,7 @@ import zipfile
 from collections import namedtuple
 
 import mozfile
+import mozinfo
 import mozlog
 from mozlog.structured import structuredlog
 
@@ -339,3 +341,107 @@ def check_for_java_exception(logcat, quiet=False):
             break
 
     return found_exception
+
+if mozinfo.isWin:
+    import ctypes
+    import uuid
+
+    kernel32 = ctypes.windll.kernel32
+    OpenProcess = kernel32.OpenProcess
+    CloseHandle = kernel32.CloseHandle
+
+    def write_minidump(pid, dump_directory):
+        """
+        Write a minidump for a process.
+
+        :param pid: PID of the process to write a minidump for.
+        :param dump_directory: Directory in which to write the minidump.
+        """
+        PROCESS_QUERY_INFORMATION = 0x0400
+        PROCESS_VM_READ = 0x0010
+        GENERIC_READ = 0x80000000
+        GENERIC_WRITE = 0x40000000
+        CREATE_ALWAYS = 2
+        FILE_ATTRIBUTE_NORMAL = 0x80
+        INVALID_HANDLE_VALUE = -1
+
+        proc_handle = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ,
+                                  0, pid)
+        if not proc_handle:
+            return
+
+        file_name = os.path.join(dump_directory,
+                                 str(uuid.uuid4()) + ".dmp")
+        if not isinstance(file_name, unicode):
+            # Convert to unicode explicitly so our path will be valid as input
+            # to CreateFileW
+            file_name = unicode(file_name, sys.getfilesystemencoding())
+
+        file_handle = kernel32.CreateFileW(file_name,
+                                           GENERIC_READ | GENERIC_WRITE,
+                                           0,
+                                           None,
+                                           CREATE_ALWAYS,
+                                           FILE_ATTRIBUTE_NORMAL,
+                                           None)
+        if file_handle != INVALID_HANDLE_VALUE:
+            ctypes.windll.dbghelp.MiniDumpWriteDump(proc_handle,
+                                                    pid,
+                                                    file_handle,
+                                                    # Dump type - MiniDumpNormal
+                                                    0,
+                                                    # Exception parameter
+                                                    None,
+                                                    # User stream parameter
+                                                    None,
+                                                    # Callback parameter
+                                                    None)
+            CloseHandle(file_handle)
+        CloseHandle(proc_handle)
+
+    def kill_pid(pid):
+        """
+        Terminate a process with extreme prejudice.
+
+        :param pid: PID of the process to terminate.
+        """
+        PROCESS_TERMINATE = 0x0001
+        handle = OpenProcess(PROCESS_TERMINATE, 0, pid)
+        if handle:
+            kernel32.TerminateProcess(handle, 1)
+            CloseHandle(handle)
+else:
+    def kill_pid(pid):
+        """
+        Terminate a process with extreme prejudice.
+
+        :param pid: PID of the process to terminate.
+        """
+        os.kill(pid, signal.SIGKILL)
+
+def kill_and_get_minidump(pid, dump_directory=None):
+    """
+    Attempt to kill a process and leave behind a minidump describing its
+    execution state.
+
+    :param pid: The PID of the process to kill.
+    :param dump_directory: The directory where a minidump should be written on
+    Windows, where the dump will be written from outside the process.
+
+    On Windows a dump will be written using the MiniDumpWriteDump function
+    from DbgHelp.dll. On Linux and OS X the process will be sent a SIGABRT
+    signal to trigger minidump writing via a Breakpad signal handler. On other
+    platforms the process will simply be killed via SIGKILL.
+
+    If the process is hung in such a way that it cannot respond to SIGABRT
+    it may still be running after this function returns. In that case it
+    is the caller's responsibility to deal with killing it.
+    """
+    needs_killing = True
+    if mozinfo.isWin:
+        write_minidump(pid, dump_directory)
+    elif mozinfo.isLinux or mozinfo.isMac:
+        os.kill(pid, signal.SIGABRT)
+        needs_killing = False
+    if needs_killing:
+        kill_pid(pid)
