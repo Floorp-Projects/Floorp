@@ -1994,8 +1994,9 @@ ElementRestyler::Restyle(nsIContent        *aParentContent,
   // It would be nice if we could make stronger assertions here; they
   // would let us simplify the ?: expressions below setting |content|
   // and |pseudoContent| in sensible ways as well as making what
-  // |localContent|, |content|, and |pseudoContent| mean make more
-  // sense.  However, we can't, because of frame trees like the one in
+  // |content| and |pseudoContent| mean, and their relationship to
+  // |mFrame->GetContent()|, make more sense.  However, we can't,
+  // because of frame trees like the one in
   // https://bugzilla.mozilla.org/show_bug.cgi?id=472353#c14 .  Once we
   // fix bug 242277 we should be able to make this make more sense.
   NS_ASSERTION(mFrame->GetContent() || !aParentContent ||
@@ -2026,13 +2027,13 @@ ElementRestyler::Restyle(nsIContent        *aParentContent,
 
     nsIAtom* const pseudoTag = oldContext->GetPseudo();
     const nsCSSPseudoElements::Type pseudoType = oldContext->GetPseudoType();
-    nsIContent* localContent = mFrame->GetContent();
     // |content| is the node that we used for rule matching of
     // normal elements (not pseudo-elements) and for which we generate
     // framechange hints if we need them.
     // XXXldb Why does it make sense to use aParentContent?  (See
     // comment above assertion at start of function.)
-    nsIContent* content = localContent ? localContent : aParentContent;
+    nsIContent* content = mFrame->GetContent() ? mFrame->GetContent()
+                                               : aParentContent;
 
     if (content && content->IsElement()) {
       content->OwnerDoc()->FlushPendingLinkUpdates();
@@ -2169,7 +2170,7 @@ ElementRestyler::Restyle(nsIContent        *aParentContent,
       newContext = prevContinuationContext;
     }
     else if (pseudoTag == nsCSSAnonBoxes::mozNonElement) {
-      NS_ASSERTION(localContent,
+      NS_ASSERTION(mFrame->GetContent(),
                    "non pseudo-element frame without content node");
       newContext = styleSet->ResolveStyleForNonElement(parentContext);
     }
@@ -2223,7 +2224,7 @@ ElementRestyler::Restyle(nsIContent        *aParentContent,
         }
       }
       else {
-        NS_ASSERTION(localContent,
+        NS_ASSERTION(mFrame->GetContent(),
                      "non pseudo-element frame without content node");
         // Skip flex-item style fixup for anonymous subtrees:
         TreeMatchContext::AutoFlexItemStyleFixupSkipper
@@ -2333,8 +2334,8 @@ ElementRestyler::Restyle(nsIContent        *aParentContent,
                                      GetDocElementContainingBlock();
       undisplayedParent = nullptr;
     } else {
-      checkUndisplayed = !!localContent;
-      undisplayedParent = localContent;
+      checkUndisplayed = !!mFrame->GetContent();
+      undisplayedParent = mFrame->GetContent();
     }
     if (checkUndisplayed) {
       UndisplayedNode* undisplayed =
@@ -2416,7 +2417,7 @@ ElementRestyler::Restyle(nsIContent        *aParentContent,
           // Checking for a :before frame is cheaper than getting the
           // :before style context.
           if (!nsLayoutUtils::GetBeforeFrame(mFrame) &&
-              nsLayoutUtils::HasPseudoStyle(localContent, newContext,
+              nsLayoutUtils::HasPseudoStyle(mFrame->GetContent(), newContext,
                                             nsCSSPseudoElements::ePseudo_before,
                                             mPresContext)) {
             // Have to create the new :before frame
@@ -2447,7 +2448,7 @@ ElementRestyler::Restyle(nsIContent        *aParentContent,
         if (!nextContinuation) {
           // Getting the :after frame is more expensive than getting the pseudo
           // context, so get the pseudo context first.
-          if (nsLayoutUtils::HasPseudoStyle(localContent, newContext,
+          if (nsLayoutUtils::HasPseudoStyle(mFrame->GetContent(), newContext,
                                             nsCSSPseudoElements::ePseudo_after,
                                             mPresContext) &&
               !nsLayoutUtils::GetAfterFrame(mFrame)) {
