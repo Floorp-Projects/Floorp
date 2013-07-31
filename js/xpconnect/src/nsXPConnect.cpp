@@ -221,7 +221,69 @@ nsXPConnect::IsISupportsDescendant(nsIInterfaceInfo* info)
     return found;
 }
 
+void
+xpc::SystemErrorReporter(JSContext *cx, const char *message, JSErrorReport *rep)
+{
+    // It would be nice to assert !JS_DescribeScriptedCaller here, to be sure
+    // that there isn't any script running that could catch the exception. But
+    // the JS engine invokes the error reporter directly if someone reports an
+    // ErrorReport that it doesn't know how to turn into an exception. Arguably
+    // it should just learn how to throw everything. But either way, if the
+    // exception is ending here, it's not going to get propagated to a caller,
+    // so it's up to us to make it known.
+
+    nsresult rv;
+
+    /* Use the console service to register the error. */
+    nsCOMPtr<nsIConsoleService> consoleService =
+        do_GetService(NS_CONSOLESERVICE_CONTRACTID);
+
+    /*
+     * Make an nsIScriptError, populate it with information from this
+     * error, then log it with the console service.
+     */
+    nsCOMPtr<nsIScriptError> errorObject =
+        do_CreateInstance(NS_SCRIPTERROR_CONTRACTID);
+
+    if (consoleService && errorObject) {
+        uint32_t column = rep->uctokenptr - rep->uclinebuf;
+
+        const PRUnichar* ucmessage =
+            static_cast<const PRUnichar*>(rep->ucmessage);
+        const PRUnichar* uclinebuf =
+            static_cast<const PRUnichar*>(rep->uclinebuf);
+
+        rv = errorObject->Init(
+              ucmessage ? nsDependentString(ucmessage) : EmptyString(),
+              NS_ConvertASCIItoUTF16(rep->filename),
+              uclinebuf ? nsDependentString(uclinebuf) : EmptyString(),
+              rep->lineno, column, rep->flags,
+              "system javascript");
+        if (NS_SUCCEEDED(rv))
+            consoleService->LogMessage(errorObject);
+    }
+
+    /* Log to stderr in debug builds. */
+#ifdef DEBUG
+    fprintf(stderr, "System JS : %s %s:%d\n"
+            "                     %s\n",
+            JSREPORT_IS_WARNING(rep->flags) ? "WARNING" : "ERROR",
+            rep->filename, rep->lineno,
+            message ? message : "<no message>");
+#endif
+
+}
+
+NS_EXPORT_(void)
+xpc::SystemErrorReporterExternal(JSContext *cx, const char *message,
+                                 JSErrorReport *rep)
+{
+    return SystemErrorReporter(cx, message, rep);
+}
+
+
 /***************************************************************************/
+
 
 nsresult
 nsXPConnect::GetInfoForIID(const nsIID * aIID, nsIInterfaceInfo** info)
