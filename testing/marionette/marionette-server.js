@@ -168,7 +168,7 @@ MarionetteServerConnection.prototype = {
       } catch(e) {
         this.conn.send({ error: ("error occurred while processing '" +
                                  aPacket.type),
-                        message: e });
+                        message: e.message });
       }
     } else {
       this.conn.send({ error: "unrecognizedPacketType",
