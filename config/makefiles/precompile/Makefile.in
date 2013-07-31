@@ -1,0 +1,34 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# This make file defines the precompile tier. This tier effectively fans out
+# to other make files and specialized targets.
+
+DEPTH := @DEPTH@
+topsrcdir := @top_srcdir@
+srcdir := @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+SUPPRESS_DEFAULT_RULES := 1
+
+include $(topsrcdir)/config/rules.mk
+
+define make_subtier_dir
+@echo "BUILDSTATUS SUBTIER_START precompile $(1)"
+$(MAKE) -C $(2) $(3)
+@echo "BUILDSTATUS SUBTIER_FINISH precompile $(1)"
+
+endef
+
+export::
+	@echo "BUILDSTATUS SUBTIERS IPDL WebIDL"
+
+export:: ipdl webidl
+
+ipdl:
+	$(call make_subtier_dir,IPDL,$(DEPTH)/ipc/ipdl,ipdl)
+
+webidl:
+	$(call make_subtier_dir,WebIDL,$(DEPTH)/dom/bindings,webidl)
