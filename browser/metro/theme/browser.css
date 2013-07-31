@@ -249,7 +249,7 @@ documenttab[selected] .documenttab-selection {
   visibility: collapse;
 }
 
-#start-container[viewstate="snapped"] richgrid[expanded] {
+#start-container[viewstate="snapped"] .meta-section[expanded] > richgrid {
   visibility: visible;
 }
 
