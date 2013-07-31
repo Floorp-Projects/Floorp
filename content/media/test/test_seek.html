@@ -62,6 +62,7 @@ function startTest(test, token) {
   var v = document.createElement('video');
   manager.started(token);
   v.src = test.name;
+  v.preload = "metadata";
   v.token = token;
   document.body.appendChild(v);
   var name = test.name + " seek test " + test.number;
