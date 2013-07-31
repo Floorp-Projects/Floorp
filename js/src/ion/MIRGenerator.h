@@ -59,6 +59,9 @@ class MIRGenerator
     IonCompartment *ionCompartment() const {
         return compartment->ionCompartment();
     }
+    IonRuntime *ionRuntime() const {
+        return compartment->rt->ionRuntime();
+    }
     CompileInfo &info() {
         return *info_;
     }
