@@ -2345,6 +2345,10 @@ ElementRestyler::Restyle(nsRestyleHint aRestyleHint)
     }
     if (checkUndisplayed &&
         // No need to do this if we're planning to reframe already.
+        // It's also important to check mHintsHandled since we use
+        // mFrame->StyleContext(), which is out of date if mHintsHandled
+        // has a ReconstructFrame hint.  Using an out of date style
+        // context could trigger assertions about mismatched rule trees.
         !(mHintsHandled & nsChangeHint_ReconstructFrame)) {
       UndisplayedNode* undisplayed =
         frameConstructor->GetAllUndisplayedContentIn(undisplayedParent);
@@ -2382,11 +2386,12 @@ ElementRestyler::Restyle(nsRestyleHint aRestyleHint)
         if (thisChildHint) {
           undisplayedContext =
             styleSet->ResolveStyleFor(undisplayed->mContent->AsElement(),
-                                      newContext,
+                                      mFrame->StyleContext(),
                                       mTreeMatchContext);
         } else {
           undisplayedContext =
-            styleSet->ReparentStyleContext(undisplayed->mStyle, newContext,
+            styleSet->ReparentStyleContext(undisplayed->mStyle,
+                                           mFrame->StyleContext(),
                                            undisplayed->mContent->AsElement());
         }
         if (undisplayedContext) {
@@ -2409,6 +2414,10 @@ ElementRestyler::Restyle(nsRestyleHint aRestyleHint)
     // Check whether we might need to create a new ::before frame.
     // There's no need to do this if we're planning to reframe already
     // or if we're not forcing restyles on kids.
+    // It's also important to check mHintsHandled since we use
+    // mFrame->StyleContext(), which is out of date if mHintsHandled has a
+    // ReconstructFrame hint.  Using an out of date style context could
+    // trigger assertions about mismatched rule trees.
     if (!(mHintsHandled & nsChangeHint_ReconstructFrame) &&
         childRestyleHint) {
       // Make sure not to do this for pseudo-frames or frames that
@@ -2425,7 +2434,8 @@ ElementRestyler::Restyle(nsRestyleHint aRestyleHint)
           // Checking for a :before frame is cheaper than getting the
           // :before style context.
           if (!nsLayoutUtils::GetBeforeFrame(mFrame) &&
-              nsLayoutUtils::HasPseudoStyle(mFrame->GetContent(), newContext,
+              nsLayoutUtils::HasPseudoStyle(mFrame->GetContent(),
+                                            mFrame->StyleContext(),
                                             nsCSSPseudoElements::ePseudo_before,
                                             mPresContext)) {
             // Have to create the new :before frame
@@ -2438,8 +2448,7 @@ ElementRestyler::Restyle(nsRestyleHint aRestyleHint)
     }
 
     // Check whether we might need to create a new ::after frame.
-    // There's no need to do this if we're planning to reframe already
-    // or if we're not forcing restyles on kids.
+    // See comments above regarding :before.
     if (!(mHintsHandled & nsChangeHint_ReconstructFrame) &&
         childRestyleHint) {
       // Make sure not to do this for pseudo-frames or frames that
@@ -2456,7 +2465,8 @@ ElementRestyler::Restyle(nsRestyleHint aRestyleHint)
         if (!nextContinuation) {
           // Getting the :after frame is more expensive than getting the pseudo
           // context, so get the pseudo context first.
-          if (nsLayoutUtils::HasPseudoStyle(mFrame->GetContent(), newContext,
+          if (nsLayoutUtils::HasPseudoStyle(mFrame->GetContent(),
+                                            mFrame->StyleContext(),
                                             nsCSSPseudoElements::ePseudo_after,
                                             mPresContext) &&
               !nsLayoutUtils::GetAfterFrame(mFrame)) {
@@ -2474,6 +2484,10 @@ ElementRestyler::Restyle(nsRestyleHint aRestyleHint)
     // new style contexts to be resolved on all of this frame's
     // descendants anyway, so we want to avoid wasting time processing
     // style contexts that we're just going to throw away anyway. - dwh
+    // It's also important to check mHintsHandled since reresolving the
+    // kids would use mFrame->StyleContext(), which is out of date if
+    // mHintsHandled has a ReconstructFrame hint; doing this could trigger
+    // assertions about mismatched rule trees.
     if (!(mHintsHandled & nsChangeHint_ReconstructFrame)) {
 
 #ifdef ACCESSIBILITY
@@ -2484,7 +2498,7 @@ ElementRestyler::Restyle(nsRestyleHint aRestyleHint)
           !mFrame->GetPrevContinuation() &&
           !nsLayoutUtils::FrameIsNonFirstInIBSplit(mFrame)) {
         if (mDesiredA11yNotifications == eSendAllNotifications) {
-          bool isFrameVisible = newContext->StyleVisibility()->IsVisible();
+          bool isFrameVisible = mFrame->StyleVisibility()->IsVisible();
           if (isFrameVisible != mWasFrameVisible) {
             if (isFrameVisible) {
               // Notify a11y the element (perhaps with its children) was shown.
@@ -2503,7 +2517,7 @@ ElementRestyler::Restyle(nsRestyleHint aRestyleHint)
             }
           }
         } else if (mDesiredA11yNotifications == eNotifyIfShown &&
-                   newContext->StyleVisibility()->IsVisible()) {
+                   mFrame->StyleVisibility()->IsVisible()) {
           // Notify a11y that element stayed visible while its parent was
           // hidden.
           mVisibleKidsOfHiddenElement.AppendElement(mFrame->GetContent());
