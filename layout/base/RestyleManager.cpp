@@ -1959,6 +1959,9 @@ ElementRestyler::ElementRestyler(const ElementRestyler& aParentRestyler,
   , mOurA11yNotification(eDontNotify)
   , mVisibleKidsOfHiddenElement(aParentRestyler.mVisibleKidsOfHiddenElement)
 {
+  if (aConstructorFlags & FOR_OUT_OF_FLOW_CHILD) {
+    mHintsHandled = NS_SubtractHint(mHintsHandled, nsChangeHint_AllReflowHints);
+  }
 }
 
 ElementRestyler::ElementRestyler(ParentContextFromChildFrame,
@@ -2566,9 +2569,6 @@ ElementRestyler::Restyle(nsRestyleHint aRestyleHint)
               do {
                 ElementRestyler oofRestyler(*this, outOfFlowFrame,
                                             FOR_OUT_OF_FLOW_CHILD);
-                oofRestyler.mHintsHandled =
-                  NS_SubtractHint(oofRestyler.mHintsHandled,
-                                  nsChangeHint_AllReflowHints);
                 oofRestyler.Restyle(childRestyleHint);
               } while ((outOfFlowFrame = outOfFlowFrame->GetNextContinuation()));
 
