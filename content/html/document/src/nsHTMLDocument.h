@@ -104,6 +104,11 @@ public:
   // nsIDOMHTMLDocument interface
   NS_DECL_NSIDOMHTMLDOCUMENT
 
+  void RouteEvent(nsDOMEvent& aEvent)
+  {
+    RouteEvent(&aEvent);
+  }
+
   /**
    * Returns the result of document.all[aID] which can either be a node
    * or a nodelist depending on if there are multiple nodes with the same
@@ -242,6 +247,9 @@ public:
     // Deprecated
   }
   already_AddRefed<nsISelection> GetSelection(mozilla::ErrorResult& rv);
+  // The XPCOM CaptureEvents works fine for us.
+  // The XPCOM ReleaseEvents works fine for us.
+  // The XPCOM RouteEvent works fine for us.
   // We're picking up GetLocation from Document
   already_AddRefed<nsIDOMLocation> GetLocation() const {
     return nsIDocument::GetLocation();
