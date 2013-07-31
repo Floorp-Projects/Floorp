@@ -2343,7 +2343,9 @@ ElementRestyler::Restyle(nsRestyleHint aRestyleHint)
       checkUndisplayed = !!mFrame->GetContent();
       undisplayedParent = mFrame->GetContent();
     }
-    if (checkUndisplayed) {
+    if (checkUndisplayed &&
+        // No need to do this if we're planning to reframe already.
+        !(mHintsHandled & nsChangeHint_ReconstructFrame)) {
       UndisplayedNode* undisplayed =
         frameConstructor->GetAllUndisplayedContentIn(undisplayedParent);
       for (TreeMatchContext::AutoAncestorPusher
