@@ -120,8 +120,6 @@ DOMCI_CLASS(ChromeMessageBroadcaster)
 DOMCI_CLASS(ChromeMessageSender)
 
 DOMCI_CLASS(IDBRequest)
-DOMCI_CLASS(IDBCursor)
-DOMCI_CLASS(IDBCursorWithValue)
 DOMCI_CLASS(IDBKeyRange)
 DOMCI_CLASS(IDBOpenDBRequest)
 
