@@ -49,3 +49,8 @@ dictionary DNSCacheDict {
   sequence<DOMString> family;
   sequence<double> expiration;
 };
+
+dictionary ConnStatusDict {
+  DOMString status;
+};
+
