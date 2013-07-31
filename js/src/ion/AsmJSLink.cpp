@@ -220,22 +220,7 @@ DynamicallyLinkModule(JSContext *cx, CallArgs args, AsmJSModule &module)
         if (!ArrayBufferObject::prepareForAsmJS(cx, heap))
             return LinkFail(cx, "Unable to prepare ArrayBuffer for asm.js use");
 
-#if defined(JS_CPU_X86)
-        void *heapOffset = (void*)heap->dataPointer();
-        void *heapLength = (void*)heap->byteLength();
-        uint8_t *code = module.functionCode();
-        for (unsigned i = 0; i < module.numHeapAccesses(); i++) {
-            const AsmJSHeapAccess &access = module.heapAccess(i);
-            JSC::X86Assembler::setPointer(access.patchLengthAt(code), heapLength);
-            JSC::X86Assembler::setPointer(access.patchOffsetAt(code), heapOffset);
-        }
-#elif defined(JS_CPU_ARM)
-        // Now the length of the array is know, patch all of the bounds check sites
-        // with the new length.
-        ion::IonContext ic(cx, NULL);
-        module.patchBoundsChecks(heap->byteLength());
-
-#endif
+        module.patchHeapAccesses(heap, cx);
     }
 
     AutoObjectVector ffis(cx);

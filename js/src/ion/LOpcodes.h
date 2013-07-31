@@ -44,6 +44,7 @@
     _(CallGeneric)                  \
     _(CallNative)                   \
     _(ApplyArgsGeneric)             \
+    _(Bail)                         \
     _(GetDynamicName)               \
     _(FilterArguments)              \
     _(CallDirectEval)               \
