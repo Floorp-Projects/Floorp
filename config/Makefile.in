@@ -17,7 +17,7 @@ VISIBILITY_FLAGS =
 
 # STDCXX_COMPAT is not needed here, and will actually fail because
 # libstdc++-compat is not built yet.
-STDCXX_COMPAT =
+MOZ_LIBSTDCXX_HOST_VERSION =
 
 ifneq (WINNT,$(HOST_OS_ARCH))
 HOST_PROGRAM	= nsinstall_real$(HOST_BIN_SUFFIX)

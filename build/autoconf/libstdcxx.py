@@ -61,6 +61,8 @@ def find_version(e):
     args +=  ['-shared', '-Wl,-t']
     p = subprocess.Popen(args, stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
     candidates = [x for x in p.stdout if 'libstdc++.so' in x]
+    if not candidates:
+        return ''
     assert len(candidates) == 1
     libstdcxx = parse_ld_line(candidates[-1])
 
