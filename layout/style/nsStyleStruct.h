@@ -655,7 +655,7 @@ struct nsCSSShadowItem {
     MOZ_COUNT_DTOR(nsCSSShadowItem);
   }
 
-  bool operator==(const nsCSSShadowItem& aOther) const {
+  bool operator==(const nsCSSShadowItem& aOther) {
     return (mXOffset == aOther.mXOffset &&
             mYOffset == aOther.mYOffset &&
             mRadius == aOther.mRadius &&
@@ -664,7 +664,7 @@ struct nsCSSShadowItem {
             mInset == aOther.mInset &&
             (!mHasColor || mColor == aOther.mColor));
   }
-  bool operator!=(const nsCSSShadowItem& aOther) const {
+  bool operator!=(const nsCSSShadowItem& aOther) {
     return !(*this == aOther);
   }
 };
@@ -714,18 +714,6 @@ class nsCSSShadowArray {
           return true;
       }
       return false;
-    }
-
-    bool operator==(const nsCSSShadowArray& aOther) const {
-      if (mLength != aOther.Length())
-        return false;
-
-      for (uint32_t i = 0; i < mLength; ++i) {
-        if (ShadowAt(i) != aOther.ShadowAt(i))
-          return false;
-      }
-
-      return true;
     }
 
     NS_INLINE_DECL_REFCOUNTING(nsCSSShadowArray)
@@ -2293,49 +2281,18 @@ struct nsStyleFilter {
     eBlur,
     eBrightness,
     eContrast,
-    eDropShadow,
-    eGrayscale,
     eHueRotate,
     eInvert,
     eOpacity,
+    eGrayscale,
     eSaturate,
     eSepia,
   };
 
-  Type GetType() const {
-    return mType;
-  }
-
-  const nsStyleCoord& GetFilterParameter() const {
-    NS_ASSERTION(mType != eDropShadow &&
-                 mType != eURL &&
-                 mType != eNull, "wrong filter type");
-    return mFilterParameter;
-  }
-  void SetFilterParameter(const nsStyleCoord& aFilterParameter,
-                          Type aType);
-
-  nsIURI* GetURL() const {
-    NS_ASSERTION(mType == eURL, "wrong filter type");
-    return mURL;
-  }
-  void SetURL(nsIURI* aURL);
-
-  nsCSSShadowArray* GetDropShadow() const {
-    NS_ASSERTION(mType == eDropShadow, "wrong filter type");
-    return mDropShadow;
-  }
-  void SetDropShadow(nsCSSShadowArray* aDropShadow);
-
-private:
-  void ReleaseRef();
-
   Type mType;
+  nsIURI* mURL;
   nsStyleCoord mFilterParameter; // coord, percent, factor, angle
-  union {
-    nsIURI* mURL;
-    nsCSSShadowArray* mDropShadow;
-  };
+  // FIXME: Add a nsCSSShadowItem when we implement drop shadow.
 };
 
 struct nsStyleSVGReset {
@@ -2361,8 +2318,8 @@ struct nsStyleSVGReset {
   // filter functions.
   nsIURI* SingleFilter() const {
     return (mFilters.Length() == 1 &&
-            mFilters[0].GetType() == nsStyleFilter::Type::eURL) ?
-            mFilters[0].GetURL() : nullptr;
+            mFilters[0].mType == nsStyleFilter::Type::eURL) ?
+            mFilters[0].mURL : nullptr;
   }
 
   nsCOMPtr<nsIURI> mClipPath;         // [reset]

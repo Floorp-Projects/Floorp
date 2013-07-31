@@ -3752,7 +3752,7 @@ already_AddRefed<nsCSSShadowArray>
 nsRuleNode::GetShadowData(const nsCSSValueList* aList,
                           nsStyleContext* aContext,
                           bool aIsBoxShadow,
-                          bool& aCanStoreInRuleTree)
+                          bool& canStoreInRuleTree)
 {
   uint32_t arrayLength = ListLength(aList);
 
@@ -3775,13 +3775,13 @@ nsRuleNode::GetShadowData(const nsCSSValueList* aList,
     // OK to pass bad aParentCoord since we're not passing SETCOORD_INHERIT
     unitOK = SetCoord(arr->Item(0), tempCoord, nsStyleCoord(),
                       SETCOORD_LENGTH | SETCOORD_CALC_LENGTH_ONLY,
-                      aContext, mPresContext, aCanStoreInRuleTree);
+                      aContext, mPresContext, canStoreInRuleTree);
     NS_ASSERTION(unitOK, "unexpected unit");
     item->mXOffset = tempCoord.GetCoordValue();
 
     unitOK = SetCoord(arr->Item(1), tempCoord, nsStyleCoord(),
                       SETCOORD_LENGTH | SETCOORD_CALC_LENGTH_ONLY,
-                      aContext, mPresContext, aCanStoreInRuleTree);
+                      aContext, mPresContext, canStoreInRuleTree);
     NS_ASSERTION(unitOK, "unexpected unit");
     item->mYOffset = tempCoord.GetCoordValue();
 
@@ -3790,7 +3790,7 @@ nsRuleNode::GetShadowData(const nsCSSValueList* aList,
       unitOK = SetCoord(arr->Item(2), tempCoord, nsStyleCoord(),
                         SETCOORD_LENGTH | SETCOORD_CALC_LENGTH_ONLY |
                           SETCOORD_CALC_CLAMP_NONNEGATIVE,
-                        aContext, mPresContext, aCanStoreInRuleTree);
+                        aContext, mPresContext, canStoreInRuleTree);
       NS_ASSERTION(unitOK, "unexpected unit");
       item->mRadius = tempCoord.GetCoordValue();
     } else {
@@ -3801,7 +3801,7 @@ nsRuleNode::GetShadowData(const nsCSSValueList* aList,
     if (aIsBoxShadow && arr->Item(3).GetUnit() != eCSSUnit_Null) {
       unitOK = SetCoord(arr->Item(3), tempCoord, nsStyleCoord(),
                         SETCOORD_LENGTH | SETCOORD_CALC_LENGTH_ONLY,
-                        aContext, mPresContext, aCanStoreInRuleTree);
+                        aContext, mPresContext, canStoreInRuleTree);
       NS_ASSERTION(unitOK, "unexpected unit");
       item->mSpread = tempCoord.GetCoordValue();
     } else {
@@ -3812,7 +3812,7 @@ nsRuleNode::GetShadowData(const nsCSSValueList* aList,
       item->mHasColor = true;
       // 2nd argument can be bogus since inherit is not a valid color
       unitOK = SetColor(arr->Item(4), 0, mPresContext, aContext, item->mColor,
-                        aCanStoreInRuleTree);
+                        canStoreInRuleTree);
       NS_ASSERTION(unitOK, "unexpected unit");
     }
 
@@ -7722,17 +7722,15 @@ nsRuleNode::ComputeSVGData(void* aStartStruct,
 }
 
 static nsStyleFilter::Type
-StyleFilterTypeForFunctionName(nsCSSKeyword aFunctionName)
+StyleFilterTypeForFunctionName(nsCSSKeyword functionName)
 {
-  switch (aFunctionName) {
+  switch (functionName) {
     case eCSSKeyword_blur:
       return nsStyleFilter::Type::eBlur;
     case eCSSKeyword_brightness:
       return nsStyleFilter::Type::eBrightness;
     case eCSSKeyword_contrast:
       return nsStyleFilter::Type::eContrast;
-    case eCSSKeyword_drop_shadow:
-      return nsStyleFilter::Type::eDropShadow;
     case eCSSKeyword_grayscale:
       return nsStyleFilter::Type::eGrayscale;
     case eCSSKeyword_hue_rotate:
@@ -7751,16 +7749,17 @@ StyleFilterTypeForFunctionName(nsCSSKeyword aFunctionName)
   }
 }
 
-void
-nsRuleNode::SetStyleFilterToCSSValue(nsStyleFilter* aStyleFilter,
-                                     const nsCSSValue& aValue,
-                                     nsStyleContext* aStyleContext,
-                                     nsPresContext* aPresContext,
-                                     bool& aCanStoreInRuleTree)
+static void
+SetStyleFilterToCSSValue(nsStyleFilter* aStyleFilter,
+                         const nsCSSValue& aValue,
+                         nsStyleContext* aStyleContext,
+                         nsPresContext* aPresContext,
+                         bool& aCanStoreInRuleTree)
 {
   nsCSSUnit unit = aValue.GetUnit();
   if (unit == eCSSUnit_URL) {
-    aStyleFilter->SetURL(aValue.GetURLValue());
+    aStyleFilter->mType = nsStyleFilter::Type::eURL;
+    aStyleFilter->mURL = aValue.GetURLValue();
     return;
   }
 
@@ -7769,36 +7768,24 @@ nsRuleNode::SetStyleFilterToCSSValue(nsStyleFilter* aStyleFilter,
   nsCSSValue::Array* filterFunction = aValue.GetArrayValue();
   nsCSSKeyword functionName =
     (nsCSSKeyword)filterFunction->Item(0).GetIntValue();
-
-  nsStyleFilter::Type type = StyleFilterTypeForFunctionName(functionName);
-  if (type == nsStyleFilter::Type::eDropShadow) {
-    nsRefPtr<nsCSSShadowArray> shadowArray = GetShadowData(
-      filterFunction->Item(1).GetListValue(),
-      aStyleContext,
-      false,
-      aCanStoreInRuleTree);
-    aStyleFilter->SetDropShadow(shadowArray);
-    return;
-  }
+  aStyleFilter->mType = StyleFilterTypeForFunctionName(functionName);
 
   int32_t mask = SETCOORD_PERCENT | SETCOORD_FACTOR;
-  if (type == nsStyleFilter::Type::eBlur) {
+  if (aStyleFilter->mType == nsStyleFilter::Type::eBlur) {
     mask = SETCOORD_LENGTH | SETCOORD_STORE_CALC;
-  } else if (type == nsStyleFilter::Type::eHueRotate) {
+  } else if (aStyleFilter->mType == nsStyleFilter::Type::eHueRotate) {
     mask = SETCOORD_ANGLE;
   }
 
   NS_ABORT_IF_FALSE(filterFunction->Count() == 2,
-                    "all filter functions should have "
+                    "all filter functions except drop-shadow should have "
                     "exactly one argument");
 
   nsCSSValue& arg = filterFunction->Item(1);
-  nsStyleCoord filterParameter;
-  DebugOnly<bool> success = SetCoord(arg, filterParameter,
+  DebugOnly<bool> success = SetCoord(arg, aStyleFilter->mFilterParameter,
                                      nsStyleCoord(), mask,
                                      aStyleContext, aPresContext,
                                      aCanStoreInRuleTree);
-  aStyleFilter->SetFilterParameter(filterParameter, type);
   NS_ABORT_IF_FALSE(success, "unexpected unit");
 }
 
@@ -7897,7 +7884,7 @@ nsRuleNode::ComputeSVGResetData(void* aStartStruct,
         nsStyleFilter styleFilter;
         SetStyleFilterToCSSValue(&styleFilter, cur->mValue, aContext,
                                  mPresContext, canStoreInRuleTree);
-        NS_ABORT_IF_FALSE(styleFilter.GetType() != nsStyleFilter::Type::eNull,
+        NS_ABORT_IF_FALSE(styleFilter.mType != nsStyleFilter::Type::eNull,
                           "filter should be set");
         svgReset->mFilters.AppendElement(styleFilter);
         cur = cur->mNext;
