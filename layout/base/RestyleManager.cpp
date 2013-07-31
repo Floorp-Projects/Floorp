@@ -1914,6 +1914,7 @@ ElementRestyler::ElementRestyler(nsPresContext* aPresContext,
                                  nsStyleChangeList* aChangeList,
                                  nsChangeHint aHintsHandledByAncestors,
                                  RestyleTracker& aRestyleTracker,
+                                 TreeMatchContext& aTreeMatchContext,
                                  nsTArray<nsIContent*>&
                                    aVisibleKidsOfHiddenElement)
   : mPresContext(aPresContext)
@@ -1928,6 +1929,7 @@ ElementRestyler::ElementRestyler(nsPresContext* aPresContext,
   , mParentFrameHintsNotHandledForDescendants(nsChangeHint(0))
   , mHintsNotHandledForDescendants(nsChangeHint(0))
   , mRestyleTracker(aRestyleTracker)
+  , mTreeMatchContext(aTreeMatchContext)
   , mDesiredA11yNotifications(eSendAllNotifications)
   , mKidsDesiredA11yNotifications(mDesiredA11yNotifications)
   , mOurA11yNotification(eDontNotify)
@@ -1950,6 +1952,7 @@ ElementRestyler::ElementRestyler(const ElementRestyler& aParentRestyler,
       aParentRestyler.mHintsNotHandledForDescendants)
   , mHintsNotHandledForDescendants(nsChangeHint(0))
   , mRestyleTracker(aParentRestyler.mRestyleTracker)
+  , mTreeMatchContext(aParentRestyler.mTreeMatchContext)
   , mDesiredA11yNotifications(aParentRestyler.mKidsDesiredA11yNotifications)
   , mKidsDesiredA11yNotifications(mDesiredA11yNotifications)
   , mOurA11yNotification(eDontNotify)
@@ -1974,6 +1977,7 @@ ElementRestyler::ElementRestyler(ParentContextFromChildFrame,
       nsChangeHint_Hints_NotHandledForDescendants)
   , mHintsNotHandledForDescendants(nsChangeHint(0))
   , mRestyleTracker(aParentRestyler.mRestyleTracker)
+  , mTreeMatchContext(aParentRestyler.mTreeMatchContext)
   , mDesiredA11yNotifications(aParentRestyler.mDesiredA11yNotifications)
   , mKidsDesiredA11yNotifications(mDesiredA11yNotifications)
   , mOurA11yNotification(eDontNotify)
@@ -2019,8 +2023,7 @@ ElementRestyler::CaptureChange(nsStyleContext* aOldContext,
  * content node attached to the frame).
  */
 void
-ElementRestyler::Restyle(nsRestyleHint aRestyleHint,
-                         TreeMatchContext &aTreeMatchContext)
+ElementRestyler::Restyle(nsRestyleHint aRestyleHint)
 {
   // It would be nice if we could make stronger assertions here; they
   // would let us simplify the ?: expressions below setting |content|
@@ -2105,8 +2108,7 @@ ElementRestyler::Restyle(nsRestyleHint aRestyleHint,
 
       ElementRestyler providerRestyler(PARENT_CONTEXT_FROM_CHILD_FRAME,
                                        *this, providerFrame);
-      providerRestyler.Restyle(aRestyleHint,
-                                                   aTreeMatchContext);
+      providerRestyler.Restyle(aRestyleHint);
       assumeDifferenceHint = providerRestyler.HintsHandledForFrame();
 
       // The provider's new context becomes the parent context of
@@ -2221,7 +2223,7 @@ ElementRestyler::Restyle(nsRestyleHint aRestyleHint,
           newContext = styleSet->ProbePseudoElementStyle(element,
                                                          pseudoType,
                                                          parentContext,
-                                                         aTreeMatchContext);
+                                                         mTreeMatchContext);
           if (!newContext) {
             // This pseudo should no longer exist; gotta reframe
             NS_UpdateHint(mHintsHandled, nsChangeHint_ReconstructFrame);
@@ -2246,10 +2248,10 @@ ElementRestyler::Restyle(nsRestyleHint aRestyleHint,
                      "non pseudo-element frame without content node");
         // Skip flex-item style fixup for anonymous subtrees:
         TreeMatchContext::AutoFlexItemStyleFixupSkipper
-          flexFixupSkipper(aTreeMatchContext,
+          flexFixupSkipper(mTreeMatchContext,
                            element->IsRootOfNativeAnonymousSubtree());
         newContext = styleSet->ResolveStyleFor(element, parentContext,
-                                               aTreeMatchContext);
+                                               mTreeMatchContext);
       }
     }
 
@@ -2351,7 +2353,7 @@ ElementRestyler::Restyle(nsRestyleHint aRestyleHint,
       UndisplayedNode* undisplayed =
         frameConstructor->GetAllUndisplayedContentIn(undisplayedParent);
       for (TreeMatchContext::AutoAncestorPusher
-             pushAncestor(undisplayed, aTreeMatchContext,
+             pushAncestor(undisplayed, mTreeMatchContext,
                           undisplayedParent ? undisplayedParent->AsElement()
                                             : nullptr);
            undisplayed; undisplayed = undisplayed->mNext) {
@@ -2370,7 +2372,7 @@ ElementRestyler::Restyle(nsRestyleHint aRestyleHint,
         bool pushInsertionPoint = parent && parent->IsActiveChildrenElement();
         TreeMatchContext::AutoAncestorPusher
           insertionPointPusher(pushInsertionPoint,
-                               aTreeMatchContext,
+                               mTreeMatchContext,
                                parent && parent->IsElement() ? parent->AsElement() : nullptr);
 
         nsRestyleHint thisChildHint = childRestyleHint;
@@ -2385,7 +2387,7 @@ ElementRestyler::Restyle(nsRestyleHint aRestyleHint,
           undisplayedContext =
             styleSet->ResolveStyleFor(undisplayed->mContent->AsElement(),
                                       newContext,
-                                      aTreeMatchContext);
+                                      mTreeMatchContext);
         } else {
           undisplayedContext =
             styleSet->ReparentStyleContext(undisplayed->mStyle, newContext,
@@ -2518,7 +2520,7 @@ ElementRestyler::Restyle(nsRestyleHint aRestyleHint,
       nsIFrame::ChildListIterator lists(mFrame);
       for (TreeMatchContext::AutoAncestorPusher
              pushAncestor(!lists.IsDone(),
-                          aTreeMatchContext,
+                          mTreeMatchContext,
                           mContent && mContent->IsElement()
                             ? mContent->AsElement() : nullptr);
            !lists.IsDone(); lists.Next()) {
@@ -2535,7 +2537,7 @@ ElementRestyler::Restyle(nsRestyleHint aRestyleHint,
             nsIContent* parent = child->GetContent() ? child->GetContent()->GetParent() : nullptr;
             bool pushInsertionPoint = parent && parent->IsActiveChildrenElement();
             TreeMatchContext::AutoAncestorPusher
-              insertionPointPusher(pushInsertionPoint, aTreeMatchContext,
+              insertionPointPusher(pushInsertionPoint, mTreeMatchContext,
                                    parent && parent->IsElement() ? parent->AsElement() : nullptr);
 
             // only do frames that are in flow
@@ -2565,21 +2567,18 @@ ElementRestyler::Restyle(nsRestyleHint aRestyleHint,
                 oofRestyler.mHintsHandled =
                   NS_SubtractHint(oofRestyler.mHintsHandled,
                                   nsChangeHint_AllReflowHints);
-                oofRestyler.Restyle(childRestyleHint,
-                                      aTreeMatchContext);
+                oofRestyler.Restyle(childRestyleHint);
               } while ((outOfFlowFrame = outOfFlowFrame->GetNextContinuation()));
 
               // reresolve placeholder's context under the same parent
               // as the out-of-flow frame
               ElementRestyler phRestyler(*this, child);
-              phRestyler.Restyle(childRestyleHint,
-                                    aTreeMatchContext);
+              phRestyler.Restyle(childRestyleHint);
             }
             else {  // regular child frame
               if (child != resolvedChild) {
                 ElementRestyler childRestyler(*this, child);
-                childRestyler.Restyle(childRestyleHint,
-                                      aTreeMatchContext);
+                childRestyler.Restyle(childRestyleHint);
               }
             }
           }
@@ -2661,10 +2660,10 @@ RestyleManager::ComputeStyleChangeFor(nsIFrame*          aFrame,
       // Inner loop over next-in-flows of the current frame
       ElementRestyler restyler(mPresContext, frame, aChangeList,
                                aMinChange, aRestyleTracker,
+                               treeMatchContext,
                                visibleKidsOfHiddenElement);
 
-      restyler.Restyle(aRestyleDescendants ? eRestyle_Subtree : eRestyle_Self,
-                              treeMatchContext);
+      restyler.Restyle(aRestyleDescendants ? eRestyle_Subtree : eRestyle_Self);
 
       if (restyler.HintsHandledForFrame() & nsChangeHint_ReconstructFrame) {
         // If it's going to cause a framechange, then don't bother
