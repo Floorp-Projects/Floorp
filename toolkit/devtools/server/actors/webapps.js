@@ -7,6 +7,7 @@
 let Cu = Components.utils;
 let Cc = Components.classes;
 let Ci = Components.interfaces;
+let CC = Components.Constructor;
 
 let promise;
 
@@ -338,6 +339,75 @@ WebappsActor.prototype = {
     return defer.promise;
   },
 
+  getIconAsDataURL: function (aRequest) {
+    debug("getIconAsDataURL");
+
+    let manifestURL = aRequest.manifestURL;
+    if (!manifestURL) {
+      return { error: "missingParameter",
+               message: "missing parameter manifestURL" };
+    }
+
+    let reg = DOMApplicationRegistry;
+    let app = reg.getAppByManifestURL(manifestURL);
+    if (!app) {
+      return { error: "wrongParameter",
+               message: "No application for " + manifestURL };
+    }
+
+    let deferred = promise.defer();
+
+    let id = reg._appIdForManifestURL(manifestURL);
+    reg._readManifests([{ id: id }], function (aResults) {
+      let jsonManifest = aResults[0].manifest;
+      let manifest = new ManifestHelper(jsonManifest, app.origin);
+      let iconURL = manifest.iconURLForSize(aRequest.size || 128);
+      if (!iconURL) {
+        deferred.resolve({
+          error: "noIcon",
+          message: "This app has no icon"
+        });
+        return;
+      }
+
+      // Download the URL as a blob
+      // bug 899177: there is a bug with xhr and app:// and jar:// uris
+      // that ends up forcing the content type to application/xml.
+      let XMLHttpRequest = CC("@mozilla.org/xmlextras/xmlhttprequest;1");
+      let req = new XMLHttpRequest();
+      req.open("GET", iconURL, false);
+      req.responseType = "blob";
+
+      try {
+        req.send(null);
+      } catch(e) {
+        deferred.resolve({
+          error: "noIcon",
+          message: "The icon file '" + iconURL + "' doesn't exists"
+        });
+        return;
+      }
+
+      // Convert the blog to a base64 encoded data URI
+      let FileReader = CC("@mozilla.org/files/filereader;1");
+      let reader = new FileReader()
+      reader.onload = function () {
+        deferred.resolve({
+          url: reader.result
+        });
+      };
+      reader.onerror = function () {
+        deferred.resolve({
+          error: reader.error.name,
+          message: String(reader.error)
+        });
+      };
+      reader.readAsDataURL(req.response);
+    });
+
+    return deferred.promise;
+  },
+
   launch: function wa_actorLaunch(aRequest) {
     debug("launch");
 
@@ -587,6 +657,7 @@ if (Services.prefs.getBoolPref("devtools.debugger.enable-content-actors")) {
   requestTypes.getAppActor = WebappsActor.prototype.getAppActor;
   requestTypes.watchApps = WebappsActor.prototype.watchApps;
   requestTypes.unwatchApps = WebappsActor.prototype.unwatchApps;
+  requestTypes.getIconAsDataURL = WebappsActor.prototype.getIconAsDataURL;
 }
 
 DebuggerServer.addGlobalActor(WebappsActor, "webappsActor");
