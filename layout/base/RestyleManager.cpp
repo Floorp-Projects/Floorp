@@ -2620,9 +2620,10 @@ ElementRestyler::Restyle(nsStyleChangeList *aChangeList,
           // Process children staying shown.
           uint32_t visibleContentCount = aVisibleKidsOfHiddenElement.Length();
           for (uint32_t idx = 0; idx < visibleContentCount; idx++) {
-            nsIContent* content = aVisibleKidsOfHiddenElement[idx];
-            accService->ContentRangeInserted(presShell, content->GetParent(),
-                                             content, content->GetNextSibling());
+            nsIContent* childContent = aVisibleKidsOfHiddenElement[idx];
+            accService->ContentRangeInserted(presShell, childContent->GetParent(),
+                                             childContent,
+                                             childContent->GetNextSibling());
           }
           aVisibleKidsOfHiddenElement.Clear();
         }
