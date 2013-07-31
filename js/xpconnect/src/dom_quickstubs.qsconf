@@ -87,7 +87,6 @@ members = [
     'nsIIDBCursor.*',
     'nsIIDBCursorWithValue.*',
     'nsIIDBDatabase.*',
-    'nsIIDBIndex.*',
     'nsIIDBKeyRange.*',
     'nsIIDBRequest.*',
     'nsIIDBOpenDBRequest.*',

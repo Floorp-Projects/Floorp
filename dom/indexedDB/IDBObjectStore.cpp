@@ -2293,7 +2293,7 @@ IDBObjectStore::SetInfo(ObjectStoreInfo* aInfo)
   mInfo = aInfo;
 }
 
-already_AddRefed<nsIIDBIndex>
+already_AddRefed<IDBIndex>
 IDBObjectStore::CreateIndexInternal(const IndexInfo& aInfo, ErrorResult& aRv)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
@@ -2338,7 +2338,7 @@ IDBObjectStore::CreateIndexInternal(const IndexInfo& aInfo, ErrorResult& aRv)
   return index.forget();
 }
 
-already_AddRefed<nsIIDBIndex>
+already_AddRefed<IDBIndex>
 IDBObjectStore::Index(const nsAString& aName, ErrorResult &aRv)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
@@ -2400,7 +2400,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(IDBObjectStore)
 
   for (uint32_t i = 0; i < tmp->mCreatedIndexes.Length(); i++) {
     NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mCreatedIndexes[i]");
-    cb.NoteXPCOMChild(static_cast<nsIIDBIndex*>(tmp->mCreatedIndexes[i].get()));
+    cb.NoteXPCOMChild(static_cast<nsISupports*>(tmp->mCreatedIndexes[i].get()));
   }
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
@@ -2582,7 +2582,7 @@ IDBObjectStore::OpenCursor(JSContext* aCx,
   return OpenCursorInternal(keyRange, argDirection, aRv);
 }
 
-already_AddRefed<nsIIDBIndex>
+already_AddRefed<IDBIndex>
 IDBObjectStore::CreateIndex(JSContext* aCx, const nsAString& aName,
                             const nsAString& aKeyPath,
                             const IDBIndexParameters& aOptionalParameters,
@@ -2600,7 +2600,7 @@ IDBObjectStore::CreateIndex(JSContext* aCx, const nsAString& aName,
   return CreateIndex(aCx, aName, keyPath, aOptionalParameters, aRv);
 }
 
-already_AddRefed<nsIIDBIndex>
+already_AddRefed<IDBIndex>
 IDBObjectStore::CreateIndex(JSContext* aCx, const nsAString& aName,
                             const Sequence<nsString >& aKeyPath,
                             const IDBIndexParameters& aOptionalParameters,
@@ -2622,7 +2622,7 @@ IDBObjectStore::CreateIndex(JSContext* aCx, const nsAString& aName,
   return CreateIndex(aCx, aName, keyPath, aOptionalParameters, aRv);
 }
 
-already_AddRefed<nsIIDBIndex>
+already_AddRefed<IDBIndex>
 IDBObjectStore::CreateIndex(JSContext* aCx, const nsAString& aName,
                             KeyPath& aKeyPath,
                             const IDBIndexParameters& aOptionalParameters,

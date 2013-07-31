@@ -9,7 +9,6 @@ const DOMException = Ci.nsIDOMDOMException;
 const IDBCursor = Ci.nsIIDBCursor;
 const IDBOpenDBRequest = Ci.nsIIDBOpenDBRequest;
 const IDBDatabase = Ci.nsIIDBDatabase
-const IDBIndex = Ci.nsIIDBIndex
 const IDBRequest = Ci.nsIIDBRequest
 
 function is(a, b, msg) {

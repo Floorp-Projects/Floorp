@@ -21,7 +21,6 @@
 class nsIDOMBlob;
 class nsIScriptContext;
 class nsPIDOMWindow;
-class nsIIDBIndex;
 
 namespace mozilla {
 namespace dom {
@@ -199,7 +198,7 @@ public:
     return mActorParent;
   }
 
-  already_AddRefed<nsIIDBIndex>
+  already_AddRefed<IDBIndex>
   CreateIndexInternal(const IndexInfo& aInfo,
                       ErrorResult& aRv);
 
@@ -313,16 +312,16 @@ public:
   OpenCursor(JSContext* aCx, const Optional<JS::Handle<JS::Value> >& aRange,
              IDBCursorDirection aDirection, ErrorResult& aRv);
 
-  already_AddRefed<nsIIDBIndex>
+  already_AddRefed<IDBIndex>
   CreateIndex(JSContext* aCx, const nsAString& aName, const nsAString& aKeyPath,
               const IDBIndexParameters& aOptionalParameters, ErrorResult& aRv);
 
-  already_AddRefed<nsIIDBIndex>
+  already_AddRefed<IDBIndex>
   CreateIndex(JSContext* aCx, const nsAString& aName,
               const Sequence<nsString >& aKeyPath,
               const IDBIndexParameters& aOptionalParameters, ErrorResult& aRv);
 
-  already_AddRefed<nsIIDBIndex>
+  already_AddRefed<IDBIndex>
   Index(const nsAString& aName, ErrorResult &aRv);
 
   void
@@ -352,7 +351,7 @@ protected:
            const Optional<JS::Handle<JS::Value> >& aKey, bool aOverwrite,
            ErrorResult& aRv);
 
-  already_AddRefed<nsIIDBIndex>
+  already_AddRefed<IDBIndex>
   CreateIndex(JSContext* aCx, const nsAString& aName, KeyPath& aKeyPath,
               const IDBIndexParameters& aOptionalParameters, ErrorResult& aRv);
 

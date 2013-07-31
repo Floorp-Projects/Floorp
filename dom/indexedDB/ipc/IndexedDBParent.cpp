@@ -1150,10 +1150,9 @@ IndexedDBObjectStoreParent::RecvPIndexedDBIndexConstructor(
       AutoSetCurrentTransaction asct(mObjectStore->Transaction());
 
       ErrorResult rv;
-      nsCOMPtr<nsIIDBIndex> obj = mObjectStore->Index(name, rv);
+      index = mObjectStore->Index(name, rv);
       ENSURE_SUCCESS(rv, false);
 
-      index = static_cast<IDBIndex*>(obj.get());
       actor->SetIndex(index);
     }
 
@@ -1298,10 +1297,8 @@ IndexedDBVersionChangeObjectStoreParent::RecvPIndexedDBIndexConstructor(
       AutoSetCurrentTransaction asct(mObjectStore->Transaction());
 
       ErrorResult rv;
-      nsCOMPtr<nsIIDBIndex> obj = mObjectStore->CreateIndexInternal(info, rv);
+      index = mObjectStore->CreateIndexInternal(info, rv);
       ENSURE_SUCCESS(rv, false);
-
-      index = static_cast<IDBIndex*>(obj.get());
     }
 
     actor->SetIndex(index);
@@ -1785,9 +1782,9 @@ IndexedDBIndexRequestParent::Get(const GetParams& aParams)
   {
     AutoSetCurrentTransaction asct(mIndex->ObjectStore()->Transaction());
 
-    nsresult rv = mIndex->GetInternal(keyRange, nullptr,
-                                      getter_AddRefs(request));
-    NS_ENSURE_SUCCESS(rv, false);
+    ErrorResult rv;
+    request = mIndex->GetInternal(keyRange, rv);
+    ENSURE_SUCCESS(rv, false);
   }
 
   request->SetActor(this);
@@ -1810,9 +1807,9 @@ IndexedDBIndexRequestParent::GetKey(const GetKeyParams& aParams)
   {
     AutoSetCurrentTransaction asct(mIndex->ObjectStore()->Transaction());
 
-    nsresult rv = mIndex->GetKeyInternal(keyRange, nullptr,
-                                         getter_AddRefs(request));
-    NS_ENSURE_SUCCESS(rv, false);
+    ErrorResult rv;
+    request = mIndex->GetKeyInternal(keyRange, rv);
+    ENSURE_SUCCESS(rv, false);
   }
 
   request->SetActor(this);
@@ -1849,9 +1846,9 @@ IndexedDBIndexRequestParent::GetAll(const GetAllParams& aParams)
   {
     AutoSetCurrentTransaction asct(mIndex->ObjectStore()->Transaction());
 
-    nsresult rv = mIndex->GetAllInternal(keyRange, aParams.limit(), nullptr,
-                                         getter_AddRefs(request));
-    NS_ENSURE_SUCCESS(rv, false);
+    ErrorResult rv;
+    request = mIndex->GetAllInternal(keyRange, aParams.limit(), rv);
+    ENSURE_SUCCESS(rv, false);
   }
 
   request->SetActor(this);
@@ -1888,9 +1885,9 @@ IndexedDBIndexRequestParent::GetAllKeys(const GetAllKeysParams& aParams)
   {
     AutoSetCurrentTransaction asct(mIndex->ObjectStore()->Transaction());
 
-    nsresult rv = mIndex->GetAllKeysInternal(keyRange, aParams.limit(), nullptr,
-                                             getter_AddRefs(request));
-    NS_ENSURE_SUCCESS(rv, false);
+    ErrorResult rv;
+    request = mIndex->GetAllKeysInternal(keyRange, aParams.limit(), rv);
+    ENSURE_SUCCESS(rv, false);
   }
 
   request->SetActor(this);
@@ -1927,9 +1924,9 @@ IndexedDBIndexRequestParent::Count(const CountParams& aParams)
   {
     AutoSetCurrentTransaction asct(mIndex->ObjectStore()->Transaction());
 
-    nsresult rv = mIndex->CountInternal(keyRange, nullptr,
-                                        getter_AddRefs(request));
-    NS_ENSURE_SUCCESS(rv, false);
+    ErrorResult rv;
+    request = mIndex->CountInternal(keyRange, rv);
+    ENSURE_SUCCESS(rv, false);
   }
 
   request->SetActor(this);
@@ -2009,10 +2006,9 @@ IndexedDBIndexRequestParent::OpenKeyCursor(const OpenKeyCursorParams& aParams)
   {
     AutoSetCurrentTransaction asct(mIndex->ObjectStore()->Transaction());
 
-    nsresult rv =
-      mIndex->OpenKeyCursorInternal(keyRange, direction, nullptr,
-                                    getter_AddRefs(request));
-    NS_ENSURE_SUCCESS(rv, false);
+    ErrorResult rv;
+    request = mIndex->OpenKeyCursorInternal(keyRange, direction, rv);
+    ENSURE_SUCCESS(rv, false);
   }
 
   request->SetActor(this);
