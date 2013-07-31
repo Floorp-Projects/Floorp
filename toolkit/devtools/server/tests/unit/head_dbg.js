@@ -49,6 +49,7 @@ let errorCount = 0;
 let listener = {
   observe: function (aMessage) {
     errorCount++;
+    var shouldThrow = true;
     try {
       // If we've been given an nsIScriptError, then we can print out
       // something nicely formatted, for tools like Emacs to pick up.
@@ -57,6 +58,7 @@ let listener = {
            scriptErrorFlagsToKind(aMessage.flags) + ": " +
            aMessage.errorMessage + "\n");
       var string = aMessage.errorMessage;
+      shouldThrow = !aMessage.flags;
     } catch (x) {
       // Be a little paranoid with message, as the whole goal here is to lose
       // no information.
@@ -71,7 +73,8 @@ let listener = {
     while (DebuggerServer.xpcInspector.eventLoopNestLevel > 0) {
       DebuggerServer.xpcInspector.exitNestedEventLoop();
     }
-    do_throw("head_dbg.js got console message: " + string + "\n");
+    if (shouldThrow)
+      do_throw("head_dbg.js got console message: " + string + "\n");
   }
 };
 
