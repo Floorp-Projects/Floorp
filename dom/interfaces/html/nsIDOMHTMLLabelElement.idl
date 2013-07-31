@@ -6,8 +6,8 @@
 #include "nsIDOMHTMLElement.idl"
 
 /**
- * The nsIDOMHTMLDirectoryElement interface is the interface to a
- * [X]HTML dir element.
+ * The nsIDOMHTMLLabelElement interface is the interface to a [X]HTML
+ * label element.
  *
  * This interface is trying to follow the DOM Level 2 HTML specification:
  * http://www.w3.org/TR/DOM-Level-2-HTML/
@@ -16,8 +16,10 @@
  * http://www.whatwg.org/specs/web-apps/current-work/
  */
 
-[scriptable, uuid(cf50373e-e004-4cec-bc65-be9250d9e4c8)]
-interface nsIDOMHTMLDirectoryElement : nsIDOMHTMLElement
+[scriptable, uuid(cbffa708-f51e-4c74-9644-19f9d417aac5)]
+interface nsIDOMHTMLLabelElement : nsIDOMHTMLElement
 {
-           attribute boolean          compact;
+  readonly attribute nsIDOMHTMLFormElement form;
+           attribute DOMString             htmlFor;
+  readonly attribute nsIDOMHTMLElement     control;
 };

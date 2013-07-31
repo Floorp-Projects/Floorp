@@ -15,6 +15,7 @@ let HTMLIFrameElement = Ci.nsIDOMHTMLIFrameElement;
 let HTMLDocument = Ci.nsIDOMHTMLDocument;
 let HTMLHtmlElement = Ci.nsIDOMHTMLHtmlElement;
 let HTMLBodyElement = Ci.nsIDOMHTMLBodyElement;
+let HTMLLabelElement = Ci.nsIDOMHTMLLabelElement;
 let HTMLButtonElement = Ci.nsIDOMHTMLButtonElement;
 let HTMLOptGroupElement = Ci.nsIDOMHTMLOptGroupElement;
 let HTMLOptionElement = Ci.nsIDOMHTMLOptionElement;

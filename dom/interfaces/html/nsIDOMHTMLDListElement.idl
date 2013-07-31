@@ -6,8 +6,8 @@
 #include "nsIDOMHTMLElement.idl"
 
 /**
- * The nsIDOMHTMLDirectoryElement interface is the interface to a
- * [X]HTML dir element.
+ * The nsIDOMHTMLDListElement interface is the interface to a [X]HTML
+ * dl element.
  *
  * This interface is trying to follow the DOM Level 2 HTML specification:
  * http://www.w3.org/TR/DOM-Level-2-HTML/
@@ -16,8 +16,8 @@
  * http://www.whatwg.org/specs/web-apps/current-work/
  */
 
-[scriptable, uuid(cf50373e-e004-4cec-bc65-be9250d9e4c8)]
-interface nsIDOMHTMLDirectoryElement : nsIDOMHTMLElement
+[scriptable, uuid(edd9338b-f0d5-4825-97d6-6a49862309cc)]
+interface nsIDOMHTMLDListElement : nsIDOMHTMLElement
 {
            attribute boolean          compact;
 };

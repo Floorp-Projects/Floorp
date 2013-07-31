@@ -8,6 +8,7 @@
 #include "nsLegendFrame.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMHTMLFieldSetElement.h"
+#include "nsIDOMHTMLLegendElement.h"
 #include "nsCSSRendering.h"
 #include <algorithm>
 #include "nsIContent.h"
