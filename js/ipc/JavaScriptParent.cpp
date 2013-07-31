@@ -151,7 +151,8 @@ bool
 CPOWProxyHandler::defineProperty(JSContext *cx, HandleObject proxy, HandleId id,
                                  PropertyDescriptor *desc)
 {
-    MOZ_CRASH("unimplemented");
+    MOZ_CRASH();
+    return true;
 }
 
 bool
@@ -215,13 +216,15 @@ JavaScriptParent::keys(JSContext *cx, HandleObject proxy, AutoIdVector &props)
 bool
 CPOWProxyHandler::delete_(JSContext *cx, HandleObject proxy, HandleId id, bool *bp)
 {
-    MOZ_CRASH("unimplemented");
+    MOZ_CRASH();
+    return true;
 }
 
 bool
 CPOWProxyHandler::enumerate(JSContext *cx, HandleObject proxy, AutoIdVector &props)
 {
-    MOZ_CRASH("unimplemented");
+    MOZ_CRASH();
+    return true;
 }
 
 bool
@@ -371,7 +374,8 @@ bool
 CPOWProxyHandler::iterate(JSContext *cx, HandleObject proxy, unsigned flags,
                           MutableHandleValue vp)
 {
-    MOZ_CRASH("unimplemented");
+    MOZ_CRASH();
+    return true;
 }
 
 bool
