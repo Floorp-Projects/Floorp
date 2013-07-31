@@ -1455,7 +1455,8 @@ void AsyncPanZoomController::SendAsyncScrollEvent() {
   CSSRect contentRect;
   CSSSize scrollableSize;
   {
-    // XXX bug 890932 - there should be a lock here. but it causes a deadlock.
+    ReentrantMonitorAutoEnter lock(mMonitor);
+
     scrollId = mFrameMetrics.mScrollId;
     scrollableSize = mFrameMetrics.mScrollableRect.Size();
     contentRect = mFrameMetrics.CalculateCompositedRectInCssPixels();
