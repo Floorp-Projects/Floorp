@@ -35,7 +35,9 @@
                                                   android:layout_width="fill_parent"
                                                   android:layout_height="fill_parent"
                                                   android:background="@android:color/white"
-                                                  android:visibility="gone">
+                                                  android:visibility="gone"
+                                                  android:focusableInTouchMode="true"
+                                                  android:descendantFocusability="afterDescendants">
 
                     <org.mozilla.gecko.home.HomePagerTabStrip android:layout_width="fill_parent"
                                                               android:layout_height="32dip"
