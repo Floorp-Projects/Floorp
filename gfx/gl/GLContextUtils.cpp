@@ -7,7 +7,7 @@
 
 #include "mozilla/Preferences.h"
 #include "mozilla/Assertions.h"
-#include "mozilla/StandardInteger.h"
+#include <stdint.h>
 
 using namespace mozilla::gfx;
 

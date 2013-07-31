@@ -37,7 +37,7 @@ typedef ptrdiff_t GLintptr;
 
 #endif /* #if !defined(__gltypes_h_) && !defined(__gl_h_) */
 
-#include "mozilla/StandardInteger.h"
+#include <stdint.h>
 
 // ARB_sync
 typedef struct __GLsync* GLsync;

@@ -7,7 +7,8 @@
 #include "jsfriendapi.h"
 
 #include "mozilla/PodOperations.h"
-#include "mozilla/StandardInteger.h"
+
+#include <stdint.h>
 
 #include "jscntxt.h"
 #include "jscompartment.h"

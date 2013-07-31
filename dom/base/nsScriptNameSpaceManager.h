@@ -175,7 +175,6 @@ private:
 
   nsresult FillHash(nsICategoryManager *aCategoryManager,
                     const char *aCategory);
-  nsresult FillHashWithDOMInterfaces();
   nsresult RegisterInterface(const char* aIfName,
                              const nsIID *aIfIID,
                              bool* aFoundOld);

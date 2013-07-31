@@ -214,69 +214,6 @@ nsScriptNameSpaceManager::FillHash(nsICategoryManager *aCategoryManager,
 }
 
 
-// This method enumerates over all installed interfaces (in .xpt
-// files) and finds ones that start with "nsIDOM" and has constants
-// defined in the interface itself (inherited constants doesn't
-// count), once such an interface is found the "nsIDOM" prefix is cut
-// off the name and the rest of the name is added into the hash for
-// global names. This makes things like 'Node.ELEMENT_NODE' work in
-// JS. See nsCommonWindowSH::GlobalResolve() for detais on how this is used.
-
-nsresult
-nsScriptNameSpaceManager::FillHashWithDOMInterfaces()
-{
-  nsCOMPtr<nsIInterfaceInfoManager>
-    iim(do_GetService(NS_INTERFACEINFOMANAGER_SERVICE_CONTRACTID));
-  NS_ENSURE_TRUE(iim, NS_ERROR_UNEXPECTED);
-
-  // First look for all interfaces whose name starts with nsIDOM
-  nsCOMPtr<nsIEnumerator> domInterfaces;
-  nsresult rv =
-    iim->EnumerateInterfacesWhoseNamesStartWith(NS_DOM_INTERFACE_PREFIX,
-                                                getter_AddRefs(domInterfaces));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsISupports> entry;
-
-  rv = domInterfaces->First();
-
-  if (NS_FAILED(rv)) {
-    // Empty interface list?
-
-    NS_WARNING("What, no nsIDOM interfaces installed?");
-
-    return NS_OK;
-  }
-
-  bool found_old;
-  nsCOMPtr<nsIInterfaceInfo> if_info;
-  const char *if_name = nullptr;
-  const nsIID *iid;
-
-  for ( ;
-       domInterfaces->IsDone() == static_cast<nsresult>(NS_ENUMERATOR_FALSE);
-       domInterfaces->Next()) {
-    rv = domInterfaces->CurrentItem(getter_AddRefs(entry));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCOMPtr<nsIInterfaceInfo> if_info(do_QueryInterface(entry));
-    if_info->GetNameShared(&if_name);
-    if_info->GetIIDShared(&iid);
-    rv = RegisterInterface(if_name + sizeof(NS_DOM_INTERFACE_PREFIX) - 1,
-                           iid, &found_old);
-
-#ifdef DEBUG
-    NS_ASSERTION(!found_old,
-                 "Whaaa, interface name already in hash!");
-#endif
-  }
-
-  // Next, look for externally registered DOM interfaces
-  rv = RegisterExternalInterfaces(false);
-
-  return rv;
-}
-
 nsresult
 nsScriptNameSpaceManager::RegisterExternalInterfaces(bool aAsProto)
 {
@@ -341,10 +278,6 @@ nsScriptNameSpaceManager::RegisterExternalInterfaces(bool aAsProto)
 
       const char* name;
       if (dom_prefix) {
-        if (!aAsProto) {
-          // nsIDOM* interfaces have already been registered.
-          break;
-        }
         name = if_name + sizeof(NS_DOM_INTERFACE_PREFIX) - 1;
       } else {
         name = if_name + sizeof(NS_INTERFACE_PREFIX) - 1;
@@ -427,7 +360,7 @@ nsScriptNameSpaceManager::Init()
 
   nsresult rv = NS_OK;
 
-  rv = FillHashWithDOMInterfaces();
+  rv = RegisterExternalInterfaces(false);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsICategoryManager> cm =

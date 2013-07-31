@@ -80,8 +80,8 @@ template <class T, uint32_t K> class nsExpirationTracker {
     nsExpirationTracker(uint32_t aTimerPeriod)
       : mTimerPeriod(aTimerPeriod), mNewestGeneration(0),
         mInAgeOneGeneration(false) {
-      MOZ_STATIC_ASSERT(K >= 2 && K <= nsExpirationState::NOT_TRACKED,
-                        "Unsupported number of generations (must be 2 <= K <= 15)");
+      static_assert(K >= 2 && K <= nsExpirationState::NOT_TRACKED,
+                    "Unsupported number of generations (must be 2 <= K <= 15)");
       mObserver = new ExpirationTrackerObserver();
       mObserver->Init(this);
     }

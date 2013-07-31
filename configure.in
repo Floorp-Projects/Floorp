@@ -1734,16 +1734,6 @@ case "$host" in
     ;;
 esac
 
-dnl Check for using a custom <stdint.h> implementation
-dnl ========================================================
-AC_MSG_CHECKING(for custom <stdint.h> implementation)
-if test "$MOZ_CUSTOM_STDINT_H"; then
-  AC_DEFINE_UNQUOTED(MOZ_CUSTOM_STDINT_H, "$MOZ_CUSTOM_STDINT_H")
-  AC_MSG_RESULT(using $MOZ_CUSTOM_STDINT_H)
-else
-  AC_MSG_RESULT(none specified)
-fi
-
 dnl Get mozilla version from central milestone file
 MOZILLA_VERSION=`$PERL $srcdir/config/milestone.pl -topsrcdir $srcdir`
 MOZILLA_UAVERSION=`$PERL $srcdir/config/milestone.pl -topsrcdir $srcdir -uaversion`
@@ -6068,7 +6058,6 @@ if test -n "$MOZ_CRASHREPORTER"; then
     fi
   fi
 fi
-AC_DEFINE_UNQUOTED(BREAKPAD_CUSTOM_STDINT_H, "mozilla/StandardInteger.h")
 
 MOZ_ARG_WITH_STRING(crashreporter-enable-percent,
 [  --with-crashreporter-enable-percent=NN

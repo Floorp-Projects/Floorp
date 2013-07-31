@@ -577,10 +577,13 @@ public:
   /**
    * Transform aRect relative to aFrame up to the coordinate system of
    * aAncestor. Computes the bounding-box of the true quadrilateral.
+   * Pass non-null aPreservesAxisAlignedRectangles and it will be set to true if
+   * we only need to use a 2d transform that PreservesAxisAlignedRectangles().
    */
   static nsRect TransformFrameRectToAncestor(nsIFrame* aFrame,
                                              const nsRect& aRect,
-                                             const nsIFrame* aAncestor);
+                                             const nsIFrame* aAncestor,
+                                             bool* aPreservesAxisAlignedRectangles = nullptr);
 
 
   /**

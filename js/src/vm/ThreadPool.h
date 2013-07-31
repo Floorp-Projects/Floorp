@@ -7,9 +7,8 @@
 #ifndef vm_ThreadPool_h
 #define vm_ThreadPool_h
 
-#include "mozilla/StandardInteger.h"
-
 #include <stddef.h>
+#include <stdint.h>
 
 #include "jsalloc.h"
 #ifdef JS_THREADSAFE

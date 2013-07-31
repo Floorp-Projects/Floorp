@@ -48,8 +48,9 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/StandardInteger.h"
 #include "mozilla/Types.h"
+
+#include <stdint.h>
 
 #ifdef __cplusplus
 namespace mozilla {
@@ -174,8 +175,8 @@ AddToHash(uint32_t hash, A* a)
    * catch data pointers and couldn't handle function pointers.
    */
 
-  MOZ_STATIC_ASSERT(sizeof(a) == sizeof(uintptr_t),
-                    "Strange pointer!");
+  static_assert(sizeof(a) == sizeof(uintptr_t),
+                "Strange pointer!");
 
   return detail::AddUintptrToHash<sizeof(uintptr_t)>(hash, uintptr_t(a));
 }

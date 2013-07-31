@@ -13,7 +13,6 @@
 #include "jsinfer.h"
 
 #include "gc/Heap.h"
-#include "ion/AsmJS.h"
 #include "ion/IonTypes.h"
 
 namespace JSC {
@@ -23,6 +22,9 @@ namespace JSC {
 class JSScript;
 
 namespace js {
+
+class AsmJSModule;
+
 namespace ion {
 
 // The maximum size of any buffer associated with an assembler or code object.
@@ -144,6 +146,19 @@ class SafepointWriter;
 class SafepointIndex;
 class OsiIndex;
 class IonCache;
+
+// Describes a single AsmJSModule which jumps (via an FFI exit with the given
+// index) directly into an IonScript.
+struct DependentAsmJSModuleExit
+{
+    const AsmJSModule *module;
+    size_t exitIndex;
+
+    DependentAsmJSModuleExit(const AsmJSModule *module, size_t exitIndex)
+      : module(module),
+        exitIndex(exitIndex)
+    { }
+};
 
 // An IonScript attaches Ion-generated information to a JSScript.
 struct IonScript

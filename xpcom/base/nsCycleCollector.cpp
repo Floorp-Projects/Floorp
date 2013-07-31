@@ -128,6 +128,7 @@
 #include "xpcpublic.h"
 #include "nsXPCOMPrivate.h"
 #include "GeckoProfiler.h"
+#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 #ifdef WIN32
@@ -143,7 +144,6 @@
 #include "mozilla/Likely.h"
 #include "mozilla/mozPoisonWrite.h"
 #include "mozilla/Mutex.h"
-#include "mozilla/StandardInteger.h"
 #include "mozilla/Telemetry.h"
 
 using namespace mozilla;
@@ -674,7 +674,7 @@ private:
 
         Block() : mNext(nullptr) {
             // Ensure Block is the right size (see above).
-            MOZ_STATIC_ASSERT(
+            static_assert(
                 sizeof(Block) == 16384 ||       // 32-bit
                 sizeof(Block) == 32768,         // 64-bit
                 "ill-sized nsPurpleBuffer::Block"

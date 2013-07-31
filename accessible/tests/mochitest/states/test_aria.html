@@ -141,6 +141,37 @@
       testStates("aria_grid_readonly_cell_inherited", STATE_READONLY, 0,
                  0, EXT_STATE_EDITABLE);
 
+      // readonly/editable on treegrid and gridcell
+      testStates("aria_treegrid_default", 0, EXT_STATE_EDITABLE,
+                 STATE_READONLY, 0);
+      testStates("aria_treegrid_default_colheader_readonly", STATE_READONLY, 0,
+                 0, EXT_STATE_EDITABLE);
+      testStates("aria_treegrid_default_colheader_inherited", 0, EXT_STATE_EDITABLE,
+                 STATE_READONLY, 0);
+      testStates("aria_treegrid_default_rowheader_readonly", STATE_READONLY, 0,
+                 0, EXT_STATE_EDITABLE);
+      testStates("aria_treegrid_default_rowheader_inherited", 0, EXT_STATE_EDITABLE,
+                 STATE_READONLY, 0);
+      testStates("aria_treegrid_default_cell_readonly", STATE_READONLY, 0,
+                 0, EXT_STATE_EDITABLE);
+      testStates("aria_treegrid_default_cell_inherited", 0, EXT_STATE_EDITABLE,
+                 STATE_READONLY, 0);
+
+      testStates("aria_treegrid_readonly", STATE_READONLY, 0,
+                 0, EXT_STATE_EDITABLE);
+      testStates("aria_treegrid_readonly_colheader_editable", 0, EXT_STATE_EDITABLE,
+                 STATE_READONLY, 0);
+      testStates("aria_treegrid_readonly_colheader_inherited", STATE_READONLY, 0,
+                 0, EXT_STATE_EDITABLE);
+      testStates("aria_treegrid_readonly_rowheader_editable", 0, EXT_STATE_EDITABLE,
+                 STATE_READONLY, 0);
+      testStates("aria_treegrid_readonly_rowheader_inherited", STATE_READONLY, 0,
+                 0, EXT_STATE_EDITABLE);
+      testStates("aria_treegrid_readonly_cell_editable", 0, EXT_STATE_EDITABLE,
+                 STATE_READONLY, 0);
+      testStates("aria_treegrid_readonly_cell_inherited", STATE_READONLY, 0,
+                 0, EXT_STATE_EDITABLE);
+
       // aria-selectable
       testStates("aria_selectable_listitem", STATE_SELECTABLE | STATE_SELECTED);
 
@@ -273,6 +304,11 @@
     Mozilla Bug 762876
   </a>
   <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=892091"
+     title="ARIA treegrid should be editable by default">
+    Bug 892091
+  </a>
+  <a target="_blank"
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=835121"
      title="ARIA grid should be editable by default">
     Mozilla Bug 835121
@@ -355,6 +391,48 @@
       <div id="aria_grid_readonly_cell_editable"
            role="gridcell" aria-readonly="false">gridcell1</div>
       <div id="aria_grid_readonly_cell_inherited"
+           role="gridcell">gridcell2</div>
+    </div>
+  </div>
+
+  <div id="aria_treegrid_default" role="grid">
+    <div role="row">
+      <div id="aria_treegrid_default_colheader_readonly"
+           role="columnheader" aria-readonly="true">colheader1</div>
+      <div id="aria_treegrid_default_colheader_inherited"
+           role="columnheader">colheader2</div>
+    </div>
+    <div role="row">
+      <div id="aria_treegrid_default_rowheader_readonly"
+           role="rowheader" aria-readonly="true">rowheader1</div>
+      <div id="aria_treegrid_default_rowheader_inherited"
+           role="rowheader">rowheader2</div>
+    </div>
+    <div role="row">
+      <div id="aria_treegrid_default_cell_readonly"
+           role="gridcell" aria-readonly="true">gridcell1</div>
+      <div id="aria_treegrid_default_cell_inherited"
+           role="gridcell">gridcell2</div>
+    </div>
+  </div>
+
+  <div id="aria_treegrid_readonly" role="grid" aria-readonly="true">
+    <div role="row">
+      <div id="aria_treegrid_readonly_colheader_editable"
+           role="columnheader" aria-readonly="false">colheader1</div>
+      <div id="aria_treegrid_readonly_colheader_inherited"
+           role="columnheader">colheader2</div>
+    </div>
+    <div role="row">
+      <div id="aria_treegrid_readonly_rowheader_editable"
+           role="rowheader" aria-readonly="false">rowheader1</div>
+      <div id="aria_treegrid_readonly_rowheader_inherited"
+           role="rowheader">rowheader2</div>
+    </div>
+    <div role="row">
+      <div id="aria_treegrid_readonly_cell_editable"
+           role="gridcell" aria-readonly="false">gridcell1</div>
+      <div id="aria_treegrid_readonly_cell_inherited"
            role="gridcell">gridcell2</div>
     </div>
   </div>

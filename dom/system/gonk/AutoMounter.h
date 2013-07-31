@@ -5,7 +5,7 @@
 #ifndef mozilla_system_automounter_h__
 #define mozilla_system_automounter_h__
 
-#include "mozilla/StandardInteger.h"
+#include <stdint.h>
 
 class nsCString;
 

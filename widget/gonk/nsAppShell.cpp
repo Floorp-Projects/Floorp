@@ -440,18 +440,18 @@ private:
 void
 GeckoInputReaderPolicy::setDisplayInfo()
 {
-    MOZ_STATIC_ASSERT(nsIScreen::ROTATION_0_DEG ==
-                      DISPLAY_ORIENTATION_0,
-                      "Orientation enums not matched!");
-    MOZ_STATIC_ASSERT(nsIScreen::ROTATION_90_DEG ==
-                      DISPLAY_ORIENTATION_90,
-                      "Orientation enums not matched!");
-    MOZ_STATIC_ASSERT(nsIScreen::ROTATION_180_DEG ==
-                      DISPLAY_ORIENTATION_180,
-                      "Orientation enums not matched!");
-    MOZ_STATIC_ASSERT(nsIScreen::ROTATION_270_DEG ==
-                      DISPLAY_ORIENTATION_270,
-                      "Orientation enums not matched!");
+    static_assert(nsIScreen::ROTATION_0_DEG ==
+                  DISPLAY_ORIENTATION_0,
+                  "Orientation enums not matched!");
+    static_assert(nsIScreen::ROTATION_90_DEG ==
+                  DISPLAY_ORIENTATION_90,
+                  "Orientation enums not matched!");
+    static_assert(nsIScreen::ROTATION_180_DEG ==
+                  DISPLAY_ORIENTATION_180,
+                  "Orientation enums not matched!");
+    static_assert(nsIScreen::ROTATION_270_DEG ==
+                  DISPLAY_ORIENTATION_270,
+                  "Orientation enums not matched!");
 
     mConfig.setDisplayInfo(0, false, gScreenBounds.width, gScreenBounds.height, nsScreenGonk::GetRotation());
 }

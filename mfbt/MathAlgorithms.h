@@ -10,11 +10,11 @@
 #define mozilla_MathAlgorithms_h
 
 #include "mozilla/Assertions.h"
-#include "mozilla/StandardInteger.h"
 #include "mozilla/TypeTraits.h"
 
 #include <cmath>
 #include <limits.h>
+#include <stdint.h>
 
 namespace mozilla {
 

@@ -32,9 +32,9 @@
 USING_INDEXEDDB_NAMESPACE
 using namespace mozilla::dom::indexedDB::ipc;
 
-MOZ_STATIC_ASSERT(sizeof(size_t) >= sizeof(IDBCursor::Direction),
-                  "Relying on conversion between size_t and "
-                  "IDBCursor::Direction");
+static_assert(sizeof(size_t) >= sizeof(IDBCursor::Direction),
+              "Relying on conversion between size_t and "
+              "IDBCursor::Direction");
 
 namespace {
 

@@ -2824,9 +2824,9 @@ nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
         case eCSSProperty_font_stretch: {
           int16_t stretch =
             static_cast<const nsStyleFont*>(styleStruct)->mFont.stretch;
-          MOZ_STATIC_ASSERT(NS_STYLE_FONT_STRETCH_ULTRA_CONDENSED == -4 &&
-                            NS_STYLE_FONT_STRETCH_ULTRA_EXPANDED == 4,
-                            "font stretch constants not as expected");
+          static_assert(NS_STYLE_FONT_STRETCH_ULTRA_CONDENSED == -4 &&
+                        NS_STYLE_FONT_STRETCH_ULTRA_EXPANDED == 4,
+                        "font stretch constants not as expected");
           if (stretch < NS_STYLE_FONT_STRETCH_ULTRA_CONDENSED ||
               stretch > NS_STYLE_FONT_STRETCH_ULTRA_EXPANDED) {
             return false;
@@ -3049,7 +3049,7 @@ nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
     case eStyleAnimType_Sides_Right:
     case eStyleAnimType_Sides_Bottom:
     case eStyleAnimType_Sides_Left: {
-      MOZ_STATIC_ASSERT(
+      static_assert(
        NS_SIDE_TOP    == eStyleAnimType_Sides_Top   -eStyleAnimType_Sides_Top &&
        NS_SIDE_RIGHT  == eStyleAnimType_Sides_Right -eStyleAnimType_Sides_Top &&
        NS_SIDE_BOTTOM == eStyleAnimType_Sides_Bottom-eStyleAnimType_Sides_Top &&
@@ -3065,7 +3065,7 @@ nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
     case eStyleAnimType_Corner_TopRight:
     case eStyleAnimType_Corner_BottomRight:
     case eStyleAnimType_Corner_BottomLeft: {
-      MOZ_STATIC_ASSERT(
+      static_assert(
        NS_CORNER_TOP_LEFT     == eStyleAnimType_Corner_TopLeft -
                                  eStyleAnimType_Corner_TopLeft        &&
        NS_CORNER_TOP_RIGHT    == eStyleAnimType_Corner_TopRight -

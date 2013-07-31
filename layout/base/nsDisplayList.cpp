@@ -51,7 +51,7 @@
 #include "ImageContainer.h"
 #include "nsCanvasFrame.h"
 
-#include "mozilla/StandardInteger.h"
+#include <stdint.h>
 #include <algorithm>
 
 using namespace mozilla;
@@ -718,17 +718,6 @@ nsDisplayListBuilder::GetBackgroundPaintFlags() {
   return flags;
 }
 
-static uint64_t RegionArea(const nsRegion& aRegion)
-{
-  uint64_t area = 0;
-  nsRegionRectIterator iter(aRegion);
-  const nsRect* r;
-  while ((r = iter.Next()) != nullptr) {
-    area += uint64_t(r->width)*r->height;
-  }
-  return area;
-}
-
 void
 nsDisplayListBuilder::SubtractFromVisibleRegion(nsRegion* aVisibleRegion,
                                                 const nsRegion& aRegion)
@@ -743,7 +732,7 @@ nsDisplayListBuilder::SubtractFromVisibleRegion(nsRegion* aVisibleRegion,
   // Do let aVisibleRegion get more complex if by doing so we reduce its
   // area by at least half.
   if (GetAccurateVisibleRegions() || tmp.GetNumRects() <= 15 ||
-      RegionArea(tmp) <= RegionArea(*aVisibleRegion)/2) {
+      tmp.Area() <= aVisibleRegion->Area()/2) {
     *aVisibleRegion = tmp;
   }
 }

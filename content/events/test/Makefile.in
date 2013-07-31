@@ -96,7 +96,6 @@ MOCHITEST_FILES = \
 		test_wheel_default_action.html \
 		window_wheel_default_action.html \
 		test_bug603008.html \
-		test_bug716822.html \
 		test_bug742376.html \
 		test_dragstart.html \
 		test_bug812744.html \

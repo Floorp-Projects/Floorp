@@ -85,7 +85,7 @@ def write_histogram_table(histograms):
 # their upper bounds, we have to let the compiler do the checking.
 
 def static_assert(expression, message):
-    print "MOZ_STATIC_ASSERT(%s, \"%s\");" % (expression, message)
+    print "static_assert(%s, \"%s\");" % (expression, message)
 
 def static_asserts_for_boolean(histogram):
     pass
