@@ -6,10 +6,11 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <iostream>
 #if !defined(__Userspace_os_Windows)
 #include <arpa/inet.h>
 #endif
+// usrsctp.h expects to have errno definitions prior to its inclusion.
+#include <errno.h>
 
 #define SCTP_DEBUG 1
 #define SCTP_STDINT_INCLUDE <stdint.h>
