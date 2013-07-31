@@ -159,6 +159,14 @@ MarkupView.prototype = {
     }
 
     switch(aEvent.keyCode) {
+      case Ci.nsIDOMKeyEvent.DOM_VK_H:
+        let node = this._selectedContainer.node;
+        if (node.hidden) {
+          this.walker.unhideNode(node).then(() => this.nodeChanged(node));
+        } else {
+          this.walker.hideNode(node).then(() => this.nodeChanged(node));
+        }
+        break;
       case Ci.nsIDOMKeyEvent.DOM_VK_DELETE:
       case Ci.nsIDOMKeyEvent.DOM_VK_BACK_SPACE:
         this.deleteNode(this._selectedContainer.node);
@@ -521,7 +529,7 @@ MarkupView.prototype = {
    */
   nodeChanged: function MT_nodeChanged(aNode)
   {
-    if (aNode === this._inspector.selection) {
+    if (aNode === this._inspector.selection.nodeFront) {
       this._inspector.change("markupview");
     }
   },
