@@ -73,6 +73,7 @@
 <!ENTITY pref_category_installed_search_engines "Installed search engines">
 <!ENTITY pref_category_devtools "Developer tools">
 <!ENTITY pref_developer_remotedebugging "Remote debugging">
+<!ENTITY pref_developer_remotedebugging_docs "Learn more">
 
 <!-- collected old strings - remove after determining final strings
      as part of Bug 877791 -->
