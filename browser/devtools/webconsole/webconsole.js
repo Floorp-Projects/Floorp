@@ -3413,13 +3413,20 @@ JSTerm.prototype = {
       view.delete = null;
     }
 
-    let container = view.controller.setSingleVariable(aOptions);
+    let scope = view.addScope(aOptions.label);
+    scope.expanded = true;
+    scope.locked = true;
+
+    let container = scope.addItem();
     container.evaluationMacro = simpleValueEvalMacro;
 
     if (aOptions.objectActor) {
+      view.controller.expand(container, aOptions.objectActor);
       view._consoleLastObjectActor = aOptions.objectActor.actor;
     }
     else if (aOptions.rawObject) {
+      container.populate(aOptions.rawObject);
+      view.commitHierarchy();
       view._consoleLastObjectActor = null;
     }
     else {
