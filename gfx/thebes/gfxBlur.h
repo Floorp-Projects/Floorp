@@ -52,12 +52,13 @@ public:
      *   this value.  This parameter should nearly always be computed using
      *   CalculateBlurRadius, below.
      *
-     * @param aDirtyRect A pointer to a dirty rect, measured in device units, if available.
-     *  This will be used for optimizing the blur operation. It is safe to pass NULL here.
+     * @param aDirtyRect A pointer to a dirty rect, measured in device units,
+     *  if available. This will be used for optimizing the blur operation. It
+     *  is safe to pass nullptr here.
      *
-     * @param aSkipRect A pointer to a rect, measured in device units, that represents an area
-     *  where blurring is unnecessary and shouldn't be done for speed reasons. It is safe to
-     *  pass NULL here.
+     * @param aSkipRect A pointer to a rect, measured in device units, that
+     *  represents an area where blurring is unnecessary and shouldn't be done
+     *  for speed reasons. It is safe to pass nullptr here.
      */
     gfxContext* Init(const gfxRect& aRect,
                      const gfxIntSize& aSpreadRadius,

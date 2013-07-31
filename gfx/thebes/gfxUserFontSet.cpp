@@ -297,7 +297,7 @@ gfxUserFontSet::OTSMessage(void *aUserData, const char *format, ...)
 #endif
 
 // Call the OTS library to sanitize an sfnt before attempting to use it.
-// Returns a newly-allocated block, or NULL in case of fatal errors.
+// Returns a newly-allocated block, or nullptr in case of fatal errors.
 const uint8_t*
 gfxUserFontSet::SanitizeOpenTypeData(gfxMixedFontFamily *aFamily,
                                      gfxProxyFontEntry *aProxy,
