@@ -187,8 +187,6 @@ class IonRuntime
     IonCode *generateDebugTrapHandler(JSContext *cx);
     IonCode *generateVMWrapper(JSContext *cx, const VMFunction &f);
 
-    IonCode *debugTrapHandler(JSContext *cx);
-
   public:
     IonRuntime();
     ~IonRuntime();
@@ -205,6 +203,55 @@ class IonRuntime
     void setFlusher(AutoFlushCache *fl) {
         if (!flusher_ || !fl)
             flusher_ = fl;
+    }
+
+    IonCode *getVMWrapper(const VMFunction &f);
+    IonCode *debugTrapHandler(JSContext *cx);
+
+    IonCode *getGenericBailoutHandler() const {
+        return bailoutHandler_;
+    }
+
+    IonCode *getExceptionTail() const {
+        return exceptionTail_;
+    }
+
+    IonCode *getBailoutTail() const {
+        return bailoutTail_;
+    }
+
+    IonCode *getBailoutTable(const FrameSizeClass &frameClass);
+
+    IonCode *getArgumentsRectifier(ExecutionMode mode) const {
+        switch (mode) {
+          case SequentialExecution: return argumentsRectifier_;
+          case ParallelExecution:   return parallelArgumentsRectifier_;
+          default:                  MOZ_ASSUME_UNREACHABLE("No such execution mode");
+        }
+    }
+
+    void *getArgumentsRectifierReturnAddr() const {
+        return argumentsRectifierReturnAddr_;
+    }
+
+    IonCode *getInvalidationThunk() const {
+        return invalidator_;
+    }
+
+    EnterIonCode enterIon() const {
+        return enterJIT_->as<EnterIonCode>();
+    }
+
+    EnterIonCode enterBaseline() const {
+        return enterBaselineJIT_->as<EnterIonCode>();
+    }
+
+    IonCode *valuePreBarrier() const {
+        return valuePreBarrier_;
+    }
+
+    IonCode *shapePreBarrier() const {
+        return shapePreBarrier_;
     }
 };
 
@@ -244,8 +291,6 @@ class IonCompartment
     IonCode *generateStringConcatStub(JSContext *cx, ExecutionMode mode);
 
   public:
-    IonCode *getVMWrapper(const VMFunction &f);
-
     OffThreadCompilationVector &finishedOffThreadCompilations() {
         return finishedOffThreadCompilations_;
     }
@@ -305,56 +350,6 @@ class IonCompartment
 
     JSC::ExecutableAllocator *execAlloc() {
         return rt->execAlloc_;
-    }
-
-    IonCode *getGenericBailoutHandler() {
-        return rt->bailoutHandler_;
-    }
-
-    IonCode *getExceptionTail() {
-        return rt->exceptionTail_;
-    }
-
-    IonCode *getBailoutTail() {
-        return rt->bailoutTail_;
-    }
-
-    IonCode *getBailoutTable(const FrameSizeClass &frameClass);
-
-    IonCode *getArgumentsRectifier(ExecutionMode mode) {
-        switch (mode) {
-          case SequentialExecution: return rt->argumentsRectifier_;
-          case ParallelExecution:   return rt->parallelArgumentsRectifier_;
-          default:                  MOZ_ASSUME_UNREACHABLE("No such execution mode");
-        }
-    }
-
-    void *getArgumentsRectifierReturnAddr() {
-        return rt->argumentsRectifierReturnAddr_;
-    }
-
-    IonCode *getInvalidationThunk() {
-        return rt->invalidator_;
-    }
-
-    EnterIonCode enterJIT() {
-        return rt->enterJIT_->as<EnterIonCode>();
-    }
-
-    EnterIonCode enterBaselineJIT() {
-        return rt->enterBaselineJIT_->as<EnterIonCode>();
-    }
-
-    IonCode *valuePreBarrier() {
-        return rt->valuePreBarrier_;
-    }
-
-    IonCode *shapePreBarrier() {
-        return rt->shapePreBarrier_;
-    }
-
-    IonCode *debugTrapHandler(JSContext *cx) {
-        return rt->debugTrapHandler(cx);
     }
 
     IonCode *stringConcatStub(ExecutionMode mode) {

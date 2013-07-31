@@ -1796,6 +1796,24 @@ class MApplyArgs
     }
 };
 
+class MBail : public MNullaryInstruction
+{
+  protected:
+    MBail()
+    {
+        setGuard();
+    }
+
+  public:
+    INSTRUCTION_HEADER(Bail)
+
+    static MBail *
+    New() {
+        return new MBail();
+    }
+
+};
+
 class MGetDynamicName
   : public MAryInstruction<2>,
     public MixPolicy<ObjectPolicy<0>, StringPolicy<1> >
