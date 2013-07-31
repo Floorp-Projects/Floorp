@@ -89,7 +89,7 @@ Tools.webConsole = {
 Tools.inspector = {
   id: "inspector",
   accesskey: l10n("inspector.accesskey", inspectorStrings),
-  key: l10n("inspector.commandkey", inspectorStrings),
+  key: null,
   ordinal: 2,
   modifiers: osString == "Darwin" ? "accel,alt" : "accel,shift",
   icon: "chrome://browser/skin/devtools/tool-inspector.png",
