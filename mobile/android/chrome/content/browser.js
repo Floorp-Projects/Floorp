@@ -6933,24 +6933,43 @@ var RemoteDebugger = {
 
   /**
    * Prompt the user to accept or decline the incoming connection.
+   * This is passed to DebuggerService.init as a callback.
    *
    * @return true if the connection should be permitted, false otherwise
    */
-  _allowConnection: function rd_allowConnection() {
+  _showConnectionPrompt: function rd_showConnectionPrompt() {
     let title = Strings.browser.GetStringFromName("remoteIncomingPromptTitle");
     let msg = Strings.browser.GetStringFromName("remoteIncomingPromptMessage");
-    let btn = Strings.browser.GetStringFromName("remoteIncomingPromptDisable");
-    let prompt = Services.prompt;
-    let flags = prompt.BUTTON_POS_0 * prompt.BUTTON_TITLE_OK +
-                prompt.BUTTON_POS_1 * prompt.BUTTON_TITLE_CANCEL +
-                prompt.BUTTON_POS_2 * prompt.BUTTON_TITLE_IS_STRING +
-                prompt.BUTTON_POS_1_DEFAULT;
-    let result = prompt.confirmEx(null, title, msg, flags, null, null, btn, null, { value: false });
-    if (result == 0)
+    let disable = Strings.browser.GetStringFromName("remoteIncomingPromptDisable");
+    let cancel = Strings.browser.GetStringFromName("remoteIncomingPromptCancel");
+    let agree = Strings.browser.GetStringFromName("remoteIncomingPromptAccept");
+
+    // Make prompt. Note: button order is in reverse.
+    let prompt = new Prompt({
+      window: null,
+      title: title,
+      message: msg,
+      buttons: [ agree, cancel, disable ],
+      priority: 1
+    });
+
+    // The debugger server expects a synchronous response, so spin on result since Prompt is async.
+    let result = null;
+
+    prompt.show(function(data) {
+      result = data.button;
+    });
+
+    // Spin this thread while we wait for a result.
+    let thread = Services.tm.currentThread;
+    while (result == null)
+      thread.processNextEvent(true);
+
+    if (result === 0)
       return true;
-    if (result == 2) {
-      this._stop();
+    if (result === 2) {
       Services.prefs.setBoolPref("devtools.debugger.remote-enabled", false);
+      this._stop();
     }
     return false;
   },
@@ -6963,7 +6982,7 @@ var RemoteDebugger = {
   _start: function rd_start() {
     try {
       if (!DebuggerServer.initialized) {
-        DebuggerServer.init(this._allowConnection);
+        DebuggerServer.init(this._showConnectionPrompt.bind(this));
         DebuggerServer.addBrowserActors();
         DebuggerServer.addActors("chrome://browser/content/dbg-browser-actors.js");
       }
