@@ -8,12 +8,15 @@
 #define mozilla_dom_indexeddb_idbcursor_h__
 
 #include "mozilla/dom/indexedDB/IndexedDatabase.h"
-#include "mozilla/dom/indexedDB/IDBObjectStore.h"
-#include "mozilla/dom/indexedDB/Key.h"
 
 #include "nsIIDBCursorWithValue.h"
 
+#include "mozilla/dom/IDBCursorBinding.h"
 #include "nsCycleCollectionParticipant.h"
+
+#include "mozilla/dom/indexedDB/IDBObjectStore.h"
+#include "mozilla/dom/indexedDB/Key.h"
+
 
 class nsIRunnable;
 class nsIScriptContext;
@@ -113,8 +116,11 @@ public:
     return mRequest;
   }
 
-  static nsresult ParseDirection(const nsAString& aDirection,
-                                 Direction* aResult);
+  static nsresult
+  ParseDirection(const nsAString& aDirection, Direction* aResult);
+
+  static Direction
+  ConvertDirection(IDBCursorDirection aDirection);
 
   void
   SetActor(IndexedDBCursorChild* aActorChild)

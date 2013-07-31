@@ -89,7 +89,6 @@ members = [
     'nsIIDBDatabase.*',
     'nsIIDBIndex.*',
     'nsIIDBKeyRange.*',
-    'nsIIDBObjectStore.*',
     'nsIIDBRequest.*',
     'nsIIDBOpenDBRequest.*',
     'nsIIndexedDatabaseManager.*',

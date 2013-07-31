@@ -204,7 +204,6 @@
 #include "mozilla/dom/indexedDB/IDBWrapperCache.h"
 #include "mozilla/dom/indexedDB/IDBRequest.h"
 #include "mozilla/dom/indexedDB/IDBDatabase.h"
-#include "mozilla/dom/indexedDB/IDBObjectStore.h"
 #include "mozilla/dom/indexedDB/IDBCursor.h"
 #include "mozilla/dom/indexedDB/IDBKeyRange.h"
 #include "mozilla/dom/indexedDB/IDBIndex.h"
@@ -638,8 +637,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            IDBEVENTTARGET_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(IDBDatabase, IDBEventTargetSH,
                            IDBEVENTTARGET_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(IDBObjectStore, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(IDBCursor, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(IDBCursorWithValue, nsDOMGenericSH,
@@ -1544,10 +1541,6 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_BEGIN(IDBDatabase, nsIIDBDatabase)
     DOM_CLASSINFO_MAP_ENTRY(nsIIDBDatabase)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(IDBObjectStore, nsIIDBObjectStore)
-    DOM_CLASSINFO_MAP_ENTRY(nsIIDBObjectStore)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(IDBCursor, nsIIDBCursor)
