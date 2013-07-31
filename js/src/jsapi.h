@@ -3181,7 +3181,7 @@ JS_GetInstancePrivate(JSContext *cx, JSObject *obj, JSClass *clasp,
                       jsval *argv);
 
 extern JS_PUBLIC_API(JSBool)
-JS_GetPrototype(JSContext *cx, JSObject *obj, JSObject **protop);
+JS_GetPrototype(JSContext *cx, JS::Handle<JSObject*> obj, JS::MutableHandle<JSObject*> protop);
 
 extern JS_PUBLIC_API(JSBool)
 JS_SetPrototype(JSContext *cx, JSObject *obj, JSObject *proto);

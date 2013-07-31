@@ -104,7 +104,7 @@ nsXBLDocGlobalObject::doCheckAccess(JSContext *cx, JS::Handle<JSObject*> obj,
   // down on the proto chain.
   JS::Rooted<JSObject*> base(cx, obj);
   while (JS_GetClass(base) != &nsXBLDocGlobalObject::gSharedGlobalClass) {
-    if (!::JS_GetPrototype(cx, base, base.address())) {
+    if (!::JS_GetPrototype(cx, base, &base)) {
       return JS_FALSE;
     }
     if (!base) {
