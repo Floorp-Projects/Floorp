@@ -1982,8 +1982,7 @@ ElementRestyler::CaptureChange(nsStyleContext* aOldContext,
  * nsStyleContext::CalcStyleDifference.
  */
 void
-ElementRestyler::Restyle(nsPresContext     *aPresContext,
-                         nsIContent        *aParentContent,
+ElementRestyler::Restyle(nsIContent        *aParentContent,
                          nsStyleChangeList *aChangeList,
                          nsChangeHint       aParentFrameHintsNotHandledForDescendants,
                          nsRestyleHint      aRestyleHint,
@@ -2013,7 +2012,7 @@ ElementRestyler::Restyle(nsPresContext     *aPresContext,
   nsChangeHint assumeDifferenceHint = NS_STYLE_HINT_NONE;
   // XXXbz oldContext should just be an nsRefPtr
   nsStyleContext* oldContext = mFrame->StyleContext();
-  nsStyleSet* styleSet = aPresContext->StyleSet();
+  nsStyleSet* styleSet = mPresContext->StyleSet();
 
   // XXXbz the nsIFrame constructor takes an nsStyleContext, so how
   // could oldContext be null?
@@ -2081,8 +2080,7 @@ ElementRestyler::Restyle(nsPresContext     *aPresContext,
 
       ElementRestyler providerRestyler(PARENT_CONTEXT_FROM_CHILD_FRAME,
                                        *this, providerFrame);
-      providerRestyler.Restyle(aPresContext,
-                                                   aParentContent, aChangeList,
+      providerRestyler.Restyle(aParentContent, aChangeList,
                                                    nsChangeHint_Hints_NotHandledForDescendants,
                                                    aRestyleHint,
                                                    aRestyleTracker,
@@ -2254,7 +2252,7 @@ ElementRestyler::Restyle(nsPresContext     *aPresContext,
 
       if (newContext != oldContext) {
         if (!copyFromContinuation) {
-          TryStartingTransition(aPresContext, mFrame->GetContent(),
+          TryStartingTransition(mPresContext, mFrame->GetContent(),
                                 oldContext, &newContext);
         }
 
@@ -2420,7 +2418,7 @@ ElementRestyler::Restyle(nsPresContext     *aPresContext,
           if (!nsLayoutUtils::GetBeforeFrame(mFrame) &&
               nsLayoutUtils::HasPseudoStyle(localContent, newContext,
                                             nsCSSPseudoElements::ePseudo_before,
-                                            aPresContext)) {
+                                            mPresContext)) {
             // Have to create the new :before frame
             NS_UpdateHint(mHintsHandled, nsChangeHint_ReconstructFrame);
             aChangeList->AppendChange(mFrame, content,
@@ -2451,7 +2449,7 @@ ElementRestyler::Restyle(nsPresContext     *aPresContext,
           // context, so get the pseudo context first.
           if (nsLayoutUtils::HasPseudoStyle(localContent, newContext,
                                             nsCSSPseudoElements::ePseudo_after,
-                                            aPresContext) &&
+                                            mPresContext) &&
               !nsLayoutUtils::GetAfterFrame(mFrame)) {
             // have to create the new :after frame
             NS_UpdateHint(mHintsHandled, nsChangeHint_ReconstructFrame);
@@ -2559,8 +2557,7 @@ ElementRestyler::Restyle(nsPresContext     *aPresContext,
                 oofRestyler.mHintsHandled =
                   NS_SubtractHint(oofRestyler.mHintsHandled,
                                   nsChangeHint_AllReflowHints);
-                oofRestyler.Restyle(aPresContext,
-                                      content, aChangeList,
+                oofRestyler.Restyle(content, aChangeList,
                                       nonInheritedHints,
                                       childRestyleHint,
                                       aRestyleTracker,
@@ -2572,7 +2569,7 @@ ElementRestyler::Restyle(nsPresContext     *aPresContext,
               // reresolve placeholder's context under the same parent
               // as the out-of-flow frame
               ElementRestyler phRestyler(*this, child);
-              phRestyler.Restyle(aPresContext, content,
+              phRestyler.Restyle(content,
                                     aChangeList,
                                     nonInheritedHints,
                                     childRestyleHint,
@@ -2584,7 +2581,7 @@ ElementRestyler::Restyle(nsPresContext     *aPresContext,
             else {  // regular child frame
               if (child != resolvedChild) {
                 ElementRestyler childRestyler(*this, child);
-                childRestyler.Restyle(aPresContext, content,
+                childRestyler.Restyle(content,
                                       aChangeList,
                                       nonInheritedHints,
                                       childRestyleHint,
@@ -2673,7 +2670,7 @@ RestyleManager::ComputeStyleChangeFor(nsIFrame*          aFrame,
       ElementRestyler restyler(mPresContext, frame,
                                aMinChange);
 
-      restyler.Restyle(mPresContext, nullptr,
+      restyler.Restyle(nullptr,
                               aChangeList, nsChangeHint(0),
                               aRestyleDescendants ?
                                 eRestyle_Subtree : eRestyle_Self,
