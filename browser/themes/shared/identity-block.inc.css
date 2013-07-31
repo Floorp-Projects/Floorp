@@ -86,3 +86,7 @@
   margin-top: .5em;
   margin-bottom: .5em;
 }
+
+#identity-popup-content-box {
+  max-width: 50ch;
+}
