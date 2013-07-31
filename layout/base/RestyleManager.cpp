@@ -1372,6 +1372,32 @@ RestyleManager::ProcessPendingRestyles()
 }
 
 void
+RestyleManager::BeginProcessingRestyles()
+{
+  // Make sure to not rebuild quote or counter lists while we're
+  // processing restyles
+  mPresContext->FrameConstructor()->BeginUpdate();
+
+  mInStyleRefresh = true;
+}
+
+void
+RestyleManager::EndProcessingRestyles()
+{
+  FlushOverflowChangedTracker();
+
+  // Set mInStyleRefresh to false now, since the EndUpdate call might
+  // add more restyles.
+  mInStyleRefresh = false;
+
+  mPresContext->FrameConstructor()->EndUpdate();
+
+#ifdef DEBUG
+  mPresContext->PresShell()->VerifyStyleTree();
+#endif
+}
+
+void
 RestyleManager::PostRestyleEventCommon(Element* aElement,
                                        nsRestyleHint aRestyleHint,
                                        nsChangeHint aMinChangeHint,
