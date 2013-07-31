@@ -1,0 +1,47 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set ts=4 sw=4 et tw=80:
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PContent;
+include DOMTypes;
+include JavaScriptTypes;
+
+using mozilla::void_t;
+
+namespace mozilla {
+namespace jsipc {
+
+rpc protocol PJavaScript
+{
+    manager PContent;
+
+child:
+    // The parent process no longer holds any references to the child object.
+    async DropObject(uint64_t objId);
+
+    // These roughly map to the ProxyHandler hooks that CPOWs need.
+    urgent Has(uint64_t objId, nsString id) returns (ReturnStatus rs, bool has);
+    urgent HasOwn(uint64_t objId, nsString id) returns (ReturnStatus rs, bool has);
+    urgent Get(uint64_t objId, uint64_t receiverId, nsString id) returns (ReturnStatus rs, JSVariant result);
+    urgent Set(uint64_t objId, uint64_t receiverId, nsString id, bool strict, JSVariant value) returns (ReturnStatus rs, JSVariant result);
+    urgent Call(uint64_t objId, JSParam[] argv) returns (ReturnStatus rs, JSVariant result, JSParam[] outparams);
+
+    urgent InstanceOf(uint64_t objId, JSIID iid) returns (ReturnStatus rs, bool instanceof);
+    urgent GetPropertyDescriptor(uint64_t objId, nsString id, uint32_t flags) returns (ReturnStatus rs, PPropertyDescriptor result);
+    urgent GetOwnPropertyDescriptor(uint64_t objId, nsString id, uint32_t flags) returns (ReturnStatus rs, PPropertyDescriptor result);
+    urgent GetOwnPropertyNames(uint64_t objId) returns (ReturnStatus rs, nsString[] names);
+    urgent Keys(uint64_t objId) returns (ReturnStatus rs, nsString[] names);
+    urgent ObjectClassIs(uint64_t objId, uint32_t classValue) returns (bool result);
+    urgent ClassName(uint64_t objId) returns (nsString name);
+    urgent IsExtensible(uint64_t objId) returns (bool result);
+    urgent PreventExtensions(uint64_t objId) returns (ReturnStatus rs);
+
+parent:
+    async __delete__();
+};
+
+}
+}

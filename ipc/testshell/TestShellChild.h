@@ -13,10 +13,6 @@
 
 namespace mozilla {
 
-namespace jsipc {
-class PContextWrapperChild;
-}
-
 namespace ipc {
 
 class XPCShellEnvironment;
@@ -39,9 +35,6 @@ public:
   bool
   DeallocPTestShellCommand(PTestShellCommandChild* aCommand);
 
-  PContextWrapperChild* AllocPContextWrapper();
-  bool DeallocPContextWrapper(PContextWrapperChild* actor);
-  
 private:
   nsAutoPtr<XPCShellEnvironment> mXPCShell;
 };

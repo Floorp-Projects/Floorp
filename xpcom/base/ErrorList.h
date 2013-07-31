@@ -592,6 +592,7 @@
   ERROR(NS_ERROR_XPC_HAS_BEEN_SHUTDOWN,                FAILURE(51)),
   ERROR(NS_ERROR_XPC_CANT_MODIFY_PROP_ON_WN,           FAILURE(52)),
   ERROR(NS_ERROR_XPC_BAD_CONVERT_JS_ZERO_ISNOT_NULL,   FAILURE(53)),
+  ERROR(NS_ERROR_XPC_CANT_PASS_CPOW_TO_NATIVE,         FAILURE(54)),
   /* any new errors here should have an associated entry added in xpc.msg */
 
   ERROR(NS_SUCCESS_I_DID_SOMETHING,      SUCCESS(1)),

@@ -797,10 +797,6 @@ JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
     analysisPurgeCallback(NULL),
     analysisPurgeTriggerBytes(0),
     gcMallocBytes(0),
-    gcBlackRootsTraceOp(NULL),
-    gcBlackRootsData(NULL),
-    gcGrayRootsTraceOp(NULL),
-    gcGrayRootsData(NULL),
     autoGCRooters(NULL),
     scriptAndCountsVector(NULL),
     NaNValue(UndefinedValue()),
@@ -2279,12 +2275,24 @@ JS_AnchorPtr(void *p)
 {
 }
 
-JS_PUBLIC_API(void)
-JS_SetExtraGCRootsTracer(JSRuntime *rt, JSTraceDataOp traceOp, void *data)
+JS_PUBLIC_API(JSBool)
+JS_AddExtraGCRootsTracer(JSRuntime *rt, JSTraceDataOp traceOp, void *data)
 {
     AssertHeapIsIdle(rt);
-    rt->gcBlackRootsTraceOp = traceOp;
-    rt->gcBlackRootsData = data;
+    return !!rt->gcBlackRootTracers.append(JSRuntime::ExtraTracer(traceOp, data));
+}
+
+JS_PUBLIC_API(void)
+JS_RemoveExtraGCRootsTracer(JSRuntime *rt, JSTraceDataOp traceOp, void *data)
+{
+    AssertHeapIsIdle(rt);
+    for (size_t i = 0; i < rt->gcBlackRootTracers.length(); i++) {
+        JSRuntime::ExtraTracer *e = &rt->gcBlackRootTracers[i];
+        if (e->op == traceOp && e->data == data) {
+            rt->gcBlackRootTracers.erase(e);
+            break;
+        }
+    }
 }
 
 JS_PUBLIC_API(void)
@@ -7111,5 +7119,14 @@ JS_GetScriptedGlobal(JSContext *cx)
     if (i.done())
         return cx->global();
     return &i.scopeChain()->global();
+}
+
+JS_PUBLIC_API(JSBool)
+JS_PreventExtensions(JSContext *cx, JS::HandleObject obj)
+{
+    if (!JS_IsExtensible(obj))
+        return JS_TRUE;
+
+    return JSObject::preventExtensions(cx, obj);
 }
 

@@ -25,7 +25,6 @@
 #include "mozilla/ipc/GeckoChildProcessHost.h"
 #include "mozilla/ipc/TestShellChild.h"
 #include "mozilla/ipc/XPCShellEnvironment.h"
-#include "mozilla/jsipc/PContextWrapperChild.h"
 #include "mozilla/layers/CompositorChild.h"
 #include "mozilla/layers/ImageBridgeChild.h"
 #include "mozilla/layers/PCompositorChild.h"
@@ -50,6 +49,7 @@
 #include "nsDebugImpl.h"
 #include "nsHashPropertyBag.h"
 #include "nsLayoutStylesheetCache.h"
+#include "nsIJSRuntimeService.h"
 
 #include "IHistory.h"
 #include "nsDocShellCID.h"
@@ -64,6 +64,7 @@
 #include "nsFrameMessageManager.h"
 
 #include "nsIGeolocationProvider.h"
+#include "JavaScriptParent.h"
 #include "mozilla/dom/PMemoryReportRequestChild.h"
 
 #ifdef MOZ_PERMISSIONS
@@ -109,6 +110,7 @@
 #include "nsIPrincipal.h"
 #include "nsDeviceStorage.h"
 #include "AudioChannelService.h"
+#include "JavaScriptChild.h"
 #include "ProcessPriorityManager.h"
 
 using namespace base;
@@ -123,6 +125,7 @@ using namespace mozilla::hal_sandbox;
 using namespace mozilla::ipc;
 using namespace mozilla::layers;
 using namespace mozilla::net;
+using namespace mozilla::jsipc;
 #if defined(MOZ_WIDGET_GONK)
 using namespace mozilla::system;
 #endif
@@ -552,6 +555,31 @@ static void FirstIdle(void)
     ContentChild::GetSingleton()->SendFirstIdle();
 }
 
+mozilla::jsipc::PJavaScriptChild *
+ContentChild::AllocPJavaScript()
+{
+    nsCOMPtr<nsIJSRuntimeService> svc = do_GetService("@mozilla.org/js/xpc/RuntimeService;1");
+    NS_ENSURE_TRUE(svc, NULL);
+
+    JSRuntime *rt;
+    svc->GetRuntime(&rt);
+    NS_ENSURE_TRUE(svc, NULL);
+
+    mozilla::jsipc::JavaScriptChild *child = new mozilla::jsipc::JavaScriptChild(rt);
+    if (!child->init()) {
+        delete child;
+        return NULL;
+    }
+    return child;
+}
+
+bool
+ContentChild::DeallocPJavaScript(PJavaScriptChild *child)
+{
+    delete child;
+    return true;
+}
+
 PBrowserChild*
 ContentChild::AllocPBrowser(const IPCTabContext& aContext,
                             const uint32_t& aChromeFlags)
@@ -760,10 +788,19 @@ ContentChild::DeallocPTestShell(PTestShellChild* shell)
     return true;
 }
 
+jsipc::JavaScriptChild *
+ContentChild::GetCPOWManager()
+{
+    if (ManagedPJavaScriptChild().Length()) {
+        return static_cast<JavaScriptChild*>(ManagedPJavaScriptChild()[0]);
+    }
+    JavaScriptChild* actor = static_cast<JavaScriptChild*>(SendPJavaScriptConstructor());
+    return actor;
+}
+
 bool
 ContentChild::RecvPTestShellConstructor(PTestShellChild* actor)
 {
-    actor->SendPContextWrapperConstructor()->SendPObjectWrapperConstructor(true);
     return true;
 }
 
