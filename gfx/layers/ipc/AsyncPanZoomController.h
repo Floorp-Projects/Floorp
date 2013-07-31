@@ -218,10 +218,6 @@ public:
    * amount.
    */
   ViewTransform GetCurrentAsyncTransform();
-private:
-  /* Internal method of above. Callers to this MUST hold the monitor. */
-  ViewTransform GetCurrentAsyncTransformInternal();
-public:
 
   /**
    * Sets the DPI of the device for use within panning and zooming logic. It is
