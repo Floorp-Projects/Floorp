@@ -6,7 +6,6 @@
 const { 'classes': Cc, 'interfaces': Ci } = Components;
 
 const DOMException = Ci.nsIDOMDOMException;
-const IDBCursor = Ci.nsIIDBCursor;
 const IDBOpenDBRequest = Ci.nsIIDBOpenDBRequest;
 const IDBRequest = Ci.nsIIDBRequest
 

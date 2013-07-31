@@ -2044,8 +2044,9 @@ IndexedDBCursorRequestParent::Continue(const ContinueParams& aParams)
   {
     AutoSetCurrentTransaction asct(mCursor->Transaction());
 
-    nsresult rv = mCursor->ContinueInternal(aParams.key(), aParams.count());
-    NS_ENSURE_SUCCESS(rv, false);
+    ErrorResult rv;
+    mCursor->ContinueInternal(aParams.key(), aParams.count(), rv);
+    ENSURE_SUCCESS(rv, false);
   }
 
   mRequest = mCursor->Request();
