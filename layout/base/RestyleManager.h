@@ -274,7 +274,8 @@ public:
   ElementRestyler(nsPresContext* aPresContext,
                   nsIFrame* aFrame,
                   nsStyleChangeList* aChangeList,
-                  nsChangeHint aHintsHandledByAncestors);
+                  nsChangeHint aHintsHandledByAncestors,
+                  RestyleTracker& aRestyleTracker);
 
   // Construct for an element whose parent is being restyled.
   ElementRestyler(const ElementRestyler& aParentRestyler,
@@ -315,7 +316,6 @@ public:
    * current parent and existing rulenode, and the same for kids.
    */
   void Restyle(nsRestyleHint aRestyleHint,
-               RestyleTracker&    aRestyleTracker,
                DesiredA11yNotifications aDesiredA11yNotifications,
                nsTArray<nsIContent*>& aVisibleKidsOfHiddenElement,
                TreeMatchContext &aTreeMatchContext);
@@ -352,6 +352,7 @@ private:
   // See nsStyleContext::CalcStyleDifference
   nsChangeHint mParentFrameHintsNotHandledForDescendants;
   nsChangeHint mHintsNotHandledForDescendants;
+  RestyleTracker& mRestyleTracker;
 };
 
 } // namespace mozilla

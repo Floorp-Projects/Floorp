@@ -1912,7 +1912,8 @@ RestyleManager::ReparentStyleContext(nsIFrame* aFrame)
 ElementRestyler::ElementRestyler(nsPresContext* aPresContext,
                                  nsIFrame* aFrame,
                                  nsStyleChangeList* aChangeList,
-                                 nsChangeHint aHintsHandledByAncestors)
+                                 nsChangeHint aHintsHandledByAncestors,
+                                 RestyleTracker& aRestyleTracker)
   : mPresContext(aPresContext)
   , mFrame(aFrame)
   , mParentContent(nullptr)
@@ -1924,6 +1925,7 @@ ElementRestyler::ElementRestyler(nsPresContext* aPresContext,
                   NS_HintsNotHandledForDescendantsIn(aHintsHandledByAncestors)))
   , mParentFrameHintsNotHandledForDescendants(nsChangeHint(0))
   , mHintsNotHandledForDescendants(nsChangeHint(0))
+  , mRestyleTracker(aRestyleTracker)
 {
 }
 
@@ -1941,6 +1943,7 @@ ElementRestyler::ElementRestyler(const ElementRestyler& aParentRestyler,
   , mParentFrameHintsNotHandledForDescendants(
       aParentRestyler.mHintsNotHandledForDescendants)
   , mHintsNotHandledForDescendants(nsChangeHint(0))
+  , mRestyleTracker(aParentRestyler.mRestyleTracker)
 {
 }
 
@@ -1960,6 +1963,7 @@ ElementRestyler::ElementRestyler(ParentContextFromChildFrame,
       // assume the worst
       nsChangeHint_Hints_NotHandledForDescendants)
   , mHintsNotHandledForDescendants(nsChangeHint(0))
+  , mRestyleTracker(aParentRestyler.mRestyleTracker)
 {
 }
 
@@ -2002,7 +2006,6 @@ ElementRestyler::CaptureChange(nsStyleContext* aOldContext,
  */
 void
 ElementRestyler::Restyle(nsRestyleHint aRestyleHint,
-                         RestyleTracker&    aRestyleTracker,
                          DesiredA11yNotifications aDesiredA11yNotifications,
                          nsTArray<nsIContent*>& aVisibleKidsOfHiddenElement,
                          TreeMatchContext &aTreeMatchContext)
@@ -2047,7 +2050,7 @@ ElementRestyler::Restyle(nsRestyleHint aRestyleHint,
     if (mContent && mContent->IsElement()) {
       mContent->OwnerDoc()->FlushPendingLinkUpdates();
       RestyleTracker::RestyleData restyleData;
-      if (aRestyleTracker.GetRestyleData(mContent->AsElement(), &restyleData)) {
+      if (mRestyleTracker.GetRestyleData(mContent->AsElement(), &restyleData)) {
         if (NS_UpdateHint(mHintsHandled, restyleData.mChangeHint)) {
           mChangeList->AppendChange(mFrame, mContent, restyleData.mChangeHint);
         }
@@ -2091,7 +2094,6 @@ ElementRestyler::Restyle(nsRestyleHint aRestyleHint,
       ElementRestyler providerRestyler(PARENT_CONTEXT_FROM_CHILD_FRAME,
                                        *this, providerFrame);
       providerRestyler.Restyle(aRestyleHint,
-                                                   aRestyleTracker,
                                                    aDesiredA11yNotifications,
                                                    aVisibleKidsOfHiddenElement,
                                                    aTreeMatchContext);
@@ -2363,7 +2365,7 @@ ElementRestyler::Restyle(nsRestyleHint aRestyleHint,
 
         nsRestyleHint thisChildHint = childRestyleHint;
         RestyleTracker::RestyleData undisplayedRestyleData;
-        if (aRestyleTracker.GetRestyleData(undisplayed->mContent->AsElement(),
+        if (mRestyleTracker.GetRestyleData(undisplayed->mContent->AsElement(),
                                            &undisplayedRestyleData)) {
           thisChildHint =
             nsRestyleHint(thisChildHint | undisplayedRestyleData.mRestyleHint);
@@ -2557,7 +2559,6 @@ ElementRestyler::Restyle(nsRestyleHint aRestyleHint,
                   NS_SubtractHint(oofRestyler.mHintsHandled,
                                   nsChangeHint_AllReflowHints);
                 oofRestyler.Restyle(childRestyleHint,
-                                      aRestyleTracker,
                                       kidsDesiredA11yNotification,
                                       aVisibleKidsOfHiddenElement,
                                       aTreeMatchContext);
@@ -2567,7 +2568,6 @@ ElementRestyler::Restyle(nsRestyleHint aRestyleHint,
               // as the out-of-flow frame
               ElementRestyler phRestyler(*this, child);
               phRestyler.Restyle(childRestyleHint,
-                                    aRestyleTracker,
                                     kidsDesiredA11yNotification,
                                     aVisibleKidsOfHiddenElement,
                                     aTreeMatchContext);
@@ -2576,7 +2576,6 @@ ElementRestyler::Restyle(nsRestyleHint aRestyleHint,
               if (child != resolvedChild) {
                 ElementRestyler childRestyler(*this, child);
                 childRestyler.Restyle(childRestyleHint,
-                                      aRestyleTracker,
                                       kidsDesiredA11yNotification,
                                       aVisibleKidsOfHiddenElement,
                                       aTreeMatchContext);
@@ -2660,10 +2659,9 @@ RestyleManager::ComputeStyleChangeFor(nsIFrame*          aFrame,
     do {
       // Inner loop over next-in-flows of the current frame
       ElementRestyler restyler(mPresContext, frame, aChangeList,
-                               aMinChange);
+                               aMinChange, aRestyleTracker);
 
       restyler.Restyle(aRestyleDescendants ? eRestyle_Subtree : eRestyle_Self,
-                              aRestyleTracker,
                               ElementRestyler::eSendAllNotifications,
                               visibleKidsOfHiddenElement,
                               treeMatchContext);
