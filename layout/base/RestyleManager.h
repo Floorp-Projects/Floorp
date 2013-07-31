@@ -272,10 +272,12 @@ public:
 
   // Construct for the root of the subtree that we're restyling.
   ElementRestyler(nsPresContext* aPresContext,
+                  nsIFrame* aFrame,
                   nsChangeHint aHintsHandledByAncestors);
 
   // Construct for an element whose parent is being restyled.
-  ElementRestyler(const ElementRestyler& aParentRestyler);
+  ElementRestyler(const ElementRestyler& aParentRestyler,
+                  nsIFrame* aFrame);
 
   // Construct for a frame whose parent is being restyled, but whose
   // style context is the parent style context for its parent frame.
@@ -285,7 +287,8 @@ public:
   // exception and have the inheritance go the other way.)
   enum ParentContextFromChildFrame { PARENT_CONTEXT_FROM_CHILD_FRAME };
   ElementRestyler(ParentContextFromChildFrame,
-                  const ElementRestyler& aParentFrameRestyler);
+                  const ElementRestyler& aParentFrameRestyler,
+                  nsIFrame* aFrame);
 
 public: // FIXME: private
   enum DesiredA11yNotifications {
@@ -311,7 +314,6 @@ public:
    * current parent and existing rulenode, and the same for kids.
    */
   void Restyle(nsPresContext     *aPresContext,
-               nsIFrame          *aFrame,
                nsIContent        *aParentContent,
                nsStyleChangeList *aChangeList,
                nsChangeHint       aParentFrameHintsNotHandledForDescendants,
@@ -333,7 +335,7 @@ public:
 private:
   void CaptureChange(nsStyleContext* aOldContext,
                      nsStyleContext* aNewContext,
-                     nsIFrame* aFrame, nsIContent* aContent,
+                     nsIContent* aContent,
                      nsStyleChangeList* aChangeList,
                      /*in*/nsChangeHint aParentHintsNotHandledForDescendants,
                      /*out*/nsChangeHint &aHintsNotHandledForDescendants,
@@ -341,6 +343,7 @@ private:
 
 private:
   nsPresContext* const mPresContext;
+  nsIFrame* const mFrame;
   // We have already generated change list entries for hints listed in
   // mHintsHandled (initially it's those handled by ancestors, but by
   // the end of Restyle it is those handled for this frame as well).  We
