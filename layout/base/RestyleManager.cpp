@@ -1929,6 +1929,7 @@ ElementRestyler::ElementRestyler(nsPresContext* aPresContext,
   , mHintsNotHandledForDescendants(nsChangeHint(0))
   , mRestyleTracker(aRestyleTracker)
   , mTreeMatchContext(aTreeMatchContext)
+  , mResolvedChild(nullptr)
   , mDesiredA11yNotifications(eSendAllNotifications)
   , mKidsDesiredA11yNotifications(mDesiredA11yNotifications)
   , mOurA11yNotification(eDontNotify)
@@ -1953,6 +1954,7 @@ ElementRestyler::ElementRestyler(const ElementRestyler& aParentRestyler,
   , mHintsNotHandledForDescendants(nsChangeHint(0))
   , mRestyleTracker(aParentRestyler.mRestyleTracker)
   , mTreeMatchContext(aParentRestyler.mTreeMatchContext)
+  , mResolvedChild(nullptr)
   , mDesiredA11yNotifications(aParentRestyler.mKidsDesiredA11yNotifications)
   , mKidsDesiredA11yNotifications(mDesiredA11yNotifications)
   , mOurA11yNotification(eDontNotify)
@@ -1981,6 +1983,7 @@ ElementRestyler::ElementRestyler(ParentContextFromChildFrame,
   , mHintsNotHandledForDescendants(nsChangeHint(0))
   , mRestyleTracker(aParentRestyler.mRestyleTracker)
   , mTreeMatchContext(aParentRestyler.mTreeMatchContext)
+  , mResolvedChild(nullptr)
   , mDesiredA11yNotifications(aParentRestyler.mDesiredA11yNotifications)
   , mKidsDesiredA11yNotifications(mDesiredA11yNotifications)
   , mOurA11yNotification(eDontNotify)
@@ -2077,7 +2080,6 @@ ElementRestyler::Restyle(nsRestyleHint aRestyleHint)
     }
 
     nsStyleContext* parentContext;
-    nsIFrame* resolvedChild = nullptr;
     // Get the frame providing the parent style context.  If it is a
     // child, then resolve the provider first.
     nsIFrame* providerFrame = mFrame->GetParentStyleContextFrame();
@@ -2111,9 +2113,9 @@ ElementRestyler::Restyle(nsRestyleHint aRestyleHint)
       // The provider's new context becomes the parent context of
       // mFrame's context.
       parentContext = providerFrame->StyleContext();
-      // Set |resolvedChild| so we don't bother resolving the
+      // Set |mResolvedChild| so we don't bother resolving the
       // provider again.
-      resolvedChild = providerFrame;
+      mResolvedChild = providerFrame;
     }
 
     if (providerFrame != mFrame->GetParent()) {
@@ -2556,7 +2558,7 @@ ElementRestyler::Restyle(nsRestyleHint aRestyleHint)
               nsIFrame* outOfFlowFrame =
                 nsPlaceholderFrame::GetRealFrameForPlaceholder(child);
               NS_ASSERTION(outOfFlowFrame, "no out-of-flow frame");
-              NS_ASSERTION(outOfFlowFrame != resolvedChild,
+              NS_ASSERTION(outOfFlowFrame != mResolvedChild,
                            "out-of-flow frame not a true descendant");
 
               // Note that the out-of-flow may not be a geometric descendant of
@@ -2584,7 +2586,7 @@ ElementRestyler::Restyle(nsRestyleHint aRestyleHint)
               phRestyler.Restyle(childRestyleHint);
             }
             else {  // regular child frame
-              if (child != resolvedChild) {
+              if (child != mResolvedChild) {
                 ElementRestyler childRestyler(*this, child, 0);
                 childRestyler.Restyle(childRestyleHint);
               }
