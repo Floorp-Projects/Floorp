@@ -2575,12 +2575,13 @@ ElementRestyler::RestyleContentChildren(nsRestyleHint aChildRestyleHint)
     for (; !childFrames.AtEnd(); childFrames.Next()) {
       nsIFrame* child = childFrames.get();
       if (!(child->GetStateBits() & NS_FRAME_OUT_OF_FLOW)) {
-        // Get the parent of the child frame's content and check if it is a XBL
-        // children element. Push the children element as an ancestor here because it does
-        // not have a frame and would not otherwise be pushed as an ancestor.
+        // Get the parent of the child frame's content and check if it
+        // is a XBL children element. Push the children element as an
+        // ancestor here because it does not have a frame and would not
+        // otherwise be pushed as an ancestor.
 
-        // Check if the frame has a content because |child| may be a nsPageFrame that does
-        // not have a content.
+        // Check if the frame has a content because |child| may be a
+        // nsPageFrame that does not have a content.
         nsIContent* parent = child->GetContent() ? child->GetContent()->GetParent() : nullptr;
         bool pushInsertionPoint = parent && parent->IsActiveChildrenElement();
         TreeMatchContext::AutoAncestorPusher
