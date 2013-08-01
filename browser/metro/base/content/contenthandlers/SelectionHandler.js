@@ -225,14 +225,14 @@ var SelectionHandler = {
 
     // This should never happen, but we check to make sure
     if (!this._targetIsEditable) {
-      this._onFail("Unexpected, coordiates didn't find a text input element.");
+      this._onFail("Coordiates didn't find a text input element.");
       return;
     }
 
     // Locate and sanity check the caret position
     let selection = this._getSelection();
     if (!selection || !selection.isCollapsed) {
-      this._onFail("Unexpected, No selection or selection is not collapsed.");
+      this._onFail("No selection or selection is not collapsed.");
       return;
     }
 
@@ -281,7 +281,7 @@ var SelectionHandler = {
     if (aClearSelection) {
       this._clearSelection();
     }
-    this._closeSelection();
+    this.closeSelection();
   },
 
   /*
@@ -307,7 +307,7 @@ var SelectionHandler = {
       Util.dumpLn(aDbgMessage);
     this.sendAsync("Content:SelectionFail");
     this._clearSelection();
-    this._closeSelection();
+    this.closeSelection();
   },
 
   /*
@@ -368,11 +368,11 @@ var SelectionHandler = {
   },
 
   /*
-   * _closeSelection
+   * closeSelection
    *
    * Shuts SelectionHandler down.
    */
-  _closeSelection: function _closeSelection() {
+  closeSelection: function closeSelection() {
     this._clearTimers();
     this._cache = null;
     this._contentWindow = null;
