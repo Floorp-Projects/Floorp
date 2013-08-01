@@ -32,7 +32,8 @@ public:
   void NotifyFinished(MediaStreamGraph* aGraph) MOZ_OVERRIDE;
 
 private:
-  template<typename SampleFormatType> void ConvertAndDispatchAudioChunk(AudioChunk& aChunk);
+  template<typename SampleFormatType>
+  void ConvertAndDispatchAudioChunk(int aDuration, float aVolume, SampleFormatType* aData);
   nsRefPtr<SpeechRecognition> mRecognition;
 };
 
