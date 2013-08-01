@@ -294,7 +294,9 @@ private:
         OP2_CVTSS2SD_VsdEd  = 0x5A,
         OP2_CVTSD2SS_VsdEd  = 0x5A,
         OP2_SUBSD_VsdWsd    = 0x5C,
+        OP2_MINSD_VsdWsd    = 0x5D,
         OP2_DIVSD_VsdWsd    = 0x5E,
+        OP2_MAXSD_VsdWsd    = 0x5F,
         OP2_SQRTSD_VsdWsd   = 0x51,
         OP2_ANDPD_VpdWpd    = 0x54,
         OP2_ORPD_VpdWpd     = 0x56,
@@ -2601,6 +2603,38 @@ public:
         m_formatter.prefix(PRE_SSE_66);
         m_formatter.threeByteOp(OP3_PINSRD_VsdWsd, ESCAPE_PINSRD, (RegisterID)dst, base, offset);
         m_formatter.immediate8(0x01); // the $1
+    }
+
+    void minsd_rr(XMMRegisterID src, XMMRegisterID dst)
+    {
+        spew("minsd      %s, %s",
+             nameFPReg(src), nameFPReg(dst));
+        m_formatter.prefix(PRE_SSE_F2);
+        m_formatter.twoByteOp(OP2_MINSD_VsdWsd, (RegisterID)dst, (RegisterID)src);
+    }
+
+    void minsd_mr(int offset, RegisterID base, XMMRegisterID dst)
+    {
+        spew("minsd      %s0x%x(%s), %s",
+             PRETTY_PRINT_OFFSET(offset), nameIReg(base), nameFPReg(dst));
+        m_formatter.prefix(PRE_SSE_F2);
+        m_formatter.twoByteOp(OP2_MINSD_VsdWsd, (RegisterID)dst, base, offset);
+    }
+
+    void maxsd_rr(XMMRegisterID src, XMMRegisterID dst)
+    {
+        spew("maxsd      %s, %s",
+             nameFPReg(src), nameFPReg(dst));
+        m_formatter.prefix(PRE_SSE_F2);
+        m_formatter.twoByteOp(OP2_MAXSD_VsdWsd, (RegisterID)dst, (RegisterID)src);
+    }
+
+    void maxsd_mr(int offset, RegisterID base, XMMRegisterID dst)
+    {
+        spew("maxsd      %s0x%x(%s), %s",
+             PRETTY_PRINT_OFFSET(offset), nameIReg(base), nameFPReg(dst));
+        m_formatter.prefix(PRE_SSE_F2);
+        m_formatter.twoByteOp(OP2_MAXSD_VsdWsd, (RegisterID)dst, base, offset);
     }
 
     // Misc instructions:
