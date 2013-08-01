@@ -794,30 +794,16 @@ MetroWidget::ShouldUseAPZC()
          Preferences::GetBool(kPrefName, false);
 }
 
-class MetroCompositorParent : public CompositorParent
-{
-public:
-  MetroCompositorParent(MetroWidget* aMetroWidget, bool aRenderToEGLSurface,
-                        int aSurfaceWidth, int aSurfaceHeight) :
-    CompositorParent(aMetroWidget, aRenderToEGLSurface,
-                     aSurfaceHeight, aSurfaceHeight),
-    mMetroWidget(aMetroWidget)
-  {
-    CompositorParent::SetControllerForLayerTree(RootLayerTreeId(), aMetroWidget);
-    MetroWidget::sAPZC = CompositorParent::GetAPZCTreeManager(RootLayerTreeId());
-  }
-
-protected:
-  nsCOMPtr<MetroWidget> mMetroWidget;
-};
-
 CompositorParent* MetroWidget::NewCompositorParent(int aSurfaceWidth, int aSurfaceHeight)
 {
+  CompositorParent *compositor = nsBaseWidget::NewCompositorParent(aSurfaceWidth, aSurfaceHeight);
+
   if (ShouldUseAPZC()) {
-    return new MetroCompositorParent(this, true, aSurfaceWidth, aSurfaceHeight);
-  } else {
-    return nsBaseWidget::NewCompositorParent(aSurfaceWidth, aSurfaceHeight);
+    CompositorParent::SetControllerForLayerTree(compositor->RootLayerTreeId(), this);
+    MetroWidget::sAPZC = CompositorParent::GetAPZCTreeManager(compositor->RootLayerTreeId());
   }
+
+  return compositor;
 }
 
 LayerManager*
