@@ -10310,6 +10310,10 @@ struct PrototypeIDMap;
                                                             workers=False,
                                                             register=True)]
         defineIncludes.append('nsScriptNameSpaceManager.h')
+        defineIncludes.extend([CGHeaders.getDeclarationFilename(desc.interface)
+                               for desc in config.getDescriptors(isNavigatorProperty=True,
+                                                                 workers=False,
+                                                                 register=True)])
         curr = CGHeaders([], [], [], [], [], defineIncludes, 'RegisterBindings',
                          curr)
 
