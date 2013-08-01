@@ -1830,10 +1830,16 @@ DocAccessible::UpdateTreeInternal(Accessible* aChild, bool aIsInsert,
 {
   uint32_t updateFlags = eAccessible;
 
+  // If a focused node has been shown then it could mean its frame was recreated
+  // while the node stays focused and we need to fire focus event on
+  // the accessible we just created. If the queue contains a focus event for
+  // this node already then it will be suppressed by this one.
+  Accessible* focusedAcc = nullptr;
+
   nsINode* node = aChild->GetNode();
   if (aIsInsert) {
     // Create accessible tree for shown accessible.
-    CacheChildrenInSubtree(aChild);
+    CacheChildrenInSubtree(aChild, &focusedAcc);
 
   } else {
     // Fire menupopup end event before hide event if a menu goes away.
@@ -1870,16 +1876,6 @@ DocAccessible::UpdateTreeInternal(Accessible* aChild, bool aIsInsert,
       updateFlags = eAlertAccessible;
       FireDelayedEvent(nsIAccessibleEvent::EVENT_ALERT, aChild);
     }
-
-    // If focused node has been shown then it means its frame was recreated
-    // while it's focused. Fire focus event on new focused accessible. If
-    // the queue contains focus event for this node then it's suppressed by
-    // this one.
-    // XXX: do we really want to send focus to focused DOM node not taking into
-    // account active item?
-    if (FocusMgr()->IsFocused(aChild))
-      FocusMgr()->DispatchFocusEvent(this, aChild);
-
   } else {
     // Update the tree for content removal.
     // The accessible parent may differ from container accessible if
@@ -1893,12 +1889,24 @@ DocAccessible::UpdateTreeInternal(Accessible* aChild, bool aIsInsert,
     UncacheChildrenInSubtree(aChild);
   }
 
+  // XXX: do we really want to send focus to focused DOM node not taking into
+  // account active item?
+  if (focusedAcc)
+    FocusMgr()->DispatchFocusEvent(this, focusedAcc);
+
   return updateFlags;
 }
 
 void
-DocAccessible::CacheChildrenInSubtree(Accessible* aRoot)
+DocAccessible::CacheChildrenInSubtree(Accessible* aRoot,
+                                      Accessible** aFocusedAcc)
 {
+  // If the accessible is focused then report a focus event after all related
+  // mutation events.
+  if (aFocusedAcc && !*aFocusedAcc &&
+      FocusMgr()->HasDOMFocus(aRoot->GetContent()))
+    *aFocusedAcc = aRoot;
+
   aRoot->EnsureChildren();
 
   // Make sure we create accessible tree defined in DOM only, i.e. if accessible
@@ -1910,7 +1918,7 @@ DocAccessible::CacheChildrenInSubtree(Accessible* aRoot)
     NS_ASSERTION(child, "Illicit tree change while tree is created!");
     // Don't cross document boundaries.
     if (child && child->IsContent())
-      CacheChildrenInSubtree(child);
+      CacheChildrenInSubtree(child, aFocusedAcc);
   }
 
   // Fire document load complete on ARIA documents.

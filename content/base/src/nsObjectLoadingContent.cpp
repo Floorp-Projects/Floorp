@@ -3157,7 +3157,7 @@ nsObjectLoadingContent::LegacyCall(JSContext* aCx,
   JS::Rooted<JSObject*> pi_obj(aCx);
   JS::Rooted<JSObject*> pi_proto(aCx);
 
-  rv = GetPluginJSObject(aCx, obj, pi, pi_obj.address(), pi_proto.address());
+  rv = GetPluginJSObject(aCx, obj, pi, &pi_obj, &pi_proto);
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
     return JS::UndefinedValue();
@@ -3223,7 +3223,7 @@ nsObjectLoadingContent::SetupProtoChain(JSContext* aCx,
   JS::Rooted<JSObject*> pi_obj(aCx); // XPConnect-wrapped peer object, when we get it.
   JS::Rooted<JSObject*> pi_proto(aCx); // 'pi.__proto__'
 
-  rv = GetPluginJSObject(aCx, aObject, pi, pi_obj.address(), pi_proto.address());
+  rv = GetPluginJSObject(aCx, aObject, pi, &pi_obj, &pi_proto);
   if (NS_FAILED(rv)) {
     return;
   }
@@ -3310,21 +3310,18 @@ nsresult
 nsObjectLoadingContent::GetPluginJSObject(JSContext *cx,
                                           JS::Handle<JSObject*> obj,
                                           nsNPAPIPluginInstance *plugin_inst,
-                                          JSObject **plugin_obj,
-                                          JSObject **plugin_proto)
+                                          JS::MutableHandle<JSObject*> plugin_obj,
+                                          JS::MutableHandle<JSObject*> plugin_proto)
 {
-  *plugin_obj = nullptr;
-  *plugin_proto = nullptr;
-
   // NB: We need an AutoEnterCompartment because we can be called from
   // nsObjectFrame when the plugin loads after the JS object for our content
   // node has been created.
   JSAutoCompartment ac(cx, obj);
 
   if (plugin_inst) {
-    plugin_inst->GetJSObject(cx, plugin_obj);
-    if (*plugin_obj) {
-      if (!::JS_GetPrototype(cx, *plugin_obj, plugin_proto)) {
+    plugin_inst->GetJSObject(cx, plugin_obj.address());
+    if (plugin_obj) {
+      if (!::JS_GetPrototype(cx, plugin_obj, plugin_proto)) {
         return NS_ERROR_UNEXPECTED;
       }
     }
@@ -3352,7 +3349,7 @@ nsObjectLoadingContent::TeardownProtoChain()
   // all JS objects of the class sNPObjectJSWrapperClass
   bool removed = false;
   while (obj) {
-    if (!::JS_GetPrototype(cx, obj, proto.address())) {
+    if (!::JS_GetPrototype(cx, obj, &proto)) {
       return;
     }
     if (!proto) {
@@ -3362,7 +3359,7 @@ nsObjectLoadingContent::TeardownProtoChain()
     // an NP object, that counts too.
     if (JS_GetClass(js::UncheckedUnwrap(proto)) == &sNPObjectJSWrapperClass) {
       // We found an NPObject on the proto chain, get its prototype...
-      if (!::JS_GetPrototype(cx, proto, proto.address())) {
+      if (!::JS_GetPrototype(cx, proto, &proto)) {
         return;
       }
 

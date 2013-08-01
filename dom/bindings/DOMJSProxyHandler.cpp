@@ -230,7 +230,7 @@ bool
 DOMProxyHandler::enumerate(JSContext* cx, JS::Handle<JSObject*> proxy, AutoIdVector& props)
 {
   JS::Rooted<JSObject*> proto(cx);
-  if (!JS_GetPrototype(cx, proxy, proto.address())) {
+  if (!JS_GetPrototype(cx, proxy, &proto))  {
     return false;
   }
   return getOwnPropertyNames(cx, proxy, props) &&

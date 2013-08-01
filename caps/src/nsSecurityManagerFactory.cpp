@@ -77,7 +77,7 @@ nsSecurityNameSet::InitializeNameSet(nsIScriptContext* aScriptContext)
     JS::Rooted<JSObject*> obj(cx, global);
     JS::Rooted<JSObject*> proto(cx);
     for (;;) {
-        MOZ_ALWAYS_TRUE(JS_GetPrototype(cx, obj, proto.address()));
+        MOZ_ALWAYS_TRUE(JS_GetPrototype(cx, obj, &proto));
         if (!proto)
             break;
         obj = proto;

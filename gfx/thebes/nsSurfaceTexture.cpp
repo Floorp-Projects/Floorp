@@ -52,11 +52,11 @@ public:
   jobject CreateSurfaceTexture(GLuint aTexture)
   {
     if (!EnsureInitialized())
-      return NULL;
+      return nullptr;
 
     JNIEnv* env = GetJNIForThread();
     if (!env)
-      return NULL;
+      return nullptr;
 
     AutoLocalJNIFrame jniFrame(env);
 
@@ -93,7 +93,7 @@ public:
     jfloatArray jarray = env->NewFloatArray(16);
     env->CallVoidMethod(aSurfaceTexture, jSurfaceTexture_getTransformMatrix, jarray);
 
-    jfloat* array = env->GetFloatArrayElements(jarray, NULL);
+    jfloat* array = env->GetFloatArrayElements(jarray, nullptr);
 
     aMatrix._11 = array[0];
     aMatrix._12 = array[1];
@@ -136,13 +136,13 @@ nsSurfaceTexture::Create(GLuint aTexture)
   // Right now we only support creating this on the main thread because
   // of the JNIEnv assumptions in JNIHelper and elsewhere
   if (!NS_IsMainThread())
-    return NULL;
+    return nullptr;
 
   nsSurfaceTexture* st = new nsSurfaceTexture();
   if (!st->Init(aTexture)) {
     LOG("Failed to initialize nsSurfaceTexture");
     delete st;
-    st = NULL;
+    st = nullptr;
   }
 
   return st;
@@ -155,7 +155,7 @@ nsSurfaceTexture::Find(int id)
 
   it = sInstances.find(id);
   if (it == sInstances.end())
-    return NULL;
+    return nullptr;
 
   return it->second;
 }
@@ -189,7 +189,7 @@ nsSurfaceTexture::Init(GLuint aTexture)
 }
 
 nsSurfaceTexture::nsSurfaceTexture()
-  : mSurfaceTexture(NULL), mNativeWindow(NULL)
+  : mSurfaceTexture(nullptr), mNativeWindow(nullptr)
 {
 }
 
@@ -197,11 +197,11 @@ nsSurfaceTexture::~nsSurfaceTexture()
 {
   sInstances.erase(mID);
 
-  mFrameAvailableCallback = NULL;
+  mFrameAvailableCallback = nullptr;
 
   if (mNativeWindow) {
     AndroidBridge::Bridge()->ReleaseNativeWindowForSurfaceTexture(mSurfaceTexture);
-    mNativeWindow = NULL;
+    mNativeWindow = nullptr;
   }
 
   JNIEnv* env = GetJNIForThread();
@@ -212,7 +212,7 @@ nsSurfaceTexture::~nsSurfaceTexture()
     AndroidBridge::Bridge()->UnregisterSurfaceTextureFrameListener(mSurfaceTexture);
 
     env->DeleteGlobalRef(mSurfaceTexture);
-    mSurfaceTexture = NULL;
+    mSurfaceTexture = nullptr;
   }
 }
 

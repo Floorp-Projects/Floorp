@@ -7,6 +7,13 @@
 // The test extension uses an insecure update url.
 Services.prefs.setBoolPref("extensions.checkUpdateSecurity", false);
 
+Components.utils.import("resource://testing-common/httpd.js");
+var testserver = new HttpServer();
+testserver.start(-1);
+gPort = testserver.identity.primaryPort;
+mapFile("/data/test_migrate4.rdf", testserver);
+testserver.registerDirectory("/addons/", do_get_file("addons"));
+
 var addon1 = {
   id: "addon1@tests.mozilla.org",
   version: "1.0",
@@ -56,7 +63,7 @@ var addon5 = {
   id: "addon5@tests.mozilla.org",
   version: "2.0",
   name: "Test 5",
-  updateURL: "http://localhost:4444/data/test_migrate4.rdf",
+  updateURL: "http://localhost:" + gPort + "/data/test_migrate4.rdf",
   targetApplications: [{
     id: "xpcshell@tests.mozilla.org",
     minVersion: "0",
@@ -68,7 +75,7 @@ var addon6 = {
   id: "addon6@tests.mozilla.org",
   version: "1.0",
   name: "Test 6",
-  updateURL: "http://localhost:4444/data/test_migrate4.rdf",
+  updateURL: "http://localhost:" + gPort + "/data/test_migrate4.rdf",
   targetApplications: [{
     id: "xpcshell@tests.mozilla.org",
     minVersion: "0",
@@ -91,19 +98,10 @@ var defaultTheme = {
 const profileDir = gProfD.clone();
 profileDir.append("extensions");
 
-Components.utils.import("resource://testing-common/httpd.js");
-var testserver;
-
 let oldSyncGUIDs = {};
 
 function prepare_profile() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
-
-  // Create and configure the HTTP server.
-  testserver = new HttpServer();
-  testserver.registerDirectory("/data/", do_get_file("data"));
-  testserver.registerDirectory("/addons/", do_get_file("addons"));
-  testserver.start(4444);
 
   writeInstallRDFForExtension(addon1, profileDir);
   writeInstallRDFForExtension(addon2, profileDir);
@@ -140,7 +138,7 @@ function prepare_profile() {
 
       a6.findUpdates({
         onUpdateAvailable: function(aAddon, aInstall6) {
-          AddonManager.getInstallForURL("http://localhost:4444/addons/test_migrate4_7.xpi", function(aInstall7) {
+          AddonManager.getInstallForURL("http://localhost:" + gPort + "/addons/test_migrate4_7.xpi", function(aInstall7) {
             completeAllInstalls([aInstall6, aInstall7], function() {
               restartManager();
   
@@ -268,7 +266,7 @@ function test_results() {
     do_check_false(a6.isActive);
     do_check_eq(a6.applyBackgroundUpdates, AddonManager.AUTOUPDATE_DEFAULT);
     do_check_true(a6.foreignInstall);
-    do_check_eq(a6.sourceURI.spec, "http://localhost:4444/addons/test_migrate4_6.xpi");
+    do_check_eq(a6.sourceURI.spec, "http://localhost:" + gPort + "/addons/test_migrate4_6.xpi");
     do_check_eq(a6.releaseNotesURI.spec, "http://example.com/updateInfo.xhtml");
     do_check_false(a6.hasBinaryComponents);
     do_check_false(a6.strictCompatibility);
@@ -281,7 +279,7 @@ function test_results() {
     do_check_true(a7.isActive);
     do_check_eq(a7.applyBackgroundUpdates, AddonManager.AUTOUPDATE_DEFAULT);
     do_check_false(a7.foreignInstall);
-    do_check_eq(a7.sourceURI.spec, "http://localhost:4444/addons/test_migrate4_7.xpi");
+    do_check_eq(a7.sourceURI.spec, "http://localhost:" + gPort + "/addons/test_migrate4_7.xpi");
     do_check_eq(a7.releaseNotesURI, null);
     do_check_false(a7.hasBinaryComponents);
     do_check_false(a7.strictCompatibility);

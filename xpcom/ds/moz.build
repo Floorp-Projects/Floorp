@@ -95,6 +95,7 @@ CPP_SOURCES += [
     'nsSupportsPrimitives.cpp',
     'nsUnicharBuffer.cpp',
     'nsVariant.cpp',
+    'TimeStamp.cpp',
 ]
 
 if CONFIG['OS_ARCH'] == 'WINNT':

@@ -12,9 +12,6 @@
     <em:name>Bug 567184 Test</em:name>
     <em:description>Test Description</em:description>
 
-    <!-- Prevent checking for updates on the default update server  -->
-    <em:updateURL>http://localhost:4444/data/</em:updateURL>
-
     <em:targetApplication>
       <Description>
         <em:id>xpcshell@tests.mozilla.org</em:id>

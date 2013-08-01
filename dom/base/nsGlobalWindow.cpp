@@ -2073,9 +2073,9 @@ nsGlobalWindow::SetOuterObject(JSContext* aCx, JS::Handle<JSObject*> aOuterObjec
   js::SetDefaultObjectForContext(aCx, aOuterObject);
 
   // Set up the prototype for the outer object.
-  JSObject* inner = JS_GetParent(aOuterObject);
+  JS::Rooted<JSObject*> inner(aCx, JS_GetParent(aOuterObject));
   JS::Rooted<JSObject*> proto(aCx);
-  if (!JS_GetPrototype(aCx, inner, proto.address())) {
+  if (!JS_GetPrototype(aCx, inner, &proto)) {
     return NS_ERROR_FAILURE;
   }
   JS_SetPrototype(aCx, aOuterObject, proto);
@@ -2467,7 +2467,8 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
     // Now that both the the inner and outer windows are initialized
     // let the script context do its magic to hook them together.
 #ifdef DEBUG
-    JSObject* newInnerJSObject = newInnerWindow->FastGetGlobalJSObject();
+    JS::Rooted<JSObject*> newInnerJSObject(cx,
+        newInnerWindow->FastGetGlobalJSObject());
 #endif
 
     // Now that we're connecting the outer global to the inner one,
@@ -2476,8 +2477,9 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
     // so update that now since it might have changed.
     js::SetDefaultObjectForContext(cx, mJSObject);
 #ifdef DEBUG
-    JSObject *proto1, *proto2;
-    JS_GetPrototype(cx, mJSObject, &proto1);
+    JS::Rooted<JSObject*> rootedJSObject(cx, mJSObject);
+    JS::Rooted<JSObject*> proto1(cx), proto2(cx);
+    JS_GetPrototype(cx, rootedJSObject, &proto1);
     JS_GetPrototype(cx, newInnerJSObject, &proto2);
     NS_ASSERTION(proto1 == proto2,
                  "outer and inner globals should have the same prototype");
@@ -6592,7 +6594,7 @@ nsGlobalWindow::CallerInnerWindow()
   {
     JSAutoCompartment ac(cx, scope);
     JS::Rooted<JSObject*> scopeProto(cx);
-    bool ok = JS_GetPrototype(cx, scope, scopeProto.address());
+    bool ok = JS_GetPrototype(cx, scope, &scopeProto);
     NS_ENSURE_TRUE(ok, nullptr);
     if (scopeProto && xpc::IsSandboxPrototypeProxy(scopeProto) &&
         (scopeProto = js::CheckedUnwrap(scopeProto, /* stopAtOuter = */ false)))

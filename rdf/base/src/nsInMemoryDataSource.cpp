@@ -197,7 +197,7 @@ Assertion::~Assertion()
 {
     if (mHashEntry && u.hash.mPropertyHash) {
         PL_DHashTableEnumerate(u.hash.mPropertyHash, DeletePropertyHashEntry,
-                               NULL);
+                               nullptr);
         PL_DHashTableDestroy(u.hash.mPropertyHash);
         u.hash.mPropertyHash = nullptr;
     }
@@ -814,7 +814,7 @@ InMemoryDataSource::~InMemoryDataSource()
         // associated with this data source. We only need to do this
         // for the forward arcs, because the reverse arcs table
         // indexes the exact same set of resources.
-        PL_DHashTableEnumerate(&mForwardArcs, DeleteForwardArcsEntry, NULL);
+        PL_DHashTableEnumerate(&mForwardArcs, DeleteForwardArcsEntry, nullptr);
         PL_DHashTableFinish(&mForwardArcs);
     }
     if (mReverseArcs.ops)

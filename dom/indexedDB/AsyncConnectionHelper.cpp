@@ -173,7 +173,7 @@ AsyncConnectionHelper::~AsyncConnectionHelper()
 
     if (mainThread) {
       if (database) {
-        NS_ProxyRelease(mainThread, static_cast<nsIIDBDatabase*>(database));
+        NS_ProxyRelease(mainThread, static_cast<IDBWrapperCache*>(database));
       }
       if (transaction) {
         NS_ProxyRelease(mainThread, static_cast<IDBWrapperCache*>(transaction));

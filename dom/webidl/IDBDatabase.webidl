@@ -10,11 +10,40 @@
  * liability, trademark and document use rules apply.
  */
 
-dictionary IDBObjectStoreParameters {
-  // XXXbz this should be "(DOMString or sequence<DOMString>)?", but
-  // we don't support unions in dictionaries yet.  See bug 767926.
-  any keyPath = null;
-  boolean autoIncrement = false;
+interface IDBDatabase : EventTarget {
+    readonly    attribute DOMString          name;
+    readonly    attribute unsigned long long version;
+
+    [Throws]
+    readonly    attribute DOMStringList      objectStoreNames;
+
+    [Throws]
+    IDBObjectStore createObjectStore (DOMString name, optional IDBObjectStoreParameters optionalParameters);
+
+    [Throws]
+    void           deleteObjectStore (DOMString name);
+
+    // This should be:
+    // IDBTransaction transaction ((DOMString or sequence<DOMString>) storeNames, optional IDBTransactionMode mode = "readonly");
+    // but unions are not currently supported.
+
+    [Throws]
+    IDBTransaction transaction (DOMString storeName, optional IDBTransactionMode mode = "readonly");
+
+    [Throws]
+    IDBTransaction transaction (sequence<DOMString> storeNames, optional IDBTransactionMode mode = "readonly");
+
+    void           close ();
+
+    [SetterThrows]
+                attribute EventHandler       onabort;
+    [SetterThrows]
+                attribute EventHandler       onerror;
+    [SetterThrows]
+                attribute EventHandler       onversionchange;
 };
 
-// If we start using IDBObjectStoreParameters here, remove it from DummyBinding.
+partial interface IDBDatabase {
+    [Throws]
+    IDBRequest mozCreateFileHandle (DOMString name, optional DOMString type);
+};

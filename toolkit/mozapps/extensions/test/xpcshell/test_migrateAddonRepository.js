@@ -69,8 +69,8 @@ function run_test() {
 
   stmt.params.addon_internal_id = 1;
   stmt.params.num = 0;
-  stmt.params.url = "http://localhost:4444/full1-1.png";
-  stmt.params.thumbnailURL = "http://localhost:4444/thumbnail1-1.png";
+  stmt.params.url = "http://localhost/full1-1.png";
+  stmt.params.thumbnailURL = "http://localhost/thumbnail1-1.png";
   stmt.params.caption = "Caption 1 - 1";
   stmt.execute();
   stmt.finalize();

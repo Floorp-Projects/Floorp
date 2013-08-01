@@ -373,7 +373,7 @@ function check_state(test, lastTest, callback) {
 }
 
 function load_blocklist(file) {
-  Services.prefs.setCharPref("extensions.blocklist.url", "http://localhost:4444/data/" + file);
+  Services.prefs.setCharPref("extensions.blocklist.url", "http://localhost:" + gPort + "/data/" + file);
   var blocklist = Components.classes["@mozilla.org/extensions/blocklist;1"]
                             .getService(Ci.nsITimerCallback);
   blocklist.notify(null);
@@ -392,7 +392,8 @@ function run_test() {
 
   gTestserver = new HttpServer();
   gTestserver.registerDirectory("/data/", do_get_file("data"));
-  gTestserver.start(4444);
+  gTestserver.start(-1);
+  gPort = gTestserver.identity.primaryPort;
 
   do_test_pending();
   check_test_pt1();

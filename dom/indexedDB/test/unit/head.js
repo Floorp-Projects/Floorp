@@ -8,9 +8,6 @@ const { 'classes': Cc, 'interfaces': Ci } = Components;
 const DOMException = Ci.nsIDOMDOMException;
 const IDBCursor = Ci.nsIIDBCursor;
 const IDBOpenDBRequest = Ci.nsIIDBOpenDBRequest;
-const IDBDatabase = Ci.nsIIDBDatabase
-const IDBIndex = Ci.nsIIDBIndex
-const IDBObjectStore = Ci.nsIIDBObjectStore
 const IDBRequest = Ci.nsIIDBRequest
 
 function is(a, b, msg) {

@@ -24,18 +24,18 @@
     <eula>Repo Add-on 1 - EULA</eula>
     <developer_comments>Repo Add-on 1
                         Developer Comments</developer_comments>
-    <icon size="32">http://localhost:4444/repo/1/icon.png</icon>
+    <icon size="32">http://localhost/repo/1/icon.png</icon>
     <status id="4">Public</status>
     <rating>1</rating>
-    <learnmore>http://localhost:4444/repo/1/learnmore.html</learnmore>
-    <homepage>http://localhost:4444/repo/1/homepage.html</homepage>
-    <support>http://localhost:4444/repo/1/support.html</support>
+    <learnmore>http://localhost/repo/1/learnmore.html</learnmore>
+    <homepage>http://localhost/repo/1/homepage.html</homepage>
+    <support>http://localhost/repo/1/support.html</support>
     <contribution_data>
-      <link>http://localhost:4444/repo/1/contribution.html</link>
+      <link>http://localhost/repo/1/contribution.html</link>
       <suggested_amount currency="USD">$11.11</suggested_amount>
-      <meet_developers>http://localhost:4444/repo/1/meetDevelopers.html</meet_developers>
+      <meet_developers>http://localhost/repo/1/meetDevelopers.html</meet_developers>
     </contribution_data>
-    <reviews num="1111">http://localhost:4444/repo/1/review.html</reviews>
+    <reviews num="1111">http://localhost/repo/1/review.html</reviews>
     <total_downloads>2221</total_downloads>
     <weekly_downloads>3331</weekly_downloads>
     <daily_users>4441</daily_users>
@@ -66,7 +66,7 @@
     <description>Repo Add-on 2 - Full Description</description>
     <eula>Repo Add-on 2 - EULA</eula>
     <developer_comments>Repo Add-on 2 - Developer Comments</developer_comments>
-    <icon size="32">http://localhost:4444/repo/2/icon.png</icon>
+    <icon size="32">http://localhost/repo/2/icon.png</icon>
     <status id="9">Unknown</status>
     <previews>
       <preview primary="1">
@@ -81,14 +81,14 @@
       </preview>
     </previews>
     <rating>2</rating>
-    <learnmore>http://localhost:4444/repo/2/learnmore.html</learnmore>
-    <homepage>http://localhost:4444/repo/2/homepage.html</homepage>
-    <support>http://localhost:4444/repo/2/support.html</support>
+    <learnmore>http://localhost/repo/2/learnmore.html</learnmore>
+    <homepage>http://localhost/repo/2/homepage.html</homepage>
+    <support>http://localhost/repo/2/support.html</support>
     <contribution_data>
-      <link>http://localhost:4444/repo/2/contribution.html</link>
-      <meet_developers>http://localhost:4444/repo/2/meetDevelopers.html</meet_developers>
+      <link>http://localhost/repo/2/contribution.html</link>
+      <meet_developers>http://localhost/repo/2/meetDevelopers.html</meet_developers>
     </contribution_data>
-    <reviews num="1112">http://localhost:4444/repo/2/review.html</reviews>
+    <reviews num="1112">http://localhost/repo/2/review.html</reviews>
     <total_downloads>2222</total_downloads>
     <weekly_downloads>3332</weekly_downloads>
     <daily_users>4442</daily_users>
@@ -101,7 +101,7 @@
     <type id="9999">Unknown</type>
     <guid>test_AddonRepository_3@tests.mozilla.org</guid>
     <version>2.3</version>
-    <icon size="32">http://localhost:4444/repo/3/icon.png</icon>
+    <icon size="32">http://localhost/repo/3/icon.png</icon>
     <previews>
       <preview primary="1">
         <full type="image/png">http://localhost:4444/repo/3/firstFull.png</full>

@@ -645,9 +645,6 @@ const KineticPanning = {
     let momentums = this.momentums;
     let flick = momentums[momentums.length - 1].time - momentums[0].time < 300;
 
-    // Calculate the panning based on the last moves.
-    momentums = momentums.slice(-kSamples);
-
     let distance = new Point(0, 0);
     momentums.forEach(function(momentum) {
       distance.add(momentum.dx, momentum.dy);
@@ -707,6 +704,12 @@ const KineticPanning = {
   record: function kp_record(delta, timestamp) {
     this.momentums.push({ 'time': this._getTime(timestamp),
                           'dx' : delta.x, 'dy' : delta.y });
+
+    // We only need to keep kSamples in this.momentums.
+    if (this.momentums.length > kSamples) {
+      this.momentums.shift();
+    }
+
     this.distance.add(delta.x, delta.y);
   },
 

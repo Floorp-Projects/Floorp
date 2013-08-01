@@ -27,7 +27,7 @@ using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::gfx;
 
-static FT_Library gPlatformFTLibrary = NULL;
+static FT_Library gPlatformFTLibrary = nullptr;
 
 static int64_t sFreetypeMemoryUsed;
 static FT_MemoryRec_ sFreetypeMemoryRecord;
@@ -114,7 +114,7 @@ gfxAndroidPlatform::~gfxAndroidPlatform()
     cairo_debug_reset_static_data();
 
     FT_Done_Library(gPlatformFTLibrary);
-    gPlatformFTLibrary = NULL;
+    gPlatformFTLibrary = nullptr;
 }
 
 already_AddRefed<gfxASurface>
