@@ -319,6 +319,7 @@ CompositorD3D11::GetTextureFactoryIdentifier()
 {
   TextureFactoryIdentifier ident;
   ident.mMaxTextureSize = GetMaxTextureSize();
+  ident.mParentProcessId = XRE_GetProcessType();
   ident.mParentBackend = LAYERS_D3D11;
   return ident;
 }
