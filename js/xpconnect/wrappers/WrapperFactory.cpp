@@ -576,7 +576,7 @@ WrapperFactory::WrapSOWObject(JSContext *cx, JSObject *objArg)
     // XUL domain, in which we can't have SOWs. We should never be called in
     // that case.
     MOZ_ASSERT(xpc::AllowXBLScope(js::GetContextCompartment(cx)));
-    if (!JS_GetPrototype(cx, obj, proto.address()))
+    if (!JS_GetPrototype(cx, obj, &proto))
         return NULL;
     JSObject *wrapperObj =
         Wrapper::New(cx, obj, proto, JS_GetGlobalForObject(cx, obj),
@@ -596,7 +596,7 @@ JSObject *
 WrapperFactory::WrapComponentsObject(JSContext *cx, HandleObject obj)
 {
     RootedObject proto(cx);
-    if (!JS_GetPrototype(cx, obj, proto.address()))
+    if (!JS_GetPrototype(cx, obj, &proto))
         return NULL;
     JSObject *wrapperObj =
         Wrapper::New(cx, obj, proto, JS_GetGlobalForObject(cx, obj),

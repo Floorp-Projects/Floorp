@@ -126,7 +126,7 @@ bool StartupCache::gIgnoreDiskCache;
 enum StartupCache::TelemetrifyAge StartupCache::gPostFlushAgeAction = StartupCache::IGNORE_AGE;
 
 StartupCache::StartupCache() 
-  : mArchive(NULL), mStartupWriteInitiated(false), mWriteThread(NULL),
+  : mArchive(nullptr), mStartupWriteInitiated(false), mWriteThread(nullptr),
     mMappingMemoryReporter(nullptr), mDataMemoryReporter(nullptr) { }
 
 StartupCache::~StartupCache() 
@@ -254,7 +254,7 @@ StartupCache::LoadArchive(enum TelemetrifyAge flag)
     return NS_ERROR_FAILURE;
 
   bool exists;
-  mArchive = NULL;
+  mArchive = nullptr;
   nsresult rv = mFile->Exists(&exists);
   if (NS_FAILED(rv) || !exists)
     return NS_ERROR_FILE_NOT_FOUND;
@@ -481,7 +481,7 @@ StartupCache::WriteToDisk()
   mTable.Enumerate(CacheCloseHelper, &holder);
 
   // Close the archive so Windows doesn't choke.
-  mArchive = NULL;
+  mArchive = nullptr;
   zipW->Close();
 
   // We succesfully wrote the archive to disk; mark the disk file as trusted
@@ -498,7 +498,7 @@ StartupCache::InvalidateCache()
 {
   WaitOnWriteThread();
   mTable.Clear();
-  mArchive = NULL;
+  mArchive = nullptr;
   nsresult rv = mFile->Remove(false);
   if (NS_FAILED(rv) && rv != NS_ERROR_FILE_TARGET_DOES_NOT_EXIST &&
       rv != NS_ERROR_FILE_NOT_FOUND) {
@@ -531,7 +531,7 @@ StartupCache::WaitOnWriteThread()
     return;
 
   PR_JoinThread(mWriteThread);
-  mWriteThread = NULL;
+  mWriteThread = nullptr;
 }
 
 void 
@@ -551,7 +551,7 @@ StartupCache::WriteTimeout(nsITimer *aTimer, void *aClosure)
 {
   gStartupCache->mWriteThread = PR_CreateThread(PR_USER_THREAD,
                                                 StartupCache::ThreadedWrite,
-                                                NULL,
+                                                nullptr,
                                                 PR_PRIORITY_NORMAL,
                                                 PR_LOCAL_THREAD,
                                                 PR_JOINABLE_THREAD,

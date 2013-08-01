@@ -89,7 +89,7 @@ public:
 
   static already_AddRefed<IDBTransaction>
   Create(IDBDatabase* aDatabase,
-         nsTArray<nsString>& aObjectStoreNames,
+         const Sequence<nsString>& aObjectStoreNames,
          Mode aMode,
          bool aDispatchDelayed)
   {
@@ -230,7 +230,7 @@ public:
   IDBTransactionMode
   GetMode(ErrorResult& aRv) const;
 
-  nsIIDBDatabase*
+  IDBDatabase*
   Db() const
   {
     NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
@@ -240,7 +240,7 @@ public:
   DOMError*
   GetError(ErrorResult& aRv);
 
-  already_AddRefed<nsIIDBObjectStore>
+  already_AddRefed<IDBObjectStore>
   ObjectStore(const nsAString& aName, ErrorResult& aRv);
 
   void
@@ -265,7 +265,7 @@ private:
   // Should only be called directly through IndexedDBDatabaseChild.
   static already_AddRefed<IDBTransaction>
   CreateInternal(IDBDatabase* aDatabase,
-                 nsTArray<nsString>& aObjectStoreNames,
+                 const Sequence<nsString>& aObjectStoreNames,
                  Mode aMode,
                  bool aDispatchDelayed,
                  bool aIsVersionChangeTransactionChild);

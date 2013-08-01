@@ -83,7 +83,7 @@ void
 gfxD2DSurface::ReleaseDC(const nsIntRect *aUpdatedRect)
 {
     if (!aUpdatedRect) {
-        return cairo_d2d_release_dc(CairoSurface(), NULL);
+        return cairo_d2d_release_dc(CairoSurface(), nullptr);
     }
 
     cairo_rectangle_int_t rect;

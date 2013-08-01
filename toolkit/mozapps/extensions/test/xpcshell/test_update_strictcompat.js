@@ -24,7 +24,13 @@ const PARAMS = "?%REQ_VERSION%/%ITEM_ID%/%ITEM_VERSION%/%ITEM_MAXAPPVERSION%/" +
 var gInstallDate;
 
 Components.utils.import("resource://testing-common/httpd.js");
-var testserver;
+var testserver = new HttpServer();
+testserver.start(-1);
+gPort = testserver.identity.primaryPort;
+mapFile("/data/test_update.rdf", testserver);
+mapFile("/data/test_update.xml", testserver);
+testserver.registerDirectory("/addons/", do_get_file("addons"));
+
 const profileDir = gProfD.clone();
 profileDir.append("extensions");
 
@@ -34,16 +40,10 @@ function run_test() {
   Services.prefs.setCharPref(PREF_SELECTED_LOCALE, "fr-FR");
   Services.prefs.setBoolPref(PREF_EM_STRICT_COMPATIBILITY, true);
 
-  // Create and configure the HTTP server.
-  testserver = new HttpServer();
-  testserver.registerDirectory("/data/", do_get_file("data"));
-  testserver.registerDirectory("/addons/", do_get_file("addons"));
-  testserver.start(4444);
-
   writeInstallRDFForExtension({
     id: "addon1@tests.mozilla.org",
     version: "1.0",
-    updateURL: "http://localhost:4444/data/test_update.rdf",
+    updateURL: "http://localhost:" + gPort + "/data/test_update.rdf",
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "1",
@@ -55,7 +55,7 @@ function run_test() {
   writeInstallRDFForExtension({
     id: "addon2@tests.mozilla.org",
     version: "1.0",
-    updateURL: "http://localhost:4444/data/test_update.rdf",
+    updateURL: "http://localhost:" + gPort + "/data/test_update.rdf",
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "0",
@@ -67,7 +67,7 @@ function run_test() {
   writeInstallRDFForExtension({
     id: "addon3@tests.mozilla.org",
     version: "1.0",
-    updateURL: "http://localhost:4444/data/test_update.rdf",
+    updateURL: "http://localhost:" + gPort + "/data/test_update.rdf",
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "5",
@@ -363,7 +363,7 @@ function run_test_6() {
   writeInstallRDFForExtension({
     id: "addon1@tests.mozilla.org",
     version: "1.0",
-    updateURL: "http://localhost:4444/data/test_update.rdf",
+    updateURL: "http://localhost:" + gPort + "/data/test_update.rdf",
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "1",
@@ -421,19 +421,19 @@ function run_test_7() {
     name: "Test LW Theme",
     description: "A test theme",
     author: "Mozilla",
-    homepageURL: "http://localhost:4444/data/index.html",
-    headerURL: "http://localhost:4444/data/header.png",
-    footerURL: "http://localhost:4444/data/footer.png",
-    previewURL: "http://localhost:4444/data/preview.png",
-    iconURL: "http://localhost:4444/data/icon.png",
-    updateURL: "http://localhost:4444/data/lwtheme.js"
+    homepageURL: "http://localhost:" + gPort + "/data/index.html",
+    headerURL: "http://localhost:" + gPort + "/data/header.png",
+    footerURL: "http://localhost:" + gPort + "/data/footer.png",
+    previewURL: "http://localhost:" + gPort + "/data/preview.png",
+    iconURL: "http://localhost:" + gPort + "/data/icon.png",
+    updateURL: "http://localhost:" + gPort + "/data/lwtheme.js"
   };
 
   // XXX The lightweight theme manager strips non-https updateURLs so hack it
   // back in.
   let themes = JSON.parse(Services.prefs.getCharPref("lightweightThemes.usedThemes"));
   do_check_eq(themes.length, 1);
-  themes[0].updateURL = "http://localhost:4444/data/lwtheme.js";
+  themes[0].updateURL = "http://localhost:" + gPort + "/data/lwtheme.js";
   Services.prefs.setCharPref("lightweightThemes.usedThemes", JSON.stringify(themes));
 
   testserver.registerPathHandler("/data/lwtheme.js", function(request, response) {
@@ -443,12 +443,12 @@ function run_test_7() {
       name: "Updated Theme",
       description: "A test theme",
       author: "Mozilla",
-      homepageURL: "http://localhost:4444/data/index2.html",
-      headerURL: "http://localhost:4444/data/header.png",
-      footerURL: "http://localhost:4444/data/footer.png",
-      previewURL: "http://localhost:4444/data/preview.png",
-      iconURL: "http://localhost:4444/data/icon2.png",
-      updateURL: "http://localhost:4444/data/lwtheme.js"
+      homepageURL: "http://localhost:" + gPort + "/data/index2.html",
+      headerURL: "http://localhost:" + gPort + "/data/header.png",
+      footerURL: "http://localhost:" + gPort + "/data/footer.png",
+      previewURL: "http://localhost:" + gPort + "/data/preview.png",
+      iconURL: "http://localhost:" + gPort + "/data/icon2.png",
+      updateURL: "http://localhost:" + gPort + "/data/lwtheme.js"
     }));
   });
 
@@ -505,7 +505,7 @@ function run_test_8() {
   writeInstallRDFForExtension({
     id: "addon1@tests.mozilla.org",
     version: "5.0",
-    updateURL: "http://localhost:4444/data/param_test.rdf" + PARAMS,
+    updateURL: "http://localhost:" + gPort + "/data/param_test.rdf" + PARAMS,
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "1",
@@ -517,7 +517,7 @@ function run_test_8() {
   writeInstallRDFForExtension({
     id: "addon2@tests.mozilla.org",
     version: "67.0.5b1",
-    updateURL: "http://localhost:4444/data/param_test.rdf" + PARAMS,
+    updateURL: "http://localhost:" + gPort + "/data/param_test.rdf" + PARAMS,
     targetApplications: [{
       id: "toolkit@mozilla.org",
       minVersion: "0",
@@ -529,7 +529,7 @@ function run_test_8() {
   writeInstallRDFForExtension({
     id: "addon3@tests.mozilla.org",
     version: "1.3+",
-    updateURL: "http://localhost:4444/data/param_test.rdf" + PARAMS,
+    updateURL: "http://localhost:" + gPort + "/data/param_test.rdf" + PARAMS,
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "0",
@@ -545,7 +545,7 @@ function run_test_8() {
   writeInstallRDFForExtension({
     id: "addon4@tests.mozilla.org",
     version: "0.5ab6",
-    updateURL: "http://localhost:4444/data/param_test.rdf" + PARAMS,
+    updateURL: "http://localhost:" + gPort + "/data/param_test.rdf" + PARAMS,
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "1",
@@ -557,7 +557,7 @@ function run_test_8() {
   writeInstallRDFForExtension({
     id: "addon5@tests.mozilla.org",
     version: "1.0",
-    updateURL: "http://localhost:4444/data/param_test.rdf" + PARAMS,
+    updateURL: "http://localhost:" + gPort + "/data/param_test.rdf" + PARAMS,
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "1",
@@ -569,7 +569,7 @@ function run_test_8() {
   writeInstallRDFForExtension({
     id: "addon6@tests.mozilla.org",
     version: "1.0",
-    updateURL: "http://localhost:4444/data/param_test.rdf" + PARAMS,
+    updateURL: "http://localhost:" + gPort + "/data/param_test.rdf" + PARAMS,
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "1",
@@ -705,7 +705,7 @@ function run_test_9() {
   writeInstallRDFForExtension({
     id: "addon4@tests.mozilla.org",
     version: "5.0",
-    updateURL: "http://localhost:4444/data/test_update.rdf",
+    updateURL: "http://localhost:" + gPort + "/data/test_update.rdf",
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "0",
@@ -775,7 +775,7 @@ function run_test_13() {
   writeInstallRDFForExtension({
     id: "addon7@tests.mozilla.org",
     version: "1.0",
-    updateURL: "http://localhost:4444/data/test_update.rdf",
+    updateURL: "http://localhost:" + gPort + "/data/test_update.rdf",
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "0",
@@ -832,7 +832,7 @@ function run_test_14() {
   writeInstallRDFForExtension({
     id: "addon1@tests.mozilla.org",
     version: "1.0",
-    updateURL: "http://localhost:4444/data/test_update.rdf",
+    updateURL: "http://localhost:" + gPort + "/data/test_update.rdf",
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "1",
@@ -844,7 +844,7 @@ function run_test_14() {
   writeInstallRDFForExtension({
     id: "addon8@tests.mozilla.org",
     version: "1.0",
-    updateURL: "http://localhost:4444/data/test_update.rdf",
+    updateURL: "http://localhost:" + gPort + "/data/test_update.rdf",
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "1",
@@ -931,7 +931,7 @@ function run_test_15() {
   writeInstallRDFForExtension({
     id: "addon1@tests.mozilla.org",
     version: "1.0",
-    updateURL: "http://localhost:4444/data/test_update.rdf",
+    updateURL: "http://localhost:" + gPort + "/data/test_update.rdf",
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "1",
@@ -943,7 +943,7 @@ function run_test_15() {
   writeInstallRDFForExtension({
     id: "addon8@tests.mozilla.org",
     version: "1.0",
-    updateURL: "http://localhost:4444/data/test_update.rdf",
+    updateURL: "http://localhost:" + gPort + "/data/test_update.rdf",
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "1",
@@ -1027,7 +1027,7 @@ function run_test_16() {
   writeInstallRDFForExtension({
     id: "addon9@tests.mozilla.org",
     version: "1.0",
-    updateURL: "http://localhost:4444/data/test_update.rdf",
+    updateURL: "http://localhost:" + gPort + "/data/test_update.rdf",
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "0.1",
@@ -1049,7 +1049,7 @@ function run_test_16() {
   });
 
   Services.prefs.setCharPref(PREF_GETADDONS_BYIDS_PERFORMANCE,
-                             "http://localhost:4444/data/test_update.xml");
+                             "http://localhost:" + gPort + "/data/test_update.xml");
   Services.prefs.setBoolPref(PREF_GETADDONS_CACHE_ENABLED, true);
   // Fake a timer event
   gInternalManager.notify(null);
@@ -1062,7 +1062,7 @@ function run_test_17() {
   writeInstallRDFForExtension({
     id: "addon11@tests.mozilla.org",
     version: "1.0",
-    updateURL: "http://localhost:4444/data/test_update.rdf",
+    updateURL: "http://localhost:" + gPort + "/data/test_update.rdf",
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "0.1",

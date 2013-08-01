@@ -20,7 +20,7 @@ function test1()
     gBrowser.selectedBrowser.removeEventListener("load", arguments.callee, true);
 
     setFinishedCallback(function(result, exception) {
-      ok(result instanceof Components.interfaces.nsIIDBDatabase,
+      ok(result instanceof IDBDatabase,
          "First database creation was successful");
       ok(!exception, "No exception");
       gBrowser.removeCurrentTab();
