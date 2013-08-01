@@ -171,6 +171,22 @@ CodeGeneratorARM::generateOutOfLineCode()
 bool
 CodeGeneratorARM::bailoutIf(Assembler::Condition condition, LSnapshot *snapshot)
 {
+    CompileInfo &info = snapshot->mir()->block()->info();
+    switch (info.executionMode()) {
+
+      case ParallelExecution: {
+        // in parallel mode, make no attempt to recover, just signal an error.
+        OutOfLineAbortPar *ool = oolAbortPar(ParallelBailoutUnsupported,
+                                             snapshot->mir()->block(),
+                                             snapshot->mir()->pc());
+        masm.ma_b(ool->entry(), condition);
+        return true;
+      }
+      case SequentialExecution:
+        break;
+      default:
+        MOZ_ASSUME_UNREACHABLE("No such execution mode");
+    }
     if (!encode(snapshot))
         return false;
 
@@ -205,6 +221,7 @@ CodeGeneratorARM::bailoutFrom(Label *label, LSnapshot *snapshot)
 
     CompileInfo &info = snapshot->mir()->block()->info();
     switch (info.executionMode()) {
+
       case ParallelExecution: {
         // in parallel mode, make no attempt to recover, just signal an error.
         OutOfLineAbortPar *ool = oolAbortPar(ParallelBailoutUnsupported,
@@ -1906,8 +1923,9 @@ CodeGeneratorARM::visitSoftUDivOrMod(LSoftUDivOrMod *ins)
 
     JS_ASSERT(lhs == r0);
     JS_ASSERT(rhs == r1);
-    JS_ASSERT(ins->mirRaw()->isAsmJSUDiv() || ins->mirRaw()->isAsmJSUMod());
-    JS_ASSERT_IF(ins->mirRaw()->isAsmJSUDiv(), output == r0);
+    JS_ASSERT(ins->mirRaw()->isDiv() || ins->mirRaw()->isAsmJSUDiv() ||
+              ins->mirRaw()->isAsmJSUMod());
+    JS_ASSERT_IF(ins->mirRaw()->isDiv() || ins->mirRaw()->isAsmJSUDiv(), output == r0);
     JS_ASSERT_IF(ins->mirRaw()->isAsmJSUMod(), output == r1);
 
     Label afterDiv;

@@ -319,6 +319,11 @@ protected:
   // if the new rectangles are different from the old rectangles.
   bool StoreWindowClipRegion(const nsTArray<nsIntRect>& aRects);
 
+  // We don't want to accelerate small popup windows like menu, but we still
+  // want to accelerate xul panels that may contain arbitrarily complex content.
+  bool IsSmallPopup();
+
+
   virtual already_AddRefed<nsIWidget>
   AllocateChildPopupWidget()
   {

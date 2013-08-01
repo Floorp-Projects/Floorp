@@ -37,6 +37,8 @@
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/IDBIndexBinding.h"
 #include "mozilla/dom/IDBObjectStoreBinding.h"
+#include "mozilla/dom/IDBOpenDBRequestBinding.h"
+#include "mozilla/dom/IDBRequestBinding.h"
 #include "mozilla/dom/IDBTransactionBinding.h"
 #include "mozilla/dom/IDBVersionChangeEventBinding.h"
 #include "mozilla/dom/TextDecoderBinding.h"
@@ -267,14 +269,13 @@ xpc::SystemErrorReporter(JSContext *cx, const char *message, JSErrorReport *rep)
             consoleService->LogMessage(errorObject);
     }
 
-    /* Log to stderr in debug builds. */
-#ifdef DEBUG
-    fprintf(stderr, "System JS : %s %s:%d\n"
-            "                     %s\n",
-            JSREPORT_IS_WARNING(rep->flags) ? "WARNING" : "ERROR",
-            rep->filename, rep->lineno,
-            message ? message : "<no message>");
-#endif
+    if (nsContentUtils::DOMWindowDumpEnabled()) {
+        fprintf(stderr, "System JS : %s %s:%d\n"
+                "                     %s\n",
+                JSREPORT_IS_WARNING(rep->flags) ? "WARNING" : "ERROR",
+                rep->filename, rep->lineno,
+                message ? message : "<no message>");
+    }
 
 }
 
@@ -548,6 +549,8 @@ nsXPConnect::InitClassesWithNewWrappedGlobal(JSContext * aJSContext,
     // Init WebIDL binding constructors wanted on all XPConnect globals.
     if (!IDBIndexBinding::GetConstructorObject(aJSContext, global) ||
         !IDBObjectStoreBinding::GetConstructorObject(aJSContext, global) ||
+        !IDBOpenDBRequestBinding::GetConstructorObject(aJSContext, global) ||
+        !IDBRequestBinding::GetConstructorObject(aJSContext, global) ||
         !IDBTransactionBinding::GetConstructorObject(aJSContext, global) ||
         !IDBVersionChangeEventBinding::GetConstructorObject(aJSContext, global) ||
         !TextDecoderBinding::GetConstructorObject(aJSContext, global) ||

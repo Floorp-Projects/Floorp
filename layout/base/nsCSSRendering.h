@@ -168,8 +168,7 @@ public:
             nsRenderingContext&  aRenderingContext,
             const nsRect&        aDirtyRect,
             const nsRect&        aFill,
-            const nsRect&        aDest,
-            uint32_t             aFlags = imgIContainer::FLAG_NONE);
+            const nsRect&        aDest);
   /**
    * Draws the image to the target rendering context using background-specific
    * arguments.

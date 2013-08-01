@@ -645,7 +645,7 @@ IDBFactory::Cmp(JSContext* aCx, JS::Handle<JS::Value> aFirst,
   return Key::CompareKeys(first, second);
 }
 
-already_AddRefed<nsIIDBOpenDBRequest>
+already_AddRefed<IDBOpenDBRequest>
 IDBFactory::OpenForPrincipal(nsIPrincipal* aPrincipal,
                              const nsAString& aName,
                              const Optional<uint64_t>& aVersion,
@@ -659,7 +659,7 @@ IDBFactory::OpenForPrincipal(nsIPrincipal* aPrincipal,
   return Open(aPrincipal, aName, aVersion, false, aRv);
 }
 
-already_AddRefed<nsIIDBOpenDBRequest>
+already_AddRefed<IDBOpenDBRequest>
 IDBFactory::DeleteForPrincipal(nsIPrincipal* aPrincipal,
                                const nsAString& aName,
                                ErrorResult& aRv)
@@ -672,7 +672,7 @@ IDBFactory::DeleteForPrincipal(nsIPrincipal* aPrincipal,
   return Open(aPrincipal, aName, Optional<uint64_t>(), true, aRv);
 }
 
-already_AddRefed<nsIIDBOpenDBRequest>
+already_AddRefed<IDBOpenDBRequest>
 IDBFactory::Open(nsIPrincipal* aPrincipal,
                  const nsAString& aName, const Optional<uint64_t>& aVersion,
                  bool aDelete, ErrorResult& aRv)

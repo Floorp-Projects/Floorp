@@ -14,6 +14,7 @@ namespace ion {
     _(Constant)                                                             \
     _(Parameter)                                                            \
     _(Callee)                                                               \
+    _(ForceUse)                                                             \
     _(TableSwitch)                                                          \
     _(Goto)                                                                 \
     _(Test)                                                                 \

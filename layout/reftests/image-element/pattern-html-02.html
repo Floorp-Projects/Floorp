@@ -3,14 +3,11 @@
      http://creativecommons.org/licenses/publicdomain/
 
      Test painting patterns with scaling by background-size and
-     -moz-transform. background-repeat requires the construction
-     of a surface with the pattern contents, which will then be
-     scaled up by the transform / background-size. That's why we
-     need a threshold filter again.
+     -moz-transform.
 -->
 <!DOCTYPE html>
 <html>
-<body style="margin:0; filter:url(#thresholdAt159);">
+<body style="margin:0;">
   <div style="background: white; overflow: hidden;">
     <div style="margin:20px 0px 20px 40px; width:40px; height:20px;
                 background:-moz-element(#p);
@@ -24,16 +21,6 @@
                    x="0" y="0" width="20" height="20">
         <rect x="5" y="5" width="10" height="10" fill="black"></rect>
       </pattern> 
-    </svg>
-  
-    <svg>
-      <filter id="thresholdAt159" color-interpolation-filters="sRGB">
-        <feComponentTransfer>
-          <feFuncR type="linear" slope="255" intercept="-159"/>
-          <feFuncG type="linear" slope="255" intercept="-159"/>
-          <feFuncB type="linear" slope="255" intercept="-159"/>
-        </feComponentTransfer>
-      </filter>
     </svg>
   </div>
 </body>
