@@ -679,6 +679,7 @@ arrowbox {
 }
 
 /* App bars ----------------------------------------------------------------- */
+
 appbar {
   display: block;
   position: fixed;
@@ -687,15 +688,12 @@ appbar {
   transform: translateY(100%);
   transition: transform @metro_animation_duration@ @metro_animation_easing@;
   font-size: 0;
+  visibility: hidden;
 }
 
-appbar toolbar {
-  -moz-appearance: none;
-  -moz-box-align: center;
-  border: 0;
-  width: 100%;
-  min-height: @toolbar_height@;
-  font-size: 1rem;
+appbar[hiding],
+appbar[visible] {
+  visibility: visible;
 }
 
 appbar[visible] {
@@ -707,6 +705,16 @@ appbar[visible] {
      soft keyboard movement. */
   transition: transform @metro_animation_duration@ @metro_animation_easing@,
               bottom @appbar_keyboard_slideup_duration@ @metro_animation_easing@;
+}
+
+
+appbar toolbar {
+  -moz-appearance: none;
+  -moz-box-align: center;
+  border: 0;
+  width: 100%;
+  min-height: @toolbar_height@;
+  font-size: 1rem;
 }
 
 appbar toolbar toolbarbutton {

@@ -444,10 +444,6 @@ documenttab[selected] .documenttab-selection {
 
 /* Navigation bar ========================================================== */
 
-#navbar[startpage] {
-  transform: none;
-}
-
 /* Progress meter ---------------------------------------------------------- */
 
 #progress-container {
