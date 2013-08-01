@@ -514,7 +514,8 @@ JavaScriptParent::init()
 bool
 JavaScriptParent::makeId(JSContext *cx, JSObject *obj, ObjectId *idp)
 {
-    if (!IsProxy(obj) || GetProxyHandler(obj) != &CPOWProxyHandler::singleton) {
+    obj = js::CheckedUnwrap(obj, false);
+    if (!obj || !IsProxy(obj) || GetProxyHandler(obj) != &CPOWProxyHandler::singleton) {
         JS_ReportError(cx, "cannot ipc non-cpow object");
         return false;
     }
@@ -655,4 +656,25 @@ JavaScriptParent::instanceOf(JSObject *obj, const nsID *id, bool *bp)
         return NS_ERROR_UNEXPECTED;
 
     return NS_OK;
+}
+
+/* static */ bool
+JavaScriptParent::DOMInstanceOf(JSObject *obj, int prototypeID, int depth, bool *bp)
+{
+    return ParentOf(obj)->domInstanceOf(obj, prototypeID, depth, bp);
+}
+
+bool
+JavaScriptParent::domInstanceOf(JSObject *obj, int prototypeID, int depth, bool *bp)
+{
+    ObjectId objId = idOf(obj);
+
+    ReturnStatus status;
+    if (!CallDOMInstanceOf(objId, prototypeID, depth, &status, bp))
+        return false;
+
+    if (!status.ok())
+        return false;
+
+    return true;
 }
