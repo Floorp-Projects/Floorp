@@ -469,6 +469,7 @@ GfxInfo::GetFeatureStatusImpl(int32_t aFeature,
         //   All JB phones except for those in blocklist below
         // Blocklist:
         //   Samsung devices from bug 812881 and 853522.
+        //   Motorola XT890 from bug 882342.
         //   All Sony devices (Bug 845734)
 
         bool isBlocklisted =
@@ -478,6 +479,7 @@ GfxInfo::GetFeatureStatusImpl(int32_t aFeature,
           cModel.Find("GT-P5100", true) != -1 ||
           cModel.Find("GT-P5110", true) != -1 ||
           cModel.Find("GT-P5113", true) != -1 ||
+          cModel.Find("XT890", true) != -1 ||
           cManufacturer.Find("Sony", true) != -1;
 
         if (isBlocklisted) {
