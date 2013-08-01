@@ -359,8 +359,9 @@ public:
   /**
    * Ensure that the texture client is suitable for the given size and content
    * type and that any initialisation has taken place.
+   * Returns true if succeeded, false if failed.
    */
-  virtual void EnsureAllocated(gfx::IntSize aSize,
+  virtual bool EnsureAllocated(gfx::IntSize aSize,
                                gfxASurface::gfxContentType aType) = 0;
 
   /**
@@ -427,13 +428,13 @@ public:
 
   virtual bool SupportsType(DeprecatedTextureClientType aType) MOZ_OVERRIDE
   {
-    return aType == TEXTURE_SHMEM || aType == TEXTURE_CONTENT;
+    return aType == TEXTURE_SHMEM || aType == TEXTURE_CONTENT || aType == TEXTURE_FALLBACK;
   }
   virtual gfxImageSurface* LockImageSurface() MOZ_OVERRIDE;
   virtual gfxASurface* LockSurface() MOZ_OVERRIDE { return GetSurface(); }
   virtual gfx::DrawTarget* LockDrawTarget();
   virtual void Unlock() MOZ_OVERRIDE;
-  virtual void EnsureAllocated(gfx::IntSize aSize, gfxASurface::gfxContentType aType) MOZ_OVERRIDE;
+  virtual bool EnsureAllocated(gfx::IntSize aSize, gfxASurface::gfxContentType aType) MOZ_OVERRIDE;
 
   virtual void ReleaseResources() MOZ_OVERRIDE;
   virtual void SetDescriptor(const SurfaceDescriptor& aDescriptor) MOZ_OVERRIDE;
@@ -461,7 +462,7 @@ public:
   ~DeprecatedTextureClientShmemYCbCr() { ReleaseResources(); }
 
   virtual bool SupportsType(DeprecatedTextureClientType aType) MOZ_OVERRIDE { return aType == TEXTURE_YCBCR; }
-  void EnsureAllocated(gfx::IntSize aSize, gfxASurface::gfxContentType aType) MOZ_OVERRIDE;
+  bool EnsureAllocated(gfx::IntSize aSize, gfxASurface::gfxContentType aType) MOZ_OVERRIDE;
   virtual void SetDescriptorFromReply(const SurfaceDescriptor& aDescriptor) MOZ_OVERRIDE;
   virtual void SetDescriptor(const SurfaceDescriptor& aDescriptor) MOZ_OVERRIDE;
   virtual void ReleaseResources();
@@ -476,7 +477,7 @@ public:
                     const TextureInfo& aTextureInfo);
   ~DeprecatedTextureClientTile();
 
-  virtual void EnsureAllocated(gfx::IntSize aSize,
+  virtual bool EnsureAllocated(gfx::IntSize aSize,
                                gfxASurface::gfxContentType aType) MOZ_OVERRIDE;
 
   virtual gfxImageSurface* LockImageSurface() MOZ_OVERRIDE;

@@ -86,6 +86,7 @@ LayerManagerComposite::ClearCachedResources(Layer* aSubtree)
 LayerManagerComposite::LayerManagerComposite(Compositor* aCompositor)
 : mCompositor(aCompositor)
 {
+  MOZ_ASSERT(aCompositor);
 }
 
 LayerManagerComposite::~LayerManagerComposite()

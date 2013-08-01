@@ -604,7 +604,8 @@ CompositorParent::ShadowLayersUpdated(LayerTransactionParent* aLayerTree,
 PLayerTransactionParent*
 CompositorParent::AllocPLayerTransactionParent(const LayersBackend& aBackendHint,
                                                const uint64_t& aId,
-                                               TextureFactoryIdentifier* aTextureFactoryIdentifier)
+                                               TextureFactoryIdentifier* aTextureFactoryIdentifier,
+                                               bool *aSuccess)
 {
   MOZ_ASSERT(aId == 0);
 
@@ -631,21 +632,24 @@ CompositorParent::AllocPLayerTransactionParent(const LayersBackend& aBackendHint
       new LayerManagerComposite(new CompositorD3D9(mWidget));
 #endif
   } else {
-    NS_ERROR("Unsupported backend selected for Async Compositor");
-    return nullptr;
+    NS_WARNING("Unsupported backend selected for Async Compositor");
+    *aSuccess = false;
+    return new LayerTransactionParent(nullptr, this, 0);
   }
 
   mWidget = nullptr;
   mLayerManager->SetCompositorID(mCompositorID);
 
   if (!mLayerManager->Initialize()) {
-    NS_ERROR("Failed to init Compositor");
-    return nullptr;
+    NS_WARNING("Failed to init Compositor");
+    *aSuccess = false;
+    return new LayerTransactionParent(nullptr, this, 0);
   }
 
   mCompositionManager = new AsyncCompositionManager(mLayerManager);
 
   *aTextureFactoryIdentifier = mLayerManager->GetTextureFactoryIdentifier();
+  *aSuccess = true;
   return new LayerTransactionParent(mLayerManager, this, 0);
 }
 
@@ -835,7 +839,8 @@ public:
   virtual PLayerTransactionParent*
     AllocPLayerTransactionParent(const LayersBackend& aBackendType,
                                  const uint64_t& aId,
-                                 TextureFactoryIdentifier* aTextureFactoryIdentifier) MOZ_OVERRIDE;
+                                 TextureFactoryIdentifier* aTextureFactoryIdentifier,
+                                 bool *aSuccess) MOZ_OVERRIDE;
 
   virtual bool DeallocPLayerTransactionParent(PLayerTransactionParent* aLayers) MOZ_OVERRIDE;
 
@@ -916,17 +921,20 @@ CrossProcessCompositorParent::ActorDestroy(ActorDestroyReason aWhy)
 PLayerTransactionParent*
 CrossProcessCompositorParent::AllocPLayerTransactionParent(const LayersBackend& aBackendType,
                                                            const uint64_t& aId,
-                                                           TextureFactoryIdentifier* aTextureFactoryIdentifier)
+                                                           TextureFactoryIdentifier* aTextureFactoryIdentifier,
+                                                           bool *aSuccess)
 {
   MOZ_ASSERT(aId != 0);
 
   if (sIndirectLayerTrees[aId].mParent) {
     LayerManagerComposite* lm = sIndirectLayerTrees[aId].mParent->GetLayerManager();
     *aTextureFactoryIdentifier = lm->GetTextureFactoryIdentifier();
+    *aSuccess = true;
     return new LayerTransactionParent(lm, this, aId);
   }
 
   NS_WARNING("Created child without a matching parent?");
+  *aSuccess = false;
   return new LayerTransactionParent(nullptr, this, aId);
 }
 
