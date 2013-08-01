@@ -211,6 +211,8 @@ private:
 
 // If we want to use d3d9 textures for transport, use this class.
 // If we are using shmem, then use DeprecatedTextureClientShmem with DeprecatedTextureHostShmemD3D9
+// Since we pass a raw pointer, you should not use this texture client for
+// multi-process compositing.
 class DeprecatedTextureClientD3D9 : public DeprecatedTextureClient
 {
 public:
