@@ -1456,12 +1456,10 @@ TokenStream::getTokenInternal()
             goto decimal_dot;
         }
         if (c == '.') {
-            qc = getCharIgnoreEOL();
-            if (qc == '.') {
+            if (matchChar('.')) {
                 tt = TOK_TRIPLEDOT;
                 goto out;
             }
-            ungetCharIgnoreEOL(qc);
         }
         ungetCharIgnoreEOL(c);
         tt = TOK_DOT;
