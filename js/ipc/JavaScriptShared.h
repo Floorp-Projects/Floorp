@@ -44,7 +44,7 @@ class ObjectStore
 {
     typedef js::DefaultHasher<ObjectId> TableKeyHasher;
 
-    typedef js::HashMap<ObjectId, JSObject *, TableKeyHasher, js::SystemAllocPolicy> ObjectTable;
+    typedef js::HashMap<ObjectId, JS::Heap<JSObject *>, TableKeyHasher, js::SystemAllocPolicy> ObjectTable;
 
   public:
     ObjectStore();
@@ -72,11 +72,13 @@ class ObjectIdCache
     bool init();
     void trace(JSTracer *trc);
 
-    bool add(JSObject *, ObjectId id);
+    bool add(JSContext *cx, JSObject *obj, ObjectId id);
     ObjectId find(JSObject *obj);
     void remove(JSObject *obj);
 
   private:
+    static void keyMarkCallback(JSTracer *trc, void *key, void *data);
+
     ObjectIdTable table_;
 };
 
