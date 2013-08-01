@@ -47,7 +47,8 @@ CompositingRenderTargetD3D9::CompositingRenderTargetD3D9(IDirect3DTexture9* aTex
   MOZ_ASSERT(aTexture);
 
   mTextures[0] = aTexture;
-  mTextures[0]->GetSurfaceLevel(0, getter_AddRefs(mSurface));
+  HRESULT hr = mTextures[0]->GetSurfaceLevel(0, getter_AddRefs(mSurface));
+  NS_ASSERTION(mSurface, "Couldn't create surface for texture");
   TextureSourceD3D9::SetSize(aSize);
 }
 
@@ -59,7 +60,7 @@ CompositingRenderTargetD3D9::CompositingRenderTargetD3D9(IDirect3DSurface9* aSur
   , mInitialized(false)
 {
   MOZ_COUNT_CTOR(CompositingRenderTargetD3D9);
-  MOZ_ASSERT(aSurface);
+  MOZ_ASSERT(mSurface);
   TextureSourceD3D9::SetSize(aSize);
 }
 
@@ -244,8 +245,8 @@ DeprecatedTextureHostShmemD3D9::UpdateImpl(const SurfaceDescriptor& aImage,
   int32_t maxSize = mCompositor->GetMaxTextureSize();
   if (size.width <= maxSize && size.height <= maxSize) {
     mTextures[0] = DataToTexture(mDevice,
-                                surf->Data(), surf->Stride(),
-                                size, format, bpp);
+                                 surf->Data(), surf->Stride(),
+                                 size, format, bpp);
     NS_ASSERTION(mTextures[0], "Could not upload texture");
     mIsTiled = false;
   } else {
@@ -495,6 +496,16 @@ DeprecatedTextureClientD3D9::EnsureAllocated(gfx::IntSize aSize,
 
   MOZ_ASSERT(mTexture);
   mDescriptor = SurfaceDescriptorD3D9(reinterpret_cast<uintptr_t>(mTexture.get()));
+
+  if (!mIsOpaque) {
+    nsRefPtr<gfxASurface> surface = LockSurface();
+    nsRefPtr<gfxContext> ctx = new gfxContext(surface);
+    ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
+    ctx->SetColor(gfxRGBA(0.0, 0.0, 0.0, 0.0));
+    ctx->Paint();
+    Unlock();
+  }
+
   mContentType = aType;
   return true;
 }

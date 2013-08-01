@@ -103,7 +103,6 @@ CompositorD3D9::CreateRenderTarget(const gfx::IntRect &aRect,
   return rt;
 }
 
-// TODO this method doesn't actually use aSource - do we need it to? (d3d11 doesn't)
 TemporaryRef<CompositingRenderTarget>
 CompositorD3D9::CreateRenderTargetFromSource(const gfx::IntRect &aRect,
                                              const CompositingRenderTarget *aSource)
@@ -114,13 +113,50 @@ CompositorD3D9::CreateRenderTargetFromSource(const gfx::IntRect &aRect,
                                        D3DPOOL_DEFAULT, byRef(texture),
                                        NULL);
   if (FAILED(hr)) {
-    ReportFailure(NS_LITERAL_CSTRING("CompositorD3D9::CreateRenderTarget: Failed to create texture"),
+    ReportFailure(NS_LITERAL_CSTRING("CompositorD3D9::CreateRenderTargetFromSource: Failed to create texture"),
                   hr);
     return nullptr;
   }
 
+  if (aSource) {
+    nsRefPtr<IDirect3DSurface9> sourceSurface =
+      static_cast<const CompositingRenderTargetD3D9*>(aSource)->GetD3D9Surface();
+
+    nsRefPtr<IDirect3DSurface9> destSurface;
+    hr = texture->GetSurfaceLevel(0, getter_AddRefs(destSurface));
+    if (FAILED(hr)) {
+      NS_WARNING("Failed to get texture surface level for dest.");
+    }
+
+    if (sourceSurface && destSurface) {
+      RECT sourceRect;
+      sourceRect.left = aRect.x;
+      sourceRect.right = aRect.XMost();
+      sourceRect.top = aRect.y;
+      sourceRect.bottom = aRect.YMost();
+      RECT destRect;
+      destRect.left = 0;
+      destRect.right = aRect.width;
+      destRect.top = 0;
+      destRect.bottom = aRect.height;
+
+      // copy the source to the dest
+      hr = device()->StretchRect(sourceSurface,
+                                 &sourceRect,
+                                 destSurface,
+                                 &destRect,
+                                 D3DTEXF_NONE);
+      if (FAILED(hr)) {
+        ReportFailure(NS_LITERAL_CSTRING("CompositorD3D9::CreateRenderTargetFromSource: Failed to update texture"),
+                      hr);
+      }
+    }
+  }
+
   RefPtr<CompositingRenderTargetD3D9> rt =
-    new CompositingRenderTargetD3D9(texture, INIT_MODE_NONE, IntSize(aRect.width, aRect.height));
+    new CompositingRenderTargetD3D9(texture,
+                                    INIT_MODE_NONE,
+                                    IntSize(aRect.width, aRect.height));
 
   return rt;
 }
@@ -531,15 +567,13 @@ CompositorD3D9::PaintToTarget()
 
   D3DLOCKED_RECT rect;
   destSurf->LockRect(&rect, NULL, D3DLOCK_READONLY);
-
+  mTarget->SetOperator(gfxContext::OPERATOR_SOURCE);
   nsRefPtr<gfxImageSurface> imageSurface =
     new gfxImageSurface((unsigned char*)rect.pBits,
                         gfxIntSize(desc.Width, desc.Height),
                         rect.Pitch,
                         gfxASurface::ImageFormatARGB32);
-
   mTarget->SetSource(imageSurface);
-  mTarget->SetOperator(gfxContext::OPERATOR_OVER);
   mTarget->Paint();
   destSurf->UnlockRect();
 }
