@@ -33,8 +33,7 @@ CanvasLayerComposite::~CanvasLayerComposite()
   CleanupResources();
 }
 
-void
-CanvasLayerComposite::SetCompositableHost(CompositableHost* aHost) {
+void CanvasLayerComposite::SetCompositableHost(CompositableHost* aHost) {
   mImageHost = aHost;
 }
 
@@ -47,7 +46,7 @@ CanvasLayerComposite::GetLayer()
 LayerRenderState
 CanvasLayerComposite::GetRenderState()
 {
-  if (mDestroyed || !mImageHost || !mImageHost->IsAttached()) {
+  if (mDestroyed || !mImageHost) {
     return LayerRenderState();
   }
   return mImageHost->GetRenderState();
@@ -57,7 +56,7 @@ void
 CanvasLayerComposite::RenderLayer(const nsIntPoint& aOffset,
                                   const nsIntRect& aClipRect)
 {
-  if (!mImageHost || !mImageHost->IsAttached()) {
+  if (!mImageHost) {
     return;
   }
 
@@ -97,12 +96,8 @@ CanvasLayerComposite::RenderLayer(const nsIntPoint& aOffset,
 }
 
 CompositableHost*
-CanvasLayerComposite::GetCompositableHost()
-{
-  if (mImageHost->IsAttached())
-    return mImageHost.get();
-
-  return nullptr;
+CanvasLayerComposite::GetCompositableHost() {
+  return mImageHost.get();
 }
 
 void
@@ -120,7 +115,7 @@ CanvasLayerComposite::PrintInfo(nsACString& aTo, const char* aPrefix)
 {
   CanvasLayer::PrintInfo(aTo, aPrefix);
   aTo += "\n";
-  if (mImageHost && mImageHost->IsAttached()) {
+  if (mImageHost) {
     nsAutoCString pfx(aPrefix);
     pfx += "  ";
     mImageHost->PrintInfo(aTo, pfx.get());

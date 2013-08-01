@@ -67,11 +67,6 @@ public:
   gfxIntSize GetCbCrSize();
 
   /**
-   * Stereo mode for the image.
-   */
-  StereoMode GetStereoMode();
-
-  /**
    * Return a pointer to the begining of the data buffer.
    */
   uint8_t* GetData();
@@ -116,11 +111,9 @@ public:
    * buffer on which we want to store the image.
    */
   void InitializeBufferInfo(const gfx::IntSize& aYSize,
-                            const gfx::IntSize& aCbCrSize,
-                            StereoMode aStereoMode);
+                            const gfx::IntSize& aCbCrSize);
   void InitializeBufferInfo(const gfxIntSize& aYSize,
-                            const gfxIntSize& aCbCrSize,
-                            StereoMode aStereoMode);
+                            const gfxIntSize& aCbCrSize);
 
   bool CopyData(const uint8_t* aYData,
                 const uint8_t* aCbData, const uint8_t* aCrData,

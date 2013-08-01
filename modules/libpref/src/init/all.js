@@ -4088,8 +4088,6 @@ pref("layers.offmainthreadcomposition.async-animations", false);
 // Whether to prefer normal memory over shared memory. Ignored with cross-process compositing
 pref("layers.prefer-memory-over-shmem", true);
 
-pref("layers.bufferrotation.enabled", true);
-
 #ifdef MOZ_X11
 #ifdef MOZ_WIDGET_GTK2
 pref("gfx.xrender.enabled",true);
