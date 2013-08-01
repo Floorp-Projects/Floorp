@@ -983,27 +983,6 @@ class Atomic<T*, Order> : public detail::AtomicBaseIncDec<T*, Order>
     Atomic(Atomic<T*, Order>& aOther) MOZ_DELETE;
 };
 
-/**
- * Atomic<T> implementation for enum types.
- *
- * The atomic store and load operations and the atomic swap method is provided.
- */
-template<typename T, MemoryOrdering Order>
-class Atomic<T, Order, typename EnableIf<IsEnum<T>::value>::Type>
-  : public detail::AtomicBase<T, Order>
-{
-    typedef typename detail::AtomicBase<T, Order> Base;
-
-  public:
-    Atomic() : Base() {}
-    Atomic(T aInit) : Base(aInit) {}
-
-    using Base::operator=;
-
-  private:
-    Atomic(Atomic<T, Order>& aOther) MOZ_DELETE;
-};
-
 } // namespace mozilla
 
 #endif /* mozilla_Atomics_h */
