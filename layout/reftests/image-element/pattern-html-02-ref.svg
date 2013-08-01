@@ -5,7 +5,23 @@
 <svg xmlns="http://www.w3.org/2000/svg">
   <rect x="15" y="15" width="30" height="30" fill="black"/>
   <rect x="75" y="15" width="30" height="30" fill="black"/>
-  <rect x="15" y="75" width="30" height="30" fill="black"/>
-  <rect x="75" y="75" width="30" height="30" fill="black"/>
 
+  <rect x="5" y="65" width="10" height="10" fill="black"/>
+  <rect x="25" y="65" width="10" height="10" fill="black"/>
+  <rect x="45" y="65" width="10" height="10" fill="black"/>
+  <rect x="65" y="65" width="10" height="10" fill="black"/>
+  <rect x="85" y="65" width="10" height="10" fill="black"/>
+  <rect x="105" y="65" width="10" height="10" fill="black"/>
+  <rect x="5" y="85" width="10" height="10" fill="black"/>
+  <rect x="25" y="85" width="10" height="10" fill="black"/>
+  <rect x="45" y="85" width="10" height="10" fill="black"/>
+  <rect x="65" y="85" width="10" height="10" fill="black"/>
+  <rect x="85" y="85" width="10" height="10" fill="black"/>
+  <rect x="105" y="85" width="10" height="10" fill="black"/>
+  <rect x="5" y="105" width="10" height="10" fill="black"/>
+  <rect x="25" y="105" width="10" height="10" fill="black"/>
+  <rect x="45" y="105" width="10" height="10" fill="black"/>
+  <rect x="65" y="105" width="10" height="10" fill="black"/>
+  <rect x="85" y="105" width="10" height="10" fill="black"/>
+  <rect x="105" y="105" width="10" height="10" fill="black"/>
 </svg>

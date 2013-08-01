@@ -84,11 +84,15 @@
   <string name="pref_category_vendor">&pref_category_vendor;</string>
   <string name="pref_category_datareporting">&pref_category_datareporting;</string>
   <string name="pref_category_installed_search_engines">&pref_category_installed_search_engines;</string>
+  <string name="pref_category_devtools">&pref_category_devtools;</string>
+  <string name="pref_developer_remotedebugging">&pref_developer_remotedebugging;</string>
+  <string name="pref_developer_remotedebugging_docs">&pref_developer_remotedebugging_docs;</string>
 
   <string name="pref_header_customize">&pref_header_customize;</string>
   <string name="pref_header_display">&pref_header_display;</string>
   <string name="pref_header_privacy_short">&pref_header_privacy_short;</string>
   <string name="pref_header_vendor">&pref_header_vendor;</string>
+  <string name="pref_header_devtools">&pref_header_devtools;</string>
 
   <string name="pref_remember_signons">&pref_remember_signons;</string>
 
@@ -295,6 +299,8 @@
   <string name="webapp_generic_name">&webapp_generic_name;</string>
 
   <string name="searchable_description">&searchable_description;</string>
+
+  <string name="devtools_remote_debugging_forward">&devtools_remote_debugging_forward;</string>
 
   <!-- Updater notifications -->
   <string name="updater_start_title">&updater_start_title2;</string>

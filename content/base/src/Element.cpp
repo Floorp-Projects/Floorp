@@ -1966,7 +1966,8 @@ Element::List(FILE* out, int32_t aIndent,
 
   ListAttributes(out);
 
-  fprintf(out, " state=[%llx]", State().GetInternalValue());
+  fprintf(out, " state=[%llx]",
+          static_cast<unsigned long long>(State().GetInternalValue()));
   fprintf(out, " flags=[%08x]", static_cast<unsigned int>(GetFlags()));
   if (IsCommonAncestorForRangeInSelection()) {
     nsRange::RangeHashTable* ranges =

@@ -16,7 +16,12 @@ function log(msg) {
 
 function Prompt(aOptions) {
   this.window = "window" in aOptions ? aOptions.window : null;
-  this.msg = { type: "Prompt:Show", async: true };
+  this.msg = { async: true };
+
+  if (aOptions.priority === 1)
+    this.msg.type = "Prompt:ShowTop"
+  else
+    this.msg.type = "Prompt:Show"
 
   if ("title" in aOptions && aOptions.title != null)
     this.msg.title = aOptions.title;

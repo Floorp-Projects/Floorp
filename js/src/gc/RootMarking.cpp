@@ -482,10 +482,12 @@ AutoGCRooter::trace(JSTracer *trc)
       case OBJOBJHASHMAP: {
         AutoObjectObjectHashMap::HashMapImpl &map = static_cast<AutoObjectObjectHashMap *>(this)->map;
         for (AutoObjectObjectHashMap::Enum e(map); !e.empty(); e.popFront()) {
-            mozilla::DebugOnly<JSObject *> key = e.front().key;
-            MarkObjectRoot(trc, const_cast<JSObject **>(&e.front().key), "AutoObjectObjectHashMap key");
-            JS_ASSERT(key == e.front().key);  // Needs rewriting for moving GC, see bug 726687.
             MarkObjectRoot(trc, &e.front().value, "AutoObjectObjectHashMap value");
+            JS_SET_TRACING_LOCATION(trc, (void *)&e.front().key);
+            JSObject *key = e.front().key;
+            MarkObjectRoot(trc, &key, "AutoObjectObjectHashMap key");
+            if (key != e.front().key)
+                e.rekeyFront(key);
         }
         return;
       }

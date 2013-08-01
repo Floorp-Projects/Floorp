@@ -344,7 +344,7 @@ function _execute_test() {
     // possible that this will mask an NS_ERROR_ABORT that happens after a
     // do_check failure though.
     if (!_quit || e != Components.results.NS_ERROR_ABORT) {
-      msg = "TEST-UNEXPECTED-FAIL | ";
+      let msg = "TEST-UNEXPECTED-FAIL | ";
       if (e.fileName) {
         msg += e.fileName;
         if (e.lineNumber) {

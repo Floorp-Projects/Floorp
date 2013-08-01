@@ -145,6 +145,15 @@ static bool ConvertToMidasInternalCommand(const nsAString & inCommandID,
 // ==================================================================
 // =
 // ==================================================================
+static void
+ReportUseOfDeprecatedMethod(nsHTMLDocument* aDoc, const char* aWarning)
+{
+  nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
+                                  "DOM Events", aDoc,
+                                  nsContentUtils::eDOM_PROPERTIES,
+                                  aWarning);
+}
+
 static nsresult
 RemoveFromAgentSheets(nsCOMArray<nsIStyleSheet> &aAgentSheets, const nsAString& url)
 {
@@ -2236,6 +2245,20 @@ nsHTMLDocument::GetSelection(ErrorResult& rv)
   nsCOMPtr<nsISelection> sel;
   rv = window->GetSelection(getter_AddRefs(sel));
   return sel.forget();
+}
+
+NS_IMETHODIMP
+nsHTMLDocument::CaptureEvents(int32_t aEventFlags)
+{
+  ReportUseOfDeprecatedMethod(this, "UseOfCaptureEventsWarning");
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLDocument::ReleaseEvents(int32_t aEventFlags)
+{
+  ReportUseOfDeprecatedMethod(this, "UseOfReleaseEventsWarning");
+  return NS_OK;
 }
 
 // Mapped to document.embeds for NS4 compatibility

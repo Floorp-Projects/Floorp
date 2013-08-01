@@ -519,6 +519,21 @@ abstract public class BrowserApp extends GeckoApp
         });
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        unregisterEventListener("Prompt:ShowTop");
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        // Register for Prompt:ShowTop so we can foreground this activity even if it's hidden.
+        registerEventListener("Prompt:ShowTop");
+    }
+
+
+
     private void showBookmarkDialog() {
         final Tab tab = Tabs.getInstance().getSelectedTab();
         final Prompt ps = new Prompt(this, new Prompt.PromptCallback() {
@@ -1127,6 +1142,12 @@ abstract public class BrowserApp extends GeckoApp
                 startActivity(settingsIntent);
             } else if (event.equals("Updater:Launch")) {
                 handleUpdaterLaunch();
+            } else if (event.equals("Prompt:ShowTop")) {
+                // Bring this activity to front so the prompt is visible..
+                Intent bringToFrontIntent = new Intent();
+                bringToFrontIntent.setClassName(AppConstants.ANDROID_PACKAGE_NAME, AppConstants.BROWSER_INTENT_CLASS);
+                bringToFrontIntent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+                startActivity(bringToFrontIntent);
             } else {
                 super.handleMessage(event, message);
             }

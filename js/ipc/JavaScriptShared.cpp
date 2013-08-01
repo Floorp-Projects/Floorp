@@ -29,9 +29,9 @@ void
 ObjectStore::trace(JSTracer *trc)
 {
     for (ObjectTable::Range r(table_.all()); !r.empty(); r.popFront()) {
-        JSObject *obj = r.front().value;
-        JS_CallObjectTracer(trc, &obj, "ipc-object");
-        MOZ_ASSERT(obj == r.front().value);
+        DebugOnly<JSObject *> prior = r.front().value.get();
+        JS_CallHeapObjectTracer(trc, &r.front().value, "ipc-object");
+        MOZ_ASSERT(r.front().value == prior);
     }
 }
 
@@ -87,9 +87,25 @@ ObjectIdCache::find(JSObject *obj)
 }
 
 bool
-ObjectIdCache::add(JSObject *obj, ObjectId id)
+ObjectIdCache::add(JSContext *cx, JSObject *obj, ObjectId id)
 {
-    return table_.put(obj, id);
+    if (!table_.put(obj, id))
+        return false;
+    JS_StoreObjectPostBarrierCallback(cx, keyMarkCallback, obj, this);
+    return true;
+}
+
+/*
+ * This function is called during minor GCs for each key in the HashMap that has
+ * been moved.
+ */
+/* static */ void
+ObjectIdCache::keyMarkCallback(JSTracer *trc, void *k, void *d) {
+    JSObject *key = static_cast<JSObject*>(k);
+    ObjectIdCache* self = static_cast<ObjectIdCache*>(d);
+    JSObject *prior = key;
+    JS_CallObjectTracer(trc, &key, "ObjectIdCache::table_ key");
+    self->table_.rekey(prior, key);
 }
 
 void

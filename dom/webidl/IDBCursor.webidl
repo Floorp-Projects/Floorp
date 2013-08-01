@@ -13,3 +13,33 @@ enum IDBCursorDirection {
     "prev",
     "prevunique"
 };
+
+interface IDBCursor {
+    // This should be: readonly    attribute (IDBObjectStore or IDBIndex) source;
+    readonly    attribute nsISupports source;
+
+    readonly    attribute IDBCursorDirection           direction;
+
+    [Throws]
+    readonly    attribute any                          key;
+
+    [Throws]
+    readonly    attribute any                          primaryKey;
+
+    [Throws]
+    IDBRequest update (any value);
+
+    [Throws]
+    void       advance ([EnforceRange] unsigned long count);
+
+    [Throws]
+    void       continue (optional any key);
+
+    [Throws]
+    IDBRequest delete ();
+};
+
+interface IDBCursorWithValue : IDBCursor {
+    [Throws]
+    readonly    attribute any value;
+};

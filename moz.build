@@ -26,4 +26,3 @@ if not CONFIG['LIBXUL_SDK']:
 # Bring in the configuration for the configured application.
 if CONFIG['COMPILE_ENVIRONMENT']:
     include('/' + CONFIG['MOZ_BUILD_APP'] + '/app.mozbuild')
-

@@ -9,6 +9,7 @@
 
 #include "xpcprivate.h"
 #include "nsArrayEnumerator.h"
+#include "nsContentUtils.h"
 #include "nsWrapperCache.h"
 #include "XPCWrapper.h"
 #include "AccessCheck.h"
@@ -1032,25 +1033,25 @@ nsXPCWrappedJSClass::CheckForException(XPCCallContext & ccx,
             }
 
             if (reportable) {
-#ifdef DEBUG
-                static const char line[] =
-                    "************************************************************\n";
-                static const char preamble[] =
-                    "* Call to xpconnect wrapped JSObject produced this error:  *\n";
-                static const char cant_get_text[] =
-                    "FAILED TO GET TEXT FROM EXCEPTION\n";
+                if (nsContentUtils::DOMWindowDumpEnabled()) {
+                    static const char line[] =
+                        "************************************************************\n";
+                    static const char preamble[] =
+                        "* Call to xpconnect wrapped JSObject produced this error:  *\n";
+                    static const char cant_get_text[] =
+                        "FAILED TO GET TEXT FROM EXCEPTION\n";
 
-                fputs(line, stdout);
-                fputs(preamble, stdout);
-                char* text;
-                if (NS_SUCCEEDED(xpc_exception->ToString(&text)) && text) {
-                    fputs(text, stdout);
-                    fputs("\n", stdout);
-                    nsMemory::Free(text);
-                } else
-                    fputs(cant_get_text, stdout);
-                fputs(line, stdout);
-#endif
+                    fputs(line, stdout);
+                    fputs(preamble, stdout);
+                    char* text;
+                    if (NS_SUCCEEDED(xpc_exception->ToString(&text)) && text) {
+                        fputs(text, stdout);
+                        fputs("\n", stdout);
+                        nsMemory::Free(text);
+                    } else
+                        fputs(cant_get_text, stdout);
+                    fputs(line, stdout);
+                }
 
                 // Log the exception to the JS Console, so that users can do
                 // something with it.
