@@ -63,7 +63,6 @@ XPIDL_SOURCES += [
     'nsIDOMHTMLStyleElement.idl',
     'nsIDOMHTMLTableCaptionElem.idl',
     'nsIDOMHTMLTableCellElement.idl',
-    'nsIDOMHTMLTableColElement.idl',
     'nsIDOMHTMLTableElement.idl',
     'nsIDOMHTMLTextAreaElement.idl',
     'nsIDOMHTMLTitleElement.idl',
