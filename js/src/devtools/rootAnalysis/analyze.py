@@ -14,12 +14,15 @@ import subprocess
 import os
 import argparse
 import sys
+import re
 
 def env(config):
-    e = os.environ
+    e = dict(os.environ)
     e['PATH'] = '%s:%s/bin' % (e['PATH'], config['sixgill'])
     e['XDB'] = '%(sixgill)s/bin/xdb.so' % config
-    e['SOURCE_ROOT'] = config['source'] or e['TARGET']
+    e['SOURCE_ROOT'] = config['source'] or e.get('TARGET', '<unset>')
+    e['TARGET_OBJ'] = config['objdir']
+    e['TARGET'] = config['source']
     return e
 
 def fill(command, config):
@@ -27,12 +30,13 @@ def fill(command, config):
         return tuple(s % config for s in command)
     except:
         print("Substitution failed:")
+        problems = []
         for fragment in command:
             try:
                 fragment % config
             except:
-                print("  %s" % fragment)
-        raise Hell
+                problems.append(fragment)
+        raise Exception("\n".join(["Substitution failed:"] + [ "  %s" % s for s in problems ]))
 
 def print_command(command, outfile=None, env=None):
     output = ' '.join(command)
@@ -45,7 +49,19 @@ def print_command(command, outfile=None, env=None):
             if (key not in e) or (e[key] != value):
                 changed[key] = value
         if changed:
-            output = ' '.join(key + "='" + value + "'" for key, value in changed.items()) + ' ' + output
+            outputs = []
+            for key, value in changed.items():
+                if key in e and e[key] in value:
+                    start = value.index(e[key])
+                    end = start + len(e[key])
+                    outputs.append('%s="%s${%s}%s"' % (key,
+                                                       value[:start],
+                                                       key,
+                                                       value[end:]))
+                else:
+                    outputs.append("%s='%s'" % (key, value))
+            output = ' '.join(outputs) + " " + output
+
     print output
 
 def generate_hazards(config, outfilename):
@@ -54,6 +70,7 @@ def generate_hazards(config, outfilename):
         command = fill(('%(js)s',
                         '%(analysis_scriptdir)s/analyzeRoots.js',
                         '%(gcFunctions_list)s',
+                        '%(gcEdges)s',
                         '%(suppressedFunctions_list)s',
                         '%(gcTypes)s',
                         str(i+1), '%(jobs)s',
@@ -86,23 +103,16 @@ JOBS = { 'dbs':
                '-b', '%(sixgill)s/bin',
                '--buildcommand=%(buildcommand)s',
                '.'),
-              None),
+              ()),
 
          'callgraph':
              (('%(js)s', '%(analysis_scriptdir)s/computeCallgraph.js'),
               'callgraph.txt'),
 
          'gcFunctions':
-             (('%(js)s', '%(analysis_scriptdir)s/computeGCFunctions.js', '%(callgraph)s'),
-              'gcFunctions.txt'),
-
-         'gcFunctions_list':
-             (('perl', '-lne', 'print $1 if /^GC Function: (.*)/', '%(gcFunctions)s'),
-              'gcFunctions.lst'),
-
-         'suppressedFunctions_list':
-             (('perl', '-lne', 'print $1 if /^Suppressed Function: (.*)/', '%(gcFunctions)s'),
-              'suppressedFunctions.lst'),
+             (('%(js)s', '%(analysis_scriptdir)s/computeGCFunctions.js', '%(callgraph)s',
+               '[gcFunctions]', '[gcFunctions_list]', '[gcEdges]', '[suppressedFunctions_list]'),
+              ('gcFunctions.txt', 'gcFunctions.lst', 'gcEdges.txt', 'suppressedFunctions.lst')),
 
          'gcTypes':
              (('%(js)s', '%(analysis_scriptdir)s/computeGCTypes.js',),
@@ -116,19 +126,49 @@ JOBS = { 'dbs':
              (generate_hazards, 'rootingHazards.txt')
          }
 
+
+def out_indexes(command):
+    for i in range(len(command)):
+        m = re.match(r'^\[(.*)\]$', command[i])
+        if m:
+            yield (i, m.group(1))
+
+
 def run_job(name, config):
-    command, outfilename = JOBS[name]
-    print("Running " + name + " to generate " + str(outfilename))
-    if hasattr(command, '__call__'):
-        command(config, outfilename)
+    cmdspec, outfiles = JOBS[name]
+    print("Running " + name + " to generate " + str(outfiles))
+    if hasattr(cmdspec, '__call__'):
+        cmdspec(config, outfiles)
     else:
-        command = fill(command, config)
+        temp_map = {}
+        cmdspec = fill(cmdspec, config)
         temp = '%s.tmp' % name
-        print_command(command, outfile=outfilename, env=env(config))
+        if isinstance(outfiles, basestring):
+            temp_map[temp] = outfiles
+            print_command(cmdspec, outfile=outfiles, env=env(config))
+        else:
+            pc = list(cmdspec)
+            outfile = 0
+            for (i, name) in out_indexes(cmdspec):
+                pc[i] = outfiles[outfile]
+                outfile += 1
+            print_command(pc, env=env(config))
+
+        command = list(cmdspec)
+        outfile = 0
+        for (i, name) in out_indexes(cmdspec):
+            command[i] = '%s.tmp' % name
+            temp_map[command[i]] = outfiles[outfile]
+            outfile += 1
+
         with open(temp, 'w') as output:
             subprocess.check_call(command, stdout=output, env=env(config))
-        if outfilename is not None:
-            os.rename(temp, outfilename)
+        for (temp, final) in temp_map.items():
+            try:
+                os.rename(temp, final)
+            except OSError:
+                print("Error renaming %s -> %s" % (temp, final))
+                raise
 
 config = { 'CWD': os.path.dirname(__file__) }
 
@@ -147,6 +187,8 @@ parser.add_argument('target', metavar='TARGET', type=str, nargs='?',
                     help='run starting from this target')
 parser.add_argument('--source', metavar='SOURCE', type=str, nargs='?',
                     help='source code to analyze')
+parser.add_argument('--upto', metavar='UPTO', type=str, nargs='?',
+                    help='last step to execute')
 parser.add_argument('--jobs', '-j', default=4, metavar='JOBS', type=int,
                     help='number of simultaneous analyzeRoots.js jobs')
 parser.add_argument('--list', const=True, nargs='?', type=bool,
@@ -169,12 +211,18 @@ elif 'BUILD' in os.environ:
 else:
     data['buildcommand'] = 'make -j4 -s'
 
+if 'TARGET_OBJ' in os.environ:
+    data['objdir'] = os.environ['TARGET_OBJ']
+
+if args.target:
+    data['source'] = args.target
+elif 'TARGET' in os.environ:
+    data['source'] = os.environ['TARGET']
+
 targets = [ 'dbs',
             'callgraph',
             'gcTypes',
             'gcFunctions',
-            'gcFunctions_list',
-            'suppressedFunctions_list',
             'allFunctions',
             'hazards' ]
 
@@ -188,11 +236,21 @@ if args.list:
     sys.exit(0)
 
 for target in targets:
-    command, outfilename = JOBS[target]
-    data[target] = outfilename
+    command, outfiles = JOBS[target]
+    if isinstance(outfiles, basestring):
+        data[target] = outfiles
+    else:
+        outfile = 0
+        for (i, name) in out_indexes(command):
+            data[name] = outfiles[outfile]
+            outfile += 1
+        assert len(outfiles) == outfile, 'target %s: mismatched number of output files and params' % target
 
 if args.target:
     targets = targets[targets.index(args.target):]
+
+if args.upto:
+    targets = targets[:targets.index(args.upto)+1]
 
 for target in targets:
     run_job(target, data)
