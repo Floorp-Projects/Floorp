@@ -75,11 +75,11 @@ public:
   /**
    * if true, the image will only be backed by a single tile texture
    */
-  void SetForceSingleTile(bool aForceSingleTile)
+  void SetDisallowBigImage(bool aDisallowBigImage)
   {
-    if (mForceSingleTile != aForceSingleTile) {
-      MOZ_LAYERS_LOG_IF_SHADOWABLE(this, ("Layer::Mutated(%p) ForceSingleTile", this));
-      mForceSingleTile = aForceSingleTile;
+    if (mDisallowBigImage != aDisallowBigImage) {
+      MOZ_LAYERS_LOG_IF_SHADOWABLE(this, ("Layer::Mutated(%p) DisallowBigImage", this));
+      mDisallowBigImage = aDisallowBigImage;
       Mutated();
     }
   }
@@ -94,7 +94,7 @@ protected:
   gfxPattern::GraphicsFilter mFilter;
   gfxIntSize mScaleToSize;
   ScaleMode mScaleMode;
-  bool mForceSingleTile;
+  bool mDisallowBigImage;
 };
 
 }

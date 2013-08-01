@@ -221,7 +221,7 @@ TiledTextureImage::TiledTextureImage(GLContext* aGL,
     , mGL(aGL)
     , mTextureState(Created)
 {
-    if (!(aFlags & TextureImage::ForceSingleTile) && mGL->WantsSmallTiles()) {
+    if (!(aFlags & TextureImage::DisallowBigImage) && mGL->WantsSmallTiles()) {
       mTileSize = 256;
     } else {
       mGL->fGetIntegerv(LOCAL_GL_MAX_TEXTURE_SIZE, (GLint*) &mTileSize);

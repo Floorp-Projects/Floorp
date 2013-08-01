@@ -57,7 +57,7 @@ public:
         NoFlags          = 0x0,
         UseNearestFilter = 0x1,
         NeedsYFlip       = 0x2,
-        ForceSingleTile  = 0x4
+        DisallowBigImage = 0x4
     };
 
     typedef gfxASurface::gfxContentType ContentType;

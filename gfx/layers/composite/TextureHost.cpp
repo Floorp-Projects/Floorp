@@ -316,9 +316,10 @@ BufferTextureHost::Upload(nsIntRegion *aRegion)
     RefPtr<DataTextureSource> srcU;
     RefPtr<DataTextureSource> srcV;
     if (!mFirstSource) {
-      srcY = mCompositor->CreateDataTextureSource(mFlags);
-      srcU = mCompositor->CreateDataTextureSource(mFlags);
-      srcV = mCompositor->CreateDataTextureSource(mFlags);
+      // We don't support BigImages for YCbCr compositing.
+      srcY = mCompositor->CreateDataTextureSource(mFlags|TEXTURE_DISALLOW_BIGIMAGE);
+      srcU = mCompositor->CreateDataTextureSource(mFlags|TEXTURE_DISALLOW_BIGIMAGE);
+      srcV = mCompositor->CreateDataTextureSource(mFlags|TEXTURE_DISALLOW_BIGIMAGE);
       mFirstSource = srcY;
       srcY->SetNextSibling(srcU);
       srcU->SetNextSibling(srcV);
