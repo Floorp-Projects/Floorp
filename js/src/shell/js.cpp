@@ -4925,7 +4925,7 @@ NewGlobalObject(JSContext *cx, JSObject *sameZoneAs)
         }
 
         /* Initialize FakeDOMObject. */
-        static js::DOMCallbacks DOMcallbacks = {
+        static const js::DOMCallbacks DOMcallbacks = {
             InstanceClassHasProtoAtDepth
         };
         SetDOMCallbacks(cx->runtime(), &DOMcallbacks);
