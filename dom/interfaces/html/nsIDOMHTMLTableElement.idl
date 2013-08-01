@@ -19,39 +19,4 @@
 [scriptable, uuid(1a7bf1f1-5d6c-4200-9ceb-455874322315)]
 interface nsIDOMHTMLTableElement : nsIDOMHTMLElement
 {
-  // Modified in DOM Level 2:
-           attribute nsIDOMHTMLTableCaptionElement caption;
-                                             // raises(DOMException) on setting
-
-  // Modified in DOM Level 2:
-           attribute nsIDOMHTMLTableSectionElement tHead;
-                                             // raises(DOMException) on setting
-
-  // Modified in DOM Level 2:
-           attribute nsIDOMHTMLTableSectionElement tFoot;
-                                             // raises(DOMException) on setting
-
-  readonly attribute nsIDOMHTMLCollection          rows;
-  readonly attribute nsIDOMHTMLCollection          tBodies;
-           attribute DOMString                     align;
-           attribute DOMString                     bgColor;
-           attribute DOMString                     border;
-           attribute DOMString                     cellPadding;
-           attribute DOMString                     cellSpacing;
-           attribute DOMString                     frame;
-           attribute DOMString                     rules;
-           attribute DOMString                     summary;
-           attribute DOMString                     width;
-  nsIDOMHTMLElement         createTHead();
-  void                      deleteTHead();
-  nsIDOMHTMLElement         createTFoot();
-  void                      deleteTFoot();
-  nsIDOMHTMLElement         createCaption();
-  void                      deleteCaption();
-  // Modified in DOM Level 2:
-  nsIDOMHTMLElement         insertRow(in long index)
-                                             raises(DOMException);
-  // Modified in DOM Level 2:
-  void                      deleteRow(in long index)
-                                             raises(DOMException);
 };
