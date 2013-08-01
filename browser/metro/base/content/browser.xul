@@ -259,17 +259,14 @@
         <hbox id="progress-control" />
       </hbox>
 
-      <vbox id="toolbar-autocomplete" flex="1">
+      <vbox id="toolbar-overlay" flex="1">
         <!-- Autocomplete -->
         <scrollbox flex="1">
           <hbox id="urlbar-autocomplete" observes="bcast_windowState"/>
         </scrollbox>
 
         <!-- Main toolbar -->
-        <toolbar id="toolbar" flex="1">
-          <observes element="bcast_windowState" attribute="*"/>
-          <observes element="bcast_urlbarState" attribute="*"/>
-
+        <toolbar id="toolbar" flex="1" observes="bcast_windowState">
           <toolbarbutton id="back-button" class="appbar-primary"
                          command="cmd_back"/>
           <toolbarbutton id="forward-button" class="appbar-primary"
@@ -296,14 +293,28 @@
                            command="cmd_stop"/>
           </hbox>
 
-          <toolbarbutton id="download-button" class="appbar-secondary"
-                         oncommand="Appbar.onDownloadButton()"/>
-          <toolbarbutton id="star-button" class="appbar-primary" type="checkbox"
-                         oncommand="Appbar.onStarButton()"/>
-          <toolbarbutton id="pin-button" class="appbar-primary" type="checkbox"
-                         oncommand="Appbar.onPinButton()"/>
-          <toolbarbutton id="menu-button" class="appbar-primary"
-                         oncommand="Appbar.onMenuButton(event)"/>
+          <stack id="toolbar-contextual">
+            <observes element="bcast_windowState" attribute="*"/>
+            <observes element="bcast_urlbarState" attribute="*"/>
+
+            <hbox id="toolbar-context-page" pack="end">
+              <toolbarbutton id="download-button" class="appbar-secondary"
+                             oncommand="Appbar.onDownloadButton()"/>
+              <toolbarbutton id="star-button" class="appbar-primary"
+                             type="checkbox"
+                             oncommand="Appbar.onStarButton()"/>
+              <toolbarbutton id="pin-button" class="appbar-primary"
+                             type="checkbox"
+                             oncommand="Appbar.onPinButton()"/>
+              <toolbarbutton id="menu-button" class="appbar-primary"
+                             oncommand="Appbar.onMenuButton(event)"/>
+            </hbox>
+
+            <hbox id="toolbar-context-autocomplete" pack="end">
+              <toolbarbutton id="close-button" class="appbar-secondary"
+                             oncommand="Appbar.onAutocompleteCloseButton()"/>
+            </hbox>
+          </stack>
         </toolbar>
       </vbox>
     </appbar>
@@ -371,10 +382,16 @@
       <textbox id="findbar-textbox" type="search"
                oncommand="FindHelperUI.search(this.value)"
                oninput="FindHelperUI.updateCommands(this.value); "/>
-      <button class="previous-button" command="cmd_findPrevious"/>
-      <button class="next-button" command="cmd_findNext"/>
+
+      <toolbarbutton id="findbar-previous-button" class="appbar-secondary"
+                     command="cmd_findPrevious"/>
+      <toolbarbutton id="findbar-next-button" class="appbar-secondary"
+                     command="cmd_findNext"/>
+
       <spacer flex="1"/>
-      <button id="findbar-close" class="close-button" command="cmd_findClose"/>
+
+      <toolbarbutton id="findbar-close-button" class="appbar-secondary"
+                     command="cmd_findClose"/>
     </appbar>
 
     <!-- Context button bar -->
