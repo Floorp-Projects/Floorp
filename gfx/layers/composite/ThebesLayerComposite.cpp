@@ -29,7 +29,6 @@ ThebesLayerComposite::ThebesLayerComposite(LayerManagerComposite *aManager)
   : ThebesLayer(aManager, nullptr)
   , LayerComposite(aManager)
   , mBuffer(nullptr)
-  , mRequiresTiledProperties(false)
 {
   MOZ_COUNT_CTOR(ThebesLayerComposite);
   mImplData = static_cast<LayerComposite*>(this);
@@ -38,13 +37,15 @@ ThebesLayerComposite::ThebesLayerComposite(LayerManagerComposite *aManager)
 ThebesLayerComposite::~ThebesLayerComposite()
 {
   MOZ_COUNT_DTOR(ThebesLayerComposite);
-  CleanupResources();
+  if (mBuffer) {
+    mBuffer->Detach();
+  }
 }
 
 void
 ThebesLayerComposite::SetCompositableHost(CompositableHost* aHost)
 {
-  mBuffer = static_cast<ContentHost*>(aHost);
+  mBuffer= static_cast<ContentHost*>(aHost);
 }
 
 void
@@ -57,7 +58,10 @@ void
 ThebesLayerComposite::Destroy()
 {
   if (!mDestroyed) {
-    CleanupResources();
+    if (mBuffer) {
+      mBuffer->Detach();
+    }
+    mBuffer = nullptr;
     mDestroyed = true;
   }
 }
@@ -71,14 +75,13 @@ ThebesLayerComposite::GetLayer()
 TiledLayerComposer*
 ThebesLayerComposite::GetTiledLayerComposer()
 {
-  MOZ_ASSERT(mBuffer && mBuffer->IsAttached());
   return mBuffer->AsTiledLayerComposer();
 }
 
 LayerRenderState
 ThebesLayerComposite::GetRenderState()
 {
-  if (!mBuffer || !mBuffer->IsAttached() || mDestroyed) {
+  if (!mBuffer || mDestroyed) {
     return LayerRenderState();
   }
   return mBuffer->GetRenderState();
@@ -88,13 +91,9 @@ void
 ThebesLayerComposite::RenderLayer(const nsIntPoint& aOffset,
                                   const nsIntRect& aClipRect)
 {
-  if (!mBuffer || !mBuffer->IsAttached()) {
+  if (!mBuffer) {
     return;
   }
-
-  MOZ_ASSERT(mBuffer->GetCompositor() == mCompositeManager->GetCompositor() &&
-             mBuffer->GetLayer() == this,
-             "buffer is corrupted");
 
   gfx::Matrix4x4 transform;
   ToMatrix4x4(GetEffectiveTransform(), transform);
@@ -145,19 +144,14 @@ ThebesLayerComposite::RenderLayer(const nsIntPoint& aOffset,
 }
 
 CompositableHost*
-ThebesLayerComposite::GetCompositableHost()
-{
-  if (mBuffer->IsAttached()) {
-    return mBuffer.get();
-  }
-
-  return nullptr;
+ThebesLayerComposite::GetCompositableHost() {
+  return mBuffer.get();
 }
 
 void
 ThebesLayerComposite::CleanupResources()
 {
-  if (mBuffer) {
+  if (mBuffer)  {
     mBuffer->Detach();
   }
   mBuffer = nullptr;
@@ -288,7 +282,7 @@ ThebesLayerComposite::PrintInfo(nsACString& aTo, const char* aPrefix)
 {
   ThebesLayer::PrintInfo(aTo, aPrefix);
   aTo += "\n";
-  if (mBuffer && mBuffer->IsAttached()) {
+  if (mBuffer) {
     nsAutoCString pfx(aPrefix);
     pfx += "  ";
     mBuffer->PrintInfo(aTo, pfx.get());

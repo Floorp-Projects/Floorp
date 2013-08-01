@@ -22,6 +22,36 @@ namespace layers {
 class LayerD3D9;
 class ThebesLayerD3D9;
 
+/**
+ * This structure is used to pass rectangles to our shader constant. We can use
+ * this for passing rectangular areas to SetVertexShaderConstant. In the format
+ * of a 4 component float(x,y,width,height). Our vertex shader can then use
+ * this to construct rectangular positions from the 0,0-1,1 quad that we source
+ * it with.
+ */
+struct ShaderConstantRect
+{
+  float mX, mY, mWidth, mHeight;
+
+  // Provide all the commonly used argument types to prevent all the local
+  // casts in the code.
+  ShaderConstantRect(float aX, float aY, float aWidth, float aHeight)
+    : mX(aX), mY(aY), mWidth(aWidth), mHeight(aHeight)
+  { }
+
+  ShaderConstantRect(int32_t aX, int32_t aY, int32_t aWidth, int32_t aHeight)
+    : mX((float)aX), mY((float)aY)
+    , mWidth((float)aWidth), mHeight((float)aHeight)
+  { }
+
+  ShaderConstantRect(int32_t aX, int32_t aY, float aWidth, float aHeight)
+    : mX((float)aX), mY((float)aY), mWidth(aWidth), mHeight(aHeight)
+  { }
+
+  // For easy passing to SetVertexShaderConstantF.
+  operator float* () { return &mX; }
+};
+
 /*
  * This is the LayerManager used for Direct3D 9. For now this will render on
  * the main thread.

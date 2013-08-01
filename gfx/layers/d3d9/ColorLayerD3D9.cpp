@@ -46,7 +46,7 @@ RenderColorLayerD3D9(ColorLayer* aLayer, LayerManagerD3D9 *aManager)
   color[2] = (float)(layerColor.b * opacity);
   color[3] = (float)(opacity);
 
-  aManager->device()->SetPixelShaderConstantF(CBvColor, color, 1);
+  aManager->device()->SetPixelShaderConstantF(0, color, 1);
 
   aManager->SetShaderMode(DeviceManagerD3D9::SOLIDCOLORLAYER,
                           aLayer->GetMaskLayer());
