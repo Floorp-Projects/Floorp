@@ -1640,12 +1640,10 @@ var NativeWindow = {
     add: function(aOptions) {
       let id = uuidgen.generateUUID().toString();
       sendMessageToJava({
-        gecko: {
-          type: "PageActions:Add",
-          id: id,
-          title: aOptions.title,
-          icon: aOptions.icon,
-        }
+        type: "PageActions:Add",
+        id: id,
+        title: aOptions.title,
+        icon: resolveGeckoUri(aOptions.icon)
       });
       this._items[id] = {
         clickCallback: aOptions.clickCallback,
@@ -1655,10 +1653,8 @@ var NativeWindow = {
     },
     remove: function(id) {
       sendMessageToJava({
-        gecko: {
-          type: "PageActions:Remove",
-          id: id
-        }
+        type: "PageActions:Remove",
+        id: id
       });
       delete this._items[id];
     }
