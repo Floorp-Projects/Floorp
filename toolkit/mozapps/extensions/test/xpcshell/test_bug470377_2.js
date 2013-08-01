@@ -23,7 +23,7 @@ function run_test() {
 
   server = new HttpServer();
   server.registerDirectory("/", do_get_file("data/test_bug470377"));
-  server.start(4444);
+  server.start(-1);
 
   startupManager();
   AddonManager.checkCompatibility = false;
