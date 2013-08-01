@@ -8,14 +8,13 @@
 
 #include "mozilla/FloatingPoint.h"
 
-#include <vector>
-
 #include "jscompartment.h"
 #include "jsfun.h"
 #include "jsobj.h"
 #include "jsutil.h"
 
 #include "gc/Marking.h"
+#include "js/Vector.h"
 #include "vm/GlobalObject.h"
 #include "vm/String.h"
 #include "vm/StringBuffer.h"
@@ -180,8 +179,8 @@ GetAlign(JSContext *cx, HandleObject type)
 
 struct FieldInfo
 {
-    HeapId name;
-    HeapPtrObject type;
+    RelocatableId name;
+    RelocatablePtrObject type;
     size_t offset;
 
     FieldInfo() : offset(0) {}
@@ -220,7 +219,7 @@ Class js::NumericTypeClasses[NUMERICTYPES] = {
     BINARYDATA_FOR_EACH_NUMERIC_TYPES(BINARYDATA_NUMERIC_CLASSES)
 };
 
-typedef std::vector<FieldInfo> FieldList;
+typedef Vector<FieldInfo> FieldList;
 
 static
 FieldList *
@@ -232,13 +231,12 @@ GetStructTypeFieldList(HandleObject obj)
 
 static
 bool
-LookupFieldList(FieldList *list, jsid fieldName, FieldInfo *out)
+LookupFieldList(FieldList *list, jsid fieldName, FieldInfo **out)
 {
-    for (FieldList::const_iterator it = list->begin(); it != list->end(); ++it) {
-        if ((*it).name == fieldName) {
-            out->name = it->name;
-            out->type = it->type;
-            out->offset = it->offset;
+    for (uint32_t i = 0; i < list->length(); ++i) {
+        FieldInfo *info = &(*list)[i];
+        if (info->name == fieldName) {
+            *out = info;
             return true;
         }
     }
@@ -268,22 +266,22 @@ IsSameStructType(JSContext *cx, HandleObject type1, HandleObject type2)
     FieldList *fieldList1 = GetStructTypeFieldList(type1);
     FieldList *fieldList2 = GetStructTypeFieldList(type2);
 
-    if (fieldList1->size() != fieldList2->size())
+    if (fieldList1->length() != fieldList2->length())
         return false;
 
     // Names and layout should be the same.
-    for (uint32_t i = 0; i < fieldList1->size(); ++i) {
-        FieldInfo fieldInfo1 = fieldList1->at(i);
-        FieldInfo fieldInfo2 = fieldList2->at(i);
+    for (uint32_t i = 0; i < fieldList1->length(); ++i) {
+        FieldInfo *fieldInfo1 = &(*fieldList1)[i];
+        FieldInfo *fieldInfo2 = &(*fieldList2)[i];
 
-        if (fieldInfo1.name.get() != fieldInfo2.name.get())
+        if (fieldInfo1->name.get() != fieldInfo2->name.get())
             return false;
 
-        if (fieldInfo1.offset != fieldInfo2.offset)
+        if (fieldInfo1->offset != fieldInfo2->offset)
             return false;
 
-        RootedObject fieldType1(cx, fieldInfo1.type);
-        RootedObject fieldType2(cx, fieldInfo2.type);
+        RootedObject fieldType1(cx, fieldInfo1->type);
+        RootedObject fieldType2(cx, fieldInfo2->type);
         if (!IsSameBinaryDataType(cx, fieldType1, fieldType2))
             return false;
     }
@@ -591,7 +589,7 @@ ArrayType::convertAndCopyTo(JSContext *cx, HandleObject exemplar,
     if (IsBlock(val)) {
         RootedObject type(cx, GetType(val));
         if (IsSameBinaryDataType(cx, exemplar, type)) {
-            uint8_t *priv = (uint8_t*) val->getPrivate();
+            uint8_t *priv = static_cast<uint8_t*>(val->getPrivate());
             memcpy(mem, priv, GetMemSize(cx, exemplar));
             return true;
         }
@@ -619,14 +617,11 @@ ArrayType::convertAndCopyTo(JSContext *cx, HandleObject exemplar,
 
     for (uint32_t i = 0; i < fromLen; i++) {
         RootedValue fromElem(cx);
-        if (!JSObject::getElement(cx, valRooted, valRooted, i, &fromElem)) {
+        if (!JSObject::getElement(cx, valRooted, valRooted, i, &fromElem))
             return ReportTypeError(cx, from, exemplar);
-        }
 
-        if (!ConvertAndCopyTo(cx, elementType, fromElem,
-                              (uint8_t *) mem + (offsetMult * i))) {
-            return false; // TypeError raised by ConvertAndCopyTo.
-        }
+        if (!ConvertAndCopyTo(cx, elementType, fromElem, mem + (offsetMult * i)))
+            return false;
     }
 
     return true;
@@ -1518,7 +1513,8 @@ StructType::layout(JSContext *cx, HandleObject structType, HandleObject fields)
     }
 
     // All error branches from here onwards should |goto error;| to free this list.
-    FieldList *fieldList = new FieldList(fieldProps.length());
+    FieldList *fieldList = js_new<FieldList>(cx);
+    fieldList->resize(fieldProps.length());
 
     uint32_t structAlign = 0;
     uint32_t structMemSize = 0;
@@ -1613,31 +1609,28 @@ StructType::convertAndCopyTo(JSContext *cx, HandleObject exemplar,
 
     FieldList *fieldList = GetStructTypeFieldList(exemplar);
 
-    if (ownProps.length() != fieldList->size()) {
+    if (ownProps.length() != fieldList->length()) {
         return ReportTypeError(cx, from, exemplar);
     }
 
-    FieldInfo info;
     for (unsigned int i = 0; i < ownProps.length(); i++) {
+        FieldInfo *info = NULL;
         if (!LookupFieldList(fieldList, ownProps[i], &info)) {
             return ReportTypeError(cx, from, exemplar);
         }
     }
 
-    for (FieldList::const_iterator it = fieldList->begin(); it != fieldList->end(); ++it) {
-        RootedPropertyName fieldName(cx, JSID_TO_ATOM(it->name)->asPropertyName());
+    for (uint32_t i = 0; i < fieldList->length(); ++i) {
+        FieldInfo *info = &(*fieldList)[i];
+        RootedPropertyName fieldName(cx, JSID_TO_ATOM(info->name)->asPropertyName());
 
         RootedValue fromProp(cx);
-        if (!JSObject::getProperty(cx, valRooted, valRooted,
-                                   fieldName, &fromProp)) {
+        if (!JSObject::getProperty(cx, valRooted, valRooted, fieldName, &fromProp))
             return ReportTypeError(cx, from, exemplar);
-        }
 
-        RootedObject fieldType(cx, it->type);
-        if (!ConvertAndCopyTo(cx, fieldType, fromProp,
-                              (uint8_t *) mem + it->offset)) {
-            return false; // TypeError raised by ConvertAndCopyTo.
-        }
+        RootedObject fieldType(cx, info->type);
+        if (!ConvertAndCopyTo(cx, fieldType, fromProp, mem + info->offset))
+            return false;
     }
     return true;
 }
@@ -1718,7 +1711,7 @@ void
 StructType::finalize(FreeOp *op, JSObject *obj)
 {
     FieldList *fieldList = static_cast<FieldList *>(obj->getPrivate());
-    delete fieldList;
+    js_delete(fieldList);
 }
 
 void
@@ -1726,9 +1719,10 @@ StructType::trace(JSTracer *tracer, JSObject *obj)
 {
     FieldList *fieldList = static_cast<FieldList *>(obj->getPrivate());
     JS_ASSERT(fieldList);
-    for (FieldList::iterator it = fieldList->begin(); it != fieldList->end(); ++it) {
-        gc::MarkId(tracer, &(it->name), "structtype.field.name");
-        MarkObject(tracer, &(it->type), "structtype.field.type");
+    for (uint32_t i = 0; i < fieldList->length(); ++i) {
+        FieldInfo *info = &(*fieldList)[i];
+        gc::MarkId(tracer, &(info->name), "structtype.field.name");
+        MarkObject(tracer, &(info->type), "structtype.field.type");
     }
 }
 
@@ -1757,15 +1751,16 @@ StructType::toString(JSContext *cx, unsigned int argc, Value *vp)
     FieldList *fieldList = GetStructTypeFieldList(thisObj);
     JS_ASSERT(fieldList);
 
-    for (FieldList::const_iterator it = fieldList->begin(); it != fieldList->end(); ++it) {
-        if (it != fieldList->begin())
+    for (uint32_t i = 0; i < fieldList->length(); ++i) {
+        FieldInfo *info = &(*fieldList)[i];
+        if (i != 0)
             contents.append(", ");
 
-        contents.append(IdToString(cx, it->name));
+        contents.append(IdToString(cx, info->name));
         contents.append(": ");
 
         RootedValue fieldStringVal(cx);
-        if (!JS_CallFunctionName(cx, it->type,
+        if (!JS_CallFunctionName(cx, info->type,
                                  "toString", 0, NULL, fieldStringVal.address()))
             return false;
 
@@ -1823,7 +1818,7 @@ BinaryStruct::create(JSContext *cx, HandleObject type,
     if (!obj)
         return NULL;
 
-    obj->setPrivate(((uint8_t*) owner->getPrivate()) + offset);
+    obj->setPrivate(static_cast<uint8_t*>(owner->getPrivate()) + offset);
     obj->setFixedSlot(SLOT_BLOCKREFOWNER, ObjectValue(*owner));
     return obj;
 }
@@ -1884,14 +1879,15 @@ BinaryStruct::obj_enumerate(JSContext *cx, HandleObject obj, JSIterateOp enum_op
         case JSENUMERATE_INIT_ALL:
         case JSENUMERATE_INIT:
             statep.setInt32(0);
-            idp.set(INT_TO_JSID(fieldList->size()));
+            idp.set(INT_TO_JSID(fieldList->length()));
             break;
 
         case JSENUMERATE_NEXT:
             index = static_cast<uint32_t>(statep.toInt32());
 
-            if (index < fieldList->size()) {
-                idp.set(fieldList->at(index).name);
+            if (index < fieldList->length()) {
+                FieldInfo *info = &(*fieldList)[index];
+                idp.set(info->name);
                 statep.setInt32(index + 1);
             } else {
                 statep.setNull();
@@ -1926,7 +1922,7 @@ BinaryStruct::obj_getGeneric(JSContext *cx, HandleObject obj,
     FieldList *fieldList = GetStructTypeFieldList(type);
     JS_ASSERT(fieldList);
 
-    FieldInfo fieldInfo;
+    FieldInfo *fieldInfo = NULL;
     if (!LookupFieldList(fieldList, id, &fieldInfo)) {
         RootedObject proto(cx, obj->getProto());
         if (!proto) {
@@ -1937,8 +1933,8 @@ BinaryStruct::obj_getGeneric(JSContext *cx, HandleObject obj,
         return JSObject::getGeneric(cx, proto, receiver, id, vp);
     }
 
-    RootedObject fieldType(cx, fieldInfo.type);
-    return Reify(cx, fieldType, obj, fieldInfo.offset, vp);
+    RootedObject fieldType(cx, fieldInfo->type);
+    return Reify(cx, fieldType, obj, fieldInfo->offset, vp);
 }
 
 JSBool
@@ -1977,16 +1973,16 @@ BinaryStruct::obj_setGeneric(JSContext *cx, HandleObject obj, HandleId id,
     FieldList *fieldList = GetStructTypeFieldList(type);
     JS_ASSERT(fieldList);
 
-    FieldInfo fieldInfo;
+    FieldInfo *fieldInfo = NULL;
     if (!LookupFieldList(fieldList, id, &fieldInfo)) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                              JSMSG_UNDEFINED_PROP, IdToString(cx, id));
         return false;
     }
 
-    uint8_t *loc = ((uint8_t *) obj->getPrivate()) + fieldInfo.offset;
+    uint8_t *loc = static_cast<uint8_t*>(obj->getPrivate()) + fieldInfo->offset;
 
-    RootedObject fieldType(cx, fieldInfo.type);
+    RootedObject fieldType(cx, fieldInfo->type);
     if (!ConvertAndCopyTo(cx, fieldType, vp, loc))
         return false;
 
