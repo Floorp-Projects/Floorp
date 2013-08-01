@@ -717,6 +717,24 @@ toolbar > .customization-target > toolbarpaletteitem > #history-panelmenu {
   list-style-image: url("moz-icon://stock/gtk-home?size=menu&state=disabled");
 }
 
+#characterencoding-panelmenu[customizableui-areatype="toolbar"],
+#developer-button[customizableui-areatype="toolbar"] {
+  list-style-image: url(chrome://browser/skin/menuPanel.png);
+}
+
+#characterencoding-panelmenu[customizableui-areatype="toolbar"] > .toolbarbutton-icon,
+#developer-button[customizableui-areatype="toolbar"] > .toolbarbutton-icon {
+  height: 24px;
+}
+
+#characterencoding-panelmenu[customizableui-areatype="toolbar"] {
+  -moz-image-region: rect(0px, 216px, 24px, 192px);
+}
+
+#developer-button[customizableui-areatype="toolbar"] {
+  -moz-image-region: rect(0px, 736px, 32px, 704px);
+}
+
 /* Menu panel buttons */
 
 %include ../shared/menupanel.inc.css
