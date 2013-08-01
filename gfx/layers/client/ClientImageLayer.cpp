@@ -127,8 +127,8 @@ ClientImageLayer::RenderLayer()
     }
     mImageClient = ImageClient::CreateImageClient(type,
                                                   ClientManager(),
-                                                  mForceSingleTile
-                                                    ? ForceSingleTile
+                                                  mDisallowBigImage
+                                                    ? TEXTURE_DISALLOW_BIGIMAGE
                                                     : 0);
     if (type == BUFFER_BRIDGE) {
       static_cast<ImageClientBridge*>(mImageClient.get())->SetLayer(this);

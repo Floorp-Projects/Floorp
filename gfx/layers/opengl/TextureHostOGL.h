@@ -105,9 +105,9 @@ class TextureImageTextureSourceOGL : public DataTextureSource
                                    , public TileIterator
 {
 public:
-  TextureImageTextureSourceOGL(gl::GLContext* aGL, bool aAllowTiling = true)
+  TextureImageTextureSourceOGL(gl::GLContext* aGL, bool aAllowBiImage = true)
     : mGL(aGL)
-    , mAllowTiling(aAllowTiling)
+    , mAllowBigImage(aAllowBiImage)
     , mIterating(false)
   {}
 
@@ -179,7 +179,7 @@ public:
 protected:
   nsRefPtr<gl::TextureImage> mTexImage;
   gl::GLContext* mGL;
-  bool mAllowTiling;
+  bool mAllowBigImage;
   bool mIterating;
 };
 
