@@ -1539,11 +1539,11 @@ class MOZ_STACK_CLASS ModuleCompiler
     }
 
     bool staticallyLink(ScopedJSDeletePtr<AsmJSModule> *module, ScopedJSFreePtr<char> *report) {
-        module_->initPostLinkFailureInfo(cx_->runtime(),
-                                         parser_.tokenStream.getOriginPrincipals(),
-                                         parser_.ss,
-                                         bodyStart_,
-                                         parser_.tokenStream.currentToken().pos.end);
+        // Record the ScriptSource and [begin, end) range of the module in case
+        // the link-time validation fails in LinkAsmJS and we need to re-parse
+        // the entire module from scratch.
+        uint32_t bodyEnd = parser_.tokenStream.currentToken().pos.end;
+        module_->initPostLinkFailureInfo(parser_.ss, bodyStart_, bodyEnd);
 
         // Finish the code section.
         masm_.finish();

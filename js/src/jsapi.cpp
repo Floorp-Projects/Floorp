@@ -4777,8 +4777,8 @@ AutoFile::open(JSContext *cx, const char *filename)
 
 
 JS::CompileOptions::CompileOptions(JSContext *cx, JSVersion version)
-    : principals(NULL),
-      originPrincipals(NULL),
+    : principals_(NULL),
+      originPrincipals_(NULL),
       version(version != JSVERSION_UNKNOWN ? version : cx->findVersion()),
       versionSet(false),
       utf8(false),
@@ -4799,6 +4799,12 @@ JS::CompileOptions::CompileOptions(JSContext *cx, JSVersion version)
 {
 }
 
+JSPrincipals *
+CompileOptions::originPrincipals() const
+{
+    return NormalizeOriginPrincipals(principals_, originPrincipals_);
+}
+
 JSScript *
 JS::Compile(JSContext *cx, HandleObject obj, CompileOptions options,
             const jschar *chars, size_t length)
@@ -4807,7 +4813,7 @@ JS::Compile(JSContext *cx, HandleObject obj, CompileOptions options,
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj);
-    JS_ASSERT_IF(options.principals, cx->compartment()->principals == options.principals);
+    JS_ASSERT_IF(options.principals(), cx->compartment()->principals == options.principals());
     AutoLastFrameCheck lfc(cx);
 
     return frontend::CompileScript(cx, &cx->tempLifoAlloc(), obj, NullPtr(), options, chars, length);
@@ -4960,7 +4966,7 @@ JS::CompileFunction(JSContext *cx, HandleObject obj, CompileOptions options,
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj);
-    JS_ASSERT_IF(options.principals, cx->compartment()->principals == options.principals);
+    JS_ASSERT_IF(options.principals(), cx->compartment()->principals == options.principals());
     AutoLastFrameCheck lfc(cx);
 
     RootedAtom funAtom(cx);
@@ -5144,7 +5150,7 @@ JS::Evaluate(JSContext *cx, HandleObject obj, CompileOptions options,
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj);
-    JS_ASSERT_IF(options.principals, cx->compartment()->principals == options.principals);
+    JS_ASSERT_IF(options.principals(), cx->compartment()->principals == options.principals());
 
     AutoLastFrameCheck lfc(cx);
 

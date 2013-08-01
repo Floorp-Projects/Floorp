@@ -226,7 +226,7 @@ GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
         jschar *source = InflateString(cx, rawSource, &sourceLen);
         if (!source)
             return NULL;
-        ScriptSource *ss = cx->new_<ScriptSource>();
+        ScriptSource *ss = cx->new_<ScriptSource>(/* originPrincipals = */ (JSPrincipals*) NULL);
         if (!ss) {
             js_free(source);
             return NULL;
@@ -239,6 +239,7 @@ GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
         CompileOptions options(cx);
         options.setNoScriptRval(true)
                .setVersion(JSVERSION_DEFAULT);
+
         RootedScript script(cx, JSScript::Create(cx,
                                                  /* enclosingScope = */ NullPtr(),
                                                  /* savedCallerFun = */ false,
