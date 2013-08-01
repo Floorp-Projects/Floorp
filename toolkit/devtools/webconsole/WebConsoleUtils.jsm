@@ -614,7 +614,7 @@ const OPEN_CLOSE_BODY = {
   "(": ")",
 };
 
-const MAX_COMPLETIONS = 256;
+const MAX_COMPLETIONS = 1500;
 
 /**
  * Analyses a given string to find the last statement that is interesting for
