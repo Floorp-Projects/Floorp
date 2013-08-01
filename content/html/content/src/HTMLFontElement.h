@@ -7,12 +7,13 @@
 
 #include "mozilla/Attributes.h"
 #include "nsGenericHTMLElement.h"
+#include "nsIDOMHTMLFontElement.h"
 
 namespace mozilla {
 namespace dom {
 
 class HTMLFontElement MOZ_FINAL : public nsGenericHTMLElement,
-                                  public nsIDOMHTMLElement
+                                  public nsIDOMHTMLFontElement
 {
 public:
   HTMLFontElement(already_AddRefed<nsINodeInfo> aNodeInfo)
@@ -32,6 +33,9 @@ public:
 
   // nsIDOMHTMLElement
   NS_FORWARD_NSIDOMHTMLELEMENT_TO_GENERIC
+
+  // nsIDOMHTMLFontElement
+  NS_DECL_NSIDOMHTMLFONTELEMENT
 
   void GetColor(nsString& aColor)
   {

@@ -219,7 +219,7 @@ nsMimeTypeArray::EnsureMimeTypes()
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(nsMimeType, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(nsMimeType, Release)
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_0(nsMimeType)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_1(nsMimeType, mPluginElement)
 
 nsMimeType::nsMimeType(nsWeakPtr aWindow, nsPluginElement* aPluginElement,
                        uint32_t aPluginTagMimeIndex, const nsAString& aType)

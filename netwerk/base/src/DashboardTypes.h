@@ -57,6 +57,11 @@ struct HttpRetParams
     bool      ssl;
 };
 
+struct ConnStatus
+{
+    nsString creationSts;
+};
+
 } }
 
 #endif // mozilla_net_DashboardTypes_h_

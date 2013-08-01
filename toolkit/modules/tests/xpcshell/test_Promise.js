@@ -583,10 +583,10 @@ tests.push(
     return promise;
   }));
 
-// Test that the values of the promise return by Promise.every() are kept in the
+// Test that the values of the promise return by Promise.all() are kept in the
 // given order even if the given promises are resolved in arbitrary order
 tests.push(
-  make_promise_test(function every_resolve(test) {
+  make_promise_test(function all_resolve(test) {
     let d1 = Promise.defer();
     let d2 = Promise.defer();
     let d3 = Promise.defer();
@@ -597,7 +597,7 @@ tests.push(
 
     let promises = [d1.promise, d2.promise, 3, d3.promise];
 
-    return Promise.every(promises).then(
+    return Promise.all(promises).then(
       function onResolve([val1, val2, val3, val4]) {
         do_check_eq(val1, 1);
         do_check_eq(val2, 2);
@@ -607,10 +607,10 @@ tests.push(
     );
   }));
 
-// Test that rejecting one of the promises passed to Promise.every()
-// rejects the promise return by Promise.every()
+// Test that rejecting one of the promises passed to Promise.all()
+// rejects the promise return by Promise.all()
 tests.push(
-  make_promise_test(function every_reject(test) {
+  make_promise_test(function all_reject(test) {
     let error = new Error("Boom");
 
     let d1 = Promise.defer();
@@ -623,7 +623,7 @@ tests.push(
 
     let promises = [d1.promise, d2.promise, d3.promise];
 
-    return Promise.every(promises).then(
+    return Promise.all(promises).then(
       function onResolve() {
         do_throw("Incorrect call to onResolve listener");
       },
@@ -633,24 +633,24 @@ tests.push(
     );
   }));
 
-// Test that passing only values (not promises) to Promise.every()
+// Test that passing only values (not promises) to Promise.all()
 // forwards them all as resolution values.
 tests.push(
-  make_promise_test(function every_resolve_no_promises(test) {
+  make_promise_test(function all_resolve_no_promises(test) {
     try {
-      Promise.every(null);
-      do_check_true(false, "every() should only accept arrays.");
+      Promise.all(null);
+      do_check_true(false, "all() should only accept arrays.");
     } catch (e) {
-      do_check_true(true, "every() fails when first the arg is not an array.");
+      do_check_true(true, "all() fails when first the arg is not an array.");
     }
 
-    let p1 = Promise.every([]).then(
+    let p1 = Promise.all([]).then(
       function onResolve(val) {
-        do_check_eq(typeof(val), "undefined");
+        do_check_true(Array.isArray(val) && val.length == 0);
       }
     );
 
-    let p2 = Promise.every([1, 2, 3]).then(
+    let p2 = Promise.all([1, 2, 3]).then(
       function onResolve([val1, val2, val3]) {
         do_check_eq(val1, 1);
         do_check_eq(val2, 2);
@@ -658,7 +658,7 @@ tests.push(
       }
     );
 
-    return Promise.every([p1, p2]);
+    return Promise.all([p1, p2]);
   }));
 
 function run_test()

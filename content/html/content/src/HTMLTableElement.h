@@ -39,6 +39,9 @@ public:
   // nsIDOMHTMLElement
   NS_FORWARD_NSIDOMHTMLELEMENT_TO_GENERIC
 
+  // nsIDOMHTMLTableElement
+  NS_DECL_NSIDOMHTMLTABLEELEMENT
+
   HTMLTableCaptionElement* GetCaption() const
   {
     return static_cast<HTMLTableCaptionElement*>(GetChild(nsGkAtoms::caption));
@@ -51,12 +54,7 @@ public:
       nsINode::AppendChild(*aCaption, rv);
     }
   }
-
-  void DeleteTFoot();
-
   already_AddRefed<nsGenericHTMLElement> CreateCaption();
-
-  void DeleteCaption();
 
   HTMLTableSectionElement* GetTHead() const
   {
@@ -75,8 +73,6 @@ public:
     }
   }
   already_AddRefed<nsGenericHTMLElement> CreateTHead();
-
-  void DeleteTHead();
 
   HTMLTableSectionElement* GetTFoot() const
   {

@@ -161,9 +161,7 @@ CodeGeneratorARM::generateOutOfLineCode()
         // Push the frame size, so the handler can recover the IonScript.
         masm.ma_mov(Imm32(frameSize()), lr);
 
-        IonCompartment *ion = GetIonContext()->compartment->ionCompartment();
-        IonCode *handler = ion->getGenericBailoutHandler();
-
+        IonCode *handler = gen->ionRuntime()->getGenericBailoutHandler();
         masm.branch(handler);
     }
 
@@ -1731,7 +1729,7 @@ CodeGeneratorARM::generateInvalidateEpilogue()
 
     // Push the Ion script onto the stack (when we determine what that pointer is).
     invalidateEpilogueData_ = masm.pushWithPatch(ImmWord(uintptr_t(-1)));
-    IonCode *thunk = GetIonContext()->compartment->ionCompartment()->getInvalidationThunk();
+    IonCode *thunk = gen->ionRuntime()->getInvalidationThunk();
 
     masm.branch(thunk);
 
@@ -1808,7 +1806,7 @@ CodeGeneratorARM::visitAsmJSLoadHeap(LAsmJSLoadHeap *ins)
                               ToRegister(ins->output()), Offset, Assembler::Zero);
         masm.ma_mov(Imm32(0), ToRegister(ins->output()), NoSetCond, Assembler::NonZero);
     }
-    return gen->noteBoundsCheck(bo.getOffset());
+    return gen->noteHeapAccess(AsmJSHeapAccess(bo.getOffset()));
 }
 
 bool
@@ -1846,7 +1844,7 @@ CodeGeneratorARM::visitAsmJSStoreHeap(LAsmJSStoreHeap *ins)
         masm.ma_dataTransferN(IsStore, size, isSigned, HeapReg, index,
                               ToRegister(ins->value()), Offset, Assembler::Zero);
     }
-    return gen->noteBoundsCheck(bo.getOffset());
+    return gen->noteHeapAccess(AsmJSHeapAccess(bo.getOffset()));
 }
 
 bool

@@ -913,16 +913,30 @@ class IDLInterface(IDLObjectWithScope):
                     elif not newMethod in self.namedConstructors:
                         raise WebIDLError("NamedConstructor conflicts with a NamedConstructor of a different interface",
                                           [method.location, newMethod.location])
+            elif (identifier == "ArrayClass"):
+                if not attr.noArguments():
+                    raise WebIDLError("[ArrayClass] must take no arguments",
+                                      [attr.location])
+                if self.parent:
+                    raise WebIDLError("[ArrayClass] must not be specified on "
+                                      "an interface with inherited interfaces",
+                                      [attr.location, self.location])
             elif (identifier == "PrefControlled" or
-                  identifier == "Pref" or
                   identifier == "NeedNewResolve" or
-                  identifier == "JSImplementation" or
-                  identifier == "HeaderFile" or
-                  identifier == "NavigatorProperty" or
                   identifier == "OverrideBuiltins" or
                   identifier == "ChromeOnly"):
-                # Known attributes that we don't need to do anything with here
-                pass
+                # Known extended attributes that do not take values
+                if not attr.noArguments():
+                    raise WebIDLError("[%s] must take no arguments" % identifier,
+                                      [attr.location])
+            elif (identifier == "Pref" or
+                  identifier == "JSImplementation" or
+                  identifier == "HeaderFile" or
+                  identifier == "NavigatorProperty"):
+                # Known extended attributes that take a string value
+                if not attr.hasValue():
+                    raise WebIDLError("[%s] must have a value" % identifier,
+                                      [attr.location])
             else:
                 raise WebIDLError("Unknown extended attribute %s on interface" % identifier,
                                   [attr.location])
