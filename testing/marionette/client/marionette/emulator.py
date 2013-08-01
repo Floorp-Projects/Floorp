@@ -453,7 +453,7 @@ waitFor(
         filename = os.path.join(self.logcat_dir, "emulator-%d.log" % self.port)
         if os.access(filename, os.F_OK):
             self.rotate_log(filename)
-        cmd = [self.adb, '-s', 'emulator-%d' % self.port, 'logcat']
+        cmd = [self.adb, '-s', 'emulator-%d' % self.port, 'logcat', '-v', 'threadtime']
 
         self.logcat_proc = LogcatProc(filename, cmd)
         self.logcat_proc.run()
