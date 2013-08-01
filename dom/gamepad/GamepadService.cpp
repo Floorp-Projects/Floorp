@@ -213,16 +213,20 @@ GamepadService::NewButtonEvent(uint32_t aIndex, uint32_t aButton, bool aPressed,
       continue;
     }
 
+    bool first_time = false;
     if (!WindowHasSeenGamepad(listeners[i], aIndex)) {
-      SetWindowHasSeenGamepad(listeners[i], aIndex);
       // This window hasn't seen this gamepad before, so
       // send a connection event first.
-      NewConnectionEvent(aIndex, true);
+      SetWindowHasSeenGamepad(listeners[i], aIndex);
+      first_time = true;
     }
 
     nsRefPtr<Gamepad> gamepad = listeners[i]->GetGamepad(aIndex);
     if (gamepad) {
       gamepad->SetButton(aButton, aPressed, aValue);
+      if (first_time) {
+        FireConnectionEvent(listeners[i], gamepad, true);
+      }
       if (mNonstandardEventsEnabled) {
         // Fire event
         FireButtonEvent(listeners[i], gamepad, aButton, aValue);
@@ -273,16 +277,20 @@ GamepadService::NewAxisMoveEvent(uint32_t aIndex, uint32_t aAxis, double aValue)
       continue;
     }
 
+    bool first_time = false;
     if (!WindowHasSeenGamepad(listeners[i], aIndex)) {
-      SetWindowHasSeenGamepad(listeners[i], aIndex);
       // This window hasn't seen this gamepad before, so
       // send a connection event first.
-      NewConnectionEvent(aIndex, true);
+      SetWindowHasSeenGamepad(listeners[i], aIndex);
+      first_time = true;
     }
 
     nsRefPtr<Gamepad> gamepad = listeners[i]->GetGamepad(aIndex);
     if (gamepad) {
       gamepad->SetAxis(aAxis, aValue);
+      if (first_time) {
+        FireConnectionEvent(listeners[i], gamepad, true);
+      }
       if (mNonstandardEventsEnabled) {
         // Fire event
         FireAxisMoveEvent(listeners[i], gamepad, aAxis, aValue);
@@ -328,13 +336,14 @@ GamepadService::NewConnectionEvent(uint32_t aIndex, bool aConnected)
 
       // Only send events to non-background windows
       if (!listeners[i]->GetOuterWindow() ||
-          listeners[i]->GetOuterWindow()->IsBackground())
+          listeners[i]->GetOuterWindow()->IsBackground()) {
         continue;
+      }
 
       // We don't fire a connected event here unless the window
       // has seen input from at least one device.
-      if (aConnected && !listeners[i]->HasSeenGamepadInput()) {
-        return;
+      if (!listeners[i]->HasSeenGamepadInput()) {
+        continue;
       }
 
       SetWindowHasSeenGamepad(listeners[i], aIndex);
@@ -360,9 +369,6 @@ GamepadService::NewConnectionEvent(uint32_t aIndex, bool aConnected)
           gamepad->SetConnected(false);
           // Fire event
           FireConnectionEvent(listeners[i], gamepad, false);
-        }
-
-        if (gamepad) {
           listeners[i]->RemoveGamepad(aIndex);
         }
       }

@@ -47,11 +47,18 @@ class GamepadService : public nsIObserver
   // Remove the gamepad at |aIndex| from the list of known gamepads.
   void RemoveGamepad(uint32_t aIndex);
 
+  // Update the state of |aButton| for the gamepad at |aIndex| for all
+  // windows that are listening and visible, and fire one of
+  // a gamepadbutton{up,down} event at them as well.
   // aPressed is used for digital buttons, aValue is for analog buttons.
   void NewButtonEvent(uint32_t aIndex, uint32_t aButton, bool aPressed,
                       double aValue);
   // When only a digital button is available the value will be synthesized.
   void NewButtonEvent(uint32_t aIndex, uint32_t aButton, bool aPressed);
+
+  // Update the state of |aAxis| for the gamepad at |aIndex| for all
+  // windows that are listening and visible, and fire a gamepadaxismove
+  // event at them as well.
   void NewAxisMoveEvent(uint32_t aIndex, uint32_t aAxis, double aValue);
 
   // Synchronize the state of |aGamepad| to match the gamepad stored at |aIndex|
@@ -62,15 +69,26 @@ class GamepadService : public nsIObserver
   virtual ~GamepadService() {};
   void StartCleanupTimer();
 
+  // Fire a gamepadconnected or gamepaddisconnected event for the gamepad
+  // at |aIndex| to all windows that are listening and have received
+  // gamepad input.
   void NewConnectionEvent(uint32_t aIndex, bool aConnected);
+
+  // Fire a gamepadaxismove event to the window at |aTarget| for |aGamepad|.
   void FireAxisMoveEvent(EventTarget* aTarget,
                          Gamepad* aGamepad,
                          uint32_t axis,
                          double value);
+
+  // Fire one of gamepadbutton{up,down} event at the window at |aTarget| for
+  // |aGamepad|.
   void FireButtonEvent(EventTarget* aTarget,
                        Gamepad* aGamepad,
                        uint32_t aButton,
                        double aValue);
+
+  // Fire one of gamepad{connected,disconnected} event at the window at
+  // |aTarget| for |aGamepad|.
   void FireConnectionEvent(EventTarget* aTarget,
                            Gamepad* aGamepad,
                            bool aConnected);
