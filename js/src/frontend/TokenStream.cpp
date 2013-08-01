@@ -484,7 +484,7 @@ TokenStream::peekChars(int n, jschar *cp)
             ungetCharIgnoreEOL(c);
             break;
         }
-        cp[i] = (jschar)c;
+        cp[i] = jschar(c);
     }
     for (j = i - 1; j >= 0; j--)
         ungetCharIgnoreEOL(cp[j]);
@@ -1119,7 +1119,7 @@ TokenStream::getTokenInternal()
      */
     if (c1kind < OneChar_Max) {
         tp = newToken(-1);
-        tt = (TokenKind)c1kind;
+        tt = TokenKind(c1kind);
         goto out;
     }
 
@@ -1297,7 +1297,7 @@ TokenStream::getTokenInternal()
                                 }
                             }
 
-                            c = (jschar)val;
+                            c = jschar(val);
                         } else if (c == 'u') {
                             jschar cp[4];
                             if (peekChars(4, cp) &&
