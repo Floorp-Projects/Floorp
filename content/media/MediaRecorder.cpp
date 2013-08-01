@@ -89,6 +89,7 @@ public:
     NS_IMETHODIMP Run()
     {
       MOZ_ASSERT(NS_IsMainThread());
+      mRecorder->mState = RecordingState::Inactive;
       mRecorder->DispatchSimpleEvent(NS_LITERAL_STRING("stop"));
       mRecorder->mReadThread->Shutdown();
       mRecorder->mReadThread = nullptr;
@@ -228,7 +229,6 @@ MediaRecorder::Stop(ErrorResult& aResult)
     return;
   }
   mTrackUnionStream->RemoveListener(mEncoder);
-  mState = RecordingState::Inactive;
 }
 
 void
