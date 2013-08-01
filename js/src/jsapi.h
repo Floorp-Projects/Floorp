@@ -3984,9 +3984,15 @@ JS_CompileUCFunction(JSContext *cx, JSObject *obj, const char *name,
 namespace JS {
 
 /* Options for JavaScript compilation. */
-struct JS_PUBLIC_API(CompileOptions) {
-    JSPrincipals *principals;
-    JSPrincipals *originPrincipals;
+class JS_PUBLIC_API(CompileOptions)
+{
+    JSPrincipals *principals_;
+    JSPrincipals *originPrincipals_;
+
+  public:
+    JSPrincipals *principals() const { return principals_; }
+    JSPrincipals *originPrincipals() const;
+
     JSVersion version;
     bool versionSet;
     bool utf8;
@@ -4010,8 +4016,8 @@ struct JS_PUBLIC_API(CompileOptions) {
     } sourcePolicy;
 
     explicit CompileOptions(JSContext *cx, JSVersion version = JSVERSION_UNKNOWN);
-    CompileOptions &setPrincipals(JSPrincipals *p) { principals = p; return *this; }
-    CompileOptions &setOriginPrincipals(JSPrincipals *p) { originPrincipals = p; return *this; }
+    CompileOptions &setPrincipals(JSPrincipals *p) { principals_ = p; return *this; }
+    CompileOptions &setOriginPrincipals(JSPrincipals *p) { originPrincipals_ = p; return *this; }
     CompileOptions &setVersion(JSVersion v) { version = v; versionSet = true; return *this; }
     CompileOptions &setUTF8(bool u) { utf8 = u; return *this; }
     CompileOptions &setFileAndLine(const char *f, unsigned l) {

@@ -130,31 +130,13 @@ XDRState<mode>::codeScript(MutableHandleScript scriptp)
     return true;
 }
 
-template<XDRMode mode>
-void
-XDRState<mode>::initScriptPrincipals(JSScript *script)
-{
-    JS_ASSERT(mode == XDR_DECODE);
-
-    /* The origin principals must be normalized at this point. */
-    JS_ASSERT_IF(principals, originPrincipals);
-    JS_ASSERT(!script->originPrincipals);
-    if (principals)
-        JS_ASSERT(script->principals() == principals);
-
-    if (originPrincipals) {
-        script->originPrincipals = originPrincipals;
-        JS_HoldPrincipals(originPrincipals);
-    }
-}
-
 XDRDecoder::XDRDecoder(JSContext *cx, const void *data, uint32_t length,
                        JSPrincipals *principals, JSPrincipals *originPrincipals)
   : XDRState<XDR_DECODE>(cx)
 {
     buf.setData(data, length);
-    this->principals = principals;
-    this->originPrincipals = JSScript::normalizeOriginPrincipals(principals, originPrincipals);
+    this->principals_ = principals;
+    this->originPrincipals_ = NormalizeOriginPrincipals(principals, originPrincipals);
 }
 
 template class js::XDRState<XDR_ENCODE>;
