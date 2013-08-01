@@ -387,7 +387,10 @@
               return;
             }
             let toolbar = mutations[0].target;
-            if (!toolbar._isModifying) {
+            // Can't use our own attribute because we might not have one if we're set to
+            // collapsed
+            let areCustomizing = toolbar.ownerDocument.documentElement.getAttribute("customizing");
+            if (!toolbar._isModifying && !areCustomizing) {
               toolbar.evictNodes();
             }
           });
