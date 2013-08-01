@@ -2015,18 +2015,22 @@ public:
 public:
     void fDrawArraysInstanced(GLenum mode, GLint first, GLsizei count, GLsizei primcount)
     {
+        BeforeGLDrawCall();
         BEFORE_GL_CALL;
         ASSERT_SYMBOL_PRESENT(fDrawArraysInstanced);
         mSymbols.fDrawArraysInstanced(mode, first, count, primcount);
         AFTER_GL_CALL;
+        AfterGLDrawCall();
     }
 
     void fDrawElementsInstanced(GLenum mode, GLsizei count, GLenum type, const GLvoid* indices, GLsizei primcount)
     {
+        BeforeGLDrawCall();
         BEFORE_GL_CALL;
         ASSERT_SYMBOL_PRESENT(fDrawElementsInstanced);
         mSymbols.fDrawElementsInstanced(mode, count, type, indices, primcount);
         AFTER_GL_CALL;
+        AfterGLDrawCall();
     }
 
 
