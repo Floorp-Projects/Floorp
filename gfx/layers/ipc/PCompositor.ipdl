@@ -60,7 +60,7 @@ parent:
   sync FlushRendering();
 
   sync PLayerTransaction(LayersBackend layersBackendHint, uint64_t id)
-    returns (TextureFactoryIdentifier textureFactoryIdentifier, bool success);
+    returns (TextureFactoryIdentifier textureFactoryIdentifier);
 };
 
 } // layers
