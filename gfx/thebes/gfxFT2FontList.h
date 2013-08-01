@@ -55,7 +55,7 @@ public:
 
     // Create a font entry for a given freetype face; if it is an installed font,
     // also record the filename and index.
-    // aFontData (if non-NULL) is NS_Malloc'ed data that aFace depends on,
+    // aFontData (if non-nullptr) is NS_Malloc'ed data that aFace depends on,
     // to be freed after the face is destroyed
     static FT2FontEntry* 
     CreateFontEntry(FT_Face aFace,

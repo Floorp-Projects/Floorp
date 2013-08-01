@@ -48,21 +48,21 @@ NS_DEFINE_NAMED_CID(NS_SAXXMLREADER_CID);
 
 static const mozilla::Module::CIDEntry kParserCIDs[] = {
 #if defined(DEBUG)
-  { &kNS_EXPAT_DRIVER_CID, false, NULL, nsExpatDriverConstructor },
+  { &kNS_EXPAT_DRIVER_CID, false, nullptr, nsExpatDriverConstructor },
 #endif
-  { &kNS_PARSER_CID, false, NULL, nsParserConstructor },
-  { &kNS_CNAVDTD_CID, false, NULL, CNavDTDConstructor },
-  { &kNS_PARSERSERVICE_CID, false, NULL, nsParserServiceConstructor },
-  { &kNS_SAXATTRIBUTES_CID, false, NULL, nsSAXAttributesConstructor },
-  { &kNS_SAXXMLREADER_CID, false, NULL, nsSAXXMLReaderConstructor },
-  { NULL }
+  { &kNS_PARSER_CID, false, nullptr, nsParserConstructor },
+  { &kNS_CNAVDTD_CID, false, nullptr, CNavDTDConstructor },
+  { &kNS_PARSERSERVICE_CID, false, nullptr, nsParserServiceConstructor },
+  { &kNS_SAXATTRIBUTES_CID, false, nullptr, nsSAXAttributesConstructor },
+  { &kNS_SAXXMLREADER_CID, false, nullptr, nsSAXXMLReaderConstructor },
+  { nullptr }
 };
 
 static const mozilla::Module::ContractIDEntry kParserContracts[] = {
   { NS_PARSERSERVICE_CONTRACTID, &kNS_PARSERSERVICE_CID },
   { NS_SAXATTRIBUTES_CONTRACTID, &kNS_SAXATTRIBUTES_CID },
   { NS_SAXXMLREADER_CONTRACTID, &kNS_SAXXMLREADER_CID },
-  { NULL }
+  { nullptr }
 };
 
 static nsresult
@@ -102,8 +102,8 @@ static mozilla::Module kParserModule = {
   mozilla::Module::kVersion,
   kParserCIDs,
   kParserContracts,
-  NULL,
-  NULL,
+  nullptr,
+  nullptr,
   Initialize,
   Shutdown
 };

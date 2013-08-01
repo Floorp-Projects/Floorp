@@ -52,7 +52,7 @@ class nsIMemoryMultiReporter;
 // used by both GDI and Uniscribe font shapers
 struct DCFromContext {
     DCFromContext(gfxContext *aContext) {
-        dc = NULL;
+        dc = nullptr;
         nsRefPtr<gfxASurface> aSurface = aContext->CurrentSurface();
         NS_ASSERTION(aSurface, "DCFromContext: null surface");
         if (aSurface &&
@@ -67,7 +67,7 @@ struct DCFromContext {
             cairo_win32_scaled_font_select_font(scaled, dc);
         }
         if (!dc) {
-            dc = GetDC(NULL);
+            dc = GetDC(nullptr);
             SetGraphicsMode(dc, GM_ADVANCED);
             needsRelease = true;
         }
@@ -75,7 +75,7 @@ struct DCFromContext {
 
     ~DCFromContext() {
         if (needsRelease) {
-            ReleaseDC(NULL, dc);
+            ReleaseDC(nullptr, dc);
         } else {
             RestoreDC(dc, -1);
         }

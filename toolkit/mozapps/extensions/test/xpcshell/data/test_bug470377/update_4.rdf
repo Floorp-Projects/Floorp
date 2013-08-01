@@ -14,7 +14,7 @@
                 <em:id>toolkit@mozilla.org</em:id>
                 <em:minVersion>1</em:minVersion>
                 <em:maxVersion>2</em:maxVersion>
-                <em:updateLink>http://localhost:4444/broken.xpi</em:updateLink>
+                <em:updateLink>http://localhost:%PORT%/broken.xpi</em:updateLink>
               </RDF:Description>
             </em:targetApplication>
           </RDF:Description>

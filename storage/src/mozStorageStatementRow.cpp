@@ -137,7 +137,7 @@ StatementRow::NewResolve(nsIXPConnectWrappedNative *aWrapper,
       // It's highly likely that the name doesn't exist, so let the JS engine
       // check the prototype chain and throw if that doesn't have the property
       // either.
-      *_objp = NULL;
+      *_objp = nullptr;
       return NS_OK;
     }
 

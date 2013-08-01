@@ -203,11 +203,8 @@
 
 #include "mozilla/dom/indexedDB/IDBWrapperCache.h"
 #include "mozilla/dom/indexedDB/IDBRequest.h"
-#include "mozilla/dom/indexedDB/IDBDatabase.h"
-#include "mozilla/dom/indexedDB/IDBObjectStore.h"
 #include "mozilla/dom/indexedDB/IDBCursor.h"
 #include "mozilla/dom/indexedDB/IDBKeyRange.h"
-#include "mozilla/dom/indexedDB/IDBIndex.h"
 
 using mozilla::dom::indexedDB::IDBWrapperCache;
 using mozilla::dom::workers::ResolveWorkerClasses;
@@ -256,7 +253,6 @@ using mozilla::dom::workers::ResolveWorkerClasses;
 #include "DOMCameraCapabilities.h"
 #include "nsIOpenWindowEventDetail.h"
 #include "nsIAsyncScrollEventDetail.h"
-#include "nsIDOMGlobalObjectConstructor.h"
 #include "nsIDOMCanvasRenderingContext2D.h"
 #include "LockedFile.h"
 #include "nsDebug.h"
@@ -637,17 +633,11 @@ static nsDOMClassInfoData sClassInfoData[] = {
 
   NS_DEFINE_CLASSINFO_DATA(IDBRequest, IDBEventTargetSH,
                            IDBEVENTTARGET_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(IDBDatabase, IDBEventTargetSH,
-                           IDBEVENTTARGET_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(IDBObjectStore, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(IDBCursor, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(IDBCursorWithValue, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(IDBKeyRange, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(IDBIndex, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(IDBOpenDBRequest, IDBEventTargetSH,
                            IDBEVENTTARGET_SCRIPTABLE_FLAGS)
@@ -1542,15 +1532,6 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN(IDBDatabase, nsIIDBDatabase)
-    DOM_CLASSINFO_MAP_ENTRY(nsIIDBDatabase)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(IDBObjectStore, nsIIDBObjectStore)
-    DOM_CLASSINFO_MAP_ENTRY(nsIIDBObjectStore)
-  DOM_CLASSINFO_MAP_END
-
   DOM_CLASSINFO_MAP_BEGIN(IDBCursor, nsIIDBCursor)
     DOM_CLASSINFO_MAP_ENTRY(nsIIDBCursor)
   DOM_CLASSINFO_MAP_END
@@ -1562,10 +1543,6 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(IDBKeyRange, nsIIDBKeyRange)
     DOM_CLASSINFO_MAP_ENTRY(nsIIDBKeyRange)
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(IDBIndex, nsIIDBIndex)
-    DOM_CLASSINFO_MAP_ENTRY(nsIIDBIndex)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(IDBOpenDBRequest, nsIIDBOpenDBRequest)
@@ -2178,7 +2155,7 @@ nsDOMClassInfo::PostCreatePrototype(JSContext * cx, JSObject * aProto)
 
 #ifdef DEBUG
     JS::Rooted<JSObject*> proto2(cx);
-    JS_GetPrototype(cx, proto, proto2.address());
+    JS_GetPrototype(cx, proto, &proto2);
     NS_ASSERTION(proto2 && JS_GetClass(proto2) == sObjectClass,
                  "Hmm, somebody did something evil?");
 #endif
@@ -2511,7 +2488,7 @@ nsWindowSH::GlobalScopePolluterNewResolve(JSContext *cx, JS::Handle<JSObject*> o
   }
 
   JS::Rooted<JSObject*> proto(cx);
-  if (!::JS_GetPrototype(cx, obj, proto.address())) {
+  if (!::JS_GetPrototype(cx, obj, &proto)) {
     return JS_FALSE;
   }
   JSBool hasProp;
@@ -2573,7 +2550,7 @@ nsWindowSH::InvalidateGlobalScopePolluter(JSContext *cx,
   JS::Rooted<JSObject*> obj(cx, aObj);
 
   for (;;) {
-    if (!::JS_GetPrototype(cx, obj, proto.address())) {
+    if (!::JS_GetPrototype(cx, obj, &proto)) {
       return JS_FALSE;
     }
     if (!proto) {
@@ -2583,7 +2560,7 @@ nsWindowSH::InvalidateGlobalScopePolluter(JSContext *cx,
     if (JS_GetClass(proto) == &sGlobalScopePolluterClass) {
 
       JS::Rooted<JSObject*> proto_proto(cx);
-      if (!::JS_GetPrototype(cx, proto, proto_proto.address())) {
+      if (!::JS_GetPrototype(cx, proto, &proto_proto)) {
         return JS_FALSE;
       }
 
@@ -2615,7 +2592,7 @@ nsWindowSH::InstallGlobalScopePolluter(JSContext *cx, JS::Handle<JSObject*> obj)
   // scope polluter (right before Object.prototype).
 
   for (;;) {
-    if (!::JS_GetPrototype(cx, o, proto.address())) {
+    if (!::JS_GetPrototype(cx, o, &proto)) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
     if (!proto) {
@@ -2729,8 +2706,7 @@ BaseStubConstructor(nsIWeakReference* aWeakOwner,
   }
 
   nsCOMPtr<nsIJSNativeInitializer> initializer(do_QueryInterface(native));
-  nsCOMPtr<nsIDOMGlobalObjectConstructor> constructor(do_QueryInterface(native));
-  if (initializer || constructor) {
+  if (initializer) {
     // Initialize object using the current inner window, but only if
     // the caller can access it.
     nsCOMPtr<nsPIDOMWindow> owner = do_QueryReferent(aWeakOwner);
@@ -2743,62 +2719,9 @@ BaseStubConstructor(nsIWeakReference* aWeakOwner,
       return NS_ERROR_DOM_SECURITY_ERR;
     }
 
-    if (initializer) {
-      rv = initializer->Initialize(currentInner, cx, obj, args);
-      if (NS_FAILED(rv)) {
-        return rv;
-      }
-    } else {
-      nsCOMPtr<nsIXPConnectWrappedJS> wrappedJS = do_QueryInterface(native);
-
-      JS::Rooted<JSObject*> thisObject(cx, wrappedJS->GetJSObject());
-      if (!thisObject) {
-        return NS_ERROR_UNEXPECTED;
-      }
-
-      nsCxPusher pusher;
-      pusher.Push(cx);
-
-      JSAutoCompartment ac(cx, thisObject);
-
-      JS::Rooted<JS::Value> funval(cx);
-      if (!JS_GetProperty(cx, thisObject, "constructor", &funval) ||
-          !funval.isObject()) {
-        return NS_ERROR_UNEXPECTED;
-      }
-
-      // Check if the object is even callable.
-      NS_ENSURE_STATE(JS_ObjectIsCallable(cx, &funval.toObject()));
-      {
-        // wrap parameters in the target compartment
-        // we also pass in the calling window as the first argument
-        unsigned argc = args.length() + 1;
-        nsAutoArrayPtr<JS::Value> argv(new JS::Value[argc]);
-        JS::AutoArrayRooter rooter(cx, 0, argv);
-
-        nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
-        nsCOMPtr<nsIDOMWindow> currentWin(do_GetInterface(currentInner));
-        rv = WrapNative(cx, obj, currentWin, &NS_GET_IID(nsIDOMWindow),
-                        true, &argv[0], getter_AddRefs(holder));
-        if (!JS_WrapValue(cx, &argv[0]))
-          return NS_ERROR_FAILURE;
-        rooter.changeLength(1);
-
-        for (size_t i = 1; i < argc; ++i) {
-          argv[i] = args[i - 1];
-          if (!JS_WrapValue(cx, &argv[i]))
-            return NS_ERROR_FAILURE;
-          rooter.changeLength(i + 1);
-        }
-
-        JS::Rooted<JS::Value> frval(cx);
-        bool ret = JS_CallFunctionValue(cx, thisObject, funval, argc, argv,
-                                        frval.address());
-
-        if (!ret) {
-          return NS_ERROR_FAILURE;
-        }
-      }
+    rv = initializer->Initialize(currentInner, cx, obj, args);
+    if (NS_FAILED(rv)) {
+      return rv;
     }
   }
 
@@ -3271,7 +3194,7 @@ nsDOMConstructor::HasInstance(nsIXPConnectWrappedNative *wrapper,
 
     JS::Rooted<JSObject*> proto(cx, dom_obj);
     for (;;) {
-      if (!JS_GetPrototype(cx, proto, proto.address())) {
+      if (!JS_GetPrototype(cx, proto, &proto)) {
         return NS_ERROR_UNEXPECTED;
       }
       if (!proto) {
@@ -3633,7 +3556,7 @@ ResolvePrototype(nsIXPConnect *aXPConnect, nsGlobalWindow *aWin, JSContext *cx,
     if (dot_prototype) {
       JSAutoCompartment ac(cx, dot_prototype);
       JS::Rooted<JSObject*> xpc_proto_proto(cx);
-      if (!::JS_GetPrototype(cx, dot_prototype, xpc_proto_proto.address())) {
+      if (!::JS_GetPrototype(cx, dot_prototype, &xpc_proto_proto)) {
         return NS_ERROR_UNEXPECTED;
       }
 
@@ -5255,7 +5178,7 @@ nsStorage2SH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   }
 
   JS::Rooted<JSObject*> proto(cx);
-  if (!::JS_GetPrototype(cx, realObj, proto.address())) {
+  if (!::JS_GetPrototype(cx, realObj, &proto)) {
     return NS_ERROR_FAILURE;
   }
   JSBool hasProp;

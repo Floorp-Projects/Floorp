@@ -290,7 +290,7 @@ gfxDWriteFontEntry::CopyFontTable(uint32_t aTableTag,
             uint32_t tableSize =
                 ::GetFontData(dc.GetDC(),
                               NativeEndian::swapToBigEndian(aTableTag), 0,
-                              NULL, 0);
+                              nullptr, 0);
             if (tableSize != GDI_ERROR) {
                 if (aBuffer.SetLength(tableSize)) {
                     ::GetFontData(dc.GetDC(),
@@ -312,7 +312,7 @@ gfxDWriteFontEntry::CopyFontTable(uint32_t aTableTag,
 
     uint8_t *tableData;
     uint32_t len;
-    void *tableContext = NULL;
+    void *tableContext = nullptr;
     BOOL exists;
     HRESULT hr =
         fontFace->TryGetFontTable(NativeEndian::swapToBigEndian(aTableTag),
@@ -481,7 +481,7 @@ gfxDWriteFontEntry::CreateFontFace(IDWriteFontFace **aFontFace,
         // has the Bold simulation - unfortunately, DWrite doesn't provide
         // a simple API for this
         UINT32 numberOfFiles = 0;
-        if (FAILED(mFontFace->GetFiles(&numberOfFiles, NULL))) {
+        if (FAILED(mFontFace->GetFiles(&numberOfFiles, nullptr))) {
             return NS_ERROR_FAILURE;
         }
         nsAutoTArray<IDWriteFontFile*,1> files;
@@ -753,8 +753,8 @@ gfxDWriteFontList::InitFontList()
 
     if (LOG_FONTINIT_ENABLED()) {    
         GetTimeFormat(LOCALE_INVARIANT, TIME_FORCE24HOURFORMAT, 
-                      NULL, NULL, nowTime, 256);
-        GetDateFormat(LOCALE_INVARIANT, 0, NULL, NULL, nowDate, 256);
+                      nullptr, nullptr, nowTime, 256);
+        GetDateFormat(LOCALE_INVARIANT, 0, nullptr, nullptr, nowDate, 256);
     }
     upTime = (double) GetTickCount();
     QueryPerformanceFrequency(&frequency);
@@ -821,8 +821,8 @@ gfxDWriteFontList::DelayedInitFontList()
 
     if (LOG_FONTINIT_ENABLED()) {    
         GetTimeFormat(LOCALE_INVARIANT, TIME_FORCE24HOURFORMAT, 
-                      NULL, NULL, nowTime, 256);
-        GetDateFormat(LOCALE_INVARIANT, 0, NULL, NULL, nowDate, 256);
+                      nullptr, nullptr, nowTime, 256);
+        GetDateFormat(LOCALE_INVARIANT, 0, nullptr, nullptr, nowDate, 256);
     }
 
     upTime = (double) GetTickCount();
@@ -1094,7 +1094,7 @@ gfxDWriteFontList::GetFontSubstitutes()
         lenAlias = ArrayLength(aliasName);
         actualName[0] = 0;
         lenActual = sizeof(actualName);
-        rv = RegEnumValueW(hKey, i, aliasName, &lenAlias, NULL, &valueType, 
+        rv = RegEnumValueW(hKey, i, aliasName, &lenAlias, nullptr, &valueType,
                 (LPBYTE)actualName, &lenActual);
 
         if (rv != ERROR_SUCCESS || valueType != REG_SZ || lenAlias == 0) {
@@ -1371,7 +1371,7 @@ gfxDWriteFontList::GlobalFontFallback(const uint32_t aCh,
 
     // initialize text format
     if (!mFallbackFormat) {
-        hr = dwFactory->CreateTextFormat(L"Arial", NULL,
+        hr = dwFactory->CreateTextFormat(L"Arial", nullptr,
                                          DWRITE_FONT_WEIGHT_REGULAR,
                                          DWRITE_FONT_STYLE_NORMAL,
                                          DWRITE_FONT_STRETCH_NORMAL,
@@ -1409,7 +1409,7 @@ gfxDWriteFontList::GlobalFontFallback(const uint32_t aCh,
 
     // call the draw method to invoke the DirectWrite layout functions
     // which determine the fallback font
-    hr = fallbackLayout->Draw(NULL, mFallbackRenderer, 50.0f, 50.0f);
+    hr = fallbackLayout->Draw(nullptr, mFallbackRenderer, 50.0f, 50.0f);
     if (FAILED(hr)) {
         return nullptr;
     }

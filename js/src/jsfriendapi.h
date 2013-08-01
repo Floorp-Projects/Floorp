@@ -495,7 +495,7 @@ GetObjectProto(JSContext *cx, JS::Handle<JSObject*> obj, JS::MutableHandle<JSObj
         clasp == js::OuterWindowProxyClassPtr ||
         clasp == js::FunctionProxyClassPtr)
     {
-        return JS_GetPrototype(cx, obj, proto.address());
+        return JS_GetPrototype(cx, obj, proto);
     }
 
     proto.set(reinterpret_cast<const shadow::Object*>(obj.get())->type->proto);

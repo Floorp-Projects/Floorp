@@ -476,8 +476,8 @@ SetupAndGetPrototypeObjectForComplexTypeInstance(JSContext *cx,
     RootedObject prototypeObj(cx,
         NewObjectWithGivenProto(cx, &JSObject::class_, NULL, global));
 
-    if (!JS_SetPrototype(cx, prototypeObj,
-                         complexTypePrototypePrototypeVal.toObjectOrNull()))
+    RootedObject proto(cx, complexTypePrototypePrototypeVal.toObjectOrNull());
+    if (!JS_SetPrototype(cx, prototypeObj, proto))
         return NULL;
 
     return prototypeObj;

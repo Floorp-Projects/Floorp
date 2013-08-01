@@ -8,18 +8,23 @@
 const PREF_GETADDONS_CACHE_ENABLED = "extensions.getAddons.cache.enabled";
 const PREF_GETADDONS_BYIDS         = "extensions.getAddons.getWithPerformance.url";
 
-const PORT            = 4444;
+Components.utils.import("resource://testing-common/httpd.js");
+var gServer = new HttpServer();
+gServer.start(-1);
+gPort = gServer.identity.primaryPort;
+
+const PORT            = gPort;
 const BASE_URL        = "http://localhost:" + PORT;
 const DEFAULT_URL     = "about:blank";
 const REQ_URL         = "/data.xml";
+
+// register static file and mark it for interpolation
+mapUrlToFile(REQ_URL, do_get_file("data/test_compatoverrides.xml"), gServer);
 
 Services.prefs.setBoolPref(PREF_EM_STRICT_COMPATIBILITY, false);
 Services.prefs.setBoolPref(PREF_GETADDONS_CACHE_ENABLED, true);
 Services.prefs.setCharPref(PREF_GETADDONS_BYIDS,
                            BASE_URL + REQ_URL);
-
-Components.utils.import("resource://testing-common/httpd.js");
-var gServer;
 
 
 // Not hosted, no overrides
@@ -178,10 +183,6 @@ function run_test() {
   writeInstallRDFForExtension(addon8, profileDir);
   writeInstallRDFForExtension(addon9, profileDir);
   writeInstallRDFForExtension(addon10, profileDir);
-
-  gServer = new HttpServer();
-  gServer.registerFile(REQ_URL, do_get_file("data/test_compatoverrides.xml"));
-  gServer.start(PORT);
 
   startupManager();
 

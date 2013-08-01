@@ -832,7 +832,7 @@ InitCTypeClass(JSContext* cx, HandleObject parent)
 
   RootedObject ctor(cx, JS_GetFunctionObject(fun));
   RootedObject fnproto(cx);
-  if (!JS_GetPrototype(cx, ctor, fnproto.address()))
+  if (!JS_GetPrototype(cx, ctor, &fnproto))
     return NULL;
   JS_ASSERT(ctor);
   JS_ASSERT(fnproto);
@@ -3573,13 +3573,14 @@ CType::GetProtoFromCtor(JSObject* obj, CTypeProtoSlot slot)
 }
 
 JSObject*
-CType::GetProtoFromType(JSContext* cx, JSObject* obj, CTypeProtoSlot slot)
+CType::GetProtoFromType(JSContext* cx, JSObject* objArg, CTypeProtoSlot slot)
 {
-  JS_ASSERT(IsCType(obj));
+  JS_ASSERT(IsCType(objArg));
+  RootedObject obj(cx, objArg);
 
   // Get the prototype of the type object.
   RootedObject proto(cx);
-  if (!JS_GetPrototype(cx, obj, proto.address()))
+  if (!JS_GetPrototype(cx, obj, &proto))
     return NULL;
   JS_ASSERT(proto);
   JS_ASSERT(CType::IsCTypeProto(proto));
@@ -3760,7 +3761,7 @@ CType::HasInstance(JSContext* cx, HandleObject obj, MutableHandleValue v, JSBool
 
   RootedObject proto(cx, &v.toObject());
   for (;;) {
-    if (!JS_GetPrototype(cx, proto, proto.address()))
+    if (!JS_GetPrototype(cx, proto, &proto))
       return JS_FALSE;
     if (!proto)
       break;
@@ -3773,12 +3774,13 @@ CType::HasInstance(JSContext* cx, HandleObject obj, MutableHandleValue v, JSBool
 }
 
 static JSObject*
-CType::GetGlobalCTypes(JSContext* cx, JSObject* obj)
+CType::GetGlobalCTypes(JSContext* cx, JSObject* objArg)
 {
-  JS_ASSERT(CType::IsCType(obj));
+  JS_ASSERT(CType::IsCType(objArg));
 
+  RootedObject obj(cx, objArg);
   RootedObject objTypeProto(cx);
-  if (!JS_GetPrototype(cx, obj, objTypeProto.address()))
+  if (!JS_GetPrototype(cx, obj, &objTypeProto))
     return NULL;
   JS_ASSERT(objTypeProto);
   JS_ASSERT(CType::IsCTypeProto(objTypeProto));
@@ -5997,7 +5999,7 @@ CClosure::Create(JSContext* cx,
   // Get the prototype of the FunctionType object, of class CTypeProto,
   // which stores our JSContext for use with the closure.
   RootedObject proto(cx);
-  if (!JS_GetPrototype(cx, typeObj, proto.address()))
+  if (!JS_GetPrototype(cx, typeObj, &proto))
     return NULL;
   JS_ASSERT(proto);
   JS_ASSERT(CType::IsCTypeProto(proto));

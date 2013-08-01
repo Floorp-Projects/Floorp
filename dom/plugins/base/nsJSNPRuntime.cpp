@@ -1085,7 +1085,7 @@ GetNPObjectWrapper(JSContext *cx, JSObject *aObj, bool wrapResult = true)
       }
       return obj;
     }
-    if (!::JS_GetPrototype(cx, obj, obj.address())) {
+    if (!::JS_GetPrototype(cx, obj, &obj)) {
       return NULL;
     }
   }
