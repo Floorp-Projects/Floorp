@@ -393,7 +393,7 @@ CodeGeneratorX86Shared::visitMinMaxD(LMinMaxD *ins)
         masm.j(Assembler::Parity, &nan);
 
     // Ordered and equal. The operands are bit-identical unless they are zero
-    // and is negative zero. These instructions merge the sign bits in that
+    // and negative zero. These instructions merge the sign bits in that
     // case, and are no-ops otherwise.
     if (ins->mir()->isMax())
         masm.andpd(second, first);
