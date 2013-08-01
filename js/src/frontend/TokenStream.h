@@ -317,14 +317,12 @@ struct Token {
 
 enum TokenStreamFlags
 {
-    TSF_EOF = 0x02,             /* hit end of file */
-    TSF_EOL = 0x04,             /* an EOL was hit in whitespace or a multi-line comment */
-    TSF_OPERAND = 0x08,         /* looking for operand, not operator */
-    TSF_UNEXPECTED_EOF = 0x10,  /* unexpected end of input, i.e. TOK_EOF not at top-level. */
-    TSF_KEYWORD_IS_NAME = 0x20, /* Ignore keywords and return TOK_NAME instead to the parser. */
-    TSF_DIRTYLINE = 0x40,       /* non-whitespace since start of line */
-    TSF_OCTAL_CHAR = 0x80,      /* observed a octal character escape */
-    TSF_HAD_ERROR = 0x100       /* returned TOK_ERROR from getToken */
+    TSF_EOF = 0x01,             /* hit end of file */
+    TSF_EOL = 0x02,             /* an EOL was hit in whitespace or a multi-line comment */
+    TSF_UNEXPECTED_EOF = 0x04,  /* unexpected end of input, i.e. TOK_EOF not at top-level. */
+    TSF_DIRTYLINE = 0x08,       /* non-whitespace since start of line */
+    TSF_OCTAL_CHAR = 0x10,      /* observed a octal character escape */
+    TSF_HAD_ERROR = 0x20        /* returned TOK_ERROR from getToken */
 };
 
 struct CompileError {
@@ -383,13 +381,12 @@ class StrictModeGetter {
 //
 // The behavior of the token scanning process (see getTokenInternal()) can be
 // modified by calling one of the first four above listed member functions with
-// an optional argument of type TokenStreamFlags. The two flags that do
-// influence the scanning process are TSF_OPERAND and TSF_KEYWORD_IS_NAME.
-// However, they will be ignored unless |lookahead == 0| holds.
-// Due to constraints of the grammar, this turns out not to be a problem in
-// practice. See the mozilla.dev.tech.js-engine.internals thread entitled 'Bug
-// in the scanner?' for more details (https://groups.google.com/forum/?
-// fromgroups=#!topic/mozilla.dev.tech.js-engine.internals/2JLH5jRcr7E).
+// an optional argument of type Modifier.  However, the modifier will be
+// ignored unless |lookahead == 0| holds.  Due to constraints of the grammar,
+// this turns out not to be a problem in practice. See the
+// mozilla.dev.tech.js-engine.internals thread entitled 'Bug in the scanner?'
+// for more details:
+// https://groups.google.com/forum/?fromgroups=#!topic/mozilla.dev.tech.js-engine.internals/2JLH5jRcr7E).
 //
 // The methods seek() and tell() allow to rescan from a previous visited
 // location of the buffer.
@@ -467,22 +464,6 @@ class MOZ_STACK_CLASS TokenStream
     static JSAtom *atomize(ExclusiveContext *cx, CharBuffer &cb);
     bool putIdentInTokenbuf(const jschar *identStart);
 
-    /*
-     * Enables flags in the associated tokenstream for the object lifetime.
-     * Useful for lexically-scoped flag toggles.
-     */
-    class Flagger {
-        TokenStream * const parent;
-        unsigned       flags;
-      public:
-        Flagger(TokenStream *parent, unsigned withFlags) : parent(parent), flags(withFlags) {
-            parent->flags |= flags;
-        }
-
-        ~Flagger() { parent->flags &= ~flags; }
-    };
-    friend class Flagger;
-
     void setFlag(bool enabled, TokenStreamFlags flag) {
         if (enabled)
             flags |= flag;
@@ -491,11 +472,22 @@ class MOZ_STACK_CLASS TokenStream
     }
 
   public:
+    // Sometimes the parser needs to modify how tokens are created.
+    enum Modifier
+    {
+        None,           // Normal operation.
+        Operand,        // Looking for an operand, not an operator.  In
+                        //   practice, this means that when '/' is seen,
+                        //   we look for a regexp instead of just returning
+                        //   TOK_DIV.
+        KeywordIsName,  // Treat keywords as names by returning TOK_NAME.
+    };
+
     /*
      * Get the next token from the stream, make it the current token, and
      * return its kind.
      */
-    TokenKind getToken() {
+    TokenKind getToken(Modifier modifier = None) {
         /* Check for a pushed-back token resulting from mismatching lookahead. */
         if (lookahead != 0) {
             lookahead--;
@@ -505,13 +497,7 @@ class MOZ_STACK_CLASS TokenStream
             return tt;
         }
 
-        return getTokenInternal();
-    }
-
-    /* Similar, but also sets flags. */
-    TokenKind getToken(unsigned withFlags) {
-        Flagger flagger(this, withFlags);
-        return getToken();
+        return getTokenInternal(modifier);
     }
 
     /*
@@ -523,20 +509,15 @@ class MOZ_STACK_CLASS TokenStream
         cursor = (cursor - 1) & ntokensMask;
     }
 
-    TokenKind peekToken() {
+    TokenKind peekToken(Modifier modifier = None) {
         if (lookahead != 0)
             return tokens[(cursor + 1) & ntokensMask].type;
-        TokenKind tt = getTokenInternal();
+        TokenKind tt = getTokenInternal(modifier);
         ungetToken();
         return tt;
     }
 
-    TokenKind peekToken(unsigned withFlags) {
-        Flagger flagger(this, withFlags);
-        return peekToken();
-    }
-
-    TokenKind peekTokenSameLine(unsigned withFlags = 0) {
+    TokenKind peekTokenSameLine(Modifier modifier = None) {
         if (!onCurrentLine(currentToken().pos))
             return TOK_EOL;
 
@@ -548,7 +529,7 @@ class MOZ_STACK_CLASS TokenStream
          * is created, just a TOK_EOL TokenKind is returned.
          */
         flags &= ~TSF_EOL;
-        TokenKind tt = getToken(withFlags);
+        TokenKind tt = getToken(modifier);
         if (flags & TSF_EOL) {
             tt = TOK_EOL;
             flags &= ~TSF_EOL;
@@ -560,16 +541,11 @@ class MOZ_STACK_CLASS TokenStream
     /*
      * Get the next token from the stream if its kind is |tt|.
      */
-    bool matchToken(TokenKind tt) {
-        if (getToken() == tt)
+    bool matchToken(TokenKind tt, Modifier modifier = None) {
+        if (getToken(modifier) == tt)
             return true;
         ungetToken();
         return false;
-    }
-
-    bool matchToken(TokenKind tt, unsigned withFlags) {
-        Flagger flagger(this, withFlags);
-        return matchToken(tt);
     }
 
     void consumeKnownToken(TokenKind tt) {
@@ -827,7 +803,7 @@ class MOZ_STACK_CLASS TokenStream
         SkipRoot skipBase, skipLimit, skipPtr;
     };
 
-    TokenKind getTokenInternal();     /* doesn't check for pushback or error flag. */
+    TokenKind getTokenInternal(Modifier modifier);
 
     int32_t getChar();
     int32_t getCharIgnoreEOL();
