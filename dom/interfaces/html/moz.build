@@ -50,7 +50,6 @@ XPIDL_SOURCES += [
     'nsIDOMHTMLOptGroupElement.idl',
     'nsIDOMHTMLOptionElement.idl',
     'nsIDOMHTMLOptionsCollection.idl',
-    'nsIDOMHTMLOutputElement.idl',
     'nsIDOMHTMLParagraphElement.idl',
     'nsIDOMHTMLParamElement.idl',
     'nsIDOMHTMLPreElement.idl',
