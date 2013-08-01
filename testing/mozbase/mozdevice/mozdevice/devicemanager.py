@@ -169,7 +169,7 @@ class DeviceManager(object):
             self.removeFile(tempScreenshotFile)
 
     @abstractmethod
-    def pushFile(self, localFilename, remoteFilename, retryLimit=1):
+    def pushFile(self, localFilename, remoteFilename, retryLimit=1, createDir=True):
         """
         Copies localname from the host to destname on the device.
         """
