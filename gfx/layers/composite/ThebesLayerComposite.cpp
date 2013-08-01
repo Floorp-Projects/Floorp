@@ -37,15 +37,13 @@ ThebesLayerComposite::ThebesLayerComposite(LayerManagerComposite *aManager)
 ThebesLayerComposite::~ThebesLayerComposite()
 {
   MOZ_COUNT_DTOR(ThebesLayerComposite);
-  if (mBuffer) {
-    mBuffer->Detach();
-  }
+  CleanupResources();
 }
 
 void
 ThebesLayerComposite::SetCompositableHost(CompositableHost* aHost)
 {
-  mBuffer= static_cast<ContentHost*>(aHost);
+  mBuffer = static_cast<ContentHost*>(aHost);
 }
 
 void
@@ -58,10 +56,7 @@ void
 ThebesLayerComposite::Destroy()
 {
   if (!mDestroyed) {
-    if (mBuffer) {
-      mBuffer->Detach();
-    }
-    mBuffer = nullptr;
+    CleanupResources();
     mDestroyed = true;
   }
 }
@@ -75,13 +70,14 @@ ThebesLayerComposite::GetLayer()
 TiledLayerComposer*
 ThebesLayerComposite::GetTiledLayerComposer()
 {
+  MOZ_ASSERT(mBuffer && mBuffer->IsAttached());
   return mBuffer->AsTiledLayerComposer();
 }
 
 LayerRenderState
 ThebesLayerComposite::GetRenderState()
 {
-  if (!mBuffer || mDestroyed) {
+  if (!mBuffer || !mBuffer->IsAttached() || mDestroyed) {
     return LayerRenderState();
   }
   return mBuffer->GetRenderState();
@@ -91,9 +87,13 @@ void
 ThebesLayerComposite::RenderLayer(const nsIntPoint& aOffset,
                                   const nsIntRect& aClipRect)
 {
-  if (!mBuffer) {
+  if (!mBuffer || !mBuffer->IsAttached()) {
     return;
   }
+
+  MOZ_ASSERT(mBuffer->GetCompositor() == mCompositeManager->GetCompositor() &&
+             mBuffer->GetLayer() == this,
+             "buffer is corrupted");
 
   gfx::Matrix4x4 transform;
   ToMatrix4x4(GetEffectiveTransform(), transform);
@@ -144,14 +144,19 @@ ThebesLayerComposite::RenderLayer(const nsIntPoint& aOffset,
 }
 
 CompositableHost*
-ThebesLayerComposite::GetCompositableHost() {
-  return mBuffer.get();
+ThebesLayerComposite::GetCompositableHost()
+{
+  if (mBuffer->IsAttached()) {
+    return mBuffer.get();
+  }
+
+  return nullptr;
 }
 
 void
 ThebesLayerComposite::CleanupResources()
 {
-  if (mBuffer)  {
+  if (mBuffer) {
     mBuffer->Detach();
   }
   mBuffer = nullptr;
@@ -282,7 +287,7 @@ ThebesLayerComposite::PrintInfo(nsACString& aTo, const char* aPrefix)
 {
   ThebesLayer::PrintInfo(aTo, aPrefix);
   aTo += "\n";
-  if (mBuffer) {
+  if (mBuffer && mBuffer->IsAttached()) {
     nsAutoCString pfx(aPrefix);
     pfx += "  ";
     mBuffer->PrintInfo(aTo, pfx.get());
