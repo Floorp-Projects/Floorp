@@ -7,8 +7,6 @@
 #define MOZILLA_LAYERS_COMPOSITORTYPES_H
 
 #include "LayersTypes.h"
-#include "nsXULAppAPI.h"
-
 
 namespace mozilla {
 namespace layers {
@@ -106,8 +104,7 @@ enum DeprecatedTextureClientType
   TEXTURE_SHARED_GL_EXTERNAL, // GLContext::SharedTextureHandle, the ownership of
                               // the SurfaceDescriptor passed to the texture
                               // remains with whoever passed it.
-  TEXTURE_STREAM_GL,          // WebGL streaming buffer
-  TEXTURE_FALLBACK            // A fallback path appropriate for the platform
+  TEXTURE_STREAM_GL           // WebGL streaming buffer
 };
 
 /**
@@ -150,18 +147,15 @@ enum DeprecatedTextureHostFlags
 struct TextureFactoryIdentifier
 {
   LayersBackend mParentBackend;
-  GeckoProcessType mParentProcessId;
   int32_t mMaxTextureSize;
   bool mSupportsTextureBlitting;
   bool mSupportsPartialUploads;
 
   TextureFactoryIdentifier(LayersBackend aLayersBackend = LAYERS_NONE,
-                           GeckoProcessType aParentProcessId = GeckoProcessType_Default,
                            int32_t aMaxTextureSize = 0,
                            bool aSupportsTextureBlitting = false,
                            bool aSupportsPartialUploads = false)
     : mParentBackend(aLayersBackend)
-    , mParentProcessId(aParentProcessId)
     , mMaxTextureSize(aMaxTextureSize)
     , mSupportsTextureBlitting(aSupportsTextureBlitting)
     , mSupportsPartialUploads(aSupportsPartialUploads)
