@@ -35,6 +35,9 @@ function runTests() {
     assertEq(s.y, 255);
     assertEq(s.z, 12.342345);
 
+    assertThrows(function() new StructType(RegExp));
+    assertThrows(function() new StructType(RegExp()));
+
     var Color = new StructType({r: uint8, g: uint8, b: uint8});
     var white = new Color();
     white.r = white.g = white.b = 255;
