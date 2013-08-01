@@ -196,7 +196,7 @@ ContentPrefService2.prototype = {
       this._pbStore.set(group, name, value);
       this._schedule(function () {
         cbHandleCompletion(callback, Ci.nsIContentPrefCallback2.COMPLETE_OK);
-        this._cps._notifyPrefSet(group, name, value);
+        this._cps._broadcastPrefSet(group, name, value);
       });
       return;
     }
@@ -266,7 +266,7 @@ ContentPrefService2.prototype = {
           this._cache.setWithCast(group, name, value);
         cbHandleCompletion(callback, reason);
         if (ok)
-          this._cps._notifyPrefSet(group, name, value);
+          this._cps._broadcastPrefSet(group, name, value);
       },
       onError: function onError(nsresult) {
         cbHandleError(callback, nsresult);
@@ -356,7 +356,7 @@ ContentPrefService2.prototype = {
         cbHandleCompletion(callback, reason);
         if (ok) {
           for (let [sgroup, , ] in prefs) {
-            this._cps._notifyPrefRemoved(sgroup, name);
+            this._cps._broadcastPrefRemoved(sgroup, name);
           }
         }
       },
@@ -448,7 +448,7 @@ ContentPrefService2.prototype = {
         cbHandleCompletion(callback, reason);
         if (ok) {
           for (let [sgroup, sname, ] in prefs) {
-            this._cps._notifyPrefRemoved(sgroup, sname);
+            this._cps._broadcastPrefRemoved(sgroup, sname);
           }
         }
       },
@@ -505,7 +505,7 @@ ContentPrefService2.prototype = {
         cbHandleCompletion(callback, reason);
         if (ok) {
           for (let [sgroup, sname, ] in prefs) {
-            this._cps._notifyPrefRemoved(sgroup, sname);
+            this._cps._broadcastPrefRemoved(sgroup, sname);
           }
         }
       },
@@ -585,7 +585,7 @@ ContentPrefService2.prototype = {
         cbHandleCompletion(callback, reason);
         if (ok) {
           for (let [sgroup, , ] in prefs) {
-            this._cps._notifyPrefRemoved(sgroup, name);
+            this._cps._broadcastPrefRemoved(sgroup, name);
           }
         }
       },
