@@ -24,5 +24,33 @@ ok("signText" in window.crypto, "signText in window.crypto");
 ok("disableRightClick" in window.crypto,
    "disableRightClick in window.crypto");
 
+function jsCallback () {
+}
+
+try {
+  window.crypto.generateCRMFRequest(null, null, null, null, jsCallback.toString());
+  ok(false, "window.crypto.generateCRMFRequest failed, should throw error");
+} catch (e) {
+  ok(e.toString().search(/Failure/) > -1,
+     "Expected error: ReqDN cannot be null");
+}
+
+try {
+  window.crypto.generateCRMFRequest(document.documentElement, null, null, null,
+                                    null);
+  ok(false, "window.crypto.generateCRMFRequest failed, should throw error");
+} catch (e) {
+  ok(e.toString().search(/Failure/) > -1,
+     "Expected error: jsCallback cannot be null");
+}
+
+try {
+  window.crypto.generateCRMFRequest(document.documentElement, null, null, null,
+                                    jsCallback.toString(), 1024);
+  ok(false, "window.crypto.generateCRMFRequest failed, should throw error");
+} catch (e) {
+  ok(e.toString().search(/TypeError/) > -1,
+     "Expected error: Not enough arguments");
+}
 </script>
 </body></html>
