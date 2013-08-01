@@ -74,6 +74,7 @@ endif
 
 LOCAL_INCLUDES += -I$(topsrcdir)/js/xpconnect/src \
   -I$(topsrcdir)/js/xpconnect/wrappers \
+  -I$(topsrcdir)/js/ipc \
   -I$(topsrcdir)/content/canvas/src \
   -I$(topsrcdir)/content/html/content/src \
   -I$(topsrcdir)/media/webrtc/signaling/src/peerconnection \
