@@ -5,6 +5,7 @@
 var calleeGraph = {};
 var callerGraph = {};
 var gcFunctions = {};
+var gcEdges = {};
 var suppressedFunctions = {};
 
 function addGCFunction(caller, reason)

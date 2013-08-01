@@ -11,14 +11,15 @@ var sourceRoot = (environment['SOURCE_ROOT'] || '') + '/'
 var functionBodies;
 
 if (typeof scriptArgs[0] != 'string' || typeof scriptArgs[1] != 'string')
-    throw "Usage: analyzeRoots.js <gcFunctions.lst> <suppressedFunctions.lst> <gcTypes.txt> [start end [tmpfile]]";
+    throw "Usage: analyzeRoots.js <gcFunctions.lst> <gcEdges.txt> <suppressedFunctions.lst> <gcTypes.txt> [start end [tmpfile]]";
 
 var gcFunctionsFile = scriptArgs[0];
-var suppressedFunctionsFile = scriptArgs[1];
-var gcTypesFile = scriptArgs[2];
-var batch = (scriptArgs[3]|0) || 1;
-var numBatches = (scriptArgs[4]|0) || 1;
-var tmpfile = scriptArgs[5] || "tmp.txt";
+var gcEdgesFile = scriptArgs[1];
+var suppressedFunctionsFile = scriptArgs[2];
+var gcTypesFile = scriptArgs[3];
+var batch = (scriptArgs[4]|0) || 1;
+var numBatches = (scriptArgs[5]|0) || 1;
+var tmpfile = scriptArgs[6] || "tmp.txt";
 
 var gcFunctions = {};
 var text = snarf("gcFunctions.lst").split("\n");
@@ -32,6 +33,17 @@ var text = snarf(suppressedFunctionsFile).split("\n");
 assert(text.pop().length == 0);
 for (var line of text) {
     suppressedFunctions[line] = true;
+}
+text = null;
+
+var gcEdges = {};
+text = snarf(gcEdgesFile).split('\n');
+assert(text.pop().length == 0);
+for (var line of text) {
+    var [ block, edge, func ] = line.split(" || ");
+    if (!(block in gcEdges))
+        gcEdges[block] = {}
+    gcEdges[block][edge] = func;
 }
 text = null;
 
