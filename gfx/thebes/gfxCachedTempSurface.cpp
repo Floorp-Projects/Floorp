@@ -73,11 +73,9 @@ gfxCachedTempSurface::Get(gfxASurface::gfxContentType aContentType,
   if (mSurface) {
     /* Verify the current buffer is valid for this purpose */
     if (mSize.width < aRect.width || mSize.height < aRect.height
-        || mSurface->GetContentType() != aContentType) {
+        || mSurface->GetContentType() != aContentType
+        || mType != aSimilarTo->GetType()) {
       mSurface = nullptr;
-    } else {
-      NS_ASSERTION(mType == aSimilarTo->GetType(),
-                   "Unexpected surface type change");
     }
   }
 
@@ -89,9 +87,7 @@ gfxCachedTempSurface::Get(gfxASurface::gfxContentType aContentType,
       return nullptr;
 
     cleared = true;
-#ifdef DEBUG
     mType = aSimilarTo->GetType();
-#endif
   }
   mSurface->SetDeviceOffset(-aRect.TopLeft());
 
