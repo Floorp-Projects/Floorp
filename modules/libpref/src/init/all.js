@@ -476,7 +476,9 @@ pref("nglayout.events.dispatchLeftClickOnly", true);
 pref("nglayout.enable_drag_images", true);
 
 // enable/disable paint flashing --- useful for debugging
+// the first one applies to everything, the second one only to chrome
 pref("nglayout.debug.paint_flashing", false);
+pref("nglayout.debug.paint_flashing_chrome", false);
 
 // enable/disable widget update area flashing --- only supported with 
 // BasicLayers (other layer managers always update the entire widget area)

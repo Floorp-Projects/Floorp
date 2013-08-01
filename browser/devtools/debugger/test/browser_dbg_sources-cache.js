@@ -114,8 +114,6 @@ function performReload(callback) {
 function testStateBeforeReload() {
   is(gSources.itemCount, 0,
     "There should be no sources present in the sources list during reload.");
-  is(gControllerSources.getCache().length, 0,
-    "The sources cache should be empty during reload.");
   is(gDebugger.SourceUtils._labelsCache, gPrevLabelsCache,
     "The labels cache has been refreshed during reload and no new objects were created.");
   is(gDebugger.SourceUtils._groupsCache, gPrevGroupsCache,

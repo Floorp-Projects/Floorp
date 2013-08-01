@@ -47,6 +47,7 @@ function initTest(test, token) {
   var v = document.createElement(type);
   if (!v.canPlayType(test.type))
     return;
+  v.preload = "metadata";
   v.token = token;
   manager.started(token);
   v._name = test.name;

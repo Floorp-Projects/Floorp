@@ -183,7 +183,7 @@ OpusTrackEncoder::GetHeader(nsTArray<uint8_t>* aOutput)
     }
   }
 
-  if (mCanceled) {
+  if (mCanceled || mDoneEncoding) {
     return NS_ERROR_FAILURE;
   }
 
@@ -242,7 +242,7 @@ OpusTrackEncoder::GetEncodedTrack(nsTArray<uint8_t>* aOutput,
       mReentrantMonitor.Wait();
     }
 
-    if (mCanceled) {
+    if (mCanceled || mDoneEncoding) {
       return NS_ERROR_FAILURE;
     }
 

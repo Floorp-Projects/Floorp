@@ -690,12 +690,14 @@
        
        let winBirthDate = FILETIME_to_Date(stat.ftCreationTime);
        let lastAccessDate = FILETIME_to_Date(stat.ftLastAccessTime);
+       let lastWriteDate = FILETIME_to_Date(stat.ftLastWriteTime);
 
        let value = ctypes.UInt64.join(stat.nFileSizeHigh, stat.nFileSizeLow);
        let size = exports.OS.Shared.Type.uint64_t.importFromC(value);
 
        exports.OS.Shared.Win.AbstractInfo.call(this, isDir, isSymLink, size,
-                                               winBirthDate, lastAccessDate);
+                                               winBirthDate, lastAccessDate,
+                                               lastWriteDate);
      };
      File.Info.prototype = Object.create(exports.OS.Shared.Win.AbstractInfo.prototype);
 

@@ -247,6 +247,11 @@ nsBMPDecoder::WriteInternal(const char* aBuffer, uint32_t aCount)
             return;
         }
 
+        if (mBIH.height == INT_MIN) {
+            PostDataError();
+            return;
+        }
+
         uint32_t real_height = GetHeight();
 
         // Post our size to the superclass

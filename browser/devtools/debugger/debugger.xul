@@ -32,6 +32,8 @@
   <commandset id="sourceEditorCommands"/>
 
   <commandset id="debuggerCommands">
+    <command id="unBlackBoxButton"
+             oncommand="DebuggerView.Sources._onStopBlackBoxing()"/>
     <command id="nextSourceCommand"
              oncommand="DebuggerView.Sources.selectNextItem()"/>
     <command id="prevSourceCommand"
@@ -293,7 +295,19 @@
           <vbox id="sources" flex="1"/>
         </vbox>
         <splitter class="devtools-side-splitter"/>
-        <vbox id="editor" flex="1"/>
+        <deck id="editor-deck" flex="1" selectedIndex="0">
+          <vbox id="editor" />
+          <vbox id="black-boxed-message" align="center">
+            <label id="black-boxed-message-label">
+              &debuggerUI.blackBoxMessage.label;
+            </label>
+            <button id="black-boxed-message-button"
+                    class="devtools-toolbarbutton"
+                    label="&debuggerUI.blackBoxMessage.unBlackBoxButton;"
+                    image="chrome://browser/skin/devtools/blackBoxMessageEye.png"
+                    command="unBlackBoxCommand"/>
+          </vbox>
+        </deck>
         <splitter class="devtools-side-splitter"/>
         <vbox id="instruments-pane" hidden="true">
           <vbox id="expressions"/>

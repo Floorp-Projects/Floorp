@@ -34,11 +34,114 @@ NS_IMPL_ADDREF_INHERITED(HTMLTableColElement, Element)
 NS_IMPL_RELEASE_INHERITED(HTMLTableColElement, Element)
 
 // QueryInterface implementation for HTMLTableColElement
-NS_INTERFACE_MAP_BEGIN(HTMLTableColElement)
+NS_INTERFACE_TABLE_HEAD(HTMLTableColElement)
   NS_HTML_CONTENT_INTERFACES(nsGenericHTMLElement)
+  NS_INTERFACE_TABLE_INHERITED1(HTMLTableColElement,
+                                nsIDOMHTMLTableColElement)
+  NS_INTERFACE_TABLE_TO_MAP_SEGUE
 NS_ELEMENT_INTERFACE_MAP_END
 
 NS_IMPL_ELEMENT_CLONE(HTMLTableColElement)
+
+NS_IMETHODIMP
+HTMLTableColElement::SetSpan(int32_t aSpan)
+{
+  ErrorResult rv;
+  SetSpan(aSpan, rv);
+  return rv.ErrorCode();
+}
+
+NS_IMETHODIMP
+HTMLTableColElement::GetSpan(int32_t* aSpan)
+{
+  *aSpan = Span();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HTMLTableColElement::SetAlign(const nsAString& aAlign)
+{
+  ErrorResult rv;
+  SetAlign(aAlign, rv);
+  return rv.ErrorCode();
+}
+
+NS_IMETHODIMP
+HTMLTableColElement::GetAlign(nsAString& aAlign)
+{
+  nsString align;
+  GetAlign(align);
+  aAlign = align;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HTMLTableColElement::SetVAlign(const nsAString& aVAlign)
+{
+  ErrorResult rv;
+  SetVAlign(aVAlign, rv);
+  return rv.ErrorCode();
+}
+
+NS_IMETHODIMP
+HTMLTableColElement::GetVAlign(nsAString& aVAlign)
+{
+  nsString vAlign;
+  GetVAlign(vAlign);
+  aVAlign = vAlign;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HTMLTableColElement::SetCh(const nsAString& aCh)
+{
+  ErrorResult rv;
+  SetCh(aCh, rv);
+  return rv.ErrorCode();
+}
+
+NS_IMETHODIMP
+HTMLTableColElement::GetCh(nsAString& aCh)
+{
+  nsString ch;
+  GetCh(ch);
+  aCh = ch;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HTMLTableColElement::SetChOff(const nsAString& aChOff)
+{
+  ErrorResult rv;
+  SetChOff(aChOff, rv);
+  return rv.ErrorCode();
+}
+
+NS_IMETHODIMP
+HTMLTableColElement::GetChOff(nsAString& aChOff)
+{
+  nsString chOff;
+  GetChOff(chOff);
+  aChOff = chOff;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HTMLTableColElement::SetWidth(const nsAString& aWidth)
+{
+  ErrorResult rv;
+  SetWidth(aWidth, rv);
+  return rv.ErrorCode();
+}
+
+NS_IMETHODIMP
+HTMLTableColElement::GetWidth(nsAString& aWidth)
+{
+  nsString width;
+  GetWidth(width);
+  aWidth = width;
+  return NS_OK;
+}
 
 bool
 HTMLTableColElement::ParseAttribute(int32_t aNamespaceID,

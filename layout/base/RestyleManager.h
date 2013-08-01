@@ -26,7 +26,7 @@ namespace dom {
   class Element;
 } // namespace dom
 
-class RestyleManager {
+class RestyleManager MOZ_FINAL {
 public:
   friend class ::nsRefreshDriver;
   friend class RestyleTracker;
@@ -145,6 +145,12 @@ public:
   // itself.
   void ProcessPendingRestyles();
 
+  // ProcessPendingRestyles calls into one of our RestyleTracker
+  // objects.  It then calls back to these functions at the beginning
+  // and end of its work.
+  void BeginProcessingRestyles();
+  void EndProcessingRestyles();
+
   // Rebuilds all style data by throwing out the old rule tree and
   // building a new one, and additionally applying aExtraHint (which
   // must not contain nsChangeHint_ReconstructFrame) to the root frame.
@@ -179,47 +185,12 @@ public:
     PostRestyleEventInternal(true);
   }
 
-  void SetInStyleRefresh(bool aInStyleRefresh)
-  {
-    mInStyleRefresh = aInStyleRefresh;
-  }
-
   void FlushOverflowChangedTracker()
   {
     mOverflowChangedTracker.Flush();
   }
 
 private:
-  enum DesiredA11yNotifications {
-    eSkipNotifications,
-    eSendAllNotifications,
-    eNotifyIfShown
-  };
-
-  enum A11yNotificationType {
-    eDontNotify,
-    eNotifyShown,
-    eNotifyHidden
-  };
-
-  // Use eRestyle_Self for the aRestyleHint argument to mean
-  // "reresolve our style context but not kids", use eRestyle_Subtree
-  // to mean "reresolve our style context and kids", and use
-  // nsRestyleHint(0) to mean recompute a new style context for our
-  // current parent and existing rulenode, and the same for kids.
-  NS_HIDDEN_(nsChangeHint)
-    ReResolveStyleContext(nsPresContext* aPresContext,
-                          nsIFrame* aFrame,
-                          nsIContent* aParentContent,
-                          nsStyleChangeList* aChangeList,
-                          nsChangeHint aMinChange,
-                          nsChangeHint aParentFrameHintsNotHandledForDescendants,
-                          nsRestyleHint aRestyleHint,
-                          RestyleTracker& aRestyleTracker,
-                          DesiredA11yNotifications aDesiredA11yNotifications,
-                          nsTArray<nsIContent*>& aVisibleKidsOfHiddenElement,
-                          TreeMatchContext& aTreeMatchContext);
-
   /**
    * Notify the frame constructor that an element needs to have its
    * style recomputed.
@@ -289,6 +260,133 @@ private:
 
   RestyleTracker mPendingRestyles;
   RestyleTracker mPendingAnimationRestyles;
+};
+
+/**
+ * An ElementRestyler is created for *each* element in a subtree that we
+ * recompute styles for.
+ */
+class ElementRestyler MOZ_FINAL {
+public:
+  typedef mozilla::dom::Element Element;
+
+  // Construct for the root of the subtree that we're restyling.
+  ElementRestyler(nsPresContext* aPresContext,
+                  nsIFrame* aFrame,
+                  nsStyleChangeList* aChangeList,
+                  nsChangeHint aHintsHandledByAncestors,
+                  RestyleTracker& aRestyleTracker,
+                  TreeMatchContext& aTreeMatchContext,
+                  nsTArray<nsIContent*>& aVisibleKidsOfHiddenElement);
+
+  // Construct for an element whose parent is being restyled.
+  enum ConstructorFlags {
+    FOR_OUT_OF_FLOW_CHILD = 1<<0
+  };
+  ElementRestyler(const ElementRestyler& aParentRestyler,
+                  nsIFrame* aFrame,
+                  uint32_t aConstructorFlags);
+
+  // Construct for a frame whose parent is being restyled, but whose
+  // style context is the parent style context for its parent frame.
+  // (This is only used for table frames, whose style contexts are used
+  // as the parent style context for their outer table frame (table
+  // wrapper frame).  We should probably try to get rid of this
+  // exception and have the inheritance go the other way.)
+  enum ParentContextFromChildFrame { PARENT_CONTEXT_FROM_CHILD_FRAME };
+  ElementRestyler(ParentContextFromChildFrame,
+                  const ElementRestyler& aParentFrameRestyler,
+                  nsIFrame* aFrame);
+
+  /**
+   * Restyle our frame's element and its subtree.
+   *
+   * Use eRestyle_Self for the aRestyleHint argument to mean
+   * "reresolve our style context but not kids", use eRestyle_Subtree
+   * to mean "reresolve our style context and kids", and use
+   * nsRestyleHint(0) to mean recompute a new style context for our
+   * current parent and existing rulenode, and the same for kids.
+   */
+  void Restyle(nsRestyleHint aRestyleHint);
+
+  /**
+   * mHintsHandled changes over time; it starts off as the hints that
+   * have been handled by ancestors, and by the end of Restyle it
+   * represents the hints that have been handled for this frame.  This
+   * method is intended to be called after Restyle, to find out what
+   * hints have been handled for this frame.
+   */
+  nsChangeHint HintsHandledForFrame() { return mHintsHandled; }
+
+private:
+  /**
+   * First half of Restyle().
+   */
+  void RestyleSelf(nsRestyleHint aRestyleHint);
+
+  /**
+   * Restyle the children of this frame (and, in turn, their children).
+   *
+   * Second half of Restyle().
+   */
+  void RestyleChildren(nsRestyleHint aChildRestyleHint);
+
+  /**
+   * Helper for RestyleSelf().
+   */
+  void CaptureChange(nsStyleContext* aOldContext,
+                     nsStyleContext* aNewContext,
+                     nsChangeHint aChangeToAssume);
+
+  /**
+   * Helpers for RestyleChildren().
+   */
+  void RestyleUndisplayedChildren(nsRestyleHint aChildRestyleHint);
+  void RestyleBeforePseudo();
+  void RestyleAfterPseudo();
+  void RestyleContentChildren(nsRestyleHint aChildRestyleHint);
+  void InitializeAccessibilityNotifications();
+  void SendAccessibilityNotifications();
+
+  enum DesiredA11yNotifications {
+    eSkipNotifications,
+    eSendAllNotifications,
+    eNotifyIfShown
+  };
+
+  enum A11yNotificationType {
+    eDontNotify,
+    eNotifyShown,
+    eNotifyHidden
+  };
+
+private:
+  nsPresContext* const mPresContext;
+  nsIFrame* const mFrame;
+  nsIContent* const mParentContent;
+  // |mContent| is the node that we used for rule matching of
+  // normal elements (not pseudo-elements) and for which we generate
+  // framechange hints if we need them.
+  nsIContent* const mContent;
+  nsStyleChangeList* const mChangeList;
+  // We have already generated change list entries for hints listed in
+  // mHintsHandled (initially it's those handled by ancestors, but by
+  // the end of Restyle it is those handled for this frame as well).  We
+  // need to generate a new change list entry for the frame when its
+  // style comparision returns a hint other than one of these hints.
+  nsChangeHint mHintsHandled;
+  // See nsStyleContext::CalcStyleDifference
+  nsChangeHint mParentFrameHintsNotHandledForDescendants;
+  nsChangeHint mHintsNotHandledForDescendants;
+  RestyleTracker& mRestyleTracker;
+  TreeMatchContext& mTreeMatchContext;
+  nsIFrame* mResolvedChild; // child that provides our parent style context
+
+  const DesiredA11yNotifications mDesiredA11yNotifications;
+  DesiredA11yNotifications mKidsDesiredA11yNotifications;
+  A11yNotificationType mOurA11yNotification;
+  nsTArray<nsIContent*>& mVisibleKidsOfHiddenElement;
+  bool mWasFrameVisible;
 };
 
 } // namespace mozilla

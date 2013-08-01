@@ -6,11 +6,10 @@
 
 MODULE = 'build'
 
-CPP_SOURCES += [
-    'stdc++compat.cpp',
-]
+if CONFIG['MOZ_LIBSTDCXX_TARGET_VERSION']:
+    LIBRARY_NAME = 'stdc++compat'
+    CPP_SOURCES += ['stdc++compat.cpp']
 
-HOST_LIBRARY_NAME = 'host_stdc++compat'
-
-LIBRARY_NAME = 'stdc++compat'
+if CONFIG['MOZ_LIBSTDCXX_HOST_VERSION']:
+    HOST_LIBRARY_NAME = 'host_stdc++compat'
 

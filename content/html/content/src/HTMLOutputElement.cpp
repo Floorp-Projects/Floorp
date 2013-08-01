@@ -53,7 +53,8 @@ NS_IMPL_RELEASE_INHERITED(HTMLOutputElement, Element)
 
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(HTMLOutputElement)
   NS_HTML_CONTENT_INTERFACES(nsGenericHTMLFormElement)
-  NS_INTERFACE_TABLE_INHERITED2(HTMLOutputElement,
+  NS_INTERFACE_TABLE_INHERITED3(HTMLOutputElement,
+                                nsIDOMHTMLOutputElement,
                                 nsIMutationObserver,
                                 nsIConstraintValidation)
   NS_INTERFACE_TABLE_TO_MAP_SEGUE
@@ -61,12 +62,20 @@ NS_ELEMENT_INTERFACE_MAP_END
 
 NS_IMPL_ELEMENT_CLONE(HTMLOutputElement)
 
-void
+
+NS_IMPL_STRING_ATTR(HTMLOutputElement, Name, name)
+
+// nsIConstraintValidation
+NS_IMPL_NSICONSTRAINTVALIDATION_EXCEPT_SETCUSTOMVALIDITY(HTMLOutputElement)
+
+NS_IMETHODIMP
 HTMLOutputElement::SetCustomValidity(const nsAString& aError)
 {
   nsIConstraintValidation::SetCustomValidity(aError);
 
   UpdateState(true);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -140,20 +149,49 @@ HTMLOutputElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
   return rv;
 }
 
-void
-HTMLOutputElement::SetValue(const nsAString& aValue, ErrorResult& aRv)
+NS_IMETHODIMP
+HTMLOutputElement::GetForm(nsIDOMHTMLFormElement** aForm)
 {
-  mValueModeFlag = eModeValue;
-  aRv = nsContentUtils::SetNodeTextContent(this, aValue, true);
+  return nsGenericHTMLFormElement::GetForm(aForm);
 }
 
-void
-HTMLOutputElement::SetDefaultValue(const nsAString& aDefaultValue, ErrorResult& aRv)
+NS_IMETHODIMP
+HTMLOutputElement::GetType(nsAString& aType)
+{
+  aType.AssignLiteral("output");
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HTMLOutputElement::GetValue(nsAString& aValue)
+{
+  nsContentUtils::GetNodeTextContent(this, true, aValue);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HTMLOutputElement::SetValue(const nsAString& aValue)
+{
+  mValueModeFlag = eModeValue;
+  return nsContentUtils::SetNodeTextContent(this, aValue, true);
+}
+
+NS_IMETHODIMP
+HTMLOutputElement::GetDefaultValue(nsAString& aDefaultValue)
+{
+  aDefaultValue = mDefaultValue;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HTMLOutputElement::SetDefaultValue(const nsAString& aDefaultValue)
 {
   mDefaultValue = aDefaultValue;
   if (mValueModeFlag == eModeDefault) {
-    aRv = nsContentUtils::SetNodeTextContent(this, mDefaultValue, true);
+    return nsContentUtils::SetNodeTextContent(this, mDefaultValue, true);
   }
+
+  return NS_OK;
 }
 
 nsDOMSettableTokenList*
@@ -163,6 +201,13 @@ HTMLOutputElement::HtmlFor()
     mTokenList = new nsDOMSettableTokenList(this, nsGkAtoms::_for);
   }
   return mTokenList;
+}
+
+NS_IMETHODIMP
+HTMLOutputElement::GetHtmlFor(nsISupports** aResult)
+{
+  NS_ADDREF(*aResult = HtmlFor());
+  return NS_OK;
 }
 
 void HTMLOutputElement::DescendantsChanged()
