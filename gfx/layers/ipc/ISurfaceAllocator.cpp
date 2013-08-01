@@ -133,6 +133,7 @@ ISurfaceAllocator::DestroySharedSurface(SurfaceDescriptor* aSurface)
     case SurfaceDescriptor::TRGBImage:
       DeallocShmem(aSurface->get_RGBImage().data());
       break;
+    case SurfaceDescriptor::TSurfaceDescriptorD3D9:
     case SurfaceDescriptor::TSurfaceDescriptorD3D10:
       break;
     case SurfaceDescriptor::TMemoryImage:

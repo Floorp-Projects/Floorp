@@ -54,7 +54,9 @@ class TextureClientYCbCr
 {
 public:
   virtual bool UpdateYCbCr(const PlanarYCbCrImage::Data& aData) = 0;
-  virtual bool AllocateForYCbCr(gfx::IntSize aYSize, gfx::IntSize aCbCrSize) = 0;
+  virtual bool AllocateForYCbCr(gfx::IntSize aYSize,
+                                gfx::IntSize aCbCrSize,
+                                StereoMode aStereoMode) = 0;
 };
 
 
@@ -207,7 +209,9 @@ public:
 
   virtual bool UpdateYCbCr(const PlanarYCbCrImage::Data& aData) MOZ_OVERRIDE;
 
-  virtual bool AllocateForYCbCr(gfx::IntSize aYSize, gfx::IntSize aCbCrSize) MOZ_OVERRIDE;
+  virtual bool AllocateForYCbCr(gfx::IntSize aYSize,
+                                gfx::IntSize aCbCrSize,
+                                StereoMode aStereoMode) MOZ_OVERRIDE;
 
   gfx::SurfaceFormat GetFormat() const { return mFormat; }
 
