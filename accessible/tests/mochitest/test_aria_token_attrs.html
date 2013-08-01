@@ -37,8 +37,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=452388
       // test (checkbox) checkable and checked states
       testStates("checkbox_checked_true", (STATE_CHECKABLE | STATE_CHECKED));
       testStates("checkbox_checked_false", STATE_CHECKABLE, 0, STATE_CHECKED);
-      testStates("checkbox_checked_empty", 0 , 0, STATE_CHECKABLE | STATE_CHECKED);
-      testStates("checkbox_checked_undefined", 0, 0, STATE_CHECKABLE | STATE_CHECKED);
+      testStates("checkbox_checked_empty", STATE_CHECKABLE , 0, STATE_CHECKED);
+      testStates("checkbox_checked_undefined", STATE_CHECKABLE, 0, STATE_CHECKED);
       testStates("checkbox_checked_absent", STATE_CHECKABLE, 0, STATE_CHECKED);
 
       // test native checkbox checked state and aria-checked state (if conflict, native wins)
@@ -106,29 +106,29 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=452388
       // test (menuitemradio) checkable and checked states
       testStates("menuitemradio_checked_true", (STATE_CHECKABLE | STATE_CHECKED));
       testStates("menuitemradio_checked_false", STATE_CHECKABLE, 0, STATE_CHECKED);
-      testStates("menuitemradio_checked_empty", 0, 0, (STATE_CHECKABLE | STATE_CHECKED));
-      testStates("menuitemradio_checked_undefined", 0, 0, (STATE_CHECKABLE | STATE_CHECKED));
+      testStates("menuitemradio_checked_empty", STATE_CHECKABLE, 0, STATE_CHECKED);
+      testStates("menuitemradio_checked_undefined", STATE_CHECKABLE, 0, STATE_CHECKED);
       testStates("menuitemradio_checked_absent", STATE_CHECKABLE, 0, STATE_CHECKED);
 
       // test (radio) checkable and checked states
       testStates("radio_checked_true", (STATE_CHECKABLE | STATE_CHECKED));
       testStates("radio_checked_false", STATE_CHECKABLE, 0, STATE_CHECKED);
-      testStates("radio_checked_empty", 0, 0, (STATE_CHECKABLE | STATE_CHECKED));
-      testStates("radio_checked_undefined", 0, 0, (STATE_CHECKABLE | STATE_CHECKED));
+      testStates("radio_checked_empty", STATE_CHECKABLE, 0, STATE_CHECKED);
+      testStates("radio_checked_undefined", STATE_CHECKABLE, 0, STATE_CHECKED);
       testStates("radio_checked_absent", STATE_CHECKABLE, 0, STATE_CHECKED);
 
       // test (textbox) multiline states
       testStates("textbox_multiline_true", 0, EXT_STATE_MULTI_LINE);
       testStates("textbox_multiline_false", 0, EXT_STATE_SINGLE_LINE);
-      testStates("textbox_multiline_empty", 0, 0, 0, EXT_STATE_SINGLE_LINE | EXT_STATE_MULTI_LINE);
-      testStates("textbox_multiline_undefined", 0, 0, 0, EXT_STATE_SINGLE_LINE | EXT_STATE_MULTI_LINE);
+      testStates("textbox_multiline_empty", 0, EXT_STATE_SINGLE_LINE);
+      testStates("textbox_multiline_undefined", 0, EXT_STATE_SINGLE_LINE);
       testStates("textbox_multiline_absent", 0, EXT_STATE_SINGLE_LINE);
 
       // test (textbox) readonly states
       testStates("textbox_readonly_true", STATE_READONLY);
       testStates("textbox_readonly_false", 0, EXT_STATE_EDITABLE, STATE_READONLY);
-      testStates("textbox_readonly_empty", 0, 0, STATE_READONLY, EXT_STATE_EDITABLE);
-      testStates("textbox_readonly_undefined", 0, 0, STATE_READONLY, EXT_STATE_EDITABLE);
+      testStates("textbox_readonly_empty", 0, EXT_STATE_EDITABLE, STATE_READONLY);
+      testStates("textbox_readonly_undefined", 0, EXT_STATE_EDITABLE, STATE_READONLY);
       testStates("textbox_readonly_absent", 0, EXT_STATE_EDITABLE, STATE_READONLY);
 
       // test native textbox readonly state and aria-readonly state (if conflict, native wins)
@@ -147,8 +147,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=452388
       // test (treeitem) selectable and selected states
       testStates("treeitem_selected_true", (STATE_SELECTABLE | STATE_SELECTED));
       testStates("treeitem_selected_false", STATE_SELECTABLE, 0, STATE_SELECTED);
-      testStates("treeitem_selected_empty", 0, 0, (STATE_SELECTABLE | STATE_SELECTED));
-      testStates("treeitem_selected_undefined", 0, 0, (STATE_SELECTABLE | STATE_SELECTED));
+      testStates("treeitem_selected_empty", STATE_SELECTABLE, 0, STATE_SELECTED);
+      testStates("treeitem_selected_undefined", STATE_SELECTABLE, 0, STATE_SELECTED);
       testStates("treeitem_selected_absent", STATE_SELECTABLE, 0, STATE_SELECTED);
 
       // test (treeitem) haspopup states

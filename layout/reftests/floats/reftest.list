@@ -6,6 +6,8 @@ fails == other-float-outside-rule-3-right-2.html other-float-outside-rule-3-righ
 fails == other-float-outside-rule-7-left.html other-float-outside-rule-7-left-ref.html # bug 616334
 fails == other-float-outside-rule-7-right.html other-float-outside-rule-7-right-ref.html # bug 616334
 fuzzy-if(gtk2Widget,1,10) == float-outside-block-push.html float-outside-block-push-ref.html # bug 815612
+== relative-float-1.html relative-float-1-ref.html
+== relative-float-2.html relative-float-2-ref.html
 == zero-height-float-base.html zero-height-float-ref.html
 fails == zero-height-float.html zero-height-float-ref.html # bug 81710
 fails == 345369-1.html 345369-1-ref.html

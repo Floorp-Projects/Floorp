@@ -16,6 +16,7 @@ XPIDL_SOURCES += [
     'nsIDOMClientRect.idl',
     'nsIDOMClientRectList.idl',
     'nsIDOMConstructor.idl',
+    'nsIDOMGlobalObjectConstructor.idl',
     'nsIDOMGlobalPropertyInitializer.idl',
     'nsIDOMHistory.idl',
     'nsIDOMJSWindow.idl',

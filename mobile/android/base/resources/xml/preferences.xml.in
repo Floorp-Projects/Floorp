@@ -4,7 +4,9 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<!-- Preferences screen for pre-v11 Android devices that do not support PreferenceFragment or ActionBar -->
+<!-- Preferences screen for pre-v11 Android devices that do not support
+     PreferenceFragment or ActionBar. Preference changes here should be mirrored
+     to xml-v11/preferences.xml. -->
 
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
                   xmlns:gecko="http://schemas.android.com/apk/res-auto"
@@ -50,6 +52,15 @@
             <extra
                 android:name="resource"
                 android:value="preferences_vendor" />
+        </intent>
+    </PreferenceScreen>
+    <PreferenceScreen android:title="@string/pref_category_devtools">
+        <intent android:action="android.intent.action.VIEW"
+                android:targetPackage="@ANDROID_PACKAGE_NAME@"
+                android:targetClass="org.mozilla.gecko.GeckoPreferences" >
+            <extra
+                android:name="resource"
+                android:value="preferences_devtools" />
         </intent>
     </PreferenceScreen>
 

@@ -253,7 +253,7 @@ struct Token {
         JSAtom       *atom;             /* potentially-numeric atom */
         struct {
             double       value;         /* floating point number */
-            DecimalPoint decimalPoint;  /* literal contains . or exponent */
+            DecimalPoint decimalPoint;  /* literal contains '.' */
         } number;
         RegExpFlag      reflags;        /* regexp flags, use tokenbuf to access
                                            regexp chars */
@@ -324,28 +324,7 @@ enum TokenStreamFlags
     TSF_KEYWORD_IS_NAME = 0x20, /* Ignore keywords and return TOK_NAME instead to the parser. */
     TSF_DIRTYLINE = 0x40,       /* non-whitespace since start of line */
     TSF_OCTAL_CHAR = 0x80,      /* observed a octal character escape */
-    TSF_HAD_ERROR = 0x100,      /* returned TOK_ERROR from getToken */
-
-    /*
-     * To handle the hard case of contiguous HTML comments, we want to clear the
-     * TSF_DIRTYINPUT flag at the end of each such comment.  But we'd rather not
-     * scan for --> within every //-style comment unless we have to.  So we set
-     * TSF_IN_HTML_COMMENT when a <!-- is scanned as an HTML begin-comment, and
-     * clear it (and TSF_DIRTYINPUT) when we scan --> either on a clean line, or
-     * only if (ts->flags & TSF_IN_HTML_COMMENT), in a //-style comment.
-     *
-     * This still works as before given a malformed comment hiding hack such as:
-     *
-     *    <script>
-     *      <!-- comment hiding hack #1
-     *      code goes here
-     *      // --> oops, markup for script-unaware browsers goes here!
-     *    </script>
-     *
-     * It does not cope with malformed comment hiding hacks where --> is hidden
-     * by C-style comments, or on a dirty line.  Such cases are already broken.
-     */
-    TSF_IN_HTML_COMMENT = 0x200
+    TSF_HAD_ERROR = 0x100       /* returned TOK_ERROR from getToken */
 };
 
 struct CompileError {
@@ -431,8 +410,7 @@ class MOZ_STACK_CLASS TokenStream
     typedef Vector<jschar, 32> CharBuffer;
 
     TokenStream(ExclusiveContext *cx, const CompileOptions &options,
-                const jschar *base, size_t length, StrictModeGetter *smg,
-                AutoKeepAtoms& keepAtoms);
+                const jschar *base, size_t length, StrictModeGetter *smg);
 
     ~TokenStream();
 
@@ -442,10 +420,6 @@ class MOZ_STACK_CLASS TokenStream
     bool isCurrentTokenType(TokenKind type) const {
         return currentToken().type == type;
     }
-    bool isCurrentTokenType(TokenKind type1, TokenKind type2) const {
-        TokenKind type = currentToken().type;
-        return type == type1 || type == type2;
-    }
     const CharBuffer &getTokenbuf() const { return tokenbuf; }
     const char *getFilename() const { return filename; }
     unsigned getLineno() const { return lineno; }
@@ -454,18 +428,6 @@ class MOZ_STACK_CLASS TokenStream
     JSVersion versionNumber() const { return VersionNumber(options().version); }
     JSVersion versionWithFlags() const { return options().version; }
     bool hadError() const { return !!(flags & TSF_HAD_ERROR); }
-
-    bool isCurrentTokenEquality() const {
-        return TokenKindIsEquality(currentToken().type);
-    }
-
-    bool isCurrentTokenRelational() const {
-        return TokenKindIsRelational(currentToken().type);
-    }
-
-    bool isCurrentTokenShift() const {
-        return TokenKindIsShift(currentToken().type);
-    }
 
     bool isCurrentTokenAssignment() const {
         return TokenKindIsAssignment(currentToken().type);
@@ -918,7 +880,6 @@ class MOZ_STACK_CLASS TokenStream
     const char          *filename;      /* input filename or null */
     jschar              *sourceMap;     /* source map's filename or null */
     CharBuffer          tokenbuf;       /* current token string buffer */
-    int8_t              oneCharTokens[128];  /* table of one-char tokens, indexed by 7-bit char */
     bool                maybeEOL[256];       /* probabilistic EOL lookup table */
     bool                maybeStrSpecial[256];/* speeds up string scanning */
     uint8_t             isExprEnding[TOK_LIMIT]; /* which tokens definitely terminate exprs? */

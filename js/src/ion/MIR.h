@@ -996,6 +996,34 @@ class MCallee : public MNullaryInstruction
     }
 };
 
+// MForceUse exists to force the use of a resumePoint-recorded
+// instruction at a later point in time, so that the contents don't get
+// discarded when inlining.
+class MForceUse : public MUnaryInstruction
+{
+  public:
+    MForceUse(MDefinition *input)
+      : MUnaryInstruction(input)
+    {
+        setGuard();
+        setResultType(MIRType_None);
+    }
+
+  public:
+    INSTRUCTION_HEADER(ForceUse)
+
+    bool congruentTo(MDefinition *ins) const {
+        return false;
+    }
+
+    static MForceUse *New(MDefinition *input) {
+        return new MForceUse(input);
+    }
+    AliasSet getAliasSet() const {
+        return AliasSet::None();
+    }
+};
+
 class MControlInstruction : public MInstruction
 {
   public:

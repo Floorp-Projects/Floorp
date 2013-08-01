@@ -2019,8 +2019,8 @@ MacroAssemblerARMCompat::store32(const Register &src, const Address &address)
 void
 MacroAssemblerARMCompat::store32(const Imm32 &src, const Address &address)
 {
-    move32(src, ScratchRegister);
-    storePtr(ScratchRegister, address);
+    move32(src, secondScratchReg_);
+    storePtr(secondScratchReg_, address);
 }
 
 void
