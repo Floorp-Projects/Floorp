@@ -5,7 +5,7 @@
 
 #include "domstubs.idl"
 
-[scriptable, uuid(80adc1fe-c0a0-44f7-8a0e-d3d928e2ecc9)]
+[scriptable, uuid(5a9689e8-5822-4dd5-b231-609b8d0260ab)]
 interface nsIDOMJSWindow : nsISupports
 {
   void                      dump(in DOMString str);
@@ -39,9 +39,6 @@ interface nsIDOMJSWindow : nsISupports
    */
   void                      captureEvents(in long eventFlags);
   void                      releaseEvents(in long eventFlags);
-  void                      routeEvent(in nsIDOMEvent evt);
-  void                      enableExternalCapture();
-  void                      disableExternalCapture();
 
   /**
    * This is the scriptable version of nsIDOMWindow::open()

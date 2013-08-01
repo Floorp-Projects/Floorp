@@ -6235,25 +6235,6 @@ nsGlobalWindow::ReleaseEvents(int32_t aEventFlags)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsGlobalWindow::RouteEvent(nsIDOMEvent* aEvt)
-{
-  ReportUseOfDeprecatedMethod(this, "UseOfRouteEventWarning");
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsGlobalWindow::EnableExternalCapture()
-{
-  return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-nsGlobalWindow::DisableExternalCapture()
-{
-  return NS_ERROR_FAILURE;
-}
-
 static
 bool IsPopupBlocked(nsIDocument* aDoc)
 {
