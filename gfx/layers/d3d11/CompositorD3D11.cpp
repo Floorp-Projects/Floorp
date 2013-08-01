@@ -641,15 +641,13 @@ CompositorD3D11::PrepareViewport(const gfx::IntSize& aSize,
   memcpy(&mVSConstants.projection, &projection, sizeof(mVSConstants.projection));
 }
 
-const nsIntSize&
-CompositorD3D11::GetWidgetSize()
+void
+CompositorD3D11::EnsureSize()
 {
   nsIntRect rect;
   mWidget->GetClientBounds(rect);
 
   mSize = rect.Size();
-
-  return mSize;
 }
 
 void
