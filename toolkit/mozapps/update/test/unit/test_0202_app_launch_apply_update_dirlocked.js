@@ -223,10 +223,6 @@ function end_test() {
   if (IS_UNIX) {
     // This will delete the launch script if it exists.
     getLaunchScript();
-    if (IS_MACOSX) {
-      // This will delete the version script and version file if they exist.
-      getVersionScriptAndFile();
-    }
   }
 
   cleanUp();
