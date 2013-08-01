@@ -117,7 +117,7 @@ class TalosRunner(MozbuildObject):
             raise e
 
     def run_mozharness(self):
-        sys.path.append(self.mozharness_dir)
+        sys.path.insert(0, self.mozharness_dir)
         from mozharness.mozilla.testing.talos import Talos
         talos_mh = Talos(config=self.args['config'],
                          initial_config_file=self.args['initial_config_file'])
