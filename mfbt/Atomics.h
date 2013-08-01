@@ -830,6 +830,11 @@ namespace detail {
 template<typename T, MemoryOrdering Order>
 class AtomicBase
 {
+    // We only support 32-bit types on 32-bit Windows, which constrains our
+    // implementation elsewhere.  But we support pointer-sized types everywhere.
+    static_assert(sizeof(T) == 4 || (sizeof(uintptr_t) == 8 && sizeof(T) == 8),
+                  "mozilla/Atomics.h only supports 32-bit and pointer-sized types");
+
   protected:
     typedef typename detail::AtomicIntrinsics<T, Order> Intrinsics;
     typename Intrinsics::ValueType mValue;
@@ -838,12 +843,12 @@ class AtomicBase
     AtomicBase() : mValue() {}
     AtomicBase(T aInit) { Intrinsics::store(mValue, aInit); }
 
-    T operator++(int) { return Intrinsics::inc(mValue); }
-    T operator--(int) { return Intrinsics::dec(mValue); }
-    T operator++() { return Intrinsics::inc(mValue) + 1; }
-    T operator--() { return Intrinsics::dec(mValue) - 1; }
-
     operator T() const { return Intrinsics::load(mValue); }
+
+    T operator=(T aValue) {
+      Intrinsics::store(mValue, aValue);
+      return aValue;
+    }
 
     /**
      * Performs an atomic swap operation.  aValue is stored and the previous
@@ -852,6 +857,7 @@ class AtomicBase
     T exchange(T aValue) {
       return Intrinsics::exchange(mValue, aValue);
     }
+
     /**
      * Performs an atomic compare-and-swap operation and returns true if it
      * succeeded. This is equivalent to atomically doing
@@ -872,16 +878,35 @@ class AtomicBase
     AtomicBase(const AtomicBase<T, AnyOrder>& aCopy) MOZ_DELETE;
 };
 
+template<typename T, MemoryOrdering Order>
+class AtomicBaseIncDec : public AtomicBase<T, Order>
+{
+    typedef typename detail::AtomicBase<T, Order> Base;
+
+  public:
+    AtomicBaseIncDec() : Base() {}
+    AtomicBaseIncDec(T aInit) : Base(aInit) {}
+
+    using Base::operator=;
+
+    T operator++(int) { return Base::Intrinsics::inc(Base::mValue); }
+    T operator--(int) { return Base::Intrinsics::dec(Base::mValue); }
+    T operator++() { return Base::Intrinsics::inc(Base::mValue) + 1; }
+    T operator--() { return Base::Intrinsics::dec(Base::mValue) - 1; }
+
+  private:
+    template<MemoryOrdering AnyOrder>
+    AtomicBaseIncDec(const AtomicBaseIncDec<T, AnyOrder>& aCopy) MOZ_DELETE;
+};
+
 } // namespace detail
 
 /**
  * A wrapper for a type that enforces that all memory accesses are atomic.
  *
- * In general, where a variable |T foo| exists, |Atomic<T> foo| can be
- * used in its place.  In addition to atomic store and load operations,
- * compound assignment and increment/decrement operators are implemented
- * which perform the corresponding read-modify-write operation
- * atomically.  Finally, an atomic swap method is provided.
+ * In general, where a variable |T foo| exists, |Atomic<T> foo| can be used in
+ * its place.  Implementations for integral and pointer types are provided
+ * below.
  *
  * Atomic accesses are sequentially consistent by default.  You should
  * use the default unless you are tall enough to ride the
@@ -893,21 +918,30 @@ class AtomicBase
  * deliberate design choice that enables static atomic variables to be declared
  * without introducing extra static constructors.
  */
-template<typename T, MemoryOrdering Order = SequentiallyConsistent>
-class Atomic : public detail::AtomicBase<T, Order>
-{
-    // We only support 32-bit types on 32-bit Windows, which constrains our
-    // implementation elsewhere.  But we support pointer-sized types everywhere.
-    static_assert(sizeof(T) == 4 || (sizeof(uintptr_t) == 8 && sizeof(T) == 8),
-                  "mozilla/Atomics.h only supports 32-bit and pointer-sized types");
-    // Regardless of the OS, we only support integral types here.
-    static_assert(IsIntegral<T>::value, "can only have integral atomic variables");
+template<typename T,
+         MemoryOrdering Order = SequentiallyConsistent,
+         typename Enable = void>
+class Atomic;
 
-    typedef typename detail::AtomicBase<T, Order> Base;
+/**
+ * Atomic<T> implementation for integral types.
+ *
+ * In addition to atomic store and load operations, compound assignment and
+ * increment/decrement operators are implemented which perform the
+ * corresponding read-modify-write operation atomically.  Finally, an atomic
+ * swap method is provided.
+ */
+template<typename T, MemoryOrdering Order>
+class Atomic<T, Order, typename EnableIf<IsIntegral<T>::value>::Type>
+  : public detail::AtomicBaseIncDec<T, Order>
+{
+    typedef typename detail::AtomicBaseIncDec<T, Order> Base;
 
   public:
-    Atomic() : detail::AtomicBase<T, Order>() {}
-    Atomic(T aInit) : detail::AtomicBase<T, Order>(aInit) {}
+    Atomic() : Base() {}
+    Atomic(T aInit) : Base(aInit) {}
+
+    using Base::operator=;
 
     T operator+=(T delta) { return Base::Intrinsics::add(Base::mValue, delta) + delta; }
     T operator-=(T delta) { return Base::Intrinsics::sub(Base::mValue, delta) - delta; }
@@ -915,53 +949,34 @@ class Atomic : public detail::AtomicBase<T, Order>
     T operator^=(T val) { return Base::Intrinsics::xor_(Base::mValue, val) ^ val; }
     T operator&=(T val) { return Base::Intrinsics::and_(Base::mValue, val) & val; }
 
-    T operator=(T aValue) {
-      Base::Intrinsics::store(Base::mValue, aValue);
-      return aValue;
-    }
-
   private:
     Atomic(Atomic<T, Order>& aOther) MOZ_DELETE;
 };
 
 /**
- * A partial specialization of Atomic for pointer variables.
+ * Atomic<T> implementation for pointer types.
  *
- * Like Atomic<T>, Atomic<T*> is equivalent in most respects to a regular T*
- * variable.  An atomic compare-and-swap primitive for pointer variables is
- * provided, as are atomic increment and decement operators.  Also provided
- * are the compound assignment operators for addition and subtraction.
- * Atomic swap (via exchange()) is included as well.
- *
- * Atomic accesses are sequentially consistent by default.  You should
- * use the default unless you are tall enough to ride the
- * memory-ordering roller coaster (if you're not sure, you aren't) and
- * you have a compelling reason to do otherwise.
- *
- * There is one exception to the case of atomic memory accesses: providing an
- * initial value of the atomic value is not guaranteed to be atomic. This is a
- * deliberate design choice that enables static atomic variables to be declared
- * without introducing extra static constructors.
+ * An atomic compare-and-swap primitive for pointer variables is provided, as
+ * are atomic increment and decement operators.  Also provided are the compound
+ * assignment operators for addition and subtraction. Atomic swap (via
+ * exchange()) is included as well.
  */
 template<typename T, MemoryOrdering Order>
-class Atomic<T*, Order> : public detail::AtomicBase<T*, Order>
+class Atomic<T*, Order> : public detail::AtomicBaseIncDec<T*, Order>
 {
-    typedef typename detail::AtomicBase<T*, Order> Base;
+    typedef typename detail::AtomicBaseIncDec<T*, Order> Base;
 
   public:
-    Atomic() : detail::AtomicBase<T*, Order>() {}
-    Atomic(T* aInit) : detail::AtomicBase<T*, Order>(aInit) {}
+    Atomic() : Base() {}
+    Atomic(T* aInit) : Base(aInit) {}
 
-    T* operator +=(ptrdiff_t delta) {
+    using Base::operator=;
+
+    T* operator+=(ptrdiff_t delta) {
       return Base::Intrinsics::add(Base::mValue, delta) + delta;
     }
-    T* operator -=(ptrdiff_t delta) {
+    T* operator-=(ptrdiff_t delta) {
       return Base::Intrinsics::sub(Base::mValue, delta) - delta;
-    }
-
-    T* operator=(T* aValue) {
-      Base::Intrinsics::store(Base::mValue, aValue);
-      return aValue;
     }
 
   private:
