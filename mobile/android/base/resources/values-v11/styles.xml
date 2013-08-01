@@ -48,13 +48,6 @@
  
     <!-- ActionBar -->
     <style name="ActionBar" parent="android:style/Widget.Holo.ActionBar" />
-
-    <!-- AwesomeBar ActionBar -->
-    <style name="ActionBar.AwesomeBar">
-         <item name="android:displayOptions">showCustom</item>
-         <item name="android:customNavigationLayout">@layout/awesomebar_actionbar</item>
-         <item name="android:visibility">gone</item>
-    </style>
  
     <!-- GeckoPreferences ActionBar -->
     <style name="ActionBar.GeckoPreferences">
