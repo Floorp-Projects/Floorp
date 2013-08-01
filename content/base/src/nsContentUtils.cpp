@@ -242,6 +242,10 @@ nsIParser* nsContentUtils::sXMLFragmentParser = nullptr;
 nsIFragmentContentSink* nsContentUtils::sXMLFragmentSink = nullptr;
 bool nsContentUtils::sFragmentParsingActive = false;
 
+#if !(defined(DEBUG) || defined(MOZ_ENABLE_JS_DUMP))
+bool nsContentUtils::sDOMWindowDumpEnabled;
+#endif
+
 namespace {
 
 static const char kJSStackContractID[] = "@mozilla.org/js/xpc/ContextStack;1";
@@ -433,6 +437,11 @@ nsContentUtils::Init()
   Preferences::AddUintVarCache(&sHandlingInputTimeout,
                                "dom.event.handling-user-input-time-limit",
                                1000);
+
+#if !(defined(DEBUG) || defined(MOZ_ENABLE_JS_DUMP))
+  Preferences::AddBoolVarCache(&sDOMWindowDumpEnabled,
+                               "browser.dom.window.dump.enabled");
+#endif
 
   Element::InitCCCallbacks();
 
@@ -6422,4 +6431,17 @@ nsContentUtils::InternalIsSupported(nsISupports* aObject,
 
   // Otherwise, we claim to support everything
   return true;
+}
+
+bool
+nsContentUtils::DOMWindowDumpEnabled()
+{
+#if !(defined(DEBUG) || defined(MOZ_ENABLE_JS_DUMP))
+  // In optimized builds we check a pref that controls if we should
+  // enable output from dump() or not, in debug builds it's always
+  // enabled.
+  return nsContentUtils::sDOMWindowDumpEnabled;
+#else
+  return true;
+#endif
 }

@@ -45,7 +45,7 @@ class MochitestOptions(optparse.OptionParser):
         { "action": "store",
           "type": "string",
           "dest": "app",
-          "default": build_obj.get_binary_path() if build_obj is not None else None,
+          "default": None,
           "help": "absolute path to application, overriding default",
         }],
         [["--utility-path"],
@@ -340,6 +340,12 @@ class MochitestOptions(optparse.OptionParser):
 
     def verifyOptions(self, options, mochitest):
         """ verify correct options and cleanup paths """
+
+        if options.app is None:
+            if build_obj is not None:
+                options.app = build_obj.get_binary_path()
+            else:
+                self.error("could not find the application path, --appname must be specified")
 
         if options.totalChunks is not None and options.thisChunk is None:
             self.error("thisChunk must be specified when totalChunks is specified")

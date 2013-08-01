@@ -91,7 +91,7 @@ JavaScriptChild::makeId(JSContext *cx, JSObject *obj, ObjectId *idp)
 
     if (!objects_.add(id, obj))
         return false;
-    if (!ids_.add(obj, id))
+    if (!ids_.add(cx, obj, id))
         return false;
 
     *idp = id;
