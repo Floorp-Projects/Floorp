@@ -971,7 +971,7 @@ MetroInput::OnTapped(UI::Input::IGestureRecognizer* aSender,
   aArgs->get_Position(&position);
   nsIntPoint pt = MetroUtils::LogToPhys(position);
 
-  CSSIntPoint point(pt.x, pt.y);
+  LayoutDeviceIntPoint point(pt.x, pt.y);
   HandleSingleTap(point);
   return S_OK;
 }
@@ -995,7 +995,7 @@ MetroInput::OnRightTapped(UI::Input::IGestureRecognizer* aSender,
   aArgs->get_Position(&position);
   nsIntPoint pt = MetroUtils::LogToPhys(position);
 
-  CSSIntPoint point(pt.x, pt.y);
+  LayoutDeviceIntPoint point(pt.x, pt.y);
   HandleLongTap(point);
 
   return S_OK;
@@ -1003,7 +1003,7 @@ MetroInput::OnRightTapped(UI::Input::IGestureRecognizer* aSender,
 
 // Used by MetroWidget GeckoContentController callbacks
 void
-MetroInput::HandleDoubleTap(const mozilla::CSSIntPoint& aPoint)
+MetroInput::HandleDoubleTap(const LayoutDeviceIntPoint& aPoint)
 {
 #ifdef DEBUG_INPUT
   LogFunction();
@@ -1021,7 +1021,7 @@ MetroInput::HandleDoubleTap(const mozilla::CSSIntPoint& aPoint)
 }
 
 void
-MetroInput::HandleSingleTap(const mozilla::CSSIntPoint& aPoint)
+MetroInput::HandleSingleTap(const LayoutDeviceIntPoint& aPoint)
 {
 #ifdef DEBUG_INPUT
   LogFunction();
@@ -1075,7 +1075,7 @@ MetroInput::HandleSingleTap(const mozilla::CSSIntPoint& aPoint)
 }
 
 void
-MetroInput::HandleLongTap(const mozilla::CSSIntPoint& aPoint)
+MetroInput::HandleLongTap(const LayoutDeviceIntPoint& aPoint)
 {
 #ifdef DEBUG_INPUT
   LogFunction();
