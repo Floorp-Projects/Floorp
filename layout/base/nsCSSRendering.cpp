@@ -3131,18 +3131,19 @@ nsCSSRendering::PrepareBackgroundLayer(nsPresContext* aPresContext,
   // proper background positioning when background-position is defined with
   // percentages.
   CSSSizeOrRatio intrinsicSize = state.mImageRenderer.ComputeIntrinsicSize();
+  nsSize bgPositionSize = bgPositioningArea.Size();
   nsSize imageSize = ComputeDrawnSizeForBackground(intrinsicSize,
-                                                   bgPositioningArea.Size(),
+                                                   bgPositionSize,
                                                    aLayer.mSize);
   if (imageSize.width <= 0 || imageSize.height <= 0)
     return state;
 
   state.mImageRenderer.SetPreferredSize(intrinsicSize,
-                                        bgPositioningArea.Size());
+                                        imageSize);
 
   // Compute the position of the background now that the background's size is
   // determined.
-  ComputeBackgroundAnchorPoint(aLayer, bgPositioningArea.Size(), imageSize,
+  ComputeBackgroundAnchorPoint(aLayer, bgPositionSize, imageSize,
                                &imageTopLeft, &state.mAnchor);
   imageTopLeft += bgPositioningArea.TopLeft();
   state.mAnchor += bgPositioningArea.TopLeft();
