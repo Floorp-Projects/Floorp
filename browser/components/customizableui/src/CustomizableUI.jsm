@@ -309,15 +309,6 @@ let CustomizableUIInternal = {
     let currentNode = container.firstChild;
     for (let id of aPlacements) {
       if (currentNode && currentNode.id == id) {
-        this._addParentFlex(currentNode);
-        this.setLocationAttributes(currentNode, aArea);
-
-        // Normalize removable attribute. It defaults to false if the widget is
-        // originally defined as a child of a build area.
-        if (!currentNode.hasAttribute("removable")) {
-          currentNode.setAttribute("removable", this.isWidgetRemovable(currentNode));
-        }
-
         currentNode = currentNode.nextSibling;
         continue;
       }

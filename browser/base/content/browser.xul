@@ -434,7 +434,8 @@
              accesskey="&menubarCmd.accesskey;"
 #endif
              context="toolbar-context-menu">
-      <toolbaritem id="menubar-items" align="center">
+      <toolbaritem id="menubar-items" align="center"
+                   customizableui-areatype="toolbar">
 # The entire main menubar is placed into browser-menubar.inc, so that it can be shared by
 # hiddenWindow.xul.
 #include browser-menubar.inc
@@ -464,6 +465,7 @@
             flex="1"
             setfocus="false"
             tooltip="tabbrowser-tab-tooltip"
+            customizableui-areatype="toolbar"
             stopwatchid="FX_TAB_CLICK_MS">
         <tab class="tabbrowser-tab" selected="true" fadein="true"/>
       </tabs>
@@ -478,6 +480,7 @@
                      ondragover="newTabButtonObserver.onDragOver(event)"
                      ondragenter="newTabButtonObserver.onDragOver(event)"
                      ondragexit="newTabButtonObserver.onDragExit(event)"
+                     customizableui-areatype="toolbar"
                      removable="true"/>
 
       <toolbarbutton id="alltabs-button"
@@ -493,6 +496,7 @@
                     key="key_tabview"
                     label="&viewTabGroups.label;"
                     command="Browser:ToggleTabView"
+                    customizableui-areatype="toolbar"
                     observes="tabviewGroupsNumber"/>
           <menuseparator id="alltabs-popup-separator"/>
         </menupopup>
@@ -502,6 +506,7 @@
                      class="close-button tabs-closebutton close-icon"
                      command="cmd_close"
                      label="&closeTab.label;"
+                     customizableui-areatype="toolbar"
                      tooltiptext="&closeTab.label;"/>
 
 #ifdef CAN_DRAW_IN_TITLEBAR
@@ -531,11 +536,14 @@
              customizationtarget="nav-bar-customizationtarget"
              overflowbutton="nav-bar-overflow-button"
              overflowtarget="widget-overflow-list"
+             flex="501"
              context="toolbar-context-menu">
 
       <hbox id="nav-bar-customizationtarget" class="customization-target" flex="1">
         <toolbaritem id="urlbar-container" align="center" flex="400" persist="width"
                      forwarddisabled="true" title="&locationItem.title;" removable="false"
+                     customizableui-areatype="toolbar"
+                     customizableui-anchorid="nav-bar-overflow-button"
                      class="chromeclass-location" nooverflow="true">
           <toolbarbutton id="back-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
                          label="&backCmd.label;"
@@ -644,6 +652,8 @@
 
         <toolbaritem id="search-container" title="&searchItem.title;"
                      align="center" class="chromeclass-toolbar-additional"
+                     customizableui-areatype="toolbar"
+                     customizableui-anchorid="nav-bar-overflow-button"
                      flex="100" persist="width" removable="true">
           <searchbar id="searchbar" flex="1"/>
         </toolbaritem>
@@ -655,6 +665,8 @@
                        orient="horizontal"
                        label="&webrtcIndicatorButton.label;"
                        tooltiptext="&webrtcIndicatorButton.tooltip;"
+                       customizableui-areatype="toolbar"
+                       customizableui-anchorid="nav-bar-overflow-button"
                        nooverflow="true">
           <menupopup onpopupshowing="WebrtcIndicator.fillPopup(this);"
                      onpopuphiding="WebrtcIndicator.clearPopup(this);"
@@ -672,6 +684,8 @@
                        ondragover="PlacesMenuDNDHandler.onDragOver(event);"
                        ondragleave="PlacesMenuDNDHandler.onDragLeave(event);"
                        ondrop="PlacesMenuDNDHandler.onDrop(event);"
+                       customizableui-areatype="toolbar"
+                       customizableui-anchorid="nav-bar-overflow-button"
                        oncommand="BookmarkingUI.onCommand(event);">
           <menupopup id="BMB_bookmarksPopup"
                      placespopup="true"
@@ -759,6 +773,8 @@
                        ondragenter="DownloadsIndicatorView.onDragOver(event);"
                        label="&downloads.label;"
                        removable="true"
+                       customizableui-areatype="toolbar"
+                       customizableui-anchorid="nav-bar-overflow-button"
                        tooltiptext="&downloads.tooltip;"/>
 
         <toolbarbutton id="home-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
@@ -769,6 +785,8 @@
                        ondrop="homeButtonObserver.onDrop(event)"
                        ondragexit="homeButtonObserver.onDragExit(event)"
                        onclick="BrowserGoHome(event);"
+                       customizableui-areatype="toolbar"
+                       customizableui-anchorid="nav-bar-overflow-button"
                        aboutHomeOverrideTooltip="&abouthome.pageTitle;"/>
 
 
@@ -778,6 +796,8 @@
                        nooverflow="true"
                        label="&sharePageCmd.label;"
                        tooltiptext="&sharePageCmd.label;"
+                       customizableui-areatype="toolbar"
+                       customizableui-anchorid="nav-bar-overflow-button"
                        command="Social:SharePage"/>
 
         <toolbaritem id="social-toolbar-item"
@@ -786,6 +806,8 @@
                      title="&socialToolbar.title;"
                      hidden="true"
                      nooverflow="true"
+                     customizableui-areatype="toolbar"
+                     customizableui-anchorid="nav-bar-overflow-button"
                      observes="socialActiveBroadcaster">
         <toolbarbutton id="social-notification-icon" class="default-notification-icon toolbarbutton-1 notification-anchor-icon"
                    oncommand="PopupNotifications._reshowNotifications(this,
@@ -880,6 +902,7 @@
              collapsed="true"
              customizable="true">
       <toolbaritem flex="1" id="personal-bookmarks" title="&bookmarksItem.title;"
+                   customizableui-areatype="toolbar"
                    removable="true">
         <hbox flex="1"
               id="PlacesToolbar"
