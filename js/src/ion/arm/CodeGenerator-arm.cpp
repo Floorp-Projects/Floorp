@@ -1906,8 +1906,9 @@ CodeGeneratorARM::visitSoftUDivOrMod(LSoftUDivOrMod *ins)
 
     JS_ASSERT(lhs == r0);
     JS_ASSERT(rhs == r1);
-    JS_ASSERT(ins->mirRaw()->isAsmJSUDiv() || ins->mirRaw()->isAsmJSUMod());
-    JS_ASSERT_IF(ins->mirRaw()->isAsmJSUDiv(), output == r0);
+    JS_ASSERT(ins->mirRaw()->isDiv() || ins->mirRaw()->isAsmJSUDiv() ||
+              ins->mirRaw()->isAsmJSUMod());
+    JS_ASSERT_IF(ins->mirRaw()->isDiv() || ins->mirRaw()->isAsmJSUDiv(), output == r0);
     JS_ASSERT_IF(ins->mirRaw()->isAsmJSUMod(), output == r1);
 
     Label afterDiv;
