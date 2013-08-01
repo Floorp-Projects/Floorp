@@ -128,43 +128,6 @@ TestPointerWithOrdering()
   MOZ_ASSERT(atomic == array1 + 3, "CAS should have changed atomic's value.");
 }
 
-template<MemoryOrdering Order>
-static void
-TestEnumWithOrdering()
-{
-  enum EnumType {
-    EnumType_0 = 0,
-    EnumType_1 = 1,
-    EnumType_2 = 2,
-    EnumType_3 = 3
-  };
-
-  Atomic<EnumType, Order> atomic(EnumType_2);
-  MOZ_ASSERT(atomic == EnumType_2, "Atomic variable did not initialize");
-
-  // Test assignment
-  DebugOnly<EnumType> result;
-  result = (atomic = EnumType_3);
-  MOZ_ASSERT(atomic == EnumType_3, "Atomic assignment failed");
-  MOZ_ASSERT(result == EnumType_3, "Atomic assignment returned the wrong value");
-
-  // Test exchange.
-  atomic = EnumType_1;
-  result = atomic.exchange(EnumType_2);
-  MOZ_ASSERT(atomic == EnumType_2, "Atomic exchange did not work");
-  MOZ_ASSERT(result == EnumType_1, "Atomic exchange returned the wrong value");
-
-  // Test CAS.
-  atomic = EnumType_1;
-  DebugOnly<bool> boolResult = atomic.compareExchange(EnumType_0, EnumType_2);
-  MOZ_ASSERT(!boolResult, "CAS should have returned false.");
-  MOZ_ASSERT(atomic == EnumType_1, "CAS shouldn't have done anything.");
-
-  boolResult = atomic.compareExchange(EnumType_1, EnumType_3);
-  MOZ_ASSERT(boolResult, "CAS should have succeeded.");
-  MOZ_ASSERT(atomic == EnumType_3, "CAS should have changed atomic's value.");
-}
-
 template <typename T>
 static void
 TestType()
@@ -183,14 +146,6 @@ TestPointer()
   TestPointerWithOrdering<T, Relaxed>();
 }
 
-static void
-TestEnum()
-{
-  TestEnumWithOrdering<SequentiallyConsistent>();
-  TestEnumWithOrdering<ReleaseAcquire>();
-  TestEnumWithOrdering<Relaxed>();
-}
-
 int main()
 {
   TestType<uint32_t>();
@@ -201,5 +156,4 @@ int main()
   TestPointer<float>();
   TestPointer<uint16_t*>();
   TestPointer<uint32_t*>();
-  TestEnum();
 }
