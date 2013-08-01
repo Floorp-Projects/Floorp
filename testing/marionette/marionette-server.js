@@ -2413,7 +2413,7 @@ this.MarionetteServer = function MarionetteServer(port, forceLocal) {
   if (forceLocal) {
     flags |= Ci.nsIServerSocket.LoopbackOnly;
   }
-  let socket = new ServerSocket(port, flags, 4);
+  let socket = new ServerSocket(port, flags, 0);
   logger.info("Listening on port " + socket.port + "\n");
   socket.asyncListen(this);
   this.listener = socket;

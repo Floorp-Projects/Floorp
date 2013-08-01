@@ -3131,18 +3131,19 @@ nsCSSRendering::PrepareBackgroundLayer(nsPresContext* aPresContext,
   // proper background positioning when background-position is defined with
   // percentages.
   CSSSizeOrRatio intrinsicSize = state.mImageRenderer.ComputeIntrinsicSize();
+  nsSize bgPositionSize = bgPositioningArea.Size();
   nsSize imageSize = ComputeDrawnSizeForBackground(intrinsicSize,
-                                                   bgPositioningArea.Size(),
+                                                   bgPositionSize,
                                                    aLayer.mSize);
   if (imageSize.width <= 0 || imageSize.height <= 0)
     return state;
 
   state.mImageRenderer.SetPreferredSize(intrinsicSize,
-                                        bgPositioningArea.Size());
+                                        imageSize);
 
   // Compute the position of the background now that the background's size is
   // determined.
-  ComputeBackgroundAnchorPoint(aLayer, bgPositioningArea.Size(), imageSize,
+  ComputeBackgroundAnchorPoint(aLayer, bgPositionSize, imageSize,
                                &imageTopLeft, &state.mAnchor);
   imageTopLeft += bgPositioningArea.TopLeft();
   state.mAnchor += bgPositioningArea.TopLeft();
@@ -4706,13 +4707,27 @@ nsImageRenderer::SetPreferredSize(const CSSSizeOrRatio& aIntrinsicSize,
                   : aDefaultSize.height;
 }
 
+// Convert from nsImageRenderer flags to the flags we want to use for drawing in
+// the imgIContainer namespace.
+static uint32_t
+ConvertImageRendererToDrawFlags(uint32_t aImageRendererFlags)
+{
+  uint32_t drawFlags = imgIContainer::FLAG_NONE;
+  if (aImageRendererFlags & nsImageRenderer::FLAG_SYNC_DECODE_IMAGES) {
+    drawFlags |= imgIContainer::FLAG_SYNC_DECODE;
+  }
+  if (aImageRendererFlags & nsImageRenderer::FLAG_PAINTING_TO_WINDOW) {
+    drawFlags |= imgIContainer::FLAG_HIGH_QUALITY_SCALING;
+  }
+  return drawFlags;
+}
+
 void
 nsImageRenderer::Draw(nsPresContext*       aPresContext,
                       nsRenderingContext&  aRenderingContext,
                       const nsRect&        aDirtyRect,
                       const nsRect&        aFill,
-                      const nsRect&        aDest,
-                      uint32_t             aFlags /* = imgIContainer::FLAG_NONE */)
+                      const nsRect&        aDest)
 {
   if (!mIsReady) {
     NS_NOTREACHED("Ensure PrepareImage() has returned true before calling me");
@@ -4731,7 +4746,8 @@ nsImageRenderer::Draw(nsPresContext*       aPresContext,
     {
       nsLayoutUtils::DrawSingleImage(&aRenderingContext, mImageContainer,
                                      graphicsFilter, aFill, aDirtyRect,
-                                     nullptr, aFlags);
+                                     nullptr,
+                                     ConvertImageRendererToDrawFlags(mFlags));
       return;
     }
     case eStyleImageType_Gradient:
@@ -4784,19 +4800,11 @@ nsImageRenderer::DrawBackground(nsPresContext*       aPresContext,
     gfxPattern::GraphicsFilter graphicsFilter =
       nsLayoutUtils::GetGraphicsFilterForFrame(mForFrame);
 
-    uint32_t drawFlags = imgIContainer::FLAG_NONE;
-    if (mFlags & FLAG_SYNC_DECODE_IMAGES) {
-      drawFlags |= imgIContainer::FLAG_SYNC_DECODE;
-    }
-    if (mFlags & FLAG_PAINTING_TO_WINDOW) {
-      drawFlags |= imgIContainer::FLAG_HIGH_QUALITY_SCALING;
-    }
-
     nsLayoutUtils::DrawBackgroundImage(&aRenderingContext, mImageContainer,
         nsIntSize(nsPresContext::AppUnitsToIntCSSPixels(mSize.width),
                   nsPresContext::AppUnitsToIntCSSPixels(mSize.height)),
         graphicsFilter,
-        aDest, aFill, aAnchor, aDirty, drawFlags);
+        aDest, aFill, aAnchor, aDirty, ConvertImageRendererToDrawFlags(mFlags));
     return;
   }
 

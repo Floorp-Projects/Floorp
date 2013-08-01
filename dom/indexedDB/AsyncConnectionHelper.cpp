@@ -119,7 +119,8 @@ HelperBase::WrapNative(JSContext* aCx,
   NS_ASSERTION(aResult.address(), "Null pointer!");
   NS_ASSERTION(mRequest, "Null request!");
 
-  JS::Rooted<JSObject*> global(aCx, mRequest->GetParentObject());
+  nsRefPtr<IDBWrapperCache> wrapper = static_cast<IDBWrapperCache*>(mRequest);
+  JS::Rooted<JSObject*> global(aCx, wrapper->GetParentObject());
   NS_ASSERTION(global, "This should never be null!");
 
   nsresult rv =

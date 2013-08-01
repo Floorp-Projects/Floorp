@@ -407,6 +407,7 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
         NeedsArgsObj,
         IsGenerator,
         IsGeneratorExp,
+        IsLegacyGenerator,
         OwnSource,
         ExplicitUseStrict,
         SelfHosted
@@ -497,6 +498,8 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
             scriptBits |= (1 << IsGenerator);
         if (script->isGeneratorExp)
             scriptBits |= (1 << IsGeneratorExp);
+        if (script->isLegacyGenerator)
+            scriptBits |= (1 << IsLegacyGenerator);
 
         JS_ASSERT(!script->compileAndGo);
         JS_ASSERT(!script->hasSingletons);
@@ -596,6 +599,8 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
             script->isGenerator = true;
         if (scriptBits & (1 << IsGeneratorExp))
             script->isGeneratorExp = true;
+        if (scriptBits & (1 << IsLegacyGenerator))
+            script->isLegacyGenerator = true;
     }
 
     JS_STATIC_ASSERT(sizeof(jsbytecode) == 1);
@@ -1967,6 +1972,7 @@ JSScript::fullyInitFromEmitter(ExclusiveContext *cx, HandleScript script, Byteco
         JS_ASSERT(!bce->script->noScriptRval);
         script->isGenerator = funbox->isGenerator();
         script->isGeneratorExp = funbox->inGenexpLambda;
+        script->isLegacyGenerator = funbox->isLegacyGenerator();
         script->setFunction(funbox->function());
     }
 

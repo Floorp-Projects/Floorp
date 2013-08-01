@@ -8,11 +8,7 @@ DIRS += ['ipc']
 TEST_DIRS += ['test']
 
 XPIDL_SOURCES += [
-    'nsIIDBCursor.idl',
-    'nsIIDBCursorWithValue.idl',
     'nsIIDBKeyRange.idl',
-    'nsIIDBOpenDBRequest.idl',
-    'nsIIDBRequest.idl',
     'nsIIndexedDatabaseManager.idl',
 ]
 

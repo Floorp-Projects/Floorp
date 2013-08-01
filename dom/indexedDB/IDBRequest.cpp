@@ -8,6 +8,7 @@
 
 #include "nsIScriptContext.h"
 
+#include "mozilla/dom/IDBOpenDBRequestBinding.h"
 #include "nsComponentManagerUtils.h"
 #include "nsDOMClassInfoID.h"
 #include "nsDOMJSUtils.h"
@@ -46,6 +47,8 @@ IDBRequest::IDBRequest()
   mHaveResultOrErrorCode(false)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
+  SetIsDOMBinding();
 }
 
 IDBRequest::~IDBRequest()
@@ -113,7 +116,7 @@ IDBRequest::NotifyHelperCompleted(HelperBase* aHelper)
     return rv;
   }
 
-  JS::Rooted<JSObject*> global(cx, GetParentObject());
+  JS::Rooted<JSObject*> global(cx, IDBWrapperCache::GetParentObject());
   NS_ASSERTION(global, "This should never be null!");
 
   JSAutoCompartment ac(cx, global);
@@ -229,53 +232,35 @@ IDBRequest::FillScriptErrorEvent(nsScriptErrorEvent* aEvent) const
   aEvent->fileName = mFilename.get();
 }
 
-NS_IMETHODIMP
-IDBRequest::GetReadyState(nsAString& aReadyState)
+mozilla::dom::IDBRequestReadyState
+IDBRequest::ReadyState() const
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
   if (IsPending()) {
-    aReadyState.AssignLiteral("pending");
-  }
-  else {
-    aReadyState.AssignLiteral("done");
+    return IDBRequestReadyState::Pending;
   }
 
-  return NS_OK;
+  return IDBRequestReadyState::Done;
 }
 
-NS_IMETHODIMP
-IDBRequest::GetSource(nsISupports** aSource)
+JSObject*
+IDBRequest::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-
-  nsCOMPtr<nsISupports> source(mSource);
-  source.forget(aSource);
-  return NS_OK;
+  return IDBRequestBinding::Wrap(aCx, aScope, this);
 }
 
-NS_IMETHODIMP
-IDBRequest::GetTransaction(nsISupports** aTransaction)
-{
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-
-  nsRefPtr<IDBWrapperCache> transaction(mTransaction);
-  transaction.forget(aTransaction);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-IDBRequest::GetResult(jsval* aResult)
+JS::Value
+IDBRequest::GetResult(JSContext* aCx, mozilla::ErrorResult& aRv) const
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
   if (!mHaveResultOrErrorCode) {
     // XXX Need a real error code here.
-    return NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR;
+    aRv.Throw(NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR);
   }
 
-  *aResult = mResultVal;
-  return NS_OK;
+  return mResultVal;
 }
 
 mozilla::dom::DOMError*
@@ -289,15 +274,6 @@ IDBRequest::GetError(mozilla::ErrorResult& aRv)
   }
 
   return mError;
-}
-
-NS_IMETHODIMP
-IDBRequest::GetError(nsISupports** aError)
-{
-  ErrorResult rv;
-  *aError = GetError(rv);
-  NS_IF_ADDREF(*aError);
-  return rv.ErrorCode();
 }
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(IDBRequest, IDBWrapperCache)
@@ -322,17 +298,10 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(IDBRequest, IDBWrapperCache)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(IDBRequest)
-  NS_INTERFACE_MAP_ENTRY(nsIIDBRequest)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(IDBRequest)
 NS_INTERFACE_MAP_END_INHERITING(IDBWrapperCache)
 
 NS_IMPL_ADDREF_INHERITED(IDBRequest, IDBWrapperCache)
 NS_IMPL_RELEASE_INHERITED(IDBRequest, IDBWrapperCache)
-
-DOMCI_DATA(IDBRequest, IDBRequest)
-
-NS_IMPL_EVENT_HANDLER(IDBRequest, success)
-NS_IMPL_EVENT_HANDLER(IDBRequest, error)
 
 nsresult
 IDBRequest::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
@@ -342,6 +311,13 @@ IDBRequest::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
   aVisitor.mCanHandle = true;
   aVisitor.mParentTarget = mTransaction;
   return NS_OK;
+}
+
+IDBOpenDBRequest::IDBOpenDBRequest()
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
+  SetIsDOMBinding();
 }
 
 IDBOpenDBRequest::~IDBOpenDBRequest()
@@ -390,20 +366,19 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(IDBOpenDBRequest,
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(IDBOpenDBRequest)
-  NS_INTERFACE_MAP_ENTRY(nsIIDBOpenDBRequest)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(IDBOpenDBRequest)
 NS_INTERFACE_MAP_END_INHERITING(IDBRequest)
 
 NS_IMPL_ADDREF_INHERITED(IDBOpenDBRequest, IDBRequest)
 NS_IMPL_RELEASE_INHERITED(IDBOpenDBRequest, IDBRequest)
 
-DOMCI_DATA(IDBOpenDBRequest, IDBOpenDBRequest)
-
-NS_IMPL_EVENT_HANDLER(IDBOpenDBRequest, blocked)
-NS_IMPL_EVENT_HANDLER(IDBOpenDBRequest, upgradeneeded)
-
 nsresult
 IDBOpenDBRequest::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
 {
   return IndexedDatabaseManager::FireWindowOnError(GetOwner(), aVisitor);
+}
+
+JSObject*
+IDBOpenDBRequest::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
+{
+  return IDBOpenDBRequestBinding::Wrap(aCx, aScope, this);
 }

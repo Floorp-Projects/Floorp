@@ -68,7 +68,8 @@ flyoutpanel[visible] {
 }
 
 .flyoutpanel-contents[input="precise"] {
-  overflow: scroll;
+  overflow-y: scroll;
+  overflow-x: hidden;
 }
 
 .flyout-close-button {
