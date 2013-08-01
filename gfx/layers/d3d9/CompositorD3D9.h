@@ -82,7 +82,14 @@ public:
   virtual void NotifyLayersTransaction() MOZ_OVERRIDE {}
 
   virtual nsIWidget* GetWidget() const MOZ_OVERRIDE { return mWidget; }
-  virtual nsIntSize& GetWidgetSize() MOZ_OVERRIDE;
+  virtual const nsIntSize& GetWidgetSize() MOZ_OVERRIDE
+  {
+    NS_ASSERTION(false, "Getting the widget size on windows causes some kind of resizing of buffers. "
+                        "You should not do that outside of BeginFrame, so the best we can do is return "
+                        "the last size we got, that might not be up to date. So you probably shouldn't "
+                        "use this method.");
+    return mSize;
+  }
 
   IDirect3DDevice9* device() const { return mDeviceManager->device(); }
 
@@ -101,7 +108,8 @@ public:
    virtual TemporaryRef<DataTextureSource>
      CreateDataTextureSource(TextureFlags aFlags = 0) MOZ_OVERRIDE { return nullptr; } 
 private:
-  void SetSamplerForFilter(gfx::Filter aFilter);
+  // ensure mSize is up to date with respect to mWidget
+  void EnsureSize();
   void PaintToTarget();
   void SetMask(const EffectChain &aEffectChain, uint32_t aMaskTexture);
 
