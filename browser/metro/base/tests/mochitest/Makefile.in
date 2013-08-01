@@ -56,6 +56,8 @@ MOCHITEST_METRO_FILES += \
   browser_selection_urlbar.js \
   browser_selection_contenteditable.js \
   browser_selection_contenteditable.html \
+  browser_selection_caretfocus.js \
+  browser_selection_caretfocus.html \
   $(NULL)
 endif
 
