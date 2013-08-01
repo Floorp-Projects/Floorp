@@ -256,6 +256,7 @@ public:
   // WebIDL helper methods
   static bool HasBatterySupport(JSContext* /* unused*/, JSObject* /*unused */);
   static bool HasPowerSupport(JSContext* /* unused */, JSObject* aGlobal);
+  static bool HasPhoneNumberSupport(JSContext* /* unused */, JSObject* aGlobal);
   static bool HasIdleSupport(JSContext* /* unused */, JSObject* aGlobal);
   static bool HasWakeLockSupport(JSContext* /* unused*/, JSObject* /*unused */);
   static bool HasDesktopNotificationSupport(JSContext* /* unused*/,
