@@ -65,6 +65,10 @@ ifdef NIGHTLY_BUILD
 DEFINES += -DENABLE_PARALLEL_JS
 endif
 
+ifdef NIGHTLY_BUILD
+DEFINES += -DENABLE_BINARYDATA
+endif
+
 # Ion
 ifdef ENABLE_ION
 VPATH +=	$(srcdir)/jit
