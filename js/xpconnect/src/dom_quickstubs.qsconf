@@ -86,10 +86,7 @@ members = [
     # dom/indexedDB
     'nsIIDBCursor.*',
     'nsIIDBCursorWithValue.*',
-    'nsIIDBDatabase.*',
-    'nsIIDBIndex.*',
     'nsIIDBKeyRange.*',
-    'nsIIDBObjectStore.*',
     'nsIIDBRequest.*',
     'nsIIDBOpenDBRequest.*',
     'nsIIndexedDatabaseManager.*',

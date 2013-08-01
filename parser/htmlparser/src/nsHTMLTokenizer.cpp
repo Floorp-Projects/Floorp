@@ -166,7 +166,7 @@ nsHTMLTokenizer::PeekToken()
  * This method provides access to the topmost token in the tokenDeque.
  * The token is really removed from the list; if the list is empty we return 0.
  *
- * @return Pointer to token or NULL
+ * @return Pointer to token or nullptr
  */
 CToken*
 nsHTMLTokenizer::PopToken()

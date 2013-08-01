@@ -8,8 +8,6 @@
  * https://dvcs.w3.org/hg/IndexedDB/raw-file/tip/Overview.html#idl-def-IDBTransactionMode
  */
 
-interface IDBObjectStore;
-
 enum IDBTransactionMode {
     "readonly",
     "readwrite",

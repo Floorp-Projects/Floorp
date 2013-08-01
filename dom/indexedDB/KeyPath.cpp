@@ -12,6 +12,8 @@
 #include "nsJSUtils.h"
 #include "xpcpublic.h"
 
+#include "mozilla/dom/BindingDeclarations.h"
+
 USING_INDEXEDDB_NAMESPACE
 
 namespace {
@@ -219,6 +221,39 @@ GetJSValFromKeyPathString(JSContext* aCx,
 }
 
 } // anonymous namespace
+
+// static
+nsresult
+KeyPath::Parse(JSContext* aCx, const nsAString& aString, KeyPath* aKeyPath)
+{
+  KeyPath keyPath(0);
+  keyPath.SetType(STRING);
+
+  if (!keyPath.AppendStringWithValidation(aCx, aString)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  *aKeyPath = keyPath;
+  return NS_OK;
+}
+
+//static
+nsresult
+KeyPath::Parse(JSContext* aCx, const mozilla::dom::Sequence<nsString>& aStrings,
+               KeyPath* aKeyPath)
+{
+  KeyPath keyPath(0);
+  keyPath.SetType(ARRAY);
+
+  for (uint32_t i = 0; i < aStrings.Length(); ++i) {
+    if (!keyPath.AppendStringWithValidation(aCx, aStrings[i])) {
+      return NS_ERROR_FAILURE;
+    }
+  }
+
+  *aKeyPath = keyPath;
+  return NS_OK;
+}
 
 // static
 nsresult

@@ -508,7 +508,7 @@ IndexedDBDatabaseChild::RecvPIndexedDBTransactionConstructor(
   nsRefPtr<IPCOpenDatabaseHelper> helper =
     new IPCOpenDatabaseHelper(mDatabase, mRequest);
 
-  nsTArray<nsString> storesToOpen;
+  Sequence<nsString> storesToOpen;
   nsRefPtr<IDBTransaction> transaction =
     IDBTransaction::CreateInternal(mDatabase, storesToOpen,
                                    IDBTransaction::VERSION_CHANGE, false, true);

@@ -2817,20 +2817,14 @@ JS_GetInstancePrivate(JSContext *cx, JSObject *objArg, JSClass *clasp, jsval *ar
 }
 
 JS_PUBLIC_API(JSBool)
-JS_GetPrototype(JSContext *cx, JSObject *objArg, JSObject **protop)
+JS_GetPrototype(JSContext *cx, JS::Handle<JSObject*> obj, JS::MutableHandle<JSObject*> protop)
 {
-    RootedObject obj(cx, objArg);
-    RootedObject proto(cx);
-    bool rv = JSObject::getProto(cx, obj, &proto);
-    *protop = proto;
-    return rv;
+    return JSObject::getProto(cx, obj, protop);
 }
 
 JS_PUBLIC_API(JSBool)
-JS_SetPrototype(JSContext *cx, JSObject *objArg, JSObject *protoArg)
+JS_SetPrototype(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handle<JSObject*> proto)
 {
-    RootedObject obj(cx, objArg);
-    RootedObject proto(cx, protoArg);
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj, proto);

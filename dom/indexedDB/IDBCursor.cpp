@@ -273,26 +273,25 @@ IDBCursor::Create(IDBRequest* aRequest,
 }
 
 // static
-nsresult
-IDBCursor::ParseDirection(const nsAString& aDirection, Direction* aResult)
+IDBCursor::Direction
+IDBCursor::ConvertDirection(mozilla::dom::IDBCursorDirection aDirection)
 {
-  if (aDirection.EqualsLiteral("next")) {
-    *aResult = NEXT;
+  switch (aDirection) {
+    case mozilla::dom::IDBCursorDirection::Next:
+      return NEXT;
+
+    case mozilla::dom::IDBCursorDirection::Nextunique:
+      return NEXT_UNIQUE;
+
+    case mozilla::dom::IDBCursorDirection::Prev:
+      return PREV;
+
+    case mozilla::dom::IDBCursorDirection::Prevunique:
+      return PREV_UNIQUE;
+
+    default:
+      MOZ_CRASH("Unknown direction!");
   }
-  else if (aDirection.EqualsLiteral("nextunique")) {
-    *aResult = NEXT_UNIQUE;
-  }
-  else if (aDirection.EqualsLiteral("prev")) {
-    *aResult = PREV;
-  }
-  else if (aDirection.EqualsLiteral("prevunique")) {
-    *aResult = PREV_UNIQUE;
-  }
-  else {
-    return NS_ERROR_TYPE_ERR;
-  }
-  
-  return NS_OK;
 }
 
 // static
@@ -732,9 +731,12 @@ IDBCursor::Update(const jsval& aValue,
       return NS_ERROR_DOM_INDEXEDDB_DATA_ERR;
     }
 
-    rv = mObjectStore->Put(aValue, JSVAL_VOID, aCx, 0, getter_AddRefs(request));
-    if (NS_FAILED(rv)) {
-      return rv;
+    ErrorResult error;
+    JS::Rooted<JS::Value> value(aCx, aValue);
+    Optional<JS::Handle<JS::Value> > keyValue(aCx);
+    request = mObjectStore->Put(aCx, value, keyValue, error);
+    if (error.Failed()) {
+      return error.ErrorCode();
     }
   }
   else {
@@ -742,9 +744,12 @@ IDBCursor::Update(const jsval& aValue,
     rv = objectKey.ToJSVal(aCx, &keyVal);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = mObjectStore->Put(aValue, keyVal, aCx, 1, getter_AddRefs(request));
-    if (NS_FAILED(rv)) {
-      return rv;
+    ErrorResult error;
+    JS::Rooted<JS::Value> value(aCx, aValue);
+    Optional<JS::Handle<JS::Value> > keyValue(aCx, keyVal);
+    request = mObjectStore->Put(aCx, value, keyValue, error);
+    if (error.Failed()) {
+      return error.ErrorCode();
     }
   }
 
@@ -813,10 +818,10 @@ IDBCursor::Delete(JSContext* aCx,
   nsresult rv = objectKey.ToJSVal(aCx, &key);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIIDBRequest> request;
-  rv = mObjectStore->Delete(key, aCx, getter_AddRefs(request));
-  if (NS_FAILED(rv)) {
-    return rv;
+  ErrorResult error;
+  nsCOMPtr<nsIIDBRequest> request = mObjectStore->Delete(aCx, key, error);
+  if (error.Failed()) {
+    return error.ErrorCode();
   }
 
 #ifdef IDB_PROFILER_USE_MARKS

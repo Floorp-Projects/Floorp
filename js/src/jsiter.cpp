@@ -1542,7 +1542,7 @@ typedef enum JSGeneratorOp {
  */
 static JSBool
 SendToGenerator(JSContext *cx, JSGeneratorOp op, HandleObject obj,
-                JSGenerator *gen, const Value &arg)
+                JSGenerator *gen, HandleValue arg)
 {
     if (gen->state == JSGEN_RUNNING || gen->state == JSGEN_CLOSING) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NESTING_GENERATOR);
@@ -1628,7 +1628,7 @@ CloseGenerator(JSContext *cx, HandleObject obj)
     if (gen->state == JSGEN_CLOSED)
         return true;
 
-    return SendToGenerator(cx, JSGENOP_CLOSE, obj, gen, UndefinedValue());
+    return SendToGenerator(cx, JSGENOP_CLOSE, obj, gen, JS::UndefinedHandleValue);
 }
 
 JS_ALWAYS_INLINE bool
@@ -1657,11 +1657,8 @@ generator_send_impl(JSContext *cx, CallArgs args)
         return false;
     }
 
-    if (!SendToGenerator(cx, JSGENOP_SEND, thisObj, gen,
-                         args.length() > 0 ? args[0] : UndefinedValue()))
-    {
+    if (!SendToGenerator(cx, JSGENOP_SEND, thisObj, gen, args.get(0)))
         return false;
-    }
 
     args.rval().set(gen->fp->returnValue());
     return true;
@@ -1687,7 +1684,7 @@ generator_next_impl(JSContext *cx, CallArgs args)
         return js_ThrowStopIteration(cx);
     }
 
-    if (!SendToGenerator(cx, JSGENOP_NEXT, thisObj, gen, UndefinedValue()))
+    if (!SendToGenerator(cx, JSGENOP_NEXT, thisObj, gen, JS::UndefinedHandleValue))
         return false;
 
     args.rval().set(gen->fp->returnValue());
@@ -1715,11 +1712,8 @@ generator_throw_impl(JSContext *cx, CallArgs args)
         return false;
     }
 
-    if (!SendToGenerator(cx, JSGENOP_THROW, thisObj, gen,
-                         args.length() > 0 ? args[0] : UndefinedValue()))
-    {
+    if (!SendToGenerator(cx, JSGENOP_THROW, thisObj, gen, args.get(0)))
         return false;
-    }
 
     args.rval().set(gen->fp->returnValue());
     return true;
@@ -1752,7 +1746,7 @@ generator_close_impl(JSContext *cx, CallArgs args)
         return true;
     }
 
-    if (!SendToGenerator(cx, JSGENOP_CLOSE, thisObj, gen, UndefinedValue()))
+    if (!SendToGenerator(cx, JSGENOP_CLOSE, thisObj, gen, JS::UndefinedHandleValue))
         return false;
 
     args.rval().set(gen->fp->returnValue());

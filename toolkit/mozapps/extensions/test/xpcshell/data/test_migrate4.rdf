@@ -33,7 +33,7 @@
                 <em:id>xpcshell@tests.mozilla.org</em:id>
                 <em:minVersion>0</em:minVersion>
                 <em:maxVersion>2</em:maxVersion>
-                <em:updateLink>http://localhost:4444/addons/test_migrate4_6.xpi</em:updateLink>
+                <em:updateLink>http://localhost:%PORT%/addons/test_migrate4_6.xpi</em:updateLink>
                 <em:updateInfoURL>http://example.com/updateInfo.xhtml</em:updateInfoURL>
               </Description>
             </em:targetApplication>

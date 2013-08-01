@@ -493,7 +493,7 @@ public:
     /**
      * Convert a pixel using a cms transform in an endian-aware manner.
      *
-     * Sets 'out' to 'in' if transform is NULL.
+     * Sets 'out' to 'in' if transform is nullptr.
      */
     static void TransformPixel(const gfxRGBA& in, gfxRGBA& out, qcms_transform *transform);
 
