@@ -14,9 +14,9 @@ var gContainingWindow = null;
 var gBrowser;
 
 function OnDocumentLoad(evt) {
-dump(evt.target.location + "\n");
-    if (evt.target.location == "about:blank")
+    if (evt.target != gBrowser.contentDocument || evt.target.location == "about:blank")
         return;
+    gBrowser.removeEventListener("load", OnDocumentLoad, true);
     gContainingWindow.close();
 }
 
@@ -39,7 +39,7 @@ this.OnRecordingLoad = function OnRecordingLoad(win) {
         return;
     }
 
-    gContainingWindow.document.addEventListener("load", OnDocumentLoad, true);
+    gBrowser.addEventListener("load", OnDocumentLoad, true);
 
     var args = window.arguments[0].wrappedJSObject;
 
