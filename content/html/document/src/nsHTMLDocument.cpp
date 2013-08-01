@@ -2261,13 +2261,6 @@ nsHTMLDocument::ReleaseEvents(int32_t aEventFlags)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsHTMLDocument::RouteEvent(nsIDOMEvent* aEvt)
-{
-  ReportUseOfDeprecatedMethod(this, "UseOfRouteEventWarning");
-  return NS_OK;
-}
-
 // Mapped to document.embeds for NS4 compatibility
 NS_IMETHODIMP
 nsHTMLDocument::GetPlugins(nsIDOMHTMLCollection** aPlugins)

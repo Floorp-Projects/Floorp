@@ -77,5 +77,4 @@ interface HTMLDocument : Document {
   // XXXbz do we actually need these anymore?
   void                      captureEvents(long eventFlags);
   void                      releaseEvents(long eventFlags);
-  void                      routeEvent(Event evt);
 };
