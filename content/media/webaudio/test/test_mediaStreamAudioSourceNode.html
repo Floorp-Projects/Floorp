@@ -11,13 +11,22 @@
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
+function createBuffer(context, delay) {
+  var buffer = context.createBuffer(2, 2048, context.sampleRate);
+  for (var i = 0; i < 2048 - delay; ++i) {
+    buffer.getChannelData(0)[i + delay] = Math.sin(440 * 2 * Math.PI * i / context.sampleRate);
+    buffer.getChannelData(1)[i + delay] = buffer.getChannelData(0)[i + delay];
+  }
+  return buffer;
+}
+
 var gTest = {
   length: 2048,
   skipOfflineContextTests: true,
   createGraph: function(context) {
     var sourceGraph = new AudioContext();
     var source = sourceGraph.createBufferSource();
-    source.buffer = this.buffer;
+    source.buffer = createBuffer(context, 0);
     var dest = sourceGraph.createMediaStreamDestination();
     source.connect(dest);
     source.start(0);
@@ -26,13 +35,7 @@ var gTest = {
     return mediaStreamSource;
   },
   createExpectedBuffers: function(context) {
-    var buffer = context.createBuffer(2, 2048, context.sampleRate);
-    for (var i = 0; i < 2048; ++i) {
-      buffer.getChannelData(0)[i] = Math.sin(440 * 2 * Math.PI * i / context.sampleRate);
-      buffer.getChannelData(1)[i] = buffer.getChannelData(0)[i];
-    }
-    this.buffer = buffer;
-    return buffer;
+    return createBuffer(context, 1);
   },
 };
 

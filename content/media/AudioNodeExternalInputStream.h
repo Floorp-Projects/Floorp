@@ -57,6 +57,17 @@ private:
                           AudioSampleFormat aFormat,
                           float aVolume);
 
+    // mEndOfConsumedInputTicks is the end of the input ticks that we've consumed.
+    // 0 if we haven't consumed any yet.
+    TrackTicks mEndOfConsumedInputTicks;
+    // mEndOfLastInputIntervalInInputStream is the timestamp for the end of the
+    // previous interval which was unblocked for both the input and output
+    // stream, in the input stream's timeline, or -1 if there wasn't one.
+    StreamTime mEndOfLastInputIntervalInInputStream;
+    // mEndOfLastInputIntervalInOutputStream is the timestamp for the end of the
+    // previous interval which was unblocked for both the input and output
+    // stream, in the output stream's timeline, or -1 if there wasn't one.
+    StreamTime mEndOfLastInputIntervalInOutputStream;
     /**
      * Number of samples passed to the resampler so far.
      */
