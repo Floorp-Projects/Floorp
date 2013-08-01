@@ -134,6 +134,13 @@ CompositableClient::CreateDeprecatedTextureClient(DeprecatedTextureClientType aD
   case TEXTURE_SHMEM:
     result = new DeprecatedTextureClientShmem(GetForwarder(), GetTextureInfo());
     break;
+  case TEXTURE_FALLBACK:
+#ifdef XP_WIN
+    if (parentBackend == LAYERS_D3D9) {
+      result = new DeprecatedTextureClientShmem(GetForwarder(), GetTextureInfo());
+    }
+#endif
+    break;
   default:
     MOZ_ASSERT(false, "Unhandled texture client type");
   }
