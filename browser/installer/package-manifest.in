@@ -520,6 +520,8 @@
 @BINPATH@/components/PermissionSettings.manifest
 @BINPATH@/components/ContactManager.js
 @BINPATH@/components/ContactManager.manifest
+@BINPATH@/components/PhoneNumberService.js
+@BINPATH@/components/PhoneNumberService.manifest
 @BINPATH@/components/AlarmsManager.js
 @BINPATH@/components/AlarmsManager.manifest
 @BINPATH@/components/Push.js

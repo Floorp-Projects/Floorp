@@ -224,6 +224,7 @@ webidl_files = \
   PerformanceNavigation.webidl \
   PerformanceTiming.webidl \
   PeriodicWave.webidl \
+  PhoneNumberService.webidl \
   Plugin.webidl \
   PluginArray.webidl \
   Position.webidl \

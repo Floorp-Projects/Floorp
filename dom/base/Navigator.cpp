@@ -1604,6 +1604,14 @@ Navigator::HasPowerSupport(JSContext* /* unused */, JSObject* aGlobal)
 
 /* static */
 bool
+Navigator::HasPhoneNumberSupport(JSContext* /* unused */, JSObject* aGlobal)
+{
+  nsCOMPtr<nsPIDOMWindow> win = GetWindowFromGlobal(aGlobal);
+  return CheckPermission(win, "phonenumberservice");
+}
+
+/* static */
+bool
 Navigator::HasIdleSupport(JSContext*  /* unused */, JSObject* aGlobal)
 {
   if (!nsContentUtils::IsIdleObserverAPIEnabled()) {
