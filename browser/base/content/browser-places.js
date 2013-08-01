@@ -998,10 +998,11 @@ let PlacesToolbarHelper = {
 
 let BookmarkingUI = {
   get button() {
-    let widget = CustomizableUI.getWidget("bookmarks-menu-button")
-                               .forWindow(window);
-    return widget.areaType == CustomizableUI.TYPE_TOOLBAR ? widget.node
-                                                          : null;
+    let widgetGroup = CustomizableUI.getWidget("bookmarks-menu-button");
+    if (widgetGroup.areaType == CustomizableUI.TYPE_TOOLBAR) {
+      return widgetGroup.forWindow(window).node;
+    }
+    return null;
   },
 
   get star() {
@@ -1233,9 +1234,9 @@ let BookmarkingUI = {
     }
 
     // Handle special case when the button is in the panel.
-    let widget = CustomizableUI.getWidget("bookmarks-menu-button")
-                               .forWindow(window);
-    if (widget.areaType == CustomizableUI.TYPE_MENU_PANEL) {
+    let widgetGroup = CustomizableUI.getWidget("bookmarks-menu-button");
+    let widget = widgetGroup.forWindow(window);
+    if (widgetGroup.areaType == CustomizableUI.TYPE_MENU_PANEL) {
       let view = document.getElementById("PanelUI-bookmarks");
       view.addEventListener("ViewShowing", this.onPanelMenuViewShowing);
       view.addEventListener("ViewHiding", this.onPanelMenuViewHiding);
