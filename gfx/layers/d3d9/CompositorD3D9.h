@@ -110,6 +110,7 @@ public:
 private:
   // ensure mSize is up to date with respect to mWidget
   void EnsureSize();
+  void SetSamplerForFilter(gfx::Filter aFilter);
   void PaintToTarget();
   void SetMask(const EffectChain &aEffectChain, uint32_t aMaskTexture);
 
