@@ -21,7 +21,8 @@ let Keyboard = {
   _messageManager: null,
   _messageNames: [
     'SetValue', 'RemoveFocus', 'SetSelectedOption', 'SetSelectedOptions',
-    'SetSelectionRange', 'ReplaceSurroundingText'
+    'SetSelectionRange', 'ReplaceSurroundingText', 'ShowInputMethodPicker',
+    'SwitchToNextInputMethod', 'HideInputMethod'
   ],
 
   get messageManager() {
@@ -120,6 +121,12 @@ let Keyboard = {
       case 'Keyboard:ReplaceSurroundingText':
         this.replaceSurroundingText(msg);
         break;
+      case 'Keyboard:SwitchToNextInputMethod':
+        this.switchToNextInputMethod();
+        break;
+      case 'Keyboard:ShowInputMethodPicker':
+        this.showInputMethodPicker();
+        break;
     }
   },
 
@@ -160,6 +167,20 @@ let Keyboard = {
   replaceSurroundingText: function keyboardReplaceSurroundingText(msg) {
     this.messageManager.sendAsyncMessage('Forms:ReplaceSurroundingText',
                                          msg.data);
+  },
+
+  showInputMethodPicker: function keyboardShowInputMethodPicker() {
+    let browser = Services.wm.getMostRecentWindow("navigator:browser");
+    browser.shell.sendChromeEvent({
+      type: "input-method-show-picker"
+    });
+  },
+
+  switchToNextInputMethod: function keyboardSwitchToNextInputMethod() {
+    let browser = Services.wm.getMostRecentWindow("navigator:browser");
+    browser.shell.sendChromeEvent({
+      type: "input-method-switch-to-next"
+    });
   }
 };
 

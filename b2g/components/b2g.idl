@@ -76,3 +76,36 @@ interface nsIB2GKeyboard : nsISupports
                               [optional] in long beforeLength,
                               [optional] in long afterLength);
 };
+
+// Manages the list of IMEs, enables/disables IME and switches to an IME.
+[scriptable, uuid(e51a6fa0-ef85-11e2-b778-0800200c9a66)]
+interface nsIInputMethodManager : nsISupports
+{
+  // Ask the OS to show a list of available IMEs for users to switch from.
+  // OS should ignore this request if the app is currently not the active one.
+  void showAll();
+
+  // Ask the OS to switch away from the current active Keyboard app.
+  // OS should ignore this request if the app is currently not the active one.
+  void next();
+
+  // To know if the OS supports IME switching or not.
+  // Use case: let the keyboard app knows if it is necessary to show the "IME switching"
+  // (globe) button. We have a use case that when there is only one IME enabled, we
+  // should not show the globe icon.
+  boolean supportsSwitching();
+
+  // Ask the OS to hide the current active Keyboard app. (was: |removeFocus()|)
+  // OS should ignore this request if the app is currently not the active one.
+  // The OS will void the current input context (if it exists).
+  // This method belong to |mgmt| because we would like to allow Keyboard to access to
+  // this method w/o a input context.
+  void hide();
+};
+
+[scriptable, uuid(5c7f4ce1-a946-4adc-89e6-c908226341a0)]
+interface nsIInputMethod : nsISupports
+{
+  // Input Method Manager contain a few global methods expose to apps
+  readonly attribute nsIInputMethodManager mgmt;
+};
