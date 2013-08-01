@@ -43,9 +43,7 @@ public:
 
   virtual TextureFactoryIdentifier GetTextureFactoryIdentifier() MOZ_OVERRIDE
   {
-    return TextureFactoryIdentifier(LAYERS_BASIC,
-                                    XRE_GetProcessType(),
-                                    GetMaxTextureSize());
+    return TextureFactoryIdentifier(LAYERS_BASIC, GetMaxTextureSize());
   }
 
   virtual TemporaryRef<CompositingRenderTarget>

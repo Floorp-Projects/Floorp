@@ -41,7 +41,6 @@ public:
   typedef gfxASurface::gfxContentType gfxContentType;
 
   CompositableForwarder()
-    : mMultiProcess(false)
   {}
 
   /**
@@ -208,14 +207,8 @@ public:
     return mTextureFactoryIdentifier.mSupportsPartialUploads;
   }
 
-  bool ForwardsToDifferentProcess() const
-  {
-    return mMultiProcess;
-  }
-
 protected:
   TextureFactoryIdentifier mTextureFactoryIdentifier;
-  bool mMultiProcess;
 };
 
 } // namespace
