@@ -242,6 +242,17 @@ class Permissions(object):
            expireType INTEGER,
            expireTime INTEGER)""")
 
+        rows = cursor.execute("PRAGMA table_info(moz_hosts)")
+        count = len(rows.fetchall())
+
+        # if the db contains 8 columns, we're using user_version 3
+        if count == 8:
+            statement = "INSERT INTO moz_hosts values(NULL, ?, ?, ?, 0, 0, 0, 0)"
+            cursor.execute("PRAGMA user_version=3;")
+        else:
+            statement = "INSERT INTO moz_hosts values(NULL, ?, ?, ?, 0, 0)"
+            cursor.execute("PRAGMA user_version=2;")
+
         for location in locations:
             # set the permissions
             permissions = { 'allowXULXBL': 'noxul' not in location.options }
@@ -250,17 +261,6 @@ class Permissions(object):
                     permission_type = 1
                 else:
                     permission_type = 2
-
-                rows = cursor.execute("PRAGMA table_info(moz_hosts)")
-                count = len(rows.fetchall())
-
-                # if the db contains 8 columns, we're using user_version 3
-                if count == 8:
-                    statement = "INSERT INTO moz_hosts values(NULL, ?, ?, ?, 0, 0, 0, 0)"
-                    cursor.execute("PRAGMA user_version=3;")
-                else:
-                    statement = "INSERT INTO moz_hosts values(NULL, ?, ?, ?, 0, 0)"
-                    cursor.execute("PRAGMA user_version=2;")
 
                 cursor.execute(statement,
                                (location.host, perm, permission_type))
