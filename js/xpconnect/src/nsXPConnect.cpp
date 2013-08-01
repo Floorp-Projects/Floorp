@@ -269,14 +269,13 @@ xpc::SystemErrorReporter(JSContext *cx, const char *message, JSErrorReport *rep)
             consoleService->LogMessage(errorObject);
     }
 
-    /* Log to stderr in debug builds. */
-#ifdef DEBUG
-    fprintf(stderr, "System JS : %s %s:%d\n"
-            "                     %s\n",
-            JSREPORT_IS_WARNING(rep->flags) ? "WARNING" : "ERROR",
-            rep->filename, rep->lineno,
-            message ? message : "<no message>");
-#endif
+    if (nsContentUtils::DOMWindowDumpEnabled()) {
+        fprintf(stderr, "System JS : %s %s:%d\n"
+                "                     %s\n",
+                JSREPORT_IS_WARNING(rep->flags) ? "WARNING" : "ERROR",
+                rep->filename, rep->lineno,
+                message ? message : "<no message>");
+    }
 
 }
 
