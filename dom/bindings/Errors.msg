@@ -44,3 +44,4 @@ MSG_DEF(MSG_INVALID_VERSION, 0, "0 (Zero) is not a valid database version.")
 MSG_DEF(MSG_INVALID_BYTESTRING, 2, "Cannot convert string to ByteString because the character"
         " at index {0} has value {1} which is greater than 255.")
 MSG_DEF(MSG_NOT_DATE, 1, "{0} is not a date.")
+MSG_DEF(MSG_INVALID_ADVANCE_COUNT, 0, "0 (Zero) is not a valid advance count.")

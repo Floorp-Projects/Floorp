@@ -201,3 +201,4 @@ skip-if(B2G) == wide--cover--omitted-width-nonpercent-height-viewbox.html ref-wi
 == wide--cover--percent-width-percent-height-viewbox.html ref-wide-lime768x256.html
 
 == diagonal-percentage-vector-background.html diagonal-percentage-vector-background-ref.html
+== no-aspect-ratio-wide.html no-aspect-ratio-normal.html

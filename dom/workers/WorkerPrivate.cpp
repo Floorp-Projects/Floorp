@@ -1126,7 +1126,7 @@ public:
       }
     }
 
-    if (!logged) {
+    if (!logged || nsContentUtils::DOMWindowDumpEnabled()) {
       NS_ConvertUTF16toUTF8 msg(aMessage);
 #ifdef ANDROID
       __android_log_print(ANDROID_LOG_INFO, "Gecko", "%s", msg.get());

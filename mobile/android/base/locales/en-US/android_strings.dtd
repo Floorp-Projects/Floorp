@@ -71,6 +71,9 @@
 <!ENTITY pref_category_vendor "&vendorShortName;">
 <!ENTITY pref_category_datareporting "Data choices">
 <!ENTITY pref_category_installed_search_engines "Installed search engines">
+<!ENTITY pref_category_devtools "Developer tools">
+<!ENTITY pref_developer_remotedebugging "Remote debugging">
+<!ENTITY pref_developer_remotedebugging_docs "Learn more">
 
 <!-- collected old strings - remove after determining final strings
      as part of Bug 877791 -->
@@ -93,6 +96,7 @@
 <!ENTITY pref_header_privacy_short "Privacy">
 <!ENTITY pref_header_help "Help">
 <!ENTITY pref_header_vendor "&vendorShortName;">
+<!ENTITY pref_header_devtools "Developer tools">
 
 <!ENTITY pref_cookies_menu "Cookies">
 <!ENTITY pref_cookies_accept_all "Enabled">
@@ -338,6 +342,8 @@ just addresses the organization to follow, e.g. "This site is run by " -->
 <!ENTITY webapp_generic_name "App">
 
 <!ENTITY searchable_description "Bookmarks and history">
+
+<!ENTITY devtools_remote_debugging_forward "Don\'t forget to set up port forwarding!">
 
  <!-- Updater notifications -->
 <!ENTITY updater_start_title2 "Update available for &brandShortName;">

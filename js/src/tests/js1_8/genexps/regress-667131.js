@@ -6,7 +6,7 @@
 
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 667131;
-var summary = 'yield ignored if maybeNoteGenerator called too late';
+var summary = 'yield ignored if maybeNoteLegacyGenerator called too late';
 var actual = '';
 var expect = '';
 

@@ -18,7 +18,6 @@
 class nsIAtom;
 class nsIFile;
 class nsIFileURL;
-class nsIIDBOpenDBRequest;
 class nsPIDOMWindow;
 
 namespace mozilla {
@@ -140,14 +139,14 @@ public:
                                JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
 
   // WebIDL
-  already_AddRefed<nsIIDBOpenDBRequest>
+  already_AddRefed<IDBOpenDBRequest>
   Open(const nsAString& aName, const Optional<uint64_t>& aVersion,
        ErrorResult& aRv)
   {
     return Open(nullptr, aName, aVersion, false, aRv);
   }
 
-  already_AddRefed<nsIIDBOpenDBRequest>
+  already_AddRefed<IDBOpenDBRequest>
   DeleteDatabase(const nsAString& aName, ErrorResult& aRv)
   {
     return Open(nullptr, aName, Optional<uint64_t>(), true, aRv);
@@ -157,11 +156,11 @@ public:
   Cmp(JSContext* aCx, JS::Handle<JS::Value> aFirst,
       JS::Handle<JS::Value> aSecond, ErrorResult& aRv);
 
-  already_AddRefed<nsIIDBOpenDBRequest>
+  already_AddRefed<IDBOpenDBRequest>
   OpenForPrincipal(nsIPrincipal* aPrincipal, const nsAString& aName,
                    const Optional<uint64_t>& aVersion, ErrorResult& aRv);
 
-  already_AddRefed<nsIIDBOpenDBRequest>
+  already_AddRefed<IDBOpenDBRequest>
   DeleteForPrincipal(nsIPrincipal* aPrincipal, const nsAString& aName,
                      ErrorResult& aRv);
 
@@ -169,7 +168,7 @@ private:
   IDBFactory();
   ~IDBFactory();
 
-  already_AddRefed<nsIIDBOpenDBRequest>
+  already_AddRefed<IDBOpenDBRequest>
   Open(nsIPrincipal* aPrincipal, const nsAString& aName,
        const Optional<uint64_t>& aVersion, bool aDelete, ErrorResult& aRv);
 

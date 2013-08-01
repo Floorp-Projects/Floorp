@@ -24,7 +24,6 @@
 #include "ClientLayerManager.h"
 #include "BasicLayers.h"
 #include "FrameMetrics.h"
-#include "nsIObserver.h"
 #include "Windows.Graphics.Display.h"
 #ifdef MOZ_CRASHREPORTER
 #include "nsExceptionHandler.h"
@@ -795,62 +794,16 @@ MetroWidget::ShouldUseAPZC()
          Preferences::GetBool(kPrefName, false);
 }
 
-class MetroCompositorParent : public CompositorParent,
-                              public nsIObserver
-{
-public:
-  NS_DECL_ISUPPORTS
-  MetroCompositorParent(MetroWidget* aMetroWidget, bool aRenderToEGLSurface,
-                        int aSurfaceWidth, int aSurfaceHeight) :
-    CompositorParent(aMetroWidget, aRenderToEGLSurface,
-                     aSurfaceHeight, aSurfaceHeight),
-    mMetroWidget(aMetroWidget)
-  {
-    nsresult rv;
-    nsCOMPtr<nsIObserverService> observerService = do_GetService("@mozilla.org/observer-service;1", &rv);
-    if (NS_SUCCEEDED(rv)) {
-      observerService->AddObserver(this, "viewport-needs-updating", false);
-    }
-
-    CompositorParent::SetControllerForLayerTree(RootLayerTreeId(), aMetroWidget);
-    MetroWidget::sAPZC = CompositorParent::GetAPZCTreeManager(RootLayerTreeId());
-  }
-
-  NS_IMETHODIMP Observe(nsISupports *subject, const char *topic, const PRUnichar *data)
-  {
-    LogFunction();
-
-    NS_ENSURE_ARG_POINTER(topic);
-    if (!strcmp(topic, "viewport-needs-updating")) {
-      Layer* targetLayer = GetLayerManager()->GetPrimaryScrollableLayer();
-      if (targetLayer && targetLayer->AsContainerLayer() && MetroWidget::sAPZC) {
-        FrameMetrics frameMetrics =
-          targetLayer->AsContainerLayer()->GetFrameMetrics();
-        frameMetrics.mDisplayPort =
-          AsyncPanZoomController::CalculatePendingDisplayPort(frameMetrics,
-                                                              mozilla::gfx::Point(0.0f, 0.0f),
-                                                              mozilla::gfx::Point(0.0f, 0.0f),
-                                                              0.0);
-        mMetroWidget->RequestContentRepaint(frameMetrics);
-      }
-    }
-    return NS_OK;
-  }
-
-protected:
-  nsCOMPtr<MetroWidget> mMetroWidget;
-};
-
-NS_IMPL_ISUPPORTS1(MetroCompositorParent, nsIObserver)
-
-
 CompositorParent* MetroWidget::NewCompositorParent(int aSurfaceWidth, int aSurfaceHeight)
 {
+  CompositorParent *compositor = nsBaseWidget::NewCompositorParent(aSurfaceWidth, aSurfaceHeight);
+
   if (ShouldUseAPZC()) {
-    return new MetroCompositorParent(this, true, aSurfaceWidth, aSurfaceHeight);
-  } else {
-    return nsBaseWidget::NewCompositorParent(aSurfaceWidth, aSurfaceHeight);
+    CompositorParent::SetControllerForLayerTree(compositor->RootLayerTreeId(), this);
+    MetroWidget::sAPZC = CompositorParent::GetAPZCTreeManager(compositor->RootLayerTreeId());
   }
+
+  return compositor;
 }
 
 LayerManager*
@@ -1365,11 +1318,13 @@ public:
 
         NS_ConvertASCIItoUTF16 data(nsPrintfCString("{ " \
                                                     "  \"resolution\": %.2f, " \
+                                                    "  \"scrollId\": %d, " \
                                                     "  \"compositedRect\": { \"width\": %d, \"height\": %d }, " \
                                                     "  \"displayPort\":    { \"x\": %d, \"y\": %d, \"width\": %d, \"height\": %d }, " \
                                                     "  \"scrollTo\":       { \"x\": %d, \"y\": %d }" \
                                                     "}",
                                                     (float)(resolution.scale / mFrameMetrics.mDevPixelsPerCSSPixel.scale),
+                                                    (int)mFrameMetrics.mScrollId,
                                                     (int)compositedRect.width,
                                                     (int)compositedRect.height,
                                                     (int)mFrameMetrics.mDisplayPort.x,

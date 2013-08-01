@@ -577,6 +577,7 @@ RES_XML = \
   res/xml/preferences_search.xml \
   res/xml/preferences_privacy.xml \
   res/xml/preferences_vendor.xml \
+  res/xml/preferences_devtools.xml \
   $(SYNC_RES_XML) \
   $(NULL)
 

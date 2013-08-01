@@ -1921,10 +1921,12 @@ ElementRestyler::ElementRestyler(nsPresContext* aPresContext,
   , mRestyleTracker(aRestyleTracker)
   , mTreeMatchContext(aTreeMatchContext)
   , mResolvedChild(nullptr)
+#ifdef ACCESSIBILITY
   , mDesiredA11yNotifications(eSendAllNotifications)
   , mKidsDesiredA11yNotifications(mDesiredA11yNotifications)
   , mOurA11yNotification(eDontNotify)
   , mVisibleKidsOfHiddenElement(aVisibleKidsOfHiddenElement)
+#endif
 {
 }
 
@@ -1946,10 +1948,12 @@ ElementRestyler::ElementRestyler(const ElementRestyler& aParentRestyler,
   , mRestyleTracker(aParentRestyler.mRestyleTracker)
   , mTreeMatchContext(aParentRestyler.mTreeMatchContext)
   , mResolvedChild(nullptr)
+#ifdef ACCESSIBILITY
   , mDesiredA11yNotifications(aParentRestyler.mKidsDesiredA11yNotifications)
   , mKidsDesiredA11yNotifications(mDesiredA11yNotifications)
   , mOurA11yNotification(eDontNotify)
   , mVisibleKidsOfHiddenElement(aParentRestyler.mVisibleKidsOfHiddenElement)
+#endif
 {
   if (aConstructorFlags & FOR_OUT_OF_FLOW_CHILD) {
     mHintsHandled = NS_SubtractHint(mHintsHandled, nsChangeHint_AllReflowHints);
@@ -1975,10 +1979,12 @@ ElementRestyler::ElementRestyler(ParentContextFromChildFrame,
   , mRestyleTracker(aParentRestyler.mRestyleTracker)
   , mTreeMatchContext(aParentRestyler.mTreeMatchContext)
   , mResolvedChild(nullptr)
+#ifdef ACCESSIBILITY
   , mDesiredA11yNotifications(aParentRestyler.mDesiredA11yNotifications)
   , mKidsDesiredA11yNotifications(mDesiredA11yNotifications)
   , mOurA11yNotification(eDontNotify)
   , mVisibleKidsOfHiddenElement(aParentRestyler.mVisibleKidsOfHiddenElement)
+#endif
 {
 }
 

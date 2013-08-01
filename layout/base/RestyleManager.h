@@ -382,11 +382,13 @@ private:
   TreeMatchContext& mTreeMatchContext;
   nsIFrame* mResolvedChild; // child that provides our parent style context
 
+#ifdef ACCESSIBILITY
   const DesiredA11yNotifications mDesiredA11yNotifications;
   DesiredA11yNotifications mKidsDesiredA11yNotifications;
   A11yNotificationType mOurA11yNotification;
   nsTArray<nsIContent*>& mVisibleKidsOfHiddenElement;
   bool mWasFrameVisible;
+#endif
 };
 
 } // namespace mozilla
