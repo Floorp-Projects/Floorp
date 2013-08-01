@@ -122,8 +122,8 @@
                 key="tokenSearchKey"
                 command="tokenSearchCommand"/>
       <menuitem id="se-dbg-cMenu-findLine"
-                label="&debuggerUI.searchLine;"
-                accesskey="&debuggerUI.searchLine.key;"
+                label="&debuggerUI.searchGoToLine;"
+                accesskey="&debuggerUI.searchGoToLine.key;"
                 key="lineSearchKey"
                 command="lineSearchCommand"/>
       <menuseparator/>
@@ -226,7 +226,7 @@
          modifiers="accel"
          command="tokenSearchCommand"/>
     <key id="lineSearchKey"
-         key="&debuggerUI.searchLine.key;"
+         key="&debuggerUI.searchGoToLine.key;"
          modifiers="accel"
          command="lineSearchCommand"/>
     <key id="variableSearchKey"
