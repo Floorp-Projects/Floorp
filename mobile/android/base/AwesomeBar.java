@@ -20,7 +20,6 @@ import android.content.Intent;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.InputType;
@@ -87,12 +86,6 @@ public class AwesomeBar extends GeckoActivity
         Log.d(LOGTAG, "creating awesomebar");
 
         setContentView(R.layout.awesomebar);
-
-        // ActionBar's isShowing() method returns true in its initial state,
-        // so that it cannot be drawn until hide is called.
-        if (Build.VERSION.SDK_INT >= 11) {
-            getActionBar().hide();
-        }
 
         mGoButton = (ImageButton) findViewById(R.id.awesomebar_button);
         mText = (CustomEditText) findViewById(R.id.awesomebar_text);
@@ -229,32 +222,6 @@ public class AwesomeBar extends GeckoActivity
                 } catch (NullPointerException e) {
                     Log.e(LOGTAG, "InputMethodManagerService, why are you throwing"
                                   + " a NullPointerException? See bug 782096", e);
-                }
-            }
-        });
-
-        mText.setOnLongClickListener(new View.OnLongClickListener() {
-            @Override
-            public boolean onLongClick(View v) {
-                if (Build.VERSION.SDK_INT >= 11) {
-                    CustomEditText text = (CustomEditText) v;
-
-                    if (text.getSelectionStart() == text.getSelectionEnd())
-                        return false;
-
-                    getActionBar().show();
-                    return false;
-                }
-
-                return false;
-            }
-        });
-
-        mText.setOnSelectionChangedListener(new CustomEditText.OnSelectionChangedListener() {
-            @Override
-            public void onSelectionChanged(int selStart, int selEnd) {
-                if (Build.VERSION.SDK_INT >= 11 && selStart == selEnd) {
-                    getActionBar().hide();
                 }
             }
         });
@@ -743,10 +710,6 @@ public class AwesomeBar extends GeckoActivity
         if (!hasCompositionString(s) ||
             InputMethods.isGestureKeyboard(mText.getContext())) {
             updateGoButton(text);
-        }
-
-        if (Build.VERSION.SDK_INT >= 11) {
-            getActionBar().hide();
         }
     }
 
