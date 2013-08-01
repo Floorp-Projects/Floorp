@@ -1431,14 +1431,36 @@ DownloadLegacySaver.prototype = {
       return;
     }
 
+    let hasPartFile = !!this.download.target.partFilePath;
+
     this.progressWasNotified = true;
-    this.setProgressBytesFn(aCurrentBytes, aTotalBytes);
+    this.setProgressBytesFn(aCurrentBytes, aTotalBytes,
+                            aCurrentBytes > 0 && hasPartFile);
   },
 
   /**
    * Whether the onProgressBytes function has been called at least once.
    */
   progressWasNotified: false,
+
+  /**
+   * Called by the nsITransfer implementation when the request has started.
+   *
+   * @param aRequest
+   *        nsIRequest associated to the status update.
+   */
+  onTransferStarted: function (aRequest)
+  {
+    // Store the entity ID to use for resuming if required.
+    if (this.download.tryToKeepPartialData &&
+        aRequest instanceof Ci.nsIResumableChannel) {
+      try {
+        // If reading the ID succeeds, the source is resumable.
+        this.entityID = aRequest.entityID;
+      } catch (ex if ex instanceof Components.Exception &&
+                     ex.result == Cr.NS_ERROR_NOT_RESUMABLE) { }
+    }
+  },
 
   /**
    * Called by the nsITransfer implementation when the request has finished.
@@ -1463,10 +1485,35 @@ DownloadLegacySaver.prototype = {
   },
 
   /**
+   * When the first execution of the download finished, it can be restarted by
+   * using a DownloadCopySaver object instead of the original legacy component
+   * that executed the download.
+   */
+  firstExecutionFinished: false,
+
+  /**
+   * In case the download is restarted after the first execution finished, this
+   * property contains a reference to the DownloadCopySaver that is executing
+   * the new download attempt.
+   */
+  copySaver: null,
+
+  /**
    * Implements "DownloadSaver.execute".
    */
   execute: function DLS_execute(aSetProgressBytesFn)
   {
+    // Check if this is not the first execution of the download.  The Download
+    // object guarantees that this function is not re-entered during execution.
+    if (this.firstExecutionFinished) {
+      if (!this.copySaver) {
+        this.copySaver = new DownloadCopySaver();
+        this.copySaver.download = this.download;
+        this.copySaver.entityID = this.entityID;
+      }
+      return this.copySaver.execute.apply(this.copySaver, arguments);
+    }
+
     this.setProgressBytesFn = aSetProgressBytesFn;
 
     return Task.spawn(function task_DLS_execute() {
@@ -1495,6 +1542,8 @@ DownloadLegacySaver.prototype = {
       } finally {
         // We don't need the reference to the request anymore.
         this.request = null;
+        // Allow the download to restart through a DownloadCopySaver.
+        this.firstExecutionFinished = true;
       }
     }.bind(this));
   },
@@ -1504,6 +1553,11 @@ DownloadLegacySaver.prototype = {
    */
   cancel: function DLS_cancel()
   {
+    // We may be using a DownloadCopySaver to handle resuming.
+    if (this.copySaver) {
+      return this.copySaver.cancel.apply(this.copySaver, arguments);
+    }
+
     // Synchronously cancel the operation as soon as the object is connected.
     this.deferCanceled.resolve();
 
@@ -1512,6 +1566,29 @@ DownloadLegacySaver.prototype = {
     // the rejection of the execution promise immediately.
     this.deferExecuted.reject(new DownloadError(Cr.NS_ERROR_FAILURE,
                                                 "Download canceled."));
+  },
+
+  /**
+   * Implements "DownloadSaver.removePartialData".
+   */
+  removePartialData: function ()
+  {
+    // DownloadCopySaver and DownloadLeagcySaver use the same logic for removing
+    // partially downloaded data, though this implementation isn't shared by
+    // other saver types, thus it isn't found on their shared prototype.
+    return DownloadCopySaver.prototype.removePartialData.call(this);
+  },
+
+  /**
+   * Implements "DownloadSaver.toSerializable".
+   */
+  toSerializable: function ()
+  {
+    // This object depends on legacy components that are created externally,
+    // thus it cannot be rebuilt during deserialization.  To support resuming
+    // across different browser sessions, this object is transformed into a
+    // DownloadCopySaver for the purpose of serialization.
+    return "copy";
   },
 };
 

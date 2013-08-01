@@ -96,8 +96,8 @@ function promiseDownloadStopped(aDownload) {
  * saved to disk.  You must call "continueResponses" to allow the interruptible
  * request to continue.
  *
- * TODO: This function uses either DownloadCopySaver or DownloadLegacySaver
- * based on the current test run.
+ * This function uses either DownloadCopySaver or DownloadLegacySaver based on
+ * the current test run.
  *
  * @return {Promise}
  * @resolves The newly created Download object, still in progress.
@@ -108,32 +108,55 @@ function promiseStartDownload_tryToKeepPartialData() {
     mustInterruptResponses();
 
     // Start a new download and configure it to keep partially downloaded data.
-    let targetFilePath = getTempFile(TEST_TARGET_FILE_NAME).path;
-    let download = yield Downloads.createDownload({
-      source: httpUrl("interruptible_resumable.txt"),
-      target: { path: targetFilePath,
-                partFilePath: targetFilePath + ".part" },
-    });
-    download.tryToKeepPartialData = true;
-    download.start();
+    let download;
+    if (!gUseLegacySaver) {
+      let targetFilePath = getTempFile(TEST_TARGET_FILE_NAME).path;
+      download = yield Downloads.createDownload({
+        source: httpUrl("interruptible_resumable.txt"),
+        target: { path: targetFilePath,
+                  partFilePath: targetFilePath + ".part" },
+      });
+      download.tryToKeepPartialData = true;
+      download.start();
+    } else {
+      // Start a download using nsIExternalHelperAppService, that is configured
+      // to keep partially downloaded data by default.
+      download = yield promiseStartExternalHelperAppServiceDownload();
+    }
 
     yield promiseDownloadMidway(download);
+    yield promisePartFileReady(download);
 
-    // After we receive the progress notification, we should wait for the worker
-    // thread of BackgroundFileSaver to receive the data to be written to disk.
-    // We don't have control over when this happens.  We may only check that the
-    // ".part" file has been created, while its size cannot be determined because
-    // the file is currently open.
+    throw new Task.Result(download);
+  });
+}
+
+/**
+ * This function should be called after the progress notification for a download
+ * is received, and waits for the worker thread of BackgroundFileSaver to
+ * receive the data to be written to the ".part" file on disk.
+ *
+ * @return {Promise}
+ * @resolves When the ".part" file has been written to disk.
+ * @rejects JavaScript exception.
+ */
+function promisePartFileReady(aDownload) {
+  return Task.spawn(function () {
+    // We don't have control over the file output code in BackgroundFileSaver.
+    // After we receive the download progress notification, we may only check
+    // that the ".part" file has been created, while its size cannot be
+    // determined because the file is currently open.
     try {
-      while (!(yield OS.File.exists(download.target.partFilePath))) {
+      do {
         yield promiseTimeout(50);
-      }
+      } while (!(yield OS.File.exists(aDownload.target.partFilePath)));
     } catch (ex if ex instanceof OS.File.Error) {
       // This indicates that the file has been created and cannot be accessed.
       // The specific error might vary with the platform.
+      do_print("Expected exception while checking existence: " + ex.toString());
+      // Wait some more time to allow the write to complete.
+      yield promiseTimeout(100);
     }
-
-    throw new Task.Result(download);
   });
 }
 
@@ -559,11 +582,6 @@ add_task(function test_cancel_immediately()
  */
 add_task(function test_cancel_midway_restart()
 {
-  // TODO: Enable all the restart tests for DownloadLegacySaver.
-  if (gUseLegacySaver) {
-    return;
-  }
-
   mustInterruptResponses();
 
   let download = yield promiseStartDownload(httpUrl("interruptible.txt"));
@@ -610,6 +628,12 @@ add_task(function test_cancel_midway_restart_tryToKeepPartialData()
   let download = yield promiseStartDownload_tryToKeepPartialData();
   yield download.cancel();
 
+  // This time-based solution is a workaround to avoid intermittent failures,
+  // and will be removed when bug 899102 is resolved.
+  if (gUseLegacySaver) {
+    yield promiseTimeout(250);
+  }
+
   do_check_true(download.stopped);
   do_check_true(download.hasPartialData);
 
@@ -642,6 +666,12 @@ add_task(function test_cancel_midway_restart_removePartialData()
   let download = yield promiseStartDownload_tryToKeepPartialData();
   yield download.cancel();
 
+  // This time-based solution is a workaround to avoid intermittent failures,
+  // and will be removed when bug 899102 is resolved.
+  if (gUseLegacySaver) {
+    yield promiseTimeout(250);
+  }
+
   do_check_true(download.hasPartialData);
   yield promiseVerifyContents(download.target.partFilePath, TEST_DATA_SHORT);
 
@@ -673,6 +703,12 @@ add_task(function test_cancel_midway_restart_tryToKeepPartialData_false()
   let download = yield promiseStartDownload_tryToKeepPartialData();
   yield download.cancel();
 
+  // This time-based solution is a workaround to avoid intermittent failures,
+  // and will be removed when bug 899102 is resolved.
+  if (gUseLegacySaver) {
+    yield promiseTimeout(250);
+  }
+
   download.tryToKeepPartialData = false;
 
   // The above property change does not affect existing partial data.
@@ -687,12 +723,19 @@ add_task(function test_cancel_midway_restart_tryToKeepPartialData_false()
   download.start();
 
   yield promiseDownloadMidway(download);
+  yield promisePartFileReady(download);
 
   // While the download is in progress, we should still have a ".part" file.
   do_check_false(download.hasPartialData);
   do_check_true(yield OS.File.exists(download.target.partFilePath));
 
   yield download.cancel();
+
+  // This time-based solution is a workaround to avoid intermittent failures,
+  // and will be removed when bug 899102 is resolved.
+  if (gUseLegacySaver) {
+    yield promiseTimeout(250);
+  }
 
   // The ".part" file should be deleted now that the download is canceled.
   do_check_false(download.hasPartialData);
@@ -716,11 +759,6 @@ add_task(function test_cancel_midway_restart_tryToKeepPartialData_false()
  */
 add_task(function test_cancel_immediately_restart_immediately()
 {
-  // TODO: Enable all the restart tests for DownloadLegacySaver.
-  if (gUseLegacySaver) {
-    return;
-  }
-
   mustInterruptResponses();
 
   let download = yield promiseStartDownload(httpUrl("interruptible.txt"));
@@ -771,11 +809,6 @@ add_task(function test_cancel_immediately_restart_immediately()
  */
 add_task(function test_cancel_midway_restart_immediately()
 {
-  // TODO: Enable all the restart tests for DownloadLegacySaver.
-  if (gUseLegacySaver) {
-    return;
-  }
-
   mustInterruptResponses();
 
   let download = yield promiseStartDownload(httpUrl("interruptible.txt"));
@@ -910,6 +943,12 @@ add_task(function test_finalize_tryToKeepPartialData()
   let download = yield promiseStartDownload_tryToKeepPartialData();
   yield download.finalize();
 
+  // This time-based solution is a workaround to avoid intermittent failures,
+  // and will be removed when bug 899102 is resolved.
+  if (gUseLegacySaver) {
+    yield promiseTimeout(250);
+  }
+
   do_check_true(download.hasPartialData);
   do_check_true(yield OS.File.exists(download.target.partFilePath));
 
@@ -920,6 +959,12 @@ add_task(function test_finalize_tryToKeepPartialData()
   download = yield promiseStartDownload_tryToKeepPartialData();
   yield download.finalize(true);
 
+  // This time-based solution is a workaround to avoid intermittent failures,
+  // and will be removed when bug 899102 is resolved.
+  if (gUseLegacySaver) {
+    yield promiseTimeout(250);
+  }
+
   do_check_false(download.hasPartialData);
   do_check_false(yield OS.File.exists(download.target.partFilePath));
 });
@@ -929,20 +974,25 @@ add_task(function test_finalize_tryToKeepPartialData()
  */
 add_task(function test_whenSucceeded_after_restart()
 {
-  // TODO: Enable all the restart tests for DownloadLegacySaver.
-  if (gUseLegacySaver) {
-    return;
-  }
-
   mustInterruptResponses();
 
-  let download = yield promiseNewDownload(httpUrl("interruptible.txt"));
+  let promiseSucceeded;
 
-  // Get a reference before the first download attempt.
-  let promiseSucceeded = download.whenSucceeded();
+  let download;
+  if (!gUseLegacySaver) {
+    // When testing DownloadCopySaver, we have control over the download, thus
+    // we can verify getting a reference before the first download attempt.
+    download = yield promiseNewDownload(httpUrl("interruptible.txt"));
+    promiseSucceeded = download.whenSucceeded();
+    download.start();
+  } else {
+    // When testing DownloadLegacySaver, the download is already started when it
+    // is created, thus we cannot get the reference before the first attempt.
+    download = yield promiseStartLegacyDownload(httpUrl("interruptible.txt"));
+    promiseSucceeded = download.whenSucceeded();
+  }
 
   // Cancel the first download attempt.
-  download.start();
   yield download.cancel();
 
   // The second request is allowed to complete.
@@ -1057,21 +1107,25 @@ add_task(function test_error_target()
  */
 add_task(function test_error_restart()
 {
-  // TODO: Enable all the restart tests for DownloadLegacySaver.
-  if (gUseLegacySaver) {
-    return;
-  }
-
-  let download = yield promiseNewDownload();
-
-  do_check_true(download.error === null);
+  let download;
 
   // Create a file without write access permissions before downloading.
-  let targetFile = new FileUtils.File(download.target.path);
+  let targetFile = getTempFile(TEST_TARGET_FILE_NAME);
   targetFile.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0);
-
   try {
-    yield download.start();
+    // Use DownloadCopySaver or DownloadLegacySaver based on the test run,
+    // specifying the target file we created.
+    if (!gUseLegacySaver) {
+      download = yield Downloads.createDownload({
+        source: httpUrl("source.txt"),
+        target: targetFile,
+      });
+      download.start();
+    } else {
+      download = yield promiseStartLegacyDownload(null,
+                                                  { targetFile: targetFile });
+    }
+    yield promiseDownloadStopped(download);
     do_throw("The download should have failed.");
   } catch (ex if ex instanceof Downloads.Error && ex.becauseTargetFailed) {
     // A specific error object is thrown when writing to the target fails.
@@ -1162,14 +1216,8 @@ add_task(function test_public_and_private()
  */
 add_task(function test_cancel_immediately_restart_and_check_startTime()
 {
-  // TODO: Enable all the restart tests for DownloadLegacySaver.
-  if (gUseLegacySaver) {
-    return;
-  }
+  let download = yield promiseStartDownload();
 
-  let download = yield promiseNewDownload();
-
-  download.start();
   let startTime = download.startTime;
   do_check_true(isValidDate(download.startTime));
 
@@ -1222,23 +1270,24 @@ add_task(function test_with_content_encoding()
  */
 add_task(function test_cancel_midway_restart_with_content_encoding()
 {
-  // TODO: Enable all the restart tests for DownloadLegacySaver.
-  if (gUseLegacySaver) {
-    return;
-  }
+  mustInterruptResponses();
 
-  let download = yield promiseNewDownload(httpUrl("interruptible_gzip.txt"));
+  let download = yield promiseStartDownload(httpUrl("interruptible_gzip.txt"));
 
   // The first time, cancel the download midway.
-  mustInterruptResponses();
   let deferCancel = Promise.defer();
-  download.onchange = function () {
+  let onchange = function () {
     if (!download.stopped && !download.canceled &&
         download.currentBytes == TEST_DATA_SHORT_GZIP_ENCODED_FIRST.length) {
       deferCancel.resolve(download.cancel());
     }
   };
-  download.start();
+
+  // Register for the notification, but also call the function directly in
+  // case the download already reached the expected progress.
+  download.onchange = onchange;
+  onchange();
+
   yield deferCancel.promise;
 
   do_check_true(download.stopped);
