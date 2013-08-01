@@ -208,8 +208,7 @@ protected:
   virtual PLayerTransactionParent*
     AllocPLayerTransactionParent(const LayersBackend& aBackendHint,
                                  const uint64_t& aId,
-                                 TextureFactoryIdentifier* aTextureFactoryIdentifier,
-                                 bool* aSuccess);
+                                 TextureFactoryIdentifier* aTextureFactoryIdentifier);
   virtual bool DeallocPLayerTransactionParent(PLayerTransactionParent* aLayers);
   virtual void ScheduleTask(CancelableTask*, int);
   virtual void Composite();
