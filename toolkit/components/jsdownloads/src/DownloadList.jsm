@@ -104,6 +104,11 @@ DownloadList.prototype = {
    * Removes a download from the list.  If the download was already removed,
    * this method has no effect.
    *
+   * This method does not change the state of the download, to allow adding it
+   * to another list, or control it directly.  If you want to dispose of the
+   * download object, you should cancel it afterwards, and remove any partially
+   * downloaded data if needed.
+   *
    * @param aDownload
    *        The Download object to remove.
    */
@@ -208,7 +213,14 @@ DownloadList.prototype = {
         // operation hasn't completed yet so we don't check "stopped" here.
         if ((download.succeeded || download.canceled || download.error) &&
             aTestFn(download)) {
+          // Remove the download first, so that the views don't get the change
+          // notifications that may occur during finalization.
           this.remove(download);
+          // Ensure that the download is stopped and no partial data is kept.
+          // This works even if the download state has changed meanwhile.  We
+          // don't need to wait for the procedure to be complete before
+          // processing the other downloads in the list.
+          download.finalize(true);
         }
       }
     }.bind(this)).then(null, Cu.reportError);

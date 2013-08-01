@@ -36,6 +36,36 @@ function promiseStartDownload(aSourceUrl) {
 }
 
 /**
+ * Waits for a download to reach half of its progress, in case it has not
+ * reached the expected progress already.
+ *
+ * @param aDownload
+ *        The Download object to wait upon.
+ *
+ * @return {Promise}
+ * @resolves When the download has reached half of its progress.
+ * @rejects Never.
+ */
+function promiseDownloadMidway(aDownload) {
+  let deferred = Promise.defer();
+
+  // Wait for the download to reach half of its progress.
+  let onchange = function () {
+    if (!aDownload.stopped && !aDownload.canceled && aDownload.progress == 50) {
+      aDownload.onchange = null;
+      deferred.resolve();
+    }
+  };
+
+  // Register for the notification, but also call the function directly in
+  // case the download already reached the expected progress.
+  aDownload.onchange = onchange;
+  onchange();
+
+  return deferred.promise;
+}
+
+/**
  * Waits for a download to finish, in case it has not finished already.
  *
  * @param aDownload
@@ -58,6 +88,53 @@ function promiseDownloadStopped(aDownload) {
 
   // The download failed or was canceled.
   return Promise.reject(aDownload.error || new Error("Download canceled."));
+}
+
+/**
+ * Creates and starts a new download, configured to keep partial data, and
+ * returns only when the first part of "interruptible_resumable.txt" has been
+ * saved to disk.  You must call "continueResponses" to allow the interruptible
+ * request to continue.
+ *
+ * TODO: This function uses either DownloadCopySaver or DownloadLegacySaver
+ * based on the current test run.
+ *
+ * @return {Promise}
+ * @resolves The newly created Download object, still in progress.
+ * @rejects JavaScript exception.
+ */
+function promiseStartDownload_tryToKeepPartialData() {
+  return Task.spawn(function () {
+    mustInterruptResponses();
+
+    // Start a new download and configure it to keep partially downloaded data.
+    let targetFilePath = getTempFile(TEST_TARGET_FILE_NAME).path;
+    let download = yield Downloads.createDownload({
+      source: httpUrl("interruptible_resumable.txt"),
+      target: { path: targetFilePath,
+                partFilePath: targetFilePath + ".part" },
+    });
+    download.tryToKeepPartialData = true;
+    download.start();
+
+    yield promiseDownloadMidway(download);
+
+    // After we receive the progress notification, we should wait for the worker
+    // thread of BackgroundFileSaver to receive the data to be written to disk.
+    // We don't have control over when this happens.  We may only check that the
+    // ".part" file has been created, while its size cannot be determined because
+    // the file is currently open.
+    try {
+      while (!(yield OS.File.exists(download.target.partFilePath))) {
+        yield promiseTimeout(50);
+      }
+    } catch (ex if ex instanceof OS.File.Error) {
+      // This indicates that the file has been created and cannot be accessed.
+      // The specific error might vary with the platform.
+    }
+
+    throw new Task.Result(download);
+  });
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -116,7 +193,6 @@ add_task(function test_referrer()
   function cleanup() {
     gHttpServer.registerPathHandler(sourcePath, null);
   }
-
   do_register_cleanup(cleanup);
 
   gHttpServer.registerPathHandler(sourcePath, function (aRequest, aResponse) {
@@ -191,7 +267,7 @@ add_task(function test_initial_final_state()
  */
 add_task(function test_final_state_notified()
 {
-  let deferResponse = deferNextResponse();
+  mustInterruptResponses();
 
   let download = yield promiseStartDownload(httpUrl("interruptible.txt"));
 
@@ -206,7 +282,7 @@ add_task(function test_final_state_notified()
 
   // Allow the download to complete.
   let promiseAttempt = download.start();
-  deferResponse.resolve();
+  continueResponses();
   yield promiseAttempt;
 
   // The view should have been notified before the download completes.
@@ -220,26 +296,18 @@ add_task(function test_final_state_notified()
  */
 add_task(function test_intermediate_progress()
 {
-  let deferResponse = deferNextResponse();
+  mustInterruptResponses();
 
   let download = yield promiseStartDownload(httpUrl("interruptible.txt"));
 
-  let onchange = function () {
-    if (download.progress == 50) {
-      do_check_true(download.hasProgress);
-      do_check_eq(download.currentBytes, TEST_DATA_SHORT.length);
-      do_check_eq(download.totalBytes, TEST_DATA_SHORT.length * 2);
+  yield promiseDownloadMidway(download);
 
-      // Continue after the first chunk of data is fully received.
-      deferResponse.resolve();
-    }
-  };
+  do_check_true(download.hasProgress);
+  do_check_eq(download.currentBytes, TEST_DATA_SHORT.length);
+  do_check_eq(download.totalBytes, TEST_DATA_SHORT.length * 2);
 
-  // Register for the notification, but also call the function directly in case
-  // the download already reached the expected progress.
-  download.onchange = onchange;
-  onchange();
-
+  // Continue after the first chunk of data is fully received.
+  continueResponses();
   yield promiseDownloadStopped(download);
 
   do_check_true(download.stopped);
@@ -271,15 +339,30 @@ add_task(function test_empty_progress()
  */
 add_task(function test_empty_noprogress()
 {
-  let deferResponse = deferNextResponse();
-  let promiseEmptyRequestReceived = promiseNextRequestReceived();
+  let sourcePath = "/test_empty_noprogress.txt";
+  let sourceUrl = httpUrl("test_empty_noprogress.txt");
+  let deferRequestReceived = Promise.defer();
 
+  // Register an interruptible handler that notifies us when the request occurs.
+  function cleanup() {
+    gHttpServer.registerPathHandler(sourcePath, null);
+  }
+  do_register_cleanup(cleanup);
+
+  registerInterruptibleHandler(sourcePath,
+    function firstPart(aRequest, aResponse) {
+      aResponse.setHeader("Content-Type", "text/plain", false);
+      deferRequestReceived.resolve();
+    }, function secondPart(aRequest, aResponse) { });
+
+  // Start the download, without allowing the request to finish.
+  mustInterruptResponses();
   let download;
   if (!gUseLegacySaver) {
     // When testing DownloadCopySaver, we have control over the download, thus
     // we can hook its onchange callback that will be notified when the
     // download starts.
-    download = yield promiseNewDownload(httpUrl("empty-noprogress.txt"));
+    download = yield promiseNewDownload(sourceUrl);
 
     download.onchange = function () {
       if (!download.stopped) {
@@ -294,14 +377,13 @@ add_task(function test_empty_noprogress()
     // When testing DownloadLegacySaver, the download is already started when it
     // is created, and it may have already made all needed property change
     // notifications, thus there is no point in checking the onchange callback.
-    download = yield promiseStartLegacyDownload(
-                                       httpUrl("empty-noprogress.txt"));
+    download = yield promiseStartLegacyDownload(sourceUrl);
   }
 
   // Wait for the request to be received by the HTTP server, but don't allow the
   // request to finish yet.  Before checking the download state, wait for the
   // events to be processed by the client.
-  yield promiseEmptyRequestReceived;
+  yield deferRequestReceived.promise;
   yield promiseExecuteSoon();
 
   // Check that this download has no progress report.
@@ -311,7 +393,7 @@ add_task(function test_empty_noprogress()
   do_check_eq(download.totalBytes, 0);
 
   // Now allow the response to finish.
-  deferResponse.resolve();
+  continueResponses();
   yield promiseDownloadStopped(download);
 
   // Verify the state of the completed download.
@@ -329,8 +411,7 @@ add_task(function test_empty_noprogress()
  */
 add_task(function test_start_twice()
 {
-  // Ensure that the download cannot complete before start is called twice.
-  let deferResponse = deferNextResponse();
+  mustInterruptResponses();
 
   let download;
   if (!gUseLegacySaver) {
@@ -348,7 +429,7 @@ add_task(function test_start_twice()
   let promiseAttempt2 = download.start();
 
   // Allow the download to finish.
-  deferResponse.resolve();
+  continueResponses();
 
   // Both promises should now be resolved.
   yield promiseAttempt1;
@@ -368,7 +449,7 @@ add_task(function test_start_twice()
  */
 add_task(function test_cancel_midway()
 {
-  let deferResponse = deferNextResponse();
+  mustInterruptResponses();
 
   // In this test case, we execute different checks that are only possible with
   // DownloadCopySaver or DownloadLegacySaver respectively.
@@ -381,62 +462,59 @@ add_task(function test_cancel_midway()
                                                 options);
   }
 
-  try {
-    // Cancel the download after receiving the first part of the response.
-    let deferCancel = Promise.defer();
-    let onchange = function () {
-      if (!download.stopped && !download.canceled && download.progress == 50) {
-        deferCancel.resolve(download.cancel());
+  // Cancel the download after receiving the first part of the response.
+  let deferCancel = Promise.defer();
+  let onchange = function () {
+    if (!download.stopped && !download.canceled && download.progress == 50) {
+      // Cancel the download immediately during the notification.
+      deferCancel.resolve(download.cancel());
 
-        // The state change happens immediately after calling "cancel", but
-        // temporary files or part files may still exist at this point.
-        do_check_true(download.canceled);
-      }
-    };
-
-    // Register for the notification, but also call the function directly in
-    // case the download already reached the expected progress.  This may happen
-    // when using DownloadLegacySaver.
-    download.onchange = onchange;
-    onchange();
-
-    let promiseAttempt;
-    if (!gUseLegacySaver) {
-      promiseAttempt = download.start();
+      // The state change happens immediately after calling "cancel", but
+      // temporary files or part files may still exist at this point.
+      do_check_true(download.canceled);
     }
+  };
 
-    // Wait on the promise returned by the "cancel" method to ensure that the
-    // cancellation process finished and temporary files were removed.
-    yield deferCancel.promise;
+  // Register for the notification, but also call the function directly in
+  // case the download already reached the expected progress.  This may happen
+  // when using DownloadLegacySaver.
+  download.onchange = onchange;
+  onchange();
 
-    if (gUseLegacySaver) {
-      // The nsIWebBrowserPersist instance should have been canceled now.
-      do_check_eq(options.outPersist.result, Cr.NS_ERROR_ABORT);
+  let promiseAttempt;
+  if (!gUseLegacySaver) {
+    promiseAttempt = download.start();
+  }
+
+  // Wait on the promise returned by the "cancel" method to ensure that the
+  // cancellation process finished and temporary files were removed.
+  yield deferCancel.promise;
+
+  if (gUseLegacySaver) {
+    // The nsIWebBrowserPersist instance should have been canceled now.
+    do_check_eq(options.outPersist.result, Cr.NS_ERROR_ABORT);
+  }
+
+  do_check_true(download.stopped);
+  do_check_true(download.canceled);
+  do_check_true(download.error === null);
+
+  do_check_false(yield OS.File.exists(download.target.path));
+
+  // Progress properties are not reset by canceling.
+  do_check_eq(download.progress, 50);
+  do_check_eq(download.totalBytes, TEST_DATA_SHORT.length * 2);
+  do_check_eq(download.currentBytes, TEST_DATA_SHORT.length);
+
+  if (!gUseLegacySaver) {
+    // The promise returned by "start" should have been rejected meanwhile.
+    try {
+      yield promiseAttempt;
+      do_throw("The download should have been canceled.");
+    } catch (ex if ex instanceof Downloads.Error) {
+      do_check_false(ex.becauseSourceFailed);
+      do_check_false(ex.becauseTargetFailed);
     }
-
-    do_check_true(download.stopped);
-    do_check_true(download.canceled);
-    do_check_true(download.error === null);
-
-    do_check_false(yield OS.File.exists(download.target.path));
-
-    // Progress properties are not reset by canceling.
-    do_check_eq(download.progress, 50);
-    do_check_eq(download.totalBytes, TEST_DATA_SHORT.length * 2);
-    do_check_eq(download.currentBytes, TEST_DATA_SHORT.length);
-
-    if (!gUseLegacySaver) {
-      // The promise returned by "start" should have been rejected meanwhile.
-      try {
-        yield promiseAttempt;
-        do_throw("The download should have been canceled.");
-      } catch (ex if ex instanceof Downloads.Error) {
-        do_check_false(ex.becauseSourceFailed);
-        do_check_false(ex.becauseTargetFailed);
-      }
-    }
-  } finally {
-    deferResponse.resolve();
   }
 });
 
@@ -445,47 +523,35 @@ add_task(function test_cancel_midway()
  */
 add_task(function test_cancel_immediately()
 {
-  // Ensure that the download cannot complete before cancel is called.
-  let deferResponse = deferNextResponse();
+  mustInterruptResponses();
+
+  let download = yield promiseStartDownload(httpUrl("interruptible.txt"));
+
+  let promiseAttempt = download.start();
+  do_check_false(download.stopped);
+
+  let promiseCancel = download.cancel();
+  do_check_true(download.canceled);
+
+  // At this point, we don't know whether the download has already stopped or
+  // is still waiting for cancellation.  We can wait on the promise returned
+  // by the "start" method to know for sure.
   try {
-    let download = yield promiseStartDownload(httpUrl("interruptible.txt"));
-
-    let promiseAttempt = download.start();
-    do_check_false(download.stopped);
-
-    let promiseCancel = download.cancel();
-    do_check_true(download.canceled);
-
-    // At this point, we don't know whether the download has already stopped or
-    // is still waiting for cancellation.  We can wait on the promise returned
-    // by the "start" method to know for sure.
-    try {
-      yield promiseAttempt;
-      do_throw("The download should have been canceled.");
-    } catch (ex if ex instanceof Downloads.Error) {
-      do_check_false(ex.becauseSourceFailed);
-      do_check_false(ex.becauseTargetFailed);
-    }
-
-    do_check_true(download.stopped);
-    do_check_true(download.canceled);
-    do_check_true(download.error === null);
-
-    do_check_false(yield OS.File.exists(download.target.path));
-
-    // Check that the promise returned by the "cancel" method has been resolved.
-    yield promiseCancel;
-  } finally {
-    deferResponse.resolve();
+    yield promiseAttempt;
+    do_throw("The download should have been canceled.");
+  } catch (ex if ex instanceof Downloads.Error) {
+    do_check_false(ex.becauseSourceFailed);
+    do_check_false(ex.becauseTargetFailed);
   }
 
-  // Even if we canceled the download immediately, the HTTP request might have
-  // been made, and the internal HTTP handler might be waiting to process it.
-  // Thus, we process any pending events now, to avoid that the request is
-  // processed during the tests that follow, interfering with them.
-  for (let i = 0; i < 5; i++) {
-    yield promiseExecuteSoon();
-  }
+  do_check_true(download.stopped);
+  do_check_true(download.canceled);
+  do_check_true(download.error === null);
+
+  do_check_false(yield OS.File.exists(download.target.path));
+
+  // Check that the promise returned by the "cancel" method has been resolved.
+  yield promiseCancel;
 });
 
 /**
@@ -498,26 +564,18 @@ add_task(function test_cancel_midway_restart()
     return;
   }
 
-  let download = yield promiseNewDownload(httpUrl("interruptible.txt"));
+  mustInterruptResponses();
+
+  let download = yield promiseStartDownload(httpUrl("interruptible.txt"));
 
   // The first time, cancel the download midway.
-  let deferResponse = deferNextResponse();
-  try {
-    let deferCancel = Promise.defer();
-    download.onchange = function () {
-      if (!download.stopped && !download.canceled && download.progress == 50) {
-        deferCancel.resolve(download.cancel());
-      }
-    };
-    download.start();
-    yield deferCancel.promise;
-  } finally {
-    deferResponse.resolve();
-  }
+  yield promiseDownloadMidway(download);
+  yield download.cancel();
 
   do_check_true(download.stopped);
 
   // The second time, we'll provide the entire interruptible response.
+  continueResponses();
   download.onchange = null;
   let promiseAttempt = download.start();
 
@@ -545,6 +603,115 @@ add_task(function test_cancel_midway_restart()
 });
 
 /**
+ * Cancels a download and restarts it from where it stopped.
+ */
+add_task(function test_cancel_midway_restart_tryToKeepPartialData()
+{
+  let download = yield promiseStartDownload_tryToKeepPartialData();
+  yield download.cancel();
+
+  do_check_true(download.stopped);
+  do_check_true(download.hasPartialData);
+
+  // The target file should not exist, but we should have kept the partial data.
+  do_check_false(yield OS.File.exists(download.target.path));
+  yield promiseVerifyContents(download.target.partFilePath, TEST_DATA_SHORT);
+
+  // Verify that the server sent the response from the start.
+  do_check_eq(gMostRecentFirstBytePos, 0);
+
+  // The second time, we'll request and obtain the second part of the response.
+  continueResponses();
+  yield download.start();
+
+  // Check that the server now sent the second part only.
+  do_check_eq(gMostRecentFirstBytePos, TEST_DATA_SHORT.length);
+
+  // The target file should now have been created, and the ".part" file deleted.
+  yield promiseVerifyContents(download.target.path,
+                              TEST_DATA_SHORT + TEST_DATA_SHORT);
+  do_check_false(yield OS.File.exists(download.target.partFilePath));
+});
+
+/**
+ * Cancels a download while keeping partially downloaded data, then removes the
+ * data and restarts the download from the beginning.
+ */
+add_task(function test_cancel_midway_restart_removePartialData()
+{
+  let download = yield promiseStartDownload_tryToKeepPartialData();
+  yield download.cancel();
+
+  do_check_true(download.hasPartialData);
+  yield promiseVerifyContents(download.target.partFilePath, TEST_DATA_SHORT);
+
+  yield download.removePartialData();
+
+  do_check_false(download.hasPartialData);
+  do_check_false(yield OS.File.exists(download.target.partFilePath));
+
+  // The second time, we'll request and obtain the entire response again.
+  continueResponses();
+  yield download.start();
+
+  // Verify that the server sent the response from the start.
+  do_check_eq(gMostRecentFirstBytePos, 0);
+
+  // The target file should now have been created, and the ".part" file deleted.
+  yield promiseVerifyContents(download.target.path,
+                              TEST_DATA_SHORT + TEST_DATA_SHORT);
+  do_check_false(yield OS.File.exists(download.target.partFilePath));
+});
+
+/**
+ * Cancels a download while keeping partially downloaded data, then removes the
+ * data and restarts the download from the beginning without keeping the partial
+ * data anymore.
+ */
+add_task(function test_cancel_midway_restart_tryToKeepPartialData_false()
+{
+  let download = yield promiseStartDownload_tryToKeepPartialData();
+  yield download.cancel();
+
+  download.tryToKeepPartialData = false;
+
+  // The above property change does not affect existing partial data.
+  do_check_true(download.hasPartialData);
+  yield promiseVerifyContents(download.target.partFilePath, TEST_DATA_SHORT);
+
+  yield download.removePartialData();
+  do_check_false(yield OS.File.exists(download.target.partFilePath));
+
+  // Restart the download from the beginning.
+  mustInterruptResponses();
+  download.start();
+
+  yield promiseDownloadMidway(download);
+
+  // While the download is in progress, we should still have a ".part" file.
+  do_check_false(download.hasPartialData);
+  do_check_true(yield OS.File.exists(download.target.partFilePath));
+
+  yield download.cancel();
+
+  // The ".part" file should be deleted now that the download is canceled.
+  do_check_false(download.hasPartialData);
+  do_check_false(yield OS.File.exists(download.target.partFilePath));
+
+  // The third time, we'll request and obtain the entire response again.
+  continueResponses();
+  yield download.start();
+
+  // Verify that the server sent the response from the start.
+  do_check_eq(gMostRecentFirstBytePos, 0);
+
+  // The target file should now have been created, and the ".part" file deleted.
+  yield promiseVerifyContents(download.target.path,
+                              TEST_DATA_SHORT + TEST_DATA_SHORT);
+  do_check_false(yield OS.File.exists(download.target.partFilePath));
+});
+
+/**
  * Cancels a download right after starting it, then restarts it immediately.
  */
 add_task(function test_cancel_immediately_restart_immediately()
@@ -554,12 +721,11 @@ add_task(function test_cancel_immediately_restart_immediately()
     return;
   }
 
-  let download = yield promiseNewDownload(httpUrl("interruptible.txt"));
+  mustInterruptResponses();
 
-  // Ensure that the download cannot complete before cancel is called.
-  let deferResponse = deferNextResponse();
-
+  let download = yield promiseStartDownload(httpUrl("interruptible.txt"));
   let promiseAttempt = download.start();
+
   do_check_false(download.stopped);
 
   download.cancel();
@@ -578,18 +744,9 @@ add_task(function test_cancel_immediately_restart_immediately()
   do_check_eq(download.totalBytes, 0);
   do_check_eq(download.currentBytes, 0);
 
-  // Even if we canceled the download immediately, the HTTP request might have
-  // been made, and the internal HTTP handler might be waiting to process it.
-  // Thus, we process any pending events now, to avoid that the request is
-  // processed during the tests that follow, interfering with them.
-  for (let i = 0; i < 5; i++) {
-    yield promiseExecuteSoon();
-  }
-
   // Ensure the next request is now allowed to complete, regardless of whether
   // the canceled request was received by the server or not.
-  deferResponse.resolve();
-
+  continueResponses();
   try {
     yield promiseAttempt;
     do_throw("The download should have been canceled.");
@@ -619,21 +776,13 @@ add_task(function test_cancel_midway_restart_immediately()
     return;
   }
 
-  let download = yield promiseNewDownload(httpUrl("interruptible.txt"));
+  mustInterruptResponses();
+
+  let download = yield promiseStartDownload(httpUrl("interruptible.txt"));
+  let promiseAttempt = download.start();
 
   // The first time, cancel the download midway.
-  let deferResponse = deferNextResponse();
-
-  let deferMidway = Promise.defer();
-  download.onchange = function () {
-    if (!download.stopped && !download.canceled && download.progress == 50) {
-      do_check_eq(download.progress, 50);
-      deferMidway.resolve();
-    }
-  };
-  let promiseAttempt = download.start();
-  yield deferMidway.promise;
-
+  yield promiseDownloadMidway(download);
   download.cancel();
   do_check_true(download.canceled);
 
@@ -650,9 +799,8 @@ add_task(function test_cancel_midway_restart_immediately()
   do_check_eq(download.totalBytes, 0);
   do_check_eq(download.currentBytes, 0);
 
-  deferResponse.resolve();
-
   // The second request is allowed to complete.
+  continueResponses();
   try {
     yield promiseAttempt;
     do_throw("The download should have been canceled.");
@@ -696,39 +844,84 @@ add_task(function test_cancel_successful()
  */
 add_task(function test_cancel_twice()
 {
-  // Ensure that the download cannot complete before cancel is called.
-  let deferResponse = deferNextResponse();
+  mustInterruptResponses();
+
+  let download = yield promiseStartDownload(httpUrl("interruptible.txt"));
+
+  let promiseAttempt = download.start();
+  do_check_false(download.stopped);
+
+  let promiseCancel1 = download.cancel();
+  do_check_true(download.canceled);
+  let promiseCancel2 = download.cancel();
+
   try {
-    let download = yield promiseStartDownload(httpUrl("interruptible.txt"));
-
-    let promiseAttempt = download.start();
-    do_check_false(download.stopped);
-
-    let promiseCancel1 = download.cancel();
-    do_check_true(download.canceled);
-    let promiseCancel2 = download.cancel();
-
-    try {
-      yield promiseAttempt;
-      do_throw("The download should have been canceled.");
-    } catch (ex if ex instanceof Downloads.Error) {
-      do_check_false(ex.becauseSourceFailed);
-      do_check_false(ex.becauseTargetFailed);
-    }
-
-    // Both promises should now be resolved.
-    yield promiseCancel1;
-    yield promiseCancel2;
-
-    do_check_true(download.stopped);
-    do_check_false(download.succeeded);
-    do_check_true(download.canceled);
-    do_check_true(download.error === null);
-
-    do_check_false(yield OS.File.exists(download.target.path));
-  } finally {
-    deferResponse.resolve();
+    yield promiseAttempt;
+    do_throw("The download should have been canceled.");
+  } catch (ex if ex instanceof Downloads.Error) {
+    do_check_false(ex.becauseSourceFailed);
+    do_check_false(ex.becauseTargetFailed);
   }
+
+  // Both promises should now be resolved.
+  yield promiseCancel1;
+  yield promiseCancel2;
+
+  do_check_true(download.stopped);
+  do_check_false(download.succeeded);
+  do_check_true(download.canceled);
+  do_check_true(download.error === null);
+
+  do_check_false(yield OS.File.exists(download.target.path));
+});
+
+/**
+ * Checks that a download cannot be restarted after the "finalize" method.
+ */
+add_task(function test_finalize()
+{
+  mustInterruptResponses();
+
+  let download = yield promiseStartDownload(httpUrl("interruptible.txt"));
+
+  let promiseFinalized = download.finalize();
+
+  try {
+    yield download.start();
+    do_throw("It should not be possible to restart after finalization.");
+  } catch (ex) { }
+
+  yield promiseFinalized;
+
+  do_check_true(download.stopped);
+  do_check_false(download.succeeded);
+  do_check_true(download.canceled);
+  do_check_true(download.error === null);
+
+  do_check_false(yield OS.File.exists(download.target.path));
+});
+
+/**
+ * Checks that the "finalize" method can remove partially downloaded data.
+ */
+add_task(function test_finalize_tryToKeepPartialData()
+{
+  // Check finalization without removing partial data.
+  let download = yield promiseStartDownload_tryToKeepPartialData();
+  yield download.finalize();
+
+  do_check_true(download.hasPartialData);
+  do_check_true(yield OS.File.exists(download.target.partFilePath));
+
+  // Clean up.
+  yield download.removePartialData();
+
+  // Check finalization while removing partial data.
+  download = yield promiseStartDownload_tryToKeepPartialData();
+  yield download.finalize(true);
+
+  do_check_false(download.hasPartialData);
+  do_check_false(yield OS.File.exists(download.target.partFilePath));
 });
 
 /**
@@ -741,10 +934,9 @@ add_task(function test_whenSucceeded_after_restart()
     return;
   }
 
-  let download = yield promiseNewDownload(httpUrl("interruptible.txt"));
+  mustInterruptResponses();
 
-  // Ensure that the download cannot complete before cancel is called.
-  let deferResponse = deferNextResponse();
+  let download = yield promiseNewDownload(httpUrl("interruptible.txt"));
 
   // Get a reference before the first download attempt.
   let promiseSucceeded = download.whenSucceeded();
@@ -753,9 +945,8 @@ add_task(function test_whenSucceeded_after_restart()
   download.start();
   yield download.cancel();
 
-  deferResponse.resolve();
-
   // The second request is allowed to complete.
+  continueResponses();
   download.start();
 
   // Wait for the download to finish by waiting on the whenSucceeded promise.
@@ -1039,26 +1230,23 @@ add_task(function test_cancel_midway_restart_with_content_encoding()
   let download = yield promiseNewDownload(httpUrl("interruptible_gzip.txt"));
 
   // The first time, cancel the download midway.
-  let deferResponse = deferNextResponse();
-  try {
-    let deferCancel = Promise.defer();
-    download.onchange = function () {
-      if (!download.stopped && !download.canceled &&
-          download.currentBytes == TEST_DATA_SHORT_GZIP_ENCODED_FIRST.length) {
-        deferCancel.resolve(download.cancel());
-      }
-    };
-    download.start();
-    yield deferCancel.promise;
-  } finally {
-    deferResponse.resolve();
-  }
+  mustInterruptResponses();
+  let deferCancel = Promise.defer();
+  download.onchange = function () {
+    if (!download.stopped && !download.canceled &&
+        download.currentBytes == TEST_DATA_SHORT_GZIP_ENCODED_FIRST.length) {
+      deferCancel.resolve(download.cancel());
+    }
+  };
+  download.start();
+  yield deferCancel.promise;
 
   do_check_true(download.stopped);
 
   // The second time, we'll provide the entire interruptible response.
+  continueResponses();
   download.onchange = null;
-  yield download.start()
+  yield download.start();
 
   do_check_eq(download.progress, 100);
   do_check_eq(download.totalBytes, TEST_DATA_SHORT_GZIP_ENCODED.length);

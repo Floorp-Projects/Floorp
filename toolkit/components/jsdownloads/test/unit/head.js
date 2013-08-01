@@ -388,55 +388,47 @@ function startFakeServer()
 }
 
 /**
- * This function allows testing events or actions that need to happen in the
- * middle of a download.
+ * This is an internal reference that should not be used directly by tests.
+ */
+let _gDeferResponses = Promise.defer();
+
+/**
+ * Ensures that all the interruptible requests started after this function is
+ * called won't complete until the continueResponses function is called.
  *
  * Normally, the internal HTTP server returns all the available data as soon as
  * a request is received.  In order for some requests to be served one part at a
- * time, special interruptible handlers are registered on the HTTP server.
- *
- * Before making a request to one of the addresses served by the interruptible
- * handlers, you may call "deferNextResponse" to get a reference to an object
- * that allows you to control the next request.
+ * time, special interruptible handlers are registered on the HTTP server.  This
+ * allows testing events or actions that need to happen in the middle of a
+ * download.
  *
  * For example, the handler accessible at the httpUri("interruptible.txt")
- * address returns the TEST_DATA_SHORT text, then waits until the "resolve"
- * method is called on the object returned by the function.  At this point, the
- * handler sends the TEST_DATA_SHORT text again to complete the response.
+ * address returns the TEST_DATA_SHORT text, then it may block until the
+ * continueResponses method is called.  At this point, the handler sends the
+ * TEST_DATA_SHORT text again to complete the response.
  *
- * You can also call the "reject" method on the returned object to interrupt the
- * response midway.  Because of how the network layer is implemented, this does
- * not cause the socket to return an error.
- *
- * @returns Deferred object used to control the response.
+ * If an interruptible request is started before the function is called, it may
+ * or may not be blocked depending on the actual sequence of events.
  */
-function deferNextResponse()
+function mustInterruptResponses()
 {
-  do_print("Interruptible request will be controlled.");
+  // If there are pending blocked requests, allow them to complete.  This is
+  // done to prevent requests from being blocked forever, but should not affect
+  // the test logic, since previously started requests should not be monitored
+  // on the client side anymore.
+  _gDeferResponses.resolve();
 
-  // Store an internal reference that should not be used directly by tests.
-  if (!deferNextResponse._deferred) {
-    deferNextResponse._deferred = Promise.defer();
-  }
-  return deferNextResponse._deferred;
+  do_print("Interruptible responses will be blocked midway.");
+  _gDeferResponses = Promise.defer();
 }
 
 /**
- * Returns a promise that is resolved when the next interruptible response
- * handler has received the request, and has started sending the first part of
- * the response.  The response might not have been received by the client yet.
- *
- * @return {Promise}
- * @resolves When the next request has been received.
- * @rejects Never.
+ * Allows all the current and future interruptible requests to complete.
  */
-function promiseNextRequestReceived()
+function continueResponses()
 {
-  do_print("Requested notification when interruptible request is received.");
-
-  // Store an internal reference that should not be used directly by tests.
-  promiseNextRequestReceived._deferred = Promise.defer();
-  return promiseNextRequestReceived._deferred.promise;
+  do_print("Interruptible responses are now allowed to continue.");
+  _gDeferResponses.resolve();
 }
 
 /**
@@ -448,44 +440,24 @@ function promiseNextRequestReceived()
  *        This function is called when the response is received, with the
  *        aRequest and aResponse arguments of the server.
  * @param aSecondPartFn
- *        This function is called after the "resolve" method of the object
- *        returned by deferNextResponse is called.  This function is called with
- *        the aRequest and aResponse arguments of the server.
+ *        This function is called with the aRequest and aResponse arguments of
+ *        the server, when the continueResponses function is called.
  */
 function registerInterruptibleHandler(aPath, aFirstPartFn, aSecondPartFn)
 {
   gHttpServer.registerPathHandler(aPath, function (aRequest, aResponse) {
-    // Get a reference to the controlling object for this request.  If the
-    // deferNextResponse function was not called, interrupt the test.
-    let deferResponse = deferNextResponse._deferred;
-    deferNextResponse._deferred = null;
-    if (deferResponse) {
-      do_print("Interruptible request started under control.");
-    } else {
-      do_print("Interruptible request started without being controlled.");
-      deferResponse = Promise.defer();
-      deferResponse.resolve();
-    }
+    do_print("Interruptible request started.");
 
     // Process the first part of the response.
     aResponse.processAsync();
     aFirstPartFn(aRequest, aResponse);
 
-    if (promiseNextRequestReceived._deferred) {
-      do_print("Notifying that interruptible request has been received.");
-      promiseNextRequestReceived._deferred.resolve();
-      promiseNextRequestReceived._deferred = null;
-    }
-
-    // Wait on the deferred object, then finish or abort the request.
-    deferResponse.promise.then(function RIH_onSuccess() {
+    // Wait on the current deferred object, then finish the request.
+    _gDeferResponses.promise.then(function RIH_onSuccess() {
       aSecondPartFn(aRequest, aResponse);
       aResponse.finish();
       do_print("Interruptible request finished.");
-    }, function RIH_onFailure() {
-      aResponse.abort();
-      do_print("Interruptible request aborted.");
-    });
+    }).then(null, Cu.reportError);
   });
 }
 
@@ -498,6 +470,12 @@ function registerInterruptibleHandler(aPath, aFirstPartFn, aSecondPartFn)
 function isValidDate(aDate) {
   return aDate && aDate.getTime && !isNaN(aDate.getTime());
 }
+
+/**
+ * Position of the first byte served by the "interruptible_resumable.txt"
+ * handler during the most recent response.
+ */
+let gMostRecentFirstBytePos;
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Initialization functions common to all tests
@@ -519,11 +497,48 @@ add_task(function test_common_initialize()
       aResponse.write(TEST_DATA_SHORT);
     });
 
-  registerInterruptibleHandler("/empty-noprogress.txt",
+  registerInterruptibleHandler("/interruptible_resumable.txt",
     function firstPart(aRequest, aResponse) {
       aResponse.setHeader("Content-Type", "text/plain", false);
-    }, function secondPart(aRequest, aResponse) { });
 
+      // Determine if only part of the data should be sent.
+      let data = TEST_DATA_SHORT + TEST_DATA_SHORT;
+      if (aRequest.hasHeader("Range")) {
+        var matches = aRequest.getHeader("Range")
+                              .match(/^\s*bytes=(\d+)?-(\d+)?\s*$/);
+        var firstBytePos = (matches[1] === undefined) ? 0 : matches[1];
+        var lastBytePos = (matches[2] === undefined) ? data.length - 1
+                                            : matches[2];
+        if (firstBytePos >= data.length) {
+          aResponse.setStatusLine(aRequest.httpVersion, 416,
+                             "Requested Range Not Satisfiable");
+          aResponse.setHeader("Content-Range", "*/" + data.length, false);
+          aResponse.finish();
+          return;
+        }
+
+        aResponse.setStatusLine(aRequest.httpVersion, 206, "Partial Content");
+        aResponse.setHeader("Content-Range", firstBytePos + "-" +
+                                             lastBytePos + "/" +
+                                             data.length, false);
+
+        data = data.substring(firstBytePos, lastBytePos + 1);
+
+        gMostRecentFirstBytePos = firstBytePos;
+      } else {
+        gMostRecentFirstBytePos = 0;
+      }
+
+      aResponse.setHeader("Content-Length", "" + data.length, false);
+
+      aResponse.write(data.substring(0, data.length / 2));
+
+      // Store the second part of the data on the response object, so that it
+      // can be used by the secondPart function.
+      aResponse.secondPartData = data.substring(data.length / 2);
+    }, function secondPart(aRequest, aResponse) {
+      aResponse.write(aResponse.secondPartData);
+    });
 
   registerInterruptibleHandler("/interruptible_gzip.txt",
     function firstPart(aRequest, aResponse) {
