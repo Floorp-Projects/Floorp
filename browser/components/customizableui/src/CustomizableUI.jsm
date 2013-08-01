@@ -2043,6 +2043,10 @@ function WidgetGroupWrapper(aWidget) {
     return wrapper;
   };
 
+  this.__defineGetter__("areaType", function() {
+    return gAreas.get(aWidget.currentArea).get("type");
+  });
+
   Object.freeze(this);
 }
 
@@ -2081,10 +2085,6 @@ function WidgetSingleWrapper(aWidget, aNode) {
                     : aNode;
   });
 
-  this.__defineGetter__("areaType", function() {
-    return aNode.getAttribute("customizableui-areatype") || "";
-  });
-
   this.__defineGetter__("overflowed", function() {
     return aNode.classList.contains("overflowedItem");
   });
@@ -2102,16 +2102,6 @@ function WidgetSingleWrapper(aWidget, aNode) {
 //XXXunf Going to need to hook this up to some events to keep it all live.
 function XULWidgetGroupWrapper(aWidgetId) {
   this.isGroup = true;
-
-  let nodes = [];
-
-  let placement = CustomizableUIInternal.getPlacementOfWidget(aWidgetId);
-  if (placement) {
-    let buildAreas = gBuildAreas.get(placement.area) || [];
-    for (let areaNode of buildAreas)
-      nodes.push(areaNode.ownerDocument.getElementById(aWidgetId));
-  }
-
   this.id = aWidgetId;
   this.type = "custom";
   this.provider = CustomizableUI.PROVIDER_XUL;
@@ -2131,6 +2121,15 @@ function XULWidgetGroupWrapper(aWidgetId) {
     }
     return wrapper;
   };
+
+  this.__defineGetter__("areaType", function() {
+    let placement = CustomizableUIInternal.getPlacementOfWidget(aWidgetId);
+    if (!placement) {
+      return null;
+    }
+
+    return gAreas.get(placement.area).get("type");
+  });
 
   Object.freeze(this);
 }
@@ -2152,10 +2151,6 @@ function XULWidgetSingleWrapper(aWidgetId, aNode) {
     let anchorId = aNode.getAttribute("customizableui-anchorid");
     return anchorId ? aNode.ownerDocument.getElementById(anchorId)
                     : aNode;
-  });
-
-  this.__defineGetter__("areaType", function() {
-    return aNode.getAttribute("customizableui-areatype") || "";
   });
 
   this.__defineGetter__("overflowed", function() {
