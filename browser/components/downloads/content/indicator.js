@@ -168,6 +168,9 @@ const DownloadsButton = {
     placeholder.parentNode.insertBefore(indicator, placeholder);
     placeholder.collapsed = true;
     indicator.collapsed = false;
+    const kAreaType = "customizableui-areatype";
+    if (!indicator.getAttribute(kAreaType))
+      indicator.setAttribute(kAreaType, placeholder.getAttribute(kAreaType));
 
     indicator.open = this._anchorRequested;
 
