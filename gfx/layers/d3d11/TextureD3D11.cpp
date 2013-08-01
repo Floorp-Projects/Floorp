@@ -77,7 +77,7 @@ DeprecatedTextureClientD3D11::~DeprecatedTextureClientD3D11()
   ClearDT();
 }
 
-bool
+void
 DeprecatedTextureClientD3D11::EnsureAllocated(gfx::IntSize aSize,
                                               gfxASurface::gfxContentType aType)
 {
@@ -87,7 +87,7 @@ DeprecatedTextureClientD3D11::EnsureAllocated(gfx::IntSize aSize,
     mTexture->GetDesc(&desc);
 
     if (desc.Width == aSize.width && desc.Height == aSize.height) {
-      return true;
+      return;
     }
 
     mTexture = nullptr;
@@ -109,7 +109,7 @@ DeprecatedTextureClientD3D11::EnsureAllocated(gfx::IntSize aSize,
 
   if (FAILED(hr)) {
     LOGD3D11("Error creating texture for client!");
-    return false;
+    return;
   }
 
   RefPtr<IDXGIResource> resource;
@@ -126,7 +126,6 @@ DeprecatedTextureClientD3D11::EnsureAllocated(gfx::IntSize aSize,
                                        aType == gfxASurface::CONTENT_COLOR_ALPHA);
 
   mContentType = aType;
-  return true;
 }
 
 gfxASurface*

@@ -27,11 +27,15 @@ TemporaryRef<DeprecatedTextureHost> CreateBasicDeprecatedTextureHost(SurfaceDesc
                                                              uint32_t aDeprecatedTextureHostFlags,
                                                              uint32_t aTextureFlags);
 
-#ifdef XP_WIN
 TemporaryRef<DeprecatedTextureHost> CreateDeprecatedTextureHostD3D9(SurfaceDescriptorType aDescriptorType,
                                                             uint32_t aDeprecatedTextureHostFlags,
-                                                            uint32_t aTextureFlags);
+                                                            uint32_t aTextureFlags)
+{
+  NS_RUNTIMEABORT("not implemented");
+  return nullptr;
+}
 
+#ifdef XP_WIN
 TemporaryRef<DeprecatedTextureHost> CreateDeprecatedTextureHostD3D11(SurfaceDescriptorType aDescriptorType,
                                                              uint32_t aDeprecatedTextureHostFlags,
                                                              uint32_t aTextureFlags);
@@ -47,11 +51,11 @@ DeprecatedTextureHost::CreateDeprecatedTextureHost(SurfaceDescriptorType aDescri
       return CreateDeprecatedTextureHostOGL(aDescriptorType,
                                         aDeprecatedTextureHostFlags,
                                         aTextureFlags);
-#ifdef XP_WIN
     case LAYERS_D3D9:
       return CreateDeprecatedTextureHostD3D9(aDescriptorType,
                                          aDeprecatedTextureHostFlags,
                                          aTextureFlags);
+#ifdef XP_WIN
     case LAYERS_D3D11:
       return CreateDeprecatedTextureHostD3D11(aDescriptorType,
                                           aDeprecatedTextureHostFlags,
