@@ -2773,6 +2773,15 @@ BeginMarkPhase(JSRuntime *rt)
     for (ThreadDataIter iter(rt); !iter.done(); iter.next())
         keepAtoms |= iter->gcKeepAtoms;
 
+    /*
+     * We don't scan the stacks of exclusive threads, so we need to avoid
+     * collecting their objects in another way. The only GC thing pointers they
+     * have are to their exclusive compartment (which is not collected) or to
+     * the atoms compartment. Therefore, we avoid collecting the atoms
+     * compartment when exclusive threads are running.
+     */
+    keepAtoms |= rt->exclusiveThreadsPresent();
+
     if (atomsZone->isGCScheduled() && rt->gcIsFull && !keepAtoms) {
         JS_ASSERT(!atomsZone->isCollecting());
         atomsZone->setGCState(Zone::Mark);
@@ -4351,6 +4360,8 @@ gc::IsIncrementalGCSafe(JSRuntime *rt)
     bool keepAtoms = false;
     for (ThreadDataIter iter(rt); !iter.done(); iter.next())
         keepAtoms |= iter->gcKeepAtoms;
+
+    keepAtoms |= rt->exclusiveThreadsPresent();
 
     if (keepAtoms)
         return IncrementalSafety::Unsafe("gcKeepAtoms set");

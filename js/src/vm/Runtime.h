@@ -765,6 +765,14 @@ struct JSRuntime : public JS::shadow::Runtime,
 #endif
     }
 
+    bool exclusiveThreadsPresent() const {
+#ifdef JS_THREADSAFE
+        return numExclusiveThreads > 0;
+#else
+        return false;
+#endif
+    }
+
     /* Default compartment. */
     JSCompartment       *atomsCompartment;
 
