@@ -296,8 +296,8 @@
                            command="cmd_stop"/>
           </hbox>
 
-          <toolbarbutton id="download-button" class="appbar-secondary"
-                         oncommand="Appbar.onDownloadButton()"/>
+          <circularprogressindicator id="download-progress"
+                                     oncommand="Appbar.onDownloadButton()"/>
           <toolbarbutton id="star-button" class="appbar-primary" type="checkbox"
                          oncommand="Appbar.onStarButton()"/>
           <toolbarbutton id="pin-button" class="appbar-primary" type="checkbox"

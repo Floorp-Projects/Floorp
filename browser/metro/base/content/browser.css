@@ -42,6 +42,10 @@ autoscroller {
   -moz-binding: url('chrome://browser/content/bindings/popup.xml#element-popup');
 }
 
+circularprogressindicator {
+  -moz-binding: url('chrome://browser/content/bindings/circularprogress.xml#circular-progress-indicator');
+}
+
 setting[type="bool"] {
   display: -moz-box;
   -moz-binding: url("chrome://browser/content/bindings/toggleswitch.xml#setting-fulltoggle-bool");
