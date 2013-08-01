@@ -66,6 +66,9 @@ AudioNodeExternalInputStream::GetTrackMapEntry(const StreamBuffer::Track& aTrack
   }
 
   TrackMapEntry* map = mTrackMap.AppendElement();
+  map->mEndOfConsumedInputTicks = 0;
+  map->mEndOfLastInputIntervalInInputStream = -1;
+  map->mEndOfLastInputIntervalInOutputStream = -1;
   map->mSamplesPassedToResampler =
     TimeToTicksRoundUp(aTrack.GetRate(), GraphTimeToStreamTime(aFrom));
   map->mResampler = resampler;
@@ -404,9 +407,7 @@ AudioNodeExternalInputStream::ProduceOutput(GraphTime aFrom, GraphTime aTo)
       // Ticks >= startTicks and < endTicks are in the interval
       StreamTime outputEnd = GraphTimeToStreamTime(interval.mEnd);
       TrackTicks startTicks = trackMap->mSamplesPassedToResampler + segment.GetDuration();
-#ifdef DEBUG
       StreamTime outputStart = GraphTimeToStreamTime(interval.mStart);
-#endif
       NS_ASSERTION(startTicks == TimeToTicksRoundUp(inputTrackRate, outputStart),
                    "Samples missing");
       TrackTicks endTicks = TimeToTicksRoundUp(inputTrackRate, outputEnd);
@@ -416,15 +417,32 @@ AudioNodeExternalInputStream::ProduceOutput(GraphTime aFrom, GraphTime aTo)
         segment.AppendNullData(ticks);
       } else {
         // See comments in TrackUnionStream::CopyTrackData
-        // StreamTime inputStart = source->GraphTimeToStreamTime(interval.mStart);
+        StreamTime inputStart = source->GraphTimeToStreamTime(interval.mStart);
         StreamTime inputEnd = source->GraphTimeToStreamTime(interval.mEnd);
         TrackTicks inputTrackEndPoint =
             inputTrack.IsEnded() ? inputTrack.GetEnd() : TRACK_TICKS_MAX;
-        TrackTicks inputEndTicks = TimeToTicksRoundUp(inputTrackRate, inputEnd);
-        TrackTicks inputStartTicks = inputEndTicks - ticks;
-        segment.AppendSlice(*inputTrack.GetSegment(),
-                            std::min(inputTrackEndPoint, inputStartTicks),
-                            std::min(inputTrackEndPoint, inputEndTicks));
+
+        if (trackMap->mEndOfLastInputIntervalInInputStream != inputStart ||
+            trackMap->mEndOfLastInputIntervalInOutputStream != outputStart) {
+          // Start of a new series of intervals where neither stream is blocked.
+          trackMap->mEndOfConsumedInputTicks = TimeToTicksRoundDown(inputTrackRate, inputStart) - 1;
+        }
+        TrackTicks inputStartTicks = trackMap->mEndOfConsumedInputTicks;
+        TrackTicks inputEndTicks = inputStartTicks + ticks;
+        trackMap->mEndOfConsumedInputTicks = inputEndTicks;
+        trackMap->mEndOfLastInputIntervalInInputStream = inputEnd;
+        trackMap->mEndOfLastInputIntervalInOutputStream = outputEnd;
+
+        if (inputStartTicks < 0) {
+          // Data before the start of the track is just null.
+          segment.AppendNullData(-inputStartTicks);
+          inputStartTicks = 0;
+        }
+        if (inputEndTicks > inputStartTicks) {
+          segment.AppendSlice(*inputTrack.GetSegment(),
+                              std::min(inputTrackEndPoint, inputStartTicks),
+                              std::min(inputTrackEndPoint, inputEndTicks));
+        }
         // Pad if we're looking past the end of the track
         segment.AppendNullData(std::max<TrackTicks>(0, inputEndTicks - inputTrackEndPoint));
       }
