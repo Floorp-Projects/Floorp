@@ -19,5 +19,8 @@ function handleRequest(request, response)
   response.setStatusLine(request.httpVersion, 200, "Content Follows");
   response.setHeader("Content-Type", "video/ogg", false);
   response.write(bytes, bytes.length);
+  // Make this request async to prevent a default Content-Length from being provided.
+  response.processAsync();
+  response.finish();
   bis.close();
 }
