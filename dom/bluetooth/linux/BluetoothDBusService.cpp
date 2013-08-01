@@ -2698,8 +2698,7 @@ BluetoothDBusService::GetServiceChannel(const nsAString& aDeviceAddress,
                                                            aServiceUUID,
                                                            1,
                                                            aManager);
-  nsresult rv = NS_DispatchToMainThread(r);
-  NS_ENSURE_SUCCESS_VOID(rv);
+  NS_DispatchToMainThread(r);
 #endif
 
   return NS_OK;
