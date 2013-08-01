@@ -81,7 +81,7 @@ MozKeyboard.prototype = {
 
     function send(type) {
       mainThread.dispatch(function() {
-	      utils.sendKeyEvent(type, keyCode, charCode, null);
+	utils.sendKeyEvent(type, keyCode, charCode, null);
       }, mainThread.DISPATCH_NORMAL);
     }
 
@@ -197,85 +197,4 @@ MozKeyboard.prototype = {
   }
 };
 
-/**
- * ==============================================
- * InputMethodManager
- * ==============================================
- */
-function MozInputMethodManager() { }
-
-MozInputMethodManager.prototype = {
-  classID: Components.ID("{7e9d7280-ef86-11e2-b778-0800200c9a66}"),
-
-  QueryInterface: XPCOMUtils.generateQI([
-    Ci.nsIInputMethodManager
-  ]),
-
-  classInfo: XPCOMUtils.generateCI({
-    "classID": Components.ID("{7e9d7280-ef86-11e2-b778-0800200c9a66}"),
-    "contractID": "@mozilla.org/b2g-imm;1",
-    "interfaces": [Ci.nsIInputMethodManager],
-    "flags": Ci.nsIClassInfo.DOM_OBJECT,
-    "classDescription": "B2G Input Method Manager"
-  }),
-
-  showAll: function() {
-    cpmm.sendAsyncMessage('Keyboard:ShowInputMethodPicker', {});
-  },
-
-  next: function() {
-    cpmm.sendAsyncMessage('Keyboard:SwitchToNextInputMethod', {});
-  },
-
-  supportsSwitching: function() {
-    return true;
-  },
-
-  hide: function() {
-    cpmm.sendAsyncMessage('Keyboard:RemoveFocus', {});
-  }
-};
-
-/**
- * ==============================================
- * InputMethod
- * ==============================================
- */
-function MozInputMethod() { }
-
-MozInputMethod.prototype = {
-  classID: Components.ID("{5c7f4ce1-a946-4adc-89e6-c908226341a0}"),
-
-  QueryInterface: XPCOMUtils.generateQI([
-    Ci.nsIInputMethod,
-    Ci.nsIDOMGlobalPropertyInitializer
-  ]),
-
-  classInfo: XPCOMUtils.generateCI({
-    "classID": Components.ID("{5c7f4ce1-a946-4adc-89e6-c908226341a0}"),
-    "contractID": "@mozilla.org/b2g-inputmethod;1",
-    "interfaces": [Ci.nsIInputMethod],
-    "flags": Ci.nsIClassInfo.DOM_OBJECT,
-    "classDescription": "B2G Input Method"
-  }),
-
-  init: function mozInputMethodInit(win) {
-    let principal = win.document.nodePrincipal;
-    let perm = Services.perms
-               .testExactPermissionFromPrincipal(principal, "keyboard");
-    if (perm != Ci.nsIPermissionManager.ALLOW_ACTION) {
-      dump("No permission to use the keyboard API for " +
-           principal.origin + "\n");
-      return null;
-    }
-
-    this._mgmt = new MozInputMethodManager();
-  },
-
-  get mgmt() {
-    return this._mgmt;
-  }
-};
-
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory(
-  [MozKeyboard, MozInputMethodManager, MozInputMethod]);
+this.NSGetFactory = XPCOMUtils.generateNSGetFactory([MozKeyboard]);
