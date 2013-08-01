@@ -26,12 +26,19 @@ NS_IMPL_ADDREF_INHERITED(HTMLModElement, Element)
 NS_IMPL_RELEASE_INHERITED(HTMLModElement, Element)
 
 // QueryInterface implementation for HTMLModElement
-NS_INTERFACE_MAP_BEGIN(HTMLModElement)
+NS_INTERFACE_TABLE_HEAD(HTMLModElement)
   NS_HTML_CONTENT_INTERFACES(nsGenericHTMLElement)
+  NS_INTERFACE_TABLE_INHERITED1(HTMLModElement,
+                                nsIDOMHTMLModElement)
+  NS_INTERFACE_TABLE_TO_MAP_SEGUE
 NS_ELEMENT_INTERFACE_MAP_END
 
 
 NS_IMPL_ELEMENT_CLONE(HTMLModElement)
+
+
+NS_IMPL_URI_ATTR(HTMLModElement, Cite, cite)
+NS_IMPL_STRING_ATTR(HTMLModElement, DateTime, datetime)
 
 JSObject*
 HTMLModElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aScope)

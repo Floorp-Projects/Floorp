@@ -7,17 +7,17 @@
 
 #include "mozilla/Attributes.h"
 #include "nsGenericHTMLElement.h"
+#include "nsIDOMHTMLTableRowElement.h"
 
 class nsIDOMHTMLTableElement;
+class nsIDOMHTMLTableSectionElement;
 class nsContentList;
 
 namespace mozilla {
 namespace dom {
 
-class HTMLTableSectionElement;
-
 class HTMLTableRowElement MOZ_FINAL : public nsGenericHTMLElement,
-                                      public nsIDOMHTMLElement
+                                      public nsIDOMHTMLTableRowElement
 {
 public:
   HTMLTableRowElement(already_AddRefed<nsINodeInfo> aNodeInfo)
@@ -38,6 +38,9 @@ public:
 
   // nsIDOMHTMLElement
   NS_FORWARD_NSIDOMHTMLELEMENT_TO_GENERIC
+
+  // nsIDOMHTMLTableRowElement
+  NS_DECL_NSIDOMHTMLTABLEROWELEMENT
 
   int32_t RowIndex() const;
   int32_t SectionRowIndex() const;
@@ -105,7 +108,7 @@ protected:
   virtual JSObject* WrapNode(JSContext *aCx,
                              JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
 
-  HTMLTableSectionElement* GetSection() const;
+  already_AddRefed<nsIDOMHTMLTableSectionElement> GetSection() const;
   HTMLTableElement* GetTable() const;
   nsRefPtr<nsContentList> mCells;
 };
