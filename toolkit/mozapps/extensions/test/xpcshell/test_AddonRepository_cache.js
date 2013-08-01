@@ -20,7 +20,7 @@ const GETADDONS_RESULTS            = BASE_URL + "/data/test_AddonRepository_cach
 const GETADDONS_EMPTY              = BASE_URL + "/data/test_AddonRepository_empty.xml";
 const GETADDONS_FAILED             = BASE_URL + "/data/test_AddonRepository_failed.xml";
 
-const FILE_DATABASE = "addons.sqlite";
+const FILE_DATABASE = "addons.json";
 const ADDON_NAMES = ["test_AddonRepository_1",
                      "test_AddonRepository_2",
                      "test_AddonRepository_3"];
@@ -521,6 +521,16 @@ function check_initialized_cache(aExpectedToFind, aCallback) {
   });
 }
 
+// Waits for the data to be written from the in-memory DB to the addons.json
+// file that is done asynchronously through OS.File
+function waitForFlushedData(aCallback) {
+  Services.obs.addObserver({
+    observe: function(aSubject, aTopic, aData) {
+      Services.obs.removeObserver(this, "addon-repository-data-written");
+      aCallback(aData == "true");
+    }
+  }, "addon-repository-data-written", false);
+}
 
 function run_test() {
   // Setup for test
@@ -558,7 +568,8 @@ function run_test_1() {
 // Tests that the cache and database begin as empty
 function run_test_2() {
   check_database_exists(false);
-  check_cache([false, false, false], false, run_test_3);
+  check_cache([false, false, false], false, function(){});
+  waitForFlushedData(run_test_3);
 }
 
 // Tests repopulateCache when the search fails
@@ -611,7 +622,9 @@ function run_test_6() {
     check_database_exists(false);
 
     Services.prefs.setBoolPref(PREF_GETADDONS_CACHE_ENABLED, true);
-    check_cache([false, false, false], false, run_test_7);
+    check_cache([false, false, false], false, function() {});
+
+    waitForFlushedData(run_test_7);
   });
 }
 
@@ -710,7 +723,7 @@ function run_test_13() {
 function run_test_14() {
   Services.prefs.setBoolPref(PREF_GETADDONS_CACHE_ENABLED, true);
 
-  trigger_background_update(function() {
+  waitForFlushedData(function() {
     check_database_exists(true);
 
     AddonManager.getAddonsByIDs(ADDON_IDS, function(aAddons) {
@@ -718,6 +731,8 @@ function run_test_14() {
       do_execute_soon(run_test_15);
     });
   });
+
+  trigger_background_update();
 }
 
 // Tests that the XPI add-ons correctly use the repository properties when
