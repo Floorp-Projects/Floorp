@@ -7,6 +7,8 @@
 #include <algorithm>
 #include <stdarg.h>
 
+#include "JavaScriptParent.h"
+
 #include "prprf.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/FloatingPoint.h"
@@ -1746,6 +1748,17 @@ InterfaceHasInstance(JSContext* cx, JS::Handle<JSObject*> obj,
     return true;
   }
 
+  JS::Rooted<JSObject*> unwrapped(cx, js::CheckedUnwrap(instance, true));
+  if (unwrapped && jsipc::JavaScriptParent::IsCPOW(unwrapped)) {
+    bool boolp = false;
+    if (!jsipc::JavaScriptParent::DOMInstanceOf(unwrapped, clasp->mPrototypeID,
+                                                clasp->mDepth, &boolp)) {
+      return false;
+    }
+    *bp = boolp;
+    return true;
+  }
+
   JS::Rooted<JS::Value> protov(cx);
   DebugOnly<bool> ok = JS_GetProperty(cx, obj, "prototype", &protov);
   MOZ_ASSERT(ok, "Someone messed with our prototype property?");
@@ -1785,6 +1798,21 @@ InterfaceHasInstance(JSContext* cx, JS::Handle<JSObject*> obj, JS::MutableHandle
 
   JS::Rooted<JSObject*> instanceObject(cx, &vp.toObject());
   return InterfaceHasInstance(cx, obj, instanceObject, bp);
+}
+
+JSBool
+InterfaceHasInstance(JSContext* cx, int prototypeID, int depth,
+                     JS::Handle<JSObject*> instance,
+                     JSBool* bp)
+{
+  const DOMClass* domClass = GetDOMClass(js::UncheckedUnwrap(instance));
+
+  MOZ_ASSERT(!domClass || prototypeID != prototypes::id::_ID_Count,
+             "Why do we have a hasInstance hook if we don't have a prototype "
+             "ID?");
+
+  *bp = (domClass && domClass->mInterfaceChain[depth] == prototypeID);
+  return true;
 }
 
 bool
