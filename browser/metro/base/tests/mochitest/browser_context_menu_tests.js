@@ -642,7 +642,7 @@ function reopenSetUp() {
 
   // Sometimes the context UI won't actually show up.
   // Since we're just normalizing, we don't want waitForCondition
-  // to cause an orange.
+  // to cause an orange, so we're putting a try/catch here.
   try {
     yield waitForCondition(() => ContextUI.isVisible);
     ContextUI.dismiss();
