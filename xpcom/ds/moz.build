@@ -95,6 +95,7 @@ CPP_SOURCES += [
     'nsSupportsPrimitives.cpp',
     'nsUnicharBuffer.cpp',
     'nsVariant.cpp',
+    'TimeStamp.cpp',
 ]
 
 if CONFIG['HAVE_CLOCK_MONOTONIC']:
