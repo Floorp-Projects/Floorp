@@ -57,6 +57,8 @@ var Downloads = {
 
     this._progress = new DownloadProgressListener(this);
     this.manager.addListener(this._progress);
+
+    this._downloadProgressIndicator = document.getElementById("download-progress");
   },
 
   uninit: function dh_uninit() {
@@ -196,6 +198,7 @@ var Downloads = {
         accessKey: "",
         callback: function() {
           Downloads.manager.retryDownload(aDownload.id);
+          Downloads._downloadProgressIndicator.reset();
         }
       },
       {
@@ -203,6 +206,7 @@ var Downloads = {
         accessKey: "",
         callback: function() {
           Downloads.cancelDownload(aDownload);
+          Downloads._downloadProgressIndicator.reset();
         }
       }
     ];
@@ -222,6 +226,7 @@ var Downloads = {
           let fileURI = aDownload.target;
           let file = Downloads._getLocalFile(fileURI);
           file.reveal();
+          Downloads._downloadProgressIndicator.reset();
         }
       }
     ];
@@ -242,11 +247,28 @@ var Downloads = {
         accessKey: "",
         callback: function() {
           Downloads.openDownload(aDownload);
+          Downloads._downloadProgressIndicator.reset();
         }
       });
     }
     this.showNotification("download-complete", message, buttons,
       this._notificationBox.PRIORITY_WARNING_MEDIUM);
+  },
+
+  _updateCircularProgressMeter: function dv_updateCircularProgressMeter() {
+    if (!this._progressNotificationInfo) {
+      return;
+    }
+
+    let totPercent = 0;
+    for (let info of this._progressNotificationInfo) {
+      // info[0]          => download guid
+      // info[1].download => nsIDownload
+      totPercent += info[1].download.percentComplete;
+    }
+
+    let percentComplete = totPercent / this._progressNotificationInfo.size;
+    this._downloadProgressIndicator.updateProgress(percentComplete);
   },
 
   _computeDownloadProgressString: function dv_computeDownloadProgressString(aDownload) {
@@ -260,6 +282,7 @@ var Downloads = {
       totSize += size;
       totSecondsLeft += ((size - amountTransferred) / speed);
     }
+
     // Compute progress in bytes.
     let amountTransferred = Util.getDownloadSize(totTransferred);
     let size = Util.getDownloadSize(totSize);
@@ -296,6 +319,7 @@ var Downloads = {
   updateInfobar: function dv_updateInfobar(aDownload) {
     this._saveDownloadData(aDownload);
     let message = this._computeDownloadProgressString(aDownload);
+    this._updateCircularProgressMeter();
 
     if (this._progressNotification == null ||
         !this._notificationBox.getNotificationWithValue("download-progress")) {
@@ -310,6 +334,7 @@ var Downloads = {
           accessKey: "",
           callback: function() {
             Downloads.cancelDownloads();
+            Downloads._downloadProgressIndicator.reset();
           }
         }
       ];
@@ -327,6 +352,7 @@ var Downloads = {
       this._saveDownloadData(aDownload);
       this._progressNotification.label =
         this._computeDownloadProgressString(aDownload);
+      this._updateCircularProgressMeter();
     }
   },
 
