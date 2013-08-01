@@ -5,7 +5,11 @@
 <head>
   <title>frame</title>
   <script type="text/javascript">
+    var connectedEvents = 0;
     var buttonPresses = 0;
+    window.addEventListener("gamepadconnected", function() {
+      connectedEvents++;
+});
     window.addEventListener("gamepadbuttondown", function() {
       buttonPresses++;
 });
