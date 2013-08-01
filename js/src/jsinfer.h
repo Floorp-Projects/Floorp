@@ -22,6 +22,8 @@ class JSScript;
 
 namespace js {
 
+class TypeRepresentation;
+
 class TaggedProto
 {
   public:
@@ -867,11 +869,13 @@ struct Property
 };
 
 struct TypeNewScript;
+struct TypeBinaryData;
 
 struct TypeObjectAddendum
 {
     enum Kind {
-        NewScript
+        NewScript,
+        BinaryData
     };
 
     Kind kind;
@@ -883,6 +887,15 @@ struct TypeObjectAddendum
     TypeNewScript *asNewScript() {
         JS_ASSERT(isNewScript());
         return (TypeNewScript*) this;
+    }
+
+    bool isBinaryData() {
+        return kind == BinaryData;
+    }
+
+    TypeBinaryData *asBinaryData() {
+        JS_ASSERT(isBinaryData());
+        return (TypeBinaryData*) this;
     }
 
     static inline void writeBarrierPre(TypeObjectAddendum *newScript);
@@ -935,6 +948,13 @@ struct TypeNewScript : public TypeObjectAddendum
     Initializer *initializerList;
 
     static inline void writeBarrierPre(TypeNewScript *newScript);
+};
+
+struct TypeBinaryData : public TypeObjectAddendum
+{
+    TypeBinaryData(TypeRepresentation *repr);
+
+    TypeRepresentation *const typeRepr;
 };
 
 /*
@@ -1010,6 +1030,23 @@ struct TypeObject : gc::Cell
     TypeNewScript *newScript() {
         return addendum->asNewScript();
     }
+
+    bool hasBinaryData() {
+        return addendum && addendum->isBinaryData();
+    }
+
+    TypeBinaryData *binaryData() {
+        return addendum->asBinaryData();
+    }
+
+    /*
+     * Tag the type object for a binary data type descriptor, instance,
+     * or handle with the type representation of the data it points at.
+     * If this type object is already tagged with a binary data addendum,
+     * this addendum must already be associated with the same TypeRepresentation,
+     * and the method has no effect.
+     */
+    bool addBinaryDataAddendum(JSContext *cx, TypeRepresentation *repr);
 
     /*
      * Properties of this object. This may contain JSID_VOID, representing the
@@ -1105,6 +1142,7 @@ struct TypeObject : gc::Cell
     void markUnknown(ExclusiveContext *cx);
     void clearAddendum(ExclusiveContext *cx);
     void clearNewScriptAddendum(ExclusiveContext *cx);
+    void clearBinaryDataAddendum(ExclusiveContext *cx);
     void getFromPrototypes(JSContext *cx, jsid id, TypeSet *types, bool force = false);
 
     void print();
