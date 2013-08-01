@@ -60,10 +60,8 @@ DataThrowError(JSContext *cx, unsigned argc, Value *vp)
 static void
 ReportTypeError(JSContext *cx, HandleValue fromValue, const char *toType)
 {
-    char *valueStr = JS_EncodeString(cx, JS_ValueToString(cx, fromValue));
     JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_CONVERT_TO,
-                         valueStr, toType);
-    JS_free(cx, (void *) valueStr);
+                         InformalValueTypeName(fromValue), toType);
 }
 
 static void
@@ -774,7 +772,8 @@ DataInstanceUpdate(JSContext *cx, unsigned argc, Value *vp)
         return false;
     }
 
-    RootedObject thisObj(cx, args.thisv().toObjectOrNull());
+    RootedObject thisObj(cx, args.thisv().isObject() ?
+                                args.thisv().toObjectOrNull() : NULL);
     if (!IsBlock(thisObj)) {
         RootedValue thisObjVal(cx, ObjectValue(*thisObj));
         ReportTypeError(cx, thisObjVal, "BinaryData block");
@@ -831,15 +830,11 @@ ArrayType::repeat(JSContext *cx, unsigned int argc, Value *vp)
         return false;
     }
 
-    RootedObject thisObj(cx, args.thisv().toObjectOrNull());
+    RootedObject thisObj(cx, args.thisv().isObject() ?
+                                args.thisv().toObjectOrNull() : NULL);
     if (!IsArrayType(thisObj)) {
-        char *valueChars = const_cast<char*>("(unknown type)");
-        RootedString valueStr(cx, JS_ValueToString(cx, args.thisv()));
-        if (valueStr)
-            valueChars = JS_EncodeString(cx, valueStr);
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_INCOMPATIBLE_PROTO, "ArrayType", "repeat", valueChars);
-        if (valueStr)
-            JS_free(cx, valueChars);
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_INCOMPATIBLE_PROTO,
+                             "ArrayType", "repeat", InformalValueTypeName(args.thisv()));
         return false;
     }
 
@@ -860,12 +855,12 @@ ArrayType::toString(JSContext *cx, unsigned int argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    RootedObject thisObj(cx, args.thisv().toObjectOrNull());
-    JS_ASSERT(thisObj);
+    RootedObject thisObj(cx, args.thisv().isObject() ?
+                                args.thisv().toObjectOrNull() : NULL);
     if (!IsArrayType(thisObj)) {
-        RootedObject obj(cx, args.thisv().toObjectOrNull());
         JS_ReportErrorNumber(cx, js_GetErrorMessage,
-                             NULL, JSMSG_INCOMPATIBLE_PROTO, "ArrayType", "toString", JS_GetClass(obj)->name);
+                             NULL, JSMSG_INCOMPATIBLE_PROTO,
+                             "ArrayType", "toString", InformalValueTypeName(args.thisv()));
         return false;
     }
 
@@ -1040,10 +1035,10 @@ JSBool BinaryArray::subarray(JSContext *cx, unsigned int argc, Value *vp)
         return false;
     }
 
-    RootedObject thisObj(cx, &args.thisv().toObject());
+    RootedObject thisObj(cx, args.thisv().isObject() ?
+                                args.thisv().toObjectOrNull() : NULL);
     if (!IsBinaryArray(thisObj)) {
-        RootedValue thisObjVal(cx, ObjectValue(*thisObj));
-        ReportTypeError(cx, thisObjVal, "binary array");
+        ReportTypeError(cx, args.thisv(), "binary array");
         return false;
     }
 
@@ -1108,13 +1103,10 @@ BinaryArray::fill(JSContext *cx, unsigned int argc, Value *vp)
         return false;
     }
 
-    if (!args.thisv().isObject())
-        return false;
-
-    RootedObject thisObj(cx, args.thisv().toObjectOrNull());
+    RootedObject thisObj(cx, args.thisv().isObject() ?
+                                args.thisv().toObjectOrNull() : NULL);
     if (!IsBinaryArray(thisObj)) {
-        RootedValue thisObjVal(cx, ObjectValue(*thisObj));
-        ReportTypeError(cx, thisObjVal, "binary array");
+        ReportTypeError(cx, args.thisv(), "binary array");
         return false;
     }
 
@@ -1519,6 +1511,13 @@ StructType::layout(JSContext *cx, HandleObject structType, HandleObject fields)
     if (!GetPropertyNames(cx, fields, JSITER_OWNONLY, &fieldProps))
         return false;
 
+    if (fieldProps.length() <= 0) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                             JSMSG_BINARYDATA_STRUCTTYPE_EMPTY_DESCRIPTOR);
+        return false;
+    }
+
+    // All error branches from here onwards should |goto error;| to free this list.
     FieldList *fieldList = new FieldList(fieldProps.length());
 
     uint32_t structAlign = 0;
@@ -1532,9 +1531,18 @@ StructType::layout(JSContext *cx, HandleObject structType, HandleObject fields)
         if (!JSObject::getGeneric(cx, fields, fields, id, &fieldTypeVal))
             goto error;
 
-        RootedObject fieldType(cx, fieldTypeVal.toObjectOrNull());
-        if (!IsBinaryType(fieldType))
+        if (!fieldTypeVal.isObject()) {
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                                 JSMSG_BINARYDATA_STRUCTTYPE_BAD_FIELD, JSID_TO_STRING(id));
             goto error;
+        }
+
+        RootedObject fieldType(cx, fieldTypeVal.toObjectOrNull());
+        if (!IsBinaryType(fieldType)) {
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                                 JSMSG_BINARYDATA_STRUCTTYPE_BAD_FIELD, JSID_TO_STRING(id));
+            goto error;
+        }
 
         size_t fieldMemSize = GetMemSize(cx, fieldType);
         size_t fieldAlign = GetAlign(cx, fieldType);
@@ -1545,9 +1553,10 @@ StructType::layout(JSContext *cx, HandleObject structType, HandleObject fields)
         if (fieldAlign > structAlign)
             structAlign = fieldAlign;
 
+        // If the field type is a BinaryType and we can't get its bytes, we have a problem.
         RootedValue fieldTypeBytes(cx);
-        if (!JSObject::getProperty(cx, fieldType, fieldType, cx->names().bytes, &fieldTypeBytes))
-            goto error;
+        bool r = JSObject::getProperty(cx, fieldType, fieldType, cx->names().bytes, &fieldTypeBytes);
+        JS_ASSERT(r);
 
         JS_ASSERT(fieldTypeBytes.isInt32());
         structByteSize += fieldTypeBytes.toInt32();
@@ -1651,11 +1660,8 @@ StructType::create(JSContext *cx, HandleObject structTypeGlobal,
     if (!obj)
         return NULL;
 
-    if (!StructType::layout(cx, obj, fields)) {
-        RootedValue fieldsVal(cx, ObjectValue(*fields));
-        ReportTypeError(cx, fieldsVal, "StructType field specifier");
+    if (!StructType::layout(cx, obj, fields))
         return NULL;
-    }
 
     RootedObject fieldsProto(cx);
     if (!JSObject::getProto(cx, fields, &fieldsProto))
@@ -1731,10 +1737,19 @@ StructType::toString(JSContext *cx, unsigned int argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
+    if (!args.thisv().isObject()) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_INCOMPATIBLE_PROTO,
+                             "StructType", "toString", InformalValueTypeName(args.thisv()));
+        return false;
+    }
+
     RootedObject thisObj(cx, args.thisv().toObjectOrNull());
 
-    if (!IsStructType(thisObj))
+    if (!IsStructType(thisObj)) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_INCOMPATIBLE_PROTO,
+                             "StructType", "toString", InformalValueTypeName(args.thisv()));
         return false;
+    }
 
     StringBuffer contents(cx);
     contents.append("StructType({");
