@@ -41,8 +41,7 @@ protected:
   virtual PLayerTransactionChild*
     AllocPLayerTransactionChild(const LayersBackend& aBackendHint,
                                 const uint64_t& aId,
-                                TextureFactoryIdentifier* aTextureFactoryIdentifier,
-                                bool* aSuccess) MOZ_OVERRIDE;
+                                TextureFactoryIdentifier* aTextureFactoryIdentifier) MOZ_OVERRIDE;
 
   virtual bool DeallocPLayerTransactionChild(PLayerTransactionChild *aChild) MOZ_OVERRIDE;
 

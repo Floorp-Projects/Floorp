@@ -161,7 +161,6 @@ void
 CompositableForwarder::IdentifyTextureHost(const TextureFactoryIdentifier& aIdentifier)
 {
   mTextureFactoryIdentifier = aIdentifier;
-  mMultiProcess = aIdentifier.mParentProcessId != XRE_GetProcessType();
 }
 
 ShadowLayerForwarder::ShadowLayerForwarder()

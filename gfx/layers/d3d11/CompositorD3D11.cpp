@@ -319,7 +319,6 @@ CompositorD3D11::GetTextureFactoryIdentifier()
 {
   TextureFactoryIdentifier ident;
   ident.mMaxTextureSize = GetMaxTextureSize();
-  ident.mParentProcessId = XRE_GetProcessType();
   ident.mParentBackend = LAYERS_D3D11;
   return ident;
 }
@@ -567,12 +566,18 @@ CompositorD3D11::BeginFrame(const Rect* aClipRectIn,
                             Rect* aClipRectOut,
                             Rect* aRenderBoundsOut)
 {
+  VerifyBufferSize();
   UpdateRenderTarget();
 
-  if (mSize.width == 0 || mSize.height == 0) {
+  nsIntRect rect;
+  mWidget->GetClientBounds(rect);
+
+  if (rect.IsEmpty()) {
     *aRenderBoundsOut = Rect();
     return;
   }
+
+  mDefaultRT->SetSize(IntSize(rect.width, rect.height));
 
   mContext->IASetInputLayout(mAttachments->mInputLayout);
 
@@ -580,34 +585,20 @@ CompositorD3D11::BeginFrame(const Rect* aClipRectIn,
   UINT size = sizeof(Vertex);
   UINT offset = 0;
   mContext->IASetVertexBuffers(0, 1, &buffer, &size, &offset);
+  SetRenderTarget(mDefaultRT);
 
   if (aClipRectOut) {
-    *aClipRectOut = Rect(0, 0, mSize.width, mSize.height);
+    *aClipRectOut = Rect(0, 0, rect.width, rect.height);
   }
   if (aRenderBoundsOut) {
-    *aRenderBoundsOut = Rect(0, 0, mSize.width, mSize.height);
+    *aRenderBoundsOut = Rect(0, 0, rect.width, rect.height);
   }
-
-  D3D11_RECT scissor;
-  if (aClipRectIn) {
-    scissor.left = aClipRectIn->x;
-    scissor.right = aClipRectIn->XMost();
-    scissor.top = aClipRectIn->y;
-    scissor.bottom = aClipRectIn->YMost();
-  } else {
-    scissor.left = scissor.top = 0;
-    scissor.right = mSize.width;
-    scissor.bottom = mSize.height;
-  }
-  mContext->RSSetScissorRects(1, &scissor);
 
   FLOAT black[] = { 0, 0, 0, 0 };
   mContext->ClearRenderTargetView(mDefaultRT->mRTView, black);
 
   mContext->OMSetBlendState(mAttachments->mPremulBlendState, sBlendFactor, 0xFFFFFFFF);
   mContext->RSSetState(mAttachments->mRasterizerState);
-
-  SetRenderTarget(mDefaultRT);
 }
 
 void
@@ -649,41 +640,43 @@ CompositorD3D11::PrepareViewport(const gfx::IntSize& aSize,
   memcpy(&mVSConstants.projection, &projection, sizeof(mVSConstants.projection));
 }
 
-void
-CompositorD3D11::EnsureSize()
+const nsIntSize&
+CompositorD3D11::GetWidgetSize()
 {
   nsIntRect rect;
   mWidget->GetClientBounds(rect);
 
   mSize = rect.Size();
+
+  return mSize;
 }
 
 void
 CompositorD3D11::VerifyBufferSize()
 {
+  nsIntRect rect;
+  mWidget->GetClientBounds(rect);
+
   DXGI_SWAP_CHAIN_DESC swapDesc;
   mSwapChain->GetDesc(&swapDesc);
 
-  if ((swapDesc.BufferDesc.Width == mSize.width &&
-       swapDesc.BufferDesc.Height == mSize.height) ||
-      mSize.width == 0 || mSize.height == 0) {
+  if ((swapDesc.BufferDesc.Width == rect.width &&
+      swapDesc.BufferDesc.Height == rect.height) || rect.IsEmpty()) {
     return;
   }
 
   mDefaultRT = nullptr;
 
   if (gfxWindowsPlatform::IsOptimus()) {
-    mSwapChain->ResizeBuffers(1, mSize.width, mSize.height,
+    mSwapChain->ResizeBuffers(1, rect.width, rect.height,
                               DXGI_FORMAT_B8G8R8A8_UNORM,
                               0);
-#ifdef MOZ_METRO
   } else if (IsRunningInWindowsMetro()) {
-    mSwapChain->ResizeBuffers(2, mSize.width, mSize.height,
+    mSwapChain->ResizeBuffers(2, rect.width, rect.height,
                               DXGI_FORMAT_B8G8R8A8_UNORM,
                               0);
-#endif
   } else {
-    mSwapChain->ResizeBuffers(1, mSize.width, mSize.height,
+    mSwapChain->ResizeBuffers(1, rect.width, rect.height,
                               DXGI_FORMAT_B8G8R8A8_UNORM,
                               DXGI_SWAP_CHAIN_FLAG_GDI_COMPATIBLE);
   }
@@ -692,9 +685,6 @@ CompositorD3D11::VerifyBufferSize()
 void
 CompositorD3D11::UpdateRenderTarget()
 {
-  EnsureSize();
-  VerifyBufferSize();
-
   if (mDefaultRT) {
     return;
   }
@@ -709,13 +699,13 @@ CompositorD3D11::UpdateRenderTarget()
   }
 
   mDefaultRT = new CompositingRenderTargetD3D11(backBuf);
-  mDefaultRT->SetSize(mSize);
 }
 
 bool
 CompositorD3D11::CreateShaders()
 {
   HRESULT hr;
+
 
   hr = mDevice->CreateVertexShader(LayerQuadVS,
                                    sizeof(LayerQuadVS),
@@ -834,7 +824,7 @@ CompositorD3D11::PaintToTarget()
                         gfxASurface::ImageFormatARGB32);
 
   mTarget->SetSource(tmpSurface);
-  mTarget->SetOperator(gfxContext::OPERATOR_SOURCE);
+  mTarget->SetOperator(gfxContext::OPERATOR_OVER);
   mTarget->Paint();
 
   mContext->Unmap(readTexture, 0);

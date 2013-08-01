@@ -64,16 +64,8 @@ CanvasClient2D::Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer)
   gfxASurface::gfxContentType contentType = isOpaque
                                               ? gfxASurface::CONTENT_COLOR
                                               : gfxASurface::CONTENT_COLOR_ALPHA;
+  mDeprecatedTextureClient->EnsureAllocated(aSize, contentType);
 
-  if (!mDeprecatedTextureClient->EnsureAllocated(aSize, contentType)) {
-    mDeprecatedTextureClient = CreateDeprecatedTextureClient(TEXTURE_FALLBACK);
-    if (!mDeprecatedTextureClient ||
-        !mDeprecatedTextureClient->EnsureAllocated(aSize, contentType)) {
-      NS_WARNING("Could not update texture, even with fallback texture client");
-      return;
-    }
-  }
-  
   gfxASurface* surface = mDeprecatedTextureClient->LockSurface();
   aLayer->UpdateSurface(surface);
   mDeprecatedTextureClient->Unlock();

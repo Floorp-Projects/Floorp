@@ -12,7 +12,6 @@
 #include "Nv3DVUtils.h"
 #include "plstr.h"
 #include <algorithm>
-#include "gfxPlatform.h"
 
 namespace mozilla {
 namespace layers {
@@ -79,16 +78,6 @@ SwapChainD3D9::Init(HWND hWnd)
   return true;
 }
 
-already_AddRefed<IDirect3DSurface9>
-SwapChainD3D9::GetBackBuffer()
-{
-  nsRefPtr<IDirect3DSurface9> backBuffer;
-    mSwapChain->GetBackBuffer(0,
-                              D3DBACKBUFFER_TYPE_MONO,
-                              getter_AddRefs(backBuffer));
-  return backBuffer.forget();
-}
-
 bool
 SwapChainD3D9::PrepareForRendering()
 {
@@ -106,7 +95,10 @@ SwapChainD3D9::PrepareForRendering()
   }
 
   if (mSwapChain) {
-    nsRefPtr<IDirect3DSurface9> backBuffer = GetBackBuffer();
+    nsRefPtr<IDirect3DSurface9> backBuffer;
+    mSwapChain->GetBackBuffer(0,
+                              D3DBACKBUFFER_TYPE_MONO,
+                              getter_AddRefs(backBuffer));
 
     D3DSURFACE_DESC desc;
     backBuffer->GetDesc(&desc);
@@ -124,7 +116,10 @@ SwapChainD3D9::PrepareForRendering()
       return false;
     }
     
-    backBuffer = GetBackBuffer();
+    mSwapChain->GetBackBuffer(0,
+                              D3DBACKBUFFER_TYPE_MONO,
+                              getter_AddRefs(backBuffer));
+
     mDeviceManager->device()->SetRenderTarget(0, backBuffer);
     
     return true;
@@ -145,12 +140,6 @@ SwapChainD3D9::Present(const nsIntRect &aRect)
 }
 
 void
-SwapChainD3D9::Present()
-{
-  mSwapChain->Present(NULL, NULL, 0, 0, 0);
-}
-
-void
 SwapChainD3D9::Reset()
 {
   mSwapChain = nullptr;
@@ -159,12 +148,9 @@ SwapChainD3D9::Reset()
 #define HAS_CAP(a, b) (((a) & (b)) == (b))
 #define LACKS_CAP(a, b) !(((a) & (b)) == (b))
 
-uint32_t DeviceManagerD3D9::sMaskQuadRegister = 11;
-
 DeviceManagerD3D9::DeviceManagerD3D9()
   : mDeviceResetCount(0)
   , mMaxTextureSize(0)
-  , mTextureAddressingMode(D3DTADDRESS_CLAMP)
   , mHasDynamicTextures(false)
   , mDeviceWasRemoved(false)
 {
@@ -174,6 +160,9 @@ DeviceManagerD3D9::~DeviceManagerD3D9()
 {
   LayerManagerD3D9::OnDeviceManagerDestroy(this);
 }
+
+NS_IMPL_ADDREF(DeviceManagerD3D9)
+NS_IMPL_RELEASE(DeviceManagerD3D9)
 
 bool
 DeviceManagerD3D9::Init()
@@ -507,12 +496,12 @@ DeviceManagerD3D9::SetupRenderState()
   mDevice->SetSamplerState(1, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
   mDevice->SetSamplerState(2, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
   mDevice->SetSamplerState(2, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
-  mDevice->SetSamplerState(0, D3DSAMP_ADDRESSU, mTextureAddressingMode);
-  mDevice->SetSamplerState(0, D3DSAMP_ADDRESSV, mTextureAddressingMode);
-  mDevice->SetSamplerState(1, D3DSAMP_ADDRESSU, mTextureAddressingMode);
-  mDevice->SetSamplerState(1, D3DSAMP_ADDRESSV, mTextureAddressingMode);
-  mDevice->SetSamplerState(2, D3DSAMP_ADDRESSU, mTextureAddressingMode);
-  mDevice->SetSamplerState(2, D3DSAMP_ADDRESSV, mTextureAddressingMode);
+  mDevice->SetSamplerState(0, D3DSAMP_ADDRESSU, D3DTADDRESS_CLAMP);
+  mDevice->SetSamplerState(0, D3DSAMP_ADDRESSV, D3DTADDRESS_CLAMP);
+  mDevice->SetSamplerState(1, D3DSAMP_ADDRESSU, D3DTADDRESS_CLAMP);
+  mDevice->SetSamplerState(1, D3DSAMP_ADDRESSV, D3DTADDRESS_CLAMP);
+  mDevice->SetSamplerState(2, D3DSAMP_ADDRESSU, D3DTADDRESS_CLAMP);
+  mDevice->SetSamplerState(2, D3DSAMP_ADDRESSV, D3DTADDRESS_CLAMP);
 }
 
 already_AddRefed<SwapChainD3D9>
@@ -544,7 +533,7 @@ DeviceManagerD3D9::CreateSwapChain(HWND hWnd)
   */
 bool
 LoadMaskTexture(Layer* aMask, IDirect3DDevice9* aDevice,
-                uint32_t aMaskTexRegister)
+                uint32_t aMaskQuadTexture, uint32_t aMaskTexRegister)
 {
   gfxIntSize size;
   nsRefPtr<IDirect3DTexture9> texture =
@@ -560,7 +549,7 @@ LoadMaskTexture(Layer* aMask, IDirect3DDevice9* aDevice,
   gfxRect bounds = gfxRect(gfxPoint(), size);
   bounds = maskTransform.TransformBounds(bounds);
 
-  aDevice->SetVertexShaderConstantF(DeviceManagerD3D9::sMaskQuadRegister, 
+  aDevice->SetVertexShaderConstantF(aMaskQuadTexture, 
                                     ShaderConstantRect((float)bounds.x,
                                                        (float)bounds.y,
                                                        (float)bounds.width,
@@ -571,10 +560,57 @@ LoadMaskTexture(Layer* aMask, IDirect3DDevice9* aDevice,
   return true;
 }
 
-uint32_t
-DeviceManagerD3D9::SetShaderMode(ShaderMode aMode, MaskType aMaskType)
+void
+DeviceManagerD3D9::SetShaderMode(ShaderMode aMode, Layer* aMask, bool aIs2D)
 {
-  if (aMaskType == MaskNone) {
+  if (aMask) {
+    // register allocations are taken from LayerManagerD3D9Shaders.h after
+    // the shaders are compiled (genshaders.sh)
+    const uint32_t maskQuadRegister = 11;
+    uint32_t maskTexRegister;
+    switch (aMode) {
+      case RGBLAYER:
+        mDevice->SetVertexShader(mLayerVSMask);
+        mDevice->SetPixelShader(mRGBPSMask);
+        maskTexRegister = 1;
+        break;
+      case RGBALAYER:
+        if (aIs2D) {
+          mDevice->SetVertexShader(mLayerVSMask);
+          mDevice->SetPixelShader(mRGBAPSMask);
+        } else {
+          mDevice->SetVertexShader(mLayerVSMask3D);
+          mDevice->SetPixelShader(mRGBAPSMask3D);
+        }
+        maskTexRegister = 1;
+        break;
+      case COMPONENTLAYERPASS1:
+        mDevice->SetVertexShader(mLayerVSMask);
+        mDevice->SetPixelShader(mComponentPass1PSMask);
+        maskTexRegister = 2;
+        break;
+      case COMPONENTLAYERPASS2:
+        mDevice->SetVertexShader(mLayerVSMask);
+        mDevice->SetPixelShader(mComponentPass2PSMask);
+        maskTexRegister = 2;
+        break;
+      case YCBCRLAYER:
+        mDevice->SetVertexShader(mLayerVSMask);
+        mDevice->SetPixelShader(mYCbCrPSMask);
+        maskTexRegister = 3;
+        break;
+      case SOLIDCOLORLAYER:
+        mDevice->SetVertexShader(mLayerVSMask);
+        mDevice->SetPixelShader(mSolidColorPSMask);
+        maskTexRegister = 0;
+        break;
+    }
+    if (!LoadMaskTexture(aMask, mDevice, maskQuadRegister, maskTexRegister)) {
+      // if we can't load the mask, fall back to unmasked rendering
+      NS_WARNING("Could not load texture for mask layer.");
+      SetShaderMode(aMode, nullptr, true);
+    }
+  } else {
     switch (aMode) {
       case RGBLAYER:
         mDevice->SetVertexShader(mLayerVS);
@@ -600,66 +636,6 @@ DeviceManagerD3D9::SetShaderMode(ShaderMode aMode, MaskType aMaskType)
         mDevice->SetVertexShader(mLayerVS);
         mDevice->SetPixelShader(mSolidColorPS);
         break;
-    }
-    return 0;
-  }
-
-  uint32_t maskTexRegister;
-  switch (aMode) {
-    case RGBLAYER:
-      mDevice->SetVertexShader(mLayerVSMask);
-      mDevice->SetPixelShader(mRGBPSMask);
-      maskTexRegister = 1;
-      break;
-    case RGBALAYER:
-      if (aMaskType == Mask2d) {
-        mDevice->SetVertexShader(mLayerVSMask);
-        mDevice->SetPixelShader(mRGBAPSMask);
-      } else {
-        mDevice->SetVertexShader(mLayerVSMask3D);
-        mDevice->SetPixelShader(mRGBAPSMask3D);
-      }
-      maskTexRegister = 1;
-      break;
-    case COMPONENTLAYERPASS1:
-      mDevice->SetVertexShader(mLayerVSMask);
-      mDevice->SetPixelShader(mComponentPass1PSMask);
-      maskTexRegister = 2;
-      break;
-    case COMPONENTLAYERPASS2:
-      mDevice->SetVertexShader(mLayerVSMask);
-      mDevice->SetPixelShader(mComponentPass2PSMask);
-      maskTexRegister = 2;
-      break;
-    case YCBCRLAYER:
-      mDevice->SetVertexShader(mLayerVSMask);
-      mDevice->SetPixelShader(mYCbCrPSMask);
-      maskTexRegister = 3;
-      break;
-    case SOLIDCOLORLAYER:
-      mDevice->SetVertexShader(mLayerVSMask);
-      mDevice->SetPixelShader(mSolidColorPSMask);
-      maskTexRegister = 0;
-      break;
-  }
-  return maskTexRegister;
-}
-
-void
-DeviceManagerD3D9::SetShaderMode(ShaderMode aMode, Layer* aMask, bool aIs2D)
-{
-  MaskType maskType = MaskNone;
-  if (aMask) {
-    maskType = aIs2D ? Mask2d : Mask3d;
-  }
-  uint32_t maskTexRegister = SetShaderMode(aMode, maskType);
-  if (aMask) {
-    // register allocations are taken from LayerManagerD3D9Shaders.h after
-    // the shaders are compiled (genshaders.sh)
-    if (!LoadMaskTexture(aMask, mDevice, maskTexRegister)) {
-      // if we can't load the mask, fall back to unmasked rendering
-      NS_WARNING("Could not load texture for mask layer.");
-      SetShaderMode(aMode, MaskNone);
     }
   }
 }
@@ -795,13 +771,6 @@ DeviceManagerD3D9::VerifyCaps()
 
   if (HAS_CAP(caps.Caps2, D3DCAPS2_DYNAMICTEXTURES)) {
     mHasDynamicTextures = true;
-  }
-
-  if (HAS_CAP(caps.TextureAddressCaps, D3DPTADDRESSCAPS_WRAP) &&
-      LACKS_CAP(caps.TextureCaps, D3DPTEXTURECAPS_NONPOW2CONDITIONAL)) {
-    mTextureAddressingMode = D3DTADDRESS_WRAP;
-  } else {
-    gfxPlatform::DisableBufferRotation();
   }
 
   return true;
