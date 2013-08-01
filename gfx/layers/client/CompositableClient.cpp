@@ -125,7 +125,8 @@ CompositableClient::CreateDeprecatedTextureClient(DeprecatedTextureClientType aD
       result = new DeprecatedTextureClientD3D11(GetForwarder(), GetTextureInfo());
       break;
     }
-    if (parentBackend == LAYERS_D3D9) {
+    if (parentBackend == LAYERS_D3D9 &&
+        !GetForwarder()->ForwardsToDifferentProcess()) {
       result = new DeprecatedTextureClientD3D9(GetForwarder(), GetTextureInfo());
       break;
     }
