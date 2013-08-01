@@ -80,7 +80,7 @@ Class JSObject::class_ = {
     JS_ConvertStub
 };
 
-JS_FRIEND_DATA(Class*) js::ObjectClassPtr = &JSObject::class_;
+JS_FRIEND_DATA(Class* const) js::ObjectClassPtr = &JSObject::class_;
 
 JS_FRIEND_API(JSObject *)
 JS_ObjectToInnerObject(JSContext *cx, JSObject *objArg)
