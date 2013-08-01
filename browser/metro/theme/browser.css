@@ -448,6 +448,12 @@ documenttab[selected] .documenttab-selection {
   transform: none;
 }
 
+.circularprogressindicator-progressRing {
+  margin: 0 @toolbar_horizontal_spacing@;
+  pointer-events:none;
+  position: absolute;
+}
+
 /* Progress meter ---------------------------------------------------------- */
 
 #progress-container {
@@ -675,13 +681,14 @@ documenttab[selected] .documenttab-selection {
 
 /* Application-Specific */
 
-#download-button {
+.circularprogressindicator-progressButton {
+  margin: 0 @toolbar_horizontal_spacing@;
   -moz-image-region: rect(0px, 40px, 40px, 0px) !important;
 }
-#download-button:hover {
+.circularprogressindicator-progressButton:hover {
   -moz-image-region: rect(40px, 40px, 80px, 0px) !important;
 }
-#download-button:active {
+.circularprogressindicator-progressButton:active {
   -moz-image-region: rect(80px, 40px, 120px, 0px) !important;
 }
 
