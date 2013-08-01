@@ -60,7 +60,7 @@ gfxMacFont::gfxMacFont(MacOSFontEntry *aFontEntry, const gfxFontStyle *aFontStyl
 
     // synthetic oblique by skewing via the font matrix
     bool needsOblique =
-        (mFontEntry != NULL) &&
+        (mFontEntry != nullptr) &&
         (!mFontEntry->IsItalic() &&
          (mStyle.style & (NS_FONT_STYLE_ITALIC | NS_FONT_STYLE_OBLIQUE)));
 
@@ -369,7 +369,7 @@ gfxMacFont::InitMetricsFromPlatform()
 {
     CTFontRef ctFont = ::CTFontCreateWithGraphicsFont(mCGFont,
                                                       mAdjustedSize,
-                                                      NULL, NULL);
+                                                      nullptr, nullptr);
     if (!ctFont) {
         return;
     }

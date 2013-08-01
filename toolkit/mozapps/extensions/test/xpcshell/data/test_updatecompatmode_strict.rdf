@@ -15,7 +15,7 @@
                 <em:id>xpcshell@tests.mozilla.org</em:id>
                 <em:minVersion>1</em:minVersion>
                 <em:maxVersion>2</em:maxVersion>
-                <em:updateLink>https://localhost:4444/addons/test1.xpi</em:updateLink>
+                <em:updateLink>https://localhost:%PORT%/addons/test1.xpi</em:updateLink>
               </Description>
             </em:targetApplication>
           </Description>

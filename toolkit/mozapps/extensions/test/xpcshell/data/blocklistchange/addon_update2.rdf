@@ -13,7 +13,7 @@
                 <em:id>toolkit@mozilla.org</em:id>
                 <em:minVersion>0</em:minVersion>
                 <em:maxVersion>*</em:maxVersion>
-                <em:updateLink>http://localhost:4444/addons/blocklist_soft1_3.xpi</em:updateLink>
+                <em:updateLink>http://localhost:%PORT%/addons/blocklist_soft1_3.xpi</em:updateLink>
               </RDF:Description>
             </em:targetApplication>
           </RDF:Description>
@@ -33,7 +33,7 @@
                 <em:id>toolkit@mozilla.org</em:id>
                 <em:minVersion>0</em:minVersion>
                 <em:maxVersion>*</em:maxVersion>
-                <em:updateLink>http://localhost:4444/addons/blocklist_soft2_3.xpi</em:updateLink>
+                <em:updateLink>http://localhost:%PORT%/addons/blocklist_soft2_3.xpi</em:updateLink>
               </RDF:Description>
             </em:targetApplication>
           </RDF:Description>
@@ -53,7 +53,7 @@
                 <em:id>toolkit@mozilla.org</em:id>
                 <em:minVersion>0</em:minVersion>
                 <em:maxVersion>*</em:maxVersion>
-                <em:updateLink>http://localhost:4444/addons/blocklist_soft3_3.xpi</em:updateLink>
+                <em:updateLink>http://localhost:%PORT%/addons/blocklist_soft3_3.xpi</em:updateLink>
               </RDF:Description>
             </em:targetApplication>
           </RDF:Description>
@@ -73,7 +73,7 @@
                 <em:id>toolkit@mozilla.org</em:id>
                 <em:minVersion>0</em:minVersion>
                 <em:maxVersion>*</em:maxVersion>
-                <em:updateLink>http://localhost:4444/addons/blocklist_soft4_3.xpi</em:updateLink>
+                <em:updateLink>http://localhost:%PORT%/addons/blocklist_soft4_3.xpi</em:updateLink>
               </RDF:Description>
             </em:targetApplication>
           </RDF:Description>
@@ -93,7 +93,7 @@
                 <em:id>toolkit@mozilla.org</em:id>
                 <em:minVersion>0</em:minVersion>
                 <em:maxVersion>*</em:maxVersion>
-                <em:updateLink>http://localhost:4444/addons/blocklist_soft5_3.xpi</em:updateLink>
+                <em:updateLink>http://localhost:%PORT%/addons/blocklist_soft5_3.xpi</em:updateLink>
               </RDF:Description>
             </em:targetApplication>
           </RDF:Description>
@@ -113,7 +113,7 @@
                 <em:id>toolkit@mozilla.org</em:id>
                 <em:minVersion>0</em:minVersion>
                 <em:maxVersion>*</em:maxVersion>
-                <em:updateLink>http://localhost:4444/addons/blocklist_hard1_3.xpi</em:updateLink>
+                <em:updateLink>http://localhost:%PORT%/addons/blocklist_hard1_3.xpi</em:updateLink>
               </RDF:Description>
             </em:targetApplication>
           </RDF:Description>
@@ -133,7 +133,7 @@
                 <em:id>toolkit@mozilla.org</em:id>
                 <em:minVersion>0</em:minVersion>
                 <em:maxVersion>*</em:maxVersion>
-                <em:updateLink>http://localhost:4444/addons/blocklist_regexp1_3.xpi</em:updateLink>
+                <em:updateLink>http://localhost:%PORT%/addons/blocklist_regexp1_3.xpi</em:updateLink>
               </RDF:Description>
             </em:targetApplication>
           </RDF:Description>

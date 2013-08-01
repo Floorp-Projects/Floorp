@@ -98,7 +98,7 @@ class nsParser : public nsIParser,
      * Select given content sink into parser for parser output
      * @update	gess5/11/98
      * @param   aSink is the new sink to be used by parser
-     * @return  old sink, or NULL
+     * @return  old sink, or nullptr
      */
     NS_IMETHOD_(void) SetContentSink(nsIContentSink* aSink);
 
@@ -106,7 +106,7 @@ class nsParser : public nsIParser,
      * retrive the sink set into the parser 
      * @update	gess5/11/98
      * @param   aSink is the new sink to be used by parser
-     * @return  old sink, or NULL
+     * @return  old sink, or nullptr
      */
     NS_IMETHOD_(nsIContentSink*) GetContentSink(void);
     
