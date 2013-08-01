@@ -1,0 +1,67 @@
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!-- bug 893785 - Test that sending a gamepadconnected event to a new window
+     doesn't result in a gamepadconnected event being sent to existing
+     windows that have already received it. -->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test hidden frames</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<script type="text/javascript" src="mock_gamepad.js"></script>
+<script class="testbody" type="text/javascript">
+SimpleTest.waitForExplicitFinish();
+var index = GamepadService.addGamepad("test gamepad", // id
+                                      SpecialPowers.Ci.nsIGamepadServiceTest.NO_MAPPING,
+                                      4, // buttons
+                                      2);// axes
+
+function pressButton() {
+  GamepadService.newButtonEvent(index, 0, true);
+  GamepadService.newButtonEvent(index, 0, false);
+}
+
+var f1, f2;
+function frame_loaded() {
+  f1 = document.getElementById('f1');
+  pressButton();
+}
+
+window.addEventListener("gamepadbuttondown", function() {
+  // Wait to ensure that all frames received the button press as well.
+  SpecialPowers.executeSoon(tests[testNum++]);
+});
+
+var testNum = 0;
+var tests = [
+  test1,
+  test2,
+];
+
+function test1() {
+  is(f1.contentWindow.connectedEvents, 1, "right number of connection events in frame 1");
+
+  // Now add another frame.
+  f2 = document.createElement("iframe");
+  f2.addEventListener("load", function() {
+    // When the frame is loaded, press a button again.
+    pressButton();
+  });
+  f2.src = "gamepad_frame.html";
+  document.body.appendChild(f2);
+}
+
+function test2() {
+  is(f1.contentWindow.connectedEvents, 1, "right number of connection events in frame 1");
+  is(f2.contentWindow.connectedEvents, 1, "right number of connection events in frame 2");
+  GamepadService.removeGamepad(index);
+  SimpleTest.finish();
+}
+
+</script>
+<iframe id="f1" src="gamepad_frame.html" onload="frame_loaded()"></iframe>
+</body>
+</html>
