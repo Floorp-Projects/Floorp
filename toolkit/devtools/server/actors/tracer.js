@@ -18,7 +18,7 @@ addDebuggerToGlobal(this);
  * Creates a TraceActor. TraceActor provides a stream of function
  * call/return packets to a remote client gathering a full trace.
  */
-function TraceActor(aConn, aBrowserTabActor)
+function TraceActor(aConn, aParentActor)
 {
   this._attached = false;
   this._activeTraces = new MapStack();
@@ -30,7 +30,7 @@ function TraceActor(aConn, aBrowserTabActor)
   }
   this._sequence = 0;
 
-  this.global = aBrowserTabActor.contentWindow.wrappedJSObject;
+  this.global = aParentActor.window.wrappedJSObject;
 }
 
 TraceActor.prototype = {
