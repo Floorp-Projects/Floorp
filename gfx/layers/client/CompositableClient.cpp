@@ -10,6 +10,7 @@
 #include "mozilla/layers/CompositableForwarder.h"
 #include "gfxPlatform.h"
 #ifdef XP_WIN
+#include "mozilla/layers/TextureD3D9.h"
 #include "mozilla/layers/TextureD3D11.h"
 #include "gfxWindowsPlatform.h"
 #endif
@@ -112,6 +113,7 @@ CompositableClient::CreateDeprecatedTextureClient(DeprecatedTextureClientType aD
     break;
   case TEXTURE_YCBCR:
     if (parentBackend == LAYERS_OPENGL ||
+        parentBackend == LAYERS_D3D9 ||
         parentBackend == LAYERS_D3D11 ||
         parentBackend == LAYERS_BASIC) {
       result = new DeprecatedTextureClientShmemYCbCr(GetForwarder(), GetTextureInfo());
@@ -121,6 +123,10 @@ CompositableClient::CreateDeprecatedTextureClient(DeprecatedTextureClientType aD
 #ifdef XP_WIN
     if (parentBackend == LAYERS_D3D11 && gfxWindowsPlatform::GetPlatform()->GetD2DDevice()) {
       result = new DeprecatedTextureClientD3D11(GetForwarder(), GetTextureInfo());
+      break;
+    }
+    if (parentBackend == LAYERS_D3D9) {
+      result = new DeprecatedTextureClientD3D9(GetForwarder(), GetTextureInfo());
       break;
     }
 #endif
