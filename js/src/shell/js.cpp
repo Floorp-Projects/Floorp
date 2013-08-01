@@ -86,14 +86,9 @@
 #include "vm/Interpreter-inl.h"
 #include "vm/Stack-inl.h"
 
-#ifdef XP_WIN
-# define PATH_MAX (MAX_PATH > _MAX_DIR ? MAX_PATH : _MAX_DIR)
-#else
-# include <libgen.h>
-#endif
-
 using namespace js;
 using namespace js::cli;
+using namespace js::shell;
 
 using mozilla::ArrayLength;
 using mozilla::MakeUnique;
@@ -108,11 +103,6 @@ enum JSShellExitCode {
     EXITCODE_FILE_NOT_FOUND     = 4,
     EXITCODE_OUT_OF_MEMORY      = 5,
     EXITCODE_TIMEOUT            = 6
-};
-
-enum PathResolutionMode {
-    RootRelative,
-    ScriptRelative
 };
 
 static size_t gStackChunkSize = 8192;
@@ -194,14 +184,6 @@ static bool dumpEntrainedVariables = false;
 static bool OOM_printAllocationCount = false;
 #endif
 
-enum JSShellErrNum {
-#define MSG_DEF(name, count, exception, format) \
-    name,
-#include "jsshell.msg"
-#undef MSG_DEF
-    JSShellErr_Limit
-};
-
 static JSContext*
 NewContext(JSRuntime* rt);
 
@@ -211,12 +193,6 @@ DestroyContext(JSContext* cx, bool withGC);
 static JSObject*
 NewGlobalObject(JSContext* cx, JS::CompartmentOptions& options,
                 JSPrincipals* principals);
-
-static const JSErrorFormatString*
-my_GetErrorMessage(void* userRef, const unsigned errorNumber);
-
-static void
-my_ErrorReporter(JSContext* cx, const char* message, JSErrorReport* report);
 
 /*
  * A toy principals type for the shell.
@@ -564,18 +540,6 @@ ReadEvalPrintLoop(JSContext* cx, FILE* in, FILE* out, bool compileOnly)
     fprintf(out, "\n");
 }
 
-class AutoCloseInputFile
-{
-  private:
-    FILE* f_;
-  public:
-    explicit AutoCloseInputFile(FILE* f) : f_(f) {}
-    ~AutoCloseInputFile() {
-        if (f_ && f_ != stdin)
-            fclose(f_);
-    }
-};
-
 static void
 Process(JSContext* cx, const char* filename, bool forceTTY)
 {
@@ -628,77 +592,6 @@ Version(JSContext* cx, unsigned argc, jsval* vp)
         args.rval().setInt32(origVersion);
     }
     return true;
-}
-
-/*
- * Resolve a (possibly) relative filename to an absolute path. If
- * |scriptRelative| is true, then the result will be relative to the directory
- * containing the currently-running script, or the current working directory if
- * the currently-running script is "-e" (namely, you're using it from the
- * command line.) Otherwise, it will be relative to the current working
- * directory.
- */
-static JSString*
-ResolvePath(JSContext* cx, HandleString filenameStr, PathResolutionMode resolveMode)
-{
-    JSAutoByteString filename(cx, filenameStr);
-    if (!filename)
-        return nullptr;
-
-    const char* pathname = filename.ptr();
-    if (pathname[0] == '/')
-        return filenameStr;
-#ifdef XP_WIN
-    // Various forms of absolute paths per http://msdn.microsoft.com/en-us/library/windows/desktop/aa365247%28v=vs.85%29.aspx
-    // "\..."
-    if (pathname[0] == '\\')
-        return filenameStr;
-    // "C:\..."
-    if (strlen(pathname) > 3 && isalpha(pathname[0]) && pathname[1] == ':' && pathname[2] == '\\')
-        return filenameStr;
-    // "\\..."
-    if (strlen(pathname) > 2 && pathname[1] == '\\' && pathname[2] == '\\')
-        return filenameStr;
-#endif
-
-    /* Get the currently executing script's name. */
-    JS::AutoFilename scriptFilename;
-    if (!DescribeScriptedCaller(cx, &scriptFilename))
-        return nullptr;
-
-    if (!scriptFilename.get())
-        return nullptr;
-
-    if (strcmp(scriptFilename.get(), "-e") == 0 || strcmp(scriptFilename.get(), "typein") == 0)
-        resolveMode = RootRelative;
-
-    static char buffer[PATH_MAX+1];
-    if (resolveMode == ScriptRelative) {
-#ifdef XP_WIN
-        // The docs say it can return EINVAL, but the compiler says it's void
-        _splitpath(scriptFilename.get(), nullptr, buffer, nullptr, nullptr);
-#else
-        strncpy(buffer, scriptFilename.get(), PATH_MAX+1);
-        if (buffer[PATH_MAX] != '\0')
-            return nullptr;
-
-        // dirname(buffer) might return buffer, or it might return a
-        // statically-allocated string
-        memmove(buffer, dirname(buffer), strlen(buffer) + 1);
-#endif
-    } else {
-        const char* cwd = getcwd(buffer, PATH_MAX);
-        if (!cwd)
-            return nullptr;
-    }
-
-    size_t len = strlen(buffer);
-    buffer[len] = '/';
-    strncpy(buffer + len + 1, pathname, sizeof(buffer) - (len+1));
-    if (buffer[PATH_MAX] != '\0')
-        return nullptr;
-
-    return JS_NewStringCopyZ(cx, buffer);
 }
 
 static bool
@@ -1365,8 +1258,8 @@ Evaluate(JSContext* cx, unsigned argc, jsval* vp)
     return JS_WrapValue(cx, args.rval());
 }
 
-static JSString*
-FileAsString(JSContext* cx, const char* pathname)
+JSString*
+js::shell::FileAsString(JSContext* cx, const char* pathname)
 {
     FILE* file;
     RootedString str(cx);
@@ -1409,39 +1302,6 @@ FileAsString(JSContext* cx, const char* pathname)
     }
 
     return str;
-}
-
-static JSObject*
-FileAsTypedArray(JSContext* cx, const char* pathname)
-{
-    FILE* file = fopen(pathname, "rb");
-    if (!file) {
-        JS_ReportError(cx, "can't open %s: %s", pathname, strerror(errno));
-        return nullptr;
-    }
-    AutoCloseInputFile autoClose(file);
-
-    RootedObject obj(cx);
-    if (fseek(file, 0, SEEK_END) != 0) {
-        JS_ReportError(cx, "can't seek end of %s", pathname);
-    } else {
-        size_t len = ftell(file);
-        if (fseek(file, 0, SEEK_SET) != 0) {
-            JS_ReportError(cx, "can't seek start of %s", pathname);
-        } else {
-            obj = JS_NewUint8Array(cx, len);
-            if (!obj)
-                return nullptr;
-            char* buf = (char*) obj->as<TypedArrayObject>().viewData();
-            size_t cc = fread(buf, 1, len, file);
-            if (cc != len) {
-                JS_ReportError(cx, "can't read %s: %s", pathname,
-                               (ptrdiff_t(cc) < 0) ? strerror(errno) : "short read");
-                obj = nullptr;
-            }
-        }
-    }
-    return obj;
 }
 
 /*
@@ -3591,112 +3451,6 @@ struct FreeOnReturn
     }
 };
 
-static bool
-ReadFile(JSContext* cx, unsigned argc, jsval* vp, bool scriptRelative)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-
-    if (args.length() < 1 || args.length() > 2) {
-        JS_ReportErrorNumber(cx, my_GetErrorMessage, nullptr,
-                             args.length() < 1 ? JSSMSG_NOT_ENOUGH_ARGS : JSSMSG_TOO_MANY_ARGS,
-                             "snarf");
-        return false;
-    }
-
-    if (!args[0].isString() || (args.length() == 2 && !args[1].isString())) {
-        JS_ReportErrorNumber(cx, my_GetErrorMessage, nullptr, JSSMSG_INVALID_ARGS, "snarf");
-        return false;
-    }
-
-    RootedString givenPath(cx, args[0].toString());
-    RootedString str(cx, ResolvePath(cx, givenPath, scriptRelative ? ScriptRelative : RootRelative));
-    if (!str)
-        return false;
-
-    JSAutoByteString filename(cx, str);
-    if (!filename)
-        return false;
-
-    if (args.length() > 1) {
-        JSString* opt = JS::ToString(cx, args[1]);
-        if (!opt)
-            return false;
-        bool match;
-        if (!JS_StringEqualsAscii(cx, opt, "binary", &match))
-            return false;
-        if (match) {
-            JSObject* obj;
-            if (!(obj = FileAsTypedArray(cx, filename.ptr())))
-                return false;
-            args.rval().setObject(*obj);
-            return true;
-        }
-    }
-
-    if (!(str = FileAsString(cx, filename.ptr())))
-        return false;
-    args.rval().setString(str);
-    return true;
-}
-
-static bool
-Snarf(JSContext* cx, unsigned argc, jsval* vp)
-{
-    return ReadFile(cx, argc, vp, false);
-}
-
-static bool
-ReadRelativeToScript(JSContext* cx, unsigned argc, jsval* vp)
-{
-    return ReadFile(cx, argc, vp, true);
-}
-
-static bool
-redirect(JSContext* cx, FILE* fp, HandleString relFilename)
-{
-    RootedString filename(cx, ResolvePath(cx, relFilename, RootRelative));
-    if (!filename)
-        return false;
-    JSAutoByteString filenameABS(cx, filename);
-    if (!filenameABS)
-        return false;
-    if (freopen(filenameABS.ptr(), "wb", fp) == nullptr) {
-        JS_ReportError(cx, "cannot redirect to %s: %s", filenameABS.ptr(), strerror(errno));
-        return false;
-    }
-    return true;
-}
-
-static bool
-RedirectOutput(JSContext* cx, unsigned argc, jsval* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-
-    if (args.length() < 1 || args.length() > 2) {
-        JS_ReportErrorNumber(cx, my_GetErrorMessage, nullptr, JSSMSG_INVALID_ARGS, "redirect");
-        return false;
-    }
-
-    if (args[0].isString()) {
-        RootedString stdoutPath(cx, args[0].toString());
-        if (!stdoutPath)
-            return false;
-        if (!redirect(cx, stdout, stdoutPath))
-            return false;
-    }
-
-    if (args.length() > 1 && args[1].isString()) {
-        RootedString stderrPath(cx, args[1].toString());
-        if (!stderrPath)
-            return false;
-        if (!redirect(cx, stderr, stderrPath))
-            return false;
-    }
-
-    args.rval().setUndefined();
-    return true;
-}
-
 static int sArgc;
 static char** sArgv;
 
@@ -4702,20 +4456,6 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
 "sleep(dt)",
 "  Sleep for dt seconds."),
 
-    JS_FN_HELP("snarf", Snarf, 1, 0,
-"snarf(filename, [\"binary\"])",
-"  Read filename into returned string. Filename is relative to the current\n"
-               "  working directory."),
-
-    JS_FN_HELP("read", Snarf, 1, 0,
-"read(filename, [\"binary\"])",
-"  Synonym for snarf."),
-
-    JS_FN_HELP("readRelativeToScript", ReadRelativeToScript, 1, 0,
-"readRelativeToScript(filename, [\"binary\"])",
-"  Read filename into returned string. Filename is relative to the directory\n"
-"  containing the current script."),
-
     JS_FN_HELP("compile", Compile, 1, 0,
 "compile(code)",
 "  Compiles a string to bytecode, potentially throwing."),
@@ -4883,11 +4623,6 @@ static const JSFunctionSpecWithHelp fuzzing_unsafe_functions[] = {
     JS_FN_HELP("pc2line", PCToLine, 0, 0,
 "pc2line(fun[, pc])",
 "  Map PC to line number."),
-
-    JS_FN_HELP("redirect", RedirectOutput, 2, 0,
-"redirect(stdoutFilename[, stderrFilename])",
-"  Redirect stdout and/or stderr to the named file. Pass undefined to avoid\n"
-"   redirecting. Filenames are relative to the current working directory."),
 
     JS_FN_HELP("nestedShell", NestedShell, 0, 0,
 "nestedShell(shellArgs...)",
@@ -5067,8 +4802,8 @@ static const JSErrorFormatString jsShell_ErrorFormatString[JSShellErr_Limit] = {
 #undef MSG_DEF
 };
 
-static const JSErrorFormatString*
-my_GetErrorMessage(void* userRef, const unsigned errorNumber)
+const JSErrorFormatString*
+js::shell::my_GetErrorMessage(void* userRef, const unsigned errorNumber)
 {
     if (errorNumber == 0 || errorNumber >= JSShellErr_Limit)
         return nullptr;
@@ -5076,8 +4811,8 @@ my_GetErrorMessage(void* userRef, const unsigned errorNumber)
     return &jsShell_ErrorFormatString[errorNumber];
 }
 
-static void
-my_ErrorReporter(JSContext* cx, const char* message, JSErrorReport* report)
+void
+js::shell::my_ErrorReporter(JSContext* cx, const char* message, JSErrorReport* report)
 {
     gGotError = PrintError(cx, gErrFile, message, report, reportWarnings);
     if (report->exnType != JSEXN_NONE && !JSREPORT_IS_WARNING(report->flags)) {
@@ -5656,7 +5391,7 @@ NewGlobalObject(JSContext* cx, JS::CompartmentOptions& options,
         if (!fuzzingSafe) {
             if (!JS_DefineFunctionsWithHelp(cx, glob, fuzzing_unsafe_functions))
                 return nullptr;
-            if (!js::DefineOS(cx, glob))
+            if (!DefineOS(cx, glob))
                 return nullptr;
             if (!DefineConsole(cx, glob))
                 return nullptr;
