@@ -450,17 +450,16 @@ CompositorD3D9::BeginFrame(const Rect *aClipRectIn,
   }
   mDeviceManager->SetupRenderState();
 
-  nsIntRect rect;
-  mWidget->GetClientBounds(rect);
+  EnsureSize();
 
   device()->Clear(0, NULL, D3DCLEAR_TARGET, 0x00000000, 0, 0);
   device()->BeginScene();
 
   if (aClipRectOut) {
-    *aClipRectOut = Rect(0, 0, rect.width, rect.height);
+    *aClipRectOut = Rect(0, 0, mSize.width, mSize.height);
   }
   if (aRenderBoundsOut) {
-    *aRenderBoundsOut = Rect(0, 0, rect.width, rect.height);
+    *aRenderBoundsOut = Rect(0, 0, mSize.width, mSize.height);
   }
 
   RECT r;
@@ -471,15 +470,15 @@ CompositorD3D9::BeginFrame(const Rect *aClipRectIn,
     r.bottom = (LONG)(aClipRectIn->y + aClipRectIn->height);
   } else {
     r.left = r.top = 0;
-    r.right = rect.width;
-    r.bottom = rect.height;
+    r.right = mSize.width;
+    r.bottom = mSize.height;
   }
   device()->SetScissorRect(&r);
 
   nsRefPtr<IDirect3DSurface9> backBuffer = mSwapChain->GetBackBuffer();
   mDefaultRT = new CompositingRenderTargetD3D9(backBuffer,
                                                INIT_MODE_CLEAR,
-                                               IntSize(rect.width, rect.height));
+                                               IntSize(mSize.width, mSize.height));
   SetRenderTarget(mDefaultRT);
 }
 
