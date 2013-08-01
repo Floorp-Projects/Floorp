@@ -1042,7 +1042,7 @@ static_assert(LastCharKind < (1 << (sizeof(firstCharKinds[0]) * 8)),
               "Elements of firstCharKinds[] are too small");
 
 TokenKind
-TokenStream::getTokenInternal()
+TokenStream::getTokenInternal(Modifier modifier)
 {
     TokenKind tt;
     int c, qc;
@@ -1169,12 +1169,13 @@ TokenStream::getTokenInternal()
             length = userbuf.addressOfNextRawChar() - identStart;
         }
 
-        /* Check for keywords unless parser asks us to ignore keywords. */
-        if (!(flags & TSF_KEYWORD_IS_NAME)) {
+        /* Check for keywords unless the parser told us not to. */
+        if (modifier != KeywordIsName) {
             tt = TOK_NAME;
             if (!checkForKeyword(chars, length, &tt))
                 goto error;
-            if (tt != TOK_NAME)                goto out;
+            if (tt != TOK_NAME)
+                goto out;
         }
 
         JSAtom *atom = AtomizeChars<CanGC>(cx, chars, length);
@@ -1591,7 +1592,7 @@ TokenStream::getTokenInternal()
         /*
          * Look for a regexp.
          */
-        if (flags & TSF_OPERAND) {
+        if (modifier == Operand) {
             tokenbuf.clear();
 
             bool inCharClass = false;

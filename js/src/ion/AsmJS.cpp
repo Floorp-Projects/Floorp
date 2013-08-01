@@ -359,9 +359,9 @@ static TokenKind
 PeekToken(AsmJSParser &parser)
 {
     TokenStream &ts = parser.tokenStream;
-    while (ts.peekToken(TSF_OPERAND) == TOK_SEMI)
-        ts.getToken(TSF_OPERAND);
-    return ts.peekToken(TSF_OPERAND);
+    while (ts.peekToken(TokenStream::Operand) == TOK_SEMI)
+        ts.consumeKnownToken(TOK_SEMI);
+    return ts.peekToken(TokenStream::Operand);
 }
 
 static bool
@@ -4585,7 +4585,7 @@ ParseFunction(ModuleCompiler &m, ParseNode **fnOut)
     DebugOnly<TokenKind> tk = tokenStream.getToken();
     JS_ASSERT(tk == TOK_FUNCTION);
 
-    if (tokenStream.getToken(TSF_KEYWORD_IS_NAME) != TOK_NAME)
+    if (tokenStream.getToken(TokenStream::KeywordIsName) != TOK_NAME)
         return false;  // This will throw a SyntaxError, no need to m.fail.
 
     RootedPropertyName name(m.cx(), tokenStream.currentToken().name());
@@ -5116,7 +5116,7 @@ CheckModuleReturn(ModuleCompiler &m)
         return m.fail(NULL, "invalid asm.js statement");
     }
 
-    ParseNode *returnStmt = m.parser().statement(TSF_OPERAND);
+    ParseNode *returnStmt = m.parser().statement();
     if (!returnStmt)
         return false;
 
