@@ -47,12 +47,16 @@ NS_IMPL_ELEMENT_CLONE(HTMLTableRowElement)
 
 
 // protected method
-already_AddRefed<nsIDOMHTMLTableSectionElement>
+HTMLTableSectionElement*
 HTMLTableRowElement::GetSection() const
 {
-  nsCOMPtr<nsIDOMHTMLTableSectionElement> section =
-    do_QueryInterface(GetParent());
-  return section.forget();
+  nsIContent* parent = GetParent();
+  if (parent->IsHTML() && (parent->Tag() == nsGkAtoms::thead ||
+                           parent->Tag() == nsGkAtoms::tbody ||
+                           parent->Tag() == nsGkAtoms::tfoot)) {
+    return static_cast<HTMLTableSectionElement*>(parent);
+  }
+  return nullptr;
 }
 
 // protected method
@@ -104,15 +108,12 @@ HTMLTableRowElement::GetRowIndex(int32_t* aValue)
 int32_t
 HTMLTableRowElement::SectionRowIndex() const
 {
-  nsCOMPtr<nsIDOMHTMLTableSectionElement> section = GetSection();
+  HTMLTableSectionElement* section = GetSection();
   if (!section) {
     return -1;
   }
 
-  nsCOMPtr<nsIDOMHTMLCollection> rows;
-  section->GetRows(getter_AddRefs(rows));
-
-  nsCOMPtr<nsIHTMLCollection> coll = do_QueryInterface(rows);
+  nsCOMPtr<nsIHTMLCollection> coll = section->Rows();
   uint32_t numRows = coll->Length();
   for (uint32_t i = 0; i < numRows; i++) {
     if (coll->GetElementAt(i) == this) {
