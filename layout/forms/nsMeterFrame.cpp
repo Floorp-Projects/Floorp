@@ -5,6 +5,7 @@
 
 #include "nsMeterFrame.h"
 
+#include "nsIDOMHTMLMeterElement.h"
 #include "nsIContent.h"
 #include "nsPresContext.h"
 #include "nsGkAtoms.h"
@@ -19,11 +20,9 @@
 #include "nsFontMetrics.h"
 #include "nsContentList.h"
 #include "mozilla/dom/Element.h"
-#include "mozilla/dom/HTMLMeterElement.h"
 #include "nsContentList.h"
 #include <algorithm>
 
-using mozilla::dom::HTMLMeterElement;
 
 nsIFrame*
 NS_NewMeterFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
@@ -151,13 +150,15 @@ nsMeterFrame::ReflowBarFrame(nsIFrame*                aBarFrame,
   nscoord yoffset = aReflowState.mComputedBorderPadding.top;
 
   // NOTE: Introduce a new function getPosition in the content part ?
-  HTMLMeterElement* meterElement = static_cast<HTMLMeterElement*>(mContent);
+  double position, max, min, value;
+  nsCOMPtr<nsIDOMHTMLMeterElement> meterElement =
+    do_QueryInterface(mContent);
 
-  double max = meterElement->Max();
-  double min = meterElement->Min();
-  double value = meterElement->Value();
+  meterElement->GetMax(&max);
+  meterElement->GetMin(&min);
+  meterElement->GetValue(&value);
 
-  double position = max - min;
+  position = max - min;
   position = position != 0 ? (value - min) / position : 1;
 
   size = NSToCoordRound(size * position);

@@ -3170,6 +3170,9 @@ nsSVGTextFrame2::ScheduleReflowSVGNonDisplayText()
   MOZ_ASSERT(!nsSVGUtils::OuterSVGIsCallingReflowSVG(this),
              "do not call ScheduleReflowSVGNonDisplayText when the outer SVG "
              "frame is under ReflowSVG");
+  MOZ_ASSERT(!(mState & NS_STATE_SVG_TEXT_IN_REFLOW),
+             "do not call ScheduleReflowSVGNonDisplayText while reflowing the "
+             "anonymous block child");
 
   // We need to find an ancestor frame that we can call FrameNeedsReflow
   // on that will cause the document to be marked as needing relayout,
@@ -5044,6 +5047,8 @@ nsSVGTextFrame2::DoReflow()
     kid->MarkIntrinsicWidthsDirty();
   }
 
+  mState |= NS_STATE_SVG_TEXT_IN_REFLOW;
+
   nscoord width = kid->GetPrefWidth(renderingContext);
   nsHTMLReflowState reflowState(presContext, kid,
                                 renderingContext,
@@ -5060,6 +5065,8 @@ nsSVGTextFrame2::DoReflow()
   kid->Reflow(presContext, desiredSize, reflowState, status);
   kid->DidReflow(presContext, &reflowState, nsDidReflowStatus::FINISHED);
   kid->SetSize(nsSize(desiredSize.width, desiredSize.height));
+
+  mState &= ~NS_STATE_SVG_TEXT_IN_REFLOW;
 
   TextNodeCorrespondenceRecorder::RecordCorrespondence(this);
 }

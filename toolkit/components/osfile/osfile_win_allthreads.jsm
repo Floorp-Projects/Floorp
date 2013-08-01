@@ -190,13 +190,13 @@ if (typeof Components != "undefined") {
    * @constructor
    */
   let AbstractInfo = function AbstractInfo(isDir, isSymLink, size, winBirthDate,
-                                           lastAccessDate) {
+                                           lastAccessDate, lastWriteDate) {
     this._isDir = isDir;
     this._isSymLink = isSymLink;
     this._size = size;
     this._winBirthDate = winBirthDate;
     this._lastAccessDate = lastAccessDate;
-    this._lastModificationDate = lastAccessDate;
+    this._lastModificationDate = lastWriteDate;
   };
 
   AbstractInfo.prototype = {

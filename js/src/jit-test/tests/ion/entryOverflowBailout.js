@@ -1,7 +1,6 @@
 var o;
 var f1;
 var counter = 0;
-var bailout = Proxy.createFunction({}, Math.sin);
 
 function f2(a) {
     bailout();

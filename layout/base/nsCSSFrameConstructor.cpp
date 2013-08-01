@@ -42,6 +42,7 @@
 #include "nsIDOMXULElement.h"
 #include "nsContainerFrame.h"
 #include "nsINameSpaceManager.h"
+#include "nsIDOMHTMLLegendElement.h"
 #include "nsIComboboxControlFrame.h"
 #include "nsIListControlFrame.h"
 #include "nsISelectControlFrame.h"
@@ -5878,7 +5879,7 @@ nsCSSFrameConstructor::IsValidSibling(nsIFrame*              aSibling,
             nsGkAtoms::blockFrame == parentType)) {
     // Legends can be sibling of legends but not of other content in the fieldset
     nsIAtom* sibType = aSibling->GetContentInsertionFrame()->GetType();
-    bool legendContent = aContent->IsHTML(nsGkAtoms::legend);
+    nsCOMPtr<nsIDOMHTMLLegendElement> legendContent(do_QueryInterface(aContent));
 
     if ((legendContent  && (nsGkAtoms::legendFrame != sibType)) ||
         (!legendContent && (nsGkAtoms::legendFrame == sibType)))
@@ -5986,7 +5987,8 @@ GetAdjustedParentFrame(nsIFrame*       aParentFrame,
   if (nsGkAtoms::fieldSetFrame == aParentFrameType) {
     // If the parent is a fieldSet, use the fieldSet's area frame as the
     // parent unless the new content is a legend. 
-    if (!aChildContent->IsHTML(nsGkAtoms::legend)) {
+    nsCOMPtr<nsIDOMHTMLLegendElement> legendContent(do_QueryInterface(aChildContent));
+    if (!legendContent) {
       newParent = GetFieldSetBlockFrame(aParentFrame);
     }
   }

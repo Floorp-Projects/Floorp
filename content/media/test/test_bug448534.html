@@ -45,6 +45,7 @@ function stopped(event) {
 
 function startTest(test, token) {
   var v = document.createElement('video');
+  v.preload = "metadata";
   v.token = token;
   manager.started(token);
   v.src = test.name;

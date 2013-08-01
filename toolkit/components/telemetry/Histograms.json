@@ -3431,6 +3431,42 @@
     "n_buckets": "1000",
     "description": "The time (in milliseconds) that it took a 'detach' request to go round trip."
   },
+  "DEVTOOLS_DEBUGGER_RDP_LOCAL_TRACERDETACH_MS": {
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": "1000",
+    "description": "The time (in milliseconds) that it took a 'detach' request to go round trip."
+  },
+  "DEVTOOLS_DEBUGGER_RDP_REMOTE_TRACERDETACH_MS": {
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": "1000",
+    "description": "The time (in milliseconds) that it took a 'detach' request to go round trip."
+  },
+  "DEVTOOLS_DEBUGGER_RDP_LOCAL_STARTTRACE_MS": {
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": "1000",
+    "description": "The time (in milliseconds) that it took a 'startTrace' request to go round trip."
+  },
+  "DEVTOOLS_DEBUGGER_RDP_REMOTE_STARTTRACE_MS": {
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": "1000",
+    "description": "The time (in milliseconds) that it took a 'startTrace' request to go round trip."
+  },
+  "DEVTOOLS_DEBUGGER_RDP_LOCAL_STOPTRACE_MS": {
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": "1000",
+    "description": "The time (in milliseconds) that it took a 'stopTrace' request to go round trip."
+  },
+  "DEVTOOLS_DEBUGGER_RDP_REMOTE_STOPTRACE_MS": {
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": "1000",
+    "description": "The time (in milliseconds) that it took a 'stopTrace' request to go round trip."
+  },
   "COOKIES_3RDPARTY_NUM_SITES_ACCEPTED": {
     "kind": "linear",
     "low": "5",

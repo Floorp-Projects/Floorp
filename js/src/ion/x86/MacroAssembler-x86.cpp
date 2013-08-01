@@ -214,7 +214,7 @@ MacroAssemblerX86::handleFailureWithHandler(void *handler)
     passABIArg(eax);
     callWithABI(handler);
 
-    IonCode *excTail = GetIonContext()->compartment->ionCompartment()->getExceptionTail();
+    IonCode *excTail = GetIonContext()->runtime->ionRuntime()->getExceptionTail();
     jmp(excTail);
 }
 
