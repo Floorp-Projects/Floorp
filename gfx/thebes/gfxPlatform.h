@@ -471,8 +471,14 @@ public:
     static bool GetPrefLayersAccelerationDisabled();
     static bool GetPrefLayersPreferOpenGL();
     static bool GetPrefLayersPreferD3D9();
+    static bool CanUseDirect3D9();
     static int  GetPrefLayoutFrameRate();
 
+    /**
+     * Is it possible to use buffer rotation
+     */
+    static bool BufferRotationEnabled();
+    static void DisableBufferRotation();
     /**
      * Are we going to try color management?
      */

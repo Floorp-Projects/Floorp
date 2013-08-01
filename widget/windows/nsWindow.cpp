@@ -6554,6 +6554,20 @@ nsWindow::StartAllowingD3D9(bool aReinitialize)
   }
 }
 
+mozilla::layers::LayersBackend
+nsWindow::GetPreferredCompositorBackend()
+{
+  LayerManagerPrefs prefs;
+  GetLayerManagerPrefs(&prefs);
+  if (prefs.mDisableAcceleration) {
+    return mozilla::layers::LAYERS_BASIC;
+  }
+  if (prefs.mPreferD3D9) {
+    return mozilla::layers::LAYERS_D3D9;
+  }
+  return mozilla::layers::LAYERS_D3D11;
+}
+
 bool
 nsWindow::HasBogusPopupsDropShadowOnMultiMonitor() {
   if (sHasBogusPopupsDropShadowOnMultiMonitor == TRI_UNKNOWN) {

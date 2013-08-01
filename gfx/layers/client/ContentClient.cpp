@@ -26,9 +26,10 @@ ContentClient::CreateContentClient(CompositableForwarder* aForwarder)
 {
   LayersBackend backend = aForwarder->GetCompositorBackendType();
   if (backend != LAYERS_OPENGL &&
+      backend != LAYERS_D3D9 &&
       backend != LAYERS_D3D11 &&
       backend != LAYERS_BASIC) {
-        return nullptr;
+    return nullptr;
   }
 
   bool useDoubleBuffering = false;
