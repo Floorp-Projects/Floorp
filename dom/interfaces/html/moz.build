@@ -23,7 +23,6 @@ XPIDL_SOURCES += [
     'nsIDOMHTMLElement.idl',
     'nsIDOMHTMLEmbedElement.idl',
     'nsIDOMHTMLFieldSetElement.idl',
-    'nsIDOMHTMLFontElement.idl',
     'nsIDOMHTMLFormElement.idl',
     'nsIDOMHTMLFrameElement.idl',
     'nsIDOMHTMLFrameSetElement.idl',
