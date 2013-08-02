@@ -50,6 +50,12 @@ dictionary DNSCacheDict {
   sequence<double> expiration;
 };
 
+dictionary DNSLookupDict {
+  sequence<DOMString> address;
+  DOMString error;
+  boolean answer;
+};
+
 dictionary ConnStatusDict {
   DOMString status;
 };
