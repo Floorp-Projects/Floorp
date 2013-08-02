@@ -46,7 +46,7 @@
   width: 24px;
   height: 7px;
   cursor: ns-resize;
-  transform: translate(12px, 12px);
+  transform: translate(-12px, 12px);
   background-image: url("chrome://browser/skin/devtools/responsive-horizontal-resizer.png");
 }
 

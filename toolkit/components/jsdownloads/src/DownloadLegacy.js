@@ -222,6 +222,8 @@ DownloadLegacyTransfer.prototype = {
     }.bind(this)).then(null, Cu.reportError);
   },
 
+  setSha256Hash: function () { },
+
   //////////////////////////////////////////////////////////////////////////////
   //// Private methods and properties
 

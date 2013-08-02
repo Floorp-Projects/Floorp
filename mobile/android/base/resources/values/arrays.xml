@@ -99,6 +99,16 @@
         <item>private.data.offlineApps</item>
         <item>private.data.siteSettings</item>
     </string-array>
+    <string-array name="pref_restore_entries">
+        <item>@string/pref_restore_always</item>
+        <item>@string/pref_restore_crash</item>
+        <item>@string/pref_restore_never</item>
+    </string-array>
+    <string-array name="pref_restore_values">
+        <item>always</item>
+        <item>crash</item>
+        <item>never</item>
+    </string-array>
     <string-array name="pref_update_autodownload_entries">
         <item>@string/pref_update_autodownload_enabled</item>
         <item>@string/pref_update_autodownload_wifi</item>
