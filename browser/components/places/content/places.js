@@ -11,6 +11,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "BookmarkJSONUtils",
                                   "resource://gre/modules/BookmarkJSONUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesBackups",
                                   "resource://gre/modules/PlacesBackups.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "DownloadUtils",
+                                  "resource://gre/modules/DownloadUtils.jsm");
 
 var PlacesOrganizer = {
   _places: null,
@@ -411,6 +413,21 @@ var PlacesOrganizer = {
 
     // Populate menu with backups.
     for (let i = 0; i < backupFiles.length; i++) {
+      let [size, unit] = DownloadUtils.convertByteUnits(backupFiles[i].fileSize);
+      let sizeString = PlacesUtils.getFormattedString("backupFileSizeText",
+                                                      [size, unit]);
+      let sizeInfo;
+      let bookmarkCount = PlacesBackups.getBookmarkCountForFile(backupFiles[i]);
+      if (bookmarkCount != null) {
+        sizeInfo = " (" + sizeString + " - " +
+                   PlacesUIUtils.getPluralString("detailsPane.itemsCountLabel",
+                                                  bookmarkCount,
+                                                  [bookmarkCount]) +
+                   ")";
+      } else {
+        sizeInfo = " (" + sizeString + ")";
+      }
+
       let backupDate = PlacesBackups.getDateForFile(backupFiles[i]);
       let m = restorePopup.insertBefore(document.createElement("menuitem"),
                                         document.getElementById("restoreFromFile"));
@@ -419,7 +436,8 @@ var PlacesOrganizer = {
                                         Ci.nsIScriptableDateFormat.dateFormatLong,
                                         backupDate.getFullYear(),
                                         backupDate.getMonth() + 1,
-                                        backupDate.getDate()));
+                                        backupDate.getDate()) +
+                                        sizeInfo);
       m.setAttribute("value", backupFiles[i].leafName);
       m.setAttribute("oncommand",
                      "PlacesOrganizer.onRestoreMenuItemClick(this);");
@@ -516,7 +534,7 @@ var PlacesOrganizer = {
     let fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
     let fpCallback = function fpCallback_done(aResult) {
       if (aResult != Ci.nsIFilePicker.returnCancel) {
-        BookmarkJSONUtils.exportToFile(fp.file);
+        PlacesBackups.saveBookmarksToJSONFile(fp.file);
       }
     };
 

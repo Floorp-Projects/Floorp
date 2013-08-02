@@ -275,6 +275,7 @@ function run_test()
 {
   // Create our bookmarks.html from bookmarks.glue.html.
   create_bookmarks_html("bookmarks.glue.html");
+  remove_all_JSON_backups();
   // Create our JSON backup from bookmarks.glue.json.
   create_JSON_backup("bookmarks.glue.json");
 
