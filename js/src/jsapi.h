@@ -3223,15 +3223,26 @@ SameZoneAs(JSObject *obj)
 struct JS_PUBLIC_API(CompartmentOptions) {
     ZoneSpecifier zoneSpec;
     JSVersion version;
+    bool invisibleToDebugger;
 
     explicit CompartmentOptions() : zoneSpec(JS::FreshZone)
                                   , version(JSVERSION_UNKNOWN)
+                                  , invisibleToDebugger(false)
     {}
 
     CompartmentOptions &setZone(ZoneSpecifier spec) { zoneSpec = spec; return *this; }
     CompartmentOptions &setVersion(JSVersion version_) {
         JS_ASSERT(version_ != JSVERSION_UNKNOWN);
         version = version_;
+        return *this;
+    }
+
+    // Certain scopes (i.e. XBL compilation scopes) are implementation details
+    // of the embedding, and references to them should never leak out to script.
+    // This flag causes the this compartment to skip firing onNewGlobalObject
+    // and makes addDebuggee a no-op for this global.
+    CompartmentOptions &setInvisibleToDebugger(bool invisible) {
+        invisibleToDebugger = invisible;
         return *this;
     }
 };
