@@ -11,6 +11,7 @@
 #include "mozilla/gfx/Rect.h"
 #include "mozilla/gfx/ScaleFactor.h"
 #include "nsDeviceContext.h"
+#include "nsRect.h"
 
 namespace mozilla {
 
