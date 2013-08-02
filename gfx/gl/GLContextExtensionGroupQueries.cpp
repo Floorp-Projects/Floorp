@@ -119,7 +119,7 @@ static const ExtensionGroupInfo sExtensionGroupInfoArr[] = {
 static inline const ExtensionGroupInfo&
 GetExtensionGroupInfo(GLContext::GLExtensionGroup extensionGroup)
 {
-    static_assert(ArrayLength(sExtensionGroupInfoArr) == size_t(GLContext::ExtensionGroup_Max),
+    MOZ_ASSERT(ArrayLength(sExtensionGroupInfoArr) == size_t(GLContext::ExtensionGroup_Max),
                   "Mismatched lengths for sExtensionGroupInfos and ExtensionGroup enums");
 
     MOZ_ASSERT(extensionGroup < GLContext::ExtensionGroup_Max,
