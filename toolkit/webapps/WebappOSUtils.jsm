@@ -21,13 +21,18 @@ this.WebappOSUtils = {
     // doesn't have a name property. We then need to use the manifest.
     // For some mozApps calls, the aApp object doesn't have a manifest
     // associated, and so we need to use the name property.
+    // They're guaranteed to be always identical to the application
+    // name in the user locale.
     if (aApp.name) {
       name = aApp.name;
     } else {
-      name = aApp.manifest.name;
+      let manifest =
+        new ManifestHelper(aApp.updateManifest || aApp.manifest, aApp.origin);
+      name = manifest.name;
     }
 
-    return this.sanitizeStringForFilename(name).toLowerCase() + "-" + AppsUtils.computeHash(aApp.manifestURL);
+    return this.sanitizeStringForFilename(name).toLowerCase() + "-" +
+           AppsUtils.computeHash(aApp.manifestURL);
   },
 
   /**

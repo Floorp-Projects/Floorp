@@ -31,7 +31,7 @@ function loadWebapp(manifest, parameters, onLoad) {
       onLoad();
     }
     gAppBrowser.addEventListener("load", onLoadApp, true);
-    gAppBrowser.setAttribute("src", WebappRT.launchURI.spec);
+    gAppBrowser.setAttribute("src", WebappRT.launchURI);
   });
 
   registerCleanupFunction(function() {
