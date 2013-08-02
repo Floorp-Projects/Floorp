@@ -316,7 +316,7 @@ MSG_DEF(JSMSG_SC_RECURSION,           262, 0, JSEXN_INTERNALERR, "recursive obje
 MSG_DEF(JSMSG_UNUSED263,              263, 0, JSEXN_NONE, "")
 MSG_DEF(JSMSG_BAD_CLONE_VERSION,      264, 0, JSEXN_ERR, "unsupported structured clone version")
 MSG_DEF(JSMSG_CANT_CLONE_OBJECT,      265, 0, JSEXN_TYPEERR, "can't clone object")
-MSG_DEF(JSMSG_UNUSED266,              266, 0, JSEXN_NONE, "")
+MSG_DEF(JSMSG_DEBUG_RESUMPTION_VALUE_DISALLOWED, 266, 0, JSEXN_TYPEERR, "resumption values are disallowed in this hook")
 MSG_DEF(JSMSG_STRICT_FUNCTION_STATEMENT, 267, 0, JSEXN_SYNTAXERR, "in strict mode code, functions may be declared only at top level or immediately within another function")
 MSG_DEF(JSMSG_INVALID_FOR_IN_INIT,    268, 0, JSEXN_SYNTAXERR, "for-in loop let declaration may not have an initializer")
 MSG_DEF(JSMSG_CLEARED_SCOPE,          269, 0, JSEXN_TYPEERR, "attempt to run compile-and-go script on a cleared scope")
