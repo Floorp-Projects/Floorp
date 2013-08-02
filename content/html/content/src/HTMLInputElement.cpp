@@ -770,7 +770,7 @@ static nsresult FireEventForAccessibility(nsIDOMHTMLInputElement* aTarget,
 
 HTMLInputElement::HTMLInputElement(already_AddRefed<nsINodeInfo> aNodeInfo,
                                    FromParser aFromParser)
-  : nsGenericHTMLFormElement(aNodeInfo)
+  : nsGenericHTMLFormElementWithState(aNodeInfo)
   , mType(kInputDefaultType->value)
   , mDisabledChanged(false)
   , mValueChanged(false)
@@ -843,7 +843,7 @@ HTMLInputElement::GetEditorState() const
 // nsISupports
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(HTMLInputElement,
-                                                  nsGenericHTMLFormElement)
+                                                  nsGenericHTMLFormElementWithState)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mValidity)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mControllers)
   if (tmp->IsSingleLineTextControl(false)) {
@@ -854,7 +854,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(HTMLInputElement,
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(HTMLInputElement,
-                                                  nsGenericHTMLFormElement)
+                                                nsGenericHTMLFormElementWithState)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mValidity)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mControllers)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mFiles)
@@ -873,7 +873,7 @@ NS_IMPL_RELEASE_INHERITED(HTMLInputElement, Element)
 
 // QueryInterface implementation for HTMLInputElement
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(HTMLInputElement)
-  NS_HTML_CONTENT_INTERFACES(nsGenericHTMLFormElement)
+  NS_HTML_CONTENT_INTERFACES(nsGenericHTMLFormElementWithState)
   NS_INTERFACE_TABLE_INHERITED8(HTMLInputElement,
                                 nsIDOMHTMLInputElement,
                                 nsITextControlElement,
@@ -975,8 +975,8 @@ HTMLInputElement::BeforeSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
     }
   }
 
-  return nsGenericHTMLFormElement::BeforeSetAttr(aNameSpaceID, aName,
-                                                 aValue, aNotify);
+  return nsGenericHTMLFormElementWithState::BeforeSetAttr(aNameSpaceID, aName,
+                                                          aValue, aNotify);
 }
 
 nsresult
@@ -1120,8 +1120,8 @@ HTMLInputElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
     UpdateState(aNotify);
   }
 
-  return nsGenericHTMLFormElement::AfterSetAttr(aNameSpaceID, aName,
-                                                aValue, aNotify);
+  return nsGenericHTMLFormElementWithState::AfterSetAttr(aNameSpaceID, aName,
+                                                         aValue, aNotify);
 }
 
 // nsIDOMHTMLInputElement
@@ -1129,7 +1129,7 @@ HTMLInputElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
 NS_IMETHODIMP
 HTMLInputElement::GetForm(nsIDOMHTMLFormElement** aForm)
 {
-  return nsGenericHTMLFormElement::GetForm(aForm);
+  return nsGenericHTMLFormElementWithState::GetForm(aForm);
 }
 
 NS_IMPL_STRING_ATTR(HTMLInputElement, DefaultValue, value)
@@ -2254,9 +2254,9 @@ HTMLInputElement::SetValueInternal(const nsAString& aValue,
       }
 
       // Treat value == defaultValue for other input elements.
-      return nsGenericHTMLFormElement::SetAttr(kNameSpaceID_None,
-                                               nsGkAtoms::value, aValue,
-                                               true);
+      return nsGenericHTMLFormElementWithState::SetAttr(kNameSpaceID_None,
+                                                        nsGkAtoms::value, aValue,
+                                                        true);
 
     case VALUE_MODE_FILENAME:
       return NS_ERROR_UNEXPECTED;
@@ -2765,7 +2765,7 @@ HTMLInputElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
   if (mType == NS_FORM_INPUT_RANGE &&
       (aVisitor.mEvent->message == NS_FOCUS_CONTENT ||
        aVisitor.mEvent->message == NS_BLUR_CONTENT)) {
-    // Just as nsGenericHTMLFormElement::PreHandleEvent calls
+    // Just as nsGenericHTMLFormElementWithState::PreHandleEvent calls
     // nsIFormControlFrame::SetFocus, we handle focus here.
     nsIFrame* frame = GetPrimaryFrame();
     if (frame) {
@@ -2773,7 +2773,7 @@ HTMLInputElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
     }
   }
 
-  return nsGenericHTMLFormElement::PreHandleEvent(aVisitor);
+  return nsGenericHTMLFormElementWithState::PreHandleEvent(aVisitor);
 }
 
 void
@@ -3451,9 +3451,9 @@ HTMLInputElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                              nsIContent* aBindingParent,
                              bool aCompileEventHandlers)
 {
-  nsresult rv = nsGenericHTMLFormElement::BindToTree(aDocument, aParent,
-                                                     aBindingParent,
-                                                     aCompileEventHandlers);
+  nsresult rv = nsGenericHTMLFormElementWithState::BindToTree(aDocument, aParent,
+                                                              aBindingParent,
+                                                              aCompileEventHandlers);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsImageLoadingContent::BindToTree(aDocument, aParent, aBindingParent,
@@ -3500,7 +3500,7 @@ void
 HTMLInputElement::UnbindFromTree(bool aDeep, bool aNullParent)
 {
   // If we have a form and are unbound from it,
-  // nsGenericHTMLFormElement::UnbindFromTree() will unset the form and
+  // nsGenericHTMLFormElementWithState::UnbindFromTree() will unset the form and
   // that takes care of form's WillRemove so we just have to take care
   // of the case where we're removing from the document and we don't
   // have a form
@@ -3509,7 +3509,7 @@ HTMLInputElement::UnbindFromTree(bool aDeep, bool aNullParent)
   }
 
   nsImageLoadingContent::UnbindFromTree(aDeep, aNullParent);
-  nsGenericHTMLFormElement::UnbindFromTree(aDeep, aNullParent);
+  nsGenericHTMLFormElementWithState::UnbindFromTree(aDeep, aNullParent);
 
   // GetCurrentDoc is returning nullptr so we can update the value
   // missing validity state to reflect we are no longer into a doc.
@@ -4025,14 +4025,14 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
   const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::type);
   if (value && value->Type() == nsAttrValue::eEnum &&
       value->GetEnumValue() == NS_FORM_INPUT_IMAGE) {
-    nsGenericHTMLFormElement::MapImageBorderAttributeInto(aAttributes, aData);
-    nsGenericHTMLFormElement::MapImageMarginAttributeInto(aAttributes, aData);
-    nsGenericHTMLFormElement::MapImageSizeAttributesInto(aAttributes, aData);
+    nsGenericHTMLFormElementWithState::MapImageBorderAttributeInto(aAttributes, aData);
+    nsGenericHTMLFormElementWithState::MapImageMarginAttributeInto(aAttributes, aData);
+    nsGenericHTMLFormElementWithState::MapImageSizeAttributesInto(aAttributes, aData);
     // Images treat align as "float"
-    nsGenericHTMLFormElement::MapImageAlignAttributeInto(aAttributes, aData);
+    nsGenericHTMLFormElementWithState::MapImageAlignAttributeInto(aAttributes, aData);
   }
 
-  nsGenericHTMLFormElement::MapCommonAttributesInto(aAttributes, aData);
+  nsGenericHTMLFormElementWithState::MapCommonAttributesInto(aAttributes, aData);
 }
 
 nsChangeHint
@@ -4040,7 +4040,7 @@ HTMLInputElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
                                          int32_t aModType) const
 {
   nsChangeHint retval =
-    nsGenericHTMLFormElement::GetAttributeChangeHint(aAttribute, aModType);
+    nsGenericHTMLFormElementWithState::GetAttributeChangeHint(aAttribute, aModType);
   if (aAttribute == nsGkAtoms::type) {
     NS_UpdateHint(retval, NS_STYLE_HINT_FRAMECHANGE);
   } else if (mType == NS_FORM_INPUT_IMAGE &&
@@ -4699,7 +4699,7 @@ HTMLInputElement::DoneCreatingElement()
   // types.
   //
   bool restoredCheckedState =
-    !mInhibitRestoration && RestoreFormControlState(this, this);
+    !mInhibitRestoration && NS_SUCCEEDED(GenerateStateKey()) && RestoreFormControlState();
 
   //
   // If restore does not occur, we initialize .checked using the CHECKED
@@ -4726,7 +4726,7 @@ HTMLInputElement::IntrinsicState() const
   // If you add states here, and they're type-dependent, you need to add them
   // to the type case in AfterSetAttr.
 
-  nsEventStates state = nsGenericHTMLFormElement::IntrinsicState();
+  nsEventStates state = nsGenericHTMLFormElementWithState::IntrinsicState();
   if (mType == NS_FORM_INPUT_CHECKBOX || mType == NS_FORM_INPUT_RADIO) {
     // Check current checked state (:checked)
     if (mChecked) {
@@ -4933,7 +4933,9 @@ HTMLInputElement::WillRemoveFromRadioGroup()
 bool
 HTMLInputElement::IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable, int32_t* aTabIndex)
 {
-  if (nsGenericHTMLFormElement::IsHTMLFocusable(aWithMouse, aIsFocusable, aTabIndex)) {
+  if (nsGenericHTMLFormElementWithState::IsHTMLFocusable(aWithMouse, aIsFocusable,
+      aTabIndex))
+  {
     return true;
   }
 
@@ -5972,7 +5974,7 @@ HTMLInputElement::FieldSetDisabledChanged(bool aNotify)
   UpdateValueMissingValidityState();
   UpdateBarredFromConstraintValidation();
 
-  nsGenericHTMLFormElement::FieldSetDisabledChanged(aNotify);
+  nsGenericHTMLFormElementWithState::FieldSetDisabledChanged(aNotify);
 }
 
 void
