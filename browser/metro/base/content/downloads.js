@@ -12,6 +12,7 @@ var Downloads = {
    * downloads if it starts before other downloads have completed.
    */
   _downloadCount: 0,
+  _downloadsInProgress: 0,
   _inited: false,
   _progressAlert: null,
   _lastSec: Infinity,
@@ -57,6 +58,8 @@ var Downloads = {
 
     this._progress = new DownloadProgressListener(this);
     this.manager.addListener(this._progress);
+
+    this._downloadProgressIndicator = document.getElementById("download-progress");
   },
 
   uninit: function dh_uninit() {
@@ -97,25 +100,26 @@ var Downloads = {
   },
 
   cancelDownload: function dh_cancelDownload(aDownload) {
-    this._progressNotificationInfo.delete(aDownload.guid);
-    this._runDownloadBooleanMap.delete(aDownload.targetFile.path);
-    this._downloadCount--;
-    if (this._progressNotificationInfo.size == 0) {
-      this._notificationBox.removeNotification(this._progressNotification);
-      this._progressNotification = null;
-    }
-
     let fileURI = aDownload.target;
     if (!(fileURI && fileURI.spec)) {
       Util.dumpLn("Cant remove download file for: "+aDownload.id+", fileURI is invalid");
-      return;
     }
 
-    let file = this._getLocalFile(fileURI);
     try {
-      this.manager.cancelDownload(aDownload.id);
+      let file = this._getLocalFile(fileURI);
       if (file && file.exists())
         file.remove(false);
+      this.manager.cancelDownload(aDownload.id);
+
+      // If cancelling was successful, stop tracking the download.
+      this._progressNotificationInfo.delete(aDownload.guid);
+      this._runDownloadBooleanMap.delete(aDownload.targetFile.path);
+      this._downloadCount--;
+      this._downloadsInProgress--;
+      if (this._downloadsInProgress <= 0) {
+        this._notificationBox.removeNotification(this._progressNotification);
+        this._progressNotification = null;
+      }
     } catch (ex) {
       Util.dumpLn("Failed to cancel download, with id: "+aDownload.id+", download target URI spec: " + fileURI.spec);
       Util.dumpLn("Failed download source:"+(aDownload.source && aDownload.source.spec));
@@ -196,6 +200,7 @@ var Downloads = {
         accessKey: "",
         callback: function() {
           Downloads.manager.retryDownload(aDownload.id);
+          Downloads._downloadProgressIndicator.reset();
         }
       },
       {
@@ -203,6 +208,7 @@ var Downloads = {
         accessKey: "",
         callback: function() {
           Downloads.cancelDownload(aDownload);
+          Downloads._downloadProgressIndicator.reset();
         }
       }
     ];
@@ -222,6 +228,7 @@ var Downloads = {
           let fileURI = aDownload.target;
           let file = Downloads._getLocalFile(fileURI);
           file.reveal();
+          Downloads._downloadProgressIndicator.reset();
         }
       }
     ];
@@ -242,11 +249,28 @@ var Downloads = {
         accessKey: "",
         callback: function() {
           Downloads.openDownload(aDownload);
+          Downloads._downloadProgressIndicator.reset();
         }
       });
     }
     this.showNotification("download-complete", message, buttons,
       this._notificationBox.PRIORITY_WARNING_MEDIUM);
+  },
+
+  _updateCircularProgressMeter: function dv_updateCircularProgressMeter() {
+    if (!this._progressNotificationInfo) {
+      return;
+    }
+
+    let totPercent = 0;
+    for (let info of this._progressNotificationInfo) {
+      // info[0]          => download guid
+      // info[1].download => nsIDownload
+      totPercent += info[1].download.percentComplete;
+    }
+
+    let percentComplete = totPercent / this._progressNotificationInfo.size;
+    this._downloadProgressIndicator.updateProgress(percentComplete);
   },
 
   _computeDownloadProgressString: function dv_computeDownloadProgressString(aDownload) {
@@ -260,6 +284,7 @@ var Downloads = {
       totSize += size;
       totSecondsLeft += ((size - amountTransferred) / speed);
     }
+
     // Compute progress in bytes.
     let amountTransferred = Util.getDownloadSize(totTransferred);
     let size = Util.getDownloadSize(totSize);
@@ -296,6 +321,7 @@ var Downloads = {
   updateInfobar: function dv_updateInfobar(aDownload) {
     this._saveDownloadData(aDownload);
     let message = this._computeDownloadProgressString(aDownload);
+    this._updateCircularProgressMeter();
 
     if (this._progressNotification == null ||
         !this._notificationBox.getNotificationWithValue("download-progress")) {
@@ -310,6 +336,7 @@ var Downloads = {
           accessKey: "",
           callback: function() {
             Downloads.cancelDownloads();
+            Downloads._downloadProgressIndicator.reset();
           }
         }
       ];
@@ -327,6 +354,7 @@ var Downloads = {
       this._saveDownloadData(aDownload);
       this._progressNotification.label =
         this._computeDownloadProgressString(aDownload);
+      this._updateCircularProgressMeter();
     }
   },
 
@@ -341,6 +369,7 @@ var Downloads = {
         break;
       case "dl-start":
         this._downloadCount++;
+        this._downloadsInProgress++;
         let download = aSubject.QueryInterface(Ci.nsIDownload);
         if (!this._progressNotificationInfo.get(download.guid)) {
           this._progressNotificationInfo.set(download.guid, {});
@@ -352,18 +381,19 @@ var Downloads = {
         this.updateInfobar(download);
         break;
       case "dl-done":
+        this._downloadsInProgress--;
         download = aSubject.QueryInterface(Ci.nsIDownload);
         let runAfterDownload = this._runDownloadBooleanMap.get(download.targetFile.path);
         if (runAfterDownload) {
           this.openDownload(download);
         }
 
-        this._progressNotificationInfo.delete(download.guid);
         this._runDownloadBooleanMap.delete(download.targetFile.path);
-        if (this._progressNotificationInfo.size == 0) {
+        if (this._downloadsInProgress == 0) {
           if (this._downloadCount > 1 || !runAfterDownload) {
             this._showDownloadCompleteNotification(download);
           }
+          this._progressNotificationInfo.clear();
           this._downloadCount = 0;
           this._notificationBox.removeNotification(this._progressNotification);
           this._progressNotification = null;
@@ -371,6 +401,7 @@ var Downloads = {
         break;
       case "dl-failed":
         download = aSubject.QueryInterface(Ci.nsIDownload);
+        this._showDownloadFailedNotification(download);
         break;
     }
   },
