@@ -8,11 +8,4 @@ srcdir    = @srcdir@
 VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
-
-EXTRA_PP_JS_MODULES = \
-  CustomizableUI.jsm \
-  CustomizableWidgets.jsm \
-  CustomizeMode.jsm \
-  $(NULL)
-
 include $(topsrcdir)/config/rules.mk
