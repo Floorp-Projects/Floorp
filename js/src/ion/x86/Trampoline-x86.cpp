@@ -645,7 +645,10 @@ IonRuntime::generateVMWrapper(JSContext *cx, const VMFunction &f)
         break;
 
       case Type_Double:
-        masm.Pop(ReturnFloatReg);
+        if (cx->runtime()->jitSupportsFloatingPoint)
+            masm.Pop(ReturnFloatReg);
+        else
+            masm.breakpoint();
         break;
 
       default:
