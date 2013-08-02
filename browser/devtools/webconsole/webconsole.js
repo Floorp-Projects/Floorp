@@ -2845,6 +2845,21 @@ JSTerm.prototype = {
   lastCompletion: null,
 
   /**
+   * Array that caches the user input suggestions received from the server.
+   * @private
+   * @type array
+   */
+  _autocompleteCache: null,
+
+  /**
+   * The input that caused the last request to the server, whose response is
+   * cached in the _autocompleteCache array.
+   * @private
+   * @type string
+   */
+  _autocompleteQuery: null,
+
+  /**
    * The Web Console sidebar.
    * @see this._createSidebar()
    * @see Sidebar.jsm
@@ -4125,11 +4140,46 @@ JSTerm.prototype = {
     }
 
     let requestId = gSequenceId();
-    let input = this.inputNode.value;
     let cursor = this.inputNode.selectionStart;
+    let input = this.inputNode.value.substring(0, cursor);
+    let cache = this._autocompleteCache;
 
-    // TODO: Bug 787986 - throttle/disable updates, deal with slow/high latency
-    // network connections.
+    // If the current input starts with the previous input, then we already
+    // have a list of suggestions and we just need to filter the cached
+    // suggestions. When the current input ends with a non-alphanumeric
+    // character we ask the server again for suggestions.
+
+    // Check if last character is non-alphanumeric
+    if (!/[a-zA-Z0-9]$/.test(input)) {
+      this._autocompleteQuery = null;
+      this._autocompleteCache = null;
+    }
+
+    if (this._autocompleteQuery && input.startsWith(this._autocompleteQuery)) {
+      let filterBy = input;
+      // Find the last non-alphanumeric if exists.
+      let lastNonAlpha = input.match(/[^a-zA-Z0-9][a-zA-Z0-9]*$/);
+      // If input contains non-alphanumerics, use the part after the last one
+      // to filter the cache
+      if (lastNonAlpha) {
+        filterBy = input.substring(input.lastIndexOf(lastNonAlpha) + 1);
+      }
+
+      let newList = cache.sort().filter(function(l) {
+        return l.startsWith(filterBy);
+      });
+
+      this.lastCompletion = {
+        requestId: null,
+        completionType: aType,
+        value: null,
+      };
+
+      let response = { matches: newList, matchProp: filterBy };
+      this._receiveAutocompleteProperties(null, aCallback, response);
+      return;
+    }
+
     this.lastCompletion = {
       requestId: requestId,
       completionType: aType,
@@ -4162,6 +4212,15 @@ JSTerm.prototype = {
     if (this.lastCompletion.value == inputValue ||
         aRequestId != this.lastCompletion.requestId) {
       return;
+    }
+
+    // Cache whatever came from the server if the last char is alphanumeric or '.'
+    let cursor = inputNode.selectionStart;
+    let inputUntilCursor = inputValue.substring(0, cursor);
+
+    if (aRequestId != null && /[a-zA-Z0-9.]$/.test(inputUntilCursor)) {
+      this._autocompleteCache = aMessage.matches;
+      this._autocompleteQuery = inputUntilCursor;
     }
 
     let matches = aMessage.matches;
