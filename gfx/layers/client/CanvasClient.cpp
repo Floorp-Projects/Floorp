@@ -22,15 +22,20 @@ namespace mozilla {
 namespace layers {
 
 /* static */ TemporaryRef<CanvasClient>
-CanvasClient::CreateCanvasClient(CanvasClientType aType,
+CanvasClient::CreateCanvasClient(CompositableType aCompositableHostType,
                                  CompositableForwarder* aForwarder,
                                  TextureFlags aFlags)
 {
-  if (aType == CanvasClientGLContext &&
-      aForwarder->GetCompositorBackendType() == LAYERS_OPENGL) {
-    return new CanvasClientSurfaceStream(aForwarder, aFlags);
+  if (aCompositableHostType == BUFFER_IMAGE_SINGLE) {
+    return new CanvasClient2D(aForwarder, aFlags);
   }
-  return new CanvasClient2D(aForwarder, aFlags);
+  if (aCompositableHostType == BUFFER_IMAGE_BUFFERED) {
+    if (aForwarder->GetCompositorBackendType() == LAYERS_OPENGL) {
+      return new CanvasClientWebGL(aForwarder, aFlags);
+    }
+    return new CanvasClient2D(aForwarder, aFlags);
+  }
+  return nullptr;
 }
 
 void
@@ -67,32 +72,28 @@ CanvasClient2D::Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer)
 }
 
 void
-CanvasClientSurfaceStream::Updated()
+CanvasClientWebGL::Updated()
 {
-  if (mNeedsUpdate) {
-    mForwarder->UpdateTextureNoSwap(this, 1, mDeprecatedTextureClient->GetDescriptor());
-    mNeedsUpdate = false;
-  }
+  mForwarder->UpdateTextureNoSwap(this, 1, mDeprecatedTextureClient->GetDescriptor());
 }
 
 
-CanvasClientSurfaceStream::CanvasClientSurfaceStream(CompositableForwarder* aFwd,
-                                                     TextureFlags aFlags)
+CanvasClientWebGL::CanvasClientWebGL(CompositableForwarder* aFwd,
+                                     TextureFlags aFlags)
 : CanvasClient(aFwd, aFlags)
-, mNeedsUpdate(false)
 {
-  mTextureInfo.mCompositableType = BUFFER_IMAGE_SINGLE;
+  mTextureInfo.mCompositableType = BUFFER_IMAGE_BUFFERED;
 }
 
 void
-CanvasClientSurfaceStream::Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer)
+CanvasClientWebGL::Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer)
 {
   if (!mDeprecatedTextureClient) {
     mDeprecatedTextureClient = CreateDeprecatedTextureClient(TEXTURE_STREAM_GL);
     MOZ_ASSERT(mDeprecatedTextureClient, "Failed to create texture client");
   }
 
-  NS_ASSERTION(aLayer->mGLContext, "CanvasClientSurfaceStream should only be used with GL canvases");
+  NS_ASSERTION(aLayer->mGLContext, "CanvasClientWebGL should only be used with GL canvases");
 
   // the content type won't be used
   mDeprecatedTextureClient->EnsureAllocated(aSize, gfxASurface::CONTENT_COLOR);
@@ -121,21 +122,15 @@ CanvasClientSurfaceStream::Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer)
     printf_stderr("isCrossProcess, but not MOZ_WIDGET_GONK! Someone needs to write some code!");
     MOZ_ASSERT(false);
 #endif
-    mNeedsUpdate = true;
   } else {
     SurfaceStreamHandle handle = stream->GetShareHandle();
-    SurfaceDescriptor *desc = mDeprecatedTextureClient->GetDescriptor();
-    if (desc->type() != SurfaceDescriptor::TSurfaceStreamDescriptor ||
-        desc->get_SurfaceStreamDescriptor().handle() != handle) {
-      *desc = SurfaceStreamDescriptor(handle, false);
+    mDeprecatedTextureClient->SetDescriptor(SurfaceStreamDescriptor(handle, false));
 
-      // Bug 894405
-      //
-      // Ref this so the SurfaceStream doesn't disappear unexpectedly. The
-      // Compositor will need to unref it when finished.
-      aLayer->mGLContext->AddRef();
-      mNeedsUpdate = true;
-    }
+    // Bug 894405
+    //
+    // Ref this so the SurfaceStream doesn't disappear unexpectedly. The
+    // Compositor will need to unref it when finished.
+    aLayer->mGLContext->AddRef();
   }
 
   aLayer->Painted();
