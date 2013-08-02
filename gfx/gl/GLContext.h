@@ -565,8 +565,7 @@ private:
 // Error handling
 public:
 
-    // TODO: this function should be a static
-    const char* GLErrorToString(GLenum aError) const
+    static const char* GLErrorToString(GLenum aError)
     {
         switch (aError) {
             case LOCAL_GL_INVALID_ENUM:
