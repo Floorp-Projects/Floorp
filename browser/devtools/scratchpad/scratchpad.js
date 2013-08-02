@@ -135,7 +135,10 @@ var Scratchpad = {
    * Retrieve the xul:notificationbox DOM element. It notifies the user when
    * the current code execution context is SCRATCHPAD_CONTEXT_BROWSER.
    */
-  get notificationBox() document.getElementById("scratchpad-notificationbox"),
+  get notificationBox()
+  {
+    return document.getElementById("scratchpad-notificationbox");
+  },
 
   /**
    * Get the selected text from the editor.
@@ -143,7 +146,10 @@ var Scratchpad = {
    * @return string
    *         The selected text.
    */
-  get selectedText() this.editor.getSelectedText(),
+  get selectedText()
+  {
+    return this.editor.getSelectedText();
+  },
 
   /**
    * Get the editor content, in the given range. If no range is given you get
@@ -252,7 +258,10 @@ var Scratchpad = {
   /**
    * Get the most recent chrome window of type navigator:browser.
    */
-  get browserWindow() Services.wm.getMostRecentWindow("navigator:browser"),
+  get browserWindow()
+  {
+    return Services.wm.getMostRecentWindow("navigator:browser");
+  },
 
   /**
    * Get the gBrowser object of the most recent browser window.
