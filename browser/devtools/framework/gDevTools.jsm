@@ -345,15 +345,24 @@ let gDevToolsBrowser = {
   selectToolCommand: function(gBrowser, toolId) {
     let target = devtools.TargetFactory.forTab(gBrowser.selectedTab);
     let toolbox = gDevTools.getToolbox(target);
+    let tools = gDevTools.getToolDefinitionMap();
+    let toolDefinition = tools.get(toolId);
 
     if (toolbox && toolbox.currentToolId == toolId) {
-      if (toolbox.hostType == devtools.Toolbox.HostType.WINDOW) {
+      toolbox.fireCustomKey(toolId);
+
+      if (toolDefinition.preventClosingOnKey || toolbox.hostType == devtools.Toolbox.HostType.WINDOW) {
         toolbox.raise();
       } else {
         toolbox.destroy();
       }
     } else {
-      gDevTools.showToolbox(target, toolId);
+      gDevTools.showToolbox(target, toolId).then(() => {
+        let target = devtools.TargetFactory.forTab(gBrowser.selectedTab);
+        let toolbox = gDevTools.getToolbox(target);
+
+        toolbox.fireCustomKey(toolId);
+      });
     }
   },
 
