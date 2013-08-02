@@ -166,6 +166,14 @@ class TestRecursiveMakeBackend(BackendTester):
                 'EXTRA_PP_COMPONENTS += bar.pp.js',
                 'EXTRA_PP_COMPONENTS += foo.pp.js',
             ],
+            'EXTRA_JS_MODULES': [
+                'EXTRA_JS_MODULES += bar.jsm',
+                'EXTRA_JS_MODULES += foo.jsm',
+            ],
+            'EXTRA_PP_JS_MODULES': [
+                'EXTRA_PP_JS_MODULES += bar.pp.jsm',
+                'EXTRA_PP_JS_MODULES += foo.pp.jsm',
+            ],
             'GTEST_CMMSRCS': [
                 'GTEST_CMMSRCS += test1.mm',
                 'GTEST_CMMSRCS += test2.mm',
