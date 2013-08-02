@@ -217,6 +217,7 @@ public:
 
 private:
   void RemoveFromDecodeQueue(WebAudioDecodeJob* aDecodeJob);
+  void ShutdownDecoder();
 
   friend struct ::mozilla::WebAudioDecodeJob;
 
