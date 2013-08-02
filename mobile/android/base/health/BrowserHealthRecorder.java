@@ -138,6 +138,20 @@ public class BrowserHealthRecorder implements GeckoEventListener {
             return new SessionInformation(wallStartTime, realStartTime, wasOOM, wasStopped);
         }
 
+        /**
+         * Initialize a new SessionInformation instance to 'split' the current
+         * session.
+         */
+        public static SessionInformation forRuntimeTransition() {
+            final boolean wasOOM = false;
+            final boolean wasStopped = true;
+            final long wallStartTime = System.currentTimeMillis();
+            final long realStartTime = android.os.SystemClock.elapsedRealtime();
+            Log.v(LOG_TAG, "Recording runtime session transition: " +
+                           wallStartTime + ", " + realStartTime);
+            return new SessionInformation(wallStartTime, realStartTime, wasOOM, wasStopped);
+        }
+
         public boolean wasKilled() {
             return wasOOM || !wasStopped;
         }
@@ -310,16 +324,19 @@ public class BrowserHealthRecorder implements GeckoEventListener {
     }
 
     /**
-     * Call this when a material change has occurred in the running environment,
-     * such that a new environment should be computed and prepared for use in
-     * future events.
+     * Call this when a material change might have occurred in the running
+     * environment, such that a new environment should be computed and prepared
+     * for use in future events.
      *
      * Invoke this method after calls that mutate the environment, such as
      * {@link #onBlocklistPrefChanged(boolean)}.
      *
-     * TODO: record a session transition with the new environment.
+     * If this change resulted in a transition between two environments, {@link
+     * #onEnvironmentTransition(int, int)} will be invoked on the background
+     * thread.
      */
     public synchronized void onEnvironmentChanged() {
+        final int previousEnv = this.env;
         this.env = -1;
         try {
             profileCache.completeInitialization();
@@ -328,7 +345,21 @@ public class BrowserHealthRecorder implements GeckoEventListener {
             this.state = State.INITIALIZATION_FAILED;
             return;
         }
-        ensureEnvironment();
+
+        final int updatedEnv = ensureEnvironment();
+
+        if (updatedEnv != -1 && updatedEnv != previousEnv) {
+          ThreadUtils.postToBackgroundThread(new Runnable() {
+              @Override
+              public void run() {
+                  try {
+                      onEnvironmentTransition(previousEnv, updatedEnv);
+                  } catch (Exception e) {
+                      Log.w(LOG_TAG, "Could not record environment transition.", e);
+                  }
+              }
+          });
+        }
     }
 
     protected synchronized int ensureEnvironment() {
@@ -565,6 +596,27 @@ public class BrowserHealthRecorder implements GeckoEventListener {
                              },
                              handler);
         Log.d(LOG_TAG, "Requested prefs.");
+    }
+
+    /**
+     * Invoked in the background whenever the environment transitions between
+     * two valid values.
+     */
+    protected void onEnvironmentTransition(int prev, int env) {
+        if (this.state != State.INITIALIZED) {
+            Log.d(LOG_TAG, "Not initialized: not recording env transition (" + prev + " => " + env + ").");
+            return;
+        }
+
+        final SharedPreferences prefs = GeckoApp.getAppSharedPreferences();
+        final SharedPreferences.Editor editor = prefs.edit();
+
+        recordSessionEnd("E", editor, prev);
+
+        final SessionInformation newSession = SessionInformation.forRuntimeTransition();
+        setCurrentSession(newSession);
+        newSession.recordBegin(editor);
+        editor.commit();
     }
 
     @Override
@@ -867,14 +919,21 @@ public class BrowserHealthRecorder implements GeckoEventListener {
     /**
      * Logic shared between crashed and normal sessions.
      */
-    private void recordSessionEntry(String field, SessionInformation session, JSONObject value) {
+    private void recordSessionEntry(String field, SessionInformation session, final int environment, JSONObject value) {
+        final HealthReportDatabaseStorage storage = this.storage;
+        if (storage == null) {
+            Log.d(LOG_TAG, "No storage: not recording session entry. Shutting down?");
+            return;
+        }
+
         try {
             final int sessionField = storage.getField(MEASUREMENT_NAME_SESSIONS,
                                                       MEASUREMENT_VERSION_SESSIONS,
                                                       field)
                                             .getID();
             final int day = storage.getDay(session.wallStartTime);
-            storage.recordDailyDiscrete(env, day, sessionField, value);
+            storage.recordDailyDiscrete(environment, day, sessionField, value);
+            Log.v(LOG_TAG, "Recorded session entry for env " + environment + ", current is " + env);
         } catch (Exception e) {
             Log.w(LOG_TAG, "Unable to record session completion.", e);
         }
@@ -901,7 +960,8 @@ public class BrowserHealthRecorder implements GeckoEventListener {
         }
 
         try {
-            recordSessionEntry("abnormal", this.previousSession, this.previousSession.getCrashedJSON());
+            recordSessionEntry("abnormal", this.previousSession, this.env,
+                               this.previousSession.getCrashedJSON());
         } catch (Exception e) {
             Log.w(LOG_TAG, "Unable to generate session JSON.", e);
 
@@ -909,10 +969,17 @@ public class BrowserHealthRecorder implements GeckoEventListener {
         }
     }
 
+    public void recordSessionEnd(String reason, SharedPreferences.Editor editor) {
+        recordSessionEnd(reason, editor, env);
+    }
+
     /**
      * Record that the current session ended. Does not commit the provided editor.
+     *
+     * @param environment An environment ID. This allows callers to record the
+     *                    end of a session due to an observed environment change.
      */
-    public void recordSessionEnd(String reason, SharedPreferences.Editor editor) {
+    public void recordSessionEnd(String reason, SharedPreferences.Editor editor, final int environment) {
         Log.d(LOG_TAG, "Recording session end: " + reason);
         if (state != State.INITIALIZED) {
             // Something has gone awry.
@@ -936,7 +1003,7 @@ public class BrowserHealthRecorder implements GeckoEventListener {
         long realEndTime = android.os.SystemClock.elapsedRealtime();
         try {
             JSONObject json = session.getCompletionJSON(reason, realEndTime);
-            recordSessionEntry("normal", session, json);
+            recordSessionEntry("normal", session, environment, json);
         } catch (JSONException e) {
             Log.w(LOG_TAG, "Unable to generate session JSON.", e);
 
