@@ -33,6 +33,12 @@ class nsIComboboxControlFrame;
 class nsPresContext;
 class nsListEventListener;
 
+namespace mozilla {
+namespace dom {
+class HTMLOptionElement;
+} // namespace dom
+} // namespace mozilla
+
 /**
  * Frame-based listbox.
  */
@@ -168,6 +174,10 @@ public:
    */
   static already_AddRefed<nsIDOMHTMLOptionsCollection>
     GetOptions(nsIContent * aContent);
+  /**
+   * Returns the HTMLOptionElement for a given index in mContent's collection.
+   */
+  mozilla::dom::HTMLOptionElement* GetOption(uint32_t aIndex) const;
 
   /**
    * Returns the nsIDOMHTMLOptionElement for a given index 
