@@ -955,7 +955,7 @@ CreateDedicatedWorkerGlobalScope(JSContext* aCx)
     options.setVersion(JSVERSION_LATEST);
   JS::Rooted<JSObject*> global(aCx,
     JS_NewGlobalObject(aCx, DedicatedWorkerGlobalScope::Class(),
-                       GetWorkerPrincipal(), options));
+                       GetWorkerPrincipal(), JS::DontFireOnNewGlobalHook, options));
   if (!global) {
     return NULL;
   }
@@ -1032,6 +1032,8 @@ CreateDedicatedWorkerGlobalScope(JSContext* aCx)
   if (!JS_DefineProfilingFunctions(aCx, global)) {
     return NULL;
   }
+
+  JS_FireOnNewGlobalObject(aCx, global);
 
   return global;
 }

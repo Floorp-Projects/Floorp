@@ -407,8 +407,12 @@ XPCWrappedNative::WrapNewGlobal(xpcObjectHelper &nativeHelper,
     // Call the common creation finish routine. This does all of the bookkeeping
     // like inserting the wrapper into the wrapper map and setting up the wrapper
     // cache.
-    return FinishCreate(scope, iface, nativeHelper.GetWrapperCache(),
-                        wrapper, wrappedGlobal);
+    nsresult rv = FinishCreate(scope, iface, nativeHelper.GetWrapperCache(),
+                               wrapper, wrappedGlobal);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    JS_FireOnNewGlobalObject(cx, global);
+    return NS_OK;
 }
 
 // static

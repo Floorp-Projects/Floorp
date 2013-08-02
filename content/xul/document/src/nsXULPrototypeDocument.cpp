@@ -767,7 +767,8 @@ nsXULPDGlobalObject::EnsureScriptEnvironment()
            .setInvisibleToDebugger(true);
     JS::Rooted<JSObject*> newGlob(cx,
       JS_NewGlobalObject(cx, &gSharedGlobalClass,
-                         nsJSPrincipals::get(GetPrincipal()), options));
+                         nsJSPrincipals::get(GetPrincipal()), JS::DontFireOnNewGlobalHook,
+                         options));
     if (!newGlob)
         return NS_OK;
 

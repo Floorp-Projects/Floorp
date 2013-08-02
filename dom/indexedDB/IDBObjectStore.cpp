@@ -535,7 +535,8 @@ class ThreadLocalJSRuntime
 
     JSAutoRequest ar(mContext);
 
-    mGlobal = JS_NewGlobalObject(mContext, &sGlobalClass, NULL);
+    mGlobal = JS_NewGlobalObject(mContext, &sGlobalClass, NULL,
+                                 JS::FireOnNewGlobalHook);
     NS_ENSURE_TRUE(mGlobal, NS_ERROR_OUT_OF_MEMORY);
 
     js::SetDefaultObjectForContext(mContext, mGlobal);
