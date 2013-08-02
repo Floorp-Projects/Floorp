@@ -119,6 +119,7 @@
 
     <style name="Widget.TopBookmarksView" parent="Widget.GridView">
         <item name="android:padding">7dp</item>
+        <item name="android:verticalSpacing">7dp</item>
     </style>
 
     <style name="Widget.TopBookmarkItemView">

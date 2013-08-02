@@ -197,5 +197,9 @@
         <attr name="android:layout"/>
     </declare-styleable>
 
+    <declare-styleable name="TopBookmarksView">
+        <attr name="android:verticalSpacing"/>
+    </declare-styleable>
+
 </resources>
 
