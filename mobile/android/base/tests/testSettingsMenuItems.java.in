@@ -26,7 +26,7 @@ public class testSettingsMenuItems extends PixelTest {
     String[][] OPTIONS_CUSTOMIZE = {
          { "Search", "", "Show search suggestions", "Installed search engines" },
          { "Import from Android", "", "Bookmarks", "History", "Import" },
-         { "Always restore tabs" },
+         { "Tabs", "Restore after a crash", "Always restore", "Restore after a crash", "Never restore" },
          { "Automatic updates", "Only over Wi-Fi", "Enabled", "Only over Wi-Fi", "Disabled" },
      };
 

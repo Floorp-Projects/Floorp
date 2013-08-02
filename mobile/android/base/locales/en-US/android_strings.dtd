@@ -118,7 +118,10 @@
 <!ENTITY pref_plugins_disabled "Disabled">
 <!ENTITY pref_text_size "Text size">
 <!ENTITY pref_reflow_on_zoom3 "Double tap to reflow text">
-<!ENTITY pref_restore_session "Always restore tabs">
+<!ENTITY pref_restore "Tabs">
+<!ENTITY pref_restore_always "Always restore">
+<!ENTITY pref_restore_crash "Restore after a crash">
+<!ENTITY pref_restore_never "Never restore">
 <!ENTITY pref_font_size_tiny "Tiny">
 <!ENTITY pref_font_size_small "Small">
 <!ENTITY pref_font_size_medium "Medium">
