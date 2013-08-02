@@ -5527,38 +5527,6 @@ class ICTypeOf_Typed : public ICFallbackStub
     };
 };
 
-// Rest
-//      JSOP_REST
-class ICRest_Fallback : public ICFallbackStub
-{
-    friend class ICStubSpace;
-
-    ICRest_Fallback(IonCode *stubCode)
-      : ICFallbackStub(ICStub::Rest_Fallback, stubCode)
-    { }
-
-  public:
-    static inline ICRest_Fallback *New(ICStubSpace *space, IonCode *code) {
-        if (!code)
-            return NULL;
-        return space->allocate<ICRest_Fallback>(code);
-    }
-
-    class Compiler : public ICStubCompiler {
-      protected:
-        bool generateStubCode(MacroAssembler &masm);
-
-      public:
-        Compiler(JSContext *cx)
-          : ICStubCompiler(cx, ICStub::Rest_Fallback)
-        { }
-
-        ICStub *getStub(ICStubSpace *space) {
-            return ICRest_Fallback::New(space, getStubCode());
-        }
-    };
-};
-
 // Stub for JSOP_RETSUB ("returning" from a |finally| block).
 class ICRetSub_Fallback : public ICFallbackStub
 {
