@@ -661,21 +661,6 @@ LayerManagerComposite::AddMaskEffect(Layer* aMaskLayer, EffectChain& aEffects, b
   return maskLayerComposite->GetCompositableHost()->AddMaskEffect(aEffects, transform, aIs3D);
 }
 
-/* static */ void
-LayerManagerComposite::RemoveMaskEffect(Layer* aMaskLayer)
-{
-  if (!aMaskLayer) {
-    return;
-  }
-  LayerComposite* maskLayerComposite = static_cast<LayerComposite*>(aMaskLayer->ImplData());
-  if (!maskLayerComposite->GetCompositableHost()) {
-    NS_WARNING("Mask layer with no compositable host");
-    return;
-  }
-
-  maskLayerComposite->GetCompositableHost()->RemoveMaskEffect();
-}
-
 TemporaryRef<DrawTarget>
 LayerManagerComposite::CreateDrawTarget(const IntSize &aSize,
                                         SurfaceFormat aFormat)
