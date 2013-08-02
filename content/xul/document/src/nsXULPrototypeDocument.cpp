@@ -763,7 +763,8 @@ nsXULPDGlobalObject::EnsureScriptEnvironment()
   {
     AutoPushJSContext cx(ctxNew->GetNativeContext());
     JS::CompartmentOptions options;
-    options.setZone(JS::SystemZone);
+    options.setZone(JS::SystemZone)
+           .setInvisibleToDebugger(true);
     JS::Rooted<JSObject*> newGlob(cx,
       JS_NewGlobalObject(cx, &gSharedGlobalClass,
                          nsJSPrincipals::get(GetPrincipal()), options));

@@ -252,7 +252,8 @@ nsXBLDocGlobalObject::EnsureScriptEnvironment()
   JS_SetErrorReporter(cx, xpc::SystemErrorReporter);
 
   JS::CompartmentOptions options;
-  options.setZone(JS::SystemZone);
+  options.setZone(JS::SystemZone)
+         .setInvisibleToDebugger(true);
   mJSObject = JS_NewGlobalObject(cx, &gSharedGlobalClass,
                                  nsJSPrincipals::get(GetPrincipal()),
                                  options);
