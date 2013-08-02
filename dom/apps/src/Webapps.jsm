@@ -1920,70 +1920,17 @@ this.DOMApplicationRegistry = {
   // content side. This let the webpage the opportunity to set event handlers
   // on the app before we start firing progress events.
   queuedDownload: {},
-  queuedPackageDownload: {},
 
   onInstallSuccessAck: function onInstallSuccessAck(aManifestURL) {
-    let cacheDownload = this.queuedDownload[aManifestURL];
-    if (cacheDownload) {
-      this.startOfflineCacheDownload(cacheDownload.manifest,
-                                     cacheDownload.app,
-                                     cacheDownload.profileDir,
-                                     cacheDownload.offlineCacheObserver);
-      delete this.queuedDownload[aManifestURL];
-
+    let download = this.queuedDownload[aManifestURL];
+    if (!download) {
       return;
     }
-
-    let packageDownload = this.queuedPackageDownload[aManifestURL];
-    if (packageDownload) {
-      let manifest = packageDownload.manifest;
-      let appObject = packageDownload.app;
-      let installSuccessCallback = packageDownload.callback;
-
-      delete this.queuedPackageDownload[aManifestURL];
-
-      this.downloadPackage(manifest, appObject, false, (function(aId, aManifest) {
-        // Move the zip out of TmpD.
-        let app = DOMApplicationRegistry.webapps[aId];
-        let zipFile = FileUtils.getFile("TmpD", ["webapps", aId, "application.zip"], true);
-        let dir = this._getAppDir(aId);
-        zipFile.moveTo(dir, "application.zip");
-        let tmpDir = FileUtils.getDir("TmpD", ["webapps", aId], true, true);
-        try {
-          tmpDir.remove(true);
-        } catch(e) { }
-
-        // Save the manifest
-        let manFile = dir.clone();
-        manFile.append("manifest.webapp");
-        this._writeFile(manFile, JSON.stringify(aManifest), function() { });
-        // Set state and fire events.
-        app.installState = "installed";
-        app.downloading = false;
-        app.downloadAvailable = false;
-        this._saveApps((function() {
-          this.updateAppHandlers(null, aManifest, appObject);
-          this.broadcastMessage("Webapps:AddApp", { id: aId, app: appObject });
-
-          if (supportUseCurrentProfile()) {
-            // Update the permissions for this app.
-            PermissionsInstaller.installPermissions({ manifest: aManifest,
-                                                      origin: appObject.origin,
-                                                      manifestURL: appObject.manifestURL },
-                                                    true);
-          }
-          debug("About to fire Webapps:PackageEvent 'installed'");
-          this.broadcastMessage("Webapps:PackageEvent",
-                                { type: "installed",
-                                  manifestURL: appObject.manifestURL,
-                                  app: app,
-                                  manifest: aManifest });
-          if (installSuccessCallback) {
-            installSuccessCallback(aManifest);
-          }
-        }).bind(this));
-      }).bind(this));
-    }
+    this.startOfflineCacheDownload(download.manifest,
+                                   download.app,
+                                   download.profileDir,
+                                   download.offlineCacheObserver);
+    delete this.queuedDownload[aManifestURL];
   },
 
   confirmInstall: function(aData, aFromSync, aProfileDir,
@@ -2121,12 +2068,47 @@ this.DOMApplicationRegistry = {
       // origin for install apps is meaningless here, since it's app:// and this
       // can't be used to resolve package paths.
       manifest = new ManifestHelper(jsonManifest, app.manifestURL);
+      this.downloadPackage(manifest, appObject, false, (function(aId, aManifest) {
+        // Success! Move the zip out of TmpD.
+        let app = DOMApplicationRegistry.webapps[aId];
+        let zipFile = FileUtils.getFile("TmpD", ["webapps", aId, "application.zip"], true);
+        let dir = this._getAppDir(id);
+        zipFile.moveTo(dir, "application.zip");
+        let tmpDir = FileUtils.getDir("TmpD", ["webapps", aId], true, true);
+        try {
+          tmpDir.remove(true);
+        } catch(e) { }
 
-      this.queuedPackageDownload[app.manifestURL] = {
-        manifest: manifest,
-        app: appObject,
-        callback: aInstallSuccessCallback
-      }
+        // Save the manifest
+        let manFile = dir.clone();
+        manFile.append("manifest.webapp");
+        this._writeFile(manFile, JSON.stringify(aManifest), function() { });
+        // Set state and fire events.
+        app.installState = "installed";
+        app.downloading = false;
+        app.downloadAvailable = false;
+        this._saveApps((function() {
+          this.updateAppHandlers(null, aManifest, appObject);
+          this.broadcastMessage("Webapps:AddApp", { id: aId, app: appObject });
+
+          if (supportUseCurrentProfile()) {
+            // Update the permissions for this app.
+            PermissionsInstaller.installPermissions({ manifest: aManifest,
+                                                      origin: appObject.origin,
+                                                      manifestURL: appObject.manifestURL },
+                                                    true);
+          }
+          debug("About to fire Webapps:PackageEvent 'installed'");
+          this.broadcastMessage("Webapps:PackageEvent",
+                                { type: "installed",
+                                  manifestURL: appObject.manifestURL,
+                                  app: app,
+                                  manifest: aManifest });
+          if (aInstallSuccessCallback) {
+            aInstallSuccessCallback(aManifest);
+          }
+        }).bind(this));
+      }).bind(this));
     }
   },
 
