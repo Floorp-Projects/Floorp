@@ -18,6 +18,8 @@ import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.View;
+import android.view.animation.AnimationUtils;
+import android.view.animation.GridLayoutAnimationController;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.GridView;
@@ -106,6 +108,9 @@ public class TopBookmarksView extends GridView {
                 return showContextMenuForChild(TopBookmarksView.this);
             }
         });
+
+        final GridLayoutAnimationController controller = new GridLayoutAnimationController(AnimationUtils.loadAnimation(getContext(), R.anim.grow_fade_in_center));
+        setLayoutAnimation(controller);
     }
 
     @Override
