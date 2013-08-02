@@ -2967,7 +2967,7 @@ nsresult nsContentUtils::FormatLocalizedString(PropertiesFile aFile,
 
 /* static */ nsresult
 nsContentUtils::ReportToConsole(uint32_t aErrorFlags,
-                                const char *aCategory,
+                                const nsACString& aCategory,
                                 nsIDocument* aDocument,
                                 PropertiesFile aFile,
                                 const char *aMessageName,
@@ -3002,7 +3002,7 @@ nsContentUtils::ReportToConsole(uint32_t aErrorFlags,
 /* static */ nsresult
 nsContentUtils::ReportToConsoleNonLocalized(const nsAString& aErrorText,
                                             uint32_t aErrorFlags,
-                                            const char *aCategory,
+                                            const nsACString& aCategory,
                                             nsIDocument* aDocument,
                                             nsIURI* aURI,
                                             const nsAFlatString& aSourceLine,

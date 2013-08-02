@@ -420,10 +420,10 @@ public:
                      "nsIScriptObjectPrincipal");
         nsCOMPtr<nsIPrincipal> systemPrincipal;
         sSecurityManager->GetSystemPrincipal(getter_AddRefs(systemPrincipal));
-        const char * category =
+        const nsACString& category =
           scriptPrincipal->GetPrincipal() == systemPrincipal
-          ? "chrome javascript"
-          : "content javascript";
+          ? NS_LITERAL_CSTRING("chrome javascript")
+          : NS_LITERAL_CSTRING("content javascript");
 
         rv = errorObject->InitWithWindowID(mErrorMsg, mFileName,
                                            mSourceLine,
