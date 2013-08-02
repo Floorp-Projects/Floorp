@@ -901,9 +901,16 @@
              toolbarname="&personalbarCmd.label;" accesskey="&personalbarCmd.accesskey;"
              collapsed="true"
              customizable="true">
-      <toolbaritem flex="1" id="personal-bookmarks" title="&bookmarksItem.title;"
+      <toolbaritem id="personal-bookmarks"
+                   flex="1"
+                   title="&bookmarksToolbarItem.label;"
                    customizableui-areatype="toolbar"
                    removable="true">
+        <toolbarbutton id="bookmarks-toolbar-placeholder"
+                       type="wrap"
+                       mousethrough="never"
+                       label="&bookmarksToolbarItem.label;"
+                       oncommand="PlacesToolbarHelper.onPlaceholderCommand();"/>
         <hbox flex="1"
               id="PlacesToolbar"
               context="placesContext"
@@ -911,9 +918,6 @@
               oncommand="BookmarksEventHandler.onCommand(event, this._placesView);"
               tooltip="bhTooltip"
               popupsinherittooltip="true">
-          <toolbarbutton class="bookmark-item bookmarks-toolbar-customize"
-                         mousethrough="never"
-                         label="&bookmarksToolbarItem.label;"/>
           <hbox flex="1">
             <hbox align="center">
               <image id="PlacesToolbarDropIndicator"

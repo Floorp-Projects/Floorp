@@ -106,6 +106,8 @@ panelview:not([mainview]) .toolbarbutton-text,
 #PanelUI-contents toolbarbutton,
 toolbarpaletteitem[place="panel"] > toolbarbutton,
 toolbarpaletteitem[place="palette"] > toolbarbutton,
+toolbarpaletteitem[place="panel"] > toolbaritem > toolbarbutton,
+toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton,
 .panel-customization-placeholder {
   -moz-appearance: none;
   -moz-box-orient: vertical;
@@ -158,6 +160,19 @@ toolbarpaletteitem[place="panel"] > toolbaritem > toolbarbutton > .toolbarbutton
   min-width: calc(8em / 3);
   min-height: calc(8em / 3);
   margin: calc(5em / 12);
+}
+
+toolbarbutton[customizableui-areatype="menu-panel"] > .toolbarbutton-icon[label]:not([label=""]),
+toolbaritem[customizableui-areatype="menu-panel"] > toolbarbutton > .toolbarbutton-icon[label]:not([label=""]),
+toolbarpaletteitem[place="palette"] > toolbarbutton > .toolbarbutton-icon[label]:not([label=""]),
+toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton > .toolbarbutton-icon[label]:not([label=""]),
+toolbarpaletteitem[place="panel"] > toolbarbutton > .toolbarbutton-icon[label]:not([label=""]),
+toolbarpaletteitem[place="panel"] > toolbaritem > toolbarbutton > .toolbarbutton-icon[label]:not([label=""]) {
+  -moz-margin-end: 0;
+}
+
+toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
+  -moz-box-flex: 1;
 }
 
 #PanelUI-contents #edit-controls toolbarbutton > .toolbarbutton-icon,
@@ -245,6 +260,7 @@ toolbarpaletteitem[place="panel"] > toolbaritem > toolbarbutton > .toolbarbutton
 
 panelview toolbarbutton,
 #widget-overflow-list > toolbarbutton,
+#widget-overflow-list > toolbaritem > toolbarbutton,
 .customizationmode-button {
   -moz-appearance: none;
   padding: 2px 6px;

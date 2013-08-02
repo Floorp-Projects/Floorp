@@ -189,12 +189,16 @@ toolbar[overflowable]:not([overflowing]) > .overflow-button {
 
 %endif
 
-.bookmarks-toolbar-customize,
-#wrapper-personal-bookmarks > #personal-bookmarks > #PlacesToolbar > hbox > #PlacesToolbarItems {
+#bookmarks-toolbar-placeholder,
+toolbarpaletteitem > #personal-bookmarks > #PlacesToolbar,
+#personal-bookmarks[customizableui-areatype="menu-panel"] > #PlacesToolbar,
+#personal-bookmarks[customizableui-areatype="toolbar"].overflowedItem > #PlacesToolbar {
   display: none;
 }
 
-#wrapper-personal-bookmarks[place="toolbar"] > #personal-bookmarks > #PlacesToolbar > .bookmarks-toolbar-customize {
+toolbarpaletteitem > #personal-bookmarks > #bookmarks-toolbar-placeholder,
+#personal-bookmarks[customizableui-areatype="menu-panel"] > #bookmarks-toolbar-placeholder,
+#personal-bookmarks[customizableui-areatype="toolbar"].overflowedItem > #bookmarks-toolbar-placeholder {
   display: -moz-box;
 }
 
