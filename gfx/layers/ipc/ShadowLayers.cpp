@@ -405,6 +405,7 @@ ShadowLayerForwarder::UpdatedTexture(CompositableClient* aCompositable,
                                      TextureClient* aTexture,
                                      nsIntRegion* aRegion)
 {
+  printf("ShadowLayerForwarder::UpdatedTexture %i\n", (int)aTexture->GetID());
   MaybeRegion region = aRegion ? MaybeRegion(*aRegion)
                                : MaybeRegion(null_t());
   mTxn->AddEdit(OpUpdateTexture(nullptr, aCompositable->GetIPDLActor(),

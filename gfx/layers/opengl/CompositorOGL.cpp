@@ -1038,6 +1038,7 @@ CompositorOGL::DrawQuad(const Rect& aRect, const Rect& aClipRect,
   }
   program->SetLayerQuadRect(aRect);
   program->SetLayerTransform(aTransform);
+  program->SetTextureTransform(gfx3DMatrix());
   program->SetRenderOffset(aOffset.x, aOffset.y);
 
   switch (aEffectChain.mPrimaryEffect->mType) {
@@ -1135,7 +1136,6 @@ CompositorOGL::DrawQuad(const Rect& aRect, const Rect& aClipRect,
 
       program->SetYCbCrTextureUnits(Y, Cb, Cr);
       program->SetLayerOpacity(aOpacity);
-      program->SetTextureTransform(gfx3DMatrix());
 
       AutoBindTexture bindMask;
       if (maskType != MaskNone) {
@@ -1159,7 +1159,6 @@ CompositorOGL::DrawQuad(const Rect& aRect, const Rect& aClipRect,
       program->Activate();
       program->SetTextureUnit(0);
       program->SetLayerOpacity(aOpacity);
-      program->SetTextureTransform(gfx3DMatrix());
 
       AutoBindTexture bindMask;
       if (maskType != MaskNone) {
