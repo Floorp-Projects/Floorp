@@ -26,7 +26,11 @@ public:
    * message will be sent to the compositor to create a corresponding image
    * host.
    */
-  static TemporaryRef<CanvasClient> CreateCanvasClient(CompositableType aImageHostType,
+  enum CanvasClientType {
+    CanvasClientSurface,
+    CanvasClientGLContext,
+  };
+  static TemporaryRef<CanvasClient> CreateCanvasClient(CanvasClientType aType,
                                                        CompositableForwarder* aFwd,
                                                        TextureFlags aFlags);
 
@@ -69,11 +73,11 @@ public:
 
 // Used for GL canvases where we don't need to do any readback, i.e., with a
 // GL backend.
-class CanvasClientWebGL : public CanvasClient
+class CanvasClientSurfaceStream : public CanvasClient
 {
 public:
-  CanvasClientWebGL(CompositableForwarder* aFwd,
-                    TextureFlags aFlags);
+  CanvasClientSurfaceStream(CompositableForwarder* aFwd,
+                            TextureFlags aFlags);
 
   TextureInfo GetTextureInfo() const MOZ_OVERRIDE
   {
@@ -82,6 +86,9 @@ public:
 
   virtual void Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer);
   virtual void Updated() MOZ_OVERRIDE;
+
+private:
+  bool mNeedsUpdate;
 };
 
 }
