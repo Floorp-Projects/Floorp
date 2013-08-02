@@ -163,6 +163,8 @@ ContainerRender(ContainerT* aContainer,
                                                rect, clipRect,
                                                transform, gfx::Point(aOffset.x, aOffset.y));
   }
+
+  LayerManagerComposite::RemoveMaskEffect(aContainer->GetMaskLayer());
 }
 
 ContainerLayerComposite::ContainerLayerComposite(LayerManagerComposite *aManager)
