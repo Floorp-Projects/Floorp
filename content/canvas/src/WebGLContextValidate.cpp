@@ -882,6 +882,16 @@ bool WebGLContext::ValidateStencilParamsForDrawCall()
   return true;
 }
 
+static inline int32_t floorPOT(int32_t x)
+{
+    MOZ_ASSERT(x > 0);
+    int32_t POT = 1;
+    while (POT < 0x40000000 && POT * 2 <= x) {
+        POT *= 2;
+    }
+    return POT;
+}
+
 bool
 WebGLContext::InitAndValidateGL()
 {
@@ -965,6 +975,9 @@ WebGLContext::InitAndValidateGL()
         gl->fGetIntegerv(LOCAL_GL_MAX_TEXTURE_IMAGE_UNITS, &mGLMaxTextureImageUnits);
         gl->fGetIntegerv(LOCAL_GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS, &mGLMaxVertexTextureImageUnits);
     }
+
+    mGLMaxTextureSize = floorPOT(mGLMaxTextureSize);
+    mGLMaxRenderbufferSize = floorPOT(mGLMaxRenderbufferSize);
 
     if (MinCapabilityMode()) {
         mGLMaxFragmentUniformVectors = MINVALUE_GL_MAX_FRAGMENT_UNIFORM_VECTORS;
