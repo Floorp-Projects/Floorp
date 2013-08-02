@@ -19,9 +19,6 @@ let TargetFactory = temp.devtools.TargetFactory;
 Cu.import("resource://gre/modules/devtools/dbg-server.jsm", temp);
 let DebuggerServer = temp.DebuggerServer;
 
-Cu.import("resource:///modules/HUDService.jsm", temp);
-let HUDService = temp.HUDService;
-
 // Import the GCLI test helper
 let testDir = gTestPath.substr(0, gTestPath.lastIndexOf("/"));
 Services.scriptloader.loadSubScript(testDir + "../../../commandline/test/helpers.js", this);
