@@ -1,0 +1,24 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIDOMEvent.idl"
+
+[scriptable, builtinclass, uuid(07f6d8d0-d364-4033-92e2-d69de323d7b7)]
+interface nsIDOMBluetoothStatusChangedEvent : nsIDOMEvent
+{
+  readonly attribute DOMString address;
+  readonly attribute boolean status;
+
+  [noscript] void initBluetoothStatusChangedEvent(in DOMString aType,
+                                                  in boolean aCanBubble,
+                                                  in boolean aCancelable,
+                                                  in DOMString aAddress,
+                                                  in boolean aStatus);
+};
+
+dictionary BluetoothStatusChangedEventInit : EventInit
+{
+  DOMString address;
+  bool status;
+};
