@@ -88,8 +88,8 @@ AlarmsManager.prototype = {
   remove: function remove(aId) {
     debug("remove()");
 
-    return this._cpmm.sendSyncMessage(
-      "AlarmsManager:Remove", 
+    this._cpmm.sendAsyncMessage(
+      "AlarmsManager:Remove",
       { id: aId, manifestURL: this._manifestURL }
     );
   },
@@ -99,7 +99,7 @@ AlarmsManager.prototype = {
 
     let request = this.createRequest();
     this._cpmm.sendAsyncMessage(
-      "AlarmsManager:GetAll", 
+      "AlarmsManager:GetAll",
       { requestId: this.getRequestId(request), manifestURL: this._manifestURL }
     );
     return request;
@@ -128,7 +128,7 @@ AlarmsManager.prototype = {
           let alarm = { "id":              aAlarm.id,
                         "date":            aAlarm.date,
                         "respectTimezone": aAlarm.ignoreTimezone ?
-                                             "ignoreTimezone" : "honorTimezone", 
+                                             "ignoreTimezone" : "honorTimezone",
                         "data":            aAlarm.data };
           alarms.push(alarm);
         });
@@ -156,20 +156,26 @@ AlarmsManager.prototype = {
     debug("init()");
 
     // Set navigator.mozAlarms to null.
-    if (!Services.prefs.getBoolPref("dom.mozAlarms.enabled"))
+    if (!Services.prefs.getBoolPref("dom.mozAlarms.enabled")) {
       return null;
+    }
 
     // Only pages with perm set can use the alarms.
     let principal = aWindow.document.nodePrincipal;
-    let perm = Services.perms.testExactPermissionFromPrincipal(principal, "alarms");
-    if (perm != Ci.nsIPermissionManager.ALLOW_ACTION)
+    let perm =
+      Services.perms.testExactPermissionFromPrincipal(principal, "alarms");
+    if (perm != Ci.nsIPermissionManager.ALLOW_ACTION) {
       return null;
+    }
 
-    this._cpmm = Cc["@mozilla.org/childprocessmessagemanager;1"].getService(Ci.nsISyncMessageSender);
+    this._cpmm = Cc["@mozilla.org/childprocessmessagemanager;1"]
+                   .getService(Ci.nsISyncMessageSender);
 
     // Add the valid messages to be listened.
-    this.initDOMRequestHelper(aWindow, ["AlarmsManager:Add:Return:OK", "AlarmsManager:Add:Return:KO",
-                              "AlarmsManager:GetAll:Return:OK", "AlarmsManager:GetAll:Return:KO"]);
+    this.initDOMRequestHelper(aWindow, ["AlarmsManager:Add:Return:OK",
+                                        "AlarmsManager:Add:Return:KO",
+                                        "AlarmsManager:GetAll:Return:OK",
+                                        "AlarmsManager:GetAll:Return:KO"]);
 
     // Get the manifest URL if this is an installed app
     let appsService = Cc["@mozilla.org/AppsService;1"]
