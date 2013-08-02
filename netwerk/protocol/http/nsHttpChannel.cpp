@@ -378,12 +378,12 @@ nsHttpChannel::Connect()
 
     if (!usingSSL) {
         // enforce Strict-Transport-Security
-        nsIStrictTransportSecurityService* stss = gHttpHandler->GetSTSService();
-        NS_ENSURE_TRUE(stss, NS_ERROR_OUT_OF_MEMORY);
+        nsISiteSecurityService* sss = gHttpHandler->GetSSService();
+        NS_ENSURE_TRUE(sss, NS_ERROR_OUT_OF_MEMORY);
 
         bool isStsHost = false;
         uint32_t flags = mPrivateBrowsing ? nsISocketProvider::NO_PERMANENT_STORAGE : 0;
-        rv = stss->IsStsURI(mURI, flags, &isStsHost);
+        rv = sss->IsStsURI(mURI, flags, &isStsHost);
 
         // if STS fails, there's no reason to cancel the load, but it's
         // worrisome.
@@ -1143,8 +1143,8 @@ nsHttpChannel::ProcessSTSHeader()
     if (PR_SUCCESS == PR_StringToNetAddr(asciiHost.get(), &hostAddr))
         return NS_OK;
 
-    nsIStrictTransportSecurityService* stss = gHttpHandler->GetSTSService();
-    NS_ENSURE_TRUE(stss, NS_ERROR_OUT_OF_MEMORY);
+    nsISiteSecurityService* sss = gHttpHandler->GetSSService();
+    NS_ENSURE_TRUE(sss, NS_ERROR_OUT_OF_MEMORY);
 
     // mSecurityInfo may not always be present, and if it's not then it is okay
     // to just disregard any STS headers since we know nothing about the
@@ -1155,7 +1155,7 @@ nsHttpChannel::ProcessSTSHeader()
     // If there are certificate errors, we still load the data, we just ignore
     // any STS headers that are present.
     bool tlsIsBroken = false;
-    rv = stss->ShouldIgnoreStsHeader(mSecurityInfo, &tlsIsBroken);
+    rv = sss->ShouldIgnoreStsHeader(mSecurityInfo, &tlsIsBroken);
     NS_ENSURE_SUCCESS(rv, NS_OK);
 
     // If this was already an STS host, the connection should have been aborted
@@ -1166,7 +1166,7 @@ nsHttpChannel::ProcessSTSHeader()
     bool wasAlreadySTSHost;
     uint32_t flags =
       NS_UsePrivateBrowsing(this) ? nsISocketProvider::NO_PERMANENT_STORAGE : 0;
-    rv = stss->IsStsURI(mURI, flags, &wasAlreadySTSHost);
+    rv = sss->IsStsURI(mURI, flags, &wasAlreadySTSHost);
     // Failure here means STS is broken.  Don't prevent the load, but this
     // shouldn't fail.
     NS_ENSURE_SUCCESS(rv, NS_OK);
@@ -1194,7 +1194,7 @@ nsHttpChannel::ProcessSTSHeader()
     // All other failures are fatal.
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = stss->ProcessStsHeader(mURI, stsHeader.get(), flags, NULL, NULL);
+    rv = sss->ProcessStsHeader(mURI, stsHeader.get(), flags, NULL, NULL);
     if (NS_FAILED(rv)) {
         AddSecurityMessage(NS_LITERAL_STRING("InvalidSTSHeaders"),
                 NS_LITERAL_STRING("Invalid HSTS Headers"));
