@@ -7,10 +7,10 @@
 
 #include "jsapi-tests/tests.h"
 
-static JSBool
+static bool
 native(JSContext *cx, unsigned argc, jsval *vp)
 {
-    return JS_TRUE;
+    return true;
 }
 
 static const char PROPERTY_NAME[] = "foo";

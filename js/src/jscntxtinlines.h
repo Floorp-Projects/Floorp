@@ -576,7 +576,7 @@ JSContext::currentScript(jsbytecode **ppc,
 }
 
 template <JSThreadSafeNative threadSafeNative>
-inline JSBool
+inline bool
 JSNativeThreadSafeWrapper(JSContext *cx, unsigned argc, JS::Value *vp)
 {
     return threadSafeNative(cx, argc, vp);

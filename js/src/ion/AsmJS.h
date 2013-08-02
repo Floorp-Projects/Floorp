@@ -85,12 +85,12 @@ static const size_t AsmJSBufferProtectedSize = 4 * 1024ULL * 1024ULL * 1024ULL;
 
 // Return whether asm.js optimization is inhibitted by the platform or
 // dynamically disabled:
-extern JSBool
+extern bool
 IsAsmJSCompilationAvailable(JSContext *cx, unsigned argc, JS::Value *vp);
 
 #else // JS_ION
 
-inline JSBool
+inline bool
 IsAsmJSCompilationAvailable(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);

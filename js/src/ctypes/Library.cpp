@@ -23,8 +23,8 @@ namespace Library
 {
   static void Finalize(JSFreeOp *fop, JSObject* obj);
 
-  static JSBool Close(JSContext* cx, unsigned argc, jsval* vp);
-  static JSBool Declare(JSContext* cx, unsigned argc, jsval* vp);
+  static bool Close(JSContext* cx, unsigned argc, jsval* vp);
+  static bool Declare(JSContext* cx, unsigned argc, jsval* vp);
 }
 
 /*******************************************************************************
@@ -49,12 +49,12 @@ static const JSFunctionSpec sLibraryFunctions[] = {
   JS_FS_END
 };
 
-JSBool
+bool
 Library::Name(JSContext* cx, unsigned argc, jsval *vp)
 {
   if (argc != 1) {
     JS_ReportError(cx, "libraryName takes one argument");
-    return JS_FALSE;
+    return false;
   }
 
   jsval arg = JS_ARGV(cx, vp)[0];
@@ -64,7 +64,7 @@ Library::Name(JSContext* cx, unsigned argc, jsval *vp)
   }
   else {
     JS_ReportError(cx, "name argument must be a string");
-      return JS_FALSE;
+      return false;
   }
 
   AutoString resultString;
@@ -75,10 +75,10 @@ Library::Name(JSContext* cx, unsigned argc, jsval *vp)
   JSString *result = JS_NewUCStringCopyN(cx, resultString.begin(),
                                          resultString.length());
   if (!result)
-    return JS_FALSE;
+    return false;
 
   JS_SET_RVAL(cx, vp, STRING_TO_JSVAL(result));
-  return JS_TRUE;
+  return true;
 }
 
 JSObject*
@@ -196,44 +196,44 @@ Library::Finalize(JSFreeOp *fop, JSObject* obj)
   UnloadLibrary(obj);
 }
 
-JSBool
+bool
 Library::Open(JSContext* cx, unsigned argc, jsval *vp)
 {
   JSObject* ctypesObj = JS_THIS_OBJECT(cx, vp);
   if (!ctypesObj)
-    return JS_FALSE;
+    return false;
   if (!IsCTypesGlobal(ctypesObj)) {
     JS_ReportError(cx, "not a ctypes object");
-    return JS_FALSE;
+    return false;
   }
 
   if (argc != 1 || JSVAL_IS_VOID(JS_ARGV(cx, vp)[0])) {
     JS_ReportError(cx, "open requires a single argument");
-    return JS_FALSE;
+    return false;
   }
 
   JSObject* library = Create(cx, JS_ARGV(cx, vp)[0], GetCallbacks(ctypesObj));
   if (!library)
-    return JS_FALSE;
+    return false;
 
   JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(library));
-  return JS_TRUE;
+  return true;
 }
 
-JSBool
+bool
 Library::Close(JSContext* cx, unsigned argc, jsval* vp)
 {
   JSObject* obj = JS_THIS_OBJECT(cx, vp);
   if (!obj)
-    return JS_FALSE;
+    return false;
   if (!IsLibrary(obj)) {
     JS_ReportError(cx, "not a library");
-    return JS_FALSE;
+    return false;
   }
 
   if (argc != 0) {
     JS_ReportError(cx, "close doesn't take any arguments");
-    return JS_FALSE;
+    return false;
   }
 
   // delete our internal objects
@@ -241,24 +241,24 @@ Library::Close(JSContext* cx, unsigned argc, jsval* vp)
   JS_SetReservedSlot(obj, SLOT_LIBRARY, PRIVATE_TO_JSVAL(NULL));
 
   JS_SET_RVAL(cx, vp, JSVAL_VOID);
-  return JS_TRUE;
+  return true;
 }
 
-JSBool
+bool
 Library::Declare(JSContext* cx, unsigned argc, jsval* vp)
 {
   RootedObject obj(cx, JS_THIS_OBJECT(cx, vp));
   if (!obj)
-    return JS_FALSE;
+    return false;
   if (!IsLibrary(obj)) {
     JS_ReportError(cx, "not a library");
-    return JS_FALSE;
+    return false;
   }
 
   PRLibrary* library = GetLibrary(obj);
   if (!library) {
     JS_ReportError(cx, "library not open");
-    return JS_FALSE;
+    return false;
   }
 
   // We allow two API variants:
@@ -273,13 +273,13 @@ Library::Declare(JSContext* cx, unsigned argc, jsval* vp)
   //    be a function pointer, as with 1). 
   if (argc < 2) {
     JS_ReportError(cx, "declare requires at least two arguments");
-    return JS_FALSE;
+    return false;
   }
 
   jsval* argv = JS_ARGV(cx, vp);
   if (!JSVAL_IS_STRING(argv[0])) {
     JS_ReportError(cx, "first argument must be a string");
-    return JS_FALSE;
+    return false;
   }
 
   RootedObject fnObj(cx, NULL);
@@ -291,19 +291,19 @@ Library::Declare(JSContext* cx, unsigned argc, jsval* vp)
     fnObj = FunctionType::CreateInternal(cx,
               argv[1], argv[2], &argv[3], argc - 3);
     if (!fnObj)
-      return JS_FALSE;
+      return false;
 
     // Make a function pointer type.
     typeObj = PointerType::CreateInternal(cx, fnObj);
     if (!typeObj)
-      return JS_FALSE;
+      return false;
   } else {
     // Case 2).
     if (JSVAL_IS_PRIMITIVE(argv[1]) ||
         !CType::IsCType(JSVAL_TO_OBJECT(argv[1])) ||
         !CType::IsSizeDefined(JSVAL_TO_OBJECT(argv[1]))) {
       JS_ReportError(cx, "second argument must be a type of defined size");
-      return JS_FALSE;
+      return false;
     }
 
     typeObj = JSVAL_TO_OBJECT(argv[1]);
@@ -326,7 +326,7 @@ Library::Declare(JSContext* cx, unsigned argc, jsval* vp)
     fnptr = PR_FindFunctionSymbol(library, symbol.begin());
     if (!fnptr) {
       JS_ReportError(cx, "couldn't find function symbol in library");
-      return JS_FALSE;
+      return false;
     }
     data = &fnptr;
 
@@ -338,13 +338,13 @@ Library::Declare(JSContext* cx, unsigned argc, jsval* vp)
     data = PR_FindSymbol(library, symbol.begin());
     if (!data) {
       JS_ReportError(cx, "couldn't find symbol in library");
-      return JS_FALSE;
+      return false;
     }
   }
 
   RootedObject result(cx, CData::Create(cx, typeObj, obj, data, isFunction));
   if (!result)
-    return JS_FALSE;
+    return false;
 
   JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(result));
 
@@ -355,9 +355,9 @@ Library::Declare(JSContext* cx, unsigned argc, jsval* vp)
   // XXX This will need to change when bug 541212 is fixed -- CData::ValueSetter
   // could be called on a sealed object.
   if (isFunction && !JS_FreezeObject(cx, result))
-    return JS_FALSE;
+    return false;
 
-  return JS_TRUE;
+  return true;
 }
 
 }

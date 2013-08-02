@@ -135,10 +135,10 @@ NPObjWrapper_Convert(JSContext *cx, JS::Handle<JSObject*> obj, JSType type, JS::
 static void
 NPObjWrapper_Finalize(JSFreeOp *fop, JSObject *obj);
 
-static JSBool
+static bool
 NPObjWrapper_Call(JSContext *cx, unsigned argc, JS::Value *vp);
 
-static JSBool
+static bool
 NPObjWrapper_Construct(JSContext *cx, unsigned argc, JS::Value *vp);
 
 static JSBool
@@ -176,7 +176,7 @@ NPObjectMember_Convert(JSContext *cx, JS::Handle<JSObject*> obj, JSType type, JS
 static void
 NPObjectMember_Finalize(JSFreeOp *fop, JSObject *obj);
 
-static JSBool
+static bool
 NPObjectMember_Call(JSContext *cx, unsigned argc, JS::Value *vp);
 
 static void
@@ -1452,12 +1452,12 @@ CallNPMethodInternal(JSContext *cx, JS::Handle<JSObject*> obj, unsigned argc,
   return ReportExceptionIfPending(cx);
 }
 
-static JSBool
+static bool
 CallNPMethod(JSContext *cx, unsigned argc, JS::Value *vp)
 {
   JS::Rooted<JSObject*> obj(cx, JS_THIS_OBJECT(cx, vp));
   if (!obj)
-      return JS_FALSE;
+      return false;
 
   return CallNPMethodInternal(cx, obj, argc, JS_ARGV(cx, vp), vp, false);
 }
@@ -1653,20 +1653,18 @@ NPObjWrapper_Finalize(JSFreeOp *fop, JSObject *obj)
   sDelayedReleases->AppendElement(npobj);
 }
 
-static JSBool
+static bool
 NPObjWrapper_Call(JSContext *cx, unsigned argc, JS::Value *vp)
 {
   JS::Rooted<JSObject*> obj(cx, JSVAL_TO_OBJECT(JS_CALLEE(cx, vp)));
-  return CallNPMethodInternal(cx, obj, argc,
-                              JS_ARGV(cx, vp), vp, false);
+  return CallNPMethodInternal(cx, obj, argc, JS_ARGV(cx, vp), vp, false);
 }
 
-static JSBool
+static bool
 NPObjWrapper_Construct(JSContext *cx, unsigned argc, JS::Value *vp)
 {
   JS::Rooted<JSObject*> obj(cx, JSVAL_TO_OBJECT(JS_CALLEE(cx, vp)));
-  return CallNPMethodInternal(cx, obj, argc,
-                              JS_ARGV(cx, vp), vp, true);
+  return CallNPMethodInternal(cx, obj, argc, JS_ARGV(cx, vp), vp, true);
 }
 
 class NPObjWrapperHashEntry : public PLDHashEntryHdr
@@ -2068,24 +2066,24 @@ NPObjectMember_Finalize(JSFreeOp *fop, JSObject *obj)
   PR_Free(memberPrivate);
 }
 
-static JSBool
+static bool
 NPObjectMember_Call(JSContext *cx, unsigned argc, JS::Value *vp)
 {
   JSObject *memobj = JSVAL_TO_OBJECT(JS_CALLEE(cx, vp));
-  NS_ENSURE_TRUE(memobj, JS_FALSE);
+  NS_ENSURE_TRUE(memobj, false);
 
   NPObjectMemberPrivate *memberPrivate =
     (NPObjectMemberPrivate *)::JS_GetInstancePrivate(cx, memobj,
                                                      &sNPObjectMemberClass,
                                                      JS_ARGV(cx, vp));
   if (!memberPrivate || !memberPrivate->npobjWrapper)
-    return JS_FALSE;
+    return false;
 
   NPObject *npobj = GetNPObject(cx, memberPrivate->npobjWrapper);
   if (!npobj) {
     ThrowJSException(cx, "Call on invalid member object");
 
-    return JS_FALSE;
+    return false;
   }
 
   NPVariant npargs_buf[8];
@@ -2099,7 +2097,7 @@ NPObjectMember_Call(JSContext *cx, unsigned argc, JS::Value *vp)
     if (!npargs) {
       ThrowJSException(cx, "Out of memory!");
 
-      return JS_FALSE;
+      return false;
     }
   }
 
@@ -2114,7 +2112,7 @@ NPObjectMember_Call(JSContext *cx, unsigned argc, JS::Value *vp)
         PR_Free(npargs);
       }
 
-      return JS_FALSE;
+      return false;
     }
   }
 
@@ -2139,7 +2137,7 @@ NPObjectMember_Call(JSContext *cx, unsigned argc, JS::Value *vp)
     if (ReportExceptionIfPending(cx))
       ThrowJSException(cx, "Error calling method on NPObject!");
 
-    return JS_FALSE;
+    return false;
   }
 
   JS_SET_RVAL(cx, vp, NPVariantToJSVal(memberPrivate->npp, cx, &npv));

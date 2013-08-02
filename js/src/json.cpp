@@ -786,7 +786,7 @@ js::ParseJSONWithReviver(JSContext *cx, StableCharPtr chars, size_t length, Hand
 }
 
 #if JS_HAS_TOSOURCE
-static JSBool
+static bool
 json_toSource(JSContext *cx, unsigned argc, Value *vp)
 {
     vp->setString(cx->names().JSON);
@@ -795,8 +795,8 @@ json_toSource(JSContext *cx, unsigned argc, Value *vp)
 #endif
 
 /* ES5 15.12.2. */
-JSBool
-js_json_parse(JSContext *cx, unsigned argc, Value *vp)
+static bool
+json_parse(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -820,8 +820,8 @@ js_json_parse(JSContext *cx, unsigned argc, Value *vp)
 }
 
 /* ES5 15.12.3. */
-JSBool
-js_json_stringify(JSContext *cx, unsigned argc, Value *vp)
+bool
+json_stringify(JSContext *cx, unsigned argc, Value *vp)
 {
     RootedObject replacer(cx, (argc >= 2 && vp[3].isObject())
                               ? &vp[3].toObject()
@@ -852,8 +852,8 @@ static const JSFunctionSpec json_static_methods[] = {
 #if JS_HAS_TOSOURCE
     JS_FN(js_toSource_str,  json_toSource,      0, 0),
 #endif
-    JS_FN("parse",          js_json_parse,      2, 0),
-    JS_FN("stringify",      js_json_stringify,  3, 0),
+    JS_FN("parse",          json_parse,         2, 0),
+    JS_FN("stringify",      json_stringify,     3, 0),
     JS_FS_END
 };
 

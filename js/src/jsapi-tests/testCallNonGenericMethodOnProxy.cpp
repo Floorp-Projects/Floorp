@@ -34,7 +34,7 @@ CustomMethodImpl(JSContext *cx, CallArgs args)
   return true;
 }
 
-static JSBool
+static bool
 CustomMethod(JSContext *cx, unsigned argc, Value *vp)
 {
   CallArgs args = CallArgsFromVp(argc, vp);

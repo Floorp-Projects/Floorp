@@ -396,7 +396,7 @@ JSAPIToJSFunctionFlags(unsigned flags)
 
 namespace js {
 
-extern JSBool
+extern bool
 Function(JSContext *cx, unsigned argc, Value *vp);
 
 extern JSFunction *
@@ -490,17 +490,17 @@ ReportIncompatibleMethod(JSContext *cx, CallReceiver call, Class *clasp);
 extern void
 ReportIncompatible(JSContext *cx, CallReceiver call);
 
-JSBool
+bool
 CallOrConstructBoundFunction(JSContext *, unsigned, js::Value *);
 
 extern const JSFunctionSpec function_methods[];
 
 } /* namespace js */
 
-extern JSBool
+extern bool
 js_fun_apply(JSContext *cx, unsigned argc, js::Value *vp);
 
-extern JSBool
+extern bool
 js_fun_call(JSContext *cx, unsigned argc, js::Value *vp);
 
 extern JSObject*
