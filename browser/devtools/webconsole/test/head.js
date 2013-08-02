@@ -243,7 +243,7 @@ function dumpConsoles()
 {
   if (gPendingOutputTest) {
     console.log("dumpConsoles start");
-    for each (let hud in HUDService.hudReferences) {
+    for (let hud of HUDService.consoles) {
       if (!hud.outputNode) {
         console.debug("no output content for", hud.hudId);
         continue;
@@ -289,14 +289,12 @@ function finishTest()
 
   dumpConsoles();
 
-  if (HUDConsoleUI.browserConsole) {
-    let hud = HUDConsoleUI.browserConsole;
-
-    if (hud.jsterm) {
-      hud.jsterm.clearOutput(true);
+  let browserConsole = HUDService.getBrowserConsole();
+  if (browserConsole) {
+    if (browserConsole.jsterm) {
+      browserConsole.jsterm.clearOutput(true);
     }
-
-    HUDConsoleUI.toggleBrowserConsole().then(finishTest);
+    HUDService.toggleBrowserConsole().then(finishTest);
     return;
   }
 
@@ -319,8 +317,8 @@ function tearDown()
 {
   dumpConsoles();
 
-  if (HUDConsoleUI.browserConsole) {
-    HUDConsoleUI.toggleBrowserConsole();
+  if (HUDService.getBrowserConsole()) {
+    HUDService.toggleBrowserConsole();
   }
 
   let target = TargetFactory.forTab(gBrowser.selectedTab);

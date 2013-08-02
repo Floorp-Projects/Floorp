@@ -263,7 +263,7 @@ this.WebConsoleUtils = {
     let desc = null;
     while (aObject) {
       try {
-        if (desc = Object.getOwnPropertyDescriptor(aObject, aProp)) {
+        if ((desc = Object.getOwnPropertyDescriptor(aObject, aProp))) {
           break;
         }
       }
@@ -1255,12 +1255,12 @@ this.JSTermHelpers = function JSTermHelpers(aOwner)
   {
     let nodes = new aOwner.window.wrappedJSObject.Array();
     let doc = aOwner.window.document;
-    let aContext = aContext || doc;
+    aContext = aContext || doc;
 
     let results = doc.evaluate(aXPath, aContext, null,
                                Ci.nsIDOMXPathResult.ANY_TYPE, null);
     let node;
-    while (node = results.iterateNext()) {
+    while ((node = results.iterateNext())) {
       nodes.push(node);
     }
 
@@ -1389,7 +1389,7 @@ this.JSTermHelpers = function JSTermHelpers(aOwner)
         type: "error",
         message: "helperFuncUnsupportedTypeError",
       };
-      return;
+      return null;
     }
 
     aOwner.helperResult = { rawOutput: true };
