@@ -10,3 +10,7 @@ MODULE = 'osfile'
 
 LIBRARY_NAME = 'osfile_s'
 
+EXTRA_PP_JS_MODULES += [
+    'osfile.jsm',
+]
+

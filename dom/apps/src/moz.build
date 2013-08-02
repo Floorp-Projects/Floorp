@@ -22,3 +22,9 @@ EXTRA_JS_MODULES += [
     'PermissionsInstaller.jsm',
     'PermissionsTable.jsm',
 ]
+
+EXTRA_PP_JS_MODULES += [
+    'AppsUtils.jsm',
+    'Webapps.jsm',
+]
+
