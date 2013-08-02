@@ -43,7 +43,7 @@ interface nsIDOMDOMRequest;
 interface nsIDOMBlob;
 interface nsIDOMBluetoothDevice;
 
-[scriptable, builtinclass, uuid(1a0c6c90-23e3-4f4c-8076-98e4341c2024)]
+[scriptable, builtinclass, uuid(54bf9aa2-1208-47ab-ac96-c7df349fcf0e)]
 interface nsIDOMBluetoothAdapter : nsIDOMEventTarget
 {
   readonly attribute DOMString address;
@@ -102,4 +102,16 @@ interface nsIDOMBluetoothAdapter : nsIDOMEventTarget
 
   // Fired when discoverying and any device is discovered.
   [implicit_jscontext] attribute jsval ondevicefound;
+
+  // Fired when pairing process is completed
+  [implicit_jscontext] attribute jsval onpairedstatuschanged;
+
+  // Fired when a2dp connection status changed
+  [implicit_jscontext] attribute jsval ona2dpstatuschanged;
+
+  // Fired when handsfree connection status changed
+  [implicit_jscontext] attribute jsval onhfpstatuschanged;
+
+  // Fired when sco connection status changed
+  [implicit_jscontext] attribute jsval onscostatuschanged;
 };
