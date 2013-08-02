@@ -191,7 +191,7 @@ ParallelResult
 ion::ConcatStringsPar(ForkJoinSlice *slice, HandleString left, HandleString right,
                       MutableHandleString out)
 {
-    JSString *str = ConcatStringsPure(slice, left, right);
+    JSString *str = ConcatStrings<NoGC>(slice, left, right);
     if (!str)
         return TP_RETRY_SEQUENTIALLY;
     out.set(str);
