@@ -97,6 +97,13 @@ Tools.inspector = {
   label: l10n("inspector.label", inspectorStrings),
   tooltip: l10n("inspector.tooltip", inspectorStrings),
 
+  preventClosingOnKey: true,
+  onkey: function(panel) {
+    if (panel.highlighter) {
+      panel.highlighter.toggleLockState();
+    }
+  },
+
   isTargetSupported: function(target) {
     return !target.isRemote;
   },
