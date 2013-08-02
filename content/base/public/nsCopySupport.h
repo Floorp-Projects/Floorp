@@ -80,14 +80,11 @@ class nsCopySupport
      * responsible for removing the content during a cut operation if true is
      * returned.
      *
-     * aClipboardType specifies which clipboard to use, from nsIClipboard.
-     *
      * If the event is cancelled or an error occurs, false will be returned.
      */
     static bool FireClipboardEvent(int32_t aType,
-                                   int32_t aClipboardType,
-                                   nsIPresShell* aPresShell,
-                                   nsISelection* aSelection);
+                                     nsIPresShell* aPresShell,
+                                     nsISelection* aSelection);
 };
 
 #endif
