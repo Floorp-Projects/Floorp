@@ -1629,7 +1629,7 @@ XrayWrapper<Base, Traits>::delete_(JSContext *cx, HandleObject wrapper,
     if (expando) {
         JSAutoCompartment ac(cx, expando);
         RootedValue v(cx);
-        if (!JS_DeletePropertyById2(cx, expando, id, v.address()) ||
+        if (!JS_DeletePropertyById2(cx, expando, id, &v) ||
             !JS_ValueToBoolean(cx, v, &b))
         {
             return false;
