@@ -1158,43 +1158,11 @@ nsListControlFrame::SetComboboxFrame(nsIFrame* aComboboxFrame)
 }
 
 void
-nsListControlFrame::GetOptionText(int32_t aIndex, nsAString & aStr)
+nsListControlFrame::GetOptionText(uint32_t aIndex, nsAString& aStr)
 {
-  aStr.SetLength(0);
-  nsCOMPtr<nsIDOMHTMLOptionsCollection> options = GetOptions(mContent);
-
-  if (options) {
-    uint32_t numOptions;
-    options->GetLength(&numOptions);
-
-    if (numOptions != 0) {
-      nsCOMPtr<nsIDOMHTMLOptionElement> optionElement =
-        GetOption(options, aIndex);
-      if (optionElement) {
-#if 0 // This is for turning off labels Bug 4050
-        nsAutoString text;
-        optionElement->GetLabel(text);
-        // the return value is always NS_OK from DOMElements
-        // it is meaningless to check for it
-        if (!text.IsEmpty()) { 
-          nsAutoString compressText = text;
-          compressText.CompressWhitespace(true, true);
-          if (!compressText.IsEmpty()) {
-            text = compressText;
-          }
-        }
-
-        if (text.IsEmpty()) {
-          // the return value is always NS_OK from DOMElements
-          // it is meaningless to check for it
-          optionElement->GetText(text);
-        }          
-        aStr = text;
-#else
-        optionElement->GetText(aStr);
-#endif
-      }
-    }
+  aStr.Truncate();
+  if (dom::HTMLOptionElement* optionElement = GetOption(aIndex)) {
+    optionElement->GetText(aStr);
   }
 }
 

@@ -124,7 +124,7 @@ public:
    * If the there are zero items then an empty string is returned
    * If there is nothing selected, then the 0th item's text is returned.
    */
-  virtual void GetOptionText(int32_t aIndex, nsAString & aStr) MOZ_OVERRIDE;
+  virtual void GetOptionText(uint32_t aIndex, nsAString& aStr) MOZ_OVERRIDE;
 
   virtual void CaptureMouseEvents(bool aGrabMouseEvents) MOZ_OVERRIDE;
   virtual nscoord GetHeightOfARow() MOZ_OVERRIDE;
