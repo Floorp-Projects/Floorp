@@ -357,6 +357,7 @@ let CustomizableUIInternal = {
           if (this.isWidgetRemovable(node)) {
             if (palette) {
               palette.appendChild(node);
+              this.removeLocationAttributes(node);
             } else {
               container.removeChild(node);
             }
