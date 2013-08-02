@@ -283,6 +283,9 @@ class MacroAssemblerX86Shared : public Assembler
     void storeDouble(FloatRegister src, const Operand &dest) {
         movsd(src, dest);
     }
+    void moveDouble(FloatRegister src, FloatRegister dest) {
+        movsd(src, dest);
+    }
     void zeroDouble(FloatRegister reg) {
         xorpd(reg, reg);
     }

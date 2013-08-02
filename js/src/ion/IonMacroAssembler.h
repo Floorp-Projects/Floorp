@@ -293,6 +293,11 @@ class MacroAssembler : public MacroAssemblerSpecific
             mov(ReturnReg, reg);
     }
 
+    void storeCallFloatResult(const FloatRegister &reg) {
+        if (reg != ReturnFloatReg)
+            moveDouble(ReturnFloatReg, reg);
+    }
+
     void storeCallResultValue(AnyRegister dest) {
 #if defined(JS_NUNBOX32)
         unboxValue(ValueOperand(JSReturnReg_Type, JSReturnReg_Data), dest);

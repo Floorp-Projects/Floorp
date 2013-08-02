@@ -24,6 +24,7 @@ enum DataType {
     Type_Void,
     Type_Bool,
     Type_Int32,
+    Type_Double,
     Type_Pointer,
     Type_Object,
     Type_Value,
@@ -364,6 +365,7 @@ template <> struct OutParamToDataType<int *> { static const DataType result = Ty
 template <> struct OutParamToDataType<uint32_t *> { static const DataType result = Type_Int32; };
 template <> struct OutParamToDataType<uint8_t **> { static const DataType result = Type_Pointer; };
 template <> struct OutParamToDataType<bool *> { static const DataType result = Type_Bool; };
+template <> struct OutParamToDataType<double *> { static const DataType result = Type_Double; };
 template <> struct OutParamToDataType<MutableHandleValue> { static const DataType result = Type_Handle; };
 template <> struct OutParamToDataType<MutableHandleObject> { static const DataType result = Type_Handle; };
 template <> struct OutParamToDataType<MutableHandleString> { static const DataType result = Type_Handle; };
