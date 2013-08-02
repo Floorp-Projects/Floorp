@@ -733,7 +733,10 @@ IonRuntime::generateVMWrapper(JSContext *cx, const VMFunction &f)
         break;
 
       case Type_Double:
-        masm.loadDouble(Address(sp, 0), ReturnFloatReg);
+        if (cx->runtime()->jitSupportsFloatingPoint)
+            masm.loadDouble(Address(sp, 0), ReturnFloatReg);
+        else
+            masm.breakpoint();
         masm.freeStack(sizeof(double));
         break;
 
