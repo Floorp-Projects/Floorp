@@ -283,7 +283,7 @@ nsDOMAttributeMap::SetNamedItemInternal(Attr& aAttr,
   }
 
   nsresult rv;
-  if (!mContent->HasSameOwnerDoc(&aAttr)) {
+  if (mContent->OwnerDoc() != aAttr.OwnerDoc()) {
     nsCOMPtr<nsINode> adoptedNode =
       mContent->OwnerDoc()->AdoptNode(aAttr, aError);
     if (aError.Failed()) {

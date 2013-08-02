@@ -440,7 +440,7 @@ nsGenericDOMDataNode::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                                  bool aCompileEventHandlers)
 {
   NS_PRECONDITION(aParent || aDocument, "Must have document if no parent!");
-  NS_PRECONDITION(HasSameOwnerDoc(NODE_FROM(aParent, aDocument)),
+  NS_PRECONDITION(NODE_FROM(aParent, aDocument)->OwnerDoc() == OwnerDoc(),
                   "Must have the same owner document");
   NS_PRECONDITION(!aParent || aDocument == aParent->GetCurrentDoc(),
                   "aDocument must be current doc of aParent");

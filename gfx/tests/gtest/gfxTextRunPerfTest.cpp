@@ -3,6 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "gtest/gtest.h"
+
 #include "mozilla/Util.h"
 
 #include "nsCOMPtr.h"
@@ -18,14 +20,6 @@
 
 #include "gfxFontTest.h"
 
-#if defined(XP_MACOSX)
-#include "gfxTestCocoaHelper.h"
-#endif
-
-#ifdef MOZ_WIDGET_GTK
-#include "gtk/gtk.h"
-#endif
-
 using namespace mozilla;
 
 struct TestEntry {
@@ -38,7 +32,7 @@ TestEntry testList[] = {
 { nullptr, nullptr } // terminator
 };
 
-already_AddRefed<gfxContext>
+static already_AddRefed<gfxContext>
 MakeContext ()
 {
     const int size = 200;
@@ -48,24 +42,23 @@ MakeContext ()
     surface = gfxPlatform::GetPlatform()->
         CreateOffscreenSurface(gfxIntSize(size, size),
                                gfxASurface::ContentFromFormat(gfxASurface::ImageFormatRGB24));
-    gfxContext *ctx = new gfxContext(surface);
-    NS_IF_ADDREF(ctx);
-    return ctx;
+    nsRefPtr<gfxContext> ctx = new gfxContext(surface);
+    return ctx.forget();
 }
 
-nsRefPtr<gfxFontGroup> fontGroup;
 const char* lastFamilies = nullptr;
 
-void
+static void
 RunTest (TestEntry *test, gfxContext *ctx) {
+    nsRefPtr<gfxFontGroup> fontGroup;
     if (!lastFamilies || strcmp(lastFamilies, test->mFamilies)) {
-        gfxFontStyle style_western_normal_16 (FONT_STYLE_NORMAL,
-                                              NS_FONT_STRETCH_NORMAL,
+        gfxFontStyle style_western_normal_16 (mozilla::gfx::FONT_STYLE_NORMAL,
                                               400,
+                                              0,
                                               16.0,
                                               NS_NewPermanentAtom(NS_LITERAL_STRING("en")),
                                               0.0,
-                                              false, false, false,
+                                              false, false,
                                               NS_LITERAL_STRING(""));
 
         fontGroup = gfxPlatform::GetPlatform()->CreateFontGroup(NS_ConvertUTF8toUTF16(test->mFamilies), &style_western_normal_16, nullptr);
@@ -84,6 +77,7 @@ RunTest (TestEntry *test, gfxContext *ctx) {
     };
     uint32_t flags = gfxTextRunFactory::TEXT_IS_PERSISTENT;
     uint32_t length;
+    gfxFontTestStore::NewStore();
     if (isASCII) {
         flags |= gfxTextRunFactory::TEXT_IS_ASCII |
                  gfxTextRunFactory::TEXT_IS_8BIT;
@@ -97,33 +91,14 @@ RunTest (TestEntry *test, gfxContext *ctx) {
 
     // Should we test drawing?
     // textRun->Draw(ctx, gfxPoint(0,0), 0, length, nullptr, nullptr, nullptr);
-    
+
     textRun->GetAdvanceWidth(0, length, nullptr);
+    gfxFontTestStore::DeleteStore();
 }
 
-uint32_t iterations = 20;
+uint32_t iterations = 1;
 
-int
-main (int argc, char **argv) {
-#ifdef MOZ_WIDGET_GTK
-    gtk_init(&argc, &argv); 
-#endif
-#ifdef XP_MACOSX
-    CocoaPoolInit();
-#endif
-
-    // Initialize XPCOM
-    nsresult rv = NS_InitXPCOM2(nullptr, nullptr, nullptr);
-    if (NS_FAILED(rv))
-        return -1; 
-
-    if (!gfxPlatform::GetPlatform())
-        return -1;
-
-    // let's get all the xpcom goop out of the system
-    fflush (stderr);
-    fflush (stdout);
-
+TEST(Gfx, TextRunPref) {
     nsRefPtr<gfxContext> context = MakeContext();
 
     // Start timing
@@ -139,9 +114,7 @@ main (int argc, char **argv) {
     }
 
     PRIntervalTime end = PR_IntervalNow();
-    
+
     printf("Elapsed time (ms): %d\n", PR_IntervalToMilliseconds(end - start));
 
-    fflush (stderr);
-    fflush (stdout);
 }

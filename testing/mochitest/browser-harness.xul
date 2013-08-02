@@ -12,6 +12,7 @@
   <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/MozillaLogger.js"/>
   <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/LogController.js"/>
   <script type="application/javascript" src="chrome://mochikit/content/chrome-harness.js"/>
+  <script type="application/javascript" src="chrome://mochikit/content/manifestLibrary.js" />
   <script type="application/javascript" src="chrome://mochikit/content/chunkifyTests.js"/>
   <style xmlns="http://www.w3.org/1999/xhtml"><![CDATA[
     #results {
@@ -167,10 +168,16 @@
     };
 
     // Returns an array of browserTest objects for all the selected tests
-    function listTests() {
-      var links = getTestList();
-      if (!links)
-        return [];
+    function runTests() {
+      gConfig.baseurl = "chrome://mochitests/content";
+      getTestList(gConfig, loadTestList);
+    }
+
+    function loadTestList(links) {
+      if (!links) {
+        createTester({});
+        return;
+      }
 
       // load server.js in so we can share template functions
       var scriptLoader = Cc["@mozilla.org/moz/jssubscript-loader;1"].
@@ -188,14 +195,14 @@
                                   gConfig.thisChunk, gConfig.chunkByDir);
       }
 
-      return fileNames.map(function (f) new browserTest(f));
+      createTester(fileNames.map(function (f) { return new browserTest(f); }));
     }
 
     function setStatus(aStatusString) {
       document.getElementById("status").value = aStatusString;
     }
 
-    function runTests() {
+    function createTester(links) {
       var windowMediator = Cc['@mozilla.org/appshell/window-mediator;1'].
                              getService(Ci.nsIWindowMediator);
       var winType = gConfig.testRoot == "browser" ? "navigator:browser" :
@@ -209,7 +216,7 @@
 
       setStatus("Running...");
       testWin.focus();
-      var Tester = new testWin.Tester(listTests(), gDumper, testsFinished);
+      var Tester = new testWin.Tester(links, gDumper, testsFinished);
       Tester.start();
     }
 

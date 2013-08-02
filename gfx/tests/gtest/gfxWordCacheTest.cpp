@@ -3,6 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "gtest/gtest.h"
+
 #include "nsCOMPtr.h"
 #include "nsTArray.h"
 #include "nsString.h"
@@ -16,14 +18,6 @@
 
 #include "gfxFontTest.h"
 #include "mozilla/Attributes.h"
-
-#if defined(XP_MACOSX)
-#include "gfxTestCocoaHelper.h"
-#endif
-
-#ifdef MOZ_WIDGET_GTK
-#include "gtk/gtk.h"
-#endif
 
 class FrameTextRunCache;
 
@@ -61,9 +55,11 @@ MakeTextRun(const PRUnichar *aText, uint32_t aLength,
 {
    nsAutoPtr<gfxTextRun> textRun;
    if (aLength == 0) {
-       textRun = aFontGroup->MakeEmptyTextRun(aParams, aFlags);
+       abort();
+       //textRun = aFontGroup->MakeEmptyTextRun(aParams, aFlags);
    } else if (aLength == 1 && aText[0] == ' ') {
-       textRun = aFontGroup->MakeSpaceTextRun(aParams, aFlags);
+       abort();
+       //textRun = aFontGroup->MakeSpaceTextRun(aParams, aFlags);
    } else {
        textRun = aFontGroup->MakeTextRun(aText, aLength, aParams, aFlags);
    }
@@ -77,7 +73,7 @@ MakeTextRun(const PRUnichar *aText, uint32_t aLength,
    return textRun.forget();
 }
 
-already_AddRefed<gfxContext>
+static already_AddRefed<gfxContext>
 MakeContext ()
 {
    const int size = 200;
@@ -87,43 +83,22 @@ MakeContext ()
    surface = gfxPlatform::GetPlatform()->
        CreateOffscreenSurface(gfxIntSize(size, size),
                               gfxASurface::ContentFromFormat(gfxASurface::ImageFormatRGB24));
-   gfxContext *ctx = new gfxContext(surface);
-   NS_IF_ADDREF(ctx);
-   return ctx;
+   nsRefPtr<gfxContext> ctx = new gfxContext(surface);
+   return ctx.forget();
 }
 
-int
-main (int argc, char **argv) {
-#ifdef MOZ_WIDGET_GTK
-   gtk_init(&argc, &argv);
-#endif
-#ifdef XP_MACOSX
-   CocoaPoolInit();
-#endif
-
-   // Initialize XPCOM
-   nsresult rv = NS_InitXPCOM2(nullptr, nullptr, nullptr);
-   if (NS_FAILED(rv))
-       return -1;
-
-   if (!gfxPlatform::GetPlatform())
-       return -1;
-
-   // let's get all the xpcom goop out of the system
-   fflush (stderr);
-   fflush (stdout);
-
+TEST(Gfx, WordCache) {
    gTextRuns = new FrameTextRunCache();
 
    nsRefPtr<gfxContext> ctx = MakeContext();
    {
-       gfxFontStyle style (FONT_STYLE_NORMAL,
-                           NS_FONT_STRETCH_NORMAL,
+       gfxFontStyle style (mozilla::gfx::FONT_STYLE_NORMAL,
                            139,
                            10.0,
+                           0,
                            NS_NewPermanentAtom(NS_LITERAL_STRING("en")),
                            0.0,
-                           false, false, false,
+                           false, false,
                            NS_LITERAL_STRING(""));
 
        nsRefPtr<gfxFontGroup> fontGroup =
@@ -152,6 +127,7 @@ main (int argc, char **argv) {
        tr2->GetAdvanceWidth(0, str2.Length(), nullptr);
    }
 
-   fflush (stderr);
-   fflush (stdout);
+   delete gTextRuns;
+   gTextRuns = nullptr;
+
 }

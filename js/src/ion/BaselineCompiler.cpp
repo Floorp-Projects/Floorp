@@ -2744,13 +2744,36 @@ BaselineCompiler::emit_JSOP_RUNONCE()
     return callVM(RunOnceScriptPrologueInfo);
 }
 
+static bool
+DoCreateRestParameter(JSContext *cx, BaselineFrame *frame, MutableHandleValue res)
+{
+    unsigned numFormals = frame->numFormalArgs() - 1;
+    unsigned numActuals = frame->numActualArgs();
+    unsigned numRest = numActuals > numFormals ? numActuals - numFormals : 0;
+    Value *rest = frame->argv() + numFormals;
+
+    JSObject *obj = NewDenseCopiedArray(cx, numRest, rest, NULL);
+    if (!obj)
+        return false;
+    types::FixRestArgumentsType(cx, obj);
+    res.setObject(*obj);
+    return true;
+}
+
+typedef bool(*DoCreateRestParameterFn)(JSContext *cx, BaselineFrame *, MutableHandleValue);
+static const VMFunction DoCreateRestParameterInfo =
+    FunctionInfo<DoCreateRestParameterFn>(DoCreateRestParameter);
+
 bool
 BaselineCompiler::emit_JSOP_REST()
 {
     frame.syncStack(0);
 
-    ICRest_Fallback::Compiler stubCompiler(cx);
-    if (!emitOpIC(stubCompiler.getStub(&stubSpace_)))
+    prepareVMCall();
+    masm.loadBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
+    pushArg(R0.scratchReg());
+
+    if (!callVM(DoCreateRestParameterInfo))
         return false;
 
     frame.push(R0);

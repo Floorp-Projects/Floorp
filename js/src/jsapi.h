@@ -75,9 +75,9 @@ class JS_PUBLIC_API(AutoCheckRequestDepth)
  * Also check that GC would be safe at this point.
  */
 JS_PUBLIC_API(void)
-AssertArgumentsAreSane(JSContext *cx, const Value &v);
+AssertArgumentsAreSane(JSContext *cx, JS::Handle<JS::Value> v);
 #else
-inline void AssertArgumentsAreSane(JSContext *cx, const Value &v) {
+inline void AssertArgumentsAreSane(JSContext *cx, JS::Handle<JS::Value> v) {
     /* Do nothing */
 }
 #endif /* DEBUG */
@@ -1600,35 +1600,32 @@ JS_ValueToUint64(JSContext *cx, jsval v, uint64_t *ip);
 namespace js {
 /* DO NOT CALL THIS.  Use JS::ToInt16. */
 extern JS_PUBLIC_API(bool)
-ToUint16Slow(JSContext *cx, const JS::Value &v, uint16_t *out);
+ToUint16Slow(JSContext *cx, JS::Handle<JS::Value> v, uint16_t *out);
 
 /* DO NOT CALL THIS.  Use JS::ToInt32. */
 extern JS_PUBLIC_API(bool)
-ToInt32Slow(JSContext *cx, const JS::Value &v, int32_t *out);
+ToInt32Slow(JSContext *cx, JS::Handle<JS::Value> v, int32_t *out);
 
 /* DO NOT CALL THIS.  Use JS::ToUint32. */
 extern JS_PUBLIC_API(bool)
-ToUint32Slow(JSContext *cx, const JS::Value &v, uint32_t *out);
+ToUint32Slow(JSContext *cx, JS::Handle<JS::Value> v, uint32_t *out);
 
 /* DO NOT CALL THIS. Use JS::ToInt64. */
 extern JS_PUBLIC_API(bool)
-ToInt64Slow(JSContext *cx, const JS::Value &v, int64_t *out);
+ToInt64Slow(JSContext *cx, JS::Handle<JS::Value> v, int64_t *out);
 
 /* DO NOT CALL THIS. Use JS::ToUint64. */
 extern JS_PUBLIC_API(bool)
-ToUint64Slow(JSContext *cx, const JS::Value &v, uint64_t *out);
+ToUint64Slow(JSContext *cx, JS::Handle<JS::Value> v, uint64_t *out);
 } /* namespace js */
 
 namespace JS {
 
 JS_ALWAYS_INLINE bool
-ToUint16(JSContext *cx, const JS::Value &v, uint16_t *out)
+ToUint16(JSContext *cx, JS::Handle<JS::Value> v, uint16_t *out)
 {
     AssertArgumentsAreSane(cx, v);
-    {
-        js::SkipRoot skip(cx, &v);
-        js::MaybeCheckStackRoots(cx);
-    }
+    js::MaybeCheckStackRoots(cx);
 
     if (v.isInt32()) {
         *out = uint16_t(v.toInt32());
@@ -1638,13 +1635,10 @@ ToUint16(JSContext *cx, const JS::Value &v, uint16_t *out)
 }
 
 JS_ALWAYS_INLINE bool
-ToInt32(JSContext *cx, const JS::Value &v, int32_t *out)
+ToInt32(JSContext *cx, JS::Handle<JS::Value> v, int32_t *out)
 {
     AssertArgumentsAreSane(cx, v);
-    {
-        js::SkipRoot root(cx, &v);
-        js::MaybeCheckStackRoots(cx);
-    }
+    js::MaybeCheckStackRoots(cx);
 
     if (v.isInt32()) {
         *out = v.toInt32();
@@ -1654,13 +1648,10 @@ ToInt32(JSContext *cx, const JS::Value &v, int32_t *out)
 }
 
 JS_ALWAYS_INLINE bool
-ToUint32(JSContext *cx, const JS::Value &v, uint32_t *out)
+ToUint32(JSContext *cx, JS::Handle<JS::Value> v, uint32_t *out)
 {
     AssertArgumentsAreSane(cx, v);
-    {
-        js::SkipRoot root(cx, &v);
-        js::MaybeCheckStackRoots(cx);
-    }
+    js::MaybeCheckStackRoots(cx);
 
     if (v.isInt32()) {
         *out = uint32_t(v.toInt32());
@@ -1670,13 +1661,10 @@ ToUint32(JSContext *cx, const JS::Value &v, uint32_t *out)
 }
 
 JS_ALWAYS_INLINE bool
-ToInt64(JSContext *cx, const JS::Value &v, int64_t *out)
+ToInt64(JSContext *cx, JS::Handle<JS::Value> v, int64_t *out)
 {
     AssertArgumentsAreSane(cx, v);
-    {
-        js::SkipRoot skip(cx, &v);
-        js::MaybeCheckStackRoots(cx);
-    }
+    js::MaybeCheckStackRoots(cx);
 
     if (v.isInt32()) {
         *out = int64_t(v.toInt32());
@@ -1687,13 +1675,10 @@ ToInt64(JSContext *cx, const JS::Value &v, int64_t *out)
 }
 
 JS_ALWAYS_INLINE bool
-ToUint64(JSContext *cx, const JS::Value &v, uint64_t *out)
+ToUint64(JSContext *cx, JS::Handle<JS::Value> v, uint64_t *out)
 {
     AssertArgumentsAreSane(cx, v);
-    {
-        js::SkipRoot skip(cx, &v);
-        js::MaybeCheckStackRoots(cx);
-    }
+    js::MaybeCheckStackRoots(cx);
 
     if (v.isInt32()) {
         /* Account for sign extension of negatives into the longer 64bit space. */
@@ -3404,18 +3389,18 @@ extern JS_PUBLIC_API(JSBool)
 JS_HasPropertyById(JSContext *cx, JSObject *obj, jsid id, JSBool *foundp);
 
 extern JS_PUBLIC_API(JSBool)
-JS_LookupProperty(JSContext *cx, JSObject *obj, const char *name, jsval *vp);
+JS_LookupProperty(JSContext *cx, JSObject *obj, const char *name, JS::MutableHandle<JS::Value> vp);
 
 extern JS_PUBLIC_API(JSBool)
-JS_LookupPropertyById(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
+JS_LookupPropertyById(JSContext *cx, JSObject *obj, jsid id, JS::MutableHandle<JS::Value> vp);
 
 extern JS_PUBLIC_API(JSBool)
 JS_LookupPropertyWithFlags(JSContext *cx, JSObject *obj, const char *name,
-                           unsigned flags, jsval *vp);
+                           unsigned flags, JS::MutableHandle<JS::Value> vp);
 
 extern JS_PUBLIC_API(JSBool)
 JS_LookupPropertyWithFlagsById(JSContext *cx, JSObject *obj, jsid id,
-                               unsigned flags, JSObject **objp, jsval *vp);
+                               unsigned flags, JSObject **objp, JS::MutableHandle<JS::Value> vp);
 
 struct JSPropertyDescriptor {
     JSObject           *obj;
@@ -3545,7 +3530,7 @@ JS_GetPropertyDescriptorById(JSContext *cx, JSObject *obj, jsid id, unsigned fla
                              JSPropertyDescriptor *desc);
 
 extern JS_PUBLIC_API(JSBool)
-JS_GetOwnPropertyDescriptor(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
+JS_GetOwnPropertyDescriptor(JSContext *cx, JSObject *obj, jsid id, JS::MutableHandle<JS::Value> vp);
 
 extern JS_PUBLIC_API(JSBool)
 JS_GetProperty(JSContext *cx, JSObject *obj, const char *name, JS::MutableHandle<JS::Value> vp);
@@ -3576,13 +3561,13 @@ JS_DeleteProperty(JSContext *cx, JSObject *obj, const char *name);
 
 extern JS_PUBLIC_API(JSBool)
 JS_DeleteProperty2(JSContext *cx, JSObject *obj, const char *name,
-                   jsval *rval);
+                   JS::MutableHandle<JS::Value> rval);
 
 extern JS_PUBLIC_API(JSBool)
 JS_DeletePropertyById(JSContext *cx, JSObject *obj, jsid id);
 
 extern JS_PUBLIC_API(JSBool)
-JS_DeletePropertyById2(JSContext *cx, JSObject *obj, jsid id, jsval *rval);
+JS_DeletePropertyById2(JSContext *cx, JSObject *obj, jsid id, JS::MutableHandle<JS::Value> rval);
 
 extern JS_PUBLIC_API(JSBool)
 JS_DefineUCProperty(JSContext *cx, JSObject *obj,
@@ -3644,7 +3629,7 @@ JS_HasUCProperty(JSContext *cx, JSObject *obj,
 extern JS_PUBLIC_API(JSBool)
 JS_LookupUCProperty(JSContext *cx, JSObject *obj,
                     const jschar *name, size_t namelen,
-                    jsval *vp);
+                    JS::MutableHandle<JS::Value> vp);
 
 extern JS_PUBLIC_API(JSBool)
 JS_GetUCProperty(JSContext *cx, JSObject *obj,
@@ -3659,7 +3644,7 @@ JS_SetUCProperty(JSContext *cx, JSObject *obj,
 extern JS_PUBLIC_API(JSBool)
 JS_DeleteUCProperty2(JSContext *cx, JSObject *obj,
                      const jschar *name, size_t namelen,
-                     jsval *rval);
+                     JS::MutableHandle<JS::Value> rval);
 
 extern JS_PUBLIC_API(JSObject *)
 JS_NewArrayObject(JSContext *cx, int length, jsval *vector);

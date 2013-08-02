@@ -5709,12 +5709,12 @@ GenerateFFIInterpreterExit(ModuleCompiler &m, const ModuleCompiler::ExitDescript
 }
 
 static int32_t
-ValueToInt32(JSContext *cx, Value *val)
+ValueToInt32(JSContext *cx, MutableHandleValue val)
 {
     int32_t i32;
-    if (!ToInt32(cx, val[0], &i32))
+    if (!ToInt32(cx, val, &i32))
         return false;
-    val[0] = Int32Value(i32);
+    val.set(Int32Value(i32));
 
     return true;
 }
