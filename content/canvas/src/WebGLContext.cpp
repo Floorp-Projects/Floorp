@@ -1022,7 +1022,7 @@ bool WebGLContext::IsExtensionSupported(WebGLExtensionID ext) const
             break;
     }
 
-    if (Preferences::GetBool("webgl.enable-draft-extensions", false)) {
+    if (Preferences::GetBool("webgl.enable-draft-extensions", false) || IsWebGL2()) {
         switch (ext) {
             case WEBGL_draw_buffers:
                 return WebGLExtensionDrawBuffers::IsSupported(this);
