@@ -36,7 +36,7 @@ ColorLayerComposite::RenderLayer(const nsIntPoint& aOffset,
 
   mCompositor->DrawQuad(rect, clipRect, effects, opacity,
                         transform, gfx::Point(aOffset.x, aOffset.y));
-  mCompositor->DrawDiagnostics(gfx::Color(0.0, 1.0, 1.0, 1.0),
+  mCompositor->DrawDiagnostics(DIAGNOSTIC_COLOR,
                                rect, clipRect,
                                transform, gfx::Point(aOffset.x, aOffset.y));
 

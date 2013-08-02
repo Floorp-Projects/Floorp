@@ -104,7 +104,6 @@ static int gCMSIntent = -2;
 static void ShutdownCMS();
 static void MigratePrefs();
 
-static bool sDrawLayerBorders = false;
 static bool sDrawFrameCounter = false;
 
 #include "mozilla/gfx/2D.h"
@@ -249,6 +248,9 @@ static const char *gPrefLangNames[] = {
 
 gfxPlatform::gfxPlatform()
   : mAzureCanvasBackendCollector(this, &gfxPlatform::GetAzureBackendInfo)
+  , mDrawLayerBorders(false)
+  , mDrawTileBorders(false)
+  , mDrawBigImageBorders(false)
 {
     mUseHarfBuzzScripts = UNINITIALIZED_VALUE;
     mAllowDownloadableFonts = UNINITIALIZED_VALUE;
@@ -264,6 +266,16 @@ gfxPlatform::gfxPlatform()
 
     mLayersUseDeprecated =
         Preferences::GetBool("layers.use-deprecated-textures", true);
+
+    Preferences::AddBoolVarCache(&mDrawLayerBorders,
+                                 "layers.draw-borders",
+                                 false);
+    Preferences::AddBoolVarCache(&mDrawTileBorders,
+                                 "layers.draw-tile-borders",
+                                 false);
+    Preferences::AddBoolVarCache(&mDrawBigImageBorders,
+                                 "layers.draw-bigimage-borders",
+                                 false);
 
     uint32_t canvasMask = (1 << BACKEND_CAIRO) | (1 << BACKEND_SKIA);
     uint32_t contentMask = 0;
@@ -416,10 +428,6 @@ gfxPlatform::Init()
     Preferences::RegisterCallbackAndCall(RecordingPrefChanged, "gfx.2d.recording", nullptr);
 
     gPlatform->mOrientationSyncMillis = Preferences::GetUint("layers.orientation.sync.timeout", (uint32_t)0);
-
-    mozilla::Preferences::AddBoolVarCache(&sDrawLayerBorders,
-                                          "layers.draw-borders",
-                                          false);
 
     mozilla::Preferences::AddBoolVarCache(&sDrawFrameCounter,
                                           "layers.frame-counter",
@@ -1181,10 +1189,20 @@ gfxPlatform::IsLangCJK(eFontPrefLang aLang)
     }
 }
 
-bool
-gfxPlatform::DrawLayerBorders()
+mozilla::layers::DiagnosticTypes
+gfxPlatform::GetLayerDiagnosticTypes()
 {
-    return sDrawLayerBorders;
+  mozilla::layers::DiagnosticTypes type = DIAGNOSTIC_NONE;
+  if (mDrawLayerBorders) {
+    type |= mozilla::layers::DIAGNOSTIC_LAYER_BORDERS;
+  }
+  if (mDrawTileBorders) {
+    type |= mozilla::layers::DIAGNOSTIC_TILE_BORDERS;
+  }
+  if (mDrawBigImageBorders) {
+    type |= mozilla::layers::DIAGNOSTIC_BIGIMAGE_BORDERS;
+  }
+  return type;
 }
 
 bool
