@@ -15,6 +15,7 @@ MOCHITEST_METRO_FILES = \
   browser_urlbar.js \
   browser_bookmarks.js \
   browser_canonizeURL.js \
+  browser_circular_progress_indicator.js \
   browser_context_menu_tests.js \
   browser_context_menu_tests_01.html \
   browser_context_menu_tests_02.html \
@@ -27,6 +28,7 @@ MOCHITEST_METRO_FILES = \
   browser_onscreen_keyboard.js \
   browser_onscreen_keyboard.html \
   browser_prefs_ui.js \
+  browser_progress_indicator.xul \
   browser_remotetabs.js \
   browser_tabs.js \
   browser_test.js \

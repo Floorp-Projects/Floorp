@@ -759,7 +759,13 @@ InplaceEditor.prototype = {
       } else {
         this.popup.selectNextItem();
       }
-      this.input.value = this.popup.selectedItem.label;
+      let input = this.input;
+      let pre = input.value.slice(0, input.selectionStart);
+      let post = input.value.slice(input.selectionEnd, input.value.length);
+      let item = this.popup.selectedItem;
+      let toComplete = item.label.slice(item.preLabel.length);
+      input.value = pre + toComplete + post;
+      input.setSelectionRange(pre.length, pre.length + toComplete.length);
       this._updateSize();
       // This emit is mainly for the purpose of making the test flow simpler.
       this.emit("after-suggest");
@@ -898,6 +904,7 @@ InplaceEditor.prototype = {
         return;
       }
       let query = input.value.slice(0, input.selectionStart);
+      let startCheckQuery = query;
       if (!query) {
         return;
       }
@@ -906,28 +913,52 @@ InplaceEditor.prototype = {
       if (this.contentType == CONTENT_TYPES.CSS_PROPERTY) {
         list = CSSPropertyList;
       } else if (this.contentType == CONTENT_TYPES.CSS_VALUE) {
-        list = domUtils.getCSSValuesForProperty(this.property.name).sort();
+        list = domUtils.getCSSValuesForProperty(this.property.name);
+      } else if (this.contentType == CONTENT_TYPES.CSS_MIXED &&
+                 /^\s*style\s*=/.test(query)) {
+        // Detecting if cursor is at property or value;
+        let match = query.match(/([:;"'=]?)\s*([^"';:= ]+)$/);
+        if (match && match.length == 3) {
+          if (match[1] == ":") { // We are in CSS value completion
+            let propertyName =
+              query.match(/[;"'=]\s*([^"';:= ]+)\s*:\s*[^"';:= ]+$/)[1];
+            list = domUtils.getCSSValuesForProperty(propertyName);
+            startCheckQuery = match[2];
+          } else if (match[1]) { // We are in CSS property name completion
+            list = CSSPropertyList;
+            startCheckQuery = match[2];
+          }
+          if (!startCheckQuery) {
+            // This emit is mainly to make the test flow simpler.
+            this.emit("after-suggest", "nothing to autocomplete");
+            return;
+          }
+        }
       }
 
       list.some(item => {
-        if (item.startsWith(query)) {
-          input.value = item;
-          input.setSelectionRange(query.length, item.length);
+        if (item.startsWith(startCheckQuery)) {
+          input.value = query + item.slice(startCheckQuery.length) +
+                        input.value.slice(query.length);
+          input.setSelectionRange(query.length, query.length + item.length -
+                                                startCheckQuery.length);
           this._updateSize();
           return true;
         }
       });
 
       if (!this.popup) {
+        // This emit is mainly to make the test flow simpler.
+        this.emit("after-suggest", "no popup");
         return;
       }
       let finalList = [];
       let length = list.length;
       for (let i = 0, count = 0; i < length && count < MAX_POPUP_ENTRIES; i++) {
-        if (list[i].startsWith(query)) {
+        if (list[i].startsWith(startCheckQuery)) {
           count++;
           finalList.push({
-            preLabel: query,
+            preLabel: startCheckQuery,
             label: list[i]
           });
         }
@@ -936,7 +967,7 @@ InplaceEditor.prototype = {
           // which would have started with query, assuming that list is sorted.
           break;
         }
-        else if (list[i][0] > query[0]) {
+        else if (list[i][0] > startCheckQuery[0]) {
           // We have crossed all possible matches alphabetically.
           break;
         }
