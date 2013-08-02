@@ -1534,7 +1534,7 @@ js::ToNumberSlow(JSContext *cx, Value v, double *out)
  * conversion. Return converted value in *out on success, false on failure.
  */
 JS_PUBLIC_API(bool)
-js::ToInt64Slow(JSContext *cx, const Value &v, int64_t *out)
+js::ToInt64Slow(JSContext *cx, const HandleValue v, int64_t *out)
 {
     JS_ASSERT(!v.isInt32());
     double d;
@@ -1553,7 +1553,7 @@ js::ToInt64Slow(JSContext *cx, const Value &v, int64_t *out)
  * conversion. Return converted value in *out on success, false on failure.
  */
 JS_PUBLIC_API(bool)
-js::ToUint64Slow(JSContext *cx, const Value &v, uint64_t *out)
+js::ToUint64Slow(JSContext *cx, const HandleValue v, uint64_t *out)
 {
     JS_ASSERT(!v.isInt32());
     double d;
@@ -1568,7 +1568,7 @@ js::ToUint64Slow(JSContext *cx, const Value &v, uint64_t *out)
 }
 
 JS_PUBLIC_API(bool)
-js::ToInt32Slow(JSContext *cx, const Value &v, int32_t *out)
+js::ToInt32Slow(JSContext *cx, const HandleValue v, int32_t *out)
 {
     JS_ASSERT(!v.isInt32());
     double d;
@@ -1583,7 +1583,7 @@ js::ToInt32Slow(JSContext *cx, const Value &v, int32_t *out)
 }
 
 JS_PUBLIC_API(bool)
-js::ToUint32Slow(JSContext *cx, const Value &v, uint32_t *out)
+js::ToUint32Slow(JSContext *cx, const HandleValue v, uint32_t *out)
 {
     JS_ASSERT(!v.isInt32());
     double d;
@@ -1598,7 +1598,7 @@ js::ToUint32Slow(JSContext *cx, const Value &v, uint32_t *out)
 }
 
 JS_PUBLIC_API(bool)
-js::ToUint16Slow(JSContext *cx, const Value &v, uint16_t *out)
+js::ToUint16Slow(JSContext *cx, const HandleValue v, uint16_t *out)
 {
     JS_ASSERT(!v.isInt32());
     double d;

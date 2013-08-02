@@ -75,9 +75,9 @@ class JS_PUBLIC_API(AutoCheckRequestDepth)
  * Also check that GC would be safe at this point.
  */
 JS_PUBLIC_API(void)
-AssertArgumentsAreSane(JSContext *cx, const Value &v);
+AssertArgumentsAreSane(JSContext *cx, JS::Handle<JS::Value> v);
 #else
-inline void AssertArgumentsAreSane(JSContext *cx, const Value &v) {
+inline void AssertArgumentsAreSane(JSContext *cx, JS::Handle<JS::Value> v) {
     /* Do nothing */
 }
 #endif /* DEBUG */
@@ -1600,35 +1600,32 @@ JS_ValueToUint64(JSContext *cx, jsval v, uint64_t *ip);
 namespace js {
 /* DO NOT CALL THIS.  Use JS::ToInt16. */
 extern JS_PUBLIC_API(bool)
-ToUint16Slow(JSContext *cx, const JS::Value &v, uint16_t *out);
+ToUint16Slow(JSContext *cx, JS::Handle<JS::Value> v, uint16_t *out);
 
 /* DO NOT CALL THIS.  Use JS::ToInt32. */
 extern JS_PUBLIC_API(bool)
-ToInt32Slow(JSContext *cx, const JS::Value &v, int32_t *out);
+ToInt32Slow(JSContext *cx, JS::Handle<JS::Value> v, int32_t *out);
 
 /* DO NOT CALL THIS.  Use JS::ToUint32. */
 extern JS_PUBLIC_API(bool)
-ToUint32Slow(JSContext *cx, const JS::Value &v, uint32_t *out);
+ToUint32Slow(JSContext *cx, JS::Handle<JS::Value> v, uint32_t *out);
 
 /* DO NOT CALL THIS. Use JS::ToInt64. */
 extern JS_PUBLIC_API(bool)
-ToInt64Slow(JSContext *cx, const JS::Value &v, int64_t *out);
+ToInt64Slow(JSContext *cx, JS::Handle<JS::Value> v, int64_t *out);
 
 /* DO NOT CALL THIS. Use JS::ToUint64. */
 extern JS_PUBLIC_API(bool)
-ToUint64Slow(JSContext *cx, const JS::Value &v, uint64_t *out);
+ToUint64Slow(JSContext *cx, JS::Handle<JS::Value> v, uint64_t *out);
 } /* namespace js */
 
 namespace JS {
 
 JS_ALWAYS_INLINE bool
-ToUint16(JSContext *cx, const JS::Value &v, uint16_t *out)
+ToUint16(JSContext *cx, JS::Handle<JS::Value> v, uint16_t *out)
 {
     AssertArgumentsAreSane(cx, v);
-    {
-        js::SkipRoot skip(cx, &v);
-        js::MaybeCheckStackRoots(cx);
-    }
+    js::MaybeCheckStackRoots(cx);
 
     if (v.isInt32()) {
         *out = uint16_t(v.toInt32());
@@ -1638,13 +1635,10 @@ ToUint16(JSContext *cx, const JS::Value &v, uint16_t *out)
 }
 
 JS_ALWAYS_INLINE bool
-ToInt32(JSContext *cx, const JS::Value &v, int32_t *out)
+ToInt32(JSContext *cx, JS::Handle<JS::Value> v, int32_t *out)
 {
     AssertArgumentsAreSane(cx, v);
-    {
-        js::SkipRoot root(cx, &v);
-        js::MaybeCheckStackRoots(cx);
-    }
+    js::MaybeCheckStackRoots(cx);
 
     if (v.isInt32()) {
         *out = v.toInt32();
@@ -1654,13 +1648,10 @@ ToInt32(JSContext *cx, const JS::Value &v, int32_t *out)
 }
 
 JS_ALWAYS_INLINE bool
-ToUint32(JSContext *cx, const JS::Value &v, uint32_t *out)
+ToUint32(JSContext *cx, JS::Handle<JS::Value> v, uint32_t *out)
 {
     AssertArgumentsAreSane(cx, v);
-    {
-        js::SkipRoot root(cx, &v);
-        js::MaybeCheckStackRoots(cx);
-    }
+    js::MaybeCheckStackRoots(cx);
 
     if (v.isInt32()) {
         *out = uint32_t(v.toInt32());
@@ -1670,13 +1661,10 @@ ToUint32(JSContext *cx, const JS::Value &v, uint32_t *out)
 }
 
 JS_ALWAYS_INLINE bool
-ToInt64(JSContext *cx, const JS::Value &v, int64_t *out)
+ToInt64(JSContext *cx, JS::Handle<JS::Value> v, int64_t *out)
 {
     AssertArgumentsAreSane(cx, v);
-    {
-        js::SkipRoot skip(cx, &v);
-        js::MaybeCheckStackRoots(cx);
-    }
+    js::MaybeCheckStackRoots(cx);
 
     if (v.isInt32()) {
         *out = int64_t(v.toInt32());
@@ -1687,13 +1675,10 @@ ToInt64(JSContext *cx, const JS::Value &v, int64_t *out)
 }
 
 JS_ALWAYS_INLINE bool
-ToUint64(JSContext *cx, const JS::Value &v, uint64_t *out)
+ToUint64(JSContext *cx, JS::Handle<JS::Value> v, uint64_t *out)
 {
     AssertArgumentsAreSane(cx, v);
-    {
-        js::SkipRoot skip(cx, &v);
-        js::MaybeCheckStackRoots(cx);
-    }
+    js::MaybeCheckStackRoots(cx);
 
     if (v.isInt32()) {
         /* Account for sign extension of negatives into the longer 64bit space. */
