@@ -965,9 +965,10 @@ let PlacesToolbarHelper = {
     // If the bookmarks toolbar item is hidden because the parent toolbar is
     // collapsed or hidden (i.e. in a popup), spare the initialization.  Also,
     // there is no need to initialize the toolbar if customizing because
-    // init() will be called when the customization is done.
+    // init() will be called when the customization is done.  Finally the view
+    // is hidden if the element is not on a toolbar.
     let toolbar = viewElt.parentNode.parentNode;
-    if (toolbar.collapsed ||
+    if (toolbar.localName != "toolbar" || toolbar.collapsed ||
         getComputedStyle(toolbar, "").display == "none" ||
         this._isCustomizing)
       return;
@@ -976,16 +977,27 @@ let PlacesToolbarHelper = {
   },
 
   customizeStart: function PTH_customizeStart() {
-    let viewElt = this._viewElt;
-    if (viewElt && viewElt._placesView)
-      viewElt._placesView.uninit();
-
-    this._isCustomizing = true;
+    try {
+      let viewElt = this._viewElt;
+      if (viewElt && viewElt._placesView)
+        viewElt._placesView.uninit();
+    } finally {
+      this._isCustomizing = true;
+    }
   },
 
   customizeDone: function PTH_customizeDone() {
     this._isCustomizing = false;
     this.init();
+  },
+
+  onPlaceholderCommand: function () {
+    let widgetGroup = CustomizableUI.getWidget("personal-bookmarks");
+    let widget = widgetGroup.forWindow(window);
+    if (widget.overflowed ||
+        widgetGroup.areaType == CustomizableUI.TYPE_MENU_PANEL) {
+      PlacesCommandHook.showPlacesOrganizer("BookmarksToolbar");
+    }
   }
 };
 

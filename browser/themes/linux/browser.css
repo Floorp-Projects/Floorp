@@ -83,7 +83,8 @@
 }
 
 /* Places toolbar */
-toolbarbutton.bookmark-item {
+toolbarbutton.bookmark-item,
+#personal-bookmarks[customizableui-areatype="toolbar"] > #bookmarks-toolbar-placeholder {
   margin: 0;
   padding: 2px 3px;
 }
@@ -96,13 +97,15 @@ toolbarbutton.bookmark-item[open="true"] {
   -moz-padding-end: 2px;
 }
 
-.bookmark-item > .toolbarbutton-icon {
+.bookmark-item > .toolbarbutton-icon,
+#personal-bookmarks[customizableui-areatype="toolbar"] > #bookmarks-toolbar-placeholder > .toolbarbutton-icon {
   width: 16px;
   height: 16px;
 }
 
 /* Force the display of the label for bookmarks */
-.bookmark-item > .toolbarbutton-text {
+.bookmark-item > .toolbarbutton-text,
+#personal-bookmarks[customizableui-areatype="toolbar"] > #bookmarks-toolbar-placeholder > .toolbarbutton-text {
   display: -moz-box !important;
 }
 
@@ -115,12 +118,7 @@ toolbarbutton.bookmark-item[open="true"] {
   display: -moz-box !important;
 }
 
-#wrapper-personal-bookmarks[place="palette"] > .toolbarpaletteitem-box {
-  background: url("chrome://browser/skin/places/bookmarksToolbar.png") no-repeat center;
-}
-
-.bookmarks-toolbar-customize {
-  max-width: 15em !important;
+#bookmarks-toolbar-placeholder {
   list-style-image: url("chrome://browser/skin/places/bookmarksToolbar.png") !important;
 }
 

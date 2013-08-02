@@ -165,7 +165,6 @@ These should match what Safari and other Apple applications use on OS X Lion. --
 
 <!ENTITY locationItem.title           "Location">
 <!ENTITY searchItem.title             "Search">
-<!ENTITY bookmarksItem.title          "Bookmarks">
 
 <!-- Toolbar items --> 
 <!ENTITY homeButton.label             "Home">
@@ -727,5 +726,6 @@ just addresses the organization to follow, e.g. "This site is run by " -->
 <!ENTITY backForwardItem.title         "Back/Forward">
 <!ENTITY viewBookmarksSidebar.label    "Show in Sidebar">
 <!ENTITY appMenuBookmarks.label        "Bookmarks">
+<!ENTITY bookmarksItem.title           "Bookmarks">
 <!-- end of strings to be removed post-Australis -->
 
