@@ -12,6 +12,7 @@ import org.mozilla.gecko.db.BrowserDB.URLColumns;
 import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
 
 import android.content.Context;
+import android.content.res.TypedArray;
 import android.database.Cursor;
 import android.text.TextUtils;
 import android.util.AttributeSet;
@@ -39,6 +40,9 @@ public class TopBookmarksView extends GridView {
     // Number of columns to show.
     private final int mNumColumns;
 
+    // Vertical spacing inbetween the rows.
+    private final int mVerticalSpacing;
+
     // On URL open listener.
     private OnUrlOpenListener mUrlOpenListener;
 
@@ -61,6 +65,10 @@ public class TopBookmarksView extends GridView {
         mMaxBookmarks = getResources().getInteger(R.integer.number_of_top_sites);
         mNumColumns = getResources().getInteger(R.integer.number_of_top_sites_cols);
         setNumColumns(mNumColumns);
+
+        TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.TopBookmarksView, defStyle, 0);
+        mVerticalSpacing = a.getDimensionPixelOffset(R.styleable.TopBookmarksView_android_verticalSpacing, 0x00);
+        a.recycle();
     }
 
     /**
@@ -164,9 +172,10 @@ public class TopBookmarksView extends GridView {
         // Number of rows required to show these bookmarks.
         final int rows = (int) Math.ceil((double) total / mNumColumns);
         final int childrenHeight = childHeight * rows;
+        final int totalVerticalSpacing = rows > 0 ? (rows - 1) * mVerticalSpacing : 0;
 
         // Total height of this view.
-        final int measuredHeight = childrenHeight + getPaddingTop() + getPaddingBottom();
+        final int measuredHeight = childrenHeight + getPaddingTop() + getPaddingBottom() + totalVerticalSpacing;
         setMeasuredDimension(measuredWidth, measuredHeight);
     }
 
