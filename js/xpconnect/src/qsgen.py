@@ -497,23 +497,23 @@ def writeArgumentUnboxing(f, i, name, type, optional, rvdeclared,
     isSetter = (i is None)
 
     if isSetter:
-        argPtr = "argv"
+        argPtr = "argv[0].address()"
         argVal = "argv[0]"
     elif optional:
         if typeName == "[jsval]":
-            val = "JSVAL_VOID"
+            val = "JS::UndefinedHandleValue"
         else:
-            val = "JSVAL_NULL"
+            val = "JS::NullHandleValue"
         argVal = "(%d < argc ? argv[%d] : %s)" % (i, i, val)
         if typeName == "[jsval]":
             # This should use the rooted argument,
             # however we probably won't ever need to support that.
             argPtr = None
         else:
-            argPtr = "(%d < argc ? &argv[%d] : NULL)" % (i, i)
+            argPtr = "(%d < argc ? argv[%d].address() : NULL)" % (i, i)
     else:
         argVal = "argv[%d]" % i
-        argPtr = "&" + argVal
+        argPtr = argVal + ".address()"
 
     params = {
         'name': name,
@@ -879,7 +879,7 @@ def writeQuickStub(f, customMethodCalls, stringtable, member, stubName,
     rvdeclared = False
     if isMethod:
         if len(member.params) > 0:
-            f.write("    jsval *argv = JS_ARGV(cx, vp);\n")
+            f.write("    JS::CallArgs argv = JS::CallArgsFromVp(argc, vp);\n")
         for i, param in enumerate(member.params):
             argName = 'arg%d' % i
             argTypeKey = argName + 'Type'
@@ -897,7 +897,7 @@ def writeQuickStub(f, customMethodCalls, stringtable, member, stubName,
                 nullBehavior=param.null,
                 undefinedBehavior=param.undefined)
     elif isSetter:
-        f.write("    jsval *argv = JS_ARGV(cx, vp);\n")
+        f.write("    JS::CallArgs argv = JS::CallArgsFromVp(argc, vp);\n")
         rvdeclared = writeArgumentUnboxing(f, None, 'arg0', member.realtype,
                                            optional=False,
                                            rvdeclared=rvdeclared,
