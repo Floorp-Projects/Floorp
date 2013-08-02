@@ -130,6 +130,19 @@ class CPPUnittestOptions(OptionParser):
                         default = None,
                         help = "absolute path to directory containing breakpad symbols, or the URL of a zip file containing symbols")
 
+def extract_unittests_from_args(args):
+    """Extract unittests from args, expanding directories as needed"""
+    progs = []
+
+    for p in args:
+        if os.path.isdir(p):
+            #filter out .py files packaged with the unit tests
+            progs.extend([os.path.abspath(os.path.join(p, x)) for x in os.listdir(p) if not x.endswith('.py')])
+        else:
+            progs.append(os.path.abspath(p))
+
+    return progs
+
 def main():
     parser = CPPUnittestOptions()
     options, args = parser.parse_args()
@@ -139,13 +152,7 @@ def main():
     if not options.xre_path:
         print >>sys.stderr, """Error: --xre-path is required"""
         sys.exit(1)
-    progs = []
-    for p in args:
-        if os.path.isdir(p):
-            #filter out .py files packaged with the unit tests
-            progs.extend([os.path.abspath(os.path.join(p, x)) for x in os.listdir(p) if not x.endswith('.py')])
-        else:
-            progs.append(os.path.abspath(p))
+    progs = extract_unittests_from_args(args)
     options.xre_path = os.path.abspath(options.xre_path)
     tester = CPPUnitTests()
     try:
