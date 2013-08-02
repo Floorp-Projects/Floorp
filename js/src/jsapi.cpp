@@ -2944,8 +2944,12 @@ JS_NewGlobalObject(JSContext *cx, JSClass *clasp, JSPrincipals *principals,
     if (!global)
         return NULL;
 
-    if (!Debugger::onNewGlobalObject(cx, global))
-        return NULL;
+    // This hook is infallible, because we can't really throw at this point.
+    // The global object is already created and in the heap, which is
+    // externally observable since the finalize hook will be called when the
+    // global is GCed. This will eat OOM and slow script, but if that happens
+    // we'll likely run up into them again soon in a fallible context.
+    Debugger::onNewGlobalObject(cx, global);
 
     return global;
 }
