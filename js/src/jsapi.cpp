@@ -706,8 +706,15 @@ JS_ShutDown(void)
 {
     MOZ_ASSERT(jsInitState == Running,
                "JS_ShutDown must only be called after JS_Init and can't race with it");
-    MOZ_ASSERT(!JSRuntime::hasLiveRuntimes(),
-               "forgot to destroy a runtime before shutting down");
+#ifdef DEBUG
+    if (JSRuntime::hasLiveRuntimes()) {
+        // Gecko is too buggy to assert this just yet.
+        fprintf(stderr,
+                "WARNING: YOU ARE LEAKING THE WORLD (at least one JSRuntime "
+                "and everything alive inside it, that is) AT JS_ShutDown "
+                "TIME.  FIX THIS!\n");
+    }
+#endif
 
     PRMJ_NowShutdown();
 
