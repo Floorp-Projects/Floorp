@@ -312,6 +312,10 @@ class CodeGeneratorShared : public LInstructionVisitor
         masm.storeCallResult(reg);
     }
 
+    void storeFloatResultTo(const FloatRegister &reg) {
+        masm.storeCallFloatResult(reg);
+    }
+
     template <typename T>
     void storeResultValueTo(const T &t) {
         masm.storeCallResultValue(t);
@@ -525,6 +529,26 @@ class StoreRegisterTo
 
     inline void generate(CodeGeneratorShared *codegen) const {
         codegen->storeResultTo(out_);
+    }
+    inline RegisterSet clobbered() const {
+        RegisterSet set = RegisterSet();
+        set.add(out_);
+        return set;
+    }
+};
+
+class StoreFloatRegisterTo
+{
+  private:
+    FloatRegister out_;
+
+  public:
+    StoreFloatRegisterTo(const FloatRegister &out)
+      : out_(out)
+    { }
+
+    inline void generate(CodeGeneratorShared *codegen) const {
+        codegen->storeFloatResultTo(out_);
     }
     inline RegisterSet clobbered() const {
         RegisterSet set = RegisterSet();
