@@ -4,11 +4,13 @@
 function whenNewWindowLoaded(aOptions, aCallback) {
   let win = OpenBrowserWindow(aOptions);
   let gotLoad = false;
-  let gotActivate = Services.focus.activeWindow == win;
+  let gotActivate = (Cc["@mozilla.org/focus-manager;1"].getService(Ci.nsIFocusManager).activeWindow == win);
 
   function maybeRunCallback() {
     if (gotLoad && gotActivate) {
-      executeSoon(function() { aCallback(win); });
+      win.BrowserChromeTest.runWhenReady(function() {
+        executeSoon(function() { aCallback(win); });
+      });
     }
   }
 
@@ -23,15 +25,12 @@ function whenNewWindowLoaded(aOptions, aCallback) {
     info("Was activated.");
   }
 
-  Services.obs.addObserver(function observer(aSubject, aTopic) {
-    if (win == aSubject) {
-      info("Delayed startup finished");
-      Services.obs.removeObserver(observer, aTopic);
-      gotLoad = true;
-      maybeRunCallback();
-    }
-  }, "browser-delayed-startup-finished", false);
-
+  win.addEventListener("load", function onLoad() {
+    info("Got load");
+    win.removeEventListener("load", onLoad, false);
+    gotLoad = true;
+    maybeRunCallback();
+  }, false);
   return win;
 }
 
