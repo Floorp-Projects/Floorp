@@ -94,7 +94,7 @@ ClientCanvasLayer::RenderLayer()
         flags |= TEXTURE_DEALLOCATE_CLIENT;
       }
     }
-    mCanvasClient = CanvasClient::CreateCanvasClient(GetCompositableClientType(),
+    mCanvasClient = CanvasClient::CreateCanvasClient(GetCanvasClientType(),
                                                      ClientManager(), flags);
     if (!mCanvasClient) {
       return;

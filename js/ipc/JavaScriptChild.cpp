@@ -284,7 +284,7 @@ JavaScriptChild::AnswerDelete(const ObjectId &objId, const nsString &id, ReturnS
         return fail(cx, rs);
 
     RootedValue v(cx);
-    if (!JS_DeletePropertyById2(cx, obj, internedId, v.address()))
+    if (!JS_DeletePropertyById2(cx, obj, internedId, &v))
         return fail(cx, rs);
 
     JSBool b;

@@ -1283,11 +1283,6 @@ public class GeckoAppShell
     public static void alertsProgressListener_OnProgress(String aAlertName, long aProgress, long aProgressMax, String aAlertText) {
         int notificationID = aAlertName.hashCode();
         sNotificationClient.update(notificationID, aProgress, aProgressMax, aAlertText);
-
-        if (aProgress == aProgressMax) {
-            // Hide the notification at 100%
-            removeObserver(aAlertName);
-        }
     }
 
     public static void closeNotification(String aAlertName) {

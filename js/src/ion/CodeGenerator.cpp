@@ -144,6 +144,12 @@ CodeGenerator::~CodeGenerator()
     js_delete(unassociatedScriptCounts_);
 }
 
+typedef bool (*StringToNumberFn)(ThreadSafeContext *, JSString *, double *);
+typedef ParallelResult (*StringToNumberParFn)(ForkJoinSlice *, JSString *, double *);
+static const VMFunctionsModal StringToNumberInfo = VMFunctionsModal(
+    FunctionInfo<StringToNumberFn>(StringToNumber),
+    FunctionInfo<StringToNumberParFn>(StringToNumberPar));
+
 bool
 CodeGenerator::visitValueToInt32(LValueToInt32 *lir)
 {
@@ -152,10 +158,19 @@ CodeGenerator::visitValueToInt32(LValueToInt32 *lir)
 
     Register tag = masm.splitTagForTest(operand);
 
-    Label done, simple, isInt32, isBool, notDouble;
+    Label done, simple, isInt32, isBool, isString, notDouble;
     // Type-check switch.
-    masm.branchTestInt32(Assembler::Equal, tag, &isInt32);
-    masm.branchTestBoolean(Assembler::Equal, tag, &isBool);
+    MDefinition *input;
+    if (lir->mode() == LValueToInt32::NORMAL)
+        input = lir->mirNormal()->input();
+    else
+        input = lir->mirTruncate()->input();
+    masm.branchEqualTypeIfNeeded(MIRType_Int32, input, tag, &isInt32);
+    masm.branchEqualTypeIfNeeded(MIRType_Boolean, input, tag, &isBool);
+    // Only convert strings to int if we are in a truncation context, like
+    // bitwise operations.
+    if (lir->mode() == LValueToInt32::TRUNCATE)
+        masm.branchEqualTypeIfNeeded(MIRType_String, input, tag, &isString);
     masm.branchTestDouble(Assembler::NotEqual, tag, &notDouble);
 
     // If the value is a double, see if it fits in a 32-bit int. We need to ask
@@ -163,16 +178,13 @@ CodeGenerator::visitValueToInt32(LValueToInt32 *lir)
     FloatRegister temp = ToFloatRegister(lir->tempFloat());
     masm.unboxDouble(operand, temp);
 
-    Label fails;
-    switch (lir->mode()) {
-      case LValueToInt32::TRUNCATE:
+    Label fails, isDouble;
+    masm.bind(&isDouble);
+    if (lir->mode() == LValueToInt32::TRUNCATE) {
         if (!emitTruncateDouble(temp, output))
             return false;
-        break;
-      default:
-        JS_ASSERT(lir->mode() == LValueToInt32::NORMAL);
-        masm.convertDoubleToInt32(temp, output, &fails, lir->mir()->canBeNegativeZero());
-        break;
+    } else {
+        masm.convertDoubleToInt32(temp, output, &fails, lir->mirNormal()->canBeNegativeZero());
     }
     masm.jump(&done);
 
@@ -183,10 +195,9 @@ CodeGenerator::visitValueToInt32(LValueToInt32 *lir)
         // which we can't handle here.
         masm.branchTestNull(Assembler::NotEqual, tag, &fails);
     } else {
-        // Test for string or object - then fallthrough to null, which will
-        // also handle undefined.
-        masm.branchTestObject(Assembler::Equal, tag, &fails);
-        masm.branchTestString(Assembler::Equal, tag, &fails);
+        // Test for object - then fallthrough to null, which will also handle
+        // undefined.
+        masm.branchEqualTypeIfNeeded(MIRType_Object, input, tag, &fails);
     }
 
     if (fails.used() && !bailoutFrom(&fails, lir->snapshot()))
@@ -196,14 +207,33 @@ CodeGenerator::visitValueToInt32(LValueToInt32 *lir)
     masm.mov(Imm32(0), output);
     masm.jump(&done);
 
+    // Unbox a string, call StringToNumber to get a double back, and jump back
+    // to the snippet generated above about dealing with doubles.
+    if (isString.used()) {
+        masm.bind(&isString);
+        Register str = masm.extractString(operand, ToRegister(lir->temp()));
+        OutOfLineCode *ool = oolCallVM(StringToNumberInfo, lir, (ArgList(), str),
+                                       StoreFloatRegisterTo(temp));
+        if (!ool)
+            return false;
+
+        masm.jump(ool->entry());
+        masm.bind(ool->rejoin());
+        masm.jump(&isDouble);
+    }
+
     // Just unbox a bool, the result is 0 or 1.
-    masm.bind(&isBool);
-    masm.unboxBoolean(operand, output);
-    masm.jump(&done);
+    if (isBool.used()) {
+        masm.bind(&isBool);
+        masm.unboxBoolean(operand, output);
+        masm.jump(&done);
+    }
 
     // Integers can be unboxed.
-    masm.bind(&isInt32);
-    masm.unboxInt32(operand, output);
+    if (isInt32.used()) {
+        masm.bind(&isInt32);
+        masm.unboxInt32(operand, output);
+    }
 
     masm.bind(&done);
 
@@ -4038,7 +4068,7 @@ CodeGenerator::visitEmulatesUndefinedAndBranch(LEmulatesUndefinedAndBranch *lir)
     return true;
 }
 
-typedef JSString *(*ConcatStringsFn)(JSContext *, HandleString, HandleString);
+typedef JSString *(*ConcatStringsFn)(ThreadSafeContext *, HandleString, HandleString);
 typedef ParallelResult (*ConcatStringsParFn)(ForkJoinSlice *, HandleString, HandleString,
                                              MutableHandleString);
 static const VMFunctionsModal ConcatStringsInfo = VMFunctionsModal(
@@ -6135,7 +6165,10 @@ CodeGenerator::visitThrow(LThrow *lir)
 }
 
 typedef bool (*BitNotFn)(JSContext *, HandleValue, int *p);
-static const VMFunction BitNotInfo = FunctionInfo<BitNotFn>(BitNot);
+typedef ParallelResult (*BitNotParFn)(ForkJoinSlice *, HandleValue, int32_t *);
+static const VMFunctionsModal BitNotInfo = VMFunctionsModal(
+    FunctionInfo<BitNotFn>(BitNot),
+    FunctionInfo<BitNotParFn>(BitNotPar));
 
 bool
 CodeGenerator::visitBitNotV(LBitNotV *lir)
@@ -6145,11 +6178,22 @@ CodeGenerator::visitBitNotV(LBitNotV *lir)
 }
 
 typedef bool (*BitopFn)(JSContext *, HandleValue, HandleValue, int *p);
-static const VMFunction BitAndInfo = FunctionInfo<BitopFn>(BitAnd);
-static const VMFunction BitOrInfo = FunctionInfo<BitopFn>(BitOr);
-static const VMFunction BitXorInfo = FunctionInfo<BitopFn>(BitXor);
-static const VMFunction BitLhsInfo = FunctionInfo<BitopFn>(BitLsh);
-static const VMFunction BitRhsInfo = FunctionInfo<BitopFn>(BitRsh);
+typedef ParallelResult (*BitopParFn)(ForkJoinSlice *, HandleValue, HandleValue, int32_t *);
+static const VMFunctionsModal BitAndInfo = VMFunctionsModal(
+    FunctionInfo<BitopFn>(BitAnd),
+    FunctionInfo<BitopParFn>(BitAndPar));
+static const VMFunctionsModal BitOrInfo = VMFunctionsModal(
+    FunctionInfo<BitopFn>(BitOr),
+    FunctionInfo<BitopParFn>(BitOrPar));
+static const VMFunctionsModal BitXorInfo = VMFunctionsModal(
+    FunctionInfo<BitopFn>(BitXor),
+    FunctionInfo<BitopParFn>(BitXorPar));
+static const VMFunctionsModal BitLhsInfo = VMFunctionsModal(
+    FunctionInfo<BitopFn>(BitLsh),
+    FunctionInfo<BitopParFn>(BitLshPar));
+static const VMFunctionsModal BitRhsInfo = VMFunctionsModal(
+    FunctionInfo<BitopFn>(BitRsh),
+    FunctionInfo<BitopParFn>(BitRshPar));
 
 bool
 CodeGenerator::visitBitOpV(LBitOpV *lir)
