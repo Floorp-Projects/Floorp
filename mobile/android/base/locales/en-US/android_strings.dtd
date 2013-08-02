@@ -195,9 +195,8 @@ size. -->
 <!ENTITY tabs_normal "Tabs">
 <!ENTITY tabs_private "Private">
 <!ENTITY tabs_synced "Synced">
-<!ENTITY wallpaper_success "Wallpaper updated">
-<!ENTITY wallpaper_progress "Setting wallpaper">
-<!ENTITY wallpaper_fail "Unable to set wallpaper">
+<!ENTITY set_image_fail "Unable to set image">
+<!ENTITY set_image_chooser_title "Set Image As">
 
 <!-- Localization note (find_text, find_prev, find_next, find_close) : These strings are used
      as alternate text for accessibility. They are not visible in the UI. -->
