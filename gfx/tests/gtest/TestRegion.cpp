@@ -3,20 +3,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "TestHarness.h"
+#include "gtest/gtest.h"
 #include "nsRegion.h"
 
 class TestLargestRegion {
-  static bool TestSingleRect(nsRect r) {
+public:
+  static void TestSingleRect(nsRect r) {
     nsRegion region(r);
-    if (!region.GetLargestRectangle().IsEqualInterior(r)) {
-      fail("largest rect of singleton %d %d %d %d", r.x, r.y, r.width, r.height);
-      return false;
-    }
-    return true;
+    EXPECT_TRUE(region.GetLargestRectangle().IsEqualInterior(r));
   }
   // Construct a rectangle, remove part of it, then check the remainder
-  static bool TestNonRectangular() {
+  static void TestNonRectangular() {
     nsRegion r(nsRect(0, 0, 30, 30));
 
     const int nTests = 19;
@@ -52,24 +49,19 @@ class TestLargestRegion {
       { nsRect(0, 10, 20, 20), 300 }
     };
 
-    bool success = true;
     for (int32_t i = 0; i < nTests; i++) {
       nsRegion r2;
       r2.Sub(r, tests[i].rect);
 
-      if (!r2.IsComplex())
-        fail("nsRegion code got unexpectedly smarter!");
+      EXPECT_TRUE(r2.IsComplex()) << "nsRegion code got unexpectedly smarter!";
 
       nsRect largest = r2.GetLargestRectangle();
-      if (largest.width * largest.height != tests[i].expectedArea) {
-        fail("Did not successfully find largest rectangle in non-rectangular region on iteration %d", i);
-        success = false;
-      }
+      EXPECT_TRUE(largest.width * largest.height == tests[i].expectedArea) <<
+        "Did not successfully find largest rectangle in non-rectangular region on iteration " << i;
     }
 
-    return success;
   }
-  static bool TwoRectTest() {
+  static void TwoRectTest() {
     nsRegion r(nsRect(0, 0, 100, 100));
     const int nTests = 4;
     struct {
@@ -81,68 +73,54 @@ class TestLargestRegion {
       { nsRect(25, 0, 75, 40), nsRect(0, 60, 75, 40),  2000 },
       { nsRect(0, 0, 75, 40),  nsRect(25, 60, 75, 40), 2000 },
     };
-    bool success = true;
     for (int32_t i = 0; i < nTests; i++) {
       nsRegion r2;
 
       r2.Sub(r, tests[i].rect1);
       r2.Sub(r2, tests[i].rect2);
 
-      if (!r2.IsComplex())
-        fail("nsRegion code got unexpectedly smarter!");
+      EXPECT_TRUE(r2.IsComplex()) << "nsRegion code got unexpectedly smarter!";
 
       nsRect largest = r2.GetLargestRectangle();
-      if (largest.width * largest.height != tests[i].expectedArea) {
-        fail("Did not successfully find largest rectangle in two-rect-subtract region on iteration %d", i);
-        success = false;
-      }
+      EXPECT_TRUE(largest.width * largest.height == tests[i].expectedArea) <<
+        "Did not successfully find largest rectangle in two-rect-subtract region on iteration " << i;
     }
-    return success;
   }
-  static bool TestContainsSpecifiedRect() {
+  static void TestContainsSpecifiedRect() {
     nsRegion r(nsRect(0, 0, 100, 100));
     r.Or(r, nsRect(0, 300, 50, 50));
-    if (!r.GetLargestRectangle(nsRect(0, 300, 10, 10)).IsEqualInterior(nsRect(0, 300, 50, 50))) {
-      fail("Chose wrong rectangle");
-      return false;
-    }
-    return true;
+    EXPECT_TRUE(r.GetLargestRectangle(nsRect(0, 300, 10, 10)).IsEqualInterior(nsRect(0, 300, 50, 50))) <<
+      "Chose wrong rectangle";
   }
-  static bool TestContainsSpecifiedOverflowingRect() {
+  static void TestContainsSpecifiedOverflowingRect() {
     nsRegion r(nsRect(0, 0, 100, 100));
     r.Or(r, nsRect(0, 300, 50, 50));
-    if (!r.GetLargestRectangle(nsRect(0, 290, 10, 20)).IsEqualInterior(nsRect(0, 300, 50, 50))) {
-      fail("Chose wrong rectangle");
-      return false;
-    }
-    return true;
-  }
-public:
-  static bool Test() {
-    if (!TestSingleRect(nsRect(0, 52, 720, 480)) ||
-        !TestSingleRect(nsRect(-20, 40, 50, 20)) ||
-        !TestSingleRect(nsRect(-20, 40, 10, 8)) ||
-        !TestSingleRect(nsRect(-20, -40, 10, 8)) ||
-        !TestSingleRect(nsRect(-10, -10, 20, 20)))
-      return false;
-    if (!TestNonRectangular())
-      return false;
-    if (!TwoRectTest())
-      return false;
-    if (!TestContainsSpecifiedRect())
-      return false;
-    if (!TestContainsSpecifiedOverflowingRect())
-      return false;
-    passed("TestLargestRegion");
-    return true;
+    EXPECT_TRUE(r.GetLargestRectangle(nsRect(0, 290, 10, 20)).IsEqualInterior(nsRect(0, 300, 50, 50))) <<
+      "Chose wrong rectangle";
   }
 };
 
-int main(int argc, char** argv) {
-  ScopedXPCOM xpcom("TestRegion");
-  if (xpcom.failed())
-    return -1;
-  if (!TestLargestRegion::Test())
-    return -1;
-  return 0;
+TEST(Gfx, RegionSingleRect) {
+  TestLargestRegion::TestSingleRect(nsRect(0, 52, 720, 480));
+  TestLargestRegion::TestSingleRect(nsRect(-20, 40, 50, 20));
+  TestLargestRegion::TestSingleRect(nsRect(-20, 40, 10, 8));
+  TestLargestRegion::TestSingleRect(nsRect(-20, -40, 10, 8));
+  TestLargestRegion::TestSingleRect(nsRect(-10, -10, 20, 20));
 }
+
+TEST(Gfx, RegionNonRectangular) {
+  TestLargestRegion::TestNonRectangular();
+}
+
+TEST(Gfx, RegionTwoRectTest) {
+  TestLargestRegion::TwoRectTest();
+}
+
+TEST(Gfx, RegionContainsSpecifiedRect) {
+  TestLargestRegion::TestContainsSpecifiedRect();
+}
+
+TEST(Gfx, RegionTestContainsSpecifiedOverflowingRect) {
+  TestLargestRegion::TestContainsSpecifiedOverflowingRect();
+}
+

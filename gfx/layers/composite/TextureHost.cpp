@@ -454,7 +454,7 @@ MemoryTextureHost::MemoryTextureHost(uint64_t aID,
 MemoryTextureHost::~MemoryTextureHost()
 {
   DeallocateDeviceData();
-  MOZ_COUNT_DTOR(ShmemTextureHost);
+  MOZ_COUNT_DTOR(MemoryTextureHost);
 }
 
 void

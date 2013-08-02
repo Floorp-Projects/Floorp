@@ -284,7 +284,7 @@ nsXBLProtoImpl::ResolveAllFields(JSContext *cx, JS::Handle<JSObject*> obj) const
     JS::Rooted<JS::Value> dummy(cx);
     if (!::JS_LookupUCProperty(cx, obj,
                                reinterpret_cast<const jschar*>(name.get()),
-                               name.Length(), dummy.address())) {
+                               name.Length(), &dummy)) {
       return false;
     }
   }
@@ -304,7 +304,7 @@ nsXBLProtoImpl::UndefineFields(JSContext *cx, JS::Handle<JSObject*> obj) const
     if (::JS_AlreadyHasOwnUCProperty(cx, obj, s, name.Length(), &hasProp) &&
         hasProp) {
       JS::Rooted<JS::Value> dummy(cx);
-      ::JS_DeleteUCProperty2(cx, obj, s, name.Length(), dummy.address());
+      ::JS_DeleteUCProperty2(cx, obj, s, name.Length(), &dummy);
     }
   }
 }

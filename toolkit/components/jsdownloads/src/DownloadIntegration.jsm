@@ -73,7 +73,7 @@ XPCOMUtils.defineLazyGetter(this, "gStringBundle", function() {
  */
 this.DownloadIntegration = {
   // For testing only
-  testMode: false,
+  _testMode: false,
   dontLoad: false,
   dontCheckParentalControls: false,
   shouldBlockInTest: false,
@@ -87,6 +87,15 @@ this.DownloadIntegration = {
    * doesn't need to be persisted.
    */
   _store: null,
+
+  /**
+   * Gets and sets test mode
+   */
+  get testMode() this._testMode,
+  set testMode(mode) {
+    this._downloadsDirectory = null;
+    return (this._testMode = mode);
+  },
 
   /**
    * Performs initialization of the list of persistent downloads, before its

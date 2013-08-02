@@ -72,6 +72,26 @@
       };
     }
 
+    function changeCheckInput(aID, aIsChecked)
+    {
+      this.DOMNode = getNode(aID);
+
+      this.eventSeq = [
+        new stateChangeChecker(STATE_CHECKED, false, aIsChecked, this.DOMNode)
+      ];
+
+      this.invoke = function changeCheckInput_invoke()
+      {
+        this.DOMNode.checked = aIsChecked;
+      }
+
+      this.getID = function changeCheckInput_getID()
+      {
+        return "change checked state to '" + aIsChecked + "' for " +
+          prettyName(aID);
+      }
+    }
+
     function stateChangeOnFileInput(aID, aAttr, aValue,
                                     aState, aIsExtraState, aIsEnabled)
     {
@@ -154,6 +174,12 @@
       // invalid state change
       gQueue.push(new invalidInput("email"));
 
+      // checked state change
+      gQueue.push(new changeCheckInput("checkbox", true));
+      gQueue.push(new changeCheckInput("checkbox", false));
+      gQueue.push(new changeCheckInput("radio", true));
+      gQueue.push(new changeCheckInput("radio", false));
+
       // file input inherited state changes
       gQueue.push(new stateChangeOnFileInput("file", "aria-busy", "true",
                                              STATE_BUSY, false, true));
@@ -180,17 +206,22 @@
   <a target="_blank"
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=564471"
      title="Make state change events async">
-    Mozilla Bug 564471
-  </a><br>
+    Bug 564471
+  </a>
   <a target="_blank"
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=555728"
      title="Fire a11y event based on HTML5 constraint validation">
-    Mozilla Bug 555728
+    Bug 555728
   </a>
   <a target="_blank"
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=699017"
      title="File input control should be propogate states to descendants">
-    Mozilla Bug 699017
+    Bug 699017
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=788389"
+     title="Fire statechange event whenever checked state is changed not depending on focused state">
+    Bug 788389
   </a>
 
   <p id="display"></p>
@@ -203,6 +234,9 @@
   </div>
 
   <input id="email" type='email'>
+
+  <input id="checkbox" type="checkbox">
+  <input id="radio" type="radio">
 
   <input id="file" type="file">
 
