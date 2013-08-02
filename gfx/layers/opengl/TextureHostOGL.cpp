@@ -462,9 +462,6 @@ TextureImageDeprecatedTextureHostOGL::Lock()
     return false;
   }
 
-  NS_ASSERTION(mTexture->GetContentType() != gfxASurface::CONTENT_ALPHA,
-                "Image layer has alpha image");
-
   mFormat = mTexture->GetTextureFormat();
 
   return true;
