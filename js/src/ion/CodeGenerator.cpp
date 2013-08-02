@@ -6135,7 +6135,10 @@ CodeGenerator::visitThrow(LThrow *lir)
 }
 
 typedef bool (*BitNotFn)(JSContext *, HandleValue, int *p);
-static const VMFunction BitNotInfo = FunctionInfo<BitNotFn>(BitNot);
+typedef ParallelResult (*BitNotParFn)(ForkJoinSlice *, HandleValue, int32_t *);
+static const VMFunctionsModal BitNotInfo = VMFunctionsModal(
+    FunctionInfo<BitNotFn>(BitNot),
+    FunctionInfo<BitNotParFn>(BitNotPar));
 
 bool
 CodeGenerator::visitBitNotV(LBitNotV *lir)
@@ -6145,11 +6148,22 @@ CodeGenerator::visitBitNotV(LBitNotV *lir)
 }
 
 typedef bool (*BitopFn)(JSContext *, HandleValue, HandleValue, int *p);
-static const VMFunction BitAndInfo = FunctionInfo<BitopFn>(BitAnd);
-static const VMFunction BitOrInfo = FunctionInfo<BitopFn>(BitOr);
-static const VMFunction BitXorInfo = FunctionInfo<BitopFn>(BitXor);
-static const VMFunction BitLhsInfo = FunctionInfo<BitopFn>(BitLsh);
-static const VMFunction BitRhsInfo = FunctionInfo<BitopFn>(BitRsh);
+typedef ParallelResult (*BitopParFn)(ForkJoinSlice *, HandleValue, HandleValue, int32_t *);
+static const VMFunctionsModal BitAndInfo = VMFunctionsModal(
+    FunctionInfo<BitopFn>(BitAnd),
+    FunctionInfo<BitopParFn>(BitAndPar));
+static const VMFunctionsModal BitOrInfo = VMFunctionsModal(
+    FunctionInfo<BitopFn>(BitOr),
+    FunctionInfo<BitopParFn>(BitOrPar));
+static const VMFunctionsModal BitXorInfo = VMFunctionsModal(
+    FunctionInfo<BitopFn>(BitXor),
+    FunctionInfo<BitopParFn>(BitXorPar));
+static const VMFunctionsModal BitLhsInfo = VMFunctionsModal(
+    FunctionInfo<BitopFn>(BitLsh),
+    FunctionInfo<BitopParFn>(BitLshPar));
+static const VMFunctionsModal BitRhsInfo = VMFunctionsModal(
+    FunctionInfo<BitopFn>(BitRsh),
+    FunctionInfo<BitopParFn>(BitRshPar));
 
 bool
 CodeGenerator::visitBitOpV(LBitOpV *lir)
