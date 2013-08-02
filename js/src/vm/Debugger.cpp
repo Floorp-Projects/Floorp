@@ -1312,8 +1312,27 @@ Debugger::fireNewGlobalObject(JSContext *cx, Handle<GlobalObject *> global, Muta
         return handleUncaughtException(ac, false);
 
     RootedValue rv(cx);
+
+    // onNewGlobalObject is infallible, and thus is only allowed to return
+    // undefined as a resumption value. If it returns anything else, we throw.
+    // And if that happens, or if the hook itself throws, we invoke the
+    // uncaughtExceptionHook so that we never leave an exception pending on the
+    // cx. This allows JS_NewGlobalObject to avoid handling failures from debugger
+    // hooks.
     bool ok = Invoke(cx, ObjectValue(*object), ObjectValue(*hook), 1, argv, &rv);
-    return parseResumptionValue(ac, ok, rv, vp);
+    if (ok && !rv.isUndefined()) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                             JSMSG_DEBUG_RESUMPTION_VALUE_DISALLOWED);
+        ok = false;
+    }
+    // NB: Even though we don't care about what goes into it, we have to pass vp
+    // to handleUncaughtException so that it parses resumption values from the
+    // uncaughtExceptionHook and tells the caller whether we should execute the
+    // rest of the onNewGlobalObject hooks or not.
+    JSTrapStatus status = ok ? JSTRAP_CONTINUE
+                             : handleUncaughtException(ac, vp, true);
+    JS_ASSERT(!cx->isExceptionPending());
+    return status;
 }
 
 bool
