@@ -7,6 +7,7 @@
 #include "base/basictypes.h"
 
 #include "BluetoothReplyRunnable.h"
+#include "BluetoothService.h"
 #include "BluetoothUtils.h"
 #include "jsapi.h"
 #include "mozilla/Scoped.h"
@@ -171,6 +172,26 @@ ParseAtCommand(const nsACString& aAtCommand, const int aStart,
 
   nsCString tmp(nsDependentCSubstring(aAtCommand, begin));
   aRetValues.AppendElement(tmp);
+}
+
+void
+DispatchStatusChangedEvent(const nsAString& aType,
+                           const nsAString& aAddress,
+                           bool aStatus)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  InfallibleTArray<BluetoothNamedValue> data;
+  data.AppendElement(
+    BluetoothNamedValue(NS_LITERAL_STRING("address"), nsString(aAddress)));
+  data.AppendElement(
+    BluetoothNamedValue(NS_LITERAL_STRING("status"), aStatus));
+
+  BluetoothSignal signal(nsString(aType), NS_LITERAL_STRING(KEY_ADAPTER), data);
+
+  BluetoothService* bs = BluetoothService::Get();
+  NS_ENSURE_TRUE_VOID(bs);
+  bs->DistributeSignal(signal);
 }
 
 END_BLUETOOTH_NAMESPACE

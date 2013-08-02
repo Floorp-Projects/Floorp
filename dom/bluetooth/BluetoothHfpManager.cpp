@@ -454,21 +454,37 @@ BluetoothHfpManager::Get()
 }
 
 void
-BluetoothHfpManager::NotifyStatusChanged(const char* aType)
+BluetoothHfpManager::DispatchConnectionStatusChanged(const nsAString& aType)
 {
-  // Broadcast system message to Gaia
+  MOZ_ASSERT(NS_IsMainThread());
+
+  bool status = false;
+  if (aType.EqualsLiteral(HFP_STATUS_CHANGED_ID)) {
+    status = IsConnected();
+  } else if (aType.EqualsLiteral(SCO_STATUS_CHANGED_ID)) {
+    status = IsScoConnected();
+  } else {
+    BT_WARNING("Wrong type for DispatchConnectionStatusChanged");
+    return;
+  }
+
+  DispatchStatusChangedEvent(aType, mDeviceAddress, status);
+}
+
+void
+BluetoothHfpManager::NotifyConnectionStatusChanged(const nsAString& aType)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
   BluetoothValue v;
   InfallibleTArray<BluetoothNamedValue> parameters;
-  nsAutoString type, name;
-  type = NS_ConvertUTF8toUTF16(aType);
-  name.AssignLiteral("connected");
-
-  if (type.EqualsLiteral(BLUETOOTH_HFP_STATUS_CHANGED_ID)) {
+  nsString name = NS_LITERAL_STRING("connected");
+  if (aType.EqualsLiteral(BLUETOOTH_HFP_STATUS_CHANGED_ID)) {
     v = IsConnected();
-  } else if (type.EqualsLiteral(BLUETOOTH_SCO_STATUS_CHANGED_ID)) {
+  } else if (aType.EqualsLiteral(BLUETOOTH_SCO_STATUS_CHANGED_ID)) {
     v = IsScoConnected();
   } else {
-    NS_WARNING("Wrong type for NotifyStatusChanged");
+    BT_WARNING("Wrong type for NotifyConnectionStatusChanged");
     return;
   }
   parameters.AppendElement(BluetoothNamedValue(name, v));
@@ -477,7 +493,7 @@ BluetoothHfpManager::NotifyStatusChanged(const char* aType)
   v = mDeviceAddress;
   parameters.AppendElement(BluetoothNamedValue(name, v));
 
-  if (!BroadcastSystemMessage(type, parameters)) {
+  if (!BroadcastSystemMessage(aType, parameters)) {
     NS_WARNING("Failed to broadcast system message to settings");
   }
 
@@ -486,8 +502,9 @@ BluetoothHfpManager::NotifyStatusChanged(const char* aType)
     do_GetService("@mozilla.org/observer-service;1");
   NS_ENSURE_TRUE_VOID(obs);
 
-  if (NS_FAILED(obs->NotifyObservers(this, aType, mDeviceAddress.get()))) {
-    NS_WARNING("Failed to notify bluetooth-sco-status-changed observsers!");
+  if (NS_FAILED(obs->NotifyObservers(this, NS_ConvertUTF16toUTF8(aType).get(),
+                                     mDeviceAddress.get()))) {
+    NS_WARNING("Failed to notify observsers!");
   }
 }
 
@@ -1482,7 +1499,8 @@ BluetoothHfpManager::OnConnectSuccess(BluetoothSocket* aSocket)
   // Cache device path for NotifySettings() since we can't get socket address
   // when a headset disconnect with us
   mSocket->GetAddress(mDeviceAddress);
-  NotifyStatusChanged(BLUETOOTH_HFP_STATUS_CHANGED_ID);
+  NotifyConnectionStatusChanged(NS_LITERAL_STRING(BLUETOOTH_HFP_STATUS_CHANGED_ID));
+  DispatchConnectionStatusChanged(NS_LITERAL_STRING(HFP_STATUS_CHANGED_ID));
 
   ListenSco();
 
@@ -1537,7 +1555,8 @@ BluetoothHfpManager::OnDisconnect(BluetoothSocket* aSocket)
   DisconnectSco();
 
   Listen();
-  NotifyStatusChanged(BLUETOOTH_HFP_STATUS_CHANGED_ID);
+  NotifyConnectionStatusChanged(NS_LITERAL_STRING(BLUETOOTH_HFP_STATUS_CHANGED_ID));
+  DispatchConnectionStatusChanged(NS_LITERAL_STRING(HFP_STATUS_CHANGED_ID));
   Reset();
 }
 
@@ -1617,7 +1636,8 @@ BluetoothHfpManager::OnScoConnectSuccess()
     mScoRunnable = nullptr;
   }
 
-  NotifyStatusChanged(BLUETOOTH_SCO_STATUS_CHANGED_ID);
+  NotifyConnectionStatusChanged(NS_LITERAL_STRING(BLUETOOTH_SCO_STATUS_CHANGED_ID));
+  DispatchConnectionStatusChanged(NS_LITERAL_STRING(SCO_STATUS_CHANGED_ID));
 
   mScoSocketStatus = mScoSocket->GetConnectionStatus();
 }
@@ -1640,7 +1660,8 @@ BluetoothHfpManager::OnScoDisconnect()
 {
   if (mScoSocketStatus == SocketConnectionStatus::SOCKET_CONNECTED) {
     ListenSco();
-    NotifyStatusChanged(BLUETOOTH_SCO_STATUS_CHANGED_ID);
+    NotifyConnectionStatusChanged(NS_LITERAL_STRING(BLUETOOTH_SCO_STATUS_CHANGED_ID));
+    DispatchConnectionStatusChanged(NS_LITERAL_STRING(SCO_STATUS_CHANGED_ID));
   }
 }
 
