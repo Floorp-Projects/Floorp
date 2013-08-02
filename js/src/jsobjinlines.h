@@ -587,7 +587,7 @@ JSObject::create(js::ExclusiveContext *cx, js::gc::AllocKind kind, js::gc::Initi
     }
 
 #ifdef JSGC_GENERATIONAL
-    if (heap != js::gc::TenuredHeap)
+    if (slots && heap != js::gc::TenuredHeap)
         cx->asJSContext()->runtime()->gcNursery.notifyInitialSlots(obj, slots);
 #endif
 

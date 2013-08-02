@@ -61,6 +61,8 @@ nsDOMAttributeMap::DropReference()
   mContent = nullptr;
 }
 
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsDOMAttributeMap)
+
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDOMAttributeMap)
   tmp->DropReference();
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER

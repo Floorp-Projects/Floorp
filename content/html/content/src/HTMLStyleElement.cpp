@@ -31,10 +31,13 @@ HTMLStyleElement::~HTMLStyleElement()
 {
 }
 
+NS_IMPL_CYCLE_COLLECTION_CLASS(HTMLStyleElement)
+
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(HTMLStyleElement,
                                                   nsGenericHTMLElement)
   tmp->nsStyleLinkElement::Traverse(cb);
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(HTMLStyleElement,
                                                 nsGenericHTMLElement)
   tmp->nsStyleLinkElement::Unlink();

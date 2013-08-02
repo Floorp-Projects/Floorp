@@ -340,6 +340,8 @@ nsPresContext::LastRelease()
   }
 }
 
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsPresContext)
+
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsPresContext)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocument);
   // NS_IMPL_CYCLE_COLLECTION_TRAVERSE_RAWPTR(mDeviceContext); // not xpcom

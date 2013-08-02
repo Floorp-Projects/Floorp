@@ -2907,6 +2907,7 @@ class AutoHoldZone
 
 JS_PUBLIC_API(JSObject *)
 JS_NewGlobalObject(JSContext *cx, JSClass *clasp, JSPrincipals *principals,
+                   JS::OnNewGlobalHookOption hookOption,
                    const JS::CompartmentOptions &options)
 {
     AssertHeapIsIdle(cx);
@@ -2944,10 +2945,21 @@ JS_NewGlobalObject(JSContext *cx, JSClass *clasp, JSPrincipals *principals,
     if (!global)
         return NULL;
 
-    if (!Debugger::onNewGlobalObject(cx, global))
-        return NULL;
+    if (hookOption == JS::FireOnNewGlobalHook)
+        JS_FireOnNewGlobalObject(cx, global);
 
     return global;
+}
+
+JS_PUBLIC_API(void)
+JS_FireOnNewGlobalObject(JSContext *cx, JS::HandleObject global)
+{
+    // This hook is infallible, because we don't really want arbitrary script
+    // to be able to throw errors during delicate global creation routines.
+    // This infallibility will eat OOM and slow script, but if that happens
+    // we'll likely run up into them again soon in a fallible context.
+    Rooted<js::GlobalObject*> globalObject(cx, &global->as<GlobalObject>());
+    Debugger::onNewGlobalObject(cx, globalObject);
 }
 
 JS_PUBLIC_API(JSObject *)
@@ -4777,8 +4789,8 @@ AutoFile::open(JSContext *cx, const char *filename)
 
 
 JS::CompileOptions::CompileOptions(JSContext *cx, JSVersion version)
-    : principals(NULL),
-      originPrincipals(NULL),
+    : principals_(NULL),
+      originPrincipals_(NULL),
       version(version != JSVERSION_UNKNOWN ? version : cx->findVersion()),
       versionSet(false),
       utf8(false),
@@ -4799,6 +4811,12 @@ JS::CompileOptions::CompileOptions(JSContext *cx, JSVersion version)
 {
 }
 
+JSPrincipals *
+CompileOptions::originPrincipals() const
+{
+    return NormalizeOriginPrincipals(principals_, originPrincipals_);
+}
+
 JSScript *
 JS::Compile(JSContext *cx, HandleObject obj, CompileOptions options,
             const jschar *chars, size_t length)
@@ -4807,7 +4825,7 @@ JS::Compile(JSContext *cx, HandleObject obj, CompileOptions options,
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj);
-    JS_ASSERT_IF(options.principals, cx->compartment()->principals == options.principals);
+    JS_ASSERT_IF(options.principals(), cx->compartment()->principals == options.principals());
     AutoLastFrameCheck lfc(cx);
 
     return frontend::CompileScript(cx, &cx->tempLifoAlloc(), obj, NullPtr(), options, chars, length);
@@ -4960,7 +4978,7 @@ JS::CompileFunction(JSContext *cx, HandleObject obj, CompileOptions options,
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj);
-    JS_ASSERT_IF(options.principals, cx->compartment()->principals == options.principals);
+    JS_ASSERT_IF(options.principals(), cx->compartment()->principals == options.principals());
     AutoLastFrameCheck lfc(cx);
 
     RootedAtom funAtom(cx);
@@ -5144,7 +5162,7 @@ JS::Evaluate(JSContext *cx, HandleObject obj, CompileOptions options,
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj);
-    JS_ASSERT_IF(options.principals, cx->compartment()->principals == options.principals);
+    JS_ASSERT_IF(options.principals(), cx->compartment()->principals == options.principals());
 
     AutoLastFrameCheck lfc(cx);
 

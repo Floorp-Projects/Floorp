@@ -174,18 +174,18 @@ ParseTask::ParseTask(JSRuntime *rt, ExclusiveContext *cx, const CompileOptions &
   : runtime(rt), cx(cx), options(options), chars(chars), length(length),
     alloc(JSRuntime::TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE), script(NULL)
 {
-    if (options.principals)
-        JS_HoldPrincipals(options.principals);
-    if (options.originPrincipals)
-        JS_HoldPrincipals(options.originPrincipals);
+    if (options.principals())
+        JS_HoldPrincipals(options.principals());
+    if (options.originPrincipals())
+        JS_HoldPrincipals(options.originPrincipals());
 }
 
 ParseTask::~ParseTask()
 {
-    if (options.principals)
-        JS_DropPrincipals(runtime, options.principals);
-    if (options.originPrincipals)
-        JS_DropPrincipals(runtime, options.originPrincipals);
+    if (options.principals())
+        JS_DropPrincipals(runtime, options.principals());
+    if (options.originPrincipals())
+        JS_DropPrincipals(runtime, options.originPrincipals());
 
     // ParseTask takes over ownership of its input exclusive context.
     js_delete(cx);
@@ -204,7 +204,8 @@ js::StartOffThreadParseScript(JSContext *cx, const CompileOptions &options,
     JS::CompartmentOptions compartmentOptions(cx->compartment()->options());
     compartmentOptions.setZone(JS::FreshZone);
 
-    JSObject *global = JS_NewGlobalObject(cx, &workerGlobalClass, NULL, compartmentOptions);
+    JSObject *global = JS_NewGlobalObject(cx, &workerGlobalClass, NULL,
+                                          JS::FireOnNewGlobalHook, compartmentOptions);
     if (!global)
         return false;
 

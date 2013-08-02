@@ -12,6 +12,7 @@ let Cu = Components.utils;
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Webapps.jsm");
+Cu.import("resource://gre/modules/AppsUtils.jsm");
 Cu.import("resource://gre/modules/WebappsInstaller.jsm");
 Cu.import("resource://gre/modules/WebappOSUtils.jsm");
 
@@ -42,7 +43,9 @@ this.WebappsHandler = {
   },
 
   doInstall: function(data, window) {
-    let {name} = data.app.manifest;
+    let jsonManifest = data.isPackage ? data.app.updateManifest : data.app.manifest;
+    let manifest = new ManifestHelper(jsonManifest, data.app.origin);
+    let name = manifest.name;
     let bundle = Services.strings.createBundle("chrome://webapprt/locale/webapp.properties");
 
     let choice = Services.prompt.confirmEx(
@@ -60,10 +63,24 @@ this.WebappsHandler = {
       {});
 
     // Perform the install if the user allows it
-    if (choice == 0 && WebappsInstaller.install(data)) {
-      DOMApplicationRegistry.confirmInstall(data);
-    }
-    else {
+    if (choice == 0) {
+      let shell = WebappsInstaller.init(data);
+
+      if (shell) {
+        let localDir = null;
+        if (shell.appProfile) {
+          localDir = shell.appProfile.localDir;
+        }
+
+        DOMApplicationRegistry.confirmInstall(data, false, localDir, null,
+          function (aManifest) {
+            WebappsInstaller.install(data, aManifest);
+          }
+        );
+      } else {
+        DOMApplicationRegistry.denyInstall(data);
+      }
+    } else {
       DOMApplicationRegistry.denyInstall(data);
     }
   }
