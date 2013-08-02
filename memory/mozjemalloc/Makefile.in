@@ -11,8 +11,6 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 ifndef MOZ_JEMALLOC3
-DISABLED_CSRCS = jemalloc.c
-
 FORCE_STATIC_LIB= 1
 
 ifeq ($(OS_ARCH),SunOS)
