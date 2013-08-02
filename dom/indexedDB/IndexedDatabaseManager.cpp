@@ -6,7 +6,6 @@
 
 #include "IndexedDatabaseManager.h"
 
-#include "jsfriendapi.h"
 #include "nsIConsoleService.h"
 #include "nsIDiskSpaceWatcher.h"
 #include "nsIDOMScriptObjectFactory.h"
@@ -17,7 +16,6 @@
 
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/CondVar.h"
-#include "mozilla/dom/IDBKeyRangeBinding.h"
 #include "mozilla/dom/quota/QuotaManager.h"
 #include "mozilla/dom/quota/Utilities.h"
 #include "mozilla/dom/TabContext.h"
@@ -527,10 +525,6 @@ IndexedDatabaseManager::InitWindowless(const jsval& aObj, JSContext* aCx)
   NS_ENSURE_ARG(!JSVAL_IS_PRIMITIVE(aObj));
 
   JS::Rooted<JSObject*> obj(aCx, JSVAL_TO_OBJECT(aObj));
-  if (!(js::GetObjectClass(obj)->flags & JSCLASS_DOM_GLOBAL)) {
-    NS_WARNING("initWindowless should only be called on a DOM global object.");
-    return NS_ERROR_FAILURE;
-  }
 
   JSBool hasIndexedDB;
   if (!JS_HasProperty(aCx, obj, "indexedDB", &hasIndexedDB)) {
@@ -566,9 +560,13 @@ IndexedDatabaseManager::InitWindowless(const jsval& aObj, JSContext* aCx)
     return NS_ERROR_FAILURE;
   }
 
-  JS::Handle<JSObject*> keyrangeObj =
-    IDBKeyRangeBinding::GetConstructorObject(aCx, obj);
+  JS::Rooted<JSObject*> keyrangeObj(aCx,
+    JS_NewObject(aCx, nullptr, nullptr, nullptr));
   NS_ENSURE_TRUE(keyrangeObj, NS_ERROR_OUT_OF_MEMORY);
+
+  if (!IDBKeyRange::DefineConstructors(aCx, keyrangeObj)) {
+    return NS_ERROR_FAILURE;
+  }
 
   if (!JS_DefineProperty(aCx, obj, "IDBKeyRange", OBJECT_TO_JSVAL(keyrangeObj),
                          nullptr, nullptr, JSPROP_ENUMERATE)) {

@@ -169,7 +169,6 @@ webidl_files = \
   IDBFactory.webidl \
   IDBFileHandle.webidl \
   IDBIndex.webidl \
-  IDBKeyRange.webidl \
   IDBObjectStore.webidl \
   IDBOpenDBRequest.webidl \
   IDBRequest.webidl \
