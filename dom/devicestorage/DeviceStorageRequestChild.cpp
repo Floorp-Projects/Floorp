@@ -51,11 +51,11 @@ DeviceStorageRequestChild::Recv__delete__(const DeviceStorageResponseValue& aVal
 
     case DeviceStorageResponseValue::TSuccessResponse:
     {
-      nsString compositePath;
-      mFile->GetCompositePath(compositePath);
+      nsString fullPath;
+      mFile->GetFullPath(fullPath);
       AutoJSContext cx;
       JS::Rooted<JS::Value> result(cx,
-        StringToJsval(mRequest->GetOwner(), compositePath));
+        StringToJsval(mRequest->GetOwner(), fullPath));
       mRequest->FireSuccess(result);
       break;
     }
