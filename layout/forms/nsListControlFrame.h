@@ -327,18 +327,6 @@ protected:
    */
   already_AddRefed<nsIContent> GetOptionContent(int32_t aIndex) const;
 
-  /** 
-   * For a given piece of content, it determines whether the 
-   * content (an option) is selected or not.
-   * @return true if it is, false if it is NOT.
-   */
-  bool     IsContentSelected(nsIContent* aContent) const;
-
-  /**
-   * For a given index is return whether the content is selected.
-   */
-  bool     IsContentSelectedByIndex(int32_t aIndex) const;
-
   bool     CheckIfAllFramesHere();
   int32_t  GetIndexFromContent(nsIContent *aContent);
   bool     IsLeftButton(nsIDOMEvent* aMouseEvent);
