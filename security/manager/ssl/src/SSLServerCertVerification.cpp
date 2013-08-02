@@ -318,11 +318,10 @@ CertErrorRunnable::CheckCertOverrides()
   nsCOMPtr<nsISiteSecurityService> sss
     = do_GetService(NS_SSSERVICE_CONTRACTID, &nsrv);
   if (NS_SUCCEEDED(nsrv)) {
-    nsCOMPtr<nsISSLSocketControl> sslSocketControl = do_QueryInterface(
-      NS_ISUPPORTS_CAST(nsITransportSecurityInfo*, mInfoObject));
-    nsrv = sss->IsStsHost(mInfoObject->GetHostName(),
-                          mProviderFlags,
-                          &strictTransportSecurityEnabled);
+    nsrv = sss->IsSecureHost(nsISiteSecurityService::HEADER_HSTS,
+                             mInfoObject->GetHostName(),
+                             mProviderFlags,
+                             &strictTransportSecurityEnabled);
   }
   if (NS_FAILED(nsrv)) {
     return new SSLServerCertVerificationResult(mInfoObject,
