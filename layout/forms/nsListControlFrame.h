@@ -305,9 +305,6 @@ protected:
   nsListControlFrame(nsIPresShell* aShell, nsIDocument* aDocument, nsStyleContext* aContext);
   virtual ~nsListControlFrame();
 
-  // Utility methods
-  nsresult GetSizeAttribute(uint32_t *aSize);
-
   /**
    * Sets the mSelectedIndex and mOldSelectedIndex from figuring out what 
    * item was selected using content

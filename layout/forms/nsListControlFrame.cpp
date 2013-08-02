@@ -932,20 +932,6 @@ nsListControlFrame::SetInitialChildList(ChildListID    aListID,
 }
 
 //---------------------------------------------------------
-nsresult
-nsListControlFrame::GetSizeAttribute(uint32_t *aSize) {
-  nsresult rv = NS_OK;
-  nsIDOMHTMLSelectElement* selectElement;
-  rv = mContent->QueryInterface(NS_GET_IID(nsIDOMHTMLSelectElement),(void**) &selectElement);
-  if (mContent && NS_SUCCEEDED(rv)) {
-    rv = selectElement->GetSize(aSize);
-    NS_RELEASE(selectElement);
-  }
-  return rv;
-}
-
-
-//---------------------------------------------------------
 void
 nsListControlFrame::Init(nsIContent*     aContent,
                          nsIFrame*       aParent,
@@ -1543,8 +1529,13 @@ nsListControlFrame::CalcIntrinsicHeight(nscoord aHeightOfARow,
   NS_PRECONDITION(!IsInDropDownMode(),
                   "Shouldn't be in dropdown mode when we call this");
 
-  mNumDisplayRows = 1;
-  GetSizeAttribute(&mNumDisplayRows);
+  dom::HTMLSelectElement* select =
+    dom::HTMLSelectElement::FromContentOrNull(mContent);
+  if (select) {
+    mNumDisplayRows = select->Size();
+  } else {
+    mNumDisplayRows = 1;
+  }
 
   if (mNumDisplayRows < 1) {
     mNumDisplayRows = 4;
