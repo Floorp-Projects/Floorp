@@ -52,26 +52,6 @@
   let isImagesPresent = false;
   let isXptiWorkingSetPresent = false;
   let isAtomTablePresent = false;
-  let isBigStringPresent = false;
-  let isSmallString1Present = false;
-  let isSmallString2Present = false;
-
-  // Generate a long, random string.  We'll check that this string is
-  // reported in at least one of the memory reporters.
-  let bigString = "";
-  while (bigString.length < 10000) {
-    bigString += Math.random();
-  }
-  let bigStringPrefix = bigString.substring(0, 100);
-
-  // Generate many copies of two distinctive short strings, "!)(*&" and
-  // "@)(*&".  We'll check that these strings are reported in at least
-  // one of the memory reporters.
-  let shortStrings = [];
-  for (let i = 0; i < 10000; i++) {
-    let str = (Math.random() > 0.5 ? "!" : "@") + ")(*&";
-    shortStrings.push(str);
-  }
 
   let mySandbox = Components.utils.Sandbox(document.nodePrincipal,
                     { sandboxName: "this-is-a-sandbox-name" });
@@ -107,12 +87,6 @@
       // A system compartment with a location (such as a sandbox) should
       // show that location.
       isSandboxLocationShown = true;
-    } else if (aPath.contains(bigStringPrefix)) {
-      isBigStringPresent = true;
-    } else if (aPath.contains("!)(*&")) {
-      isSmallString1Present = true;
-    } else if (aPath.contains("@)(*&")) {
-      isSmallString2Present = true;
     }
   }
 
@@ -174,9 +148,6 @@
   ok(isImagesPresent,                       "images is present");
   ok(isXptiWorkingSetPresent,               "xpti-working-set is present");
   ok(isAtomTablePresent,                    "atom-table is present");
-  ok(isBigStringPresent,                    "large string is present");
-  ok(isSmallString1Present,                 "small string 1 is present");
-  ok(isSmallString2Present,                 "small string 2 is present");
 
   ]]>
   </script>
