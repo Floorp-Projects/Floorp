@@ -19,6 +19,7 @@ MOCHITEST_BROWSER_FILES := \
     browser_inspector_markup_edit.js \
     browser_inspector_markup_subset.html \
     browser_inspector_markup_subset.js \
+    browser_bug896181_css_mixed_completion_new_attribute.js \
 		head.js \
 		$(NULL)
 
