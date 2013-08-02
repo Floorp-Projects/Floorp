@@ -3561,6 +3561,11 @@ NewGlobal(JSContext *cx, unsigned argc, jsval *vp)
             return false;
         if (v.isObject())
             options.zoneSpec = JS::SameZoneAs(UncheckedUnwrap(&v.toObject()));
+
+        if (!JS_GetProperty(cx, opts, "invisibleToDebugger", &v))
+            return false;
+        if (v.isBoolean())
+            options.invisibleToDebugger = v.toBoolean();
     }
 
     RootedObject global(cx, NewGlobalObject(cx, options));
@@ -3914,7 +3919,8 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
 "newGlobal([options])",
 "  Return a new global object in a new compartment. If options\n"
 "  is given, it may have any of the following properties:\n"
-"      sameZoneAs: the compartment will be in the same zone as the given object (defaults to a new zone)"),
+"      sameZoneAs: the compartment will be in the same zone as the given object (defaults to a new zone)\n"
+"      invisibleToDebugger: the global will be invisible to the debugger (default false)"),
 
     JS_FN_HELP("enableStackWalkingAssertion", EnableStackWalkingAssertion, 1, 0,
 "enableStackWalkingAssertion(enabled)",
