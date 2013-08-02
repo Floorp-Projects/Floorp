@@ -4497,7 +4497,8 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
   uint32_t msg = aEnter ? NS_MOUSE_ENTER : NS_MOUSE_EXIT;
   nsMouseEvent event(true, msg, mGeckoChild, nsMouseEvent::eReal);
-  event.refPoint = mGeckoChild->CocoaPointsToDevPixels(localEventLocation);
+  event.refPoint = LayoutDeviceIntPoint::FromUntyped(
+    mGeckoChild->CocoaPointsToDevPixels(localEventLocation));
 
   // Create event for use by plugins.
   // This is going to our child view so we don't need to look up the destination
@@ -4939,7 +4940,8 @@ static int32_t RoundUp(double aDouble)
   NSPoint locationInWindow = nsCocoaUtils::EventLocationForWindow(aMouseEvent, [self window]);
   NSPoint localPoint = [self convertPoint:locationInWindow fromView:nil];
 
-  outGeckoEvent->refPoint = mGeckoChild->CocoaPointsToDevPixels(localPoint);
+  outGeckoEvent->refPoint = LayoutDeviceIntPoint::FromUntyped(
+    mGeckoChild->CocoaPointsToDevPixels(localPoint));
 
   nsMouseEvent_base* mouseEvent =
     static_cast<nsMouseEvent_base*>(outGeckoEvent);
@@ -5361,8 +5363,9 @@ static int32_t RoundUp(double aDouble)
   // hitTest needs coordinates in device pixels
   NSPoint eventLoc = nsCocoaUtils::ScreenLocationForEvent(currentEvent);
   eventLoc.y = nsCocoaUtils::FlippedScreenY(eventLoc.y);
-  nsIntPoint widgetLoc = mGeckoChild->CocoaPointsToDevPixels(eventLoc) -
-    mGeckoChild->WidgetToScreenOffset();
+  LayoutDeviceIntPoint widgetLoc = LayoutDeviceIntPoint::FromUntyped(
+    mGeckoChild->CocoaPointsToDevPixels(eventLoc) -
+    mGeckoChild->WidgetToScreenOffset());
 
   nsQueryContentEvent hitTest(true, NS_QUERY_DOM_WIDGET_HITTEST, mGeckoChild);
   hitTest.InitForQueryDOMWidgetHittest(widgetLoc);
@@ -5594,7 +5597,8 @@ static int32_t RoundUp(double aDouble)
   NSPoint draggingLoc = [aSender draggingLocation];
   NSPoint localPoint = [self convertPoint:draggingLoc fromView:nil];
 
-  geckoEvent.refPoint = mGeckoChild->CocoaPointsToDevPixels(localPoint);
+  geckoEvent.refPoint = LayoutDeviceIntPoint::FromUntyped(
+    mGeckoChild->CocoaPointsToDevPixels(localPoint));
 
   nsAutoRetainCocoaObject kungFuDeathGrip(self);
   mGeckoChild->DispatchWindowEvent(geckoEvent);
