@@ -1545,13 +1545,35 @@ NS_MEMORY_REPORTER_IMPLEMENT(JSMainRuntimeTemporaryPeak,
 #define REPORT(_path, _kind, _units, _amount, _desc)                          \
     do {                                                                      \
         nsresult rv;                                                          \
-        rv = cb->Callback(EmptyCString(), _path, _kind, _units, _amount,      \
-                          NS_LITERAL_CSTRING(_desc), closure);                \
+        rv = cb->Callback(EmptyCString(), _path,                              \
+                          nsIMemoryReporter::_kind,                           \
+                          nsIMemoryReporter::_units,                          \
+                          _amount,                                            \
+                          NS_LITERAL_CSTRING(_desc),                          \
+                          closure);                                           \
         NS_ENSURE_SUCCESS(rv, rv);                                            \
     } while (0)
 
 #define REPORT_BYTES(_path, _kind, _amount, _desc)                            \
-    REPORT(_path, _kind, nsIMemoryReporter::UNITS_BYTES, _amount, _desc);
+    REPORT(_path, _kind, UNITS_BYTES, _amount, _desc);
+
+// REPORT2 and REPORT_BYTES2 are just like REPORT and REPORT_BYTES, except the
+// description is an nsCString, instead of a literal string.
+
+#define REPORT2(_path, _kind, _units, _amount, _desc)                         \
+    do {                                                                      \
+        nsresult rv;                                                          \
+        rv = cb->Callback(EmptyCString(), _path,                              \
+                          nsIMemoryReporter::_kind,                           \
+                          nsIMemoryReporter::_units,                          \
+                          _amount,                                            \
+                          _desc,                                              \
+                          closure);                                           \
+        NS_ENSURE_SUCCESS(rv, rv);                                            \
+    } while (0)
+
+#define REPORT_BYTES2(_path, _kind, _amount, _desc)                           \
+    REPORT2(_path, _kind, UNITS_BYTES, _amount, _desc);
 
 #define REPORT_GC_BYTES(_path, _amount, _desc)                                \
     do {                                                                      \
@@ -1649,21 +1671,6 @@ ReportZoneStats(const JS::ZoneStats &zStats,
                       "heap taken by empty GC thing slots within non-empty "
                       "arenas.");
 
-    ZCREPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("gc-heap/strings/normal"),
-                      zStats.gcHeapStringsNormal,
-                      "Memory on the garbage-collected JavaScript "
-                      "heap that holds normal string headers.  String headers contain "
-                      "various pieces of information about a string, but do not "
-                      "contain (except in the case of very short strings) the "
-                      "string characters;  characters in longer strings are "
-                      "counted under 'gc-heap/string-chars' instead.");
-
-    ZCREPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("gc-heap/strings/short"),
-                      zStats.gcHeapStringsShort,
-                      "Memory on the garbage-collected JavaScript "
-                      "heap that holds over-sized string headers, in which "
-                      "string characters are stored inline.");
-
     ZCREPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("gc-heap/lazy-scripts"),
                       zStats.gcHeapLazyScripts,
                       "Memory on the garbage-collected JavaScript "
@@ -1694,8 +1701,121 @@ ReportZoneStats(const JS::ZoneStats &zStats,
                    zStats.typePool,
                    "Memory holding contents of type sets and related data.");
 
-    ZCREPORT_BYTES2(pathPrefix + NS_LITERAL_CSTRING("string-chars/non-huge"),
-                    zStats.stringCharsNonHuge, nsPrintfCString(
+    // Our notable string reporter needs to change these values, so copy them
+    // here.
+    size_t gcHeapStringsShort = zStats.gcHeapStringsShort;
+    size_t gcHeapStringsNormal = zStats.gcHeapStringsNormal;
+    size_t stringCharsNonNotable = zStats.stringCharsNonNotable;
+    size_t gcHeapStringsAboutMemory = 0;
+    size_t stringCharsAboutMemory = 0;
+
+    for (size_t i = 0; i < zStats.notableStrings.length(); i++) {
+        const JS::NotableStringInfo &info = zStats.notableStrings[i];
+
+        nsDependentCString notableString(info.buffer);
+
+        // Viewing about:memory generates many notable strings which contain
+        // "string(length=".  If we report these as notable, then we'll create
+        // even more notable strings the next time we open about:memory (unless
+        // there's a GC in the meantime), and so on ad infinitum.
+        //
+        // To avoid cluttering up about:memory like this, we stick notable
+        // strings which contain "string(length=" into their own bucket.
+#       define STRING_LENGTH "string(length="
+        if (FindInReadable(NS_LITERAL_CSTRING(STRING_LENGTH), notableString)) {
+            gcHeapStringsAboutMemory += info.totalGCThingSizeOf();
+            stringCharsAboutMemory += info.sizeOfAllStringChars;
+            continue;
+        }
+
+        // Escape / to \ before we put notableString into the memory reporter
+        // path, because we don't want any forward slashes in the string to
+        // count as path separators.
+        nsCString escapedString(notableString);
+        escapedString.ReplaceSubstring("/", "\\");
+
+        bool truncated = notableString.Length() < info.length;
+
+        nsCString notableBlurb =
+            nsPrintfCString("notable/" STRING_LENGTH "%d, copies=%d, \"%s\"%s)",
+                            info.length, info.numCopies, escapedString.get(),
+                            truncated ? " (truncated)" : "");
+#       undef STRING_LENGTH
+
+        // SpiderMonkey considers a string to be notable if all of its copies
+        // together take up more than notableSize() bytes of memory, counting
+        // both JS GC heap memory and string-chars.  Most notable strings will
+        // use either a lot of gc-heap memory or a lot of string-chars memory,
+        // but only strings of a certain sweet-spot length will have their
+        // memory usage spread roughly equally between the two types of memory.
+        //
+        // We don't want to clutter up 'gc-heap/strings' with entries for
+        // notable strings which use relatively little GC memory, so instead we
+        // report a notable string in gc-heap/strings only if it uses
+        // |notableSize() / 2| or more bytes of GC memory.  We do the same for
+        // string-chars.  This ensures that every notable string is reported
+        // under at least one of gc-heap/strings or string-chars.
+
+        MOZ_ASSERT(info.totalGCThingSizeOf() >=
+                     JS::NotableStringInfo::notableSize() / 2 ||
+                   info.sizeOfAllStringChars >=
+                     JS::NotableStringInfo::notableSize() / 2);
+
+        if (info.totalGCThingSizeOf() >= JS::NotableStringInfo::notableSize() / 2) {
+            REPORT_BYTES2(pathPrefix + NS_LITERAL_CSTRING("gc-heap/strings/") + notableBlurb,
+                KIND_NONHEAP,
+                info.totalGCThingSizeOf(),
+                nsPrintfCString("Memory allocated to hold headers for copies of "
+                "the given notable string.  A string is notable if all of its copies "
+                "together use more than %d bytes total of JS GC heap and malloc heap "
+                "memory.\n\n"
+                "These headers may contain the string data itself, if the string "
+                "is short enough.  If so, the string won't have any memory reported "
+                "under 'string-chars/.",
+                JS::NotableStringInfo::notableSize()));
+
+                // Don't add to gcTotal if we're adding to
+                // gcHeapStrings{Short,Normal}; when we report those values,
+                // they'll get added into gcTotal.
+                gcTotal += info.totalGCThingSizeOf();
+        } else {
+            gcHeapStringsShort += info.sizeOfShortStringGCThings;
+            gcHeapStringsNormal += info.sizeOfNormalStringGCThings;
+        }
+
+        if (info.sizeOfAllStringChars >= JS::NotableStringInfo::notableSize() / 2) {
+            REPORT_BYTES2(pathPrefix + NS_LITERAL_CSTRING("string-chars/") + notableBlurb,
+                KIND_HEAP,
+                info.sizeOfAllStringChars,
+                nsPrintfCString("Memory allocated to hold string data for copies "
+                "of the given notable string.  A string is notable if all of its "
+                "copies together use more than %d bytes total of JS GC heap and "
+                "malloc heap memory.\n\n",
+                JS::NotableStringInfo::notableSize()));
+        } else {
+            stringCharsNonNotable += info.sizeOfAllStringChars;
+        }
+    }
+
+    ZCREPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("gc-heap/strings/short"),
+                      gcHeapStringsShort,
+                      "Memory on the garbage-collected JavaScript "
+                      "heap that holds over-sized string headers, in which "
+                      "string characters are stored inline.");
+
+    ZCREPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("gc-heap/strings/normal"),
+                      gcHeapStringsNormal,
+                      "Memory on the garbage-collected JavaScript "
+                      "heap that holds headers for strings that are not short "
+                      "and that don't appear under 'gc-heap/strings/notable*'.\n\n "
+                      "String headers contain various pieces of information "
+                      "about a string, but do not contain (except in the case of "
+                      "very short strings) the string characters;  characters "
+                      "in longer strings are counted under 'gc-heap/string-chars' "
+                      "instead.");
+
+    ZCREPORT_BYTES2(pathPrefix + NS_LITERAL_CSTRING("string-chars/non-notable"),
+                    stringCharsNonNotable, nsPrintfCString(
                     "Memory allocated to hold characters of strings whose "
                     "characters take up less than than %d bytes of memory.\n\n"
                     "Sometimes more memory is allocated than necessary, to "
@@ -1703,31 +1823,29 @@ ReportZoneStats(const JS::ZoneStats &zStats,
                     "header which is stored on the compartment's JavaScript heap; "
                     "that header is not counted here, but in 'gc-heap/strings' "
                     "instead.",
-                    JS::HugeStringInfo::MinSize()));
+                    JS::NotableStringInfo::notableSize()));
 
-    for (size_t i = 0; i < zStats.hugeStrings.length(); i++) {
-        const JS::HugeStringInfo& info = zStats.hugeStrings[i];
+    if (gcHeapStringsAboutMemory > 0) {
+        ZCREPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("gc-heap/strings/notable/about-memory"),
+                          gcHeapStringsAboutMemory,
+                          "Memory allocated on the garbage-collected JavaScript "
+                          "heap that holds headers for notable strings which "
+                          "contain the string 'string(length='.  These strings are "
+                          "likely from about:memory itself.  We filter them out "
+                          "rather than display them, because displaying them would "
+                          "create even more strings every time you refresh "
+                          "about:memory.");
+    }
 
-        nsDependentCString hugeString(info.buffer);
-
-        // Escape / to \ before we put hugeString into the memory reporter
-        // path, because we don't want any forward slashes in the string to
-        // count as path separators.
-        nsCString escapedString(hugeString);
-        escapedString.ReplaceSubstring("/", "\\");
-
-        ZCREPORT_BYTES2(
-            pathPrefix +
-            nsPrintfCString("string-chars/huge/string(length=%d, \"%s...\")",
-                            info.length, escapedString.get()),
-            info.size,
-            nsPrintfCString("Memory allocated to hold characters of "
-            "a length-%d string which begins \"%s\".\n\n"
-            "Sometimes more memory is allocated than necessary, to simplify "
-            "string concatenation.  Each string also includes a header which is "
-            "stored on the compartment's JavaScript heap; that header is not "
-            "counted here, but in 'gc-heap/strings' instead.",
-            info.length, hugeString.get()));
+    if (stringCharsAboutMemory > 0) {
+        ZCREPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("string-chars/notable/about-memory"),
+                       stringCharsAboutMemory,
+                       "Memory allocated to hold characters of notable strings "
+                       "which contain the string 'string(length='.  These strings "
+                       "are likely from about:memory itself.  We filter them out "
+                       "rather than display them, because displaying them would "
+                       "create even more strings every time you refresh "
+                       "about:memory.");
     }
 
     if (gcHeapSundries > 0) {
@@ -2020,7 +2138,7 @@ ReportJSRuntimeExplicitTreeStats(const JS::RuntimeStats &rtStats,
     size_t gcTotal = 0;
 
     for (size_t i = 0; i < rtStats.zoneStatsVector.length(); i++) {
-        JS::ZoneStats zStats = rtStats.zoneStatsVector[i];
+        const JS::ZoneStats &zStats = rtStats.zoneStatsVector[i];
         const xpc::ZoneStatsExtras *extras =
           static_cast<const xpc::ZoneStatsExtras*>(zStats.extra);
         rv = ReportZoneStats(zStats, *extras, cb, closure, &gcTotal);
