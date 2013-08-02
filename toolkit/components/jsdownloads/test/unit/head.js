@@ -42,6 +42,10 @@ XPCOMUtils.defineLazyModuleGetter(this, "Task",
 XPCOMUtils.defineLazyModuleGetter(this, "OS",
                                   "resource://gre/modules/osfile.jsm");
 
+XPCOMUtils.defineLazyServiceGetter(this, "gExternalHelperAppService",
+           "@mozilla.org/uriloader/external-helper-app-service;1",
+           Ci.nsIExternalHelperAppService);
+
 const ServerSocket = Components.Constructor(
                                 "@mozilla.org/network/server-socket;1",
                                 "nsIServerSocket",
@@ -277,6 +281,68 @@ function promiseStartLegacyDownload(aSourceUrl, aOptions) {
 }
 
 /**
+ * Starts a new download using the nsIHelperAppService interface, and controls
+ * it using the legacy nsITransfer interface.  The source of the download will
+ * be "interruptible_resumable.txt" and partially downloaded data will be kept.
+ *
+ * @return {Promise}
+ * @resolves The Download object created as a consequence of controlling the
+ *           download through the legacy nsITransfer interface.
+ * @rejects Never.  The current test fails in case of exceptions.
+ */
+function promiseStartExternalHelperAppServiceDownload() {
+  let sourceURI = NetUtil.newURI(httpUrl("interruptible_resumable.txt"));
+
+  let deferred = Promise.defer();
+
+  Downloads.getPublicDownloadList().then(function (aList) {
+    // Temporarily register a view that will get notified when the download we
+    // are controlling becomes visible in the list of downloads.
+    aList.addView({
+      onDownloadAdded: function (aDownload) {
+        aList.removeView(this);
+
+        // Remove the download to keep the list empty for the next test.  This
+        // also allows the caller to register the "onchange" event directly.
+        aList.remove(aDownload);
+
+        // When the download object is ready, make it available to the caller.
+        deferred.resolve(aDownload);
+      },
+    });
+
+    let channel = NetUtil.newChannel(sourceURI);
+
+    // Start the actual download process.
+    channel.asyncOpen({
+      contentListener: null,
+
+      onStartRequest: function (aRequest, aContext)
+      {
+        let channel = aRequest.QueryInterface(Ci.nsIChannel);
+        this.contentListener = gExternalHelperAppService.doContent(
+                                     channel.contentType, aRequest, null, true);
+        this.contentListener.onStartRequest(aRequest, aContext);
+      },
+
+      onStopRequest: function (aRequest, aContext, aStatusCode)
+      {
+        this.contentListener.onStopRequest(aRequest, aContext, aStatusCode);
+      },
+
+      onDataAvailable: function (aRequest, aContext, aInputStream, aOffset,
+                                 aCount)
+      {
+        this.contentListener.onDataAvailable(aRequest, aContext, aInputStream,
+                                             aOffset, aCount);
+      },
+    }, null);
+  }.bind(this)).then(null, do_report_unexpected_exception);
+
+  return deferred.promise;
+}
+
+/**
  * Returns a new public DownloadList object.
  *
  * @return {Promise}
@@ -317,22 +383,33 @@ function promiseNewPrivateDownloadList() {
  */
 function promiseVerifyContents(aPath, aExpectedContents)
 {
-  let deferred = Promise.defer();
-  let file = new FileUtils.File(aPath);
-  NetUtil.asyncFetch(file, function(aInputStream, aStatus) {
-    do_check_true(Components.isSuccessCode(aStatus));
-    let contents = NetUtil.readInputStreamToString(aInputStream,
-                                                   aInputStream.available());
-    if (contents.length <= TEST_DATA_SHORT.length * 2) {
-      do_check_eq(contents, aExpectedContents);
-    } else {
-      // Do not print the entire content string to the test log.
-      do_check_eq(contents.length, aExpectedContents.length);
-      do_check_true(contents == aExpectedContents);
+  return Task.spawn(function() {
+    let file = new FileUtils.File(aPath);
+
+    if (!(yield OS.File.exists(aPath))) {
+      do_throw("File does not exist: " + aPath);
     }
-    deferred.resolve();
+
+    if ((yield OS.File.stat(aPath)).size == 0) {
+      do_throw("File is empty: " + aPath);
+    }
+
+    let deferred = Promise.defer();
+    NetUtil.asyncFetch(file, function(aInputStream, aStatus) {
+      do_check_true(Components.isSuccessCode(aStatus));
+      let contents = NetUtil.readInputStreamToString(aInputStream,
+                                                     aInputStream.available());
+      if (contents.length <= TEST_DATA_SHORT.length * 2) {
+        do_check_eq(contents, aExpectedContents);
+      } else {
+        // Do not print the entire content string to the test log.
+        do_check_eq(contents.length, aExpectedContents.length);
+        do_check_true(contents == aExpectedContents);
+      }
+      deferred.resolve();
+    });
+    yield deferred.promise;
   });
-  return deferred.promise;
 }
 
 /**
@@ -388,55 +465,47 @@ function startFakeServer()
 }
 
 /**
- * This function allows testing events or actions that need to happen in the
- * middle of a download.
+ * This is an internal reference that should not be used directly by tests.
+ */
+let _gDeferResponses = Promise.defer();
+
+/**
+ * Ensures that all the interruptible requests started after this function is
+ * called won't complete until the continueResponses function is called.
  *
  * Normally, the internal HTTP server returns all the available data as soon as
  * a request is received.  In order for some requests to be served one part at a
- * time, special interruptible handlers are registered on the HTTP server.
- *
- * Before making a request to one of the addresses served by the interruptible
- * handlers, you may call "deferNextResponse" to get a reference to an object
- * that allows you to control the next request.
+ * time, special interruptible handlers are registered on the HTTP server.  This
+ * allows testing events or actions that need to happen in the middle of a
+ * download.
  *
  * For example, the handler accessible at the httpUri("interruptible.txt")
- * address returns the TEST_DATA_SHORT text, then waits until the "resolve"
- * method is called on the object returned by the function.  At this point, the
- * handler sends the TEST_DATA_SHORT text again to complete the response.
+ * address returns the TEST_DATA_SHORT text, then it may block until the
+ * continueResponses method is called.  At this point, the handler sends the
+ * TEST_DATA_SHORT text again to complete the response.
  *
- * You can also call the "reject" method on the returned object to interrupt the
- * response midway.  Because of how the network layer is implemented, this does
- * not cause the socket to return an error.
- *
- * @returns Deferred object used to control the response.
+ * If an interruptible request is started before the function is called, it may
+ * or may not be blocked depending on the actual sequence of events.
  */
-function deferNextResponse()
+function mustInterruptResponses()
 {
-  do_print("Interruptible request will be controlled.");
+  // If there are pending blocked requests, allow them to complete.  This is
+  // done to prevent requests from being blocked forever, but should not affect
+  // the test logic, since previously started requests should not be monitored
+  // on the client side anymore.
+  _gDeferResponses.resolve();
 
-  // Store an internal reference that should not be used directly by tests.
-  if (!deferNextResponse._deferred) {
-    deferNextResponse._deferred = Promise.defer();
-  }
-  return deferNextResponse._deferred;
+  do_print("Interruptible responses will be blocked midway.");
+  _gDeferResponses = Promise.defer();
 }
 
 /**
- * Returns a promise that is resolved when the next interruptible response
- * handler has received the request, and has started sending the first part of
- * the response.  The response might not have been received by the client yet.
- *
- * @return {Promise}
- * @resolves When the next request has been received.
- * @rejects Never.
+ * Allows all the current and future interruptible requests to complete.
  */
-function promiseNextRequestReceived()
+function continueResponses()
 {
-  do_print("Requested notification when interruptible request is received.");
-
-  // Store an internal reference that should not be used directly by tests.
-  promiseNextRequestReceived._deferred = Promise.defer();
-  return promiseNextRequestReceived._deferred.promise;
+  do_print("Interruptible responses are now allowed to continue.");
+  _gDeferResponses.resolve();
 }
 
 /**
@@ -448,44 +517,24 @@ function promiseNextRequestReceived()
  *        This function is called when the response is received, with the
  *        aRequest and aResponse arguments of the server.
  * @param aSecondPartFn
- *        This function is called after the "resolve" method of the object
- *        returned by deferNextResponse is called.  This function is called with
- *        the aRequest and aResponse arguments of the server.
+ *        This function is called with the aRequest and aResponse arguments of
+ *        the server, when the continueResponses function is called.
  */
 function registerInterruptibleHandler(aPath, aFirstPartFn, aSecondPartFn)
 {
   gHttpServer.registerPathHandler(aPath, function (aRequest, aResponse) {
-    // Get a reference to the controlling object for this request.  If the
-    // deferNextResponse function was not called, interrupt the test.
-    let deferResponse = deferNextResponse._deferred;
-    deferNextResponse._deferred = null;
-    if (deferResponse) {
-      do_print("Interruptible request started under control.");
-    } else {
-      do_print("Interruptible request started without being controlled.");
-      deferResponse = Promise.defer();
-      deferResponse.resolve();
-    }
+    do_print("Interruptible request started.");
 
     // Process the first part of the response.
     aResponse.processAsync();
     aFirstPartFn(aRequest, aResponse);
 
-    if (promiseNextRequestReceived._deferred) {
-      do_print("Notifying that interruptible request has been received.");
-      promiseNextRequestReceived._deferred.resolve();
-      promiseNextRequestReceived._deferred = null;
-    }
-
-    // Wait on the deferred object, then finish or abort the request.
-    deferResponse.promise.then(function RIH_onSuccess() {
+    // Wait on the current deferred object, then finish the request.
+    _gDeferResponses.promise.then(function RIH_onSuccess() {
       aSecondPartFn(aRequest, aResponse);
       aResponse.finish();
       do_print("Interruptible request finished.");
-    }, function RIH_onFailure() {
-      aResponse.abort();
-      do_print("Interruptible request aborted.");
-    });
+    }).then(null, Cu.reportError);
   });
 }
 
@@ -498,6 +547,12 @@ function registerInterruptibleHandler(aPath, aFirstPartFn, aSecondPartFn)
 function isValidDate(aDate) {
   return aDate && aDate.getTime && !isNaN(aDate.getTime());
 }
+
+/**
+ * Position of the first byte served by the "interruptible_resumable.txt"
+ * handler during the most recent response.
+ */
+let gMostRecentFirstBytePos;
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Initialization functions common to all tests
@@ -519,11 +574,48 @@ add_task(function test_common_initialize()
       aResponse.write(TEST_DATA_SHORT);
     });
 
-  registerInterruptibleHandler("/empty-noprogress.txt",
+  registerInterruptibleHandler("/interruptible_resumable.txt",
     function firstPart(aRequest, aResponse) {
       aResponse.setHeader("Content-Type", "text/plain", false);
-    }, function secondPart(aRequest, aResponse) { });
 
+      // Determine if only part of the data should be sent.
+      let data = TEST_DATA_SHORT + TEST_DATA_SHORT;
+      if (aRequest.hasHeader("Range")) {
+        var matches = aRequest.getHeader("Range")
+                              .match(/^\s*bytes=(\d+)?-(\d+)?\s*$/);
+        var firstBytePos = (matches[1] === undefined) ? 0 : matches[1];
+        var lastBytePos = (matches[2] === undefined) ? data.length - 1
+                                            : matches[2];
+        if (firstBytePos >= data.length) {
+          aResponse.setStatusLine(aRequest.httpVersion, 416,
+                             "Requested Range Not Satisfiable");
+          aResponse.setHeader("Content-Range", "*/" + data.length, false);
+          aResponse.finish();
+          return;
+        }
+
+        aResponse.setStatusLine(aRequest.httpVersion, 206, "Partial Content");
+        aResponse.setHeader("Content-Range", firstBytePos + "-" +
+                                             lastBytePos + "/" +
+                                             data.length, false);
+
+        data = data.substring(firstBytePos, lastBytePos + 1);
+
+        gMostRecentFirstBytePos = firstBytePos;
+      } else {
+        gMostRecentFirstBytePos = 0;
+      }
+
+      aResponse.setHeader("Content-Length", "" + data.length, false);
+
+      aResponse.write(data.substring(0, data.length / 2));
+
+      // Store the second part of the data on the response object, so that it
+      // can be used by the secondPart function.
+      aResponse.secondPartData = data.substring(data.length / 2);
+    }, function secondPart(aRequest, aResponse) {
+      aResponse.write(aResponse.secondPartData);
+    });
 
   registerInterruptibleHandler("/interruptible_gzip.txt",
     function firstPart(aRequest, aResponse) {
@@ -549,4 +641,61 @@ add_task(function test_common_initialize()
   DownloadIntegration._deferTestOpenFile = Promise.defer();
   DownloadIntegration._deferTestShowDir = Promise.defer();
 
+  // Get a reference to nsIComponentRegistrar, and ensure that is is freed
+  // before the XPCOM shutdown.
+  let registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
+  do_register_cleanup(() => registrar = null);
+
+  // Make sure that downloads started using nsIExternalHelperAppService are
+  // saved to disk without asking for a destination interactively.
+  let mockFactory = {
+    createInstance: function (aOuter, aIid) {
+      return {
+        QueryInterface: XPCOMUtils.generateQI([Ci.nsIHelperAppLauncherDialog]),
+        promptForSaveToFile: function (aLauncher, aWindowContext,
+                                       aDefaultFileName,
+                                       aSuggestedFileExtension,
+                                       aForcePrompt)
+        {
+          throw new Components.Exception(
+                             "Synchronous promptForSaveToFile not implemented.",
+                             Cr.NS_ERROR_NOT_AVAILABLE);
+        },
+        promptForSaveToFileAsync: function (aLauncher, aWindowContext,
+                                            aDefaultFileName,
+                                            aSuggestedFileExtension,
+                                            aForcePrompt)
+        {
+          let file = getTempFile(TEST_TARGET_FILE_NAME);
+          aLauncher.saveDestinationAvailable(file);
+        },
+      }.QueryInterface(aIid);
+    }
+  };
+
+  let contractID = "@mozilla.org/helperapplauncherdialog;1";
+  let cid = registrar.contractIDToCID(contractID);
+  let oldFactory = Components.manager.getClassObject(Cc[contractID],
+                                                     Ci.nsIFactory);
+
+  registrar.unregisterFactory(cid, oldFactory);
+  registrar.registerFactory(cid, "", contractID, mockFactory);
+  do_register_cleanup(function () {
+    registrar.unregisterFactory(cid, mockFactory);
+    registrar.registerFactory(cid, "", contractID, oldFactory);
+  });
+
+  // We must also make sure that nsIExternalHelperAppService uses the
+  // JavaScript implementation of nsITransfer, because the
+  // "@mozilla.org/transfer;1" contract is currently implemented in
+  // "toolkit/components/downloads".  When the other folder is not included in
+  // builds anymore (bug 851471), we'll not need to do this anymore.
+  let transferContractID = "@mozilla.org/transfer;1";
+  let transferNewCid = Components.ID("{1b4c85df-cbdd-4bb6-b04e-613caece083c}");
+  let transferCid = registrar.contractIDToCID(transferContractID);
+
+  registrar.registerFactory(transferNewCid, "", transferContractID, null);
+  do_register_cleanup(function () {
+    registrar.registerFactory(transferCid, "", transferContractID, null);
+  });
 });

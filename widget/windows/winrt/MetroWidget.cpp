@@ -976,10 +976,10 @@ MetroWidget::InitEvent(nsGUIEvent& event, nsIntPoint* aPoint)
   if (!aPoint) {
     event.refPoint.x = event.refPoint.y = 0;
   } else {
-    // convert CSS pixels to device pixels for event.refPoint
-    double scale = GetDefaultScale(); 
-    event.refPoint.x = int32_t(NS_round(aPoint->x * scale));
-    event.refPoint.y = int32_t(NS_round(aPoint->y * scale));
+    CSSIntPoint cssPoint(aPoint->x, aPoint->y);
+    LayoutDeviceIntPoint layoutDeviceIntPoint = CSSIntPointToLayoutDeviceIntPoint(cssPoint);
+    event.refPoint.x = layoutDeviceIntPoint.x;
+    event.refPoint.y = layoutDeviceIntPoint.y;
   }
   event.time = ::GetMessageTime();
 }
@@ -1064,6 +1064,15 @@ double MetroWidget::GetDefaultScaleInternal()
     }
   }
   return 1.0;
+}
+
+LayoutDeviceIntPoint
+MetroWidget::CSSIntPointToLayoutDeviceIntPoint(const CSSIntPoint &aCSSPoint)
+{
+  double scale = GetDefaultScale();
+  LayoutDeviceIntPoint devPx(int32_t(NS_round(scale * aCSSPoint.x)),
+                             int32_t(NS_round(scale * aCSSPoint.y)));
+  return devPx;
 }
 
 float MetroWidget::GetDPI()
@@ -1364,7 +1373,7 @@ MetroWidget::HandleDoubleTap(const CSSIntPoint& aPoint)
     return;
   }
 
-  mMetroInput->HandleDoubleTap(aPoint);
+  mMetroInput->HandleDoubleTap(CSSIntPointToLayoutDeviceIntPoint(aPoint));
 }
 
 void
@@ -1376,7 +1385,7 @@ MetroWidget::HandleSingleTap(const CSSIntPoint& aPoint)
     return;
   }
 
-  mMetroInput->HandleSingleTap(aPoint);
+  mMetroInput->HandleSingleTap(CSSIntPointToLayoutDeviceIntPoint(aPoint));
 }
 
 void
@@ -1388,7 +1397,7 @@ MetroWidget::HandleLongTap(const CSSIntPoint& aPoint)
     return;
   }
 
-  mMetroInput->HandleLongTap(aPoint);
+  mMetroInput->HandleLongTap(CSSIntPointToLayoutDeviceIntPoint(aPoint));
 }
 
 void
