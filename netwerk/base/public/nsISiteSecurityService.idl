@@ -8,18 +8,24 @@ interface nsIURI;
 interface nsIObserver;
 interface nsIHttpChannel;
 
-[scriptable, uuid(1ca9de3d-26b8-4e0c-9641-62c380bdd9c7)]
+[scriptable, uuid(b20a9242-5732-45bc-9fa0-a178154f2721)]
 interface nsISiteSecurityService : nsISupports
 {
+    const uint32_t HEADER_HSTS = 0;
+    const uint32_t HEADER_HKPK = 1;
+    const uint32_t HEADER_OMS = 2;
+
     /**
      * Parses a given HTTP header and records the results internally.
-     * The format of the STS header is defined by the STS specification:
-     * http://tools.ietf.org/html/draft-hodges-strict-transport-sec
-     * and allows a host to specify that future requests on port 80 should be
+     * Currently the only header type supported is HSTS (aka STS).
+     * The format of the HSTS header is defined by the HSTS specification:
+     * https://tools.ietf.org/html/rfc6797
+     * and allows a host to specify that future HTTP requests should be
      * upgraded to HTTPS.
      *
+     * @param aType the type of security header in question.
      * @param aSourceURI the URI of the resource with the HTTP header.
-     * @param aHeader the HTTP response header specifying STS data.
+     * @param aHeader the HTTP response header specifying security data.
      * @param aFlags  options for this request as defined in nsISocketProvider:
      *                  NO_PERMANENT_STORAGE
      * @param aMaxAge the parsed max-age directive of the header.
@@ -29,53 +35,60 @@ interface nsISiteSecurityService : nsISupports
      *         NS_SUCCESS_LOSS_OF_INSIGNIFICANT_DATA
      *                          if there are unrecognized tokens in the header.
      */
-    void processStsHeader(in nsIURI aSourceURI,
-                          in string aHeader,
-                          in uint32_t aFlags,
-                          [optional] out unsigned long long aMaxAge,
-                          [optional] out boolean aIncludeSubdomains);
+    void processHeader(in uint32_t aType,
+                       in nsIURI aSourceURI,
+                       in string aHeader,
+                       in uint32_t aFlags,
+                       [optional] out unsigned long long aMaxAge,
+                       [optional] out boolean aIncludeSubdomains);
 
     /**
-     * Removes the STS state of a host, including the includeSubdomains state
-     * that would affect subdomains.  This essentially removes STS state for
-     * the domain tree rooted at this host.
+     * Given a header type, removes state relating to that header of a host,
+     * including the includeSubdomains state that would affect subdomains.
+     * This essentially removes the state for the domain tree rooted at this
+     * host.
+     * @param aType   the type of security state in question
      * @param aURI    the URI of the target host
      * @param aFlags  options for this request as defined in nsISocketProvider:
      *                  NO_PERMANENT_STORAGE
      */
-    void removeStsState(in nsIURI aURI,
-                        in uint32_t aFlags);
+    void removeState(in uint32_t aType,
+                     in nsIURI aURI,
+                     in uint32_t aFlags);
 
     /**
-     * Checks if the given security info is for an STS host with a broken
-     * transport layer (certificate errors like invalid CN).
-     */
-    boolean shouldIgnoreStsHeader(in nsISupports aSecurityInfo);
-
-    /**
-     * Checks whether or not the given hostname has STS state set.
-     * The host is an STS host if either it has the STS permission, or one of
-     * its super-domains has an STS "includeSubdomains" permission set.
+     * See isSecureURI
      *
-     * @param aHost the hostname (punycode) to query for STS state.
+     * @param aType the type of security state in question.
+     * @param aHost the hostname (punycode) to query for state.
      * @param aFlags  options for this request as defined in nsISocketProvider:
      *                  NO_PERMANENT_STORAGE
      */
-    boolean isStsHost(in string aHost, in uint32_t aFlags);
+    boolean isSecureHost(in uint32_t aType,
+                         in string aHost,
+                         in uint32_t aFlags);
 
     /**
-     * Checks whether or not the URI's hostname has STS state set.
-     * The URI is an STS URI if either the host has the STS permission, or one
-     * of its super-domains has an STS "includeSubdomains" permission set.
-     * NOTE: this function makes decisions based only on the scheme and
+     * Checks if the given security info is for a host with a broken
+     * transport layer (certificate errors like invalid CN).
+     */
+    boolean shouldIgnoreHeaders(in nsISupports aSecurityInfo);
+
+    /**
+     * Checks whether or not the URI's hostname has a given security state set.
+     * For example, for HSTS:
+     * The URI is an HSTS URI if either the host has the HSTS state set, or one
+     * of its super-domains has the HSTS "includeSubdomains" flag set.
+     * NOTE: this function makes decisions based only on the
      * host contained in the URI, and disregards other portions of the URI
      * such as path and port.
      *
+     * @param aType the type of security state in question.
      * @param aURI the URI to query for STS state.
      * @param aFlags  options for this request as defined in nsISocketProvider:
      *                  NO_PERMANENT_STORAGE
      */
-    boolean isStsURI(in nsIURI aURI, in uint32_t aFlags);
+    boolean isSecureURI(in uint32_t aType, in nsIURI aURI, in uint32_t aFlags);
 
 };
 
