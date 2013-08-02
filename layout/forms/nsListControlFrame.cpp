@@ -1070,12 +1070,9 @@ nsListControlFrame::GetOptionText(uint32_t aIndex, nsAString& aStr)
 int32_t
 nsListControlFrame::GetSelectedIndex()
 {
-  int32_t aIndex;
-  
-  nsCOMPtr<nsIDOMHTMLSelectElement> selectElement(do_QueryInterface(mContent));
-  selectElement->GetSelectedIndex(&aIndex);
-  
-  return aIndex;
+  dom::HTMLSelectElement* select =
+    dom::HTMLSelectElement::FromContentOrNull(mContent);
+  return select->SelectedIndex();
 }
 
 dom::HTMLOptionElement*
