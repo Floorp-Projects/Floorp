@@ -244,6 +244,8 @@ public:
 #endif
   }
 
+  void ReleaseWrapper(void* aScriptObjectHolder);
+
 private:
   JSObject *GetWrapperJSObject() const
   {
@@ -339,7 +341,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsWrapperCache, NS_WRAPPERCACHE_IID)
   tmp->TraceWrapper(aCallbacks, aClosure);
 
 #define NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER \
-  nsContentUtils::ReleaseWrapper(p, tmp);
+  tmp->ReleaseWrapper(p);
 
 #define NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(_class) \
   NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(_class)              \
