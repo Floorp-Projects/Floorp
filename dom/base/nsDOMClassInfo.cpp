@@ -1932,7 +1932,7 @@ nsDOMClassInfo::ResolveConstructor(JSContext *cx, JSObject *aObj,
   JS::Rooted<JSObject*> global(cx, ::JS_GetGlobalForObject(cx, obj));
 
   JS::Rooted<JS::Value> val(cx);
-  if (!::JS_LookupProperty(cx, global, mData->mName, val.address())) {
+  if (!::JS_LookupProperty(cx, global, mData->mName, &val)) {
     return NS_ERROR_UNEXPECTED;
   }
 
@@ -2601,7 +2601,7 @@ ResolveGlobalName(const nsAString& aName, void* aClosure)
   JS::Rooted<JS::Value> dummy(closure->cx);
   bool ok = JS_LookupUCProperty(closure->cx, closure->obj,
                                 aName.BeginReading(), aName.Length(),
-                                dummy.address());
+                                &dummy);
   if (!ok) {
     *closure->retval = false;
     return PL_DHASH_STOP;
@@ -3411,12 +3411,12 @@ ResolvePrototype(nsIXPConnect *aXPConnect, nsGlobalWindow *aWin, JSContext *cx,
       JSAutoCompartment ac(cx, winobj);
 
       JS::Rooted<JS::Value> val(cx);
-      if (!JS_LookupProperty(cx, winobj, CutPrefix(class_parent_name), val.address())) {
+      if (!JS_LookupProperty(cx, winobj, CutPrefix(class_parent_name), &val)) {
         return NS_ERROR_UNEXPECTED;
       }
 
       if (val.isObject()) {
-        if (!JS_LookupProperty(cx, &val.toObject(), "prototype", val.address())) {
+        if (!JS_LookupProperty(cx, &val.toObject(), "prototype", &val)) {
           return NS_ERROR_UNEXPECTED;
         }
 
@@ -4233,7 +4233,7 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
         JS::Rooted<JS::Value> val(cx);
 
         if (!::JS_LookupPropertyWithFlagsById(cx, proto, id, flags,
-                                              pobj.address(), val.address())) {
+                                              pobj.address(), &val)) {
           *_retval = JS_FALSE;
 
           return NS_OK;

@@ -208,7 +208,7 @@ GetJSValFromKeyPathString(JSContext* aCx,
     if (!JS_DeleteUCProperty2(aCx, targetObject,
                               targetObjectPropName.get(),
                               targetObjectPropName.Length(),
-                              succeeded.address())) {
+                              &succeeded)) {
       return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
     }
     NS_ASSERTION(JSVAL_IS_BOOLEAN(succeeded), "Wtf?");
