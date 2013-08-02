@@ -22,6 +22,10 @@ loader.lazyGetter(this, "ToolSidebar",
                   () => require("devtools/framework/sidebar").ToolSidebar);
 loader.lazyGetter(this, "NetworkPanel",
                   () => require("devtools/webconsole/network-panel").NetworkPanel);
+loader.lazyGetter(this, "ConsoleOutput",
+                  () => require("devtools/webconsole/console-output").ConsoleOutput);
+loader.lazyGetter(this, "Messages",
+                  () => require("devtools/webconsole/console-output").Messages);
 loader.lazyImporter(this, "GripClient", "resource://gre/modules/devtools/dbg-client.jsm");
 loader.lazyImporter(this, "VariablesView", "resource:///modules/devtools/VariablesView.jsm");
 loader.lazyImporter(this, "VariablesViewController", "resource:///modules/devtools/VariablesViewController.jsm");
@@ -187,6 +191,8 @@ function WebConsoleFrame(aWebConsoleOwner)
   this._networkRequests = {};
   this.filterPrefs = {};
 
+  this.output = new ConsoleOutput(this);
+
   this._toggleFilter = this._toggleFilter.bind(this);
   this._flushMessageQueue = this._flushMessageQueue.bind(this);
 
@@ -323,6 +329,12 @@ WebConsoleFrame.prototype = {
    * @type nsIDOMElement
    */
   outputNode: null,
+
+  /**
+   * The ConsoleOutput instance that manages all output.
+   * @type object
+   */
+  output: null,
 
   /**
    * The input element that allows the user to filter messages by string.
@@ -830,8 +842,6 @@ WebConsoleFrame.prototype = {
         node.classList.add("hud-filtered-by-type");
       }
     }
-
-    this.regroupOutput();
   },
 
   /**
@@ -858,8 +868,6 @@ WebConsoleFrame.prototype = {
         node.classList.add("hud-filtered-by-string");
       }
     }
-
-    this.regroupOutput();
   },
 
   /**
@@ -1751,6 +1759,35 @@ WebConsoleFrame.prototype = {
   },
 
   /**
+   * Handler for the tabNavigated notification.
+   *
+   * @param string aEvent
+   *        Event name.
+   * @param object aPacket
+   *        Notification packet received from the server.
+   */
+  handleTabNavigated: function WCF_handleTabNavigated(aEvent, aPacket)
+  {
+    if (aEvent == "will-navigate") {
+      if (this.persistLog) {
+        let marker = new Messages.NavigationMarker(aPacket.url, Date.now());
+        this.output.addMessage(marker);
+      }
+      else {
+        this.jsterm.clearOutput();
+      }
+    }
+
+    if (aPacket.url) {
+      this.onLocationChange(aPacket.url, aPacket.title);
+    }
+
+    if (aEvent == "navigate" && !aPacket.nativeConsoleAPI) {
+      this.logWarningAboutReplacedAPI();
+    }
+  },
+
+  /**
    * Output a message node. This filters a node appropriately, then sends it to
    * the output, regrouping and pruning output as necessary.
    *
@@ -1861,11 +1898,6 @@ WebConsoleFrame.prototype = {
         removedNodes += this.pruneOutputIfNecessary(aCategory);
       }, this);
       this._pruneCategoriesQueue = {};
-    }
-
-    // Regroup messages at the end of the queue.
-    if (!this._outputQueue.length) {
-      this.regroupOutput();
     }
 
     let isInputOutput = lastVisibleNode &&
@@ -2133,29 +2165,6 @@ WebConsoleFrame.prototype = {
 
     if (aNode.parentNode) {
       aNode.parentNode.removeChild(aNode);
-    }
-  },
-
-  /**
-   * Splits the given console messages into groups based on their timestamps.
-   */
-  regroupOutput: function WCF_regroupOutput()
-  {
-    // Go through the nodes and adjust the placement of "webconsole-new-group"
-    // classes.
-    let nodes = this.outputNode.querySelectorAll(".hud-msg-node" +
-      ":not(.hud-filtered-by-string):not(.hud-filtered-by-type)");
-    let lastTimestamp;
-    for (let i = 0, n = nodes.length; i < n; i++) {
-      let thisTimestamp = nodes[i].timestamp;
-      if (lastTimestamp != null &&
-          thisTimestamp >= lastTimestamp + NEW_GROUP_DELAY) {
-        nodes[i].classList.add("webconsole-new-group");
-      }
-      else {
-        nodes[i].classList.remove("webconsole-new-group");
-      }
-      lastTimestamp = thisTimestamp;
     }
   },
 
@@ -2622,7 +2631,6 @@ WebConsoleFrame.prototype = {
 
     // Gather up the selected items and concatenate their clipboard text.
     let strings = [];
-    let newGroup = false;
 
     let children = this.outputNode.children;
 
@@ -2632,21 +2640,10 @@ WebConsoleFrame.prototype = {
         continue;
       }
 
-      // Add dashes between groups so that group boundaries show up in the
-      // copied output.
-      if (i > 0 && item.classList.contains("webconsole-new-group")) {
-        newGroup = true;
-      }
-
       // Ensure the selected item hasn't been filtered by type or string.
       if (!item.classList.contains("hud-filtered-by-type") &&
           !item.classList.contains("hud-filtered-by-string")) {
         let timestampString = l10n.timestampString(item.timestamp);
-        if (newGroup) {
-          strings.push("--");
-          newGroup = false;
-        }
-
         if (aOptions.linkOnly) {
           strings.push(item.url);
         }
@@ -2741,6 +2738,9 @@ WebConsoleFrame.prototype = {
       this.jsterm.destroy();
       this.jsterm = null;
     }
+    this.output.destroy();
+    this.output = null;
+
     if (this._contextMenuHandler) {
       this._contextMenuHandler.destroy();
       this._contextMenuHandler = null;
@@ -4981,17 +4981,7 @@ WebConsoleConnectionProxy.prototype = {
       return;
     }
 
-    if (aEvent == "will-navigate" && !this.owner.persistLog) {
-      this.owner.jsterm.clearOutput();
-    }
-
-    if (aPacket.url) {
-      this.owner.onLocationChange(aPacket.url, aPacket.title);
-    }
-
-    if (aEvent == "navigate" && !aPacket.nativeConsoleAPI) {
-      this.owner.logWarningAboutReplacedAPI();
-    }
+    this.owner.handleTabNavigated(aEvent, aPacket);
   },
 
   /**

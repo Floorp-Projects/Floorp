@@ -124,12 +124,20 @@ function testFormSubmission()
     // There should be 3 network requests pointing to the HTML file.
     waitForMessages({
       webconsole: hud,
-      messages: [{
-        text: "test-network-request.html",
-        category: CATEGORY_NETWORK,
-        severity: SEVERITY_LOG,
-        count: 3,
-      }],
+      messages: [
+        {
+          text: "test-network-request.html",
+          category: CATEGORY_NETWORK,
+          severity: SEVERITY_LOG,
+          count: 3,
+        },
+        {
+          text: "test-data.json",
+          category: CATEGORY_NETWORK,
+          severity: SEVERITY_LOG,
+          count: 2,
+        },
+      ],
     }).then(testLiveFilteringOnSearchStrings);
   };
 

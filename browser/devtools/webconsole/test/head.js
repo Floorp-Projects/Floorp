@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-let WebConsoleUtils, gDevTools, TargetFactory, console, promise;
+let WebConsoleUtils, gDevTools, TargetFactory, console, promise, require;
 
 (() => {
   gDevTools = Cu.import("resource:///modules/devtools/gDevTools.jsm", {}).gDevTools;
@@ -14,6 +14,7 @@ let WebConsoleUtils, gDevTools, TargetFactory, console, promise;
   let utils = tools.require("devtools/toolkit/webconsole/utils");
   TargetFactory = tools.TargetFactory;
   WebConsoleUtils = utils.Utils;
+  require = tools.require;
 })();
 // promise._reportErrors = true; // please never leave me.
 
@@ -884,6 +885,9 @@ function getMessageElementText(aElement)
  *            message.
  *            - longString: boolean, set to |true} to match long strings in the
  *            message.
+ *            - type: match messages that are instances of the given object. For
+ *            example, you can point to Messages.NavigationMarker to match any
+ *            such message.
  *            - objects: boolean, set to |true| if you expect inspectable
  *            objects in the message.
  *            - source: object that can hold one property: url. This is used to
@@ -1063,8 +1067,25 @@ function waitForMessages(aOptions)
       return false;
     }
 
+    if (aRule.type) {
+      // The rule tries to match the newer types of messages, based on their
+      // object constructor.
+      if (!aElement._messageObject ||
+          !(aElement._messageObject instanceof aRule.type)) {
+        return false;
+      }
+    }
+    else if (aElement._messageObject) {
+      // If the message element holds a reference to its object, it means this
+      // is a newer message type. All of the older waitForMessages() rules do
+      // not expect this kind of messages. We return false here.
+      // TODO: we keep this behavior until bug 778766 is fixed. After that we
+      // will not require |type| to match newer types of messages.
+      return false;
+    }
+
     let partialMatch = !!(aRule.consoleTrace || aRule.consoleTime ||
-                          aRule.consoleTimeEnd);
+                          aRule.consoleTimeEnd || aRule.type);
 
     if (aRule.category && aElement.category != aRule.category) {
       if (partialMatch) {
