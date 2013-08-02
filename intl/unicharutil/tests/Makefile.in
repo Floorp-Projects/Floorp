@@ -13,8 +13,6 @@ include $(DEPTH)/config/autoconf.mk
 
 USE_STATIC_LIBS = 1
 
-DISABLE_SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=$(BIN_SUFFIX))
-
 LIBS		= \
 	$(XPCOM_STATICRUNTIME_GLUE_LDOPTS) \
 	$(DIST)/lib/$(LIB_PREFIX)unicharutil_external_s.$(LIB_SUFFIX) \
