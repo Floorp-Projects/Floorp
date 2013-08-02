@@ -24,7 +24,7 @@ public class testSettingsMenuItems extends PixelTest {
     //
     // This test assumes menu items are in order (scrolling down for off-screen items).
     String[][] OPTIONS_CUSTOMIZE = {
-         { "Search", "", "Show search suggestions", "Installed search engines" },
+         { "Search settings", "", "Show search suggestions", "Installed search engines" },
          { "Import from Android", "", "Bookmarks", "History", "Import" },
          { "Always restore tabs" },
          { "Automatic updates", "Only over Wi-Fi", "Enabled", "Only over Wi-Fi", "Disabled" },
@@ -32,8 +32,9 @@ public class testSettingsMenuItems extends PixelTest {
 
     String[][] OPTIONS_DISPLAY = {
         { "Text size" },
-        { "Double tap to reflow text" },
         { "Title bar", "Show page title", "Show page title", "Show page address" },
+        { "Advanced" },
+        { "Text reflow" },
         { "Character encoding", "Don't show menu", "Show menu", "Don't show menu" },
         { "Plugins", "Tap to play", "Enabled", "Tap to play", "Disabled" },
     };
