@@ -5483,8 +5483,11 @@ var XPInstallObserver = {
     if (needsRestart) {
       this.showRestartPrompt();
     } else {
-      let message = Strings.browser.GetStringFromName("alertAddonsInstalledNoRestart");
-      NativeWindow.toast.show(message, "short");
+      // Display completion message for new installs or updates not done Automatically
+      if (!aInstall.existingAddon || !AddonManager.shouldAutoUpdate(aInstall.existingAddon)) {
+        let message = Strings.browser.GetStringFromName("alertAddonsInstalledNoRestart");
+        NativeWindow.toast.show(message, "short");
+      }
     }
   },
 
