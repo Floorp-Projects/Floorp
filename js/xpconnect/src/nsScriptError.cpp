@@ -102,8 +102,9 @@ nsScriptError::Init(const nsAString& message,
                     uint32_t flags,
                     const char *category)
 {
+    nsDependentCString c(category);
     return InitWithWindowID(message, sourceName, sourceLine, lineNumber,
-                            columnNumber, flags, category, 0);
+                            columnNumber, flags, c, 0);
 }
 
 NS_IMETHODIMP
@@ -113,7 +114,7 @@ nsScriptError::InitWithWindowID(const nsAString& message,
                                 uint32_t lineNumber,
                                 uint32_t columnNumber,
                                 uint32_t flags,
-                                const char *category,
+                                const nsACString& category,
                                 uint64_t aInnerWindowID)
 {
     mMessage.Assign(message);
@@ -122,7 +123,7 @@ nsScriptError::InitWithWindowID(const nsAString& message,
     mSourceLine.Assign(sourceLine);
     mColumnNumber = columnNumber;
     mFlags = flags;
-    mCategory.Assign(category);
+    mCategory = category;
     mTimeStamp = JS_Now() / 1000;
     mInnerWindowID = aInnerWindowID;
 

@@ -2480,7 +2480,7 @@ nsDocument::SendToConsole(nsCOMArray<nsISecurityConsoleMessage>& aMessages)
     aMessages[i]->GetCategory(category);
 
     nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
-                                    NS_ConvertUTF16toUTF8(category).get(),
+                                    NS_ConvertUTF16toUTF8(category),
                                     this, nsContentUtils::eSECURITY_PROPERTIES,
                                     NS_ConvertUTF16toUTF8(messageTag).get());
   }
