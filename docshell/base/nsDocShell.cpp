@@ -4273,7 +4273,8 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI *aURI,
                   mInPrivateBrowsing ? nsISocketProvider::NO_PERMANENT_STORAGE : 0;
                 
                 bool isStsHost = false;
-                rv = sss->IsStsURI(aURI, flags, &isStsHost);
+                rv = sss->IsSecureURI(nsISiteSecurityService::HEADER_HSTS,
+                                      aURI, flags, &isStsHost);
                 NS_ENSURE_SUCCESS(rv, rv);
 
                 uint32_t bucketId;

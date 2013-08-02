@@ -191,7 +191,7 @@
       Cc["@mozilla.org/ssservice;1"].
         getService(Ci.nsISiteSecurityService);
     var flags = isPrivate ? Ci.nsISocketProvider.NO_PERMANENT_STORAGE : 0
-    sss.removeStsState(thehost, flags);
+    sss.removeState(Ci.nsISiteSecurityService.HEADER_HSTS, thehost, flags);
     dump_STSState(isPrivate);
   }
 
@@ -200,7 +200,7 @@
       Cc["@mozilla.org/ssservice;1"].
         getService(Ci.nsISiteSecurityService);
     var flags = isPrivate ? Ci.nsISocketProvider.NO_PERMANENT_STORAGE : 0
-    SimpleTest.info("State of example.com: " + sss.isStsHost("example.com", flags));
+    SimpleTest.info("State of example.com: " + sss.isSecureHost(Ci.nsISiteSecurityService.HEADER_HSTS, "example.com", flags));
   }
 
   // These are executed in the order presented.
