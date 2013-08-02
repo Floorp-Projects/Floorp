@@ -42,7 +42,7 @@ var Downloads = {
     let f = this._getLocalFile(fileUri);
     try {
       f.launch();
-    } catch (ex) { 
+    } catch (ex) {
       // in case we are not able to open the file (i.e. there is no app able to handle it)
       // we just open the browser tab showing it 
       BrowserApp.addTab("about:downloads?id=" + guid);
