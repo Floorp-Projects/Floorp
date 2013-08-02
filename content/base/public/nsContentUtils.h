@@ -1278,9 +1278,6 @@ public:
                                mozilla::DeferredFinalizeFunction aFunc,
                                void* aThing);
 
-  static void ReleaseWrapper(void* aScriptObjectHolder,
-                             nsWrapperCache* aCache);
-
   /*
    * Notify when the first XUL menu is opened and when the all XUL menus are
    * closed. At opening, aInstalling should be TRUE, otherwise, it should be
