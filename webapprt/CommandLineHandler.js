@@ -30,7 +30,7 @@ CommandLineHandler.prototype = {
                              "chrome,dialog=no",
                              args);
     } else {
-      args.setProperty("url", WebappRT.launchURI);
+      args.setProperty("url", WebappRT.launchURI.spec);
       Services.ww.openWindow(null,
                              "chrome://webapprt/content/webapp.xul",
                              "_blank",

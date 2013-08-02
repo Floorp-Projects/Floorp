@@ -24,7 +24,6 @@ var props = {
   getInstalled: "function",
   getSelf: "function",
   install: "function",
-  installPackage: "function",
   mgmt: "object",
 };
 

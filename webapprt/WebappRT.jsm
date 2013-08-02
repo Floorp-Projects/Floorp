@@ -10,11 +10,15 @@ const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/AppsUtils.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "FileUtils", function() {
   Cu.import("resource://gre/modules/FileUtils.jsm");
   return FileUtils;
+});
+
+XPCOMUtils.defineLazyGetter(this, "DOMApplicationRegistry", function() {
+  Cu.import("resource://gre/modules/Webapps.jsm");
+  return DOMApplicationRegistry;
 });
 
 this.WebappRT = {
@@ -47,8 +51,10 @@ this.WebappRT = {
   },
 
   get launchURI() {
-    let manifest = new ManifestHelper(this.config.app.manifest,
-                                      this.config.app.origin);
-    return manifest.fullLaunchPath();
+    let url = Services.io.newURI(this.config.app.origin, null, null);
+    if (this.config.app.manifest.launch_path) {
+      url = Services.io.newURI(this.config.app.manifest.launch_path, null, url);
+    }
+    return url;
   }
 };

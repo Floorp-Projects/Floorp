@@ -7,8 +7,11 @@
 EXTRA_COMPONENTS += [
     'AppsService.js',
     'AppsService.manifest',
-    'Webapps.js',
     'Webapps.manifest',
+]
+
+EXTRA_PP_COMPONENTS += [
+    'Webapps.js',
 ]
 
 EXTRA_JS_MODULES += [
