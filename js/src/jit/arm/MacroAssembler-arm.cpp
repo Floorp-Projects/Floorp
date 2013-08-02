@@ -3103,10 +3103,7 @@ void
 MacroAssemblerARMCompat::passABIArg(const MoveOperand &from)
 {
     MoveOperand to;
-    uint32_t increment = 1;
-    bool useResolver = true;
     ++passedArgs_;
-    Move::Kind kind = Move::GENERAL;
     if (!enoughMemory_)
         return;
     if (from.isDouble()) {
