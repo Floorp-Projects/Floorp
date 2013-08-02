@@ -327,7 +327,7 @@ ExposedPropertiesOnly::check(JSContext *cx, JSObject *wrapperArg, jsid idArg, Wr
         return true;
 
     RootedValue exposedProps(cx);
-    if (!JS_LookupPropertyById(cx, wrappedObject, exposedPropsId, exposedProps.address()))
+    if (!JS_LookupPropertyById(cx, wrappedObject, exposedPropsId, &exposedProps))
         return false;
 
     if (exposedProps.isNullOrUndefined())

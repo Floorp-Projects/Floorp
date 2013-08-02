@@ -1405,3 +1405,33 @@ MacroAssembler::popRooted(VMFunction::RootType rootType, Register cellReg,
         break;
     }
 }
+
+void
+MacroAssembler::branchEqualTypeIfNeeded(MIRType type, MDefinition *def, const Register &tag,
+                                        Label *label)
+{
+    if (def->mightBeType(type)) {
+        switch (type) {
+          case MIRType_Null:
+            branchTestNull(Equal, tag, label);
+            break;
+          case MIRType_Boolean:
+            branchTestBoolean(Equal, tag, label);
+            break;
+          case MIRType_Int32:
+            branchTestInt32(Equal, tag, label);
+            break;
+          case MIRType_Double:
+            branchTestDouble(Equal, tag, label);
+            break;
+          case MIRType_String:
+            branchTestString(Equal, tag, label);
+            break;
+          case MIRType_Object:
+            branchTestObject(Equal, tag, label);
+            break;
+          default:
+            MOZ_ASSUME_UNREACHABLE("Unsupported type");
+        }
+    }
+}

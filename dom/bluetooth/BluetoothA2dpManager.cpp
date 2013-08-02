@@ -204,7 +204,8 @@ BluetoothA2dpManager::HandleSinkPropertyChanged(const BluetoothSignal& aSignal)
     // Indicates if a stream is setup to a A2DP sink on the remote device.
     MOZ_ASSERT(value.type() == BluetoothValue::Tbool);
     mA2dpConnected = value.get_bool();
-    NotifyStatusChanged();
+    NotifyConnectionStatusChanged();
+    DispatchConnectionStatusChanged();
   } else if (name.EqualsLiteral("Playing")) {
     // Indicates if a stream is active to a A2DP sink on the remote device.
     MOZ_ASSERT(value.type() == BluetoothValue::Tbool);
@@ -254,7 +255,16 @@ BluetoothA2dpManager::HandleSinkStateChanged(SinkState aState)
 }
 
 void
-BluetoothA2dpManager::NotifyStatusChanged()
+BluetoothA2dpManager::DispatchConnectionStatusChanged()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  DispatchStatusChangedEvent(
+    NS_LITERAL_STRING(A2DP_STATUS_CHANGED_ID), mDeviceAddress, mA2dpConnected);
+}
+
+void
+BluetoothA2dpManager::NotifyConnectionStatusChanged()
 {
   MOZ_ASSERT(NS_IsMainThread());
 

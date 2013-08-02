@@ -17,6 +17,7 @@
 #include "nsHttp.h"
 #include "nsITransport.h"
 #include "nsITimer.h"
+#include "nsIDNSListener.h"
 
 namespace mozilla {
 namespace net {
@@ -25,7 +26,8 @@ class Dashboard:
     public nsIDashboard,
     public nsIDashboardEventNotifier,
     public nsITransportEventSink,
-    public nsITimerCallback
+    public nsITimerCallback,
+    public nsIDNSListener
 {
 public:
     NS_DECL_THREADSAFE_ISUPPORTS
@@ -33,6 +35,7 @@ public:
     NS_DECL_NSIDASHBOARDEVENTNOTIFIER
     NS_DECL_NSITRANSPORTEVENTSINK
     NS_DECL_NSITIMERCALLBACK
+    NS_DECL_NSIDNSLISTENER
 
     Dashboard();
     friend class DashConnStatusRunnable;
@@ -119,6 +122,14 @@ private:
         nsIThread* thread;
     };
 
+    struct DnsLookup
+    {
+        nsCOMPtr<nsIDNSService> serv;
+        nsCOMPtr<nsICancelable> mCancel;
+        nsCOMPtr<NetDashboardCallback> cb;
+        nsIThread* thread;
+    };
+
     struct ConnectionData
     {
         nsCOMPtr<nsISocketTransport> socket;
@@ -134,6 +145,7 @@ private:
     struct HttpData mHttp;
     struct WebSocketData mWs;
     struct DnsData mDns;
+    struct DnsLookup mDnsup;
     struct ConnectionData mConn;
 };
 

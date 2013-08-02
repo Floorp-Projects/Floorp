@@ -172,6 +172,8 @@ public:
                      const gfx::Matrix4x4& aTransform,
                      bool aIs3D = false);
 
+  void RemoveMaskEffect();
+
   Compositor* GetCompositor() const
   {
     return mCompositor;
