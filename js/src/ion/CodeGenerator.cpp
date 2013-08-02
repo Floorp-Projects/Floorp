@@ -4038,7 +4038,7 @@ CodeGenerator::visitEmulatesUndefinedAndBranch(LEmulatesUndefinedAndBranch *lir)
     return true;
 }
 
-typedef JSString *(*ConcatStringsFn)(JSContext *, HandleString, HandleString);
+typedef JSString *(*ConcatStringsFn)(ThreadSafeContext *, HandleString, HandleString);
 typedef ParallelResult (*ConcatStringsParFn)(ForkJoinSlice *, HandleString, HandleString,
                                              MutableHandleString);
 static const VMFunctionsModal ConcatStringsInfo = VMFunctionsModal(
