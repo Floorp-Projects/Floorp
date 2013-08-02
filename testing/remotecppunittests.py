@@ -5,11 +5,21 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import os, sys
+import subprocess
+import tempfile
+from zipfile import ZipFile
 import runcppunittests as cppunittests
 import mozcrash, mozlog
+import mozfile
 import StringIO
 import posixpath
 from mozdevice import devicemanager, devicemanagerADB, devicemanagerSUT
+
+try:
+    from mozbuild.base import MozbuildObject
+    build_obj = MozbuildObject.from_environment()
+except ImportError:
+    build_obj = None
 
 log = mozlog.getLogger('remotecppunittests')
 
@@ -42,6 +52,29 @@ class RemoteCPPUnitTests(cppunittests.CPPUnitTests):
         self.device.chmodDir(self.remote_bin_dir)
 
     def push_libs(self):
+        if self.options.local_apk:
+            with mozfile.TemporaryDirectory() as tmpdir:
+                apk_contents = ZipFile(self.options.local_apk)
+                szip = os.path.join(self.options.local_bin, '..', 'host', 'bin', 'szip')
+                if not os.path.exists(szip):
+                    # Tinderbox builds must run szip from the test package
+                    szip = os.path.join(self.options.local_bin, 'host', 'szip')
+                if not os.path.exists(szip):
+                    # If the test package doesn't contain szip, it means files
+                    # are not szipped in the test package.
+                    szip = None
+
+                for info in apk_contents.infolist():
+                    if info.filename.endswith(".so"):
+                        print >> sys.stderr, "Pushing %s.." % info.filename
+                        remote_file = posixpath.join(self.remote_bin_dir, os.path.basename(info.filename))
+                        apk_contents.extract(info, tmpdir)
+                        file = os.path.join(tmpdir, info.filename)
+                        if szip:
+                            out = subprocess.check_output([szip, '-d', file], stderr=subprocess.STDOUT)
+                        self.device.pushFile(os.path.join(tmpdir, info.filename), remote_file)
+            return
+
         for file in os.listdir(self.options.local_lib):
             if file.endswith(".so"):
                 print >> sys.stderr, "Pushing %s.." % file
@@ -141,6 +174,16 @@ class RemoteCPPUnittestOptions(cppunittests.CPPUnittestOptions):
                         help = "location of libraries to push -- preferably stripped")
         defaults["local_lib"] = None
 
+        self.add_option("--apk", action="store",
+                        type = "string", dest = "local_apk",
+                        help = "local path to Fennec APK")
+        defaults["local_apk"] = None
+
+        self.add_option("--localBinDir", action="store",
+                        type = "string", dest = "local_bin",
+                        help = "local path to bin directory")
+        defaults["local_bin"] = build_obj.bindir if build_obj is not None else None
+
         self.add_option("--remoteTestRoot", action = "store",
                     type = "string", dest = "remote_test_root",
                     help = "remote directory to use as test root (eg. /data/local/tests)")
@@ -161,11 +204,14 @@ def main():
     if not args:
         print >>sys.stderr, """Usage: %s <test binary> [<test binary>...]""" % sys.argv[0]
         sys.exit(1)
-    if not options.local_lib:
-        print >>sys.stderr, """Error: --localLib is required"""
+    if options.local_lib is None and options.local_apk is None:
+        print >>sys.stderr, """Error: --localLib or --apk is required"""
         sys.exit(1)
-    if not os.path.isdir(options.local_lib):
+    if options.local_lib is not None and not os.path.isdir(options.local_lib):
         print >>sys.stderr, """Error: --localLib directory %s not found""" % options.local_lib
+        sys.exit(1)
+    if options.local_apk is not None and not os.path.isfile(options.local_apk):
+        print >>sys.stderr, """Error: --apk file %s not found""" % options.local_apk
         sys.exit(1)
     if not options.xre_path:
         print >>sys.stderr, """Error: --xre-path is required"""
@@ -181,7 +227,7 @@ def main():
             print "Error: you must provide a device IP to connect to via the --deviceIP option"
             sys.exit(1)
     options.xre_path = os.path.abspath(options.xre_path)
-    progs = [os.path.abspath(p) for p in args]
+    progs = cppunittests.extract_unittests_from_args(args)
     tester = RemoteCPPUnitTests(dm, options, progs)
     try:
         result = tester.run_tests(progs, options.xre_path, options.symbols_path)
