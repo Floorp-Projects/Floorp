@@ -25,7 +25,6 @@ class CanvasClientWebGL;
 class ClientCanvasLayer : public CopyableCanvasLayer,
                           public ClientLayer
 {
-  typedef CanvasClient::CanvasClientType CanvasClientType;
 public:
   ClientCanvasLayer(ClientLayerManager* aLayerManager) :
     CopyableCanvasLayer(aLayerManager, static_cast<ClientLayer*>(this))
@@ -76,18 +75,18 @@ protected:
     return static_cast<ClientLayerManager*>(mManager);
   }
   
-  CanvasClientType GetCanvasClientType()
+  CompositableType GetCompositableClientType()
   {
     if (mGLContext) {
-      return CanvasClient::CanvasClientGLContext;
+      return BUFFER_IMAGE_BUFFERED;
     }
-    return CanvasClient::CanvasClientSurface;
+    return BUFFER_IMAGE_SINGLE;
   }
 
   RefPtr<CanvasClient> mCanvasClient;
 
   friend class CanvasClient2D;
-  friend class CanvasClientSurfaceStream;
+  friend class CanvasClientWebGL;
 };
 }
 }
