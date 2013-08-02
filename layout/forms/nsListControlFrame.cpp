@@ -1075,27 +1075,6 @@ nsListControlFrame::GetOption(nsIDOMHTMLOptionsCollection* aCollection,
   return nullptr;
 }
 
-bool 
-nsListControlFrame::IsContentSelected(nsIContent* aContent) const
-{
-  bool isSelected = false;
-
-  nsCOMPtr<nsIDOMHTMLOptionElement> optEl = do_QueryInterface(aContent);
-  if (optEl)
-    optEl->GetSelected(&isSelected);
-
-  return isSelected;
-}
-
-bool 
-nsListControlFrame::IsContentSelectedByIndex(int32_t aIndex) const 
-{
-  nsCOMPtr<nsIContent> content = GetOptionContent(aIndex);
-  NS_ASSERTION(content, "Failed to retrieve option content");
-
-  return IsContentSelected(content);
-}
-
 NS_IMETHODIMP
 nsListControlFrame::OnOptionSelected(int32_t aIndex, bool aSelected)
 {
