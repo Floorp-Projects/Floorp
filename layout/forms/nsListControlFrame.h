@@ -186,13 +186,6 @@ public:
   static already_AddRefed<nsIDOMHTMLOptionElement>
     GetOption(nsIDOMHTMLOptionsCollection* aOptions, int32_t aIndex);
 
-  /**
-   * Returns the nsIContent object in the collection 
-   * for a given index.
-   */
-  static already_AddRefed<nsIContent>
-    GetOptionAsContent(nsIDOMHTMLOptionsCollection* aCollection,int32_t aIndex);
-
   static void ComboboxFocusSet();
 
   // Helper
@@ -287,8 +280,8 @@ protected:
   void       DropDownToggleKey(nsIDOMEvent* aKeyEvent);
 
   nsresult   IsOptionDisabled(int32_t anIndex, bool &aIsDisabled);
-  nsresult   ScrollToFrame(nsIContent * aOptElement);
-  nsresult   ScrollToIndex(int32_t anIndex);
+  void ScrollToFrame(mozilla::dom::HTMLOptionElement& aOptElement);
+  void ScrollToIndex(int32_t anIndex);
 
   /**
    * When the user clicks on the comboboxframe to show the dropdown
@@ -329,12 +322,6 @@ protected:
    * @return NS_OK if it successfully found the selection
    */
   nsresult GetIndexFromDOMEvent(nsIDOMEvent* aMouseEvent, int32_t& aCurIndex);
-
-  /**
-   * For a given index it returns the nsIContent object 
-   * from the select.
-   */
-  already_AddRefed<nsIContent> GetOptionContent(int32_t aIndex) const;
 
   bool     CheckIfAllFramesHere();
   bool     IsLeftButton(nsIDOMEvent* aMouseEvent);
