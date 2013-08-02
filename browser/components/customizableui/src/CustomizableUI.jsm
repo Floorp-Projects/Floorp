@@ -526,7 +526,7 @@ let CustomizableUIInternal = {
                                 : null;
       this.insertWidgetBefore(widgetNode, nextNode, container, aArea);
       this._addParentFlex(widgetNode);
-      if (area.type == this.TYPE_TOOLBAR) {
+      if (area.get("type") == CustomizableUI.TYPE_TOOLBAR) {
         areaNode.setAttribute("currentset", areaNode.currentSet);
       }
     }
@@ -569,7 +569,7 @@ let CustomizableUIInternal = {
         }
         areaNode.toolbox.palette.appendChild(widgetNode);
       }
-      if (area.type == this.TYPE_TOOLBAR) {
+      if (area.get("type") == CustomizableUI.TYPE_TOOLBAR) {
         areaNode.setAttribute("currentset", areaNode.currentSet);
       }
     }
@@ -612,7 +612,7 @@ let CustomizableUIInternal = {
       let nextNode = nextNodeId ? container.querySelector(idToSelector(nextNodeId))
                                 : null;
       this.insertWidgetBefore(widgetNode, nextNode, container, aArea);
-      if (area.type == this.TYPE_TOOLBAR) {
+      if (area.get("type") == CustomizableUI.TYPE_TOOLBAR) {
         areaNode.setAttribute("currentset", areaNode.currentSet);
       }
     }
