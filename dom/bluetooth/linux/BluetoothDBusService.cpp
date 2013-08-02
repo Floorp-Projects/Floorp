@@ -467,6 +467,8 @@ GetIntCallback(DBusMessage* aMsg, void* aBluetoothReplyRunnable)
 static void
 CheckForError(DBusMessage* aMsg, void *aParam, const nsAString& aError)
 {
+  NS_ENSURE_TRUE_VOID(aMsg);
+
   BluetoothValue v;
   nsAutoString replyError;
   UnpackVoidMessage(aMsg, nullptr, v, replyError);
@@ -1484,15 +1486,26 @@ EventFilter(DBusConnection* aConn, DBusMessage* aMsg, void* aData)
                         sDeviceProperties,
                         ArrayLength(sDeviceProperties));
 
-    // Fire another task for sending system message of
-    // "bluetooth-pairedstatuschanged"
     BluetoothNamedValue& property = v.get_ArrayOfBluetoothNamedValue()[0];
     if (property.name().EqualsLiteral("Paired")) {
+      // Original approach: Broadcast system message of
+      // "bluetooth-pairedstatuschanged" from BluetoothService.
       BluetoothValue newValue(v);
       ToLowerCase(newValue.get_ArrayOfBluetoothNamedValue()[0].name());
-      BluetoothSignal signal(NS_LITERAL_STRING("PairedStatusChanged"),
+      BluetoothSignal signal(NS_LITERAL_STRING(PAIRED_STATUS_CHANGED_ID),
                              NS_LITERAL_STRING(KEY_LOCAL_AGENT),
                              newValue);
+      NS_DispatchToMainThread(new DistributeBluetoothSignalTask(signal));
+
+      // New approach: Dispatch event from BluetoothAdapter
+      bool status = property.value();
+      InfallibleTArray<BluetoothNamedValue> parameters;
+      parameters.AppendElement(
+        BluetoothNamedValue(NS_LITERAL_STRING("address"), signalPath));
+      parameters.AppendElement(
+        BluetoothNamedValue(NS_LITERAL_STRING("status"), status));
+      signal.path() = NS_LITERAL_STRING(KEY_ADAPTER);
+      signal.value() = parameters;
       NS_DispatchToMainThread(new DistributeBluetoothSignalTask(signal));
     }
   } else if (dbus_message_is_signal(aMsg, DBUS_MANAGER_IFACE, "AdapterAdded")) {
