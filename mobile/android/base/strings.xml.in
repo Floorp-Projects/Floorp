@@ -124,7 +124,10 @@
   <string name="pref_font_size_adjust_char">&pref_font_size_adjust_char;</string>
   <string name="pref_font_size_preview_text">&pref_font_size_preview_text;</string>
   <string name="pref_reflow_on_zoom">&pref_reflow_on_zoom3;</string>
-  <string name="pref_restore_session">&pref_restore_session;</string>
+  <string name="pref_restore">&pref_restore;</string>
+  <string name="pref_restore_always">&pref_restore_always;</string>
+  <string name="pref_restore_crash">&pref_restore_crash;</string>
+  <string name="pref_restore_never">&pref_restore_never;</string>
   <string name="pref_show_product_announcements">&pref_show_product_announcements;</string>
   <string name="pref_sync">&pref_sync;</string>
   <string name="pref_search_suggestions">&pref_search_suggestions;</string>
