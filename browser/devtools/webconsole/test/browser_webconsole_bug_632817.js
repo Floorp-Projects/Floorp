@@ -28,7 +28,7 @@ function test()
     openConsole(null, function(aHud) {
       hud = aHud;
 
-      HUDService.lastFinishedRequestCallback = function(aRequest) {
+      HUDService.lastFinishedRequest.callback = function(aRequest) {
         lastRequest = aRequest;
         if (requestCallback) {
           requestCallback();
@@ -170,7 +170,7 @@ function testLiveFilteringOnSearchStrings() {
   is(countMessageNodes(), 0, "the log nodes are hidden when searching for " +
     "the string \"foo\"bar'baz\"boo'\"");
 
-  HUDService.lastFinishedRequestCallback = null;
+  HUDService.lastFinishedRequest.callback = null;
   lastRequest = null;
   requestCallback = null;
   finishTest();

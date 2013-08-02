@@ -7153,9 +7153,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "gDevTools",
 XPCOMUtils.defineLazyModuleGetter(this, "gDevToolsBrowser",
                                   "resource:///modules/devtools/gDevTools.jsm");
 
-XPCOMUtils.defineLazyGetter(this, "HUDConsoleUI", function () {
-  return Cu.import("resource:///modules/HUDService.jsm", {}).HUDService.consoleUI;
-});
+XPCOMUtils.defineLazyModuleGetter(this, "HUDService",
+                                  "resource:///modules/HUDService.jsm");
 
 // Prompt user to restart the browser in safe mode
 function safeModeRestart()
