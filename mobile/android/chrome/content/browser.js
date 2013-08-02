@@ -595,8 +595,7 @@ var BrowserApp = {
                                       aTarget.ownerDocument);
       });
 
-#ifdef MOZ_ANDROID_WALLPAPER
-    NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.setWallpaper"),
+    NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.setImageAs"),
       NativeWindow.contextmenus.imageSaveableContext,
       function(aTarget) {
         let src = aTarget.src;
@@ -605,7 +604,6 @@ var BrowserApp = {
           url: src
         });
       });
-#endif
 
     NativeWindow.contextmenus.add(
       function(aTarget) {
