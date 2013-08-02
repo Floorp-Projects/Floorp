@@ -10,6 +10,8 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsDOMMessageEvent)
+
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsDOMMessageEvent, nsDOMEvent)
   tmp->mData = JSVAL_VOID;
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mSource)

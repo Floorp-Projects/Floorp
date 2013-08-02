@@ -20,6 +20,8 @@ USING_BLUETOOTH_NAMESPACE
 
 DOMCI_DATA(BluetoothDevice, BluetoothDevice)
 
+NS_IMPL_CYCLE_COLLECTION_CLASS(BluetoothDevice)
+
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(BluetoothDevice,
                                                nsDOMEventTargetHelper)
   NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mJsUuids)

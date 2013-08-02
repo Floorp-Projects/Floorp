@@ -461,6 +461,8 @@ IDBDatabase::CreateObjectStoreInternal(IDBTransaction* aTransaction,
   return objectStore.forget();
 }
 
+NS_IMPL_CYCLE_COLLECTION_CLASS(IDBDatabase)
+
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(IDBDatabase, IDBWrapperCache)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFactory)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END

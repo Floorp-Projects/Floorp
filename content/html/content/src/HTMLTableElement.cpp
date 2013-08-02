@@ -312,6 +312,8 @@ HTMLTableElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope)
   return HTMLTableElementBinding::Wrap(aCx, aScope, this);
 }
 
+NS_IMPL_CYCLE_COLLECTION_CLASS(HTMLTableElement)
+
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(HTMLTableElement, nsGenericHTMLElement)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mTBodies)
   if (tmp->mRows) {

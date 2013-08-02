@@ -314,6 +314,8 @@ TraverseObservers(nsIURI* aKey, nsIObserver* aData, void* aContext)
     return PL_DHASH_NEXT;
 }
 
+NS_IMPL_CYCLE_COLLECTION_CLASS(XULDocument)
+
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(XULDocument, XMLDocument)
     NS_ASSERTION(!nsCCUncollectableMarker::InGeneration(cb, tmp->GetMarkedCCGeneration()),
                  "Shouldn't traverse XULDocument!");
