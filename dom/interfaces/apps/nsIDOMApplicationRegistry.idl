@@ -138,7 +138,7 @@ interface mozIDOMApplicationMgmt : nsISupports
   nsIDOMDOMRequest uninstall(in mozIDOMApplication app);
 };
 
-[scriptable, uuid(52710c5f-b2a2-4b27-b5b9-f679a1bcc79b)]
+[scriptable, uuid(abfc6c15-8b92-4b9a-b892-52e6ae76f379)]
 interface mozIDOMApplicationRegistry : nsISupports
 {
   /**
@@ -168,19 +168,6 @@ interface mozIDOMApplicationRegistry : nsISupports
    * the request will return the applications installed from this origin, or null.
    */
   nsIDOMDOMRequest getInstalled();
-
-  /**
-   * Install a packaged web app.
-   *
-   * @param packageUrl : the URL of the webapps manifest.
-   * @param parameters : A structure with optional information.
-   *                      {
-   *                       receipts: ...    Will be used to specify the payment receipts for this installation.
-   *                       categories: ...  Will be used to specify the categories of the webapp.
-   *                      }
-   * @returns          : A DOMRequest object, returning the app object in |result| if install succeeds.
-   */
-  nsIDOMDOMRequest installPackage(in DOMString packageUrl, [optional] in jsval parameters);
 
   readonly attribute mozIDOMApplicationMgmt mgmt;
 };
