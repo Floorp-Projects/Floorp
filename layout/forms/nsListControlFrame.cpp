@@ -1056,6 +1056,16 @@ nsListControlFrame::GetOptions(nsIContent * aContent)
   return options.forget();
 }
 
+dom::HTMLOptionElement*
+nsListControlFrame::GetOption(uint32_t aIndex) const
+{
+  dom::HTMLSelectElement* select =
+    dom::HTMLSelectElement::FromContentOrNull(mContent);
+  NS_ENSURE_TRUE(select, nullptr);
+
+  return select->Item(aIndex);
+}
+
 already_AddRefed<nsIDOMHTMLOptionElement>
 nsListControlFrame::GetOption(nsIDOMHTMLOptionsCollection* aCollection,
                               int32_t aIndex)
