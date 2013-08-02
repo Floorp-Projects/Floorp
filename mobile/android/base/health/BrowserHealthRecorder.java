@@ -63,6 +63,7 @@ public class BrowserHealthRecorder implements GeckoEventListener {
     private static final String PREF_BLOCKLIST_ENABLED = "extensions.blocklist.enabled";
     private static final String EVENT_ADDONS_ALL = "Addons:All";
     private static final String EVENT_ADDONS_CHANGE = "Addons:Change";
+    private static final String EVENT_ADDONS_UNINSTALLING = "Addons:Uninstalling";
     private static final String EVENT_PREF_CHANGE = "Pref:Change";
  
     // This is raised from Gecko. It avoids browser.js having to know about the
@@ -299,6 +300,7 @@ public class BrowserHealthRecorder implements GeckoEventListener {
     private void unregisterEventListeners() {
         this.dispatcher.unregisterEventListener(EVENT_ADDONS_ALL, this);
         this.dispatcher.unregisterEventListener(EVENT_ADDONS_CHANGE, this);
+        this.dispatcher.unregisterEventListener(EVENT_ADDONS_UNINSTALLING, this);
         this.dispatcher.unregisterEventListener(EVENT_PREF_CHANGE, this);
         this.dispatcher.unregisterEventListener(EVENT_KEYWORD_SEARCH, this);
         this.dispatcher.unregisterEventListener(EVENT_SEARCH, this);
@@ -318,6 +320,15 @@ public class BrowserHealthRecorder implements GeckoEventListener {
         this.profileCache.beginInitialization();
         try {
             this.profileCache.updateJSONForAddon(id, json);
+        } catch (IllegalStateException e) {
+            Log.w(LOG_TAG, "Attempted to update add-on cache prior to full init.", e);
+        }
+    }
+
+    public void onAddonUninstalling(String id) {
+        this.profileCache.beginInitialization();
+        try {
+            this.profileCache.removeAddon(id);
         } catch (IllegalStateException e) {
             Log.w(LOG_TAG, "Attempted to update add-on cache prior to full init.", e);
         }
@@ -348,18 +359,21 @@ public class BrowserHealthRecorder implements GeckoEventListener {
 
         final int updatedEnv = ensureEnvironment();
 
-        if (updatedEnv != -1 && updatedEnv != previousEnv) {
-          ThreadUtils.postToBackgroundThread(new Runnable() {
-              @Override
-              public void run() {
-                  try {
-                      onEnvironmentTransition(previousEnv, updatedEnv);
-                  } catch (Exception e) {
-                      Log.w(LOG_TAG, "Could not record environment transition.", e);
-                  }
-              }
-          });
+        if (updatedEnv == -1 ||
+            updatedEnv == previousEnv) {
+            Log.v(LOG_TAG, "Environment didn't change.");
+            return;
         }
+        ThreadUtils.postToBackgroundThread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    onEnvironmentTransition(previousEnv, updatedEnv);
+                } catch (Exception e) {
+                    Log.w(LOG_TAG, "Could not record environment transition.", e);
+                }
+            }
+        });
     }
 
     protected synchronized int ensureEnvironment() {
@@ -524,6 +538,7 @@ public class BrowserHealthRecorder implements GeckoEventListener {
 
                     try {
                         // Listen for add-ons and prefs changes.
+                        dispatcher.registerEventListener(EVENT_ADDONS_UNINSTALLING, self);
                         dispatcher.registerEventListener(EVENT_ADDONS_CHANGE, self);
                         dispatcher.registerEventListener(EVENT_PREF_CHANGE, self);
 
@@ -643,12 +658,19 @@ public class BrowserHealthRecorder implements GeckoEventListener {
 
                 return;
             }
+
+            if (EVENT_ADDONS_UNINSTALLING.equals(event)) {
+                this.onAddonUninstalling(message.getString("id"));
+                this.onEnvironmentChanged();
+                return;
+            }
+
             if (EVENT_ADDONS_CHANGE.equals(event)) {
-                Log.d(LOG_TAG, "Add-on changed: " + message.getString("id"));
                 this.onAddonChanged(message.getString("id"), message.getJSONObject("json"));
                 this.onEnvironmentChanged();
                 return;
             }
+
             if (EVENT_PREF_CHANGE.equals(event)) {
                 final String pref = message.getString("pref");
                 Log.d(LOG_TAG, "Pref changed: " + pref);
