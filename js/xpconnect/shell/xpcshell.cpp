@@ -1883,24 +1883,26 @@ XPCShellDirProvider::GetFiles(const char *prop, nsISimpleEnumerator* *result)
         }
         return NS_ERROR_FAILURE;
     } else if (!strcmp(prop, NS_APP_PLUGINS_DIR_LIST)) {
-        nsCOMPtr<nsIFile> file;
         nsCOMArray<nsIFile> dirs;
-        bool exists;
-        // We have to add this path, buildbot copies the test plugin directory
-        // to (app)/bin when unpacking test zips.
-        if (mGREDir) {
-            mGREDir->Clone(getter_AddRefs(file));
-            if (NS_SUCCEEDED(mGREDir->Clone(getter_AddRefs(file)))) {
-                file->AppendNative(NS_LITERAL_CSTRING("plugins"));
-                if (NS_SUCCEEDED(file->Exists(&exists)) && exists) {
-                    dirs.AppendObject(file);
-                }
-            }
-        }
         // Add the test plugin location passed in by the caller or through
         // runxpcshelltests.
         if (mPluginDir) {
             dirs.AppendObject(mPluginDir);
+        // If there was no path specified, default to the one set up by automation
+        } else {
+            nsCOMPtr<nsIFile> file;
+            bool exists;
+            // We have to add this path, buildbot copies the test plugin directory
+            // to (app)/bin when unpacking test zips.
+            if (mGREDir) {
+                mGREDir->Clone(getter_AddRefs(file));
+                if (NS_SUCCEEDED(mGREDir->Clone(getter_AddRefs(file)))) {
+                    file->AppendNative(NS_LITERAL_CSTRING("plugins"));
+                    if (NS_SUCCEEDED(file->Exists(&exists)) && exists) {
+                        dirs.AppendObject(file);
+                    }
+                }
+            }
         }
         return NS_NewArrayEnumerator(result, dirs);
     }
