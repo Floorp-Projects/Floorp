@@ -1,9 +1,9 @@
-<?xml version="1.0"?>  
+<?xml version="1.0"?>
 
 <bindings xmlns="http://www.mozilla.org/xbl"
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-  <binding id="appbarBinding">  
-    <content> 
+  <binding id="appbarBinding">
+    <content>
       <xul:toolbar anonid="toolbar"><children/></xul:toolbar>
     </content>
 
@@ -29,12 +29,19 @@
           ]]>
         </body>
       </method>
-      
+
       <method name="dismiss">
         <body>
           <![CDATA[
             if (!this.isShowing)
               return;
+
+            let self = this;
+            this.setAttribute("hiding", "true");
+            this.addEventListener("transitionend", function appbar_transitionend() {
+              self.removeEventListener("transitionend", appbar_transitionend, false);
+              self.removeAttribute("hiding");
+            }, false);
 
             this._fire("MozAppbarDismissing");
             this.removeAttribute("visible");

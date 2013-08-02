@@ -18,34 +18,6 @@ LIBRARY_NAME   = nksctp_s
 LIBXUL_LIBRARY = 1
 NO_PROFILE_GUIDED_OPTIMIZE = 1 # Don't PGO
 
-DISABLED_CSRCS = \
-  user_environment.c \
-  user_mbuf.c \
-  user_recv_thread.c \
-  user_sctp_timer_iterate.c \
-  user_socket.c \
-  sctp_asconf.c \
-  sctp_auth.c \
-  sctp_bsd_addr.c \
-  sctp_callout.c \
-  sctp_cc_functions.c \
-  sctp_crc32.c \
-  sctp_hashdriver.c \
-  sctp_indata.c \
-  sctp_input.c \
-  sctp_output.c \
-  sctp_pcb.c \
-  sctp_peeloff.c \
-  sctp_sha1.c \
-  sctp_ss_functions.c \
-  sctp_sysctl.c \
-  sctp_userspace.c \
-  sctp_timer.c \
-  sctp_usrreq.c \
-  sctputil.c \
-  sctp6_usrreq.c \
-  $(NULL)
-
 LOCAL_INCLUDES = \
   -I$(srcdir)/../../base/src \
   -I$(topsrcdir)/content/base/src \

@@ -989,7 +989,7 @@ FragmentOrElement::DestroyContent()
 
   // XXX We really should let cycle collection do this, but that currently still
   //     leaks (see https://bugzilla.mozilla.org/show_bug.cgi?id=406684).
-  nsContentUtils::ReleaseWrapper(this, this);
+  ReleaseWrapper(this);
 
   uint32_t i, count = mAttrsAndChildren.ChildCount();
   for (i = 0; i < count; ++i) {
@@ -1147,6 +1147,8 @@ FragmentOrElement::ClearContentUnbinder()
 {
   ContentUnbinder::UnbindAll();
 }
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(FragmentOrElement)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(FragmentOrElement)
   nsINode::Unlink(tmp);

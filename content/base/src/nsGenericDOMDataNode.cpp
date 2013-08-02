@@ -63,6 +63,8 @@ nsGenericDOMDataNode::~nsGenericDOMDataNode()
   }
 }
 
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsGenericDOMDataNode)
+
 NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(nsGenericDOMDataNode)
 
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_BEGIN(nsGenericDOMDataNode)
@@ -694,7 +696,7 @@ nsGenericDOMDataNode::DestroyContent()
 {
   // XXX We really should let cycle collection do this, but that currently still
   //     leaks (see https://bugzilla.mozilla.org/show_bug.cgi?id=406684).
-  nsContentUtils::ReleaseWrapper(this, this);
+  ReleaseWrapper(this);
 }
 
 #ifdef DEBUG

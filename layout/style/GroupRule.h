@@ -75,7 +75,7 @@ public:
 
 protected:
   // to help implement nsIDOMCSSRule
-  nsresult AppendRulesToCssText(nsAString& aCssText);
+  void AppendRulesToCssText(nsAString& aCssText);
 
   // to implement common methods on nsIDOMCSSMediaRule and
   // nsIDOMCSSMozDocumentRule

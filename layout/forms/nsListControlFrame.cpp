@@ -13,7 +13,6 @@
 #include "nsIFormControl.h"
 #include "nsIDocument.h"
 #include "nsIDOMHTMLCollection.h"
-#include "nsIDOMHTMLOptionsCollection.h"
 #include "nsIDOMHTMLSelectElement.h"
 #include "nsIDOMHTMLOptionElement.h"
 #include "nsComboboxControlFrame.h"
@@ -42,6 +41,7 @@
 #include "nsDisplayList.h"
 #include "nsContentUtils.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/dom/HTMLOptionsCollection.h"
 #include "mozilla/dom/HTMLSelectElement.h"
 #include "mozilla/LookAndFeel.h"
 #include <algorithm>
@@ -620,41 +620,6 @@ nsListControlFrame::GetContentInsertionFrame() {
 }
 
 //---------------------------------------------------------
-// Starts at the passed in content object and walks up the 
-// parent heierarchy looking for the nsIDOMHTMLOptionElement
-//---------------------------------------------------------
-nsIContent *
-nsListControlFrame::GetOptionFromContent(nsIContent *aContent) 
-{
-  for (nsIContent* content = aContent; content; content = content->GetParent()) {
-    if (content->IsHTML(nsGkAtoms::option)) {
-      return content;
-    }
-  }
-
-  return nullptr;
-}
-
-//---------------------------------------------------------
-// Finds the index of the hit frame's content in the list
-// of option elements
-//---------------------------------------------------------
-int32_t 
-nsListControlFrame::GetIndexFromContent(nsIContent *aContent)
-{
-  nsCOMPtr<nsIDOMHTMLOptionElement> option;
-  option = do_QueryInterface(aContent);
-  if (option) {
-    int32_t retval;
-    option->GetIndex(&retval);
-    if (retval >= 0) {
-      return retval;
-    }
-  }
-  return kNothingSelected;
-}
-
-//---------------------------------------------------------
 bool
 nsListControlFrame::ExtendedSelection(int32_t aStartIndex,
                                       int32_t aEndIndex,
@@ -719,17 +684,13 @@ nsListControlFrame::InitSelectionRange(int32_t aClickedIndex)
   int32_t selectedIndex = GetSelectedIndex();
   if (selectedIndex >= 0) {
     // Get the end of the contiguous selection
-    nsCOMPtr<nsIDOMHTMLOptionsCollection> options = GetOptions(mContent);
+    nsRefPtr<dom::HTMLOptionsCollection> options = GetOptions();
     NS_ASSERTION(options, "Collection of options is null!");
-    uint32_t numOptions;
-    options->GetLength(&numOptions);
+    uint32_t numOptions = options->Length();
+    // Push i to one past the last selected index in the group.
     uint32_t i;
-    // Push i to one past the last selected index in the group
-    for (i=selectedIndex+1; i < numOptions; i++) {
-      bool selected;
-      nsCOMPtr<nsIDOMHTMLOptionElement> option = GetOption(options, i);
-      option->GetSelected(&selected);
-      if (!selected) {
+    for (i = selectedIndex + 1; i < numOptions; i++) {
+      if (!options->ItemAsOption(i)->Selected()) {
         break;
       }
     }
@@ -971,20 +932,6 @@ nsListControlFrame::SetInitialChildList(ChildListID    aListID,
 }
 
 //---------------------------------------------------------
-nsresult
-nsListControlFrame::GetSizeAttribute(uint32_t *aSize) {
-  nsresult rv = NS_OK;
-  nsIDOMHTMLSelectElement* selectElement;
-  rv = mContent->QueryInterface(NS_GET_IID(nsIDOMHTMLSelectElement),(void**) &selectElement);
-  if (mContent && NS_SUCCEEDED(rv)) {
-    rv = selectElement->GetSize(aSize);
-    NS_RELEASE(selectElement);
-  }
-  return rv;
-}
-
-
-//---------------------------------------------------------
 void
 nsListControlFrame::Init(nsIContent*     aContent,
                          nsIFrame*       aParent,
@@ -1019,81 +966,24 @@ nsListControlFrame::Init(nsIContent*     aContent,
   }
 }
 
-already_AddRefed<nsIContent> 
-nsListControlFrame::GetOptionAsContent(nsIDOMHTMLOptionsCollection* aCollection, int32_t aIndex) 
+dom::HTMLOptionsCollection*
+nsListControlFrame::GetOptions() const
 {
-  nsCOMPtr<nsIDOMHTMLOptionElement> optionElement = GetOption(aCollection,
-                                                              aIndex);
+  dom::HTMLSelectElement* select =
+    dom::HTMLSelectElement::FromContentOrNull(mContent);
+  NS_ENSURE_TRUE(select, nullptr);
 
-  NS_ASSERTION(optionElement != nullptr, "could not get option element by index!");
-
-  nsCOMPtr<nsIContent> content = do_QueryInterface(optionElement);
-  return content.forget();
+  return select->Options();
 }
 
-already_AddRefed<nsIContent> 
-nsListControlFrame::GetOptionContent(int32_t aIndex) const
-  
+dom::HTMLOptionElement*
+nsListControlFrame::GetOption(uint32_t aIndex) const
 {
-  nsCOMPtr<nsIDOMHTMLOptionsCollection> options = GetOptions(mContent);
-  NS_ASSERTION(options.get() != nullptr, "Collection of options is null!");
+  dom::HTMLSelectElement* select =
+    dom::HTMLSelectElement::FromContentOrNull(mContent);
+  NS_ENSURE_TRUE(select, nullptr);
 
-  if (options) {
-    return GetOptionAsContent(options, aIndex);
-  } 
-  return nullptr;
-}
-
-already_AddRefed<nsIDOMHTMLOptionsCollection>
-nsListControlFrame::GetOptions(nsIContent * aContent)
-{
-  nsCOMPtr<nsIDOMHTMLOptionsCollection> options;
-  nsCOMPtr<nsIDOMHTMLSelectElement> selectElement = do_QueryInterface(aContent);
-  if (selectElement) {
-    selectElement->GetOptions(getter_AddRefs(options));
-  }
-
-  return options.forget();
-}
-
-already_AddRefed<nsIDOMHTMLOptionElement>
-nsListControlFrame::GetOption(nsIDOMHTMLOptionsCollection* aCollection,
-                              int32_t aIndex)
-{
-  nsCOMPtr<nsIDOMNode> node;
-  if (NS_SUCCEEDED(aCollection->Item(aIndex, getter_AddRefs(node)))) {
-    NS_ASSERTION(node,
-                 "Item was successful, but node from collection was null!");
-    if (node) {
-      nsCOMPtr<nsIDOMHTMLOptionElement> option = do_QueryInterface(node);
-
-      return option.forget();
-    }
-  } else {
-    NS_ERROR("Couldn't get option by index from collection!");
-  }
-  return nullptr;
-}
-
-bool 
-nsListControlFrame::IsContentSelected(nsIContent* aContent) const
-{
-  bool isSelected = false;
-
-  nsCOMPtr<nsIDOMHTMLOptionElement> optEl = do_QueryInterface(aContent);
-  if (optEl)
-    optEl->GetSelected(&isSelected);
-
-  return isSelected;
-}
-
-bool 
-nsListControlFrame::IsContentSelectedByIndex(int32_t aIndex) const 
-{
-  nsCOMPtr<nsIContent> content = GetOptionContent(aIndex);
-  NS_ASSERTION(content, "Failed to retrieve option content");
-
-  return IsContentSelected(content);
+  return select->Item(aIndex);
 }
 
 NS_IMETHODIMP
@@ -1169,58 +1059,23 @@ nsListControlFrame::SetComboboxFrame(nsIFrame* aComboboxFrame)
 }
 
 void
-nsListControlFrame::GetOptionText(int32_t aIndex, nsAString & aStr)
+nsListControlFrame::GetOptionText(uint32_t aIndex, nsAString& aStr)
 {
-  aStr.SetLength(0);
-  nsCOMPtr<nsIDOMHTMLOptionsCollection> options = GetOptions(mContent);
-
-  if (options) {
-    uint32_t numOptions;
-    options->GetLength(&numOptions);
-
-    if (numOptions != 0) {
-      nsCOMPtr<nsIDOMHTMLOptionElement> optionElement =
-        GetOption(options, aIndex);
-      if (optionElement) {
-#if 0 // This is for turning off labels Bug 4050
-        nsAutoString text;
-        optionElement->GetLabel(text);
-        // the return value is always NS_OK from DOMElements
-        // it is meaningless to check for it
-        if (!text.IsEmpty()) { 
-          nsAutoString compressText = text;
-          compressText.CompressWhitespace(true, true);
-          if (!compressText.IsEmpty()) {
-            text = compressText;
-          }
-        }
-
-        if (text.IsEmpty()) {
-          // the return value is always NS_OK from DOMElements
-          // it is meaningless to check for it
-          optionElement->GetText(text);
-        }          
-        aStr = text;
-#else
-        optionElement->GetText(aStr);
-#endif
-      }
-    }
+  aStr.Truncate();
+  if (dom::HTMLOptionElement* optionElement = GetOption(aIndex)) {
+    optionElement->GetText(aStr);
   }
 }
 
 int32_t
 nsListControlFrame::GetSelectedIndex()
 {
-  int32_t aIndex;
-  
-  nsCOMPtr<nsIDOMHTMLSelectElement> selectElement(do_QueryInterface(mContent));
-  selectElement->GetSelectedIndex(&aIndex);
-  
-  return aIndex;
+  dom::HTMLSelectElement* select =
+    dom::HTMLSelectElement::FromContentOrNull(mContent);
+  return select->SelectedIndex();
 }
 
-already_AddRefed<nsIContent>
+dom::HTMLOptionElement*
 nsListControlFrame::GetCurrentOption()
 {
   // The mEndSelectionIndex is what is currently being selected. Use
@@ -1229,43 +1084,24 @@ nsListControlFrame::GetCurrentOption()
     GetSelectedIndex() : mEndSelectionIndex;
 
   if (focusedIndex != kNothingSelected) {
-    return GetOptionContent(focusedIndex);
+    return GetOption(SafeCast<uint32_t>(focusedIndex));
   }
 
+  // There is no selected item. Return the first non-disabled item.
   nsRefPtr<dom::HTMLSelectElement> selectElement =
     dom::HTMLSelectElement::FromContent(mContent);
-  NS_ASSERTION(selectElement, "Can't be null");
 
-  // There is no a selected item return the first non-disabled item and skip all
-  // the option group elements.
-  nsCOMPtr<nsIDOMNode> node;
-
-  uint32_t length;
-  selectElement->GetLength(&length);
-  if (length) {
-    bool isDisabled = true;
-    for (uint32_t i = 0; i < length && isDisabled; i++) {
-      if (NS_FAILED(selectElement->Item(i, getter_AddRefs(node))) || !node) {
-        break;
-      }
-      if (NS_FAILED(selectElement->IsOptionDisabled(i, &isDisabled))) {
-        break;
-      }
-      if (isDisabled) {
-        node = nullptr;
-      } else {
-        break;
-      }
-    }
+  for (uint32_t i = 0, length = selectElement->Length(); i < length; ++i) {
+    dom::HTMLOptionElement* node = selectElement->Item(i);
     if (!node) {
       return nullptr;
     }
+
+    if (!selectElement->IsOptionDisabled(node)) {
+      return node;
+    }
   }
 
-  if (node) {
-    nsCOMPtr<nsIContent> focusedOption = do_QueryInterface(node);
-    return focusedOption.forget();
-  }
   return nullptr;
 }
 
@@ -1278,18 +1114,12 @@ nsListControlFrame::IsInDropDownMode() const
 uint32_t
 nsListControlFrame::GetNumberOfOptions()
 {
-  if (!mContent) {
-    return 0;
-  }
-
-  nsCOMPtr<nsIDOMHTMLOptionsCollection> options = GetOptions(mContent);
+  dom::HTMLOptionsCollection* options = GetOptions();
   if (!options) {
     return 0;
   }
 
-  uint32_t length = 0;
-  options->GetLength(&length);
-  return length;
+  return options->Length();
 }
 
 //----------------------------------------------------------------------
@@ -1421,29 +1251,16 @@ nsListControlFrame::SetOptionsSelectedFromFrame(int32_t aStartIndex,
 bool
 nsListControlFrame::ToggleOptionSelectedFromFrame(int32_t aIndex)
 {
-  nsCOMPtr<nsIDOMHTMLOptionsCollection> options = GetOptions(mContent);
-  NS_ASSERTION(options, "No options");
-  if (!options) {
-    return false;
-  }
-  nsCOMPtr<nsIDOMHTMLOptionElement> option = GetOption(options, aIndex);
-  NS_ASSERTION(option, "No option");
-  if (!option) {
-    return false;
-  }
+  nsRefPtr<dom::HTMLOptionElement> option =
+    GetOption(static_cast<uint32_t>(aIndex));
+  NS_ENSURE_TRUE(option, false);
 
-  bool value = false;
-#ifdef DEBUG
-  nsresult rv =
-#endif
-    option->GetSelected(&value);
-
-  NS_ASSERTION(NS_SUCCEEDED(rv), "GetSelected failed");
   nsRefPtr<dom::HTMLSelectElement> selectElement =
     dom::HTMLSelectElement::FromContent(mContent);
+
   return selectElement->SetOptionsSelectedByIndex(aIndex,
                                                   aIndex,
-                                                  !value,
+                                                  !option->Selected(),
                                                   false,
                                                   false,
                                                   true);
@@ -1709,8 +1526,13 @@ nsListControlFrame::CalcIntrinsicHeight(nscoord aHeightOfARow,
   NS_PRECONDITION(!IsInDropDownMode(),
                   "Shouldn't be in dropdown mode when we call this");
 
-  mNumDisplayRows = 1;
-  GetSizeAttribute(&mNumDisplayRows);
+  dom::HTMLSelectElement* select =
+    dom::HTMLSelectElement::FromContentOrNull(mContent);
+  if (select) {
+    mNumDisplayRows = select->Size();
+  } else {
+    mNumDisplayRows = 1;
+  }
 
   if (mNumDisplayRows < 1) {
     mNumDisplayRows = 4;
@@ -1877,12 +1699,17 @@ nsListControlFrame::GetIndexFromDOMEvent(nsIDOMEvent* aMouseEvent,
     }
   }
 
-  nsCOMPtr<nsIContent> content = PresContext()->EventStateManager()->
-    GetEventTargetContent(nullptr);
+  nsRefPtr<dom::HTMLOptionElement> option;
+  for (nsCOMPtr<nsIContent> content =
+         PresContext()->EventStateManager()->GetEventTargetContent(nullptr);
+       content && !option;
+       content = content->GetParent()) {
+    option = dom::HTMLOptionElement::FromContent(content);
+  }
 
-  nsCOMPtr<nsIContent> optionContent = GetOptionFromContent(content);
-  if (optionContent) {
-    aCurIndex = GetIndexFromContent(optionContent);
+  if (option) {
+    option->GetIndex(&aCurIndex);
+    MOZ_ASSERT(aCurIndex >= 0);
     return NS_OK;
   }
 
@@ -1894,7 +1721,7 @@ nsListControlFrame::GetIndexFromDOMEvent(nsIDOMEvent* aMouseEvent,
 
   // If the event coordinate is above the first option frame, then target the
   // first option frame
-  nsCOMPtr<nsIContent> firstOption = GetOptionContent(0);
+  nsRefPtr<dom::HTMLOptionElement> firstOption = GetOption(0);
   NS_ASSERTION(firstOption, "Can't find first option that's supposed to be there");
   nsIFrame* optionFrame = firstOption->GetPrimaryFrame();
   if (optionFrame) {
@@ -1906,7 +1733,7 @@ nsListControlFrame::GetIndexFromDOMEvent(nsIDOMEvent* aMouseEvent,
     }
   }
 
-  nsCOMPtr<nsIContent> lastOption = GetOptionContent(numOptions - 1);
+  nsRefPtr<dom::HTMLOptionElement> lastOption = GetOption(numOptions - 1);
   // If the event coordinate is below the last option frame, then target the
   // last option frame
   NS_ASSERTION(lastOption, "Can't find last option that's supposed to be there");
@@ -2047,34 +1874,27 @@ nsListControlFrame::DragMove(nsIDOMEvent* aMouseEvent)
 //----------------------------------------------------------------------
 // Scroll helpers.
 //----------------------------------------------------------------------
-nsresult
+void
 nsListControlFrame::ScrollToIndex(int32_t aIndex)
 {
   if (aIndex < 0) {
     // XXX shouldn't we just do nothing if we're asked to scroll to
     // kNothingSelected?
-    return ScrollToFrame(nullptr);
+    ScrollTo(nsPoint(0, 0), nsIScrollableFrame::INSTANT);
   } else {
-    nsCOMPtr<nsIContent> content = GetOptionContent(aIndex);
-    if (content) {
-      return ScrollToFrame(content);
+    nsRefPtr<dom::HTMLOptionElement> option =
+      GetOption(SafeCast<uint32_t>(aIndex));
+    if (option) {
+      ScrollToFrame(*option);
     }
   }
-
-  return NS_ERROR_FAILURE;
 }
 
-nsresult
-nsListControlFrame::ScrollToFrame(nsIContent* aOptElement)
+void
+nsListControlFrame::ScrollToFrame(dom::HTMLOptionElement& aOptElement)
 {
-  // if null is passed in we scroll to 0,0
-  if (nullptr == aOptElement) {
-    ScrollTo(nsPoint(0, 0), nsIScrollableFrame::INSTANT);
-    return NS_OK;
-  }
-
   // otherwise we find the content's frame and scroll to it
-  nsIFrame *childFrame = aOptElement->GetPrimaryFrame();
+  nsIFrame* childFrame = aOptElement.GetPrimaryFrame();
   if (childFrame) {
     PresContext()->PresShell()->
       ScrollFrameRectIntoView(childFrame,
@@ -2083,7 +1903,6 @@ nsListControlFrame::ScrollToFrame(nsIContent* aOptElement)
                               nsIPresShell::SCROLL_OVERFLOW_HIDDEN |
                               nsIPresShell::SCROLL_FIRST_ANCESTOR_ONLY);
   }
-  return NS_OK;
 }
 
 //---------------------------------------------------------------------
@@ -2246,11 +2065,10 @@ nsListControlFrame::KeyDown(nsIDOMEvent* aKeyEvent)
   }
 
   // now make sure there are options or we are wasting our time
-  nsCOMPtr<nsIDOMHTMLOptionsCollection> options = GetOptions(mContent);
+  nsRefPtr<dom::HTMLOptionsCollection> options = GetOptions();
   NS_ENSURE_TRUE(options, NS_ERROR_FAILURE);
 
-  uint32_t numOptions = 0;
-  options->GetLength(&numOptions);
+  uint32_t numOptions = options->Length();
 
   // this is the new index to set
   int32_t newIndex = kNothingSelected;
@@ -2462,15 +2280,15 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
   }
 
   // now make sure there are options or we are wasting our time
-  nsCOMPtr<nsIDOMHTMLOptionsCollection> options = GetOptions(mContent);
+  nsRefPtr<dom::HTMLOptionsCollection> options = GetOptions();
   NS_ENSURE_TRUE(options, NS_ERROR_FAILURE);
 
-  uint32_t numOptions = 0;
-  options->GetLength(&numOptions);
+  uint32_t numOptions = options->Length();
 
   for (uint32_t i = 0; i < numOptions; ++i) {
     uint32_t index = (i + startIndex) % numOptions;
-    nsCOMPtr<nsIDOMHTMLOptionElement> optionElement = GetOption(options, index);
+    nsRefPtr<dom::HTMLOptionElement> optionElement =
+      options->ItemAsOption(index);
     if (!optionElement) {
       continue;
     }

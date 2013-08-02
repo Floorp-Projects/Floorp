@@ -625,39 +625,6 @@ public:
   static void MapScrollingAttributeInto(const nsMappedAttributes* aAttributes,
                                         nsRuleData* aData);
   /**
-   * Get the presentation state for this, or create it if it does not exist.
-   * Generally used by SaveState().
-   *
-   * @return the presentation state (out param)
-   */
-  nsPresState* GetPrimaryPresState();
-  /**
-   * Get the layout history object *and* generate the key for a particular
-   * piece of content.
-   *
-   * @param aContent the content to generate the key for
-   * @param aRead if true, won't return a layout history state (and won't
-   *              generate a key) if the layout history state is empty.
-   * @param aState the history state object (out param)
-   * @param aKey the key (out param)
-   */
-  static already_AddRefed<nsILayoutHistoryState>
-  GetLayoutHistoryAndKey(nsGenericHTMLElement* aContent,
-                         bool aRead,
-                         nsACString& aKey);
-  /**
-   * Restore the state for a form control.  Ends up calling
-   * nsIFormControl::RestoreState().
-   *
-   * @param aContent an nsGenericHTMLElement* pointing to the form control
-   * @param aControl an nsIFormControl* pointing to the form control
-   * @return false if RestoreState() was not called, the return
-   *         value of RestoreState() otherwise.
-   */
-  static bool RestoreFormControlState(nsGenericHTMLElement* aContent,
-                                        nsIFormControl* aControl);
-
-  /**
    * Get the presentation context for this content node.
    * @return the presentation context
    */
@@ -1233,6 +1200,52 @@ protected:
 
   /* This is a pointer to our closest fieldset parent if any */
   mozilla::dom::HTMLFieldSetElement* mFieldSet;
+};
+
+class nsGenericHTMLFormElementWithState : public nsGenericHTMLFormElement
+{
+public:
+  nsGenericHTMLFormElementWithState(already_AddRefed<nsINodeInfo> aNodeInfo);
+
+  /**
+   * Get the presentation state for a piece of content, or create it if it does
+   * not exist.  Generally used by SaveState().
+   */
+  nsPresState* GetPrimaryPresState();
+
+  /**
+   * Get the layout history object for a particular piece of content.
+   *
+   * @param aRead if true, won't return a layout history state if the
+   *              layout history state is empty.
+   * @return the history state object
+   */
+  already_AddRefed<nsILayoutHistoryState>
+    GetLayoutHistory(bool aRead);
+
+  /**
+   * Restore the state for a form control.  Ends up calling
+   * nsIFormControl::RestoreState().
+   *
+   * @return false if RestoreState() was not called, the return
+   *         value of RestoreState() otherwise.
+   */
+  bool RestoreFormControlState();
+
+  /**
+   * Called when we have been cloned and adopted, and the information of the
+   * node has been changed.
+   */
+  virtual void NodeInfoChanged(nsINodeInfo* aOldNodeInfo) MOZ_OVERRIDE;
+
+protected:
+  /* Generates the state key for saving the form state in the session if not
+     computed already. The result is stored in mStateKey on success */
+  nsresult GenerateStateKey();
+
+  /* Used to store the key to that element in the session. Is void until
+     GenerateStateKey has been used */
+  nsCString mStateKey;
 };
 
 //----------------------------------------------------------------------

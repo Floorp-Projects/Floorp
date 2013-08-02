@@ -56,7 +56,7 @@ JSObject * JSAPITest::createGlobal(JSPrincipals *principals)
     /* Create the global object. */
     JS::CompartmentOptions options;
     options.setVersion(JSVERSION_LATEST);
-    global = JS_NewGlobalObject(cx, getGlobalClass(), principals, options);
+    global = JS_NewGlobalObject(cx, getGlobalClass(), principals, JS::FireOnNewGlobalHook, options);
     if (!global)
         return NULL;
     JS_AddNamedObjectRoot(cx, &global, "test-global");

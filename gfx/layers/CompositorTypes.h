@@ -29,7 +29,7 @@ const TextureFlags UseNearestFilter           = 1 << 0;
 const TextureFlags NeedsYFlip                 = 1 << 1;
 // Force the texture to be represented using a single tile (note that this means
 // tiled textures, not tiled layers).
-const TextureFlags ForceSingleTile            = 1 << 2;
+const TextureFlags TEXTURE_DISALLOW_BIGIMAGE  = 1 << 2;
 // Allow using 'repeat' mode for wrapping.
 const TextureFlags AllowRepeat                = 1 << 3;
 // The texture represents a tile which is newly created.

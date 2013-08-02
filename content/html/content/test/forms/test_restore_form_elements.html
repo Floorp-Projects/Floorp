@@ -1,0 +1,174 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=737851
+-->
+<head>
+  <meta charset="utf-8">
+
+  <title>Test for Bug 737851</title>
+
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+
+<body>
+
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=737851">Mozilla Bug 737851</a>
+
+<p id="display"></p>
+
+
+<div id="content">
+
+  <iframe id="frame" width="800px" height="600px" src='data:text/html,
+          <html>
+            <body style="display:none;">
+
+              <h3>Checking persistence of inputs through js inserts and moves</h3>
+              <div id="test">
+                <input id="a"/>
+                <input id="b"/>
+                <form id="form1">
+                  <input id="c"/>
+                  <input id="d"/>
+                </form>
+                <form id="form2">
+                  <input id="radio1" type="radio" name="radio"/>
+                  <input type="radio" name="radio"/>
+                  <input type="radio" name="radio"/>
+                  <input type="radio" name="radio"/>
+                </form>
+                <input id="e"/>
+              </div>
+
+              <h3>Bug 728798: checking persistence of inputs when forward-using @form</h3>
+              <div>
+                <input id="728798-a" form="728798-form" name="a"/>
+                <form id="728798-form">
+                  <input id="728798-b" form="728798-form" name="b"/>
+                  <input id="728798-c" name="c"/>
+                </form>
+                <input id="728798-d" form="728798-form" name="d"/>
+              </div>
+
+            </body>
+          </html>
+  '></iframe>
+
+</div>
+
+
+<pre id="test">
+<script type="text/javascript">
+
+var frameElement = document.getElementById("frame");
+var frame = frameElement.contentWindow;
+
+
+/* -- Main test run -- */
+
+SimpleTest.waitForExplicitFinish();
+
+addLoadEvent(function() {
+  shuffle();
+  fill();
+  frameElement.addEventListener("load", function() {
+    shuffle();
+    checkAllFields();
+    SimpleTest.finish();
+  });
+  frame.location.reload();
+})
+
+
+/* -- Input fields js changes and moves -- */
+
+function shuffle() {
+  var framedoc = frame.document;
+
+  // Insert a button (toplevel)
+  var btn = framedoc.createElement("button");
+  var testdiv = framedoc.getElementById("test");
+  testdiv.insertBefore(btn, framedoc.getElementById("b"));
+
+  // Insert a dynamically generated input (in a form)
+  var newInput = framedoc.createElement("input");
+  newInput.setAttribute("id","c0");
+  var form1 = framedoc.getElementById("form1");
+  form1.insertBefore(newInput, form1.firstChild);
+
+  // Move an input around
+  var inputD = framedoc.getElementById("d");
+  var form2 = framedoc.getElementById("form2");
+  form2.insertBefore(inputD, form2.firstChild)
+
+  // Clone an existing input
+  var inputE2 = framedoc.getElementById("e").cloneNode();
+  inputE2.setAttribute("id","e2");
+  testdiv.appendChild(inputE2);
+}
+
+
+/* -- Input fields fill & check -- */
+
+/* Values entered in the input fields (by id) */
+
+var fieldValues = {
+  'a':'simple input',
+  'b':'moved by inserting a button before (no form)',
+  'c0':'dynamically generated input',
+  'c':'moved by inserting an input before (in a form)',
+  'd':'moved from a form to another',
+  'e':'the original',
+  'e2':'the clone',
+  '728798-a':'before the form',
+  '728798-b':'from within the form',
+  '728798-c':'no form attribute in the form',
+  '728798-d':'after the form'
+}
+
+/* Fields for which the input is changed, and corresponding value
+   (clone and creation, same behaviour as webkit) */
+
+var changedFields = {
+  // dynamically generated input field not preserved
+  'c0':'',
+  // cloned input field is restored with the value of the original
+  'e2':fieldValues.e
+}
+
+/* Simulate user input by entering the values */
+
+function fill() {
+  for (id in fieldValues) {
+    frame.document.getElementById(id).value = fieldValues[id];
+  }
+  // an input is inserted before the radios (that may move the selected one by 1)
+  frame.document.getElementById('radio1').checked = true;
+}
+
+/* Check that all the fields are as they have been entered */
+
+function checkAllFields() {
+
+  for (id in fieldValues) {
+    var fieldValue = frame.document.getElementById(id).value;
+    if (changedFields[id] === undefined) {
+      is(fieldValue, fieldValues[id],
+                    "Field "+id+" should be restored after reload");
+    } else {
+      is(fieldValue, changedFields[id],
+                    "Field "+id+" normally gets a different value after reload");
+    }
+  }
+
+  ok(frame.document.getElementById('radio1').checked,
+                "Radio button radio1 should be restored after reload")
+
+}
+
+</script>
+</pre>
+</body>
+</html>

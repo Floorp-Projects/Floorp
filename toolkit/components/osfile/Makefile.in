@@ -11,23 +11,4 @@ include $(DEPTH)/config/autoconf.mk
 
 LIBXUL_LIBRARY  = 1
 
-EXTRA_PP_JS_MODULES = \
-   osfile.jsm \
-   $(NULL)
-
 include $(topsrcdir)/config/rules.mk
-
-libs::
-	$(NSINSTALL) $(srcdir)/osfile_shared_allthreads.jsm $(FINAL_TARGET)/modules/osfile
-	$(NSINSTALL) $(srcdir)/osfile_unix_allthreads.jsm $(FINAL_TARGET)/modules/osfile
-	$(NSINSTALL) $(srcdir)/osfile_unix_back.jsm $(FINAL_TARGET)/modules/osfile
-	$(NSINSTALL) $(srcdir)/ospath_unix_back.jsm $(FINAL_TARGET)/modules/osfile
-	$(NSINSTALL) $(srcdir)/osfile_unix_front.jsm $(FINAL_TARGET)/modules/osfile
-	$(NSINSTALL) $(srcdir)/osfile_win_allthreads.jsm $(FINAL_TARGET)/modules/osfile
-	$(NSINSTALL) $(srcdir)/ospath_win_back.jsm $(FINAL_TARGET)/modules/osfile
-	$(NSINSTALL) $(srcdir)/osfile_win_back.jsm $(FINAL_TARGET)/modules/osfile
-	$(NSINSTALL) $(srcdir)/osfile_win_front.jsm $(FINAL_TARGET)/modules/osfile
-	$(NSINSTALL) $(srcdir)/osfile_async_front.jsm $(FINAL_TARGET)/modules/osfile
-	$(NSINSTALL) $(srcdir)/osfile_async_worker.js $(FINAL_TARGET)/modules/osfile
-	$(NSINSTALL) $(srcdir)/osfile_shared_front.jsm $(FINAL_TARGET)/modules/osfile
-	$(NSINSTALL) $(srcdir)/_PromiseWorker.jsm $(FINAL_TARGET)/modules/osfile

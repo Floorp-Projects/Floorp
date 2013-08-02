@@ -53,8 +53,14 @@ this.FreeSpaceWatcher = {
             }
           };
 
-          let deviceStorage = Services.wm.getMostRecentWindow("navigator:browser")
-                                         .navigator.getDeviceStorage("apps");
+          let navigator = Services.wm.getMostRecentWindow("navigator:browser")
+                                  .navigator;
+          let deviceStorage = null;
+
+          if (navigator.getDeviceStorage) {
+            deviceStorage = navigator.getDeviceStorage("apps");
+          }
+
           if (deviceStorage) {
             let req = deviceStorage.freeSpace();
             req.onsuccess = req.onerror = function statResult(e) {

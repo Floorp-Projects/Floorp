@@ -160,6 +160,8 @@ nsXBLBinding::~nsXBLBinding(void)
   NS_RELEASE(info);
 }
 
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsXBLBinding)
+
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsXBLBinding)
   // XXX Probably can't unlink mPrototypeBinding->XBLDocumentInfo(), because
   //     mPrototypeBinding is weak.

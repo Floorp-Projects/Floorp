@@ -45,10 +45,6 @@ MIDL_GENERATED_FILES = \
 	dlldata.c \
 	$(NULL)
 
-EXTRA_COMPONENTS = MetroUIUtils.js \
-	MetroUIUtils.manifest \
-	$(NULL)
-
 GARBAGE += $(MIDL_GENERATED_FILES) done_gen
 
 do_interfaces_gen: UIABridge.idl

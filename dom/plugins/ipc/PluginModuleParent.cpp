@@ -4,6 +4,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#ifdef MOZ_WIDGET_QT
+// Must be included first to avoid conflicts.
+#include <QtCore/QCoreApplication>
+#include <QtCore/QEventLoop>
+#include "NestedLoopTimer.h"
+#endif
+
 #include "mozilla/plugins/PluginModuleParent.h"
 
 #include "base/process_util.h"
@@ -37,12 +44,6 @@
 #elif XP_MACOSX
 #include "PluginInterposeOSX.h"
 #include "PluginUtilsOSX.h"
-#endif
-
-#ifdef MOZ_WIDGET_QT
-#include <QtCore/QCoreApplication>
-#include <QtCore/QEventLoop>
-#include "NestedLoopTimer.h"
 #endif
 
 using base::KillProcess;

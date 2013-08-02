@@ -60,6 +60,11 @@ if CONFIG['MOZ_PLACES']:
         'PlacesDBUtils.jsm',
     ]
 
+    EXTRA_PP_JS_MODULES += [
+        'BookmarkHTMLUtils.jsm',
+        'PlacesUtils.jsm',
+    ]
+
 MODULE = 'places'
 
 
