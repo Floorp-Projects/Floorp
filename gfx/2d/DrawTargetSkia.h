@@ -109,14 +109,13 @@ public:
 
 private:
   friend class SourceSurfaceSkia;
-  void AppendSnapshot(SourceSurfaceSkia* aSnapshot);
-  void RemoveSnapshot(SourceSurfaceSkia* aSnapshot);
+  void SnapshotDestroyed();
 
   void MarkChanged();
 
   IntSize mSize;
   SkRefPtr<SkCanvas> mCanvas;
-  std::vector<SourceSurfaceSkia*> mSnapshots;
+  SourceSurfaceSkia* mSnapshot;
 };
 
 }
