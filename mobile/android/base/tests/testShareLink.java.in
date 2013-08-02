@@ -93,6 +93,7 @@ public class testShareLink extends BaseTest {
         mSolo.clickLongOnView(bookmark);
         verifySharePopup(shareOptions,"bookmarks");
 
+        //  Removed by Bug 896576 - [fig] Remove [getHistoryList] from BaseTest
         // Test the share popup in the History tab
         ListView hlist = getHistoryList("Today|Yesterday");
         View history = hlist.getChildAt(1); // Getting child at 1 because 0 might be the "Today" label

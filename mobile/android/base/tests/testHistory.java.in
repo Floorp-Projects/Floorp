@@ -30,6 +30,7 @@ public class testHistory extends PixelTest {
         loadAndPaint(url3);
         verifyPageTitle("Browser Blank Page 03");
 
+        /*  Removed by Bug 896576 - [fig] Remove [getHistoryList] from BaseTest
         final ListView hList = getHistoryList("Today|Yesterday");
         mAsserter.ok(hList != null, "checking history exists", "history exists");
 
@@ -64,6 +65,8 @@ public class testHistory extends PixelTest {
 
         mAsserter.isnot(mFirstChild, null, "Got history item");
         mSolo.clickOnView(mFirstChild);
+        */
+
         // The first item here (since it was just visited) should be a "Switch to tab" item
         // i.e. don't expect a DOMCOntentLoaded event
         verifyPageTitle("Browser Blank Page 03");
