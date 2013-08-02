@@ -1498,7 +1498,7 @@ CodeGenerator::visitCallNative(LCallNative *call)
         masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, target->native()));
 
         // Test for failure.
-        masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, &failure);
+        masm.branchIfFalseBool(ReturnReg, &failure);
         break;
 
       case ParallelExecution:

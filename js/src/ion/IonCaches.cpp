@@ -923,7 +923,7 @@ GenerateCallGetter(JSContext *cx, IonScript *ion, MacroAssembler &masm,
         masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, target->native()));
 
         // Test for failure.
-        masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, &exception);
+        masm.branchIfFalseBool(ReturnReg, &exception);
 
         // Load the outparam vp[0] into output register(s).
         masm.loadValue(
@@ -966,7 +966,7 @@ GenerateCallGetter(JSContext *cx, IonScript *ion, MacroAssembler &masm,
         masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, target));
 
         // Test for failure.
-        masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, &exception);
+        masm.branchIfFalseBool(ReturnReg, &exception);
 
         // Load the outparam vp[0] into output register(s).
         masm.loadValue(
@@ -1172,7 +1172,7 @@ GetPropertyIC::attachDOMProxyShadowed(JSContext *cx, IonScript *ion, JSObject *o
 
     // Test for failure.
     Label exception;
-    masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, &exception);
+    masm.branchIfFalseBool(ReturnReg, &exception);
 
     // Load the outparam vp[0] into output register(s).
     masm.loadValue(
@@ -1918,7 +1918,7 @@ SetPropertyIC::attachSetterCall(JSContext *cx, IonScript *ion,
     masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, target));
 
     // Test for failure.
-    masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, &exception);
+    masm.branchIfFalseBool(ReturnReg, &exception);
 
     masm.jump(&success);
 

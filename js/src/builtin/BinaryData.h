@@ -55,7 +55,7 @@ class NumericType
   public:
     static bool convert(JSContext *cx, HandleValue val, T *converted);
     static bool reify(JSContext *cx, void *mem, MutableHandleValue vp);
-    static JSBool call(JSContext *cx, unsigned argc, Value *vp);
+    static bool call(JSContext *cx, unsigned argc, Value *vp);
 };
 
 template <typename T>
@@ -129,10 +129,10 @@ class ArrayType : public JSObject
 
     static JSObject *create(JSContext *cx, HandleObject arrayTypeGlobal,
                             HandleObject elementType, uint32_t length);
-    static JSBool construct(JSContext *cx, unsigned int argc, jsval *vp);
-    static JSBool repeat(JSContext *cx, unsigned int argc, jsval *vp);
+    static bool construct(JSContext *cx, unsigned int argc, jsval *vp);
+    static bool repeat(JSContext *cx, unsigned int argc, jsval *vp);
 
-    static JSBool toString(JSContext *cx, unsigned int argc, jsval *vp);
+    static bool toString(JSContext *cx, unsigned int argc, jsval *vp);
 
     static uint32_t length(JSContext *cx, HandleObject obj);
     static JSObject *elementType(JSContext *cx, HandleObject obj);
@@ -160,13 +160,13 @@ class BinaryArray
     // uses passed block as memory
     static JSObject *create(JSContext *cx, HandleObject type,
                             HandleObject owner, size_t offset);
-    static JSBool construct(JSContext *cx, unsigned int argc, jsval *vp);
+    static bool construct(JSContext *cx, unsigned int argc, jsval *vp);
 
     static void finalize(FreeOp *op, JSObject *obj);
     static void obj_trace(JSTracer *tracer, JSObject *obj);
 
-    static JSBool subarray(JSContext *cx, unsigned int argc, jsval *vp);
-    static JSBool fill(JSContext *cx, unsigned int argc, jsval *vp);
+    static bool subarray(JSContext *cx, unsigned int argc, jsval *vp);
+    static bool fill(JSContext *cx, unsigned int argc, jsval *vp);
 
     static JSBool obj_lookupGeneric(JSContext *cx, HandleObject obj,
                                     HandleId id, MutableHandleObject objp,
@@ -249,8 +249,7 @@ class BinaryArray
                                 MutableHandleValue statep,
                                 MutableHandleId idp);
 
-    static JSBool lengthGetter(JSContext *cx, unsigned int argc, jsval *vp);
-
+    static bool lengthGetter(JSContext *cx, unsigned int argc, jsval *vp);
 };
 
 class StructType : public JSObject
@@ -268,8 +267,8 @@ class StructType : public JSObject
   public:
     static Class class_;
 
-    static JSBool construct(JSContext *cx, unsigned int argc, jsval *vp);
-    static JSBool toString(JSContext *cx, unsigned int argc, jsval *vp);
+    static bool construct(JSContext *cx, unsigned int argc, jsval *vp);
+    static bool toString(JSContext *cx, unsigned int argc, jsval *vp);
 
     static bool convertAndCopyTo(JSContext *cx, HandleObject exemplar,
                                  HandleValue from, uint8_t *mem);
@@ -292,7 +291,7 @@ class BinaryStruct : public JSObject
 
     static JSObject *create(JSContext *cx, HandleObject type,
                             HandleObject owner, size_t offset);
-    static JSBool construct(JSContext *cx, unsigned int argc, jsval *vp);
+    static bool construct(JSContext *cx, unsigned int argc, jsval *vp);
 
     static void finalize(js::FreeOp *op, JSObject *obj);
     static void obj_trace(JSTracer *tracer, JSObject *obj);

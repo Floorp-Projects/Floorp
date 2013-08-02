@@ -106,7 +106,7 @@ GetKeyFromJSValOrThrow(JSContext* aCx,
   return true;
 }
 
-JSBool
+bool
 MakeOnlyKeyRange(JSContext* aCx,
                  unsigned aArgc,
                  jsval* aVp)
@@ -127,7 +127,7 @@ MakeOnlyKeyRange(JSContext* aCx,
   return ReturnKeyRange(aCx, aVp, keyRange);
 }
 
-JSBool
+bool
 MakeLowerBoundKeyRange(JSContext* aCx,
                        unsigned aArgc,
                        jsval* aVp)
@@ -150,7 +150,7 @@ MakeLowerBoundKeyRange(JSContext* aCx,
   return ReturnKeyRange(aCx, aVp, keyRange);
 }
 
-JSBool
+bool
 MakeUpperBoundKeyRange(JSContext* aCx,
                        unsigned aArgc,
                        jsval* aVp)
@@ -173,7 +173,7 @@ MakeUpperBoundKeyRange(JSContext* aCx,
   return ReturnKeyRange(aCx, aVp, keyRange);
 }
 
-JSBool
+bool
 MakeBoundKeyRange(JSContext* aCx,
                   unsigned aArgc,
                   jsval* aVp)
