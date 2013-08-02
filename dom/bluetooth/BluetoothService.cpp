@@ -788,9 +788,9 @@ BluetoothService::Notify(const BluetoothSignal& aData)
     MOZ_ASSERT(aData.value().get_ArrayOfBluetoothNamedValue().Length() == 0,
       "Cancel: Wrong length of parameters");
     type.AssignLiteral("bluetooth-cancel");
-  } else if (aData.name().EqualsLiteral("PairedStatusChanged")) {
+  } else if (aData.name().EqualsLiteral(PAIRED_STATUS_CHANGED_ID)) {
     MOZ_ASSERT(aData.value().get_ArrayOfBluetoothNamedValue().Length() == 1,
-      "PairedStatusChagned: Wrong length of parameters");
+      "pairedstatuschanged: Wrong length of parameters");
     type.AssignLiteral("bluetooth-pairedstatuschanged");
   } else {
     nsCString warningMsg;
