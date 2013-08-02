@@ -321,10 +321,9 @@
   <!-- Search suggestions opt-in -->
   <string name="suggestions_prompt">&suggestions_prompt2;</string>
 
-  <!-- Wallpaper Notifications -->
-  <string name="wallpaper_success">&wallpaper_success;</string>
-  <string name="wallpaper_progress">&wallpaper_progress;</string>
-  <string name="wallpaper_fail">&wallpaper_fail;</string>
+  <!-- Set Image Notifications -->
+  <string name="set_image_fail">&set_image_fail;</string>
+  <string name="set_image_chooser_title">&set_image_chooser_title;</string>
 
   <!-- Contacts API -->
   <string name="contacts_account_chooser_dialog_title">Share contacts from...</string>
