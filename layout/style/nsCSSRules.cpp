@@ -566,6 +566,8 @@ SetStyleSheetReference(Rule* aRule, void* aSheet)
   return true;
 }
 
+NS_IMPL_CYCLE_COLLECTION_CLASS(GroupRule)
+
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(GroupRule)
   tmp->mRules.EnumerateForwards(SetParentRuleReference, nullptr);
   // If tmp does not have a stylesheet, neither do its descendants.  In that
@@ -1749,6 +1751,8 @@ nsCSSFontFaceRule::Clone() const
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsCSSFontFaceRule)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsCSSFontFaceRule)
 
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsCSSFontFaceRule)
+
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(nsCSSFontFaceRule)
   // Trace the wrapper for our declaration.  This just expands out
   // NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER which we can't use
@@ -2244,6 +2248,7 @@ nsCSSKeyframeRule::Clone() const
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsCSSKeyframeRule)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsCSSKeyframeRule)
 
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsCSSKeyframeRule)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsCSSKeyframeRule)
   if (tmp->mDOMDeclaration) {
@@ -2733,6 +2738,8 @@ nsCSSPageRule::Clone() const
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsCSSPageRule)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsCSSPageRule)
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsCSSPageRule)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsCSSPageRule)
   if (tmp->mDOMDeclaration) {

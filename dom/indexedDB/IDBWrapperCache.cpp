@@ -9,6 +9,8 @@
 
 USING_INDEXEDDB_NAMESPACE
 
+NS_IMPL_CYCLE_COLLECTION_CLASS(IDBWrapperCache)
+
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(IDBWrapperCache,
                                                   nsDOMEventTargetHelper)
   // Don't need NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS because

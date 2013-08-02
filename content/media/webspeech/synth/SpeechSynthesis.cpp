@@ -43,6 +43,8 @@ TraverseCachedVoices(const nsAString& aKey, SpeechSynthesisVoice* aEntry, void* 
   return PL_DHASH_NEXT;
 }
 
+NS_IMPL_CYCLE_COLLECTION_CLASS(SpeechSynthesis)
+
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(SpeechSynthesis)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mParent)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mCurrentTask)

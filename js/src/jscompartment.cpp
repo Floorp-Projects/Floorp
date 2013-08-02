@@ -42,6 +42,9 @@ JSCompartment::JSCompartment(Zone *zone, const JS::CompartmentOptions &options =
     principals(NULL),
     isSystem(false),
     marked(true),
+#ifdef DEBUG
+    firedOnNewGlobalObject(false),
+#endif
     global_(NULL),
     enterCompartmentDepth(0),
     lastCodeRelease(0),

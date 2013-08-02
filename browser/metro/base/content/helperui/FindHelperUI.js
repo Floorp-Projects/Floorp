@@ -116,15 +116,16 @@ var FindHelperUI = {
     // Shutdown selection related ui
     SelectionHelperUI.closeEditSession();
 
-    this.search(this._textbox.value);
-    this._textbox.select();
-    this._textbox.focus();
-    this._open = true;
-
     let findbar = this._container;
     setTimeout(() => {
       Elements.browsers.setAttribute("findbar", true);
       findbar.show();
+
+      this.search(this._textbox.value);
+      this._textbox.select();
+      this._textbox.focus();
+
+      this._open = true;
     }, 0);
 
     // Prevent the view to scroll automatically while searching

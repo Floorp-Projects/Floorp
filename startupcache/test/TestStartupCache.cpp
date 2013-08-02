@@ -522,7 +522,7 @@ int main(int argc, char** argv)
   };
   JSObject *glob = nullptr;
   if (use_js)
-    glob = JS_NewGlobalObject(cx, &global_class, nullptr);
+    glob = JS_NewGlobalObject(cx, &global_class, nullptr, JS::FireOnNewGlobalHook);
   if (!glob)
     use_js = false;
   mozilla::Maybe<JSAutoCompartment> ac;

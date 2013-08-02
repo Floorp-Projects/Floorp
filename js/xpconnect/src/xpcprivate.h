@@ -2253,18 +2253,16 @@ public:
     {
       NS_DECL_CYCLE_COLLECTION_CLASS_BODY_NO_UNLINK(XPCWrappedNative,
                                                     XPCWrappedNative)
-      static NS_METHOD RootImpl(void *p) { return NS_OK; }
-      static NS_METHOD UnlinkImpl(void *p);
-      static NS_METHOD UnrootImpl(void *p) { return NS_OK; }
+      NS_IMETHOD Root(void *p) { return NS_OK; }
+      NS_IMETHOD Unlink(void *p);
+      NS_IMETHOD Unroot(void *p) { return NS_OK; }
       static nsXPCOMCycleCollectionParticipant* GetParticipant()
       {
-        static const CCParticipantVTable<NS_CYCLE_COLLECTION_CLASSNAME(XPCWrappedNative)>
-          ::Type participant =
-          { NS_IMPL_CYCLE_COLLECTION_VTABLE(NS_CYCLE_COLLECTION_CLASSNAME(XPCWrappedNative)) };
-        return NS_PARTICIPANT_AS(nsXPCOMCycleCollectionParticipant,
-                                 &participant);
+        return &XPCWrappedNative::NS_CYCLE_COLLECTION_INNERNAME;
       }
     };
+    static NS_CYCLE_COLLECTION_INNERCLASS NS_CYCLE_COLLECTION_INNERNAME;
+
     void DeleteCycleCollectable() {}
 
     nsIPrincipal* GetObjectPrincipal() const;

@@ -20,6 +20,8 @@ HTMLMapElement::HTMLMapElement(already_AddRefed<nsINodeInfo> aNodeInfo)
 {
 }
 
+NS_IMPL_CYCLE_COLLECTION_CLASS(HTMLMapElement)
+
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(HTMLMapElement,
                                                   nsGenericHTMLElement)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mAreas)

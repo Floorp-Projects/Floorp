@@ -73,7 +73,7 @@ gTests.push({
     yield waitForEvent(Elements.findbar, "transitionend");
     is(Elements.findbar.isShowing, true, "Show find bar with menu item");
 
-    EventUtils.synthesizeMouse(document.getElementById("findbar-close"), 1, 1, {});
+    EventUtils.synthesizeMouse(document.getElementById("findbar-close-button"), 1, 1, {});
     yield waitForEvent(Elements.findbar, "transitionend");
     is(Elements.findbar.isShowing, false, "Hide find bar with close button");
 

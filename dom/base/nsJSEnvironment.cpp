@@ -1186,8 +1186,11 @@ nsJSContext::DestroyJSContext()
 }
 
 // QueryInterface implementation for nsJSContext
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsJSContext)
+
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(nsJSContext)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
+
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsJSContext)
   NS_ASSERTION(!tmp->mContext || !js::ContextHasOutstandingRequests(tmp->mContext),
                "Trying to unlink a context with outstanding requests.");
@@ -3601,6 +3604,8 @@ nsJSArgArray::ReleaseJSObjects()
 }
 
 // QueryInterface implementation for nsJSArgArray
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsJSArgArray)
+
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsJSArgArray)
   tmp->ReleaseJSObjects();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
