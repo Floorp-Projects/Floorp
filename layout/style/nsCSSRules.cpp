@@ -687,7 +687,7 @@ GroupRule::ReplaceStyleRule(Rule* aOld, Rule* aNew)
   return NS_OK;
 }
 
-nsresult
+void
 GroupRule::AppendRulesToCssText(nsAString& aCssText)
 {
   aCssText.AppendLiteral(" {\n");
@@ -706,8 +706,6 @@ GroupRule::AppendRulesToCssText(nsAString& aCssText)
   }
 
   aCssText.AppendLiteral("}");
-
-  return NS_OK;
 }
 
 // nsIDOMCSSMediaRule or nsIDOMCSSMozDocumentRule methods
@@ -871,7 +869,8 @@ MediaRule::GetCssText(nsAString& aCssText)
 {
   aCssText.AssignLiteral("@media ");
   AppendConditionText(aCssText);
-  return GroupRule::AppendRulesToCssText(aCssText);
+  GroupRule::AppendRulesToCssText(aCssText);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1078,7 +1077,8 @@ DocumentRule::GetCssText(nsAString& aCssText)
 {
   aCssText.AssignLiteral("@-moz-document ");
   AppendConditionText(aCssText);
-  return GroupRule::AppendRulesToCssText(aCssText);
+  GroupRule::AppendRulesToCssText(aCssText);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -2937,7 +2937,8 @@ CSSSupportsRule::GetCssText(nsAString& aCssText)
 {
   aCssText.AssignLiteral("@supports ");
   aCssText.Append(mCondition);
-  return css::GroupRule::AppendRulesToCssText(aCssText);
+  css::GroupRule::AppendRulesToCssText(aCssText);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
