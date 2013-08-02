@@ -3389,18 +3389,18 @@ extern JS_PUBLIC_API(JSBool)
 JS_HasPropertyById(JSContext *cx, JSObject *obj, jsid id, JSBool *foundp);
 
 extern JS_PUBLIC_API(JSBool)
-JS_LookupProperty(JSContext *cx, JSObject *obj, const char *name, jsval *vp);
+JS_LookupProperty(JSContext *cx, JSObject *obj, const char *name, JS::MutableHandle<JS::Value> vp);
 
 extern JS_PUBLIC_API(JSBool)
-JS_LookupPropertyById(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
+JS_LookupPropertyById(JSContext *cx, JSObject *obj, jsid id, JS::MutableHandle<JS::Value> vp);
 
 extern JS_PUBLIC_API(JSBool)
 JS_LookupPropertyWithFlags(JSContext *cx, JSObject *obj, const char *name,
-                           unsigned flags, jsval *vp);
+                           unsigned flags, JS::MutableHandle<JS::Value> vp);
 
 extern JS_PUBLIC_API(JSBool)
 JS_LookupPropertyWithFlagsById(JSContext *cx, JSObject *obj, jsid id,
-                               unsigned flags, JSObject **objp, jsval *vp);
+                               unsigned flags, JSObject **objp, JS::MutableHandle<JS::Value> vp);
 
 struct JSPropertyDescriptor {
     JSObject           *obj;
@@ -3530,7 +3530,7 @@ JS_GetPropertyDescriptorById(JSContext *cx, JSObject *obj, jsid id, unsigned fla
                              JSPropertyDescriptor *desc);
 
 extern JS_PUBLIC_API(JSBool)
-JS_GetOwnPropertyDescriptor(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
+JS_GetOwnPropertyDescriptor(JSContext *cx, JSObject *obj, jsid id, JS::MutableHandle<JS::Value> vp);
 
 extern JS_PUBLIC_API(JSBool)
 JS_GetProperty(JSContext *cx, JSObject *obj, const char *name, JS::MutableHandle<JS::Value> vp);
@@ -3561,13 +3561,13 @@ JS_DeleteProperty(JSContext *cx, JSObject *obj, const char *name);
 
 extern JS_PUBLIC_API(JSBool)
 JS_DeleteProperty2(JSContext *cx, JSObject *obj, const char *name,
-                   jsval *rval);
+                   JS::MutableHandle<JS::Value> rval);
 
 extern JS_PUBLIC_API(JSBool)
 JS_DeletePropertyById(JSContext *cx, JSObject *obj, jsid id);
 
 extern JS_PUBLIC_API(JSBool)
-JS_DeletePropertyById2(JSContext *cx, JSObject *obj, jsid id, jsval *rval);
+JS_DeletePropertyById2(JSContext *cx, JSObject *obj, jsid id, JS::MutableHandle<JS::Value> rval);
 
 extern JS_PUBLIC_API(JSBool)
 JS_DefineUCProperty(JSContext *cx, JSObject *obj,
@@ -3629,7 +3629,7 @@ JS_HasUCProperty(JSContext *cx, JSObject *obj,
 extern JS_PUBLIC_API(JSBool)
 JS_LookupUCProperty(JSContext *cx, JSObject *obj,
                     const jschar *name, size_t namelen,
-                    jsval *vp);
+                    JS::MutableHandle<JS::Value> vp);
 
 extern JS_PUBLIC_API(JSBool)
 JS_GetUCProperty(JSContext *cx, JSObject *obj,
@@ -3644,7 +3644,7 @@ JS_SetUCProperty(JSContext *cx, JSObject *obj,
 extern JS_PUBLIC_API(JSBool)
 JS_DeleteUCProperty2(JSContext *cx, JSObject *obj,
                      const jschar *name, size_t namelen,
-                     jsval *rval);
+                     JS::MutableHandle<JS::Value> rval);
 
 extern JS_PUBLIC_API(JSObject *)
 JS_NewArrayObject(JSContext *cx, int length, jsval *vector);
