@@ -67,16 +67,24 @@ AudioTrackEncoder::NotifyRemoved(MediaStreamGraph* aGraph)
 {
   // In case that MediaEncoder does not receive a TRACK_EVENT_ENDED event.
   LOG("[AudioTrackEncoder]: NotifyRemoved.");
+  NotifyEndOfStream();
+}
 
+void
+AudioTrackEncoder::NotifyEndOfStream()
+{
   // If source audio chunks are completely silent till the end of encoding,
   // initialize the encoder with default channel counts and sampling rate, and
   // append this many null data to the segment of track encoder.
-  if (!mInitialized && mSilentDuration > 0) {
+  if (!mCanceled && !mInitialized && mSilentDuration > 0) {
     Init(DEFAULT_CHANNELS, DEFAULT_SAMPLING_RATE);
     mRawSegment->AppendNullData(mSilentDuration);
     mSilentDuration = 0;
   }
-  NotifyEndOfStream();
+
+  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+  mEndOfStream = true;
+  mReentrantMonitor.NotifyAll();
 }
 
 nsresult
