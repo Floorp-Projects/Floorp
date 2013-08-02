@@ -176,8 +176,7 @@
     <broadcaster id="devtoolsMenuBroadcaster_DevToolbox"
                  label="&devToolboxMenuItem.label;"
                  type="checkbox" autocheck="false"
-                 command="Tools:DevToolbox"
-                 key="key_developerTools"/>
+                 command="Tools:DevToolbox"/>
     <broadcaster id="devtoolsMenuBroadcaster_DevToolbar"
                  label="&devToolbarMenu.label;"
                  type="checkbox" autocheck="false"
@@ -262,9 +261,9 @@
     <key id="key_openDownloads" key="&downloads.commandkey;" command="Tools:Downloads" modifiers="accel"/>
 #endif
     <key id="key_openAddons" key="&addons.commandkey;" command="Tools:Addons" modifiers="accel,shift"/>
-    <key id="key_developerTools" keycode="&devToolsCmd.keycode;" keytext="&devToolsCmd.keytext;" command="Tools:DevToolbox"/>
     <key id="key_browserConsole" key="&browserConsoleCmd.commandkey;" command="Tools:BrowserConsole" modifiers="accel,shift"/>
-    <key id="key_devToolbar" keycode="&devToolbar.keycode;" modifiers="shift" keytext="&devToolbar.keytext;" command="Tools:DevToolbarFocus"/>
+    <key id="key_devToolbar" keycode="&devToolbar.keycode;" modifiers="shift"
+         keytext="&devToolbar.keytext;" command="Tools:DevToolbarFocus"/>
     <key id="key_responsiveUI" key="&responsiveDesignTool.commandkey;" command="Tools:ResponsiveUI"
 #ifdef XP_MACOSX
         modifiers="accel,alt"
