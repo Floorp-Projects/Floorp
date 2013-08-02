@@ -8215,6 +8215,7 @@ DoCreateRestParameter(JSContext *cx, BaselineFrame *frame, ICRest_Fallback *stub
     JSObject *obj = NewDenseCopiedArray(cx, numRest, rest, NULL);
     if (!obj)
         return false;
+    types::FixRestArgumentsType(cx, obj);
     res.setObject(*obj);
     return true;
 }
