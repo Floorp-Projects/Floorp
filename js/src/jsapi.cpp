@@ -2907,6 +2907,7 @@ class AutoHoldZone
 
 JS_PUBLIC_API(JSObject *)
 JS_NewGlobalObject(JSContext *cx, JSClass *clasp, JSPrincipals *principals,
+                   JS::OnNewGlobalHookOption hookOption,
                    const JS::CompartmentOptions &options)
 {
     AssertHeapIsIdle(cx);
@@ -2944,14 +2945,21 @@ JS_NewGlobalObject(JSContext *cx, JSClass *clasp, JSPrincipals *principals,
     if (!global)
         return NULL;
 
-    // This hook is infallible, because we can't really throw at this point.
-    // The global object is already created and in the heap, which is
-    // externally observable since the finalize hook will be called when the
-    // global is GCed. This will eat OOM and slow script, but if that happens
-    // we'll likely run up into them again soon in a fallible context.
-    Debugger::onNewGlobalObject(cx, global);
+    if (hookOption == JS::FireOnNewGlobalHook)
+        JS_FireOnNewGlobalObject(cx, global);
 
     return global;
+}
+
+JS_PUBLIC_API(void)
+JS_FireOnNewGlobalObject(JSContext *cx, JS::HandleObject global)
+{
+    // This hook is infallible, because we don't really want arbitrary script
+    // to be able to throw errors during delicate global creation routines.
+    // This infallibility will eat OOM and slow script, but if that happens
+    // we'll likely run up into them again soon in a fallible context.
+    Rooted<js::GlobalObject*> globalObject(cx, &global->as<GlobalObject>());
+    Debugger::onNewGlobalObject(cx, globalObject);
 }
 
 JS_PUBLIC_API(JSObject *)

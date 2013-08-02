@@ -256,6 +256,7 @@ nsXBLDocGlobalObject::EnsureScriptEnvironment()
          .setInvisibleToDebugger(true);
   mJSObject = JS_NewGlobalObject(cx, &gSharedGlobalClass,
                                  nsJSPrincipals::get(GetPrincipal()),
+                                 JS::DontFireOnNewGlobalHook,
                                  options);
   if (!mJSObject)
       return NS_OK;

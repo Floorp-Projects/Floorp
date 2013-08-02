@@ -2507,7 +2507,8 @@ static JSClass sandbox_class = {
 static JSObject *
 NewSandbox(JSContext *cx, bool lazy)
 {
-    RootedObject obj(cx, JS_NewGlobalObject(cx, &sandbox_class, NULL));
+    RootedObject obj(cx, JS_NewGlobalObject(cx, &sandbox_class, NULL,
+                                            JS::DontFireOnNewGlobalHook));
     if (!obj)
         return NULL;
 
@@ -2520,6 +2521,8 @@ NewSandbox(JSContext *cx, bool lazy)
         if (!JS_SetProperty(cx, obj, "lazy", value))
             return NULL;
     }
+
+    JS_FireOnNewGlobalObject(cx, obj);
 
     if (!cx->compartment()->wrap(cx, obj.address()))
         return NULL;
@@ -4884,7 +4887,8 @@ DestroyContext(JSContext *cx, bool withGC)
 static JSObject *
 NewGlobalObject(JSContext *cx, JS::CompartmentOptions &options)
 {
-    RootedObject glob(cx, JS_NewGlobalObject(cx, &global_class, NULL, options));
+    RootedObject glob(cx, JS_NewGlobalObject(cx, &global_class, NULL,
+                                             JS::DontFireOnNewGlobalHook, options));
     if (!glob)
         return NULL;
 
@@ -4952,6 +4956,8 @@ NewGlobalObject(JSContext *cx, JS::CompartmentOptions &options)
         /* Initialize FakeDOMObject.prototype */
         InitDOMObject(domProto);
     }
+
+    JS_FireOnNewGlobalObject(cx, glob);
 
     return glob;
 }

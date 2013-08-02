@@ -3247,11 +3247,40 @@ struct JS_PUBLIC_API(CompartmentOptions) {
     }
 };
 
+// During global creation, we fire notifications to callbacks registered
+// via the Debugger API. These callbacks are arbitrary script, and can touch
+// the global in arbitrary ways. When that happens, the global should not be
+// in a half-baked state. But this creates a problem for consumers that need
+// to set slots on the global to put it in a consistent state.
+//
+// This API provides a way for consumers to set slots atomically (immediately
+// after the global is created), before any debugger hooks are fired. It's
+// unfortunately on the clunky side, but that's the way the cookie crumbles.
+//
+// If callers have no additional state on the global to set up, they may pass
+// |FireOnNewGlobalHook| to JS_NewGlobalObject, which causes that function to
+// fire the hook as its final act before returning. Otherwise, callers should
+// pass |DontFireOnNewGlobalHook|, which means that they are responsible for
+// invoking JS_FireOnNewGlobalObject upon successfully creating the global. If
+// an error occurs and the operation aborts, callers should skip firing the
+// hook. But otherwise, callers must take care to fire the hook exactly once
+// before compiling any script in the global's scope (we have assertions in
+// place to enforce this). This lets us be sure that debugger clients never miss
+// breakpoints.
+enum OnNewGlobalHookOption {
+    FireOnNewGlobalHook,
+    DontFireOnNewGlobalHook
+};
+
 } /* namespace JS */
 
 extern JS_PUBLIC_API(JSObject *)
 JS_NewGlobalObject(JSContext *cx, JSClass *clasp, JSPrincipals *principals,
+                   JS::OnNewGlobalHookOption hookOption,
                    const JS::CompartmentOptions &options = JS::CompartmentOptions());
+
+extern JS_PUBLIC_API(void)
+JS_FireOnNewGlobalObject(JSContext *cx, JS::HandleObject global);
 
 extern JS_PUBLIC_API(JSObject *)
 JS_NewObject(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent);
