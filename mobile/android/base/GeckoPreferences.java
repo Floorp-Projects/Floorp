@@ -77,7 +77,7 @@ public class GeckoPreferences
     private static String PREFS_HEALTHREPORT_LINK = NON_PREF_PREFIX + "healthreport.link";
     private static String PREFS_DEVTOOLS_REMOTE_ENABLED = "devtools.debugger.remote-enabled";
 
-    public static String PREFS_RESTORE_SESSION = NON_PREF_PREFIX + "restoreSession";
+    public static String PREFS_RESTORE_SESSION = NON_PREF_PREFIX + "restoreSession2";
 
     // These values are chosen to be distinct from other Activity constants.
     private static int REQUEST_CODE_PREF_SCREEN = 5;
@@ -321,6 +321,15 @@ public class GeckoPreferences
                             return true;
                         }
                     });
+                } else if (PREFS_RESTORE_SESSION.equals(key)) {
+                    // Set the summary string to the current entry. The summary
+                    // for other list prefs will be set in the PrefsHelper
+                    // callback, but since this pref doesn't live in Gecko, we
+                    // need to handle it separately.
+                    ListPreference listPref = (ListPreference) pref;
+                    CharSequence selectedEntry = listPref.getEntry();
+                    listPref.setSummary(selectedEntry);
+                    continue;
                 }
 
                 // Some Preference UI elements are not actually preferences,
@@ -452,6 +461,9 @@ public class GeckoPreferences
         String prefName = preference.getKey();
         if (PREFS_MP_ENABLED.equals(prefName)) {
             showDialog((Boolean) newValue ? DIALOG_CREATE_MASTER_PASSWORD : DIALOG_REMOVE_MASTER_PASSWORD);
+
+            // We don't want the "use master password" pref to change until the
+            // user has gone through the dialog.
             return false;
         } else if (PREFS_MENU_CHAR_ENCODING.equals(prefName)) {
             setCharEncodingState(((String) newValue).equals("true"));
@@ -467,20 +479,16 @@ public class GeckoPreferences
             // background uploader service, which will start or stop the
             // repeated background upload attempts.
             broadcastHealthReportUploadPref(GeckoAppShell.getContext(), ((Boolean) newValue).booleanValue());
-            return true;
         } else if (PREFS_GEO_REPORTING.equals(prefName)) {
             // Translate boolean value to int for geo reporting pref.
-            PrefsHelper.setPref(prefName, (Boolean) newValue ? 1 : 0);
-            return true;
-        } else if (PREFS_RESTORE_SESSION.equals(prefName)) {
-            // Do nothing else; the pref will be persisted in the shared prefs,
-            // and it will be read at startup in Java before a session restore.
-            return true;
+            newValue = ((Boolean) newValue) ? 1 : 0;
         }
 
-        if (!TextUtils.isEmpty(prefName)) {
+        // Send Gecko-side pref changes to Gecko
+        if (!TextUtils.isEmpty(prefName) && !prefName.startsWith(NON_PREF_PREFIX)) {
             PrefsHelper.setPref(prefName, newValue);
         }
+
         if (preference instanceof ListPreference) {
             // We need to find the entry for the new value
             int newIndex = ((ListPreference) preference).findIndexOfValue((String) newValue);
@@ -493,6 +501,7 @@ public class GeckoPreferences
             final FontSizePreference fontSizePref = (FontSizePreference) preference;
             fontSizePref.setSummary(fontSizePref.getSavedFontSizeName());
         }
+
         return true;
     }
 
