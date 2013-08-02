@@ -14,7 +14,7 @@ interface nsIVariant;
  * @see http://dvcs.w3.org/hg/webevents/raw-file/tip/touchevents.html
  */
 
-[scriptable, builtinclass, uuid(98bc0f7d-5bff-4387-9c42-58af54b48dd5)]
+[scriptable, builtinclass, uuid(2311671f-ff7e-43d2-adfb-d9e07006955e)]
 interface nsIDOMTouch : nsISupports {
   readonly attribute long              identifier;
   readonly attribute nsIDOMEventTarget target;
@@ -28,14 +28,6 @@ interface nsIDOMTouch : nsISupports {
   readonly attribute long              radiusY;
   readonly attribute float             rotationAngle;
   readonly attribute float             force;
-  %{C++
-    nsCOMPtr<mozilla::dom::EventTarget> mTarget;
-    mozilla::dom::EventTarget *GetTarget() { return mTarget; }
-    void SetTarget(mozilla::dom::EventTarget *target) { mTarget = target; }
-    nsIntPoint mRefPoint;
-    bool mChanged;
-    uint32_t mMessage;
-  %}
 };
 
 [scriptable, builtinclass, uuid(60706eb7-d50d-4379-b01c-e78e6af84213)]

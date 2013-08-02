@@ -6735,7 +6735,7 @@ PresShell::HandleEventInternal(nsEvent* aEvent, nsEventStatus* aStatus)
             touches.RemoveElementAt(i);
             continue;
           }
-          if (touch->Equals(oldTouch)) {
+          if (!touch->Equals(oldTouch)) {
             touch->mChanged = true;
             haveChanged = true;
           }
@@ -6887,12 +6887,12 @@ PresShell::DispatchTouchEvent(nsEvent *aEvent,
 
   // loop over all touches and dispatch events on any that have changed
   for (uint32_t i = 0; i < touchEvent->touches.Length(); ++i) {
-    nsIDOMTouch *touch = touchEvent->touches[i];
+    dom::Touch* touch = touchEvent->touches[i];
     if (!touch || !touch->mChanged) {
       continue;
     }
 
-    nsCOMPtr<EventTarget> targetPtr = touch->GetTarget();
+    nsCOMPtr<EventTarget> targetPtr = touch->mTarget;
     nsCOMPtr<nsIContent> content = do_QueryInterface(targetPtr);
     if (!content) {
       continue;

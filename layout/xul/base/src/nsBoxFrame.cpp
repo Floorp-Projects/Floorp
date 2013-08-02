@@ -2077,12 +2077,11 @@ nsBoxFrame::GetEventPoint(nsGUIEvent* aEvent, nsIntPoint &aPoint) {
       return false;
     }
 
-    nsIDOMTouch *touch = touchEvent->touches.SafeElementAt(0);
+    dom::Touch* touch = touchEvent->touches.SafeElementAt(0);
     if (!touch) {
       return false;
     }
-    Touch* domtouch = static_cast<Touch*>(touch);
-    aPoint = domtouch->mRefPoint;
+    aPoint = touch->mRefPoint;
   } else {
     aPoint = LayoutDeviceIntPoint::ToUntyped(aEvent->refPoint);
   }

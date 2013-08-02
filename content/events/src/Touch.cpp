@@ -146,19 +146,13 @@ Touch::InitializePoints(nsPresContext* aPresContext, nsEvent* aEvent)
 }
 
 bool
-Touch::Equals(nsIDOMTouch* aTouch)
+Touch::Equals(Touch* aTouch)
 {
-  float force;
-  float orientation;
-  int32_t radiusX, radiusY;
-  aTouch->GetForce(&force);
-  aTouch->GetRotationAngle(&orientation);
-  aTouch->GetRadiusX(&radiusX);
-  aTouch->GetRadiusY(&radiusY);
-  return mRefPoint != aTouch->mRefPoint ||
-         (mForce != force) ||
-         (mRotationAngle != orientation) ||
-         (mRadius.x != radiusX) || (mRadius.y != radiusY);
+  return mRefPoint == aTouch->mRefPoint &&
+         mForce == aTouch->Force() &&
+         mRotationAngle == aTouch->RotationAngle() &&
+         mRadius.x == aTouch->RadiusX() &&
+         mRadius.y == aTouch->RadiusY();
 }
 
 /* virtual */ JSObject*
