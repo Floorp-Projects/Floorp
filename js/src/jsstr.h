@@ -320,10 +320,6 @@ namespace js {
 extern size_t
 PutEscapedStringImpl(char *buffer, size_t size, FILE *fp, JSLinearString *str, uint32_t quote);
 
-extern size_t
-PutEscapedStringImpl(char *buffer, size_t bufferSize, FILE *fp, const jschar *chars,
-                     size_t length, uint32_t quote);
-
 /*
  * Write str into buffer escaping any non-printable or non-ASCII character
  * using \escapes for JS string literals.
@@ -337,16 +333,6 @@ inline size_t
 PutEscapedString(char *buffer, size_t size, JSLinearString *str, uint32_t quote)
 {
     size_t n = PutEscapedStringImpl(buffer, size, NULL, str, quote);
-
-    /* PutEscapedStringImpl can only fail with a file. */
-    JS_ASSERT(n != size_t(-1));
-    return n;
-}
-
-inline size_t
-PutEscapedString(char *buffer, size_t bufferSize, const jschar *chars, size_t length, uint32_t quote)
-{
-    size_t n = PutEscapedStringImpl(buffer, bufferSize, NULL, chars, length, quote);
 
     /* PutEscapedStringImpl can only fail with a file. */
     JS_ASSERT(n != size_t(-1));
