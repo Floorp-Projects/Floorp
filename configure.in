@@ -5905,6 +5905,10 @@ if test -n "$MOZ_WEBGL_DISABLED"; then
   MOZ_ANGLE_RENDERER=
 fi
 
+if test -n "$MOZ_WEBGL"; then
+  AC_DEFINE(MOZ_WEBGL)
+fi
+
 if test -n "$MOZ_WEBGL_CONFORMANT"; then
   AC_DEFINE(MOZ_WEBGL_CONFORMANT)
 fi
