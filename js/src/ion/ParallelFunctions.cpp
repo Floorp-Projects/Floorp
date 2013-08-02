@@ -218,6 +218,12 @@ ion::DoubleToStringPar(ForkJoinSlice *slice, double d, MutableHandleString out)
     return TP_SUCCESS;
 }
 
+ParallelResult
+ion::StringToNumberPar(ForkJoinSlice *slice, JSString *str, double *out)
+{
+    return StringToNumber(slice, str, out) ? TP_SUCCESS : TP_FATAL;
+}
+
 #define PAR_RELATIONAL_OP(OP, EXPECTED)                                         \
 do {                                                                            \
     /* Optimize for two int-tagged operands (typical loop control). */          \

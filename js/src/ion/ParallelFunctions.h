@@ -44,6 +44,7 @@ ParallelResult ConcatStringsPar(ForkJoinSlice *slice, HandleString left, HandleS
                                 MutableHandleString out);
 ParallelResult IntToStringPar(ForkJoinSlice *slice, int i, MutableHandleString out);
 ParallelResult DoubleToStringPar(ForkJoinSlice *slice, double d, MutableHandleString out);
+ParallelResult StringToNumberPar(ForkJoinSlice *slice, JSString *str, double *out);
 
 // Binary and unary operator functions on values. These tend to return
 // RETRY_SEQUENTIALLY if the values are objects.
