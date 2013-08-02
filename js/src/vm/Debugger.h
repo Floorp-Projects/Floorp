@@ -335,7 +335,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
     static bool slowPathOnLeaveFrame(JSContext *cx, AbstractFramePtr frame, bool ok);
     static void slowPathOnNewScript(JSContext *cx, HandleScript script,
                                     GlobalObject *compileAndGoGlobal);
-    static bool slowPathOnNewGlobalObject(JSContext *cx, Handle<GlobalObject *> global);
+    static void slowPathOnNewGlobalObject(JSContext *cx, Handle<GlobalObject *> global);
     static JSTrapStatus dispatchHook(JSContext *cx, MutableHandleValue vp, Hook which);
 
     JSTrapStatus fireDebuggerStatement(JSContext *cx, MutableHandleValue vp);
@@ -407,7 +407,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
     static inline JSTrapStatus onExceptionUnwind(JSContext *cx, MutableHandleValue vp);
     static inline void onNewScript(JSContext *cx, HandleScript script,
                                    GlobalObject *compileAndGoGlobal);
-    static inline bool onNewGlobalObject(JSContext *cx, Handle<GlobalObject *> global);
+    static inline void onNewGlobalObject(JSContext *cx, Handle<GlobalObject *> global);
     static JSTrapStatus onTrap(JSContext *cx, MutableHandleValue vp);
     static JSTrapStatus onSingleStep(JSContext *cx, MutableHandleValue vp);
     static bool handleBaselineOsr(JSContext *cx, StackFrame *from, ion::BaselineFrame *to);
@@ -681,12 +681,11 @@ Debugger::onNewScript(JSContext *cx, HandleScript script, GlobalObject *compileA
         slowPathOnNewScript(cx, script, compileAndGoGlobal);
 }
 
-bool
+void
 Debugger::onNewGlobalObject(JSContext *cx, Handle<GlobalObject *> global)
 {
-    if (JS_CLIST_IS_EMPTY(&cx->runtime()->onNewGlobalObjectWatchers))
-        return true;
-    return Debugger::slowPathOnNewGlobalObject(cx, global);
+    if (!JS_CLIST_IS_EMPTY(&cx->runtime()->onNewGlobalObjectWatchers))
+        Debugger::slowPathOnNewGlobalObject(cx, global);
 }
 
 extern JSBool
