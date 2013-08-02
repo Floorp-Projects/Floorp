@@ -16,7 +16,7 @@ namespace js {
 // JSOP_EVAL which in turn calls DirectEval. Thus, even though IndirectEval is
 // the callee function object for *all* calls to eval, it is by construction
 // only ever called in the case indirect eval.
-extern JSBool
+extern bool
 IndirectEval(JSContext *cx, unsigned argc, Value *vp);
 
 // Performs a direct eval for the given arguments, which must correspond to the

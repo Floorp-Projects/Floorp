@@ -24,12 +24,12 @@ IsAsmJSModuleNative(JSNative native);
 
 // Return whether the given value is a function containing "use asm" that has
 // been validated according to the asm.js spec.
-extern JSBool
+extern bool
 IsAsmJSModule(JSContext *cx, unsigned argc, JS::Value *vp);
 
 // Return whether the given value is a nested function in an asm.js module that
 // has been both compile- and link-time validated.
-extern JSBool
+extern bool
 IsAsmJSFunction(JSContext *cx, unsigned argc, JS::Value *vp);
 
 #else // JS_ION
@@ -40,7 +40,7 @@ IsAsmJSModuleNative(JSNative native)
     return false;
 }
 
-inline JSBool
+inline bool
 IsAsmJSFunction(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -48,7 +48,7 @@ IsAsmJSFunction(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
-inline JSBool
+inline bool
 IsAsmJSModule(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);

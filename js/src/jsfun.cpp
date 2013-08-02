@@ -759,7 +759,7 @@ fun_toStringHelper(JSContext *cx, HandleObject obj, unsigned indent)
     return FunctionToString(cx, fun, false, indent != JS_DONT_PRETTY_PRINT);
 }
 
-static JSBool
+static bool
 fun_toString(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -783,7 +783,7 @@ fun_toString(JSContext *cx, unsigned argc, Value *vp)
 }
 
 #if JS_HAS_TOSOURCE
-static JSBool
+static bool
 fun_toSource(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -802,7 +802,7 @@ fun_toSource(JSContext *cx, unsigned argc, Value *vp)
 }
 #endif
 
-JSBool
+bool
 js_fun_call(JSContext *cx, unsigned argc, Value *vp)
 {
     RootedValue fval(cx, vp[1]);
@@ -858,7 +858,7 @@ PushBaselineFunApplyArguments(JSContext *cx, ion::IonFrameIterator &frame, Invok
 #endif
 
 /* ES5 15.3.4.3 */
-JSBool
+bool
 js_fun_apply(JSContext *cx, unsigned argc, Value *vp)
 {
     /* Step 1. */
@@ -1166,7 +1166,7 @@ JSFunction::createScriptForLazilyInterpretedFunction(JSContext *cx, HandleFuncti
 }
 
 /* ES5 15.3.4.5.1 and 15.3.4.5.2. */
-JSBool
+bool
 js::CallOrConstructBoundFunction(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -1219,7 +1219,7 @@ js::CallOrConstructBoundFunction(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
-static JSBool
+static bool
 fun_isGenerator(JSContext *cx, unsigned argc, Value *vp)
 {
     JSFunction *fun;
@@ -1240,7 +1240,7 @@ fun_isGenerator(JSContext *cx, unsigned argc, Value *vp)
 }
 
 /* ES5 15.3.4.5. */
-static JSBool
+static bool
 fun_bind(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -1332,7 +1332,7 @@ const JSFunctionSpec js::function_methods[] = {
     JS_FS_END
 };
 
-JSBool
+bool
 js::Function(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);

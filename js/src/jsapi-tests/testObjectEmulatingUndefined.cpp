@@ -16,7 +16,7 @@ static JSClass ObjectEmulatingUndefinedClass = {
     JS_ConvertStub
 };
 
-static JSBool
+static bool
 ObjectEmulatingUndefinedConstructor(JSContext *cx, unsigned argc, jsval *vp)
 {
     JSObject *obj = JS_NewObjectForConstructor(cx, &ObjectEmulatingUndefinedClass, vp);
