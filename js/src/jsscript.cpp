@@ -538,7 +538,6 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
         JSVersion version_ = JSVersion(version & JS_BITMASK(16));
         JS_ASSERT((version_ & VersionFlags::MASK) == unsigned(version_));
 
-        // principals and originPrincipals are set with xdr->initScriptPrincipals(script) below.
         // staticLevel is set below.
         CompileOptions options(cx);
         options.setVersion(version_)
@@ -546,7 +545,7 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
                .setSelfHostingMode(!!(scriptBits & (1 << SelfHosted)));
         JS::RootedScriptSource sourceObject(cx);
         if (scriptBits & (1 << OwnSource)) {
-            ScriptSource *ss = cx->new_<ScriptSource>();
+            ScriptSource *ss = cx->new_<ScriptSource>(xdr->originPrincipals());
             if (!ss)
                 return false;
             sourceObject = ScriptSourceObject::create(cx, ss);
@@ -622,7 +621,6 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
         script->lineno = lineno;
         script->nslots = uint16_t(nslots);
         script->staticLevel = uint16_t(nslots >> 16);
-        xdr->initScriptPrincipals(script);
     }
 
     jsbytecode *code = script->code;
@@ -1358,6 +1356,8 @@ ScriptSource::destroy()
     adjustDataSize(0);
     js_free(filename_);
     js_free(sourceMap_);
+    if (originPrincipals_)
+        JS_DropPrincipals(TlsPerThreadData.get()->runtimeFromMainThread(), originPrincipals_);
     ready_ = false;
     js_free(this);
 }
@@ -1728,20 +1728,9 @@ ScriptDataSize(uint32_t nbindings, uint32_t nobjects, uint32_t nregexps,
 }
 
 void
-JSScript::initCompartmentAndPrincipals(ExclusiveContext *cx, const CompileOptions &options)
+JSScript::initCompartment(ExclusiveContext *cx)
 {
     compartment_ = cx->compartment_;
-
-    /* Establish invariant: principals implies originPrincipals. */
-    if (options.principals) {
-        JS_ASSERT(options.principals == cx->compartment_->principals);
-        originPrincipals
-            = options.originPrincipals ? options.originPrincipals : options.principals;
-        JS_HoldPrincipals(originPrincipals);
-    } else if (options.originPrincipals) {
-        originPrincipals = options.originPrincipals;
-        JS_HoldPrincipals(originPrincipals);
-    }
 }
 
 JSScript *
@@ -1760,7 +1749,7 @@ JSScript::Create(ExclusiveContext *cx, HandleObject enclosingScope, bool savedCa
 
     script->enclosingScopeOrOriginalFunction_ = enclosingScope;
     script->savedCallerFun = savedCallerFun;
-    script->initCompartmentAndPrincipals(cx, options);
+    script->initCompartment(cx);
 
     script->compileAndGo = options.compileAndGo;
     script->selfHosted = options.selfHostingMode;
@@ -2081,9 +2070,6 @@ JSScript::finalize(FreeOp *fop)
     CallDestroyScriptHook(fop, this);
     fop->runtime()->spsProfiler.onScriptFinalized(this);
 
-    if (originPrincipals)
-        JS_DropPrincipals(fop->runtime(), originPrincipals);
-
     if (types)
         types->destroy();
 
@@ -2305,7 +2291,7 @@ js::CurrentScriptFileLineOrigin(JSContext *cx, const char **file, unsigned *line
         JS_ASSERT(*(pc + JSOP_EVAL_LENGTH) == JSOP_LINENO);
         *file = script->filename();
         *linenop = GET_UINT16(pc + JSOP_EVAL_LENGTH);
-        *origin = script->originPrincipals;
+        *origin = script->originPrincipals();
         return;
     }
 
@@ -2314,14 +2300,14 @@ js::CurrentScriptFileLineOrigin(JSContext *cx, const char **file, unsigned *line
     if (iter.done()) {
         *file = NULL;
         *linenop = 0;
-        *origin = NULL;
+        *origin = cx->compartment()->principals;
         return;
     }
 
     JSScript *script = iter.script();
     *file = script->filename();
     *linenop = PCToLineNumber(iter.script(), iter.pc());
-    *origin = script->originPrincipals;
+    *origin = script->originPrincipals();
 }
 
 template <class T>
@@ -2427,7 +2413,7 @@ js::CloneScript(JSContext *cx, HandleObject enclosingScope, HandleFunction fun, 
 
     CompileOptions options(cx);
     options.setPrincipals(cx->compartment()->principals)
-           .setOriginPrincipals(src->originPrincipals)
+           .setOriginPrincipals(src->originPrincipals())
            .setCompileAndGo(src->compileAndGo)
            .setSelfHostingMode(src->selfHosted)
            .setNoScriptRval(src->noScriptRval)
@@ -2533,10 +2519,9 @@ js::CloneFunctionScript(JSContext *cx, HandleFunction original, HandleFunction c
     clone->setScript(cscript);
     cscript->setFunction(clone);
 
-    RootedGlobalObject global(cx, script->compileAndGo ? &script->global() : NULL);
-
     script = clone->nonLazyScript();
     CallNewScriptHook(cx, script, clone);
+    RootedGlobalObject global(cx, script->compileAndGo ? &script->global() : NULL);
     Debugger::onNewScript(cx, script, global);
 
     return true;
@@ -2854,9 +2839,6 @@ LazyScript::finalize(FreeOp *fop)
 {
     if (table_)
         fop->free_(table_);
-
-    if (originPrincipals_)
-        JS_DropPrincipals(fop->runtime(), originPrincipals_);
 }
 
 void
@@ -3012,7 +2994,6 @@ LazyScript::LazyScript(JSFunction *fun, void *table, uint32_t numFreeVariables, 
     enclosingScope_(NULL),
     sourceObject_(NULL),
     table_(table),
-    originPrincipals_(NULL),
     version_(version),
     numFreeVariables_(numFreeVariables),
     numInnerFunctions_(numInnerFunctions),
@@ -3039,15 +3020,11 @@ LazyScript::initScript(JSScript *script)
 }
 
 void
-LazyScript::setParent(JSObject *enclosingScope, ScriptSourceObject *sourceObject,
-                      JSPrincipals *originPrincipals)
+LazyScript::setParent(JSObject *enclosingScope, ScriptSourceObject *sourceObject)
 {
-    JS_ASSERT(sourceObject && !sourceObject_ && !enclosingScope_ && !originPrincipals_);
+    JS_ASSERT(sourceObject && !sourceObject_ && !enclosingScope_);
     enclosingScope_ = enclosingScope;
     sourceObject_ = sourceObject;
-    originPrincipals_ = originPrincipals;
-    if (originPrincipals)
-        JS_HoldPrincipals(originPrincipals);
 }
 
 ScriptSourceObject *

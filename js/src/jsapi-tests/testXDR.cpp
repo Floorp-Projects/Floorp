@@ -47,7 +47,7 @@ FreezeThaw(JSContext *cx, JS::HandleScript script)
 
     // thaw
     JSScript *script2 = JS_DecodeScript(cx, memory, nbytes,
-                                        script->principals(), script->originPrincipals);
+                                        script->principals(), script->originPrincipals());
     js_free(memory);
     return script2;
 }
@@ -71,7 +71,7 @@ FreezeThaw(JSContext *cx, JS::HandleObject funobj)
     JSScript *script = GetScript(cx, funobj);
     JSObject *funobj2 = JS_DecodeInterpretedFunction(cx, memory, nbytes,
                                                      script->principals(),
-                                                     script->originPrincipals);
+                                                     script->originPrincipals());
     js_free(memory);
     return funobj2;
 }

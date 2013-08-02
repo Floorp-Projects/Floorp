@@ -27,11 +27,8 @@ NS_IMPL_CYCLE_COLLECTION_INHERITED_1(HTMLDataListElement, nsGenericHTMLElement,
 NS_IMPL_ADDREF_INHERITED(HTMLDataListElement, Element)
 NS_IMPL_RELEASE_INHERITED(HTMLDataListElement, Element)
 
-NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(HTMLDataListElement)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(HTMLDataListElement)
   NS_HTML_CONTENT_INTERFACES(nsGenericHTMLElement)
-  NS_INTERFACE_TABLE_INHERITED1(HTMLDataListElement,
-                                nsIDOMHTMLDataListElement)
-  NS_INTERFACE_TABLE_TO_MAP_SEGUE
 NS_ELEMENT_INTERFACE_MAP_END
 
 
@@ -43,14 +40,6 @@ HTMLDataListElement::MatchOptions(nsIContent* aContent, int32_t aNamespaceID,
 {
   return aContent->NodeInfo()->Equals(nsGkAtoms::option, kNameSpaceID_XHTML) &&
          !aContent->HasAttr(kNameSpaceID_None, nsGkAtoms::disabled);
-}
-
-NS_IMETHODIMP
-HTMLDataListElement::GetOptions(nsIDOMHTMLCollection** aOptions)
-{
-  NS_ADDREF(*aOptions = Options());
-
-  return NS_OK;
 }
 
 } // namespace dom

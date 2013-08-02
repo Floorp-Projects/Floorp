@@ -56,6 +56,8 @@ nsDOMDataChannel::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
   return DataChannelBinding::Wrap(aCx, aScope, this);
 }
 
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsDOMDataChannel)
+
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsDOMDataChannel,
                                                   nsDOMEventTargetHelper)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END

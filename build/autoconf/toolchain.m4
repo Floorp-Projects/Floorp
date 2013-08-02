@@ -217,6 +217,8 @@ EOF
         CPPFLAGS="$_SAVE_CPPFLAGS"
         CXX="$_SAVE_CXX"
     fi
+elif test "$GNU_CXX"; then
+    HOST_CXXFLAGS="$HOST_CXXFLAGS -std=gnu++0x"
 fi
 AC_LANG_C
 ])

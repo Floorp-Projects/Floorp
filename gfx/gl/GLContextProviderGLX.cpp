@@ -966,6 +966,8 @@ private:
           mPixmap(aPixmap)
     {
         MOZ_ASSERT(mGLX);
+        // See 899855
+        SetProfileVersion(ContextProfile::OpenGLCompatibility, 200);
     }
 
     GLXContext mContext;
