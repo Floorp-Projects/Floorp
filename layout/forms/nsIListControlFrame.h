@@ -29,7 +29,7 @@ public:
   /**
    * Get the display string for an item
    */
-  virtual void GetOptionText(int32_t aIndex, nsAString & aStr) = 0;
+  virtual void GetOptionText(uint32_t aIndex, nsAString& aStr) = 0;
 
   /**
    * Get the Selected Item's index
