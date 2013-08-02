@@ -36,6 +36,7 @@ class nsListEventListener;
 namespace mozilla {
 namespace dom {
 class HTMLOptionElement;
+class HTMLOptionsCollection;
 } // namespace dom
 } // namespace mozilla
 
@@ -170,21 +171,13 @@ public:
   nsresult KeyPress(nsIDOMEvent* aKeyEvent);    // might destroy |this|
 
   /**
-   * Returns the options collection for aContent, if any.
+   * Returns the options collection for mContent, if any.
    */
-  static already_AddRefed<nsIDOMHTMLOptionsCollection>
-    GetOptions(nsIContent * aContent);
+  mozilla::dom::HTMLOptionsCollection* GetOptions() const;
   /**
    * Returns the HTMLOptionElement for a given index in mContent's collection.
    */
   mozilla::dom::HTMLOptionElement* GetOption(uint32_t aIndex) const;
-
-  /**
-   * Returns the nsIDOMHTMLOptionElement for a given index 
-   * in the select's collection.
-   */
-  static already_AddRefed<nsIDOMHTMLOptionElement>
-    GetOption(nsIDOMHTMLOptionsCollection* aOptions, int32_t aIndex);
 
   static void ComboboxFocusSet();
 
