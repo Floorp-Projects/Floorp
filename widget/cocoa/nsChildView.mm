@@ -5223,8 +5223,9 @@ static int32_t RoundUp(double aDouble)
   if (mGeckoChild && mTextInputHandler && mTextInputHandler->IsFocused()) {
 #ifdef MOZ_CRASHREPORTER
     NSWindow* window = [self window];
-    NSString* info = [NSString stringWithFormat:@"view [%@], window [%@], key event [%@], window is key %i, app is active %i",
-                      self, window, theEvent, [window isKeyWindow], [NSApp isActive]];
+    NSString* info = [NSString stringWithFormat:@"\nview [%@], window [%@], key event [%@], window is key %i, is fullscreen %i, app is active %i",
+                      self, window, theEvent, [window isKeyWindow], ([window styleMask] & (1 << 14)) != 0,
+                      [NSApp isActive]];
     nsAutoCString additionalInfo([info UTF8String]);
 #endif
     if (mIsPluginView) {
