@@ -49,10 +49,14 @@ this.WebappOSUtils = {
       appPath = mwaUtils.pathForAppWithIdentifier(aData.origin);
     } catch (e) {}
 
-    if (appPath) {
+    if (!appPath) {
+      return false;
+    }
+
+    try {
       mwaUtils.launchAppWithIdentifier(aData.origin);
       return true;
-    }
+    } catch (e) {}
 
     return false;
 #elifdef XP_UNIX
