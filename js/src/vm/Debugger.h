@@ -677,6 +677,11 @@ Debugger::onNewScript(JSContext *cx, HandleScript script, GlobalObject *compileA
 {
     JS_ASSERT_IF(script->compileAndGo, compileAndGoGlobal);
     JS_ASSERT_IF(script->compileAndGo, compileAndGoGlobal == &script->global());
+    // We early return in slowPathOnNewScript for self-hosted scripts, so we can
+    // ignore those in our assertion here.
+    JS_ASSERT_IF(!script->compartment()->options().invisibleToDebugger &&
+                 !script->selfHosted,
+                 script->compartment()->firedOnNewGlobalObject);
     JS_ASSERT_IF(!script->compileAndGo, !compileAndGoGlobal);
     if (!script->compartment()->getDebuggees().empty())
         slowPathOnNewScript(cx, script, compileAndGoGlobal);
@@ -685,6 +690,10 @@ Debugger::onNewScript(JSContext *cx, HandleScript script, GlobalObject *compileA
 void
 Debugger::onNewGlobalObject(JSContext *cx, Handle<GlobalObject *> global)
 {
+    JS_ASSERT(!global->compartment()->firedOnNewGlobalObject);
+#ifdef DEBUG
+    global->compartment()->firedOnNewGlobalObject = true;
+#endif
     if (!JS_CLIST_IS_EMPTY(&cx->runtime()->onNewGlobalObjectWatchers))
         Debugger::slowPathOnNewGlobalObject(cx, global);
 }
