@@ -313,7 +313,7 @@ MSG_DEF(JSMSG_CANT_CHANGE_EXTENSIBILITY, 259, 0, JSEXN_TYPEERR, "can't change ob
 MSG_DEF(JSMSG_SC_BAD_SERIALIZED_DATA, 260, 1, JSEXN_INTERNALERR, "bad serialized structured data ({0})")
 MSG_DEF(JSMSG_SC_UNSUPPORTED_TYPE,    261, 0, JSEXN_TYPEERR, "unsupported type for structured data")
 MSG_DEF(JSMSG_SC_RECURSION,           262, 0, JSEXN_INTERNALERR, "recursive object")
-MSG_DEF(JSMSG_UNUSED263,              263, 0, JSEXN_NONE, "")
+MSG_DEF(JSMSG_DEBUG_CANT_DEBUG_GLOBAL, 263, 0, JSEXN_ERR, "passing non-debuggable global to addDebuggee")
 MSG_DEF(JSMSG_BAD_CLONE_VERSION,      264, 0, JSEXN_ERR, "unsupported structured clone version")
 MSG_DEF(JSMSG_CANT_CLONE_OBJECT,      265, 0, JSEXN_TYPEERR, "can't clone object")
 MSG_DEF(JSMSG_DEBUG_RESUMPTION_VALUE_DISALLOWED, 266, 0, JSEXN_TYPEERR, "resumption values are disallowed in this hook")
