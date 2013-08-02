@@ -84,7 +84,6 @@ members = [
     'nsIBoxObject.height',
 
     # dom/indexedDB
-    'nsIIDBKeyRange.*',
     'nsIIndexedDatabaseManager.*',
 
     # dom/file
