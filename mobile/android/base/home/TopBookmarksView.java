@@ -143,27 +143,31 @@ public class TopBookmarksView extends GridView {
 
         // If there's an adapter, use it to calculate the height of this view.
         final TopBookmarksAdapter adapter = (TopBookmarksAdapter) getAdapter();
-        final int count = (adapter == null ? 0 : adapter.getCount());
+        final int count;
 
-        if (adapter != null && count > 0) {
-            // Get the first child from the adapter.
-            final View child = adapter.getView(0, null, this);
-            if (child != null) {
-                // Set a default LayoutParams on the child, if it doesn't have one on its own.
-                AbsListView.LayoutParams params = (AbsListView.LayoutParams) child.getLayoutParams();
-                if (params == null) {
-                    params = new AbsListView.LayoutParams(AbsListView.LayoutParams.WRAP_CONTENT,
-                                                          AbsListView.LayoutParams.WRAP_CONTENT);
-                    child.setLayoutParams(params);
-                }
+        // There shouldn't be any inherent size (due to padding) if there are no child views.
+        if (adapter == null || (count = adapter.getCount()) == 0) {
+            setMeasuredDimension(0, 0);
+            return;
+        }
 
-                // Measure the exact width of the child, and the height based on the width.
-                // Note: the child (and BookmarkThumbnailView) takes care of calculating its height.
-                int childWidthSpec = MeasureSpec.makeMeasureSpec(childWidth, MeasureSpec.EXACTLY);
-                int childHeightSpec = MeasureSpec.makeMeasureSpec(0,  MeasureSpec.UNSPECIFIED);
-                child.measure(childWidthSpec, childHeightSpec);
-                childHeight = child.getMeasuredHeight();
+        // Get the first child from the adapter.
+        final View child = adapter.getView(0, null, this);
+        if (child != null) {
+            // Set a default LayoutParams on the child, if it doesn't have one on its own.
+            AbsListView.LayoutParams params = (AbsListView.LayoutParams) child.getLayoutParams();
+            if (params == null) {
+                params = new AbsListView.LayoutParams(AbsListView.LayoutParams.WRAP_CONTENT,
+                                                      AbsListView.LayoutParams.WRAP_CONTENT);
+                child.setLayoutParams(params);
             }
+
+            // Measure the exact width of the child, and the height based on the width.
+            // Note: the child (and BookmarkThumbnailView) takes care of calculating its height.
+            int childWidthSpec = MeasureSpec.makeMeasureSpec(childWidth, MeasureSpec.EXACTLY);
+            int childHeightSpec = MeasureSpec.makeMeasureSpec(0,  MeasureSpec.UNSPECIFIED);
+            child.measure(childWidthSpec, childHeightSpec);
+            childHeight = child.getMeasuredHeight();
         }
 
         // Find the minimum of bookmarks we need to show, and the one given by the cursor.
