@@ -915,6 +915,10 @@ nsXBLService::LoadBindingDocumentInfo(nsIContent* aBoundElement,
     if (aBoundDocument) {
       bindingManager = aBoundDocument->BindingManager();
       info = bindingManager->GetXBLDocumentInfo(documentURI);
+      if (aBoundDocument->IsStaticDocument() &&
+          IsChromeOrResourceURI(aBindingURI)) {
+        aForceSyncLoad = true;
+      }
     }
 
     nsINodeInfo *ni = nullptr;
