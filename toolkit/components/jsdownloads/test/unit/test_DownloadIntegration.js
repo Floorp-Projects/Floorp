@@ -21,7 +21,7 @@ XPCOMUtils.defineLazyGetter(this, "gStringBundle", function() {
  */
 add_task(function test_getSystemDownloadsDirectory()
 {
-  // Enable test mode for the getSystemDownloadsDirectoy method to return
+  // Enable test mode for the getSystemDownloadsDirectory method to return
   // temp directory instead so we can check whether the desired directory
   // is created or not.
   DownloadIntegration.testMode = true;
@@ -59,7 +59,11 @@ add_task(function test_getSystemDownloadsDirectory()
     do_check_true(info.isDir);
     yield OS.File.removeEmptyDir(targetPath);
   }
+
+  let downloadDirBefore = yield DownloadIntegration.getSystemDownloadsDirectory();
   cleanup();
+  let downloadDirAfter = yield DownloadIntegration.getSystemDownloadsDirectory();
+  do_check_false(downloadDirBefore.equals(downloadDirAfter));
 });
 
 /**
