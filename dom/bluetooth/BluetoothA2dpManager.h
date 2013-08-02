@@ -72,12 +72,14 @@ private:
   void HandleSinkStateChanged(SinkState aState);
   void HandleShutdown();
 
-  void NotifyStatusChanged();
+  void DispatchConnectionStatusChanged();
+  void NotifyConnectionStatusChanged();
+
+  nsString mDeviceAddress;
 
   // A2DP data member
   bool mA2dpConnected;
   bool mPlaying;
-  nsString mDeviceAddress;
   SinkState mSinkState;
 
   // AVRCP data member

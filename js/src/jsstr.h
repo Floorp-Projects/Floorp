@@ -44,12 +44,9 @@ class RopeBuilder;
 
 template <AllowGC allowGC>
 extern JSString *
-ConcatStrings(JSContext *cx,
+ConcatStrings(ThreadSafeContext *cx,
               typename MaybeRooted<JSString*, allowGC>::HandleType left,
               typename MaybeRooted<JSString*, allowGC>::HandleType right);
-
-extern JSString *
-ConcatStringsPure(ThreadSafeContext *cx, JSString *left, JSString *right);
 
 // Return s advanced past any Unicode white space characters.
 static inline const jschar *

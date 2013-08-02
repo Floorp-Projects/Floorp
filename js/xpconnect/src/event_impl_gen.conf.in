@@ -29,6 +29,7 @@ simple_events = [
     'StyleSheetApplicableStateChangeEvent',
 #ifdef MOZ_B2G_BT
     'BluetoothDeviceEvent',
+    'BluetoothStatusChangedEvent',
 #endif
 #ifdef MOZ_B2G_RIL
     'CallEvent',

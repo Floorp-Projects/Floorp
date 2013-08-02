@@ -943,7 +943,7 @@ nsXBLBinding::DoInitJSClass(JSContext *cx, JS::Handle<JSObject*> global,
   JS::Rooted<JSObject*> proto(cx);
   JS::Rooted<JS::Value> val(cx);
 
-  if (!::JS_LookupPropertyWithFlags(cx, global, className.get(), 0, val.address()))
+  if (!::JS_LookupPropertyWithFlags(cx, global, className.get(), 0, &val))
     return NS_ERROR_OUT_OF_MEMORY;
 
   if (val.isObject()) {

@@ -2487,10 +2487,10 @@ class LValueToDouble : public LInstructionHelper<1, BOX_PIECES, 0>
 //   Input: components of a Value
 //   Output: 32-bit integer
 //   Bailout: undefined, string, object, or non-int32 double
-//   Temps: one float register
+//   Temps: one float register, one GP register
 //
 // This instruction requires a temporary float register.
-class LValueToInt32 : public LInstructionHelper<1, BOX_PIECES, 1>
+class LValueToInt32 : public LInstructionHelper<1, BOX_PIECES, 2>
 {
   public:
     enum Mode {
@@ -2504,10 +2504,11 @@ class LValueToInt32 : public LInstructionHelper<1, BOX_PIECES, 1>
   public:
     LIR_HEADER(ValueToInt32)
 
-    LValueToInt32(const LDefinition &temp, Mode mode)
+    LValueToInt32(const LDefinition &temp0, const LDefinition &temp1, Mode mode)
       : mode_(mode)
     {
-        setTemp(0, temp);
+        setTemp(0, temp0);
+        setTemp(1, temp1);
     }
 
     const char *extraName() const {
@@ -2522,8 +2523,16 @@ class LValueToInt32 : public LInstructionHelper<1, BOX_PIECES, 1>
     const LDefinition *tempFloat() {
         return getTemp(0);
     }
-    MToInt32 *mir() const {
+    const LDefinition *temp() {
+        return getTemp(1);
+    }
+    MToInt32 *mirNormal() const {
+        JS_ASSERT(mode_ == NORMAL);
         return mir_->toToInt32();
+    }
+    MTruncateToInt32 *mirTruncate() const {
+        JS_ASSERT(mode_ == TRUNCATE);
+        return mir_->toTruncateToInt32();
     }
 };
 
@@ -4410,8 +4419,8 @@ class LRestPar : public LCallInstructionHelper<1, 2, 3>
     const LAllocation *numActuals() {
         return getOperand(1);
     }
-    MRest *mir() const {
-        return mir_->toRest();
+    MRestPar *mir() const {
+        return mir_->toRestPar();
     }
 };
 

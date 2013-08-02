@@ -293,6 +293,11 @@ class MacroAssembler : public MacroAssemblerSpecific
             mov(ReturnReg, reg);
     }
 
+    void storeCallFloatResult(const FloatRegister &reg) {
+        if (reg != ReturnFloatReg)
+            moveDouble(ReturnFloatReg, reg);
+    }
+
     void storeCallResultValue(AnyRegister dest) {
 #if defined(JS_NUNBOX32)
         unboxValue(ValueOperand(JSReturnReg_Type, JSReturnReg_Data), dest);
@@ -610,6 +615,11 @@ class MacroAssembler : public MacroAssemblerSpecific
 
         bind(&done);
     }
+
+    // Emit type case branch on tag matching if the type tag in the definition
+    // might actually be that type.
+    void branchEqualTypeIfNeeded(MIRType type, MDefinition *def, const Register &tag,
+                                 Label *label);
 
     // Inline allocation.
     void newGCThing(const Register &result, gc::AllocKind allocKind, Label *fail);

@@ -1198,6 +1198,9 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         uint32_t scale = Imm32::ShiftOf(addr.scale).value;
         ma_vstr(src, addr.base, addr.index, scale);
     }
+    void moveDouble(FloatRegister src, FloatRegister dest) {
+        ma_vstr(src, Operand(dest));
+    }
 
     void storeFloat(FloatRegister src, Address addr) {
         ma_vstr(VFPRegister(src).singleOverlay(), Operand(addr));

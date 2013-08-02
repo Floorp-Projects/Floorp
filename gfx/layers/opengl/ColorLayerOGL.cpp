@@ -37,7 +37,6 @@ RenderColorLayer(ColorLayer* aLayer, LayerManagerOGL *aManager,
   program->Activate();
   program->SetLayerQuadRect(aLayer->GetBounds());
   program->SetLayerTransform(aLayer->GetEffectiveTransform());
-  program->SetTextureTransform(gfx3DMatrix());
   program->SetRenderOffset(aOffset);
   program->SetRenderColor(color);
   program->LoadMask(aLayer->GetMaskLayer());

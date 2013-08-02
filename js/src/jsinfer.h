@@ -1369,8 +1369,13 @@ struct TypeCompartment
     ArrayTypeTable *arrayTypeTable;
     ObjectTypeTable *objectTypeTable;
 
+  private:
+    void setTypeToHomogenousArray(JSContext *cx, JSObject *obj, Type type);
+
+  public:
     void fixArrayType(JSContext *cx, JSObject *obj);
     void fixObjectType(JSContext *cx, JSObject *obj);
+    void fixRestArgumentsType(JSContext *cx, JSObject *obj);
 
     JSObject *newTypedObject(JSContext *cx, IdValuePair *properties, size_t nproperties);
 
@@ -1432,6 +1437,8 @@ struct TypeCompartment
 
     void finalizeObjects();
 };
+
+void FixRestArgumentsType(ExclusiveContext *cxArg, JSObject *obj);
 
 struct TypeZone
 {
