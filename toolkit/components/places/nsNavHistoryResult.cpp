@@ -3941,6 +3941,8 @@ RemoveBookmarkFolderObserversCallback(nsTrimInt64HashKey::KeyType aKey,
   return PL_DHASH_REMOVE;
 }
 
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsNavHistoryResult)
+
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsNavHistoryResult)
   tmp->StopObserving();
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mRootNode)

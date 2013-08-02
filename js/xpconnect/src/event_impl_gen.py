@@ -386,6 +386,7 @@ def write_cpp(eventname, iface, fd, conf):
 
     fd.write("%s::~%s() {}\n\n" % (classname, classname))
 
+    fd.write("NS_IMPL_CYCLE_COLLECTION_CLASS(%s)\n" % (classname))
     fd.write("NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(%s, %s)\n" % (classname, basename))
     for c in ccattributes:
         fd.write("  NS_IMPL_CYCLE_COLLECTION_UNLINK(m%s)\n" % firstCap(c.name))

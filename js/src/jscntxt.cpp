@@ -360,7 +360,7 @@ PopulateReportBlame(JSContext *cx, JSErrorReport *report)
 
     report->filename = iter.script()->filename();
     report->lineno = PCToLineNumber(iter.script(), iter.pc(), &report->column);
-    report->originPrincipals = iter.script()->originPrincipals;
+    report->originPrincipals = iter.script()->originPrincipals();
 }
 
 /*

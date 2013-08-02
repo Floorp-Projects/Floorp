@@ -43,7 +43,7 @@ BEGIN_TEST(testChromeBuffer)
 {
     JS_SetTrustedPrincipals(rt, &system_principals);
 
-    trusted_glob = JS_NewGlobalObject(cx, &global_class, &system_principals);
+    trusted_glob = JS_NewGlobalObject(cx, &global_class, &system_principals, JS::FireOnNewGlobalHook);
     CHECK(trusted_glob);
 
     if (!JS_AddNamedObjectRoot(cx, &trusted_glob, "trusted-global"))

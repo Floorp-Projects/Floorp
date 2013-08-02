@@ -43,8 +43,10 @@ xpc_OkToHandOutWrapper(nsWrapperCache *cache)
 
 /***************************************************************************/
 
+NS_IMPL_CYCLE_COLLECTION_CLASS(XPCWrappedNative)
+
 NS_IMETHODIMP
-NS_CYCLE_COLLECTION_CLASSNAME(XPCWrappedNative)::UnlinkImpl(void *p)
+NS_CYCLE_COLLECTION_CLASSNAME(XPCWrappedNative)::Unlink(void *p)
 {
     XPCWrappedNative *tmp = static_cast<XPCWrappedNative*>(p);
     tmp->ExpireWrapper();
@@ -52,9 +54,8 @@ NS_CYCLE_COLLECTION_CLASSNAME(XPCWrappedNative)::UnlinkImpl(void *p)
 }
 
 NS_IMETHODIMP
-NS_CYCLE_COLLECTION_CLASSNAME(XPCWrappedNative)::TraverseImpl
-   (NS_CYCLE_COLLECTION_CLASSNAME(XPCWrappedNative) *that, void *p,
-    nsCycleCollectionTraversalCallback &cb)
+NS_CYCLE_COLLECTION_CLASSNAME(XPCWrappedNative)::Traverse
+   (void *p, nsCycleCollectionTraversalCallback &cb)
 {
     XPCWrappedNative *tmp = static_cast<XPCWrappedNative*>(p);
     if (!tmp->IsValid())
@@ -406,8 +407,12 @@ XPCWrappedNative::WrapNewGlobal(xpcObjectHelper &nativeHelper,
     // Call the common creation finish routine. This does all of the bookkeeping
     // like inserting the wrapper into the wrapper map and setting up the wrapper
     // cache.
-    return FinishCreate(scope, iface, nativeHelper.GetWrapperCache(),
-                        wrapper, wrappedGlobal);
+    nsresult rv = FinishCreate(scope, iface, nativeHelper.GetWrapperCache(),
+                               wrapper, wrappedGlobal);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    JS_FireOnNewGlobalObject(cx, global);
+    return NS_OK;
 }
 
 // static
