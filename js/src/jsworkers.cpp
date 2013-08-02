@@ -204,7 +204,8 @@ js::StartOffThreadParseScript(JSContext *cx, const CompileOptions &options,
     JS::CompartmentOptions compartmentOptions(cx->compartment()->options());
     compartmentOptions.setZone(JS::FreshZone);
 
-    JSObject *global = JS_NewGlobalObject(cx, &workerGlobalClass, NULL, compartmentOptions);
+    JSObject *global = JS_NewGlobalObject(cx, &workerGlobalClass, NULL,
+                                          JS::FireOnNewGlobalHook, compartmentOptions);
     if (!global)
         return false;
 
