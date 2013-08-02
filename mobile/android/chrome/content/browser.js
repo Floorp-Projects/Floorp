@@ -6722,10 +6722,9 @@ var WebappsUI = {
   doInstall: function doInstall(aData) {
     let jsonManifest = aData.isPackage ? aData.app.updateManifest : aData.app.manifest;
     let manifest = new ManifestHelper(jsonManifest, aData.app.origin);
-    let name = manifest.name ? manifest.name : manifest.fullLaunchPath();
     let showPrompt = true;
 
-    if (!showPrompt || Services.prompt.confirm(null, Strings.browser.GetStringFromName("webapps.installTitle"), name + "\n" + aData.app.origin)) {
+    if (!showPrompt || Services.prompt.confirm(null, Strings.browser.GetStringFromName("webapps.installTitle"), manifest.name + "\n" + aData.app.origin)) {
       // Get a profile for the app to be installed in. We'll download everything before creating the icons.
       let origin = aData.app.origin;
       let profilePath = sendMessageToJava({
@@ -6737,10 +6736,12 @@ var WebappsUI = {
       if (profilePath) {
         let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
         file.initWithPath(profilePath);
-  
+
         let self = this;
         DOMApplicationRegistry.confirmInstall(aData, false, file, null,
-          function (manifest) {
+          function (aManifest) {
+            let localeManifest = new ManifestHelper(aManifest, aData.app.origin);
+
             // the manifest argument is the manifest from within the zip file,
             // TODO so now would be a good time to ask about permissions.
             self.makeBase64Icon(self.getBiggestIcon(manifest.icons, Services.io.newURI(aData.app.origin, null, null)),
@@ -6760,7 +6761,7 @@ var WebappsUI = {
                   // aData.app.origin may now point to the app: url that hosts this app
                   sendMessageToJava({
                     type: "WebApps:PostInstall",
-                    name: manifest.name,
+                    name: localeManifest.name,
                     manifestURL: aData.app.manifestURL,
                     originalOrigin: origin,
                     origin: aData.app.origin,
@@ -6770,7 +6771,7 @@ var WebappsUI = {
                     // For packaged apps, put a notification in the notification bar.
                     let message = Strings.browser.GetStringFromName("webapps.alertSuccess");
                     let alerts = Cc["@mozilla.org/alerts-service;1"].getService(Ci.nsIAlertsService);
-                    alerts.showAlertNotification("drawable://alert_app", manifest.name, message, true, "", {
+                    alerts.showAlertNotification("drawable://alert_app", localeManifest.name, message, true, "", {
                       observe: function () {
                         self.openURL(aData.app.manifestURL, aData.app.origin);
                       }
@@ -6779,7 +6780,7 @@ var WebappsUI = {
                 } catch(ex) {
                   console.log(ex);
                 }
-                self.writeDefaultPrefs(file, manifest);
+                self.writeDefaultPrefs(file, localeManifest);
               }
             );
           }
