@@ -12,6 +12,12 @@
 class nsAString;
 class nsIContent;
 
+namespace mozilla {
+namespace dom {
+class HTMLOptionElement;
+} // namespace dom
+} // namespace mozilla
+
 /** 
   * nsIListControlFrame is the interface for frame-based listboxes.
   */
@@ -41,7 +47,7 @@ public:
    * Return current option. The current option is the option displaying
    * the focus ring when the listbox is focused.
    */
-  virtual already_AddRefed<nsIContent> GetCurrentOption() = 0;
+  virtual mozilla::dom::HTMLOptionElement* GetCurrentOption() = 0;
 
   /**
    * Initiates mouse capture for the listbox
