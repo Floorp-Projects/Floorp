@@ -243,7 +243,9 @@ let ConsolePanelView = {
       target: row,
       json: {
         types: ["copy"],
-        string: text
+        string: text,
+        xPos: aEvent.clientX,
+        yPos: aEvent.clientY
       }
     });
   },
