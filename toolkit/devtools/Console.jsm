@@ -111,12 +111,11 @@ function getCtorName(aObj) {
  *
  * @param {any} aThing
  *        The object to be stringified
- * @param {boolean} aAllowNewLines
  * @return {string}
  *        A single line representation of aThing, which will generally be at
  *        most 80 chars long
  */
-function stringify(aThing, aAllowNewLines) {
+function stringify(aThing) {
   if (aThing === undefined) {
     return "undefined";
   }
@@ -146,10 +145,7 @@ function stringify(aThing, aAllowNewLines) {
     return aThing.toString().replace(/\s+/g, " ");
   }
 
-  let str = aThing.toString();
-  if (!aAllowNewLines) {
-    str = str.replace(/\n/g, "|");
-  }
+  let str = aThing.toString().replace(/\n/g, "|");
   return str;
 }
 
@@ -469,9 +465,9 @@ function createDumper(aLevel) {
     let frame = getStack(Components.stack.caller, 1)[0];
     sendConsoleAPIMessage(aLevel, frame, args);
     let data = args.map(function(arg) {
-      return stringify(arg, true);
+      return stringify(arg);
     });
-    dumpMessage(this, aLevel, data.join(" "));
+    dumpMessage(this, aLevel, data.join(", "));
   };
 }
 
