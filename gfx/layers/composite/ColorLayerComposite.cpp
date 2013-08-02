@@ -40,7 +40,6 @@ ColorLayerComposite::RenderLayer(const nsIntPoint& aOffset,
                                rect, clipRect,
                                transform, gfx::Point(aOffset.x, aOffset.y));
 
-  LayerManagerComposite::RemoveMaskEffect(GetMaskLayer());
 }
 
 } /* layers */

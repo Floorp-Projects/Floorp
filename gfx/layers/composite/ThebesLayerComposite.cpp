@@ -140,7 +140,6 @@ ThebesLayerComposite::RenderLayer(const nsIntPoint& aOffset,
     mValidRegion = tiledLayerProps.mValidRegion;
   }
 
-  LayerManagerComposite::RemoveMaskEffect(mMaskLayer);
   mCompositeManager->GetCompositor()->MakeCurrent();
 }
 

@@ -93,8 +93,6 @@ CanvasLayerComposite::RenderLayer(const nsIntPoint& aOffset,
                         gfx::Point(aOffset.x, aOffset.y),
                         gfx::ToFilter(filter),
                         clipRect);
-
-  LayerManagerComposite::RemoveMaskEffect(mMaskLayer);
 }
 
 CompositableHost*

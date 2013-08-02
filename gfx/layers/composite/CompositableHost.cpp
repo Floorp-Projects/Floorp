@@ -104,18 +104,7 @@ CompositableHost::AddMaskEffect(EffectChain& aEffects,
                                 const gfx::Matrix4x4& aTransform,
                                 bool aIs3D)
 {
-  RefPtr<TextureSource> source;
-  RefPtr<DeprecatedTextureHost> oldHost = GetDeprecatedTextureHost();
-  if (oldHost) {
-    oldHost->Lock();
-    source = oldHost;
-  } else {
-    RefPtr<TextureHost> host = GetTextureHost();
-    if (host) {
-      host->Lock();
-      source = host->GetTextureSources();
-    }
-  }
+  RefPtr<TextureSource> source = GetDeprecatedTextureHost();
 
   if (!source) {
     NS_WARNING("Using compositable with no texture host as mask layer");
@@ -128,20 +117,6 @@ CompositableHost::AddMaskEffect(EffectChain& aEffects,
   effect->mIs3D = aIs3D;
   aEffects.mSecondaryEffects[EFFECT_MASK] = effect;
   return true;
-}
-
-void
-CompositableHost::RemoveMaskEffect()
-{
-  RefPtr<DeprecatedTextureHost> oldHost = GetDeprecatedTextureHost();
-  if (oldHost) {
-    oldHost->Unlock();
-  } else {
-    RefPtr<TextureHost> host = GetTextureHost();
-    if (host) {
-      host->Unlock();
-    }
-  }
 }
 
 /* static */ TemporaryRef<CompositableHost>

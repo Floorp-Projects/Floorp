@@ -22,6 +22,7 @@ AddCommonArgs(ProgramProfileOGL& aProfile)
 {
   aProfile.mUniforms.AppendElement(Argument("uLayerTransform"));
   aProfile.mUniforms.AppendElement(Argument("uLayerQuadTransform"));
+  aProfile.mUniforms.AppendElement(Argument("uTextureTransform"));
   aProfile.mUniforms.AppendElement(Argument("uMatrixProj"));
   aProfile.mHasMatrixProj = true;
   aProfile.mUniforms.AppendElement(Argument("uRenderTargetOffset"));
@@ -32,7 +33,6 @@ AddCommonTextureArgs(ProgramProfileOGL& aProfile)
 {
   aProfile.mUniforms.AppendElement(Argument("uLayerOpacity"));
   aProfile.mUniforms.AppendElement(Argument("uTexture"));
-  aProfile.mUniforms.AppendElement(Argument("uTextureTransform"));
   aProfile.mAttributes.AppendElement(Argument("aTexCoord"));
 }
 
@@ -172,7 +172,6 @@ ProgramProfileOGL::GetProfileFor(ShaderProgramType aType,
     result.mUniforms.AppendElement(Argument("uYTexture"));
     result.mUniforms.AppendElement(Argument("uCbTexture"));
     result.mUniforms.AppendElement(Argument("uCrTexture"));
-    result.mUniforms.AppendElement(Argument("uTextureTransform"));
     result.mAttributes.AppendElement(Argument("aTexCoord"));
     result.mTextureCount = 3;
     break;
@@ -188,7 +187,6 @@ ProgramProfileOGL::GetProfileFor(ShaderProgramType aType,
     result.mUniforms.AppendElement(Argument("uLayerOpacity"));
     result.mUniforms.AppendElement(Argument("uBlackTexture"));
     result.mUniforms.AppendElement(Argument("uWhiteTexture"));
-    result.mUniforms.AppendElement(Argument("uTextureTransform"));
     result.mAttributes.AppendElement(Argument("aTexCoord"));
     result.mTextureCount = 2;
     break;
@@ -204,7 +202,6 @@ ProgramProfileOGL::GetProfileFor(ShaderProgramType aType,
     result.mUniforms.AppendElement(Argument("uLayerOpacity"));
     result.mUniforms.AppendElement(Argument("uBlackTexture"));
     result.mUniforms.AppendElement(Argument("uWhiteTexture"));
-    result.mUniforms.AppendElement(Argument("uTextureTransform"));
     result.mAttributes.AppendElement(Argument("aTexCoord"));
     result.mTextureCount = 2;
     break;
@@ -220,7 +217,6 @@ ProgramProfileOGL::GetProfileFor(ShaderProgramType aType,
     result.mUniforms.AppendElement(Argument("uLayerOpacity"));
     result.mUniforms.AppendElement(Argument("uBlackTexture"));
     result.mUniforms.AppendElement(Argument("uWhiteTexture"));
-    result.mUniforms.AppendElement(Argument("uTextureTransform"));
     result.mAttributes.AppendElement(Argument("aTexCoord"));
     result.mTextureCount = 2;
     break;
@@ -236,7 +232,6 @@ ProgramProfileOGL::GetProfileFor(ShaderProgramType aType,
     result.mUniforms.AppendElement(Argument("uLayerOpacity"));
     result.mUniforms.AppendElement(Argument("uBlackTexture"));
     result.mUniforms.AppendElement(Argument("uWhiteTexture"));
-    result.mUniforms.AppendElement(Argument("uTextureTransform"));
     result.mAttributes.AppendElement(Argument("aTexCoord"));
     result.mTextureCount = 2;
     break;
@@ -245,7 +240,6 @@ ProgramProfileOGL::GetProfileFor(ShaderProgramType aType,
     result.mVertexShaderString = sCopyVS;
     result.mFragmentShaderString = sCopy2DFS;
     result.mUniforms.AppendElement(Argument("uTexture"));
-    result.mUniforms.AppendElement(Argument("uTextureTransform"));
     result.mAttributes.AppendElement(Argument("aVertexCoord"));
     result.mAttributes.AppendElement(Argument("aTexCoord"));
     result.mTextureCount = 1;
@@ -255,7 +249,6 @@ ProgramProfileOGL::GetProfileFor(ShaderProgramType aType,
     result.mVertexShaderString = sCopyVS;
     result.mFragmentShaderString = sCopy2DRectFS;
     result.mUniforms.AppendElement(Argument("uTexture"));
-    result.mUniforms.AppendElement(Argument("uTextureTransform"));
     result.mAttributes.AppendElement(Argument("aVertexCoord"));
     result.mAttributes.AppendElement(Argument("aTexCoord"));
     result.mTextureCount = 1;
