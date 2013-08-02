@@ -45,6 +45,8 @@ private:
   friend class DrawTargetSkia;
 
   void DrawTargetWillChange();
+  void DrawTargetDestroyed();
+  void MarkIndependent();
   void MaybeUnlock();
 
   SkBitmap mBitmap;
