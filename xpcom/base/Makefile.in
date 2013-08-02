@@ -27,24 +27,6 @@ endif
 
 endif #if OS_ARCH == WINNT
 
-DISABLED_SDK_HEADERS     = \
-		nsAutoPtr.h \
-		nsError.h \
-		ErrorList.h \
-		ErrorListCxxDefines.h \
-		ErrorListCDefines.h \
-		nsISupportsBase.h \
-		nscore.h \
-		nsCycleCollector.h \
-		nsObjCExceptions.h \
-
-ifeq ($(OS_ARCH),WINNT)
-DISABLED_SDK_HEADERS += \
-		nsWindowsHelpers.h \
-		$(NULL)
-endif
-
-
 include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/config/rules.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk

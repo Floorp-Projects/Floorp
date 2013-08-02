@@ -14,12 +14,6 @@ MSVC_ENABLE_PGO := 1
 LIBXUL_LIBRARY = 1
 FAIL_ON_WARNINGS := 1
 
-DISABLED_CSRCS = \
-  race.c \
-  nameprep.c \
-  punycode.c \
-  $(NULL)
-
 # need to include etld_data.inc
 LOCAL_INCLUDES = \
   -I$(srcdir)/../base/src \

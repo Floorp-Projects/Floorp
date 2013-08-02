@@ -19,11 +19,6 @@ include $(srcdir)/objs.mk
 DIST_INSTALL = 1
 SDK_LIBRARY = $(LIBRARY)
 
-
-DISABLED_SDK_HEADERS = \
-	nsUnicharUtils.h \
-	$(NULL)
-
 FORCE_STATIC_LIB = 1
 USE_STATIC_LIBS = 1
 
