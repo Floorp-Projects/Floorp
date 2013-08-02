@@ -1841,15 +1841,6 @@ this.DOMApplicationRegistry = {
                      app.installOrigin + ": " + aError);
     }.bind(this);
 
-    // Disallow reinstalls from the same manifest URL for now.
-    // See https://bugzilla.mozilla.org/show_bug.cgi?id=821288
-    if (this.getAppLocalIdByManifestURL(app.manifestURL) !==
-        Ci.nsIScriptSecurityManager.NO_APP_ID ||
-        this._appId(app.origin) !== null) {
-      sendError("REINSTALL_FORBIDDEN");
-      return;
-    }
-
     let xhr = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
                 .createInstance(Ci.nsIXMLHttpRequest);
     xhr.open("GET", app.manifestURL, true);
@@ -1869,6 +1860,13 @@ this.DOMApplicationRegistry = {
         let manifest = app.updateManifest = xhr.response;
         if (!manifest) {
           sendError("MANIFEST_PARSE_ERROR");
+          return;
+        }
+
+        // Disallow reinstalls from the same manifest URL for now.
+        if (this._appIdForManifestURL(app.manifestURL) !== null &&
+            this._isLaunchable(app)) {
+          sendError("REINSTALL_FORBIDDEN");
           return;
         }
 
@@ -1988,7 +1986,7 @@ this.DOMApplicationRegistry = {
     appObject.id = id;
     appObject.localId = localId;
     appObject.basePath = FileUtils.getDir(DIRECTORY_NAME, ["webapps"], true, true).path;
-    let dir = FileUtils.getDir(DIRECTORY_NAME, ["webapps", id], true, true);
+    let dir = this._getAppDir(id);
     let manFile = dir.clone();
     manFile.append(manifestName);
     let jsonManifest = aData.isPackage ? app.updateManifest : app.manifest;
@@ -2062,7 +2060,7 @@ this.DOMApplicationRegistry = {
     if (!aData.isPackage) {
       this.updateAppHandlers(null, app.manifest, app);
       if (aInstallSuccessCallback) {
-        aInstallSuccessCallback(manifest);
+        aInstallSuccessCallback(app.manifest);
       }
     }
 
@@ -2074,7 +2072,7 @@ this.DOMApplicationRegistry = {
         // Success! Move the zip out of TmpD.
         let app = DOMApplicationRegistry.webapps[aId];
         let zipFile = FileUtils.getFile("TmpD", ["webapps", aId, "application.zip"], true);
-        let dir = FileUtils.getDir(DIRECTORY_NAME, ["webapps", aId], true, true);
+        let dir = this._getAppDir(id);
         zipFile.moveTo(dir, "application.zip");
         let tmpDir = FileUtils.getDir("TmpD", ["webapps", aId], true, true);
         try {
