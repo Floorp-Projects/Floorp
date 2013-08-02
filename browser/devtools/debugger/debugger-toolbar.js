@@ -757,7 +757,7 @@ FilterView.prototype = {
     this._tokenOperatorLabel.setAttribute("value",
       L10N.getFormatStr("searchPanelToken", this._tokenSearchKey));
     this._lineOperatorLabel.setAttribute("value",
-      L10N.getFormatStr("searchPanelLine", this._lineSearchKey));
+      L10N.getFormatStr("searchPanelGoToLine", this._lineSearchKey));
     this._variableOperatorLabel.setAttribute("value",
       L10N.getFormatStr("searchPanelVariable", this._variableSearchKey));
 

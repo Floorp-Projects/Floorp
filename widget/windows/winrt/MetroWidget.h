@@ -121,6 +121,7 @@ public:
   virtual bool  HasPendingInputEvent();
   virtual double GetDefaultScaleInternal();
   float         GetDPI();
+  mozilla::LayoutDeviceIntPoint CSSIntPointToLayoutDeviceIntPoint(const mozilla::CSSIntPoint &aCSSPoint);
   void          ChangedDPI();
   virtual bool  IsVisible() const;
   virtual bool  IsEnabled() const;

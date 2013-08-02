@@ -2477,7 +2477,7 @@ private:
     uint32_t mLength;
   };
 public:
-  StringBuilder() : mLast(this), mLength(0)
+  StringBuilder() : mLast(MOZ_THIS_IN_INITIALIZER_LIST()), mLength(0)
   {
     MOZ_COUNT_CTOR(StringBuilder);
   }

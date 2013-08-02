@@ -286,6 +286,7 @@ browser.jar:
   skin/classic/browser/devtools/debugger-step-over.png      (devtools/debugger-step-over.png)
   skin/classic/browser/devtools/responsive-se-resizer.png   (devtools/responsive-se-resizer.png)
   skin/classic/browser/devtools/responsive-vertical-resizer.png (devtools/responsive-vertical-resizer.png)
+  skin/classic/browser/devtools/responsive-horizontal-resizer.png (devtools/responsive-horizontal-resizer.png)
   skin/classic/browser/devtools/responsive-background.png   (devtools/responsive-background.png)
   skin/classic/browser/devtools/toggle-tools.png            (devtools/toggle-tools.png)
   skin/classic/browser/devtools/dock-bottom.png             (devtools/dock-bottom.png)

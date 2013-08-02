@@ -67,7 +67,7 @@ TestTabActor.prototype = {
   constructor: TestTabActor,
   actorPrefix: "TestTabActor",
 
-  get contentWindow() {
+  get window() {
     return { wrappedJSObject: this._global };
   },
 
