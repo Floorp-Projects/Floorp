@@ -15,28 +15,32 @@
                     android:negativeButtonText="@string/button_cancel"
                     android:persistent="false" />
 
-    <CheckBoxPreference
-                    android:key="browser.zoom.reflowOnZoom"
-                    android:title="@string/pref_reflow_on_zoom"
-                    android:defaultValue="false"
-                    android:persistent="false" />
-
     <ListPreference android:key="browser.chrome.titlebarMode"
                     android:title="@string/pref_titlebar_mode"
                     android:entries="@array/pref_titlebar_mode_entries"
                     android:entryValues="@array/pref_titlebar_mode_values"
                     android:persistent="false" />
 
-    <ListPreference android:key="browser.menu.showCharacterEncoding"
-                    android:title="@string/pref_char_encoding"
-                    android:entries="@array/pref_char_encoding_entries"
-                    android:entryValues="@array/pref_char_encoding_values"
-                    android:persistent="false" />
+    <PreferenceCategory android:title="@string/pref_category_advanced">
 
-    <ListPreference android:key="plugin.enable"
-                    android:title="@string/pref_plugins"
-                    android:entries="@array/pref_plugins_entries"
-                    android:entryValues="@array/pref_plugins_values"
-                    android:persistent="false" />
+        <CheckBoxPreference
+                        android:key="browser.zoom.reflowOnZoom"
+                        android:title="@string/pref_reflow_on_zoom"
+                        android:defaultValue="false"
+                        android:persistent="false" />
+
+        <ListPreference android:key="browser.menu.showCharacterEncoding"
+                        android:title="@string/pref_char_encoding"
+                        android:entries="@array/pref_char_encoding_entries"
+                        android:entryValues="@array/pref_char_encoding_values"
+                        android:persistent="false" />
+
+        <ListPreference android:key="plugin.enable"
+                        android:title="@string/pref_plugins"
+                        android:entries="@array/pref_plugins_entries"
+                        android:entryValues="@array/pref_plugins_values"
+                        android:persistent="false" />
+
+    </PreferenceCategory>
 
 </PreferenceScreen>
