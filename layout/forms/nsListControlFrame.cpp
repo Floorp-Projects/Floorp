@@ -984,31 +984,6 @@ nsListControlFrame::Init(nsIContent*     aContent,
   }
 }
 
-already_AddRefed<nsIContent> 
-nsListControlFrame::GetOptionAsContent(nsIDOMHTMLOptionsCollection* aCollection, int32_t aIndex) 
-{
-  nsCOMPtr<nsIDOMHTMLOptionElement> optionElement = GetOption(aCollection,
-                                                              aIndex);
-
-  NS_ASSERTION(optionElement != nullptr, "could not get option element by index!");
-
-  nsCOMPtr<nsIContent> content = do_QueryInterface(optionElement);
-  return content.forget();
-}
-
-already_AddRefed<nsIContent> 
-nsListControlFrame::GetOptionContent(int32_t aIndex) const
-  
-{
-  nsCOMPtr<nsIDOMHTMLOptionsCollection> options = GetOptions(mContent);
-  NS_ASSERTION(options.get() != nullptr, "Collection of options is null!");
-
-  if (options) {
-    return GetOptionAsContent(options, aIndex);
-  } 
-  return nullptr;
-}
-
 already_AddRefed<nsIDOMHTMLOptionsCollection>
 nsListControlFrame::GetOptions(nsIContent * aContent)
 {
@@ -1942,34 +1917,27 @@ nsListControlFrame::DragMove(nsIDOMEvent* aMouseEvent)
 //----------------------------------------------------------------------
 // Scroll helpers.
 //----------------------------------------------------------------------
-nsresult
+void
 nsListControlFrame::ScrollToIndex(int32_t aIndex)
 {
   if (aIndex < 0) {
     // XXX shouldn't we just do nothing if we're asked to scroll to
     // kNothingSelected?
-    return ScrollToFrame(nullptr);
+    ScrollTo(nsPoint(0, 0), nsIScrollableFrame::INSTANT);
   } else {
-    nsCOMPtr<nsIContent> content = GetOptionContent(aIndex);
-    if (content) {
-      return ScrollToFrame(content);
+    nsRefPtr<dom::HTMLOptionElement> option =
+      GetOption(SafeCast<uint32_t>(aIndex));
+    if (option) {
+      ScrollToFrame(*option);
     }
   }
-
-  return NS_ERROR_FAILURE;
 }
 
-nsresult
-nsListControlFrame::ScrollToFrame(nsIContent* aOptElement)
+void
+nsListControlFrame::ScrollToFrame(dom::HTMLOptionElement& aOptElement)
 {
-  // if null is passed in we scroll to 0,0
-  if (nullptr == aOptElement) {
-    ScrollTo(nsPoint(0, 0), nsIScrollableFrame::INSTANT);
-    return NS_OK;
-  }
-
   // otherwise we find the content's frame and scroll to it
-  nsIFrame *childFrame = aOptElement->GetPrimaryFrame();
+  nsIFrame* childFrame = aOptElement.GetPrimaryFrame();
   if (childFrame) {
     PresContext()->PresShell()->
       ScrollFrameRectIntoView(childFrame,
@@ -1978,7 +1946,6 @@ nsListControlFrame::ScrollToFrame(nsIContent* aOptElement)
                               nsIPresShell::SCROLL_OVERFLOW_HIDDEN |
                               nsIPresShell::SCROLL_FIRST_ANCESTOR_ONLY);
   }
-  return NS_OK;
 }
 
 //---------------------------------------------------------------------
