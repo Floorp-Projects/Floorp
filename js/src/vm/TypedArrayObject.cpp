@@ -189,7 +189,8 @@ JSBool
 ArrayBufferObject::class_constructor(JSContext *cx, unsigned argc, Value *vp)
 {
     int32_t nbytes = 0;
-    if (argc > 0 && !ToInt32(cx, vp[2], &nbytes))
+    CallArgs args = CallArgsFromVp(argc, vp);
+    if (argc > 0 && !ToInt32(cx, args[0], &nbytes))
         return false;
 
     if (nbytes < 0) {
@@ -205,7 +206,7 @@ ArrayBufferObject::class_constructor(JSContext *cx, unsigned argc, Value *vp)
     JSObject *bufobj = create(cx, uint32_t(nbytes));
     if (!bufobj)
         return false;
-    vp->setObject(*bufobj);
+    args.rval().setObject(*bufobj);
     return true;
 }
 
@@ -1829,30 +1830,29 @@ class TypedArrayObjectTemplate : public TypedArrayObject
     class_constructor(JSContext *cx, unsigned argc, Value *vp)
     {
         /* N.B. this is a constructor for protoClass, not fastClass! */
-        JSObject *obj = create(cx, argc, JS_ARGV(cx, vp));
+        CallArgs args = CallArgsFromVp(argc, vp);
+        JSObject *obj = create(cx, args);
         if (!obj)
             return false;
-        vp->setObject(*obj);
+        args.rval().setObject(*obj);
         return true;
     }
 
     static JSObject *
-    create(JSContext *cx, unsigned argc, Value *argv)
+    create(JSContext *cx, const CallArgs& args)
     {
-        /* N.B. there may not be an argv[-2]/argv[-1]. */
-
         /* () or (number) */
         uint32_t len = 0;
-        if (argc == 0 || ValueIsLength(argv[0], &len))
+        if (args.length() == 0 || ValueIsLength(args[0], &len))
             return fromLength(cx, len);
 
         /* (not an object) */
-        if (!argv[0].isObject()) {
+        if (!args[0].isObject()) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_TYPED_ARRAY_BAD_ARGS);
             return NULL;
         }
 
-        RootedObject dataObj(cx, &argv[0].toObject());
+        RootedObject dataObj(cx, &args.get(0).toObject());
 
         /*
          * (typedArray)
@@ -1869,8 +1869,8 @@ class TypedArrayObjectTemplate : public TypedArrayObject
         int32_t byteOffset = 0;
         int32_t length = -1;
 
-        if (argc > 1) {
-            if (!ToInt32(cx, argv[1], &byteOffset))
+        if (args.length() > 1) {
+            if (!ToInt32(cx, args[1], &byteOffset))
                 return NULL;
             if (byteOffset < 0) {
                 JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
@@ -1878,8 +1878,8 @@ class TypedArrayObjectTemplate : public TypedArrayObject
                 return NULL;
             }
 
-            if (argc > 2) {
-                if (!ToInt32(cx, argv[2], &length))
+            if (args.length() > 2) {
+                if (!ToInt32(cx, args[2], &length))
                     return NULL;
                 if (length < 0) {
                     JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,

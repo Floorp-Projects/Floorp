@@ -1994,9 +1994,9 @@ END_CASE(JSOP_BINDNAME)
 #define BITWISE_OP(OP)                                                        \
     JS_BEGIN_MACRO                                                            \
         int32_t i, j;                                                         \
-        if (!ToInt32(cx, regs.sp[-2], &i))                                    \
+        if (!ToInt32(cx, regs.stackHandleAt(-2), &i))                         \
             goto error;                                                       \
-        if (!ToInt32(cx, regs.sp[-1], &j))                                    \
+        if (!ToInt32(cx, regs.stackHandleAt(-1), &j))                         \
             goto error;                                                       \
         i = i OP j;                                                           \
         regs.sp--;                                                            \
@@ -2123,9 +2123,9 @@ END_CASE(JSOP_GE)
 #define SIGNED_SHIFT_OP(OP)                                                   \
     JS_BEGIN_MACRO                                                            \
         int32_t i, j;                                                         \
-        if (!ToInt32(cx, regs.sp[-2], &i))                                    \
+        if (!ToInt32(cx, regs.stackHandleAt(-2), &i))                         \
             goto error;                                                       \
-        if (!ToInt32(cx, regs.sp[-1], &j))                                    \
+        if (!ToInt32(cx, regs.stackHandleAt(-1), &j))                         \
             goto error;                                                       \
         i = i OP (j & 31);                                                    \
         regs.sp--;                                                            \
