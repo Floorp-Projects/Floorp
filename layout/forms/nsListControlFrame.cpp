@@ -620,41 +620,6 @@ nsListControlFrame::GetContentInsertionFrame() {
 }
 
 //---------------------------------------------------------
-// Starts at the passed in content object and walks up the 
-// parent heierarchy looking for the nsIDOMHTMLOptionElement
-//---------------------------------------------------------
-nsIContent *
-nsListControlFrame::GetOptionFromContent(nsIContent *aContent) 
-{
-  for (nsIContent* content = aContent; content; content = content->GetParent()) {
-    if (content->IsHTML(nsGkAtoms::option)) {
-      return content;
-    }
-  }
-
-  return nullptr;
-}
-
-//---------------------------------------------------------
-// Finds the index of the hit frame's content in the list
-// of option elements
-//---------------------------------------------------------
-int32_t 
-nsListControlFrame::GetIndexFromContent(nsIContent *aContent)
-{
-  nsCOMPtr<nsIDOMHTMLOptionElement> option;
-  option = do_QueryInterface(aContent);
-  if (option) {
-    int32_t retval;
-    option->GetIndex(&retval);
-    if (retval >= 0) {
-      return retval;
-    }
-  }
-  return kNothingSelected;
-}
-
-//---------------------------------------------------------
 bool
 nsListControlFrame::ExtendedSelection(int32_t aStartIndex,
                                       int32_t aEndIndex,
@@ -1802,12 +1767,17 @@ nsListControlFrame::GetIndexFromDOMEvent(nsIDOMEvent* aMouseEvent,
     }
   }
 
-  nsCOMPtr<nsIContent> content = PresContext()->EventStateManager()->
-    GetEventTargetContent(nullptr);
+  nsRefPtr<dom::HTMLOptionElement> option;
+  for (nsCOMPtr<nsIContent> content =
+         PresContext()->EventStateManager()->GetEventTargetContent(nullptr);
+       content && !option;
+       content = content->GetParent()) {
+    option = dom::HTMLOptionElement::FromContent(content);
+  }
 
-  nsCOMPtr<nsIContent> optionContent = GetOptionFromContent(content);
-  if (optionContent) {
-    aCurIndex = GetIndexFromContent(optionContent);
+  if (option) {
+    option->GetIndex(&aCurIndex);
+    MOZ_ASSERT(aCurIndex >= 0);
     return NS_OK;
   }
 
@@ -1819,7 +1789,7 @@ nsListControlFrame::GetIndexFromDOMEvent(nsIDOMEvent* aMouseEvent,
 
   // If the event coordinate is above the first option frame, then target the
   // first option frame
-  nsCOMPtr<nsIContent> firstOption = GetOptionContent(0);
+  nsRefPtr<dom::HTMLOptionElement> firstOption = GetOption(0);
   NS_ASSERTION(firstOption, "Can't find first option that's supposed to be there");
   nsIFrame* optionFrame = firstOption->GetPrimaryFrame();
   if (optionFrame) {
@@ -1831,7 +1801,7 @@ nsListControlFrame::GetIndexFromDOMEvent(nsIDOMEvent* aMouseEvent,
     }
   }
 
-  nsCOMPtr<nsIContent> lastOption = GetOptionContent(numOptions - 1);
+  nsRefPtr<dom::HTMLOptionElement> lastOption = GetOption(numOptions - 1);
   // If the event coordinate is below the last option frame, then target the
   // last option frame
   NS_ASSERTION(lastOption, "Can't find last option that's supposed to be there");
