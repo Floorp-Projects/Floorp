@@ -58,7 +58,6 @@ protected:
                     bool aIsExternal,
                     bool aUserCancelled,
                     bool aIsCrossDomainSubFrameDrop,
-                    int32_t aClipboardType,
                     nsTArray<nsTArray<TransferItem> >& aItems,
                     nsIDOMElement* aDragImage,
                     uint32_t aDragImageX,
@@ -83,10 +82,8 @@ public:
   // paste or a drag that was started without using a data transfer. The
   // latter will occur when an external drag occurs, that is, a drag where the
   // source is another application, or a drag is started by calling the drag
-  // service directly. For clipboard operations, aClipboardType indicates
-  // which clipboard to use, from nsIClipboard, or -1 for non-clipboard operations,
-  // or if access to the system clipboard should not be allowed.
-  nsDOMDataTransfer(uint32_t aEventType, bool aIsExternal, int32_t aClipboardType);
+  // service directly.
+  nsDOMDataTransfer(uint32_t aEventType, bool aIsExternal);
 
   void GetDragTarget(nsIDOMElement** aDragTarget)
   {
@@ -180,10 +177,6 @@ protected:
   // true if this is a cross-domain drop from a subframe where access to the
   // data should be prevented
   bool mIsCrossDomainSubFrameDrop;
-
-  // Indicates which clipboard type to use for clipboard operations. Ignored for
-  // drag and drop.
-  int32_t mClipboardType;
 
   // array of items, each containing an array of format->data pairs
   nsTArray<nsTArray<TransferItem> > mItems;

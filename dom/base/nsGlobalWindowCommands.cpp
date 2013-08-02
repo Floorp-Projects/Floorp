@@ -25,7 +25,6 @@
 #include "nsIContentViewer.h"
 #include "nsFocusManager.h"
 #include "nsCopySupport.h"
-#include "nsIClipboard.h"
 #include "nsGUIEvent.h"
 #include "mozilla/Attributes.h"
 
@@ -366,7 +365,7 @@ nsClipboardCommand::DoCommand(const char *aCommandName, nsISupports *aContext)
   nsCOMPtr<nsIPresShell> presShell = docShell->GetPresShell();
   NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
 
-  nsCopySupport::FireClipboardEvent(NS_COPY, nsIClipboard::kGlobalClipboard, presShell, nullptr);
+  nsCopySupport::FireClipboardEvent(NS_COPY, presShell, nullptr);
   return NS_OK;
 }
 

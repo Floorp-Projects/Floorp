@@ -573,7 +573,7 @@ nsCopySupport::CanCopy(nsIDocument* aDocument)
 }
 
 bool
-nsCopySupport::FireClipboardEvent(int32_t aType, int32_t aClipboardType, nsIPresShell* aPresShell, nsISelection* aSelection)
+nsCopySupport::FireClipboardEvent(int32_t aType, nsIPresShell* aPresShell, nsISelection* aSelection)
 {
   NS_ASSERTION(aType == NS_CUT || aType == NS_COPY || aType == NS_PASTE,
                "Invalid clipboard event type");
@@ -633,7 +633,7 @@ nsCopySupport::FireClipboardEvent(int32_t aType, int32_t aClipboardType, nsIPres
   bool doDefault = true;
   nsRefPtr<nsDOMDataTransfer> clipboardData;
   if (Preferences::GetBool("dom.event.clipboardevents.enabled", true)) {
-    clipboardData = new nsDOMDataTransfer(aType, aType == NS_PASTE, aClipboardType);
+    clipboardData = new nsDOMDataTransfer(aType, aType == NS_PASTE);
 
     nsEventStatus status = nsEventStatus_eIgnore;
     nsClipboardEvent evt(true, aType);
@@ -675,7 +675,7 @@ nsCopySupport::FireClipboardEvent(int32_t aType, int32_t aClipboardType, nsIPres
       return false;
     }
     // call the copy code
-    rv = HTMLCopy(sel, doc, aClipboardType);
+    rv = HTMLCopy(sel, doc, nsIClipboard::kGlobalClipboard);
     if (NS_FAILED(rv)) {
       return false;
     }
@@ -692,7 +692,7 @@ nsCopySupport::FireClipboardEvent(int32_t aType, int32_t aClipboardType, nsIPres
       NS_ENSURE_TRUE(transferable, false);
 
       // put the transferable on the clipboard
-      rv = clipboard->SetData(transferable, nullptr, aClipboardType);
+      rv = clipboard->SetData(transferable, nullptr, nsIClipboard::kGlobalClipboard);
       if (NS_FAILED(rv)) {
         return false;
       }

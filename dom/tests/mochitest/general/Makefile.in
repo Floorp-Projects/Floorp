@@ -53,7 +53,6 @@ MOCHITEST_FILES = \
 		test_stylesheetPI.html \
 		test_showModalDialog.html \
 		file_showModalDialog.html \
-		test_paste_selection.html \
 		$(NULL)
 
 # Disable this test until bug 795711 is fixed.
