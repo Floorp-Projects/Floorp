@@ -10,3 +10,7 @@ XPIDL_SOURCES += [
 
 XPIDL_MODULE = 'WorkerTest'
 
+EXTRA_COMPONENTS += [
+    'WorkerTest.js',
+    'WorkerTest.manifest',
+]

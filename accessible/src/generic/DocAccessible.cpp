@@ -103,6 +103,8 @@ DocAccessible::~DocAccessible()
 ////////////////////////////////////////////////////////////////////////////////
 // nsISupports
 
+NS_IMPL_CYCLE_COLLECTION_CLASS(DocAccessible)
+
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(DocAccessible, Accessible)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mNotificationController)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mVirtualCursor)

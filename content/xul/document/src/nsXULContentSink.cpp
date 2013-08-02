@@ -190,6 +190,8 @@ XULContentSinkImpl::~XULContentSinkImpl()
 //----------------------------------------------------------------------
 // nsISupports interface
 
+NS_IMPL_CYCLE_COLLECTION_CLASS(XULContentSinkImpl)
+
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(XULContentSinkImpl)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mNodeInfoManager)
   tmp->mContextStack.Clear();

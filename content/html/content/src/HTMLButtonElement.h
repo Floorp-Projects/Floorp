@@ -14,7 +14,7 @@
 namespace mozilla {
 namespace dom {
 
-class HTMLButtonElement MOZ_FINAL : public nsGenericHTMLFormElement,
+class HTMLButtonElement MOZ_FINAL : public nsGenericHTMLFormElementWithState,
                                     public nsIDOMHTMLButtonElement,
                                     public nsIConstraintValidation
 {
@@ -26,7 +26,7 @@ public:
   virtual ~HTMLButtonElement();
 
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(HTMLButtonElement,
-                                           nsGenericHTMLFormElement)
+                                           nsGenericHTMLFormElementWithState)
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED

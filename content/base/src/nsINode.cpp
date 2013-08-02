@@ -1254,9 +1254,9 @@ nsINode::Traverse(nsINode *tmp, nsCycleCollectionTraversalCallback &cb)
 
 /* static */
 void
-nsINode::Unlink(nsINode *tmp)
+nsINode::Unlink(nsINode* tmp)
 {
-  nsContentUtils::ReleaseWrapper(tmp, tmp);
+  tmp->ReleaseWrapper(tmp);
 
   nsSlots *slots = tmp->GetExistingSlots();
   if (slots) {

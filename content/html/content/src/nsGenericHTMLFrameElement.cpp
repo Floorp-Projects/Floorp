@@ -19,6 +19,8 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsGenericHTMLFrameElement)
+
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsGenericHTMLFrameElement,
                                                   nsGenericHTMLElement)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFrameLoader)

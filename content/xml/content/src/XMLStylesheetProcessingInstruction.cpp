@@ -23,10 +23,13 @@ NS_IMPL_ADDREF_INHERITED(XMLStylesheetProcessingInstruction,
 NS_IMPL_RELEASE_INHERITED(XMLStylesheetProcessingInstruction,
                           ProcessingInstruction)
 
+NS_IMPL_CYCLE_COLLECTION_CLASS(XMLStylesheetProcessingInstruction)
+
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(XMLStylesheetProcessingInstruction,
                                                   ProcessingInstruction)
   tmp->nsStyleLinkElement::Traverse(cb);
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(XMLStylesheetProcessingInstruction,
                                                 ProcessingInstruction)
   tmp->nsStyleLinkElement::Unlink();

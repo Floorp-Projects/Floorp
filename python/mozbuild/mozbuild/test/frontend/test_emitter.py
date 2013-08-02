@@ -133,6 +133,8 @@ class TestEmitterBasic(unittest.TestCase):
             DEFINES=['-Dfans', '-Dtans'],
             EXTRA_COMPONENTS=['fans.js', 'tans.js'],
             EXTRA_PP_COMPONENTS=['fans.pp.js', 'tans.pp.js'],
+            EXTRA_JS_MODULES=['bar.jsm', 'foo.jsm'],
+            EXTRA_PP_JS_MODULES=['bar.pp.jsm', 'foo.pp.jsm'],
             GTEST_CSRCS=['test1.c', 'test2.c'],
             GTEST_CMMSRCS=['test1.mm', 'test2.mm'],
             GTEST_CPPSRCS=['test1.cpp', 'test2.cpp'],

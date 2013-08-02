@@ -20,26 +20,6 @@ LOCAL_INCLUDES += \
   -I$(topsrcdir)/content/events/src \
   -I$(topsrcdir)/dom/base \
   -I$(topsrcdir)/dom/bindings \
-  $(NULL)
-
-# On Systems that have build in geolocation providers,
-# we really do not need these.
-ifneq (Android,$(OS_TARGET))
-EXTRA_COMPONENTS = \
-  NetworkGeolocationProvider.js \
-  NetworkGeolocationProvider.manifest \
-  $(NULL)
-endif
-
-ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
-EXTRA_COMPONENTS = \
-  NetworkGeolocationProvider.js \
-  NetworkGeolocationProvider.manifest \
-  $(NULL)
-endif
-
-LOCAL_INCLUDES += \
-  -I$(topsrcdir)/content/events/src \
   -I$(topsrcdir)/js/xpconnect/loader \
   $(NULL)
 

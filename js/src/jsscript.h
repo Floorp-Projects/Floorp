@@ -295,6 +295,7 @@ class ScriptSource
     uint32_t compressedLength_;
     char *filename_;
     jschar *sourceMap_;
+    JSPrincipals *originPrincipals_;
 
     // True if we can call JSRuntime::sourceHook to load the source on
     // demand. If sourceRetrievable_ and hasSourceData() are false, it is not
@@ -304,17 +305,20 @@ class ScriptSource
     bool ready_:1;
 
   public:
-    ScriptSource()
+    ScriptSource(JSPrincipals *originPrincipals)
       : refs(0),
         length_(0),
         compressedLength_(0),
         filename_(NULL),
         sourceMap_(NULL),
+        originPrincipals_(originPrincipals),
         sourceRetrievable_(false),
         argumentsNotIncluded_(false),
         ready_(true)
     {
         data.source = NULL;
+        if (originPrincipals_)
+            JS_HoldPrincipals(originPrincipals_);
     }
     void incref() { refs++; }
     void decref() {
@@ -357,6 +361,8 @@ class ScriptSource
     bool setSourceMap(ExclusiveContext *cx, jschar *sourceMapURL);
     const jschar *sourceMap();
     bool hasSourceMap() const { return sourceMap_ != NULL; }
+
+    JSPrincipals *originPrincipals() const { return originPrincipals_; }
 
   private:
     void destroy();
@@ -429,7 +435,6 @@ class JSScript : public js::gc::Cell
     js::HeapPtrAtom *atoms;     /* maps immediate index to literal struct */
 
     JSCompartment   *compartment_;
-    JSPrincipals    *originPrincipals; /* see jsapi.h 'originPrincipals' comment */
 
     /* Persistent type information retained across GCs. */
     js::types::TypeScript *types;
@@ -441,6 +446,20 @@ class JSScript : public js::gc::Cell
     // For callsite clones, which cannot have enclosing scopes, the original
     // function; otherwise the enclosing scope
     js::HeapPtrObject   enclosingScopeOrOriginalFunction_;
+
+    /* Information attached by Baseline/Ion for sequential mode execution. */
+    js::ion::IonScript *ion;
+    js::ion::BaselineScript *baseline;
+
+    /* Information attached by Ion for parallel mode execution */
+    js::ion::IonScript *parallelIon;
+
+    /*
+     * Pointer to either baseline->method()->raw() or ion->method()->raw(), or NULL
+     * if there's no Baseline or Ion script.
+     */
+    uint8_t *baselineOrIonRaw;
+    uint8_t *baselineOrIonSkipArgCheck;
 
     // 32-bit fields.
 
@@ -595,8 +614,7 @@ class JSScript : public js::gc::Cell
                             JS::HandleScriptSource sourceObject, uint32_t sourceStart,
                             uint32_t sourceEnd);
 
-    void initCompartmentAndPrincipals(js::ExclusiveContext *cx,
-                                      const JS::CompileOptions &options);
+    void initCompartment(js::ExclusiveContext *cx);
 
     // Three ways ways to initialize a JSScript. Callers of partiallyInit()
     // and fullyInitTrivial() are responsible for notifying the debugger after
@@ -653,26 +671,6 @@ class JSScript : public js::gc::Cell
         return hasIonScript() || hasParallelIonScript();
     }
 
-  private:
-    /* Information attached by Baseline/Ion for sequential mode execution. */
-    js::ion::IonScript *ion;
-    js::ion::BaselineScript *baseline;
-
-    /* Information attached by Ion for parallel mode execution */
-    js::ion::IonScript *parallelIon;
-
-#if JS_BITS_PER_WORD == 32
-    uint32_t padding0;
-#endif
-
-    /*
-     * Pointer to either baseline->method()->raw() or ion->method()->raw(), or NULL
-     * if there's no Baseline or Ion script.
-     */
-    uint8_t *baselineOrIonRaw;
-    uint8_t *baselineOrIonSkipArgCheck;
-
-  public:
     bool hasIonScript() const {
         return ion && ion != ION_DISABLED_SCRIPT && ion != ION_COMPILING_SCRIPT;
     }
@@ -772,6 +770,7 @@ class JSScript : public js::gc::Cell
     void setSourceObject(js::ScriptSourceObject *object);
     js::ScriptSourceObject *sourceObject() const;
     js::ScriptSource *scriptSource() const { return sourceObject()->source(); }
+    JSPrincipals *originPrincipals() const { return scriptSource()->originPrincipals(); }
     const char *filename() const { return scriptSource()->filename(); }
 
   public:
@@ -1038,11 +1037,6 @@ class JSScript : public js::gc::Cell
 
     static inline js::ThingRootKind rootKind() { return js::THING_ROOT_SCRIPT; }
 
-    static JSPrincipals *normalizeOriginPrincipals(JSPrincipals *principals,
-                                                   JSPrincipals *originPrincipals) {
-        return originPrincipals ? originPrincipals : principals;
-    }
-
     void markChildren(JSTracer *trc);
 };
 
@@ -1145,8 +1139,11 @@ class LazyScript : public js::gc::Cell
     // Heap allocated table with any free variables or inner functions.
     void *table_;
 
+#if JS_BITS_PER_WORD == 32
+    uint32_t padding;
+#endif
+
     // Assorted bits that should really be in ScriptSourceObject.
-    JSPrincipals *originPrincipals_;
     uint32_t version_ : 8;
 
     uint32_t numFreeVariables_ : 24;
@@ -1189,16 +1186,18 @@ class LazyScript : public js::gc::Cell
         return enclosingScope_;
     }
     ScriptSourceObject *sourceObject() const;
+    ScriptSource *scriptSource() const {
+        return sourceObject()->source();
+    }
     JSPrincipals *originPrincipals() const {
-        return originPrincipals_;
+        return scriptSource()->originPrincipals();
     }
     JSVersion version() const {
         JS_STATIC_ASSERT(JSVERSION_UNKNOWN == -1);
         return (version_ == JS_BIT(8) - 1) ? JSVERSION_UNKNOWN : JSVersion(version_);
     }
 
-    void setParent(JSObject *enclosingScope, ScriptSourceObject *sourceObject,
-                   JSPrincipals *originPrincipals);
+    void setParent(JSObject *enclosingScope, ScriptSourceObject *sourceObject);
 
     uint32_t numFreeVariables() const {
         return numFreeVariables_;
@@ -1288,6 +1287,9 @@ class LazyScript : public js::gc::Cell
 
     static inline void writeBarrierPre(LazyScript *lazy);
 };
+
+/* If this fails, add/remove padding within LazyScript. */
+JS_STATIC_ASSERT(sizeof(LazyScript) % js::gc::CellSize == 0);
 
 #ifdef JS_THREADSAFE
 /*
@@ -1491,6 +1493,19 @@ CloneScript(JSContext *cx, HandleObject enclosingScope, HandleFunction fun, Hand
 bool
 CloneFunctionScript(JSContext *cx, HandleFunction original, HandleFunction clone,
                     NewObjectKind newKind = GenericObject);
+
+/*
+ * JSAPI clients are allowed to leave CompileOptions.originPrincipals NULL in
+ * which case the JS engine sets options.originPrincipals = origin.principals.
+ * This normalization step must occur before the originPrincipals get stored in
+ * the JSScript/ScriptSource.
+ */
+
+static inline JSPrincipals *
+NormalizeOriginPrincipals(JSPrincipals *principals, JSPrincipals *originPrincipals)
+{
+    return originPrincipals ? originPrincipals : principals;
+}
 
 /*
  * NB: after a successful XDR_DECODE, XDRScript callers must do any required

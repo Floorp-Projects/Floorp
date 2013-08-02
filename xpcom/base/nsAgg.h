@@ -72,11 +72,9 @@ class NS_CYCLE_COLLECTION_INNERCLASS                                        \
  : public nsXPCOMCycleCollectionParticipant                                 \
 {                                                                           \
 public:                                                                     \
-  static NS_METHOD UnlinkImpl(void *p);                                     \
-  static NS_METHOD TraverseImpl(NS_CYCLE_COLLECTION_INNERCLASS *that,       \
-                                void *p,                                    \
-                                nsCycleCollectionTraversalCallback &cb);    \
-  static NS_METHOD_(void) DeleteCycleCollectableImpl(void* p)               \
+  NS_IMETHOD Unlink(void *p);                                               \
+  NS_IMETHOD Traverse(void *p, nsCycleCollectionTraversalCallback &cb);     \
+  NS_IMETHOD_(void) DeleteCycleCollectable(void* p)                         \
   {                                                                         \
     NS_CYCLE_COLLECTION_CLASSNAME(_class)::                                 \
       Downcast(static_cast<nsISupports*>(p))->DeleteCycleCollectable();     \
@@ -89,16 +87,12 @@ public:                                                                     \
   {                                                                         \
     return p->InnerObject();                                                \
   }                                                                         \
-  static nsXPCOMCycleCollectionParticipant* GetParticipant()                   \
-  {                                                                            \
-    static const CCParticipantVTable<NS_CYCLE_COLLECTION_CLASSNAME(_class)>    \
-    ::Type participant = {                                                     \
-      NS_IMPL_CYCLE_COLLECTION_VTABLE(NS_CYCLE_COLLECTION_CLASSNAME(_class))   \
-    };                                                                         \
-    return NS_PARTICIPANT_AS(nsXPCOMCycleCollectionParticipant,                \
-                                    &participant);                             \
-  }                                                                            \
-};
+  static nsXPCOMCycleCollectionParticipant* GetParticipant()                \
+  {                                                                         \
+    return &_class::NS_CYCLE_COLLECTION_INNERNAME;                          \
+  }                                                                         \
+};                                                                          \
+static NS_CYCLE_COLLECTION_INNERCLASS NS_CYCLE_COLLECTION_INNERNAME;
 
 // Put this in your class's constructor:
 #define NS_INIT_AGGREGATED(outer)                                           \
@@ -276,10 +270,9 @@ _class::AggregatedQueryInterface(REFNSIID aIID, void** aInstancePtr)        \
   else
 
 #define NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_AGGREGATED(_class)          \
-  NS_METHOD                                                                 \
-  NS_CYCLE_COLLECTION_CLASSNAME(_class)::TraverseImpl                       \
-                         (NS_CYCLE_COLLECTION_CLASSNAME(_class) *that,      \
-                          void *p, nsCycleCollectionTraversalCallback &cb)  \
+  NS_IMETHODIMP                                                             \
+  NS_CYCLE_COLLECTION_CLASSNAME(_class)::Traverse                           \
+                         (void *p, nsCycleCollectionTraversalCallback &cb)  \
   {                                                                         \
     nsISupports *s = static_cast<nsISupports*>(p);                          \
     MOZ_ASSERT(CheckForRightISupports(s),                                   \

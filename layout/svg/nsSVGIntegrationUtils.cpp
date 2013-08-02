@@ -577,10 +577,12 @@ class PaintFrameCallback : public gfxDrawingCallback {
 public:
   PaintFrameCallback(nsIFrame* aFrame,
                      const nsSize aPaintServerSize,
-                     const gfxIntSize aRenderSize)
+                     const gfxIntSize aRenderSize,
+                     uint32_t aFlags)
    : mFrame(aFrame)
    , mPaintServerSize(aPaintServerSize)
    , mRenderSize(aRenderSize)
+   , mFlags (aFlags)
   {}
   virtual bool operator()(gfxContext* aContext,
                             const gfxRect& aFillRect,
@@ -590,6 +592,7 @@ private:
   nsIFrame* mFrame;
   nsSize mPaintServerSize;
   gfxIntSize mRenderSize;
+  uint32_t mFlags;
 };
 
 bool
@@ -636,10 +639,15 @@ PaintFrameCallback::operator()(gfxContext* aContext,
   // Draw.
   nsRect dirty(-offset.x, -offset.y,
                mPaintServerSize.width, mPaintServerSize.height);
+
+  uint32_t flags = nsLayoutUtils::PAINT_IN_TRANSFORM |
+                   nsLayoutUtils::PAINT_ALL_CONTINUATIONS;
+  if (mFlags & nsSVGIntegrationUtils::FLAG_SYNC_DECODE_IMAGES) {
+    flags |= nsLayoutUtils::PAINT_SYNC_DECODE_IMAGES;
+  }
   nsLayoutUtils::PaintFrame(&context, mFrame,
                             dirty, NS_RGBA(0, 0, 0, 0),
-                            nsLayoutUtils::PAINT_IN_TRANSFORM |
-                            nsLayoutUtils::PAINT_ALL_CONTINUATIONS);
+                            flags);
 
   aContext->Restore();
 
@@ -653,7 +661,8 @@ DrawableFromPaintServer(nsIFrame*         aFrame,
                         nsIFrame*         aTarget,
                         const nsSize&     aPaintServerSize,
                         const gfxIntSize& aRenderSize,
-                        const gfxMatrix&  aContextMatrix)
+                        const gfxMatrix&  aContextMatrix,
+                        uint32_t          aFlags)
 {
   // aPaintServerSize is the size that would be filled when using
   // background-repeat:no-repeat and background-size:auto. For normal background
@@ -695,7 +704,7 @@ DrawableFromPaintServer(nsIFrame*         aFrame,
   // We don't want to paint into a surface as long as we don't need to, so we
   // set up a drawing callback.
   nsRefPtr<gfxDrawingCallback> cb =
-    new PaintFrameCallback(aFrame, aPaintServerSize, aRenderSize);
+    new PaintFrameCallback(aFrame, aPaintServerSize, aRenderSize, aFlags);
   nsRefPtr<gfxDrawable> drawable = new gfxCallbackDrawable(cb, aRenderSize);
   return drawable.forget();
 }
@@ -709,7 +718,8 @@ nsSVGIntegrationUtils::DrawPaintServer(nsRenderingContext* aRenderingContext,
                                        const nsRect&        aFill,
                                        const nsPoint&       aAnchor,
                                        const nsRect&        aDirty,
-                                       const nsSize&        aPaintServerSize)
+                                       const nsSize&        aPaintServerSize,
+                                       uint32_t             aFlags)
 {
   if (aDest.IsEmpty() || aFill.IsEmpty())
     return;
@@ -720,7 +730,7 @@ nsSVGIntegrationUtils::DrawPaintServer(nsRenderingContext* aRenderingContext,
   gfxIntSize imageSize(roundedOut.width, roundedOut.height);
   nsRefPtr<gfxDrawable> drawable =
     DrawableFromPaintServer(aPaintServer, aTarget, aPaintServerSize, imageSize,
-                          aRenderingContext->ThebesContext()->CurrentMatrix());
+                          aRenderingContext->ThebesContext()->CurrentMatrix(), aFlags);
 
   if (drawable) {
     nsLayoutUtils::DrawPixelSnapped(aRenderingContext, drawable, aFilter,

@@ -3223,9 +3223,11 @@ SameZoneAs(JSObject *obj)
 struct JS_PUBLIC_API(CompartmentOptions) {
     ZoneSpecifier zoneSpec;
     JSVersion version;
+    bool invisibleToDebugger;
 
     explicit CompartmentOptions() : zoneSpec(JS::FreshZone)
                                   , version(JSVERSION_UNKNOWN)
+                                  , invisibleToDebugger(false)
     {}
 
     CompartmentOptions &setZone(ZoneSpecifier spec) { zoneSpec = spec; return *this; }
@@ -3234,13 +3236,51 @@ struct JS_PUBLIC_API(CompartmentOptions) {
         version = version_;
         return *this;
     }
+
+    // Certain scopes (i.e. XBL compilation scopes) are implementation details
+    // of the embedding, and references to them should never leak out to script.
+    // This flag causes the this compartment to skip firing onNewGlobalObject
+    // and makes addDebuggee a no-op for this global.
+    CompartmentOptions &setInvisibleToDebugger(bool invisible) {
+        invisibleToDebugger = invisible;
+        return *this;
+    }
+};
+
+// During global creation, we fire notifications to callbacks registered
+// via the Debugger API. These callbacks are arbitrary script, and can touch
+// the global in arbitrary ways. When that happens, the global should not be
+// in a half-baked state. But this creates a problem for consumers that need
+// to set slots on the global to put it in a consistent state.
+//
+// This API provides a way for consumers to set slots atomically (immediately
+// after the global is created), before any debugger hooks are fired. It's
+// unfortunately on the clunky side, but that's the way the cookie crumbles.
+//
+// If callers have no additional state on the global to set up, they may pass
+// |FireOnNewGlobalHook| to JS_NewGlobalObject, which causes that function to
+// fire the hook as its final act before returning. Otherwise, callers should
+// pass |DontFireOnNewGlobalHook|, which means that they are responsible for
+// invoking JS_FireOnNewGlobalObject upon successfully creating the global. If
+// an error occurs and the operation aborts, callers should skip firing the
+// hook. But otherwise, callers must take care to fire the hook exactly once
+// before compiling any script in the global's scope (we have assertions in
+// place to enforce this). This lets us be sure that debugger clients never miss
+// breakpoints.
+enum OnNewGlobalHookOption {
+    FireOnNewGlobalHook,
+    DontFireOnNewGlobalHook
 };
 
 } /* namespace JS */
 
 extern JS_PUBLIC_API(JSObject *)
 JS_NewGlobalObject(JSContext *cx, JSClass *clasp, JSPrincipals *principals,
+                   JS::OnNewGlobalHookOption hookOption,
                    const JS::CompartmentOptions &options = JS::CompartmentOptions());
+
+extern JS_PUBLIC_API(void)
+JS_FireOnNewGlobalObject(JSContext *cx, JS::HandleObject global);
 
 extern JS_PUBLIC_API(JSObject *)
 JS_NewObject(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent);
@@ -3984,9 +4024,15 @@ JS_CompileUCFunction(JSContext *cx, JSObject *obj, const char *name,
 namespace JS {
 
 /* Options for JavaScript compilation. */
-struct JS_PUBLIC_API(CompileOptions) {
-    JSPrincipals *principals;
-    JSPrincipals *originPrincipals;
+class JS_PUBLIC_API(CompileOptions)
+{
+    JSPrincipals *principals_;
+    JSPrincipals *originPrincipals_;
+
+  public:
+    JSPrincipals *principals() const { return principals_; }
+    JSPrincipals *originPrincipals() const;
+
     JSVersion version;
     bool versionSet;
     bool utf8;
@@ -4010,8 +4056,8 @@ struct JS_PUBLIC_API(CompileOptions) {
     } sourcePolicy;
 
     explicit CompileOptions(JSContext *cx, JSVersion version = JSVERSION_UNKNOWN);
-    CompileOptions &setPrincipals(JSPrincipals *p) { principals = p; return *this; }
-    CompileOptions &setOriginPrincipals(JSPrincipals *p) { originPrincipals = p; return *this; }
+    CompileOptions &setPrincipals(JSPrincipals *p) { principals_ = p; return *this; }
+    CompileOptions &setOriginPrincipals(JSPrincipals *p) { originPrincipals_ = p; return *this; }
     CompileOptions &setVersion(JSVersion v) { version = v; versionSet = true; return *this; }
     CompileOptions &setUTF8(bool u) { utf8 = u; return *this; }
     CompileOptions &setFileAndLine(const char *f, unsigned l) {

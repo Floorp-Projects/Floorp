@@ -21,3 +21,8 @@ CPP_SOURCES += [
     'nsWinMetroUtils.cpp',
 ]
 
+EXTRA_COMPONENTS += [
+    'MetroUIUtils.js',
+    'MetroUIUtils.manifest',
+]
+

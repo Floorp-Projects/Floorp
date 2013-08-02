@@ -507,7 +507,7 @@ Class JSFunction::class_ = {
     fun_trace
 };
 
-JS_FRIEND_DATA(Class*) js::FunctionClassPtr = &JSFunction::class_;
+JS_FRIEND_DATA(Class* const) js::FunctionClassPtr = &JSFunction::class_;
 
 /* Find the body of a function (not including braces). */
 static bool
@@ -1108,9 +1108,6 @@ JSFunction::createScriptForLazilyInterpretedFunction(JSContext *cx, HandleFuncti
                 return false;
             }
 
-            // The cloned script will have reused the origin principals and
-            // filename from the original script, which may differ.
-            clonedScript->originPrincipals = lazy->originPrincipals();
             clonedScript->setSourceObject(lazy->sourceObject());
 
             fun->initAtom(script->function()->displayAtom());

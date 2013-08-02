@@ -1,4 +1,5 @@
-// Resumption values from uncaughtExceptionHook from onNewGlobalObject handlers are respected.
+// Resumption values other than |undefined| from uncaughtExceptionHook from
+// onNewGlobalObject handlers are ignored (other than cancelling further hooks).
 
 load(libdir + 'asserts.js');
 
@@ -17,7 +18,7 @@ dbg.uncaughtExceptionHook = function (ex) {
 };
 
 log = '';
-assertThrowsValue(newGlobal, 'fit');
+assertEq(typeof newGlobal(), 'object');
 assertEq(log, 'nu');
 
 dbg.uncaughtExceptionHook = function (ex) {

@@ -212,6 +212,8 @@ nsHTMLDocument::~nsHTMLDocument()
   mAll = nullptr;
 }
 
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsHTMLDocument)
+
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsHTMLDocument, nsDocument)
   NS_ASSERTION(!nsCCUncollectableMarker::InGeneration(cb, tmp->GetMarkedCCGeneration()),
                "Shouldn't traverse nsHTMLDocument!");

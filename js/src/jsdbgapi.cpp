@@ -539,7 +539,7 @@ JS_GetScriptPrincipals(JSScript *script)
 JS_PUBLIC_API(JSPrincipals *)
 JS_GetScriptOriginPrincipals(JSScript *script)
 {
-    return script->originPrincipals;
+    return script->originPrincipals();
 }
 
 /************************************************************************/

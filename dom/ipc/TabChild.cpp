@@ -1706,7 +1706,7 @@ TabChild::DispatchSynthesizedMouseEvent(uint32_t aMsg, uint64_t aTime,
 
   nsMouseEvent event(true, aMsg, NULL,
       nsMouseEvent::eReal, nsMouseEvent::eNormal);
-  event.refPoint = nsIntPoint(aRefPoint.x, aRefPoint.y);
+  event.refPoint = LayoutDeviceIntPoint(aRefPoint.x, aRefPoint.y);
   event.time = aTime;
   event.button = nsMouseEvent::eLeftButton;
   event.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_TOUCH;

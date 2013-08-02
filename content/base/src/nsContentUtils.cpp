@@ -2967,7 +2967,7 @@ nsresult nsContentUtils::FormatLocalizedString(PropertiesFile aFile,
 
 /* static */ nsresult
 nsContentUtils::ReportToConsole(uint32_t aErrorFlags,
-                                const char *aCategory,
+                                const nsACString& aCategory,
                                 nsIDocument* aDocument,
                                 PropertiesFile aFile,
                                 const char *aMessageName,
@@ -3002,7 +3002,7 @@ nsContentUtils::ReportToConsole(uint32_t aErrorFlags,
 /* static */ nsresult
 nsContentUtils::ReportToConsoleNonLocalized(const nsAString& aErrorText,
                                             uint32_t aErrorFlags,
-                                            const char *aCategory,
+                                            const nsACString& aCategory,
                                             nsIDocument* aDocument,
                                             nsIURI* aURI,
                                             const nsAFlatString& aSourceLine,
@@ -6288,24 +6288,6 @@ nsContentUtils::IsInPointerLockContext(nsIDOMWindow* aWin)
   aWin->GetScriptableTop(getter_AddRefs(top));
 
   return top == lockTop;
-}
-
-// static
-void
-nsContentUtils::ReleaseWrapper(void* aScriptObjectHolder,
-                               nsWrapperCache* aCache)
-{
-  if (aCache->PreservingWrapper()) {
-    // PreserveWrapper puts new DOM bindings in the JS holders hash, but they
-    // can also be in the DOM expando hash, so we need to try to remove them
-    // from both here.
-    JSObject* obj = aCache->GetWrapperPreserveColor();
-    if (aCache->IsDOMBinding() && obj && js::IsProxy(obj)) {
-        DOMProxyHandler::GetAndClearExpandoObject(obj);
-    }
-    aCache->SetPreservingWrapper(false);
-    DropJSObjects(aScriptObjectHolder);
-  }
 }
 
 // static
