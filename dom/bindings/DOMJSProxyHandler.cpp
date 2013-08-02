@@ -216,7 +216,7 @@ DOMProxyHandler::delete_(JSContext* cx, JS::Handle<JSObject*> proxy,
   JS::Rooted<JSObject*> expando(cx);
   if (!xpc::WrapperFactory::IsXrayWrapper(proxy) && (expando = GetExpandoObject(proxy))) {
     JS::Rooted<Value> v(cx);
-    if (!JS_DeletePropertyById2(cx, expando, id, v.address()) ||
+    if (!JS_DeletePropertyById2(cx, expando, id, &v) ||
         !JS_ValueToBoolean(cx, v, &b)) {
       return false;
     }
