@@ -1310,7 +1310,7 @@ nsWindow::DispatchGestureEvent(uint32_t msg, uint32_t direction, double delta,
 
     event.modifiers = 0;
     event.time = time;
-    event.refPoint = refPoint;
+    event.refPoint = LayoutDeviceIntPoint::FromUntyped(refPoint);
 
     DispatchEvent(&event);
 }
@@ -1327,7 +1327,7 @@ nsWindow::DispatchMotionEvent(nsInputEvent &event, AndroidGeckoEvent *ae,
 
     // XXX possibly bound the range of event.refPoint here.
     //     some code may get confused.
-    event.refPoint = refPoint - offset;
+    event.refPoint = LayoutDeviceIntPoint::FromUntyped(refPoint - offset);
 
     DispatchEvent(&event);
 }

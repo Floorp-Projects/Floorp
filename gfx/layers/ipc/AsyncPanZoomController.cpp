@@ -297,7 +297,7 @@ AsyncPanZoomController::ReceiveInputEvent(const nsInputEvent& aEvent,
         aOutEvent->refPoint.x, aOutEvent->refPoint.y)),
       currentResolution);
     LayoutDevicePoint refPoint = refCSSPoint * mFrameMetrics.mDevPixelsPerCSSPixel;
-    aOutEvent->refPoint = nsIntPoint(refPoint.x, refPoint.y);
+    aOutEvent->refPoint = LayoutDeviceIntPoint(refPoint.x, refPoint.y);
     break;
   }
   }
