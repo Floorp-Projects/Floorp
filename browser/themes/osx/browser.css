@@ -155,7 +155,8 @@ toolbarbutton.chevron:-moz-locale-dir(rtl) > .toolbarbutton-icon {
 
 /* ----- BOOKMARK BUTTONS ----- */
 
-toolbarbutton.bookmark-item {
+toolbarbutton.bookmark-item,
+#personal-bookmarks[customizableui-areatype="toolbar"] > #bookmarks-toolbar-placeholder {
   font-weight: bold;
   color: #222;
   border: 0;
@@ -183,7 +184,8 @@ toolbarbutton.bookmark-item {
   }
 }
 
-.bookmark-item > .toolbarbutton-text {
+.bookmark-item > .toolbarbutton-text,
+#personal-bookmarks[customizableui-areatype="toolbar"] > #bookmarks-toolbar-placeholder > .toolbarbutton-text {
   display: -moz-box !important; /* Force the display of the label for bookmarks */
   margin: 0 !important;
 }
@@ -222,14 +224,16 @@ toolbarbutton.bookmark-item > menupopup {
   -moz-margin-start: 3px;
 }
 
-.bookmark-item > .toolbarbutton-icon {
+.bookmark-item > .toolbarbutton-icon,
+#personal-bookmarks[customizableui-areatype="toolbar"] > #bookmarks-toolbar-placeholder > .toolbarbutton-icon {
   width: 16px;
   min-height: 16px;
   max-height: 16px;
 }
 
 .bookmark-item > .toolbarbutton-icon[label]:not([label=""]),
-.bookmark-item > .toolbarbutton-icon[type="menu"] {
+.bookmark-item > .toolbarbutton-icon[type="menu"],
+#personal-bookmarks[customizableui-areatype="toolbar"] > #bookmarks-toolbar-placeholder > .toolbarbutton-icon[label]:not([label=""]) {
   -moz-margin-end: 5px;
 }
 
@@ -323,31 +327,22 @@ toolbarbutton.bookmark-item > menupopup {
 
 @media (min-resolution: 2dppx) {
   .bookmark-item > .toolbarbutton-icon,
-  .bookmark-item > .menu-iconic-left > .menu-iconic-icon {
+  .bookmark-item > .menu-iconic-left > .menu-iconic-icon,
+  #personal-bookmarks[customizableui-areatype="toolbar"] > #bookmarks-toolbar-placeholder > .toolbarbutton-icon {
     image-rendering: -moz-crisp-edges;
   }
 }
 
-#wrapper-personal-bookmarks[place="palette"] > .toolbarpaletteitem-box {
-  background: url("chrome://browser/skin/places/bookmarksToolbar.png") no-repeat center;
-}
-
-.bookmarks-toolbar-customize {
-  max-width: 15em !important;
+#bookmarks-toolbar-placeholder {
   list-style-image: url("chrome://browser/skin/places/bookmarksToolbar.png") !important;
 }
 
 @media (min-resolution: 2dppx) {
-  #wrapper-personal-bookmarks[place="palette"] > .toolbarpaletteitem-box {
-    background-image: url("chrome://browser/skin/places/bookmarksToolbar@2x.png");
-    background-size: 16px;
-  }
-
-  .bookmarks-toolbar-customize {
+  #bookmarks-toolbar-placeholder {
     list-style-image: url("chrome://browser/skin/places/bookmarksToolbar@2x.png") !important;
   }
 
-  .bookmarks-toolbar-customize > .toolbarbutton-icon {
+  #bookmarks-toolbar-placeholder > .toolbarbutton-icon {
     width: 16px;
   }
 }
