@@ -217,6 +217,10 @@ public class ProfileInformationCache implements ProfileInformationProvider {
     addons.put(id, new JSONObject(json));
   }
 
+  public void removeAddon(String id) {
+    addons.remove(id);
+  }
+
   /**
    * Will throw if you haven't done a full update at least once.
    */
