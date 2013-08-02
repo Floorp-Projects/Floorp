@@ -8,8 +8,6 @@
 
 #include "IDBIndex.h"
 
-#include "nsIIDBKeyRange.h"
-
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/ipc/Blob.h"
