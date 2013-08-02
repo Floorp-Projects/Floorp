@@ -66,8 +66,6 @@ class JavaScriptChild
                                 ReturnStatus *rs, nsTArray<nsString> *names);
     bool AnswerInstanceOf(const ObjectId &objId, const JSIID &iid,
                           ReturnStatus *rs, bool *instanceof);
-    bool AnswerDOMInstanceOf(const ObjectId &objId, const int &prototypeID, const int &depth,
-                             ReturnStatus *rs, bool *instanceof);
 
   protected:
     JSObject *unwrap(JSContext *cx, ObjectId id);
