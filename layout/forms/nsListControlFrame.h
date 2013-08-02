@@ -321,7 +321,6 @@ protected:
 
   // Utility methods
   nsresult GetSizeAttribute(uint32_t *aSize);
-  nsIContent* GetOptionFromContent(nsIContent *aContent);
 
   /**
    * Sets the mSelectedIndex and mOldSelectedIndex from figuring out what 
@@ -338,7 +337,6 @@ protected:
   already_AddRefed<nsIContent> GetOptionContent(int32_t aIndex) const;
 
   bool     CheckIfAllFramesHere();
-  int32_t  GetIndexFromContent(nsIContent *aContent);
   bool     IsLeftButton(nsIDOMEvent* aMouseEvent);
 
   // guess at a row height based on our own style.
