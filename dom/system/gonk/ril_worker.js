@@ -10522,6 +10522,8 @@ let ICCFileHelper = {
       case ICC_EF_CSIM_CST:
       case ICC_EF_CSIM_SPN:
         return EF_PATH_MF_SIM + EF_PATH_DF_CDMA;
+      case ICC_EF_FDN:
+        return EF_PATH_MF_SIM + EF_PATH_DF_TELECOM;
       default:
         return null;
     }
@@ -11078,9 +11080,8 @@ let ICCRecordHelper = {
     }
 
     if (!contact || !contact.recordId) {
-      if (onerror) {
-        onerror("Invalid parameter.");
-      }
+      let error = onerror || debug;
+      error(GECKO_ERROR_INVALID_PARAMETER);
       return;
     }
 
@@ -11756,9 +11757,8 @@ let ICCRecordHelper = {
         ICCIOHelper.loadNextRecord(options);
       } else {
         // No free record found.
-        if (onerror) {
-          onerror("No free record found.");
-        }
+        let error = onerror || debug;
+        error("No free record found.");
       }
     }
 
@@ -12223,9 +12223,25 @@ let ICCUtilsHelper = {
  */
 let ICCContactHelper = {
   /**
+   * Helper function to check DF_PHONEBOOK.
+   */
+  hasDfPhoneBook: function hasDfPhoneBook(appType) {
+    switch (appType) {
+      case CARD_APPTYPE_SIM:
+        return false;
+      case CARD_APPTYPE_USIM:
+        return true;
+      case CARD_APPTYPE_RUIM:
+        return ICCUtilsHelper.isICCServiceAvailable("ENHANCED_PHONEBOOK");
+      default:
+        return false;
+    }
+  },
+
+  /**
    * Helper function to read ICC contacts.
    *
-   * @param appType       CARD_APPTYPE_SIM or CARD_APPTYPE_USIM.
+   * @param appType       One of CARD_APPTYPE_*.
    * @param contactType   "adn" or "fdn".
    * @param onsuccess     Callback to be called when success.
    * @param onerror       Callback to be called when error.
@@ -12233,17 +12249,18 @@ let ICCContactHelper = {
   readICCContacts: function readICCContacts(appType, contactType, onsuccess, onerror) {
     switch (contactType) {
       case "adn":
-        switch (appType) {
-          case CARD_APPTYPE_SIM:
-            ICCRecordHelper.readADNLike(ICC_EF_ADN, onsuccess, onerror);
-            break;
-          case CARD_APPTYPE_USIM:
-            this.readUSimContacts(onsuccess, onerror);
-            break;
+        if (!this.hasDfPhoneBook(appType)) {
+          ICCRecordHelper.readADNLike(ICC_EF_ADN, onsuccess, onerror);
+        } else {
+          this.readUSimContacts(onsuccess, onerror);
         }
         break;
       case "fdn":
         ICCRecordHelper.readADNLike(ICC_EF_FDN, onsuccess, onerror);
+        break;
+      default:
+        let error = onerror || debug;
+        error(GECKO_ERROR_REQUEST_NOT_SUPPORTED);
         break;
     }
   },
@@ -12251,7 +12268,7 @@ let ICCContactHelper = {
   /**
    * Helper function to find free contact record.
    *
-   * @param appType       CARD_APPTYPE_SIM or CARD_APPTYPE_USIM.
+   * @param appType       One of CARD_APPTYPE_*.
    * @param contactType   "adn" or "fdn".
    * @param onsuccess     Callback to be called when success.
    * @param onerror       Callback to be called when error.
@@ -12259,26 +12276,22 @@ let ICCContactHelper = {
   findFreeICCContact: function findFreeICCContact(appType, contactType, onsuccess, onerror) {
     switch (contactType) {
       case "adn":
-        switch (appType) {
-          case CARD_APPTYPE_SIM:
-            ICCRecordHelper.findFreeRecordId(ICC_EF_ADN, onsuccess, onerror);
-            break;
-          case CARD_APPTYPE_USIM:
-            let gotPbrCb = function gotPbrCb(pbrs) {
-              this.findUSimFreeADNRecordId(pbrs, onsuccess, onerror);
-            }.bind(this);
+        if (!this.hasDfPhoneBook(appType)) {
+          ICCRecordHelper.findFreeRecordId(ICC_EF_ADN, onsuccess, onerror);
+        } else {
+          let gotPbrCb = function gotPbrCb(pbrs) {
+            this.findUSimFreeADNRecordId(pbrs, onsuccess, onerror);
+          }.bind(this);
 
-            ICCRecordHelper.readPBR(gotPbrCb, onerror);
-            break;
+          ICCRecordHelper.readPBR(gotPbrCb, onerror);
         }
         break;
       case "fdn":
         ICCRecordHelper.findFreeRecordId(ICC_EF_FDN, onsuccess, onerror);
         break;
       default:
-        if (onerror) {
-          onerror(GECKO_ERROR_REQUEST_NOT_SUPPORTED);
-        }
+        let error = onerror || debug;
+        error(GECKO_ERROR_REQUEST_NOT_SUPPORTED);
         break;
     }
   },
@@ -12311,7 +12324,7 @@ let ICCContactHelper = {
   /**
    * Helper function to add a new ICC contact.
    *
-   * @param appType       CARD_APPTYPE_SIM or CARD_APPTYPE_USIM.
+   * @param appType       One of CARD_APPTYPE_*.
    * @param contactType   "adn" or "fdn".
    * @param contact       The contact will be added.
    * @param pin2          PIN2 is required for FDN.
@@ -12331,7 +12344,7 @@ let ICCContactHelper = {
   /**
    * Helper function to update ICC contact.
    *
-   * @param appType       CARD_APPTYPE_SIM or CARD_APPTYPE_USIM.
+   * @param appType       One of CARD_APPTYPE_*.
    * @param contactType   "adn" or "fdn".
    * @param contact       The contact will be updated.
    * @param pin2          PIN2 is required for FDN.
@@ -12341,22 +12354,18 @@ let ICCContactHelper = {
   updateICCContact: function updateICCContact(appType, contactType, contact, pin2, onsuccess, onerror) {
     switch (contactType) {
       case "adn":
-        switch (appType) {
-          case CARD_APPTYPE_SIM:
-            ICCRecordHelper.updateADNLike(ICC_EF_ADN, contact, null, onsuccess, onerror);
-            break;
-          case CARD_APPTYPE_USIM:
-            this.updateUSimContact(contact, onsuccess, onerror);
-            break;
+        if (!this.hasDfPhoneBook(appType)) {
+          ICCRecordHelper.updateADNLike(ICC_EF_ADN, contact, null, onsuccess, onerror);
+        } else {
+          this.updateUSimContact(contact, onsuccess, onerror);
         }
         break;
       case "fdn":
         ICCRecordHelper.updateADNLike(ICC_EF_FDN, contact, pin2, onsuccess, onerror);
         break;
       default:
-        if (onerror) {
-          onerror(GECKO_ERROR_REQUEST_NOT_SUPPORTED);
-        }
+        let error = onerror || debug;
+        error(GECKO_ERROR_REQUEST_NOT_SUPPORTED);
         break;
     }
   },
@@ -12527,7 +12536,8 @@ let ICCContactHelper = {
           ICCRecordHelper.readANR(fileId, fileType, recordId, gotFieldCb, onerror);
           break;
         default:
-          onerror("Unknown field " + field);
+          let error = onerror || debug;
+          error("Unknown field " + field);
           break;
       }
     }.bind(this);
