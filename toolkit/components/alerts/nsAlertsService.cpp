@@ -86,7 +86,6 @@ NS_IMETHODIMP nsAlertsService::ShowAlertNotification(const nsAString & aImageUrl
   }
 
 #ifdef MOZ_WIDGET_ANDROID
-  mozilla::AndroidBridge::Bridge()->CloseNotification(aAlertName);
   mozilla::AndroidBridge::Bridge()->ShowAlertNotification(aImageUrl, aAlertTitle, aAlertText, aAlertCookie,
                                                           aAlertListener, aAlertName);
   return NS_OK;
