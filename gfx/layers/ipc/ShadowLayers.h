@@ -471,9 +471,8 @@ private:
   bool PlatformDestroySharedSurface(SurfaceDescriptor* aSurface);
 
   Transaction* mTxn;
-
+  DiagnosticTypes mDiagnosticTypes;
   bool mIsFirstPaint;
-  bool mDrawColoredBorders;
   bool mWindowOverlayChanged;
 };
 
