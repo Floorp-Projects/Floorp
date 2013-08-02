@@ -358,9 +358,9 @@ DeviceStorageRequestParent::PostBlobSuccessEvent::CancelableRun() {
   nsString mime;
   CopyASCIItoUTF16(mMimeType, mime);
 
-  nsString  compositePath;
-  mFile->GetCompositePath(compositePath);
-  nsCOMPtr<nsIDOMBlob> blob = new nsDOMFileFile(compositePath, mime, mLength, mFile->mFile, mLastModificationDate);
+  nsString fullPath;
+  mFile->GetFullPath(fullPath);
+  nsCOMPtr<nsIDOMBlob> blob = new nsDOMFileFile(fullPath, mime, mLength, mFile->mFile, mLastModificationDate);
 
   ContentParent* cp = static_cast<ContentParent*>(mParent->Manager());
   BlobParent* actor = cp->GetOrCreateActorForBlob(blob);
