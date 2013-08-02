@@ -13,7 +13,6 @@
 #include "nsIFormControl.h"
 #include "nsIDocument.h"
 #include "nsIDOMHTMLCollection.h"
-#include "nsIDOMHTMLOptionsCollection.h"
 #include "nsIDOMHTMLSelectElement.h"
 #include "nsIDOMHTMLOptionElement.h"
 #include "nsComboboxControlFrame.h"
@@ -42,6 +41,7 @@
 #include "nsDisplayList.h"
 #include "nsContentUtils.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/dom/HTMLOptionsCollection.h"
 #include "mozilla/dom/HTMLSelectElement.h"
 #include "mozilla/LookAndFeel.h"
 #include <algorithm>
@@ -684,17 +684,13 @@ nsListControlFrame::InitSelectionRange(int32_t aClickedIndex)
   int32_t selectedIndex = GetSelectedIndex();
   if (selectedIndex >= 0) {
     // Get the end of the contiguous selection
-    nsCOMPtr<nsIDOMHTMLOptionsCollection> options = GetOptions(mContent);
+    nsRefPtr<dom::HTMLOptionsCollection> options = GetOptions();
     NS_ASSERTION(options, "Collection of options is null!");
-    uint32_t numOptions;
-    options->GetLength(&numOptions);
+    uint32_t numOptions = options->Length();
+    // Push i to one past the last selected index in the group.
     uint32_t i;
-    // Push i to one past the last selected index in the group
-    for (i=selectedIndex+1; i < numOptions; i++) {
-      bool selected;
-      nsCOMPtr<nsIDOMHTMLOptionElement> option = GetOption(options, i);
-      option->GetSelected(&selected);
-      if (!selected) {
+    for (i = selectedIndex + 1; i < numOptions; i++) {
+      if (!options->ItemAsOption(i)->Selected()) {
         break;
       }
     }
@@ -984,16 +980,14 @@ nsListControlFrame::Init(nsIContent*     aContent,
   }
 }
 
-already_AddRefed<nsIDOMHTMLOptionsCollection>
-nsListControlFrame::GetOptions(nsIContent * aContent)
+dom::HTMLOptionsCollection*
+nsListControlFrame::GetOptions() const
 {
-  nsCOMPtr<nsIDOMHTMLOptionsCollection> options;
-  nsCOMPtr<nsIDOMHTMLSelectElement> selectElement = do_QueryInterface(aContent);
-  if (selectElement) {
-    selectElement->GetOptions(getter_AddRefs(options));
-  }
+  dom::HTMLSelectElement* select =
+    dom::HTMLSelectElement::FromContentOrNull(mContent);
+  NS_ENSURE_TRUE(select, nullptr);
 
-  return options.forget();
+  return select->Options();
 }
 
 dom::HTMLOptionElement*
@@ -1004,25 +998,6 @@ nsListControlFrame::GetOption(uint32_t aIndex) const
   NS_ENSURE_TRUE(select, nullptr);
 
   return select->Item(aIndex);
-}
-
-already_AddRefed<nsIDOMHTMLOptionElement>
-nsListControlFrame::GetOption(nsIDOMHTMLOptionsCollection* aCollection,
-                              int32_t aIndex)
-{
-  nsCOMPtr<nsIDOMNode> node;
-  if (NS_SUCCEEDED(aCollection->Item(aIndex, getter_AddRefs(node)))) {
-    NS_ASSERTION(node,
-                 "Item was successful, but node from collection was null!");
-    if (node) {
-      nsCOMPtr<nsIDOMHTMLOptionElement> option = do_QueryInterface(node);
-
-      return option.forget();
-    }
-  } else {
-    NS_ERROR("Couldn't get option by index from collection!");
-  }
-  return nullptr;
 }
 
 NS_IMETHODIMP
@@ -1156,18 +1131,12 @@ nsListControlFrame::IsInDropDownMode() const
 uint32_t
 nsListControlFrame::GetNumberOfOptions()
 {
-  if (!mContent) {
-    return 0;
-  }
-
-  nsCOMPtr<nsIDOMHTMLOptionsCollection> options = GetOptions(mContent);
+  dom::HTMLOptionsCollection* options = GetOptions();
   if (!options) {
     return 0;
   }
 
-  uint32_t length = 0;
-  options->GetLength(&length);
-  return length;
+  return options->Length();
 }
 
 //----------------------------------------------------------------------
@@ -2108,11 +2077,10 @@ nsListControlFrame::KeyDown(nsIDOMEvent* aKeyEvent)
   }
 
   // now make sure there are options or we are wasting our time
-  nsCOMPtr<nsIDOMHTMLOptionsCollection> options = GetOptions(mContent);
+  nsRefPtr<dom::HTMLOptionsCollection> options = GetOptions();
   NS_ENSURE_TRUE(options, NS_ERROR_FAILURE);
 
-  uint32_t numOptions = 0;
-  options->GetLength(&numOptions);
+  uint32_t numOptions = options->Length();
 
   // this is the new index to set
   int32_t newIndex = kNothingSelected;
@@ -2324,15 +2292,15 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
   }
 
   // now make sure there are options or we are wasting our time
-  nsCOMPtr<nsIDOMHTMLOptionsCollection> options = GetOptions(mContent);
+  nsRefPtr<dom::HTMLOptionsCollection> options = GetOptions();
   NS_ENSURE_TRUE(options, NS_ERROR_FAILURE);
 
-  uint32_t numOptions = 0;
-  options->GetLength(&numOptions);
+  uint32_t numOptions = options->Length();
 
   for (uint32_t i = 0; i < numOptions; ++i) {
     uint32_t index = (i + startIndex) % numOptions;
-    nsCOMPtr<nsIDOMHTMLOptionElement> optionElement = GetOption(options, index);
+    nsRefPtr<dom::HTMLOptionElement> optionElement =
+      options->ItemAsOption(index);
     if (!optionElement) {
       continue;
     }
