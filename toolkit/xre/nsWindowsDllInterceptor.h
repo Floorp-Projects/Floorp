@@ -159,14 +159,14 @@ public:
 
   bool WriteHook(byteptr_t fn, intptr_t hookDest, void **origFunc)
   {
-    // Check that the 5 bytes before fn are NOP's, and that the 2 bytes after
-    // fn are mov(edi, edi).
+    // Check that the 5 bytes before fn are NOP's or INT 3's,
+    // and that the 2 bytes after fn are mov(edi, edi).
     //
     // It's safe to read fn[-5] because we set it to PAGE_EXECUTE_READWRITE
     // before calling WriteHook.
 
     for (int i = -5; i <= -1; i++) {
-      if (fn[i] != 0x90) // nop
+      if (fn[i] != 0x90 && fn[i] != 0xcc) // nop or int 3
         return false;
     }
 
