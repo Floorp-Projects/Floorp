@@ -2,9 +2,11 @@
 package @ANDROID_PACKAGE_NAME@.tests;
 
 import @ANDROID_PACKAGE_NAME@.*;
-import android.widget.ListView;
+import java.util.ArrayList;
 
-public class testClearPrivateData extends AboutHomeTest  {
+public class testClearPrivateData extends AboutHomeTest {
+    private final String BLANK1_TITLE = "Browser Blank Page 01";
+    private final String BLANK2_TITLE = "Browser Blank Page 02";
 
     @Override
     protected int getTestType() {
@@ -17,29 +19,26 @@ public class testClearPrivateData extends AboutHomeTest  {
     }
 
     private void clearHistory() {
-        // Loading a page so we are sure that there is at least one history entry
-        String url = getAbsoluteUrl("/robocop/robocop_blank_01.html");
-        inputAndLoadUrl(url);
+        // Loading a page and adding a second one as bookmark to have user made bookmarks and history
+        String blank1 = getAbsoluteUrl("/robocop/robocop_blank_01.html");
+        String blank2 = getAbsoluteUrl("/robocop/robocop_blank_02.html");
 
-        /*  Removed by Bug 896576 - [fig] Remove [getHistoryList] from BaseTest
+        inputAndLoadUrl(blank1);
+        waitForText(BLANK1_TITLE);
+
+        addOrUpdateMobileBookmark(BLANK2_TITLE, blank2);
+
         // Checking that the history list is not empty
-        ListView hList = getHistoryList("Today|Yesterday");
-        mAsserter.ok(hList.getAdapter().getCount() > 0,"checking history exists","history exists");
+        ArrayList<String> browserHistory = getBrowserDBUrls(BrowserDataType.HISTORY);
+        mAsserter.ok(browserHistory.size() > 0,"Checking history exists","History exists");
 
-        // Quit the awesomescreen
-        mActions.sendSpecialKey(Actions.SpecialKey.BACK);
-        waitForText("Browser Blank Page 01");
-
-        // Clearing private data
-        selectSettingsItem("Privacy", "Clear private data");
-        mAsserter.ok(mSolo.searchButton("Clear data"),"checking clear button","clear button exists");
-        mSolo.clickOnButton("Clear data");
-        // TODO: extra long wait here for bug 837274
-        mAsserter.is(mSolo.waitForText("Private data cleared", 0, 60000),true,"private data cleared successfully");
+        clearPrivateData();
 
         // Checking that history list is empty
-        hList = getHistoryList("History", 0);
-        mAsserter.ok(hList != null,"checking history is cleared ","history is cleared");
-        */
+        browserHistory = getBrowserDBUrls(BrowserDataType.HISTORY);
+        mAsserter.ok(browserHistory.size() == 0,"Checking history is cleared ","History is cleared");
+
+        // Checking that the user made bookmark is not removed
+        mAsserter.ok(isBookmark(blank2), "Checking that bookmarks have not been removed", "User made bookmarks were not removed with private data");
     }
 }
