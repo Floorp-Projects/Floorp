@@ -24,6 +24,7 @@ var steps = [
   invalidManifest,
   permissionDenied,
   invalidContent,
+  installPackageNotImplemented,
   invalidLaunchPath,
   invalidLaunchPath2,
   invalidEntryPoint,
@@ -164,6 +165,12 @@ function invalidMessage(next) {
     is(this.error.name, "INVALID_MANIFEST", "Manifest has absolute message href");
     next();
   };
+}
+
+function installPackageNotImplemented(next) {
+  ok(!("installPackage" in navigator.mozApps),
+     "installPackage not in navigator.mozApps");
+  next();
 }
 
 function fileURL(next) {
