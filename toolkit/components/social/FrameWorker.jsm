@@ -141,16 +141,16 @@ FrameWorker.prototype = {
                      'clearInterval', 'clearTimeout', 'dump',
                      'setInterval', 'setTimeout', 'XMLHttpRequest',
                      'FileReader', 'Blob', 'EventSource', 'indexedDB',
-                     'location'];
+                     'location', 'Worker'];
 
     // Only expose localStorage if the caller opted-in
     if (this.exposeLocalStorage) {
       workerAPI.push('localStorage');
     }
 
-    // Bug 798660 - XHR and WebSocket have issues in a sandbox and need
+    // Bug 798660 - XHR, WebSocket and Worker have issues in a sandbox and need
     // to be unwrapped to work
-    let needsWaive = ['XMLHttpRequest', 'WebSocket'];
+    let needsWaive = ['XMLHttpRequest', 'WebSocket', 'Worker'];
     // Methods need to be bound with the proper |this|.
     let needsBind = ['atob', 'btoa', 'dump', 'setInterval', 'clearInterval',
                      'setTimeout', 'clearTimeout'];
