@@ -202,7 +202,6 @@
 #include "mozilla/dom/Element.h"
 
 #include "mozilla/dom/indexedDB/IDBWrapperCache.h"
-#include "mozilla/dom/indexedDB/IDBKeyRange.h"
 
 using mozilla::dom::indexedDB::IDBWrapperCache;
 using mozilla::dom::workers::ResolveWorkerClasses;
@@ -629,10 +628,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
                                        DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CHROME_ONLY_CLASSINFO_DATA(ChromeMessageSender, nsDOMGenericSH,
                                        DOM_DEFAULT_SCRIPTABLE_FLAGS)
-
-  NS_DEFINE_CLASSINFO_DATA(IDBKeyRange, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
-
 
   NS_DEFINE_CLASSINFO_DATA(MozCSSKeyframeRule, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
@@ -1516,10 +1511,6 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIFrameScriptLoader)
     DOM_CLASSINFO_MAP_ENTRY(nsIMessageListenerManager)
     DOM_CLASSINFO_MAP_ENTRY(nsIMessageSender)
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(IDBKeyRange, nsIIDBKeyRange)
-    DOM_CLASSINFO_MAP_ENTRY(nsIIDBKeyRange)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(MozCSSKeyframeRule, nsIDOMMozCSSKeyframeRule)
@@ -3223,16 +3214,7 @@ nsDOMConstructor::ResolveInterfaceConstants(JSContext *cx, JS::Handle<JSObject*>
     return NS_OK;
   }
 
-  nsresult rv = DefineInterfaceConstants(cx, obj, class_iid);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Special case for |IDBKeyRange| which gets funny "static" functions.
-  if (class_iid->Equals(NS_GET_IID(nsIIDBKeyRange)) &&
-      !indexedDB::IDBKeyRange::DefineConstructors(cx, obj)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  return NS_OK;
+  return DefineInterfaceConstants(cx, obj, class_iid);
 }
 
 NS_IMETHODIMP
@@ -3355,12 +3337,6 @@ ResolvePrototype(nsIXPConnect *aXPConnect, nsGlobalWindow *aWin, JSContext *cx,
 
     rv = DefineInterfaceConstants(cx, class_obj, primary_iid);
     NS_ENSURE_SUCCESS(rv, rv);
-
-    // Special case for |IDBKeyRange| which gets funny "static" functions.
-    if (primary_iid->Equals(NS_GET_IID(nsIIDBKeyRange)) &&
-        !indexedDB::IDBKeyRange::DefineConstructors(cx, class_obj)) {
-      return NS_ERROR_FAILURE;
-    }
 
     nsCOMPtr<nsIInterfaceInfoManager>
       iim(do_GetService(NS_INTERFACEINFOMANAGER_SERVICE_CONTRACTID));
