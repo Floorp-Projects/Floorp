@@ -121,7 +121,7 @@ Object.defineProperty(ContentTabActor.prototype, "url", {
   configurable: false
 });
 
-Object.defineProperty(ContentTabActor.prototype, "contentWindow", {
+Object.defineProperty(ContentTabActor.prototype, "window", {
   get: function() {
     return this.browser;
   },

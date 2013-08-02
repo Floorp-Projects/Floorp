@@ -470,18 +470,22 @@ function check_bookmarks_html() {
 function create_JSON_backup(aFilename) {
   if (!aFilename)
     do_throw("you must pass a filename to create_JSON_backup function");
-  remove_all_JSON_backups();
   let bookmarksBackupDir = gProfD.clone();
   bookmarksBackupDir.append("bookmarkbackups");
   if (!bookmarksBackupDir.exists()) {
     bookmarksBackupDir.create(Ci.nsIFile.DIRECTORY_TYPE, parseInt("0755", 8));
     do_check_true(bookmarksBackupDir.exists());
   }
+  let profileBookmarksJSONFile = bookmarksBackupDir.clone();
+  profileBookmarksJSONFile.append(FILENAME_BOOKMARKS_JSON);
+  if (profileBookmarksJSONFile.exists()) {
+    profileBookmarksJSONFile.remove();
+  }
   let bookmarksJSONFile = gTestDir.clone();
   bookmarksJSONFile.append(aFilename);
   do_check_true(bookmarksJSONFile.exists());
   bookmarksJSONFile.copyTo(bookmarksBackupDir, FILENAME_BOOKMARKS_JSON);
-  let profileBookmarksJSONFile = bookmarksBackupDir.clone();
+  profileBookmarksJSONFile = bookmarksBackupDir.clone();
   profileBookmarksJSONFile.append(FILENAME_BOOKMARKS_JSON);
   do_check_true(profileBookmarksJSONFile.exists());
   return profileBookmarksJSONFile;
@@ -504,12 +508,30 @@ function remove_all_JSON_backups() {
 /**
  * Check a JSON backup file for today exists in the profile folder.
  *
+ * @param aIsAutomaticBackup The boolean indicates whether it's an automatic
+ *        backup.
  * @return nsIFile object for the file.
  */
-function check_JSON_backup() {
-  let profileBookmarksJSONFile = gProfD.clone();
-  profileBookmarksJSONFile.append("bookmarkbackups");
-  profileBookmarksJSONFile.append(FILENAME_BOOKMARKS_JSON);
+function check_JSON_backup(aIsAutomaticBackup) {
+  let profileBookmarksJSONFile;
+  if (aIsAutomaticBackup) {
+    let bookmarksBackupDir = gProfD.clone();
+    bookmarksBackupDir.append("bookmarkbackups");
+    let files = bookmarksBackupDir.directoryEntries;
+    let backup_date = new Date().toLocaleFormat("%Y-%m-%d");
+    let rx = new RegExp("^bookmarks-" + backup_date + "_[0-9]+\.json$");
+    while (files.hasMoreElements()) {
+      let entry = files.getNext().QueryInterface(Ci.nsIFile);
+      if (entry.leafName.match(rx)) {
+        profileBookmarksJSONFile = entry;
+        break;
+      }
+    }
+  } else {
+    profileBookmarksJSONFile = gProfD.clone();
+    profileBookmarksJSONFile.append("bookmarkbackups");
+    profileBookmarksJSONFile.append(FILENAME_BOOKMARKS_JSON);
+  }
   do_check_true(profileBookmarksJSONFile.exists());
   return profileBookmarksJSONFile;
 }
