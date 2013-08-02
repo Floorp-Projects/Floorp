@@ -107,10 +107,7 @@ if (typeof console != "undefined" && console.log) {
   gLogger = console.log.bind(console, "OS");
 } else {
   gLogger = function(...args) {
-    let text = "OS";
-    for (let i = 0; i < args.length; ++i) {
-      text += (" " + args[i]);
-    }
+    dump("OS " + args.join(" ") + "\n");
   };
 }
 
