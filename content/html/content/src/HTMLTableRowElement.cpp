@@ -26,6 +26,8 @@ HTMLTableRowElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope)
   return HTMLTableRowElementBinding::Wrap(aCx, aScope, this);
 }
 
+NS_IMPL_CYCLE_COLLECTION_CLASS(HTMLTableRowElement)
+
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(HTMLTableRowElement,
                                                   nsGenericHTMLElement)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCells)
