@@ -102,11 +102,6 @@ public class NotificationHandler {
         if (mForegroundNotification == null && isOngoing(notification)) {
             setForegroundNotification(notificationID, notification);
         }
-
-        // Hide the notification at 100%
-        if (aProgress == aProgressMax) {
-            remove(notificationID);
-        }
     }
 
     /**
