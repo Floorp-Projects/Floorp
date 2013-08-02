@@ -13,6 +13,8 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/FileUtils.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://gre/modules/osfile.jsm");
+Cu.import("resource://gre/modules/WebappOSUtils.jsm");
+Cu.import("resource://gre/modules/AppsUtils.jsm");
 
 this.WebappsInstaller = {
   /**
@@ -71,14 +73,9 @@ this.WebappsInstaller = {
 function NativeApp(aData) {
   let app = this.app = aData.app;
 
-  let origin = Services.io.newURI(app.origin, null, null);
+  this.uniqueName = WebappOSUtils.getUniqueName(app);
 
-  if (app.manifest.launch_path) {
-    this.launchURI = Services.io.newURI(origin.resolve(app.manifest.launch_path),
-                                        null, null);
-  } else {
-    this.launchURI = origin.clone();
-  }
+  let origin = Services.io.newURI(app.origin, null, null);
 
   let biggestIcon = getBiggestIconURL(app.manifest.icons);
   try {
@@ -133,8 +130,7 @@ function NativeApp(aData) {
  *
  * The Windows installation process will generate the following files:
  *
- * ${FolderName} = protocol;app-origin[;port]
- *                 e.g.: subdomain.example.com;http;85
+ * ${FolderName} = sanitized app name + "-" + manifest url hash
  *
  * %APPDATA%/${FolderName}
  *   - webapp.ini
@@ -199,18 +195,9 @@ WinNativeApp.prototype = {
       this.appNameAsFilename = "webapp";
     }
 
-    // The ${InstallDir} format is as follows:
-    //  protocol
-    //  + ";" + host of the app origin
-    //  + ";" + port (only if port is not default)
+    // The ${InstallDir} is: sanitized app name + "-" + manifest url hash
     this.installDir = Services.dirsvc.get("AppData", Ci.nsIFile);
-    let installDirLeaf = this.launchURI.scheme
-                       + ";"
-                       + this.launchURI.host;
-    if (this.launchURI.port != -1) {
-      installDirLeaf += ";" + this.launchURI.port;
-    }
-    this.installDir.append(installDirLeaf);
+    this.installDir.append(this.uniqueName);
 
     this.webapprt = this.installDir.clone();
     this.webapprt.append(this.appNameAsFilename + ".exe");
@@ -233,8 +220,7 @@ WinNativeApp.prototype = {
     this.iconFile.append("default");
     this.iconFile.append("default.ico");
 
-    this.uninstallSubkeyStr = this.launchURI.scheme + "://" +
-                              this.launchURI.hostPort;
+    this.uninstallSubkeyStr = this.uniqueName;
   },
 
   /**
@@ -477,14 +463,9 @@ MacNativeApp.prototype = {
       this.appNameAsFilename = "Webapp";
     }
 
-    // The ${ProfileDir} format is as follows:
-    //  host of the app origin + ";" +
-    //  protocol + ";" +
-    //  port (-1 for default port)
+    // The ${ProfileDir} is: sanitized app name + "-" + manifest url hash
     this.appProfileDir = this.appSupportDir.clone();
-    this.appProfileDir.append(this.launchURI.host + ";" +
-                              this.launchURI.scheme + ";" +
-                              this.launchURI.port);
+    this.appProfileDir.append(this.uniqueName);
 
     this.installDir = Services.dirsvc.get("TmpD", Ci.nsILocalFile);
     this.installDir.append(this.appNameAsFilename + ".app");
@@ -585,7 +566,7 @@ MacNativeApp.prototype = {
     <key>CFBundleIconFile</key>\n\
     <string>appicon</string>\n\
     <key>CFBundleIdentifier</key>\n\
-    <string>' + escapeXML(this.launchURI.prePath) + '</string>\n\
+    <string>' + escapeXML(this.uniqueName) + '</string>\n\
     <key>CFBundleInfoDictionaryVersion</key>\n\
     <string>6.0</string>\n\
     <key>CFBundleName</key>\n\
@@ -670,14 +651,8 @@ function LinuxNativeApp(aData) {
 
 LinuxNativeApp.prototype = {
   _init: function() {
-    // The ${InstallDir} and desktop entry filename format is as follows:
-    // host of the app origin + ";" +
-    // protocol
-    // + ";" + port (only if port is not default)
-
-    this.uniqueName = this.launchURI.scheme + ";" + this.launchURI.host;
-    if (this.launchURI.port != -1)
-      this.uniqueName += ";" + this.launchURI.port;
+    // The ${InstallDir} and desktop entry filename are: sanitized app name +
+    // "-" + manifest url hash
 
     this.installDir = Services.dirsvc.get("Home", Ci.nsIFile);
     this.installDir.append("." + this.uniqueName);
