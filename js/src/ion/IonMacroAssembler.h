@@ -616,6 +616,11 @@ class MacroAssembler : public MacroAssemblerSpecific
         bind(&done);
     }
 
+    // Emit type case branch on tag matching if the type tag in the definition
+    // might actually be that type.
+    void branchEqualTypeIfNeeded(MIRType type, MDefinition *def, const Register &tag,
+                                 Label *label);
+
     // Inline allocation.
     void newGCThing(const Register &result, gc::AllocKind allocKind, Label *fail);
     void newGCThing(const Register &result, JSObject *templateObject, Label *fail);
