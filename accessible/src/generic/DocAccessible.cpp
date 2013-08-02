@@ -1158,7 +1158,13 @@ DocAccessible::ContentStateChanged(nsIDocument* aDocument,
       nsRefPtr<AccEvent> event =
         new AccSelChangeEvent(widget, accessible, selChangeType);
       FireDelayedEvent(event);
+      return;
     }
+
+    nsRefPtr<AccEvent> event =
+      new AccStateChangeEvent(accessible, states::CHECKED,
+                              aContent->AsElement()->State().HasState(NS_EVENT_STATE_CHECKED));
+    FireDelayedEvent(event);
   }
 
   if (aStateMask.HasState(NS_EVENT_STATE_INVALID)) {
