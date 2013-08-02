@@ -22,7 +22,10 @@ SourceSurfaceSkia::SourceSurfaceSkia()
 SourceSurfaceSkia::~SourceSurfaceSkia()
 {
   MaybeUnlock();
-  MarkIndependent();
+  if (mDrawTarget) {
+    mDrawTarget->SnapshotDestroyed();
+    mDrawTarget = nullptr;
+  }
 }
 
 IntSize
@@ -105,21 +108,6 @@ SourceSurfaceSkia::DrawTargetWillChange()
     SkBitmap temp = mBitmap;
     mBitmap.reset();
     temp.copyTo(&mBitmap, temp.getConfig());
-  }
-}
-
-void
-SourceSurfaceSkia::DrawTargetDestroyed()
-{
-  mDrawTarget = nullptr;
-}
-
-void
-SourceSurfaceSkia::MarkIndependent()
-{
-  if (mDrawTarget) {
-    mDrawTarget->RemoveSnapshot(this);
-    mDrawTarget = nullptr;
   }
 }
 
