@@ -181,8 +181,7 @@
     <vbox id="page">
       <vbox id="tray" class="tray-toolbar" observes="bcast_windowState" >
         <!-- Tabs -->
-        <!-- onclick handler to work around bug 837242 -->
-        <hbox id="tabs-container" observes="bcast_windowState" onclick="void(0);">
+        <hbox id="tabs-container" observes="bcast_windowState">
           <box id="tabs" flex="1"
                 observes="bcast_preciseInput"
                 onselect="BrowserUI.selectTabAndDismiss(this);"
@@ -243,8 +242,7 @@
         <box id="horizontal-scroller" class="scroller" orient="horizontal" left="0" bottom="0"/>
 
         <!-- Content touch selection overlay -->
-        <!-- onclick addresses dom bug 835175 -->
-        <box onclick="false" class="selection-overlay-hidden" id="content-selection-overlay"/>
+        <box class="selection-overlay-hidden" id="content-selection-overlay"/>
       </stack>
     </vbox>
 
@@ -293,6 +291,8 @@
                            command="cmd_stop"/>
           </hbox>
 
+          <circularprogressindicator id="download-progress"
+                                     oncommand="Appbar.onDownloadButton()"/>
           <stack id="toolbar-contextual">
             <observes element="bcast_windowState" attribute="*"/>
             <observes element="bcast_urlbarState" attribute="*"/>
@@ -736,11 +736,9 @@
     </flyoutpanel>
 
     <!-- Chrome touch selection overlay -->
-    <!-- onclick addresses dom bug 835175 -->
-    <box onclick="false" class="selection-overlay-hidden" id="chrome-selection-overlay"/>
+    <box class="selection-overlay-hidden" id="chrome-selection-overlay"/>
 
     <box onclick="event.stopPropagation();" id="context-container" class="menu-container" hidden="true">
-      <!-- onclick is dom bug 835175 -->
       <vbox id="context-popup" class="menu-popup">
         <richlistbox id="context-commands" bindingType="contextmenu" flex="1">
           <!-- priority="low" items are hidden by default when a context is being displayed

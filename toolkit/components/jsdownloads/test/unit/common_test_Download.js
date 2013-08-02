@@ -644,9 +644,30 @@ add_task(function test_cancel_midway_restart_tryToKeepPartialData()
   // Verify that the server sent the response from the start.
   do_check_eq(gMostRecentFirstBytePos, 0);
 
-  // The second time, we'll request and obtain the second part of the response.
+  // The second time, we'll request and obtain the second part of the response,
+  // but we still stop when half of the remaining progress is reached.
+  let deferMidway = Promise.defer();
+  download.onchange = function () {
+    if (!download.stopped && !download.canceled &&
+        download.currentBytes == Math.floor(TEST_DATA_SHORT.length * 3 / 2)) {
+      download.onchange = null;
+      deferMidway.resolve();
+    }
+  };
+
+  mustInterruptResponses();
+  let promiseAttempt = download.start();
+
+  // Continue when the number of bytes we received is correct, then check that
+  // progress is at about 75 percent.  The exact figure may vary because of
+  // rounding issues, since the total number of bytes in the response might not
+  // be a multiple of four.
+  yield deferMidway.promise;
+  do_check_true(download.progress > 72 && download.progress < 78);
+
+  // Now we allow the download to finish.
   continueResponses();
-  yield download.start();
+  yield promiseAttempt;
 
   // Check that the server now sent the second part only.
   do_check_eq(gMostRecentFirstBytePos, TEST_DATA_SHORT.length);

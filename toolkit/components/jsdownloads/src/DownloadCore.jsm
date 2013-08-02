@@ -1200,12 +1200,14 @@ DownloadCopySaver.prototype = {
           // If we have data that we can use to resume the download from where
           // it stopped, try to use it.
           let resumeAttempted = false;
+          let resumeFromBytes = 0;
           if (channel instanceof Ci.nsIResumableChannel && this.entityID &&
               partFilePath && keepPartialData) {
             try {
               let stat = yield OS.File.stat(partFilePath);
               channel.resumeAt(stat.size, this.entityID);
               resumeAttempted = true;
+              resumeFromBytes = stat.size;
             } catch (ex if ex instanceof OS.File.Error &&
                            ex.becauseNoSuchFile) { }
           }
@@ -1216,7 +1218,10 @@ DownloadCopySaver.prototype = {
             onProgress: function DCSE_onProgress(aRequest, aContext, aProgress,
                                                  aProgressMax)
             {
-              aSetProgressBytesFn(aProgress, aProgressMax, aProgress > 0 &&
+              let currentBytes = resumeFromBytes + aProgress;
+              let totalBytes = aProgressMax == -1 ? -1 : (resumeFromBytes +
+                                                          aProgressMax);
+              aSetProgressBytesFn(currentBytes, totalBytes, aProgress > 0 &&
                                   partFilePath && keepPartialData);
             },
             onStatus: function () { },

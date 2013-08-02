@@ -26,6 +26,7 @@ chrome.jar:
   content/bindings/selectionoverlay.xml        (content/bindings/selectionoverlay.xml)
   content/bindings/cssthrobber.xml             (content/bindings/cssthrobber.xml)
   content/bindings/popup.xml                   (content/bindings/popup.xml)
+  content/bindings/circularprogress.xml        (content/bindings/circularprogress.xml)
 
 * content/flyoutpanels/FlyoutPanelsUI.js       (content/flyoutpanels/FlyoutPanelsUI.js)
 * content/flyoutpanels/AboutFlyoutPanel.js     (content/flyoutpanels/AboutFlyoutPanel.js)
