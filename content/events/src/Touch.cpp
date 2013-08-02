@@ -134,15 +134,14 @@ Touch::InitializePoints(nsPresContext* aPresContext, nsEvent* aEvent)
   if (mPointsInitialized) {
     return;
   }
-  mClientPoint = nsDOMEvent::GetClientCoords(aPresContext,
-                                             aEvent,
-                                             mRefPoint,
-                                             mClientPoint);
-  mPagePoint = nsDOMEvent::GetPageCoords(aPresContext,
-                                         aEvent,
-                                         mRefPoint,
-                                         mClientPoint);
-  mScreenPoint = nsDOMEvent::GetScreenCoords(aPresContext, aEvent, mRefPoint);
+  mClientPoint = nsDOMEvent::GetClientCoords(
+    aPresContext, aEvent, LayoutDeviceIntPoint::FromUntyped(mRefPoint),
+    mClientPoint);
+  mPagePoint = nsDOMEvent::GetPageCoords(
+    aPresContext, aEvent, LayoutDeviceIntPoint::FromUntyped(mRefPoint),
+    mClientPoint);
+  mScreenPoint = nsDOMEvent::GetScreenCoords(aPresContext, aEvent,
+    LayoutDeviceIntPoint::FromUntyped(mRefPoint));
   mPointsInitialized = true;
 }
 

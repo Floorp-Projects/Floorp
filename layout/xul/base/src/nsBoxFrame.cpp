@@ -2084,7 +2084,7 @@ nsBoxFrame::GetEventPoint(nsGUIEvent* aEvent, nsIntPoint &aPoint) {
     Touch* domtouch = static_cast<Touch*>(touch);
     aPoint = domtouch->mRefPoint;
   } else {
-    aPoint = aEvent->refPoint;
+    aPoint = LayoutDeviceIntPoint::ToUntyped(aEvent->refPoint);
   }
   return true;
 }

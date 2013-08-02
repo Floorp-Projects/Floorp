@@ -227,7 +227,6 @@ public:
    * Misc.
    */
   virtual bool            AutoErase(HDC dc);
-  nsIntPoint*             GetLastPoint() { return &mLastPoint; }
   bool                    IsTopLevelWidget() { return mIsTopWidgetWindow; }
   /**
    * Start allowing Direct3D9 to be used by widgets when GetLayerManager is

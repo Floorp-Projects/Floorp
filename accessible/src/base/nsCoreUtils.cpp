@@ -41,6 +41,8 @@
 #include "nsITreeBoxObject.h"
 #include "nsITreeColumns.h"
 
+using namespace mozilla;
+
 ////////////////////////////////////////////////////////////////////////////////
 // nsCoreUtils
 ////////////////////////////////////////////////////////////////////////////////
@@ -130,7 +132,7 @@ nsCoreUtils::DispatchMouseEvent(uint32_t aEventType, int32_t aX, int32_t aY,
   nsMouseEvent event(true, aEventType, aRootWidget,
                      nsMouseEvent::eReal, nsMouseEvent::eNormal);
 
-  event.refPoint = nsIntPoint(aX, aY);
+  event.refPoint = LayoutDeviceIntPoint(aX, aY);
 
   event.clickCount = 1;
   event.button = nsMouseEvent::eLeftButton;
