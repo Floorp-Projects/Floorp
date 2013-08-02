@@ -1165,6 +1165,7 @@ this.GECKO_ICC_SERVICES = {
     SPDI: 51
   },
   ruim: {
+    ENHANCED_PHONEBOOK: 6,
     SPN: 17
   }
 };
