@@ -578,9 +578,13 @@ function regularListing(metadata, response)
  */
 function testListing(metadata, response)
 {
-  var [links, count] = list(metadata.path,
-                            metadata.getProperty("directory"),
-                            true);
+  var links = {};
+  var count = 0;
+  if (metadata.queryString.indexOf('manifestFile') == -1) {
+    [links, count] = list(metadata.path,
+                          metadata.getProperty("directory"),
+                          true);
+  }
   var table_class = metadata.queryString.indexOf("hideResultsTable=1") > -1 ? "invisible": "";
 
   let testname = (metadata.queryString.indexOf("testname=") > -1)
@@ -606,6 +610,8 @@ function testListing(metadata, response)
                  src: "/tests/SimpleTest/MozillaLogger.js"}),
         SCRIPT({type: "text/javascript",
                  src: "/chunkifyTests.js"}),
+        SCRIPT({type: "text/javascript",
+                 src: "/manifestLibrary.js"}),
         SCRIPT({type: "text/javascript",
                  src: "/tests/SimpleTest/setup.js"}),
         SCRIPT({type: "text/javascript"},

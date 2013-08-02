@@ -98,7 +98,7 @@ public:
   bool IsPreliminaryHandshakeDone() const { return mPreliminaryHandshakeDone; }
   void SetPreliminaryHandshakeDone() { mPreliminaryHandshakeDone = true; }
 
-  void SetKEAUsed(PRUint16 kea) { mKEAUsed = kea; }
+  void SetKEAUsed(uint16_t kea) { mKEAUsed = kea; }
   inline int16_t GetKEAExpected() // infallible in nsISSLSocketControl
   {
     int16_t result;
@@ -106,7 +106,7 @@ public:
     MOZ_ASSERT(NS_SUCCEEDED(rv));
     return result;
   }
-  void SetSymmetricCipherUsed(PRUint16 symmetricCipher)
+  void SetSymmetricCipherUsed(uint16_t symmetricCipher)
   {
     mSymmetricCipherUsed = symmetricCipher;
   }
@@ -147,10 +147,10 @@ private:
 
   // mKEA* and mSymmetricCipher* are used in false start detetermination
   // values are from nsISSLSocketControl
-  PRInt16 mKEAUsed;
-  PRInt16 mKEAExpected;
-  PRInt16 mSymmetricCipherUsed;
-  PRInt16 mSymmetricCipherExpected;
+  int16_t mKEAUsed;
+  int16_t mKEAExpected;
+  int16_t mSymmetricCipherUsed;
+  int16_t mSymmetricCipherExpected;
 
   uint32_t mProviderFlags;
   mozilla::TimeStamp mSocketCreationTimestamp;

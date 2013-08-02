@@ -508,9 +508,13 @@ class MOZ_STACK_CLASS MutableHandle : public js::MutableHandleBase<T>
     }
 
     T *address() const { return ptr; }
-    T get() const { return *ptr; }
+    const T& get() const { return *ptr; }
 
-    operator T() const { return get(); }
+    /*
+     * Return a reference so passing a MutableHandle<T> to something that takes
+     * a |const T&| is not a GC hazard.
+     */
+    operator const T&() const { return get(); }
     T operator->() const { return get(); }
 
   private:

@@ -11,6 +11,8 @@ relativesrcdir = @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+CXXFLAGS += $(MOZ_CAIRO_CFLAGS) $(MOZ_PIXMAN_CFLAGS) $(TK_CFLAGS) 
+
 # Create a GTest library
 MODULE_NAME    = gfxtest
 LIBXUL_LIBRARY = 1

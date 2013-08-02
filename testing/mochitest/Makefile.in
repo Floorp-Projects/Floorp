@@ -50,6 +50,7 @@ _SERV_FILES = 	\
 		gen_template.pl \
 		server.js \
 		chunkifyTests.js \
+		manifestLibrary.js \
 		harness.xul \
 		browser-test-overlay.xul \
 		browser-test.js \
@@ -203,6 +204,7 @@ $(_DEST_DIR):
 
 stage-package:
 	$(NSINSTALL) -D $(PKG_STAGE)/mochitest && $(NSINSTALL) -D $(PKG_STAGE)/bin/plugins && $(NSINSTALL) -D $(DIST)/plugins
+	cp $(DEPTH)/mozinfo.json $(PKG_STAGE)/mochitest
 	(cd $(DEPTH)/_tests/testing/mochitest/ && tar $(TAR_CREATE_FLAGS) - *) | (cd $(PKG_STAGE)/mochitest && tar -xf -)
 	@cp $(DEPTH)/mozinfo.json $(PKG_STAGE)/mochitest
 	@(cd $(DIST_BIN) && tar $(TAR_CREATE_FLAGS) - $(TEST_HARNESS_BINS)) | (cd $(PKG_STAGE)/bin && tar -xf -)

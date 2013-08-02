@@ -3,13 +3,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "TestHarness.h"
+#include "gtest/gtest.h"
 
 #include <string.h>
 #include "nsColor.h"
 #include "nsColorNames.h"
 #include "prprf.h"
 #include "nsString.h"
+#include "mozilla/Util.h"
 
 // define an array of all color names
 #define GFX_COLOR(_name, _value) #_name,
@@ -25,6 +26,8 @@ static const nscolor kColors[] = {
 };
 #undef GFX_COLOR
 
+using namespace mozilla;
+
 static const char* kJunkNames[] = {
   nullptr,
   "",
@@ -34,15 +37,9 @@ static const char* kJunkNames[] = {
   "#@$&@#*@*$@$#"
 };
 
-int main(int argc, char** argv)
-{
-  ScopedXPCOM xpcom("TestColorNames");
-  if (xpcom.failed())
-    return 1;
-
+static
+void RunColorTests() {
   nscolor rgb;
-  int rv = 0;
-
   // First make sure we can find all of the tags that are supposed to
   // be in the table. Futz with the case to make sure any case will
   // work
@@ -52,27 +49,17 @@ int main(int argc, char** argv)
     nsCString tagName(kColorNames[index]);
 
     // Check that color lookup by name gets the right rgb value
-    if (!NS_ColorNameToRGB(NS_ConvertASCIItoUTF16(tagName), &rgb)) {
-      fail("can't find '%s'", tagName.get());
-      rv = 1;
-    }
-    if (rgb != kColors[index]) {
-      fail("name='%s' ColorNameToRGB=%x kColors[%d]=%08x",
-           tagName.get(), rgb, index, kColors[index]);
-      rv = 1;
-    }
+    ASSERT_TRUE(NS_ColorNameToRGB(NS_ConvertASCIItoUTF16(tagName), &rgb)) <<
+      "can't find '" << tagName.get() << "'";
+    ASSERT_TRUE((rgb == kColors[index])) <<
+      "failed at index " << index << " out of " << ArrayLength(kColorNames);
 
     // fiddle with the case to make sure we can still find it
     tagName.SetCharAt(tagName.CharAt(0) - 32, 0);
-    if (!NS_ColorNameToRGB(NS_ConvertASCIItoUTF16(tagName), &rgb)) {
-      fail("can't find '%s'", tagName.get());
-      rv = 1;
-    }
-    if (rgb != kColors[index]) {
-      fail("name='%s' ColorNameToRGB=%x kColors[%d]=%08x",
-           tagName.get(), rgb, index, kColors[index]);
-      rv = 1;
-    }
+    ASSERT_TRUE(NS_ColorNameToRGB(NS_ConvertASCIItoUTF16(tagName), &rgb)) <<
+      "can't find '" << tagName.get() << "'";
+    ASSERT_TRUE((rgb == kColors[index])) <<
+      "failed at index " << index << " out of " << ArrayLength(kColorNames);
 
     // Check that parsing an RGB value in hex gets the right values
     uint8_t r = NS_GET_R(rgb);
@@ -86,26 +73,27 @@ int main(int argc, char** argv)
     char cbuf[50];
     PR_snprintf(cbuf, sizeof(cbuf), "%02x%02x%02x", r, g, b);
     nscolor hexrgb;
-    if (!NS_HexToRGB(NS_ConvertASCIItoUTF16(cbuf), &hexrgb)) {
-      fail("hex conversion to color of '%s'", cbuf);
-      rv = 1;
-    }
-    if (hexrgb != rgb) {
-      fail("rgb=%x hexrgb=%x", rgb, hexrgb);
-      rv = 1;
-    }
+    ASSERT_TRUE(NS_HexToRGB(NS_ConvertASCIItoUTF16(cbuf), &hexrgb)) <<
+      "hex conversion to color of '" << cbuf << "'";
+    ASSERT_TRUE(hexrgb == rgb);
   }
+}
 
+static
+void RunJunkColorTests() {
+  nscolor rgb;
   // Now make sure we don't find some garbage
   for (uint32_t i = 0; i < ArrayLength(kJunkNames); i++) {
     nsCString tag(kJunkNames[i]);
-    if (NS_ColorNameToRGB(NS_ConvertASCIItoUTF16(tag), &rgb)) {
-      fail("found '%s'", kJunkNames[i] ? kJunkNames[i] : "(null)");
-      rv = 1;
-    }
+    ASSERT_FALSE(NS_ColorNameToRGB(NS_ConvertASCIItoUTF16(tag), &rgb)) <<
+      "Failed at junk color " << kJunkNames[i];
   }
+}
 
-  if (rv == 0)
-    passed("TestColorNames");
-  return rv;
+TEST(Gfx, ColorNames) {
+  RunColorTests();
+}
+
+TEST(Gfx, JunkColorNames) {
+  RunJunkColorTests();
 }
