@@ -688,7 +688,8 @@ JSRuntime::initSelfHosting(JSContext *cx)
 {
     JS_ASSERT(!selfHostingGlobal_);
     RootedObject savedGlobal(cx, js::DefaultObjectForContextOrNull(cx));
-    if (!(selfHostingGlobal_ = JS_NewGlobalObject(cx, &self_hosting_global_class, NULL)))
+    if (!(selfHostingGlobal_ = JS_NewGlobalObject(cx, &self_hosting_global_class,
+                                                  NULL, JS::DontFireOnNewGlobalHook)))
         return false;
     JSAutoCompartment ac(cx, selfHostingGlobal_);
     js::SetDefaultObjectForContext(cx, selfHostingGlobal_);
@@ -703,6 +704,8 @@ JSRuntime::initSelfHosting(JSContext *cx)
 
     if (!JS_DefineFunctions(cx, shg, intrinsic_functions))
         return false;
+
+    JS_FireOnNewGlobalObject(cx, shg);
 
     /*
      * In self-hosting mode, scripts emit JSOP_CALLINTRINSIC instead of

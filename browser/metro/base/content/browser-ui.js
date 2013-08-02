@@ -45,6 +45,7 @@ let Elements = {};
   ["toolbar",            "toolbar"],
   ["browsers",           "browsers"],
   ["navbar",             "navbar"],
+  ["autocomplete",       "urlbar-autocomplete"],
   ["contextappbar",      "contextappbar"],
   ["findbar",            "findbar"],
   ["contentViewport",    "content-viewport"],
@@ -550,13 +551,12 @@ var BrowserUI = {
         break;
       case "metro_viewstate_changed":
         this._adjustDOMforViewState();
-        let autocomplete = document.getElementById("urlbar-autocomplete");
         if (aData == "snapped") {
           FlyoutPanelsUI.hide();
-          autocomplete.setAttribute("orient", "vertical");
+          Elements.autocomplete.setAttribute("orient", "vertical");
         }
         else {
-          autocomplete.setAttribute("orient", "horizontal");
+          Elements.autocomplete.setAttribute("orient", "horizontal");
         }
 
         break;

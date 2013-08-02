@@ -14,6 +14,8 @@
 namespace mozilla {
 namespace dom {
 
+NS_IMPL_CYCLE_COLLECTION_CLASS(WaveShaperNode)
+
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(WaveShaperNode, AudioNode)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
   tmp->ClearCurve();

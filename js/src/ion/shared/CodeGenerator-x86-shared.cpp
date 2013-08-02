@@ -16,6 +16,7 @@
 #include "ion/IonCompartment.h"
 #include "ion/IonFrames.h"
 #include "ion/ParallelFunctions.h"
+#include "ion/RangeAnalysis.h"
 
 #include "ion/shared/CodeGenerator-shared-inl.h"
 
@@ -379,35 +380,43 @@ CodeGeneratorX86Shared::visitMinMaxD(LMinMaxD *ins)
 
     JS_ASSERT(first == output);
 
-    Assembler::Condition cond = ins->mir()->isMax()
-                               ? Assembler::Above
-                               : Assembler::Below;
-    Label nan, equal, returnSecond, done;
+    Label done, nan, minMaxInst;
 
-    masm.ucomisd(second, first);
-    masm.j(Assembler::Parity, &nan); // first or second is NaN, result is NaN.
-    masm.j(Assembler::Equal, &equal); // make sure we handle -0 and 0 right.
-    masm.j(cond, &returnSecond);
-    masm.jmp(&done);
+    // Do a ucomisd to catch equality and NaNs, which both require special
+    // handling. If the operands are ordered and inequal, we branch straight to
+    // the min/max instruction. If we wanted, we could also branch for less-than
+    // or greater-than here instead of using min/max, however these conditions
+    // will sometimes be hard on the branch predictor.
+    masm.ucomisd(first, second);
+    masm.j(Assembler::NotEqual, &minMaxInst);
+    if (!ins->mir()->range() || ins->mir()->range()->isInfinite())
+        masm.j(Assembler::Parity, &nan);
 
-    // Check for zero.
-    masm.bind(&equal);
-    masm.xorpd(ScratchFloatReg, ScratchFloatReg);
-    masm.ucomisd(first, ScratchFloatReg);
-    masm.j(Assembler::NotEqual, &done); // first wasn't 0 or -0, so just return it.
-    // So now both operands are either -0 or 0.
+    // Ordered and equal. The operands are bit-identical unless they are zero
+    // and negative zero. These instructions merge the sign bits in that
+    // case, and are no-ops otherwise.
     if (ins->mir()->isMax())
-        masm.addsd(second, first); // -0 + -0 = -0 and -0 + 0 = 0.
+        masm.andpd(second, first);
     else
-        masm.orpd(second, first); // This just ors the sign bit.
-    masm.jmp(&done);
+        masm.orpd(second, first);
+    masm.jump(&done);
 
-    masm.bind(&nan);
-    masm.loadStaticDouble(&js_NaN, output);
-    masm.jmp(&done);
+    // x86's min/max are not symmetric; if either operand is a NaN, they return
+    // the read-only operand. We need to return a NaN if either operand is a
+    // NaN, so we explicitly check for a NaN in the read-write operand.
+    if (!ins->mir()->range() || ins->mir()->range()->isInfinite()) {
+        masm.bind(&nan);
+        masm.ucomisd(first, first);
+        masm.j(Assembler::Parity, &done);
+    }
 
-    masm.bind(&returnSecond);
-    masm.movsd(second, output);
+    // When the values are inequal, or second is NaN, x86's min and max will
+    // return the value we need.
+    masm.bind(&minMaxInst);
+    if (ins->mir()->isMax())
+        masm.maxsd(second, first);
+    else
+        masm.minsd(second, first);
 
     masm.bind(&done);
     return true;

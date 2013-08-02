@@ -149,7 +149,7 @@ END_TEST(testDebugger_throwHook)
 BEGIN_TEST(testDebugger_debuggerObjectVsDebugMode)
 {
     CHECK(JS_DefineDebuggerObject(cx, global));
-    JS::RootedObject debuggee(cx, JS_NewGlobalObject(cx, getGlobalClass(), NULL));
+    JS::RootedObject debuggee(cx, JS_NewGlobalObject(cx, getGlobalClass(), NULL, JS::FireOnNewGlobalHook));
     CHECK(debuggee);
 
     {
@@ -189,7 +189,7 @@ BEGIN_TEST(testDebugger_newScriptHook)
 {
     // Test that top-level indirect eval fires the newScript hook.
     CHECK(JS_DefineDebuggerObject(cx, global));
-    JS::RootedObject g(cx, JS_NewGlobalObject(cx, getGlobalClass(), NULL));
+    JS::RootedObject g(cx, JS_NewGlobalObject(cx, getGlobalClass(), NULL, JS::FireOnNewGlobalHook));
     CHECK(g);
     {
         JSAutoCompartment ae(cx, g);

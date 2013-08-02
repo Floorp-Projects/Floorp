@@ -469,7 +469,8 @@ CreateGlobalObject(JSContext *cx, JSClass *clasp, nsIPrincipal *principal,
     MOZ_ASSERT(principal);
 
     RootedObject global(cx,
-                        JS_NewGlobalObject(cx, clasp, nsJSPrincipals::get(principal), aOptions));
+                        JS_NewGlobalObject(cx, clasp, nsJSPrincipals::get(principal),
+                                           JS::DontFireOnNewGlobalHook, aOptions));
     if (!global)
         return nullptr;
     JSAutoCompartment ac(cx, global);

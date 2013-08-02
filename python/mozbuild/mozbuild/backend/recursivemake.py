@@ -11,7 +11,10 @@ import types
 
 import mozpack.path
 from mozpack.copier import FilePurger
-from mozpack.manifests import PurgeManifest
+from mozpack.manifests import (
+    InstallManifest,
+    PurgeManifest,
+)
 
 from .base import BuildBackend
 from ..frontend.data import (
@@ -132,6 +135,8 @@ class RecursiveMakeBackend(BuildBackend):
 
         self.backend_input_files.add(os.path.join(self.environment.topobjdir,
             'config', 'autoconf.mk'))
+
+        self._install_manifests = dict()
 
         self._purge_manifests = dict(
             dist_bin=PurgeManifest(relpath='dist/bin'),
@@ -292,7 +297,8 @@ class RecursiveMakeBackend(BuildBackend):
             self._update_from_avoid_write(mastermanifest.close())
             self.summary.managed_count += 1
 
-        self._write_purge_manifests()
+        self._write_manifests('install', self._install_manifests)
+        self._write_manifests('purge', self._purge_manifests)
 
     def _process_directory_traversal(self, obj, backend_file):
         """Process a data.DirectoryTraversal instance."""
@@ -370,21 +376,15 @@ class RecursiveMakeBackend(BuildBackend):
             manifest = '%s/%s' % (obj.relativedir, manifest)
         self.xpcshell_manifests.append(manifest)
 
-    def _write_purge_manifests(self):
-        # We write out a "manifest" file for each directory that is to be
-        # purged.
-        #
-        # Ideally we have as few manifests as possible - ideally only 1. This
-        # will likely require all build metadata to be in emitted objects.
-        # We're not quite there yet, so we maintain multiple manifests.
+    def _write_manifests(self, dest, manifests):
         man_dir = os.path.join(self.environment.topobjdir, '_build_manifests',
-            'purge')
+            dest)
 
-        # We have a purger for the manifests themselves to ensure we don't over
-        # purge if we delete a purge manifest.
+        # We have a purger for the manifests themselves to ensure legacy
+        # manifests are deleted.
         purger = FilePurger()
 
-        for k, manifest in self._purge_manifests.items():
+        for k, manifest in manifests.items():
             purger.add(k)
 
             fh = FileAvoidWrite(os.path.join(man_dir, k))
