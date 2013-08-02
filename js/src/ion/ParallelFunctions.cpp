@@ -391,6 +391,79 @@ js::ion::StringsUnequalPar(ForkJoinSlice *slice, HandleString v1, HandleString v
     return StringsEqualImplPar<false>(slice, v1, v2, res);
 }
 
+ParallelResult
+ion::BitNotPar(ForkJoinSlice *slice, HandleValue in, int32_t *out)
+{
+    if (in.isObject())
+        return TP_RETRY_SEQUENTIALLY;
+    int i;
+    if (!NonObjectToInt32(slice, in, &i))
+        return TP_FATAL;
+    *out = ~i;
+    return TP_SUCCESS;
+}
+
+#define BIT_OP(OP)                                                      \
+    JS_BEGIN_MACRO                                                      \
+    int32_t left, right;                                                \
+    if (lhs.isObject() || rhs.isObject())                               \
+        return TP_RETRY_SEQUENTIALLY;                                   \
+    if (!NonObjectToInt32(slice, lhs, &left) ||                         \
+        !NonObjectToInt32(slice, rhs, &right))                          \
+    {                                                                   \
+        return TP_FATAL;                                                \
+    }                                                                   \
+    *out = (OP);                                                        \
+    return TP_SUCCESS;                                                  \
+    JS_END_MACRO
+
+ParallelResult
+ion::BitXorPar(ForkJoinSlice *slice, HandleValue lhs, HandleValue rhs, int32_t *out)
+{
+    BIT_OP(left ^ right);
+}
+
+ParallelResult
+ion::BitOrPar(ForkJoinSlice *slice, HandleValue lhs, HandleValue rhs, int32_t *out)
+{
+    BIT_OP(left | right);
+}
+
+ParallelResult
+ion::BitAndPar(ForkJoinSlice *slice, HandleValue lhs, HandleValue rhs, int32_t *out)
+{
+    BIT_OP(left & right);
+}
+
+ParallelResult
+ion::BitLshPar(ForkJoinSlice *slice, HandleValue lhs, HandleValue rhs, int32_t *out)
+{
+    BIT_OP(left << (right & 31));
+}
+
+ParallelResult
+ion::BitRshPar(ForkJoinSlice *slice, HandleValue lhs, HandleValue rhs, int32_t *out)
+{
+    BIT_OP(left >> (right & 31));
+}
+
+#undef BIT_OP
+
+ParallelResult
+ion::UrshValuesPar(ForkJoinSlice *slice, HandleValue lhs, HandleValue rhs,
+                   MutableHandleValue out)
+{
+    uint32_t left;
+    int32_t right;
+    if (lhs.isObject() || rhs.isObject())
+        return TP_RETRY_SEQUENTIALLY;
+    if (!NonObjectToUint32(slice, lhs, &left) || !NonObjectToInt32(slice, rhs, &right))
+        return TP_FATAL;
+    left >>= right & 31;
+    out.setNumber(uint32_t(left));
+    return TP_SUCCESS;
+}
+
 void
 ion::AbortPar(ParallelBailoutCause cause, JSScript *outermostScript, JSScript *currentScript,
               jsbytecode *bytecode)
