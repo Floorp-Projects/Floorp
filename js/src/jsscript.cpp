@@ -2519,10 +2519,9 @@ js::CloneFunctionScript(JSContext *cx, HandleFunction original, HandleFunction c
     clone->setScript(cscript);
     cscript->setFunction(clone);
 
-    RootedGlobalObject global(cx, script->compileAndGo ? &script->global() : NULL);
-
     script = clone->nonLazyScript();
     CallNewScriptHook(cx, script, clone);
+    RootedGlobalObject global(cx, script->compileAndGo ? &script->global() : NULL);
     Debugger::onNewScript(cx, script, global);
 
     return true;
