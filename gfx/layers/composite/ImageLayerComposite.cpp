@@ -96,6 +96,8 @@ ImageLayerComposite::RenderLayer(const nsIntPoint& aOffset,
                         gfx::Point(aOffset.x, aOffset.y),
                         gfx::ToFilter(mFilter),
                         clipRect);
+
+  LayerManagerComposite::RemoveMaskEffect(mMaskLayer);
 }
 
 void 
