@@ -84,6 +84,15 @@ namespace mozilla {
 namespace gl {
 typedef uintptr_t SharedTextureHandle;
 
+MOZ_BEGIN_ENUM_CLASS(ContextProfile, uint8_t)
+    Unknown = 0,
+    OpenGL, // only for IsAtLeast's <profile> parameter
+    OpenGLCore,
+    OpenGLCompatibility,
+    OpenGLES
+MOZ_END_ENUM_CLASS(ContextProfile)
+
+
 class GLContext
     : public GLLibraryLoader
     , public GenericAtomicRefCounted
@@ -140,6 +149,85 @@ public:
         return false;
     }
 
+    /**
+     * Return true if we are running on a OpenGL core profile context
+     */
+    inline bool IsCoreProfile() const {
+        MOZ_ASSERT(mProfile != ContextProfile::Unknown, "unknown context profile");
+
+        return mProfile == ContextProfile::OpenGLCore;
+    }
+
+    /**
+     * Return true if we are running on a OpenGL compatibility profile context
+     * (legacy profile 2.1 on Max OS X)
+     */
+    inline bool IsCompatibilityProfile() const {
+        MOZ_ASSERT(mProfile != ContextProfile::Unknown, "unknown context profile");
+
+        return mProfile == ContextProfile::OpenGLCompatibility;
+    }
+
+    /**
+     * Return true if the context is a true OpenGL ES context or an ANGLE context
+     */
+    inline bool IsGLES() const {
+        MOZ_ASSERT(mProfile != ContextProfile::Unknown, "unknown context profile");
+
+        return mProfile == ContextProfile::OpenGLES;
+    }
+
+    static const char* GetProfileName(ContextProfile profile)
+    {
+        switch (profile)
+        {
+            case ContextProfile::OpenGL:
+                return "OpenGL";
+            case ContextProfile::OpenGLCore:
+                return "OpenGL Core";
+            case ContextProfile::OpenGLCompatibility:
+                return "OpenGL Compatibility";
+            case ContextProfile::OpenGLES:
+                return "OpenGL ES";
+            default:
+                break;
+        }
+
+        MOZ_ASSERT(profile != ContextProfile::Unknown, "unknown context profile");
+        return "OpenGL unknown profile";
+    }
+
+    /**
+     * Return true if the context is compatible with given parameters
+     *
+     * IsAtLeast(ContextProfile::OpenGL, N) is exactly same as
+     * IsAtLeast(ContextProfile::OpenGLCore, N) || IsAtLeast(ContextProfile::OpenGLCompatibility, N)
+     */
+    inline bool IsAtLeast(ContextProfile profile, unsigned int version) const
+    {
+        MOZ_ASSERT(profile != ContextProfile::Unknown, "IsAtLeast: bad <profile> parameter");
+        MOZ_ASSERT(mProfile != ContextProfile::Unknown, "unknown context profile");
+        MOZ_ASSERT(mVersion != 0, "unknown context version");
+
+        if (profile == ContextProfile::OpenGL) {
+            return (profile == ContextProfile::OpenGLCore ||
+                    profile == ContextProfile::OpenGLCompatibility) &&
+                   version >= mVersion;
+        }
+
+        return profile == mProfile &&
+               version >= mVersion;
+    }
+
+    /**
+     * Return the version of the context.
+     * Example :
+     *   If this a OpenGL 2.1, that will return 210
+     */
+    inline unsigned int Version() const {
+        return mVersion;
+    }
+
     int Vendor() const {
         return mVendor;
     }
@@ -171,7 +259,7 @@ public:
      * extensions).
      */
     inline bool IsGLES2() const {
-        return mIsGLES2;
+        return IsAtLeast(ContextProfile::OpenGLES, 200);
     }
 
     /**
@@ -189,14 +277,24 @@ protected:
     bool mIsOffscreen;
     bool mIsGlobalSharedContext;
     bool mContextLost;
-    bool mIsGLES2;
+
+    /**
+     * mVersion store the OpenGL's version, multiplied by 100. For example, if
+     * the context is an OpenGL 2.1 context, mVersion value will be 210.
+     */
+    unsigned int mVersion;
+    ContextProfile mProfile;
 
     int32_t mVendor;
     int32_t mRenderer;
 
-    inline void SetIsGLES2(bool isGLES2) {
-        MOZ_ASSERT(!mInitialized, "SetIsGLES2 can only be called before initialization!");
-        mIsGLES2 = isGLES2;
+    inline void SetProfileVersion(ContextProfile profile, unsigned int version) {
+        MOZ_ASSERT(!mInitialized, "SetProfileVersion can only be called before initialization!");
+        MOZ_ASSERT(profile != ContextProfile::Unknown && profile != ContextProfile::OpenGL, "Invalid `profile` for SetProfileVersion");
+        MOZ_ASSERT(version >= 100, "Invalid `version` for SetProfileVersion");
+
+        mVersion = version;
+        mProfile = profile;
     }
 
 
@@ -2015,18 +2113,22 @@ public:
 public:
     void fDrawArraysInstanced(GLenum mode, GLint first, GLsizei count, GLsizei primcount)
     {
+        BeforeGLDrawCall();
         BEFORE_GL_CALL;
         ASSERT_SYMBOL_PRESENT(fDrawArraysInstanced);
         mSymbols.fDrawArraysInstanced(mode, first, count, primcount);
         AFTER_GL_CALL;
+        AfterGLDrawCall();
     }
 
     void fDrawElementsInstanced(GLenum mode, GLsizei count, GLenum type, const GLvoid* indices, GLsizei primcount)
     {
+        BeforeGLDrawCall();
         BEFORE_GL_CALL;
         ASSERT_SYMBOL_PRESENT(fDrawElementsInstanced);
         mSymbols.fDrawElementsInstanced(mode, count, type, indices, primcount);
         AFTER_GL_CALL;
+        AfterGLDrawCall();
     }
 
 
@@ -2115,7 +2217,8 @@ protected:
         mIsOffscreen(isOffscreen),
         mIsGlobalSharedContext(false),
         mContextLost(false),
-        mIsGLES2(false),
+        mVersion(0),
+        mProfile(ContextProfile::Unknown),
         mVendor(-1),
         mRenderer(-1),
         mHasRobustness(false),

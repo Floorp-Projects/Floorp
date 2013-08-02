@@ -30,7 +30,7 @@ class nsPresState;
 namespace mozilla {
 namespace dom {
 
-class HTMLTextAreaElement MOZ_FINAL : public nsGenericHTMLFormElement,
+class HTMLTextAreaElement MOZ_FINAL : public nsGenericHTMLFormElementWithState,
                                       public nsIDOMHTMLTextAreaElement,
                                       public nsITextControlElement,
                                       public nsIDOMNSEditableElement,
@@ -147,7 +147,7 @@ public:
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
 
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(HTMLTextAreaElement,
-                                           nsGenericHTMLFormElement)
+                                           nsGenericHTMLFormElementWithState)
 
   virtual nsIDOMNode* AsDOMNode() MOZ_OVERRIDE { return this; }
 
@@ -189,8 +189,8 @@ public:
   {
     SetHTMLBoolAttr(nsGkAtoms::disabled, aDisabled, aError);
   }
-  // nsGenericHTMLFormElement::GetForm is fine
-  using nsGenericHTMLFormElement::GetForm;
+  // nsGenericHTMLFormElementWithState::GetForm is fine
+  using nsGenericHTMLFormElementWithState::GetForm;
   int32_t MaxLength()
   {
     return GetIntAttr(nsGkAtoms::maxlength, -1);
@@ -272,7 +272,8 @@ public:
   }
 
 protected:
-  using nsGenericHTMLFormElement::IsSingleLineTextControl; // get rid of the compiler warning
+  // get rid of the compiler warning
+  using nsGenericHTMLFormElementWithState::IsSingleLineTextControl;
 
   virtual JSObject* WrapNode(JSContext *aCx,
                              JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;

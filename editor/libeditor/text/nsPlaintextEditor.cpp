@@ -91,6 +91,8 @@ nsPlaintextEditor::~nsPlaintextEditor()
     mRules->DetachEditor();
 }
 
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsPlaintextEditor)
+
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsPlaintextEditor, nsEditor)
   if (tmp->mRules)
     tmp->mRules->DetachEditor();

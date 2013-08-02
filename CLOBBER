@@ -18,4 +18,4 @@
 # Modifying this file will now automatically clobber the buildbot machines \o/
 #
 
-Multiple WebIDL changes requiring a clobber on Windows due to bug 890744
+Removal of XPIDL for bug 893117 requires a clobber to make sure interfaces aren't generated.

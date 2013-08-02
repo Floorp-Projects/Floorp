@@ -64,8 +64,9 @@
 
 <!ENTITY settings "Settings">
 <!ENTITY settings_title "Settings">
+<!ENTITY pref_category_advanced "Advanced">
 <!ENTITY pref_category_customize "Customize">
-<!ENTITY pref_category_search "Search">
+<!ENTITY pref_category_search2 "Search settings">
 <!ENTITY pref_category_display "Display">
 <!ENTITY pref_category_privacy_short "Privacy">
 <!ENTITY pref_category_vendor "&vendorShortName;">
@@ -74,20 +75,6 @@
 <!ENTITY pref_category_devtools "Developer tools">
 <!ENTITY pref_developer_remotedebugging "Remote debugging">
 <!ENTITY pref_developer_remotedebugging_docs "Learn more">
-
-<!-- collected old strings - remove after determining final strings
-     as part of Bug 877791 -->
-<!ENTITY pref_category_general "General">
-<!ENTITY pref_category_privacy "Privacy &amp; Security">
-<!ENTITY pref_category_content "Content">
-<!-- Localization note (datareporting_title) : This string matches
-     (dataChoicesTab.label) in chrome/browser/preferences/advanced.dtd except in
-     capitalization. -->
-<!ENTITY pref_header_general "General">
-<!ENTITY pref_header_privacy "Privacy &amp; Security">
-<!ENTITY pref_header_content "Content">
-<!-- end of old strings -->
-
 <!ENTITY pref_remember_signons "Remember passwords">
 
 <!-- Localization note: These are shown in the left sidebar on tablets -->
@@ -117,7 +104,7 @@
 <!ENTITY pref_plugins_tap_to_play "Tap to play">
 <!ENTITY pref_plugins_disabled "Disabled">
 <!ENTITY pref_text_size "Text size">
-<!ENTITY pref_reflow_on_zoom3 "Double tap to reflow text">
+<!ENTITY pref_reflow_on_zoom4 "Text reflow">
 <!ENTITY pref_restore_session "Always restore tabs">
 <!ENTITY pref_font_size_tiny "Tiny">
 <!ENTITY pref_font_size_small "Small">

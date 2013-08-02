@@ -47,6 +47,8 @@ DOMRequest::Init(nsIDOMWindow* aWindow)
                                         window->GetCurrentInnerWindow());
 }
 
+NS_IMPL_CYCLE_COLLECTION_CLASS(DOMRequest)
+
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(DOMRequest,
                                                   nsDOMEventTargetHelper)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mError)

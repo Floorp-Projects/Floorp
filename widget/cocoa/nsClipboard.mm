@@ -471,6 +471,38 @@ nsClipboard::PasteboardDictFromTransferable(nsITransferable* aTransferable)
       if (tiffData)
         CFRelease(tiffData);
     }
+    else if (flavorStr.EqualsLiteral(kFileMime)) {
+      uint32_t len = 0;
+      nsCOMPtr<nsISupports> genericFile;
+      rv = aTransferable->GetTransferData(flavorStr, getter_AddRefs(genericFile), &len);
+      if (NS_FAILED(rv)) {
+        continue;
+      }
+
+      nsCOMPtr<nsIFile> file(do_QueryInterface(genericFile));
+      if (!file) {
+        nsCOMPtr<nsISupportsInterfacePointer> ptr(do_QueryInterface(genericFile));
+
+        if (ptr) {
+          ptr->GetData(getter_AddRefs(genericFile));
+          file = do_QueryInterface(genericFile);
+        }
+      }
+
+      if (!file) {
+        continue;
+      }
+
+      nsAutoString fileURI;
+      rv = file->GetPath(fileURI);
+      if (NS_FAILED(rv)) {
+        continue;
+      }
+
+      NSString* str = nsCocoaUtils::ToNSString(fileURI);
+      NSArray* fileList = [NSArray arrayWithObjects:str, nil];
+      [pasteboardOutputDict setObject:fileList forKey:NSFilenamesPboardType];
+    }
     else if (flavorStr.EqualsLiteral(kFilePromiseMime)) {
       [pasteboardOutputDict setObject:[NSArray arrayWithObject:@""] forKey:NSFilesPromisePboardType];      
     }
