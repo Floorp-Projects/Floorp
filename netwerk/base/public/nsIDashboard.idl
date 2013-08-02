@@ -46,4 +46,8 @@ interface nsIDashboard : nsISupports
 
     /* When true, the service will log websocket events */
     attribute boolean enableLogging;
+
+    /* DNS resolver for host name
+     * aHost: host name */
+    void requestDNSLookup(in ACString aHost, in NetDashboardCallback cb);
 };
