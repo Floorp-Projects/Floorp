@@ -476,52 +476,43 @@ nsColorPickerShownCallback::Done(const nsAString& aColor)
 
 NS_IMPL_ISUPPORTS1(nsColorPickerShownCallback, nsIColorPickerShownCallback)
 
-HTMLInputElement::AsyncClickHandler::AsyncClickHandler(HTMLInputElement* aInput)
-  : mInput(aInput)
+bool
+HTMLInputElement::IsPopupBlocked() const
 {
-  nsPIDOMWindow* win = aInput->OwnerDoc()->GetWindow();
-  if (win) {
-    mPopupControlState = win->GetPopupControlState();
+  nsCOMPtr<nsPIDOMWindow> win = OwnerDoc()->GetWindow();
+  MOZ_ASSERT(win, "window should not be null");
+  if (!win) {
+    return true;
   }
-}
 
-NS_IMETHODIMP
-HTMLInputElement::AsyncClickHandler::Run()
-{
-  if (mInput->GetType() == NS_FORM_INPUT_FILE) {
-    return InitFilePicker();
-  } else if (mInput->GetType() == NS_FORM_INPUT_COLOR) {
-    return InitColorPicker();
+  // Check if page is allowed to open the popup
+  if (win->GetPopupControlState() <= openControlled) {
+    return false;
   }
-  return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIPopupWindowManager> pm = do_GetService(NS_POPUPWINDOWMANAGER_CONTRACTID);
+  if (!pm) {
+    return true;
+  }
+
+  uint32_t permission;
+  pm->TestPermission(OwnerDoc()->NodePrincipal(), &permission);
+  return permission == nsIPopupWindowManager::DENY_POPUP;
 }
 
 nsresult
-HTMLInputElement::AsyncClickHandler::InitColorPicker()
+HTMLInputElement::InitColorPicker()
 {
-  // Get parent nsPIDOMWindow object.
-  nsCOMPtr<nsIDocument> doc = mInput->OwnerDoc();
+  nsCOMPtr<nsIDocument> doc = OwnerDoc();
 
   nsCOMPtr<nsPIDOMWindow> win = doc->GetWindow();
   if (!win) {
     return NS_ERROR_FAILURE;
   }
 
-  // Check if page is allowed to open the popup
-  if (mPopupControlState > openControlled) {
-    nsCOMPtr<nsIPopupWindowManager> pm =
-      do_GetService(NS_POPUPWINDOWMANAGER_CONTRACTID);
-
-    if (!pm) {
-      return NS_OK;
-    }
-
-    uint32_t permission;
-    pm->TestPermission(doc->NodePrincipal(), &permission);
-    if (permission == nsIPopupWindowManager::DENY_POPUP) {
-      nsGlobalWindow::FirePopupBlockedEvent(doc, win, nullptr, EmptyString(), EmptyString());
-      return NS_OK;
-    }
+  if (IsPopupBlocked()) {
+    nsGlobalWindow::FirePopupBlockedEvent(doc, win, nullptr, EmptyString(), EmptyString());
+    return NS_OK;
   }
 
   // Get Loc title
@@ -535,42 +526,30 @@ HTMLInputElement::AsyncClickHandler::InitColorPicker()
   }
 
   nsAutoString initialValue;
-  mInput->GetValueInternal(initialValue);
+  GetValueInternal(initialValue);
   nsresult rv = colorPicker->Init(win, title, initialValue);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIColorPickerShownCallback> callback =
-    new nsColorPickerShownCallback(mInput, colorPicker);
+    new nsColorPickerShownCallback(this, colorPicker);
 
   return colorPicker->Open(callback);
 }
 
 nsresult
-HTMLInputElement::AsyncClickHandler::InitFilePicker()
+HTMLInputElement::InitFilePicker()
 {
   // Get parent nsPIDOMWindow object.
-  nsCOMPtr<nsIDocument> doc = mInput->OwnerDoc();
+  nsCOMPtr<nsIDocument> doc = OwnerDoc();
 
-  nsPIDOMWindow* win = doc->GetWindow();
+  nsCOMPtr<nsPIDOMWindow> win = doc->GetWindow();
   if (!win) {
     return NS_ERROR_FAILURE;
   }
 
-  // Check if page is allowed to open the popup
-  if (mPopupControlState > openControlled) {
-    nsCOMPtr<nsIPopupWindowManager> pm =
-      do_GetService(NS_POPUPWINDOWMANAGER_CONTRACTID);
-
-    if (!pm) {
-      return NS_OK;
-    }
-
-    uint32_t permission;
-    pm->TestPermission(doc->NodePrincipal(), &permission);
-    if (permission == nsIPopupWindowManager::DENY_POPUP) {
-      nsGlobalWindow::FirePopupBlockedEvent(doc, win, nullptr, EmptyString(), EmptyString());
-      return NS_OK;
-    }
+  if (IsPopupBlocked()) {
+    nsGlobalWindow::FirePopupBlockedEvent(doc, win, nullptr, EmptyString(), EmptyString());
+    return NS_OK;
   }
 
   // Get Loc title
@@ -582,7 +561,7 @@ HTMLInputElement::AsyncClickHandler::InitFilePicker()
   if (!filePicker)
     return NS_ERROR_FAILURE;
 
-  bool multi = mInput->HasAttr(kNameSpaceID_None, nsGkAtoms::multiple);
+  bool multi = HasAttr(kNameSpaceID_None, nsGkAtoms::multiple);
 
   nsresult rv = filePicker->Init(win, title,
                                  multi
@@ -590,8 +569,8 @@ HTMLInputElement::AsyncClickHandler::InitFilePicker()
                                   : static_cast<int16_t>(nsIFilePicker::modeOpen));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (mInput->HasAttr(kNameSpaceID_None, nsGkAtoms::accept)) {
-    mInput->SetFilePickerFiltersFromAccept(filePicker);
+  if (HasAttr(kNameSpaceID_None, nsGkAtoms::accept)) {
+    SetFilePickerFiltersFromAccept(filePicker);
   } else {
     filePicker->AppendFilters(nsIFilePicker::filterAll);
   }
@@ -599,10 +578,10 @@ HTMLInputElement::AsyncClickHandler::InitFilePicker()
   // Set default directry and filename
   nsAutoString defaultName;
 
-  const nsCOMArray<nsIDOMFile>& oldFiles = mInput->GetFilesInternal();
+  const nsCOMArray<nsIDOMFile>& oldFiles = GetFilesInternal();
 
   nsCOMPtr<nsIFilePickerShownCallback> callback =
-    new HTMLInputElement::nsFilePickerShownCallback(mInput, filePicker, multi);
+    new HTMLInputElement::nsFilePickerShownCallback(this, filePicker, multi);
 
   if (oldFiles.Count()) {
     nsString path;
@@ -2596,13 +2575,6 @@ HTMLInputElement::SelectAll(nsPresContext* aPresContext)
   }
 }
 
-NS_IMETHODIMP
-HTMLInputElement::FireAsyncClickHandler()
-{
-  nsCOMPtr<nsIRunnable> event = new AsyncClickHandler(this);
-  return NS_DispatchToMainThread(event);
-}
-
 bool
 HTMLInputElement::NeedToInitializeEditorForEvent(nsEventChainPreVisitor& aVisitor) const
 {
@@ -2906,8 +2878,8 @@ HTMLInputElement::ShouldPreventDOMActivateDispatch(EventTarget* aOriginalTarget)
                              nsGkAtoms::button, eCaseMatters);
 }
 
-void
-HTMLInputElement::MaybeFireAsyncClickHandler(nsEventChainPostVisitor& aVisitor)
+nsresult
+HTMLInputElement::MaybeInitPickers(nsEventChainPostVisitor& aVisitor)
 {
   // Open a file picker when we receive a click on a <input type='file'>, or
   // open a color picker when we receive a click on a <input type='color'>.
@@ -2915,12 +2887,17 @@ HTMLInputElement::MaybeFireAsyncClickHandler(nsEventChainPostVisitor& aVisitor)
   // - preventDefault() has not been called (or something similar);
   // - it's the left mouse button.
   // We do not prevent non-trusted click because authors can already use
-  // .click(). However, the file picker will follow the rules of popup-blocking.
-  if ((mType == NS_FORM_INPUT_FILE || mType == NS_FORM_INPUT_COLOR) &&
-      NS_IS_MOUSE_LEFT_CLICK(aVisitor.mEvent) &&
+  // .click(). However, the pickers will follow the rules of popup-blocking.
+  if (NS_IS_MOUSE_LEFT_CLICK(aVisitor.mEvent) &&
       !aVisitor.mEvent->mFlags.mDefaultPrevented) {
-    FireAsyncClickHandler();
+    if (mType == NS_FORM_INPUT_FILE) {
+      return InitFilePicker();
+    }
+    if (mType == NS_FORM_INPUT_COLOR) {
+      return InitColorPicker();
+    }
   }
+  return NS_OK;
 }
 
 nsresult
@@ -2928,9 +2905,8 @@ HTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
 {
   if (!aVisitor.mPresContext) {
     // Hack alert! In order to open file picker even in case the element isn't
-    // in document, fire click handler even without PresContext.
-    MaybeFireAsyncClickHandler(aVisitor);
-    return NS_OK;
+    // in document, try to init picker even without PresContext.
+    return MaybeInitPickers(aVisitor);
   }
 
   if (aVisitor.mEvent->message == NS_FOCUS_CONTENT ||
@@ -3333,9 +3309,7 @@ HTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
     PostHandleEventForRangeThumb(aVisitor);
   }
 
-  MaybeFireAsyncClickHandler(aVisitor);
-
-  return rv;
+  return MaybeInitPickers(aVisitor);
 }
 
 void
