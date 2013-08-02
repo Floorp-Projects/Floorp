@@ -54,7 +54,7 @@ static const nsAttrValue::EnumTable* kButtonDefaultType = &kButtonTypeTable[2];
 // Construction, destruction
 HTMLButtonElement::HTMLButtonElement(already_AddRefed<nsINodeInfo> aNodeInfo,
                                      FromParser aFromParser)
-  : nsGenericHTMLFormElement(aNodeInfo),
+  : nsGenericHTMLFormElementWithState(aNodeInfo),
     mType(kButtonDefaultType->value),
     mDisabledChanged(false),
     mInInternalActivate(false),
@@ -73,7 +73,8 @@ HTMLButtonElement::~HTMLButtonElement()
 
 // nsISupports
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED_1(HTMLButtonElement, nsGenericHTMLFormElement,
+NS_IMPL_CYCLE_COLLECTION_INHERITED_1(HTMLButtonElement,
+                                     nsGenericHTMLFormElementWithState,
                                      mValidity)
 
 NS_IMPL_ADDREF_INHERITED(HTMLButtonElement, Element)
@@ -82,7 +83,7 @@ NS_IMPL_RELEASE_INHERITED(HTMLButtonElement, Element)
 
 // QueryInterface implementation for HTMLButtonElement
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(HTMLButtonElement)
-  NS_HTML_CONTENT_INTERFACES(nsGenericHTMLFormElement)
+  NS_HTML_CONTENT_INTERFACES(nsGenericHTMLFormElementWithState)
   NS_INTERFACE_TABLE_INHERITED2(HTMLButtonElement,
                                 nsIDOMHTMLButtonElement,
                                 nsIConstraintValidation)
@@ -103,7 +104,7 @@ NS_IMPL_ELEMENT_CLONE(HTMLButtonElement)
 NS_IMETHODIMP
 HTMLButtonElement::GetForm(nsIDOMHTMLFormElement** aForm)
 {
-  return nsGenericHTMLFormElement::GetForm(aForm);
+  return nsGenericHTMLFormElementWithState::GetForm(aForm);
 }
 
 NS_IMPL_BOOL_ATTR(HTMLButtonElement, Autofocus, autofocus)
@@ -129,7 +130,7 @@ HTMLButtonElement::TabIndexDefault()
 bool
 HTMLButtonElement::IsHTMLFocusable(bool aWithMouse, bool *aIsFocusable, int32_t *aTabIndex)
 {
-  if (nsGenericHTMLFormElement::IsHTMLFocusable(aWithMouse, aIsFocusable, aTabIndex)) {
+  if (nsGenericHTMLFormElementWithState::IsHTMLFocusable(aWithMouse, aIsFocusable, aTabIndex)) {
     return true;
   }
 
@@ -392,9 +393,9 @@ HTMLButtonElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,
                               bool aCompileEventHandlers)
 {
-  nsresult rv = nsGenericHTMLFormElement::BindToTree(aDocument, aParent,
-                                                     aBindingParent,
-                                                     aCompileEventHandlers);
+  nsresult rv =
+    nsGenericHTMLFormElementWithState::BindToTree(aDocument, aParent, aBindingParent,
+                                                  aCompileEventHandlers);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Update our state; we may now be the default submit element
@@ -406,7 +407,7 @@ HTMLButtonElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
 void
 HTMLButtonElement::UnbindFromTree(bool aDeep, bool aNullParent)
 {
-  nsGenericHTMLFormElement::UnbindFromTree(aDeep, aNullParent);
+  nsGenericHTMLFormElementWithState::UnbindFromTree(aDeep, aNullParent);
 
   // Update our state; we may no longer be the default submit element
   UpdateState(false);
@@ -461,8 +462,10 @@ void
 HTMLButtonElement::DoneCreatingElement()
 {
   if (!mInhibitStateRestoration) {
-    // Restore state as needed.
-    RestoreFormControlState(this, this);
+    nsresult rv = GenerateStateKey();
+    if (NS_SUCCEEDED(rv)) {
+      RestoreFormControlState();
+    }
   }
 }
 
@@ -476,8 +479,8 @@ HTMLButtonElement::BeforeSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
     mDisabledChanged = true;
   }
 
-  return nsGenericHTMLFormElement::BeforeSetAttr(aNameSpaceID, aName,
-                                                 aValue, aNotify);
+  return nsGenericHTMLFormElementWithState::BeforeSetAttr(aNameSpaceID, aName,
+                                                          aValue, aNotify);
 }
 
 nsresult
@@ -494,8 +497,8 @@ HTMLButtonElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
     }
   }
 
-  return nsGenericHTMLFormElement::AfterSetAttr(aNameSpaceID, aName,
-                                                aValue, aNotify);
+  return nsGenericHTMLFormElementWithState::AfterSetAttr(aNameSpaceID, aName,
+                                                         aValue, aNotify);
 }
 
 NS_IMETHODIMP
@@ -528,7 +531,7 @@ HTMLButtonElement::RestoreState(nsPresState* aState)
 nsEventStates
 HTMLButtonElement::IntrinsicState() const
 {
-  nsEventStates state = nsGenericHTMLFormElement::IntrinsicState();
+  nsEventStates state = nsGenericHTMLFormElementWithState::IntrinsicState();
 
   if (mForm && !mForm->GetValidity() && IsSubmitControl()) {
     state |= NS_EVENT_STATE_MOZ_SUBMITINVALID;
