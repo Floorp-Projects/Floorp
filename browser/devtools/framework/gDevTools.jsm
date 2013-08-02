@@ -13,13 +13,11 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource:///modules/devtools/shared/event-emitter.js");
 let promise = Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js").Promise;
 Cu.import("resource://gre/modules/devtools/Loader.jsm");
-Cu.import("resource://gre/modules/AddonManager.jsm");
 
 var ProfilerController = devtools.require("devtools/profiler/controller");
 
 const FORBIDDEN_IDS = new Set(["toolbox", ""]);
 const MAX_ORDINAL = 99;
-
 
 /**
  * DevTools is a class that represents a set of developer tools, it holds a
@@ -376,13 +374,6 @@ let gDevToolsBrowser = {
     gDevToolsBrowser._trackedBrowserWindows.add(win);
     gDevToolsBrowser._addAllToolsToMenu(win.document);
 
-    this._getFirebug().then((firebug) => {
-      if (firebug && firebug.hasOwnProperty("isActive") && firebug.isActive) {
-        let broadcaster = win.document.getElementById("devtoolsMenuBroadcaster_DevToolbox");
-        broadcaster.removeAttribute("key");
-      }
-    })
-
     let tabContainer = win.document.getElementById("tabbrowser-tabs")
     tabContainer.addEventListener("TabSelect",
                                   gDevToolsBrowser._updateMenuCheckbox, false);
@@ -401,7 +392,6 @@ let gDevToolsBrowser = {
    */
   attachKeybindingsToBrowser: function DT_attachKeybindingsToBrowser(doc, keys) {
     let devtoolsKeyset = doc.getElementById("devtoolsKeyset");
-
     if (!devtoolsKeyset) {
       devtoolsKeyset = doc.createElement("keyset");
       devtoolsKeyset.setAttribute("id", "devtoolsKeyset");
@@ -409,20 +399,6 @@ let gDevToolsBrowser = {
     devtoolsKeyset.appendChild(keys);
     let mainKeyset = doc.getElementById("mainKeyset");
     mainKeyset.parentNode.insertBefore(devtoolsKeyset, mainKeyset);
-  },
-
-
-  /**
-   * Detect the presence of a Firebug.
-   *
-   * @return promise
-   */
-  _getFirebug: function DT_getFirebug() {
-    let deferred = promise.defer();
-    AddonManager.getAddonByID("firebug@software.joehewitt.com", (addon) => {
-      deferred.resolve(addon);
-    });
-    return deferred.promise;
   },
 
   /**
@@ -749,7 +725,6 @@ let gDevToolsBrowser = {
     Services.obs.removeObserver(gDevToolsBrowser.destroy, "quit-application");
   },
 }
-
 this.gDevToolsBrowser = gDevToolsBrowser;
 
 gDevTools.on("tool-registered", function(ev, toolId) {
