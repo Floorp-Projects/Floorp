@@ -190,6 +190,32 @@ var Addons = {
     return outer;
   },
 
+  _createBrowseItem: function _createBrowseItem() {
+    let outer = document.createElement("div");
+    outer.className = "addon-item list-item";
+    outer.setAttribute("role", "button");
+    outer.addEventListener("click", function() {
+      openLink(document.getElementById("header-button"));
+    }.bind(this), true);
+
+    let img = document.createElement("img");
+    img.className = "icon";
+    img.setAttribute("src", "chrome://browser/skin/images/amo-logo.png");
+    outer.appendChild(img);
+
+    let inner = document.createElement("div");
+    inner.className = "inner";
+
+    let title = document.createElement("div");
+    title.id = "browse-title";
+    title.className = "title";
+    title.textContent = gStringBundle.GetStringFromName("addons.browseAll");;
+    inner.appendChild(title);
+
+    outer.appendChild(inner);
+    return outer;
+  },
+
   _createItemForAddon: function _createItemForAddon(aAddon) {
     let appManaged = (aAddon.scope == AddonManager.SCOPE_APPLICATION);
     let opType = this._getOpTypeForOperations(aAddon.pendingOperations);
@@ -269,6 +295,10 @@ var Addons = {
         item.addon = addon;
         list.appendChild(item);
       }
+
+      // Add a "Browse all Firefox Add-ons" item to the bottom of the list.
+      let browseItem = self._createBrowseItem();
+      list.appendChild(browseItem);
     });
   },
 
