@@ -979,6 +979,7 @@ let RemoteDebugger = {
     if (!DebuggerServer.initialized) {
       // Ask for remote connections.
       DebuggerServer.init(this.prompt.bind(this));
+      DebuggerServer.chromeWindowType = "navigator:browser";
       DebuggerServer.addActors("resource://gre/modules/devtools/server/actors/webbrowser.js");
       // Until we implement unix domain socket, we enable content actors
       // only on development devices
