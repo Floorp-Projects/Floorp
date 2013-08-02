@@ -10,11 +10,15 @@ relativesrcdir  = @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-# Disabled for intermittent failures (bug 880739)
+# Disabled for intermittent failures 
+# Bug 880739
 #  browser_context_menu_tests.js \
 #  browser_context_menu_tests_01.html \
 #  browser_context_menu_tests_02.html \
 #  browser_context_menu_tests_03.html \
+# Bug 897175
+#  browser_findbar.js \
+#  browser_findbar.html \
 
 MOCHITEST_METRO_FILES = \
   head.js \
@@ -24,8 +28,6 @@ MOCHITEST_METRO_FILES = \
   browser_circular_progress_indicator.js \
   browser_context_ui.js \
   browser_downloads.js \
-  browser_findbar.js \
-  browser_findbar.html \
   browser_history.js \
   browser_onscreen_keyboard.js \
   browser_onscreen_keyboard.html \
