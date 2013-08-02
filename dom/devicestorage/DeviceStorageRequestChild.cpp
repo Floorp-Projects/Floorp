@@ -33,7 +33,8 @@ DeviceStorageRequestChild::~DeviceStorageRequestChild() {
 }
 
 bool
-DeviceStorageRequestChild::Recv__delete__(const DeviceStorageResponseValue& aValue)
+DeviceStorageRequestChild::
+  Recv__delete__(const DeviceStorageResponseValue& aValue)
 {
   if (mCallback) {
     mCallback->RequestComplete();
@@ -105,14 +106,14 @@ DeviceStorageRequestChild::Recv__delete__(const DeviceStorageResponseValue& aVal
     case DeviceStorageResponseValue::TEnumerationResponse:
     {
       EnumerationResponse r = aValue;
-      nsDOMDeviceStorageCursor* cursor = static_cast<nsDOMDeviceStorageCursor*>(mRequest.get());
+      nsDOMDeviceStorageCursor* cursor
+        = static_cast<nsDOMDeviceStorageCursor*>(mRequest.get());
 
       uint32_t count = r.paths().Length();
       for (uint32_t i = 0; i < count; i++) {
-        nsRefPtr<DeviceStorageFile> dsf = new DeviceStorageFile(r.type(),
-                                                                r.paths()[i].storageName(),
-                                                                r.rootdir(),
-                                                                r.paths()[i].name());
+        nsRefPtr<DeviceStorageFile> dsf
+          = new DeviceStorageFile(r.type(), r.paths()[i].storageName(),
+                                  r.rootdir(), r.paths()[i].name());
         cursor->mFiles.AppendElement(dsf);
       }
 
@@ -131,7 +132,8 @@ DeviceStorageRequestChild::Recv__delete__(const DeviceStorageResponseValue& aVal
 }
 
 void
-DeviceStorageRequestChild::SetCallback(DeviceStorageRequestChildCallback *aCallback)
+DeviceStorageRequestChild::
+  SetCallback(DeviceStorageRequestChildCallback *aCallback)
 {
   mCallback = aCallback;
 }
