@@ -694,7 +694,7 @@ nsGenericDOMDataNode::DestroyContent()
 {
   // XXX We really should let cycle collection do this, but that currently still
   //     leaks (see https://bugzilla.mozilla.org/show_bug.cgi?id=406684).
-  nsContentUtils::ReleaseWrapper(this, this);
+  ReleaseWrapper(this);
 }
 
 #ifdef DEBUG

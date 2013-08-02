@@ -6291,24 +6291,6 @@ nsContentUtils::IsInPointerLockContext(nsIDOMWindow* aWin)
 }
 
 // static
-void
-nsContentUtils::ReleaseWrapper(void* aScriptObjectHolder,
-                               nsWrapperCache* aCache)
-{
-  if (aCache->PreservingWrapper()) {
-    // PreserveWrapper puts new DOM bindings in the JS holders hash, but they
-    // can also be in the DOM expando hash, so we need to try to remove them
-    // from both here.
-    JSObject* obj = aCache->GetWrapperPreserveColor();
-    if (aCache->IsDOMBinding() && obj && js::IsProxy(obj)) {
-        DOMProxyHandler::GetAndClearExpandoObject(obj);
-    }
-    aCache->SetPreservingWrapper(false);
-    DropJSObjects(aScriptObjectHolder);
-  }
-}
-
-// static
 int32_t
 nsContentUtils::GetAdjustedOffsetInTextControl(nsIFrame* aOffsetFrame,
                                                int32_t aOffset)

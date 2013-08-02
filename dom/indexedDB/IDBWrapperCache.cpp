@@ -39,7 +39,7 @@ NS_IMPL_RELEASE_INHERITED(IDBWrapperCache, nsDOMEventTargetHelper)
 IDBWrapperCache::~IDBWrapperCache()
 {
   mScriptOwner = nullptr;
-  nsContentUtils::ReleaseWrapper(this, this);
+  ReleaseWrapper(this);
   NS_DROP_JS_OBJECTS(this, IDBWrapperCache);
 }
 
