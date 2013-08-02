@@ -686,7 +686,6 @@ InitRestParameter(JSContext *cx, uint32_t length, Value *rest, HandleObject temp
 
         JS_ASSERT(!arrRes->getDenseInitializedLength());
         JS_ASSERT(arrRes->type() == templateObj->type());
-        JS_ASSERT(arrRes->type()->unknownProperties());
 
         // Fast path: we managed to allocate the array inline; initialize the
         // slots.
@@ -700,7 +699,10 @@ InitRestParameter(JSContext *cx, uint32_t length, Value *rest, HandleObject temp
         return arrRes;
     }
 
-    return NewDenseCopiedArray(cx, length, rest, NULL);
+    ArrayObject *arrRes = NewDenseCopiedArray(cx, length, rest, NULL);
+    if (arrRes)
+        arrRes->setType(templateObj->type());
+    return arrRes;
 }
 
 bool

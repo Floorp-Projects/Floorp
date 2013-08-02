@@ -4410,8 +4410,8 @@ class LRestPar : public LCallInstructionHelper<1, 2, 3>
     const LAllocation *numActuals() {
         return getOperand(1);
     }
-    MRest *mir() const {
-        return mir_->toRest();
+    MRestPar *mir() const {
+        return mir_->toRestPar();
     }
 };
 
