@@ -444,10 +444,6 @@ documenttab[selected] .documenttab-selection {
 
 /* Navigation bar ========================================================== */
 
-#navbar[startpage] {
-  transform: none;
-}
-
 /* Progress meter ---------------------------------------------------------- */
 
 #progress-container {
@@ -483,9 +479,11 @@ documenttab[selected] .documenttab-selection {
 
 /* Toolbar ----------------------------------------------------------------- */
 
-#toolbar-autocomplete {
+#toolbar-overlay {
   background-color: @panel_light_color@;
 }
+
+/* Combined back/forward buttons */
 
 #back-button {
   list-style-image: url(chrome://browser/skin/images/navbar-back.png);
@@ -584,6 +582,7 @@ documenttab[selected] .documenttab-selection {
 
 /* Combined stop-reload button */
 .urlbar-button {
+  margin: 0;
   -moz-image-region: rect(0px, 30px, 30px, 0px);
 }
 
@@ -673,19 +672,32 @@ documenttab[selected] .documenttab-selection {
   visibility: collapse;
 }
 
-/* Application-Specific */
+/* Contextual toolbar controls */
+
+#toolbar-context-autocomplete,
+#toolbar-context-page {
+  transition-property: opacity, visibility;
+  transition-duration: @forward_transition_length@;
+  transition-timing-function: @metro_animation_easing@;
+}
+
+#toolbar-contextual:not([autocomplete]) #toolbar-context-autocomplete,
+#toolbar-contextual[startpage] #toolbar-context-page,
+#toolbar-contextual[autocomplete] #toolbar-context-page {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
 
 #download-button {
   -moz-image-region: rect(0px, 40px, 40px, 0px) !important;
 }
-#download-button:hover {
+#download-button:hover:not(:active) {
   -moz-image-region: rect(40px, 40px, 80px, 0px) !important;
 }
 #download-button:active {
   -moz-image-region: rect(80px, 40px, 120px, 0px) !important;
 }
-
-/* Page-Specific */
 
 #pin-button {
   list-style-image: url(chrome://browser/skin/images/navbar-pin.png);
@@ -725,6 +737,18 @@ documenttab[selected] .documenttab-selection {
   #menu-button {
     list-style-image: url(chrome://browser/skin/images/navbar-menu@1.8x.png);
   }
+}
+
+#close-button {
+  -moz-image-region: rect(0px, 480px, 40px, 440px);
+}
+
+#close-button:hover:not(:active) {
+  -moz-image-region: rect(40px, 480px, 80px, 440px);
+}
+
+#close-button:active {
+  -moz-image-region: rect(80px, 480px, 120px, 440px);
 }
 
 /* Panel UI ================================================================ */
@@ -802,76 +826,15 @@ documenttab[selected] .documenttab-selection {
 #findbar {
   background-color: @metro_orange@;
   padding: 0;
-  pointer-events: none;
 }
 
 #findbar > toolbar {
   min-height: @findbar_height@ !important;
 }
 
-#findbar > .previous-button,
-#findbar > .next-button,
-#findbar > .close-button {
-  list-style-image: url(chrome://browser/skin/images/appbar-icons.png);
-  min-width: @touch_button_small@ !important; /* button size */
-  min-height: @touch_button_small@ !important; /* button size */
-  border: none !important;
-  background-image: none !important;
-  background-color: inherit !important;
-  pointer-events: auto;
-  -moz-user-focus: ignore !important;
-  margin: 0 @margin_normal@ !important;
-}
-
-#findbar > .close-button {
-  -moz-margin-start: 0;
-  -moz-image-region: rect(0px, 480px, 40px, 440px);
-}
-
-#findbar > .close-button:hover {
-  -moz-image-region: rect(40px, 480px, 80px, 440px);
-}
-
-#findbar > .close-button:active {
-  -moz-image-region: rect(80px, 480px, 120px, 440px);
-}
-
-#findbar > .previous-button {
-  -moz-margin-end: 0;
-  -moz-image-region: rect(0px, 400px, 40px, 360px);
-}
-
-#findbar > .previous-button:hover {
-  -moz-image-region: rect(40px, 400px, 80px, 360px);
-}
-
-#findbar > .previous-button:active{
-  -moz-image-region: rect(80px, 400px, 120px, 360px);
-}
-
-#findbar > .next-button {
-  -moz-margin-start: 0;
-  -moz-image-region: rect(0px, 440px, 40px, 400px);
-}
-
-#findbar > .next-button:hover {
-  -moz-image-region: rect(40px, 440px, 80px, 400px);
-}
-
-#findbar > .next-button:active {
-  -moz-image-region: rect(80px, 440px, 120px, 400px);
-}
-
 #findbar-textbox {
-  pointer-events: auto;
-  -moz-margin-end: 0;
   border: none !important;
   width: 20em;
-}
-
-.textbox-search-icon {
-  list-style-image: url("chrome://browser/skin/images/search-glass-30.png");
-  -moz-image-region: auto;
 }
 
 /* Override the default box ordering and make the find textbox appear to the
@@ -880,16 +843,53 @@ documenttab[selected] .documenttab-selection {
   -moz-box-ordinal-group: 2
 }
 
-#findbar-textbox deck {
-  margin-right: @margin_normal@;
-}
-
 #findbar-textbox[status="1"] { /* Ci.nsITypeAheadFind.FIND_NOTFOUND */
   background: rgb(255,200,200);
 }
 
 #findbar-textbox:hover:active {
   background: #8db8d8;
+}
+
+.textbox-search-icon {
+  list-style-image: url("chrome://browser/skin/images/search-glass-30.png");
+  -moz-image-region: auto;
+}
+
+#findbar-previous-button {
+  -moz-image-region: rect(0px, 400px, 40px, 360px);
+}
+
+#findbar-previous-button:hover:not(:active) {
+  -moz-image-region: rect(40px, 400px, 80px, 360px);
+}
+
+#findbar-previous-button:active {
+  -moz-image-region: rect(80px, 400px, 120px, 360px);
+}
+
+#findbar-next-button {
+  -moz-image-region: rect(0px, 440px, 40px, 400px);
+}
+
+#findbar-next-button:hover:not(:active) {
+  -moz-image-region: rect(40px, 440px, 80px, 400px);
+}
+
+#findbar-next-button:active {
+  -moz-image-region: rect(80px, 440px, 120px, 400px);
+}
+
+#findbar-close-button {
+  -moz-image-region: rect(0px, 480px, 40px, 440px);
+}
+
+#findbar-close-button:hover:not(:active) {
+  -moz-image-region: rect(40px, 480px, 80px, 440px);
+}
+
+#findbar-close-button:active {
+  -moz-image-region: rect(80px, 480px, 120px, 440px);
 }
 
 /* Contextual appbar ======================================================= */

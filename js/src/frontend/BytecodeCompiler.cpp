@@ -174,7 +174,7 @@ frontend::CompileScript(ExclusiveContext *cx, LifoAlloc *alloc, HandleObject sco
     if (!CheckLength(cx, length))
         return NULL;
     JS_ASSERT_IF(staticLevel != 0, options.sourcePolicy != CompileOptions::LAZY_SOURCE);
-    ScriptSource *ss = cx->new_<ScriptSource>();
+    ScriptSource *ss = cx->new_<ScriptSource>(options.originPrincipals());
     if (!ss)
         return NULL;
     if (options.filename && !ss->setFilename(cx, options.filename))
@@ -444,7 +444,7 @@ frontend::CompileFunctionBody(JSContext *cx, MutableHandleFunction fun, CompileO
 
     if (!CheckLength(cx, length))
         return false;
-    ScriptSource *ss = cx->new_<ScriptSource>();
+    ScriptSource *ss = cx->new_<ScriptSource>(options.originPrincipals());
     if (!ss)
         return false;
     if (options.filename && !ss->setFilename(cx, options.filename))

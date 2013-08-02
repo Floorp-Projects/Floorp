@@ -335,7 +335,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
     static bool slowPathOnLeaveFrame(JSContext *cx, AbstractFramePtr frame, bool ok);
     static void slowPathOnNewScript(JSContext *cx, HandleScript script,
                                     GlobalObject *compileAndGoGlobal);
-    static bool slowPathOnNewGlobalObject(JSContext *cx, Handle<GlobalObject *> global);
+    static void slowPathOnNewGlobalObject(JSContext *cx, Handle<GlobalObject *> global);
     static JSTrapStatus dispatchHook(JSContext *cx, MutableHandleValue vp, Hook which);
 
     JSTrapStatus fireDebuggerStatement(JSContext *cx, MutableHandleValue vp);
@@ -407,7 +407,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
     static inline JSTrapStatus onExceptionUnwind(JSContext *cx, MutableHandleValue vp);
     static inline void onNewScript(JSContext *cx, HandleScript script,
                                    GlobalObject *compileAndGoGlobal);
-    static inline bool onNewGlobalObject(JSContext *cx, Handle<GlobalObject *> global);
+    static inline void onNewGlobalObject(JSContext *cx, Handle<GlobalObject *> global);
     static JSTrapStatus onTrap(JSContext *cx, MutableHandleValue vp);
     static JSTrapStatus onSingleStep(JSContext *cx, MutableHandleValue vp);
     static bool handleBaselineOsr(JSContext *cx, StackFrame *from, ion::BaselineFrame *to);
@@ -676,17 +676,26 @@ void
 Debugger::onNewScript(JSContext *cx, HandleScript script, GlobalObject *compileAndGoGlobal)
 {
     JS_ASSERT_IF(script->compileAndGo, compileAndGoGlobal);
+    JS_ASSERT_IF(script->compileAndGo, compileAndGoGlobal == &script->global());
+    // We early return in slowPathOnNewScript for self-hosted scripts, so we can
+    // ignore those in our assertion here.
+    JS_ASSERT_IF(!script->compartment()->options().invisibleToDebugger &&
+                 !script->selfHosted,
+                 script->compartment()->firedOnNewGlobalObject);
     JS_ASSERT_IF(!script->compileAndGo, !compileAndGoGlobal);
     if (!script->compartment()->getDebuggees().empty())
         slowPathOnNewScript(cx, script, compileAndGoGlobal);
 }
 
-bool
+void
 Debugger::onNewGlobalObject(JSContext *cx, Handle<GlobalObject *> global)
 {
-    if (JS_CLIST_IS_EMPTY(&cx->runtime()->onNewGlobalObjectWatchers))
-        return true;
-    return Debugger::slowPathOnNewGlobalObject(cx, global);
+    JS_ASSERT(!global->compartment()->firedOnNewGlobalObject);
+#ifdef DEBUG
+    global->compartment()->firedOnNewGlobalObject = true;
+#endif
+    if (!JS_CLIST_IS_EMPTY(&cx->runtime()->onNewGlobalObjectWatchers))
+        Debugger::slowPathOnNewGlobalObject(cx, global);
 }
 
 extern JSBool

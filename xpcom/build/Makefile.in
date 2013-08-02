@@ -59,11 +59,6 @@ LOCAL_INCLUDES	= \
 		-I$(srcdir)/../../docshell/base \
 		$(NULL)
 
-DISABLED_SDK_HEADERS =  \
-  nsXPCOM.h       \
-  nsXPCOMCID.h    \
-  $(NULL)
-
 GARBAGE         += $(XPCOM_GLUE_SRC_LCPPSRCS) $(XPCOM_GLUENS_SRC_LCPPSRCS)
 
 include $(topsrcdir)/config/config.mk

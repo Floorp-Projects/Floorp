@@ -1103,8 +1103,11 @@ MacroAssemblerARM::ma_dataTransferN(LoadStore ls, int size, bool IsSigned,
         if (mode == PreIndex)
             base = rn;
         JS_ASSERT(mode != PostIndex);
-        // at this point, both off - bottom and off + neg_bottom will be reasonable-ish
-        // quantities.
+        // At this point, both off - bottom and off + neg_bottom will be reasonable-ish quantities.
+        //
+        // Note a neg_bottom of 0x1000 can not be encoded as an immediate negative offset in the
+        // instruction and this occurs when bottom is zero, so this case is guarded against below.
+        // 
         if (off < 0) {
             Operand2 sub_off = Imm8(-(off-bottom)); // sub_off = bottom - off
             if (!sub_off.invalid) {
@@ -1112,7 +1115,8 @@ MacroAssemblerARM::ma_dataTransferN(LoadStore ls, int size, bool IsSigned,
                 return as_dtr(ls, size, Offset, rt, DTRAddr(ScratchRegister, DtrOffImm(bottom)), cc);
             }
             sub_off = Imm8(-(off+neg_bottom));// sub_off = -neg_bottom - off
-            if (!sub_off.invalid) {
+            if (!sub_off.invalid && bottom != 0) {
+                JS_ASSERT(neg_bottom < 0x1000);  // Guarded against by: bottom != 0
                 as_sub(ScratchRegister, rn, sub_off, NoSetCond, cc); // - sub_off = neg_bottom + off
                 return as_dtr(ls, size, Offset, rt, DTRAddr(ScratchRegister, DtrOffImm(-neg_bottom)), cc);
             }
@@ -1123,7 +1127,8 @@ MacroAssemblerARM::ma_dataTransferN(LoadStore ls, int size, bool IsSigned,
                 return as_dtr(ls, size, Offset, rt, DTRAddr(ScratchRegister, DtrOffImm(bottom)), cc);
             }
             sub_off = Imm8(off+neg_bottom);// sub_off = neg_bottom + off
-            if (!sub_off.invalid) {
+            if (!sub_off.invalid && bottom != 0) {
+                JS_ASSERT(neg_bottom < 0x1000);  // Guarded against by: bottom != 0
                 as_add(ScratchRegister, rn, sub_off, NoSetCond,  cc); // sub_off = neg_bottom + off
                 return as_dtr(ls, size, Offset, rt, DTRAddr(ScratchRegister, DtrOffImm(-neg_bottom)), cc);
             }
@@ -1135,12 +1140,15 @@ MacroAssemblerARM::ma_dataTransferN(LoadStore ls, int size, bool IsSigned,
         if (off < 256 && off > -256)
             return as_extdtr(ls, size, IsSigned, mode, rt, EDtrAddr(rn, EDtrOffImm(off)), cc);
 
-        // We cannot encode this offset in a a single extldr.  Try to encode it as
+        // We cannot encode this offset in a single extldr.  Try to encode it as
         // an add scratch, base, imm; extldr dest, [scratch, +offset].
         int bottom = off & 0xff;
         int neg_bottom = 0x100 - bottom;
-        // at this point, both off - bottom and off + neg_bottom will be reasonable-ish
-        // quantities.
+        // At this point, both off - bottom and off + neg_bottom will be reasonable-ish quantities.
+        //
+        // Note a neg_bottom of 0x100 can not be encoded as an immediate negative offset in the
+        // instruction and this occurs when bottom is zero, so this case is guarded against below.
+        // 
         if (off < 0) {
             Operand2 sub_off = Imm8(-(off-bottom)); // sub_off = bottom - off
             if (!sub_off.invalid) {
@@ -1150,7 +1158,8 @@ MacroAssemblerARM::ma_dataTransferN(LoadStore ls, int size, bool IsSigned,
                                  cc);
             }
             sub_off = Imm8(-(off+neg_bottom));// sub_off = -neg_bottom - off
-            if (!sub_off.invalid) {
+            if (!sub_off.invalid && bottom != 0) {
+                JS_ASSERT(neg_bottom < 0x100);  // Guarded against by: bottom != 0
                 as_sub(ScratchRegister, rn, sub_off, NoSetCond, cc); // - sub_off = neg_bottom + off
                 return as_extdtr(ls, size, IsSigned, Offset, rt,
                                  EDtrAddr(ScratchRegister, EDtrOffImm(-neg_bottom)),
@@ -1165,7 +1174,8 @@ MacroAssemblerARM::ma_dataTransferN(LoadStore ls, int size, bool IsSigned,
                                  cc);
             }
             sub_off = Imm8(off+neg_bottom);// sub_off = neg_bottom + off
-            if (!sub_off.invalid) {
+            if (!sub_off.invalid && bottom != 0) {
+                JS_ASSERT(neg_bottom < 0x100);  // Guarded against by: bottom != 0
                 as_add(ScratchRegister, rn, sub_off, NoSetCond,  cc); // sub_off = neg_bottom + off
                 return as_extdtr(ls, size, IsSigned, Offset, rt,
                                  EDtrAddr(ScratchRegister, EDtrOffImm(-neg_bottom)),
@@ -1431,8 +1441,11 @@ MacroAssemblerARM::ma_vdtr(LoadStore ls, const Operand &addr, VFPRegister rt, Co
     // an add scratch, base, imm; ldr dest, [scratch, +offset].
     int bottom = off & (0xff << 2);
     int neg_bottom = (0x100 << 2) - bottom;
-    // at this point, both off - bottom and off + neg_bottom will be reasonable-ish
-    // quantities.
+    // At this point, both off - bottom and off + neg_bottom will be reasonable-ish quantities.
+    //
+    // Note a neg_bottom of 0x400 can not be encoded as an immediate negative offset in the
+    // instruction and this occurs when bottom is zero, so this case is guarded against below.
+    // 
     if (off < 0) {
         Operand2 sub_off = Imm8(-(off-bottom)); // sub_off = bottom - off
         if (!sub_off.invalid) {
@@ -1440,7 +1453,8 @@ MacroAssemblerARM::ma_vdtr(LoadStore ls, const Operand &addr, VFPRegister rt, Co
             return as_vdtr(ls, rt, VFPAddr(ScratchRegister, VFPOffImm(bottom)), cc);
         }
         sub_off = Imm8(-(off+neg_bottom));// sub_off = -neg_bottom - off
-        if (!sub_off.invalid) {
+        if (!sub_off.invalid && bottom != 0) {
+            JS_ASSERT(neg_bottom < 0x400);  // Guarded against by: bottom != 0
             as_sub(ScratchRegister, base, sub_off, NoSetCond, cc); // - sub_off = neg_bottom + off
             return as_vdtr(ls, rt, VFPAddr(ScratchRegister, VFPOffImm(-neg_bottom)), cc);
         }
@@ -1451,7 +1465,8 @@ MacroAssemblerARM::ma_vdtr(LoadStore ls, const Operand &addr, VFPRegister rt, Co
             return as_vdtr(ls, rt, VFPAddr(ScratchRegister, VFPOffImm(bottom)), cc);
         }
         sub_off = Imm8(off+neg_bottom);// sub_off = neg_bottom + off
-        if (!sub_off.invalid) {
+        if (!sub_off.invalid && bottom != 0) {
+            JS_ASSERT(neg_bottom < 0x400);  // Guarded against by: bottom != 0
             as_add(ScratchRegister, base, sub_off, NoSetCond,  cc); // sub_off = neg_bottom + off
             return as_vdtr(ls, rt, VFPAddr(ScratchRegister, VFPOffImm(-neg_bottom)), cc);
         }

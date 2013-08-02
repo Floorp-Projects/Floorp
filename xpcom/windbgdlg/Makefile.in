@@ -10,8 +10,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DISABLED_SIMPLE_PROGRAMS = windbgdlg$(BIN_SUFFIX)
-
 MOZ_WINCONSOLE = 0
 include $(topsrcdir)/config/rules.mk
 

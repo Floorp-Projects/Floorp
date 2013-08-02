@@ -39,3 +39,9 @@ EXTRA_JS_MODULES += [
     'SpellCheckDictionaryBootstrap.js',
 ]
 
+EXTRA_PP_JS_MODULES += [
+    'AddonManager.jsm',
+    'XPIProvider.jsm',
+    'XPIProviderUtils.js',
+]
+

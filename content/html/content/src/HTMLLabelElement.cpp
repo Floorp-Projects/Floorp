@@ -115,7 +115,7 @@ DestroyMouseDownPoint(void *    /*aObject*/,
                       void *    aPropertyValue,
                       void *    /*aData*/)
 {
-  nsIntPoint* pt = static_cast<nsIntPoint*>(aPropertyValue);
+  LayoutDeviceIntPoint* pt = static_cast<LayoutDeviceIntPoint*>(aPropertyValue);
   delete pt;
 }
 
@@ -145,9 +145,10 @@ HTMLLabelElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
             nsMouseEvent::eLeftButton) {
           // We reset the mouse-down point on every event because there is
           // no guarantee we will reach the NS_MOUSE_CLICK code below.
-          nsIntPoint *curPoint = new nsIntPoint(aVisitor.mEvent->refPoint);
+          LayoutDeviceIntPoint* curPoint =
+            new LayoutDeviceIntPoint(aVisitor.mEvent->refPoint);
           SetProperty(nsGkAtoms::labelMouseDownPtProperty,
-                      static_cast<void *>(curPoint),
+                      static_cast<void*>(curPoint),
                       DestroyMouseDownPoint);
         }
         break;
@@ -156,12 +157,13 @@ HTMLLabelElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
         if (NS_IS_MOUSE_LEFT_CLICK(aVisitor.mEvent)) {
           const nsMouseEvent* event =
             static_cast<const nsMouseEvent*>(aVisitor.mEvent);
-          nsIntPoint *mouseDownPoint = static_cast<nsIntPoint *>
-            (GetProperty(nsGkAtoms::labelMouseDownPtProperty));
+          LayoutDeviceIntPoint* mouseDownPoint =
+            static_cast<LayoutDeviceIntPoint*>(
+              GetProperty(nsGkAtoms::labelMouseDownPtProperty));
 
           bool dragSelect = false;
           if (mouseDownPoint) {
-            nsIntPoint dragDistance = *mouseDownPoint;
+            LayoutDeviceIntPoint dragDistance = *mouseDownPoint;
             DeleteProperty(nsGkAtoms::labelMouseDownPtProperty);
 
             dragDistance -= aVisitor.mEvent->refPoint;

@@ -18,17 +18,4 @@ DEFINES += \
   -DMOZ_BUILD_APP=$(MOZ_BUILD_APP) \
   $(NULL)
 
-EXTRA_PP_JS_MODULES = \
-  CertUtils.jsm \
-  ResetProfile.jsm \
-  Services.jsm \
-  Troubleshoot.jsm \
-  UpdateChannel.jsm \
-  WindowDraggingUtils.jsm \
-  $(NULL)
-
-ifneq (Android,$(OS_TARGET))
-EXTRA_PP_JS_MODULES += LightweightThemeConsumer.jsm
-endif
-
 include $(topsrcdir)/config/rules.mk

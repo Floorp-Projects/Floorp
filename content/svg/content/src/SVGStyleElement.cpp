@@ -31,10 +31,13 @@ NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(SVGStyleElement)
                                 nsIMutationObserver)
 NS_INTERFACE_TABLE_TAIL_INHERITING(SVGStyleElementBase)
 
+NS_IMPL_CYCLE_COLLECTION_CLASS(SVGStyleElement)
+
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(SVGStyleElement,
                                                   SVGStyleElementBase)
   tmp->nsStyleLinkElement::Traverse(cb);
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(SVGStyleElement,
                                                 SVGStyleElementBase)
   tmp->nsStyleLinkElement::Unlink();

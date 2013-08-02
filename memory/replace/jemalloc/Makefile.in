@@ -20,19 +20,7 @@ endif
 
 VPATH += $(topsrcdir)/memory/build
 
-DISABLED_CSRCS = \
-  mozjemalloc_compat.c \
-  jemalloc_config.c \
-  $(NULL)
-
 MOZ_GLUE_LDFLAGS = # Don't link against mozglue
 WRAP_LDFLAGS = # Never wrap malloc function calls with -Wl,--wrap
-
-# Android doesn't have pthread_atfork, so just implement a dummy function.
-# It shouldn't make much problem, as the use of fork is pretty limited on
-# Android.
-ifeq ($(MOZ_WIDGET_TOOLKIT),android)
-DISABLED_CSRCS += pthread_atfork.c
-endif
 
 include $(topsrcdir)/config/rules.mk

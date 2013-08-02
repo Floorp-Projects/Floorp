@@ -17,13 +17,6 @@ SDK_LIBRARY = $(REAL_LIBRARY)
 DIST_INSTALL = 1
 endif
 
-DISABLED_CSRCS := $(notdir $(wildcard $(srcdir)/src/src/*.c))
-# Only OSX needs the zone allocation implementation, but only if
-# replace-malloc is not enabled.
-ifneq ($(OS_TARGET)$(MOZ_REPLACE_MALLOC),Darwin)
-DISABLED_CSRCS := $(filter-out zone.c,$(CSRCS))
-endif
-
 include $(topsrcdir)/config/rules.mk
 
 LOCAL_INCLUDES += \

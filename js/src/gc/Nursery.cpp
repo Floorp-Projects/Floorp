@@ -508,7 +508,7 @@ js::Nursery::moveElementsToTenured(JSObject *dst, JSObject *src, AllocKind dstKi
         return nslots * sizeof(HeapSlot);
     }
 
-    JS_ASSERT(nslots > 2);
+    JS_ASSERT(nslots >= 2);
     size_t nbytes = nslots * sizeof(HeapValue);
     dstHeader = static_cast<ObjectElements *>(zone->malloc_(nbytes));
     if (!dstHeader)
