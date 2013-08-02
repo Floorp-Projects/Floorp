@@ -1346,17 +1346,19 @@ SpecialPowersAPI.prototype = {
     sendAsyncMessage("SpecialPowers.Focus", {});
   },
 
-  getClipboardData: function(flavor) {
+  getClipboardData: function(flavor, whichClipboard) {
     if (this._cb == null)
       this._cb = Components.classes["@mozilla.org/widget/clipboard;1"].
                             getService(Components.interfaces.nsIClipboard);
+    if (whichClipboard === undefined)
+      whichClipboard = this._cb.kGlobalClipboard;
 
     var xferable = Components.classes["@mozilla.org/widget/transferable;1"].
                    createInstance(Components.interfaces.nsITransferable);
     xferable.init(this._getDocShell(content.window)
                       .QueryInterface(Components.interfaces.nsILoadContext));
     xferable.addDataFlavor(flavor);
-    this._cb.getData(xferable, this._cb.kGlobalClipboard);
+    this._cb.getData(xferable, whichClipboard);
     var data = {};
     try {
       xferable.getTransferData(flavor, data, {});
