@@ -1339,6 +1339,8 @@ void
 Debugger::slowPathOnNewGlobalObject(JSContext *cx, Handle<GlobalObject *> global)
 {
     JS_ASSERT(!JS_CLIST_IS_EMPTY(&cx->runtime()->onNewGlobalObjectWatchers));
+    if (global->compartment()->options().invisibleToDebugger)
+        return;
 
     /*
      * Make a copy of the runtime's onNewGlobalObjectWatchers before running the
@@ -1958,7 +1960,7 @@ Debugger::addAllGlobalsAsDebuggees(JSContext *cx, unsigned argc, Value *vp)
     THIS_DEBUGGER(cx, argc, vp, "addAllGlobalsAsDebuggees", args, dbg);
     AutoDebugModeGC dmgc(cx->runtime());
     for (CompartmentsIter c(cx->runtime()); !c.done(); c.next()) {
-        if (c == dbg->object->compartment())
+        if (c == dbg->object->compartment() || c->options().invisibleToDebugger)
             continue;
         c->zone()->scheduledForDestruction = false;
         GlobalObject *global = c->maybeGlobal();
@@ -2134,7 +2136,16 @@ Debugger::addDebuggeeGlobal(JSContext *cx,
     if (debuggees.has(global))
         return true;
 
+    // Callers should generally be unable to get a reference to a debugger-
+    // invisible global in order to pass it to addDebuggee. But this is possible
+    // with certain testing aides we expose in the shell, so just make addDebuggee
+    // throw in that case.
     JSCompartment *debuggeeCompartment = global->compartment();
+    if (debuggeeCompartment->options().invisibleToDebugger) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                             JSMSG_DEBUG_CANT_DEBUG_GLOBAL);
+        return false;
+    }
 
     /*
      * Check for cycles. If global's compartment is reachable from this
