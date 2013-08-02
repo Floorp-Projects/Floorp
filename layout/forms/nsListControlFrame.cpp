@@ -1359,29 +1359,16 @@ nsListControlFrame::SetOptionsSelectedFromFrame(int32_t aStartIndex,
 bool
 nsListControlFrame::ToggleOptionSelectedFromFrame(int32_t aIndex)
 {
-  nsCOMPtr<nsIDOMHTMLOptionsCollection> options = GetOptions(mContent);
-  NS_ASSERTION(options, "No options");
-  if (!options) {
-    return false;
-  }
-  nsCOMPtr<nsIDOMHTMLOptionElement> option = GetOption(options, aIndex);
-  NS_ASSERTION(option, "No option");
-  if (!option) {
-    return false;
-  }
+  nsRefPtr<dom::HTMLOptionElement> option =
+    GetOption(static_cast<uint32_t>(aIndex));
+  NS_ENSURE_TRUE(option, false);
 
-  bool value = false;
-#ifdef DEBUG
-  nsresult rv =
-#endif
-    option->GetSelected(&value);
-
-  NS_ASSERTION(NS_SUCCEEDED(rv), "GetSelected failed");
   nsRefPtr<dom::HTMLSelectElement> selectElement =
     dom::HTMLSelectElement::FromContent(mContent);
+
   return selectElement->SetOptionsSelectedByIndex(aIndex,
                                                   aIndex,
-                                                  !value,
+                                                  !option->Selected(),
                                                   false,
                                                   false,
                                                   true);
