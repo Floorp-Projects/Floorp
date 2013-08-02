@@ -32,6 +32,10 @@
   -moz-image-region: rect(0px, 16px, 16px, 0px);
 }
 
+#developer-toolbar-toolbox-button > label {
+  display: none;
+}
+
 #developer-toolbar-toolbox-button:hover {
   -moz-image-region: rect(0px, 32px, 16px, 16px);
 }

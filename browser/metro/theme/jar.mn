@@ -99,6 +99,7 @@ chrome.jar:
   skin/images/tile-selected-check-hdpi.png  (images/tile-selected-check-hdpi.png)
   skin/images/plus-34.png                   (images/plus-34.png)
   skin/images/plus-24.png                   (images/plus-24.png)
+  skin/images/progresscircle.png            (images/progresscircle.png)
 
   skin/images/overlay-back.png              (images/overlay-back.png)
   skin/images/overlay-plus.png              (images/overlay-plus.png)
