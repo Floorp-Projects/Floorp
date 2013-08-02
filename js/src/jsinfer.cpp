@@ -3131,10 +3131,8 @@ struct types::ArrayTableKey
 };
 
 void
-TypeCompartment::fixArrayType(JSContext *cx, JSObject *obj)
+TypeCompartment::setTypeToHomogenousArray(JSContext *cx, JSObject *obj, Type elementType)
 {
-    AutoEnterAnalysis enter(cx);
-
     if (!arrayTypeTable) {
         arrayTypeTable = cx->new_<ArrayTypeTable>();
         if (!arrayTypeTable || !arrayTypeTable->init()) {
@@ -3143,6 +3141,38 @@ TypeCompartment::fixArrayType(JSContext *cx, JSObject *obj)
             return;
         }
     }
+
+    ArrayTableKey key;
+    key.type = elementType;
+    key.proto = obj->getProto();
+    ArrayTypeTable::AddPtr p = arrayTypeTable->lookupForAdd(key);
+
+    if (p) {
+        obj->setType(p->value);
+    } else {
+        /* Make a new type to use for future arrays with the same elements. */
+        RootedObject objProto(cx, obj->getProto());
+        TypeObject *objType = newTypeObject(cx, &ArrayObject::class_, objProto);
+        if (!objType) {
+            cx->compartment()->types.setPendingNukeTypes(cx);
+            return;
+        }
+        obj->setType(objType);
+
+        if (!objType->unknownProperties())
+            objType->addPropertyType(cx, JSID_VOID, elementType);
+
+        if (!arrayTypeTable->relookupOrAdd(p, key, objType)) {
+            cx->compartment()->types.setPendingNukeTypes(cx);
+            return;
+        }
+    }
+}
+
+void
+TypeCompartment::fixArrayType(JSContext *cx, JSObject *obj)
+{
+    AutoEnterAnalysis enter(cx);
 
     /*
      * If the array is of homogenous type, pick a type object which will be
@@ -3168,42 +3198,31 @@ TypeCompartment::fixArrayType(JSContext *cx, JSObject *obj)
         }
     }
 
-    ArrayTableKey key;
-    key.type = type;
-    key.proto = obj->getProto();
-    ArrayTypeTable::AddPtr p = arrayTypeTable->lookupForAdd(key);
+    setTypeToHomogenousArray(cx, obj, type);
+}
 
-    if (p) {
-        obj->setType(p->value);
-    } else {
-        Rooted<Type> origType(cx, type);
-        /* Make a new type to use for future arrays with the same elements. */
-        RootedObject objProto(cx, obj->getProto());
-        Rooted<TypeObject*> objType(cx, newTypeObject(cx, &ArrayObject::class_, objProto));
-        if (!objType) {
-            cx->compartment()->types.setPendingNukeTypes(cx);
-            return;
-        }
-        obj->setType(objType);
-
-        if (!objType->unknownProperties())
-            objType->addPropertyType(cx, JSID_VOID, type);
-
-        // The key's fields may have been moved by moving GC and therefore the
-        // AddPtr is now invalid. ArrayTypeTable's equality and hashcodes
-        // operators use only the two fields (type and proto) directly, so we
-        // can just conditionally update them here.
-        if (type != origType || key.proto != obj->getProto()) {
-            key.type = origType;
-            key.proto = obj->getProto();
-            p = arrayTypeTable->lookupForAdd(key);
-        }
-
-        if (!arrayTypeTable->relookupOrAdd(p, key, objType)) {
-            cx->compartment()->types.setPendingNukeTypes(cx);
-            return;
-        }
+void
+types::FixRestArgumentsType(ExclusiveContext *cxArg, JSObject *obj)
+{
+    if (cxArg->isJSContext()) {
+        JSContext *cx = cxArg->asJSContext();
+        if (cx->typeInferenceEnabled())
+            cx->compartment()->types.fixRestArgumentsType(cx, obj);
     }
+}
+
+void
+TypeCompartment::fixRestArgumentsType(JSContext *cx, JSObject *obj)
+{
+    AutoEnterAnalysis enter(cx);
+
+    /*
+     * Tracking element types for rest argument arrays is not worth it, but we
+     * still want it to be known that it's a dense array.
+     */
+    JS_ASSERT(obj->is<ArrayObject>());
+
+    setTypeToHomogenousArray(cx, obj, Type::UnknownType());
 }
 
 /*
@@ -6382,11 +6401,11 @@ TypeCompartment::sweep(FreeOp *fop)
         for (ArrayTypeTable::Enum e(*arrayTypeTable); !e.empty(); e.popFront()) {
             const ArrayTableKey &key = e.front().key;
             JS_ASSERT(e.front().value->proto == key.proto);
-            JS_ASSERT(!key.type.isSingleObject());
+            JS_ASSERT(key.type.isUnknown() || !key.type.isSingleObject());
 
             bool remove = false;
             TypeObject *typeObject = NULL;
-            if (key.type.isTypeObject()) {
+            if (!key.type.isUnknown() && key.type.isTypeObject()) {
                 typeObject = key.type.typeObject();
                 if (IsTypeObjectAboutToBeFinalized(&typeObject))
                     remove = true;
