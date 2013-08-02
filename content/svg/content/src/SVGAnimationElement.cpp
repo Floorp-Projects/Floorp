@@ -25,6 +25,8 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(SVGAnimationElement)
 NS_INTERFACE_MAP_END_INHERITING(SVGAnimationElementBase)
 
 // Cycle collection magic -- based on nsSVGUseElement
+NS_IMPL_CYCLE_COLLECTION_CLASS(SVGAnimationElement)
+
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(SVGAnimationElement,
                                                 SVGAnimationElementBase)
   tmp->mHrefTarget.Unlink();

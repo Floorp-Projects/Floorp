@@ -276,6 +276,8 @@ IDBRequest::GetError(mozilla::ErrorResult& aRv)
   return mError;
 }
 
+NS_IMPL_CYCLE_COLLECTION_CLASS(IDBRequest)
+
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(IDBRequest, IDBWrapperCache)
   // Don't need NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS because
   // nsDOMEventTargetHelper does it for us.
@@ -354,6 +356,8 @@ IDBOpenDBRequest::SetTransaction(IDBTransaction* aTransaction)
 
   mTransaction = aTransaction;
 }
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(IDBOpenDBRequest)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(IDBOpenDBRequest,
                                                   IDBRequest)

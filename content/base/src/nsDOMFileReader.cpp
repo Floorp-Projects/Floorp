@@ -54,6 +54,8 @@ using namespace mozilla::dom;
 #define LOADSTART_STR "loadstart"
 #define LOADEND_STR "loadend"
 
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsDOMFileReader)
+
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsDOMFileReader,
                                                   FileIOObject)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFile)
