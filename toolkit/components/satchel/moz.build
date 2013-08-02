@@ -35,3 +35,8 @@ LIBRARY_NAME = 'satchel'
 EXTRA_JS_MODULES += [
     'nsFormAutoCompleteResult.jsm',
 ]
+
+EXTRA_PP_JS_MODULES += [
+    'FormHistory.jsm',
+]
+

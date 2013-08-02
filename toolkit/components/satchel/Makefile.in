@@ -19,8 +19,4 @@ LOCAL_INCLUDES = \
   $(NULL)
 
 
-EXTRA_PP_JS_MODULES = \
-  FormHistory.jsm \
-	$(NULL)
-
 include $(topsrcdir)/config/rules.mk

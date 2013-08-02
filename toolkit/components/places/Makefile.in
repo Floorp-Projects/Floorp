@@ -19,17 +19,6 @@ IS_COMPONENT = 1
 
 LOCAL_INCLUDES += -I$(srcdir)/../build
 
-
-ifdef MOZ_XUL
-endif
-
-EXTRA_PP_JS_MODULES = \
-  BookmarkHTMLUtils.jsm \
-  PlacesUtils.jsm \
-  $(NULL)
-
-include $(topsrcdir)/config/config.mk
-
 endif
 
 include $(topsrcdir)/config/rules.mk
