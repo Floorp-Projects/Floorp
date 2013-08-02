@@ -117,7 +117,7 @@ public:
     // nsIListControlFrame
   virtual void SetComboboxFrame(nsIFrame* aComboboxFrame) MOZ_OVERRIDE;
   virtual int32_t GetSelectedIndex() MOZ_OVERRIDE;
-  virtual already_AddRefed<nsIContent> GetCurrentOption() MOZ_OVERRIDE;
+  virtual mozilla::dom::HTMLOptionElement* GetCurrentOption() MOZ_OVERRIDE;
 
   /**
    * Gets the text of the currently selected item.
