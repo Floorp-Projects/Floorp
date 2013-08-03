@@ -234,7 +234,6 @@ FENNEC_JAVA_FILES = \
   menu/MenuPanel.java \
   menu/MenuPopup.java \
   preferences/SearchPreferenceCategory.java \
-  preferences/SearchEnginePreference.java \
   widget/AboutHome.java \
   widget/AboutHomeView.java \
   widget/AboutHomeSection.java \
