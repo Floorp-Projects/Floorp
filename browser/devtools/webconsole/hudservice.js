@@ -6,37 +6,19 @@
 
 "use strict";
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cu = Components.utils;
+const {Cc, Ci, Cu} = require("chrome");
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+let WebConsoleUtils = require("devtools/toolkit/webconsole/utils").Utils;
+let Heritage = require("sdk/core/heritage");
 
-XPCOMUtils.defineLazyModuleGetter(this, "gDevTools",
-    "resource:///modules/devtools/gDevTools.jsm");
-
-XPCOMUtils.defineLazyModuleGetter(this, "devtools",
-    "resource://gre/modules/devtools/Loader.jsm");
-
-XPCOMUtils.defineLazyModuleGetter(this, "Services",
-    "resource://gre/modules/Services.jsm");
-
-XPCOMUtils.defineLazyModuleGetter(this, "DebuggerServer",
-  "resource://gre/modules/devtools/dbg-server.jsm");
-
-XPCOMUtils.defineLazyModuleGetter(this, "DebuggerClient",
-  "resource://gre/modules/devtools/dbg-client.jsm");
-
-XPCOMUtils.defineLazyModuleGetter(this, "WebConsoleUtils",
-    "resource://gre/modules/devtools/WebConsoleUtils.jsm");
-
-XPCOMUtils.defineLazyModuleGetter(this, "promise",
-    "resource://gre/modules/commonjs/sdk/core/promise.js", "Promise");
-
-XPCOMUtils.defineLazyModuleGetter(this, "Heritage",
-    "resource:///modules/devtools/ViewHelpers.jsm");
-
-let Telemetry = devtools.require("devtools/shared/telemetry");
+loader.lazyGetter(this, "promise", () => require("sdk/core/promise"));
+loader.lazyGetter(this, "Telemetry", () => require("devtools/shared/telemetry"));
+loader.lazyGetter(this, "WebConsoleFrame", () => require("devtools/webconsole/webconsole").WebConsoleFrame);
+loader.lazyImporter(this, "gDevTools", "resource:///modules/devtools/gDevTools.jsm");
+loader.lazyImporter(this, "devtools", "resource://gre/modules/devtools/Loader.jsm");
+loader.lazyImporter(this, "Services", "resource://gre/modules/Services.jsm");
+loader.lazyImporter(this, "DebuggerServer", "resource://gre/modules/devtools/dbg-server.jsm");
+loader.lazyImporter(this, "DebuggerClient", "resource://gre/modules/devtools/dbg-client.jsm");
 
 const STRINGS_URI = "chrome://browser/locale/devtools/webconsole.properties";
 let l10n = new WebConsoleUtils.l10n(STRINGS_URI);
@@ -45,8 +27,6 @@ const BROWSER_CONSOLE_WINDOW_FEATURES = "chrome,titlebar,toolbar,centerscreen,re
 
 // The preference prefix for all of the Browser Console filters.
 const BROWSER_CONSOLE_FILTER_PREFS_PREFIX = "devtools.browserconsole.filter.";
-
-this.EXPORTED_SYMBOLS = ["HUDService"];
 
 ///////////////////////////////////////////////////////////////////////////
 //// The HUD service
@@ -330,7 +310,7 @@ function WebConsole(aTarget, aIframeWindow, aChromeWindow)
     this.browserWindow = HUDService.currentContext();
   }
 
-  this.ui = new this.iframeWindow.WebConsoleFrame(this);
+  this.ui = new WebConsoleFrame(this);
 }
 
 WebConsole.prototype = {
@@ -724,3 +704,15 @@ BrowserConsole.prototype = Heritage.extend(WebConsole.prototype,
 });
 
 const HUDService = new HUD_SERVICE();
+
+(() => {
+  let methods = ["openWebConsole", "openBrowserConsole", "toggleWebConsole",
+                 "toggleBrowserConsole", "getOpenWebConsole",
+                 "getBrowserConsole", "getHudByWindow", "getHudReferenceById"];
+  for (let method of methods) {
+    exports[method] = HUDService[method].bind(HUDService);
+  }
+
+  exports.consoles = HUDService.consoles;
+  exports.lastFinishedRequest = HUDService.lastFinishedRequest;
+})();
