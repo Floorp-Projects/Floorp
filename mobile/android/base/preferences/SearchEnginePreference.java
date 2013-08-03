@@ -14,16 +14,13 @@ import android.os.Build;
 import android.preference.Preference;
 import android.text.SpannableString;
 import android.util.Log;
-import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.mozilla.gecko.Favicons;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.util.ThreadUtils;
-import org.mozilla.gecko.widget.FaviconView;
 
 /**
  * Represents an element in the list of search engines on the preferences menu.
@@ -33,7 +30,6 @@ public class SearchEnginePreference extends Preference {
 
     // Dimensions, in dp, of the icon to display for this engine.
     public static int sIconSize;
-    public static int sDialogIconSize;
 
     // Indices in button array of the AlertDialog of the three buttons.
     public static final int INDEX_SET_DEFAULT_BUTTON = 0;
@@ -55,11 +51,6 @@ public class SearchEnginePreference extends Preference {
 
     private final SearchPreferenceCategory mParentCategory;
 
-    // The icon to display in the prompt when clicked.
-    private BitmapDrawable mPromptIcon;
-    // The bitmap backing the drawable above - needed seperately for the FaviconView.
-    private Bitmap mIconBitmap;
-
     /**
      * Create a preference object to represent a search engine that is attached to category
      * containingCategory.
@@ -73,13 +64,8 @@ public class SearchEnginePreference extends Preference {
 
         Resources res = getContext().getResources();
 
-        // Set the layout resource for this preference - includes a FaviconView
-        setLayoutResource(R.layout.preference_search_engine);
-
-        // Fetch the dimensions we want to upscale miniscule favicons to.
-        sIconSize = (int) res.getDimension(R.dimen.awesomebar_row_favicon_size_small);
-        sDialogIconSize = (int) res.getDimension(R.dimen.awesomebar_row_favicon_size_large);
-
+        // Fetch the icon dimensions from the resource file.
+        sIconSize = res.getDimensionPixelSize(R.dimen.searchpreferences_icon_size);
         setOnPreferenceClickListener(new OnPreferenceClickListener() {
             @Override
             public boolean onPreferenceClick(Preference preference) {
@@ -99,18 +85,6 @@ public class SearchEnginePreference extends Preference {
     }
 
     /**
-    * Called by android when we're bound to the custom view. Allows us to set the custom properties
-    * of our custom view elements as we desire (We can now use findViewById on them).
-    * @param view The view instance for this Preference object.
-    */
-    @Override
-    protected void onBindView(View view) {
-        super.onBindView(view);
-        // Set the icon in the FaviconView
-        ((FaviconView) view.findViewById(R.id.search_engine_icon)).updateImage(mIconBitmap, getTitle().toString());
-    }
-
-    /**
      * Configure this Preference object from the Gecko search engine JSON object.
      * @param geckoEngineJSON The Gecko-formatted JSON object representing the search engine.
      * @throws JSONException If the JSONObject is invalid.
@@ -126,12 +100,14 @@ public class SearchEnginePreference extends Preference {
         }
         setTitle(titleSpannable);
 
-        String iconURI = geckoEngineJSON.getString("iconURI");
-        // Keep a reference to the bitmap - we'll need it later in onBindView.
-        mIconBitmap = BitmapUtils.getBitmapFromDataURI(iconURI);
-        // For the really tiny favicons, upscale them to 16x16 (Otherwise you can hardly see them)
-        if (!Favicons.getInstance().isLargeFavicon(mIconBitmap)) {
-            mIconBitmap = Bitmap.createScaledBitmap(mIconBitmap, sIconSize, sIconSize, false);
+        // setIcon is only available on Honeycomb and up.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
+            // Create a drawable from the iconURI and assign it to this Preference for display.
+            String iconURI = geckoEngineJSON.getString("iconURI");
+            Bitmap iconBitmap = BitmapUtils.getBitmapFromDataURI(iconURI);
+            Bitmap scaledIconBitmap = Bitmap.createScaledBitmap(iconBitmap, sIconSize, sIconSize, false);
+            BitmapDrawable drawable = new BitmapDrawable(scaledIconBitmap);
+            setIcon(drawable);
         }
     }
 
@@ -196,12 +172,10 @@ public class SearchEnginePreference extends Preference {
             }
         });
 
-        // Copy the icon from this object to the prompt we produce. We lazily create the drawable,
-        // as the user may not ever actually tap this object.
-        if (mPromptIcon == null) {
-            mPromptIcon = new BitmapDrawable(Bitmap.createScaledBitmap(mIconBitmap, sDialogIconSize, sDialogIconSize, false));
+        // Copy the icon, if any, from this object to the prompt we produce.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
+            builder.setIcon(getIcon());
         }
-        builder.setIcon(mPromptIcon);
 
         // We have to construct the dialog itself on the UI thread.
         ThreadUtils.postToUiThread(new Runnable() {
