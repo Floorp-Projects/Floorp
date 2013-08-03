@@ -229,6 +229,9 @@ BufferTextureHost::Updated(const nsIntRegion* aRegion)
   } else {
     mPartialUpdate = false;
   }
+  if (GetFlags() & TEXTURE_IMMEDIATE_UPLOAD) {
+    MaybeUpload(mPartialUpdate ? &mMaybeUpdatedRegion : nullptr);
+  }
 }
 
 void
@@ -268,11 +271,8 @@ NewTextureSource*
 BufferTextureHost::GetTextureSources()
 {
   MOZ_ASSERT(mLocked, "should never be called while not locked");
-  if (!mFirstSource || mUpdateSerial != mFirstSource->GetUpdateSerial()) {
-    if (!Upload(mPartialUpdate ? &mMaybeUpdatedRegion : nullptr)) {
+  if (!MaybeUpload(mPartialUpdate ? &mMaybeUpdatedRegion : nullptr)) {
       return nullptr;
-    }
-    mFirstSource->SetUpdateSerial(mUpdateSerial);
   }
   return mFirstSource;
 }
@@ -291,6 +291,19 @@ BufferTextureHost::GetFormat() const
     return gfx::FORMAT_R8G8B8X8;
   }
   return mFormat;
+}
+
+bool
+BufferTextureHost::MaybeUpload(nsIntRegion *aRegion)
+{
+  if (mFirstSource && mFirstSource->GetUpdateSerial() == mUpdateSerial) {
+    return true;
+  }
+  if (!Upload(aRegion)) {
+    return false;
+  }
+  mFirstSource->SetUpdateSerial(mUpdateSerial);
+  return true;
 }
 
 bool

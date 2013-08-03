@@ -197,8 +197,14 @@ ImageClientBuffered::UpdateImage(ImageContainer* aContainer,
 void
 ImageClientSingle::AddTextureClient(TextureClient* aTexture)
 {
-  aTexture->AddFlags(mTextureFlags);
+  MOZ_ASSERT((mTextureFlags & aTexture->GetFlags()) == mTextureFlags);
   CompositableClient::AddTextureClient(aTexture);
+}
+
+TemporaryRef<BufferTextureClient>
+ImageClientSingle::CreateBufferTextureClient(gfx::SurfaceFormat aFormat)
+{
+  return CompositableClient::CreateBufferTextureClient(aFormat, mTextureFlags);
 }
 
 void
