@@ -25,10 +25,13 @@ endef
 export::
 	@echo "BUILDSTATUS SUBTIERS IPDL WebIDL"
 
-export:: ipdl webidl
+export:: ipdl webidl xpidl-parser
 
 ipdl:
 	$(call make_subtier_dir,IPDL,$(DEPTH)/ipc/ipdl,ipdl)
 
 webidl:
 	$(call make_subtier_dir,WebIDL,$(DEPTH)/dom/bindings,webidl)
+
+xpidl-parser:
+	$(call make_subtier_dir,XPIDLParser,$(DEPTH)/xpcom/idl-parser,xpidl-parser)
