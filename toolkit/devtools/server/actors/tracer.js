@@ -286,7 +286,10 @@ TraceActor.prototype = {
       sequence: this._sequence++
     };
 
-    this._handleEvent(TraceTypes.Events.exitFrame, packet, { value: aValue });
+    this._handleEvent(TraceTypes.Events.exitFrame, packet, {
+      value: aValue,
+      startTime: this._startTime
+    });
 
     this.conn.send(packet);
   }
