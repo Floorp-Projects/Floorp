@@ -175,6 +175,19 @@ BufferTextureClient::UpdateSurface(gfxASurface* aSurface)
   return true;
 }
 
+already_AddRefed<gfxASurface>
+BufferTextureClient::GetAsSurface()
+{
+  ImageDataSerializer serializer(GetBuffer());
+  if (!serializer.IsValid()) {
+    return nullptr;
+  }
+
+  RefPtr<gfxImageSurface> surf = serializer.GetAsThebesSurface();
+  nsRefPtr<gfxASurface> result = surf.get();
+  return result.forget();
+}
+
 bool
 BufferTextureClient::AllocateForSurface(gfx::IntSize aSize)
 {
