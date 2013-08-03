@@ -147,16 +147,22 @@ CompositableClient::CreateDeprecatedTextureClient(DeprecatedTextureClientType aD
 }
 
 TemporaryRef<BufferTextureClient>
-CompositableClient::CreateBufferTextureClient(gfx::SurfaceFormat aFormat)
+CompositableClient::CreateBufferTextureClient(gfx::SurfaceFormat aFormat,
+                                              uint32_t aTextureFlags)
 {
   if (gfxPlatform::GetPlatform()->PreferMemoryOverShmem()) {
-    RefPtr<BufferTextureClient> result = new MemoryTextureClient(this, aFormat);
+    RefPtr<BufferTextureClient> result = new MemoryTextureClient(this, aFormat, aTextureFlags);
     return result.forget();
   }
-  RefPtr<BufferTextureClient> result = new ShmemTextureClient(this, aFormat);
+  RefPtr<BufferTextureClient> result = new ShmemTextureClient(this, aFormat, aTextureFlags);
   return result.forget();
 }
 
+TemporaryRef<BufferTextureClient>
+CompositableClient::CreateBufferTextureClient(gfx::SurfaceFormat aFormat)
+{
+  return CreateBufferTextureClient(aFormat, TEXTURE_FLAGS_DEFAULT);
+}
 
 void
 CompositableClient::AddTextureClient(TextureClient* aClient)
