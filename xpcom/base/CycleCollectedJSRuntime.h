@@ -96,8 +96,8 @@ protected:
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
   void UnmarkSkippableJSHolders();
 
-  virtual void TraverseAdditionalNativeRoots(nsCycleCollectionNoteRootCallback& aCb) = 0;
-  virtual void TraceAdditionalNativeGrayRoots(JSTracer* aTracer) = 0;
+  virtual void TraverseAdditionalNativeRoots(nsCycleCollectionNoteRootCallback& aCb) {}
+  virtual void TraceAdditionalNativeGrayRoots(JSTracer* aTracer) {}
 
   virtual void CustomGCCallback(JSGCStatus aStatus) {}
   virtual bool CustomContextCallback(JSContext* aCx, unsigned aOperation)
@@ -113,7 +113,10 @@ private:
 
   virtual bool
   DescribeCustomObjects(JSObject* aObject, js::Class* aClasp,
-                        char (&aName)[72]) const = 0;
+                        char (&aName)[72]) const
+  {
+    return false; // We did nothing.
+  }
 
   void
   NoteGCThingJSChildren(void* aThing, JSGCTraceKind aTraceKind,
@@ -125,8 +128,10 @@ private:
 
   virtual bool
   NoteCustomGCThingXPCOMChildren(js::Class* aClasp, JSObject* aObj,
-                                 nsCycleCollectionTraversalCallback& aCb) const = 0;
-
+                                 nsCycleCollectionTraversalCallback& aCb) const
+  {
+    return false; // We did nothing.
+  }
 
   enum TraverseSelect {
       TRAVERSE_CPP,

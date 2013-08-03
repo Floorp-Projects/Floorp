@@ -670,10 +670,10 @@ public:
 
     virtual bool
     DescribeCustomObjects(JSObject* aObject, js::Class* aClasp,
-                          char (&aName)[72]) const;
+                          char (&aName)[72]) const MOZ_OVERRIDE;
     virtual bool
     NoteCustomGCThingXPCOMChildren(js::Class* aClasp, JSObject* aObj,
-                                   nsCycleCollectionTraversalCallback& aCb) const;
+                                   nsCycleCollectionTraversalCallback& aCb) const MOZ_OVERRIDE;
 
     /**
      * Infrastructure for classes that need to defer part of the finalization
@@ -725,9 +725,9 @@ public:
         return mStrings[index];
     }
 
-    void TraceNativeBlackRoots(JSTracer* trc);
-    void TraceAdditionalNativeGrayRoots(JSTracer* aTracer);
-    void TraverseAdditionalNativeRoots(nsCycleCollectionNoteRootCallback& cb);
+    void TraceNativeBlackRoots(JSTracer* trc) MOZ_OVERRIDE;
+    void TraceAdditionalNativeGrayRoots(JSTracer* aTracer) MOZ_OVERRIDE;
+    void TraverseAdditionalNativeRoots(nsCycleCollectionNoteRootCallback& cb) MOZ_OVERRIDE;
     void UnmarkSkippableJSHolders();
     void PrepareForForgetSkippable() MOZ_OVERRIDE;
     void PrepareForCollection() MOZ_OVERRIDE;
