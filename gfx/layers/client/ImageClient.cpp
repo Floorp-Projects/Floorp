@@ -146,10 +146,7 @@ ImageClientSingle::UpdateImage(ImageContainer* aContainer,
     nsRefPtr<gfxASurface> surface = image->GetAsSurface();
     MOZ_ASSERT(surface);
 
-    gfx::IntSize size = gfx::IntSize(image->GetSize().width, image->GetSize().height);
-
-    if (mFrontBuffer &&
-        (mFrontBuffer->IsImmutable() || mFrontBuffer->GetSize() != size)) {
+    if (mFrontBuffer && mFrontBuffer->IsImmutable()) {
       RemoveTextureClient(mFrontBuffer);
       mFrontBuffer = nullptr;
     }
@@ -158,6 +155,7 @@ ImageClientSingle::UpdateImage(ImageContainer* aContainer,
       gfxASurface::gfxImageFormat format
         = gfxPlatform::GetPlatform()->OptimalFormatForContent(surface->GetContentType());
       mFrontBuffer = CreateBufferTextureClient(gfx::ImageFormatToSurfaceFormat(format));
+      gfx::IntSize size = gfx::IntSize(image->GetSize().width, image->GetSize().height);
       MOZ_ASSERT(mFrontBuffer->AsTextureClientSurface());
       mFrontBuffer->AsTextureClientSurface()->AllocateForSurface(size);
 
@@ -197,14 +195,8 @@ ImageClientBuffered::UpdateImage(ImageContainer* aContainer,
 void
 ImageClientSingle::AddTextureClient(TextureClient* aTexture)
 {
-  MOZ_ASSERT((mTextureFlags & aTexture->GetFlags()) == mTextureFlags);
+  aTexture->AddFlags(mTextureFlags);
   CompositableClient::AddTextureClient(aTexture);
-}
-
-TemporaryRef<BufferTextureClient>
-ImageClientSingle::CreateBufferTextureClient(gfx::SurfaceFormat aFormat)
-{
-  return CompositableClient::CreateBufferTextureClient(aFormat, mTextureFlags);
 }
 
 void

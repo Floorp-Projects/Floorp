@@ -44,7 +44,6 @@ class TextureClientSurface
 {
 public:
   virtual bool UpdateSurface(gfxASurface* aSurface) = 0;
-  virtual already_AddRefed<gfxASurface> GetAsSurface() = 0;
   virtual bool AllocateForSurface(gfx::IntSize aSize) = 0;
 };
 
@@ -125,7 +124,30 @@ public:
 
   virtual bool ToSurfaceDescriptor(SurfaceDescriptor& aDescriptor) = 0;
 
-  virtual gfx::IntSize GetSize() const = 0;
+  void SetFlags(TextureFlags aFlags)
+  {
+    MOZ_ASSERT(!IsSharedWithCompositor());
+    mFlags = aFlags;
+  }
+
+  void AddFlags(TextureFlags  aFlags)
+  {
+    MOZ_ASSERT(!IsSharedWithCompositor());
+    // make sure we don't deallocate on both client and host;
+    MOZ_ASSERT(!(aFlags & TEXTURE_DEALLOCATE_CLIENT && aFlags & TEXTURE_DEALLOCATE_HOST));
+    if (aFlags & TEXTURE_DEALLOCATE_CLIENT) {
+      mFlags &= ~TEXTURE_DEALLOCATE_HOST;
+    } else if (aFlags & TEXTURE_DEALLOCATE_HOST) {
+      mFlags &= ~TEXTURE_DEALLOCATE_CLIENT;
+    }
+    mFlags |= aFlags;
+  }
+
+  void RemoveFlags(TextureFlags  aFlags)
+  {
+    MOZ_ASSERT(!IsSharedWithCompositor());
+    mFlags &= (~aFlags);
+  }
 
   TextureFlags GetFlags() const { return mFlags; }
 
@@ -142,19 +164,6 @@ public:
 
   bool ShouldDeallocateInDestructor() const;
 protected:
-  void AddFlags(TextureFlags  aFlags)
-  {
-    MOZ_ASSERT(!IsSharedWithCompositor());
-    // make sure we don't deallocate on both client and host;
-    MOZ_ASSERT(!(aFlags & TEXTURE_DEALLOCATE_CLIENT && aFlags & TEXTURE_DEALLOCATE_HOST));
-    if (aFlags & TEXTURE_DEALLOCATE_CLIENT) {
-      mFlags &= ~TEXTURE_DEALLOCATE_HOST;
-    } else if (aFlags & TEXTURE_DEALLOCATE_HOST) {
-      mFlags &= ~TEXTURE_DEALLOCATE_CLIENT;
-    }
-    mFlags |= aFlags;
-  }
-
   uint64_t mID;
   RefPtr<TextureClient> mNextSibling;
   TextureFlags mFlags;
@@ -170,8 +179,7 @@ class BufferTextureClient : public TextureClient
                           , TextureClientYCbCr
 {
 public:
-  BufferTextureClient(CompositableClient* aCompositable, gfx::SurfaceFormat aFormat,
-                      TextureFlags aFlags);
+  BufferTextureClient(CompositableClient* aCompositable, gfx::SurfaceFormat aFormat);
 
   virtual ~BufferTextureClient();
 
@@ -185,15 +193,11 @@ public:
 
   virtual size_t GetBufferSize() const = 0;
 
-  virtual gfx::IntSize GetSize() const { return mSize; }
-
   // TextureClientSurface
 
   virtual TextureClientSurface* AsTextureClientSurface() MOZ_OVERRIDE { return this; }
 
   virtual bool UpdateSurface(gfxASurface* aSurface) MOZ_OVERRIDE;
-
-  virtual already_AddRefed<gfxASurface> GetAsSurface() MOZ_OVERRIDE;
 
   virtual bool AllocateForSurface(gfx::IntSize aSize) MOZ_OVERRIDE;
 
@@ -210,7 +214,6 @@ public:
 protected:
   CompositableClient* mCompositable;
   gfx::SurfaceFormat mFormat;
-  gfx::IntSize mSize;
 };
 
 /**
@@ -220,8 +223,7 @@ protected:
 class ShmemTextureClient : public BufferTextureClient
 {
 public:
-  ShmemTextureClient(CompositableClient* aCompositable, gfx::SurfaceFormat aFormat,
-                     TextureFlags aFlags);
+  ShmemTextureClient(CompositableClient* aCompositable, gfx::SurfaceFormat aFormat);
 
   ~ShmemTextureClient();
 
@@ -253,8 +255,7 @@ protected:
 class MemoryTextureClient : public BufferTextureClient
 {
 public:
-  MemoryTextureClient(CompositableClient* aCompositable, gfx::SurfaceFormat aFormat,
-                      TextureFlags aFlags);
+  MemoryTextureClient(CompositableClient* aCompositable, gfx::SurfaceFormat aFormat);
 
   ~MemoryTextureClient();
 
