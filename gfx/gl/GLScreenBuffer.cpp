@@ -29,7 +29,7 @@ GLScreenBuffer::Create(GLContext* gl,
                      const SurfaceCaps& caps)
 {
     if (caps.antialias &&
-        !gl->SupportsFramebufferMultisample())
+        !gl->IsExtensionSupported(GLContext::XXX_framebuffer_multisample))
     {
         return nullptr;
     }
@@ -79,7 +79,7 @@ GLScreenBuffer::BindAsFramebuffer(GLContext* const gl, GLenum target) const
     GLuint drawFB = DrawFB();
     GLuint readFB = ReadFB();
 
-    if (!gl->HasExt_FramebufferBlit()) {
+    if (!gl->IsExtensionSupported(GLContext::XXX_framebuffer_blit)) {
         MOZ_ASSERT(drawFB == readFB);
         gl->raw_fBindFramebuffer(target, readFB);
         return;
@@ -92,14 +92,14 @@ GLScreenBuffer::BindAsFramebuffer(GLContext* const gl, GLenum target) const
         break;
 
     case LOCAL_GL_DRAW_FRAMEBUFFER_EXT:
-        if (!gl->HasExt_FramebufferBlit())
+        if (!gl->IsExtensionSupported(GLContext::XXX_framebuffer_blit))
             NS_WARNING("DRAW_FRAMEBUFFER requested but unavailable.");
 
         gl->raw_fBindFramebuffer(LOCAL_GL_DRAW_FRAMEBUFFER_EXT, drawFB);
         break;
 
     case LOCAL_GL_READ_FRAMEBUFFER_EXT:
-        if (!gl->HasExt_FramebufferBlit())
+        if (!gl->IsExtensionSupported(GLContext::XXX_framebuffer_blit))
             NS_WARNING("READ_FRAMEBUFFER requested but unavailable.");
 
         gl->raw_fBindFramebuffer(LOCAL_GL_READ_FRAMEBUFFER_EXT, readFB);
@@ -124,7 +124,7 @@ GLScreenBuffer::BindFB(GLuint fb)
     if (mInternalDrawFB == mInternalReadFB) {
         mGL->raw_fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, mInternalDrawFB);
     } else {
-        MOZ_ASSERT(mGL->SupportsSplitFramebuffer());
+        MOZ_ASSERT(mGL->IsExtensionSupported(GLContext::XXX_framebuffer_blit));
         mGL->raw_fBindFramebuffer(LOCAL_GL_DRAW_FRAMEBUFFER_EXT, mInternalDrawFB);
         mGL->raw_fBindFramebuffer(LOCAL_GL_READ_FRAMEBUFFER_EXT, mInternalReadFB);
     }
@@ -138,7 +138,7 @@ GLScreenBuffer::BindFB(GLuint fb)
 void
 GLScreenBuffer::BindDrawFB(GLuint fb)
 {
-    if (!mGL->SupportsSplitFramebuffer()) {
+    if (!mGL->IsExtensionSupported(GLContext::XXX_framebuffer_blit)) {
         NS_WARNING("DRAW_FRAMEBUFFER requested, but unsupported.");
 
         mGL->raw_fBindFramebuffer(LOCAL_GL_DRAW_FRAMEBUFFER_EXT, fb);
@@ -158,7 +158,7 @@ GLScreenBuffer::BindDrawFB(GLuint fb)
 void
 GLScreenBuffer::BindReadFB(GLuint fb)
 {
-    if (!mGL->SupportsSplitFramebuffer()) {
+    if (!mGL->IsExtensionSupported(GLContext::XXX_framebuffer_blit)) {
         NS_WARNING("READ_FRAMEBUFFER requested, but unsupported.");
 
         mGL->raw_fBindFramebuffer(LOCAL_GL_READ_FRAMEBUFFER_EXT, fb);
@@ -233,7 +233,7 @@ GLScreenBuffer::GetReadFB() const
     // We use raw_ here because this is debug code and we need to see what
     // the driver thinks.
     GLuint actual = 0;
-    if (mGL->SupportsSplitFramebuffer())
+    if (mGL->IsExtensionSupported(GLContext::XXX_framebuffer_blit))
         mGL->raw_fGetIntegerv(LOCAL_GL_READ_FRAMEBUFFER_BINDING_EXT, (GLint*)&actual);
     else
         mGL->raw_fGetIntegerv(LOCAL_GL_FRAMEBUFFER_BINDING, (GLint*)&actual);
