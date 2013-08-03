@@ -1329,6 +1329,11 @@
 
             // Restore the progress listener.
             aBrowser.webProgress.addProgressListener(filter, Ci.nsIWebProgress.NOTIFY_ALL);
+
+            if (aRemote)
+              tab.setAttribute("remote", "true");
+            else
+              tab.removeAttribute("remote");
           ]]>
         </body>
       </method>
@@ -1411,6 +1416,8 @@
 
             t.setAttribute("crop", "end");
             t.setAttribute("onerror", "this.removeAttribute('image');");
+            if (remote)
+              t.setAttribute("remote", "true");
             t.className = "tabbrowser-tab";
 
             this.tabContainer._unlockTabSizing();
@@ -2908,6 +2915,7 @@
             browserStack.removeChild(this.mCurrentBrowser);
             this.mCurrentBrowser.setAttribute("remote", true);
             browserStack.appendChild(this.mCurrentBrowser);
+            this.tabContainer.firstChild.setAttribute("remote", "true");
           }
 
           this.mCurrentTab = this.tabContainer.firstChild;
