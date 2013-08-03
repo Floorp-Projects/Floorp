@@ -86,8 +86,8 @@ protected:
 
   RefPtr<CanvasClient> mCanvasClient;
 
-  friend class CanvasClient2D;
-  friend class CanvasClientSurfaceStream;
+  friend class DeprecatedCanvasClient2D;
+  friend class DeprecatedCanvasClientSurfaceStream;
 };
 }
 }
