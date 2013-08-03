@@ -69,9 +69,12 @@ public:
 
   virtual void AddTextureClient(TextureClient* aTexture) MOZ_OVERRIDE
   {
-    aTexture->AddFlags(mTextureInfo.mTextureFlags);
+    MOZ_ASSERT((mTextureInfo.mTextureFlags & aTexture->GetFlags()) == mTextureInfo.mTextureFlags);
     CompositableClient::AddTextureClient(aTexture);
   }
+
+  virtual TemporaryRef<BufferTextureClient>
+  CreateBufferTextureClient(gfx::SurfaceFormat aFormat) MOZ_OVERRIDE;
 
   virtual void Detach() MOZ_OVERRIDE
   {

@@ -127,31 +127,6 @@ public:
 
   virtual gfx::IntSize GetSize() const = 0;
 
-  void SetFlags(TextureFlags aFlags)
-  {
-    MOZ_ASSERT(!IsSharedWithCompositor());
-    mFlags = aFlags;
-  }
-
-  void AddFlags(TextureFlags  aFlags)
-  {
-    MOZ_ASSERT(!IsSharedWithCompositor());
-    // make sure we don't deallocate on both client and host;
-    MOZ_ASSERT(!(aFlags & TEXTURE_DEALLOCATE_CLIENT && aFlags & TEXTURE_DEALLOCATE_HOST));
-    if (aFlags & TEXTURE_DEALLOCATE_CLIENT) {
-      mFlags &= ~TEXTURE_DEALLOCATE_HOST;
-    } else if (aFlags & TEXTURE_DEALLOCATE_HOST) {
-      mFlags &= ~TEXTURE_DEALLOCATE_CLIENT;
-    }
-    mFlags |= aFlags;
-  }
-
-  void RemoveFlags(TextureFlags  aFlags)
-  {
-    MOZ_ASSERT(!IsSharedWithCompositor());
-    mFlags &= (~aFlags);
-  }
-
   TextureFlags GetFlags() const { return mFlags; }
 
   /**
@@ -167,6 +142,19 @@ public:
 
   bool ShouldDeallocateInDestructor() const;
 protected:
+  void AddFlags(TextureFlags  aFlags)
+  {
+    MOZ_ASSERT(!IsSharedWithCompositor());
+    // make sure we don't deallocate on both client and host;
+    MOZ_ASSERT(!(aFlags & TEXTURE_DEALLOCATE_CLIENT && aFlags & TEXTURE_DEALLOCATE_HOST));
+    if (aFlags & TEXTURE_DEALLOCATE_CLIENT) {
+      mFlags &= ~TEXTURE_DEALLOCATE_HOST;
+    } else if (aFlags & TEXTURE_DEALLOCATE_HOST) {
+      mFlags &= ~TEXTURE_DEALLOCATE_CLIENT;
+    }
+    mFlags |= aFlags;
+  }
+
   uint64_t mID;
   RefPtr<TextureClient> mNextSibling;
   TextureFlags mFlags;
@@ -182,7 +170,8 @@ class BufferTextureClient : public TextureClient
                           , TextureClientYCbCr
 {
 public:
-  BufferTextureClient(CompositableClient* aCompositable, gfx::SurfaceFormat aFormat);
+  BufferTextureClient(CompositableClient* aCompositable, gfx::SurfaceFormat aFormat,
+                      TextureFlags aFlags);
 
   virtual ~BufferTextureClient();
 
@@ -231,7 +220,8 @@ protected:
 class ShmemTextureClient : public BufferTextureClient
 {
 public:
-  ShmemTextureClient(CompositableClient* aCompositable, gfx::SurfaceFormat aFormat);
+  ShmemTextureClient(CompositableClient* aCompositable, gfx::SurfaceFormat aFormat,
+                     TextureFlags aFlags);
 
   ~ShmemTextureClient();
 
@@ -263,7 +253,8 @@ protected:
 class MemoryTextureClient : public BufferTextureClient
 {
 public:
-  MemoryTextureClient(CompositableClient* aCompositable, gfx::SurfaceFormat aFormat);
+  MemoryTextureClient(CompositableClient* aCompositable, gfx::SurfaceFormat aFormat,
+                      TextureFlags aFlags);
 
   ~MemoryTextureClient();
 
