@@ -22,7 +22,6 @@
         width="900" height="350"
         persist="screenX screenY width height sizemode">
   <script type="text/javascript" src="chrome://global/content/globalOverlay.js"/>
-  <script type="text/javascript" src="webconsole.js"/>
   <script type="text/javascript"><![CDATA[
 function goUpdateConsoleCommands() {
   goUpdateCommand("consoleCmd_openURL");

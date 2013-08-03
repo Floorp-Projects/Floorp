@@ -3,20 +3,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const Cu = Components.utils;
-const Ci = Components.interfaces;
+"use strict";
 
-// The XUL and XHTML namespace.
+const {Cc, Ci, Cu} = require("chrome");
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-
-XPCOMUtils.defineLazyGetter(this, "gDevTools", function() {
-  return Cu.import("resource:///modules/devtools/gDevTools.jsm", {}).gDevTools;
-});
-
-this.EXPORTED_SYMBOLS = ["AutocompletePopup"];
+loader.lazyImporter(this, "Services", "resource://gre/modules/Services.jsm");
+loader.lazyImporter(this, "gDevTools", "resource:///modules/devtools/gDevTools.jsm");
 
 /**
  * Autocomplete popup UI implementation.
@@ -38,7 +31,6 @@ this.EXPORTED_SYMBOLS = ["AutocompletePopup"];
  *        - onClick {String} The click event handler for the richlistbox.
  *        - onKeypress {String} The keypress event handler for the richlistitems.
  */
-this.AutocompletePopup =
 function AutocompletePopup(aDocument, aOptions = {})
 {
   this._document = aDocument;
@@ -117,6 +109,7 @@ function AutocompletePopup(aDocument, aOptions = {})
     this._list.addEventListener("keypress", this.onKeypress, false);
   }
 }
+exports.AutocompletePopup = AutocompletePopup;
 
 AutocompletePopup.prototype = {
   _document: null,

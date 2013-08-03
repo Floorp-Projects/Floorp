@@ -6,45 +6,25 @@
 
 "use strict";
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cu = Components.utils;
+const {Cc, Ci, Cu} = require("chrome");
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+let WebConsoleUtils = require("devtools/toolkit/webconsole/utils").Utils;
 
-XPCOMUtils.defineLazyModuleGetter(this, "Services",
-                                  "resource://gre/modules/Services.jsm");
-
-XPCOMUtils.defineLazyServiceGetter(this, "clipboardHelper",
-                                   "@mozilla.org/widget/clipboardhelper;1",
-                                   "nsIClipboardHelper");
-
-XPCOMUtils.defineLazyModuleGetter(this, "GripClient",
-                                  "resource://gre/modules/devtools/dbg-client.jsm");
-
-XPCOMUtils.defineLazyModuleGetter(this, "NetworkPanel",
-                                  "resource:///modules/NetworkPanel.jsm");
-
-XPCOMUtils.defineLazyModuleGetter(this, "AutocompletePopup",
-                                  "resource:///modules/devtools/AutocompletePopup.jsm");
-
-XPCOMUtils.defineLazyModuleGetter(this, "WebConsoleUtils",
-                                  "resource://gre/modules/devtools/WebConsoleUtils.jsm");
-
-XPCOMUtils.defineLazyModuleGetter(this, "promise",
-                                  "resource://gre/modules/commonjs/sdk/core/promise.js", "Promise");
-
-XPCOMUtils.defineLazyModuleGetter(this, "VariablesView",
-                                  "resource:///modules/devtools/VariablesView.jsm");
-
-XPCOMUtils.defineLazyModuleGetter(this, "VariablesViewController",
-                                  "resource:///modules/devtools/VariablesViewController.jsm");
-
-XPCOMUtils.defineLazyModuleGetter(this, "EventEmitter",
-                                  "resource:///modules/devtools/shared/event-emitter.js");
-
-XPCOMUtils.defineLazyModuleGetter(this, "devtools",
-                                  "resource://gre/modules/devtools/Loader.jsm");
+loader.lazyServiceGetter(this, "clipboardHelper",
+                         "@mozilla.org/widget/clipboardhelper;1",
+                         "nsIClipboardHelper");
+loader.lazyImporter(this, "Services", "resource://gre/modules/Services.jsm");
+loader.lazyGetter(this, "promise", () => require("sdk/core/promise"));
+loader.lazyGetter(this, "EventEmitter", () => require("devtools/shared/event-emitter"));
+loader.lazyGetter(this, "AutocompletePopup",
+                  () => require("devtools/shared/autocomplete-popup").AutocompletePopup);
+loader.lazyGetter(this, "ToolSidebar",
+                  () => require("devtools/framework/sidebar").ToolSidebar);
+loader.lazyGetter(this, "NetworkPanel",
+                  () => require("devtools/webconsole/network-panel").NetworkPanel);
+loader.lazyImporter(this, "GripClient", "resource://gre/modules/devtools/dbg-client.jsm");
+loader.lazyImporter(this, "VariablesView", "resource:///modules/devtools/VariablesView.jsm");
+loader.lazyImporter(this, "VariablesViewController", "resource:///modules/devtools/VariablesViewController.jsm");
 
 const STRINGS_URI = "chrome://browser/locale/devtools/webconsole.properties";
 let l10n = new WebConsoleUtils.l10n(STRINGS_URI);
@@ -199,6 +179,7 @@ function WebConsoleFrame(aWebConsoleOwner)
 {
   this.owner = aWebConsoleOwner;
   this.hudId = this.owner.hudId;
+  this.window = this.owner.iframeWindow;
 
   this._repeatNodes = {};
   this._outputQueue = [];
@@ -214,11 +195,12 @@ function WebConsoleFrame(aWebConsoleOwner)
 
   EventEmitter.decorate(this);
 }
+exports.WebConsoleFrame = WebConsoleFrame;
 
 WebConsoleFrame.prototype = {
   /**
    * The WebConsole instance that owns this frame.
-   * @see HUDService.jsm::WebConsole
+   * @see hudservice.js::WebConsole
    * @type object
    */
   owner: null,
@@ -472,9 +454,6 @@ WebConsoleFrame.prototype = {
    */
   _initUI: function WCF__initUI()
   {
-    // Remember that this script is loaded in the webconsole.xul context:
-    // |window| is the iframe global.
-    this.window = window;
     this.document = this.window.document;
     this.rootElement = this.document.documentElement;
 
@@ -3301,7 +3280,6 @@ JSTerm.prototype = {
   _createSidebar: function JST__createSidebar()
   {
     let tabbox = this.hud.document.querySelector("#webconsole-sidebar");
-    let ToolSidebar = devtools.require("devtools/framework/sidebar").ToolSidebar;
     this.sidebar = new ToolSidebar(tabbox, this, "webconsole");
     this.sidebar.show();
   },
