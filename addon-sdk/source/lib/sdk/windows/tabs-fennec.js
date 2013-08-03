@@ -131,9 +131,12 @@ function onTabOpen(event) {
   tab.on('ready', function() emit(gTabs, 'ready', tab));
   tab.once('close', onTabClose);
 
+  tab.on('pageshow', function(_tab, persisted)
+    emit(gTabs, 'pageshow', tab, persisted));
+  
   emit(tab, 'open', tab);
   emit(gTabs, 'open', tab);
-};
+}
 
 // TabSelect
 function onTabSelect(event) {
@@ -153,10 +156,10 @@ function onTabSelect(event) {
     emit(t, 'deactivate', t);
     emit(gTabs, 'deactivate', t);
   }
-};
+}
 
 // TabClose
 function onTabClose(tab) {
   removeTab(tab);
   emit(gTabs, EVENTS.close.name, tab);
-};
+}
