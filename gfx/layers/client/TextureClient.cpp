@@ -187,6 +187,7 @@ BufferTextureClient::AllocateForSurface(gfx::IntSize aSize)
   }
   ImageDataSerializer serializer(GetBuffer());
   serializer.InitializeBufferInfo(aSize, mFormat);
+  mSize = aSize;
   return true;
 }
 
@@ -220,6 +221,7 @@ BufferTextureClient::AllocateForYCbCr(gfx::IntSize aYSize, gfx::IntSize aCbCrSiz
   YCbCrImageDataSerializer serializer(GetBuffer());
   serializer.InitializeBufferInfo(aYSize,
                                   aCbCrSize);
+  mSize = aYSize;
   return true;
 }
 
