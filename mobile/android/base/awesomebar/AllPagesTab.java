@@ -90,7 +90,7 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
         mSearchEngines = new ArrayList<SearchEngine>();
 
         registerEventListener("SearchEngines:Data");
-        GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("SearchEngines:GetVisible", null));
+        GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("SearchEngines:Get", null));
 
         mHandler = new AllPagesHandler();
     }

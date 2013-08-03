@@ -151,12 +151,6 @@
   <string name="pref_vendor_faqs">&pref_vendor_faqs;</string>
   <string name="pref_vendor_feedback">&pref_vendor_feedback;</string>
 
-  <!-- Strings used in default search provider config preferences menu -->
-  <string name="pref_search_set_default">&pref_search_set_default;</string>
-  <string name="pref_search_default">&pref_search_default;</string>
-  <string name="pref_search_remove">&pref_search_remove;</string>
-  <string name="pref_search_last_toast">&pref_search_last_toast;</string>
-
   <string name="datareporting_notification_title">&datareporting_notification_title;</string>
   <string name="datareporting_notification_action_long">&datareporting_notification_action_long;</string>
   <string name="datareporting_notification_action">&datareporting_notification_action;</string>
