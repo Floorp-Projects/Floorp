@@ -84,7 +84,7 @@ class CycleCollectedJSRuntime
 protected:
   CycleCollectedJSRuntime(uint32_t aMaxbytes,
                           JSUseHelperThreads aUseHelperThreads,
-                          bool aExpectRootedGlobals);
+                          bool aExpectUnrootedGlobals);
   virtual ~CycleCollectedJSRuntime();
 
   JSRuntime* Runtime() const
@@ -100,6 +100,10 @@ protected:
   virtual void TraceAdditionalNativeGrayRoots(JSTracer* aTracer) = 0;
 
   virtual void CustomGCCallback(JSGCStatus aStatus) {}
+  virtual bool CustomContextCallback(JSContext* aCx, unsigned aOperation)
+  {
+    return true; // Don't block context creation.
+  }
 
 private:
 
@@ -150,6 +154,8 @@ private:
   static void TraceBlackJS(JSTracer* aTracer, void* aData);
   static void TraceGrayJS(JSTracer* aTracer, void* aData);
   static void GCCallback(JSRuntime* aRuntime, JSGCStatus aStatus, void* aData);
+  static JSBool ContextCallback(JSContext* aCx, unsigned aOperation,
+                                void* aData);
 
   virtual void TraceNativeBlackRoots(JSTracer* aTracer) { };
   void TraceNativeGrayRoots(JSTracer* aTracer);
@@ -162,6 +168,7 @@ private:
   void FinalizeDeferredThings(DeferredFinalizeType aType);
 
   void OnGC(JSGCStatus aStatus);
+  bool OnContext(JSContext* aCx, unsigned aOperation);
 
 public:
   void AddJSHolder(void* aHolder, nsScriptObjectTracer* aTracer);
@@ -214,9 +221,10 @@ private:
 
   nsRefPtr<IncrementalFinalizeRunnable> mFinalizeRunnable;
 
+  bool mExpectUnrootedGlobals;
+
 #ifdef DEBUG
   void* mObjectToUnlink;
-  bool mExpectUnrootedGlobals;
 #endif
 };
 
