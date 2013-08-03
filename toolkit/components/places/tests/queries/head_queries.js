@@ -148,36 +148,6 @@ function task_populateDB(aArray)
             }
           }
 
-          if (qdata.isPageBinaryAnnotation) {
-            if (qdata.removeAnnotation)
-              PlacesUtils.annotations.removePageAnnotation(uri(qdata.uri),
-                                                           qdata.annoName);
-            else {
-              PlacesUtils.annotations.setPageAnnotationBinary(uri(qdata.uri),
-                                                              qdata.annoName,
-                                                              qdata.binarydata,
-                                                              qdata.binaryDataLength,
-                                                              qdata.annoMimeType,
-                                                              qdata.annoFlags,
-                                                              qdata.annoExpiration);
-            }
-          }
-
-          if (qdata.isItemBinaryAnnotation) {
-            if (qdata.removeAnnotation)
-              PlacesUtils.annotations.removeItemAnnotation(qdata.itemId,
-                                                           qdata.annoName);
-            else {
-              PlacesUtils.annotations.setItemAnnotationBinary(qdata.itemId,
-                                                              qdata.annoName,
-                                                              qdata.binaryData,
-                                                              qdata.binaryDataLength,
-                                                              qdata.annoMimeType,
-                                                              qdata.annoFlags,
-                                                              qdata.annoExpiration);
-            }
-          }
-
           if (qdata.isFolder) {
             let folderId = PlacesUtils.bookmarks.createFolder(qdata.parentFolder,
                                                               qdata.title,
@@ -262,12 +232,6 @@ function queryData(obj) {
   this.annoExpiration = obj.annoExpiration ? obj.annoExpiration : 0;
   this.isItemAnnotation = obj.isItemAnnotation ? obj.isItemAnnotation : false;
   this.itemId = obj.itemId ? obj.itemId : 0;
-  this.isPageBinaryAnnotation = obj.isPageBinaryAnnotation ?
-                                obj.isPageBinaryAnnotation : false;
-  this.isItemBinaryAnnotation = obj.isItemBinaryAnnotation ?
-                                obj.isItemBinaryAnnotation : false;
-  this.binaryData = obj.binaryData ? obj.binaryData : null;
-  this.binaryDataLength = obj.binaryDataLength ? obj.binaryDataLength : 0;
   this.annoMimeType = obj.annoMimeType ? obj.annoMimeType : "";
   this.isTag = obj.isTag ? obj.isTag : false;
   this.tagArray = obj.tagArray ? obj.tagArray : null;
