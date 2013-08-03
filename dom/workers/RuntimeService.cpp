@@ -825,7 +825,8 @@ public:
   // call to JS_SetGCParameter inside CreateJSContextForWorker.
   WorkerJSRuntime(WorkerPrivate* aWorkerPrivate)
   : CycleCollectedJSRuntime(WORKER_DEFAULT_RUNTIME_HEAPSIZE,
-                            JS_NO_HELPER_THREADS)
+                            JS_NO_HELPER_THREADS,
+                            false)
   {
     // We need to ensure that a JSContext outlives the cycle collector, and
     // that the internal JSContext created by ctypes is not the last JSContext
