@@ -22,7 +22,7 @@ SDK_BINARY = \
   xpidlyacc.py \
   $(NULL)
 
-SDK_BINARY_TARGET = export
+SDK_BINARY_TARGET = xpidl-parser
 
 ifndef MOZ_SYSTEM_PLY
 PLY_FILES = \
@@ -33,7 +33,7 @@ PLY_FILES = \
 
 PLY_DEST = $(SDK_BIN_DIR)/ply
 INSTALL_TARGETS += PLY
-PLY_TARGET = export
+PLY_TARGET = xpidl-parser
 endif
 
 include $(topsrcdir)/config/rules.mk
