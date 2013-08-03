@@ -449,7 +449,6 @@ public:
 
 protected:
   bool Upload(nsIntRegion *aRegion = nullptr);
-  bool MaybeUpload(nsIntRegion *aRegion = nullptr);
 
   Compositor* mCompositor;
   RefPtr<DataTextureSource> mFirstSource;

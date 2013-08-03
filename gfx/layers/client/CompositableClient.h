@@ -77,9 +77,6 @@ public:
   CreateDeprecatedTextureClient(DeprecatedTextureClientType aDeprecatedTextureClientType);
 
   TemporaryRef<BufferTextureClient>
-  CreateBufferTextureClient(gfx::SurfaceFormat aFormat, TextureFlags aFlags);
-
-  virtual TemporaryRef<BufferTextureClient>
   CreateBufferTextureClient(gfx::SurfaceFormat aFormat);
 
   virtual void SetDescriptorFromReply(TextureIdentifier aTextureId,

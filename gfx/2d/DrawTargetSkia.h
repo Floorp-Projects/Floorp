@@ -114,7 +114,8 @@ public:
 
 private:
   friend class SourceSurfaceSkia;
-  void SnapshotDestroyed();
+  void AppendSnapshot(SourceSurfaceSkia* aSnapshot);
+  void RemoveSnapshot(SourceSurfaceSkia* aSnapshot);
 
   void MarkChanged();
 
@@ -132,7 +133,7 @@ private:
 
   IntSize mSize;
   SkRefPtr<SkCanvas> mCanvas;
-  SourceSurfaceSkia* mSnapshot;
+  std::vector<SourceSurfaceSkia*> mSnapshots;
   bool mSoftClipping;
 };
 

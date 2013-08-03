@@ -39,7 +39,7 @@ public:
                 bool aIsCrossProcess = false,
                 bool aInverted = false);
 
-  virtual gfx::IntSize GetSize() const { return mSize; }
+  gfx::IntSize GetSize() const { return mSize; }
 
 protected:
   gfx::IntSize mSize;
