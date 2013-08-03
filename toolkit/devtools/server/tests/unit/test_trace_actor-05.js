@@ -80,16 +80,16 @@ function test_enter_exit_frame()
 
       do_check_eq(typeof packets[2].arguments, "object",
                   'foo entry packet should have arguments');
-      do_check_eq(typeof packets[2].arguments.values, "object",
-                  'foo arguments object should have values array');
-      do_check_eq(packets[2].arguments.values.length, 1,
+      do_check_true(Array.isArray(packets[2].arguments),
+                    'foo entry packet arguments should be an array');
+      do_check_eq(packets[2].arguments.length, 1,
                   'foo should have only one actual parameter');
-      do_check_eq(packets[2].arguments.values[0], 42,
+      do_check_eq(packets[2].arguments[0], 42,
                   'foo should have actual parameter 42');
 
-      do_check_eq(typeof packets[3].return, "object",
+      do_check_eq(typeof packets[3].return, "string",
                   'Fourth packet in sequence should be exit from "foo" frame');
-      do_check_eq(packets[3].return.value, "bar",
+      do_check_eq(packets[3].return, "bar",
                   'foo should return "bar"');
 
       finishClient(gClient);
