@@ -731,6 +731,7 @@ public:
     void PrepareForCollection() MOZ_OVERRIDE;
 
     void CustomGCCallback(JSGCStatus status) MOZ_OVERRIDE;
+    bool CustomContextCallback(JSContext *cx, unsigned operation) MOZ_OVERRIDE;
     static void GCSliceCallback(JSRuntime *rt,
                                 JS::GCProgress progress,
                                 const JS::GCDescription &desc);
@@ -817,6 +818,8 @@ public:
 
     void AddGCCallback(xpcGCCallback cb);
     void RemoveGCCallback(xpcGCCallback cb);
+    void AddContextCallback(xpcContextCallback cb);
+    void RemoveContextCallback(xpcContextCallback cb);
 
     static void ActivityCallback(void *arg, JSBool active);
     static void CTypesActivityCallback(JSContext *cx,
@@ -864,6 +867,7 @@ private:
     XPCRootSetElem *mWrappedJSRoots;
     XPCRootSetElem *mObjectHolderRoots;
     nsTArray<xpcGCCallback> extraGCCallbacks;
+    nsTArray<xpcContextCallback> extraContextCallbacks;
     nsRefPtr<WatchdogManager> mWatchdogManager;
     JS::GCSliceCallback mPrevGCSliceCallback;
     JSObject* mJunkScope;

@@ -965,7 +965,7 @@ typedef enum JSContextOp {
  *                      and return true in this case.
  */
 typedef JSBool
-(* JSContextCallback)(JSContext *cx, unsigned contextOp);
+(* JSContextCallback)(JSContext *cx, unsigned contextOp, void *data);
 
 typedef enum JSGCStatus {
     JSGC_BEGIN,
@@ -1909,8 +1909,8 @@ class JSAutoCheckRequest
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
-extern JS_PUBLIC_API(JSContextCallback)
-JS_SetContextCallback(JSRuntime *rt, JSContextCallback cxCallback);
+extern JS_PUBLIC_API(void)
+JS_SetContextCallback(JSRuntime *rt, JSContextCallback cxCallback, void *data);
 
 extern JS_PUBLIC_API(JSContext *)
 JS_NewContext(JSRuntime *rt, size_t stackChunkSize);

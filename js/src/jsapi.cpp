@@ -854,14 +854,11 @@ JS_IsInRequest(JSRuntime *rt)
 #endif
 }
 
-JS_PUBLIC_API(JSContextCallback)
-JS_SetContextCallback(JSRuntime *rt, JSContextCallback cxCallback)
+JS_PUBLIC_API(void)
+JS_SetContextCallback(JSRuntime *rt, JSContextCallback cxCallback, void *data)
 {
-    JSContextCallback old;
-
-    old = rt->cxCallback;
     rt->cxCallback = cxCallback;
-    return old;
+    rt->cxCallbackData = data;
 }
 
 JS_PUBLIC_API(JSContext *)
