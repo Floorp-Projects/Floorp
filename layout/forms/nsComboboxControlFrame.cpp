@@ -1330,19 +1330,12 @@ nsComboboxControlFrame::CreateFrameFor(nsIContent*      aContent)
   nsRefPtr<nsStyleContext> textStyleContext;
   textStyleContext = styleSet->ResolveStyleForNonElement(mStyleContext);
 
-  // Start by by creating our anonymous block frame
+  // Start by creating our anonymous block frame
   mDisplayFrame = new (shell) nsComboboxDisplayFrame(styleContext, this);
-  if (MOZ_UNLIKELY(!mDisplayFrame)) {
-    return nullptr;
-  }
-
   mDisplayFrame->Init(mContent, this, nullptr);
 
   // Create a text frame and put it inside the block frame
   nsIFrame* textFrame = NS_NewTextFrame(shell, textStyleContext);
-  if (MOZ_UNLIKELY(!textFrame)) {
-    return nullptr;
-  }
 
   // initialize the text frame
   textFrame->Init(aContent, mDisplayFrame, nullptr);
