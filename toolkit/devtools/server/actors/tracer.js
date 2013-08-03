@@ -442,14 +442,30 @@ TraceTypes.register("name", TraceTypes.Events.enterFrame, function({ frame }) {
     : "(" + frame.type + ")";
 });
 
-TraceTypes.register("callsite", TraceTypes.Events.enterFrame, function({ frame }) {
+TraceTypes.register("location", TraceTypes.Events.enterFrame, function({ frame }) {
   if (!frame.script) {
     return undefined;
   }
+  // We should return the location of the start of the script, but
+  // Debugger.Script does not provide complete start locations
+  // (bug 901138). Instead, return the current offset (the location of
+  // the first statement in the function).
   return {
     url: frame.script.url,
     line: frame.script.getOffsetLine(frame.offset),
     column: getOffsetColumn(frame.offset, frame.script)
+  };
+});
+
+TraceTypes.register("callsite", TraceTypes.Events.enterFrame, function({ frame }) {
+  let older = frame.older;
+  if (!older || !older.script) {
+    return undefined;
+  }
+  return {
+    url: older.script.url,
+    line: older.script.getOffsetLine(older.offset),
+    column: getOffsetColumn(older.offset, older.script)
   };
 });
 
