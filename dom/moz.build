@@ -27,7 +27,6 @@ interfaces = [
     'geolocation',
     'notification',
     'permission',
-    'push',
     'svg',
     'smil',
     'apps',
