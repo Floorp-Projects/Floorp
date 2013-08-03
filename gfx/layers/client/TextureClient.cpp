@@ -88,8 +88,9 @@ ShmemTextureClient::GetBufferSize() const
 }
 
 ShmemTextureClient::ShmemTextureClient(CompositableClient* aCompositable,
-                                       gfx::SurfaceFormat aFormat)
-  : BufferTextureClient(aCompositable, aFormat)
+                                       gfx::SurfaceFormat aFormat,
+                                       TextureFlags aFlags)
+  : BufferTextureClient(aCompositable, aFormat, aFlags)
   , mAllocated(false)
 {
   MOZ_COUNT_CTOR(ShmemTextureClient);
@@ -125,8 +126,10 @@ MemoryTextureClient::Allocate(uint32_t aSize)
   return true;
 }
 
-MemoryTextureClient::MemoryTextureClient(CompositableClient* aCompositable, gfx::SurfaceFormat aFormat)
-  : BufferTextureClient(aCompositable, aFormat)
+MemoryTextureClient::MemoryTextureClient(CompositableClient* aCompositable,
+                                         gfx::SurfaceFormat aFormat,
+                                         TextureFlags aFlags)
+  : BufferTextureClient(aCompositable, aFormat, aFlags)
   , mBuffer(nullptr)
   , mBufSize(0)
 {
@@ -144,8 +147,9 @@ MemoryTextureClient::~MemoryTextureClient()
 }
 
 BufferTextureClient::BufferTextureClient(CompositableClient* aCompositable,
-                                         gfx::SurfaceFormat aFormat)
-  : TextureClient()
+                                         gfx::SurfaceFormat aFormat,
+                                         TextureFlags aFlags)
+  : TextureClient(aFlags)
   , mCompositable(aCompositable)
   , mFormat(aFormat)
 {}
@@ -172,6 +176,12 @@ BufferTextureClient::UpdateSurface(gfxASurface* aSurface)
   tmpCtx->SetOperator(gfxContext::OPERATOR_SOURCE);
   tmpCtx->DrawSurface(aSurface, gfxSize(serializer.GetSize().width,
                                         serializer.GetSize().height));
+
+  if (TextureRequiresLocking(aFlags)) {
+    // We don't have support for proper locking yet, so we'll
+    // have to be immutable instead.
+    MarkImmutable();
+  }
   return true;
 }
 
@@ -219,6 +229,12 @@ BufferTextureClient::UpdateYCbCr(const PlanarYCbCrImage::Data& aData)
                            aData.mYSkip, aData.mCbSkip)) {
     NS_WARNING("Failed to copy image data!");
     return false;
+  }
+
+  if (TextureRequiresLocking(aFlags)) {
+    // We don't have support for proper locking yet, so we'll
+    // have to be immutable instead.
+    MarkImmutable();
   }
   return true;
 }

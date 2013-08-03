@@ -67,10 +67,29 @@ const TextureFlags TEXTURE_DEALLOCATE_HOST    = 1 << 26;
 // modified, it can only be read. It is safe to not Lock/Unlock immutable
 // textures.
 const TextureFlags TEXTURE_IMMUTABLE          = 1 << 27;
+// The contents of the texture must be uploaded or copied immediately
+// during the transaction, because the producer may want to write
+// to it again.
+const TextureFlags TEXTURE_IMMEDIATE_UPLOAD   = 1 << 28;
+// The texture is going to be used as part of a double
+// buffered pair, and so we can guarantee that the producer/consumer
+// won't be racing to access its contents.
+const TextureFlags TEXTURE_DOUBLE_BUFFERED    = 1 << 29;
 
 // the default flags
 const TextureFlags TEXTURE_FLAGS_DEFAULT = TEXTURE_DEALLOCATE_HOST
                                          | TEXTURE_FRONT;
+
+static inline bool
+TextureRequiresLocking(TextureFlags aFlags)
+{
+  // If we're not double buffered, or uploading
+  // within a transaction, then we need to support
+  // locking correctly.
+  return !(aFlags & (TEXTURE_IMMEDIATE_UPLOAD |
+                     TEXTURE_DOUBLE_BUFFERED |
+                     TEXTURE_IMMUTABLE));
+}
 
 /**
  * See gfx/layers/Effects.h
