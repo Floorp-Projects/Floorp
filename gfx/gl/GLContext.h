@@ -503,23 +503,6 @@ private:
 
 
 // -----------------------------------------------------------------------------
-// Deprecated extension group queries (use XXX_* instead)
-public:
-
-    bool SupportsFramebufferMultisample() const {
-        return IsExtensionSupported(XXX_framebuffer_multisample);
-    }
-
-    bool HasExt_FramebufferBlit() const {
-        return IsExtensionSupported(XXX_framebuffer_blit);
-    }
-
-    bool SupportsSplitFramebuffer() const {
-        return IsExtensionSupported(XXX_framebuffer_blit);
-    }
-
-
-// -----------------------------------------------------------------------------
 // Robustness handling
 public:
 
@@ -2568,8 +2551,9 @@ public:
         if (mScreen)
             return mScreen->GetReadFB();
 
-        GLenum bindEnum = SupportsSplitFramebuffer() ? LOCAL_GL_READ_FRAMEBUFFER_BINDING_EXT
-                                                     : LOCAL_GL_FRAMEBUFFER_BINDING;
+        GLenum bindEnum = IsExtensionSupported(XXX_framebuffer_blit)
+                            ? LOCAL_GL_READ_FRAMEBUFFER_BINDING_EXT
+                            : LOCAL_GL_FRAMEBUFFER_BINDING;
 
         GLuint ret = 0;
         GetUIntegerv(bindEnum, &ret);
