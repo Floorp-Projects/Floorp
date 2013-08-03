@@ -1447,7 +1447,9 @@ public:
         gcLogFile->OpenANSIFileDesc("w", &gcLogANSIFile);
         NS_ENSURE_STATE(gcLogANSIFile);
         MozillaRegisterDebugFILE(gcLogANSIFile);
-        xpc::DumpJSHeap(gcLogANSIFile);
+        CollectorData *data = sCollectorData.get();
+        if (data && data->mRuntime)
+            data->mRuntime->DumpJSHeap(gcLogANSIFile);
         MozillaUnRegisterDebugFILE(gcLogANSIFile);
         fclose(gcLogANSIFile);
 
