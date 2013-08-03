@@ -478,10 +478,10 @@ CycleCollectedJSRuntime::CycleCollectedJSRuntime(uint32_t aMaxbytes,
                                                  bool aExpectUnrootedGlobals)
   : mGCThingCycleCollectorGlobal(sGCThingCycleCollectorGlobal),
     mJSZoneCycleCollectorGlobal(sJSZoneCycleCollectorGlobal),
-    mJSRuntime(nullptr)
+    mJSRuntime(nullptr),
+    mExpectUnrootedGlobals(aExpectUnrootedGlobals)
 #ifdef DEBUG
   , mObjectToUnlink(nullptr)
-  , mExpectUnrootedGlobals(aExpectUnrootedGlobals)
 #endif
 {
   mJSRuntime = JS_NewRuntime(aMaxbytes, aUseHelperThreads);
@@ -494,6 +494,7 @@ CycleCollectedJSRuntime::CycleCollectedJSRuntime(uint32_t aMaxbytes,
   }
   JS_SetGrayGCRootsTracer(mJSRuntime, TraceGrayJS, this);
   JS_SetGCCallback(mJSRuntime, GCCallback, this);
+  JS_SetContextCallback(mJSRuntime, ContextCallback, this);
 
   mJSHolders.Init(512);
 
@@ -793,6 +794,18 @@ CycleCollectedJSRuntime::GCCallback(JSRuntime* aRuntime,
   MOZ_ASSERT(aRuntime == self->Runtime());
 
   self->OnGC(aStatus);
+}
+
+/* static */ JSBool
+CycleCollectedJSRuntime::ContextCallback(JSContext* aContext,
+                                         unsigned aOperation,
+                                         void* aData)
+{
+  CycleCollectedJSRuntime* self = static_cast<CycleCollectedJSRuntime*>(aData);
+
+  MOZ_ASSERT(JS_GetRuntime(aContext) == self->Runtime());
+
+  return self->OnContext(aContext, aOperation);
 }
 
 struct JsGcTracer : public TraceCallbacks
@@ -1186,6 +1199,18 @@ CycleCollectedJSRuntime::OnGC(JSGCStatus aStatus)
   switch (aStatus) {
     case JSGC_BEGIN:
     {
+      // XXXkhuey do we still need this?
+      // We seem to sometime lose the unrooted global flag. Restore it
+      // here. FIXME: bug 584495.
+      if (mExpectUnrootedGlobals){
+        JSContext* iter = nullptr;
+        while (JSContext* acx = JS_ContextIterator(Runtime(), &iter)) {
+          if (!js::HasUnrootedGlobal(acx)) {
+            JS_ToggleOptions(acx, JSOPTION_UNROOTED_GLOBAL);
+          }
+        }
+      }
+
       break;
     }
     case JSGC_END:
@@ -1211,4 +1236,16 @@ CycleCollectedJSRuntime::OnGC(JSGCStatus aStatus)
   }
 
   CustomGCCallback(aStatus);
+}
+
+bool
+CycleCollectedJSRuntime::OnContext(JSContext* aCx, unsigned aOperation)
+{
+  if (mExpectUnrootedGlobals && aOperation == JSCONTEXT_NEW) {
+    // XXXkhuey bholley is going to make this go away, but for now XPConnect
+    // needs it.
+    JS_ToggleOptions(aCx, JSOPTION_UNROOTED_GLOBAL);
+  }
+
+  return CustomContextCallback(aCx, aOperation);
 }
