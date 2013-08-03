@@ -188,16 +188,13 @@ class Contents(unittest.TestCase):
                 self.failUnlessEqual(e.args[0], 0)
             zf = zipfile.ZipFile("seven.xpi", "r")
             names = zf.namelist()
-            # the first problem found in bug 664840 was that cuddlefish.js
-            # (the loader) was stripped out on windows, due to a /-vs-\ bug
-            self.assertIn("resources/addon-sdk/lib/sdk/loader/cuddlefish.js", names)
-            # the second problem found in bug 664840 was that an addon
+            # problem found in bug 664840 was that an addon
             # without an explicit tests/ directory would copy all files from
             # the package into a bogus JID-PKGNAME-tests/ directory, so check
             # for that
             testfiles = [fn for fn in names if "seven/tests" in fn]
             self.failUnlessEqual([], testfiles)
-            # the third problem was that data files were being stripped from
+            # another problem was that data files were being stripped from
             # the XPI. Note that data/ is only supposed to be included if a
             # module that actually gets used does a require("self") .
             self.assertIn("resources/seven/data/text.data",
