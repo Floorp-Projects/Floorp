@@ -124,6 +124,8 @@ public:
 
   virtual bool ToSurfaceDescriptor(SurfaceDescriptor& aDescriptor) = 0;
 
+  virtual gfx::IntSize GetSize() const = 0;
+
   void SetFlags(TextureFlags aFlags)
   {
     MOZ_ASSERT(!IsSharedWithCompositor());
@@ -193,6 +195,8 @@ public:
 
   virtual size_t GetBufferSize() const = 0;
 
+  virtual gfx::IntSize GetSize() const { return mSize; }
+
   // TextureClientSurface
 
   virtual TextureClientSurface* AsTextureClientSurface() MOZ_OVERRIDE { return this; }
@@ -214,6 +218,7 @@ public:
 protected:
   CompositableClient* mCompositable;
   gfx::SurfaceFormat mFormat;
+  gfx::IntSize mSize;
 };
 
 /**

@@ -146,7 +146,10 @@ ImageClientSingle::UpdateImage(ImageContainer* aContainer,
     nsRefPtr<gfxASurface> surface = image->GetAsSurface();
     MOZ_ASSERT(surface);
 
-    if (mFrontBuffer && mFrontBuffer->IsImmutable()) {
+    gfx::IntSize size = gfx::IntSize(image->GetSize().width, image->GetSize().height);
+
+    if (mFrontBuffer &&
+        (mFrontBuffer->IsImmutable() || mFrontBuffer->GetSize() != size)) {
       RemoveTextureClient(mFrontBuffer);
       mFrontBuffer = nullptr;
     }
@@ -155,7 +158,6 @@ ImageClientSingle::UpdateImage(ImageContainer* aContainer,
       gfxASurface::gfxImageFormat format
         = gfxPlatform::GetPlatform()->OptimalFormatForContent(surface->GetContentType());
       mFrontBuffer = CreateBufferTextureClient(gfx::ImageFormatToSurfaceFormat(format));
-      gfx::IntSize size = gfx::IntSize(image->GetSize().width, image->GetSize().height);
       MOZ_ASSERT(mFrontBuffer->AsTextureClientSurface());
       mFrontBuffer->AsTextureClientSurface()->AllocateForSurface(size);
 
