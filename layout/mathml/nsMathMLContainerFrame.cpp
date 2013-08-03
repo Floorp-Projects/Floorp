@@ -1551,9 +1551,7 @@ NS_NewMathMLmathBlockFrame(nsIPresShell* aPresShell, nsStyleContext* aContext,
                            uint32_t aFlags)
 {
   nsMathMLmathBlockFrame* it = new (aPresShell) nsMathMLmathBlockFrame(aContext);
-  if (it) {
-    it->SetFlags(aFlags);
-  }
+  it->SetFlags(aFlags);
   return it;
 }
 
