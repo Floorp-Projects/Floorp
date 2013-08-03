@@ -112,6 +112,7 @@ ClientCanvasLayer::RenderLayer()
 
   ClientManager()->Hold(this);
   mCanvasClient->Updated();
+  mCanvasClient->OnTransaction();
 }
 
 already_AddRefed<CanvasLayer>
