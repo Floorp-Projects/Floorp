@@ -37,12 +37,16 @@ function test_enter_exit_frame()
                 'enteredFrame response should have type "enteredFrame"');
     do_check_eq(typeof aPacket.sequence, "number",
                 'enteredFrame response should have sequence number');
+    do_check_true(!isNaN(aPacket.sequence),
+                  'enteredFrame sequence should be a number');
     do_check_eq(typeof aPacket.name, "string",
                 'enteredFrame response should have function name');
     do_check_eq(typeof aPacket.callsite, "object",
                 'enteredFrame response should have callsite');
     do_check_eq(typeof aPacket.time, "number",
                 'enteredFrame response should have time');
+    do_check_true(!isNaN(aPacket.time),
+                  'enteredFrame time should be a number');
     packets[aPacket.sequence] = aPacket;
   });
 
@@ -51,8 +55,12 @@ function test_enter_exit_frame()
                 'exitedFrame response should have type "exitedFrame"');
     do_check_eq(typeof aPacket.sequence, "number",
                 'exitedFrame response should have sequence number');
+    do_check_true(!isNaN(aPacket.sequence),
+                  'exitedFrame sequence should be a number');
     do_check_eq(typeof aPacket.time, "number",
                 'exitedFrame response should have time');
+    do_check_true(!isNaN(aPacket.time),
+                  'exitedFrame time should be a number');
     packets[aPacket.sequence] = aPacket;
   });
 
