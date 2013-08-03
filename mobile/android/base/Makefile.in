@@ -474,7 +474,6 @@ RES_LAYOUT = \
   res/layout/notification_progress.xml \
   res/layout/notification_progress_text.xml \
   res/layout/preference_rightalign_icon.xml \
-  res/layout/preference_search_engine.xml \
   res/layout/preference_search_tip.xml \
   res/layout/search_engine_row.xml \
   res/layout/site_setting_item.xml \
