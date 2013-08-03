@@ -33,9 +33,6 @@ const Tab = Class({
     // TabReady
     let onReady = tabInternals.onReady = onTabReady.bind(this);
     tab.browser.addEventListener(EVENTS.ready.dom, onReady, false);
-    
-    let onPageShow = tabInternals.onPageShow = onTabPageShow.bind(this);
-    tab.browser.addEventListener(EVENTS.pageshow.dom, onPageShow, false);
 
     // TabClose
     let onClose = tabInternals.onClose = onTabClose.bind(this);
@@ -183,10 +180,8 @@ function cleanupTab(tab) {
 
   if (tabInternals.tab.browser) {
     tabInternals.tab.browser.removeEventListener(EVENTS.ready.dom, tabInternals.onReady, false);
-    tabInternals.tab.browser.removeEventListener(EVENTS.pageshow.dom, tabInternals.onPageShow, false);
   }
   tabInternals.onReady = null;
-  tabInternals.onPageShow = null;
   tabInternals.window.BrowserApp.deck.removeEventListener(EVENTS.close.dom, tabInternals.onClose, false);
   tabInternals.onClose = null;
   rawTabNS(tabInternals.tab).tab = null;
@@ -201,12 +196,6 @@ function onTabReady(event) {
   if (win === win.top) {
     emit(this, 'ready', this);
   }
-}
-
-function onTabPageShow(event) {
-  let win = event.target.defaultView;
-  if (win === win.top)
-    emit(this, 'pageshow', this, event.persisted);
 }
 
 // TabClose
