@@ -447,6 +447,7 @@ StackFrames.prototype = {
   currentEvaluation: null,
   currentException: null,
   currentReturnedValue: null,
+  _dontSwitchSources: false,
 
   /**
    * Connect to the current thread client.
@@ -603,12 +604,24 @@ StackFrames.prototype = {
     // Make sure the debugger view panes are visible.
     DebuggerView.showInstrumentsPane();
 
+    this._refillFrames();
+  },
+
+  /**
+   * Fill the StackFrames view with the frames we have in the cache, compressing
+   * frames which have black boxed sources into single frames.
+   */
+  _refillFrames: function() {
     // Make sure all the previous stackframes are removed before re-adding them.
     DebuggerView.StackFrames.empty();
 
     let previousBlackBoxed = null;
     for (let frame of this.activeThread.cachedFrames) {
-      let { depth, where: { url, line }, isBlackBoxed } = frame;
+      let { depth, where: { url, line }, source } = frame;
+
+      let isBlackBoxed = source
+        ? this.activeThread.source(source).isBlackBoxed
+        : false;
       let frameLocation = NetworkHelper.convertToUnicode(unescape(url));
       let frameTitle = StackFrameUtils.getFrameTitle(frame);
 
@@ -621,8 +634,10 @@ StackFrames.prototype = {
         previousBlackBoxed = null;
       }
 
-      DebuggerView.StackFrames.addFrame(frameTitle, frameLocation, line, depth, isBlackBoxed);
+      DebuggerView.StackFrames.addFrame(
+        frameTitle, frameLocation, line, depth, isBlackBoxed);
     }
+
     if (this.currentFrame == null) {
       DebuggerView.StackFrames.selectedDepth = 0;
     }
@@ -653,10 +668,9 @@ StackFrames.prototype = {
    */
   _onBlackBoxChange: function() {
     if (this.activeThread.state == "paused") {
-      // We have to clear out the existing frames and refetch them to get their
-      // updated black boxed status.
-      this.activeThread._clearFrames();
-      this.activeThread.fillFrames(CALL_STACK_PAGE_SIZE);
+      this._dontSwitchSources = true;
+      this.currentFrame = null;
+      this._refillFrames();
     }
   },
 
@@ -681,8 +695,10 @@ StackFrames.prototype = {
    *
    * @param number aDepth
    *        The depth of the frame in the stack.
+   * @param boolean aDontSwitchSources
+   *        Flag on whether or not we want to switch the selected source.
    */
-  selectFrame: function(aDepth) {
+  selectFrame: function(aDepth, aDontSwitchSources) {
     // Make sure the frame at the specified depth exists first.
     let frame = this.activeThread.cachedFrames[this.currentFrame = aDepth];
     if (!frame) {
@@ -695,8 +711,11 @@ StackFrames.prototype = {
       return;
     }
 
+    let noSwitch = this._dontSwitchSources;
+    this._dontSwitchSources = false;
+
     // Move the editor's caret to the proper url and line.
-    DebuggerView.updateEditor(url, line);
+    DebuggerView.updateEditor(url, line, { noSwitch: noSwitch });
     // Highlight the breakpoint at the specified url and line if it exists.
     DebuggerView.Sources.highlightBreakpoint(url, line);
     // Don't display the watch expressions textbox inputs in the pane.
