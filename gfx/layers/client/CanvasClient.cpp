@@ -30,7 +30,50 @@ CanvasClient::CreateCanvasClient(CanvasClientType aType,
       aForwarder->GetCompositorBackendType() == LAYERS_OPENGL) {
     return new DeprecatedCanvasClientSurfaceStream(aForwarder, aFlags);
   }
-  return new DeprecatedCanvasClient2D(aForwarder, aFlags);
+  if (gfxPlatform::GetPlatform()->UseDeprecatedTextures()) {
+    return new DeprecatedCanvasClient2D(aForwarder, aFlags);
+  }
+  return new CanvasClient2D(aForwarder, aFlags);
+}
+
+void
+CanvasClient2D::Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer)
+{
+  if (mBuffer &&
+      (mBuffer->IsImmutable() || mBuffer->GetSize() != aSize)) {
+    RemoveTextureClient(mBuffer);
+    mBuffer = nullptr;
+  }
+
+  if (!mBuffer) {
+    bool isOpaque = (aLayer->GetContentFlags() & Layer::CONTENT_OPAQUE);
+    gfxASurface::gfxContentType contentType = isOpaque
+                                                ? gfxASurface::CONTENT_COLOR
+                                                : gfxASurface::CONTENT_COLOR_ALPHA;
+    gfxASurface::gfxImageFormat format
+      = gfxPlatform::GetPlatform()->OptimalFormatForContent(contentType);
+    mBuffer = CreateBufferTextureClient(gfx::ImageFormatToSurfaceFormat(format));
+    MOZ_ASSERT(mBuffer->AsTextureClientSurface());
+    mBuffer->AsTextureClientSurface()->AllocateForSurface(aSize);
+
+    AddTextureClient(mBuffer);
+  }
+
+  if (!mBuffer->Lock(OPEN_READ_WRITE)) {
+    return;
+  }
+
+  nsRefPtr<gfxASurface> surface = mBuffer->AsTextureClientSurface()->GetAsSurface();
+  if (surface) {
+    aLayer->UpdateSurface(surface);
+  }
+
+  mBuffer->Unlock();
+
+  if (surface) {
+    GetForwarder()->UpdatedTexture(this, mBuffer, nullptr);
+    GetForwarder()->UseTexture(this, mBuffer);
+  }
 }
 
 void

@@ -51,6 +51,36 @@ protected:
 };
 
 // Used for 2D canvases and WebGL canvas on non-GL systems where readback is requried.
+class CanvasClient2D : public CanvasClient
+{
+public:
+  CanvasClient2D(CompositableForwarder* aLayerForwarder,
+                 TextureFlags aFlags)
+    : CanvasClient(aLayerForwarder, aFlags)
+  {
+  }
+
+  TextureInfo GetTextureInfo() const
+  {
+    return TextureInfo(COMPOSITABLE_IMAGE);
+  }
+
+  virtual void Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer) MOZ_OVERRIDE;
+
+  virtual void AddTextureClient(TextureClient* aTexture) MOZ_OVERRIDE
+  {
+    aTexture->AddFlags(mTextureInfo.mTextureFlags);
+    CompositableClient::AddTextureClient(aTexture);
+  }
+
+  virtual void Detach() MOZ_OVERRIDE
+  {
+    mBuffer = nullptr;
+  }
+
+private:
+  RefPtr<TextureClient> mBuffer;
+};
 class DeprecatedCanvasClient2D : public CanvasClient
 {
 public:
