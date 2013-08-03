@@ -468,7 +468,7 @@ class MochitestOptions(optparse.OptionParser):
 
         if not options.mozInfo:
             if build_obj:
-                options.mozInfo = os.path.join(build_obj.get_binary_path(), 'mozinfo.json')
+                options.mozInfo = os.path.join(build_obj.topobjdir, 'mozinfo.json')
             else:
                 options.mozInfo = os.path.abspath('mozinfo.json')
 
