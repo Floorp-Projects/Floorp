@@ -637,7 +637,12 @@ SideMenuItem.prototype = {
       checkbox.removeAttribute("checked");
     }
 
-    checkbox.addEventListener("command", function () {
+    // Stop the toggling of the checkbox from selecting the list item.
+    checkbox.addEventListener("mousedown", function (event) {
+      event.stopPropagation();
+    }, false);
+
+    checkbox.addEventListener("command", function (event) {
       ViewHelpers.dispatchEvent(checkbox, "check", {
         checked: checkbox.checked,
       });
