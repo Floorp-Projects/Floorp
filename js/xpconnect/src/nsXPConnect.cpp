@@ -1446,14 +1446,6 @@ Base64Decode(JSContext *cx, JS::Value val, JS::Value *out)
 }
 
 void
-DumpJSHeap(FILE* file)
-{
-    NS_ABORT_IF_FALSE(NS_IsMainThread(), "Must dump GC heap on main thread.");
-    nsXPConnect* xpc = nsXPConnect::XPConnect();
-    js::DumpHeapComplete(xpc->GetRuntime()->Runtime(), file);
-}
-
-void
 SetLocationForGlobal(JSObject *global, const nsACString& location)
 {
     MOZ_ASSERT(global);

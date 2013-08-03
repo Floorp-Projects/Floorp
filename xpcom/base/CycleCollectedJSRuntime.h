@@ -196,6 +196,8 @@ public:
                         void* aThing);
   void DeferredFinalize(nsISupports* aSupports);
 
+  void DumpJSHeap(FILE* aFile);
+
 private:
   JSGCThingParticipant mGCThingCycleCollectorGlobal;
 

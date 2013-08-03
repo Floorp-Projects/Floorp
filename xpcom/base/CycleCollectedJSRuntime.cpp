@@ -1032,6 +1032,13 @@ CycleCollectedJSRuntime::DeferredFinalize(nsISupports* aSupports)
   mDeferredSupports.AppendElement(aSupports);
 }
 
+void
+CycleCollectedJSRuntime::DumpJSHeap(FILE* file)
+{
+  js::DumpHeapComplete(Runtime(), file);
+}
+
+
 bool
 ReleaseSliceNow(uint32_t aSlice, void* aData)
 {
