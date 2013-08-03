@@ -65,7 +65,6 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsCycleCollector.h"
 #include "nsDOMJSUtils.h"
-#include "nsLayoutStatics.h"
 #include "xpcpublic.h"
 
 using namespace mozilla;
@@ -850,11 +849,7 @@ CycleCollectedJSRuntime::TraceNativeGrayRoots(JSTracer* aTracer)
 void
 CycleCollectedJSRuntime::AddJSHolder(void* aHolder, nsScriptObjectTracer* aTracer)
 {
-  bool wasEmpty = mJSHolders.Count() == 0;
   mJSHolders.Put(aHolder, aTracer);
-  if (wasEmpty && mJSHolders.Count() == 1) {
-    nsLayoutStatics::AddRef();
-  }
 }
 
 void
@@ -869,11 +864,7 @@ CycleCollectedJSRuntime::RemoveJSHolder(void* aHolder)
     AssertNoObjectsToTrace(aHolder);
   }
 #endif
-  bool hadOne = mJSHolders.Count() == 1;
   mJSHolders.Remove(aHolder);
-  if (hadOne && mJSHolders.Count() == 0) {
-    nsLayoutStatics::Release();
-  }
 }
 
 #ifdef DEBUG
