@@ -261,22 +261,28 @@ AutocompletePopup.prototype = {
    */
   _updateSize: function AP__updateSize()
   {
-    // We need the dispatch to allow the content to reflow. Attempting to
-    // update the richlistbox size too early does not work.
-    Services.tm.currentThread.dispatch({ run: () => {
-      if (!this._panel) {
-        return;
-      }
-      this._list.width = this._panel.clientWidth + this._scrollbarWidth;
-      // Height change is required, otherwise the panel is drawn at an offset
-      // the first time.
-      this._list.height = this._list.clientHeight;
-      // This brings the panel back at right position.
-      this._list.top = 0;
-      // Changing panel height might make the selected item out of view, so
-      // bring it back to view.
-      this._list.ensureIndexIsVisible(this._list.selectedIndex);
-    }}, 0);
+    if (!this._panel) {
+      return;
+    }
+    // Flush the layout so that we get the latest height.
+    this._panel.boxObject.height;
+    let height = {};
+    this._list.scrollBoxObject.getScrolledSize({}, height);
+    // Change the width of the popup only if the scrollbar is visible.
+    if (height.value > this._panel.clientHeight) {
+       this._list.width = this._panel.clientWidth + this._scrollbarWidth;
+    }
+    // Height change is required, otherwise the panel is drawn at an offset
+    // the first time.
+    this._list.height = this._list.clientHeight;
+    // This brings the panel back at right position.
+    this._list.top = 0;
+    // Move the panel to -1,-1 to realign the popup with its anchor node when
+    // decreasing the panel height.
+    this._panel.moveTo(-1, -1);
+    // Changing panel height might make the selected item out of view, so
+    // bring it back to view.
+    this._list.ensureIndexIsVisible(this._list.selectedIndex);
   },
 
   /**
