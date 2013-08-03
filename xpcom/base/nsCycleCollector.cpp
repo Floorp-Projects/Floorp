@@ -903,76 +903,7 @@ enum ccType {
     ShutdownCC   /* Shutdown CC, used for finding leaks. */
 };
 
-class nsCycleCollector;
-
-class nsCycleCollectorRunner : public nsRunnable
-{
-    nsCycleCollector *mCollector;
-    CCThreadingModel mModel;
-    nsICycleCollectorListener *mListener;
-    nsCOMPtr<nsIThread> mThread;
-    Mutex mLock;
-    CondVar mRequest;
-    CondVar mReply;
-    bool mRunning;
-    bool mShutdown;
-    bool mCollected;
-    ccType mCCType;
-
-public:
-    nsCycleCollectorRunner(nsCycleCollector *collector,
-                           CCThreadingModel aModel)
-        : mCollector(collector),
-          mModel(aModel),
-          mListener(nullptr),
-          mLock("cycle collector lock"),
-          mRequest(mLock, "cycle collector request condvar"),
-          mReply(mLock, "cycle collector reply condvar"),
-          mRunning(false),
-          mShutdown(false),
-          mCollected(false),
-          mCCType(ScheduledCC)
-    {
-        MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
-    }
-
-    NS_IMETHOD Run();
-
-    nsresult Init()
-    {
-        if (mModel == CCSingleThread)
-            return NS_OK;
-
-        return NS_NewThread(getter_AddRefs(mThread), this);
-    }
-
-    void Collect(ccType aCCType,
-                 nsCycleCollectorResults *aResults,
-                 nsICycleCollectorListener *aListener);
-
-    void Shutdown()
-    {
-        MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
-
-        if (!mThread)
-            return;
-
-        MutexAutoLock autoLock(mLock);
-
-        mShutdown = true;
-
-        if (!mRunning)
-            return;
-
-        mRunning = false;
-        mRequest.Notify();
-        mReply.Wait();
-
-        nsCOMPtr<nsIThread> thread;
-        thread.swap(mThread);
-        thread->Shutdown();
-    }
-};
+class nsCycleCollectorRunner;
 
 ////////////////////////////////////////////////////////////////////////
 // Top level structure for the cycle collector.
@@ -995,7 +926,7 @@ class nsCycleCollector
 
     // Strong reference
     nsCycleCollectorRunner *mRunner;
-    PRThread* mThread;
+    nsIThread* mThread;
 
 public:
     nsCycleCollectorParams mParams;
@@ -1099,6 +1030,75 @@ public:
                              size_t *aPurpleBufferSize) const;
 };
 
+class nsCycleCollectorRunner : public nsRunnable
+{
+    nsCycleCollector *mCollector;
+    CCThreadingModel mModel;
+    nsICycleCollectorListener *mListener;
+    nsCOMPtr<nsIThread> mThread;
+    Mutex mLock;
+    CondVar mRequest;
+    CondVar mReply;
+    bool mRunning;
+    bool mShutdown;
+    bool mCollected;
+    ccType mCCType;
+
+public:
+    nsCycleCollectorRunner(nsCycleCollector *collector,
+                           CCThreadingModel aModel)
+        : mCollector(collector),
+          mModel(aModel),
+          mListener(nullptr),
+          mLock("cycle collector lock"),
+          mRequest(mLock, "cycle collector request condvar"),
+          mReply(mLock, "cycle collector reply condvar"),
+          mRunning(false),
+          mShutdown(false),
+          mCollected(false),
+          mCCType(ScheduledCC)
+    {
+        collector->CheckThreadSafety();
+    }
+
+    NS_IMETHOD Run();
+
+    nsresult Init()
+    {
+        if (mModel == CCSingleThread)
+            return NS_OK;
+
+        return NS_NewThread(getter_AddRefs(mThread), this);
+    }
+
+    void Collect(ccType aCCType,
+                 nsCycleCollectorResults *aResults,
+                 nsICycleCollectorListener *aListener);
+
+    void Shutdown()
+    {
+        mCollector->CheckThreadSafety();
+
+        if (!mThread)
+            return;
+
+        MutexAutoLock autoLock(mLock);
+
+        mShutdown = true;
+
+        if (!mRunning)
+            return;
+
+        mRunning = false;
+        mRequest.Notify();
+        mReply.Wait();
+
+        nsCOMPtr<nsIThread> thread;
+        thread.swap(mThread);
+        thread->Shutdown();
+    }
+};
+
 NS_IMETHODIMP
 nsCycleCollectorRunner::Run()
 {
@@ -1148,7 +1148,7 @@ nsCycleCollectorRunner::Collect(ccType aCCType,
                                 nsCycleCollectorResults *aResults,
                                 nsICycleCollectorListener *aListener)
 {
-    MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
+    mCollector->CheckThreadSafety();
 
     // On a WantAllTraces CC, force a synchronous global GC to prevent
     // hijinks from ForgetSkippable and compartmental GCs.
@@ -2680,7 +2680,7 @@ nsCycleCollector::nsCycleCollector(CCThreadingModel aModel) :
     mResults(nullptr),
     mJSRuntime(nullptr),
     mRunner(nullptr),
-    mThread(PR_GetCurrentThread()),
+    mThread(NS_GetCurrentThread()),
     mWhiteNodes(nullptr),
     mWhiteNodeCount(0),
     mVisitedRefCounted(0),
@@ -2785,7 +2785,10 @@ void
 nsCycleCollector::CheckThreadSafety()
 {
 #ifdef DEBUG
-    MOZ_ASSERT(mThread == PR_GetCurrentThread());
+    nsIThread* currentThread = NS_GetCurrentThread();
+    // XXXkhuey we can be called so late in shutdown that NS_GetCurrentThread
+    // returns null (after the thread manager has shut down)
+    MOZ_ASSERT(mThread == currentThread || !currentThread);
 #endif
 }
 
@@ -2798,8 +2801,7 @@ nsCycleCollector::CheckThreadSafety()
 void
 nsCycleCollector::FixGrayBits(bool aForceGC)
 {
-    MOZ_ASSERT(NS_IsMainThread(),
-               "nsCycleCollector::FixGrayBits() must be called on the main thread.");
+    CheckThreadSafety();
 
     if (!mJSRuntime)
         return;
