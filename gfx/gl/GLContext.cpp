@@ -494,7 +494,6 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
 
         if (IsExtensionSupported(XXX_framebuffer_multisample))
         {
-            MOZ_ASSERT(SupportsSplitFramebuffer());
             SymLoadStruct auxSymbols[] = {
                 {
                     (PRFuncPtr*) &mSymbols.fRenderbufferStorageMultisample,
@@ -698,7 +697,7 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
         mMaxTextureImageSize = mMaxTextureSize;
 
         mMaxSamples = 0;
-        if (SupportsFramebufferMultisample()) {
+        if (IsExtensionSupported(XXX_framebuffer_multisample)) {
             fGetIntegerv(LOCAL_GL_MAX_SAMPLES, (GLint*)&mMaxSamples);
         }
 
