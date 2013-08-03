@@ -15,13 +15,4 @@
 
     <org.mozilla.gecko.preferences.SearchPreferenceCategory
                         android:title="@string/pref_category_installed_search_engines"/>
-
-    <PreferenceCategory android:title="@string/pref_category_add_search_providers">
-
-        <Preference android:layout="@layout/preference_search_tip"
-                    android:enabled="false"
-                    android:selectable="false"/>
-
-    </PreferenceCategory>
-
 </PreferenceScreen>

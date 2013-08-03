@@ -85,8 +85,6 @@
   <string name="pref_category_vendor">&pref_category_vendor;</string>
   <string name="pref_category_datareporting">&pref_category_datareporting;</string>
   <string name="pref_category_installed_search_engines">&pref_category_installed_search_engines;</string>
-  <string name="pref_category_add_search_providers">&pref_category_add_search_providers;</string>
-  <string name="pref_search_tip">&pref_search_tip;</string>
   <string name="pref_category_devtools">&pref_category_devtools;</string>
   <string name="pref_developer_remotedebugging">&pref_developer_remotedebugging;</string>
   <string name="pref_developer_remotedebugging_docs">&pref_developer_remotedebugging_docs;</string>
