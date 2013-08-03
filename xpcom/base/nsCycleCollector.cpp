@@ -1001,8 +1001,6 @@ public:
     nsCycleCollectorParams mParams;
 
 private:
-    nsRefPtr<AsyncFreeSnowWhite> mAsyncSnowWhiteFreer;
-
     nsTArray<PtrInfo*> *mWhiteNodes;
     uint32_t mWhiteNodeCount;
 
@@ -1080,17 +1078,7 @@ public:
     bool BeginCollection(ccType aCCType, nsICycleCollectorListener *aListener);
     bool FinishCollection(nsICycleCollectorListener *aListener);
 
-    AsyncFreeSnowWhite* AsyncSnowWhiteFreer()
-    {
-        return mAsyncSnowWhiteFreer;
-    }
-
     bool FreeSnowWhite(bool aUntilNoSWInPurpleBuffer);
-
-    // If there is a cycle collector available in the current thread,
-    // this calls FreeSnowWhite(false). Returns true if some
-    // snow-white objects were found.
-    static bool TryToFreeSnowWhite();
 
     uint32_t SuspectedCount();
     void Shutdown();
@@ -2183,44 +2171,6 @@ MayHaveChild(void *o, nsCycleCollectionParticipant* cp)
     return cf.MayHaveChild();
 }
 
-class AsyncFreeSnowWhite : public nsRunnable
-{
-public:
-  NS_IMETHOD Run()
-  {
-      TimeStamp start = TimeStamp::Now();
-      bool hadSnowWhiteObjects = nsCycleCollector::TryToFreeSnowWhite();
-      Telemetry::Accumulate(Telemetry::CYCLE_COLLECTOR_ASYNC_SNOW_WHITE_FREEING,
-                            uint32_t((TimeStamp::Now() - start).ToMilliseconds()));
-      if (hadSnowWhiteObjects && !mContinuation) {
-          mContinuation = true;
-          if (NS_FAILED(NS_DispatchToCurrentThread(this))) {
-              mActive = false;
-          }
-      } else {
-          mActive = false;
-      }
-      return NS_OK;
-  }
-
-  static void Dispatch(nsCycleCollector* aCollector, bool aContinuation = false)
-  {
-      AsyncFreeSnowWhite* swf = aCollector->AsyncSnowWhiteFreer();
-      if (swf->mContinuation) {
-          swf->mContinuation = aContinuation;
-      }
-      if (!swf->mActive && NS_SUCCEEDED(NS_DispatchToCurrentThread(swf))) {
-          swf->mActive = true;
-      }
-  }
-
-  AsyncFreeSnowWhite() : mContinuation(false), mActive(false) {}
-
-public:
-  bool mContinuation;
-  bool mActive;
-};
-
 struct SnowWhiteObject
 {
   void* mPointer;
@@ -2302,7 +2252,7 @@ public:
         }
         if (HasSnowWhiteObjects()) {
             // Effectively a continuation.
-            AsyncFreeSnowWhite::Dispatch(mCollector, true);
+            nsCycleCollector_dispatchDeferredDeletion(true);
         }
     }
 
@@ -2315,7 +2265,7 @@ public:
                 SnowWhiteKiller::Visit(aBuffer, aEntry);
             } else if (!mDispatchedDeferredDeletion) {
                 mDispatchedDeferredDeletion = true;
-                nsCycleCollector_dispatchDeferredDeletion();
+                nsCycleCollector_dispatchDeferredDeletion(false);
             }
             return;
         }
@@ -2362,15 +2312,6 @@ nsCycleCollector::FreeSnowWhite(bool aUntilNoSWInPurpleBuffer)
         }
     } while (aUntilNoSWInPurpleBuffer);
     return hadSnowWhiteObjects;
-}
-
-/* static */ bool
-nsCycleCollector::TryToFreeSnowWhite()
-{
-  CollectorData* data = sCollectorData.get();
-  return data->mCollector ?
-      data->mCollector->FreeSnowWhite(false) :
-      false;
 }
 
 void
@@ -2649,7 +2590,7 @@ nsCycleCollector::CollectWhite(nsICycleCollectorListener *aListener)
     }
     timeLog.Checkpoint("CollectWhite::Unroot");
 
-    nsCycleCollector_dispatchDeferredDeletion();
+    nsCycleCollector_dispatchDeferredDeletion(false);
 
     return count > 0;
 }
@@ -2740,7 +2681,6 @@ nsCycleCollector::nsCycleCollector(CCThreadingModel aModel) :
     mJSRuntime(nullptr),
     mRunner(nullptr),
     mThread(PR_GetCurrentThread()),
-    mAsyncSnowWhiteFreer(new AsyncFreeSnowWhite()),
     mWhiteNodes(nullptr),
     mWhiteNodeCount(0),
     mVisitedRefCounted(0),
@@ -3379,12 +3319,28 @@ nsCycleCollector_forgetSkippable(bool aRemoveChildlessNodes,
 }
 
 void
-nsCycleCollector_dispatchDeferredDeletion()
+nsCycleCollector_dispatchDeferredDeletion(bool aContinuation)
 {
-    CollectorData* data = sCollectorData.get();
-    if (data && data->mCollector) {
-        AsyncFreeSnowWhite::Dispatch(data->mCollector);
+    CollectorData *data = sCollectorData.get();
+
+    if (!data || !data->mRuntime) {
+        return;
     }
+
+    data->mRuntime->DispatchDeferredDeletion(aContinuation);
+}
+
+bool
+nsCycleCollector_doDeferredDeletion()
+{
+    CollectorData *data = sCollectorData.get();
+
+    // We should have started the cycle collector by now.
+    MOZ_ASSERT(data);
+    MOZ_ASSERT(data->mCollector);
+    MOZ_ASSERT(data->mRuntime);
+
+    return data->mCollector->FreeSnowWhite(false);
 }
 
 void
