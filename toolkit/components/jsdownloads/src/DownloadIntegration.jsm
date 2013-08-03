@@ -343,24 +343,26 @@ this.DownloadIntegration = {
         }
 
         // Custom application chosen
-        mimeInfo.preferredAction = Ci.nsIMIMEInfo.useHelperApp;
-
         let localHandlerApp = Cc["@mozilla.org/uriloader/local-handler-app;1"]
                                 .createInstance(Ci.nsILocalHandlerApp);
         localHandlerApp.executable = new FileUtils.File(aDownload.launcherPath);
 
+        mimeInfo.preferredApplicationHandler = localHandlerApp;
+        mimeInfo.preferredAction = Ci.nsIMIMEInfo.useHelperApp;
+
+        // In test mode, allow the test to verify the nsIMIMEInfo instance.
         if (this.dontOpenFileAndFolder) {
-          throw new Task.Result("chosen-app");
+          throw new Task.Result(mimeInfo);
         }
 
         mimeInfo.launchWithFile(file);
         return;
       }
 
-      // No custom application chosen, let's launch the file with the
-      // default handler
+      // No custom application chosen, let's launch the file with the default
+      // handler.  In test mode, we indicate this with a null value.
       if (this.dontOpenFileAndFolder) {
-        throw new Task.Result("default-handler");
+        throw new Task.Result(null);
       }
 
       // First let's try to launch it through the MIME service application
