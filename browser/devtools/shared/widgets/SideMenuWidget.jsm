@@ -14,8 +14,16 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource:///modules/devtools/ViewHelpers.jsm");
 Cu.import("resource:///modules/devtools/shared/event-emitter.js");
 
-XPCOMUtils.defineLazyModuleGetter(this, "NetworkHelper",
-  "resource://gre/modules/devtools/NetworkHelper.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "devtools",
+  "resource://gre/modules/devtools/Loader.jsm");
+
+Object.defineProperty(this, "NetworkHelper", {
+  get: function() {
+    return devtools.require("devtools/toolkit/webconsole/network-helper");
+  },
+  configurable: true,
+  enumerable: true
+});
 
 this.EXPORTED_SYMBOLS = ["SideMenuWidget"];
 

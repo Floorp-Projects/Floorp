@@ -29,8 +29,17 @@ Cu.import("resource:///modules/devtools/ViewHelpers.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Parser",
   "resource:///modules/devtools/Parser.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "NetworkHelper",
-  "resource://gre/modules/devtools/NetworkHelper.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "devtools",
+  "resource://gre/modules/devtools/Loader.jsm");
+
+Object.defineProperty(this, "NetworkHelper", {
+  get: function() {
+    return devtools.require("devtools/toolkit/webconsole/network-helper");
+  },
+  configurable: true,
+  enumerable: true
+});
+
 
 /**
  * Object defining the debugger controller components.
