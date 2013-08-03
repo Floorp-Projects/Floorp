@@ -607,6 +607,8 @@ enum WatchdogTimestampCategory
     TimestampCount
 };
 
+class AsyncFreeSnowWhite;
+
 class XPCJSRuntime : public mozilla::CycleCollectedJSRuntime
 {
 public:
@@ -729,6 +731,7 @@ public:
     void UnmarkSkippableJSHolders();
     void PrepareForForgetSkippable() MOZ_OVERRIDE;
     void PrepareForCollection() MOZ_OVERRIDE;
+    void DispatchDeferredDeletion(bool continuation) MOZ_OVERRIDE;
 
     void CustomGCCallback(JSGCStatus status) MOZ_OVERRIDE;
     bool CustomContextCallback(JSContext *cx, unsigned operation) MOZ_OVERRIDE;
@@ -871,6 +874,7 @@ private:
     nsRefPtr<WatchdogManager> mWatchdogManager;
     JS::GCSliceCallback mPrevGCSliceCallback;
     JSObject* mJunkScope;
+    nsRefPtr<AsyncFreeSnowWhite> mAsyncSnowWhiteFreer;
 
     nsCOMPtr<nsIException>   mPendingException;
     nsCOMPtr<nsIExceptionManager> mExceptionManager;

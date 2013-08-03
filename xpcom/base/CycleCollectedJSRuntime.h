@@ -204,6 +204,8 @@ public:
   void DeferredFinalize(nsISupports* aSupports);
 
   void DumpJSHeap(FILE* aFile);
+  
+  virtual void DispatchDeferredDeletion(bool aContinuation) = 0;
 
 private:
   JSGCThingParticipant mGCThingCycleCollectorGlobal;
