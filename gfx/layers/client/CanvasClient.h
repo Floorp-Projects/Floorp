@@ -44,40 +44,18 @@ public:
 
   virtual void Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer) = 0;
 
-  virtual void Updated();
+  virtual void Updated() { }
 
-  virtual void SetDescriptorFromReply(TextureIdentifier aTextureId,
-                                      const SurfaceDescriptor& aDescriptor) MOZ_OVERRIDE
-  {
-    mDeprecatedTextureClient->SetDescriptorFromReply(aDescriptor);
-  }
 protected:
-  RefPtr<DeprecatedTextureClient> mDeprecatedTextureClient;
   TextureInfo mTextureInfo;
 };
 
 // Used for 2D canvases and WebGL canvas on non-GL systems where readback is requried.
-class CanvasClient2D : public CanvasClient
+class DeprecatedCanvasClient2D : public CanvasClient
 {
 public:
-  CanvasClient2D(CompositableForwarder* aLayerForwarder,
-                 TextureFlags aFlags);
-
-  TextureInfo GetTextureInfo() const MOZ_OVERRIDE
-  {
-    return mTextureInfo;
-  }
-
-  virtual void Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer);
-};
-
-// Used for GL canvases where we don't need to do any readback, i.e., with a
-// GL backend.
-class CanvasClientSurfaceStream : public CanvasClient
-{
-public:
-  CanvasClientSurfaceStream(CompositableForwarder* aFwd,
-                            TextureFlags aFlags);
+  DeprecatedCanvasClient2D(CompositableForwarder* aLayerForwarder,
+                           TextureFlags aFlags);
 
   TextureInfo GetTextureInfo() const MOZ_OVERRIDE
   {
@@ -87,7 +65,40 @@ public:
   virtual void Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer);
   virtual void Updated() MOZ_OVERRIDE;
 
+  virtual void SetDescriptorFromReply(TextureIdentifier aTextureId,
+                                      const SurfaceDescriptor& aDescriptor) MOZ_OVERRIDE
+  {
+    mDeprecatedTextureClient->SetDescriptorFromReply(aDescriptor);
+  }
+
 private:
+  RefPtr<DeprecatedTextureClient> mDeprecatedTextureClient;
+};
+
+// Used for GL canvases where we don't need to do any readback, i.e., with a
+// GL backend.
+class DeprecatedCanvasClientSurfaceStream : public CanvasClient
+{
+public:
+  DeprecatedCanvasClientSurfaceStream(CompositableForwarder* aFwd,
+                                      TextureFlags aFlags);
+
+  TextureInfo GetTextureInfo() const MOZ_OVERRIDE
+  {
+    return mTextureInfo;
+  }
+
+  virtual void Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer);
+  virtual void Updated() MOZ_OVERRIDE;
+
+  virtual void SetDescriptorFromReply(TextureIdentifier aTextureId,
+                                      const SurfaceDescriptor& aDescriptor) MOZ_OVERRIDE
+  {
+    mDeprecatedTextureClient->SetDescriptorFromReply(aDescriptor);
+  }
+
+private:
+  RefPtr<DeprecatedTextureClient> mDeprecatedTextureClient;
   bool mNeedsUpdate;
 };
 

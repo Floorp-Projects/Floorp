@@ -28,27 +28,27 @@ CanvasClient::CreateCanvasClient(CanvasClientType aType,
 {
   if (aType == CanvasClientGLContext &&
       aForwarder->GetCompositorBackendType() == LAYERS_OPENGL) {
-    return new CanvasClientSurfaceStream(aForwarder, aFlags);
+    return new DeprecatedCanvasClientSurfaceStream(aForwarder, aFlags);
   }
-  return new CanvasClient2D(aForwarder, aFlags);
+  return new DeprecatedCanvasClient2D(aForwarder, aFlags);
 }
 
 void
-CanvasClient::Updated()
+DeprecatedCanvasClient2D::Updated()
 {
   mForwarder->UpdateTexture(this, 1, mDeprecatedTextureClient->GetDescriptor());
 }
 
 
-CanvasClient2D::CanvasClient2D(CompositableForwarder* aFwd,
-                               TextureFlags aFlags)
+DeprecatedCanvasClient2D::DeprecatedCanvasClient2D(CompositableForwarder* aFwd,
+                                                   TextureFlags aFlags)
 : CanvasClient(aFwd, aFlags)
 {
   mTextureInfo.mCompositableType = BUFFER_IMAGE_SINGLE;
 }
 
 void
-CanvasClient2D::Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer)
+DeprecatedCanvasClient2D::Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer)
 {
   if (!mDeprecatedTextureClient) {
     mDeprecatedTextureClient = CreateDeprecatedTextureClient(TEXTURE_CONTENT);
@@ -67,7 +67,7 @@ CanvasClient2D::Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer)
 }
 
 void
-CanvasClientSurfaceStream::Updated()
+DeprecatedCanvasClientSurfaceStream::Updated()
 {
   if (mNeedsUpdate) {
     mForwarder->UpdateTextureNoSwap(this, 1, mDeprecatedTextureClient->GetDescriptor());
@@ -76,8 +76,8 @@ CanvasClientSurfaceStream::Updated()
 }
 
 
-CanvasClientSurfaceStream::CanvasClientSurfaceStream(CompositableForwarder* aFwd,
-                                                     TextureFlags aFlags)
+DeprecatedCanvasClientSurfaceStream::DeprecatedCanvasClientSurfaceStream(CompositableForwarder* aFwd,
+                                                                         TextureFlags aFlags)
 : CanvasClient(aFwd, aFlags)
 , mNeedsUpdate(false)
 {
@@ -85,7 +85,7 @@ CanvasClientSurfaceStream::CanvasClientSurfaceStream(CompositableForwarder* aFwd
 }
 
 void
-CanvasClientSurfaceStream::Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer)
+DeprecatedCanvasClientSurfaceStream::Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer)
 {
   if (!mDeprecatedTextureClient) {
     mDeprecatedTextureClient = CreateDeprecatedTextureClient(TEXTURE_STREAM_GL);
