@@ -222,6 +222,43 @@ XPCJSRuntime::CustomContextCallback(JSContext *cx, unsigned operation)
     return true;
 }
 
+class AsyncFreeSnowWhite : public nsRunnable
+{
+public:
+  NS_IMETHOD Run()
+  {
+      TimeStamp start = TimeStamp::Now();
+      bool hadSnowWhiteObjects = nsCycleCollector_doDeferredDeletion();
+      Telemetry::Accumulate(Telemetry::CYCLE_COLLECTOR_ASYNC_SNOW_WHITE_FREEING,
+                            uint32_t((TimeStamp::Now() - start).ToMilliseconds()));
+      if (hadSnowWhiteObjects && !mContinuation) {
+          mContinuation = true;
+          if (NS_FAILED(NS_DispatchToCurrentThread(this))) {
+              mActive = false;
+          }
+      } else {
+          mActive = false;
+      }
+      return NS_OK;
+  }
+
+  void Dispatch(bool aContinuation = false)
+  {
+      if (mContinuation) {
+          mContinuation = aContinuation;
+      }
+      if (!mActive && NS_SUCCEEDED(NS_DispatchToCurrentThread(this))) {
+          mActive = true;
+      }
+  }
+
+  AsyncFreeSnowWhite() : mContinuation(false), mActive(false) {}
+
+public:
+  bool mContinuation;
+  bool mActive;
+};
+
 namespace xpc {
 
 CompartmentPrivate::~CompartmentPrivate()
@@ -564,6 +601,12 @@ XPCJSRuntime::PrepareForCollection()
     if (obs) {
         obs->NotifyObservers(nullptr, "cycle-collector-begin", nullptr);
     }
+}
+
+void
+XPCJSRuntime::DispatchDeferredDeletion(bool aContinuation)
+{
+    mAsyncSnowWhiteFreer->Dispatch(aContinuation);
 }
 
 void
@@ -2698,6 +2741,7 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
    mObjectHolderRoots(nullptr),
    mWatchdogManager(new WatchdogManager(this)),
    mJunkScope(nullptr),
+   mAsyncSnowWhiteFreer(new AsyncFreeSnowWhite()),
    mExceptionManagerNotAvailable(false)
 {
 #ifdef XPC_CHECK_WRAPPERS_AT_SHUTDOWN
