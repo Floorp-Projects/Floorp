@@ -979,6 +979,10 @@ CycleCollectedJSRuntime::BeginCycleCollection(nsCycleCollectionNoteRootCallback 
 bool
 CycleCollectedJSRuntime::UsefulToMergeZones() const
 {
+  if (!NS_IsMainThread()) {
+    return false;
+  }
+
   JSContext* iter = nullptr;
   JSContext* cx;
   JSAutoRequest ar(nsContentUtils::GetSafeJSContext());
