@@ -144,10 +144,6 @@ size. -->
 <!ENTITY pref_about_firefox "About &brandShortName;">
 <!ENTITY pref_vendor_faqs "FAQs">
 <!ENTITY pref_vendor_feedback "Give feedback">
-<!ENTITY pref_search_set_default "Set as default">
-<!ENTITY pref_search_default "Default">
-<!ENTITY pref_search_remove "Remove">
-<!ENTITY pref_search_last_toast "You can\'t remove or disable your last search engine.">
 
 <!ENTITY datareporting_notification_title "&brandShortName; stats &amp; data">
 <!ENTITY datareporting_notification_action_long "Choose what information to share">
