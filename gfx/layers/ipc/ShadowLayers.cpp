@@ -407,16 +407,9 @@ ShadowLayerForwarder::UpdatedTexture(CompositableClient* aCompositable,
 {
   MaybeRegion region = aRegion ? MaybeRegion(*aRegion)
                                : MaybeRegion(null_t());
-  if (aTexture->GetFlags() & TEXTURE_IMMEDIATE_UPLOAD) {
-    mTxn->AddPaint(OpUpdateTexture(nullptr, aCompositable->GetIPDLActor(),
-                                   aTexture->GetID(),
-                                   region));
-  } else {
-    mTxn->AddNoSwapPaint(OpUpdateTexture(nullptr, aCompositable->GetIPDLActor(),
-                                         aTexture->GetID(),
-                                         region));
-
-  }
+  mTxn->AddEdit(OpUpdateTexture(nullptr, aCompositable->GetIPDLActor(),
+                                aTexture->GetID(),
+                                region));
 }
 
 void
