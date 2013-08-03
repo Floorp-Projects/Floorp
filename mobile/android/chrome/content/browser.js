@@ -6421,6 +6421,9 @@ var SearchEngines = {
 
   init: function init() {
     Services.obs.addObserver(this, "SearchEngines:Get", false);
+    Services.obs.addObserver(this, "SearchEngines:GetVisible", false);
+    Services.obs.addObserver(this, "SearchEngines:SetDefault", false);
+    Services.obs.addObserver(this, "SearchEngines:Remove", false);
     let contextName = Strings.browser.GetStringFromName("contextmenu.addSearchEngine");
     let filter = {
       matches: function (aElement) {
@@ -6432,21 +6435,36 @@ var SearchEngines = {
 
   uninit: function uninit() {
     Services.obs.removeObserver(this, "SearchEngines:Get");
+    Services.obs.removeObserver(this, "SearchEngines:GetVisible");
+    Services.obs.removeObserver(this, "SearchEngines:SetDefault");
+    Services.obs.removeObserver(this, "SearchEngines:Remove");
     if (this._contextMenuId != null)
       NativeWindow.contextmenus.remove(this._contextMenuId);
   },
 
-  _handleSearchEnginesGet: function _handleSearchEnginesGet(rv) {
+  // Fetch list of search engines. all ? All engines : Visible engines only.
+  _handleSearchEnginesGet: function _handleSearchEnginesGet(rv, all) {
     if (!Components.isSuccessCode(rv)) {
       Cu.reportError("Could not initialize search service, bailing out.");
       return;
     }
-    let engineData = Services.search.getVisibleEngines({});
+    let engineData;
+    if (all) {
+      engineData = Services.search.getEngines({});
+    } else {
+      engineData = Services.search.getVisibleEngines({});
+    }
+
+    // These engines are the bundled ones - they may not be uninstalled.
+    let immutableEngines = Services.search.getDefaultEngines();
+
     let searchEngines = engineData.map(function (engine) {
       return {
         name: engine.name,
         identifier: engine.identifier,
-        iconURI: (engine.iconURI ? engine.iconURI.spec : null)
+        iconURI: (engine.iconURI ? engine.iconURI.spec : null),
+        hidden: engine.hidden,
+        immutable: immutableEngines.indexOf(engine) != -1
       };
     });
 
@@ -6458,6 +6476,8 @@ var SearchEngines = {
       suggestTemplate = engine.getSubmission("__searchTerms__", "application/x-suggestions+json").uri.spec;
     }
 
+
+    // By convention, the currently configured default engine is at position zero in searchEngines.
     sendMessageToJava({
       type: "SearchEngines:Data",
       searchEngines: searchEngines,
@@ -6470,9 +6490,45 @@ var SearchEngines = {
     });
   },
 
+  _handleSearchEnginesGetAll: function _handleSearchEnginesGetAll(rv) {
+    this._handleSearchEnginesGet(rv, true);
+  },
+  _handleSearchEnginesGetVisible: function _handleSearchEnginesGetVisible(rv) {
+    this._handleSearchEnginesGet(rv, false)
+  },
+
+  // Helper method to extract the engine name from a JSON. Simplifies the observe function.
+  _extractEngineFromJSON: function _extractEngineFromJSON(aData) {
+    let data = JSON.parse(aData);
+    return Services.search.getEngineByName(data.engine);
+  },
+
   observe: function observe(aSubject, aTopic, aData) {
-    if (aTopic == "SearchEngines:Get") {
-      Services.search.init(this._handleSearchEnginesGet.bind(this));
+    let engine;
+    switch(aTopic) {
+      case "SearchEngines:GetVisible":
+        Services.search.init(this._handleSearchEnginesGetVisible.bind(this));
+        break;
+      case "SearchEngines:Get":
+        // Return a list of all engines, including "Hidden" ones.
+        Services.search.init(this._handleSearchEnginesGetAll.bind(this));
+        break;
+      case "SearchEngines:SetDefault":
+        engine = this._extractEngineFromJSON(aData);
+        // Move the new default search engine to the top of the search engine list.
+        Services.search.moveEngine(engine, 0);
+        Services.search.defaultEngine = engine;
+        break;
+      case "SearchEngines:Remove":
+        // Make sure the engine isn't hidden before removing it, to make sure it's
+        // visible if the user later re-adds it (works around bug 341833)
+        engine = this._extractEngineFromJSON(aData);
+        engine.hidden = false;
+        Services.search.removeEngine(engine);
+        break;
+      default:
+        dump("Unexpected message type observed: " + aTopic);
+        break;
     }
   },
 
