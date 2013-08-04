@@ -5392,7 +5392,7 @@ class CGEnumerateHook(CGAbstractBindingMethod):
                 "}\n"
                 "JS::Rooted<JS::Value> dummy(cx);\n"
                 "for (uint32_t i = 0; i < names.Length(); ++i) {\n"
-                "  if (!JS_LookupUCProperty(cx, obj, names[i].get(), names[i].Length(), dummy.address())) {\n"
+                "  if (!JS_LookupUCProperty(cx, obj, names[i].get(), names[i].Length(), &dummy)) {\n"
                 "    return false;\n"
                 "  }\n"
                 "}\n"
