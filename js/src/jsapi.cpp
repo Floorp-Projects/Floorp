@@ -4954,7 +4954,7 @@ JS_BufferIsCompilableUnit(JSContext *cx, JSObject *objArg, const char *utf8, siz
                                                   options, chars, length,
                                                   /* foldConstants = */ true, NULL, NULL);
         older = JS_SetErrorReporter(cx, NULL);
-        if (!parser.parse(obj) && parser.tokenStream.isUnexpectedEOF()) {
+        if (!parser.parse(obj) && parser.isUnexpectedEOF()) {
             /*
              * We ran into an error. If it was because we ran out of
              * source, we return false so our caller knows to try to
