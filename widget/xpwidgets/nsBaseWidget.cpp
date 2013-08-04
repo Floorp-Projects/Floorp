@@ -966,7 +966,7 @@ void nsBaseWidget::CreateCompositor(int aWidth, int aHeight)
     return;
   }
 
-  NS_ASSERTION(false, "Failed to create an OMT compositor.");
+  NS_WARNING("Failed to create an OMT compositor.");
   DestroyCompositor();
   // Compositor child had the only reference to LayerManager and will have
   // deallocated it when being freed.
