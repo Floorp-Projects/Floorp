@@ -363,8 +363,8 @@ TokenStream::updateLineInfoForEOL()
 JS_ALWAYS_INLINE void
 TokenStream::updateFlagsForEOL()
 {
-    flags &= ~TSF_DIRTYLINE;
-    flags |= TSF_EOL;
+    flags.isDirtyLine = false;
+    flags.sawEOL = true;
 }
 
 /* This gets the next char, normalizing all EOL sequences to '\n' as it goes. */
@@ -405,7 +405,7 @@ TokenStream::getChar()
         return c;
     }
 
-    flags |= TSF_EOF;
+    flags.isEOF = true;
     return EOF;
 
   eol:
@@ -426,7 +426,7 @@ TokenStream::getCharIgnoreEOL()
     if (JS_LIKELY(userbuf.hasRawChars()))
         return userbuf.getRawChar();
 
-    flags |= TSF_EOF;
+    flags.isEOF = true;
     return EOF;
 }
 
@@ -1058,7 +1058,7 @@ TokenStream::getTokenInternal(Modifier modifier)
     if (JS_UNLIKELY(!userbuf.hasRawChars())) {
         tp = newToken(0);
         tt = TOK_EOF;
-        flags |= TSF_EOF;
+        flags.isEOF = true;
         goto out;
     }
 
@@ -1283,7 +1283,7 @@ TokenStream::getTokenInternal(Modifier modifier)
                             if (val != 0 || JS7_ISDEC(c)) {
                                 if (!reportStrictModeError(JSMSG_DEPRECATED_OCTAL))
                                     goto error;
-                                flags |= TSF_OCTAL_CHAR;
+                                flags.sawOctalEscape = true;
                             }
                             if ('0' <= c && c < '8') {
                                 val = 8 * val + JS7_UNDEC(c);
@@ -1660,7 +1660,7 @@ TokenStream::getTokenInternal(Modifier modifier)
 
       case '-':
         if (matchChar('-')) {
-            if (peekChar() == '>' && !(flags & TSF_DIRTYLINE))
+            if (peekChar() == '>' && !flags.isDirtyLine)
                 goto skipline;
             tt = TOK_DEC;
         } else {
@@ -1675,14 +1675,14 @@ TokenStream::getTokenInternal(Modifier modifier)
     }
 
   out:
-    flags |= TSF_DIRTYLINE;
+    flags.isDirtyLine = true;
     tp->pos.end = userbuf.addressOfNextRawChar() - userbuf.base();
     tp->type = tt;
     JS_ASSERT(IsTokenSane(tp));
     return tt;
 
   error:
-    flags |= TSF_DIRTYLINE;
+    flags.isDirtyLine = true;
     tp->pos.end = userbuf.addressOfNextRawChar() - userbuf.base();
     tp->type = TOK_ERROR;
     JS_ASSERT(IsTokenSane(tp));
@@ -1693,7 +1693,7 @@ TokenStream::getTokenInternal(Modifier modifier)
 void
 TokenStream::onError()
 {
-    flags |= TSF_HAD_ERROR;
+    flags.hadError = true;
 #ifdef DEBUG
     /*
      * Poisoning userbuf on error establishes an invariant: once an erroneous
