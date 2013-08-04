@@ -5310,9 +5310,9 @@ Parser<ParseHandler>::unaryExpr()
         return unaryOpExpr(PNK_NOT, JSOP_NOT, begin);
       case TOK_BITNOT:
         return unaryOpExpr(PNK_BITNOT, JSOP_BITNOT, begin);
-      case TOK_PLUS:
+      case TOK_ADD:
         return unaryOpExpr(PNK_POS, JSOP_POS, begin);
-      case TOK_MINUS:
+      case TOK_SUB:
         return unaryOpExpr(PNK_NEG, JSOP_NEG, begin);
 
       case TOK_INC:
