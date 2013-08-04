@@ -102,9 +102,11 @@ nsScriptError::Init(const nsAString& message,
                     uint32_t flags,
                     const char *category)
 {
-    nsDependentCString c(category);
     return InitWithWindowID(message, sourceName, sourceLine, lineNumber,
-                            columnNumber, flags, c, 0);
+                            columnNumber, flags,
+                            category ? nsDependentCString(category)
+                                     : EmptyCString(),
+                            0);
 }
 
 NS_IMETHODIMP
