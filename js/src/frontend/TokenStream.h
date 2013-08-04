@@ -315,16 +315,6 @@ struct Token {
     }
 };
 
-enum TokenStreamFlags
-{
-    TSF_EOF = 0x01,             /* hit end of file */
-    TSF_EOL = 0x02,             /* an EOL was hit in whitespace or a multi-line comment */
-    TSF_UNEXPECTED_EOF = 0x04,  /* unexpected end of input, i.e. TOK_EOF not at top-level. */
-    TSF_DIRTYLINE = 0x08,       /* non-whitespace since start of line */
-    TSF_OCTAL_CHAR = 0x10,      /* observed a octal character escape */
-    TSF_HAD_ERROR = 0x20        /* returned TOK_ERROR from getToken */
-};
-
 struct CompileError {
     JSContext *cx;
     JSErrorReport report;
@@ -424,18 +414,17 @@ class MOZ_STACK_CLASS TokenStream
     JSPrincipals *getOriginPrincipals() const { return originPrincipals; }
     JSVersion versionNumber() const { return VersionNumber(options().version); }
     JSVersion versionWithFlags() const { return options().version; }
-    bool hadError() const { return !!(flags & TSF_HAD_ERROR); }
 
     bool isCurrentTokenAssignment() const {
         return TokenKindIsAssignment(currentToken().type);
     }
 
-    /* Flag methods. */
-    void setUnexpectedEOF(bool enabled = true) { setFlag(enabled, TSF_UNEXPECTED_EOF); }
-
-    bool isUnexpectedEOF() const { return !!(flags & TSF_UNEXPECTED_EOF); }
-    bool isEOF() const { return !!(flags & TSF_EOF); }
-    bool sawOctalEscape() const { return !!(flags & TSF_OCTAL_CHAR); }
+    // Flag methods.
+    bool isEOF() const { return flags.isEOF; }
+    void setUnexpectedEOF() { flags.isUnexpectedEOF = true; }
+    bool isUnexpectedEOF() const { return flags.isUnexpectedEOF; }
+    bool sawOctalEscape() const { return flags.sawOctalEscape; }
+    bool hadError() const { return flags.hadError; }
 
     // TokenStream-specific error reporters.
     bool reportError(unsigned errorNumber, ...);
@@ -464,12 +453,19 @@ class MOZ_STACK_CLASS TokenStream
     static JSAtom *atomize(ExclusiveContext *cx, CharBuffer &cb);
     bool putIdentInTokenbuf(const jschar *identStart);
 
-    void setFlag(bool enabled, TokenStreamFlags flag) {
-        if (enabled)
-            flags |= flag;
-        else
-            flags &= ~flag;
-    }
+    struct Flags
+    {
+        bool isEOF:1;           // Hit end of file.
+        bool isUnexpectedEOF:1; // Unexpected end of input, i.e. TOK_EOF not at top-level.
+        bool sawEOL:1;          // An EOL was hit in whitespace or a multi-line comment.
+        bool isDirtyLine:1;     // Non-whitespace since start of line.
+        bool sawOctalEscape:1;  // Saw an octal character escape.
+        bool hadError:1;        // Returned TOK_ERROR from getToken.
+
+        Flags()
+          : isEOF(), isUnexpectedEOF(), sawEOL(), isDirtyLine(), sawOctalEscape(), hadError()
+        {}
+    };
 
   public:
     // Sometimes the parser needs to modify how tokens are created.
@@ -528,11 +524,11 @@ class MOZ_STACK_CLASS TokenStream
          * This is the only place TOK_EOL is produced.  No token with TOK_EOL
          * is created, just a TOK_EOL TokenKind is returned.
          */
-        flags &= ~TSF_EOL;
+        flags.sawEOL = false;
         TokenKind tt = getToken(modifier);
-        if (flags & TSF_EOL) {
+        if (flags.sawEOL) {
             tt = TOK_EOL;
-            flags &= ~TSF_EOL;
+            flags.sawEOL = false;
         }
         ungetToken();
         return tt;
@@ -579,7 +575,7 @@ class MOZ_STACK_CLASS TokenStream
         Position(const Position&) MOZ_DELETE;
         friend class TokenStream;
         const jschar *buf;
-        unsigned flags;
+        Flags flags;
         unsigned lineno;
         const jschar *linebase;
         const jschar *prevLinebase;
@@ -712,8 +708,8 @@ class MOZ_STACK_CLASS TokenStream
      * This is the low-level interface to the JS source code buffer.  It just
      * gets raw chars, basically.  TokenStreams functions are layered on top
      * and do some extra stuff like converting all EOL sequences to '\n',
-     * tracking the line number, and setting the TSF_EOF flag.  (The "raw" in
-     * "raw chars" refers to the lack of EOL sequence normalization.)
+     * tracking the line number, and setting |flags.isEOF|.  (The "raw" in "raw
+     * chars" refers to the lack of EOL sequence normalization.)
      */
     class TokenBuf {
       public:
@@ -849,7 +845,7 @@ class MOZ_STACK_CLASS TokenStream
     unsigned            cursor;         /* index of last parsed token */
     unsigned            lookahead;      /* count of lookahead tokens */
     unsigned            lineno;         /* current line number */
-    unsigned            flags;          /* flags -- see above */
+    Flags               flags;          /* flags -- see above */
     const jschar        *linebase;      /* start of current line;  points into userbuf */
     const jschar        *prevLinebase;  /* start of previous line;  NULL if on the first line */
     TokenBuf            userbuf;        /* user input buffer */
