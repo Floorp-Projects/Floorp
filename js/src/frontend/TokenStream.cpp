@@ -1465,7 +1465,7 @@ TokenStream::getTokenInternal(Modifier modifier)
         }
         ungetCharIgnoreEOL(c);
         tt = TOK_DOT;
-        break;
+        goto out;
 
       case '=':
         if (matchChar('='))
@@ -1474,14 +1474,14 @@ TokenStream::getTokenInternal(Modifier modifier)
             tt = TOK_ARROW;
         else
             tt = TOK_ASSIGN;
-        break;
+        goto out;
 
       case '+':
         if (matchChar('+'))
             tt = TOK_INC;
         else
             tt = matchChar('=') ? TOK_ADDASSIGN : TOK_PLUS;
-        break;
+        goto out;
 
       case '\\':
         hadUnicodeEscape = matchUnicodeEscapeIdStart(&qc);
@@ -1496,25 +1496,25 @@ TokenStream::getTokenInternal(Modifier modifier)
             tt = TOK_OR;
         else
             tt = matchChar('=') ? TOK_BITORASSIGN : TOK_BITOR;
-        break;
+        goto out;
 
       case '^':
         tt = matchChar('=') ? TOK_BITXORASSIGN : TOK_BITXOR;
-        break;
+        goto out;
 
       case '&':
         if (matchChar('&'))
             tt = TOK_AND;
         else
             tt = matchChar('=') ? TOK_BITANDASSIGN : TOK_BITAND;
-        break;
+        goto out;
 
       case '!':
         if (matchChar('='))
             tt = matchChar('=') ? TOK_STRICTNE : TOK_NE;
         else
             tt = TOK_NOT;
-        break;
+        goto out;
 
       case '<':
         /* NB: treat HTML begin-comment as comment-till-end-of-line */
@@ -1531,7 +1531,7 @@ TokenStream::getTokenInternal(Modifier modifier)
         } else {
             tt = matchChar('=') ? TOK_LE : TOK_LT;
         }
-        break;
+        goto out;
 
       case '>':
         if (matchChar('>')) {
@@ -1542,11 +1542,11 @@ TokenStream::getTokenInternal(Modifier modifier)
         } else {
             tt = matchChar('=') ? TOK_GE : TOK_GT;
         }
-        break;
+        goto out;
 
       case '*':
         tt = matchChar('=') ? TOK_MULASSIGN : TOK_STAR;
-        break;
+        goto out;
 
       case '/':
         /*
@@ -1648,15 +1648,15 @@ TokenStream::getTokenInternal(Modifier modifier)
             }
             tp->setRegExpFlags(reflags);
             tt = TOK_REGEXP;
-            break;
+            goto out;
         }
 
         tt = matchChar('=') ? TOK_DIVASSIGN : TOK_DIV;
-        break;
+        goto out;
 
       case '%':
         tt = matchChar('=') ? TOK_MODASSIGN : TOK_MOD;
-        break;
+        goto out;
 
       case '-':
         if (matchChar('-')) {
@@ -1666,13 +1666,15 @@ TokenStream::getTokenInternal(Modifier modifier)
         } else {
             tt = matchChar('=') ? TOK_SUBASSIGN : TOK_MINUS;
         }
-        break;
+        goto out;
 
       badchar:
       default:
         reportError(JSMSG_ILLEGAL_CHARACTER);
         goto error;
     }
+
+    MOZ_ASSUME_UNREACHABLE("should have jumped to |out| or |error|");
 
   out:
     flags.isDirtyLine = true;
