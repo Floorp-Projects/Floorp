@@ -52,7 +52,13 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
             'd3d9/DeviceManagerD3D9.h',
             'd3d9/LayerManagerD3D9.h',
         ]
+        EXPORTS.mozilla.layers += [
+            'CompositorD3D9.h',
+            'TextureD3D9.h',
+        ]
         CPP_SOURCES += [
+            'CompositorD3D9.cpp',
+            'TextureD3D9.cpp',
             'LayerManagerD3D9.cpp',
             'ThebesLayerD3D9.cpp',
             'ContainerLayerD3D9.cpp',
