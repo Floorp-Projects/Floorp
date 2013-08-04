@@ -421,8 +421,6 @@ class MOZ_STACK_CLASS TokenStream
 
     // Flag methods.
     bool isEOF() const { return flags.isEOF; }
-    void setUnexpectedEOF() { flags.isUnexpectedEOF = true; }
-    bool isUnexpectedEOF() const { return flags.isUnexpectedEOF; }
     bool sawOctalEscape() const { return flags.sawOctalEscape; }
     bool hadError() const { return flags.hadError; }
 
@@ -456,14 +454,13 @@ class MOZ_STACK_CLASS TokenStream
     struct Flags
     {
         bool isEOF:1;           // Hit end of file.
-        bool isUnexpectedEOF:1; // Unexpected end of input, i.e. TOK_EOF not at top-level.
         bool sawEOL:1;          // An EOL was hit in whitespace or a multi-line comment.
         bool isDirtyLine:1;     // Non-whitespace since start of line.
         bool sawOctalEscape:1;  // Saw an octal character escape.
         bool hadError:1;        // Returned TOK_ERROR from getToken.
 
         Flags()
-          : isEOF(), isUnexpectedEOF(), sawEOL(), isDirtyLine(), sawOctalEscape(), hadError()
+          : isEOF(), sawEOL(), isDirtyLine(), sawOctalEscape(), hadError()
         {}
     };
 

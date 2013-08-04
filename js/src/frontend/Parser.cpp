@@ -398,6 +398,7 @@ Parser<ParseHandler>::Parser(ExclusiveContext *cx, LifoAlloc *alloc,
     keepAtoms(cx->perThreadData),
     foldConstants(foldConstants),
     abortedSyntaxParse(false),
+    isUnexpectedEOF_(false),
     handler(cx, *alloc, tokenStream, foldConstants, syntaxParser, lazyOuterFunction)
 {
     cx->perThreadData->activeCompilations++;
@@ -2544,7 +2545,7 @@ Parser<ParseHandler>::statements()
         if (tt <= TOK_EOF || tt == TOK_RC) {
             if (tt == TOK_ERROR) {
                 if (tokenStream.isEOF())
-                    tokenStream.setUnexpectedEOF();
+                    isUnexpectedEOF_ = true;
                 return null();
             }
             break;
@@ -2552,7 +2553,7 @@ Parser<ParseHandler>::statements()
         Node next = statement(canHaveDirectives);
         if (!next) {
             if (tokenStream.isEOF())
-                tokenStream.setUnexpectedEOF();
+                isUnexpectedEOF_ = true;
             return null();
         }
 
