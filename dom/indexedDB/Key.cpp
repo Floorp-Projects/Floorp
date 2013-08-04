@@ -106,8 +106,8 @@ Key::EncodeJSValInternal(JSContext* aCx, const jsval aVal,
 {
   NS_ENSURE_TRUE(aRecursionDepth < MaxRecursionDepth, NS_ERROR_DOM_INDEXEDDB_DATA_ERR);
 
-  MOZ_STATIC_ASSERT(eMaxType * MaxArrayCollapse < 256,
-                    "Unable to encode jsvals.");
+  static_assert(eMaxType * MaxArrayCollapse < 256,
+                "Unable to encode jsvals.");
 
   if (JSVAL_IS_STRING(aVal)) {
     nsDependentJSString str;

@@ -24,16 +24,17 @@ dl.google.com: did not receive HSTS header
 docs.google.com: did not receive HSTS header
 drive.google.com: did not receive HSTS header
 dropcam.com: did not receive HSTS header
-emailprivacytester.com: max-age too low: 8640000
+emailprivacytester.com: [Exception... "Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIStrictTransportSecurityService.processStsHeader]"  nsresult: "0x80004005 (NS_ERROR_FAILURE)"  location: "JS frame :: /builds/slave/m-cen-l64-hsts-000000000000000/getHSTSPreloadList.js :: processStsHeader :: line 123"  data: no]
 encrypted.google.com: did not receive HSTS header
 epoxate.com: max-age too low: 259200
 fatzebra.com.au: did not receive HSTS header
 fj.simple.com: did not receive HSTS header
 gmail.com: did not receive HSTS header
+gocardless.com: [Exception... "Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIStrictTransportSecurityService.processStsHeader]"  nsresult: "0x80004005 (NS_ERROR_FAILURE)"  location: "JS frame :: /builds/slave/m-cen-l64-hsts-000000000000000/getHSTSPreloadList.js :: processStsHeader :: line 123"  data: no]
 googlemail.com: did not receive HSTS header
 googleplex.com: could not connect to host
 greplin.com: did not receive HSTS header
-grepular.com: max-age too low: 8640000
+grepular.com: [Exception... "Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIStrictTransportSecurityService.processStsHeader]"  nsresult: "0x80004005 (NS_ERROR_FAILURE)"  location: "JS frame :: /builds/slave/m-cen-l64-hsts-000000000000000/getHSTSPreloadList.js :: processStsHeader :: line 123"  data: no]
 groups.google.com: did not receive HSTS header
 health.google.com: did not receive HSTS header
 history.google.com: did not receive HSTS header
@@ -85,6 +86,7 @@ www.dropcam.com: max-age too low: 2592000
 www.elanex.biz: did not receive HSTS header
 www.gmail.com: did not receive HSTS header
 www.googlemail.com: did not receive HSTS header
+www.gov.uk: [Exception... "Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIStrictTransportSecurityService.processStsHeader]"  nsresult: "0x80004005 (NS_ERROR_FAILURE)"  location: "JS frame :: /builds/slave/m-cen-l64-hsts-000000000000000/getHSTSPreloadList.js :: processStsHeader :: line 123"  data: no]
 www.greplin.com: did not receive HSTS header
 www.jitsi.org: did not receive HSTS header
 www.lastpass.com: did not receive HSTS header
@@ -93,6 +95,7 @@ www.logentries.com: did not receive HSTS header
 www.moneybookers.com: did not receive HSTS header
 www.neonisi.com: could not connect to host
 www.paycheckrecords.com: max-age too low: 86400
-www.paypal.com: max-age too low: 14400
+www.paypal.com: [Exception... "Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIStrictTransportSecurityService.processStsHeader]"  nsresult: "0x80004005 (NS_ERROR_FAILURE)"  location: "JS frame :: /builds/slave/m-cen-l64-hsts-000000000000000/getHSTSPreloadList.js :: processStsHeader :: line 123"  data: no]
 www.sandbox.mydigipass.com: could not connect to host
 www.surfeasy.com: did not receive HSTS header
+zoo24.de: did not receive HSTS header

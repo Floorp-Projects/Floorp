@@ -451,6 +451,8 @@ NS_IMPL_RELEASE(nsDOMFile)
 ////////////////////////////////////////////////////////////////////////////
 // nsDOMFileCC implementation
 
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsDOMFileCC)
+
 NS_IMPL_CYCLE_COLLECTION_UNLINK_0(nsDOMFileCC)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDOMFileCC)
   // We don't have anything to traverse, but some of our subclasses do.

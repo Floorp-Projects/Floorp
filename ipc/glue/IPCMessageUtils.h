@@ -16,7 +16,9 @@
 #endif
 #include "mozilla/Util.h"
 #include "mozilla/gfx/2D.h"
-#include "mozilla/StandardInteger.h"
+#include "mozilla/gfx/Point.h"
+
+#include <stdint.h>
 
 #include "nsID.h"
 #include "nsMemory.h"
@@ -722,6 +724,24 @@ struct ParamTraits<nsIntPoint>
 };
 
 template<>
+struct ParamTraits<mozilla::gfx::IntSize>
+{
+  typedef mozilla::gfx::IntSize paramType;
+
+  static void Write(Message* msg, const paramType& param)
+  {
+    WriteParam(msg, param.width);
+    WriteParam(msg, param.height);
+  }
+
+  static bool Read(const Message* msg, void** iter, paramType* result)
+  {
+    return (ReadParam(msg, iter, &result->width) &&
+            ReadParam(msg, iter, &result->height));
+  }
+};
+
+template<>
 struct ParamTraits<nsIntRect>
 {
   typedef nsIntRect paramType;
@@ -1188,6 +1208,13 @@ struct ParamTraits<mozilla::layers::CompositableType>
   : public EnumSerializer<mozilla::layers::CompositableType,
                           mozilla::layers::BUFFER_UNKNOWN,
                           mozilla::layers::BUFFER_COUNT>
+{};
+
+template <>
+struct ParamTraits<mozilla::gfx::SurfaceFormat>
+  : public EnumSerializer<mozilla::gfx::SurfaceFormat,
+                          mozilla::gfx::FORMAT_B8G8R8A8,
+                          mozilla::gfx::FORMAT_UNKNOWN>
 {};
 
 } /* namespace IPC */

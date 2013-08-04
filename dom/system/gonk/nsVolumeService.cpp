@@ -377,6 +377,7 @@ nsVolumeService::CreateFakeVolume(const nsAString& name, const nsAString& path)
   if (XRE_GetProcessType() == GeckoProcessType_Default) {
     nsRefPtr<nsVolume> vol = new nsVolume(name, path, nsIVolume::STATE_INIT, -1);
     vol->SetIsFake(true);
+    vol->LogState();
     UpdateVolume(vol.get());
     return NS_OK;
   }
@@ -398,6 +399,7 @@ nsVolumeService::SetFakeVolumeState(const nsAString& name, int32_t state)
       return NS_ERROR_NOT_AVAILABLE;
     }
     vol->SetState(state);
+    vol->LogState();
     UpdateVolume(vol.get());
     return NS_OK;
   }

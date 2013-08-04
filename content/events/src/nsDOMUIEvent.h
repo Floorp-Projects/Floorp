@@ -34,8 +34,8 @@ public:
   NS_IMETHOD_(void) Serialize(IPC::Message* aMsg, bool aSerializeInterfaceType) MOZ_OVERRIDE;
   NS_IMETHOD_(bool) Deserialize(const IPC::Message* aMsg, void** aIter) MOZ_OVERRIDE;
 
-  static nsIntPoint CalculateScreenPoint(nsPresContext* aPresContext,
-                                         nsEvent* aEvent)
+  static nsIntPoint
+  CalculateScreenPoint(nsPresContext* aPresContext, nsEvent* aEvent)
   {
     if (!aEvent ||
         (aEvent->eventStructType != NS_MOUSE_EVENT &&
@@ -46,12 +46,13 @@ public:
       return nsIntPoint(0, 0);
     }
 
-    if (!((nsGUIEvent*)aEvent)->widget ) {
-      return aEvent->refPoint;
+    nsGUIEvent* event = static_cast<nsGUIEvent*>(aEvent);
+    if (!event->widget) {
+      return mozilla::LayoutDeviceIntPoint::ToUntyped(aEvent->refPoint);
     }
 
-    nsIntPoint offset = aEvent->refPoint +
-                        ((nsGUIEvent*)aEvent)->widget->WidgetToScreenOffset();
+    mozilla::LayoutDeviceIntPoint offset = aEvent->refPoint +
+      mozilla::LayoutDeviceIntPoint::FromUntyped(event->widget->WidgetToScreenOffset());
     nscoord factor = aPresContext->DeviceContext()->UnscaledAppUnitsPerDevPixel();
     return nsIntPoint(nsPresContext::AppUnitsToIntCSSPixels(offset.x * factor),
                       nsPresContext::AppUnitsToIntCSSPixels(offset.y * factor));

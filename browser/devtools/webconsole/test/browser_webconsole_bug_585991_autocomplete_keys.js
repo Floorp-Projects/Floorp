@@ -69,7 +69,6 @@ function consoleOpened(aHud) {
     is(popup.selectedIndex, 17,
        "Index of the first item from bottom is selected.");
     EventUtils.synthesizeKey("VK_DOWN", {});
-    EventUtils.synthesizeKey("VK_DOWN", {});
 
     let prefix = jsterm.inputNode.value.replace(/[\S]/g, " ");
 
@@ -123,7 +122,6 @@ function popupHideAfterTab()
 
     is(popup.selectedIndex, 17, "First index from bottom is selected");
     EventUtils.synthesizeKey("VK_DOWN", {});
-    EventUtils.synthesizeKey("VK_DOWN", {});
 
     let prefix = jsterm.inputNode.value.replace(/[\S]/g, " ");
 
@@ -168,7 +166,6 @@ function testReturnKey()
     is(popup.itemCount, 18, "popup.itemCount is correct");
 
     is(popup.selectedIndex, 17, "First index from bottom is selected");
-    EventUtils.synthesizeKey("VK_DOWN", {});
     EventUtils.synthesizeKey("VK_DOWN", {});
 
     let prefix = jsterm.inputNode.value.replace(/[\S]/g, " ");
@@ -292,7 +289,6 @@ function testCompletionInText()
     ok(popup.isOpen, "popup is open");
     is(popup.itemCount, 2, "popup.itemCount is correct");
 
-    EventUtils.synthesizeKey("VK_DOWN", {});
     EventUtils.synthesizeKey("VK_DOWN", {});
     is(popup.selectedIndex, 0, "popup.selectedIndex is correct");
     ok(!completeNode.value, "completeNode.value is empty");

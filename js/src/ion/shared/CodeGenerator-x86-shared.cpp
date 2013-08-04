@@ -16,6 +16,7 @@
 #include "ion/IonCompartment.h"
 #include "ion/IonFrames.h"
 #include "ion/ParallelFunctions.h"
+#include "ion/RangeAnalysis.h"
 
 #include "ion/shared/CodeGenerator-shared-inl.h"
 
@@ -30,12 +31,6 @@ namespace ion {
 CodeGeneratorX86Shared::CodeGeneratorX86Shared(MIRGenerator *gen, LIRGraph *graph, MacroAssembler *masm)
   : CodeGeneratorShared(gen, graph, masm)
 {
-}
-
-double
-test(double x, double y)
-{
-    return x + y;
 }
 
 bool
@@ -251,9 +246,7 @@ CodeGeneratorX86Shared::generateOutOfLineCode()
         // Push the frame size, so the handler can recover the IonScript.
         masm.push(Imm32(frameSize()));
 
-        IonCompartment *ion = GetIonContext()->compartment->ionCompartment();
-        IonCode *handler = ion->getGenericBailoutHandler();
-
+        IonCode *handler = gen->ionRuntime()->getGenericBailoutHandler();
         masm.jmp(handler->raw(), Relocation::IONCODE);
     }
 
@@ -387,35 +380,43 @@ CodeGeneratorX86Shared::visitMinMaxD(LMinMaxD *ins)
 
     JS_ASSERT(first == output);
 
-    Assembler::Condition cond = ins->mir()->isMax()
-                               ? Assembler::Above
-                               : Assembler::Below;
-    Label nan, equal, returnSecond, done;
+    Label done, nan, minMaxInst;
 
-    masm.ucomisd(second, first);
-    masm.j(Assembler::Parity, &nan); // first or second is NaN, result is NaN.
-    masm.j(Assembler::Equal, &equal); // make sure we handle -0 and 0 right.
-    masm.j(cond, &returnSecond);
-    masm.jmp(&done);
+    // Do a ucomisd to catch equality and NaNs, which both require special
+    // handling. If the operands are ordered and inequal, we branch straight to
+    // the min/max instruction. If we wanted, we could also branch for less-than
+    // or greater-than here instead of using min/max, however these conditions
+    // will sometimes be hard on the branch predictor.
+    masm.ucomisd(first, second);
+    masm.j(Assembler::NotEqual, &minMaxInst);
+    if (!ins->mir()->range() || ins->mir()->range()->isInfinite())
+        masm.j(Assembler::Parity, &nan);
 
-    // Check for zero.
-    masm.bind(&equal);
-    masm.xorpd(ScratchFloatReg, ScratchFloatReg);
-    masm.ucomisd(first, ScratchFloatReg);
-    masm.j(Assembler::NotEqual, &done); // first wasn't 0 or -0, so just return it.
-    // So now both operands are either -0 or 0.
+    // Ordered and equal. The operands are bit-identical unless they are zero
+    // and negative zero. These instructions merge the sign bits in that
+    // case, and are no-ops otherwise.
     if (ins->mir()->isMax())
-        masm.addsd(second, first); // -0 + -0 = -0 and -0 + 0 = 0.
+        masm.andpd(second, first);
     else
-        masm.orpd(second, first); // This just ors the sign bit.
-    masm.jmp(&done);
+        masm.orpd(second, first);
+    masm.jump(&done);
 
-    masm.bind(&nan);
-    masm.loadStaticDouble(&js_NaN, output);
-    masm.jmp(&done);
+    // x86's min/max are not symmetric; if either operand is a NaN, they return
+    // the read-only operand. We need to return a NaN if either operand is a
+    // NaN, so we explicitly check for a NaN in the read-write operand.
+    if (!ins->mir()->range() || ins->mir()->range()->isInfinite()) {
+        masm.bind(&nan);
+        masm.ucomisd(first, first);
+        masm.j(Assembler::Parity, &done);
+    }
 
-    masm.bind(&returnSecond);
-    masm.movsd(second, output);
+    // When the values are inequal, or second is NaN, x86's min and max will
+    // return the value we need.
+    masm.bind(&minMaxInst);
+    if (ins->mir()->isMax())
+        masm.maxsd(second, first);
+    else
+        masm.minsd(second, first);
 
     masm.bind(&done);
     return true;
@@ -651,6 +652,31 @@ CodeGeneratorX86Shared::visitMulI(LMulI *ins)
     return true;
 }
 
+class ReturnZero : public OutOfLineCodeBase<CodeGeneratorX86Shared>
+{
+    Register reg_;
+
+  public:
+    explicit ReturnZero(Register reg)
+      : reg_(reg)
+    { }
+
+    virtual bool accept(CodeGeneratorX86Shared *codegen) {
+        return codegen->visitReturnZero(this);
+    }
+    Register reg() const {
+        return reg_;
+    }
+};
+
+bool
+CodeGeneratorX86Shared::visitReturnZero(ReturnZero *ool)
+{
+    masm.xorl(ool->reg(), ool->reg());
+    masm.jmp(ool->rejoin());
+    return true;
+}
+
 bool
 CodeGeneratorX86Shared::visitUDivOrMod(LUDivOrMod *ins)
 {
@@ -660,19 +686,17 @@ CodeGeneratorX86Shared::visitUDivOrMod(LUDivOrMod *ins)
 
     JS_ASSERT_IF(output == eax, ToRegister(ins->remainder()) == edx);
 
-    Label afterDiv;
-
     masm.testl(rhs, rhs);
-    Label notzero;
-    masm.j(Assembler::NonZero, &notzero);
-    masm.xorl(output, output);
-    masm.jmp(&afterDiv);
-    masm.bind(&notzero);
+
+    ReturnZero *ool = new ReturnZero(output);
+    masm.j(Assembler::Zero, ool->entry());
+    if (!addOutOfLineCode(ool))
+        return false;
 
     masm.xorl(edx, edx);
     masm.udiv(rhs);
 
-    masm.bind(&afterDiv);
+    masm.bind(ool->rejoin());
 
     return true;
 }
@@ -750,17 +774,16 @@ CodeGeneratorX86Shared::visitDivI(LDivI *ins)
     JS_ASSERT(output == eax);
 
     Label done;
+    ReturnZero *ool = NULL;
 
     // Handle divide by zero.
     if (mir->canBeDivideByZero()) {
         masm.testl(rhs, rhs);
         if (mir->isTruncated()) {
             // Truncated division by zero is zero (Infinity|0 == 0)
-            Label notzero;
-            masm.j(Assembler::NonZero, &notzero);
-            masm.xorl(output, output);
-            masm.jmp(&done);
-            masm.bind(&notzero);
+            if (!ool)
+                ool = new ReturnZero(output);
+            masm.j(Assembler::Zero, ool->entry());
         } else {
             JS_ASSERT(mir->fallible());
             if (!bailoutIf(Assembler::Zero, ins->snapshot()))
@@ -810,6 +833,12 @@ CodeGeneratorX86Shared::visitDivI(LDivI *ins)
 
     masm.bind(&done);
 
+    if (ool) {
+        if (!addOutOfLineCode(ool))
+            return false;
+        masm.bind(ool->rejoin());
+    }
+
     return true;
 }
 
@@ -843,6 +872,47 @@ CodeGeneratorX86Shared::visitModPowTwoI(LModPowTwoI *ins)
 
 }
 
+class ModOverflowCheck : public OutOfLineCodeBase<CodeGeneratorX86Shared>
+{
+    Label done_;
+    LModI *ins_;
+    Register rhs_;
+
+  public:
+    explicit ModOverflowCheck(LModI *ins, Register rhs)
+      : ins_(ins), rhs_(rhs)
+    { }
+
+    virtual bool accept(CodeGeneratorX86Shared *codegen) {
+        return codegen->visitModOverflowCheck(this);
+    }
+    Label *done() {
+        return &done_;
+    }
+    LModI *ins() const {
+        return ins_;
+    }
+    Register rhs() const {
+        return rhs_;
+    }
+};
+
+bool
+CodeGeneratorX86Shared::visitModOverflowCheck(ModOverflowCheck *ool)
+{
+    masm.cmpl(ool->rhs(), Imm32(-1));
+    if (ool->ins()->mir()->isTruncated()) {
+        masm.j(Assembler::NotEqual, ool->rejoin());
+        masm.xorl(edx, edx);
+        masm.jmp(ool->done());
+    } else {
+        if (!bailoutIf(Assembler::Equal, ool->ins()->snapshot()))
+            return false;
+       masm.jmp(ool->rejoin());
+    }
+    return true;
+}
+
 bool
 CodeGeneratorX86Shared::visitModI(LModI *ins)
 {
@@ -861,16 +931,16 @@ CodeGeneratorX86Shared::visitModI(LModI *ins)
     }
 
     Label done;
+    ReturnZero *ool = NULL;
+    ModOverflowCheck *overflow = NULL;
 
     // Prevent divide by zero.
     if (ins->mir()->canBeDivideByZero()) {
         masm.testl(rhs, rhs);
         if (ins->mir()->isTruncated()) {
-            Label notzero;
-            masm.j(Assembler::NonZero, &notzero);
-            masm.xorl(edx, edx);
-            masm.jmp(&done);
-            masm.bind(&notzero);
+            if (!ool)
+                ool = new ReturnZero(edx);
+            masm.j(Assembler::Zero, ool->entry());
         } else {
             if (!bailoutIf(Assembler::Zero, ins->snapshot()))
                 return false;
@@ -920,18 +990,9 @@ CodeGeneratorX86Shared::visitModI(LModI *ins)
         // Prevent an integer overflow exception from -2147483648 % -1
         Label notmin;
         masm.cmpl(lhs, Imm32(INT32_MIN));
-        masm.j(Assembler::NotEqual, &notmin);
-        masm.cmpl(rhs, Imm32(-1));
-        if (ins->mir()->isTruncated()) {
-            masm.j(Assembler::NotEqual, &notmin);
-            masm.xorl(edx, edx);
-            masm.jmp(&done);
-        } else {
-            if (!bailoutIf(Assembler::Equal, ins->snapshot()))
-                return false;
-        }
-        masm.bind(&notmin);
-
+        overflow = new ModOverflowCheck(ins, rhs);
+        masm.j(Assembler::Equal, overflow->entry());
+        masm.bind(overflow->rejoin());
         masm.cdq();
         masm.idiv(rhs);
 
@@ -944,6 +1005,19 @@ CodeGeneratorX86Shared::visitModI(LModI *ins)
     }
 
     masm.bind(&done);
+
+    if (overflow) {
+        if (!addOutOfLineCode(overflow))
+            return false;
+        masm.bind(overflow->done());
+    }
+
+    if (ool) {
+        if (!addOutOfLineCode(ool))
+            return false;
+        masm.bind(ool->rejoin());
+    }
+
     return true;
 }
 
@@ -1409,7 +1483,7 @@ CodeGeneratorX86Shared::generateInvalidateEpilogue()
 
     // Push the Ion script onto the stack (when we determine what that pointer is).
     invalidateEpilogueData_ = masm.pushWithPatch(ImmWord(uintptr_t(-1)));
-    IonCode *thunk = GetIonContext()->compartment->ionCompartment()->getInvalidationThunk();
+    IonCode *thunk = gen->ionRuntime()->getInvalidationThunk();
 
     masm.call(thunk);
 

@@ -61,21 +61,21 @@ AudioChannelAgent::InitInternal(int32_t aChannelType,
 {
   // We syncd the enum of channel type between nsIAudioChannelAgent.idl and
   // AudioChannelCommon.h the same.
-  MOZ_STATIC_ASSERT(static_cast<AudioChannelType>(AUDIO_AGENT_CHANNEL_NORMAL) ==
-                    AUDIO_CHANNEL_NORMAL &&
-                    static_cast<AudioChannelType>(AUDIO_AGENT_CHANNEL_CONTENT) ==
-                    AUDIO_CHANNEL_CONTENT &&
-                    static_cast<AudioChannelType>(AUDIO_AGENT_CHANNEL_NOTIFICATION) ==
-                    AUDIO_CHANNEL_NOTIFICATION &&
-                    static_cast<AudioChannelType>(AUDIO_AGENT_CHANNEL_ALARM) ==
-                    AUDIO_CHANNEL_ALARM &&
-                    static_cast<AudioChannelType>(AUDIO_AGENT_CHANNEL_TELEPHONY) ==
-                    AUDIO_CHANNEL_TELEPHONY &&
-                    static_cast<AudioChannelType>(AUDIO_AGENT_CHANNEL_RINGER) ==
-                    AUDIO_CHANNEL_RINGER &&
-                    static_cast<AudioChannelType>(AUDIO_AGENT_CHANNEL_PUBLICNOTIFICATION) ==
-                    AUDIO_CHANNEL_PUBLICNOTIFICATION,
-                    "Enum of channel on nsIAudioChannelAgent.idl should be the same with AudioChannelCommon.h");
+  static_assert(static_cast<AudioChannelType>(AUDIO_AGENT_CHANNEL_NORMAL) ==
+                AUDIO_CHANNEL_NORMAL &&
+                static_cast<AudioChannelType>(AUDIO_AGENT_CHANNEL_CONTENT) ==
+                AUDIO_CHANNEL_CONTENT &&
+                static_cast<AudioChannelType>(AUDIO_AGENT_CHANNEL_NOTIFICATION) ==
+                AUDIO_CHANNEL_NOTIFICATION &&
+                static_cast<AudioChannelType>(AUDIO_AGENT_CHANNEL_ALARM) ==
+                AUDIO_CHANNEL_ALARM &&
+                static_cast<AudioChannelType>(AUDIO_AGENT_CHANNEL_TELEPHONY) ==
+                AUDIO_CHANNEL_TELEPHONY &&
+                static_cast<AudioChannelType>(AUDIO_AGENT_CHANNEL_RINGER) ==
+                AUDIO_CHANNEL_RINGER &&
+                static_cast<AudioChannelType>(AUDIO_AGENT_CHANNEL_PUBLICNOTIFICATION) ==
+                AUDIO_CHANNEL_PUBLICNOTIFICATION,
+                "Enum of channel on nsIAudioChannelAgent.idl should be the same with AudioChannelCommon.h");
 
   if (mAudioChannelType != AUDIO_AGENT_CHANNEL_ERROR ||
       aChannelType > AUDIO_AGENT_CHANNEL_PUBLICNOTIFICATION ||

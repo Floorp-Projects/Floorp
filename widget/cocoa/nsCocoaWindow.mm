@@ -1557,6 +1557,15 @@ nsCocoaWindow::BackingScaleFactorChanged()
   }
 }
 
+int32_t
+nsCocoaWindow::RoundsWidgetCoordinatesTo()
+{
+  if (BackingScaleFactor() == 2.0) {
+    return 2;
+  }
+  return 1;
+}
+
 NS_IMETHODIMP nsCocoaWindow::SetCursor(nsCursor aCursor)
 {
   if (mPopupContentView)

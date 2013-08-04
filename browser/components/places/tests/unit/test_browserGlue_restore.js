@@ -43,6 +43,7 @@ function run_test() {
 
   // Create our JSON backup copying bookmarks.glue.json to the profile
   // folder.  It will be ignored.
+  remove_all_JSON_backups();
   create_JSON_backup("bookmarks.glue.json");
 
   // Remove current database file.

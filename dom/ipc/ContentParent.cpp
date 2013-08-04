@@ -849,6 +849,13 @@ ContentParent::ShutDownProcess(bool aCloseWithError)
   // NB: must MarkAsDead() here so that this isn't accidentally
   // returned from Get*() while in the midst of shutdown.
   MarkAsDead();
+
+  // A ContentParent object might not get freed until after XPCOM shutdown has
+  // shut down the cycle collector.  But by then it's too late to release any
+  // CC'ed objects, so we need to null them out here, while we still can.  See
+  // bug 899761.
+  mMemoryReporters.Clear();
+  mMessageManager = nullptr;
 }
 
 void
@@ -1757,7 +1764,15 @@ ContentParent::AllocPBrowserParent(const IPCTabContext& aContext,
         return nullptr;
     }
 
-    TabParent* parent = new TabParent(this, TabContext(aContext));
+    MaybeInvalidTabContext tc(aContext);
+    if (!tc.IsValid()) {
+        NS_ERROR(nsPrintfCString("Child passed us an invalid TabContext.  (%s)  "
+                                 "Aborting AllocPBrowserParent.",
+                                 tc.GetInvalidReason()).get());
+        return nullptr;
+    }
+
+    TabParent* parent = new TabParent(this, tc.GetTabContext());
 
     // We release this ref in DeallocPBrowserParent()
     NS_ADDREF(parent);

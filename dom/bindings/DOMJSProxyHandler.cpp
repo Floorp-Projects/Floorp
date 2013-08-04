@@ -216,7 +216,7 @@ DOMProxyHandler::delete_(JSContext* cx, JS::Handle<JSObject*> proxy,
   JS::Rooted<JSObject*> expando(cx);
   if (!xpc::WrapperFactory::IsXrayWrapper(proxy) && (expando = GetExpandoObject(proxy))) {
     JS::Rooted<Value> v(cx);
-    if (!JS_DeletePropertyById2(cx, expando, id, v.address()) ||
+    if (!JS_DeletePropertyById2(cx, expando, id, &v) ||
         !JS_ValueToBoolean(cx, v, &b)) {
       return false;
     }
@@ -230,7 +230,7 @@ bool
 DOMProxyHandler::enumerate(JSContext* cx, JS::Handle<JSObject*> proxy, AutoIdVector& props)
 {
   JS::Rooted<JSObject*> proto(cx);
-  if (!JS_GetPrototype(cx, proxy, proto.address())) {
+  if (!JS_GetPrototype(cx, proxy, &proto))  {
     return false;
   }
   return getOwnPropertyNames(cx, proxy, props) &&

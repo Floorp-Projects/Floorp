@@ -32,4 +32,11 @@
         <extra android:name="resource"
                android:value="preferences_vendor"/>
     </header>
+
+    <header android:fragment="org.mozilla.gecko.GeckoPreferenceFragment"
+            android:title="@string/pref_header_devtools">
+        <extra android:name="resource"
+               android:value="preferences_devtools"/>
+    </header>
+
 </preference-headers>

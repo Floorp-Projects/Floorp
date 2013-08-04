@@ -10,7 +10,7 @@
 extern "C" {
 #endif
 
-#include "mozilla/StandardInteger.h"
+#include <stdint.h>
 
 /**
  * md4sum - computes the MD4 sum over the input buffer per RFC 1320

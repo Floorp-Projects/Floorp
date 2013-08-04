@@ -22,12 +22,14 @@ public class PromptService implements GeckoEventResponder {
 
     public PromptService(Context context) {
         GeckoAppShell.getEventDispatcher().registerEventListener("Prompt:Show", this);
+        GeckoAppShell.getEventDispatcher().registerEventListener("Prompt:ShowTop", this);
         mPromptQueue = new ConcurrentLinkedQueue<String>();
         mContext = context;
     }
 
     void destroy() {
         GeckoAppShell.getEventDispatcher().unregisterEventListener("Prompt:Show", this);
+        GeckoAppShell.getEventDispatcher().unregisterEventListener("Prompt:ShowTop", this);
     }
 
     public void show(final String aTitle, final String aText, final Prompt.PromptListItem[] aMenuList,

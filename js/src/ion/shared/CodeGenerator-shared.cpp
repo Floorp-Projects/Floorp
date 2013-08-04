@@ -428,6 +428,10 @@ CodeGeneratorShared::callVM(const VMFunction &fun, LInstruction *ins, const Regi
     // Different execution modes have different sets of VM functions.
     JS_ASSERT(fun.executionMode == gen->info().executionMode());
 
+    // If we're calling a function with an out parameter type of double, make
+    // sure we have an FPU.
+    JS_ASSERT_IF(fun.outParam == Type_Double, GetIonContext()->runtime->jitSupportsFloatingPoint);
+
 #ifdef DEBUG
     if (ins->mirRaw()) {
         JS_ASSERT(ins->mirRaw()->isInstruction());
@@ -445,8 +449,7 @@ CodeGeneratorShared::callVM(const VMFunction &fun, LInstruction *ins, const Regi
 #endif
 
     // Get the wrapper of the VM function.
-    IonCompartment *ion = GetIonContext()->compartment->ionCompartment();
-    IonCode *wrapper = ion->getVMWrapper(fun);
+    IonCode *wrapper = gen->ionRuntime()->getVMWrapper(fun);
     if (!wrapper)
         return false;
 

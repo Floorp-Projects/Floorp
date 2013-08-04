@@ -11,12 +11,15 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 ifdef MOZ_ENABLE_GTK2
+MODULE_NAME	= nsWidgetGtk2Module
 LIBRARY_NAME	= widget_gtk2
 else
+MODULE_NAME	= nsWidgetGtk3Module
 LIBRARY_NAME	= widget_gtk3
 endif
 
 EXPORT_LIBRARY	= 1
+IS_COMPONENT	= 1
 LIBXUL_LIBRARY = 1
 FAIL_ON_WARNINGS = 1
 

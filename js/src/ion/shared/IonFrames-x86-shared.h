@@ -7,7 +7,7 @@
 #ifndef ion_shared_IonFrames_x86_shared_h
 #define ion_shared_IonFrames_x86_shared_h
 
-#include "mozilla/StandardInteger.h"
+#include <stdint.h>
 
 #include "ion/shared/IonFrames-shared.h"
 

@@ -12,19 +12,19 @@ const PREF_GETADDONS_CACHE_ENABLED = "extensions.getAddons.cache.enabled";
 Services.prefs.setBoolPref(PREF_EM_CHECK_UPDATE_SECURITY, false);
 
 Components.utils.import("resource://testing-common/httpd.js");
-var testserver;
+var testserver = new HttpServer();
+testserver.start(-1);
+gPort = testserver.identity.primaryPort;
+mapFile("/data/test_update.rdf", testserver);
+mapFile("/data/test_update.xml", testserver);
+testserver.registerDirectory("/addons/", do_get_file("addons"));
+
 const profileDir = gProfD.clone();
 profileDir.append("extensions");
 
 
 function run_test() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
-
-  // Create and configure the HTTP server.
-  testserver = new HttpServer();
-  testserver.registerDirectory("/data/", do_get_file("data"));
-  testserver.registerDirectory("/addons/", do_get_file("addons"));
-  testserver.start(4444);
 
   run_test_1();
 }
@@ -35,7 +35,7 @@ function run_test_1() {
   writeInstallRDFForExtension({
     id: "addon9@tests.mozilla.org",
     version: "1.0",
-    updateURL: "http://localhost:4444/data/test_update.rdf",
+    updateURL: "http://localhost:" + gPort + "/data/test_update.rdf",
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "0.1",
@@ -57,7 +57,7 @@ function run_test_1() {
   });
 
   Services.prefs.setCharPref(PREF_GETADDONS_BYIDS_PERFORMANCE,
-                             "http://localhost:4444/data/test_update.xml");
+                             "http://localhost:" + gPort + "/data/test_update.xml");
   Services.prefs.setBoolPref(PREF_GETADDONS_CACHE_ENABLED, true);
   // Fake a timer event
   gInternalManager.notify(null);
@@ -69,7 +69,7 @@ function run_test_2() {
   writeInstallRDFForExtension({
     id: "addon11@tests.mozilla.org",
     version: "1.0",
-    updateURL: "http://localhost:4444/data/test_update.rdf",
+    updateURL: "http://localhost:" + gPort + "/data/test_update.rdf",
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "0.1",

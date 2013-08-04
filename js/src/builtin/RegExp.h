@@ -55,7 +55,7 @@ extern JSBool
 regexp_exec(JSContext *cx, unsigned argc, Value *vp);
 
 bool
-regexp_test_raw(JSContext *cx, HandleObject regexp, HandleString input, JSBool *result);
+regexp_test_raw(JSContext *cx, HandleObject regexp, HandleString input, bool *result);
 
 extern JSBool
 regexp_test(JSContext *cx, unsigned argc, Value *vp);

@@ -90,9 +90,12 @@ this.Downloads = {
   /**
    * Downloads data from a remote network location to a local file.
    *
-   * This download method does not provide user interface or the ability to
-   * cancel the download programmatically.  For that, you should obtain a
-   * reference to a Download object using the createDownload function.
+   * This download method does not provide user interface, or the ability to
+   * cancel or restart the download programmatically.  For that, you should
+   * obtain a reference to a Download object using the createDownload function.
+   *
+   * Since the download cannot be restarted, any partially downloaded data will
+   * not be kept in case the download fails.
    *
    * @param aSource
    *        String containing the URI for the download source.  Alternatively,

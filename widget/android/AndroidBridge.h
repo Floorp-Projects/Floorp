@@ -601,7 +601,9 @@ public:
     void HandleDoubleTap(const CSSIntPoint& aPoint) MOZ_OVERRIDE;
     void HandleSingleTap(const CSSIntPoint& aPoint) MOZ_OVERRIDE;
     void HandleLongTap(const CSSIntPoint& aPoint) MOZ_OVERRIDE;
-    void SendAsyncScrollDOMEvent(const CSSRect& aContentRect, const CSSSize& aScrollableSize) MOZ_OVERRIDE;
+    void SendAsyncScrollDOMEvent(mozilla::layers::FrameMetrics::ViewID aScrollId,
+                                 const CSSRect& aContentRect,
+                                 const CSSSize& aScrollableSize) MOZ_OVERRIDE;
     void PostDelayedTask(Task* aTask, int aDelayMs) MOZ_OVERRIDE;
     int64_t RunDelayedTasks();
 };

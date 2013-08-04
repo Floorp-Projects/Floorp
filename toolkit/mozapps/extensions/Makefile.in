@@ -26,12 +26,6 @@ DEFINES += -DMOZ_EM_DEBUG=1
 endif
 
 
-EXTRA_PP_JS_MODULES = \
-  AddonManager.jsm \
-  XPIProvider.jsm \
-  XPIProviderUtils.js \
-  $(NULL)
-
 EXTRA_DSO_LDOPTS = \
   $(MOZ_JS_LIBS) \
   $(MOZ_UNICHARUTIL_LIBS) \

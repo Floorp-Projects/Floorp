@@ -66,6 +66,8 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsContentSink)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDocumentObserver)
 NS_INTERFACE_MAP_END
 
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsContentSink)
+
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsContentSink)
   if (tmp->mDocument) {
     tmp->mDocument->RemoveObserver(tmp);

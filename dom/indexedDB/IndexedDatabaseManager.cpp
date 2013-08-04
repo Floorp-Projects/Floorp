@@ -276,8 +276,7 @@ IndexedDatabaseManager::FireWindowOnError(nsPIDOMWindow* aOwner,
   nsCOMPtr<EventTarget> eventTarget =
     aVisitor.mDOMEvent->InternalDOMEvent()->GetTarget();
 
-  nsCOMPtr<nsIIDBRequest> strongRequest = do_QueryInterface(eventTarget);
-  IDBRequest* request = static_cast<IDBRequest*>(strongRequest.get());
+  IDBRequest* request = static_cast<IDBRequest*>(eventTarget.get());
   NS_ENSURE_TRUE(request, NS_ERROR_UNEXPECTED);
 
   ErrorResult ret;

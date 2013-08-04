@@ -279,13 +279,11 @@ def write_header(iface, fd):
 
 def write_getter(a, iface, fd):
     realtype = a.realtype.nativeType('in')
+    fd.write("    NS_ENSURE_STATE(JS_GetPropertyById(aCx, aObj, %s, &v));\n"
+             % get_jsid(a.name))
     if realtype.count("JS::Value"):
-        fd.write("    NS_ENSURE_STATE(JS_GetPropertyById(aCx, aObj, %s, &aDict.%s));\n"
-                 % (get_jsid(a.name), a.name))
-    else:
-        fd.write("    NS_ENSURE_STATE(JS_GetPropertyById(aCx, aObj, %s, v.address()));\n"
-                 % get_jsid(a.name))
-    if realtype.count("bool"):
+        fd.write("    aDict.%s = v;\n" % a.name)
+    elif realtype.count("bool"):
         fd.write("    JSBool b;\n")
         fd.write("    MOZ_ALWAYS_TRUE(JS_ValueToBoolean(aCx, v, &b));\n")
         fd.write("    aDict.%s = b;\n" % a.name)
@@ -373,15 +371,11 @@ def write_cpp(iface, fd):
         fd.write("  NS_ENSURE_SUCCESS(rv, rv);\n")
 
     fd.write("  JSBool found = JS_FALSE;\n")
-    needjsval = False
     needccx = False
     for a in attributes:
-        if not a.realtype.nativeType('in').count("JS::Value"):
-            needjsval = True
         if a.realtype.nativeType('in').count("nsIVariant"):
             needccx = True
-    if needjsval:
-        fd.write("  JS::RootedValue v(aCx, JSVAL_VOID);\n")
+    fd.write("  JS::RootedValue v(aCx, JSVAL_VOID);\n")
     if needccx:
         fd.write("  XPCCallContext ccx(NATIVE_CALLER, aCx);\n")
         fd.write("  NS_ENSURE_STATE(ccx.IsValid());\n")

@@ -45,6 +45,10 @@ if CONFIG['CPU_ARCH'] == 'arm':
         'arm.cpp',
     ]
 
+if CONFIG['MOZ_ASAN']:
+    CPP_SOURCES += [
+        'AsanOptions.cpp',
+    ]
 
 
 LIBRARY_NAME = 'mozglue'

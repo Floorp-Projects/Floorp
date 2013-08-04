@@ -91,7 +91,32 @@ function do_test() {
       "violet", "wheat", "white", "whitesmoke", "yellow", "yellowgreen", "no-repeat", "repeat",
       "repeat-x", "repeat-y", "fixed", "scroll", "local", "center", "top", "bottom", "left", "right",
       "border-box", "padding-box", "content-box", "border-box", "padding-box", "content-box", "contain",
-      "cover", "rgb", "hsl", "-moz-rgba", "-moz-hsla", "rgba", "hsla", "none", "-moz-element", "-moz-image-rect" ];
+      "cover", "rgb", "hsl", "-moz-rgba", "-moz-hsla", "rgba", "hsla", "none", "-moz-element", "-moz-image-rect", "url" ];
+  ok(testValues(values, expected), "Shorthand property values.");
+
+  var prop = "border";
+  var values = utils.getCSSValuesForProperty(prop);
+  var expected = [ "-moz-calc", "-moz-hsla", "-moz-initial", "-moz-rgba", "-moz-use-text-color", "aliceblue",
+      "antiquewhite", "aqua", "aquamarine", "azure", "beige", "bisque", "black", "blanchedalmond", "blue", "blueviolet",
+      "brown", "burlywood", "cadetblue", "calc", "chartreuse", "chocolate", "coral", "cornflowerblue", "cornsilk",
+      "crimson", "cyan", "darkblue", "darkcyan", "darkgoldenrod", "darkgray", "darkgreen", "darkgrey", "darkkhaki",
+      "darkmagenta", "darkolivegreen", "darkorange", "darkorchid", "darkred", "darksalmon", "darkseagreen",
+      "darkslateblue", "darkslategray", "darkslategrey", "darkturquoise", "darkviolet", "dashed", "deeppink",
+      "deepskyblue", "dimgray", "dimgrey", "dodgerblue", "dotted", "double", "fill", "firebrick", "floralwhite",
+      "forestgreen", "fuchsia", "gainsboro", "ghostwhite", "gold", "goldenrod", "gray", "grey", "green", "greenyellow",
+      "groove", "hidden", "honeydew", "hotpink", "hsl", "hsla", "indianred", "indigo", "inherit", "inset", "ivory",
+      "khaki", "lavender", "lavenderblush", "lawngreen", "lemonchiffon", "lightblue", "lightcoral", "lightcyan",
+      "lightgoldenrodyellow", "lightgray", "lightgreen", "lightgrey", "lightpink", "lightsalmon", "lightseagreen",
+      "lightskyblue", "lightslategray", "lightslategrey", "lightsteelblue", "lightyellow", "lime", "limegreen",
+      "linen", "logical", "magenta", "maroon", "medium", "mediumaquamarine", "mediumblue", "mediumorchid",
+      "mediumpurple", "mediumseagreen", "mediumslateblue", "mediumspringgreen", "mediumturquoise",
+      "mediumvioletred", "midnightblue", "mintcream", "mistyrose", "moccasin", "navajowhite", "navy", "none",
+      "oldlace", "olive", "olivedrab", "orange", "orangered", "orchid", "outset", "palegoldenrod", "palegreen",
+      "paleturquoise", "palevioletred", "papayawhip", "peachpuff", "peru", "physical", "pink", "plum", "powderblue",
+      "purple", "red", "repeat", "rgb", "rgba", "ridge", "rosybrown", "round", "royalblue", "saddlebrown", "salmon",
+      "sandybrown", "seagreen", "seashell", "sienna", "silver", "skyblue", "slateblue", "slategray", "slategrey",
+      "snow", "solid", "springgreen", "steelblue", "stretch", "tan", "teal", "thick", "thin", "thistle", "tomato",
+      "transparent", "turquoise", "url", "violet", "wheat", "white", "whitesmoke", "yellow", "yellowgreen" ]
   ok(testValues(values, expected), "Shorthand property values.");
 
   // test keywords only
@@ -146,7 +171,7 @@ function do_test() {
   // Test property with "auto"
   var prop = "margin";
   var values = utils.getCSSValuesForProperty(prop);
-  var expected = [ "-moz-calc", "-moz-initial", "auto", "calc", "inherit", "logical", "physical" ];
+  var expected = [ "-moz-calc", "-moz-initial", "auto", "calc", "inherit" ];
   ok(testValues(values, expected), "property margin's values.");
 
   // Test property with "normal"

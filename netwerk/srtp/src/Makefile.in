@@ -23,33 +23,6 @@ include $(DEPTH)/config/autoconf.mk
 LIBRARY_NAME = nksrtp_s
 LIBXUL_LIBRARY = 1
 
-DISABLED_CSRCS := \
-  ekt.c \
-  srtp.c \
-  aes.c \
-  aes_cbc.c \
-  aes_icm.c \
-  cipher.c \
-  null_cipher.c \
-  auth.c \
-  hmac.c \
-  null_auth.c \
-  sha1.c \
-  alloc.c \
-  crypto_kernel.c \
-  err.c \
-  key.c \
-  datatypes.c \
-  gf2_8.c \
-  stat.c \
-  rdb.c \
-  rdbx.c \
-  ut_sim.c \
-  ctr_prng.c \
-  prng.c \
-  rand_source.c \
-  $(NULL)
-
 LOCAL_INCLUDES = \
   -I$(srcdir)/include \
   -I$(srcdir)/crypto/include \
@@ -57,14 +30,13 @@ LOCAL_INCLUDES = \
 
 DEFINES += \
   -DHAVE_STDLIB_H=1 \
-  -DINTEGER_TYPES_H="\"mozilla/StandardInteger.h\"" \
   -DHAVE_UINT8_T=1 \
   -DHAVE_UINT16_T=1 \
   -DHAVE_UINT32_T=1 \
   -DHAVE_UINT64_T=1 \
   $(NULL)
 
-# We know StandardInteger.h will define uint8/16/32/64_t, so we don't need
+# We know stdint.h will define uint8/16/32/64_t, so we don't need
 # to define SIZEOF_UNSIGNED_LONG/SIZEOF_UNSIGNED_LONG_LONG
 
 ifeq ($(CPU_ARCH),arm)

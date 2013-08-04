@@ -77,6 +77,11 @@ public:
   static nsIContent* FindContentFor(ViewID aId);
 
   /**
+   * Find the scrollable frame for a given ID.
+   */
+  static nsIScrollableFrame* FindScrollableFrameFor(ViewID aId);
+
+  /**
    * Get display port for the given element.
    */
   static bool GetDisplayPort(nsIContent* aContent, nsRect *aResult);
@@ -373,16 +378,23 @@ public:
   static nsIScrollableFrame* GetNearestScrollableFrameForDirection(nsIFrame* aFrame,
                                                                    Direction aDirection);
 
+  enum {
+    SCROLLABLE_SAME_DOC = 0x01,
+    SCROLLABLE_INCLUDE_HIDDEN = 0x02
+  };
   /**
    * GetNearestScrollableFrame locates the first ancestor of aFrame
    * (or aFrame itself) that is scrollable with overflow:scroll or
    * overflow:auto in some direction.
-   * The search extends across document boundaries.
    *
    * @param  aFrame the frame to start with
+   * @param  aFlags if SCROLLABLE_SAME_DOC is set, do not search across
+   * document boundaries. If SCROLLABLE_INCLUDE_HIDDEN is set, include
+   * frames scrollable with overflow:hidden.
    * @return the nearest scrollable frame or nullptr if not found
    */
-  static nsIScrollableFrame* GetNearestScrollableFrame(nsIFrame* aFrame);
+  static nsIScrollableFrame* GetNearestScrollableFrame(nsIFrame* aFrame,
+                                                       uint32_t aFlags = 0);
 
   /**
    * GetScrolledRect returns the range of allowable scroll offsets
@@ -526,19 +538,28 @@ public:
                                      nsTArray<ViewID> &aOutIDs,
                                      bool aIgnoreRootScrollFrame);
 
+  enum FrameForPointFlags {
+    /**
+     * When set, paint suppression is ignored, so we'll return non-root page
+     * elements even if paint suppression is stopping them from painting.
+     */
+    IGNORE_PAINT_SUPPRESSION = 0x01,
+    /**
+     * When set, clipping due to the root scroll frame (and any other viewport-
+     * related clipping) is ignored.
+     */
+    IGNORE_ROOT_SCROLL_FRAME = 0x02
+  };
+
   /**
    * Given aFrame, the root frame of a stacking context, find its descendant
    * frame under the point aPt that receives a mouse event at that location,
    * or nullptr if there is no such frame.
    * @param aPt the point, relative to the frame origin
-   * @param aShouldIgnoreSuppression a boolean to control if the display
-   * list builder should ignore paint suppression or not
-   * @param aIgnoreRootScrollFrame whether or not the display list builder
-   * should ignore the root scroll frame.
+   * @param aFlags some combination of FrameForPointFlags
    */
   static nsIFrame* GetFrameForPoint(nsIFrame* aFrame, nsPoint aPt,
-                                    bool aShouldIgnoreSuppression = false,
-                                    bool aIgnoreRootScrollFrame = false);
+                                    uint32_t aFlags = 0);
 
   /**
    * Given aFrame, the root frame of a stacking context, find all descendant
@@ -546,15 +567,11 @@ public:
    * or nullptr if there is no such frame.
    * @param aRect the rect, relative to the frame origin
    * @param aOutFrames an array to add all the frames found
-   * @param aShouldIgnoreSuppression a boolean to control if the display
-   * list builder should ignore paint suppression or not
-   * @param aIgnoreRootScrollFrame whether or not the display list builder
-   * should ignore the root scroll frame.
+   * @param aFlags some combination of FrameForPointFlags
    */
   static nsresult GetFramesForArea(nsIFrame* aFrame, const nsRect& aRect,
                                    nsTArray<nsIFrame*> &aOutFrames,
-                                   bool aShouldIgnoreSuppression = false,
-                                   bool aIgnoreRootScrollFrame = false);
+                                   uint32_t aFlags = 0);
 
   /**
    * Transform aRect relative to aAncestor down to the coordinate system of
@@ -567,10 +584,13 @@ public:
   /**
    * Transform aRect relative to aFrame up to the coordinate system of
    * aAncestor. Computes the bounding-box of the true quadrilateral.
+   * Pass non-null aPreservesAxisAlignedRectangles and it will be set to true if
+   * we only need to use a 2d transform that PreservesAxisAlignedRectangles().
    */
   static nsRect TransformFrameRectToAncestor(nsIFrame* aFrame,
                                              const nsRect& aRect,
-                                             const nsIFrame* aAncestor);
+                                             const nsIFrame* aAncestor,
+                                             bool* aPreservesAxisAlignedRectangles = nullptr);
 
 
   /**

@@ -24,7 +24,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=717103
 
 devicestorage_setup();
 
-var gFileName = "devicestorage/hi.png";
+var gFileName = "devicestorage/" + randomFilename(12) + "/hi.png";
 var gData = "My name is Doug Turner.  My IRC nick is DougT.  I like Maple cookies."
 var gDataBlob = new Blob([gData], {type: 'image/png'});
 var gFileReader = new FileReader();
@@ -93,7 +93,21 @@ function getError(e) {
 
 function addSuccess(e) {
 
-  ok(e.target.result == gFileName, "File name should match");
+  var filename = e.target.result;
+  if (filename[0] == "/") {
+    // We got /storageName/prefix/filename
+    // Remove the storageName (this shows up on FirefoxOS)
+    filename = filename.substring(1); // Remove leading slash
+    var slashIndex = filename.indexOf("/");
+    if (slashIndex >= 0) {
+      filename = filename.substring(slashIndex + 1); // Remove storageName
+    }
+  }
+  ok(filename == gFileName, "File name should match");
+
+  // Update gFileName to be the fully qualified name so that
+  // further checks will pass.
+  gFileName = e.target.result;
 
   var storage = navigator.getDeviceStorage("pictures");
   request = storage.get(gFileName);
@@ -113,7 +127,7 @@ ok(navigator.getDeviceStorage, "Should have getDeviceStorage");
 var storage = navigator.getDeviceStorage("pictures");
 ok(storage, "Should have gotten a storage");
 
-request = storage.addNamed(gDataBlob, "devicestorage/hi.png");
+request = storage.addNamed(gDataBlob, gFileName);
 ok(request, "Should have a non-null request");
 
 request.onsuccess = addSuccess;

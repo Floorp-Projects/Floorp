@@ -14,7 +14,7 @@
  */
 
 #include "GonkDisplayJB.h"
-#include <gui/SurfaceTextureClient.h>
+#include <gui/Surface.h>
 
 #include <hardware/hardware.h>
 #include <hardware/hwcomposer.h>
@@ -99,7 +99,7 @@ GonkDisplayJB::GonkDisplayJB()
     mAlloc = new GraphicBufferAlloc();
     mFBSurface = new FramebufferSurface(0, mWidth, mHeight, surfaceformat, mAlloc);
 
-    sp<SurfaceTextureClient> stc = new SurfaceTextureClient(static_cast<sp<ISurfaceTexture> >(mFBSurface->getBufferQueue()));
+    sp<Surface> stc = new Surface(static_cast<sp<IGraphicBufferProducer> >(mFBSurface->getBufferQueue()));
     mSTClient = stc;
 
     mList = (hwc_display_contents_1_t *)malloc(sizeof(*mList) + (sizeof(hwc_layer_1_t)*2));
@@ -166,8 +166,8 @@ GonkDisplayJB::SwapBuffers(EGLDisplay dpy, EGLSurface sur)
     StopBootAnimation();
     mBootAnimBuffer = nullptr;
 
-    mList->dpy = dpy;
-    mList->sur = sur;
+    mList->outbuf = nullptr;
+    mList->outbufAcquireFenceFd = -1;
     eglSwapBuffers(dpy, sur);
     return Post(mFBSurface->lastHandle, mFBSurface->lastFenceFD);
 }
@@ -189,8 +189,11 @@ GonkDisplayJB::Post(buffer_handle_t buf, int fence)
     mList->flags = HWC_GEOMETRY_CHANGED;
     mList->hwLayers[0].compositionType = HWC_BACKGROUND;
     mList->hwLayers[0].hints = 0;
-    mList->hwLayers[0].flags = 0;
+    /* Skip this layer so the hwc module doesn't complain about null handles */
+    mList->hwLayers[0].flags = HWC_SKIP_LAYER;
     mList->hwLayers[0].backgroundColor = {0};
+    /* hwc module checks displayFrame even though it shouldn't */
+    mList->hwLayers[0].displayFrame = r;
     mList->hwLayers[1].compositionType = HWC_FRAMEBUFFER_TARGET;
     mList->hwLayers[1].hints = 0;
     mList->hwLayers[1].flags = 0;
@@ -200,9 +203,10 @@ GonkDisplayJB::Post(buffer_handle_t buf, int fence)
     mList->hwLayers[1].sourceCrop = r;
     mList->hwLayers[1].displayFrame = r;
     mList->hwLayers[1].visibleRegionScreen.numRects = 1;
-    mList->hwLayers[1].visibleRegionScreen.rects = &mList->hwLayers[0].sourceCrop;
+    mList->hwLayers[1].visibleRegionScreen.rects = &mList->hwLayers[1].sourceCrop;
     mList->hwLayers[1].acquireFenceFd = fence;
     mList->hwLayers[1].releaseFenceFd = -1;
+    mList->hwLayers[1].planeAlpha = 0xFF;
     mHwc->prepare(mHwc, HWC_NUM_DISPLAY_TYPES, displays);
     int err = mHwc->set(mHwc, HWC_NUM_DISPLAY_TYPES, displays);
     mFBSurface->setReleaseFenceFd(mList->hwLayers[1].releaseFenceFd);

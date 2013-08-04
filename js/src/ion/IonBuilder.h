@@ -422,7 +422,9 @@ class IonBuilder : public MIRGenerator
     bool jsop_newobject(HandleObject baseObj);
     bool jsop_initelem();
     bool jsop_initelem_array();
+    bool jsop_initelem_getter_setter();
     bool jsop_initprop(HandlePropertyName name);
+    bool jsop_initprop_getter_setter(PropertyName *name);
     bool jsop_regexp(RegExpObject *reobj);
     bool jsop_object(JSObject *obj);
     bool jsop_lambda(JSFunction *fun);
@@ -497,7 +499,6 @@ class IonBuilder : public MIRGenerator
     InliningStatus inlineUnsafeGetReservedSlot(CallInfo &callInfo);
 
     // Parallel intrinsics.
-    InliningStatus inlineForceSequentialOrInParallelSection(CallInfo &callInfo);
     InliningStatus inlineNewParallelArray(CallInfo &callInfo);
     InliningStatus inlineParallelArray(CallInfo &callInfo);
     InliningStatus inlineParallelArrayTail(CallInfo &callInfo,
@@ -512,6 +513,10 @@ class IonBuilder : public MIRGenerator
     InliningStatus inlineHaveSameClass(CallInfo &callInfo);
     InliningStatus inlineToObject(CallInfo &callInfo);
     InliningStatus inlineDump(CallInfo &callInfo);
+
+    // Testing functions.
+    InliningStatus inlineForceSequentialOrInParallelSection(CallInfo &callInfo);
+    InliningStatus inlineBailout(CallInfo &callInfo);
 
     // Main inlining functions
     InliningStatus inlineNativeCall(CallInfo &callInfo, JSNative native);

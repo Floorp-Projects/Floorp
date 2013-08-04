@@ -104,6 +104,7 @@ nsHttpNegotiateAuth::ChallengeReceived(nsIHttpAuthenticableChannel *authChannel,
             return NS_ERROR_ABORT;
         }
 
+        req_flags |= nsIAuthModule::REQ_PROXY_AUTH;
         nsCOMPtr<nsIProxyInfo> proxyInfo;
         authChannel->GetProxyInfo(getter_AddRefs(proxyInfo));
         NS_ENSURE_STATE(proxyInfo);

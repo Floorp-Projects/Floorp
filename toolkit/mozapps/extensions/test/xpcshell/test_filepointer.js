@@ -94,7 +94,8 @@ function run_test() {
   testserver = new HttpServer();
   testserver.registerDirectory("/data/", do_get_file("data"));
   testserver.registerDirectory("/addons/", do_get_file("addons"));
-  testserver.start(4444);
+  testserver.start(-1);
+  gPort = testserver.identity.primaryPort;
 
   run_test_1();
 }
@@ -136,7 +137,7 @@ function run_test_2() {
     "onNewInstall",
   ]);
 
-  let url = "http://localhost:4444/addons/test_filepointer.xpi";
+  let url = "http://localhost:" + gPort + "/addons/test_filepointer.xpi";
   AddonManager.getInstallForURL(url, function(install) {
     ensure_test_completed();
 

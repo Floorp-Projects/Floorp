@@ -503,17 +503,6 @@ nsNodeSupportsWeakRefTearoff::GetWeakReference(nsIWeakReference** aInstancePtr)
 }
 
 //----------------------------------------------------------------------
-
-NS_IMPL_CYCLE_COLLECTION_1(nsInlineEventHandlersTearoff, mElement)
-
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsInlineEventHandlersTearoff)
-  NS_INTERFACE_MAP_ENTRY(nsIInlineEventHandlers)
-NS_INTERFACE_MAP_END_AGGREGATED(mElement)
-
-NS_IMPL_CYCLE_COLLECTING_ADDREF(nsInlineEventHandlersTearoff)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(nsInlineEventHandlersTearoff)
-
-//----------------------------------------------------------------------
 FragmentOrElement::nsDOMSlots::nsDOMSlots()
   : nsINode::nsSlots(),
     mDataset(nullptr),
@@ -1000,7 +989,7 @@ FragmentOrElement::DestroyContent()
 
   // XXX We really should let cycle collection do this, but that currently still
   //     leaks (see https://bugzilla.mozilla.org/show_bug.cgi?id=406684).
-  nsContentUtils::ReleaseWrapper(this, this);
+  ReleaseWrapper(this);
 
   uint32_t i, count = mAttrsAndChildren.ChildCount();
   for (i = 0; i < count; ++i) {
@@ -1158,6 +1147,8 @@ FragmentOrElement::ClearContentUnbinder()
 {
   ContentUnbinder::UnbindAll();
 }
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(FragmentOrElement)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(FragmentOrElement)
   nsINode::Unlink(tmp);
@@ -1750,8 +1741,6 @@ NS_INTERFACE_MAP_BEGIN(FragmentOrElement)
                                  new nsNodeSupportsWeakRefTearoff(this))
   NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOMXPathNSResolver,
                                  new nsNode3Tearoff(this))
-  NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIInlineEventHandlers,
-                                 new nsInlineEventHandlersTearoff(this))
   // DOM bindings depend on the identity pointer being the
   // same as nsINode (which nsIContent inherits).
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIContent)

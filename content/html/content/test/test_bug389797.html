@@ -32,8 +32,7 @@ function HTML_TAG(aTagName, aImplClass) {
   classInfos[aTagName] = aImplClass;
   interfaces[aTagName] =
     [ "nsIDOMEventTarget",
-      "nsIDOMElementCSSInlineStyle",
-      "nsIInlineEventHandlers" ];
+      "nsIDOMElementCSSInlineStyle" ];
 
   // Some interfaces don't appear in classinfo because other interfaces that
   // inherit from them do.
@@ -245,13 +244,9 @@ for (var tag of allTags) {
   if (classInfoString != 'HTMLUnknownElement') {
     is(node instanceof HTMLUnknownElement, false,
        tagName(tag) + " is an instance of HTMLUnknownElement");
-    is(node instanceof SpecialPowers.Ci.nsIDOMHTMLUnknownElement, false,
-       tagName(tag) + " is an instance of nsIDOMHTMLUnknownElement");
   } else {
     is(node instanceof HTMLUnknownElement, true,
        tagName(tag) + " is an instance of HTMLUnknownElement");
-    is(node instanceof SpecialPowers.Ci.nsIDOMHTMLUnknownElement, true,
-       tagName(tag) + " is an instance of nsIDOMHTMLUnknownElement");
   }
 
   // Check that each node QIs to all the things we expect it to QI to

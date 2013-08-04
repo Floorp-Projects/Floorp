@@ -12,6 +12,13 @@
 #include "gfxASurface.h"
 #include "GLContextTypes.h"
 #include "gfxPattern.h"
+#include "mozilla/gfx/Rect.h"
+
+namespace mozilla {
+namespace gfx {
+class DataSourceSurface;
+}
+}
 
 namespace mozilla {
 namespace gl {
@@ -50,7 +57,7 @@ public:
         NoFlags          = 0x0,
         UseNearestFilter = 0x1,
         NeedsYFlip       = 0x2,
-        ForceSingleTile  = 0x4
+        DisallowBigImage = 0x4
     };
 
     typedef gfxASurface::gfxContentType ContentType;
@@ -164,6 +171,10 @@ public:
      * aFrom - offset in the source to update from
      */
     virtual bool DirectUpdate(gfxASurface *aSurf, const nsIntRegion& aRegion, const nsIntPoint& aFrom = nsIntPoint(0,0)) = 0;
+    // Moz2D equivalent
+    bool UpdateFromDataSource(gfx::DataSourceSurface *aSurf,
+                              const nsIntRegion* aDstRegion = nullptr,
+                              const gfx::IntPoint* aSrcOffset = nullptr);
 
     virtual void BindTexture(GLenum aTextureUnit) = 0;
     virtual void ReleaseTexture() {}

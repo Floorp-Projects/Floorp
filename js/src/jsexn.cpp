@@ -1007,7 +1007,6 @@ IsDuckTypedErrorObject(JSContext *cx, HandleObject exnObject, const char **filen
 JSBool
 js_ReportUncaughtException(JSContext *cx)
 {
-    jsval roots[6];
     JSErrorReport *reportp, report;
 
     if (!JS_IsExceptionPending(cx))
@@ -1017,8 +1016,8 @@ js_ReportUncaughtException(JSContext *cx)
     if (!JS_GetPendingException(cx, exn.address()))
         return false;
 
-    PodArrayZero(roots);
-    AutoArrayRooter tvr(cx, ArrayLength(roots), roots);
+    AutoValueVector roots(cx);
+    roots.resize(6);
 
     /*
      * Because ToString below could error and an exception object could become
@@ -1048,18 +1047,12 @@ js_ReportUncaughtException(JSContext *cx)
         (exnObject->is<ErrorObject>() || IsDuckTypedErrorObject(cx, exnObject, &filename_str)))
     {
         RootedString name(cx);
-        if (JS_GetProperty(cx, exnObject, js_name_str, &roots[2]) &&
-            JSVAL_IS_STRING(roots[2]))
-        {
-            name = JSVAL_TO_STRING(roots[2]);
-        }
+        if (JS_GetProperty(cx, exnObject, js_name_str, roots.handleAt(2)) && roots[2].isString())
+            name = roots[2].toString();
 
         RootedString msg(cx);
-        if (JS_GetProperty(cx, exnObject, js_message_str, &roots[3]) &&
-            JSVAL_IS_STRING(roots[3]))
-        {
-            msg = JSVAL_TO_STRING(roots[3]);
-        }
+        if (JS_GetProperty(cx, exnObject, js_message_str, roots.handleAt(3)) && roots[3].isString())
+            msg = roots[3].toString();
 
         if (name && msg) {
             RootedString colon(cx, JS_NewStringCopyZ(cx, ": "));
@@ -1077,22 +1070,22 @@ js_ReportUncaughtException(JSContext *cx)
             str = msg;
         }
 
-        if (JS_GetProperty(cx, exnObject, filename_str, &roots[4])) {
-            JSString *tmp = ToString<CanGC>(cx, HandleValue::fromMarkedLocation(&roots[4]));
+        if (JS_GetProperty(cx, exnObject, filename_str, roots.handleAt(4))) {
+            JSString *tmp = ToString<CanGC>(cx, roots.handleAt(4));
             if (tmp)
                 filename.encodeLatin1(cx, tmp);
         }
 
         uint32_t lineno;
-        if (!JS_GetProperty(cx, exnObject, js_lineNumber_str, &roots[5]) ||
-            !ToUint32(cx, roots[5], &lineno))
+        if (!JS_GetProperty(cx, exnObject, js_lineNumber_str, roots.handleAt(5)) ||
+            !ToUint32(cx, roots.handleAt(5), &lineno))
         {
             lineno = 0;
         }
 
         uint32_t column;
-        if (!JS_GetProperty(cx, exnObject, js_columnNumber_str, &roots[5]) ||
-            !ToUint32(cx, roots[5], &column))
+        if (!JS_GetProperty(cx, exnObject, js_columnNumber_str, roots.handleAt(5)) ||
+            !ToUint32(cx, roots.handleAt(5), &column))
         {
             column = 0;
         }

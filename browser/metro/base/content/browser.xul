@@ -146,11 +146,11 @@
     <key id="key_quit" key="q" modifiers="accel" command="cmd_quit"/>
     <key id="key_addBoomkark" key="d" modifiers="accel" command="cmd_addBookmark"/>
     <key id="key_console" key="j" modifiers="accel,shift" oncommand="PanelUI.show('console-container')"/>
-    <key id="key_options" key="o" modifiers="accel,shift" oncommand="FlyoutPanelsUI.show('PrefsFlyout')" />
+    <key id="key_options" key="o" modifiers="accel,shift" oncommand="FlyoutPanelsUI.show('PrefsFlyoutPanel')" />
 #ifdef MOZ_SERVICES_SYNC
-    <key id="key_options" key="s" modifiers="accel,shift" oncommand="FlyoutPanelsUI.show('SyncFlyout')" />
+    <key id="key_options" key="s" modifiers="accel,shift" oncommand="FlyoutPanelsUI.show('SyncFlyoutPanel')" />
 #endif
-    <key id="key_options" key="a" modifiers="accel,shift" oncommand="FlyoutPanelsUI.show('AboutFlyout')" />
+    <key id="key_options" key="a" modifiers="accel,shift" oncommand="FlyoutPanelsUI.show('AboutFlyoutPanel')" />
 
     <!-- manage tabs -->
     <key id="key_newTab" key="t" modifiers="accel" command="cmd_newTab"/>
@@ -181,8 +181,7 @@
     <vbox id="page">
       <vbox id="tray" class="tray-toolbar" observes="bcast_windowState" >
         <!-- Tabs -->
-        <!-- onclick handler to work around bug 837242 -->
-        <hbox id="tabs-container" observes="bcast_windowState" onclick="void(0);">
+        <hbox id="tabs-container" observes="bcast_windowState">
           <box id="tabs" flex="1"
                 observes="bcast_preciseInput"
                 onselect="BrowserUI.selectTabAndDismiss(this);"
@@ -197,31 +196,35 @@
           <!-- portrait/landscape/filled view -->
 
           <scrollbox id="start-scrollbox" observes="bcast_preciseInput" flex="1">
-            <vbox id="start-topsites" class="meta-section">
+            <vbox id="start-topsites" class="meta-section" expanded="true">
               <label class="meta-section-title wide-title" value="&topSitesHeader.label;"/>
-              <label class="meta-section-title narrow-title" value="&snappedTopSitesHeader.label;"
-                onclick="StartUI.onNarrowTitleClick('start-topsites-grid')"/>
-              <richgrid id="start-topsites-grid" set-name="topSites" rows="3" columns="3" tiletype="thumbnail" seltype="multiple" flex="1" expanded="true"/>
+              <html:div class="meta-section-title narrow-title" onclick="StartUI.onNarrowTitleClick('start-topsites')">
+                &narrowTopSitesHeader.label;
+              </html:div>
+              <richgrid id="start-topsites-grid" set-name="topSites" rows="3" columns="3" tiletype="thumbnail" seltype="multiple" flex="1"/>
             </vbox>
 
             <vbox id="start-bookmarks" class="meta-section">
               <label class="meta-section-title wide-title" value="&bookmarksHeader.label;"/>
-              <label class="meta-section-title narrow-title" value="&snappedBookmarksHeader.label;"
-                onclick="StartUI.onNarrowTitleClick('start-bookmarks-grid')"/>
+              <html:div class="meta-section-title narrow-title" onclick="StartUI.onNarrowTitleClick('start-bookmarks')">
+                &narrowBookmarksHeader.label;
+              </html:div>
               <richgrid id="start-bookmarks-grid" set-name="bookmarks" seltype="multiple" flex="1"/>
             </vbox>
 
             <vbox id="start-history" class="meta-section">
               <label class="meta-section-title wide-title" value="&recentHistoryHeader.label;"/>
-              <label class="meta-section-title narrow-title" value="&snappedRecentHistoryHeader.label;"
-                onclick="StartUI.onNarrowTitleClick('start-history-grid')"/>
+              <html:div class="meta-section-title narrow-title" onclick="StartUI.onNarrowTitleClick('start-history')">
+                &narrowRecentHistoryHeader.label;
+              </html:div>
               <richgrid id="start-history-grid" set-name="recentHistory" seltype="multiple" flex="1"/>
             </vbox>
 
             <vbox id="start-remotetabs" class="meta-section">
               <label class="meta-section-title wide-title" value="&remoteTabsHeader.label;"/>
-              <label id="snappedRemoteTabsLabel" class="meta-section-title narrow-title" value="&snappedRemoteTabsHeader.label;"
-                onclick="StartUI.onNarrowTitleClick('start-remotetabs-grid')"/>
+              <html:div id="snappedRemoteTabsLabel" class="meta-section-title narrow-title" onclick="StartUI.onNarrowTitleClick('start-remotetabs')">
+                &narrowRemoteTabsHeader.label;
+              </html:div>
               <richgrid id="start-remotetabs-grid" set-name="remoteTabs" seltype="multiple" flex="1"/>
             </vbox>
 
@@ -239,8 +242,7 @@
         <box id="horizontal-scroller" class="scroller" orient="horizontal" left="0" bottom="0"/>
 
         <!-- Content touch selection overlay -->
-        <!-- onclick addresses dom bug 835175 -->
-        <box onclick="false" class="selection-overlay-hidden" id="content-selection-overlay"/>
+        <box class="selection-overlay-hidden" id="content-selection-overlay"/>
       </stack>
     </vbox>
 
@@ -255,17 +257,14 @@
         <hbox id="progress-control" />
       </hbox>
 
-      <vbox id="toolbar-autocomplete" flex="1">
+      <vbox id="toolbar-overlay" flex="1">
         <!-- Autocomplete -->
         <scrollbox flex="1">
           <hbox id="urlbar-autocomplete" observes="bcast_windowState"/>
         </scrollbox>
 
         <!-- Main toolbar -->
-        <toolbar id="toolbar" flex="1">
-          <observes element="bcast_windowState" attribute="*"/>
-          <observes element="bcast_urlbarState" attribute="*"/>
-
+        <toolbar id="toolbar" flex="1" observes="bcast_windowState">
           <toolbarbutton id="back-button" class="appbar-primary"
                          command="cmd_back"/>
           <toolbarbutton id="forward-button" class="appbar-primary"
@@ -292,14 +291,30 @@
                            command="cmd_stop"/>
           </hbox>
 
-          <toolbarbutton id="download-button" class="appbar-secondary"
-                         oncommand="Appbar.onDownloadButton()"/>
-          <toolbarbutton id="star-button" class="appbar-primary" type="checkbox"
-                         oncommand="Appbar.onStarButton()"/>
-          <toolbarbutton id="pin-button" class="appbar-primary" type="checkbox"
-                         oncommand="Appbar.onPinButton()"/>
-          <toolbarbutton id="menu-button" class="appbar-primary"
-                         oncommand="Appbar.onMenuButton(event)"/>
+          <circularprogressindicator id="download-progress"
+                                     oncommand="Appbar.onDownloadButton()"/>
+          <stack id="toolbar-contextual">
+            <observes element="bcast_windowState" attribute="*"/>
+            <observes element="bcast_urlbarState" attribute="*"/>
+
+            <hbox id="toolbar-context-page" pack="end">
+              <toolbarbutton id="download-button" class="appbar-secondary"
+                             oncommand="Appbar.onDownloadButton()"/>
+              <toolbarbutton id="star-button" class="appbar-primary"
+                             type="checkbox"
+                             oncommand="Appbar.onStarButton()"/>
+              <toolbarbutton id="pin-button" class="appbar-primary"
+                             type="checkbox"
+                             oncommand="Appbar.onPinButton()"/>
+              <toolbarbutton id="menu-button" class="appbar-primary"
+                             oncommand="Appbar.onMenuButton(event)"/>
+            </hbox>
+
+            <hbox id="toolbar-context-autocomplete" pack="end">
+              <toolbarbutton id="close-button" class="appbar-secondary"
+                             oncommand="Appbar.onAutocompleteCloseButton()"/>
+            </hbox>
+          </stack>
         </toolbar>
       </vbox>
     </appbar>
@@ -367,10 +382,16 @@
       <textbox id="findbar-textbox" type="search"
                oncommand="FindHelperUI.search(this.value)"
                oninput="FindHelperUI.updateCommands(this.value); "/>
-      <button class="previous-button" command="cmd_findPrevious"/>
-      <button class="next-button" command="cmd_findNext"/>
+
+      <toolbarbutton id="findbar-previous-button" class="appbar-secondary"
+                     command="cmd_findPrevious"/>
+      <toolbarbutton id="findbar-next-button" class="appbar-secondary"
+                     command="cmd_findNext"/>
+
       <spacer flex="1"/>
-      <button id="findbar-close" class="close-button" command="cmd_findClose"/>
+
+      <toolbarbutton id="findbar-close-button" class="appbar-secondary"
+                     command="cmd_findClose"/>
     </appbar>
 
     <!-- Context button bar -->
@@ -396,7 +417,7 @@
 
     <autoscroller class="autoscroller" id="autoscrollerid"/>
 
-    <flyoutpanel id="about-flyoutpanel" headertext="&aboutHeader.title;">
+    <flyoutpanel id="about-flyoutpanel" class="flyout-narrow" headertext="&aboutHeader.title;">
       <label id="about-product-label" value="&aboutHeader.product.label;"/>
       <label value="&aboutHeader.company.label;"/>
 #expand <label id="about-version-label">__MOZ_APP_VERSION__</label>
@@ -451,12 +472,12 @@
     </flyoutpanel>
 
 #ifdef MOZ_SERVICES_SYNC
-    <flyoutpanel id="sync-flyoutpanel" headertext="&sync.flyout.title;">
+    <flyoutpanel id="sync-flyoutpanel" class="flyout-narrow" headertext="&sync.flyout.title;">
 
       <vbox id="sync-presetup-container" collapsed="true">
         <description>&sync.flyout.presetup.description1;</description>
         <separator />
-        <hbox onclick="FlyoutPanelsUI.SyncFlyout.startEasySetup();"
+        <hbox onclick="FlyoutPanelsUI.SyncFlyoutPanel.startEasySetup();"
               align="center"
               class="text-link">
           <image src="chrome://browser/skin/images/plus-34.png" />
@@ -497,8 +518,8 @@
         <separator />
         <description class="text-link"
                      flex="1"
-                     onclick="FlyoutPanelsUI.SyncFlyout.abortEasySetup();
-                              FlyoutPanelsUI.SyncFlyout.showManualSetup()">
+                     onclick="FlyoutPanelsUI.SyncFlyoutPanel.abortEasySetup();
+                              FlyoutPanelsUI.SyncFlyoutPanel.showManualSetup()">
           &sync.flyout.setup.manual.label;
         </description>
         <separator />
@@ -517,14 +538,14 @@
         <separator/>
         <textbox id="sync-manualsetup-account"
                  placeholder="&sync.flyout.manualsetup.account.placeholder;"
-                 oninput="FlyoutPanelsUI.SyncFlyout.updateManualSetupConnectButtonState();"/>
+                 oninput="FlyoutPanelsUI.SyncFlyoutPanel.updateManualSetupConnectButtonState();"/>
         <textbox id="sync-manualsetup-password"
                  placeholder="&sync.flyout.manualsetup.password.placeholder;"
                  type="password"
-                 oninput="FlyoutPanelsUI.SyncFlyout.updateManualSetupConnectButtonState();"/>
+                 oninput="FlyoutPanelsUI.SyncFlyoutPanel.updateManualSetupConnectButtonState();"/>
         <textbox id="sync-manualsetup-syncKey"
                  placeholder="&sync.flyout.manualsetup.recoveryKey.placeholder;"
-                 oninput="FlyoutPanelsUI.SyncFlyout.updateManualSetupConnectButtonState();"/>
+                 oninput="FlyoutPanelsUI.SyncFlyoutPanel.updateManualSetupConnectButtonState();"/>
         <description id="sync-manualsetup-failure"
                      class="syncErrorText"
                      collapsed="true" />
@@ -532,7 +553,7 @@
         <hbox>
           <button id="sync-manualsetup-connect"
                   class="syncButton"
-                  oncommand="FlyoutPanelsUI.SyncFlyout.manualSetupConnect();"
+                  oncommand="FlyoutPanelsUI.SyncFlyoutPanel.manualSetupConnect();"
                   label="&sync.flyout.manualsetup.connect.label;"
                   disabled="true" />
           <spacer flex="1" />
@@ -548,10 +569,10 @@
         <description>&sync.flyout.setupfailure.description;</description>
         <hbox>
           <button class="syncButton"
-                  oncommand="FlyoutPanelsUI.SyncFlyout.onCancelButton();"
+                  oncommand="FlyoutPanelsUI.SyncFlyoutPanel.onCancelButton();"
                   label="&sync.flyout.setupfailure.cancelButton;" />
           <button class="syncButton"
-                  oncommand="FlyoutPanelsUI.SyncFlyout.onTryAgainButton();"
+                  oncommand="FlyoutPanelsUI.SyncFlyoutPanel.onTryAgainButton();"
                   label="&sync.flyout.setupfailure.tryAgainButton;" />
         </hbox>
       </vbox>
@@ -574,7 +595,7 @@
         </hbox>
         <label id="sync-disconnect-label"
                class="text-link"
-               onclick="FlyoutPanelsUI.SyncFlyout.onDisconnectLink();">
+               onclick="FlyoutPanelsUI.SyncFlyoutPanel.onDisconnectLink();">
           &sync.flyout.connected.disconnect;
         </label>
         <separator />
@@ -588,14 +609,14 @@
           <hbox>
             <separator />
             <button label="&sync.flyout.connected.cancel;"
-                    oncommand="FlyoutPanelsUI.SyncFlyout.onDisconnectCancel();" />
+                    oncommand="FlyoutPanelsUI.SyncFlyoutPanel.onDisconnectCancel();" />
             <button label="&sync.flyout.connected.disconnect;"
-                    oncommand="FlyoutPanelsUI.SyncFlyout.onDisconnectButton();" />
+                    oncommand="FlyoutPanelsUI.SyncFlyoutPanel.onDisconnectButton();" />
 
           </hbox>
           <separator />
         </vbox>
-        <hbox onclick="FlyoutPanelsUI.SyncFlyout.onPairDeviceLink();"
+        <hbox onclick="FlyoutPanelsUI.SyncFlyoutPanel.onPairDeviceLink();"
               class="text-link">
           <image src="chrome://browser/skin/images/plus-24.png" />
           <separator />
@@ -611,15 +632,15 @@
             <textbox id="sync-pair-entry1"
                      class="syncJPAKECode"
                      maxlength="4"
-                     oninput="FlyoutPanelsUI.SyncFlyout.updatePairButtonState();" />
+                     oninput="FlyoutPanelsUI.SyncFlyoutPanel.updatePairButtonState();" />
             <textbox id="sync-pair-entry2"
                      class="syncJPAKECode"
                      maxlength="4"
-                     oninput="FlyoutPanelsUI.SyncFlyout.updatePairButtonState();" />
+                     oninput="FlyoutPanelsUI.SyncFlyoutPanel.updatePairButtonState();" />
             <textbox id="sync-pair-entry3"
                      class="syncJPAKECode"
                      maxlength="4"
-                     oninput="FlyoutPanelsUI.SyncFlyout.updatePairButtonState();" />
+                     oninput="FlyoutPanelsUI.SyncFlyoutPanel.updatePairButtonState();" />
           </vbox>
           <spacer flex="1" />
         </hbox>
@@ -631,7 +652,7 @@
         <hbox>
           <button id="sync-pair-button"
                   label="&sync.flyout.pairNewDevice.pair;"
-                  oncommand="FlyoutPanelsUI.SyncFlyout.onPairButton();"
+                  oncommand="FlyoutPanelsUI.SyncFlyoutPanel.onPairButton();"
                   disabled="true" />
           <spacer flex="1" />
         </hbox>
@@ -653,7 +674,7 @@
     </flyoutpanel>
 #endif
 
-    <flyoutpanel id="prefs-flyoutpanel" headertext="&optionsHeader.title;">
+    <flyoutpanel id="prefs-flyoutpanel" class="flyout-narrow" headertext="&optionsHeader.title;">
       <settings id="prefs-startup" label="&optionsHeader.startup.title;"> <!-- note, this element has a custom margin-top -->
         <setting id="prefs-homepage" title="&optionsHeader.homepage.title;" type="menulist" pref="browser.startup.sessionRestore" class="setting-expanded">
           <menulist id="prefs-homepage-options">
@@ -700,11 +721,11 @@
         <setting pref="app.crashreporter.autosubmit" type="bool" title="&optionsHeader.reporting.crashes.label;" oncommand="BrowserUI.crashReportingPrefChanged(this.value);"/>
       </settings>
       <settings id="prefs-telemetry" label="&optionsHeader.telemetry.title;">
-        <setting pref="toolkit.telemetry.enabled" type="bool" title="&optionsHeader.telemetry.label;" oncommand="FlyoutPanelsUI.PrefsFlyout.onTelemetryPreferenceChanged(this.value);"/>
+        <setting pref="toolkit.telemetry.enabled" type="bool" title="&optionsHeader.telemetry.label;" oncommand="FlyoutPanelsUI.PrefsFlyoutPanel.onTelemetryPreferenceChanged(this.value);"/>
       </settings>
       <settings id="prefs-dnt" label="&doNotTrack.title;">
         <description>&doNotTrack.desc;</description>
-        <setting id="prefs-dnt-value" pref="privacy.donottrackheader.value" onpreferencechanged="FlyoutPanelsUI.PrefsFlyout.onDNTPreferenceChanged();" type="radio" >
+        <setting id="prefs-dnt-value" pref="privacy.donottrackheader.value" onpreferencechanged="FlyoutPanelsUI.PrefsFlyoutPanel.onDNTPreferenceChanged();" type="radio" >
           <radiogroup id="prefs-dnt-options">
             <radio id="prefs-dnt-notrack" label="&doNotTrack.options.trackingNotOkay;" value="1"/>
             <radio id="prefs-dnt-nopref" label="&doNotTrack.options.noPreference;" value="-1"/>
@@ -715,11 +736,9 @@
     </flyoutpanel>
 
     <!-- Chrome touch selection overlay -->
-    <!-- onclick addresses dom bug 835175 -->
-    <box onclick="false" class="selection-overlay-hidden" id="chrome-selection-overlay"/>
+    <box class="selection-overlay-hidden" id="chrome-selection-overlay"/>
 
     <box onclick="event.stopPropagation();" id="context-container" class="menu-container" hidden="true">
-      <!-- onclick is dom bug 835175 -->
       <vbox id="context-popup" class="menu-popup">
         <richlistbox id="context-commands" bindingType="contextmenu" flex="1">
           <!-- priority="low" items are hidden by default when a context is being displayed

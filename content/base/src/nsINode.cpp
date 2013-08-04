@@ -1254,9 +1254,9 @@ nsINode::Traverse(nsINode *tmp, nsCycleCollectionTraversalCallback &cb)
 
 /* static */
 void
-nsINode::Unlink(nsINode *tmp)
+nsINode::Unlink(nsINode* tmp)
 {
-  nsContentUtils::ReleaseWrapper(tmp, tmp);
+  tmp->ReleaseWrapper(tmp);
 
   nsSlots *slots = tmp->GetExistingSlots();
   if (slots) {
@@ -1318,7 +1318,7 @@ AdoptNodeIntoOwnerDoc(nsINode *aParent, nsINode *aNode)
   NS_ASSERTION(aParent->OwnerDoc() == doc,
                "ownerDoc chainged while adopting");
   NS_ASSERTION(adoptedNode == node, "Uh, adopt node changed nodes?");
-  NS_ASSERTION(aParent->HasSameOwnerDoc(aNode),
+  NS_ASSERTION(aParent->OwnerDoc() == aNode->OwnerDoc(),
                "ownerDocument changed again after adopting!");
 
   return NS_OK;
@@ -1340,7 +1340,7 @@ nsINode::doInsertChildAt(nsIContent* aKid, uint32_t aIndex,
   nsIDocument* doc = GetCurrentDoc();
   mozAutoDocUpdate updateBatch(doc, UPDATE_CONTENT_MODEL, aNotify);
 
-  if (!HasSameOwnerDoc(aKid)) {
+  if (OwnerDoc() != aKid->OwnerDoc()) {
     rv = AdoptNodeIntoOwnerDoc(this, aKid);
     NS_ENSURE_SUCCESS(rv, rv);
   }
@@ -1953,7 +1953,7 @@ nsINode::ReplaceOrInsertBefore(bool aReplace, nsINode* aNewChild,
   // DocumentType nodes are the only nodes that can have a null
   // ownerDocument according to the DOM spec, and we need to allow
   // inserting them w/o calling AdoptNode().
-  if (!HasSameOwnerDoc(newContent)) {
+  if (OwnerDoc() != newContent->OwnerDoc()) {
     aError = AdoptNodeIntoOwnerDoc(this, aNewChild);
     if (aError.Failed()) {
       return nullptr;

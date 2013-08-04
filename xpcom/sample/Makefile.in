@@ -25,12 +25,7 @@ IS_COMPONENT	= 1
 # name specified in NS_IMPL_NSGETMODULE
 MODULE_NAME	= nsSampleModule
 
-# CPPSRCS specifies C++ files to be built into a library.
 include $(topsrcdir)/config/config.mk
-
-# EXTRA_COMPONENTS installs components written JavaScript to
-# dist/bin/components
-EXTRA_COMPONENTS = nsSample.js nsSample.manifest
 
 # EXTRA_DSO_LDOPTS specifies linker flags when building a shared library
 # from this Makefile. We link against the "dependent glue" and against the

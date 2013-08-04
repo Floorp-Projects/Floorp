@@ -53,30 +53,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "ConsoleAPIStorage",
 function WebConsoleActor(aConnection, aParentActor)
 {
   this.conn = aConnection;
-
-  if (aParentActor.browser instanceof Ci.nsIDOMWindow) {
-    // B2G tab actor |this.browser| points to a DOM window, not
-    // a xul:browser element.
-    //
-    // TODO: bug 802246 - b2g has tab actor which is
-    // not properly supported by the console actor - see bug for details.
-    //
-    // Below we work around the problem: selecting a b2g tab actor
-    // behaves as if the user picked the global console actor.
-    this._window = aParentActor.browser;
-    this._isGlobalActor = true;
-  }
-  else if (aParentActor instanceof BrowserTabActor &&
-           aParentActor.browser instanceof Ci.nsIDOMElement) {
-    // Firefox for desktop tab actor |this.browser| points to the xul:browser
-    // element.
-    this._window = aParentActor.browser.contentWindow;
-  }
-  else {
-    // In all other cases we should behave as the global console actor.
-    this._window = Services.wm.getMostRecentWindow("navigator:browser");
-    this._isGlobalActor = true;
-  }
+  this.parentActor = aParentActor;
 
   this._actorPool = new ActorPool(this.conn);
   this.conn.addActorPool(this._actorPool);
@@ -93,7 +70,7 @@ function WebConsoleActor(aConnection, aParentActor)
   this._onObserverNotification = this._onObserverNotification.bind(this);
   Services.obs.addObserver(this._onObserverNotification,
                            "inner-window-destroyed", false);
-  if (this._isGlobalActor) {
+  if (this.parentActor.isRootActor) {
     Services.obs.addObserver(this._onObserverNotification,
                              "last-pb-context-exited", false);
   }
@@ -107,13 +84,6 @@ WebConsoleActor.prototype =
    * @see jsdebugger.jsm
    */
   dbg: null,
-
-  /**
-   * Tells if this Web Console actor is a global actor or not.
-   * @private
-   * @type boolean
-   */
-  _isGlobalActor: false,
 
   /**
    * Actor pool for all of the actors we send to the client.
@@ -167,9 +137,7 @@ WebConsoleActor.prototype =
    * The content window we work with.
    * @type nsIDOMWindow
    */
-  get window() this._window,
-
-  _window: null,
+  get window() this.parentActor.window,
 
   /**
    * The ConsoleServiceListener instance.
@@ -237,7 +205,7 @@ WebConsoleActor.prototype =
     this.conn.removeActorPool(this._actorPool);
     Services.obs.removeObserver(this._onObserverNotification,
                                 "inner-window-destroyed");
-    if (this._isGlobalActor) {
+    if (this.parentActor.isRootActor) {
       Services.obs.removeObserver(this._onObserverNotification,
                                   "last-pb-context-exited");
     }
@@ -248,7 +216,7 @@ WebConsoleActor.prototype =
     this._dbgGlobals.clear();
     this.dbg.enabled = false;
     this.dbg = null;
-    this.conn = this._window = null;
+    this.conn = null;
   },
 
   /**
@@ -386,7 +354,7 @@ WebConsoleActor.prototype =
   onStartListeners: function WCA_onStartListeners(aRequest)
   {
     let startedListeners = [];
-    let window = !this._isGlobalActor ? this.window : null;
+    let window = !this.parentActor.isRootActor ? this.window : null;
 
     while (aRequest.listeners.length > 0) {
       let listener = aRequest.listeners.shift();
@@ -519,7 +487,7 @@ WebConsoleActor.prototype =
             break;
           }
           let cache = this.consoleAPIListener
-                      .getCachedMessages(!this._isGlobalActor);
+                      .getCachedMessages(!this.parentActor.isRootActor);
           cache.forEach((aMessage) => {
             let message = this.prepareConsoleMessageForRemote(aMessage);
             message._type = type;
@@ -532,7 +500,7 @@ WebConsoleActor.prototype =
             break;
           }
           let cache = this.consoleServiceListener
-                      .getCachedMessages(!this._isGlobalActor);
+                      .getCachedMessages(!this.parentActor.isRootActor);
           cache.forEach((aMessage) => {
             let message = null;
             if (aMessage instanceof Ci.nsIScriptError) {
@@ -625,11 +593,29 @@ WebConsoleActor.prototype =
   {
     // TODO: Bug 842682 - use the debugger API for autocomplete in the Web
     // Console, and provide suggestions from the selected debugger stack frame.
+    // Also, properly reuse _getJSTermHelpers instead of re-implementing it
+    // here.
     let result = JSPropertyProvider(this.window, aRequest.text,
                                     aRequest.cursor) || {};
+    let matches = result.matches || [];
+    let reqText = aRequest.text.substr(0, aRequest.cursor);
+
+    // We consider '$' as alphanumerc because it is used in the names of some
+    // helper functions.
+    let lastNonAlphaIsDot = /[.][a-zA-Z0-9$]*$/.test(reqText);
+    if (!lastNonAlphaIsDot) {
+      let helpers = {
+        sandbox: Object.create(null)
+      };
+      JSTermHelpers(helpers);
+
+      let helperNames = Object.getOwnPropertyNames(helpers.sandbox);
+      matches = matches.concat(helperNames.filter(n => n.startsWith(result.matchProp)));
+    }
+
     return {
       from: this.actorID,
-      matches: result.matches || [],
+      matches: matches.sort(),
       matchProp: result.matchProp,
     };
   },
@@ -640,10 +626,10 @@ WebConsoleActor.prototype =
   onClearMessagesCache: function WCA_onClearMessagesCache()
   {
     // TODO: Bug 717611 - Web Console clear button does not clear cached errors
-    let windowId = !this._isGlobalActor ?
+    let windowId = !this.parentActor.isRootActor ?
                    WebConsoleUtils.getInnerWindowId(this.window) : null;
     ConsoleAPIStorage.clearEvents(windowId);
-    if (this._isGlobalActor) {
+    if (this.parentActor.isRootActor) {
       Services.console.logStringMessage(null); // for the Error Console
       Services.console.reset();
     }
@@ -1074,7 +1060,7 @@ WebConsoleActor.prototype =
     let details = aMessage.request;
 
     // send request from target's window
-    let request = new this._window.XMLHttpRequest();
+    let request = new this.window.XMLHttpRequest();
     request.open(details.method, details.url, true);
 
     for (let {name, value} of details.headers) {

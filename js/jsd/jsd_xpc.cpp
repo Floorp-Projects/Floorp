@@ -1695,7 +1695,7 @@ NS_IMETHODIMP
 jsdContext::GetGlobalObject (jsdIValue **_rval)
 {
     ASSERT_VALID_EPHEMERAL;
-    JSObject *glob = js::GetDefaultGlobalForContext(mJSCx);
+    JSObject *glob = js::DefaultObjectForContextOrNull(mJSCx);
     JSDValue *jsdv = JSD_NewValue (mJSDCx, OBJECT_TO_JSVAL(glob));
     if (!jsdv)
         return NS_ERROR_FAILURE;
@@ -3350,7 +3350,7 @@ CreateJSDGlobal(JSContext *aCx, JSClass *aClasp)
     NS_ENSURE_SUCCESS(rv, nullptr);
 
     JSPrincipals *jsPrin = nsJSPrincipals::get(nullPrin);
-    JSObject *global = JS_NewGlobalObject(aCx, aClasp, jsPrin);
+    JS::RootedObject global(aCx, JS_NewGlobalObject(aCx, aClasp, jsPrin, JS::DontFireOnNewGlobalHook));
     NS_ENSURE_TRUE(global, nullptr);
 
     // We have created a new global let's attach a private to it
@@ -3358,6 +3358,8 @@ CreateJSDGlobal(JSContext *aCx, JSClass *aClasp)
     nsCOMPtr<nsIScriptObjectPrincipal> sbp =
         new SandboxPrivate(nullPrin, global);
     JS_SetPrivate(global, sbp.forget().get());
+
+    JS_FireOnNewGlobalObject(aCx, global);
 
     return global;
 }

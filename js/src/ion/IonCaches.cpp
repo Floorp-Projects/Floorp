@@ -2655,6 +2655,23 @@ IsElementSetInlineable(HandleObject obj, HandleValue index)
     if (!index.isInt32())
         return false;
 
+    // The object may have a setter definition,
+    // either directly, or via a prototype, or via the target object for a prototype
+    // which is a proxy, that handles a particular integer write.
+    // Scan the prototype and shape chain to make sure that this is not the case.
+    JSObject *curObj = obj;
+    while (curObj) {
+        // Ensure object is native.
+        if (!curObj->isNative())
+            return false;
+
+        // Ensure all indexed properties are stored in dense elements.
+        if (curObj->isIndexed())
+            return false;
+
+        curObj = curObj->getProto();
+    }
+
     return true;
 }
 

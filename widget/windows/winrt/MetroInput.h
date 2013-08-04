@@ -152,9 +152,9 @@ public:
                         IRightTappedEventArgs* aArgs);
 
   // Used by MetroWidget GeckoContentController callbacks
-  void HandleDoubleTap(const mozilla::CSSIntPoint& aPoint);
-  void HandleSingleTap(const mozilla::CSSIntPoint& aPoint);
-  void HandleLongTap(const mozilla::CSSIntPoint& aPoint);
+  void HandleDoubleTap(const mozilla::LayoutDeviceIntPoint& aPoint);
+  void HandleSingleTap(const mozilla::LayoutDeviceIntPoint& aPoint);
+  void HandleLongTap(const mozilla::LayoutDeviceIntPoint& aPoint);
 
 private:
   Microsoft::WRL::ComPtr<ICoreWindow> mWindow;

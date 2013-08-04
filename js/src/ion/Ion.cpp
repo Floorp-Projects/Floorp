@@ -15,9 +15,8 @@
 #endif
 
 #include "gc/Marking.h"
-#include "ion/AliasAnalysis.h"
-#include "ion/AsmJS.h"
 #include "ion/AsmJSModule.h"
+#include "ion/AliasAnalysis.h"
 #include "ion/BacktrackingAllocator.h"
 #include "ion/BaselineCompiler.h"
 #include "ion/BaselineInspector.h"
@@ -430,18 +429,18 @@ IonCompartment::sweep(FreeOp *fop)
 }
 
 IonCode *
-IonCompartment::getBailoutTable(const FrameSizeClass &frameClass)
+IonRuntime::getBailoutTable(const FrameSizeClass &frameClass)
 {
     JS_ASSERT(frameClass != FrameSizeClass::None());
-    return rt->bailoutTables_[frameClass.classId()];
+    return bailoutTables_[frameClass.classId()];
 }
 
 IonCode *
-IonCompartment::getVMWrapper(const VMFunction &f)
+IonRuntime::getVMWrapper(const VMFunction &f)
 {
-    JS_ASSERT(rt->functionWrappers_);
-    JS_ASSERT(rt->functionWrappers_->initialized());
-    IonRuntime::VMWrapperMap::Ptr p = rt->functionWrappers_->readonlyThreadsafeLookup(&f);
+    JS_ASSERT(functionWrappers_);
+    JS_ASSERT(functionWrappers_->initialized());
+    IonRuntime::VMWrapperMap::Ptr p = functionWrappers_->readonlyThreadsafeLookup(&f);
     JS_ASSERT(p);
 
     return p->value;
@@ -1791,7 +1790,7 @@ ion::CanEnterInParallel(JSContext *cx, HandleScript script)
 
     // This can GC, so afterward, script->parallelIon is
     // not guaranteed to be valid.
-    if (!cx->compartment()->ionCompartment()->enterJIT())
+    if (!cx->runtime()->ionRuntime()->enterIon())
         return Method_Error;
 
     // Subtle: it is possible for GC to occur during
@@ -1828,7 +1827,7 @@ ion::CanEnterUsingFastInvoke(JSContext *cx, HandleScript script, uint32_t numAct
         return Method_Error;
 
     // This can GC, so afterward, script->ion is not guaranteed to be valid.
-    if (!cx->compartment()->ionCompartment()->enterJIT())
+    if (!cx->runtime()->ionRuntime()->enterIon())
         return Method_Error;
 
     if (!script->hasIonScript())
@@ -1844,7 +1843,7 @@ EnterIon(JSContext *cx, EnterJitData &data)
     JS_ASSERT(ion::IsEnabled(cx));
     JS_ASSERT(!data.osrFrame);
 
-    EnterIonCode enter = cx->compartment()->ionCompartment()->enterJIT();
+    EnterIonCode enter = cx->runtime()->ionRuntime()->enterIon();
 
     // Caller must construct |this| before invoking the Ion function.
     JS_ASSERT_IF(data.constructing, data.maxArgv[0].isObject());
@@ -1961,7 +1960,7 @@ ion::FastInvoke(JSContext *cx, HandleFunction fun, CallArgs &args)
 
     JitActivation activation(cx, /* firstFrameIsConstructing = */false);
 
-    EnterIonCode enter = cx->compartment()->ionCompartment()->enterJIT();
+    EnterIonCode enter = cx->runtime()->ionRuntime()->enterIon();
     void *calleeToken = CalleeToToken(fun);
 
     RootedValue result(cx, Int32Value(args.length()));
@@ -2413,8 +2412,6 @@ AutoFlushInhibitor::~AutoFlushInhibitor()
     if (afc)
         IonSpewCont(IonSpew_CacheFlush, "{");
 }
-
-int js::ion::LabelBase::id_count = 0;
 
 void
 ion::PurgeCaches(JSScript *script, Zone *zone)

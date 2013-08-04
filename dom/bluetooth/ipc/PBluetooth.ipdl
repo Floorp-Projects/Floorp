@@ -141,6 +141,23 @@ struct IsScoConnectedRequest
 {
 };
 
+struct SendMetaDataRequest
+{
+  nsString title;
+  nsString artist;
+  nsString album;
+  int64_t mediaNumber;
+  int64_t totalMediaCount;
+  int64_t duration;
+};
+
+struct SendPlayStatusRequest
+{
+  int64_t duration;
+  int64_t position;
+  nsString playStatus;
+};
+
 union Request
 {
   DefaultAdapterPathRequest;
@@ -167,6 +184,8 @@ union Request
   ConnectScoRequest;
   DisconnectScoRequest;
   IsScoConnectedRequest;
+  SendMetaDataRequest;
+  SendPlayStatusRequest;
 };
 
 protocol PBluetooth

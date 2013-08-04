@@ -67,6 +67,13 @@ pref("extensions.autoDisableScopes", 15);
 // Dictionary download preference
 pref("browser.dictionaries.download.url", "https://addons.mozilla.org/%LOCALE%/firefox/dictionaries/");
 
+// At startup, should we check to see if the installation
+// date is older than some threshold
+pref("app.update.checkInstallTime", true);
+
+// The number of days a binary is permitted to be old without checking is defined in
+// firefox-branding.js (app.update.checkInstallTime.days)
+
 // The minimum delay in seconds for the timer to fire.
 // default=2 minutes
 pref("app.update.timerMinimumDelay", 120);
@@ -223,8 +230,6 @@ pref("general.autoScroll", false);
 pref("general.autoScroll", true);
 #endif
 
-pref("general.useragent.complexOverride.moodle", false); // bug 797703
-
 // At startup, check if we're the default browser and prompt user if not.
 pref("browser.shell.checkDefaultBrowser", true);
 pref("browser.shell.shortcutFavicons",true);
@@ -332,6 +337,10 @@ pref("browser.download.manager.resumeOnWakeDelay", 10000);
 
 // This allows disabling the Downloads Panel in favor of the old interface.
 pref("browser.download.useToolkitUI", false);
+
+// This allows disabling the animated notifications shown by
+// the Downloads Indicator when a download starts or completes.
+pref("browser.download.animateNotifications", true);
 
 // This records whether or not the panel has been shown at least once.
 pref("browser.download.panel.shown", false);

@@ -160,6 +160,8 @@ nsXBLBinding::~nsXBLBinding(void)
   NS_RELEASE(info);
 }
 
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsXBLBinding)
+
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsXBLBinding)
   // XXX Probably can't unlink mPrototypeBinding->XBLDocumentInfo(), because
   //     mPrototypeBinding is weak.
@@ -765,7 +767,7 @@ nsXBLBinding::ChangeDocument(nsIDocument* aOldDocument, nsIDocument* aNewDocumen
           JS::Rooted<JSObject*> base(cx, scriptObject);
           JS::Rooted<JSObject*> proto(cx);
           for ( ; true; base = proto) { // Will break out on null proto
-            if (!JS_GetPrototype(cx, base, proto.address())) {
+            if (!JS_GetPrototype(cx, base, &proto)) {
               return;
             }
             if (!proto) {
@@ -799,7 +801,7 @@ nsXBLBinding::ChangeDocument(nsIDocument* aOldDocument, nsIDocument* aNewDocumen
             // Alright!  This is the right prototype.  Pull it out of the
             // proto chain.
             JS::Rooted<JSObject*> grandProto(cx);
-            if (!JS_GetPrototype(cx, proto, grandProto.address())) {
+            if (!JS_GetPrototype(cx, proto, &grandProto)) {
               return;
             }
             ::JS_SetPrototype(cx, base, grandProto);
@@ -899,7 +901,7 @@ nsXBLBinding::DoInitJSClass(JSContext *cx, JS::Handle<JSObject*> global,
   nsXBLJSClass* c = nullptr;
   if (obj) {
     // Retrieve the current prototype of obj.
-    if (!JS_GetPrototype(cx, obj, parent_proto.address())) {
+    if (!JS_GetPrototype(cx, obj, &parent_proto)) {
       return NS_ERROR_FAILURE;
     }
     if (parent_proto) {
@@ -941,7 +943,7 @@ nsXBLBinding::DoInitJSClass(JSContext *cx, JS::Handle<JSObject*> global,
   JS::Rooted<JSObject*> proto(cx);
   JS::Rooted<JS::Value> val(cx);
 
-  if (!::JS_LookupPropertyWithFlags(cx, global, className.get(), 0, val.address()))
+  if (!::JS_LookupPropertyWithFlags(cx, global, className.get(), 0, &val))
     return NS_ERROR_OUT_OF_MEMORY;
 
   if (val.isObject()) {
@@ -1163,7 +1165,7 @@ nsXBLBinding::LookupMemberInternal(JSContext* aCx, nsString& aName,
   // Find our class object. It's in a protected scope and permanent just in case,
   // so should be there no matter what.
   JS::RootedValue classObject(aCx);
-  if (!JS_GetProperty(aCx, aXBLScope, mJSClass->name, classObject.address())) {
+  if (!JS_GetProperty(aCx, aXBLScope, mJSClass->name, &classObject)) {
     return false;
   }
 

@@ -74,18 +74,23 @@
 
   <string name="settings">&settings;</string>
   <string name="settings_title">&settings_title;</string>
+  <string name="pref_category_advanced">&pref_category_advanced;</string>
   <string name="pref_category_customize">&pref_category_customize;</string>
-  <string name="pref_category_search">&pref_category_search;</string>
+  <string name="pref_category_search">&pref_category_search2;</string>
   <string name="pref_category_display">&pref_category_display;</string>
   <string name="pref_category_privacy_short">&pref_category_privacy_short;</string>
   <string name="pref_category_vendor">&pref_category_vendor;</string>
   <string name="pref_category_datareporting">&pref_category_datareporting;</string>
   <string name="pref_category_installed_search_engines">&pref_category_installed_search_engines;</string>
+  <string name="pref_category_devtools">&pref_category_devtools;</string>
+  <string name="pref_developer_remotedebugging">&pref_developer_remotedebugging;</string>
+  <string name="pref_developer_remotedebugging_docs">&pref_developer_remotedebugging_docs;</string>
 
   <string name="pref_header_customize">&pref_header_customize;</string>
   <string name="pref_header_display">&pref_header_display;</string>
   <string name="pref_header_privacy_short">&pref_header_privacy_short;</string>
   <string name="pref_header_vendor">&pref_header_vendor;</string>
+  <string name="pref_header_devtools">&pref_header_devtools;</string>
 
   <string name="pref_remember_signons">&pref_remember_signons;</string>
 
@@ -116,8 +121,11 @@
   <string name="pref_font_size_set">&pref_font_size_set;</string>
   <string name="pref_font_size_adjust_char">&pref_font_size_adjust_char;</string>
   <string name="pref_font_size_preview_text">&pref_font_size_preview_text;</string>
-  <string name="pref_reflow_on_zoom">&pref_reflow_on_zoom3;</string>
-  <string name="pref_restore_session">&pref_restore_session;</string>
+  <string name="pref_reflow_on_zoom">&pref_reflow_on_zoom4;</string>
+  <string name="pref_restore">&pref_restore;</string>
+  <string name="pref_restore_always">&pref_restore_always;</string>
+  <string name="pref_restore_crash">&pref_restore_crash;</string>
+  <string name="pref_restore_never">&pref_restore_never;</string>
   <string name="pref_show_product_announcements">&pref_show_product_announcements;</string>
   <string name="pref_sync">&pref_sync;</string>
   <string name="pref_search_suggestions">&pref_search_suggestions;</string>
@@ -286,6 +294,8 @@
   <string name="webapp_generic_name">&webapp_generic_name;</string>
 
   <string name="searchable_description">&searchable_description;</string>
+
+  <string name="devtools_remote_debugging_forward">&devtools_remote_debugging_forward;</string>
 
   <!-- Updater notifications -->
   <string name="updater_start_title">&updater_start_title2;</string>

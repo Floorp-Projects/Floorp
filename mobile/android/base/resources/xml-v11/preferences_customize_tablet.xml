@@ -4,7 +4,8 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <!-- Tablet only: The contents under the "Customize" header for tablets,
-     See xml-v11/preferences.xml for single-pane v11+ phone layout. -->
+     See xml-v11/preferences.xml for single-pane v11+ phone layout.
+     Changes to preferences shoudl be mirrored to preferences_customize.xml. -->
 
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
                   xmlns:gecko="http://schemas.android.com/apk/res-auto"
@@ -30,10 +31,12 @@
             android:negativeButtonText="@string/button_cancel"
             android:persistent="false" />
 
-    <CheckBoxPreference android:key="android.not_a_preference.restoreSession"
-                        android:title="@string/pref_restore_session"
-                        android:defaultValue="false"
-                        android:persistent="true" />
+    <ListPreference android:key="android.not_a_preference.restoreSession2"
+                    android:title="@string/pref_restore"
+                    android:defaultValue="crash"
+                    android:entries="@array/pref_restore_entries"
+                    android:entryValues="@array/pref_restore_values"
+                    android:persistent="true" />
 
     <ListPreference android:key="app.update.autodownload"
                     android:title="@string/pref_update_autodownload"

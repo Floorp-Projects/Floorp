@@ -28,7 +28,7 @@
 
 #include "frontend/Parser.h"
 #include "frontend/TokenStream.h"
-#include "ion/AsmJS.h"
+#include "ion/AsmJSLink.h"
 #include "vm/Debugger.h"
 
 #include "jsatominlines.h"
@@ -4510,7 +4510,7 @@ EmitFunc(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
                 JSObject *scope = bce->blockChain;
                 if (!scope && bce->sc->isFunctionBox())
                     scope = bce->sc->asFunctionBox()->function();
-                fun->lazyScript()->setParent(scope, bce->script->sourceObject(), bce->script->originPrincipals);
+                fun->lazyScript()->setParent(scope, bce->script->sourceObject());
             }
         } else {
             SharedContext *outersc = bce->sc;
@@ -4523,7 +4523,7 @@ EmitFunc(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             Rooted<JSScript*> parent(cx, bce->script);
             CompileOptions options(bce->parser->options());
             options.setPrincipals(parent->principals())
-                   .setOriginPrincipals(parent->originPrincipals)
+                   .setOriginPrincipals(parent->originPrincipals())
                    .setCompileAndGo(parent->compileAndGo)
                    .setSelfHostingMode(parent->selfHosted)
                    .setNoScriptRval(false)
@@ -5458,8 +5458,8 @@ EmitObject(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         if (!objbox)
             return false;
         unsigned index = bce->objectList.add(objbox);
-        MOZ_STATIC_ASSERT(JSOP_NEWINIT_LENGTH == JSOP_NEWOBJECT_LENGTH,
-                          "newinit and newobject must have equal length to edit in-place");
+        static_assert(JSOP_NEWINIT_LENGTH == JSOP_NEWOBJECT_LENGTH,
+                      "newinit and newobject must have equal length to edit in-place");
         EMIT_UINT32_IN_PLACE(offset, JSOP_NEWOBJECT, uint32_t(index));
     }
 

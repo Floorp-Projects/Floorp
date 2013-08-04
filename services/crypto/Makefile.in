@@ -14,10 +14,6 @@ modules := \
   WeaveCrypto.js \
   $(NULL)
 
-EXTRA_COMPONENTS := \
-  cryptoComponents.manifest \
-  $(NULL)
-
 CRYPTO_MODULE_FILES := $(addprefix modules/,$(modules))
 CRYPTO_MODULE_DEST = $(FINAL_TARGET)/modules/services-crypto
 INSTALL_TARGETS += CRYPTO_MODULE

@@ -8,10 +8,10 @@
 
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/StandardInteger.h"
 
 #include <limits>
 #include <math.h>
+#include <stdint.h>
 
 #if defined(XP_WIN) || defined(XP_OS2)
 #include <float.h>
@@ -832,7 +832,7 @@ InitCTypeClass(JSContext* cx, HandleObject parent)
 
   RootedObject ctor(cx, JS_GetFunctionObject(fun));
   RootedObject fnproto(cx);
-  if (!JS_GetPrototype(cx, ctor, fnproto.address()))
+  if (!JS_GetPrototype(cx, ctor, &fnproto))
     return NULL;
   JS_ASSERT(ctor);
   JS_ASSERT(fnproto);
@@ -1257,7 +1257,7 @@ static bool GetObjectProperty(JSContext *cx, HandleObject obj,
                               const char *property, MutableHandleObject result)
 {
   RootedValue val(cx);
-  if (!JS_GetProperty(cx, obj, property, val.address())) {
+  if (!JS_GetProperty(cx, obj, property, &val)) {
     return false;
   }
 
@@ -2544,7 +2544,7 @@ ImplicitConvert(JSContext* cx,
           return false;
 
         RootedValue prop(cx);
-        if (!JS_GetPropertyById(cx, valObj, id, prop.address()))
+        if (!JS_GetPropertyById(cx, valObj, id, &prop))
           return false;
 
         // Convert the field via ImplicitConvert().
@@ -3573,13 +3573,14 @@ CType::GetProtoFromCtor(JSObject* obj, CTypeProtoSlot slot)
 }
 
 JSObject*
-CType::GetProtoFromType(JSContext* cx, JSObject* obj, CTypeProtoSlot slot)
+CType::GetProtoFromType(JSContext* cx, JSObject* objArg, CTypeProtoSlot slot)
 {
-  JS_ASSERT(IsCType(obj));
+  JS_ASSERT(IsCType(objArg));
+  RootedObject obj(cx, objArg);
 
   // Get the prototype of the type object.
   RootedObject proto(cx);
-  if (!JS_GetPrototype(cx, obj, proto.address()))
+  if (!JS_GetPrototype(cx, obj, &proto))
     return NULL;
   JS_ASSERT(proto);
   JS_ASSERT(CType::IsCTypeProto(proto));
@@ -3760,7 +3761,7 @@ CType::HasInstance(JSContext* cx, HandleObject obj, MutableHandleValue v, JSBool
 
   RootedObject proto(cx, &v.toObject());
   for (;;) {
-    if (!JS_GetPrototype(cx, proto, proto.address()))
+    if (!JS_GetPrototype(cx, proto, &proto))
       return JS_FALSE;
     if (!proto)
       break;
@@ -3773,12 +3774,13 @@ CType::HasInstance(JSContext* cx, HandleObject obj, MutableHandleValue v, JSBool
 }
 
 static JSObject*
-CType::GetGlobalCTypes(JSContext* cx, JSObject* obj)
+CType::GetGlobalCTypes(JSContext* cx, JSObject* objArg)
 {
-  JS_ASSERT(CType::IsCType(obj));
+  JS_ASSERT(CType::IsCType(objArg));
 
+  RootedObject obj(cx, objArg);
   RootedObject objTypeProto(cx);
-  if (!JS_GetPrototype(cx, obj, objTypeProto.address()))
+  if (!JS_GetPrototype(cx, obj, &objTypeProto))
     return NULL;
   JS_ASSERT(objTypeProto);
   JS_ASSERT(CType::IsCTypeProto(objTypeProto));
@@ -4292,7 +4294,7 @@ ArrayType::ConstructData(JSContext* cx,
       // This could be a JS array, or a CData array.
       RootedObject arg(cx, &args[0].toObject());
       RootedValue lengthVal(cx);
-      if (!JS_GetProperty(cx, arg, "length", lengthVal.address()) ||
+      if (!JS_GetProperty(cx, arg, "length", &lengthVal) ||
           !jsvalToSize(cx, lengthVal, false, &length)) {
         JS_ReportError(cx, "argument must be an array object or length");
         return JS_FALSE;
@@ -4644,7 +4646,7 @@ ExtractStructField(JSContext* cx, jsval val, JSObject** typeObj)
   }
 
   RootedValue propVal(cx);
-  if (!JS_GetPropertyById(cx, obj, nameid, propVal.address()))
+  if (!JS_GetPropertyById(cx, obj, nameid, &propVal))
     return NULL;
 
   if (propVal.isPrimitive() || !CType::IsCType(&propVal.toObject())) {
@@ -5997,7 +5999,7 @@ CClosure::Create(JSContext* cx,
   // Get the prototype of the FunctionType object, of class CTypeProto,
   // which stores our JSContext for use with the closure.
   RootedObject proto(cx);
-  if (!JS_GetPrototype(cx, typeObj, proto.address()))
+  if (!JS_GetPrototype(cx, typeObj, &proto))
     return NULL;
   JS_ASSERT(proto);
   JS_ASSERT(CType::IsCTypeProto(proto));
@@ -7411,7 +7413,7 @@ Int64::Construct(JSContext* cx,
   // Get ctypes.Int64.prototype from the 'prototype' property of the ctor.
   RootedValue slot(cx);
   RootedObject callee(cx, &args.callee());
-  ASSERT_OK(JS_GetProperty(cx, callee, "prototype", slot.address()));
+  ASSERT_OK(JS_GetProperty(cx, callee, "prototype", &slot));
   RootedObject proto(cx, JSVAL_TO_OBJECT(slot));
   JS_ASSERT(JS_GetClass(proto) == &sInt64ProtoClass);
 
@@ -7581,7 +7583,7 @@ UInt64::Construct(JSContext* cx,
   // Get ctypes.UInt64.prototype from the 'prototype' property of the ctor.
   RootedValue slot(cx);
   RootedObject callee(cx, &args.callee());
-  ASSERT_OK(JS_GetProperty(cx, callee, "prototype", slot.address()));
+  ASSERT_OK(JS_GetProperty(cx, callee, "prototype", &slot));
   RootedObject proto(cx, &slot.toObject());
   JS_ASSERT(JS_GetClass(proto) == &sUInt64ProtoClass);
 

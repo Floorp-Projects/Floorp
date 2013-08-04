@@ -586,6 +586,7 @@ RES_XML = \
   res/xml/preferences_search.xml \
   res/xml/preferences_privacy.xml \
   res/xml/preferences_vendor.xml \
+  res/xml/preferences_devtools.xml \
   $(SYNC_RES_XML) \
   $(NULL)
 
@@ -1332,23 +1333,25 @@ $(RESOURCES): $(RES_DIRS) $(subst res/,$(srcdir)/resources/,$(RESOURCES))
 res/values/strings.xml:
 	$(MAKE) -C locales
 
+# With multilocale builds, there will be multiple strings.xml files. We need to
+# rebuild gecko.ap_ if any of them change.
+MULTILOCALE_STRINGS_XML_FILES := $(wildcard res/values-*/strings.xml)
 all_resources = \
   res/drawable-mdpi/icon.png \
   res/drawable-hdpi/icon.png \
   res/drawable-xhdpi/icon.png \
   res/drawable-xxhdpi/icon.png \
   res/values/strings.xml \
+  $(MULTILOCALE_STRINGS_XML_FILES) \
   AndroidManifest.xml \
   $(RESOURCES) \
   $(PP_RES_XML) \
   $(NULL)
 
 R.java: $(all_resources)
-R.java: FORCE
 	$(AAPT) package -f -M AndroidManifest.xml -I $(ANDROID_SDK)/android.jar -S res -J . --custom-package org.mozilla.gecko
 
 gecko.ap_: $(all_resources)
-gecko.ap_: FORCE
 	$(AAPT) package -f -M AndroidManifest.xml -I $(ANDROID_SDK)/android.jar  -S res -F $@
 
 fennec_ids.txt: fennec-ids-generator.py R.java

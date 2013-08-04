@@ -21,7 +21,9 @@ public:
   ProgressMeterAccessible(nsIContent* aContent, DocAccessible* aDoc) :
     LeafAccessible(aContent, aDoc)
   {
-    mStateFlags |= eHasNumericValue;
+    // Ignore 'ValueChange' DOM event in lieu of @value attribute change
+    // notifications.
+    mStateFlags |= eHasNumericValue | eIgnoreDOMUIEvent;
     mType = eProgressType;
   }
 

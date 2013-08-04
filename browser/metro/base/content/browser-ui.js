@@ -45,6 +45,7 @@ let Elements = {};
   ["toolbar",            "toolbar"],
   ["browsers",           "browsers"],
   ["navbar",             "navbar"],
+  ["autocomplete",       "urlbar-autocomplete"],
   ["contextappbar",      "contextappbar"],
   ["findbar",            "findbar"],
   ["contentViewport",    "content-viewport"],
@@ -550,13 +551,12 @@ var BrowserUI = {
         break;
       case "metro_viewstate_changed":
         this._adjustDOMforViewState();
-        let autocomplete = document.getElementById("urlbar-autocomplete");
         if (aData == "snapped") {
           FlyoutPanelsUI.hide();
-          autocomplete.setAttribute("orient", "vertical");
+          Elements.autocomplete.setAttribute("orient", "vertical");
         }
         else {
-          autocomplete.setAttribute("orient", "horizontal");
+          Elements.autocomplete.setAttribute("orient", "horizontal");
         }
 
         break;
@@ -1036,7 +1036,7 @@ var BrowserUI = {
       case "cmd_remoteTabs":
 #ifdef MOZ_SERVICES_SYNC
         if (Weave.Status.checkSetup() == Weave.CLIENT_NOT_CONFIGURED) {
-          FlyoutPanelsUI.show('SyncFlyout');
+          FlyoutPanelsUI.show('SyncFlyoutPanel');
         } else {
           PanelUI.show("remotetabs-container");
         }
@@ -1185,16 +1185,16 @@ var StartUI = {
       ContextUI.dismissTabs();
   },
 
-  onNarrowTitleClick: function onNarrowTitleClick(gridId) {
-    let grid = document.getElementById(gridId);
+  onNarrowTitleClick: function onNarrowTitleClick(sectionId) {
+    let section = document.getElementById(sectionId);
 
-    if (grid.hasAttribute("expanded"))
+    if (section.hasAttribute("expanded"))
       return;
 
-    for (let expandedGrid of Elements.startUI.querySelectorAll("[expanded]"))
-      expandedGrid.removeAttribute("expanded")
+    for (let expandedSection of Elements.startUI.querySelectorAll(".meta-section[expanded]"))
+      expandedSection.removeAttribute("expanded")
 
-    grid.setAttribute("expanded", "true");
+    section.setAttribute("expanded", "true");
   },
 
   handleEvent: function handleEvent(aEvent) {
@@ -1506,17 +1506,17 @@ var SettingsCharm = {
     // Options
     this.addEntry({
         label: Strings.browser.GetStringFromName("optionsCharm"),
-        onselected: function() FlyoutPanelsUI.show('PrefsFlyout')
+        onselected: function() FlyoutPanelsUI.show('PrefsFlyoutPanel')
     });
     // Sync
     this.addEntry({
         label: Strings.browser.GetStringFromName("syncCharm"),
-        onselected: function() FlyoutPanelsUI.show('SyncFlyout')
+        onselected: function() FlyoutPanelsUI.show('SyncFlyoutPanel')
     });
     // About
     this.addEntry({
         label: Strings.browser.GetStringFromName("aboutCharm1"),
-        onselected: function() FlyoutPanelsUI.show('AboutFlyout')
+        onselected: function() FlyoutPanelsUI.show('AboutFlyoutPanel')
     });
     // Help
     this.addEntry({

@@ -110,7 +110,7 @@ registrar.registerFactory(Components.ID("{1dfeb90a-2193-45d5-9cb8-864928b2af55}"
 function do_update_blocklist(aDatafile, aNextPart) {
   gNextTestPart = aNextPart;
 
-  gPrefs.setCharPref("extensions.blocklist.url", "http://localhost:4444/data/" + aDatafile);
+  gPrefs.setCharPref("extensions.blocklist.url", "http://localhost:" + gPort + "/data/" + aDatafile);
   gBlocklist.QueryInterface(Ci.nsITimerCallback).notify(null);
 }
 
@@ -119,7 +119,8 @@ function run_test() {
 
   gTestserver = new HttpServer();
   gTestserver.registerDirectory("/data/", do_get_file("data"));
-  gTestserver.start(4444);
+  gTestserver.start(-1);
+  gPort = gTestserver.identity.primaryPort;
 
   startupManager();
 

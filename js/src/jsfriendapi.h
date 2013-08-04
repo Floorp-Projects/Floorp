@@ -204,8 +204,6 @@ JS_SetSourceHook(JSRuntime *rt, JS_SourceHook hook);
 
 namespace js {
 
-extern mozilla::ThreadLocal<PerThreadData *> TlsPerThreadData;
-
 inline JSRuntime *
 GetRuntime(const JSContext *cx)
 {
@@ -382,13 +380,13 @@ struct Atom {
 
 // These are equal to |&{Function,Object,OuterWindow}ProxyObject::class_|.  Use
 // them in places where you don't want to #include vm/ProxyObject.h.
-extern JS_FRIEND_DATA(js::Class*) FunctionProxyClassPtr;
-extern JS_FRIEND_DATA(js::Class*) ObjectProxyClassPtr;
-extern JS_FRIEND_DATA(js::Class*) OuterWindowProxyClassPtr;
+extern JS_FRIEND_DATA(js::Class* const) FunctionProxyClassPtr;
+extern JS_FRIEND_DATA(js::Class* const) ObjectProxyClassPtr;
+extern JS_FRIEND_DATA(js::Class* const) OuterWindowProxyClassPtr;
 
 // This is equal to |&JSObject::class_|.  Use it in places where you don't want
 // to #include jsobj.h.
-extern JS_FRIEND_DATA(js::Class*) ObjectClassPtr;
+extern JS_FRIEND_DATA(js::Class* const) ObjectClassPtr;
 
 inline js::Class *
 GetObjectClass(JSObject *obj)
@@ -442,7 +440,10 @@ GetGlobalForObjectCrossCompartment(JSObject *obj);
 
 // For legacy consumers only. This whole concept is going away soon.
 JS_FRIEND_API(JSObject *)
-GetDefaultGlobalForContext(JSContext *cx);
+DefaultObjectForContextOrNull(JSContext *cx);
+
+JS_FRIEND_API(void)
+SetDefaultObjectForContext(JSContext *cx, JSObject *obj);
 
 JS_FRIEND_API(void)
 NotifyAnimationActivity(JSObject *obj);
@@ -494,7 +495,7 @@ GetObjectProto(JSContext *cx, JS::Handle<JSObject*> obj, JS::MutableHandle<JSObj
         clasp == js::OuterWindowProxyClassPtr ||
         clasp == js::FunctionProxyClassPtr)
     {
-        return JS_GetPrototype(cx, obj, proto.address());
+        return JS_GetPrototype(cx, obj, proto);
     }
 
     proto.set(reinterpret_cast<const shadow::Object*>(obj.get())->type->proto);

@@ -146,18 +146,9 @@ CreateScopeKey(nsIPrincipal* aPrincipal,
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (domainScope.IsEmpty()) {
-    // About pages have an empty host but a valid path.  Since they are handled
-    // internally by our own redirector, we can trust them and use path as key.
-    // if file:/// protocol, let's make the exact directory the domain
+    // For the file:/// protocol use the exact directory as domain.
     bool isScheme = false;
-    if ((NS_SUCCEEDED(uri->SchemeIs("about", &isScheme)) && isScheme) ||
-        (NS_SUCCEEDED(uri->SchemeIs("moz-safe-about", &isScheme)) && isScheme)) {
-      rv = uri->GetPath(domainScope);
-      NS_ENSURE_SUCCESS(rv, rv);
-      // While the host is always canonicalized to lowercase, the path is not,
-      // thus need to force the casing.
-      ToLowerCase(domainScope);
-    } else if (NS_SUCCEEDED(uri->SchemeIs("file", &isScheme)) && isScheme) {
+    if (NS_SUCCEEDED(uri->SchemeIs("file", &isScheme)) && isScheme) {
       nsCOMPtr<nsIURL> url = do_QueryInterface(uri, &rv);
       NS_ENSURE_SUCCESS(rv, rv);
       rv = url->GetDirectory(domainScope);

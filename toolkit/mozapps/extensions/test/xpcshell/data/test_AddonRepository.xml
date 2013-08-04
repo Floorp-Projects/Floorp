@@ -9,7 +9,7 @@
     <authors>
       <author>
         <name>Test Creator 1</name>
-        <link>http://localhost:4444/creator1.html</link>
+        <link>http://localhost:%PORT%/creator1.html</link>
       </author>
     </authors>
     <status id="8">Preliminarily Reviewed</status>
@@ -26,7 +26,7 @@
     <reviews num="   1111   ">   </reviews>
     <!-- Test that a negative total_downloads is ignored -->
     <total_downloads>-2</total_downloads>
-    <install>http://localhost:4444/test1.xpi</install>
+    <install>http://localhost:%PORT%/test1.xpi</install>
   </addon>
 
   <!-- Passes requirements. Tests optional attributes. Also tests that
@@ -42,11 +42,11 @@
            and the second one is a developer -->
       <author>
         <name>Test Creator 2</name>
-        <link>http://localhost:4444/creator2.html</link>
+        <link>http://localhost:%PORT%/creator2.html</link>
       </author>
       <author>
         <name>Test Developer 2</name>
-        <link>http://localhost:4444/developer2.html</link>
+        <link>http://localhost:%PORT%/developer2.html</link>
       </author>
     </authors>
     <summary>&lt;h1&gt;Test Summary 2&lt;/h1&gt;&lt;p&gt;paragraph&lt;/p&gt;</summary>
@@ -54,9 +54,9 @@
     <developer_comments>Test Developer
                         Comments 2</developer_comments>
     <eula>Test EULA 2</eula>
-    <icon size="64">http://localhost:4444/icon2-64.png</icon>
-    <icon size="48">http://localhost:4444/icon2-48.png</icon>
-    <icon size="32">http://localhost:4444/icon2-32.png</icon>
+    <icon size="64">http://localhost:%PORT%/icon2-64.png</icon>
+    <icon size="48">http://localhost:%PORT%/icon2-48.png</icon>
+    <icon size="32">http://localhost:%PORT%/icon2-32.png</icon>
     <status id="4">Public</status>
     <compatible_applications>
       <application>
@@ -68,31 +68,31 @@
     <!-- Test that multiple preview images are correctly parsed -->
     <previews>
       <preview primary="0">
-        <full type="image/png">http://localhost:4444/full1-2.png</full>
-        <thumbnail type="image/png">http://localhost:4444/thumbnail1-2.png</thumbnail>
+        <full type="image/png">http://localhost:%PORT%/full1-2.png</full>
+        <thumbnail type="image/png">http://localhost:%PORT%/thumbnail1-2.png</thumbnail>
       </preview>
       <preview primary="0">
-        <full type="image/png">http://localhost:4444/full2-2.png</full>
-        <thumbnail type="image/png">http://localhost:4444/thumbnail2-2.png</thumbnail>
+        <full type="image/png">http://localhost:%PORT%/full2-2.png</full>
+        <thumbnail type="image/png">http://localhost:%PORT%/thumbnail2-2.png</thumbnail>
         <caption>Caption 2</caption>
       </preview>
     </previews>
     <rating>NaN</rating>
     <!-- Test that learnmore is used as the add-on's homepageURL
          if there is no homepage defined -->
-    <learnmore>http://localhost:4444/learnmore2.html</learnmore>
+    <learnmore>http://localhost:%PORT%/learnmore2.html</learnmore>
     <homepage/>
-    <support>http://localhost:4444/support2.html</support>
+    <support>http://localhost:%PORT%/support2.html</support>
     <contribution_data>
-      <link>http://localhost:4444/contribution2.html</link>
-      <meet_developers>http://localhost:4444/meetDevelopers2.html</meet_developers>
+      <link>http://localhost:%PORT%/contribution2.html</link>
+      <meet_developers>http://localhost:%PORT%/meetDevelopers2.html</meet_developers>
     </contribution_data>
-    <reviews num="NaN">http://localhost:4444/review2.html</reviews>
+    <reviews num="NaN">http://localhost:%PORT%/review2.html</reviews>
     <total_downloads>NaN</total_downloads>
     <weekly_downloads>NaN</weekly_downloads>
     <daily_users>NaN</daily_users>
     <last_updated epoch="NaN">Not an acual date</last_updated>
-    <install size="NaN" os="ALL">http://localhost:4444/test2.xpi</install>
+    <install size="NaN" os="ALL">http://localhost:%PORT%/test2.xpi</install>
   </addon>
 
   <!-- Passes requirements. Tests optional attributes with extra whitespace. -->
@@ -106,7 +106,7 @@
       <!-- Test that authors with blank names are ignored -->
       <author>
         <name>    </name>
-        <link>   http://localhost:4444/ignore3.html   </link>
+        <link>   http://localhost:%PORT%/ignore3.html   </link>
       </author>
       <!-- Test that authors with blank links are ignored -->
       <author>
@@ -115,11 +115,11 @@
       </author>
       <author>
         <name>   Test Creator 3   </name>
-        <link>   http://localhost:4444/creator3.html   </link>
+        <link>   http://localhost:%PORT%/creator3.html   </link>
       </author>
       <author>
         <name>   First Test Developer 3   </name>
-        <link>   http://localhost:4444/developer1-3.html   </link>
+        <link>   http://localhost:%PORT%/developer1-3.html   </link>
       </author>
       <author>
         <name>    </name>
@@ -127,14 +127,14 @@
       </author>
       <author>
         <name>   Second Test Developer 3   </name>
-        <link>   http://localhost:4444/developer2-3.html   </link>
+        <link>   http://localhost:%PORT%/developer2-3.html   </link>
       </author>
     </authors>
     <summary>   Test Summary 3   </summary>
     <description>   Test Description 3&lt;br&gt;&lt;ul&gt;&lt;li&gt;List item 1&lt;li&gt;List item 2&lt;/ul&gt;   </description>
     <developer_comments>   Test Developer Comments 3   </developer_comments>
     <eula>   Test EULA 3   </eula>
-    <icon size="32">   http://localhost:4444/icon3.png   </icon>
+    <icon size="32">   http://localhost:%PORT%/icon3.png   </icon>
     <status id="   8   ">Preliminarily Reviewed</status>
     <!-- Test that an incompatible + compatible application list passes -->
     <compatible_applications>
@@ -152,7 +152,7 @@
     <!-- Test that primary images appear first in the add-on's screenshots array -->
     <previews>
       <preview primary="   0   ">
-        <full type="   image/png   ">   http://localhost:4444/full2-3.png   </full>
+        <full type="   image/png   ">   http://localhost:%PORT%/full2-3.png   </full>
         <caption>   Caption 2 - 3   </caption>
       </preview>
       <!-- Test that a preview without a <full> element is ignored -->
@@ -164,13 +164,13 @@
         <full type="   image/png   ">   </full>
         <caption>   Caption ignore - 3   </caption>
       <preview primary="   1   ">
-        <full type="   image/png   ">   http://localhost:4444/full1-3.png   </full>
-        <thumbnail type="   image/png   ">   http://localhost:4444/thumbnail1-3.png   </thumbnail>
+        <full type="   image/png   ">   http://localhost:%PORT%/full1-3.png   </full>
+        <thumbnail type="   image/png   ">   http://localhost:%PORT%/thumbnail1-3.png   </thumbnail>
         <caption>   Caption 1 - 3   </caption>
       </preview>
       <preview primary="   0   ">
-        <full type="   image/png   ">   http://localhost:4444/full3-3.png   </full>
-        <thumbnail type="   image/png   ">   http://localhost:4444/thumbnail3-3.png   </thumbnail>
+        <full type="   image/png   ">   http://localhost:%PORT%/full3-3.png   </full>
+        <thumbnail type="   image/png   ">   http://localhost:%PORT%/thumbnail3-3.png   </thumbnail>
         <caption>   Caption 3 - 3   </caption>
       </preview>
       </preview>
@@ -179,23 +179,23 @@
     <rating>   2   </rating>
     <!-- Test that hompage is used as the add-on's homepageURL
          even if learnmore is defined -->
-    <learnmore>   http://localhost:4444/learnmore3.html   </learnmore>
-    <homepage>   http://localhost:4444/homepage3.html   </homepage>
-    <support>   http://localhost:4444/support3.html   </support>
+    <learnmore>   http://localhost:%PORT%/learnmore3.html   </learnmore>
+    <homepage>   http://localhost:%PORT%/homepage3.html   </homepage>
+    <support>   http://localhost:%PORT%/support3.html   </support>
     <contribution_data>
-      <link>   http://localhost:4444/contribution3.html   </link>
+      <link>   http://localhost:%PORT%/contribution3.html   </link>
       <suggested_amount currency="USD">   $11.11   </suggested_amount>
-      <meet_developers>   http://localhost:4444/meetDevelopers3.html   </meet_developers>
+      <meet_developers>   http://localhost:%PORT%/meetDevelopers3.html   </meet_developers>
     </contribution_data>
-    <reviews num="   1111   ">   http://localhost:4444/review3.html   </reviews>
+    <reviews num="   1111   ">   http://localhost:%PORT%/review3.html   </reviews>
     <total_downloads>   2222   </total_downloads>
     <weekly_downloads>   3333   </weekly_downloads>
     <daily_users>   4444   </daily_users>
     <last_updated epoch="   1265033045   ">   2010-02-01T14:04:05Z   </last_updated>
     <!-- Test that an incompatible install is ignored -->
-    <install size="   9999   " os="   UNKNOWN   ">   http://localhost:4444/fail3.xpi   </install>
+    <install size="   9999   " os="   UNKNOWN   ">   http://localhost:%PORT%/fail3.xpi   </install>
     <!-- Test that OS matching is case-insensitive -->
-    <install size="   5555   " os="   xpCShell   " hash="   sha1:c26f0b0d62e5dcddcda95074d3f3fedb9bbc26e3   ">   http://localhost:4444/test3.xpi   </install>
+    <install size="   5555   " os="   xpCShell   " hash="   sha1:c26f0b0d62e5dcddcda95074d3f3fedb9bbc26e3   ">   http://localhost:%PORT%/test3.xpi   </install>
   </addon>
 
   <!-- Fails because name is undefined -->
@@ -213,7 +213,7 @@
         <max_version>1</max_version>
       </application>
     </compatible_applications>
-    <install>http://localhost:4444/test4.xpi</install>
+    <install>http://localhost:%PORT%/test4.xpi</install>
   </addon>
 
   <!-- Fails because name is empty-->
@@ -232,7 +232,7 @@
         <max_version>1</max_version>
       </application>
     </compatible_applications>
-    <install>http://localhost:4444/test5.xpi</install>
+    <install>http://localhost:%PORT%/test5.xpi</install>
   </addon>
 
   <!-- Fails because type is undefined -->
@@ -250,7 +250,7 @@
         <max_version>1</max_version>
       </application>
     </compatible_applications>
-    <install>http://localhost:4444/test6.xpi</install>
+    <install>http://localhost:%PORT%/test6.xpi</install>
   </addon>
 
   <!-- Fails because type is empty -->
@@ -269,7 +269,7 @@
         <max_version>1</max_version>
       </application>
     </compatible_applications>
-    <install>http://localhost:4444/test7.xpi</install>
+    <install>http://localhost:%PORT%/test7.xpi</install>
   </addon>
 
   <!-- Fails because type is unknown -->
@@ -288,7 +288,7 @@
         <max_version>1</max_version>
       </application>
     </compatible_applications>
-    <install>http://localhost:4444/test8.xpi</install>
+    <install>http://localhost:%PORT%/test8.xpi</install>
   </addon>
 
   <!-- Fails because guid is undefined -->
@@ -306,7 +306,7 @@
         <max_version>1</max_version>
       </application>
     </compatible_applications>
-    <install>http://localhost:4444/test9.xpi</install>
+    <install>http://localhost:%PORT%/test9.xpi</install>
   </addon>
 
   <!-- Fails because guid is empty -->
@@ -325,7 +325,7 @@
         <max_version>1</max_version>
       </application>
     </compatible_applications>
-    <install>http://localhost:4444/test10.xpi</install>
+    <install>http://localhost:%PORT%/test10.xpi</install>
   </addon>
 
   <!-- Fails because guid matches previously successful result -->
@@ -344,7 +344,7 @@
         <max_version>1</max_version>
       </application>
     </compatible_applications>
-    <install>http://localhost:4444/test11.xpi</install>
+    <install>http://localhost:%PORT%/test11.xpi</install>
   </addon>
 
   <!-- Fails because guid matches already installed add-on -->
@@ -363,7 +363,7 @@
         <max_version>1</max_version>
       </application>
     </compatible_applications>
-    <install>http://localhost:4444/test12.xpi</install>
+    <install>http://localhost:%PORT%/test12.xpi</install>
   </addon>
 
   <!-- Fails because version is undefined -->
@@ -381,7 +381,7 @@
         <max_version>1</max_version>
       </application>
     </compatible_applications>
-    <install>http://localhost:4444/test13.xpi</install>
+    <install>http://localhost:%PORT%/test13.xpi</install>
   </addon>
 
   <!-- Fails because version is empty -->
@@ -400,7 +400,7 @@
         <max_version>1</max_version>
       </application>
     </compatible_applications>
-    <install>http://localhost:4444/test14.xpi</install>
+    <install>http://localhost:%PORT%/test14.xpi</install>
   </addon>
 
   <!-- Fails because authors undefined -->
@@ -418,7 +418,7 @@
         <max_version>1</max_version>
       </application>
     </compatible_applications>
-    <install>http://localhost:4444/test15.xpi</install>
+    <install>http://localhost:%PORT%/test15.xpi</install>
   </addon>
 
   <!-- Fails because it has no defined author elements -->
@@ -437,7 +437,7 @@
         <max_version>1</max_version>
       </application>
     </compatible_applications>
-    <install>http://localhost:4444/test16.xpi</install>
+    <install>http://localhost:%PORT%/test16.xpi</install>
   </addon>
 
   <!-- Fails because no non-empty author elements -->
@@ -459,7 +459,7 @@
         <max_version>1</max_version>
       </application>
     </compatible_applications>
-    <install>http://localhost:4444/test17.xpi</install>
+    <install>http://localhost:%PORT%/test17.xpi</install>
   </addon>
 
   <!-- Fails because status is undefined -->
@@ -477,7 +477,7 @@
         <max_version>1</max_version>
       </application>
     </compatible_applications>
-    <install>http://localhost:4444/test18.xpi</install>
+    <install>http://localhost:%PORT%/test18.xpi</install>
   </addon>
 
   <!-- Fails because status is not Public -->
@@ -496,7 +496,7 @@
         <max_version>1</max_version>
       </application>
     </compatible_applications>
-    <install>http://localhost:4444/test19.xpi</install>
+    <install>http://localhost:%PORT%/test19.xpi</install>
   </addon>
 
   <!-- Fails because compatible_applications is undefined -->
@@ -508,7 +508,7 @@
     <authors><author><name>Test Creator 20</name></author></authors>
     <status id="4">Public</status>
     <summary>Add-on with undefined compatible_applications should be ignored.</summary>
-    <install>http://localhost:4444/test20.xpi</install>
+    <install>http://localhost:%PORT%/test20.xpi</install>
   </addon>
 
   <!-- Fails because no compatible applications matched -->
@@ -527,7 +527,7 @@
         <max_version>1</max_version>
       </application>
     </compatible_applications>
-    <install>http://localhost:4444/test21.xpi</install>
+    <install>http://localhost:%PORT%/test21.xpi</install>
   </addon>
 
   <!-- Fails because compatible application's min version is undefined -->
@@ -545,7 +545,7 @@
         <max_version>2.0</max_version>
       </application>
     </compatible_applications>
-    <install>http://localhost:4444/test22.xpi</install>
+    <install>http://localhost:%PORT%/test22.xpi</install>
   </addon>
 
   <!-- Fails because compatible application's min version too high -->
@@ -564,7 +564,7 @@
         <max_version>2.0</max_version>
       </application>
     </compatible_applications>
-    <install>http://localhost:4444/test23.xpi</install>
+    <install>http://localhost:%PORT%/test23.xpi</install>
   </addon>
 
   <!-- Fails because compatible application's max version is undefined -->
@@ -582,7 +582,7 @@
         <min_version>0.9</min_version>
       </application>
     </compatible_applications>
-    <install>http://localhost:4444/test24.xpi</install>
+    <install>http://localhost:%PORT%/test24.xpi</install>
   </addon>
 
   <!-- Fails because compatible application's max version is too low -->
@@ -601,7 +601,7 @@
         <max_version>0.9.9</max_version>
       </application>
     </compatible_applications>
-    <install>http://localhost:4444/test25.xpi</install>
+    <install>http://localhost:%PORT%/test25.xpi</install>
   </addon>
 
   <!-- Fails because XPI URL is undefined -->
@@ -657,8 +657,8 @@
         <max_version>1</max_version>
       </application>
     </compatible_applications>
-    <install os="UNKNOWN1">http://localhost:4444/test28.xpi</install>
-    <install os="UNKNOWN2">http://localhost:4444/test28.xpi</install>
+    <install os="UNKNOWN1">http://localhost:%PORT%/test28.xpi</install>
+    <install os="UNKNOWN2">http://localhost:%PORT%/test28.xpi</install>
   </addon>
 
   <!-- Fails because XPI URL matches an installing AddonInstall -->
@@ -677,7 +677,7 @@
         <max_version>1</max_version>
       </application>
     </compatible_applications>
-    <install>http://localhost:4444/addons/test_AddonRepository_2.xpi</install>
+    <install>http://localhost:%PORT%/addons/test_AddonRepository_2.xpi</install>
   </addon>
 
   <!-- Passes because the add-on has the right payment info -->
@@ -689,7 +689,7 @@
     <authors>
       <author>
         <name>Test Creator - Last Passing</name>
-        <link>http://localhost:4444/creatorLastPassing.html</link>
+        <link>http://localhost:%PORT%/creatorLastPassing.html</link>
       </author>
     </authors>
     <status id="4">Public</status>
@@ -705,7 +705,7 @@
     </compatible_applications>
     <rating>5</rating>
     <payment_data>
-      <link>http://localhost:4444/purchaseURL1</link>
+      <link>http://localhost:%PORT%/purchaseURL1</link>
       <amount amount="5">$5</amount>
     </payment_data>
   </addon>
@@ -719,7 +719,7 @@
     <authors>
       <author>
         <name>Test Creator - Last Passing</name>
-        <link>http://localhost:4444/creatorLastPassing.html</link>
+        <link>http://localhost:%PORT%/creatorLastPassing.html</link>
       </author>
     </authors>
     <status id="4">Public</status>
@@ -735,7 +735,7 @@
     </compatible_applications>
     <rating>5</rating>
     <payment_data>
-      <link>http://localhost:4444/purchaseURL2</link>
+      <link>http://localhost:%PORT%/purchaseURL2</link>
       <amount amount="10.0">$10</amount>
     </payment_data>
   </addon>
@@ -749,7 +749,7 @@
     <authors>
       <author>
         <name>Test Creator - Last Passing</name>
-        <link>http://localhost:4444/creatorLastPassing.html</link>
+        <link>http://localhost:%PORT%/creatorLastPassing.html</link>
       </author>
     </authors>
     <status id="4">Public</status>
@@ -765,7 +765,7 @@
     </compatible_applications>
     <rating>5</rating>
     <payment_data>
-      <link>http://localhost:4444/purchaseURL3</link>
+      <link>http://localhost:%PORT%/purchaseURL3</link>
       <amount amount="10">$10</amount>
     </payment_data>
   </addon>
@@ -781,7 +781,7 @@
     <authors>
       <author>
         <name>Test Creator - Last Passing</name>
-        <link>http://localhost:4444/creatorLastPassing.html</link>
+        <link>http://localhost:%PORT%/creatorLastPassing.html</link>
       </author>
     </authors>
     <status id="4">Public</status>
@@ -794,7 +794,7 @@
     </compatible_applications>
     <!-- Test that a rating > 5 becomes a rating = 5 -->
     <rating>10</rating>
-    <install>http://localhost:4444/addons/test_AddonRepository_3.xpi</install>
+    <install>http://localhost:%PORT%/addons/test_AddonRepository_3.xpi</install>
   </addon>
 
   <!-- Fails because of MAX_RESULTS limit. The previous <addon> should
@@ -814,7 +814,7 @@
         <max_version>1</max_version>
       </application>
     </compatible_applications>
-    <install>http://localhost:4444/test-surpassesLimit.xpi</install>
+    <install>http://localhost:%PORT%/test-surpassesLimit.xpi</install>
   </addon>
 </searchresults>
 

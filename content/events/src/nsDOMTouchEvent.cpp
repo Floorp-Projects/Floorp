@@ -85,9 +85,8 @@ nsDOMTouchEvent::nsDOMTouchEvent(mozilla::dom::EventTarget* aOwner,
     mEventIsInternal = false;
 
     for (uint32_t i = 0; i < aEvent->touches.Length(); ++i) {
-      nsIDOMTouch *touch = aEvent->touches[i];
-      dom::Touch *domtouch = static_cast<dom::Touch*>(touch);
-      domtouch->InitializePoints(mPresContext, aEvent);
+      Touch* touch = aEvent->touches[i];
+      touch->InitializePoints(mPresContext, aEvent);
     }
   } else {
     mEventIsInternal = true;

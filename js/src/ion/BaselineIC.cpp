@@ -14,6 +14,8 @@
 #include "ion/IonSpewer.h"
 #include "ion/VMFunctions.h"
 
+#include "jsboolinlines.h"
+
 #include "vm/Interpreter-inl.h"
 
 namespace js {
@@ -560,8 +562,7 @@ ICStubCompiler::getStubCode()
 bool
 ICStubCompiler::tailCallVM(const VMFunction &fun, MacroAssembler &masm)
 {
-    IonCompartment *ion = cx->compartment()->ionCompartment();
-    IonCode *code = ion->getVMWrapper(fun);
+    IonCode *code = cx->runtime()->ionRuntime()->getVMWrapper(fun);
     if (!code)
         return false;
 
@@ -573,8 +574,7 @@ ICStubCompiler::tailCallVM(const VMFunction &fun, MacroAssembler &masm)
 bool
 ICStubCompiler::callVM(const VMFunction &fun, MacroAssembler &masm)
 {
-    IonCompartment *ion = cx->compartment()->ionCompartment();
-    IonCode *code = ion->getVMWrapper(fun);
+    IonCode *code = cx->runtime()->ionRuntime()->getVMWrapper(fun);
     if (!code)
         return false;
 
@@ -585,8 +585,7 @@ ICStubCompiler::callVM(const VMFunction &fun, MacroAssembler &masm)
 bool
 ICStubCompiler::callTypeUpdateIC(MacroAssembler &masm, uint32_t objectOffset)
 {
-    IonCompartment *ion = cx->compartment()->ionCompartment();
-    IonCode *code = ion->getVMWrapper(DoTypeUpdateFallbackInfo);
+    IonCode *code = cx->runtime()->ionRuntime()->getVMWrapper(DoTypeUpdateFallbackInfo);
     if (!code)
         return false;
 
@@ -1662,7 +1661,7 @@ DoCompareFallback(JSContext *cx, BaselineFrame *frame, ICCompare_Fallback *stub,
     RootedValue rhsCopy(cx, rhs);
 
     // Perform the compare operation.
-    JSBool out;
+    bool out;
     switch(op) {
       case JSOP_LT:
         if (!LessThan(cx, &lhsCopy, &rhsCopy, &out))
@@ -2328,7 +2327,8 @@ ICToBool_Object::Compiler::generateStubCode(MacroAssembler &masm)
     masm.bind(&slowPath);
     masm.setupUnalignedABICall(1, scratch);
     masm.passABIArg(objReg);
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, ObjectEmulatesUndefined));
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, js::EmulatesUndefined));
+    masm.convertBoolToInt32(ReturnReg, ReturnReg);
     masm.xor32(Imm32(1), ReturnReg);
     masm.tagValue(JSVAL_TYPE_BOOLEAN, ReturnReg, R0);
     EmitReturnFromIC(masm);
@@ -4743,7 +4743,7 @@ DoInFallback(JSContext *cx, ICIn_Fallback *stub, HandleValue key, HandleValue ob
 
     RootedObject obj(cx, &objValue.toObject());
 
-    JSBool cond = false;
+    bool cond = false;
     if (!OperatorIn(cx, key, obj, &cond))
         return false;
 
@@ -5748,7 +5748,7 @@ ICGetProp_CallScripted::Compiler::generateStubCode(MacroAssembler &masm)
         JS_ASSERT(ArgumentsRectifierReg != code);
 
         IonCode *argumentsRectifier =
-            cx->compartment()->ionCompartment()->getArgumentsRectifier(SequentialExecution);
+            cx->runtime()->ionRuntime()->getArgumentsRectifier(SequentialExecution);
 
         masm.movePtr(ImmGCPtr(argumentsRectifier), code);
         masm.loadPtr(Address(code, IonCode::offsetOfCode()), code);
@@ -6674,7 +6674,7 @@ ICSetProp_CallScripted::Compiler::generateStubCode(MacroAssembler &masm)
         JS_ASSERT(ArgumentsRectifierReg != code);
 
         IonCode *argumentsRectifier =
-            cx->compartment()->ionCompartment()->getArgumentsRectifier(SequentialExecution);
+            cx->runtime()->ionRuntime()->getArgumentsRectifier(SequentialExecution);
 
         masm.movePtr(ImmGCPtr(argumentsRectifier), code);
         masm.loadPtr(Address(code, IonCode::offsetOfCode()), code);
@@ -7432,7 +7432,7 @@ ICCallScriptedCompiler::generateStubCode(MacroAssembler &masm)
         JS_ASSERT(ArgumentsRectifierReg != argcReg);
 
         IonCode *argumentsRectifier =
-            cx->compartment()->ionCompartment()->getArgumentsRectifier(SequentialExecution);
+            cx->runtime()->ionRuntime()->getArgumentsRectifier(SequentialExecution);
 
         masm.movePtr(ImmGCPtr(argumentsRectifier), code);
         masm.loadPtr(Address(code, IonCode::offsetOfCode()), code);
@@ -7691,7 +7691,7 @@ ICCall_ScriptedApplyArguments::Compiler::generateStubCode(MacroAssembler &masm)
         JS_ASSERT(ArgumentsRectifierReg != argcReg);
 
         IonCode *argumentsRectifier =
-            cx->compartment()->ionCompartment()->getArgumentsRectifier(SequentialExecution);
+            cx->runtime()->ionRuntime()->getArgumentsRectifier(SequentialExecution);
 
         masm.movePtr(ImmGCPtr(argumentsRectifier), target);
         masm.loadPtr(Address(target, IonCode::offsetOfCode()), target);
@@ -7727,7 +7727,7 @@ ICCall_ScriptedApplyArguments::Compiler::generateStubCode(MacroAssembler &masm)
     return true;
 }
 
-static JSBool
+static bool
 DoubleValueToInt32ForSwitch(Value *v)
 {
     double d = v->toDouble();
@@ -7783,7 +7783,7 @@ ICTableSwitch::Compiler::generateStubCode(MacroAssembler &masm)
         // int32.
         masm.mov(ReturnReg, scratch);
         masm.popValue(R0);
-        masm.branchTest32(Assembler::Zero, scratch, scratch, &outOfRange);
+        masm.branchIfFalseBool(scratch, &outOfRange);
         masm.unboxInt32(R0, key);
     }
     masm.jump(&isInt32);
@@ -8085,7 +8085,7 @@ DoInstanceOfFallback(JSContext *cx, ICInstanceOf_Fallback *stub,
 
     RootedObject obj(cx, &rhs.toObject());
 
-    JSBool cond = false;
+    bool cond = false;
     if (!HasInstance(cx, obj, lhs, &cond))
         return false;
 
@@ -8195,44 +8195,6 @@ ICTypeOf_Typed::Compiler::generateStubCode(MacroAssembler &masm)
     masm.bind(&failure);
     EmitStubGuardFailure(masm);
     return true;
-}
-
-//
-// Rest_Fallback
-//
-
-static bool
-DoCreateRestParameter(JSContext *cx, BaselineFrame *frame, ICRest_Fallback *stub,
-                      MutableHandleValue res)
-{
-    FallbackICSpew(cx, stub, "Rest");
-
-    unsigned numFormals = frame->numFormalArgs() - 1;
-    unsigned numActuals = frame->numActualArgs();
-    unsigned numRest = numActuals > numFormals ? numActuals - numFormals : 0;
-    Value *rest = frame->argv() + numFormals;
-
-    JSObject *obj = NewDenseCopiedArray(cx, numRest, rest, NULL);
-    if (!obj)
-        return false;
-    res.setObject(*obj);
-    return true;
-}
-
-typedef bool(*DoCreateRestParameterFn)(JSContext *cx, BaselineFrame *, ICRest_Fallback *,
-                                       MutableHandleValue);
-static const VMFunction DoCreateRestParameterInfo =
-    FunctionInfo<DoCreateRestParameterFn>(DoCreateRestParameter);
-
-bool
-ICRest_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
-{
-    EmitRestoreTailCallReg(masm);
-
-    masm.push(BaselineStubReg); // stub
-    masm.pushBaselineFramePtr(BaselineFrameReg, R0.scratchReg()); // frame pointer
-
-    return tailCallVM(DoCreateRestParameterInfo, masm);
 }
 
 static bool

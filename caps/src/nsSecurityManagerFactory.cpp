@@ -77,7 +77,7 @@ nsSecurityNameSet::InitializeNameSet(nsIScriptContext* aScriptContext)
     JS::Rooted<JSObject*> obj(cx, global);
     JS::Rooted<JSObject*> proto(cx);
     for (;;) {
-        MOZ_ALWAYS_TRUE(JS_GetPrototype(cx, obj, proto.address()));
+        MOZ_ALWAYS_TRUE(JS_GetPrototype(cx, obj, &proto));
         if (!proto)
             break;
         obj = proto;
@@ -85,7 +85,7 @@ nsSecurityNameSet::InitializeNameSet(nsIScriptContext* aScriptContext)
     JSClass *objectClass = JS_GetClass(obj);
 
     JS::Rooted<JS::Value> v(cx);
-    if (!JS_GetProperty(cx, global, "netscape", v.address()))
+    if (!JS_GetProperty(cx, global, "netscape", &v))
         return NS_ERROR_FAILURE;
 
     JS::Rooted<JSObject*> securityObj(cx);
@@ -95,7 +95,7 @@ nsSecurityNameSet::InitializeNameSet(nsIScriptContext* aScriptContext)
          * "security" property.
          */
         obj = &v.toObject();
-        if (!JS_GetProperty(cx, obj, "security", v.address()) || !v.isObject())
+        if (!JS_GetProperty(cx, obj, "security", &v) || !v.isObject())
             return NS_ERROR_FAILURE;
         securityObj = &v.toObject();
     } else {

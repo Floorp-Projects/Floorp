@@ -163,9 +163,25 @@ ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
                             const char* aName,
                             unsigned aFlags)
 {
-  CycleCollectionNoteChild(aCallback, aField.mListener.GetISupports(), aName,
-                           aFlags);
+  if (MOZ_UNLIKELY(aCallback.WantDebugInfo())) {
+    nsAutoCString name;
+    name.AppendASCII(aName);
+    if (aField.mTypeAtom) {
+      name.AppendASCII(" event=");
+      name.Append(nsAtomCString(aField.mTypeAtom));
+      name.AppendASCII(" listenerType=");
+      name.AppendInt(aField.mListenerType);
+      name.AppendASCII(" ");
+    }
+    CycleCollectionNoteChild(aCallback, aField.mListener.GetISupports(), name.get(),
+                             aFlags);
+  } else {
+    CycleCollectionNoteChild(aCallback, aField.mListener.GetISupports(), aName,
+                             aFlags);
+  }
 }
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsEventListenerManager)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsEventListenerManager)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mListeners)

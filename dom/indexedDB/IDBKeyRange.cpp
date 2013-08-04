@@ -38,7 +38,7 @@ ReturnKeyRange(JSContext* aCx,
   nsIXPConnect* xpc = nsContentUtils::XPConnect();
   NS_ASSERTION(xpc, "This should never be null!");
 
-  JSObject* global = JS_GetGlobalForScopeChain(aCx);
+  JSObject* global = JS::CurrentGlobalOrNull(aCx);
   if (!global) {
     NS_WARNING("Couldn't get global object!");
     return false;
@@ -307,6 +307,8 @@ IDBKeyRange::ToSerializedKeyRange(T& aKeyRange)
     aKeyRange.upper() = Upper();
   }
 }
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(IDBKeyRange)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(IDBKeyRange)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS

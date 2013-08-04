@@ -14,6 +14,8 @@ include $(DEPTH)/config/autoconf.mk
 ifdef MOZ_XUL
 ifeq (,$(filter android qt os2 cocoa windows,$(MOZ_WIDGET_TOOLKIT)))
 EXPORT_LIBRARY = 1
+IS_COMPONENT = 1
+MODULE_NAME = nsFileViewModule
 LIBXUL_LIBRARY = 1
 endif
 endif

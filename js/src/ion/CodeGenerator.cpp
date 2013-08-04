@@ -26,6 +26,8 @@
 #include "ion/PerfSpewer.h"
 #include "vm/ForkJoin.h"
 
+#include "jsboolinlines.h"
+
 #include "ion/shared/CodeGenerator-shared-inl.h"
 #include "vm/Interpreter-inl.h"
 
@@ -142,6 +144,12 @@ CodeGenerator::~CodeGenerator()
     js_delete(unassociatedScriptCounts_);
 }
 
+typedef bool (*StringToNumberFn)(ThreadSafeContext *, JSString *, double *);
+typedef ParallelResult (*StringToNumberParFn)(ForkJoinSlice *, JSString *, double *);
+static const VMFunctionsModal StringToNumberInfo = VMFunctionsModal(
+    FunctionInfo<StringToNumberFn>(StringToNumber),
+    FunctionInfo<StringToNumberParFn>(StringToNumberPar));
+
 bool
 CodeGenerator::visitValueToInt32(LValueToInt32 *lir)
 {
@@ -150,10 +158,19 @@ CodeGenerator::visitValueToInt32(LValueToInt32 *lir)
 
     Register tag = masm.splitTagForTest(operand);
 
-    Label done, simple, isInt32, isBool, notDouble;
+    Label done, simple, isInt32, isBool, isString, notDouble;
     // Type-check switch.
-    masm.branchTestInt32(Assembler::Equal, tag, &isInt32);
-    masm.branchTestBoolean(Assembler::Equal, tag, &isBool);
+    MDefinition *input;
+    if (lir->mode() == LValueToInt32::NORMAL)
+        input = lir->mirNormal()->input();
+    else
+        input = lir->mirTruncate()->input();
+    masm.branchEqualTypeIfNeeded(MIRType_Int32, input, tag, &isInt32);
+    masm.branchEqualTypeIfNeeded(MIRType_Boolean, input, tag, &isBool);
+    // Only convert strings to int if we are in a truncation context, like
+    // bitwise operations.
+    if (lir->mode() == LValueToInt32::TRUNCATE)
+        masm.branchEqualTypeIfNeeded(MIRType_String, input, tag, &isString);
     masm.branchTestDouble(Assembler::NotEqual, tag, &notDouble);
 
     // If the value is a double, see if it fits in a 32-bit int. We need to ask
@@ -161,16 +178,13 @@ CodeGenerator::visitValueToInt32(LValueToInt32 *lir)
     FloatRegister temp = ToFloatRegister(lir->tempFloat());
     masm.unboxDouble(operand, temp);
 
-    Label fails;
-    switch (lir->mode()) {
-      case LValueToInt32::TRUNCATE:
+    Label fails, isDouble;
+    masm.bind(&isDouble);
+    if (lir->mode() == LValueToInt32::TRUNCATE) {
         if (!emitTruncateDouble(temp, output))
             return false;
-        break;
-      default:
-        JS_ASSERT(lir->mode() == LValueToInt32::NORMAL);
-        masm.convertDoubleToInt32(temp, output, &fails, lir->mir()->canBeNegativeZero());
-        break;
+    } else {
+        masm.convertDoubleToInt32(temp, output, &fails, lir->mirNormal()->canBeNegativeZero());
     }
     masm.jump(&done);
 
@@ -181,10 +195,9 @@ CodeGenerator::visitValueToInt32(LValueToInt32 *lir)
         // which we can't handle here.
         masm.branchTestNull(Assembler::NotEqual, tag, &fails);
     } else {
-        // Test for string or object - then fallthrough to null, which will
-        // also handle undefined.
-        masm.branchTestObject(Assembler::Equal, tag, &fails);
-        masm.branchTestString(Assembler::Equal, tag, &fails);
+        // Test for object - then fallthrough to null, which will also handle
+        // undefined.
+        masm.branchEqualTypeIfNeeded(MIRType_Object, input, tag, &fails);
     }
 
     if (fails.used() && !bailoutFrom(&fails, lir->snapshot()))
@@ -194,14 +207,33 @@ CodeGenerator::visitValueToInt32(LValueToInt32 *lir)
     masm.mov(Imm32(0), output);
     masm.jump(&done);
 
+    // Unbox a string, call StringToNumber to get a double back, and jump back
+    // to the snippet generated above about dealing with doubles.
+    if (isString.used()) {
+        masm.bind(&isString);
+        Register str = masm.extractString(operand, ToRegister(lir->temp()));
+        OutOfLineCode *ool = oolCallVM(StringToNumberInfo, lir, (ArgList(), str),
+                                       StoreFloatRegisterTo(temp));
+        if (!ool)
+            return false;
+
+        masm.jump(ool->entry());
+        masm.bind(ool->rejoin());
+        masm.jump(&isDouble);
+    }
+
     // Just unbox a bool, the result is 0 or 1.
-    masm.bind(&isBool);
-    masm.unboxBoolean(operand, output);
-    masm.jump(&done);
+    if (isBool.used()) {
+        masm.bind(&isBool);
+        masm.unboxBoolean(operand, output);
+        masm.jump(&done);
+    }
 
     // Integers can be unboxed.
-    masm.bind(&isInt32);
-    masm.unboxInt32(operand, output);
+    if (isInt32.used()) {
+        masm.bind(&isInt32);
+        masm.unboxInt32(operand, output);
+    }
 
     masm.bind(&done);
 
@@ -293,11 +325,11 @@ CodeGenerator::emitOOLTestObject(Register objreg, Label *ifTruthy, Label *ifFals
     saveVolatile(scratch);
     masm.setupUnalignedABICall(1, scratch);
     masm.passABIArg(objreg);
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, ObjectEmulatesUndefined));
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, js::EmulatesUndefined));
     masm.storeCallResult(scratch);
     restoreVolatile(scratch);
 
-    masm.branchTest32(Assembler::NonZero, scratch, scratch, ifFalsy);
+    masm.branchIfTrueBool(scratch, ifFalsy);
     masm.jump(ifTruthy);
 }
 
@@ -643,7 +675,7 @@ CodeGenerator::visitRegExp(LRegExp *lir)
 }
 
 typedef bool (*RegExpTestRawFn)(JSContext *cx, HandleObject regexp,
-                                HandleString input, JSBool *result);
+                                HandleString input, bool *result);
 static const VMFunction RegExpTestRawInfo = FunctionInfo<RegExpTestRawFn>(regexp_test_raw);
 
 bool
@@ -837,6 +869,18 @@ CodeGenerator::visitCallee(LCallee *lir)
 
     masm.loadPtr(ptr, callee);
     masm.clearCalleeTag(callee, gen->info().executionMode());
+    return true;
+}
+
+bool
+CodeGenerator::visitForceUseV(LForceUseV *lir)
+{
+    return true;
+}
+
+bool
+CodeGenerator::visitForceUseT(LForceUseT *lir)
+{
     return true;
 }
 
@@ -1297,7 +1341,7 @@ CodeGenerator::visitOutOfLineCallPostWriteBarrier(OutOfLineCallPostWriteBarrier 
     }
 
     Register runtimereg = regs.takeAny();
-    masm.mov(ImmWord(GetIonContext()->compartment->rt), runtimereg);
+    masm.mov(ImmWord(gen->compartment->rt), runtimereg);
 
     masm.setupUnalignedABICall(2, regs.takeAny());
     masm.passABIArg(runtimereg);
@@ -1319,7 +1363,7 @@ CodeGenerator::visitPostWriteBarrierO(LPostWriteBarrierO *lir)
     if (!addOutOfLineCode(ool))
         return false;
 
-    Nursery &nursery = GetIonContext()->compartment->rt->gcNursery;
+    Nursery &nursery = gen->compartment->rt->gcNursery;
 
     if (lir->object()->isConstant()) {
         JS_ASSERT(!nursery.isInside(&lir->object()->toConstant()->toObject()));
@@ -1351,7 +1395,7 @@ CodeGenerator::visitPostWriteBarrierV(LPostWriteBarrierV *lir)
     ValueOperand value = ToValue(lir, LPostWriteBarrierV::Input);
     masm.branchTestObject(Assembler::NotEqual, value, ool->rejoin());
 
-    Nursery &nursery = GetIonContext()->compartment->rt->gcNursery;
+    Nursery &nursery = gen->compartment->rt->gcNursery;
 
     if (lir->object()->isConstant()) {
         JS_ASSERT(!nursery.isInside(&lir->object()->toConstant()->toObject()));
@@ -1643,8 +1687,7 @@ CodeGenerator::visitCallGeneric(LCallGeneric *call)
     JS_ASSERT(!call->hasSingleTarget());
 
     // Generate an ArgumentsRectifier.
-    IonCompartment *ion = gen->ionCompartment();
-    IonCode *argumentsRectifier = ion->getArgumentsRectifier(executionMode);
+    IonCode *argumentsRectifier = gen->ionRuntime()->getArgumentsRectifier(executionMode);
 
     masm.checkStackAlignment();
 
@@ -2038,8 +2081,7 @@ CodeGenerator::visitApplyArgsGeneric(LApplyArgsGeneric *apply)
             masm.bind(&underflow);
 
             // Hardcode the address of the argumentsRectifier code.
-            IonCompartment *ion = gen->ionCompartment();
-            IonCode *argumentsRectifier = ion->getArgumentsRectifier(executionMode);
+            IonCode *argumentsRectifier = gen->ionRuntime()->getArgumentsRectifier(executionMode);
 
             JS_ASSERT(ArgumentsRectifierReg != objreg);
             masm.movePtr(ImmGCPtr(argumentsRectifier), objreg); // Necessary for GC marking.
@@ -2078,6 +2120,12 @@ CodeGenerator::visitApplyArgsGeneric(LApplyArgsGeneric *apply)
     emitPopArguments(apply, copyreg);
 
     return true;
+}
+
+bool
+CodeGenerator::visitBail(LBail *lir)
+{
+    return bailout(lir->snapshot());
 }
 
 bool
@@ -2126,7 +2174,7 @@ CodeGenerator::visitFilterArguments(LFilterArguments *lir)
     masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, FilterArguments));
 
     Label bail;
-    masm.branch32(Assembler::Equal, ReturnReg, Imm32(0), &bail);
+    masm.branchIfFalseBool(ReturnReg, &bail);
     return bailoutFrom(&bail, lir->snapshot());
 }
 
@@ -3170,6 +3218,25 @@ CodeGenerator::visitInitElem(LInitElem *lir)
     return callVM(InitElemInfo, lir);
 }
 
+typedef bool (*InitElemGetterSetterFn)(JSContext *, jsbytecode *, HandleObject, HandleValue,
+                                       HandleObject);
+static const VMFunction InitElemGetterSetterInfo =
+    FunctionInfo<InitElemGetterSetterFn>(InitGetterSetterOperation);
+
+bool
+CodeGenerator::visitInitElemGetterSetter(LInitElemGetterSetter *lir)
+{
+    Register obj = ToRegister(lir->object());
+    Register value = ToRegister(lir->value());
+
+    pushArg(value);
+    pushArg(ToValue(lir, LInitElemGetterSetter::IdIndex));
+    pushArg(obj);
+    pushArg(ImmWord(lir->mir()->resumePoint()->pc()));
+
+    return callVM(InitElemGetterSetterInfo, lir);
+}
+
 typedef bool(*InitPropFn)(JSContext *cx, HandleObject obj,
                           HandlePropertyName name, HandleValue value);
 static const VMFunction InitPropInfo =
@@ -3185,6 +3252,25 @@ CodeGenerator::visitInitProp(LInitProp *lir)
     pushArg(objReg);
 
     return callVM(InitPropInfo, lir);
+}
+
+typedef bool(*InitPropGetterSetterFn)(JSContext *, jsbytecode *, HandleObject, HandlePropertyName,
+                                      HandleObject);
+static const VMFunction InitPropGetterSetterInfo =
+    FunctionInfo<InitPropGetterSetterFn>(InitGetterSetterOperation);
+
+bool
+CodeGenerator::visitInitPropGetterSetter(LInitPropGetterSetter *lir)
+{
+    Register obj = ToRegister(lir->object());
+    Register value = ToRegister(lir->value());
+
+    pushArg(value);
+    pushArg(ImmGCPtr(lir->mir()->name()));
+    pushArg(obj);
+    pushArg(ImmWord(lir->mir()->resumePoint()->pc()));
+
+    return callVM(InitPropGetterSetterInfo, lir);
 }
 
 typedef bool (*CreateThisFn)(JSContext *cx, HandleObject callee, MutableHandleValue rval);
@@ -3627,9 +3713,8 @@ CodeGenerator::visitBinaryV(LBinaryV *lir)
     }
 }
 
-typedef bool (*StringCompareFn)(JSContext *, HandleString, HandleString, JSBool *);
-typedef ParallelResult (*StringCompareParFn)(ForkJoinSlice *, HandleString, HandleString,
-                                             JSBool *);
+typedef bool (*StringCompareFn)(JSContext *, HandleString, HandleString, bool *);
+typedef ParallelResult (*StringCompareParFn)(ForkJoinSlice *, HandleString, HandleString, bool *);
 static const VMFunctionsModal StringsEqualInfo = VMFunctionsModal(
     FunctionInfo<StringCompareFn>(ion::StringsEqual<true>),
     FunctionInfo<StringCompareParFn>(ion::StringsEqualPar));
@@ -3700,9 +3785,9 @@ CodeGenerator::visitCompareS(LCompareS *lir)
     return emitCompareS(lir, op, left, right, output, temp);
 }
 
-typedef bool (*CompareFn)(JSContext *, MutableHandleValue, MutableHandleValue, JSBool *);
+typedef bool (*CompareFn)(JSContext *, MutableHandleValue, MutableHandleValue, bool *);
 typedef ParallelResult (*CompareParFn)(ForkJoinSlice *, MutableHandleValue, MutableHandleValue,
-                                       JSBool *);
+                                       bool *);
 static const VMFunctionsModal EqInfo = VMFunctionsModal(
     FunctionInfo<CompareFn>(ion::LooselyEqual<true>),
     FunctionInfo<CompareParFn>(ion::LooselyEqualPar));
@@ -3983,7 +4068,7 @@ CodeGenerator::visitEmulatesUndefinedAndBranch(LEmulatesUndefinedAndBranch *lir)
     return true;
 }
 
-typedef JSString *(*ConcatStringsFn)(JSContext *, HandleString, HandleString);
+typedef JSString *(*ConcatStringsFn)(ThreadSafeContext *, HandleString, HandleString);
 typedef ParallelResult (*ConcatStringsParFn)(ForkJoinSlice *, HandleString, HandleString,
                                              MutableHandleString);
 static const VMFunctionsModal ConcatStringsInfo = VMFunctionsModal(
@@ -4559,10 +4644,9 @@ CodeGenerator::visitStoreElementHoleV(LStoreElementHoleV *lir)
     return true;
 }
 
-typedef bool (*SetObjectElementFn)(JSContext *, HandleObject,
-                                   HandleValue, HandleValue, JSBool strict);
-static const VMFunction SetObjectElementInfo =
-    FunctionInfo<SetObjectElementFn>(SetObjectElement);
+typedef bool (*SetObjectElementFn)(JSContext *, HandleObject, HandleValue, HandleValue,
+                                   bool strict);
+static const VMFunction SetObjectElementInfo = FunctionInfo<SetObjectElementFn>(SetObjectElement);
 
 bool
 CodeGenerator::visitOutOfLineStoreElementHole(OutOfLineStoreElementHole *ool)
@@ -5020,7 +5104,7 @@ CodeGenerator::visitIteratorStart(LIteratorStart *lir)
     masm.or32(Imm32(JSITER_ACTIVE), Address(niTemp, offsetof(NativeIterator, flags)));
 
     // Chain onto the active iterator stack.
-    masm.movePtr(ImmWord(GetIonContext()->compartment), temp1);
+    masm.movePtr(ImmWord(gen->compartment), temp1);
     masm.loadPtr(Address(temp1, offsetof(JSCompartment, enumerators)), temp1);
 
     // ni->next = list
@@ -5083,7 +5167,7 @@ CodeGenerator::visitIteratorNext(LIteratorNext *lir)
     return true;
 }
 
-typedef bool (*IteratorMoreFn)(JSContext *, HandleObject, JSBool *);
+typedef bool (*IteratorMoreFn)(JSContext *, HandleObject, bool *);
 static const VMFunction IteratorMoreInfo = FunctionInfo<IteratorMoreFn>(ion::IteratorMore);
 
 bool
@@ -5331,7 +5415,7 @@ CodeGenerator::generate()
         return false;
 
     if (frameClass_ != FrameSizeClass::None()) {
-        deoptTable_ = GetIonContext()->compartment->ionCompartment()->getBailoutTable(frameClass_);
+        deoptTable_ = gen->ionRuntime()->getBailoutTable(frameClass_);
         if (!deoptTable_)
             return false;
     }
@@ -5998,7 +6082,7 @@ CodeGenerator::visitCallSetProperty(LCallSetProperty *ins)
     return callVM(SetPropertyInfo, ins);
 }
 
-typedef bool (*DeletePropertyFn)(JSContext *, HandleValue, HandlePropertyName, JSBool *);
+typedef bool (*DeletePropertyFn)(JSContext *, HandleValue, HandlePropertyName, bool *);
 static const VMFunction DeletePropertyStrictInfo =
     FunctionInfo<DeletePropertyFn>(DeleteProperty<true>);
 static const VMFunction DeletePropertyNonStrictInfo =
@@ -6012,8 +6096,8 @@ CodeGenerator::visitCallDeleteProperty(LCallDeleteProperty *lir)
 
     if (lir->mir()->block()->info().script()->strict)
         return callVM(DeletePropertyStrictInfo, lir);
-    else
-        return callVM(DeletePropertyNonStrictInfo, lir);
+
+    return callVM(DeletePropertyNonStrictInfo, lir);
 }
 
 bool
@@ -6081,7 +6165,10 @@ CodeGenerator::visitThrow(LThrow *lir)
 }
 
 typedef bool (*BitNotFn)(JSContext *, HandleValue, int *p);
-static const VMFunction BitNotInfo = FunctionInfo<BitNotFn>(BitNot);
+typedef ParallelResult (*BitNotParFn)(ForkJoinSlice *, HandleValue, int32_t *);
+static const VMFunctionsModal BitNotInfo = VMFunctionsModal(
+    FunctionInfo<BitNotFn>(BitNot),
+    FunctionInfo<BitNotParFn>(BitNotPar));
 
 bool
 CodeGenerator::visitBitNotV(LBitNotV *lir)
@@ -6091,11 +6178,22 @@ CodeGenerator::visitBitNotV(LBitNotV *lir)
 }
 
 typedef bool (*BitopFn)(JSContext *, HandleValue, HandleValue, int *p);
-static const VMFunction BitAndInfo = FunctionInfo<BitopFn>(BitAnd);
-static const VMFunction BitOrInfo = FunctionInfo<BitopFn>(BitOr);
-static const VMFunction BitXorInfo = FunctionInfo<BitopFn>(BitXor);
-static const VMFunction BitLhsInfo = FunctionInfo<BitopFn>(BitLsh);
-static const VMFunction BitRhsInfo = FunctionInfo<BitopFn>(BitRsh);
+typedef ParallelResult (*BitopParFn)(ForkJoinSlice *, HandleValue, HandleValue, int32_t *);
+static const VMFunctionsModal BitAndInfo = VMFunctionsModal(
+    FunctionInfo<BitopFn>(BitAnd),
+    FunctionInfo<BitopParFn>(BitAndPar));
+static const VMFunctionsModal BitOrInfo = VMFunctionsModal(
+    FunctionInfo<BitopFn>(BitOr),
+    FunctionInfo<BitopParFn>(BitOrPar));
+static const VMFunctionsModal BitXorInfo = VMFunctionsModal(
+    FunctionInfo<BitopFn>(BitXor),
+    FunctionInfo<BitopParFn>(BitXorPar));
+static const VMFunctionsModal BitLhsInfo = VMFunctionsModal(
+    FunctionInfo<BitopFn>(BitLsh),
+    FunctionInfo<BitopParFn>(BitLshPar));
+static const VMFunctionsModal BitRhsInfo = VMFunctionsModal(
+    FunctionInfo<BitopFn>(BitRsh),
+    FunctionInfo<BitopParFn>(BitRshPar));
 
 bool
 CodeGenerator::visitBitOpV(LBitOpV *lir)
@@ -6499,7 +6597,7 @@ CodeGenerator::visitClampVToUint8(LClampVToUint8 *lir)
     return true;
 }
 
-typedef bool (*OperatorInFn)(JSContext *, HandleValue, HandleObject, JSBool *);
+typedef bool (*OperatorInFn)(JSContext *, HandleValue, HandleObject, bool *);
 static const VMFunction OperatorInInfo = FunctionInfo<OperatorInFn>(OperatorIn);
 
 bool
@@ -6511,7 +6609,7 @@ CodeGenerator::visitIn(LIn *ins)
     return callVM(OperatorInInfo, ins);
 }
 
-typedef bool (*OperatorInIFn)(JSContext *, uint32_t, HandleObject, JSBool *);
+typedef bool (*OperatorInIFn)(JSContext *, uint32_t, HandleObject, bool *);
 static const VMFunction OperatorInIInfo = FunctionInfo<OperatorInIFn>(OperatorInI);
 
 bool
@@ -6597,16 +6695,12 @@ CodeGenerator::visitInstanceOfV(LInstanceOfV *ins)
 
 // Wrap IsDelegate, which takes a Value for the lhs of an instanceof.
 static bool
-IsDelegateObject(JSContext *cx, HandleObject protoObj, HandleObject obj, JSBool *res)
+IsDelegateObject(JSContext *cx, HandleObject protoObj, HandleObject obj, bool *res)
 {
-    bool nres;
-    if (!IsDelegate(cx, protoObj, ObjectValue(*obj), &nres))
-        return false;
-    *res = nres;
-    return true;
+    return IsDelegate(cx, protoObj, ObjectValue(*obj), res);
 }
 
-typedef bool (*IsDelegateObjectFn)(JSContext *, HandleObject, HandleObject, JSBool *);
+typedef bool (*IsDelegateObjectFn)(JSContext *, HandleObject, HandleObject, bool *);
 static const VMFunction IsDelegateObjectInfo = FunctionInfo<IsDelegateObjectFn>(IsDelegateObject);
 
 bool
@@ -6699,7 +6793,7 @@ CodeGenerator::emitInstanceOf(LInstruction *ins, JSObject *prototypeObject)
     return true;
 }
 
-typedef bool (*HasInstanceFn)(JSContext *, HandleObject, HandleValue, JSBool *);
+typedef bool (*HasInstanceFn)(JSContext *, HandleObject, HandleValue, bool *);
 static const VMFunction HasInstanceInfo = FunctionInfo<HasInstanceFn>(js::HasInstance);
 
 bool

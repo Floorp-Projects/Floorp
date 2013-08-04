@@ -420,10 +420,10 @@ public:
                      "nsIScriptObjectPrincipal");
         nsCOMPtr<nsIPrincipal> systemPrincipal;
         sSecurityManager->GetSystemPrincipal(getter_AddRefs(systemPrincipal));
-        const char * category =
+        const nsACString& category =
           scriptPrincipal->GetPrincipal() == systemPrincipal
-          ? "chrome javascript"
-          : "content javascript";
+          ? NS_LITERAL_CSTRING("chrome javascript")
+          : NS_LITERAL_CSTRING("content javascript");
 
         rv = errorObject->InitWithWindowID(mErrorMsg, mFileName,
                                            mSourceLine,
@@ -555,31 +555,31 @@ NS_ScriptErrorReporter(JSContext *cx,
     }
   }
 
-#ifdef DEBUG
-  // Print it to stderr as well, for the benefit of those invoking
-  // mozilla with -console.
-  nsAutoCString error;
-  error.Assign("JavaScript ");
-  if (JSREPORT_IS_STRICT(report->flags))
-    error.Append("strict ");
-  if (JSREPORT_IS_WARNING(report->flags))
-    error.Append("warning: ");
-  else
-    error.Append("error: ");
-  error.Append(report->filename);
-  error.Append(", line ");
-  error.AppendInt(report->lineno, 10);
-  error.Append(": ");
-  if (report->ucmessage) {
-    AppendUTF16toUTF8(reinterpret_cast<const PRUnichar*>(report->ucmessage),
-                      error);
-  } else {
-    error.Append(message);
-  }
+  if (nsContentUtils::DOMWindowDumpEnabled()) {
+    // Print it to stderr as well, for the benefit of those invoking
+    // mozilla with -console.
+    nsAutoCString error;
+    error.Assign("JavaScript ");
+    if (JSREPORT_IS_STRICT(report->flags))
+      error.Append("strict ");
+    if (JSREPORT_IS_WARNING(report->flags))
+      error.Append("warning: ");
+    else
+      error.Append("error: ");
+    error.Append(report->filename);
+    error.Append(", line ");
+    error.AppendInt(report->lineno, 10);
+    error.Append(": ");
+    if (report->ucmessage) {
+      AppendUTF16toUTF8(reinterpret_cast<const PRUnichar*>(report->ucmessage),
+                        error);
+    } else {
+      error.Append(message);
+    }
 
-  fprintf(stderr, "%s\n", error.get());
-  fflush(stderr);
-#endif
+    fprintf(stderr, "%s\n", error.get());
+    fflush(stderr);
+  }
 
 #ifdef PR_LOGGING
   if (!gJSDiagnostics)
@@ -736,7 +736,7 @@ nsJSContext::DOMOperationCallback(JSContext *cx)
 
   // Check the amount of time this script has been running, or if the
   // dialog is disabled.
-  JSObject* global = ::JS_GetGlobalForScopeChain(cx);
+  JSObject* global = ::JS::CurrentGlobalOrNull(cx);
   bool isTrackingChromeCodeTime =
     global && xpc::AccessCheck::isChrome(js::GetObjectCompartment(global));
   if (duration < (isTrackingChromeCodeTime ?
@@ -1186,8 +1186,11 @@ nsJSContext::DestroyJSContext()
 }
 
 // QueryInterface implementation for nsJSContext
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsJSContext)
+
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(nsJSContext)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
+
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsJSContext)
   NS_ASSERTION(!tmp->mContext || !js::ContextHasOutstandingRequests(tmp->mContext),
                "Trying to unlink a context with outstanding requests.");
@@ -1195,7 +1198,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsJSContext)
   tmp->mGCOnDestruction = false;
   if (tmp->mContext) {
     JSAutoRequest ar(tmp->mContext);
-    JS_SetGlobalObject(tmp->mContext, nullptr);
+    js::SetDefaultObjectForContext(tmp->mContext, nullptr);
   }
   tmp->DestroyJSContext();
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mGlobalObjectRef)
@@ -1604,7 +1607,7 @@ nsJSContext::GetGlobalObject()
 JSObject*
 nsJSContext::GetNativeGlobal()
 {
-    return js::GetDefaultGlobalForContext(mContext);
+    return js::DefaultObjectForContextOrNull(mContext);
 }
 
 JSContext*
@@ -3300,7 +3303,7 @@ NS_DOMReadStructuredClone(JSContext* cx,
     nsRefPtr<ImageData> imageData = new ImageData(width, height,
                                                   dataArray.toObject());
     // Wrap it in a JS::Value.
-    JS::Rooted<JSObject*> global(cx, JS_GetGlobalForScopeChain(cx));
+    JS::Rooted<JSObject*> global(cx, JS::CurrentGlobalOrNull(cx));
     if (!global) {
       return nullptr;
     }
@@ -3601,6 +3604,8 @@ nsJSArgArray::ReleaseJSObjects()
 }
 
 // QueryInterface implementation for nsJSArgArray
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsJSArgArray)
+
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsJSArgArray)
   tmp->ReleaseJSObjects();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END

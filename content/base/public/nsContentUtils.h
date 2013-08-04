@@ -750,7 +750,7 @@ public:
    */
   static nsresult ReportToConsoleNonLocalized(const nsAString& aErrorText,
                                               uint32_t aErrorFlags,
-                                              const char *aCategory,
+                                              const nsACString& aCategory,
                                               nsIDocument* aDocument,
                                               nsIURI* aURI = nullptr,
                                               const nsAFlatString& aSourceLine
@@ -794,7 +794,7 @@ public:
     PropertiesFile_COUNT
   };
   static nsresult ReportToConsole(uint32_t aErrorFlags,
-                                  const char *aCategory,
+                                  const nsACString& aCategory,
                                   nsIDocument* aDocument,
                                   PropertiesFile aFile,
                                   const char *aMessageName,
@@ -805,6 +805,26 @@ public:
                                     = EmptyString(),
                                   uint32_t aLineNumber = 0,
                                   uint32_t aColumnNumber = 0);
+  // This overload allows passing a literal string for aCategory.
+  template<uint32_t N>
+  static nsresult ReportToConsole(uint32_t aErrorFlags,
+                                  const char (&aCategory)[N],
+                                  nsIDocument* aDocument,
+                                  PropertiesFile aFile,
+                                  const char *aMessageName,
+                                  const PRUnichar **aParams = nullptr,
+                                  uint32_t aParamsLength = 0,
+                                  nsIURI* aURI = nullptr,
+                                  const nsAFlatString& aSourceLine
+                                    = EmptyString(),
+                                  uint32_t aLineNumber = 0,
+                                  uint32_t aColumnNumber = 0)
+  {
+      nsDependentCString category(aCategory, N - 1);
+      return ReportToConsole(aErrorFlags, category, aDocument, aFile,
+                             aMessageName, aParams, aParamsLength, aURI,
+                             aSourceLine, aLineNumber, aColumnNumber);
+  }
 
   /**
    * Get the localized string named |aKey| in properties file |aFile|.
@@ -1277,9 +1297,6 @@ public:
   static void DeferredFinalize(mozilla::DeferredFinalizeAppendFunction aAppendFunc,
                                mozilla::DeferredFinalizeFunction aFunc,
                                void* aThing);
-
-  static void ReleaseWrapper(void* aScriptObjectHolder,
-                             nsWrapperCache* aCache);
 
   /*
    * Notify when the first XUL menu is opened and when the all XUL menus are
@@ -2116,6 +2133,11 @@ public:
                                   const nsAString& aFeature,
                                   const nsAString& aVersion);
 
+  /**
+   * Return true if the browser.dom.window.dump.enabled pref is set.
+   */
+  static bool DOMWindowDumpEnabled();
+
 private:
   static bool InitializeEventTable();
 
@@ -2225,6 +2247,10 @@ private:
   static nsString* sOSText;
   static nsString* sAltText;
   static nsString* sModifierSeparator;
+
+#if !(defined(DEBUG) || defined(MOZ_ENABLE_JS_DUMP))
+  static bool sDOMWindowDumpEnabled;
+#endif
 };
 
 typedef nsCharSeparatedTokenizerTemplate<nsContentUtils::IsHTMLWhitespace>

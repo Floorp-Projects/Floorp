@@ -255,6 +255,13 @@ gfxPlatform::gfxPlatform()
     mOpenTypeSVGEnabled = UNINITIALIZED_VALUE;
     mBidiNumeralOption = UNINITIALIZED_VALUE;
 
+    mLayersPreferMemoryOverShmem =
+        XRE_GetProcessType() == GeckoProcessType_Default &&
+        Preferences::GetBool("layers.prefer-memory-over-shmem", true);
+
+    mLayersUseDeprecated =
+        Preferences::GetBool("layers.use-deprecated-textures", true);
+
     uint32_t canvasMask = (1 << BACKEND_CAIRO) | (1 << BACKEND_SKIA);
     uint32_t contentMask = 0;
     InitBackendPrefs(canvasMask, contentMask);
@@ -503,6 +510,12 @@ gfxPlatform::~gfxPlatform()
 #endif
 }
 
+bool
+gfxPlatform::PreferMemoryOverShmem() const {
+  MOZ_ASSERT(!CompositorParent::IsInCompositorThread());
+  return mLayersPreferMemoryOverShmem;
+}
+
 already_AddRefed<gfxASurface>
 gfxPlatform::CreateOffscreenImageSurface(const gfxIntSize& aSize,
                                          gfxASurface::gfxContentType aContentType)
@@ -543,7 +556,7 @@ RefPtr<DrawTarget>
 gfxPlatform::CreateDrawTargetForSurface(gfxASurface *aSurface, const IntSize& aSize)
 {
   RefPtr<DrawTarget> drawTarget = Factory::CreateDrawTargetForCairoSurface(aSurface->CairoSurface(), aSize);
-  aSurface->SetData(&kDrawTarget, drawTarget, NULL);
+  aSurface->SetData(&kDrawTarget, drawTarget, nullptr);
   return drawTarget;
 }
 
@@ -591,13 +604,13 @@ void SourceSnapshotDetached(cairo_surface_t *nullSurf)
   gfxImageSurface* origSurf =
     static_cast<gfxImageSurface*>(cairo_surface_get_user_data(nullSurf, &kSourceSurface));
 
-  origSurf->SetData(&kSourceSurface, NULL, NULL);
+  origSurf->SetData(&kSourceSurface, nullptr, nullptr);
 }
 #else
 void SourceSnapshotDetached(void *nullSurf)
 {
   gfxImageSurface* origSurf = static_cast<gfxImageSurface*>(nullSurf);
-  origSurf->SetData(&kSourceSurface, NULL, NULL);
+  origSurf->SetData(&kSourceSurface, nullptr, nullptr);
 }
 #endif
 
@@ -634,7 +647,8 @@ gfxPlatform::GetSourceSurfaceForSurface(DrawTarget *aTarget, gfxASurface *aSurfa
   RefPtr<SourceSurface> srcBuffer;
 
 #ifdef XP_WIN
-  if (aSurface->GetType() == gfxASurface::SurfaceTypeD2D) {
+  if (aSurface->GetType() == gfxASurface::SurfaceTypeD2D &&
+      format != FORMAT_A8) {
     NativeSurface surf;
     surf.mFormat = format;
     surf.mType = NATIVE_SURFACE_D3D10_TEXTURE;
@@ -724,7 +738,7 @@ gfxPlatform::GetSourceSurfaceForSurface(DrawTarget *aTarget, gfxASurface *aSurfa
     cairo_surface_set_user_data(nullSurf,
                                 &kSourceSurface,
                                 imgSurface,
-                                NULL);
+                                nullptr);
     cairo_surface_attach_snapshot(imgSurface->CairoSurface(), nullSurf, SourceSnapshotDetached);
     cairo_surface_destroy(nullSurf);
 #else
@@ -835,7 +849,7 @@ gfxPlatform::CreateDrawTargetForBackend(BackendType aBackend, const IntSize& aSi
     nsRefPtr<gfxASurface> surf = CreateOffscreenSurface(ThebesIntSize(aSize),
                                                         ContentForFormat(aFormat));
     if (!surf || surf->CairoStatus()) {
-      return NULL;
+      return nullptr;
     }
 
     return CreateDrawTargetForSurface(surf, aSize);

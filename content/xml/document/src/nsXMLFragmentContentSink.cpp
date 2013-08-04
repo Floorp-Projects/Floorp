@@ -142,6 +142,8 @@ NS_INTERFACE_MAP_END_INHERITING(nsXMLContentSink)
 NS_IMPL_ADDREF_INHERITED(nsXMLFragmentContentSink, nsXMLContentSink)
 NS_IMPL_RELEASE_INHERITED(nsXMLFragmentContentSink, nsXMLContentSink)
 
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsXMLFragmentContentSink)
+
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsXMLFragmentContentSink,
                                                   nsXMLContentSink)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTargetDocument)

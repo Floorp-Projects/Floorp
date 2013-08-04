@@ -453,7 +453,7 @@ const CodePosition CodePosition::MIN(0);
 bool
 RegisterAllocator::init()
 {
-    if (!insData.init(lir->mir(), graph.numInstructions()))
+    if (!insData.init(mir, graph.numInstructions()))
         return false;
 
     for (size_t i = 0; i < graph.numBlocks(); i++) {

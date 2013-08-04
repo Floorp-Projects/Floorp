@@ -79,6 +79,8 @@ XPCTraceableVariant::GetTraceName(JSTracer* trc, char *buf, size_t bufsize)
     JS_snprintf(buf, bufsize, "XPCVariant[0x%p].mJSVal", trc->debugPrintArg);
 }
 
+NS_IMPL_CYCLE_COLLECTION_CLASS(XPCVariant)
+
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(XPCVariant)
     JS::Value val = tmp->GetJSValPreserveColor();
     if (val.isObjectOrNull()) {

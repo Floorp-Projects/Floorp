@@ -47,6 +47,8 @@ class BuildMonitor(object):
         self.current_tier_dirs = []
         self.current_tier_static_dirs = []
         self.current_subtier_dirs = []
+        self.current_subtier_started = set()
+        self.current_subtier_finished = set()
         self.current_tier_dir = None
         self.current_tier_dir_index = 0
 
@@ -107,6 +109,8 @@ class BuildMonitor(object):
                 self.current_tier = args[0]
                 self.current_subtier = None
                 self.current_tier_dirs = []
+                self.current_subtier_started = set()
+                self.current_subtier_finished = set()
                 self.current_tier_dir = None
             elif action == 'TIER_FINISH':
                 assert len(args) == 1
@@ -121,11 +125,12 @@ class BuildMonitor(object):
                 else:
                     self.current_subtier_dirs = self.current_tier_dirs
                 self.current_tier_dir_index = 0
+                self.current_subtier_started.add(subtier)
             elif action == 'SUBTIER_FINISH':
                 assert len(args) == 2
                 tier, subtier = args
                 assert tier == self.current_tier
-                assert subtier == self.current_subtier
+                self.current_subtier_finished.add(subtier)
             elif action == 'TIERDIR_START':
                 assert len(args) == 1
                 self.current_tier_dir = args[0]

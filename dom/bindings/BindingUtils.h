@@ -131,9 +131,9 @@ IsDOMIfaceAndProtoClass(const js::Class* clasp)
   return IsDOMIfaceAndProtoClass(Jsvalify(clasp));
 }
 
-MOZ_STATIC_ASSERT(DOM_OBJECT_SLOT == js::PROXY_PRIVATE_SLOT,
-                  "js::PROXY_PRIVATE_SLOT doesn't match DOM_OBJECT_SLOT.  "
-                  "Expect bad things");
+static_assert(DOM_OBJECT_SLOT == js::PROXY_PRIVATE_SLOT,
+              "js::PROXY_PRIVATE_SLOT doesn't match DOM_OBJECT_SLOT.  "
+              "Expect bad things");
 template <class T>
 inline T*
 UnwrapDOMObject(JSObject* obj)
@@ -269,9 +269,9 @@ UnwrapObject(JSContext* cx, JSObject* obj, U& value)
 // The items in the protoAndIfaceArray are indexed by the prototypes::id::ID and
 // constructors::id::ID enums, in that order. The end of the prototype objects
 // should be the start of the interface objects.
-MOZ_STATIC_ASSERT((size_t)constructors::id::_ID_Start ==
-                  (size_t)prototypes::id::_ID_Count,
-                  "Overlapping or discontiguous indexes.");
+static_assert((size_t)constructors::id::_ID_Start ==
+              (size_t)prototypes::id::_ID_Count,
+              "Overlapping or discontiguous indexes.");
 const size_t kProtoAndIfaceCacheCount = constructors::id::_ID_Count;
 
 inline void
@@ -1527,17 +1527,17 @@ private:
   class DepedentStringAsserter : public nsDependentString {
   public:
     static void StaticAsserts() {
-      MOZ_STATIC_ASSERT(sizeof(FakeDependentString) == sizeof(nsDependentString),
-                        "Must have right object size");
-      MOZ_STATIC_ASSERT(offsetof(FakeDependentString, mData) ==
-                          offsetof(DepedentStringAsserter, mData),
-                        "Offset of mData should match");
-      MOZ_STATIC_ASSERT(offsetof(FakeDependentString, mLength) ==
-                          offsetof(DepedentStringAsserter, mLength),
-                        "Offset of mLength should match");
-      MOZ_STATIC_ASSERT(offsetof(FakeDependentString, mFlags) ==
-                          offsetof(DepedentStringAsserter, mFlags),
-                        "Offset of mFlags should match");
+      static_assert(sizeof(FakeDependentString) == sizeof(nsDependentString),
+                    "Must have right object size");
+      static_assert(offsetof(FakeDependentString, mData) ==
+                      offsetof(DepedentStringAsserter, mData),
+                    "Offset of mData should match");
+      static_assert(offsetof(FakeDependentString, mLength) ==
+                      offsetof(DepedentStringAsserter, mLength),
+                    "Offset of mLength should match");
+      static_assert(offsetof(FakeDependentString, mFlags) ==
+                      offsetof(DepedentStringAsserter, mFlags),
+                    "Offset of mFlags should match");
     }
   };
 };
@@ -2286,7 +2286,7 @@ template<class T>
 class GetCCParticipant<T, true>
 {
 public:
-  static nsCycleCollectionParticipant*
+  static MOZ_CONSTEXPR nsCycleCollectionParticipant*
   Get()
   {
     return nullptr;

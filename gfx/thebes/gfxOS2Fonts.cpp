@@ -356,7 +356,7 @@ cairo_font_face_t *gfxOS2Font::CairoFontFace()
 
         // finally find a matching font
         FcResult fcRes;
-        FcPattern *fcMatch = FcFontMatch(NULL, fcPattern, &fcRes);
+        FcPattern *fcMatch = FcFontMatch(nullptr, fcPattern, &fcRes);
 
         // Most code that depends on FcFontMatch() assumes it won't fail,
         // then crashes when it does.  For now, at least, substitute the
@@ -370,7 +370,7 @@ cairo_font_face_t *gfxOS2Font::CairoFontFace()
 //#endif
             // FcPatternAddString() will free the existing FC_FAMILY string
             FcPatternAddString(fcPattern, FC_FAMILY, (FcChar8*)"SERIF");
-            fcMatch = FcFontMatch(NULL, fcPattern, &fcRes);
+            fcMatch = FcFontMatch(nullptr, fcPattern, &fcRes);
 //#ifdef DEBUG
             printf("Attempt to substitute default SERIF font %s\n",
                    fcMatch ? "succeeded" : "failed");
@@ -449,7 +449,7 @@ bool gfxOS2Font::SetupCairoFont(gfxContext *aContext)
 #endif
     // gfxPangoFont checks the CTM but Windows doesn't so leave away here, too
 
-    // this implicitely ensures that mScaledFont is created if NULL
+    // this implicitely ensures that mScaledFont is created if nullptr
     cairo_scaled_font_t *scaledFont = CairoScaledFont();
     if (!scaledFont || cairo_scaled_font_status(scaledFont) != CAIRO_STATUS_SUCCESS) {
         // Don't cairo_set_scaled_font as that would propagate the error to

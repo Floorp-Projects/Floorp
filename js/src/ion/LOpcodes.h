@@ -18,6 +18,8 @@
     _(Value)                        \
     _(Parameter)                    \
     _(Callee)                       \
+    _(ForceUseV)                    \
+    _(ForceUseT)                    \
     _(TableSwitch)                  \
     _(TableSwitchV)                 \
     _(Goto)                         \
@@ -33,7 +35,9 @@
     _(NewCallObjectPar)             \
     _(AbortPar)                     \
     _(InitElem)                     \
+    _(InitElemGetterSetter)         \
     _(InitProp)                     \
+    _(InitPropGetterSetter)         \
     _(CheckOverRecursed)            \
     _(CheckOverRecursedPar)         \
     _(DefVar)                       \
@@ -42,6 +46,7 @@
     _(CallGeneric)                  \
     _(CallNative)                   \
     _(ApplyArgsGeneric)             \
+    _(Bail)                         \
     _(GetDynamicName)               \
     _(FilterArguments)              \
     _(CallDirectEval)               \

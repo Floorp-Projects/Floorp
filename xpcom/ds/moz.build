@@ -95,6 +95,7 @@ CPP_SOURCES += [
     'nsSupportsPrimitives.cpp',
     'nsUnicharBuffer.cpp',
     'nsVariant.cpp',
+    'TimeStamp.cpp',
 ]
 
 if CONFIG['OS_ARCH'] == 'WINNT':
@@ -111,6 +112,11 @@ elif CONFIG['OS_ARCH'] == 'Darwin':
     ]
 else:
     error('No TimeStamp implementation on this platform.  Build will not succeed')
+
+EXTRA_COMPONENTS += [
+    'nsINIProcessor.js',
+    'nsINIProcessor.manifest',
+]
 
 LIBRARY_NAME = 'xpcomds_s'
 

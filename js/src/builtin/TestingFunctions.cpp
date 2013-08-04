@@ -15,6 +15,7 @@
 #include "jswrapper.h"
 
 #include "ion/AsmJS.h"
+#include "ion/AsmJSLink.h"
 #include "vm/ForkJoin.h"
 #include "vm/Interpreter.h"
 
@@ -239,7 +240,7 @@ MinorGC(JSContext *cx, unsigned argc, jsval *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     if (args.get(0) == BooleanValue(true))
-        cx->runtime()->gcStoreBuffer.setOverflowed();
+        cx->runtime()->gcStoreBuffer.setAboutToOverflow();
 
     MinorGC(cx->runtime(), gcreason::API);
 #endif
@@ -800,7 +801,7 @@ static JSClass FinalizeCounterClass = {
 static JSBool
 MakeFinalizeObserver(JSContext *cx, unsigned argc, jsval *vp)
 {
-    RootedObject scope(cx, JS_GetGlobalForScopeChain(cx));
+    RootedObject scope(cx, JS::CurrentGlobalOrNull(cx));
     if (!scope)
         return false;
 
@@ -984,33 +985,15 @@ GetObjectMetadata(JSContext *cx, unsigned argc, jsval *vp)
     return true;
 }
 
-#ifndef JS_ION
 JSBool
-js::IsAsmJSCompilationAvailable(JSContext *cx, unsigned argc, Value *vp)
+js::testingFunc_bailout(JSContext *cx, unsigned argc, jsval *vp)
 {
-    CallArgs args = CallArgsFromVp(argc, vp);
-    args.rval().set(BooleanValue(false));
+    // NOP when not in IonMonkey
+    JS_SET_RVAL(cx, vp, JSVAL_VOID);
     return true;
 }
 
-JSBool
-js::IsAsmJSModule(JSContext *cx, unsigned argc, Value *vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    args.rval().set(BooleanValue(false));
-    return true;
-}
-
-JSBool
-js::IsAsmJSFunction(JSContext *cx, unsigned argc, Value *vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    args.rval().set(BooleanValue(false));
-    return true;
-}
-#endif
-
-static JSFunctionSpecWithHelp TestingFunctions[] = {
+static const JSFunctionSpecWithHelp TestingFunctions[] = {
     JS_FN_HELP("gc", ::GC, 0, 0,
 "gc([obj] | 'compartment')",
 "  Run the garbage collector. When obj is given, GC only its compartment.\n"
@@ -1018,9 +1001,9 @@ static JSFunctionSpecWithHelp TestingFunctions[] = {
 "  GC via schedulegc."),
 
     JS_FN_HELP("minorgc", ::MinorGC, 0, 0,
-"minorgc([overflow])",
-"  Run a minor collector on the Nursery. When overflow is true, marks the\n"
-"  store buffer as overflowed before collecting."),
+"minorgc([aboutToOverflow])",
+"  Run a minor collector on the Nursery. When aboutToOverflow is true, marks\n"
+"  the store buffer as about-to-overflow before collecting."),
 
     JS_FN_HELP("gcparam", GCParameter, 2, 0,
 "gcparam(name [, value])",
@@ -1187,6 +1170,10 @@ static JSFunctionSpecWithHelp TestingFunctions[] = {
     JS_FN_HELP("getObjectMetadata", GetObjectMetadata, 1, 0,
 "getObjectMetadata(obj)",
 "  Get the metadata for an object."),
+
+    JS_FN_HELP("bailout", testingFunc_bailout, 0, 0,
+"bailout()",
+"  Force a bailout out of ionmonkey (if running in ionmonkey)."),
 
     JS_FS_HELP_END
 };

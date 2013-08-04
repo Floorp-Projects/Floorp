@@ -27,54 +27,45 @@ function focusing() {
 }
 
 var eatSpace;
+var wordModifiers =
+    (navigator.platform.indexOf("Mac") >= 0) ? {altKey:true} : {ctrlKey:true};
+var sel = window.getSelection();
+var editor = document.getElementById("editor");
 
-function getPrefs() {
-  const prefSvcContractID = "@mozilla.org/preferences-service;1";
-  const prefSvcIID = Components.interfaces.nsIPrefService;
-  return Components.classes[prefSvcContractID].getService(prefSvcIID)
-                                               .getBranch("layout.word_select.");
+function setPrefs(eat_space, stop_at_punctuation, callback) {
+  SpecialPowers.pushPrefEnv({"set": [["layout.word_select.eat_space_to_next_word", eat_space], ["layout.word_select.stop_at_punctuation", stop_at_punctuation]]}, callback);
 }
 
-function setPrefs(eat_space, stop_at_punctuation) {
-  getPrefs().setBoolPref("eat_space_to_next_word", eat_space);
-  getPrefs().setBoolPref("stop_at_punctuation", stop_at_punctuation);
-  eatSpace = eat_space;
+function errString(dir) {
+  return dir + " movement broken with eatSpace=" + eatSpace + " in \"" + editor.innerHTML +
+    "\"; sel.anchorNode.parentNode=" + sel.anchorNode.parentNode;
 }
 
-function restorePrefs() {
-  getPrefs().clearUserPref("eat_space_to_next_word");
-  getPrefs().clearUserPref("stop_at_punctuation");
+function testRight(node, offset) {
+  synthesizeKey("VK_RIGHT", wordModifiers);
+  is(sel.anchorNode, node, errString("Right"));
+  is(sel.anchorOffset, offset, errString("Right"));
 }
+
+function testLeft(node, offset) {
+  synthesizeKey("VK_LEFT", wordModifiers);
+  is(sel.anchorNode, node, errString("Left"));
+  is(sel.anchorOffset, offset, errString("Left"));
+}
+
+var afterEditorNode = document.getElementById("catch").firstChild;
+
+var ChineseChars = "&#x6F22;&#x5B57;";
+var HiraganaChars = "&#x3072;&#x3089;&#x304C;&#x306A;";
+var KatakanaChars = "&#x30AB;&#x30BF;&#x30AB;&#x30CA;";
+var JapaneseFullStop = "&#x3002;";
+var JapaneseComma = "&#x3001";
 
 function test() {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  setPrefs(false, true, test1);
+}
 
-  var wordModifiers =
-      (navigator.platform.indexOf("Mac") >= 0) ? {altKey:true} : {ctrlKey:true};
-  var sel = window.getSelection();
-  var editor = document.getElementById("editor");
-
-  function errString(dir) {
-    return dir + " movement broken with eatSpace=" + eatSpace + " in \"" + editor.innerHTML +
-      "\"; sel.anchorNode.parentNode=" + sel.anchorNode.parentNode;
-  }
-
-  function testRight(node, offset) {
-    synthesizeKey("VK_RIGHT", wordModifiers);
-    is(sel.anchorNode, node, errString("Right"));
-    is(sel.anchorOffset, offset, errString("Right"));
-  }
-
-  function testLeft(node, offset) {
-    synthesizeKey("VK_LEFT", wordModifiers);
-    is(sel.anchorNode, node, errString("Left"));
-    is(sel.anchorOffset, offset, errString("Left"));
-  }
-
-  var afterEditorNode = document.getElementById("catch").firstChild;
-
-  setPrefs(false, true);
-
+function test1() {
   editor.innerHTML = "Hello Kitty";
   sel.collapse(editor.firstChild, 0);
   testRight(editor.firstChild, 5);
@@ -126,12 +117,6 @@ function test() {
   testLeft(editor.firstChild, 8);
   testLeft(editor.firstChild, 5);
   testLeft(editor.firstChild, 0);
-
-  var ChineseChars = "&#x6F22;&#x5B57;";
-  var HiraganaChars = "&#x3072;&#x3089;&#x304C;&#x306A;";
-  var KatakanaChars = "&#x30AB;&#x30BF;&#x30AB;&#x30CA;";
-  var JapaneseFullStop = "&#x3002;";
-  var JapaneseComma = "&#x3001";
 
   editor.innerHTML = ChineseChars + HiraganaChars + ChineseChars;
   sel.collapse(editor.firstChild, 0);
@@ -187,10 +172,11 @@ function test() {
   testLeft(editor.firstChild, 3);
   testLeft(editor.firstChild, 0);
 
-  setPrefs(true, true);
-
   // test basic word movement with eat_space_next_to_word true.
+  setPrefs(true, true, test2);
+}
 
+function test2() {
   editor.innerHTML = "Hello Kitty";
   sel.collapse(editor.firstChild, 0);
   testRight(editor.firstChild, 6);
@@ -294,8 +280,6 @@ function test() {
   testLeft(editor.firstChild, 6);
   testLeft(editor.firstChild, 3);
   testLeft(editor.firstChild, 0);
-
-  restorePrefs();
 
   SimpleTest.finish();
 }

@@ -41,7 +41,7 @@ static JSBool
 test_fn2(JSContext *cx, unsigned argc, jsval *vp)
 {
     jsval r;
-    JS::RootedObject global(cx, JS_GetGlobalForScopeChain(cx));
+    JS::RootedObject global(cx, JS::CurrentGlobalOrNull(cx));
     return JS_CallFunctionName(cx, global, "d", 0, NULL, &r);
 }
 
@@ -81,7 +81,7 @@ static JSObject*
 initialize(JSContext *cx)
 {
     js::SetRuntimeProfilingStack(cx->runtime(), pstack, &psize, 10);
-    JS::RootedObject global(cx, JS_GetGlobalForScopeChain(cx));
+    JS::RootedObject global(cx, JS::CurrentGlobalOrNull(cx));
     return JS_InitClass(cx, global, NULL, &ptestClass, Prof, 0,
                         NULL, ptestFunctions, NULL, NULL);
 }

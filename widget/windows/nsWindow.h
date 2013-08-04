@@ -227,7 +227,6 @@ public:
    * Misc.
    */
   virtual bool            AutoErase(HDC dc);
-  nsIntPoint*             GetLastPoint() { return &mLastPoint; }
   bool                    IsTopLevelWidget() { return mIsTopWidgetWindow; }
   /**
    * Start allowing Direct3D9 to be used by widgets when GetLayerManager is
@@ -538,6 +537,11 @@ protected:
   // The point in time at which the last paint completed. We use this to avoid
   //  painting too rapidly in response to frequent input events.
   TimeStamp mLastPaintEndTime;
+
+  // Caching for hit test results
+  POINT mCachedHitTestPoint;
+  TimeStamp mCachedHitTestTime;
+  int32_t mCachedHitTestResult;
 
   static bool sNeedsToInitMouseWheelSettings;
   static void InitMouseWheelScrollData();

@@ -320,8 +320,8 @@ class IDLUnresolvedIdentifier(IDLObject):
                               [location])
         if name[0] == '_' and not allowDoubleUnderscore:
             name = name[1:]
-        # TODO: Bug 872377, Restore "toJSON" to below list.
-        if name in ["constructor", "iterator", "toString"] and not allowForbidden:
+        if (name in ["constructor", "iterator", "toString", "toJSON"] and
+            not allowForbidden):
             raise WebIDLError("Cannot use reserved identifier '%s'" % (name),
                               [location])
 
@@ -913,16 +913,30 @@ class IDLInterface(IDLObjectWithScope):
                     elif not newMethod in self.namedConstructors:
                         raise WebIDLError("NamedConstructor conflicts with a NamedConstructor of a different interface",
                                           [method.location, newMethod.location])
+            elif (identifier == "ArrayClass"):
+                if not attr.noArguments():
+                    raise WebIDLError("[ArrayClass] must take no arguments",
+                                      [attr.location])
+                if self.parent:
+                    raise WebIDLError("[ArrayClass] must not be specified on "
+                                      "an interface with inherited interfaces",
+                                      [attr.location, self.location])
             elif (identifier == "PrefControlled" or
-                  identifier == "Pref" or
                   identifier == "NeedNewResolve" or
-                  identifier == "JSImplementation" or
-                  identifier == "HeaderFile" or
-                  identifier == "NavigatorProperty" or
                   identifier == "OverrideBuiltins" or
                   identifier == "ChromeOnly"):
-                # Known attributes that we don't need to do anything with here
-                pass
+                # Known extended attributes that do not take values
+                if not attr.noArguments():
+                    raise WebIDLError("[%s] must take no arguments" % identifier,
+                                      [attr.location])
+            elif (identifier == "Pref" or
+                  identifier == "JSImplementation" or
+                  identifier == "HeaderFile" or
+                  identifier == "NavigatorProperty"):
+                # Known extended attributes that take a string value
+                if not attr.hasValue():
+                    raise WebIDLError("[%s] must have a value" % identifier,
+                                      [attr.location])
             else:
                 raise WebIDLError("Unknown extended attribute %s on interface" % identifier,
                                   [attr.location])
@@ -1257,6 +1271,12 @@ class IDLType(IDLObject):
     def isPrimitive(self):
         return False
 
+    def isBoolean(self):
+        return False
+
+    def isNumeric(self):
+        return False
+
     def isString(self):
         return False
 
@@ -1332,6 +1352,9 @@ class IDLType(IDLObject):
     def isUnrestricted(self):
         # Should only call this on float types
         assert self.isFloat()
+
+    def isSerializable(self):
+        return False
 
     def tag(self):
         assert False # Override me!
@@ -1411,6 +1434,12 @@ class IDLNullableType(IDLType):
     def isPrimitive(self):
         return self.inner.isPrimitive()
 
+    def isBoolean(self):
+        return self.inner.isBoolean()
+
+    def isNumeric(self):
+        return self.inner.isNumeric()
+
     def isString(self):
         return self.inner.isString()
 
@@ -1467,6 +1496,9 @@ class IDLNullableType(IDLType):
 
     def isUnion(self):
         return self.inner.isUnion()
+
+    def isSerializable(self):
+        return self.inner.isSerializable()
 
     def tag(self):
         return self.inner.tag()
@@ -1553,6 +1585,9 @@ class IDLSequenceType(IDLType):
     def isEnum(self):
         return False
 
+    def isSerializable(self):
+        return self.inner.isSerializable()
+
     def includesRestrictedFloat(self):
         return self.inner.includesRestrictedFloat()
 
@@ -1601,6 +1636,9 @@ class IDLUnionType(IDLType):
 
     def isUnion(self):
         return True
+
+    def isSerializable(self):
+        return all(m.isSerializable() for m in self.memberTypes)
 
     def includesRestrictedFloat(self):
         return any(t.includesRestrictedFloat() for t in self.memberTypes)
@@ -1805,6 +1843,12 @@ class IDLTypedefType(IDLType, IDLObjectWithIdentifier):
     def isPrimitive(self):
         return self.inner.isPrimitive()
 
+    def isBoolean(self):
+        return self.inner.isBoolean()
+
+    def isNumeric(self):
+        return self.inner.isNumeric()
+
     def isString(self):
         return self.inner.isString()
 
@@ -1932,6 +1976,19 @@ class IDLWrapperType(IDLType):
     def isEnum(self):
         return isinstance(self.inner, IDLEnum)
 
+    def isSerializable(self):
+        if self.isInterface():
+            if self.inner.isExternal():
+                return False
+            return any(m.isMethod() and m.isJsonifier() for m in self.inner.members)
+        elif self.isEnum():
+            return True
+        elif self.isDictionary():
+            return all(m.isSerializable() for m in self.inner.members)
+        else:
+            raise WebIDLError("IDLWrapperType wraps type %s that we don't know if "
+                              "is serializable" % type(self.inner), [self.location])
+
     def resolveType(self, parentScope):
         assert isinstance(parentScope, IDLScope)
         self.inner.resolve(parentScope)
@@ -1955,7 +2012,7 @@ class IDLWrapperType(IDLType):
             return other.isDistinguishableFrom(self)
         assert self.isInterface() or self.isEnum() or self.isDictionary()
         if self.isEnum():
-            return (other.isInterface() or other.isObject() or
+            return (other.isPrimitive() or other.isInterface() or other.isObject() or
                     other.isCallback() or other.isDictionary() or
                     other.isSequence() or other.isArray() or
                     other.isDate())
@@ -2084,6 +2141,12 @@ class IDLBuiltinType(IDLType):
     def isPrimitive(self):
         return self._typeTag <= IDLBuiltinType.Types.double
 
+    def isBoolean(self):
+        return self._typeTag == IDLBuiltinType.Types.boolean
+
+    def isNumeric(self):
+        return self.isPrimitive() and not self.isBoolean()
+
     def isString(self):
         return self._typeTag == IDLBuiltinType.Types.domstring or \
                self._typeTag == IDLBuiltinType.Types.bytestring
@@ -2130,6 +2193,9 @@ class IDLBuiltinType(IDLType):
         return self._typeTag == IDLBuiltinType.Types.unrestricted_float or \
                self._typeTag == IDLBuiltinType.Types.unrestricted_double
 
+    def isSerializable(self):
+        return self.isPrimitive() or self.isDOMString() or self.isDate()
+
     def includesRestrictedFloat(self):
         return self.isFloat() and not self.isUnrestricted()
 
@@ -2140,8 +2206,21 @@ class IDLBuiltinType(IDLType):
         if other.isUnion():
             # Just forward to the union; it'll deal
             return other.isDistinguishableFrom(self)
-        if self.isPrimitive() or self.isString():
-            return (other.isInterface() or other.isObject() or
+        if self.isBoolean():
+            return (other.isNumeric() or other.isString() or other.isEnum() or
+                    other.isInterface() or other.isObject() or
+                    other.isCallback() or other.isDictionary() or
+                    other.isSequence() or other.isArray() or
+                    other.isDate())
+        if self.isNumeric():
+            return (other.isBoolean() or other.isString() or other.isEnum() or
+                    other.isInterface() or other.isObject() or
+                    other.isCallback() or other.isDictionary() or
+                    other.isSequence() or other.isArray() or
+                    other.isDate())
+        if self.isString():
+            return (other.isPrimitive() or other.isInterface() or
+                    other.isObject() or
                     other.isCallback() or other.isDictionary() or
                     other.isSequence() or other.isArray() or
                     other.isDate())

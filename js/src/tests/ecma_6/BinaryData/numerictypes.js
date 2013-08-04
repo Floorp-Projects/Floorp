@@ -85,6 +85,7 @@ function runTests()
         check(function() type(/abcd/) == 0);
 
         checkThrows(function() new type());
+        checkThrows(function() type());
     }
 
     var floatTypes = [float32, float64];
@@ -105,6 +106,7 @@ function runTests()
         check(function() Number.isNaN(type(/abcd/)));
 
         checkThrows(function() new type());
+        checkThrows(function() type());
     }
 
     ///// test ranges and creation

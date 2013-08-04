@@ -6957,13 +6957,13 @@ CSSParserImpl::ParseBackgroundItem(CSSParserImpl::BackgroundParseState& aState)
         MOZ_ASSERT(nsCSSProps::kKeywordTableTable[
                      eCSSProperty_background_clip] ==
                    nsCSSProps::kBackgroundOriginKTable);
-        MOZ_STATIC_ASSERT(NS_STYLE_BG_CLIP_BORDER ==
-                          NS_STYLE_BG_ORIGIN_BORDER &&
-                          NS_STYLE_BG_CLIP_PADDING ==
-                          NS_STYLE_BG_ORIGIN_PADDING &&
-                          NS_STYLE_BG_CLIP_CONTENT ==
-                          NS_STYLE_BG_ORIGIN_CONTENT,
-                          "bg-clip and bg-origin style constants must agree");
+        static_assert(NS_STYLE_BG_CLIP_BORDER ==
+                      NS_STYLE_BG_ORIGIN_BORDER &&
+                      NS_STYLE_BG_CLIP_PADDING ==
+                      NS_STYLE_BG_ORIGIN_PADDING &&
+                      NS_STYLE_BG_CLIP_CONTENT ==
+                      NS_STYLE_BG_ORIGIN_CONTENT,
+                      "bg-clip and bg-origin style constants must agree");
 
         if (!ParseSingleValueProperty(aState.mClip->mValue,
                                       eCSSProperty_background_clip)) {
@@ -9531,13 +9531,13 @@ CSSParserImpl::ParseTextDecoration()
     eDecorationBlink        = NS_STYLE_TEXT_DECORATION_LINE_BLINK,
     eDecorationPrefAnchors  = NS_STYLE_TEXT_DECORATION_LINE_PREF_ANCHORS
   };
-  MOZ_STATIC_ASSERT((eDecorationNone ^ eDecorationUnderline ^
-                     eDecorationOverline ^ eDecorationLineThrough ^
-                     eDecorationBlink ^ eDecorationPrefAnchors) ==
-                    (eDecorationNone | eDecorationUnderline |
-                     eDecorationOverline | eDecorationLineThrough |
-                     eDecorationBlink | eDecorationPrefAnchors),
-                    "text decoration constants need to be bitmasks");
+  static_assert((eDecorationNone ^ eDecorationUnderline ^
+                 eDecorationOverline ^ eDecorationLineThrough ^
+                 eDecorationBlink ^ eDecorationPrefAnchors) ==
+                (eDecorationNone | eDecorationUnderline |
+                 eDecorationOverline | eDecorationLineThrough |
+                 eDecorationBlink | eDecorationPrefAnchors),
+                "text decoration constants need to be bitmasks");
 
   static const int32_t kTextDecorationKTable[] = {
     eCSSKeyword_none,                   eDecorationNone,
@@ -9666,8 +9666,9 @@ CSSParserImpl::ParseTextOverflow(nsCSSValue& aValue)
 ///////////////////////////////////////////////////////
 // transform Parsing Implementation
 
-/* Reads a function list of arguments.  Do not call this function
- * directly; it's mean to be caled from ParseFunction.
+/* Reads a function list of arguments and consumes the closing parenthesis.
+ * Do not call this function directly; it's meant to be called from
+ * ParseFunction.
  */
 bool
 CSSParserImpl::ParseFunctionInternals(const int32_t aVariantMask[],
@@ -9684,21 +9685,28 @@ CSSParserImpl::ParseFunctionInternals(const int32_t aVariantMask[],
     nsCSSValue newValue;
     int32_t m = aVariantMaskAll ? aVariantMaskAll : aVariantMask[index];
     if (!ParseVariant(newValue, m, nullptr)) {
-      return false;
+      break;
     }
 
     aOutput.AppendElement(newValue);
 
-    // See whether to continue or whether to look for end of function.
-    if (!ExpectSymbol(',', true)) {
-      // We need to read the closing parenthesis, and also must take care
-      // that we haven't read too few symbols.
-      return ExpectSymbol(')', true) && (index + 1) >= aMinElems;
+    if (ExpectSymbol(',', true)) {
+      // Move on to the next argument if we see a comma.
+      continue;
     }
+
+    if (ExpectSymbol(')', true)) {
+      // Make sure we've read enough symbols if we see a closing parenthesis.
+      return (index + 1) >= aMinElems;
+    }
+
+    // Only a comma or a closing parenthesis is valid after an argument.
+    break;
   }
 
-  // If we're here, we finished looping without hitting the end, so we read too
-  // many elements.
+  // If we're here, we've hit an error without seeing a closing parenthesis or
+  // we've read too many elements without seeing a closing parenthesis.
+  SkipUntil(')');
   return false;
 }
 
@@ -10774,7 +10782,7 @@ CSSParserImpl::ParseMarker()
 bool
 CSSParserImpl::ParsePaintOrder()
 {
-  MOZ_STATIC_ASSERT
+  static_assert
     ((1 << NS_STYLE_PAINT_ORDER_BITWIDTH) > NS_STYLE_PAINT_ORDER_LAST_VALUE,
      "bitfield width insufficient for paint-order constants");
 
@@ -10786,9 +10794,9 @@ CSSParserImpl::ParsePaintOrder()
     eCSSKeyword_UNKNOWN,-1
   };
 
-  MOZ_STATIC_ASSERT(NS_ARRAY_LENGTH(kPaintOrderKTable) ==
-                      2 * (NS_STYLE_PAINT_ORDER_LAST_VALUE + 2),
-                    "missing paint-order values in kPaintOrderKTable");
+  static_assert(NS_ARRAY_LENGTH(kPaintOrderKTable) ==
+                  2 * (NS_STYLE_PAINT_ORDER_LAST_VALUE + 2),
+                "missing paint-order values in kPaintOrderKTable");
 
   nsCSSValue value;
   if (!ParseVariant(value, VARIANT_HK, kPaintOrderKTable)) {
@@ -10801,7 +10809,7 @@ CSSParserImpl::ParsePaintOrder()
 
   // Ensure that even cast to a signed int32_t when stored in CSSValue,
   // we have enough space for the entire paint-order value.
-  MOZ_STATIC_ASSERT
+  static_assert
     (NS_STYLE_PAINT_ORDER_BITWIDTH * NS_STYLE_PAINT_ORDER_LAST_VALUE < 32,
      "seen and order not big enough");
 
@@ -10845,8 +10853,8 @@ CSSParserImpl::ParsePaintOrder()
       }
     }
 
-    MOZ_STATIC_ASSERT(NS_STYLE_PAINT_ORDER_NORMAL == 0,
-                      "unexpected value for NS_STYLE_PAINT_ORDER_NORMAL");
+    static_assert(NS_STYLE_PAINT_ORDER_NORMAL == 0,
+                  "unexpected value for NS_STYLE_PAINT_ORDER_NORMAL");
     value.SetIntValue(static_cast<int32_t>(order), eCSSUnit_Enumerated);
   }
 

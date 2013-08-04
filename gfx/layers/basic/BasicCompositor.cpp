@@ -291,6 +291,7 @@ BasicCompositor::DrawQuad(const gfx::Rect& aRect, const gfx::Rect& aClipRect,
   Matrix maskTransform;
   if (aEffectChain.mSecondaryEffects[EFFECT_MASK]) {
     EffectMask *effectMask = static_cast<EffectMask*>(aEffectChain.mSecondaryEffects[EFFECT_MASK].get());
+    static_cast<DeprecatedTextureHost*>(effectMask->mMaskTexture)->Lock();
     sourceMask = effectMask->mMaskTexture->AsSourceBasic()->GetSurface();
     MOZ_ASSERT(effectMask->mMaskTransform.Is2D(), "How did we end up with a 3D transform here?!");
     MOZ_ASSERT(!effectMask->mIs3D);
@@ -346,6 +347,11 @@ BasicCompositor::DrawQuad(const gfx::Rect& aRect, const gfx::Rect& aClipRect,
       NS_RUNTIMEABORT("Invalid effect type!");
       break;
     }
+  }
+
+  if (aEffectChain.mSecondaryEffects[EFFECT_MASK]) {
+    EffectMask *effectMask = static_cast<EffectMask*>(aEffectChain.mSecondaryEffects[EFFECT_MASK].get());
+    static_cast<DeprecatedTextureHost*>(effectMask->mMaskTexture)->Unlock();
   }
 
   dest->SetTransform(oldTransform);

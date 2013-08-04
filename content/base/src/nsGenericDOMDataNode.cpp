@@ -63,6 +63,8 @@ nsGenericDOMDataNode::~nsGenericDOMDataNode()
   }
 }
 
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsGenericDOMDataNode)
+
 NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(nsGenericDOMDataNode)
 
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_BEGIN(nsGenericDOMDataNode)
@@ -438,7 +440,7 @@ nsGenericDOMDataNode::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                                  bool aCompileEventHandlers)
 {
   NS_PRECONDITION(aParent || aDocument, "Must have document if no parent!");
-  NS_PRECONDITION(HasSameOwnerDoc(NODE_FROM(aParent, aDocument)),
+  NS_PRECONDITION(NODE_FROM(aParent, aDocument)->OwnerDoc() == OwnerDoc(),
                   "Must have the same owner document");
   NS_PRECONDITION(!aParent || aDocument == aParent->GetCurrentDoc(),
                   "aDocument must be current doc of aParent");
@@ -694,7 +696,7 @@ nsGenericDOMDataNode::DestroyContent()
 {
   // XXX We really should let cycle collection do this, but that currently still
   //     leaks (see https://bugzilla.mozilla.org/show_bug.cgi?id=406684).
-  nsContentUtils::ReleaseWrapper(this, this);
+  ReleaseWrapper(this);
 }
 
 #ifdef DEBUG

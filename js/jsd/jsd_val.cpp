@@ -509,7 +509,7 @@ jsd_GetValueProperty(JSDContext* jsdc, JSDValue* jsdval, JSString* nameStr)
 
         JS_ClearPendingException(cx);
 
-        if(!JS_GetUCProperty(cx, obj, nameChars, nameLen, val.address()))
+        if(!JS_GetUCProperty(cx, obj, nameChars, nameLen, &val))
         {
             if (JS_IsExceptionPending(cx))
             {
@@ -581,7 +581,7 @@ jsd_GetValuePrototype(JSDContext* jsdc, JSDValue* jsdval)
         if(JSVAL_IS_PRIMITIVE(jsdval->val))
             return NULL;
         obj = JSVAL_TO_OBJECT(jsdval->val);
-        if(!JS_GetPrototype(cx, obj, proto.address()))
+        if(!JS_GetPrototype(cx, obj, &proto))
             return NULL;
         if(!proto)
             return NULL;
@@ -632,7 +632,7 @@ jsd_GetValueConstructor(JSDContext* jsdc, JSDValue* jsdval)
         if(JSVAL_IS_PRIMITIVE(jsdval->val))
             return NULL;
         obj = JSVAL_TO_OBJECT(jsdval->val);
-        if(!JS_GetPrototype(cx, obj, proto.address()))
+        if(!JS_GetPrototype(cx, obj, &proto))
             return NULL;
         if(!proto)
             return NULL;

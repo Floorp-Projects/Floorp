@@ -27,7 +27,7 @@ interface nsIDOMLocation;
  * http://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html
  */
 
-[scriptable, uuid(18de0c13-f82e-4c7e-9a48-b778e00df9ca)]
+[scriptable, uuid(aa4b59de-462a-4f61-abd9-4232fef3dacc)]
 interface nsIDOMDocument : nsIDOMNode
 {
   readonly attribute nsIDOMDocumentType         doctype;
@@ -386,14 +386,6 @@ interface nsIDOMDocument : nsIDOMNode
    * @see <http://dvcs.w3.org/hg/pointerlock/raw-file/default/index.html>
    */
   void mozExitPointerLock();
-
-  /**
-   * Inline event handler for readystatechange events.
-   */
-  [implicit_jscontext] attribute jsval onreadystatechange;
-
-  [implicit_jscontext] attribute jsval onmouseenter;
-  [implicit_jscontext] attribute jsval onmouseleave;
 
   /**
    * Visibility API implementation.

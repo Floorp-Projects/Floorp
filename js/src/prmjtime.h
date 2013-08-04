@@ -7,8 +7,7 @@
 #ifndef prmjtime_h
 #define prmjtime_h
 
-#include "mozilla/StandardInteger.h"
-
+#include <stdint.h>
 #include <time.h>
 
 /*

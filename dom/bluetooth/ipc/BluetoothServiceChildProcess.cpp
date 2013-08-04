@@ -339,6 +339,32 @@ BluetoothServiceChildProcess::IsScoConnected(BluetoothReplyRunnable* aRunnable)
   SendRequest(aRunnable, IsScoConnectedRequest());
 }
 
+void
+BluetoothServiceChildProcess::SendMetaData(const nsAString& aTitle,
+                                           const nsAString& aArtist,
+                                           const nsAString& aAlbum,
+                                           int64_t aMediaNumber,
+                                           int64_t aTotalMediaCount,
+                                           int64_t aDuration,
+                                           BluetoothReplyRunnable* aRunnable)
+{
+  SendRequest(aRunnable,
+              SendMetaDataRequest(nsString(aTitle), nsString(aArtist),
+                                  nsString(aAlbum), aMediaNumber,
+                                  aTotalMediaCount, aDuration));
+}
+
+void
+BluetoothServiceChildProcess::SendPlayStatus(int64_t aDuration,
+                                             int64_t aPosition,
+                                             const nsAString& aPlayStatus,
+                                             BluetoothReplyRunnable* aRunnable)
+{
+  SendRequest(aRunnable,
+              SendPlayStatusRequest(aDuration, aPosition,
+                                    nsString(aPlayStatus)));
+}
+
 nsresult
 BluetoothServiceChildProcess::HandleStartup()
 {
@@ -388,3 +414,12 @@ BluetoothServiceChildProcess::SendSinkMessage(const nsAString& aDeviceAddresses,
 {
   MOZ_CRASH("This should never be called!");
 }
+
+void
+BluetoothServiceChildProcess::UpdatePlayStatus(uint32_t aDuration,
+                                               uint32_t aPosition,
+                                               ControlPlayStatus aPlayStatus)
+{
+  MOZ_CRASH("This should never be called!");
+}
+
