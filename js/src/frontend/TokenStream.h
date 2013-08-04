@@ -255,25 +255,26 @@ struct Token {
 
     // Mutators
 
-    // FIXME: Init type early enough such that all mutators can assert
-    //        type-safety.  See bug 697000.
-
     void setName(PropertyName *name) {
+        JS_ASSERT(type == TOK_NAME);
         JS_ASSERT(!IsPoisonedPtr(name));
         u.name = name;
     }
 
     void setAtom(JSAtom *atom) {
+        JS_ASSERT(type == TOK_STRING);
         JS_ASSERT(!IsPoisonedPtr(atom));
         u.atom = atom;
     }
 
     void setRegExpFlags(js::RegExpFlag flags) {
+        JS_ASSERT(type == TOK_REGEXP);
         JS_ASSERT((flags & AllFlags) == flags);
         u.reflags = flags;
     }
 
     void setNumber(double n, DecimalPoint decimalPoint) {
+        JS_ASSERT(type == TOK_NUMBER);
         u.number.value = n;
         u.number.decimalPoint = decimalPoint;
     }
