@@ -77,6 +77,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/Mutex.h"
 
 #include "nsIGfxInfo.h"
 
@@ -85,6 +86,8 @@ using namespace mozilla::layers;
 
 gfxPlatform *gPlatform = nullptr;
 static bool gEverInitialized = false;
+
+static Mutex* gGfxPlatformPrefsLock = nullptr;
 
 // These two may point to the same profile
 static qcms_profile *gCMSOutputProfile = nullptr;
@@ -313,6 +316,8 @@ gfxPlatform::Init()
     sCmapDataLog = PR_NewLogModule("cmapdata");;
 #endif
 
+    gGfxPlatformPrefsLock = new Mutex("gfxPlatform::gGfxPlatformPrefsLock");
+
     /* Initialize the GfxInfo service.
      * Note: we can't call functions on GfxInfo that depend
      * on gPlatform until after it has been initialized
@@ -474,6 +479,8 @@ gfxPlatform::Shutdown()
     ImageBridgeChild::ShutDown();
 
     CompositorParent::ShutDown();
+
+    delete gGfxPlatformPrefsLock;
 
     delete gPlatform;
     gPlatform = nullptr;
@@ -1856,11 +1863,15 @@ static bool sPrefLayersAccelerationForceEnabled = false;
 static bool sPrefLayersAccelerationDisabled = false;
 static bool sPrefLayersPreferOpenGL = false;
 static bool sPrefLayersPreferD3D9 = false;
+static bool sLayersSupportsD3D9 = true;
 static int  sPrefLayoutFrameRate = -1;
+static bool sBufferRotationEnabled = false;
 
-void InitLayersAccelerationPrefs()
+static bool sLayersAccelerationPrefsInitialized = false;
+
+void
+InitLayersAccelerationPrefs()
 {
-  static bool sLayersAccelerationPrefsInitialized = false;
   if (!sLayersAccelerationPrefsInitialized)
   {
     sPrefLayersOffMainThreadCompositionEnabled = Preferences::GetBool("layers.offmainthreadcomposition.enabled", false);
@@ -1871,12 +1882,24 @@ void InitLayersAccelerationPrefs()
     sPrefLayersPreferOpenGL = Preferences::GetBool("layers.prefer-opengl", false);
     sPrefLayersPreferD3D9 = Preferences::GetBool("layers.prefer-d3d9", false);
     sPrefLayoutFrameRate = Preferences::GetInt("layout.frame_rate", -1);
+    sBufferRotationEnabled = Preferences::GetBool("layers.bufferrotation.enabled", true);
+
+    nsCOMPtr<nsIGfxInfo> gfxInfo = do_GetService("@mozilla.org/gfx/info;1");
+    if (gfxInfo) {
+      int32_t status;
+      if (NS_SUCCEEDED(gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_DIRECT3D_9_LAYERS, &status))) {
+        if (status != nsIGfxInfo::FEATURE_NO_INFO && !sPrefLayersAccelerationForceEnabled) {
+          sLayersSupportsD3D9 = false;
+        }
+      }
+    }
 
     sLayersAccelerationPrefsInitialized = true;
   }
 }
 
-bool gfxPlatform::GetPrefLayersOffMainThreadCompositionEnabled()
+bool
+gfxPlatform::GetPrefLayersOffMainThreadCompositionEnabled()
 {
   InitLayersAccelerationPrefs();
   return sPrefLayersOffMainThreadCompositionEnabled ||
@@ -1884,13 +1907,15 @@ bool gfxPlatform::GetPrefLayersOffMainThreadCompositionEnabled()
          sPrefLayersOffMainThreadCompositionTestingEnabled;
 }
 
-bool gfxPlatform::GetPrefLayersOffMainThreadCompositionForceEnabled()
+bool
+gfxPlatform::GetPrefLayersOffMainThreadCompositionForceEnabled()
 {
   InitLayersAccelerationPrefs();
   return sPrefLayersOffMainThreadCompositionForceEnabled;
 }
 
-bool gfxPlatform::GetPrefLayersAccelerationForceEnabled()
+bool
+gfxPlatform::GetPrefLayersAccelerationForceEnabled()
 {
   InitLayersAccelerationPrefs();
   return sPrefLayersAccelerationForceEnabled;
@@ -1903,20 +1928,49 @@ gfxPlatform::GetPrefLayersAccelerationDisabled()
   return sPrefLayersAccelerationDisabled;
 }
 
-bool gfxPlatform::GetPrefLayersPreferOpenGL()
+bool
+gfxPlatform::GetPrefLayersPreferOpenGL()
 {
   InitLayersAccelerationPrefs();
   return sPrefLayersPreferOpenGL;
 }
 
-bool gfxPlatform::GetPrefLayersPreferD3D9()
+bool
+gfxPlatform::GetPrefLayersPreferD3D9()
 {
   InitLayersAccelerationPrefs();
   return sPrefLayersPreferD3D9;
 }
 
-int gfxPlatform::GetPrefLayoutFrameRate()
+bool
+gfxPlatform::CanUseDirect3D9()
+{
+  // this function is called from the compositor thread, so it is not
+  // safe to init the prefs etc. from here.
+  MOZ_ASSERT(sLayersAccelerationPrefsInitialized);
+  return sLayersSupportsD3D9;
+}
+
+int
+gfxPlatform::GetPrefLayoutFrameRate()
 {
   InitLayersAccelerationPrefs();
   return sPrefLayoutFrameRate;
+}
+
+bool
+gfxPlatform::BufferRotationEnabled()
+{
+  MutexAutoLock autoLock(*gGfxPlatformPrefsLock);
+
+  InitLayersAccelerationPrefs();
+  return sBufferRotationEnabled;
+}
+
+void
+gfxPlatform::DisableBufferRotation()
+{
+  MutexAutoLock autoLock(*gGfxPlatformPrefsLock);
+
+  sBufferRotationEnabled = false;
 }
