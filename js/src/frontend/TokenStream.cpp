@@ -1015,7 +1015,6 @@ static_assert(LastCharKind < (1 << (sizeof(firstCharKinds[0]) * 8)),
 TokenKind
 TokenStream::getTokenInternal(Modifier modifier)
 {
-    TokenKind tt;
     int c, qc;
     Token *tp;
     FirstCharKind c1kind;
@@ -1028,7 +1027,7 @@ TokenStream::getTokenInternal(Modifier modifier)
   retry:
     if (JS_UNLIKELY(!userbuf.hasRawChars())) {
         tp = newToken(0);
-        tt = TOK_EOF;
+        tp->type = TOK_EOF;
         flags.isEOF = true;
         goto out;
     }
@@ -1087,7 +1086,7 @@ TokenStream::getTokenInternal(Modifier modifier)
     //
     if (c1kind < OneChar_Max) {
         tp = newToken(-1);
-        tt = TokenKind(c1kind);
+        tp->type = TokenKind(c1kind);
         goto out;
     }
 
@@ -1134,18 +1133,18 @@ TokenStream::getTokenInternal(Modifier modifier)
 
         // Check for keywords unless the parser told us not to.
         if (modifier != KeywordIsName) {
-            tt = TOK_NAME;
-            if (!checkForKeyword(chars, length, &tt))
+            tp->type = TOK_NAME;
+            if (!checkForKeyword(chars, length, &tp->type))
                 goto error;
-            if (tt != TOK_NAME)
+            if (tp->type != TOK_NAME)
                 goto out;
         }
 
         JSAtom *atom = AtomizeChars<CanGC>(cx, chars, length);
         if (!atom)
             goto error;
+        tp->type = TOK_NAME;
         tp->setName(atom->asPropertyName());
-        tt = TOK_NAME;
         goto out;
     }
 
@@ -1201,8 +1200,8 @@ TokenStream::getTokenInternal(Modifier modifier)
             if (!js_strtod(cx, numStart, userbuf.addressOfNextRawChar(), &dummy, &dval))
                 goto error;
         }
+        tp->type = TOK_NUMBER;
         tp->setNumber(dval, decimalPoint);
-        tt = TOK_NUMBER;
         goto out;
     }
 
@@ -1300,8 +1299,8 @@ TokenStream::getTokenInternal(Modifier modifier)
         JSAtom *atom = atomize(cx, tokenbuf);
         if (!atom)
             goto error;
+        tp->type = TOK_STRING;
         tp->setAtom(atom);
-        tt = TOK_STRING;
         goto out;
     }
 
@@ -1391,8 +1390,8 @@ TokenStream::getTokenInternal(Modifier modifier)
         const jschar *dummy;
         if (!GetPrefixInteger(cx, numStart, userbuf.addressOfNextRawChar(), radix, &dummy, &dval))
             goto error;
+        tp->type = TOK_NUMBER;
         tp->setNumber(dval, NoDecimal);
-        tt = TOK_NUMBER;
         goto out;
     }
 
@@ -1411,28 +1410,28 @@ TokenStream::getTokenInternal(Modifier modifier)
         }
         if (c == '.') {
             if (matchChar('.')) {
-                tt = TOK_TRIPLEDOT;
+                tp->type = TOK_TRIPLEDOT;
                 goto out;
             }
         }
         ungetCharIgnoreEOL(c);
-        tt = TOK_DOT;
+        tp->type = TOK_DOT;
         goto out;
 
       case '=':
         if (matchChar('='))
-            tt = matchChar('=') ? TOK_STRICTEQ : TOK_EQ;
+            tp->type = matchChar('=') ? TOK_STRICTEQ : TOK_EQ;
         else if (matchChar('>'))
-            tt = TOK_ARROW;
+            tp->type = TOK_ARROW;
         else
-            tt = TOK_ASSIGN;
+            tp->type = TOK_ASSIGN;
         goto out;
 
       case '+':
         if (matchChar('+'))
-            tt = TOK_INC;
+            tp->type = TOK_INC;
         else
-            tt = matchChar('=') ? TOK_ADDASSIGN : TOK_ADD;
+            tp->type = matchChar('=') ? TOK_ADDASSIGN : TOK_ADD;
         goto out;
 
       case '\\':
@@ -1445,27 +1444,27 @@ TokenStream::getTokenInternal(Modifier modifier)
 
       case '|':
         if (matchChar('|'))
-            tt = TOK_OR;
+            tp->type = TOK_OR;
         else
-            tt = matchChar('=') ? TOK_BITORASSIGN : TOK_BITOR;
+            tp->type = matchChar('=') ? TOK_BITORASSIGN : TOK_BITOR;
         goto out;
 
       case '^':
-        tt = matchChar('=') ? TOK_BITXORASSIGN : TOK_BITXOR;
+        tp->type = matchChar('=') ? TOK_BITXORASSIGN : TOK_BITXOR;
         goto out;
 
       case '&':
         if (matchChar('&'))
-            tt = TOK_AND;
+            tp->type = TOK_AND;
         else
-            tt = matchChar('=') ? TOK_BITANDASSIGN : TOK_BITAND;
+            tp->type = matchChar('=') ? TOK_BITANDASSIGN : TOK_BITAND;
         goto out;
 
       case '!':
         if (matchChar('='))
-            tt = matchChar('=') ? TOK_STRICTNE : TOK_NE;
+            tp->type = matchChar('=') ? TOK_STRICTNE : TOK_NE;
         else
-            tt = TOK_NOT;
+            tp->type = TOK_NOT;
         goto out;
 
       case '<':
@@ -1479,25 +1478,25 @@ TokenStream::getTokenInternal(Modifier modifier)
             ungetChar('!');
         }
         if (matchChar('<')) {
-            tt = matchChar('=') ? TOK_LSHASSIGN : TOK_LSH;
+            tp->type = matchChar('=') ? TOK_LSHASSIGN : TOK_LSH;
         } else {
-            tt = matchChar('=') ? TOK_LE : TOK_LT;
+            tp->type = matchChar('=') ? TOK_LE : TOK_LT;
         }
         goto out;
 
       case '>':
         if (matchChar('>')) {
             if (matchChar('>'))
-                tt = matchChar('=') ? TOK_URSHASSIGN : TOK_URSH;
+                tp->type = matchChar('=') ? TOK_URSHASSIGN : TOK_URSH;
             else
-                tt = matchChar('=') ? TOK_RSHASSIGN : TOK_RSH;
+                tp->type = matchChar('=') ? TOK_RSHASSIGN : TOK_RSH;
         } else {
-            tt = matchChar('=') ? TOK_GE : TOK_GT;
+            tp->type = matchChar('=') ? TOK_GE : TOK_GT;
         }
         goto out;
 
       case '*':
-        tt = matchChar('=') ? TOK_MULASSIGN : TOK_MUL;
+        tp->type = matchChar('=') ? TOK_MULASSIGN : TOK_MUL;
         goto out;
 
       case '/':
@@ -1592,25 +1591,25 @@ TokenStream::getTokenInternal(Modifier modifier)
                 (void) getChar();
                 goto error;
             }
+            tp->type = TOK_REGEXP;
             tp->setRegExpFlags(reflags);
-            tt = TOK_REGEXP;
             goto out;
         }
 
-        tt = matchChar('=') ? TOK_DIVASSIGN : TOK_DIV;
+        tp->type = matchChar('=') ? TOK_DIVASSIGN : TOK_DIV;
         goto out;
 
       case '%':
-        tt = matchChar('=') ? TOK_MODASSIGN : TOK_MOD;
+        tp->type = matchChar('=') ? TOK_MODASSIGN : TOK_MOD;
         goto out;
 
       case '-':
         if (matchChar('-')) {
             if (peekChar() == '>' && !flags.isDirtyLine)
                 goto skipline;
-            tt = TOK_DEC;
+            tp->type = TOK_DEC;
         } else {
-            tt = matchChar('=') ? TOK_SUBASSIGN : TOK_SUB;
+            tp->type = matchChar('=') ? TOK_SUBASSIGN : TOK_SUB;
         }
         goto out;
 
@@ -1625,9 +1624,8 @@ TokenStream::getTokenInternal(Modifier modifier)
   out:
     flags.isDirtyLine = true;
     tp->pos.end = userbuf.addressOfNextRawChar() - userbuf.base();
-    tp->type = tt;
     JS_ASSERT(IsTokenSane(tp));
-    return tt;
+    return tp->type;
 
   error:
     flags.isDirtyLine = true;
