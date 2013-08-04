@@ -103,6 +103,8 @@ class Element;
  */
 #define NS_STATE_SVG_POSITIONING_MAY_USE_PERCENTAGES NS_FRAME_STATE_BIT(23)
 
+#define NS_STATE_SVG_TEXT_IN_REFLOW              NS_FRAME_STATE_BIT(24)
+
 /**
  * Byte offsets of channels in a native packed gfxColor or cairo image surface.
  */

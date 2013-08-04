@@ -61,6 +61,20 @@ LIRGenerator::visitCallee(MCallee *ins)
 }
 
 bool
+LIRGenerator::visitForceUse(MForceUse *ins)
+{
+    if (ins->input()->type() == MIRType_Value) {
+        LForceUseV *lir = new LForceUseV();
+        if (!useBox(lir, 0, ins->input()))
+            return false;
+        return add(lir);
+    }
+
+    LForceUseT *lir = new LForceUseT(useAnyOrConstant(ins->input()));
+    return add(lir);
+}
+
+bool
 LIRGenerator::visitGoto(MGoto *ins)
 {
     return add(new LGoto(ins->target()));
@@ -253,12 +267,31 @@ LIRGenerator::visitInitElem(MInitElem *ins)
 }
 
 bool
+LIRGenerator::visitInitElemGetterSetter(MInitElemGetterSetter *ins)
+{
+    LInitElemGetterSetter *lir = new LInitElemGetterSetter(useRegisterAtStart(ins->object()),
+                                                           useRegisterAtStart(ins->value()));
+    if (!useBoxAtStart(lir, LInitElemGetterSetter::IdIndex, ins->idValue()))
+        return false;
+
+    return add(lir, ins) && assignSafepoint(lir, ins);
+}
+
+bool
 LIRGenerator::visitInitProp(MInitProp *ins)
 {
     LInitProp *lir = new LInitProp(useRegisterAtStart(ins->getObject()));
     if (!useBoxAtStart(lir, LInitProp::ValueIndex, ins->getValue()))
         return false;
 
+    return add(lir, ins) && assignSafepoint(lir, ins);
+}
+
+bool
+LIRGenerator::visitInitPropGetterSetter(MInitPropGetterSetter *ins)
+{
+    LInitPropGetterSetter *lir = new LInitPropGetterSetter(useRegisterAtStart(ins->object()),
+                                                           useRegisterAtStart(ins->value()));
     return add(lir, ins) && assignSafepoint(lir, ins);
 }
 
@@ -455,6 +488,13 @@ LIRGenerator::visitApplyArgs(MApplyArgs *apply)
     if (!assignSafepoint(lir, apply))
         return false;
     return true;
+}
+
+bool
+LIRGenerator::visitBail(MBail *bail)
+{
+    LBail *lir = new LBail();
+    return assignSnapshot(lir) && add(lir, bail);
 }
 
 bool
@@ -1501,10 +1541,10 @@ LIRGenerator::visitToInt32(MToInt32 *convert)
     switch (opd->type()) {
       case MIRType_Value:
       {
-        LValueToInt32 *lir = new LValueToInt32(tempFloat(), LValueToInt32::NORMAL);
+        LValueToInt32 *lir = new LValueToInt32(tempFloat(), temp(), LValueToInt32::NORMAL);
         if (!useBox(lir, LValueToInt32::Input, opd))
             return false;
-        return assignSnapshot(lir) && define(lir, convert);
+        return assignSnapshot(lir) && define(lir, convert) && assignSafepoint(lir, convert);
       }
 
       case MIRType_Null:
@@ -1547,10 +1587,10 @@ LIRGenerator::visitTruncateToInt32(MTruncateToInt32 *truncate)
     switch (opd->type()) {
       case MIRType_Value:
       {
-        LValueToInt32 *lir = new LValueToInt32(tempFloat(), LValueToInt32::TRUNCATE);
+        LValueToInt32 *lir = new LValueToInt32(tempFloat(), temp(), LValueToInt32::TRUNCATE);
         if (!useBox(lir, LValueToInt32::Input, opd))
             return false;
-        return assignSnapshot(lir) && define(lir, truncate);
+        return assignSnapshot(lir) && define(lir, truncate) && assignSafepoint(lir, truncate);
       }
 
       case MIRType_Null:

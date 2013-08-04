@@ -13,8 +13,8 @@
 #include "jscompartment.h"
 #include "jsinfer.h"
 
-#include "ion/BaselineJIT.h"
 #include "ion/BaselineIC.h"
+#include "ion/BaselineJIT.h"
 #include "ion/BytecodeAnalysis.h"
 #include "ion/FixedList.h"
 #include "ion/IonAllocPolicy.h"

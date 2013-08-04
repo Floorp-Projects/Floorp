@@ -1322,7 +1322,13 @@ GetPropertyOnPrototype(JSContext* cx, JS::Handle<JSObject*> proxy,
     return true;
   }
 
-  return JS_ForwardGetPropertyTo(cx, proto, id, proxy, vp);
+  JS::Rooted<JS::Value> value(cx);
+  if (!JS_ForwardGetPropertyTo(cx, proto, id, proxy, &value)) {
+    return false;
+  }
+
+  *vp = value;
+  return true;
 }
 
 bool
@@ -1741,7 +1747,7 @@ InterfaceHasInstance(JSContext* cx, JS::Handle<JSObject*> obj,
   }
 
   JS::Rooted<JS::Value> protov(cx);
-  DebugOnly<bool> ok = JS_GetProperty(cx, obj, "prototype", protov.address());
+  DebugOnly<bool> ok = JS_GetProperty(cx, obj, "prototype", &protov);
   MOZ_ASSERT(ok, "Someone messed with our prototype property?");
 
   JS::Rooted<JSObject*> interfacePrototype(cx, &protov.toObject());
@@ -1749,7 +1755,7 @@ InterfaceHasInstance(JSContext* cx, JS::Handle<JSObject*> obj,
              "Someone messed with our prototype property?");
 
   JS::Rooted<JSObject*> proto(cx);
-  if (!JS_GetPrototype(cx, instance, proto.address())) {
+  if (!JS_GetPrototype(cx, instance, &proto)) {
     return false;
   }
 
@@ -1759,7 +1765,7 @@ InterfaceHasInstance(JSContext* cx, JS::Handle<JSObject*> obj,
       return true;
     }
 
-    if (!JS_GetPrototype(cx, proto, proto.address())) {
+    if (!JS_GetPrototype(cx, proto, &proto)) {
       return false;
     }
   }
@@ -1845,7 +1851,7 @@ GetWindowForJSImplementedObject(JSContext* cx, JS::Handle<JSObject*> obj,
 
   // Look up the content-side object.
   JS::Rooted<JS::Value> domImplVal(cx);
-  if (!JS_GetProperty(cx, obj, "__DOM_IMPL__", domImplVal.address())) {
+  if (!JS_GetProperty(cx, obj, "__DOM_IMPL__", &domImplVal)) {
     return false;
   }
 
@@ -1979,13 +1985,13 @@ ConvertJSValueToByteString(JSContext* cx, JS::Handle<JS::Value> v,
       // The largest unsigned 64 bit number (18,446,744,073,709,551,615) has
       // 20 digits, plus one more for the null terminator.
       char index[21];
-      MOZ_STATIC_ASSERT(sizeof(size_t) <= 8, "index array too small");
+      static_assert(sizeof(size_t) <= 8, "index array too small");
       PR_snprintf(index, sizeof(index), "%d", i);
       // A jschar is 16 bits long.  The biggest unsigned 16 bit
       // number (65,535) has 5 digits, plus one more for the null
       // terminator.
       char badChar[6];
-      MOZ_STATIC_ASSERT(sizeof(jschar) <= 2, "badChar array too small");
+      static_assert(sizeof(jschar) <= 2, "badChar array too small");
       PR_snprintf(badChar, sizeof(badChar), "%d", chars[i]);
       ThrowErrorMessage(cx, MSG_INVALID_BYTESTRING, index, badChar);
       return false;

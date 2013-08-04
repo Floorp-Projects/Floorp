@@ -5,17 +5,12 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "base/basictypes.h"
-#include "BluetoothAdapter.h"
-#include "BluetoothDevice.h"
-#include "BluetoothReplyRunnable.h"
-#include "BluetoothService.h"
-#include "BluetoothUtils.h"
 #include "GeneratedEvents.h"
-
 #include "nsContentUtils.h"
 #include "nsCxPusher.h"
 #include "nsDOMClassInfo.h"
 #include "nsIDOMBluetoothDeviceEvent.h"
+#include "nsIDOMBluetoothStatusChangedEvent.h"
 #include "nsTArrayHelpers.h"
 #include "DOMRequest.h"
 #include "nsThreadUtils.h"
@@ -25,11 +20,21 @@
 #include "mozilla/LazyIdleThread.h"
 #include "mozilla/Util.h"
 
+#include "BluetoothAdapter.h"
+#include "BluetoothDevice.h"
+#include "BluetoothReplyRunnable.h"
+#include "BluetoothService.h"
+#include "BluetoothUtils.h"
+#include "MediaMetaData.h"
+#include "MediaPlayStatus.h"
+
 using namespace mozilla;
 
 USING_BLUETOOTH_NAMESPACE
 
 DOMCI_DATA(BluetoothAdapter, BluetoothAdapter)
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(BluetoothAdapter)
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(BluetoothAdapter,
                                                nsDOMEventTargetHelper)
@@ -329,14 +334,34 @@ BluetoothAdapter::Notify(const BluetoothSignal& aData)
                                 false, false, device);
     DispatchTrustedEvent(event);
   } else if (aData.name().EqualsLiteral("PropertyChanged")) {
-    NS_ASSERTION(v.type() == BluetoothValue::TArrayOfBluetoothNamedValue,
-                 "PropertyChanged: Invalid value type");
+    MOZ_ASSERT(v.type() == BluetoothValue::TArrayOfBluetoothNamedValue);
     const InfallibleTArray<BluetoothNamedValue>& arr =
       v.get_ArrayOfBluetoothNamedValue();
 
-    NS_ASSERTION(arr.Length() == 1,
-                 "Got more than one property in a change message!");
+    MOZ_ASSERT(arr.Length() == 1);
     SetPropertyByValue(arr[0]);
+  } else if (aData.name().EqualsLiteral(PAIRED_STATUS_CHANGED_ID) ||
+             aData.name().EqualsLiteral(HFP_STATUS_CHANGED_ID) ||
+             aData.name().EqualsLiteral(SCO_STATUS_CHANGED_ID) ||
+             aData.name().EqualsLiteral(A2DP_STATUS_CHANGED_ID)) {
+    MOZ_ASSERT(v.type() == BluetoothValue::TArrayOfBluetoothNamedValue);
+    const InfallibleTArray<BluetoothNamedValue>& arr =
+      v.get_ArrayOfBluetoothNamedValue();
+
+    MOZ_ASSERT(arr.Length() == 2 &&
+               arr[0].value().type() == BluetoothValue::TnsString &&
+               arr[1].value().type() == BluetoothValue::Tbool);
+    nsString address = arr[0].value().get_nsString();
+    bool status = arr[1].value().get_bool();
+
+    nsCOMPtr<nsIDOMEvent> event;
+    NS_NewDOMBluetoothStatusChangedEvent(
+      getter_AddRefs(event), this, nullptr, nullptr);
+
+    nsCOMPtr<nsIDOMBluetoothStatusChangedEvent> e = do_QueryInterface(event);
+    e->InitBluetoothStatusChangedEvent(aData.name(), false, false,
+                                       address, status);
+    DispatchTrustedEvent(event);
   } else {
 #ifdef DEBUG
     nsCString warningMsg;
@@ -833,4 +858,75 @@ BluetoothAdapter::IsScoConnected(nsIDOMDOMRequest** aRequest)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+BluetoothAdapter::SendMediaMetaData(const JS::Value& aOptions,
+                                    nsIDOMDOMRequest** aRequest)
+{
+  MediaMetaData metadata;
+
+  nsresult rv;
+  nsIScriptContext* sc = GetContextForEventHandlers(&rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  AutoPushJSContext cx(sc->GetNativeContext());
+  rv = metadata.Init(cx, &aOptions);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIDOMDOMRequest> req;
+  rv = PrepareDOMRequest(GetOwner(), getter_AddRefs(req));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsRefPtr<BluetoothReplyRunnable> results =
+    new BluetoothVoidReplyRunnable(req);
+
+  BluetoothService* bs = BluetoothService::Get();
+  NS_ENSURE_TRUE(bs, NS_ERROR_FAILURE);
+  bs->SendMetaData(metadata.mTitle,
+                   metadata.mArtist,
+                   metadata.mAlbum,
+                   metadata.mMediaNumber,
+                   metadata.mTotalMediaCount,
+                   metadata.mDuration,
+                   results);
+
+  req.forget(aRequest);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+BluetoothAdapter::SendMediaPlayStatus(const JS::Value& aOptions,
+                                      nsIDOMDOMRequest** aRequest)
+{
+  MediaPlayStatus status;
+
+  nsresult rv;
+  nsIScriptContext* sc = GetContextForEventHandlers(&rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  AutoPushJSContext cx(sc->GetNativeContext());
+  rv = status.Init(cx, &aOptions);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIDOMDOMRequest> req;
+  rv = PrepareDOMRequest(GetOwner(), getter_AddRefs(req));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsRefPtr<BluetoothReplyRunnable> results =
+    new BluetoothVoidReplyRunnable(req);
+
+  BluetoothService* bs = BluetoothService::Get();
+  NS_ENSURE_TRUE(bs, NS_ERROR_FAILURE);
+  bs->SendPlayStatus(status.mDuration,
+                     status.mPosition,
+                     status.mPlayStatus,
+                     results);
+
+  req.forget(aRequest);
+  return NS_OK;
+}
+
 NS_IMPL_EVENT_HANDLER(BluetoothAdapter, devicefound)
+NS_IMPL_EVENT_HANDLER(BluetoothAdapter, a2dpstatuschanged)
+NS_IMPL_EVENT_HANDLER(BluetoothAdapter, hfpstatuschanged)
+NS_IMPL_EVENT_HANDLER(BluetoothAdapter, pairedstatuschanged)
+NS_IMPL_EVENT_HANDLER(BluetoothAdapter, scostatuschanged)

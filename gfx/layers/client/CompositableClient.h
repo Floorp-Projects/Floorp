@@ -16,6 +16,8 @@ namespace layers {
 class CompositableChild;
 class CompositableClient;
 class DeprecatedTextureClient;
+class TextureClient;
+class BufferTextureClient;
 class ImageBridgeChild;
 class ShadowableLayer;
 class CompositableForwarder;
@@ -63,23 +65,19 @@ class SurfaceDescriptor;
 class CompositableClient : public RefCounted<CompositableClient>
 {
 public:
-  CompositableClient(CompositableForwarder* aForwarder)
-  : mCompositableChild(nullptr), mForwarder(aForwarder)
-  {
-    MOZ_COUNT_CTOR(CompositableClient);
-  }
+  CompositableClient(CompositableForwarder* aForwarder);
 
   virtual ~CompositableClient();
 
-  virtual TextureInfo GetTextureInfo() const
-  {
-    MOZ_CRASH("This method should be overridden");
-  }
+  virtual TextureInfo GetTextureInfo() const = 0;
 
   LayersBackend GetCompositorBackendType() const;
 
   TemporaryRef<DeprecatedTextureClient>
   CreateDeprecatedTextureClient(DeprecatedTextureClientType aDeprecatedTextureClientType);
+
+  TemporaryRef<BufferTextureClient>
+  CreateBufferTextureClient(gfx::SurfaceFormat aFormat);
 
   virtual void SetDescriptorFromReply(TextureIdentifier aTextureId,
                                       const SurfaceDescriptor& aDescriptor)
@@ -111,7 +109,31 @@ public:
    */
   uint64_t GetAsyncID() const;
 
+  /**
+   * Tells the Compositor to create a TextureHost for this TextureClient.
+   */
+  virtual void AddTextureClient(TextureClient* aClient);
+
+  /**
+   * Tells the Compositor to delete the TextureHost corresponding to this
+   * TextureClient.
+   */
+  virtual void RemoveTextureClient(TextureClient* aClient);
+
+  /**
+   * A hook for the Compositable to execute whatever it held off for next trasanction.
+   */
+  virtual void OnTransaction();
+
+  /**
+   * A hook for the when the Compositable is detached from it's layer.
+   */
+  virtual void Detach() {}
+
 protected:
+  // The textures to destroy in the next transaction;
+  std::vector<uint64_t> mTexturesToRemove;
+  uint64_t mNextTextureID;
   CompositableChild* mCompositableChild;
   CompositableForwarder* mForwarder;
 };

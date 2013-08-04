@@ -289,8 +289,7 @@ class ExclusiveContext : public ThreadSafeContext
     friend class AutoCompartment;
     friend class AutoLockForExclusiveAccess;
     friend struct StackBaseShape;
-    friend void JSScript::initCompartmentAndPrincipals(ExclusiveContext *cx,
-                                                       const JS::CompileOptions &options);
+    friend void JSScript::initCompartment(ExclusiveContext *cx);
 
     // The worker on which this context is running, if this is not a JSContext.
     WorkerThread *workerThread;
@@ -825,7 +824,7 @@ extern const JSErrorFormatString js_ErrorFormatString[JSErr_Limit];
 extern JSBool
 js_InvokeOperationCallback(JSContext *cx);
 
-extern JSBool
+extern bool
 js_HandleExecutionInterrupt(JSContext *cx);
 
 /*

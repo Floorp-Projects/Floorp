@@ -36,16 +36,6 @@ LOCAL_INCLUDES = \
   -I$(topsrcdir)/content/events/src \
   $(NULL)
 
-EXTRA_COMPONENTS = \
-  NetworkManager.manifest \
-  NetworkManager.js \
-  RadioInterfaceLayer.manifest \
-  RadioInterfaceLayer.js \
-  RILContentHelper.js \
-  NetworkInterfaceListService.manifest \
-  NetworkInterfaceListService.js \
-  $(NULL)
-
 include $(topsrcdir)/config/rules.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
 

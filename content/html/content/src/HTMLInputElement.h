@@ -77,7 +77,7 @@ public:
   };
 };
 
-class HTMLInputElement MOZ_FINAL : public nsGenericHTMLFormElement,
+class HTMLInputElement MOZ_FINAL : public nsGenericHTMLFormElementWithState,
                                    public nsImageLoadingContent,
                                    public nsIDOMHTMLInputElement,
                                    public nsITextControlElement,
@@ -90,7 +90,7 @@ public:
   using nsIConstraintValidation::CheckValidity;
   using nsIConstraintValidation::WillValidate;
   using nsIConstraintValidation::Validity;
-  using nsGenericHTMLFormElement::GetForm;
+  using nsGenericHTMLFormElementWithState::GetForm;
 
   HTMLInputElement(already_AddRefed<nsINodeInfo> aNodeInfo,
                    mozilla::dom::FromParser aFromParser);
@@ -222,11 +222,8 @@ public:
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
 
-  void MaybeFireAsyncClickHandler(nsEventChainPostVisitor& aVisitor);
-  NS_IMETHOD FireAsyncClickHandler();
-
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(HTMLInputElement,
-                                           nsGenericHTMLFormElement)
+                                           nsGenericHTMLFormElementWithState)
 
   static UploadLastDir* gUploadLastDir;
   // create and destroy the static UploadLastDir object for remembering
@@ -665,7 +662,7 @@ protected:
 
   // Pull IsSingleLineTextControl into our scope, otherwise it'd be hidden
   // by the nsITextControlElement version.
-  using nsGenericHTMLFormElement::IsSingleLineTextControl;
+  using nsGenericHTMLFormElementWithState::IsSingleLineTextControl;
 
   /**
    * The ValueModeType specifies how the value IDL attribute should behave.
@@ -1083,6 +1080,25 @@ protected:
    */
   bool ShouldPreventDOMActivateDispatch(EventTarget* aOriginalTarget);
 
+  /**
+   * Some input type (color and file) let user choose a value using a picker:
+   * this function checks if it is needed, and if so, open the corresponding
+   * picker (color picker or file picker).
+   */
+  nsresult MaybeInitPickers(nsEventChainPostVisitor& aVisitor);
+
+  nsresult InitFilePicker();
+  nsresult InitColorPicker();
+
+  /**
+   * Use this function before trying to open a picker.
+   * It checks if the page is allowed to open a new pop-up.
+   * If it returns true, you should not create the picker.
+   *
+   * @return true if popup should be blocked, false otherwise
+   */
+  bool IsPopupBlocked() const;
+
   nsCOMPtr<nsIControllers> mControllers;
 
   /*
@@ -1228,21 +1244,6 @@ private:
     // mapping, which can be different accross OS, user's personal configuration, ...)
     // For now, only mask filters are considered to be "trusted".
     bool mIsTrusted; 
-  };
-
-  class AsyncClickHandler
-    : public nsRunnable
-  {
-  public:
-    AsyncClickHandler(HTMLInputElement* aInput);
-    NS_IMETHOD Run() MOZ_OVERRIDE;
-
-  protected:
-    nsresult InitFilePicker();
-    nsresult InitColorPicker();
-
-    nsRefPtr<HTMLInputElement> mInput;
-    PopupControlState mPopupControlState;
   };
 
   class nsFilePickerShownCallback

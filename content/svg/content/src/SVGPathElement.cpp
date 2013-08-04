@@ -3,15 +3,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsGkAtoms.h"
+#include "mozilla/dom/SVGPathElement.h"
+
+#include <algorithm>
+
 #include "DOMSVGPathSeg.h"
 #include "DOMSVGPathSegList.h"
+#include "DOMSVGPoint.h"
+#include "gfxPath.h"
+#include "mozilla/dom/SVGPathElementBinding.h"
 #include "nsCOMPtr.h"
 #include "nsContentUtils.h"
-#include "mozilla/dom/SVGPathElement.h"
-#include "DOMSVGPoint.h"
-#include <algorithm>
-#include "mozilla/dom/SVGPathElementBinding.h"
+#include "nsGkAtoms.h"
 
 class gfxContext;
 

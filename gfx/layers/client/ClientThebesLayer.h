@@ -27,6 +27,10 @@ public:
   }
   virtual ~ClientThebesLayer()
   {
+    if (mContentClient) {
+      mContentClient->Detach();
+      mContentClient = nullptr;
+    }
     MOZ_COUNT_DTOR(ClientThebesLayer);
   }
 

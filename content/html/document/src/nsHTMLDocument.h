@@ -242,6 +242,8 @@ public:
     // Deprecated
   }
   already_AddRefed<nsISelection> GetSelection(mozilla::ErrorResult& rv);
+  // The XPCOM CaptureEvents works fine for us.
+  // The XPCOM ReleaseEvents works fine for us.
   // We're picking up GetLocation from Document
   already_AddRefed<nsIDOMLocation> GetLocation() const {
     return nsIDocument::GetLocation();

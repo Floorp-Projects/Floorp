@@ -26,13 +26,13 @@
       let oldThemeUrl = Services.io.newURI(
         DEVTOOLS_SKIN_URL + oldTheme + "-theme.css", null, null);
       try {
-        winUtils.removeSheet(oldThemeUrl, window.AUTHOR_SHEET);
+        winUtils.removeSheet(oldThemeUrl, winUtils.AUTHOR_SHEET);
       } catch(ex) {}
     }
 
     let newThemeUrl = Services.io.newURI(
       DEVTOOLS_SKIN_URL + newTheme + "-theme.css", null, null);
-    winUtils.loadSheet(newThemeUrl, window.AUTHOR_SHEET);
+    winUtils.loadSheet(newThemeUrl, winUtils.AUTHOR_SHEET);
 
     // Floating scrollbars à la osx
     if (Services.appinfo.OS != "Darwin") {
@@ -40,10 +40,10 @@
         DEVTOOLS_SKIN_URL + "floating-scrollbars-light.css", null, null);
 
       if (newTheme == "dark") {
-        winUtils.loadSheet(scrollbarsUrl, window.AGENT_SHEET);
+        winUtils.loadSheet(scrollbarsUrl, winUtils.AGENT_SHEET);
       } else if (oldTheme == "dark") {
         try {
-          winUtils.removeSheet(scrollbarsUrl, window.AGENT_SHEET);
+          winUtils.removeSheet(scrollbarsUrl, winUtils.AGENT_SHEET);
         } catch(ex) {}
       }
       forceStyle();

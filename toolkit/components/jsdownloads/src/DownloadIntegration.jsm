@@ -39,9 +39,18 @@ XPCOMUtils.defineLazyModuleGetter(this, "Services",
                                   "resource://gre/modules/Services.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Task",
                                   "resource://gre/modules/Task.jsm");
-XPCOMUtils.defineLazyServiceGetter(this, "env",
+XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
+                                  "resource://gre/modules/NetUtil.jsm");
+XPCOMUtils.defineLazyServiceGetter(this, "gEnvironment",
                                    "@mozilla.org/process/environment;1",
                                    "nsIEnvironment");
+XPCOMUtils.defineLazyServiceGetter(this, "gMIMEService",
+                                   "@mozilla.org/mime;1",
+                                   "nsIMIMEService");
+XPCOMUtils.defineLazyServiceGetter(this, "gExternalProtocolService",
+                                   "@mozilla.org/uriloader/external-protocol-service;1",
+                                   "nsIExternalProtocolService");
+
 XPCOMUtils.defineLazyGetter(this, "gParentalControlsService", function() {
   if ("@mozilla.org/parental-controls-service;1" in Cc) {
     return Cc["@mozilla.org/parental-controls-service;1"]
@@ -64,10 +73,13 @@ XPCOMUtils.defineLazyGetter(this, "gStringBundle", function() {
  */
 this.DownloadIntegration = {
   // For testing only
-  testMode: false,
+  _testMode: false,
   dontLoad: false,
   dontCheckParentalControls: false,
   shouldBlockInTest: false,
+  dontOpenFileAndFolder: false,
+  _deferTestOpenFile: null,
+  _deferTestShowDir: null,
 
   /**
    * Main DownloadStore object for loading and saving the list of persistent
@@ -75,6 +87,15 @@ this.DownloadIntegration = {
    * doesn't need to be persisted.
    */
   _store: null,
+
+  /**
+   * Gets and sets test mode
+   */
+  get testMode() this._testMode,
+  set testMode(mode) {
+    this._downloadsDirectory = null;
+    return (this._testMode = mode);
+  },
 
   /**
    * Performs initialization of the list of persistent downloads, before its
@@ -145,7 +166,7 @@ this.DownloadIntegration = {
 #elifdef ANDROID
       // Android doesn't have a $HOME directory, and by default we only have
       // write access to /data/data/org.mozilla.{$APP} and /sdcard
-      let directoryPath = env.get("DOWNLOADS_DIRECTORY");
+      let directoryPath = gEnvironment.get("DOWNLOADS_DIRECTORY");
       if (!directoryPath) {
         throw new Components.Exception("DOWNLOADS_DIRECTORY is not set.",
                                        Cr.NS_ERROR_FILE_UNRECOGNIZED_PATH);
@@ -269,6 +290,165 @@ this.DownloadIntegration = {
   _isImmersiveProcess: function() {
     // TODO: to be implemented
     return false;
+  },
+
+  /*
+   * Launches a file represented by the target of a download. This can
+   * open the file with the default application for the target MIME type
+   * or file extension, or with a custom application if
+   * aDownload.launcherPath is set.
+   *
+   * @param    aDownload
+   *           A Download object that contains the necessary information
+   *           to launch the file. The relevant properties are: the target
+   *           file, the contentType and the custom application chosen
+   *           to launch it.
+   *
+   * @return {Promise}
+   * @resolves When the instruction to launch the file has been
+   *           successfully given to the operating system. Note that
+   *           the OS might still take a while until the file is actually
+   *           launched.
+   * @rejects  JavaScript exception if there was an error trying to launch
+   *           the file.
+   */
+  launchDownload: function (aDownload) {
+    let deferred = Task.spawn(function DI_launchDownload_task() {
+      let file = new FileUtils.File(aDownload.target.path);
+
+      // In case of a double extension, like ".tar.gz", we only
+      // consider the last one, because the MIME service cannot
+      // handle multiple extensions.
+      let fileExtension = null, mimeInfo = null;
+      let match = file.leafName.match(/\.([^.]+)$/);
+      if (match) {
+        fileExtension = match[1];
+      }
+
+      try {
+        // The MIME service might throw if contentType == "" and it can't find
+        // a MIME type for the given extension, so we'll treat this case as
+        // an unknown mimetype.
+        mimeInfo = gMIMEService.getFromTypeAndExtension(aDownload.contentType,
+                                                        fileExtension);
+      } catch (e) { }
+
+      if (aDownload.launcherPath) {
+        if (!mimeInfo) {
+          // This should not happen on normal circumstances because launcherPath
+          // is only set when we had an instance of nsIMIMEInfo to retrieve
+          // the custom application chosen by the user.
+          throw new Error(
+            "Unable to create nsIMIMEInfo to launch a custom application");
+        }
+
+        // Custom application chosen
+        mimeInfo.preferredAction = Ci.nsIMIMEInfo.useHelperApp;
+
+        let localHandlerApp = Cc["@mozilla.org/uriloader/local-handler-app;1"]
+                                .createInstance(Ci.nsILocalHandlerApp);
+        localHandlerApp.executable = new FileUtils.File(aDownload.launcherPath);
+
+        if (this.dontOpenFileAndFolder) {
+          throw new Task.Result("chosen-app");
+        }
+
+        mimeInfo.launchWithFile(file);
+        return;
+      }
+
+      // No custom application chosen, let's launch the file with the
+      // default handler
+      if (this.dontOpenFileAndFolder) {
+        throw new Task.Result("default-handler");
+      }
+
+      // First let's try to launch it through the MIME service application
+      // handler
+      if (mimeInfo) {
+        mimeInfo.preferredAction = Ci.nsIMIMEInfo.useSystemDefault;
+
+        try {
+          mimeInfo.launchWithFile(file);
+          return;
+        } catch (ex) { }
+      }
+
+      // If it didn't work or if there was no MIME info available,
+      // let's try to directly launch the file.
+      try {
+        file.launch();
+        return;
+      } catch (ex) { }
+
+      // If our previous attempts failed, try sending it through
+      // the system's external "file:" URL handler.
+      gExternalProtocolService.loadUrl(NetUtil.newURI(file));
+      yield undefined;
+    }.bind(this));
+
+    if (this.dontOpenFileAndFolder) {
+      deferred.then((value) => { this._deferTestOpenFile.resolve(value); },
+                    (error) => { this._deferTestOpenFile.reject(error); });
+    }
+
+    return deferred;
+  },
+
+  /*
+   * Shows the containing folder of a file.
+   *
+   * @param    aFilePath
+   *           The path to the file.
+   *
+   * @return {Promise}
+   * @resolves When the instruction to open the containing folder has been
+   *           successfully given to the operating system. Note that
+   *           the OS might still take a while until the folder is actually
+   *           opened.
+   * @rejects  JavaScript exception if there was an error trying to open
+   *           the containing folder.
+   */
+  showContainingDirectory: function (aFilePath) {
+    let deferred = Task.spawn(function DI_showContainingDirectory_task() {
+      let file = new FileUtils.File(aFilePath);
+
+      if (this.dontOpenFileAndFolder) {
+        return;
+      }
+
+      try {
+        // Show the directory containing the file and select the file.
+        file.reveal();
+        return;
+      } catch (ex) { }
+
+      // If reveal fails for some reason (e.g., it's not implemented on unix
+      // or the file doesn't exist), try using the parent if we have it.
+      let parent = file.parent;
+      if (!parent) {
+        throw new Error(
+          "Unexpected reference to a top-level directory instead of a file");
+      }
+
+      try {
+        // Open the parent directory to show where the file should be.
+        parent.launch();
+        return;
+      } catch (ex) { }
+
+      // If launch also fails (probably because it's not implemented), let
+      // the OS handler try to open the parent.
+      gExternalProtocolService.loadUrl(NetUtil.newURI(parent));
+      yield undefined;
+    }.bind(this));
+
+    if (this.dontOpenFileAndFolder) {
+      deferred.then((value) => { this._deferTestShowDir.resolve("success"); },
+                    (error) => { this._deferTestShowDir.reject(error); });
+    }
+
+    return deferred;
   },
 
   /**

@@ -18,7 +18,6 @@
 #elif defined(JS_CPU_ARM)
 # include "ion/arm/MacroAssembler-arm.h"
 #endif
-#include "ion/AsmJS.h"
 #include "ion/IonCompartment.h"
 #include "ion/IonInstrumentation.h"
 #include "ion/ParallelFunctions.h"
@@ -219,6 +218,12 @@ class MacroAssembler : public MacroAssemblerSpecific
         branchTest32(Assembler::Zero, reg, Imm32(0xFF), label);
     }
 
+    // Branches to |label| if |reg| is true. |reg| should be a C++ bool.
+    void branchIfTrueBool(const Register &reg, Label *label) {
+        // Note that C++ bool is only 1 byte, so ignore the higher-order bits.
+        branchTest32(Assembler::NonZero, reg, Imm32(0xFF), label);
+    }
+
     void loadObjPrivate(Register obj, uint32_t nfixed, Register dest) {
         loadPtr(Address(obj, JSObject::getPrivateDataOffset(nfixed)), dest);
     }
@@ -286,6 +291,11 @@ class MacroAssembler : public MacroAssemblerSpecific
     void storeCallResult(Register reg) {
         if (reg != ReturnReg)
             mov(ReturnReg, reg);
+    }
+
+    void storeCallFloatResult(const FloatRegister &reg) {
+        if (reg != ReturnFloatReg)
+            moveDouble(ReturnFloatReg, reg);
     }
 
     void storeCallResultValue(AnyRegister dest) {
@@ -493,10 +503,10 @@ class MacroAssembler : public MacroAssemblerSpecific
         Push(PreBarrierReg);
         computeEffectiveAddress(address, PreBarrierReg);
 
-        JSCompartment *compartment = GetIonContext()->compartment;
+        JSRuntime *runtime = GetIonContext()->runtime;
         IonCode *preBarrier = (type == MIRType_Shape)
-                              ? compartment->ionCompartment()->shapePreBarrier()
-                              : compartment->ionCompartment()->valuePreBarrier();
+                              ? runtime->ionRuntime()->shapePreBarrier()
+                              : runtime->ionRuntime()->valuePreBarrier();
 
         call(preBarrier);
         Pop(PreBarrierReg);
@@ -605,6 +615,11 @@ class MacroAssembler : public MacroAssemblerSpecific
 
         bind(&done);
     }
+
+    // Emit type case branch on tag matching if the type tag in the definition
+    // might actually be that type.
+    void branchEqualTypeIfNeeded(MIRType type, MDefinition *def, const Register &tag,
+                                 Label *label);
 
     // Inline allocation.
     void newGCThing(const Register &result, gc::AllocKind allocKind, Label *fail);

@@ -7,8 +7,6 @@ var testGenerator = testSteps();
 
 function testSteps()
 {
-  const nsIIDBObjectStore = Components.interfaces.nsIIDBObjectStore;
-
   const name = this.window ? window.location.pathname : "Splendid Test";
   const objectStoreName = "Objects";
 

@@ -17,7 +17,7 @@
 /*
 ** Required includes.
 */
-#include "mozilla/StandardInteger.h"
+#include <stdint.h>
 #include "nspr.h"
 #include "prlock.h"
 #include "prrwlock.h"

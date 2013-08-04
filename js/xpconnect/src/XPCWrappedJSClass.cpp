@@ -9,6 +9,7 @@
 
 #include "xpcprivate.h"
 #include "nsArrayEnumerator.h"
+#include "nsContentUtils.h"
 #include "nsWrapperCache.h"
 #include "XPCWrapper.h"
 #include "AccessCheck.h"
@@ -230,7 +231,7 @@ nsXPCWrappedJSClass::CallQueryInterfaceOnJSObject(JSContext* cx,
 
     // check upfront for the existence of the function property
     funid = mRuntime->GetStringID(XPCJSRuntime::IDX_QUERY_INTERFACE);
-    if (!JS_GetPropertyById(cx, jsobj, funid, fun.address()) || JSVAL_IS_PRIMITIVE(fun))
+    if (!JS_GetPropertyById(cx, jsobj, funid, &fun) || JSVAL_IS_PRIMITIVE(fun))
         return nullptr;
 
     // Ensure that we are asking for a scriptable interface.
@@ -330,7 +331,7 @@ GetNamedPropertyAsVariantRaw(XPCCallContext& ccx,
     nsXPTType type = nsXPTType((uint8_t)TD_INTERFACE_TYPE);
     RootedValue val(ccx);
 
-    return JS_GetPropertyById(ccx, aJSObj, aName, val.address()) &&
+    return JS_GetPropertyById(ccx, aJSObj, aName, &val) &&
            // Note that this always takes the T_INTERFACE path through
            // JSData2Native, so the value passed for useAllocator
            // doesn't really matter. We pass true for consistency.
@@ -1032,25 +1033,25 @@ nsXPCWrappedJSClass::CheckForException(XPCCallContext & ccx,
             }
 
             if (reportable) {
-#ifdef DEBUG
-                static const char line[] =
-                    "************************************************************\n";
-                static const char preamble[] =
-                    "* Call to xpconnect wrapped JSObject produced this error:  *\n";
-                static const char cant_get_text[] =
-                    "FAILED TO GET TEXT FROM EXCEPTION\n";
+                if (nsContentUtils::DOMWindowDumpEnabled()) {
+                    static const char line[] =
+                        "************************************************************\n";
+                    static const char preamble[] =
+                        "* Call to xpconnect wrapped JSObject produced this error:  *\n";
+                    static const char cant_get_text[] =
+                        "FAILED TO GET TEXT FROM EXCEPTION\n";
 
-                fputs(line, stdout);
-                fputs(preamble, stdout);
-                char* text;
-                if (NS_SUCCEEDED(xpc_exception->ToString(&text)) && text) {
-                    fputs(text, stdout);
-                    fputs("\n", stdout);
-                    nsMemory::Free(text);
-                } else
-                    fputs(cant_get_text, stdout);
-                fputs(line, stdout);
-#endif
+                    fputs(line, stdout);
+                    fputs(preamble, stdout);
+                    char* text;
+                    if (NS_SUCCEEDED(xpc_exception->ToString(&text)) && text) {
+                        fputs(text, stdout);
+                        fputs("\n", stdout);
+                        nsMemory::Free(text);
+                    } else
+                        fputs(cant_get_text, stdout);
+                    fputs(line, stdout);
+                }
 
                 // Log the exception to the JS Console, so that users can do
                 // something with it.
@@ -1264,7 +1265,7 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16_t methodIndex,
                 }
             }
         } else {
-            if (!JS_GetProperty(cx, obj, name, fval.address()))
+            if (!JS_GetProperty(cx, obj, name, &fval))
                 goto pre_call_clean_up;
             // XXX We really want to factor out the error reporting better and
             // specifically report the failure to find a function with this name.
@@ -1431,7 +1432,7 @@ pre_call_clean_up:
 
     RootedValue rval(cx);
     if (XPT_MD_IS_GETTER(info->flags)) {
-        success = JS_GetProperty(cx, obj, name, rval.address());
+        success = JS_GetProperty(cx, obj, name, &rval);
     } else if (XPT_MD_IS_SETTER(info->flags)) {
         rval = *argv;
         success = JS_SetProperty(cx, obj, name, rval);
@@ -1514,7 +1515,7 @@ pre_call_clean_up:
         else if (JSVAL_IS_PRIMITIVE(argv[i]) ||
                  !JS_GetPropertyById(cx, JSVAL_TO_OBJECT(argv[i]),
                                      mRuntime->GetStringID(XPCJSRuntime::IDX_VALUE),
-                                     val.address()))
+                                     &val))
             break;
 
         // setup allocator and/or iid
@@ -1558,7 +1559,7 @@ pre_call_clean_up:
                 val = rval;
             else if (!JS_GetPropertyById(cx, JSVAL_TO_OBJECT(argv[i]),
                                          mRuntime->GetStringID(XPCJSRuntime::IDX_VALUE),
-                                         val.address()))
+                                         &val))
                 break;
 
             // setup allocator and/or iid

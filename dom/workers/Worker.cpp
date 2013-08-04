@@ -142,13 +142,14 @@ protected:
       return false;
     }
 
+    // Ensure that the DOM_OBJECT_SLOT always has a PrivateValue set, as this
+    // will be accessed in the Trace() method if WorkerPrivate::Create()
+    // triggers a GC.
+    js::SetReservedSlot(obj, DOM_OBJECT_SLOT, JS::PrivateValue(nullptr));
+
     nsRefPtr<WorkerPrivate> worker =
       WorkerPrivate::Create(aCx, obj, parent, scriptURL, aIsChromeWorker);
     if (!worker) {
-      // It'd be better if we could avoid allocating the JSObject until after we
-      // make sure we have a WorkerPrivate, but failing that we should at least
-      // make sure that the DOM_OBJECT_SLOT always has a PrivateValue.
-      js::SetReservedSlot(obj, DOM_OBJECT_SLOT, JS::PrivateValue(nullptr));
       return false;
     }
 

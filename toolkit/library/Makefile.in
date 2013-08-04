@@ -58,6 +58,7 @@ endif
 endif
 
 SHARED_LIBRARY_LIBS += \
+  $(foreach component,$(COMPONENT_LIBS),$(DEPTH)/staticlib/components/$(LIB_PREFIX)$(component).$(LIB_SUFFIX)) \
   $(foreach lib,$(STATIC_LIBS),$(DEPTH)/staticlib/$(LIB_PREFIX)$(lib).$(LIB_SUFFIX)) \
   $(NULL)
 
@@ -95,6 +96,9 @@ endif #}
 
 ifdef MOZ_B2G_BT #{
 STATIC_LIBS += mozdbus_s
+ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
+OS_LIBS += -ldbus
+endif
 endif #}
 
 ifneq ($(strip $(MOZ_B2G_RIL)$(MOZ_B2G_BT)),) #{
@@ -134,7 +138,7 @@ STATIC_LIBS += \
   $(NULL)
 
 # component libraries
-STATIC_LIBS += \
+COMPONENT_LIBS += \
   necko \
   uconv \
   i18n \
@@ -170,94 +174,94 @@ STATIC_LIBS += \
   $(NULL)
 
 ifdef BUILD_CTYPES
-STATIC_LIBS += \
+COMPONENT_LIBS += \
   jsctypes \
   $(NULL)
 endif
 
-STATIC_LIBS += \
+COMPONENT_LIBS += \
   jsperf \
   gkplugin \
   $(NULL)
 
 ifdef MOZ_XUL
 ifdef MOZ_ENABLE_GTK
-STATIC_LIBS += \
+COMPONENT_LIBS += \
   unixproxy \
   $(NULL)
 endif
 endif
 
 ifneq (,$(filter cocoa,$(MOZ_WIDGET_TOOLKIT)))
-STATIC_LIBS += \
+COMPONENT_LIBS += \
   osxproxy \
   $(NULL)
 endif
 
 ifdef MOZ_XUL
 ifeq (qt,$(MOZ_WIDGET_TOOLKIT))
-STATIC_LIBS += \
+COMPONENT_LIBS += \
         unixproxy \
         $(NULL)
 endif
 endif
 
 ifneq (,$(filter windows,$(MOZ_WIDGET_TOOLKIT)))
-STATIC_LIBS += \
+COMPONENT_LIBS += \
   windowsproxy \
   $(NULL)
 endif
 
 ifneq (,$(filter android,$(MOZ_WIDGET_TOOLKIT)))
-STATIC_LIBS += \
+COMPONENT_LIBS += \
   androidproxy \
   $(NULL)
 endif
 
 ifdef MOZ_JSDEBUGGER
 DEFINES += -DMOZ_JSDEBUGGER
-STATIC_LIBS += \
+COMPONENT_LIBS += \
   jsd \
   $(NULL)
 endif
 
 ifdef MOZ_PREF_EXTENSIONS
 DEFINES += -DMOZ_PREF_EXTENSIONS
-STATIC_LIBS += \
+COMPONENT_LIBS += \
   autoconfig \
   $(NULL)
 endif
 
 ifdef MOZ_AUTH_EXTENSION
-STATIC_LIBS += auth
+COMPONENT_LIBS += auth
 DEFINES += -DMOZ_AUTH_EXTENSION
 endif
 
 ifdef MOZ_PERMISSIONS
-STATIC_LIBS += cookie permissions
+COMPONENT_LIBS += cookie permissions
 DEFINES += -DMOZ_PERMISSIONS
 endif
 
 ifdef MOZ_UNIVERSALCHARDET
-STATIC_LIBS += universalchardet
+COMPONENT_LIBS += universalchardet
 DEFINES += -DMOZ_UNIVERSALCHARDET
 endif
 
 ifeq (,$(filter android gonk qt os2 cocoa windows,$(MOZ_WIDGET_TOOLKIT)))
 ifdef MOZ_XUL
-STATIC_LIBS += fileview
+COMPONENT_LIBS += fileview
 DEFINES += -DMOZ_FILEVIEW
 endif
 endif
 
 ifdef MOZ_PLACES
-STATIC_LIBS += \
+COMPONENT_LIBS += \
 	places \
 	$(NULL)
 endif
 
 ifdef MOZ_XUL
-STATIC_LIBS += \
+COMPONENT_LIBS += \
 	tkautocomplete \
 	satchel \
 	pippki \
@@ -265,11 +269,11 @@ STATIC_LIBS += \
 endif
 
 ifdef MOZ_ENABLE_GTK3
-STATIC_LIBS += widget_gtk3
+COMPONENT_LIBS += widget_gtk3
 endif
 
 ifdef MOZ_ENABLE_GTK2
-STATIC_LIBS += widget_gtk2
+COMPONENT_LIBS += widget_gtk2
 endif
 
 ifdef MOZ_ENABLE_GTK2
@@ -281,68 +285,69 @@ endif
 # Platform-specific icon channel stuff - supported mostly-everywhere
 ifneq (,$(filter windows os2 mac cocoa gtk2 gtk3 qt android,$(MOZ_WIDGET_TOOLKIT)))
 DEFINES += -DICON_DECODER
-STATIC_LIBS += imgicon
+COMPONENT_LIBS += imgicon
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),android)
-STATIC_LIBS += widget_android skia_npapi
+COMPONENT_LIBS += widget_android
+STATIC_LIBS += skia_npapi
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),gonk)
-STATIC_LIBS += widget_gonk
+COMPONENT_LIBS += widget_gonk
 endif
 
 STATIC_LIBS += thebes gl ycbcr
 
 ifdef MOZ_ENABLE_PROFILER_SPS
-STATIC_LIBS += profiler
+COMPONENT_LIBS += profiler
 endif
 
 ifeq (windows,$(MOZ_WIDGET_TOOLKIT))
-STATIC_LIBS += widget_windows
+COMPONENT_LIBS += widget_windows
 ifdef MOZ_METRO
-STATIC_LIBS += widget_winrt
+COMPONENT_LIBS += widget_winrt
 endif
 endif
 ifeq (os2,$(MOZ_WIDGET_TOOLKIT))
-STATIC_LIBS += wdgtos2
+COMPONENT_LIBS += wdgtos2
 endif
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
-STATIC_LIBS += widget_mac
+COMPONENT_LIBS += widget_mac
 endif
 ifeq (qt,$(MOZ_WIDGET_TOOLKIT))
-STATIC_LIBS += widget_qt
+COMPONENT_LIBS += widget_qt
 endif
 
 ifdef MOZ_ENABLE_XREMOTE
-STATIC_LIBS += remoteservice
+COMPONENT_LIBS += remoteservice
 endif
 
 ifdef MOZ_SPELLCHECK
 DEFINES += -DMOZ_SPELLCHECK
-STATIC_LIBS += spellchecker
+COMPONENT_LIBS += spellchecker
 endif
 
 ifdef MOZ_ZIPWRITER
 DEFINES += -DMOZ_ZIPWRITER
-STATIC_LIBS += zipwriter
+COMPONENT_LIBS += zipwriter
 endif
 
-STATIC_LIBS += services-crypto
+COMPONENT_LIBS += services-crypto
 
 ifdef MOZ_DEBUG
 ifdef ENABLE_TESTS
-STATIC_LIBS += gkdebug
+COMPONENT_LIBS += gkdebug
 endif
 endif
 
 ifdef MOZ_GIO_COMPONENT
 DEFINES += -DMOZ_GIO_COMPONENT
-STATIC_LIBS += nkgio
+COMPONENT_LIBS += nkgio
 endif
 
 ifdef MOZ_APP_COMPONENT_LIBS
-STATIC_LIBS += $(MOZ_APP_COMPONENT_LIBS)
+COMPONENT_LIBS += $(MOZ_APP_COMPONENT_LIBS)
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
@@ -394,7 +399,7 @@ EXTRA_DSO_LDOPTS += $(call EXPAND_LIBNAME_PATH,gkmedias,$(DIST)/lib)
 
 ifdef MOZ_WEBRTC
 ifdef MOZ_PEERCONNECTION
-STATIC_LIBS += peerconnection
+COMPONENT_LIBS += peerconnection
 endif
 ifdef MOZ_WEBRTC_SIGNALING
 EXTRA_DSO_LDOPTS += \
@@ -444,7 +449,6 @@ OS_LIBS += \
   -lsysutils \
   -lcamera_client \
   -lsensorservice \
-  -ldbus \
   -lstagefright \
   -lstagefright_foundation \
   -lstagefright_omx \
@@ -707,7 +711,7 @@ endif
 
 ifdef LINK_GTEST
 
-STATIC_LIBS += \
+COMPONENT_LIBS += \
   gtest \
   gfxtest \
   $(NULL)

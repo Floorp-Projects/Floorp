@@ -22,6 +22,7 @@ if CONFIG['MOZ_B2G_BT']:
         'nsIDOMBluetoothDevice.idl',
         'nsIDOMBluetoothDeviceEvent.idl',
         'nsIDOMBluetoothManager.idl',
+        'nsIDOMBluetoothStatusChangedEvent.idl',
     ]
 
     CPP_SOURCES += [
@@ -42,6 +43,8 @@ if CONFIG['MOZ_B2G_BT']:
         'ObexBase.cpp',
         'BluetoothUuid.cpp',
         'BluetoothSocket.cpp',
+        'MediaMetaData.cpp',
+        'MediaPlayStatus.cpp'
     ]
 
     if CONFIG['MOZ_B2G_RIL']:

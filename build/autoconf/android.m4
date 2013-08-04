@@ -289,6 +289,7 @@ case "$target" in
         fi
     fi
 
+    android_tools="$android_sdk"/../../tools
     android_platform_tools="$android_sdk"/../../platform-tools
     if test ! -d "$android_platform_tools" ; then
         android_platform_tools="$android_sdk"/tools # SDK Tools < r8
@@ -296,7 +297,7 @@ case "$target" in
     # The build tools got moved around to different directories in
     # SDK Tools r22.  Try to locate them.
     android_build_tools=""
-    for suffix in 17.0.0 android-4.2.2; do
+    for suffix in 18.0.1 18.0.0 17.0.0 android-4.2.2; do
         tools_directory="$android_sdk/../../build-tools/$suffix"
         if test -d "$tools_directory" ; then
             android_build_tools="$tools_directory"
@@ -312,6 +313,7 @@ case "$target" in
     else
         ANDROID_COMPAT_LIB="${android_sdk}/../../extras/android/support/v4/android-support-v4.jar";
     fi
+    ANDROID_TOOLS="${android_tools}"
     ANDROID_PLATFORM_TOOLS="${android_platform_tools}"
     ANDROID_BUILD_TOOLS="${android_build_tools}"
     AC_SUBST(ANDROID_SDK)
@@ -319,8 +321,28 @@ case "$target" in
     if ! test -e $ANDROID_COMPAT_LIB ; then
         AC_MSG_ERROR([You must download the Android support library when targeting Android.   Run the Android SDK tool and install Android Support Library under Extras.  See https://developer.android.com/tools/extras/support-library.html for more info. (looked for $ANDROID_COMPAT_LIB)])
     fi
-    AC_SUBST(ANDROID_PLATFORM_TOOLS)
-    AC_SUBST(ANDROID_BUILD_TOOLS)
+
+    MOZ_PATH_PROG(ZIPALIGN, zipalign, :, [$ANDROID_TOOLS])
+    MOZ_PATH_PROG(DX, dx, :, [$ANDROID_BUILD_TOOLS])
+    MOZ_PATH_PROG(AAPT, aapt, :, [$ANDROID_BUILD_TOOLS])
+    MOZ_PATH_PROG(AIDL, aidl, :, [$ANDROID_BUILD_TOOLS])
+    MOZ_PATH_PROG(ADB, adb, :, [$ANDROID_PLATFORM_TOOLS])
+
+    if test -z "$ZIPALIGN" -o "$ZIPALIGN" = ":"; then
+      AC_MSG_ERROR([The program zipalign was not found.  Use --with-android-sdk={android-sdk-dir}.])
+    fi
+    if test -z "$DX" -o "$DX" = ":"; then
+      AC_MSG_ERROR([The program dx was not found.  Use --with-android-sdk={android-sdk-dir}.])
+    fi
+    if test -z "$AAPT" -o "$AAPT" = ":"; then
+      AC_MSG_ERROR([The program aapt was not found.  Use --with-android-sdk={android-sdk-dir}.])
+    fi
+    if test -z "$AIDL" -o "$AIDL" = ":"; then
+      AC_MSG_ERROR([The program aidl was not found.  Use --with-android-sdk={android-sdk-dir}.])
+    fi
+    if test -z "$ADB" -o "$ADB" = ":"; then
+      AC_MSG_ERROR([The program adb was not found.  Use --with-android-sdk={android-sdk-dir}.])
+    fi
     ;;
 esac
 

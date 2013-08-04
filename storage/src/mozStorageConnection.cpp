@@ -560,7 +560,7 @@ Connection::initialize()
   PROFILER_LABEL("storage", "Connection::initialize");
 
   // in memory database requested, sqlite uses a magic file name
-  int srv = ::sqlite3_open_v2(":memory:", &mDBConn, mFlags, NULL);
+  int srv = ::sqlite3_open_v2(":memory:", &mDBConn, mFlags, nullptr);
   if (srv != SQLITE_OK) {
     mDBConn = nullptr;
     return convertResultCode(srv);
@@ -583,7 +583,7 @@ Connection::initialize(nsIFile *aDatabaseFile)
   NS_ENSURE_SUCCESS(rv, rv);
 
   int srv = ::sqlite3_open_v2(NS_ConvertUTF16toUTF8(path).get(), &mDBConn,
-                              mFlags, NULL);
+                              mFlags, nullptr);
   if (srv != SQLITE_OK) {
     mDBConn = nullptr;
     return convertResultCode(srv);
@@ -612,7 +612,7 @@ Connection::initialize(nsIFileURL *aFileURL)
   rv = aFileURL->GetSpec(spec);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  int srv = ::sqlite3_open_v2(spec.get(), &mDBConn, mFlags, NULL);
+  int srv = ::sqlite3_open_v2(spec.get(), &mDBConn, mFlags, nullptr);
   if (srv != SQLITE_OK) {
     mDBConn = nullptr;
     return convertResultCode(srv);
@@ -837,7 +837,7 @@ Connection::internalClose()
 
 #ifdef DEBUG
   // Notify about any non-finalized statements.
-  sqlite3_stmt *stmt = NULL;
+  sqlite3_stmt *stmt = nullptr;
   while ((stmt = ::sqlite3_next_stmt(mDBConn, stmt))) {
     char *msg = ::PR_smprintf("SQL statement '%s' was not finalized",
                               ::sqlite3_sql(stmt));
@@ -850,7 +850,7 @@ Connection::internalClose()
   NS_ASSERTION(srv == SQLITE_OK,
                "sqlite3_close failed. There are probably outstanding statements that are listed above!");
 
-  mDBConn = NULL;
+  mDBConn = nullptr;
   return convertResultCode(srv);
 }
 
@@ -926,8 +926,11 @@ Connection::prepareStatement(const nsCString &aSQL,
   (void)::sqlite3_extended_result_codes(mDBConn, 1);
 
   int srv;
-  while((srv = ::sqlite3_prepare_v2(mDBConn, aSQL.get(), -1, _stmt, NULL)) ==
-        SQLITE_LOCKED_SHAREDCACHE) {
+  while((srv = ::sqlite3_prepare_v2(mDBConn,
+                                    aSQL.get(),
+                                    -1,
+                                    _stmt,
+                                    nullptr)) == SQLITE_LOCKED_SHAREDCACHE) {
     if (!checkedMainThread) {
       checkedMainThread = true;
       if (::NS_IsMainThread()) {
@@ -960,10 +963,10 @@ Connection::prepareStatement(const nsCString &aSQL,
   (void)::sqlite3_extended_result_codes(mDBConn, 0);
   // Drop off the extended result bits of the result code.
   int rc = srv & 0xFF;
-  // sqlite will return OK on a comment only string and set _stmt to NULL.
+  // sqlite will return OK on a comment only string and set _stmt to nullptr.
   // The callers of this function are used to only checking the return value,
   // so it is safer to return an error code.
-  if (rc == SQLITE_OK && *_stmt == NULL) {
+  if (rc == SQLITE_OK && *_stmt == nullptr) {
     return SQLITE_MISUSE;
   }
 
@@ -978,7 +981,7 @@ Connection::executeSql(const char *aSqlString)
     return SQLITE_MISUSE;
 
   TimeStamp startTime = TimeStamp::Now();
-  int srv = ::sqlite3_exec(mDBConn, aSqlString, NULL, NULL, NULL);
+  int srv = ::sqlite3_exec(mDBConn, aSqlString, nullptr, nullptr, nullptr);
 
   // Report very slow SQL statements to Telemetry
   TimeDuration duration = TimeStamp::Now() - startTime;
@@ -1466,7 +1469,7 @@ Connection::CreateFunction(const nsACString &aFunctionName,
   // Check to see if this function is already defined.  We only check the name
   // because a function can be defined with the same body but different names.
   SQLiteMutexAutoLock lockedScope(sharedDBMutex);
-  NS_ENSURE_FALSE(mFunctions.Get(aFunctionName, NULL), NS_ERROR_FAILURE);
+  NS_ENSURE_FALSE(mFunctions.Get(aFunctionName, nullptr), NS_ERROR_FAILURE);
 
   int srv = ::sqlite3_create_function(mDBConn,
                                       nsPromiseFlatCString(aFunctionName).get(),
@@ -1474,8 +1477,8 @@ Connection::CreateFunction(const nsACString &aFunctionName,
                                       SQLITE_ANY,
                                       aFunction,
                                       basicFunctionHelper,
-                                      NULL,
-                                      NULL);
+                                      nullptr,
+                                      nullptr);
   if (srv != SQLITE_OK)
     return convertResultCode(srv);
 
@@ -1496,7 +1499,7 @@ Connection::CreateAggregateFunction(const nsACString &aFunctionName,
 
   // Check to see if this function name is already defined.
   SQLiteMutexAutoLock lockedScope(sharedDBMutex);
-  NS_ENSURE_FALSE(mFunctions.Get(aFunctionName, NULL), NS_ERROR_FAILURE);
+  NS_ENSURE_FALSE(mFunctions.Get(aFunctionName, nullptr), NS_ERROR_FAILURE);
 
   // Because aggregate functions depend on state across calls, you cannot have
   // the same instance use the same name.  We want to enumerate all functions
@@ -1508,7 +1511,7 @@ Connection::CreateAggregateFunction(const nsACString &aFunctionName,
                                       aNumArguments,
                                       SQLITE_ANY,
                                       aFunction,
-                                      NULL,
+                                      nullptr,
                                       aggregateFunctionStepHelper,
                                       aggregateFunctionFinalHelper);
   if (srv != SQLITE_OK)
@@ -1528,16 +1531,16 @@ Connection::RemoveFunction(const nsACString &aFunctionName)
   if (!mDBConn) return NS_ERROR_NOT_INITIALIZED;
 
   SQLiteMutexAutoLock lockedScope(sharedDBMutex);
-  NS_ENSURE_TRUE(mFunctions.Get(aFunctionName, NULL), NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(mFunctions.Get(aFunctionName, nullptr), NS_ERROR_FAILURE);
 
   int srv = ::sqlite3_create_function(mDBConn,
                                       nsPromiseFlatCString(aFunctionName).get(),
                                       0,
                                       SQLITE_ANY,
-                                      NULL,
-                                      NULL,
-                                      NULL,
-                                      NULL);
+                                      nullptr,
+                                      nullptr,
+                                      nullptr,
+                                      nullptr);
   if (srv != SQLITE_OK)
     return convertResultCode(srv);
 
@@ -1577,7 +1580,7 @@ Connection::RemoveProgressHandler(mozIStorageProgressHandler **_oldHandler)
   NS_IF_ADDREF(*_oldHandler = mProgressHandler);
 
   mProgressHandler = nullptr;
-  ::sqlite3_progress_handler(mDBConn, 0, NULL, NULL);
+  ::sqlite3_progress_handler(mDBConn, 0, nullptr, nullptr);
 
   return NS_OK;
 }
@@ -1598,7 +1601,8 @@ Connection::SetGrowthIncrement(int32_t aChunkSize, const nsACString &aDatabaseNa
   }
 
   (void)::sqlite3_file_control(mDBConn,
-                               aDatabaseName.Length() ? nsPromiseFlatCString(aDatabaseName).get() : NULL,
+                               aDatabaseName.Length() ? nsPromiseFlatCString(aDatabaseName).get()
+                                                      : nullptr,
                                SQLITE_FCNTL_CHUNK_SIZE,
                                &aChunkSize);
 #endif

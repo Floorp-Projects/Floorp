@@ -188,8 +188,8 @@ class Heap : public js::HeapBase<T>
 {
   public:
     Heap() {
-        MOZ_STATIC_ASSERT(sizeof(T) == sizeof(Heap<T>),
-                          "Heap<T> must be binary compatible with T.");
+        static_assert(sizeof(T) == sizeof(Heap<T>),
+                      "Heap<T> must be binary compatible with T.");
         init(js::GCMethods<T>::initial());
     }
     explicit Heap(T p) { init(p); }
@@ -301,8 +301,8 @@ class TenuredHeap : public js::HeapBase<T>
 {
   public:
     TenuredHeap() : bits(0) {
-        MOZ_STATIC_ASSERT(sizeof(T) == sizeof(TenuredHeap<T>),
-                          "TenuredHeap<T> must be binary compatible with T.");
+        static_assert(sizeof(T) == sizeof(TenuredHeap<T>),
+                      "TenuredHeap<T> must be binary compatible with T.");
     }
     explicit TenuredHeap(T p) : bits(0) { setPtr(p); }
     explicit TenuredHeap(const TenuredHeap<T> &p) : bits(0) { setPtr(p.ptr); }
@@ -385,22 +385,22 @@ class MOZ_NONHEAP_CLASS Handle : public js::HandleBase<T>
     Handle(Handle<S> handle,
            typename mozilla::EnableIf<mozilla::IsConvertible<S, T>::value, int>::Type dummy = 0)
     {
-        MOZ_STATIC_ASSERT(sizeof(Handle<T>) == sizeof(T *),
-                          "Handle must be binary compatible with T*.");
+        static_assert(sizeof(Handle<T>) == sizeof(T *),
+                      "Handle must be binary compatible with T*.");
         ptr = reinterpret_cast<const T *>(handle.address());
     }
 
     /* Create a handle for a NULL pointer. */
     Handle(js::NullPtr) {
-        MOZ_STATIC_ASSERT(mozilla::IsPointer<T>::value,
-                          "js::NullPtr overload not valid for non-pointer types");
+        static_assert(mozilla::IsPointer<T>::value,
+                      "js::NullPtr overload not valid for non-pointer types");
         ptr = reinterpret_cast<const T *>(&js::NullPtr::constNullValue);
     }
 
     /* Create a handle for a NULL pointer. */
     Handle(JS::NullPtr) {
-        MOZ_STATIC_ASSERT(mozilla::IsPointer<T>::value,
-                          "JS::NullPtr overload not valid for non-pointer types");
+        static_assert(mozilla::IsPointer<T>::value,
+                      "JS::NullPtr overload not valid for non-pointer types");
         ptr = reinterpret_cast<const T *>(&JS::NullPtr::constNullValue);
     }
 
@@ -508,9 +508,13 @@ class MOZ_STACK_CLASS MutableHandle : public js::MutableHandleBase<T>
     }
 
     T *address() const { return ptr; }
-    T get() const { return *ptr; }
+    const T& get() const { return *ptr; }
 
-    operator T() const { return get(); }
+    /*
+     * Return a reference so passing a MutableHandle<T> to something that takes
+     * a |const T&| is not a GC hazard.
+     */
+    operator const T&() const { return get(); }
     T operator->() const { return get(); }
 
   private:
@@ -1034,8 +1038,8 @@ template <typename T>
 inline
 MutableHandle<T>::MutableHandle(Rooted<T> *root)
 {
-    MOZ_STATIC_ASSERT(sizeof(MutableHandle<T>) == sizeof(T *),
-                      "MutableHandle must be binary compatible with T*.");
+    static_assert(sizeof(MutableHandle<T>) == sizeof(T *),
+                  "MutableHandle must be binary compatible with T*.");
     ptr = root->address();
 }
 

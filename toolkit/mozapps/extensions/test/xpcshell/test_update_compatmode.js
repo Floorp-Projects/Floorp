@@ -10,24 +10,25 @@
 Services.prefs.setBoolPref(PREF_EM_CHECK_UPDATE_SECURITY, false);
 
 Components.utils.import("resource://testing-common/httpd.js");
-var testserver;
+var testserver = new HttpServer();
+testserver.start(-1);
+gPort = testserver.identity.primaryPort;
+mapFile("/data/test_updatecompatmode_ignore.rdf", testserver);
+mapFile("/data/test_updatecompatmode_normal.rdf", testserver);
+mapFile("/data/test_updatecompatmode_strict.rdf", testserver);
+testserver.registerDirectory("/addons/", do_get_file("addons"));
+
 const profileDir = gProfD.clone();
 profileDir.append("extensions");
 
 function run_test() {
   do_test_pending();
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
-  
-  // Create and configure the HTTP server.
-  testserver = new HttpServer();
-  testserver.registerDirectory("/data/", do_get_file("data"));
-  testserver.registerDirectory("/addons/", do_get_file("addons"));
-  testserver.start(4444);
 
   writeInstallRDFForExtension({
     id: "compatmode-normal@tests.mozilla.org",
     version: "1.0",
-    updateURL: "http://localhost:4444/data/test_updatecompatmode_%COMPATIBILITY_MODE%.rdf",
+    updateURL: "http://localhost:" + gPort + "/data/test_updatecompatmode_%COMPATIBILITY_MODE%.rdf",
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "1",
@@ -39,7 +40,7 @@ function run_test() {
   writeInstallRDFForExtension({
     id: "compatmode-strict@tests.mozilla.org",
     version: "1.0",
-    updateURL: "http://localhost:4444/data/test_updatecompatmode_%COMPATIBILITY_MODE%.rdf",
+    updateURL: "http://localhost:" + gPort + "/data/test_updatecompatmode_%COMPATIBILITY_MODE%.rdf",
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "1",
@@ -51,7 +52,7 @@ function run_test() {
   writeInstallRDFForExtension({
     id: "compatmode-strict-optin@tests.mozilla.org",
     version: "1.0",
-    updateURL: "http://localhost:4444/data/test_updatecompatmode_%COMPATIBILITY_MODE%.rdf",
+    updateURL: "http://localhost:" + gPort + "/data/test_updatecompatmode_%COMPATIBILITY_MODE%.rdf",
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "1",
@@ -64,7 +65,7 @@ function run_test() {
   writeInstallRDFForExtension({
     id: "compatmode-ignore@tests.mozilla.org",
     version: "1.0",
-    updateURL: "http://localhost:4444/data/test_updatecompatmode_%COMPATIBILITY_MODE%.rdf",
+    updateURL: "http://localhost:" + gPort + "/data/test_updatecompatmode_%COMPATIBILITY_MODE%.rdf",
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "1",

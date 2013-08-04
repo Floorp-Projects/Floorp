@@ -35,6 +35,19 @@ interface nsIDashboard : nsISupports
     /* Arrays: hostname, family, hostaddr, expiration */
     void requestDNSInfo(in NetDashboardCallback cb);
 
+    /* aProtocol: a transport layer protocol:
+     *      ex: "ssl", "tcp", default is "tcp".
+     * aHost: the host's name
+     * aPort: the port which the connection will open on
+     * aTimeout: the timespan before the connection will be timed out */
+    void requestConnection(in ACString aHost, in unsigned long aPort,
+                           in string aProtocol, in unsigned long aTimeout,
+                           in NetDashboardCallback cb);
+
     /* When true, the service will log websocket events */
     attribute boolean enableLogging;
+
+    /* DNS resolver for host name
+     * aHost: host name */
+    void requestDNSLookup(in ACString aHost, in NetDashboardCallback cb);
 };

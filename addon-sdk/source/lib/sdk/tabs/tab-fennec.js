@@ -54,7 +54,9 @@ const Tab = Class({
    * Changing this property will loads page under under the specified location.
    * @type {String}
    */
-  get url() getTabURL(tabNS(this).tab),
+  get url() {
+    return tabNS(this).closed ? undefined : getTabURL(tabNS(this).tab);
+  },
   set url(url) setTabURL(tabNS(this).tab, url),
 
   /**
@@ -95,6 +97,8 @@ const Tab = Class({
    * @type {Number}
    */
   get index() {
+    if (tabNS(this).closed) return undefined;
+
     let tabs = tabNS(this).window.BrowserApp.tabs;
     let tab = tabNS(this).tab;
     for (var i = tabs.length; i >= 0; i--) {
@@ -151,8 +155,11 @@ const Tab = Class({
    * Close the tab
    */
   close: function close(callback) {
-    if (callback)
-      this.once(EVENTS.close.name, callback);
+    let tab = this;
+    this.once(EVENTS.close.name, function () {
+      tabNS(tab).closed = true;
+      if (callback) callback();
+    });
 
     closeTab(tabNS(this).tab);
   },

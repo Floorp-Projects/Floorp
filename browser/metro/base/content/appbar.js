@@ -36,7 +36,7 @@ var Appbar = {
         break;
 
       case 'MozAppbarDismissing':
-        if (this.activeTileset) {
+        if (this.activeTileset && ('isBound' in this.activeTileset)) {
           this.activeTileset.clearSelection();
         }
         this.clearContextualActions();
@@ -100,15 +100,19 @@ var Appbar = {
   },
 
   onMenuButton: function(aEvent) {
-      var typesArray = ["find-in-page"];
+      let typesArray = [];
 
-      if (ConsolePanelView.enabled) typesArray.push("open-error-console");
-      if (!MetroUtils.immersive) typesArray.push("open-jsshell");
+      if (!StartUI.isVisible)
+        typesArray.push("find-in-page");
+      if (ConsolePanelView.enabled)
+        typesArray.push("open-error-console");
+      if (!MetroUtils.immersive)
+        typesArray.push("open-jsshell");
 
       try {
         // If we have a valid http or https URI then show the view on desktop
         // menu item.
-        var uri = Services.io.newURI(Browser.selectedBrowser.currentURI.spec,
+        let uri = Services.io.newURI(Browser.selectedBrowser.currentURI.spec,
                                      null, null);
         if (uri.schemeIs('http') || uri.schemeIs('https')) {
           typesArray.push("view-on-desktop");
@@ -144,9 +148,13 @@ var Appbar = {
     }
   },
 
+  onAutocompleteCloseButton: function () {
+    Elements.autocomplete.closePopup();
+  },
+
   dispatchContextualAction: function(aActionName){
     let activeTileset = this.activeTileset;
-    if (activeTileset) {
+    if (activeTileset && ('isBound' in this.activeTileset)) {
       // fire event on the richgrid, others can listen
       // but we keep coupling loose so grid doesn't need to know about appbar
       let event = document.createEvent("Events");
@@ -234,8 +242,11 @@ var Appbar = {
   _onTileSelectionChanged: function _onTileSelectionChanged(aEvent){
     let activeTileset = aEvent.target;
 
-    // deselect tiles in other tile groups
-    if (this.activeTileset && this.activeTileset !== activeTileset) {
+    // deselect tiles in other tile groups,
+    // ensure previousyl-activeTileset is bound before calling methods on it
+    if (this.activeTileset &&
+          ('isBound' in this.activeTileset) &&
+          this.activeTileset !== activeTileset) {
       this.activeTileset.clearSelection();
     }
     // keep track of which view is the target/scope for the contextual actions

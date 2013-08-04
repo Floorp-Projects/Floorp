@@ -15,55 +15,30 @@ ifeq ($(OS_TARGET),WINNT)
 VISIBILITY_FLAGS =
 endif
 
-DISABLED_CSRCS           = \
-                cubeb.c \
-                $(NULL)
-
 ifeq ($(OS_TARGET),WINNT)
-DISABLED_CSRCS           += \
-                cubeb_winmm.c \
-                $(NULL)
 DEFINES         += -DUSE_WINMM -DUSE_WASAPI
 endif
 
 ifeq ($(OS_TARGET),Android)
 ifneq ($(MOZ_WIDGET_TOOLKIT),gonk)
-DISABLED_CSRCS           += \
-                cubeb_audiotrack.c \
-                $(NULL)
 DEFINES         += -DUSE_AUDIOTRACK
 endif
-DISABLED_CSRCS           += \
-                cubeb_opensl.c \
-                $(NULL)
 DEFINES         += -DUSE_OPENSL
 endif
 
 ifeq ($(OS_TARGET),Darwin)
-DISABLED_CSRCS           += \
-                cubeb_audiounit.c \
-                $(NULL)
 DEFINES         += -DUSE_AUDIOUNIT
 endif
 
 ifeq ($(OS_ARCH),OpenBSD)
-DISABLED_CSRCS           += \
-                cubeb_sndio.c \
-                $(NULL)
 DEFINES         += -DUSE_SNDIO
 endif
 
 ifdef MOZ_ALSA
-DISABLED_CSRCS           += \
-                cubeb_alsa.c \
-                $(NULL)
 DEFINES         += -DUSE_ALSA
 endif
 
 ifdef MOZ_PULSEAUDIO
-DISABLED_CSRCS           += \
-                cubeb_pulse.c \
-                $(NULL)
 DEFINES         += -DUSE_PULSE
 ifeq ($(MOZ_WIDGET_TOOLKIT),gonk)
 DEFINES         += -DDISABLE_LIBPULSE_DLOPEN

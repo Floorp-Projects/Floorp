@@ -1264,6 +1264,40 @@ class AssemblerX86Shared
         JS_ASSERT(HasSSE41());
         masm.roundsd_rr(src.code(), dest.code(), mode);
     }
+    void minsd(const FloatRegister &src, const FloatRegister &dest) {
+        JS_ASSERT(HasSSE2());
+        masm.minsd_rr(src.code(), dest.code());
+    }
+    void minsd(const Operand &src, const FloatRegister &dest) {
+        JS_ASSERT(HasSSE2());
+        switch (src.kind()) {
+          case Operand::FPREG:
+            masm.minsd_rr(src.fpu(), dest.code());
+            break;
+          case Operand::REG_DISP:
+            masm.minsd_mr(src.disp(), src.base(), dest.code());
+            break;
+          default:
+            MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
+        }
+    }
+    void maxsd(const FloatRegister &src, const FloatRegister &dest) {
+        JS_ASSERT(HasSSE2());
+        masm.maxsd_rr(src.code(), dest.code());
+    }
+    void maxsd(const Operand &src, const FloatRegister &dest) {
+        JS_ASSERT(HasSSE2());
+        switch (src.kind()) {
+          case Operand::FPREG:
+            masm.maxsd_rr(src.fpu(), dest.code());
+            break;
+          case Operand::REG_DISP:
+            masm.maxsd_mr(src.disp(), src.base(), dest.code());
+            break;
+          default:
+            MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
+        }
+    }
     void fisttp(const Operand &dest) {
         JS_ASSERT(HasSSE3());
         switch (dest.kind()) {

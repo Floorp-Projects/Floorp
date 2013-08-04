@@ -36,7 +36,7 @@
 #ifndef UTIL_SNAPPY_OPENSOURCE_SNAPPY_STUBS_PUBLIC_H_
 #define UTIL_SNAPPY_OPENSOURCE_SNAPPY_STUBS_PUBLIC_H_
 
-#include "mozilla/StandardInteger.h"
+#include <stdint.h>
 
 #if defined IS_BIG_ENDIAN || defined __BIG_ENDIAN__
 #define WORDS_BIGENDIAN

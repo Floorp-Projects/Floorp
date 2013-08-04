@@ -286,7 +286,7 @@ void gfxFT2FontGroup::GetCJKPrefFonts(nsTArray<nsRefPtr<gfxFontEntry> >& aFontEn
             case 950: GetPrefFonts(nsGkAtoms::zh_tw, aFontEntryList); break;
         }
 #else
-        const char *ctype = setlocale(LC_CTYPE, NULL);
+        const char *ctype = setlocale(LC_CTYPE, nullptr);
         if (ctype) {
             if (!PL_strncasecmp(ctype, "ja", 2)) {
                 GetPrefFonts(nsGkAtoms::Japanese, aFontEntryList);

@@ -222,7 +222,7 @@ ArchiveRequest::GetFileResult(JSContext* aCx,
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (filename == mFilename) {
-      JS::Rooted<JSObject*> global(aCx, JS_GetGlobalForScopeChain(aCx));
+      JS::Rooted<JSObject*> global(aCx, JS::CurrentGlobalOrNull(aCx));
       return nsContentUtils::WrapNative(aCx, global, file,
                                         &NS_GET_IID(nsIDOMFile), aValue);
     }
@@ -245,7 +245,7 @@ ArchiveRequest::GetFilesResult(JSContext* aCx,
     nsCOMPtr<nsIDOMFile> file = aFileList[i];
 
     JS::Rooted<JS::Value> value(aCx);
-    JS::Rooted<JSObject*> global(aCx, JS_GetGlobalForScopeChain(aCx));
+    JS::Rooted<JSObject*> global(aCx, JS::CurrentGlobalOrNull(aCx));
     nsresult rv = nsContentUtils::WrapNative(aCx, global, file,
                                              &NS_GET_IID(nsIDOMFile),
                                              value.address());

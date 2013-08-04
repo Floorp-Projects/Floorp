@@ -640,38 +640,6 @@ var SelectionHelperUI = {
   },
 
   /*
-   * _transitionFromSelectionToCaret
-   *
-   * Transitions from text selection mode to caret mode.
-   *
-   * @param aClientX, aClientY - client coordinates of the
-   * tap that initiates the change.
-   */
-  _transitionFromSelectionToCaret: function _transitionFromSelectionToCaret(aClientX, aClientY) {
-    // Reset some of our state
-    this._activeSelectionRect = null;
-
-    // Reset the monocles
-    this._shutdownAllMarkers();
-    this._setupMonocleIdArray();
-
-    // Translate to browser relative client coordinates
-    let coords =
-      this._msgTarget.ptClientToBrowser(aClientX, aClientY, true);
-
-    // Init SelectionHandler and turn on caret selection. Note the focus caret
-    // will have been removed from the target element due to the shutdown call.
-    // This won't set the caret position on its own.
-    this._sendAsyncMessage("Browser:CaretAttach", {
-      xPos: coords.x,
-      yPos: coords.y
-    });
-
-    // Set the caret position
-    this._setCaretPositionAtPoint(coords.x, coords.y);
-  },
-
-  /*
    * _setupDebugOptions
    *
    * Sends a message over to content instructing it to
@@ -803,68 +771,14 @@ var SelectionHelperUI = {
    */
 
   /*
-   * _onTap
-   *
    * Handles taps that move the current caret around in text edits,
    * clear active selection and focus when neccessary, or change
    * modes.
-   * Future: changing selection modes by tapping on a monocle.
    */
-  _onTap: function _onTap(aEvent) {
-    let clientCoords =
-      this._msgTarget.ptBrowserToClient(aEvent.clientX, aEvent.clientY, true);
-
-    // Check for a tap on a monocle
-    if (this.startMark.hitTest(clientCoords.x, clientCoords.y) ||
-        this.endMark.hitTest(clientCoords.x, clientCoords.y)) {
-      aEvent.stopPropagation();
-      aEvent.preventDefault();
-      return;
-    }
-
-    // Is the tap point within the bound of the target element? This
-    // is useful if we are dealing with some sort of input control.
-    // Not so much if the target is a page or div.
-    let pointInTargetElement =
-      Util.pointWithinRect(clientCoords.x, clientCoords.y,
-                           this._targetElementRect);
-
-    // If the tap is within an editable element and the caret monocle is
-    // active, update the caret.
-    if (this.caretMark.visible && pointInTargetElement) {
-      // setCaretPositionAtPoint takes browser relative coords.
-      this._setCaretPositionAtPoint(aEvent.clientX, aEvent.clientY);
-      return;
-    }
-
-    // if the target is editable, we have selection or a caret, and the
-    // user clicks off the target clear selection and remove focus from
-    // the input.
-    if (this._targetIsEditable && !pointInTargetElement) {
-      // shutdown but leave focus alone. the event will fall through
-      // and the dom will update focus for us. If the user tapped on
-      // another input, we'll get a attachToCaret call soonish on the
-      // new input.
-      this.closeEditSession(false);
-      return;
-    }
-
-    if (this._hitTestSelection(aEvent) && this._targetIsEditable) {
-      // Attach to the newly placed caret position
+  _onClick: function(aEvent) {
+    if (this.layerMode == kChromeLayer && this._targetIsEditable) {
       this.attachToCaret(this._msgTarget, aEvent.clientX, aEvent.clientY);
-      return;
     }
-
-    // A tap within an editable but outside active selection, clear the
-    // selection and flip back to caret mode.
-    if (this.startMark.visible && pointInTargetElement &&
-        this._targetIsEditable) {
-      this._transitionFromSelectionToCaret(clientCoords.x, clientCoords.y);
-      return;
-    }
-
-    // Close when we get a single tap in content.
-    this.closeEditSession(false);
   },
 
   _onKeypress: function _onKeypress() {
@@ -1019,7 +933,7 @@ var SelectionHelperUI = {
     }
     switch (aEvent.type) {
       case "click":
-        this._onTap(aEvent);
+        this._onClick(aEvent);
         break;
 
       case "touchstart": {

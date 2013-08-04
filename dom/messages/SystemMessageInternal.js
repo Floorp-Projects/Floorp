@@ -49,8 +49,8 @@ function debug(aMsg) {
 
 
 let defaultMessageConfigurator = {
-  get safeToSendBeforeRunningApp() {
-    return true;
+  get mustShowRunningApp() {
+    return false;
   }
 };
 
@@ -208,10 +208,7 @@ SystemMessageInternal.prototype = {
       // Queue this message in the corresponding pages.
       this._queueMessage(page, aMessage, messageID);
 
-      if (result === MSG_SENT_FAILURE_APP_NOT_RUNNING) {
-        // Don't open the page again if we already sent the message to it.
-        this._openAppPage(page, aMessage, aExtra);
-      }
+      this._openAppPage(page, aMessage, aExtra, result);
     }
   },
 
@@ -253,10 +250,7 @@ SystemMessageInternal.prototype = {
         // Queue this message in the corresponding pages.
         this._queueMessage(aPage, aMessage, messageID);
 
-        if (result === MSG_SENT_FAILURE_APP_NOT_RUNNING) {
-          // Open app pages to handle their pending messages.
-          this._openAppPage(aPage, aMessage, aExtra);
-        }
+        this._openAppPage(aPage, aMessage, aExtra, result);
       }
     }, this);
   },
@@ -530,13 +524,28 @@ SystemMessageInternal.prototype = {
     }
   },
 
-  _openAppPage: function _openAppPage(aPage, aMessage, aExtra) {
+  _openAppPage: function _openAppPage(aPage, aMessage, aExtra, aMsgSentStatus) {
+    // This means the app must be brought to the foreground.
+    let showApp = this._getMessageConfigurator(aPage.type).mustShowRunningApp;
+
+    // We should send the open-app message if the system message was
+    // not sent, or if it was sent but we should show the app anyway.
+    if ((aMsgSentStatus === MSG_SENT_SUCCESS) && !showApp) {
+      return;
+    }
+
+    // This flag means the app must *only* be brought to the foreground
+    // and we don't need to load the app to handle messages.
+    let onlyShowApp = (aMsgSentStatus === MSG_SENT_SUCCESS) && showApp;
+
     // We don't need to send the full object to observers.
     let page = { uri: aPage.uri,
                  manifest: aPage.manifest,
                  type: aPage.type,
                  extra: aExtra,
-                 target: aMessage.target };
+                 target: aMessage.target,
+                 onlyShowApp: onlyShowApp,
+                 showApp: showApp };
     debug("Asking to open " + JSON.stringify(page));
     Services.obs.notifyObservers(this, "system-messages-open-app", JSON.stringify(page));
   },
@@ -580,40 +589,34 @@ SystemMessageInternal.prototype = {
                                            manifest: aManifestURI,
                                            uri: aPageURI });
 
-    // Tries to send the message to a previously opened app only if it's safe
-    // to do so. Generically, it's safe to send the message if the app isn't
-    // going to be reloaded. And it's not safe otherwise
-    if (this._getMessageConfigurator(aType).safeToSendBeforeRunningApp) {
-
-      let targets = this._listeners[aManifestURI];
-      if (targets) {
-        for (let index = 0; index < targets.length; ++index) {
-          let target = targets[index];
-          // We only need to send the system message to the targets (processes)
-          // which contain the window page that matches the manifest/page URL of
-          // the destination of system message.
-          if (target.winCounts[aPageURI] === undefined) {
-            continue;
-          }
-
-          appPageIsRunning = true;
-          // We need to acquire a CPU wake lock for that page and expect that
-          // we'll receive a "SystemMessageManager:HandleMessagesDone" message
-          // when the page finishes handling the system message. At that point,
-          // we'll release the lock we acquired.
-          this._acquireCpuWakeLock(pageKey);
-
-          // Multiple windows can share the same target (process), the content
-          // window needs to check if the manifest/page URL is matched. Only
-          // *one* window should handle the system message.
-          let manager = target.target;
-          manager.sendAsyncMessage("SystemMessageManager:Message",
-                                   { type: aType,
-                                     msg: aMessage,
-                                     manifest: aManifestURI,
-                                     uri: aPageURI,
-                                     msgID: aMessageID });
+    let targets = this._listeners[aManifestURI];
+    if (targets) {
+      for (let index = 0; index < targets.length; ++index) {
+        let target = targets[index];
+        // We only need to send the system message to the targets (processes)
+        // which contain the window page that matches the manifest/page URL of
+        // the destination of system message.
+        if (target.winCounts[aPageURI] === undefined) {
+          continue;
         }
+
+        appPageIsRunning = true;
+        // We need to acquire a CPU wake lock for that page and expect that
+        // we'll receive a "SystemMessageManager:HandleMessagesDone" message
+        // when the page finishes handling the system message. At that point,
+        // we'll release the lock we acquired.
+        this._acquireCpuWakeLock(pageKey);
+
+        // Multiple windows can share the same target (process), the content
+        // window needs to check if the manifest/page URL is matched. Only
+        // *one* window should handle the system message.
+        let manager = target.target;
+        manager.sendAsyncMessage("SystemMessageManager:Message",
+                                 { type: aType,
+                                   msg: aMessage,
+                                   manifest: aManifestURI,
+                                   uri: aPageURI,
+                                   msgID: aMessageID });
       }
     }
 

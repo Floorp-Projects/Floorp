@@ -14,7 +14,6 @@
 
 #include "jsmath.h"
 #include "jsworkers.h"
-#include "jswrapper.h"
 #include "prmjtime.h"
 
 #include "frontend/Parser.h"
@@ -37,6 +36,7 @@ using mozilla::AddToHash;
 using mozilla::ArrayLength;
 using mozilla::DebugOnly;
 using mozilla::HashGeneric;
+using mozilla::IsNaN;
 using mozilla::IsNegativeZero;
 using mozilla::Maybe;
 using mozilla::Move;
@@ -756,6 +756,10 @@ IsNumericLiteral(ParseNode *pn)
 static NumLit
 ExtractNumericLiteral(ParseNode *pn)
 {
+    // The JS grammar treats -42 as -(42) (i.e., with separate grammar
+    // productions) for the unary - and literal 42). However, the asm.js spec
+    // recognizes -42 (modulo parens, so -(42) and -((42))) as a single literal
+    // so fold the two potential parse nodes into a single double value.
     JS_ASSERT(IsNumericLiteral(pn));
     ParseNode *numberNode;
     double d;
@@ -767,21 +771,33 @@ ExtractNumericLiteral(ParseNode *pn)
         d = NumberNodeValue(numberNode);
     }
 
+    // The asm.js spec syntactically distinguishes any literal containing a
+    // decimal point or the literal -0 as having double type.
     if (NumberNodeHasFrac(numberNode) || IsNegativeZero(d))
         return NumLit(NumLit::Double, DoubleValue(d));
 
-    int64_t i64 = int64_t(d);
+    // The syntactic checks above rule out these double values.
+    JS_ASSERT(!IsNegativeZero(d));
+    JS_ASSERT(!IsNaN(d));
 
+    // Although doubles can only *precisely* represent 53-bit integers, they
+    // can *imprecisely* represent integers much bigger than an int64_t.
+    // Furthermore, d may be inf or -inf. In both cases, casting to an int64_t
+    // is undefined, so test against the integer bounds using doubles.
+    if (d < double(INT32_MIN) || d > double(UINT32_MAX))
+        return NumLit(NumLit::OutOfRangeInt, UndefinedValue());
+
+    // With the above syntactic and range limitations, d is definitely an
+    // integer in the range [INT32_MIN, UINT32_MAX] range.
+    int64_t i64 = int64_t(d);
     if (i64 >= 0) {
         if (i64 <= INT32_MAX)
             return NumLit(NumLit::Fixnum, Int32Value(i64));
-        if (i64 <= UINT32_MAX)
-            return NumLit(NumLit::BigUnsigned, Int32Value(uint32_t(i64)));
-        return NumLit(NumLit::OutOfRangeInt, UndefinedValue());
+        JS_ASSERT(i64 <= UINT32_MAX);
+        return NumLit(NumLit::BigUnsigned, Int32Value(uint32_t(i64)));
     }
-    if (i64 >= INT32_MIN)
-        return NumLit(NumLit::NegativeInt, Int32Value(i64));
-    return NumLit(NumLit::OutOfRangeInt, UndefinedValue());
+    JS_ASSERT(i64 >= INT32_MIN);
+    return NumLit(NumLit::NegativeInt, Int32Value(i64));
 }
 
 static inline bool
@@ -1437,13 +1453,8 @@ class MOZ_STACK_CLASS ModuleCompiler
     }
 
     bool collectAccesses(MIRGenerator &gen) {
-#ifdef JS_CPU_ARM
-        if (!module_->addBoundsChecks(gen.asmBoundsChecks()))
-            return false;
-#else
         if (!module_->addHeapAccesses(gen.heapAccesses()))
             return false;
-#endif
         if (!globalAccesses_.appendAll(gen.globalAccesses()))
             return false;
         return true;
@@ -1528,11 +1539,11 @@ class MOZ_STACK_CLASS ModuleCompiler
     }
 
     bool staticallyLink(ScopedJSDeletePtr<AsmJSModule> *module, ScopedJSFreePtr<char> *report) {
-        module_->initPostLinkFailureInfo(cx_->runtime(),
-                                         parser_.tokenStream.getOriginPrincipals(),
-                                         parser_.ss,
-                                         bodyStart_,
-                                         parser_.tokenStream.currentToken().pos.end);
+        // Record the ScriptSource and [begin, end) range of the module in case
+        // the link-time validation fails in LinkAsmJS and we need to re-parse
+        // the entire module from scratch.
+        uint32_t bodyEnd = parser_.tokenStream.currentToken().pos.end;
+        module_->initPostLinkFailureInfo(parser_.ss, bodyStart_, bodyEnd);
 
         // Finish the code section.
         masm_.finish();
@@ -1590,26 +1601,21 @@ class MOZ_STACK_CLASS ModuleCompiler
                 data[j] = code + masm_.actualOffset(table.elem(j).code()->offset());
         }
 
-        // Global accesses in function bodies
+        // Fix up heap/global accesses now that compilation has finished
 #ifdef JS_CPU_ARM
-        JS_ASSERT(globalAccesses_.length() == 0);
         // The AsmJSHeapAccess offsets need to be updated to reflect the
         // "actualOffset" (an ARM distinction).
-        module_->convertBoundsChecksToActualOffset(masm_);
-
+        for (unsigned i = 0; i < module_->numHeapAccesses(); i++) {
+            AsmJSHeapAccess &access = module_->heapAccess(i);
+            access.setOffset(masm_.actualOffset(access.offset()));
+        }
+        JS_ASSERT(globalAccesses_.length() == 0);
 #else
-
         for (unsigned i = 0; i < globalAccesses_.length(); i++) {
             AsmJSGlobalAccess access = globalAccesses_[i];
             masm_.patchAsmJSGlobalAccess(access.offset, code, codeBytes, access.globalDataOffset);
         }
 #endif
-        // The AsmJSHeapAccess offsets need to be updated to reflect the
-        // "actualOffset" (an ARM distinction).
-        for (unsigned i = 0; i < module_->numHeapAccesses(); i++) {
-            AsmJSHeapAccess &access = module_->heapAccess(i);
-            access.updateOffset(masm_.actualOffset(access.offset()));
-        }
 
         *module = module_.forget();
 
@@ -2530,88 +2536,6 @@ class FunctionCompiler
         return true;
     }
 };
-
-/*****************************************************************************/
-// An AsmJSModule contains the persistent results of asm.js module compilation,
-// viz., the jit code and dynamic link information.
-//
-// An AsmJSModule object is created at the end of module compilation and
-// subsequently owned by an AsmJSModuleClass JSObject.
-
-static void AsmJSModuleObject_finalize(FreeOp *fop, JSObject *obj);
-static void AsmJSModuleObject_trace(JSTracer *trc, JSObject *obj);
-
-static const unsigned ASM_CODE_RESERVED_SLOT = 0;
-static const unsigned ASM_CODE_NUM_RESERVED_SLOTS = 1;
-
-static Class AsmJSModuleClass = {
-    "AsmJSModuleObject",
-    JSCLASS_IS_ANONYMOUS | JSCLASS_IMPLEMENTS_BARRIERS |
-    JSCLASS_HAS_RESERVED_SLOTS(ASM_CODE_NUM_RESERVED_SLOTS),
-    JS_PropertyStub,         /* addProperty */
-    JS_DeletePropertyStub,   /* delProperty */
-    JS_PropertyStub,         /* getProperty */
-    JS_StrictPropertyStub,   /* setProperty */
-    JS_EnumerateStub,
-    JS_ResolveStub,
-    NULL,                    /* convert     */
-    AsmJSModuleObject_finalize,
-    NULL,                    /* checkAccess */
-    NULL,                    /* call        */
-    NULL,                    /* hasInstance */
-    NULL,                    /* construct   */
-    AsmJSModuleObject_trace
-};
-
-AsmJSModule &
-js::AsmJSModuleObjectToModule(JSObject *obj)
-{
-    JS_ASSERT(obj->getClass() == &AsmJSModuleClass);
-    return *(AsmJSModule *)obj->getReservedSlot(ASM_CODE_RESERVED_SLOT).toPrivate();
-}
-
-bool
-js::IsAsmJSModuleObject(JSObject *obj)
-{
-    return obj->getClass() == &AsmJSModuleClass;
-}
-
-static const unsigned ASM_MODULE_FUNCTION_MODULE_OBJECT_SLOT = 0;
-
-JSObject &
-js::AsmJSModuleObject(JSFunction *moduleFun)
-{
-    return moduleFun->getExtendedSlot(ASM_MODULE_FUNCTION_MODULE_OBJECT_SLOT).toObject();
-}
-
-void
-js::SetAsmJSModuleObject(JSFunction *moduleFun, JSObject *moduleObj)
-{
-    moduleFun->setExtendedSlot(ASM_MODULE_FUNCTION_MODULE_OBJECT_SLOT, OBJECT_TO_JSVAL(moduleObj));
-}
-
-static void
-AsmJSModuleObject_finalize(FreeOp *fop, JSObject *obj)
-{
-    fop->delete_(&AsmJSModuleObjectToModule(obj));
-}
-
-static void
-AsmJSModuleObject_trace(JSTracer *trc, JSObject *obj)
-{
-    AsmJSModuleObjectToModule(obj).trace(trc);
-}
-
-static JSObject *
-NewAsmJSModuleObject(JSContext *cx, ScopedJSDeletePtr<AsmJSModule> *module)
-{
-    JSObject *obj = NewObjectWithGivenProto(cx, &AsmJSModuleClass, NULL, NULL);
-    if (!obj)
-        return NULL;
-
-    obj->setReservedSlot(ASM_CODE_RESERVED_SLOT, PrivateValue(module->forget()));
-    return obj;
-}
 
 /*****************************************************************************/
 // asm.js type-checking and code-generation algorithm
@@ -5785,12 +5709,12 @@ GenerateFFIInterpreterExit(ModuleCompiler &m, const ModuleCompiler::ExitDescript
 }
 
 static int32_t
-ValueToInt32(JSContext *cx, Value *val)
+ValueToInt32(JSContext *cx, MutableHandleValue val)
 {
     int32_t i32;
-    if (!ToInt32(cx, val[0], &i32))
+    if (!ToInt32(cx, val, &i32))
         return false;
-    val[0] = Int32Value(i32);
+    val.set(Int32Value(i32));
 
     return true;
 }
@@ -6153,9 +6077,9 @@ GenerateOperationCallbackExit(ModuleCompiler &m, Label *throwLabel)
     LoadJSContextFromActivation(masm, activation, IntArgReg0);
 #endif
 
-    JSBool (*pf)(JSContext*) = js_HandleExecutionInterrupt;
+    bool (*pf)(JSContext*) = js_HandleExecutionInterrupt;
     masm.call(ImmWord(JS_FUNC_TO_DATA_PTR(void*, pf)));
-    masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, throwLabel);
+    masm.branchIfFalseBool(ReturnReg, throwLabel);
 
     // Restore the StackPointer to it's position before the call.
     masm.mov(ABIArgGenerator::NonVolatileReg, StackPointer);
@@ -6185,9 +6109,9 @@ GenerateOperationCallbackExit(ModuleCompiler &m, Label *throwLabel)
     masm.loadPtr(Address(IntArgReg0, AsmJSActivation::offsetOfContext()), IntArgReg0);
 
     masm.PushRegsInMask(RegisterSet(GeneralRegisterSet(0), FloatRegisterSet(FloatRegisters::AllMask)));   // save all FP registers
-    JSBool (*pf)(JSContext*) = js_HandleExecutionInterrupt;
+    bool (*pf)(JSContext*) = js_HandleExecutionInterrupt;
     masm.call(ImmWord(JS_FUNC_TO_DATA_PTR(void*, pf)));
-    masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, throwLabel);
+    masm.branchIfFalseBool(ReturnReg, throwLabel);
 
     // Restore the machine state to before the interrupt. this will set the pc!
     masm.PopRegsInMask(RegisterSet(GeneralRegisterSet(0), FloatRegisterSet(FloatRegisters::AllMask)));   // restore all FP registers
@@ -6391,24 +6315,13 @@ js::CompileAsmJS(JSContext *cx, AsmJSParser &parser, ParseNode *stmtList, bool *
     if (!moduleObj)
         return false;
 
-    ParseNode *fn = parser.pc->maybeFunction;
-    RootedFunction origFun(cx, fn->pn_funbox->function());
-    RootedPropertyName name(cx, origFun->name());
-    RootedFunction moduleFun(cx, NewFunction(cx, NullPtr(), LinkAsmJS, origFun->nargs,
-                                             JSFunction::NATIVE_FUN, NullPtr(), name,
-                                             JSFunction::ExtendedFinalizeKind, TenuredObject));
+    FunctionBox *funbox = parser.pc->maybeFunction->pn_funbox;
+    RootedFunction moduleFun(cx, NewAsmJSModuleFunction(cx, funbox->function(), moduleObj));
     if (!moduleFun)
         return false;
 
-    SetAsmJSModuleObject(moduleFun, moduleObj);
-
-    // Replace the old interpreted function (which will now become garbage)
-    // with the new LinkAsmJS native function. This allows us to avoid creating
-    // bytecode for the entire asm.js module (which can be quite large). If
-    // link-time validation fails, LinkAsmJS will re-parse the whole module.
-    JS_ASSERT(fn->pn_funbox->function()->isInterpreted());
-    fn->pn_funbox->object = moduleFun;
-    JS_ASSERT(IsAsmJSModuleNative(fn->pn_funbox->function()->native()));
+    JS_ASSERT(funbox->function()->isInterpreted());
+    funbox->object = moduleFun;
 
     *validated = true;
     return Warn(cx, JSMSG_USE_ASM_TYPE_OK, compilationTimeReport);
@@ -6425,59 +6338,4 @@ js::IsAsmJSCompilationAvailable(JSContext *cx, unsigned argc, Value *vp)
 
     args.rval().set(BooleanValue(available));
     return true;
-}
-
-static bool
-IsMaybeWrappedNativeFunction(const Value &v, Native native)
-{
-    if (!v.isObject())
-        return false;
-
-    JSObject *obj = CheckedUnwrap(&v.toObject());
-    if (!obj)
-        return false;
-
-    return obj->is<JSFunction>() && obj->as<JSFunction>().maybeNative() == native;
-}
-
-JSBool
-js::IsAsmJSModule(JSContext *cx, unsigned argc, Value *vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    bool rval = args.hasDefined(0) && IsMaybeWrappedNativeFunction(args[0], LinkAsmJS);
-    args.rval().set(BooleanValue(rval));
-    return true;
-}
-
-JSBool
-js::IsAsmJSFunction(JSContext *cx, unsigned argc, Value *vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    bool rval = args.hasDefined(0) && IsMaybeWrappedNativeFunction(args[0], CallAsmJS);
-    args.rval().set(BooleanValue(rval));
-    return true;
-}
-
-AsmJSModule::~AsmJSModule()
-{
-    if (code_) {
-        for (unsigned i = 0; i < numExits(); i++) {
-            AsmJSModule::ExitDatum &exitDatum = exitIndexToGlobalDatum(i);
-            if (!exitDatum.fun)
-                continue;
-
-            if (!exitDatum.fun->hasScript())
-                continue;
-
-            JSScript *script = exitDatum.fun->nonLazyScript();
-            if (!script->hasIonScript())
-                continue;
-
-            DependentAsmJSModuleExit exit(this, i);
-            script->ionScript()->removeDependentAsmJSModule(exit);
-        }
-    }
-
-    for (size_t i = 0; i < numFunctionCounts(); i++)
-        js_delete(functionCounts(i));
 }

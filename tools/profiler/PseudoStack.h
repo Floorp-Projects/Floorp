@@ -7,7 +7,7 @@
 #define PROFILER_PSEUDO_STACK_H_
 
 #include "mozilla/NullPtr.h"
-#include "mozilla/StandardInteger.h"
+#include <stdint.h>
 #include "jsfriendapi.h"
 #include <stdlib.h>
 #include <algorithm>

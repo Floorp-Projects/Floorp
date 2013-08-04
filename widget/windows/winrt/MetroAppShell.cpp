@@ -143,7 +143,7 @@ MetroAppShell::ProcessNextNativeEvent(bool mayWait)
 
   if (mayWait) {
     if (!WinUtils::PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE)) {
-      WaitMessage();
+      WinUtils::WaitForMessage();
     }
     ProcessOneNativeEventIfPresent();
     return true;

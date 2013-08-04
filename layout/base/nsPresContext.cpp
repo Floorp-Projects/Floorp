@@ -340,6 +340,8 @@ nsPresContext::LastRelease()
   }
 }
 
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsPresContext)
+
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsPresContext)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocument);
   // NS_IMPL_CYCLE_COLLECTION_TRAVERSE_RAWPTR(mDeviceContext); // not xpcom
@@ -538,8 +540,8 @@ nsPresContext::GetFontPrefsForLang(nsIAtom *aLanguage) const
     &prefs->mDefaultCursiveFont,
     &prefs->mDefaultFantasyFont
   };
-  MOZ_STATIC_ASSERT(NS_ARRAY_LENGTH(fontTypes) == eDefaultFont_COUNT,
-                    "FontTypes array count is not correct");
+  static_assert(NS_ARRAY_LENGTH(fontTypes) == eDefaultFont_COUNT,
+                "FontTypes array count is not correct");
 
   // Get attributes specific to each generic font. We do not get the user's
   // generic-font-name-to-specific-family-name preferences because its the

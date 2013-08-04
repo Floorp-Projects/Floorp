@@ -1419,7 +1419,6 @@ XPCJSRuntime::~XPCJSRuntime()
         delete mDetachedWrappedNativeProtoMap;
     }
 
-    JS_ShutDown();
 #ifdef MOZ_ENABLE_PROFILER_SPS
     // Tell the profiler that the runtime is gone
     if (PseudoStack *stack = mozilla_get_pseudo_stack())
@@ -2686,56 +2685,6 @@ SourceHook(JSContext *cx, JS::Handle<JSScript*> script, jschar **src,
   return true;
 }
 
-// |sSizeOfICU| can be accessed by multiple JSRuntimes, so it must be
-// thread-safe.
-static Atomic<size_t> sSizeOfICU;
-
-static int64_t
-GetICUSize()
-{
-    return sSizeOfICU;
-}
-
-NS_MEMORY_REPORTER_IMPLEMENT(ICU,
-    "explicit/icu",
-    KIND_HEAP,
-    UNITS_BYTES,
-    GetICUSize,
-    "Memory used by ICU, a Unicode and globalization support library."
-)
-
-NS_MEMORY_REPORTER_MALLOC_SIZEOF_ON_ALLOC_FUN(ICUMallocSizeOfOnAlloc)
-NS_MEMORY_REPORTER_MALLOC_SIZEOF_ON_FREE_FUN(ICUMallocSizeOfOnFree)
-
-static void *
-ICUAlloc(const void *, size_t size)
-{
-    void *p = malloc(size);
-    sSizeOfICU += ICUMallocSizeOfOnAlloc(p);
-    return p;
-}
-
-static void *
-ICURealloc(const void *, void *p, size_t size)
-{
-    sSizeOfICU -= ICUMallocSizeOfOnFree(p);
-    void *pnew = realloc(p, size);
-    if (pnew) {
-        sSizeOfICU += ICUMallocSizeOfOnAlloc(pnew);
-    } else {
-        // realloc failed;  undo the decrement from above
-        sSizeOfICU += ICUMallocSizeOfOnAlloc(p);
-    }
-    return pnew;
-}
-
-static void
-ICUFree(const void *, void *p)
-{
-    sSizeOfICU -= ICUMallocSizeOfOnFree(p);
-    free(p);
-}
-
 XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
    : CycleCollectedJSRuntime(32L * 1024L * 1024L, JS_USE_HELPER_THREADS, true),
    mJSContextStack(new XPCJSContextStack()),
@@ -2838,9 +2787,6 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
     // handlers.
     JS_SetSourceHook(runtime, SourceHook);
 
-    if (!JS_SetICUMemoryFunctions(ICUAlloc, ICURealloc, ICUFree))
-        NS_RUNTIMEABORT("JS_SetICUMemoryFunctions failed.");
-
     // Set up locale information and callbacks for the newly-created runtime so
     // that the various toLocaleString() methods, localeCompare(), and other
     // internationalization APIs work as desired.
@@ -2851,7 +2797,6 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
     NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(XPConnectJSSystemCompartmentCount));
     NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(XPConnectJSUserCompartmentCount));
     NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(JSMainRuntimeTemporaryPeak));
-    NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(ICU));
     NS_RegisterMemoryMultiReporter(new JSCompartmentsMultiReporter);
 
     // Install a JavaScript 'debugger' keyword handler in debug builds only

@@ -16,6 +16,10 @@ namespace mozilla {
 namespace ipc {
   class Shmem;
 }
+namespace gfx {
+  class DataSourceSurface;
+}
+
 namespace layers {
 
 class Image;
@@ -134,6 +138,13 @@ class MOZ_STACK_CLASS YCbCrImageDataDeserializer : public YCbCrImageDataDeserial
 {
 public:
   YCbCrImageDataDeserializer(uint8_t* aData) : YCbCrImageDataDeserializerBase(aData) {}
+
+  /**
+   * Convert the YCbCr data into RGB and return a DataSourceSurface.
+   * This is a costly operation, so use it only when YCbCr compositing is
+   * not supported.
+   */
+  TemporaryRef<gfx::DataSourceSurface> ToDataSourceSurface();
 };
 
 } // namespace

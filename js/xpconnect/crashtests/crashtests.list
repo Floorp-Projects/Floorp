@@ -52,3 +52,4 @@ load 806751.html
 load 833856.html
 load 854604.html
 load 854139.html
+pref(dom.use_xbl_scopes_for_remote_xul,true) skip-if(Android) load 898939.html

@@ -20,9 +20,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "AddonManager",
 XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
                                   "resource://gre/modules/NetUtil.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "UserAgentOverrides",
-                                  "resource://gre/modules/UserAgentOverrides.jsm");
-
 XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
                                   "resource://gre/modules/FileUtils.jsm");
 
@@ -456,8 +453,6 @@ BrowserGlue.prototype = {
     // handle any UI migration
     this._migrateUI();
 
-    this._setUpUserAgentOverrides();
-
     this._syncSearchEngines();
 
     webappsUI.init();
@@ -471,19 +466,27 @@ BrowserGlue.prototype = {
     Services.obs.notifyObservers(null, "browser-ui-startup-complete", "");
   },
 
-  _setUpUserAgentOverrides: function BG__setUpUserAgentOverrides() {
-    UserAgentOverrides.init();
+  _checkForOldBuildUpdates: function () {
+    // check for update if our build is old
+    if (Services.prefs.getBoolPref("app.update.enabled") &&
+        Services.prefs.getBoolPref("app.update.checkInstallTime")) {
 
-    if (Services.prefs.getBoolPref("general.useragent.complexOverride.moodle")) {
-      UserAgentOverrides.addComplexOverride(function (aHttpChannel, aOriginalUA) {
-        let cookies;
-        try {
-          cookies = aHttpChannel.getRequestHeader("Cookie");
-        } catch (e) { /* no cookie sent */ }
-        if (cookies && cookies.indexOf("MoodleSession") > -1)
-          return aOriginalUA.replace(/Gecko\/[^ ]*/, "Gecko/20100101");
-        return null;
-      });
+      let buildID = Services.appinfo.appBuildID;
+      let today = new Date().getTime();
+      let buildDate = new Date(buildID.slice(0,4),     // year
+                               buildID.slice(4,6) - 1, // months are zero-based.
+                               buildID.slice(6,8),     // day
+                               buildID.slice(8,10),    // hour
+                               buildID.slice(10,12),   // min
+                               buildID.slice(12,14))   // ms
+      .getTime();
+
+      const millisecondsIn24Hours = 86400000;
+      let acceptableAge = Services.prefs.getIntPref("app.update.checkInstallTime.days") * millisecondsIn24Hours;
+
+      if (buildDate + acceptableAge < today) {
+        Cc["@mozilla.org/updates/update-service;1"].getService(Ci.nsIApplicationUpdateService).checkForBackgroundUpdates();
+      }
     }
   },
 
@@ -604,6 +607,8 @@ BrowserGlue.prototype = {
         Date.now() - lastUse >= OFFER_PROFILE_RESET_INTERVAL_MS) {
       this._resetUnusedProfileNotification();
     }
+
+    this._checkForOldBuildUpdates();
   },
 
   /**
@@ -613,7 +618,6 @@ BrowserGlue.prototype = {
    */
   _onProfileShutdown: function BG__onProfileShutdown() {
     BrowserNewTabPreloader.uninit();
-    UserAgentOverrides.uninit();
     webappsUI.uninit();
     SignInToWebsiteUX.uninit();
     webrtcUI.uninit();

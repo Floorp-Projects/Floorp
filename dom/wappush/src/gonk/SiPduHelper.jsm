@@ -134,18 +134,21 @@ this.PduHelper = {
  */
 const SI_TAG_FIELDS = (function () {
   let names = {};
-  function add(name, number) {
+  function add(name, codepage, number) {
     let entry = {
       name: name,
       number: number,
     };
-    names[number] = entry;
+    if (!names[codepage]) {
+      names[codepage] = {};
+    }
+    names[codepage][number] = entry;
   }
 
-  add("si",           0x05);
-  add("indication",   0x06);
-  add("info",         0x07);
-  add("item",         0x08);
+  add("si",           0,  0x05);
+  add("indication",   0,  0x06);
+  add("info",         0,  0x07);
+  add("item",         0,  0x08);
 
   return names;
 })();
@@ -157,47 +160,53 @@ const SI_TAG_FIELDS = (function () {
  */
 const SI_ATTRIBUTE_FIELDS = (function () {
   let names = {};
-  function add(name, value, number) {
+  function add(name, value, codepage, number) {
     let entry = {
       name: name,
       value: value,
       number: number,
     };
-    names[number] = entry;
+    if (!names[codepage]) {
+      names[codepage] = {};
+    }
+    names[codepage][number] = entry;
   }
 
-  add("action",       "signal-none",    0x05);
-  add("action",       "signal-low",     0x06);
-  add("action",       "signal-medium",  0x07);
-  add("action",       "signal-high",    0x08);
-  add("action",       "delete",         0x09);
-  add("created",      "",               0x0A);
-  add("href",         "",               0x0B);
-  add("href",         "http://",        0x0C);
-  add("href",         "http://www.",    0x0D);
-  add("href",         "https://",       0x0E);
-  add("href",         "https://www.",   0x0F);
-  add("si-expires",   "",               0x10);
-  add("si-id",        "",               0x11);
-  add("class",        "",               0x12);
+  add("action",       "signal-none",    0,  0x05);
+  add("action",       "signal-low",     0,  0x06);
+  add("action",       "signal-medium",  0,  0x07);
+  add("action",       "signal-high",    0,  0x08);
+  add("action",       "delete",         0,  0x09);
+  add("created",      "",               0,  0x0A);
+  add("href",         "",               0,  0x0B);
+  add("href",         "http://",        0,  0x0C);
+  add("href",         "http://www.",    0,  0x0D);
+  add("href",         "https://",       0,  0x0E);
+  add("href",         "https://www.",   0,  0x0F);
+  add("si-expires",   "",               0,  0x10);
+  add("si-id",        "",               0,  0x11);
+  add("class",        "",               0,  0x12);
 
   return names;
 })();
 
 const SI_VALUE_FIELDS = (function () {
   let names = {};
-  function add(value, number) {
+  function add(value, codepage, number) {
     let entry = {
       value: value,
       number: number,
     };
-    names[number] = entry;
+    if (!names[codepage]) {
+      names[codepage] = {};
+    }
+    names[codepage][number] = entry;
   }
 
-  add(".com/",          0x85);
-  add(".edu/",          0x86);
-  add(".net/",          0x87);
-  add(".org/",          0x88);
+  add(".com/",    0,    0x85);
+  add(".edu/",    0,    0x86);
+  add(".net/",    0,    0x87);
+  add(".org/",    0,    0x88);
 
   return names;
 })();

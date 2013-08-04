@@ -493,7 +493,7 @@ public:
     /**
      * Convert a pixel using a cms transform in an endian-aware manner.
      *
-     * Sets 'out' to 'in' if transform is NULL.
+     * Sets 'out' to 'in' if transform is nullptr.
      */
     static void TransformPixel(const gfxRGBA& in, gfxRGBA& out, qcms_transform *transform);
 
@@ -556,6 +556,14 @@ public:
 
     static bool DrawLayerBorders();
     static bool DrawFrameCounter();
+    /**
+     * Returns true if we should use raw memory to send data to the compositor
+     * rather than using shmems.
+     *
+     * This method should not be called from the compositor thread.
+     */
+    bool PreferMemoryOverShmem() const;
+    bool UseDeprecatedTextures() const { return mLayersUseDeprecated; }
 
 protected:
     gfxPlatform();
@@ -659,6 +667,8 @@ private:
     mozilla::RefPtr<mozilla::gfx::DrawEventRecorder> mRecorder;
     bool mWidgetUpdateFlashing;
     uint32_t mOrientationSyncMillis;
+    bool mLayersPreferMemoryOverShmem;
+    bool mLayersUseDeprecated;
 };
 
 #endif /* GFX_PLATFORM_H */

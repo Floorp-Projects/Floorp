@@ -50,9 +50,9 @@ this.UserAgentOverrides = {
   },
 
   getOverrideForURI: function uao_getOverrideForURI(aURI) {
-    if (!gInitialized)
-      return null;
-    if (!(aURI instanceof Ci.nsIStandardURL))
+    if (!gInitialized ||
+        !gOverrides.size ||
+        !(aURI instanceof Ci.nsIStandardURL))
       return null;
 
     let host = aURI.asciiHost;

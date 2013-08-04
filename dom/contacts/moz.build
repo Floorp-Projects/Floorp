@@ -5,7 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 # Android only supports the Contacts API on the Nightly channel.
-if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'android' or CONFIG['NIGHTLY_BUILD']:
+if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'android':
     TEST_DIRS += ['tests']
 
 EXTRA_COMPONENTS += [

@@ -2011,7 +2011,7 @@ nsEventStatus nsWindow::OnTouchEvent(QTouchEvent *event, bool &handled)
         for (int i = touchPoints.count() -1; i >= 0; i--) {
             QPointF fpos = touchPoints[i].pos();
             nsGestureNotifyEvent gestureNotifyEvent(true, NS_GESTURENOTIFY_EVENT_START, this);
-            gestureNotifyEvent.refPoint = nsIntPoint(fpos.x(), fpos.y());
+            gestureNotifyEvent.refPoint = LayoutDeviceIntPoint(fpos.x(), fpos.y());
             DispatchEvent(&gestureNotifyEvent);
         }
     }
@@ -2117,7 +2117,7 @@ nsWindow::DispatchGestureEvent(uint32_t aMsg, uint32_t aDirection,
     nsSimpleGestureEvent mozGesture(true, aMsg, this, 0, 0.0);
     mozGesture.direction = aDirection;
     mozGesture.delta = aDelta;
-    mozGesture.refPoint = aRefPoint;
+    mozGesture.refPoint = LayoutDeviceIntPoint::FromUntyped(aRefPoint);
 
     Qt::KeyboardModifiers modifiers = QApplication::keyboardModifiers();
 
@@ -2582,7 +2582,7 @@ void
 key_event_to_context_menu_event(nsMouseEvent &aEvent,
                                 QKeyEvent *aGdkEvent)
 {
-    aEvent.refPoint = nsIntPoint(0, 0);
+    aEvent.refPoint = LayoutDeviceIntPoint(0, 0);
     aEvent.modifiers = 0;
     aEvent.time = 0;
     aEvent.clickCount = 1;

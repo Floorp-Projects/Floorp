@@ -29,9 +29,9 @@
 #include "mozilla/Likely.h"
 #include <algorithm>
 
-MOZ_STATIC_ASSERT((((1 << nsStyleStructID_Length) - 1) &
-                   ~(NS_STYLE_INHERIT_MASK)) == 0,
-                  "Not enough bits in NS_STYLE_INHERIT_MASK");
+static_assert((((1 << nsStyleStructID_Length) - 1) &
+               ~(NS_STYLE_INHERIT_MASK)) == 0,
+              "Not enough bits in NS_STYLE_INHERIT_MASK");
 
 inline bool IsFixedUnit(const nsStyleCoord& aCoord, bool aEnumOK)
 {
@@ -215,6 +215,7 @@ nsChangeHint nsStyleFont::CalcFontDifference(const nsFont& aFont1, const nsFont&
       (aFont1.variant == aFont2.variant) &&
       (aFont1.weight == aFont2.weight) &&
       (aFont1.stretch == aFont2.stretch) &&
+      (aFont1.smoothing == aFont2.smoothing) &&
       (aFont1.name == aFont2.name) &&
       (aFont1.kerning == aFont2.kerning) &&
       (aFont1.synthesis == aFont2.synthesis) &&
@@ -2100,12 +2101,12 @@ void nsTimingFunction::AssignFromKeyword(int32_t aTimingFunctionType)
       break;
   }
 
-  MOZ_STATIC_ASSERT(NS_STYLE_TRANSITION_TIMING_FUNCTION_EASE == 0 &&
-                    NS_STYLE_TRANSITION_TIMING_FUNCTION_LINEAR == 1 &&
-                    NS_STYLE_TRANSITION_TIMING_FUNCTION_EASE_IN == 2 &&
-                    NS_STYLE_TRANSITION_TIMING_FUNCTION_EASE_OUT == 3 &&
-                    NS_STYLE_TRANSITION_TIMING_FUNCTION_EASE_IN_OUT == 4,
-                    "transition timing function constants not as expected");
+  static_assert(NS_STYLE_TRANSITION_TIMING_FUNCTION_EASE == 0 &&
+                NS_STYLE_TRANSITION_TIMING_FUNCTION_LINEAR == 1 &&
+                NS_STYLE_TRANSITION_TIMING_FUNCTION_EASE_IN == 2 &&
+                NS_STYLE_TRANSITION_TIMING_FUNCTION_EASE_OUT == 3 &&
+                NS_STYLE_TRANSITION_TIMING_FUNCTION_EASE_IN_OUT == 4,
+                "transition timing function constants not as expected");
 
   static const float timingFunctionValues[5][4] = {
     { 0.25f, 0.10f, 0.25f, 1.00f }, // ease

@@ -56,6 +56,10 @@ add_task(function test_save_reload()
     target: getTempFile(TEST_TARGET_FILE_NAME),
   }));
 
+  let legacyDownload = yield promiseStartLegacyDownload();
+  yield legacyDownload.cancel();
+  listForSave.add(legacyDownload);
+
   yield storeForSave.save();
   yield storeForLoad.load();
 
@@ -76,8 +80,8 @@ add_task(function test_save_reload()
                 itemsForLoad[i].source.referrer);
     do_check_eq(itemsForSave[i].target.path,
                 itemsForLoad[i].target.path);
-    do_check_eq(itemsForSave[i].saver.type,
-                itemsForLoad[i].saver.type);
+    do_check_eq(itemsForSave[i].saver.toSerializable(),
+                itemsForLoad[i].saver.toSerializable());
   }
 });
 

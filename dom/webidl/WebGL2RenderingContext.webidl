@@ -6,6 +6,7 @@
  * This IDL depend on WebGLRenderingContext.webidl
  */
 
+[Pref="webgl.enable-prototype-webgl2"]
 interface WebGL2RenderingContext : WebGLRenderingContext {
 
     /* draw buffers */

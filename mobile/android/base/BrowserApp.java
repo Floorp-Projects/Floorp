@@ -111,6 +111,9 @@ abstract public class BrowserApp extends GeckoApp
     private View mHomePagerContainer;
     protected Telemetry.Timer mAboutHomeStartupTimer = null;
 
+    // Set the default session restore value
+    private int mSessionRestore = -1;
+
     private static final int GECKO_TOOLS_MENU = -1;
     private static final int ADDON_MENU_OFFSET = 1000;
     private class MenuItemInfo {
@@ -386,12 +389,23 @@ abstract public class BrowserApp extends GeckoApp
     }
 
     @Override
+    protected int getSessionRestoreState(Bundle savedInstanceState) {
+        if (mSessionRestore > -1) {
+            return mSessionRestore;
+        }
+
+        return super.getSessionRestoreState(savedInstanceState);
+    }
+
+    @Override
     public void onCreate(Bundle savedInstanceState) {
         mAboutHomeStartupTimer = new Telemetry.Timer("FENNEC_STARTUP_TIME_ABOUTHOME");
 
         String args = getIntent().getStringExtra("args");
         if (args != null && args.contains("--guest-mode")) {
             mProfile = GeckoProfile.createGuestProfile(this);
+        } else if (GeckoProfile.maybeCleanupGuestProfile(this)) {
+            mSessionRestore = RESTORE_NORMAL;
         }
 
         super.onCreate(savedInstanceState);
@@ -543,6 +557,19 @@ abstract public class BrowserApp extends GeckoApp
         }
 
         super.onBackPressed();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        unregisterEventListener("Prompt:ShowTop");
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        // Register for Prompt:ShowTop so we can foreground this activity even if it's hidden.
+        registerEventListener("Prompt:ShowTop");
     }
 
     private void showBookmarkDialog() {
@@ -711,6 +738,11 @@ abstract public class BrowserApp extends GeckoApp
         }
         if (mBrowserToolbar != null)
             mBrowserToolbar.onDestroy();
+
+        if (mFindInPageBar != null) {
+            mFindInPageBar.onDestroy();
+            mFindInPageBar = null;
+        }
 
         if (mSharedPreferencesHelper != null) {
             mSharedPreferencesHelper.uninit();
@@ -1098,6 +1130,12 @@ abstract public class BrowserApp extends GeckoApp
                 handleUpdaterLaunch();
             } else if (event.equals("Reader:GoToReadingList")) {
                 openReadingList();
+            } else if (event.equals("Prompt:ShowTop")) {
+                // Bring this activity to front so the prompt is visible..
+                Intent bringToFrontIntent = new Intent();
+                bringToFrontIntent.setClassName(AppConstants.ANDROID_PACKAGE_NAME, AppConstants.BROWSER_INTENT_CLASS);
+                bringToFrontIntent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+                startActivity(bringToFrontIntent);
             } else {
                 super.handleMessage(event, message);
             }
@@ -1882,6 +1920,8 @@ abstract public class BrowserApp extends GeckoApp
                         String args = "";
                         if (type == GuestModeDialog.ENTERING) {
                             args = "--guest-mode";
+                        } else {
+                            GeckoProfile.leaveGuestSession(BrowserApp.this);
                         }
                         doRestart(args);
                         System.exit(0);

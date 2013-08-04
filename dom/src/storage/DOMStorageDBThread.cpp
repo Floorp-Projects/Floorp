@@ -677,7 +677,7 @@ DOMStorageDBThread::TimeUntilFlush()
     return 0; // Do it now regardless the timeout.
   }
 
-  MOZ_STATIC_ASSERT(PR_INTERVAL_NO_TIMEOUT != 0,
+  static_assert(PR_INTERVAL_NO_TIMEOUT != 0,
       "PR_INTERVAL_NO_TIMEOUT must be non-zero");
 
   if (!mDirtyEpoch) {

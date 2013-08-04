@@ -27,8 +27,8 @@ template<typename To, typename From>
 inline To
 BitwiseCast(const From from)
 {
-  MOZ_STATIC_ASSERT(sizeof(From) == sizeof(To),
-                    "To and From must have the same size");
+  static_assert(sizeof(From) == sizeof(To),
+                "To and From must have the same size");
   union {
     From from;
     To to;

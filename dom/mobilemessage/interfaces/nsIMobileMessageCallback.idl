@@ -13,7 +13,7 @@ dictionary SmsThreadListItem
   unsigned long long unreadCount;
 };
 
-[scriptable, builtinclass, uuid(a22d9aae-ee0a-11e2-949e-e770d0d3883f)]
+[scriptable, uuid(ea5fb581-bee7-40a6-b2dc-c98b99a2dc49)]
 interface nsIMobileMessageCallback : nsISupports
 {
   /**

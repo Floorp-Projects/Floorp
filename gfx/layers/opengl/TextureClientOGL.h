@@ -8,9 +8,46 @@
 
 #include "mozilla/layers/TextureClient.h"
 #include "ISurfaceAllocator.h" // For IsSurfaceDescriptorValid
+#include "GLContext.h" // For SharedTextureHandle
+
+#ifdef MOZ_WIDGET_GONK
+#include <ui/GraphicBuffer.h>
+#endif
 
 namespace mozilla {
 namespace layers {
+
+
+
+/**
+ * A TextureClient implementation to share TextureMemory that is already
+ * on the GPU, for the OpenGL backend.
+ */
+class SharedTextureClientOGL : public TextureClient
+{
+public:
+  SharedTextureClientOGL();
+
+  ~SharedTextureClientOGL();
+
+  virtual bool IsAllocated() const MOZ_OVERRIDE;
+
+  virtual bool ToSurfaceDescriptor(SurfaceDescriptor& aOutDescriptor) MOZ_OVERRIDE;
+
+  void InitWith(gl::SharedTextureHandle aHandle,
+                gfx::IntSize aSize,
+                bool aIsCrossProcess = false,
+                bool aInverted = false);
+
+  gfx::IntSize GetSize() const { return mSize; }
+
+protected:
+  gfx::IntSize mSize;
+  gl::SharedTextureHandle mHandle;
+  bool mIsCrossProcess;
+  bool mInverted;
+};
+
 
 class DeprecatedTextureClientSharedOGL : public DeprecatedTextureClient
 {

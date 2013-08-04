@@ -10,7 +10,6 @@ Runs the Mochitest test harness.
 from __future__ import with_statement
 import optparse
 import os
-import os.path
 import sys
 import time
 import traceback
@@ -24,8 +23,10 @@ import urllib2
 from automation import Automation
 from automationutils import getDebuggerInfo, isURL, processLeakLog
 from mochitest_options import MochitestOptions
-
+from manifestparser import TestManifest
 import mozinfo
+import json
+
 import mozlog
 
 log = mozlog.getLogger('Mochitest')
@@ -70,7 +71,7 @@ class MochitestServer:
     env["ASAN_OPTIONS"] = "quarantine_size=1:redzone=32"
 
     if mozinfo.isWin:
-      env["PATH"] = env["PATH"] + ";" + self._xrePath
+      env["PATH"] = env["PATH"] + ";" + str(self._xrePath)
 
     args = ["-g", self._xrePath,
             "-v", "170",
@@ -240,13 +241,37 @@ class MochitestUtilsMixin(object):
           self.urlOpts.append("runOnly=true")
         else:
           self.urlOpts.append("runOnly=false")
+      if options.manifestFile:
+        self.urlOpts.append("manifestFile=%s" % options.manifestFile)
       if options.failureFile:
         self.urlOpts.append("failureFile=%s" % self.getFullPath(options.failureFile))
       if options.runSlower:
         self.urlOpts.append("runSlower=true")
 
   def buildTestPath(self, options):
-    """ Build the url path to the specific test harness and test file or directory """
+    """ Build the url path to the specific test harness and test file or directory
+        Build a manifest of tests to run and write out a json file for the harness to read
+    """
+    if options.manifestFile and os.path.isfile(options.manifestFile):
+      manifest = TestManifest(strict=False)
+      manifest.read(options.manifestFile)
+      # Bug 883858 - return all tests including disabled tests 
+      tests = manifest.active_tests(disabled=False, **mozinfo.info)
+      paths = []
+      for test in tests:
+        tp = test['path'].split(self.getTestRoot(options), 1)[1].strip('/')
+
+        # Filter out tests if we are using --test-path
+        if options.testPath and not tp.startswith(options.testPath):
+          continue
+
+        paths.append({'path': tp})
+
+      # Bug 883865 - add this functionality into manifestDestiny
+      with open('tests.json', 'w') as manifestFile:
+        manifestFile.write(json.dumps({'tests': paths}))
+      options.manifestFile = 'tests.json'
+
     testHost = "http://mochi.test:8888"
     testURL = ("/").join([testHost, self.TEST_PATH, options.testPath])
     if os.path.isfile(os.path.join(self.oldcwd, os.path.dirname(__file__), self.TEST_PATH, options.testPath)) and options.repeat > 0:
@@ -432,14 +457,28 @@ class Mochitest(MochitestUtilsMixin):
     """ create the profile and add optional chrome bits and files if requested """
     if options.browserChrome and options.timeout:
       options.extraPrefs.append("testing.browserTestHarness.timeout=%d" % options.timeout)
-    self.automation.initializeProfile(options.profilePath,
-                                      options.extraPrefs,
-                                      useServerLocations=True,
-                                      prefsPath=os.path.join(SCRIPT_DIR,
-                                                        'profile_data', 'prefs_general.js'))
+
+    # get extensions to install
+    extensions = self.getExtensionsToInstall(options)
+
+    # create a profile
+    appsPath = os.path.join(SCRIPT_DIR, 'profile_data', 'webapps_mochitest.json')
+    appsPath = appsPath if os.path.exists(appsPath) else None
+    prefsPath = os.path.join(SCRIPT_DIR, 'profile_data', 'prefs_general.js')
+    profile = self.automation.initializeProfile(options.profilePath,
+                                                options.extraPrefs,
+                                                useServerLocations=True,
+                                                appsPath=appsPath,
+                                                prefsPath=prefsPath,
+                                                addons=extensions)
+
+    #if we don't do this, the profile object is destroyed when we exit this method
+    self.profile = profile
+    options.profilePath = profile.profile
+
+    manifest = self.addChromeToProfile(options)
     self.copyExtraFilesToProfile(options)
-    self.installExtensionsToProfile(options)
-    return self.addChromeToProfile(options)
+    return manifest
 
   def buildBrowserEnv(self, options):
     """ build the environment variables for the specific test and operating system """

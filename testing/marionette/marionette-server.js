@@ -147,6 +147,7 @@ function MarionetteServerConnection(aPrefix, aTransport, aServer)
   this.curFrame = null; //subframe that currently has focus
   this.importedScripts = FileUtils.getFile('TmpD', ['marionettescriptchrome']);
   this.currentRemoteFrame = null; // a member of remoteFrames
+  this.currentFrameElement = null;
   this.testName = null;
   this.mozBrowserClose = null;
 
@@ -167,7 +168,7 @@ MarionetteServerConnection.prototype = {
       } catch(e) {
         this.conn.send({ error: ("error occurred while processing '" +
                                  aPacket.type),
-                        message: e });
+                        message: e.message });
       }
     } else {
       this.conn.send({ error: "unrecognizedPacketType",
@@ -179,7 +180,7 @@ MarionetteServerConnection.prototype = {
 
   onClosed: function MSC_onClosed(aStatus) {
     this.server._connectionClosed(this);
-    this.deleteSession();
+    this.sessionTearDown();
   },
 
   /**
@@ -262,6 +263,7 @@ MarionetteServerConnection.prototype = {
     messageManager.addMessageListener("Marionette:register", this);
     messageManager.addMessageListener("Marionette:runEmulatorCmd", this);
     messageManager.addMessageListener("Marionette:switchToFrame", this);
+    messageManager.addMessageListener("Marionette:switchedToFrame", this);
   },
 
   /**
@@ -280,6 +282,7 @@ MarionetteServerConnection.prototype = {
     messageManager.removeMessageListener("Marionette:register", this);
     messageManager.removeMessageListener("Marionette:runEmulatorCmd", this);
     messageManager.removeMessageListener("Marionette:switchToFrame", this);
+    messageManager.removeMessageListener("Marionette:switchedToFrame", this);
   },
 
   logRequest: function MDA_logRequest(type, data) {
@@ -1194,6 +1197,23 @@ MarionetteServerConnection.prototype = {
                    command_id);
   },
  
+  getActiveFrame: function MDA_getActiveFrame() {
+    this.command_id = this.getCommandId();
+
+    if (this.context == "chrome") {
+      if (this.curFrame) {
+        let frameUid = this.curBrowser.elementManager.addToKnownElements(this.curFrame.frameElement);
+        this.sendResponse(frameUid, this.command_id);
+      } else {
+        // no current frame, we're at toplevel
+        this.sendResponse(null, this.command_id);
+      }
+    } else {
+      // not chrome
+      this.sendResponse(this.currentFrameElement, this.command_id);
+    }
+  },
+
   /**
    * Switch to a given frame within the current window
    *
@@ -1908,7 +1928,8 @@ MarionetteServerConnection.prototype = {
 
       // if there is only 1 window left, delete the session
       if (numOpenWindows === 1){
-        this.deleteSession();
+        this.sessionTearDown();
+        this.sendOk(command_id);
         return;
       }
 
@@ -1933,8 +1954,7 @@ MarionetteServerConnection.prototype = {
    * all other listeners. The main content listener persists after disconnect (it's the homescreen),
    * and can safely be reused.
    */
-  deleteSession: function MDA_deleteSession() {
-    let command_id = this.command_id = this.getCommandId();
+  sessionTearDown: function MDA_sessionTearDown() {
     if (this.curBrowser != null) {
       if (appName == "B2G") {
         this.globalMessageManager.broadcastAsyncMessage(
@@ -1958,7 +1978,6 @@ MarionetteServerConnection.prototype = {
         winEnum.getNext().messageManager.removeDelayedFrameScript(FRAME_SCRIPT); 
       }
     }
-    this.sendOk(command_id);
     this.removeMessageManagerListeners(this.globalMessageManager);
     this.switchToGlobalMessageManager();
     // reset frame to the top-most frame
@@ -1972,6 +1991,16 @@ MarionetteServerConnection.prototype = {
     }
     catch (e) {
     }
+  },
+
+  /**
+   * Processes the 'deleteSession' request from the client by tearing down
+   * the session and responding 'ok'.
+   */
+  deleteSession: function MDA_sessionTearDown() {
+    let command_id = this.command_id = this.getCommandId();
+    this.sessionTearDown();
+    this.sendOk(command_id);
   },
 
   /**
@@ -2134,6 +2163,10 @@ MarionetteServerConnection.prototype = {
         remoteFrames.push(aFrame);
         this.currentRemoteFrame = aFrame;
         break;
+      case "Marionette:switchedToFrame":
+        logger.info("Switched to frame: " + JSON.stringify(message.json));
+        this.currentFrameElement = message.json.frameValue;
+        break;
       case "Marionette:register":
         // This code processes the content listener's registration information
         // and either accepts the listener, or ignores it
@@ -2227,6 +2260,7 @@ MarionetteServerConnection.prototype.requestTypes = {
   "refresh":  MarionetteServerConnection.prototype.refresh,
   "getWindow":  MarionetteServerConnection.prototype.getWindow,
   "getWindows":  MarionetteServerConnection.prototype.getWindows,
+  "getActiveFrame": MarionetteServerConnection.prototype.getActiveFrame,
   "switchToFrame": MarionetteServerConnection.prototype.switchToFrame,
   "switchToWindow": MarionetteServerConnection.prototype.switchToWindow,
   "deleteSession": MarionetteServerConnection.prototype.deleteSession,
@@ -2388,7 +2422,7 @@ this.MarionetteServer = function MarionetteServer(port, forceLocal) {
   if (forceLocal) {
     flags |= Ci.nsIServerSocket.LoopbackOnly;
   }
-  let socket = new ServerSocket(port, flags, 4);
+  let socket = new ServerSocket(port, flags, 0);
   logger.info("Listening on port " + socket.port + "\n");
   socket.asyncListen(this);
   this.listener = socket;

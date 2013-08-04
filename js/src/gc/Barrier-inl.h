@@ -309,7 +309,7 @@ HeapSlot::HeapSlot(JSObject *obj, Kind kind, uint32_t slot, const Value &v)
     : EncapsulatedValue(v)
 {
     JS_ASSERT(!IsPoisonedValue(v));
-    post(obj, kind, slot);
+    post(obj, kind, slot, v);
 }
 
 inline
@@ -317,7 +317,7 @@ HeapSlot::HeapSlot(JSObject *obj, Kind kind, uint32_t slot, const HeapSlot &s)
     : EncapsulatedValue(s.value)
 {
     JS_ASSERT(!IsPoisonedValue(s.value));
-    post(obj, kind, slot);
+    post(obj, kind, slot, s);
 }
 
 inline
@@ -330,14 +330,14 @@ inline void
 HeapSlot::init(JSObject *obj, Kind kind, uint32_t slot, const Value &v)
 {
     value = v;
-    post(obj, kind, slot);
+    post(obj, kind, slot, v);
 }
 
 inline void
 HeapSlot::init(JSRuntime *rt, JSObject *obj, Kind kind, uint32_t slot, const Value &v)
 {
     value = v;
-    post(rt, obj, kind, slot);
+    post(rt, obj, kind, slot, v);
 }
 
 inline void
@@ -349,7 +349,7 @@ HeapSlot::set(JSObject *obj, Kind kind, uint32_t slot, const Value &v)
     pre();
     JS_ASSERT(!IsPoisonedValue(v));
     value = v;
-    post(obj, kind, slot);
+    post(obj, kind, slot, v);
 }
 
 inline void
@@ -362,35 +362,40 @@ HeapSlot::set(Zone *zone, JSObject *obj, Kind kind, uint32_t slot, const Value &
     pre(zone);
     JS_ASSERT(!IsPoisonedValue(v));
     value = v;
-    post(zone->rt, obj, kind, slot);
+    post(zone->rt, obj, kind, slot, v);
 }
 
 inline void
-HeapSlot::writeBarrierPost(JSObject *obj, Kind kind, uint32_t slot)
+HeapSlot::writeBarrierPost(JSObject *obj, Kind kind, uint32_t slot, Value target)
 {
 #ifdef JSGC_GENERATIONAL
-    obj->runtime()->gcStoreBuffer.putSlot(obj, kind, slot);
+    writeBarrierPost(obj->runtime(), obj, kind, slot, target);
 #endif
 }
 
 inline void
-HeapSlot::writeBarrierPost(JSRuntime *rt, JSObject *obj, Kind kind, uint32_t slot)
+HeapSlot::writeBarrierPost(JSRuntime *rt, JSObject *obj, Kind kind, uint32_t slot, Value target)
 {
 #ifdef JSGC_GENERATIONAL
-    rt->gcStoreBuffer.putSlot(obj, kind, slot);
+    JS_ASSERT_IF(kind == Slot, obj->getSlotAddressUnchecked(slot)->get() == target);
+    JS_ASSERT_IF(kind == Element,
+                 static_cast<HeapSlot *>(obj->getDenseElements() + slot)->get() == target);
+
+    if (target.isObject())
+        rt->gcStoreBuffer.putSlot(obj, kind, slot, &target.toObject());
 #endif
 }
 
 inline void
-HeapSlot::post(JSObject *owner, Kind kind, uint32_t slot)
+HeapSlot::post(JSObject *owner, Kind kind, uint32_t slot, Value target)
 {
-    HeapSlot::writeBarrierPost(owner, kind, slot);
+    HeapSlot::writeBarrierPost(owner, kind, slot, target);
 }
 
 inline void
-HeapSlot::post(JSRuntime *rt, JSObject *owner, Kind kind, uint32_t slot)
+HeapSlot::post(JSRuntime *rt, JSObject *owner, Kind kind, uint32_t slot, Value target)
 {
-    HeapSlot::writeBarrierPost(rt, owner, kind, slot);
+    HeapSlot::writeBarrierPost(rt, owner, kind, slot, target);
 }
 
 #ifdef JSGC_GENERATIONAL

@@ -68,7 +68,8 @@ flyoutpanel[visible] {
 }
 
 .flyoutpanel-contents[input="precise"] {
-  overflow: scroll;
+  overflow-y: scroll;
+  overflow-x: hidden;
 }
 
 .flyout-close-button {
@@ -84,4 +85,8 @@ flyoutpanel[visible] {
 
 .flyout-close-button:active {
   -moz-image-region: rect(0 96px 32px 64px);
+}
+
+.flyout-narrow {
+  width: 346px;
 }

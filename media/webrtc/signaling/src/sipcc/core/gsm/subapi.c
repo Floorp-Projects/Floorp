@@ -53,7 +53,7 @@ sub_send_msg (cprBuffer_t buf, uint32_t cmd, uint16_t len, cc_srcs_t dst_id)
     /* This buffer is assumed to be at least of size int */
     MOZ_ASSERT(len >= sizeof(int));
     if (len < sizeof(int)) {
-        return CPR_FAILURE;
+        return CC_RC_ERROR;
     }
 
     CC_DEBUG_MSG sub_print_msg((char *)buf, len);

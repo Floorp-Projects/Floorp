@@ -1,0 +1,65 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+from marionette_test import MarionetteTestCase
+
+
+class TestSwitchRemoteFrame(MarionetteTestCase):
+    def setUp(self):
+        super(TestSwitchRemoteFrame, self).setUp()
+        self.oop_by_default = self.marionette.execute_script("""
+            try {
+              return SpecialPowers.getBoolPref('dom.ipc.browser_frames.oop_by_default');
+            }
+            catch(e) {}
+            """)
+        self.mozBrowserFramesEnabled = self.marionette.execute_script("""
+            try {
+              return SpecialPowers.getBoolPref('dom.mozBrowserFramesEnabled');
+            }
+            catch(e) {}
+            """)
+        self.marionette.execute_script("""
+            SpecialPowers.setBoolPref('dom.ipc.browser_frames.oop_by_default', true);
+            """)
+        self.marionette.execute_script("""
+            SpecialPowers.setBoolPref('dom.mozBrowserFramesEnabled', true);
+            """)
+
+    def test_remote_frame(self):
+        self.marionette.navigate(self.marionette.absolute_url("test.html"))
+        self.marionette.execute_script("SpecialPowers.addPermission('browser', true, document)")
+        self.marionette.execute_script("""
+            let iframe = document.createElement("iframe");
+            SpecialPowers.wrap(iframe).mozbrowser = true;
+            SpecialPowers.wrap(iframe).remote = true;
+            iframe.id = "remote_iframe";
+            iframe.style.height = "100px";
+            iframe.style.width = "100%%";
+            iframe.src = "%s";
+            document.body.appendChild(iframe);
+            """ % self.marionette.absolute_url("test.html"))
+        self.marionette.switch_to_frame("remote_iframe")
+        main_process = self.marionette.execute_script("""
+            return SpecialPowers.isMainProcess();
+            """)
+        self.assertFalse(main_process)
+
+    def tearDown(self):
+        if self.oop_by_default is None:
+            self.marionette.execute_script("""
+                SpecialPowers.clearUserPref('dom.ipc.browser_frames.oop_by_default');
+                """)
+        else:
+            self.marionette.execute_script("""
+                SpecialPowers.setBoolPref('dom.ipc.browser_frames.oop_by_default', %s);
+                """ % 'true' if self.oop_by_default else 'false')
+        if self.mozBrowserFramesEnabled is None:
+            self.marionette.execute_script("""
+                SpecialPowers.clearUserPref('dom.mozBrowserFramesEnabled');
+                """)
+        else:
+            self.marionette.execute_script("""
+                SpecialPowers.setBoolPref('dom.mozBrowserFramesEnabled', %s);
+                """ % 'true' if self.mozBrowserFramesEnabled else 'false')

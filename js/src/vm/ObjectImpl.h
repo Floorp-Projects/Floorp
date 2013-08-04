@@ -9,7 +9,8 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/GuardObjects.h"
-#include "mozilla/StandardInteger.h"
+
+#include <stdint.h>
 
 #include "jsfriendapi.h"
 #include "jsinfer.h"
@@ -456,8 +457,8 @@ class ElementsHeader
     };
 
     void staticAsserts() {
-        MOZ_STATIC_ASSERT(sizeof(ElementsHeader) == ValuesPerHeader * sizeof(Value),
-                          "Elements size and values-per-Elements mismatch");
+        static_assert(sizeof(ElementsHeader) == ValuesPerHeader * sizeof(Value),
+                      "Elements size and values-per-Elements mismatch");
     }
 
   public:
@@ -637,8 +638,8 @@ struct uint8_clamped {
     }
 
     void staticAsserts() {
-        MOZ_STATIC_ASSERT(sizeof(uint8_clamped) == 1,
-                          "uint8_clamped must be layout-compatible with uint8_t");
+        static_assert(sizeof(uint8_clamped) == 1,
+                      "uint8_clamped must be layout-compatible with uint8_t");
     }
 };
 
@@ -1071,8 +1072,8 @@ class ObjectElements
     uint32_t length;
 
     void staticAsserts() {
-        MOZ_STATIC_ASSERT(sizeof(ObjectElements) == VALUES_PER_HEADER * sizeof(Value),
-                          "Elements size and values-per-Elements mismatch");
+        static_assert(sizeof(ObjectElements) == VALUES_PER_HEADER * sizeof(Value),
+                      "Elements size and values-per-Elements mismatch");
     }
 
     bool shouldConvertDoubleElements() const {
@@ -1125,7 +1126,7 @@ class ObjectElements
 };
 
 /* Shared singleton for objects with no elements. */
-extern HeapSlot *emptyObjectElements;
+extern HeapSlot *const emptyObjectElements;
 
 struct Class;
 struct GCMarker;
@@ -1210,19 +1211,19 @@ class ObjectImpl : public gc::Cell
 
   private:
     static void staticAsserts() {
-        MOZ_STATIC_ASSERT(sizeof(ObjectImpl) == sizeof(shadow::Object),
-                          "shadow interface must match actual implementation");
-        MOZ_STATIC_ASSERT(sizeof(ObjectImpl) % sizeof(Value) == 0,
-                          "fixed slots after an object must be aligned");
+        static_assert(sizeof(ObjectImpl) == sizeof(shadow::Object),
+                      "shadow interface must match actual implementation");
+        static_assert(sizeof(ObjectImpl) % sizeof(Value) == 0,
+                      "fixed slots after an object must be aligned");
 
-        MOZ_STATIC_ASSERT(offsetof(ObjectImpl, shape_) == offsetof(shadow::Object, shape),
-                          "shadow shape must match actual shape");
-        MOZ_STATIC_ASSERT(offsetof(ObjectImpl, type_) == offsetof(shadow::Object, type),
-                          "shadow type must match actual type");
-        MOZ_STATIC_ASSERT(offsetof(ObjectImpl, slots) == offsetof(shadow::Object, slots),
-                          "shadow slots must match actual slots");
-        MOZ_STATIC_ASSERT(offsetof(ObjectImpl, elements) == offsetof(shadow::Object, _1),
-                          "shadow placeholder must match actual elements");
+        static_assert(offsetof(ObjectImpl, shape_) == offsetof(shadow::Object, shape),
+                      "shadow shape must match actual shape");
+        static_assert(offsetof(ObjectImpl, type_) == offsetof(shadow::Object, type),
+                      "shadow type must match actual type");
+        static_assert(offsetof(ObjectImpl, slots) == offsetof(shadow::Object, slots),
+                      "shadow slots must match actual slots");
+        static_assert(offsetof(ObjectImpl, elements) == offsetof(shadow::Object, _1),
+                      "shadow placeholder must match actual elements");
     }
 
     JSObject * asObjectPtr() { return reinterpret_cast<JSObject *>(this); }
@@ -1622,9 +1623,9 @@ class ObjectImpl : public gc::Cell
     }
 
     inline HeapSlot *fixedElements() const {
-        MOZ_STATIC_ASSERT(2 * sizeof(Value) == sizeof(ObjectElements),
-                          "when elements are stored inline, the first two "
-                          "slots will hold the ObjectElements header");
+        static_assert(2 * sizeof(Value) == sizeof(ObjectElements),
+                      "when elements are stored inline, the first two "
+                      "slots will hold the ObjectElements header");
         return &fixedSlots()[2];
     }
 

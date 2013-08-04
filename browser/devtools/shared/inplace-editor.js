@@ -24,15 +24,23 @@
 
 "use strict";
 
-const {Ci, Cu} = require("chrome");
+const {Ci, Cu, Cc} = require("chrome");
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
+const CONTENT_TYPES = {
+  PLAIN_TEXT: 0,
+  CSS_VALUE: 1,
+  CSS_MIXED: 2,
+  CSS_PROPERTY: 3,
+};
+const MAX_POPUP_ENTRIES = 10;
 
 const FOCUS_FORWARD = Ci.nsIFocusManager.MOVEFOCUS_FORWARD;
 const FOCUS_BACKWARD = Ci.nsIFocusManager.MOVEFOCUS_BACKWARD;
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource:///modules/devtools/shared/event-emitter.js");
 
 /**
  * Mark a span editable.  |editableField| will listen for the span to
@@ -160,6 +168,9 @@ function InplaceEditor(aOptions, aEvent)
   this.initial = aOptions.initial ? aOptions.initial : this.elt.textContent;
   this.multiline = aOptions.multiline || false;
   this.stopOnReturn = !!aOptions.stopOnReturn;
+  this.contentType = aOptions.contentType || CONTENT_TYPES.PLAIN_TEXT;
+  this.property = aOptions.property;
+  this.popup = aOptions.popup;
 
   this._onBlur = this._onBlur.bind(this);
   this._onKeyPress = this._onKeyPress.bind(this);
@@ -204,9 +215,13 @@ function InplaceEditor(aOptions, aEvent)
   if (aOptions.start) {
     aOptions.start(this, aEvent);
   }
+
+  EventEmitter.decorate(this);
 }
 
 exports.InplaceEditor = InplaceEditor;
+
+InplaceEditor.CONTENT_TYPES = CONTENT_TYPES;
 
 InplaceEditor.prototype = {
   _createInput: function InplaceEditor_createEditor()
@@ -732,9 +747,39 @@ InplaceEditor.prototype = {
       increment *= smallIncrement;
     }
 
+    let cycling = false;
     if (increment && this._incrementValue(increment) ) {
       this._updateSize();
       prevent = true;
+    } else if (increment && this.popup && this.popup.isOpen) {
+      cycling = true;
+      prevent = true;
+      if (increment > 0) {
+        this.popup.selectPreviousItem();
+      } else {
+        this.popup.selectNextItem();
+      }
+      let input = this.input;
+      let pre = input.value.slice(0, input.selectionStart);
+      let post = input.value.slice(input.selectionEnd, input.value.length);
+      let item = this.popup.selectedItem;
+      let toComplete = item.label.slice(item.preLabel.length);
+      input.value = pre + toComplete + post;
+      input.setSelectionRange(pre.length, pre.length + toComplete.length);
+      this._updateSize();
+      // This emit is mainly for the purpose of making the test flow simpler.
+      this.emit("after-suggest");
+    }
+
+    if (aEvent.keyCode === Ci.nsIDOMKeyEvent.DOM_VK_BACK_SPACE ||
+        aEvent.keyCode === Ci.nsIDOMKeyEvent.DOM_VK_DELETE ||
+        aEvent.keyCode === Ci.nsIDOMKeyEvent.DOM_VK_LEFT ||
+        aEvent.keyCode === Ci.nsIDOMKeyEvent.DOM_VK_RIGHT) {
+      if (this.popup && this.popup.isOpen) {
+        this.popup.hidePopup();
+      }
+    } else if (!cycling) {
+      this._maybeSuggestCompletion();
     }
 
     if (this.multiline &&
@@ -756,9 +801,17 @@ InplaceEditor.prototype = {
         direction = null;
       }
 
+      // Now we don't want to suggest anything as we are moving out.
+      this._preventSuggestions = true;
+
       let input = this.input;
 
       this._apply();
+
+      // Close the popup if open
+      if (this.popup && this.popup.isOpen) {
+        this.popup.hidePopup();
+      }
 
       if (direction !== null && focusManager.focusedElement === input) {
         // If the focused element wasn't changed by the done callback,
@@ -775,6 +828,12 @@ InplaceEditor.prototype = {
       this._clear();
     } else if (aEvent.keyCode === Ci.nsIDOMKeyEvent.DOM_VK_ESCAPE) {
       // Cancel and blur ourselves.
+      // Now we don't want to suggest anything as we are moving out.
+      this._preventSuggestions = true;
+      // Close the popup if open
+      if (this.popup && this.popup.isOpen) {
+        this.popup.hidePopup();
+      }
       prevent = true;
       this.cancelled = true;
       this._apply();
@@ -821,6 +880,108 @@ InplaceEditor.prototype = {
     if (this.change) {
       this.change(this.input.value.trim());
     }
+  },
+
+  /**
+   * Handles displaying suggestions based on the current input.
+   */
+  _maybeSuggestCompletion: function() {
+    // Since we are calling this method from a keypress event handler, the
+    // |input.value| does not include currently typed character. Thus we perform
+    // this method async.
+    this.doc.defaultView.setTimeout(() => {
+      if (this._preventSuggestions) {
+        this._preventSuggestions = false;
+        return;
+      }
+      if (this.contentType == CONTENT_TYPES.PLAIN_TEXT) {
+        return;
+      }
+
+      let input = this.input;
+      // Input can be null in cases when you intantaneously switch out of it.
+      if (!input) {
+        return;
+      }
+      let query = input.value.slice(0, input.selectionStart);
+      let startCheckQuery = query;
+      if (!query) {
+        return;
+      }
+
+      let list = [];
+      if (this.contentType == CONTENT_TYPES.CSS_PROPERTY) {
+        list = CSSPropertyList;
+      } else if (this.contentType == CONTENT_TYPES.CSS_VALUE) {
+        list = domUtils.getCSSValuesForProperty(this.property.name);
+      } else if (this.contentType == CONTENT_TYPES.CSS_MIXED &&
+                 /^\s*style\s*=/.test(query)) {
+        // Detecting if cursor is at property or value;
+        let match = query.match(/([:;"'=]?)\s*([^"';:= ]+)$/);
+        if (match && match.length == 3) {
+          if (match[1] == ":") { // We are in CSS value completion
+            let propertyName =
+              query.match(/[;"'=]\s*([^"';:= ]+)\s*:\s*[^"';:= ]+$/)[1];
+            list = domUtils.getCSSValuesForProperty(propertyName);
+            startCheckQuery = match[2];
+          } else if (match[1]) { // We are in CSS property name completion
+            list = CSSPropertyList;
+            startCheckQuery = match[2];
+          }
+          if (!startCheckQuery) {
+            // This emit is mainly to make the test flow simpler.
+            this.emit("after-suggest", "nothing to autocomplete");
+            return;
+          }
+        }
+      }
+
+      list.some(item => {
+        if (item.startsWith(startCheckQuery)) {
+          input.value = query + item.slice(startCheckQuery.length) +
+                        input.value.slice(query.length);
+          input.setSelectionRange(query.length, query.length + item.length -
+                                                startCheckQuery.length);
+          this._updateSize();
+          return true;
+        }
+      });
+
+      if (!this.popup) {
+        // This emit is mainly to make the test flow simpler.
+        this.emit("after-suggest", "no popup");
+        return;
+      }
+      let finalList = [];
+      let length = list.length;
+      for (let i = 0, count = 0; i < length && count < MAX_POPUP_ENTRIES; i++) {
+        if (list[i].startsWith(startCheckQuery)) {
+          count++;
+          finalList.push({
+            preLabel: startCheckQuery,
+            label: list[i]
+          });
+        }
+        else if (count > 0) {
+          // Since count was incremented, we had already crossed the entries
+          // which would have started with query, assuming that list is sorted.
+          break;
+        }
+        else if (list[i][0] > startCheckQuery[0]) {
+          // We have crossed all possible matches alphabetically.
+          break;
+        }
+      }
+
+      if (finalList.length > 1) {
+        this.popup.setItems(finalList);
+        this.popup.openPopup(this.input);
+      } else {
+        this.popup.hidePopup();
+      }
+      // This emit is mainly for the purpose of making the test flow simpler.
+      this.emit("after-suggest");
+    }, 0);
   }
 };
 
@@ -848,4 +1009,12 @@ function moveFocus(aWin, aDirection)
 
 XPCOMUtils.defineLazyGetter(this, "focusManager", function() {
   return Services.focus;
+});
+
+XPCOMUtils.defineLazyGetter(this, "CSSPropertyList", function() {
+  return domUtils.getCSSPropertyNames(domUtils.INCLUDE_ALIASES).sort();
+});
+
+XPCOMUtils.defineLazyGetter(this, "domUtils", function() {
+  return Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils);
 });

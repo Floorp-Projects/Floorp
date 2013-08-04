@@ -29,6 +29,9 @@
     <!-- Max width of arrow popups on tablets -->
     <dimen name="arrow_popup_width">400dp</dimen>
 
+    <!-- Padding at the top of the site identity popup, when no identity data is available. -->
+    <dimen name="identity_padding_top">5dp</dimen>
+
     <dimen name="doorhanger_input_width">250dp</dimen>
     <dimen name="doorhanger_spinner_textsize">9sp</dimen>
     <dimen name="doorhanger_padding">15dp</dimen>

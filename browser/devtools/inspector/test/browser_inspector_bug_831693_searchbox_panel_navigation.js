@@ -108,6 +108,13 @@ function test()
   }
 
   function checkState(event) {
+    if (event && event.keyCode != event.DOM_VK_UP &&
+        event.keyCode != event.DOM_VK_DOWN) {
+      info("Should wait before server sends the qSA response.");
+      inspector.searchSuggestions._lastQuery
+               .then(() => checkState(), () => checkState());
+      return;
+    }
     if (panelOpeningStates.indexOf(state) != -1 &&
         !inspector.searchSuggestions.searchPopup.isOpen) {
       info("Panel is not open, should wait before it shows up.");

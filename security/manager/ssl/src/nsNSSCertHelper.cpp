@@ -2110,7 +2110,7 @@ nsNSSCertificate::CreateTBSCertificateASN1Struct(nsIASN1Sequence **retSequence,
 }
 
 nsresult
-nsNSSCertificate::CreateASN1Struct()
+nsNSSCertificate::CreateASN1Struct(nsIASN1Object** aRetVal)
 {
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown())
@@ -2118,14 +2118,14 @@ nsNSSCertificate::CreateASN1Struct()
 
   nsCOMPtr<nsIASN1Sequence> sequence = new nsNSSASN1Sequence();
 
-  mASN1Structure = sequence; 
-
   nsCOMPtr<nsIMutableArray> asn1Objects;
   sequence->GetASN1Objects(getter_AddRefs(asn1Objects));
   nsXPIDLCString title;
   GetWindowTitle(getter_Copies(title));
   
-  mASN1Structure->SetDisplayName(NS_ConvertUTF8toUTF16(title));
+  sequence->SetDisplayName(NS_ConvertUTF8toUTF16(title));
+  *aRetVal = sequence.forget().get();
+
   // This sequence will be contain the tbsCertificate, signatureAlgorithm,
   // and signatureValue.
   nsresult rv;
