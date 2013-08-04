@@ -113,8 +113,8 @@ enum TokenKind {
     TOK_GE,
     TOK_RELOP_LAST = TOK_GE,
 
-    TOK_INSTANCEOF,                /* instanceof keyword */
-    TOK_IN,                        /* in keyword */
+    TOK_INSTANCEOF,                /* |instanceof| keyword */
+    TOK_IN,                        /* |in| keyword */
 
     /* Shift ops (<< >> >>>), per TokenKindIsShift */
     TOK_LSH,
@@ -123,11 +123,11 @@ enum TokenKind {
     TOK_URSH,
     TOK_SHIFTOP_LAST = TOK_URSH,
 
-    TOK_PLUS,                      /* plus */
-    TOK_MINUS,                     /* minus */
-    TOK_STAR,                      /* multiply */
-    TOK_DIV,                       /* divide */
-    TOK_MOD,                       /* modulus */
+    TOK_ADD,
+    TOK_SUB,
+    TOK_MUL,
+    TOK_DIV,
+    TOK_MOD,
     TOK_BINOP_LAST = TOK_MOD,
 
     /* Unary operation tokens */

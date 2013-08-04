@@ -1480,7 +1480,7 @@ TokenStream::getTokenInternal(Modifier modifier)
         if (matchChar('+'))
             tt = TOK_INC;
         else
-            tt = matchChar('=') ? TOK_ADDASSIGN : TOK_PLUS;
+            tt = matchChar('=') ? TOK_ADDASSIGN : TOK_ADD;
         goto out;
 
       case '\\':
@@ -1545,7 +1545,7 @@ TokenStream::getTokenInternal(Modifier modifier)
         goto out;
 
       case '*':
-        tt = matchChar('=') ? TOK_MULASSIGN : TOK_STAR;
+        tt = matchChar('=') ? TOK_MULASSIGN : TOK_MUL;
         goto out;
 
       case '/':
@@ -1664,7 +1664,7 @@ TokenStream::getTokenInternal(Modifier modifier)
                 goto skipline;
             tt = TOK_DEC;
         } else {
-            tt = matchChar('=') ? TOK_SUBASSIGN : TOK_MINUS;
+            tt = matchChar('=') ? TOK_SUBASSIGN : TOK_SUB;
         }
         goto out;
 
@@ -1755,9 +1755,9 @@ TokenKindToString(TokenKind tt)
       case TOK_BITOR:           return "TOK_BITOR";
       case TOK_BITXOR:          return "TOK_BITXOR";
       case TOK_BITAND:          return "TOK_BITAND";
-      case TOK_PLUS:            return "TOK_PLUS";
-      case TOK_MINUS:           return "TOK_MINUS";
-      case TOK_STAR:            return "TOK_STAR";
+      case TOK_ADD:             return "TOK_ADD";
+      case TOK_SUB:             return "TOK_SUB";
+      case TOK_MUL:             return "TOK_MUL";
       case TOK_DIV:             return "TOK_DIV";
       case TOK_MOD:             return "TOK_MOD";
       case TOK_INC:             return "TOK_INC";
