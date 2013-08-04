@@ -27,6 +27,9 @@ var gInternalManager = null;
 var gAppInfo = null;
 var gAddonsList;
 
+var gPort = null;
+var gUrlToFileMap = {};
+
 var TEST_UNPACKED = false;
 
 function isNightlyChannel() {
@@ -277,7 +280,7 @@ function do_check_addon(aActualAddon, aExpectedAddon, aProperties) {
         break;
 
       default:
-        if (actualValue !== expectedValue)
+        if (remove_port(actualValue) !== remove_port(expectedValue))
           do_throw("Failed for " + aProperty + " for add-on " + aExpectedAddon.id +
                    " (" + actualValue + " === " + expectedValue + ")");
     }
@@ -337,7 +340,7 @@ function do_check_compatibilityoverride(aActual, aExpected) {
 
 function do_check_icons(aActual, aExpected) {
   for (var size in aExpected) {
-    do_check_eq(aActual[size], aExpected[size]);
+    do_check_eq(remove_port(aActual[size]), remove_port(aExpected[size]));
   }
 }
 
@@ -612,7 +615,7 @@ function createInstallRDF(aData) {
 function writeInstallRDFToDir(aData, aDir, aExtraFile) {
   var rdf = createInstallRDF(aData);
   if (!aDir.exists())
-    aDir.create(AM_Ci.nsIFile.DIRECTORY_TYPE, 0755);
+    aDir.create(AM_Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
   var file = aDir.clone();
   file.append("install.rdf");
   if (file.exists())
@@ -630,7 +633,7 @@ function writeInstallRDFToDir(aData, aDir, aExtraFile) {
 
   file = aDir.clone();
   file.append(aExtraFile);
-  file.create(AM_Ci.nsIFile.NORMAL_FILE_TYPE, 0644);
+  file.create(AM_Ci.nsIFile.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
 }
 
 /**
@@ -662,7 +665,7 @@ function writeInstallRDFForExtension(aData, aDir, aId, aExtraFile) {
   }
 
   if (!dir.exists())
-    dir.create(AM_Ci.nsIFile.DIRECTORY_TYPE, 0755);
+    dir.create(AM_Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
   dir.append(id + ".xpi");
   var rdf = createInstallRDF(aData);
   var stream = AM_Cc["@mozilla.org/io/string-input-stream;1"].
@@ -715,7 +718,7 @@ function manuallyInstall(aXPIFile, aInstallLocation, aID) {
   if (TEST_UNPACKED) {
     let dir = aInstallLocation.clone();
     dir.append(aID);
-    dir.create(AM_Ci.nsIFile.DIRECTORY_TYPE, 0755);
+    dir.create(AM_Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
     let zip = AM_Cc["@mozilla.org/libjar/zip-reader;1"].
               createInstance(AM_Ci.nsIZipReader);
     zip.open(aXPIFile);
@@ -1315,6 +1318,70 @@ do_register_cleanup(function addon_cleanup() {
   } catch (e) {}
 });
 
+/**
+ * Handler function that responds with the interpolated
+ * static file associated to the URL specified by request.path.
+ * This replaces the %PORT% entries in the file with the actual
+ * value of the running server's port (stored in gPort).
+ */
+function interpolateAndServeFile(request, response) {
+  try {
+    let file = gUrlToFileMap[request.path];
+    var data = "";
+    var fstream = Components.classes["@mozilla.org/network/file-input-stream;1"].
+    createInstance(Components.interfaces.nsIFileInputStream);
+    var cstream = Components.classes["@mozilla.org/intl/converter-input-stream;1"].
+    createInstance(Components.interfaces.nsIConverterInputStream);
+    fstream.init(file, -1, 0, 0);
+    cstream.init(fstream, "UTF-8", 0, 0);
+
+    let (str = {}) {
+      let read = 0;
+      do {
+        // read as much as we can and put it in str.value
+        read = cstream.readString(0xffffffff, str);
+        data += str.value;
+      } while (read != 0);
+    }
+    data = data.replace(/%PORT%/g, gPort);
+
+    response.write(data);
+  } catch (e) {
+    do_throw("Exception while serving interpolated file.");
+  } finally {
+    cstream.close(); // this closes fstream as well
+  }
+}
+
+/**
+ * Sets up a path handler for the given URL and saves the
+ * corresponding file in the global url -> file map.
+ *
+ * @param  url
+ *         the actual URL
+ * @param  file
+ *         nsILocalFile representing a static file
+ */
+function mapUrlToFile(url, file, server) {
+  server.registerPathHandler(url, interpolateAndServeFile);
+  gUrlToFileMap[url] = file;
+}
+
+function mapFile(path, server) {
+  mapUrlToFile(path, do_get_file(path), server);
+}
+
+/**
+ * Take out the port number in an URL
+ *
+ * @param url
+ *        String that represents an URL with a port number in it
+ */
+function remove_port(url) {
+  if (typeof url === "string")
+    return url.replace(/:\d+/, "");
+  return url;
+}
 // Wrap a function (typically a callback) to catch and report exceptions
 function do_exception_wrap(func) {
   return function() {

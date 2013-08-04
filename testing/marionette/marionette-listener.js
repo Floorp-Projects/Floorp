@@ -1469,6 +1469,9 @@ function switchToFrame(msg) {
     msg.json.element = null;
   }
   if ((msg.json.value == null) && (msg.json.element == null)) {
+    // returning to root frame
+    sendSyncMessage("Marionette:switchedToFrame", { frameValue: null });
+
     curWindow = content;
     if(msg.json.focus == true) {
       curWindow.focus();
@@ -1531,9 +1534,14 @@ function switchToFrame(msg) {
 
   sandbox = null;
 
+  // send a synchronous message to let the server update the currently active
+  // frame element (for getActiveFrame)
+  let frameValue = elementManager.wrapValue(curWindow.wrappedJSObject)['ELEMENT'];
+  sendSyncMessage("Marionette:switchedToFrame", { frameValue: frameValue });
+
   if (curWindow.contentWindow == null) {
-    // The frame we want to switch to is a remote frame; notify our parent to handle
-    // the switch.
+    // The frame we want to switch to is a remote (out-of-process) frame;
+    // notify our parent to handle the switch.
     curWindow = content;
     sendToServer('Marionette:switchToFrame', {frame: foundFrame,
                                               win: parWindow,

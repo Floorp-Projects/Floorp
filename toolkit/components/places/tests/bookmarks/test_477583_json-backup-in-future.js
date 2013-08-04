@@ -20,11 +20,16 @@ function run_test() {
   dateObj.setYear(dateObj.getFullYear() + 1);
   let name = PlacesBackups.getFilenameForDate(dateObj);
   do_check_eq(name, "bookmarks-" + dateObj.toLocaleFormat("%Y-%m-%d") + ".json");
+  let rx = new RegExp("^" + name.replace(/\.json/, "") + "(_[0-9]+){0,1}\.json$");
+  let files = bookmarksBackupDir.directoryEntries;
+  while (files.hasMoreElements()) {
+    let entry = files.getNext().QueryInterface(Ci.nsIFile);
+    if (entry.leafName.match(rx))
+      entry.remove(false);
+  }
+
   let futureBackupFile = bookmarksBackupDir.clone();
   futureBackupFile.append(name);
-  if (futureBackupFile.exists())
-    futureBackupFile.remove(false);
-  do_check_false(futureBackupFile.exists());
   futureBackupFile.create(Ci.nsILocalFile.NORMAL_FILE_TYPE, 0600);
   do_check_true(futureBackupFile.exists());
 
@@ -36,8 +41,9 @@ function run_test() {
     do_check_eq(PlacesBackups.entries.length, 1);
     let mostRecentBackupFile = PlacesBackups.getMostRecent();
     do_check_neq(mostRecentBackupFile, null);
-    let todayName = PlacesBackups.getFilenameForDate();
-    do_check_eq(mostRecentBackupFile.leafName, todayName);
+    let todayFilename = PlacesBackups.getFilenameForDate();
+    rx = new RegExp("^" + todayFilename.replace(/\.json/, "") + "(_[0-9]+){0,1}\.json$");
+    do_check_true(mostRecentBackupFile.leafName.match(rx).length > 0);
 
     // Check that future backup has been removed.
     do_check_false(futureBackupFile.exists());

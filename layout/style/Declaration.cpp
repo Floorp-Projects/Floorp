@@ -20,8 +20,8 @@ namespace css {
 
 // check that we can fit all the CSS properties into a uint16_t
 // for the mOrder array
-MOZ_STATIC_ASSERT(eCSSProperty_COUNT_no_shorthands - 1 <= UINT16_MAX,
-                  "CSS longhand property numbers no longer fit in a uint16_t");
+static_assert(eCSSProperty_COUNT_no_shorthands - 1 <= UINT16_MAX,
+              "CSS longhand property numbers no longer fit in a uint16_t");
 
 Declaration::Declaration()
   : mImmutable(false)
@@ -481,13 +481,13 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
           MOZ_ASSERT(nsCSSProps::kKeywordTableTable[
                        eCSSProperty_background_clip] ==
                      nsCSSProps::kBackgroundOriginKTable);
-          MOZ_STATIC_ASSERT(NS_STYLE_BG_CLIP_BORDER ==
-                            NS_STYLE_BG_ORIGIN_BORDER &&
-                            NS_STYLE_BG_CLIP_PADDING ==
-                            NS_STYLE_BG_ORIGIN_PADDING &&
-                            NS_STYLE_BG_CLIP_CONTENT ==
-                            NS_STYLE_BG_ORIGIN_CONTENT,
-                            "bg-clip and bg-origin style constants must agree");
+          static_assert(NS_STYLE_BG_CLIP_BORDER ==
+                        NS_STYLE_BG_ORIGIN_BORDER &&
+                        NS_STYLE_BG_CLIP_PADDING ==
+                        NS_STYLE_BG_ORIGIN_PADDING &&
+                        NS_STYLE_BG_CLIP_CONTENT ==
+                        NS_STYLE_BG_ORIGIN_CONTENT,
+                        "bg-clip and bg-origin style constants must agree");
           aValue.Append(PRUnichar(' '));
           origin->mValue.AppendToString(eCSSProperty_background_origin, aValue);
 

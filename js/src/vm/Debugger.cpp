@@ -1312,14 +1312,35 @@ Debugger::fireNewGlobalObject(JSContext *cx, Handle<GlobalObject *> global, Muta
         return handleUncaughtException(ac, false);
 
     RootedValue rv(cx);
+
+    // onNewGlobalObject is infallible, and thus is only allowed to return
+    // undefined as a resumption value. If it returns anything else, we throw.
+    // And if that happens, or if the hook itself throws, we invoke the
+    // uncaughtExceptionHook so that we never leave an exception pending on the
+    // cx. This allows JS_NewGlobalObject to avoid handling failures from debugger
+    // hooks.
     bool ok = Invoke(cx, ObjectValue(*object), ObjectValue(*hook), 1, argv, &rv);
-    return parseResumptionValue(ac, ok, rv, vp);
+    if (ok && !rv.isUndefined()) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                             JSMSG_DEBUG_RESUMPTION_VALUE_DISALLOWED);
+        ok = false;
+    }
+    // NB: Even though we don't care about what goes into it, we have to pass vp
+    // to handleUncaughtException so that it parses resumption values from the
+    // uncaughtExceptionHook and tells the caller whether we should execute the
+    // rest of the onNewGlobalObject hooks or not.
+    JSTrapStatus status = ok ? JSTRAP_CONTINUE
+                             : handleUncaughtException(ac, vp, true);
+    JS_ASSERT(!cx->isExceptionPending());
+    return status;
 }
 
-bool
+void
 Debugger::slowPathOnNewGlobalObject(JSContext *cx, Handle<GlobalObject *> global)
 {
     JS_ASSERT(!JS_CLIST_IS_EMPTY(&cx->runtime()->onNewGlobalObjectWatchers));
+    if (global->compartment()->options().invisibleToDebugger)
+        return;
 
     /*
      * Make a copy of the runtime's onNewGlobalObjectWatchers before running the
@@ -1333,7 +1354,7 @@ Debugger::slowPathOnNewGlobalObject(JSContext *cx, Handle<GlobalObject *> global
         Debugger *dbg = fromOnNewGlobalObjectWatchersLink(link);
         JS_ASSERT(dbg->observesNewGlobalObject());
         if (!watchers.append(dbg->object))
-            return false;
+            return;
     }
 
     JSTrapStatus status = JSTRAP_CONTINUE;
@@ -1342,31 +1363,21 @@ Debugger::slowPathOnNewGlobalObject(JSContext *cx, Handle<GlobalObject *> global
     for (size_t i = 0; i < watchers.length(); i++) {
         Debugger *dbg = fromJSObject(watchers[i]);
 
-        // One Debugger's onNewGlobalObject handler can disable another's, so we
-        // must test this in the loop.
+        // We disallow resumption values from onNewGlobalObject hooks, because we
+        // want the debugger hooks for global object creation to be infallible.
+        // But if an onNewGlobalObject hook throws, and the uncaughtExceptionHook
+        // decides to raise an error, we want to at least avoid invoking the rest
+        // of the onNewGlobalObject handlers in the list (not for any super
+        // compelling reason, just because it seems like the right thing to do).
+        // So we ignore whatever comes out in |value|, but break out of the loop
+        // if a non-success trap status is returned.
         if (dbg->observesNewGlobalObject()) {
             status = dbg->fireNewGlobalObject(cx, global, &value);
             if (status != JSTRAP_CONTINUE && status != JSTRAP_RETURN)
                 break;
         }
     }
-
-    switch (status) {
-      case JSTRAP_CONTINUE:
-      case JSTRAP_RETURN: // Treat return like continue, ignoring the value.
-        return true;
-
-      case JSTRAP_ERROR:
-        JS_ASSERT(!cx->isExceptionPending());
-        return false;
-
-      case JSTRAP_THROW:
-        cx->setPendingException(value);
-        return false;
-
-      default:
-        MOZ_ASSUME_UNREACHABLE("bad status from Debugger::fireNewGlobalObject");
-    }
+    JS_ASSERT(!cx->isExceptionPending());
 }
 
 
@@ -1949,7 +1960,7 @@ Debugger::addAllGlobalsAsDebuggees(JSContext *cx, unsigned argc, Value *vp)
     THIS_DEBUGGER(cx, argc, vp, "addAllGlobalsAsDebuggees", args, dbg);
     AutoDebugModeGC dmgc(cx->runtime());
     for (CompartmentsIter c(cx->runtime()); !c.done(); c.next()) {
-        if (c == dbg->object->compartment())
+        if (c == dbg->object->compartment() || c->options().invisibleToDebugger)
             continue;
         c->zone()->scheduledForDestruction = false;
         GlobalObject *global = c->maybeGlobal();
@@ -2125,7 +2136,16 @@ Debugger::addDebuggeeGlobal(JSContext *cx,
     if (debuggees.has(global))
         return true;
 
+    // Callers should generally be unable to get a reference to a debugger-
+    // invisible global in order to pass it to addDebuggee. But this is possible
+    // with certain testing aides we expose in the shell, so just make addDebuggee
+    // throw in that case.
     JSCompartment *debuggeeCompartment = global->compartment();
+    if (debuggeeCompartment->options().invisibleToDebugger) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                             JSMSG_DEBUG_CANT_DEBUG_GLOBAL);
+        return false;
+    }
 
     /*
      * Check for cycles. If global's compartment is reachable from this
@@ -4194,7 +4214,7 @@ DebuggerGenericEval(JSContext *cx, const char *fullMethodName, const Value &code
         RootedObject opts(cx, &options.toObject());
         RootedValue v(cx);
 
-        if (!JS_GetProperty(cx, opts, "url", v.address()))
+        if (!JS_GetProperty(cx, opts, "url", &v))
             return false;
         if (!v.isUndefined()) {
             RootedString url_str(cx, JS_ValueToString(cx, v));
@@ -4203,7 +4223,7 @@ DebuggerGenericEval(JSContext *cx, const char *fullMethodName, const Value &code
             url = JS_EncodeString(cx, url_str);
         }
 
-        if (!JS_GetProperty(cx, opts, "lineNumber", v.address()))
+        if (!JS_GetProperty(cx, opts, "lineNumber", &v))
             return false;
         if (!v.isUndefined()) {
             uint32_t lineno;

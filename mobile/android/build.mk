@@ -14,10 +14,6 @@ fast-package:
 	@$(MAKE) package MOZ_FAST_PACKAGE=1
 
 ifeq ($(OS_TARGET),Android)
-# $(ADB) is defined in config/android-common.mk, but that file is not
-# in scope when this file is read, so we define it locally.
-ADB=$(ANDROID_PLATFORM_TOOLS)/adb
-
 ifneq ($(MOZ_ANDROID_INSTALL_TARGET),)
 ANDROID_SERIAL = $(MOZ_ANDROID_INSTALL_TARGET)
 endif

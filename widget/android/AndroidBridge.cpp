@@ -707,8 +707,10 @@ AndroidBridge::ShowAlertNotification(const nsAString& aImageUrl,
 
     AutoLocalJNIFrame jniFrame(env);
 
-    if (nsAppShell::gAppShell && aAlertListener)
+    if (nsAppShell::gAppShell && aAlertListener) {
+        // This will remove any observers already registered for this id
         nsAppShell::gAppShell->AddObserver(aAlertName, aAlertListener);
+    }
 
     jvalue args[5];
     args[0].l = NewJavaString(&jniFrame, aImageUrl);
@@ -2850,7 +2852,9 @@ AndroidBridge::HandleLongTap(const CSSIntPoint& aPoint)
 }
 
 void
-AndroidBridge::SendAsyncScrollDOMEvent(const CSSRect& aContentRect, const CSSSize& aScrollableSize)
+AndroidBridge::SendAsyncScrollDOMEvent(mozilla::layers::FrameMetrics::ViewID aScrollId,
+                                       const CSSRect& aContentRect,
+                                       const CSSSize& aScrollableSize)
 {
     // FIXME implement this
 }

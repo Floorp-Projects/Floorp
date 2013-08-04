@@ -9,11 +9,12 @@
 
 #include "mozilla/DebugOnly.h"
 
+#include "jsopcode.h"
+
 #include "ion/arm/Assembler-arm.h"
 #include "ion/IonCaches.h"
 #include "ion/IonFrames.h"
 #include "ion/MoveResolver.h"
-#include "jsopcode.h"
 
 using mozilla::DebugOnly;
 
@@ -44,6 +45,7 @@ class MacroAssemblerARM : public Assembler
         secondScratchReg_ = reg;
     }
 
+    void convertBoolToInt32(Register source, Register dest);
     void convertInt32ToDouble(const Register &src, const FloatRegister &dest);
     void convertInt32ToDouble(const Address &src, FloatRegister dest);
     void convertUInt32ToDouble(const Register &src, const FloatRegister &dest);
@@ -1195,6 +1197,9 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         JS_ASSERT(addr.offset == 0);
         uint32_t scale = Imm32::ShiftOf(addr.scale).value;
         ma_vstr(src, addr.base, addr.index, scale);
+    }
+    void moveDouble(FloatRegister src, FloatRegister dest) {
+        ma_vstr(src, Operand(dest));
     }
 
     void storeFloat(FloatRegister src, Address addr) {

@@ -39,6 +39,7 @@
 using namespace mozilla::dom;
 USING_INDEXEDDB_NAMESPACE
 using mozilla::dom::quota::QuotaManager;
+using mozilla::ErrorResult;
 
 namespace {
 
@@ -91,7 +92,7 @@ NS_IMPL_QUERY_INTERFACE1(StartTransactionRunnable, nsIRunnable)
 // static
 already_AddRefed<IDBTransaction>
 IDBTransaction::CreateInternal(IDBDatabase* aDatabase,
-                               nsTArray<nsString>& aObjectStoreNames,
+                               const Sequence<nsString>& aObjectStoreNames,
                                Mode aMode,
                                bool aDispatchDelayed,
                                bool aIsVersionChangeTransactionChild)
@@ -178,6 +179,8 @@ IDBTransaction::IDBTransaction()
 #endif
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
+  SetIsDOMBinding();
 }
 
 IDBTransaction::~IDBTransaction()
@@ -600,6 +603,8 @@ IDBTransaction::Abort(nsresult aErrorCode)
   return AbortInternal(aErrorCode, error.forget());
 }
 
+NS_IMPL_CYCLE_COLLECTION_CLASS(IDBTransaction)
+
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(IDBTransaction,
                                                   IDBWrapperCache)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDatabase)
@@ -616,9 +621,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(IDBTransaction, IDBWrapperCache)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(IDBTransaction)
-  NS_INTERFACE_MAP_ENTRY(nsIIDBTransaction)
   NS_INTERFACE_MAP_ENTRY(nsIRunnable)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(IDBTransaction)
 NS_INTERFACE_MAP_END_INHERITING(IDBWrapperCache)
 
 NS_IMPL_ADDREF_INHERITED(IDBTransaction, IDBWrapperCache)
@@ -626,59 +629,49 @@ NS_IMPL_RELEASE_INHERITED(IDBTransaction, IDBWrapperCache)
 
 DOMCI_DATA(IDBTransaction, IDBTransaction)
 
-NS_IMPL_EVENT_HANDLER(IDBTransaction, error)
-NS_IMPL_EVENT_HANDLER(IDBTransaction, complete)
-NS_IMPL_EVENT_HANDLER(IDBTransaction, abort)
-
-NS_IMETHODIMP
-IDBTransaction::GetDb(nsIIDBDatabase** aDB)
+JSObject*
+IDBTransaction::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-
-  NS_ADDREF(*aDB = mDatabase);
-  return NS_OK;
+  return IDBTransactionBinding::Wrap(aCx, aScope, this);
 }
 
-NS_IMETHODIMP
-IDBTransaction::GetMode(nsAString& aMode)
+mozilla::dom::IDBTransactionMode
+IDBTransaction::GetMode(ErrorResult& aRv) const
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
   switch (mMode) {
     case READ_ONLY:
-      aMode.AssignLiteral("readonly");
-      break;
+      return mozilla::dom::IDBTransactionMode::Readonly;
+
     case READ_WRITE:
-      aMode.AssignLiteral("readwrite");
-      break;
+      return mozilla::dom::IDBTransactionMode::Readwrite;
+
     case VERSION_CHANGE:
-      aMode.AssignLiteral("versionchange");
-      break;
+      return mozilla::dom::IDBTransactionMode::Versionchange;
 
     case MODE_INVALID:
     default:
-      NS_NOTREACHED("Bad mode value!");
-      return NS_ERROR_UNEXPECTED;
+      aRv.Throw(NS_ERROR_UNEXPECTED);
+      return mozilla::dom::IDBTransactionMode::Readonly;
   }
-
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-IDBTransaction::GetError(nsISupports** aError)
+DOMError*
+IDBTransaction::GetError(ErrorResult& aRv)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
   if (IsOpen()) {
-    return NS_ERROR_DOM_INVALID_STATE_ERR;
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return nullptr;
   }
 
-  NS_IF_ADDREF(*aError = mError);
-  return NS_OK;
+  return mError;
 }
 
-NS_IMETHODIMP
-IDBTransaction::GetObjectStoreNames(nsIDOMDOMStringList** aObjectStores)
+already_AddRefed<nsIDOMDOMStringList>
+IDBTransaction::GetObjectStoreNames(ErrorResult& aRv)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
@@ -698,38 +691,24 @@ IDBTransaction::GetObjectStoreNames(nsIDOMDOMStringList** aObjectStores)
 
   uint32_t count = arrayOfNames->Length();
   for (uint32_t index = 0; index < count; index++) {
-    NS_ENSURE_TRUE(list->Add(arrayOfNames->ElementAt(index)),
-                   NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+    if (!list->Add(arrayOfNames->ElementAt(index))) {
+      NS_WARNING("Failed to add element!");
+      aRv.Throw(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+      return nullptr;
+    }
   }
 
-  list.forget(aObjectStores);
-  return NS_OK;
+  return list.forget();
 }
 
-NS_IMETHODIMP
-IDBTransaction::ObjectStore(const nsAString& aName,
-                            nsIIDBObjectStore** _retval)
-{
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-
-  nsRefPtr<IDBObjectStore> objectStore;
-  nsresult rv = ObjectStoreInternal(aName, getter_AddRefs(objectStore));
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  objectStore.forget(_retval);
-  return NS_OK;
-}
-
-nsresult
-IDBTransaction::ObjectStoreInternal(const nsAString& aName,
-                                    IDBObjectStore** _retval)
+already_AddRefed<IDBObjectStore>
+IDBTransaction::ObjectStore(const nsAString& aName, ErrorResult& aRv)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
   if (IsFinished()) {
-    return NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR;
+    aRv.Throw(NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR);
+    return nullptr;
   }
 
   ObjectStoreInfo* info = nullptr;
@@ -740,23 +719,19 @@ IDBTransaction::ObjectStoreInternal(const nsAString& aName,
   }
 
   if (!info) {
-    return NS_ERROR_DOM_INDEXEDDB_NOT_FOUND_ERR;
+    aRv.Throw(NS_ERROR_DOM_INDEXEDDB_NOT_FOUND_ERR);
+    return nullptr;
   }
 
   nsRefPtr<IDBObjectStore> objectStore =
     GetOrCreateObjectStore(aName, info, false);
-  NS_ENSURE_TRUE(objectStore, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+  if (!objectStore) {
+    NS_WARNING("Failed to get or create object store!");
+    aRv.Throw(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+    return nullptr;
+  }
 
-  objectStore.forget(_retval);
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP
-IDBTransaction::Abort()
-{
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  return AbortInternal(NS_ERROR_DOM_INDEXEDDB_ABORT_ERR, nullptr);
+  return objectStore.forget();
 }
 
 nsresult

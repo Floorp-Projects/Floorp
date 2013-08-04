@@ -14,6 +14,14 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk2':
 DIRS += ['locales']
 TEST_DIRS += ['test']
 
+EXTRA_COMPONENTS += [
+    'CommandLineHandler.js',
+    'ContentPermission.js',
+    'ContentPolicy.js',
+    'DirectoryProvider.js',
+    'components.manifest',
+]
+
 EXTRA_JS_MODULES += [
     'Startup.jsm',
     'WebappRT.jsm',

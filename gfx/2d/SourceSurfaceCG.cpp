@@ -157,12 +157,21 @@ DataSourceSurfaceCG::InitFromData(unsigned char *aData,
                                int32_t aStride,
                                SurfaceFormat aFormat)
 {
+  if (aSize.width <= 0 || aSize.height <= 0) {
+    return false;
+  }
+
   void *data = malloc(aStride * aSize.height);
   memcpy(data, aData, aStride * aSize.height);
 
   mImage = CreateCGImage(data, data, aSize, aStride, aFormat);
 
-  return mImage;
+  if (!mImage) {
+    delete data;
+    return false;
+  }
+
+  return true;
 }
 
 CGContextRef CreateBitmapContextForImage(CGImageRef image)

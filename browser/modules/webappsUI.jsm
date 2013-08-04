@@ -106,15 +106,21 @@ this.webappsUI = {
       label: bundle.getString("webapps.install"),
       accessKey: bundle.getString("webapps.install.accesskey"),
       callback: function() {
-        let app = WebappsInstaller.install(aData);
+        let app = WebappsInstaller.init(aData);
+
         if (app) {
           let localDir = null;
           if (app.appProfile) {
             localDir = app.appProfile.localDir;
           }
 
-          DOMApplicationRegistry.confirmInstall(aData, false, localDir);
-          installationSuccessNotification(app, aWindow);
+          DOMApplicationRegistry.confirmInstall(aData, false, localDir, null,
+            function (aManifest) {
+              if (WebappsInstaller.install(aData, aManifest)) {
+                installationSuccessNotification(aData, app, aWindow);
+              }
+            }
+          );
         } else {
           DOMApplicationRegistry.denyInstall(aData);
         }
@@ -122,7 +128,8 @@ this.webappsUI = {
     };
 
     let requestingURI = aWindow.makeURI(aData.from);
-    let manifest = new ManifestHelper(aData.app.manifest, aData.app.origin);
+    let jsonManifest = aData.isPackage ? aData.app.updateManifest : aData.app.manifest;
+    let manifest = new ManifestHelper(jsonManifest, aData.app.origin);
 
     let host;
     try {
@@ -140,7 +147,15 @@ this.webappsUI = {
   }
 }
 
-function installationSuccessNotification(app, aWindow) {
+function installationSuccessNotification(aData, app, aWindow) {
+  let launcher = {
+    observe: function(aSubject, aTopic) {
+      if (aTopic == "alertclickcallback") {
+        WebappOSUtils.launch(aData.app);
+      }
+    }
+  };
+
   let bundle = aWindow.gNavigatorBundle;
 
   if (("@mozilla.org/alerts-service;1" in Cc)) {
@@ -152,7 +167,7 @@ function installationSuccessNotification(app, aWindow) {
       notifier.showAlertNotification(app.iconURI.spec,
                                     bundle.getString("webapps.install.success"),
                                     app.appNameAsFilename,
-                                    false, null, null);
+                                    true, null, launcher);
 
     } catch (ex) {}
   }

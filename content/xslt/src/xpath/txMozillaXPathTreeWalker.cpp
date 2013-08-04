@@ -22,7 +22,7 @@
 #include "nsAttrName.h"
 #include "nsTArray.h"
 #include "mozilla/dom/Element.h"
-#include "mozilla/StandardInteger.h"
+#include <stdint.h>
 #include <algorithm>
 
 const uint32_t kUnknownIndex = uint32_t(-1);

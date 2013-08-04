@@ -140,7 +140,7 @@ void TestSpecExample()
 
 void TestInvalidEvents()
 {
-  MOZ_STATIC_ASSERT(numeric_limits<float>::has_quiet_NaN, "Platform must have a quiet NaN");
+  static_assert(numeric_limits<float>::has_quiet_NaN, "Platform must have a quiet NaN");
   const float NaN = numeric_limits<float>::quiet_NaN();
   const float Infinity = numeric_limits<float>::infinity();
   Timeline timeline(10.0f);

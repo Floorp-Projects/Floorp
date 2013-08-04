@@ -108,8 +108,8 @@ class SupportsWeakPtrBase
 
   protected:
     ~SupportsWeakPtrBase() {
-      MOZ_STATIC_ASSERT((IsBaseOf<SupportsWeakPtrBase<T, WeakReference>, T>::value),
-                        "T must derive from SupportsWeakPtrBase<T, WeakReference>");
+      static_assert(IsBaseOf<SupportsWeakPtrBase<T, WeakReference>, T>::value,
+                    "T must derive from SupportsWeakPtrBase<T, WeakReference>");
       if (weakRef)
         weakRef->detach();
     }

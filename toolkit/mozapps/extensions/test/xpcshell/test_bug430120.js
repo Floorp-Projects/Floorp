@@ -106,7 +106,8 @@ function run_test() {
   testserver = new HttpServer();
   testserver.registerPathHandler("/1", failHandler);
   testserver.registerPathHandler("/2", pathHandler);
-  testserver.start(4444);
+  testserver.start(-1);
+  gPort = testserver.identity.primaryPort;
 
   // Initialise the blocklist service
   gBlocklist = Components.classes["@mozilla.org/extensions/blocklist;1"]
@@ -119,7 +120,7 @@ function run_test() {
   do_test_pending();
 
   // This should have no effect as the blocklist is disabled
-  Services.prefs.setCharPref(PREF_BLOCKLIST_URL, "http://localhost:4444/1");
+  Services.prefs.setCharPref(PREF_BLOCKLIST_URL, "http://localhost:" + gPort + "/1");
   Services.prefs.setBoolPref(PREF_BLOCKLIST_ENABLED, false);
   timerService.fireTimer(BLOCKLIST_TIMER);
 
@@ -132,7 +133,7 @@ function run_test() {
   defaults.setCharPref(PREF_GENERAL_USERAGENT_LOCALE, "locale");
 
   // This should correctly escape everything
-  Services.prefs.setCharPref(PREF_BLOCKLIST_URL, "http://localhost:4444/2?" +
+  Services.prefs.setCharPref(PREF_BLOCKLIST_URL, "http://localhost:" + gPort + "/2?" +
                      "%APP_ID%&%APP_VERSION%&%PRODUCT%&%VERSION%&%BUILD_ID%&" +
                      "%BUILD_TARGET%&%LOCALE%&%CHANNEL%&" +
                      "%OS_VERSION%&%PLATFORM_VERSION%&%DISTRIBUTION%&%DISTRIBUTION_VERSION%");

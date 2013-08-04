@@ -12,7 +12,7 @@
 #include "frontend/FoldConstants.h"
 #include "frontend/NameFunctions.h"
 #include "frontend/Parser.h"
-#include "ion/AsmJS.h"
+#include "ion/AsmJSLink.h"
 #include "vm/GlobalObject.h"
 
 #include "jsobjinlines.h"
@@ -66,8 +66,8 @@ CheckArgumentsWithinEval(JSContext *cx, Parser<FullParseHandler> &parser, Handle
             return false;
     }
 
-    // It's an error to use |arguments| in a generator expression.
-    if (script->isGeneratorExp) {
+    // It's an error to use |arguments| in a legacy generator expression.
+    if (script->isGeneratorExp && script->isLegacyGenerator) {
         parser.report(ParseError, false, NULL, JSMSG_BAD_GENEXP_BODY, js_arguments_str);
         return false;
     }
@@ -174,7 +174,7 @@ frontend::CompileScript(ExclusiveContext *cx, LifoAlloc *alloc, HandleObject sco
     if (!CheckLength(cx, length))
         return NULL;
     JS_ASSERT_IF(staticLevel != 0, options.sourcePolicy != CompileOptions::LAZY_SOURCE);
-    ScriptSource *ss = cx->new_<ScriptSource>();
+    ScriptSource *ss = cx->new_<ScriptSource>(options.originPrincipals());
     if (!ss)
         return NULL;
     if (options.filename && !ss->setFilename(cx, options.filename))
@@ -444,7 +444,7 @@ frontend::CompileFunctionBody(JSContext *cx, MutableHandleFunction fun, CompileO
 
     if (!CheckLength(cx, length))
         return false;
-    ScriptSource *ss = cx->new_<ScriptSource>();
+    ScriptSource *ss = cx->new_<ScriptSource>(options.originPrincipals());
     if (!ss)
         return false;
     if (options.filename && !ss->setFilename(cx, options.filename))

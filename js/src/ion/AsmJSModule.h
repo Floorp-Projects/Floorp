@@ -14,6 +14,7 @@
 #include "jsscript.h"
 
 #include "gc/Marking.h"
+#include "ion/AsmJS.h"
 #include "ion/IonMacroAssembler.h"
 #if defined(JS_ION_PERF)
 # include "ion/PerfSpewer.h"
@@ -320,35 +321,23 @@ class AsmJSModule
     // This struct holds the data required to do this.
     struct PostLinkFailureInfo
     {
-        JSRuntime *         rt;
-        JSPrincipals *      originPrincipals;
         ScriptSource *      scriptSource;
         uint32_t            bufStart;      // offset of the function body's start
         uint32_t            bufEnd;        // offset of the function body's end
 
         PostLinkFailureInfo()
-          : rt(), originPrincipals(), scriptSource(), bufStart(), bufEnd()
+          : scriptSource(), bufStart(), bufEnd()
         {}
 
-        void init(JSRuntime *rt, JSPrincipals *originPrincipals, ScriptSource *scriptSource,
-                  uint32_t bufStart, uint32_t bufEnd)
-        {
-            JS_ASSERT(!this->rt);
-
-            this->rt               = rt;
-            this->originPrincipals = originPrincipals;
+        void init(ScriptSource *scriptSource, uint32_t bufStart, uint32_t bufEnd) {
+            JS_ASSERT(!this->scriptSource);
             this->scriptSource     = scriptSource;
             this->bufStart         = bufStart;
             this->bufEnd           = bufEnd;
-
-            if (originPrincipals)
-                JS_HoldPrincipals(originPrincipals);
             scriptSource->incref();
         }
 
         ~PostLinkFailureInfo() {
-            if (originPrincipals)
-                JS_DropPrincipals(rt, originPrincipals);
             if (scriptSource)
                 scriptSource->decref();
         }
@@ -359,9 +348,6 @@ class AsmJSModule
     typedef Vector<Global, 0, SystemAllocPolicy> GlobalVector;
     typedef Vector<Exit, 0, SystemAllocPolicy> ExitVector;
     typedef Vector<ion::AsmJSHeapAccess, 0, SystemAllocPolicy> HeapAccessVector;
-#if defined(JS_CPU_ARM)
-    typedef Vector<ion::AsmJSBoundsCheck, 0, SystemAllocPolicy> BoundsCheckVector;
-#endif
     typedef Vector<ion::IonScriptCounts *, 0, SystemAllocPolicy> FunctionCountsVector;
 #if defined(MOZ_VTUNE) or defined(JS_ION_PERF)
     typedef Vector<ProfiledFunction, 0, SystemAllocPolicy> ProfiledFunctionVector;
@@ -371,9 +357,6 @@ class AsmJSModule
     ExitVector                            exits_;
     ExportedFunctionVector                exports_;
     HeapAccessVector                      heapAccesses_;
-#if defined(JS_CPU_ARM)
-    BoundsCheckVector                     boundsChecks_;
-#endif
 #if defined(MOZ_VTUNE)
     ProfiledFunctionVector                profiledFunctions_;
 #endif
@@ -675,33 +658,7 @@ class AsmJSModule
     const ion::AsmJSHeapAccess &heapAccess(unsigned i) const {
         return heapAccesses_[i];
     }
-#if defined(JS_CPU_ARM)
-    bool addBoundsChecks(const ion::AsmJSBoundsCheckVector &checks) {
-        return boundsChecks_.appendAll(checks);
-    }
-    void convertBoundsChecksToActualOffset(ion::MacroAssembler &masm) {
-        for (unsigned i = 0; i < boundsChecks_.length(); i++)
-            boundsChecks_[i].setOffset(masm.actualOffset(boundsChecks_[i].offset()));
-    }
-
-    void patchBoundsChecks(unsigned heapSize) {
-        if (heapSize == 0)
-            return;
-
-        ion::AutoFlushCache afc("patchBoundsCheck");
-        uint32_t bits = mozilla::CeilingLog2(heapSize);
-
-        for (unsigned i = 0; i < boundsChecks_.length(); i++)
-            ion::Assembler::updateBoundsCheck(bits, (ion::Instruction*)(boundsChecks_[i].offset() + code_));
-
-    }
-    unsigned numBoundsChecks() const {
-        return boundsChecks_.length();
-    }
-    const ion::AsmJSBoundsCheck &boundsCheck(unsigned i) const {
-        return boundsChecks_[i];
-    }
-#endif
+    void patchHeapAccesses(ArrayBufferObject *heap, JSContext *cx);
 
     void takeOwnership(JSC::ExecutablePool *pool, uint8_t *code, size_t codeBytes, size_t totalBytes) {
         JS_ASSERT(uintptr_t(code) % AsmJSPageSize == 0);
@@ -749,12 +706,10 @@ class AsmJSModule
     PropertyName *importArgumentName() const { return importArgumentName_; }
     PropertyName *bufferArgumentName() const { return bufferArgumentName_; }
 
-    void initPostLinkFailureInfo(JSRuntime *rt,
-                                 JSPrincipals *originPrincipals,
-                                 ScriptSource *scriptSource,
+    void initPostLinkFailureInfo(ScriptSource *scriptSource,
                                  uint32_t bufStart,
                                  uint32_t bufEnd) {
-        postLinkFailureInfo_.init(rt, originPrincipals, scriptSource, bufStart, bufEnd);
+        postLinkFailureInfo_.init(scriptSource, bufStart, bufEnd);
     }
     const PostLinkFailureInfo &postLinkFailureInfo() const {
         return postLinkFailureInfo_;
@@ -765,20 +720,19 @@ class AsmJSModule
     }
 };
 
+// On success, return an AsmJSModuleClass JSObject that has taken ownership
+// (and release()ed) the given module.
+extern JSObject *
+NewAsmJSModuleObject(JSContext *cx, ScopedJSDeletePtr<AsmJSModule> *module);
+
+// Return whether the given object was created by NewAsmJSModuleObject.
+extern bool
+IsAsmJSModuleObject(JSObject *obj);
 
 // The AsmJSModule C++ object is held by a JSObject that takes care of calling
 // 'trace' and the destructor on finalization.
 extern AsmJSModule &
 AsmJSModuleObjectToModule(JSObject *obj);
-
-extern bool
-IsAsmJSModuleObject(JSObject *obj);
-
-extern JSObject &
-AsmJSModuleObject(JSFunction *moduleFun);
-
-extern void
-SetAsmJSModuleObject(JSFunction *moduleFun, JSObject *moduleObj);
 
 }  // namespace js
 

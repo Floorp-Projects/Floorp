@@ -303,7 +303,7 @@ EventQueue::CoalesceSelChangeEvents(AccSelChangeEvent* aTailEvent,
         aTailEvent->mSelChangeType == AccSelChangeEvent::eSelectionRemove) {
       aTailEvent->mEventRule = AccEvent::eDoNotEmit;
       aThisEvent->mEventType = nsIAccessibleEvent::EVENT_SELECTION;
-      aThisEvent->mPackedEvent = aThisEvent;
+      aThisEvent->mPackedEvent = aTailEvent;
       return;
     }
   }
@@ -470,6 +470,29 @@ EventQueue::ProcessEventQueue()
                                     hyperText);
         }
         continue;
+      }
+
+      // Fire selected state change events in support to selection events.
+      if (event->mEventType == nsIAccessibleEvent::EVENT_SELECTION_ADD) {
+        nsEventShell::FireEvent(event->mAccessible, states::SELECTED,
+                                true, event->mIsFromUserInput);
+
+      } else if (event->mEventType == nsIAccessibleEvent::EVENT_SELECTION_REMOVE) {
+        nsEventShell::FireEvent(event->mAccessible, states::SELECTED,
+                                false, event->mIsFromUserInput);
+
+      } else if (event->mEventType == nsIAccessibleEvent::EVENT_SELECTION) {
+        AccSelChangeEvent* selChangeEvent = downcast_accEvent(event);
+        nsEventShell::FireEvent(event->mAccessible, states::SELECTED,
+                                (selChangeEvent->mSelChangeType == AccSelChangeEvent::eSelectionAdd),
+                                event->mIsFromUserInput);
+
+        if (selChangeEvent->mPackedEvent) {
+          nsEventShell::FireEvent(selChangeEvent->mPackedEvent->mAccessible,
+                                  states::SELECTED,
+                                  (selChangeEvent->mPackedEvent->mSelChangeType == AccSelChangeEvent::eSelectionAdd),
+                                  selChangeEvent->mPackedEvent->mIsFromUserInput);
+        }
       }
 
       nsEventShell::FireEvent(event);

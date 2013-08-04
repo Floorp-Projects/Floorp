@@ -91,7 +91,7 @@ JavaScriptChild::makeId(JSContext *cx, JSObject *obj, ObjectId *idp)
 
     if (!objects_.add(id, obj))
         return false;
-    if (!ids_.add(obj, id))
+    if (!ids_.add(cx, obj, id))
         return false;
 
     *idp = id;
@@ -284,7 +284,7 @@ JavaScriptChild::AnswerDelete(const ObjectId &objId, const nsString &id, ReturnS
         return fail(cx, rs);
 
     RootedValue v(cx);
-    if (!JS_DeletePropertyById2(cx, obj, internedId, v.address()))
+    if (!JS_DeletePropertyById2(cx, obj, internedId, &v))
         return fail(cx, rs);
 
     JSBool b;
@@ -372,7 +372,7 @@ JavaScriptChild::AnswerGet(const ObjectId &objId, const ObjectId &receiverId, co
     if (!convertGeckoStringToId(cx, id, &internedId))
         return fail(cx, rs);
 
-    JS::Value val;
+    JS::Rooted<JS::Value> val(cx);
     if (!JS_ForwardGetPropertyTo(cx, obj, internedId, receiver, &val))
         return fail(cx, rs);
 
@@ -516,7 +516,7 @@ JavaScriptChild::AnswerCall(const ObjectId &objId, const nsTArray<JSParam> &argv
     for (size_t i = 0; i < outobjects.length(); i++) {
         RootedObject obj(cx, &outobjects[i].toObject());
 
-        jsval v;
+        RootedValue v(cx);
         JSBool found;
         if (JS_HasProperty(cx, obj, "value", &found)) {
             if (!JS_GetProperty(cx, obj, "value", &v))

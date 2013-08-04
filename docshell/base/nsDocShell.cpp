@@ -2128,7 +2128,7 @@ nsDocShell::SetUsePrivateBrowsing(bool aUsePrivateBrowsing)
     nsContentUtils::ReportToConsoleNonLocalized(
         NS_LITERAL_STRING("Only internal code is allowed to set the usePrivateBrowsing attribute"),
         nsIScriptError::warningFlag,
-        "Internal API Used",
+        NS_LITERAL_CSTRING("Internal API Used"),
         mContentViewer ? mContentViewer->GetDocument() : nullptr);
 
     return SetPrivateBrowsing(aUsePrivateBrowsing);

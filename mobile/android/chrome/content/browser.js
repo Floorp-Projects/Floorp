@@ -295,6 +295,7 @@ var BrowserApp = {
     Services.obs.addObserver(this, "FormHistory:Init", false);
     Services.obs.addObserver(this, "gather-telemetry", false);
     Services.obs.addObserver(this, "keyword-search", false);
+    Services.obs.addObserver(this, "SelectedText:Get", false);
 
     Services.obs.addObserver(this, "sessionstore-state-purge-complete", false);
 
@@ -1441,6 +1442,14 @@ var BrowserApp = {
         });
         break;
 
+      case "SelectedText:Get":
+        sendMessageToJava({
+          type: "SelectedText:Data",
+          requestId: aData,
+          text: SelectionHandler.getSelectedText()
+        });
+        break;
+
       case "Browser:Quit":
         this.quit();
         break;
@@ -1630,12 +1639,10 @@ var NativeWindow = {
     add: function(aOptions) {
       let id = uuidgen.generateUUID().toString();
       sendMessageToJava({
-        gecko: {
-          type: "PageActions:Add",
-          id: id,
-          title: aOptions.title,
-          icon: aOptions.icon,
-        }
+        type: "PageActions:Add",
+        id: id,
+        title: aOptions.title,
+        icon: resolveGeckoUri(aOptions.icon)
       });
       this._items[id] = {
         clickCallback: aOptions.clickCallback,
@@ -1645,10 +1652,8 @@ var NativeWindow = {
     },
     remove: function(id) {
       sendMessageToJava({
-        gecko: {
-          type: "PageActions:Remove",
-          id: id
-        }
+        type: "PageActions:Remove",
+        id: id
       });
       delete this._items[id];
     }
@@ -2054,6 +2059,8 @@ var NativeWindow = {
 
       this.menuitems = [];
       let menuitemsSet = false;
+
+      Services.obs.notifyObservers(null, "before-build-contextmenu", "");
 
       // now walk up the tree and for each node look for any context menu items that apply
       let element = target;
@@ -3554,6 +3561,7 @@ Tab.prototype = {
             if (!tabURL.startsWith("about:reader")) {
               this.savedArticle = null;
               this.readerEnabled = false;
+              this.readerActive = false;
             } else {
               this.readerActive = true;
             }
@@ -5348,12 +5356,12 @@ let HealthReportStatusListener = {
     return o;
   },
 
-  notifyJava: function (aAddon, aNeedsRestart) {
+  notifyJava: function (aAddon, aNeedsRestart, aAction="Addons:Change") {
     let json = this.jsonForAddon(aAddon);
     if (this._shouldIgnore(aAddon)) {
       json.ignore = true;
     }
-    sendMessageToJava({ type: "Addons:Change", id: aAddon.id, json: json });
+    sendMessageToJava({ type: aAction, id: aAddon.id, json: json });
   },
 
   // Add-on listeners.
@@ -5367,9 +5375,12 @@ let HealthReportStatusListener = {
     this.notifyJava(aAddon, aNeedsRestart);
   },
   onUninstalling: function (aAddon, aNeedsRestart) {
-    this.notifyJava(aAddon, aNeedsRestart);
+    this.notifyJava(aAddon, aNeedsRestart, "Addons:Uninstalling");
   },
   onPropertyChanged: function (aAddon, aProperties) {
+    this.notifyJava(aAddon);
+  },
+  onOperationCancelled: function (aAddon) {
     this.notifyJava(aAddon);
   },
 
@@ -5476,8 +5487,11 @@ var XPInstallObserver = {
     if (needsRestart) {
       this.showRestartPrompt();
     } else {
-      let message = Strings.browser.GetStringFromName("alertAddonsInstalledNoRestart");
-      NativeWindow.toast.show(message, "short");
+      // Display completion message for new installs or updates not done Automatically
+      if (!aInstall.existingAddon || !AddonManager.shouldAutoUpdate(aInstall.existingAddon)) {
+        let message = Strings.browser.GetStringFromName("alertAddonsInstalledNoRestart");
+        NativeWindow.toast.show(message, "short");
+      }
     }
   },
 
@@ -5954,6 +5968,9 @@ var IndexedDB = {
 };
 
 var ClipboardHelper = {
+  // Recorded so search with option can be removed/replaced when default engine changed.
+  _searchMenuItem: -1,
+
   init: function() {
     NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.copy"), ClipboardHelper.getCopyContext(false), ClipboardHelper.copy.bind(ClipboardHelper));
     NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.copyAll"), ClipboardHelper.getCopyContext(true), ClipboardHelper.copy.bind(ClipboardHelper));
@@ -5962,6 +5979,26 @@ var ClipboardHelper = {
     NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.share"), ClipboardHelper.shareContext, ClipboardHelper.share.bind(ClipboardHelper));
     NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.paste"), ClipboardHelper.pasteContext, ClipboardHelper.paste.bind(ClipboardHelper));
     NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.changeInputMethod"), NativeWindow.contextmenus.textContext, ClipboardHelper.inputMethod.bind(ClipboardHelper));
+
+    // We add this contextmenu item right before the menu is built to avoid having to initialise the search service early.
+    Services.obs.addObserver(this, "before-build-contextmenu", false);
+  },
+
+  uninit: function ch_uninit() {
+    Services.obs.removeObserver(this, "before-build-contextmenu");
+  },
+
+  observe: function observe(aSubject, aTopic) {
+    if (aTopic == "before-build-contextmenu") {
+      this._setSearchMenuItem();
+    }
+  },
+
+  _setSearchMenuItem: function setSearchMenuItem() {
+    if (this._searchMenuItem) {
+      NativeWindow.contextmenus.remove(this._searchMenuItem);
+    }
+    this._searchMenuItem = NativeWindow.contextmenus.add(Strings.browser.formatStringFromName("contextmenu.search", [Services.search.defaultEngine.name], 1), ClipboardHelper.searchWithContext, ClipboardHelper.searchWith.bind(ClipboardHelper));
   },
 
   get clipboardHelper() {
@@ -5996,6 +6033,10 @@ var ClipboardHelper = {
 
   selectAll: function(aElement, aX, aY) {
     SelectionHandler.selectAll(aElement, aX, aY);
+  },
+
+  searchWith: function(aElement) {
+    SelectionHandler.searchSelection(aElement);
   },
 
   share: function() {
@@ -6063,6 +6104,12 @@ var ClipboardHelper = {
 
   shareContext: {
     matches: function shareContextMatches(aElement, aX, aY) {
+      return SelectionHandler.shouldShowContextMenu(aX, aY);
+    }
+  },
+
+  searchWithContext: {
+    matches: function searchWithContextMatches(aElement, aX, aY) {
       return SelectionHandler.shouldShowContextMenu(aX, aY);
     }
   },
@@ -6224,6 +6271,9 @@ var IdentityHandler = {
     return result;
   },
 
+  /**
+   * Determines the identity mode corresponding to the icon we show in the urlbar.
+   */
   getIdentityMode: function getIdentityMode(aState) {
     if (aState & Ci.nsIWebProgressListener.STATE_BLOCKED_MIXED_ACTIVE_CONTENT)
       return this.IDENTITY_MODE_MIXED_CONTENT_BLOCKED;
@@ -6270,8 +6320,10 @@ var IdentityHandler = {
     let mode = this.getIdentityMode(aState);
     let result = { mode: mode };
 
-    // We can't to do anything else for pages without identity data
-    if (mode == this.IDENTITY_MODE_UNKNOWN)
+    // Don't show identity data for pages with an unknown identity or if any
+    // mixed content is loaded (mixed display content is loaded by default).
+    if (mode == this.IDENTITY_MODE_UNKNOWN ||
+        aState & Ci.nsIWebProgressListener.STATE_IS_BROKEN)
       return result;
 
     // Ideally we'd just make this a Java string
@@ -6674,10 +6726,9 @@ var WebappsUI = {
   doInstall: function doInstall(aData) {
     let jsonManifest = aData.isPackage ? aData.app.updateManifest : aData.app.manifest;
     let manifest = new ManifestHelper(jsonManifest, aData.app.origin);
-    let name = manifest.name ? manifest.name : manifest.fullLaunchPath();
     let showPrompt = true;
 
-    if (!showPrompt || Services.prompt.confirm(null, Strings.browser.GetStringFromName("webapps.installTitle"), name + "\n" + aData.app.origin)) {
+    if (!showPrompt || Services.prompt.confirm(null, Strings.browser.GetStringFromName("webapps.installTitle"), manifest.name + "\n" + aData.app.origin)) {
       // Get a profile for the app to be installed in. We'll download everything before creating the icons.
       let origin = aData.app.origin;
       let profilePath = sendMessageToJava({
@@ -6689,10 +6740,12 @@ var WebappsUI = {
       if (profilePath) {
         let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
         file.initWithPath(profilePath);
-  
+
         let self = this;
         DOMApplicationRegistry.confirmInstall(aData, false, file, null,
-          function (manifest) {
+          function (aManifest) {
+            let localeManifest = new ManifestHelper(aManifest, aData.app.origin);
+
             // the manifest argument is the manifest from within the zip file,
             // TODO so now would be a good time to ask about permissions.
             self.makeBase64Icon(self.getBiggestIcon(manifest.icons, Services.io.newURI(aData.app.origin, null, null)),
@@ -6712,7 +6765,7 @@ var WebappsUI = {
                   // aData.app.origin may now point to the app: url that hosts this app
                   sendMessageToJava({
                     type: "WebApps:PostInstall",
-                    name: manifest.name,
+                    name: localeManifest.name,
                     manifestURL: aData.app.manifestURL,
                     originalOrigin: origin,
                     origin: aData.app.origin,
@@ -6722,7 +6775,7 @@ var WebappsUI = {
                     // For packaged apps, put a notification in the notification bar.
                     let message = Strings.browser.GetStringFromName("webapps.alertSuccess");
                     let alerts = Cc["@mozilla.org/alerts-service;1"].getService(Ci.nsIAlertsService);
-                    alerts.showAlertNotification("drawable://alert_app", manifest.name, message, true, "", {
+                    alerts.showAlertNotification("drawable://alert_app", localeManifest.name, message, true, "", {
                       observe: function () {
                         self.openURL(aData.app.manifestURL, aData.app.origin);
                       }
@@ -6731,7 +6784,7 @@ var WebappsUI = {
                 } catch(ex) {
                   console.log(ex);
                 }
-                self.writeDefaultPrefs(file, manifest);
+                self.writeDefaultPrefs(file, localeManifest);
               }
             );
           }
@@ -6884,24 +6937,43 @@ var RemoteDebugger = {
 
   /**
    * Prompt the user to accept or decline the incoming connection.
+   * This is passed to DebuggerService.init as a callback.
    *
    * @return true if the connection should be permitted, false otherwise
    */
-  _allowConnection: function rd_allowConnection() {
+  _showConnectionPrompt: function rd_showConnectionPrompt() {
     let title = Strings.browser.GetStringFromName("remoteIncomingPromptTitle");
     let msg = Strings.browser.GetStringFromName("remoteIncomingPromptMessage");
-    let btn = Strings.browser.GetStringFromName("remoteIncomingPromptDisable");
-    let prompt = Services.prompt;
-    let flags = prompt.BUTTON_POS_0 * prompt.BUTTON_TITLE_OK +
-                prompt.BUTTON_POS_1 * prompt.BUTTON_TITLE_CANCEL +
-                prompt.BUTTON_POS_2 * prompt.BUTTON_TITLE_IS_STRING +
-                prompt.BUTTON_POS_1_DEFAULT;
-    let result = prompt.confirmEx(null, title, msg, flags, null, null, btn, null, { value: false });
-    if (result == 0)
+    let disable = Strings.browser.GetStringFromName("remoteIncomingPromptDisable");
+    let cancel = Strings.browser.GetStringFromName("remoteIncomingPromptCancel");
+    let agree = Strings.browser.GetStringFromName("remoteIncomingPromptAccept");
+
+    // Make prompt. Note: button order is in reverse.
+    let prompt = new Prompt({
+      window: null,
+      title: title,
+      message: msg,
+      buttons: [ agree, cancel, disable ],
+      priority: 1
+    });
+
+    // The debugger server expects a synchronous response, so spin on result since Prompt is async.
+    let result = null;
+
+    prompt.show(function(data) {
+      result = data.button;
+    });
+
+    // Spin this thread while we wait for a result.
+    let thread = Services.tm.currentThread;
+    while (result == null)
+      thread.processNextEvent(true);
+
+    if (result === 0)
       return true;
-    if (result == 2) {
-      this._stop();
+    if (result === 2) {
       Services.prefs.setBoolPref("devtools.debugger.remote-enabled", false);
+      this._stop();
     }
     return false;
   },
@@ -6914,7 +6986,7 @@ var RemoteDebugger = {
   _start: function rd_start() {
     try {
       if (!DebuggerServer.initialized) {
-        DebuggerServer.init(this._allowConnection);
+        DebuggerServer.init(this._showConnectionPrompt.bind(this));
         DebuggerServer.addBrowserActors();
         DebuggerServer.addActors("chrome://browser/content/dbg-browser-actors.js");
       }

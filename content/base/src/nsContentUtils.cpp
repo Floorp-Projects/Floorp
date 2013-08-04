@@ -242,6 +242,10 @@ nsIParser* nsContentUtils::sXMLFragmentParser = nullptr;
 nsIFragmentContentSink* nsContentUtils::sXMLFragmentSink = nullptr;
 bool nsContentUtils::sFragmentParsingActive = false;
 
+#if !(defined(DEBUG) || defined(MOZ_ENABLE_JS_DUMP))
+bool nsContentUtils::sDOMWindowDumpEnabled;
+#endif
+
 namespace {
 
 static const char kJSStackContractID[] = "@mozilla.org/js/xpc/ContextStack;1";
@@ -433,6 +437,11 @@ nsContentUtils::Init()
   Preferences::AddUintVarCache(&sHandlingInputTimeout,
                                "dom.event.handling-user-input-time-limit",
                                1000);
+
+#if !(defined(DEBUG) || defined(MOZ_ENABLE_JS_DUMP))
+  Preferences::AddBoolVarCache(&sDOMWindowDumpEnabled,
+                               "browser.dom.window.dump.enabled");
+#endif
 
   Element::InitCCCallbacks();
 
@@ -1649,10 +1658,10 @@ nsContentUtils::TraceSafeJSContext(JSTracer* aTrc)
   if (!cx) {
     return;
   }
-  if (JSObject* global = js::GetDefaultGlobalForContext(cx)) {
+  if (JSObject* global = js::DefaultObjectForContextOrNull(cx)) {
     JS::AssertGCThingMustBeTenured(global);
     JS_CallObjectTracer(aTrc, &global, "safe context");
-    MOZ_ASSERT(global == js::GetDefaultGlobalForContext(cx));
+    MOZ_ASSERT(global == js::DefaultObjectForContextOrNull(cx));
   }
 }
 
@@ -1675,7 +1684,7 @@ nsContentUtils::GetDocumentFromCaller()
   AutoJSContext cx;
 
   nsCOMPtr<nsPIDOMWindow> win =
-    do_QueryInterface(nsJSUtils::GetStaticScriptGlobal(JS_GetGlobalForScopeChain(cx)));
+    do_QueryInterface(nsJSUtils::GetStaticScriptGlobal(JS::CurrentGlobalOrNull(cx)));
   if (!win) {
     return nullptr;
   }
@@ -2958,7 +2967,7 @@ nsresult nsContentUtils::FormatLocalizedString(PropertiesFile aFile,
 
 /* static */ nsresult
 nsContentUtils::ReportToConsole(uint32_t aErrorFlags,
-                                const char *aCategory,
+                                const nsACString& aCategory,
                                 nsIDocument* aDocument,
                                 PropertiesFile aFile,
                                 const char *aMessageName,
@@ -2993,7 +3002,7 @@ nsContentUtils::ReportToConsole(uint32_t aErrorFlags,
 /* static */ nsresult
 nsContentUtils::ReportToConsoleNonLocalized(const nsAString& aErrorText,
                                             uint32_t aErrorFlags,
-                                            const char *aCategory,
+                                            const nsACString& aCategory,
                                             nsIDocument* aDocument,
                                             nsIURI* aURI,
                                             const nsAFlatString& aSourceLine,
@@ -5666,7 +5675,7 @@ nsContentUtils::CreateBlobBuffer(JSContext* aCx,
   } else {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  JS::Rooted<JSObject*> scope(aCx, JS_GetGlobalForScopeChain(aCx));
+  JS::Rooted<JSObject*> scope(aCx, JS::CurrentGlobalOrNull(aCx));
   return nsContentUtils::WrapNative(aCx, scope, blob, aBlob.address(), nullptr,
                                     true);
 }
@@ -6282,24 +6291,6 @@ nsContentUtils::IsInPointerLockContext(nsIDOMWindow* aWin)
 }
 
 // static
-void
-nsContentUtils::ReleaseWrapper(void* aScriptObjectHolder,
-                               nsWrapperCache* aCache)
-{
-  if (aCache->PreservingWrapper()) {
-    // PreserveWrapper puts new DOM bindings in the JS holders hash, but they
-    // can also be in the DOM expando hash, so we need to try to remove them
-    // from both here.
-    JSObject* obj = aCache->GetWrapperPreserveColor();
-    if (aCache->IsDOMBinding() && obj && js::IsProxy(obj)) {
-        DOMProxyHandler::GetAndClearExpandoObject(obj);
-    }
-    aCache->SetPreservingWrapper(false);
-    DropJSObjects(aScriptObjectHolder);
-  }
-}
-
-// static
 int32_t
 nsContentUtils::GetAdjustedOffsetInTextControl(nsIFrame* aOffsetFrame,
                                                int32_t aOffset)
@@ -6422,4 +6413,17 @@ nsContentUtils::InternalIsSupported(nsISupports* aObject,
 
   // Otherwise, we claim to support everything
   return true;
+}
+
+bool
+nsContentUtils::DOMWindowDumpEnabled()
+{
+#if !(defined(DEBUG) || defined(MOZ_ENABLE_JS_DUMP))
+  // In optimized builds we check a pref that controls if we should
+  // enable output from dump() or not, in debug builds it's always
+  // enabled.
+  return nsContentUtils::sDOMWindowDumpEnabled;
+#else
+  return true;
+#endif
 }

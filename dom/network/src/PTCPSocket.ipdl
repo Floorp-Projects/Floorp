@@ -6,6 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 include protocol PNecko;
+include protocol PBrowser;
 
 include "mozilla/net/NeckoMessageUtils.h";
 
@@ -35,15 +36,19 @@ protocol PTCPSocket
   manager PNecko;
 
 parent:
+  Open(nsString host, uint16_t port, bool useSSL, nsString binaryType,
+       nullable PBrowser browser);
   Data(SendableData data);
   Suspend();
   Resume();
   Close();
-  RequestDelete();
 
 child:
   Callback(nsString type, CallbackData data,
            nsString readyState, uint32_t bufferedAmount);
+
+both:
+  RequestDelete();
   __delete__();
 };
 

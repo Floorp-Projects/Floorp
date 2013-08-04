@@ -50,7 +50,7 @@ const HEADER = "/* This Source Code Form is subject to the terms of the Mozilla 
 "/* nsStrictTransportSecurityService.cpp, you shouldn't be #including it.     */\n" +
 "/*****************************************************************************/\n" +
 "\n" +
-"#include \"mozilla/StandardInteger.h\"\n";
+"#include <stdint.h>\n";
 const PREFIX = "\n" +
 "class nsSTSPreload\n" +
 "{\n" +

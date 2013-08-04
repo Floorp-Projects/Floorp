@@ -42,6 +42,9 @@ JSCompartment::JSCompartment(Zone *zone, const JS::CompartmentOptions &options =
     principals(NULL),
     isSystem(false),
     marked(true),
+#ifdef DEBUG
+    firedOnNewGlobalObject(false),
+#endif
     global_(NULL),
     enterCompartmentDepth(0),
     lastCodeRelease(0),
@@ -231,6 +234,7 @@ JSCompartment::wrap(JSContext *cx, MutableHandleValue vp, HandleObject existingA
      * This loses us some transparency, and is generally very cheesy.
      */
     HandleObject global = cx->global();
+    JS_ASSERT(global);
 
     /* Unwrap incoming objects. */
     if (vp.isObject()) {

@@ -360,14 +360,14 @@ MediaPluginReader::ImageBufferCallback::operator()(size_t aWidth, size_t aHeight
     return nullptr;
   }
 
-  nsRefPtr<mozilla::layers::DeprecatedSharedRGBImage> rgbImage;
+  nsRefPtr<Image> rgbImage;
   switch(aColorFormat) {
     case MPAPI::RGB565:
-      rgbImage = mozilla::layers::DeprecatedSharedRGBImage::Create(mImageContainer,
-                                                         nsIntSize(aWidth, aHeight),
-                                                         gfxASurface::ImageFormatRGB16_565);
+      rgbImage = mozilla::layers::CreateSharedRGBImage(mImageContainer,
+                                                       nsIntSize(aWidth, aHeight),
+                                                       gfxASurface::ImageFormatRGB16_565);
       mImage = rgbImage;
-      return rgbImage->GetBuffer();
+      return rgbImage->AsSharedImage()->GetBuffer();
     case MPAPI::YCbCr:
     default:
       NS_NOTREACHED("Color format not supported");

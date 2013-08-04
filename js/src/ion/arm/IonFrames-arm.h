@@ -8,7 +8,6 @@
 #define ion_arm_IonFrames_arm_h
 
 #include "ion/shared/IonFrames-shared.h"
-//#include "ion/arm/Assembler-arm.h"
 
 namespace js {
 namespace ion {

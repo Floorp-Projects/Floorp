@@ -72,8 +72,8 @@ const MEM_HISTOGRAMS = {
   "images-content-used-uncompressed":
     "MEMORY_IMAGES_CONTENT_USED_UNCOMPRESSED",
   "heap-allocated": "MEMORY_HEAP_ALLOCATED",
-  "heap-committed-unused": "MEMORY_HEAP_COMMITTED_UNUSED",
-  "heap-committed-unused-ratio": "MEMORY_HEAP_COMMITTED_UNUSED_RATIO",
+  "heap-overhead": "MEMORY_HEAP_COMMITTED_UNUSED",
+  "heap-overhead-ratio": "MEMORY_HEAP_COMMITTED_UNUSED_RATIO",
   "page-faults-hard": "PAGE_FAULTS_HARD",
   "low-memory-events/virtual": "LOW_MEMORY_EVENTS_VIRTUAL",
   "low-memory-events/physical": "LOW_MEMORY_EVENTS_PHYSICAL",

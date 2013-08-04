@@ -214,6 +214,10 @@
                 onget="return this.webNavigation.currentURI;"
                 readonly="true"/>
 
+      <property name="documentURI"
+                onget="return this.contentDocument.documentURIObject;"
+                readonly="true"/>
+
       <property name="preferences"
                 onget="return this.mPrefs.QueryInterface(Components.interfaces.nsIPrefService);"
                 readonly="true"/>
@@ -237,6 +241,22 @@
             return false;
           ]]>
         </setter>
+      </property>
+
+      <property name="imageDocument"
+                readonly="true">
+        <getter>
+          <![CDATA[
+            var document = this.contentDocument;
+            if (!document || !(document instanceof Ci.nsIImageDocument))
+              return null;
+
+            try {
+                return {width: document.imageRequest.image.width, height: document.imageRequest.image.height };
+            } catch (e) {}
+            return null;
+          ]]>
+        </getter>
       </property>
 
       <property name="isRemoteBrowser"

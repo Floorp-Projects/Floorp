@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: Javascript; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* vim: set ft=javascript ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -235,7 +235,8 @@ ResponsiveUI.prototype = {
     // Removed elements.
     this.container.removeChild(this.toolbar);
     this.stack.removeChild(this.resizer);
-    this.stack.removeChild(this.resizeBar);
+    this.stack.removeChild(this.resizeBarV);
+    this.stack.removeChild(this.resizeBarH);
 
     // Unset the responsive mode.
     this.container.removeAttribute("responsivemode");
@@ -305,7 +306,8 @@ ResponsiveUI.prototype = {
    *  <stack class="browserStack"> From tabbrowser.xml
    *    <browser/>
    *    <box class="devtools-responsiveui-resizehandle" bottom="0" right="0"/>
-   *    <box class="devtools-responsiveui-resizebar" top="0" right="0"/>
+   *    <box class="devtools-responsiveui-resizebarV" top="0" right="0"/>
+   *    <box class="devtools-responsiveui-resizebarH" bottom="0" left="0"/>
    *  </stack>
    * </vbox>
    */
@@ -360,15 +362,22 @@ ResponsiveUI.prototype = {
     this.resizer.setAttribute("bottom", "0");
     this.resizer.onmousedown = this.bound_startResizing;
 
-    this.resizeBar =  this.chromeDoc.createElement("box");
-    this.resizeBar.className = "devtools-responsiveui-resizebar";
-    this.resizeBar.setAttribute("top", "0");
-    this.resizeBar.setAttribute("right", "0");
-    this.resizeBar.onmousedown = this.bound_startResizing;
+    this.resizeBarV =  this.chromeDoc.createElement("box");
+    this.resizeBarV.className = "devtools-responsiveui-resizebarV";
+    this.resizeBarV.setAttribute("top", "0");
+    this.resizeBarV.setAttribute("right", "0");
+    this.resizeBarV.onmousedown = this.bound_startResizing;
+
+    this.resizeBarH =  this.chromeDoc.createElement("box");
+    this.resizeBarH.className = "devtools-responsiveui-resizebarH";
+    this.resizeBarH.setAttribute("bottom", "0");
+    this.resizeBarH.setAttribute("left", "0");
+    this.resizeBarH.onmousedown = this.bound_startResizing;
 
     this.container.insertBefore(this.toolbar, this.stack);
     this.stack.appendChild(this.resizer);
-    this.stack.appendChild(this.resizeBar);
+    this.stack.appendChild(this.resizeBarV);
+    this.stack.appendChild(this.resizeBarH);
   },
 
   /**
@@ -567,7 +576,7 @@ ResponsiveUI.prototype = {
    */
   setSize: function RUI_setSize(aWidth, aHeight) {
     aWidth = Math.min(Math.max(aWidth, MIN_WIDTH), MAX_WIDTH);
-    aHeight = Math.min(Math.max(aHeight, MIN_HEIGHT), MAX_WIDTH);
+    aHeight = Math.min(Math.max(aHeight, MIN_HEIGHT), MAX_HEIGHT);
 
     // We resize the containing stack.
     let style = "max-width: %width;" +
@@ -581,7 +590,9 @@ ResponsiveUI.prototype = {
     this.stack.setAttribute("style", style);
 
     if (!this.ignoreY)
-      this.resizeBar.setAttribute("top", Math.round(aHeight / 2));
+      this.resizeBarV.setAttribute("top", Math.round(aHeight / 2));
+    if (!this.ignoreX)
+      this.resizeBarH.setAttribute("left", Math.round(aWidth / 2));
 
     let selectedPreset = this.menuitems.get(this.selectedItem);
 
@@ -622,7 +633,8 @@ ResponsiveUI.prototype = {
     this.lastScreenX = aEvent.screenX;
     this.lastScreenY = aEvent.screenY;
 
-    this.ignoreY = (aEvent.target === this.resizeBar);
+    this.ignoreY = (aEvent.target === this.resizeBarV);
+    this.ignoreX = (aEvent.target === this.resizeBarH);
 
     this.isResizing = true;
   },
@@ -638,6 +650,8 @@ ResponsiveUI.prototype = {
 
     if (this.ignoreY)
       deltaY = 0;
+    if (this.ignoreX)
+      deltaX = 0;
 
     let width = this.customPreset.width + deltaX;
     let height = this.customPreset.height + deltaY;

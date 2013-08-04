@@ -678,7 +678,7 @@ regexp_test_impl(JSContext *cx, CallArgs args)
 
 /* Separate interface for use by IonMonkey. */
 bool
-js::regexp_test_raw(JSContext *cx, HandleObject regexp, HandleString input, JSBool *result)
+js::regexp_test_raw(JSContext *cx, HandleObject regexp, HandleString input, bool *result)
 {
     MatchPair match;
     MatchConduit conduit(&match);

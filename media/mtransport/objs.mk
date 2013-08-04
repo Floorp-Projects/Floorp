@@ -56,7 +56,6 @@ DEFINES += -DWIN
 endif
 
 DEFINES += \
-   -DR_PLATFORM_INT_TYPES='"mozilla/StandardInteger.h"' \
    -DR_DEFINED_INT2=int16_t -DR_DEFINED_UINT2=uint16_t \
    -DR_DEFINED_INT4=int32_t -DR_DEFINED_UINT4=uint32_t \
    -DR_DEFINED_INT8=int64_t -DR_DEFINED_UINT8=uint64_t \

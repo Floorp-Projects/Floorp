@@ -21,9 +21,9 @@ function ActivityMessageConfigurator() {
 }
 
 ActivityMessageConfigurator.prototype = {
-  get safeToSendBeforeRunningApp() {
-    debug("safeToSendBeforeRunningApp returning false");
-    return false;
+  get mustShowRunningApp() {
+    debug("mustShowRunningApp returning true");
+    return true;
   },
 
   classID: Components.ID("{d2296daa-c406-4c5e-b698-e5f2c1715798}"),

@@ -11,7 +11,7 @@
 #include "MediaDecoderStateMachine.h"
 #include "VideoUtils.h"
 
-#include "mozilla/StandardInteger.h"
+#include <stdint.h>
 #include "mozilla/Util.h"
 #include "mozilla/CheckedInt.h"
 #include <algorithm>

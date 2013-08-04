@@ -128,11 +128,19 @@ ParseDecimalNumber(const JS::TwoByteChars chars);
  * *dp == 0 and *endp == start upon return.
  */
 extern bool
-GetPrefixInteger(ExclusiveContext *cx, const jschar *start, const jschar *end, int base,
+GetPrefixInteger(ThreadSafeContext *cx, const jschar *start, const jschar *end, int base,
                  const jschar **endp, double *dp);
 
+/*
+ * This is like GetPrefixInteger, but only deals with base 10, and doesn't have
+ * and |endp| outparam.  It should only be used when the jschars are known to
+ * only contain digits.
+ */
 extern bool
-StringToNumber(ExclusiveContext *cx, JSString *str, double *result);
+GetDecimalInteger(ExclusiveContext *cx, const jschar *start, const jschar *end, double *dp);
+
+extern bool
+StringToNumber(ThreadSafeContext *cx, JSString *str, double *result);
 
 /* ES5 9.3 ToNumber, overwriting *vp with the appropriate number value. */
 JS_ALWAYS_INLINE bool
@@ -169,7 +177,7 @@ num_parseInt(JSContext *cx, unsigned argc, Value *vp);
  * Return false if out of memory.
  */
 extern JSBool
-js_strtod(js::ExclusiveContext *cx, const jschar *s, const jschar *send,
+js_strtod(js::ThreadSafeContext *cx, const jschar *s, const jschar *send,
           const jschar **ep, double *dp);
 
 extern JSBool
@@ -279,6 +287,49 @@ ToNumber(ExclusiveContext *cx, const Value &v, double *out)
         return true;
     }
     return ToNumberSlow(cx, v, out);
+}
+
+/*
+ * Thread safe variants of number conversion functions.
+ */
+
+bool
+NonObjectToNumberSlow(ThreadSafeContext *cx, Value v, double *out);
+
+inline bool
+NonObjectToNumber(ThreadSafeContext *cx, const Value &v, double *out)
+{
+    if (v.isNumber()) {
+        *out = v.toNumber();
+        return true;
+    }
+    return NonObjectToNumberSlow(cx, v, out);
+}
+
+bool
+NonObjectToInt32Slow(ThreadSafeContext *cx, const Value &v, int32_t *out);
+
+inline bool
+NonObjectToInt32(ThreadSafeContext *cx, const Value &v, int32_t *out)
+{
+    if (v.isInt32()) {
+        *out = v.toInt32();
+        return true;
+    }
+    return NonObjectToInt32Slow(cx, v, out);
+}
+
+bool
+NonObjectToUint32Slow(ThreadSafeContext *cx, const Value &v, uint32_t *out);
+
+JS_ALWAYS_INLINE bool
+NonObjectToUint32(ThreadSafeContext *cx, const Value &v, uint32_t *out)
+{
+    if (v.isInt32()) {
+        *out = uint32_t(v.toInt32());
+        return true;
+    }
+    return NonObjectToUint32Slow(cx, v, out);
 }
 
 } /* namespace js */

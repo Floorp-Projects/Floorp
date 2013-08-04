@@ -69,8 +69,8 @@ function run_test() {
 
   stmt.params.addon_internal_id = 1;
   stmt.params.num = 0;
-  stmt.params.url = "http://localhost:4444/full1-1.png";
-  stmt.params.thumbnailURL = "http://localhost:4444/thumbnail1-1.png";
+  stmt.params.url = "http://localhost/full1-1.png";
+  stmt.params.thumbnailURL = "http://localhost/thumbnail1-1.png";
   stmt.params.caption = "Caption 1 - 1";
   stmt.execute();
   stmt.finalize();
@@ -109,7 +109,7 @@ function run_test() {
       stmt.finalize();
 
       db.close();
-      run_test_2();
+      do_test_finished();
     }
   }, "addon-repository-shutdown", null);
 
@@ -123,40 +123,6 @@ function run_test() {
     do_check_true(aAddon.screenshots[0].thumbnailHeight === null);
     do_check_eq(aAddon.iconURL, undefined);
     do_check_eq(JSON.stringify(aAddon.icons), "{}");
-    AddonRepository.shutdown();
-  });
-}
-
-function run_test_2() {
-  // Write out a minimal database.
-  let db = AM_Cc["@mozilla.org/storage/service;1"].
-           getService(AM_Ci.mozIStorageService).
-           openDatabase(dbfile);
-
-  db.createTable("futuristicSchema",
-                 "id INTEGER, " +
-                 "sharks TEXT, " +
-                 "lasers TEXT");
-
-  db.schemaVersion = 1000;
-  db.close();
-
-  Services.obs.addObserver({
-    observe: function () {
-      Services.obs.removeObserver(this, "addon-repository-shutdown");
-      // Check the DB schema has changed once AddonRepository has freed it.
-      db = AM_Cc["@mozilla.org/storage/service;1"].
-           getService(AM_Ci.mozIStorageService).
-           openDatabase(dbfile);
-      do_check_eq(db.schemaVersion, EXPECTED_SCHEMA_VERSION);
-      db.close();
-      do_test_finished();
-    }
-  }, "addon-repository-shutdown", null);
-
-  // Force a connection to the addon database to be opened.
-  Services.prefs.setBoolPref("extensions.getAddons.cache.enabled", true);
-  AddonRepository.getCachedAddonByID("test1@tests.mozilla.org", function (aAddon) {
     AddonRepository.shutdown();
   });
 }

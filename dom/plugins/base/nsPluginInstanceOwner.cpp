@@ -2225,9 +2225,10 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
         const nsMouseEvent& mouseEvent =
           static_cast<const nsMouseEvent&>(anEvent);
         // Get reference point relative to screen:
-        nsIntPoint rootPoint(-1,-1);
+        LayoutDeviceIntPoint rootPoint(-1, -1);
         if (widget)
-          rootPoint = anEvent.refPoint + widget->WidgetToScreenOffset();
+          rootPoint = anEvent.refPoint +
+            LayoutDeviceIntPoint::FromUntyped(widget->WidgetToScreenOffset());
 #ifdef MOZ_WIDGET_GTK
         Window root = GDK_ROOT_WINDOW();
 #elif defined(MOZ_WIDGET_QT)

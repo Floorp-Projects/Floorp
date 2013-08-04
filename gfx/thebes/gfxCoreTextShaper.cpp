@@ -32,8 +32,8 @@
 using namespace mozilla;
 
 // standard font descriptors that we construct the first time they're needed
-CTFontDescriptorRef gfxCoreTextShaper::sDefaultFeaturesDescriptor = NULL;
-CTFontDescriptorRef gfxCoreTextShaper::sDisableLigaturesDescriptor = NULL;
+CTFontDescriptorRef gfxCoreTextShaper::sDefaultFeaturesDescriptor = nullptr;
+CTFontDescriptorRef gfxCoreTextShaper::sDisableLigaturesDescriptor = nullptr;
 
 gfxCoreTextShaper::gfxCoreTextShaper(gfxMacFont *aFont)
     : gfxFontShaper(aFont)
@@ -41,7 +41,7 @@ gfxCoreTextShaper::gfxCoreTextShaper(gfxMacFont *aFont)
     // Create our CTFontRef
     mCTFont = ::CTFontCreateWithGraphicsFont(aFont->GetCGFontRef(),
                                              aFont->GetAdjustedSize(),
-                                             NULL,
+                                             nullptr,
                                              GetDefaultFeaturesDescriptor());
 
     // Set up the default attribute dictionary that we will need each time we create a CFAttributedString
@@ -214,9 +214,9 @@ gfxCoreTextShaper::SetGlyphsFromRun(gfxShapedText *aShapedText,
     nsAutoArrayPtr<CGGlyph> glyphsArray;
     nsAutoArrayPtr<CGPoint> positionsArray;
     nsAutoArrayPtr<CFIndex> glyphToCharArray;
-    const CGGlyph* glyphs = NULL;
-    const CGPoint* positions = NULL;
-    const CFIndex* glyphToChar = NULL;
+    const CGGlyph* glyphs = nullptr;
+    const CGPoint* positions = nullptr;
+    const CFIndex* glyphToChar = nullptr;
 
     // Testing indicates that CTRunGetGlyphsPtr (almost?) always succeeds,
     // and so allocating a new array and copying data with CTRunGetGlyphs
@@ -260,7 +260,7 @@ gfxCoreTextShaper::SetGlyphsFromRun(gfxShapedText *aShapedText,
     }
 
     double runWidth = ::CTRunGetTypographicBounds(aCTRun, ::CFRangeMake(0, 0),
-                                                  NULL, NULL, NULL);
+                                                  nullptr, nullptr, nullptr);
 
     nsAutoTArray<gfxShapedText::DetailedGlyph,1> detailedGlyphs;
     gfxShapedText::CompressedGlyph g;
@@ -513,7 +513,7 @@ gfxCoreTextShaper::SetGlyphsFromRun(gfxShapedText *aShapedText,
 void
 gfxCoreTextShaper::CreateDefaultFeaturesDescriptor()
 {
-    if (sDefaultFeaturesDescriptor != NULL) {
+    if (sDefaultFeaturesDescriptor != nullptr) {
         return;
     }
 
@@ -586,7 +586,7 @@ gfxCoreTextShaper::CreateDefaultFeaturesDescriptor()
 CTFontRef
 gfxCoreTextShaper::CreateCTFontWithDisabledLigatures(CGFloat aSize)
 {
-    if (sDisableLigaturesDescriptor == NULL) {
+    if (sDisableLigaturesDescriptor == nullptr) {
         // initialize cached descriptor to turn off the Common Ligatures feature
         SInt16 val = kLigaturesType;
         CFNumberRef ligaturesType =
@@ -636,19 +636,19 @@ gfxCoreTextShaper::CreateCTFontWithDisabledLigatures(CGFloat aSize)
     }
 
     gfxMacFont *f = static_cast<gfxMacFont*>(mFont);
-    return ::CTFontCreateWithGraphicsFont(f->GetCGFontRef(), aSize, NULL,
+    return ::CTFontCreateWithGraphicsFont(f->GetCGFontRef(), aSize, nullptr,
                                           sDisableLigaturesDescriptor);
 }
 
 void
 gfxCoreTextShaper::Shutdown() // [static]
 {
-    if (sDisableLigaturesDescriptor != NULL) {
+    if (sDisableLigaturesDescriptor != nullptr) {
         ::CFRelease(sDisableLigaturesDescriptor);
-        sDisableLigaturesDescriptor = NULL;
+        sDisableLigaturesDescriptor = nullptr;
     }        
-    if (sDefaultFeaturesDescriptor != NULL) {
+    if (sDefaultFeaturesDescriptor != nullptr) {
         ::CFRelease(sDefaultFeaturesDescriptor);
-        sDefaultFeaturesDescriptor = NULL;
+        sDefaultFeaturesDescriptor = nullptr;
     }
 }

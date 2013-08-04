@@ -34,7 +34,7 @@ CanvasLayerComposite::~CanvasLayerComposite()
 }
 
 void CanvasLayerComposite::SetCompositableHost(CompositableHost* aHost) {
-  mImageHost = static_cast<ImageHost*>(aHost);
+  mImageHost = aHost;
 }
 
 Layer*
@@ -93,6 +93,8 @@ CanvasLayerComposite::RenderLayer(const nsIntPoint& aOffset,
                         gfx::Point(aOffset.x, aOffset.y),
                         gfx::ToFilter(filter),
                         clipRect);
+
+  LayerManagerComposite::RemoveMaskEffect(mMaskLayer);
 }
 
 CompositableHost*

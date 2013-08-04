@@ -112,6 +112,14 @@ VARIABLES = {
         "modules" if left undefined.
         """),
 
+    'EXTRA_PP_JS_MODULES': (StrictOrderingOnAppendList, list, [],
+        """Additional JavaScript files to distribute.
+
+        This variable contains a list of files to copy into
+        $(FINAL_TARGET)/$(JS_MODULES_PATH), after preprocessing.
+        JS_MODULES_PATH defaults to "modules" if left undefined.
+        """),
+
     'EXTRA_PP_COMPONENTS': (StrictOrderingOnAppendList, list, [],
         """Javascript XPCOM files.
 

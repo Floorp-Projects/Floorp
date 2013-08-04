@@ -128,8 +128,8 @@ template<typename T>
 void CheckUintOverflow()
 {
   // This test is only for integer types smaller than uint32_t
-  MOZ_STATIC_ASSERT(sizeof(T) < sizeof(uint32_t), "This test is only for integer types \
-                    smaller than uint32_t");
+  static_assert(sizeof(T) < sizeof(uint32_t), "This test is only for integer types \
+                smaller than uint32_t");
 
   const size_t numElems = 64; // should be significantly larger than tree leaf size to
                               // ensure we exercise some nontrivial tree-walking

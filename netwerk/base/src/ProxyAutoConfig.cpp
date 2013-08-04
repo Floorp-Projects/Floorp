@@ -13,6 +13,7 @@
 #include "nsThreadUtils.h"
 #include "nsIConsoleService.h"
 #include "nsJSUtils.h"
+#include "jsfriendapi.h"
 #include "prnetdb.h"
 #include "nsITimer.h"
 #include "mozilla/net/DNS.h"
@@ -539,17 +540,21 @@ private:
     JS::CompartmentOptions options;
     options.setZone(JS::SystemZone)
            .setVersion(JSVERSION_LATEST);
-    mGlobal = JS_NewGlobalObject(mContext, &sGlobalClass, nullptr, options);
+    mGlobal = JS_NewGlobalObject(mContext, &sGlobalClass, nullptr,
+                                 JS::DontFireOnNewGlobalHook, options);
     NS_ENSURE_TRUE(mGlobal, NS_ERROR_OUT_OF_MEMORY);
 
     JSAutoCompartment ac(mContext, mGlobal);
-    JS_SetGlobalObject(mContext, mGlobal);
+    js::SetDefaultObjectForContext(mContext, mGlobal);
     JS_InitStandardClasses(mContext, mGlobal);
 
     JS_SetErrorReporter(mContext, PACErrorReporter);
 
     if (!JS_DefineFunctions(mContext, mGlobal, PACGlobalFunctions))
       return NS_ERROR_FAILURE;
+
+    JS::Rooted<JSObject*> rootedGlobal(mContext, mGlobal);
+    JS_FireOnNewGlobalObject(mContext, rootedGlobal);
 
     return NS_OK;
   }

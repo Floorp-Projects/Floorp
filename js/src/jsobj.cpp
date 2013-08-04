@@ -80,7 +80,7 @@ Class JSObject::class_ = {
     JS_ConvertStub
 };
 
-JS_FRIEND_DATA(Class*) js::ObjectClassPtr = &JSObject::class_;
+JS_FRIEND_DATA(Class* const) js::ObjectClassPtr = &JSObject::class_;
 
 JS_FRIEND_API(JSObject *)
 JS_ObjectToInnerObject(JSContext *cx, JSObject *objArg)
@@ -2086,8 +2086,8 @@ JSObject::TradeGuts(JSContext *cx, JSObject *a, JSObject *b, TradeGutsReserved &
          * below, in common with the other case.
          */
         for (size_t i = 0; i < a->numFixedSlots(); ++i) {
-            HeapSlot::writeBarrierPost(cx->runtime(), a, HeapSlot::Slot, i);
-            HeapSlot::writeBarrierPost(cx->runtime(), b, HeapSlot::Slot, i);
+            HeapSlot::writeBarrierPost(cx->runtime(), a, HeapSlot::Slot, i, a->getSlot(i));
+            HeapSlot::writeBarrierPost(cx->runtime(), b, HeapSlot::Slot, i, b->getSlot(i));
         }
 #endif
     } else {

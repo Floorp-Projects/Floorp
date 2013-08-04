@@ -113,20 +113,20 @@ NS_DEFINE_NAMED_CID(NS_LOCALSTORE_CID);
 
 
 static const mozilla::Module::CIDEntry kRDFCIDs[] = {
-    { &kNS_RDFCOMPOSITEDATASOURCE_CID, false, NULL, CreateNewRDFCompositeDataSource },
-    { &kNS_RDFFILESYSTEMDATASOURCE_CID, false, NULL, FileSystemDataSource::Create },
-    { &kNS_RDFINMEMORYDATASOURCE_CID, false, NULL, NS_NewRDFInMemoryDataSource },
-    { &kNS_RDFXMLDATASOURCE_CID, false, NULL, CreateNewRDFXMLDataSource },
-    { &kNS_RDFDEFAULTRESOURCE_CID, false, NULL, CreateNewRDFDefaultResource },
-    { &kNS_RDFCONTENTSINK_CID, false, NULL, CreateNewRDFContentSink },
-    { &kNS_RDFCONTAINER_CID, false, NULL, CreateNewRDFContainer },
-    { &kNS_RDFCONTAINERUTILS_CID, false, NULL, CreateNewRDFContainerUtils },
-    { &kNS_RDFSERVICE_CID, false, NULL, RDFServiceImpl::CreateSingleton },
-    { &kNS_RDFXMLPARSER_CID, false, NULL, nsRDFXMLParser::Create },
-    { &kNS_RDFXMLSERIALIZER_CID, false, NULL, nsRDFXMLSerializer::Create },
-    { &kNS_RDFNTRIPLES_SERIALIZER_CID, false, NULL, CreateNewTriplesSerializer },
-    { &kNS_LOCALSTORE_CID, false, NULL, NS_NewLocalStore },
-    { NULL }
+    { &kNS_RDFCOMPOSITEDATASOURCE_CID, false, nullptr, CreateNewRDFCompositeDataSource },
+    { &kNS_RDFFILESYSTEMDATASOURCE_CID, false, nullptr, FileSystemDataSource::Create },
+    { &kNS_RDFINMEMORYDATASOURCE_CID, false, nullptr, NS_NewRDFInMemoryDataSource },
+    { &kNS_RDFXMLDATASOURCE_CID, false, nullptr, CreateNewRDFXMLDataSource },
+    { &kNS_RDFDEFAULTRESOURCE_CID, false, nullptr, CreateNewRDFDefaultResource },
+    { &kNS_RDFCONTENTSINK_CID, false, nullptr, CreateNewRDFContentSink },
+    { &kNS_RDFCONTAINER_CID, false, nullptr, CreateNewRDFContainer },
+    { &kNS_RDFCONTAINERUTILS_CID, false, nullptr, CreateNewRDFContainerUtils },
+    { &kNS_RDFSERVICE_CID, false, nullptr, RDFServiceImpl::CreateSingleton },
+    { &kNS_RDFXMLPARSER_CID, false, nullptr, nsRDFXMLParser::Create },
+    { &kNS_RDFXMLSERIALIZER_CID, false, nullptr, nsRDFXMLSerializer::Create },
+    { &kNS_RDFNTRIPLES_SERIALIZER_CID, false, nullptr, CreateNewTriplesSerializer },
+    { &kNS_LOCALSTORE_CID, false, nullptr, NS_NewLocalStore },
+    { nullptr }
 };
 
 static const mozilla::Module::ContractIDEntry kRDFContracts[] = {
@@ -143,7 +143,7 @@ static const mozilla::Module::ContractIDEntry kRDFContracts[] = {
     { NS_RDF_CONTRACTID "/xml-serializer;1", &kNS_RDFXMLSERIALIZER_CID },
     { NS_RDF_SERIALIZER "ntriples", &kNS_RDFNTRIPLES_SERIALIZER_CID },
     { NS_LOCALSTORE_CONTRACTID, &kNS_LOCALSTORE_CID },
-    { NULL }
+    { nullptr }
 };
 
 static nsresult
@@ -170,8 +170,8 @@ static const mozilla::Module kRDFModule = {
     mozilla::Module::kVersion,
     kRDFCIDs,
     kRDFContracts,
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
     StartupRDFModule,
     ShutdownRDFModule
 };

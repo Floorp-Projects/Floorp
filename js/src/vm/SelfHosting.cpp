@@ -687,11 +687,12 @@ bool
 JSRuntime::initSelfHosting(JSContext *cx)
 {
     JS_ASSERT(!selfHostingGlobal_);
-    RootedObject savedGlobal(cx, js::GetDefaultGlobalForContext(cx));
-    if (!(selfHostingGlobal_ = JS_NewGlobalObject(cx, &self_hosting_global_class, NULL)))
+    RootedObject savedGlobal(cx, js::DefaultObjectForContextOrNull(cx));
+    if (!(selfHostingGlobal_ = JS_NewGlobalObject(cx, &self_hosting_global_class,
+                                                  NULL, JS::DontFireOnNewGlobalHook)))
         return false;
     JSAutoCompartment ac(cx, selfHostingGlobal_);
-    JS_SetGlobalObject(cx, selfHostingGlobal_);
+    js::SetDefaultObjectForContext(cx, selfHostingGlobal_);
     Rooted<GlobalObject*> shg(cx, &selfHostingGlobal_->as<GlobalObject>());
     /*
      * During initialization of standard classes for the self-hosting global,
@@ -703,6 +704,8 @@ JSRuntime::initSelfHosting(JSContext *cx)
 
     if (!JS_DefineFunctions(cx, shg, intrinsic_functions))
         return false;
+
+    JS_FireOnNewGlobalObject(cx, shg);
 
     /*
      * In self-hosting mode, scripts emit JSOP_CALLINTRINSIC instead of
@@ -758,7 +761,7 @@ JSRuntime::initSelfHosting(JSContext *cx)
         ok = Evaluate(cx, shg, options, src, srcLen, &rv);
     }
     JS_SetErrorReporter(cx, oldReporter);
-    JS_SetGlobalObject(cx, savedGlobal);
+    js::SetDefaultObjectForContext(cx, savedGlobal);
     return ok;
 }
 
@@ -830,6 +833,21 @@ CloneProperties(JSContext *cx, HandleObject obj, HandleObject clone, CloneMemory
     return true;
 }
 
+static gc::AllocKind
+GetObjectAllocKindForClone(JSRuntime *rt, JSObject *obj)
+{
+    if (!gc::IsInsideNursery(rt, (void *)obj))
+        return obj->tenuredGetAllocKind();
+
+    if (obj->is<JSFunction>())
+        return obj->as<JSFunction>().getAllocKind();
+
+    gc::AllocKind kind = gc::GetGCObjectFixedSlotsKind(obj->numFixedSlots());
+    if (CanBeFinalizedInBackground(kind, obj->getClass()))
+        kind = GetBackgroundAllocKind(kind);
+    return kind;
+}
+
 static JSObject *
 CloneObject(JSContext *cx, HandleObject srcObj, CloneMemory &clonedObjects)
 {
@@ -869,7 +887,8 @@ CloneObject(JSContext *cx, HandleObject srcObj, CloneMemory &clonedObjects)
     } else {
         JS_ASSERT(srcObj->isNative());
         clone = NewObjectWithGivenProto(cx, srcObj->getClass(), NULL, cx->global(),
-                                        srcObj->tenuredGetAllocKind(), SingletonObject);
+                                        GetObjectAllocKindForClone(cx->runtime(), srcObj),
+                                        SingletonObject);
     }
     if (!clone || !clonedObjects.relookupOrAdd(p, srcObj.get(), clone.get()) ||
         !CloneProperties(cx, srcObj, clone, clonedObjects))

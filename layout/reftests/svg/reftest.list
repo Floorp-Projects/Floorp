@@ -76,7 +76,7 @@ fuzzy-if(/^Windows\x20NT\x206\.[12]/.test(http.oscpu),1,5) fuzzy-if(azureQuartz,
 fuzzy-if(Android,4,87) skip-if(B2G) == dynamic-clipPath-01.svg pass.svg
 == dynamic-clipPath-02.svg pass.svg
 == dynamic-feFlood-01.svg pass.svg
-== dynamic-feImage-01.svg pass.svg
+random-if(gtk2Widget) == dynamic-feImage-01.svg pass.svg # intermittent failures (bug 886080)
 == dynamic-fill-01.svg dynamic-fill-01-ref.svg
 skip-if(B2G) fuzzy-if(d2d,1,10000) == dynamic-filter-contents-01a.svg dynamic-filter-contents-01-ref.svg
 skip-if(B2G) fuzzy-if(d2d,1,10000) == dynamic-filter-contents-01b.svg dynamic-filter-contents-01-ref.svg
@@ -365,3 +365,4 @@ skip-if(B2G) == tspan-xy-anchor-end-01.svg tspan-xy-anchor-end-ref.svg # bug 773
 == svg-effects-area-zoomed-in.xhtml svg-effects-area-zoomed-in-ref.xhtml
 == svg-effects-area-zoomed-out.xhtml svg-effects-area-zoomed-out-ref.xhtml
 == href-attr-change-restyles.svg href-attr-change-restyles-ref.svg
+== mask-img.html mask-img-ref.html

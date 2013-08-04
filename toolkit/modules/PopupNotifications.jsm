@@ -21,6 +21,18 @@ const PREF_SECURITY_DELAY = "security.notification_enable_delay";
 let popupNotificationsMap = new WeakMap();
 let gNotificationParents = new WeakMap;
 
+function getAnchorFromBrowser(aBrowser) {
+  let anchor = aBrowser.getAttribute("popupnotificationanchor") ||
+                aBrowser.popupnotificationanchor;
+  if (anchor) {
+    if (anchor instanceof Ci.nsIDOMXULElement) {
+      return anchor;
+    }
+    return aBrowser.ownerDocument.getElementById(anchor);
+  }
+  return null;
+}
+
 /**
  * Notification object describes a single popup notification.
  *
@@ -60,16 +72,7 @@ Notification.prototype = {
   get anchorElement() {
     let iconBox = this.owner.iconBox;
 
-    let anchorElement = null;
-    let anchor = this.browser.getAttribute("popupnotificationanchor") ||
-                 this.browser.popupnotificationanchor;
-    if (anchor) {
-      if (anchor instanceof Ci.nsIDOMXULElement) {
-        anchorElement = anchor;
-      } else {
-        anchorElement = this.browser.ownerDocument.getElementById(anchor);
-      }
-    }
+    let anchorElement = getAnchorFromBrowser(this.browser);
 
     if (!iconBox)
       return anchorElement;
@@ -344,8 +347,15 @@ PopupNotifications.prototype = {
 
     this._setNotificationsForBrowser(aBrowser, notifications);
 
-    if (aBrowser.docShell.isActive)
-      this._update(notifications);
+    if (aBrowser.docShell.isActive) {
+      // get the anchor element if the browser has defined one so it will
+      // _update will handle both the tabs iconBox and non-tab permission
+      // anchors.
+      let anchorElement = notifications.length > 0 ? notifications[0].anchorElement : null;
+      if (!anchorElement)
+        anchorElement = getAnchorFromBrowser(aBrowser);
+      this._update(notifications, anchorElement);
+    }
   },
 
   /**

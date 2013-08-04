@@ -62,7 +62,7 @@ namespace js {}
 # define JS_DIAGNOSTICS_ASSERT(expr) ((void) 0)
 #endif
 
-#define JS_STATIC_ASSERT(cond)           MOZ_STATIC_ASSERT(cond, "JS_STATIC_ASSERT")
+#define JS_STATIC_ASSERT(cond)           static_assert(cond, "JS_STATIC_ASSERT")
 #define JS_STATIC_ASSERT_IF(cond, expr)  MOZ_STATIC_ASSERT_IF(cond, expr, "JS_STATIC_ASSERT_IF")
 
 extern MOZ_NORETURN JS_PUBLIC_API(void)

@@ -22,7 +22,7 @@
 #include "nsContentUtils.h"
 #include "nsCxPusher.h"
 
-#include "mozilla/StandardInteger.h"
+#include <stdint.h>
 #include "mozilla/Util.h"
 #include "mozilla/Likely.h"
 #include <algorithm>
@@ -43,8 +43,10 @@ xpc_OkToHandOutWrapper(nsWrapperCache *cache)
 
 /***************************************************************************/
 
+NS_IMPL_CYCLE_COLLECTION_CLASS(XPCWrappedNative)
+
 NS_IMETHODIMP
-NS_CYCLE_COLLECTION_CLASSNAME(XPCWrappedNative)::UnlinkImpl(void *p)
+NS_CYCLE_COLLECTION_CLASSNAME(XPCWrappedNative)::Unlink(void *p)
 {
     XPCWrappedNative *tmp = static_cast<XPCWrappedNative*>(p);
     tmp->ExpireWrapper();
@@ -52,9 +54,8 @@ NS_CYCLE_COLLECTION_CLASSNAME(XPCWrappedNative)::UnlinkImpl(void *p)
 }
 
 NS_IMETHODIMP
-NS_CYCLE_COLLECTION_CLASSNAME(XPCWrappedNative)::TraverseImpl
-   (NS_CYCLE_COLLECTION_CLASSNAME(XPCWrappedNative) *that, void *p,
-    nsCycleCollectionTraversalCallback &cb)
+NS_CYCLE_COLLECTION_CLASSNAME(XPCWrappedNative)::Traverse
+   (void *p, nsCycleCollectionTraversalCallback &cb)
 {
     XPCWrappedNative *tmp = static_cast<XPCWrappedNative*>(p);
     if (!tmp->IsValid())
@@ -360,7 +361,13 @@ XPCWrappedNative::WrapNewGlobal(xpcObjectHelper &nativeHelper,
     XPCNativeScriptableInfo* siProto = proto->GetScriptableInfo();
     if (siProto && siProto->GetCallback() == sciWrapper.GetCallback()) {
         wrapper->mScriptableInfo = siProto;
+        // XPCNativeScriptableShared instances live in a map, and are
+        // GCed, but XPCNativeScriptableInfo is per-instance and must be
+        // manually managed. If we're switching over to that of the proto, we
+        // need to destroy the one we've allocated, and also null out the
+        // AutoMarkingPtr, so that it doesn't try to mark garbage data.
         delete si;
+        si = nullptr;
     } else {
         wrapper->mScriptableInfo = si;
     }
@@ -400,8 +407,12 @@ XPCWrappedNative::WrapNewGlobal(xpcObjectHelper &nativeHelper,
     // Call the common creation finish routine. This does all of the bookkeeping
     // like inserting the wrapper into the wrapper map and setting up the wrapper
     // cache.
-    return FinishCreate(scope, iface, nativeHelper.GetWrapperCache(),
-                        wrapper, wrappedGlobal);
+    nsresult rv = FinishCreate(scope, iface, nativeHelper.GetWrapperCache(),
+                               wrapper, wrappedGlobal);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    JS_FireOnNewGlobalObject(cx, global);
+    return NS_OK;
 }
 
 // static
@@ -1993,7 +2004,7 @@ class CallMethodHelper
                               nsID* result) const;
 
     JS_ALWAYS_INLINE JSBool
-    GetOutParamSource(uint8_t paramIndex, jsval* srcp) const;
+    GetOutParamSource(uint8_t paramIndex, MutableHandleValue srcp) const;
 
     JS_ALWAYS_INLINE JSBool
     GatherAndConvertResults();
@@ -2249,7 +2260,7 @@ CallMethodHelper::GetInterfaceTypeFromParam(uint8_t paramIndex,
 }
 
 JSBool
-CallMethodHelper::GetOutParamSource(uint8_t paramIndex, jsval* srcp) const
+CallMethodHelper::GetOutParamSource(uint8_t paramIndex, MutableHandleValue srcp) const
 {
     const nsXPTParamInfo& paramInfo = mMethodInfo->GetParam(paramIndex);
 
@@ -2529,7 +2540,7 @@ CallMethodHelper::ConvertIndependentParam(uint8_t i)
     //
     // This is a no-op for 'in' params.
     RootedValue src(mCallContext);
-    if (!GetOutParamSource(i, src.address()))
+    if (!GetOutParamSource(i, &src))
         return false;
 
     // All that's left to do is value conversion. Bail early if we don't need
@@ -2634,7 +2645,7 @@ CallMethodHelper::ConvertDependentParam(uint8_t i)
     //
     // This is a no-op for 'in' params.
     RootedValue src(mCallContext);
-    if (!GetOutParamSource(i, src.address()))
+    if (!GetOutParamSource(i, &src))
         return false;
 
     // All that's left to do is value conversion. Bail early if we don't need

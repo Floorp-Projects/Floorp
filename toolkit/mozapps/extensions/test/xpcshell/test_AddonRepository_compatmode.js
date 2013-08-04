@@ -8,20 +8,22 @@
 const PREF_GETADDONS_GETSEARCHRESULTS    = "extensions.getAddons.search.url";
 
 Components.utils.import("resource://testing-common/httpd.js");
-var gServer;
+var gServer = new HttpServer();
+gServer.start(-1);
+gPort = gServer.identity.primaryPort;
 var COMPATIBILITY_PREF;
+
+// register static files with server and interpolate port numbers in them
+mapFile("/data/test_AddonRepository_compatmode_ignore.xml", gServer);
+mapFile("/data/test_AddonRepository_compatmode_normal.xml", gServer);
+mapFile("/data/test_AddonRepository_compatmode_strict.xml", gServer);
 
 function run_test() {
   do_test_pending();
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
 
-  // Create and configure the HTTP server.
-  gServer = new HttpServer();
-  gServer.registerDirectory("/data/", do_get_file("data"));
-  gServer.start(4444);
-
   Services.prefs.setCharPref(PREF_GETADDONS_GETSEARCHRESULTS,
-                             "http://localhost:4444/data/test_AddonRepository_compatmode_%COMPATIBILITY_MODE%.xml");
+                             "http://localhost:" + gPort + "/data/test_AddonRepository_compatmode_%COMPATIBILITY_MODE%.xml");
   startupManager();
   run_test_1();
 }

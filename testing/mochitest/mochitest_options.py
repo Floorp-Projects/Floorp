@@ -1,3 +1,7 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 import optparse
 import os
 import sys
@@ -41,7 +45,7 @@ class MochitestOptions(optparse.OptionParser):
         { "action": "store",
           "type": "string",
           "dest": "app",
-          "default": build_obj.get_binary_path() if build_obj is not None else None,
+          "default": None,
           "help": "absolute path to application, overriding default",
         }],
         [["--utility-path"],
@@ -266,21 +270,21 @@ class MochitestOptions(optparse.OptionParser):
         { "action": "store",
           "type": "string",
           "dest": "runOnlyTests",
-          "help": "JSON list of tests that we only want to run, cannot be specified with --exclude-tests. [DEPRECATED- please use --test-manifest]",
-          "default": None,
-        }],
-        [["--exclude-tests"],
-        { "action": "store",
-          "type": "string",
-          "dest": "excludeTests",
-          "help": "JSON list of tests that we want to not run, cannot be specified with --run-only-tests. [DEPRECATED- please use --test-manifest]",
+          "help": "JSON list of tests that we only want to run. [DEPRECATED- please use --test-manifest]",
           "default": None,
         }],
         [["--test-manifest"],
         { "action": "store",
           "type": "string",
           "dest": "testManifest",
-          "help": "JSON list of tests to specify 'runtests' and 'excludetests'.",
+          "help": "JSON list of tests to specify 'runtests'. Old format for mobile specific tests",
+          "default": None,
+        }],
+        [["--manifest"],
+        { "action": "store",
+          "type": "string",
+          "dest": "manifestFile",
+          "help": ".ini format of tests to run.",
           "default": None,
         }],
         [["--failure-file"],
@@ -317,6 +321,13 @@ class MochitestOptions(optparse.OptionParser):
           "metavar": "PREF=VALUE",
           "help": "defines an extra user preference",
         }],
+        [["--build-info-json"],
+        { "action": "store",
+          "type": "string",
+          "default": None,
+          "dest": "mozInfo",
+          "help": "path to mozinfo.json to determine build time options",
+        }],
     ]
 
     def __init__(self, automation=None, **kwargs):
@@ -336,6 +347,12 @@ class MochitestOptions(optparse.OptionParser):
 
     def verifyOptions(self, options, mochitest):
         """ verify correct options and cleanup paths """
+
+        if options.app is None:
+            if build_obj is not None:
+                options.app = build_obj.get_binary_path()
+            else:
+                self.error("could not find the application path, --appname must be specified")
 
         if options.totalChunks is not None and options.thisChunk is None:
             self.error("thisChunk must be specified when totalChunks is specified")
@@ -390,23 +407,18 @@ class MochitestOptions(optparse.OptionParser):
                 self.error("%s not found, cannot automate VMware recording." %
                            mochitest.vmwareHelperPath)
 
-        if options.runOnlyTests != None and options.excludeTests != None:
-            self.error("We can only support --run-only-tests OR --exclude-tests, not both.  Please consider using --test-manifest instead.")
-
-        if options.testManifest != None and (options.runOnlyTests != None or options.excludeTests != None):
-            self.error("Please use --test-manifest only and not --run-only-tests or --exclude-tests.")
+        if options.testManifest and options.runOnlyTests:
+            self.error("Please use --test-manifest only and not --run-only-tests")
 
         if options.runOnlyTests:
             if not os.path.exists(os.path.abspath(options.runOnlyTests)):
-                self.error("unable to find --run-only-tests file '%s'" % options.runOnlyTests);
-            options.testManifest = options.runOnlyTests
+                self.error("unable to find --run-only-tests file '%s'" % options.runOnlyTests)
             options.runOnly = True
+            options.testManifest = options.runOnlyTests
+            options.runOnlyTests = None
 
-        if options.excludeTests:
-            if not os.path.exists(os.path.abspath(options.excludeTests)):
-                self.error("unable to find --exclude-tests file '%s'" % options.excludeTests);
-            options.testManifest = options.excludeTests
-            options.runOnly = False
+        if options.manifestFile and options.testManifest:
+            self.error("Unable to support both --manifest and --test-manifest/--run-only-tests at the same time")
 
         if options.webapprtContent and options.webapprtChrome:
             self.error("Only one of --webapprt-content and --webapprt-chrome may be given.")
@@ -453,6 +465,16 @@ class MochitestOptions(optparse.OptionParser):
                 self.error("--run-until-failure can only be used together with --test-path specifying a single test.")
             if not options.repeat:
                 options.repeat = 29
+
+        if not options.mozInfo:
+            if build_obj:
+                options.mozInfo = os.path.join(build_obj.get_binary_path(), 'mozinfo.json')
+            else:
+                options.mozInfo = os.path.abspath('mozinfo.json')
+
+        if not os.path.isfile(options.mozInfo):
+            self.error("Unable to file build information file (mozinfo.json) at this location: %s" % options.mozInfo)
+
         return options
 
 

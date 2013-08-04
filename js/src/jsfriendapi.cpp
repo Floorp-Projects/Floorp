@@ -7,7 +7,8 @@
 #include "jsfriendapi.h"
 
 #include "mozilla/PodOperations.h"
-#include "mozilla/StandardInteger.h"
+
+#include <stdint.h>
 
 #include "jscntxt.h"
 #include "jscompartment.h"
@@ -370,9 +371,15 @@ js::GetGlobalForObjectCrossCompartment(JSObject *obj)
 }
 
 JS_FRIEND_API(JSObject *)
-js::GetDefaultGlobalForContext(JSContext *cx)
+js::DefaultObjectForContextOrNull(JSContext *cx)
 {
     return cx->maybeDefaultCompartmentObject();
+}
+
+JS_FRIEND_API(void)
+js::SetDefaultObjectForContext(JSContext *cx, JSObject *obj)
+{
+    cx->setDefaultCompartmentObject(obj);
 }
 
 JS_FRIEND_API(void)

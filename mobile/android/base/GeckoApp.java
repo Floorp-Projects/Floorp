@@ -152,6 +152,7 @@ abstract public class GeckoApp
     public static final String ACTION_LOAD          = "org.mozilla.gecko.LOAD";
     public static final String ACTION_LAUNCH_SETTINGS = "org.mozilla.gecko.SETTINGS";
     public static final String ACTION_INIT_PW       = "org.mozilla.gecko.INIT_PW";
+    public static final String SAVED_STATE_INTENT_HANDLED = "intentHandled";
     public static final String SAVED_STATE_IN_BACKGROUND = "inBackground";
     public static final String SAVED_STATE_PRIVATE_SESSION = "privateSession";
 
@@ -184,6 +185,7 @@ abstract public class GeckoApp
     protected GeckoProfile mProfile;
     public static int mOrientation;
     protected boolean mIsRestoringActivity;
+    private boolean mIntentHandled;
     private String mCurrentResponse = "";
     public static boolean sIsUsingCustomProfile = false;
 
@@ -487,11 +489,13 @@ abstract public class GeckoApp
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
 
-        if (outState == null)
-            outState = new Bundle();
-
         outState.putBoolean(SAVED_STATE_IN_BACKGROUND, isApplicationInBackground());
         outState.putString(SAVED_STATE_PRIVATE_SESSION, mPrivateBrowsingSession);
+
+        // Bug 896992 - Replace intent action with ACTION_MAIN on restart.
+        if (mIntentHandled) {
+            outState.putBoolean(SAVED_STATE_INTENT_HANDLED, true);
+        }
     }
 
     void handleFaviconRequest(final String url) {
@@ -1332,6 +1336,16 @@ abstract public class GeckoApp
                 Telemetry.HistogramAdd("FENNEC_WAS_KILLED", 1);
             }
 
+            if (savedInstanceState.getBoolean(SAVED_STATE_INTENT_HANDLED, false)) {
+                Intent thisIntent = getIntent();
+                // Bug 896992 - This intent has already been handled, clear the intent action.
+                thisIntent.setAction(Intent.ACTION_MAIN);
+                setIntent(thisIntent);
+
+                // Persist this flag for reincarnations of this Activity Intent.
+                mIntentHandled = true;
+            }
+
             mPrivateBrowsingSession = savedInstanceState.getString(SAVED_STATE_PRIVATE_SESSION);
         }
 
@@ -1411,7 +1425,7 @@ abstract public class GeckoApp
             }
         } else {
             // If given an external URL, load it
-            int flags = Tabs.LOADURL_NEW_TAB | Tabs.LOADURL_USER_ENTERED;
+            int flags = Tabs.LOADURL_NEW_TAB | Tabs.LOADURL_USER_ENTERED | Tabs.LOADURL_EXTERNAL;
             Tabs.getInstance().loadUrl(url, flags);
         }
     }
@@ -1514,6 +1528,7 @@ abstract public class GeckoApp
 
         // Check if launched from data reporting notification.
         if (ACTION_LAUNCH_SETTINGS.equals(action)) {
+            mIntentHandled = true;
             Intent settingsIntent = new Intent(GeckoApp.this, GeckoPreferences.class);
             // Copy extras.
             settingsIntent.putExtras(intent);
@@ -1715,6 +1730,7 @@ abstract public class GeckoApp
     protected int getSessionRestoreState(Bundle savedInstanceState) {
         final SharedPreferences prefs = GeckoApp.getAppSharedPreferences();
         int restoreMode = RESTORE_NONE;
+        boolean allowCrashRestore = true;
 
         // If the version has changed, the user has done an upgrade, so restore
         // previous tabs.
@@ -1730,9 +1746,19 @@ abstract public class GeckoApp
             });
 
             restoreMode = RESTORE_NORMAL;
-        } else if (savedInstanceState != null ||
-                PreferenceManager.getDefaultSharedPreferences(this).getBoolean(GeckoPreferences.PREFS_RESTORE_SESSION, false)) {
+        } else if (savedInstanceState != null) {
             restoreMode = RESTORE_NORMAL;
+        } else {
+            String restorePref = PreferenceManager.getDefaultSharedPreferences(this)
+                                                  .getString(GeckoPreferences.PREFS_RESTORE_SESSION, "crash");
+            if ("always".equals(restorePref)) {
+                restoreMode = RESTORE_NORMAL;
+            } else {
+                restoreMode = RESTORE_NONE;
+                if ("never".equals(restorePref)) {
+                    allowCrashRestore = false;
+                }
+            }
         }
 
         // We record crashes in the crash reporter. If sessionstore.js
@@ -1749,7 +1775,9 @@ abstract public class GeckoApp
                 }
             });
 
-            restoreMode = RESTORE_CRASH;
+            if (allowCrashRestore) {
+                restoreMode = RESTORE_CRASH;
+            }
         }
 
         return restoreMode;
@@ -1917,7 +1945,8 @@ abstract public class GeckoApp
             GeckoAppShell.sendEventToGecko(GeckoEvent.createURILoadEvent(uri));
         } else if (ACTION_ALERT_CALLBACK.equals(action)) {
             processAlertCallback(intent);
-        } if (ACTION_LAUNCH_SETTINGS.equals(action)) {
+        } else if (ACTION_LAUNCH_SETTINGS.equals(action)) {
+            mIntentHandled = true;
             // Check if launched from data reporting notification.
             Intent settingsIntent = new Intent(GeckoApp.this, GeckoPreferences.class);
             // Copy extras.

@@ -34,12 +34,20 @@
   margin-left: 0;
 }
 
-.devtools-responsiveui-resizebar {
+.devtools-responsiveui-resizebarV {
   width: 7px;
   height: 24px;
   cursor: ew-resize;
   transform: translate(12px, -12px);
   background-image: url("chrome://browser/skin/devtools/responsive-vertical-resizer.png");
+}
+
+.devtools-responsiveui-resizebarH {
+  width: 24px;
+  height: 7px;
+  cursor: ns-resize;
+  transform: translate(-12px, 12px);
+  background-image: url("chrome://browser/skin/devtools/responsive-horizontal-resizer.png");
 }
 
 .devtools-responsiveui-resizehandle {

@@ -25,9 +25,9 @@
     <em:translator>XPI Add-on 1 - Second Translator</em:translator>
     <em:contributor>XPI Add-on 1 - First Contributor</em:contributor>
     <em:contributor>XPI Add-on 1 - Second Contributor</em:contributor>
-    <em:homepageURL>http://localhost:4444/xpi/1/homepage.html</em:homepageURL>
-    <em:optionsURL>http://localhost:4444/xpi/1/options.html</em:optionsURL>
-    <em:aboutURL>http://localhost:4444/xpi/1/about.html</em:aboutURL>
-    <em:iconURL>http://localhost:4444/xpi/1/icon.png</em:iconURL>
+    <em:homepageURL>http://localhost/xpi/1/homepage.html</em:homepageURL>
+    <em:optionsURL>http://localhost/xpi/1/options.html</em:optionsURL>
+    <em:aboutURL>http://localhost/xpi/1/about.html</em:aboutURL>
+    <em:iconURL>http://localhost/xpi/1/icon.png</em:iconURL>
   </Description>
 </RDF>

@@ -356,8 +356,8 @@ nsCSSProps::LookupProperty(const nsACString& aProperty,
   // Check eCSSAliasCount against 0 to make it easy for the
   // compiler to optimize away the 0-aliases case.
   if (eCSSAliasCount != 0 && res >= eCSSProperty_COUNT) {
-    MOZ_STATIC_ASSERT(eCSSProperty_UNKNOWN < eCSSProperty_COUNT,
-                      "assuming eCSSProperty_UNKNOWN doesn't hit this code");
+    static_assert(eCSSProperty_UNKNOWN < eCSSProperty_COUNT,
+                  "assuming eCSSProperty_UNKNOWN doesn't hit this code");
     if (IsEnabled(res) || aEnabled == eAny) {
       res = gAliases[res - eCSSProperty_COUNT];
       NS_ABORT_IF_FALSE(0 <= res && res < eCSSProperty_COUNT,
@@ -383,8 +383,8 @@ nsCSSProps::LookupProperty(const nsAString& aProperty, EnabledState aEnabled)
   // Check eCSSAliasCount against 0 to make it easy for the
   // compiler to optimize away the 0-aliases case.
   if (eCSSAliasCount != 0 && res >= eCSSProperty_COUNT) {
-    MOZ_STATIC_ASSERT(eCSSProperty_UNKNOWN < eCSSProperty_COUNT,
-                      "assuming eCSSProperty_UNKNOWN doesn't hit this code");
+    static_assert(eCSSProperty_UNKNOWN < eCSSProperty_COUNT,
+                  "assuming eCSSProperty_UNKNOWN doesn't hit this code");
     if (IsEnabled(res) || aEnabled == eAny) {
       res = gAliases[res - eCSSProperty_COUNT];
       NS_ABORT_IF_FALSE(0 <= res && res < eCSSProperty_COUNT,
@@ -647,10 +647,10 @@ const int32_t nsCSSProps::kBackgroundInlinePolicyKTable[] = {
   eCSSKeyword_UNKNOWN,-1
 };
 
-MOZ_STATIC_ASSERT(NS_STYLE_BG_CLIP_BORDER == NS_STYLE_BG_ORIGIN_BORDER &&
-                  NS_STYLE_BG_CLIP_PADDING == NS_STYLE_BG_ORIGIN_PADDING &&
-                  NS_STYLE_BG_CLIP_CONTENT == NS_STYLE_BG_ORIGIN_CONTENT,
-                  "bg-clip and bg-origin style constants must agree");
+static_assert(NS_STYLE_BG_CLIP_BORDER == NS_STYLE_BG_ORIGIN_BORDER &&
+              NS_STYLE_BG_CLIP_PADDING == NS_STYLE_BG_ORIGIN_PADDING &&
+              NS_STYLE_BG_CLIP_CONTENT == NS_STYLE_BG_ORIGIN_CONTENT,
+              "bg-clip and bg-origin style constants must agree");
 const int32_t nsCSSProps::kBackgroundOriginKTable[] = {
   eCSSKeyword_border_box, NS_STYLE_BG_ORIGIN_BORDER,
   eCSSKeyword_padding_box, NS_STYLE_BG_ORIGIN_PADDING,
@@ -1039,6 +1039,12 @@ const int32_t nsCSSProps::kFontSizeKTable[] = {
   eCSSKeyword_xx_large, NS_STYLE_FONT_SIZE_XXLARGE,
   eCSSKeyword_larger, NS_STYLE_FONT_SIZE_LARGER,
   eCSSKeyword_smaller, NS_STYLE_FONT_SIZE_SMALLER,
+  eCSSKeyword_UNKNOWN,-1
+};
+
+const int32_t nsCSSProps::kFontSmoothingKTable[] = {
+  eCSSKeyword_auto, NS_FONT_SMOOTHING_AUTO,
+  eCSSKeyword_grayscale, NS_FONT_SMOOTHING_GRAYSCALE,
   eCSSKeyword_UNKNOWN,-1
 };
 
@@ -1948,9 +1954,9 @@ static const nsCSSProperty gBorderBottomSubpropTable[] = {
   eCSSProperty_UNKNOWN
 };
 
-MOZ_STATIC_ASSERT(NS_SIDE_TOP == 0 && NS_SIDE_RIGHT == 1 &&
-                  NS_SIDE_BOTTOM == 2 && NS_SIDE_LEFT == 3,
-                  "box side constants not top/right/bottom/left == 0/1/2/3");
+static_assert(NS_SIDE_TOP == 0 && NS_SIDE_RIGHT == 1 &&
+              NS_SIDE_BOTTOM == 2 && NS_SIDE_LEFT == 3,
+              "box side constants not top/right/bottom/left == 0/1/2/3");
 static const nsCSSProperty gBorderColorSubpropTable[] = {
   // Code relies on these being in top-right-bottom-left order.
   // Code relies on these matching the NS_SIDE_* constants.

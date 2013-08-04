@@ -482,7 +482,7 @@ const sqlite3_mem_methods memMethods = {
   &sqliteMemRoundup,
   &sqliteMemInit,
   &sqliteMemShutdown,
-  NULL
+  nullptr
 };
 
 } // anonymous namespace
@@ -628,7 +628,7 @@ Service::OpenSpecialDatabase(const char *aStorageKey,
 
   nsCOMPtr<nsIFile> storageFile;
   if (::strcmp(aStorageKey, "memory") == 0) {
-    // just fall through with NULL storageFile, this will cause the storage
+    // just fall through with nullptr storageFile, this will cause the storage
     // connection to use a memory DB.
   }
   else {
@@ -764,7 +764,7 @@ Service::OpenAsyncDatabase(nsIVariant *aDatabaseStore,
       return NS_ERROR_INVALID_ARG;
     }
 
-    // Just fall through with NULL storageFile, this will cause the storage
+    // Just fall through with nullptr storageFile, this will cause the storage
     // connection to use a memory DB.
   }
 

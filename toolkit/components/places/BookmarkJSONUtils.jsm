@@ -7,6 +7,7 @@ this.EXPORTED_SYMBOLS = [ "BookmarkJSONUtils" ];
 const Ci = Components.interfaces;
 const Cc = Components.classes;
 const Cu = Components.utils;
+const Cr = Components.results;
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
@@ -513,6 +514,7 @@ BookmarkExporter.prototype = {
                       createInstance(Ci.nsIFileOutputStream);
     safeFileOut.init(aLocalFile, FileUtils.MODE_WRONLY | FileUtils.MODE_CREATE |
                      FileUtils.MODE_TRUNCATE, parseInt("0600", 8), 0);
+    let nodeCount;
 
     try {
       // We need a buffered output stream for performance.  See bug 202477.
@@ -525,7 +527,7 @@ BookmarkExporter.prototype = {
                              createInstance(Ci.nsIConverterOutputStream);
         this._converterOut.init(bufferedOut, "utf-8", 0, 0);
         try {
-          yield this._writeContentToFile();
+          nodeCount = yield this._writeContentToFile();
 
           // Flush the buffer and retain the target file on success only.
           bufferedOut.QueryInterface(Ci.nsISafeOutputStream).finish();
@@ -539,27 +541,34 @@ BookmarkExporter.prototype = {
     } finally {
       safeFileOut.close();
     }
+    throw new Task.Result(nodeCount);
   },
 
   _writeContentToFile: function BE__writeContentToFile() {
-    // Weep over stream interface variance.
-    let streamProxy = {
-      converter: this._converterOut,
-      write: function(aData, aLen) {
-        this.converter.writeString(aData);
-      }
-    };
+    return Task.spawn(function() {
+      // Weep over stream interface variance.
+      let streamProxy = {
+        converter: this._converterOut,
+        write: function(aData, aLen) {
+          this.converter.writeString(aData);
+        }
+      };
 
-    // Get list of itemIds that must be excluded from the backup.
-    let excludeItems = PlacesUtils.annotations.getItemsWithAnnotation(
-                         PlacesUtils.EXCLUDE_FROM_BACKUP_ANNO);
-    let root = PlacesUtils.getFolderContents(PlacesUtils.placesRootId, false,
-                                             false).root;
+      // Get list of itemIds that must be excluded from the backup.
+      let excludeItems = PlacesUtils.annotations.getItemsWithAnnotation(
+                           PlacesUtils.EXCLUDE_FROM_BACKUP_ANNO);
+      let root = PlacesUtils.getFolderContents(PlacesUtils.placesRootId, false,
+                                               false).root;
+      // Serialize to JSON and write to stream.
+      let nodeCount = yield BookmarkNode.serializeAsJSONToOutputStream(root,
+                                                                       streamProxy,
+                                                                       false,
+                                                                       false,
+                                                                       excludeItems);
+      root.containerOpen = false;
 
-    // Serialize to JSON and write to stream.
-    yield BookmarkNode.serializeAsJSONToOutputStream(root, streamProxy, false, false,
-                                                     excludeItems);
-    root.containerOpen = false;
+      throw new Task.Result(nodeCount);
+    }.bind(this));
   }
 }
 
@@ -582,6 +591,7 @@ let BookmarkNode = {
    * @param   aExcludeItems
    *          An array of item ids that should not be written to the backup.
    * @returns Task promise
+   * @resolves the number of serialized uri nodes.
    */
   serializeAsJSONToOutputStream: function BN_serializeAsJSONToOutputStream(
     aNode, aStream, aIsUICommand, aResolveShortcuts, aExcludeItems) {
@@ -589,20 +599,25 @@ let BookmarkNode = {
     return Task.spawn(function() {
       // Serialize to stream
       let array = [];
-      if (yield this._appendConvertedNode(aNode, null, array, aIsUICommand,
-                                          aResolveShortcuts, aExcludeItems)) {
+      let result = yield this._appendConvertedNode(aNode, null, array,
+                                                   aIsUICommand,
+                                                   aResolveShortcuts,
+                                                   aExcludeItems);
+      if (result.appendedNode) {
         let json = JSON.stringify(array[0]);
         aStream.write(json, json.length);
       } else {
         throw Cr.NS_ERROR_UNEXPECTED;
       }
-    }.bind(this));                                  
+      throw new Task.Result(result.nodeCount);
+    }.bind(this));
   },
 
   _appendConvertedNode: function BN__appendConvertedNode(
     bNode, aIndex, aArray, aIsUICommand, aResolveShortcuts, aExcludeItems) {
     return Task.spawn(function() {
       let node = {};
+      let nodeCount = 0;
 
       // Set index in order received
       // XXX handy shortcut, but are there cases where we don't want
@@ -618,7 +633,7 @@ let BookmarkNode = {
       if (PlacesUtils.nodeIsURI(bNode)) {
         // Tag root accept only folder nodes
         if (parent && parent.itemId == PlacesUtils.tagsFolderId)
-          throw new Task.Result(false);
+          throw new Task.Result({ appendedNode: false, nodeCount: nodeCount });
 
         // Check for url validity, since we can't halt while writing a backup.
         // This will throw if we try to serialize an invalid url and it does
@@ -626,14 +641,15 @@ let BookmarkNode = {
         try {
           NetUtil.newURI(bNode.uri);
         } catch (ex) {
-          throw new Task.Result(false);
+          throw new Task.Result({ appendedNode: false, nodeCount: nodeCount });
         }
 
         yield this._addURIProperties(bNode, node, aIsUICommand);
+        nodeCount++;
       } else if (PlacesUtils.nodeIsContainer(bNode)) {
         // Tag containers accept only uri nodes
         if (grandParent && grandParent.itemId == PlacesUtils.tagsFolderId)
-          throw new Task.Result(false);
+          throw new Task.Result({ appendedNode: false, nodeCount: nodeCount });
 
         this._addContainerProperties(bNode, node, aIsUICommand,
                                      aResolveShortcuts);
@@ -642,19 +658,24 @@ let BookmarkNode = {
         // Tag containers accept only uri nodes
         if ((parent && parent.itemId == PlacesUtils.tagsFolderId) ||
             (grandParent && grandParent.itemId == PlacesUtils.tagsFolderId))
-          throw new Task.Result(false);
+          throw new Task.Result({ appendedNode: false, nodeCount: nodeCount });
 
         this._addSeparatorProperties(bNode, node);
       }
 
       if (!node.feedURI && node.type == PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER) {
-        throw new Task.Result(yield this._appendConvertedComplexNode(node, bNode, aArray, aIsUICommand,
-                                                                     aResolveShortcuts, aExcludeItems));
+        nodeCount += yield this._appendConvertedComplexNode(node,
+                                                           bNode,
+                                                           aArray,
+                                                           aIsUICommand,
+                                                           aResolveShortcuts,
+                                                           aExcludeItems)
+        throw new Task.Result({ appendedNode: true, nodeCount: nodeCount });
       }
 
       aArray.push(node);
-      throw new Task.Result(true);
-    }.bind(this));                                   
+      throw new Task.Result({ appendedNode: true, nodeCount: nodeCount });
+    }.bind(this));
   },
 
   _addGenericProperties: function BN__addGenericProperties(
@@ -765,6 +786,7 @@ let BookmarkNode = {
     aExcludeItems) {
     return Task.spawn(function() {
       let repr = {};
+      let nodeCount = 0;
 
       for (let [name, value] in Iterator(aNode))
         repr[name] = value;
@@ -781,16 +803,17 @@ let BookmarkNode = {
           let childNode = aSourceNode.getChild(i);
           if (aExcludeItems && aExcludeItems.indexOf(childNode.itemId) != -1)
             continue;
-          yield this._appendConvertedNode(aSourceNode.getChild(i), i, children,
-                                          aIsUICommand, aResolveShortcuts,
-                                          aExcludeItems);
+          let result = yield this._appendConvertedNode(aSourceNode.getChild(i), i, children,
+                                                       aIsUICommand, aResolveShortcuts,
+                                                       aExcludeItems);
+          nodeCount += result.nodeCount;
         }
         if (!wasOpen)
           aSourceNode.containerOpen = false;
       }
 
       aArray.push(repr);
-      throw new Task.Result(true);
+      throw new Task.Result(nodeCount);
     }.bind(this));
   }
 }

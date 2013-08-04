@@ -1,0 +1,78 @@
+<?xml version="1.0"?>
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<bindings xmlns="http://www.mozilla.org/xbl"
+          xmlns:xbl="http://www.mozilla.org/xbl"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+          xmlns:html="http://www.w3.org/1999/xhtml">
+  <binding id="circular-progress-indicator">
+    <content>
+      <xul:stack>
+        <xul:toolbarbutton anonid="progressButton" class="circularprogressindicator-progressButton appbar-secondary"/>
+        <html:canvas anonid="progressRing" class="circularprogressindicator-progressRing" width="46" height="46"></html:canvas>
+      </xul:stack>
+    </content>
+    <implementation>
+      <field name="_progressCanvas">
+          document.getAnonymousElementByAttribute(this, "anonid", "progressRing");
+      </field>
+      <field name="_progressCircleCtx">null</field>
+      <field name="_img">null</field>
+      <constructor>
+        <![CDATA[
+          this._progressCircleCtx = this._progressCanvas.getContext('2d');
+          this._img = new Image();
+        ]]>
+      </constructor>
+      <method name="updateProgress">
+        <parameter name="percentComplete"/>
+        <body>
+          <![CDATA[
+            const PROGRESS_RING_IMG = "chrome://browser/skin/images/progresscircle.png";
+
+            let startAngle = 1.5 * Math.PI;
+            let endAngle = startAngle + (2 * Math.PI * (percentComplete / 100));
+
+            let ctx = this._progressCircleCtx;
+            ctx.clearRect(0, 0,
+              this._progressCanvas.width, this._progressCanvas.height);
+
+            // Save the state, so we can undo the clipping
+            ctx.save();
+
+            ctx.beginPath();
+            let center = this._progressCanvas.width / 2;
+            ctx.arc(center, center, center, startAngle, endAngle, false);
+            ctx.lineTo(center, center);
+            ctx.closePath();
+            ctx.clip();
+
+            // Draw circle image.
+            if (this._img && this._img.src) {
+              ctx.drawImage(this._img, 0, 0);
+            } else {
+              this._img.onload = function() {
+                ctx.drawImage(this._img, 0, 0);
+              }.bind(this);
+              this._img.src = PROGRESS_RING_IMG;
+            }
+
+            ctx.restore();
+            return [startAngle, endAngle];
+          ]]>
+        </body>
+      </method>
+      <method name="reset">
+        <body>
+          <![CDATA[
+            this._progressCircleCtx.clearRect(0, 0,
+              this._progressCanvas.width, this._progressCanvas.height);
+          ]]>
+        </body>
+      </method>
+    </implementation>
+  </binding>
+</bindings>

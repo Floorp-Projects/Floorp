@@ -39,7 +39,7 @@
                 <em:id>xpcshell@tests.mozilla.org</em:id>
                 <em:minVersion>1</em:minVersion>
                 <em:maxVersion>1</em:maxVersion>
-                <em:updateLink>http://localhost:4444/addons/test_update.xpi</em:updateLink>
+                <em:updateLink>http://localhost:%PORT%/addons/test_update.xpi</em:updateLink>
                 <em:updateInfoURL>http://example.com/updateInfo.xhtml</em:updateInfoURL>
               </Description>
             </em:targetApplication>
@@ -136,7 +136,7 @@
                 <em:id>xpcshell@tests.mozilla.org</em:id>
                 <em:minVersion>1</em:minVersion>
                 <em:maxVersion>1</em:maxVersion>
-                <em:updateLink>http://localhost:4444/addons/test_update8.xpi</em:updateLink>
+                <em:updateLink>http://localhost:%PORT%/addons/test_update8.xpi</em:updateLink>
               </Description>
             </em:targetApplication>
           </Description>
@@ -156,7 +156,7 @@
                 <em:id>xpcshell@tests.mozilla.org</em:id>
                 <em:minVersion>1</em:minVersion>
                 <em:maxVersion>1</em:maxVersion>
-                <em:updateLink>http://localhost:4444/addons/test_update9_2.xpi</em:updateLink>
+                <em:updateLink>http://localhost:%PORT%/addons/test_update9_2.xpi</em:updateLink>
               </Description>
             </em:targetApplication>
           </Description>
@@ -170,7 +170,7 @@
                 <em:id>xpcshell@tests.mozilla.org</em:id>
                 <em:minVersion>0.9</em:minVersion>
                 <em:maxVersion>0.9</em:maxVersion>
-                <em:updateLink>http://localhost:4444/addons/test_update9_3.xpi</em:updateLink>
+                <em:updateLink>http://localhost:%PORT%/addons/test_update9_3.xpi</em:updateLink>
               </Description>
             </em:targetApplication>
           </Description>
@@ -184,7 +184,7 @@
                 <em:id>xpcshell@tests.mozilla.org</em:id>
                 <em:minVersion>0.9</em:minVersion>
                 <em:maxVersion>0.9</em:maxVersion>
-                <em:updateLink>http://localhost:4444/addons/test_update9_4.xpi</em:updateLink>
+                <em:updateLink>http://localhost:%PORT%/addons/test_update9_4.xpi</em:updateLink>
               </Description>
             </em:targetApplication>
           </Description>
@@ -198,7 +198,7 @@
                 <em:id>xpcshell@tests.mozilla.org</em:id>
                 <em:minVersion>5</em:minVersion>
                 <em:maxVersion>6</em:maxVersion>
-                <em:updateLink>http://localhost:4444/addons/test_update9_5.xpi</em:updateLink>
+                <em:updateLink>http://localhost:%PORT%/addons/test_update9_5.xpi</em:updateLink>
               </Description>
             </em:targetApplication>
           </Description>
@@ -218,7 +218,7 @@
                 <em:id>xpcshell@tests.mozilla.org</em:id>
                 <em:minVersion>0.1</em:minVersion>
                 <em:maxVersion>0.4</em:maxVersion>
-                <em:updateLink>http://localhost:4444/addons/test_update10.xpi</em:updateLink>
+                <em:updateLink>http://localhost:%PORT%/addons/test_update10.xpi</em:updateLink>
               </Description>
             </em:targetApplication>
           </Description>
@@ -239,7 +239,7 @@
                 <em:minVersion>0.1</em:minVersion>
                 <em:maxVersion>0.2</em:maxVersion>
                 <em:strictCompatibility>true</em:strictCompatibility>
-                <em:updateLink>http://localhost:4444/addons/test_update11.xpi</em:updateLink>
+                <em:updateLink>http://localhost:%PORT%/addons/test_update11.xpi</em:updateLink>
               </Description>
             </em:targetApplication>
           </Description>
@@ -259,7 +259,7 @@
                 <em:id>xpcshell@tests.mozilla.org</em:id>
                 <em:minVersion>1</em:minVersion>
                 <em:maxVersion>1</em:maxVersion>
-                <em:updateLink>http://localhost:4444/addons/test_update12.xpi</em:updateLink>
+                <em:updateLink>http://localhost:%PORT%/addons/test_update12.xpi</em:updateLink>
               </Description>
             </em:targetApplication>
           </Description>

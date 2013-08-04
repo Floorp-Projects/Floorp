@@ -12,3 +12,7 @@ EXTRA_JS_MODULES += [
     'mcc_iso3166_table.jsm',
 ]
 
+EXTRA_PP_JS_MODULES += [
+    'PhoneNumberUtils.jsm',
+]
+

@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/StandardInteger.h"
+#include <stdint.h>
 #include "mozilla/Util.h"
 #include "mozilla/Likely.h"
 
@@ -127,6 +127,8 @@ nsSVGElement::EnumInfo SVGSVGElement::sEnumInfo[1] =
 
 //----------------------------------------------------------------------
 // nsISupports methods
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(SVGSVGElement)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(SVGSVGElement,
                                                 SVGSVGElementBase)

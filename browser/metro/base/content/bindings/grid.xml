@@ -101,7 +101,7 @@
               this.selectItem(aItem);
             }
 
-	    if (this.controller && this.controller.handleItemClick)
+            if (this.controller && this.controller.handleItemClick)
               this.controller.handleItemClick(aItem, aEvent);
           ]]>
         </body>
@@ -112,7 +112,7 @@
         <parameter name="aEvent"/>
         <body>
           <![CDATA[
-            if(!this.isBound)
+            if(!this.isBound || this.suppressOnSelect)
               return;
             // we'll republish this as a selectionchange event on the grid
             aEvent.stopPropagation();
@@ -506,8 +506,6 @@
       </method>
 
       <!-- Inteface to suppress selection events -->
-
-      <field name="_suppressOnSelect"/>
       <property name="suppressOnSelect"
                   onget="return this.getAttribute('suppressonselect') == 'true';"
                   onset="this.setAttribute('suppressonselect', val);"/>
@@ -639,7 +637,7 @@
             switch (aType) {
               case "select" :
               case "selectionchange" :
-                if (this.suppressOnSelect || this._suppressOnSelect)
+                if (this.suppressOnSelect)
                   return;
                 break;
               case "arranged" :
@@ -790,6 +788,8 @@
       </handler>
       <handler event="MozCrossSlideSelect">
         <![CDATA[
+          if (this.suppressOnSelect)
+            return;
           this.toggleItemSelection(event.target);
         ]]>
       </handler>

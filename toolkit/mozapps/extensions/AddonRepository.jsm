@@ -7,6 +7,7 @@
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
+const Cr = Components.results;
 
 Components.utils.import("resource://gre/modules/Services.jsm");
 Components.utils.import("resource://gre/modules/AddonManager.jsm");
@@ -16,6 +17,12 @@ XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
                                   "resource://gre/modules/FileUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
                                   "resource://gre/modules/NetUtil.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "OS",
+                                  "resource://gre/modules/osfile.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "DeferredSave",
+                                  "resource://gre/modules/DeferredSave.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "AddonRepository_SQLiteMigrator",
+                                  "resource://gre/modules/AddonRepository_SQLiteMigrator.jsm");
 
 this.EXPORTED_SYMBOLS = [ "AddonRepository" ];
 
@@ -29,15 +36,26 @@ const PREF_GETADDONS_BROWSERECOMMENDED   = "extensions.getAddons.recommended.bro
 const PREF_GETADDONS_GETRECOMMENDED      = "extensions.getAddons.recommended.url";
 const PREF_GETADDONS_BROWSESEARCHRESULTS = "extensions.getAddons.search.browseURL";
 const PREF_GETADDONS_GETSEARCHRESULTS    = "extensions.getAddons.search.url";
+const PREF_GETADDONS_DB_SCHEMA           = "extensions.getAddons.databaseSchema"
 
 const XMLURI_PARSE_ERROR  = "http://www.mozilla.org/newlayout/xml/parsererror.xml";
 
 const API_VERSION = "1.5";
 const DEFAULT_CACHE_TYPES = "extension,theme,locale,dictionary";
 
-const KEY_PROFILEDIR = "ProfD";
-const FILE_DATABASE  = "addons.sqlite";
-const DB_SCHEMA      = 4;
+const KEY_PROFILEDIR        = "ProfD";
+const FILE_DATABASE         = "addons.json";
+const DB_SCHEMA             = 5;
+const DB_MIN_JSON_SCHEMA    = 5;
+const DB_BATCH_TIMEOUT_MS   = 50;
+const DB_DATA_WRITTEN_TOPIC = "addon-repository-data-written"
+
+const BLANK_DB = function() {
+  return {
+    addons: new Map(),
+    schema: DB_SCHEMA
+  };
+}
 
 const TOOLKIT_ID     = "toolkit@mozilla.org";
 
@@ -49,18 +67,6 @@ const TOOLKIT_ID     = "toolkit@mozilla.org";
     return this[aName];
   });
 }, this);
-
-
-// Add-on properties parsed out of AMO results
-// Note: the 'install' property is added for results from
-// retrieveRecommendedAddons and searchAddons
-const PROP_SINGLE = ["id", "type", "name", "version", "creator", "description",
-                     "fullDescription", "developerComments", "eula",
-                     "homepageURL", "supportURL", "contributionURL",
-                     "contributionAmount", "averageRating", "reviewCount",
-                     "reviewURL", "totalDownloads", "weeklyDownloads",
-                     "dailyUsers", "sourceURI", "repositoryStatus", "size",
-                     "updateDate"];
 
 // A map between XML keys to AddonSearchResult keys for string values
 // that require no extra parsing from XML
@@ -144,6 +150,7 @@ function getAddonsToCache(aIds, aCallback) {
 function AddonSearchResult(aId) {
   this.id = aId;
   this.icons = {};
+  this._unsupportedProperties = {};
 }
 
 AddonSearchResult.prototype = {
@@ -203,7 +210,7 @@ AddonSearchResult.prototype = {
    * The url of the add-on's icon
    */
   get iconURL() {
-    return this.icons[32];
+    return this.icons && this.icons[32];
   },
 
    /**
@@ -409,6 +416,40 @@ AddonSearchResult.prototype = {
       aListener.onNoUpdateAvailable(this);
     if ("onUpdateFinished" in aListener)
       aListener.onUpdateFinished(this);
+  },
+
+  toJSON: function() {
+    let json = {};
+
+    for (let [property, value] of Iterator(this)) {
+      if (property.startsWith("_") ||
+          typeof(value) === "function")
+        continue;
+
+      try {
+        switch (property) {
+          case "sourceURI":
+            json.sourceURI = value ? value.spec : "";
+            break;
+
+          case "updateDate":
+            json.updateDate = value ? value.getTime() : "";
+            break;
+
+          default:
+            json[property] = value;
+        }
+      } catch (ex) {
+        WARN("Error writing property value for " + property);
+      }
+    }
+
+    for (let [property, value] of Iterator(this._unsupportedProperties)) {
+      if (!property.startsWith("_"))
+        json[property] = value;
+    }
+
+    return json;
   }
 }
 
@@ -449,6 +490,12 @@ this.AddonRepository = {
 
   // An array of callbacks pending the retrieval of add-ons from AddonDatabase
   _pendingCallbacks: null,
+
+  // Whether a migration in currently in progress
+  _migrationInProgress: false,
+
+  // A callback to be called when migration finishes
+  _postMigrationCallback: null,
 
   // Whether a search is currently in progress
   _searching: false,
@@ -1474,182 +1521,110 @@ var AddonDatabase = {
   initialized: false,
   // false if there was an unrecoverable error openning the database
   databaseOk: true,
-  // A cache of statements that are used and need to be finalized on shutdown
-  asyncStatementsCache: {},
 
-  // The queries used by the database
-  queries: {
-    getAllAddons: "SELECT internal_id, id, type, name, version, " +
-                  "creator, creatorURL, description, fullDescription, " +
-                  "developerComments, eula, homepageURL, supportURL, " +
-                  "contributionURL, contributionAmount, averageRating, " +
-                  "reviewCount, reviewURL, totalDownloads, weeklyDownloads, " +
-                  "dailyUsers, sourceURI, repositoryStatus, size, updateDate " +
-                  "FROM addon",
-
-    getAllDevelopers: "SELECT addon_internal_id, name, url FROM developer " +
-                      "ORDER BY addon_internal_id, num",
-
-    getAllScreenshots: "SELECT addon_internal_id, url, width, height, " +
-                       "thumbnailURL, thumbnailWidth, thumbnailHeight, caption " +
-                       "FROM screenshot ORDER BY addon_internal_id, num",
-
-    getAllCompatOverrides: "SELECT addon_internal_id, type, minVersion, " +
-                           "maxVersion, appID, appMinVersion, appMaxVersion " +
-                           "FROM compatibility_override " +
-                           "ORDER BY addon_internal_id, num",
-
-    getAllIcons: "SELECT addon_internal_id, size, url FROM icon " +
-                 "ORDER BY addon_internal_id, size",
-
-    insertAddon: "INSERT INTO addon (id, type, name, version, " +
-                 "creator, creatorURL, description, fullDescription, " +
-                 "developerComments, eula, homepageURL, supportURL, " +
-                 "contributionURL, contributionAmount, averageRating, " +
-                 "reviewCount, reviewURL, totalDownloads, weeklyDownloads, " +
-                 "dailyUsers, sourceURI, repositoryStatus, size, updateDate) " +
-                 "VALUES (:id, :type, :name, :version, :creator, :creatorURL, " +
-                 ":description, :fullDescription, :developerComments, :eula, " +
-                 ":homepageURL, :supportURL, :contributionURL, " +
-                 ":contributionAmount, :averageRating, :reviewCount, " +
-                 ":reviewURL, :totalDownloads, :weeklyDownloads, :dailyUsers, " +
-                 ":sourceURI, :repositoryStatus, :size, :updateDate)",
-
-    insertDeveloper:  "INSERT INTO developer (addon_internal_id, " +
-                      "num, name, url) VALUES (:addon_internal_id, " +
-                      ":num, :name, :url)",
-
-    insertScreenshot: "INSERT INTO screenshot (addon_internal_id, " +
-                      "num, url, width, height, thumbnailURL, " +
-                      "thumbnailWidth, thumbnailHeight, caption) " +
-                      "VALUES (:addon_internal_id, " +
-                      ":num, :url, :width, :height, :thumbnailURL, " +
-                      ":thumbnailWidth, :thumbnailHeight, :caption)",
-
-    insertCompatibilityOverride: "INSERT INTO compatibility_override " +
-                                 "(addon_internal_id, num, type, " +
-                                 "minVersion, maxVersion, appID, " +
-                                 "appMinVersion, appMaxVersion) VALUES " +
-                                 "(:addon_internal_id, :num, :type, " +
-                                 ":minVersion, :maxVersion, :appID, " +
-                                 ":appMinVersion, :appMaxVersion)",
-
-    insertIcon: "INSERT INTO icon (addon_internal_id, size, url) " +
-                "VALUES (:addon_internal_id, :size, :url)",
-
-    emptyAddon:       "DELETE FROM addon"
-  },
+  // the in-memory database
+  DB: BLANK_DB(),
 
   /**
-   * A helper function to log an SQL error.
-   *
-   * @param  aError
-   *         The storage error code associated with the error
-   * @param  aErrorString
-   *         An error message
+   * A getter to retrieve an nsIFile pointer to the DB
    */
-  logSQLError: function AD_logSQLError(aError, aErrorString) {
-    ERROR("SQL error " + aError + ": " + aErrorString);
-  },
-
-  /**
-   * A helper function to log any errors that occur during async statements.
-   *
-   * @param  aError
-   *         A mozIStorageError to log
-   */
-  asyncErrorLogger: function AD_asyncErrorLogger(aError) {
-    ERROR("Async SQL error " + aError.result + ": " + aError.message);
+  get jsonFile() {
+    delete this.jsonFile;
+    return this.jsonFile = FileUtils.getFile(KEY_PROFILEDIR, [FILE_DATABASE], true);
   },
 
   /**
    * Synchronously opens a new connection to the database file.
-   *
-   * @param  aSecondAttempt
-   *         Whether this is a second attempt to open the database
-   * @return the mozIStorageConnection for the database
    */
-  openConnection: function AD_openConnection(aSecondAttempt) {
+  openConnection: function() {
+    this.DB = BLANK_DB();
     this.initialized = true;
     delete this.connection;
 
-    let dbfile = FileUtils.getFile(KEY_PROFILEDIR, [FILE_DATABASE], true);
-    let dbMissing = !dbfile.exists();
-
-    var tryAgain = (function openConnection_tryAgain() {
-      LOG("Deleting database, and attempting openConnection again");
-      this.initialized = false;
-      if (this.connection.connectionReady)
-        this.connection.close();
-      if (dbfile.exists())
-        dbfile.remove(false);
-      return this.openConnection(true);
-    }).bind(this);
+    let inputDB, fstream, cstream, schema;
 
     try {
-      this.connection = Services.storage.openUnsharedDatabase(dbfile);
-    } catch (e) {
-      this.initialized = false;
-      ERROR("Failed to open database", e);
-      if (aSecondAttempt || dbMissing) {
-        this.databaseOk = false;
-        throw Components.Exception("Failed to open database: " + e, e.result);
+     let data = "";
+     fstream = Cc["@mozilla.org/network/file-input-stream;1"]
+                 .createInstance(Ci.nsIFileInputStream);
+     cstream = Cc["@mozilla.org/intl/converter-input-stream;1"]
+                 .createInstance(Ci.nsIConverterInputStream);
+
+     fstream.init(this.jsonFile, -1, 0, 0);
+     cstream.init(fstream, "UTF-8", 0, 0);
+     let (str = {}) {
+       let read = 0;
+       do {
+         read = cstream.readString(0xffffffff, str); // read as much as we can and put it in str.value
+         data += str.value;
+       } while (read != 0);
+     }
+
+     inputDB = JSON.parse(data);
+
+     if (!inputDB.hasOwnProperty("addons") ||
+         !Array.isArray(inputDB.addons)) {
+       throw new Error("No addons array.");
+     }
+
+     if (!inputDB.hasOwnProperty("schema")) {
+       throw new Error("No schema specified.");
+     }
+
+     schema = parseInt(inputDB.schema, 10);
+
+     if (!Number.isInteger(schema) ||
+         schema < DB_MIN_JSON_SCHEMA) {
+       throw new Error("Invalid schema value.");
+     }
+
+    } catch (e if e.result == Cr.NS_ERROR_FILE_NOT_FOUND) {
+      LOG("No " + FILE_DATABASE + " found.");
+
+      // Create a blank addons.json file
+      this._saveDBToDisk();
+
+      let dbSchema = 0;
+      try {
+        dbSchema = Services.prefs.getIntPref(PREF_GETADDONS_DB_SCHEMA);
+      } catch (e) {}
+
+      if (dbSchema < DB_MIN_JSON_SCHEMA) {
+        this._migrationInProgress = AddonRepository_SQLiteMigrator.migrate((results) => {
+          if (results.length)
+            this.insertAddons(results);
+
+          if (this._postMigrationCallback) {
+            this._postMigrationCallback();
+            this._postMigrationCallback = null;
+          }
+
+          this._migrationInProgress = false;
+        });
+
+        Services.prefs.setIntPref(PREF_GETADDONS_DB_SCHEMA, DB_SCHEMA);
       }
-      return tryAgain();
+
+      return;
+
+    } catch (e) {
+      ERROR("Malformed " + FILE_DATABASE + ": " + e);
+      this.databaseOk = false;
+      return;
+
+    } finally {
+     cstream.close();
+     fstream.close();
     }
 
-    this.connection.executeSimpleSQL("PRAGMA locking_mode = EXCLUSIVE");
+    Services.prefs.setIntPref(PREF_GETADDONS_DB_SCHEMA, DB_SCHEMA);
 
-    // Any errors in here should rollback
-    try {
-      this.connection.beginTransaction();
-      switch (this.connection.schemaVersion) {
-        case 0:
-          LOG("Recreating database schema");
-          this._createSchema();
-          break;
-        case 1:
-          LOG("Upgrading database schema to version 2");
-          this.connection.executeSimpleSQL("ALTER TABLE screenshot ADD COLUMN width INTEGER");
-          this.connection.executeSimpleSQL("ALTER TABLE screenshot ADD COLUMN height INTEGER");
-          this.connection.executeSimpleSQL("ALTER TABLE screenshot ADD COLUMN thumbnailWidth INTEGER");
-          this.connection.executeSimpleSQL("ALTER TABLE screenshot ADD COLUMN thumbnailHeight INTEGER");
-        case 2:
-          LOG("Upgrading database schema to version 3");
-          this.connection.createTable("compatibility_override",
-                                      "addon_internal_id INTEGER, " +
-                                      "num INTEGER, " +
-                                      "type TEXT, " +
-                                      "minVersion TEXT, " +
-                                      "maxVersion TEXT, " +
-                                      "appID TEXT, " +
-                                      "appMinVersion TEXT, " +
-                                      "appMaxVersion TEXT, " +
-                                      "PRIMARY KEY (addon_internal_id, num)");
-        case 3:
-          LOG("Upgrading database schema to version 4");
-          this.connection.createTable("icon",
-                                      "addon_internal_id INTEGER, " +
-                                      "size INTEGER, " +
-                                      "url TEXT, " +
-                                      "PRIMARY KEY (addon_internal_id, size)");
-          this._createIndices();
-          this._createTriggers();
-          this.connection.schemaVersion = DB_SCHEMA;
-        case DB_SCHEMA:
-          break;
-        default:
-          return tryAgain();
-      }
-      this.connection.commitTransaction();
-    } catch (e) {
-      ERROR("Failed to create database schema", e);
-      this.logSQLError(this.connection.lastError, this.connection.lastErrorString);
-      this.connection.rollbackTransaction();
-      return tryAgain();
+    // We use _insertAddon manually instead of calling
+    // insertAddons to avoid the write to disk which would
+    // be a waste since this is the data that was just read.
+    for (let addon of inputDB.addons) {
+      this._insertAddon(addon);
     }
-
-    return this.connection;
   },
 
   /**
@@ -1665,36 +1640,30 @@ var AddonDatabase = {
    *
    * @param  aCallback
    *         An optional callback to call once complete
+   * @param  aSkipFlush
+   *         An optional boolean to skip flushing data to disk. Useful
+   *         when the database is going to be deleted afterwards.
    */
-  shutdown: function AD_shutdown(aCallback) {
+  shutdown: function AD_shutdown(aCallback, aSkipFlush) {
     this.databaseOk = true;
+    aCallback = aCallback || function() {};
+
     if (!this.initialized) {
-      if (aCallback)
-        aCallback();
+      aCallback();
       return;
     }
 
     this.initialized = false;
 
-    for each (let stmt in this.asyncStatementsCache)
-      stmt.finalize();
-    this.asyncStatementsCache = {};
-
-    if (this.connection.transactionInProgress) {
-      ERROR("Outstanding transaction, rolling back.");
-      this.connection.rollbackTransaction();
-    }
-
-    let connection = this.connection;
-    delete this.connection;
-
-    // Re-create the connection smart getter to allow the database to be
-    // re-loaded during testing.
     this.__defineGetter__("connection", function shutdown_connectionGetter() {
       return this.openConnection();
     });
 
-    connection.asyncClose(aCallback);
+    if (aSkipFlush) {
+      aCallback();
+    } else {
+      this.Writer.flush().then(aCallback, aCallback);
+    }
   },
 
   /**
@@ -1705,37 +1674,42 @@ var AddonDatabase = {
    *         An optional callback to call once complete
    */
   delete: function AD_delete(aCallback) {
-    this.shutdown(function delete_shutdown() {
-      let dbfile = FileUtils.getFile(KEY_PROFILEDIR, [FILE_DATABASE], true);
-      if (dbfile.exists())
-        dbfile.remove(false);
+    this.DB = BLANK_DB();
 
-      if (aCallback)
-        aCallback();
+    this.Writer.flush().then(null, () => {}).then(() => {
+      this.shutdown(() => {
+        let promise = OS.File.remove(this.jsonFile.path, {});
+        if (aCallback)
+          promise.then(aCallback, aCallback);
+      }, true);
     });
   },
 
-  /**
-   * Gets a cached async statement or creates a new statement if it doesn't
-   * already exist.
-   *
-   * @param  aKey
-   *         A unique key to reference the statement
-   * @return a mozIStorageAsyncStatement for the SQL corresponding to the
-   *         unique key
-   */
-  getAsyncStatement: function AD_getAsyncStatement(aKey) {
-    if (aKey in this.asyncStatementsCache)
-      return this.asyncStatementsCache[aKey];
-
-    let sql = this.queries[aKey];
-    try {
-      return this.asyncStatementsCache[aKey] = this.connection.createAsyncStatement(sql);
-    } catch (e) {
-      ERROR("Error creating statement " + aKey + " (" + sql + ")");
-      throw Components.Exception("Error creating statement " + aKey + " (" + sql + "): " + e,
-                                 e.result);
+  toJSON: function AD_toJSON() {
+    let json = {
+      schema: this.DB.schema,
+      addons: []
     }
+
+    for (let [, value] of this.DB.addons)
+      json.addons.push(value);
+
+    return json;
+  },
+
+  /*
+   * This is a deferred task writer that is used
+   * to batch operations done within 50ms of each
+   * other and thus generating only one write to disk
+   */
+  get Writer() {
+    delete this.Writer;
+    this.Writer = new DeferredSave(
+      this.jsonFile.path,
+      () => { return JSON.stringify(this); },
+      DB_BATCH_TIMEOUT_MS
+    );
+    return this.Writer;
   },
 
   /**
@@ -1746,171 +1720,21 @@ var AddonDatabase = {
    *         The callback to pass the add-ons back to
    */
   retrieveStoredData: function AD_retrieveStoredData(aCallback) {
-    let self = this;
-    let addons = {};
+    if (!this.initialized)
+      this.openConnection();
 
-    // Retrieve all data from the addon table
-    function getAllAddons() {
-      self.getAsyncStatement("getAllAddons").executeAsync({
-        handleResult: function getAllAddons_handleResult(aResults) {
-          let row = null;
-          while ((row = aResults.getNextRow())) {
-            let internal_id = row.getResultByName("internal_id");
-            addons[internal_id] = self._makeAddonFromAsyncRow(row);
-          }
-        },
+    let gatherResults = () => {
+      let result = {};
+      for (let [key, value] of this.DB.addons)
+        result[key] = value;
 
-        handleError: self.asyncErrorLogger,
+      executeSoon(function() aCallback(result));
+    };
 
-        handleCompletion: function getAllAddons_handleCompletion(aReason) {
-          if (aReason != Ci.mozIStorageStatementCallback.REASON_FINISHED) {
-            ERROR("Error retrieving add-ons from database. Returning empty results");
-            aCallback({});
-            return;
-          }
-
-          getAllDevelopers();
-        }
-      });
-    }
-
-    // Retrieve all data from the developer table
-    function getAllDevelopers() {
-      self.getAsyncStatement("getAllDevelopers").executeAsync({
-        handleResult: function getAllDevelopers_handleResult(aResults) {
-          let row = null;
-          while ((row = aResults.getNextRow())) {
-            let addon_internal_id = row.getResultByName("addon_internal_id");
-            if (!(addon_internal_id in addons)) {
-              WARN("Found a developer not linked to an add-on in database");
-              continue;
-            }
-
-            let addon = addons[addon_internal_id];
-            if (!addon.developers)
-              addon.developers = [];
-
-            addon.developers.push(self._makeDeveloperFromAsyncRow(row));
-          }
-        },
-
-        handleError: self.asyncErrorLogger,
-
-        handleCompletion: function getAllDevelopers_handleCompletion(aReason) {
-          if (aReason != Ci.mozIStorageStatementCallback.REASON_FINISHED) {
-            ERROR("Error retrieving developers from database. Returning empty results");
-            aCallback({});
-            return;
-          }
-
-          getAllScreenshots();
-        }
-      });
-    }
-
-    // Retrieve all data from the screenshot table
-    function getAllScreenshots() {
-      self.getAsyncStatement("getAllScreenshots").executeAsync({
-        handleResult: function getAllScreenshots_handleResult(aResults) {
-          let row = null;
-          while ((row = aResults.getNextRow())) {
-            let addon_internal_id = row.getResultByName("addon_internal_id");
-            if (!(addon_internal_id in addons)) {
-              WARN("Found a screenshot not linked to an add-on in database");
-              continue;
-            }
-
-            let addon = addons[addon_internal_id];
-            if (!addon.screenshots)
-              addon.screenshots = [];
-            addon.screenshots.push(self._makeScreenshotFromAsyncRow(row));
-          }
-        },
-
-        handleError: self.asyncErrorLogger,
-
-        handleCompletion: function getAllScreenshots_handleCompletion(aReason) {
-          if (aReason != Ci.mozIStorageStatementCallback.REASON_FINISHED) {
-            ERROR("Error retrieving screenshots from database. Returning empty results");
-            aCallback({});
-            return;
-          }
-
-          getAllCompatOverrides();
-        }
-      });
-    }
-
-    function getAllCompatOverrides() {
-      self.getAsyncStatement("getAllCompatOverrides").executeAsync({
-        handleResult: function getAllCompatOverrides_handleResult(aResults) {
-          let row = null;
-          while ((row = aResults.getNextRow())) {
-            let addon_internal_id = row.getResultByName("addon_internal_id");
-            if (!(addon_internal_id in addons)) {
-              WARN("Found a compatibility override not linked to an add-on in database");
-              continue;
-            }
-
-            let addon = addons[addon_internal_id];
-            if (!addon.compatibilityOverrides)
-              addon.compatibilityOverrides = [];
-            addon.compatibilityOverrides.push(self._makeCompatOverrideFromAsyncRow(row));
-          }
-        },
-
-        handleError: self.asyncErrorLogger,
-
-        handleCompletion: function getAllCompatOverrides_handleCompletion(aReason) {
-          if (aReason != Ci.mozIStorageStatementCallback.REASON_FINISHED) {
-            ERROR("Error retrieving compatibility overrides from database. Returning empty results");
-            aCallback({});
-            return;
-          }
-
-          getAllIcons();
-        }
-      });
-    }
-
-    function getAllIcons() {
-      self.getAsyncStatement("getAllIcons").executeAsync({
-        handleResult: function getAllIcons_handleResult(aResults) {
-          let row = null;
-          while ((row = aResults.getNextRow())) {
-            let addon_internal_id = row.getResultByName("addon_internal_id");
-            if (!(addon_internal_id in addons)) {
-              WARN("Found an icon not linked to an add-on in database");
-              continue;
-            }
-
-            let addon = addons[addon_internal_id];
-            let { size, url } = self._makeIconFromAsyncRow(row);
-            addon.icons[size] = url;
-            if (size == 32)
-              addon.iconURL = url;
-          }
-        },
-
-        handleError: self.asyncErrorLogger,
-
-        handleCompletion: function getAllIcons_handleCompletion(aReason) {
-          if (aReason != Ci.mozIStorageStatementCallback.REASON_FINISHED) {
-            ERROR("Error retrieving icons from database. Returning empty results");
-            aCallback({});
-            return;
-          }
-
-          let returnedAddons = {};
-          for each (let addon in addons)
-            returnedAddons[addon.id] = addon;
-          aCallback(returnedAddons);
-        }
-      });
-    }
-
-    // Begin asynchronous process
-    getAllAddons();
+    if (this._migrationInProgress)
+      this._postMigrationCallback = gatherResults;
+    else
+      gatherResults();
   },
 
   /**
@@ -1923,23 +1747,8 @@ var AddonDatabase = {
    *         An optional callback to call once complete
    */
   repopulate: function AD_repopulate(aAddons, aCallback) {
-    let self = this;
-
-    // Completely empty the database
-    let stmts = [this.getAsyncStatement("emptyAddon")];
-
-    this.connection.executeAsync(stmts, stmts.length, {
-      handleResult: function emptyAddon_handleResult() {},
-      handleError: self.asyncErrorLogger,
-
-      handleCompletion: function emptyAddon_handleCompletion(aReason) {
-        if (aReason != Ci.mozIStorageStatementCallback.REASON_FINISHED)
-          ERROR("Error emptying database. Attempting to continue repopulating database");
-
-        // Insert the specified add-ons
-        self.insertAddons(aAddons, aCallback);
-      }
-    });
+    this.DB.addons.clear();
+    this.insertAddons(aAddons, aCallback);
   },
 
   /**
@@ -1951,21 +1760,17 @@ var AddonDatabase = {
    *         An optional callback to call once complete
    */
   insertAddons: function AD_insertAddons(aAddons, aCallback) {
-    let self = this;
-    let currentAddon = -1;
+    if (!this.initialized)
+      this.openConnection();
 
-    // Chain insertions
-    function insertNextAddon() {
-      if (++currentAddon == aAddons.length) {
-        if (aCallback)
-          aCallback();
-        return;
-      }
-
-      self._insertAddon(aAddons[currentAddon], insertNextAddon);
+    for (let addon of aAddons) {
+      this._insertAddon(addon);
     }
 
-    insertNextAddon();
+    this._saveDBToDisk();
+
+    if (aCallback)
+      executeSoon(aCallback);
   },
 
   /**
@@ -1978,314 +1783,190 @@ var AddonDatabase = {
    * @param  aCallback
    *         The callback to call once complete
    */
-  _insertAddon: function AD__insertAddon(aAddon, aCallback) {
-    let self = this;
-    let internal_id = null;
-    this.connection.beginTransaction();
+  _insertAddon: function AD__insertAddon(aAddon) {
+    let newAddon = this._parseAddon(aAddon);
+    if (!newAddon ||
+        !newAddon.id ||
+        this.DB.addons.has(newAddon.id))
+      return;
 
-    // Simultaneously insert the developers, screenshots, and compatibility
-    // overrides of the add-on.
-    function insertAdditionalData() {
-      let stmts = [];
+    this.DB.addons.set(newAddon.id, newAddon);
+  },
 
-      // Initialize statement and parameters for inserting an array
-      function initializeArrayInsert(aStatementKey, aArray, aAddParams) {
-        if (!aArray || aArray.length == 0)
-          return;
+  /*
+   * Creates an AddonSearchResult by parsing an object structure
+   * retrieved from the DB JSON representation.
+   *
+   * @param  aObj
+   *         The object to parse
+   * @return Returns an AddonSearchResult object.
+   */
+  _parseAddon: function (aObj) {
+    if (aObj instanceof AddonSearchResult)
+      return aObj;
 
-        let stmt = self.getAsyncStatement(aStatementKey);
-        let params = stmt.newBindingParamsArray();
-        aArray.forEach(function(aElement, aIndex) {
-          aAddParams(params, internal_id, aElement, aIndex);
-        });
+    let id = aObj.id;
+    if (!aObj.id)
+      return null;
 
-        stmt.bindParameters(params);
-        stmts.push(stmt);
+    let addon = new AddonSearchResult(id);
+
+    for (let [expectedProperty,] of Iterator(AddonSearchResult.prototype)) {
+      if (!(expectedProperty in aObj) ||
+          typeof(aObj[expectedProperty]) === "function")
+        continue;
+
+      let value = aObj[expectedProperty];
+
+      try {
+        switch (expectedProperty) {
+          case "sourceURI":
+            addon.sourceURI = value ? NetUtil.newURI(value) :  null;
+            break;
+
+          case "creator":
+            addon.creator = value
+                            ? this._makeDeveloper(value)
+                            : null;
+            break;
+
+          case "updateDate":
+            addon.updateDate = value ? new Date(value) : null;
+            break;
+
+          case "developers":
+            if (!addon.developers) addon.developers = [];
+            for (let developer of value) {
+              addon.developers.push(this._makeDeveloper(developer));
+            }
+            break;
+
+          case "screenshots":
+            if (!addon.screenshots) addon.screenshots = [];
+            for (let screenshot of value) {
+              addon.screenshots.push(this._makeScreenshot(screenshot));
+            }
+            break;
+
+          case "compatibilityOverrides":
+            if (!addon.compatibilityOverrides) addon.compatibilityOverrides = [];
+            for (let override of value) {
+              addon.compatibilityOverrides.push(
+                this._makeCompatOverride(override)
+              );
+            }
+            break;
+
+          case "icons":
+            if (!addon.icons) addon.icons = {};
+            for (let [size, url] of Iterator(aObj.icons)) {
+              addon.icons[size] = url;
+            }
+            break;
+
+          case "iconURL":
+            break;
+
+          default:
+            addon[expectedProperty] = value;
+        }
+      } catch (ex) {
+        WARN("Error in parsing property value for " + expectedProperty + " | " + ex);
       }
 
-      // Initialize statements to insert developers, screenshots, and
-      // compatibility overrides
-      initializeArrayInsert("insertDeveloper", aAddon.developers,
-                            self._addDeveloperParams);
-      initializeArrayInsert("insertScreenshot", aAddon.screenshots,
-                            self._addScreenshotParams);
-      initializeArrayInsert("insertCompatibilityOverride",
-                            aAddon.compatibilityOverrides,
-                            self._addCompatOverrideParams);
-      {
-        let stmt = self.getAsyncStatement("insertIcon");
-        let params = stmt.newBindingParamsArray();
-        let empty = true;
-        for (let size in aAddon.icons) {
-          self._addIconParams(params, internal_id, aAddon.icons[size], size);
-          empty = false;
-        }
-
-        if (!empty) {
-          stmt.bindParameters(params);
-          stmts.push(stmt);
-        }
-      }
-
-      // Immediately call callback if nothing to insert
-      if (stmts.length == 0) {
-        self.connection.commitTransaction();
-        aCallback();
-        return;
-      }
-
-      self.connection.executeAsync(stmts, stmts.length, {
-        handleResult: function insertAdditionalData_handleResult() {},
-        handleError: self.asyncErrorLogger,
-        handleCompletion: function insertAdditionalData_handleCompletion(aReason) {
-          if (aReason != Ci.mozIStorageStatementCallback.REASON_FINISHED) {
-            ERROR("Error inserting additional addon metadata into database. Attempting to continue");
-            self.connection.rollbackTransaction();
-          }
-          else {
-            self.connection.commitTransaction();
-          }
-
-          aCallback();
-        }
-      });
+      // delete property from obj to indicate we've already
+      // handled it. The remaining public properties will
+      // be stored separately and just passed through to
+      // be written back to the DB.
+      delete aObj[expectedProperty];
     }
 
-    // Insert add-on into database
-    this._makeAddonStatement(aAddon).executeAsync({
-      handleResult: function makeAddonStatement_handleResult() {},
-      handleError: self.asyncErrorLogger,
-
-      handleCompletion: function makeAddonStatement_handleCompletion(aReason) {
-        if (aReason != Ci.mozIStorageStatementCallback.REASON_FINISHED) {
-          ERROR("Error inserting add-ons into database. Attempting to continue.");
-          self.connection.rollbackTransaction();
-          aCallback();
-          return;
-        }
-
-        internal_id = self.connection.lastInsertRowID;
-        insertAdditionalData();
-      }
-    });
-  },
-
-  /**
-   * Make an asynchronous statement that will insert the specified add-on
-   *
-   * @param  aAddon
-   *         The add-on to make the statement for
-   * @return The asynchronous mozIStorageStatement
-   */
-  _makeAddonStatement: function AD__makeAddonStatement(aAddon) {
-    let stmt = this.getAsyncStatement("insertAddon");
-    let params = stmt.params;
-
-    PROP_SINGLE.forEach(function(aProperty) {
-      switch (aProperty) {
-        case "sourceURI":
-          params.sourceURI = aAddon.sourceURI ? aAddon.sourceURI.spec : null;
-          break;
-        case "creator":
-          params.creator =  aAddon.creator ? aAddon.creator.name : null;
-          params.creatorURL =  aAddon.creator ? aAddon.creator.url : null;
-          break;
-        case "updateDate":
-          params.updateDate = aAddon.updateDate ? aAddon.updateDate.getTime() : null;
+    // Copy remaining properties to a separate object
+    // to prevent accidental access on downgraded versions.
+    // The properties will be merged in the same object
+    // prior to being written back through toJSON.
+    for (let remainingProperty of Object.keys(aObj)) {
+      switch (typeof(aObj[remainingProperty])) {
+        case "boolean":
+        case "number":
+        case "string":
+        case "object":
+          // these types are accepted
           break;
         default:
-          params[aProperty] = aAddon[aProperty];
+          continue;
       }
-    });
 
-    return stmt;
-  },
-
-  /**
-   * Add developer parameters to the specified mozIStorageBindingParamsArray
-   *
-   * @param  aParams
-   *         The mozIStorageBindingParamsArray to add the parameters to
-   * @param  aInternalID
-   *         The internal_id of the add-on that this developer is for
-   * @param  aDeveloper
-   *         The developer to make the parameters from
-   * @param  aIndex
-   *         The index of this developer
-   * @return The asynchronous mozIStorageStatement
-   */
-  _addDeveloperParams: function AD__addDeveloperParams(aParams, aInternalID,
-                                                       aDeveloper, aIndex) {
-    let bp = aParams.newBindingParams();
-    bp.bindByName("addon_internal_id", aInternalID);
-    bp.bindByName("num", aIndex);
-    bp.bindByName("name", aDeveloper.name);
-    bp.bindByName("url", aDeveloper.url);
-    aParams.addParams(bp);
-  },
-
-  /**
-   * Add screenshot parameters to the specified mozIStorageBindingParamsArray
-   *
-   * @param  aParams
-   *         The mozIStorageBindingParamsArray to add the parameters to
-   * @param  aInternalID
-   *         The internal_id of the add-on that this screenshot is for
-   * @param  aScreenshot
-   *         The screenshot to make the parameters from
-   * @param  aIndex
-   *         The index of this screenshot
-   */
-  _addScreenshotParams: function AD__addScreenshotParams(aParams, aInternalID,
-                                                         aScreenshot, aIndex) {
-    let bp = aParams.newBindingParams();
-    bp.bindByName("addon_internal_id", aInternalID);
-    bp.bindByName("num", aIndex);
-    bp.bindByName("url", aScreenshot.url);
-    bp.bindByName("width", aScreenshot.width);
-    bp.bindByName("height", aScreenshot.height);
-    bp.bindByName("thumbnailURL", aScreenshot.thumbnailURL);
-    bp.bindByName("thumbnailWidth", aScreenshot.thumbnailWidth);
-    bp.bindByName("thumbnailHeight", aScreenshot.thumbnailHeight);
-    bp.bindByName("caption", aScreenshot.caption);
-    aParams.addParams(bp);
-  },
-
-  /**
-   * Add compatibility override parameters to the specified
-   * mozIStorageBindingParamsArray.
-   *
-   * @param  aParams
-   *         The mozIStorageBindingParamsArray to add the parameters to
-   * @param  aInternalID
-   *         The internal_id of the add-on that this override is for
-   * @param  aOverride
-   *         The override to make the parameters from
-   * @param  aIndex
-   *         The index of this override
-   */
-  _addCompatOverrideParams: function AD_addCompatOverrideParams(aParams,
-                                                                aInternalID,
-                                                                aOverride,
-                                                                aIndex) {
-    let bp = aParams.newBindingParams();
-    bp.bindByName("addon_internal_id", aInternalID);
-    bp.bindByName("num", aIndex);
-    bp.bindByName("type", aOverride.type);
-    bp.bindByName("minVersion", aOverride.minVersion);
-    bp.bindByName("maxVersion", aOverride.maxVersion);
-    bp.bindByName("appID", aOverride.appID);
-    bp.bindByName("appMinVersion", aOverride.appMinVersion);
-    bp.bindByName("appMaxVersion", aOverride.appMaxVersion);
-    aParams.addParams(bp);
-  },
-
-  /**
-   * Add icon parameters to the specified mozIStorageBindingParamsArray.
-   *
-   * @param  aParams
-   *         The mozIStorageBindingParamsArray to add the parameters to
-   * @param  aInternalID
-   *         The internal_id of the add-on that this override is for
-   * @param  aURL
-   *         The URL of this icon
-   * @param  aSize
-   *         The size of this icon
-   */
-  _addIconParams: function AD_addIconParams(aParams,
-                                            aInternalID,
-                                            aURL,
-                                            aSize) {
-    let bp = aParams.newBindingParams();
-    bp.bindByName("addon_internal_id", aInternalID);
-    bp.bindByName("url", aURL);
-    bp.bindByName("size", aSize);
-    aParams.addParams(bp);
-  },
-
-  /**
-   * Make add-on from an asynchronous row
-   * Note: This add-on will be lacking both developers and screenshots
-   *
-   * @param  aRow
-   *         The asynchronous row to use
-   * @return The created add-on
-   */
-  _makeAddonFromAsyncRow: function AD__makeAddonFromAsyncRow(aRow) {
-    let addon = {};
-    addon.icons = {};
-
-    PROP_SINGLE.forEach(function(aProperty) {
-      let value = aRow.getResultByName(aProperty);
-
-      switch (aProperty) {
-        case "sourceURI":
-          addon.sourceURI = value ? NetUtil.newURI(value) : null;
-          break;
-        case "creator":
-          let creatorURL = aRow.getResultByName("creatorURL");
-          if (value || creatorURL)
-            addon.creator = new AddonManagerPrivate.AddonAuthor(value, creatorURL);
-          else
-            addon.creator = null;
-          break;
-        case "updateDate":
-          addon.updateDate = value ? new Date(value) : null;
-          break;
-        default:
-          addon[aProperty] = value;
-      }
-    });
+      if (!remainingProperty.startsWith("_"))
+        addon._unsupportedProperties[remainingProperty] =
+          aObj[remainingProperty];
+    }
 
     return addon;
   },
 
   /**
-   * Make a developer from an asynchronous row
+   * Write the in-memory DB to disk, after waiting for
+   * the DB_BATCH_TIMEOUT_MS timeout.
    *
-   * @param  aRow
-   *         The asynchronous row to use
+   * @return Promise A promise that resolves after the
+   *                 write to disk has completed.
+   */
+  _saveDBToDisk: function() {
+    return this.Writer.saveChanges().then(
+      function() Services.obs.notifyObservers(null, DB_DATA_WRITTEN_TOPIC, null),
+      ERROR);
+  },
+
+  /**
+   * Make a developer object from a vanilla
+   * JS object from the JSON database
+   *
+   * @param  aObj
+   *         The JS object to use
    * @return The created developer
    */
-  _makeDeveloperFromAsyncRow: function AD__makeDeveloperFromAsyncRow(aRow) {
-    let name = aRow.getResultByName("name");
-    let url = aRow.getResultByName("url")
+  _makeDeveloper: function (aObj) {
+    let name = aObj.name;
+    let url = aObj.url;
     return new AddonManagerPrivate.AddonAuthor(name, url);
   },
 
   /**
-   * Make a screenshot from an asynchronous row
+   * Make a screenshot object from a vanilla
+   * JS object from the JSON database
    *
-   * @param  aRow
-   *         The asynchronous row to use
+   * @param  aObj
+   *         The JS object to use
    * @return The created screenshot
    */
-  _makeScreenshotFromAsyncRow: function AD__makeScreenshotFromAsyncRow(aRow) {
-    let url = aRow.getResultByName("url");
-    let width = aRow.getResultByName("width");
-    let height = aRow.getResultByName("height");
-    let thumbnailURL = aRow.getResultByName("thumbnailURL");
-    let thumbnailWidth = aRow.getResultByName("thumbnailWidth");
-    let thumbnailHeight = aRow.getResultByName("thumbnailHeight");
-    let caption = aRow.getResultByName("caption");
+  _makeScreenshot: function (aObj) {
+    let url = aObj.url;
+    let width = aObj.width;
+    let height = aObj.height;
+    let thumbnailURL = aObj.thumbnailURL;
+    let thumbnailWidth = aObj.thumbnailWidth;
+    let thumbnailHeight = aObj.thumbnailHeight;
+    let caption = aObj.caption;
     return new AddonManagerPrivate.AddonScreenshot(url, width, height, thumbnailURL,
                                                    thumbnailWidth, thumbnailHeight, caption);
   },
 
   /**
-   * Make a CompatibilityOverride from an asynchronous row
+   * Make a CompatibilityOverride from a vanilla
+   * JS object from the JSON database
    *
-   * @param  aRow
-   *         The asynchronous row to use
+   * @param  aObj
+   *         The JS object to use
    * @return The created CompatibilityOverride
    */
-  _makeCompatOverrideFromAsyncRow: function AD_makeCompatOverrideFromAsyncRow(aRow) {
-    let type = aRow.getResultByName("type");
-    let minVersion = aRow.getResultByName("minVersion");
-    let maxVersion = aRow.getResultByName("maxVersion");
-    let appID = aRow.getResultByName("appID");
-    let appMinVersion = aRow.getResultByName("appMinVersion");
-    let appMaxVersion = aRow.getResultByName("appMaxVersion");
+  _makeCompatOverride: function (aObj) {
+    let type = aObj.type;
+    let minVersion = aObj.minVersion;
+    let maxVersion = aObj.maxVersion;
+    let appID = aObj.appID;
+    let appMinVersion = aObj.appMinVersion;
+    let appMaxVersion = aObj.appMaxVersion;
     return new AddonManagerPrivate.AddonCompatibilityOverride(type,
                                                               minVersion,
                                                               maxVersion,
@@ -2293,120 +1974,8 @@ var AddonDatabase = {
                                                               appMinVersion,
                                                               appMaxVersion);
   },
-
-  /**
-   * Make an icon from an asynchronous row
-   *
-   * @param  aRow
-   *         The asynchronous row to use
-   * @return An object containing the size and URL of the icon
-   */
-  _makeIconFromAsyncRow: function AD_makeIconFromAsyncRow(aRow) {
-    let size = aRow.getResultByName("size");
-    let url = aRow.getResultByName("url");
-    return { size: size, url: url };
-  },
-
-  /**
-   * Synchronously creates the schema in the database.
-   */
-  _createSchema: function AD__createSchema() {
-    LOG("Creating database schema");
-
-      this.connection.createTable("addon",
-                                  "internal_id INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                                  "id TEXT UNIQUE, " +
-                                  "type TEXT, " +
-                                  "name TEXT, " +
-                                  "version TEXT, " +
-                                  "creator TEXT, " +
-                                  "creatorURL TEXT, " +
-                                  "description TEXT, " +
-                                  "fullDescription TEXT, " +
-                                  "developerComments TEXT, " +
-                                  "eula TEXT, " +
-                                  "homepageURL TEXT, " +
-                                  "supportURL TEXT, " +
-                                  "contributionURL TEXT, " +
-                                  "contributionAmount TEXT, " +
-                                  "averageRating INTEGER, " +
-                                  "reviewCount INTEGER, " +
-                                  "reviewURL TEXT, " +
-                                  "totalDownloads INTEGER, " +
-                                  "weeklyDownloads INTEGER, " +
-                                  "dailyUsers INTEGER, " +
-                                  "sourceURI TEXT, " +
-                                  "repositoryStatus INTEGER, " +
-                                  "size INTEGER, " +
-                                  "updateDate INTEGER");
-
-      this.connection.createTable("developer",
-                                  "addon_internal_id INTEGER, " +
-                                  "num INTEGER, " +
-                                  "name TEXT, " +
-                                  "url TEXT, " +
-                                  "PRIMARY KEY (addon_internal_id, num)");
-
-      this.connection.createTable("screenshot",
-                                  "addon_internal_id INTEGER, " +
-                                  "num INTEGER, " +
-                                  "url TEXT, " +
-                                  "width INTEGER, " +
-                                  "height INTEGER, " +
-                                  "thumbnailURL TEXT, " +
-                                  "thumbnailWidth INTEGER, " +
-                                  "thumbnailHeight INTEGER, " +
-                                  "caption TEXT, " +
-                                  "PRIMARY KEY (addon_internal_id, num)");
-
-      this.connection.createTable("compatibility_override",
-                                  "addon_internal_id INTEGER, " +
-                                  "num INTEGER, " +
-                                  "type TEXT, " +
-                                  "minVersion TEXT, " +
-                                  "maxVersion TEXT, " +
-                                  "appID TEXT, " +
-                                  "appMinVersion TEXT, " +
-                                  "appMaxVersion TEXT, " +
-                                  "PRIMARY KEY (addon_internal_id, num)");
-
-      this.connection.createTable("icon",
-                                  "addon_internal_id INTEGER, " +
-                                  "size INTEGER, " +
-                                  "url TEXT, " +
-                                  "PRIMARY KEY (addon_internal_id, size)");
-
-      this._createIndices();
-      this._createTriggers();
-
-      this.connection.schemaVersion = DB_SCHEMA;
-  },
-
-  /**
-   * Synchronously creates the triggers in the database.
-   */
-  _createTriggers: function AD__createTriggers() {
-    this.connection.executeSimpleSQL("DROP TRIGGER IF EXISTS delete_addon");
-    this.connection.executeSimpleSQL("CREATE TRIGGER delete_addon AFTER DELETE " +
-      "ON addon BEGIN " +
-      "DELETE FROM developer WHERE addon_internal_id=old.internal_id; " +
-      "DELETE FROM screenshot WHERE addon_internal_id=old.internal_id; " +
-      "DELETE FROM compatibility_override WHERE addon_internal_id=old.internal_id; " +
-      "DELETE FROM icon WHERE addon_internal_id=old.internal_id; " +
-      "END");
-  },
-
-  /**
-   * Synchronously creates the indices in the database.
-   */
-  _createIndices: function AD__createIndices() {
-      this.connection.executeSimpleSQL("CREATE INDEX IF NOT EXISTS developer_idx " +
-                                       "ON developer (addon_internal_id)");
-      this.connection.executeSimpleSQL("CREATE INDEX IF NOT EXISTS screenshot_idx " +
-                                       "ON screenshot (addon_internal_id)");
-      this.connection.executeSimpleSQL("CREATE INDEX IF NOT EXISTS compatibility_override_idx " +
-                                       "ON compatibility_override (addon_internal_id)");
-      this.connection.executeSimpleSQL("CREATE INDEX IF NOT EXISTS icon_idx " +
-                                       "ON icon (addon_internal_id)");
-  }
 };
+
+function executeSoon(aCallback) {
+  Services.tm.mainThread.dispatch(aCallback, Ci.nsIThread.DISPATCH_NORMAL);
+}

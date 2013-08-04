@@ -4,9 +4,17 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+DIRS += [
+    'modules',
+]
+
 TEST_DIRS += ['tests']
 
 MODULE = 'osfile'
 
 LIBRARY_NAME = 'osfile_s'
+
+EXTRA_PP_JS_MODULES += [
+    'osfile.jsm',
+]
 

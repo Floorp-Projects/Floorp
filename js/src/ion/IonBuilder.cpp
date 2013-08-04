@@ -194,10 +194,6 @@ IonBuilder::getPolyCallTargets(types::StackTypeSet *calleeTypes,
             DebugOnly<bool> appendOk = targets.append(obj);
             JS_ASSERT(appendOk);
         } else {
-            /* Temporarily disable heavyweight-function inlining. */
-            targets.clear();
-            return true;
-#if 0
             types::TypeObject *typeObj = calleeTypes->getTypeObject(i);
             JS_ASSERT(typeObj);
             if (!typeObj->isFunction() || !typeObj->interpretedFunction) {
@@ -210,7 +206,6 @@ IonBuilder::getPolyCallTargets(types::StackTypeSet *calleeTypes,
             JS_ASSERT(appendOk);
 
             *gotLambda = true;
-#endif
         }
     }
 
@@ -1338,6 +1333,16 @@ IonBuilder::inspectOpcode(JSOp op)
         RootedPropertyName name(cx, info().getAtom(pc)->asPropertyName());
         return jsop_initprop(name);
       }
+
+      case JSOP_INITPROP_GETTER:
+      case JSOP_INITPROP_SETTER: {
+        PropertyName *name = info().getAtom(pc)->asPropertyName();
+        return jsop_initprop_getter_setter(name);
+      }
+
+      case JSOP_INITELEM_GETTER:
+      case JSOP_INITELEM_SETTER:
+        return jsop_initelem_getter_setter();
 
       case JSOP_ENDINIT:
         return true;
@@ -3517,6 +3522,11 @@ IonBuilder::inlineScriptedCall(CallInfo &callInfo, JSFunction *target)
     returnBlock->inheritSlots(current);
     returnBlock->pop();
 
+    // If callee is not a constant, add an MForceUse with the callee to make sure that
+    // it gets kept alive across the inlined body.
+    if (!callInfo.fun()->isConstant())
+        returnBlock->add(MForceUse::New(callInfo.fun()));
+
     // Accumulate return values.
     MIRGraphExits &exits = *inlineBuilder.graph().exitAccumulator();
     if (exits.length() == 0) {
@@ -4666,6 +4676,7 @@ IonBuilder::jsop_funapplyarguments(uint32_t argc)
 
         // Vp
         MPassArg *passVp = current->pop()->toPassArg();
+        passVp->getArgument()->setFoldedUnchecked();
         passVp->replaceAllUsesWith(passVp->getArgument());
         passVp->block()->discard(passVp);
 
@@ -4705,6 +4716,7 @@ IonBuilder::jsop_funapplyarguments(uint32_t argc)
 
     // Vp
     MPassArg *passVp = current->pop()->toPassArg();
+    passVp->getArgument()->setFoldedUnchecked();
     passVp->replaceAllUsesWith(passVp->getArgument());
     passVp->block()->discard(passVp);
 
@@ -5440,6 +5452,29 @@ IonBuilder::jsop_initprop(HandlePropertyName name)
 
     current->add(store);
     return resumeAfter(store);
+}
+
+bool
+IonBuilder::jsop_initprop_getter_setter(PropertyName *name)
+{
+    MDefinition *value = current->pop();
+    MDefinition *obj = current->peek(-1);
+
+    MInitPropGetterSetter *init = MInitPropGetterSetter::New(obj, name, value);
+    current->add(init);
+    return resumeAfter(init);
+}
+
+bool
+IonBuilder::jsop_initelem_getter_setter()
+{
+    MDefinition *value = current->pop();
+    MDefinition *id = current->pop();
+    MDefinition *obj = current->peek(-1);
+
+    MInitElemGetterSetter *init = MInitElemGetterSetter::New(obj, id, value);
+    current->add(init);
+    return resumeAfter(init);
 }
 
 MBasicBlock *
@@ -6761,6 +6796,11 @@ IonBuilder::jsop_setelem()
                 break;
             }
 
+            // Don't generate a fast path if there have been bounds check failures
+            // and this access might be on a sparse property.
+            if (ElementAccessHasExtraIndexedProperty(cx, object) && failedBoundsCheck_)
+                break;
+
             return jsop_setelem_dense(conversion, SetElem_Normal, object, index, value);
         } while(false);
     }
@@ -7175,16 +7215,23 @@ IonBuilder::jsop_arguments_setelem(MDefinition *object, MDefinition *index, MDef
     return abort("NYI arguments[]=");
 }
 
+static JSObject *
+CreateRestArgumentsTemplateObject(JSContext *cx, unsigned length)
+{
+    JSObject *templateObject = NewDenseUnallocatedArray(cx, 0, NULL, TenuredObject);
+    if (templateObject)
+        types::FixRestArgumentsType(cx, templateObject);
+    return templateObject;
+}
+
 bool
 IonBuilder::jsop_rest()
 {
     // We don't know anything about the callee.
     if (inliningDepth_ == 0) {
-        // Get an empty template array that doesn't have a pc-tracked type.
-        JSObject *templateObject = NewDenseUnallocatedArray(cx, 0, NULL, TenuredObject);
+        JSObject *templateObject = CreateRestArgumentsTemplateObject(cx, 0);
         if (!templateObject)
             return false;
-
         MArgumentsLength *numActuals = MArgumentsLength::New();
         current->add(numActuals);
 
@@ -7200,7 +7247,9 @@ IonBuilder::jsop_rest()
     unsigned numActuals = inlineCallInfo_->argv().length();
     unsigned numFormals = info().nargs() - 1;
     unsigned numRest = numActuals > numFormals ? numActuals - numFormals : 0;
-    JSObject *templateObject = NewDenseUnallocatedArray(cx, numRest, NULL, TenuredObject);
+    JSObject *templateObject = CreateRestArgumentsTemplateObject(cx, numRest);
+    if (!templateObject)
+        return false;
 
     MNewArray *array = new MNewArray(numRest, templateObject, MNewArray::NewArray_Allocating);
     current->add(array);

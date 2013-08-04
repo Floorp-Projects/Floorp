@@ -127,6 +127,13 @@ var DebuggerServer = {
   _allowConnection: null,
 
   /**
+   * The windowtype of the chrome window to use for actors that use the global
+   * window (i.e the global style editor). Set this to your main window type,
+   * for example "navigator:browser".
+   */
+  chromeWindowType: null,
+
+  /**
    * Prompt the user to accept or decline the incoming connection. This is the
    * default implementation that products embedding the debugger server may
    * choose to override.
@@ -282,6 +289,7 @@ var DebuggerServer = {
    * Install Firefox-specific actors.
    */
   addBrowserActors: function DS_addBrowserActors() {
+    this.chromeWindowType = "navigator:browser";
     this.addActors("resource://gre/modules/devtools/server/actors/webbrowser.js");
     this.addActors("resource://gre/modules/devtools/server/actors/script.js");
     this.addGlobalActor(this.ChromeDebuggerActor, "chromeDebugger");
@@ -293,6 +301,7 @@ var DebuggerServer = {
     this.addActors("resource://gre/modules/devtools/server/actors/styleeditor.js");
     this.addActors("resource://gre/modules/devtools/server/actors/webapps.js");
     this.registerModule("devtools/server/actors/inspector");
+    this.registerModule("devtools/server/actors/tracer");
   },
 
   /**

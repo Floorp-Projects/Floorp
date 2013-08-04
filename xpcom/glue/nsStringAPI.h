@@ -1081,10 +1081,10 @@ private:
 
 #if defined(HAVE_CPP_CHAR16_T) || defined(HAVE_CPP_2BYTE_WCHAR_T)
 #if defined(HAVE_CPP_CHAR16_T)
-  MOZ_STATIC_ASSERT(sizeof(char16_t) == 2, "size of char16_t must be 2");
+  static_assert(sizeof(char16_t) == 2, "size of char16_t must be 2");
   #define NS_LL(s)                                u##s
 #else
-  MOZ_STATIC_ASSERT(sizeof(wchar_t) == 2, "size of wchar_t must be 2");
+  static_assert(sizeof(wchar_t) == 2, "size of wchar_t must be 2");
   #define NS_LL(s)                                L##s
 #endif
   #define NS_MULTILINE_LITERAL_STRING(s)          nsDependentString(reinterpret_cast<const nsAString::char_type*>(s), uint32_t((sizeof(s)/2)-1))
@@ -1100,7 +1100,7 @@ private:
 #endif
 
 /* Check that PRUnichar is unsigned */
-MOZ_STATIC_ASSERT(PRUnichar(-1) > PRUnichar(0), "PRUnichar is by definition an unsigned type");
+static_assert(PRUnichar(-1) > PRUnichar(0), "PRUnichar is by definition an unsigned type");
 
 /*
  * Macro arguments used in concatenation or stringification won't be expanded.
