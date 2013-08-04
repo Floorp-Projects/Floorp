@@ -73,7 +73,8 @@ CompositorChild::Get()
 PLayerTransactionChild*
 CompositorChild::AllocPLayerTransactionChild(const LayersBackend& aBackendHint,
                                              const uint64_t& aId,
-                                             TextureFactoryIdentifier*)
+                                             TextureFactoryIdentifier*,
+                                             bool*)
 {
   return new LayerTransactionChild();
 }

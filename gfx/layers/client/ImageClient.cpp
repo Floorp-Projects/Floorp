@@ -121,7 +121,7 @@ ImageClientSingle::UpdateImage(ImageContainer* aContainer,
       mFrontBuffer = CreateBufferTextureClient(gfx::FORMAT_YUV);
       gfx::IntSize ySize(data->mYSize.width, data->mYSize.height);
       gfx::IntSize cbCrSize(data->mCbCrSize.width, data->mCbCrSize.height);
-      if (!mFrontBuffer->AsTextureClientYCbCr()->AllocateForYCbCr(ySize, cbCrSize)) {
+      if (!mFrontBuffer->AsTextureClientYCbCr()->AllocateForYCbCr(ySize, cbCrSize, data->mStereoMode)) {
         mFrontBuffer = nullptr;
         return false;
       }

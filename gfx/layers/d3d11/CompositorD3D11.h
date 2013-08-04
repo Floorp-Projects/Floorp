@@ -137,11 +137,20 @@ public:
   virtual void NotifyLayersTransaction() MOZ_OVERRIDE { }
 
   virtual nsIWidget* GetWidget() const MOZ_OVERRIDE { return mWidget; }
-  virtual const nsIntSize& GetWidgetSize() MOZ_OVERRIDE;
+  virtual const nsIntSize& GetWidgetSize() MOZ_OVERRIDE
+  {
+    NS_ASSERTION(false, "Getting the widget size on windows causes some kind of resizing of buffers. "
+                        "You should not do that outside of BeginFrame, so the best we can do is return "
+                        "the last size we got, that might not be up to date. So you probably shouldn't "
+                        "use this method.");
+    return mSize;
+  }
 
   ID3D11Device* GetDevice() { return mDevice; }
 
 private:
+  // ensure mSize is up to date with respect to mWidget
+  void EnsureSize();
   void VerifyBufferSize();
   void UpdateRenderTarget();
   bool CreateShaders();
@@ -161,9 +170,7 @@ private:
   nsRefPtr<gfxContext> mTarget;
 
   nsIWidget* mWidget;
-  // GetWidgetSize requires us to return a reference to an nsIntSize. Since we
-  // don't otherwise keep this value around, we need mSize to avoid a dangling
-  // reference problem.
+
   nsIntSize mSize;
 
   HWND mHwnd;
