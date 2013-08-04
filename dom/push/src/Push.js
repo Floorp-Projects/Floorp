@@ -41,9 +41,6 @@ Push.prototype = {
   init: function(aWindow) {
     debug("init()");
 
-    if (!Services.prefs.getBoolPref("services.push.enabled"))
-      return null;
-
     let principal = aWindow.document.nodePrincipal;
 
     this._pageURL = principal.URI;
@@ -52,13 +49,19 @@ Push.prototype = {
                         .getService(Ci.nsIAppsService);
     this._app = appsService.getAppByLocalId(principal.appId);
     this._manifestURL = appsService.getManifestURLByLocalId(principal.appId);
-    if (!this._manifestURL)
-      return null;
+    if (!this._manifestURL) {
+	// Now what?  XXXbz should this be tested in a Func for this
+	// interface so it wouldn't appear at all?
+	return;
+    }
 
     let perm = Services.perms.testExactPermissionFromPrincipal(principal,
                                                                "push");
-    if (perm != Ci.nsIPermissionManager.ALLOW_ACTION)
-      return null;
+    if (perm != Ci.nsIPermissionManager.ALLOW_ACTION) {
+	// Now what?  XXXbz should this be tested in a Func for this
+	// interface so it wouldn't appear at all?
+	return;
+    }
 
     this.initDOMRequestHelper(aWindow, [
       "PushService:Register:OK",
@@ -71,8 +74,6 @@ Push.prototype = {
 
     this._cpmm = Cc["@mozilla.org/childprocessmessagemanager;1"]
                    .getService(Ci.nsISyncMessageSender);
-
-    var self = this;
   },
 
   receiveMessage: function(aMessage) {
