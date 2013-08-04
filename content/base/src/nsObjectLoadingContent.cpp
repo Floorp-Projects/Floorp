@@ -3389,6 +3389,19 @@ nsObjectLoadingContent::DoNewResolve(JSContext* aCx, JS::Handle<JSObject*> aObje
   return true;
 }
 
+void
+nsObjectLoadingContent::GetOwnPropertyNames(JSContext* aCx,
+                                            nsTArray<nsString>& /* unused */,
+                                            ErrorResult& aRv)
+{
+  // Just like DoNewResolve, just make sure we're instantiated.  That will do
+  // the work our Enumerate hook needs to do, and we don't want to return these
+  // property names from Xrays anyway.
+  nsRefPtr<nsNPAPIPluginInstance> pi;
+  aRv = ScriptRequestPluginInstance(aCx, getter_AddRefs(pi));
+}
+
+
 // SetupProtoChainRunner implementation
 nsObjectLoadingContent::SetupProtoChainRunner::SetupProtoChainRunner(
     nsIScriptContext* scriptContext,
