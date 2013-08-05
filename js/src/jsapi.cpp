@@ -793,7 +793,7 @@ static void
 StartRequest(JSContext *cx)
 {
     JSRuntime *rt = cx->runtime();
-    rt->assertValidThread();
+    JS_ASSERT(CurrentThreadCanAccessRuntime(rt));
 
     if (rt->requestDepth) {
         rt->requestDepth++;
@@ -810,7 +810,8 @@ static void
 StopRequest(JSContext *cx)
 {
     JSRuntime *rt = cx->runtime();
-    rt->assertValidThread();
+    JS_ASSERT(CurrentThreadCanAccessRuntime(rt));
+
     JS_ASSERT(rt->requestDepth != 0);
     if (rt->requestDepth != 1) {
         rt->requestDepth--;
@@ -847,7 +848,7 @@ JS_PUBLIC_API(JSBool)
 JS_IsInRequest(JSRuntime *rt)
 {
 #ifdef JS_THREADSAFE
-    rt->assertValidThread();
+    JS_ASSERT(CurrentThreadCanAccessRuntime(rt));
     return rt->requestDepth != 0;
 #else
     return false;
@@ -3049,7 +3050,7 @@ JS_IsNative(JSObject *obj)
 JS_PUBLIC_API(JSRuntime *)
 JS_GetObjectRuntime(JSObject *obj)
 {
-    return obj->compartment()->rt;
+    return obj->compartment()->runtimeFromMainThread();
 }
 
 JS_PUBLIC_API(JSBool)
@@ -6599,7 +6600,10 @@ JS_SetRuntimeThread(JSRuntime *rt)
 extern JS_NEVER_INLINE JS_PUBLIC_API(void)
 JS_AbortIfWrongThread(JSRuntime *rt)
 {
-    rt->abortIfWrongThread();
+    if (!CurrentThreadCanAccessRuntime(rt))
+        MOZ_CRASH();
+    if (!js::TlsPerThreadData.get()->associatedWith(rt))
+        MOZ_CRASH();
 }
 
 #ifdef JS_GC_ZEAL
