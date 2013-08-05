@@ -6,7 +6,6 @@
 #ifndef mozilla_dom_Touch_h
 #define mozilla_dom_Touch_h
 
-#include "nsIDOMTouchEvent.h"
 #include "nsString.h"
 #include "nsTArray.h"
 #include "mozilla/Attributes.h"
@@ -18,7 +17,7 @@
 namespace mozilla {
 namespace dom {
 
-class Touch MOZ_FINAL : public nsIDOMTouch
+class Touch MOZ_FINAL : public nsISupports
                       , public nsWrapperCache
 {
 public:
@@ -77,7 +76,6 @@ public:
     }
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(Touch)
-  NS_DECL_NSIDOMTOUCH
 
   void InitializePoints(nsPresContext* aPresContext, nsEvent* aEvent);
 
