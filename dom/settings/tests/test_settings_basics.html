@@ -14,7 +14,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id={678695}
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id={678695}">Mozilla Bug {678695}</a>
 <p id="display"></p>
 <div id="content" style="display: none">
-<iframe></iframe>
+
 </div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
@@ -24,6 +24,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id={678695}
 if (SpecialPowers.isMainProcess()) {
   SpecialPowers.Cu.import("resource://gre/modules/SettingsChangeNotifier.jsm");
 }
+
+SpecialPowers.addPermission("settings-read", true, document);
+SpecialPowers.addPermission("settings-write", true, document);
 
 function onUnwantedSuccess() {
   ok(false, "onUnwantedSuccess: shouldn't get here");
@@ -93,7 +96,7 @@ function check(o1, o2) {
 var req, req2, req3, req4, req5, req6;
 var index = 0;
 
-var mozSettings;
+var mozSettings = navigator.mozSettings;
 
 var steps = [
   function () {
@@ -779,19 +782,7 @@ function next() {
 }
 
 SimpleTest.waitForExplicitFinish();
-is(frames[0].navigator.mozSettings, null, "navigator.mozSettings is null when the page doesn't have permissions");
-SpecialPowers.pushPermissions([
-  {"type": "settings-read", "allow": 1, "context": document},
-  {"type": "settings-write", "allow": 1, "context": document}
-], function() {
-  var frame = document.getElementsByTagName("iframe")[0];
-  frame.addEventListener("load", function() {
-    mozSettings = frames[0].navigator.mozSettings;
-    ok(frames[0].navigator.mozSettings instanceof SettingsManager, "navigator.mozSettings is SettingsManager when the page has permissions");
-    SimpleTest.executeSoon(next);
-  });
-  frames[0].location.reload();
-});
+addLoadEvent(next);
 </script>
 </pre>
 </body>
