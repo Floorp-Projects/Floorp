@@ -126,6 +126,14 @@ class SearchEngineRow extends AnimatedHeightLayout {
                 }
             }
         });
+
+        // Intercept long clicks to avoid trying to show a context menu.
+        setOnLongClickListener(new OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                return true;
+            }
+        });
     }
 
     private String getSuggestionTextFromView(View v) {
