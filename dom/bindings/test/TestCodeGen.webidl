@@ -704,6 +704,10 @@ dictionary Dict : ParentDict {
   unrestricted double  negativeInfUrDouble = -Infinity;
   unrestricted double  nanUrDouble = NaN;
 
+  ArrayBuffer arrayBuffer;
+  ArrayBuffer? nullableArrayBuffer;
+  Uint8Array uint8Array;
+  Float64Array? float64Array = null;
 };
 
 dictionary ParentDict : GrandparentDict {
