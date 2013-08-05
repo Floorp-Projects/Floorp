@@ -1350,7 +1350,8 @@ var WifiManager = (function() {
   var networkConfigurationFields = [
     "ssid", "bssid", "psk", "wep_key0", "wep_key1", "wep_key2", "wep_key3",
     "wep_tx_keyidx", "priority", "key_mgmt", "scan_ssid", "disabled",
-    "identity", "password", "auth_alg", "phase1", "phase2", "eap"
+    "identity", "password", "auth_alg", "phase1", "phase2", "eap", "pin",
+    "pcsc"
   ];
 
   manager.getNetworkConfiguration = function(config, callback) {
@@ -1724,6 +1725,7 @@ Network.api = {
   wep: "rw",
   hidden: "rw",
   eap: "rw",
+  pin: "rw",
   phase1: "rw",
   phase2: "rw"
 };
@@ -1985,6 +1987,11 @@ function WifiWorker() {
     if (wep && net.wep && net.wep != '*') {
       configured.wep_key0 = net.wep_key0 = isWepHexKey(net.wep) ? net.wep : quote(net.wep);
       configured.auth_alg = net.auth_alg = "OPEN SHARED";
+    }
+
+    if ("pin" in net) {
+      net.pin = quote(net.pin);
+      net.pcsc = quote("");
     }
 
     if ("phase1" in net)
