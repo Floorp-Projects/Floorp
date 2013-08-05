@@ -35,18 +35,22 @@ class CameraImageResultHandler implements ActivityResultHandler {
     @Override
     public void onActivityResult(int resultCode, Intent data) {
         if (resultCode != Activity.RESULT_OK) {
-            mFilePickerResult.offer("");
+            if (mFilePickerResult != null) {
+                mFilePickerResult.offer("");
+            }
             return;
         }
 
         File file = new File(Environment.getExternalStorageDirectory(), sImageName);
         sImageName = "";
 
-        if (mFilePickerResult != null)
+        if (mFilePickerResult != null) {
             mFilePickerResult.offer(file.getAbsolutePath());
+        }
 
-        if (mHandler != null)
+        if (mHandler != null) {
             mHandler.gotFile(file.getAbsolutePath());
+        }
     }
 
     // this code is really hacky and doesn't belong anywhere so I'm putting it here for now
