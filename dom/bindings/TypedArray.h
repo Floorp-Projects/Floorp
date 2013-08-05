@@ -9,6 +9,7 @@
 
 #include "jsfriendapi.h"
 #include "js/RootingAPI.h"
+#include "jsapi.h"
 
 namespace mozilla {
 namespace dom {
@@ -62,6 +63,16 @@ public:
   inline JSObject *Obj() const {
     MOZ_ASSERT(inited());
     return mObj;
+  }
+
+  inline bool WrapIntoNewCompartment(JSContext* cx)
+  {
+    return JS_WrapObject(cx, &mObj);
+  }
+
+  inline void TraceSelf(JSTracer* trc)
+  {
+    JS_CallObjectTracer(trc, &mObj, "TypedArray.mObj");
   }
 
 protected:
