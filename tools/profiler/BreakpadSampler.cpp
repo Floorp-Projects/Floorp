@@ -54,6 +54,7 @@
 UnwMode sUnwindMode      = UnwINVALID;
 int     sUnwindInterval  = 0;
 int     sUnwindStackScan = 0;
+int     sProfileEntries  = 0;
 
 using std::string;
 using namespace mozilla;
