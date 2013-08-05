@@ -5,6 +5,7 @@
 
 #include "nsErrorService.h"
 #include "nsCRT.h"
+#include "nsAutoPtr.h"
 
 static void*
 CloneCString(nsHashKey *aKey, void *aData, void* closure)
@@ -65,13 +66,8 @@ nsresult
 nsErrorService::Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr)
 {
     NS_ENSURE_NO_AGGREGATION(outer);
-    nsErrorService* serv = new nsErrorService();
-    if (serv == nullptr)
-        return NS_ERROR_OUT_OF_MEMORY;
-    NS_ADDREF(serv);
-    nsresult rv = serv->QueryInterface(aIID, aInstancePtr);
-    NS_RELEASE(serv);
-    return rv;
+    nsRefPtr<nsErrorService> serv = new nsErrorService();
+    return serv->QueryInterface(aIID, aInstancePtr);
 }
 
 NS_IMETHODIMP
