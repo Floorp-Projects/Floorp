@@ -3667,14 +3667,14 @@ extern JS_PUBLIC_API(JSBool)
 JS_HasElement(JSContext *cx, JSObject *obj, uint32_t index, JSBool *foundp);
 
 extern JS_PUBLIC_API(JSBool)
-JS_LookupElement(JSContext *cx, JSObject *obj, uint32_t index, jsval *vp);
+JS_LookupElement(JSContext *cx, JSObject *obj, uint32_t index, JS::MutableHandle<JS::Value> vp);
 
 extern JS_PUBLIC_API(JSBool)
-JS_GetElement(JSContext *cx, JSObject *obj, uint32_t index, jsval *vp);
+JS_GetElement(JSContext *cx, JSObject *obj, uint32_t index, JS::MutableHandle<JS::Value> vp);
 
 extern JS_PUBLIC_API(JSBool)
 JS_ForwardGetElementTo(JSContext *cx, JSObject *obj, uint32_t index, JSObject *onBehalfOf,
-                       jsval *vp);
+                       JS::MutableHandle<JS::Value> vp);
 
 /*
  * Get the property with name given by |index|, if it has one.  If
@@ -3683,10 +3683,10 @@ JS_ForwardGetElementTo(JSContext *cx, JSObject *obj, uint32_t index, JSObject *o
  */
 extern JS_PUBLIC_API(JSBool)
 JS_GetElementIfPresent(JSContext *cx, JSObject *obj, uint32_t index, JSObject *onBehalfOf,
-                       jsval *vp, JSBool* present);
+                       JS::MutableHandle<JS::Value> vp, JSBool* present);
 
 extern JS_PUBLIC_API(JSBool)
-JS_SetElement(JSContext *cx, JSObject *obj, uint32_t index, jsval *vp);
+JS_SetElement(JSContext *cx, JSObject *obj, uint32_t index, JS::MutableHandle<JS::Value> vp);
 
 extern JS_PUBLIC_API(JSBool)
 JS_DeleteElement(JSContext *cx, JSObject *obj, uint32_t index);
