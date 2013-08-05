@@ -5284,6 +5284,7 @@ WebGLContext::ReattachTextureToAnyFramebufferToWorkAroundBugs(WebGLTexture *tex,
         return;
 
     MakeContextCurrent();
+    WebGLFramebuffer* curFB = mBoundFramebuffer;
 
     for(WebGLFramebuffer *framebuffer = mFramebuffers.getFirst();
         framebuffer;
@@ -5293,29 +5294,31 @@ WebGLContext::ReattachTextureToAnyFramebufferToWorkAroundBugs(WebGLTexture *tex,
         for (size_t i = 0; i < colorAttachmentCount; i++)
         {
             if (framebuffer->ColorAttachment(i).Texture() == tex) {
-                ScopedBindFramebuffer autoFB(gl, framebuffer->GLName());
+                BindFramebuffer(LOCAL_GL_FRAMEBUFFER, framebuffer);
                 framebuffer->FramebufferTexture2D(
                   LOCAL_GL_FRAMEBUFFER, LOCAL_GL_COLOR_ATTACHMENT0 + i,
                   tex->Target(), tex, level);
             }
         }
         if (framebuffer->DepthAttachment().Texture() == tex) {
-            ScopedBindFramebuffer autoFB(gl, framebuffer->GLName());
+            BindFramebuffer(LOCAL_GL_FRAMEBUFFER, framebuffer);
             framebuffer->FramebufferTexture2D(
               LOCAL_GL_FRAMEBUFFER, LOCAL_GL_DEPTH_ATTACHMENT,
               tex->Target(), tex, level);
         }
         if (framebuffer->StencilAttachment().Texture() == tex) {
-            ScopedBindFramebuffer autoFB(gl, framebuffer->GLName());
+            BindFramebuffer(LOCAL_GL_FRAMEBUFFER, framebuffer);
             framebuffer->FramebufferTexture2D(
               LOCAL_GL_FRAMEBUFFER, LOCAL_GL_STENCIL_ATTACHMENT,
               tex->Target(), tex, level);
         }
         if (framebuffer->DepthStencilAttachment().Texture() == tex) {
-            ScopedBindFramebuffer autoFB(gl, framebuffer->GLName());
+            BindFramebuffer(LOCAL_GL_FRAMEBUFFER, framebuffer);
             framebuffer->FramebufferTexture2D(
               LOCAL_GL_FRAMEBUFFER, LOCAL_GL_DEPTH_STENCIL_ATTACHMENT,
               tex->Target(), tex, level);
         }
     }
+
+    BindFramebuffer(LOCAL_GL_FRAMEBUFFER, curFB);
 }
