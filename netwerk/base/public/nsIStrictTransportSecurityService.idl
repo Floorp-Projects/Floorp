@@ -8,13 +8,9 @@ interface nsIURI;
 interface nsIObserver;
 interface nsIHttpChannel;
 
-[scriptable, uuid(b20a9242-5732-45bc-9fa0-a178154f2721)]
-interface nsISiteSecurityService : nsISupports
+[scriptable, uuid(c6138514-f212-4747-98c2-7abfce3be293)]
+interface nsIStrictTransportSecurityService : nsISupports
 {
-    const uint32_t HEADER_HSTS = 0;
-    const uint32_t HEADER_HKPK = 1;
-    const uint32_t HEADER_OMS = 2;
-
     /**
      * Parses a given HTTP header and records the results internally.
      * The format of the STS header is defined by the STS specification:
@@ -33,12 +29,11 @@ interface nsISiteSecurityService : nsISupports
      *         NS_SUCCESS_LOSS_OF_INSIGNIFICANT_DATA
      *                          if there are unrecognized tokens in the header.
      */
-    void processHeader(in uint32_t aType,
-                       in nsIURI aSourceURI,
-                       in string aHeader,
-                       in uint32_t aFlags,
-                       [optional] out unsigned long long aMaxAge,
-                       [optional] out boolean aIncludeSubdomains);
+    void processStsHeader(in nsIURI aSourceURI,
+                          in string aHeader,
+                          in uint32_t aFlags,
+                          [optional] out unsigned long long aMaxAge,
+                          [optional] out boolean aIncludeSubdomains);
 
     /**
      * Removes the STS state of a host, including the includeSubdomains state
@@ -48,15 +43,25 @@ interface nsISiteSecurityService : nsISupports
      * @param aFlags  options for this request as defined in nsISocketProvider:
      *                  NO_PERMANENT_STORAGE
      */
-    void removeState(in uint32_t aType,
-                     in nsIURI aURI,
-                     in uint32_t aFlags);
+    void removeStsState(in nsIURI aURI,
+                        in uint32_t aFlags);
 
     /**
      * Checks if the given security info is for an STS host with a broken
      * transport layer (certificate errors like invalid CN).
      */
-    boolean shouldIgnoreHeader(in nsISupports aSecurityInfo);
+    boolean shouldIgnoreStsHeader(in nsISupports aSecurityInfo);
+
+    /**
+     * Checks whether or not the given hostname has STS state set.
+     * The host is an STS host if either it has the STS permission, or one of
+     * its super-domains has an STS "includeSubdomains" permission set.
+     *
+     * @param aHost the hostname (punycode) to query for STS state.
+     * @param aFlags  options for this request as defined in nsISocketProvider:
+     *                  NO_PERMANENT_STORAGE
+     */
+    boolean isStsHost(in string aHost, in uint32_t aFlags);
 
     /**
      * Checks whether or not the URI's hostname has STS state set.
@@ -70,12 +75,12 @@ interface nsISiteSecurityService : nsISupports
      * @param aFlags  options for this request as defined in nsISocketProvider:
      *                  NO_PERMANENT_STORAGE
      */
-    boolean isSecureURI(in uint32_t aType, in nsIURI aURI, in uint32_t aFlags);
+    boolean isStsURI(in nsIURI aURI, in uint32_t aFlags);
 
 };
 
 %{C++
-#define NS_SSSERVICE_CONTRACTID "@mozilla.org/ssservice;1"
+#define NS_STSSERVICE_CONTRACTID "@mozilla.org/stsservice;1"
 
 #define STS_PERMISSION "sts/use"
 #define STS_SUBDOMAIN_PERMISSION "sts/subd"

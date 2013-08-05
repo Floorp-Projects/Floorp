@@ -98,7 +98,7 @@
 #include "CertVerifier.h"
 #include "nsIBadCertListener2.h"
 #include "nsICertOverrideService.h"
-#include "nsISiteSecurityService.h"
+#include "nsIStrictTransportSecurityService.h"
 #include "nsNSSComponent.h"
 #include "nsNSSCleaner.h"
 #include "nsRecentBadCerts.h"
@@ -310,26 +310,19 @@ CertErrorRunnable::CheckCertOverrides()
   uint32_t remaining_display_errors = mCollectedErrors;
 
   nsresult nsrv;
-  nsCString hostString(mInfoObject->GetHostName());
 
   // Enforce Strict-Transport-Security for hosts that are "STS" hosts:
   // connections must be dropped when there are any certificate errors
   // (STS Spec section 7.3).
   bool strictTransportSecurityEnabled = false;
-  nsCOMPtr<nsISiteSecurityService> sss
-    = do_GetService(NS_SSSERVICE_CONTRACTID, &nsrv);
+  nsCOMPtr<nsIStrictTransportSecurityService> stss
+    = do_GetService(NS_STSSERVICE_CONTRACTID, &nsrv);
   if (NS_SUCCEEDED(nsrv)) {
     nsCOMPtr<nsISSLSocketControl> sslSocketControl = do_QueryInterface(
       NS_ISUPPORTS_CAST(nsITransportSecurityInfo*, mInfoObject));
-    nsCOMPtr<nsIURI> uri;
-    nsrv = NS_NewURI(getter_AddRefs(uri),
-                     NS_LITERAL_CSTRING("https://") + hostString);
-    if (NS_SUCCEEDED(nsrv)) {
-      nsrv = sss->IsSecureURI(nsISiteSecurityService::HEADER_HSTS,
-                              uri,
-                              mProviderFlags,
-                              &strictTransportSecurityEnabled);
-    }
+    nsrv = stss->IsStsHost(mInfoObject->GetHostName(),
+                           mProviderFlags,
+                           &strictTransportSecurityEnabled);
   }
   if (NS_FAILED(nsrv)) {
     return new SSLServerCertVerificationResult(mInfoObject,
@@ -347,6 +340,7 @@ CertErrorRunnable::CheckCertOverrides()
     {
       bool haveOverride;
       bool isTemporaryOverride; // we don't care
+      nsCString hostString(mInfoObject->GetHostName());
       nsrv = overrideService->HasMatchingOverride(hostString, port,
                                                   mCert,
                                                   &overrideBits,
