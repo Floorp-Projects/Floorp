@@ -363,6 +363,9 @@ MOCHITEST_FILES_B = \
 	 	file_CSP_evalscript_main_spec_compliant.html^headers^ \
 		file_CSP_evalscript_main_spec_compliant_allowed.html \
 		file_CSP_evalscript_main_spec_compliant_allowed.html^headers^ \
+		file_CSP_evalscript_no_CSP_at_all.html \
+		file_CSP_evalscript_no_CSP_at_all.html^headers^ \
+		file_CSP_evalscript_no_CSP_at_all.js \
 		test_CSP_inlinestyle.html \
 		file_CSP_inlinestyle_main.html \
 		file_CSP_inlinestyle_main.html^headers^ \
