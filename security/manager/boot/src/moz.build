@@ -12,7 +12,7 @@ CPP_SOURCES += [
     'nsSecureBrowserUIImpl.cpp',
     'nsSecurityHeaderParser.cpp',
     'nsSecurityWarningDialogs.cpp',
-    'nsSiteSecurityService.cpp',
+    'nsStrictTransportSecurityService.cpp',
 ]
 
 LIBRARY_NAME = 'pipboot'

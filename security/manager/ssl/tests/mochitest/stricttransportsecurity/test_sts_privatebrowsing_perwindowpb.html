@@ -187,21 +187,20 @@
     var ios =
       Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
     var thehost = ios.newURI("http://example.com", null, null);
-    var sss =
-      Cc["@mozilla.org/ssservice;1"].
-        getService(Ci.nsISiteSecurityService);
+    var stss =
+      Cc["@mozilla.org/stsservice;1"].
+        getService(Ci.nsIStrictTransportSecurityService);
     var flags = isPrivate ? Ci.nsISocketProvider.NO_PERMANENT_STORAGE : 0
-    sss.removeState(Ci.nsISiteSecurityService.HEADER_HSTS, thehost, flags);
+    stss.removeStsState(thehost, flags);
     dump_STSState(isPrivate);
   }
 
   function dump_STSState(isPrivate) {
-    var sss =
-      Cc["@mozilla.org/ssservice;1"].
-        getService(Ci.nsISiteSecurityService);
+    var stss =
+      Cc["@mozilla.org/stsservice;1"].
+        getService(Ci.nsIStrictTransportSecurityService);
     var flags = isPrivate ? Ci.nsISocketProvider.NO_PERMANENT_STORAGE : 0
-    var uri = SpecialPowers.Services.io.newURI("https://example.com", null, null);
-    SimpleTest.info("State of example.com: " + sss.isSecureURI(Ci.nsISiteSecurityService.HEADER_HSTS, uri, flags));
+    SimpleTest.info("State of example.com: " + stss.isStsHost("example.com", flags));
   }
 
   // These are executed in the order presented.
