@@ -24,7 +24,12 @@ template<typename T,
 struct TypedArray_base {
   TypedArray_base(JSObject* obj)
   {
-    mObj = UnboxArray(obj, &mLength, &mData);
+    DoInit(obj);
+  }
+
+  TypedArray_base() :
+    mObj(nullptr)
+  {
   }
 
 private:
@@ -33,6 +38,12 @@ private:
   JSObject* mObj;
 
 public:
+  inline void Init(JSObject* obj)
+  {
+    MOZ_ASSERT(!inited());
+    DoInit(obj);
+  }
+
   inline bool inited() const {
     return !!mObj;
   }
@@ -51,6 +62,12 @@ public:
     MOZ_ASSERT(inited());
     return mObj;
   }
+
+protected:
+  inline void DoInit(JSObject* obj)
+  {
+    mObj = UnboxArray(obj, &mLength, &mData);
+  }
 };
 
 
@@ -61,6 +78,10 @@ template<typename T,
 struct TypedArray : public TypedArray_base<T,UnboxArray> {
   TypedArray(JSObject* obj) :
     TypedArray_base<T,UnboxArray>(obj)
+  {}
+
+  TypedArray() :
+    TypedArray_base<T,UnboxArray>()
   {}
 
   static inline JSObject*
