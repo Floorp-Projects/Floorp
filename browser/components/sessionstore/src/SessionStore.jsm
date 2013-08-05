@@ -547,13 +547,6 @@ let SessionStoreInternal = {
       return this._prefBranch.getIntPref("sessionstore.interval");
     });
 
-    // when crash recovery is disabled, session data is not written to disk
-    XPCOMUtils.defineLazyGetter(this, "_resume_from_crash", function () {
-      // get crash recovery state from prefs and allow for proper reaction to state changes
-      this._prefBranch.addObserver("sessionstore.resume_from_crash", this, true);
-      return this._prefBranch.getBoolPref("sessionstore.resume_from_crash");
-    });
-
     XPCOMUtils.defineLazyGetter(this, "_max_tabs_undo", function () {
       this._prefBranch.addObserver("sessionstore.max_tabs_undo", this, true);
       return this._prefBranch.getIntPref("sessionstore.max_tabs_undo");
@@ -1190,14 +1183,6 @@ let SessionStoreInternal = {
           this._saveTimer = null;
         }
         this.saveStateDelayed(null, -1);
-        break;
-      case "sessionstore.resume_from_crash":
-        this._resume_from_crash = this._prefBranch.getBoolPref("sessionstore.resume_from_crash");
-        // either create the file with crash recovery information or remove it
-        // (when _loadState is not STATE_RUNNING, that file is used for session resuming instead)
-        if (!this._resume_from_crash)
-          _SessionFile.wipe();
-        this.saveState(true);
         break;
     }
   },
@@ -2547,11 +2532,9 @@ let SessionStoreInternal = {
    * gather session data as object
    * @param aUpdateAll
    *        Bool update all windows
-   * @param aPinnedOnly
-   *        Bool collect pinned tabs only
    * @returns object
    */
-  _getCurrentState: function ssi_getCurrentState(aUpdateAll, aPinnedOnly) {
+  _getCurrentState: function ssi_getCurrentState(aUpdateAll) {
     this._handleClosedWindows();
 
     var activeWindow = this._getMostRecentBrowserWindow();
@@ -2613,24 +2596,6 @@ let SessionStoreInternal = {
       } while (total[0].isPopup && lastClosedWindowsCopy.length > 0)
     }
 #endif
-
-    if (aPinnedOnly) {
-      // perform a deep copy so that existing session variables are not changed.
-      total = JSON.parse(this._toJSONString(total));
-      total = total.filter(function (win) {
-        win.tabs = win.tabs.filter(function (tab) tab.pinned);
-        // remove closed tabs
-        win._closedTabs = [];
-        // correct selected tab index if it was stripped out
-        if (win.selected > win.tabs.length)
-          win.selected = 1;
-        return win.tabs.length > 0;
-      });
-      if (total.length == 0)
-        return null;
-
-      lastClosedWindowsCopy = [];
-    }
 
     if (activeWindow) {
       this.activeWindowSSiCache = activeWindow.__SSi || "";
@@ -3759,12 +3724,10 @@ let SessionStoreInternal = {
   saveState: function ssi_saveState(aUpdateAll) {
     // If crash recovery is disabled, we only want to resume with pinned tabs
     // if we crash.
-    let pinnedOnly = this._loadState == STATE_RUNNING && !this._resume_from_crash;
-
     TelemetryStopwatch.start("FX_SESSION_RESTORE_COLLECT_DATA_MS");
     TelemetryStopwatch.start("FX_SESSION_RESTORE_COLLECT_DATA_LONGEST_OP_MS");
 
-    var oState = this._getCurrentState(aUpdateAll, pinnedOnly);
+    var oState = this._getCurrentState(aUpdateAll);
     if (!oState) {
       TelemetryStopwatch.cancel("FX_SESSION_RESTORE_COLLECT_DATA_MS");
       TelemetryStopwatch.cancel("FX_SESSION_RESTORE_COLLECT_DATA_LONGEST_OP_MS");
@@ -3844,8 +3807,7 @@ let SessionStoreInternal = {
     }
 
     // Write (atomically) to a session file, using a tmp file.
-    let promise =
-      _SessionFile.write(data, {backupOnFirstWrite: this._resume_from_crash});
+    let promise = _SessionFile.write(data);
 
     // Once the session file is successfully updated, save the time stamp of the
     // last save and notify the observers.
