@@ -1,7 +1,7 @@
 . "$topsrcdir/mobile/android/config/mozconfigs/common"
 
 # L10n
-ac_add_options --with-l10n-base=../../l10n-central
+ac_add_options --with-l10n-base=..
 
 # Global options
 ac_add_options --disable-tests
@@ -33,6 +33,6 @@ ac_add_options --enable-update-channel=${MOZ_UPDATE_CHANNEL}
 export JAVA_HOME=/tools/jdk6
 export MOZILLA_OFFICIAL=1
 
-ac_add_options --with-branding=mobile/android/branding/nightly
+ac_add_options --with-branding=mobile/android/branding/aurora
 
 . "$topsrcdir/mobile/android/config/mozconfigs/common.override"
