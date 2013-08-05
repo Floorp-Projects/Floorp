@@ -15,13 +15,14 @@
 <iframe style="width:100%;height:300px;" id='cspframe'></iframe>
 <iframe style="width:100%;height:300px;" id='cspframe2'></iframe>
 <iframe style="width:100%;height:300px;" id='cspframe3'></iframe>
+<iframe style="width:100%;height:300px;" id='cspframe4'></iframe>
 <script class="testbody" type="text/javascript">
 
 var path = "/tests/content/base/test/";
 
 var evalScriptsThatRan = 0;
 var evalScriptsBlocked = 0;
-var evalScriptsTotal = 24;
+var evalScriptsTotal = 28;
 
 
 // called by scripts that run
@@ -61,6 +62,7 @@ SpecialPowers.pushPrefEnv(
       document.getElementById('cspframe').src = 'file_CSP_evalscript_main.html';
       document.getElementById('cspframe2').src = 'file_CSP_evalscript_main_spec_compliant.html';
       document.getElementById('cspframe3').src = 'file_CSP_evalscript_main_spec_compliant_allowed.html';
+      document.getElementById('cspframe4').src = 'file_CSP_evalscript_no_CSP_at_all.html';
     });
 </script>
 </pre>
