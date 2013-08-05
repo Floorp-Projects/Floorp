@@ -37,6 +37,13 @@ struct DictionaryBase
 {
 };
 
+// Struct that serves as a base class for all typed arrays and array buffers and
+// array buffer views.  Particularly useful so we can use IsBaseOf to detect
+// typed array/buffer/view template arguments.
+struct AllTypedArraysBase {
+};
+
+
 struct MainThreadDictionaryBase : public DictionaryBase
 {
 protected:
