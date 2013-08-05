@@ -8,13 +8,13 @@
 #define mozilla_dom_domerror_h__
 
 #include "mozilla/Attributes.h"
-#include "mozilla/ErrorResult.h"
-#include "mozilla/dom/BindingUtils.h"
-#include "nsCycleCollectionParticipant.h"
 #include "nsPIDOMWindow.h"
 #include "nsWrapperCache.h"
 
 namespace mozilla {
+
+class ErrorResult;
+
 namespace dom {
 
 class GlobalObject;
