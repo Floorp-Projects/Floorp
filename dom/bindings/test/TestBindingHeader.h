@@ -399,6 +399,10 @@ public:
   void PassUint8ClampedArray(const Uint8ClampedArray&);
   void PassFloat32Array(const Float32Array&);
   void PassFloat64Array(const Float64Array&);
+  void PassSequenceOfArrayBuffers(const Sequence<ArrayBuffer>&);
+  void PassSequenceOfNullableArrayBuffers(const Sequence<Nullable<ArrayBuffer> >&);
+  void PassVariadicTypedArray(const Sequence<Float32Array>&);
+  void PassVariadicNullableTypedArray(const Sequence<Nullable<Float32Array> >&);
   JSObject* ReceiveUint8Array(JSContext*);
 
   // DOMString types

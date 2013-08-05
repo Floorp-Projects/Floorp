@@ -1646,7 +1646,9 @@ public:
 
 // Class used to trace sequences, with specializations for various
 // sequence types.
-template<typename T, bool isDictionary=IsBaseOf<DictionaryBase, T>::value>
+template<typename T,
+         bool isDictionary=IsBaseOf<DictionaryBase, T>::value,
+         bool isTypedArray=IsBaseOf<AllTypedArraysBase, T>::value>
 class SequenceTracer
 {
   explicit SequenceTracer() MOZ_DELETE; // Should never be instantiated
@@ -1654,13 +1656,13 @@ class SequenceTracer
 
 // sequence<object> or sequence<object?>
 template<>
-class SequenceTracer<JSObject*, false>
+class SequenceTracer<JSObject*, false, false>
 {
   explicit SequenceTracer() MOZ_DELETE; // Should never be instantiated
 
 public:
   static void TraceSequence(JSTracer* trc, JSObject** objp, JSObject** end) {
-    for ( ; objp != end; ++objp) {
+    for (; objp != end; ++objp) {
       JS_CallObjectTracer(trc, objp, "sequence<object>");
     }
   }
@@ -1668,13 +1670,13 @@ public:
 
 // sequence<any>
 template<>
-class SequenceTracer<JS::Value, false>
+class SequenceTracer<JS::Value, false, false>
 {
   explicit SequenceTracer() MOZ_DELETE; // Should never be instantiated
 
 public:
   static void TraceSequence(JSTracer* trc, JS::Value* valp, JS::Value* end) {
-    for ( ; valp != end; ++valp) {
+    for (; valp != end; ++valp) {
       JS_CallValueTracer(trc, valp, "sequence<any>");
     }
   }
@@ -1682,13 +1684,13 @@ public:
 
 // sequence<sequence<T>>
 template<typename T>
-class SequenceTracer<Sequence<T>, false>
+class SequenceTracer<Sequence<T>, false, false>
 {
   explicit SequenceTracer() MOZ_DELETE; // Should never be instantiated
 
 public:
   static void TraceSequence(JSTracer* trc, Sequence<T>* seqp, Sequence<T>* end) {
-    for ( ; seqp != end; ++seqp) {
+    for (; seqp != end; ++seqp) {
       DoTraceSequence(trc, *seqp);
     }
   }
@@ -1696,13 +1698,13 @@ public:
 
 // sequence<sequence<T>> as return value
 template<typename T>
-class SequenceTracer<nsTArray<T>, false>
+class SequenceTracer<nsTArray<T>, false, false>
 {
   explicit SequenceTracer() MOZ_DELETE; // Should never be instantiated
 
 public:
   static void TraceSequence(JSTracer* trc, nsTArray<T>* seqp, nsTArray<T>* end) {
-    for ( ; seqp != end; ++seqp) {
+    for (; seqp != end; ++seqp) {
       DoTraceSequence(trc, *seqp);
     }
   }
@@ -1710,30 +1712,48 @@ public:
 
 // sequence<someDictionary>
 template<typename T>
-class SequenceTracer<T, true>
+class SequenceTracer<T, true, false>
 {
   explicit SequenceTracer() MOZ_DELETE; // Should never be instantiated
 
 public:
   static void TraceSequence(JSTracer* trc, T* dictp, T* end) {
-    for ( ; dictp != end; ++dictp) {
+    for (; dictp != end; ++dictp) {
       dictp->TraceDictionary(trc);
     }
   }
 };
 
-// sequence<sequence<T>?>
+// sequence<SomeTypedArray>
 template<typename T>
-class SequenceTracer<Nullable<Sequence<T> >, false>
+class SequenceTracer<T, false, true>
 {
   explicit SequenceTracer() MOZ_DELETE; // Should never be instantiated
 
 public:
-  static void TraceSequence(JSTracer* trc, Nullable<Sequence<T> >* seqp,
-                            Nullable<Sequence<T> >* end) {
-    for ( ; seqp != end; ++seqp) {
+  static void TraceSequence(JSTracer* trc, T* arrayp, T* end) {
+    for (; arrayp != end; ++arrayp) {
+      arrayp->TraceSelf(trc);
+    }
+  }
+};
+
+// sequence<T?> with T? being a Nullable<T>
+template<typename T>
+class SequenceTracer<Nullable<T>, false, false>
+{
+  explicit SequenceTracer() MOZ_DELETE; // Should never be instantiated
+
+public:
+  static void TraceSequence(JSTracer* trc, Nullable<T>* seqp,
+                            Nullable<T>* end) {
+    for (; seqp != end; ++seqp) {
       if (!seqp->IsNull()) {
-        DoTraceSequence(trc, seqp->Value());
+        // Pretend like we actually have a length-one sequence here so
+        // we can do template instantiation correctly for T.
+        T& val = seqp->Value();
+        T* ptr = &val;
+        SequenceTracer<T>::TraceSequence(trc, ptr, ptr+1);
       }
     }
   }

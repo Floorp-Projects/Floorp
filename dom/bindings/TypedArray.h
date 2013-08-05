@@ -10,6 +10,7 @@
 #include "jsfriendapi.h"
 #include "js/RootingAPI.h"
 #include "jsapi.h"
+#include "mozilla/dom/BindingDeclarations.h"
 
 namespace mozilla {
 namespace dom {
@@ -22,7 +23,7 @@ namespace dom {
  */
 template<typename T,
          JSObject* UnboxArray(JSObject*, uint32_t*, T**)>
-struct TypedArray_base {
+struct TypedArray_base : AllTypedArraysBase {
   TypedArray_base(JSObject* obj)
   {
     DoInit(obj);

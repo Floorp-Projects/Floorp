@@ -3200,10 +3200,6 @@ for (uint32_t i = 0; i < length; ++i) {
 
     if type.isSpiderMonkeyInterface():
         assert not isEnforceRange and not isClamp
-        if isMember and isMember != "Dictionary":
-            raise TypeError("Can't handle member arraybuffers or "
-                            "arraybuffer views because making sure all the "
-                            "objects are properly rooted is hard")
         name = type.name
         declType = CGGeneric(name)
         if type.nullable():
@@ -9116,7 +9112,6 @@ class CGNativeMember(ClassMethod):
                     False, False)
 
         if type.isSpiderMonkeyInterface():
-            assert not isMember
             if self.jsObjectsArePtr:
                 return "JSObject*", False, False
 
