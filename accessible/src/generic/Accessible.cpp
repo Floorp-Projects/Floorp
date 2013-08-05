@@ -2285,7 +2285,7 @@ Accessible::DispatchClickEvent(nsIContent *aContent, uint32_t aActionIndex)
   if (IsDefunct())
     return;
 
-  nsIPresShell* presShell = mDoc->PresShell();
+  nsCOMPtr<nsIPresShell> presShell = mDoc->PresShell();
 
   // Scroll into view.
   presShell->ScrollContentIntoView(aContent,
@@ -2293,7 +2293,7 @@ Accessible::DispatchClickEvent(nsIContent *aContent, uint32_t aActionIndex)
                                    nsIPresShell::ScrollAxis(),
                                    nsIPresShell::SCROLL_OVERFLOW_HIDDEN);
 
-  nsIFrame* frame = aContent->GetPrimaryFrame();
+  nsWeakFrame frame = aContent->GetPrimaryFrame();
   if (!frame)
     return;
 
@@ -2305,8 +2305,7 @@ Accessible::DispatchClickEvent(nsIContent *aContent, uint32_t aActionIndex)
 
   nsSize size = frame->GetSize();
 
-  nsPresContext* presContext = presShell->GetPresContext();
-
+  nsRefPtr<nsPresContext> presContext = presShell->GetPresContext();
   int32_t x = presContext->AppUnitsToDevPixels(point.x + size.width / 2);
   int32_t y = presContext->AppUnitsToDevPixels(point.y + size.height / 2);
 
