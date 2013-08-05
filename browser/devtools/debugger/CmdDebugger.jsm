@@ -506,11 +506,12 @@ gcli.addCommand({
       const blackBoxed = [];
 
       for (let source of toBlackBox) {
+        let { url } = source;
         activeThread.source(source)[cmd.clientMethod](function ({ error }) {
           if (error) {
-            blackBoxed.push(lookup("ErrorDesc") + " " + source.url);
+            blackBoxed.push(lookup("ErrorDesc") + " " + url);
           } else {
-            blackBoxed.push(source.url);
+            blackBoxed.push(url);
           }
 
           if (toBlackBox.length === blackBoxed.length) {

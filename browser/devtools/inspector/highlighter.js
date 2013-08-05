@@ -129,8 +129,6 @@ Highlighter.prototype = {
     this.transitionDisabler = null;
     this.pageEventsMuter = null;
 
-    this.unlockAndFocus();
-
     this.selection.on("new-node", this.highlight);
     this.selection.on("new-node", this.updateInfobar);
     this.selection.on("pseudoclass", this.updateInfobar);

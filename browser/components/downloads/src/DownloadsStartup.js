@@ -86,10 +86,6 @@ DownloadsStartup.prototype = {
   {
     switch (aTopic) {
       case "profile-after-change":
-        kObservedTopics.forEach(
-          function (topic) Services.obs.addObserver(this, topic, true),
-          this);
-
         // Override Toolkit's nsIDownloadManagerUI implementation with our own.
         // This must be done at application startup and not in the manifest to
         // ensure that our implementation overrides the original one.
@@ -104,15 +100,21 @@ DownloadsStartup.prototype = {
         // when nsIDownloadManager will not be available anymore (bug 851471).
         let useJSTransfer = false;
         try {
+          // For performance reasons, we don't want to load the DownloadsCommon
+          // module during startup, so we read the preference value directly.
           useJSTransfer =
             Services.prefs.getBoolPref("browser.download.useJSTransfer");
-        } catch (ex) {
-          // This is a hidden preference that does not exist by default.
-        }
+        } catch (ex) { }
         if (useJSTransfer) {
           Components.manager.QueryInterface(Ci.nsIComponentRegistrar)
                             .registerFactory(kTransferCid, "",
                                              kTransferContractId, null);
+        } else {
+          // The other notifications are handled internally by the JavaScript
+          // API for downloads, no need to observe when that API is enabled.
+          for (let topic of kObservedTopics) {
+            Services.obs.addObserver(this, topic, true);
+          }
         }
         break;
 

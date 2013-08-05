@@ -52,19 +52,8 @@
  *  Mihai Sucan (Mozilla Corp.)
  */
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cu = Components.utils;
-
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-
-XPCOMUtils.defineLazyGetter(this, "NetUtil", function () {
-  var obj = {};
-  Cu.import("resource://gre/modules/NetUtil.jsm", obj);
-  return obj.NetUtil;
-});
-
-this.EXPORTED_SYMBOLS = ["NetworkHelper"];
+const {Cc, Ci, Cu} = require("chrome");
+loader.lazyImporter(this, "NetUtil", "resource://gre/modules/NetUtil.jsm");
 
 /**
  * Helper object for networking stuff.
@@ -72,9 +61,7 @@ this.EXPORTED_SYMBOLS = ["NetworkHelper"];
  * Most of the following functions have been taken from the Firebug source. They
  * have been modified to match the Firefox coding rules.
  */
-
-this.NetworkHelper =
-{
+let NetworkHelper = {
   /**
    * Converts aText with a given aCharset to unicode.
    *
@@ -268,8 +255,7 @@ this.NetworkHelper =
       let contentCharset = aChannel.contentCharset || aCharset;
 
       // Read the content of the stream using contentCharset as encoding.
-      aCallback(NetworkHelper.readAndConvertFromStream(aInputStream,
-                                                       contentCharset));
+      aCallback(this.readAndConvertFromStream(aInputStream, contentCharset));
     });
   },
 
@@ -438,7 +424,7 @@ this.NetworkHelper =
       return true;
     }
 
-    switch (NetworkHelper.mimeCategoryMap[aMimeType]) {
+    switch (this.mimeCategoryMap[aMimeType]) {
       case "txt":
       case "js":
       case "json":
@@ -452,4 +438,8 @@ this.NetworkHelper =
         return false;
     }
   },
+};
+
+for (let prop of Object.getOwnPropertyNames(NetworkHelper)) {
+  exports[prop] = NetworkHelper[prop];
 }

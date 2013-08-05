@@ -272,3 +272,17 @@
 .webconsole-msg-security.webconsole-msg-warn {
   -moz-image-region: rect(32px, 24px, 40px, 16px);
 }
+
+.navigation-marker {
+  color: #aaa;
+  background: linear-gradient(#fff, #bbb, #fff) no-repeat left 50%;
+  background-size: 100% 2px;
+  -moz-margin-start: 3px;
+  -moz-margin-end: 6px;
+  font-size: 0.9em;
+}
+
+.navigation-marker .url {
+  background: #fff;
+  -moz-padding-end: 6px;
+}

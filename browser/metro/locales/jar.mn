@@ -23,6 +23,7 @@
   locale/browser/phishing.dtd             (%chrome/phishing.dtd)
   locale/browser/crashprompt.dtd          (%chrome/crashprompt.dtd)
   locale/browser/crashprompt.properties   (%chrome/crashprompt.properties)
+  locale/browser/aboutAddons.dtd          (%chrome/aboutAddons.dtd)
 
 @AB_CD@.jar:
 % locale browser @AB_CD@ %locale/browser/
