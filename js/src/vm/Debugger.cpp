@@ -4513,7 +4513,7 @@ DebuggerObject_getParameterNames(JSContext *cx, unsigned argc, Value *vp)
     }
 
     RootedFunction fun(cx, &obj->as<JSFunction>());
-    JSObject *result = NewDenseAllocatedArray(cx, fun->nargs);
+    RootedObject result(cx, NewDenseAllocatedArray(cx, fun->nargs));
     if (!result)
         return false;
     result->ensureDenseInitializedLength(cx, 0, fun->nargs);
