@@ -67,7 +67,7 @@ Tools.options = {
 
 Tools.webConsole = {
   id: "webconsole",
-  key: l10n("webConsole.commandkey", webConsoleStrings),
+  key: l10n("cmd.commandkey", webConsoleStrings),
   accesskey: l10n("webConsoleCmd.accesskey", webConsoleStrings),
   modifiers: Services.appinfo.OS == "Darwin" ? "accel,alt" : "accel,shift",
   ordinal: 1,
