@@ -195,9 +195,8 @@ size. -->
 <!ENTITY tabs_normal "Tabs">
 <!ENTITY tabs_private "Private">
 <!ENTITY tabs_synced "Synced">
-<!ENTITY wallpaper_success "Wallpaper updated">
-<!ENTITY wallpaper_progress "Setting wallpaper">
-<!ENTITY wallpaper_fail "Unable to set wallpaper">
+<!ENTITY set_image_fail "Unable to set image">
+<!ENTITY set_image_chooser_title "Set Image As">
 
 <!-- Localization note (find_text, find_prev, find_next, find_close) : These strings are used
      as alternate text for accessibility. They are not visible in the UI. -->
@@ -348,12 +347,12 @@ just addresses the organization to follow, e.g. "This site is run by " -->
 <!ENTITY updater_apply_select2 "Touch to update">
 
 <!-- Guest mode -->
-<!ENTITY enter_guest_mode "Enter guest mode">
-<!ENTITY exit_guest_mode "Leave guest mode">
-<!ENTITY guest_mode_dialog_continue "Continue">
-<!ENTITY guest_mode_dialog_cancel "Cancel">
-<!ENTITY guest_mode_enter_title "Guest mode">
-<!ENTITY guest_mode_enter_text "While in guest mode, the person using &brandShortName; will not be able to see any of your personal browsing data (like your saved passwords, history or bookmarks).\n\nWhen your guest is done, their browsing data will be deleted.">
+<!ENTITY new_guest_session "New Guest Session">
+<!ENTITY exit_guest_session "Exit Guest Session">
+<!ENTITY guest_session_dialog_continue "Continue">
+<!ENTITY guest_session_dialog_cancel "Cancel">
+<!ENTITY new_guest_session_title "&brandShortName; will now restart">
+<!ENTITY new_guest_session_text "The person using it will not be able to see any of your personal browsing data (like saved passwords, history or bookmarks).\n\nWhen your guest is done, their browsing data will be deleted and your session will be restored.">
 
-<!ENTITY guest_mode_leave_title "Leaving guest mode">
-<!ENTITY guest_mode_leave_text "&brandShortName; will delete browsing data from this session.">
+<!ENTITY exit_guest_session_title "&brandShortName; will now restart">
+<!ENTITY exit_guest_session_text "The browsing data from this session will be deleted.">

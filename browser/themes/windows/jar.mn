@@ -26,6 +26,7 @@ browser.jar:
 *       skin/classic/browser/browser.css
         skin/classic/browser/click-to-play-warning-stripes.png
 *       skin/classic/browser/engineManager.css
+        skin/classic/browser/fullscreen-darknoise.png
         skin/classic/browser/Geolocation-16.png
         skin/classic/browser/Geolocation-64.png
         skin/classic/browser/Info.png
@@ -283,6 +284,7 @@ browser.jar:
 *       skin/classic/aero/browser/browser.css                        (browser-aero.css)
         skin/classic/aero/browser/click-to-play-warning-stripes.png
 *       skin/classic/aero/browser/engineManager.css
+        skin/classic/aero/browser/fullscreen-darknoise.png
         skin/classic/aero/browser/Geolocation-16.png
         skin/classic/aero/browser/Geolocation-64.png
         skin/classic/aero/browser/Info.png                           (Info-aero.png)

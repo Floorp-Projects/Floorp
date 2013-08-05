@@ -73,5 +73,10 @@
         </body>
       </method>
     </implementation>
+
+    <handlers>
+      <!-- Work around for bug 835175 -->
+      <handler event="click">false;</handler>
+    </handlers>
   </binding>
 </bindings>

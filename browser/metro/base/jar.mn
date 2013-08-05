@@ -10,6 +10,7 @@ chrome.jar:
   content/aboutRights.xhtml                    (content/pages/aboutRights.xhtml)
   content/blockedSite.xhtml                    (content/pages/blockedSite.xhtml)
   content/netError.xhtml                       (content/pages/netError.xhtml)
+  content/aboutAddons.xhtml                    (content/pages/aboutAddons.xhtml)
 
   content/bindings/bindings.xml                (content/bindings/bindings.xml)
   content/bindings/tabs.xml                    (content/bindings/tabs.xml)
@@ -101,3 +102,4 @@ chrome.jar:
 
 % override chrome://global/content/config.xul chrome://browser/content/config.xul
 % override chrome://global/content/netError.xhtml chrome://browser/content/netError.xhtml
+% override chrome://mozapps/content/extensions/extensions.xul chrome://browser/content/aboutAddons.xhtml

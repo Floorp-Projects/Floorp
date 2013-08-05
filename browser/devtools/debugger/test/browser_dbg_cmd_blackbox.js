@@ -20,7 +20,7 @@ let gClient;
 let gThreadClient;
 let gTab;
 
-function cmd(typed, expectedNumEvents=1) {
+function cmd(typed, expectedNumEvents=1, output=null) {
   const deferred = promise.defer();
 
   let timesFired = 0;
@@ -31,10 +31,16 @@ function cmd(typed, expectedNumEvents=1) {
     }
   });
 
-  helpers.audit(gOptions, [{
+  let audit = {
     setup: typed,
     exec: {}
-  }]);
+  };
+
+  if (output) {
+    audit.output = output;
+  }
+
+  helpers.audit(gOptions, [audit]);
 
   return deferred.promise;
 }
@@ -93,7 +99,8 @@ function testUnBlackBoxSource() {
 }
 
 function testBlackBoxGlob() {
-  return cmd("dbg blackbox --glob *blackboxing_t*.js", 2)
+  return cmd("dbg blackbox --glob *blackboxing_t*.js", 2,
+             [/blackboxing_three\.js/g, /blackboxing_two\.js/g])
     .then(function () {
       ok(getBlackBoxCheckbox(BLACKBOXME_URL).checked,
          "blackboxme should not be black boxed because it doesn't match the glob");

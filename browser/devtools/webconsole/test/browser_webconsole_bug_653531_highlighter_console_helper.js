@@ -84,46 +84,29 @@ function performWebConsoleTests(hud)
   outputNode = hud.outputNode;
 
   jsterm.clearOutput();
-  jsterm.execute("$0");
+  jsterm.execute("$0", onNodeOutput);
 
-  waitForSuccess({
-    name: "$0 output",
-    validatorFn: function()
-    {
-      return outputNode.querySelector(".webconsole-msg-output");
-    },
-    successFn: function()
-    {
-      let node = outputNode.querySelector(".webconsole-msg-output");
-      isnot(node.textContent.indexOf("[object HTMLHeadingElement"), -1,
-            "correct output for $0");
+  function onNodeOutput()
+  {
+    let node = outputNode.querySelector(".webconsole-msg-output");
+    isnot(node.textContent.indexOf("[object HTMLHeadingElement"), -1,
+          "correct output for $0");
 
-      jsterm.clearOutput();
-      jsterm.execute("$0.textContent = 'bug653531'");
-      waitForSuccess(waitForNodeUpdate);
-    },
-    failureFn: finishUp,
-  });
+    jsterm.clearOutput();
+    jsterm.execute("$0.textContent = 'bug653531'", onNodeUpdate);
+  }
 
-  let waitForNodeUpdate = {
-    name: "$0.textContent update",
-    validatorFn: function()
-    {
-      return outputNode.querySelector(".webconsole-msg-output");
-    },
-    successFn: function()
-    {
-      let node = outputNode.querySelector(".webconsole-msg-output");
-      isnot(node.textContent.indexOf("bug653531"), -1,
-            "correct output for $0.textContent");
-      let inspector = gDevTools.getToolbox(target).getPanel("inspector");
-      is(inspector.selection.node.textContent, "bug653531",
-         "node successfully updated");
+  function onNodeUpdate()
+  {
+    let node = outputNode.querySelector(".webconsole-msg-output");
+    isnot(node.textContent.indexOf("bug653531"), -1,
+          "correct output for $0.textContent");
+    let inspector = gDevTools.getToolbox(target).getPanel("inspector");
+    is(inspector.selection.node.textContent, "bug653531",
+       "node successfully updated");
 
-      executeSoon(finishUp);
-    },
-    failureFn: finishUp,
-  };
+    executeSoon(finishUp);
+  }
 }
 
 function finishUp() {

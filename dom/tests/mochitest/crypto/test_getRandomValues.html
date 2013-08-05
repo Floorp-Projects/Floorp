@@ -125,7 +125,7 @@ function onWindowLoad()
     window.crypto.getRandomValues(null);
   }
   catch (ex) {
-    var test = ex.toString().search(/1003/);
+    var test = ex.toString().search(/1003|TypeError/);
     ok((test > -1), "Expected TYPE_ERR, got " + ex + ".");
   }
 
