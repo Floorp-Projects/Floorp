@@ -231,11 +231,11 @@ StatsCellCallback(JSRuntime *rt, void *data, void *thing, JSGCTraceKind traceKin
             cStats->shapesExtraDictTables += propTableSize;
             JS_ASSERT(kidsSize == 0);
         } else {
-            if (shape->base()->getObjectParent() == shape->compartment()->maybeGlobal()) {
+            JSObject *parent = shape->base()->getObjectParent();
+            if (parent && parent->is<GlobalObject>())
                 cStats->gcHeapShapesTreeGlobalParented += thingSize;
-            } else {
+            else
                 cStats->gcHeapShapesTreeNonGlobalParented += thingSize;
-            }
             cStats->shapesExtraTreeTables += propTableSize;
             cStats->shapesExtraTreeShapeKids += kidsSize;
         }

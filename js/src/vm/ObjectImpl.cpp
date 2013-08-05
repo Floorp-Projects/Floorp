@@ -264,7 +264,7 @@ js::ObjectImpl::initializeSlotRange(uint32_t start, uint32_t length)
     HeapSlot *fixedStart, *fixedEnd, *slotsStart, *slotsEnd;
     getSlotRangeUnchecked(start, length, &fixedStart, &fixedEnd, &slotsStart, &slotsEnd);
 
-    JSRuntime *rt = runtime();
+    JSRuntime *rt = runtimeFromAnyThread();
     uint32_t offset = start;
     for (HeapSlot *sp = fixedStart; sp < fixedEnd; sp++)
         sp->init(rt, this->asObjectPtr(), HeapSlot::Slot, offset++, UndefinedValue());
@@ -275,7 +275,7 @@ js::ObjectImpl::initializeSlotRange(uint32_t start, uint32_t length)
 void
 js::ObjectImpl::initSlotRange(uint32_t start, const Value *vector, uint32_t length)
 {
-    JSRuntime *rt = runtime();
+    JSRuntime *rt = runtimeFromAnyThread();
     HeapSlot *fixedStart, *fixedEnd, *slotsStart, *slotsEnd;
     getSlotRange(start, length, &fixedStart, &fixedEnd, &slotsStart, &slotsEnd);
     for (HeapSlot *sp = fixedStart; sp < fixedEnd; sp++)

@@ -86,7 +86,7 @@ js::IterateScripts(JSRuntime *rt, JSCompartment *compartment,
 void
 js::IterateGrayObjects(Zone *zone, GCThingCallback cellCallback, void *data)
 {
-    AutoPrepareForTracing prep(zone->rt);
+    AutoPrepareForTracing prep(zone->runtimeFromMainThread());
 
     for (size_t finalizeKind = 0; finalizeKind <= FINALIZE_OBJECT_LAST; finalizeKind++) {
         for (CellIterUnderGC i(zone, AllocKind(finalizeKind)); !i.done(); i.next()) {
