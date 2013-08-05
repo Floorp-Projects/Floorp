@@ -30,6 +30,16 @@ var onevalblocked = (function(window) {
 // Defer until document is loaded so that we can write the pretty result boxes
 // out.
 addEventListener('load', function() {
+  // generateCRMFRequest test -- make sure we cannot eval the callback if CSP is in effect
+  try {
+    var script = 'console.log("dynamic script eval\'d in crypto.generateCRMFRequest should be disallowed")';
+    crypto.generateCRMFRequest('CN=0', 0, 0, null, script, 384, null, 'rsa-dual-use');
+    onevalexecuted(false, "crypto.generateCRMFRequest()",
+                   "crypto.generateCRMFRequest() should not run!");
+  } catch (e) {
+    onevalblocked(false, "eval(script) inside crypto.generateCRMFRequest",
+                  "eval was blocked during crypto.generateCRMFRequest");
+  }
 
   // setTimeout(String) test -- mutate something in the window._testResults
   // obj, then check it.

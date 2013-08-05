@@ -44,6 +44,7 @@ class nsIChannel;
 class nsIConsoleService;
 class nsIContent;
 class nsIContentPolicy;
+class nsIContentSecurityPolicy;
 class nsIDocShell;
 class nsIDocument;
 class nsIDocumentLoaderFactory;
@@ -470,6 +471,12 @@ public:
   {
     return sSecurityManager;
   }
+
+  /**
+   * Get the ContentSecurityPolicy for a JS context.
+   **/
+  static bool GetContentSecurityPolicy(JSContext* aCx,
+                                       nsIContentSecurityPolicy** aCSP);
 
   // Returns the subject principal. Guaranteed to return non-null. May only
   // be called when nsContentUtils is initialized.
