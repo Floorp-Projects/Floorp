@@ -23,6 +23,7 @@ CONSTRUCT_HOOK_NAME = '_constructor'
 LEGACYCALLER_HOOK_NAME = '_legacycaller'
 HASINSTANCE_HOOK_NAME = '_hasInstance'
 NEWRESOLVE_HOOK_NAME = '_newResolve'
+ENUMERATE_HOOK_NAME= '_enumerate'
 ENUM_ENTRY_VARIABLE_NAME = 'strings'
 
 def replaceFileIfChanged(filename, newContents):
@@ -88,7 +89,7 @@ class CGNativePropertyHooks(CGThing):
             enumerateOwnProperties = "EnumerateOwnProperties"
         elif self.descriptor.interface.getExtendedAttribute("NeedNewResolve"):
             resolveOwnProperty = "ResolveOwnPropertyViaNewresolve"
-            enumerateOwnProperties = "nullptr"
+            enumerateOwnProperties = "EnumerateOwnPropertiesViaGetOwnPropertyNames"
         else:
             resolveOwnProperty = "nullptr"
             enumerateOwnProperties = "nullptr"
@@ -173,8 +174,10 @@ class CGDOMJSClass(CGThing):
         if self.descriptor.interface.getExtendedAttribute("NeedNewResolve"):
             newResolveHook = "(JSResolveOp)" + NEWRESOLVE_HOOK_NAME
             classFlags += " | JSCLASS_NEW_RESOLVE"
+            enumerateHook = ENUMERATE_HOOK_NAME
         else:
             newResolveHook = "JS_ResolveStub"
+            enumerateHook = "JS_EnumerateStub"
         return """
 DOMJSClass Class = {
   { "%s",
@@ -183,8 +186,8 @@ DOMJSClass Class = {
     JS_DeletePropertyStub, /* delProperty */
     JS_PropertyStub,       /* getProperty */
     JS_StrictPropertyStub, /* setProperty */
-    JS_EnumerateStub,
-    %s,
+    %s, /* enumerate */
+    %s, /* resolve */
     JS_ConvertStub,
     %s, /* finalize */
     nullptr,               /* checkAccess */
@@ -199,7 +202,7 @@ DOMJSClass Class = {
 """ % (self.descriptor.interface.identifier.name,
        classFlags,
        ADDPROPERTY_HOOK_NAME if self.descriptor.concrete and not self.descriptor.workers and self.descriptor.wrapperCache else 'JS_PropertyStub',
-       newResolveHook, FINALIZE_HOOK_NAME, callHook, traceHook,
+       enumerateHook, newResolveHook, FINALIZE_HOOK_NAME, callHook, traceHook,
        CGIndenter(CGGeneric(DOMClass(self.descriptor))).define())
 
 def PrototypeIDAndDepth(descriptor):
@@ -647,13 +650,15 @@ class CGHeaders(CGWrapper):
         for desc in descriptors:
             if desc.interface.isExternal():
                 continue
-            for m in desc.interface.members:
-                func = PropertyDefiner.getStringAttr(m, "Func")
+            def addHeaderForFunc(func):
                 # Include the right class header, which we can only do
                 # if this is a class member function.
                 if func is not None and "::" in func:
                     # Strip out the function name and convert "::" to "/"
                     bindingHeaders.add("/".join(func.split("::")[:-1]) + ".h")
+            for m in desc.interface.members:
+                addHeaderForFunc(PropertyDefiner.getStringAttr(m, "Func"))
+            addHeaderForFunc(desc.interface.getExtendedAttribute("Func"))
 
         for d in dictionaries:
             if d.parent:
@@ -1369,21 +1374,6 @@ def overloadLength(arguments):
 def methodLength(method):
     signatures = method.signatures()
     return min(overloadLength(arguments) for (retType, arguments) in signatures)
-def requiresQueryInterfaceMethod(descriptor):
-    # Make sure to not stick QueryInterface on abstract interfaces that
-    # have hasXPConnectImpls (like EventTarget).  So only put it on
-    # interfaces that are concrete and all of whose ancestors are abstract.
-    def allAncestorsAbstract(iface):
-        if not iface.parent:
-            return True
-        desc = descriptor.getDescriptor(iface.parent.identifier.name)
-        if desc.concrete:
-            return False
-        return allAncestorsAbstract(iface.parent)
-    return (not descriptor.workers and
-            descriptor.interface.hasInterfacePrototypeObject() and
-            descriptor.concrete and
-            allAncestorsAbstract(descriptor.interface))
 
 class MethodDefiner(PropertyDefiner):
     """
@@ -1425,7 +1415,7 @@ class MethodDefiner(PropertyDefiner):
                                  "flags": "JSPROP_ENUMERATE",
                                  "condition": MemberCondition(None, None) })
 
-        if not static and requiresQueryInterfaceMethod(descriptor):
+        if not static and descriptor.wantsQI():
             condition = "WantsQueryInterface<%s>::Enabled" % descriptor.nativeType
             self.regular.append({"name": 'QueryInterface',
                                  "methodInfo": False,
@@ -1720,7 +1710,9 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
             if len(idsToInit) > 1:
                 initIds = CGWrapper(initIds, pre="(", post=")", reindent=True)
             initIds = CGList(
-                [CGGeneric("%s_ids[0] == JSID_VOID &&" % idsToInit[0]), initIds],
+                [CGGeneric("%s_ids[0] == JSID_VOID &&" % idsToInit[0]),
+                 CGGeneric("NS_IsMainThread() &&"),
+                 initIds],
                 "\n")
             initIds = CGWrapper(initIds, pre="if (", post=") {", reindent=True)
             initIds = CGList(
@@ -1950,7 +1942,7 @@ class CGDefineDOMInterfaceMethod(CGAbstractMethod):
 
 """ + getConstructor)
 
-class CGPrefEnabledNative(CGAbstractMethod):
+class CGConstructorEnabledViaPrefEnabled(CGAbstractMethod):
     """
     A method for testing whether the preference controlling this
     interface is enabled. This delegates to PrefEnabled() on the
@@ -1967,7 +1959,7 @@ class CGPrefEnabledNative(CGAbstractMethod):
     def definition_body(self):
         return "  return %s::PrefEnabled();" % self.descriptor.nativeType
 
-class CGPrefEnabled(CGAbstractMethod):
+class CGConstructorEnabledViaPref(CGAbstractMethod):
     """
     A method for testing whether the preference controlling this
     interface is enabled. This generates code in the binding to
@@ -2001,6 +1993,22 @@ class CGConstructorEnabledChromeOnly(CGAbstractMethod):
 
     def definition_body(self):
         return "  return %s;" % GetAccessCheck(self.descriptor, "aObj")
+
+class CGConstructorEnabledViaFunc(CGAbstractMethod):
+    """
+    A method for testing whether the interface object should be exposed on a
+    given global based on whatever the callee wants to consider.
+    """
+    def __init__(self, descriptor):
+        CGAbstractMethod.__init__(self, descriptor,
+                                  'ConstructorEnabled', 'bool',
+                                  [Argument("JSContext*", "cx"),
+                                   Argument("JS::Handle<JSObject*>", "obj")])
+
+    def definition_body(self):
+        func = self.descriptor.interface.getExtendedAttribute("Func")
+        assert isinstance(func, list) and len(func) == 1
+        return "  return %s(cx, obj);" % func[0]
 
 class CGIsMethod(CGAbstractMethod):
     def __init__(self, descriptor):
@@ -2148,7 +2156,7 @@ class CGWrapWithCacheMethod(CGAbstractMethod):
         self.properties = properties
 
     def definition_body(self):
-        if self.descriptor.workers:
+        if self.descriptor.nativeOwnership == 'worker':
             return """  return aObject->GetJSObject();"""
 
         assertISupportsInheritance = (
@@ -5336,19 +5344,14 @@ class CGNewResolveHook(CGAbstractBindingMethod):
     NewResolve hook for our object
     """
     def __init__(self, descriptor):
-        self._needNewResolve = descriptor.interface.getExtendedAttribute("NeedNewResolve")
+        assert descriptor.interface.getExtendedAttribute("NeedNewResolve")
         args = [Argument('JSContext*', 'cx'), Argument('JS::Handle<JSObject*>', 'obj'),
                 Argument('JS::Handle<jsid>', 'id'), Argument('unsigned', 'flags'),
                 Argument('JS::MutableHandle<JSObject*>', 'objp')]
-        # Our "self" is actually the callee in this case, not the thisval.
+        # Our "self" is actually the "obj" argument in this case, not the thisval.
         CGAbstractBindingMethod.__init__(
             self, descriptor, NEWRESOLVE_HOOK_NAME,
             args, getThisObj="", callArgs="")
-
-    def define(self):
-        if not self._needNewResolve:
-            return ""
-        return CGAbstractBindingMethod.define(self)
 
     def generate_code(self):
         return CGIndenter(CGGeneric(
@@ -5363,6 +5366,36 @@ class CGNewResolveHook(CGAbstractBindingMethod):
                 "  return false;\n"
                 "}\n"
                 "objp.set(obj);\n"
+                "return true;"))
+
+class CGEnumerateHook(CGAbstractBindingMethod):
+    """
+    Enumerate hook for our object
+    """
+    def __init__(self, descriptor):
+        assert descriptor.interface.getExtendedAttribute("NeedNewResolve")
+        args = [Argument('JSContext*', 'cx'),
+                Argument('JS::Handle<JSObject*>', 'obj')]
+        # Our "self" is actually the "obj" argument in this case, not the thisval.
+        CGAbstractBindingMethod.__init__(
+            self, descriptor, ENUMERATE_HOOK_NAME,
+            args, getThisObj="", callArgs="")
+
+    def generate_code(self):
+        return CGIndenter(CGGeneric(
+                "nsAutoTArray<nsString, 8> names;\n"
+                "ErrorResult rv;\n"
+                "self->GetOwnPropertyNames(cx, names, rv);\n"
+                "rv.WouldReportJSException();\n"
+                "if (rv.Failed()) {\n"
+                '  return ThrowMethodFailedWithDetails<true>(cx, rv, "%s", "enumerate");\n'
+                "}\n"
+                "JS::Rooted<JS::Value> dummy(cx);\n"
+                "for (uint32_t i = 0; i < names.Length(); ++i) {\n"
+                "  if (!JS_LookupUCProperty(cx, obj, names[i].get(), names[i].Length(), &dummy)) {\n"
+                "    return false;\n"
+                "  }\n"
+                "}\n"
                 "return true;"))
 
 class CppKeywords():
@@ -6920,6 +6953,33 @@ class CGEnumerateOwnProperties(CGAbstractStaticMethod):
         return """  return js::GetProxyHandler(obj)->getOwnPropertyNames(cx, wrapper, props);
 """
 
+class CGEnumerateOwnPropertiesViaGetOwnPropertyNames(CGAbstractBindingMethod):
+    """
+    An implementation of Xray EnumerateOwnProperties stuff for things
+    that have a newresolve hook.
+    """
+    def __init__(self, descriptor):
+        args = [Argument('JSContext*', 'cx'),
+                Argument('JS::Handle<JSObject*>', 'wrapper'),
+                Argument('JS::Handle<JSObject*>', 'obj'),
+                Argument('JS::AutoIdVector&', 'props')]
+        CGAbstractBindingMethod.__init__(self, descriptor,
+                                         "EnumerateOwnPropertiesViaGetOwnPropertyNames",
+                                         args, getThisObj="",
+                                         callArgs="", returnType="bool")
+    def generate_code(self):
+        return CGIndenter(CGGeneric(
+                "nsAutoTArray<nsString, 8> names;\n"
+                "ErrorResult rv;\n"
+                "self->GetOwnPropertyNames(cx, names, rv);\n"
+                "rv.WouldReportJSException();\n"
+                "if (rv.Failed()) {\n"
+                '  return ThrowMethodFailedWithDetails<true>(cx, rv, "%s", "enumerate");\n'
+                "}\n"
+                '// OK to pass null as "proxy" because it\'s ignored if\n'
+                "// shadowPrototypeProperties is true\n"
+                "return DOMProxyHandler::AppendNamedPropertyIds(cx, JS::NullPtr(), names, true, nullptr, props);"))
+
 class CGPrototypeTraitsClass(CGClass):
     def __init__(self, descriptor, indent=''):
         templateArgs = [Argument('prototypes::ID', 'PrototypeID')]
@@ -7488,7 +7548,7 @@ for (int32_t i = 0; i < int32_t(length); ++i) {
             addNames = """
 nsTArray<nsString> names;
 UnwrapProxy(proxy)->GetSupportedNames(names);
-if (!AppendNamedPropertyIds(cx, proxy, names, %s, props)) {
+if (!AppendNamedPropertyIds(cx, proxy, names, %s, this, props)) {
   return false;
 }
 """ % shadow
@@ -7882,6 +7942,7 @@ class CGDescriptor(CGThing):
             cgThings.append(CGEnumerateOwnProperties(descriptor))
         elif descriptor.interface.getExtendedAttribute("NeedNewResolve"):
             cgThings.append(CGResolveOwnPropertyViaNewresolve(descriptor))
+            cgThings.append(CGEnumerateOwnPropertiesViaGetOwnPropertyNames(descriptor))
 
         # Now that we have our ResolveOwnProperty/EnumerateOwnProperties stuff
         # done, set up our NativePropertyHooks.
@@ -7897,7 +7958,9 @@ class CGDescriptor(CGThing):
             cgThings.append(CGNamedConstructors(descriptor))
 
         cgThings.append(CGLegacyCallHook(descriptor))
-        cgThings.append(CGNewResolveHook(descriptor))
+        if descriptor.interface.getExtendedAttribute("NeedNewResolve"):
+            cgThings.append(CGNewResolveHook(descriptor))
+            cgThings.append(CGEnumerateHook(descriptor))
 
         if descriptor.interface.hasInterfacePrototypeObject():
             cgThings.append(CGPrototypeJSClass(descriptor, properties))
@@ -7918,17 +7981,21 @@ class CGDescriptor(CGThing):
             prefControlled = descriptor.interface.getExtendedAttribute("PrefControlled")
             havePref = descriptor.interface.getExtendedAttribute("Pref")
             haveChromeOnly = descriptor.interface.getExtendedAttribute("ChromeOnly")
+            haveFunc = descriptor.interface.getExtendedAttribute("Func")
             # Make sure at most one of those is set
-            if bool(prefControlled) + bool(havePref) + bool(haveChromeOnly) > 1:
+            if (bool(prefControlled) + bool(havePref) +
+                bool(haveChromeOnly) + bool(haveFunc) > 1):
                 raise TypeError("Interface %s has more than one of "
-                                "'PrefControlled', 'Pref', and 'ChomeOnly' "
-                                "specified", descriptor.name)
+                                "'PrefControlled', 'Pref', 'Func', and "
+                                "'ChomeOnly' specified", descriptor.name)
             if prefControlled is not None:
-                cgThings.append(CGPrefEnabledNative(descriptor))
+                cgThings.append(CGConstructorEnabledViaPrefEnabled(descriptor))
             elif havePref is not None:
-                cgThings.append(CGPrefEnabled(descriptor))
+                cgThings.append(CGConstructorEnabledViaPref(descriptor))
             elif haveChromeOnly is not None:
                 cgThings.append(CGConstructorEnabledChromeOnly(descriptor))
+            elif haveFunc is not None:
+                cgThings.append(CGConstructorEnabledViaFunc(descriptor))
 
         if descriptor.concrete:
             if descriptor.proxy:
@@ -8454,7 +8521,8 @@ class CGRegisterProtos(CGAbstractMethod):
         def getCheck(desc):
             if (desc.interface.getExtendedAttribute("PrefControlled") is None and
                 desc.interface.getExtendedAttribute("Pref") is None and
-                desc.interface.getExtendedAttribute("ChromeOnly") is None):
+                desc.interface.getExtendedAttribute("ChromeOnly") is None and
+                desc.interface.getExtendedAttribute("Func") is None):
                 return "nullptr"
             return "%sBinding::ConstructorEnabled" % desc.name
         lines = []

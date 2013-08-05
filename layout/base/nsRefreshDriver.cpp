@@ -654,11 +654,16 @@ nsRefreshDriver::DefaultInterval()
 // Compute the interval to use for the refresh driver timer, in milliseconds.
 // outIsDefault indicates that rate was not explicitly set by the user
 // so we might choose other, more appropriate rates (e.g. vsync, etc)
+// layout.frame_rate=0 indicates "ASAP mode".
+// In ASAP mode rendering is iterated as fast as possible (typically for stress testing).
+// A target rate of 10k is used internally instead of special-handling 0.
+// Backends which block on swap/present/etc should try to not block
+// when layout.frame_rate=0 - to comply with "ASAP" as much as possible.
 double
 nsRefreshDriver::GetRegularTimerInterval(bool *outIsDefault) const
 {
   int32_t rate = Preferences::GetInt("layout.frame_rate", -1);
-  if (rate <= 0) {
+  if (rate < 0) {
     rate = DEFAULT_FRAME_RATE;
     if (outIsDefault) {
       *outIsDefault = true;
@@ -668,6 +673,11 @@ nsRefreshDriver::GetRegularTimerInterval(bool *outIsDefault) const
       *outIsDefault = false;
     }
   }
+
+  if (rate == 0) {
+    rate = 10000;
+  }
+
   return 1000.0 / rate;
 }
 

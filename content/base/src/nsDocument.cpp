@@ -6704,6 +6704,14 @@ nsIDocument::AdoptNode(nsINode& aAdoptedNode, ErrorResult& rv)
         int32_t idx = parent->IndexOf(adoptedNode);
         MOZ_ASSERT(idx >= 0);
         parent->RemoveChildAt(idx, true);
+      } else {
+        MOZ_ASSERT(!adoptedNode->IsInDoc());
+
+        // If we're adopting a node that's not in a document, it might still
+        // have a binding applied. Remove the binding from the element now
+        // that it's getting adopted into a new document.
+        // TODO Fully tear down the binding.
+        adoptedNode->AsContent()->SetXBLBinding(nullptr);
       }
 
       break;

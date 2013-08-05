@@ -207,6 +207,7 @@ ComputeDistanceFromRect(const nsPoint& aPoint, const nsRect& aRect)
 static float
 ComputeDistanceFromRegion(const nsPoint& aPoint, const nsRegion& aRegion)
 {
+  MOZ_ASSERT(!aRegion.IsEmpty(), "can't compute distance between point and empty region");
   nsRegionRectIterator iter(aRegion);
   const nsRect* r;
   float minDist = -1;
@@ -254,6 +255,11 @@ GetClosest(nsIFrame* aRoot, const nsPoint& aPointRelativeToRootFrame,
         nsRect(nsPoint(0, 0), f->GetSize()), aRoot, &preservesAxisAlignedRectangles);
     nsRegion region;
     region.And(exposedRegion, borderBox);
+
+    if (region.IsEmpty()) {
+      continue;
+    }
+
     if (preservesAxisAlignedRectangles) {
       // Subtract from the exposed region if we have a transform that won't make
       // the bounds include a bunch of area that we don't actually cover.

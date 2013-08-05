@@ -31,6 +31,7 @@ class Compositor;
 class SurfaceDescriptor;
 class ISurfaceAllocator;
 class TextureSourceOGL;
+class TextureSourceD3D9;
 class TextureSourceD3D11;
 class TextureSourceBasic;
 class TextureParent;
@@ -87,18 +88,11 @@ public:
   virtual gfx::SurfaceFormat GetFormat() const { return gfx::FORMAT_UNKNOWN; }
 
   /**
-   * Cast to a TextureSource for the OpenGL backend.
+   * Cast to a TextureSource for for each backend..
    */
   virtual TextureSourceOGL* AsSourceOGL() { return nullptr; }
-
-  /**
-   * Cast to a TextureSource for the D3D11 backend.
-   */
+  virtual TextureSourceD3D9* AsSourceD3D9() { return nullptr; }
   virtual TextureSourceD3D11* AsSourceD3D11() { return nullptr; }
-
-  /**
-   * Cast to a TextureSource for the software backend.
-   */
   virtual TextureSourceBasic* AsSourceBasic() { return nullptr; }
 
   /**
@@ -449,6 +443,7 @@ public:
 
 protected:
   bool Upload(nsIntRegion *aRegion = nullptr);
+  bool MaybeUpload(nsIntRegion *aRegion = nullptr);
 
   Compositor* mCompositor;
   RefPtr<DataTextureSource> mFirstSource;

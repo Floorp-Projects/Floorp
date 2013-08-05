@@ -9125,7 +9125,7 @@ if test -n "$MOZ_WEBRTC"; then
    AC_MSG_RESULT("generating WebRTC Makefiles...")
 
    if test "${MOZ_WIDGET_TOOLKIT}" = "gonk"; then
-      EXTRA_GYP_DEFINES="${EXTRA_GYP_DEFINES} -D build_with_gonk=1 -D include_internal_audio_device=0"
+      EXTRA_GYP_DEFINES="${EXTRA_GYP_DEFINES} -D build_with_gonk=1"
    fi
 
 dnl Any --include files must also appear in -D FORCED_INCLUDE_FILE= entries

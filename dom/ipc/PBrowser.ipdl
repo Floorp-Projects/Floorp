@@ -191,6 +191,12 @@ parent:
     SetBackgroundColor(nscolor color);
 
     /**
+     * Used to set the current text of the status tooltip.
+     * Nowadays this is mainly used for link locations on hover.
+     */
+    SetStatus(uint32_t type, nsString status);
+
+    /**
      * Initiates an asynchronous request for permission for the
      * provided principal.
      *

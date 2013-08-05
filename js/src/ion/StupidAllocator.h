@@ -75,6 +75,9 @@ class StupidAllocator : public RegisterAllocator
     void loadRegister(LInstruction *ins, uint32_t vreg, RegisterIndex index);
 
     RegisterIndex findExistingRegister(uint32_t vreg);
+
+    bool allocationRequiresRegister(const LAllocation *alloc, AnyRegister reg);
+    bool registerIsReserved(LInstruction *ins, AnyRegister reg);
 };
 
 } // namespace ion
