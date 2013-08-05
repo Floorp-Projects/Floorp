@@ -227,6 +227,9 @@ public class BrowserSearch extends HomeFragment
         mList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                // Account for the search engines
+                position -= getSuggestEngineCount();
+
                 final Cursor c = mAdapter.getCursor();
                 if (c == null || !c.moveToPosition(position)) {
                     return;
@@ -541,6 +544,10 @@ public class BrowserSearch extends HomeFragment
         mList.startAnimation(shrinkAnimation);
     }
 
+    private int getSuggestEngineCount() {
+        return (TextUtils.isEmpty(mSearchTerm) || mSuggestClient == null || !mSuggestionsEnabled) ? 0 : 1;
+    }
+
     private void registerEventListener(String eventName) {
         GeckoAppShell.registerEventListener(eventName, this);
     }
@@ -737,10 +744,6 @@ public class BrowserSearch extends HomeFragment
 
                 return row;
             }
-        }
-
-        private int getSuggestEngineCount() {
-            return (TextUtils.isEmpty(mSearchTerm) || mSuggestClient == null || !mSuggestionsEnabled) ? 0 : 1;
         }
 
         private int getEngineIndex(int position) {
