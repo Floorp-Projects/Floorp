@@ -38,10 +38,11 @@ private:
   JSObject* mObj;
 
 public:
-  inline void Init(JSObject* obj)
+  inline bool Init(JSObject* obj)
   {
     MOZ_ASSERT(!inited());
     DoInit(obj);
+    return inited();
   }
 
   inline bool inited() const {
