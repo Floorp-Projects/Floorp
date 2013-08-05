@@ -39,6 +39,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=780847
   <div class="target" id="t6" onmousedown="x=1" hidden>
     <div id="t6_inner" style="position:absolute; left:-20px; top:20px; width:60px; height:60px; background:yellow;"></div>
   </div>
+
+  <div class="target" id="t7" onmousedown="x=1" hidden></div>
+  <div class="target" id="t7_over" hidden></div>
+
 </div>
 <pre id="test">
 <script type="application/javascript">
@@ -179,6 +183,13 @@ function runTest() {
   testMouseClick("t6_inner", 25, -1, "t6",
     "clicking in clickable parent close to inner activates parent, not inner");
   setShowing("t6", false);
+
+  setShowing("t7", true);
+  setShowing("t7_over", true);
+  testMouseClick("t7", 100 + 11*mm, 10, "body", "covered div is not clickable");
+  testMouseClick("t7", 10, 10, "t7_over", "covered div is not clickable even within its bounds");
+  setShowing("t7", false);
+  setShowing("t7_over", false);
 
   // Not yet tested:
   // -- visited link weight

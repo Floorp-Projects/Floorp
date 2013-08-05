@@ -17,20 +17,21 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/DOMRequestHelper.jsm");
 Cu.import("resource://gre/modules/AppsUtils.jsm");
 
-const PUSH_CID = Components.ID("{c7ad4f42-faae-4e8b-9879-780a72349945}");
+const PUSH_CID = Components.ID("{cde1d019-fad8-4044-b141-65fb4fb7a245}");
 
 /**
  * The Push component runs in the child process and exposes the SimplePush API
  * to the web application. The PushService running in the parent process is the
  * one actually performing all operations.
  */
-function Push()
-{
+function Push() {
   debug("Push Constructor");
 }
 
 Push.prototype = {
   __proto__: DOMRequestIpcHelper.prototype,
+
+  contractID: "@mozilla.org/push/PushManager;1",
 
   classID : PUSH_CID,
 
@@ -40,9 +41,6 @@ Push.prototype = {
   init: function(aWindow) {
     debug("init()");
 
-    if (!Services.prefs.getBoolPref("services.push.enabled"))
-      return null;
-
     let principal = aWindow.document.nodePrincipal;
 
     this._pageURL = principal.URI;
@@ -51,13 +49,19 @@ Push.prototype = {
                         .getService(Ci.nsIAppsService);
     this._app = appsService.getAppByLocalId(principal.appId);
     this._manifestURL = appsService.getManifestURLByLocalId(principal.appId);
-    if (!this._manifestURL)
-      return null;
+    if (!this._manifestURL) {
+	// Now what?  XXXbz should this be tested in a Func for this
+	// interface so it wouldn't appear at all?
+	return;
+    }
 
     let perm = Services.perms.testExactPermissionFromPrincipal(principal,
                                                                "push");
-    if (perm != Ci.nsIPermissionManager.ALLOW_ACTION)
-      return null;
+    if (perm != Ci.nsIPermissionManager.ALLOW_ACTION) {
+	// Now what?  XXXbz should this be tested in a Func for this
+	// interface so it wouldn't appear at all?
+	return;
+    }
 
     this.initDOMRequestHelper(aWindow, [
       "PushService:Register:OK",
@@ -70,18 +74,6 @@ Push.prototype = {
 
     this._cpmm = Cc["@mozilla.org/childprocessmessagemanager;1"]
                    .getService(Ci.nsISyncMessageSender);
-
-    var self = this;
-    return {
-      register: self.register.bind(self),
-      unregister: self.unregister.bind(self),
-      registrations: self.registrations.bind(self),
-      __exposedProps__: {
-        register: "r",
-        unregister: "r",
-        registrations: "r"
-      }
-    };
   },
 
   receiveMessage: function(aMessage) {

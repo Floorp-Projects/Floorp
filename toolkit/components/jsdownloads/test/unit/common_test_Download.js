@@ -354,6 +354,9 @@ add_task(function test_empty_progress()
   do_check_eq(download.currentBytes, 0);
   do_check_eq(download.totalBytes, 0);
 
+  // We should have received the content type even for an empty file.
+  do_check_eq(download.contentType, "text/plain");
+
   do_check_eq((yield OS.File.stat(download.target.path)).size, 0);
 });
 
@@ -418,6 +421,9 @@ add_task(function test_empty_noprogress()
   // Now allow the response to finish.
   continueResponses();
   yield promiseDownloadStopped(download);
+
+  // We should have received the content type even if no progress is reported.
+  do_check_eq(download.contentType, "text/plain");
 
   // Verify the state of the completed download.
   do_check_true(download.stopped);
@@ -1401,35 +1407,65 @@ add_task(function test_showContainingDirectory() {
  * download.launch() action
  */
 add_task(function test_launch() {
-  let targetPath = getTempFile(TEST_TARGET_FILE_NAME).path;
+  let customLauncher = getTempFile("app-launcher");
 
+  // Test both with and without setting a custom application.
+  for (let launcherPath of [null, customLauncher.path]) {
+    let download;
+    if (!gUseLegacySaver) {
+      // When testing DownloadCopySaver, we have control over the download, thus
+      // we can test that file is not launched if download.succeeded is not set.
+      download = yield Downloads.createDownload({
+        source: httpUrl("source.txt"),
+        target: getTempFile(TEST_TARGET_FILE_NAME).path,
+        launcherPath: launcherPath,
+      });
+
+      try {
+        yield download.launch();
+        do_throw("Can't launch download file as it has not completed yet");
+      } catch (ex) {
+        do_check_eq(ex.message,
+                    "launch can only be called if the download succeeded");
+      }
+
+      yield download.start();
+    } else {
+      // When testing DownloadLegacySaver, the download is already started when
+      // it is created, thus we don't test calling "launch" before starting.
+      download = yield promiseStartLegacyDownload(
+                                         httpUrl("source.txt"),
+                                         { launcherPath: launcherPath });
+      yield promiseDownloadStopped(download);
+    }
+
+    do_check_false(download.launchWhenSucceeded);
+
+    DownloadIntegration._deferTestOpenFile = Promise.defer();
+    download.launch();
+    let result = yield DownloadIntegration._deferTestOpenFile.promise;
+
+    // Verify that the results match the test case.
+    if (!launcherPath) {
+      // This indicates that the default handler has been chosen.
+      do_check_true(result === null);
+    } else {
+      // Check the nsIMIMEInfo instance that would have been used for launching.
+      do_check_eq(result.preferredAction, Ci.nsIMIMEInfo.useHelperApp);
+      do_check_true(result.preferredApplicationHandler
+                          .QueryInterface(Ci.nsILocalHandlerApp)
+                          .executable.equals(customLauncher));
+    }
+  }
+});
+
+/**
+ * Test passing an invalid path as the launcherPath property.
+ */
+add_task(function test_launcherPath_invalid() {
   let download = yield Downloads.createDownload({
     source: { url: httpUrl("source.txt") },
-    target: { path: targetPath }
-  });
-
-  // Test that file is not launched if this.succeeded is not set.
-  // i.e., download has not yet completed.
-  try {
-    yield download.launch();
-    do_throw("Can't launch download file as it has not completed yet");
-  } catch (ex) {
-    do_check_eq(ex.message, "launch can only be called if the download succeeded")
-  }
-
-  // Test that the file can be launched after download is completed.
-  DownloadIntegration._deferTestOpenFile = Promise.defer();
-  yield download.start();
-  download.launch();
-  let result = yield DownloadIntegration._deferTestOpenFile.promise;
-  do_check_eq(result, "default-handler");
-
-
-  // Test that a proper error will be thrown if an invalid
-  // custom handler was chosen.
-  download = yield Downloads.createDownload({
-    source: { url: httpUrl("source.txt") },
-    target: { path: targetPath },
+    target: { path: getTempFile(TEST_TARGET_FILE_NAME).path },
     launcherPath: " "
   });
 
@@ -1446,21 +1482,6 @@ add_task(function test_launch() {
                       ex.result == Cr.NS_ERROR_FAILURE;
     do_check_true(validResult);
   }
-
-  // Test that the custom app chosen will be used
-  // if launcherPath is set.
-  download = yield Downloads.createDownload({
-    source: { url: httpUrl("source.txt") },
-    target: { path: targetPath },
-    launcherPath: getTempFile("app-launcher").path
-  });
-
-  DownloadIntegration._deferTestOpenFile = Promise.defer();
-  yield download.start();
-  download.launch();
-  result = yield DownloadIntegration._deferTestOpenFile.promise;
-  do_check_eq(result, "chosen-app");
-
 });
 
 /**
@@ -1468,44 +1489,50 @@ add_task(function test_launch() {
  * the download finishes if download.launchWhenSucceeded = true
  */
 add_task(function test_launchWhenSucceeded() {
-  let targetPath = getTempFile(TEST_TARGET_FILE_NAME).path;
+  let customLauncher = getTempFile("app-launcher");
 
-  let download = yield Downloads.createDownload({
-    source: { url: httpUrl("source.txt") },
-    target: { path: targetPath },
-    launchWhenSucceeded: true,
-  });
+  // Test both with and without setting a custom application.
+  for (let launcherPath of [null, customLauncher.path]) {
+    DownloadIntegration._deferTestOpenFile = Promise.defer();
 
-  // Test that the default handler will be used if no
-  // custom handler was chosen.
-  DownloadIntegration._deferTestOpenFile = Promise.defer();
-  download.start();
-  let result = yield DownloadIntegration._deferTestOpenFile.promise;
-  do_check_eq(result, "default-handler");
+    if (!gUseLegacySaver) {
+      let download = yield Downloads.createDownload({
+        source: httpUrl("source.txt"),
+        target: getTempFile(TEST_TARGET_FILE_NAME).path,
+        launchWhenSucceeded: true,
+        launcherPath: launcherPath,
+      });
+      yield download.start();
+    } else {
+      let download = yield promiseStartLegacyDownload(
+                                             httpUrl("source.txt"),
+                                             { launcherPath: launcherPath,
+                                               launchWhenSucceeded: true });
+      yield promiseDownloadStopped(download);
+    }
 
+    let result = yield DownloadIntegration._deferTestOpenFile.promise;
 
-  // Test that the custom app chosen will be used
-  // if launcherPath is set.
-  download = yield Downloads.createDownload({
-    source: { url: httpUrl("source.txt") },
-    target: { path: targetPath },
-    launchWhenSucceeded: true,
-    launcherPath: getTempFile("app-launcher").path
-  });
-
-  DownloadIntegration._deferTestOpenFile = Promise.defer();
-  yield download.start();
-  result = yield DownloadIntegration._deferTestOpenFile.promise;
-  do_check_eq(result, "chosen-app");
+    // Verify that the results match the test case.
+    if (!launcherPath) {
+      // This indicates that the default handler has been chosen.
+      do_check_true(result === null);
+    } else {
+      // Check the nsIMIMEInfo instance that would have been used for launching.
+      do_check_eq(result.preferredAction, Ci.nsIMIMEInfo.useHelperApp);
+      do_check_true(result.preferredApplicationHandler
+                          .QueryInterface(Ci.nsILocalHandlerApp)
+                          .executable.equals(customLauncher));
+    }
+  }
 });
 
 /**
- * Tests that the proper content type is set for a download.
+ * Tests that the proper content type is set for a normal download.
  */
 add_task(function test_contentType() {
   let download = yield promiseStartDownload(httpUrl("source.txt"));
-
   yield promiseDownloadStopped(download);
+
   do_check_eq("text/plain", download.contentType);
 });
-

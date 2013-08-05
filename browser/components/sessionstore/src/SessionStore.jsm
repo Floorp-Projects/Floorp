@@ -112,8 +112,6 @@ let gDocShellCapabilities = (function () {
   };
 })();
 
-XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
-  "resource://gre/modules/NetUtil.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ScratchpadManager",
   "resource:///modules/devtools/scratchpad-manager.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "DocumentUtils",
@@ -348,16 +346,6 @@ let SessionStoreInternal = {
   // True if session store is disabled by multi-process browsing.
   // See bug 516755.
   _disabledForMultiProcess: false,
-
-  // The original "sessionstore.resume_session_once" preference value before it
-  // was modified by saveState.  saveState will set the
-  // "sessionstore.resume_session_once" to true when the
-  // the "sessionstore.resume_from_crash" preference is false (crash recovery
-  // is disabled) so that pinned tabs will be restored in the case of a
-  // crash.  This variable is used to restore the original value so the
-  // previous session is not always restored when
-  // "sessionstore.resume_from_crash" is true.
-  _resume_session_once_on_shutdown: null,
 
   /**
    * A promise fulfilled once initialization is complete.
@@ -1057,15 +1045,6 @@ let SessionStoreInternal = {
       // browser is about to exit anyway.
       Services.obs.removeObserver(this, "browser:purge-session-history");
     }
-    else if (this._resume_session_once_on_shutdown != null) {
-      // if the sessionstore.resume_session_once preference was changed by
-      // saveState because crash recovery is disabled then restore the
-      // preference back to the value it was prior to that.  This will prevent
-      // SessionStore from always restoring the session when crash recovery is
-      // disabled.
-      this._prefBranch.setBoolPref("sessionstore.resume_session_once",
-                                   this._resume_session_once_on_shutdown);
-    }
 
     if (aData != "restart") {
       // Throw away the previous session on shutdown
@@ -1214,12 +1193,6 @@ let SessionStoreInternal = {
         break;
       case "sessionstore.resume_from_crash":
         this._resume_from_crash = this._prefBranch.getBoolPref("sessionstore.resume_from_crash");
-        // restore original resume_session_once preference if set in saveState
-        if (this._resume_session_once_on_shutdown != null) {
-          this._prefBranch.setBoolPref("sessionstore.resume_session_once",
-                                       this._resume_session_once_on_shutdown);
-          this._resume_session_once_on_shutdown = null;
-        }
         // either create the file with crash recovery information or remove it
         // (when _loadState is not STATE_RUNNING, that file is used for session resuming instead)
         if (!this._resume_from_crash)
@@ -3840,19 +3813,6 @@ let SessionStoreInternal = {
       }
     }
 #endif
-
-    if (pinnedOnly) {
-      // Save original resume_session_once preference for when quiting browser,
-      // otherwise session will be restored next time browser starts and we
-      // only want it to be restored in the case of a crash.
-      if (this._resume_session_once_on_shutdown == null) {
-        this._resume_session_once_on_shutdown =
-          this._prefBranch.getBoolPref("sessionstore.resume_session_once");
-        this._prefBranch.setBoolPref("sessionstore.resume_session_once", true);
-        // flush the preference file so preference will be saved in case of a crash
-        Services.prefs.savePrefFile(null);
-      }
-    }
 
     // Persist the last session if we deferred restoring it
     if (this._lastSessionState)

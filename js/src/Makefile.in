@@ -105,7 +105,7 @@ VPATH += 	$(srcdir)/assembler/assembler \
 endif
 
 #
-# END enclude sources for the Nitro assembler
+# END include sources for the Nitro assembler
 #############################################
 
 ifdef JS_HAS_CTYPES
@@ -298,12 +298,15 @@ JITTEST_VALGRIND_FLAG = --valgrind
 endif
 endif
 
+check-style::
+	(cd $(srcdir) && $(PYTHON) config/check_spidermonkey_style.py);
+
 check-jit-test::
 	$(wildcard $(RUN_TEST_PROGRAM)) $(PYTHON) -u $(srcdir)/jit-test/jit_test.py \
 	        --no-slow --no-progress --tinderbox --tbpl $(JITTEST_VALGRIND_FLAG) \
 	        $(DIST)/bin/$(JS_SHELL_NAME)$(BIN_SUFFIX)
 
-check:: check-jit-test
+check:: check-style check-jit-test
 
 # jstests doesn't have a --jitflags option, so we need to loop, updating the
 # exit code (RC) after each invocation.
@@ -366,15 +369,6 @@ NSPR_STATIC_PATH = $(subst -L,,$(findstring -L,$(NSPR_LIBS)))
 else
 NSPR_STATIC_PATH = $(DIST)/lib
 endif
-
-ifdef MOZ_VTUNE
-ifeq ($(OS_ARCH), WINNT)
-EXTRA_DSO_LDOPTS += $(VTUNE_LIBRARIES)
-LIBS += $(VTUNE_LIBRARIES)
-else
-SHARED_LIBRARY_LIBS += $(VTUNE_LIBRARIES)
-endif # WINNT
-endif # MOZ_VTUNE
 
 ifdef MOZ_ETW
 # This will get the ETW provider resources into the library mozjs.dll

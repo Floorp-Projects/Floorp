@@ -1456,7 +1456,7 @@ Navigator::DoNewResolve(JSContext* aCx, JS::Handle<JSObject*> aObject,
     return true;
   }
 
-  nsScriptNameSpaceManager *nameSpaceManager =
+  nsScriptNameSpaceManager* nameSpaceManager =
     nsJSRuntime::GetNameSpaceManager();
   if (!nameSpaceManager) {
     return Throw<true>(aCx, NS_ERROR_NOT_INITIALIZED);
@@ -1548,6 +1548,29 @@ Navigator::DoNewResolve(JSContext* aCx, JS::Handle<JSObject*> aObject,
 
   aValue.set(prop_val);
   return true;
+}
+
+static PLDHashOperator
+SaveNavigatorName(const nsAString& aName, void* aClosure)
+{
+  nsTArray<nsString>* arr = static_cast<nsTArray<nsString>*>(aClosure);
+  arr->AppendElement(aName);
+  return PL_DHASH_NEXT;
+}
+
+void
+Navigator::GetOwnPropertyNames(JSContext* aCx, nsTArray<nsString>& aNames,
+                               ErrorResult& aRv)
+{
+  nsScriptNameSpaceManager *nameSpaceManager =
+    nsJSRuntime::GetNameSpaceManager();
+  if (!nameSpaceManager) {
+    NS_ERROR("Can't get namespace manager.");
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return;
+  }
+
+  nameSpaceManager->EnumerateNavigatorNames(SaveNavigatorName, &aNames);
 }
 
 JSObject*

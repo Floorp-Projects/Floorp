@@ -41,6 +41,7 @@ child:
 
     urgent GetPropertyNames(uint64_t objId, uint32_t flags) returns (ReturnStatus rs, nsString[] names);
     urgent InstanceOf(uint64_t objId, JSIID iid) returns (ReturnStatus rs, bool instanceof);
+    urgent DOMInstanceOf(uint64_t objId, int prototypeID, int depth) returns (ReturnStatus rs, bool instanceof);
 
 parent:
     async __delete__();

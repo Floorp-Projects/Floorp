@@ -1146,32 +1146,29 @@ int32_t nsNavHistoryContainerResultNode::SortComparison_AnnotationLess(
           }                                                                   \
         }
 
-    // Surprising as it is, we don't support sorting by a binary annotation
-    if (annoType != nsIAnnotationService::TYPE_BINARY) {
-      if (annoType == nsIAnnotationService::TYPE_STRING) {
-        nsAutoString a_val, b_val;
-        GET_ANNOTATIONS_VALUES(GetItemAnnotationString,
-                               GetPageAnnotationString, a_val, b_val);
-        value = SortComparison_StringLess(a_val, b_val);
-      }
-      else if (annoType == nsIAnnotationService::TYPE_INT32) {
-        int32_t a_val = 0, b_val = 0;
-        GET_ANNOTATIONS_VALUES(GetItemAnnotationInt32,
-                               GetPageAnnotationInt32, &a_val, &b_val);
-        value = (a_val < b_val) ? -1 : (a_val > b_val) ? 1 : 0;
-      }
-      else if (annoType == nsIAnnotationService::TYPE_INT64) {
-        int64_t a_val = 0, b_val = 0;
-        GET_ANNOTATIONS_VALUES(GetItemAnnotationInt64,
-                               GetPageAnnotationInt64, &a_val, &b_val);
-        value = (a_val < b_val) ? -1 : (a_val > b_val) ? 1 : 0;
-      }
-      else if (annoType == nsIAnnotationService::TYPE_DOUBLE) {
-        double a_val = 0, b_val = 0;
-        GET_ANNOTATIONS_VALUES(GetItemAnnotationDouble,
-                               GetPageAnnotationDouble, &a_val, &b_val);
-        value = (a_val < b_val) ? -1 : (a_val > b_val) ? 1 : 0;
-      }
+    if (annoType == nsIAnnotationService::TYPE_STRING) {
+      nsAutoString a_val, b_val;
+      GET_ANNOTATIONS_VALUES(GetItemAnnotationString,
+                             GetPageAnnotationString, a_val, b_val);
+      value = SortComparison_StringLess(a_val, b_val);
+    }
+    else if (annoType == nsIAnnotationService::TYPE_INT32) {
+      int32_t a_val = 0, b_val = 0;
+      GET_ANNOTATIONS_VALUES(GetItemAnnotationInt32,
+                             GetPageAnnotationInt32, &a_val, &b_val);
+      value = (a_val < b_val) ? -1 : (a_val > b_val) ? 1 : 0;
+    }
+    else if (annoType == nsIAnnotationService::TYPE_INT64) {
+      int64_t a_val = 0, b_val = 0;
+      GET_ANNOTATIONS_VALUES(GetItemAnnotationInt64,
+                             GetPageAnnotationInt64, &a_val, &b_val);
+      value = (a_val < b_val) ? -1 : (a_val > b_val) ? 1 : 0;
+    }
+    else if (annoType == nsIAnnotationService::TYPE_DOUBLE) {
+      double a_val = 0, b_val = 0;
+      GET_ANNOTATIONS_VALUES(GetItemAnnotationDouble,
+                             GetPageAnnotationDouble, &a_val, &b_val);
+      value = (a_val < b_val) ? -1 : (a_val > b_val) ? 1 : 0;
     }
   }
 

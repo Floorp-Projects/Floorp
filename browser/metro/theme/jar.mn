@@ -7,6 +7,7 @@
 chrome.jar:
 % skin browser classic/1.0 %skin/
   skin/aboutPage.css                        (aboutPage.css)
+  skin/aboutAddons.css                      (aboutAddons.css)
   skin/about.css                            (about.css)
 * skin/flyoutpanel.css                      (flyoutpanel.css)
 * skin/cssthrobber.css                      (cssthrobber.css)
@@ -60,6 +61,8 @@ chrome.jar:
   skin/images/infobar-key.png               (images/infobar-key.png)
   skin/images/infobar-popup.png             (images/infobar-popup.png)
   skin/images/firefox-watermark.png         (images/firefox-watermark.png)
+  skin/images/aboutAddonsBackground.png     (images/aboutAddonsBackground.png)
+  skin/images/aboutAddonsBackgroundFillSlice.png     (images/aboutAddonsBackgroundFillSlice.png)
   skin/images/flyout-back-button.png        (images/flyout-back-button.png)
   skin/images/about-footer.png              (images/about-footer.png)
   skin/images/button-bg.png                 (images/button-bg.png)

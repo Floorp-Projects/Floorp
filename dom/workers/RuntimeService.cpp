@@ -21,6 +21,7 @@
 #include "GeckoProfiler.h"
 #include "jsdbgapi.h"
 #include "jsfriendapi.h"
+#include "mozilla/CycleCollectedJSRuntime.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/EventTargetBinding.h"
 #include "mozilla/DebugOnly.h"
@@ -28,6 +29,7 @@
 #include "mozilla/Util.h"
 #include <Navigator.h>
 #include "nsContentUtils.h"
+#include "nsCycleCollector.h"
 #include "nsDOMJSUtils.h"
 #include "nsLayoutStatics.h"
 #include "nsNetUtil.h"
@@ -748,19 +750,10 @@ CTypesActivityCallback(JSContext* aCx,
 }
 
 JSContext*
-CreateJSContextForWorker(WorkerPrivate* aWorkerPrivate)
+CreateJSContextForWorker(WorkerPrivate* aWorkerPrivate, JSRuntime* aRuntime)
 {
   aWorkerPrivate->AssertIsOnWorkerThread();
   NS_ASSERTION(!aWorkerPrivate->GetJSContext(), "Already has a context!");
-
-  // The number passed here doesn't matter, we're about to change it in the call
-  // to JS_SetGCParameter.
-  JSRuntime* runtime =
-    JS_NewRuntime(WORKER_DEFAULT_RUNTIME_HEAPSIZE, JS_NO_HELPER_THREADS);
-  if (!runtime) {
-    NS_WARNING("Could not create new runtime!");
-    return nullptr;
-  }
 
   JSSettings settings;
   aWorkerPrivate->CopyJSSettings(settings);
@@ -779,45 +772,44 @@ CreateJSContextForWorker(WorkerPrivate* aWorkerPrivate)
     const JSSettings::JSGCSetting& setting = gcSettings[index];
     if (setting.IsSet()) {
       NS_ASSERTION(setting.value, "Can't handle 0 values!");
-      JS_SetGCParameter(runtime, setting.key, setting.value);
+      JS_SetGCParameter(aRuntime, setting.key, setting.value);
     }
   }
 
-  JS_SetNativeStackQuota(runtime, WORKER_CONTEXT_NATIVE_STACK_LIMIT);
+  JS_SetNativeStackQuota(aRuntime, WORKER_CONTEXT_NATIVE_STACK_LIMIT);
 
   // Security policy:
   static JSSecurityCallbacks securityCallbacks = {
     NULL,
     ContentSecurityPolicyAllows
   };
-  JS_SetSecurityCallbacks(runtime, &securityCallbacks);
+  JS_SetSecurityCallbacks(aRuntime, &securityCallbacks);
 
   // DOM helpers:
   static js::DOMCallbacks DOMCallbacks = {
     InstanceClassHasProtoAtDepth
   };
-  SetDOMCallbacks(runtime, &DOMCallbacks);
+  SetDOMCallbacks(aRuntime, &DOMCallbacks);
 
-  JSContext* workerCx = JS_NewContext(runtime, 0);
+  JSContext* workerCx = JS_NewContext(aRuntime, 0);
   if (!workerCx) {
-    JS_DestroyRuntime(runtime);
     NS_WARNING("Could not create new context!");
     return nullptr;
   }
 
-  JS_SetRuntimePrivate(runtime, aWorkerPrivate);
+  JS_SetRuntimePrivate(aRuntime, aWorkerPrivate);
 
   JS_SetErrorReporter(workerCx, ErrorReporter);
 
   JS_SetOperationCallback(workerCx, OperationCallback);
 
-  js::SetCTypesActivityCallback(runtime, CTypesActivityCallback);
+  js::SetCTypesActivityCallback(aRuntime, CTypesActivityCallback);
 
   JS_SetOptions(workerCx,
                 aWorkerPrivate->IsChromeWorker() ? settings.chrome.options :
                                                    settings.content.options);
 
-  JS_SetJitHardening(runtime, settings.jitHardening);
+  JS_SetJitHardening(aRuntime, settings.jitHardening);
 
 #ifdef JS_GC_ZEAL
   JS_SetGCZeal(workerCx, settings.gcZeal, settings.gcZealFrequency);
@@ -825,6 +817,58 @@ CreateJSContextForWorker(WorkerPrivate* aWorkerPrivate)
 
   return workerCx;
 }
+
+class WorkerJSRuntime : public mozilla::CycleCollectedJSRuntime
+{
+public:
+  // The heap size passed here doesn't matter, we will change it later in the
+  // call to JS_SetGCParameter inside CreateJSContextForWorker.
+  WorkerJSRuntime(WorkerPrivate* aWorkerPrivate)
+  : CycleCollectedJSRuntime(WORKER_DEFAULT_RUNTIME_HEAPSIZE,
+                            JS_NO_HELPER_THREADS,
+                            false)
+  {
+    // We need to ensure that a JSContext outlives the cycle collector, and
+    // that the internal JSContext created by ctypes is not the last JSContext
+    // to die.  So we create an unused JSContext here and destroy it after
+    // the cycle collector shuts down.  Thus all cycles will be broken before
+    // the last GC and all finalizers will be run.
+    mLastJSContext = JS_NewContext(Runtime(), 0);
+    MOZ_ASSERT(mLastJSContext);
+  }
+
+  ~WorkerJSRuntime()
+  {
+    // All JSContexts except mLastJSContext should be destroyed now.  The
+    // worker global will be unrooted and the shutdown cycle collection
+    // should break all remaining cycles.  Destroying mLastJSContext will run
+    // the GC the final time and finalize any JSObjects that were participating
+    // in cycles that were broken during CC shutdown.
+    nsCycleCollector_shutdownThreads();
+    nsCycleCollector_shutdown();
+    JS_DestroyContext(mLastJSContext);
+    mLastJSContext = nullptr;
+  }
+
+  // Make this public for now.  Ideally we'd hide the JSRuntime inside.
+  JSRuntime*
+  Runtime() const
+  {
+    return mozilla::CycleCollectedJSRuntime::Runtime();
+  }
+
+  void
+  DispatchDeferredDeletion(bool aContinuation) MOZ_OVERRIDE
+  {
+    MOZ_ASSERT(!aContinuation);
+
+    // Do it immediately, no need for asynchronous behavior here.
+    nsCycleCollector_doDeferredDeletion();
+  }
+
+private:
+  JSContext* mLastJSContext;
+};
 
 class WorkerThreadRunnable : public nsRunnable
 {
@@ -845,50 +889,45 @@ public:
 
     workerPrivate->AssertIsOnWorkerThread();
 
-    JSContext* cx = CreateJSContextForWorker(workerPrivate);
-    if (!cx) {
-      // XXX need to fire an error at parent.
-      NS_ERROR("Failed to create runtime and context!");
-      return NS_ERROR_FAILURE;
-    }
-
-    JSRuntime* rt = JS_GetRuntime(cx);
-
-    char aLocal;
-    profiler_register_thread("WebWorker", &aLocal);
-#ifdef MOZ_ENABLE_PROFILER_SPS
-    if (PseudoStack* stack = mozilla_get_pseudo_stack())
-      stack->sampleRuntime(rt);
-#endif
-
     {
-      JSAutoRequest ar(cx);
-      workerPrivate->DoRunLoop(cx);
-    }
+      nsCycleCollector_startup(CCSingleThread);
 
-    // XXX Bug 666963 - CTypes can create another JSContext for use with
-    // closures, and then it holds that context in a reserved slot on the CType
-    // prototype object. We have to destroy that context before we can destroy
-    // the runtime, and we also have to make sure that it isn't the last context
-    // to be destroyed (otherwise it will assert). To accomplish this we create
-    // an unused dummy context, destroy our real context, and then destroy the
-    // dummy. Once this bug is resolved we can remove this nastiness and simply
-    // call JS_DestroyContextNoGC on our context.
-    JSContext* dummyCx = JS_NewContext(rt, 0);
-    if (dummyCx) {
+      WorkerJSRuntime runtime(workerPrivate);
+      JSRuntime* rt = runtime.Runtime();
+      JSContext* cx = CreateJSContextForWorker(workerPrivate, rt);
+      if (!cx) {
+        // XXX need to fire an error at parent.
+        NS_ERROR("Failed to create runtime and context!");
+        return NS_ERROR_FAILURE;
+      }
+
+      char aLocal;
+      profiler_register_thread("WebWorker", &aLocal);
+  #ifdef MOZ_ENABLE_PROFILER_SPS
+      if (PseudoStack* stack = mozilla_get_pseudo_stack())
+        stack->sampleRuntime(rt);
+  #endif
+
+      {
+        JSAutoRequest ar(cx);
+        workerPrivate->DoRunLoop(cx);
+      }
+
+      // Destroy the main context.  This will unroot the main worker global and
+      // GC.  This is not the last JSContext (WorkerJSRuntime maintains an
+      // internal JSContext).
       JS_DestroyContext(cx);
-      JS_DestroyContext(dummyCx);
-    }
-    else {
-      NS_WARNING("Failed to create dummy context!");
-      JS_DestroyContext(cx);
+
+      // Now WorkerJSRuntime goes out of scope and its destructor will shut
+      // down the cycle collector and destroy the final JSContext.  This
+      // breaks any remaining cycles and collects the C++ and JS objects
+      // participating.
     }
 
 #ifdef MOZ_ENABLE_PROFILER_SPS
     if (PseudoStack* stack = mozilla_get_pseudo_stack())
       stack->sampleRuntime(nullptr);
 #endif
-    JS_DestroyRuntime(rt);
 
     workerPrivate->ScheduleDeletion(false);
     profiler_unregister_thread();
