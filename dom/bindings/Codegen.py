@@ -2801,7 +2801,7 @@ for (uint32_t i = 0; i < length; ++i) {
                                           "${declName}.SetNull()", notSequence)
         # Sequence arguments that might contain traceable things need
         # to get traced
-        if not isMember and typeNeedsCx(elementType, descriptorProvider):
+        if not isMember and typeNeedsRooting(elementType, descriptorProvider):
             holderType = CGTemplatedType("SequenceRooter", elementInfo.declType)
             holderArgs = "cx, &%s" % arrayRef
         else:
@@ -3200,7 +3200,7 @@ for (uint32_t i = 0; i < length; ++i) {
 
     if type.isSpiderMonkeyInterface():
         assert not isEnforceRange and not isClamp
-        if isMember:
+        if isMember and isMember != "Dictionary":
             raise TypeError("Can't handle member arraybuffers or "
                             "arraybuffer views because making sure all the "
                             "objects are properly rooted is hard")
@@ -3500,7 +3500,7 @@ for (uint32_t i = 0; i < length; ++i) {
 
         # Dictionary arguments that might contain traceable things need to get
         # traced
-        if not isMember and typeNeedsCx(type, descriptorProvider):
+        if not isMember and typeNeedsRooting(type, descriptorProvider):
             declType = CGTemplatedType("RootedDictionary", declType);
             declArgs = "cx"
         else:
@@ -3812,7 +3812,7 @@ class CGArgumentConverter(CGThing):
         replacer = dict(self.argcAndIndex, **self.replacementVariables)
         replacer["seqType"] = CGTemplatedType("AutoSequence",
                                               typeConversion.declType).define()
-        if typeNeedsCx(self.argument.type, self.descriptorProvider):
+        if typeNeedsRooting(self.argument.type, self.descriptorProvider):
             rooterDecl = ("SequenceRooter<%s> ${holderName}(cx, &${declName});\n" %
                           typeConversion.declType.define())
         else:
@@ -4241,27 +4241,40 @@ def infallibleForMember(member, type, descriptorProvider):
                                   memberIsCreator(member), "return false;",
                                   False)[1]
 
+def leafTypeNeedsCx(type, descriptorProvider, retVal):
+    return (type.isAny() or type.isObject() or
+            (retVal and type.isSpiderMonkeyInterface()) or
+            (descriptorProvider.workers and type.isCallback()))
+
+def leafTypeNeedsRooting(type, descriptorProvider):
+    return (leafTypeNeedsCx(type, descriptorProvider, False) or
+            type.isSpiderMonkeyInterface())
+
+def typeNeedsRooting(type, descriptorProvider):
+    return typeMatchesLambda(type,
+                             lambda t: leafTypeNeedsRooting(t, descriptorProvider))
+
 def typeNeedsCx(type, descriptorProvider, retVal=False):
+    return typeMatchesLambda(type,
+                             lambda t: leafTypeNeedsCx(t, descriptorProvider, retVal))
+
+def typeMatchesLambda(type, func):
     if type is None:
         return False
     if type.nullable():
-        return typeNeedsCx(type.inner, descriptorProvider, retVal)
+        return typeMatchesLambda(type.inner, func)
     if type.isSequence() or type.isArray():
-        return typeNeedsCx(type.inner, descriptorProvider, retVal)
+        return typeMatchesLambda(type.inner, func)
     if type.isUnion():
-        return any(typeNeedsCx(t, descriptorProvider) for t in
+        return any(typeMatchesLambda(t, func) for t in
                    type.unroll().flatMemberTypes)
     if type.isDictionary():
-        return dictionaryNeedsCx(type.inner, descriptorProvider)
-    if retVal and type.isSpiderMonkeyInterface():
-        return True
-    if type.isCallback():
-        return descriptorProvider.workers
-    return type.isAny() or type.isObject()
+        return dictionaryMatchesLambda(type.inner, func)
+    return func(type)
 
-def dictionaryNeedsCx(dictionary, descriptorProvider):
-    return (any(typeNeedsCx(m.type, descriptorProvider) for m in dictionary.members) or
-        (dictionary.parent and dictionaryNeedsCx(dictionary.parent, descriptorProvider)))
+def dictionaryMatchesLambda(dictionary, func):
+    return (any(typeMatchesLambda(m.type, func) for m in dictionary.members) or
+        (dictionary.parent and dictionaryMatchesLambda(dictionary.parent, func)))
 
 # Whenever this is modified, please update CGNativeMember.getRetvalInfo as
 # needed to keep the types compatible.
@@ -4333,7 +4346,7 @@ def getRetvalDeclarationForType(returnType, descriptorProvider,
                                                         resultAlreadyAddRefed,
                                                         isMember="Sequence")
         # While we have our inner type, set up our rooter, if needed
-        if not isMember and typeNeedsCx(returnType, descriptorProvider):
+        if not isMember and typeNeedsRooting(returnType, descriptorProvider):
             rooter = CGGeneric("SequenceRooter<%s > resultRooter(cx, &result);" %
                                result.define())
         else:
@@ -4348,7 +4361,7 @@ def getRetvalDeclarationForType(returnType, descriptorProvider,
                                                     descriptorProvider.workers) +
                     "Initializer")
         result = CGGeneric(dictName)
-        if not isMember and typeNeedsCx(returnType, descriptorProvider):
+        if not isMember and typeNeedsRooting(returnType, descriptorProvider):
             if nullable:
                 result = CGTemplatedType("NullableRootedDictionary", result)
             else:
@@ -4515,10 +4528,19 @@ def wrapTypeIntoCurrentCompartment(type, value, isMember=True):
                          "}" % value)
 
     if type.isSpiderMonkeyInterface():
-        raise TypeError("Can't handle wrapping of spidermonkey interfaces in "
-                        "constructor arguments yet")
+        origValue = value
+        if type.nullable():
+            value = "%s.Value()" % value
+        wrapCode = CGGeneric("if (!%s.WrapIntoNewCompartment(cx)) {\n"
+                             "  return false;\n"
+                             "}" % value)
+        if type.nullable():
+            wrapCode = CGIfWrapper(wrapCode, "!%s.IsNull()" % origValue)
+        return wrapCode
 
     if type.isSequence():
+        origValue = value
+        origType = type
         if type.nullable():
             type = type.inner
             value = "%s.Value()" % value
@@ -4530,10 +4552,13 @@ def wrapTypeIntoCurrentCompartment(type, value, isMember=True):
         sequenceWrapLevel -= 1
         if not wrapElement:
             return None
-        return CGWrapper(CGIndenter(wrapElement),
-                         pre=("for (uint32_t %s = 0; %s < %s.Length(); ++%s) {\n" %
-                              (index, index, value, index)),
-                         post="\n}")
+        wrapCode = CGWrapper(CGIndenter(wrapElement),
+                             pre=("for (uint32_t %s = 0; %s < %s.Length(); ++%s) {\n" %
+                                  (index, index, value, index)),
+                             post="\n}")
+        if origType.nullable():
+            wrapCode = CGIfWrapper(wrapCode, "!%s.IsNull()" % origValue)
+        return wrapCode
 
     if type.isDictionary():
         assert not type.nullable()
@@ -8219,7 +8244,7 @@ class CGDictionary(CGThing):
 
         memberTraces = [self.getMemberTrace(m)
                         for m in self.dictionary.members
-                        if typeNeedsCx(m.type, self.descriptorProvider)]
+                        if typeNeedsRooting(m.type, self.descriptorProvider)]
 
         body += "\n\n".join(memberTraces)
 
@@ -8379,7 +8404,8 @@ class CGDictionary(CGThing):
                 'jsvalRef': "temp",
                 'jsvalHandle': "&temp",
                 'isCreator': False,
-                'obj': "parentObject"
+                'obj': "parentObject",
+                'typedArraysAreStructs': True
             })
         conversion = CGGeneric(innerTemplate)
         conversion = CGWrapper(conversion,
@@ -8403,7 +8429,7 @@ class CGDictionary(CGThing):
 
     def getMemberTrace(self, member):
         type = member.type;
-        assert typeNeedsCx(type, self.descriptorProvider)
+        assert typeNeedsRooting(type, self.descriptorProvider)
         memberLoc = self.makeMemberName(member.identifier.name)
         if member.defaultValue:
             memberData = memberLoc
@@ -8420,15 +8446,18 @@ class CGDictionary(CGThing):
         elif type.isAny():
             trace = CGGeneric('JS_CallValueTracer(trc, %s, "%s");' %
                               ("&"+memberData, memberName))
-        elif type.isSequence() or type.isDictionary():
+        elif (type.isSequence() or type.isDictionary() or
+              type.isSpiderMonkeyInterface()):
             if type.nullable():
                 memberNullable = memberData
                 memberData = "%s.Value()" % memberData
             if type.isSequence():
                 trace = CGGeneric('DoTraceSequence(trc, %s);' % memberData)
-            else:
-                assert type.isDictionary()
+            elif type.isDictionary():
                 trace = CGGeneric('%s.TraceDictionary(trc);' % memberData)
+            else:
+                assert type.isSpiderMonkeyInterface()
+                trace = CGGeneric('%s.TraceSelf(trc);' % memberData)
             if type.nullable():
                 trace = CGIfWrapper(trace, "!%s.IsNull()" % memberNullable)
         else:
