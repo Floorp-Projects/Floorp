@@ -3205,55 +3205,24 @@ for (uint32_t i = 0; i < length; ++i) {
                             "arraybuffer views because making sure all the "
                             "objects are properly rooted is hard")
         name = type.name
-        # By default, we use a Maybe<> to hold our typed array.  And in the optional
-        # non-nullable case we want to pass Optional<TypedArray> to consumers, not
-        # Optional<NonNull<TypedArray> >, so jump though some hoops to do that.
-        holderType = "Maybe<%s>" % name
-        constructLoc = "${holderName}"
-        constructMethod = "construct"
-        constructInternal = "ref"
+        declType = CGGeneric(name)
         if type.nullable():
-            if isOptional:
-                declType = "Optional<" + name + "*>"
-            else:
-                declType = name + "*"
+            declType = CGTemplatedType("Nullable", declType)
+            objRef = "${declName}.SetValue()"
         else:
-            if isOptional:
-                declType = "Optional<" + name + ">"
-                # We don't need a holder in this case
-                holderType = None
-                constructLoc = "${declName}"
-                constructMethod = "Construct"
-                constructInternal = "Value"
-            else:
-                declType = "NonNull<" + name + ">"
+            objRef = "${declName}"
+
         template = (
-            "%s.%s(&${val}.toObject());\n"
-            "if (!%s.%s().inited()) {\n"
+            "if (!%s.Init(&${val}.toObject())) {\n"
             "%s" # No newline here because onFailureBadType() handles that
             "}\n" %
-            (constructLoc, constructMethod, constructLoc, constructInternal,
+            (objRef,
              CGIndenter(onFailureBadType(failureCode, type.name)).define()))
-        nullableTarget = ""
-        if type.nullable():
-            if isOptional:
-                template += "${declName}.Construct();\n"
-                nullableTarget = "${declName}.Value()"
-            else:
-                nullableTarget = "${declName}"
-            template += "%s = ${holderName}.addr();" % nullableTarget
-        elif not isOptional:
-            template += "${declName} = ${holderName}.addr();"
-        template = wrapObjectTemplate(template, type,
-                                      "%s = nullptr" % nullableTarget,
+        template = wrapObjectTemplate(template, type, "${declName}.SetNull()",
                                       failureCode)
-
-        if holderType is not None:
-            holderType = CGGeneric(holderType)
-        # We handle all the optional stuff ourselves; no need for caller to do it.
         return JSToNativeConversionInfo(template,
-                                        declType=CGGeneric(declType),
-                                        holderType=holderType)
+                                        declType=declType,
+                                        dealWithOptional=isOptional)
 
     if type.isDOMString():
         assert not isEnforceRange and not isClamp
@@ -3886,7 +3855,7 @@ class CGArgumentConverter(CGThing):
 sequenceWrapLevel = 0
 
 def getWrapTemplateForType(type, descriptorProvider, result, successCode,
-                           isCreator, exceptionCode):
+                           isCreator, exceptionCode, typedArraysAreStructs):
     """
     Reflect a C++ value stored in "result", of IDL type "type" into JS.  The
     "successCode" is the code to run once we have successfully done the
@@ -3894,6 +3863,9 @@ def getWrapTemplateForType(type, descriptorProvider, result, successCode,
     stops once the successCode has executed (e.g. by doing a 'return', or by
     doing a 'break' if the entire conversion template is inside a block that
     the 'break' will exit).
+
+    If typedArraysAreStructs is true, then if the type is a typed array,
+    "result" is one of the dom::TypedArray subclasses, not a JSObject*.
 
     The resulting string should be used with string.Template.  It
     needs the following keys when substituting:
@@ -3970,7 +3942,8 @@ def getWrapTemplateForType(type, descriptorProvider, result, successCode,
             # Nullable sequences are Nullable< nsTArray<T> >
             (recTemplate, recInfall) = getWrapTemplateForType(type.inner, descriptorProvider,
                                                               "%s.Value()" % result, successCode,
-                                                              isCreator, exceptionCode)
+                                                              isCreator, exceptionCode,
+                                                              typedArraysAreStructs)
             return ("""
 if (%s.IsNull()) {
 %s
@@ -4135,7 +4108,8 @@ if (!returnArray) {
         # NB: setValue(..., True) calls JS_WrapValue(), so is fallible
         return (setValue(result, "value"), False)
 
-    if type.isObject() or type.isSpiderMonkeyInterface():
+    if (type.isObject() or (type.isSpiderMonkeyInterface() and
+                            not typedArraysAreStructs)):
         # See comments in WrapNewBindingObject explaining why we need
         # to wrap here.
         if type.nullable():
@@ -4153,16 +4127,27 @@ if (!returnArray) {
         # NB: setValue(..., True) calls JS_WrapValue(), so is fallible
         return (setValue(toValue % result, wrapType), False)
 
-    if not (type.isUnion() or type.isPrimitive() or type.isDictionary() or type.isDate()):
+    if not (type.isUnion() or type.isPrimitive() or type.isDictionary() or
+            type.isDate() or
+            (type.isSpiderMonkeyInterface() and typedArraysAreStructs)):
         raise TypeError("Need to learn to wrap %s" % type)
 
     if type.nullable():
         (recTemplate, recInfal) = getWrapTemplateForType(type.inner, descriptorProvider,
                                                          "%s.Value()" % result, successCode,
-                                                         isCreator, exceptionCode)
+                                                         isCreator, exceptionCode,
+                                                         typedArraysAreStructs)
         return ("if (%s.IsNull()) {\n" % result +
                 CGIndenter(CGGeneric(setValue("JSVAL_NULL"))).define() + "\n" +
                 "}\n" + recTemplate, recInfal)
+
+    if type.isSpiderMonkeyInterface():
+        assert typedArraysAreStructs
+        # See comments in WrapNewBindingObject explaining why we need
+        # to wrap here.
+        # NB: setValue(..., True) calls JS_WrapValue(), so is fallible
+        return (setValue("JS::ObjectValue(*%s.Obj())" % result,
+                         "nonDOMObject"), False)
 
     if type.isUnion():
         return (wrapAndSetPtr("%s.ToJSVal(cx, ${obj}, ${jsvalHandle})" % result),
@@ -4234,7 +4219,9 @@ def wrapForType(type, descriptorProvider, templateValues):
                                   templateValues.get('successCode', None),
                                   templateValues.get('isCreator', False),
                                   templateValues.get('exceptionCode',
-                                                     "return false;"))[0]
+                                                     "return false;"),
+                                  templateValues.get('typedArraysAreStructs',
+                                                     False))[0]
 
     defaultValues = {'obj': 'obj'}
     return string.Template(wrap).substitute(defaultValues, **templateValues)
@@ -4251,7 +4238,8 @@ def infallibleForMember(member, type, descriptorProvider):
         failure conditions.
     """
     return getWrapTemplateForType(type, descriptorProvider, 'result', None,\
-                                  memberIsCreator(member), "return false;")[1]
+                                  memberIsCreator(member), "return false;",
+                                  False)[1]
 
 def typeNeedsCx(type, descriptorProvider, retVal=False):
     if type is None:
@@ -4442,11 +4430,13 @@ class CGCallGenerator(CGThing):
                     return True
                 if a.type.isUnion():
                     return True
+                if a.type.isSpiderMonkeyInterface():
+                    return True
                 return False
             if needsConst(a):
                 arg = CGWrapper(arg, pre="Constify(", post=")")
             # And convert NonNull<T> to T&
-            if (((a.type.isInterface() or a.type.isCallback()) and
+            if (((a.type.isGeckoInterface() or a.type.isCallback()) and
                  not a.type.nullable()) or
                 a.type.isDOMString()):
                 arg = CGWrapper(arg, pre="NonNullHelper(", post=")")
@@ -5893,10 +5883,8 @@ def getUnionAccessorSignatureType(type, descriptorProvider):
     if type.isSpiderMonkeyInterface():
         typeName = CGGeneric(type.name)
         if type.nullable():
-            typeName = CGWrapper(typeName, post="*")
-        else:
-            typeName = CGWrapper(typeName, post="&")
-        return typeName
+            typeName = CGTemplatedType("Nullable", typeName)
+        return CGWrapper(typeName, post="&")
 
     if type.isDOMString():
         return CGGeneric("const nsAString&")
@@ -6146,11 +6134,6 @@ ${doConversionsToJS}
         (templateVars, type) = arg
         assert not type.nullable() # flatMemberTypes never has nullable types
         val = "mValue.m%(name)s.Value()" % templateVars
-        if type.isSpiderMonkeyInterface():
-            # We have a NonNull<TypedArray> object while the wrapping code
-            # wants a JSObject*.  Cheat with .get() so we don't have to
-            # figure out the right reference type to cast to.
-            val = "%s.get()->Obj()" % val
         wrapCode = wrapForType(
             type, self.descriptorProvider,
             {
@@ -6158,6 +6141,7 @@ ${doConversionsToJS}
                 "jsvalHandle": "rval",
                 "obj": "scopeObj",
                 "result": val,
+                "typedArraysAreStructs": True
                 })
         return CGIndenter(CGList([CGGeneric("case e%(name)s:" % templateVars),
                                   CGWrapper(CGIndenter(CGGeneric(wrapCode)),
@@ -8988,9 +8972,9 @@ class CGNativeMember(ClassMethod):
             return "JSObject*", "nullptr", "return ${declName};"
         if type.isSpiderMonkeyInterface():
             if type.nullable():
-                returnCode = "return ${declName} ? ${declName}->Obj() : nullptr;"
+                returnCode = "return ${declName}.IsNull() ? nullptr : ${declName}.Value().Obj();"
             else:
-                returnCode = ("return static_cast<%s&>(${declName}).Obj();" % type.name)
+                returnCode = "return ${declName}.Obj();"
             return "JSObject*", "nullptr", returnCode
         if type.isSequence():
             # If we want to handle sequence-of-sequences return values, we're
@@ -9105,16 +9089,9 @@ class CGNativeMember(ClassMethod):
         if type.isSpiderMonkeyInterface():
             assert not isMember
             if self.jsObjectsArePtr:
-                typeDecl = "JSObject*"
-            else:
-                if type.nullable():
-                    typeDecl = "%s*"
-                else:
-                    typeDecl = "%s"
-                    if not optional:
-                        typeDecl += "&"
-                typeDecl = typeDecl % type.name
-            return typeDecl, False, False
+                return "JSObject*", False, False
+
+            return type.name, True, True
 
         if type.isDOMString():
             if isMember:

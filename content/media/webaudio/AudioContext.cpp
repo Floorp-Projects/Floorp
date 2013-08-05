@@ -160,7 +160,7 @@ AudioContext::CreateBuffer(JSContext* aJSContext, uint32_t aNumberOfChannels,
 }
 
 already_AddRefed<AudioBuffer>
-AudioContext::CreateBuffer(JSContext* aJSContext, ArrayBuffer& aBuffer,
+AudioContext::CreateBuffer(JSContext* aJSContext, const ArrayBuffer& aBuffer,
                           bool aMixToMono, ErrorResult& aRv)
 {
   // Do not accept this method unless the legacy pref has been set.
