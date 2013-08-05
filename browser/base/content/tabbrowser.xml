@@ -9,6 +9,11 @@
 %tabBrowserDTD;
 ]>
 
+# MAKE_E10S_WORK surrounds code needed to have the front-end try to be smart
+# about using non-remote browsers for loading certain URIs when remote tabs
+# (browser.tabs.remote) are enabled.
+#define MAKE_E10S_WORK 1
+
 <bindings id="tabBrowserBindings"
           xmlns="http://www.mozilla.org/xbl"
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -1300,6 +1305,73 @@
         ]]></body>
       </method>
 
+#ifdef MAKE_E10S_WORK
+      <method name="_updateBrowserRemoteness">
+        <parameter name="aBrowser"/>
+        <parameter name="aRemote"/>
+        <body>
+          <![CDATA[
+            let isRemote = aBrowser.getAttribute("remote") == "true";
+            if (isRemote == aRemote)
+              return;
+
+            // Unhook our progress listener.
+            let tab = this._getTabForBrowser(aBrowser);
+            let index = tab._tPos;
+            let filter = this.mTabFilters[index];
+            aBrowser.webProgress.removeProgressListener(filter);
+
+            // Change the "remote" attribute.
+            let parent = aBrowser.parentNode;
+            parent.removeChild(aBrowser);
+            aBrowser.setAttribute("remote", aRemote ? "true" : "false");
+            parent.appendChild(aBrowser);
+
+            // Restore the progress listener.
+            aBrowser.webProgress.addProgressListener(filter, Ci.nsIWebProgress.NOTIFY_ALL);
+
+            if (aRemote)
+              tab.setAttribute("remote", "true");
+            else
+              tab.removeAttribute("remote");
+          ]]>
+        </body>
+      </method>
+
+      <!--
+        Returns true if we want to load the content for this URL in a
+        remote process. Eventually this should just check whether aURL
+        is unprivileged. Right now, though, we would like to load
+        some unprivileged URLs (like about:neterror) in the main
+        process since they interact with chrome code through
+        BrowserOnClick.
+      -->
+      <method name="_shouldBrowserBeRemote">
+        <parameter name="aURL"/>
+        <body>
+          <![CDATA[
+            if (!gMultiProcessBrowser)
+              return false;
+
+            // loadURI in browser.xml treats null as about:blank
+            if (!aURL)
+              aURL = "about:blank";
+
+            if (aURL.startsWith("about:") &&
+                aURL.toLowerCase() != "about:home" &&
+                aURL.toLowerCase() != "about:blank") {
+              return false;
+            }
+
+            if (aURL.startsWith("chrome:"))
+              return false;
+
+            return true;
+          ]]>
+        </body>
+      </method>
+#endif
+
       <method name="addTab">
         <parameter name="aURI"/>
         <parameter name="aReferrerURI"/>
@@ -1344,6 +1416,8 @@
 
             t.setAttribute("crop", "end");
             t.setAttribute("onerror", "this.removeAttribute('image');");
+            if (remote)
+              t.setAttribute("remote", "true");
             t.className = "tabbrowser-tab";
 
             this.tabContainer._unlockTabSizing();
@@ -1379,10 +1453,13 @@
             b.setAttribute("contextmenu", this.getAttribute("contentcontextmenu"));
             b.setAttribute("tooltip", this.getAttribute("contenttooltip"));
 
-            if (Services.prefs.getPrefType("browser.tabs.remote") == Services.prefs.PREF_BOOL &&
-                Services.prefs.getBoolPref("browser.tabs.remote")) {
+#ifdef MAKE_E10S_WORK
+            let remote = this._shouldBrowserBeRemote(aURI);
+#else
+            let remote = gMultiProcessBrowser;
+#endif
+            if (remote)
               b.setAttribute("remote", "true");
-            }
 
             if (window.gShowPageResizers && document.getElementById("addon-bar").collapsed &&
                 window.windowState == window.STATE_NORMAL) {
@@ -2554,7 +2631,17 @@
         <parameter name="aCharset"/>
         <body>
           <![CDATA[
+#ifdef MAKE_E10S_WORK
+            this._updateBrowserRemoteness(this.mCurrentBrowser, this._shouldBrowserBeRemote(aURI));
+            try {
+#endif
             return this.mCurrentBrowser.loadURI(aURI, aReferrerURI, aCharset);
+#ifdef MAKE_E10S_WORK
+            } catch (e) {
+              let url = this.mCurrentBrowser.currentURI.spec;
+              this._updateBrowserRemoteness(this.mCurrentBrowser, this._shouldBrowserBeRemote(url));
+            }
+#endif
           ]]>
         </body>
       </method>
@@ -2568,7 +2655,17 @@
         <parameter name="aPostData"/>
         <body>
           <![CDATA[
+#ifdef MAKE_E10S_WORK
+            this._updateBrowserRemoteness(this.mCurrentBrowser, this._shouldBrowserBeRemote(aURI));
+            try {
+#endif
             return this.mCurrentBrowser.loadURIWithFlags(aURI, aFlags, aReferrerURI, aCharset, aPostData);
+#ifdef MAKE_E10S_WORK
+            } catch (e) {
+              let url = this.mCurrentBrowser.currentURI.spec;
+              this._updateBrowserRemoteness(this.mCurrentBrowser, this._shouldBrowserBeRemote(url));
+            }
+#endif
           ]]>
         </body>
       </method>
@@ -2818,6 +2915,7 @@
             browserStack.removeChild(this.mCurrentBrowser);
             this.mCurrentBrowser.setAttribute("remote", true);
             browserStack.appendChild(this.mCurrentBrowser);
+            this.tabContainer.firstChild.setAttribute("remote", "true");
           }
 
           this.mCurrentTab = this.tabContainer.firstChild;

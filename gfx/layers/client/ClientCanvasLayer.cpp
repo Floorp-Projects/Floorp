@@ -81,7 +81,7 @@ ClientCanvasLayer::RenderLayer()
   }
   
   if (!mCanvasClient) {
-    TextureFlags flags = 0;
+    TextureFlags flags = TEXTURE_IMMEDIATE_UPLOAD;
     if (mNeedsYFlip) {
       flags |= NeedsYFlip;
     }
@@ -112,6 +112,7 @@ ClientCanvasLayer::RenderLayer()
 
   ClientManager()->Hold(this);
   mCanvasClient->Updated();
+  mCanvasClient->OnTransaction();
 }
 
 already_AddRefed<CanvasLayer>

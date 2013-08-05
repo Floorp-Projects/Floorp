@@ -1971,6 +1971,10 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   border-radius: 0;
 }
 
+.tabbrowser-tab[remote] {
+  text-decoration: underline;
+}
+
 .tabbrowser-tab:hover,
 .tabs-newtab-button:hover {
   background-image: @toolbarShadowOnTab@, @bgTabTextureHover@,
