@@ -33,6 +33,6 @@ ac_add_options --enable-update-channel=${MOZ_UPDATE_CHANNEL}
 export JAVA_HOME=/tools/jdk6
 export MOZILLA_OFFICIAL=1
 
-ac_add_options --with-branding=mobile/android/branding/aurora
+ac_add_options --with-branding=mobile/android/branding/beta
 
 . "$topsrcdir/mobile/android/config/mozconfigs/common.override"
